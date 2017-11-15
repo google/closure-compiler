@@ -607,7 +607,10 @@ class AmbiguateProperties implements CompilerPass {
         skipAmbiguating = true;
         return;
       }
-
+      ObjectTypeI maybeObj = newType.toMaybeObjectType();
+      if (maybeObj != null) {
+        newType = maybeObj.withoutStrayProperties();
+      }
       if (!relatedTypes.get(getIntForType(newType))) {
         computeRelatedTypes(newType);
         relatedTypes.or(getRelatedTypesOnNonUnion(newType));

@@ -229,6 +229,15 @@ class ScopedAliases implements HotSwapCompilerPass {
       Node aliasDefinition = aliasVar.getInitialValue();
       Node replacement = aliasDefinition.cloneTree();
       replacement.useSourceInfoFromForTree(aliasReference);
+      // Given alias "var Bar = foo.Bar;" here we replace a usage of Bar with foo.Bar.
+      // foo is generated and never visible to user. Because of that we should mark all new nodes as
+      // non-indexable leaving only Bar indexable.
+      // Given that replacement is GETPROP node, prefix is first child. It's also possible that
+      // replacement is single-part namespace. Like goog.provide('Foo') in that case replacement
+      // won't have children.
+      if (replacement.getFirstChild() != null) {
+        replacement.getFirstChild().makeNonIndexableRecursive();
+      }
       if (aliasReference.isStringKey()) {
         checkState(!aliasReference.hasChildren());
         aliasReference.addChildToFront(replacement);

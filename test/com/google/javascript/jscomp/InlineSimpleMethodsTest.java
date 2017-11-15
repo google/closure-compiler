@@ -308,7 +308,7 @@ public final class InlineSimpleMethodsTest extends CompilerTestCase {
   // at all.
   public void testEs6Issue1() {
     testSame(
-        LINE_JOINER.join(
+        lines(
             "/** @constructor */",
             "function OldClass() {}",
             "",
@@ -326,7 +326,7 @@ public final class InlineSimpleMethodsTest extends CompilerTestCase {
 
   public void testEs6Issue2() {
     testSame(
-        LINE_JOINER.join(
+        lines(
             "/** @constructor */",
             "function OldClass() {}",
             "",
@@ -362,7 +362,7 @@ public final class InlineSimpleMethodsTest extends CompilerTestCase {
     // escapes, because method definitions aren't commonly mutated.
     test(
         "var esc;",
-        LINE_JOINER.join(
+        lines(
             "/** @constructor */",
             "function Foo() {",
             "  this.prop = 123;",
@@ -372,7 +372,7 @@ public final class InlineSimpleMethodsTest extends CompilerTestCase {
             "}",
             "(new Foo).m();",
             "esc(Foo);"),
-        LINE_JOINER.join(
+        lines(
             "/** @constructor */",
             "function Foo(){this.prop=123}",
             "Foo.prototype.m=function(){return this.prop}",

@@ -347,6 +347,18 @@ public final class CrossModuleReferenceCollector implements ScopedCallback, Comp
           return true;
         }
       }
+    } else if (valueNode.isTemplateLit()) {
+      // A template literal is movable if all of the substitutions it contains are movable.
+      for (Node child = valueNode.getFirstChild(); child != null; child = child.getNext()) {
+        if (child.isTemplateLitSub()) {
+          if (!canMoveValue(scope, child.getFirstChild())) {
+            return false;
+          }
+        } else {
+          checkState(child.isString(), child);
+        }
+      }
+      return true;
     }
 
     return false;

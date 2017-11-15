@@ -22,10 +22,8 @@ const userAgent = goog.require('goog.userAgent');
 
 testSuite({
   shouldRunTests() {
-    // NOTE: Using ** forces the compiler to see this code as ES7.
-    // We need this to guarantee the polyfill is provided.
     // Disable tests for IE8 and below.
-    return 1 ** 1 && !userAgent.IE || userAgent.isVersionOrHigher(9);
+    return !userAgent.IE || userAgent.isVersionOrHigher(9);
   },
 
   testIncludes() {

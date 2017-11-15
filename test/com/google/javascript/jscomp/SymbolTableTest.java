@@ -17,7 +17,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
-import static com.google.javascript.jscomp.CompilerTestCase.LINE_JOINER;
+import static com.google.javascript.jscomp.CompilerTestCase.lines;
 import static com.google.javascript.jscomp.parsing.Config.JsDocParsing.INCLUDE_DESCRIPTIONS_NO_WHITESPACE;
 
 import com.google.common.collect.ImmutableList;
@@ -73,7 +73,7 @@ public final class SymbolTableTest extends TestCase {
    */
   public void testFunctionInCall() {
     createSymbolTable(
-        LINE_JOINER.join(
+        lines(
             "class Y { constructor(fn) {} }",
             "class X extends Y {",
             "  constructor() {",
@@ -1090,7 +1090,7 @@ public final class SymbolTableTest extends TestCase {
 
   public void testPrototypeSymbolEqualityForTwoPathsToSamePrototype() {
     String input =
-        LINE_JOINER.join(
+        lines(
             "/**\n",
             "* An employer.\n",
             "*\n",

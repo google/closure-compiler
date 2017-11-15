@@ -23,9 +23,6 @@ const userAgent = goog.require('goog.userAgent');
 
 testSuite({
   shouldRunTests() {
-    // NOTE: Using an async function forces the compiler to consider this file
-    // as ES8 code, which guarantees the polyfill will be included.
-    (async () => 1)();
     // Not polyfilled to ES3
     return !userAgent.IE || userAgent.isVersionOrHigher(9);
   },

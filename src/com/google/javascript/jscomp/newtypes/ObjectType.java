@@ -1696,6 +1696,10 @@ final class ObjectType implements TypeWithProperties {
     return null;
   }
 
+  JSType getNamespaceType() {
+    return this.ns.toJSType();
+  }
+
   @Override
   public String toString() {
     return appendTo(new StringBuilder(), ToStringContext.TO_STRING).toString();

@@ -54,26 +54,26 @@ public final class Es6RenameVariablesInParamListsTest extends CompilerTestCase {
         "var x = 5; function f(y=x) { var x$0; }");
 
     test(
-        LINE_JOINER.join(
+        lines(
             "function x() {}",
             "function f(y=(function y() { return x(); }())) {",
             "  var x; y++;",
             "}"),
-        LINE_JOINER.join(
+        lines(
             "function x() {}",
             "function f(y=(function y() { return x(); }())) {",
             "  var x$0; y++;",
             "}"));
 
     test(
-        LINE_JOINER.join(
+        lines(
             "function x() {}",
             "function f(y=(function y() { return x(); }())) {",
             "  var x;",
             "  { let x; x++; }",
             "  x++;",
             "}"),
-        LINE_JOINER.join(
+        lines(
             "function x() {}",
             "function f(y=(function y() { return x(); }())) {",
             "  var x$0;",
@@ -82,55 +82,55 @@ public final class Es6RenameVariablesInParamListsTest extends CompilerTestCase {
             "}"));
 
     test(
-        LINE_JOINER.join(
+        lines(
             "function x() {}",
             "function f(y=(function y() { return x(); }())) {",
             "  var x; { x++ };",
             "}"),
-        LINE_JOINER.join(
+        lines(
             "function x() {}",
             "function f(y=(function y() { return x(); }())) {",
             "  var x$0; { x$0++ };",
             "}"));
 
     test(
-        LINE_JOINER.join(
+        lines(
             "function f(a = x, b = y) {",
             "  var y, x;",
             "  return function() { var x = () => y };",
             "}"),
-        LINE_JOINER.join(
+        lines(
             "function f(a = x, b = y) {",
             "  var y$0, x$1;",
             "  return function() { var x = () => y$0 };",
             "}"));
 
     test(
-        LINE_JOINER.join(
+        lines(
             "var x = 4;", "function f(a=x) { let x = 5; { let x = 99; } return a + x; }"),
-        LINE_JOINER.join(
+        lines(
             "var x = 4;", "function f(a=x) { let x$0 = 5; { let x = 99; } return a + x$0; }"));
 
   }
 
   public void testRenameFunction() {
     test(
-        LINE_JOINER.join(
+        lines(
             "function x() {}", "function f(y=x()) {", "  x();", "  function x() {}", "}"),
-        LINE_JOINER.join(
+        lines(
             "function x() {}", "function f(y=x()) {", "  x$0();", "  function x$0() {}", "}"));
   }
 
   public void testGlobalDeclaration() {
     test(
-        LINE_JOINER.join(
+        lines(
             "function x() {}",
             "function f(y=(function y() { w = 5; return w; }())) {",
             "  let x = w;",
             "  var w = 3;",
             "  return w;",
             "}"),
-        LINE_JOINER.join(
+        lines(
             "function x() {}",
             "function f(y=(function y() { w = 5; return w; }())) {",
             "  let x = w$0;",
@@ -139,7 +139,7 @@ public final class Es6RenameVariablesInParamListsTest extends CompilerTestCase {
             "}"));
 
     testSame(
-        LINE_JOINER.join(
+        lines(
             "function x() {}",
             "function f(y=(function () { w = 5; return w; }())) {",
             "  w;",
@@ -147,14 +147,14 @@ public final class Es6RenameVariablesInParamListsTest extends CompilerTestCase {
             "}"));
 
     test(
-        LINE_JOINER.join(
+        lines(
             "function x() {}",
             "function f(y=(function () { w = 5; return w; }())) {",
             "  w;",
             "  var w = 3;",
             "  return w;",
             "}"),
-        LINE_JOINER.join(
+        lines(
             "function x() {}",
             "function f(y=(function () { w = 5; return w; }())) {",
             "  w$0;",
@@ -163,14 +163,14 @@ public final class Es6RenameVariablesInParamListsTest extends CompilerTestCase {
             "}"));
 
     test(
-        LINE_JOINER.join(
+        lines(
             "function x() {}",
             "function f(y=(function () { w = 5; return w; }())) {",
             "  w;",
             "  let w = 3;",
             "  return w;",
             "}"),
-        LINE_JOINER.join(
+        lines(
             "function x() {}",
             "function f(y=(function () { w = 5; return w; }())) {",
             "  w$0;",
@@ -181,7 +181,7 @@ public final class Es6RenameVariablesInParamListsTest extends CompilerTestCase {
 
   public void testMultipleDefaultParams() {
     test(
-        LINE_JOINER.join(
+        lines(
             "function x() {}",
             "var y = 1;",
             "function f(z=x, w=y) {",
@@ -189,7 +189,7 @@ public final class Es6RenameVariablesInParamListsTest extends CompilerTestCase {
             "  var y = 3;",
             "  return w;",
             "}"),
-        LINE_JOINER.join(
+        lines(
             "function x() {}",
             "var y = 1;",
             "function f(z=x, w=y) {",
@@ -199,7 +199,7 @@ public final class Es6RenameVariablesInParamListsTest extends CompilerTestCase {
             "}"));
 
     test(
-        LINE_JOINER.join(
+        lines(
             "function x() {}",
             "var y = 1;",
             "function f(z=x, w=y) {",
@@ -208,7 +208,7 @@ public final class Es6RenameVariablesInParamListsTest extends CompilerTestCase {
             "  { var y; y++; }",
             "  x++;",
             "}"),
-        LINE_JOINER.join(
+        lines(
             "function x() {}",
             "var y = 1;",
             "function f(z=x, w=y) {",

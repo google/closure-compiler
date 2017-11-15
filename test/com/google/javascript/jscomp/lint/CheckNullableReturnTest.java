@@ -55,7 +55,7 @@ public final class CheckNullableReturnTest extends TypeICompilerTestCase {
   }
 
   public void testSimpleWarning() {
-    testError(LINE_JOINER.join(
+    testError(lines(
         "/** @return {SomeType} */",
         "function f() {",
         "  return new SomeType();",
@@ -127,7 +127,7 @@ public final class CheckNullableReturnTest extends TypeICompilerTestCase {
   }
 
   public void testTwoBranches() {
-    testError(LINE_JOINER.join(
+    testError(lines(
         "/** @return {SomeType} */",
         "function f() {",
         "  if (foo) {",
@@ -136,7 +136,7 @@ public final class CheckNullableReturnTest extends TypeICompilerTestCase {
         "    return new SomeType();",
         "  }",
         "}"));
-    testError(LINE_JOINER.join(
+    testError(lines(
         "var obj = {",
         "  /** @return {SomeType} */",
         "  f() {",
@@ -150,7 +150,7 @@ public final class CheckNullableReturnTest extends TypeICompilerTestCase {
   }
 
   public void testTryCatch() {
-    testError(LINE_JOINER.join(
+    testError(lines(
         "/** @return {SomeType} */",
         "function f() {",
         "  try {",
@@ -159,7 +159,7 @@ public final class CheckNullableReturnTest extends TypeICompilerTestCase {
         "    return new SomeType();",
         "  }",
         "}"));
-    testError(LINE_JOINER.join(
+    testError(lines(
         "var obj = {",
         "  /** @return {SomeType} */",
         "  f() {",
@@ -171,7 +171,7 @@ public final class CheckNullableReturnTest extends TypeICompilerTestCase {
         "  }",
         "}"));
 
-    testBodyOk(LINE_JOINER.join(
+    testBodyOk(lines(
         "try {",
         "  if (a) throw '';",
         "} catch (e) {",
@@ -179,7 +179,7 @@ public final class CheckNullableReturnTest extends TypeICompilerTestCase {
         "}",
         "return {}"));
 
-    testBodyOk(LINE_JOINER.join(
+    testBodyOk(lines(
         "try {",
         "  return bar();",
         "} catch (e) {",
@@ -188,7 +188,7 @@ public final class CheckNullableReturnTest extends TypeICompilerTestCase {
 
   public void testNoExplicitReturn() {
     this.mode = TypeInferenceMode.OTI_ONLY;
-    testError(LINE_JOINER.join(
+    testError(lines(
         "/** @return {SomeType} */",
         "function f() {",
         "  if (foo) {",
@@ -198,7 +198,7 @@ public final class CheckNullableReturnTest extends TypeICompilerTestCase {
   }
 
   public void testNoWarningIfCanReturnNull() {
-    testOk(LINE_JOINER.join(
+    testOk(lines(
         "/** @return {SomeType} */",
         "function f() {",
         "  if (foo) {",
@@ -211,10 +211,10 @@ public final class CheckNullableReturnTest extends TypeICompilerTestCase {
 
   public void testNoWarningOnEmptyFunction() {
     this.mode = TypeInferenceMode.OTI_ONLY;
-    testOk(LINE_JOINER.join(
+    testOk(lines(
         "/** @return {SomeType} */",
         "function f() {}"));
-    testOk(LINE_JOINER.join(
+    testOk(lines(
         "var obj = {",
         "  /** @return {SomeType} */\n",
         "  f() {}",
@@ -222,7 +222,7 @@ public final class CheckNullableReturnTest extends TypeICompilerTestCase {
   }
 
   public void testNoWarningOnXOrNull() {
-    testOk(LINE_JOINER.join(
+    testOk(lines(
         "/**",
         " * @param {!Array.<!Object>} arr",
         " * @return {Object}",
@@ -230,7 +230,7 @@ public final class CheckNullableReturnTest extends TypeICompilerTestCase {
         "function f4(arr) {",
         "  return arr[0] || null;",
         "}"));
-    testOk(LINE_JOINER.join(
+    testOk(lines(
         "var obj = {",
         "  /**",
         "   * @param {!Array.<!Object>} arr",

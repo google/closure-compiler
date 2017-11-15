@@ -104,7 +104,7 @@ public final class SideEffectsAnalysisTest extends CompilerTestCase {
     assertSafeMoveVisibility("var x; src: x++; env: 1; dest: 3;");
 
     // Source references global, env changes local
-    assertSafeMoveVisibility(LINE_JOINER.join(
+    assertSafeMoveVisibility(lines(
         "var x;",
         "function f(){",
         "  var y;",
@@ -114,7 +114,7 @@ public final class SideEffectsAnalysisTest extends CompilerTestCase {
         "}"));
 
     // Source changes global, env refs local
-    assertSafeMoveVisibility(LINE_JOINER.join(
+    assertSafeMoveVisibility(lines(
         "var x;",
         "function f(){",
         "  var y;",
@@ -124,7 +124,7 @@ public final class SideEffectsAnalysisTest extends CompilerTestCase {
         "}"));
 
     // Source references global, env changes local with shadowing
-    assertSafeMoveVisibility(LINE_JOINER.join(
+    assertSafeMoveVisibility(lines(
         "var x;",
         "var y;",
         "function f(){",
@@ -135,7 +135,7 @@ public final class SideEffectsAnalysisTest extends CompilerTestCase {
         "}"));
 
     // Source changes global, env refs local with shadowing
-    assertSafeMoveVisibility(LINE_JOINER.join(
+    assertSafeMoveVisibility(lines(
         "var x;",
         "var y;",
         "function f(){",
@@ -147,7 +147,7 @@ public final class SideEffectsAnalysisTest extends CompilerTestCase {
 
 
     // Source references captured local, env changes local
-    assertSafeMoveVisibility(LINE_JOINER.join(
+    assertSafeMoveVisibility(lines(
         "function f(){",
         "  var x;",
         "  var y;",
@@ -160,7 +160,7 @@ public final class SideEffectsAnalysisTest extends CompilerTestCase {
         "}"));
 
     // Source changes captured local, env refs local
-    assertSafeMoveVisibility(LINE_JOINER.join(
+    assertSafeMoveVisibility(lines(
         "function f(){",
         "  var x;",
         "  var y;",
@@ -173,7 +173,7 @@ public final class SideEffectsAnalysisTest extends CompilerTestCase {
         "}"));
 
     // Source references heap, env changes local
-    assertSafeMoveVisibility(LINE_JOINER.join(
+    assertSafeMoveVisibility(lines(
         "var x = {};",
         "function f(){",
         "  var y;",
@@ -183,7 +183,7 @@ public final class SideEffectsAnalysisTest extends CompilerTestCase {
         "}"));
 
     // Source changes heap, env refs local
-    assertSafeMoveVisibility(LINE_JOINER.join(
+    assertSafeMoveVisibility(lines(
         "var x = {};",
         "function f(){",
         "  var y;",
@@ -193,7 +193,7 @@ public final class SideEffectsAnalysisTest extends CompilerTestCase {
         "}"));
 
     // MOD in function expressions shouldn't count
-    assertSafeMoveVisibility(LINE_JOINER.join(
+    assertSafeMoveVisibility(lines(
         "var x = {};",
         "src: x.a;",
         "env: (function() {",
@@ -202,7 +202,7 @@ public final class SideEffectsAnalysisTest extends CompilerTestCase {
         "dest: 3;"));
 
     // REF in function expressions shouldn't count
-    assertSafeMoveVisibility(LINE_JOINER.join(
+    assertSafeMoveVisibility(lines(
         "var x = {};",
         "src: x.a++;",
         "env: (function() {",
@@ -230,13 +230,13 @@ public final class SideEffectsAnalysisTest extends CompilerTestCase {
     assertUnsafeMoveVisibility("var x,y; src: x++; env: y; dest: 3;");
 
     // Unsafe to move increment across read for local variables
-    assertUnsafeMoveVisibility(LINE_JOINER.join(
+    assertUnsafeMoveVisibility(lines(
         "function f() {",
         "  var x,y; src: x++; env: y; dest: 3;",
         "}"));
 
     // Unsafe to move increment across read for captured local variables
-    assertUnsafeMoveVisibility(LINE_JOINER.join(
+    assertUnsafeMoveVisibility(lines(
         "function f() {",
         "  var x,y; src: x++; env: y; dest: 3;",
         "  function inner() {",
@@ -251,13 +251,13 @@ public final class SideEffectsAnalysisTest extends CompilerTestCase {
     assertUnsafeMoveVisibility("var x,y; src: y; env: x++; dest: 3;");
 
     // Unsafe to move read across increment for local variables
-    assertUnsafeMoveVisibility(LINE_JOINER.join(
+    assertUnsafeMoveVisibility(lines(
         "function f() {",
         "  var x,y; src: x; env: y++; dest: 3;",
         "}"));
 
     // Unsafe to move read across increment for captured local variables
-    assertUnsafeMoveVisibility(LINE_JOINER.join(
+    assertUnsafeMoveVisibility(lines(
         "function f() {",
         "  var x,y; src: x; env: y++; dest: 3;",
         "  function inner() {",
@@ -272,13 +272,13 @@ public final class SideEffectsAnalysisTest extends CompilerTestCase {
     assertUnsafeMoveVisibility("var x,y; src: x = 7; env: y = 3; dest: 3;");
 
     // Unsafe to move write across write for local variables
-    assertUnsafeMoveVisibility(LINE_JOINER.join(
+    assertUnsafeMoveVisibility(lines(
         "function f() {",
         "  var x,y; src: x = 7; env: y = 3; dest: 3;",
         "}"));
 
     // Unsafe to move write across write for captured local variables
-    assertUnsafeMoveVisibility(LINE_JOINER.join(
+    assertUnsafeMoveVisibility(lines(
         "function f() {",
         "  var x,y; src: x = 7; env: y = 3; dest: 3;",
         "  function inner() {",
@@ -298,7 +298,7 @@ public final class SideEffectsAnalysisTest extends CompilerTestCase {
     // TODO(dcc): implement interprocedural side effect analysis.
 
     // Source makes call, env refs global
-    assertUnsafeMoveVisibility(LINE_JOINER.join(
+    assertUnsafeMoveVisibility(lines(
         "var x = {};",
         "var g = function(){};",
         "function f(){",
@@ -309,7 +309,7 @@ public final class SideEffectsAnalysisTest extends CompilerTestCase {
         "}"));
 
     // Source makes refs global, env makes call
-    assertUnsafeMoveVisibility(LINE_JOINER.join(
+    assertUnsafeMoveVisibility(lines(
         "var x = {};",
         "var g = function(){};",
         "function f(){",
@@ -321,7 +321,7 @@ public final class SideEffectsAnalysisTest extends CompilerTestCase {
 
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     // Source makes a taggedTemplate Call.
-    assertUnsafeMoveVisibility(LINE_JOINER.join(
+    assertUnsafeMoveVisibility(lines(
         "function taggedTemplate(){};",
         "function f(){",
         "  src: taggedTemplate`tTemplate`;",
@@ -330,7 +330,7 @@ public final class SideEffectsAnalysisTest extends CompilerTestCase {
         "}"));
 
     // Env makes a taggedTemplate Call.
-    assertUnsafeMoveVisibility(LINE_JOINER.join(
+    assertUnsafeMoveVisibility(lines(
         "function taggedTemplate(){};",
         "function f(){",
         "  src: 24;",
@@ -345,7 +345,7 @@ public final class SideEffectsAnalysisTest extends CompilerTestCase {
     // parameters can be references and modified via the arguments object.
 
     // Source changes heap, env refs parameter
-    assertUnsafeMoveVisibility(LINE_JOINER.join(
+    assertUnsafeMoveVisibility(lines(
         "var x = {};",
         "function f(y){",
         "  src: x[0]++;",
@@ -354,7 +354,7 @@ public final class SideEffectsAnalysisTest extends CompilerTestCase {
         "}"));
 
     // Source refs heap, env changes parameters
-    assertUnsafeMoveVisibility(LINE_JOINER.join(
+    assertUnsafeMoveVisibility(lines(
         "var x = {};",
         "function f(y){",
         "  src: x[0];",
@@ -363,7 +363,7 @@ public final class SideEffectsAnalysisTest extends CompilerTestCase {
         "}"));
 
     // Source changes arguments explicitly, env refs parameter
-    assertUnsafeMoveVisibility(LINE_JOINER.join(
+    assertUnsafeMoveVisibility(lines(
         "var x = {};",
         "function f(y){",
         "  src: arguments[0]++;",
@@ -372,7 +372,7 @@ public final class SideEffectsAnalysisTest extends CompilerTestCase {
         "}"));
 
     // Source refs arguments explicitly, env changes parameter
-    assertUnsafeMoveVisibility(LINE_JOINER.join(
+    assertUnsafeMoveVisibility(lines(
         "var x = {};",
         "function f(y){",
         "  src: arguments[0];",
@@ -384,7 +384,7 @@ public final class SideEffectsAnalysisTest extends CompilerTestCase {
   public void testMovedSideEffectsMustHaveSameControlFlow() {
 
     // Safe to move within IF block
-    assertSafeMoveVisibility(LINE_JOINER.join(
+    assertSafeMoveVisibility(lines(
         "var a;",
         "function f() {",
         "  var l;",
@@ -396,7 +396,7 @@ public final class SideEffectsAnalysisTest extends CompilerTestCase {
         "}"));
 
     // Unsafe to move between two IF blocks
-    assertUnsafeMoveVisibility(LINE_JOINER.join(
+    assertUnsafeMoveVisibility(lines(
         "var a;",
         "function f() {",
         "  var l;",
@@ -410,7 +410,7 @@ public final class SideEffectsAnalysisTest extends CompilerTestCase {
         "}"));
 
     // Unsafe to move between then/else of same IF block
-    assertUnsafeMoveVisibility(LINE_JOINER.join(
+    assertUnsafeMoveVisibility(lines(
         "var a;",
         "function f() {",
         "  var l;",
@@ -423,7 +423,7 @@ public final class SideEffectsAnalysisTest extends CompilerTestCase {
         "}"));
 
     // Safe to move within WHILE block
-    assertSafeMoveVisibility(LINE_JOINER.join(
+    assertSafeMoveVisibility(lines(
         "var a;",
         "function f() {",
         "  var l;",
@@ -435,7 +435,7 @@ public final class SideEffectsAnalysisTest extends CompilerTestCase {
         "}"));
 
     // Unsafe to move within WHILE block with BREAK
-    assertUnsafeMoveVisibility(LINE_JOINER.join(
+    assertUnsafeMoveVisibility(lines(
         "var a;",
         "function f() {",
         "  var l;",
@@ -448,7 +448,7 @@ public final class SideEffectsAnalysisTest extends CompilerTestCase {
         "}"));
 
     // Unsafe to move within WHILE block with continue
-    assertUnsafeMoveVisibility(LINE_JOINER.join(
+    assertUnsafeMoveVisibility(lines(
         "var a;",
         "function f() {",
         "  var l;",
@@ -461,7 +461,7 @@ public final class SideEffectsAnalysisTest extends CompilerTestCase {
         "}"));
 
     // Unsafe to move within WHILE block with continue
-    assertUnsafeMoveVisibility(LINE_JOINER.join(
+    assertUnsafeMoveVisibility(lines(
         "var a;",
         "function f() {",
         "  var l;",
@@ -474,7 +474,7 @@ public final class SideEffectsAnalysisTest extends CompilerTestCase {
         "}"));
 
     // Safe to move within DO
-    assertSafeMoveVisibility(LINE_JOINER.join(
+    assertSafeMoveVisibility(lines(
         "var a;",
         "function f() {",
         "  var l;",
@@ -486,7 +486,7 @@ public final class SideEffectsAnalysisTest extends CompilerTestCase {
         "}"));
 
     // Unsafe to move outside DO
-    assertUnsafeMoveVisibility(LINE_JOINER.join(
+    assertUnsafeMoveVisibility(lines(
         "var a;",
         "function f() {",
         "  var l;",
@@ -500,7 +500,7 @@ public final class SideEffectsAnalysisTest extends CompilerTestCase {
     // It should be safe to move within CASE
     // but we disallow for now because analyzing
     // CASE fall-through and BREAKs is complicated.
-    assertUnsafeMoveVisibility(LINE_JOINER.join(
+    assertUnsafeMoveVisibility(lines(
         "var a;",
         "function f() {",
         "  var l;",
@@ -514,7 +514,7 @@ public final class SideEffectsAnalysisTest extends CompilerTestCase {
         "}"));
 
     // Unsafe to move between CASEs
-    assertUnsafeMoveVisibility(LINE_JOINER.join(
+    assertUnsafeMoveVisibility(lines(
         "var a;",
         "function f() {",
         "  var l;",
@@ -530,7 +530,7 @@ public final class SideEffectsAnalysisTest extends CompilerTestCase {
         "}"));
 
     // Unsafe to move between FUNCTIONs
-    assertUnsafeMoveVisibility(LINE_JOINER.join(
+    assertUnsafeMoveVisibility(lines(
         "var a;",
         "function f() {",
         "  src: a++;",

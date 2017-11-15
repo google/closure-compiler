@@ -31,7 +31,7 @@ public final class TypeTransformationTest extends CompilerTypeTestCase {
   private ImmutableMap<String, String> nameVars;
   private static JSType recordTypeTest, nestedRecordTypeTest, asynchRecord;
 
-  static final String EXTRA_TYPE_DEFS = LINE_JOINER.join(
+  static final String EXTRA_TYPE_DEFS = lines(
       "/** @typedef {!Array<?>} */ var ArrayAlias;",
       "",
       "/** @constructor */",

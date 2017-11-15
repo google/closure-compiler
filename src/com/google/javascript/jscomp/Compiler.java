@@ -1174,6 +1174,9 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     List<String> moduleNameRegexList = options.modulesToPrintAfterEachPassRegexList;
     StringBuilder builder = new StringBuilder();
 
+    if (fileNameRegexList.isEmpty() && moduleNameRegexList.isEmpty()) {
+      return toSource();
+    }
     if (!fileNameRegexList.isEmpty()) {
       checkNotNull(jsRoot);
       for (Node fileNode : jsRoot.children()) {
@@ -1186,6 +1189,9 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
           }
         }
       }
+      if (builder.toString().isEmpty()) {
+        throw new RuntimeException("No files matched any of: " + fileNameRegexList);
+      }
     }
     if (!moduleNameRegexList.isEmpty()) {
       for (JSModule jsModule : modules) {
@@ -1197,13 +1203,12 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
           }
         }
       }
+      if (builder.toString().isEmpty()) {
+        throw new RuntimeException("No modules matched any of: " + moduleNameRegexList);
+      }
     }
+    return builder.toString();
 
-    if (!builder.toString().isEmpty()) {
-      return builder.toString();
-    } else {
-      return toSource();
-    }
   }
 
   @Override
@@ -1769,21 +1774,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       } else if (options.needsTranspilationFrom(FeatureSet.ES6_MODULES)
           || options.processCommonJSModules) {
 
-        if (options.processCommonJSModules) {
-          for (CompilerInput input : inputs) {
-            FindModuleDependencies findDeps =
-                new FindModuleDependencies(
-                    this,
-                    options.getLanguageIn().toFeatureSet().has(Feature.MODULES),
-                    true,
-                    inputPathByWebpackId);
-            findDeps.process(input.getAstRoot(this));
-            this.moduleTypesByName.put(input.getPath().toModuleName(), input.getJsModuleType());
-          }
-        } else if (options.getLanguageIn().toFeatureSet().has(Feature.MODULES)) {
-          parsePotentialModules(inputs);
-        }
-
         // Build a map of module identifiers for any input which provides no namespace.
         // These files could be imported modules which have no exports, but do have side effects.
         Map<String, CompilerInput> inputModuleIdentifiers = new HashMap<>();
@@ -1809,7 +1799,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
         for (CompilerInput input : inputsToRewrite.values()) {
           input.setJsModuleType(CompilerInput.ModuleType.IMPORTED_SCRIPT);
-          moduleTypesByName.put(input.getPath().toModuleName(), input.getJsModuleType());
         }
       }
 
@@ -1988,8 +1977,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       // be forced to be a module.
       if (wasImportedByModule && input.getJsModuleType() == CompilerInput.ModuleType.NONE) {
         input.setJsModuleType(CompilerInput.ModuleType.IMPORTED_SCRIPT);
-        this.moduleTypesByName.remove(input.getPath().toModuleName());
-        this.moduleTypesByName.put(input.getPath().toModuleName(), input.getJsModuleType());
       }
 
       return orderedInputs;
@@ -2140,7 +2127,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
         continue;
       }
       input.setJsModuleType(CompilerInput.ModuleType.JSON);
-      moduleTypesByName.put(input.getPath().toModuleName(), input.getJsModuleType());
       rewriteJson.process(null, root);
     }
     return rewriteJson.getPackageJsonMainEntries();
@@ -2169,9 +2155,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     return filteredInputs;
   }
 
-  /**
-   * Transforms AMD to CJS modules
-   */
+  /** Transforms AMD to CJS modules */
   void processAMDModules() {
     for (CompilerInput input : inputs) {
       input.setCompiler(this);

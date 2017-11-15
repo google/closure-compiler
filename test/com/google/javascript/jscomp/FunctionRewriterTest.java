@@ -67,7 +67,7 @@ public final class FunctionRewriterTest extends CompilerTestCase {
   public void testEs6Class() {
     // There is never any benefit to replacing ES6 class methods
     checkCompilesToSame(
-        LINE_JOINER.join(
+        lines(
             "class C {",
             "  constructor(x = 1) {",  // looks like a setter
             "    this.x_ = x;",

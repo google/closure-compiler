@@ -40,24 +40,24 @@ public class InlineAliasesTest extends CompilerTestCase {
         "function Foo(){}; var /** @const */ alias = Foo; /** @type {Foo} */ var x;");
 
     test(
-        LINE_JOINER.join(
+        lines(
             "var ns={};",
             "function Foo(){};",
             "/** @const */ ns.alias = Foo;",
             "/** @type {ns.alias} */ var x;"),
-        LINE_JOINER.join(
+        lines(
             "var ns={};",
             "function Foo(){};",
             "/** @const */ ns.alias = Foo;",
             "/** @type {Foo} */ var x;"));
 
     test(
-        LINE_JOINER.join(
+        lines(
             "var ns={};",
             "function Foo(){};",
             "/** @const */ ns.alias = Foo;",
             "/** @type {ns.alias.Subfoo} */ var x;"),
-        LINE_JOINER.join(
+        lines(
             "var ns={};",
             "function Foo(){};",
             "/** @const */ ns.alias = Foo;",
@@ -77,24 +77,24 @@ public class InlineAliasesTest extends CompilerTestCase {
 
   public void testAliasQualifiedName() {
     test(
-        LINE_JOINER.join(
+        lines(
             "var ns = {};",
             "ns.Foo = function(){};",
             "/** @const */ ns.alias = ns.Foo;",
             "/** @type {ns.alias.Subfoo} */ var x;"),
-        LINE_JOINER.join(
+        lines(
             "var ns = {};",
             "ns.Foo = function(){};",
             "/** @const */ ns.alias = ns.Foo;",
             "/** @type {ns.Foo.Subfoo} */ var x;"));
 
     test(
-        LINE_JOINER.join(
+        lines(
             "var ns = {};",
             "ns.Foo = function(){};",
             "/** @const */ ns.alias = ns.Foo;",
             "var x = new ns.alias.Subfoo;"),
-        LINE_JOINER.join(
+        lines(
             "var ns = {};",
             "ns.Foo = function(){};",
             "/** @const */ ns.alias = ns.Foo;",
@@ -104,23 +104,23 @@ public class InlineAliasesTest extends CompilerTestCase {
   public void testHoistedAliasesInCode() {
     // Unqualified
     test(
-        LINE_JOINER.join(
+        lines(
             "function Foo(){};",
             "function Bar(){ var x = alias; };",
             "var /** @const */ alias = Foo;"),
-        LINE_JOINER.join(
+        lines(
             "function Foo(){};",
             "function Bar(){ var x = Foo; };",
             "var /** @const */ alias = Foo;"));
 
     // Qualified
     test(
-        LINE_JOINER.join(
+        lines(
             "var ns = {};",
             "ns.Foo = function(){};",
             "function Bar(){ var x = ns.alias; };",
             "/** @const */ ns.alias = ns.Foo;"),
-        LINE_JOINER.join(
+        lines(
             "var ns = {};",
             "ns.Foo = function(){};",
             "function Bar(){ var x = ns.Foo; };",
@@ -129,7 +129,7 @@ public class InlineAliasesTest extends CompilerTestCase {
 
   public void testAliasCycleError() {
     testError(
-        LINE_JOINER.join(
+        lines(
             "/** @const */ var x = y;",
             "/** @const */ var y = x;"),
         ALIAS_CYCLE);
@@ -137,14 +137,14 @@ public class InlineAliasesTest extends CompilerTestCase {
 
   public void testTransitiveAliases() {
     test(
-        LINE_JOINER.join(
+        lines(
             "/** @const */ var ns = {};",
             "/** @constructor */ ns.Foo = function() {};",
             "/** @constructor */ ns.Foo.Bar = function() {};",
             "var /** @const */ alias = ns.Foo;",
             "var /** @const */ alias2 = alias.Bar;",
             "var x = new alias2"),
-        LINE_JOINER.join(
+        lines(
             "/** @const */ var ns = {};",
             "/** @constructor */ ns.Foo = function() {};",
             "/** @constructor */ ns.Foo.Bar = function() {};",
@@ -156,12 +156,12 @@ public class InlineAliasesTest extends CompilerTestCase {
   public void testAliasChains() {
     // Unqualified
     test(
-        LINE_JOINER.join(
+        lines(
             "/** @constructor */ var Foo = function() {};",
             "var /** @const */ alias1 = Foo;",
             "var /** @const */ alias2 = alias1;",
             "var x = new alias2"),
-        LINE_JOINER.join(
+        lines(
             "/** @constructor */ var Foo = function() {};",
             "var /** @const */ alias1 = Foo;",
             "var /** @const */ alias2 = Foo;",
@@ -169,13 +169,13 @@ public class InlineAliasesTest extends CompilerTestCase {
 
     // Qualified
     test(
-        LINE_JOINER.join(
+        lines(
             "/** @const */ var ns = {};",
             "/** @constructor */ ns.Foo = function() {};",
             "var /** @const */ alias1 = ns.Foo;",
             "var /** @const */ alias2 = alias1;",
             "var x = new alias2"),
-        LINE_JOINER.join(
+        lines(
             "/** @const */ var ns = {};",
             "/** @constructor */ ns.Foo = function() {};",
             "var /** @const */ alias1 = ns.Foo;",
@@ -204,7 +204,7 @@ public class InlineAliasesTest extends CompilerTestCase {
 
   public void testConstWithTypesAreNotInlined() {
     testSame(
-        LINE_JOINER.join(
+        lines(
             "var /** @type {number} */ n = 5",
             "var /** @const {number} */ alias = n;",
             "var x = use(alias)"));
@@ -217,7 +217,7 @@ public class InlineAliasesTest extends CompilerTestCase {
 
   public void testShadowedAliasesNotRenamed() {
     testSame(
-        LINE_JOINER.join(
+        lines(
             "var ns = {};",
             "ns.Foo = function(){};",
             "var /** @const */ alias = ns.Foo;",
@@ -226,7 +226,7 @@ public class InlineAliasesTest extends CompilerTestCase {
             "}"));
 
     testSame(
-        LINE_JOINER.join(
+        lines(
             "var ns = {};",
             "ns.Foo = function(){};",
             "var /** @const */ alias = ns.Foo;",
@@ -236,7 +236,7 @@ public class InlineAliasesTest extends CompilerTestCase {
             "}"));
 
     testSame(
-        LINE_JOINER.join(
+        lines(
             "/** @const */",
             "var x = y;",
             "function f() {",
@@ -261,7 +261,7 @@ public class InlineAliasesTest extends CompilerTestCase {
 
   public void testNoInlineAliasesInsideClassConstructor() {
     testSame(
-        LINE_JOINER.join(
+        lines(
             "class Foo {",
             " /** @constructor */",
             " constructor(x) {",
@@ -274,12 +274,12 @@ public class InlineAliasesTest extends CompilerTestCase {
 
   public void testArrayDestructuringVarAssign() {
     test(
-        LINE_JOINER.join(
+        lines(
             "var Foo = class {};",
             "var /** @const */ A = Foo;",
             "var a = [5, A];",
             "var [one, two] = a;"),
-        LINE_JOINER.join(
+        lines(
             "var Foo = class {};",
             "var /** @const */ A = Foo;",
             "var a = [5, Foo];",
@@ -288,7 +288,7 @@ public class InlineAliasesTest extends CompilerTestCase {
 
   public void testArrayDestructuringFromFunction() {
     test(
-        LINE_JOINER.join(
+        lines(
             "var Foo = class {};",
             "var /** @const */ A = Foo;",
             "function f() {",
@@ -296,7 +296,7 @@ public class InlineAliasesTest extends CompilerTestCase {
             "}",
             "var a, b;",
             "[a, b] = f();"),
-        LINE_JOINER.join(
+        lines(
             "var Foo = class {};",
             "var /** @const */ A = Foo;",
             "function f() {",
@@ -308,7 +308,7 @@ public class InlineAliasesTest extends CompilerTestCase {
 
   public void testArrayDestructuringSwapIsNotInlined() {
     testSame(
-        LINE_JOINER.join(
+        lines(
             "var Foo = class {};",
             "var /** @const */ A = Foo;",
             "var temp = 3;",
@@ -317,7 +317,7 @@ public class InlineAliasesTest extends CompilerTestCase {
 
   public void testArrayDestructuringSwapIsNotInlinedWithClassDeclaration() {
     testSame(
-        LINE_JOINER.join(
+        lines(
             "class Foo {};",
             "var /** @const */ A = Foo;",
             "var temp = 3;",
@@ -330,7 +330,7 @@ public class InlineAliasesTest extends CompilerTestCase {
 
   public void testArrayDestructuringTwoVarsAndRedefinedAliasesNotRenamed() {
     testSame(
-        LINE_JOINER.join(
+        lines(
             "var x = 0;",
             "var /** @const */ alias = x;",
             "var y = 5;",
@@ -340,12 +340,12 @@ public class InlineAliasesTest extends CompilerTestCase {
 
   public void testObjectDestructuringBasicAssign() {
     test(
-        LINE_JOINER.join(
+        lines(
             "var Foo = class {};",
             "var /** @const */ A = Foo;",
             "var o = {p: A, q: 5};",
             "var {p, q} = o;"),
-        LINE_JOINER.join(
+        lines(
             "var Foo = class {};",
             "var /** @const */ A = Foo;",
             "var o = {p: Foo, q: 5};",
@@ -354,11 +354,11 @@ public class InlineAliasesTest extends CompilerTestCase {
 
   public void testObjectDestructuringAssignWithoutDeclaration() {
     test(
-        LINE_JOINER.join(
+        lines(
             "var Foo = class {};",
             "var /** @const */ A = Foo;",
             "({a, b} = {a: A, b: A});"),
-        LINE_JOINER.join(
+        lines(
             "var Foo = class {};",
             "var /** @const */ A = Foo;",
             "({a, b} = {a: Foo, b: Foo});"));
@@ -366,12 +366,12 @@ public class InlineAliasesTest extends CompilerTestCase {
 
   public void testObjectDestructuringAssignNewVarNames() {
     test(
-        LINE_JOINER.join(
+        lines(
             "var Foo = class {};",
             "var /** @const */ A = Foo;",
             "var o = {p: A, q: true};",
             "var {p: newName1, q: newName2} = o;"),
-        LINE_JOINER.join(
+        lines(
             "var Foo = class {};",
             "var /** @const */ A = Foo;",
             "var o = {p: Foo, q: true};",
@@ -380,11 +380,11 @@ public class InlineAliasesTest extends CompilerTestCase {
 
   public void testObjectDestructuringDefaultVals() {
     test(
-        LINE_JOINER.join(
+        lines(
             "var Foo = class {};",
             "var /** @const */ A = Foo;",
             "var {a = A, b = A} = {a: 13};"),
-        LINE_JOINER.join(
+        lines(
             "var Foo = class {};",
             "var /** @const */ A = Foo;",
             "var {a = Foo, b = Foo} = {a: 13};"));
@@ -392,14 +392,14 @@ public class InlineAliasesTest extends CompilerTestCase {
 
   public void testArrayDestructuringWithParameter() {
     test(
-        LINE_JOINER.join(
+        lines(
             "var Foo = class {};",
             "var /** @const */ A = Foo;",
             "function f([name, val]) {",
             "   console.log(name, val);",
             "}",
             "f([A, A]);"),
-        LINE_JOINER.join(
+        lines(
             "var Foo = class {};",
             "var /** @const */ A = Foo;",
             "function f([name, val]) {",
@@ -410,7 +410,7 @@ public class InlineAliasesTest extends CompilerTestCase {
 
   public void testObjectDestructuringWithParameters() {
    test(
-       LINE_JOINER.join(
+       lines(
            "var Foo = class {};",
            "var /** @const */ A = Foo;",
            "function g({",
@@ -423,7 +423,7 @@ public class InlineAliasesTest extends CompilerTestCase {
            "   name: A,",
            "   val: A",
            "});"),
-       LINE_JOINER.join(
+       lines(
            "var Foo = class {};",
            "var /** @const */ A = Foo;",
            "function g({",
@@ -440,7 +440,7 @@ public class InlineAliasesTest extends CompilerTestCase {
 
   public void testObjectDestructuringWithParametersAndStyleShortcut() {
    test(
-       LINE_JOINER.join(
+       lines(
            "var Foo = class {};",
            "var /** @const */ A = Foo;",
            "function h({",
@@ -450,7 +450,7 @@ public class InlineAliasesTest extends CompilerTestCase {
            "   console.log(name, val);",
            "}",
            "h({name: A, val: A});"),
-       LINE_JOINER.join(
+       lines(
            "var Foo = class {};",
            "var /** @const */ A = Foo;",
            "function h({",
@@ -476,7 +476,7 @@ public class InlineAliasesTest extends CompilerTestCase {
 
   public void testUnqualifiedHoistedConstAliasesInCode() {
     testSame(
-        LINE_JOINER.join(
+        lines(
             "function Foo(){};",
             "function Bar(){ const x = alias; };",
             "const /** @const */ alias = Foo;"));
@@ -484,7 +484,7 @@ public class InlineAliasesTest extends CompilerTestCase {
 
   public void testTransitiveConstAliases() {
     testSame(
-        LINE_JOINER.join(
+        lines(
             "/** @const */ const ns = {};",
             "/** @constructor */ ns.Foo = function() {};",
             "/** @constructor */ ns.Foo.Bar = function() {};",
@@ -495,7 +495,7 @@ public class InlineAliasesTest extends CompilerTestCase {
 
   public void testUnqualifiedConstAliasChains() {
     testSame(
-        LINE_JOINER.join(
+        lines(
             "/** @constructor */ var Foo = function() {};",
             "const /** @const */ alias1 = Foo;",
             "const /** @const */ alias2 = alias1;",
@@ -504,7 +504,7 @@ public class InlineAliasesTest extends CompilerTestCase {
 
   public void testQualifiedConstAliasChains() {
     testSame(
-        LINE_JOINER.join(
+        lines(
             "/** @const */ const ns = {};",
             "/** @constructor */ ns.Foo = function() {};",
             "const /** @const */ alias1 = ns.Foo;",
@@ -526,7 +526,7 @@ public class InlineAliasesTest extends CompilerTestCase {
 
   public void testConstArrayDestructuringVarAssign() {
     testSame(
-        LINE_JOINER.join(
+        lines(
             "var Foo = class {};",
             "const /** @const */ A = Foo;",
             "var a = [5, A];",
@@ -535,7 +535,7 @@ public class InlineAliasesTest extends CompilerTestCase {
 
   public void testConstArrayDestructuringFromFunction() {
     testSame(
-        LINE_JOINER.join(
+        lines(
             "var Foo = class {};",
             "const /** @const */ A = Foo;",
             "function f() {",
@@ -547,7 +547,7 @@ public class InlineAliasesTest extends CompilerTestCase {
 
   public void testConstObjectDestructuringBasicAssign() {
     testSame(
-        LINE_JOINER.join(
+        lines(
             "var Foo = class {};",
             "const /** @const */ A = Foo;",
             "var o = {p: A, q: 5};",
@@ -556,13 +556,13 @@ public class InlineAliasesTest extends CompilerTestCase {
 
   public void testConstObjectDestructuringAssignWithoutDeclaration() {
     testSame(
-        LINE_JOINER.join(
+        lines(
             "var Foo = class {};", "const /** @const */ A = Foo;", "({a, b} = {a: A, b: A});"));
   }
 
   public void testConstObjectDestructuringAssignNewVarNames() {
     testSame(
-        LINE_JOINER.join(
+        lines(
             "var Foo = class {};",
             "const /** @const */ A = Foo;",
             "var o = {p: A, q: true};",
@@ -571,7 +571,7 @@ public class InlineAliasesTest extends CompilerTestCase {
 
   public void testConstObjectDestructuringDefaultVals() {
     testSame(
-        LINE_JOINER.join(
+        lines(
             "var Foo = class {};",
             "const /** @const */ A = Foo;",
             "var {a = A, b = A} = {a: 13};"));
@@ -579,7 +579,7 @@ public class InlineAliasesTest extends CompilerTestCase {
 
   public void testConstArrayDestructuringWithParameters() {
     testSame(
-        LINE_JOINER.join(
+        lines(
             "var Foo = class {};",
             "const /** @const */ A = Foo;",
             "function f([name, val]) {",
@@ -590,7 +590,7 @@ public class InlineAliasesTest extends CompilerTestCase {
 
   public void testConstObjectDestructuringWithParameters() {
     testSame(
-        LINE_JOINER.join(
+        lines(
             "var Foo = class {};",
             "const /** @const */ A = Foo;",
             "function g({",
@@ -607,7 +607,7 @@ public class InlineAliasesTest extends CompilerTestCase {
 
   public void testConstObjectDestructuringWithParametersAndStyleShortcut() {
     testSame(
-        LINE_JOINER.join(
+        lines(
             "var Foo = class {};",
             "const /** @const */ A = Foo;",
             "function h({",
@@ -633,7 +633,7 @@ public class InlineAliasesTest extends CompilerTestCase {
 
   public void testUnqualifiedHoistedLetAliasesInCode() {
     testSame(
-        LINE_JOINER.join(
+        lines(
             "function Foo(){};",
             "function Bar(){ var x = alias; };",
             "let /** @const */ alias = Foo;"));
@@ -641,7 +641,7 @@ public class InlineAliasesTest extends CompilerTestCase {
 
   public void testTransitiveLetAliases() {
     testSame(
-        LINE_JOINER.join(
+        lines(
             "/** @const */ var ns = {};",
             "/** @constructor */ ns.Foo = function() {};",
             "/** @constructor */ ns.Foo.Bar = function() {};",
@@ -652,7 +652,7 @@ public class InlineAliasesTest extends CompilerTestCase {
 
   public void testUnqualifiedLetAliasChains() {
     testSame(
-        LINE_JOINER.join(
+        lines(
             "/** @constructor */ var Foo = function() {};",
             "let /** @const */ alias1 = Foo;",
             "let /** @const */ alias2 = alias1;",
@@ -661,7 +661,7 @@ public class InlineAliasesTest extends CompilerTestCase {
 
   public void testQualifiedLetAliasChains() {
     testSame(
-        LINE_JOINER.join(
+        lines(
             "/** @const */ var ns = {};",
             "/** @constructor */ ns.Foo = function() {};",
             "let /** @const */ alias1 = ns.Foo;",
@@ -679,7 +679,7 @@ public class InlineAliasesTest extends CompilerTestCase {
 
   public void testArrayDestructuringLetAssign() {
     testSame(
-        LINE_JOINER.join(
+        lines(
             "var Foo = class {};",
             "let /** @const */ A = Foo;",
             "var a = [5, A];",
@@ -688,7 +688,7 @@ public class InlineAliasesTest extends CompilerTestCase {
 
   public void testLetArrayDestructuringFromFunction() {
     testSame(
-        LINE_JOINER.join(
+        lines(
             "var Foo = class {};",
             "let /** @const */ A = Foo;",
             "function f() {",
@@ -700,7 +700,7 @@ public class InlineAliasesTest extends CompilerTestCase {
 
   public void testLetObjectDestructuringBasicAssign() {
     testSame(
-        LINE_JOINER.join(
+        lines(
             "var Foo = class {};",
             "let /** @const */ A = Foo;",
             "var o = {p: A, q: 5};",
@@ -709,7 +709,7 @@ public class InlineAliasesTest extends CompilerTestCase {
 
   public void testWithLetObjectDestructuringAssignWithoutDeclaration() {
     testSame(
-        LINE_JOINER.join(
+        lines(
             "var Foo = class {};",
             "let /** @const */ A = Foo;",
             "({a, b} = {a: A, b: A});"));
@@ -717,7 +717,7 @@ public class InlineAliasesTest extends CompilerTestCase {
 
   public void testLetObjectDestructuringAssignNewVarNames() {
     testSame(
-        LINE_JOINER.join(
+        lines(
             "var Foo = class {};",
             "let /** @const */ A = Foo;",
             "var o = {p: A, q: true};",
@@ -726,7 +726,7 @@ public class InlineAliasesTest extends CompilerTestCase {
 
   public void testLetObjectDestructuringDefaultVals() {
     testSame(
-        LINE_JOINER.join(
+        lines(
             "var Foo = class {};",
             "let /** @const */ A = Foo;", 
             "var {a = A, b = A} = {a: 13};"));
@@ -734,7 +734,7 @@ public class InlineAliasesTest extends CompilerTestCase {
 
   public void testLetArrayDestructuringWithParameter() {
     testSame(
-        LINE_JOINER.join(
+        lines(
             "var Foo = class {};",
             "let /** @const */ A = Foo;",
             "function f([name, val]) {",
@@ -745,7 +745,7 @@ public class InlineAliasesTest extends CompilerTestCase {
 
   public void testLetObjectDestructuringWithParameters() {
     testSame(
-        LINE_JOINER.join(
+        lines(
             "var Foo = class {};",
             "let /** @const */ A = Foo;",
             "function g({",
@@ -762,7 +762,7 @@ public class InlineAliasesTest extends CompilerTestCase {
 
   public void testLetObjectDestructuringWithParametersAndStyleShortcut() {
     testSame(
-        LINE_JOINER.join(
+        lines(
             "var Foo = class {};",
             "let /** @const */ A = Foo;",
             "function h({",

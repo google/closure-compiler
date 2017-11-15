@@ -430,6 +430,8 @@ public final class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCas
     testSame("tag `hello ${name}`");
     testSame("tag `hello`");
     test("`hello ${'foo'}`", "'hello foo'");
+    test("`${2} bananas`", "'2 bananas'");
+    test("`This is ${true}`", "'This is true'");
   }
 
   public void testBindToCall1() {

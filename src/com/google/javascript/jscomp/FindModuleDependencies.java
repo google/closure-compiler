@@ -62,7 +62,7 @@ public class FindModuleDependencies implements NodeTraversal.ScopedCallback {
 
   public void process(Node root) {
     checkArgument(root.isScript());
-    if (FindModuleDependencies.isEs6ModuleRoot(root)) {
+    if (Es6RewriteModules.isEs6ModuleRoot(root)) {
       moduleType = ModuleType.ES6;
     }
     CompilerInput input = compiler.getInput(root.getInputId());
@@ -112,7 +112,7 @@ public class FindModuleDependencies implements NodeTraversal.ScopedCallback {
         Node maybeGetProp = n.getFirstFirstChild();
         if (maybeGetProp != null
             && (maybeGetProp.matchesQualifiedName("goog.provide")
-            || maybeGetProp.matchesQualifiedName("goog.module"))) {
+                || maybeGetProp.matchesQualifiedName("goog.module"))) {
           moduleType = ModuleType.GOOG;
           return;
         }
@@ -202,12 +202,27 @@ public class FindModuleDependencies implements NodeTraversal.ScopedCallback {
     }
   }
 
-  /** Return whether or not the given script node represents an ES6 module file. */
-  public static boolean isEs6ModuleRoot(Node scriptNode) {
-    checkArgument(scriptNode.isScript());
-    if (scriptNode.getBooleanProp(Node.GOOG_MODULE)) {
-      return false;
+  /**
+   * Convert a script into a module by marking it's root node as a module body. This allows a script
+   * which is imported as a module to be scoped as a module even without "import" or "export"
+   * statements. Fails if the file contains a goog.provide or goog.module.
+   *
+   * @return True, if the file is now an ES6 module. False, if the file must remain a script.
+   */
+  private boolean convertToEs6Module(Node root, boolean skipGoogProvideModuleCheck) {
+    if (Es6RewriteModules.isEs6ModuleRoot(root)) {
+      return true;
     }
-    return scriptNode.hasChildren() && scriptNode.getFirstChild().isModuleBody();
+    if (!skipGoogProvideModuleCheck) {
+      FindGoogProvideOrGoogModule finder = new FindGoogProvideOrGoogModule();
+      NodeTraversal.traverseEs6(compiler, root, finder);
+      if (finder.isFound()) {
+        return false;
+      }
+    }
+    Node moduleNode = new Node(Token.MODULE_BODY).srcref(root);
+    moduleNode.addChildrenToBack(root.removeChildren());
+    root.addChildToBack(moduleNode);
+    return true;
   }
 }

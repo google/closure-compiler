@@ -73,7 +73,7 @@ public final class SingleFileCheckRequiresTest extends CompilerTestCase {
 
   public void testReferenceToQualifiedName() {
     testError(
-        LINE_JOINER.join(
+        lines(
             "goog.require('x.y.z');",
             "goog.require('bar.Abc');",
             "new x.y.z();",
@@ -86,7 +86,7 @@ public final class SingleFileCheckRequiresTest extends CompilerTestCase {
   // is a "non-Closurized" namespace, i.e. that all bar.* names come from the externs.
   public void testReferenceToQualifiedName_nonClosurizedNamespace() {
     testSame(
-        LINE_JOINER.join(
+        lines(
             "goog.require('x.y.z');",
             "new x.y.z();",
             "new bar.Foo();"));
@@ -94,27 +94,27 @@ public final class SingleFileCheckRequiresTest extends CompilerTestCase {
 
   public void testReferenceToUnqualifiedName() {
     testSame(
-        LINE_JOINER.join(
+        lines(
             "goog.module('a.b.c');",
             "var z = goog.require('x.y.z');",
             "",
             "exports = { foobar : z };"));
 
     testSame(
-        LINE_JOINER.join(
+        lines(
             "goog.module('a.b.c');",
             "var {z} = goog.require('x.y');",
             "",
             "exports = { foobar : z };"));
 
     testSame(
-        LINE_JOINER.join(
+        lines(
             "import {z} from 'x.y'",
             "",
             "export var foobar = z;"));
 
     testSame(
-        LINE_JOINER.join(
+        lines(
             "import z from 'x.y.z'",
             "",
             "export var foobar = z;"));
@@ -162,7 +162,7 @@ public final class SingleFileCheckRequiresTest extends CompilerTestCase {
 
   public void testPassForwardDeclareInModule() {
     testSame(
-        LINE_JOINER.join(
+        lines(
             "goog.module('example');",
             "",
             "var Event = goog.forwardDeclare('goog.events.Event');",
@@ -179,7 +179,7 @@ public final class SingleFileCheckRequiresTest extends CompilerTestCase {
 
   public void testFailForwardDeclareInModule() {
     testError(
-        LINE_JOINER.join(
+        lines(
             "goog.module('example');",
             "",
             "var Event = goog.forwardDeclare('goog.events.Event');",
@@ -198,7 +198,7 @@ public final class SingleFileCheckRequiresTest extends CompilerTestCase {
 
   public void testPassForwardDeclare() {
     testSame(
-        LINE_JOINER.join(
+        lines(
             "goog.forwardDeclare('goog.events.Event');",
             "",
             "/**",
@@ -211,7 +211,7 @@ public final class SingleFileCheckRequiresTest extends CompilerTestCase {
 
   public void testFailForwardDeclare() {
     testError(
-        LINE_JOINER.join(
+        lines(
             "goog.forwardDeclare('goog.events.Event');",
             "goog.forwardDeclare('goog.events.Unused');",
             "",

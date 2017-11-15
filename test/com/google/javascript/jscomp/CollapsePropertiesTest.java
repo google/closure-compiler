@@ -406,7 +406,7 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
 
   public void testAliasCreatedForClassDepth2_1() {
     test(
-        LINE_JOINER.join(
+        lines(
             "var a = {};",
             "a.b = {};",
             "/** @constructor */",
@@ -414,7 +414,7 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
             "var d = 1;",
             "d = a.b;",
             "a.b.c != d.c;"),
-        LINE_JOINER.join(
+        lines(
             "var a$b = {}; ",
             "/** @constructor */",
             "var a$b$c = function(){};",
@@ -424,7 +424,7 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
         warning(UNSAFE_NAMESPACE_WARNING));
 
     test(
-        LINE_JOINER.join(
+        lines(
             "var a = {};",
             "a.b = {};",
             " /** @constructor @nocollapse */",
@@ -432,7 +432,7 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
             "var d = 1;",
             " d = a.b; ",
             "a.b.c == d.c;"),
-        LINE_JOINER.join(
+        lines(
             "var a$b = {};",
             "/** @constructor @nocollapse */",
             "a$b.c = function(){};",
@@ -465,7 +465,7 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
         + "a.b.c = {d: 3}; new f(a.b.c); a.b.c.d;");
 
     test(
-        LINE_JOINER.join(
+        lines(
             "var a = {};",
             "/** @constructor */",
             "a.b = function(){};",
@@ -473,7 +473,7 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
             " a.b.c = {d: 3};",
             " new f(a.b.c);",
             " a.b.c.d;"),
-        LINE_JOINER.join(
+        lines(
             "/** @constructor */",
             " var a$b = function(){};",
             " /** @nocollapse */",
@@ -1598,12 +1598,12 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
 
   public void testCollapsedNameAlreadyTaken() {
     test(
-        LINE_JOINER.join(
+        lines(
             "/** @constructor */ function Funny$Name(){};",
             "function Funny(){};",
             "Funny.Name = 5;",
             "var x = new Funny$Name();"),
-        LINE_JOINER.join(
+        lines(
             "/** @constructor */ function Funny$Name(){};",
             "function Funny(){};",
             "var Funny$Name$1 = 5;",
@@ -1677,13 +1677,13 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
     // follow the assumptions of the pass and thus produces the following output.
 
     test(
-        LINE_JOINER.join(
+        lines(
             "var a = {",
             "  ['val' + ++i]: i,",
             "  ['val' + ++i]: i",
             "};",
             "a.val1;"),
-        LINE_JOINER.join(
+        lines(
             "var a = {",
             "  ['val' + ++i]: i,",
             "  ['val' + ++i]: i",
@@ -1696,7 +1696,7 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
 
     // Computed property method name in class
     testSame(
-        LINE_JOINER.join(
+        lines(
             "class Bar {",
             "  constructor(){}",
             "  ['f'+'oo']() {",
@@ -1708,7 +1708,7 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
 
     // Computed property method name in class - no concatenation
     testSame(
-        LINE_JOINER.join(
+        lines(
             "class Bar {",
             "  constructor(){}",
             "  ['foo']() {",
@@ -1722,7 +1722,7 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
   public void testClassGetSetMembers() {
     // Get and set methods
     testSame(
-        LINE_JOINER.join(
+        lines(
             "class Bar {",
             "  constructor(x) {",
             "    this.x = x;",
@@ -1742,7 +1742,7 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
   public void testClassNonStaticMembers() {
     // Call class method inside class scope
     testSame(
-        LINE_JOINER.join(
+        lines(
             "function getA() {};",
             "class Bar {",
             "  constructor(){}",
@@ -1756,7 +1756,7 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
 
     // Call class method outside class scope
     testSame(
-        LINE_JOINER.join(
+        lines(
             "class Bar {",
             "  constructor(){}",
             "  getB(x) {}",
@@ -1767,7 +1767,7 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
 
     // Non-static method
     testSame(
-        LINE_JOINER.join(
+        lines(
             "class Bar {",
             "  constructor(x){",
             "    this.x = x;",
@@ -1785,7 +1785,7 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
     // TODO (simranarora) Make the pass collapse for static methods. Currently we have backed off
     // because we will need to handle super and this occurrences within the method.
     testSame(
-        LINE_JOINER.join(
+        lines(
             "class Bar {",
             "  static double(n) {",
             "    return n*2",
@@ -1797,13 +1797,13 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
     // we don't detect that it's specifically a static class function.
     // TODO(b/68948902): Consider adding a warning for this kind of class static method declaration.
     test(
-        LINE_JOINER.join(
+        lines(
             "class Bar {}",
             "Bar.double = function(n) {",
             "  return n*2",
             "}",
             "Bar.double(1);"),
-        LINE_JOINER.join(
+        lines(
             "class Bar {}",
             "var Bar$double = function(n) {",
             "  return n*2",
@@ -1821,7 +1821,7 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
         "class A { static useFoo() { alert(this.foo); } } var A$foo = 'bar'; A.useFoo();");
 
     testSame(
-        LINE_JOINER.join(
+        lines(
             "class A {",
             "  static useFoo() {",
             "    alert(this.foo);",
@@ -1830,6 +1830,48 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
             "/** @nocollapse */",
             "A.foo = 'bar';",
             "A.useFoo();"));
+  }
+
+  public void testClassStaticProperties_locallyDeclared1() {
+    test(
+        lines(
+            "class A {}",
+            "function addStaticPropToA() {",
+            "  A.staticProp = 5;",
+            "}",
+            "if (A.staticProp) {",
+            "  use(A.staticProp);",
+            "}"),
+        lines(
+            "class A {}",
+            "var A$staticProp;",
+            "function addStaticPropToA() {",
+            "  A$staticProp = 5;",
+            "}",
+            "if (A$staticProp) {",
+            "  use(A$staticProp);",
+            "}"));
+  }
+
+  public void testClassStaticProperties_locallyDeclared2() {
+    test(
+        lines(
+            "const A = class {}",
+            "function addStaticPropToA() {",
+            "  A.staticProp = 5;",
+            "}",
+            "if (A.staticProp) {",
+            "  use(A.staticProp);",
+            "}"),
+        lines(
+            "const A = class {}",
+            "var A$staticProp;",
+            "function addStaticPropToA() {",
+            "  A$staticProp = 5;",
+            "}",
+            "if (A$staticProp) {",
+            "  use(A$staticProp);",
+            "}"));
   }
 
   public void testEs6ClassStaticInheritance() {
@@ -1847,7 +1889,7 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
         "class A {}     A.foo = 5; class B extends A {} use(B.foo);     B.foo = 6; use(B.foo);",
         "class A {} var A$foo = 5; class B extends A {} use(B$foo); var B$foo = 6; use(B$foo);");
 
-    testSame(LINE_JOINER.join(
+    testSame(lines(
         "class A {}",
         "/** @nocollapse */",
         "A.foo = 5;",
@@ -1860,7 +1902,7 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
 
   public void testSuperExtern() {
     testSame(
-        LINE_JOINER.join(
+        lines(
             "class Foo {",
             "  constructor(){",
             "    this.x = x; ",
@@ -1887,7 +1929,7 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
     // ES5 version
     setLanguage(LanguageMode.ECMASCRIPT3, LanguageMode.ECMASCRIPT3);
     test(
-        LINE_JOINER.join(
+        lines(
             "var foo = { ",
             "  bar: 1, ",
             "  myFunc: function myFunc() {",
@@ -1895,7 +1937,7 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
             "  }",
             "};",
             "foo.myFunc();"),
-        LINE_JOINER.join(
+        lines(
             "var foo$bar = 1;",
             "var foo$myFunc = function myFunc() {",
             "  return this.bar",
@@ -1906,7 +1948,7 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
     // ES6 version
     setLanguage(LanguageMode.ECMASCRIPT_2015, LanguageMode.ECMASCRIPT_2015);
     test(
-        LINE_JOINER.join(
+        lines(
             "var foo = { ",
             "  bar: 1, ",
             "  myFunc() {",
@@ -1914,7 +1956,7 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
             "  }",
             "};",
             "foo.myFunc();"),
-        LINE_JOINER.join(
+        lines(
             "var foo$bar = 1;",
             "var foo$myFunc = function() {",
             "  return this.bar",
@@ -1924,14 +1966,14 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
 
     // "this" is lexically scoped in arrow functions so collapsing is safe.
     test(
-        LINE_JOINER.join(
+        lines(
             "var foo = { ",
             "  myFunc: () => {",
             "    return this;",
             "  }",
             "};",
             "foo.myFunc();"),
-        LINE_JOINER.join(
+        lines(
             "var foo$myFunc = () => {",
             "  return this",
             "};",
@@ -1942,7 +1984,7 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
     // ES5 Version
     setLanguage(LanguageMode.ECMASCRIPT3, LanguageMode.ECMASCRIPT3);
     test(
-        LINE_JOINER.join(
+        lines(
             "var foo = { ",
             "  bar: 1, ",
             "  myFunc: function myFunc() {",
@@ -1950,7 +1992,7 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
             "  }",
             "};",
             "foo.myFunc();"),
-        LINE_JOINER.join(
+        lines(
             "var foo$bar = 1;",
             "var foo$myFunc = function myFunc() {",
             "    return 5;",
@@ -1960,7 +2002,7 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
     // ES6 version
     setLanguage(LanguageMode.ECMASCRIPT_2015, LanguageMode.ECMASCRIPT_2015);
     test(
-        LINE_JOINER.join(
+        lines(
             "var foo = { ",
             "  bar: 1, ",
             "  myFunc() {",
@@ -1968,7 +2010,7 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
             "  }",
             "};",
             "foo.myFunc();"),
-        LINE_JOINER.join(
+        lines(
             "var foo$bar = 1;",
             "var foo$myFunc = function() {",
             "    return 5;",
@@ -1978,7 +2020,7 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
 
   public void testMethodPropertyShorthand() {
     test(
-        LINE_JOINER.join(
+        lines(
             "var foo = { ",
             "  bar: 1, ",
             "   myFunc() {",
@@ -1986,7 +2028,7 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
             "  }",
             "};",
             "foo.myFunc();"),
-        LINE_JOINER.join(
+        lines(
             "var foo$bar = 1;",
             "var foo$myFunc = function() {",
             "    return 2;",
@@ -2015,11 +2057,11 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
 
   public void testTemplateStrings() {
     test(
-        LINE_JOINER.join(
+        lines(
             "var a = {};",
             "a.b = 'foo';",
             "var c = `Hi ${a.b}`;"),
-        LINE_JOINER.join(
+        lines(
             "var a$b = 'foo';",
             "var c = `Hi ${a$b}`;"));
   }

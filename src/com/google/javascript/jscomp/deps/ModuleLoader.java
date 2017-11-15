@@ -317,6 +317,7 @@ public final class ModuleLoader {
     } else {
       this.errorHandler = errorHandler;
     }
+    this.moduleResolver.setErrorHandler(this.errorHandler);
   }
 
   public ErrorHandler getErrorHandler() {

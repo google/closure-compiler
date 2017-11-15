@@ -28,7 +28,7 @@ public final class PeepholeReplaceKnownMethodsTest extends TypeICompilerTestCase
   private boolean useTypes = true;
 
   public PeepholeReplaceKnownMethodsTest() {
-    super(MINIMAL_EXTERNS + LINE_JOINER.join(
+    super(MINIMAL_EXTERNS + lines(
         // NOTE: these are defined as variadic to avoid wrong-argument-count warnings in NTI,
         // which enables testing that the pass does not touch calls with wrong argument count.
         "/** @type {function(this: string, ...*): string} */ String.prototype.substring;",
@@ -293,7 +293,7 @@ public final class PeepholeReplaceKnownMethodsTest extends TypeICompilerTestCase
     foldSame("var x = [x,y,z].join();");
 
     foldSame(
-        LINE_JOINER.join(
+        lines(
             "shape['matrix'] = [",
             "    Number(headingCos2).toFixed(4),",
             "    Number(-headingSin2).toFixed(4),",
@@ -450,7 +450,7 @@ public final class PeepholeReplaceKnownMethodsTest extends TypeICompilerTestCase
     // to rewrite substring to charAt.  We need to figure out if this is desirable.
     foldSame("function f(/** ? */ a) { a.substring(0, 1); }");
     foldSame("function f(/** ? */ a) { a.substr(0, 1); }");
-    foldSame(LINE_JOINER.join(
+    foldSame(lines(
         "/** @constructor */ function A() {};",
         "A.prototype.substring = function() {};",
         "function f(/** ? */ a) { a.substring(0, 1); }"));

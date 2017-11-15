@@ -131,7 +131,7 @@ public final class ReferenceCollectingCallbackTest extends CompilerTestCase {
   public void testVarInBlock_oldScopeCreator() {
     es6ScopeCreator = false;
     testBehavior(
-        LINE_JOINER.join(
+        lines(
             "function f(x) {",
             "  if (true) {",
             "    var y = x;",
@@ -153,7 +153,7 @@ public final class ReferenceCollectingCallbackTest extends CompilerTestCase {
 
   public void testVarInBlock() {
     testBehavior(
-        LINE_JOINER.join(
+        lines(
             "function f(x) {",
             "  if (true) {",
             "    var y = x;",
@@ -279,7 +279,7 @@ public final class ReferenceCollectingCallbackTest extends CompilerTestCase {
           }
         };
     testBehavior(
-        LINE_JOINER.join(
+        lines(
             "try {",
             "} catch (e) {",
             "  var y = e;",
@@ -288,7 +288,7 @@ public final class ReferenceCollectingCallbackTest extends CompilerTestCase {
             "}"),
         behavior);
     testBehavior(
-        LINE_JOINER.join(
+        lines(
             "try {",
             "} catch (e) {",
             "  var y; y = e;",
@@ -300,7 +300,7 @@ public final class ReferenceCollectingCallbackTest extends CompilerTestCase {
 
   public void testLetAssignedOnceInLifetime1() {
     testBehavior(
-        LINE_JOINER.join(
+        lines(
             "try {",
             "} catch (e) {",
             "  let y = e;",
@@ -323,7 +323,7 @@ public final class ReferenceCollectingCallbackTest extends CompilerTestCase {
 
   public void testLetAssignedOnceInLifetime2() {
     testBehavior(
-        LINE_JOINER.join(
+        lines(
             "try {",
             "} catch (e) {",
             "  let y; y = e;",
@@ -352,7 +352,7 @@ public final class ReferenceCollectingCallbackTest extends CompilerTestCase {
   private void testBasicBlocks(boolean scopeCreator) {
     es6ScopeCreator = scopeCreator;
     testBehavior(
-        LINE_JOINER.join(
+        lines(
             "var x = 0;",
             "switch (x) {",
             "  case 0:",
@@ -374,7 +374,7 @@ public final class ReferenceCollectingCallbackTest extends CompilerTestCase {
 
   public void testThis() {
     testBehavior(
-        LINE_JOINER.join(
+        lines(
             "/** @constructor */",
             "function C() {}",
             "",
@@ -399,7 +399,7 @@ public final class ReferenceCollectingCallbackTest extends CompilerTestCase {
   public void testThis_oldScopeCreator() {
     es6ScopeCreator = false;
     testBehavior(
-        LINE_JOINER.join(
+        lines(
             "/** @constructor */",
             "function C() {}",
             "",

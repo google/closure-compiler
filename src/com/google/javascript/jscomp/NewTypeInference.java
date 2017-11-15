@@ -1395,18 +1395,49 @@ final class NewTypeInference implements CompilerPass {
         }
       }
     }
-    JSType varType = rhsType;
-    if (rhs == null) {
-      varType = UNDEFINED;
-    } else if (declType != null) {
-      // If the declared type comes from a @const that was inferred during GTI, don't use here.
-      JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(nameNode);
-      if (jsdoc != null && (!jsdoc.hasConstAnnotation() || jsdoc.hasType())) {
-        varType = declType;
-      }
-    }
+    JSType varType = getInitialTypeOfVar(nameNode, declType, rhsType);
     maybeSetTypeI(nameNode, varType);
     return envPutType(outEnv, varName, varType);
+  }
+
+  private JSType getInitialTypeOfVar(Node nameNode, JSType declType, JSType rhsType) {
+    String varName = nameNode.getString();
+    JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(nameNode);
+    Node rhs = nameNode.getFirstChild();
+    if (jsdoc != null && jsdoc.hasConstAnnotation()) {
+      // A constant without an explicit type annotation is still considered as having a declared
+      // type, and we have inferred that type in GlobalTypeInfoCollector.
+      // However, we want to type it using rhsType here, because the rhsType may be more precise
+      // due to flow-sensitive type checking.
+      return jsdoc.hasType() ? declType : (rhsType != null ? rhsType : UNKNOWN);
+    } else if (this.currentScope.isEscapedVar(varName)) {
+      // If a variable escapes (so, may be reassigned in a different scope), we type it
+      // more loosely to avoid false-positive warnings.
+      if (declType != null) {
+        return declType;
+      } else if (rhs == null || rhsType.isNullOrUndef()) {
+        // If the escaped variable is not declared and is uninitialized, or is initialized to null,
+        // type it as unknown. The usual pattern is that the variable will be initialized in a
+        // different scope and then used later in this scope, and we don't have a good way here
+        // of figuring out the intended type of the variable.
+        return UNKNOWN;
+      } else if (rhsType.isBoolean()) {
+        // If the escaped variable is initialized to true or false, type it as boolean instead of
+        // the more specialized type; its value may change in another scope.
+        return BOOLEAN;
+      }
+      return rhsType;
+    } else if (rhs == null) {
+      // If the variable doesn't escape and is not initialized, start it as undefined even if
+      // it is declared. This lets us catch uninitialized-variable errors.
+      return UNDEFINED;
+    } else if (declType != null) {
+      // If the unescaped variable is declared, use that type even if the variable is initialized
+      // to a more precise type. Useful because people can use the declared type to tell the
+      // compiler what the variable should be, and don't need to cast the initializer.
+      return declType;
+    }
+    return rhsType;
   }
 
   /**
@@ -2546,7 +2577,7 @@ final class NewTypeInference implements CompilerPass {
     Node insideCast = expr.getFirstChild();
     EnvTypePair pair = analyzeExprFwd(insideCast, inEnv, this.commonTypes.UNKNOWN, newSpecType);
     JSType fromType = pair.type;
-    JSType toType = symbolTable.getCastType(expr);
+    JSType toType = (JSType) expr.getTypeI();
     if (!fromType.isInterfaceInstance()
         && !toType.isInterfaceInstance()
         && !JSType.haveCommonSubtype(fromType, toType)
@@ -3035,7 +3066,7 @@ final class NewTypeInference implements CompilerPass {
           continue;
         }
         QualifiedName qname = new QualifiedName(pnameNode.getString());
-        JSType jsdocType = symbolTable.getPropDeclaredType(prop);
+        JSType jsdocType = (JSType) prop.getTypeI();
         JSType reqPtype;
         JSType specPtype;
         if (jsdocType != null) {
@@ -3667,7 +3698,12 @@ final class NewTypeInference implements CompilerPass {
     checkArgument(n.isFunction() || (n.isName() && NodeUtil.isInvocationTarget(n)));
     String fnName = n.isFunction() ? symbolTable.getFunInternalName(n) : n.getString();
     NTIScope innerScope = this.currentScope.getScope(fnName);
-    FunctionType summary = summaries.get(innerScope).getFunType();
+    JSType summaryAsJstype = summaries.get(innerScope);
+    if (summaryAsJstype == null) {
+      checkState(NodeUtil.isUnannotatedCallback(n));
+      return env;
+    }
+    FunctionType summary = summaryAsJstype.getFunType();
     for (String freeVar : innerScope.getOuterVars()) {
       if (innerScope.getDeclaredTypeOf(freeVar) == null) {
         JSType outerType = envGetType(env, freeVar);
@@ -3682,8 +3718,8 @@ final class NewTypeInference implements CompilerPass {
             // so we don't warn for uninitialized variables.
             && (n.isName() || (n.isFunction() && !outerType.isUndefined()))
             && !JSType.haveCommonSubtype(outerType, innerType)) {
-          warnings.add(JSError.make(n, CROSS_SCOPE_GOTCHA,
-                  freeVar, outerType.toString(), innerType.toString()));
+          warnings.add(JSError.make(
+              n, CROSS_SCOPE_GOTCHA, freeVar, outerType.toString(), innerType.toString()));
         }
         // If n is a callee node, we only want to keep the type in the callee.
         // If n is a function expression, we don't know if it will get called, so we take the
@@ -3918,7 +3954,7 @@ final class NewTypeInference implements CompilerPass {
         return analyzeArrayLitBwd(expr, outEnv);
       case CAST: {
         EnvTypePair pair = analyzeExprBwd(expr.getFirstChild(), outEnv);
-        pair.type = symbolTable.getCastType(expr);
+        pair.type = (JSType) expr.getTypeI();
         return pair;
       }
       case TEMPLATELIT:
@@ -4275,7 +4311,7 @@ final class NewTypeInference implements CompilerPass {
         env = analyzeExprBwd(prop, env).env;
       } else {
         QualifiedName pname = new QualifiedName(NodeUtil.getObjectLitKeyName(prop));
-        JSType jsdocType = symbolTable.getPropDeclaredType(prop);
+        JSType jsdocType = (JSType) prop.getTypeI();
         JSType reqPtype;
         if (jsdocType != null) {
           reqPtype = jsdocType;

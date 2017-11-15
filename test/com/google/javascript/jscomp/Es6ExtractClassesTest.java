@@ -40,7 +40,7 @@ public final class Es6ExtractClassesTest extends CompilerTestCase {
   public void testExtractionFromCall() {
     test(
         "f(class{});",
-        LINE_JOINER.join(
+        lines(
             "const testcode$classdecl$var0 = class {};",
             "f(testcode$classdecl$var0);"));
   }
@@ -48,7 +48,7 @@ public final class Es6ExtractClassesTest extends CompilerTestCase {
   public void testSelfReference1() {
     test(
         "var Outer = class Inner { constructor() { alert(Inner); } };",
-        LINE_JOINER.join(
+        lines(
             "const testcode$classdecl$var0 = class {",
             "  constructor() { alert(testcode$classdecl$var0); }",
             "};",
@@ -56,7 +56,7 @@ public final class Es6ExtractClassesTest extends CompilerTestCase {
 
     test(
         "let Outer = class Inner { constructor() { alert(Inner); } };",
-        LINE_JOINER.join(
+        lines(
             "const testcode$classdecl$var0 = class {",
             "  constructor() { alert(testcode$classdecl$var0); }",
             "};",
@@ -64,7 +64,7 @@ public final class Es6ExtractClassesTest extends CompilerTestCase {
 
     test(
         "const Outer = class Inner { constructor() { alert(Inner); } };",
-        LINE_JOINER.join(
+        lines(
             "const testcode$classdecl$var0 = class {",
             "  constructor() { alert(testcode$classdecl$var0); }",
             "};",
@@ -74,7 +74,7 @@ public final class Es6ExtractClassesTest extends CompilerTestCase {
   public void testSelfReference2() {
     test(
         "alert(class C { constructor() { alert(C); } });",
-        LINE_JOINER.join(
+        lines(
             "const testcode$classdecl$var0 = class {",
             "  constructor() { alert(testcode$classdecl$var0); }",
             "};",
@@ -83,12 +83,12 @@ public final class Es6ExtractClassesTest extends CompilerTestCase {
 
   public void testSelfReference3() {
     test(
-        LINE_JOINER.join(
+        lines(
             "alert(class C {",
             "  m1() { class C {}; alert(C); }",
             "  m2() { alert(C); }",
             "});"),
-        LINE_JOINER.join(
+        lines(
             "const testcode$classdecl$var0 = class {",
             "  m1() { class C {}; alert(C); }",
             "  m2() { alert(testcode$classdecl$var0); }",
@@ -98,10 +98,10 @@ public final class Es6ExtractClassesTest extends CompilerTestCase {
 
   public void testSelfReference_googModule() {
     test(
-        LINE_JOINER.join(
+        lines(
             "goog.module('example');",
             "exports = class Inner { constructor() { alert(Inner); } };"),
-        LINE_JOINER.join(
+        lines(
             "goog.module('example');",
             "const testcode$classdecl$var0 = class {",
             "  constructor() {",
@@ -114,7 +114,7 @@ public final class Es6ExtractClassesTest extends CompilerTestCase {
   public void testSelfReference_qualifiedName() {
     test(
         "outer.qual.Name = class Inner { constructor() { alert(Inner); } };",
-        LINE_JOINER.join(
+        lines(
             "const testcode$classdecl$var0 = class {",
             "  constructor() {",
             "    alert(testcode$classdecl$var0);",
@@ -126,7 +126,7 @@ public final class Es6ExtractClassesTest extends CompilerTestCase {
   public void testConstAssignment() {
     test(
         "var foo = bar(class {});",
-        LINE_JOINER.join(
+        lines(
             "const testcode$classdecl$var0 = class {};",
             "var foo = bar(testcode$classdecl$var0);"));
   }
@@ -134,7 +134,7 @@ public final class Es6ExtractClassesTest extends CompilerTestCase {
   public void testLetAssignment() {
     test(
         "let foo = bar(class {});",
-        LINE_JOINER.join(
+        lines(
             "const testcode$classdecl$var0 = class {};",
             "let foo = bar(testcode$classdecl$var0);"));
   }
@@ -142,7 +142,7 @@ public final class Es6ExtractClassesTest extends CompilerTestCase {
   public void testVarAssignment() {
     test(
         "var foo = bar(class {});",
-        LINE_JOINER.join(
+        lines(
             "const testcode$classdecl$var0 = class {};",
             "var foo = bar(testcode$classdecl$var0);"));
   }
@@ -150,7 +150,7 @@ public final class Es6ExtractClassesTest extends CompilerTestCase {
   public void testJSDoc() {
     test(
         "/** @unrestricted */ var foo = class bar {};",
-        LINE_JOINER.join(
+        lines(
             "/** @unrestricted */",
             "const testcode$classdecl$var0 = class {};",
             "/** @unrestricted */",
@@ -164,7 +164,7 @@ public final class Es6ExtractClassesTest extends CompilerTestCase {
         ImmutableList.of(
             SourceFile.fromCode(
                 "unusual@name",
-                LINE_JOINER.join(
+                lines(
                     "const unusual$name$classdecl$var0 = class{};",
                     "alert(unusual$name$classdecl$var0);"))));
   }
@@ -176,7 +176,7 @@ public final class Es6ExtractClassesTest extends CompilerTestCase {
         ImmutableList.of(
             SourceFile.fromCode(
                 "+path/file",
-                LINE_JOINER.join(
+                lines(
                     "const $some$$path$file$classdecl$var0 = class{};",
                     "alert($some$$path$file$classdecl$var0);"))));
 
@@ -189,7 +189,7 @@ public final class Es6ExtractClassesTest extends CompilerTestCase {
   public void testExtractionFromArrayLiteral() {
     test(
         "var c = [class C {}];",
-        LINE_JOINER.join(
+        lines(
             "const testcode$classdecl$var0 = class {};",
             "var c = [testcode$classdecl$var0];"));
   }
@@ -205,7 +205,7 @@ public final class Es6ExtractClassesTest extends CompilerTestCase {
         CANNOT_CONVERT);
 
     testError(
-        LINE_JOINER.join(
+        lines(
             "var x;",
             "function f(x, y) {}",
 

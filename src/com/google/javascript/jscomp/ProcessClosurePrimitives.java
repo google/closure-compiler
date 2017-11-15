@@ -371,7 +371,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
       case FUNCTION:
         // If this is a declaration of a provided named function, this is an
         // error. Hoisted functions will explode if they're provided.
-        if (t.inGlobalHoistScope() && !NodeUtil.isFunctionExpression(n)) {
+        if (t.inGlobalHoistScope() && NodeUtil.isFunctionDeclaration(n)) {
           String name = n.getFirstChild().getString();
           ProvidedName pn = providedNames.get(name);
           if (pn != null) {

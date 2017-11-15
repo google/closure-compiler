@@ -23,7 +23,7 @@ import com.google.javascript.rhino.Node;
 public final class PolymerPassFindExternsTest extends TypeICompilerTestCase {
 
   private static final String EXTERNS =
-      LINE_JOINER.join(
+      lines(
           MINIMAL_EXTERNS,
           "/** @constructor */",
           "var HTMLElement = function() {};",

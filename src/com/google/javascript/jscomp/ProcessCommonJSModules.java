@@ -33,13 +33,13 @@ import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 /**
- * Rewrites a CommonJS module http://wiki.commonjs.org/wiki/Modules/1.1.1
- * into a form that can be safely concatenated.
- * Does not add a function around the module body but instead adds suffixes
- * to global variables to avoid conflicts.
- * Calls to require are changed to reference the required module directly.
+ * Rewrites a CommonJS module http://wiki.commonjs.org/wiki/Modules/1.1.1 into a form that can be
+ * safely concatenated. Does not add a function around the module body but instead adds suffixes to
+ * global variables to avoid conflicts. Calls to require are changed to reference the required
+ * module directly.
  */
 public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrderCallback
     implements CompilerPass {
@@ -62,8 +62,8 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
   private final String exportPropertyName;
 
   /**
-   * Creates a new ProcessCommonJSModules instance which can be used to
-   * rewrite CommonJS modules to a concatenable form.
+   * Creates a new ProcessCommonJSModules instance which can be used to rewrite CommonJS modules to
+   * a concatenable form.
    *
    * @param compiler The compiler
    */
@@ -143,7 +143,8 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
       NodeTraversal.traverseEs6(
           compiler,
           n,
-          new RewriteModule(isCommonJsModule || forceModuleDetection, exports.build(), defaultExportIsConst));
+          new RewriteModule(isCommonJsModule || forceModuleDetection, exports.build(),
+              defaultExportIsConst));
     }
     return false;
   }
@@ -177,8 +178,10 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
   /**
    * Recognize if a node is a module import. We recognize two forms:
    *
-   *  - require("something");
-   *  - __webpack_require__(4); // only when the module resolution is WEBPACK
+   * <ul>
+   *   <li> require("something";
+   *   <li> webpack_require__(4); // only when the module resolution is WEBPACK
+   * </ul>
    */
   public static boolean isCommonJsImport(Node requireCall, ModuleLoader.ResolutionMode resolutionMode) {
     if (requireCall.isCall() && requireCall.hasTwoChildren()) {
@@ -221,9 +224,11 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
   /**
    * Recognize if a node is a module export. We recognize several forms:
    *
-   *  - module.exports = something;
-   *  - module.exports.something = something;
-   *  - exports.something = something;
+   * <ul>
+   *   <li> module.exports = something;
+   *   <li> module.exports.something = something;
+   *   <li> exports.something = something;
+   * </ul>
    *
    * <p>In addition, we only recognize an export if the base export object is not defined or is
    * defined in externs.
@@ -811,6 +816,10 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
      * <p>Returns whether the default export can be declared constant
      */
     boolean initializeModule() {
+      if (exports.isEmpty() && moduleExports.isEmpty()) {
+        return true;
+      }
+
       CompilerInput ci = compiler.getInput(this.script.getInputId());
       ModulePath modulePath = ci.getPath();
       if (modulePath == null) {
@@ -946,12 +955,12 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
             && umdPattern.activeBranch.getChildCount() == 1) {
           newNode = umdPattern.activeBranch.removeFirstChild();
         } else {
-          newNode.detachFromParent();
+          newNode.detach();
         }
         needsRetraverse = true;
         parent.replaceChild(umdPattern.ifRoot, newNode);
         reportNestedScopesDeleted(umdPattern.ifRoot);
-        changeScope =  NodeUtil.getEnclosingChangeScopeRoot(newNode);
+        changeScope = NodeUtil.getEnclosingChangeScopeRoot(newNode);
         if (changeScope != null) {
           compiler.reportChangeToEnclosingScope(newNode);
         }
@@ -979,7 +988,8 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
             continue;
           }
           needsRetraverse = true;
-          String factoryLabel = modulePath.toModuleName() + "_factory" + compiler.getUniqueNameIdSupplier().get();
+          String factoryLabel =
+              modulePath.toModuleName() + "_factory" + compiler.getUniqueNameIdSupplier().get();
 
           FunctionToBlockMutator mutator =
               new FunctionToBlockMutator(compiler, compiler.getUniqueNameIdSupplier());
@@ -1011,7 +1021,8 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
             String assignedName = null;
             if (expr.isAssign() && expr.getSecondChild().isCall()) {
               call = expr.getSecondChild();
-              assignedName = modulePath.toModuleName() + "_iife" + compiler.getUniqueNameIdSupplier().get();
+              assignedName =
+                  modulePath.toModuleName() + "_iife" + compiler.getUniqueNameIdSupplier().get();
             } else if (expr.isCall()) {
               call = expr;
             }
@@ -1223,7 +1234,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
             Var nameDeclaration = t.getScope().getVar(qName);
             if (nameDeclaration != null
                 && nameDeclaration.getNode() != null
-                && nameDeclaration.getNode().getInputId() == n.getInputId()) {
+                && Objects.equals(nameDeclaration.getNode().getInputId(), n.getInputId())) {
 
               // Avoid renaming a shadowed global
               //
@@ -1781,7 +1792,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
      *     is actually the export target itself, return null;
      */
     private String getExportedName(NodeTraversal t, Node n, Var var) {
-      if (var == null || var.getNode().getInputId() != n.getInputId()) {
+      if (var == null || !Objects.equals(var.getNode().getInputId(), n.getInputId())) {
         return n.getQualifiedName();
       }
 
@@ -2001,7 +2012,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
 
             // Make sure we can find a variable declaration (and it's in this file)
             if (typeDeclaration != null
-                && typeDeclaration.getNode().getInputId() == typeNode.getInputId()) {
+                && Objects.equals(typeDeclaration.getNode().getInputId(), typeNode.getInputId())) {
               String importedModuleName = getModuleImportName(t, typeDeclaration.getNode());
 
               // If the name is an import alias, rewrite it to be a reference to the

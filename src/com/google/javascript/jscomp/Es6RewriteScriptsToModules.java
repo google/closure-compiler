@@ -21,30 +21,17 @@ import com.google.javascript.jscomp.NodeTraversal.AbstractPreOrderCallback;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
-/**
- * Rewrites a script which was imported as a module into an ES6 module.
- */
+/** Rewrites a script which was imported as a module into an ES6 module. */
 public final class Es6RewriteScriptsToModules extends AbstractPreOrderCallback
     implements HotSwapCompilerPass {
   private final AbstractCompiler compiler;
 
   /**
-   * Creates a new Es6RewriteModules instance which can be used to rewrite
-   * ES6 modules to a concatenable form.
+   * Creates a new Es6RewriteModules instance which can be used to rewrite ES6 modules to a
+   * concatenable form.
    */
   public Es6RewriteScriptsToModules(AbstractCompiler compiler) {
     this.compiler = compiler;
-  }
-
-  /**
-   * Return whether or not the given script node represents an ES6 module file.
-   */
-  public static boolean isEs6ModuleRoot(Node scriptNode) {
-    checkArgument(scriptNode.isScript());
-    if (scriptNode.getBooleanProp(Node.GOOG_MODULE)) {
-      return false;
-    }
-    return scriptNode.hasChildren() && scriptNode.getFirstChild().isModuleBody();
   }
 
   /**
@@ -52,7 +39,7 @@ public final class Es6RewriteScriptsToModules extends AbstractPreOrderCallback
    * "import" or "export" statements.
    */
   void forceToEs6Module(Node root) {
-    if (isEs6ModuleRoot(root)) {
+    if (Es6RewriteModules.isEs6ModuleRoot(root)) {
       return;
     }
     Node moduleNode = new Node(Token.MODULE_BODY).srcref(root);
@@ -76,8 +63,7 @@ public final class Es6RewriteScriptsToModules extends AbstractPreOrderCallback
   @Override
   public boolean shouldTraverse(NodeTraversal nodeTraversal, Node n, Node parent) {
     if (n.isScript()) {
-      CompilerInput.ModuleType moduleType = compiler.getModuleTypeByName(
-          compiler.getInput(n.getInputId()).getPath().toModuleName());
+      CompilerInput.ModuleType moduleType = compiler.getInput(n.getInputId()).getJsModuleType();
 
       if (moduleType == CompilerInput.ModuleType.IMPORTED_SCRIPT) {
         forceToEs6Module(n);

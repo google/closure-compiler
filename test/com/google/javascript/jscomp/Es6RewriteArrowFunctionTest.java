@@ -53,7 +53,7 @@ public class Es6RewriteArrowFunctionTest extends CompilerTestCase {
 
     test(
         "var f = x => { this.needsBinding(); return 0; };",
-        LINE_JOINER.join(
+        lines(
             "const $jscomp$this = this;",
             "var f = function(x) {",
             "  $jscomp$this.needsBinding();",
@@ -61,9 +61,9 @@ public class Es6RewriteArrowFunctionTest extends CompilerTestCase {
             "};"));
 
     test(
-        LINE_JOINER.join(
+        lines(
             "var f = x => {", "  this.init();", "  this.doThings();", "  this.done();", "};"),
-        LINE_JOINER.join(
+        lines(
             "const $jscomp$this = this;",
             "var f = function(x) {",
             "  $jscomp$this.init();",
@@ -73,7 +73,7 @@ public class Es6RewriteArrowFunctionTest extends CompilerTestCase {
 
     test(
         "switch(a) { case b: (() => { this; })(); }",
-        LINE_JOINER.join(
+        lines(
             "const $jscomp$this = this;",
             "switch(a) {",
             "  case b:",
@@ -81,14 +81,14 @@ public class Es6RewriteArrowFunctionTest extends CompilerTestCase {
             "}"));
 
     test(
-        LINE_JOINER.join(
+        lines(
             "switch(a) {",
             "  case b:",
             "    (() => { this; })();",
             "  case c:",
             "    (() => { this; })();",
             "}"),
-        LINE_JOINER.join(
+        lines(
             "const $jscomp$this = this;",
             "switch(a) {",
             "  case b:",
@@ -98,7 +98,7 @@ public class Es6RewriteArrowFunctionTest extends CompilerTestCase {
             "}"));
 
    test(
-        LINE_JOINER.join(
+        lines(
             "switch(a) {",
             "  case b:",
             "    (() => { this; })();",
@@ -107,7 +107,7 @@ public class Es6RewriteArrowFunctionTest extends CompilerTestCase {
             "  case d:",
             "    (() => { this; })();",
             "}"),
-        LINE_JOINER.join(
+        lines(
             "const $jscomp$this = this;",
             "switch(a) {",
             "  case b:",
@@ -121,11 +121,11 @@ public class Es6RewriteArrowFunctionTest extends CompilerTestCase {
 
   public void testArguments() {
     test(
-        LINE_JOINER.join(
+        lines(
             "function f() {",
             "  var x = () => arguments;",
             "}"),
-        LINE_JOINER.join(
+        lines(
             "function f() {",
             "  /** @type {!Arguments} */",
             "  const $jscomp$arguments = arguments;",
@@ -140,7 +140,7 @@ public class Es6RewriteArrowFunctionTest extends CompilerTestCase {
 
   public void testArrowInClass() {
     test(
-        LINE_JOINER.join(
+        lines(
             "class C {",
             "  constructor() {",
             "    this.counter = 0;",
@@ -154,7 +154,7 @@ public class Es6RewriteArrowFunctionTest extends CompilerTestCase {
             "     this.counter++;",
             "  }",
             "}"),
-        LINE_JOINER.join(
+        lines(
             "class C {",
             "  constructor() {",
             "    this.counter = 0;",
@@ -173,7 +173,7 @@ public class Es6RewriteArrowFunctionTest extends CompilerTestCase {
 
   public void testArrowInConstructorWithSuperCall() {
     test(
-        LINE_JOINER.join(
+        lines(
             "class B {",
             "  constructor(x) {",
             "    this.x = x;",
@@ -188,7 +188,7 @@ public class Es6RewriteArrowFunctionTest extends CompilerTestCase {
             "    this.wrappedYGetter = () => this.y;",
             "  }",
             "}"),
-        LINE_JOINER.join(
+        lines(
             "class B {",
             "  constructor(x) {",
             "    this.x = x;",
@@ -205,7 +205,7 @@ public class Es6RewriteArrowFunctionTest extends CompilerTestCase {
             "  }",
             "}"));
     test(
-        LINE_JOINER.join(
+        lines(
             "class B {",
             "  constructor(x) {",
             "    this.x = x;",
@@ -223,7 +223,7 @@ public class Es6RewriteArrowFunctionTest extends CompilerTestCase {
             "    this.wrappedYGetter = () => this.y;",
             "  }",
             "}"),
-        LINE_JOINER.join(
+        lines(
             "class B {",
             "  constructor(x) {",
             "    this.x = x;",
@@ -251,7 +251,7 @@ public class Es6RewriteArrowFunctionTest extends CompilerTestCase {
 
     test(
         "function f() { var a1 = x => x+1; var a2 = x => x-1; }",
-        LINE_JOINER.join(
+        lines(
             "function f() {",
             "  var a1 = function(x) { return x+1; };",
             "  var a2 = function(x) { return x-1; };",
@@ -259,7 +259,7 @@ public class Es6RewriteArrowFunctionTest extends CompilerTestCase {
 
     test(
         "function f() { var a1 = () => this.x; var a2 = () => this.y; }",
-        LINE_JOINER.join(
+        lines(
             "function f() {",
             "  const $jscomp$this = this;",
             "  var a1 = function() { return $jscomp$this.x; };",
@@ -268,17 +268,17 @@ public class Es6RewriteArrowFunctionTest extends CompilerTestCase {
 
     test(
         "var a = [1,2,3,4]; var b = a.map(x => x+1).map(x => x*x);",
-        LINE_JOINER.join(
+        lines(
             "var a = [1,2,3,4];",
             "var b = a.map(function(x) { return x+1; }).map(function(x) { return x*x; });"));
 
     test(
-        LINE_JOINER.join(
+        lines(
             "function f() {",
             "  var a = [1,2,3,4];",
             "  var b = a.map(x => x+1).map(x => x*x);",
             "}"),
-        LINE_JOINER.join(
+        lines(
             "function f() {",
             "  var a = [1,2,3,4];",
             "  var b = a.map(function(x) { return x+1; }).map(function(x) { return x*x; });",
@@ -287,7 +287,7 @@ public class Es6RewriteArrowFunctionTest extends CompilerTestCase {
 
   public void testArrowNestedScope() {
     test(
-        LINE_JOINER.join(
+        lines(
             "var outer = {",
             "  f: function() {",
             "     var a1 = () => this.x;",
@@ -298,7 +298,7 @@ public class Es6RewriteArrowFunctionTest extends CompilerTestCase {
             "     };",
             "  }",
             "}"),
-        LINE_JOINER.join(
+        lines(
             "var outer = {",
             "  f: function() {",
             "     const $jscomp$this = this;",
@@ -313,14 +313,14 @@ public class Es6RewriteArrowFunctionTest extends CompilerTestCase {
             "}"));
 
     test(
-        LINE_JOINER.join(
+        lines(
             "function f() {",
             "  var setup = () => {",
             "    function Foo() { this.x = 5; }",
             "    this.f = new Foo;",
             "  }",
             "}"),
-        LINE_JOINER.join(
+        lines(
             "function f() {",
             "  const $jscomp$this = this;",
             "  var setup = function() {",
@@ -338,7 +338,7 @@ public class Es6RewriteArrowFunctionTest extends CompilerTestCase {
   public void testArrowceptionWithThis() {
     test(
         "var f = (x => { var g = (y => { this.foo(); }) });",
-        LINE_JOINER.join(
+        lines(
             "const $jscomp$this = this;",
             "var f = function(x) {",
             "  var g = function(y) {",

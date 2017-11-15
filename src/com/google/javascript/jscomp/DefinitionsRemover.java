@@ -48,7 +48,7 @@ class DefinitionsRemover {
     if (NodeUtil.isNameDeclaration(parent) && n.isName() && (isExtern || n.hasChildren())) {
       return new VarDefinition(n, isExtern);
     } else if (parent.isFunction() && parent.getFirstChild() == n) {
-      if (!NodeUtil.isFunctionExpression(parent)) {
+      if (NodeUtil.isFunctionDeclaration(parent)) {
         return new NamedFunctionDefinition(parent, isExtern);
       } else if (!n.getString().isEmpty()) {
         return new FunctionExpressionDefinition(parent, isExtern);

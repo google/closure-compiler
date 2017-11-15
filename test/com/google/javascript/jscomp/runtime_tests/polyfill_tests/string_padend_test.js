@@ -26,9 +26,6 @@ const noCheck = testing.noCheck;
 
 testSuite({
   shouldRunTests() {
-    // NOTE: Using an async function forces the compiler to consider this file
-    // as ES8 code, which guarantees the polyfill will be included.
-    (async () => 1)();
     // NOTE: padEnd is not present in all browsers we currently test under.
     return !goog.global.NOT_TRANSPILED ||
         userAgent.CHROME && userAgent.isVersionOrHigher(57) ||

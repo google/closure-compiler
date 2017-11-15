@@ -73,18 +73,30 @@ public final class NodeUtilTest extends TestCase {
     return var.getFirstChild();
   }
 
+  private static Node getYieldNode(String js) {
+    return checkNotNull(getYieldNode(parse(js)));
+  }
+
+  private static Node getYieldNode(Node root) {
+    return getNode(root, Token.YIELD);
+  }
+
   private static Node getAwaitNode(String js) {
     return checkNotNull(getAwaitNode(parse(js)));
   }
 
   private static Node getAwaitNode(Node root) {
+    return getNode(root, Token.AWAIT);
+  }
+
+  private static Node getNode(Node root, Token token) {
     for (Node n : root.children()) {
-      if (n.isAwait()) {
+      if (n.getToken() == token) {
         return n;
       }
-      Node awaitNode = getAwaitNode(n);
-      if (awaitNode != null) {
-        return awaitNode;
+      Node potentialMatch = getNode(n, token);
+      if (potentialMatch != null) {
+        return potentialMatch;
       }
     }
     return null;
@@ -316,6 +328,9 @@ public final class NodeUtilTest extends TestCase {
     assertEquals("Hello", NodeUtil.getStringValue(getNode("`Hello`")));
     assertEquals("Hello foo", NodeUtil.getStringValue(getNode("`Hello ${'foo'}`")));
     assertEquals(null, NodeUtil.getStringValue(getNode("`Hello ${name}`")));
+    assertEquals("4 bananas", NodeUtil.getStringValue(getNode("`${4} bananas`")));
+    assertEquals("This is true.", NodeUtil.getStringValue(getNode("`This is ${true}.`")));
+    assertEquals(null, NodeUtil.getStringValue(getNode("`${'hello'} ${name}`")));
   }
 
   public void testGetArrayStringValue() {
@@ -416,6 +431,7 @@ public final class NodeUtilTest extends TestCase {
   public void testIsFunctionDeclaration() {
     assertTrue(NodeUtil.isFunctionDeclaration(getFunctionNode("function foo(){}")));
     assertFalse(NodeUtil.isFunctionDeclaration(getFunctionNode("class C { constructor() {} }")));
+    assertFalse(NodeUtil.isFunctionDeclaration(getFunctionNode("({ foo() {} })")));
     assertFalse(NodeUtil.isFunctionDeclaration(getFunctionNode("var x = function(){}")));
     assertTrue(NodeUtil.isFunctionDeclaration(getFunctionNode("export function f() {}")));
     assertFalse(NodeUtil.isFunctionDeclaration(getFunctionNode("export default function() {}")));
@@ -423,6 +439,16 @@ public final class NodeUtilTest extends TestCase {
         NodeUtil.isFunctionDeclaration(getFunctionNode("export default function foo() {}")));
     assertFalse(
         NodeUtil.isFunctionDeclaration(getFunctionNode("export default (foo) => { alert(foo); }")));
+  }
+
+  public void testIsMethodDeclaration() {
+    assertTrue(
+        NodeUtil.isMethodDeclaration(getFunctionNode("class C { constructor() {} }")));
+    assertTrue(NodeUtil.isMethodDeclaration(getFunctionNode("class C { a() {} }")));
+    assertTrue(NodeUtil.isMethodDeclaration(getFunctionNode("class C { static a() {} }")));
+    assertTrue(NodeUtil.isMethodDeclaration(getFunctionNode("({ set foo(v) {} })")));
+    assertTrue(NodeUtil.isMethodDeclaration(getFunctionNode("({ get foo() {} })")));
+    assertTrue(NodeUtil.isMethodDeclaration(getFunctionNode("({ [foo]() {} })")));
   }
 
   public void testIsClassDeclaration() {
@@ -704,6 +730,9 @@ public final class NodeUtilTest extends TestCase {
     assertContainsAnonFunc(true, "export default function() {};");
     assertContainsAnonFunc(false, "export default function a() {};");
     assertContainsAnonFunc(false, "export function a() {};");
+    assertContainsAnonFunc(false, "class C { a() {} }");
+    assertContainsAnonFunc(false, "class C { static a() {} }");
+    assertContainsAnonFunc(false, "x = { a() {} }");
   }
 
   private void assertContainsAnonFunc(boolean expected, String js) {
@@ -1625,6 +1654,15 @@ public final class NodeUtilTest extends TestCase {
 
     // it isn't clear why someone would want to wait on a non-thenable value...
     expr = getAwaitNode("async function f() { await 5; }");
+    assertFalse(NodeUtil.evaluatesToLocalValue(expr));
+  }
+
+  public void testLocalValueYield() {
+    Node expr;
+    expr = getYieldNode("function *f() { yield; }");
+    assertFalse(NodeUtil.evaluatesToLocalValue(expr));
+
+    expr = getYieldNode("function *f() { yield 'something'; }");
     assertFalse(NodeUtil.evaluatesToLocalValue(expr));
   }
 

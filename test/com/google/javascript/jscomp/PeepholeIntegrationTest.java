@@ -146,14 +146,14 @@ public class PeepholeIntegrationTest extends CompilerTestCase {
 
   public void testRemoveDuplicateStatementsIntegration() {
     test(
-        LINE_JOINER.join(
+        lines(
             "function z() {if (a) { return true }",
             "else if (b) { return true }",
             "else { return true }}"),
         "function z() {return true;}");
 
     test(
-        LINE_JOINER.join(
+        lines(
             "function z() {if (a()) { return true }",
             "else if (b()) { return true }",
             "else { return true }}"),
@@ -247,7 +247,7 @@ public class PeepholeIntegrationTest extends CompilerTestCase {
   }
 
   public void testBugIssue3() {
-    testSame(LINE_JOINER.join(
+    testSame(lines(
         "function foo() {",
         "  if(sections.length != 1) children[i] = 0;",
         "  else var selectedid = children[i]",

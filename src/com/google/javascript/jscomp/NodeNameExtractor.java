@@ -80,6 +80,7 @@ class NodeNameExtractor {
       case THIS:
         return "this";
       case CALL:
+      case COMPUTED_PROP:
         return getName(node.getFirstChild());
       default:
         StringBuilder sb = new StringBuilder();

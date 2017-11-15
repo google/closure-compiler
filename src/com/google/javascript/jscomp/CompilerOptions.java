@@ -2324,14 +2324,6 @@ public class CompilerOptions implements Serializable {
     this.rewriteFunctionExpressions = rewriteFunctionExpressions;
   }
 
-  @Deprecated
-  public void setOptimizeParameters(boolean optimizeParameters) {
-  }
-
-  @Deprecated
-  public void setOptimizeReturns(boolean optimizeReturns) {
-  }
-
   public void setOptimizeCalls(boolean optimizeCalls) {
     this.optimizeCalls = optimizeCalls;
   }
@@ -2890,6 +2882,7 @@ public class CompilerOptions implements Serializable {
             .add("extraAnnotationNames", extraAnnotationNames)
             .add("extractPrototypeMemberDeclarations", extractPrototypeMemberDeclarations)
             .add("extraSmartNameRemoval", extraSmartNameRemoval)
+            .add("filesToPrintAfterEachPassRegexList", filesToPrintAfterEachPassRegexList)
             .add("flowSensitiveInlineVariables", flowSensitiveInlineVariables)
             .add("foldConstants", foldConstants)
             .add("forceLibraryInjection", forceLibraryInjection)
@@ -2932,6 +2925,7 @@ public class CompilerOptions implements Serializable {
             .add("maxFunctionSizeAfterInlining", maxFunctionSizeAfterInlining)
             .add("messageBundle", messageBundle)
             .add("moduleRoots", moduleRoots)
+            .add("modulesToPrintAfterEachPassRegexList", modulesToPrintAfterEachPassRegexList)
             .add("moveFunctionDeclarations", moveFunctionDeclarations)
             .add("nameGenerator", nameGenerator)
             .add("optimizeArgumentsArray", optimizeArgumentsArray)

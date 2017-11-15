@@ -31,7 +31,7 @@ public abstract class ModuleResolver {
   /** Root URIs to match module roots against. */
   protected final ImmutableList<String> moduleRootPaths;
 
-  protected final ErrorHandler errorHandler;
+  protected ErrorHandler errorHandler;
 
   public ModuleResolver(
       ImmutableSet<String> modulePaths,
@@ -97,5 +97,9 @@ public abstract class ModuleResolver {
               ourPath.substring(0, lastIndex + ModuleLoader.MODULE_SLASH.length()) + path);
     }
     return path;
+  }
+
+  public void setErrorHandler(ErrorHandler errorHandler) {
+    this.errorHandler = errorHandler;
   }
 }

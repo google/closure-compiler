@@ -82,7 +82,7 @@ public final class CollapseAnonymousFunctionsTest extends CompilerTestCase {
 
   public void testVarNotImmediatelyBelowScriptOrBlock2() {
     testSame(
-        LINE_JOINER.join(
+        lines(
             "var x = 1;",
             "if (x == 1) {",
             "  var f = function () { alert('b')}",
@@ -170,13 +170,13 @@ public final class CollapseAnonymousFunctionsTest extends CompilerTestCase {
 
   public void testInnerFunction1() {
     test(
-        LINE_JOINER.join(
+        lines(
             "function f() { ",
             "  var x = 3;",
             "  var y = function() { return 4; };",
             "  return x + y();",
             "}"),
-        LINE_JOINER.join(
+        lines(
             "function f() { ",
             "  function y() { return 4; }",
             "  var x = 3;",

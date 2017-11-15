@@ -708,30 +708,10 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
     return substituteGenerics(this.commonTypes.MAP_TO_UNKNOWN);
   }
 
-  /**
-   * Given an generic supertype of this,
-   * returns the type argument as instantiated by this type.
-   *
-   * Parameter supertype has to be a type with a single type parameter.
-   *
-   * For example,<pre>   {@code
-   *   (Iterable<Foo>).getInstantiatedTypeArgument(Iterable<?>) returns Foo,
-   *   and
-   *   /** {@literal @}template A * /
-   *   class Foo {}
-   *   /**
-   *    * {@literal @}template B
-   *    * {@literal @}extends {Foo<Array<B>>}
-   *    * /
-   *   class Bar {}
-   *   (Bar<string>).getInstantiatedTypeArguments(Bar<?>) returns string
-   *   (Bar<string>).getInstantiatedTypeArguments(Foo<?>) returns Array<string>
-   * }</pre>
-   * This is used, for example, in type-checking for-of and yield.
-   */
-  public JSType getInstantiatedTypeArgument(JSType supertype) {
+  @Override
+  public JSType getInstantiatedTypeArgument(TypeI supertype) {
     RawNominalType rawType =
-        supertype.getNominalTypeIfSingletonObj().getRawNominalType();
+        ((JSType) supertype).getNominalTypeIfSingletonObj().getRawNominalType();
     List<String> typeParameters = rawType.getTypeParameters();
     checkState(typeParameters.size() == 1);
 
@@ -2375,8 +2355,17 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
   public ObjectTypeI withoutStrayProperties() {
     ObjectType obj = getObjTypeIfSingletonObj();
     NominalType nt = getNominalTypeIfSingletonObj();
-    return nt.isLiteralObject() || obj.isPrototypeObject() || obj.isNamespace()
-        ? this : nt.getInstanceAsJSType();
+    if (nt.isLiteralObject()) {
+      return this;
+    }
+    if (obj.isPrototypeObject()) {
+      // The canonical prototype, without any specialized properties
+      return obj.getOwnerFunction().getInstanceTypeOfCtor().getPrototypeObject();
+    }
+    if (obj.isNamespace()) {
+      return obj.getNamespaceType();
+    }
+    return nt.getInstanceAsJSType();
   }
 
   @Override

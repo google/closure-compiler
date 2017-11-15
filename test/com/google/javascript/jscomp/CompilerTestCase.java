@@ -180,7 +180,7 @@ public abstract class CompilerTestCase extends TestCase {
   private boolean setUpRan = false;
 
   protected static final String ACTIVE_X_OBJECT_DEF =
-      LINE_JOINER.join(
+      lines(
           "/**",
           " * @param {string} progId",
           " * @param {string=} opt_location",
@@ -191,7 +191,9 @@ public abstract class CompilerTestCase extends TestCase {
 
   /** A minimal set of externs, consisting of only those needed for NTI not to blow up. */
   protected static final String MINIMAL_EXTERNS =
-      LINE_JOINER.join(
+      lines(
+          "/** @type {undefined} */",
+          "var undefined;",
           "/**",
           " * @constructor",
           " * @param {*=} opt_value",
@@ -264,7 +266,7 @@ public abstract class CompilerTestCase extends TestCase {
 
   /** A default set of externs for testing. */
   protected static final String DEFAULT_EXTERNS =
-      LINE_JOINER.join(
+      lines(
           MINIMAL_EXTERNS,
           "/**",
           " * @type{number}",
@@ -1784,7 +1786,8 @@ public abstract class CompilerTestCase extends TestCase {
     TranspilationPasses.addEs2017Passes(factories);
     TranspilationPasses.addEs2016Passes(factories);
     TranspilationPasses.addEs6EarlyPasses(factories);
-    TranspilationPasses.addEs6LatePasses(factories);
+    TranspilationPasses.addEs6LatePassesBeforeNti(factories);
+    TranspilationPasses.addEs6LatePassesAfterNti(factories);
     TranspilationPasses.addRewritePolyfillPass(factories);
     for (PassFactory factory : factories) {
       factory.create(compiler).process(externsRoot, codeRoot);

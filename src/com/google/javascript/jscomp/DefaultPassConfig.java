@@ -184,7 +184,8 @@ public final class DefaultPassConfig extends PassConfig {
     // can be removed.
     if (options.needsTranspilationFrom(ES6) || options.needsTranspilationFrom(ES7)) {
       TranspilationPasses.addEs6EarlyPasses(passes);
-      TranspilationPasses.addEs6LatePasses(passes);
+      TranspilationPasses.addEs6LatePassesBeforeNti(passes);
+      TranspilationPasses.addEs6LatePassesAfterNti(passes);
       TranspilationPasses.addPostCheckPasses(passes);
       if (options.rewritePolyfills) {
         TranspilationPasses.addRewritePolyfillPass(passes);
@@ -204,9 +205,13 @@ public final class DefaultPassConfig extends PassConfig {
   @Override
   protected List<PassFactory> getWhitespaceOnlyPasses() {
     List<PassFactory> passes = new ArrayList<>();
+
     if (options.processCommonJSModules) {
       passes.add(rewriteCommonJsModules);
+    } else if (options.getLanguageIn().toFeatureSet().has(FeatureSet.Feature.MODULES)) {
+      passes.add(rewriteScriptsToEs6Modules);
     }
+
     if (options.wrapGoogModulesForWhitespaceOnly) {
       passes.add(whitespaceWrapGoogModules);
     }
@@ -391,10 +396,9 @@ public final class DefaultPassConfig extends PassConfig {
     }
 
     if (options.needsTranspilationFrom(ES6)) {
-      if (options.getTypeCheckEs6Natively()) {
-        TranspilationPasses.addEs6PassesBeforeNTI(checks);
-      } else {
-        TranspilationPasses.addEs6LatePasses(checks);
+      TranspilationPasses.addEs6LatePassesBeforeNti(checks);
+      if (!options.getTypeCheckEs6Natively()) {
+        TranspilationPasses.addEs6LatePassesAfterNti(checks);
       }
     }
 
@@ -434,7 +438,9 @@ public final class DefaultPassConfig extends PassConfig {
       }
 
       if (options.needsTranspilationFrom(ES6)) {
-        TranspilationPasses.addEs6PassesAfterNTI(checks);
+        if (options.getTypeCheckEs6Natively()) {
+          TranspilationPasses.addEs6LatePassesAfterNti(checks);
+        }
         checks.add(setFeatureSet(options.getLanguageOut().toFeatureSet()));
       }
     }
@@ -2698,9 +2704,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          // TODO(tbreisacher): Switch to ES8_MODULES when MethodCompilerPass understands ES6
-          // method definitions.
-          return ES5;
+          return ES8_MODULES;
         }
       };
 

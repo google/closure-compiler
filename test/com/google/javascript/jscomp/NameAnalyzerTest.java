@@ -147,13 +147,13 @@ public final class NameAnalyzerTest extends CompilerTestCase {
   // Let/const defined variables in blocks are not global so NameAnalyzer doesn't remove them.
   public void testDontRemoveLetInBlock1() {
     testSame(
-        LINE_JOINER.join(
+        lines(
             "if (true) {",
             "  let x = 1; alert(x);",
             "}"));
 
     testSame(
-        LINE_JOINER.join(
+        lines(
             "if (true) {",
             "  let x = 1;",
             "}"));
@@ -161,7 +161,7 @@ public final class NameAnalyzerTest extends CompilerTestCase {
 
   public void testDontRemoveLetInBlock2() {
     testSame(
-        LINE_JOINER.join(
+        lines(
             "if (true) {",
             "  let x = 1; alert(x);",
             "} else {",
@@ -169,7 +169,7 @@ public final class NameAnalyzerTest extends CompilerTestCase {
             "}"));
 
     testSame(
-        LINE_JOINER.join(
+        lines(
             "if (true) {",
             "  let x = 1;",
             "} else {",
@@ -497,7 +497,7 @@ public final class NameAnalyzerTest extends CompilerTestCase {
     testSame("class C {} var c = new C(); g(c);");
 
     testSame(
-        LINE_JOINER.join(
+        lines(
             "class C {",
             "  constructor() {",
             "    this.x = 1;",
@@ -607,7 +607,7 @@ public final class NameAnalyzerTest extends CompilerTestCase {
 
   public void testInherits5() {
     testSame(
-        LINE_JOINER.join(
+        lines(
             "var a = {};",
             "this.b = {};",
             "var goog = {};",
@@ -1944,25 +1944,25 @@ public final class NameAnalyzerTest extends CompilerTestCase {
   }
 
   public void testNoRemoveWindowPropertyAlias4() {
-    testSame(LINE_JOINER.join(
+    testSame(lines(
         "var self_ = window['gbar'] || {};",
         "self_.qs = function() {};"));
  }
 
   public void testNoRemoveWindowPropertyAlias4a() {
-    testSame(LINE_JOINER.join(
+    testSame(lines(
         "var self_; self_ = window.gbar || {};",
         "self_.qs = function() {};"));
  }
 
   public void testNoRemoveWindowPropertyAlias5() {
-    testSame(LINE_JOINER.join(
+    testSame(lines(
         "var self_ = window || {};",
         "self_['qs'] = function() {};"));
   }
 
   public void testNoRemoveWindowPropertyAlias5a() {
-    testSame(LINE_JOINER.join(
+    testSame(lines(
         "var self_; self_ = window || {};",
         "self_['qs'] = function() {};"));
   }
@@ -2149,7 +2149,7 @@ public final class NameAnalyzerTest extends CompilerTestCase {
   }
 
   public void testAliasInstanceof5() {
-    testSame(LINE_JOINER.join(
+    testSame(lines(
       "function Foo() {}",
       "function Bar() {}",
       "var b = x ? Foo : Bar;",
@@ -2264,7 +2264,7 @@ public final class NameAnalyzerTest extends CompilerTestCase {
 
   public void testBug37975351a() {
     // The original repro case from the bug.
-    testSame(LINE_JOINER.join(
+    testSame(lines(
         "function noop() {}",
         "var x = window['magic'];",
         "var FormData = window['FormData'] || noop;",
@@ -2274,7 +2274,7 @@ public final class NameAnalyzerTest extends CompilerTestCase {
 
   public void testBug37975351b() {
     // The simplified repro that still repro'd the problem.
-    testSame(LINE_JOINER.join(
+    testSame(lines(
         "var FormData = window['FormData'] || function() {};",
         "function f() { return window['magic'] instanceof FormData; }",
         "console.log(f());"));
@@ -2282,7 +2282,7 @@ public final class NameAnalyzerTest extends CompilerTestCase {
 
   public void testBug37975351c() {
     // This simpliification did not reproduce the problematic behavior.
-    testSame(LINE_JOINER.join(
+    testSame(lines(
         "var FormData = window['FormData'];",
         "function f() { return window['magic'] instanceof FormData; }",
         "console.log(f());"));
@@ -2293,14 +2293,14 @@ public final class NameAnalyzerTest extends CompilerTestCase {
     // as-is this pass has a prerequisite that the peephole passes have already remove
     // side-effect free statements like this.
     test(
-        LINE_JOINER.join(
+        lines(
             "function Base() {};",
             "/** @nosideeffects */",
             "Base.prototype.foo =  function() {",
             "}",
             "var x = new Base();",
             "x.foo()"),
-        LINE_JOINER.join(
+        lines(
             "function Base() {};",
             "/** @nosideeffects */",
             "Base.prototype.foo =  function() {",
@@ -2321,7 +2321,7 @@ public final class NameAnalyzerTest extends CompilerTestCase {
    */
   public void testSpread() {
     test(
-        LINE_JOINER.join(
+        lines(
             "const ns = {};",
             "",
             "const X = [];",
@@ -2421,14 +2421,14 @@ public final class NameAnalyzerTest extends CompilerTestCase {
     test("let a = `hello`", "");
     test("var name = 'foo'; let a = `hello ${name}`", "");
     test(
-        LINE_JOINER.join(
+        lines(
             "function Base() {}",
             "Base.prototype.foo =  `hello`;"
         ),
       "");
 
     test(
-        LINE_JOINER.join(
+        lines(
             "var bar = 'foo';",
             "function Base() {}",
             "Base.prototype.foo =  `foo ${bar}`;"

@@ -106,7 +106,7 @@ public final class TypeValidatorTest extends CompilerTestCase {
 
   public void testFunctionMismatchMediumLengthTypes() throws Exception {
     testSame("",
-        LINE_JOINER.join(
+        lines(
             "/**",
             " * @param {{a: string, b: string, c: string, d: string, e: string}} x",
             " */",
@@ -114,7 +114,7 @@ public final class TypeValidatorTest extends CompilerTestCase {
             "var y = {a:'',b:'',c:'',d:'',e:0};",
             "f(y);"),
         TYPE_MISMATCH_WARNING,
-        LINE_JOINER.join(
+        lines(
             "actual parameter 1 of f does not match formal parameter",
             "found   : {",
             "  a: string,",
@@ -140,7 +140,7 @@ public final class TypeValidatorTest extends CompilerTestCase {
    */
   public void testFunctionMismatchLongTypes() throws Exception {
     testSame("",
-        LINE_JOINER.join(
+        lines(
             "/**",
             " * @param {{a: string, b: string, c: string, d: string, e: string,",
             " *          f: string, g: string, h: string, i: string, j: string, k: string}} x",
@@ -149,7 +149,7 @@ public final class TypeValidatorTest extends CompilerTestCase {
             "var y = {a:'',b:'',c:'',d:'',e:'',f:'',g:'',h:'',i:'',j:'',k:0};",
             "f(y);"),
         TYPE_MISMATCH_WARNING,
-        LINE_JOINER.join(
+        lines(
             "actual parameter 1 of f does not match formal parameter",
             "found   : {a: string, b: string, c: string, d: string, e: string, f: string,"
               + " g: string, h: string, i: string, j: string, k: (number|string)}",
@@ -164,7 +164,7 @@ public final class TypeValidatorTest extends CompilerTestCase {
    */
   public void testFunctionMismatchTypedef() throws Exception {
     testSame("",
-        LINE_JOINER.join(
+        lines(
             "/**",
             " * @typedef {{a: string, b: string, c: string, d: string, e: string,",
             " *            f: string, g: string, h: string, i: string, j: string, k: string}} x",
@@ -177,7 +177,7 @@ public final class TypeValidatorTest extends CompilerTestCase {
             "var y = {a:'',b:'',c:'',d:'',e:'',f:'',g:'',h:'',i:'',j:'',k:0};",
             "f(y);"),
         TYPE_MISMATCH_WARNING,
-        LINE_JOINER.join(
+        lines(
             "actual parameter 1 of f does not match formal parameter",
             "found   : {a: string, b: string, c: string, d: string, e: string, f: string,"
               + " g: string, h: string, i: string, j: string, k: (number|string)}",
@@ -214,7 +214,7 @@ public final class TypeValidatorTest extends CompilerTestCase {
     testSame(ImmutableList.of(
         SourceFile.fromCode(
             "foo.java.js",
-            LINE_JOINER.join(
+            lines(
                 "function f(/** number */ to, /** (number|null) */ from) {",
                 "  to = from;",
                 "}"))));
@@ -224,7 +224,7 @@ public final class TypeValidatorTest extends CompilerTestCase {
     testSame(ImmutableList.of(
         SourceFile.fromCode(
             "foo.java.js",
-            LINE_JOINER.join(
+            lines(
                 "function f(/** number */ to, /** (number|undefined) */ from) {",
                 "  to = from;",
                 "}"))));
@@ -234,7 +234,7 @@ public final class TypeValidatorTest extends CompilerTestCase {
     testSame(ImmutableList.of(
         SourceFile.fromCode(
             "foo.java.js",
-            LINE_JOINER.join(
+            lines(
                 "/** @constructor */",
                 "function Foo() {}",
                 "function f(/** !Foo */ to, /** ?Foo */ from) {",
@@ -246,7 +246,7 @@ public final class TypeValidatorTest extends CompilerTestCase {
     testSame(ImmutableList.of(
         SourceFile.fromCode(
             "foo.java.js",
-            LINE_JOINER.join(
+            lines(
                 "/** @constructor */",
                 "function Foo() {}",
                 "/** @constructor @extends {Foo} */",
@@ -260,7 +260,7 @@ public final class TypeValidatorTest extends CompilerTestCase {
     testSame(ImmutableList.of(
         SourceFile.fromCode(
             "foo.java.js",
-            LINE_JOINER.join(
+            lines(
                 "function f(/** {a: number} */ to, /** {a: (null|number)} */ from) {",
                 "  to = from;",
                 "}"))));
@@ -270,7 +270,7 @@ public final class TypeValidatorTest extends CompilerTestCase {
     testSame(ImmutableList.of(
         SourceFile.fromCode(
             "foo.java.js",
-            LINE_JOINER.join(
+            lines(
                 "function f(/** {a: number} */ to, /** ?{a: (null|number)} */ from) {",
                 "  to = from;",
                 "}"))));
@@ -280,7 +280,7 @@ public final class TypeValidatorTest extends CompilerTestCase {
     testSame(ImmutableList.of(
         SourceFile.fromCode(
             "foo.java.js",
-            LINE_JOINER.join(
+            lines(
                 "/** @constructor */",
                 "function Foo() {}",
                 "function f(/** function():!Foo */ to, /** function():?Foo */ from) {",
@@ -292,7 +292,7 @@ public final class TypeValidatorTest extends CompilerTestCase {
     testSame(ImmutableList.of(
         SourceFile.fromCode(
             "foo.java.js",
-            LINE_JOINER.join(
+            lines(
                 "/**",
                 " * @constructor",
                 " * @template T",
@@ -307,7 +307,7 @@ public final class TypeValidatorTest extends CompilerTestCase {
     testSame(ImmutableList.of(
         SourceFile.fromCode(
             "foo.java.js",
-            LINE_JOINER.join(
+            lines(
                 "/** @interface */",
                 "function Foo() {}",
                 "/** @type {function(?number)} */",
@@ -322,7 +322,7 @@ public final class TypeValidatorTest extends CompilerTestCase {
     testSame(ImmutableList.of(
         SourceFile.fromCode(
             "foo.java.js",
-            LINE_JOINER.join(
+            lines(
                 "/** @constructor */",
                 "function Bar() {}",
                 "/** @type {!number} */",
@@ -336,7 +336,7 @@ public final class TypeValidatorTest extends CompilerTestCase {
     testSame(ImmutableList.of(
         SourceFile.fromCode(
             "foo.java.js",
-            LINE_JOINER.join(
+            lines(
                 "function f(/** number */ n) {}",
                 "f(/** @type {?number} */ (null));"))));
   }
@@ -346,13 +346,13 @@ public final class TypeValidatorTest extends CompilerTestCase {
     testWarning(ImmutableList.of(
         SourceFile.fromCode(
             "foo.js",
-            LINE_JOINER.join(
+            lines(
                 "function f(/** number */ to, /** (number|null) */ from) {",
                 "  to = from;",
                 "}")),
         SourceFile.fromCode(
             "foo.java.js",
-            LINE_JOINER.join(
+            lines(
                 "function g(/** number */ to, /** (number|null) */ from) {",
                 "  to = from;",
                 "}"))),
@@ -370,7 +370,7 @@ public final class TypeValidatorTest extends CompilerTestCase {
     testSame(ImmutableList.of(
         SourceFile.fromCode(
             "foo.java.js",
-            LINE_JOINER.join(
+            lines(
                 "/** @constructor */",
                 "function Foo() {}",
                 "/** @return {string} */",
@@ -388,7 +388,7 @@ public final class TypeValidatorTest extends CompilerTestCase {
     testSame(ImmutableList.of(
         SourceFile.fromCode(
             "foo.java.js",
-            LINE_JOINER.join(
+            lines(
                 "/** @interface */",
                 "function Foo() {}",
                 "/** @return {string} */",
@@ -406,7 +406,7 @@ public final class TypeValidatorTest extends CompilerTestCase {
     testSame(ImmutableList.of(
         SourceFile.fromCode(
             "foo.java.js",
-            LINE_JOINER.join(
+            lines(
                 "/** @interface */",
                 "function High1() {}",
                 "/** @type {number} */",
@@ -424,7 +424,7 @@ public final class TypeValidatorTest extends CompilerTestCase {
   }
 
   public void testDuplicateSuppression() {
-    testSame(LINE_JOINER.join(
+    testSame(lines(
         "/** @const */",
         "var ns0 = {};",
         "/** @type {number} */",
@@ -432,7 +432,7 @@ public final class TypeValidatorTest extends CompilerTestCase {
         "/** @type {number} */",
         "ns0.x;"));
 
-    testSame(LINE_JOINER.join(
+    testSame(lines(
         "/** @const */",
         "var ns1 = {};",
         "/** @type {number} */",
@@ -441,7 +441,7 @@ public final class TypeValidatorTest extends CompilerTestCase {
         "ns1.x = 3;"));
 
     testWarning(
-        LINE_JOINER.join(
+        lines(
             "/** @const */",
             "var ns2 = {};",
             "/** @type {number} */",
@@ -451,7 +451,7 @@ public final class TypeValidatorTest extends CompilerTestCase {
         TypeValidator.DUP_VAR_DECLARATION);
 
     testWarning(
-        LINE_JOINER.join(
+        lines(
             "/** @const */",
             "var ns3 = {};",
             "/** @type {number} */",
@@ -461,22 +461,22 @@ public final class TypeValidatorTest extends CompilerTestCase {
         TypeValidator.DUP_VAR_DECLARATION_TYPE_MISMATCH);
 
     testWarning(
-        LINE_JOINER.join("/** @type {number} */", "var w;", "/** @type {number} */", "var w;"),
+        lines("/** @type {number} */", "var w;", "/** @type {number} */", "var w;"),
         TypeValidator.DUP_VAR_DECLARATION);
 
-    testSame(LINE_JOINER.join(
+    testSame(lines(
         "/** @type {number} */",
         "var x;",
         "/** @type {number} @suppress {duplicate} */",
         "var x;"));
 
     testWarning(
-        LINE_JOINER.join(
+        lines(
             "/** @type {number} */", "var y = 3;", "/** @type {number} */", "var y = 3;"),
         TypeValidator.DUP_VAR_DECLARATION);
 
     testWarning(
-        LINE_JOINER.join(
+        lines(
             "/** @type {number} */",
             "var z;",
             "/** @type {string} @suppress {duplicate} */",

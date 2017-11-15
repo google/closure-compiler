@@ -82,7 +82,7 @@ public final class RemoveUnusedPrototypePropertiesTest extends CompilerTestCase 
         + "var x = new e; x.a()");
 
     testSame(
-        LINE_JOINER.join(
+        lines(
             "class C {",
             "  constructor() {}",
             "  bExtern() {}",
@@ -430,7 +430,7 @@ public final class RemoveUnusedPrototypePropertiesTest extends CompilerTestCase 
 
   public void testGlobalFunctionsInGraph8() {
     test(
-        LINE_JOINER.join(
+        lines(
             "let x = function() { (new Foo).baz(); };",
             "const y = function() { x(); };",
             "function Foo() { Foo.prototype.baz = function() { y(); }; }"),
@@ -523,13 +523,13 @@ public final class RemoveUnusedPrototypePropertiesTest extends CompilerTestCase 
   }
 
   public void testRemoveInBlock() {
-    test(LINE_JOINER.join(
+    test(lines(
         "if (true) {",
         "  if (true) {",
         "    var foo = function() {};",
         "  }",
         "}"),
-         LINE_JOINER.join(
+         lines(
         "if (true) {",
         "  if (true) {",
         "  }",
@@ -540,84 +540,84 @@ public final class RemoveUnusedPrototypePropertiesTest extends CompilerTestCase 
 
   public void testDestructuringProperty() {
     testSame(
-        LINE_JOINER.join(
+        lines(
             "function Foo() {}",
             "Foo.prototype.a = function() {};",
             "var {a:x} = new Foo();"));
 
     test(
-        LINE_JOINER.join(
+        lines(
             "function Foo() {}",
             "Foo.prototype.a = function() {};",
             "Foo.prototype.b = function() {}",
             "var {a} = new Foo();"),
-        LINE_JOINER.join(
+        lines(
             "function Foo() {}",
             "Foo.prototype.a = function() {};",
             "var {a} = new Foo();"));
 
     test(
-        LINE_JOINER.join(
+        lines(
             "function Foo() {}",
             "Foo.prototype.a = function() {};",
             "Foo.prototype.b = function() {}",
             "var {a:x} = new Foo();"),
-        LINE_JOINER.join(
+        lines(
             "function Foo() {}",
             "Foo.prototype.a = function() {};",
             "var {a:x} = new Foo();"));
 
     testSame(
-        LINE_JOINER.join(
+        lines(
             "function Foo() {}",
             "Foo.prototype.a = function() {};",
             "Foo.prototype.b = function() {}",
             "var {a, b} = new Foo();"));
 
     testSame(
-        LINE_JOINER.join(
+        lines(
             "function Foo() {}",
             "Foo.prototype.a = function() {};",
             "Foo.prototype.b = function() {}",
             "var {a:x, b:y} = new Foo();"));
 
     testSame(
-        LINE_JOINER.join(
+        lines(
             "function Foo() {}",
             "Foo.prototype.a = function() {};",
             "({a:x} = new Foo());"));
 
     testSame(
-        LINE_JOINER.join(
+        lines(
             "function Foo() {}",
             "Foo.prototype.a = function() {};",
             "function f({a:x}) {}; f(new Foo());"));
 
     testSame(
-        LINE_JOINER.join(
+        lines(
             "function Foo() {}",
             "Foo.prototype.a = function() {};",
             "var {a : x = 3} = new Foo();"));
 
     test(
-        LINE_JOINER.join(
+        lines(
             "function Foo() {}",
             "Foo.prototype.a = function() {};",
             "Foo.prototype.b = function() {}",
             "var {a : a = 3} = new Foo();"),
-        LINE_JOINER.join(
+        lines(
             "function Foo() {}",
             "Foo.prototype.a = function() {};",
             "var {a : a = 3} = new Foo();"));
 
     testSame(
-        LINE_JOINER.join(
+        lines(
             "function Foo() {}",
             "Foo.prototype.a = function() {};",
             "let { a : [b, c, d] } = new Foo();"));
 
     testSame(
-        LINE_JOINER.join(
+        lines(
             "function Foo() {}",
             "Foo.prototype.a = function() {};",
             "const { a : { b : { c : d = '' }}} = new Foo();"));
@@ -626,7 +626,7 @@ public final class RemoveUnusedPrototypePropertiesTest extends CompilerTestCase 
 
   public void testEs6Class() {
     testSame(
-        LINE_JOINER.join(
+        lines(
             "class C {",
             "  constructor() {",
             "    this.x = 1;",
@@ -634,7 +634,7 @@ public final class RemoveUnusedPrototypePropertiesTest extends CompilerTestCase 
             "}"));
 
     test(
-        LINE_JOINER.join(
+        lines(
             "class C {",
             "  constructor() {",
             "    this.x = 1;",
@@ -643,7 +643,7 @@ public final class RemoveUnusedPrototypePropertiesTest extends CompilerTestCase 
             "}",
             "var c = new C "
         ),
-        LINE_JOINER.join(
+        lines(
             "class C {",
             "  constructor() {",
             "    this.x = 1;",
@@ -652,7 +652,7 @@ public final class RemoveUnusedPrototypePropertiesTest extends CompilerTestCase 
             "var c = new C"));
 
     testSame(
-        LINE_JOINER.join(
+        lines(
             "class C {",
             "  constructor() {",
             "    this.x = 1;",
@@ -662,9 +662,11 @@ public final class RemoveUnusedPrototypePropertiesTest extends CompilerTestCase 
             "var c = new C ",
             "c.foo()"
         ));
+  }
 
+  public void testEs6StaticMethodNotRemoved() {
     testSame(
-        LINE_JOINER.join(
+        lines(
             "class C {",
             "  constructor() {",
             "    this.x = 1;",
@@ -672,9 +674,11 @@ public final class RemoveUnusedPrototypePropertiesTest extends CompilerTestCase 
             "  static foo() {}",
             "}"
         ));
+  }
 
+  public void testEs6ClassGetterSetter() {
     test(
-        LINE_JOINER.join(
+        lines(
             "class C {",
             "  constructor() {",
             "    this.x = 1;",
@@ -684,7 +688,7 @@ public final class RemoveUnusedPrototypePropertiesTest extends CompilerTestCase 
             "}",
             "var c = new C "
         ),
-        LINE_JOINER.join(
+        lines(
             "class C {",
             "  constructor() {",
             "    this.x = 1;",
@@ -693,7 +697,7 @@ public final class RemoveUnusedPrototypePropertiesTest extends CompilerTestCase 
             "var c = new C"));
 
     testSame(
-        LINE_JOINER.join(
+        lines(
             "class C {",
             "  constructor() {",
             "    this.x = 1;",
@@ -705,7 +709,7 @@ public final class RemoveUnusedPrototypePropertiesTest extends CompilerTestCase 
             "c.foo = 3;"));
 
     testSame(
-        LINE_JOINER.join(
+        lines(
             "class C {",
             "  constructor() {",
             "    this.x = 1;",
@@ -719,7 +723,7 @@ public final class RemoveUnusedPrototypePropertiesTest extends CompilerTestCase 
 
   public void testEs6Extends() {
     testSame(
-        LINE_JOINER.join(
+        lines(
             "class C {",
             "  constructor() {",
             "    this.x = 1;",
@@ -730,7 +734,7 @@ public final class RemoveUnusedPrototypePropertiesTest extends CompilerTestCase 
             "}"));
 
     testSame(
-        LINE_JOINER.join(
+        lines(
             "class C {",
             "  constructor() {",
             "    this.x = 1;",
@@ -747,7 +751,7 @@ public final class RemoveUnusedPrototypePropertiesTest extends CompilerTestCase 
             "d.foo()"));
 
     test(
-        LINE_JOINER.join(
+        lines(
             "class C {",
             "  constructor() {",
             "    this.x = 1;",
@@ -761,7 +765,7 @@ public final class RemoveUnusedPrototypePropertiesTest extends CompilerTestCase 
             "  }",
             "}",
             "var d = new D"),
-        LINE_JOINER.join(
+        lines(
             "class C {",
             "  constructor() {",
             "    this.x = 1;",
@@ -775,14 +779,14 @@ public final class RemoveUnusedPrototypePropertiesTest extends CompilerTestCase 
 
   public void testAnonClasses() {
     test(
-        LINE_JOINER.join(
+        lines(
             "var C = class {",
             "  constructor() {",
             "    this.x = 1;",
             "  }",
             "  foo() {}",
             "}"),
-        LINE_JOINER.join(
+        lines(
             "var C = class {",
             "  constructor() {",
             "    this.x = 1;",
@@ -790,7 +794,7 @@ public final class RemoveUnusedPrototypePropertiesTest extends CompilerTestCase 
             "}"));
 
     testSame(
-        LINE_JOINER.join(
+        lines(
             "var C = class {",
             "  constructor() {",
             "    this.x = 1;",
@@ -801,7 +805,7 @@ public final class RemoveUnusedPrototypePropertiesTest extends CompilerTestCase 
             "c.foo()"));
 
     test(
-        LINE_JOINER.join(
+        lines(
             "var C = class {}",
             "C.D = class {",
             "  constructor() {",
@@ -809,7 +813,7 @@ public final class RemoveUnusedPrototypePropertiesTest extends CompilerTestCase 
             "  }",
             "  foo() {}",
             "}"),
-        LINE_JOINER.join(
+        lines(
             "var C = class {}",
             "C.D = class{",
             "  constructor() {",
@@ -818,7 +822,7 @@ public final class RemoveUnusedPrototypePropertiesTest extends CompilerTestCase 
             "}"));
 
     testSame(
-        LINE_JOINER.join(
+        lines(
             "foo(class {",
             "  constructor() { }",
             "  bar() { }",

@@ -171,8 +171,16 @@ class VarCheck extends AbstractPostOrderCallback implements
 
       // Only a function can have an empty name.
       if (varName.isEmpty()) {
-        checkState(parent.isFunction());
-        checkState(NodeUtil.isFunctionExpression(parent));
+        // Name is optional for function expressions
+        // x = function() {...}
+        // Arrow functions are also expressions and cannot have a name
+        // x = () => {...}
+        // Member functions have an empty NAME node string, because the actual name is stored on the
+        // MEMBER_FUNCTION_DEF object that contains the FUNCTION.
+        // class C { foo() {...} }
+        // x = { foo() {...} }
+        checkState(
+            NodeUtil.isFunctionExpression(parent) || NodeUtil.isMethodDeclaration(parent));
         return;
       }
 

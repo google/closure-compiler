@@ -164,13 +164,13 @@ public final class ClosureOptimizePrimitivesTest extends CompilerTestCase {
 
     // Class
     test(
-        LINE_JOINER.join(
+        lines(
             "class C {",
             "  constructor() {",
             "    this.x = goog.object.create(1, 2);",
             "  }",
             "}"),
-        LINE_JOINER.join(
+        lines(
             "class C {",
             "  constructor() {",
             "    this.x = {1: 2};",
@@ -179,13 +179,13 @@ public final class ClosureOptimizePrimitivesTest extends CompilerTestCase {
 
     // Shorthand methods
     test(
-        LINE_JOINER.join(
+        lines(
             "var obj = {",
             "  method() {",
             "    return goog.object.create('a', 2);",
             "  }",
             "}"),
-        LINE_JOINER.join(
+        lines(
             "var obj = {",
             "  method() {",
             "    return {'a': 2};",
@@ -194,23 +194,23 @@ public final class ClosureOptimizePrimitivesTest extends CompilerTestCase {
 
     // Computed Prop
     test(
-        LINE_JOINER.join(
+        lines(
             "var obj = {",
             "  [goog.object.create(1, 2)]: 42",
             "}"),
-        LINE_JOINER.join(
+        lines(
             "var obj = {",
             "  [{1: 2}]: 42",
             "}"));
 
     // Template Literals
     test(
-        LINE_JOINER.join(
+        lines(
             "function tag(strings) {",
             "  return goog.object.create('a', 2);",
             "}",
             "tag`template`"),
-        LINE_JOINER.join(
+        lines(
             "function tag(strings) {",
             "  return {'a': 2};",
             "}",
@@ -221,11 +221,11 @@ public final class ClosureOptimizePrimitivesTest extends CompilerTestCase {
 
     // Async
     test(
-        LINE_JOINER.join(
+        lines(
             "async function foo() {",
             "   return await goog.object.create('a', 2);",
             "}"),
-        LINE_JOINER.join(
+        lines(
             "async function foo() {",
             "   return await {'a': 2};",
             "}"));

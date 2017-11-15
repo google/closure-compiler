@@ -44,14 +44,14 @@ public final class Es6TypedToEs6ConverterTest extends CompilerTestCase {
   }
 
   public void testMemberVariable() {
-    test(LINE_JOINER.join(
+    test(lines(
         "class C {",
         "  mv: number;",
         "  constructor() {",
         "    this.f = 1;",
         "  }",
         "}"),
-        LINE_JOINER.join(
+        lines(
         "class C {",
         "  constructor() {",
         "    this.f = 1;",
@@ -59,13 +59,13 @@ public final class Es6TypedToEs6ConverterTest extends CompilerTestCase {
         "}",
         "/** @type {number} */ C.prototype.mv;"));
 
-    test(LINE_JOINER.join(
+    test(lines(
         "class C {",
         "  on: {",
         "    p: string;",
         "  }",
         "}"),
-        LINE_JOINER.join(
+        lines(
         "class C {}",
         "/** @type {{p: string}} */ C.prototype.on;"));
 
@@ -110,7 +110,7 @@ public final class Es6TypedToEs6ConverterTest extends CompilerTestCase {
 
   public void testComputedPropertyVariable() {
     test(
-        LINE_JOINER.join(
+        lines(
             "class C {",
             "  ['mv']: number;",
             "  ['mv' + 2]: number;",
@@ -118,7 +118,7 @@ public final class Es6TypedToEs6ConverterTest extends CompilerTestCase {
             "    this.f = 1;",
             "  }",
             "}"),
-        LINE_JOINER.join(
+        lines(
             "class C {",
             "  constructor() {",
             "    this.f = 1;",
@@ -195,12 +195,12 @@ public final class Es6TypedToEs6ConverterTest extends CompilerTestCase {
          "/** @interface */ class I {} /** @type {string | undefined} */ I.prototype.foo;");
 
     test("interface I {foo?(): string}",
-        LINE_JOINER.join(
+        lines(
          "/** @interface */ class I {}",
          "/** @type {(function(): string) | undefined} */ I.prototype.foo;"));
 
     test("interface I {foo?()}",
-        LINE_JOINER.join(
+        lines(
          "/** @interface */ class I {}",
          "/** @type {(function(): ?) | undefined} */ I.prototype.foo;"));
   }
@@ -268,7 +268,7 @@ public final class Es6TypedToEs6ConverterTest extends CompilerTestCase {
     test("var x: {p: string; q: {p: string; q: number}};",
          "var /** {p: string, q: {p: string, q: number}}*/ x;");
 
-    test(LINE_JOINER.join(
+    test(lines(
         "var x: {",
         "  p: string;",
         "};"),
@@ -391,13 +391,13 @@ public final class Es6TypedToEs6ConverterTest extends CompilerTestCase {
 
     testDts(
         "declare namespace foo.bar { interface J extends foo.I {} }",
-        LINE_JOINER.join(
+        lines(
         "/** @const */ var foo = {}; /** @const */ foo.bar = {}",
         "/** @interface @extends {foo.I} */ foo.bar.J = class {};"));
 
     testDts(
         "declare namespace foo { interface I { bar: number; } }",
-        LINE_JOINER.join(
+        lines(
         "/** @const */ var foo = {};",
         "/** @interface */ foo.I = class {}; /** @type {number} */ foo.I.prototype.bar;"));
   }
@@ -530,40 +530,40 @@ public final class Es6TypedToEs6ConverterTest extends CompilerTestCase {
          "/** @const */ var foo = {}; /** @interface */ foo.I = class {};");
 
     testDts("declare namespace foo { interface I { bar: number; } }",
-        LINE_JOINER.join(
+        lines(
          "/** @const */ var foo = {}; /** @interface */ foo.I = class {};",
          "/** @type {number} */ foo.I.prototype.bar;"));
 
     testDts("declare namespace foo { class C { bar: number; } }",
-        LINE_JOINER.join(
+        lines(
          "/** @const */ var foo = {}; foo.C = class {};",
          "/** @type {number} */ foo.C.prototype.bar;"));
 
     testDts("declare namespace foo.bar { class C { baz(): number; } }",
-        LINE_JOINER.join(
+        lines(
          "/** @const */ var foo = {}; /** @const */ foo.bar = {};",
          "foo.bar.C = class { /** @return {number} */ baz() {}};"));
 
     testDts("declare namespace foo { interface I {} class C implements I {} }",
-        LINE_JOINER.join(
+        lines(
             "/** @const */ var foo = {};",
             "/** @interface */ foo.I = class {};",
             "/** @implements {foo.I} */ foo.C = class {}"));
 
     testDts("declare namespace foo { class A {} class B extends A {} }",
-        LINE_JOINER.join(
+        lines(
             "/** @const */ var foo = {};",
             "foo.A = class {};",
             "foo.B = class extends foo.A {};"));
 
     testDts("declare namespace foo { class C {} var x: C; }",
-        LINE_JOINER.join(
+        lines(
             "/** @const */ var foo = {};",
             "foo.C = class {};",
             "/** @type {!foo.C} */ foo.x;"));
 
     testDts("declare namespace foo { interface J {} interface I extends J {} }",
-         LINE_JOINER.join(
+         lines(
              "/** @const */ var foo = {};",
              "/** @interface */ foo.J = class {};",
              "/** @interface @extends {foo.J} */ foo.I = class {};"));
@@ -576,7 +576,7 @@ public final class Es6TypedToEs6ConverterTest extends CompilerTestCase {
 
     testDts(
         "declare namespace foo { module baw {} } declare namespace foo { module baz {} }",
-        LINE_JOINER.join(
+        lines(
         "/** @const */ var foo = {};",
         "/** @const */ foo.baw = {}; /** @const */ foo.baz = {};"));
 
@@ -683,26 +683,26 @@ public final class Es6TypedToEs6ConverterTest extends CompilerTestCase {
 
     testDts(
         "declare namespace foo { export interface I {} export class C implements I {} }",
-        LINE_JOINER.join(
+        lines(
             "/** @const */ var foo = {};",
             "/** @interface */ foo.I = class {};",
             "/** @implements {foo.I} */ foo.C = class {}"));
 
     testDts("declare namespace foo { export class A {} export class B extends A {} }",
-        LINE_JOINER.join(
+        lines(
             "/** @const */ var foo = {};",
             "foo.A = class {};",
             "foo.B = class extends foo.A {};"));
 
     testDts("declare namespace foo { export class C {} export var x: C; }",
-        LINE_JOINER.join(
+        lines(
             "/** @const */ var foo = {};",
             "foo.C = class {};",
             "/** @type {!foo.C} */ foo.x;"));
 
     testDts(
         "declare namespace foo { export interface J {} export interface I extends J {} }",
-         LINE_JOINER.join(
+         lines(
              "/** @const */ var foo = {};",
              "/** @interface */ foo.J = class {};",
              "/** @interface @extends {foo.J} */ foo.I = class {};"));
@@ -714,15 +714,15 @@ public final class Es6TypedToEs6ConverterTest extends CompilerTestCase {
         "/** @const */ var foo = {}; /** @const */ foo.bar = {};");
 
     testDts(
-        LINE_JOINER.join(
+        lines(
         "declare namespace foo { export namespace bax {} export namespace bay {} }",
         "declare namespace foo { export namespace baz {} }"),
-        LINE_JOINER.join(
+        lines(
         "/** @const */ var foo = {}; /** @const */ foo.bax = {};",
         "/** @const */ foo.bay = {}; /** @const */ foo.baz = {};"));
 
     testDts(
-        LINE_JOINER.join(
+        lines(
         "declare namespace foo { export var x: Bar; }",
         "declare namespace foo { export class Bar {} }"),
         "/** @const */ var foo = {}; /** @type {!foo.Bar} */ foo.x; foo.Bar = class {};");
@@ -739,20 +739,20 @@ public final class Es6TypedToEs6ConverterTest extends CompilerTestCase {
         "/** @interface */ class I {} /** @type {!Function | undefined} */ I.prototype.foo;",
         warning(Es6TypedToEs6Converter.OVERLOAD_NOT_SUPPORTED));
 
-    testDts(LINE_JOINER.join(
+    testDts(lines(
         "declare function foo(p1: number): number;",
         "declare function foo(p1: number, p2: boolean): string"),
         "/** @type {!Function} */ function foo() {}",
             Es6TypedToEs6Converter.OVERLOAD_NOT_SUPPORTED);
 
-    testDts(LINE_JOINER.join(
+    testDts(lines(
         "declare function foo(p1: number): number;",
         "declare function bar();",
         "declare function foo(p1: number, p2: boolean): string"),
         "/** @type {!Function} */ function foo() {} function bar() {}",
             Es6TypedToEs6Converter.OVERLOAD_NOT_SUPPORTED);
 
-    testDts(LINE_JOINER.join(
+    testDts(lines(
         "declare function foo(): any;",
         "declare function foo(p1: number): number;",
         "declare function bar();",
@@ -761,7 +761,7 @@ public final class Es6TypedToEs6ConverterTest extends CompilerTestCase {
             Es6TypedToEs6Converter.OVERLOAD_NOT_SUPPORTED,
             Es6TypedToEs6Converter.OVERLOAD_NOT_SUPPORTED);
 
-    testDts(LINE_JOINER.join(
+    testDts(lines(
         "declare namespace goog {",
         "  function foo(p1: number): number;",
         "  function foo(p1: number, p2: boolean): string",
@@ -770,7 +770,7 @@ public final class Es6TypedToEs6ConverterTest extends CompilerTestCase {
             Es6TypedToEs6Converter.OVERLOAD_NOT_SUPPORTED);
 
     testDts(
-        LINE_JOINER.join(
+        lines(
         "declare namespace goog {",
         "  interface I {",
         "    foo(): number;",
@@ -779,7 +779,7 @@ public final class Es6TypedToEs6ConverterTest extends CompilerTestCase {
         "  function foo(p1: number): number",
         "  function foo(p1: number, p2: boolean): string",
         "}"),
-        LINE_JOINER.join(
+        lines(
         "/** @const */ var goog = {};",
         "/** @interface */ goog.I = class { /** @type {!Function} */ foo() {} };",
         "/** @type {!Function} */ goog.foo = function() {};"),
@@ -789,7 +789,7 @@ public final class Es6TypedToEs6ConverterTest extends CompilerTestCase {
     // Test to make sure nested functions with the same names declared in different functions are
     // not considered overloads. For now, our parser rejects overloaded nested functions so we can't
     // have a better test case.
-    testSame(LINE_JOINER.join(
+    testSame(lines(
         "function f() {",
         "  function g() {}",
         "}",
@@ -807,7 +807,7 @@ public final class Es6TypedToEs6ConverterTest extends CompilerTestCase {
 
   public void testValidOverload_withES6Modules() {
     testSame(
-        LINE_JOINER.join(
+        lines(
             "export function f() {",
             "  function g() {}",
             "}",
@@ -818,7 +818,7 @@ public final class Es6TypedToEs6ConverterTest extends CompilerTestCase {
 
   public void testSpecializedSignature() {
     testDts(
-        LINE_JOINER.join(
+        lines(
             "declare function foo(p1: number): number;",
             "declare function foo(p1: 'random'): string"),
         "/** @type {!Function} */ function foo() {}",

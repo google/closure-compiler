@@ -19,7 +19,7 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.truth.Truth.assertThat;
-import static com.google.javascript.jscomp.CompilerTestCase.LINE_JOINER;
+import static com.google.javascript.jscomp.CompilerTestCase.lines;
 import static com.google.javascript.jscomp.testing.NodeSubject.assertNode;
 
 import com.google.common.collect.HashMultiset;
@@ -442,7 +442,7 @@ public final class Es6SyntacticScopeCreatorTest extends TestCase {
   }
 
   public void testObjectDestructuring() {
-    String js = LINE_JOINER.join(
+    String js = lines(
         "function foo() {",
         "  var {a, b} = bar();",
         "}");
@@ -461,7 +461,7 @@ public final class Es6SyntacticScopeCreatorTest extends TestCase {
   }
 
   public void testObjectDestructuring2() {
-    String js = LINE_JOINER.join(
+    String js = lines(
         "function foo() {",
         "  var {a: b = 1} = bar();",
         "}");
@@ -480,7 +480,7 @@ public final class Es6SyntacticScopeCreatorTest extends TestCase {
   }
 
   public void testObjectDestructuringComputedProp() {
-    String js = LINE_JOINER.join(
+    String js = lines(
         "function foo() {",
         "  var {['s']: a} = bar();",
         "}");
@@ -509,7 +509,7 @@ public final class Es6SyntacticScopeCreatorTest extends TestCase {
   }
 
   public void testObjectDestructuringNested() {
-    String js = LINE_JOINER.join(
+    String js = lines(
         "function foo() {",
         "  var {a:{b}} = bar();",
         "}");
@@ -528,7 +528,7 @@ public final class Es6SyntacticScopeCreatorTest extends TestCase {
   }
 
   public void testObjectDestructuringWithInitializer() {
-    String js = LINE_JOINER.join(
+    String js = lines(
         "function foo() {",
         "  var {a=1} = bar();",
         "}");
@@ -834,7 +834,7 @@ public final class Es6SyntacticScopeCreatorTest extends TestCase {
   }
 
   public void testImport() {
-    String js = LINE_JOINER.join(
+    String js = lines(
         "import * as ns from 'm1';",
         "import d from 'm2';",
         "import {foo} from 'm3';",
@@ -920,7 +920,7 @@ public final class Es6SyntacticScopeCreatorTest extends TestCase {
   }
 
   public void testVarAfterLet() {
-    String js = LINE_JOINER.join(
+    String js = lines(
         "function f() {",
         "  if (a) {",
         "    let x;",

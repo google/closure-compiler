@@ -158,11 +158,11 @@ public final class MultiPassTest extends CompilerTestCase {
     addArrowFunctionPass();
 
     test(
-        LINE_JOINER.join(
+        lines(
             "var foo = (x,y) => x===y;",
             "var f = ({key: value}) => foo('v', value);",
             "f({key: 'v'})"),
-        LINE_JOINER.join(
+        lines(
             "var foo = function(x,y) {return x===y;};",
             "var f = function ($jscomp$destructuring$var0) {",
             "   var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;",
@@ -172,8 +172,8 @@ public final class MultiPassTest extends CompilerTestCase {
             "f({key:'v'})"));
 
     test(
-        LINE_JOINER.join("var x, a, b;", "x = ([a,b] = [1,2])"),
-        LINE_JOINER.join(
+        lines("var x, a, b;", "x = ([a,b] = [1,2])"),
+        lines(
             "var x, a, b;",
             "x = function () {",
             "   let $jscomp$destructuring$var0 = [1,2];",
@@ -184,8 +184,8 @@ public final class MultiPassTest extends CompilerTestCase {
             "} ();"));
 
     test(
-        LINE_JOINER.join("var x, a, b;", "x = (() => {console.log(); return [a,b] = [1,2];})()"),
-        LINE_JOINER.join(
+        lines("var x, a, b;", "x = (() => {console.log(); return [a,b] = [1,2];})()"),
+        lines(
             "var x, a, b;",
             "x = function () {",
             "   console.log();",
@@ -200,9 +200,9 @@ public final class MultiPassTest extends CompilerTestCase {
             "} ();"));
 
     test(
-        LINE_JOINER.join(
+        lines(
             "var foo = function () {", "var x, a, b;", "x = ([a,b] = [1,2]);", "}", "foo();"),
-        LINE_JOINER.join(
+        lines(
             "var foo = function () {",
             "var x, a, b;",
             " x = function () {",
@@ -216,8 +216,8 @@ public final class MultiPassTest extends CompilerTestCase {
             "foo();"));
 
     test(
-        LINE_JOINER.join("var prefix;", "for (;;[, prefix] = /\\.?([^.]+)$/.exec(prefix)){", "}"),
-        LINE_JOINER.join(
+        lines("var prefix;", "for (;;[, prefix] = /\\.?([^.]+)$/.exec(prefix)){", "}"),
+        lines(
             "var prefix;",
             "for (;;function () {",
             "   let $jscomp$destructuring$var0 = /\\.?([^.]+)$/.exec(prefix)",
@@ -230,12 +230,12 @@ public final class MultiPassTest extends CompilerTestCase {
             "}"));
 
     test(
-        LINE_JOINER.join(
+        lines(
             "var prefix;",
             "for (;;[, prefix] = /\\.?([^.]+)$/.exec(prefix)){",
             "   console.log(prefix);",
             "}"),
-        LINE_JOINER.join(
+        lines(
             "var prefix;",
             "for (;;function () {",
             "   let $jscomp$destructuring$var0 = /\\.?([^.]+)$/.exec(prefix)",
@@ -249,8 +249,8 @@ public final class MultiPassTest extends CompilerTestCase {
             "}"));
 
     test(
-        LINE_JOINER.join("for (var x = 1; x < 3; [x,] = [3,4]){", "   console.log(x);", "}"),
-        LINE_JOINER.join(
+        lines("for (var x = 1; x < 3; [x,] = [3,4]){", "   console.log(x);", "}"),
+        lines(
             "for (var x = 1; x < 3; function () {",
             "   let $jscomp$destructuring$var0 = [3,4]",
             "   var $jscomp$destructuring$var1 = $jscomp.makeIterator($jscomp$destructuring$var0);",
@@ -262,7 +262,7 @@ public final class MultiPassTest extends CompilerTestCase {
 
     test(
         "var x = ({a: b, c: d} = foo());",
-        LINE_JOINER.join(
+        lines(
             "var x = function () {",
             "   let $jscomp$destructuring$var0 = foo();",
             "   var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;",
@@ -273,7 +273,7 @@ public final class MultiPassTest extends CompilerTestCase {
 
     test(
         "var x = ({a: b, c: d} = foo());",
-        LINE_JOINER.join(
+        lines(
             "var x = function () {",
             "   let $jscomp$destructuring$var0 = foo();",
             "   var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;",
@@ -284,7 +284,7 @@ public final class MultiPassTest extends CompilerTestCase {
 
     test(
         "var x; var y = ({a: x} = foo());",
-        LINE_JOINER.join(
+        lines(
             "var x;",
             "var y = function () {",
             "   let $jscomp$destructuring$var0 = foo();",
@@ -295,7 +295,7 @@ public final class MultiPassTest extends CompilerTestCase {
 
     test(
         "var x; var y = (() => {return {a,b} = foo();})();",
-        LINE_JOINER.join(
+        lines(
             "var x;",
             "var y = function () {",
             "   return function () {",

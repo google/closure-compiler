@@ -16,7 +16,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
-import static com.google.javascript.jscomp.CompilerTestCase.LINE_JOINER;
+import static com.google.javascript.jscomp.CompilerTestCase.lines;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.common.base.Joiner;
@@ -28,7 +28,6 @@ import com.google.debugging.sourcemap.SourceMapConsumerV3;
 import com.google.debugging.sourcemap.SourceMapGeneratorV3;
 import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
-import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
@@ -327,21 +326,6 @@ public final class CompilerTest extends TestCase {
     assertThat(mapping.getIdentifier()).isEqualTo("testSymbolName");
   }
 
-  private Compiler initCompilerForCommonJS(
-      List<SourceFile> inputs, List<ModuleIdentifier> entryPoints)
-      throws Exception {
-    CompilerOptions options = new CompilerOptions();
-    options.setIdeMode(true);
-    options.dependencyOptions.setDependencyPruning(true);
-    options.dependencyOptions.setMoocherDropping(true);
-    options.dependencyOptions.setEntryPoints(entryPoints);
-    options.setProcessCommonJSModules(true);
-    options.setModuleResolutionMode(ModuleLoader.ResolutionMode.NODE);
-    Compiler compiler = new Compiler();
-    compiler.init(new ArrayList<SourceFile>(), inputs, options);
-    compiler.parseInputs();
-    return compiler;
-  }
 
   private static final ImmutableList<SourceFile> EMPTY_EXTERNS =
       ImmutableList.of(SourceFile.fromCode("externs", ""));
@@ -671,7 +655,7 @@ public final class CompilerTest extends TestCase {
   // Make sure we concatenate licenses the same way.
   public void testMultipleLicenseDirectiveOutput() throws Exception {
     test(
-        LINE_JOINER.join(
+        lines(
             "/** @license Your favorite license goes here */",
             "/** @license Another license */",
             "var x;"),
@@ -682,7 +666,7 @@ public final class CompilerTest extends TestCase {
   // Same thing, two @licenses in the same comment.
   public void testTwoLicenseInSameComment() throws Exception {
     test(
-        LINE_JOINER.join(
+        lines(
             "/** @license Your favorite license goes here ",
             "  * @license Another license */",
             "var x;"),
@@ -694,7 +678,7 @@ public final class CompilerTest extends TestCase {
   // inside another declaration?
   public void testLicenseInTree() throws Exception {
     test(
-        LINE_JOINER.join(
+        lines(
             "var a = function() {",
             "+ /** @license Your favorite license goes here */",
             " 1;};"),
@@ -1484,7 +1468,7 @@ public final class CompilerTest extends TestCase {
     sources.add(
         SourceFile.fromCode(
             "/entry.js",
-            LINE_JOINER.join(
+            lines(
                 "import './b/b.js';",
                 "import './b/a.js';",
                 "import './important.js';",
@@ -1496,7 +1480,7 @@ public final class CompilerTest extends TestCase {
     sources.add(
         SourceFile.fromCode(
             "/b/b.js",
-            LINE_JOINER.join(
+            lines(
                 "import foo from './c.js';",
                 "if (foo.settings.inUse) {",
                 "  window['E'] = true;",
@@ -1505,7 +1489,7 @@ public final class CompilerTest extends TestCase {
     sources.add(
         SourceFile.fromCode(
             "/b/c.js",
-            LINE_JOINER.join(
+            lines(
                 "window['BEFOREA'] = true;",
                 "",
                 "export default {",
@@ -1550,14 +1534,14 @@ public final class CompilerTest extends TestCase {
     sources.add(
         SourceFile.fromCode(
             "base.js",
-            LINE_JOINER.join(
+            lines(
                 "/** @provideGoog */",
                 "/** @const */ var goog = goog || {};",
                 "var COMPILED = false;")));
     sources.add(
         SourceFile.fromCode(
             "entry.js",
-            LINE_JOINER.join(
+            lines(
                 "goog.require('a');",
                 "goog.require('b');",
                 "goog.require('c');",

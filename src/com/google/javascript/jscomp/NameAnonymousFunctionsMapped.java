@@ -95,6 +95,8 @@ class NameAnonymousFunctionsMapped implements CompilerPass {
         case STRING:
         case STRING_KEY:
           return node.getString();
+        case COMPUTED_PROP:
+          return getName(node.getFirstChild());
         default:
           return compiler.toSource(node);
       }

@@ -215,7 +215,7 @@ class InlineFunctions implements CompilerPass {
           // function Foo(x) { return ... }
         case FUNCTION:
           Preconditions.checkState(NodeUtil.isStatementBlock(parent) || parent.isLabel());
-          if (!NodeUtil.isFunctionExpression(n)) {
+          if (NodeUtil.isFunctionDeclaration(n)) {
             Function fn = new NamedFunction(n);
             maybeAddFunction(fn, t.getModule());
           }

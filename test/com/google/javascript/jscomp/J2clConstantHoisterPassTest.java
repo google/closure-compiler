@@ -31,7 +31,7 @@ public class J2clConstantHoisterPassTest extends CompilerTestCase {
 
   public void testHoistClinitConstantAssignments() {
     test(
-        LINE_JOINER.join(
+        lines(
             "var someClass = /** @constructor */ function() {};",
             "someClass.$clinit = function() {",
             "  someClass.$clinit = function() {};",
@@ -42,6 +42,52 @@ public class J2clConstantHoisterPassTest extends CompilerTestCase {
             "var someClass$foo = false;",
             "var someClass$bar = null;",
             "var someClass$buzz = null;"),
+        lines(
+            "var someClass = /** @constructor */ function() {};",
+            "someClass.$clinit = function() {",
+            "  someClass.$clinit = function() {};",
+            "};",
+            "var someClass$foo = true;",
+            "var someClass$bar = 'hey';",
+            "var someClass$buzz = function(){ return someClass$bar; };"));
+  }
+
+  public void testHoistClinitConstantAssignments_assignmentAfterInit() {
+    test(
+        LINE_JOINER.join(
+            "var someClass = /** @constructor */ function() {};",
+            "var someClass$foo = false;",
+            "var someClass$bar = null;",
+            "var someClass$buzz = null;",
+            "someClass.$clinit = function() {",
+            "  someClass.$clinit = function() {};",
+            "  someClass$foo = true;",
+            "  someClass$bar = 'hey';",
+            "  someClass$buzz = function() { return someClass$bar; };",
+            "};"),
+        LINE_JOINER.join(
+            "var someClass = /** @constructor */ function() {};",
+            "var someClass$foo = true;",
+            "var someClass$bar = 'hey';",
+            "var someClass$buzz = function(){ return someClass$bar; };",
+            "someClass.$clinit = function() {",
+            "  someClass.$clinit = function() {};",
+            "};"));
+  }
+
+  public void testHoistClinitConstantAssignments_stubInit() {
+    test(
+        LINE_JOINER.join(
+            "var someClass = /** @constructor */ function() {};",
+            "someClass.$clinit = function() {",
+            "  someClass.$clinit = function() {};",
+            "  someClass$foo = true;",
+            "  someClass$bar = 'hey';",
+            "  someClass$buzz = function() { return someClass$bar; };",
+            "};",
+            "var someClass$foo = false;",
+            "var someClass$bar;",
+            "var someClass$buzz;"),
         LINE_JOINER.join(
             "var someClass = /** @constructor */ function() {};",
             "someClass.$clinit = function() {",
@@ -54,7 +100,7 @@ public class J2clConstantHoisterPassTest extends CompilerTestCase {
 
   public void testHoistClinitConstantAssignments_avoidUnsafe() {
     testSame(
-        LINE_JOINER.join(
+        lines(
             "var someClass = /** @constructor */ function() {};",
             "someClass.$clinit = function() {",
             "  someClass.$clinit = function() {};",
@@ -79,7 +125,7 @@ public class J2clConstantHoisterPassTest extends CompilerTestCase {
    */
   public void testHoistClinitConstantAssignments_devirtualized() {
     test(
-        LINE_JOINER.join(
+        lines(
             "var someClass = /** @constructor */ function() {};",
             "var someClass$$0clinit = function() {",
             "  someClass$$0clinit = function() {};",
@@ -88,7 +134,7 @@ public class J2clConstantHoisterPassTest extends CompilerTestCase {
             "};",
             "var someClass$shouldHoist = false;",
             "var someClass$shouldNotHoist = null;"),
-        LINE_JOINER.join(
+        lines(
             "var someClass = /** @constructor */ function() {};",
             "var someClass$$0clinit = function() {",
             "  someClass$$0clinit = function() {};",
@@ -100,7 +146,7 @@ public class J2clConstantHoisterPassTest extends CompilerTestCase {
 
   public void testHoistClinitConstantAssignments_avoidUnsafeFunc() {
     testSame(
-        LINE_JOINER.join(
+        lines(
             "var someClass = /** @constructor */ function() {};",
             "someClass.$clinit = function() {",
             "  someClass.$clinit = function() {};",
@@ -109,7 +155,7 @@ public class J2clConstantHoisterPassTest extends CompilerTestCase {
             "};",
             "var someClass$foo = null;"));
     testSame(
-        LINE_JOINER.join(
+        lines(
             "var someClass = /** @constructor */ function() {};",
             "someClass.$clinit = function() {",
             "  someClass.$clinit = function() {};",

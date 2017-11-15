@@ -255,7 +255,7 @@ public class ChromePassTest extends CompilerTestCase {
 
   public void testCrDefineConstEnum() {
     test(
-        LINE_JOINER.join(
+        lines(
             "cr.define('foo', function() {",
             "  /** ",
             "   * @enum {string}",
@@ -269,7 +269,7 @@ public class ChromePassTest extends CompilerTestCase {
             "    DangerType: DangerType,",
             "  };",
             "});"),
-        LINE_JOINER.join(
+        lines(
             "var foo = foo || {};",
             "cr.define('foo', function() {",
             "  /** @enum {string} */",
@@ -287,7 +287,7 @@ public class ChromePassTest extends CompilerTestCase {
 
   public void testCrDefineLetEnum() {
     test(
-        LINE_JOINER.join(
+        lines(
             "cr.define('foo', function() {",
             "  /** ",
             "   * @enum {string}",
@@ -301,7 +301,7 @@ public class ChromePassTest extends CompilerTestCase {
             "    DangerType: DangerType,",
             "  };",
             "});"),
-        LINE_JOINER.join(
+        lines(
             "var foo = foo || {};",
             "cr.define('foo', function() {",
             "  /** @enum {string} */",
@@ -373,11 +373,11 @@ public class ChromePassTest extends CompilerTestCase {
   public void testCrDefinePropertyDefinesUnquotedPropertyWithTypeInfoForPropertyKindJs()
       throws Exception {
     test(
-        LINE_JOINER.join(
+        lines(
             // @type starts here.
             "/** @type {!Object} */",
             "cr.defineProperty(a.prototype, 'c', cr.PropertyKind.JS);"),
-        LINE_JOINER.join(
+        lines(
             "cr.defineProperty(a.prototype, 'c', cr.PropertyKind.JS);",
             // But gets moved here.
             "/** @type {!Object} */",
@@ -387,11 +387,11 @@ public class ChromePassTest extends CompilerTestCase {
   public void testCrDefinePropertyDefinesUnquotedPropertyIgnoringJsDocWhenBoolAttrIsPresent()
       throws Exception {
     test(
-        LINE_JOINER.join(
+        lines(
             // PropertyKind is used at runtime and is canonical. When it's specified, ignore @type.
             "/** @type {!Object} */",
             "cr.defineProperty(a.prototype, 'c', cr.PropertyKind.BOOL_ATTR);"),
-        LINE_JOINER.join(
+        lines(
             "cr.defineProperty(a.prototype, 'c', cr.PropertyKind.BOOL_ATTR);",
             // @type is now {boolean}. Earlier, manually-specified @type is ignored.
             "/** @type {boolean} */",
@@ -401,11 +401,11 @@ public class ChromePassTest extends CompilerTestCase {
   public void testCrDefinePropertyDefinesUnquotedPropertyIgnoringJsDocWhenAttrIsPresent()
       throws Exception {
     test(
-        LINE_JOINER.join(
+        lines(
             // PropertyKind is used at runtime and is canonical. When it's specified, ignore @type.
             "/** @type {!Array} */",
             "cr.defineProperty(a.prototype, 'c', cr.PropertyKind.ATTR);"),
-        LINE_JOINER.join(
+        lines(
             "cr.defineProperty(a.prototype, 'c', cr.PropertyKind.ATTR);",
             // @type is now {string}. Earlier, manually-specified @type is ignored.
             "/** @type {string} */",
@@ -491,13 +491,13 @@ public class ChromePassTest extends CompilerTestCase {
 
   public void testCrDefineFunction() throws Exception {
     test(
-        LINE_JOINER.join(
+        lines(
             "cr.define('settings', function() {",
             "  var x = 0;",
             "  function C() {}",
             "  return { C: C };",
             "});"),
-        LINE_JOINER.join(
+        lines(
             "var settings = settings || {};",
             "cr.define('settings', function() {",
             "  var x = 0;",
@@ -508,13 +508,13 @@ public class ChromePassTest extends CompilerTestCase {
 
   public void testCrDefineClassStatement() throws Exception {
     test(
-        LINE_JOINER.join(
+        lines(
             "cr.define('settings', function() {",
             "  var x = 0;",
             "  class C {}",
             "  return { C: C };",
             "});"),
-        LINE_JOINER.join(
+        lines(
             "var settings = settings || {};",
             "cr.define('settings', function() {",
             "  var x = 0;",
@@ -525,13 +525,13 @@ public class ChromePassTest extends CompilerTestCase {
 
   public void testCrDefineClassExpression() throws Exception {
     test(
-        LINE_JOINER.join(
+        lines(
             "cr.define('settings', function() {",
             "  var x = 0;",
             "  var C = class {}",
             "  return { C: C };",
             "});"),
-        LINE_JOINER.join(
+        lines(
             "var settings = settings || {};",
             "cr.define('settings', function() {",
             "  var x = 0;",
@@ -542,7 +542,7 @@ public class ChromePassTest extends CompilerTestCase {
 
   public void testCrDefineClassWithInternalSelfReference() throws Exception {
     test(
-        LINE_JOINER.join(
+        lines(
             "cr.define('settings', function() {",
             "  var x = 0;",
             "  class C {",
@@ -550,7 +550,7 @@ public class ChromePassTest extends CompilerTestCase {
             "  }",
             "  return { C: C };",
             "});"),
-        LINE_JOINER.join(
+        lines(
             "var settings = settings || {};",
             "cr.define('settings', function() {",
             "  var x = 0;",

@@ -21,7 +21,7 @@ import static com.google.common.truth.Truth.assertThat;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.rhino.Node;
 
-/** Unit tests for {@link RewriteJsonToModule} */
+/** Unit tests for {@link Es6RewriteScriptsToModules} */
 public final class Es6RewriteScriptsToModulesTest extends CompilerTestCase {
 
   @Override
@@ -51,8 +51,7 @@ public final class Es6RewriteScriptsToModulesTest extends CompilerTestCase {
             SourceFile.fromCode("/module.js", "import '/script.js';")),
         options);
     Node root = compiler.parseInputs();
-    String errorMsg = LINE_JOINER.join(compiler.getErrors());
-    assertThat(errorMsg).isEqualTo("");
+    assertThat(compiler.getErrors()).isEmpty();
     Node externsRoot = root.getFirstChild();
     Node mainRoot = externsRoot.getNext();
     getProcessor(compiler).process(externsRoot, mainRoot);

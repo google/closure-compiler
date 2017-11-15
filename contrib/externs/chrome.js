@@ -65,12 +65,92 @@ Port.prototype.disconnect = function() {};
 
 
 /**
+ * Base event type without listener methods.
+ *
+ * This interface exists for event interfaces whose addListeners() method takes
+ * more than one parameter. Those interfaces must inherit from this one, so they
+ * can supply their own custom listener method declarations.
+ *
+ * Event interfaces whose addListeners() method takes just one parameter should
+ * inherit from ChromeBaseEvent instead. It extends this interface.
+ *
+ * @see https://developer.chrome.com/extensions/events.html
+ * @interface
+ */
+function ChromeBaseEventNoListeners() {}
+
+
+/**
+ * @param {!Array<!Rule>} rules
+ * @param {function(!Array<!Rule>): void=} callback
+ * @see https://developer.chrome.com/extensions/events#method-Event-addRules
+ */
+ChromeBaseEventNoListeners.prototype.addRules = function(rules, callback) {};
+
+
+/**
+ * Returns currently registered rules.
+ *
+ * NOTE: The API allows the first argument to be omitted.
+ *     That cannot be correctly represented here, so we end up incorrectly
+ *     allowing 2 callback arguments.
+ * @param {!Array<string>|function(!Array<!Rule>): void} ruleIdentifiersOrCb
+ * @param {function(!Array<!Rule>): void=} callback
+ * @see https://developer.chrome.com/extensions/events#method-Event-getRules
+ */
+ChromeBaseEventNoListeners.prototype.getRules =
+    function(ruleIdentifiersOrCb, callback) {};
+
+
+/**
+ * Removes currently registered rules.
+ *
+ * NOTE: The API allows the either or both arguments to be omitted.
+ *     That cannot be correctly represented here, so we end up incorrectly
+ *     allowing 2 callback arguments.
+ * @param {(!Array<string>|function(): void)=} ruleIdentifiersOrCb
+ * @param {function(): void=} callback
+ * @see https://developer.chrome.com/extensions/events#method-Event-removeRules
+ */
+ChromeBaseEventNoListeners.prototype.removeRules =
+    function(ruleIdentifiersOrCb, callback) {};
+
+
+/**
+ * @see https://developer.chrome.com/extensions/events#type-Rule
+ * @record
+ */
+function Rule() {}
+
+
+/** @type {string|undefined} */
+Rule.prototype.id;
+
+
+/** @type {!Array<string>|undefined} */
+Rule.prototype.tags;
+
+
+/** @type {!Array<*>} */
+Rule.prototype.conditions;
+
+
+/** @type {!Array<*>} */
+Rule.prototype.actions;
+
+
+/** @type {number|undefined} */
+Rule.prototype.priority;
+
+
+/**
  * Base event type from which all others inherit.
  *
  * LISTENER must be a function type that returns void.
  *
  * @see https://developer.chrome.com/extensions/events.html
  * @interface
+ * @extends {ChromeBaseEventNoListeners}
  * @template LISTENER
  */
 function ChromeBaseEvent() {}
@@ -99,9 +179,6 @@ ChromeBaseEvent.prototype.hasListener = function(callback) {};
 
 /** @return {boolean} */
 ChromeBaseEvent.prototype.hasListeners = function() {};
-
-
-// TODO(bradfordcsmith): Add the addRules, getRules, and removeRules methods?
 
 
 /**

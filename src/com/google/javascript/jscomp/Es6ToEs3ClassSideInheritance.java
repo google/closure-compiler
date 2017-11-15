@@ -27,10 +27,12 @@ import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -132,18 +134,18 @@ public final class Es6ToEs3ClassSideInheritance implements HotSwapCompilerPass {
     FindStaticMembers findStaticMembers = new FindStaticMembers();
     TranspilationPasses.processTranspile(compiler, externs, findStaticMembers);
     TranspilationPasses.processTranspile(compiler, root, findStaticMembers);
-    processInherits(findStaticMembers.inheritsCalls);
+    processInherits(findStaticMembers);
   }
 
   @Override
   public void hotSwapScript(Node scriptRoot, Node originalRoot) {
     FindStaticMembers findStaticMembers = new FindStaticMembers();
     TranspilationPasses.processTranspile(compiler, scriptRoot, findStaticMembers);
-    processInherits(findStaticMembers.inheritsCalls);
+    processInherits(findStaticMembers);
   }
 
-  private void processInherits(List<Node> inheritsCalls) {
-    for (Node inheritsCall : inheritsCalls) {
+  private void processInherits(FindStaticMembers findStaticMembers) {
+    for (Node inheritsCall : findStaticMembers.inheritsCalls) {
       Node superclassNameNode = inheritsCall.getLastChild();
       String superclassQname = superclassNameNode.getQualifiedName();
       Node subclassNameNode = superclassNameNode.getPrevious();
@@ -157,7 +159,7 @@ public final class Es6ToEs3ClassSideInheritance implements HotSwapCompilerPass {
       if (superClass == null || subClass == null) {
         continue;
       }
-      copyStaticMembers(superClass, subClass, inheritsCall);
+      copyStaticMembers(superClass, subClass, inheritsCall, findStaticMembers);
       copyDeclarations(superClass, subClass, inheritsCall);
     }
   }
@@ -205,7 +207,8 @@ public final class Es6ToEs3ClassSideInheritance implements HotSwapCompilerPass {
   }
 
   private void copyStaticMembers(
-      JavascriptClass superClass, JavascriptClass subClass, Node inheritsCall) {
+      JavascriptClass superClass, JavascriptClass subClass, Node inheritsCall,
+      FindStaticMembers findStaticMembers) {
     for (Node staticMember : superClass.staticMembers) {
       checkState(staticMember.isAssign(), staticMember);
       String memberName = staticMember.getFirstChild().getLastChild().getString();
@@ -215,6 +218,13 @@ public final class Es6ToEs3ClassSideInheritance implements HotSwapCompilerPass {
       if (isOverriden(subClass, memberName)) {
         continue;
       }
+      if (findStaticMembers.isBefore(inheritsCall, staticMember)) {
+        // Don't copy members that are defined after the $jscomp.inherits call,
+        // since they will not work correctly in IE<11, where static inheritance
+        // is done by copying, rather than prototype manipulation.
+        continue;
+      }
+
       JSDocInfoBuilder info = JSDocInfoBuilder.maybeCopyFrom(staticMember.getJSDocInfo());
       Node function = staticMember.getLastChild();
       Node sourceInfoNode = function;
@@ -279,7 +289,10 @@ public final class Es6ToEs3ClassSideInheritance implements HotSwapCompilerPass {
   }
 
   private class FindStaticMembers extends AbstractPostOrderCallback {
-    private final List<Node> inheritsCalls = new ArrayList<>();
+    final List<Node> inheritsCalls = new ArrayList<>();
+    // Store the order we find class definitions and static fields.  Copied statics must occur
+    // after both the namespace and the copied property are defined.
+    final Map<Node, Integer> nodeOrder = new HashMap<>();
 
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
@@ -287,6 +300,7 @@ public final class Es6ToEs3ClassSideInheritance implements HotSwapCompilerPass {
         case CALL:
           if (n.getFirstChild().matchesQualifiedName(Es6RewriteClass.INHERITS)) {
             inheritsCalls.add(n);
+            nodeOrder.put(n, nodeOrder.size());
           }
           if (NodeUtil.isObjectDefinePropertiesDefinition(n)) {
             visitDefinedPropertiesCall(t, n);
@@ -359,6 +373,7 @@ public final class Es6ToEs3ClassSideInheritance implements HotSwapCompilerPass {
         Node classNode = getProp.getFirstChild();
         if (isReferenceToClass(t, classNode)) {
           classByAlias.get(classNode.getQualifiedName()).staticMembers.add(n);
+          nodeOrder.put(n, nodeOrder.size());
         }
       }
     }
@@ -375,6 +390,12 @@ public final class Es6ToEs3ClassSideInheritance implements HotSwapCompilerPass {
           setAlias(maybeOriginalName, maybeAlias);
         }
       }
+    }
+
+    boolean isBefore(Node earlier, Node later) {
+      Integer earlierPosition = nodeOrder.get(earlier);
+      Integer laterPosition = nodeOrder.get(later);
+      return earlierPosition != null && laterPosition != null && earlierPosition < laterPosition;
     }
   }
 }

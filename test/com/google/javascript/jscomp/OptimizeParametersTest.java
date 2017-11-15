@@ -24,7 +24,7 @@ package com.google.javascript.jscomp;
 public final class OptimizeParametersTest extends CompilerTestCase {
 
   public OptimizeParametersTest() {
-    super(lines(DEFAULT_EXTERNS, "var undefined;"));
+    super(DEFAULT_EXTERNS);
   }
 
   @Override
@@ -319,12 +319,12 @@ public final class OptimizeParametersTest extends CompilerTestCase {
     // Don't change the call to baz as it has been aliased.
 
     test(
-        LINE_JOINER.join(
+        lines(
             "function foo(bar) {};",
             "var baz = function(a) {};",
             "baz(1);",
             "foo(baz);"),
-        LINE_JOINER.join(
+        lines(
             "function foo() {var bar = baz};",
             "var baz = function(a) {};",
             "baz(1);",
@@ -367,11 +367,11 @@ public final class OptimizeParametersTest extends CompilerTestCase {
 
     // A more OO test
     test(
-        LINE_JOINER.join(
+        lines(
             "/** @constructor */",
             "function Person() {}; Person.prototype.run = function(a, b) {};",
             "Person.run(1, 'a'); Person.run(2, 'a');"),
-        LINE_JOINER.join(
+        lines(
             "/** @constructor */",
             "function Person() {}; Person.prototype.run = function(a) {var b = 'a'};",
             "Person.run(1); Person.run(2);"));
@@ -409,13 +409,13 @@ public final class OptimizeParametersTest extends CompilerTestCase {
 
   public void testFunctionPassedAsParam() {
     test(
-        LINE_JOINER.join(
+        lines(
             "/** @constructor */ function person() {};",
             "person.prototype.run = function(a, b) {};",
             "person.prototype.walk = function() {};",
             "person.prototype.foo = function() { this.run(this.walk, 0.1); };",
             "person.foo();"),
-        LINE_JOINER.join(
+        lines(
             "/** @constructor */ function person() {};",
             "person.prototype.run = function(a) { var b = 0.1; };",
             "person.prototype.walk = function() {};",

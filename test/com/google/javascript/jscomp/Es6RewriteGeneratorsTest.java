@@ -20,8 +20,6 @@ import static com.google.common.truth.Truth.assertThat;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 
 /** Unit tests for {@link Es6RewriteGenerators}. */
-// TODO(tbreisacher): Rewrite direct calls to test() to use rewriteGeneratorBody
-// or rewriteGeneratorBodyWithVars.
 public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
 
   @Override
@@ -43,15 +41,15 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
     return new Es6RewriteGenerators(compiler);
   }
 
-  public void rewriteGeneratorBody(String beforeBody, String afterBody) {
+  private void rewriteGeneratorBody(String beforeBody, String afterBody) {
     rewriteGeneratorBodyWithVars(beforeBody, "", afterBody);
   }
 
-  public void rewriteGeneratorBodyWithVars(
+  private void rewriteGeneratorBodyWithVars(
       String beforeBody, String varDecls, String afterBody) {
     test(
         "function *f() {" + beforeBody + "}",
-        LINE_JOINER.join(
+        lines(
             "/** @suppress {uselessCode} */",
             "function f() {",
             "  var $jscomp$generator$state = 0;",
@@ -81,14 +79,14 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
   public void testSimpleGenerator() {
     rewriteGeneratorBody(
         "",
-        LINE_JOINER.join(
+        lines(
             "case 0:",
             "  $jscomp$generator$state = -1;"));
     assertThat(getLastCompiler().injected).containsExactly("es6/symbol");
 
     rewriteGeneratorBody(
         "yield 1;",
-        LINE_JOINER.join(
+        lines(
             "case 0:",
             "  $jscomp$generator$state = 1;",
             "  return {value: 1, done: false};",
@@ -103,7 +101,7 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
 
     test(
         "/** @param {*} a */ function *f(a, b) {}",
-        LINE_JOINER.join(
+        lines(
             "/** @param {*} a @suppress {uselessCode} */",
             "function f(a, b) {",
             "  var $jscomp$generator$state = 0;",
@@ -132,7 +130,7 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
     rewriteGeneratorBodyWithVars(
         "var i = 0, j = 2",
         "var j; var i;",
-        LINE_JOINER.join(
+        lines(
             "case 0:",
             "  i = 0;",
             "  j = 2;",
@@ -141,7 +139,7 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
     rewriteGeneratorBodyWithVars(
         "var i = 0; yield i; i = 1; yield i; i = i + 1; yield i;",
         "var i;",
-        LINE_JOINER.join(
+        lines(
             "case 0:",
             "  i = 0;",
             "  $jscomp$generator$state = 1;",
@@ -179,7 +177,7 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
   public void testReturnGenerator() {
     test(
         "function f() { return function *g() {yield 1;} }",
-        LINE_JOINER.join(
+        lines(
             "function f() {",
             "  return /** @suppress {uselessCode} */ function g() {",
             "    var $jscomp$generator$state = 0;",
@@ -219,7 +217,7 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
   public void testNestedGenerator() {
     test(
         "function *f() { function *g() {yield 2;} yield 1; }",
-        LINE_JOINER.join(
+        lines(
             "/** @suppress {uselessCode} */",
             "function f() {",
             "  var $jscomp$generator$state = 0;",
@@ -293,7 +291,7 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
     rewriteGeneratorBodyWithVars(
         "var i = 0; for (var j = 0; j < 10; j++) { i += j; } yield i;",
         "var i;",
-        LINE_JOINER.join(
+        lines(
             "case 0:",
             "  i = 0;",
             "  for (var j = 0; j < 10; j++) { i += j; }",
@@ -311,7 +309,7 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
     rewriteGeneratorBodyWithVars(
         "for (var j = 0; j < 10; j++) { yield j; }",
         "var j;",
-        LINE_JOINER.join(
+        lines(
             "case 0:",
             "  j = 0;",
             "case 1:",
@@ -335,7 +333,7 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
     rewriteGeneratorBodyWithVars(
         "var i = 0; for (var j = 0; j < 10; j++) { i += j; throw 5; } yield i;",
         "var j; var i;",
-        LINE_JOINER.join(
+        lines(
             "case 0:",
             "  i = 0;",
             "  j = 0;",
@@ -368,7 +366,7 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
     rewriteGeneratorBodyWithVars(
         "var i = 0; while (i < 10) { i++; i++; i++; } yield i;",
         "  var i;",
-        LINE_JOINER.join(
+        lines(
             "case 0:",
             "  i = 0;",
             "  while (i < 10) { i ++; i++; i++; }",
@@ -386,7 +384,7 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
     rewriteGeneratorBodyWithVars(
         "var j = 0; while (j < 10) { yield j; j++; }",
         "var j;",
-        LINE_JOINER.join(
+        lines(
             "case 0:",
             "  j = 0;",
             "case 1:",
@@ -426,7 +424,7 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
   public void testThrowGenerator() {
     rewriteGeneratorBody(
         "throw 1;",
-        LINE_JOINER.join(
+        lines(
             "case 0:",
             "  $jscomp$generator$state = -1;",
             "  throw 1;",
@@ -436,14 +434,14 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
   public void testLabelsGenerator() {
     rewriteGeneratorBody(
         "l: if (true) { break l; }",
-        LINE_JOINER.join(
+        lines(
             "case 0:",
             "  l: if (true) { break l; }",
             "  $jscomp$generator$state = -1;"));
 
     rewriteGeneratorBody(
         "l: for (;;) { yield i; continue l; }",
-        LINE_JOINER.join(
+        lines(
             "case 0:",
             "case 1:",
             "  if (!true) { $jscomp$generator$state = 2; break; }",
@@ -468,7 +466,7 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
     rewriteGeneratorBodyWithVars(
         "var j = 0; if (j < 1) { yield j; }",
         "var j;",
-        LINE_JOINER.join(
+        lines(
             "case 0:",
             "  j = 0;",
             "  if (!(j < 1)) { $jscomp$generator$state = 1; break; }",
@@ -486,7 +484,7 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
 
     test(
         "function *f(i) { if (i < 1) { yield i; } else { yield 1; } }",
-        LINE_JOINER.join(
+        lines(
             "/** @suppress {uselessCode} */",
             "function f(i) {",
             "  var $jscomp$generator$state = 0;",
@@ -539,7 +537,7 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
   public void testGeneratorReturn() {
     rewriteGeneratorBody(
         "return 1;",
-        LINE_JOINER.join(
+        lines(
             "case 0:",
             "  $jscomp$generator$state = -1;",
             "  return {value: 1, done: true};",
@@ -550,7 +548,7 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
     rewriteGeneratorBodyWithVars(
         "var j = 0; while (j < 10) { yield j; break; }",
         "var j;",
-        LINE_JOINER.join(
+        lines(
             "case 0:",
             "  j = 0;",
             "case 1:",
@@ -574,7 +572,7 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
     rewriteGeneratorBodyWithVars(
         "var j = 0; while (j < 10) { yield j; continue; }",
         "var j;",
-        LINE_JOINER.join(
+        lines(
             "case 0:",
             "  j = 0;",
             "case 1:",
@@ -598,7 +596,7 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
     rewriteGeneratorBodyWithVars(
         "for (var j = 0; j < 10; j++) { yield j; break; }",
         "var j;",
-        LINE_JOINER.join(
+        lines(
             "case 0:",
             "  j = 0;",
             "case 1:",
@@ -624,7 +622,7 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
     rewriteGeneratorBodyWithVars(
         "for (var j = 0; j < 10; j++) { yield j; continue; }",
         "var j;",
-        LINE_JOINER.join(
+        lines(
             "case 0:",
             "  j = 0;",
             "case 1:",
@@ -652,7 +650,7 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
     rewriteGeneratorBodyWithVars(
         "do { yield j; } while (j < 10);",
         "var $jscomp$generator$first$do;",
-        LINE_JOINER.join(
+        lines(
             "case 0:",
             "  $jscomp$generator$first$do = true;",
             "case 1:",
@@ -678,7 +676,7 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
   public void testYieldNoValue() {
     rewriteGeneratorBody(
         "yield;",
-        LINE_JOINER.join(
+        lines(
             "case 0:",
             "  $jscomp$generator$state = 1;",
             "  return {value: undefined, done: false};",
@@ -695,7 +693,7 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
   public void testReturnNoValue() {
     rewriteGeneratorBody(
         "return;",
-        LINE_JOINER.join(
+        lines(
             "case 0:",
             "  $jscomp$generator$state = -1;",
             "  return {value: undefined, done: true};",
@@ -706,7 +704,7 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
     rewriteGeneratorBodyWithVars(
         "return (yield 1);",
         "var $jscomp$generator$next$arg0;",
-        LINE_JOINER.join(
+        lines(
             "case 0:",
             "  $jscomp$generator$state = 1;",
             "  return {value: 1, done: false};",
@@ -724,41 +722,19 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
   }
 
   public void testFunctionInGenerator() {
-    test(
-        "function *f() { function g() {} }",
-        LINE_JOINER.join(
-            "/** @suppress {uselessCode} */",
-            "function f() {",
-            "  var $jscomp$generator$state = 0;",
-            "  function g() {}",
-            "  function $jscomp$generator$impl(",
-            "      $jscomp$generator$action$arg,",
-            "      $jscomp$generator$next$arg,",
-            "      $jscomp$generator$throw$arg) {",
-            "    while (1) switch ($jscomp$generator$state) {",
-            "      case 0:",
-            "        $jscomp$generator$state = -1;",
-            "      default:",
-            "        return {value: undefined, done: true}",
-            "    }",
-            "  }",
-            "  var iterator = /** @type {!Generator<?>} */ ({",
-            "    next: function(arg){ return $jscomp$generator$impl(0, arg, undefined); },",
-            "    throw: function(arg){ return $jscomp$generator$impl(1, undefined, arg); },",
-            "    return: function(arg) { throw Error('Not yet implemented'); },",
-            "  });",
-            "  $jscomp.initSymbolIterator();",
-            "  /** @this {!Generator<?>} */",
-            "  iterator[Symbol.iterator] = function() { return this; };",
-            "  return iterator;",
-            "}"));
+    rewriteGeneratorBodyWithVars(
+        "function g() {}",
+        "function g() {}",
+        lines(
+            "case 0:",
+            "  $jscomp$generator$state = -1;"));
   }
 
   public void testYieldAll() {
     rewriteGeneratorBodyWithVars(
         "yield * n;",
         "var $jscomp$generator$yield$entry; var $jscomp$generator$yield$all;",
-        LINE_JOINER.join(
+        lines(
             "case 0:",
             "  $jscomp$generator$yield$all = $jscomp.makeIterator(n);",
             "case 1:",
@@ -786,7 +762,7 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
     rewriteGeneratorBodyWithVars(
         "var i = yield * n;",
         "var i;" + "var $jscomp$generator$yield$entry;" + "var $jscomp$generator$yield$all;",
-        LINE_JOINER.join(
+        lines(
             "case 0:",
             "  $jscomp$generator$yield$all = $jscomp.makeIterator(n);",
             "case 1:",
@@ -815,7 +791,7 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
     rewriteGeneratorBodyWithVars(
         "yield arguments[0];",
         "var $jscomp$generator$arguments = arguments;",
-        LINE_JOINER.join(
+        lines(
             "case 0:",
             "  $jscomp$generator$state = 1;",
             "  return {value: $jscomp$generator$arguments[0], done: false};",
@@ -833,7 +809,7 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
     rewriteGeneratorBodyWithVars(
         "yield this;",
         "var $jscomp$generator$this = this;",
-        LINE_JOINER.join(
+        lines(
             "case 0:",
             "  $jscomp$generator$state = 1;",
             "  return {value: $jscomp$generator$this, done: false};",
@@ -850,7 +826,7 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
   public void testGeneratorShortCircuit() {
     rewriteGeneratorBody(
         "0 || (yield 1);",
-        LINE_JOINER.join(
+        lines(
             "case 0:",
             "  if (!0) {",
             "    $jscomp$generator$state = 1;",
@@ -874,7 +850,7 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
 
     rewriteGeneratorBody(
         "0 && (yield 1);",
-        LINE_JOINER.join(
+        lines(
             "case 0:",
             "  if (!0) {",
             "    $jscomp$generator$state = 1;",
@@ -895,7 +871,7 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
 
     rewriteGeneratorBody(
         "0 ? 1 : (yield 1);",
-        LINE_JOINER.join(
+        lines(
             "case 0:",
             "  if (!0) {",
             "    $jscomp$generator$state = 1;",
@@ -921,7 +897,7 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
 
   public void testYieldSwitch() {
     rewriteGeneratorBodyWithVars(
-        LINE_JOINER.join(
+        lines(
             "while (1) {",
             "  switch (i) {",
             "    case 1:",
@@ -937,7 +913,7 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
             "  }",
             "}"),
         "var $jscomp$generator$switch$val1; var $jscomp$generator$switch$entered0;",
-        LINE_JOINER.join(
+        lines(
             "case 0:",
             "case 1:",
             "  if (!1) {",
@@ -1018,7 +994,7 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
   public void testGeneratorNoTranslate() {
     rewriteGeneratorBody(
         "if (1) { try {} catch (e) {} throw 1; }",
-        LINE_JOINER.join(
+        lines(
             "case 0:",
             "  if (!1) {",
             "    $jscomp$generator$state = 1;",
@@ -1034,12 +1010,12 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
   public void testGeneratorForIn() {
     rewriteGeneratorBodyWithVars(
         "for (var i in j) { yield 1; }",
-        LINE_JOINER.join(
+        lines(
             "var i;",
             "var $jscomp$generator$forin$iter0;",
             "var $jscomp$generator$forin$var0;",
             "var $jscomp$generator$forin$array0;"),
-        LINE_JOINER.join(
+        lines(
             "case 0:",
             "  $jscomp$generator$forin$array0 = [];",
             "  $jscomp$generator$forin$iter0 = j;",
@@ -1082,7 +1058,7 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
     rewriteGeneratorBodyWithVars(
         "try {yield 1;} catch (e) {}",
         "var e; var $jscomp$generator$global$error;",
-        LINE_JOINER.join(
+        lines(
             "case 0:",
             "  try {",
             "    $jscomp$generator$state = 3;",
@@ -1123,7 +1099,7 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
     rewriteGeneratorBodyWithVars(
         "try {yield 1;} catch (e) {} finally {b();}",
         "var e; var $jscomp$generator$finally0; var $jscomp$generator$global$error;",
-        LINE_JOINER.join(
+        lines(
             "case 0:",
             "  try {",
             "    $jscomp$generator$state = 4;",

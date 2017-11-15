@@ -198,7 +198,7 @@ public final class CheckSuspiciousCodeTest extends CompilerTestCase {
 
     testSame("(()=>42) instanceof Function");
     testSame("class Person{} Person instanceof Function");
-    testSame(LINE_JOINER.join(
+    testSame(lines(
         "class Person{}",
         "var peter = new Person();",
         "peter instanceof Person"));

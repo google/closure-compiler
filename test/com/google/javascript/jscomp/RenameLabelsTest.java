@@ -75,14 +75,14 @@ public final class RenameLabelsTest extends CompilerTestCase {
   }
 
   public void testRenameForOf() {
-    test(LINE_JOINER.join(
+    test(lines(
          "loop:",
          "for (let x of [1, 2, 3]) {",
          "  if (x > 2) {",
          "    break loop;",
          "  }",
          "}"),
-         LINE_JOINER.join(
+         lines(
          "a:" ,
          "for (let x of [1, 2, 3]) {",
          "  if (x > 2) {",

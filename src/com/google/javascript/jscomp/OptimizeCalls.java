@@ -103,85 +103,6 @@ class OptimizeCalls implements CompilerPass {
     }
 
     /**
-     * @return true iff the result of the expression is consumed in a way that creates an alias.
-     */
-    private static boolean isExpressionValueAliased(Node expr) {
-      Node parent = expr.getParent();
-      switch (parent.getToken()) {
-        case CAST:
-          return isExpressionValueAliased(parent);
-        case HOOK:
-          return (expr != parent.getFirstChild()) && isExpressionValueAliased(parent);
-        case AND:
-        case OR:
-          return isExpressionValueAliased(parent);
-        case COMMA:
-          return (expr == parent.getLastChild()) && isExpressionValueAliased(parent);
-
-        // function result expressions
-        case RETURN:
-        case THROW:
-        case YIELD:
-        case AWAIT:
-          return true;
-
-        // Tagged template literals receive the call
-        case TEMPLATELIT:
-          return parent.getParent().isTaggedTemplateLit();
-        case NEW:
-        case CALL:    // CALL(..., value, ...)
-          return (expr != parent.getFirstChild());
-
-        // Direct assignments
-        case ASSIGN:  // ... = value
-        case NAME:    // NAME = value
-        case ARRAYLIT:// [ ..., value, ... ]
-          return true;
-        // object literals give the value a new name
-        case COMPUTED_PROP:
-          return expr == parent.getLastChild() && isExpressionValueAliased(parent);
-        case STRING_KEY:
-          return isExpressionValueAliased(parent);
-
-        case OBJECTLIT:
-          // objects can be reflected upon
-          // TODO(johnlenz): add support for objects assigned to prototypes
-          return true;
-
-        case GETPROP:
-        case GETELEM:
-          // Calls escape the "this" value. a.foo() aliases "a" as "this" but general
-          // property references do not.
-          Node grandparent = parent.getParent();
-          if (grandparent != null && grandparent.isCall()) {
-            return true;
-          }
-          return false;
-
-        default:
-          break;
-      }
-      return false;
-    }
-
-    static boolean isAliasingReference(Node n) {
-      if (isCallOrNewTarget(n)) {
-        return false;
-      } else if (NodeUtil.isLValue(n)) {
-        Node value = NodeUtil.getRValueOfLValue(n);
-        if (value == null) {
-          // A "var x;" declaration is not an alias.
-          return false;
-        } else {
-          // We consider recursive calls to be aliased.
-          return NodeUtil.isNamedFunctionExpression(value);
-        }
-      } else {
-        return isExpressionValueAliased(n);
-      }
-    }
-
-    /**
      * Given a set of references, returns the set of known definitions. Specifically,
      * those of the form:
      *    function x() { }
@@ -434,12 +355,64 @@ class OptimizeCalls implements CompilerPass {
     }
   }
 
-
   static ReferenceMap buildPropAndGlobalNameReferenceMap(
       AbstractCompiler compiler, Node externs, Node root) {
     final ReferenceMap references = new ReferenceMap();
     NodeTraversal.traverseRootsEs6(compiler, new ReferenceMapBuildingCallback(
         compiler, references), externs, root);
     return references;
+  }
+
+  /**
+   * @return Whether the provide name may be a candidate for
+   *    call optimizations.
+   */
+  static boolean mayBeOptimizableName(AbstractCompiler compiler, String name) {
+    if (compiler.getCodingConvention().isExported(name)) {
+      return false;
+    }
+
+    // Avoid modifying a few special case functions. Specifically, $jscomp.inherits to
+    // recognize 'inherits' calls. (b/27244988)
+    if (name.equals(NodeUtil.JSC_PROPERTY_NAME_FN)
+        || name.equals(NodeUtil.EXTERN_OBJECT_PROPERTY_STRING)
+        || name.equals("inherits")
+        || name.equals("$jscomp$inherits")
+        || name.equals("goog$inherits")) {
+      return false;
+    }
+    return true;
+  }
+
+  /**
+   * @return Whether the reference is a known non-aliasing reference.
+   */
+  static boolean isAllowedReference(Node n) {
+    Node parent = n.getParent();
+    switch (parent.getToken()) {
+      case FOR_IN:
+      case FOR_OF:
+        // inspecting the properties is allowed.
+        return parent.getSecondChild() == n;
+      case INSTANCEOF:
+      case TYPEOF:
+      case IN:
+        return true;
+      case GETELEM:
+      case GETPROP:
+        // Calls escape the "this" value. a.foo() aliases "a" as "this" but general
+        // property references do not.
+        Node grandparent = parent.getParent();
+        if (n == parent.getFirstChild() && grandparent != null && grandparent.isCall()) {
+          return false;
+        }
+        return true;
+      default:
+        if (NodeUtil.isNameDeclaration(parent) && !n.hasChildren()) {
+          // allow "let x;"
+          return true;
+        }
+    }
+    return false;
   }
 }

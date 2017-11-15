@@ -19,7 +19,7 @@ package com.google.javascript.jscomp;
 /** Unit tests for the RemoveUnusedPolyfills compiler pass. */
 public final class RemoveUnusedPolyfillsTest extends TypeICompilerTestCase {
 
-  private static final String EXTERNS = LINE_JOINER.join(
+  private static final String EXTERNS = lines(
       DEFAULT_EXTERNS,
       // Polyfill
       "var $jscomp = {};",

@@ -267,7 +267,7 @@ public final class CheckUnreachableCodeTest extends CompilerTestCase {
   }
 
   public void testReturnsInShorthandFunctionOfObjLit() {
-    testSame(LINE_JOINER.join(
+    testSame(lines(
         "var obj = {",
         "  f() { ",
         "    switch(x) { ",
@@ -276,7 +276,7 @@ public final class CheckUnreachableCodeTest extends CompilerTestCase {
         "    }",
         "  }",
         "}"));
-    assertUnreachable(LINE_JOINER.join(
+    assertUnreachable(lines(
         "var obj = {f() {",
         "  switch(x) { ",
         "    default: return; ",
@@ -285,7 +285,7 @@ public final class CheckUnreachableCodeTest extends CompilerTestCase {
         "  return; ",
         "}}"));
     testSame("var obj = {f() { if(x) {return;} else {return; }}}");
-    assertUnreachable(LINE_JOINER.join(
+    assertUnreachable(lines(
         "var obj = {f() { ",
         "  if(x) {",
         "    return;",
@@ -323,7 +323,7 @@ public final class CheckUnreachableCodeTest extends CompilerTestCase {
 
   public void testSubclass() {
     testSame(
-        LINE_JOINER.join(
+        lines(
             "class D {foo() {if (true) {return;}}}",
             "class C extends D {foo() {super.foo();}}"));
   }
@@ -342,7 +342,7 @@ public final class CheckUnreachableCodeTest extends CompilerTestCase {
 
   public void testGenerators() {
     testSame(
-        LINE_JOINER.join(
+        lines(
             "function* f() {",
             "  var i = 0;",
             "  while(true)",
@@ -350,7 +350,7 @@ public final class CheckUnreachableCodeTest extends CompilerTestCase {
             "}"));
 
     assertUnreachable(
-        LINE_JOINER.join(
+        lines(
             "function* f() {",
             "  var i = 0;",
             "  while(true) {",
@@ -360,7 +360,7 @@ public final class CheckUnreachableCodeTest extends CompilerTestCase {
             "}"));
 
     testSame(
-        LINE_JOINER.join(
+        lines(
             "function* f() {",
             "  var i = 0;",
             "  while(true) {",
