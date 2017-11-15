@@ -1773,6 +1773,9 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
             options.processCommonJSModules);
       } else if (options.needsTranspilationFrom(FeatureSet.ES6_MODULES)
           || options.processCommonJSModules) {
+        if (options.getLanguageIn().toFeatureSet().has(Feature.MODULES)) {
+          parsePotentialModules(inputs);
+        }
 
         // Build a map of module identifiers for any input which provides no namespace.
         // These files could be imported modules which have no exports, but do have side effects.
@@ -1940,7 +1943,10 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       }
     }
     for (ModuleIdentifier moduleIdentifier : options.getDependencyOptions().getEntryPoints()) {
-      CompilerInput input = inputsByIdentifier.get(moduleIdentifier.toString());
+      CompilerInput input = inputsByProvide.get(moduleIdentifier.toString());
+      if (input == null) {
+        input = inputsByIdentifier.get(moduleIdentifier.toString());
+      }
       if (input != null) {
         entryPoints.add(input);
       }
