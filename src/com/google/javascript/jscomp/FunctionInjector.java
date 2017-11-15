@@ -449,8 +449,12 @@ class FunctionInjector {
     } else {
       Node expressionRoot = ExpressionDecomposer.findExpressionRoot(callNode);
       if (expressionRoot != null) {
+        // TODO(tbreisacher): Change this to compiler.getOptions().allowMethodCallDecomposing().
+        // Doing so currently causes a "DecomposeExpression depth exceeded" error.
+        boolean allowMethodCallDecomposing = false;
+
         ExpressionDecomposer decomposer = new ExpressionDecomposer(
-            compiler, safeNameIdSupplier, knownConstants, ref.scope);
+            compiler, safeNameIdSupplier, knownConstants, ref.scope, allowMethodCallDecomposing);
         DecompositionType type = decomposer.canExposeExpression(
             callNode);
         if (type == DecompositionType.MOVABLE) {
@@ -467,8 +471,12 @@ class FunctionInjector {
   }
 
   private ExpressionDecomposer getDecomposer(Scope scope) {
+    // TODO(tbreisacher): Change this to compiler.getOptions().allowMethodCallDecomposing().
+    // Doing so currently causes a "DecomposeExpression depth exceeded" error.
+    boolean allowMethodCallDecomposing = false;
+
     return new ExpressionDecomposer(
-        compiler, safeNameIdSupplier, knownConstants, scope);
+        compiler, safeNameIdSupplier, knownConstants, scope, allowMethodCallDecomposing);
   }
 
   /**

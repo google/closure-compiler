@@ -21,10 +21,12 @@ import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 
 /** Unit tests for {@link Es6RewriteGenerators}. */
 public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
+  private boolean allowMethodCallDecomposing;
 
   @Override
   protected void setUp() throws Exception {
     super.setUp();
+    allowMethodCallDecomposing = false;
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     enableRunTypeCheckAfterProcessing();
   }
@@ -33,6 +35,7 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
   protected CompilerOptions getOptions() {
     CompilerOptions options = super.getOptions();
     options.setLanguageOut(LanguageMode.ECMASCRIPT3);
+    options.setAllowMethodCallDecomposing(allowMethodCallDecomposing);
     return options;
   }
 
@@ -406,8 +409,35 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
   }
 
   public void testUndecomposableExpression() {
-    testError("function *f() { obj.bar(yield 5); }",
-        Es6ToEs3Util.CANNOT_CONVERT);
+    testError("function *f() { obj.bar(yield 5); }", Es6ToEs3Util.CANNOT_CONVERT);
+  }
+
+  public void testDecomposableExpression() {
+    allowMethodCallDecomposing = true;
+    rewriteGeneratorBodyWithVars(
+        "obj.bar(yield 5);",
+        LINE_JOINER.join(
+            "var $jscomp$generator$next$arg2;",
+            "var JSCompiler_temp_const$jscomp$0;",
+            "var JSCompiler_temp_const$jscomp$1;"),
+        LINE_JOINER.join(
+            "case 0:",
+            "  JSCompiler_temp_const$jscomp$1 = obj;",
+            "  JSCompiler_temp_const$jscomp$0 = JSCompiler_temp_const$jscomp$1.bar;",
+            "  $jscomp$generator$state = 1;",
+            "  return { value: 5, done: false };",
+            "case 1:",
+            "  if (!($jscomp$generator$action$arg ==1 )) {",
+            "    $jscomp$generator$state = 2;",
+            "    break;",
+            "  }",
+            "  $jscomp$generator$state = -1;",
+            "  throw $jscomp$generator$throw$arg;",
+            "case 2:",
+            "  $jscomp$generator$next$arg2 = $jscomp$generator$next$arg;",
+            "  JSCompiler_temp_const$jscomp$0.call(",
+            "      JSCompiler_temp_const$jscomp$1, $jscomp$generator$next$arg2);",
+            "  $jscomp$generator$state = -1;"));
   }
 
   public void testGeneratorCannotConvertYet() {

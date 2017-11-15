@@ -758,6 +758,11 @@ public class CommandLineRunner extends
         usage = "Rewrite ES6 library calls to use polyfills provided by the compiler's runtime.")
     private boolean rewritePolyfills = true;
 
+    @Option(name = "--allow_method_call_decomposing",
+        handler = BooleanOptionHandler.class,
+        usage = "Allow decomposing x.y(); to: var tmp = x.y; tmp.call(x); Unsafe on IE 8 and 9")
+    private boolean allowMethodCallDecomposing = false;
+
     @Option(
       name = "--print_source_after_each_pass",
       handler = BooleanOptionHandler.class,
@@ -1727,6 +1732,8 @@ public class CommandLineRunner extends
 
     options.rewritePolyfills =
         flags.rewritePolyfills && options.getLanguageIn().toFeatureSet().contains(FeatureSet.ES6);
+
+    options.setAllowMethodCallDecomposing(flags.allowMethodCallDecomposing);
 
     if (!flags.translationsFile.isEmpty()) {
       try {

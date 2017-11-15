@@ -1116,7 +1116,8 @@ public final class Es6RewriteGenerators
               compiler,
               compiler.getUniqueNameIdSupplier(),
               consts,
-              Scope.createGlobalScope(new Node(Token.SCRIPT)));
+              Scope.createGlobalScope(new Node(Token.SCRIPT)),
+              compiler.getOptions().allowMethodCallDecomposing());
     }
 
     @Override

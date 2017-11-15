@@ -59,11 +59,18 @@ class ExpressionDecomposer {
   private final Set<String> knownConstants;
   private final Scope scope;
 
+  /**
+   * Whether to allow decomposing foo.bar to "var fn = foo.bar; fn.call(foo);"
+   * Should be false if targetting IE8 or IE9.
+   */
+  private final boolean allowMethodCallDecomposing;
+
   ExpressionDecomposer(
       AbstractCompiler compiler,
       Supplier<String> safeNameIdSupplier,
       Set<String> constNames,
-      Scope scope) {
+      Scope scope,
+      boolean allowMethodCallDecomposing) {
     checkNotNull(compiler);
     checkNotNull(safeNameIdSupplier);
     checkNotNull(constNames);
@@ -71,6 +78,7 @@ class ExpressionDecomposer {
     this.safeNameIdSupplier = safeNameIdSupplier;
     this.knownConstants = constNames;
     this.scope = scope;
+    this.allowMethodCallDecomposing = allowMethodCallDecomposing;
   }
 
   // An arbitrary limit to prevent catch infinite recursion.
@@ -89,7 +97,7 @@ class ExpressionDecomposer {
       i++;
       if (i > MAX_ITERATIONS) {
         throw new IllegalStateException(
-            "DecomposeExpression depth exceeded on :\n" + expression.toStringTree());
+            "DecomposeExpression depth exceeded on:\n" + expression.toStringTree());
       }
     }
   }
@@ -196,18 +204,14 @@ class ExpressionDecomposer {
               decomposeSubExpressions(left.getFirstChild(), null, state);
             }
           }
-      } else if (parentType == Token.CALL
-          && NodeUtil.isGet(parent.getFirstChild())) {
+      } else if (parentType == Token.CALL && NodeUtil.isGet(parent.getFirstChild())) {
         Node functionExpression = parent.getFirstChild();
         decomposeSubExpressions(functionExpression.getNext(), child, state);
         // Now handle the call expression
         if (isExpressionTreeUnsafe(functionExpression, state.sideEffects)
             && functionExpression.getFirstChild() != grandchild) {
-          // TODO(johnlenz): In Internet Explorer, non-JavaScript objects such
-          // as DOM objects can not be decomposed.
-          checkState(allowObjectCallDecomposing(), "Object method calls can not be decomposed.");
-          // Either there were preexisting side-effects, or this node has
-          // side-effects.
+          checkState(allowMethodCallDecomposing, "Object method calls can not be decomposed.");
+          // Either there were preexisting side-effects, or this node has side-effects.
           state.sideEffects = true;
 
           // Rewrite the call so "this" is preserved.
@@ -237,18 +241,6 @@ class ExpressionDecomposer {
       boolean needResult = !parent.isExprResult();
       extractConditional(nonconditionalExpr, exprInjectionPoint, needResult);
     }
-  }
-
-  private static boolean allowObjectCallDecomposing() {
-    return false;
-  }
-
-  /**
-   * @return Whether the node may represent an external method.
-   */
-  private static boolean maybeExternMethod(Node node) {
-    // TODO(johnlenz): Provide some mechanism for determining this.
-    return true;
   }
 
   /**
@@ -519,20 +511,19 @@ class ExpressionDecomposer {
    * @return The replacement node.
    */
   private Node rewriteCallExpression(Node call, DecompositionState state) {
-    checkArgument(call.isCall());
+    checkArgument(call.isCall(), call);
     Node first = call.getFirstChild();
-    checkArgument(NodeUtil.isGet(first));
+    checkArgument(NodeUtil.isGet(first), first);
 
     // Extracts the expression representing the function to call. For example:
     //   "a['b'].c" from "a['b'].c()"
-    Node getVarNode = extractExpression(
-        first, state.extractBeforeStatement);
+    Node getVarNode = extractExpression(first, state.extractBeforeStatement);
     state.extractBeforeStatement = getVarNode;
 
     // Extracts the object reference to be used as "this". For example:
     //   "a['b']" from "a['b'].c"
     Node getExprNode = getVarNode.getFirstFirstChild();
-    checkArgument(NodeUtil.isGet(getExprNode));
+    checkArgument(NodeUtil.isGet(getExprNode), getExprNode);
     Node thisVarNode = extractExpression(
         getExprNode.getFirstChild(), state.extractBeforeStatement);
     state.extractBeforeStatement = thisVarNode;
@@ -551,9 +542,8 @@ class ExpressionDecomposer {
     //   ...
     Node newCall = IR.call(
         IR.getprop(
-            functionNameNode.cloneNode(),
-            IR.string("call")),
-        thisNameNode.cloneNode()).srcref(call);
+            functionNameNode.cloneNode(), IR.string("call")),
+        thisNameNode.cloneNode()).useSourceInfoIfMissingFromForTree(call);
 
     // Throw away the call name
     call.removeFirstChild();
@@ -562,9 +552,7 @@ class ExpressionDecomposer {
       newCall.addChildrenToBack(call.removeChildren());
     }
 
-    // Replace the call.
-    Node callParent = call.getParent();
-    callParent.replaceChild(call, newCall);
+    call.replaceWith(newCall);
 
     return newCall;
   }
@@ -824,10 +812,10 @@ class ExpressionDecomposer {
           //
           Node first = parent.getFirstChild();
           if (requiresDecomposition && parent.isCall() && NodeUtil.isGet(first)) {
-            if (maybeExternMethod(first)) {
-              return DecompositionType.UNDECOMPOSABLE;
-            } else {
+            if (allowMethodCallDecomposing) {
               return DecompositionType.DECOMPOSABLE;
+            } else {
+              return DecompositionType.UNDECOMPOSABLE;
             }
           }
         }
