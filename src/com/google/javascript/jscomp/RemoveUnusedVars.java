@@ -34,6 +34,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import javax.annotation.Nullable;
 
@@ -116,6 +117,9 @@ class RemoveUnusedVars implements CompilerPass {
    */
   private final Multimap<String, VarInfo> varInfoForPropertyNameMap = HashMultimap.create();
 
+  /** Single value to use for all vars for which we cannot remove anything at all. */
+  private final VarInfo canonicalTotallyUnremovableVarInfo;
+
   /**
    * Keep track of scopes that we've traversed.
    */
@@ -135,6 +139,10 @@ class RemoveUnusedVars implements CompilerPass {
     this.removeGlobals = removeGlobals;
     this.preserveFunctionExpressionNames = preserveFunctionExpressionNames;
     this.scopeCreator = new Es6SyntacticScopeCreator(compiler);
+
+    // All Vars that are completely unremovable will share this VarInfo instance.
+    canonicalTotallyUnremovableVarInfo = new VarInfo();
+    canonicalTotallyUnremovableVarInfo.setCannotRemoveAnything();
   }
 
   /**
@@ -319,7 +327,7 @@ class RemoveUnusedVars implements CompilerPass {
     // e.g. $jscomp.inherits(Class, BaseClass) or goog.addSingletonGetter(Class)
     // Such methods never have meaningful return values, so we won't look for them in other
     // contexts
-    if (parent.isExprResult() || parent.isComma() && parent.getFirstChild() == callNode) {
+    if (parent.isExprResult() || (parent.isComma() && parent.getFirstChild() == callNode)) {
       SubclassRelationship subclassRelationship =
           codingConvention.getClassesDefinedByCall(callNode);
       if (subclassRelationship != null) {
@@ -921,12 +929,34 @@ class RemoveUnusedVars implements CompilerPass {
     }
   }
 
+  /**
+   * Get the right {@link VarInfo} object to use for the given {@link Var}.
+   *
+   * <p>This method is responsible for managing the entries in {@link #varInfoMap}.
+   * <p>Note: Several {@link Var}s may share the same {@link VarInfo} when they should be treated
+   * the same way.
+   */
   private VarInfo getVarInfo(Var var) {
     checkNotNull(var);
     VarInfo varInfo = varInfoMap.get(var);
     if (varInfo == null) {
-      varInfo = new VarInfo(var);
-      varInfoMap.put(var, varInfo);
+      boolean isGlobal = var.isGlobal();
+      if (isGlobal && !removeGlobals) {
+        // TODO(bradfordcsmith): Should we allow removal of properties here?
+        varInfo = canonicalTotallyUnremovableVarInfo;
+      } else if (codingConvention.isExported(var.getName(), !isGlobal)) {
+        varInfo = canonicalTotallyUnremovableVarInfo;
+      } else if (var.isArguments()) {
+        // TODO(bradfordcsmith): mark all function parameters unremovable at this point.
+        varInfo = canonicalTotallyUnremovableVarInfo;
+      } else {
+        varInfo = new VarInfo();
+        if (var.getParentNode().isParamList()) {
+          varInfo.propertyAssignmentsWillPreventRemoval = true;
+          varInfo.unreferencedPropertiesMayBeRemoved = false;
+        }
+        varInfoMap.put(var, varInfo);
+      }
     }
     return varInfo;
   }
@@ -936,7 +966,10 @@ class RemoveUnusedVars implements CompilerPass {
    * variables as well.
    */
   private void removeUnreferencedVars() {
-    for (VarInfo varInfo : varInfoMap.values()) {
+    for (Entry<Var, VarInfo>entry : varInfoMap.entrySet()) {
+      Var var = entry.getKey();
+      VarInfo varInfo = entry.getValue();
+
       if (!varInfo.isRemovable()) {
         continue;
       }
@@ -946,8 +979,8 @@ class RemoveUnusedVars implements CompilerPass {
       // to other unreferenced variables.
       varInfo.removeAllRemovables();
 
-      compiler.addToDebugLog("Unreferenced var: ", varInfo.var.name);
-      Node nameNode = varInfo.var.nameNode;
+      compiler.addToDebugLog("Unreferenced var: ", var.name);
+      Node nameNode = var.nameNode;
       Node toRemove = nameNode.getParent();
       if (toRemove == null || alreadyRemoved(toRemove)) {
         // varInfo.removeAllRemovables () already removed it
@@ -1458,8 +1491,6 @@ class RemoveUnusedVars implements CompilerPass {
   }
 
   private class VarInfo {
-    final Var var;
-
     /**
      * Objects that represent variable declarations, assignments, or class setup calls that can
      * be removed.
@@ -1506,24 +1537,6 @@ class RemoveUnusedVars implements CompilerPass {
      * It is used in combination with propertyAssignmentsWillPreventRemoval.
      */
     boolean hasPropertyAssignments = false;
-
-    VarInfo(Var var) {
-      this.var = var;
-
-      boolean isGlobal = var.isGlobal();
-      if (isGlobal && !removeGlobals) {
-        // TODO(bradfordcsmith): Should we allow removal of properties here?
-        setCannotRemoveAnything();
-      } else if (codingConvention.isExported(var.getName(), !isGlobal)) {
-        setCannotRemoveAnything();
-      } else if (var.isArguments()) {
-        // TODO(bradfordcsmith): Create a single VarInfo to represent all "arguments" to save space.
-        setCannotRemoveAnything();
-      } else if (var.getParentNode().isParamList()) {
-        propertyAssignmentsWillPreventRemoval = true;
-        unreferencedPropertiesMayBeRemoved = false;
-      }
-    }
 
     void addRemovable(Removable removable) {
       // determine how this removable affects removability
@@ -1610,7 +1623,8 @@ class RemoveUnusedVars implements CompilerPass {
 
     boolean isPropertyRemovable(String propertyName) {
       return isEntirelyRemovable
-          || unreferencedPropertiesMayBeRemoved && !referencedPropertyNames.contains(propertyName);
+          || (unreferencedPropertiesMayBeRemoved
+              && !referencedPropertyNames.contains(propertyName));
     }
 
     boolean setIsExplicitlyNotRemovable() {
