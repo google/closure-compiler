@@ -415,6 +415,12 @@ public final class NodeUtilTest extends TestCase {
         NodeUtil.getNearestFunctionName(parent.getLastChild()));
   }
 
+  public void testConstKeywordNamespace(String js) {
+    Node decl = parse("const ns = {};").getFirstFirstChild();
+    Node nameNode = decl.getFirstChild();
+    assertThat(NodeUtil.isNamespaceDecl(nameNode)).isTrue();
+  }
+
   private void assertGetNameResult(Node function, String name) {
     assertEquals(Token.FUNCTION, function.getToken());
     assertEquals(name, NodeUtil.getName(function));
