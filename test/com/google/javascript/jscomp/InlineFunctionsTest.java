@@ -3093,6 +3093,48 @@ public class InlineFunctionsTest extends CompilerTestCase {
         ));
   }
 
+  public void testObjectPatternParamWithDefaults() {
+    // TODO(b/64614552): Consider inlining in this case.
+    testSame(
+        lines(
+            "function foo({x = 3}) {",
+            "  return x;",
+            "}",
+            "alert(foo({}));"
+        ));
+
+    testSame(
+        lines(
+            "function foo({x = 3}) {",
+            "  return x;",
+            "}",
+            "alert(foo({x: 3}));"
+        ));
+
+    testSame(
+        lines(
+            "function foo({x = 3}, y) {",
+            "  return y;",
+            "}",
+            "alert(foo({x: 3}, 4));"
+        ));
+
+    testSame(
+        lines(
+            "function foo({x = 3} = {}) {",
+            "  return x;",
+            "}",
+            "alert(foo());"
+        ));
+
+    testSame(
+        lines(
+            "function foo(x, ...{length = 5}) {",
+            "  return x * length;",
+            "}",
+            "alert(foo(3));"));
+  }
+
   public void testDefaultParam() {
     test(
         lines(

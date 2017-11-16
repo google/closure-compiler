@@ -734,9 +734,16 @@ class InlineFunctions implements CompilerPass {
           @Override
           public boolean apply(Node input) {
             checkNotNull(input);
-            return input.isDestructuringPattern()
+            if (input.isDestructuringPattern()
                 && (NodeUtil.getEnclosingType(input.getParent(), Token.ARRAY_PATTERN) != null
-                || NodeUtil.getEnclosingType(input.getParent(), Token.OBJECT_PATTERN) != null);
+                    || NodeUtil.getEnclosingType(input.getParent(), Token.OBJECT_PATTERN)
+                        != null)) {
+              return true;
+            } else if (input.isDefaultValue() && input.getGrandparent().isObjectPattern()) {
+              // e.g. function f({a = 3}) {}
+              return true;
+            }
+            return false;
           }
         };
 
