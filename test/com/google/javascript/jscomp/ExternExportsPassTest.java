@@ -1001,11 +1001,9 @@ public final class ExternExportsPassTest extends TypeICompilerTestCase {
         "goog.exportProperty = function(a, b, c) {};",
         js);
 
-    testSame(externs(externs), srcs(js), new Postcondition() {
-      @Override public void verify(Compiler compiler) {
-        if (consumer != null) {
-          consumer.accept(compiler.getResult().externExport);
-        }
+    testSame(externs(externs), srcs(js), (Postcondition) (Compiler compiler) -> {
+      if (consumer != null) {
+        consumer.accept(compiler.getResult().externExport);
       }
     });
   }

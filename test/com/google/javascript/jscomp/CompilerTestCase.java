@@ -2358,7 +2358,7 @@ public abstract class CompilerTestCase extends TestCase {
     }
   }
 
-  protected abstract static class Postcondition implements TestPart {
-    abstract void verify(Compiler compiler);
+  protected interface Postcondition extends TestPart {
+    void verify(Compiler compiler);
   }
 }
