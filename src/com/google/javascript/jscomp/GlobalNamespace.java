@@ -657,7 +657,7 @@ class GlobalNamespace
       }
       String superclassName = superclass.getQualifiedName();
 
-      Name superclassNameObj = getOrCreateName(superclassName, false);
+      Name superclassNameObj = getOrCreateName(superclassName, true);
       // If the superclass is an ES3/5 class we don't record its subclasses.
       if (superclassNameObj != null && superclassNameObj.type == Name.Type.CLASS) {
         superclassNameObj.addSubclass(subclassNameObj);
