@@ -1141,6 +1141,15 @@ public final class NodeUtil {
         }
         break;
 
+      case SPREAD:
+        Node expr = n.getOnlyChild();
+        if (!expr.isArrayLit()) {
+          // Anything other than an array, in the absense of any other information,
+          // we have to assume is going to invoke invoke a stateful generator or the like.
+          return true;
+        }
+        break;
+
       case VAR:    // empty var statement (no declaration)
       case LET:
       case CONST:

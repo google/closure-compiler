@@ -480,6 +480,12 @@ public final class NodeUtilTest extends TestCase {
   }
 
   public void testMayHaveSideEffects() {
+    assertSideEffect(false, "[1]");
+    assertSideEffect(false, "[1, 2]");
+    assertSideEffect(false, "[...[]]");
+    assertSideEffect(false, "[...[1]]");
+    assertSideEffect(true, "[...[i++]]");
+    assertSideEffect(true, "[...f()]");
     assertSideEffect(true, "i++");
     assertSideEffect(true, "[b, [a, i++]]");
     assertSideEffect(true, "i=3");
