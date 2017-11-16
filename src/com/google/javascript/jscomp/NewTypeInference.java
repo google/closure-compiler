@@ -1640,7 +1640,7 @@ final class NewTypeInference implements CompilerPass {
         resultPair = analyzeArrayLitFwd(expr, inEnv);
         break;
       case CAST:
-        resultPair = analyzeCastFwd(expr, inEnv, specializedType);
+        resultPair = analyzeCastFwd(expr, inEnv);
         break;
       case CASE:
         // For a statement of the form: switch (exp1) { ... case exp2: ... }
@@ -1780,18 +1780,19 @@ final class NewTypeInference implements CompilerPass {
 
   private EnvTypePair analyzeLogicalOpFwd(
       Node expr, TypeEnv inEnv, JSType requiredType, JSType specializedType) {
-    Token exprKind = expr.getToken();
+    Token logicalOp = expr.getToken();
     Node lhs = expr.getFirstChild();
     Node rhs = expr.getLastChild();
-    if ((specializedType.isTrueOrTruthy() && exprKind == Token.AND)
-        || (specializedType.isFalseOrFalsy() && exprKind == Token.OR)) {
+    if ((specializedType.isTrueOrTruthy() && logicalOp == Token.AND)
+        || (specializedType.isFalseOrFalsy() && logicalOp == Token.OR)) {
       EnvTypePair lhsPair =
           analyzeExprFwd(lhs, inEnv, UNKNOWN, specializedType);
       EnvTypePair rhsPair =
           analyzeExprFwd(rhs, lhsPair.env, UNKNOWN, specializedType);
       return rhsPair;
-    } else if ((specializedType.isFalseOrFalsy() && exprKind == Token.AND)
-        || (specializedType.isTrueOrTruthy() && exprKind == Token.OR)) {
+    }
+    if ((specializedType.isFalseOrFalsy() && logicalOp == Token.AND)
+        || (specializedType.isTrueOrTruthy() && logicalOp == Token.OR)) {
       EnvTypePair shortCircuitPair =
           analyzeExprFwd(lhs, inEnv, UNKNOWN, specializedType);
       EnvTypePair lhsPair = analyzeExprFwd(
@@ -1800,21 +1801,16 @@ final class NewTypeInference implements CompilerPass {
           analyzeExprFwd(rhs, lhsPair.env, UNKNOWN, specializedType);
       JSType lhsUnspecializedType = JSType.join(shortCircuitPair.type, lhsPair.type);
       return combineLhsAndRhsForLogicalOps(
-          exprKind, lhsUnspecializedType, shortCircuitPair, rhsPair);
-    } else {
-      // Independently of the specializedType, && rhs is only analyzed when
-      // lhs is truthy, and || rhs is only analyzed when lhs is falsy.
-      JSType stopAfterLhsType = exprKind == Token.AND ? FALSY : TRUTHY;
-      EnvTypePair shortCircuitPair =
-          analyzeExprFwd(lhs, inEnv, UNKNOWN, stopAfterLhsType);
-      EnvTypePair lhsPair = analyzeExprFwd(
-          lhs, inEnv, UNKNOWN, stopAfterLhsType.negate());
-      EnvTypePair rhsPair =
-          analyzeExprFwd(rhs, lhsPair.env, requiredType, specializedType);
-      JSType lhsUnspecializedType = JSType.join(shortCircuitPair.type, lhsPair.type);
-      return combineLhsAndRhsForLogicalOps(
-          exprKind, lhsUnspecializedType, shortCircuitPair, rhsPair);
+          logicalOp, lhsUnspecializedType, shortCircuitPair, rhsPair);
     }
+    // Independently of the specializedType, && rhs is only analyzed when
+    // lhs is truthy, and || rhs is only analyzed when lhs is falsy.
+    JSType stopAfterLhsType = logicalOp == Token.AND ? FALSY : TRUTHY;
+    EnvTypePair shortCircuitPair = analyzeExprFwd(lhs, inEnv, UNKNOWN, stopAfterLhsType);
+    EnvTypePair lhsPair = analyzeExprFwd(lhs, inEnv, UNKNOWN, stopAfterLhsType.negate());
+    EnvTypePair rhsPair = analyzeExprFwd(rhs, lhsPair.env, requiredType, specializedType);
+    JSType lhsType = JSType.join(shortCircuitPair.type, lhsPair.type);
+    return combineLhsAndRhsForLogicalOps(logicalOp, lhsType, shortCircuitPair, rhsPair);
   }
 
   private EnvTypePair combineLhsAndRhsForLogicalOps(Token logicalOp,
@@ -2565,17 +2561,9 @@ final class NewTypeInference implements CompilerPass {
     return new EnvTypePair(env, commonTypes.getArrayInstance(elementType));
   }
 
-  // Because of the cast, expr doesn't need to have the required type of the context.
-  // However, we still pass along the specialized type, to specialize types when using
-  // logical operators.
-  private EnvTypePair analyzeCastFwd(Node expr, TypeEnv inEnv, JSType specializedType) {
-    Node parent = expr.getParent();
-    JSType newSpecType = this.commonTypes.UNKNOWN;
-    if ((parent.isOr() || parent.isAnd()) && expr == parent.getFirstChild()) {
-      newSpecType = specializedType;
-    }
+  private EnvTypePair analyzeCastFwd(Node expr, TypeEnv inEnv) {
     Node insideCast = expr.getFirstChild();
-    EnvTypePair pair = analyzeExprFwd(insideCast, inEnv, this.commonTypes.UNKNOWN, newSpecType);
+    EnvTypePair pair = analyzeExprFwd(insideCast, inEnv);
     JSType fromType = pair.type;
     JSType toType = (JSType) expr.getTypeI();
     if (!fromType.isInterfaceInstance()

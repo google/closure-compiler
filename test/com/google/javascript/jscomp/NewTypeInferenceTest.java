@@ -19397,7 +19397,7 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "}"));
   }
 
-  public void testMaybeSpecializeInCast() {
+  public void testDontSpecializeInCast() {
     // In this case, we're explicitly using the cast to "protect" arr from the
     // context, so it's not correct to infer that arr has type !Array<!Sub>
     // just because g takes a !Array<!Sub>.
@@ -19421,10 +19421,25 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "}"),
         NewTypeInference.RETURN_NONDECLARED_TYPE);
 
+    // The cast prevents x from being specialized to !Object
     typeCheck(LINE_JOINER.join(
         "function foo(/** ?Object */ x) {",
         "  var /** !Object */ n;",
         "  return /** @type {*} */ (x) && (n = x);",
+        "}"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    // Tests that when we analyze the lhs of the OR as falsy, we don't specialize the call to
+    // googObjectGet as falsy.
+    typeCheck(LINE_JOINER.join(
+        "/**",
+        " * @param {!IObject<?,V>} obj",
+        " * @return {V|undefined}",
+        " * @template V",
+        " */",
+        "function googObjectGet(obj) {}",
+        "function f(/** !Object */ x) {",
+        "  return /** @type {!Array} */ (googObjectGet(x)) || null;",
         "}"));
   }
 
