@@ -2896,6 +2896,11 @@ public final class DefaultPassConfig extends PassConfig {
 
           return new ExtractPrototypeMemberDeclarations(compiler, pattern);
         }
+
+        @Override
+        protected FeatureSet featureSet() {
+          return ES8;
+        }
       };
 
   /** Rewrites common function definitions to be more compact. */
