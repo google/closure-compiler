@@ -207,7 +207,8 @@ class RemoveUnusedVars implements CompilerPass {
           // If this function is a removable var, then create a continuation
           // for it instead of traversing immediately.
           if (NodeUtil.isFunctionDeclaration(n)) {
-            varInfo = getVarInfo(scope.getVar(n.getFirstChild().getString()));
+            varInfo =
+                traverseVar(scope.getVar(n.getFirstChild().getString()));
             FunctionDeclaration functionDeclaration =
                 new RemovableBuilder()
                     .addContinuation(new Continuation(n, scope))
@@ -299,7 +300,7 @@ class RemoveUnusedVars implements CompilerPass {
           var = scope.getVar(n.getString());
           if (var != null) {
             // All name references that aren't handled elsewhere are references to vars.
-            getVarInfo(var).markAsReferenced();
+            traverseVar(var).markAsReferenced();
           }
         }
         break;
@@ -349,7 +350,7 @@ class RemoveUnusedVars implements CompilerPass {
       // reference a constructor, but checking that it is a global is easier and mostly the same.
       traverseChildren(callNode, scope);
     } else {
-      VarInfo classVarInfo = getVarInfo(classVar);
+      VarInfo classVarInfo = traverseVar(classVar);
       RemovableBuilder builder = new RemovableBuilder();
       for (Node child = callNode.getFirstChild(); child != null; child = child.getNext()) {
         builder.addContinuation(new Continuation(child, scope));
@@ -365,7 +366,7 @@ class RemoveUnusedVars implements CompilerPass {
     } else {
       Var var = scope.getVar(target.getString());
       if (var != null) {
-        VarInfo varInfo = getVarInfo(var);
+        VarInfo varInfo = traverseVar(var);
         // NOTE: DestructuringAssign is currently used for both actual destructuring and
         // default or rest parameters.
         // TODO(bradfordcsmith): Maybe distinguish between these 2 cases.
@@ -393,7 +394,8 @@ class RemoveUnusedVars implements CompilerPass {
   private void traverseCatch(Node catchNode, Scope scope) {
     Node exceptionNameNode = catchNode.getFirstChild();
     Node block = exceptionNameNode.getNext();
-    VarInfo exceptionVarInfo = getVarInfo(scope.getVar(exceptionNameNode.getString()));
+    VarInfo exceptionVarInfo =
+        traverseVar(scope.getVar(exceptionNameNode.getString()));
     exceptionVarInfo.setCannotRemoveAnything();
     traverseNode(block, scope);
   }
@@ -410,7 +412,7 @@ class RemoveUnusedVars implements CompilerPass {
       Var var = forScope.getVar(iterationTarget.getString());
       // NOTE: var will be null if it was declared in externs
       if (var != null) {
-        VarInfo varInfo = getVarInfo(var);
+        VarInfo varInfo = traverseVar(var);
         varInfo.setCannotRemoveAnything();
       }
     } else if (NodeUtil.isNameDeclaration(iterationTarget)) {
@@ -433,7 +435,7 @@ class RemoveUnusedVars implements CompilerPass {
         checkState(!declNode.hasChildren());
         // We can never remove the loop variable of a for-in or for-of loop, because it's
         // essential to loop syntax.
-        VarInfo varInfo = getVarInfo(forScope.getVar(declNode.getString()));
+        VarInfo varInfo = traverseVar(forScope.getVar(declNode.getString()));
         varInfo.setCannotRemoveAnything();
       }
     } else {
@@ -471,7 +473,7 @@ class RemoveUnusedVars implements CompilerPass {
       } else {
         Node nameNode = child;
         @Nullable Node valueNode = child.getFirstChild();
-        VarInfo varInfo = getVarInfo(scope.getVar(nameNode.getString()));
+        VarInfo varInfo = traverseVar(scope.getVar(nameNode.getString()));
         if (valueNode == null) {
           varInfo.addRemovable(new RemovableBuilder().buildVanillaForNameDeclaration(nameNode));
         } else if (NodeUtil.mayHaveSideEffects(valueNode)) {
@@ -499,7 +501,8 @@ class RemoveUnusedVars implements CompilerPass {
       traverseNode(nameNode, scope);
     } else {
       Node valueNode = nameNode.getFirstChild();
-      VarInfo varInfo = getVarInfo(checkNotNull(scope.getVar(nameNode.getString())));
+      VarInfo varInfo =
+          traverseVar(checkNotNull(scope.getVar(nameNode.getString())));
       RemovableBuilder builder = new RemovableBuilder();
       if (valueNode == null) {
         varInfo.addRemovable(builder.buildNameDeclarationStatement(declarationStatement));
@@ -568,7 +571,7 @@ class RemoveUnusedVars implements CompilerPass {
         builder.addContinuation(new Continuation(valueNode, scope));
       }
 
-      VarInfo varInfo = getVarInfo(var);
+      VarInfo varInfo = traverseVar(var);
       if (isNamedPropertyAssign) {
         varInfo.addRemovable(builder.buildNamedPropertyAssign(assignNode, nameNode, propertyNode));
       } else if (isVariableAssign) {
@@ -598,7 +601,7 @@ class RemoveUnusedVars implements CompilerPass {
       if (var == null) {
         traverseNode(value, scope);
       } else {
-        VarInfo varInfo = getVarInfo(var);
+        VarInfo varInfo = traverseVar(var);
         if (NodeUtil.mayHaveSideEffects(value)) {
           // TODO(johnlenz): we don't really need to retain all uses of the variable, just
           //     enough to host the default value assignment.
@@ -623,7 +626,7 @@ class RemoveUnusedVars implements CompilerPass {
       } else {
         Var var = scope.getVar(c.getString());
         if (var != null) {
-          VarInfo varInfo = getVarInfo(var);
+          VarInfo varInfo = traverseVar(var);
           varInfo.addRemovable(new RemovableBuilder().buildDestructuringAssign(c, c));
         }
       }
@@ -690,7 +693,7 @@ class RemoveUnusedVars implements CompilerPass {
       }
       if (var != null) {
         // Since we cannot remove it, we must now treat this usage as a reference.
-        getVarInfo(var).markAsReferenced();
+        traverseVar(var).markAsReferenced();
       }
     } else {
       RemovableBuilder builder = new RemovableBuilder();
@@ -704,7 +707,8 @@ class RemoveUnusedVars implements CompilerPass {
       if (defaultValue != null) {
         builder.addContinuation(new Continuation(defaultValue, scope));
       }
-      getVarInfo(var).addRemovable(builder.buildDestructuringAssign(elm, target));
+      traverseVar(var)
+          .addRemovable(builder.buildDestructuringAssign(elm, target));
     }
   }
 
@@ -734,7 +738,8 @@ class RemoveUnusedVars implements CompilerPass {
           new RemovableBuilder()
               .addContinuation(new Continuation(baseClassExpression, classScope))
               .addContinuation(new Continuation(classBodyNode, classScope));
-      VarInfo varInfo = getVarInfo(classScope.getVar(classNameNode.getString()));
+      VarInfo varInfo =
+          traverseVar(classScope.getVar(classNameNode.getString()));
       if (NodeUtil.isClassDeclaration(classNode)) {
         varInfo.addRemovable(builder.buildClassDeclaration(classNode));
       } else {
@@ -768,37 +773,18 @@ class RemoveUnusedVars implements CompilerPass {
     // Checking the function body
     Scope fbodyScope = scopeCreator.createScope(body, fparamScope);
 
-    // for cases like
-    // var x = function funcName() {};
-    // make sure funcName gets into the varInfoMap so it will be considered for removal.
-    getFunctionNameVarInfo(function, fparamScope);
+    String name = function.getFirstChild().getString();
+    if (!name.isEmpty()) {
+      // var x = function funcName() {};
+      Var var = checkNotNull(fparamScope.getVar(name));
+      // make sure funcName gets into the varInfoMap so it will be considered for removal.
+      traverseVar(var);
+    }
 
     traverseChildren(paramlist, fparamScope);
-    if (NodeUtil.isVarArgsFunction(function)) {
-      // if arguments is referenced anywhere, we'll assume we cannot remove any parameters
-      for (Node p : NodeUtil.findLhsNodesInNode(paramlist)) {
-        Var paramVar = checkNotNull(fparamScope.getOwnSlot(p.getString()));
-        getVarInfo(paramVar).markAsReferenced();
-      }
-    }
     traverseChildren(body, fbodyScope);
 
     allFunctionParamScopes.add(fparamScope);
-  }
-
-  @Nullable
-  private VarInfo getFunctionNameVarInfo(Node function, Scope scope) {
-    Node nameNode = checkNotNull(function.getFirstChild());
-    checkState(nameNode.isName());
-    String name = nameNode.getString();
-    if (name.isEmpty()) {
-      // function() {}
-      return null;
-    } else {
-      // function name() {}
-      Var var = checkNotNull(scope.getVar(name));
-      return getVarInfo(var);
-    }
   }
 
   private boolean canRemoveParameters(Node parameterList) {
@@ -866,7 +852,7 @@ class RemoveUnusedVars implements CompilerPass {
           lValue = lValue.getFirstChild();
         }
         if (lValue.isRest()) {
-          lValue = lValue.getFirstChild();
+          lValue = lValue.getOnlyChild();
         }
         if (lValue.isDestructuringPattern()) {
           continue;
@@ -926,6 +912,40 @@ class RemoveUnusedVars implements CompilerPass {
       } else {
         break;
       }
+    }
+  }
+
+  /**
+   * Handles a variable reference seen during traversal and returns a {@link VarInfo} object
+   * appropriate for the given {@link Var}.
+   *
+   * <p>This is a wrapper for {@link #getVarInfo} that handles additional logic needed when we're
+   * getting the {@link VarInfo} during traversal.
+   */
+  private VarInfo traverseVar(Var var) {
+    checkNotNull(var);
+    if (var.isArguments()) {
+      // If `arguments` is used in a function we must consider all parameters to be referenced.
+      Scope functionScope = var.getScope().getClosestHoistScope();
+      Node paramList = NodeUtil.getFunctionParameters(functionScope.getRootNode());
+      for (Node param = paramList.getFirstChild(); param != null; param = param.getNext()) {
+        Node lValue = param;
+        if (lValue.isDefaultValue()) {
+          lValue = lValue.getFirstChild();
+        }
+        if (lValue.isRest()) {
+          lValue = lValue.getOnlyChild();
+        }
+        if (lValue.isDestructuringPattern()) {
+          continue;
+        }
+        Var paramVar = functionScope.getVar(lValue.getString());
+        getVarInfo(paramVar).markAsReferenced();
+      }
+      // `arguments` is never removable.
+      return canonicalTotallyUnremovableVarInfo;
+    } else {
+      return getVarInfo(var);
     }
   }
 
