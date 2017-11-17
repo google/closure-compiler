@@ -22,7 +22,6 @@ import com.google.javascript.refactoring.NodeMetadata;
 import com.google.javascript.refactoring.Scanner;
 import com.google.javascript.refactoring.SuggestedFix;
 import com.google.javascript.rhino.Node;
-import java.util.List;
 
 /**
  * Replaces goog.bind(..., this) with arrow functions. The pretty-printer does not do well with
@@ -58,7 +57,7 @@ public final class GoogBindToArrow extends Scanner {
   }
 
   @Override
-  public List<SuggestedFix> processMatch(Match match) {
+  public ImmutableList<SuggestedFix> processMatch(Match match) {
     AbstractCompiler compiler = match.getMetadata().getCompiler();
     Node googBindCall = match.getNode();
     Node function = googBindCall.getFirstChild().getNext();

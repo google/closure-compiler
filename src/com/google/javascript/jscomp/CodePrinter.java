@@ -227,7 +227,7 @@ public final class CodePrinter {
     }
 
     /** Calculates length of each line in compiled code. */
-    private static List<Integer> computeLineLengths(String code) {
+    private static ImmutableList<Integer> computeLineLengths(String code) {
       ImmutableList.Builder<Integer> builder = ImmutableList.<Integer>builder();
       int lineStartPos = 0;
       int lineEndPos = code.indexOf('\n');

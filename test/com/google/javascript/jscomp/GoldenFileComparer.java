@@ -36,7 +36,7 @@ public class GoldenFileComparer {
       "test/"
           + "com/google/javascript/jscomp/testdata/";
 
-  private static List<SourceFile> coverageExterns() {
+  private static ImmutableList<SourceFile> coverageExterns() {
     SourceFile externs = SourceFile.fromCode(
         "externs", "function Symbol() {}; var window; var self;");
       return ImmutableList.of(externs);

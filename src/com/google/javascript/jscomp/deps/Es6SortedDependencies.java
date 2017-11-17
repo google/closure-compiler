@@ -68,7 +68,7 @@ public final class Es6SortedDependencies<INPUT extends DependencyInfo>
   }
 
   @Override
-  public List<INPUT> getDependenciesOf(List<INPUT> rootInputs, boolean sorted) {
+  public ImmutableList<INPUT> getDependenciesOf(List<INPUT> rootInputs, boolean sorted) {
     checkArgument(userOrderedInputs.containsAll(rootInputs));
 
     Set<INPUT> includedInputs = new HashSet<>();
@@ -105,7 +105,7 @@ public final class Es6SortedDependencies<INPUT extends DependencyInfo>
   }
 
   @Override
-  public List<INPUT> getInputsWithoutProvides() {
+  public ImmutableList<INPUT> getInputsWithoutProvides() {
     return ImmutableList.copyOf(nonExportingInputs.values());
   }
 

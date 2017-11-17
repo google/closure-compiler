@@ -224,7 +224,7 @@ public final class ErrorToFixMapper {
         .build();
   }
 
-  private static List<SuggestedFix> getFixesForImplicitlyNullableJsDoc(
+  private static ImmutableList<SuggestedFix> getFixesForImplicitlyNullableJsDoc(
       JSError error, AbstractCompiler compiler) {
     SuggestedFix qmark =
         new SuggestedFix.Builder()

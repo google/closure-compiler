@@ -1201,7 +1201,7 @@ public abstract class CompilerTestCase extends TestCase {
     testInternal(compiler, inputs, expected, diagnostic, postconditions);
   }
 
-  private static List<SourceFile> maybeCreateSources(String name, String srcText) {
+  private static ImmutableList<SourceFile> maybeCreateSources(String name, String srcText) {
     if (srcText != null) {
       return ImmutableList.of(SourceFile.fromCode(name, srcText));
     }

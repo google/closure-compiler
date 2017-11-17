@@ -84,13 +84,12 @@ public final class ApplySuggestedFixes {
   }
 
   /**
-   * Applies the provided set of suggested fixes to the provided code and returns the new code.
-   * The {@code filenameToCodeMap} must contain all the files that the provided fixes apply to.
-   * The fixes can be provided in any order, but they may not have any overlapping modifications
-   * for the same file.
-   * This function will return new code only for the files that have been modified.
+   * Applies the provided set of suggested fixes to the provided code and returns the new code. The
+   * {@code filenameToCodeMap} must contain all the files that the provided fixes apply to. The
+   * fixes can be provided in any order, but they may not have any overlapping modifications for the
+   * same file. This function will return new code only for the files that have been modified.
    */
-  public static Map<String, String> applySuggestedFixesToCode(
+  public static ImmutableMap<String, String> applySuggestedFixesToCode(
       Iterable<SuggestedFix> fixes, Map<String, String> filenameToCodeMap) {
     ReplacementMap map = new ReplacementMap();
     for (SuggestedFix fix : fixes) {

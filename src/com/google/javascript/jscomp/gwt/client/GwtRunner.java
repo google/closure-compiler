@@ -189,10 +189,8 @@ public final class GwtRunner implements EntryPoint {
   private static final class JsMap extends JavaScriptObject {
     protected JsMap() {}
 
-    /**
-     * @return This {@code JsMap} as a {@link Map}.
-     */
-    Map<String, Object> asMap() {
+    /** @return This {@code JsMap} as a {@link Map}. */
+    ImmutableMap<String, Object> asMap() {
       ImmutableMap.Builder<String, Object> builder = new ImmutableMap.Builder<>();
       for (String key : keys(this)) {
         builder.put(key, get(key));
@@ -285,7 +283,7 @@ public final class GwtRunner implements EntryPoint {
     return DefaultExterns.prepareExterns(environment, all);
   }
 
-  private static List<ModuleIdentifier> createEntryPoints(String[] entryPoints) {
+  private static ImmutableList<ModuleIdentifier> createEntryPoints(String[] entryPoints) {
     ImmutableList.Builder<ModuleIdentifier> builder = new ImmutableList.Builder<>();
     for (String entryPoint : entryPoints) {
       if (entryPoint.startsWith("goog:")) {

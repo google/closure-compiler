@@ -17,13 +17,11 @@ package com.google.javascript.jscomp;
 
 import com.google.common.collect.ImmutableMap;
 
-import java.util.Map;
-
 /**
  * Contains a mapping from HTML Element tag name to the javascript type of that element at runtime.
  */
 class TagNameToType {
-  static Map<String, String> getMap() {
+  static ImmutableMap<String, String> getMap() {
       return new ImmutableMap.Builder<String, String>()
           .put("a", "HTMLAnchorElement")
           .put("area", "HTMLAreaElement")

@@ -147,7 +147,7 @@ public final class SymbolTable {
     return Collections.unmodifiableCollection(symbol.references.values());
   }
 
-  public List<Reference> getReferenceList(Symbol symbol) {
+  public ImmutableList<Reference> getReferenceList(Symbol symbol) {
     return ImmutableList.copyOf(symbol.references.values());
   }
 

@@ -377,7 +377,7 @@ final class NTIScope implements DeclaredTypeRegistry, Serializable, TypeIEnv<JST
     return new LinkedHashSet<>(outerVars);
   }
 
-  Set<String> getLocalFunDefs() {
+  ImmutableSet<String> getLocalFunDefs() {
     return ImmutableSet.copyOf(localFunDefs.keySet());
   }
 
@@ -490,11 +490,11 @@ final class NTIScope implements DeclaredTypeRegistry, Serializable, TypeIEnv<JST
     return s;
   }
 
-  Set<String> getLocals() {
+  ImmutableSet<String> getLocals() {
     return ImmutableSet.copyOf(locals.keySet());
   }
 
-  Set<String> getExterns() {
+  ImmutableSet<String> getExterns() {
     return ImmutableSet.copyOf(externs.keySet());
   }
 

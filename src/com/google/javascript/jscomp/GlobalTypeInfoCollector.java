@@ -22,6 +22,7 @@ import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.HashBasedTable;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.LinkedHashMultimap;
@@ -523,8 +524,8 @@ public class GlobalTypeInfoCollector implements CompilerPass {
     }
   }
 
-  private Collection<PropertyDef> getPropDefsFromInterface(NominalType nominalType,
-      String pname) {
+  private ImmutableCollection<PropertyDef> getPropDefsFromInterface(
+      NominalType nominalType, String pname) {
     checkArgument(nominalType.isFrozen());
     checkArgument(nominalType.isInterface() || nominalType.isBuiltinObject());
     if (nominalType.getPropDeclaredType(pname) == null) {

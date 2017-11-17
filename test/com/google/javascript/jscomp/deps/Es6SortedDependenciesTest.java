@@ -21,6 +21,7 @@ import static com.google.common.truth.Truth.assertThat;
 import com.google.common.collect.ImmutableList;
 import java.util.List;
 import junit.framework.TestCase;
+
 /**
  * Tests for {@link Es6SortedDependencies}
  * @author nicksantos@google.com (Nick Santos)
@@ -241,11 +242,11 @@ public class Es6SortedDependenciesTest extends TestCase {
     assertThat(sorted.getSortedList()).isEqualTo(expected);
   }
 
-  private static List<String> requires(String... strings) {
+  private static ImmutableList<String> requires(String... strings) {
     return ImmutableList.copyOf(strings);
   }
 
-  private static List<String> provides(String... strings) {
+  private static ImmutableList<String> provides(String... strings) {
     return ImmutableList.copyOf(strings);
   }
 }
