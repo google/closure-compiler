@@ -105,6 +105,7 @@ class FunctionInjector {
       this.mode = mode;
     }
 
+    @Override
     public String toString() {
       return "Reference @ " + callNode;
     }
@@ -453,13 +454,8 @@ class FunctionInjector {
     } else {
       Node expressionRoot = ExpressionDecomposer.findExpressionRoot(callNode);
       if (expressionRoot != null) {
-        // TODO(b/69375648): Change this to compiler.getOptions().allowMethodCallDecomposing()
-        boolean allowMethodCallDecomposing = false;
-
-        ExpressionDecomposer decomposer = new ExpressionDecomposer(
-            compiler, safeNameIdSupplier, knownConstants, ref.scope, allowMethodCallDecomposing);
-        DecompositionType type = decomposer.canExposeExpression(
-            callNode);
+        ExpressionDecomposer decomposer = getDecomposer(ref.scope);
+        DecompositionType type = decomposer.canExposeExpression(callNode);
         if (type == DecompositionType.MOVABLE) {
           return CallSiteType.EXPRESSION;
         } else if (type == DecompositionType.DECOMPOSABLE) {
