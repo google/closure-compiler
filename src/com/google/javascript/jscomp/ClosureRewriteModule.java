@@ -44,7 +44,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.Stack;
 import javax.annotation.Nullable;
 
 /**
@@ -641,12 +640,12 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     public static String resolve(String fromModulePath, String relativeToModulePath) {
       // Normally we'd use java.nio.file.Path here, but GWT/J2cl does not support it.
       String path = fromModulePath + "/../" + relativeToModulePath;
-      Stack<String> stack = new Stack<>();
+      Deque<String> stack = new ArrayDeque<>();
       for (String component : Splitter.on('/').split(path)) {
-        if (component.equals("..") && !stack.isEmpty() && !stack.peek().equals("..")) {
-          stack.pop();
+        if (component.equals("..") && !stack.isEmpty() && !stack.peekLast().equals("..")) {
+          stack.removeLast();
         } else if (!component.equals(".")) {
-          stack.push(component);
+          stack.addLast(component);
         }
       }
       return Joiner.on('/').join(stack);

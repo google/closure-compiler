@@ -20,7 +20,7 @@ import static com.google.common.base.Preconditions.checkState;
 import com.google.javascript.jscomp.NodeTraversal.AbstractShallowCallback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nullable;
 
@@ -170,7 +170,7 @@ class ExtractPrototypeMemberDeclarations implements CompilerPass {
    * instead.
    */
   private void extractInstance(ExtractionInstance instance) {
-    PrototypeMemberDeclaration first = instance.declarations.getFirst();
+    PrototypeMemberDeclaration first = instance.declarations.get(0);
     String className = first.qualifiedClassName;
     if (pattern == Pattern.USE_GLOBAL_TEMP) {
       // Use the temp variable to hold the prototype.
@@ -246,7 +246,7 @@ class ExtractPrototypeMemberDeclarations implements CompilerPass {
    */
   private class GatherExtractionInfo extends AbstractShallowCallback {
 
-    private final List<ExtractionInstance> instances = new LinkedList<>();
+    private final List<ExtractionInstance> instances = new ArrayList<>();
     private int totalDelta = pattern.globalOverhead;
 
     @Override
@@ -266,7 +266,7 @@ class ExtractPrototypeMemberDeclarations implements CompilerPass {
         // Found a good site here. The constructor will computes the chain of
         // declarations that is qualified for extraction.
         ExtractionInstance instance = new ExtractionInstance(prototypeMember, n);
-        cur = instance.declarations.getLast().node;
+        cur = instance.declarations.get(instance.declarations.size() - 1).node;
 
         // Only add it to our work list if the extraction at this instance makes the code smaller.
         if (instance.isFavorable()) {
@@ -286,7 +286,7 @@ class ExtractPrototypeMemberDeclarations implements CompilerPass {
   }
 
   private class ExtractionInstance {
-    LinkedList<PrototypeMemberDeclaration> declarations = new LinkedList<>();
+    List<PrototypeMemberDeclaration> declarations = new ArrayList<>();
     private int delta = 0;
     private final Node parent;
 

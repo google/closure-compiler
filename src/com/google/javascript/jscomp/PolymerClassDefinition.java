@@ -25,7 +25,7 @@ import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nullable;
 
@@ -148,7 +148,7 @@ final class PolymerClassDefinition {
     PolymerBehaviorExtractor behaviorExtractor =
         new PolymerBehaviorExtractor(compiler, globalNames);
     ImmutableList<BehaviorDefinition> behaviors = behaviorExtractor.extractBehaviors(behaviorArray);
-    List<MemberDefinition> allProperties = new LinkedList<>();
+    List<MemberDefinition> allProperties = new ArrayList<>();
     for (BehaviorDefinition behavior : behaviors) {
       overwriteMembersIfPresent(allProperties, behavior.props);
     }
