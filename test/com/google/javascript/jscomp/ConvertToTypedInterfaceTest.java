@@ -189,6 +189,33 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
             "/** @const {number} */ Foo.prototype.x;"));
   }
 
+  public void testMultipleSameNamedThisProperties() {
+    test(
+        lines(
+            "class Foo {",
+            "  constructor(/** number */ x) {",
+            "    /** @const */ this.x = x;",
+            "  }",
+            "}",
+            "/** @template T */",
+            "class Bar {",
+            "  constructor(/** T */ x) {",
+            "    /** @const */ this.x = x;",
+            "  }",
+            "}"),
+        lines(
+            "class Foo {",
+            "  constructor(/** number */ x) {}",
+            "}",
+            "/** @const {number} */ Foo.prototype.x;",
+            "/** @template T */",
+            "class Bar {",
+            "  constructor(/** T */ x) {}",
+            "}",
+            "/** @const {T} */ Bar.prototype.x;"));
+
+  }
+
   public void testLegacyGoogModule() {
     testSame(
         lines(
@@ -354,6 +381,24 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
         lines(
             "/** @constructor */ function Foo(/** number= */ opt_x) {}",
             "/** @const {number|undefined} */ Foo.prototype.x;"));
+
+  }
+
+  public void testNotConfusedByOutOfOrderDeclarations() {
+    test(
+        lines(
+            "/** @constructor */",
+            "function Foo(/** boolean= */ opt_tag) {",
+            "  if (opt_tag) {",
+            "    Foo.tag = opt_tag;",
+            "  }",
+            "}",
+            "/** @type {boolean} */ Foo.tag = true;",
+            ""),
+        lines(
+            "/** @constructor */",
+            "function Foo(/** boolean= */ opt_tag) {}",
+            "/** @type {boolean} */ Foo.tag;"));
 
   }
 
