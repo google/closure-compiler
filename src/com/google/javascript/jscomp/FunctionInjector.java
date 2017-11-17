@@ -104,6 +104,10 @@ class FunctionInjector {
       this.module = module;
       this.mode = mode;
     }
+
+    public String toString() {
+      return "Reference @ " + callNode;
+    }
   }
 
   /**
@@ -319,7 +323,7 @@ class FunctionInjector {
     UNSUPPORTED() {
       @Override
       public void prepare(FunctionInjector injector, Reference ref) {
-        throw new IllegalStateException("unexpected");
+        throw new IllegalStateException("unexpected: " + ref);
       }
     },
 

@@ -548,10 +548,7 @@ public final class CodePrinter {
     }
   }
 
-
-  static class CompactCodePrinter
-      extends MappedCodePrinter {
-
+  static class CompactCodePrinter extends MappedCodePrinter {
     // The CompactCodePrinter tries to emit just enough newlines to stop there
     // being lines longer than the threshold.  Since the output is going to be
     // gzipped, it makes sense to try to make the newlines appear in similar

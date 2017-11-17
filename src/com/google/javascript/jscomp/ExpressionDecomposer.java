@@ -178,9 +178,8 @@ class ExpressionDecomposer {
          grandchild = child,
              child = parent,
              parent = child.getParent()) {
-      Token parentType = parent.getToken();
       checkState(!isConditionalOp(parent) || child == parent.getFirstChild());
-      if (parentType == Token.ASSIGN) {
+      if (parent.isAssign()) {
           if (isSafeAssign(parent, state.sideEffects)) {
             // It is always safe to inline "foo()" for expressions such as
             // "a = b = c = foo();"
@@ -195,16 +194,16 @@ class ExpressionDecomposer {
           } else {
             // Alias "next()" in "next().foo"
             Node left = parent.getFirstChild();
-          Token type = left.getToken();
+            Token type = left.getToken();
             if (left != child) {
-            checkState(NodeUtil.isGet(left));
+              checkState(NodeUtil.isGet(left));
               if (type == Token.GETELEM) {
                 decomposeSubExpressions(left.getLastChild(), null, state);
               }
               decomposeSubExpressions(left.getFirstChild(), null, state);
             }
           }
-      } else if (parentType == Token.CALL && NodeUtil.isGet(parent.getFirstChild())) {
+      } else if (parent.isCall() && NodeUtil.isGet(parent.getFirstChild())) {
         Node functionExpression = parent.getFirstChild();
         decomposeSubExpressions(functionExpression.getNext(), child, state);
         // Now handle the call expression
@@ -219,7 +218,7 @@ class ExpressionDecomposer {
           // Continue from here.
           parent = replacement;
         }
-      } else if (parentType == Token.OBJECTLIT) {
+      } else if (parent.isObjectLit()) {
         decomposeObjectLiteralKeys(parent.getFirstChild(), child, state);
       } else {
         decomposeSubExpressions(parent.getFirstChild(), child, state);
@@ -247,8 +246,7 @@ class ExpressionDecomposer {
    * @return "expression" or the node closest to "expression", that does not
    * have a conditional ancestor.
    */
-  private static Node findNonconditionalParent(
-      Node subExpression, Node expressionRoot) {
+  private static Node findNonconditionalParent(Node subExpression, Node expressionRoot) {
      Node result = subExpression;
 
      for (Node child = subExpression, parent = child.getParent();
@@ -299,7 +297,7 @@ class ExpressionDecomposer {
     }
 
     // Never try to decompose an object literal key.
-    checkState(!NodeUtil.isObjectLitKey(n));
+    checkState(!NodeUtil.isObjectLitKey(n), n);
 
     // Decompose the children in reverse evaluation order.  This simplifies
     // determining if the any of the children following have side-effects.
@@ -313,8 +311,7 @@ class ExpressionDecomposer {
       // Either there were preexisting side-effects, or this node has
       // side-effects.
       state.sideEffects = true;
-      state.extractBeforeStatement = extractExpression(
-          n, state.extractBeforeStatement);
+      state.extractBeforeStatement = extractExpression(n, state.extractBeforeStatement);
     }
   }
 
@@ -366,7 +363,7 @@ class ExpressionDecomposer {
         break;
       default:
         // With a valid tree we should never get here.
-        throw new IllegalStateException("Unexpected.");
+        throw new IllegalStateException("Unexpected expression: " + expr);
     }
 
     Node ifNode;
@@ -407,12 +404,9 @@ class ExpressionDecomposer {
    * otherwise, simply:
    *       expr
    */
-  private static Node buildResultExpression(
-      Node expr, boolean needResult, String tempName) {
+  private static Node buildResultExpression(Node expr, boolean needResult, String tempName) {
     if (needResult) {
-      return IR.assign(
-          IR.name(tempName),
-          expr).srcrefTree(expr);
+      return IR.assign(IR.name(tempName), expr).srcrefTree(expr);
     } else {
       return expr;
     }
@@ -465,7 +459,7 @@ class ExpressionDecomposer {
     // If it is ASSIGN_XXX, keep the assignment in place and extract the
     // original value of the LHS operand.
     if (isLhsOfAssignOp) {
-      checkState(expr.isName() || NodeUtil.isGet(expr));
+      checkState(expr.isName() || NodeUtil.isGet(expr), expr);
       // Transform "x += 2" into "x = temp + 2"
       Node opNode = new Node(NodeUtil.getOpFromAssignmentOp(parent))
           .useSourceInfoIfMissingFrom(parent);
@@ -845,8 +839,7 @@ class ExpressionDecomposer {
    * in these cases the checks below are necessary.
    *
    * @param seenSideEffects If true, check to see if node-tree maybe affected by
-   * side-effects, otherwise if the tree has side-effects. @see
-   * isExpressionTreeUnsafe
+   * side-effects, otherwise if the tree has side-effects. @see isExpressionTreeUnsafe
    * @return Whether the assignment is safe from side-effects.
    */
   private boolean isSafeAssign(Node n, boolean seenSideEffects) {
@@ -871,8 +864,7 @@ class ExpressionDecomposer {
    * @return Whether anything in the expression tree prevents a call from
    * being moved.
    */
-  private boolean isExpressionTreeUnsafe(
-      Node n, boolean followingSideEffectsExist) {
+  private boolean isExpressionTreeUnsafe(Node n, boolean followingSideEffectsExist) {
     if (followingSideEffectsExist) {
       // If the call to be inlined has side-effects, check to see if this
       // expression tree can be affected by any side-effects.

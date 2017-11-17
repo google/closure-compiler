@@ -19,7 +19,6 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 
-import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.base.Splitter;
@@ -1295,7 +1294,7 @@ public final class NodeUtil {
    * @param callNode - constructor call node
    */
   static boolean constructorCallHasSideEffects(Node callNode) {
-    Preconditions.checkArgument(callNode.isNew(), "Expected NEW node, got %s", callNode.getToken());
+    checkArgument(callNode.isNew(), "Expected NEW node, got %s", callNode.getToken());
 
     if (callNode.isNoSideEffectsCall()) {
       return false;
@@ -1535,13 +1534,11 @@ public final class NodeUtil {
   /**
    * @param knownConstants A set of names known to be constant value at
    * node 'n' (such as locals that are last written before n can execute).
-   * @return Whether the tree can be affected by side-effects or
-   * has side-effects.
+   * @return Whether the tree can be affected by side-effects or has side-effects.
    */
   // TODO(nick): Get rid of the knownConstants argument in favor of using
   // scope with InferConsts.
-  static boolean canBeSideEffected(
-      Node n, Set<String> knownConstants, Scope scope) {
+  static boolean canBeSideEffected(Node n, Set<String> knownConstants, @Nullable Scope scope) {
     switch (n.getToken()) {
       case YIELD:
       case CALL:
@@ -1552,8 +1549,7 @@ public final class NodeUtil {
         return true;
       case NAME:
         // Non-constant names values may have been changed.
-        return !isConstantVar(n, scope)
-            && !knownConstants.contains(n.getString());
+        return !isConstantVar(n, scope) && !knownConstants.contains(n.getString());
 
       // Properties on constant NAMEs can still be side-effected.
       case GETPROP:
@@ -1565,7 +1561,7 @@ public final class NodeUtil {
         // and function declarations are not part of expressions.
         // TODO(bradfordcsmith): Do we need to add a case for CLASS here?
         //     This checkState currently does not exclude class methods.
-        Preconditions.checkState(!isFunctionDeclaration(n));
+        checkState(!isFunctionDeclaration(n), n);
         return false;
       default:
         break;
@@ -2303,7 +2299,7 @@ public final class NodeUtil {
   /** @return The first getter in the class members that matches the key. */
   @Nullable
   static Node getFirstGetterMatchingKey(Node n, String keyName) {
-    Preconditions.checkState(n.isClassMembers() || n.isObjectLit());
+    checkState(n.isClassMembers() || n.isObjectLit(), n);
     for (Node keyNode : n.children()) {
       if (keyNode.isGetterDef() && keyNode.getString().equals(keyName)) {
         return keyNode;
@@ -2315,7 +2311,7 @@ public final class NodeUtil {
   /** @return The first setter in the class members that matches the key. */
   @Nullable
   static Node getFirstSetterMatchingKey(Node n, String keyName) {
-    Preconditions.checkState(n.isClassMembers() || n.isObjectLit());
+    checkState(n.isClassMembers() || n.isObjectLit(), n);
     for (Node keyNode : n.children()) {
       if (keyNode.isSetterDef() && keyNode.getString().equals(keyName)) {
         return keyNode;
@@ -2579,7 +2575,7 @@ public final class NodeUtil {
       case DEFAULT_CASE:
         return true;
       default:
-        Preconditions.checkState(isControlStructure(parent));
+        checkState(isControlStructure(parent), parent);
         return false;
     }
   }
@@ -3108,7 +3104,7 @@ public final class NodeUtil {
         case MODULE_BODY:
           return false;
         default:
-          Preconditions.checkState(current.isLabel());
+          checkState(current.isLabel(), current);
           current = current.getParent();
       }
     }
@@ -3871,7 +3867,7 @@ public final class NodeUtil {
       if (current.isName() || current.isThis() || current.isSuper()) {
         return current;
       }
-      Preconditions.checkState(current.isGetProp(), "Not a getprop node: ", current);
+      checkState(current.isGetProp(), "Not a getprop node: ", current);
     }
   }
 
@@ -4552,7 +4548,7 @@ public final class NodeUtil {
     return fnNode.getSecondChild();
   }
 
-  static boolean isConstantVar(Node node, Scope scope) {
+  static boolean isConstantVar(Node node, @Nullable Scope scope) {
     if (isConstantName(node)) {
       return true;
     }
@@ -5435,7 +5431,7 @@ public final class NodeUtil {
     if (invocation.isTaggedTemplateLit()) {
       return new TemplateArgsIterable(invocation.getLastChild());
     } else {
-      Preconditions.checkState(isCallOrNew(invocation));
+      checkState(isCallOrNew(invocation), invocation);
       return invocation.hasOneChild()
           ? ImmutableList.<Node>of() : invocation.getSecondChild().siblings();
     }
