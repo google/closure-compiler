@@ -462,7 +462,9 @@ class ConvertToTypedInterface implements CompilerPass {
       Node newStatement =
           NodeUtil.newQNameDeclaration(compiler, nameNode.getQualifiedName(), null, jsdoc);
       newStatement.useSourceInfoIfMissingFromForTree(nameNode);
-      getStatement().replaceWith(newStatement);
+      Node oldStatement = getStatement();
+      NodeUtil.deleteChildren(oldStatement, compiler);
+      oldStatement.replaceWith(newStatement);
       compiler.reportChangeToEnclosingScope(newStatement);
     }
   }
@@ -723,6 +725,9 @@ class ConvertToTypedInterface implements CompilerPass {
               && !rhs.hasChildren()
               && (jsdoc == null || !JsdocUtil.hasAnnotatedType(jsdoc)))) {
         return RemovalType.PRESERVE_ALL;
+      }
+      if (NodeUtil.isNamespaceDecl(nameNode)) {
+        return RemovalType.SIMPLIFY_RHS;
       }
       if (!isExport && (jsdoc == null || !jsdoc.containsDeclaration())) {
         if (isDeclaration(nameNode)

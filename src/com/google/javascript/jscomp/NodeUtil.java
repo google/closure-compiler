@@ -1021,7 +1021,7 @@ public final class NodeUtil {
     // Also, omitting @const in externs is not as confusing as in source code,
     // because assigning an object literal in externs only makes sense when
     // defining a namespace or enum.
-    boolean isMarkedConst = n.isConst() || (jsdoc != null && jsdoc.isConstant());
+    boolean isMarkedConst = n.getParent().isConst() || (jsdoc != null && jsdoc.isConstant());
     if (!n.isFromExterns() && !isMarkedConst) {
       return false;
     }

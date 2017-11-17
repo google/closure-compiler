@@ -1003,6 +1003,13 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
 
   }
 
+  public void testConstKeywordNamespaces() {
+    testSame("const ns = {}; /** @return {number} */ ns.fun = function(x,y,z) {}");
+    testSame("const ns = { /** @return {number} */ fun : goog.abstractMethod };");
+    testSame("const ns = {fun: function(x,y,z) {}}");
+    testSame("const ns = { /** @return {number} */ fun(x,y,z) {}}");
+  }
+
   public void testRemoveIgnoredProperties() {
     test(
         "/** @const */ var ns = {}; /** @return {number} */ ns['fun'] = function(x,y,z) {}",
