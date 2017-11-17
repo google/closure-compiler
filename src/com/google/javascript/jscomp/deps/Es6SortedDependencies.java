@@ -110,7 +110,7 @@ public final class Es6SortedDependencies<INPUT extends DependencyInfo>
   }
 
   @Override
-  public List<INPUT> getSortedDependenciesOf(List<INPUT> roots) {
+  public ImmutableList<INPUT> getSortedDependenciesOf(List<INPUT> roots) {
     return getDependenciesOf(roots, true);
   }
 

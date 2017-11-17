@@ -57,7 +57,8 @@ public final class ErrorToFixMapper {
   private static final Pattern USE_SHORT_NAME =
       Pattern.compile(".*Please use the short name '(.*)' instead.");
 
-  public static List<SuggestedFix> getFixesForJsError(JSError error, AbstractCompiler compiler) {
+  public static ImmutableList<SuggestedFix> getFixesForJsError(
+      JSError error, AbstractCompiler compiler) {
     SuggestedFix fix = getFixForJsError(error, compiler);
     if (fix != null) {
       return ImmutableList.of(fix);
