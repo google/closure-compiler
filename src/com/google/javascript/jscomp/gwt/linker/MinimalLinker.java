@@ -67,10 +67,13 @@ public class MinimalLinker extends AbstractLinker {
   private static String formatOutput(String js, boolean export) {
     StringBuilder output = new StringBuilder();
 
-    // If $wnd is set to this, then JSInterop's normal export will run. If export is false, fake
-    // out $wnd ith an empty object (plus Error to work around StackTraceCreator using it in a
-    // static block).
-    output.append("(function(){var $wnd=").append(export ? "this" : "{'Error':{}}").append(";");
+    // Shadow window so that non-browser environments can pass their own global object here.
+    output.append("(function(window){");
+
+    // If $wnd is set to this, then JSInterop's normal export will run, and pollute the global
+    // namespace. If export is false, fake out $wnd with an empty object.
+    // (We also add Error to work around StackTraceCreator using it in a static block).
+    output.append("var $wnd=").append(export ? "this" : "{'Error':{}}").append(";");
 
     // Shadow $doc, $moduleName and $moduleBase.
     output.append("var $doc={},$moduleName,$moduleBase;");
@@ -78,10 +81,18 @@ public class MinimalLinker extends AbstractLinker {
     // Append output JS.
     output.append(js);
 
-    // Reset $wnd, and call gwtOnLoad if defined. This invokes the onModuleLoad methods of all
-    // loaded modules.
-    output.append(
-        "this['$gwtExport']=$wnd;$wnd=this;typeof gwtOnLoad==='function'&&gwtOnLoad()})();");
+    // 1. Export $gwtExport, needed for transpile.js
+    // 2. Reset $wnd (nb. this occurs after jscompiler's JS has run)
+    // 3. Call gwtOnLoad, if defined: this invokes onModuleLoad for all loaded modules.
+    output.append("this['$gwtExport']=$wnd;$wnd=this;typeof gwtOnLoad==='function'&&gwtOnLoad()");
+
+    // Overspecify the global object, to capture Node and browser environments.
+    String globalObject = "this&&this.self||"
+        + "(typeof window!=='undefined'?window:(typeof global!=='undefined'?global:this))";
+
+    // Call the outer function with the global object as this and its first argument, so that we
+    // fake window in Node environments, allowing our code to do things like "window.console(...)".
+    output.append("}).call(").append(globalObject).append(",").append(globalObject).append(");");
 
     return output.toString();
   }
