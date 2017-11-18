@@ -657,7 +657,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
           // This seems fragile but has worked well for a long time.
           // TODO(ChadKillingsworth): Discover if there is a better way to detect these.
           Node ifAncestor = getOutermostIfAncestor(parent);
-          if (ifAncestor != null) {
+          if (ifAncestor != null && (NodeUtil.isLValue(n) || isInIfTest(n))) {
             UmdPattern existingPattern = findUmdPattern(umdPatterns, ifAncestor);
             if (existingPattern != null) {
               umdPatterns.remove(existingPattern);
@@ -678,7 +678,9 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
         // This seems fragile but has worked well for a long time.
         // TODO(ChadKillingsworth): Discover if there is a better way to detect these.
         Node ifAncestor = getOutermostIfAncestor(parent);
-        if (ifAncestor != null && findUmdPattern(umdPatterns, ifAncestor) == null) {
+        if (ifAncestor != null
+            && findUmdPattern(umdPatterns, ifAncestor) == null
+            && (NodeUtil.isLValue(n) || isInIfTest(n))) {
           umdPatterns.add(new UmdPattern(ifAncestor, ifAncestor.getChildAtIndex(2)));
         }
       }
@@ -711,7 +713,9 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
             // This seems fragile but has worked well for a long time.
             // TODO(ChadKillingsworth): Discover if there is a better way to detect these.
             Node ifAncestor = getOutermostIfAncestor(parent);
-            if (ifAncestor != null && findUmdPattern(umdPatterns, ifAncestor) == null) {
+            if (ifAncestor != null
+                && findUmdPattern(umdPatterns, ifAncestor) == null
+                && (NodeUtil.isLValue(n) || isInIfTest(n))) {
               umdPatterns.add(new UmdPattern(ifAncestor, ifAncestor.getSecondChild()));
             }
           }
@@ -952,6 +956,23 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
       }
 
       return getOutermostIfAncestor(parent);
+    }
+
+    /** Return whether the node is within the test portion of an if statement */
+    private boolean isInIfTest(Node n) {
+      if (n == null || NodeUtil.isTopLevel(n) || n.isFunction()) {
+        return false;
+      }
+      Node parent = n.getParent();
+      if (parent == null) {
+        return false;
+      }
+
+      if ((parent.isIf() || parent.isHook()) && parent.getFirstChild() == n) {
+        return true;
+      }
+
+      return isInIfTest(parent);
     }
 
     /** Remove a Universal Module Definition and leave just the commonjs export statement */

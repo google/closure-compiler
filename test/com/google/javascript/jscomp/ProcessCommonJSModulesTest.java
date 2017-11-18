@@ -1095,4 +1095,33 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             " */",
             "var foo = module$missing.default;"));
   }
+
+  /** The export reference in the if statement should not be recognized as a UMD pattern. */
+  public void testExportsUsageInIf() {
+    testModules(
+        "test.js",
+        lines(
+            "exports.merge = function(source) {",
+            "  return Object.keys(source).reduce(function (acc, key) {",
+            "    if (Object.prototype.hasOwnProperty.call(acc, key)) {",
+            "      acc[key] = exports.merge(acc[key], value, options);",
+            "    } else {",
+            "      acc[key] = value;",
+            "    }",
+            "    return acc;",
+            "  }, {});",
+            "};"),
+        lines(
+            "/** @const */ var module$test = {/** @const */ default: {}};",
+            "module$test.default.merge = function(source) {",
+            "  return Object.keys(source).reduce(function(acc,key) {",
+            "    if (Object.prototype.hasOwnProperty.call(acc,key)) {",
+            "      acc[key] = module$test.default.merge(acc[key],value,options);",
+            "    } else {",
+            "      acc[key] = value;",
+            "    }",
+            "    return acc;",
+            "  }, {});",
+            "}"));
+  }
 }
