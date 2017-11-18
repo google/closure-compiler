@@ -63,14 +63,15 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "module$other.default.call(null);"));
     test(
         ImmutableList.of(
-            SourceFile.fromCode(Compiler.joinPathParts("mod", "name.js"), ""),
+            SourceFile.fromCode(Compiler.joinPathParts("mod", "name.js"), "module.exports = {};"),
             SourceFile.fromCode(
                 Compiler.joinPathParts("test", "sub.js"),
                 lines(
                     "var name = require('../mod/name');",
                     "(function() { let foo = name; foo(); })();"))),
         ImmutableList.of(
-            SourceFile.fromCode(Compiler.joinPathParts("mod", "name.js"), ""),
+            SourceFile.fromCode(Compiler.joinPathParts("mod", "name.js"),
+                "/** @const */ var module$mod$name = {/** @const */ default: {}};"),
             SourceFile.fromCode(
                 Compiler.joinPathParts("test", "sub.js"),
                 lines(
@@ -818,13 +819,15 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
     moduleRoots = ImmutableList.of("/base");
     test(
         ImmutableList.of(
-            SourceFile.fromCode(Compiler.joinPathParts("base", "mod", "name.js"), ""),
+            SourceFile.fromCode(Compiler.joinPathParts("base", "mod", "name.js"),
+                "module.exports = {}"),
             SourceFile.fromCode(
                 Compiler.joinPathParts("base", "test", "sub.js"),
                 lines(
                     "var name = require('/mod/name');", "(function() { let foo = name; foo(); })();"))),
         ImmutableList.of(
-            SourceFile.fromCode(Compiler.joinPathParts("base", "mod", "name.js"), ""),
+            SourceFile.fromCode(Compiler.joinPathParts("base", "mod", "name.js"),
+                "/** @const */ var module$mod$name = {/** @const */ default: {}};"),
             SourceFile.fromCode(
                 Compiler.joinPathParts("base", "test", "sub.js"),
                 lines(
@@ -1031,10 +1034,20 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
           "  else if (typeof module !== 'undefined' && module.exports) { module.exports = definition(); }",
           "  else if (context.exports) { context.exports = definition(); }",
           "  else { context[name] = definition(); }",
-          "})('Fingerprint2', this, function() { return 'hi'; })"),
+          "})('Fingerprint2', this, function() {",
+          "  var Fingerprint2 = function() {",
+          "    if (!(this instanceof Fingerprint2)) { return new Fingerprint2(); }",
+          "  };",
+          "  return Fingerprint2$$module$test;",
+          "})"),
       lines(
-          "/** @const */ var module$test={};",
-          "/** @const */ module$test.default = 'hi';"));
+          "/** @const */ var module$test = {};",
+          "var Fingerprint2$$module$test = function() {",
+          "  if (!(this instanceof Fingerprint2$$module$test)) {",
+          "    return new Fingerprint2$$module$test();",
+          "  }",
+          "};",
+          "module$test.default = Fingerprint2$$module$test;"));
   }
 
   public void testTypeofModuleReference() {
@@ -1080,6 +1093,6 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             " * @fileoverview",
             " * @suppress {moduleLoad}",
             " */",
-            "var foo = module$missing;"));
+            "var foo = module$missing.default;"));
   }
 }

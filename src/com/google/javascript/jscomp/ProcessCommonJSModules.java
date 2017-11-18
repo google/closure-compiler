@@ -221,6 +221,22 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
     return requireCall.getSecondChild().getString();
   }
 
+  private String getImportedModuleName(NodeTraversal t, Node requireCall) {
+    return getImportedModuleName(t, requireCall, getCommonJsImportPath(requireCall));
+  }
+
+  private String getImportedModuleName(NodeTraversal t, Node n, String importPath) {
+    ModulePath modulePath =
+        t.getInput()
+            .getPath()
+            .resolveJsModule(importPath, n.getSourceFileName(), n.getLineno(), n.getCharno());
+
+    if (modulePath == null) {
+      return ModuleIdentifier.forFile(importPath).getModuleName();
+    }
+    return modulePath.toModuleName();
+  }
+
   /**
    * Recognize if a node is a module export. We recognize several forms:
    *
@@ -1240,11 +1256,10 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
             if (qName == null) {
               break;
             }
-            Var nameDeclaration = t.getScope().getVar(qName);
+            final Var nameDeclaration = t.getScope().getVar(qName);
             if (nameDeclaration != null
                 && nameDeclaration.getNode() != null
                 && Objects.equals(nameDeclaration.getNode().getInputId(), n.getInputId())) {
-
               // Avoid renaming a shadowed global
               //
               // var angular = angular;  // value is global ref
@@ -1255,7 +1270,9 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
                 }
               });
 
-              if (enclosingDeclaration == null || enclosingDeclaration == n) {
+              if (enclosingDeclaration == null
+                  || enclosingDeclaration == n
+                  || nameDeclaration.getScope() != t.getScope()) {
                 maybeUpdateName(t, n, nameDeclaration);
               }
             }
@@ -1317,23 +1334,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
      */
     private void visitRequireCall(NodeTraversal t, Node require, Node parent) {
       String requireName = getCommonJsImportPath(require);
-
-      ModulePath modulePath =
-          t.getInput()
-              .getPath()
-              .resolveJsModule(
-                  requireName,
-                  require.getSourceFileName(),
-                  require.getLineno(),
-                  require.getCharno());
-
-      String moduleName;
-      if (modulePath == null) {
-        // The module loader will issue an error, but use a fallback
-        moduleName = ModuleIdentifier.forFile(requireName).getModuleName();
-      } else {
-        moduleName = modulePath.toModuleName();
-      }
+      String moduleName = getImportedModuleName(t, require);
       Node moduleRef = NodeUtil.newQName(compiler, getBasePropertyImport(moduleName))
           .useSourceInfoFromForTree(require);
       parent.replaceChild(require, moduleRef);
@@ -1930,55 +1931,19 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
       }
 
       if (rValue.isCall() && isCommonJsImport(rValue)) {
-        // var foo = require('bar');
-        String importName = rewriteImportName(t, rValue);
-        if (importName == null) {
-          return null;
-        }
-        if (isCommonJsImport(rValue)
-            && t.getScope().getVar(rValue.getFirstChild().getQualifiedName()) == null) {
-          String requireName = getCommonJsImportPath(rValue);
-          ModulePath modulePath =
-              t.getInput()
-                  .getPath()
-                  .resolveJsModule(
-                      requireName, n.getSourceFileName(), n.getLineno(), n.getCharno());
-          String moduleName;
-          if (modulePath == null) {
-            moduleName = ModuleIdentifier.forFile(requireName).getModuleName();
-          } else {
-            moduleName = modulePath.toModuleName();
-          }
-          return moduleName + propSuffix;
-        }
-        return importName + propSuffix;
+        return getBasePropertyImport(getImportedModuleName(t, rValue)) + propSuffix;
       } else if (rValue.isGetProp() && isCommonJsImport(rValue.getFirstChild())) {
         // var foo = require('bar').foo;
-        String importName = rewriteImportName(t, rValue.getFirstChild());
-        if (importName == null) {
-          return null;
-        }
+        String importName =
+            getBasePropertyImport(getImportedModuleName(t, rValue.getFirstChild()));
 
         String suffix = rValue.getSecondChild().isGetProp() ?
             rValue.getSecondChild().getQualifiedName() : rValue.getSecondChild().getString();
 
-        return importName + "." + suffix;
+        return importName + "." + suffix + propSuffix;
       }
 
       return null;
-    }
-
-    private String rewriteImportName(NodeTraversal t, Node call) {
-      String requireName = getCommonJsImportPath(call);
-      ModulePath modulePath =
-          t.getInput()
-              .getPath()
-              .resolveJsModule(
-                  requireName, call.getSourceFileName(), call.getLineno(), call.getCharno());
-      if (modulePath == null) {
-        return null;
-      }
-      return getBasePropertyImport(modulePath.toModuleName());
     }
 
     /**
@@ -1999,22 +1964,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
           }
 
           String moduleName = name.substring(0, endIndex);
-          ModulePath modulePath =
-              t.getInput()
-                  .getPath()
-                  .resolveJsModule(
-                      moduleName,
-                      typeNode.getSourceFileName(),
-                      typeNode.getLineno(),
-                      typeNode.getCharno());
-
-          String globalModuleName;
-          if (modulePath == null) {
-            // The module loader will issue an error, but we fall back to a path-based name
-            globalModuleName = ModuleIdentifier.forFile(moduleName).getModuleName();
-          } else {
-            globalModuleName = modulePath.toModuleName();
-          }
+          String globalModuleName = getImportedModuleName(t, typeNode, moduleName);
           String baseImportProperty = getBasePropertyImport(globalModuleName);
           typeNode.setString(
               localTypeName == null ? baseImportProperty : baseImportProperty + localTypeName);
