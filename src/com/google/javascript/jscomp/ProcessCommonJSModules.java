@@ -845,10 +845,6 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
      * <p>Returns whether the default export can be declared constant
      */
     boolean initializeModule() {
-      if (exports.isEmpty() && moduleExports.isEmpty()) {
-        return true;
-      }
-
       CompilerInput ci = compiler.getInput(this.script.getInputId());
       ModulePath modulePath = ci.getPath();
       if (modulePath == null) {

@@ -1711,7 +1711,7 @@ public final class CommandLineRunnerTest extends TestCase {
               "};"),
           LINE_JOINER.join(
               "var Baz = module$Baz.default,",
-              "    baz = new module$Baz();",
+              "    baz = new module$Baz.default();",
               "console.log(baz.baz());",
               "console.log(baz.bar());")
         });
@@ -1772,7 +1772,7 @@ public final class CommandLineRunnerTest extends TestCase {
               "};"),
           LINE_JOINER.join(
               "var Baz = module$Baz.default,",
-              "    baz = new module$Baz();",
+              "    baz = new module$Baz.default();",
               "console.log(baz.baz());",
               "console.log(baz.bar());")
         });
@@ -1892,6 +1892,7 @@ public final class CommandLineRunnerTest extends TestCase {
         },
         new String[] {
           CompilerTestCase.LINE_JOINER.join(
+              "/** @const */ var module$foo = {/** @const */ default: {}};",
               "function foo$$module$foo(){ alert('foo'); }",
               "foo$$module$foo();"),
           CompilerTestCase.LINE_JOINER.join("'use strict';", "")
