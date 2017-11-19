@@ -1544,4 +1544,20 @@ public final class CrossModuleCodeMotionTest extends CompilerTestCase {
             "function f() { return A; } f(); function f2() { return B; }"
         });
   }
+
+  public void testDestructuringDeclarationsNotMovable() {
+    testSame(createModuleChain("const [a] = [];", "a;"));
+    testSame(createModuleChain("const {a} = { a: 1 };", "a;"));
+  }
+
+  public void testDestructuringAssignmentsAreReferences() {
+    testSame(createModuleChain("let a = 1; [a] = [5];", "a;"));
+    testSame(createModuleChain("let a = 1; ({x: a} = {x: 5});", "a;"));
+    test(
+        createModuleChain("let a = 1;", "[a] = [5];", "a;"),
+        new String[] {"", "let a = 1; [a] = [5];", "a;"});
+    test(
+        createModuleChain("let a = 1;", "({x: a} = {x: 5});", "a;"),
+        new String[] {"", "let a = 1; ({x: a} = {x: 5});", "a;"});
+  }
 }
