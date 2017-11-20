@@ -338,6 +338,53 @@ public class SuggestedFixTest {
   }
 
   @Test
+  public void testReplace_lowerPrecedence() {
+    String before = "2 * ";
+    String after = "3";
+    Compiler compiler = getCompiler(before + after + ";\n");
+    Node root = compileToScriptRoot(compiler);
+    Node newNode = IR.exprResult(IR.sub(IR.number(4), IR.number(1)));
+    Node toReplace = root.getOnlyChild().getOnlyChild().getLastChild();
+    SuggestedFix fix = new SuggestedFix.Builder()
+        .replace(toReplace, newNode, compiler)
+        .build();
+    CodeReplacement replacement =
+        CodeReplacement.create(before.length(), after.length(), "(4 - 1)");
+    assertReplacement(fix, replacement);
+  }
+
+  @Test
+  public void testReplace_samePrecedence() {
+    String before = "5 - ";
+    String after = "1";
+    Compiler compiler = getCompiler(before + after + ";\n");
+    Node root = compileToScriptRoot(compiler);
+    Node newNode = IR.exprResult(IR.sub(IR.number(3), IR.number(2)));
+    Node toReplace = root.getOnlyChild().getOnlyChild().getLastChild();
+    SuggestedFix fix = new SuggestedFix.Builder()
+        .replace(toReplace, newNode, compiler)
+        .build();
+    CodeReplacement replacement =
+        CodeReplacement.create(before.length(), after.length(), "(3 - 2)");
+    assertReplacement(fix, replacement);
+  }
+
+  @Test
+  public void testReplace_higherPrecedence() {
+    String before = "3 << ";
+    String after = "2";
+    Compiler compiler = getCompiler(before + after + ";\n");
+    Node root = compileToScriptRoot(compiler);
+    Node newNode = IR.exprResult(IR.add(IR.number(1), IR.number(1)));
+    Node toReplace = root.getOnlyChild().getOnlyChild().getLastChild();
+    SuggestedFix fix = new SuggestedFix.Builder()
+        .replace(toReplace, newNode, compiler)
+        .build();
+    CodeReplacement replacement = CodeReplacement.create(before.length(), after.length(), "1 + 1");
+    assertReplacement(fix, replacement);
+  }
+
+  @Test
   public void testAddCast() {
     String input = "obj.fnCall();";
     Compiler compiler = getCompiler(input);

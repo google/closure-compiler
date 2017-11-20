@@ -709,7 +709,7 @@ public class IR {
    * It isn't possible to always determine if a detached node is a expression,
    * so make a best guess.
    */
-  private static boolean mayBeExpression(Node n) {
+  public static boolean mayBeExpression(Node n) {
     switch (n.getToken()) {
       case FUNCTION:
       case CLASS:

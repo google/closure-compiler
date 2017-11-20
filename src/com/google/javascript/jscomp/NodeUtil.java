@@ -1579,13 +1579,13 @@ public final class NodeUtil {
   }
 
   /**
-   * The comma operator has the lowest precedence, 0, followed by the assignment operators (=, &=,
-   * +=, etc.) which have precedence of 1, and so on.
+   * The comma operator has the lowest precedence, 0, followed by the assignment operators
+   * ({@code =}, {@code &=}, {@code +=}, etc.) which have precedence of 1, and so on.
    *
-   * @see
-   *     https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Operator_Precedence
+   * See
+   * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Operator_Precedence
    */
-  static int precedence(Token type) {
+  public static int precedence(Token type) {
     switch (type) {
       case COMMA:  return 0;
       case ASSIGN_BITOR:
