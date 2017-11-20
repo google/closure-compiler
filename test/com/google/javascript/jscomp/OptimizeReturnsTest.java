@@ -324,6 +324,8 @@ public final class OptimizeReturnsTest extends CompilerTestCase {
   }
 
   public void testRewriteUnusedAsyncResult1() throws Exception {
+    // Async function returns can be dropped if no-one waits on the returned
+    // promise.
     String source = lines(
         "async function a(){return promise}",
         "a()");
@@ -333,6 +335,17 @@ public final class OptimizeReturnsTest extends CompilerTestCase {
     test(source, expected);
   }
 
+  public void testRewriteUnusedGeneratorResult1() throws Exception {
+    // Generator function returns can be dropped if no-one uses the returned
+    // iterator.
+    String source = lines(
+        "function *a(){return value}",
+        "a()");
+    String expected = lines(
+        "function *a(){value; return}",
+        "a()");
+    test(source, expected);
+  }
 
   public void testNoRewriteObjLit1() throws Exception {
     String source = lines(
