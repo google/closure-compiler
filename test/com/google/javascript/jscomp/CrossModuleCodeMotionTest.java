@@ -1560,4 +1560,17 @@ public final class CrossModuleCodeMotionTest extends CompilerTestCase {
         createModuleChain("let a = 1;", "({x: a} = {x: 5});", "a;"),
         new String[] {"", "let a = 1; ({x: a} = {x: 5});", "a;"});
   }
+
+  public void testDefaultParamValuesAreReferences() {
+    testSame(createModuleChain("let a = 1; function f(x = a) {} f();", "a;"));
+    test(
+        createModuleChain("let a = 1; function f(x = a) {}", "f();"),
+        new String[] {"", "let a = 1; function f(x = a) {} f();"});
+  }
+
+  public void testSpreadCountsAsAReference() {
+    test(
+        createModuleChain("let a = [];", "function f(...args) {} f(...a);", "a;"),
+        new String[] {"", "let a = []; function f(...args) {} f(...a);", "a;"});
+ }
 }
