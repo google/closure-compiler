@@ -78,6 +78,14 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
   private static final int TRUTHY_MASK = 0x200;
   private static final int FALSY_MASK = 0x400;
   // Room to grow.
+
+  /**
+   * The unresolved type is useful for per-library type checking. This type is neither a subtype
+   * nor a supertype of any other type. In effect, if you try to use it, you get a warning.
+   * To avoid flowing this type around and having to change all type operations to recognize it,
+   * if an expression evaluates to this type, we warn and return ? instead.
+   */
+  private static final int UNRESOLVED_MASK = 0x6fffffff;
   private static final int UNKNOWN_MASK = 0x7fffffff; // @type {?}
   private static final int TOP_MASK = 0xffffffff; // @type {*}
 
@@ -169,6 +177,8 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
         return commonTypes.FALSY;
       case UNKNOWN_MASK:
         return commonTypes.UNKNOWN;
+      case UNRESOLVED_MASK:
+        return commonTypes.UNRESOLVED;
       case TOP_MASK:
         return commonTypes.TOP;
       case BOOLEAN_MASK:
@@ -260,6 +270,7 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
     types.put("TRUTHY", new MaskType(commonTypes, TRUTHY_MASK));
     types.put("UNDEFINED", new MaskType(commonTypes, UNDEFINED_MASK));
     types.put("UNKNOWN", new MaskType(commonTypes, UNKNOWN_MASK));
+    types.put("UNRESOLVED", new MaskType(commonTypes, UNRESOLVED_MASK));
 
     types.put("UNDEFINED_OR_BOOLEAN", new MaskType(commonTypes, UNDEFINED_OR_BOOLEAN_MASK));
     types.put("UNDEFINED_OR_NUMBER", new MaskType(commonTypes, UNDEFINED_OR_NUMBER_MASK));
@@ -606,16 +617,19 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
     return result;
   }
 
-  // When joining w/ TOP or UNKNOWN, avoid setting more fields on them, eg, obj.
+  // When joining w/ TOP or UNKNOWN, avoid setting more fields on them, e.g., obj.
   public static JSType join(JSType lhs, JSType rhs) {
     checkNotNull(lhs);
     checkNotNull(rhs);
     JSTypes commonTypes = lhs.commonTypes;
-    if (lhs.isTop() || rhs.isTop()) {
-      return commonTypes.TOP;
+    if (lhs.isUnresolved() || rhs.isUnresolved()) {
+      return commonTypes.UNRESOLVED;
     }
     if (lhs.isUnknown() || rhs.isUnknown()) {
       return commonTypes.UNKNOWN;
+    }
+    if (lhs.isTop() || rhs.isTop()) {
+      return commonTypes.TOP;
     }
     if (lhs.isBottom()) {
       return rhs;
@@ -638,15 +652,13 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
         ObjectType.joinSets(lhs.getObjs(), rhs.getObjs());
     String newTypevar =
         lhs.getTypeVar() != null ? lhs.getTypeVar() : rhs.getTypeVar();
-    ImmutableSet<EnumType> newEnums =
-        EnumType.union(lhs.getEnums(), rhs.getEnums());
+    ImmutableSet<EnumType> newEnums = EnumType.union(lhs.getEnums(), rhs.getEnums());
     if (newEnums.isEmpty()) {
       return makeType(commonTypes, newMask, newObjs, newTypevar, NO_ENUMS);
     }
-    JSType tmpJoin =
-        makeType(commonTypes, newMask & ~ENUM_MASK, newObjs, newTypevar, NO_ENUMS);
-    return makeType(commonTypes, newMask, newObjs,
-        newTypevar, EnumType.normalizeForJoin(newEnums, tmpJoin));
+    JSType tmpJoin = makeType(commonTypes, newMask & ~ENUM_MASK, newObjs, newTypevar, NO_ENUMS);
+    return makeType(
+        commonTypes, newMask, newObjs, newTypevar, EnumType.normalizeForJoin(newEnums, tmpJoin));
   }
 
   /**
@@ -696,30 +708,10 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
     return substituteGenerics(this.commonTypes.MAP_TO_UNKNOWN);
   }
 
-  /**
-   * Given an generic supertype of this,
-   * returns the type argument as instantiated by this type.
-   *
-   * Parameter supertype has to be a type with a single type parameter.
-   *
-   * For example,<pre>   {@code
-   *   (Iterable<Foo>).getInstantiatedTypeArgument(Iterable<?>) returns Foo,
-   *   and
-   *   /** {@literal @}template A * /
-   *   class Foo {}
-   *   /**
-   *    * {@literal @}template B
-   *    * {@literal @}extends {Foo<Array<B>>}
-   *    * /
-   *   class Bar {}
-   *   (Bar<string>).getInstantiatedTypeArguments(Bar<?>) returns string
-   *   (Bar<string>).getInstantiatedTypeArguments(Foo<?>) returns Array<string>
-   * }</pre>
-   * This is used, for example, in type-checking for-of and yield.
-   */
-  public JSType getInstantiatedTypeArgument(JSType supertype) {
+  @Override
+  public JSType getInstantiatedTypeArgument(TypeI supertype) {
     RawNominalType rawType =
-        supertype.getNominalTypeIfSingletonObj().getRawNominalType();
+        ((JSType) supertype).getNominalTypeIfSingletonObj().getRawNominalType();
     List<String> typeParameters = rawType.getTypeParameters();
     checkState(typeParameters.size() == 1);
 
@@ -1257,6 +1249,9 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
     if (isUnknown() || other.isUnknown() || other.isTop()) {
       return true;
     }
+    if (other.isUnresolved()) {
+      return false;
+    }
     if (isTheTruthyType()) {
       return !other.makeTruthy().isBottom();
     }
@@ -1327,7 +1322,7 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
         !other.isTop() && !other.isUnknown()
         && (otherMask & TYPEVAR_MASK) == 0 && (otherMask & ENUM_MASK) == 0,
         "Requested invalid type to remove: %s", other);
-    if (isUnknown()) {
+    if (isUnknown() || isUnresolved()) {
       return this;
     }
     if (isTop()) {
@@ -1621,6 +1616,8 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
         return builder.append("*");
       case UNKNOWN_MASK:
         return builder.append("?");
+      case UNRESOLVED_MASK:
+        return builder.append("unresolved");
       default:
         if (isUnion) {
           builder.append("(");
@@ -1758,11 +1755,7 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
 
   @Override
   public final boolean isUnresolved() {
-    // TODO(aravindpg): This is purely a stub to ensure we never get into a codepath that
-    // depends on us being an unresolved type. We currently do not mark unresolved types as such
-    // in NTI since the main use-case (warning for unfulfilled forward declares) can be
-    // handled differently (by warning after GTI), so we don't want to change the type system.
-    return false;
+    return getMask() == UNRESOLVED_MASK;
   }
 
   @Override
@@ -1791,7 +1784,7 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
   }
 
   @Override
-  public final TypeI restrictByNotNullOrUndefined() {
+  public final JSType restrictByNotNullOrUndefined() {
     return this.removeType(this.commonTypes.NULL_OR_UNDEFINED);
   }
 
@@ -2026,19 +2019,8 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
   @Override
   public final JSType getPrototypeObject() {
     checkState(this.isSingletonObj());
-    JSType proto = getNominalTypeIfSingletonObj().getPrototypePropertyOfCtor();
-    if (this.equals(proto)) {
-      // In JS's dynamic semantics, the only object without a __proto__ is
-      // Object.prototype, but it's not representable in NTI.
-      // Object.prototype is the only case where we are equal to our own prototype.
-      // In this case, we should return null.
-      Preconditions.checkState(
-          isBuiltinObjectPrototype(),
-          "Failed to reach Object.prototype in prototype chain, unexpected self-link found at %s",
-          this);
-      return null;
-    }
-    return proto;
+    ObjectType proto = getObjTypeIfSingletonObj().getPrototypeObject();
+    return proto != null ? fromObjectType(proto) : null;
   }
 
   @Override
@@ -2086,11 +2068,6 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
     return obj != null && obj.isAmbiguousObject();
   }
 
-  final boolean isBuiltinObjectPrototype() {
-    ObjectType obj = getObjTypeIfSingletonObj();
-    return obj != null && obj.getNominalType().isBuiltinObject() && obj.isPrototypeObject();
-  }
-
   @Override
   public final boolean isLiteralObject() {
     return isSingletonObj() && getNominalTypeIfSingletonObj().isLiteralObject();
@@ -2100,7 +2077,7 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
   public final boolean isInstanceofObject() {
     if (isSingletonObj()) {
       NominalType nt = getNominalTypeIfSingletonObj();
-      return nt.isLiteralObject() || nt.isBuiltinObject();
+      return nt.isLiteralObject() || nt.isBuiltinObject() || nt.isIObject();
     }
     return false;
   }
@@ -2375,6 +2352,23 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
   }
 
   @Override
+  public ObjectTypeI withoutStrayProperties() {
+    ObjectType obj = getObjTypeIfSingletonObj();
+    NominalType nt = getNominalTypeIfSingletonObj();
+    if (nt.isLiteralObject()) {
+      return this;
+    }
+    if (obj.isPrototypeObject()) {
+      // The canonical prototype, without any specialized properties
+      return obj.getOwnerFunction().getInstanceTypeOfCtor().getPrototypeObject();
+    }
+    if (obj.isNamespace()) {
+      return obj.getNamespaceType();
+    }
+    return nt.getInstanceAsJSType();
+  }
+
+  @Override
   public TypeInference typeInference() {
     return TypeInference.NTI;
   }
@@ -2450,6 +2444,7 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
       out.writeObject(new ArrayList<>(this.enums));
     }
 
+    @SuppressWarnings("unchecked")
     @GwtIncompatible("ObjectInputStream")
     private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
       in.defaultReadObject();
@@ -2525,6 +2520,7 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
       out.writeObject(new ArrayList<>(this.objs));
     }
 
+    @SuppressWarnings("unchecked")
     @GwtIncompatible("ObjectInputStream")
     private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
       in.defaultReadObject();
@@ -2570,6 +2566,7 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
       out.writeObject(new ArrayList<>(this.objs));
     }
 
+    @SuppressWarnings("unchecked")
     @GwtIncompatible("ObjectInputStream")
     private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
       in.defaultReadObject();

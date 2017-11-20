@@ -19,12 +19,12 @@ package com.google.javascript.jscomp;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.rhino.Node;
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
  * This file contains the only tests that use the infrastructure in
- * CompilerTestCase to run multiple passes and do sanity checks. The other files
+ * CompilerTestCase to run multiple passes and do validity checks. The other files
  * that use CompilerTestCase unit test a single pass.
  *
  * @author dimvar@google.com (Dimitris Vardoulakis)
@@ -45,11 +45,11 @@ public final class MultiPassTest extends CompilerTestCase {
   protected CompilerPass getProcessor(Compiler compiler) {
     PhaseOptimizer phaseopt = new PhaseOptimizer(compiler, null);
     phaseopt.consume(passes);
-    phaseopt.setSanityCheck(
-        new PassFactory("sanityCheck", false) {
+    phaseopt.setValidityCheck(
+        new PassFactory("validityCheck", false) {
           @Override
           protected CompilerPass create(AbstractCompiler compiler) {
-            return new SanityCheck(compiler);
+            return new ValidityCheck(compiler);
           }
         });
     compiler.setPhaseOptimizer(phaseopt);
@@ -69,7 +69,7 @@ public final class MultiPassTest extends CompilerTestCase {
   }
 
   public void testInlineVarsAndPeephole() {
-    passes = new LinkedList<>();
+    passes = new ArrayList<>();
     addInlineVariables();
     addPeephole();
     test("function f() { var x = 1; return x + 5; }",
@@ -77,7 +77,7 @@ public final class MultiPassTest extends CompilerTestCase {
   }
 
   public void testInlineFunctionsAndPeephole() {
-    passes = new LinkedList<>();
+    passes = new ArrayList<>();
     addInlineFunctions();
     addPeephole();
     test("function f() { return 1; }" +
@@ -87,7 +87,7 @@ public final class MultiPassTest extends CompilerTestCase {
   }
 
   public void testInlineVarsAndDeadCodeElim() {
-    passes = new LinkedList<>();
+    passes = new ArrayList<>();
     addDeadCodeElimination();
     addInlineVariables();
     test("function f() { var x = 1; return x; x = 3; }",
@@ -95,7 +95,7 @@ public final class MultiPassTest extends CompilerTestCase {
   }
 
   public void testCollapseObjectLiteralsScopeChange() {
-    passes = new LinkedList<>();
+    passes = new ArrayList<>();
     addCollapseObjectLiterals();
     test("function f() {" +
         "  var obj = { x: 1 };" +
@@ -110,7 +110,7 @@ public final class MultiPassTest extends CompilerTestCase {
   }
 
   public void testRemoveUnusedClassPropertiesScopeChange() {
-    passes = new LinkedList<>();
+    passes = new ArrayList<>();
     addRemoveUnusedClassProperties();
     test("/** @constructor */" +
         "function Foo() { this.a = 1; }" +
@@ -121,7 +121,7 @@ public final class MultiPassTest extends CompilerTestCase {
   }
 
   public void testRemoveUnusedVariablesScopeChange() {
-    passes = new LinkedList<>();
+    passes = new ArrayList<>();
     addRemoveUnusedVars();
     test("function f() { var x; }",
         "function f() {}");
@@ -132,14 +132,14 @@ public final class MultiPassTest extends CompilerTestCase {
   }
 
   public void testTopScopeChange() {
-    passes = new LinkedList<>();
+    passes = new ArrayList<>();
     addInlineVariables();
     addPeephole();
     test("var x = 1, y = x, z = x + y;", "var z = 2;");
   }
 
   public void testTwoOptimLoopsNoCrash() {
-    passes = new LinkedList<>();
+    passes = new ArrayList<>();
     addInlineVariables();
     addSmartNamePass();
     addInlineVariables();
@@ -151,18 +151,18 @@ public final class MultiPassTest extends CompilerTestCase {
     disableNormalize();
     allowExternsChanges();
 
-    passes = new LinkedList<>();
+    passes = new ArrayList<>();
     addRenameVariablesInParamListsPass();
     addSplitVariableDeclarationsPass();
     addDestructuringPass();
     addArrowFunctionPass();
 
     test(
-        LINE_JOINER.join(
+        lines(
             "var foo = (x,y) => x===y;",
             "var f = ({key: value}) => foo('v', value);",
             "f({key: 'v'})"),
-        LINE_JOINER.join(
+        lines(
             "var foo = function(x,y) {return x===y;};",
             "var f = function ($jscomp$destructuring$var0) {",
             "   var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;",
@@ -172,8 +172,8 @@ public final class MultiPassTest extends CompilerTestCase {
             "f({key:'v'})"));
 
     test(
-        LINE_JOINER.join("var x, a, b;", "x = ([a,b] = [1,2])"),
-        LINE_JOINER.join(
+        lines("var x, a, b;", "x = ([a,b] = [1,2])"),
+        lines(
             "var x, a, b;",
             "x = function () {",
             "   let $jscomp$destructuring$var0 = [1,2];",
@@ -184,8 +184,8 @@ public final class MultiPassTest extends CompilerTestCase {
             "} ();"));
 
     test(
-        LINE_JOINER.join("var x, a, b;", "x = (() => {console.log(); return [a,b] = [1,2];})()"),
-        LINE_JOINER.join(
+        lines("var x, a, b;", "x = (() => {console.log(); return [a,b] = [1,2];})()"),
+        lines(
             "var x, a, b;",
             "x = function () {",
             "   console.log();",
@@ -200,9 +200,9 @@ public final class MultiPassTest extends CompilerTestCase {
             "} ();"));
 
     test(
-        LINE_JOINER.join(
+        lines(
             "var foo = function () {", "var x, a, b;", "x = ([a,b] = [1,2]);", "}", "foo();"),
-        LINE_JOINER.join(
+        lines(
             "var foo = function () {",
             "var x, a, b;",
             " x = function () {",
@@ -216,8 +216,8 @@ public final class MultiPassTest extends CompilerTestCase {
             "foo();"));
 
     test(
-        LINE_JOINER.join("var prefix;", "for (;;[, prefix] = /\\.?([^.]+)$/.exec(prefix)){", "}"),
-        LINE_JOINER.join(
+        lines("var prefix;", "for (;;[, prefix] = /\\.?([^.]+)$/.exec(prefix)){", "}"),
+        lines(
             "var prefix;",
             "for (;;function () {",
             "   let $jscomp$destructuring$var0 = /\\.?([^.]+)$/.exec(prefix)",
@@ -230,12 +230,12 @@ public final class MultiPassTest extends CompilerTestCase {
             "}"));
 
     test(
-        LINE_JOINER.join(
+        lines(
             "var prefix;",
             "for (;;[, prefix] = /\\.?([^.]+)$/.exec(prefix)){",
             "   console.log(prefix);",
             "}"),
-        LINE_JOINER.join(
+        lines(
             "var prefix;",
             "for (;;function () {",
             "   let $jscomp$destructuring$var0 = /\\.?([^.]+)$/.exec(prefix)",
@@ -249,8 +249,8 @@ public final class MultiPassTest extends CompilerTestCase {
             "}"));
 
     test(
-        LINE_JOINER.join("for (var x = 1; x < 3; [x,] = [3,4]){", "   console.log(x);", "}"),
-        LINE_JOINER.join(
+        lines("for (var x = 1; x < 3; [x,] = [3,4]){", "   console.log(x);", "}"),
+        lines(
             "for (var x = 1; x < 3; function () {",
             "   let $jscomp$destructuring$var0 = [3,4]",
             "   var $jscomp$destructuring$var1 = $jscomp.makeIterator($jscomp$destructuring$var0);",
@@ -262,7 +262,7 @@ public final class MultiPassTest extends CompilerTestCase {
 
     test(
         "var x = ({a: b, c: d} = foo());",
-        LINE_JOINER.join(
+        lines(
             "var x = function () {",
             "   let $jscomp$destructuring$var0 = foo();",
             "   var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;",
@@ -273,7 +273,7 @@ public final class MultiPassTest extends CompilerTestCase {
 
     test(
         "var x = ({a: b, c: d} = foo());",
-        LINE_JOINER.join(
+        lines(
             "var x = function () {",
             "   let $jscomp$destructuring$var0 = foo();",
             "   var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;",
@@ -284,7 +284,7 @@ public final class MultiPassTest extends CompilerTestCase {
 
     test(
         "var x; var y = ({a: x} = foo());",
-        LINE_JOINER.join(
+        lines(
             "var x;",
             "var y = function () {",
             "   let $jscomp$destructuring$var0 = foo();",
@@ -295,7 +295,7 @@ public final class MultiPassTest extends CompilerTestCase {
 
     test(
         "var x; var y = (() => {return {a,b} = foo();})();",
-        LINE_JOINER.join(
+        lines(
             "var x;",
             "var y = function () {",
             "   return function () {",
@@ -362,11 +362,11 @@ public final class MultiPassTest extends CompilerTestCase {
             return new PeepholeOptimizationsPass(
                 compiler,
                 getName(),
-                new PeepholeMinimizeConditions(late, false /* useTypes */),
+                new PeepholeMinimizeConditions(late),
                 new PeepholeSubstituteAlternateSyntax(late),
-                new PeepholeReplaceKnownMethods(late, false),
+                new PeepholeReplaceKnownMethods(late, false /* useTypes */),
                 new PeepholeRemoveDeadCode(),
-                new PeepholeFoldConstants(late, false),
+                new PeepholeFoldConstants(late, false /* useTypes */),
                 new PeepholeCollectPropertyAssignments());
           }
         });
@@ -387,7 +387,7 @@ public final class MultiPassTest extends CompilerTestCase {
         new PassFactory("removeUnusedVars", false) {
           @Override
           protected CompilerPass create(AbstractCompiler compiler) {
-            return new RemoveUnusedVars(compiler, false, false, false);
+            return new RemoveUnusedVars(compiler, false, false);
           }
         });
   }

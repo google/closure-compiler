@@ -423,7 +423,7 @@ public final class TranspileAfterNTITest extends IntegrationTestCase {
     assertType(nameX.getTypeI()).isNumber();
     assertType(nameX.getFirstChild().getTypeI()).isNumber();
     assertType(nameX.getFirstFirstChild().getTypeI())
-        .toStringIsEqualTo("Math.pow<|function(?,?): number|>{prototype: ?}");
+        .toStringIsEqualTo("Math.pow");
     assertType(nameX.getFirstFirstChild().getFirstChild().getTypeI()).toStringIsEqualTo("Math");
     assertType(nameX.getFirstChild().getSecondChild().getTypeI()).isNumber();
   }
@@ -436,7 +436,7 @@ public final class TranspileAfterNTITest extends IntegrationTestCase {
     assertType(assign.getFirstChild().getTypeI()).isNumber();
     assertType(assign.getSecondChild().getTypeI()).isNumber();
     assertType(assign.getSecondChild().getFirstChild().getTypeI())
-        .toStringIsEqualTo("Math.pow<|function(?,?): number|>{prototype: ?}");
+        .toStringIsEqualTo("Math.pow");
     assertType(assign.getSecondChild().getFirstFirstChild().getTypeI()).toStringIsEqualTo("Math");
     assertType(assign.getSecondChild().getSecondChild().getTypeI()).isNumber();
   }

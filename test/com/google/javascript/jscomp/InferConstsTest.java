@@ -188,7 +188,7 @@ public final class InferConstsTest extends CompilerTestCase {
 
   public void testGeneratorFunctionVar() {
     testNotConsts(
-        LINE_JOINER.join(
+        lines(
             "function *gen() {",
             "  var x = 0; ",
             "  while (x < 3)",
@@ -199,7 +199,7 @@ public final class InferConstsTest extends CompilerTestCase {
 
   public void testGeneratorFunctionConst() {
     testConsts(
-        LINE_JOINER.join(
+        lines(
             "function *gen() {",
             "  var x = 0;",
             "  yield x;",

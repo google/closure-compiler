@@ -36,7 +36,7 @@ public class J2clPass implements CompilerPass {
   private final Supplier<String> safeNameIdSupplier;
 
   private class GetDefineRewriter extends AbstractPostOrderCallback {
-    private Set<String> defines;
+    private final Set<String> defines;
 
     GetDefineRewriter(Set<String> defines) {
       this.defines = defines;
@@ -245,16 +245,21 @@ public class J2clPass implements CompilerPass {
      */
     inlineFunctionsInFile(
         root,
-        "vmbootstrap/Arrays.impl.java.js",
+        "Arrays.impl.java.js",
         ImmutableSet.of("$create", "$init", "$instanceIsOfType", "$castTo", "$stampType"),
         InliningMode.DIRECT);
     inlineFunctionsInFile(
-        root, "vmbootstrap/Casts.impl.java.js", ImmutableSet.of("$to"), InliningMode.DIRECT);
+        root, "Casts.impl.java.js", ImmutableSet.of("$to"), InliningMode.DIRECT);
 
     /*
      * Inlines all Interface.$markImplementor(FooClass) metaclass calls so that FooClass and others
      * like it are not unnecessarily retained and so that static analysis of interface instanceof
      * calls becomes possible.
+     *
+     * Note that his pass should NOT be restricted to j2cl .java.js files because JavaScript code
+     * implementing Java interfaces (not recommended but widely used in xplat) needs calls to
+     * $markImplementor.
+     *
      */
     inlineFunctionsInFile(
         root, ALL_CLASS_FILE_NAMES, ImmutableSet.of("$markImplementor"), InliningMode.BLOCK);
@@ -264,7 +269,7 @@ public class J2clPass implements CompilerPass {
      */
     inlineFunctionsInFile(
         root,
-        "nativebootstrap/Util.impl.java.js",
+        "Util.impl.java.js",
         ImmutableSet.of(
             "$setClassMetadata",
             "$setClassMetadataForInterface",

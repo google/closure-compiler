@@ -158,9 +158,11 @@ public class Node implements Serializable {
       IS_ES6_CLASS = 92,          // Indicates that a FUNCTION node is converted from an ES6 class
       TRANSPILED = 93,            // Indicates that a SCRIPT represents a transpiled file
       DELETED = 94,               // For passes that work only on deleted funs.
-      GOOG_MODULE_ALIAS = 95;     // Indicates that the node is an alias of goog.require'd module.
+      GOOG_MODULE_ALIAS = 95,     // Indicates that the node is an alias of goog.require'd module.
                                   // Aliases are desugared and inlined by compiler passes but we
                                   // need to preserve them for building index.
+      IS_UNUSED_PARAMETER = 96;   // Mark a parameter as unused. Used to defer work from
+                                  // RemovedUnusedVars to OptimizeParameters.
 
   private static final String propToString(byte propType) {
       switch (propType) {
@@ -222,6 +224,7 @@ public class Node implements Serializable {
         case TRANSPILED:         return "transpiled";
         case DELETED:            return "DELETED";
         case GOOG_MODULE_ALIAS:  return "goog_module_alias";
+        case IS_UNUSED_PARAMETER: return "is_unused_parameter";
         default:
           throw new IllegalStateException("unexpected prop id " + propType);
       }
@@ -314,6 +317,11 @@ public class Node implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
+    // Only for cloneNode
+    private StringNode(Token token) {
+      super(token);
+    }
+
     StringNode(Token token, String str) {
       super(token);
       setString(str);
@@ -347,10 +355,11 @@ public class Node implements Serializable {
     }
 
     @Override
+    @SuppressWarnings("ReferenceEquality")
     public boolean isEquivalentTo(
         Node node, boolean compareType, boolean recur, boolean jsDoc, boolean sideEffect) {
       return (super.isEquivalentTo(node, compareType, recur, jsDoc, sideEffect)
-          && this.str.equals(((StringNode) node).str));
+          && this.str == (((StringNode) node).str));
     }
 
     /**
@@ -376,7 +385,9 @@ public class Node implements Serializable {
 
     @Override
     public StringNode cloneNode(boolean cloneTypeExprs) {
-      return copyNodeFields(new StringNode(token, str), cloneTypeExprs);
+      StringNode clone = new StringNode(token);
+      clone.str = str;
+      return copyNodeFields(clone, cloneTypeExprs);
     }
 
     @GwtIncompatible("ObjectInputStream")
@@ -601,6 +612,11 @@ public class Node implements Serializable {
 
   public final boolean hasChildren() {
     return first != null;
+  }
+
+  public final Node getOnlyChild() {
+    checkState(hasOneChild());
+    return first;
   }
 
   @Nullable
@@ -1341,6 +1357,13 @@ public class Node implements Serializable {
     this.putBooleanProp(NON_INDEXABLE, true);
   }
 
+  public final void makeNonIndexableRecursive() {
+    this.makeNonIndexable();
+    for (Node child : children()) {
+      child.makeNonIndexableRecursive();
+    }
+  }
+
   public final boolean isFromExterns() {
     StaticSourceFile file = getStaticSourceFile();
     return file == null ? false : file.isExtern();
@@ -1886,6 +1909,10 @@ public class Node implements Serializable {
       if (this.getSideEffectFlags() != node.getSideEffectFlags()) {
         return false;
       }
+
+      if (this.isUnusedParameter() != node.isUnusedParameter()) {
+        return false;
+      }
     }
 
     if (recurse) {
@@ -2051,18 +2078,21 @@ public class Node implements Serializable {
    * Returns whether a node matches a simple or a qualified name, such as <code>x</code> or <code>
    * a.b.c</code> or <code>this.a</code>.
    */
+  @SuppressWarnings("ReferenceEquality")
   public final boolean matchesQualifiedName(Node n) {
     if (n == null || n.token != token) {
       return false;
     }
     switch (token) {
       case NAME:
-        return !getString().isEmpty() && getString().equals(n.getString());
+        // ==, rather than equal as it is intern'd in setString
+        return !getString().isEmpty() && getString() == n.getString();
       case THIS:
       case SUPER:
         return true;
       case GETPROP:
-        return getLastChild().getString().equals(n.getLastChild().getString())
+        // ==, rather than equal as it is intern'd in setString
+        return getLastChild().getString() == n.getLastChild().getString()
             && getFirstChild().matchesQualifiedName(n.getFirstChild());
       default:
         return false;
@@ -2242,30 +2272,6 @@ public class Node implements Serializable {
   }
 
   /**
-   * Copies source file and name information from the other node to the
-   * entire tree rooted at this node.
-   * @return this
-   */
-  // TODO(nicksantos): The semantics of this method are ill-defined. Delete it.
-  @Deprecated
-  public final Node useSourceInfoWithoutLengthIfMissingFromForTree(Node other) {
-    if (getStaticSourceFile() == null) {
-      setStaticSourceFileFrom(other);
-      sourcePosition = other.sourcePosition;
-    }
-
-    if (getProp(ORIGINALNAME_PROP) == null) {
-      putProp(ORIGINALNAME_PROP, other.getProp(ORIGINALNAME_PROP));
-    }
-
-    for (Node child = first; child != null; child = child.next) {
-      child.useSourceInfoWithoutLengthIfMissingFromForTree(other);
-    }
-
-    return this;
-  }
-
-  /**
    * Overwrite all the source information in this node with
    * that of {@code other}.
    */
@@ -2402,6 +2408,17 @@ public class Node implements Serializable {
 
   public final boolean isDeleted() {
     return getBooleanProp(DELETED);
+  }
+
+  public final void setUnusedParameter(boolean unused) {
+    putBooleanProp(IS_UNUSED_PARAMETER, unused);
+  }
+
+  /**
+   * @return Whether a parameter was function to be unused. Set by RemoveUnusedVars
+   */
+  public final boolean isUnusedParameter() {
+    return getBooleanProp(IS_UNUSED_PARAMETER);
   }
 
   /**
@@ -2641,9 +2658,9 @@ public class Node implements Serializable {
    */
   public final void setSideEffectFlags(int flags) {
     checkArgument(
-        this.isCall() || this.isNew(),
-        "setIsNoSideEffectsCall only supports CALL and NEW nodes, got %s",
-        this.getToken());
+        this.isCall() || this.isNew() || this.isTaggedTemplateLit(),
+        "setIsNoSideEffectsCall only supports call-like nodes, got %s",
+        this);
 
     putIntProp(SIDE_EFFECT_FLAGS, flags);
   }
@@ -2888,6 +2905,10 @@ public class Node implements Serializable {
 
   public final boolean isRoot() {
     return this.token == Token.ROOT;
+  }
+
+  public final boolean isAwait() {
+    return this.token == Token.AWAIT;
   }
 
   public final boolean isBreak() {

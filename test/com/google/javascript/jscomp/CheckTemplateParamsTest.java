@@ -41,17 +41,13 @@ public final class CheckTemplateParamsTest extends TypeICompilerTestCase {
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
     // No-op. We're just checking for warnings during JSDoc parsing.
-    return new CompilerPass() {
-      @Override
-      public void process(Node externs, Node root) {}
-    };
+    return (Node externs, Node root) -> {};
   }
 
   @Override
   protected CompilerOptions getOptions(CompilerOptions options) {
     super.getOptions(options);
-    options.setWarningLevel(DiagnosticGroups.ANALYZER_CHECKS, CheckLevel.WARNING);
-
+    options.setWarningLevel(DiagnosticGroups.TOO_MANY_TYPE_PARAMS, CheckLevel.WARNING);
     return options;
   }
 

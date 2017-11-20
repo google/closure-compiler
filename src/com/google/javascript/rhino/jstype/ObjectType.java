@@ -218,15 +218,19 @@ public abstract class ObjectType
    * We construct these types by appending suffixes to the constructor name.
    *
    * The normalized reference name does not have these suffixes, and as such,
-   * recollapses these implicit types back to their real type.
+   * recollapses these implicit types back to their real type.  Note that
+   * suffixes such as ".prototype" can be added <i>after</i> the delegate
+   * suffix, so anything after the parentheses must still be retained.
    */
   @Nullable
-  public String getNormalizedReferenceName() {
+  public final String getNormalizedReferenceName() {
     String name = getReferenceName();
     if (name != null) {
-      int pos = name.indexOf('(');
-      if (pos != -1) {
-        return name.substring(0, pos);
+      int start = name.indexOf('(');
+      if (start != -1) {
+        int end = name.lastIndexOf(')');
+        String prefix = name.substring(0, start);
+        return end + 1 % name.length() == 0 ? prefix : prefix + name.substring(end + 1);
       }
     }
     return name;
@@ -528,6 +532,9 @@ public abstract class ObjectType
    */
   @Override
   public Set<String> getOwnPropertyNames() {
+    // TODO(sdh): ObjectTypeI specifies that this should include prototype properties,
+    // but currently it does not.  Check if this is a constructor and add them, but
+    // this could possibly break things so it should be done separately.
     return getPropertyMap().getOwnPropertyNames();
   }
 
@@ -828,5 +835,17 @@ public abstract class ObjectType
   @Override
   public TypeI getEnumeratedTypeOfEnumObject() {
     return null;
+  }
+
+  @Override
+  public ObjectTypeI withoutStrayProperties() {
+    // OTI represents object types in a way that already exhibits the behavior of this method,
+    // so we don't need to change anything.
+    return this;
+  }
+
+  @Override
+  public TypeI getInstantiatedTypeArgument(TypeI supertype) {
+    throw new UnsupportedOperationException();
   }
 }

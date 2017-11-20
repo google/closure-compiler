@@ -47,22 +47,63 @@ public final class CollapseAnonymousFunctionsTest extends CompilerTestCase {
          "function f(){ function x(){} return x }");
   }
 
+  public void testLet() {
+    test(
+        "let f = function() {};",
+        "function f() {}");
+  }
+
+  public void testConst() {
+    test(
+        "let f = function() {};",
+        "function f() {}");
+  }
+
+  public void testArrow() {
+    testSame("function f() { var g = () => this; }");
+    // It would be safe to collapse this one because it doesn't reference 'this' or 'arguments'
+    // but (at least for now) we don't.
+    testSame("let f = () => { console.log(0); };");
+  }
+
+  public void testDestructuring() {
+    testSame("var {name} = function() {};");
+    testSame("let {name} = function() {};");
+    testSame("const {name} = function() {};");
+
+    testSame("var [x] = function() {};");
+    testSame("let [x] = function() {};");
+    testSame("const [x] = function() {};");
+  }
+
   public void testVarNotImmediatelyBelowScriptOrBlock1() {
     testSame("if (x) var f = function(){}");
   }
 
   public void testVarNotImmediatelyBelowScriptOrBlock2() {
-    testSame("var x = 1;" +
-             "if (x == 1) {" +
-             "  var f = function () { alert('b')}" +
-             "} else {" +
-             "  f = function() { alert('c')}" +
-             "}" +
-             "f();");
+    testSame(
+        lines(
+            "var x = 1;",
+            "if (x == 1) {",
+            "  var f = function () { alert('b')}",
+            "} else {",
+            "  f = function() { alert('c')}",
+            "}",
+            "f();"));
   }
 
   public void testVarNotImmediatelyBelowScriptOrBlock3() {
     testSame("var x = 1; if (x) {var f = function(){return x}; f(); x--;}");
+  }
+
+  // TODO(tbreisacher): We could collapse in this case, but we probably need to tweak Normalize.
+  public void testLetNotImmediatelyBelowScriptOrBlock1() {
+    testSame("if (x) let f = function() {};");
+  }
+
+  // TODO(tbreisacher): We could collapse in this case, but we probably need to tweak Normalize.
+  public void testLetNotImmediatelyBelowScriptOrBlock2() {
+    testSame("let x = 1; if (x) { let f = function() {return x}; f(); x--;}");
   }
 
   public void testMultipleVar() {
@@ -129,11 +170,17 @@ public final class CollapseAnonymousFunctionsTest extends CompilerTestCase {
 
   public void testInnerFunction1() {
     test(
-        "function f() { " +
-        "  var x = 3; var y = function() { return 4; }; return x + y();" +
-        "}",
-        "function f() { " +
-        "  function y() { return 4; } var x = 3; return x + y();" +
-        "}");
+        lines(
+            "function f() { ",
+            "  var x = 3;",
+            "  var y = function() { return 4; };",
+            "  return x + y();",
+            "}"),
+        lines(
+            "function f() { ",
+            "  function y() { return 4; }",
+            "  var x = 3;",
+            "  return x + y();",
+            "}"));
   }
 }

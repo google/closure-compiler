@@ -17,6 +17,10 @@
 'require es6/util/iteratorfromarray';
 'require util/polyfill';
 
+// NOTE: Although Array.prototype.values was added to the 2015 edition of the
+// spec, we consider it an "ES8" feature because many browsers which are
+// otherwise ES6-compatible, have not implemented it due to web compatibility
+// issues. See https://bugs.chromium.org/p/chromium/issues/detail?id=615873
 $jscomp.polyfill('Array.prototype.values', function(orig) {
   if (orig) return orig;
 
@@ -33,6 +37,4 @@ $jscomp.polyfill('Array.prototype.values', function(orig) {
   };
 
   return polyfill;
-  // NOTE: 'es6' here is incorrect, since this method is not actually supported
-  // in current versions of Chrome and FF (due to web compatibility).
-}, 'es6', 'es3');
+}, 'es8', 'es3');

@@ -26,7 +26,6 @@ import com.google.javascript.jscomp.MinimizedCondition.MinimizationStyle;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-import com.google.javascript.rhino.TypeI;
 import com.google.javascript.rhino.jstype.TernaryValue;
 
 /**
@@ -43,7 +42,6 @@ class PeepholeMinimizeConditions
   private static final int AND_PRECEDENCE = NodeUtil.precedence(Token.AND);
 
   private final boolean late;
-  private final boolean useTypes;
 
   /**
    * @param late When late is false, this mean we are currently running before
@@ -52,9 +50,8 @@ class PeepholeMinimizeConditions
    * merging statements with commas, etc). When this is true, we would
    * do anything to minimize for size.
    */
-  PeepholeMinimizeConditions(boolean late, boolean useTypes) {
+  PeepholeMinimizeConditions(boolean late) {
     this.late = late;
-    this.useTypes = useTypes;
   }
 
   /**
@@ -81,17 +78,14 @@ class PeepholeMinimizeConditions
         return tryMinimizeNot(node);
 
       case IF:
-        performCoercionSubstitutions(node.getFirstChild());
         performConditionSubstitutions(node.getFirstChild());
         return tryMinimizeIf(node);
 
       case EXPR_RESULT:
-        performCoercionSubstitutions(node.getFirstChild());
         performConditionSubstitutions(node.getFirstChild());
         return tryMinimizeExprResult(node);
 
       case HOOK:
-        performCoercionSubstitutions(node.getFirstChild());
         performConditionSubstitutions(node.getFirstChild());
         return tryMinimizeHook(node);
 
@@ -107,12 +101,6 @@ class PeepholeMinimizeConditions
 
       case BLOCK:
         return tryReplaceIf(node);
-
-      case EQ:
-      case NE:
-      case SHEQ:
-      case SHNE:
-        return tryReplaceComparisonWithCoercion(node, true /* booleanResult */);
 
       default:
         return node; //Nothing changed
@@ -980,140 +968,12 @@ class PeepholeMinimizeConditions
    * @return The replacement for n, or the original if no change was made.
    */
   private Node tryMinimizeCondition(Node n) {
-    n = performCoercionSubstitutions(n);
     n = performConditionSubstitutions(n);
     MinimizedCondition minCond = MinimizedCondition.fromConditionNode(n);
     return replaceNode(
         n,
         minCond.getMinimized(MinimizationStyle.PREFER_UNNEGATED));
   }
-
-  /**
-   * Replaces 'foo ==/!=/===/!== null' with 'foo' or '!foo'. Should only be used for expressions
-   * used in conditions where the final result is coerced to a boolean.
-   *
-   * @return The replacement for n, or the original if no change was made.
-   */
-  private Node performCoercionSubstitutions(Node n) {
-    if (!useTypes) {
-      return n;
-    }
-
-    switch (n.getToken()) {
-      case OR:
-      case AND:
-        performCoercionSubstitutions(n.getFirstChild());
-        performCoercionSubstitutions(n.getLastChild());
-        break;
-
-      case EQ:
-      case NE:
-      case SHEQ:
-      case SHNE:
-        return tryReplaceComparisonWithCoercion(n, false /* booleanResult */);
-      default:
-        break;
-    }
-    return n;
-  }
-
-  /**
-   * Replaces comparisons (e.g. obj == null, num == 0) with the equivalent type
-   * coercion (e.g. !obj, !num), if possible.
-   * @param n a comparison node
-   * @param booleanResult whether the replacement must evaluate to a boolean
-   * @return the replacement node or the original node if no replacement was made
-   */
-  private Node tryReplaceComparisonWithCoercion(Node n, boolean booleanResult) {
-    if (!useTypes) {
-      return n;
-    }
-
-    Token op = n.getToken();
-    boolean isShallow = op == Token.SHEQ || op == Token.SHNE;
-    checkArgument(op == Token.EQ || op == Token.NE || isShallow);
-
-    Node left = n.getFirstChild();
-    Node right = n.getLastChild();
-    BooleanCoercability booleanCoercability =
-        canConvertComparisonToBooleanCoercion(left, right, isShallow);
-    if (booleanCoercability != BooleanCoercability.NONE) {
-      n.detachChildren();
-      Node objExpression = booleanCoercability == BooleanCoercability.LEFT ? left : right;
-      Node replacement;
-      if (n.getToken() == Token.EQ || n.getToken() == Token.SHEQ) {
-        replacement = IR.not(objExpression);
-      } else {
-        replacement = booleanResult ? IR.not(IR.not(objExpression)).srcrefTree(n) : objExpression;
-      }
-      n.replaceWith(replacement);
-      compiler.reportChangeToEnclosingScope(replacement);
-      return replacement;
-    }
-    return n;
-  }
-
-  /**
-   * The ability of a comparison node to be converted to a coercion.
-   */
-  private enum BooleanCoercability {
-    // Comparison cannot be converted to coercion.
-    NONE,
-    // Comparison can be converted to coercion of the left child.
-    LEFT,
-    // Comparison can be converted to coercion of the right child.
-    RIGHT
-  }
-
-  /**
-   * Determines whether the types on either side of an (in)equality operation
-   * are amenable to converting to a simple truthiness check.  Specifically,
-   * this is the case when comparing an object type against null or undefined.
-   */
-  private BooleanCoercability canConvertComparisonToBooleanCoercion(
-      Node left, Node right, boolean isShallow) {
-    // Convert null or undefined check of an object to coercion.
-    boolean leftIsNull = left.isNull();
-    boolean rightIsNull = right.isNull();
-    boolean leftIsUndefined = NodeUtil.isUndefined(left);
-    boolean rightIsUndefined = NodeUtil.isUndefined(right);
-    boolean leftIsNullOrUndefined = leftIsNull || leftIsUndefined;
-    boolean rightIsNullOrUndefined = rightIsNull || rightIsUndefined;
-
-    boolean leftIsObjectType = isObjectType(left);
-    boolean rightIsObjectType = isObjectType(right);
-    if (isShallow) {
-      // Shallow compare: must guarantee object cannot be the other type of null/undefined.
-      if ((leftIsObjectType && !left.getTypeI().isNullable() && rightIsUndefined)
-          || (rightIsObjectType && !right.getTypeI().isNullable() && leftIsUndefined)) {
-        return leftIsNullOrUndefined ? BooleanCoercability.RIGHT : BooleanCoercability.LEFT;
-      }
-    } else {
-      if ((leftIsObjectType && rightIsNullOrUndefined)
-          || (rightIsObjectType && leftIsNullOrUndefined)) {
-        return leftIsNullOrUndefined ? BooleanCoercability.RIGHT : BooleanCoercability.LEFT;
-      }
-    }
-
-    return BooleanCoercability.NONE;
-  }
-
-  /**
-   * Returns whether the node's type is an object type, which can be
-   * reduced to a truthiness check when compared against null or undefined.
-   */
-  private static boolean isObjectType(Node n) {
-    TypeI type = n.getTypeI();
-    if (type == null) {
-      return false;
-    }
-    type = type.restrictByNotNullOrUndefined();
-    return !type.isUnknownType()
-        && !type.isBottom()
-        && !type.isTop()
-        && type.isObjectType();
-  }
-
 
   private Node replaceNode(Node original, MeasuredNode measuredNodeReplacement) {
     if (measuredNodeReplacement.willChange(original)) {

@@ -166,7 +166,7 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
   }
 
   public void testErrorHandling2() {
-    inFunction(LINE_JOINER.join(
+    inFunction(lines(
         "try {",
         "} catch (e) {",
         "  e = 1; ",
@@ -175,7 +175,7 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
         "}"
     ));
 
-    inFunction(LINE_JOINER.join(
+    inFunction(lines(
         "try {",
         "} catch (e) {",
         "    e = 1;",
@@ -582,7 +582,7 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
 
   public void testClassMethods() {
     test(
-        LINE_JOINER.join(
+        lines(
             "class C{",
             "  func() {",
             "    var x;",
@@ -590,7 +590,7 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
             "  }",
             "}"
         ),
-        LINE_JOINER.join(
+        lines(
             "class C{",
             "  func() {",
             "    var x;",
@@ -599,7 +599,7 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
             "}"));
 
     test(
-        LINE_JOINER.join(
+        lines(
             "class C{",
             "  constructor(x, y) {",
             "    this.x = x;",
@@ -612,7 +612,7 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
             "  }",
             "}"
         ),
-        LINE_JOINER.join(
+        lines(
             "class C{",
             "  constructor(x, y) {",
             "    this.x = x;",
@@ -628,14 +628,14 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
 
   public void testGenerators() {
     test(
-        LINE_JOINER.join(
+        lines(
             "function* f() {",
             "  var x, y;",
             "  x = 1; y = 2;",
             "  yield y;",
             "}"
         ),
-        LINE_JOINER.join(
+        lines(
             "function* f() {",
             "  var x, y;",
             "  1; y = 2;",
@@ -666,13 +666,13 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
 
   public void testDefaultParameter() {
     test(
-        LINE_JOINER.join(
+        lines(
             "function f(x, y = 12) {",
             "  var z;",
             "  z = y;",
             "}"
         ),
-        LINE_JOINER.join(
+        lines(
             "function f(x, y = 12) {",
             "  var z;",
             "  y;",
@@ -681,7 +681,7 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
 
   public void testObjectLiterals() {
     test(
-        LINE_JOINER.join(
+        lines(
             "var obj = {",
             "  f() {",
             "  var x;",
@@ -689,7 +689,7 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
             "  }",
             "}"
         ),
-        LINE_JOINER.join(
+        lines(
             "var obj = {",
             "  f() {",
             "  var x;",
@@ -706,13 +706,19 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
         "let a; let b; foo(); b = 2; return b;");
   }
 
-  public void testConst() {
+  public void testConst1() {
     inFunction("const a = 1;");
+  }
+
+  public void testConst2() {
+    test(
+        "async function f(d) { if (d) { d = 5; } const a = 1; const b = 2; const [x, y] = b; }",
+        "async function f(d) { if (d) {     5; } const a = 1; const b = 2; const [x, y] = b; }");
   }
 
   public void testBlockScoping() {
     inFunction(
-        LINE_JOINER.join(
+        lines(
             "let x;",
             "{",
             "  let x;",
@@ -721,7 +727,7 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
             "x = 2;",
             "return x;"
         ),
-        LINE_JOINER.join(
+        lines(
             "let x;",
             "{",
             "  let x$jscomp$1;",
@@ -731,7 +737,7 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
             "return x;"));
 
     inFunction(
-        LINE_JOINER.join(
+        lines(
             "let x;",
             "x = 2",
             "{",
@@ -740,7 +746,7 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
             "}",
             "print(x);"
         ),
-        LINE_JOINER.join(
+        lines(
             "let x;",
             "x = 2;",
             "{",

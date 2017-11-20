@@ -23,7 +23,7 @@ import static com.google.javascript.jscomp.CheckAccessControls.BAD_PRIVATE_PROPE
  * as expected.
  */
 public final class CheckAccessControlsPolymerTest extends TypeICompilerTestCase {
-  private static final String EXTERNS = LINE_JOINER.join(
+  private static final String EXTERNS = lines(
       CompilerTypeTestCase.DEFAULT_EXTERNS,
       "var Polymer = function(descriptor) {};",
       "/** @constructor */",
@@ -60,7 +60,7 @@ public final class CheckAccessControlsPolymerTest extends TypeICompilerTestCase 
   }
 
   public void testPrivateMethodInElement() {
-    testNoWarning(LINE_JOINER.join(
+    testNoWarning(lines(
         "var AnElement = Polymer({",
         "  is: 'an-element',",
         "",
@@ -72,14 +72,14 @@ public final class CheckAccessControlsPolymerTest extends TypeICompilerTestCase 
 
   public void testPrivateMethodInBehavior() {
     testNoWarning(new String[] {
-      LINE_JOINER.join(
+      lines(
         "/** @polymerBehavior */",
         "var Behavior = {",
         "  /** @private */",
         "  foo_: function() {},",
         "  bar: function() { this.foo_(); },",
         "};"),
-      LINE_JOINER.join(
+      lines(
         "var AnElement = Polymer({",
         "  is: 'an-element',",
         "  behaviors: [Behavior],",
@@ -89,13 +89,13 @@ public final class CheckAccessControlsPolymerTest extends TypeICompilerTestCase 
 
   public void testPrivateMethodFromBehaviorUsedInElement() {
     testError(new String[] {
-      LINE_JOINER.join(
+      lines(
         "/** @polymerBehavior */",
         "var Behavior = {",
         "  /** @private */",
         "  foo_: function() {},",
         "};"),
-      LINE_JOINER.join(
+      lines(
         "var AnElement = Polymer({",
         "  is: 'an-element',",
         "  behaviors: [Behavior],",
@@ -106,14 +106,14 @@ public final class CheckAccessControlsPolymerTest extends TypeICompilerTestCase 
 
   public void testPrivatePropertyInBehavior() {
     testNoWarning(new String[] {
-      LINE_JOINER.join(
+      lines(
         "/** @polymerBehavior */",
         "var Behavior = {",
         "  /** @private */",
         "  foo_: 'foo',",
         "  bar: function() { alert(this.foo_); },",
         "};"),
-      LINE_JOINER.join(
+      lines(
         "var AnElement = Polymer({",
         "  is: 'an-element',",
         "  behaviors: [Behavior],",
@@ -123,13 +123,13 @@ public final class CheckAccessControlsPolymerTest extends TypeICompilerTestCase 
 
   public void testPrivatePropertyFromBehaviorUsedInElement() {
     testError(new String[] {
-      LINE_JOINER.join(
+      lines(
         "/** @polymerBehavior */",
         "var Behavior = {",
         "  /** @private */",
         "  foo_: 'foo',",
         "};"),
-      LINE_JOINER.join(
+      lines(
         "var AnElement = Polymer({",
         "  is: 'an-element',",
         "  behaviors: [Behavior],",

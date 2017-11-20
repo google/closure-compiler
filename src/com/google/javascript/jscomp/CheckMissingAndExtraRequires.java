@@ -140,7 +140,7 @@ public class CheckMissingAndExtraRequires implements HotSwapCompilerPass, NodeTr
 
   // Return the shortest prefix of the className that refers to a class,
   // or null if no part refers to a class.
-  private static List<String> getClassNames(String qualifiedName) {
+  private static ImmutableList<String> getClassNames(String qualifiedName) {
     ImmutableList.Builder<String> classNames = ImmutableList.builder();
     List<String> parts = DOT_SPLITTER.splitToList(qualifiedName);
     for (int i = 0; i < parts.size(); i++) {

@@ -56,7 +56,7 @@ public final class DevirtualizePrototypeMethodsTest extends TypeICompilerTestCas
 
   public void testRewritePrototypeMethodsWithCorrectTypes() throws Exception {
     String input =
-        LINE_JOINER.join(
+        lines(
             "/** @constructor */",
             "function A() { this.x = 3; }",
             "/** @return {number} */",
@@ -70,7 +70,7 @@ public final class DevirtualizePrototypeMethodsTest extends TypeICompilerTestCas
             "o.bar(2);",
             "o.baz()");
     String expected =
-        LINE_JOINER.join(
+        lines(
             "/** @constructor */",
             "function A(){ this.x = 3; }",
             "var JSCompiler_StaticMethods_foo = ",
@@ -150,13 +150,13 @@ public final class DevirtualizePrototypeMethodsTest extends TypeICompilerTestCas
 
   public void testRewriteChained() throws Exception {
     String source =
-        LINE_JOINER.join(
+        lines(
             "A.prototype.foo = function(){return this.b};",
             "B.prototype.bar = function(){};",
             "o.foo().bar()");
 
     String expected =
-        LINE_JOINER.join(
+        lines(
             "var JSCompiler_StaticMethods_foo = ",
             "function(JSCompiler_StaticMethods_foo$self) {",
             "  return JSCompiler_StaticMethods_foo$self.b",
@@ -201,7 +201,7 @@ public final class DevirtualizePrototypeMethodsTest extends TypeICompilerTestCas
    */
   private static class NoRewriteIfNotInGlobalScopeTestInput {
     static final String INPUT =
-        LINE_JOINER.join(
+        lines(
             "function a(){}",
             "a.prototype.foo = function() {return this.x};",
             "var o = new a;",
@@ -212,7 +212,7 @@ public final class DevirtualizePrototypeMethodsTest extends TypeICompilerTestCas
 
   public void testRewriteInGlobalScope() throws Exception {
     String expected =
-        LINE_JOINER.join(
+        lines(
             "function a(){}",
             "var JSCompiler_StaticMethods_foo = ",
             "function(JSCompiler_StaticMethods_foo$self) {",
@@ -242,12 +242,12 @@ public final class DevirtualizePrototypeMethodsTest extends TypeICompilerTestCas
 
   public void testRewriteIfDuplicates() throws Exception {
     test(
-        LINE_JOINER.join(
+        lines(
             "function A(){}; A.prototype.getFoo = function() { return 1; }; ",
             "function B(){}; B.prototype.getFoo = function() { return 1; }; ",
             "var x = Math.random() ? new A() : new B();",
             "alert(x.getFoo());"),
-        LINE_JOINER.join(
+        lines(
             "function A(){}; ",
             "var JSCompiler_StaticMethods_getFoo=",
             "function(JSCompiler_StaticMethods_getFoo$self){return 1};",
@@ -259,14 +259,14 @@ public final class DevirtualizePrototypeMethodsTest extends TypeICompilerTestCas
 
   public void testRewriteIfDuplicatesWithThis() throws Exception {
     test(
-        LINE_JOINER.join(
+        lines(
             "function A(){}; A.prototype.getFoo = ",
             "function() { return this._foo + 1; }; ",
             "function B(){}; B.prototype.getFoo = ",
             "function() { return this._foo + 1; }; ",
             "var x = Math.random() ? new A() : new B();",
             "alert(x.getFoo());"),
-        LINE_JOINER.join(
+        lines(
             "function A(){}; ",
             "var JSCompiler_StaticMethods_getFoo=",
             "function(JSCompiler_StaticMethods_getFoo$self){",
@@ -280,7 +280,7 @@ public final class DevirtualizePrototypeMethodsTest extends TypeICompilerTestCas
 
   public void testNoRewriteIfDuplicates() throws Exception {
     testSame(
-        LINE_JOINER.join(
+        lines(
             "function A(){}; A.prototype.getFoo = function() { return 1; }; ",
             "function B(){}; B.prototype.getFoo = function() { return 2; }; ",
             "var x = Math.random() ? new A() : new B();",
@@ -303,7 +303,7 @@ public final class DevirtualizePrototypeMethodsTest extends TypeICompilerTestCas
         semicolonJoin(
             NoRewritePrototypeObjectLiteralsTestInput.REGULAR,
             NoRewritePrototypeObjectLiteralsTestInput.CALL),
-        LINE_JOINER.join(
+        lines(
             "var JSCompiler_StaticMethods_foo = ",
             "function(JSCompiler_StaticMethods_foo$self) { return 1; };",
             "JSCompiler_StaticMethods_foo(o)"));
@@ -314,7 +314,7 @@ public final class DevirtualizePrototypeMethodsTest extends TypeICompilerTestCas
         semicolonJoin(
             NoRewritePrototypeObjectLiteralsTestInput.OBJ_LIT,
             NoRewritePrototypeObjectLiteralsTestInput.CALL),
-        LINE_JOINER.join(
+        lines(
             "a.prototype={};",
             "var JSCompiler_StaticMethods_foo=",
             "function(JSCompiler_StaticMethods_foo$self){ return 2; };",
@@ -342,14 +342,14 @@ public final class DevirtualizePrototypeMethodsTest extends TypeICompilerTestCas
 
   public void testRewriteNoVarArgs() throws Exception {
     String source =
-        LINE_JOINER.join(
+        lines(
             "function a(){}",
             "a.prototype.foo = function(args) {return args};",
             "var o = new a;",
             "o.foo()");
 
     String expected =
-        LINE_JOINER.join(
+        lines(
             "function a(){}",
             "var JSCompiler_StaticMethods_foo = ",
             "  function(JSCompiler_StaticMethods_foo$self, args) {return args};",
@@ -361,7 +361,7 @@ public final class DevirtualizePrototypeMethodsTest extends TypeICompilerTestCas
 
   public void testNoRewriteVarArgs() throws Exception {
     String source =
-        LINE_JOINER.join(
+        lines(
             "function a(){}",
             "a.prototype.foo = function(var_args) {return arguments};",
             "var o = new a;",
@@ -381,7 +381,7 @@ public final class DevirtualizePrototypeMethodsTest extends TypeICompilerTestCas
 
   public void testRewriteCallReference() throws Exception {
     String expected =
-        LINE_JOINER.join(
+        lines(
             "function a(){}",
             "var JSCompiler_StaticMethods_foo = ",
             "function(JSCompiler_StaticMethods_foo$self) {",
@@ -441,13 +441,13 @@ public final class DevirtualizePrototypeMethodsTest extends TypeICompilerTestCas
 
   public void testRewriteImplementedMethod() throws Exception {
     String source =
-        LINE_JOINER.join(
+        lines(
             "function a(){}",
             "a.prototype.foo = function(args) {return args};",
             "var o = new a;",
             "o.foo()");
     String expected =
-        LINE_JOINER.join(
+        lines(
             "function a(){}",
             "var JSCompiler_StaticMethods_foo = ",
             "  function(JSCompiler_StaticMethods_foo$self, args) {return args};",
@@ -458,7 +458,7 @@ public final class DevirtualizePrototypeMethodsTest extends TypeICompilerTestCas
 
   public void testRewriteImplementedMethod2() throws Exception {
     String source =
-        LINE_JOINER.join(
+        lines(
             "function a(){}",
             "a.prototype['foo'] = function(args) {return args};",
             "var o = new a;",
@@ -468,7 +468,7 @@ public final class DevirtualizePrototypeMethodsTest extends TypeICompilerTestCas
 
   public void testRewriteImplementedMethod3() throws Exception {
     String source =
-        LINE_JOINER.join(
+        lines(
             "function a(){}",
             "a.prototype.foo = function(args) {return args};",
             "var o = new a;",
@@ -478,7 +478,7 @@ public final class DevirtualizePrototypeMethodsTest extends TypeICompilerTestCas
 
   public void testRewriteImplementedMethod4() throws Exception {
     String source =
-        LINE_JOINER.join(
+        lines(
             "function a(){}",
             "a.prototype['foo'] = function(args) {return args};",
             "var o = new a;",
@@ -493,7 +493,7 @@ public final class DevirtualizePrototypeMethodsTest extends TypeICompilerTestCas
 
   public void testRewriteImplementedMethodInObj() throws Exception {
     String source =
-        LINE_JOINER.join(
+        lines(
             "function a(){}",
             "a.prototype = {foo: function(args) {return args}};",
             "var o = new a;",

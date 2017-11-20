@@ -15,9 +15,9 @@
  */
 package com.google.javascript.jscomp.parsing.parser.testing;
 
-import static com.google.common.truth.Truth.THROW_ASSERTION_ERROR;
+import static com.google.common.truth.Truth.assertAbout;
 
-import com.google.common.truth.FailureStrategy;
+import com.google.common.truth.FailureMetadata;
 import com.google.common.truth.Subject;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
@@ -32,14 +32,16 @@ import javax.annotation.CheckReturnValue;
  * </pre>
  */
 public class FeatureSetSubject extends Subject<FeatureSetSubject, FeatureSet> {
+  private static final Subject.Factory<FeatureSetSubject, FeatureSet> FACTORY =
+    FeatureSetSubject::new;
 
   @CheckReturnValue
   public static FeatureSetSubject assertFS(FeatureSet fs) {
-    return new FeatureSetSubject(THROW_ASSERTION_ERROR, fs);
+    return assertAbout(FACTORY).that(fs);
   }
 
-  public FeatureSetSubject(FailureStrategy fs, FeatureSet featureSet) {
-    super(fs, featureSet);
+  public FeatureSetSubject(FailureMetadata failureMetadata, FeatureSet featureSet) {
+    super(failureMetadata, featureSet);
   }
 
   public void contains(FeatureSet other) {

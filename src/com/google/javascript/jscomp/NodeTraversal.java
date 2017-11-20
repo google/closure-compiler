@@ -687,6 +687,10 @@ public class NodeTraversal {
     t.traverseScopeRoot(scopeNode);
   }
 
+  /**
+   * @deprecated Use the ES6SyntacticScopeCreator instead.
+   */
+  @Deprecated
   public static void traverseTyped(AbstractCompiler compiler, Node root, Callback cb) {
     NodeTraversal t = new NodeTraversal(compiler, cb, SyntacticScopeCreator.makeTyped(compiler));
     t.traverse(root);
@@ -698,6 +702,10 @@ public class NodeTraversal {
     t.traverseRoots(externs, root);
   }
 
+  /**
+   * @deprecated Use the ES6SyntacticScopeCreator instead.
+   */
+  @Deprecated
   public static void traverseRootsTyped(
       AbstractCompiler compiler, Callback cb, Node externs, Node root) {
     NodeTraversal t = new NodeTraversal(compiler, cb, SyntacticScopeCreator.makeTyped(compiler));
@@ -764,9 +772,9 @@ public class NodeTraversal {
   /** Traverses a function. */
   private void traverseFunction(Node n, Node parent) {
     final Node fnName = n.getFirstChild();
-    boolean isFunctionExpression = parent != null && NodeUtil.isFunctionExpression(n);
+    boolean isFunctionDeclaration = parent != null && NodeUtil.isFunctionDeclaration(n);
 
-    if (!isFunctionExpression) {
+    if (isFunctionDeclaration) {
       // Function declarations are in the scope containing the declaration.
       traverseBranch(fnName, n);
     }
@@ -774,7 +782,7 @@ public class NodeTraversal {
     curNode = n;
     pushScope(n);
 
-    if (isFunctionExpression) {
+    if (!isFunctionDeclaration) {
       // Function expression names are only accessible within the function
       // scope.
       traverseBranch(fnName, n);
@@ -1085,7 +1093,6 @@ public class NodeTraversal {
    */
   private void setChangeScope(Node n) {
     this.currentChangeScope = n;
-    compiler.setChangeScope(n);
   }
 
   private Node getEnclosingScript(Node n) {

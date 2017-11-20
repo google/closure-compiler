@@ -205,8 +205,7 @@ final class RenameVars implements CompilerPass {
 
     @Override
     public void enterScope(NodeTraversal t) {
-      if (t.inGlobalHoistScope() ||
-          !shouldTemporarilyRenameLocalsInScope(t.getScope())) {
+      if (t.inGlobalHoistScope() || !shouldTemporarilyRenameLocalsInScope(t.getScope())) {
         return;
       }
       Scope scope = t.getScope();
@@ -246,9 +245,10 @@ final class RenameVars implements CompilerPass {
       // scope, because IE has bugs in how it handles bleeding
       // functions.
       Var var = t.getScope().getVar(name);
-      boolean local = (var != null) && var.isLocal() &&
-          (!var.scope.getParent().isGlobal() ||
-           !var.isBleedingFunction());
+      boolean local =
+          var != null
+              && var.isLocal()
+              && (var.scope.getParent().isLocal() || !var.isBleedingFunction());
 
       // Never rename references to the arguments array
       if (var != null && var.isArguments()) {
@@ -590,8 +590,7 @@ final class RenameVars implements CompilerPass {
       throw new IllegalArgumentException("Var is not local");
     }
 
-    boolean isBleedingIntoScope = s.getParent() != null &&
-        localBleedingFunctions.contains(v);
+    boolean isBleedingIntoScope = s.getParent() != null && localBleedingFunctions.contains(v);
 
     while (s.getParent() != null) {
       if (isBleedingIntoScope) {
@@ -619,7 +618,6 @@ final class RenameVars implements CompilerPass {
    * be the same temporary name used when the rename map was created.
    */
   private boolean shouldTemporarilyRenameLocalsInScope(Scope s) {
-    return (!preferStableNames ||
-        s.getVarCount() <= MAX_LOCALS_IN_SCOPE_TO_TEMP_RENAME);
+    return (!preferStableNames || s.getVarCount() <= MAX_LOCALS_IN_SCOPE_TO_TEMP_RENAME);
   }
 }

@@ -55,7 +55,7 @@ public final class CrossModuleReferenceCollectorTest extends CompilerTestCase {
   }
 
   public void testVarInBlock() {
-    testSame(LINE_JOINER.join(
+    testSame(lines(
             "  if (true) {",
             "    var y = x;",
             "    y;",
@@ -131,7 +131,7 @@ public final class CrossModuleReferenceCollectorTest extends CompilerTestCase {
   }
 
   public void testBasicBlocks() {
-    testSame(LINE_JOINER.join(
+    testSame(lines(
             "var x = 0;",
             "switch (x) {",
             "  case 0:",
@@ -148,7 +148,7 @@ public final class CrossModuleReferenceCollectorTest extends CompilerTestCase {
   }
 
   public void testTopLevelStatements() {
-    testSame(LINE_JOINER.join(
+    testSame(lines(
         "var x = 1;",
         "const y = x;",
         "let z = x - y;",
@@ -179,12 +179,12 @@ public final class CrossModuleReferenceCollectorTest extends CompilerTestCase {
     TopLevelStatement yEqualsX = topLevelStatements.get(1);
     assertThat(yEqualsX.getOriginalOrder()).isEqualTo(1);
     assertThat(yEqualsX.getNonDeclarationReferences())
-        .containsExactly(yReferences.get(0), xReferences.get(1));
+        .containsExactly(xReferences.get(1));
     // let z = x - y;
     TopLevelStatement zEqualsXMinusY = topLevelStatements.get(2);
     assertThat(zEqualsXMinusY.getOriginalOrder()).isEqualTo(2);
     assertThat(zEqualsXMinusY.getNonDeclarationReferences())
-        .containsExactly(zReferences.get(0), xReferences.get(2), yReferences.get(1));
+        .containsExactly(xReferences.get(2), yReferences.get(1));
     // function f(x, y) { return x + y + z; }
     TopLevelStatement functionDeclaration = topLevelStatements.get(3);
     assertThat(functionDeclaration.getOriginalOrder()).isEqualTo(3);
@@ -276,7 +276,6 @@ public final class CrossModuleReferenceCollectorTest extends CompilerTestCase {
     assertThat(inheritsStatement.isMovableDeclaration()).isTrue();
   }
 
-  // TODO: add test cases for isMovableDeclarationStatement()
   public void testFunctionDeclarationOrAssignmentIsMovable() {
     testSame("function f() {}");
     assertThat(testedCollector.getTopLevelStatements().get(0).isMovableDeclaration()).isTrue();
@@ -290,7 +289,7 @@ public final class CrossModuleReferenceCollectorTest extends CompilerTestCase {
   }
 
   public void testFunctionCallsAreNotMovableExceptForMethodStubs() {
-    testSame(LINE_JOINER.join(
+    testSame(lines(
         "function Foo() {}",
         "Foo.prototype.stub = JSCompiler_stubMethod(x);",
         "Foo.prototype.unstub = JSCompiler_unstubMethod(x);",
@@ -342,7 +341,7 @@ public final class CrossModuleReferenceCollectorTest extends CompilerTestCase {
   }
 
   public void testObjectLiteralOfMovablesIsMovable() {
-    testSame(LINE_JOINER.join(
+    testSame(lines(
         "var wellDefinedName = 1;",
         "var o = { f: function(){}, one: 1, n: wellDefinedName, o: {}};"));
     assertThat(testedCollector.getTopLevelStatements().get(1).isMovableDeclaration()).isTrue();
@@ -350,6 +349,18 @@ public final class CrossModuleReferenceCollectorTest extends CompilerTestCase {
 
   public void testObjectLiteralWithImmovableIsImmovable() {
     testSame("var o = { v: unknownValue };");
+    assertThat(testedCollector.getTopLevelStatements().get(0).isMovableDeclaration()).isFalse();
+  }
+
+  public void testTemplateLiteralIsMovableIfSubstitutionsAreMovable() {
+    testSame(lines(
+        "var wellDefinedName = 1;",
+        "var t = `${wellDefinedName}`;"));
+    assertThat(testedCollector.getTopLevelStatements().get(1).isMovableDeclaration()).isTrue();
+  }
+
+  public void testTemplateLiteralIsImmovableIfSubstitutionsAreImmovable() {
+    testSame("var t = `${unknownValue}`");
     assertThat(testedCollector.getTopLevelStatements().get(0).isMovableDeclaration()).isFalse();
   }
 

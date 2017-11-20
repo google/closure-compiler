@@ -186,7 +186,7 @@ public class Es6SyntacticScopeCreator implements ScopeCreator {
     }
 
     private void declareLHS(Scope s, Node n) {
-      for (Node lhs : NodeUtil.getLhsNodesOfDeclaration(n)) {
+      for (Node lhs : NodeUtil.findLhsNodesInNode(n)) {
         declareVar(s, lhs);
       }
     }

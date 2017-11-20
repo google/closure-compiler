@@ -119,8 +119,7 @@ public final class TypeEnv {
           // two type envs at the same time, to avoid the map lookup here.
           JSType currentType = newMap.get(name);
           JSType otherType = entry.getValue();
-          Preconditions.checkNotNull(
-              currentType, "%s is missing from an env", name);
+          Preconditions.checkNotNull(currentType, "%s is missing from an env", name);
           if (!currentType.equals(otherType)) {
             newMap = newMap.with(name, JSType.join(currentType, otherType));
           }

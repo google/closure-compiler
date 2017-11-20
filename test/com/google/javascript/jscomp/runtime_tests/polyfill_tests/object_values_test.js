@@ -19,20 +19,12 @@ goog.setTestOnly();
 
 const testSuite = goog.require('goog.testing.testSuite');
 const testing = goog.require('jscomp.runtime_tests.polyfill_tests.testing');
-//const userAgent = goog.require('goog.userAgent');
 
 const assertPropertyListEquals = testing.assertPropertyListEquals;
 
 const SYMBOL_IS_POLYFILLED = typeof Symbol('') === 'string';
 
 testSuite({
-  shouldRunTests() {
-    // NOTE: Using an async function forces the compiler to consider this file
-    // as ES8 code, which guarantees the polyfill will be included.
-    (async () => 1)();
-    return true;
-  },
-
   testValues() {
     assertPropertyListEquals(
         [4, 1, 2, 3], Object.values({'a': 1, 'c': 2, 'b': 3, 1: 4}));

@@ -25,6 +25,7 @@ import com.google.common.collect.ImmutableMap;
  *
  */
 public final class NameAnonymousFunctionsMappedTest extends CompilerTestCase {
+
   private static final String EXTERNS = "var document;";
 
   private NameAnonymousFunctionsMapped pass;
@@ -84,6 +85,16 @@ public final class NameAnonymousFunctionsMappedTest extends CompilerTestCase {
          "var fn = function $a() { return 1; }");
 
     assertMapping("$a", "fn");
+  }
+
+  public void testSimpleLetAssignment() {
+    test("let a = function() { return 1; }", "let a = function $() { return 1; }");
+    assertMapping("$", "a");
+  }
+
+  public void testSimpleConstAssignment() {
+    test("const a = function() { return 1; }", "const a = function $() { return 1; }");
+    assertMapping("$", "a");
   }
 
   public void testAssignmentToProperty() {
@@ -162,6 +173,11 @@ public final class NameAnonymousFunctionsMappedTest extends CompilerTestCase {
     assertMapping("$", "a.b[x()].d");
   }
 
+  public void testAssignmentToObjectLiteralOnDeclaration() {
+    testSame("var a = { b: function() {} }");
+    testSame("var a = { b: { c: function() {} } }");
+  }
+
   public void testAssignmentToGetElem() {
     test("function f() { win['x' + this.id] = function(a){}; }",
          "function f() { win['x' + this.id] = function $(a){}; }");
@@ -179,6 +195,67 @@ public final class NameAnonymousFunctionsMappedTest extends CompilerTestCase {
   public void testDuplicateNames() {
     test("var a = function() { return 1; };a = function() { return 2; }",
          "var a = function $() { return 1; };a = function $() { return 2; }");
+    assertMapping("$", "a");
+  }
+
+  public void testIgnoreArrowFunctions() {
+    testSame("var a = () => 1");
+    testSame("var a = {b: () => 1};");
+    testSame("function A() {} A.prototype.foo = () => 5");
+  }
+
+  public void testComputedProperty() {
+    test(
+        "function A() {} A.prototype = {['foo']: function() {} };",
+        "function A() {} A.prototype = {['foo']: function $() {} };");
+    assertMapping("$", "A.prototype.foo");
+
+    test(
+        "function A() {} A.prototype = {['foo' + bar()]: function() {} };",
+        "function A() {} A.prototype = {['foo' + bar()]: function $() {} };");
+    assertMapping("$", "A.prototype.\"foo\"+bar()");
+  }
+
+  public void testGetter() {
+    testSame("function A() {} A.prototype = { get foo() { return 5; } }");
+  }
+
+  public void testSetter() {
+    testSame("function A() {} A.prototype = { set foo(bar) {} }");
+  }
+
+  public void testMethodDefinitionShorthand() {
+    testSame("var obj = { b() {}, c() {} }");
+    testSame("var obj; obj = { b() {}, c() {} }");
+  }
+
+  public void testClasses() {
+    testSame("class A { static foo() {} }");
+    testSame("class A { constructor() {} foo() {} }");
+  }
+
+  public void testExportedFunctions() {
+    // Don't provide a name in the first case, since it would declare the function in the module
+    // scope and potentially be unsafe.
+    testSame("export default function() {}");
+    // In this case, adding a name would be okay since this is a function expression.
+    testSame("export default (function() {})");
+    testSame("export default function foo() {}");
+  }
+
+  public void testDefaultParameters() {
+    test("function f(g = function() {}) {}", "function f(g = function $() {}) {}");
+    assertMapping("$", "g");
+  }
+
+  public void testSimpleGeneratorAssignment() {
+    test("var a = function *() { yield 1; }",
+        "var a = function *$() { yield 1; }");
+    assertMapping("$", "a");
+  }
+
+  public void testDestructuring() {
+    test("var {a = function() {}} = {};", "var {a = function $() {}} = {};");
     assertMapping("$", "a");
   }
 }

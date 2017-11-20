@@ -26,8 +26,6 @@ const noCheck = testing.noCheck;
 
 testSuite({
   shouldRunTests() {
-    // NOTE: we need this file to show up as ES8 to guarantee the polyfill.
-    (async () => 1)();
     // NOTE: padStart is not present in all browsers we currently test under.
     return !goog.global.NOT_TRANSPILED ||
         userAgent.CHROME && userAgent.isVersionOrHigher(57) ||

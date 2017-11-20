@@ -17,7 +17,6 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
-import static com.google.javascript.jscomp.CompilerTestCase.LINE_JOINER;
 import static java.util.Comparator.comparingInt;
 
 import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
@@ -725,7 +724,7 @@ public final class DataFlowAnalysisTest extends TestCase {
     compiler.initOptions(options);
     compiler.setLifeCycleStage(LifeCycleStage.NORMALIZED);
 
-    String src = LINE_JOINER.join(lines);
+    String src = CompilerTestCase.lines(lines);
     Node n = compiler.parseTestCode(src).removeFirstChild();
     Node script = new Node(Token.SCRIPT, n);
     script.setInputId(new InputId("test"));
@@ -798,7 +797,7 @@ public final class DataFlowAnalysisTest extends TestCase {
     options.setCodingConvention(new GoogleCodingConvention());
     compiler.initOptions(options);
 
-    String src = LINE_JOINER.join(lines);
+    String src = CompilerTestCase.lines(lines);
     Node n = compiler.parseTestCode(src).removeFirstChild();
     Node script = new Node(Token.SCRIPT, n);
     script.setInputId(new InputId("test"));

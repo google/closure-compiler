@@ -16,7 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
@@ -38,14 +37,16 @@ import java.util.regex.Pattern;
  * applications. Strings that should be aliased occur many times in the code,
  * or occur on codepaths that get executed frequently.
  *
- * 2016/05/04 Note: This pass addressed some performance problems in older
- * browser VMs, which don't happen on modern VMs. Turning on the pass usually
- * hurts code size after gzip, so we no longer recommend it. At some point we
- * will probably delete it.
+ * 2017/09/17 Notes:
+ *     - Turning on this pass usually hurts code size after gzip.
+ *     - It was originally written to deal with performance problems on some
+ *       older browser VMs.
+ *     - However, projects that make heavy use of jslayout may need to enable
+ *       this pass even for modern browsers, because jslayout generates so many
+ *       duplicate strings.
  *
  */
-class AliasStrings extends AbstractPostOrderCallback
-    implements CompilerPass {
+class AliasStrings implements CompilerPass, NodeTraversal.Callback {
 
   private static final Logger logger =
       Logger.getLogger(AliasStrings.class.getName());
@@ -125,6 +126,20 @@ class AliasStrings extends AbstractPostOrderCallback
 
     if (outputStringUsage) {
       outputStringUsage();
+    }
+  }
+
+  @Override
+  public boolean shouldTraverse(NodeTraversal nodeTraversal, Node n, Node parent) {
+    switch (n.getToken()) {
+      case TEMPLATELIT:
+      case TAGGED_TEMPLATELIT:
+      case TEMPLATELIT_SUB: // technically redundant, since it must be a child of the others
+        // TODO(bradfordcsmith): Consider replacing long and/or frequently occurring substrings
+        // within template literals with template substitutions.
+        return false;
+      default:
+        return true;
     }
   }
 

@@ -1294,12 +1294,11 @@ public final class JsDocInfoParser {
   }
 
   /**
-   * The types in @template annotations must start with a capital letter, and contain
-   * only letters, digits, and underscores.
+   * The types in @template annotations must contain only letters, digits, and underscores.
    */
   private static boolean validTemplateTypeName(String name) {
-    return !name.isEmpty() && CharMatcher.javaUpperCase().matches(name.charAt(0)) &&
-        CharMatcher.javaLetterOrDigit().or(CharMatcher.is('_')).matchesAllOf(name);
+    return !name.isEmpty()
+        && CharMatcher.javaLetterOrDigit().or(CharMatcher.is('_')).matchesAllOf(name);
   }
 
   /**

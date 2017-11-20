@@ -40,6 +40,7 @@ import java.util.Arrays;
 import java.util.BitSet;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
@@ -56,13 +57,13 @@ import java.util.Set;
 public final class JSModuleGraph implements Serializable {
 
   private final JSModule[] modules;
-  
+
   /**
    * selfPlusTransitiveDeps[i] = indices of all modules that modules[i] depends on, including
    * itself.
    */
   private final BitSet[] selfPlusTransitiveDeps;
-  
+
   /**
    * subtreeSize[i] = Number of modules that transitively depend on modules[i], including itself.
    */
@@ -444,6 +445,17 @@ public final class JSModuleGraph implements Serializable {
     Iterable<CompilerInput> entryPointInputs = createEntryPointInputs(
         depOptions, inputs, sorter);
 
+    HashMap<String, CompilerInput> inputsByProvide = new HashMap<>();
+    for (CompilerInput input : inputs) {
+      for (String provide : input.getKnownProvides()) {
+        inputsByProvide.put(provide, input);
+      }
+      String moduleName = input.getPath().toModuleName();
+      if (!inputsByProvide.containsKey(moduleName)) {
+        inputsByProvide.put(moduleName, input);
+      }
+    }
+
     // The order of inputs, sorted independently of modules.
     List<CompilerInput> absoluteOrder =
         sorter.getDependenciesOf(inputs, depOptions.shouldSortDependencies());
@@ -465,11 +477,34 @@ public final class JSModuleGraph implements Serializable {
 
     // Figure out which sources *must* be in each module, or in one
     // of that module's dependencies.
+    List<CompilerInput> orderedInputs = new ArrayList<>();
+    Set<CompilerInput> reachedInputs = new HashSet<>();
     for (JSModule module : entryPointInputsPerModule.keySet()) {
-      List<CompilerInput> transitiveClosure =
-          sorter.getDependenciesOf(
-              entryPointInputsPerModule.get(module),
-              depOptions.shouldSortDependencies());
+      List<CompilerInput> transitiveClosure;
+      // Prefer a depth first ordering of dependencies from entry points.
+      // Always orders in a deterministic fashion regardless of the order of provided inputs
+      // given the same entry points in the same order.
+      if (depOptions.shouldSortDependencies() && depOptions.shouldPruneDependencies()) {
+        transitiveClosure = new ArrayList<>();
+        // We need the ful set of dependencies for each module, so start with the full input set
+        Set<CompilerInput> inputsNotYetReached = new HashSet<>(inputs);
+        for (CompilerInput entryPoint : entryPointInputsPerModule.get(module)) {
+          transitiveClosure.addAll(
+              getDepthFirstDependenciesOf(entryPoint, inputsNotYetReached, inputsByProvide));
+        }
+        // For any input we have not yet reached, add them to the ordered list
+        for (CompilerInput orderedInput : transitiveClosure) {
+          if (reachedInputs.add(orderedInput)) {
+            orderedInputs.add(orderedInput);
+          }
+        }
+      } else {
+        // Simply order inputs so that any required namespace comes before it's usage.
+        // Ordered result varies based on the original order of inputs.
+        transitiveClosure =
+            sorter.getDependenciesOf(
+                entryPointInputsPerModule.get(module), depOptions.shouldSortDependencies());
+      }
       for (CompilerInput input : transitiveClosure) {
         JSModule oldModule = input.getModule();
         if (oldModule == null) {
@@ -481,10 +516,14 @@ public final class JSModuleGraph implements Serializable {
         }
       }
     }
+    if (!(depOptions.shouldSortDependencies() && depOptions.shouldPruneDependencies())
+        || entryPointInputsPerModule.isEmpty()) {
+      orderedInputs = absoluteOrder;
+    }
 
     // All the inputs are pointing to the modules that own them. Yeah!
     // Update the modules to reflect this.
-    for (CompilerInput input : absoluteOrder) {
+    for (CompilerInput input : orderedInputs) {
       JSModule module = input.getModule();
       if (module != null) {
         module.add(input);
@@ -500,6 +539,36 @@ public final class JSModuleGraph implements Serializable {
     return result.build();
   }
 
+  /**
+   * Given an input and set of unprocessed inputs, return the input and it's dependencies by
+   * performing a recursive, depth-first traversal.
+   */
+  private List<CompilerInput> getDepthFirstDependenciesOf(
+      CompilerInput rootInput,
+      Set<CompilerInput> unreachedInputs,
+      Map<String, CompilerInput> inputsByProvide) {
+    List<CompilerInput> orderedInputs = new ArrayList<>();
+    if (!unreachedInputs.remove(rootInput)) {
+      return orderedInputs;
+    }
+
+    for (String importedNamespace : rootInput.getRequires()) {
+      CompilerInput dependency = null;
+      if (inputsByProvide.containsKey(importedNamespace)
+          && unreachedInputs.contains(inputsByProvide.get(importedNamespace))) {
+        dependency = inputsByProvide.get(importedNamespace);
+      }
+
+      if (dependency != null) {
+        orderedInputs.addAll(
+            getDepthFirstDependenciesOf(dependency, unreachedInputs, inputsByProvide));
+      }
+    }
+
+    orderedInputs.add(rootInput);
+    return orderedInputs;
+  }
+
   private Collection<CompilerInput> createEntryPointInputs(
       DependencyOptions depOptions,
       List<CompilerInput> inputs,
@@ -507,8 +576,14 @@ public final class JSModuleGraph implements Serializable {
       throws MissingModuleException, MissingProvideException {
     Set<CompilerInput> entryPointInputs = new LinkedHashSet<>();
     Map<String, JSModule> modulesByName = getModulesByName();
-
     if (depOptions.shouldPruneDependencies()) {
+      // Some files implicitly depend on base.js without actually requiring anything.
+      // So we always treat it as the first entry point to ensure it's ordered correctly.
+      CompilerInput baseJs = sorter.maybeGetInputProviding("goog");
+      if (baseJs != null) {
+        entryPointInputs.add(baseJs);
+      }
+
       if (!depOptions.shouldDropMoochers()) {
         entryPointInputs.addAll(sorter.getInputsWithoutProvides());
       }
@@ -537,11 +612,6 @@ public final class JSModuleGraph implements Serializable {
         }
 
         entryPointInputs.add(entryPointInput);
-      }
-
-      CompilerInput baseJs = sorter.maybeGetInputProviding("goog");
-      if (baseJs != null) {
-        entryPointInputs.add(baseJs);
       }
     } else {
       entryPointInputs.addAll(inputs);

@@ -68,7 +68,7 @@ public final class ImplicitNullabilityCheckTest extends TypeICompilerTestCase {
   }
 
   public void testParameterizedObject() {
-    warnImplicitlyNullable(LINE_JOINER.join(
+    warnImplicitlyNullable(lines(
         "/** @param {Object<string, string>=} opt_values */",
         "function getMsg(opt_values) {};"));
   }
@@ -80,7 +80,7 @@ public final class ImplicitNullabilityCheckTest extends TypeICompilerTestCase {
     warnImplicitlyNullable("/** @typedef {?number} */ var Num; var /** Num */ x;");
   }
 
-  public void testUnkownTypenameDoesntWarn() {
+  public void testUnknownTypenameDoesntWarn() {
     // Different warnings in OTI and NTI
     this.mode = TypeInferenceMode.OTI_ONLY;
     testSame(
@@ -99,13 +99,13 @@ public final class ImplicitNullabilityCheckTest extends TypeICompilerTestCase {
   }
 
   public void testUserDefinedClass() {
-    warnImplicitlyNullable(LINE_JOINER.join(
+    warnImplicitlyNullable(lines(
         "/** @constructor */",
         "function Foo() {}",
         "/** @type {Foo} */ var x;"));
 
     // TODO(aravindpg): this ought to warn under both, or at any rate NTI.
-    noWarning(LINE_JOINER.join(
+    noWarning(lines(
         "function f() {",
         "  /** @constructor */",
         "  function Foo() {}",
@@ -114,7 +114,7 @@ public final class ImplicitNullabilityCheckTest extends TypeICompilerTestCase {
   }
 
   public void testNamespacedTypeDoesntCrash() {
-    warnImplicitlyNullable(LINE_JOINER.join(
+    warnImplicitlyNullable(lines(
         "/** @const */ var a = {};",
         "/** @const */ a.b = {};",
         "/** @constructor */ a.b.Foo = function() {};",

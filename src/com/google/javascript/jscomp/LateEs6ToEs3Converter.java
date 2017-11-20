@@ -23,6 +23,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.javascript.jscomp.AbstractCompiler.MostRecentTypechecker;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
@@ -48,6 +49,7 @@ import java.util.List;
 // TODO(tbreisacher): This class does too many things. Break it into smaller passes.
 public final class LateEs6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompilerPass {
   private final AbstractCompiler compiler;
+  private static final FeatureSet transpiledFeatures = FeatureSet.ES6.without(FeatureSet.ES5);
   // addTypes indicates whether we should add type information when transpiling.
   private final boolean addTypes;
   private final TypeIRegistry registry;
@@ -73,13 +75,13 @@ public final class LateEs6ToEs3Converter implements NodeTraversal.Callback, HotS
 
   @Override
   public void process(Node externs, Node root) {
-    TranspilationPasses.processTranspile(compiler, externs, this);
-    TranspilationPasses.processTranspile(compiler, root, this);
+    TranspilationPasses.processTranspile(compiler, externs, transpiledFeatures, this);
+    TranspilationPasses.processTranspile(compiler, root, transpiledFeatures, this);
   }
 
   @Override
   public void hotSwapScript(Node scriptRoot, Node originalRoot) {
-    TranspilationPasses.hotSwapTranspile(compiler, scriptRoot, this);
+    TranspilationPasses.hotSwapTranspile(compiler, scriptRoot, transpiledFeatures, this);
   }
 
   @Override
@@ -118,9 +120,6 @@ public final class LateEs6ToEs3Converter implements NodeTraversal.Callback, HotS
       case FOR_OF:
         visitForOf(t, n, parent);
         break;
-      case STRING_KEY:
-        visitStringKey(n);
-        break;
       case TAGGED_TEMPLATELIT:
         Es6TemplateLiterals.visitTaggedTemplateLiteral(t, n, addTypes);
         break;
@@ -148,29 +147,21 @@ public final class LateEs6ToEs3Converter implements NodeTraversal.Callback, HotS
     compiler.reportChangeToEnclosingScope(stringKey);
   }
 
-  /**
-   * Converts extended object literal {a} to {a:a}.
-   */
-  // TODO(blickly): Separate this so it can be part of the normalization early transpilation passes.
-  private void visitStringKey(Node n) {
-    if (!n.hasChildren()) {
-      Node name = withType(IR.name(n.getString()), n.getTypeI());
-      name.useSourceInfoIfMissingFrom(n);
-      n.addChildToBack(name);
-      compiler.reportChangeToEnclosingScope(name);
-    }
-  }
-
   private void visitForOf(NodeTraversal t, Node node, Node parent) {
     Node variable = node.removeFirstChild();
     Node iterable = node.removeFirstChild();
     Node body = node.removeFirstChild();
 
-    ObjectTypeI iterableType = null;
     TypeI typeParam = unknownType;
     if (addTypes) {
-       iterableType = iterable.getTypeI().autobox().toMaybeObjectType();
-       typeParam = iterableType.getTemplateTypes().get(0);
+      // TODO(sdh): This is going to be null if the iterable is nullable or unknown. We might want
+      // to consider some way of unifying rather than simply looking at the nominal type.
+      ObjectTypeI iterableType = iterable.getTypeI().autobox().toMaybeObjectType();
+      if (iterableType != null) {
+        TypeIRegistry registry = compiler.getTypeIRegistry();
+        TypeI iterableBaseType = registry.getNativeType(JSTypeNative.ITERABLE_TYPE);
+        typeParam = iterableType.getInstantiatedTypeArgument(iterableBaseType);
+      }
     }
     TypeI iteratorType = createGenericType(JSTypeNative.ITERATOR_TYPE, typeParam);
     TypeI iIterableResultType = createGenericType(JSTypeNative.I_ITERABLE_RESULT_TYPE, typeParam);
@@ -367,4 +358,3 @@ public final class LateEs6ToEs3Converter implements NodeTraversal.Callback, HotS
     return withType(n, unknownType);
   }
 }
-

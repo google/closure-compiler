@@ -46,8 +46,7 @@ public class ComposeWarningsGuard extends WarningsGuard {
   private final Map<WarningsGuard, Integer> orderOfAddition = new HashMap<>();
   private int numberOfAdds = 0;
 
-  private final Comparator<WarningsGuard> guardComparator =
-      new GuardComparator(orderOfAddition);
+  private final Comparator<WarningsGuard> guardComparator = new GuardComparator(orderOfAddition);
   private boolean demoteErrors = false;
 
   private static class GuardComparator
@@ -73,8 +72,7 @@ public class ComposeWarningsGuard extends WarningsGuard {
   }
 
   // The order that the guards are applied in.
-  private final TreeSet<WarningsGuard> guards =
-      new TreeSet<>(guardComparator);
+  private final TreeSet<WarningsGuard> guards = new TreeSet<>(guardComparator);
 
   public ComposeWarningsGuard(List<WarningsGuard> guards) {
     addGuards(guards);

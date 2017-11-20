@@ -19,6 +19,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
+import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfoBuilder;
@@ -53,6 +54,8 @@ public final class EarlyEs6ToEs3Converter implements Callback, HotSwapCompilerPa
   private static final String REST_PARAMS = "$jscomp$restParams";
 
   private static final String FRESH_SPREAD_VAR = "$jscomp$spread$args";
+  // Since there's currently no Feature for Symbol, run this pass if the code has any ES6 features.
+  private static final FeatureSet transpiledFeatures = FeatureSet.ES6.without(FeatureSet.ES5);
 
   public EarlyEs6ToEs3Converter(AbstractCompiler compiler) {
     this.compiler = compiler;
@@ -60,13 +63,13 @@ public final class EarlyEs6ToEs3Converter implements Callback, HotSwapCompilerPa
 
   @Override
   public void process(Node externs, Node root) {
-    TranspilationPasses.processTranspile(compiler, externs, this);
-    TranspilationPasses.processTranspile(compiler, root, this);
+    TranspilationPasses.processTranspile(compiler, externs, transpiledFeatures, this);
+    TranspilationPasses.processTranspile(compiler, root, transpiledFeatures, this);
   }
 
   @Override
   public void hotSwapScript(Node scriptRoot, Node originalRoot) {
-    TranspilationPasses.hotSwapTranspile(compiler, scriptRoot, this);
+    TranspilationPasses.hotSwapTranspile(compiler, scriptRoot, transpiledFeatures, this);
   }
 
   /**

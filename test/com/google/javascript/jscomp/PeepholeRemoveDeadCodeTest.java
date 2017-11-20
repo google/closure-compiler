@@ -408,7 +408,7 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
         "}",
         "");
     fold(
-        LINE_JOINER.join(
+        lines(
             "switch ('fallThru') {",
             "case 'fallThru':",
             "  if (foo(123) > 0) {",
@@ -419,7 +419,7 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
             "case 'bar':",
             "  bar();",
             "}"),
-        LINE_JOINER.join(
+        lines(
             "switch ('fallThru') {",
             "case 'fallThru':",
             "  if (foo(123) > 0) {",
@@ -430,18 +430,18 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
             "  bar();",
             "}"));
     fold(
-        LINE_JOINER.join(
+        lines(
             "switch ('fallThru') {",
             "case 'fallThru':",
             "  foo();",
             "case 'bar':",
             "  bar();",
             "}"),
-        LINE_JOINER.join(
+        lines(
             "foo();",
             "bar();"));
     fold(
-        LINE_JOINER.join(
+        lines(
             "switch ('hasDefaultCase') {",
             "  case 'foo':",
             "    foo();",
@@ -514,7 +514,7 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
         "  foo();\n" +
         "}");
     fold(
-        LINE_JOINER.join(
+        lines(
             "switch ('empty') {",
             "case 'empty':",
             "case 'foo':",
@@ -523,23 +523,23 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
         "foo()");
 
     fold(
-        LINE_JOINER.join(
+        lines(
             "let x;",
             "switch (use(x)) {",
             "  default: {let x;}",
             "}"),
-        LINE_JOINER.join(
+        lines(
             "let x;",
             "use(x);",
             "{let x}"));
 
     fold(
-        LINE_JOINER.join(
+        lines(
             "let x;",
             "switch (use(x)) {",
             "  default: let x;",
             "}"),
-        LINE_JOINER.join(
+        lines(
             "let x;",
             "use(x);",
             "{let x}"));
@@ -569,7 +569,7 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
 
   public void testOptimizeSwitch3() {
     fold(
-        LINE_JOINER.join(
+        lines(
             "switch (1) {",
             "  case 1:",
             "  case 2:",
@@ -588,7 +588,7 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
 
   public void testOptimizeSwitchWithLabellessBreak() {
     test(
-        LINE_JOINER.join(
+        lines(
             "function f() {",
             "  switch('x') {",
             "    case 'x': var x = 1; break;",
@@ -599,7 +599,7 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
 
     // TODO(moz): Convert this to an if statement for better optimization
     testSame(
-        LINE_JOINER.join(
+        lines(
             "function f() {",
             "  switch(x) {",
             "    case 'y': break;",
@@ -608,7 +608,7 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
             "}"));
 
     test(
-        LINE_JOINER.join(
+        lines(
             "var exit;",
             "switch ('a') {",
             "  case 'a':",
@@ -621,7 +621,7 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
             "  case 21: throw 'x';",
             "  default : console.log('good');",
             "}"),
-        LINE_JOINER.join(
+        lines(
             "var exit;",
             "switch(exit) {",
             "  case 21: throw 'x';",
@@ -629,13 +629,13 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
             "}"));
 
     test(
-        LINE_JOINER.join(
+        lines(
             "let x = 1;",
             "switch('x') {",
             "  case 'x': let x = 2; break;",
             "}"
         ),
-        LINE_JOINER.join(
+        lines(
             "let x = 1;",
             "{let x = 2}"
         ));
@@ -643,7 +643,7 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
 
   public void testOptimizeSwitchWithLabelledBreak() {
     test(
-        LINE_JOINER.join(
+        lines(
             "function f() {",
             "  label:",
             "  switch('x') {",
@@ -654,7 +654,7 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
         "function f() { }");
 
     test(
-        LINE_JOINER.join(
+        lines(
             "function f() {",
             "  label:",
             "  switch('x') {",
@@ -667,7 +667,7 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
 
   public void testOptimizeSwitchWithReturn() {
     test(
-        LINE_JOINER.join(
+        lines(
             "function f() {",
             "  switch('x') {",
             "    case 'x': return 1;",
@@ -677,7 +677,7 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
         "function f() { return 1; }");
 
     test(
-        LINE_JOINER.join(
+        lines(
             "function f() {",
             "  let x = 1;",
             "  switch('x') {",
@@ -685,7 +685,7 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
             "    case 'y': return 4;",
             "  }",
             "}"),
-        LINE_JOINER.join(
+        lines(
             "function f() {",
             "  let x = 1;",
             "  { let x = 2; } return 3; ",
@@ -695,7 +695,7 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
 
   public void testOptimizeSwitchWithThrow() {
     test(
-        LINE_JOINER.join(
+        lines(
             "function f() {",
             "  switch('x') {",
             "    case 'x': throw f;",
@@ -707,7 +707,7 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
 
   public void testOptimizeSwitchWithContinue() {
     test(
-        LINE_JOINER.join(
+        lines(
             "function f() {",
             "  while (true) {",
             "    switch('x') {",
@@ -722,7 +722,7 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
   // GitHub issue #1722: https://github.com/google/closure-compiler/issues/1722
   public void testOptimizeSwitchWithDefaultCase() {
     test(
-        LINE_JOINER.join(
+        lines(
             "function f() {",
             "  switch('x') {",
             "    case 'x': return 1;",
@@ -733,7 +733,7 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
         "function f() { return 1; }");
 
     test(
-        LINE_JOINER.join(
+        lines(
             "switch ('hasDefaultCase') {",
             "  case 'foo':",
             "    foo();",
@@ -748,7 +748,7 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
 
     // Potentially foldable
     testSame(
-        LINE_JOINER.join(
+        lines(
             "switch (x) {",
             "  case x:",
             "    foo();",
@@ -759,7 +759,7 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
             "}"));
 
     test(
-        LINE_JOINER.join(
+        lines(
             "switch ('hasDefaultCase') {",
             "  case 'foo':",
             "    foo();",
@@ -771,7 +771,7 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
         "");
 
     test(
-        LINE_JOINER.join(
+        lines(
             "switch ('hasDefaultCase') {",
             "  case 'foo':",
             "    foo();",
@@ -783,7 +783,7 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
         "switch ('hasDefaultCase') { default: if (a) { break; } bar(); }");
 
     test(
-        LINE_JOINER.join(
+        lines(
             "l: switch ('hasDefaultCase') {",
             "  case 'foo':",
             "    foo();",
@@ -796,7 +796,7 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
         "l:{ if (a) { break l; } bar(); }");
 
     test(
-        LINE_JOINER.join(
+        lines(
             "switch ('hasDefaultCase') {",
             "  case 'foo':",
             "    bar();",
@@ -812,7 +812,7 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
     test("switch (a()) { default: break; bar();}", "a();");
 
     test(
-        LINE_JOINER.join(
+        lines(
             "loop: ",
             "while (true) {",
             "  switch (a()) {",
@@ -1118,5 +1118,10 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
     test("([1])", "");
     test("([a])", "");
     test("([foo()])", "foo()");
+  }
+
+  public void testAwait() {
+    testSame("async function f() { await something(); }");
+    testSame("async function f() { await some.thing(); }");
   }
 }

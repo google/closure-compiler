@@ -21,6 +21,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
+import com.google.common.base.Joiner;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
@@ -94,7 +95,7 @@ final class NameAnalyzer implements CompilerPass {
   private final Map<String, JsName> allNames = new HashMap<>();
 
   /** Reference dependency graph */
-  private LinkedDirectedGraph<JsName, RefType> referenceGraph =
+  private final LinkedDirectedGraph<JsName, RefType> referenceGraph =
       LinkedDirectedGraph.createWithoutAnnotations();
 
   /**
@@ -132,9 +133,6 @@ final class NameAnalyzer implements CompilerPass {
 
   /** Names that refer to the global scope */
   private final Set<String> globalNames;
-
-  /** Ast change helper */
-  private final AstChangeProxy changeProxy;
 
   /** Names that are externally defined */
   private final Set<String> externalNames = new HashSet<>();
@@ -186,7 +184,7 @@ final class NameAnalyzer implements CompilerPass {
    */
   private static class NameInformation {
     /** Fully qualified name */
-    String name;
+    final String name;
 
     /** Whether the name is guaranteed to be externally referenceable */
     boolean isExternallyReferenceable = false;
@@ -220,8 +218,12 @@ final class NameAnalyzer implements CompilerPass {
    * Struct to hold information about a fully qualified JS name
    */
   private static class JsName implements Comparable<JsName> {
+    JsName(String name) {
+      this.name = name;
+    }
+
     /** Fully qualified name */
-    String name;
+    final String name;
 
     /** Name of prototype functions attached to this name */
     List<String> prototypeNames = new ArrayList<>();
@@ -241,11 +243,8 @@ final class NameAnalyzer implements CompilerPass {
     /** Whether the name is directly set */
     boolean hasSetterReference = false;
 
-    /**
-     * Output the node as a string
-     *
-     * @return Node as a string
-     */
+    private static final Joiner joiner = Joiner.on(", ");
+
     @Override
     public String toString() {
       StringBuilder out = new StringBuilder();
@@ -254,13 +253,7 @@ final class NameAnalyzer implements CompilerPass {
       if (!prototypeNames.isEmpty()) {
         out.append(" (CLASS)\n");
         out.append(" - FUNCTIONS: ");
-        Iterator<String> pIter = prototypeNames.iterator();
-        while (pIter.hasNext()) {
-          out.append(pIter.next());
-          if (pIter.hasNext()) {
-            out.append(", ");
-          }
-        }
+        joiner.appendTo(out, prototypeNames);
       }
 
       return out.toString();
@@ -287,13 +280,13 @@ final class NameAnalyzer implements CompilerPass {
    */
   private class JsNameRefNode implements RefNode {
     /** JsName node for this reference */
-    JsName name;
+    final JsName name;
 
     /**
      * Parent node of the name access
      * (ASSIGN, VAR, FUNCTION, OBJECTLIT, or CALL)
      */
-    Node parent;
+    final Node parent;
 
 
     /**
@@ -382,12 +375,13 @@ final class NameAnalyzer implements CompilerPass {
 
     @Override public void remove() {
       Node grandparent = parent.getParent();
+      compiler.reportChangeToEnclosingScope(grandparent);
       if (grandparent.isExprResult()) {
         // name.prototype.foo = function() { ... };
-        changeProxy.removeChild(grandparent.getParent(), grandparent);
+        NodeUtil.deleteNode(grandparent, compiler);
       } else {
         // ... name.prototype.foo = function() { ... } ...
-        changeProxy.replaceWith(grandparent, parent, parent.getLastChild().detach());
+        parent.replaceWith(parent.getLastChild().detach());
       }
     }
   }
@@ -397,10 +391,10 @@ final class NameAnalyzer implements CompilerPass {
    */
   private abstract static class SpecialReferenceNode implements RefNode {
     /** JsName node for the function */
-    JsName name;
+    final JsName name;
 
     /** The CALL node */
-    Node node;
+    final Node node;
 
     /**
      * Create a special reference node.
@@ -447,10 +441,11 @@ final class NameAnalyzer implements CompilerPass {
     public void remove() {
       checkState(node.isCall());
       Node parent = getParent();
+      compiler.reportChangeToEnclosingScope(parent);
       if (parent.isExprResult()) {
-        changeProxy.removeChild(getGrandparent(), parent);
+        NodeUtil.deleteNode(parent, compiler);
       } else {
-        changeProxy.replaceWith(parent, node, IR.voidNode(IR.number(0)));
+        node.replaceWith(IR.voidNode(IR.number(0)));
       }
     }
   }
@@ -475,7 +470,8 @@ final class NameAnalyzer implements CompilerPass {
 
     @Override
     public void remove() {
-      changeProxy.replaceWith(getGrandparent(), getParent(), IR.falseNode());
+      compiler.reportChangeToEnclosingScope(getParent());
+      getParent().replaceWith(IR.falseNode());
     }
   }
 
@@ -555,7 +551,7 @@ final class NameAnalyzer implements CompilerPass {
         checkNotNull(ns, "createNameInformation returned null for: %s", targetObject);
         recordDepScope(n, ns);
       } else if (n.isDestructuringLhs()) {
-        for (Node child : NodeUtil.getLhsNodesOfDeclaration(n)) {
+        for (Node child : NodeUtil.findLhsNodesInNode(n)) {
           if (!child.getParent().isComputedProp()) {
             checkState(child.isName());
             NameInformation ns = createNameInformation(t, child);
@@ -644,9 +640,7 @@ final class NameAnalyzer implements CompilerPass {
    * it is legal to refer to variable and function names before the
    * actual declaration.
    */
-  private class HoistVariableAndFunctionDeclarations
-      extends NodeTraversal.AbstractShallowCallback {
-
+  private class HoistVariableAndFunctionDeclarations extends NodeTraversal.AbstractShallowCallback {
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       if (n.isName() && parent.isVar()) {
@@ -671,7 +665,6 @@ final class NameAnalyzer implements CompilerPass {
    * can perform modifications in traversal order.
    */
   private class FindDeclarationsAndSetters extends AbstractPostOrderCallback {
-
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
 
@@ -684,7 +677,7 @@ final class NameAnalyzer implements CompilerPass {
           checkNotNull(ns, "createNameInformation returned null for: %s", n);
           recordSet(ns.name, n);
         } else if (NodeUtil.isNameDeclaration(parent) && n.isDestructuringLhs()){
-          for (Node child : NodeUtil.getLhsNodesOfDeclaration(n)) {
+          for (Node child : NodeUtil.findLhsNodesInNode(n)) {
             if (!child.getParent().isComputedProp()) {
               checkState(child.isName());
               NameInformation ns = createNameInformation(t, child);
@@ -883,7 +876,7 @@ final class NameAnalyzer implements CompilerPass {
         addSimplifiedExpression(decl, n);
         addSimplifiedExpression(pred, n);   // addAllChildren?
         addSimplifiedExpression(step, n);
-      } else if (n.isForIn()) {
+      } else if (NodeUtil.isEnhancedFor(n)) {
         Node decl = n.getFirstChild();
         Node iter = decl.getNext();
         addAllChildren(decl);
@@ -949,8 +942,7 @@ final class NameAnalyzer implements CompilerPass {
       }
 
       // instanceof checks are not handled like regular read references.
-      boolean isInstanceOfCheck = parent.isInstanceOf() &&
-          parent.getLastChild() == n;
+      boolean isInstanceOfCheck = parent.isInstanceOf() && parent.getLastChild() == n;
       if (isInstanceOfCheck) {
         JsName checkedClass = getName(nameInfo.name, true);
 
@@ -959,10 +951,10 @@ final class NameAnalyzer implements CompilerPass {
         // this as a special reference. It will be replaced with
         // false if there are no other references, because we
         // know the class can't be instantiated.
-        if (checkedClass.hasSetterReference &&
-            !nameInfo.isExternallyReferenceable &&
+        if (checkedClass.hasSetterReference
+            && !nameInfo.isExternallyReferenceable
             // Exclude GETELEMs.
-            n.isQualifiedName()) {
+            && n.isQualifiedName()) {
           refNodes.add(new InstanceOfCheckNode(checkedClass, n));
           checkedClass.hasInstanceOfReference = true;
           return;
@@ -989,9 +981,7 @@ final class NameAnalyzer implements CompilerPass {
         NameInformation nameInfo, @Nullable NameInformation referring) {
       String referringName = "";
       if (referring != null) {
-        referringName = referring.isPrototype
-                      ? referring.prototypeClass
-                      : referring.name;
+        referringName = referring.isPrototype ? referring.prototypeClass : referring.name;
       }
 
       String name = nameInfo.name;
@@ -1036,8 +1026,7 @@ final class NameAnalyzer implements CompilerPass {
         }
       } else if (referring != null) {
         if (!maybeRecordAlias(name, n, referring, referringName)) {
-          RefType depType = referring.onlyAffectsClassDef ?
-              RefType.INHERITANCE : RefType.REGULAR;
+          RefType depType = referring.onlyAffectsClassDef ? RefType.INHERITANCE : RefType.REGULAR;
           recordReference(referringName, name, depType);
         }
       } else {
@@ -1046,8 +1035,7 @@ final class NameAnalyzer implements CompilerPass {
         // or assignment with a complex lhs.  In those cases,
         // protect this node by creating a reference to WINDOW.
         for (Node ancestor : n.getAncestors()) {
-          if (NodeUtil.isAssignmentOp(ancestor) ||
-              ancestor.isFunction()) {
+          if (NodeUtil.isAssignmentOp(ancestor) || ancestor.isFunction()) {
             recordReference(WINDOW, name, RefType.REGULAR);
             break;
           }
@@ -1129,9 +1117,7 @@ final class NameAnalyzer implements CompilerPass {
      * Helper class that gathers the list of nodes that would be left
      * behind after simplification.
      */
-    private class NodeAccumulator
-        implements SideEffectAccumulator {
-
+    private class NodeAccumulator implements SideEffectAccumulator {
       @Override
       public boolean classDefiningCallsHaveSideEffects() {
         return false;
@@ -1190,13 +1176,6 @@ final class NameAnalyzer implements CompilerPass {
     return parent;
   }
 
-  private class RemoveListener implements AstChangeProxy.ChangeListener {
-    @Override
-    public void nodeRemoved(Node n, Node parent) {
-      compiler.reportChangeToEnclosingScope(parent);
-    }
-  }
-
   /**
    * Creates a name analyzer, with option to remove unreferenced variables when
    * calling process().
@@ -1217,7 +1196,6 @@ final class NameAnalyzer implements CompilerPass {
     this.removeUnreferenced = removeUnreferenced;
     this.reportPath = reportPath;
     this.globalNames = DEFAULT_GLOBAL_NAMES;
-    this.changeProxy = new AstChangeProxy(compiler);
   }
 
   static void createEmptyReport(AbstractCompiler compiler, String reportPath) {
@@ -1332,17 +1310,12 @@ final class NameAnalyzer implements CompilerPass {
    * Removes all unreferenced variables.
    */
   void removeUnreferenced() {
-    RemoveListener listener = new RemoveListener();
-    changeProxy.registerListener(listener);
-
     for (RefNode refNode : refNodes) {
       JsName name = refNode.name();
       if (!name.referenced && !name.externallyDefined) {
         refNode.remove();
       }
     }
-
-    changeProxy.unregisterListener(listener);
   }
 
   /**
@@ -1460,8 +1433,7 @@ final class NameAnalyzer implements CompilerPass {
   private JsName createName(String name) {
     JsName jsn = allNames.get(name);
     if (jsn == null) {
-      jsn = new JsName();
-      jsn.name = name;
+      jsn = new JsName(name);
       allNames.put(name, jsn);
     }
     return jsn;
@@ -1640,12 +1612,12 @@ final class NameAnalyzer implements CompilerPass {
       }
     }
 
-    // Check whether this is an ES6 class
+    // Check whether this is the name node of an ES6 class
     if (parent.isClass() && n == parent.getFirstChild()) {
       checkState(n.isName());
       NameInformation nameInfo = new NameInformation(n.getString());
-      if (n.getNext().isName()) { // class it extends from
-        nameInfo.superclass = n.getNext().getString();
+      if (n.getNext().isQualifiedName()) { // class it extends from
+        nameInfo.superclass = n.getNext().getQualifiedName();
         nameInfo.onlyAffectsClassDef = true;
       }
       return nameInfo;
@@ -1696,8 +1668,7 @@ final class NameAnalyzer implements CompilerPass {
     String rootName = rootNameNode.getString();
     Var v = scope.getVar(rootName);
     boolean isExtern = (v == null && externalNames.contains(rootName));
-    boolean isGlobalRef = (v != null && v.isGlobal()) || isExtern ||
-        rootName.equals(WINDOW);
+    boolean isGlobalRef = (v != null && v.isGlobal()) || isExtern || rootName.equals(WINDOW);
     if (!isGlobalRef) {
       return null;
     }
@@ -1894,6 +1865,7 @@ final class NameAnalyzer implements CompilerPass {
    * replace it with the subexpressions that have side effects.
    */
   private void replaceWithRhs(Node parent, Node n) {
+    compiler.reportChangeToEnclosingScope(n);
     if (valueConsumedByParent(n, parent)) {
       // parent reads from n directly; replace it with n's rhs + lhs
       // subexpressions with side effects.
@@ -1905,7 +1877,7 @@ final class NameAnalyzer implements CompilerPass {
       Node valueExpr = Iterables.getLast(replacements);
       valueExpr.detach();
       newReplacements.add(valueExpr);
-      changeProxy.replaceWith(parent, n, collapseReplacements(newReplacements));
+      n.replaceWith(collapseReplacements(newReplacements));
     } else if (n.isAssign() && !parent.isVanillaFor()) {
       // assignment appears in a RHS expression.  we have already
       // considered names in the assignment's RHS as being referenced;
@@ -1914,7 +1886,7 @@ final class NameAnalyzer implements CompilerPass {
       // this pass and RemoveConstantExpressions together in a loop.
       Node replacement = n.getLastChild();
       replacement.detach();
-      changeProxy.replaceWith(parent, n, replacement);
+      n.replaceWith(replacement);
     } else {
       replaceTopLevelExpressionWithRhs(parent, n);
     }
@@ -1958,24 +1930,27 @@ final class NameAnalyzer implements CompilerPass {
             "Unsupported node type in replaceWithRhs " + n.getToken());
     }
 
-    // gather replacements
-    List<Node> replacements = new ArrayList<>();
+    // Gather replacements in a temporary block node.
+    Node replacements = IR.block();
     for (Node rhs : getRhsSubexpressions(n)) {
-      replacements.addAll(getSideEffectNodes(rhs));
-    }
-
-    if (parent.isVanillaFor() || parent.isForIn()) {
-      // tweak replacements array s.t. it is a single expression node.
-      if (replacements.isEmpty()) {
-        replacements.add(IR.empty());
-      } else {
-        Node expr = collapseReplacements(replacements);
-        replacements.clear();
-        replacements.add(expr);
+      for (Node r : getSideEffectNodes(rhs)) {
+        replacements.addChildToBack(r);
       }
     }
 
-    changeProxy.replaceWith(parent, n, replacements);
+    if (NodeUtil.isAnyFor(parent)) {
+      // tweak replacements array s.t. it is a single expression node.
+      if (!replacements.hasChildren()) {
+        replacements.addChildToBack(IR.empty().useSourceInfoFrom(n));
+      } else {
+        Node expr = collapseReplacements(replacements.children());
+        replacements.removeChildren();
+        replacements.addChildToBack(expr);
+      }
+    }
+
+    parent.addChildrenAfter(replacements.removeChildren(), n);
+    NodeUtil.deleteNode(n, compiler);
   }
 
   /**
@@ -2026,7 +2001,7 @@ final class NameAnalyzer implements CompilerPass {
    * Merge a list of nodes into a single expression.  The value of the
    * new expression is determined by the last expression in the list.
    */
-  private static Node collapseReplacements(List<Node> replacements) {
+  private static Node collapseReplacements(Iterable<Node> replacements) {
     Node expr = null;
     for (Node rep : replacements) {
       if (rep.isExprResult()) {
@@ -2057,12 +2032,10 @@ final class NameAnalyzer implements CompilerPass {
         // function nodes have no RHS
         return ImmutableList.of();
       case CALL:
-        {
-          // In our analyzable case, only the last argument to Object.defineProperties
-          // (the object literal) can have side-effects
-          checkState(isAnalyzableObjectDefinePropertiesDefinition(n));
-          return ImmutableList.of(n.getLastChild());
-        }
+        // In our analyzable case, only the last argument to Object.defineProperties
+        // (the object literal) can have side-effects
+        checkState(isAnalyzableObjectDefinePropertiesDefinition(n));
+        return ImmutableList.of(n.getLastChild());
       case NAME:
         {
           // parent is a var node.  RHS is the first child
@@ -2093,7 +2066,7 @@ final class NameAnalyzer implements CompilerPass {
           return nodes.build();
         }
       default:
-        throw new IllegalArgumentException("AstChangeProxy::getRhs " + n);
+        throw new IllegalArgumentException("getRhsSubexpressions " + n);
     }
   }
 

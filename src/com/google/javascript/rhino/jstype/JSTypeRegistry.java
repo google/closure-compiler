@@ -259,11 +259,8 @@ public class JSTypeRegistry implements TypeIRegistry {
   public boolean isTemplatedBuiltin(String fnName, JSDocInfo info) {
     ImmutableList<TemplateType> requiredTemplateTypes = getTemplateTypesOfBuiltin(fnName);
     ImmutableList<String> infoTemplateTypeNames = info.getTemplateTypeNames();
-    if (requiredTemplateTypes == null
-        || infoTemplateTypeNames.size() != requiredTemplateTypes.size()) {
-      return false;
-    }
-    return true;
+    return requiredTemplateTypes != null
+        && infoTemplateTypeNames.size() == requiredTemplateTypes.size();
   }
 
   /**

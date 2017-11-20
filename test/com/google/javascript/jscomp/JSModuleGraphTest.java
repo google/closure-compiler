@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
+import static java.util.Collections.shuffle;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
@@ -26,6 +27,7 @@ import com.google.gson.JsonObject;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.BitSet;
+import java.util.HashMap;
 import java.util.List;
 import junit.framework.TestCase;
 
@@ -35,6 +37,7 @@ import junit.framework.TestCase;
  */
 public final class JSModuleGraphTest extends TestCase {
 
+  // NOTE: These are not static. It would probably be clearer to initialize them in setUp()
   private final JSModule A = new JSModule("A");
   private final JSModule B = new JSModule("B");
   private final JSModule C = new JSModule("C");
@@ -344,6 +347,109 @@ public final class JSModuleGraphTest extends TestCase {
     return inputs;
   }
 
+  public void testGoogBaseOrderedCorrectly() throws Exception {
+    List<SourceFile> sourceFiles = new ArrayList<>();
+    sourceFiles.add(code("a9", provides("a9"), requires()));
+    sourceFiles.add(code("a8", provides("a8"), requires()));
+    sourceFiles.add(code("a7", provides("a7"), requires()));
+    sourceFiles.add(code("a6", provides("a6"), requires()));
+    sourceFiles.add(code("a5", provides("a5"), requires()));
+    sourceFiles.add(code("a4", provides("a4"), requires()));
+    sourceFiles.add(code("a3", provides("a3"), requires()));
+    sourceFiles.add(code("a2", provides("a2"), requires()));
+    sourceFiles.add(
+        code("a1", provides("a1"), requires("a2", "a3", "a4", "a5", "a6", "a7", "a8", "a9")));
+    sourceFiles.add(code("base.js", BASEJS, provides(), requires()));
+
+    DependencyOptions depOptions = new DependencyOptions();
+    depOptions.setDependencySorting(true);
+    depOptions.setDependencyPruning(true);
+    depOptions.setMoocherDropping(true);
+    depOptions.setEntryPoints(ImmutableList.of(ModuleIdentifier.forClosure("a1")));
+    for (int i = 0; i < 10; i++) {
+      shuffle(sourceFiles);
+      A.removeAll();
+      for (SourceFile sourceFile : sourceFiles) {
+        A.add(sourceFile);
+      }
+
+      for (CompilerInput input : A.getInputs()) {
+        input.setCompiler(compiler);
+      }
+
+      List<CompilerInput> inputs = new ArrayList<>();
+      inputs.addAll(A.getInputs());
+      List<CompilerInput> results = graph.manageDependencies(depOptions, inputs);
+
+      assertInputs(A, "base.js", "a2", "a3", "a4", "a5", "a6", "a7", "a8", "a9", "a1");
+
+      assertThat(sourceNames(results))
+          .containsExactly("base.js", "a2", "a3", "a4", "a5", "a6", "a7", "a8", "a9", "a1")
+          .inOrder();
+    }
+  }
+
+  public void testProperEs6ModuleOrdering() throws Exception {
+    List<SourceFile> sourceFiles = new ArrayList<>();
+    sourceFiles.add(code("/entry.js", provides(), requires()));
+    sourceFiles.add(code("/a/a.js", provides(), requires()));
+    sourceFiles.add(code("/a/b.js", provides(), requires()));
+    sourceFiles.add(code("/b/a.js", provides(), requires()));
+    sourceFiles.add(code("/b/b.js", provides(), requires()));
+    sourceFiles.add(code("/b/c.js", provides(), requires()));
+    sourceFiles.add(code("/important.js", provides(), requires()));
+
+    HashMap<String, List<String>> orderedRequires = new HashMap<>();
+    orderedRequires.put(
+        "/entry.js",
+        ImmutableList.of(
+            ModuleIdentifier.forFile("/b/b.js").toString(),
+            ModuleIdentifier.forFile("/b/a.js").toString(),
+            ModuleIdentifier.forFile("/important.js").toString(),
+            ModuleIdentifier.forFile("/a/b.js").toString(),
+            ModuleIdentifier.forFile("/a/a.js").toString()));
+    orderedRequires.put("/a/a.js", ImmutableList.of());
+    orderedRequires.put("/a/b.js", ImmutableList.of());
+    orderedRequires.put("/b/a.js", ImmutableList.of());
+    orderedRequires.put(
+        "/b/b.js", ImmutableList.of(ModuleIdentifier.forFile("/b/c.js").toString()));
+    orderedRequires.put("/b/c.js", ImmutableList.of());
+    orderedRequires.put("/important.js", ImmutableList.of());
+
+    DependencyOptions depOptions = new DependencyOptions();
+    depOptions.setDependencySorting(true);
+    depOptions.setDependencyPruning(true);
+    depOptions.setMoocherDropping(true);
+    depOptions.setEntryPoints(ImmutableList.of(ModuleIdentifier.forFile("/entry.js")));
+    for (int iterationCount = 0; iterationCount < 10; iterationCount++) {
+      shuffle(sourceFiles);
+      A.removeAll();
+      for (SourceFile sourceFile : sourceFiles) {
+        A.add(sourceFile);
+      }
+
+      for (CompilerInput input : A.getInputs()) {
+        input.setCompiler(compiler);
+        for (String require : orderedRequires.get(input.getSourceFile().getName())) {
+          input.addOrderedRequire(require);
+        }
+        input.setHasFullParseDependencyInfo(true);
+      }
+
+      List<CompilerInput> inputs = new ArrayList<>();
+      inputs.addAll(A.getInputs());
+      List<CompilerInput> results = graph.manageDependencies(depOptions, inputs);
+
+      assertInputs(
+          A, "/b/c.js", "/b/b.js", "/b/a.js", "/important.js", "/a/b.js", "/a/a.js", "/entry.js");
+
+      assertThat(sourceNames(results))
+          .containsExactly(
+              "/b/c.js", "/b/b.js", "/b/a.js", "/important.js", "/a/b.js", "/a/a.js", "/entry.js")
+          .inOrder();
+    }
+  }
+
   private void assertInputs(JSModule module, String... sourceNames) {
     assertEquals(ImmutableList.copyOf(sourceNames), sourceNames(module.getInputs()));
   }
@@ -372,11 +478,11 @@ public final class JSModuleGraphTest extends TestCase {
     return SourceFile.fromCode(sourceName, text + source);
   }
 
-  private List<String> provides(String... strings) {
+  private ImmutableList<String> provides(String... strings) {
     return ImmutableList.copyOf(strings);
   }
 
-  private List<String> requires(String... strings) {
+  private ImmutableList<String> requires(String... strings) {
     return ImmutableList.copyOf(strings);
   }
 

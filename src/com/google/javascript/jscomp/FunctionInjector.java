@@ -104,6 +104,11 @@ class FunctionInjector {
       this.module = module;
       this.mode = mode;
     }
+
+    @Override
+    public String toString() {
+      return "Reference @ " + callNode;
+    }
   }
 
   /**
@@ -319,7 +324,7 @@ class FunctionInjector {
     UNSUPPORTED() {
       @Override
       public void prepare(FunctionInjector injector, Reference ref) {
-        throw new IllegalStateException("unexpected");
+        throw new IllegalStateException("unexpected: " + ref);
       }
     },
 
@@ -449,10 +454,8 @@ class FunctionInjector {
     } else {
       Node expressionRoot = ExpressionDecomposer.findExpressionRoot(callNode);
       if (expressionRoot != null) {
-        ExpressionDecomposer decomposer = new ExpressionDecomposer(
-            compiler, safeNameIdSupplier, knownConstants, ref.scope);
-        DecompositionType type = decomposer.canExposeExpression(
-            callNode);
+        ExpressionDecomposer decomposer = getDecomposer(ref.scope);
+        DecompositionType type = decomposer.canExposeExpression(callNode);
         if (type == DecompositionType.MOVABLE) {
           return CallSiteType.EXPRESSION;
         } else if (type == DecompositionType.DECOMPOSABLE) {
@@ -467,8 +470,11 @@ class FunctionInjector {
   }
 
   private ExpressionDecomposer getDecomposer(Scope scope) {
+    // TODO(b/69375648): Change this to compiler.getOptions().allowMethodCallDecomposing()
+    boolean allowMethodCallDecomposing = false;
+
     return new ExpressionDecomposer(
-        compiler, safeNameIdSupplier, knownConstants, scope);
+        compiler, safeNameIdSupplier, knownConstants, scope, allowMethodCallDecomposing);
   }
 
   /**

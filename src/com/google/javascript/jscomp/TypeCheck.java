@@ -111,7 +111,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
 
   static final DiagnosticType INEXISTENT_PROPERTY_WITH_SUGGESTION =
       DiagnosticType.disabled(
-          "JSC_INEXISTENT_PROPERTY",
+          "JSC_INEXISTENT_PROPERTY_WITH_SUGGESTION",
           "Property {0} never defined on {1}. Did you mean {2}?");
 
   protected static final DiagnosticType NOT_A_CONSTRUCTOR =
@@ -864,7 +864,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
   private void checkTypeofString(NodeTraversal t, Node n, String s) {
     if (!(s.equals("number") || s.equals("string") || s.equals("boolean") ||
           s.equals("undefined") || s.equals("function") ||
-          s.equals("object") || s.equals("unknown"))) {
+          s.equals("object") ||  s.equals("symbol") || s.equals("unknown"))) {
       validator.expectValidTypeofName(t, n, s);
     }
   }

@@ -41,12 +41,6 @@ var expect = function(subject, opt_description) {};
  */
 var ExpectChain = function() {};
 
-/**
- * Represent a non-chainable terminal part in an `expect()` chain. These are
- * effectively assertions.
- * @constructor
- */
-var ExpectChainTerminal = function() {};
 
 /** @type {!ExpectChain} */ ExpectChain.prototype.to;
 /** @type {!ExpectChain} */ ExpectChain.prototype.be;
@@ -67,31 +61,56 @@ var ExpectChainTerminal = function() {};
 /** @type {!ExpectChain} */ ExpectChain.prototype.all;
 /** @type {!ExpectChain} */ ExpectChain.prototype.length;
 /** @type {!ExpectChain} */ ExpectChain.prototype.itself;
+/** @type {!ExpectChain} */ ExpectChain.prototype.ok;
+/** @type {!ExpectChain} */ ExpectChain.prototype.true;
+/** @type {!ExpectChain} */ ExpectChain.prototype.false;
+/** @type {!ExpectChain} */ ExpectChain.prototype.null;
+/** @type {!ExpectChain} */ ExpectChain.prototype.undefined;
+/** @type {!ExpectChain} */ ExpectChain.prototype.NaN;
+/** @type {!ExpectChain} */ ExpectChain.prototype.exist;
+/** @type {!ExpectChain} */ ExpectChain.prototype.empty;
+/** @type {!ExpectChain} */ ExpectChain.prototype.arguments;
+/** @type {!ExpectChain} */ ExpectChain.prototype.extensible;
+/** @type {!ExpectChain} */ ExpectChain.prototype.sealed;
+/** @type {!ExpectChain} */ ExpectChain.prototype.frozen;
 
-/** @type {!ExpectChainTerminal} */ ExpectChain.prototype.ok;
-/** @type {!ExpectChainTerminal} */ ExpectChain.prototype.true;
-/** @type {!ExpectChainTerminal} */ ExpectChain.prototype.false;
-/** @type {!ExpectChainTerminal} */ ExpectChain.prototype.null;
-/** @type {!ExpectChainTerminal} */ ExpectChain.prototype.undefined;
-/** @type {!ExpectChainTerminal} */ ExpectChain.prototype.NaN;
-/** @type {!ExpectChainTerminal} */ ExpectChain.prototype.exist;
-/** @type {!ExpectChainTerminal} */ ExpectChain.prototype.empty;
-/** @type {!ExpectChainTerminal} */ ExpectChain.prototype.arguments;
-/** @type {!ExpectChainTerminal} */ ExpectChain.prototype.extensible;
-/** @type {!ExpectChainTerminal} */ ExpectChain.prototype.sealed;
-/** @type {!ExpectChainTerminal} */ ExpectChain.prototype.frozen;
+
+/**
+ * @param {string} type
+ * @param {string=} opt_message
+ * @return {!ExpectChain}
+ */
+ExpectChain.prototype.a = function(type, opt_message) {};
 
 /**
  * @param {string} type
  * @param {string=} opt_message
  */
-ExpectChain.prototype.a = function(type, opt_message) {};
+ExpectChain.prototype.an = function(type, opt_message) {}
 
 /**
  * @param {*} value
  * @param {string=} opt_message
  */
 ExpectChain.prototype.include = function(value, opt_message) {};
+
+/**
+ * @param {*} value
+ * @param {string=} opt_message
+ */
+ExpectChain.prototype.includes = function(value, opt_message) {};
+
+/**
+ * @param {*} value
+ * @param {string=} opt_message
+ */
+ExpectChain.prototype.contain = function(value, opt_message) {};
+
+/**
+ * @param {*} value
+ * @param {string=} opt_message
+ */
+ExpectChain.prototype.contains = function(value, opt_message) {};
 
 /**
  * @param {*} value
@@ -141,6 +160,12 @@ ExpectChain.prototype.within = function(start, finish, opt_message) {};
  * @param {string=} opt_message
  */
 ExpectChain.prototype.instanceof = function(constructor, opt_message) {};
+
+/**
+ * @param {function(new: Object)} constructor
+ * @param {string=} opt_message
+ */
+ExpectChain.prototype.an.instanceof = function(constructor, opt_message) {};
 
 /**
  * @param {string} name
@@ -292,6 +317,13 @@ assert.notEqual = function(actual, expected, opt_message) {};
 assert.deepEqual = function(actual, expected, opt_message) {};
 
 /**
+ * @param {*} actual
+ * @param {*} expected
+ * @param {string=} opt_message
+ */
+assert.notDeepEqual = function(actual, expected, opt_message) {};
+
+/**
  * @param {*} valueToCheck
  * @param {*} valueToBeAbove
  * @param {string=} opt_message
@@ -315,7 +347,19 @@ assert.isTrue = function(value, opt_message) {};
  * @param {*} value
  * @param {string=} opt_message
  */
+assert.isNotTrue = function(value, opt_message) {};
+
+/**
+ * @param {*} value
+ * @param {string=} opt_message
+ */
 assert.isFalse = function(value, opt_message) {};
+
+/**
+ * @param {*} value
+ * @param {string=} opt_message
+ */
+assert.isNotFalse = function(value, opt_message) {};
 
 /**
  * @param {*} value
@@ -356,18 +400,25 @@ assert.instanceOf = function(object, constructor, opt_message) {};
 assert.include = function(haystack, needle, opt_message) {};
 
 /**
- * @param {*} collection
- * @param {number} length
- * @param {string=} message
- */
-assert.lengthOf = function(collection, length, message) {};
-
-/**
  * @param {!Array<*>|string} haystack
  * @param {*} needle
  * @param {string=} opt_message
  */
 assert.notInclude = function(haystack, needle, opt_message) {};
+
+/**
+ * @param {*} needle
+ * @param {!Array<*>} haystack
+ * @param {string=} opt_message
+ */
+assert.oneOf = function(needle, haystack, opt_message) {};
+
+/**
+ * @param {*} collection
+ * @param {number} length
+ * @param {string=} message
+ */
+assert.lengthOf = function(collection, length, message) {};
 
 /**
  * @param {*} object

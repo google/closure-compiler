@@ -334,9 +334,8 @@ public class CodeGenerator {
         {
           checkState(childCount == 1);
 
-          // It's important to our sanity checker that the code
-          // we print produces the same AST as the code we parse back.
-          // NEG is a weird case because Rhino parses "- -2" as "2".
+          // It's important to our validity checker that the code we print produces the same AST as
+          // the code we parse back. NEG is a weird case because Rhino parses "- -2" as "2".
           if (n.getFirstChild().isNumber()) {
             cc.addNumber(-n.getFirstChild().getDouble(), n.getFirstChild());
           } else {
@@ -944,6 +943,13 @@ public class CodeGenerator {
       case NEW:
         add("new ");
         int precedence = NodeUtil.precedence(type);
+
+        // `new void 0` is a syntax error add parenthese in this case.  This is only particularly
+        // interesting for code in dead branches.
+        int precedenceOfFirst = NodeUtil.precedence(first.getToken());
+        if (precedenceOfFirst == precedence) {
+          precedence = precedence + 1;
+        }
 
         // If the first child contains a CALL, then claim higher precedence
         // to force parentheses. Otherwise, when parsed, NEW will bind to the
@@ -1822,11 +1828,9 @@ public class CodeGenerator {
           // Break <!-- into <\!--
           final String startComment = "!--";
 
-          if (s.regionMatches(true, i + 1, endScript, 0,
-                              endScript.length())) {
+          if (s.regionMatches(true, i + 1, endScript, 0, endScript.length())) {
             sb.append(LT_ESCAPED);
-          } else if (s.regionMatches(false, i + 1, startComment, 0,
-                                     startComment.length())) {
+          } else if (s.regionMatches(false, i + 1, startComment, 0, startComment.length())) {
             sb.append(LT_ESCAPED);
           } else {
             sb.append(c);

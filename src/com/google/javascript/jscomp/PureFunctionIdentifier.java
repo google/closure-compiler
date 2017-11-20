@@ -22,7 +22,6 @@ import static com.google.common.base.Preconditions.checkState;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
@@ -61,7 +60,7 @@ import java.util.Map;
  * <p>TODO: This pass could be greatly improved by proper tracking of locals within function bodies.
  * Every instance of the call to {@link NodeUtil#evaluatesToLocalValue(Node)} and {@link
  * NodeUtil#allArgsUnescapedLocal(Node)} do not actually take into account local variables. They
- * only assume literals, primatives, and operations on primatives are local.
+ * only assume literals, primitives, and operations on primitives are local.
  *
  * @author johnlenz@google.com (John Lenz)
  * @author tdeegan@google.com (Thomas Deegan)
@@ -283,7 +282,7 @@ class PureFunctionIdentifier implements CompilerPass {
   /**
    * When propagating side effects we construct a graph from every function definition A to every
    * function definition B that calls A(). Since the definition provider cannot always provide a
-   * unique defintion for a name, there may be many possible definitions for a given call site. In
+   * unique definition for a name, there may be many possible definitions for a given call site. In
    * the case where multiple defs share the same node in the graph.
    *
    * <p>We need to build the map {@link PureFunctionIdentifier#functionInfoByName} to get a
@@ -544,7 +543,7 @@ class PureFunctionIdentifier implements CompilerPass {
 
       // Handle deferred local variable modifications:
       for (FunctionInformation sideEffectInfo : functionSideEffectMap.get(function)) {
-        Preconditions.checkNotNull(sideEffectInfo, "%s has no side effect info.", function);
+        checkNotNull(sideEffectInfo, "%s has no side effect info.", function);
 
         if (sideEffectInfo.mutatesGlobalState()) {
           continue;
@@ -608,42 +607,47 @@ class PureFunctionIdentifier implements CompilerPass {
      */
     private void visitAssignmentOrUnaryOperator(
         FunctionInformation sideEffectInfo, Scope scope, Node op, Node enclosingFunction) {
-      Node lhs = op.getFirstChild();
-      Preconditions.checkState(
-          lhs.isName() || NodeUtil.isGet(lhs), "Unexpected LHS expression:", lhs);
-      if (lhs.isName()) {
-        Var var = scope.getVar(lhs.getString());
-        if (isVarDeclaredInScope(var, scope)) {
-          // Assignment to local, if the value isn't a safe local value,
-          // a literal or new object creation, add it to the local blacklist.
-          // parameter values depend on the caller.
-
-          // Note: other ops result in the name or prop being assigned a local
-          // value (x++ results in a number, for instance)
-          checkState(NodeUtil.isAssignmentOp(op) || isIncDec(op) || op.isDelProp());
-          Node rhs = op.getLastChild();
-          if (rhs != null && op.isAssign() && !NodeUtil.evaluatesToLocalValue(rhs)) {
-            blacklistedVarsByFunction.put(enclosingFunction, var);
-          }
-        } else {
-          sideEffectInfo.setTaintsGlobalState();
-        }
-      } else if (NodeUtil.isGet(lhs)) { // a['elem'] or a.elem
-        if (lhs.getFirstChild().isThis()) {
-          sideEffectInfo.setTaintsThis();
-        } else {
-          Node objectNode = lhs.getFirstChild();
-          if (objectNode.isName()) {
-            Var var = scope.getVar(objectNode.getString());
-            if (isVarDeclaredInScope(var, scope)) {
-              // Maybe a local object modification.  We won't know for sure until
-              // we exit the scope and can validate the value of the local.
-              taintedVarsByFunction.put(enclosingFunction, var);
+      Iterable<Node> lhsNodes;
+      if (isIncDec(op) || op.isDelProp()) {
+        lhsNodes = ImmutableList.of(op.getOnlyChild());
+      } else {
+        lhsNodes = NodeUtil.findLhsNodesInNode(op);
+      }
+      for (Node lhs : lhsNodes) {
+        if (NodeUtil.isGet(lhs)) {
+          if (lhs.getFirstChild().isThis()) {
+            sideEffectInfo.setTaintsThis();
+          } else {
+            Node objectNode = lhs.getFirstChild();
+            if (objectNode.isName()) {
+              Var var = scope.getVar(objectNode.getString());
+              if (isVarDeclaredInScope(var, scope)) {
+                // Maybe a local object modification.  We won't know for sure until
+                // we exit the scope and can validate the value of the local.
+                taintedVarsByFunction.put(enclosingFunction, var);
+              } else {
+                sideEffectInfo.setTaintsGlobalState();
+              }
             } else {
+              // TODO(tdeegan): Perhaps handle multi level locals: local.prop.prop2++;
               sideEffectInfo.setTaintsGlobalState();
             }
+          }
+        } else {
+          Var var = scope.getVar(lhs.getString());
+          if (isVarDeclaredInScope(var, scope)) {
+            // Assignment to local, if the value isn't a safe local value,
+            // a literal or new object creation, add it to the local blacklist.
+            // parameter values depend on the caller.
+
+            // Note: other ops result in the name or prop being assigned a local
+            // value (x++ results in a number, for instance)
+            checkState(NodeUtil.isAssignmentOp(op) || isIncDec(op) || op.isDelProp());
+            Node rhs = NodeUtil.getRValueOfLValue(lhs);
+            if (rhs != null && op.isAssign() && !NodeUtil.evaluatesToLocalValue(rhs)) {
+              blacklistedVarsByFunction.put(enclosingFunction, var);
+            }
           } else {
-            // TODO(tdeegan): Perhaps handle multi level locals: local.prop.prop2++;
             sideEffectInfo.setTaintsGlobalState();
           }
         }

@@ -63,7 +63,7 @@ public final class ReplaceCssNamesTest extends TypeICompilerTestCase {
   Map<String, Integer> cssNames;
 
   public ReplaceCssNamesTest() {
-    super(LINE_JOINER.join(
+    super(lines(
         DEFAULT_EXTERNS,
         "Object.prototype.getClass;",
         "goog.getCssName;"));
@@ -302,6 +302,9 @@ public final class ReplaceCssNamesTest extends TypeICompilerTestCase {
   public void testNoSymbolMapStripsCallAndDoesntIssueWarnings() {
     String input = "[goog.getCssName('test'), goog.getCssName(base, 'active')]";
     Compiler compiler = new Compiler();
+    CompilerOptions options = new CompilerOptions();
+    options.setEmitUseStrict(false);
+    compiler.initOptions(options);
     ErrorManager errorMan = new BasicErrorManager() {
       @Override protected void printSummary() {}
       @Override public void println(CheckLevel level, JSError error) {}

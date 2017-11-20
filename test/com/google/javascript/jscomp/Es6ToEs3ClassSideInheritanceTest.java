@@ -43,7 +43,8 @@ public class Es6ToEs3ClassSideInheritanceTest extends CompilerTestCase {
 
   public void testSimple() {
     test(
-        LINE_JOINER.join(
+        lines(
+            // Note: let statement is necessary so that input language is ES6; else pass is skipped.
             "let x = 1;",
             "/** @constructor */",
             "function Example() {}",
@@ -52,7 +53,7 @@ public class Es6ToEs3ClassSideInheritanceTest extends CompilerTestCase {
             "/** @constructor @extends {Example} */",
             "function Subclass() {}",
             "$jscomp.inherits(Subclass, Example);"),
-        LINE_JOINER.join(
+        lines(
             "let x = 1;",
             "/** @constructor */",
             "function Example() {}",
@@ -68,7 +69,7 @@ public class Es6ToEs3ClassSideInheritanceTest extends CompilerTestCase {
 
   public void testTyped() {
     test(
-        LINE_JOINER.join(
+        lines(
             "let x = 1;",
             "/** @constructor */",
             "function Example() {}",
@@ -79,7 +80,7 @@ public class Es6ToEs3ClassSideInheritanceTest extends CompilerTestCase {
             "/** @constructor @extends {Example} */",
             "function Subclass() {}",
             "$jscomp.inherits(Subclass, Example);"),
-        LINE_JOINER.join(
+        lines(
             "let x = 1;",
             "/** @constructor */",
             "function Example() {}",
@@ -95,9 +96,46 @@ public class Es6ToEs3ClassSideInheritanceTest extends CompilerTestCase {
             "Subclass.staticMethod = Example.staticMethod;"));
   }
 
+
+  public void testNestedSubclass() {
+    test(
+        lines(
+            "let x = 1;",
+            "/** @constructor */",
+            "function A() {}",
+            "A.a = 19;",
+            "/** @constructor */",
+            "A.B = function() {};",
+            "/** @constructor @extends {A} */",
+            "A.C = function() {};",
+            "$jscomp.inherits(A.C, A);",
+            "/** @constructor */",
+            "A.D = function() {};",
+            "A.e = 42;"),
+        lines(
+            "let x = 1;",
+            "/** @constructor */",
+            "function A() {}",
+            "A.a = 19;",
+            "/** @constructor */",
+            "A.B = function() {}",
+            "/** @constructor @extends {A} */",
+            "A.C = function() {};",
+            "$jscomp.inherits(A.C, A);",
+            "/** @constructor @extends {A} @suppress {visibility} */",
+            "A.C.C = A.C;",
+            "/** @constructor @suppress {visibility} */",
+            "A.C.B = A.B;",
+            "/** @suppress {visibility} */",
+            "A.C.a = A.a;",
+            "/** @constructor */",
+            "A.D = function() {};",
+            "A.e = 42;"));
+  }
+
   public void testOverride() {
     testSame(
-        LINE_JOINER.join(
+        lines(
             "let x = 1;",
             "/** @constructor */",
             "function Example() {}",
@@ -112,7 +150,7 @@ public class Es6ToEs3ClassSideInheritanceTest extends CompilerTestCase {
             "Subclass.staticMethod = function() { return 5; };"));
 
     testSame(
-        LINE_JOINER.join(
+        lines(
             "let x = 1;",
             "/** @constructor */",
             "function Example() {}",
@@ -128,7 +166,7 @@ public class Es6ToEs3ClassSideInheritanceTest extends CompilerTestCase {
    */
   public void testStaticNonMethod() {
     test(
-        LINE_JOINER.join(
+        lines(
             "let x = 1;",
             "/** @constructor */",
             "function Example() {}",
@@ -139,7 +177,7 @@ public class Es6ToEs3ClassSideInheritanceTest extends CompilerTestCase {
             "/** @constructor @extends {Example} */",
             "function Subclass() {}",
             "$jscomp.inherits(Subclass, Example);"),
-        LINE_JOINER.join(
+        lines(
             "let x = 1;",
             "/** @constructor */",
             "function Example() {}",
@@ -168,7 +206,7 @@ public class Es6ToEs3ClassSideInheritanceTest extends CompilerTestCase {
     //     static set property(x) {}
     //   }
     test(
-        LINE_JOINER.join(
+        lines(
             "let x = 1;",
             "/** @constructor */",
             "function Example() {}",
@@ -183,7 +221,7 @@ public class Es6ToEs3ClassSideInheritanceTest extends CompilerTestCase {
             "/** @constructor @extends {Example} */",
             "function Subclass() {}",
             "$jscomp.inherits(Subclass, Example);"),
-        LINE_JOINER.join(
+        lines(
             "let x = 1;",
             "/** @constructor */",
             "function Example() {}",
@@ -205,7 +243,7 @@ public class Es6ToEs3ClassSideInheritanceTest extends CompilerTestCase {
 
   public void testGetterSetterQualifiedClassName() {
     test(
-        LINE_JOINER.join(
+        lines(
             "let TestCase = {};",
             "TestCase.A = /** @constructor */function() {};",
             "",
@@ -219,7 +257,7 @@ public class Es6ToEs3ClassSideInheritanceTest extends CompilerTestCase {
             "/** @constructor @extends {TestCase.A} */",
             "function Subclass() {}",
             "$jscomp.inherits(Subclass, TestCase.A);"),
-        LINE_JOINER.join(
+        lines(
             "let TestCase = {};",
             "TestCase.A = /** @constructor */function() {};",
             "",
@@ -243,7 +281,7 @@ public class Es6ToEs3ClassSideInheritanceTest extends CompilerTestCase {
    */
   public void testGetterSetterFakeStub() {
     test(
-        LINE_JOINER.join(
+        lines(
             "let x = 1;",
             "/** @constructor */",
             "function A() {}",
@@ -255,7 +293,7 @@ public class Es6ToEs3ClassSideInheritanceTest extends CompilerTestCase {
             "/** @constructor @extends {A} */",
             "function B() {}",
             "$jscomp.inherits(B, A);"),
-        LINE_JOINER.join(
+        lines(
             "let x = 1;",
             "/** @constructor */",
             "function A() {}",
@@ -273,7 +311,7 @@ public class Es6ToEs3ClassSideInheritanceTest extends CompilerTestCase {
 
   public void testGetterSetterSubclassSubclass() {
     test(
-        LINE_JOINER.join(
+        lines(
             "let x = 1;",
             "/** @constructor */",
             "function A() {}",
@@ -293,7 +331,7 @@ public class Es6ToEs3ClassSideInheritanceTest extends CompilerTestCase {
             "function C() {}",
             "$jscomp.inherits(C, B);",
             ""),
-        LINE_JOINER.join(
+        lines(
             "let x = 1;",
             "/** @constructor */",
             "function A() {}",
@@ -324,7 +362,7 @@ public class Es6ToEs3ClassSideInheritanceTest extends CompilerTestCase {
    */
   public void testGetterSetterSubclassOverride() {
     testSame(
-        LINE_JOINER.join(
+        lines(
             "let x = 1;",
             "/** @constructor */",
             "function A() {}",
@@ -348,7 +386,7 @@ public class Es6ToEs3ClassSideInheritanceTest extends CompilerTestCase {
             ""));
 
     testSame(
-        LINE_JOINER.join(
+        lines(
             "let x = 1;",
             "/** @constructor */",
             "function A() {}",
@@ -370,7 +408,7 @@ public class Es6ToEs3ClassSideInheritanceTest extends CompilerTestCase {
 
   public void testGetterSetter_noType() {
     test(
-        LINE_JOINER.join(
+        lines(
             "let x = 1;",
             "/** @constructor */",
             "function Example() {}",
@@ -384,7 +422,7 @@ public class Es6ToEs3ClassSideInheritanceTest extends CompilerTestCase {
             "/** @constructor @extends {Example} */",
             "function Subclass() {}",
             "$jscomp.inherits(Subclass, Example);"),
-        LINE_JOINER.join(
+        lines(
             "let x = 1;",
             "/** @constructor */",
             "function Example() {}",
@@ -405,18 +443,18 @@ public class Es6ToEs3ClassSideInheritanceTest extends CompilerTestCase {
 
   public void testInheritFromExterns() {
     test(
-        LINE_JOINER.join(
+        lines(
             "let x;",
             "/** @constructor */ function ExternsClass() {}",
             "ExternsClass.m = function() {};"),
-        LINE_JOINER.join(
+        lines(
             "let y = 1;",
             "/** @constructor @struct @extends {ExternsClass} */",
             "var CodeClass = function(var_args) {",
             "  ExternsClass.apply(this,arguments)",
             "};",
             "$jscomp.inherits(CodeClass,ExternsClass)"),
-        LINE_JOINER.join(
+        lines(
             "let y = 1;",
             "/** @constructor @struct @extends {ExternsClass} */",
             "var CodeClass = function(var_args) {",
@@ -429,7 +467,7 @@ public class Es6ToEs3ClassSideInheritanceTest extends CompilerTestCase {
 
   public void testAliasing() {
     test(
-        LINE_JOINER.join(
+        lines(
             "let x = 1;",
             "/** @constructor */",
             "function Foo() {}",
@@ -438,7 +476,7 @@ public class Es6ToEs3ClassSideInheritanceTest extends CompilerTestCase {
             "/** @constructor @extends {aliasFoo} */",
             "function Bar() {}",
             "$jscomp.inherits(Bar, aliasFoo);"),
-        LINE_JOINER.join(
+        lines(
             "let x = 1;",
             "/** @constructor */",
             "function Foo() {}",
@@ -451,7 +489,7 @@ public class Es6ToEs3ClassSideInheritanceTest extends CompilerTestCase {
             "Bar.prop = aliasFoo.prop;"));
 
     test(
-        LINE_JOINER.join(
+        lines(
             "let x = 1;",
             "/** @constructor */",
             "function Foo() {}",
@@ -460,7 +498,7 @@ public class Es6ToEs3ClassSideInheritanceTest extends CompilerTestCase {
             "/** @constructor @extends {Foo} */",
             "function Bar() {}",
             "$jscomp.inherits(Bar, Foo);"),
-        LINE_JOINER.join(
+        lines(
             "let x = 1;",
             "/** @constructor */",
             "function Foo() {}",
@@ -475,7 +513,7 @@ public class Es6ToEs3ClassSideInheritanceTest extends CompilerTestCase {
 
   public void testScopeHandling() {
     testSame(
-        LINE_JOINER.join(
+        lines(
             "/** @constructor */",
             "function Foo() {}",
             "",
@@ -488,7 +526,7 @@ public class Es6ToEs3ClassSideInheritanceTest extends CompilerTestCase {
             "$jscomp.inherits(Bar, Foo);"));
 
     testSame(
-        LINE_JOINER.join(
+        lines(
             "/** @constructor */",
             "function Foo() {}",
             "",
@@ -505,7 +543,7 @@ public class Es6ToEs3ClassSideInheritanceTest extends CompilerTestCase {
 
   public void testInlineTypes() {
     test(
-        LINE_JOINER.join(
+        lines(
             "/** @constructor @struct */",
             "let A = function() {}",
             "A.foo = function(/** number */ x) {}",
@@ -513,7 +551,7 @@ public class Es6ToEs3ClassSideInheritanceTest extends CompilerTestCase {
             "/** @constructor @struct @extends {A} */",
             "var B = function(var_args) { A.apply(this,arguments); };",
             "$jscomp.inherits(B, A);"),
-        LINE_JOINER.join(
+        lines(
             "/** @constructor @struct */",
             "let A = function() {}",
             "A.foo = function(/** number */ x) {}",
@@ -533,7 +571,7 @@ public class Es6ToEs3ClassSideInheritanceTest extends CompilerTestCase {
    */
   public void testIncorrectScopeHandling() {
     test(
-        LINE_JOINER.join(
+        lines(
             "let example = {};",
             "/** @constructor */",
             "example.Foo = function() {};",
@@ -547,7 +585,7 @@ public class Es6ToEs3ClassSideInheritanceTest extends CompilerTestCase {
             "/** @constructor @extends {example.Foo} */",
             "function Bar() {}",
             "$jscomp.inherits(Bar, example.Foo);"),
-        LINE_JOINER.join(
+        lines(
             "let example = {};",
             "/** @constructor */",
             "example.Foo = function() {};",
@@ -564,7 +602,7 @@ public class Es6ToEs3ClassSideInheritanceTest extends CompilerTestCase {
             "Bar.prop = example.Foo.prop"));
 
     testSame(
-        LINE_JOINER.join(
+        lines(
             "let x = 1;",
             "function a() {",
             "  /** @constructor */",

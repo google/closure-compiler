@@ -18,10 +18,15 @@
 package com.google.javascript.jscomp;
 
 /**
- * Tests for {@link OptimizeParameters}
- *
+ * Tests for {@link OptimizeParameters}.  Note: interaction with {@link RemoveUnusedVars} is
+ * tested in {@link OptimizeCallsTest}.
  */
 public final class OptimizeParametersTest extends CompilerTestCase {
+
+  public OptimizeParametersTest() {
+    super(DEFAULT_EXTERNS);
+  }
+
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
     return new OptimizeParameters(compiler);
@@ -33,18 +38,70 @@ public final class OptimizeParametersTest extends CompilerTestCase {
     enableNormalize();
   }
 
+  @Override
+  protected int getNumRepetitions() {
+    return 1;
+  }
+
+  // NOTE:
+
   public void testNoRemoval() {
-    testSame("function foo(p1) { } foo(1); foo(2)");
-    testSame("function foo(p1) { } foo(1,2); foo(3,4)");
+    testSame("function foo(p1) { } foo(1); foo(2)"); // required "remove unused vars"
+    testSame("function foo(p1) { } foo(this);");
+    testSame("function foo(p1) { } function g() {foo(arguments)}; g();");
+    // Can't move a reference to a local.
+    testSame("function foo(p1) { use(p1); } function g() {var x = 1; foo(x);}; g();");
   }
 
   public void testSimpleRemoval() {
-    test("function foo(p1) { } foo(); foo()",
-         "function foo() {var p1;} foo(); foo()");
-    test("function foo(p1) { } foo(1); foo(1)",
-         "function foo() {var p1 = 1;} foo(); foo()");
-    test("function foo(p1) { } foo(1,2); foo(1,4)",
-         "function foo() {var p1 = 1;} foo(2); foo(4)");
+    test("function foo(p1) {       } foo(); foo()",
+         "function foo(  ) {var p1;} foo(); foo()");
+    test("function foo(p1) {           } foo(1); foo(1)",
+         "function foo(  ) {var p1 = 1;} foo( ); foo( )");
+    test("function foo(p1) {           } foo(1,2); foo(1,4)",
+         "function foo(  ) {var p1 = 1;} foo(   ); foo(   )");
+    test("function foo(p1) { } foo(1,2); foo(3,4);",
+         "function foo(p1) { } foo(1  ); foo(3  );");
+    test("function foo(p1) {           } foo(1,x()); foo(1,y())",
+         "function foo(  ) {var p1 = 1;} foo(  x()); foo(  y())");
+  }
+
+  public void testSimpleRemoval2() {
+    test("function f(p1) {       } new f(); new f()",
+         "function f(  ) {var p1;} new f(); new f()");
+    test("function f(p1) {           } new f(1); new f(1)",
+         "function f(  ) {var p1 = 1;} new f( ); new f( )");
+    test("function f(p1) {           } new f(1,2); new f(1,4)",
+         "function f(  ) {var p1 = 1;} new f(   ); new f(   )");
+    test("function f(p1) { } new f(1,2); new f(3,4);",
+         "function f(p1) { } new f(1  ); new f(3  );");
+    test("function f(p1) {           } new f(1,x()); new f(1,y())",
+         "function f(  ) {var p1 = 1;} new f(  x()); new f(  y())");
+  }
+
+  public void testSimpleRemovalInstanceof() {
+    test("function f(p1) {       } x instanceof f; new f(); new f()",
+         "function f(  ) {var p1;} x instanceof f; new f(); new f()");
+    test("function f(p1) {           } x instanceof f; new f(1); new f(1)",
+         "function f(  ) {var p1 = 1;} x instanceof f; new f( ); new f( )");
+  }
+
+  public void testSimpleRemovalTypeof() {
+    test("function f(p1) {       } typeof f != 'undefined' && f();",
+         "function f(  ) {var p1;} typeof f != 'undefined' && f();");
+    test("function f(p1) {           } typeof f != 'undefined'; f(1);",
+         "function f(  ) {var p1 = 1;} typeof f != 'undefined'; f();");
+  }
+
+  public void testSimpleRemoval4() {
+    test("function f(p1) {       } f.prop = 1; new f(); new f()",
+         "function f(  ) {var p1;} f.prop = 1; new f(); new f()");
+    test("function f(p1) {           } f.prop = 1; new f(1); new f(1)",
+         "function f(  ) {var p1 = 1;} f.prop = 1; new f( ); new f( )");
+    test("function f(p1) {       } f['prop'] = 1; new f(); new f()",
+         "function f(  ) {var p1;} f['prop'] = 1; new f(); new f()");
+   test("function f(p1) {           } f['prop'] = 1; new f(1); new f(1)",
+        "function f(  ) {var p1 = 1;} f['prop'] = 1; new f( ); new f( )");
   }
 
   public void testNotAFunction() {
@@ -62,9 +119,13 @@ public final class OptimizeParametersTest extends CompilerTestCase {
         "function h() {function g(a) {} g(4); g(5);} f(2);");
   }
 
-  public void testOptimizeOnlyImmutableValues() {
-    test("function foo(a) {}; foo(undefined);",
-         "function foo() {var a = undefined}; foo()");
+  public void testOptimizeOnlyImmutableValues1() {
+    test(
+        "function foo(a) {}; foo(undefined);",
+        "function foo() {var a = undefined}; foo()");
+  }
+
+  public void testOptimizeOnlyImmutableValues2() {
     test("function foo(a) {}; foo(null);",
         "function foo() {var a = null}; foo()");
     test("function foo(a) {}; foo(1);",
@@ -89,18 +150,26 @@ public final class OptimizeParametersTest extends CompilerTestCase {
 
   public void testDoOptimizeCall() {
     testSame("var foo = function () {}; foo(); foo.call();");
-    // TODO(johnlenz): support foo.call
+    // TODO(johnlenz): support removing unused "this" from .call
     testSame("var foo = function () {}; foo(); foo.call(this);");
-    testSame("var foo = function (a, b) {}; foo(1); foo.call(this, 1);");
+    test(
+        "var foo = function (a, b) {}; foo(1); foo.call(this, 1);",
+        "var foo = function () {var a = 1;var b;}; foo(); foo.call(this);");
     testSame("var foo = function () {}; foo(); foo.call(null);");
-    testSame("var foo = function (a, b) {}; foo(1); foo.call(null, 1);");
+    test(
+        "var foo = function (a, b) {}; foo(1); foo.call(null, 1);",
+        "var foo = function () {var a = 1;var b;}; foo(); foo.call(null);");
 
     testSame("var foo = function () {}; foo.call();");
-    // TODO(johnlenz): support foo.call
+
     testSame("var foo = function () {}; foo.call(this);");
-    testSame("var foo = function (a, b) {}; foo.call(this, 1);");
+    test(
+        "var foo = function (a) {}; foo.call(this, 1);",
+        "var foo = function () {var a = 1;}; foo.call(this);");
     testSame("var foo = function () {}; foo.call(null);");
-    testSame("var foo = function (a, b) {}; foo.call(null, 1);");
+    test(
+        "var foo = function (a) {}; foo.call(null, 1);",
+        "var foo = function () {var a = 1;}; foo.call(null);");
   }
 
   public void testDoOptimizeApply() {
@@ -118,39 +187,53 @@ public final class OptimizeParametersTest extends CompilerTestCase {
   }
 
   public void testRemoveOneOptionalExpressionAssign() {
-    // TODO(johnlenz): There are two definitions of "foo" here, ignore the
-    // one that can't be called.
-    testSame("var foo; foo = function (p1) { }; foo()");
+    test(
+        "var foo; foo = function (p1) { }; foo()",
+        "var foo; foo = function () { var p1; }; foo()");
   }
 
   public void testRemoveOneOptionalOneRequired() {
-    test("function foo(p1, p2) { } foo(1); foo(2)",
+    test(
+        "function foo(p1, p2) { } foo(1); foo(2)",
         "function foo(p1) {var p2} foo(1); foo(2)");
   }
 
   public void testRemoveOneOptionalMultipleCalls() {
-    test( "function foo(p1, p2) { } foo(1); foo(2); foo()",
+    test(
+        "function foo(p1, p2) { } foo(1); foo(2); foo()",
         "function foo(p1) {var p2} foo(1); foo(2); foo()");
   }
 
   public void testRemoveOneOptionalMultiplePossibleDefinition() {
-    // TODO(johnlenz): Support multiple valid definitions.
-    String src = "var goog = {};" +
-        "goog.foo = function (p1, p2) { };" +
-        "goog.foo = function (q1, q2) { };" +
-        "goog.foo = function (r1, r2) { };" +
-        "goog.foo(1); goog.foo(2); goog.foo()";
-    testSame(src);
+    String src = lines(
+        "var goog = {};",
+        "goog.foo = function (p1, p2) { };",
+        "goog.foo = function (q1, q2) { };",
+        "goog.foo = function (r1, r2) { };",
+        "goog.foo(1); goog.foo(2); goog.foo()");
+    String result = lines(
+        "var goog = {};",
+        "goog.foo = function (p1) { var p2; };",
+        "goog.foo = function (q1) { var q2; };",
+        "goog.foo = function (r1) { var r2; };",
+        "goog.foo(1); goog.foo(2); goog.foo()");
+    test(src, result);
   }
 
   public void testRemoveTwoOptionalMultiplePossibleDefinition() {
-    // TODO(johnlenz): Support multiple valid definitions.
-    String src = "var goog = {};" +
-        "goog.foo = function (p1, p2, p3, p4) { };" +
-        "goog.foo = function (q1, q2, q3, q4) { };" +
-        "goog.foo = function (r1, r2, r3, r4) { };" +
-        "goog.foo(1,0); goog.foo(2,1); goog.foo()";
-    testSame(src);
+    String src = lines(
+        "var goog = {};",
+        "goog.foo = function (p1, p2, p3, p4) { };",
+        "goog.foo = function (q1, q2, q3, q4) { };",
+        "goog.foo = function (r1, r2, r3, r4) { };",
+        "goog.foo(1,0); goog.foo(2,1); goog.foo()");
+    String result = lines(
+        "var goog = {};",
+        "goog.foo = function (p1, p2) { var p3; var p4 };",
+        "goog.foo = function (q1, q2) { var q3; var q4 };",
+        "goog.foo = function (r1, r2) { var r3; var r4 };",
+        "goog.foo(1,0); goog.foo(2,1); goog.foo()");
+    test(src, result);
   }
 
   public void testConstructorOptArgsNotRemoved() {
@@ -166,14 +249,21 @@ public final class OptimizeParametersTest extends CompilerTestCase {
   }
 
   public void testMultipleUnknown() {
-    // TODO(johnlenz): Support multiple definitions.
-    String src = "var goog1 = {};" +
-        "goog1.foo = function () { };" +
-        "var goog2 = {};" +
-        "goog2.foo = function (p1) { };" +
-        "var x = getGoog();" +
-        "x.foo()";
-    testSame(src);
+    String src = lines(
+        "var goog1 = {};",
+        "goog1.foo = function () { };",
+        "var goog2 = {};",
+        "goog2.foo = function (p1) { };",
+        "var x = getGoog();",
+        "x.foo()");
+    String result = lines(
+        "var goog1 = {};",
+        "goog1.foo = function () { };",
+        "var goog2 = {};",
+        "goog2.foo = function () { var p1; };",
+        "var x = getGoog();",
+        "x.foo()");
+    test(src, result);
   }
 
   public void testSingleUnknown() {
@@ -229,14 +319,14 @@ public final class OptimizeParametersTest extends CompilerTestCase {
     // Don't change the call to baz as it has been aliased.
 
     test(
-        LINE_JOINER.join(
+        lines(
             "function foo(bar) {};",
-            "baz = function(a) {};",
+            "var baz = function(a) {};",
             "baz(1);",
             "foo(baz);"),
-        LINE_JOINER.join(
+        lines(
             "function foo() {var bar = baz};",
-            "baz = function(a) {};",
+            "var baz = function(a) {};",
             "baz(1);",
             "foo();"));
   }
@@ -277,11 +367,11 @@ public final class OptimizeParametersTest extends CompilerTestCase {
 
     // A more OO test
     test(
-        LINE_JOINER.join(
+        lines(
             "/** @constructor */",
             "function Person() {}; Person.prototype.run = function(a, b) {};",
             "Person.run(1, 'a'); Person.run(2, 'a');"),
-        LINE_JOINER.join(
+        lines(
             "/** @constructor */",
             "function Person() {}; Person.prototype.run = function(a) {var b = 'a'};",
             "Person.run(1); Person.run(2);"));
@@ -319,13 +409,13 @@ public final class OptimizeParametersTest extends CompilerTestCase {
 
   public void testFunctionPassedAsParam() {
     test(
-        LINE_JOINER.join(
+        lines(
             "/** @constructor */ function person() {};",
             "person.prototype.run = function(a, b) {};",
             "person.prototype.walk = function() {};",
             "person.prototype.foo = function() { this.run(this.walk, 0.1); };",
             "person.foo();"),
-        LINE_JOINER.join(
+        lines(
             "/** @constructor */ function person() {};",
             "person.prototype.run = function(a) { var b = 0.1; };",
             "person.prototype.walk = function() {};",
@@ -334,10 +424,17 @@ public final class OptimizeParametersTest extends CompilerTestCase {
   }
 
   public void testCallIsIgnore() {
-    testSame("var goog;" +
-        "goog.foo = function(a, opt) {};" +
-        "var bar = function(){goog.foo.call(this, 1)};" +
-        "goog.foo(1);");
+    test(
+        lines(
+            "var goog;",
+            "goog.foo = function(a, opt) {};",
+            "var bar = function(){goog.foo.call(this, 1)};",
+            "goog.foo(1);"),
+        lines(
+            "var goog;",
+            "goog.foo = function() {var a = 1;var opt;};",
+            "var bar = function(){goog.foo.call(this)};",
+            "goog.foo();"));
   }
 
   public void testApplyIsIgnore() {
@@ -348,11 +445,9 @@ public final class OptimizeParametersTest extends CompilerTestCase {
   }
 
   public void testFunctionWithReferenceToArgumentsShouldNotBeOptimize() {
-    testSame("function foo(a,b,c) { return arguments.size; };" +
-             "foo(1);");
+    testSame("function foo(a,b,c) { return arguments.size; }; foo(1);");
     testSame("var foo = function(a,b,c) { return arguments.size }; foo(1);");
-    testSame("var foo = function bar(a,b,c) { return arguments.size }; " +
-             "foo(2); bar(2);");
+    testSame("var foo = function bar(a,b,c) { return arguments.size }; foo(2); bar(2);");
   }
 
   public void testFunctionWithTwoNames() {
@@ -420,17 +515,39 @@ public final class OptimizeParametersTest extends CompilerTestCase {
         "array[0] = foo;");
   }
 
-  public void testOptimizeThis() {
-    String src = "function foo() {" +
-        "var bar = function (a, b) {};" +
-        "this.bar = function (a, b) {};" +
-        "this.bar(3);" +
-        "bar(2);}";
-    String expected = "function foo() {" +
-        "var bar = function () {var b; var a = 2;};" +
-        "this.bar = function () {var b; var a = 3;};" +
-        "this.bar();" +
-        "bar();}";
+  public void testOptimizeThis1() {
+    String src = lines(
+        "var bar = function (a, b) {};",
+        "function foo() {",
+        "  this.bar = function (a, b) {};",
+        "  this.bar(3);",
+        "  bar(2);",
+        "}");
+    String expected =  lines(
+        "var bar = function () {var a = 2;var b;};",
+        "function foo() {",
+        "  this.bar = function () {var a = 3;var b;};",
+        "  this.bar();",
+        "  bar();",
+        "}");
+    test(src, expected);
+  }
+
+  public void testOptimizeThis2() {
+    String src = lines(
+        "function foo() {",
+        "  var bar = function (a, b) {};",
+        "  this.bar = function (a, b) {};",
+        "  this.bar(3);",
+        "  bar(2);",
+        "}");
+    String expected =  lines(
+        "function foo() {",
+        "  var bar = function (a, b) {};",
+        "  this.bar = function () {var a = 3;var b;};",
+        "  this.bar();",
+        "  bar(2);",
+        "}");
     test(src, expected);
   }
 
@@ -575,7 +692,7 @@ public final class OptimizeParametersTest extends CompilerTestCase {
              "foo(x())");
   }
 
-  public void testCrash() {
+  public void testNoCrash() {
     test(
         "function foo(a) {}" +
         "foo({o:1});" +
@@ -590,12 +707,16 @@ public final class OptimizeParametersTest extends CompilerTestCase {
   }
 
   public void testNamelessParameter1() {
-    test("f(g()); function f(){}",
-         "f(); function f(){g()}");
+    test(
+        "var g;",
+        "f(g()); function f(){}",
+        "f(); function f(){g()}");
   }
 
   public void testNamelessParameter2() {
-    test("f(g(),h()); function f(){}",
-         "f(); function f(){g();h()}");
+    test(
+        "var g, h;",
+        "f(g(),h()); function f(){}",
+        "f(); function f(){g();h()}");
   }
 }

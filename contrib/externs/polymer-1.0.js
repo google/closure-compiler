@@ -1220,8 +1220,10 @@ Polymer.Templatizer = {
 
   /**
    * @param {?Element} template
+   * @param {boolean=} mutableData In Polymer 1.x, passing this argument is a
+   * no-op.
    */
-  templatize: function(template) {},
+  templatize: function(template, mutableData) {},
 
   /**
    * Returns the template "model" associated with a given element, which
@@ -1652,6 +1654,25 @@ Polymer.DomModule = function() {};
  */
 Polymer.DomModule.import = function(id, opt_selector) {};
 
+/** @const */
+Polymer.Path = {
+  /**
+   * @param {string=} base
+   * @param {string=} newBase
+   * @param {string=} path
+   * @return {string}
+   */
+  translate: function(base, newBase, path) {},
+
+  /**
+   * @param {string=} base
+   * @param {string=} wildcard
+   * @param {string=} path
+   * @return {boolean}
+   */
+  matches: function(base, wildcard, path) {}
+};
+
 /**
  * For compatibility with both Polymer 1.0 and 2.0, code may check for certain
  * objects and properties which don't exist in Polymer 1.0.
@@ -1663,3 +1684,24 @@ Polymer.DomModule.import = function(id, opt_selector) {};
 
 /** @type {undefined} */
 var ShadyDOM;
+
+Polymer.flush;
+Polymer.enqueueDebouncer;
+Polymer.Async.animationFrame;
+Polymer.Async.idlePeriod;
+Polymer.Async.microTask;
+Polymer.Debouncer.debounce;
+
+Polymer.Templatizer.mutableData;
+Polymer.Templatizer.parentModel;
+Polymer.Templatizer.forwardHostProp;
+Polymer.Templatizer.notifyInstanceProp;
+Polymer.Templatizer._setPendingPropertyOrPath;
+Polymer.Templatizer._setPendingProperty;
+Polymer.Templatizer._instanceProps;
+
+/**
+ * @param {number} index
+ * @return {boolean}
+ */
+ArraySelectorElement.prototype.isIndexSelected = function(index) {};

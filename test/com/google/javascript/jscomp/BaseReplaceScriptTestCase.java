@@ -22,6 +22,7 @@ import static com.google.javascript.jscomp.testing.JSErrorSubject.assertError;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
@@ -36,8 +37,30 @@ public abstract class BaseReplaceScriptTestCase extends TestCase {
           "goog.require = function(x) {};",
           "goog.provide = function(x) {};");
 
-  protected static final ImmutableList<SourceFile> EXTERNS =
+  /** Externs used by most test cases and containing only a single definition. */
+  protected static final ImmutableList<SourceFile> EXTVAR_EXTERNS =
       ImmutableList.of(SourceFile.fromCode("externs", "var extVar = 3;"));
+
+  /**
+   * Default externs containing definitions needed for transpilation of async functions and other
+   * post-ES5 features.
+   */
+  protected static final ImmutableList<SourceFile> DEFAULT_EXTERNS =
+      ImmutableList.of(SourceFile.fromCode("default_externs", CompilerTestCase.DEFAULT_EXTERNS));
+
+  /**
+   * Test methods may set this variable to control the externs passed to the compiler.
+   *
+   * <p>Most test cases don't need externs at all or only need the one `extVar` variable defined in
+   * the EXTVAR_EXTERNS used here.
+   */
+  protected ImmutableList<SourceFile> testExterns = EXTVAR_EXTERNS;
+
+  @Override
+  protected void setUp() throws Exception {
+    super.setUp();
+    testExterns = EXTVAR_EXTERNS;
+  }
 
   /**
    * In addition to the passed parameter adds a few options necessary options for
@@ -45,6 +68,7 @@ public abstract class BaseReplaceScriptTestCase extends TestCase {
    */
   protected CompilerOptions getOptions(DiagnosticGroup... typesOfGuard) {
     CompilerOptions options = new CompilerOptions();
+    options.setLanguageIn(LanguageMode.ECMASCRIPT3);
     options.declaredGlobalExternsOnWindow = false;
     options.setClosurePass(true);
     // These are the options that are always on in JsDev which is the only
@@ -145,7 +169,7 @@ public abstract class BaseReplaceScriptTestCase extends TestCase {
     }
     Compiler compiler = new Compiler();
     Compiler.setLoggingLevel(Level.INFO);
-    Result result = compiler.compile(EXTERNS, inputs, options);
+    Result result = compiler.compile(testExterns, inputs, options);
     if (expectedCompileErrors == 0) {
       assertThat(compiler.getErrors()).isEmpty();
       assertThat(result.success).isTrue();

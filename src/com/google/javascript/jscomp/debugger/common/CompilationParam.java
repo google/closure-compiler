@@ -19,7 +19,6 @@ package com.google.javascript.jscomp.debugger.common;
 import com.google.javascript.jscomp.AnonymousFunctionNamingPolicy;
 import com.google.javascript.jscomp.CheckLevel;
 import com.google.javascript.jscomp.CompilerOptions;
-import com.google.javascript.jscomp.CompilerOptions.J2clPassMode;
 import com.google.javascript.jscomp.CompilerOptions.Reach;
 import com.google.javascript.jscomp.DiagnosticGroup;
 import com.google.javascript.jscomp.DiagnosticGroups;
@@ -168,6 +167,7 @@ public enum CompilationParam {
     @Override
     public void apply(CompilerOptions options, boolean value) {
       options.setNewTypeInference(value);
+      options.setRunOTIafterNTI(false);
     }
 
     @Override
@@ -827,30 +827,6 @@ public enum CompilationParam {
     }
   },
 
-  OPTIMIZE_PARAMETERS(ParamGroup.TYPE_CHECKING_OPTIMIZATION) {
-    @Override
-    public void apply(CompilerOptions options, boolean value) {
-      options.setOptimizeParameters(value);
-    }
-
-    @Override
-    public boolean isApplied(CompilerOptions options) {
-      return options.optimizeParameters;
-    }
-  },
-
-  OPTIMIZE_RETURNS(ParamGroup.TYPE_CHECKING_OPTIMIZATION) {
-    @Override
-    public void apply(CompilerOptions options, boolean value) {
-      options.setOptimizeReturns(value);
-    }
-
-    @Override
-    public boolean isApplied(CompilerOptions options) {
-      return options.optimizeReturns;
-    }
-  },
-
   // --------------------------------
   // Special-purpose alterations
   // --------------------------------
@@ -984,13 +960,6 @@ public enum CompilationParam {
     @Override
     public void apply(CompilerOptions options, boolean value) {
       options.setChromePass(value);
-    }
-  },
-
-  J2CL_PASS(ParamGroup.SPECIAL_PASSES) {
-    @Override
-    public void apply(CompilerOptions options, boolean value) {
-      options.setJ2clPass(value ? J2clPassMode.ON : J2clPassMode.OFF);
     }
   },
 

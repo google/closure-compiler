@@ -1993,7 +1993,7 @@ CSSProperties.prototype.willChange;
 
 /**
  * @param {string} media_query_list
- * @return {MediaQueryList}
+ * @return {!MediaQueryList}
  * @see http://www.w3.org/TR/cssom-view/#dom-window-matchmedia
  */
 Window.prototype.matchMedia = function(media_query_list) {};
@@ -2084,6 +2084,7 @@ Window.prototype.outerHeight;
 
 /**
  * @constructor
+ * @implements {EventTarget}
  * @see http://www.w3.org/TR/cssom-view/#mediaquerylist
  */
 function MediaQueryList() {}
@@ -2113,6 +2114,17 @@ MediaQueryList.prototype.addListener = function(listener) {};
  * @return {undefined}
  */
 MediaQueryList.prototype.removeListener = function(listener) {};
+
+/** @override Not available in some browsers; use addListener instead. */
+MediaQueryList.prototype.addEventListener = function(
+    type, listener, opt_options) {};
+
+/** @override Not available in old browsers; use removeListener instead. */
+MediaQueryList.prototype.removeEventListener = function(
+    type, listener, opt_options) {};
+
+/** @override */
+MediaQueryList.prototype.dispatchEvent = function(evt) {};
 
 /**
  * @typedef {(function(!MediaQueryList) : void)}
@@ -2621,12 +2633,12 @@ FontFaceSet.prototype.delete = function(value) {};
 FontFaceSet.prototype.has = function(font) {};
 
 /**
- * @param {function(!FontFace, number, !FontFaceSet)} cb
+ * @param {function(!FontFace, number, !FontFaceSet)} callback
  * @param {Object|undefined=} opt_selfObj
  * see http://dev.w3.org/csswg/css-font-loading/#dom-fontfaceset-foreach
  * @return {undefined}
  */
-FontFaceSet.prototype.forEach = function(cb, opt_selfObj) {};
+FontFaceSet.prototype.forEach = function(callback, opt_selfObj) {};
 
 /**
  * @param {string} font

@@ -29,6 +29,9 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import java.io.IOException;
 import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Map;
@@ -64,11 +67,12 @@ public final class RawNominalType extends Namespace {
   // If this type is generic, we don't record which instantiation A inherits from.
   // We don't store subclasses for Object because there are too many.
 
-  // TODO(rluble): Serialize this field. If this field is serialized naively, a cycle is introduced
-  // which results in NPE when attempting to deserialize an HashSet that contains object that are
-  // only partially deserialized.
+  // These two fields have handled by custom serialization to avoid deserialization NPEs due
+  // to the problematic interaction caused by cycles in the graph on objects that implement
+  // equals(), hashCode() and Sets.
   private transient Set<RawNominalType> subtypes = new LinkedHashSet<>();
-  private ImmutableSet<NominalType> interfaces = null;
+  private transient Collection<NominalType> interfaces = null;
+
   private final Kind kind;
   private final boolean isAbstractClass;
   // Used in GlobalTypeInfo to find type mismatches in the inheritance chain.
@@ -181,8 +185,7 @@ public final class RawNominalType extends Namespace {
 
   private static boolean isBuiltinHelper(
       String nameToCheck, String builtinName, Node defSite) {
-    return defSite != null && defSite.isFromExterns()
-        && nameToCheck.equals(builtinName);
+    return defSite != null && defSite.isFromExterns() && nameToCheck.equals(builtinName);
   }
 
   boolean isBuiltinWithName(String s) {
@@ -244,7 +247,7 @@ public final class RawNominalType extends Namespace {
     this.ctorFn = ctorFn;
   }
 
-  boolean hasAncestorClass(RawNominalType ancestor) {
+  public boolean hasAncestorClass(RawNominalType ancestor) {
     checkState(ancestor.isClass());
     if (this == ancestor) {
       return true;
@@ -278,9 +281,8 @@ public final class RawNominalType extends Namespace {
     if (mayHaveProp(pname)) {
       if (this.protoProps.containsKey(pname)) {
         return ImmutableSet.of(this.protoObject);
-      } else {
-        return ImmutableSet.of(getInstanceAsJSType());
       }
+      return ImmutableSet.of(getInstanceAsJSType());
     }
     HashSet<JSType> typesWithProp = new HashSet<>();
     for (RawNominalType subtype : this.subtypes) {
@@ -356,7 +358,7 @@ public final class RawNominalType extends Namespace {
     return this.superclass;
   }
 
-  public ImmutableSet<NominalType> getInterfaces() {
+  public Iterable<NominalType> getInterfaces() {
     return this.interfaces == null ? ImmutableSet.<NominalType>of() : this.interfaces;
   }
 
@@ -626,6 +628,16 @@ public final class RawNominalType extends Namespace {
     this.protoProps = this.protoProps.with(pname, newProp);
   }
 
+  /**
+   * Update the type of an existing prototype property. We use this when properties are defined
+   * on prototype methods.
+   */
+  public void updateProtoProperty(String pname, JSType type) {
+    checkState(this.protoProps.containsKey(pname));
+    Property newProp = this.protoProps.get(pname).withNewType(type);
+    this.protoProps = this.protoProps.with(pname, newProp);
+  }
+
   /** Add a new undeclared prototype property to this class */
   public void addUndeclaredProtoProperty(String pname, Node defSite, JSType inferredType) {
     checkState(!this.isFrozen);
@@ -729,14 +741,21 @@ public final class RawNominalType extends Namespace {
     this.isFrozen = true;
   }
 
-  StringBuilder appendTo(StringBuilder builder) {
-    builder.append(name);
-    return builder;
+  StringBuilder appendTo(StringBuilder builder, ToStringContext ctx) {
+    if (ctx.forAnnotation()) {
+      // Note: some synthetic nominal types have a parenthesized segment in their name,
+      // which is not compatible with type annotations, so remove it if found.
+      int index = name.indexOf('(');
+      if (index >= 0) {
+        return builder.append(name, 0, index);
+      }
+    }
+    return builder.append(name);
   }
 
   @Override
   public String toString() {
-    return appendTo(new StringBuilder()).toString();
+    return appendTo(new StringBuilder(), ToStringContext.TO_STRING).toString();
   }
 
   @Override
@@ -781,9 +800,17 @@ public final class RawNominalType extends Namespace {
   }
 
   @GwtIncompatible("ObjectInputStream")
+  @SuppressWarnings("unchecked")
   private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
     in.defaultReadObject();
     this.subtypes = new LinkedHashSet<>();
+    this.interfaces = (Collection<NominalType>) in.readObject();
+  }
+
+  @GwtIncompatible("ObjectOutputStream")
+  private void writeObject(ObjectOutputStream out) throws IOException {
+    out.defaultWriteObject();
+    out.writeObject(new ArrayList<>(this.interfaces));
   }
 
   // equals and hashCode default to reference equality, which is what we want

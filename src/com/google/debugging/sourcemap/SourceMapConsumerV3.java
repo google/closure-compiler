@@ -291,9 +291,6 @@ public final class SourceMapConsumerV3 implements SourceMapConsumer,
       previousCol = 0;
     }
 
-    /**
-     * Sanity check the entry.
-     */
     private void validateEntry(Entry entry) {
       Preconditions.checkState((lineCount < 0) || (line < lineCount),
           "line=%s, lineCount=%s", line, lineCount);

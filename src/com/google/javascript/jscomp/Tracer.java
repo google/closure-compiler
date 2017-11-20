@@ -21,10 +21,11 @@ import static com.google.common.base.Strings.nullToEmpty;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -173,8 +174,7 @@ final class Tracer {
    * a list of additional statistics that the user wants to keep track
    * of.
    */
-  private static List<TracingStatistic> extraTracingStatistics =
-      new CopyOnWriteArrayList<>();
+  private static final List<TracingStatistic> extraTracingStatistics = new CopyOnWriteArrayList<>();
 
   /** Values returned by extraTracingStatistics */
   private long[] extraTracingValues;
@@ -855,7 +855,7 @@ final class Tracer {
       int numDigits = getMaxDigits();
       StringBuilder sb = new StringBuilder();
       long etime = -1;
-      LinkedList<String> indent = prettyPrint ? new LinkedList<String>() : null;
+      Deque<String> indent = prettyPrint ? new ArrayDeque<String>() : null;
       for (Event e : events) {
         if (prettyPrint && !e.isStart && !indent.isEmpty()) {
           indent.pop();
@@ -936,9 +936,8 @@ final class Tracer {
     }
   }
 
-  /** Holds the ThreadTrace for each thread.  */
-  private static ThreadLocal<ThreadTrace> traces =
-      new ThreadLocal<>();
+  /** Holds the ThreadTrace for each thread. */
+  private static final ThreadLocal<ThreadTrace> traces = new ThreadLocal<>();
 
   /**
    * Get the ThreadTrace for the current thread, creating one if necessary.

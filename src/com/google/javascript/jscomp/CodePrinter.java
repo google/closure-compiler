@@ -227,7 +227,7 @@ public final class CodePrinter {
     }
 
     /** Calculates length of each line in compiled code. */
-    private static List<Integer> computeLineLengths(String code) {
+    private static ImmutableList<Integer> computeLineLengths(String code) {
       ImmutableList.Builder<Integer> builder = ImmutableList.<Integer>builder();
       int lineStartPos = 0;
       int lineEndPos = code.indexOf('\n');
@@ -242,7 +242,7 @@ public final class CodePrinter {
 
     /**
      * Adjusts end position of a mapping. End position points to a column *after* the last character
-     * that is covered by a mapping. And if it's end of the line there are 2 possibilites: either
+     * that is covered by a mapping. And if it's end of the line there are 2 possibilities: either
      * point to the non-existent character after the last char on a line or point to the first
      * character on the next line. In some cases we end up with 2 mappings which should have the
      * same end position, but they use different styles as described above it leads to invalid
@@ -548,10 +548,7 @@ public final class CodePrinter {
     }
   }
 
-
-  static class CompactCodePrinter
-      extends MappedCodePrinter {
-
+  static class CompactCodePrinter extends MappedCodePrinter {
     // The CompactCodePrinter tries to emit just enough newlines to stop there
     // being lines longer than the threshold.  Since the output is going to be
     // gzipped, it makes sense to try to make the newlines appear in similar

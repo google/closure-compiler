@@ -148,7 +148,7 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
         "if(1)_.test=function (){}");
   }
 
-  public void testFunctionStatements_freeCallSemantics() throws Exception {
+  public void testFunctionStatements_freeCallSemantics1() throws Exception {
     disableCompareAsTree();
 
     // This triggers free call.
@@ -161,16 +161,24 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
     test(
         "var a=function(){this};a()",
         "_.a=function(){this};(0,_.a)()");
+  }
+
+  public void testFunctionStatements_freeCallSemantics2() {
     // Cases where free call forcing through (0, foo)() is not necessary.
     test(
         "var a=function(){};a()",
         "_.a=function(){};_.a()");
     test(
         "function a(){};a()",
-        "_.a=function(){};_.a()");
+        "_.a=function(){};;_.a()");
     test(
         "var a;a=function(){};a()",
         "_.a=function(){};_.a()");
+  }
+
+  public void testFunctionStatements_freeCallSemantics3() {
+    disableCompareAsTree();
+
     // Ambigious cases.
     test(
         "var a=1;a=function(){};a()",
@@ -351,7 +359,7 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
     assumeCrossModuleNames = false;
 
     test(createModules(
-        LINE_JOINER.join(
+        lines(
             "Foo = function() { this.b = ns; };",
             "var f = function(a) {",
             "  if (a instanceof Foo && a.b === ns) {}",
@@ -360,7 +368,7 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
             "g = function(a) { var b = new Foo; };"),
         "f; g;"),
         new String[] {
-            LINE_JOINER.join(
+            lines(
                 "var ns;",
                 "window.Foo = function() { this.b = ns; };",
                 "_.f = function(a) {",

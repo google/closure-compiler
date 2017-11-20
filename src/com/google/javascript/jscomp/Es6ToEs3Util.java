@@ -41,10 +41,6 @@ public final class Es6ToEs3Util {
       "JSC_CANNOT_CONVERT_YET",
       "ES6 transpilation of ''{0}'' is not yet implemented.");
 
-  static final DiagnosticType BAD_REST_PARAMETER_ANNOTATION = DiagnosticType.warning(
-      "BAD_REST_PARAMETER_ANNOTATION",
-      "Missing \"...\" in type annotation for rest parameter.");
-
   static void cannotConvert(AbstractCompiler compiler, Node n, String message) {
     compiler.report(JSError.make(n, CANNOT_CONVERT, message));
   }

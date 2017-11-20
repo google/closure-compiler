@@ -62,11 +62,11 @@ public final class AngularPassTest extends CompilerTestCase {
 
   public void testNgInjectAddsInjectAfterGoogInherits() throws Exception {
     test(
-        LINE_JOINER.join(
+        lines(
             "/** @ngInject @constructor */",
             "function fn(a, b) {}",
             "goog.inherits(fn, parent);"),
-        LINE_JOINER.join(
+        lines(
             "/** @ngInject @constructor */",
             "function fn(a, b) {}",
             "goog.inherits(fn, parent);",
@@ -74,12 +74,12 @@ public final class AngularPassTest extends CompilerTestCase {
             "fn['$inject']=['a', 'b']"));
 
     test(
-        LINE_JOINER.join(
+        lines(
             "/** @ngInject @constructor */",
             "function fn(a, b) {}",
             "goog.inherits(fn, parent);",
             "var foo = 42;"),
-        LINE_JOINER.join(
+        lines(
             "/** @ngInject @constructor */",
             "function fn(a, b) {}",
             "goog.inherits(fn, parent);",
@@ -98,10 +98,10 @@ public final class AngularPassTest extends CompilerTestCase {
 
   public void testNgInjectAddsInjectToNestedProps() throws Exception {
     test(
-        LINE_JOINER.join(
+        lines(
             "var ns = {}; ns.subns = {};",
             "/** @ngInject */ ns.subns.fn = function (a, b) {}"),
-        LINE_JOINER.join(
+        lines(
             "var ns = {}; ns.subns = {};",
             "/** @ngInject */",
             "ns.subns.fn = function (a, b) {};",
@@ -136,7 +136,7 @@ public final class AngularPassTest extends CompilerTestCase {
   public void testNgInjectAddsInjectToVarsWithChainedAssignment()
       throws Exception {
     test("var ns = {}; /** @ngInject */ var fn = ns.func = function (a, b) {}",
-        LINE_JOINER.join(
+        lines(
             "var ns = {};",
             "/** @ngInject */",
             "var fn = ns.func = function (a, b) {};",
@@ -148,12 +148,12 @@ public final class AngularPassTest extends CompilerTestCase {
 
   public void testNgInjectInBlock() throws Exception {
     test(
-        LINE_JOINER.join(
+        lines(
             "(function() {",
             "  var ns = {};",
             "  /** @ngInject */ var fn = ns.func = function (a, b) {}",
             "})()"),
-        LINE_JOINER.join(
+        lines(
             "(function() {",
             "  var ns = {};",
             "  /** @ngInject */",
@@ -162,7 +162,7 @@ public final class AngularPassTest extends CompilerTestCase {
             "  fn['$inject']=['a', 'b']",
             "})()"));
 
-    testSame(LINE_JOINER.join(
+    testSame(lines(
         "(function() {",
         "  var ns = {}; var fn = ns.func = function (a, b) {}",
         "})()"));
@@ -170,13 +170,13 @@ public final class AngularPassTest extends CompilerTestCase {
 
   public void testNgInjectAddsToTheRightBlock() throws Exception {
     test(
-        LINE_JOINER.join(
+        lines(
             "var fn = 10;",
             "(function() {",
             "  var ns = {};",
             "  /** @ngInject */ var fn = ns.func = function (a, b) {};",
             "})()"),
-        LINE_JOINER.join(
+        lines(
             "var fn = 10;",
             "(function() {",
             "  var ns = {};",
@@ -234,13 +234,13 @@ public final class AngularPassTest extends CompilerTestCase {
 
   public void testNgInjectAddsInjectToClassMethod1() throws Exception {
     test(
-        LINE_JOINER.join(
+        lines(
             "class FnClass {",
             "  constructor(a, b) {}",
             "  /** @ngInject */ ",
             "  methodA(c, d){}",
             "}"),
-        LINE_JOINER.join(
+        lines(
             "class FnClass {",
             "  constructor(a, b){}",
             "  /** @ngInject */",
@@ -252,12 +252,12 @@ public final class AngularPassTest extends CompilerTestCase {
 
   public void testNgInjectAddsInjectToClassMethod2() throws Exception {
     test(
-        LINE_JOINER.join(
+        lines(
             "FnClass.foo = class {",
             "  /** @ngInject */",
             "  constructor(a, b) {}",
             "};"),
-        LINE_JOINER.join(
+        lines(
             "FnClass.foo = class {",
             "  /** @ngInject */",
             "  constructor(a, b){}",
@@ -268,12 +268,12 @@ public final class AngularPassTest extends CompilerTestCase {
 
   public void testNgInjectAddsInjectToClassMethod3() throws Exception {
     test(
-        LINE_JOINER.join(
+        lines(
             "var foo = class {",
             "  /** @ngInject */",
             "  constructor(a, b) {}",
             "};"),
-        LINE_JOINER.join(
+        lines(
             "var foo = class {",
             "  /** @ngInject */",
             "  constructor(a, b){}",
@@ -282,12 +282,12 @@ public final class AngularPassTest extends CompilerTestCase {
             "foo['$inject'] = ['a','b'];"));
 
     test(
-        LINE_JOINER.join(
+        lines(
             "let foo = class {",
             "  /** @ngInject */",
             "  constructor(a, b) {}",
             "};"),
-        LINE_JOINER.join(
+        lines(
             "let foo = class {",
             "  /** @ngInject */",
             "  constructor(a, b){}",
@@ -296,12 +296,12 @@ public final class AngularPassTest extends CompilerTestCase {
             "foo['$inject'] = ['a','b'];"));
 
     test(
-        LINE_JOINER.join(
+        lines(
             "const foo = class {",
             "  /** @ngInject */",
             "  constructor(a, b) {}",
             "};"),
-        LINE_JOINER.join(
+        lines(
             "const foo = class {",
             "  /** @ngInject */",
             "  constructor(a, b){}",
@@ -313,13 +313,13 @@ public final class AngularPassTest extends CompilerTestCase {
 
   public void testNgInjectAddsInjectToStaticMethod() throws Exception {
     test(
-        LINE_JOINER.join(
+        lines(
             "class FnClass {",
             "  constructor(a, b) {}",
             "  /** @ngInject */ ",
             "  static methodA(c, d) {}",
             "}"),
-        LINE_JOINER.join(
+        lines(
             "class FnClass {",
             "  constructor(a, b) {}",
             "  /** @ngInject */ ",
@@ -331,13 +331,13 @@ public final class AngularPassTest extends CompilerTestCase {
 
   public void testNgInjectAddsInjectToClassGenerator() throws Exception {
     test(
-        LINE_JOINER.join(
+        lines(
             "class FnClass {",
             "  constructor(a, b) {}",
             "  /** @ngInject */ ",
             "  * methodA(c, d){}",
             "}"),
-        LINE_JOINER.join(
+        lines(
             "class FnClass {",
             "  constructor(a, b){}",
             "  /** @ngInject */ ",
@@ -349,14 +349,14 @@ public final class AngularPassTest extends CompilerTestCase {
 
   public void testNgInjectAddsInjectToClassMixOldStyle() throws Exception {
     test(
-        LINE_JOINER.join(
+        lines(
             "class FnClass {",
             "  constructor() {",
             "    /** @ngInject */ ",
             "    this.someMethod = function(a, b){}",
             "  }",
             "}"),
-        LINE_JOINER.join(
+        lines(
             "class FnClass {",
             "  constructor() {",
             "    /** @ngInject */ ",
@@ -369,12 +369,12 @@ public final class AngularPassTest extends CompilerTestCase {
 
   public void testNgInjectAddsInjectToClassWithExtraName() throws Exception {
     test(
-        LINE_JOINER.join(
+        lines(
             "var foo = class bar{",
             "  /** @ngInject */",
             "  constructor(a, b) {}",
             "};"),
-        LINE_JOINER.join(
+        lines(
             "var foo = class bar{",
             "  /** @ngInject */ ",
             "  constructor(a, b){}",
@@ -383,12 +383,12 @@ public final class AngularPassTest extends CompilerTestCase {
             "foo['$inject'] = ['a','b'];"));
 
     test(
-        LINE_JOINER.join(
+        lines(
             "let foo = class bar{",
             "  /** @ngInject */",
             "  constructor(a, b) {}",
             "};"),
-        LINE_JOINER.join(
+        lines(
             "let foo = class bar{",
             "  /** @ngInject */ ",
             "  constructor(a, b){}",
@@ -397,12 +397,12 @@ public final class AngularPassTest extends CompilerTestCase {
             "foo['$inject'] = ['a','b'];"));
 
     test(
-        LINE_JOINER.join(
+        lines(
             "const foo = class bar{",
             "  /** @ngInject */",
             "  constructor(a, b) {}",
             "};"),
-        LINE_JOINER.join(
+        lines(
             "const foo = class bar{",
             "  /** @ngInject */ ",
             "  constructor(a, b){}",
@@ -411,12 +411,12 @@ public final class AngularPassTest extends CompilerTestCase {
             "foo['$inject'] = ['a','b'];"));
 
     test(
-        LINE_JOINER.join(
+        lines(
             "x.y = class bar{",
             "  /** @ngInject */",
             "  constructor(a, b) {}",
             "};"),
-        LINE_JOINER.join(
+        lines(
             "x.y = class bar{",
             "  /** @ngInject */ ",
             "  constructor(a, b){}",
@@ -428,14 +428,14 @@ public final class AngularPassTest extends CompilerTestCase {
 
   public void testNgInjectAddsInjectToClassArrowFunc() throws Exception {
     test(
-        LINE_JOINER.join(
+        lines(
             "class FnClass {",
             "  constructor() {",
             "    /** @ngInject */ ",
             "    this.someMethod = (a, b) => 42",
             "  }",
             "}"),
-        LINE_JOINER.join(
+        lines(
             "class FnClass {",
             "  constructor() {",
             "    /** @ngInject */ ",
@@ -448,7 +448,7 @@ public final class AngularPassTest extends CompilerTestCase {
 
   public void testNgInjectAddsInjectToClassCompMethodName() throws Exception {
     testError(
-        LINE_JOINER.join(
+        lines(
             "class FnClass {",
             "  constructor() {}",
             "    /** @ngInject */ ",
@@ -484,11 +484,11 @@ public final class AngularPassTest extends CompilerTestCase {
   public void testInGoogModule() {
     enableRewriteClosureCode();
     test(
-        LINE_JOINER.join(
+        lines(
             "goog.module('my.module');",
             "/** @ngInject */",
             "function fn(a, b) {}"),
-        LINE_JOINER.join(
+        lines(
             "goog.module('my.module');",
             "/** @ngInject */",
             "function fn(a, b) {}",
@@ -496,13 +496,13 @@ public final class AngularPassTest extends CompilerTestCase {
   }
 
   public void testInEsModule() {
-    String js = LINE_JOINER.join(
+    String js = lines(
         "import {Foo} from './foo';",
         "",
         "class Bar extends Foo { /** @ngInject */ constructor(x, y) {} }");
     test(
         js,
-        LINE_JOINER.join(
+        lines(
             js,
             "/** @public */",
             "Bar['$inject'] = ['x', 'y'];"));
@@ -511,12 +511,12 @@ public final class AngularPassTest extends CompilerTestCase {
   public void testInGoogScope() {
     enableRewriteClosureCode();
     test(
-        LINE_JOINER.join(
+        lines(
             "goog.scope(function() {",
             "/** @ngInject */",
             "function fn(a, b) {}",
             "});"),
-        LINE_JOINER.join(
+        lines(
             "goog.scope(function() {",
             "/** @ngInject */",
             "function fn(a, b) {}",

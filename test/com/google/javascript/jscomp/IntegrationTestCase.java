@@ -128,6 +128,9 @@ abstract class IntegrationTestCase extends TestCase {
                   "/** @type {number} */",
                   "Array.prototype.length;",
                   "",
+                  "/** @return {IteratorIterable<T>} */",
+                  "Array.prototype.values;",
+                  "",
                   "/**",
                   " * @constructor",
                   " * @return {number}",
@@ -403,7 +406,11 @@ abstract class IntegrationTestCase extends TestCase {
   }
 
   protected Compiler compile(CompilerOptions options, String[] original) {
-    Compiler compiler = lastCompiler = new Compiler();
+    return compile(options, original, new Compiler());
+  }
+
+  protected Compiler compile(CompilerOptions options, String[] original, Compiler compiler) {
+    lastCompiler = compiler;
     BlackHoleErrorManager.silence(compiler);
     compiler.compileModules(
         externs,

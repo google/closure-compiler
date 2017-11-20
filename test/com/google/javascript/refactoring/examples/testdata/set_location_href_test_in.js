@@ -29,6 +29,14 @@ refactoring_testcase.test_location_href = function(target, val) {
 };
 
 /**
+ * @param {!Location} target The Target.
+ */
+refactoring_testcase.location_href_string_literal = function(target) {
+  // Shouldn't match.
+  target.href = 'foo';
+};
+
+/**
  * @param {!Window} target The target.
  * @param {string} val The value.
  */

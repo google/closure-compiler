@@ -35,6 +35,7 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
 import java.util.HashMap;
@@ -43,7 +44,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.Stack;
 import javax.annotation.Nullable;
 
 /**
@@ -318,7 +318,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     String legacyNamespace; // "a.b.c"
     String contentsPrefix; // "module$contents$a$b$c_
     final Set<String> topLevelNames = new HashSet<>(); // For prefixed content renaming.
-    final Deque<ScriptDescription> childScripts = new LinkedList<>();
+    final Deque<ScriptDescription> childScripts = new ArrayDeque<>();
     final Map<String, String> namesToInlineByAlias = new HashMap<>(); // For alias inlining.
 
     /**
@@ -621,7 +621,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
       };
 
   // Per script state needed for rewriting.
-  private Deque<ScriptDescription> scriptStack = new LinkedList<>();
+  private final Deque<ScriptDescription> scriptStack = new ArrayDeque<>();
   private ScriptDescription currentScript = null;
 
   // Global state tracking an association between the dotted names of goog.module()s and whether
@@ -629,23 +629,23 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
   // Allows for detecting duplicate goog.module()s and for rewriting fully qualified
   // JsDoc type references to goog.module() types in legacy scripts.
   static class GlobalRewriteState {
-    private Map<String, ScriptDescription> scriptDescriptionsByGoogModuleNamespace =
+    private final Map<String, ScriptDescription> scriptDescriptionsByGoogModuleNamespace =
         new HashMap<>();
     private final Map<String, String> modulePathsToNamespaces =
         new HashMap<>();
-    private Multimap<Node, String> legacyNamespacesByScriptNode = HashMultimap.create();
-    private Set<String> legacyScriptNamespaces = new HashSet<>();
+    private final Multimap<Node, String> legacyNamespacesByScriptNode = HashMultimap.create();
+    private final Set<String> legacyScriptNamespaces = new HashSet<>();
     private final Set<String> nonModulePaths = new HashSet<>();
 
     public static String resolve(String fromModulePath, String relativeToModulePath) {
       // Normally we'd use java.nio.file.Path here, but GWT/J2cl does not support it.
       String path = fromModulePath + "/../" + relativeToModulePath;
-      Stack<String> stack = new Stack<>();
+      Deque<String> stack = new ArrayDeque<>();
       for (String component : Splitter.on('/').split(path)) {
-        if (component.equals("..") && !stack.isEmpty() && !stack.peek().equals("..")) {
-          stack.pop();
+        if (component.equals("..") && !stack.isEmpty() && !stack.peekLast().equals("..")) {
+          stack.removeLast();
         } else if (!component.equals(".")) {
-          stack.push(component);
+          stack.addLast(component);
         }
       }
       return Joiner.on('/').join(stack);
@@ -711,9 +711,9 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     }
   }
 
-  private GlobalRewriteState rewriteState;
-  private Set<String> legacyScriptNamespacesAndPrefixes = new HashSet<>();
-  private List<UnrecognizedRequire> unrecognizedRequires = new ArrayList<>();
+  private final GlobalRewriteState rewriteState;
+  private final Set<String> legacyScriptNamespacesAndPrefixes = new HashSet<>();
+  private final List<UnrecognizedRequire> unrecognizedRequires = new ArrayList<>();
 
   ClosureRewriteModule(
       AbstractCompiler compiler,
@@ -754,7 +754,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
 
   @Override
   public void process(Node externs, Node root) {
-    Deque<ScriptDescription> scriptDescriptions = new LinkedList<>();
+    Deque<ScriptDescription> scriptDescriptions = new ArrayDeque<>();
     processAllFiles(scriptDescriptions, externs);
     processAllFiles(scriptDescriptions, root);
   }
@@ -823,6 +823,10 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     if (!n.hasChildren()) {
       Node nameNode = IR.name(n.getString()).srcref(n);
       n.addChildToBack(nameNode);
+      Node changeScope = NodeUtil.getEnclosingChangeScopeRoot(n);
+      if (changeScope != null) {
+        compiler.reportChangeToChangeScope(changeScope);
+      }
     }
   }
 
@@ -1054,7 +1058,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
   }
 
   private void recordTopLevelVarNames(Node varNode) {
-    for (Node lhs : NodeUtil.getLhsNodesOfDeclaration(varNode)) {
+    for (Node lhs : NodeUtil.findLhsNodesInNode(varNode)) {
       String name = lhs.getString();
       currentScript.topLevelNames.add(name);
     }

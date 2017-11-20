@@ -24,10 +24,10 @@ import com.google.javascript.jscomp.ControlFlowGraph.Branch;
 import com.google.javascript.jscomp.graph.GraphNode;
 import com.google.javascript.jscomp.graph.LatticeElement;
 import com.google.javascript.rhino.Node;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -60,7 +60,7 @@ final class MustBeReachingVariableDef extends
     this.compiler = compiler;
     this.escaped = new HashSet<>();
     this.allVarsInFn = new HashMap<>();
-    this.orderedVars = new LinkedList<>();
+    this.orderedVars = new ArrayList<>();
     computeEscapedEs6(jsScope.getParent(), escaped, compiler, scopeCreator);
     NodeUtil.getAllVarsDeclaredInFunction(
         allVarsInFn, orderedVars, compiler, scopeCreator, jsScope.getParent());

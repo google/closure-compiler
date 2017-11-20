@@ -19,6 +19,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.base.Optional;
+import com.google.javascript.jscomp.parsing.parser.FeatureSet;
+import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayDeque;
@@ -107,6 +109,8 @@ public final class RewriteAsyncFunctions implements NodeTraversal.Callback, HotS
 
   private final Deque<LexicalContext> contextStack;
   private final AbstractCompiler compiler;
+  private static final FeatureSet transpiledFeatures =
+      FeatureSet.BARE_MINIMUM.with(Feature.ASYNC_FUNCTIONS);
 
   public RewriteAsyncFunctions(AbstractCompiler compiler) {
     checkNotNull(compiler);
@@ -117,12 +121,12 @@ public final class RewriteAsyncFunctions implements NodeTraversal.Callback, HotS
 
   @Override
   public void process(Node externs, Node root) {
-    TranspilationPasses.processTranspile(compiler, root, this);
+    TranspilationPasses.processTranspile(compiler, root, transpiledFeatures, this);
   }
 
   @Override
   public void hotSwapScript(Node scriptRoot, Node originalRoot) {
-    TranspilationPasses.hotSwapTranspile(compiler, scriptRoot, this);
+    TranspilationPasses.hotSwapTranspile(compiler, scriptRoot, transpiledFeatures, this);
   }
 
   @Override
@@ -159,6 +163,7 @@ public final class RewriteAsyncFunctions implements NodeTraversal.Callback, HotS
         if (context.mustReplaceThisAndArguments() && n.matchesQualifiedName("arguments")) {
           n.setString(ASYNC_ARGUMENTS);
           context.recordAsyncArgumentsReplacementWasDone();
+          compiler.reportChangeToChangeScope(context.function.get());
         }
         break;
 
@@ -166,6 +171,7 @@ public final class RewriteAsyncFunctions implements NodeTraversal.Callback, HotS
         if (context.mustReplaceThisAndArguments()) {
           parent.replaceChild(n, IR.name(ASYNC_THIS).useSourceInfoIfMissingFrom(n));
           context.recordAsyncThisReplacementWasDone();
+          compiler.reportChangeToChangeScope(context.function.get());
         }
         break;
 

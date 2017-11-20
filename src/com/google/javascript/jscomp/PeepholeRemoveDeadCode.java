@@ -260,6 +260,10 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
           result = n;
         }
         break;
+      case AWAIT:
+        // If there's an 'await' node whose result isn't used, it's still important to wait
+        // for the promise to resolve before running the next line, so don't remove it.
+        break;
       default:
         if (!nodeTypeMayHaveSideEffects(n)) {
           // This is the meat of this function. The node itself doesn't generate
@@ -395,9 +399,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
         for (cur = cond.getNext(); cur != null; cur = next) {
           next = cur.getNext();
           caseLabel = cur.getFirstChild();
-          // TODO(moz): Use type information if allowed.
-          caseMatches = PeepholeFoldConstants.evaluateComparison(
-              Token.SHEQ, cond, caseLabel, false);
+          caseMatches = PeepholeFoldConstants.evaluateComparison(Token.SHEQ, cond, caseLabel);
           if (caseMatches == TernaryValue.TRUE) {
             break;
           } else if (caseMatches == TernaryValue.UNKNOWN) {

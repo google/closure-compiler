@@ -357,7 +357,7 @@ public final class InlineObjectLiteralsTest extends CompilerTestCase {
 
   public void testProto() {
     testSameLocal(
-        LINE_JOINER.join(
+        lines(
             "var protoObject = {",
             "  f: function() {",
             "    return 1;",
@@ -369,7 +369,7 @@ public final class InlineObjectLiteralsTest extends CompilerTestCase {
             "g(object.f);"));
 
     testSame(
-        LINE_JOINER.join(
+        lines(
             "var protoObject = {",
             "  f: function() {",
             "    return 1;",
@@ -380,7 +380,7 @@ public final class InlineObjectLiteralsTest extends CompilerTestCase {
             "  g: false",
             "};",
             "g(object.g);"),
-        LINE_JOINER.join(
+        lines(
             "var protoObject = {",
             "  f: function() {",
             "    return 1;",
@@ -393,7 +393,7 @@ public final class InlineObjectLiteralsTest extends CompilerTestCase {
 
   public void testSuper() {
     testSameLocal(
-        LINE_JOINER.join(
+        lines(
             "var superObject = {",
             "  f() {",
             "    return 1;",
@@ -410,7 +410,7 @@ public final class InlineObjectLiteralsTest extends CompilerTestCase {
 
   public void testShorthandFunctions() {
     testSameLocal(
-        LINE_JOINER.join(
+        lines(
             "var object = {",
             "  items: [],",
             "  add(item) {",
@@ -420,31 +420,31 @@ public final class InlineObjectLiteralsTest extends CompilerTestCase {
             "object.add(1);"));
 
     testSameLocal(
-        LINE_JOINER.join(
+        lines(
             "var object = {", "  one() {", "    return 1", "  },", "};", "object.one();"));
   }
 
   public void testShorthandAssignments() {
     testLocal(
-        LINE_JOINER.join(
+        lines(
             "var object = {",
             "  x,",
             "  y",
             "};",
             "f(object.x, object.y);"),
-        LINE_JOINER.join(
+        lines(
             "var JSCompiler_object_inline_x_0=x;",
             "var JSCompiler_object_inline_y_1=y;",
             "f(JSCompiler_object_inline_x_0,JSCompiler_object_inline_y_1)"));
 
     testLocal(
-        LINE_JOINER.join(
+        lines(
             "var object = {",
             "  x,",
             "};",
             "object.y = y",
             "f(object.x, object.y);"),
-        LINE_JOINER.join(
+        lines(
             "var JSCompiler_object_inline_x_0=x;",
             "var JSCompiler_object_inline_y_1;",
             "var JSCompiler_object_inline_y_1=y;",
@@ -453,7 +453,7 @@ public final class InlineObjectLiteralsTest extends CompilerTestCase {
 
   public void testComputedPropertyName() {
     testSameLocal(
-        LINE_JOINER.join(
+        lines(
             "function addBar(name) {",
             "  return name + 'Bar'",
             "}",
@@ -462,13 +462,32 @@ public final class InlineObjectLiteralsTest extends CompilerTestCase {
             "};"));
 
     testSameLocal(
-        LINE_JOINER.join(
+        lines(
             "var sym = Symbol('key');",
             "var object = {",
             "  [sym]: 1,",
             "  x: true",
             "}",
             "use(object[sym]);"));
+  }
+
+  public void testQuotedKeyThatIsNotRead() {
+    testLocal("var obj = {'a.b.c': 'd'};", "var JSCompiler_object_inline_string_key_0 = 'd';");
+    testLocal("var obj = {'@': 5, '!': 4, 'foo': 3};",
+        lines(
+            "var JSCompiler_object_inline_string_key_0 = 5;",
+            "var JSCompiler_object_inline_string_key_1 = 4;",
+            "var JSCompiler_object_inline_foo_2 = 3;"
+        ));
+
+    testSameLocal("var obj = {}; obj['@'] = 3;");
+  }
+
+
+  public void testQuotedKeyThatIsRead() {
+    testSameLocal("var obj = {'a.b.c': 'd'}; use(obj['a.b.c']);");
+
+    testSameLocal("var obj = {}; obj['a'] = 3; use(obj['a']);");
   }
 
   private static final String LOCAL_PREFIX = "function local(){";

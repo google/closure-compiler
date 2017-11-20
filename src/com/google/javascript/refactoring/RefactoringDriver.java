@@ -43,24 +43,19 @@ import java.util.regex.Pattern;
  */
 public final class RefactoringDriver {
 
-  private final Scanner scanner;
   private final Compiler compiler;
   private final Node rootNode;
 
   private RefactoringDriver(
-      Scanner scanner,
       List<SourceFile> inputs,
       List<SourceFile> externs,
       CompilerOptions compilerOptions) {
-    this.scanner = scanner;
     this.compiler = createCompiler(inputs, externs, compilerOptions);
     this.rootNode = this.compiler.getRoot();
   }
 
-  /**
-   * Run the refactoring and return any suggested fixes as a result.
-   */
-  public List<SuggestedFix> drive(Pattern includeFilePattern) {
+  /** Run a refactoring and return any suggested fixes as a result. */
+  public List<SuggestedFix> drive(Scanner scanner, Pattern includeFilePattern) {
     JsFlumeCallback callback = new JsFlumeCallback(scanner, includeFilePattern);
     NodeTraversal.traverseEs6(compiler, rootNode, callback);
     List<SuggestedFix> fixes = callback.getFixes();
@@ -68,11 +63,9 @@ public final class RefactoringDriver {
     return fixes;
   }
 
-  /**
-   * Run the refactoring and return any suggested fixes as a result.
-   */
-  public List<SuggestedFix> drive() {
-    return drive(null);
+  /** Run a refactoring and return any suggested fixes as a result. */
+  public List<SuggestedFix> drive(Scanner scanner) {
+    return drive(scanner, null);
   }
 
   public Compiler getCompiler() {
@@ -128,14 +121,11 @@ public final class RefactoringDriver {
           }
         };
 
-    private final Scanner scanner;
     private final ImmutableList.Builder<SourceFile> inputs = ImmutableList.builder();
     private final ImmutableList.Builder<SourceFile> externs = ImmutableList.builder();
     private CompilerOptions compilerOptions = getCompilerOptions();
 
-    public Builder(Scanner scanner) {
-      this.scanner = scanner;
-    }
+    public Builder() {}
 
     public Builder addExternsFromFile(String filename) {
       externs.add(SourceFile.fromFile(filename));
@@ -187,7 +177,7 @@ public final class RefactoringDriver {
     }
 
     public RefactoringDriver build() {
-      return new RefactoringDriver(scanner, inputs.build(), externs.build(), compilerOptions);
+      return new RefactoringDriver(inputs.build(), externs.build(), compilerOptions);
     }
   }
 }

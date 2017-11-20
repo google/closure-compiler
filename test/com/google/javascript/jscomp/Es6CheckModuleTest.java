@@ -41,13 +41,13 @@ public final class Es6CheckModuleTest extends CompilerTestCase {
 
   public void testEs6ThisWithImportModule() {
     testWarning(
-        LINE_JOINER.join("import ln from 'other.x'", "if (x) {", "  alert(this);", "}"),
+        lines("import ln from 'other.x'", "if (x) {", "  alert(this);", "}"),
         Es6CheckModule.ES6_MODULE_REFERENCES_THIS);
   }
 
   public void testEs6ThisWithConstructor() {
     testSame(
-        LINE_JOINER.join(
+        lines(
             "class Foo {",
             "  constructor() {",
             "    this.x = 5;",

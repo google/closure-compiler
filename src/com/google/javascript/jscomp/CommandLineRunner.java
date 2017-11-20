@@ -177,8 +177,7 @@ public class CommandLineRunner extends
         usage = "Assume input sources are to run in strict mode.")
     private boolean strictModeInput = true;
 
-    // Turn on (very slow) extra sanity checks for use when modifying the
-    // compiler.
+    // Turn on (very slow) extra validity checks for use when modifying the compiler.
     @Option(
       name = "--jscomp_dev_mode",
       hidden = true,
@@ -311,7 +310,10 @@ public class CommandLineRunner extends
         usage = "An output wrapper for a JavaScript module (optional). "
         + "The format is <name>:<wrapper>. The module name must correspond "
         + "with a module specified using --module. The wrapper must "
-        + "contain %s as the code placeholder. The %basename% placeholder can "
+        + "contain %s as the code placeholder. "
+        + "Alternately, %output% can be used in place of %s. "
+        + "%n% can be used to represent a newline. "
+        + "The %basename% placeholder can "
         + "also be used to substitute the base name of the module output file.")
     private List<String> moduleWrapper = new ArrayList<>();
 
@@ -606,7 +608,7 @@ public class CommandLineRunner extends
     @Option(
       name = "--language_in",
       usage =
-          "Sets what language spec that input sources conform. "
+          "Sets the language spec to which input sources should conform. "
               + "Options: ECMASCRIPT3, ECMASCRIPT5, ECMASCRIPT5_STRICT, "
               + "ECMASCRIPT6_TYPED (experimental), ECMASCRIPT_2015, ECMASCRIPT_2016, "
               + "ECMASCRIPT_2017, ECMASCRIPT_NEXT"
@@ -616,10 +618,10 @@ public class CommandLineRunner extends
     @Option(
       name = "--language_out",
       usage =
-          "Sets what language spec the output should conform to. "
+          "Sets the language spec to which output should conform. "
               + "Options: ECMASCRIPT3, ECMASCRIPT5, ECMASCRIPT5_STRICT, "
               + "ECMASCRIPT6_TYPED (experimental), ECMASCRIPT_2015, ECMASCRIPT_2016, "
-              + "ECMASCRIPT_2017, ECMASCRIPT_NEXT"
+              + "ECMASCRIPT_2017, ECMASCRIPT_NEXT, NO_TRANSPILE"
     )
     private String languageOut = "ECMASCRIPT5";
 
@@ -756,6 +758,11 @@ public class CommandLineRunner extends
         usage = "Rewrite ES6 library calls to use polyfills provided by the compiler's runtime.")
     private boolean rewritePolyfills = true;
 
+    @Option(name = "--allow_method_call_decomposing",
+        handler = BooleanOptionHandler.class,
+        usage = "Allow decomposing x.y(); to: var tmp = x.y; tmp.call(x); Unsafe on IE 8 and 9")
+    private boolean allowMethodCallDecomposing = false;
+
     @Option(
       name = "--print_source_after_each_pass",
       handler = BooleanOptionHandler.class,
@@ -782,6 +789,11 @@ public class CommandLineRunner extends
               + "Defaults to a list with the following entries: \"browser\", \"module\", \"main\"."
     )
     private String packageJsonEntryNames = null;
+
+    @Option(name = "--renaming",
+        handler = BooleanOptionHandler.class,
+        usage = "Disables variable renaming. Cannot be used with ADVANCED optimizations.")
+    private boolean renaming = true;
 
     @Argument
     private List<String> arguments = new ArrayList<>();
@@ -1552,6 +1564,12 @@ public class CommandLineRunner extends
         }
       }
 
+      if (!flags.renaming
+          && flags.compilationLevelParsed == CompilationLevel.ADVANCED_OPTIMIZATIONS) {
+        reportError("ERROR - renaming cannot be disabled when ADVANCED_OPTMIZATIONS is used.");
+        runCompiler = false;
+      }
+
       getCommandLineConfig()
           .setPrintTree(flags.printTree)
           .setPrintAst(flags.printAst)
@@ -1726,6 +1744,8 @@ public class CommandLineRunner extends
     options.rewritePolyfills =
         flags.rewritePolyfills && options.getLanguageIn().toFeatureSet().contains(FeatureSet.ES6);
 
+    options.setAllowMethodCallDecomposing(flags.allowMethodCallDecomposing);
+
     if (!flags.translationsFile.isEmpty()) {
       try {
         options.messageBundle = new XtbMessageBundle(
@@ -1789,6 +1809,11 @@ public class CommandLineRunner extends
       } catch (CmdLineException e) {
         reportError("ERROR - invalid package_json_entry_names format specified.");
       }
+    }
+
+    if (!flags.renaming) {
+      options.setVariableRenaming(VariableRenamingPolicy.OFF);
+      options.setPropertyRenaming(PropertyRenamingPolicy.OFF);
     }
 
     return options;

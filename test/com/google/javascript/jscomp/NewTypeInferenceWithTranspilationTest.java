@@ -38,14 +38,14 @@ public final class NewTypeInferenceWithTranspilationTest extends NewTypeInferenc
     typeCheck("class Foo {}");
 
     typeCheck(
-        LINE_JOINER.join(
+        lines(
             "class Foo {}",
             "class Bar {}",
             "/** @type {!Foo} */ var x = new Bar;"),
         NewTypeInference.MISTYPED_ASSIGN_RHS);
 
     typeCheck(
-        LINE_JOINER.join(
+        lines(
             "class Foo {",
             "  constructor(x) {",
             "    /** @type {string} */",
@@ -58,7 +58,7 @@ public final class NewTypeInferenceWithTranspilationTest extends NewTypeInferenc
 
   public void testClassInheritance() {
     typeCheck(
-        LINE_JOINER.join(
+        lines(
             "class Foo {}",
             "class Bar extends Foo {}"));
   }
@@ -77,7 +77,7 @@ public final class NewTypeInferenceWithTranspilationTest extends NewTypeInferenc
 
   public void testFunctionSubtypingForReceiverType() {
     typeCheck(
-        LINE_JOINER.join(
+        lines(
             "class Foo {",
             "  method() {}",
             "}",
@@ -86,7 +86,7 @@ public final class NewTypeInferenceWithTranspilationTest extends NewTypeInferenc
             "f(Foo.prototype.method);"));
 
     typeCheck(
-        LINE_JOINER.join(
+        lines(
             "class Foo {",
             "  method() { return 123; }",
             "}",
@@ -99,20 +99,19 @@ public final class NewTypeInferenceWithTranspilationTest extends NewTypeInferenc
             "f(Foo.prototype.method);"));
 
     typeCheck(
-        LINE_JOINER.join(
+        lines(
             "class Controller {}",
             "class SubController extends Controller {",
             "  method() {}",
             "}",
             "/** @param {{always: function(this:Controller)}} spec */",
             "function vsyncMethod(spec) {}",
-            "vsyncMethod({always: (new SubController).method});"),
-        NewTypeInference.INVALID_ARGUMENT_TYPE);
+            "vsyncMethod({always: (new SubController).method});"));
   }
 
   public void testDetectPropertyDefinitionOnNullableObject() {
     typeCheck(
-        LINE_JOINER.join(
+        lines(
             "/** @unrestricted */",
             "class Foo {}",
             "function f(/** ?Foo */ x) {",
@@ -127,7 +126,7 @@ public final class NewTypeInferenceWithTranspilationTest extends NewTypeInferenc
 
   public void testDetectPropertyDefinitionOnQualifiedName() {
     typeCheck(
-        LINE_JOINER.join(
+        lines(
             "/** @unrestricted */",
             "class A {}",
             "/** @unrestricted */",
@@ -145,7 +144,7 @@ public final class NewTypeInferenceWithTranspilationTest extends NewTypeInferenc
 
   public void testThisIsNull() {
     typeCheck(
-        LINE_JOINER.join(
+        lines(
             "class Foo {",
             "  method() {}",
             "}",
@@ -159,7 +158,7 @@ public final class NewTypeInferenceWithTranspilationTest extends NewTypeInferenc
 
   public void testFunctionsWithUntypecheckedArguments() {
     typeCheck(
-        LINE_JOINER.join(
+        lines(
             "class Foo {}",
             "/**",
             " * @param {function(function(new:Foo, ...?))} f1",
@@ -170,7 +169,7 @@ public final class NewTypeInferenceWithTranspilationTest extends NewTypeInferenc
             "}"));
 
     typeCheck(
-        LINE_JOINER.join(
+        lines(
             "class Foo {}",
             "/**",
             " * @template T",
@@ -188,18 +187,18 @@ public final class NewTypeInferenceWithTranspilationTest extends NewTypeInferenc
 
   public void testMethodOverridesWithoutJsdoc() {
     typeCheck(
-        LINE_JOINER.join(
+        lines(
             "class A {  someMethod(x) {}  }",
             "class B extends A {  someMethod() {}  }"));
 
     typeCheck(
-        LINE_JOINER.join(
+        lines(
             "class A {  someMethod(x) {}  }",
             "class B extends A {  someMethod(x, y) { return y + 1; }  }"),
         GlobalTypeInfoCollector.INVALID_PROP_OVERRIDE);
 
     typeCheck(
-        LINE_JOINER.join(
+        lines(
             "class Foo {",
             "  /** @param {...number} var_args */",
             "  method(var_args) {}",
@@ -211,7 +210,7 @@ public final class NewTypeInferenceWithTranspilationTest extends NewTypeInferenc
         NewTypeInference.INVALID_ARGUMENT_TYPE);
 
     typeCheck(
-        LINE_JOINER.join(
+        lines(
             "class Foo {",
             "  /** @param {...number} var_args */",
             "  method(var_args) {}",
@@ -225,7 +224,7 @@ public final class NewTypeInferenceWithTranspilationTest extends NewTypeInferenc
 
   public void testOuterVarDefinitionJoinDoesntCrash() {
     typeCheck(
-        LINE_JOINER.join(
+        lines(
             "/** @constructor */ function Foo(){}",
             "function f() {",
             "  if (true) {",
@@ -234,7 +233,7 @@ public final class NewTypeInferenceWithTranspilationTest extends NewTypeInferenc
             "  }",
             "}"));
 
-    // typeCheck(LINE_JOINER.join(
+    // typeCheck(lines(
     //     "function f() {",
     //     "  if (true) {",
     //     "    function g() { new Foo; }",
@@ -247,7 +246,7 @@ public final class NewTypeInferenceWithTranspilationTest extends NewTypeInferenc
   public void testSuper() {
     compilerOptions.setLanguageIn(LanguageMode.ECMASCRIPT_2015);
     typeCheck(
-        LINE_JOINER.join(
+        lines(
             "class A {",
             "  constructor(/** string */ x) {}",
             "}",
@@ -259,7 +258,7 @@ public final class NewTypeInferenceWithTranspilationTest extends NewTypeInferenc
         NewTypeInference.INVALID_ARGUMENT_TYPE);
 
     typeCheck(
-        LINE_JOINER.join(
+        lines(
             "class A {",
             "  foo(/** string */ x) {}",
             "}",
@@ -271,7 +270,7 @@ public final class NewTypeInferenceWithTranspilationTest extends NewTypeInferenc
         NewTypeInference.INVALID_ARGUMENT_TYPE);
 
     typeCheck(
-        LINE_JOINER.join(
+        lines(
             "class A {",
             "  /**",
             "   * @template T",
@@ -291,7 +290,7 @@ public final class NewTypeInferenceWithTranspilationTest extends NewTypeInferenc
         NewTypeInference.INVALID_ARGUMENT_TYPE);
 
     typeCheck(
-        LINE_JOINER.join(
+        lines(
             "class A {",
             "  static foo(/** string */ x) {}",
             "}",
@@ -304,7 +303,7 @@ public final class NewTypeInferenceWithTranspilationTest extends NewTypeInferenc
 
     // Test that when the superclass has a qualified name, using super works.
     typeCheck(
-        LINE_JOINER.join(
+        lines(
             "/** @const */",
             "var ns = {};",
             "ns.A = class {",
@@ -318,7 +317,7 @@ public final class NewTypeInferenceWithTranspilationTest extends NewTypeInferenc
         NewTypeInference.INVALID_ARGUMENT_TYPE);
 
     typeCheck(
-        LINE_JOINER.join(
+        lines(
             "/** @template T */",
             "class Collection {",
             "  constructor() {",
@@ -342,7 +341,7 @@ public final class NewTypeInferenceWithTranspilationTest extends NewTypeInferenc
 
   public void testDefaultValuesForArguments() {
     typeCheck(
-        LINE_JOINER.join(
+        lines(
             "/** @param {{ focus: (undefined|string) }=} x */",
             "function f(x = {}) {",
             "  return { a: x.focus };",
@@ -351,13 +350,13 @@ public final class NewTypeInferenceWithTranspilationTest extends NewTypeInferenc
 
   public void testDestructuring() {
     typeCheck(
-        LINE_JOINER.join(
+        lines(
             "function f({ myprop1: { myprop2: prop } }) {",
             "  return prop;",
             "}"));
 
     typeCheck(
-        LINE_JOINER.join(
+        lines(
             "/**",
             " * @param {{prop: (number|undefined)}} x",
             " * @return {number}",
@@ -369,7 +368,7 @@ public final class NewTypeInferenceWithTranspilationTest extends NewTypeInferenc
 
   public void testAbstractMethodCalls() {
     typeCheck(
-        LINE_JOINER.join(
+        lines(
             "/** @abstract */",
             "class A {",
             "  /** @abstract */",
@@ -381,7 +380,7 @@ public final class NewTypeInferenceWithTranspilationTest extends NewTypeInferenc
         NewTypeInference.ABSTRACT_SUPER_METHOD_NOT_CALLABLE);
 
     typeCheck(
-        LINE_JOINER.join(
+        lines(
             "/** @abstract */",
             "class A {",
             "  foo() {}",
@@ -391,7 +390,7 @@ public final class NewTypeInferenceWithTranspilationTest extends NewTypeInferenc
             "}"));
 
     typeCheck(
-        LINE_JOINER.join(
+        lines(
             "/** @abstract */",
             "class A {",
             "  /** @abstract */",
@@ -408,7 +407,7 @@ public final class NewTypeInferenceWithTranspilationTest extends NewTypeInferenc
             "}"));
 
     typeCheck(
-        LINE_JOINER.join(
+        lines(
             "/** @abstract */",
             "class A {",
             "  /** @abstract */",
@@ -424,7 +423,7 @@ public final class NewTypeInferenceWithTranspilationTest extends NewTypeInferenc
 
     // This should generate a warning
     typeCheck(
-        LINE_JOINER.join(
+        lines(
             "/** @abstract */",
             "class A {",
             "  /** @abstract */",
@@ -438,7 +437,7 @@ public final class NewTypeInferenceWithTranspilationTest extends NewTypeInferenc
             "}"));
 
     typeCheck(
-        LINE_JOINER.join(
+        lines(
             "/** @abstract */",
             "class A {",
             "  /** @abstract */",
@@ -452,7 +451,7 @@ public final class NewTypeInferenceWithTranspilationTest extends NewTypeInferenc
             "}"));
 
     typeCheck(
-        LINE_JOINER.join(
+        lines(
             "/** @abstract */",
             "class A {",
             "  /** @abstract */",
@@ -467,7 +466,7 @@ public final class NewTypeInferenceWithTranspilationTest extends NewTypeInferenc
             "}"));
 
     typeCheck(
-        LINE_JOINER.join(
+        lines(
             "/** @abstract */",
             "class A {",
             "  /** @abstract @return {number} */ get foo() {}",
@@ -479,7 +478,7 @@ public final class NewTypeInferenceWithTranspilationTest extends NewTypeInferenc
   // Avoid crashing.
   public void testDontCrashWithInvalidIntermediateASTwithSuper() {
     typeCheck(
-        LINE_JOINER.join(
+        lines(
             "class Foo {}",
             "function g(x) {}",
             "g(function f(x) { return class extends Foo {} });"));
@@ -487,7 +486,7 @@ public final class NewTypeInferenceWithTranspilationTest extends NewTypeInferenc
 
   public void testDontWarnAboutUnknownExtends() {
     typeCheck(
-        LINE_JOINER.join(
+        lines(
             "function f(clazz) {",
             "  class Foo extends clazz {}",
             "}"));
@@ -495,7 +494,7 @@ public final class NewTypeInferenceWithTranspilationTest extends NewTypeInferenc
 
   public void testMixedClassInheritance() {
     typeCheck(
-        LINE_JOINER.join(
+        lines(
             "/** @record */",
             "function IToggle(){}",
             "/** @return {number} */",
@@ -527,7 +526,7 @@ public final class NewTypeInferenceWithTranspilationTest extends NewTypeInferenc
 
   public void testLoopVariableTranspiledToProperty() {
     typeCheck(
-        LINE_JOINER.join(
+        lines(
             "function f() {",
             "  for (let i = 0; i < 1; ++i) {",
             "    const x = 1;",
@@ -539,7 +538,7 @@ public final class NewTypeInferenceWithTranspilationTest extends NewTypeInferenc
 
     // TODO(dimvar): catch this warning once we typecheck ES6 natively.
     typeCheck(
-        LINE_JOINER.join(
+        lines(
             "function f() {",
             "  for (let i = 0; i < 1; ++i) {",
             "    const x = 1;",
@@ -553,7 +552,7 @@ public final class NewTypeInferenceWithTranspilationTest extends NewTypeInferenc
 
   public void testInterfacePropertiesInConstructor() {
     typeCheck(
-        LINE_JOINER.join(
+        lines(
             "/** @record */",
             "class Foo {",
             "  constructor() {",
@@ -566,7 +565,7 @@ public final class NewTypeInferenceWithTranspilationTest extends NewTypeInferenc
             "}"));
 
     typeCheck(
-        LINE_JOINER.join(
+        lines(
             "/** @record */",
             "class Foo {",
             "  constructor() {",
@@ -580,7 +579,7 @@ public final class NewTypeInferenceWithTranspilationTest extends NewTypeInferenc
         NewTypeInference.MISTYPED_ASSIGN_RHS);
 
     typeCheck(
-        LINE_JOINER.join(
+        lines(
             "/**",
             " * @record",
             " * @template T",
@@ -599,39 +598,40 @@ public final class NewTypeInferenceWithTranspilationTest extends NewTypeInferenc
 
   public void testForOf() {
     typeCheck(
-        LINE_JOINER.join(
+        lines(
             "function f(/** number */ y) {",
             "  for (var x of \"abc\") { y = x; }",
-            "}"));
-    // should be NewTypeInference.MISTYPED_ASSIGN_RHS
+            "}"),
+        nativeEs6Only(NewTypeInference.MISTYPED_ASSIGN_RHS));
 
     typeCheck(
-        LINE_JOINER.join(
-            "function f(/** Array<string> */ y) {",
-            "  for (var x of new Map([['a', 'b'], ['c', 'd']])) { y = x; }",
-            "}"));
-
-    typeCheck(
-        LINE_JOINER.join(
+        lines(
             "function f(/** string */ y, /** number */ z) {",
-            "  for (var x of new Map([['a', 1], ['c', 1]])) { [y,z] = x; }",
+            "  for (var x of new Map([['a', 1], ['c', 1]])) { [y, z] = x; }",
             "}"));
 
-    // TODO: Need tuple types (heterogeneous arrays) to be able to catch this error.
+    // TODO(sdh): Need tuple types (heterogeneous arrays) to be able to catch this error.
     typeCheck(
-        LINE_JOINER.join(
+        lines(
             "function f(/** string */ y, /** string */ z) {",
-            "  for (var x of new Map([['a', 1], ['c', 1]])) { [y,z] = x; }",
+            "  for (var x of new Map([['a', 1], ['c', 1]])) { [y, z] = x; }",
             "}"));
 
     typeCheck(
-        LINE_JOINER.join(
-            "function f(/** number */ z) {",
+        lines(
+            "function f(/** number */ z, /** !Set<number> */ set) {",
             "  for (var x of new Set([1, 2, 3])) { z = x; }",
             "}"));
 
     typeCheck(
-        LINE_JOINER.join(
+        lines(
+            "function f(/** string */ z) {",
+            "  for (var x of new Set([1, 2, 3])) { z = x; }",
+            "}"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(
+        lines(
             "function* foo() {",
             "  yield 1;",
             "  yield 2;",
@@ -642,18 +642,20 @@ public final class NewTypeInferenceWithTranspilationTest extends NewTypeInferenc
             "}"));
 
     typeCheck(
-        LINE_JOINER.join(
+        lines(
             "function f(/** string */ y) {",
             "  for (var x of { a: 1, b: 2 }) { y = x; }",
             "}"),
-        NewTypeInference.INVALID_ARGUMENT_TYPE);
-    // should be NewTypeInference.FOROF_EXPECTS_ITERABLE);
-
-    typeCheck("for (var x of 123) ;", NewTypeInference.INVALID_ARGUMENT_TYPE);
-    // should be NewTypeInference.FOROF_EXPECTS_ITERABLE);
+        fullyTranspiledOnly(NewTypeInference.INVALID_ARGUMENT_TYPE),
+        nativeEs6Only(NewTypeInference.FOROF_EXPECTS_ITERABLE));
 
     typeCheck(
-        LINE_JOINER.join(
+        "for (var x of 123);",
+        fullyTranspiledOnly(NewTypeInference.INVALID_ARGUMENT_TYPE),
+        nativeEs6Only(NewTypeInference.FOROF_EXPECTS_ITERABLE));
+
+    typeCheck(
+        lines(
             "var iterable = {",
             "    [Symbol.iterator]() {",
             "      return {",
@@ -672,8 +674,14 @@ public final class NewTypeInferenceWithTranspilationTest extends NewTypeInferenc
             "}"));
 
     typeCheck(
-        "function f(/** Array<number>? */ m) { for (var x of m); }",
-        NewTypeInference.INVALID_ARGUMENT_TYPE);
-    // should be NewTypeInference.NULLABLE_DEREFERENCE
+        "function f(/** ?Array<number> */ m) { for (var x of m); }",
+        fullyTranspiledOnly(NewTypeInference.INVALID_ARGUMENT_TYPE),
+        nativeEs6Only(NewTypeInference.NULLABLE_DEREFERENCE));
+
+    typeCheck(
+        LINE_JOINER.join(
+            "function f(/** ?Array<number> */ y, /** ? */ iter) {",
+            "  for (var x of iter) { y = x; }",
+            "}"));
   }
 }

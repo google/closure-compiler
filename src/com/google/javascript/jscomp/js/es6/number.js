@@ -22,3 +22,5 @@
 'require es6/number/isinteger';
 'require es6/number/isnan';
 'require es6/number/issafeinteger';
+'require es6/number/parsefloat';
+'require es6/number/parseint';

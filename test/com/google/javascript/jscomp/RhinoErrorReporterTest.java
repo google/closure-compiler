@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import java.util.Arrays;
 import java.util.List;
 import junit.framework.TestCase;
@@ -154,6 +155,7 @@ public final class RhinoErrorReporterTest extends TestCase {
   private Compiler parseCode(String code) {
     Compiler compiler = new Compiler();
     CompilerOptions options = new CompilerOptions();
+    options.setLanguageIn(LanguageMode.ECMASCRIPT3);
 
     if (!reportEs3Props) {
       options.setWarningLevel(

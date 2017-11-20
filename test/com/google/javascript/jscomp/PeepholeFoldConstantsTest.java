@@ -1361,17 +1361,9 @@ public final class PeepholeFoldConstantsTest extends TypeICompilerTestCase {
     test("function f(/** boolean */ x) { x + 1 + 1 + x; }",
          "function f(/** boolean */ x) { x + 2 + x; }");
 
-    test("function f(/** null */ x) { x + 1 + 1 + x; }",
-         "function f(/** null */ x) { 2; }");
+    testSame("function f(/** null */ x) { var y = true > x; }");
 
-    test("function f(/** undefined */ x) { x + 1 + 1 + x; }",
-         "function f(/** undefined */ x) { NaN; }");
-
-    test("function f(/** null */ x) { var y = true > x; }",
-         "function f(/** null */ x) { var y = true; }");
-
-    test("function f(/** null */ x) { var y = null > x; }",
-         "function f(/** null */ x) { var y = false; }");
+    testSame("function f(/** null */ x) { var y = null > x; }");
 
     testSame("function f(/** string */ x) { x + 1 + 1 + x; }");
 
@@ -1395,11 +1387,11 @@ public final class PeepholeFoldConstantsTest extends TypeICompilerTestCase {
         "function foo(x = (1 !== void 0), y) {return x+y;}",
         "function foo(x = true, y) {return x+y;}");
     test(
-        LINE_JOINER.join(
+        lines(
             "class Foo {",
             "  constructor() {this.x = null <= null;}",
             "}"),
-        LINE_JOINER.join(
+        lines(
             "class Foo {",
             "  constructor() {this.x = true;}",
             "}"));

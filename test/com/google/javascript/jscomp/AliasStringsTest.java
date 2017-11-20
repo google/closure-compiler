@@ -45,6 +45,21 @@ public final class AliasStringsTest extends CompilerTestCase {
     return pass;
   }
 
+  public void testTemplateLiteral() {
+    strings = ImmutableSet.of("aliasable string");
+    // TODO(bradfordcsmith): Maybe implement using aliases in template literals?
+    test(
+        lines(
+            "const A = 'aliasable string';",
+            "const B = 'aliasable string';",
+            "const AB = `${A}aliasable string${B}`;"),
+        lines(
+            "var $$S_aliasable$20string = 'aliasable string';",
+            "const A = $$S_aliasable$20string;",
+            "const B = $$S_aliasable$20string;",
+            "const AB = `${A}aliasable string${B}`"));
+  }
+
   public void testAssignment() {
     strings = ImmutableSet.of("none", "width", "overimaginative");
 
@@ -400,11 +415,11 @@ public final class AliasStringsTest extends CompilerTestCase {
         modules,
         new String[] {
           // m1
-          LINE_JOINER.join(
+          lines(
               "var $$S_ciaociaociaociaociao = 'ciaociaociaociaociao';",
               "function g() { alert($$S_ciaociaociaociaociao); }"),
           // m2
-          LINE_JOINER.join(
+          lines(
               "var $$S_hhhhhhhhhhhhhhhhhhh$3a = 'hhhhhhhhhhhhhhhhhhh:';",
               "function h(a) {"
                   + "  alert($$S_hhhhhhhhhhhhhhhhhhh$3a + a);"
@@ -439,7 +454,7 @@ public final class AliasStringsTest extends CompilerTestCase {
           // m0
           "",
           // m1
-          LINE_JOINER.join(
+          lines(
               "var $$S_ciaociaociaociaociao = 'ciaociaociaociaociao';",
               "function g() { alert($$S_ciaociaociaociaociao); }"),
           // m2

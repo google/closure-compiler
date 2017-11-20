@@ -38,12 +38,20 @@ public final class NameAnonymousFunctionsTest extends CompilerTestCase {
          "var a = function $a$() { return 1; }");
   }
 
+  public void testSimpleLetAssignment() {
+    test("let a = function() { return 1; }", "let a = function $a$() { return 1; }");
+  }
+
+  public void testSimpleConstAssignment() {
+    test("const a = function() { return 1; }", "const a = function $a$() { return 1; }");
+  }
+
   public void testAssignmentToProperty() {
     test("var a = {}; a.b = function() { return 1; }",
          "var a = {}; a.b = function $a$b$() { return 1; }");
   }
 
-  public void testAssignmentToPrototype() {
+  public void testAssignmentToPrototype1() {
     test("function a() {} a.prototype.b = function() { return 1; };",
          "function a() {} " +
          "a.prototype.b = function $a$$b$() { return 1; };");
@@ -104,6 +112,11 @@ public final class NameAnonymousFunctionsTest extends CompilerTestCase {
          "var a = {b: {'c': {}}}; a.b[x()].d = function $a$b$x$d$() {};");
   }
 
+  public void testAssignmentToObjectLiteralOnDeclaration() {
+    testSame("var a = { b: function() {} }");
+    testSame("var a = { b: { c: function() {} } }");
+  }
+
   public void testAssignmentToGetElem() {
     test("function f() {win['x' + this.id] = function(a){};}",
          "function f() {win['x' + this.id] = function $win$x$this$id$(a){};}");
@@ -127,5 +140,61 @@ public final class NameAnonymousFunctionsTest extends CompilerTestCase {
         "" +
         "main();",
         "var main;(function(){main=function $main$(){return 5}})();main()");
+  }
+
+  public void testIgnoreArrowFunctions() {
+    testSame("var a = () => 1");
+    testSame("var a = {b: () => 1};");
+    testSame("function A() {} A.prototype.foo = () => 5");
+  }
+
+  public void testComputedProperty() {
+    test(
+        "function A() {} A.prototype = {['foo']: function() {} };",
+        "function A() {} A.prototype = {['foo']: function $A$$foo$() {} };");
+
+    test(
+        "function A() {} A.prototype = {[getName() + '_1']: function() {} };",
+        "function A() {} A.prototype = {[getName() + '_1']: function $A$$getName$_1$() {} };");
+  }
+
+  public void testGetter() {
+    testSame("function A() {} A.prototype = { get foo() { return 5; } }");
+  }
+
+  public void testSetter() {
+    testSame("function A() {} A.prototype = { set foo(bar) {} }");
+  }
+
+  public void testMethodDefinitionShorthand() {
+    testSame("var obj = { b() {}, c() {} }");
+    testSame("var obj; obj = { b() {}, c() {} }");
+  }
+
+  public void testClasses() {
+    testSame("class A { static foo() {} }");
+    testSame("class A { constructor() {} foo() {} }");
+  }
+
+  public void testExportedFunctions() {
+    // Don't provide a name in the first case, since it would declare the function in the module
+    // scope and potentially be unsafe.
+    testSame("export default function() {}");
+    // In this case, adding a name would be okay since this is a function expression.
+    testSame("export default (function() {})");
+    testSame("export default function foo() {}");
+  }
+
+  public void testDefaultParameters() {
+    test("function f(g = function() {}) {}", "function f(g = function $g$() {}) {}");
+  }
+
+  public void testSimpleGeneratorAssignment() {
+    test("var a = function *() { yield 1; }",
+        "var a = function *$a$() { yield 1; }");
+  }
+
+  public void testDestructuring() {
+    test("var {a = function() {}} = {};", "var {a = function $a$() {}} = {};");
   }
 }

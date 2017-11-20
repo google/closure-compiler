@@ -288,27 +288,14 @@ public final class StripCodeTest extends CompilerTestCase {
   }
 
   public void testClassDefiningCallWithStripType4() {
-    testError("goog.formatter=function(){};" +
-         "goog.formatter.inherits(goog.debug.Formatter)",
-         StripCode.STRIP_TYPE_INHERIT_ERROR);
+    testSame("goog.formatter=function(){}; goog.formatter.inherits(goog.debug.FormatterFoo)");
   }
 
   public void testClassDefiningCallWithStripType5() {
-    testSame("goog.formatter=function(){};" +
-             "goog.formatter.inherits(goog.debug.FormatterFoo)");
+    test("goog.inherits(goog.debug.TextFormatter, goog.debug.Formatter)", "");
   }
 
   public void testClassDefiningCallWithStripType6() {
-    testError("goog.formatter=function(){};" +
-         "goog.formatter.inherits(goog.debug.Formatter.Foo)",
-         StripCode.STRIP_TYPE_INHERIT_ERROR);
-  }
-
-  public void testClassDefiningCallWithStripType7() {
-    test("goog.inherits(goog.debug.TextFormatter,goog.debug.Formatter)", "");
-  }
-
-  public void testClassDefiningCallWithStripType8() {
     // listed types should be removed.
     test("goog.debug.DebugWindow = function(){}", "");
     test("goog.inherits(goog.debug.DebugWindow,Base)", "");

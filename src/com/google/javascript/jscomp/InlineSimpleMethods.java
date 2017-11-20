@@ -13,8 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.google.javascript.jscomp;
+
+import static com.google.common.base.Preconditions.checkState;
 
 import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.rhino.IR;
@@ -62,6 +63,12 @@ class InlineSimpleMethods extends MethodCompilerPass {
     super(compiler);
   }
 
+  @Override
+  public void process(Node externs, Node root) {
+    checkState(compiler.getLifeCycleStage().isNormalized(), compiler.getLifeCycleStage());
+    super.process(externs, root);
+  }
+
   /**
    * For each method call, see if it is a candidate for inlining.
    * TODO(kushal): Cache the results of the checks
@@ -70,8 +77,7 @@ class InlineSimpleMethods extends MethodCompilerPass {
 
     @Override
     void visit(NodeTraversal t, Node callNode, Node parent, String callName) {
-      if (externMethods.contains(callName) ||
-          nonMethodProperties.contains(callName)) {
+      if (externMethods.contains(callName) || nonMethodProperties.contains(callName)) {
         return;
       }
 
@@ -96,17 +102,15 @@ class InlineSimpleMethods extends MethodCompilerPass {
                 logger.fine("Inlining property accessor: " + callName);
               }
               inlinePropertyReturn(parent, callNode, returned);
-            } else if (NodeUtil.isLiteralValue(returned, false) &&
-              !NodeUtil.mayHaveSideEffects(
-                  callNode.getFirstChild(), compiler)) {
+            } else if (NodeUtil.isLiteralValue(returned, false)
+                && !NodeUtil.mayHaveSideEffects(callNode.getFirstChild(), compiler)) {
               if (logger.isLoggable(Level.FINE)) {
                 logger.fine("Inlining constant accessor: " + callName);
               }
               inlineConstReturn(parent, callNode, returned);
             }
-          } else if (isEmptyMethod(firstDefinition) &&
-              !NodeUtil.mayHaveSideEffects(
-                  callNode.getFirstChild(), compiler)) {
+          } else if (isEmptyMethod(firstDefinition)
+              && !NodeUtil.mayHaveSideEffects(callNode.getFirstChild(), compiler)) {
             if (logger.isLoggable(Level.FINE)) {
               logger.fine("Inlining empty method: " + callName);
             }
@@ -137,8 +141,7 @@ class InlineSimpleMethods extends MethodCompilerPass {
     }
 
     Node leftChild = expectedGetprop.getFirstChild();
-    if (!leftChild.isThis() &&
-        !isPropertyTree(leftChild)) {
+    if (!leftChild.isThis() && !isPropertyTree(leftChild)) {
       return false;
     }
 
@@ -164,7 +167,7 @@ class InlineSimpleMethods extends MethodCompilerPass {
    * by the method, given a FUNCTION node.
    */
   private static Node returnedExpression(Node fn) {
-    Node expectedBlock = getMethodBlock(fn);
+    Node expectedBlock = NodeUtil.getFunctionBody(fn);
     if (!expectedBlock.hasOneChild()) {
       return null;
     }
@@ -178,7 +181,7 @@ class InlineSimpleMethods extends MethodCompilerPass {
       return null;
     }
 
-    return expectedReturn.getLastChild();
+    return expectedReturn.getOnlyChild();
   }
 
 
@@ -188,24 +191,7 @@ class InlineSimpleMethods extends MethodCompilerPass {
    * Must be private, or moved to NodeUtil.
    */
   private static boolean isEmptyMethod(Node fn) {
-    Node expectedBlock = getMethodBlock(fn);
-    return expectedBlock == null ?
-        false : NodeUtil.isEmptyBlock(expectedBlock);
-  }
-
-  /**
-   * Return a BLOCK node if the given FUNCTION node is a valid method
-   * definition, null otherwise.
-   *
-   * Must be private, or moved to NodeUtil.
-   */
-  private static Node getMethodBlock(Node fn) {
-    if (fn.getChildCount() != 3) {
-      return null;
-    }
-
-    Node expectedBlock = fn.getLastChild();
-    return expectedBlock.isNormalBlock() ? expectedBlock : null;
+    return NodeUtil.isEmptyBlock(NodeUtil.getFunctionBody(fn));
   }
 
   /** Given a set of method definitions, verify they are the same. */
@@ -231,8 +217,7 @@ class InlineSimpleMethods extends MethodCompilerPass {
    *       obj
    *       string
    */
-  private void inlinePropertyReturn(Node parent, Node call,
-      Node returnedValue) {
+  private void inlinePropertyReturn(Node parent, Node call, Node returnedValue) {
     Node getProp = returnedValue.cloneTree();
     replaceThis(getProp, call.getFirstChild().removeFirstChild());
     parent.replaceChild(call, getProp);
@@ -244,8 +229,7 @@ class InlineSimpleMethods extends MethodCompilerPass {
    * in returnedValue. Should be called only if the object reference has
    * no side effects.
    */
-  private void inlineConstReturn(Node parent, Node call,
-      Node returnedValue) {
+  private void inlineConstReturn(Node parent, Node call, Node returnedValue) {
     Node retValue = returnedValue.cloneTree();
     parent.replaceChild(call, retValue);
     compiler.reportChangeToEnclosingScope(retValue);

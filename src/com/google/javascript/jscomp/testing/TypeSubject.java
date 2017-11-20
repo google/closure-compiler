@@ -21,9 +21,8 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
-import com.google.common.truth.FailureStrategy;
+import com.google.common.truth.FailureMetadata;
 import com.google.common.truth.Subject;
-import com.google.common.truth.SubjectFactory;
 import com.google.javascript.rhino.ObjectTypeI;
 import com.google.javascript.rhino.TypeI;
 import javax.annotation.CheckReturnValue;
@@ -43,17 +42,12 @@ public final class TypeSubject extends Subject<TypeSubject, TypeI> {
     return assertAbout(types()).that(type);
   }
 
-  public static SubjectFactory<TypeSubject, TypeI> types() {
-    return new SubjectFactory<TypeSubject, TypeI>() {
-      @Override
-      public TypeSubject getSubject(FailureStrategy failureStrategy, TypeI actual) {
-        return new TypeSubject(failureStrategy, actual);
-      }
-    };
+  public static Subject.Factory<TypeSubject, TypeI> types() {
+    return TypeSubject::new;
   }
 
-  public TypeSubject(FailureStrategy fs, TypeI type) {
-    super(fs, type);
+  public TypeSubject(FailureMetadata failureMetadata, TypeI type) {
+    super(failureMetadata, type);
   }
 
   public void isNumber() {

@@ -23,7 +23,6 @@ import static com.google.common.base.Preconditions.checkState;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.LinkedHashMultimap;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
@@ -34,6 +33,7 @@ import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.jscomp.NodeTraversal.ChangeScopeRootCallback;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -114,7 +114,7 @@ public class NameBasedDefinitionProvider implements DefinitionProvider, Compiler
    * same qualified name also exists and has type annotations.
    *
    * <p>TODO: This hack is mostly for the purpose of preventing untyped stubs from showing up in the
-   * {@link PureFunctionIdentifier} and causing unkown side effects from propagating everywhere.
+   * {@link PureFunctionIdentifier} and causing unknown side effects from propagating everywhere.
    * This should probably be solved in one of the following ways instead:
    *
    * <p>a) Have a pass earlier in the compiler that goes in and removes these stub definitions.
@@ -127,7 +127,7 @@ public class NameBasedDefinitionProvider implements DefinitionProvider, Compiler
    */
   private void dropUntypedExterns() {
     for (String name : definitionsByName.keySet()) {
-      for (Definition definition : Lists.newArrayList(definitionsByName.get(name))) {
+      for (Definition definition : new ArrayList<>(definitionsByName.get(name))) {
         if (!(definition instanceof ExternalNameOnlyDefinition)) {
           continue;
         }

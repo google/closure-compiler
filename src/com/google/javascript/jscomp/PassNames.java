@@ -65,6 +65,7 @@ public final class PassNames {
   public static final String INFER_TYPES = "inferTypes";
   public static final String INLINE_FUNCTIONS = "inlineFunctions";
   public static final String INLINE_PROPERTIES = "inlineProperties";
+  public static final String INLINE_TYPE_ALIASES = "inlineTypeAliases";
   public static final String INLINE_VARIABLES = "inlineVariables";
   public static final String LINT_CHECKS = "lintChecks";
   public static final String MARK_NO_SIDE_EFFECT_CALLS = "markNoSideEffectCalls";
@@ -76,6 +77,8 @@ public final class PassNames {
   public static final String OPTIMIZE_CALLS = "optimizeCalls";
   public static final String PARSE_INPUTS = "parseInputs";
   public static final String PEEPHOLE_OPTIMIZATIONS = "peepholeOptimizations";
+  public static final String REWRITE_COMMON_JS_MODULES = "rewriteCommonJsModules";
+  public static final String REWRITE_SCRIPTS_TO_ES6_MODULES = "rewriteScriptsToEs6Modules";
   public static final String REMOVE_SUPER_METHODS = "removeSuperMethods";
   public static final String REMOVE_UNREACHABLE_CODE = "removeUnreachableCode";
   public static final String REMOVE_UNUSED_CLASS_PROPERTIES = "removeUnusedClassProperties";

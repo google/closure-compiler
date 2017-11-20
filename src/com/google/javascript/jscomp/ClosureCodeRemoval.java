@@ -233,7 +233,7 @@ final class ClosureCodeRemoval implements CompilerPass {
           parent.replaceChild(call, NodeUtil.newUndefinedNode(call));
         } else {
           Node replacement = firstArg.detach();
-          replacement.setJSType(call.getJSType());
+          replacement.setTypeI(call.getTypeI());
           parent.replaceChild(call, replacement);
         }
         NodeUtil.markFunctionsDeleted(call, compiler);

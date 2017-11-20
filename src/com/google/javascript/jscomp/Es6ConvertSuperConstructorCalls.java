@@ -22,6 +22,8 @@ import static com.google.javascript.jscomp.Es6ToEs3Util.CANNOT_CONVERT;
 
 import com.google.javascript.jscomp.GlobalNamespace.Name;
 import com.google.javascript.jscomp.GlobalNamespace.Ref;
+import com.google.javascript.jscomp.parsing.parser.FeatureSet;
+import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayDeque;
@@ -49,6 +51,8 @@ implements NodeTraversal.Callback, HotSwapCompilerPass {
   private final AbstractCompiler compiler;
   private final Deque<ConstructorData> constructorDataStack;
   private GlobalNamespace globalNamespace;
+  private static final FeatureSet transpiledFeatures =
+      FeatureSet.BARE_MINIMUM.with(Feature.CLASSES, Feature.SUPER);
 
   public Es6ConvertSuperConstructorCalls(AbstractCompiler compiler) {
     this.compiler = compiler;
@@ -486,12 +490,12 @@ implements NodeTraversal.Callback, HotSwapCompilerPass {
   public void process(Node externs, Node root) {
     globalNamespace = new GlobalNamespace(compiler, externs, root);
     // Might need to synthesize constructors for ambient classes in .d.ts externs
-    TranspilationPasses.processTranspile(compiler, externs, this);
-    TranspilationPasses.processTranspile(compiler, root, this);
+    TranspilationPasses.processTranspile(compiler, externs, transpiledFeatures, this);
+    TranspilationPasses.processTranspile(compiler, root, transpiledFeatures, this);
   }
 
   @Override
   public void hotSwapScript(Node scriptRoot, Node originalRoot) {
-    TranspilationPasses.hotSwapTranspile(compiler, scriptRoot, this);
+    TranspilationPasses.hotSwapTranspile(compiler, scriptRoot, transpiledFeatures, this);
   }
 }

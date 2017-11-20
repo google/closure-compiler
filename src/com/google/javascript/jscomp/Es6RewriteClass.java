@@ -23,6 +23,8 @@ import static com.google.javascript.jscomp.Es6ToEs3Util.CANNOT_CONVERT_YET;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterables;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import com.google.javascript.jscomp.parsing.parser.FeatureSet;
+import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfo.Visibility;
@@ -40,6 +42,7 @@ import javax.annotation.Nullable;
  */
 public final class Es6RewriteClass implements NodeTraversal.Callback, HotSwapCompilerPass {
   private final AbstractCompiler compiler;
+  private static final FeatureSet features = FeatureSet.BARE_MINIMUM.with(Feature.CLASSES);
 
   // Whether to add $jscomp.inherits(Parent, Child) for each subclass.
   private final boolean shouldAddInheritsPolyfill;
@@ -70,13 +73,13 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, HotSwapCom
 
   @Override
   public void process(Node externs, Node root) {
-    TranspilationPasses.processTranspile(compiler, externs, this);
-    TranspilationPasses.processTranspile(compiler, root, this);
+    TranspilationPasses.processTranspile(compiler, externs, features, this);
+    TranspilationPasses.processTranspile(compiler, root, features, this);
   }
 
   @Override
   public void hotSwapScript(Node scriptRoot, Node originalRoot) {
-    TranspilationPasses.hotSwapTranspile(compiler, scriptRoot, this);
+    TranspilationPasses.hotSwapTranspile(compiler, scriptRoot, features, this);
   }
 
   @Override
@@ -216,7 +219,7 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, HotSwapCom
       } else {
         if (shouldAddInheritsPolyfill && !classNode.isFromExterns()) {
           Node classNameNode = NodeUtil.newQName(compiler, metadata.fullClassName)
-             .useSourceInfoIfMissingFrom(metadata.classNameNode);
+              .useSourceInfoIfMissingFrom(metadata.classNameNode);
           Node superClassNameNode = NodeUtil.newQName(compiler, superClassString)
               .useSourceInfoIfMissingFrom(metadata.superClassNameNode);
 
@@ -322,6 +325,7 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, HotSwapCom
   /**
    * @param node A getter or setter node.
    */
+  @Nullable
   private JSTypeExpression getTypeFromGetterOrSetter(Node node) {
     JSDocInfo info = node.getJSDocInfo();
     if (info != null) {
@@ -340,7 +344,7 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, HotSwapCom
       }
     }
 
-    return new JSTypeExpression(new Node(Token.QMARK), node.getSourceFileName());
+    return null;
   }
 
   /**
@@ -397,7 +401,7 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, HotSwapCom
       return;
     }
 
-    JSTypeExpression typeExpr = getTypeFromGetterOrSetter(member).copy();
+    JSTypeExpression typeExpr = getTypeFromGetterOrSetter(member);
     addToDefinePropertiesObject(metadata, member);
 
     Map<String, JSDocInfo> membersToDeclare;
@@ -412,23 +416,30 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, HotSwapCom
               ? metadata.classMembersToDeclare
               : metadata.prototypeMembersToDeclare;
       memberName = member.getString();
-      }
+    }
     JSDocInfo existingJSDoc = membersToDeclare.get(memberName);
     JSTypeExpression existingType = existingJSDoc == null ? null : existingJSDoc.getType();
-    if (existingType != null && !existingType.equals(typeExpr)) {
+    if (existingType != null && typeExpr != null && !existingType.equals(typeExpr)) {
       compiler.report(JSError.make(member, CONFLICTING_GETTER_SETTER_TYPE, memberName));
     } else {
       JSDocInfoBuilder jsDoc = new JSDocInfoBuilder(false);
-      jsDoc.recordType(typeExpr);
       if (member.getJSDocInfo() != null && member.getJSDocInfo().isExport()) {
         jsDoc.recordExport();
         jsDoc.recordVisibility(Visibility.PUBLIC);
+      }
+      if (member.getJSDocInfo() != null && member.getJSDocInfo().isOverride()) {
+        jsDoc.recordOverride();
+      } else if (typeExpr == null) {
+        typeExpr = new JSTypeExpression(new Node(Token.QMARK), member.getSourceFileName());
+      }
+      if (typeExpr != null) {
+        jsDoc.recordType(typeExpr.copy());
       }
       if (member.isStaticMember() && !member.isComputedProp()) {
         jsDoc.recordNoCollapse();
       }
       membersToDeclare.put(memberName, jsDoc.build());
-      }
+    }
   }
 
   /**
@@ -524,7 +535,7 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, HotSwapCom
   }
 
   private class CheckClassAssignments extends NodeTraversal.AbstractPostOrderCallback {
-    private Node className;
+    private final Node className;
 
     public CheckClassAssignments(Node className) {
       this.className = className;

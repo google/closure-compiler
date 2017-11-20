@@ -195,18 +195,9 @@ class IRFactory {
   static final String INVALID_OCTAL_DIGIT =
       "Invalid octal digit in octal literal.";
 
-  static final String STRING_CONTINUATION_ERROR =
-      "String continuations are not supported in this language mode.";
-
   static final String STRING_CONTINUATION_WARNING =
       "String continuations are not recommended. See"
       + " https://google.github.io/styleguide/javascriptguide.xml?showone=Multiline_string_literals#Multiline_string_literals";
-
-  static final String BINARY_NUMBER_LITERAL_WARNING =
-      "Binary integer literals are not supported in this language mode.";
-
-  static final String OCTAL_NUMBER_LITERAL_WARNING =
-      "Octal integer literals are not supported in this language mode.";
 
   static final String OCTAL_STRING_LITERAL_WARNING =
       "Octal literals in strings are not supported in this language mode.";
@@ -222,11 +213,11 @@ class IRFactory {
 
   static final String UNEXPECTED_CONTINUE = "continue must be inside loop";
 
-  static final String UNEXPECTED_LABLED_CONTINUE =
+  static final String UNEXPECTED_LABELLED_CONTINUE =
       "continue can only use labeles of iteration statements";
 
   static final String UNEXPECTED_RETURN = "return must be inside function";
-
+  static final String UNEXPECTED_NEW_DOT_TARGET = "new.target must be inside a function";
   static final String UNDEFINED_LABEL = "undefined label \"%s\"";
 
   private final String sourceString;
@@ -433,6 +424,7 @@ class IRFactory {
     validateParameters(n);
     validateBreakContinue(n);
     validateReturn(n);
+    validateNewDotTarget(n);
     validateLabel(n);
   }
 
@@ -446,6 +438,18 @@ class IRFactory {
       }
       errorReporter.error(UNEXPECTED_RETURN,
           sourceName, n.getLineno(), n.getCharno());
+    }
+  }
+
+  private void validateNewDotTarget(Node n) {
+    if (n.getToken() == Token.NEW_TARGET) {
+      Node parent = n;
+      while ((parent = parent.getParent()) != null) {
+        if (parent.isFunction()) {
+          return;
+        }
+      }
+      errorReporter.error(UNEXPECTED_NEW_DOT_TARGET, sourceName, n.getLineno(), n.getCharno());
     }
   }
 
@@ -469,7 +473,7 @@ class IRFactory {
           if (n.isContinue() && !isContinueTarget(parent.getLastChild())) {
             // report invalid continue target
             errorReporter.error(
-                UNEXPECTED_LABLED_CONTINUE,
+                UNEXPECTED_LABELLED_CONTINUE,
                 sourceName,
                 n.getLineno(), n.getCharno());
           }
@@ -831,12 +835,19 @@ class IRFactory {
   }
 
   static int lineno(ParseTree node) {
-    // location lines start at zero, our AST starts at 1.
     return lineno(node.location.start);
   }
 
   static int charno(ParseTree node) {
     return charno(node.location.start);
+  }
+
+  static int lineno(com.google.javascript.jscomp.parsing.parser.Token token) {
+    return lineno(token.location.start);
+  }
+
+  static int charno(com.google.javascript.jscomp.parsing.parser.Token token) {
+    return charno(token.location.start);
   }
 
   static int lineno(SourcePosition location) {
@@ -846,6 +857,33 @@ class IRFactory {
 
   static int charno(SourcePosition location) {
     return location.column;
+  }
+
+  void maybeWarnForFeature(ParseTree node, Feature feature) {
+    features = features.with(feature);
+    if (!isSupportedForInputLanguageMode(feature)) {
+      errorReporter.warning(
+          "this language feature is only supported for "
+              + LanguageMode.minimumRequiredFor(feature)
+              + " mode or better: "
+              + feature,
+          sourceName,
+          lineno(node), charno(node));
+    }
+  }
+
+  void maybeWarnForFeature(
+      com.google.javascript.jscomp.parsing.parser.Token token, Feature feature) {
+    features = features.with(feature);
+    if (!isSupportedForInputLanguageMode(feature)) {
+      errorReporter.warning(
+          "this language feature is only supported for "
+              + LanguageMode.minimumRequiredFor(feature)
+              + " mode or better: "
+              + feature,
+          sourceName,
+          lineno(token), charno(token));
+    }
   }
 
   void setSourceInfo(Node node, Node ref) {
@@ -2575,20 +2613,6 @@ class IRFactory {
       }
     }
 
-    void maybeWarnForFeature(ParseTree node, Feature feature) {
-      features = features.with(feature);
-      if (!isSupportedForInputLanguageMode(feature)) {
-
-        errorReporter.warning(
-            "this language feature is only supported for "
-            + LanguageMode.minimumRequiredFor(feature)
-            + " mode or better: "
-            + feature,
-            sourceName,
-            lineno(node), charno(node));
-      }
-    }
-
     void maybeProcessAccessibilityModifier(ParseTree parseTree, Node n, @Nullable TokenType type) {
       if (type != null) {
         Visibility access;
@@ -2861,10 +2885,68 @@ class IRFactory {
 
   String normalizeRegex(LiteralToken token) {
     String value = token.value;
-    int lastSlash = value.lastIndexOf('/');
-    return value.substring(1, lastSlash);
-  }
+    final int lastSlash = value.lastIndexOf('/');
+    int cur = value.indexOf('\\');
+    if (cur == -1) {
+      return value.substring(1, lastSlash);
+    }
 
+    StringBuilder result = new StringBuilder();
+    int start = 1;
+    while (cur != -1) {
+      result.append(value, start, cur);
+
+      cur++; // skip the escape char.
+      char c = value.charAt(cur);
+      switch (c) {
+        // Characters for which the backslash is semantically important.
+        case '^':
+        case '$':
+        case '\\':
+        case '/':
+        case '.':
+        case '*':
+        case '+':
+        case '?':
+        case '(':
+        case ')':
+        case '[':
+        case ']':
+        case '{':
+        case '}':
+        case '|':
+        case '-':
+        case 'b':
+        case 'B':
+        case 'c':
+        case 'd':
+        case 'D':
+        case 'f':
+        case 'n':
+        case 'r':
+        case 's':
+        case 'S':
+        case 't':
+        case 'u':
+        case 'v':
+        case 'w':
+        case 'W':
+        case 'x':
+        case '0': case '1': case '2': case '3': case '4':
+        case '5': case '6': case '7': case '8': case '9':
+          result.append('\\');
+          // fallthrough
+        default:
+          // For all other characters, the backslash has no effect, so just append the next char.
+          result.append(c);
+      }
+
+      start = cur + 1;
+      cur = value.indexOf('\\', start);
+    }
+    result.append(value, start, lastSlash);
+    return result.toString();
+  }
 
   String normalizeString(LiteralToken token, boolean templateLiteral) {
     String value = token.value;
@@ -2880,17 +2962,11 @@ class IRFactory {
     }
     StringBuilder result = new StringBuilder();
     while (cur != -1) {
-      if (cur - start > 0) {
-        result.append(value, start, cur);
-      }
+      result.append(value, start, cur);
+
       cur += 1; // skip the escape char.
       char c = value.charAt(cur);
       switch (c) {
-        case '\'':
-        case '"':
-        case '\\':
-          result.append(c);
-          break;
         case 'b':
           result.append('\b');
           break;
@@ -2910,17 +2986,13 @@ class IRFactory {
           result.append('\u000B');
           break;
         case '\n':
-          features = features.with(Feature.STRING_CONTINUATION);
-          if (isEs5OrBetterMode()) {
-            errorReporter.warning(STRING_CONTINUATION_WARNING,
-                sourceName,
-                lineno(token.location.start), charno(token.location.start));
-          } else {
-            errorReporter.error(STRING_CONTINUATION_ERROR,
-                sourceName,
-                lineno(token.location.start), charno(token.location.start));
-          }
           // line continuation, skip the line break
+          maybeWarnForFeature(token, Feature.STRING_CONTINUATION);
+          errorReporter.warning(
+              STRING_CONTINUATION_WARNING,
+              sourceName,
+              lineno(token.location.start),
+              charno(token.location.start));
           break;
         case '0':
           if (cur + 1 >= value.length()) {
@@ -2981,9 +3053,10 @@ class IRFactory {
           result.append(Character.toChars(Integer.parseInt(hexDigits, 0x10)));
           cur = escapeEnd - 1;
           break;
+        case '\'':
+        case '"':
+        case '\\':
         default:
-          // TODO(tbreisacher): Add a warning because the user probably
-          // intended to type an escape sequence.
           result.append(c);
           break;
       }
@@ -3026,12 +3099,7 @@ class IRFactory {
           return Double.valueOf(value);
         case 'b':
         case 'B': {
-          features = features.with(Feature.BINARY_LITERALS);
-          if (!isSupportedForInputLanguageMode(Feature.BINARY_LITERALS)) {
-            errorReporter.warning(BINARY_NUMBER_LITERAL_WARNING,
-                sourceName,
-                lineno(token.location.start), charno(token.location.start));
-          }
+          maybeWarnForFeature(token, Feature.BINARY_LITERALS);
           double v = 0;
           int c = 1;
           while (++c < length) {
@@ -3041,12 +3109,7 @@ class IRFactory {
         }
         case 'o':
         case 'O': {
-          features = features.with(Feature.OCTAL_LITERALS);
-          if (!isSupportedForInputLanguageMode(Feature.OCTAL_LITERALS)) {
-            errorReporter.warning(OCTAL_NUMBER_LITERAL_WARNING,
-                sourceName,
-                lineno(token.location.start), charno(token.location.start));
-          }
+          maybeWarnForFeature(token, Feature.OCTAL_LITERALS);
           double v = 0;
           int c = 1;
           while (++c < length) {
@@ -3072,13 +3135,8 @@ class IRFactory {
             if (isOctalDigit(digit)) {
               v = (v * 8) + octaldigit(digit);
             } else {
-              if (inStrictContext()) {
-                errorReporter.error(INVALID_ES5_STRICT_OCTAL, sourceName,
-                    lineno(location.start), charno(location.start));
-              } else {
-                errorReporter.error(INVALID_OCTAL_DIGIT, sourceName,
-                    lineno(location.start), charno(location.start));
-              }
+              errorReporter.error(INVALID_OCTAL_DIGIT, sourceName,
+                  lineno(location.start), charno(location.start));
               return 0;
             }
           }

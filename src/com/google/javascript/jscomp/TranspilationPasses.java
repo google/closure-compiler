@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES8;
+import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES8_MODULES;
 
 import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.jscomp.PassFactory.HotSwapPassFactory;
@@ -50,6 +51,7 @@ public class TranspilationPasses {
    * transpile them, even if the output language is also ES6.
    */
   public static void addEs6EarlyPasses(List<PassFactory> passes) {
+    passes.add(es6NormalizeShorthandProperties);
     passes.add(es6SuperCheck);
     passes.add(es6ConvertSuper);
     passes.add(es6RenameVariablesInParamLists);
@@ -108,14 +110,14 @@ public class TranspilationPasses {
 
         @Override
         protected FeatureSet featureSet() {
-          return FeatureSet.ES8_MODULES;
+          return ES8_MODULES;
         }
       };
 
   private static final PassFactory rewriteAsyncFunctions =
-      new PassFactory("rewriteAsyncFunctions", true) {
+      new HotSwapPassFactory("rewriteAsyncFunctions") {
         @Override
-        protected CompilerPass create(final AbstractCompiler compiler) {
+        protected HotSwapCompilerPass create(final AbstractCompiler compiler) {
           return new RewriteAsyncFunctions(compiler);
         }
 
@@ -126,10 +128,23 @@ public class TranspilationPasses {
       };
 
   private static final PassFactory convertEs7ToEs6 =
-      new PassFactory("convertEs7ToEs6", true) {
+      new HotSwapPassFactory("convertEs7ToEs6") {
         @Override
-        protected CompilerPass create(final AbstractCompiler compiler) {
+        protected HotSwapCompilerPass create(final AbstractCompiler compiler) {
           return new Es7ToEs6Converter(compiler);
+        }
+
+        @Override
+        protected FeatureSet featureSet() {
+          return ES8;
+        }
+      };
+
+  private static final HotSwapPassFactory es6NormalizeShorthandProperties =
+      new HotSwapPassFactory("es6NormalizeShorthandProperties") {
+        @Override
+        protected HotSwapCompilerPass create(AbstractCompiler compiler) {
+          return new Es6NormalizeShorthandProperties(compiler);
         }
 
         @Override
@@ -225,7 +240,7 @@ public class TranspilationPasses {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES8;
+          return ES8_MODULES;
         }
       };
 
@@ -333,7 +348,7 @@ public class TranspilationPasses {
 
   /**
    * @param script The SCRIPT node representing a JS file
-   * @return If the file has any features which are part of ES6 but not part of ES5.
+   * @return If the file has any features which are part of ES6 or higher but not part of ES5.
    */
   static boolean isScriptEs6OrHigher(Node script) {
     FeatureSet features = (FeatureSet) script.getProp(Node.FEATURE_SET);
@@ -341,14 +356,17 @@ public class TranspilationPasses {
   }
 
   /**
-   * Process ES6 checks if the input language is set to at least ES6 and a JS file has ES6 features.
+   * Process checks if the input language contains the provided features, on any JS file that has
+   * ES6 features.
    *
    * @param compiler An AbstractCompiler
    * @param combinedRoot The combined root for all JS files.
+   * @param featureSet The features which this check targets.
    * @param callbacks The callbacks that should be invoked if a file has ES6 features.
    */
-  static void processCheck(AbstractCompiler compiler, Node combinedRoot, Callback... callbacks) {
-    if (compiler.getOptions().getLanguageIn().toFeatureSet().contains(FeatureSet.ES6)) {
+  static void processCheck(
+      AbstractCompiler compiler, Node combinedRoot, FeatureSet featureSet, Callback... callbacks) {
+    if (compiler.getOptions().getLanguageIn().toFeatureSet().contains(featureSet)) {
       for (Node singleRoot : combinedRoot.children()) {
         if (isScriptEs6OrHigher(singleRoot)) {
           for (Callback callback : callbacks) {
@@ -360,15 +378,17 @@ public class TranspilationPasses {
   }
 
   /**
-   * Hot-swap ES6 checks if the input language is set to at least ES6 and a JS file has ES6
-   * features.
+   * Hot-swap ES6+ checks if the input language contains the provided features, on any JS file that
+   * has ES6 features.
    *
    * @param compiler An AbstractCompiler
    * @param scriptRoot The SCRIPT root for the JS file.
+   * @param featureSet The features which this check targets.
    * @param callbacks The callbacks that should be invoked if the file has ES6 features.
    */
-  static void hotSwapCheck(AbstractCompiler compiler, Node scriptRoot, Callback... callbacks) {
-    if (compiler.getOptions().getLanguageIn().toFeatureSet().contains(FeatureSet.ES6)) {
+  static void hotSwapCheck(
+      AbstractCompiler compiler, Node scriptRoot, FeatureSet featureSet, Callback... callbacks) {
+    if (compiler.getOptions().getLanguageIn().toFeatureSet().contains(featureSet)) {
       if (isScriptEs6OrHigher(scriptRoot)) {
         for (Callback callback : callbacks) {
           NodeTraversal.traverseEs6(compiler, scriptRoot, callback);
@@ -378,17 +398,22 @@ public class TranspilationPasses {
   }
 
   /**
-   * Process ES6 transpilations if the input language is set to at least ES6 and the JS file has ES6
-   * features.
+   * Process transpilations if the input language needs transpilation from certain features, on any
+   * JS file that has ES6 features.
    *
    * @param compiler An AbstractCompiler
    * @param combinedRoot The combined root for all JS files.
+   * @param featureSet The features which this pass helps transpile.
    * @param callbacks The callbacks that should be invoked if a file has ES6 features.
    */
   static void processTranspile(
-      AbstractCompiler compiler, Node combinedRoot, Callback... callbacks) {
-    if (compiler.getOptions().needsTranspilationFrom(FeatureSet.ES6)) {
+      AbstractCompiler compiler, Node combinedRoot, FeatureSet featureSet, Callback... callbacks) {
+    if (compiler.getOptions().needsTranspilationFrom(featureSet)) {
       for (Node singleRoot : combinedRoot.children()) {
+        // TODO(lharker): Only run callbacks if the script has features from the given featureSet,
+        // instead of whenever the script has any ES6+ features. We can't do this until ensuring
+        // that all passes correctly update the script's associated FeatureSet.
+        // The same applies in hotSwapTranspile, hotSwapCheck, and processCheck.
         if (isScriptEs6OrHigher(singleRoot)) {
           for (Callback callback : callbacks) {
             singleRoot.putBooleanProp(Node.TRANSPILED, true);
@@ -400,15 +425,17 @@ public class TranspilationPasses {
   }
 
   /**
-   * Hot-swap ES6 transpilations if the input language is set to at least ES6 and the JS file has
-   * ES6 features.
+   * Hot-swap ES6+ transpilations if the input language needs transpilation from certain features,
+   * on any JS file that has ES6 features.
    *
    * @param compiler An AbstractCompiler
    * @param scriptRoot The SCRIPT root for the JS file.
+   * @param featureSet The features which this pass helps transpile.
    * @param callbacks The callbacks that should be invoked if the file has ES6 features.
    */
-  static void hotSwapTranspile(AbstractCompiler compiler, Node scriptRoot, Callback... callbacks) {
-    if (compiler.getOptions().needsTranspilationFrom(FeatureSet.ES6)) {
+  static void hotSwapTranspile(
+      AbstractCompiler compiler, Node scriptRoot, FeatureSet featureSet, Callback... callbacks) {
+    if (compiler.getOptions().needsTranspilationFrom(featureSet)) {
       if (isScriptEs6OrHigher(scriptRoot)) {
         for (Callback callback : callbacks) {
           scriptRoot.putBooleanProp(Node.TRANSPILED, true);

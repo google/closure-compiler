@@ -46,3 +46,17 @@ function negativeTest() {
   assert.isDefined(someVar);
   assert.isNotOk('a string');
 }
+
+/** Tests method (not property) expectations */
+function methodTests() {
+  assert.equal(1 + 1, 2);
+  assert.notEqual(1 + 1, 3);
+  assert.notEqual(1 + 1, 3);
+  assert.deepEqual([1, 2], [1, 2]);
+  assert.notDeepEqual([1, 2], [2, 1]);
+  assert.instanceOf([], Array);
+  assert.instanceOf([], Array);
+  assert.oneOf(1, [2, 1]);
+  assert.include([1, 2], 1);
+  assert.lengthOf([1, 2], 2);
+}

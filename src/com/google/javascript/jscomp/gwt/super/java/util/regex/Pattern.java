@@ -31,7 +31,7 @@ public final class Pattern {
 
   public static Pattern compile(String string) {
     Pattern pattern = new Pattern();
-    pattern.regExp = new RegExp(string);
+     pattern.regExp = new RegExp(string);
     return pattern;
   }
 
@@ -44,4 +44,3 @@ public final class Pattern {
     return new Matcher(regExp, string);
   }
 }
-

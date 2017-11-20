@@ -42,7 +42,7 @@ public final class CheckInterfacesTest extends CompilerTestCase {
         CheckInterfaces.INTERFACE_SHOULD_NOT_TAKE_ARGS);
 
     testSame(
-        LINE_JOINER.join(
+        lines(
             "var ns = {};\n", "/** @interface */\n", "ns.SomeInterface = function(x) {};"),
         CheckInterfaces.INTERFACE_SHOULD_NOT_TAKE_ARGS);
   }
@@ -58,7 +58,7 @@ public final class CheckInterfacesTest extends CompilerTestCase {
         CheckInterfaces.INTERFACE_FUNCTION_NOT_EMPTY);
 
     testSame(
-        LINE_JOINER.join(
+        lines(
             "var ns = {};\n",
             "/** @interface */\n",
             "ns.SomeInterface = function() { this.foo; };"),
@@ -73,7 +73,7 @@ public final class CheckInterfacesTest extends CompilerTestCase {
 
   public void testRecordWithFieldDeclarations() {
     testSame(
-        LINE_JOINER.join(
+        lines(
             "/** @record */",
             "function R() {",
             "  /** @type {string} */",
@@ -86,7 +86,7 @@ public final class CheckInterfacesTest extends CompilerTestCase {
 
   public void testRecordWithOtherContents() {
     testSame(
-        LINE_JOINER.join(
+        lines(
             "/** @record */",
             "function R() {",
             "  /** @type {string} */",

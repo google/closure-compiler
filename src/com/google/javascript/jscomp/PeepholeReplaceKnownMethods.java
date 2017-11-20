@@ -18,12 +18,12 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Strings.isNullOrEmpty;
 
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 
@@ -106,6 +106,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
             return tryFoldStringToLowerCase(subtree, stringNode);
           case "toUpperCase":
             return tryFoldStringToUpperCase(subtree, stringNode);
+          default: // fall out
         }
       } else {
         if (NodeUtil.isImmutableValue(firstArg)) {
@@ -122,6 +123,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
               return tryFoldStringCharAt(subtree, stringNode, firstArg);
             case "charCodeAt":
               return tryFoldStringCharCodeAt(subtree, stringNode, firstArg);
+            default: // fall out
           }
         }
       }
@@ -132,10 +134,10 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
             || (stringNode.getTypeI() != null
                 && stringNode.getTypeI().isStringValueType()))) {
       if (subtree.hasXChildren(3)) {
-        Double maybeStart = NodeUtil.getNumberValue(firstArg, useTypes);
+        Double maybeStart = NodeUtil.getNumberValue(firstArg);
         if (maybeStart != null) {
           int start = maybeStart.intValue();
-          Double maybeLengthOrEnd = NodeUtil.getNumberValue(firstArg.getNext(), useTypes);
+          Double maybeLengthOrEnd = NodeUtil.getNumberValue(firstArg.getNext());
           if (maybeLengthOrEnd != null) {
             switch (functionNameString) {
               case "substr":
@@ -150,6 +152,8 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
                 if (end - start == 1) {
                   return replaceWithCharAt(subtree, callTarget, firstArg);
                 }
+                break;
+              default: // fall out
             }
           }
         }
@@ -407,6 +411,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
    * Try to fold an array join: ['a', 'b', 'c'].join('') -> 'abc';
    */
   private Node tryFoldArrayJoin(Node n) {
+    checkState(n.isCall(), n);
     Node callTarget = n.getFirstChild();
 
     if (callTarget == null || !callTarget.isGetProp()) {
@@ -423,20 +428,18 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
     Node arrayNode = callTarget.getFirstChild();
     Node functionName = arrayNode.getNext();
 
-    if (!arrayNode.isArrayLit() ||
-        !functionName.getString().equals("join")) {
+    if (!arrayNode.isArrayLit() || !functionName.getString().equals("join")) {
       return n;
     }
 
-    if (right != null && right.isString()
-        && ",".equals(right.getString())) {
+    if (right != null && right.isString() && ",".equals(right.getString())) {
       // "," is the default, it doesn't need to be explicit
       n.removeChild(right);
       compiler.reportChangeToEnclosingScope(n);
     }
 
     String joinString = (right == null) ? "," : NodeUtil.getStringValue(right);
-    List<Node> arrayFoldedChildren = new LinkedList<>();
+    List<Node> arrayFoldedChildren = new ArrayList<>();
     StringBuilder sb = null;
     int foldedSize = 0;
     Node prev = null;
@@ -485,7 +488,9 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
         return emptyStringNode;
       case 1:
         Node foldedStringNode = arrayFoldedChildren.remove(0);
-        if (foldedSize > originalSize) {
+        // The spread isn't valid outside any array literal (or would change meaning)
+        // so don't try to fold it.
+        if (foldedStringNode.isSpread() || foldedSize > originalSize) {
           return n;
         }
         arrayNode.detachChildren();
@@ -534,7 +539,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
     int length;
     String stringAsString = stringNode.getString();
 
-    Double maybeStart = NodeUtil.getNumberValue(arg1, useTypes);
+    Double maybeStart = NodeUtil.getNumberValue(arg1);
     if (maybeStart != null) {
       start = maybeStart.intValue();
     } else {
@@ -543,7 +548,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
 
     Node arg2 = arg1.getNext();
     if (arg2 != null) {
-      Double maybeLength = NodeUtil.getNumberValue(arg2, useTypes);
+      Double maybeLength = NodeUtil.getNumberValue(arg2);
       if (maybeLength != null) {
         length = maybeLength.intValue();
       } else {
@@ -590,7 +595,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
     int end;
     String stringAsString = stringNode.getString();
 
-    Double maybeStart = NodeUtil.getNumberValue(arg1, useTypes);
+    Double maybeStart = NodeUtil.getNumberValue(arg1);
     if (maybeStart != null) {
       start = maybeStart.intValue();
     } else {
@@ -599,7 +604,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
 
     Node arg2 = arg1.getNext();
     if (arg2 != null) {
-      Double maybeEnd = NodeUtil.getNumberValue(arg2, useTypes);
+      Double maybeEnd = NodeUtil.getNumberValue(arg2);
       if (maybeEnd != null) {
         end = maybeEnd.intValue();
       } else {

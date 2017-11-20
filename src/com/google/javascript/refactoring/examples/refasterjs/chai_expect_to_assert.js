@@ -168,3 +168,163 @@ function before_not_ok(param) {
 function after_not_ok(param) {
   assert.isNotOk(param);
 }
+
+/**
+ * @param {?} param
+ * @param {?} param2
+ */
+function before_to_equal(param, param2) {
+  expect(param).to.equal(param2);
+}
+
+/**
+ * @param {?} param
+ * @param {?} param2
+ */
+function after_to_equal(param, param2) {
+  assert.equal(param, param2);
+}
+
+/**
+ * @param {?} param
+ * @param {?} param2
+ */
+function before_to_not_equal(param, param2) {
+  expect(param).to.not.equal(param2);
+}
+
+/**
+ * @param {?} param
+ * @param {?} param2
+ */
+function after_to_not_equal(param, param2) {
+  assert.notEqual(param, param2);
+}
+
+/**
+ * @param {?} param
+ * @param {?} param2
+ */
+function before_not_to_equal(param, param2) {
+  expect(param).not.to.equal(param2);
+}
+
+/**
+ * @param {?} param
+ * @param {?} param2
+ */
+function after_not_to_equal(param, param2) {
+  assert.notEqual(param, param2);
+}
+
+/**
+ * @param {?} param
+ * @param {?} param2
+ */
+function before_to_deep_equal(param, param2) {
+  expect(param).to.deep.equal(param2);
+}
+
+/**
+ * @param {?} param
+ * @param {?} param2
+ */
+function after_to_deep_equal(param, param2) {
+  assert.deepEqual(param, param2);
+}
+
+/**
+ * @param {?} param
+ * @param {?} param2
+ */
+function before_to_not_deep_equal(param, param2) {
+  expect(param).to.not.deep.equal(param2);
+}
+
+/**
+ * @param {?} param
+ * @param {?} param2
+ */
+function after_to_not_deep_equal(param, param2) {
+  assert.notDeepEqual(param, param2);
+}
+
+/**
+ * @param {?} param
+ * @param {?} param2
+ */
+function before_is_an_instanceof(param, param2) {
+  expect(param).is.an.instanceof(param2);
+}
+
+/**
+ * @param {?} param
+ * @param {?} param2
+ */
+function after_is_an_instanceof(param, param2) {
+  assert.instanceOf(param, param2);
+}
+
+/**
+ * @param {?} param
+ * @param {?} param2
+ */
+function before_to_be_an_instanceof(param, param2) {
+  expect(param).to.be.an.instanceof(param2);
+}
+
+/**
+ * @param {?} param
+ * @param {?} param2
+ */
+function after_to_be_an_instanceof(param, param2) {
+  assert.instanceOf(param, param2);
+}
+
+/**
+ * @param {?} param
+ * @param {!Array<?>} param2
+ */
+function before_to_be_oneOf(param, param2) {
+  expect(param).to.be.oneOf(param2);
+}
+
+/**
+ * @param {?} param
+ * @param {!Array<?>} param2
+ */
+function after_to_be_oneOf(param, param2) {
+  assert.oneOf(param, param2);
+}
+
+/**
+ * @param {!Array<?>|string} param
+ * @param {?} param2
+ */
+function before_to_contain(param, param2) {
+  expect(param).to.contain(param2);
+}
+
+/**
+ * @param {!Array<?>|string} param
+ * @param {?} param2
+ */
+function after_to_contain(param, param2) {
+  assert.include(param, param2);
+}
+
+/**
+ * @param {?} param
+ * @param {number} param2
+ */
+function before_to_have_lengthOf(param, param2) {
+  expect(param).to.have.lengthOf(param2);
+}
+
+/**
+ * @param {?} param
+ * @param {number} param2
+ */
+function after_to_have_lengthOf(param, param2) {
+  assert.lengthOf(param, param2);
+}

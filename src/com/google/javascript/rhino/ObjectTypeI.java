@@ -173,7 +173,37 @@ public interface ObjectTypeI extends TypeI {
   TypeI getEnumeratedTypeOfEnumObject();
 
   /**
+   * Given an generic supertype of this,
+   * returns the type argument as instantiated by this type.
+   *
+   * Parameter supertype has to be a type with a single type parameter.
+   *
+   * For example,<pre>   {@code
+   *   (Iterable<Foo>).getInstantiatedTypeArgument(Iterable<?>) returns Foo,
+   *   and
+   *   /** {@literal @}template A * /
+   *   class Foo {}
+   *   /**
+   *    * {@literal @}template B
+   *    * {@literal @}extends {Foo<Array<B>>}
+   *    * /
+   *   class Bar {}
+   *   (Bar<string>).getInstantiatedTypeArguments(Bar<?>) returns string
+   *   (Bar<string>).getInstantiatedTypeArguments(Foo<?>) returns Array<string>
+   * }</pre>
+   * This is used, for example, in type-checking for-of and yield.
+   */
+  TypeI getInstantiatedTypeArgument(TypeI supertype);
+
+  /**
    * Returns a set of properties defined or inferred on this type or any of its supertypes.
    */
   Set<String> getPropertyNames();
+
+  /**
+   * Remove any properties that exist only on this specific instance: stray properties,
+   * or properties whose type has been specialized.
+   * Keep all instance, prototype, and namespace properties.
+   */
+  ObjectTypeI withoutStrayProperties();
 }

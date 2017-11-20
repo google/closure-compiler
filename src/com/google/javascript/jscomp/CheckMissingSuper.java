@@ -17,6 +17,8 @@ package com.google.javascript.jscomp;
 
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
+import com.google.javascript.jscomp.parsing.parser.FeatureSet;
+import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.Node;
 
 /**
@@ -31,6 +33,8 @@ final class CheckMissingSuper extends AbstractPostOrderCallback implements HotSw
       DiagnosticType.error("JSC_THIS_BEFORE_SUPER", "cannot access this before calling super()");
 
   private final AbstractCompiler compiler;
+  private static final FeatureSet checkedFeatures =
+      FeatureSet.BARE_MINIMUM.with(Feature.CLASSES);
 
   public CheckMissingSuper(AbstractCompiler compiler) {
     this.compiler = compiler;
@@ -38,12 +42,12 @@ final class CheckMissingSuper extends AbstractPostOrderCallback implements HotSw
 
   @Override
   public void process(Node externs, Node root) {
-    TranspilationPasses.processCheck(compiler, root, this);
+    TranspilationPasses.processCheck(compiler, root, checkedFeatures, this);
   }
 
   @Override
   public void hotSwapScript(Node scriptRoot, Node originalRoot) {
-    TranspilationPasses.hotSwapCheck(compiler, scriptRoot, this);
+    TranspilationPasses.hotSwapCheck(compiler, scriptRoot, checkedFeatures, this);
   }
 
   @Override

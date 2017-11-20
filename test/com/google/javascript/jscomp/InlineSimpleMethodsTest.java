@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.google.javascript.jscomp;
 
 public final class InlineSimpleMethodsTest extends CompilerTestCase {
@@ -26,7 +25,7 @@ public final class InlineSimpleMethodsTest extends CompilerTestCase {
   @Override
   protected void setUp() throws Exception {
     super.setUp();
-    disableCompareAsTree();
+    enableNormalize();
   }
 
   /**
@@ -176,10 +175,10 @@ public final class InlineSimpleMethodsTest extends CompilerTestCase {
   }
 
   public void testEmptyMethodInline() {
-    testWithPrefix("function Foo(){}" +
-        "Foo.prototype.bar=function(a){};",
-        "var x=new Foo; x.bar();",
-        "var x=new Foo");
+    testWithPrefix(
+        "function Foo(){} Foo.prototype.bar=function(a){};",
+        "var x = new Foo(); x.bar();",
+        "var x = new Foo();;");
   }
 
   public void testEmptyMethodInlineWithSideEffects() {
@@ -261,13 +260,23 @@ public final class InlineSimpleMethodsTest extends CompilerTestCase {
   }
 
   public void testObjectLit4() {
-    testSame("var key=\"bar\";"
+    testSame("var key='bar';"
         + "var blah={[key]:a};"
         + "(new Foo).bar");
   }
 
-  public void testObjectLitExtern() {
+  public void testObjectLitExtern1() {
     String externs = "window.bridge={_sip:function(){}};";
+    testSame(externs, "window.bridge._sip()");
+  }
+
+  public void testObjectLitExtern2() {
+    String externs = "window.bridge={_sip(){}};";
+    testSame(externs, "window.bridge._sip()");
+  }
+
+  public void testClassExtern() {
+    String externs = "window.bridge= class { _sip() {} };";
     testSame(externs, "window.bridge._sip()");
   }
 
@@ -281,30 +290,69 @@ public final class InlineSimpleMethodsTest extends CompilerTestCase {
   public void testIssue2508576_1() {
     // Method defined by an extern should be left alone.
     String externs = "function alert(a) {}";
-    testSame(externs, "({a:alert,b:alert}).a(\"a\")");
+    testSame(externs, "({a:alert,b:alert}).a('a')");
   }
 
   public void testIssue2508576_2() {
     // Anonymous object definition with a side-effect should be left alone.
-    testSame("({a:function(){},b:x()}).a(\"a\")");
+    testSame("({a:function(){},b:x()}).a('a')");
   }
 
   public void testIssue2508576_3() {
     // Anonymous object definition without side-effect should be removed.
-    test("({a:function(){},b:alert}).a(\"a\")", "");
+    test("({a:function(){},b:alert}).a('a')", ";");
+  }
+
+  // When there are two methods with the same name, one on an ES3-style class, and one on an
+  // ES6-style class, make sure the right one gets inlined into the right place, if inlining happens
+  // at all.
+  public void testEs6Issue1() {
+    testSame(
+        lines(
+            "/** @constructor */",
+            "function OldClass() {}",
+            "",
+            "OldClass.prototype.foo = function() { return this.oldbar; };",
+            "",
+            "class NewClass {",
+            "  foo() { return this.newbar; }",
+            "}",
+            "",
+            "var x = new OldClass;",
+            "x.foo();",
+            "x = new NewClass;",
+            "x.foo();"));
+  }
+
+  public void testEs6Issue2() {
+    testSame(
+        lines(
+            "/** @constructor */",
+            "function OldClass() {}",
+            "",
+            "OldClass.prototype.foo = function() { return this.oldbar; };",
+            "",
+            "class NewClass {",
+            "  foo() { return this.newbar; }",
+            "}",
+            "",
+            "var x = new OldClass;",
+            "x.foo();",
+            "var y = new NewClass;",
+            "y.foo();"));
   }
 
   public void testAnonymousGet() {
     // Anonymous object definition without side-effect should be removed.
-    testSame("({get a(){return function(){}},b:alert}).a(\"a\")");
-    testSame("({get a(){},b:alert}).a(\"a\")");
+    testSame("({get a(){return function(){}},b:alert}).a('a')");
+    testSame("({get a(){},b:alert}).a('a')");
     testSame("({get a(){},b:alert}).a");
   }
 
   public void testAnonymousSet() {
     // Anonymous object definition without side-effect should be removed.
-    testSame("({set a(b){return function(){}},b:alert}).a(\"a\")");
-    testSame("({set a(b){},b:alert}).a(\"a\")");
+    testSame("({set a(b){return function(){}},b:alert}).a('a')");
+    testSame("({set a(b){},b:alert}).a('a')");
     testSame("({set a(b){},b:alert}).a");
   }
 
@@ -314,18 +362,21 @@ public final class InlineSimpleMethodsTest extends CompilerTestCase {
     // escapes, because method definitions aren't commonly mutated.
     test(
         "var esc;",
-        "/** @constructor */"
-        + "function Foo() {"
-        + "  this.prop = 123;"
-        + "}"
-        + "Foo.prototype.m = function() {"
-        + "  return this.prop;"
-        + "}"
-        + "(new Foo).m();"
-        + "esc(Foo);",
-        "function Foo(){this.prop=123}"
-        + "Foo.prototype.m=function(){return this.prop}"
-        + "(new Foo).m();"
-        + "esc(Foo)");
+        lines(
+            "/** @constructor */",
+            "function Foo() {",
+            "  this.prop = 123;",
+            "}",
+            "Foo.prototype.m = function() {",
+            "  return this.prop;",
+            "}",
+            "(new Foo).m();",
+            "esc(Foo);"),
+        lines(
+            "/** @constructor */",
+            "function Foo(){this.prop=123}",
+            "Foo.prototype.m=function(){return this.prop}",
+            "(new Foo).m();",
+            "esc(Foo)"));
   }
 }

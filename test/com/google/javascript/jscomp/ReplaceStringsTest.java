@@ -140,7 +140,7 @@ public final class ReplaceStringsTest extends TypeICompilerTestCase {
         new CollapseProperties(compiler).process(externs, js);
         if (runDisambiguateProperties) {
           SourceInformationAnnotator sia =
-              new SourceInformationAnnotator("test", false /* doSanityChecks */);
+              new SourceInformationAnnotator("test", false /* checkAnnotated */);
           NodeTraversal.traverseEs6(compiler, js, sia);
 
           new DisambiguateProperties(compiler, propertiesToErrorFor).process(externs, js);
@@ -227,7 +227,7 @@ public final class ReplaceStringsTest extends TypeICompilerTestCase {
 
   public void testThrowError4() {
     testDebugStrings(
-        LINE_JOINER.join(
+        lines(
             "/** @constructor */",
             "var A = function() {};",
             "A.prototype.m = function(child) {",
@@ -240,7 +240,7 @@ public final class ReplaceStringsTest extends TypeICompilerTestCase {
             "  }",
             "  child.parentNode = this;",
             "};"),
-        LINE_JOINER.join(
+        lines(
             "/** @constructor */",
             "var A = function(){};",
             "A.prototype.m = function(child) {",
@@ -357,11 +357,7 @@ public final class ReplaceStringsTest extends TypeICompilerTestCase {
 
   // Non-matching "info" prototype property.
   public void testLoggerOnObject3b() {
-    // TODO(sdh): Figure out how to make this test work in NTI.  First, we get a
-    // warning about global this, but it also incorrectly replaces the message.
-    // These are probably related (i.e. NTI likely is replacing with ? which then
-    // has the possibility to match Logger).
-    this.mode = TypeInferenceMode.OTI_ONLY;
+    ignoreWarnings(NewTypeInference.GLOBAL_THIS);
     testSame(
       "/** @constructor */\n" +
       "var x = function() {};\n" +
@@ -391,10 +387,8 @@ public final class ReplaceStringsTest extends TypeICompilerTestCase {
   }
 
   public void testLoggerOnThis() {
-    // TODO(sdh): Figure out how to make this test work in NTI.  First, we get a
-    // warning about global this, but it also incorrectly doesn't replace the message.
-    // These are probably related (i.e. NTI likely is replacing with ? which then
-    // has the possibility to match Logger).
+    // This fails in NTI because NTI doesn't specialize the type of THIS after the assignment;
+    // THIS remains unknown. Working as intended.
     this.mode = TypeInferenceMode.OTI_ONLY;
     testDebugStrings(
         "function f() {" +
@@ -408,6 +402,29 @@ public final class ReplaceStringsTest extends TypeICompilerTestCase {
         new String[] {
             "a", "foo",
             "b", "Some message"});
+  }
+
+  public void testLoggerOnThis2() {
+    testDebugStrings(
+        lines(
+            "/** @constructor */",
+            "function Foo() {",
+            "  /** @type {!goog.debug.Logger} */",
+            "  this.logger_;",
+            "}",
+            "Foo.prototype.f = function() {",
+            "  this.logger_.info('Some message');",
+            "};"),
+        lines(
+            "/** @constructor */",
+            "function Foo() {",
+            "  /** @type {!goog.debug.Logger} */",
+            "  this.logger_;",
+            "}",
+            "Foo.prototype.f = function() {",
+            "  this.logger_.info('a');",
+            "};"),
+        new String[] { "a", "Some message" });
   }
 
   public void testRepeatedErrorString1() {
@@ -520,7 +537,7 @@ public final class ReplaceStringsTest extends TypeICompilerTestCase {
     functionsToInspect = builder.build();
 
     testDebugStrings(
-        LINE_JOINER.join(
+        lines(
             "/** @constructor */",
             "function A() {}",
             "/** @param {string} p",
@@ -542,7 +559,7 @@ public final class ReplaceStringsTest extends TypeICompilerTestCase {
             "var n = ab.f('not replaced');",
             "(new A).f('replaced with a');",
             "(new C).f('replaced with b');"),
-        LINE_JOINER.join(
+        lines(
             "/** @constructor */",
             "function A() {}",
             "/** @param {string} p",

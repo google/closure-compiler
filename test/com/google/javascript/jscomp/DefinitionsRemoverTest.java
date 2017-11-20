@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.google.javascript.jscomp;
 
 import com.google.javascript.jscomp.DefinitionsRemover.Definition;
@@ -23,9 +22,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Test for {@link DefinitionsRemover}. Basically test for the simple removal
- * cases. More complicated cases will be tested by the clients of
- * {@link DefinitionsRemover}.
+ * Test for {@link DefinitionsRemover}. Basically test for the simple removal cases. More
+ * complicated cases are tested by the clients of {@link DefinitionsRemover} such as {@link
+ * PureFunctionIdentifierTest} and {@link RemoveUnusedVarsTest}.
  *
  */
 public final class DefinitionsRemoverTest extends CompilerTestCase {
@@ -74,17 +73,20 @@ public final class DefinitionsRemoverTest extends CompilerTestCase {
     testSame("f(class {[Symbol.iterator](){}})");
   }
 
+  public void testRemoveObjectMemberFunctions() {
+    test("use({func(){}});", "use({});");
+    test("use({x: 1, func(){}});", "use({});");
+    test("use({func(){}, x: 1});", "use({});");
+  }
+
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
     // Create a pass that removes all the definitions.
-    return new CompilerPass() {
-      @Override
-      public void process(Node externs, Node root) {
-        DefinitionsGatherer definitionsGatherer = new DefinitionsGatherer();
-        NodeTraversal.traverseEs6(compiler, root, definitionsGatherer);
-        for (Definition def : definitionsGatherer.definitions) {
-          def.remove(compiler);
-        }
+    return (Node externs, Node root) -> {
+      DefinitionsGatherer definitionsGatherer = new DefinitionsGatherer();
+      NodeTraversal.traverseEs6(compiler, root, definitionsGatherer);
+      for (Definition def : definitionsGatherer.definitions) {
+        def.remove(compiler);
       }
     };
   }

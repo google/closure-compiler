@@ -262,7 +262,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
         break;
     }
 
-    Double result = NodeUtil.getNumberValue(n, shouldUseTypes);
+    Double result = NodeUtil.getNumberValue(n);
     if (result == null) {
       return;
     }
@@ -739,11 +739,11 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     // TODO(johnlenz): Handle NaN with unknown value. BIT ops convert NaN
     // to zero so this is a little awkward here.
 
-    Double lValObj = NodeUtil.getNumberValue(left, shouldUseTypes);
+    Double lValObj = NodeUtil.getNumberValue(left);
     if (lValObj == null) {
       return null;
     }
-    Double rValObj = NodeUtil.getNumberValue(right, shouldUseTypes);
+    Double rValObj = NodeUtil.getNumberValue(right);
     if (rValObj == null) {
       return null;
     }
@@ -819,7 +819,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
 
     // Use getNumberValue to handle constants like "NaN" and "Infinity"
     // other values are converted to numbers elsewhere.
-    Double rightValObj = NodeUtil.getNumberValue(right, shouldUseTypes);
+    Double rightValObj = NodeUtil.getNumberValue(right);
     if (rightValObj != null && left.getToken() == opType) {
       checkState(left.hasTwoChildren());
 
@@ -852,8 +852,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     checkArgument(node.isAdd());
 
     if (NodeUtil.mayBeString(node, shouldUseTypes)) {
-      if (NodeUtil.isLiteralValue(left, false) &&
-          NodeUtil.isLiteralValue(right, false)) {
+      if (NodeUtil.isLiteralValue(left, false) && NodeUtil.isLiteralValue(right, false)) {
         // '6' + 7
         return tryFoldAddConstantString(node, left, right);
       } else {
@@ -930,7 +929,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
    * Try to fold comparison nodes, e.g ==
    */
   private Node tryFoldComparison(Node n, Node left, Node right) {
-    TernaryValue result = evaluateComparison(n.getToken(), left, right, shouldUseTypes);
+    TernaryValue result = evaluateComparison(n.getToken(), left, right);
     if (result == TernaryValue.UNKNOWN) {
       return n;
     }
@@ -945,7 +944,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
 
   /** http://www.ecma-international.org/ecma-262/6.0/#sec-abstract-relational-comparison */
   private static TernaryValue tryAbstractRelationalComparison(Node left, Node right,
-      boolean useTypes, boolean willNegate) {
+      boolean willNegate) {
     // First, try to evaluate based on the general type.
     ValueType leftValueType = NodeUtil.getKnownValueType(left);
     ValueType rightValueType = NodeUtil.getKnownValueType(right);
@@ -969,8 +968,8 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       }
     }
     // Then, try to evaluate based on the value of the node. Try comparing as numbers.
-    Double lv = NodeUtil.getNumberValue(left, useTypes);
-    Double rv = NodeUtil.getNumberValue(right, useTypes);
+    Double lv = NodeUtil.getNumberValue(left);
+    Double rv = NodeUtil.getNumberValue(right);
     if (lv == null || rv == null) {
       // Special case: `x < x` is always false.
       //
@@ -991,15 +990,14 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
   }
 
   /** http://www.ecma-international.org/ecma-262/6.0/#sec-abstract-equality-comparison */
-  private static TernaryValue tryAbstractEqualityComparison(Node left, Node right,
-      boolean useTypes) {
+  private static TernaryValue tryAbstractEqualityComparison(Node left, Node right) {
     // Evaluate based on the general type.
     ValueType leftValueType = NodeUtil.getKnownValueType(left);
     ValueType rightValueType = NodeUtil.getKnownValueType(right);
     if (leftValueType != ValueType.UNDETERMINED && rightValueType != ValueType.UNDETERMINED) {
       // Delegate to strict equality comparison for values of the same type.
       if (leftValueType == rightValueType) {
-        return tryStrictEqualityComparison(left, right, useTypes);
+        return tryStrictEqualityComparison(left, right);
       }
       if ((leftValueType == ValueType.NULL && rightValueType == ValueType.VOID)
           || (leftValueType == ValueType.VOID && rightValueType == ValueType.NULL)) {
@@ -1007,17 +1005,17 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       }
       if ((leftValueType == ValueType.NUMBER && rightValueType == ValueType.STRING)
           || rightValueType == ValueType.BOOLEAN) {
-        Double rv = NodeUtil.getNumberValue(right, useTypes);
+        Double rv = NodeUtil.getNumberValue(right);
         return rv == null
             ? TernaryValue.UNKNOWN
-            : tryAbstractEqualityComparison(left, IR.number(rv), useTypes);
+            : tryAbstractEqualityComparison(left, IR.number(rv));
       }
       if ((leftValueType == ValueType.STRING && rightValueType == ValueType.NUMBER)
           || leftValueType == ValueType.BOOLEAN) {
-        Double lv = NodeUtil.getNumberValue(left, useTypes);
+        Double lv = NodeUtil.getNumberValue(left);
         return lv == null
             ? TernaryValue.UNKNOWN
-            : tryAbstractEqualityComparison(IR.number(lv), right, useTypes);
+            : tryAbstractEqualityComparison(IR.number(lv), right);
       }
       if ((leftValueType == ValueType.STRING || leftValueType == ValueType.NUMBER)
           && rightValueType == ValueType.OBJECT) {
@@ -1034,7 +1032,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
   }
 
   /** http://www.ecma-international.org/ecma-262/6.0/#sec-strict-equality-comparison */
-  private static TernaryValue tryStrictEqualityComparison(Node left, Node right, boolean useTypes) {
+  private static TernaryValue tryStrictEqualityComparison(Node left, Node right) {
     // First, try to evaluate based on the general type.
     ValueType leftValueType = NodeUtil.getKnownValueType(left);
     ValueType rightValueType = NodeUtil.getKnownValueType(right);
@@ -1054,8 +1052,8 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
           if (NodeUtil.isNaN(right)) {
             return TernaryValue.FALSE;
           }
-          Double lv = NodeUtil.getNumberValue(left, useTypes);
-          Double rv = NodeUtil.getNumberValue(right, useTypes);
+          Double lv = NodeUtil.getNumberValue(left);
+          Double rv = NodeUtil.getNumberValue(right);
           if (lv != null && rv != null) {
             return TernaryValue.forBoolean(lv.doubleValue() == rv.doubleValue());
           }
@@ -1098,7 +1096,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     return TernaryValue.UNKNOWN;
   }
 
-  static TernaryValue evaluateComparison(Token op, Node left, Node right, boolean useTypes) {
+  static TernaryValue evaluateComparison(Token op, Node left, Node right) {
     // Don't try to minimize side-effects here.
     if (NodeUtil.mayHaveSideEffects(left) || NodeUtil.mayHaveSideEffects(right)) {
       return TernaryValue.UNKNOWN;
@@ -1106,21 +1104,21 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
 
     switch (op) {
       case EQ:
-        return tryAbstractEqualityComparison(left, right, useTypes);
+        return tryAbstractEqualityComparison(left, right);
       case NE:
-        return tryAbstractEqualityComparison(left, right, useTypes).not();
+        return tryAbstractEqualityComparison(left, right).not();
       case SHEQ:
-        return tryStrictEqualityComparison(left, right, useTypes);
+        return tryStrictEqualityComparison(left, right);
       case SHNE:
-        return tryStrictEqualityComparison(left, right, useTypes).not();
+        return tryStrictEqualityComparison(left, right).not();
       case LT:
-        return tryAbstractRelationalComparison(left, right, useTypes, false);
+        return tryAbstractRelationalComparison(left, right, false);
       case GT:
-        return tryAbstractRelationalComparison(right, left, useTypes, false);
+        return tryAbstractRelationalComparison(right, left, false);
       case LE:
-        return tryAbstractRelationalComparison(right, left, useTypes, true).not();
+        return tryAbstractRelationalComparison(right, left, true).not();
       case GE:
-        return tryAbstractRelationalComparison(left, right, useTypes, true).not();
+        return tryAbstractRelationalComparison(left, right, true).not();
       default:
         break;
     }

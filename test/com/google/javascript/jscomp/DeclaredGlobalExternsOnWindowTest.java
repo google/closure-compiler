@@ -87,7 +87,7 @@ public final class DeclaredGlobalExternsOnWindowTest extends TypeICompilerTestCa
 
   public void testWindowProperty6() {
     testExternChanges("var window; /** @const {number} */ var n;", "",
-        LINE_JOINER.join(
+        lines(
             "var window;",
             "/** @const {number} */ var n;",
             "/** @const {number} @suppress {const,duplicate} */ window.n;"));
@@ -95,7 +95,7 @@ public final class DeclaredGlobalExternsOnWindowTest extends TypeICompilerTestCa
 
   public void testWindowProperty7() {
     testExternChanges("var window; /** @const */ var ns = {}", "",
-        LINE_JOINER.join(
+        lines(
             "var window;",
             "/** @const */ var ns = {};",
             "/** @suppress {const,duplicate} @const */ window.ns = ns;"));
@@ -103,14 +103,14 @@ public final class DeclaredGlobalExternsOnWindowTest extends TypeICompilerTestCa
 
   public void testNameAliasing() {
     testExternChanges(
-        LINE_JOINER.join(
+        lines(
             "var window;",
             "/** @const */",
             "var ns = {};",
             "/** @const */",
             "var ns2 = ns;"),
         "",
-        LINE_JOINER.join(
+        lines(
             "var window;",
             "/** @const */",
             "var ns = {};",
@@ -124,7 +124,7 @@ public final class DeclaredGlobalExternsOnWindowTest extends TypeICompilerTestCa
 
   public void testQualifiedNameAliasing() {
     testExternChanges(
-        LINE_JOINER.join(
+        lines(
             "var window;",
             "/** @const */",
             "var ns = {};",
@@ -133,7 +133,7 @@ public final class DeclaredGlobalExternsOnWindowTest extends TypeICompilerTestCa
             "/** @const */",
             "var num = ns.THE_NUMBER;"),
         "",
-        LINE_JOINER.join(
+        lines(
             "var window;",
             "/** @const */",
             "var ns = {};",
@@ -149,7 +149,7 @@ public final class DeclaredGlobalExternsOnWindowTest extends TypeICompilerTestCa
 
   public void testWindowProperty8() {
     testExternChanges("var window; /** @constructor */ function Foo() {}", "",
-        LINE_JOINER.join(
+        lines(
             "var window;",
             "/** @constructor */ function Foo(){}",
             "/** @constructor @suppress {const,duplicate} */ window.Foo = Foo;"));
@@ -157,7 +157,7 @@ public final class DeclaredGlobalExternsOnWindowTest extends TypeICompilerTestCa
 
   public void testEnumWindowProperty() {
     testExternChanges("var window; /** @enum {string} */ var Enum = { A: 'str' };", "",
-        LINE_JOINER.join(
+        lines(
             "var window;",
             "/** @enum {string} */ var Enum = { A: 'str' };",
             "/** @enum {string} @suppress {const,duplicate} */ window.Enum = Enum;"));

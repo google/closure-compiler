@@ -52,11 +52,6 @@ public final class GenerateExportsTest extends CompilerTestCase {
     this.allowNonGlobalExports  = true;
   }
 
-  @Override
-  protected void testExternChanges(String input, String expectedExtern) {
-    disableCompareAsTree();
-    super.testExternChanges(input, expectedExtern);
-  }
 
   public void testExportSymbol() {
     test(
@@ -66,10 +61,10 @@ public final class GenerateExportsTest extends CompilerTestCase {
 
   public void testExportSymbolAndProperties() {
     test(
-        LINE_JOINER.join(
+        lines(
             "/** @export */function foo() {}",
             "/** @export */foo.prototype.bar = function() {}"),
-        LINE_JOINER.join(
+        lines(
             "/** @export */function foo(){}",
             "google_exportSymbol(\"foo\",foo);",
             "/** @export */foo.prototype.bar=function(){};",
@@ -78,10 +73,10 @@ public final class GenerateExportsTest extends CompilerTestCase {
 
   public void testExportPrototypeProperty() {
     test(
-        LINE_JOINER.join(
+        lines(
             "function Foo() {}",
             "/** @export */ Foo.prototype.bar = function() {};"),
-        LINE_JOINER.join(
+        lines(
             "function Foo() {}",
             "/** @export */ Foo.prototype.bar = function(){};",
             "goog.exportProperty(Foo.prototype, 'bar', Foo.prototype.bar);"));
@@ -89,10 +84,10 @@ public final class GenerateExportsTest extends CompilerTestCase {
 
   public void testExportSymbolAndConstantProperties() {
     test(
-        LINE_JOINER.join(
+        lines(
             "/** @export */function foo() {}",
             "/** @export */foo.BAR = 5;"),
-        LINE_JOINER.join(
+        lines(
             "/** @export */function foo(){}",
             "google_exportSymbol(\"foo\",foo);",
             "/** @export */foo.BAR=5;",
@@ -102,7 +97,7 @@ public final class GenerateExportsTest extends CompilerTestCase {
   public void testExportVars() {
     test(
         "/** @export */var FOO = 5",
-        LINE_JOINER.join(
+        lines(
             "/** @export */var FOO=5;",
             "google_exportSymbol('FOO',FOO)"));
   }
@@ -110,7 +105,7 @@ public final class GenerateExportsTest extends CompilerTestCase {
   public void testExportLet() {
     test(
         "/** @export */let FOO = 5",
-        LINE_JOINER.join(
+        lines(
             "/** @export */let FOO = 5;",
             "google_exportSymbol('FOO', FOO)"));
   }
@@ -118,7 +113,7 @@ public final class GenerateExportsTest extends CompilerTestCase {
   public void testExportConst() {
     test(
         "/** @export */const FOO = 5",
-        LINE_JOINER.join(
+        lines(
             "/** @export */const FOO = 5;",
             "google_exportSymbol('FOO', FOO)"));
   }
@@ -126,7 +121,7 @@ public final class GenerateExportsTest extends CompilerTestCase {
   public void testExportEs6ArrowFunction() {
     test(
         "/** @export */var fn = ()=>{};",
-        LINE_JOINER.join(
+        lines(
             "/** @export */var fn = ()=>{};",
             "google_exportSymbol('fn', fn)"));
   }
@@ -142,14 +137,14 @@ public final class GenerateExportsTest extends CompilerTestCase {
   public void testNestedVarAssign() {
     this.allowNonGlobalExports = false;
     testError(
-        LINE_JOINER.join(
+        lines(
             "var BAR;",
             "/** @export */ var FOO = BAR = 5"),
         FindExportableNodes.NON_GLOBAL_ERROR);
 
     this.allowNonGlobalExports = true;
     testError(
-        LINE_JOINER.join(
+        lines(
             "var BAR;",
             "/** @export */ var FOO = BAR = 5"),
         FindExportableNodes.EXPORT_ANNOTATION_NOT_ALLOWED);
@@ -162,14 +157,14 @@ public final class GenerateExportsTest extends CompilerTestCase {
   public void testNestedAssign() {
     this.allowNonGlobalExports = false;
     testError(
-        LINE_JOINER.join(
+        lines(
             "var BAR;var FOO = {};",
             "/** @export */FOO.test = BAR = 5"),
         FindExportableNodes.NON_GLOBAL_ERROR);
 
     this.allowNonGlobalExports = true;
     testError(
-        LINE_JOINER.join(
+        lines(
             "var BAR;",
             "var FOO = {};",
             "/** @export */FOO.test = BAR = 5"),
@@ -200,10 +195,10 @@ public final class GenerateExportsTest extends CompilerTestCase {
 
   public void testExportClassMember() {
     test(
-        LINE_JOINER.join(
+        lines(
             "/** @export */ function F() {}",
             "/** @export */ F.prototype.method = function() {};"),
-        LINE_JOINER.join(
+        lines(
             "/** @export */ function F() {}",
             "google_exportSymbol('F', F);",
             "/** @export */ F.prototype.method = function() {};",
@@ -222,45 +217,45 @@ public final class GenerateExportsTest extends CompilerTestCase {
 
   public void testExportEs6ClassProperty() {
     test(
-        LINE_JOINER.join(
+        lines(
             "/** @export */ G = class {};",
             "/** @export */ G.foo = class {};"),
-        LINE_JOINER.join(
+        lines(
             "/** @export */ G = class {};",
             "google_exportSymbol('G', G);",
-            "/** @public @export */ G.foo = class {};",
+            "/** @export */ G.foo = class {};",
             "goog.exportProperty(G, 'foo', G.foo)"));
 
     test(
-        LINE_JOINER.join(
+        lines(
             "G = class {};",
             "/** @export */ G.prototype.foo = class {};"),
-        LINE_JOINER.join(
+        lines(
             "G = class {};",
-            "/** @export @public */ G.prototype.foo = class {};",
+            "/** @export */ G.prototype.foo = class {};",
             "goog.exportProperty(G.prototype, 'foo', G.prototype.foo)"));
   }
 
   public void testExportEs6ClassMembers() {
     test(
-        LINE_JOINER.join(
+        lines(
             "/** @export */",
             "class G {",
             "  /** @export */ method() {}",
             "}"),
-        LINE_JOINER.join(
-            "/** @export @public */ class G { /** @export */ method() {} }",
+        lines(
+            "/** @export */ class G { /** @export */ method() {} }",
             "google_exportSymbol('G', G);",
             "goog.exportProperty(G.prototype, 'method', G.prototype.method);"));
 
     test(
-        LINE_JOINER.join(
+        lines(
             "/** @export */",
             "class G {",
             "  /** @export */ static method() {}",
             "}"),
-        LINE_JOINER.join(
-            "/** @export @public */ class G { /** @export */ static method() {} }",
+        lines(
+            "/** @export */ class G { /** @export */ static method() {} }",
             "google_exportSymbol('G', G);",
             "goog.exportProperty(G, 'method', G.method);"));
   }
@@ -268,7 +263,7 @@ public final class GenerateExportsTest extends CompilerTestCase {
   public void testGoogScopeFunctionOutput() {
     test(
         "/** @export */ $jscomp.scope.foo = /** @export */ function() {}",
-        LINE_JOINER.join(
+        lines(
             "/** @export */ $jscomp.scope.foo = /** @export */ function() {};",
             "google_exportSymbol('$jscomp.scope.foo', $jscomp.scope.foo);"));
   }
@@ -276,17 +271,17 @@ public final class GenerateExportsTest extends CompilerTestCase {
   public void testGoogScopeClassOutput() {
     test(
         "/** @export */ $jscomp.scope.foo = /** @export */ class {}",
-        LINE_JOINER.join(
+        lines(
             "/** @export */ $jscomp.scope.foo = /** @export */ class {};",
             "google_exportSymbol('$jscomp.scope.foo', $jscomp.scope.foo);"));
   }
 
   public void testExportSubclass() {
     test(
-        LINE_JOINER.join(
+        lines(
             "var goog = {}; function F() {}",
             "/** @export */ function G() {} goog.inherits(G, F);"),
-        LINE_JOINER.join(
+        lines(
             "var goog = {}; function F() {}",
             "/** @export */ function G() {} goog.inherits(G, F); google_exportSymbol('G', G);"));
   }
@@ -341,10 +336,10 @@ public final class GenerateExportsTest extends CompilerTestCase {
 
   public void testMemberExportDoesntConflict() {
     allowExternsChanges();
-    String code = LINE_JOINER.join(
+    String code = lines(
         "var foo = function() { /** @export */ this.foo = 1; };",
         "/** @export */ foo.method = function(){};");
-    String result = LINE_JOINER.join(
+    String result = lines(
         "var foo = function() { /** @export */ this.foo = 1; };",
         "/** @export */ foo.method = function(){};",
         "google_exportSymbol('foo.method', foo.method);");

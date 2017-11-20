@@ -80,6 +80,14 @@ public final class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
     invert = false;
   }
 
+  private void testWithInversion(String[] original, String[] expected) {
+    invert = false;
+    test(original, expected);
+    invert = true;
+    test(expected, original);
+    invert = false;
+  }
+
   private void testSameWithInversion(String externs, String original) {
     invert = false;
     testSame(externs, original);
@@ -299,7 +307,7 @@ public final class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
   public void testLetsInSeparateBlocks() {
     useDefaultRenamer = true;
     test(
-        LINE_JOINER.join(
+        lines(
             "if (x) {",
             "  let e;",
             "  alert(e);",
@@ -308,7 +316,7 @@ public final class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
             "  let e;",
             "  alert(e);",
             "}"),
-        LINE_JOINER.join(
+        lines(
             "if (x) {",
             "  let e;",
             "  alert(e);",
@@ -322,19 +330,19 @@ public final class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
   public void testConstInGlobalHoistScope() {
     useDefaultRenamer = true;
     testSame(
-        LINE_JOINER.join(
+        lines(
             "if (true) {",
             "  const x = 1; alert(x);",
             "}"));
 
     test(
-        LINE_JOINER.join(
+        lines(
             "if (true) {",
             "  const x = 1; alert(x);",
             "} else {",
             "  const x = 1; alert(x);",
             "}"),
-        LINE_JOINER.join(
+        lines(
             "if (true) {",
             "  const x = 1; alert(x);",
             "} else {",
@@ -368,7 +376,7 @@ public final class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
 
     test(
         "let a; function foo(a) {let b; a; }",
-        LINE_JOINER.join(
+        lines(
             "let a$jscomp$unique_0;",
             "function foo$jscomp$unique_1(a$jscomp$unique_2) {",
             "  let b$jscomp$unique_3;",
@@ -376,11 +384,11 @@ public final class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
             "}"));
 
     test(
-        LINE_JOINER.join(
+        lines(
             "let a;",
             "function foo() { let b; a; }",
             "function boo() { let b; a; }"),
-        LINE_JOINER.join(
+        lines(
             "let a$jscomp$unique_0;",
             "function foo$jscomp$unique_1() {",
             "  let b$jscomp$unique_3;",
@@ -455,7 +463,7 @@ public final class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
 
   public void testOnlyInversion3() {
     invert = true;
-    test(LINE_JOINER.join(
+    test(lines(
         "function x1() {",
         "  var a$jscomp$1;",
         "  function x2() {",
@@ -465,7 +473,7 @@ public final class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
         "    var a$jscomp$3;",
         "  }",
         "}"),
-        LINE_JOINER.join(
+        lines(
         "function x1() {",
         "  var a$jscomp$0;",
         "  function x2() {",
@@ -479,14 +487,14 @@ public final class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
 
   public void testOnlyInversion4() {
     invert = true;
-    test(LINE_JOINER.join(
+    test(lines(
         "function x1() {",
         "  var a$jscomp$0;",
         "  function x2() {",
         "    var a;a$jscomp$0++",
         "  }",
         "}"),
-        LINE_JOINER.join(
+        lines(
         "function x1() {",
         "  var a$jscomp$1;",
         "  function x2() {",
@@ -497,14 +505,14 @@ public final class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
 
   public void testOnlyInversion5() {
     invert = true;
-    test(LINE_JOINER.join(
+    test(lines(
         "function x1() {",
         "  const a$jscomp$1 = 0;",
         "  function x2() {",
         "    const b$jscomp$1 = 0;",
         "  }",
         "}"),
-        LINE_JOINER.join(
+        lines(
         "function x1() {",
         "  const a = 0;",
         "  function x2() {",
@@ -534,12 +542,12 @@ public final class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
   public void testRestParamWithContextWithInversion() {
     this.useDefaultRenamer = true;
     testWithInversion(
-        LINE_JOINER.join(
+        lines(
             "let x = 0;",
             "function foo(...x) {",
             "  return x[0];",
             "}"),
-        LINE_JOINER.join(
+        lines(
             "let x = 0;",
             "function foo(...x$jscomp$1) {",
             "  return x$jscomp$1[0]",
@@ -548,11 +556,11 @@ public final class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
 
   public void testVarParamSameName0() {
     test(
-        LINE_JOINER.join(
+        lines(
             "function f(x) {",
             "  if (!x) var x = 6;",
             "}"),
-        LINE_JOINER.join(
+        lines(
              "function f$jscomp$unique_0(x$jscomp$unique_1) {",
              "  if (!x$jscomp$unique_1) var x$jscomp$unique_1 = 6;",
              "}"));
@@ -560,11 +568,11 @@ public final class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
 
   public void testVarParamSameName1() {
     test(
-        LINE_JOINER.join(
+        lines(
             "function f(x) {",
             "  if (!x) x = 6;",
             "}"),
-        LINE_JOINER.join(
+        lines(
              "function f$jscomp$unique_0(x$jscomp$unique_1) {",
              "  if (!x$jscomp$unique_1) x$jscomp$unique_1 = 6; ",
              "}"));
@@ -572,11 +580,11 @@ public final class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
 
   public void testVarParamSameAsLet0() {
     test(
-        LINE_JOINER.join(
+        lines(
             "function f(x) {",
             "  if (!x) { let x = 6; }",
             "}"),
-        LINE_JOINER.join(
+        lines(
             "function f$jscomp$unique_0(x$jscomp$unique_1) {",
             "  if (!x$jscomp$unique_1) { let x$jscomp$unique_2 = 6; }",
             "}"));
@@ -592,7 +600,7 @@ public final class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
   public void testClassesWithContextWithInversion() {
     this.useDefaultRenamer = true;
     testWithInversion(
-        LINE_JOINER.join(
+        lines(
             "var a;",
             "class Foo {",
             "  constructor(a) {",
@@ -603,7 +611,7 @@ public final class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
             "    return a + x;",
             "  }",
             "}"),
-        LINE_JOINER.join(
+        lines(
             "var a;",
             "class Foo {",
             "  constructor(a$jscomp$1) {",
@@ -617,7 +625,7 @@ public final class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
 
     //class declarations are block-scoped but not hoisted.
     testSameWithInversion(
-        LINE_JOINER.join(
+        lines(
             "{",
             "  let x = new Foo();", //ReferenceError
             "  class Foo {}",
@@ -627,12 +635,12 @@ public final class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
   public void testBlockScopesWithContextWithInversion1() {
     this.useDefaultRenamer = true;
     testWithInversion(
-        LINE_JOINER.join(
+        lines(
             "{let a;",
             "  {",
             "    let a;",
             "  }}"),
-        LINE_JOINER.join(
+        lines(
             "{let a;",
             "  {",
             "  let a$jscomp$1;",
@@ -643,7 +651,7 @@ public final class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
     this.useDefaultRenamer = true;
     // function declarations are block-scoped
     testWithInversion(
-        LINE_JOINER.join(
+        lines(
             "function foo() {",
             "  function bar() {",
             "    return 1;",
@@ -654,7 +662,7 @@ public final class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
             "    return 2;",
             "  }",
             "}"),
-        LINE_JOINER.join(
+        lines(
             "function foo() {",
             "  function bar() {",
             "    return 1;",
@@ -670,7 +678,7 @@ public final class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
   public void testBlockScopesWithContextWithInversion3() {
     this.useDefaultRenamer = true;
     test(
-        LINE_JOINER.join(
+        lines(
             "function foo() {",
             "  function bar() {",
             "    return 1;",
@@ -681,7 +689,7 @@ public final class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
             "    }",
             "  }",
             "}"),
-        LINE_JOINER.join(
+        lines(
             "function foo() {",
             "  function bar() {",
             "    return 1;",
@@ -697,7 +705,7 @@ public final class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
   public void testBlockScopesWithContextWithInversion4() {
     this.useDefaultRenamer = true;
     test(
-        LINE_JOINER.join(
+        lines(
             "var f1=function(){",
             "  var x",
             "};",
@@ -710,7 +718,7 @@ public final class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
             "  }",
             "  f2()",
             "})()"),
-        LINE_JOINER.join(
+        lines(
             "var f1=function(){",
             "  var x",
             "};",
@@ -728,7 +736,7 @@ public final class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
   public void testBlockScopesWithContextWithInversion5() {
     this.useDefaultRenamer = true;
     testSame(
-        LINE_JOINER.join(
+        lines(
             "if (true) {",
             "  function f(){};",
             "}",
@@ -738,14 +746,14 @@ public final class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
   public void testBlockScopesWithoutContext() {
     this.useDefaultRenamer = false;
     test(
-        LINE_JOINER.join(
+        lines(
             "{",
             "  function foo() {return 1;}",
             "  if (true) {",
             "    function foo() {return 2;}",
             "  }",
             "}"),
-        LINE_JOINER.join(
+        lines(
             "{",
             "  function foo$jscomp$unique_0() {return 1;}",
             "  if (true) {",
@@ -754,21 +762,21 @@ public final class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
             "}"));
 
     test(
-        LINE_JOINER.join(
+        lines(
             "function foo(x) {",
             "  return foo(x) - 1;",
             "}"),
-        LINE_JOINER.join(
+        lines(
             "function foo$jscomp$unique_0(x$jscomp$unique_1) {",
             "  return foo$jscomp$unique_0(x$jscomp$unique_1) - 1;",
             "}"));
 
     test(
-        LINE_JOINER.join(
+        lines(
             "export function foo(x) {",
             "  return foo(x) - 1;",
             "}"),
-        LINE_JOINER.join(
+        lines(
             "export function foo$jscomp$unique_0(x$jscomp$unique_1) {",
             "  return foo$jscomp$unique_0(x$jscomp$unique_1) - 1;",
             "}"));
@@ -777,7 +785,7 @@ public final class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
   public void testRecursiveFunctionsWithContextWithInversion() {
     this.useDefaultRenamer = true;
     testSameWithInversion(
-        LINE_JOINER.join(
+        lines(
             "function foo(x) {",
             "  return foo(x) - 1;",
             "}"));
@@ -786,7 +794,7 @@ public final class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
   public void testArrowFunctionWithContextWithInversion() {
     this.useDefaultRenamer = true;
     testWithInversion(
-        LINE_JOINER.join(
+        lines(
             "function foo() {",
             "  var f = (x) => x;",
             "  return f(1);",
@@ -795,7 +803,7 @@ public final class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
             "  var f = (x) => x;",
             "  return f(2);",
             "}"),
-        LINE_JOINER.join(
+        lines(
             "function foo() {",
             "  var f = (x) => x;",
             "  return f(1);",
@@ -806,7 +814,7 @@ public final class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
             "}"));
 
     testWithInversion(
-        LINE_JOINER.join(
+        lines(
             "function foo() {",
             "  var f = (x, ...y) => x + y[0];",
             "  return f(1, 2);",
@@ -815,7 +823,7 @@ public final class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
             "  var f = (x, ...y) => x + y[0];",
             "  return f(1, 2);",
             "}"),
-        LINE_JOINER.join(
+        lines(
             "function foo() {",
             "  var f = (x, ...y) => x + y[0];",
             "  return f(1, 2);",
@@ -829,14 +837,14 @@ public final class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
   public void testDefaultParameterWithContextWithInversion1() {
     this.useDefaultRenamer = true;
     testWithInversion(
-        LINE_JOINER.join(
+        lines(
             "function foo(x = 1) {",
             "  return x;",
             "}",
             "function boo(x = 1) {",
             "  return x;",
             "}"),
-        LINE_JOINER.join(
+        lines(
             "function foo(x = 1) {",
             "  return x;",
             "}",
@@ -845,7 +853,7 @@ public final class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
             "}"));
 
     testSameWithInversion(
-        LINE_JOINER.join(
+        lines(
             "function foo(x = 1, y = x) {",
             "  return x + y;",
             "}"));
@@ -858,13 +866,13 @@ public final class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
     // Methods or functions defined "inside" parameter default values don't see the local variables
     // of the body.
     testWithInversion(
-        LINE_JOINER.join(
+        lines(
             "let x = 'outer';",
             "function foo(bar = baz => x) {",
             "  let x = 'inner';",
             "  console.log(bar());",
             "}"),
-        LINE_JOINER.join(
+        lines(
             "let x = 'outer';",
             "function foo(bar = baz => x) {",
             "  let x$jscomp$1 = 'inner';",
@@ -872,13 +880,13 @@ public final class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
             "}"));
 
     testWithInversion(
-        LINE_JOINER.join(
+        lines(
             "const x = 'outer';",
             "function foo(a = x) {",
             "  const x = 'inner';",
             "  return a;",
             "}"),
-        LINE_JOINER.join(
+        lines(
             "const x = 'outer';",
             "function foo(a = x) {",
             "  const x$jscomp$1 = 'inner';",
@@ -886,7 +894,7 @@ public final class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
             "}"));
 
     testWithInversion(
-        LINE_JOINER.join(
+        lines(
             "const x = 'outerouter';",
             "{",
             "  const x = 'outer';",
@@ -895,7 +903,7 @@ public final class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
             "  }",
             "foo();",
             "}"),
-        LINE_JOINER.join(
+        lines(
             "const x = 'outerouter';",
             "{",
             "  const x$jscomp$1 = 'outer';",
@@ -907,7 +915,7 @@ public final class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
         ));
 
     testSameWithInversion(
-        LINE_JOINER.join(
+        lines(
             "function foo(x, y = x) {",
             "  return x + y;",
             "}"));
@@ -916,14 +924,14 @@ public final class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
   public void testObjectLiteralsWithContextWithInversion() {
     this.useDefaultRenamer = true;
     testWithInversion(
-        LINE_JOINER.join(
+        lines(
             "function foo({x:y}) {",
             "  return y;",
             "}",
             "function boo({x:y}) {",
             "  return y;",
             "}"),
-        LINE_JOINER.join(
+        lines(
             "function foo({x:y}) {",
             "  return y;",
             "}",
@@ -936,7 +944,21 @@ public final class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
     // The eventual desired behavior is that none of the 'a's in the following test cases
     // are renamed to a$jscomp$1. Rewrite this test after that behavior is implemented.
     this.useDefaultRenamer = true;
-    testSame("var a; export {a as a};");
-    testSame("var a; import {a as a} from './bar.js'");
+    test(
+        new String[] {"var a;", "let a; export {a as a};"},
+        new String[] {"var a;", "let a$jscomp$1; export {a$jscomp$1 as a};"});
+
+    test(
+        new String[] {"var a;", "import {a as a} from './foo.js'; let b = a;"},
+        new String[] {"var a;", "import {a as a$jscomp$1} from './foo.js'; let b = a$jscomp$1;"});
+  }
+
+  public void testImportStarWithInversion() {
+    this.useDefaultRenamer = true;
+    testWithInversion(
+        new String[] {"let a = 5;", "import * as a from './a.js'; const TAU = 2 * a.PI;"},
+        new String[] {
+          "let a = 5;", "import * as a$jscomp$1 from './a.js'; const TAU = 2 * a$jscomp$1.PI"
+        });
   }
 }

@@ -406,7 +406,7 @@ $jscomp.polyfill('Promise',
 
   PolyfillPromise.prototype.callWhenSettled_ = function(
       onFulfilled, onRejected) {
-    var thisPromise = this;
+    var /** !PolyfillPromise */ thisPromise = this;
     function callback() {
       switch (thisPromise.state_) {
         case PromiseState.FULFILLED:

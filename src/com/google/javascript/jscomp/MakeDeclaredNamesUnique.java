@@ -109,6 +109,7 @@ class MakeDeclaredNamesUnique extends NodeTraversal.AbstractScopedCallback {
   public void visit(NodeTraversal t, Node n, Node parent) {
     switch (n.getToken()) {
       case NAME:
+      case IMPORT_STAR:
         visitName(t, n, parent);
         break;
 
@@ -129,8 +130,7 @@ class MakeDeclaredNamesUnique extends NodeTraversal.AbstractScopedCallback {
 
   private void visitName(NodeTraversal t, Node n, Node parent) {
     // Don't rename the exported name foo in export {a as foo}; or import {foo as b};
-    if (parent != null && ((parent.isImportSpec() && parent.getFirstChild() == n)
-        || (parent.isExportSpec() && parent.getLastChild() == n))) {
+    if (NodeUtil.isNonlocalModuleExportName(n)) {
       return;
     }
     String newName = getReplacementName(n.getString());
@@ -223,7 +223,7 @@ class MakeDeclaredNamesUnique extends NodeTraversal.AbstractScopedCallback {
     private Set<String> referencedNames = ImmutableSet.of();
 
     // Stack reference sets.
-    private Deque<Set<String>> referenceStack = new ArrayDeque<>();
+    private final Deque<Set<String>> referenceStack = new ArrayDeque<>();
 
     // Name are globally unique initially, so we don't need a per-scope map.
     private final ListMultimap<String, Node> nameMap =
@@ -309,7 +309,7 @@ class MakeDeclaredNamesUnique extends NodeTraversal.AbstractScopedCallback {
         referencedNames.add(newName);
         List<Node> references = nameMap.get(name);
         for (Node n : references) {
-          checkState(n.isName(), n);
+          checkState(n.isName() || n.isImportStar(), n);
           n.setString(newName);
           if (markChanges) {
             compiler.reportChangeToEnclosingScope(n);
@@ -357,7 +357,7 @@ class MakeDeclaredNamesUnique extends NodeTraversal.AbstractScopedCallback {
         return;
       }
 
-      if (NodeUtil.isReferenceName(node)) {
+      if (NodeUtil.isReferenceName(node) || node.isImportStar()) {
         String name = node.getString();
         // Add all referenced names to the set so it is possible to check for
         // conflicts.
@@ -627,8 +627,8 @@ class MakeDeclaredNamesUnique extends NodeTraversal.AbstractScopedCallback {
 
   /** Only rename things that match the whitelist. Wraps another renamer. */
   static class WhitelistedRenamer implements Renamer {
-    private Renamer delegate;
-    private Set<String> whitelist;
+    private final Renamer delegate;
+    private final Set<String> whitelist;
 
     WhitelistedRenamer(Renamer delegate, Set<String> whitelist) {
       this.delegate = delegate;

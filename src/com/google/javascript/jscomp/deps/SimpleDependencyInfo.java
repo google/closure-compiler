@@ -92,7 +92,7 @@ public final class SimpleDependencyInfo implements DependencyInfo {
     return loadFlags;
   }
 
-  private static Map<String, String> loadFlags(boolean isModule) {
+  private static ImmutableMap<String, String> loadFlags(boolean isModule) {
     return isModule ? ImmutableMap.of("module", "goog") : ImmutableMap.<String, String>of();
   }
 

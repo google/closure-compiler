@@ -32,7 +32,6 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -633,7 +632,7 @@ abstract class DataFlowAnalysis<N, L extends LatticeElement> {
         };
 
     Map<String, Var> allVarsInFn = new HashMap<>();
-    List<Var> orderedVars = new LinkedList<>();
+    List<Var> orderedVars = new ArrayList<>();
     NodeUtil.getAllVarsDeclaredInFunction(
         allVarsInFn, orderedVars, compiler, scopeCreator, jsScope);
     NodeTraversal t = new NodeTraversal(compiler, finder, scopeCreator);

@@ -21,13 +21,17 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
 /**
- * Visitor that performs naming operations on anonymous functions by
+ * Visitor that performs naming operations on anonymous function by
  * means of the FunctionNamer interface.  Anonymous functions are
- * named based on context.  For example, the anonymous function on the
- * RHS based on the property at the LHS of the assignment operator.
+ * named based on context.  For example, the anonymous function below
+ * would be given a name generated from goog.string.htmlEscape by the FunctionNamer.
  *
  * goog.string.htmlEscape = function(str) {
  * }
+ *
+ * This pass does not try to name FUNCTIONs with empty NAME nodes if doing so would violate AST
+ * validity. Currently, we can never name arrow functions, which must stay anonymous, or getters,
+ * setters, and member function definitions, which have a name elsewhere in the AST.
  *
  */
 class AnonymousFunctionNamingCallback
@@ -46,7 +50,8 @@ class AnonymousFunctionNamingCallback
     String getName(Node node);
 
     /**
-     * Sets the name of an anonymous function.
+     * Sets the name of an anonymous function. Will only ever be called if the fnNode can be named
+     * without making the AST invalid.
      * @param fnNode The function node to update
      * @param name The name
      */
@@ -75,12 +80,14 @@ class AnonymousFunctionNamingCallback
         // get the function name and see if it's empty
         Node functionNameNode = n.getFirstChild();
         String functionName = functionNameNode.getString();
-        if (functionName.isEmpty()) {
-          if (parent.isAssign()) {
+        if (functionName.isEmpty() && !n.isArrowFunction()) {
+          if (parent.isAssign() || parent.isDefaultValue()) {
             // this is an assignment to a property, generally either a
-            // static function or a prototype function
-            // e.g. goog.string.htmlEscape = function() { } or
-            //      goog.structs.Map.prototype.getCount = function() { }
+            // static function or a prototype function, or a potential assignment of
+            // a default value
+            // e.g. goog.string.htmlEscape = function() { }
+            //      goog.structs.Map.prototype.getCount = function() { } or
+            //      function f(g = function() {}) { }
             Node lhs = parent.getFirstChild();
             String name = namer.getName(lhs);
             namer.setFunctionName(name, n);
@@ -104,17 +111,6 @@ class AnonymousFunctionNamingCallback
           nameObjectLiteralMethods(rhs, namer.getName(lhs));
         }
         break;
-      case CLASS:
-        // this handle functions that are class methods.
-        // e.g. class A{
-        //        method(){}
-        //      }
-        // or (var) A = class{
-        //      method(){}
-        //    }
-        Node classMembersNode = n.getLastChild();
-        nameClassMethods(classMembersNode, namer.getName(n));
-        break;
       default:
         break;
     }
@@ -124,17 +120,20 @@ class AnonymousFunctionNamingCallback
     for (Node keyNode = objectLiteral.getFirstChild();
          keyNode != null;
          keyNode = keyNode.getNext()) {
-      Node valueNode = keyNode.getFirstChild();
 
       // Object literal keys may be STRING_KEY, GETTER_DEF, SETTER_DEF,
       // MEMBER_FUNCTION_DEF (Shorthand function definition) or COMPUTED_PROP.
-      // Get, Set and CompProp are skipped because they can not be named.
-      if (keyNode.isStringKey() || keyNode.isMemberFunctionDef()) {
+      // Getters, setters, and member function defs are skipped because their FUNCTION nodes must
+      // have empty NAME nodes (currently enforced by CodeGenerator).
+      if (keyNode.isStringKey() || keyNode.isComputedProp()) {
         // concatenate the context and key name to get a new qualified name.
         String name = namer.getCombinedName(context, namer.getName(keyNode));
 
+        // computed property has 2 children -- index expression and value expression
+        Node valueNode = keyNode.isStringKey() ? keyNode.getOnlyChild() : keyNode.getLastChild();
+
         Token type = valueNode.getToken();
-        if (type == Token.FUNCTION) {
+        if (type == Token.FUNCTION && !valueNode.isArrowFunction()) {
           // set name if function is anonymous
           Node functionNameNode = valueNode.getFirstChild();
           String functionName = functionNameNode.getString();
@@ -145,16 +144,6 @@ class AnonymousFunctionNamingCallback
           // process nested object literal
           nameObjectLiteralMethods(valueNode, name);
         }
-      }
-    }
-  }
-
-  private void nameClassMethods(Node classMembersNode, String className) {
-    for (Node methodNode : classMembersNode.children()) {
-      if (methodNode.isMemberFunctionDef()) {
-        Node valueNode = methodNode.getFirstChild();
-        String name = namer.getCombinedName(className, namer.getName(methodNode));
-        namer.setFunctionName(name, valueNode);
       }
     }
   }

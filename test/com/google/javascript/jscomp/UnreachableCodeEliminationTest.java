@@ -442,14 +442,14 @@ public final class UnreachableCodeEliminationTest extends CompilerTestCase {
 
   public void testGenerators() {
     test(
-        LINE_JOINER.join(
+        lines(
             "function* f() {", "  while(true) {", "    yield 1;", "  }", "  x = 1;", "}"),
-        LINE_JOINER.join("function* f() {", "  while(true) {", "    yield 1;", "  }", "}"));
+        lines("function* f() {", "  while(true) {", "    yield 1;", "  }", "}"));
 
-    testSame(LINE_JOINER.join("function* f() {", "  while(true) {", "    yield 1;", "  }", "}"));
+    testSame(lines("function* f() {", "  while(true) {", "    yield 1;", "  }", "}"));
 
     testSame(
-        LINE_JOINER.join(
+        lines(
             "function* f() {",
             "  let i = 0;",
             "  while (true) {",

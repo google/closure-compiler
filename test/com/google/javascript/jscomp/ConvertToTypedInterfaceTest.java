@@ -72,7 +72,7 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
 
     test(
         "const x = 5, y = 'str', z = /abc/;",
-        LINE_JOINER.join(
+        lines(
             "/** @const {number} */ var x;",
             "/** @const {string} */ var y;",
             "/** @const {!RegExp} */ var z;"));
@@ -108,19 +108,19 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
 
   public void testThisPropertiesInConstructorsAndPrototype() {
     test(
-        LINE_JOINER.join(
+        lines(
             "/** @constructor */ function Foo() { this.x = null; }",
             "/** @type {?number} */ Foo.prototype.x = 5;"),
         "/** @constructor */ function Foo() {} \n /** @type {?number} */ Foo.prototype.x;");
 
     test(
-        LINE_JOINER.join(
+        lines(
             "/** @constructor */ function Foo() { this.x = null; }",
             "/** @type {?number} */ Foo.prototype.x;"),
         "/** @constructor */ function Foo() {} \n /** @type {?number} */ Foo.prototype.x;");
 
      test(
-         LINE_JOINER.join(
+         lines(
              "/** @constructor */ function Foo() { this.x = null; }",
              "Foo.prototype.x = 5;"),
          "/** @constructor */ function Foo() {} \n /** @const {*} */ Foo.prototype.x;");
@@ -141,47 +141,47 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
 
   public void testConstJsdocPropagationForConstructorNames() {
     test(
-        LINE_JOINER.join(
+        lines(
             "/** @constructor */",
             "function Foo(/** number */ x) {",
             "  /** @const */ this.x = x;",
             "}"),
-        LINE_JOINER.join(
+        lines(
             "/** @constructor */ function Foo(/** number */ x) {}",
             "/** @const {number} */ Foo.prototype.x;"));
 
     test(
-        LINE_JOINER.join(
+        lines(
             "/** @constructor @param {!Array<string>} arr */",
             "function Foo(arr) {",
             "  /** @const */ this.arr = arr;",
             "}"),
-        LINE_JOINER.join(
+        lines(
           "/** @constructor @param {!Array<string>} arr */ function Foo(arr) {}",
           "/** @const {!Array<string>} */ Foo.prototype.arr;"));
 
     test(
-        LINE_JOINER.join(
+        lines(
             "class Foo {",
             "  constructor(/** number */ x) {",
             "    /** @const */ this.x = x;",
             "  }",
             "}"),
-        LINE_JOINER.join(
+        lines(
             "class Foo {",
             "  constructor(/** number */ x) {}",
             "}",
             "/** @const {number} */ Foo.prototype.x;"));
 
     test(
-        LINE_JOINER.join(
+        lines(
             "class Foo {",
             "  /** @param {number} x */",
             "  constructor(x) {",
             "    /** @const */ this.x = x;",
             "  }",
             "}"),
-        LINE_JOINER.join(
+        lines(
             "class Foo {",
             "  /** @param {number} x */",
             "  constructor(x) {}",
@@ -189,9 +189,36 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
             "/** @const {number} */ Foo.prototype.x;"));
   }
 
+  public void testMultipleSameNamedThisProperties() {
+    test(
+        lines(
+            "class Foo {",
+            "  constructor(/** number */ x) {",
+            "    /** @const */ this.x = x;",
+            "  }",
+            "}",
+            "/** @template T */",
+            "class Bar {",
+            "  constructor(/** T */ x) {",
+            "    /** @const */ this.x = x;",
+            "  }",
+            "}"),
+        lines(
+            "class Foo {",
+            "  constructor(/** number */ x) {}",
+            "}",
+            "/** @const {number} */ Foo.prototype.x;",
+            "/** @template T */",
+            "class Bar {",
+            "  constructor(/** T */ x) {}",
+            "}",
+            "/** @const {T} */ Bar.prototype.x;"));
+
+  }
+
   public void testLegacyGoogModule() {
     testSame(
-        LINE_JOINER.join(
+        lines(
             "goog.module('a.b.c');",
             "goog.module.declareLegacyNamespace();",
             "",
@@ -200,7 +227,7 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
 
   public void testConstructorAlias1() {
     testSame(
-        LINE_JOINER.join(
+        lines(
             "/** @constructor */",
             "function Foo() {}",
             "/** @const */ var FooAlias = Foo;"));
@@ -208,7 +235,7 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
 
   public void testConstructorAlias2() {
     testSame(
-        LINE_JOINER.join(
+        lines(
             "goog.module('a.b.c');",
             "",
             "/** @constructor */",
@@ -218,14 +245,14 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
 
   public void testConstructorAlias3() {
     testSame(
-        LINE_JOINER.join(
+        lines(
             "class Foo {}",
             "/** @const */ var FooAlias = Foo;"));
   }
 
   public void testConstructorAlias4() {
     testSame(
-        LINE_JOINER.join(
+        lines(
             "goog.module('a.b.c');",
             "",
             "class Foo {}",
@@ -234,27 +261,81 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
 
   public void testConstructorAlias5() {
     testSame(
-        LINE_JOINER.join(
+        lines(
             "/** @constructor */",
             "function Foo() {}",
            "/** @constructor */ var FooAlias = Foo;"));
   }
 
+  public void testConstructorAlias6() {
+    testSame(
+        lines(
+            "goog.provide('a.b.c.Foo');",
+            "goog.provide('FooAlias');",
+            "",
+            "/** @constructor */",
+            "a.b.c.Foo = function() {};",
+            "",
+            "/** @const */ var FooAlias = a.b.c.Foo;"));
+  }
+
+  public void testRequireAlias1() {
+    testSame(
+        lines(
+            "goog.provide('FooAlias');",
+            "",
+            "goog.require('a.b.c.Foo');",
+            "",
+            "/** @const */ var FooAlias = a.b.c.Foo;"));
+  }
+
+  public void testRequireAlias2() {
+    testSame(
+        lines(
+            "goog.provide('FooAlias');",
+            "goog.provide('BarAlias');",
+            "",
+            "goog.require('a.b.c');",
+            "",
+            "/** @const */ var FooAlias = a.b.c.Foo;",
+            "/** @const */ var BarAlias = a.b.c.Bar;"));
+  }
+
+  public void testRequireAlias3() {
+    testSame(
+        lines(
+            "goog.module('FooAlias');",
+            "",
+            "const Foo = goog.require('a.b.c.Foo');",
+            "",
+            "exports = Foo;"));
+  }
+
+  public void testRequireAlias4() {
+    testSame(
+        lines(
+            "goog.module('FooAlias');",
+            "",
+            "const {Foo} = goog.require('a.b.c');",
+            "",
+            "exports = Foo;"));
+  }
+
   public void testConstPropagationPrivateProperties1() {
     test(
-        LINE_JOINER.join(
+        lines(
             "/** @constructor */",
             "function Foo() {",
             "  /** @const @private */ this.x = someComplicatedExpression();",
             "}"),
-        LINE_JOINER.join(
+        lines(
             "/** @constructor */ function Foo() {}",
             "/** @const @private {*} */ Foo.prototype.x;"));
   }
 
   public void testConstPropagationPrivateProperties2() {
     test(
-        LINE_JOINER.join(
+        lines(
             "goog.provide('a.b.c');",
             "",
             "/** @private @const */",
@@ -264,7 +345,7 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
 
   public void testOverrideAnnotationCountsAsDeclaration() {
     testSame(
-        LINE_JOINER.join(
+        lines(
             "goog.provide('x.y.z.Bar');",
             "",
             "goog.require('a.b.c.Foo');",
@@ -276,7 +357,7 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
             "x.y.z.Bar.prototype.method = function(a, b, c) {};"));
 
     testSame(
-        LINE_JOINER.join(
+        lines(
             "goog.module('x.y.z');",
             "",
             "const {Foo} = goog.require('a.b.c');",
@@ -292,20 +373,38 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
 
   public void testConstJsdocPropagationForNames_optional() {
     test(
-        LINE_JOINER.join(
+        lines(
             "/** @constructor */",
             "function Foo(/** number= */ opt_x) {",
             "  /** @const */ this.x = opt_x;",
             "}"),
-        LINE_JOINER.join(
+        lines(
             "/** @constructor */ function Foo(/** number= */ opt_x) {}",
             "/** @const {number|undefined} */ Foo.prototype.x;"));
 
   }
 
+  public void testNotConfusedByOutOfOrderDeclarations() {
+    test(
+        lines(
+            "/** @constructor */",
+            "function Foo(/** boolean= */ opt_tag) {",
+            "  if (opt_tag) {",
+            "    Foo.tag = opt_tag;",
+            "  }",
+            "}",
+            "/** @type {boolean} */ Foo.tag = true;",
+            ""),
+        lines(
+            "/** @constructor */",
+            "function Foo(/** boolean= */ opt_tag) {}",
+            "/** @type {boolean} */ Foo.tag;"));
+
+  }
+
   public void testConstJsdocPropagationForNames_rest() {
     test(
-        LINE_JOINER.join(
+        lines(
             "/**",
             " * @constructor",
             " * @param {...number} nums",
@@ -313,7 +412,7 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
             "function Foo(...nums) {",
             "  /** @const */ this.nums = nums;",
             "}"),
-        LINE_JOINER.join(
+        lines(
             "/**",
             " * @constructor",
             " * @param {...number} nums",
@@ -324,7 +423,7 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
 
   public void testOptionalRestParamFunction() {
     test(
-        LINE_JOINER.join(
+        lines(
             "/**",
             " * @param {?Object} o",
             " * @param {string=} str",
@@ -332,7 +431,7 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
             " * @param {...!Object} rest",
             " */",
             "function foo(o, str = '', num = 5, ...rest) {}"),
-        LINE_JOINER.join(
+        lines(
             "/**",
             " * @param {?Object} o",
             " * @param {string=} str",
@@ -344,7 +443,7 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
 
   public void testConstJsdocPropagationForNames_defaultValue() {
     test(
-        LINE_JOINER.join(
+        lines(
             "/**",
             " * @constructor",
             " * @param {string=} str",
@@ -352,7 +451,7 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
             "function Foo(str = '') {",
             "  /** @const */ this.s = str;",
             "}"),
-        LINE_JOINER.join(
+        lines(
             "/**",
             " * @constructor",
             " * @param {string=} str",
@@ -361,14 +460,14 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
             "/** @const {string} */ Foo.prototype.s;"));
 
     test(
-        LINE_JOINER.join(
+        lines(
             "class Foo {",
             "  /** @param {string=} str */",
             "  constructor(str = '') {",
             "    /** @const */ this.s = str;",
             "  }",
             "}"),
-        LINE_JOINER.join(
+        lines(
             "class Foo {",
             "  /** @param {string=} str */",
             "  constructor(str) {}",
@@ -429,14 +528,14 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
     testSame("import {Foo} from 'foo';");
 
     testSame(
-        LINE_JOINER.join(
+        lines(
             "import {Baz} from 'baz';",
             "",
             "export /** @constructor */ function Foo() {}",
             "/** @type {!Baz} */ Foo.prototype.baz"));
 
     testSame(
-        LINE_JOINER.join(
+        lines(
             "import {Bar, Baz} from 'a/b/c';",
             "",
             "class Foo extends Bar {",
@@ -446,14 +545,14 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
             "export {Foo};"));
 
     test(
-        LINE_JOINER.join(
+        lines(
             "export class Foo {",
             "  /** @return {number} */ getTime() { return Date.now(); }",
             "}",
             "export default /** @return {number} */ () => 6",
             "const BLAH = 'foobar';",
             "export {BLAH};"),
-        LINE_JOINER.join(
+        lines(
             "export class Foo {",
             "  /** @return {number} */ getTime() {}",
             "}",
@@ -464,7 +563,7 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
 
   public void testGoogModules() {
     testSame(
-        LINE_JOINER.join(
+        lines(
             "goog.module('x.y.z');",
             "",
             "/** @constructor */ function Foo() {}",
@@ -472,7 +571,7 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
             "exports = Foo;"));
 
     testSame(
-        LINE_JOINER.join(
+        lines(
             "goog.module('x.y.z');",
             "",
             "const Baz = goog.require('a.b.c');",
@@ -483,7 +582,7 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
             "exports = Foo;"));
 
     testSame(
-        LINE_JOINER.join(
+        lines(
             "goog.module('x.y.z');",
             "",
             "const {Bar, Baz} = goog.require('a.b.c');",
@@ -495,39 +594,39 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
 
     testSame(
         new String[] {
-          LINE_JOINER.join(
+          lines(
               "goog.module('a.b.c');",
               "/** @constructor */ function Foo() {}",
-              "Foo.prototoype.display = function() {};",
+              "Foo.prototype.display = function() {};",
               "exports = Foo;"),
-          LINE_JOINER.join(
+          lines(
               "goog.module('x.y.z');",
               "/** @constructor */ function Foo() {}",
-              "Foo.prototoype.display = function() {};",
+              "Foo.prototype.display = function() {};",
               "exports = Foo;"),
         });
 
     testSame(
         new String[] {
-          LINE_JOINER.join(
+          lines(
               "/** @constructor */ function Foo() {}",
-              "Foo.prototoype.display = function() {};"),
-          LINE_JOINER.join(
+              "Foo.prototype.display = function() {};"),
+          lines(
               "goog.module('x.y.z');",
               "/** @constructor */ function Foo() {}",
-              "Foo.prototoype.display = function() {};",
+              "Foo.prototype.display = function() {};",
               "exports = Foo;"),
         });
 
     test(
         new String[] {
-          LINE_JOINER.join(
+          lines(
               "goog.module('a.b.c');",
               "/** @constructor */ function Foo() {",
               "  /** @type {number} */ this.x = 5;",
               "}",
               "exports = Foo;"),
-          LINE_JOINER.join(
+          lines(
               "goog.module('x.y.z');",
               "/** @constructor */ function Foo() {",
               "  /** @type {number} */ this.x = 99;",
@@ -535,12 +634,12 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
               "exports = Foo;"),
         },
         new String[] {
-          LINE_JOINER.join(
+          lines(
               "goog.module('a.b.c');",
               "/** @constructor */ function Foo() {}",
               "/** @type {number} */ Foo.prototype.x;",
               "exports = Foo;"),
-          LINE_JOINER.join(
+          lines(
               "goog.module('x.y.z');",
               "/** @constructor */ function Foo() {}",
               "/** @type {number} */ Foo.prototype.x;",
@@ -550,7 +649,7 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
 
   public void testGoogModulesWithUndefinedExports() {
     testWarning(
-        LINE_JOINER.join(
+        lines(
             "goog.module('x.y.z');",
             "",
             "const Baz = goog.require('x.y.z.Baz');",
@@ -560,7 +659,7 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
         ConvertToTypedInterface.CONSTANT_WITHOUT_EXPLICIT_TYPE);
 
    testWarning(
-        LINE_JOINER.join(
+        lines(
             "goog.module('x.y.z');",
             "",
             "const Baz = goog.require('x.y.z.Baz');",
@@ -572,7 +671,7 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
 
   public void testGoogModulesWithAnnotatedUninferrableExports() {
     test(
-        LINE_JOINER.join(
+        lines(
             "goog.module('x.y.z');",
             "",
             "const Baz = goog.require('x.y.z.Baz');",
@@ -580,7 +679,7 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
             "",
             "/** @type {Foobar} */",
             "exports.foobar = (new Baz).getFoobar();"),
-        LINE_JOINER.join(
+        lines(
             "goog.module('x.y.z');",
             "",
             "const Baz = goog.require('x.y.z.Baz');",
@@ -590,7 +689,7 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
             "exports.foobar;"));
 
     test(
-        LINE_JOINER.join(
+        lines(
             "goog.module('x.y.z');",
             "",
             "const Baz = goog.require('x.y.z.Baz');",
@@ -598,7 +697,7 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
             "",
             "/** @type {Foobar} */",
             "exports = (new Baz).getFoobar();"),
-        LINE_JOINER.join(
+        lines(
             "goog.module('x.y.z');",
             "",
             "const Baz = goog.require('x.y.z.Baz');",
@@ -610,34 +709,34 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
 
   public void testCrossFileModifications() {
     test(
-        LINE_JOINER.join(
+        lines(
             "goog.module('a.b.c');",
             "othermodule.modify.something = othermodule.modify.something + 1;"),
         "goog.module('a.b.c');");
 
     test(
-        LINE_JOINER.join(
+        lines(
             "goog.module('a.b.c');",
             "class Foo {}",
             "Foo.something = othermodule.modify.something + 1;",
             "exports = Foo;"),
-        LINE_JOINER.join(
+        lines(
             "goog.module('a.b.c');",
             "class Foo {}",
             "/** @const {*} */ Foo.something",
             "exports = Foo;"));
 
     test(
-        LINE_JOINER.join(
+        lines(
             "goog.provide('a.b.c');",
             "otherfile.modify.something = otherfile.modify.something + 1;"),
         "goog.provide('a.b.c');");
 
     test(
-        LINE_JOINER.join(
+        lines(
             "goog.provide('a.b.c');",
             "a.b.c.something = otherfile.modify.something + 1;"),
-        LINE_JOINER.join(
+        lines(
             "goog.provide('a.b.c');",
             "/** @const {*} */ a.b.c.something;"));
   }
@@ -680,7 +779,7 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
         "/** @type {number} */ var n;");
 
     test(
-        LINE_JOINER.join(
+        lines(
             "try {",
             "  /** @type {number} */ var start = Date.now();",
             "  doStuff();",
@@ -692,13 +791,13 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
 
   public void testTemplatedClass() {
     test(
-        LINE_JOINER.join(
+        lines(
             "/** @template T */",
             "const Foo = goog.defineClass(null, {",
             "  /** @param {T} x */",
             "  constructor: function(x) { /** @const */ this.x = x;},",
             "});"),
-        LINE_JOINER.join(
+        lines(
             "/** @template T */",
             "const Foo = goog.defineClass(null, {",
             "  /** @param {T} x */",
@@ -707,13 +806,13 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
             "/** @const {T} */ Foo.prototype.x;"));
 
     test(
-        LINE_JOINER.join(
+        lines(
             "/** @template T */",
             "class Foo {",
             "  /** @param {T} x */",
             "  constructor(x) { /** @const */ this.x = x;}",
             "}"),
-        LINE_JOINER.join(
+        lines(
             "/** @template T */",
             "class Foo {",
             "  /** @param {T} x */",
@@ -740,46 +839,46 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
         "class Foo { constructor() {} } /** @type {number} */ Foo.prototype.num;");
 
     test(
-        LINE_JOINER.join(
+        lines(
             "const Foo = goog.defineClass(null, {",
             "  constructor: function() { /** @type {number} */ this.num = 5;},",
             "});"),
-        LINE_JOINER.join(
+        lines(
             "const Foo = goog.defineClass(null, {",
             "  constructor: function() {},",
             "});",
             "/** @type {number} */ Foo.prototype.num;"));
 
     test(
-        LINE_JOINER.join(
+        lines(
             "ns.Foo = goog.defineClass(null, {",
             "  constructor: function() { /** @type {number} */ this.num = 5;},",
             "});"),
-        LINE_JOINER.join(
+        lines(
             "ns.Foo = goog.defineClass(null, {",
             "  constructor: function() {},",
             "});",
             "/** @type {number} */ ns.Foo.prototype.num;"));
 
     test(
-        LINE_JOINER.join(
+        lines(
             "const Foo = goog.defineClass(null, {",
             "  /** @return {number} */",
             "  foo: function() { return 5;},",
             "});"),
-        LINE_JOINER.join(
+        lines(
             "const Foo = goog.defineClass(null, {",
             "  /** @return {number} */",
             "  foo: function() {},",
             "});"));
 
     test(
-        LINE_JOINER.join(
+        lines(
             "const Foo = goog.defineClass(null, {",
             "  /** @return {number} */",
             "  foo() { return 5;},",
             "});"),
-        LINE_JOINER.join(
+        lines(
             "const Foo = goog.defineClass(null, {",
             "  /** @return {number} */",
             "  foo() {},",
@@ -881,6 +980,36 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
         "/** @const */ var ns = {}; ns.fun = function(x,y,z) {}");
   }
 
+  public void testNonemptyNamespaces() {
+    testSame("/** @const */ var ns = {fun: function(x,y,z) {}}");
+
+    test(
+        "/** @const */ var ns = {/** @type {number} */ n: 5};",
+        "/** @const */ var ns = {/** @type {number} */ n: 0};");
+
+    // NOTE: This pattern typechecks when found in externs, but not for code.
+    // Since the goal of this pass is intended to be used as externs, this is acceptable.
+    test(
+        "/** @const */ var ns = {/** @type {string} */ s: 'str'};",
+        "/** @const */ var ns = {/** @type {string} */ s: 0};");
+
+    test(
+        "/** @const */ var ns = {/** @const */ s: 'blahblahblah'};",
+        "/** @const */ var ns = {/** @const {string} */ s: 0};");
+
+    test(
+        "/** @const */ var ns = {untyped: foo()};",
+        "/** @const */ var ns = {/** @const {*} */ untyped: 0};");
+
+  }
+
+  public void testConstKeywordNamespaces() {
+    testSame("const ns = {}; /** @return {number} */ ns.fun = function(x,y,z) {}");
+    testSame("const ns = { /** @return {number} */ fun : goog.abstractMethod };");
+    testSame("const ns = {fun: function(x,y,z) {}}");
+    testSame("const ns = { /** @return {number} */ fun(x,y,z) {}}");
+  }
+
   public void testRemoveIgnoredProperties() {
     test(
         "/** @const */ var ns = {}; /** @return {number} */ ns['fun'] = function(x,y,z) {}",
@@ -946,7 +1075,7 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
     testSame("goog.module('x.y.z'); class Foo {} exports = {Foo};");
 
     testSame(
-        LINE_JOINER.join(
+        lines(
             "goog.module('x.y.z');",
             "const C = goog.require('a.b.C');",
             "class Foo extends C {}",
@@ -954,9 +1083,8 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
   }
 
   public void testDontPreserveUnknownTypeDeclarations() {
-    test(
-        "goog.forwardDeclare('MyType'); /** @type {MyType} */ var x;",
-        "/** @type {MyType} */ var x;");
+    testSame(
+        "goog.forwardDeclare('MyType'); /** @type {MyType} */ var x;");
 
     test(
         "goog.addDependency('zzz.js', ['MyType'], []); /** @type {MyType} */ var x;",
@@ -968,7 +1096,7 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
 
   public void testAliasOfRequirePreserved() {
     testSame(
-        LINE_JOINER.join(
+        lines(
             "goog.provide('a.b.c');",
             "",
             "goog.require('ns.Foo');",
@@ -977,7 +1105,7 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
             "a.b.c.FooAlias = ns.Foo;"));
 
     testSame(
-        LINE_JOINER.join(
+        lines(
             "goog.provide('a.b.c');",
             "",
             "goog.require('ns.Foo');",
@@ -986,7 +1114,7 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
             "a.b.c.FooAlias = ns.Foo;"));
 
     testSame(
-        LINE_JOINER.join(
+        lines(
             "goog.module('mymod');",
             "",
             "const {Foo} = goog.require('ns.Foo');",
@@ -999,7 +1127,7 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
 
 
     testSame(
-        LINE_JOINER.join(
+        lines(
             "goog.module('mymod');",
             "",
             "var Foo = goog.require('ns.Foo');",
@@ -1013,7 +1141,7 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
 
   public void testAliasOfNonRequiredName() {
     testWarning(
-        LINE_JOINER.join(
+        lines(
             "goog.provide('a.b.c');",
             "",
             "/** @const */",
@@ -1021,7 +1149,7 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
         ConvertToTypedInterface.CONSTANT_WITHOUT_EXPLICIT_TYPE);
 
     testWarning(
-        LINE_JOINER.join(
+        lines(
             "goog.provide('a.b.c');",
             "",
             "/** @constructor */",
@@ -1032,7 +1160,7 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
         ConvertToTypedInterface.CONSTANT_WITHOUT_EXPLICIT_TYPE);
 
     testWarning(
-        LINE_JOINER.join(
+        lines(
             "goog.module('a.b.c');",
             "",
             "class FooAlias {",
@@ -1046,7 +1174,7 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
 
   public void testGoogScopeLeftoversAreRemoved() {
     test(
-        LINE_JOINER.join(
+        lines(
             "goog.provide('a.b.c.d.e.f.g');",
             "",
             "/** @const */ var $jscomp = $jscomp || {};",
@@ -1055,13 +1183,13 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
             "$jscomp.scope.strayVariable = function() {};",
             "",
             "a.b.c.d.e.f.g.Foo = class {};"),
-        LINE_JOINER.join(
+        lines(
             "goog.provide('a.b.c.d.e.f.g');",
             "",
             "a.b.c.d.e.f.g.Foo = class {};"));
 
     test(
-        LINE_JOINER.join(
+        lines(
             "goog.provide('a.b.c.d.e.f.g');",
             "",
             "/** @const */ var $jscomp = $jscomp || {};",
@@ -1071,9 +1199,49 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
             "$jscomp.scope.strayCtor = function() { this.x = 5; };",
             "",
             "a.b.c.d.e.f.g.Foo = class {};"),
-        LINE_JOINER.join(
+        lines(
             "goog.provide('a.b.c.d.e.f.g');",
             "",
             "a.b.c.d.e.f.g.Foo = class {};"));
+  }
+
+  public void testDestructuringDoesntCrash() {
+    test(
+        lines(
+            "goog.module('a.b.c');",
+            "",
+            "const Enum = goog.require('Enum');",
+            "const Foo = goog.require('Foo');",
+            "",
+            "const {A, B} = Enum;",
+            "",
+            "/** @type {Foo} */",
+            "exports.foo = use(A, B);",
+            ""),
+        lines(
+            "goog.module('a.b.c');",
+            "",
+            "const Enum = goog.require('Enum');",
+            "const Foo = goog.require('Foo');",
+            "",
+            "/** @type {Foo} */",
+            "exports.foo;",
+            ""));
+  }
+
+  public void testDescAnnotationCountsAsTyped() {
+    test(
+        lines(
+            "goog.module('a.b.c');",
+            "",
+            "/** @desc Some description */",
+            "exports.MSG_DESCRIPTION = goog.getMsg('Text');",
+            ""),
+        lines(
+            "goog.module('a.b.c');",
+            "",
+            "/** @const {string} @desc Some description */",
+            "exports.MSG_DESCRIPTION;",
+            ""));
   }
 }

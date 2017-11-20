@@ -279,7 +279,7 @@ public class PrototypeObjectType extends ObjectType {
   @Override
   StringBuilder appendTo(StringBuilder sb, boolean forAnnotations) {
     if (hasReferenceName()) {
-      return sb.append(getReferenceName());
+      return sb.append(forAnnotations ? getNormalizedReferenceName() : getReferenceName());
     }
     if (!prettyPrint) {
       return sb.append(forAnnotations ? "?" : "{...}");

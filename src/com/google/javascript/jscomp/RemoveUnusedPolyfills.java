@@ -122,7 +122,7 @@ class RemoveUnusedPolyfills implements CompilerPass {
         if (unusedStaticPolyfills.put(polyfillName, n) != null) {
           throw new RuntimeException(polyfillName + " polyfilled multiple times.");
         }
-        suffixes.add(polyfillName.substring(polyfillName.lastIndexOf(".") + 1));
+        suffixes.add(polyfillName.substring(polyfillName.lastIndexOf('.') + 1));
       }
     }
 

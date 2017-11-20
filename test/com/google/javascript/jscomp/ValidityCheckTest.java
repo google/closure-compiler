@@ -25,13 +25,12 @@ import com.google.javascript.rhino.Token;
 /**
  * @author nicksantos@google.com (Nick Santos)
  */
-public final class SanityCheckTest extends CompilerTestCase {
+public final class ValidityCheckTest extends CompilerTestCase {
 
   private CompilerPass otherPass = null;
 
   @Override protected void setUp() throws Exception {
     super.setUp();
-    disableCompareAsTree();
     otherPass = null;
   }
 
@@ -43,7 +42,7 @@ public final class SanityCheckTest extends CompilerTestCase {
     return new CompilerPass() {
       @Override public void process(Node externs, Node root) {
         otherPass.process(externs, root);
-        (new SanityCheck(compiler)).process(externs, root);
+        (new ValidityCheck(compiler)).process(externs, root);
       }
     };
   }
@@ -63,7 +62,7 @@ public final class SanityCheckTest extends CompilerTestCase {
       test("var x = 3;", "var x=3;0;0");
       fail("Expected IllegalStateException");
     } catch (IllegalStateException e) {
-      assertThat(e.getMessage()).contains("Expected BLOCK but was EMPTY");
+      assertThat(e).hasMessageThat().contains("Expected BLOCK but was EMPTY");
     }
   }
 
@@ -78,7 +77,7 @@ public final class SanityCheckTest extends CompilerTestCase {
       testSame("while(1){}");
       fail("Expected RuntimeException");
     } catch (RuntimeException e) {
-      assertThat(e.getMessage()).contains("Normalize constraints violated:\nWHILE node");
+      assertThat(e).hasMessageThat().contains("Normalize constraints violated:\nWHILE node");
     }
   }
 
@@ -99,7 +98,9 @@ public final class SanityCheckTest extends CompilerTestCase {
       test("var x;", "var x; x;");
       fail("Expected RuntimeException");
     } catch (RuntimeException e) {
-      assertThat(e.getMessage()).contains("The name x is not consistently annotated as constant.");
+      assertThat(e)
+          .hasMessageThat()
+          .contains("The name x is not consistently annotated as constant.");
     }
   }
 }

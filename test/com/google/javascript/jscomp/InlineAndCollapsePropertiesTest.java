@@ -229,10 +229,10 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
          "/** @constructor */ var a$b = function(){}; var c = null; a$b = 0; a$b != a$b;");
 
     test(
-        LINE_JOINER.join(
+        lines(
             "var a = {}; /** @constructor @nocollapse */ a.b = function(){};",
             "var c = 1; c = a; c.b = 0; a.b == c.b;"),
-        LINE_JOINER.join(
+        lines(
             "var a = {}; /** @constructor @nocollapse */ a.b = function(){};",
             "var c = 1; c = a; c.b = 0; a.b == c.b;"),
         warning(UNSAFE_NAMESPACE_WARNING));
@@ -322,7 +322,7 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
 
   public void testAddPropertyToChildTypeOfUncollapsibleObjectInLocalScope() {
     test(
-        LINE_JOINER.join(
+        lines(
             "var a = {};",
             "/** @constructor */",
             "a.b = function (){};",
@@ -331,7 +331,7 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
             "(function() {a.b.y = 1;})();",
             "a.b.x;",
             "a.b.y;"),
-        LINE_JOINER.join(
+        lines(
             "/** @constructor */",
             "var a$b = function (){};",
             "var a$b$y;",
@@ -342,7 +342,7 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
             "a$b$y;"));
 
     test(
-        LINE_JOINER.join(
+        lines(
             "var a = {};",
             "/** @constructor */",
             "a.b = function (){};",
@@ -352,7 +352,7 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
             "a.b.x;",
             "a.b.y;",
             "use(c);"),
-        LINE_JOINER.join(
+        lines(
             "var a = {};",
             "/** @constructor */",
             "var a$b = function (){};",
@@ -424,6 +424,11 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
   public void testLocalAlias7() {
     test("var a = {b: {c: 5}}; function f() { var x = a.b; f(x.c); }",
          "var a$b$c = 5; function f() { var x = null; f(a$b$c); }");
+  }
+
+  public void testLocalAlias8() {
+    testSame(
+        "var a = { b: 3 }; function f() { if (true) { var x = a; f(x.b); } x = { b : 4}; }");
   }
 
   public void testGlobalWriteToAncestor() {
@@ -775,7 +780,7 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
   public void testCodeGeneratedByGoogModule() {
     // The static property is added to the exports object
     test(
-        LINE_JOINER.join(
+        lines(
             "var $jscomp = {};",
             "$jscomp.scope = {};",
             "/** @constructor */",
@@ -783,7 +788,7 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
             "var exports = $jscomp.scope.Foo;",
             "exports.staticprop = {A:1};",
             "var y = exports.staticprop.A;"),
-        LINE_JOINER.join(
+        lines(
             "/** @constructor */",
             "var $jscomp$scope$Foo = function() {}",
             "var exports = null;",
@@ -792,7 +797,7 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
 
     // The static property is added to the constructor
     test(
-        LINE_JOINER.join(
+        lines(
             "var $jscomp = {};",
             "$jscomp.scope = {};",
             "/** @constructor */",
@@ -800,7 +805,7 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
             "$jscomp.scope.Foo.staticprop = {A:1};",
             "var exports = $jscomp.scope.Foo;",
             "var y = exports.staticprop.A;"),
-        LINE_JOINER.join(
+        lines(
             "/** @constructor */",
             "var $jscomp$scope$Foo = function() {}",
             "var $jscomp$scope$Foo$staticprop$A = 1;",
@@ -810,7 +815,7 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
 
   public void testInlineCtorInObjLit() {
     test(
-        LINE_JOINER.join(
+        lines(
             "/** @constructor */",
             "function Foo() {}",
             "",
@@ -820,7 +825,7 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
             "var objlit = {",
             "  'prop' : Bar",
             "};"),
-        LINE_JOINER.join(
+        lines(
             "/** @constructor */",
             "function Foo() {}",
             "/** @constructor */",
@@ -864,5 +869,380 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
         + "    })();\n"
         + "}",
         null);
+  }
+
+  public void testGlobalAliasWithLet() {
+    test(
+        "let ns = {}; ns.foo = 'bar'; let ns2 = ns; use(ns2.foo);",
+        "var ns$foo = 'bar'; let ns2 = null; use(ns$foo);");
+  }
+
+  public void testGlobalAliasForLet2() {
+    // We don't do any sort of branch prediction, so can't collapse here.
+    testSame(
+        lines(
+            "let ns = {};",
+            "ns.foo = 'bar';",
+            "let ns2;",
+            "if (true) {",
+            "  ns2 = ns;",
+            "}",
+            "use(ns2.foo);"));
+  }
+
+  public void testGlobalAliasWithLet3() {
+    // Back off since in general we don't check that ns2 is only ever accessed within the if block.
+    testSame(
+        lines(
+            "let ns = {};",
+            "ns.foo = 'bar';",
+            "let ns2;",
+            "if (true) {",
+            "  ns2 = ns;",
+            "  use(ns2.foo);",
+            "}"));
+  }
+
+  public void testLocalAliasWithLet1() {
+    test(
+        "let ns = {}; ns.foo = 'bar'; function f() { let ns2 = ns; use(ns2.foo); }",
+        "var ns$foo = 'bar'; function f() { let ns2 = null; use(ns$foo); }");
+  }
+
+  public void testLocalAliasWithLet2() {
+    test(
+        lines(
+            "let ns = {};",
+            "ns.foo = 'bar';",
+            "function f() {",
+            "  if (true) {",
+            "    let ns2 = ns;",
+            "    use(ns2.foo);",
+            "  }",
+            "}"),
+        lines(
+            "var ns$foo = 'bar';",
+            "function f() {",
+            "  if (true) {",
+            "    let ns2 = null;",
+            "    use(ns$foo);",
+            "  }",
+            "}"));
+  }
+
+  public void testLocalAliasWithLet3() {
+    test(
+        lines(
+            "let ns = {};",
+            "ns.foo = 'bar';",
+            "if (true) {",
+            "  let ns2 = ns;",
+            "  use(ns2.foo);",
+            "}"),
+        lines(
+            "var ns$foo = 'bar';",
+            "if (true) {",
+            "  let ns2 = null;",
+            "  use(ns$foo);", "}"));
+  }
+
+  public void testLocalAliasWithLet4() {
+    test(
+        lines(
+            "let ns = {};",
+            "ns.foo = 'bar';",
+            "if (true) {",
+            "  let baz = ns.foo;",
+            "  use(baz);",
+            "}"),
+        lines(
+            "var ns$foo = 'bar';",
+            "if (true) {",
+            "  let baz = null;",
+            "  use(ns$foo);", "}"));
+  }
+
+  public void testLocalAliasWithLet5() {
+    // For local variables (VAR, CONST, or LET) we only handle cases where the alias is a variable,
+    // not a property.
+    testSame(
+        lines(
+            "let ns = {};",
+            "ns.foo = 'bar';",
+            "if (true) {",
+            "  let ns2 = {};",
+            "  ns2.baz = ns;",
+            "  use(ns2.baz.foo);",
+            "}"));
+  }
+
+  public void testGlobalAliasWithConst() {
+    test(
+        "const ns = {}; ns.foo = 'bar'; const ns2 = ns; use(ns2.foo);",
+        "var ns$foo = 'bar'; const ns2 = null; use(ns$foo);");
+  }
+
+  public void testLocalAliasWithConst1() {
+    test(
+        lines(
+            "const ns = {};",
+            "ns.foo = 'bar';",
+            "function f() { const ns2 = ns;",
+            "use(ns2.foo); }"),
+        lines(
+            "var ns$foo = 'bar';",
+            "function f() {",
+            "const ns2 = null;",
+            "use(ns$foo);", "}"));
+  }
+
+  public void testLocalAliasWithConst2() {
+    test(
+        lines(
+            "const ns = {};",
+            "ns.foo = 'bar';",
+            "function f() {",
+            "  if (true) {",
+            "    const ns2 = ns;",
+            "    use(ns2.foo);",
+            "  }",
+            "}"),
+        lines(
+            "var ns$foo = 'bar';",
+            "function f() {",
+            "  if (true) {",
+            "    const ns2 = null;",
+            "    use(ns$foo);",
+            "  }",
+            "}"));
+  }
+
+  public void testLocalAliasWithConst3() {
+    test(
+        lines(
+            "const ns = {};",
+            "ns.foo = 'bar';",
+            "if (true) {",
+            "  const ns2 = ns;",
+            "  use(ns2.foo);",
+            "}"),
+        lines(
+            "var ns$foo = 'bar';",
+            "if (true) {",
+            "  const ns2 = null;",
+            "  use(ns$foo);",
+            "}"));
+  }
+
+  public void testLocalAliasWithConst4() {
+    test(
+        lines(
+            "const ns = {};",
+            "ns.foo = 'bar';",
+            "if (true) {",
+            "  const baz = ns.foo;",
+            "  use(baz);",
+            "}"),
+        lines(
+            "var ns$foo = 'bar';",
+            "if (true) {",
+            "  const baz = null;",
+            "  use(ns$foo);",
+            "}"));
+  }
+
+  public void testLocalAliasWithConst5() {
+    // For local variables (VAR, CONST, or LET) we only handle cases where the alias is a variable,
+    // not a property.
+    testSame(
+        lines(
+            "const ns = {};",
+            "ns.foo = 'bar';",
+            "if (true) {",
+            "  const ns2 = {};",
+            "  ns2.baz = ns;",
+            "  use(ns2.baz.foo);",
+            "}"));
+  }
+
+  public void testLocalAliasInsideClass() {
+    test(
+        "var a = {b: 5}; class A { fn() { var c = a; use(a.b); } }",
+        "var a$b = 5; class A { fn() { var c = null; use(a$b); } }");
+  }
+
+  public void testEs6ClassStaticProperties() {
+    // Collapsing static properties (A.foo in this case) is known to be unsafe.
+    test(
+        lines(
+            "class A {",
+            "  static useFoo() {",
+            "    alert(this.foo);",
+            "  }",
+            "}",
+            "A.foo = 'bar';",
+            "const B = A;",
+            "B.foo = 'baz';",
+            "B.useFoo();"),
+        lines(
+            "class A {",
+            "static useFoo() {",
+            "alert(this.foo);",
+            "}",
+            "}",
+            "var A$foo = 'bar';",
+            "const B = null;",
+            "A$foo = 'baz';",
+            "A.useFoo();"));
+
+    // Adding @nocollapse makes this safe.
+    test(
+        lines(
+            "class A {",
+            "  static useFoo() {",
+            "    alert(this.foo);",
+            "  }",
+            "}",
+            "/** @nocollapse */",
+            "A.foo = 'bar';",
+            "const B = A;",
+            "B.foo = 'baz';",
+            "B.useFoo();"),
+        lines(
+            "class A {",
+            "static useFoo() {",
+            "alert(this.foo);",
+            "}",
+            "}",
+            "/** @nocollapse */",
+            "A.foo = 'bar';",
+            "const B = null;",
+            "A.foo = 'baz';",
+            "A.useFoo();"));
+  }
+
+  public void testClassStaticInheritance_method() {
+    test(
+        "class A { static s() {} } class B extends A {} const C = B;    C.s();",
+        "class A { static s() {} } class B extends A {} const C = null; B.s();");
+
+    testSame("class A { static s() {} } class B extends A {} B.s();");
+
+    // Currently we unsafely collapse A.s because we don't detect it is a class static method.
+    test(
+        "class A {}     A.s = function() {}; class B extends A {} B.s();",
+        "class A {} var A$s = function() {}; class B extends A {} B.s();");
+  }
+
+  public void testClassStaticInheritance_propertyAlias() {
+    test(
+        "class A {}     A.staticProp = 6; class B extends A {} let b = new B;",
+        "class A {} var A$staticProp = 6; class B extends A {} let b = new B;");
+
+    test(
+        "class A {}     A.staticProp = 6; class B extends A {} use(B.staticProp);",
+        "class A {} var A$staticProp = 6; class B extends A {} use(A$staticProp);");
+  }
+
+  public void testClassStaticInheritance_propertyWithSubproperty() {
+    test(
+        "class A {}     A.ns = {foo: 'bar'}; class B extends A {} use(B.ns.foo);",
+        "class A {} var A$ns$foo = 'bar'; class B extends A {} use(A$ns$foo);");
+
+    test(
+        "class A {} A.ns = {}; class B extends A {} B.ns.foo = 'baz'; use(B.ns.foo);",
+        "class A {} class B extends A {} var A$ns$foo = 'baz'; use(A$ns$foo);");
+  }
+
+  public void testClassStaticInheritance_propertyWithShadowing() {
+    test(
+        "class A {}     A.staticProp = 6; class B extends A {}     B.staticProp = 7;",
+        "class A {} var A$staticProp = 6; class B extends A {} var B$staticProp = 7;");
+
+    // At the time use() is called, B.staticProp is still the same as A.staticProp, but we back off
+    // rewriting it because of the shadowing afterwards. This makes CollapseProperties unsafely
+    // collapse in this case - the same issue occurs when transpiling down to ES5.
+    test(
+        "class A {}     A.foo = 6; class B extends A {} use(B.foo); B.foo = 7;",
+        "class A {} var A$foo = 6; class B extends A {} use(B$foo); var B$foo = 7;");
+  }
+
+  public void testClassStaticInheritance_cantDetermineSuperclass() {
+    // Here A.foo and B.foo are not collapsed because getSuperclass() creates an alias for them.
+    testSame(
+        lines(
+            "class A {}",
+            "A.foo = 5;",
+            "class B {}",
+            "B.foo = 6;",
+            "function getSuperclass() { return 1 < 2 ? A : B; }",
+            "class C extends getSuperclass() {}",
+            "use(C.foo);"));
+  }
+
+  public void testAliasForSuperclassNamespace() {
+    test(
+        lines(
+            "var ns = {};",
+            "class Foo {}",
+            "ns.clazz = Foo;",
+            "var Bar = class extends ns.clazz.Baz {}"),
+        lines(
+            "class Foo {}",
+            "var ns$clazz = null;",
+            "var Bar = class extends Foo.Baz {}"));
+
+    test(
+        lines(
+            "var ns = {};",
+            "class Foo {}",
+            "Foo.Builder = class {}",
+            "ns.clazz = Foo;",
+            "var Bar = class extends ns.clazz.Builder {}"),
+        lines(
+            "class Foo {}",
+            "var Foo$Builder = class {}",
+            "var ns$clazz = null;",
+            "var Bar = class extends Foo$Builder {}"));
+  }
+
+  public void testAliasForSuperclassNamespace_withStaticInheritance() {
+    // TODO(lharker): The last line should be "use(Foo$Builder$baz);".
+    test(
+        lines(
+            "var ns = {};",
+            "class Foo {}",
+            "Foo.Builder = class {}",
+            "Foo.Builder.baz = 3;",
+            "ns.clazz = Foo;",
+            "var Bar = class extends ns.clazz.Builder {}",
+            "use(Bar.baz);"),
+        lines(
+            "class Foo {}",
+            "var Foo$Builder = class {}",
+            "var Foo$Builder$baz = 3;",
+            "var ns$clazz = null;",
+            "var Bar = class extends Foo$Builder {}",
+            "use(Bar.baz);"));
+  }
+
+  public void testDestructuringAlias1() {
+    testSame("var a = { x: 5 }; var [b] = [a]; use(b.x);");
+  }
+
+  public void testDestructuringAlias2() {
+    testSame("var a = { x: 5 }; var {b} = {b: a}; use(b.x);");
+  }
+
+  public void testDefaultParamAlias1() {
+    test(
+        "var a = {b: 5}; var b = a; function f(x=b) { alert(x.b); }",
+        "var a = {b: 5}; var b = null; function f(x=a) { alert(x.b); }");
+  }
+
+  public void testDefaultParamAlias2() {
+    test(
+        "var a = {b: {c: 5}}; var b = a; function f(x=b.b) { alert(x.c); }",
+        "var a$b = {c: 5}; var b = null; function f(x=a$b) { alert(x.c); }");
   }
 }

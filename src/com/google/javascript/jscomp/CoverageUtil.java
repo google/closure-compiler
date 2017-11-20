@@ -29,7 +29,7 @@ class CoverageUtil {
 
   /**
    * Returns a string with all non-alphanumeric characters in the given string
-   * replaced with underscrores. This is to create a valid identifier based on
+   * replaced with underscores. This is to create a valid identifier based on
    * the given text.
    * @param inputText the text to create an identifier from
    * @return the new string that can be used as in identifier

@@ -93,7 +93,7 @@ public class J2clPropertyInlinerPassTest extends CompilerTestCase {
         Lists.newArrayList(
             SourceFile.fromCode(
                 "someFile.js",
-                LINE_JOINER.join(
+                lines(
                     "var A = function() {};",
                     "A.$clinit = function() {",
                     "  A.$j2cl_prop = 2;",
@@ -123,7 +123,7 @@ public class J2clPropertyInlinerPassTest extends CompilerTestCase {
         Lists.newArrayList(
             SourceFile.fromCode(
                 "someFile.js",
-                LINE_JOINER.join(
+                lines(
                     "var A = function() {};",
                     "A.$clinit = function() {",
                     "  A.$j2cl_prop = 2;",
@@ -147,7 +147,7 @@ public class J2clPropertyInlinerPassTest extends CompilerTestCase {
         Lists.newArrayList(
             SourceFile.fromCode(
                 "someFile.js",
-                LINE_JOINER.join(
+                lines(
                     "var A = function() {};",
                     "A.$clinit = function() {",
                     "  A.$x = 2;",
@@ -167,7 +167,7 @@ public class J2clPropertyInlinerPassTest extends CompilerTestCase {
         Lists.newArrayList(
             SourceFile.fromCode(
                 "someFile.js",
-                LINE_JOINER.join(
+                lines(
                     "var A = function() {};",
                     "A.$clinit = function() {",
                     "  A.$x = 2;",
@@ -181,7 +181,7 @@ public class J2clPropertyInlinerPassTest extends CompilerTestCase {
         Lists.newArrayList(
             SourceFile.fromCode(
                 "someFile.js",
-                LINE_JOINER.join(
+                lines(
                     "var A = function() {};",
                     "A.$clinit = function() {",
                     "  A.$x = 2;",
@@ -201,7 +201,7 @@ public class J2clPropertyInlinerPassTest extends CompilerTestCase {
         Lists.newArrayList(
             SourceFile.fromCode(
                 "someFile.js",
-                LINE_JOINER.join(
+                lines(
                     "var A = function() {};",
                     "A.$clinit = function() {",
                     "  A.$x = 2;",
@@ -215,7 +215,7 @@ public class J2clPropertyInlinerPassTest extends CompilerTestCase {
         Lists.newArrayList(
             SourceFile.fromCode(
                 "someFile.js",
-                LINE_JOINER.join(
+                lines(
                     "var A = function() {};",
                     "A.$clinit = function() {",
                     "  A.$x = {y: 2};",
@@ -235,7 +235,7 @@ public class J2clPropertyInlinerPassTest extends CompilerTestCase {
         Lists.newArrayList(
             SourceFile.fromCode(
                 "someFile.js",
-                LINE_JOINER.join(
+                lines(
                     "var A = function() {};",
                     "A.$clinit = function() {",
                     "  A.$x = {y: 2};",
@@ -250,7 +250,7 @@ public class J2clPropertyInlinerPassTest extends CompilerTestCase {
         Lists.newArrayList(
             SourceFile.fromCode(
                 "someFile.js",
-                LINE_JOINER.join(
+                lines(
                     "var A = function() {};",
                     "A.$clinit = function() {",
                     "  A.$x = 2;",
@@ -275,7 +275,7 @@ public class J2clPropertyInlinerPassTest extends CompilerTestCase {
         Lists.newArrayList(
             SourceFile.fromCode(
                 "someFile.js",
-                LINE_JOINER.join(
+                lines(
                     "var A = function() {};",
                     "A.$clinit = function() {",
                     "  A.$x = 2;",
@@ -298,7 +298,7 @@ public class J2clPropertyInlinerPassTest extends CompilerTestCase {
         Lists.newArrayList(
             SourceFile.fromCode(
                 "someFile.js",
-                LINE_JOINER.join(
+                lines(
                     "var A = function() {};",
                     "A.$clinit = function() {",
                     "  A.$x = 2;",

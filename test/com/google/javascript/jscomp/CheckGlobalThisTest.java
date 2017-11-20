@@ -269,7 +269,7 @@ public final class CheckGlobalThisTest extends CompilerTestCase {
 
   public void testInnerFunctionInClassMethod1() {
     // TODO(user): It would be nice to warn for using 'this' here
-    testSame(LINE_JOINER.join(
+    testSame(lines(
         "function Foo() {}",
         "Foo.prototype.init = function() {",
         "  button.addEventListener('click', function () {",
@@ -281,7 +281,7 @@ public final class CheckGlobalThisTest extends CompilerTestCase {
 
   public void testInnerFunctionInClassMethod2() {
     // TODO(user): It would be nice to warn for using 'this' here
-    testSame(LINE_JOINER.join(
+    testSame(lines(
         "function Foo() {",
         "  var x = function() {",
         "    button.addEventListener('click', function () {",
@@ -294,7 +294,7 @@ public final class CheckGlobalThisTest extends CompilerTestCase {
   public void testInnerFunctionInEs6ClassMethod() {
     // TODO(user): It would be nice to warn for using 'this' here
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
-    testSame(LINE_JOINER.join(
+    testSame(lines(
         "class Foo {",
         "  constructor() {",
         "    button.addEventListener('click', function () {",

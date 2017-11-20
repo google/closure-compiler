@@ -28,6 +28,7 @@ import com.google.common.primitives.Chars;
 import com.google.javascript.jscomp.CompilerOptions.DevMode;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.CompilerOptions.Reach;
+import com.google.javascript.jscomp.CompilerTestCase.NoninjectingCompiler;
 import com.google.javascript.jscomp.testing.NodeSubject;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -278,6 +279,7 @@ public final class IntegrationTest extends IntegrationTestCase {
   @GwtIncompatible // b/63595345
   public void testUnresolvedDefine() {
     CompilerOptions options = new CompilerOptions();
+    options.setLanguageIn(LanguageMode.ECMASCRIPT3);
     options.setClosurePass(true);
     options.setCheckTypes(true);
     DiagnosticType[] warnings = {
@@ -377,6 +379,7 @@ public final class IntegrationTest extends IntegrationTestCase {
 
   public void testAdvancedModeIncludesExtraSmartNameRemoval() {
     CompilerOptions options = new CompilerOptions();
+    options.setLanguageIn(LanguageMode.ECMASCRIPT3);
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     test(
         options,
@@ -466,6 +469,25 @@ public final class IntegrationTest extends IntegrationTestCase {
 
   public void testBug32660578() {
     testSame(createCompilerOptions(), "function f() { alert(x); for (var x in []) {} }");
+  }
+
+  public void testArrayValuesIsPolyfilledForEs2015Out() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setTypeBasedOptimizationOptions(options);
+    options.setRewritePolyfills(true);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_2015);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2015);
+
+    NoninjectingCompiler compiler = new NoninjectingCompiler();
+    compile(
+        options,
+        new String[] {"for (const x of [1, 2, 3].values()) { alert(x); }"},
+        compiler);
+
+    assertThat(compiler.getResult().errors).isEmpty();
+    assertThat(compiler.getResult().warnings).isEmpty();
+    assertThat(compiler.injected).containsExactly("es6/array/values");
   }
 
   public void testWindowIsTypedEs6() {
@@ -937,6 +959,7 @@ public final class IntegrationTest extends IntegrationTestCase {
 
   public void testRenamingOfTypedefPropertiesWithNTI() {
     CompilerOptions options = new CompilerOptions();
+    options.setLanguageIn(LanguageMode.ECMASCRIPT3);
     options.setNewTypeInference(true);
     options.setPropertyRenaming(PropertyRenamingPolicy.ALL_UNQUOTED);
 
@@ -1008,6 +1031,7 @@ public final class IntegrationTest extends IntegrationTestCase {
 
   public void testSilenceUnknownTypeWarningFromOTI() {
     CompilerOptions options = new CompilerOptions();
+    options.setLanguageIn(LanguageMode.ECMASCRIPT3);
     options.setCheckTypes(true);
     options.setNewTypeInference(true);
 
@@ -1061,6 +1085,7 @@ public final class IntegrationTest extends IntegrationTestCase {
 
   public void testLegacyCompileOverridesStrict() {
     CompilerOptions options = new CompilerOptions();
+    options.setLanguageIn(LanguageMode.ECMASCRIPT3);
     options.setCheckTypes(true);
     options.addWarningsGuard(new StrictWarningsGuard());
     options.setLegacyCodeCompile(true);
@@ -1071,6 +1096,7 @@ public final class IntegrationTest extends IntegrationTestCase {
 
   public void testLegacyCompileOverridesExplicitPromotionToError() {
     CompilerOptions options = new CompilerOptions();
+    options.setLanguageIn(LanguageMode.ECMASCRIPT3);
     options.setCheckTypes(true);
     options.addWarningsGuard(new DiagnosticGroupWarningsGuard(
         DiagnosticGroups.CHECK_TYPES, CheckLevel.ERROR));
@@ -1154,6 +1180,50 @@ public final class IntegrationTest extends IntegrationTestCase {
         "var goog = {};");
   }
 
+  public void testRemoveClosureAsserts2() {
+    CompilerOptions options = new CompilerOptions();
+    options.setLanguageIn(LanguageMode.ECMASCRIPT3);
+    options.setClosurePass(true);
+    options.setNewTypeInference(true);
+    options.setRunOTIafterNTI(false);
+    options.setRemoveClosureAsserts(true);
+    options.setDisambiguateProperties(true);
+
+    String js = LINE_JOINER.join(
+        "/** @const */ var goog = {};",
+        "goog.asserts;",
+        "goog.asserts.assertInstanceof;",
+        "/** @constructor */",
+        "function Bar() {",
+        "  this.a = 1;",
+        "}",
+        "/** @constructor */",
+        "function Baz() {",
+        "  this.a = 1;",
+        "}",
+        "function f(x) {",
+        "  return (goog.asserts.assertInstanceof(x, Bar)).a;",
+        "}");
+
+    String output = LINE_JOINER.join(
+        "/** @const */ var goog = {};",
+        "goog.asserts;",
+        "goog.asserts.assertInstanceof;",
+        "/** @constructor */",
+        "function Bar() {",
+        "  this.Bar$a = 1;",
+        "}",
+        "/** @constructor */",
+        "function Baz() {",
+        "  this.Baz$a = 1;",
+        "}",
+        "function f(x) {",
+        "  return x.Bar$a;",
+        "}");
+
+    test(options, js, output);
+  }
+
   public void testDeprecation() {
     String code = "/** @deprecated */ function f() { } function g() { f(); }";
 
@@ -1231,23 +1301,23 @@ public final class IntegrationTest extends IntegrationTestCase {
   }
 
   public void testOptimizeParameters() {
-    String code = "function f(a) { return a; } f(true);";
+    String code = "function f(a) {} f(true);";
 
     CompilerOptions options = createCompilerOptions();
     testSame(options, code);
 
-    options.optimizeParameters = true;
-    test(options, code, "function f() { var a = true; return a;} f();");
+    options.setOptimizeCalls(true);
+    test(options, code, "function f() { var a = true;} f();");
   }
 
   public void testOptimizeReturns() {
-    String code = "function f(a) { return a; } f(true);";
+    String code = "var x; function f() { return x; } f();";
 
     CompilerOptions options = createCompilerOptions();
     testSame(options, code);
 
-    options.optimizeReturns = true;
-    test(options, code, "function f(a) {return;} f(true);");
+    options.setOptimizeCalls(true);
+    test(options, code, "var x; function f() {x; return;} f();");
   }
 
   public void testRemoveAbstractMethods() {
@@ -1383,6 +1453,188 @@ public final class IntegrationTest extends IntegrationTestCase {
             "function Foo(){}",
             "function Bar(){}",
             "Bar.prototype.a=function(x){};"));
+  }
+
+  public void testDisambiguatePropertiesWithNtiNoCrash() {
+    CompilerOptions options = createCompilerOptions();
+    options.setClosurePass(true);
+    options.setNewTypeInference(true);
+    options.setRunOTIafterNTI(false);
+    options.setDisambiguateProperties(true);
+    this.externs = ImmutableList.of(SourceFile.fromCode(
+        "externs",
+        LINE_JOINER.join(
+            "/** @constructor */",
+            "function Object() {}",
+            "/** @constructor */",
+            "function Function() {}",
+            "/** @const */",
+            "var ns = {};",
+            "ns.subns = {};",
+            "ns.subns.prototype.f = function() {};")));
+
+    testSame(options, "");
+  }
+
+  public void testDisambiguatePropertiesWithNtiNoCrash2() {
+    CompilerOptions options = new CompilerOptions();
+    options.setLanguageIn(LanguageMode.ECMASCRIPT3);
+    options.setClosurePass(true);
+    options.setNewTypeInference(true);
+    options.setRunOTIafterNTI(false);
+    options.setDisambiguateProperties(true);
+    options.setGenerateExports(true);
+    options.setExportLocalPropertyDefinitions(true);
+
+    test(options,
+        LINE_JOINER.join(
+            "/** @constructor */",
+            "function Foo() {",
+            "  /** @export */",
+            "  this.prop = 123;",
+            "}"),
+        LINE_JOINER.join(
+            "/** @constructor */",
+            "function Foo() {",
+            "  /** @export */",
+            "  this.Foo$prop = 123;",
+            "}"));
+  }
+
+  // Test that NTI doesn't invalidate types involved in type mismatches with type variables.
+  // This behavior is generally unsafe (as in the code tested here), but also allows more
+  // disambiguation.
+  public void testNtiTypeVariableErrorsDontBlockDisambiguation() {
+    CompilerOptions options = new CompilerOptions();
+    options.setLanguageIn(LanguageMode.ECMASCRIPT3);
+    options.setClosurePass(true);
+    options.setNewTypeInference(true);
+    options.setRunOTIafterNTI(false);
+    options.setDisambiguateProperties(true);
+
+    String js = LINE_JOINER.join(
+        "/** @constructor */",
+        "function Foo() {",
+        "  this.a = 1;",
+        "}",
+        "/** @constructor */",
+        "function Bar() {",
+        "  this.a = 2;",
+        "}",
+        "/**",
+        " * @template T",
+        " * @return {T}",
+        " */",
+        "function f() {",
+        "  return new Foo;",
+        "}",
+        "var /** !Bar */ x = f();",
+        "var y = x.a;");
+
+    String output = LINE_JOINER.join(
+        "/** @constructor */",
+        "function Foo() {",
+        "  this.Foo$a = 1;",
+        "}",
+        "/** @constructor */",
+        "function Bar() {",
+        "  this.Bar$a = 2;",
+        "}",
+        "/**",
+        " * @template T",
+        " * @return {T}",
+        " */",
+        "function f() {",
+        "  return new Foo;",
+        "}",
+        "var /** !Bar */ x = f();",
+        "var y = x.Bar$a;");
+
+    test(options, js, output, NewTypeInference.RETURN_NONDECLARED_TYPE);
+  }
+
+  public void testNtiTypeVariableErrorsDontBlockDisambiguation2() {
+    CompilerOptions options = new CompilerOptions();
+    options.setLanguageIn(LanguageMode.ECMASCRIPT3);
+    options.setClosurePass(true);
+    options.setNewTypeInference(true);
+    options.setRunOTIafterNTI(false);
+    options.setDisambiguateProperties(true);
+
+    String js = LINE_JOINER.join(
+        "/**",
+        " * @constructor",
+        " * @template T",
+        " */",
+        "function Foo() {",
+        "  /** @type {T} */",
+        "  this.p;",
+        "}",
+        "/** @return {!Bar} */",
+        "Foo.prototype.f = function() {",
+        "  return /** @type {!Bar} */ (this.p);",
+        "};",
+        "/** @constructor */",
+        "function Bar() {",
+        "  this.a = 1;",
+        "}",
+        "/** @constructor */",
+        "function Baz() {",
+        "  this.a = 1;",
+        "}");
+
+    String output = LINE_JOINER.join(
+        "/**",
+        " * @constructor",
+        " * @template T",
+        " */",
+        "function Foo() {",
+        "  /** @type {T} */",
+        "  this.p;",
+        "}",
+        "/** @return {!Bar} */",
+        "Foo.prototype.f = function() {",
+        "  return this.p;",
+        "};",
+        "/** @constructor */",
+        "function Bar() {",
+        "  this.Bar$a = 1;",
+        "}",
+        "/** @constructor */",
+        "function Baz() {",
+        "  this.Baz$a = 1;",
+        "}");
+
+    test(options, js, output);
+  }
+
+  public void testTurnOffConstChecksOfCheckAccessControlsWithNtiOn() {
+    CompilerOptions options = new CompilerOptions();
+    options.setLanguageIn(LanguageMode.ECMASCRIPT3);
+    options.setClosurePass(true);
+    options.setNewTypeInference(true);
+    options.setRunOTIafterNTI(false);
+
+    testSame(
+        options,
+        LINE_JOINER.join(
+            "/** @constructor  */",
+            "var Foo = function() {};",
+            "/** @const {number|undefined} */",
+            "Foo.prototype.p;",
+            "/**",
+            " * @constructor",
+            " * @extends {Foo}",
+            " */",
+            "var Bar = function() {};",
+            "/** @const */",
+            "Bar.prototype.p = 123;",
+            "/**",
+            " * @constructor",
+            " * @extends {Foo}",
+            " */",
+            "var Baz = function() {};",
+            "Baz.prototype.p = 345;"));
   }
 
   public void testMarkPureCalls() {
@@ -2060,7 +2312,6 @@ public final class IntegrationTest extends IntegrationTestCase {
     // looks for that exact suffix, and IntegrationTestCase adds an input
     // id number between prefix and suffix.
     inputFileNameSuffix = "vmbootstrap/Arrays.impl.java.js";
-    CompilerOptions options = new CompilerOptions();
     String code = LINE_JOINER.join(
         "/** @constructor */",
         "var Arrays = function() {};",
@@ -2071,6 +2322,8 @@ public final class IntegrationTest extends IntegrationTestCase {
         "function Bar() { this.myprop = 2; }",
         "var x = /** @type {!Foo} */ (Arrays.$create()).myprop;");
 
+    CompilerOptions options = new CompilerOptions();
+    options.setLanguageIn(LanguageMode.ECMASCRIPT3);
     options.setCheckTypes(true);
     options.setDisambiguateProperties(true);
 
@@ -2104,6 +2357,7 @@ public final class IntegrationTest extends IntegrationTestCase {
         "})()");
 
     CompilerOptions options = new CompilerOptions();
+    options.setLanguageIn(LanguageMode.ECMASCRIPT3);
     options.setCheckTypes(true);
     options.setSmartNameRemoval(true);
     options.setFoldConstants(true);
@@ -2153,6 +2407,7 @@ public final class IntegrationTest extends IntegrationTestCase {
         "})()");
 
     CompilerOptions options = new CompilerOptions();
+    options.setLanguageIn(LanguageMode.ECMASCRIPT3);
     options.setCheckTypes(true);
     options.setSmartNameRemoval(true);
     options.setFoldConstants(true);
@@ -2897,8 +3152,8 @@ public final class IntegrationTest extends IntegrationTestCase {
 
   public void testCheckStrictMode() {
     CompilerOptions options = createCompilerOptions();
-    CompilationLevel.ADVANCED_OPTIMIZATIONS
-        .setOptionsForCompilationLevel(options);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT3);
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     WarningLevel.VERBOSE.setOptionsForWarningLevel(options);
 
     externs = ImmutableList.of(
@@ -3424,6 +3679,7 @@ public final class IntegrationTest extends IntegrationTestCase {
 
   public void testCheckProvidesWarning() {
     CompilerOptions options = createCompilerOptions();
+    options.setLanguageIn(LanguageMode.ECMASCRIPT3);
     options.setWarningLevel(DiagnosticGroups.MISSING_PROVIDE, CheckLevel.WARNING);
     options.setWarningLevel(DiagnosticGroups.ES5_STRICT, CheckLevel.OFF);
     test(options,
@@ -3674,6 +3930,7 @@ public final class IntegrationTest extends IntegrationTestCase {
 
   public void testGoogModuleOuterLegacyInner() {
     CompilerOptions options = new CompilerOptions();
+    options.setLanguageIn(LanguageMode.ECMASCRIPT3);
     options.setClosurePass(true);
     options.setCodingConvention(new ClosureCodingConvention());
 
@@ -3719,6 +3976,7 @@ public final class IntegrationTest extends IntegrationTestCase {
 
   public void testLegacyGoogModuleExport() {
     CompilerOptions options = new CompilerOptions();
+    options.setLanguageIn(LanguageMode.ECMASCRIPT3);
     options.setClosurePass(true);
     options.setCodingConvention(new ClosureCodingConvention());
     options.setGenerateExports(true);
@@ -4053,7 +4311,7 @@ public final class IntegrationTest extends IntegrationTestCase {
         "Sub.called();"));
   }
 
-  public void failing_testES6StaticsAreRemoved2() {
+  public void testES6StaticsAreRemoved2() {
     testES6StaticsAreRemoved(LINE_JOINER.join(
         "class Base {",
         "  static calledInSubclassOnly() { alert('No one ever calls me'); }",
@@ -4224,6 +4482,7 @@ public final class IntegrationTest extends IntegrationTestCase {
 
   public void testGatherExternPropsWithNTI() {
     CompilerOptions options = new CompilerOptions();
+    options.setLanguageIn(LanguageMode.ECMASCRIPT3);
     options.setNewTypeInference(true);
     options.setGenerateExports(true);
     options.setExportLocalPropertyDefinitions(true);
@@ -4541,6 +4800,7 @@ public final class IntegrationTest extends IntegrationTestCase {
   public void testInlineRestParamNonTranspiling() {
     CompilerOptions options = createCompilerOptions();
     options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2017);
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     test(
         options,
@@ -4573,6 +4833,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2017);
 
     test(
         options,
@@ -4610,6 +4871,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2017);
     externs = DEFAULT_EXTERNS;
 
     test(
@@ -4622,10 +4884,21 @@ public final class IntegrationTest extends IntegrationTestCase {
         "alert(4);");
   }
 
+  public void testTranspilingEs2016ToEs2015() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2015);
+
+    test(options, "alert(2 ** 5);", "alert(Math.pow(2, 5));");
+    test(options, "const n = 2 ** 5;", "const a = Math.pow(2, 5);");
+  }
+
   /** Creates a CompilerOptions object with google coding conventions. */
   @Override
   protected CompilerOptions createCompilerOptions() {
     CompilerOptions options = new CompilerOptions();
+    options.setLanguageOut(LanguageMode.ECMASCRIPT3);
     options.setDevMode(DevMode.EVERY_PASS);
     options.setCodingConvention(new GoogleCodingConvention());
     options.setRenamePrefixNamespaceAssumeCrossModuleNames(true);

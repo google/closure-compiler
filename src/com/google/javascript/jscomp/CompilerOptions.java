@@ -195,10 +195,6 @@ public class CompilerOptions implements Serializable {
     return incrementalCheckMode != IncrementalCheckMode.OFF;
   }
 
-  public boolean allowUnfulfilledForwardDeclarations() {
-    return incrementalCheckMode == IncrementalCheckMode.OFF;
-  }
-
   private Config.JsDocParsing parseJsDocDocumentation = Config.JsDocParsing.TYPES_ONLY;
 
   private boolean printExterns;
@@ -252,7 +248,7 @@ public class CompilerOptions implements Serializable {
   boolean skipNonTranspilationPasses;
 
   /**
-   * Configures the compiler to run expensive sanity checks after
+   * Configures the compiler to run expensive validity checks after
    * every pass. Only intended for internal development.
    */
   DevMode devMode;
@@ -558,16 +554,6 @@ public class CompilerOptions implements Serializable {
 
   /** Reduces the size of common function expressions. */
   public boolean rewriteFunctionExpressions;
-
-  /**
-   * Remove unused and constant parameters.
-   */
-  public boolean optimizeParameters;
-
-  /**
-   * Remove unused return values.
-   */
-  public boolean optimizeReturns;
 
   /**
    * Remove unused parameters from call sites.
@@ -993,11 +979,27 @@ public class CompilerOptions implements Serializable {
     trustedStrings = yes;
   }
 
+  private boolean allowMethodCallDecomposing;
+
+  boolean allowMethodCallDecomposing() {
+    return allowMethodCallDecomposing;
+  }
+
+  /**
+   * Setting this to true indicates that it's safe to rewrite x.y() as: fn = x.y; fn.call(x);
+   * This should be usually be false if supporting IE 8 or IE 9 is necessary.
+   */
+  public void setAllowMethodCallDecomposing(boolean value) {
+    this.allowMethodCallDecomposing = value;
+  }
+
   // Should only be used when debugging compiler bugs.
   boolean printSourceAfterEachPass;
-  // Used to narrow down the printed source when overall input size is large. If this is empty,
-  // the entire source is printed.
+
+  // Used to narrow down the printed source when overall input size is large. If these are both
+  // empty the entire source is printed.
   List<String> filesToPrintAfterEachPassRegexList = ImmutableList.of();
+  List<String> modulesToPrintAfterEachPassRegexList = ImmutableList.of();
 
   public void setPrintSourceAfterEachPass(boolean printSource) {
     this.printSourceAfterEachPass = printSource;
@@ -1005,6 +1007,10 @@ public class CompilerOptions implements Serializable {
 
   public void setFilesToPrintAfterEachPassRegexList(List<String> filePathRegexList) {
     this.filesToPrintAfterEachPassRegexList = filePathRegexList;
+  }
+
+  public void setModulesToPrintAfterEachPassRegexList(List<String> modulePathRegexList) {
+    this.modulesToPrintAfterEachPassRegexList = modulePathRegexList;
   }
 
   String reportPath;
@@ -1205,7 +1211,7 @@ public class CompilerOptions implements Serializable {
    */
   public CompilerOptions() {
     // Accepted language
-    languageIn = LanguageMode.ECMASCRIPT3;
+    languageIn = LanguageMode.ECMASCRIPT_2017;
     languageOut = LanguageMode.NO_TRANSPILE;
 
     // Which environment to use
@@ -1267,8 +1273,6 @@ public class CompilerOptions implements Serializable {
     outputJsStringUsage = false;
     convertToDottedProperties = false;
     rewriteFunctionExpressions = false;
-    optimizeParameters = false;
-    optimizeReturns = false;
 
     // Renaming
     variableRenaming = VariableRenamingPolicy.OFF;
@@ -1793,11 +1797,6 @@ public class CompilerOptions implements Serializable {
     this.dartPass = dartPass;
   }
 
-  @Deprecated
-  public void setJ2clPass(boolean flag) {
-    setJ2clPass(flag ? J2clPassMode.ON : J2clPassMode.OFF);
-  }
-
   public void setJ2clPass(J2clPassMode j2clPassMode) {
     this.j2clPassMode = j2clPassMode;
   }
@@ -2013,6 +2012,13 @@ public class CompilerOptions implements Serializable {
 
   public void setNewTypeInference(boolean enable) {
     this.useNewTypeInference = enable;
+  }
+
+  /**
+   * @return true if either typechecker is ON.
+   */
+  public boolean isTypecheckingEnabled() {
+    return this.checkTypes || this.useNewTypeInference;
   }
 
   public boolean getRunOTIafterNTI() {
@@ -2330,14 +2336,6 @@ public class CompilerOptions implements Serializable {
 
   public void setRewriteFunctionExpressions(boolean rewriteFunctionExpressions) {
     this.rewriteFunctionExpressions = rewriteFunctionExpressions;
-  }
-
-  public void setOptimizeParameters(boolean optimizeParameters) {
-    this.optimizeParameters = optimizeParameters;
-  }
-
-  public void setOptimizeReturns(boolean optimizeReturns) {
-    this.optimizeReturns = optimizeReturns;
   }
 
   public void setOptimizeCalls(boolean optimizeCalls) {
@@ -2898,6 +2896,7 @@ public class CompilerOptions implements Serializable {
             .add("extraAnnotationNames", extraAnnotationNames)
             .add("extractPrototypeMemberDeclarations", extractPrototypeMemberDeclarations)
             .add("extraSmartNameRemoval", extraSmartNameRemoval)
+            .add("filesToPrintAfterEachPassRegexList", filesToPrintAfterEachPassRegexList)
             .add("flowSensitiveInlineVariables", flowSensitiveInlineVariables)
             .add("foldConstants", foldConstants)
             .add("forceLibraryInjection", forceLibraryInjection)
@@ -2940,12 +2939,11 @@ public class CompilerOptions implements Serializable {
             .add("maxFunctionSizeAfterInlining", maxFunctionSizeAfterInlining)
             .add("messageBundle", messageBundle)
             .add("moduleRoots", moduleRoots)
+            .add("modulesToPrintAfterEachPassRegexList", modulesToPrintAfterEachPassRegexList)
             .add("moveFunctionDeclarations", moveFunctionDeclarations)
             .add("nameGenerator", nameGenerator)
             .add("optimizeArgumentsArray", optimizeArgumentsArray)
             .add("optimizeCalls", optimizeCalls)
-            .add("optimizeParameters", optimizeParameters)
-            .add("optimizeReturns", optimizeReturns)
             .add("outputCharset", outputCharset)
             .add("outputJs", outputJs)
             .add("outputJsStringUsage", outputJsStringUsage)
@@ -3145,10 +3143,10 @@ public class CompilerOptions implements Serializable {
     }
   }
 
-  /** When to do the extra sanity checks */
+  /** When to do the extra validity checks */
   public static enum DevMode {
     /**
-     * Don't do any extra sanity checks.
+     * Don't do any extra checks.
      */
     OFF,
 
@@ -3357,18 +3355,12 @@ public class CompilerOptions implements Serializable {
    */
   public static enum J2clPassMode {
     /** J2clPass is disabled. */
-    FALSE,
-    /** J2clPass is enabled. */
-    TRUE,
-    /** J2clPass is disabled. */
     OFF,
-    /** J2clPass is enabled. */
-    ON,
     /** It auto-detects whether there are J2cl generated file. If yes, execute J2clPass. */
     AUTO;
 
     boolean shouldAddJ2clPasses() {
-      return this == TRUE || this == ON || this == AUTO;
+      return this == AUTO;
     }
   }
 

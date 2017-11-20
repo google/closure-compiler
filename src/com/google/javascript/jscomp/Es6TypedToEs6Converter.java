@@ -880,7 +880,7 @@ public final class Es6TypedToEs6Converter implements NodeTraversal.Callback, Hot
   }
 
   private class ScanNamespaces implements NodeTraversal.Callback {
-    private Map<String, Namespace> namespaces = new HashMap<>();
+    private final Map<String, Namespace> namespaces = new HashMap<>();
 
     @Override
     public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
@@ -942,8 +942,8 @@ public final class Es6TypedToEs6Converter implements NodeTraversal.Callback, Hot
 
   private static class Namespace {
     private final String name;
-    private Set<String> typeNames;
-    private Namespace parent;
+    private final Set<String> typeNames;
+    private final Namespace parent;
 
     private Namespace(String name, Namespace parent) {
       this.name = name;

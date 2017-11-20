@@ -95,8 +95,11 @@ class InstanceObjectType extends PrototypeObjectType {
   @Override
   StringBuilder appendTo(StringBuilder sb, boolean forAnnotations) {
     return constructor.hasReferenceName()
-        ? sb.append(constructor.getReferenceName())
-            : super.appendTo(sb, forAnnotations);
+        ? sb.append(
+            forAnnotations
+                ? constructor.getNormalizedReferenceName()
+                : constructor.getReferenceName())
+        : super.appendTo(sb, forAnnotations);
   }
 
   @Override

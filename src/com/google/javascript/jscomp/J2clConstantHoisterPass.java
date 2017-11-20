@@ -87,28 +87,27 @@ public class J2clConstantHoisterPass implements CompilerPass {
       return;
     }
 
-    Node firstAssignment = Iterables.get(assignments, 0);
-    Node secondAssignment = Iterables.get(assignments, 1);
+    Node first = Iterables.get(assignments, 0);
+    Node second = Iterables.get(assignments, 1);
 
-    // One of them is for field initialization in declaration phase:
-    if (!isClassFieldInitialization(secondAssignment)) {
+    // One of them is the top level declaration and the other is the assignment in clinit.
+    Node topLevelDeclaration = isClassFieldDeclaration(first) ? first : second;
+    Node clinitAssignment = isClinitFieldAssignment(first) ? first : second;
+    if (!isClassFieldDeclaration(topLevelDeclaration)
+        || !isClinitFieldAssignment(clinitAssignment)) {
       return;
     }
 
-    // The other one is the clinit initialization:
-    if (!isClinitFieldAssignment(firstAssignment)) {
-      return;
-    }
     // And it is assigned to a literal value; hence could be used in static eval and safe to move:
-    Node firstAssignmentRhs = firstAssignment.getSecondChild();
-    if (!NodeUtil.isLiteralValue(firstAssignmentRhs, true /* includeFunctions */)
-        || (firstAssignmentRhs.isFunction() && !hoistableFunctions.contains(firstAssignmentRhs))) {
+    Node assignmentRhs = clinitAssignment.getSecondChild();
+    if (!NodeUtil.isLiteralValue(assignmentRhs, true /* includeFunctions */)
+        || (assignmentRhs.isFunction() && !hoistableFunctions.contains(assignmentRhs))) {
       return;
     }
 
     // And the assignment are in the same script:
-    if (NodeUtil.getEnclosingScript(firstAssignment)
-        != NodeUtil.getEnclosingScript(secondAssignment)) {
+    if (NodeUtil.getEnclosingScript(clinitAssignment)
+        != NodeUtil.getEnclosingScript(topLevelDeclaration)) {
       return;
     }
 
@@ -116,12 +115,12 @@ public class J2clConstantHoisterPass implements CompilerPass {
     // cycle between clinits and the field is accessed before initialization; which is almost always
     // a bug and GWT never assumed this state is observable in its optimization, yet nobody
     // complained. So it is safe to upgrade it to a constant.
-    hoistConstantLikeField(firstAssignment, secondAssignment);
+    hoistConstantLikeField(clinitAssignment, topLevelDeclaration);
   }
 
-  private void hoistConstantLikeField(Node clinitAssignment, Node declarationAssignment) {
+  private void hoistConstantLikeField(Node clinitAssignment, Node topLevelDeclaration) {
     Node clinitAssignedValue = clinitAssignment.getSecondChild();
-    Node declarationInClass = declarationAssignment.getFirstChild();
+    Node declarationInClass = topLevelDeclaration.getFirstChild();
     Node declarationAssignedValue = declarationInClass.getFirstChild();
 
     Node clinitChangeScope = NodeUtil.getEnclosingChangeScopeRoot(clinitAssignment);
@@ -129,24 +128,32 @@ public class J2clConstantHoisterPass implements CompilerPass {
     NodeUtil.removeChild(clinitAssignment.getParent(), clinitAssignment);
 
 
-    // Replace the assignment in declaration with the value from clinit
     clinitAssignedValue.detach();
     compiler.reportChangeToChangeScope(clinitChangeScope);
-    if (!declarationAssignedValue.isEquivalentTo(clinitAssignedValue)) {
+    if (declarationAssignedValue == null) {
+      // Add the value from clinit to the stub declaration
+      declarationInClass.addChildToFront(clinitAssignedValue);
+      compiler.reportChangeToEnclosingScope(topLevelDeclaration);
+    } else if (!declarationAssignedValue.isEquivalentTo(clinitAssignedValue)) {
+      checkState(NodeUtil.isLiteralValue(declarationAssignedValue, false /* includeFunctions */));
+      // Replace the assignment in declaration with the value from clinit
       declarationInClass.replaceChild(declarationAssignedValue, clinitAssignedValue);
-      compiler.reportChangeToEnclosingScope(declarationAssignment);
+      compiler.reportChangeToEnclosingScope(topLevelDeclaration);
     }
     declarationInClass.putBooleanProp(Node.IS_CONSTANT_VAR, true);
-
-    // Sanity check
-    checkState(NodeUtil.isLiteralValue(declarationAssignedValue, false /* includeFunctions */));
   }
 
-  private static boolean isClassFieldInitialization(Node node) {
+  /**
+   * Matches literal value declarations {@code var foo = 3;} or stub declarations like
+   * {@code var bar;}.
+   */
+  private static boolean isClassFieldDeclaration(Node node) {
     return node.getParent().isScript()
         && node.isVar()
-        && node.getFirstFirstChild() != null
-        && NodeUtil.isLiteralValue(node.getFirstFirstChild(), false /* includeFunctions */);
+        && (!node.getFirstChild().hasChildren()
+            || (node.getFirstFirstChild() != null
+                && NodeUtil.isLiteralValue(
+                    node.getFirstFirstChild(), false /* includeFunctions */)));
   }
 
   private static boolean isClinitFieldAssignment(Node node) {

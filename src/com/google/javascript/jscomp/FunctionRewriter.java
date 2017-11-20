@@ -119,8 +119,10 @@ class FunctionRewriter implements CompilerPass {
   }
 
   private static boolean isReduceableFunctionExpression(Node n) {
+    Node parent = n.getParent();
     return NodeUtil.isFunctionExpression(n)
-        && !NodeUtil.isGetOrSetKey(n.getParent());
+        && !NodeUtil.isGetOrSetKey(parent)
+        && !parent.isMemberFunctionDef();
   }
 
   /**
@@ -251,7 +253,7 @@ class FunctionRewriter implements CompilerPass {
 
     @Override
     public Node reduce(Node node) {
-      if (NodeUtil.isEmptyFunctionExpression(node)) {
+      if (isReduceableFunctionExpression(node) && NodeUtil.isEmptyFunctionExpression(node)) {
         return buildCallNode(FACTORY_METHOD_NAME, null, node);
       } else {
         return node;
@@ -327,7 +329,8 @@ class FunctionRewriter implements CompilerPass {
     private boolean isIdentityFunction(Node functionNode) {
       Node argList = functionNode.getSecondChild();
       Node paramNode = argList.getFirstChild();
-      if (paramNode == null) {
+      if (paramNode == null || !paramNode.isName()) {
+        // no parameters, or first parameter uses destructuring or a default value
         return false;
       }
 
@@ -505,7 +508,8 @@ class FunctionRewriter implements CompilerPass {
 
       Node argList = functionNode.getSecondChild();
       Node paramNode = argList.getFirstChild();
-      if (paramNode == null) {
+      if (paramNode == null || !paramNode.isName()) {
+        // no parameters, or first parameter uses destructuring or a default value
         return null;
       }
 

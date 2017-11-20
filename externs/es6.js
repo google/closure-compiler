@@ -195,6 +195,15 @@ Object.is;
  */
 Number.prototype.toLocaleString = function(opt_locales, opt_options) {};
 
+/**
+ * Returns the wrapped primitive value of this Number object.
+ * @return {number}
+ * @nosideeffects
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/valueOf
+ * @override
+ */
+Number.prototype.valueOf = function() {};
+
 
 /**
  * Pads the end of the string so that it reaches the given length.
@@ -1270,32 +1279,32 @@ Array.prototype.entries;
 
 
 /**
- * @param {!function(this:S, T, number, !Array<T>): boolean} predicate
+ * @param {!function(this:S, T, number, !Array<T>): boolean} predicateFn
  * @param {S=} opt_this
  * @return {T|undefined}
  * @this {IArrayLike<T>|string}
  * @template T,S
  * @see http://www.ecma-international.org/ecma-262/6.0/#sec-array.prototype.find
  */
-Array.prototype.find = function(predicate, opt_this) {};
+Array.prototype.find = function(predicateFn, opt_this) {};
 
 
 /**
- * @param {!function(this:S, T, number, !Array<T>): boolean} predicate
+ * @param {!function(this:S, T, number, !Array<T>): boolean} predicateFn
  * @param {S=} opt_this
  * @return {number}
  * @this {IArrayLike<T>|string}
  * @template T,S
  * @see http://www.ecma-international.org/ecma-262/6.0/#sec-array.prototype.findindex
  */
-Array.prototype.findIndex = function(predicate, opt_this) {};
+Array.prototype.findIndex = function(predicateFn, opt_this) {};
 
 
 /**
  * @param {T} value
  * @param {number=} opt_begin
  * @param {number=} opt_end
- * @return {!IArrayLike<T>}
+ * @return {!Array<T>}
  * @this {!IArrayLike<T>|string}
  * @template T
  * @see http://www.ecma-international.org/ecma-262/6.0/#sec-array.prototype.fill
@@ -1309,7 +1318,7 @@ Array.prototype.fill = function(value, opt_begin, opt_end) {};
  * @param {number=} opt_end
  * @see http://www.ecma-international.org/ecma-262/6.0/#sec-array.prototype.copywithin
  * @template T
- * @return {!IArrayLike<T>}
+ * @return {!Array<T>}
  */
 Array.prototype.copyWithin = function(target, start, opt_end) {};
 
@@ -1466,24 +1475,24 @@ Object.getOwnPropertyDescriptors = function(obj) {};
 var Reflect = {};
 
 /**
- * @param {function(this: THIS, ...?): RESULT} target
+ * @param {function(this: THIS, ...?): RESULT} targetFn
  * @param {THIS} thisArg
- * @param {!Array} argList
+ * @param {!Array<?>} argList
  * @return {RESULT}
  * @template THIS, RESULT
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Reflect/apply
  */
-Reflect.apply = function(target, thisArg, argList) {};
+Reflect.apply = function(targetFn, thisArg, argList) {};
 
 /**
- * @param {function(new: ?, ...?)} target
- * @param {!Array} argList
- * @param {function(new: TARGET, ...?)=} opt_newTarget
+ * @param {function(new: ?, ...?)} targetConstructorFn
+ * @param {!Array<?>} argList
+ * @param {function(new: TARGET, ...?)=} opt_newTargetConstructorFn
  * @return {TARGET}
  * @template TARGET
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Reflect/construct
  */
-Reflect.construct = function(target, argList, opt_newTarget) {};
+Reflect.construct = function(targetConstructorFn, argList, opt_newTargetConstructorFn) {};
 
 /**
  * @param {!Object} target

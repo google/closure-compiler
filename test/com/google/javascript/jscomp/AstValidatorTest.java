@@ -59,11 +59,51 @@ public final class AstValidatorTest extends CompilerTestCase {
     disableLineNumberCheck();
   }
 
+  public void testClass() {
+    valid(lines(
+        "class C {",
+        "  get m1() {return 1}",
+        "  set m1(a) {}",
+        "  m2(a) {}",
+        "  ['m2']() {}",
+        "  [m2]() {}",
+        "}"));
+
+    Node c = new Node(Token.CLASS, IR.name("C"), IR.empty());
+    Node members = new Node(Token.CLASS_MEMBERS);
+    c.addChildToBack(members);
+    expectValid(c, Check.STATEMENT);
+    Node method1 = new Node(
+        Token.MEMBER_FUNCTION_DEF, IR.function(IR.name(""), IR.paramList(), IR.block()));
+    members.addChildToBack(method1);
+    expectInvalid(c, Check.STATEMENT);
+
+    members.detachChildren();
+
+    // Invalid empty string
+    Node method2 = Node.newString(Token.MEMBER_FUNCTION_DEF, "");
+    method2.addChildToBack(IR.function(IR.name(""), IR.paramList(), IR.block()));
+    members.addChildToBack(method2);
+
+    expectInvalid(c, Check.STATEMENT);
+  }
+
   public void testForIn() {
     valid("for(var a in b);");
+    valid("for(let a in b);");
+    valid("for(const a in b);");
     valid("for(a in b);");
     valid("for(a in []);");
     valid("for(a in {});");
+  }
+
+  public void testForOf() {
+    valid("for(var a of b);");
+    valid("for(let a of b);");
+    valid("for(const a of b);");
+    valid("for(a of b);");
+    valid("for(a of []);");
+    valid("for(a of {});");
   }
 
   public void testQuestionableForIn() {
@@ -105,6 +145,29 @@ public final class AstValidatorTest extends CompilerTestCase {
     expectValid(n, Check.EXPRESSION);
     expectInvalid(n, Check.STATEMENT);
     expectInvalid(n, Check.SCRIPT);
+  }
+
+  public void testValidConst() {
+    valid("const x = r;");
+    valid("const [x] = r;");
+    valid("const {x} = r;");
+    valid("const x = r, y = r;");
+    valid("const {x} = r, y = r;");
+    valid("const x = r, {y} = r;");
+  }
+
+  public void testInvalidConst() {
+    Node n = new Node(Token.CONST);
+    expectInvalid(n, Check.STATEMENT);
+
+    n.addChildToBack(IR.name("x"));
+    expectInvalid(n, Check.STATEMENT);
+
+    n = new Node(Token.CONST);
+    n.addChildToBack(new Node(Token.DESTRUCTURING_LHS));
+    n.getFirstChild().addChildToBack(new Node(Token.OBJECT_PATTERN));
+
+    expectInvalid(n, Check.STATEMENT);
   }
 
   public void testNewTargetIsValidExpression() {
@@ -164,12 +227,76 @@ public final class AstValidatorTest extends CompilerTestCase {
     expectInvalid(n, Check.EXPRESSION);
   }
 
-  public void testValidDestructuringAssignment() {
+  public void testInvalidArrayPattern0() {
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
+
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
+
+    // [...x = 1] = [];
+    Node n = IR.assign(
+        new Node(Token.ARRAY_PATTERN,
+            new Node(Token.REST,
+                new Node(Token.DEFAULT_VALUE,
+                    IR.name("x"), IR.arraylit()))),
+        IR.arraylit());
+    expectInvalid(n, Check.EXPRESSION);
+  }
+
+  public void testValidDestructuringAssignment0() {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
+    valid("var [x] = obj;");
+    valid("var [x = 1] = obj;");
+    valid("var [...y] = obj;");
     valid("var [x, ...y] = obj;");
+
+    valid("[x] = [];");
+    valid("[x = 1] = [];");
+    valid("[x.y] = [];");
+    valid("[x.y = 1] = [];");
+    valid("[x['y']] = [];");
+    valid("[x['y'] = 1] = [];");
+    valid("[x().y] = [];");
+    valid("[x().y = 1] = [];");
+    valid("[x()['y']] = [];");
+    valid("[x()['y'] = 1] = [];");
+
+    valid("([...y] = obj);");
+    valid("([x, ...y] = obj);");
     valid("([...this.x] = obj);");
+    valid("([...this['x']] = obj);");
+    valid("([...x.y] = obj);");
+    valid("([...x['y']] = obj);");
+    valid("([...x().y] = obj);");
+    valid("([...x()['y']] = obj);");
+  }
+
+  public void testValidDestructuringAssignment1() {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     valid("var {a:b} = obj;");
-    valid("({a:this.b} = obj);");
+    valid("({a:b} = obj);");
+    valid("({a:b.c} = obj);");
+    valid("({a:b().c} = obj);");
+    valid("({a:b['c']} = obj);");
+    valid("({a:b()['c']} = obj);");
+    valid("({a:b.c = 1} = obj);");
+    valid("({a:b().c = 1} = obj);");
+    valid("({a:b['c'] = 1} = obj);");
+    valid("({a:b()['c'] = 1} = obj);");
+  }
+
+  public void testValidDestructuringAssignment2() {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
+    valid("var {['a']:b} = obj;");
+    valid("({['a']:b} = obj);");
+    valid("({['a']:this.b} = obj);");
+    valid("({['a']:b.c} = obj);");
+    valid("({['a']:b.c = 1} = obj);");
+    valid("({['a']:b().c} = obj);");
+    valid("({['a']:b().c = 1} = obj);");
+    valid("({['a']:b['c']} = obj);");
+    valid("({['a']:b['c'] = 1} = obj);");
+    valid("({['a']:b()['c']} = obj);");
+    valid("({['a']:b()['c'] = 1} = obj);");
   }
 
   public void testInvalidDestructuringAssignment() {

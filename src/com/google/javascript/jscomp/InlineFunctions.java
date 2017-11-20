@@ -215,7 +215,7 @@ class InlineFunctions implements CompilerPass {
           // function Foo(x) { return ... }
         case FUNCTION:
           Preconditions.checkState(NodeUtil.isStatementBlock(parent) || parent.isLabel());
-          if (!NodeUtil.isFunctionExpression(n)) {
+          if (NodeUtil.isFunctionDeclaration(n)) {
             Function fn = new NamedFunction(n);
             maybeAddFunction(fn, t.getModule());
           }
@@ -342,6 +342,10 @@ class InlineFunctions implements CompilerPass {
       }
 
       if (fnNode.isGeneratorFunction()) {
+        functionState.setInline(false);
+      }
+
+      if (fnNode.isAsyncFunction()) {
         functionState.setInline(false);
       }
     }
@@ -730,9 +734,16 @@ class InlineFunctions implements CompilerPass {
           @Override
           public boolean apply(Node input) {
             checkNotNull(input);
-            return input.isDestructuringPattern()
+            if (input.isDestructuringPattern()
                 && (NodeUtil.getEnclosingType(input.getParent(), Token.ARRAY_PATTERN) != null
-                || NodeUtil.getEnclosingType(input.getParent(), Token.OBJECT_PATTERN) != null);
+                    || NodeUtil.getEnclosingType(input.getParent(), Token.OBJECT_PATTERN)
+                        != null)) {
+              return true;
+            } else if (input.isDefaultValue() && input.getGrandparent().isObjectPattern()) {
+              // e.g. function f({a = 3}) {}
+              return true;
+            }
+            return false;
           }
         };
 
@@ -853,7 +864,7 @@ class InlineFunctions implements CompilerPass {
     }
   }
 
-  /** Sanity check to verify, that expression rewriting didn't make a call inaccessible. */
+  /** Check to verify that expression rewriting didn't make a call inaccessible. */
   void verifyAllReferencesInlined(FunctionState functionState) {
     for (Reference ref : functionState.getReferences()) {
       if (!ref.inlined) {

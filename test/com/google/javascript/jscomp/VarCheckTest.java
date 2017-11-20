@@ -30,7 +30,7 @@ public final class VarCheckTest extends CompilerTestCase {
   private static final String EXTERNS = "var window; function alert() {}";
 
   private CheckLevel strictModuleDepErrorLevel;
-  private boolean sanityCheck = false;
+  private boolean validityCheck = false;
 
   private CheckLevel externValidationErrorLevel;
 
@@ -48,7 +48,7 @@ public final class VarCheckTest extends CompilerTestCase {
     allowExternsChanges();
     strictModuleDepErrorLevel = CheckLevel.OFF;
     externValidationErrorLevel = null;
-    sanityCheck = false;
+    validityCheck = false;
     declarationCheck = false;
   }
 
@@ -67,8 +67,8 @@ public final class VarCheckTest extends CompilerTestCase {
   protected CompilerPass getProcessor(final Compiler compiler) {
     return new CompilerPass() {
       @Override public void process(Node externs, Node root) {
-        new VarCheck(compiler, sanityCheck).process(externs, root);
-        if (!sanityCheck && !compiler.hasErrors()) {
+        new VarCheck(compiler, validityCheck).process(externs, root);
+        if (!validityCheck && !compiler.hasErrors()) {
           // If the original test turned off sanity check, make sure our synthesized
           // code passes it.
           new VarCheck(compiler, true).process(externs, root);
@@ -214,6 +214,14 @@ public final class VarCheckTest extends CompilerTestCase {
         VarCheck.NAME_REFERENCE_IN_EXTERNS_ERROR);
   }
 
+  public void testDestructuringInExterns() {
+    testSame("function externalFunction({x, y}) {}", "");
+    testSame("function externalFunction({x, y:{z}}) {}", "");
+    testSame("function externalFunction({x:localName}) {}", "");
+    testSame("function externalFunction([a, b, c]) {}", "");
+    testSame("function externalFunction([[...a], b, c = 5, ...d]) {}", "");
+  }
+
   public void testVarReferenceInExterns_withEs6Modules() {
     // vars in ES6 modules are not in global scope, so foo is undefined.
     testError("foo;", "export var foo;", VarCheck.UNDEFINED_VAR_ERROR);
@@ -239,7 +247,7 @@ public final class VarCheckTest extends CompilerTestCase {
     testSame(
         "var Foo; var ns = {}; /** @const */ ns.FooAlias = Foo;", "");
     testSame(
-        LINE_JOINER.join(
+        lines(
             "var ns = {}; /** @constructor */ ns.Foo = function() {};",
             "var ns2 = {}; /** @const */ ns2.Bar = ns.Foo;"),
         "");
@@ -354,7 +362,7 @@ public final class VarCheckTest extends CompilerTestCase {
 
     // Arrow function nested
     testError(
-        LINE_JOINER.join("function FUNC() {", "  {", "    () => { var b = a; }", "  }", "}"),
+        lines("function FUNC() {", "  {", "    () => { var b = a; }", "  }", "}"),
         VarCheck.UNDEFINED_VAR_ERROR);
   }
 
@@ -394,23 +402,23 @@ public final class VarCheckTest extends CompilerTestCase {
 
 
   public void testMissingModuleDependencySkipNonStrict() {
-    sanityCheck = true;
+    validityCheck = true;
     testIndependentModules("var x = 10;", "var y = x++;", null, null);
   }
 
   public void testViolatedModuleDependencySkipNonStrict() {
-    sanityCheck = true;
+    validityCheck = true;
     testDependentModules("var y = x++;", "var x = 10;", null);
   }
 
   public void testMissingModuleDependencySkipNonStrictNotPromoted() {
-    sanityCheck = true;
+    validityCheck = true;
     strictModuleDepErrorLevel = CheckLevel.ERROR;
     testIndependentModules("var x = 10;", "var y = x++;", null, null);
   }
 
   public void testViolatedModuleDependencyNonStrictNotPromoted() {
-    sanityCheck = true;
+    validityCheck = true;
     strictModuleDepErrorLevel = CheckLevel.ERROR;
     testDependentModules("var y = x++;", "var x = 10;", null);
   }
@@ -490,13 +498,13 @@ public final class VarCheckTest extends CompilerTestCase {
     checkSynthesizedExtern("var x", "");
   }
 
-  public void testSimpleSanityCheck() {
-    sanityCheck = true;
+  public void testSimpleValidityCheck() {
+    validityCheck = true;
     try {
       checkSynthesizedExtern("x", "");
       fail("Expected RuntimeException");
     } catch (RuntimeException e) {
-      assertThat(e.getMessage()).contains("Unexpected variable x");
+      assertThat(e).hasMessageThat().contains("Unexpected variable x");
     }
   }
 
@@ -576,7 +584,7 @@ public final class VarCheckTest extends CompilerTestCase {
 
   public void testDuplicateBlockScopedDeclarationInSwitch() {
     testError(
-        LINE_JOINER.join(
+        lines(
             "function f(x) {",
             "  switch (x) {",
             "    case 'a':",
@@ -590,7 +598,7 @@ public final class VarCheckTest extends CompilerTestCase {
         VarCheck.LET_CONST_CLASS_MULTIPLY_DECLARED_ERROR);
 
     testError(
-        LINE_JOINER.join(
+        lines(
             "function f(x) {",
             "  switch (x) {",
             "    case 'a':",
@@ -625,7 +633,7 @@ public final class VarCheckTest extends CompilerTestCase {
     testError("var f = function (arguments) {}", VarCheck.VAR_ARGUMENTS_SHADOWED_ERROR);
     testSame("function f() {try {} catch(arguments) {}}");
 
-    sanityCheck = true;
+    validityCheck = true;
     testSame("function f() {var arguments}");
   }
 
@@ -640,14 +648,13 @@ public final class VarCheckTest extends CompilerTestCase {
   public void testImportedNames() throws Exception {
     List<SourceFile> inputs =
         ImmutableList.of(
-            SourceFile.fromCode("/index[0].js", "import foo from './foo'; foo('hello');"),
+            SourceFile.fromCode("/index[0].js", "import foo from './foo.js'; foo('hello');"),
             SourceFile.fromCode("/foo.js", "export default (foo) => { alert(foo); }"));
 
     List<ModuleIdentifier> entryPoints = ImmutableList.of(ModuleIdentifier.forFile("/index[0].js"));
 
     CompilerOptions options = new CompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
-    ;
     options.setLanguage(CompilerOptions.LanguageMode.ECMASCRIPT_2017);
     options.dependencyOptions.setDependencyPruning(true);
     options.dependencyOptions.setDependencySorting(true);
@@ -670,6 +677,22 @@ public final class VarCheckTest extends CompilerTestCase {
 
   public void testImportStar() {
     testSame("import * as foo from './foo.js';");
+  }
+
+  public void testExportAsAlias() {
+    testSame("let a = 1; export {a as b};");
+    testError("let a = 1; export {b as a};", VarCheck.UNDEFINED_VAR_ERROR);
+    testError("export {a as a};", VarCheck.UNDEFINED_VAR_ERROR);
+
+    // Make sure non-aliased exports still work correctly.
+    testSame("let a = 1; export {a}");
+    testError("let a = 1; export {b};", VarCheck.UNDEFINED_VAR_ERROR);
+  }
+
+  public void testImportAsAlias() {
+    testSame("import {b as a} from './foo.js'; let c = a;");
+    testError("import {b as a} from './foo.js'; let c = b;", VarCheck.UNDEFINED_VAR_ERROR);
+    testSame("import {a} from './foo.js'; let c = a;");
   }
 
   private static final class VariableTestCheck implements CompilerPass {
@@ -705,7 +728,7 @@ public final class VarCheckTest extends CompilerTestCase {
 
   public void checkSynthesizedExtern(
       String extern, String input, String expectedExtern) {
-    declarationCheck = !sanityCheck;
+    declarationCheck = !validityCheck;
     disableCompareAsTree();
     testExternChanges(extern, input, expectedExtern);
   }

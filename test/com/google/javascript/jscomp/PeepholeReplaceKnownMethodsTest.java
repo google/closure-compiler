@@ -28,7 +28,7 @@ public final class PeepholeReplaceKnownMethodsTest extends TypeICompilerTestCase
   private boolean useTypes = true;
 
   public PeepholeReplaceKnownMethodsTest() {
-    super(MINIMAL_EXTERNS + LINE_JOINER.join(
+    super(MINIMAL_EXTERNS + lines(
         // NOTE: these are defined as variadic to avoid wrong-argument-count warnings in NTI,
         // which enables testing that the pass does not touch calls with wrong argument count.
         "/** @type {function(this: string, ...*): string} */ String.prototype.substring;",
@@ -124,8 +124,8 @@ public final class PeepholeReplaceKnownMethodsTest extends TypeICompilerTestCase
          "x = [\"a\",\"5\",\"c\"].join(\"a very very very long chain\")");
 
     // Template strings
-    foldSame("x = [`a`, `b`, `c`].join(``)");
-    foldSame("x = [`a`, `b`, `c`].join('')");
+    fold("x = [`a`, `b`, `c`].join(``)", "x = 'abc'");
+    fold("x = [`a`, `b`, `c`].join('')", "x = 'abc'");
 
     // TODO(user): Its possible to fold this better.
     foldSame("x = ['', foo].join('-')");
@@ -293,7 +293,7 @@ public final class PeepholeReplaceKnownMethodsTest extends TypeICompilerTestCase
     foldSame("var x = [x,y,z].join();");
 
     foldSame(
-        LINE_JOINER.join(
+        lines(
             "shape['matrix'] = [",
             "    Number(headingCos2).toFixed(4),",
             "    Number(-headingSin2).toFixed(4),",
@@ -304,13 +304,24 @@ public final class PeepholeReplaceKnownMethodsTest extends TypeICompilerTestCase
             "  ].join()"));
   }
 
-  // Fails with:
-  // java.lang.IllegalStateException: SPREAD node should not be the child of a ADD node.
-  // TODO(b/67381773): Fix and enable this test.
-  public void disabled_testJoinSpread() {
-    foldSame("var x = [...foo].join(',');");
+  public void testJoinSpread1() {
     foldSame("var x = [...foo].join('');");
     foldSame("var x = [...someMap.keys()].join('');");
+    foldSame("var x = [foo, ...bar].join('');");
+    foldSame("var x = [...foo, bar].join('');");
+    foldSame("var x = [...foo, 'bar'].join('');");
+    foldSame("var x = ['1', ...'2', '3'].join('');");
+    foldSame("var x = ['1', ...['2'], '3'].join('');");
+  }
+
+  public void testJoinSpread2() {
+    fold("var x = [...foo].join(',');", "var x = [...foo].join();");
+    fold("var x = [...someMap.keys()].join(',');", "var x = [...someMap.keys()].join();");
+    fold("var x = [foo, ...bar].join(',');", "var x = [foo, ...bar].join();");
+    fold("var x = [...foo, bar].join(',');", "var x = [...foo, bar].join();");
+    fold("var x = [...foo, 'bar'].join(',');", "var x = [...foo, 'bar'].join();");
+    fold("var x = ['1', ...'2', '3'].join(',');", "var x = ['1', ...'2', '3'].join();");
+    fold("var x = ['1', ...['2'], '3'].join(',');", "var x = ['1', ...['2'], '3'].join();");
   }
 
   public void testToUpper() {
@@ -439,7 +450,7 @@ public final class PeepholeReplaceKnownMethodsTest extends TypeICompilerTestCase
     // to rewrite substring to charAt.  We need to figure out if this is desirable.
     foldSame("function f(/** ? */ a) { a.substring(0, 1); }");
     foldSame("function f(/** ? */ a) { a.substr(0, 1); }");
-    foldSame(LINE_JOINER.join(
+    foldSame(lines(
         "/** @constructor */ function A() {};",
         "A.prototype.substring = function() {};",
         "function f(/** ? */ a) { a.substring(0, 1); }"));

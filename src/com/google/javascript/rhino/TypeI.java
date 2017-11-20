@@ -98,9 +98,10 @@ public interface TypeI extends Serializable {
   boolean isGenericObjectType();
 
   /**
-   * True when the nominal type of this type is Object. The name is not great, because objects
-   * with a different nominal type can flow to places that treat them as Object. But I'm not
-   * sure what a better name would be.
+   * True when the nominal type of this type is Object (including parameterized object types:
+   * Object&lt;K, V&gt; and IObject&lt;K, V&gt;). The name is not great, because objects with a
+   * different nominal type can flow to places that treat them as Object.
+   * But I'm not sure what a better name would be.
    */
   boolean isInstanceofObject();
 

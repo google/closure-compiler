@@ -246,6 +246,58 @@ MediaTrackSettings.prototype.torch
 
 /**
  * @interface
+ * @see https://w3c.github.io/mediacapture-main/#media-track-supported-constraints
+ */
+function MediaTrackSupportedConstraints() {}
+
+/** @type {boolean|undefined} */
+MediaTrackSupportedConstraints.prototype.width;
+
+/** @type {boolean|undefined} */
+MediaTrackSupportedConstraints.prototype.height;
+
+/** @type {boolean|undefined} */
+MediaTrackSupportedConstraints.prototype.aspectRatio;
+
+/** @type {boolean|undefined} */
+MediaTrackSupportedConstraints.prototype.frameRate;
+
+/** @type {boolean|undefined} */
+MediaTrackSupportedConstraints.prototype.facingMode;
+
+/** @type {boolean|undefined} */
+MediaTrackSupportedConstraints.prototype.volume;
+
+/** @type {boolean|undefined} */
+MediaTrackSupportedConstraints.prototype.sampleRate;
+
+/** @type {boolean|undefined} */
+MediaTrackSupportedConstraints.prototype.sampleSize;
+
+/** @type {boolean|undefined} */
+MediaTrackSupportedConstraints.prototype.echoCancellation;
+
+/** @type {boolean|undefined} */
+MediaTrackSupportedConstraints.prototype.autoGainControl;
+
+/** @type {boolean|undefined} */
+MediaTrackSupportedConstraints.prototype.noiseSuppression;
+
+/** @type {boolean|undefined} */
+MediaTrackSupportedConstraints.prototype.latency;
+
+/** @type {boolean|undefined} */
+MediaTrackSupportedConstraints.prototype.channelCount;
+
+/** @type {boolean|undefined} */
+MediaTrackSupportedConstraints.prototype.deviceId;
+
+/** @type {boolean|undefined} */
+MediaTrackSupportedConstraints.prototype.groupId;
+
+
+/**
+ * @interface
  * @extends {EventTarget}
  * @see https://www.w3.org/TR/mediacapture-streams/#mediastreamtrack
  */
@@ -1223,6 +1275,12 @@ MediaDevices.prototype.enumerateDevices = function() {};
  */
 MediaDevices.prototype.getUserMedia = function(constraints) {}
 
+/**
+ * @see https://w3c.github.io/mediacapture-main/#dom-mediadevices-getsupportedconstraints
+ * @return {!MediaTrackSupportedConstraints}
+ */
+MediaDevices.prototype.getSupportedConstraints = function()  {}
+
 /** @const {!MediaDevices} */
 Navigator.prototype.mediaDevices;
 
@@ -1745,40 +1803,40 @@ RTCPeerConnection.prototype.dispatchEvent = function(evt) {};
 /**
  * @param {(!RTCSessionDescriptionCallback|!MediaConstraints)=}
  *    successCallbackOrConstraints
- * @param {!RTCPeerConnectionErrorCallback=} failureCallback
+ * @param {!RTCPeerConnectionErrorCallback=} errorCallback
  * @param {!MediaConstraints=} constraints
  * @return {!Promise<!RTCSessionDescription>|undefined}
  */
 RTCPeerConnection.prototype.createOffer = function(successCallbackOrConstraints,
-    failureCallback, constraints) {};
+    errorCallback, constraints) {};
 
 /**
  * @param {(!RTCSessionDescriptionCallback|!MediaConstraints)=}
  *    successCallbackOrConstraints
- * @param {!RTCPeerConnectionErrorCallback=} failureCallback
+ * @param {!RTCPeerConnectionErrorCallback=} errorCallback
  * @param {!MediaConstraints=} constraints
  * @return {!Promise<!RTCSessionDescription>|undefined}
  */
 RTCPeerConnection.prototype.createAnswer =
-    function(successCallbackOrConstraints, failureCallback, constraints) {};
+    function(successCallbackOrConstraints, errorCallback, constraints) {};
 
 /**
  * @param {!RTCSessionDescription} description
  * @param {!RTCVoidCallback=} successCallback
- * @param {!RTCPeerConnectionErrorCallback=} failureCallback
+ * @param {!RTCPeerConnectionErrorCallback=} errorCallback
  * @return {!Promise<!RTCSessionDescription>|undefined}
  */
 RTCPeerConnection.prototype.setLocalDescription = function(description,
-    successCallback, failureCallback) {};
+    successCallback, errorCallback) {};
 
 /**
  * @param {!RTCSessionDescription} description
  * @param {!RTCVoidCallback=} successCallback
- * @param {!RTCPeerConnectionErrorCallback=} failureCallback
+ * @param {!RTCPeerConnectionErrorCallback=} errorCallback
  * @return {!Promise<!RTCSessionDescription>|undefined}
  */
 RTCPeerConnection.prototype.setRemoteDescription = function(description,
-    successCallback, failureCallback) {};
+    successCallback, errorCallback) {};
 
 /**
  * @type {?RTCSessionDescription}
@@ -1809,10 +1867,10 @@ RTCPeerConnection.prototype.updateIce = function(configuration, constraints) {};
  * Void in Chrome for now, a promise that you can then/catch in Firefox.
  * @param {!RTCIceCandidate} candidate
  * @param {!RTCVoidCallback=} successCallback
- * @param {!function(DOMException)=} failureCallback
+ * @param {!function(DOMException)=} errorCallback
  * @return {!Promise|undefined}
  */
-RTCPeerConnection.prototype.addIceCandidate = function(candidate, successCallback, failureCallback) {};
+RTCPeerConnection.prototype.addIceCandidate = function(candidate, successCallback, errorCallback) {};
 
 /**
  * @type {!RTCIceGatheringState}

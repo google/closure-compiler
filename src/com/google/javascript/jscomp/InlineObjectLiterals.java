@@ -24,6 +24,7 @@ import com.google.javascript.jscomp.ReferenceCollectingCallback.Behavior;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
+import com.google.javascript.rhino.TokenStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -45,6 +46,7 @@ import java.util.Set;
 class InlineObjectLiterals implements CompilerPass {
 
   public static final String VAR_PREFIX = "JSCompiler_object_inline_";
+  public static final String STRING_KEY_IDENTIFIER = "string_key";
 
   private final AbstractCompiler compiler;
 
@@ -283,8 +285,11 @@ class InlineObjectLiterals implements CompilerPass {
               if (varmap.containsKey(varname)) {
                 continue;
               }
-
-              String var = VAR_PREFIX + varname + "_" + safeNameIdSupplier.get();
+              String var = varname;
+              if (!TokenStream.isJSIdentifier(varname)) {
+                var = STRING_KEY_IDENTIFIER;
+              }
+              var = VAR_PREFIX + var + "_" + safeNameIdSupplier.get();
               varmap.put(varname, var);
             }
           }

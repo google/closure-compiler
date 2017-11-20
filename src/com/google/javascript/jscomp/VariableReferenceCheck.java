@@ -132,7 +132,7 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
    */
   private class ReferenceCheckingBehavior implements Behavior {
 
-    private Set<String> varsInFunctionBody;
+    private final Set<String> varsInFunctionBody;
 
     private ReferenceCheckingBehavior() {
       varsInFunctionBody = new HashSet<>();
@@ -430,15 +430,8 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
 
     boolean inGoogScope = false;
     Scope s = v.getScope();
-    Node function = null;
     if (s.isFunctionBlockScope()) {
-      function = s.getRootNode().getParent();
-    } else if (s.isFunctionScope()) {
-      // TODO(tbreisacher): Remove this branch when everything is switched to
-      // Es6SyntacticScopeCreator.
-      function = s.getRootNode();
-    }
-    if (function != null) {
+      Node function = s.getRootNode().getParent();
       Node callee = function.getPrevious();
       inGoogScope = callee != null && callee.matchesQualifiedName("goog.scope");
     }

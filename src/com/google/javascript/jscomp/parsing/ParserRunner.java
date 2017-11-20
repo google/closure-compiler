@@ -107,7 +107,7 @@ public final class ParserRunner {
     reservedVars = extractList(config.getString("compiler.reserved.vars"));
   }
 
-  private static Set<String> extractList(String configProp) {
+  private static ImmutableSet<String> extractList(String configProp) {
     return ImmutableSet.copyOf(Splitter.on(',').trimResults().split(configProp));
   }
 

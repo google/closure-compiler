@@ -37,6 +37,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
+import javax.annotation.Nullable;
 
 /**
  * {@link JSType}s include a possibly-empty set of ObjectType instances,
@@ -209,20 +210,59 @@ final class ObjectType implements TypeWithProperties {
     return this.ns != null;
   }
 
+  private boolean isBuiltinObjectPrototype() {
+    return this.nominalType.isBuiltinObject() && isPrototypeObject();
+  }
+
+  /**
+   * Returns the prototype of this object type. For Object.prototype it returns null.
+   * When Bar extends Foo, the prototype of Bar.prototype is the canonical Foo instance. (This is
+   * accomplished in OTI by using the special type PrototypeObjectType.)
+   * As a result, this method may return a type X for which isPrototypeObject is false, i.e.,
+   * a type that has no owner function.
+   */
+  @Nullable
+  ObjectType getPrototypeObject() {
+    ObjectType proto;
+    if (isPrototypeObject() && !isBuiltinObjectPrototype()) {
+      proto = this.nominalType.getInstanceAsObjectType();
+    } else {
+      proto = this.nominalType.getPrototypeObject().getObjTypeIfSingletonObj();
+    }
+    if (this.equals(proto)) {
+      // In JS's dynamic semantics, the only object without a __proto__ is
+      // Object.prototype, but it's not representable in NTI.
+      // Object.prototype is the only case where we are equal to our own prototype.
+      // In this case, we should return null.
+      Preconditions.checkState(
+          isBuiltinObjectPrototype(),
+          "Failed to reach Object.prototype in prototype chain, unexpected self-link found at %s",
+          this);
+      return null;
+    }
+    return proto;
+  }
+
   boolean isPrototypeObject() {
     return getOwnerFunction() != null;
   }
 
   /**
-   * If this a prototype object (e.g. Foo.prototype), returns the
+   * If this a prototype object (e.g. Foo.prototype), this method returns the
    * associated constructor (e.g. Foo). Otherwise returns null.
+   *
+   * Note that we don't have a robust way of recognizing prototype objects, so we use a heuristic.
+   * It must have the "constructor" property, and the same nominal type as the stored prototype.
    */
   FunctionType getOwnerFunction() {
     JSType t = getProp(new QualifiedName("constructor"));
     if (t != null && t.isFunctionType()) {
       FunctionType maybeCtor = t.getFunTypeIfSingletonObj();
       if (maybeCtor.isSomeConstructorOrInterface()) {
-        return maybeCtor;
+        JSType proto = maybeCtor.getPrototypeOfNewInstances();
+        if (this.nominalType.equals(proto.getNominalTypeIfSingletonObj())) {
+          return maybeCtor;
+        }
       }
     }
     return null;
@@ -1158,13 +1198,15 @@ final class ObjectType implements TypeWithProperties {
   }
 
   private static boolean canMergeObjectsInJoin(ObjectType obj1, ObjectType obj2) {
-    if (obj1.isTopObject() || obj2.isTopObject()) {
+    if (obj1.isTopObject() || obj2.isTopObject() || obj1.equals(obj2)) {
       return true;
     }
     NominalType nt1 = obj1.nominalType;
     NominalType nt2 = obj2.nominalType;
     // In a union, there is at most one object whose nominal type is Object (or literal object).
-    if ((nt1.isBuiltinObject() || nt1.isLiteralObject())
+    if (!obj1.isPrototypeObject()
+        && (nt1.isBuiltinObject() || nt1.isLiteralObject())
+        && !obj2.isPrototypeObject()
         && (nt2.isBuiltinObject() || nt2.isLiteralObject())) {
       return true;
     }
@@ -1177,7 +1219,9 @@ final class ObjectType implements TypeWithProperties {
     if (nt2.isBuiltinObject()) {
       return obj2.isLoose && obj1.isSubtypeOf(obj2, SubtypeCache.create());
     }
-    return areRelatedNominalTypes(nt1, nt2) || NominalType.equalRawTypes(nt1, nt2);
+    return !obj1.isPrototypeObject()
+        && !obj2.isPrototypeObject()
+        && (areRelatedNominalTypes(nt1, nt2) || NominalType.equalRawTypes(nt1, nt2));
   }
 
   /**
@@ -1601,12 +1645,15 @@ final class ObjectType implements TypeWithProperties {
     if (isEnumObject() || isPrototypeObject() || (this.ns != null && this.fn != null)) {
       return false;
     }
-    // All constructors have "Function" as their nominalType, so look at instance
-    // types instead for these cases.
-    NominalType nt =
-        (fn != null && fn.isSomeConstructorOrInterface())
-        ? fn.getInstanceTypeOfCtor().getObjTypeIfSingletonObj().nominalType
-        : this.nominalType;
+    NominalType nt;
+    if (fn != null && fn.isSomeConstructorOrInterface()) {
+      // All constructors have "Function" as their nominalType, so look at instance
+      // types instead for these cases.
+      ObjectType instance = fn.getInstanceTypeOfCtor().getObjTypeIfSingletonObj();
+      nt = instance != null ? instance.nominalType : getCommonTypes().getObjectType();
+    } else {
+      nt = this.nominalType;
+    }
     return nt.isFunction() || nt.isBuiltinObject() || nt.isLiteralObject();
   }
 
@@ -1649,6 +1696,10 @@ final class ObjectType implements TypeWithProperties {
     return null;
   }
 
+  JSType getNamespaceType() {
+    return this.ns.toJSType();
+  }
+
   @Override
   public String toString() {
     return appendTo(new StringBuilder(), ToStringContext.TO_STRING).toString();
@@ -1661,7 +1712,7 @@ final class ObjectType implements TypeWithProperties {
   StringBuilder appendTo(StringBuilder builder, ToStringContext ctx) {
     // "Foo.prototype" is a valid type when appropriate.
     if (isPrototypeObject()) {
-      return builder.append(getOwnerFunction().getThisType()).append(".prototype");
+      return builder.append(getOwnerFunction().getThisType().getDisplayName()).append(".prototype");
     }
     // Annotations need simpler output that can be re-parsed.
     if (ctx.forAnnotation()) {
@@ -1688,21 +1739,25 @@ final class ObjectType implements TypeWithProperties {
     // More thorough stringification when annotation support is not needed.
     if (!nominalType.isFunction()
         && !nominalType.isBuiltinObject()
-        && !nominalType.isLiteralObject()) {
+        && !nominalType.isLiteralObject()
+        && !isNamespace()) {
       nominalType.appendTo(builder, ctx);
     } else if (isStruct()) {
       builder.append("struct");
     } else if (isDict()) {
       builder.append("dict");
     } else if (this.ns != null) {
+      if (this.fn != null && (this.fn.isUniqueConstructor() || this.fn.isInterfaceDefinition())) {
+        // Add $ to distinguish a constructor namespace from an instance type with the same name
+        builder.append("$");
+      }
       builder.append(this.ns);
-    }
-    if (this.fn != null) {
+    } else if (this.fn != null) {
       builder.append("<|");
       fn.appendTo(builder, ctx);
       builder.append("|>");
     }
-    if (ns == null || !props.isEmpty()) {
+    if (ns == null) {
       appendPropsTo(builder, ctx);
     }
     if (isLoose) {

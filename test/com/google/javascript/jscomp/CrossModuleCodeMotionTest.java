@@ -60,7 +60,7 @@ public final class CrossModuleCodeMotionTest extends CompilerTestCase {
     JSModule[] modules =
         createModuleStar(
             // m1
-            LINE_JOINER.join(
+            lines(
                 "function f1(a) { alert(a); }",
                 "function f2(a) { alert(a); }",
                 "function f3(a) { alert(a); }",
@@ -77,7 +77,7 @@ public final class CrossModuleCodeMotionTest extends CompilerTestCase {
           // m1
           "function f3(a) { alert(a); } function g() { alert('ciao'); }",
           // m2
-          LINE_JOINER.join(
+          lines(
               "function f1(a) { alert(a); }",
               "function f4() { alert(1); }",
               "f1('hi'); f3('bye'); var a = f4;",
@@ -198,7 +198,7 @@ public final class CrossModuleCodeMotionTest extends CompilerTestCase {
           // m1
           "",
           // m2
-          LINE_JOINER.join(
+          lines(
               "var f = function(n){if(true){if(true){return (n<1)?1:f(n-1)}}};", "var a = f(4);")
         });
   }
@@ -291,7 +291,7 @@ public final class CrossModuleCodeMotionTest extends CompilerTestCase {
     testSame(
         createModuleStar(
             // m1
-            LINE_JOINER.join(
+            lines(
                 "function f(){};f.prototype.bar=new f;",
                 "if(a)function f2(){}",
                 "{{while(a)function f3(){}}}"),
@@ -312,6 +312,23 @@ public final class CrossModuleCodeMotionTest extends CompilerTestCase {
             "var b = f();"));
   }
 
+  public void testEs6ClassMovement1() {
+    test(
+        createModuleStar(
+            // m1
+            "class f { bar() {} }",
+            // m2
+            "var a = new f();"),
+        new String[] {"", "class f { bar() {} } var a = new f();"});
+    test(
+        createModuleStar(
+            // m1
+            "var f = class { bar() {} };",
+            // m2
+            "var a = new f();"),
+        new String[] {"", "var f = class { bar() {} }; var a = new f();"});
+  }
+
   public void testClassMovement1() {
     test(
         createModuleStar(
@@ -320,6 +337,20 @@ public final class CrossModuleCodeMotionTest extends CompilerTestCase {
             // m2
             "var a = new f();"),
         new String[] {"", "function f(){} f.prototype.bar=function (){}; var a = new f();"});
+  }
+
+  public void testEs6ClassMovement_instanceof() {
+    parentModuleCanSeeSymbolsDeclaredInChildren = true;
+    test(
+        createModuleStar(
+            // m1
+            "class f { bar(){} } 1 instanceof f;",
+            // m2
+            "var a = new f();"),
+        new String[] {
+            "'undefined' != typeof f && 1 instanceof f;",
+            "class f { bar(){} } var a = new f();"
+        });
   }
 
   public void testClassMovement_instanceof() {
@@ -336,6 +367,16 @@ public final class CrossModuleCodeMotionTest extends CompilerTestCase {
         });
   }
 
+  public void testEs6ClassMovement_instanceofTurnedOff() {
+    parentModuleCanSeeSymbolsDeclaredInChildren = false;
+    testSame(
+        createModuleStar(
+            // m1
+            "class f { bar(){} } 1 instanceof f;",
+            // m2
+            "var a = new f();"));
+  }
+
   public void testClassMovement_instanceofTurnedOff() {
     parentModuleCanSeeSymbolsDeclaredInChildren = false;
     testSame(
@@ -344,6 +385,20 @@ public final class CrossModuleCodeMotionTest extends CompilerTestCase {
             "function f(){} f.prototype.bar=function (){}; 1 instanceof f;",
             // m2
             "var a = new f();"));
+  }
+
+  public void testEs6ClassMovement_instanceof2() {
+    parentModuleCanSeeSymbolsDeclaredInChildren = true;
+    test(
+        createModuleStar(
+            // m1
+            "class f { bar(){} } (true && 1 instanceof f);",
+            // m2
+            "var a = new f();"),
+        new String[] {
+          "(true && ('undefined' != typeof f && 1 instanceof f));",
+          "class f { bar(){} } var a = new f();"
+        });
   }
 
   public void testClassMovement_instanceof2() {
@@ -365,7 +420,7 @@ public final class CrossModuleCodeMotionTest extends CompilerTestCase {
     test(
         createModuleStar(
             // m1
-            LINE_JOINER.join(
+            lines(
                 "function f(){} f.prototype.bar=function (){};",
                 "(true && ('undefined' != typeof f && 1 instanceof f));"),
             // m2
@@ -408,6 +463,35 @@ public final class CrossModuleCodeMotionTest extends CompilerTestCase {
             "var a = new f();"));
   }
 
+  public void testEs6ClassMovement2() {
+    test(
+        createModuleChain(
+            // m1
+            "class f {} f.prototype.bar=3; f.prototype.baz=5;",
+            // m2
+            "f.prototype.baq = 7;",
+            // m3
+            "f.prototype.baz = 9;",
+            // m4
+            "var a = new f();"),
+        new String[] {
+            // m1
+            "",
+            // m2
+            "",
+            // m3
+            "",
+            // m4
+            lines(
+                "class f {}",
+                "f.prototype.bar = 3;",
+                "f.prototype.baz = 5;",
+                "f.prototype.baq = 7;",
+                "f.prototype.baz = 9;",
+                "var a = new f();")
+        });
+  }
+
   public void testClassMovement2() {
     test(
         createModuleChain(
@@ -427,7 +511,7 @@ public final class CrossModuleCodeMotionTest extends CompilerTestCase {
           // m3
           "",
           // m4
-          LINE_JOINER.join(
+          lines(
               "function f(){}",
               "f.prototype.bar=3;",
               "f.prototype.baz=5;",
@@ -456,7 +540,7 @@ public final class CrossModuleCodeMotionTest extends CompilerTestCase {
           // m3
           "",
           // m4
-          LINE_JOINER.join(
+          lines(
               "var f = function() {};",
               "f.prototype.bar=3;",
               "f.prototype.baz=5;",
@@ -522,11 +606,35 @@ public final class CrossModuleCodeMotionTest extends CompilerTestCase {
         });
   }
 
+  public void testEs6ClassMovement6() {
+    test(
+        createModuleChain(
+            // m1
+            "class Foo{} class Bar extends Foo {} new Foo();",
+            // m2
+            "new Bar();"),
+        new String[] {
+          // m1
+          "class Foo {} new Foo();",
+          // m2
+          "class Bar extends Foo {} new Bar();"
+        });
+  }
+
   public void testClassMovement7() {
     testSame(
         createModuleChain(
             // m1
             "function Foo(){} function Bar(){} goog.inherits(Bar, Foo); new Bar();",
+            // m2
+            "new Foo();"));
+  }
+
+  public void testEs6ClassMovement7() {
+    testSame(
+        createModuleChain(
+            // m1
+            "class Foo {} class Bar extends Foo {} new Bar();",
             // m2
             "new Foo();"));
   }
@@ -548,7 +656,7 @@ public final class CrossModuleCodeMotionTest extends CompilerTestCase {
           // m0
           "",
           // m1
-          LINE_JOINER.join(
+          lines(
               "function Foo(){} Foo.prototype.bar = JSCompiler_stubMethod(x);",
               "Foo.prototype.bar = JSCompiler_unstubMethod(x);"),
           // m2
@@ -659,6 +767,30 @@ public final class CrossModuleCodeMotionTest extends CompilerTestCase {
             "var h = f;"));
   }
 
+  public void testStringTemplateLiteralMovement1() {
+    test(
+        createModuleChain(
+            // m1
+            "var s = 'world'; var f = `hi ${s}`;",
+            // m2
+            "var h = f;"),
+        new String[] {
+          // m1
+          "",
+          // m2
+          "var s = 'world'; var f = `hi ${s}`; var h = f;"
+        });
+  }
+
+  public void testStringTemplateLiteralMovement2() {
+    testSame(
+        createModuleChain(
+            // m1
+            "var f = `hi ${goog.nullFunction()}`;",
+            // m2
+            "var h = f;"));
+  }
+
   public void testVarMovement1() {
     // test moving a variable
     JSModule[] modules =
@@ -675,6 +807,25 @@ public final class CrossModuleCodeMotionTest extends CompilerTestCase {
           "",
           // m2
           "var a = 0; var x = a;",
+        });
+  }
+
+  public void testLetConstMovement() {
+    // test moving a variable
+    JSModule[] modules =
+        createModuleStar(
+            // m1
+            "const a = 0;",
+            // m2
+            "let x = a;");
+
+    test(
+        modules,
+        new String[] {
+          // m1
+          "",
+          // m2
+          "const a = 0; let x = a;",
         });
   }
 
@@ -697,6 +848,25 @@ public final class CrossModuleCodeMotionTest extends CompilerTestCase {
         });
   }
 
+  public void testLetConstMovement2() {
+    // Test moving 1 variable out of the block
+    JSModule[] modules =
+        createModuleStar(
+            // m1
+            "const a = 0; const b = 1; const c = 2;",
+            // m2
+            "let x = b;");
+
+    test(
+        modules,
+        new String[] {
+          // m1
+          "const a = 0; const c = 2;",
+          // m2
+          "const b = 1; let x = b;"
+        });
+  }
+
   public void testVarMovement3() {
     // Test moving all variables out of the block
     JSModule[] modules =
@@ -713,6 +883,25 @@ public final class CrossModuleCodeMotionTest extends CompilerTestCase {
           "",
           // m2
           "var a = 0; var b = 1; var x = a + b;"
+        });
+  }
+
+  public void testLetConstMovement3() {
+    // Test moving all variables out of the block
+    JSModule[] modules =
+        createModuleStar(
+            // m1
+            "const a = 0; const b = 1;",
+            // m2
+            "let x = a + b;");
+
+    test(
+        modules,
+        new String[] {
+          // m1
+          "",
+          // m2
+          "const a = 0; const b = 1; let x = a + b;"
         });
   }
 
@@ -735,6 +924,25 @@ public final class CrossModuleCodeMotionTest extends CompilerTestCase {
         });
   }
 
+  public void testLetConstMovement4() {
+    // Test moving a function
+    JSModule[] modules =
+        createModuleStar(
+            // m1
+            "const a = function(){alert(1)};",
+            // m2
+            "let x = a;");
+
+    test(
+        modules,
+        new String[] {
+          // m1
+          "",
+          // m2
+          "const a = function(){alert(1)}; let x = a;"
+        });
+  }
+
   public void testVarMovement5() {
     // Don't move a function outside of scope
     testSame(
@@ -743,6 +951,16 @@ public final class CrossModuleCodeMotionTest extends CompilerTestCase {
             "var a = alert;",
             // m2
             "var x = a;"));
+  }
+
+  public void testLetConstMovement5() {
+    // Don't move a function outside of scope
+    testSame(
+        createModuleStar(
+            // m1
+            "const a = alert;",
+            // m2
+            "let x = a;"));
   }
 
   public void testVarMovement6() {
@@ -761,6 +979,25 @@ public final class CrossModuleCodeMotionTest extends CompilerTestCase {
           "",
           // m2
           "var a; var x = a;"
+        });
+  }
+
+  public void testLetMovement6() {
+    // Test moving a let with no assigned value
+    JSModule[] modules =
+        createModuleStar(
+            // m1
+            "let a;",
+            // m2
+            "let x = a;");
+
+    test(
+        modules,
+        new String[] {
+          // m1
+          "",
+          // m2
+          "let a; let x = a;"
         });
   }
 
@@ -800,6 +1037,32 @@ public final class CrossModuleCodeMotionTest extends CompilerTestCase {
         });
   }
 
+  public void testLetConstMovement8() {
+    JSModule[] modules =
+        createModuleBush(
+            // m1
+            "const a = 0;",
+            // m2 -> m1
+            "",
+            // m3 -> m2
+            "let x = a;",
+            // m4 -> m2
+            "let y = a;");
+
+    test(
+        modules,
+        new String[] {
+          // m1
+          "",
+          // m2
+          "const a = 0;",
+          // m3
+          "let x = a;",
+          // m4
+          "let y = a;"
+        });
+  }
+
   public void testVarMovement9() {
     JSModule[] modules =
         createModuleTree(
@@ -827,6 +1090,44 @@ public final class CrossModuleCodeMotionTest extends CompilerTestCase {
           "var a = 0;",
           // m3
           "var b = 1;",
+          // m4
+          "a;",
+          // m5
+          "a;c;",
+          // m6
+          "b;",
+          // m7
+          "b;c;"
+        });
+  }
+
+  public void testConstMovement9() {
+    JSModule[] modules =
+        createModuleTree(
+            // m1
+            "const a = 0; const b = 1; const c = 3;",
+            // m2 -> m1
+            "",
+            // m3 -> m1
+            "",
+            // m4 -> m2
+            "a;",
+            // m5 -> m2
+            "a;c;",
+            // m6 -> m3
+            "b;",
+            // m7 -> m4
+            "b;c;");
+
+    test(
+        modules,
+        new String[] {
+          // m1
+          "const c = 3;",
+          // m2
+          "const a = 0;",
+          // m3
+          "const b = 1;",
           // m4
           "a;",
           // m5
@@ -883,7 +1184,7 @@ public final class CrossModuleCodeMotionTest extends CompilerTestCase {
           // m1
           "",
           // m2
-          LINE_JOINER.join(
+          lines(
               "function f(){}",
               "f.prototype.clone = function() { return new f() };",
               "var a = (new f).clone();",
@@ -895,7 +1196,7 @@ public final class CrossModuleCodeMotionTest extends CompilerTestCase {
     test(
         createModuleChain(
             // m1
-            LINE_JOINER.join(
+            lines(
                 "function f(){}",
                 "f.prototype.cloneFun = function() {",
                 "  return function() {new f}",
@@ -905,7 +1206,7 @@ public final class CrossModuleCodeMotionTest extends CompilerTestCase {
         new String[] {
           // m1
           "",
-          LINE_JOINER.join(
+          lines(
               "function f(){}",
               "f.prototype.cloneFun = function() {",
               "  return function() {new f}",
@@ -988,7 +1289,7 @@ public final class CrossModuleCodeMotionTest extends CompilerTestCase {
     testSame(
         createModuleChain(
             // m0
-            LINE_JOINER.join(
+            lines(
                 "g();", // must recognize this as a reference to the following declaration
                 "function g() {}"),
             // m1
@@ -997,7 +1298,7 @@ public final class CrossModuleCodeMotionTest extends CompilerTestCase {
     testSame(
         createModuleChain(
             // m0
-            LINE_JOINER.join(
+            lines(
                 "function f() { g(); }",
                 "function g() {}",
                 "f();"), // f() cannot move, so neither can g()
@@ -1009,7 +1310,7 @@ public final class CrossModuleCodeMotionTest extends CompilerTestCase {
     test(
         createModuleChain(
             // m0
-            LINE_JOINER.join(
+            lines(
                 "function a() { b(); }",
                 "function b() {}",
                 "function c() {}",
@@ -1020,7 +1321,7 @@ public final class CrossModuleCodeMotionTest extends CompilerTestCase {
           // m0
           "",
           // m1
-          LINE_JOINER.join(
+          lines(
               "function b() {}",
               "function c() {}",
               "function a() { b(); }",
@@ -1033,7 +1334,7 @@ public final class CrossModuleCodeMotionTest extends CompilerTestCase {
     test(
         createModuleChain(
             // m0
-            LINE_JOINER.join(
+            lines(
                 "function a() { c(); }",
                 "function b() {}",
                 "a.prototype.x = function() { c(); };",
@@ -1045,7 +1346,7 @@ public final class CrossModuleCodeMotionTest extends CompilerTestCase {
           // m0
           "function b() {}",
           // m1
-          LINE_JOINER.join(
+          lines(
               "function c() {}",
               "function a() { c(); }",
               "a.prototype.x = function() { c(); };",
@@ -1176,7 +1477,7 @@ public final class CrossModuleCodeMotionTest extends CompilerTestCase {
     test(
         createModuleChain(
             // m0
-            LINE_JOINER.join(
+            lines(
                 "function C() {}",
                 "function X() {}",
                 "X.prototype.a = function(x) { return x instanceof C; }",
@@ -1191,7 +1492,7 @@ public final class CrossModuleCodeMotionTest extends CompilerTestCase {
           // m1
           "function C() {} new C();",
           // m2
-          LINE_JOINER.join(
+          lines(
               "function X() {}",
               // no need to guard instanceof
               "X.prototype.a = function(x) { return x instanceof C; }",
@@ -1201,7 +1502,7 @@ public final class CrossModuleCodeMotionTest extends CompilerTestCase {
     test(
         createModuleChain(
             // m0
-            LINE_JOINER.join(
+            lines(
                 "function C() {}",
                 "function X() {}",
                 "X.prototype.a = function(x) { return x instanceof C; }",
@@ -1214,7 +1515,7 @@ public final class CrossModuleCodeMotionTest extends CompilerTestCase {
           // m0
           "",
           // m1
-          LINE_JOINER.join(
+          lines(
               "function X() {}",
               "X.prototype.a = function(x) { return 'undefined' != typeof C && x instanceof C; }",
               "new X();",

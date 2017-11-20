@@ -20,8 +20,10 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.annotations.GwtIncompatible;
+import com.google.common.base.Ascii;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
@@ -49,6 +51,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -1363,7 +1366,7 @@ public final class ConformanceRules {
       return ConformanceResult.CONFORMANCE;
     }
 
-    private boolean conforms(TypeI type) {
+    private static boolean conforms(TypeI type) {
       if (type.isUnionType()) {
         // unwrap union types which might contain unresolved type name
         // references for example {Foo|undefined}
@@ -1376,6 +1379,23 @@ public final class ConformanceRules {
       } else {
         return !type.isUnresolved();
       }
+    }
+  }
+
+  /** Ban any use of unresolved forward-declared types */
+  public static final class StrictBanUnresolvedType extends AbstractTypeRestrictionRule {
+    public StrictBanUnresolvedType(AbstractCompiler compiler, Requirement requirement)
+        throws InvalidRequirementSpec {
+      super(compiler, requirement);
+    }
+
+    @Override
+    protected ConformanceResult checkConformance(NodeTraversal t, Node n) {
+      TypeI type = n.getTypeI();
+      if (type != null && !BanUnresolvedType.conforms(type) && !isTypeImmediatelyTightened(n)) {
+        return ConformanceResult.VIOLATION;
+      }
+      return ConformanceResult.CONFORMANCE;
     }
   }
 
@@ -1445,6 +1465,72 @@ public final class ConformanceRules {
   }
 
   /**
+   * Bans {@code document.createElement} and similar methods with string literal parameter specified
+   * in {@code value}, e.g. {@code value: 'script'}. The purpose of banning these is that they don't
+   * provide the type information which hinders other rules. Authors should use e.g. {@code
+   * goog.dom.createElement(goog.dom.TagName.SCRIPT)} which returns HTMLScriptElement.
+   */
+  public static final class BanCreateElement extends AbstractRule {
+    private final Set<String> bannedTags;
+    private final TypeI domHelperType;
+    private final TypeI documentType;
+
+    public BanCreateElement(AbstractCompiler compiler, Requirement requirement)
+        throws InvalidRequirementSpec {
+      super(compiler, requirement);
+      bannedTags = new HashSet<>();
+      for (String value : requirement.getValueList()) {
+        bannedTags.add(Ascii.toLowerCase(value));
+      }
+      if (bannedTags.isEmpty()) {
+        throw new InvalidRequirementSpec("Specify one or more values.");
+      }
+      domHelperType = compiler.getTypeIRegistry().getType("goog.dom.DomHelper");
+      documentType = compiler.getTypeIRegistry().getType("Document");
+    }
+
+    @Override
+    protected ConformanceResult checkConformance(NodeTraversal t, Node n) {
+      if (n.isCall()) {
+        Node tag = n.getSecondChild();
+        if (tag != null
+            && tag.isString()
+            && bannedTags.contains(Ascii.toLowerCase(tag.getString()))) {
+          return checkCreateElement(n);
+        }
+      }
+      return ConformanceResult.CONFORMANCE;
+    }
+
+    private ConformanceResult checkCreateElement(Node n) {
+      Node target = n.getFirstChild();
+      if (!target.isGetProp()) {
+        return ConformanceResult.CONFORMANCE;
+      }
+      String functionName = target.getLastChild().getString();
+      if (!"createElement".equals(functionName) && !"createDom".equals(functionName)) {
+        return ConformanceResult.CONFORMANCE;
+      }
+
+      Node srcObj = target.getFirstChild();
+      if (srcObj.matchesQualifiedName("goog.dom")) {
+        return ConformanceResult.VIOLATION;
+      }
+      TypeI type = srcObj.getTypeI();
+      if (type == null || type.isUnknownType() || type.isUnresolved() || type.isTop()) {
+        return reportLooseTypeViolations
+            ? ConformanceResult.POSSIBLE_VIOLATION_DUE_TO_LOOSE_TYPES
+            : ConformanceResult.CONFORMANCE;
+      }
+      if ((domHelperType != null && domHelperType.isSubtypeOf(type))
+          || (documentType != null && documentType.isSubtypeOf(type))) {
+        return ConformanceResult.VIOLATION;
+      }
+      return ConformanceResult.CONFORMANCE;
+    }
+  }
+
+  /**
    * Ban {@code goog.dom.createDom} and {@code goog.dom.DomHelper#createDom} with parameters
    * specified in {@code value} in the format tagname.attribute, e.g. {@code value: 'iframe.src'}.
    * Tag name might be also {@code *} to ban the attribute in any tag.
@@ -1452,8 +1538,9 @@ public final class ConformanceRules {
    * attacker controlled.
    */
   public static final class BanCreateDom extends AbstractRule {
-    private List<String[]> bannedTagAttrs;
-    private TypeI classNameTypes;
+    private final List<String[]> bannedTagAttrs;
+    private final TypeI domHelperType;
+    private final TypeI classNameTypes;
 
     public BanCreateDom(AbstractCompiler compiler, Requirement requirement)
         throws InvalidRequirementSpec {
@@ -1470,6 +1557,7 @@ public final class ConformanceRules {
       if (bannedTagAttrs.isEmpty()) {
         throw new InvalidRequirementSpec("Specify one or more values.");
       }
+      domHelperType = compiler.getTypeIRegistry().getType("goog.dom.DomHelper");
       classNameTypes = compiler.getTypeIRegistry().createUnionType(ImmutableList.of(
           compiler.getTypeIRegistry().getNativeType(JSTypeNative.STRING_TYPE),
           compiler.getTypeIRegistry().getNativeType(JSTypeNative.ARRAY_TYPE),
@@ -1541,7 +1629,7 @@ public final class ConformanceRules {
       return ConformanceResult.CONFORMANCE;
     }
 
-    private Collection<String> getTagNames(Node tag) {
+    private ImmutableCollection<String> getTagNames(Node tag) {
       if (tag.isString()) {
         return ImmutableSet.of(tag.getString().toLowerCase());
       } else if (tag.isGetProp() && tag.getFirstChild().matchesQualifiedName("goog.dom.TagName")) {
@@ -1661,9 +1749,7 @@ public final class ConformanceRules {
       if (type == null) {
         return false;
       }
-      // TODO(johnlenz): This is really slow instead use the type registry to lookup the
-      // type and use isEquivalentTo
-      if ("goog.dom.DomHelper".equals(type.getDisplayName())) {
+      if (type.isEquivalentTo(domHelperType)) {
         return true;
       }
       return false;

@@ -108,7 +108,7 @@ public final class CheckRegExpTest extends CompilerTestCase {
 
     // Class property is also OK.
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
-    testReference(LINE_JOINER.join(
+    testReference(lines(
         "class x {",
         "  constructor() {this.RegExp = {};}",
         "  method() {",

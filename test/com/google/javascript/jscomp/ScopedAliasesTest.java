@@ -75,11 +75,8 @@ public final class ScopedAliasesTest extends TypeICompilerTestCase {
     testScoped(aliases + code, code, postconditions);
   }
 
-  private static final Postcondition VERIFY_TYPES = new Postcondition() {
-    @Override
-    void verify(Compiler compiler) {
-      new TypeVerifyingPass(compiler).process(compiler.externsRoot, compiler.jsRoot);
-    }
+  private static final Postcondition VERIFY_TYPES = (Compiler compiler) -> {
+    new TypeVerifyingPass(compiler).process(compiler.externsRoot, compiler.jsRoot);
   };
 
   public void testLet() {
@@ -351,36 +348,36 @@ public final class ScopedAliasesTest extends TypeICompilerTestCase {
    */
   public void testObjectLiteral() {
     testScoped(
-        LINE_JOINER.join(
+        lines(
             "var Foo = goog.Foo;",
             "goog.x = {",
             "  /** @param {Foo} foo */",
             "  y: function(foo) { }",
             "};"),
-        LINE_JOINER.join(
+        lines(
             "goog.x = {",
             "  /** @param {goog.Foo} foo */",
             "  y: function(foo) {}",
             "};"));
 
     testScoped(
-        LINE_JOINER.join(
+        lines(
             "var Foo = goog.Foo;",
             "goog.x = {",
             "  y: /** @param {Foo} foo */ function(foo) {}",
             "};"),
-        LINE_JOINER.join(
+        lines(
             "goog.x = {",
             "  y: /** @param {goog.Foo} foo */ function(foo) {}",
             "};"));
 
     testScoped(
-        LINE_JOINER.join(
+        lines(
             "var Foo = goog.Foo;",
             "goog.x = {",
             "  y: /** @type {function(Foo)} */ (function(foo) {})",
             "};"),
-        LINE_JOINER.join(
+        lines(
             "goog.x = {",
             "  y: /** @type {function(goog.Foo)} */ (function(foo) {})",
             "};"));
@@ -411,7 +408,7 @@ public final class ScopedAliasesTest extends TypeICompilerTestCase {
     this.mode = TypeInferenceMode.BOTH;
 
     String externs =
-        LINE_JOINER.join(
+        lines(
             MINIMAL_EXTERNS,
             "/** @const */ var ns = {};",
             "/** @constructor */",
@@ -422,7 +419,7 @@ public final class ScopedAliasesTest extends TypeICompilerTestCase {
             "goog.scope = function(fn) {}");
 
     String js =
-        LINE_JOINER.join(
+        lines(
             "goog.scope(function() {",
             "  var Foo = ns.Foo;",
             "  var x = {",
@@ -437,7 +434,7 @@ public final class ScopedAliasesTest extends TypeICompilerTestCase {
             TypeValidator.TYPE_MISMATCH_WARNING, NewTypeInference.INVALID_ARGUMENT_TYPE));
 
     js =
-        LINE_JOINER.join(
+        lines(
             "goog.scope(function() {",
             "  var Foo = ns.Foo;",
             "  var x = {",
@@ -484,7 +481,7 @@ public final class ScopedAliasesTest extends TypeICompilerTestCase {
   public void testJsDocType() {
     testTypes(
         "var x = goog.Timer;",
-        LINE_JOINER.join(
+        lines(
             "/** @type {goog.Timer} */ types.actual;",
             "/** @type {goog.Timer} */ types.expected;"));
   }
@@ -492,7 +489,7 @@ public final class ScopedAliasesTest extends TypeICompilerTestCase {
   public void testJsDocParameter() {
     testTypes(
         "var x = goog.Timer;",
-        LINE_JOINER.join(
+        lines(
             "/** @param {goog.Timer} a */ types.actual;",
             "/** @param {goog.Timer} a */ types.expected;"));
   }
@@ -500,7 +497,7 @@ public final class ScopedAliasesTest extends TypeICompilerTestCase {
   public void testJsDocExtends() {
     testTypes(
         "var x = goog.Timer;",
-        LINE_JOINER.join(
+        lines(
             "/** @extends {goog.Timer} */ types.actual;",
             "/** @extends {goog.Timer} */ types.expected;"));
   }
@@ -508,7 +505,7 @@ public final class ScopedAliasesTest extends TypeICompilerTestCase {
   public void testJsDocImplements() {
     testTypes(
         "var x = goog.Timer;",
-        LINE_JOINER.join(
+        lines(
             "/** @implements {goog.Timer} */ types.actual;",
             "/** @implements {goog.Timer} */ types.expected;"));
   }
@@ -516,7 +513,7 @@ public final class ScopedAliasesTest extends TypeICompilerTestCase {
   public void testJsDocEnum() {
     testTypes(
         "var x = goog.Timer;",
-        LINE_JOINER.join(
+        lines(
             "",
             "/** @enum {goog.Timer} */ types.actual;",
             "/** @enum {goog.Timer} */ types.expected;"));
@@ -525,7 +522,7 @@ public final class ScopedAliasesTest extends TypeICompilerTestCase {
   public void testJsDocReturn() {
     testTypes(
         "var x = goog.Timer;",
-        LINE_JOINER.join(
+        lines(
             "/** @return {goog.Timer} */ types.actual;",
             "/** @return {goog.Timer} */ types.expected;"));
   }
@@ -533,7 +530,7 @@ public final class ScopedAliasesTest extends TypeICompilerTestCase {
   public void testJsDocThis() {
     testTypes(
         "var x = goog.Timer;",
-        LINE_JOINER.join(
+        lines(
             "/** @this {goog.Timer} */ types.actual;",
             "/** @this {goog.Timer} */ types.expected;"));
   }
@@ -541,7 +538,7 @@ public final class ScopedAliasesTest extends TypeICompilerTestCase {
   public void testJsDocThrows() {
     testTypes(
         "var x = goog.Timer;",
-        LINE_JOINER.join(
+        lines(
             "/** @throws {goog.Timer} */ types.actual;",
             "/** @throws {goog.Timer} */ types.expected;"));
   }
@@ -549,7 +546,7 @@ public final class ScopedAliasesTest extends TypeICompilerTestCase {
   public void testJsDocSubType() {
     testTypes(
         "var x = goog.Timer;",
-        LINE_JOINER.join(
+        lines(
             "/** @type {goog.Timer.Enum} */ types.actual;",
             "/** @type {goog.Timer.Enum} */ types.expected;"));
   }
@@ -557,22 +554,22 @@ public final class ScopedAliasesTest extends TypeICompilerTestCase {
   public void testJsDocTypedef() {
     testTypes(
         "var x = goog.Timer;",
-        LINE_JOINER.join(
+        lines(
             "/** @typedef {goog.Timer} */ types.actual;",
             "/** @typedef {goog.Timer} */ types.expected;"));
 
     testScoped(
-        LINE_JOINER.join(
+        lines(
             "/** @typedef {string} */ var s;",
             "/** @type {s} */ var t;"),
-        LINE_JOINER.join(
+        lines(
             SCOPE_NAMESPACE,
             "/** @typedef {string} */ $jscomp.scope.s;",
             "/** @type {$jscomp.scope.s} */ $jscomp.scope.t;"));
 
     testScoped(
-        LINE_JOINER.join("/** @typedef {string} */ let s;", "/** @type {s} */ var t;"),
-        LINE_JOINER.join(
+        lines("/** @typedef {string} */ let s;", "/** @type {s} */ var t;"),
+        lines(
             SCOPE_NAMESPACE,
             "/** @typedef {string} */ $jscomp.scope.s;",
             "/** @type {$jscomp.scope.s} */ $jscomp.scope.t;"));
@@ -581,13 +578,13 @@ public final class ScopedAliasesTest extends TypeICompilerTestCase {
   public void testJsDocRecord() {
     this.mode = TypeInferenceMode.BOTH;
     test(
-        LINE_JOINER.join(
+        lines(
             "/** @const */ var ns = {};",
             "goog.scope(function () {",
             "  var x = goog.Timer;",
             "  /** @type {{x: string}} */ ns.y = {'goog.Timer': 'x'};",
             "});"),
-        LINE_JOINER.join(
+        lines(
             "/** @const */ var ns = {};",
             "/** @type {{x: string}} */ ns.y = {'goog.Timer': 'x'};"),
         warningOtiNti(TypeValidator.TYPE_MISMATCH_WARNING, NewTypeInference.MISTYPED_ASSIGN_RHS));
@@ -596,7 +593,7 @@ public final class ScopedAliasesTest extends TypeICompilerTestCase {
   public void testArrayJsDoc() {
     testTypes(
         "var x = goog.Timer;",
-        LINE_JOINER.join(
+        lines(
             "/** @type {Array.<goog.Timer>} */ types.actual;",
             "/** @type {Array.<goog.Timer>} */ types.expected;"));
   }
@@ -604,12 +601,12 @@ public final class ScopedAliasesTest extends TypeICompilerTestCase {
   public void testObjectJsDoc() {
     testTypes(
         "var x = goog.Timer;",
-        LINE_JOINER.join(
+        lines(
             "/** @type {{someKey: goog.Timer}} */ types.actual;",
             "/** @type {{someKey: goog.Timer}} */ types.expected;"));
     testTypes(
         "var x = goog.Timer;",
-        LINE_JOINER.join(
+        lines(
             "/** @type {{x: number}} */ types.actual;",
             "/** @type {{x: number}} */ types.expected;"));
   }
@@ -617,7 +614,7 @@ public final class ScopedAliasesTest extends TypeICompilerTestCase {
   public void testObjectJsDoc2() {
     testTypes(
         "var x = goog$Timer;",
-        LINE_JOINER.join(
+        lines(
             "/** @type {{someKey: goog$Timer}} */ types.actual;",
             "/** @type {{someKey: goog$Timer}} */ types.expected;"));
   }
@@ -958,7 +955,7 @@ public final class ScopedAliasesTest extends TypeICompilerTestCase {
   // https://github.com/google/closure-compiler/issues/2211
   public void testIssue2211() {
     test(
-        LINE_JOINER.join(
+        lines(
             "var ns = {};",
             "var y = 1;",
             "goog.scope(function () {",
@@ -966,7 +963,7 @@ public final class ScopedAliasesTest extends TypeICompilerTestCase {
             "    return n == 1 ? 1 : n * y(n - 1);",
             "  };",
             "});"),
-        LINE_JOINER.join(
+        lines(
             "var ns = {};",
             "var y = 1;",
             "ns.fact = function y$jscomp$scopedAliases$0(n) {",
@@ -977,7 +974,7 @@ public final class ScopedAliasesTest extends TypeICompilerTestCase {
   // https://github.com/google/closure-compiler/issues/2211
   public void testIssue2211b() {
     test(
-        LINE_JOINER.join(
+        lines(
             "var ns = {};",
             "var y = 1;",
             "goog.scope(function () {",
@@ -986,7 +983,7 @@ public final class ScopedAliasesTest extends TypeICompilerTestCase {
             "    return n == 1 ? 1 : n * y(n - 1);",
             "  };",
             "});"),
-        LINE_JOINER.join(
+        lines(
             SCOPE_NAMESPACE,
             "var ns = {};",
             "var y = 1;",
@@ -999,13 +996,13 @@ public final class ScopedAliasesTest extends TypeICompilerTestCase {
   // https://github.com/google/closure-compiler/issues/2211
   public void testIssue2211c() {
     testScoped(
-        LINE_JOINER.join(
+        lines(
             "foo(() => {",
             "  const y = function y() {",
             "    use(y);",
             "  };",
             "});"),
-        LINE_JOINER.join(
+        lines(
             "foo(() => {",
             "  const y = function y$jscomp$scopedAliases$0() {",
             "    use(y$jscomp$scopedAliases$0);",
@@ -1021,12 +1018,12 @@ public final class ScopedAliasesTest extends TypeICompilerTestCase {
     this.mode = TypeInferenceMode.BOTH;
 
     test(
-        LINE_JOINER.join(
+        lines(
             "goog.scope(function () {",
             "  /** @constructor */ function F() {}",
             "  /** @return {F} */ function createFoo() { return 1; }",
             "});"),
-        LINE_JOINER.join(
+        lines(
             SCOPE_NAMESPACE,
             "/** @return {$jscomp.scope.F} */",
             "$jscomp.scope.createFoo = /** @return {$jscomp.scope.F} */ function() { return 1; };",
