@@ -2196,6 +2196,10 @@ public abstract class CompilerTestCase extends TestCase {
     return match != null ? diagnostic.withMessage(match) : diagnostic;
   }
 
+  protected static Postcondition postcondition(Postcondition postcondition) {
+    return postcondition;
+  }
+
   protected void testSame(TestPart... parts) {
     testInternal(Iterables.concat(Arrays.asList(parts), ImmutableList.of(EXPECTED_SAME)));
   }

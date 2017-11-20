@@ -1945,12 +1945,15 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
   }
 
   void assertPureCallsMarked(String source, final List<String> expected, final Postcondition post) {
-    testSame(srcs(source), (Postcondition) (Compiler compiler) -> {
-      assertEquals(expected, noSideEffectCalls);
-      if (post != null) {
-        post.verify(compiler);
-      }
-    });
+    testSame(
+        srcs(source),
+        postcondition(
+            (Compiler compiler) -> {
+              assertEquals(expected, noSideEffectCalls);
+              if (post != null) {
+                post.verify(compiler);
+              }
+            }));
   }
 
   void checkLocalityOfMarkedCalls(String source, final List<String> expected) {
