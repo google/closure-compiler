@@ -23,16 +23,6 @@ package com.google.javascript.jscomp;
  */
 public final class OptimizeParametersTest extends CompilerTestCase {
 
-  // TODO(johnlenz): ES6+ features to still to test
-  //   classes:
-  //        constructors (alias)
-  //        computed properties (allowed as a value?)
-  //   objects:
-  //        computed properties (allowed as a value?)
-  //   for..of
-  //   async functions
-  //   generators
-
   public OptimizeParametersTest() {
     super(lines(DEFAULT_EXTERNS, "var alert;"));
   }
@@ -244,6 +234,42 @@ public final class OptimizeParametersTest extends CompilerTestCase {
          "function f(  ) {var p1;} f['prop'] = 1; new f(); new f()");
    test("function f(p1) {           } f['prop'] = 1; new f(1); new f(1)",
         "function f(  ) {var p1 = 1;} f['prop'] = 1; new f( ); new f( )");
+  }
+
+  public void testSimpleRemovalAsync() {
+    // parameter never supplied
+    test("var f = async function (p1) {       }; f(); f()",
+         "var f = async function (  ) {var p1;}; f(); f()");
+    test("let f = async function (p1) {       }; f(); f()",
+         "let f = async function (  ) {var p1;}; f(); f()");
+    test("const f = async function (p1) {       }; f(); f()",
+         "const f = async function (  ) {var p1;}; f(); f()");
+
+    // constant parameter
+    test("var f = async function (p1) {          }; f(1); f(1)",
+         "var f = async function (  ) {var p1 = 1;}; f( ); f( )");
+    test("let f = async function (p1) {           }; f(1); f(1)",
+         "let f = async function (  ) {var p1 = 1;}; f( ); f( )");
+    test("const f = async function (p1) {          }; f(1); f(1)",
+         "const f = async function (  ) {var p1 = 1;}; f( ); f( )");
+  }
+
+  public void testSimpleRemovalGenerator() {
+    // parameter never supplied
+    test("var f = function * (p1) {       }; f(); f()",
+         "var f = function * (  ) {var p1;}; f(); f()");
+    test("let f = function * (p1) {       }; f(); f()",
+         "let f = function * (  ) {var p1;}; f(); f()");
+    test("const f = function * (p1) {       }; f(); f()",
+         "const f = function * (  ) {var p1;}; f(); f()");
+
+    // constant parameter
+    test("var f = function * (p1) {          }; f(1); f(1)",
+         "var f = function * (  ) {var p1 = 1;}; f( ); f( )");
+    test("let f = function * (p1) {           }; f(1); f(1)",
+         "let f = function * (  ) {var p1 = 1;}; f( ); f( )");
+    test("const f = function * (p1) {          }; f(1); f(1)",
+         "const f = function * (  ) {var p1 = 1;}; f( ); f( )");
   }
 
   public void testNotAFunction() {
@@ -872,11 +898,54 @@ public final class OptimizeParametersTest extends CompilerTestCase {
         "f(); function f(){g();h()}");
   }
 
+  public void testNoRewriteUsedClassConstructor1() throws Exception {
+    testSame(lines(
+        "class C { constructor(a) { use(a); } }",
+        "var c = new C();"));
+  }
+
+  public void testNoRewriteUsedClassConstructor2() throws Exception {
+    // `constructor` aliases the class constructor
+    testSame(lines(
+        "class C { constructor(a) { use(a); } }",
+        "var c = new C();",
+        "new c.constructor(1);"));
+  }
+
+  public void testNoRewriteUsedClassConstructor3() throws Exception {
+    // `super` aliases the super type constructor
+    testSame(lines(
+        "class C { constructor(a) { use(a); } }",
+        "class D extends C { constructor() { super(1); } }",
+        "var d = new D(); new C();"));
+  }
+
+  public void testNoRewriteUsedClassConstructor4() throws Exception {
+    // `new.target` aliases self and subtype constructors
+    testSame(lines(
+        "class C { constructor() { var x = new.target(1); } }",
+        "class D extends C { constructor(a) { super(); } }",
+        "var d = new D(); new C();"));
+  }
+
+  public void testNoRewriteUsedClassConstructor5() throws Exception {
+    // Static class methods "this" values can alias constructors.
+    testSame(lines(
+        "class C { constructor(a) { use(a); }; static create(a) { new this(1); } }",
+        "var c = new C();",
+        "C.create();"));
+  }
+
   public void testNoRewriteUsedClassMethodParam1() throws Exception {
-    String source = lines(
+    testSame(lines(
         "class C { method(a) { use(a); } }",
-        "var c = new C(); c.method(1); c.method(2)");
-    testSame(source);
+        "var c = new C(); c.method(1); c.method(2)"));
+  }
+
+  public void testNoRewriteUnusedClassComputedMethodParam1() throws Exception {
+    testSame(lines(
+        "class C { [method](a) { } }",
+        "var c = new C(); c[method](1); c[method](2)"));
   }
 
   public void testRewriteUsedClassMethodParam1() throws Exception {
