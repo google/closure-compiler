@@ -25,6 +25,10 @@ import com.google.javascript.rhino.Node;
  */
 public final class OptimizeCallsTest extends CompilerTestCase {
 
+  public OptimizeCallsTest() {
+    super(lines(DEFAULT_EXTERNS, "var alert;"));
+  }
+
   @Override
   protected void setUp() throws Exception {
     super.setUp();
@@ -55,6 +59,16 @@ public final class OptimizeCallsTest extends CompilerTestCase {
         passes.process(externs, root);
       }
     };
+  }
+
+  public void testSimpleRemoval() {
+    // unused parameter value
+    test("var foo = (p1)=>{}; foo(1); foo(2)",
+         "var foo = (  )=>{}; foo( ); foo( )");
+    test("let foo = (p1)=>{}; foo(1); foo(2)",
+         "let foo = (  )=>{}; foo( ); foo( )");
+    test("const foo = (p1)=>{}; foo(1); foo(2)",
+         "const foo = (  )=>{}; foo( ); foo( )");
   }
 
   public void testRemovingReturnCallToFunctionWithUnusedParams() {
@@ -288,6 +302,119 @@ public final class OptimizeCallsTest extends CompilerTestCase {
     test(
         "var b=function(e,c,f,d,g){use(c+d)};b(1,2);b(3,4,5,6)",
         "var b=function(c,d){use(c+d)};b(2);b(4,6)");
+  }
+
+  public void testFunctionArgRemovalFromCallSitesSpread1() {
+    test(
+        "function f(a,b,c,d){};f(...[1,2,3,4]);f(4,3,2,1)",
+        "function f(){};f();f()");
+    test(
+        "function f(a,b,c,d){};f(...[1,2,3,4], alert());f(4,3,2,1)",
+        "function f(){};f(alert());f()");
+    test(
+        "function f(a,b,c,d){use(c+d)};f(...[1,2,3,4]);f(4,3,2,1)",
+        "function f(a,b,c,d){use(c+d)};f(...[1,2,3,4]);f(0,0,2,1)");
+    test(
+        "function f(a,b,c,d){use(c+d)};f(1,...[2,3,4,5]);f(4,3,2,1)",
+        "function f(  b,c,d){use(c+d)};f(  ...[2,3,4,5]);f(  0,2,1)");
+    test(
+        "function f(a,b,c,d){use(c+d)};f(1,2,...[3,4,5]);f(4,3,2,1)",
+        "function f(    c,d){use(c+d)};f(    ...[3,4,5]);f(    2,1)");
+    test(
+        "function f(a,b,c,d){use(c+d)}; f(...[],2,3);f(4,3,2,1)",
+        "function f(a,b,c,d){use(c+d)}; f(...[],2,3);f(0,0,2,1)");
+  }
+
+  public void testFunctionArgRemovalFromCallSitesSpread2() {
+    test(
+        "function f(a,b,c,d){};f(...[alert()]);f(4,3,2,1)",
+        "function f(){};f(...[alert()]);f()");
+    test(
+        "function f(a,b,c,d){};f(...[alert()], alert());f(4,3,2,1)",
+        "function f(){};f(...[alert()], alert());f()");
+    test(
+        "function f(a,b,c,d){use(c+d)};f(...[alert()]);f(4,3,2,1)",
+        "function f(a,b,c,d){use(c+d)};f(...[alert()]);f(0,0,2,1)");
+    test(
+        "function f(a,b,c,d){use(c+d)};f(1,...[alert()]);f(4,3,2,1)",
+        "function f(  b,c,d){use(c+d)};f(  ...[alert()]);f(  0,2,1)");
+    test(
+        "function f(a,b,c,d){use(c+d)};f(1,2,...[alert()]);f(4,3,2,1)",
+        "function f(    c,d){use(c+d)};f(    ...[alert()]);f(    2,1)");
+    test(
+        "function f(a,b,c,d){use(c+d)}; f(...[alert()],2,3);f(4,3,2,1)",
+        "function f(a,b,c,d){use(c+d)}; f(...[alert()],2,3);f(0,0,2,1)");
+  }
+
+  public void testFunctionArgRemovalFromCallSitesSpread3() {
+    test(
+        "function f(a,b,c,d){};f(...alert());f(4,3,2,1)",
+        "function f(){};f(...alert());f()");
+    test(
+        "function f(a,b,c,d){};f(...alert(), 1);f(4,3,2,1)",
+        "function f(){};f(...alert());f()");
+    test(
+        "function f(a,b,c,d){use(c+d)};f(...alert());f(4,3,2,1)",
+        "function f(a,b,c,d){use(c+d)};f(...alert());f(0,0,2,1)");
+    test(
+        "function f(a,b,c,d){use(c+d)};f(1,...alert());f(4,3,2,1)",
+        "function f(  b,c,d){use(c+d)};f(  ...alert());f(  0,2,1)");
+    test(
+        "function f(a,b,c,d){use(c+d)};f(1,2,...alert());f(4,3,2,1)",
+        "function f(    c,d){use(c+d)};f(    ...alert());f(    2,1)");
+    test(
+        "function f(a,b,c,d){use(c+d)}; f(...[alert()],2,3);f(4,3,2,1)",
+        "function f(a,b,c,d){use(c+d)}; f(...[alert()],2,3);f(0,0,2,1)");
+  }
+
+  public void testFunctionArgRemovalFromCallSitesRest() {
+    // remove all function arguments
+    test(
+        "var b=function(c,...d){return};b(1,2,3);b(4,5,6)",
+        "var b=function(      ){return};b(     );b(     )");
+
+    // remove no function arguments
+    testSame("var b=function(c,...d){return c+d};b(1,2,3);use(b(4,5,6))");
+
+    // remove some function arguments
+    test(
+        "var b=function(e,f,...c){return c};b(1,2,3,4);use(b(4,3,2,1))",
+        "var b=function(    ...c){return c};b(    3,4);use(b(    2,1))");
+  }
+
+  public void testFunctionArgRemovalFromCallSitesDefaultValue() {
+    // remove all function arguments
+    test(
+        "function f(c = 1, d = 2){};f(1,2,3);f(4,5,6)",
+        "function f(            ){};f(     );f(     )");
+    testSame(
+        "function f(c = alert()){};f(undefined);f(4)");
+    test(
+        "function f(c = alert()){};f();f()",
+        "function f(){var c = alert();};f();f()");
+    // TODO(johnlenz): handle this like the "no value" case above and
+    // allow the default value to inlined into the body.
+    testSame(
+        "function f(c = alert()){};f(undefined);f(undefined)");
+  }
+
+  public void testFunctionArgRemovalFromCallSitesDestructuring() {
+    // remove all function arguments
+    test(
+        "function f([a] = [1], [b] = [2]){};f(v1,v2,v3);f(v4,v5,v6)",
+        "function f(                    ){};f(        );f(        )");
+    test(
+        "function f(a, [b] = alert(), [c] = alert(), d){};f(v1,v2,v3,v4);f(v4,v5,v6,v7)",
+        "function f(   [ ] = alert(), [ ] = alert()   ){};f(   v2,v3   );f(   v5,v6  )");
+
+    test(
+        "function f(a, [b = alert()] = [], [c = alert()] = [], d){};f(v1,v2,v3,v4);f(v4,v5,v6,v7)",
+        "function f(   [b = alert()] = [], [c = alert()] = []   ){};f(   v2,v3   );f(   v5,v6  )");
+
+    test(
+        "function f(a, [b = alert()], [c = alert()], d){};f(v1,v2,v3,v4);f(v4,v5,v6,v7)",
+        "function f(   [b = alert()], [c = alert()]   ){};f(   v2,v3   );f(   v5,v6   )");
+
   }
 
   public void testLocalVarReferencesGlobalVar() {

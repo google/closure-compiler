@@ -141,12 +141,20 @@ class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompile
      *     #isCandidate.
      */
     void tryEliminateUnusedArgs(ArrayList<Node> refs) {
-      // An argument is unused if it is than the number of declare parameters
+      // An argument is unused if its position is greater than the number of declared parameters
       // or if it marked as unused.
       List<Node> fns = ReferenceMap.getFunctionNodes(refs);
       Preconditions.checkState(!fns.isEmpty());
 
-      int maxFormals = 0;
+      // Examine all function definitions that are ever assigned to the symbol to determine:
+      // 1. Which formal parameter positions are used by at least one of the definitions?
+      // 2. What is the largest number of formal parameters across all of the functions?
+      // 3. The lowest formal parameter position that contains a rest parameter that is used.
+      // e.g.
+      // foo = function(used0, unused1, ...usedRest) {}
+      // foo = function(unused0, ...unusedRest) {}
+      // In this case maxFormalsCount = 3, lowestUsedRest = 2, and used = { 0, 2 }
+      int maxFormalsCount = 0;
       int lowestUsedRest = Integer.MAX_VALUE;
       BitSet used = new BitSet();
       for (Node fn : fns) {
@@ -166,36 +174,27 @@ class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompile
           }
         }
 
-        maxFormals = Math.max(maxFormals, index + 1);
+        maxFormalsCount = Math.max(maxFormalsCount, index + 1);
       }
 
-      BitSet unused = new BitSet();
-      if (maxFormals > 0) {
-        unused = ((BitSet) used.clone());
-        unused.flip(0, maxFormals);
-        // There was a use "rest" declaration
-        if (lowestUsedRest < maxFormals) {
-          // everything above lowestUsedRest is used
-          unused.clear(lowestUsedRest, maxFormals - 1);
-          if (unused.cardinality() == 0) {
-            // Nothing can possibly be removed
-            return;
-          }
-        }
+      // every argument slot after the earliest rest is used
+      if (lowestUsedRest < maxFormalsCount) {
+        used.set(lowestUsedRest, maxFormalsCount);
       }
 
-      int lowestUnused = Integer.MAX_VALUE;
-      for (int i = 0; i < maxFormals; i++) {
-        if (unused.get(i)) {
-          lowestUnused = i;
-          break;
-        }
+      BitSet unused = ((BitSet) used.clone());
+      unused.flip(0, maxFormalsCount);
+
+      // If was a used "rest" declaration, there are no trailing parameters to remove, so
+      // bail out now if there are no unused formals.
+      if (lowestUsedRest < maxFormalsCount && unused.cardinality() == 0) {
+        return;
       }
 
       // NOTE: RemoveUnusedVars removes any trailing unused formals, so we don't need to
       // do for that case.
 
-      BitSet unremovableAtAnyCall = ((BitSet) used.clone());
+      BitSet unremovable = ((BitSet) used.clone());
 
       // A parameter is removable from a call-site if the parameter value
       // has no side-effects. If all call-sites can be updated, the
@@ -225,15 +224,17 @@ class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompile
           Node param = ReferenceMap.getFirstArgumentForCallOrNewOrDotCall(n);
           int paramIndex = 0;
           while (param != null) {
+            if (paramIndex >= maxFormalsCount) {
+              break;
+            }
+
             if (param.isSpread()) {
               lowestSpread = Math.min(lowestSpread, paramIndex);
-              unremovableAtAnyCall.set(paramIndex);
-              if (lowestSpread < lowestUnused) {
-                break;
-              }
+              break;
             }
-            if (unused.get(paramIndex) && NodeUtil.mayHaveSideEffects(param, compiler)) {
-              unremovableAtAnyCall.set(paramIndex);
+
+            if (!unremovable.get(paramIndex) && NodeUtil.mayHaveSideEffects(param, compiler)) {
+              unremovable.set(paramIndex);
             }
 
             param = param.getNext();
@@ -242,50 +243,84 @@ class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompile
         }
       }
 
-      // TODO: if spread < maxformal, set unremovable from spread...maxformal
+      // Although, a spread prevents the removal of it and all following used slots, it doesn't
+      // prevent the replacement of unused values from other call sites
+      if (lowestSpread < maxFormalsCount) {
+        unremovable.set(lowestSpread, maxFormalsCount);
+      }
+
+      // Only remove trailing parameters if there isn't a rest arguments in any of the
+      // definition sites.
+      int removeAllAfterIndex = Integer.MAX_VALUE;
+      if (lowestUsedRest == Integer.MAX_VALUE) {
+        removeAllAfterIndex = maxFormalsCount - 1;
+      }
 
       for (Node n : refs) {
         if (ReferenceMap.isCallOrNewTarget(n) && !alreadyRemoved(n)) {
           Node arg = ReferenceMap.getFirstArgumentForCallOrNewOrDotCall(n);
           recordRemovalCallArguments(
-              lowestUsedRest, maxFormals, unused, unremovableAtAnyCall, arg, 0);
+              lowestUsedRest, removeAllAfterIndex, unused, unremovable, arg, 0);
         }
       }
 
       for (Node fn : fns) {
         Node paramList = NodeUtil.getFunctionParameters(fn);
         Node param = paramList.getFirstChild();
-        removeUnusedFunctionPameters(lowestUsedRest, unused, unremovableAtAnyCall, param, 0);
+        removeUnusedFunctionParameters(unremovable, param, 0);
       }
     }
 
-    // max (rest is used) is or removeAllAfter (last formal) is but not both.
+    // Either firstRestIndex will be MAX_VALUE or removeAllAfterIndex will be MAX_VALUE
     void recordRemovalCallArguments(
-        int max, int removeAllAfter, BitSet unused, BitSet unremovable, Node arg, int index) {
-      if (arg != null && index < max) {
-        if (arg.isSpread() && index < removeAllAfter) {
-          // Unless we can remove everything, we can't remove anything.
-          return;
-        }
-        recordRemovalCallArguments(
-            max, removeAllAfter, unused, unremovable, arg.getNext(), index + 1);
-        if (index >= removeAllAfter || unused.get(index)) {
-          if (!NodeUtil.mayHaveSideEffects(arg, compiler)) {
-            if (unremovable.get(index)) {
+        int firstRestIndex, int removeAllAfterIndex,
+        BitSet unused, BitSet unremovable,
+        Node arg, int index) {
+      if (arg == null) {
+        return;
+      }
+
+      if (index > removeAllAfterIndex) {
+        removeArgAndFollowing(arg);
+        return;
+      }
+
+      if (arg.isSpread()) {
+        // There is no meaningful "index" after a spread.
+        return;
+      }
+
+      recordRemovalCallArguments(
+          firstRestIndex, removeAllAfterIndex,
+          unused, unremovable,
+          arg.getNext(), index + 1);
+
+      if (index < firstRestIndex && unused.get(index)) {
+        if (!NodeUtil.mayHaveSideEffects(arg, compiler)) {
+          if (unremovable.get(index)) {
+            if (!arg.isNumber() || arg.getDouble() != 0) {
               toReplaceWithZero.add(arg);
-            } else {
-              toRemove.add(arg);
             }
+          } else {
+            toRemove.add(arg);
           }
         }
       }
     }
 
-    void removeUnusedFunctionPameters(
-        int max, BitSet unused, BitSet unremovable, Node param, int index) {
-      if (param != null && index < max) {
-        removeUnusedFunctionPameters(max, unused, unremovable, param.getNext(), index + 1);
-        if (unused.get(index) && !unremovable.get(index)) {
+    void removeArgAndFollowing(Node arg) {
+      if (arg != null) {
+        removeArgAndFollowing(arg.getNext());
+        if (!NodeUtil.mayHaveSideEffects(arg, compiler)) {
+          toRemove.add(arg);
+        }
+      }
+    }
+
+    void removeUnusedFunctionParameters(BitSet unremovable, Node param, int index) {
+      if (param != null) {
+        removeUnusedFunctionParameters(unremovable, param.getNext(), index + 1);
+        if (!unremovable.get(index)) {
           checkState(param.isName());  // update for ES6
           // params are not otherwise referenceable.
           compiler.reportChangeToEnclosingScope(param);
@@ -309,6 +344,7 @@ class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompile
         NodeUtil.markFunctionsDeleted(n, compiler);
       }
       for (Node n : toReplaceWithZero) {
+        Preconditions.checkState(!n.isNumber() || n.getDouble() != 0.0);
         // Don't remove any nodes twice since doing so would violate change reporting constraints.
         if (alreadyRemoved(n)) {
           continue;
@@ -392,9 +428,15 @@ class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompile
       if (allDefinitionsAreCandidateFunctions(n.getFirstChild())) {
         return true;
       }
+    } else if (isClassMemberDefinition(n)) {
+      return true;
     }
 
     return false;
+  }
+
+  private boolean isClassMemberDefinition(Node n) {
+    return n.isMemberFunctionDef() && n.getParent().isClassMembers();
   }
 
   private static boolean allDefinitionsAreCandidateFunctions(Node n) {
@@ -467,38 +509,8 @@ class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompile
    *     #isCandidate.
    */
   private void tryEliminateConstantArgs(ArrayList<Node> refs) {
-    List<Parameter> parameters = new ArrayList<>();
-    boolean firstCall = true;
-
-    // Build a list of parameters to remove
-    boolean continueLooking = false;
-    for (Node n : refs) {
-      if (ReferenceMap.isCallOrNewTarget(n)) {
-        Node call = n.getParent();
-        Node firstParam = call.getFirstChild();
-        // Look at the first param in the case of a ".call", if it is a spread, the order
-        // of the parameters is unknown.
-        if (firstParam.isSpread()) {
-          return;  // stop looking
-        }
-        Node cur = ReferenceMap.getFirstArgumentForCallOrNewOrDotCall(n);
-        if (firstCall) {
-          // Use the first call to construct a list of parameter values of the
-          // function.
-          continueLooking = buildParameterList(parameters, cur);
-          firstCall = false;
-        } else {
-          // All the rest must match
-          continueLooking = findFixedParameters(parameters, cur);
-        }
-        if (!continueLooking) {
-          return;
-        }
-      }
-    }
-
-    continueLooking = adjustForSideEffects(parameters);
-    if (!continueLooking) {
+    List<Parameter> parameters = findFixedArguments(refs);
+    if (parameters == null) {
       return;
     }
 
@@ -510,6 +522,14 @@ class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompile
       return;
     }
 
+    // Only one definition is currently supported.
+    Node fn = fns.get(0);
+
+    boolean continueLooking = adjustForConstraints(fn, parameters);
+    if (!continueLooking) {
+      return;
+    }
+
     // Found something to do, move the values from the call sites to the function definitions.
     for (Node n : refs) {
       if (ReferenceMap.isCallOrNewTarget(n) && !alreadyRemoved(n)) {
@@ -517,18 +537,73 @@ class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompile
       }
     }
 
-    for (Node fn : fns) {
-      optimizeFunctionDefinition(parameters, fn);
-    }
+    optimizeFunctionDefinition(parameters, fn);
   }
 
   /**
-   * Adjust the parameters to move based on the side-effects seen.
+   * @param refs A list of references to the symbol (name or property) as vetted by
+   *     #isCandidate.
+   * @return A list of Parameter objects, in the declaration order, which represent potentially
+   *     movable values fixed values from all call sites or null if there are no candidate values.
+   */
+  private List<Parameter> findFixedArguments(ArrayList<Node> refs) {
+    List<Parameter> parameters = new ArrayList<>();
+    boolean firstCall = true;
+
+    // Build a list of parameters to remove
+    boolean continueLooking = false;
+    for (Node n : refs) {
+      if (ReferenceMap.isCallOrNewTarget(n)) {
+        Node call = n.getParent();
+        Node firstDotCallParam = call.getFirstChild();
+        // Normally, we ignore the first parameter to a .call expression (the 'this' value)
+        // but if it is a spread, we know nothing about any of the parameters, so bail out now.
+        if (firstDotCallParam.isSpread()) {
+          continueLooking = false;
+          break;
+        }
+        Node cur = ReferenceMap.getFirstArgumentForCallOrNewOrDotCall(n);
+        if (firstCall) {
+          // Use the first call to construct a list of parameter values of the
+          // function.
+          continueLooking = buildInitialParameterList(parameters, cur);
+          firstCall = false;
+        } else {
+          // All the rest must match
+          continueLooking = findFixedParameters(parameters, cur);
+        }
+        if (!continueLooking) {
+          break;
+        }
+      }
+    }
+
+    return (continueLooking) ? parameters : null;
+  }
+
+  /**
+   * Adjust the provided Parameter objects value created by #findFixedArguments for "rest" value
+   * and side-effects which might prevent the motion of the parameters from the call sites to the
+   * function body.
+   *
+   * @param parameters A list of Parameter objects summarizing all the call-sites and
+   *     whether any of the parameters are fixed.
    * @return Whether there are any movable parameters.
    */
-  private static boolean adjustForSideEffects(List<Parameter> parameters) {
+  private static boolean adjustForConstraints(Node fn, List<Parameter> parameters) {
+    Node paramList = NodeUtil.getFunctionParameters(fn);
+    Node lastFormal = paramList.getLastChild();
+    int restIndex = Integer.MAX_VALUE;
+    int lastNonRestFormal = paramList.getChildCount() - 1;
+    Node formal = lastFormal;
+    if (lastFormal != null && lastFormal.isRest()) {
+      restIndex = lastNonRestFormal;
+      lastNonRestFormal--;
+      formal = formal.getPrevious();
+    }
+
     // A parameter with side-effects can move if there are no following parameters
-    // that can be effected.
+    // that can be affected.
 
     // A parameter can be moved if it can't be side-effected (a literal),
     // or there are no following side-effects, that aren't moved.
@@ -536,8 +611,18 @@ class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompile
     boolean anyMovable = false;
     boolean seenUnmovableSideEffects = false;
     boolean seenUnmoveableSideEffected = false;
+    boolean allRestValueRemovable = true;
     for (int i = parameters.size() - 1; i >= 0; i--) {
       Parameter current = parameters.get(i);
+
+      // back-off for default values whose default value maybe needed.
+      // TODO(johnlenz): handle used default
+      if (i <= lastNonRestFormal) {
+        if (formal.isDefaultValue() && current.mayBeUndefined) {
+          current.shouldRemove = false;
+        }
+        formal = formal.getPrevious();
+      }
 
       // Preserve side-effect ordering, don't move this parameter if:
       // * the current parameter has side-effects and a following
@@ -549,6 +634,30 @@ class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompile
           && ((seenUnmovableSideEffects && current.canBeSideEffected())
           || (seenUnmoveableSideEffected && current.hasSideEffects()))) {
         current.shouldRemove = false;
+      }
+
+      // If any values that are part of the rest cannot be moved to the function body,
+      // then all the rest values must remain at the callsite.
+      if (i >= restIndex) {
+        if (allRestValueRemovable) {
+          if (!current.shouldRemove) {
+            anyMovable = false;
+            allRestValueRemovable = false;
+            // revisit the trailing params and remark them now that we know they are unremovable.
+            for (int j = i + 1; j < parameters.size(); j++) {
+              Parameter p = parameters.get(0);
+              p.shouldRemove = false;
+              if (p.canBeSideEffected) {
+                seenUnmoveableSideEffected = true;
+              }
+              if (p.hasSideEffects) {
+                seenUnmovableSideEffects = true;
+              }
+            }
+          }
+        } else {
+          current.shouldRemove = false;
+        }
       }
 
       if (current.shouldRemove) {
@@ -578,6 +687,7 @@ class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompile
       if (index >= parameters.size()) {
         p = new Parameter(cur, false);
         parameters.add(p);
+        setParameterSideEffectInfo(p, cur);
       } else {
         p = parameters.get(index);
         if (p.shouldRemove()) {
@@ -590,7 +700,6 @@ class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompile
         }
       }
 
-      setParameterSideEffectInfo(p, cur);
       cur = cur.getNext();
       index++;
     }
@@ -605,7 +714,7 @@ class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompile
   /**
    * @return Whether any parameter was movable.
    */
-  private boolean buildParameterList(List<Parameter> parameters, Node cur) {
+  private boolean buildInitialParameterList(List<Parameter> parameters, Node cur) {
     boolean anyMovable = false;
     while (cur != null) {
       if (cur.isSpread()) {
@@ -624,15 +733,10 @@ class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompile
   }
 
   private void setParameterSideEffectInfo(Parameter p, Node value) {
-    if (!p.hasSideEffects()) {
-      p.setHasSideEffects(NodeUtil.mayHaveSideEffects(value, compiler));
-    }
-
-    if (!p.canBeSideEffected()) {
-      p.setCanBeSideEffected(NodeUtil.canBeSideEffected(value));
-    }
+    p.setHasSideEffects(NodeUtil.mayHaveSideEffects(value, compiler));
+    p.setCanBeSideEffected(NodeUtil.canBeSideEffected(value));
+    p.setMayBeUndefined(NodeUtil.mayBeUndefined(value));
   }
-
 
   /**
    * @return Whether the expression can be safely moved to another function
@@ -672,11 +776,45 @@ class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompile
     return true;
   }
 
-  private void optimizeFunctionDefinition(List<Parameter> parameters, Node function) {
-    for (int index = parameters.size() - 1; index >= 0; index--) {
-      if (parameters.get(index).shouldRemove()) {
-        Node paramName = eliminateFunctionParamAt(function, index);
-        addVariableToFunction(function, paramName, parameters.get(index).getArg());
+  private void optimizeFunctionDefinition(List<Parameter> parameters, Node fn) {
+    Node paramList = NodeUtil.getFunctionParameters(fn);
+    Node maybeRest = paramList.getLastChild();
+    int lastParameter = parameters.size() - 1;
+    if (maybeRest != null && maybeRest.isRest()) {
+      int restIndex = paramList.getChildCount() - 1;
+      // If the rest parameter is removable they all are.
+      if (parameters.size() < restIndex || parameters.get(restIndex).shouldRemove()) {
+        Node value = IR.arraylit().srcref(maybeRest);
+        for (int i = restIndex; i < parameters.size(); i++) {
+          Parameter parameter = parameters.get(i);
+
+          checkState(parameter.shouldRemove());
+          value.addChildToBack(parameters.get(i).getArg());
+        }
+        maybeRest.detach();
+        Node lhs = maybeRest.removeFirstChild();
+        addRestVariableToFunction(fn, lhs, value);
+      }
+
+      // process the rest.
+      lastParameter = Math.min(parameters.size() - 1, restIndex - 1);
+    }
+
+    for (int i = lastParameter; i >= 0; i--) {
+      Parameter parameter = parameters.get(i);
+      if (parameter.shouldRemove()) {
+        Node formalParam = NodeUtil.getArgumentForFunction(fn, i);
+        if (formalParam != null) {
+          formalParam.detach();
+          if (formalParam.isDefaultValue()) {
+            // Drop the default value as we should only get here if the default value isn't going
+            // to be used.
+            checkState(!parameter.mayBeUndefined);
+            formalParam = formalParam.getFirstChild().detach();
+          }
+        }
+
+        addVariableToFunction(fn, formalParam, parameters.get(i).getArg());
       }
     }
   }
@@ -713,6 +851,7 @@ class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompile
     private boolean shouldRemove;
     private boolean hasSideEffects;
     private boolean canBeSideEffected;
+    private boolean mayBeUndefined;
 
     public Parameter(Node arg, boolean shouldRemove) {
       this.shouldRemove = shouldRemove;
@@ -746,22 +885,34 @@ class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompile
     public boolean canBeSideEffected() {
       return canBeSideEffected;
     }
+
+    public void setMayBeUndefined(boolean mayBeUndefined) {
+      this.mayBeUndefined = mayBeUndefined;
+    }
+
+    public boolean mayBeUndefined() {
+      return mayBeUndefined;
+    }
+  }
+
+  private void addRestVariableToFunction(Node function, Node lhs, Node value) {
+    checkState(lhs.getParent() == null);
+    addVariableToFunction(function, lhs, value);
   }
 
   /**
    * Adds a variable to the top of a function block.
    * @param function A function node.
-   * @param varName The name of the variable.
+   * @param lhs The lhs expression.
    * @param value The initial value of the variable.
    */
-  private void addVariableToFunction(Node function, @Nullable Node varName, Node value) {
-    Preconditions.checkArgument(function.isFunction(), "Expected function, got: %s", function);
-
-    Node block = NodeUtil.getFunctionBody(function);
+  private void addVariableToFunction(Node function, @Nullable Node lhs, Node value) {
     checkState(value.getParent() == null);
+    checkState(lhs == null || lhs.getParent() == null);
+    Node block = NodeUtil.getFunctionBody(function);
     Node stmt;
-    if (varName != null) {
-      stmt = NodeUtil.newVarNode(varName.getString(), value);
+    if (lhs != null) {
+      stmt = NodeUtil.newVarNode(lhs, value);
     } else {
       stmt = IR.exprResult(value).useSourceInfoFrom(value);
     }
@@ -781,15 +932,26 @@ class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompile
     eliminateParamsAfter(fnNode, formalArgPtr);
   }
 
-  private void eliminateParamsAfter(Node fnNode, Node argNode) {
-    if (argNode != null) {
+  private void eliminateParamsAfter(Node fnNode, Node formal) {
+    if (formal != null) {
       // Keep the args in the same order, do the last first.
-      eliminateParamsAfter(fnNode, argNode.getNext());
-
-      argNode.detach();
-      Node var = IR.var(argNode).useSourceInfoIfMissingFrom(argNode);
-      fnNode.getLastChild().addChildToFront(var);
-      compiler.reportChangeToEnclosingScope(var);
+      eliminateParamsAfter(fnNode, formal.getNext());
+      formal.detach();
+      Node stmt;
+      if (formal.isRest()) {
+        checkState(formal.getNext() == null);
+        stmt = NodeUtil.newVarNode(formal.getFirstChild().detach(), IR.arraylit().srcref(formal));
+      } else {
+        if (formal.isDefaultValue()) {
+          Node lhs = formal.getFirstChild().detach();
+          Node value = formal.getLastChild().detach();
+          stmt = NodeUtil.newVarNode(lhs, value);
+        } else {
+          stmt = IR.var(formal).useSourceInfoIfMissingFrom(formal);
+        }
+      }
+      fnNode.getLastChild().addChildToFront(stmt);
+      compiler.reportChangeToEnclosingScope(stmt);
     }
   }
 

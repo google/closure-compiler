@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.base.Predicate;
@@ -4298,18 +4299,32 @@ public final class NodeUtil {
    * Create a VAR node containing the given name and initial value expression.
    */
   static Node newVarNode(String name, Node value) {
-    Node nodeName = IR.name(name);
+    Node lhs = IR.name(name);
     if (value != null) {
-      nodeName.addChildToBack(value);
-      nodeName.srcref(value);
+      lhs.srcref(value);
     }
-    Node var = IR.var(nodeName).srcref(nodeName);
+    return newVarNode(lhs, value);
+  }
 
-    return var;
+  /**
+   * Create a VAR node containing the given lhs (name or destructuring pattern) and
+   * initial value expression.
+   */
+  static Node newVarNode(Node lhs, Node value) {
+    if (lhs.isDestructuringPattern()) {
+      checkNotNull(value);
+      return IR.var(new Node(Token.DESTRUCTURING_LHS, lhs, value).srcref(lhs)).srcref(lhs);
+    } else {
+      checkState(lhs.isName() && !lhs.hasChildren());
+      if (value != null) {
+        lhs.addChildToBack(value);
+      }
+      return IR.var(lhs).srcref(lhs);
+    }
   }
 
   public static Node emptyFunction() {
-    return new Node(Token.FUNCTION, IR.name(""), IR.paramList(), IR.block());
+    return IR.function(IR.name(""), IR.paramList(), IR.block());
   }
 
   /**
@@ -4833,6 +4848,77 @@ public final class NodeUtil {
         if (isAssignmentOp(value)
             || isSimpleOperator(value)
             || isImmutableValue(value)) {
+          return true;
+        }
+
+        throw new IllegalStateException(
+            "Unexpected expression node: " + value + "\n parent:" + value.getParent());
+    }
+  }
+
+  /**
+   * @return Whether the provided expression is may evaluate to 'undefined'.
+   */
+  static boolean mayBeUndefined(Node n) {
+    return !isDefinedValue(n);
+  }
+
+  /**
+   * @return Whether the provided expression is known not to evaluate to 'undefined'.
+   *
+   * Similiar to #getKnownValueType only for 'undefined'.  This is useful for simplifing
+   * default value expressions.
+   */
+  static boolean isDefinedValue(Node value) {
+    switch (value.getToken()) {
+      case ASSIGN: // Only the assigned value matters here.
+      case CAST:
+      case COMMA:
+        return isDefinedValue(value.getLastChild());
+      case AND:
+      case OR:
+        return isDefinedValue(value.getFirstChild())
+            && isDefinedValue(value.getLastChild());
+      case HOOK:
+        return isDefinedValue(value.getSecondChild())
+            && isDefinedValue(value.getLastChild());
+      // Assume undefined leaks in this and call results.
+      case CALL:
+      case NEW:
+      case GETELEM:
+      case GETPROP:
+      case TAGGED_TEMPLATELIT:
+      case THIS:
+      case YIELD:
+      case AWAIT:
+      case VOID:
+        return false;
+      case DELPROP:
+      case INC:
+      case DEC:
+      case CLASS:
+      case FUNCTION:
+      case REGEXP:
+      case EMPTY:
+      case ARRAYLIT:
+      case OBJECTLIT:
+      case TEMPLATELIT:
+      case STRING:
+      case NUMBER:
+      case NULL:
+      case TRUE:
+      case FALSE:
+        return true;
+      case NAME:
+        String name = value.getString();
+        // We assume here that programs don't change the value of the keyword
+        // undefined to something other than the value undefined.
+        return "Infinity".equals(name) || "NaN".equals(name);
+      default:
+        // Other op force a local value:
+        //  '' + g (a  string)
+        //  x -= g (x is now an number)
+        if (isAssignmentOp(value) || isSimpleOperator(value)) {
           return true;
         }
 
