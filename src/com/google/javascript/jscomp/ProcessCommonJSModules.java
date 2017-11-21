@@ -401,20 +401,6 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
 
     /** Visit require calls. */
     private void visitRequireCall(NodeTraversal t, Node require, Node parent) {
-      String requireName = ProcessCommonJSModules.getCommonJsImportPath(require);
-      ModulePath modulePath =
-          t.getInput()
-              .getPath()
-              .resolveJsModule(
-                  requireName,
-                  require.getSourceFileName(),
-                  require.getLineno(),
-                  require.getCharno());
-      if (modulePath == null) {
-        // The module loader will issue an error
-        return;
-      }
-
       // When require("name") is used as a standalone statement (the result isn't used)
       // it indicates that a module is being loaded for the side effects it produces.
       // In this case the require statement should just be removed as the dependency
@@ -422,6 +408,15 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
       if (!NodeUtil.isExpressionResultUsed(require)
           && parent.isExprResult()
           && NodeUtil.isStatementBlock(parent.getParent())) {
+
+        // Attempt to resolve the module so that load warnings are issued
+        t.getInput()
+            .getPath()
+            .resolveJsModule(
+                getCommonJsImportPath(require),
+                require.getSourceFileName(),
+                require.getLineno(),
+                require.getCharno());
         Node grandparent = parent.getParent();
         parent.detach();
         compiler.reportChangeToEnclosingScope(grandparent);
@@ -912,12 +907,14 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
                   require.getSourceFileName(),
                   require.getLineno(),
                   require.getCharno());
-      if (modulePath == null) {
-        // The module loader will issue an error
-        return;
-      }
 
-      String moduleName = modulePath.toModuleName();
+      String moduleName;
+      if (modulePath == null) {
+        // The module loader will issue an error, but use a fallback
+        moduleName = ModuleIdentifier.forFile(requireName).getModuleName();
+      } else {
+        moduleName = modulePath.toModuleName();
+      }
       Node moduleRef = IR.name(moduleName).srcref(require);
       parent.replaceChild(require, moduleRef);
 
@@ -1436,10 +1433,13 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
                   .getPath()
                   .resolveJsModule(
                       requireName, n.getSourceFileName(), n.getLineno(), n.getCharno());
+          String moduleName;
           if (modulePath == null) {
-            return null;
+            moduleName = ModuleIdentifier.forFile(requireName).getModuleName();
+          } else {
+            moduleName = modulePath.toModuleName();
           }
-          return modulePath.toModuleName() + propSuffix;
+          return moduleName + propSuffix;
         }
         return null;
 
@@ -1480,12 +1480,15 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
                       typeNode.getSourceFileName(),
                       typeNode.getLineno(),
                       typeNode.getCharno());
+
+          String globalModuleName;
           if (modulePath == null) {
-            // The module loader will issue an error
-            return;
+            // The module loader will issue an error, but we fall back to a path-based name
+            globalModuleName = ModuleIdentifier.forFile(moduleName).getModuleName();
+          } else {
+            globalModuleName = modulePath.toModuleName();
           }
 
-          String globalModuleName = modulePath.toModuleName();
           typeNode.setString(
               localTypeName == null ? globalModuleName : globalModuleName + localTypeName);
 
