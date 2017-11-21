@@ -807,8 +807,10 @@ public class Parser {
     Token token = peekToken();
     switch (token.type) {
       case IDENTIFIER:
+      case NUMBER:
       case STAR:
       case STATIC:
+      case STRING:
       case OPEN_SQUARE:
       case SEMI_COLON:
         return true;
@@ -873,11 +875,19 @@ public class Parser {
 
     ParseTree nameExpr;
     IdentifierToken name;
-    if (peekIdOrKeyword()) {
-      nameExpr = null;
-      name = eatIdOrKeywordAsId();
-      if (Keywords.isKeyword(name.value)) {
-        features = features.with(Feature.KEYWORDS_AS_PROPERTIES);
+    if (peekPropertyName(0)) {
+      if (peekIdOrKeyword()) {
+        nameExpr = null;
+        name = eatIdOrKeywordAsId();
+        if (Keywords.isKeyword(name.value)) {
+          features = features.with(Feature.KEYWORDS_AS_PROPERTIES);
+        }
+      } else {
+        // { 'str'() {} }
+        // { 123() {} }
+        // Treat these as if they were computed properties.
+        name = null;
+        nameExpr = parseLiteralExpression();
       }
     } else {
       if (config.parseTypeSyntax && peekIndexSignature()) {
@@ -957,26 +967,42 @@ public class Parser {
 
   private ParseTree parseAsyncMethod(PartialClassElement partial) {
     eatPredefinedString(ASYNC);
-    if (peekIdOrKeyword()) {
-      IdentifierToken name = eatIdOrKeywordAsId();
-      FunctionDeclarationTree.Builder builder =
-          FunctionDeclarationTree.builder(FunctionDeclarationTree.Kind.MEMBER)
-              .setAsync(true)
-              .setStatic(partial.isStatic)
-              .setName(name)
-              .setAccess(partial.accessModifier);
-      if (partial.isAmbient) {
-        builder
-            .setGenerics(maybeParseGenericTypes())
-            .setFormalParameterList(parseFormalParameterList(ParamContext.SIGNATURE))
-            .setReturnType(maybeParseColonType())
-            .setFunctionBody(new EmptyStatementTree(getTreeLocation(partial.start)));
-        eatPossibleImplicitSemiColon();
-      } else {
-        parseFunctionTail(builder, FunctionFlavor.ASYNCHRONOUS);
-      }
+    if (peekPropertyName(0)) {
+      if (peekIdOrKeyword()) {
+        IdentifierToken name = eatIdOrKeywordAsId();
+        FunctionDeclarationTree.Builder builder =
+            FunctionDeclarationTree.builder(FunctionDeclarationTree.Kind.MEMBER)
+                .setAsync(true)
+                .setStatic(partial.isStatic)
+                .setName(name)
+                .setAccess(partial.accessModifier);
+        if (partial.isAmbient) {
+          builder
+              .setGenerics(maybeParseGenericTypes())
+              .setFormalParameterList(parseFormalParameterList(ParamContext.SIGNATURE))
+              .setReturnType(maybeParseColonType())
+              .setFunctionBody(new EmptyStatementTree(getTreeLocation(partial.start)));
+          eatPossibleImplicitSemiColon();
+        } else {
+          parseFunctionTail(builder, FunctionFlavor.ASYNCHRONOUS);
+        }
 
-      return builder.build(getTreeLocation(name.getStart()));
+        return builder.build(getTreeLocation(name.getStart()));
+      } else {
+        // { 'str'() {} }
+        // { 123() {} }
+        // Treat these as if they were computed properties.
+        ParseTree nameExpr = parseLiteralExpression();
+        FunctionDeclarationTree.Builder builder =
+            FunctionDeclarationTree.builder(FunctionDeclarationTree.Kind.EXPRESSION)
+                .setAsync(true)
+                .setStatic(partial.isStatic);
+        parseFunctionTail(builder, FunctionFlavor.ASYNCHRONOUS);
+
+        ParseTree function = builder.build(getTreeLocation(nameExpr.getStart()));
+        return new ComputedPropertyMethodTree(
+            getTreeLocation(nameExpr.getStart()), partial.accessModifier, nameExpr, function);
+      }
     } else if (config.parseTypeSyntax && peekIndexSignature()) {
       ParseTree indexSignature = parseIndexSignature();
       eatPossibleImplicitSemiColon();
