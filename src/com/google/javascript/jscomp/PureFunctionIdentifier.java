@@ -71,7 +71,7 @@ import javax.annotation.Nullable;
  */
 class PureFunctionIdentifier implements CompilerPass {
   private final AbstractCompiler compiler;
-  private final DefinitionProvider definitionProvider;
+  private final NameBasedDefinitionProvider definitionProvider;
 
   /** Map of function names to side effect gathering representative nodes */
   private final Map<String, FunctionInformation> functionInfoByName = new HashMap<>();
@@ -105,7 +105,8 @@ class PureFunctionIdentifier implements CompilerPass {
   private Node externs;
   private Node root;
 
-  public PureFunctionIdentifier(AbstractCompiler compiler, DefinitionProvider definitionProvider) {
+  public PureFunctionIdentifier(
+      AbstractCompiler compiler, NameBasedDefinitionProvider definitionProvider) {
     this.compiler = checkNotNull(compiler);
     this.definitionProvider = definitionProvider;
     this.functionSideEffectMap = ArrayListMultimap.create();
@@ -353,8 +354,8 @@ class PureFunctionIdentifier implements CompilerPass {
 
   /**
    * Propagate side effect information by building a graph based on call site information stored in
-   * FunctionInformation and the DefinitionProvider and then running GraphReachability to determine
-   * the set of functions that have side effects.
+   * FunctionInformation and the NameBasedDefinitionProvider and then running GraphReachability to
+   * determine the set of functions that have side effects.
    */
   private void propagateSideEffects() {
     // Propagate side effect information to a fixed point.

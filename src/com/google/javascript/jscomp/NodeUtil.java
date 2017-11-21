@@ -4885,7 +4885,7 @@ public final class NodeUtil {
   /**
    * @return Whether the provided expression is known not to evaluate to 'undefined'.
    *
-   * Similiar to #getKnownValueType only for 'undefined'.  This is useful for simplifing
+   * Similar to #getKnownValueType only for 'undefined'.  This is useful for simplifying
    * default value expressions.
    */
   static boolean isDefinedValue(Node value) {

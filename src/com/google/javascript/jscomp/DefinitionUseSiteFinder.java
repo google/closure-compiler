@@ -21,6 +21,7 @@ import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.HashMultimap;
+import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
@@ -57,7 +58,7 @@ public class DefinitionUseSiteFinder extends NameBasedDefinitionProvider {
   @VisibleForTesting
   Multimap<String, UseSite> getUseSitesByName() {
     // Defensive copy.
-    return LinkedHashMultimap.create(useSitesByName);
+    return ImmutableMultimap.copyOf(useSitesByName);
   }
 
   public DefinitionUseSiteFinder(AbstractCompiler compiler) {
@@ -92,7 +93,7 @@ public class DefinitionUseSiteFinder extends NameBasedDefinitionProvider {
       }
 
       Collection<Definition> defs = getDefinitionsReferencedAt(node);
-      if (defs == null) {
+      if (defs.isEmpty()) {
         return;
       }
 

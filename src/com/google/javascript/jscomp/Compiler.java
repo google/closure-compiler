@@ -2986,7 +2986,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   //------------------------------------------------------------------------
 
   @Override
-  Node getNodeForCodeInsertion(JSModule module) {
+  Node getNodeForCodeInsertion(@Nullable JSModule module) {
     if (module == null) {
       if (inputs.isEmpty()) {
         throw new IllegalStateException("No inputs");
