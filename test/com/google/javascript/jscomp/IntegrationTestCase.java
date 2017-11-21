@@ -20,6 +20,7 @@ import static com.google.javascript.jscomp.testing.JSErrorSubject.assertError;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
+import com.google.javascript.jscomp.CompilerTestCase.NoninjectingCompiler;
 import com.google.javascript.jscomp.testing.BlackHoleErrorManager;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
@@ -235,6 +236,7 @@ abstract class IntegrationTestCase extends TestCase {
   protected Compiler lastCompiler;
 
   protected boolean normalizeResults = false;
+  protected boolean useNoninjectingCompiler = false;
 
   protected String inputFileNamePrefix;
   protected String inputFileNameSuffix;
@@ -244,6 +246,7 @@ abstract class IntegrationTestCase extends TestCase {
     externs = DEFAULT_EXTERNS;
     lastCompiler = null;
     normalizeResults = false;
+    useNoninjectingCompiler = false;
     inputFileNamePrefix = "i";
     inputFileNameSuffix = ".js";
   }
@@ -406,10 +409,8 @@ abstract class IntegrationTestCase extends TestCase {
   }
 
   protected Compiler compile(CompilerOptions options, String[] original) {
-    return compile(options, original, new Compiler());
-  }
+    Compiler compiler = useNoninjectingCompiler ? new NoninjectingCompiler() : new Compiler();
 
-  protected Compiler compile(CompilerOptions options, String[] original, Compiler compiler) {
     lastCompiler = compiler;
     BlackHoleErrorManager.silence(compiler);
     compiler.compileModules(

@@ -22,6 +22,7 @@ goog.module('jscomp.test.static_async');
 
 const testSuite = goog.require('goog.testing.testSuite');
 
+// TODO(b/69456597): Remove @nocollapse on Main's static methods.
 class Main {
   /**
    * @return {IThenable<number>}
