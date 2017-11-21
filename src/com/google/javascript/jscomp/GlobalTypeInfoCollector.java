@@ -1905,7 +1905,7 @@ public class GlobalTypeInfoCollector implements CompilerPass {
         visitPrototypeAssignment(getProp);
       }
       // "Static" property on constructor
-      else if (isStaticCtorProp(getProp, currentScope)) {
+      else if (isStaticCtorProp(getProp)) {
         visitConstructorPropertyDeclaration(getProp);
       }
       // Namespace property
@@ -1918,17 +1918,12 @@ public class GlobalTypeInfoCollector implements CompilerPass {
       }
     }
 
-    private boolean isStaticCtorProp(Node getProp, NTIScope s) {
+    private boolean isStaticCtorProp(Node getProp) {
       checkArgument(getProp.isGetProp());
       if (!getProp.isQualifiedName()) {
         return false;
       }
-      Node receiverObj = getProp.getFirstChild();
-      if (!s.isLocalFunDef(receiverObj.getQualifiedName())) {
-        return false;
-      }
-      return null != currentScope.getNominalType(
-          QualifiedName.fromNode(receiverObj));
+      return null != currentScope.getNominalType(QualifiedName.fromNode(getProp.getFirstChild()));
     }
 
     /** Compute the declared type for a given scope. */
@@ -2063,13 +2058,18 @@ public class GlobalTypeInfoCollector implements CompilerPass {
       if (isNamedType(getProp)) {
         return;
       }
-      String ctorName = getProp.getFirstChild().getQualifiedName();
       QualifiedName ctorQname = QualifiedName.fromNode(getProp.getFirstChild());
-      checkState(currentScope.isLocalFunDef(ctorName));
       RawNominalType classType = currentScope.getNominalType(ctorQname);
       String pname = getProp.getLastChild().getString();
       JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(getProp);
-      JSType propDeclType = getDeclaredTypeOfNode(jsdoc, currentScope);
+      JSType propDeclType;
+      if (jsdoc != null && !jsdoc.hasType() && jsdoc.containsFunctionDeclaration()) {
+        FunctionAndSlotType fst =
+            getTypeParser().getFunctionType(jsdoc, pname, getProp, null, null, this.currentScope);
+        propDeclType = getCommonTypes().fromFunctionType(fst.functionType.toFunctionType());
+      } else {
+        propDeclType = getDeclaredTypeOfNode(jsdoc, currentScope);
+      }
       boolean isConst = isConst(getProp);
       if (propDeclType != null || isConst) {
         JSType previousPropType = classType.getCtorPropDeclaredType(pname);
@@ -2164,8 +2164,8 @@ public class GlobalTypeInfoCollector implements CompilerPass {
         defSite.putBooleanProp(Node.ANALYZED_DURING_GTI, true);
         if (ns.hasSubnamespace(new QualifiedName(pname))
             || (ns.hasStaticProp(pname)
-            && previousPropType != null
-            && !suppressDupPropWarning(jsdoc, propDeclType, previousPropType))) {
+                && previousPropType != null
+                && !suppressDupPropWarning(jsdoc, propDeclType, previousPropType))) {
           warnings.add(JSError.make(
               defSite, REDECLARED_PROPERTY, pname, "namespace " + ns));
           defSite.getParent().putBooleanProp(Node.ANALYZED_DURING_GTI, true);
@@ -2713,12 +2713,10 @@ public class GlobalTypeInfoCollector implements CompilerPass {
 
     private boolean isNamedType(Node getProp) {
       JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(getProp);
-      if (jsdoc != null
-          && jsdoc.hasType() && !jsdoc.containsFunctionDeclaration()) {
+      if (jsdoc != null && jsdoc.hasType() && !jsdoc.containsFunctionDeclaration()) {
         return false;
       }
-      return this.currentScope.isNamespace(getProp)
-          || NodeUtil.isTypedefDecl(getProp);
+      return this.currentScope.isNamespace(getProp) || NodeUtil.isTypedefDecl(getProp);
     }
   }
 

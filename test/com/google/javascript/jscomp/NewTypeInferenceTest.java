@@ -1702,6 +1702,18 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "var h = f;"));
   }
 
+  public void testGoogNullFunctionDifferentArityNoWarning() {
+    typeCheck(LINE_JOINER.join(
+        CLOSURE_BASE,
+        "/** @const */",
+        "var ns = {};",
+        "/** @constructor */",
+        "ns.Foo = function() {};",
+        "/** @param {!Function} x */",
+        "ns.Foo.fun = goog.nullFunction;",
+        "ns.Foo.fun(function() {});"));
+  }
+
   public void testDifficultObjectSpecialization() {
     typeCheck(LINE_JOINER.join(
         "/** @constructor */",
@@ -15043,6 +15055,18 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "function f() {",
         "  f.prop = function() {};",
         "}"));
+
+    typeCheck(LINE_JOINER.join(
+        "/** @const */",
+        "var ns = {};",
+        "/** @constructor */",
+        "ns.Foo = function() {};",
+        "function f() {}",
+        "f.prop = 123;",
+        "/** @typedef {function()} */",
+        "var myfun;",
+        "/** @const {myfun} */",
+        "ns.Foo.defaultUrlPolicy_ = f;"));
   }
 
   public void testFunctionNamespacesThatAreProperties() {
