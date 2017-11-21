@@ -33,6 +33,7 @@ public final class CrossModuleReferenceCollectorTest extends CompilerTestCase {
   @Override
   protected void setUp() throws Exception {
     super.setUp();
+    enableNormalize();
     setLanguage(ECMASCRIPT_NEXT, ECMASCRIPT_NEXT);
   }
 
@@ -301,8 +302,7 @@ public final class CrossModuleReferenceCollectorTest extends CompilerTestCase {
   }
 
   public void testUnknownNameValueIsImmovable() {
-    testSame("var a = unknownName;");
-    assertThat(testedCollector.getTopLevelStatements().get(0).isMovableDeclaration()).isFalse();
+    assertStatementIsImmovable("var a = unknownName;");
   }
 
   public void testWellDefinedNameValueIsMovable() {
@@ -331,8 +331,7 @@ public final class CrossModuleReferenceCollectorTest extends CompilerTestCase {
   }
 
   public void testArrayLiteralWithImmovableIsImmovable() {
-    testSame("var a = [unknownValue];");
-    assertThat(testedCollector.getTopLevelStatements().get(0).isMovableDeclaration()).isFalse();
+    assertStatementIsImmovable("var a = [unknownValue];");
   }
 
   public void testEmptyObjectLiteralIsMovable() {
@@ -343,12 +342,49 @@ public final class CrossModuleReferenceCollectorTest extends CompilerTestCase {
   public void testObjectLiteralOfMovablesIsMovable() {
     testSame(lines(
         "var wellDefinedName = 1;",
-        "var o = { f: function(){}, one: 1, n: wellDefinedName, o: {}};"));
+        "var o = {",
+        "  f: function(){},",
+        "  one: 1,",
+        "  n: wellDefinedName,",
+        "  o: {},",
+        "  'quoted': 1,",
+        "  123: 2,",
+        // computed
+        "  ['computed string']: 1,",
+        "  [234]: 1,",
+        // method shorthand
+        "  method() {},",
+        "  'quoted method'() {},",
+        "  ['computed method']() {},",
+        "  [345]() {},",
+        // variable shorthand
+        "  wellDefinedName,",
+        // getters
+        "  get x() {},",
+        "  get 'a'() {},",
+        "  get ['a']() {},",
+        "  get 456() {},",
+        "  get [567]() {},",
+        // setters
+        "  set x(x) {},",
+        "  set 'a'(v) {},",
+        "  set ['a'](v) {},",
+        "  set 678(v) {},",
+        "  set [678](v) {},",
+        "};"));
     assertThat(testedCollector.getTopLevelStatements().get(1).isMovableDeclaration()).isTrue();
   }
 
   public void testObjectLiteralWithImmovableIsImmovable() {
-    testSame("var o = { v: unknownValue };");
+    assertStatementIsImmovable("var o = { v: unknownValue };");
+    assertStatementIsImmovable("var o = { [unknownValue]: 1 };");
+    assertStatementIsImmovable("var o = { [unknownValue]() {} };");
+    assertStatementIsImmovable("var o = { get [unknownValue]() {} };");
+    assertStatementIsImmovable("var o = { set [unknownValue](x) {} };");
+  }
+
+  private void assertStatementIsImmovable(String statement) {
+    testSame(statement);
     assertThat(testedCollector.getTopLevelStatements().get(0).isMovableDeclaration()).isFalse();
   }
 
@@ -360,8 +396,7 @@ public final class CrossModuleReferenceCollectorTest extends CompilerTestCase {
   }
 
   public void testTemplateLiteralIsImmovableIfSubstitutionsAreImmovable() {
-    testSame("var t = `${unknownValue}`");
-    assertThat(testedCollector.getTopLevelStatements().get(0).isMovableDeclaration()).isFalse();
+    assertStatementIsImmovable("var t = `${unknownValue}`");
   }
 
   //  try to find cases to copy from CrossModuleCodeMotion
