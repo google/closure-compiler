@@ -705,10 +705,28 @@ public final class NodeUtil {
         return true;
 
       case OBJECTLIT:
-        // Return true only if all values are const.
         for (Node child = n.getFirstChild(); child != null; child = child.getNext()) {
-          if (!isLiteralValue(child.getFirstChild(), includeFunctions)) {
-            return false;
+          if (child.isMemberFunctionDef() || NodeUtil.isGetOrSetKey(child)) {
+            // { methodName() {...} }
+            // { get propertyName() {...} }
+            // { set propertyName(value) {...} }
+            if (!includeFunctions) {
+              return false;
+            }
+          } else if (child.isComputedProp()) {
+            // { [key_expression]: value, ... }
+            // { [key_expression](args) {...}, ... }
+            if (!isLiteralValue(child.getFirstChild(), includeFunctions)
+                || !isLiteralValue(child.getLastChild(), includeFunctions)) {
+              return false;
+            }
+          } else {
+            // { key: value, ... }
+            // { "quoted_key": value, ... }
+            checkState(child.isStringKey(), child);
+            if (!isLiteralValue(child.getOnlyChild(), includeFunctions)) {
+              return false;
+            }
           }
         }
         return true;

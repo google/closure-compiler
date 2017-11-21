@@ -161,6 +161,44 @@ public final class NodeUtilTest extends TestCase {
     assertNotLiteral(getNode("void foo()"));
   }
 
+  public void testObjectLiteralIsLiteralValue() {
+    assertTrue(isLiteralValue("{a: 20}"));
+    assertTrue(isLiteralValue("{'a': 20}"));
+    assertTrue(isLiteralValue("{a: function() {}}"));
+    assertFalse(isLiteralValueExcludingFunctions("{a: function() {}}"));
+    assertTrue(isLiteralValue("{a() {}}"));
+    assertFalse(isLiteralValueExcludingFunctions("{a() {}}"));
+    assertTrue(isLiteralValue("{'a'() {}}"));
+    assertFalse(isLiteralValueExcludingFunctions("{'a'() {}}"));
+
+    assertTrue(isLiteralValue("{['a']: 20}"));
+    assertFalse(isLiteralValue("{[b]: 20}"));
+    assertTrue(isLiteralValue("{['a']() {}}"));
+    assertFalse(isLiteralValue("{[b]() {}}"));
+    assertFalse(isLiteralValueExcludingFunctions("{['a']() {}}"));
+
+    assertTrue(isLiteralValue("{ get a() { return 0; } }"));
+    assertTrue(isLiteralValue("{ get 'a'() { return 0; } }"));
+    assertTrue(isLiteralValue("{ get ['a']() { return 0; } }"));
+    assertTrue(isLiteralValue("{ get 123() { return 0; } }"));
+    assertTrue(isLiteralValue("{ get [123]() { return 0; } }"));
+    assertFalse(isLiteralValue("{ get [b]() { return 0; } }"));
+    assertTrue(isLiteralValue("{ set a(x) { } }"));
+    assertTrue(isLiteralValue("{ set 'a'(x) { } }"));
+    assertTrue(isLiteralValue("{ set ['a'](x) { } }"));
+    assertTrue(isLiteralValue("{ set 123(x) { } }"));
+    assertTrue(isLiteralValue("{ set [123](x) { } }"));
+    assertFalse(isLiteralValue("{ set [b](x) { } }"));
+  }
+
+  private boolean isLiteralValueExcludingFunctions(String code) {
+    return NodeUtil.isLiteralValue(getNode(code), /* includeFunctions */ false);
+  }
+
+  private boolean isLiteralValue(String code) {
+    return NodeUtil.isLiteralValue(getNode(code), /* includeFunctions */ true);
+  }
+
   private void assertLiteralAndImmutable(Node n) {
     assertTrue(NodeUtil.isLiteralValue(n, true));
     assertTrue(NodeUtil.isLiteralValue(n, false));
