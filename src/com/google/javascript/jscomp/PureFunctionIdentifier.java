@@ -29,6 +29,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.SetMultimap;
 import com.google.common.io.Files;
+import com.google.errorprone.annotations.Immutable;
 import com.google.javascript.jscomp.CodingConvention.Cache;
 import com.google.javascript.jscomp.DefinitionsRemover.Definition;
 import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
@@ -48,6 +49,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import javax.annotation.Nullable;
 
 /**
  * Compiler pass that computes function purity. A function is pure if it has no outside visible side
@@ -183,6 +185,7 @@ class PureFunctionIdentifier implements CompilerPass {
    * @return A list of GET_PROP NAME and function expression nodes (all of which can be called). Or
    *     null if any of the callable nodes are of an unsupported type. e.g. x['asdf'](param);
    */
+  @Nullable
   private static Iterable<Node> unwrapCallableExpression(Node exp) {
     switch (exp.getToken()) {
       case GETPROP:
@@ -214,7 +217,7 @@ class PureFunctionIdentifier implements CompilerPass {
     }
   }
 
-  private static boolean isSupportedFunctionDefinition(Node definitionRValue) {
+  private static boolean isSupportedFunctionDefinition(@Nullable Node definitionRValue) {
     if (definitionRValue == null) {
       return false;
     }
@@ -239,8 +242,9 @@ class PureFunctionIdentifier implements CompilerPass {
         unwrapCallableExpression(cacheCall.valueFn), unwrapCallableExpression(cacheCall.keyFn));
   }
 
+  @Nullable
   private List<FunctionInformation> getSideEffectsForCall(Node call) {
-    checkArgument(call.isCall() || call.isNew());
+    checkArgument(call.isCall() || call.isNew(), call);
 
     Iterable<Node> expanded;
     Cache cacheCall = compiler.getCodingConvention().describeCachingCall(call);
@@ -260,7 +264,7 @@ class PureFunctionIdentifier implements CompilerPass {
         // getFunctionDefinitions() will only be called on the first
         // child of a call and thus the function expression
         // definition will never be an extern.
-        results.addAll(checkNotNull(functionSideEffectMap.get(expression)));
+        results.addAll(functionSideEffectMap.get(expression));
         continue;
       }
 
@@ -449,14 +453,12 @@ class PureFunctionIdentifier implements CompilerPass {
       // Functions need to be processed as part of pre-traversal so that an entry for the function
       // exists in the functionSideEffectMap map when processing assignments and calls within the
       // body.
-      if (node.isFunction()) {
-        if (!functionSideEffectMap.containsKey(node)) {
-          // This function was not part of a definition which is why it was not created by
-          // {@link buildGraph}. For example, an anonymous function.
-          FunctionInformation functionInfo = new FunctionInformation();
-          functionSideEffectMap.put(node, functionInfo);
-          functionInfo.graphNode = sideEffectGraph.createNode(functionInfo);
-        }
+      if (node.isFunction() && !functionSideEffectMap.containsKey(node)) {
+        // This function was not part of a definition which is why it was not created by
+        // {@link buildGraph}. For example, an anonymous function.
+        FunctionInformation functionInfo = new FunctionInformation();
+        functionSideEffectMap.put(node, functionInfo);
+        functionInfo.graphNode = sideEffectGraph.createNode(functionInfo);
       }
       return true;
     }
@@ -500,7 +502,7 @@ class PureFunctionIdentifier implements CompilerPass {
       } else if (node.isName()) {
         // Variable definition are not side effects. Check that the name appears in the context of a
         // variable declaration.
-        checkArgument(NodeUtil.isNameDeclaration(node.getParent()));
+        checkArgument(NodeUtil.isNameDeclaration(node.getParent()), node.getParent());
         Node value = node.getFirstChild();
         // Assignment to local, if the value isn't a safe local value,
         // new object creation or literal or known primitive result
@@ -523,7 +525,7 @@ class PureFunctionIdentifier implements CompilerPass {
         // 'await' throws if the promise it's waiting on is rejected.
         sideEffectInfo.setFunctionThrows();
       } else {
-        throw new IllegalArgumentException("Unhandled side effect node type " + node.getToken());
+        throw new IllegalArgumentException("Unhandled side effect node type " + node);
       }
     }
 
@@ -587,7 +589,7 @@ class PureFunctionIdentifier implements CompilerPass {
       }
     }
 
-    private boolean isVarDeclaredInScope(Var v, Scope scope) {
+    private boolean isVarDeclaredInScope(@Nullable Var v, Scope scope) {
       if (v == null) {
         return false;
       }
@@ -696,6 +698,7 @@ class PureFunctionIdentifier implements CompilerPass {
    * This class stores all the information about a call site needed to propagate side effects from
    * one instance of {@link FunctionInformation} to another.
    */
+  @Immutable
   private static class CallSitePropagationInfo {
 
     private CallSitePropagationInfo(
@@ -817,17 +820,13 @@ class PureFunctionIdentifier implements CompilerPass {
       return (bitmask & mask) != 0;
     }
 
-    boolean taintsGlobalState() {
-      return getMask(TAINTS_GLOBAL_STATE_MASK);
-    }
-
     boolean taintsThis() {
       return getMask(TAINTS_THIS_MASK);
     }
 
     /**
      * @return Whether the function returns something that is not affected by global state. In this
-     *     case, only true if return value is a literal or primative since locals are not tracked
+     *     case, only true if return value is a literal or primitive since locals are not tracked
      *     correctly.
      */
     boolean taintsReturn() {
@@ -895,12 +894,16 @@ class PureFunctionIdentifier implements CompilerPass {
         status.add("this");
       }
 
-      if (taintsGlobalState()) {
+      if (mutatesGlobalState()) {
         status.add("global");
       }
 
       if (mutatesArguments()) {
         status.add("args");
+      }
+
+      if (taintsReturn()) {
+        status.add("return");
       }
 
       if (functionThrows()) {
