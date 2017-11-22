@@ -1793,6 +1793,15 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     Node newQualifiedNameNode = NodeUtil.newQName(compiler, newString);
     newQualifiedNameNode.srcrefTree(nameNode);
     nameParent.replaceChild(nameNode, newQualifiedNameNode);
+    // Given import "var Bar = goog.require('foo.Bar');" here we replace a usage of Bar with
+    // foo.Bar if Bar is goog.provided. 'foo' node is generated and never visible to user.
+    // Because of that we should mark all such nodes as non-indexable leaving only Bar indexable.
+    // Given that replacement is GETPROP node, prefix is first child. It's also possible that
+    // replacement is single-part namespace. Like goog.provide('Bar') in that case replacement
+    // won't have children.
+    if (newQualifiedNameNode.getFirstChild() != null) {
+      newQualifiedNameNode.getFirstChild().makeNonIndexableRecursive();
+    }
     compiler.reportChangeToEnclosingScope(newQualifiedNameNode);
   }
 
