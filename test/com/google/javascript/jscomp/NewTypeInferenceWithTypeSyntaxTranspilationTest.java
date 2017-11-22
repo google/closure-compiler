@@ -220,7 +220,7 @@ public final class NewTypeInferenceWithTypeSyntaxTranspilationTest
         "  prop: string;",
         "}",
         "interface Baz extends Foo, Bar {}"),
-        GlobalTypeInfoCollector.SUPER_INTERFACES_HAVE_INCOMPATIBLE_PROPERTIES);
+        GlobalTypeInfoCollector.ANCESTOR_TYPES_HAVE_INCOMPATIBLE_PROPERTIES);
   }
 
   public void testAmbientDeclarationsInCode() {

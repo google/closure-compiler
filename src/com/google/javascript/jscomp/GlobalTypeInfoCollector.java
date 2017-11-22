@@ -203,11 +203,10 @@ public class GlobalTypeInfoCollector implements CompilerPass {
           "A typedef should only be used in type annotations, not as a value."
               + " Adding properties to typedefs is not allowed.");
 
-  static final DiagnosticType SUPER_INTERFACES_HAVE_INCOMPATIBLE_PROPERTIES =
+  static final DiagnosticType ANCESTOR_TYPES_HAVE_INCOMPATIBLE_PROPERTIES =
       DiagnosticType.warning(
-          "JSC_NTI_SUPER_INTERFACES_HAVE_INCOMPATIBLE_PROPERTIES",
-          "Interface {0} has a property {1} with incompatible types in "
-              + "its super interfaces: {2}");
+          "JSC_NTI_ANCESTOR_TYPES_HAVE_INCOMPATIBLE_PROPERTIES",
+          "Type {0} has a property {1} with incompatible types in its ancestor types: {2}");
 
   static final DiagnosticType ONE_TYPE_FOR_MANY_VARS = DiagnosticType.warning(
       "JSC_NTI_ONE_TYPE_FOR_MANY_VARS",
@@ -260,7 +259,7 @@ public class GlobalTypeInfoCollector implements CompilerPass {
       ONE_TYPE_FOR_MANY_VARS,
       REDECLARED_PROPERTY,
       STRUCT_WITHOUT_CTOR_OR_INTERF,
-      SUPER_INTERFACES_HAVE_INCOMPATIBLE_PROPERTIES,
+      ANCESTOR_TYPES_HAVE_INCOMPATIBLE_PROPERTIES,
       UNKNOWN_OVERRIDE,
       UNRECOGNIZED_TYPE_NAME,
       WRONG_PARAMETER_COUNT);
@@ -524,6 +523,16 @@ public class GlobalTypeInfoCollector implements CompilerPass {
     }
   }
 
+  private ImmutableCollection<PropertyDef> getPropDefsFromType(NominalType nt, String pname) {
+    if (nt.isClass()) {
+      PropertyDef propdef = getPropDefFromClass(nt, pname);
+      // propdef can be null when nt is a class created by a mixin application. The class may
+      // have prototype properties but we can't see where these properties are defined.
+      return propdef == null ? ImmutableSet.of() : ImmutableSet.of(propdef);
+    }
+    return getPropDefsFromInterface(nt, pname);
+  }
+
   private ImmutableCollection<PropertyDef> getPropDefsFromInterface(
       NominalType nominalType, String pname) {
     checkArgument(nominalType.isFrozen());
@@ -546,7 +555,6 @@ public class GlobalTypeInfoCollector implements CompilerPass {
     while (nominalType.getPropDeclaredType(pname) != null) {
       checkArgument(nominalType.isFrozen());
       checkArgument(nominalType.isClass());
-
       if (propertyDefs.get(nominalType.getId(), pname) != null) {
         PropertyDef propDef = propertyDefs.get(nominalType.getId(), pname);
         return nominalType.isGeneric() ? propDef.substituteNominalGenerics(nominalType) : propDef;
@@ -556,6 +564,21 @@ public class GlobalTypeInfoCollector implements CompilerPass {
     return null;
   }
 
+  /**
+   * Reconcile the properties of this nominal type with the properties it inherits from its
+   * supertypes, and then freeze the type.
+   *
+   * NOTE(dimvar): The logic is somewhat convoluted, but I'm not sure how to make it clearer.
+   * There is just a lot of case analysis involved.
+   *
+   * - Collect all super definitions of methods and other properties.
+   * - During the collection process, warn when a property on this type is not a subtype of
+   *   an inherited property on the supertype.
+   * - If there are multiple inherited definitions for a property, meet them to find a single
+   *   inherited type. If they meet to bottom, warn.
+   * - If this type has its own definition of the property, and not just inherits it, adjust the
+   *   type of the local definition based on the inherited property type.
+   */
   private void checkAndFreezeNominalType(RawNominalType rawType) {
     if (rawType.isFrozen()) {
       return;
@@ -573,8 +596,12 @@ public class GlobalTypeInfoCollector implements CompilerPass {
       }
     }
 
-    Multimap<String, DeclaredFunctionType> propMethodTypesToProcess = LinkedHashMultimap.create();
-    Multimap<String, JSType> propTypesToProcess = LinkedHashMultimap.create();
+    // If this type defines a method m, collect all inherited definitions of m here in order
+    // to possibly adjust the type of m.
+    Multimap<String, DeclaredFunctionType> superMethodTypes = LinkedHashMultimap.create();
+    // For each property p on this type, regardless of whether it is defined on the type or just
+    // inherited, collect all inherited definitions of p here.
+    Multimap<String, JSType> superPropTypes = LinkedHashMultimap.create();
     // Collect inherited types for extended classes
     if (superClass != null) {
       checkState(superClass.isFrozen());
@@ -589,8 +616,7 @@ public class GlobalTypeInfoCollector implements CompilerPass {
               pname, superClass.getName()));
         }
         nonInheritedPropNames.remove(pname);
-        checkSuperProperty(
-            rawType, superClass, pname, propMethodTypesToProcess, propTypesToProcess);
+        checkSuperProperty(rawType, superClass, pname, superMethodTypes, superPropTypes);
       }
     }
 
@@ -599,16 +625,15 @@ public class GlobalTypeInfoCollector implements CompilerPass {
       checkState(superInterf.isFrozen());
       for (String pname : superInterf.getPropertyNames()) {
         nonInheritedPropNames.remove(pname);
-        checkSuperProperty(
-            rawType, superInterf, pname, propMethodTypesToProcess, propTypesToProcess);
+        checkSuperProperty(rawType, superInterf, pname, superMethodTypes, superPropTypes);
       }
     }
 
     // Munge inherited types of methods
-    for (String pname : propMethodTypesToProcess.keySet()) {
-      Collection<DeclaredFunctionType> methodTypes = propMethodTypesToProcess.get(pname);
+    for (String pname : superMethodTypes.keySet()) {
+      Collection<DeclaredFunctionType> methodTypes = superMethodTypes.get(pname);
       checkState(!methodTypes.isEmpty());
-      PropertyDef localPropDef = propertyDefs.get(rawType, pname);
+      PropertyDef localPropDef = checkNotNull(propertyDefs.get(rawType, pname));
       // To find the declared type of a method, we must meet declared types
       // from all inherited methods.
       DeclaredFunctionType superMethodType = DeclaredFunctionType.meet(methodTypes);
@@ -617,13 +642,9 @@ public class GlobalTypeInfoCollector implements CompilerPass {
       if (superMethodType == null) {
         // If the inherited types are not compatible, pick one.
         superMethodType = methodTypes.iterator().next();
-        warnings.add(JSError.make(localPropDef.defSite,
-            SUPER_INTERFACES_HAVE_INCOMPATIBLE_PROPERTIES,
-            rawType.getName(), pname, methodTypes.toString()));
       } else if (getsTypeFromParent
           && localMethodType.getMaxArity() > superMethodType.getMaxArity()) {
-        // When getsTypeFromParent is true, we will miss the invalid override
-        // earlier, so we check here.
+        // When getsTypeFromParent is true, we miss the invalid override earlier, so we check here.
         warnings.add(JSError.make(
             localPropDef.defSite, INVALID_PROP_OVERRIDE, pname,
             superMethodType.toFunctionType().toString(),
@@ -632,33 +653,46 @@ public class GlobalTypeInfoCollector implements CompilerPass {
       DeclaredFunctionType updatedMethodType =
           localMethodType.withTypeInfoFromSuper(superMethodType, getsTypeFromParent);
       localPropDef.updateMethodType(updatedMethodType);
-      propTypesToProcess.put(pname,
+      superPropTypes.put(pname,
           getCommonTypes().fromFunctionType(updatedMethodType.toFunctionType()));
     }
 
-    // Check inherited types of all props
-    add_interface_props:
-    for (String pname : propTypesToProcess.keySet()) {
-      Collection<JSType> defs = propTypesToProcess.get(pname);
+    // Check inherited types of all properties
+    for (String pname : superPropTypes.keySet()) {
+      Collection<JSType> defs = superPropTypes.get(pname);
       checkState(!defs.isEmpty());
-      JSType resultType = getCommonTypes().TOP;
+      JSType inheritedPropType = getCommonTypes().TOP;
       for (JSType inheritedType : defs) {
-        resultType = JSType.meet(resultType, inheritedType);
-        if (!resultType.isBottom()) {
-          resultType = inheritedType;
-        } else {
+        inheritedPropType = JSType.meet(inheritedPropType, inheritedType);
+        if (inheritedPropType.isBottom()) {
           warnings.add(
               JSError.make(
                   rawType.getDefSite(),
-                  SUPER_INTERFACES_HAVE_INCOMPATIBLE_PROPERTIES,
+                  ANCESTOR_TYPES_HAVE_INCOMPATIBLE_PROPERTIES,
                   rawType.getName(),
                   pname,
                   defs.toString()));
-          continue add_interface_props;
+          break;
         }
       }
-      // TODO(dimvar): check if we can have @const props here
-      rawType.addProtoProperty(pname, null, resultType, false);
+      // Adjust the type of the local property definition based on the inherited type.
+      PropertyDef localPropDef = propertyDefs.get(rawType, pname);
+      if (localPropDef != null) {
+        JSType updatedPropType;
+        if (localPropDef.methodType == null) {
+          JSType t = rawType.getInstancePropDeclaredType(pname);
+          updatedPropType = t == null ? inheritedPropType : t.specialize(inheritedPropType);
+        } else {
+          // When the property is a method, the local type already includes the meet of the
+          // inherited types, from the earlier loop. We don't use inheritedPropType in this branch,
+          // because if the inherited method type has static properties (e.g., framework-specific
+          // passes can add such properties), we don't want to inherit these.
+          FunctionType ft = localPropDef.methodType.toFunctionType();
+          updatedPropType = getCommonTypes().fromFunctionType(ft);
+        }
+        // TODO(dimvar): check if we can have @const props here
+        rawType.addProtoProperty(pname, null, updatedPropType, false);
+      }
     }
 
     // Warn when inheriting from incompatible IObject types
@@ -668,7 +702,7 @@ public class GlobalTypeInfoCollector implements CompilerPass {
         warnings.add(
             JSError.make(
                 rawType.getDefSite(),
-                SUPER_INTERFACES_HAVE_INCOMPATIBLE_PROPERTIES,
+                ANCESTOR_TYPES_HAVE_INCOMPATIBLE_PROPERTIES,
                 rawType.getName(),
                 "IObject<K,V>#index",
                 "the keys K have types that can't be joined."));
@@ -676,7 +710,7 @@ public class GlobalTypeInfoCollector implements CompilerPass {
         warnings.add(
             JSError.make(
                 rawType.getDefSite(),
-                SUPER_INTERFACES_HAVE_INCOMPATIBLE_PROPERTIES,
+                ANCESTOR_TYPES_HAVE_INCOMPATIBLE_PROPERTIES,
                 rawType.getName(),
                 "IObject<K,V>#index",
                 "the values V should have a common subtype."));
@@ -706,20 +740,23 @@ public class GlobalTypeInfoCollector implements CompilerPass {
     inProgressFreezes.remove(rawType);
   }
 
-  // TODO(dimvar): the finalization method and this one should be cleaned up;
-  // they are very hard to understand.
+  /**
+   * Collect inherited property definitions and warn if the local definition of a property
+   * disagrees with the inherited definition.
+   */
   private void checkSuperProperty(
       RawNominalType current, NominalType superType, String pname,
-      Multimap<String, DeclaredFunctionType> propMethodTypesToProcess,
-      Multimap<String, JSType> propTypesToProcess) {
+      Multimap<String, DeclaredFunctionType> superMethodTypes,
+      Multimap<String, JSType> superPropTypes) {
     JSType inheritedPropType = superType.getPropDeclaredType(pname);
     if (inheritedPropType == null) {
       // No need to go further for undeclared props.
       return;
     }
-    Collection<PropertyDef> inheritedPropDefs;
-    if (superType.isInterface()) {
-      inheritedPropDefs = getPropDefsFromInterface(superType, pname);
+
+    Collection<PropertyDef> inheritedPropDefs = getPropDefsFromType(superType, pname);
+
+    if (current.isClass() && superType.isInterface()) {
       // If a class is defined by mixin application, add missing property defs from the
       // super interface, o/w checkSuperProperty will break for its subclasses.
       if (isCtorDefinedByCall(current)) {
@@ -728,54 +765,43 @@ public class GlobalTypeInfoCollector implements CompilerPass {
             propertyDefs.put(current, pname, inheritedDef);
           }
         }
-      }
-    } else {
-      PropertyDef propdef = getPropDefFromClass(superType, pname);
-      // This can happen if superType is a class created by a mixin application. The class may
-      // have prototype properties but we can't see where these properties are defined.
-      if (propdef == null) {
+      } else if (!current.mayHaveNonStrayProp(pname)) {
+        warnings.add(JSError.make(
+            inheritedPropDefs.iterator().next().defSite,
+            INTERFACE_METHOD_NOT_IMPLEMENTED,
+            pname, superType.toString(), current.toString()));
         return;
       }
-      inheritedPropDefs = ImmutableSet.of(propdef);
     }
-    if (superType.isInterface()
-        && current.isClass()
-        && !isCtorDefinedByCall(current)
-        && !current.mayHaveNonStrayProp(pname)) {
-      warnings.add(JSError.make(
-          inheritedPropDefs.iterator().next().defSite,
-          INTERFACE_METHOD_NOT_IMPLEMENTED,
-          pname, superType.toString(), current.toString()));
-      return;
-    }
+
     PropertyDef localPropDef = propertyDefs.get(current, pname);
-    // If the property is inherited, we want to drop the result of getInstancePropDeclaredType.
-    JSType localPropType =
-        localPropDef == null ? null : current.getInstancePropDeclaredType(pname);
-    if (localPropDef != null && superType.isClass()
-        && localPropType != null
-        && localPropType.getFunType() != null
-        && superType.hasConstantProp(pname)) {
+    JSType localPropType = localPropDef == null ? null : current.getInstancePropDeclaredType(pname);
+
+    if (localPropType != null
+        && superType.isClass()
+        && superType.hasConstantProp(pname)
+        && localPropType.getFunType() != null) {
       // TODO(dimvar): This doesn't work for multiple levels in the hierarchy.
       // Clean up how we process inherited properties and then fix this.
-      warnings.add(JSError.make(
-          localPropDef.defSite, CANNOT_OVERRIDE_FINAL_METHOD, pname));
+      warnings.add(JSError.make(localPropDef.defSite, CANNOT_OVERRIDE_FINAL_METHOD, pname));
       return;
     }
-    if (localPropType == null && superType.isInterface()) {
-      // Add property from interface to class
-      propTypesToProcess.put(pname, inheritedPropType);
-    } else if (localPropType != null
+
+    if (localPropType != null
         && !getsTypeInfoFromParentMethod(localPropDef)
         && !isValidOverride(localPropType, inheritedPropType)) {
       warnings.add(JSError.make(
           localPropDef.defSite, INVALID_PROP_OVERRIDE, pname,
           inheritedPropType.toString(), localPropType.toString()));
-    } else if (localPropType != null && localPropDef.methodType != null) {
+      return;
+    }
+
+    superPropTypes.put(pname, inheritedPropType);
+    if (localPropType != null && localPropDef.methodType != null) {
       // If we are looking at a method definition, munging may be needed
       for (PropertyDef inheritedPropDef : inheritedPropDefs) {
         if (inheritedPropDef.methodType != null) {
-          propMethodTypesToProcess.put(pname, inheritedPropDef.methodType);
+          superMethodTypes.put(pname, inheritedPropDef.methodType);
         }
       }
     }
