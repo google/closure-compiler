@@ -20,6 +20,8 @@ import com.google.javascript.jscomp.AstValidator.ViolationHandler;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.InputId;
+import com.google.javascript.rhino.JSDocInfoBuilder;
+import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.SimpleSourceFile;
 import com.google.javascript.rhino.Token;
@@ -173,6 +175,17 @@ public final class AstValidatorTest extends CompilerTestCase {
   public void testNewTargetIsValidExpression() {
     Node n = new Node(Token.NEW_TARGET);
     expectValid(n, Check.EXPRESSION);
+  }
+
+  public void testCastOnLeftSideOfAssign() {
+    JSDocInfoBuilder jsdoc = new JSDocInfoBuilder(false);
+    jsdoc.recordType(new JSTypeExpression(IR.string("number"), "<AstValidatorTest>"));
+    Node n = IR.exprResult(
+        new Node(
+            Token.ASSIGN,
+            IR.cast(IR.name("x"), jsdoc.build()),
+            IR.number(0)));
+    expectValid(n, Check.STATEMENT);
   }
 
   public void testInvalidEmptyStatement() {

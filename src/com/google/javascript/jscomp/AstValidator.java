@@ -899,6 +899,9 @@ public final class AstValidator implements CompilerPass {
       case GETELEM:
         validateGetPropGetElemInLHS(contextType, n);
         break;
+      case CAST:
+        validateLHS(contextType, n.getOnlyChild());
+        break;
       default:
         violation("Invalid child for " + contextType + " node", n);
     }
