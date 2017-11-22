@@ -213,7 +213,13 @@ public class CodeGenerator {
         add("return");
         if (childCount == 1) {
           cc.maybeInsertSpace();
-          add(first);
+          if (preserveTypeAnnotations && first.getJSDocInfo() != null) {
+            add("(");
+            add(first);
+            add(")");
+          } else {
+            add(first);
+          }
         } else {
           checkState(childCount == 0);
         }

@@ -1490,6 +1490,22 @@ public final class CodePrinterTest extends CodePrinterTestBase {
         "/**\n * @return {undefined}\n * @this {!Array<string>}\n */\nfunction foo() {\n}\n");
   }
 
+  public void testReturnWithTypeAnnotation() {
+    preserveTypeAnnotations = true;
+    assertPrettyPrint(
+        "function f() { return (/** @return {number} */ function() { return 42; }); }",
+        LINE_JOINER.join(
+            "function f() {",
+            "  return (/**",
+            " @return {number}",
+            " */",
+            "function() {",
+            "    return 42;",
+            "  });",
+            "}",
+            ""));
+  }
+
   public void testDeprecatedAnnotationIncludesNewline() {
     String js =
         LINE_JOINER.join(
