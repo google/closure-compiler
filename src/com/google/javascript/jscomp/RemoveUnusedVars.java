@@ -22,6 +22,7 @@ import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
 import com.google.javascript.jscomp.CodingConvention.SubclassRelationship;
 import com.google.javascript.rhino.IR;
@@ -88,6 +89,10 @@ import javax.annotation.Nullable;
  */
 class RemoveUnusedVars implements CompilerPass {
 
+  // Properties that are implicitly used as part of the JS language.
+  private static final ImmutableSet<String> IMPLICITLY_USED_PROPERTIES =
+      ImmutableSet.of("length", "toString", "valueOf");
+
   private final AbstractCompiler compiler;
 
   private final CodingConvention codingConvention;
@@ -108,7 +113,7 @@ class RemoveUnusedVars implements CompilerPass {
 
   private final Map<Var, VarInfo> varInfoMap = new HashMap<>();
 
-  private final Set<String> referencedPropertyNames = new HashSet<>();
+  private final Set<String> referencedPropertyNames = new HashSet<>(IMPLICITLY_USED_PROPERTIES);
 
   /**
    * Map from property name to variables on which the property is defined.
@@ -127,17 +132,18 @@ class RemoveUnusedVars implements CompilerPass {
 
   private final ScopeCreator scopeCreator;
 
-  // TODO(bradfordcsmith): Make this a constructor option that can be enabled
-  private final boolean removeUnusedProperties = false;
+  private final boolean removeUnusedProperties;
 
   RemoveUnusedVars(
       AbstractCompiler compiler,
       boolean removeGlobals,
-      boolean preserveFunctionExpressionNames) {
+      boolean preserveFunctionExpressionNames,
+      boolean removeUnusedProperties) {
     this.compiler = compiler;
     this.codingConvention = compiler.getCodingConvention();
     this.removeGlobals = removeGlobals;
     this.preserveFunctionExpressionNames = preserveFunctionExpressionNames;
+    this.removeUnusedProperties = removeUnusedProperties;
     this.scopeCreator = new Es6SyntacticScopeCreator(compiler);
 
     // All Vars that are completely unremovable will share this VarInfo instance.
@@ -152,6 +158,9 @@ class RemoveUnusedVars implements CompilerPass {
   @Override
   public void process(Node externs, Node root) {
     checkState(compiler.getLifeCycleStage().isNormalized());
+    if (removeUnusedProperties) {
+      referencedPropertyNames.addAll(compiler.getExternProperties());
+    }
     traverseAndRemoveUnusedReferences(root);
   }
 
@@ -961,17 +970,17 @@ class RemoveUnusedVars implements CompilerPass {
     VarInfo varInfo = varInfoMap.get(var);
     if (varInfo == null) {
       boolean isGlobal = var.isGlobal();
-      if (isGlobal && !removeGlobals) {
-        // TODO(bradfordcsmith): Should we allow removal of properties here?
+      if (isGlobal && !removeGlobals && !removeUnusedProperties) {
         varInfo = canonicalTotallyUnremovableVarInfo;
       } else if (codingConvention.isExported(var.getName(), !isGlobal)) {
         varInfo = canonicalTotallyUnremovableVarInfo;
       } else if (var.isArguments()) {
-        // TODO(bradfordcsmith): mark all function parameters unremovable at this point.
         varInfo = canonicalTotallyUnremovableVarInfo;
       } else {
         varInfo = new VarInfo();
-        if (var.getParentNode().isParamList()) {
+        if (isGlobal && !removeGlobals) {
+          varInfo.setIsExplicitlyNotRemovable();
+        } else if (var.getParentNode().isParamList()) {
           varInfo.propertyAssignmentsWillPreventRemoval = true;
           varInfo.unreferencedPropertiesMayBeRemoved = false;
         }
@@ -1687,8 +1696,8 @@ class RemoveUnusedVars implements CompilerPass {
     }
 
     void removeUnreferencedProperties() {
-      checkState(!isEntirelyRemovable && unreferencedPropertiesMayBeRemoved);
-      if (namedPropertyRemovables != null) {
+      if (!isEntirelyRemovable && namedPropertyRemovables != null) {
+        checkState(unreferencedPropertiesMayBeRemoved);
         // iterate over a copy to avoid ConcurrentModificationException when we remove keys
         // within the loop
         for (String propertyName : ImmutableList.copyOf(namedPropertyRemovables.keySet())) {
