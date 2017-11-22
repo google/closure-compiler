@@ -200,11 +200,11 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
   }
 
   /**
-   * Run PureFunctionIdentifier, then gather a list of calls that are
-   * marked as having no side effects.
+   * Run PureFunctionIdentifier, then gather a list of calls that are marked as having no side
+   * effects.
    */
-  private class NoSideEffectCallEnumerator
-  extends AbstractPostOrderCallback implements CompilerPass {
+  private class NoSideEffectCallEnumerator extends AbstractPostOrderCallback
+      implements CompilerPass {
     private final Compiler compiler;
 
     NoSideEffectCallEnumerator(Compiler compiler) {
@@ -325,9 +325,7 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
 
   public void testAnnotationInExterns_new5() throws Exception {
     assertPureCallsMarked(
-        "function f() { new externObjSEThis() };" +
-        "f();",
-        ImmutableList.of("externObjSEThis", "f"));
+        "function f() { new externObjSEThis() }; f();", ImmutableList.of("externObjSEThis", "f"));
   }
 
   public void testAnnotationInExterns_new6() throws Exception {
@@ -1808,6 +1806,24 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
 
     // This should be "(Error || FUNCTION)" but isn't.
     assertNoPureCalls(source);
+  }
+
+  public void testClassMethod1() {
+    this.mode = TypeInferenceMode.NEITHER;
+    String source = "class C { m() { alert(1); } }; (new C).m();";
+    assertNoPureCalls(source);
+  }
+
+  public void testClassMethod2() {
+    this.mode = TypeInferenceMode.NEITHER;
+    String source = "class C { m() { } }; (new C).m();";
+    assertPureCallsMarked(source, ImmutableList.of("NEW STRING m"));
+  }
+
+  public void testClassMethod3() {
+    this.mode = TypeInferenceMode.NEITHER;
+    String source = "class C { m1() { } m2() { this.m1(); }}; (new C).m2();";
+    assertPureCallsMarked(source, ImmutableList.of("this.m1", "NEW STRING m2"));
   }
 
   public void testFunctionProperties1() throws Exception {

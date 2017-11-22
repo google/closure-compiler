@@ -4825,6 +4825,7 @@ public final class NodeUtil {
         return evaluatesToLocalValue(value.getSecondChild(), locals)
             && evaluatesToLocalValue(value.getLastChild(), locals);
       case THIS:
+      case SUPER:
         return locals.apply(value);
       case NAME:
         return isImmutableValue(value) || locals.apply(value);

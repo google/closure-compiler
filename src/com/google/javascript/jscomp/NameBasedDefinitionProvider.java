@@ -316,6 +316,8 @@ public class NameBasedDefinitionProvider implements CompilerPass {
       }
     } else if (node.isGetProp()) {
       return "this." + node.getLastChild().getString();
+    } else if (node.isMemberFunctionDef()) {
+      return "this." + node.getString();
     }
     return null;
   }
