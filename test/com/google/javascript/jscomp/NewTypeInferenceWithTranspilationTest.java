@@ -684,4 +684,19 @@ public final class NewTypeInferenceWithTranspilationTest extends NewTypeInferenc
             "  for (var x of iter) { y = x; }",
             "}"));
   }
+
+  public void testAnalyzeInsideNamespaceObjectLiterals() {
+    typeCheck(LINE_JOINER.join(
+        "const ns = {",
+        "  a: 1 - true",
+        "};"),
+        NewTypeInference.INVALID_OPERAND_TYPE);
+
+    typeCheck(LINE_JOINER.join(
+        "/** @const */",
+        "let ns = {",
+        "  a: 1 - true",
+        "};"),
+        NewTypeInference.INVALID_OPERAND_TYPE);
+  }
 }

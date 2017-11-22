@@ -1374,6 +1374,9 @@ final class NewTypeInference implements CompilerPass {
         || nameNode.getParent().getBooleanProp(Node.ANALYZED_DURING_GTI)) {
       Preconditions.checkNotNull(declType,
           "Can't skip var declaration with undeclared type at: %s", nameNode);
+      if (!rhs.isQualifiedName()) {
+        analyzeExprFwdIgnoreResult(rhs, inEnv);
+      }
       maybeSetTypeI(nameNode, declType);
       maybeSetTypeI(rhs, declType);
       return envPutType(inEnv, varName, declType);
@@ -1968,13 +1971,17 @@ final class NewTypeInference implements CompilerPass {
       Node expr, TypeEnv inEnv, JSType requiredType, JSType specializedType) {
     if (expr.getBooleanProp(Node.ANALYZED_DURING_GTI)) {
       expr.removeProp(Node.ANALYZED_DURING_GTI);
+      Node rhs = expr.getLastChild();
+      if (!rhs.isQualifiedName()) {
+        analyzeExprFwdIgnoreResult(rhs, inEnv);
+      }
       // If the assignment is an aliasing of a typedef, markAndGetTypeOfPreanalyzedNode won't
       // be able to find a type and we'll get a spurious warning.
       // But during NTI we don't have typedef info anymore, so we back off for all aliasing
       // definitions, not just ones defining typedefs.
       if (!NodeUtil.isAliasedConstDefinition(expr.getFirstChild())) {
         markAndGetTypeOfPreanalyzedNode(expr.getFirstChild(), inEnv, true);
-        markAndGetTypeOfPreanalyzedNode(expr.getLastChild(), inEnv, true);
+        markAndGetTypeOfPreanalyzedNode(rhs, inEnv, true);
       }
       return new EnvTypePair(inEnv, requiredType);
     }
@@ -3683,12 +3690,18 @@ final class NewTypeInference implements CompilerPass {
    * Returns a type environment that combines the types from all uses of a variable.
    */
   private TypeEnv collectTypesForEscapedVarsFwd(Node n, TypeEnv env) {
-    checkArgument(n.isFunction() || (n.isName() && NodeUtil.isInvocationTarget(n)));
+    checkArgument(
+        n.isFunction() || (n.isName() && NodeUtil.isInvocationTarget(n)),
+        "Expected invovation target, found %s", n);
     String fnName = n.isFunction() ? symbolTable.getFunInternalName(n) : n.getString();
     NTIScope innerScope = this.currentScope.getScope(fnName);
     JSType summaryAsJstype = summaries.get(innerScope);
     if (summaryAsJstype == null) {
-      checkState(NodeUtil.isUnannotatedCallback(n));
+      // NOTE(dimvar): The n.isFromExterns part is here because the polymer pass does some weird
+      // rewriting which AFAIU can copy some @polymerBehavior code from the externs to the source,
+      // but the AST function nodes are still marked as externs, and don't have summaries.
+      // We don't have a unit test for it.
+      checkState(NodeUtil.isUnannotatedCallback(n) || n.isFromExterns());
       return env;
     }
     FunctionType summary = summaryAsJstype.getFunType();

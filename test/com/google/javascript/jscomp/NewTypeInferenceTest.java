@@ -22444,4 +22444,22 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "var x = /** @type {!Foo} */ ({ a: 1 });"),
         NewTypeInference.INVALID_CAST);
   }
+
+  public void testAnalyzeInsideNamespaceObjectLiterals() {
+    typeCheck(LINE_JOINER.join(
+        "/** @const */",
+        "var ns = {",
+        "  a: 1 - true",
+        "};"),
+        NewTypeInference.INVALID_OPERAND_TYPE);
+
+    typeCheck(LINE_JOINER.join(
+        "/** @const */",
+        "var ns = {};",
+        "/** @const */",
+        "ns.subns = {",
+        "  a: 1 - true",
+        "};"),
+        NewTypeInference.INVALID_OPERAND_TYPE);
+  }
 }
