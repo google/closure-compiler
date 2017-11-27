@@ -139,10 +139,12 @@ public class NodeModuleResolver extends ModuleResolver {
     return builder.build();
   }
 
+  @Override
   Map<String, String> getPackageJsonMainEntries() {
     return this.packageJsonMainEntries;
   }
 
+  @Override
   @Nullable
   public String resolveJsModule(
       String scriptAddress, String moduleAddress, String sourcename, int lineno, int colno) {
@@ -163,8 +165,8 @@ public class NodeModuleResolver extends ModuleResolver {
   }
 
   public String resolveJsModuleFile(String scriptAddress, String moduleAddress) {
-    for (int i = 0; i < FILE_EXTENSIONS_TO_SEARCH.length; i++) {
-      String loadAddress = locate(scriptAddress, moduleAddress + FILE_EXTENSIONS_TO_SEARCH[i]);
+    for (String extension : FILE_EXTENSIONS_TO_SEARCH) {
+      String loadAddress = locate(scriptAddress, moduleAddress + extension);
       if (loadAddress != null) {
         // Also look for mappings in packageJsonMainEntries because browser field
         // advanced usage allows to override / blacklist specific files, including
