@@ -31,7 +31,7 @@ import javax.annotation.Nullable;
  * <p>As the compiler normally locates modules by path string, webpack numeric ids are converted to
  * strings.
  */
-public class WebpackModuleResolver extends ModuleResolver {
+public class WebpackModuleResolver extends NodeModuleResolver {
   private final ImmutableMap<String, String> modulesById;
 
   public WebpackModuleResolver(
@@ -39,7 +39,7 @@ public class WebpackModuleResolver extends ModuleResolver {
       ImmutableList<String> moduleRootPaths,
       Map<String, String> modulesById,
       ErrorHandler errorHandler) {
-    super(modulePaths, moduleRootPaths, errorHandler);
+    super(modulePaths, moduleRootPaths, null, errorHandler);
 
     this.modulesById = ImmutableMap.copyOf(modulesById);
   }
@@ -48,6 +48,15 @@ public class WebpackModuleResolver extends ModuleResolver {
   @Nullable
   public String resolveJsModule(
       String scriptAddress, String moduleAddress, String sourcename, int lineno, int colno) {
+
+    // Normal webpack module addresses are numeric ids. However module paths may still be used
+    // in type nodes so we need to resolve either.
+    try {
+      Integer.parseInt(moduleAddress);
+    } catch (NumberFormatException e) {
+      return super.resolveJsModule(scriptAddress, moduleAddress, sourcename, lineno, colno);
+    }
+
     String loadAddress = modulesById.get(moduleAddress);
     if (loadAddress == null) {
       errorHandler.report(
