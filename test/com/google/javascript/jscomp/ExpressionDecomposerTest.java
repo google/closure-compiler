@@ -720,6 +720,10 @@ public final class ExpressionDecomposerTest extends TestCase {
     assertThat(findExpressionRoot("for (let x in f()) {}", "f")).isNull();
   }
 
+  public void testFindExpressionRoot5() {
+    assertThat(findExpressionRoot("for (let x = f();;) {}", "f")).isNull();
+  }
+
   /** Test case helpers. */
 
   /**

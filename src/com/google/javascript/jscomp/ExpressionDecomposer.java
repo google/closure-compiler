@@ -653,11 +653,18 @@ class ExpressionDecomposer {
         case SWITCH:
         case RETURN:
         case THROW:
+          Preconditions.checkState(child == parent.getFirstChild());
+          return parent;
         case VAR:
         case CONST:
         case LET:
           Preconditions.checkState(child == parent.getFirstChild());
-          return parent;
+          if (parent.getParent().isVanillaFor()
+              && parent == parent.getParent().getFirstChild()) {
+            return null;
+          } else {
+            return parent;
+          }
         // Any of these indicate an unsupported expression:
         case FOR:
           if (child == parent.getFirstChild()) {
