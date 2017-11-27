@@ -16,8 +16,11 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 import static com.google.javascript.jscomp.CompilerTestCase.lines;
+import static com.google.javascript.jscomp.testing.NodeSubject.assertNode;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.ExpressionDecomposer.DecompositionType;
@@ -234,6 +237,20 @@ public final class ExpressionDecomposerTest extends TestCase {
             "  var myUrl=new temp_const$jscomp$0(",
             "      result$jscomp$0.getDomHelper().getWindow().location.href);",
             "}"));
+  }
+
+  public void testCanExposeExpression9() {
+    helperCanExposeExpression(
+        DecompositionType.UNDECOMPOSABLE,
+        "function *f() { for (let x of yield y) {} }",
+        "yield");
+  }
+
+  public void testCanExposeExpression10() {
+    helperCanExposeExpression(
+        DecompositionType.UNDECOMPOSABLE,
+        "function *f() { for (let x in yield y) {} }",
+        "yield");
   }
 
   public void testMoveExpression1() {
@@ -687,7 +704,37 @@ public final class ExpressionDecomposerTest extends TestCase {
         "var result$jscomp$0=foo();var x = {set a(p) {}, b: result$jscomp$0};");
   }
 
+  public void testFindExpressionRoot1() {
+    assertNode(findExpressionRoot("var x = f()", "f")).hasType(Token.VAR);
+  }
+
+  public void testFindExpressionRoot2() {
+    assertNode(findExpressionRoot("foo(bar(f()));", "f")).hasType(Token.EXPR_RESULT);
+  }
+
+  public void testFindExpressionRoot3() {
+    assertThat(findExpressionRoot("for (let x of f()) {}", "f")).isNull();
+  }
+
+  public void testFindExpressionRoot4() {
+    assertThat(findExpressionRoot("for (let x in f()) {}", "f")).isNull();
+  }
+
   /** Test case helpers. */
+
+  /**
+   * @return The result of calling {@link ExpressionDecomposer#findExpressionRoot} on the CALL
+   *     node in {@code js} whose callee is a NAME matching {@code name}.
+   */
+  @Nullable
+  private Node findExpressionRoot(String js, String name) {
+    Compiler compiler = getCompiler();
+    Node tree = parse(compiler, js);
+    Node call = findCall(tree, name);
+    checkNotNull(call);
+
+    return ExpressionDecomposer.findExpressionRoot(call);
+  }
 
   private void helperCanExposeExpression(
       DecompositionType expectedResult,

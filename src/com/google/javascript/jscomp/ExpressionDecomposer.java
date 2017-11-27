@@ -27,6 +27,7 @@ import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import java.util.Set;
+import javax.annotation.Nullable;
 
 /**
  * Methods necessary for partially or full decomposing an expression.  Initially
@@ -601,6 +602,7 @@ class ExpressionDecomposer {
    * @return For the subExpression, find the nearest statement Node before which
    * it can be inlined.  Null if no such location can be found.
    */
+  @Nullable
   static Node findInjectionPoint(Node subExpression) {
     Node expressionRoot = findExpressionRoot(subExpression);
     checkNotNull(expressionRoot);
@@ -613,7 +615,7 @@ class ExpressionDecomposer {
       parent = injectionPoint.getParent();
     }
 
-    checkState(NodeUtil.isStatementBlock(injectionPoint.getParent()));
+    checkState(NodeUtil.isStatementBlock(parent), parent);
     return injectionPoint;
   }
 
@@ -636,6 +638,7 @@ class ExpressionDecomposer {
    *     is not contain in a Node where inlining is known to be possible.
    *     For example, a WHILE node condition expression.
    */
+  @Nullable
   static Node findExpressionRoot(Node subExpression) {
     Node child = subExpression;
     for (Node parent : child.getAncestors()) {
@@ -662,6 +665,7 @@ class ExpressionDecomposer {
           }
           // fall through
         case FOR_IN:
+        case FOR_OF:
         case SCRIPT:
         case BLOCK:
         case LABEL:
@@ -735,11 +739,9 @@ class ExpressionDecomposer {
    * @return UNDECOMPOSABLE if the expression cannot be moved, DECOMPOSABLE if
    * decomposition is required before the expression can be moved, otherwise MOVABLE.
    */
-  private DecompositionType isSubexpressionMovable(
-      Node expressionRoot, Node subExpression) {
+  private DecompositionType isSubexpressionMovable(Node expressionRoot, Node subExpression) {
     boolean requiresDecomposition = false;
-    boolean seenSideEffects = NodeUtil.mayHaveSideEffects(
-        subExpression, compiler);
+    boolean seenSideEffects = NodeUtil.mayHaveSideEffects(subExpression, compiler);
 
     Node child = subExpression;
     for (Node parent : child.getAncestors()) {
