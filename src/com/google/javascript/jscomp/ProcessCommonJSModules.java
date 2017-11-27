@@ -179,7 +179,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
    * Recognize if a node is a module import. We recognize two forms:
    *
    * <ul>
-   *   <li> require("something";
+   *   <li> require("something");
    *   <li> webpack_require__(4); // only when the module resolution is WEBPACK
    * </ul>
    */
@@ -287,27 +287,34 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
 
   private static boolean isWebpackRequireEnsureCallback(Node fnc) {
     checkArgument(fnc.isFunction());
-    Node fncParams = NodeUtil.getFunctionParameters(fnc);
-    if (!(fncParams.hasOneChild()
-        && fncParams.getFirstChild().isName()
-        && fncParams.getFirstChild().getString().equals("require"))) {
+    if (fnc.getParent() == null) {
       return false;
     }
 
-    if (!(fnc.getParent().isGetProp()
+    Node callParent;
+    if (fnc.getParent().isCall()) {
+      callParent = fnc.getParent();
+    } else if (fnc.getParent().isGetProp()
+        && fnc.getNext() != null
+        && fnc.getNext().isString()
+        && fnc.getNext().getString().equals("bind")
         && fnc.getGrandparent() != null
-        && fnc.getGrandparent().isCall())) {
+        && fnc.getGrandparent().isCall()
+        && fnc.getGrandparent().getParent() != null
+        && fnc.getGrandparent().getParent().isCall()) {
+      callParent = fnc.getGrandparent().getParent();
+    } else {
       return false;
     }
-    Node call = fnc.getGrandparent();
-    if (call.getPrevious().isGetProp()
-        && call.getPrevious().getFirstChild().isCall()
-        && call.getPrevious().getFirstFirstChild().isGetProp()
-        && call.getPrevious().getFirstFirstChild().isQualifiedName()
-        && call.getPrevious().getFirstFirstChild().matchesQualifiedName("__webpack_require__.e")) {
+
+    if (callParent.getFirstChild() != null
+        && callParent.getFirstChild().isGetProp()
+        && callParent.getFirstFirstChild().isCall()
+        && callParent.getFirstFirstChild().getFirstChild().matchesQualifiedName("__webpack_require__.e")
+        && callParent.getFirstChild().getSecondChild().isString()
+        && callParent.getFirstChild().getSecondChild().getString().equals("then")) {
       return true;
     }
-
     return false;
   }
 
