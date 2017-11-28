@@ -27,7 +27,7 @@
  */
 function BeforeInstallPromptEvent() {}
 
-/** @type {!Promise<!AppBannerPromptOutcome>} */
+/** @type {!Promise<{outcome: !AppBannerPromptOutcome}>} */
 BeforeInstallPromptEvent.prototype.userChoice;
 
 /** @return {!Promise<!PromptResponseObject>} */
@@ -41,3 +41,6 @@ var PromptResponseObject;
 
 /** @type {?function(!BeforeInstallPromptEvent)} */
 Window.prototype.onbeforeinstallpromptevent;
+
+/** @type {?function(!Event)} */
+Window.prototype.onappinstalled;
