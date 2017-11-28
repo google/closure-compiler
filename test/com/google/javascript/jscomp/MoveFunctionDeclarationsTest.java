@@ -36,6 +36,19 @@ public final class MoveFunctionDeclarationsTest extends CompilerTestCase {
          new String[] { "var f = function(){}; var g = function(){}; a" });
   }
 
+  public void testGeneratorDeclarations() {
+    test(
+        "a; function *f(){} function *g(){}", "var f = function* (){}; var g = function* (){}; a;");
+  }
+
+  public void testFunctionDeclarationsInEs6Module() {
+    // NOTE: Currently this pass always runs after module transpilation.
+    // No current uses of this pass would benefit from ES6 module support:
+    // a) RescopeGlobalSymbols, which relies on this pass, only cares about the global scope.
+    // b) ES6 module output cannot be wrapped in a try/catch.
+    testSame("a; function f(){} function g(){} export default 5;");
+  }
+
   public void testFunctionsExpression() {
     testSame("a; f = function(){}");
   }

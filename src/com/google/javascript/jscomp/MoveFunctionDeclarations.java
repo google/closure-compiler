@@ -27,29 +27,29 @@ import java.util.List;
 import java.util.Map.Entry;
 
 /**
- * Moves top-level function declarations to the top.
+ * Moves top-level function declarations to the top of the enclosing JSModule.
  *
- * Enable this pass if a try catch block wraps the output after compilation,
- * and the output runs on Firefox because function declarations are only
- * defined when reached inside a try catch block on Firefox.
+ * <p>Enable this pass if a try catch block wraps the output after compilation, and the output runs
+ * on Firefox because function declarations are only defined when reached inside a try catch block
+ * on older versions of Firefox.
  *
- * On Firefox, this code works:
+ * <p>On Firefox versions <= 45, this code works:
  *
- * var g = f;
- * function f() {}
+ * <p>var g = f; function f() {}
  *
- * but this code does not work:
+ * <p>but this code does not work:
  *
- * try {
- *   var g = f;
- *   function f() {}
- * } catch(e) {}
+ * <p>try { var g = f; function f() {} } catch(e) {}
  *
- * NOTE(dimvar):
- * This pass is safe to turn on by default and delete the associated compiler
- * option. However, we don't do that because the pass is only useful for code
- * wrapped in a try/catch, and otherwise it makes debugging harder because it
- * moves code around.
+ * <p>NOTE(lharker): As of Firefox version 46 the above code works. Projects not supporting older
+ * versions of Firefox shouldn't need this pass.
+ *
+ * <p>RescopeGlobalSymbols still depends on this pass running first to preserve function hoisting
+ * semantics.
+ *
+ * <p>NOTE(dimvar): This pass is safe to turn on by default and delete the associated compiler
+ * option. However, we don't do that because the pass is only useful for code wrapped in a
+ * try/catch, and otherwise it makes debugging harder because it moves code around.
  *
  */
 class MoveFunctionDeclarations implements Callback, CompilerPass {

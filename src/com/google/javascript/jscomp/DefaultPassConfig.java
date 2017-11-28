@@ -2945,6 +2945,11 @@ public final class DefaultPassConfig extends PassConfig {
         protected CompilerPass create(AbstractCompiler compiler) {
           return new MoveFunctionDeclarations(compiler);
         }
+
+        @Override
+        protected FeatureSet featureSet() {
+          return ES8;
+        }
       };
 
   private final PassFactory nameUnmappedAnonymousFunctions =
