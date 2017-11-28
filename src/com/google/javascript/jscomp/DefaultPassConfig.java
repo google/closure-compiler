@@ -2806,6 +2806,11 @@ public final class DefaultPassConfig extends PassConfig {
               compiler.getModuleGraph(),
               options.parentModuleCanSeeSymbolsDeclaredInChildren);
         }
+
+        @Override
+        protected FeatureSet featureSet() {
+          return ES8_MODULES;
+        }
       };
 
   /** Move methods to a deeper common module */
