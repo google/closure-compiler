@@ -3293,8 +3293,7 @@ public final class DefaultPassConfig extends PassConfig {
   }
 
   @VisibleForTesting
-  static Map<String, Node> getAdditionalReplacements(
-      CompilerOptions options) {
+  static Map<String, Node> getAdditionalReplacements(CompilerOptions options) {
     Map<String, Node> additionalReplacements = new HashMap<>();
 
     if (options.markAsCompiled || options.closurePass) {
@@ -3352,12 +3351,17 @@ public final class DefaultPassConfig extends PassConfig {
         }
       };
 
-    /** Rewrites J2CL constructs to be more optimizable. */
+  /** Rewrites J2CL constructs to be more optimizable. */
   private final PassFactory j2clConstantHoisterPass =
       new PassFactory("j2clConstantHoisterPass", false) {
         @Override
         protected CompilerPass create(AbstractCompiler compiler) {
           return new J2clConstantHoisterPass(compiler);
+        }
+
+        @Override
+        protected FeatureSet featureSet() {
+          return ES8_MODULES;
         }
       };
 
@@ -3368,6 +3372,11 @@ public final class DefaultPassConfig extends PassConfig {
         protected CompilerPass create(AbstractCompiler compiler) {
           List<Node> changedScopeNodes = compiler.getChangedScopeNodesForPass(getName());
           return new J2clClinitPrunerPass(compiler, changedScopeNodes);
+        }
+
+        @Override
+        protected FeatureSet featureSet() {
+          return ES8_MODULES;
         }
       };
 
@@ -3405,6 +3414,11 @@ public final class DefaultPassConfig extends PassConfig {
         protected CompilerPass create(AbstractCompiler compiler) {
           return new J2clAssertRemovalPass(compiler);
         }
+
+        @Override
+        protected FeatureSet featureSet() {
+          return ES8_MODULES;
+        }
       };
 
   private final PassFactory j2clSourceFileChecker =
@@ -3425,6 +3439,11 @@ public final class DefaultPassConfig extends PassConfig {
         @Override
         protected CompilerPass create(final AbstractCompiler compiler) {
           return new J2clChecksPass(compiler);
+        }
+
+        @Override
+        protected FeatureSet featureSet() {
+          return ES8_MODULES;
         }
       };
 
