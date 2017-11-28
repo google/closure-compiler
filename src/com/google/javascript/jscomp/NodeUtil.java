@@ -17,9 +17,9 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
-import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.base.Splitter;
@@ -705,10 +705,28 @@ public final class NodeUtil {
         return true;
 
       case OBJECTLIT:
-        // Return true only if all values are const.
         for (Node child = n.getFirstChild(); child != null; child = child.getNext()) {
-          if (!isLiteralValue(child.getFirstChild(), includeFunctions)) {
-            return false;
+          if (child.isMemberFunctionDef() || NodeUtil.isGetOrSetKey(child)) {
+            // { methodName() {...} }
+            // { get propertyName() {...} }
+            // { set propertyName(value) {...} }
+            if (!includeFunctions) {
+              return false;
+            }
+          } else if (child.isComputedProp()) {
+            // { [key_expression]: value, ... }
+            // { [key_expression](args) {...}, ... }
+            if (!isLiteralValue(child.getFirstChild(), includeFunctions)
+                || !isLiteralValue(child.getLastChild(), includeFunctions)) {
+              return false;
+            }
+          } else {
+            // { key: value, ... }
+            // { "quoted_key": value, ... }
+            checkState(child.isStringKey(), child);
+            if (!isLiteralValue(child.getOnlyChild(), includeFunctions)) {
+              return false;
+            }
           }
         }
         return true;
@@ -937,6 +955,7 @@ public final class NodeUtil {
       case GETELEM:
       case GETPROP:
       case GT:
+      case IN:
       case INSTANCEOF:
       case LE:
       case LSH:
@@ -1021,8 +1040,8 @@ public final class NodeUtil {
     // Also, omitting @const in externs is not as confusing as in source code,
     // because assigning an object literal in externs only makes sense when
     // defining a namespace or enum.
-    if (!n.isFromExterns()
-        && (jsdoc == null || !jsdoc.isConstant())) {
+    boolean isMarkedConst = n.getParent().isConst() || (jsdoc != null && jsdoc.isConstant());
+    if (!n.isFromExterns() && !isMarkedConst) {
       return false;
     }
     Node qnameNode;
@@ -1140,6 +1159,15 @@ public final class NodeUtil {
         }
         break;
 
+      case SPREAD:
+        Node expr = n.getOnlyChild();
+        if (!expr.isArrayLit()) {
+          // Anything other than an array, in the absense of any other information,
+          // we have to assume is going to invoke invoke a stateful generator or the like.
+          return true;
+        }
+        break;
+
       case VAR:    // empty var statement (no declaration)
       case LET:
       case CONST:
@@ -1203,7 +1231,6 @@ public final class NodeUtil {
       case EXPR_RESULT:
       case HOOK:
       case IF:
-      case IN:
       case PARAM_LIST:
       case NUMBER:
       case OR:
@@ -1286,7 +1313,7 @@ public final class NodeUtil {
    * @param callNode - constructor call node
    */
   static boolean constructorCallHasSideEffects(Node callNode) {
-    Preconditions.checkArgument(callNode.isNew(), "Expected NEW node, got %s", callNode.getToken());
+    checkArgument(callNode.isNew(), "Expected NEW node, got %s", callNode.getToken());
 
     if (callNode.isNoSideEffectsCall()) {
       return false;
@@ -1492,6 +1519,7 @@ public final class NodeUtil {
       case INC:
       case YIELD:
       case THROW:
+      case AWAIT:
         return true;
       case CALL:
         return NodeUtil.functionCallHasSideEffects(n, compiler);
@@ -1526,13 +1554,11 @@ public final class NodeUtil {
   /**
    * @param knownConstants A set of names known to be constant value at
    * node 'n' (such as locals that are last written before n can execute).
-   * @return Whether the tree can be affected by side-effects or
-   * has side-effects.
+   * @return Whether the tree can be affected by side-effects or has side-effects.
    */
   // TODO(nick): Get rid of the knownConstants argument in favor of using
   // scope with InferConsts.
-  static boolean canBeSideEffected(
-      Node n, Set<String> knownConstants, Scope scope) {
+  static boolean canBeSideEffected(Node n, Set<String> knownConstants, @Nullable Scope scope) {
     switch (n.getToken()) {
       case YIELD:
       case CALL:
@@ -1543,8 +1569,7 @@ public final class NodeUtil {
         return true;
       case NAME:
         // Non-constant names values may have been changed.
-        return !isConstantVar(n, scope)
-            && !knownConstants.contains(n.getString());
+        return !isConstantVar(n, scope) && !knownConstants.contains(n.getString());
 
       // Properties on constant NAMEs can still be side-effected.
       case GETPROP:
@@ -1556,7 +1581,7 @@ public final class NodeUtil {
         // and function declarations are not part of expressions.
         // TODO(bradfordcsmith): Do we need to add a case for CLASS here?
         //     This checkState currently does not exclude class methods.
-        Preconditions.checkState(!isFunctionDeclaration(n));
+        checkState(!isFunctionDeclaration(n), n);
         return false;
       default:
         break;
@@ -1572,13 +1597,13 @@ public final class NodeUtil {
   }
 
   /**
-   * The comma operator has the lowest precedence, 0, followed by the assignment operators (=, &=,
-   * +=, etc.) which have precedence of 1, and so on.
+   * The comma operator has the lowest precedence, 0, followed by the assignment operators
+   * ({@code =}, {@code &=}, {@code +=}, etc.) which have precedence of 1, and so on.
    *
-   * @see
-   *     https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Operator_Precedence
+   * See
+   * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Operator_Precedence
    */
-  static int precedence(Token type) {
+  public static int precedence(Token type) {
     switch (type) {
       case COMMA:  return 0;
       case ASSIGN_BITOR:
@@ -2294,7 +2319,7 @@ public final class NodeUtil {
   /** @return The first getter in the class members that matches the key. */
   @Nullable
   static Node getFirstGetterMatchingKey(Node n, String keyName) {
-    Preconditions.checkState(n.isClassMembers() || n.isObjectLit());
+    checkState(n.isClassMembers() || n.isObjectLit(), n);
     for (Node keyNode : n.children()) {
       if (keyNode.isGetterDef() && keyNode.getString().equals(keyName)) {
         return keyNode;
@@ -2306,7 +2331,7 @@ public final class NodeUtil {
   /** @return The first setter in the class members that matches the key. */
   @Nullable
   static Node getFirstSetterMatchingKey(Node n, String keyName) {
-    Preconditions.checkState(n.isClassMembers() || n.isObjectLit());
+    checkState(n.isClassMembers() || n.isObjectLit(), n);
     for (Node keyNode : n.children()) {
       if (keyNode.isSetterDef() && keyNode.getString().equals(keyName)) {
         return keyNode;
@@ -2570,7 +2595,7 @@ public final class NodeUtil {
       case DEFAULT_CASE:
         return true;
       default:
-        Preconditions.checkState(isControlStructure(parent));
+        checkState(isControlStructure(parent), parent);
         return false;
     }
   }
@@ -3099,7 +3124,7 @@ public final class NodeUtil {
         case MODULE_BODY:
           return false;
         default:
-          Preconditions.checkState(current.isLabel());
+          checkState(current.isLabel(), current);
           current = current.getParent();
       }
     }
@@ -3822,7 +3847,7 @@ public final class NodeUtil {
       AbstractCompiler compiler, String name, Node basisNode,
       String originalName) {
     Node node = newQName(compiler, name);
-    node.useSourceInfoWithoutLengthIfMissingFromForTree(basisNode);
+    useSourceInfoForNewQName(node, basisNode);
     if (!originalName.equals(node.getOriginalName())) {
       // If basisNode already had the correct original name, then it will already be set correctly.
       // Setting it again will force the QName node to have a different property list from all of
@@ -3833,6 +3858,28 @@ public final class NodeUtil {
   }
 
   /**
+   * Custom update new QName node with source info from another node.
+   *
+   * <p>This is very similar to {@link Node#useSourceInfoIfMissingFromForTree(Node)}, but it avoids
+   * overwriting the length field of the nodes.
+   * TODO(bradfordcsmith): Eliminate the need for this custom method.
+   */
+  private static void useSourceInfoForNewQName(Node newQName, Node basisNode) {
+    if (newQName.getStaticSourceFile() == null) {
+      newQName.setStaticSourceFileFrom(basisNode);
+      newQName.setSourceEncodedPosition(basisNode.getSourcePosition());
+    }
+
+    if (newQName.getProp(Node.ORIGINALNAME_PROP) == null) {
+      newQName.putProp(Node.ORIGINALNAME_PROP, basisNode.getProp(Node.ORIGINALNAME_PROP));
+    }
+
+    for (Node child = newQName.getFirstChild(); child != null; child = child.getNext()) {
+      useSourceInfoForNewQName(child, basisNode);
+    }
+  }
+
+  /**
    * Gets the root node of a qualified name. Must be either NAME, THIS or SUPER.
    */
   static Node getRootOfQualifiedName(Node qName) {
@@ -3840,7 +3887,7 @@ public final class NodeUtil {
       if (current.isName() || current.isThis() || current.isSuper()) {
         return current;
       }
-      Preconditions.checkState(current.isGetProp(), "Not a getprop node: ", current);
+      checkState(current.isGetProp(), "Not a getprop node: ", current);
     }
   }
 
@@ -4019,7 +4066,6 @@ public final class NodeUtil {
       case DEFAULT_VALUE:
       case CATCH:
       case REST:
-      case ASSIGN:
         getLhsNodesHelper(n.getFirstChild(), lhsNodes);
         return;
       case IMPORT_SPEC:
@@ -4038,8 +4084,19 @@ public final class NodeUtil {
       case IMPORT_STAR:
         lhsNodes.add(n);
         return;
+      case GETPROP:
+      case GETELEM:
+        // Not valid in declarations but may appear in assignments.
+        lhsNodes.add(n);
+        return;
+      case EMPTY:
+        return;
       default:
-        Preconditions.checkState(n.isEmpty(), "Invalid node in lhs of declaration: %s", n);
+        if (isAssignmentOp(n)) {
+          getLhsNodesHelper(n.getFirstChild(), lhsNodes);
+        } else {
+          throw new IllegalStateException("Invalid node in lhs: " + n);
+        }
     }
   }
 
@@ -4048,7 +4105,7 @@ public final class NodeUtil {
     checkArgument(
         isNameDeclaration(declNode)
             || declNode.isParamList()
-            || declNode.isAssign()
+            || isAssignmentOp(declNode)
             || declNode.isCatch()
             || declNode.isDestructuringLhs()
             || declNode.isDefaultValue()
@@ -4261,18 +4318,32 @@ public final class NodeUtil {
    * Create a VAR node containing the given name and initial value expression.
    */
   static Node newVarNode(String name, Node value) {
-    Node nodeName = IR.name(name);
+    Node lhs = IR.name(name);
     if (value != null) {
-      nodeName.addChildToBack(value);
-      nodeName.srcref(value);
+      lhs.srcref(value);
     }
-    Node var = IR.var(nodeName).srcref(nodeName);
+    return newVarNode(lhs, value);
+  }
 
-    return var;
+  /**
+   * Create a VAR node containing the given lhs (name or destructuring pattern) and
+   * initial value expression.
+   */
+  static Node newVarNode(Node lhs, Node value) {
+    if (lhs.isDestructuringPattern()) {
+      checkNotNull(value);
+      return IR.var(new Node(Token.DESTRUCTURING_LHS, lhs, value).srcref(lhs)).srcref(lhs);
+    } else {
+      checkState(lhs.isName() && !lhs.hasChildren());
+      if (value != null) {
+        lhs.addChildToBack(value);
+      }
+      return IR.var(lhs).srcref(lhs);
+    }
   }
 
   public static Node emptyFunction() {
-    return new Node(Token.FUNCTION, IR.name(""), IR.paramList(), IR.block());
+    return IR.function(IR.name(""), IR.paramList(), IR.block());
   }
 
   /**
@@ -4511,7 +4582,7 @@ public final class NodeUtil {
     return fnNode.getSecondChild();
   }
 
-  static boolean isConstantVar(Node node, Scope scope) {
+  static boolean isConstantVar(Node node, @Nullable Scope scope) {
     if (isConstantName(node)) {
       return true;
     }
@@ -4754,6 +4825,7 @@ public final class NodeUtil {
         return evaluatesToLocalValue(value.getSecondChild(), locals)
             && evaluatesToLocalValue(value.getLastChild(), locals);
       case THIS:
+      case SUPER:
         return locals.apply(value);
       case NAME:
         return isImmutableValue(value) || locals.apply(value);
@@ -4770,8 +4842,6 @@ public final class NodeUtil {
       case NEW:
         return newHasLocalResult(value) || locals.apply(value);
       case DELPROP:
-      case IN:
-        // TODO(johnlenz): should IN operator be included in #isSimpleOperator?
       case INC:
       case DEC:
       case CLASS:
@@ -4798,6 +4868,77 @@ public final class NodeUtil {
         if (isAssignmentOp(value)
             || isSimpleOperator(value)
             || isImmutableValue(value)) {
+          return true;
+        }
+
+        throw new IllegalStateException(
+            "Unexpected expression node: " + value + "\n parent:" + value.getParent());
+    }
+  }
+
+  /**
+   * @return Whether the provided expression is may evaluate to 'undefined'.
+   */
+  static boolean mayBeUndefined(Node n) {
+    return !isDefinedValue(n);
+  }
+
+  /**
+   * @return Whether the provided expression is known not to evaluate to 'undefined'.
+   *
+   * Similar to #getKnownValueType only for 'undefined'.  This is useful for simplifying
+   * default value expressions.
+   */
+  static boolean isDefinedValue(Node value) {
+    switch (value.getToken()) {
+      case ASSIGN: // Only the assigned value matters here.
+      case CAST:
+      case COMMA:
+        return isDefinedValue(value.getLastChild());
+      case AND:
+      case OR:
+        return isDefinedValue(value.getFirstChild())
+            && isDefinedValue(value.getLastChild());
+      case HOOK:
+        return isDefinedValue(value.getSecondChild())
+            && isDefinedValue(value.getLastChild());
+      // Assume undefined leaks in this and call results.
+      case CALL:
+      case NEW:
+      case GETELEM:
+      case GETPROP:
+      case TAGGED_TEMPLATELIT:
+      case THIS:
+      case YIELD:
+      case AWAIT:
+      case VOID:
+        return false;
+      case DELPROP:
+      case INC:
+      case DEC:
+      case CLASS:
+      case FUNCTION:
+      case REGEXP:
+      case EMPTY:
+      case ARRAYLIT:
+      case OBJECTLIT:
+      case TEMPLATELIT:
+      case STRING:
+      case NUMBER:
+      case NULL:
+      case TRUE:
+      case FALSE:
+        return true;
+      case NAME:
+        String name = value.getString();
+        // We assume here that programs don't change the value of the keyword
+        // undefined to something other than the value undefined.
+        return "Infinity".equals(name) || "NaN".equals(name);
+      default:
+        // Other op force a local value:
+        //  '' + g (a  string)
+        //  x -= g (x is now an number)
+        if (isAssignmentOp(value) || isSimpleOperator(value)) {
           return true;
         }
 
@@ -5396,7 +5537,7 @@ public final class NodeUtil {
     if (invocation.isTaggedTemplateLit()) {
       return new TemplateArgsIterable(invocation.getLastChild());
     } else {
-      Preconditions.checkState(isCallOrNew(invocation));
+      checkState(isCallOrNew(invocation), invocation);
       return invocation.hasOneChild()
           ? ImmutableList.<Node>of() : invocation.getSecondChild().siblings();
     }

@@ -1900,6 +1900,20 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
         "use(B.foo);"));
   }
 
+  public void testEs6ClassExtendsChildClass() {
+    test(
+        lines(
+            "class Thing {}",
+            "Thing.Builder = class {};",
+            "class Subthing {}",
+            "Subthing.Builder = class extends Thing.Builder {}"),
+        lines(
+            "class Thing {}",
+            "var Thing$Builder = class {};",
+            "class Subthing {}",
+            "var Subthing$Builder = class extends Thing$Builder {}"));
+  }
+
   public void testSuperExtern() {
     testSame(
         lines(

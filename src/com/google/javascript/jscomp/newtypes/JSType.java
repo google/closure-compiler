@@ -2077,7 +2077,7 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
   public final boolean isInstanceofObject() {
     if (isSingletonObj()) {
       NominalType nt = getNominalTypeIfSingletonObj();
-      return nt.isLiteralObject() || nt.isBuiltinObject();
+      return nt.isLiteralObject() || nt.isBuiltinObject() || nt.isIObject();
     }
     return false;
   }

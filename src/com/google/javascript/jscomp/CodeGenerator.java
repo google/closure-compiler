@@ -213,7 +213,13 @@ public class CodeGenerator {
         add("return");
         if (childCount == 1) {
           cc.maybeInsertSpace();
-          add(first);
+          if (preserveTypeAnnotations && first.getJSDocInfo() != null) {
+            add("(");
+            add(first);
+            add(")");
+          } else {
+            add(first);
+          }
         } else {
           checkState(childCount == 0);
         }
@@ -1828,11 +1834,9 @@ public class CodeGenerator {
           // Break <!-- into <\!--
           final String startComment = "!--";
 
-          if (s.regionMatches(true, i + 1, endScript, 0,
-                              endScript.length())) {
+          if (s.regionMatches(true, i + 1, endScript, 0, endScript.length())) {
             sb.append(LT_ESCAPED);
-          } else if (s.regionMatches(false, i + 1, startComment, 0,
-                                     startComment.length())) {
+          } else if (s.regionMatches(false, i + 1, startComment, 0, startComment.length())) {
             sb.append(LT_ESCAPED);
           } else {
             sb.append(c);

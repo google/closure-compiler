@@ -21,10 +21,11 @@ import static com.google.common.base.Strings.nullToEmpty;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -854,7 +855,7 @@ final class Tracer {
       int numDigits = getMaxDigits();
       StringBuilder sb = new StringBuilder();
       long etime = -1;
-      LinkedList<String> indent = prettyPrint ? new LinkedList<String>() : null;
+      Deque<String> indent = prettyPrint ? new ArrayDeque<String>() : null;
       for (Event e : events) {
         if (prettyPrint && !e.isStart && !indent.isEmpty()) {
           indent.pop();

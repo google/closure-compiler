@@ -22,6 +22,7 @@ import static com.google.javascript.jscomp.PolymerPassErrors.POLYMER_INVALID_EXT
 import static com.google.javascript.jscomp.PolymerPassErrors.POLYMER_MISSING_EXTERNS;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
@@ -30,7 +31,6 @@ import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 
 /**
@@ -48,7 +48,7 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
   static final String VIRTUAL_FILE = "<PolymerPass.java>";
 
   private final AbstractCompiler compiler;
-  private final Map<String, String> tagNameMap;
+  private final ImmutableMap<String, String> tagNameMap;
   private final int polymerVersion;
   private final boolean propertyRenamingEnabled;
 

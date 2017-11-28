@@ -479,11 +479,11 @@ public final class JSModuleGraphTest extends TestCase {
     return SourceFile.fromCode(sourceName, text + source);
   }
 
-  private List<String> provides(String... strings) {
+  private ImmutableList<String> provides(String... strings) {
     return ImmutableList.copyOf(strings);
   }
 
-  private List<String> requires(String... strings) {
+  private ImmutableList<String> requires(String... strings) {
     return ImmutableList.copyOf(strings);
   }
 

@@ -37,10 +37,8 @@ public final class NamespaceLit extends Namespace {
     return this.window;
   }
 
-  public void maybeSetWindowInstance(JSType obj) {
-    if (obj != null) {
-      this.window = obj.getNominalTypeIfSingletonObj();
-    }
+  public void setWindowType(NominalType window) {
+    this.window = window;
   }
 
   @Override

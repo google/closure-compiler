@@ -15,10 +15,10 @@
  */
 package com.google.javascript.jscomp.testing;
 
-import static com.google.common.truth.Truth.THROW_ASSERTION_ERROR;
+import static com.google.common.truth.Truth.assertAbout;
 import static org.junit.Assert.assertEquals;
 
-import com.google.common.truth.FailureStrategy;
+import com.google.common.truth.FailureMetadata;
 import com.google.common.truth.Subject;
 import com.google.javascript.jscomp.DiagnosticType;
 import com.google.javascript.jscomp.JSError;
@@ -36,11 +36,11 @@ import javax.annotation.CheckReturnValue;
 public final class JSErrorSubject extends Subject<JSErrorSubject, JSError> {
   @CheckReturnValue
   public static JSErrorSubject assertError(JSError error) {
-    return new JSErrorSubject(THROW_ASSERTION_ERROR, error);
+    return assertAbout(JSErrorSubject::new).that(error);
   }
 
-  public JSErrorSubject(FailureStrategy fs, JSError error) {
-    super(fs, error);
+  public JSErrorSubject(FailureMetadata failureMetadata, JSError error) {
+    super(failureMetadata, error);
   }
 
   public void hasType(DiagnosticType type) {

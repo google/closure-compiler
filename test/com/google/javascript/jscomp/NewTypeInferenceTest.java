@@ -1702,6 +1702,18 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "var h = f;"));
   }
 
+  public void testGoogNullFunctionDifferentArityNoWarning() {
+    typeCheck(LINE_JOINER.join(
+        CLOSURE_BASE,
+        "/** @const */",
+        "var ns = {};",
+        "/** @constructor */",
+        "ns.Foo = function() {};",
+        "/** @param {!Function} x */",
+        "ns.Foo.fun = goog.nullFunction;",
+        "ns.Foo.fun(function() {});"));
+  }
+
   public void testDifficultObjectSpecialization() {
     typeCheck(LINE_JOINER.join(
         "/** @constructor */",
@@ -4883,7 +4895,7 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "/** @interface */ function I() {}",
         "/** @param {number} x */",
         "I.prototype.method = function(x, y) {};",
-        "/** @constructor @implements{I} */ function C() {}",
+        "/** @constructor @implements {I} */ function C() {}",
         "/** @param {string} y */",
         "C.prototype.method = function(x, y) {};",
         "(new C).method(5, 6);"),
@@ -5022,7 +5034,7 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "Int1.prototype.foo;",
         "/** @interface \n @extends {Int0} \n @extends {Int1} */",
         "function Int2() {};"),
-        GlobalTypeInfoCollector.SUPER_INTERFACES_HAVE_INCOMPATIBLE_PROPERTIES);
+        GlobalTypeInfoCollector.ANCESTOR_TYPES_HAVE_INCOMPATIBLE_PROPERTIES);
 
     typeCheck(LINE_JOINER.join(
         "/** @interface */",
@@ -5043,7 +5055,7 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "Parent2.prototype.method = function(x) {};",
         "/** @interface @extends {Parent1} @extends {Parent2} */",
         "function Child() {}"),
-        GlobalTypeInfoCollector.SUPER_INTERFACES_HAVE_INCOMPATIBLE_PROPERTIES);
+        GlobalTypeInfoCollector.ANCESTOR_TYPES_HAVE_INCOMPATIBLE_PROPERTIES);
 
     typeCheck(LINE_JOINER.join(
         "/** @constructor */ function Foo() {}",
@@ -5058,7 +5070,7 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "Parent2.prototype.obj;",
         "/** @interface @extends {Parent1} @extends {Parent2} */",
         "function Child() {}"),
-        GlobalTypeInfoCollector.SUPER_INTERFACES_HAVE_INCOMPATIBLE_PROPERTIES);
+        GlobalTypeInfoCollector.ANCESTOR_TYPES_HAVE_INCOMPATIBLE_PROPERTIES);
   }
 
   public void testTwoLevelExtendedInterface() {
@@ -15043,6 +15055,18 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "function f() {",
         "  f.prop = function() {};",
         "}"));
+
+    typeCheck(LINE_JOINER.join(
+        "/** @const */",
+        "var ns = {};",
+        "/** @constructor */",
+        "ns.Foo = function() {};",
+        "function f() {}",
+        "f.prop = 123;",
+        "/** @typedef {function()} */",
+        "var myfun;",
+        "/** @const {myfun} */",
+        "ns.Foo.defaultUrlPolicy_ = f;"));
   }
 
   public void testFunctionNamespacesThatAreProperties() {
@@ -16877,7 +16901,7 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "/** @constructor @implements {Foo} @implements {Bar} */",
         "function Baz() {}",
         "Baz.prototype.m = function() { return 123; };"),
-        GlobalTypeInfoCollector.SUPER_INTERFACES_HAVE_INCOMPATIBLE_PROPERTIES);
+        GlobalTypeInfoCollector.ANCESTOR_TYPES_HAVE_INCOMPATIBLE_PROPERTIES);
   }
 
   public void testStructuralInterfaces() {
@@ -17786,7 +17810,7 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         " * @implements {Int2}",
         " */",
         "function Foo() {}"),
-        GlobalTypeInfoCollector.SUPER_INTERFACES_HAVE_INCOMPATIBLE_PROPERTIES);
+        GlobalTypeInfoCollector.ANCESTOR_TYPES_HAVE_INCOMPATIBLE_PROPERTIES);
 
     typeCheck(LINE_JOINER.join(
         "/** @interface @extends {IObject<string, string>} */",
@@ -17801,7 +17825,7 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "function Foo() {}",
         // Tests that we don't crash on property accesses of bad IObjects
         "var /** null */ n = (new Foo)['asdf'+'asdf'];"),
-        GlobalTypeInfoCollector.SUPER_INTERFACES_HAVE_INCOMPATIBLE_PROPERTIES);
+        GlobalTypeInfoCollector.ANCESTOR_TYPES_HAVE_INCOMPATIBLE_PROPERTIES);
 
     typeCheck(LINE_JOINER.join(
         "/** @interface @extends {IObject<function(number), number>} */",
@@ -17814,7 +17838,7 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         " * @implements {Int2}",
         " */",
         "function Foo() {}"),
-        GlobalTypeInfoCollector.SUPER_INTERFACES_HAVE_INCOMPATIBLE_PROPERTIES);
+        GlobalTypeInfoCollector.ANCESTOR_TYPES_HAVE_INCOMPATIBLE_PROPERTIES);
   }
 
   public void testDontWarnForMissingReturnOnInfiniteLoop() {
@@ -19299,9 +19323,14 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
   }
 
   public void testDontTypeGlobalThisAsUknown() {
-    typeCheck(
+    typeCheckMessageContents(
         "var /** null */ x = this;",
-        NewTypeInference.MISTYPED_ASSIGN_RHS);
+        NewTypeInference.MISTYPED_ASSIGN_RHS,
+        LINE_JOINER.join(
+            "The right side in the assignment is not a subtype of the left side.",
+            "Expected : null",
+            "Found    : window",
+            ""));
 
     typeCheck("var /** !Window */ x = this;");
 
@@ -19392,7 +19421,7 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "}"));
   }
 
-  public void testMaybeSpecializeInCast() {
+  public void testDontSpecializeInCast() {
     // In this case, we're explicitly using the cast to "protect" arr from the
     // context, so it's not correct to infer that arr has type !Array<!Sub>
     // just because g takes a !Array<!Sub>.
@@ -19416,10 +19445,25 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "}"),
         NewTypeInference.RETURN_NONDECLARED_TYPE);
 
+    // The cast prevents x from being specialized to !Object
     typeCheck(LINE_JOINER.join(
         "function foo(/** ?Object */ x) {",
         "  var /** !Object */ n;",
         "  return /** @type {*} */ (x) && (n = x);",
+        "}"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    // Tests that when we analyze the lhs of the OR as falsy, we don't specialize the call to
+    // googObjectGet as falsy.
+    typeCheck(LINE_JOINER.join(
+        "/**",
+        " * @param {!IObject<?,V>} obj",
+        " * @return {V|undefined}",
+        " * @template V",
+        " */",
+        "function googObjectGet(obj) {}",
+        "function f(/** !Object */ x) {",
+        "  return /** @type {!Array} */ (googObjectGet(x)) || null;",
         "}"));
   }
 
@@ -22399,5 +22443,121 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "function Foo() {}",
         "var x = /** @type {!Foo} */ ({ a: 1 });"),
         NewTypeInference.INVALID_CAST);
+  }
+
+  public void testAnalyzeInsideNamespaceObjectLiterals() {
+    typeCheck(LINE_JOINER.join(
+        "/** @const */",
+        "var ns = {",
+        "  a: 1 - true",
+        "};"),
+        NewTypeInference.INVALID_OPERAND_TYPE);
+
+    typeCheck(LINE_JOINER.join(
+        "/** @const */",
+        "var ns = {};",
+        "/** @const */",
+        "ns.subns = {",
+        "  a: 1 - true",
+        "};"),
+        NewTypeInference.INVALID_OPERAND_TYPE);
+  }
+
+  public void testInheritedPropertyTypes() {
+    // Channel#dispatchEvent must be a subtype of both inherited methods, so it accepts
+    // the join of string|!Object and !Array, which is string|!Object.
+    typeCheck(LINE_JOINER.join(
+        "/** @interface */",
+        "function IListenable() {}",
+        "/** @param {string|!Object} x */",
+        "IListenable.prototype.dispatchEvent = function(x) {};",
+        "/**",
+        " * @constructor",
+        " * @implements {IListenable}",
+        " */",
+        "function GoogEventEventTarget() {}",
+        "/** @override */",
+        "GoogEventEventTarget.prototype.dispatchEvent = function(x) {};",
+        "/** @interface */",
+        "function IEventTarget() {}",
+        "/** @param {!Array} x */",
+        "IEventTarget.prototype.dispatchEvent = function(x) {};",
+        "/**",
+        " * @constructor",
+        " * @extends {GoogEventEventTarget}",
+        " * @implements {IEventTarget}",
+        " */",
+        "function Channel() {}",
+        "(new Channel).dispatchEvent({});"));
+
+    typeCheck(LINE_JOINER.join(
+        "/** @interface */",
+        "function IListenable() {}",
+        "/** @param {string|!Object} x */",
+        "IListenable.prototype.dispatchEvent = function(x) {};",
+        "/**",
+        " * @constructor",
+        " * @implements {IListenable}",
+        " */",
+        "function GoogEventEventTarget() {}",
+        "/** @override */",
+        "GoogEventEventTarget.prototype.dispatchEvent = function(x) {};",
+        "/** @interface */",
+        "function IEventTarget() {}",
+        "/** @param {!Array} x */",
+        "IEventTarget.prototype.dispatchEvent = function(x) {};",
+        "/**",
+        " * @constructor",
+        " * @extends {GoogEventEventTarget}",
+        " * @implements {IEventTarget}",
+        " */",
+        "function Channel() {}",
+        "(new Channel).dispatchEvent(123);"),
+        NewTypeInference.INVALID_ARGUMENT_TYPE);
+
+    typeCheck(LINE_JOINER.join(
+        "/** @constructor */",
+        "function SuperClass() {}",
+        "/** @param {!Object} x */",
+        "SuperClass.prototype.f = function(x) {};",
+        "/** @interface */",
+        "function Interf() {}",
+        "/** @param {!Array} x */",
+        "Interf.prototype.f = function(x) {};",
+        "/**",
+        " * @constructor",
+        " * @extends {SuperClass}",
+        " * @implements {Interf}",
+        " */",
+        "function SubClass() {}",
+        "(new SubClass).f({a: 1, b: 2});"));
+
+    typeCheck(LINE_JOINER.join(
+        "/** @constructor */",
+        "function Foo() {}",
+        "/** @type {?string} */",
+        "Foo.prototype.title;",
+        "/** @constructor @extends {Foo} */",
+        "function Bar() {}",
+        "/** @type {string} */",
+        "Bar.prototype.title;",
+        "var /** string */ s = (new Bar).title;"));
+
+    typeCheck(LINE_JOINER.join(
+        "/** @constructor */",
+        "function Foo() {}",
+        "/** @type {string} */",
+        "Foo.prototype.a;",
+        "/** @interface {Foo} */",
+        "function Bar() {}",
+        "/** @type {number} */",
+        "Bar.prototype.a;",
+        "/**",
+        " * @constructor",
+        " * @extends {Foo}",
+        " * @implements {Bar}",
+        " */",
+        "function Baz() {}"),
+        GlobalTypeInfoCollector.ANCESTOR_TYPES_HAVE_INCOMPATIBLE_PROPERTIES);
   }
 }

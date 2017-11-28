@@ -979,6 +979,20 @@ public class CompilerOptions implements Serializable {
     trustedStrings = yes;
   }
 
+  private boolean allowMethodCallDecomposing;
+
+  boolean allowMethodCallDecomposing() {
+    return allowMethodCallDecomposing;
+  }
+
+  /**
+   * Setting this to true indicates that it's safe to rewrite x.y() as: fn = x.y; fn.call(x);
+   * This should be usually be false if supporting IE 8 or IE 9 is necessary.
+   */
+  public void setAllowMethodCallDecomposing(boolean value) {
+    this.allowMethodCallDecomposing = value;
+  }
+
   // Should only be used when debugging compiler bugs.
   boolean printSourceAfterEachPass;
 

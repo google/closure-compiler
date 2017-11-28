@@ -1544,4 +1544,77 @@ public final class CrossModuleCodeMotionTest extends CompilerTestCase {
             "function f() { return A; } f(); function f2() { return B; }"
         });
   }
+
+  public void testDestructuringDeclarationsNotMovable() {
+    testSame(createModuleChain("const [a] = [];", "a;"));
+    testSame(createModuleChain("const {a} = { a: 1 };", "a;"));
+  }
+
+  public void testDestructuringAssignmentsAreReferences() {
+    testSame(createModuleChain("let a = 1; [a] = [5];", "a;"));
+    testSame(createModuleChain("let a = 1; ({x: a} = {x: 5});", "a;"));
+    test(
+        createModuleChain("let a = 1;", "[a] = [5];", "a;"),
+        new String[] {"", "let a = 1; [a] = [5];", "a;"});
+    test(
+        createModuleChain("let a = 1;", "({x: a} = {x: 5});", "a;"),
+        new String[] {"", "let a = 1; ({x: a} = {x: 5});", "a;"});
+  }
+
+  public void testDefaultParamValuesAreReferences() {
+    testSame(createModuleChain("let a = 1; function f(x = a) {} f();", "a;"));
+    test(
+        createModuleChain("let a = 1; function f(x = a) {}", "f();"),
+        new String[] {"", "let a = 1; function f(x = a) {} f();"});
+  }
+
+  public void testSpreadCountsAsAReference() {
+    test(
+        createModuleChain("let a = [];", "function f(...args) {} f(...a);", "a;"),
+        new String[] {"", "let a = []; function f(...args) {} f(...a);", "a;"});
+  }
+
+  public void testObjectLiteralMethods() {
+    // Object literal methods, getters, and setters are movable and references within them are
+    // handled correctly.
+    test(
+        createModuleChain(
+            "const a = 1;",
+            "const o = { foo() {return a;}, get x() {}, set x(v) {a = v;} };",
+            "o;",
+            "a;"),
+        new String[] {
+          "",
+          "",
+          "const a = 1; const o = { foo() {return a;}, get x() {}, set x(v) {a = v;} }; o;",
+          "a;"
+        });
+  }
+
+  public void testComputedProperties() {
+    // Computed properties are movable if the key expression is a literal.
+    test(
+        createModuleChain("let a = { ['something']: 1};", "a;"),
+        new String[] {"", "let a = { ['something']: 1}; a;"});
+
+    // Computed properties are movable if the key is a well defined variable
+    test(createModuleChain(
+        "const x = 1; let a = { [x]: 1};", "a;"),
+        new String[] {"", "const x = 1; let a = { [x]: 1}; a;"});
+    test(createModuleChain(
+        "const x = 1; let a = class { [x]() {} };", "a;"),
+        new String[] {"", "const x = 1; let a = class { [x]() {} }; a;"});
+
+    // Computed properties are not movable if the key is an unknown variable
+    testSame(createModuleChain("let a = { [x]: 1};", "a;"));
+    testSame(createModuleChain("let a = class { [x]() {} };", "a;"));
+
+    // Computed properties are not movable if the key is a
+    testSame(createModuleChain("let a = { [x]: 1};", "a;"));
+
+    // references in computed properties are honored
+    test(
+        createModuleChain("let a = 1;", "let b = { [a + 1]: 2 };", "a;"),
+        new String[] {"", "let a = 1; let b = { [a + 1]: 2 };", "a;"});
+ }
 }

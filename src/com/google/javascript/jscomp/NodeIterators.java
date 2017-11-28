@@ -20,11 +20,12 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Deque;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Stack;
 
 /**
  * A package for common iteration patterns.
@@ -41,7 +42,7 @@ class NodeIterators {
    * Traverses the local scope, skipping all function nodes.
    */
   static class FunctionlessLocalScope implements Iterator<Node> {
-    private final Stack<Node> ancestors = new Stack<>();
+    private final Deque<Node> ancestors = new ArrayDeque<>();
 
     /**
      * @param ancestors The ancestors of the point where iteration will start,
@@ -56,21 +57,21 @@ class NodeIterators {
           break;
         }
 
-        this.ancestors.add(0, n);
+        this.ancestors.addFirst(n);
       }
     }
 
     @Override
     public boolean hasNext() {
       // Check if the current node has any nodes after it.
-      return !(ancestors.size() == 1 && ancestors.peek().getNext() == null);
+      return !(ancestors.size() == 1 && ancestors.peekLast().getNext() == null);
     }
 
     @Override
     public Node next() {
-      Node current = ancestors.pop();
+      Node current = ancestors.removeLast();
       if (current.getNext() == null) {
-        current = ancestors.peek();
+        current = ancestors.peekLast();
 
         // If this is a function node, skip it.
         if (current.isFunction()) {
@@ -78,7 +79,7 @@ class NodeIterators {
         }
       } else {
         current = current.getNext();
-        ancestors.push(current);
+        ancestors.addLast(current);
 
         // If this is a function node, skip it.
         if (current.isFunction()) {
@@ -87,7 +88,7 @@ class NodeIterators {
 
         while (current.hasChildren()) {
           current = current.getFirstChild();
-          ancestors.push(current);
+          ancestors.addLast(current);
 
           // If this is a function node, skip it.
           if (current.isFunction()) {
@@ -108,14 +109,14 @@ class NodeIterators {
      * Gets the node most recently returned by next().
      */
     protected Node current() {
-      return ancestors.peek();
+      return ancestors.peekLast();
     }
 
     /**
      * Gets the parent of the node most recently returned by next().
      */
     protected Node currentParent() {
-      return ancestors.size() >= 2 ? ancestors.get(ancestors.size() - 2) : null;
+      return ancestors.size() >= 2 ? current().getParent() : null;
     }
 
     /**

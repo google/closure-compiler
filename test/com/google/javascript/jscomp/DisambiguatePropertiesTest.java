@@ -2659,24 +2659,17 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
         "function Baz() {}",
         "Baz.prototype.firstElementChild;");
 
-    this.mode = TypeInferenceMode.NTI_ONLY;
     testSame(DEFAULT_EXTERNS + externs, js);
   }
 
   private void testSets(String js, String expected, final String fieldTypes) {
-    test(srcs(js), expected(expected), new Postcondition() {
-      @Override public void verify(Compiler unused) {
-        assertEquals(fieldTypes, mapToString(lastPass.getRenamedTypesForTesting()));
-      }
-    });
+    test(srcs(js), expected(expected));
+    assertEquals(fieldTypes, mapToString(lastPass.getRenamedTypesForTesting()));
   }
 
   private void testSets(String externs, String js, String expected, final String fieldTypes) {
-    test(externs(DEFAULT_EXTERNS + externs), srcs(js), expected(expected), new Postcondition() {
-      @Override public void verify(Compiler unused) {
-        assertEquals(fieldTypes, mapToString(lastPass.getRenamedTypesForTesting()));
-      }
-    });
+    test(externs(DEFAULT_EXTERNS + externs), srcs(js), expected(expected));
+    assertEquals(fieldTypes, mapToString(lastPass.getRenamedTypesForTesting()));
   }
 
   private void testSets(String externs, String js, String expected,
@@ -2685,12 +2678,8 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
         externs(DEFAULT_EXTERNS + externs),
         srcs(js),
         expected(expected),
-        warning(warning, description),
-        new Postcondition() {
-          @Override public void verify(Compiler unused) {
-            assertEquals(fieldTypes, mapToString(lastPass.getRenamedTypesForTesting()));
-          }
-        });
+        warning(warning, description));
+    assertEquals(fieldTypes, mapToString(lastPass.getRenamedTypesForTesting()));
   }
 
   /**
@@ -2701,11 +2690,8 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
    * {field=[[Type1, Type2]]}
    */
   private void testSets(String js, final String fieldTypes) {
-    test(srcs(js), new Postcondition() {
-      @Override public void verify(Compiler unused) {
-        assertEquals(fieldTypes, mapToString(lastPass.getRenamedTypesForTesting()));
-      }
-    });
+    test(srcs(js));
+    assertEquals(fieldTypes, mapToString(lastPass.getRenamedTypesForTesting()));
   }
 
   /**
@@ -2716,10 +2702,8 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
    * {field=[[Type1, Type2]]}
    */
   private void testSets(String js, final String fieldTypes, DiagnosticType warning) {
-    test(srcs(js), warning(warning), new Postcondition() {
-      @Override public void verify(Compiler unused) {
-        assertEquals(fieldTypes, mapToString(lastPass.getRenamedTypesForTesting()));
-      }
+    test(srcs(js), warning(warning), (Postcondition) (Compiler unused) -> {
+      assertEquals(fieldTypes, mapToString(lastPass.getRenamedTypesForTesting()));
     });
   }
 

@@ -1374,6 +1374,9 @@ final class NewTypeInference implements CompilerPass {
         || nameNode.getParent().getBooleanProp(Node.ANALYZED_DURING_GTI)) {
       Preconditions.checkNotNull(declType,
           "Can't skip var declaration with undeclared type at: %s", nameNode);
+      if (!rhs.isQualifiedName()) {
+        analyzeExprFwdIgnoreResult(rhs, inEnv);
+      }
       maybeSetTypeI(nameNode, declType);
       maybeSetTypeI(rhs, declType);
       return envPutType(inEnv, varName, declType);
@@ -1640,7 +1643,7 @@ final class NewTypeInference implements CompilerPass {
         resultPair = analyzeArrayLitFwd(expr, inEnv);
         break;
       case CAST:
-        resultPair = analyzeCastFwd(expr, inEnv, specializedType);
+        resultPair = analyzeCastFwd(expr, inEnv);
         break;
       case CASE:
         // For a statement of the form: switch (exp1) { ... case exp2: ... }
@@ -1780,18 +1783,19 @@ final class NewTypeInference implements CompilerPass {
 
   private EnvTypePair analyzeLogicalOpFwd(
       Node expr, TypeEnv inEnv, JSType requiredType, JSType specializedType) {
-    Token exprKind = expr.getToken();
+    Token logicalOp = expr.getToken();
     Node lhs = expr.getFirstChild();
     Node rhs = expr.getLastChild();
-    if ((specializedType.isTrueOrTruthy() && exprKind == Token.AND)
-        || (specializedType.isFalseOrFalsy() && exprKind == Token.OR)) {
+    if ((specializedType.isTrueOrTruthy() && logicalOp == Token.AND)
+        || (specializedType.isFalseOrFalsy() && logicalOp == Token.OR)) {
       EnvTypePair lhsPair =
           analyzeExprFwd(lhs, inEnv, UNKNOWN, specializedType);
       EnvTypePair rhsPair =
           analyzeExprFwd(rhs, lhsPair.env, UNKNOWN, specializedType);
       return rhsPair;
-    } else if ((specializedType.isFalseOrFalsy() && exprKind == Token.AND)
-        || (specializedType.isTrueOrTruthy() && exprKind == Token.OR)) {
+    }
+    if ((specializedType.isFalseOrFalsy() && logicalOp == Token.AND)
+        || (specializedType.isTrueOrTruthy() && logicalOp == Token.OR)) {
       EnvTypePair shortCircuitPair =
           analyzeExprFwd(lhs, inEnv, UNKNOWN, specializedType);
       EnvTypePair lhsPair = analyzeExprFwd(
@@ -1800,21 +1804,16 @@ final class NewTypeInference implements CompilerPass {
           analyzeExprFwd(rhs, lhsPair.env, UNKNOWN, specializedType);
       JSType lhsUnspecializedType = JSType.join(shortCircuitPair.type, lhsPair.type);
       return combineLhsAndRhsForLogicalOps(
-          exprKind, lhsUnspecializedType, shortCircuitPair, rhsPair);
-    } else {
-      // Independently of the specializedType, && rhs is only analyzed when
-      // lhs is truthy, and || rhs is only analyzed when lhs is falsy.
-      JSType stopAfterLhsType = exprKind == Token.AND ? FALSY : TRUTHY;
-      EnvTypePair shortCircuitPair =
-          analyzeExprFwd(lhs, inEnv, UNKNOWN, stopAfterLhsType);
-      EnvTypePair lhsPair = analyzeExprFwd(
-          lhs, inEnv, UNKNOWN, stopAfterLhsType.negate());
-      EnvTypePair rhsPair =
-          analyzeExprFwd(rhs, lhsPair.env, requiredType, specializedType);
-      JSType lhsUnspecializedType = JSType.join(shortCircuitPair.type, lhsPair.type);
-      return combineLhsAndRhsForLogicalOps(
-          exprKind, lhsUnspecializedType, shortCircuitPair, rhsPair);
+          logicalOp, lhsUnspecializedType, shortCircuitPair, rhsPair);
     }
+    // Independently of the specializedType, && rhs is only analyzed when
+    // lhs is truthy, and || rhs is only analyzed when lhs is falsy.
+    JSType stopAfterLhsType = logicalOp == Token.AND ? FALSY : TRUTHY;
+    EnvTypePair shortCircuitPair = analyzeExprFwd(lhs, inEnv, UNKNOWN, stopAfterLhsType);
+    EnvTypePair lhsPair = analyzeExprFwd(lhs, inEnv, UNKNOWN, stopAfterLhsType.negate());
+    EnvTypePair rhsPair = analyzeExprFwd(rhs, lhsPair.env, requiredType, specializedType);
+    JSType lhsType = JSType.join(shortCircuitPair.type, lhsPair.type);
+    return combineLhsAndRhsForLogicalOps(logicalOp, lhsType, shortCircuitPair, rhsPair);
   }
 
   private EnvTypePair combineLhsAndRhsForLogicalOps(Token logicalOp,
@@ -1972,13 +1971,17 @@ final class NewTypeInference implements CompilerPass {
       Node expr, TypeEnv inEnv, JSType requiredType, JSType specializedType) {
     if (expr.getBooleanProp(Node.ANALYZED_DURING_GTI)) {
       expr.removeProp(Node.ANALYZED_DURING_GTI);
+      Node rhs = expr.getLastChild();
+      if (!rhs.isQualifiedName()) {
+        analyzeExprFwdIgnoreResult(rhs, inEnv);
+      }
       // If the assignment is an aliasing of a typedef, markAndGetTypeOfPreanalyzedNode won't
       // be able to find a type and we'll get a spurious warning.
       // But during NTI we don't have typedef info anymore, so we back off for all aliasing
       // definitions, not just ones defining typedefs.
       if (!NodeUtil.isAliasedConstDefinition(expr.getFirstChild())) {
         markAndGetTypeOfPreanalyzedNode(expr.getFirstChild(), inEnv, true);
-        markAndGetTypeOfPreanalyzedNode(expr.getLastChild(), inEnv, true);
+        markAndGetTypeOfPreanalyzedNode(rhs, inEnv, true);
       }
       return new EnvTypePair(inEnv, requiredType);
     }
@@ -2565,17 +2568,9 @@ final class NewTypeInference implements CompilerPass {
     return new EnvTypePair(env, commonTypes.getArrayInstance(elementType));
   }
 
-  // Because of the cast, expr doesn't need to have the required type of the context.
-  // However, we still pass along the specialized type, to specialize types when using
-  // logical operators.
-  private EnvTypePair analyzeCastFwd(Node expr, TypeEnv inEnv, JSType specializedType) {
-    Node parent = expr.getParent();
-    JSType newSpecType = this.commonTypes.UNKNOWN;
-    if ((parent.isOr() || parent.isAnd()) && expr == parent.getFirstChild()) {
-      newSpecType = specializedType;
-    }
+  private EnvTypePair analyzeCastFwd(Node expr, TypeEnv inEnv) {
     Node insideCast = expr.getFirstChild();
-    EnvTypePair pair = analyzeExprFwd(insideCast, inEnv, this.commonTypes.UNKNOWN, newSpecType);
+    EnvTypePair pair = analyzeExprFwd(insideCast, inEnv);
     JSType fromType = pair.type;
     JSType toType = (JSType) expr.getTypeI();
     if (!fromType.isInterfaceInstance()
@@ -3695,12 +3690,18 @@ final class NewTypeInference implements CompilerPass {
    * Returns a type environment that combines the types from all uses of a variable.
    */
   private TypeEnv collectTypesForEscapedVarsFwd(Node n, TypeEnv env) {
-    checkArgument(n.isFunction() || (n.isName() && NodeUtil.isInvocationTarget(n)));
+    checkArgument(
+        n.isFunction() || (n.isName() && NodeUtil.isInvocationTarget(n)),
+        "Expected invovation target, found %s", n);
     String fnName = n.isFunction() ? symbolTable.getFunInternalName(n) : n.getString();
     NTIScope innerScope = this.currentScope.getScope(fnName);
     JSType summaryAsJstype = summaries.get(innerScope);
     if (summaryAsJstype == null) {
-      checkState(NodeUtil.isUnannotatedCallback(n));
+      // NOTE(dimvar): The n.isFromExterns part is here because the polymer pass does some weird
+      // rewriting which AFAIU can copy some @polymerBehavior code from the externs to the source,
+      // but the AST function nodes are still marked as externs, and don't have summaries.
+      // We don't have a unit test for it.
+      checkState(NodeUtil.isUnannotatedCallback(n) || n.isFromExterns());
       return env;
     }
     FunctionType summary = summaryAsJstype.getFunType();

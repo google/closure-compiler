@@ -116,7 +116,8 @@ class TypeMismatch implements Serializable {
     sourceType = sourceType.restrictByNotNullOrUndefined();
     targetType = targetType.restrictByNotNullOrUndefined();
     if (sourceType.isInstanceofObject()
-        && !targetType.isInstanceofObject() && !targetType.isUnknownType()
+        && !targetType.isInstanceofObject()
+        && !targetType.isUnknownType()
         && bothAreNotTypeVariables(sourceType, targetType)) {
       // We don't report a type error, but we still need to construct a JSError,
       // for people who enable the invalidation diagnostics in DisambiguateProperties.

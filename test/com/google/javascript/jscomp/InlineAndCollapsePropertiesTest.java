@@ -1180,6 +1180,52 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
             "use(C.foo);"));
   }
 
+  public void testAliasForSuperclassNamespace() {
+    test(
+        lines(
+            "var ns = {};",
+            "class Foo {}",
+            "ns.clazz = Foo;",
+            "var Bar = class extends ns.clazz.Baz {}"),
+        lines(
+            "class Foo {}",
+            "var ns$clazz = null;",
+            "var Bar = class extends Foo.Baz {}"));
+
+    test(
+        lines(
+            "var ns = {};",
+            "class Foo {}",
+            "Foo.Builder = class {}",
+            "ns.clazz = Foo;",
+            "var Bar = class extends ns.clazz.Builder {}"),
+        lines(
+            "class Foo {}",
+            "var Foo$Builder = class {}",
+            "var ns$clazz = null;",
+            "var Bar = class extends Foo$Builder {}"));
+  }
+
+  public void testAliasForSuperclassNamespace_withStaticInheritance() {
+    // TODO(lharker): The last line should be "use(Foo$Builder$baz);".
+    test(
+        lines(
+            "var ns = {};",
+            "class Foo {}",
+            "Foo.Builder = class {}",
+            "Foo.Builder.baz = 3;",
+            "ns.clazz = Foo;",
+            "var Bar = class extends ns.clazz.Builder {}",
+            "use(Bar.baz);"),
+        lines(
+            "class Foo {}",
+            "var Foo$Builder = class {}",
+            "var Foo$Builder$baz = 3;",
+            "var ns$clazz = null;",
+            "var Bar = class extends Foo$Builder {}",
+            "use(Bar.baz);"));
+  }
+
   public void testDestructuringAlias1() {
     testSame("var a = { x: 5 }; var [b] = [a]; use(b.x);");
   }

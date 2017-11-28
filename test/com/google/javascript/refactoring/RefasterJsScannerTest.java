@@ -152,6 +152,23 @@ public class RefasterJsScannerTest {
   }
 
   @Test
+  public void test_operatorPrecedence() throws Exception {
+    String originalCode = "f(1 || 2) && f(3) && f(4) == 5 && 6 == f(7) && 8 + f(9);";
+    String expectedCode =
+        "(1 || 2) == 0 && 3 == 0 && (4 == 0) == 5 && 6 == (7 == 0) && 8 + (9 == 0);";
+    String template = Joiner.on("\n").join(
+        "/** @param {?} x */",
+        "function before_foo(x) {",
+        "  f(x);",
+        "};",
+        "/** @param {?} x */",
+        "function after_foo(x) {",
+        "  x == 0;",
+        "}");
+    assertChanges("", originalCode, expectedCode, template);
+  }
+
+  @Test
   public void test_withTypes() throws Exception {
     String externs = ""
         + "/** @constructor */\n"

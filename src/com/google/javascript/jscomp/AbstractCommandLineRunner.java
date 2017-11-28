@@ -584,11 +584,11 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
   }
 
   /**
-   * Check that relative paths inside zip files are unique, since multiple files
-   * with the same path inside different zips are considered duplicate inputs.
-   * Parameter {@code sourceFiles} may be modified if duplicates are removed.
+   * Check that relative paths inside zip files are unique, since multiple files with the same path
+   * inside different zips are considered duplicate inputs. Parameter {@code sourceFiles} may be
+   * modified if duplicates are removed.
    */
-  public static List<JSError> removeDuplicateZipEntries(
+  public static ImmutableList<JSError> removeDuplicateZipEntries(
       List<SourceFile> sourceFiles, List<JsModuleSpec> jsModuleSpecs) throws IOException {
     ImmutableList.Builder<JSError> errors = ImmutableList.builder();
     Map<String, SourceFile> sourceFilesByName = new HashMap<>();

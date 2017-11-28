@@ -25,6 +25,8 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.AbstractCompiler.MostRecentTypechecker;
+import com.google.javascript.jscomp.parsing.parser.FeatureSet;
+import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.FunctionTypeI;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
@@ -76,6 +78,8 @@ public final class Es6RewriteGenerators
   private static final String GENERATOR_LOOP_GUARD = "$jscomp$generator$loop$guard";
 
   private final AbstractCompiler compiler;
+  private static final FeatureSet transpiledFeatures =
+      FeatureSet.BARE_MINIMUM.with(Feature.GENERATORS);
 
   // Maintains a stack of numbers which identify the cases which mark the end of loops. These
   // are used to manage jump destinations for break and continue statements.
@@ -136,13 +140,15 @@ public final class Es6RewriteGenerators
   public void process(Node externs, Node root) {
     // Report change only if the generator function is preloaded. See #cleanUpGeneratorSkeleton.
     boolean reportChange = getPreloadedGeneratorFunc(compiler.getJsRoot()) != null;
-    TranspilationPasses.processTranspile(compiler, root, new DecomposeYields(compiler), this);
+    TranspilationPasses.processTranspile(
+        compiler, root, transpiledFeatures, new DecomposeYields(compiler), this);
     cleanUpGeneratorSkeleton(reportChange);
   }
 
   @Override
   public void hotSwapScript(Node scriptRoot, Node originalRoot) {
-    TranspilationPasses.hotSwapTranspile(compiler, scriptRoot, new DecomposeYields(compiler), this);
+    TranspilationPasses.hotSwapTranspile(
+        compiler, scriptRoot, transpiledFeatures, new DecomposeYields(compiler), this);
   }
 
   @Override
@@ -1110,7 +1116,8 @@ public final class Es6RewriteGenerators
               compiler,
               compiler.getUniqueNameIdSupplier(),
               consts,
-              Scope.createGlobalScope(new Node(Token.SCRIPT)));
+              Scope.createGlobalScope(new Node(Token.SCRIPT)),
+              compiler.getOptions().allowMethodCallDecomposing());
     }
 
     @Override

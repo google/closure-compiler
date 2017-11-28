@@ -1037,4 +1037,72 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
     // module bodies here.
     testSame("const a = {b: 5}; const c = a; export default function() {};");
   }
+
+  public void testAliasForSuperclassNamespace() {
+    test(
+        lines(
+            "var ns = {};",
+            "class Foo {}",
+            "ns.clazz = Foo;",
+            "var Bar = class extends ns.clazz.Baz {}"),
+        lines(
+            "var ns = {};",
+            "class Foo {}",
+            "ns.clazz = null;",
+            "var Bar = class extends Foo.Baz {}"));
+
+    test(
+        lines(
+            "var ns = {};",
+            "class Foo {}",
+            "Foo.Builder = class {}",
+            "ns.clazz = Foo;",
+            "var Bar = class extends ns.clazz.Builder {}"),
+        lines(
+            "var ns = {};",
+            "class Foo {}",
+            "Foo.Builder = class {}",
+            "ns.clazz = null;",
+            "var Bar = class extends Foo.Builder {}"));
+  }
+
+  public void testAliasForSuperclass_withStaticInheritance() {
+    test(
+        lines(
+            "var ns = {};",
+            "class Foo {}",
+            "Foo.baz = 3;",
+            "ns.clazz = Foo;",
+            "var Bar = class extends ns.clazz {}",
+            "use(Bar.baz);"),
+        lines(
+            "var ns = {};",
+            "class Foo {}",
+            "Foo.baz = 3;",
+            "ns.clazz = null;",
+            "var Bar = class extends Foo {}",
+            "use(Foo.baz);"));
+  }
+
+  public void testAliasForSuperclassNamespace_withStaticInheritance() {
+    // TODO(lharker): The last line should be "use(Foo.baz);"
+    // Make sure GlobalNamespace correctly handles aliases for superclasses.
+    test(
+        lines(
+            "var ns = {};",
+            "class Foo {}",
+            "Foo.Builder = class {}",
+            "Foo.Builder.baz = 3;",
+            "ns.clazz = Foo;",
+            "var Bar = class extends ns.clazz.Builder {}",
+            "use(Bar.baz);"),
+        lines(
+            "var ns = {};",
+            "class Foo {}",
+            "Foo.Builder = class {}",
+            "Foo.Builder.baz = 3;",
+            "ns.clazz = null;",
+            "var Bar = class extends Foo.Builder {}",
+            "use(Bar.baz);"));
+  }
 }

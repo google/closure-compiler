@@ -22,6 +22,12 @@ goog.setTestOnly();
 
 const testSuite = goog.require('goog.testing.testSuite');
 
+class C {
+  static doSomething(i) {
+    return i;
+  }
+}
+
 testSuite({
   testEmptyFunction() {
     async function empty() {}
@@ -206,6 +212,24 @@ testSuite({
       return Promise.all([argCountPromise(1), argCountPromise(1, 2)]);
     }
     return f().then(v => assertObjectEquals([1, 2], v));
+  },
+
+  /**
+   * Confirms that method decomposition aliasing a constructor is
+   * handled correctly.
+   *
+   * TODO(b/69456597): Fix this. (Currently fails with
+   * "Cannot read property 'call' of undefined".
+   *
+   * @return {!Promise<?>}
+   */
+  disabledTestMethodCallDecomposingInAsyncFunction() {
+    async function f() {
+      return C.doSomething(await 5);
+    }
+    return f().then(result => {
+      assertEquals(5, result);
+    });
   },
 
   testRejectWithUndefined() {

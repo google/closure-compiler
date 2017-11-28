@@ -595,11 +595,6 @@ public class IR {
     return stringKey;
   }
 
-  @Deprecated
-  public static Node rest(String name) {
-    return rest(name(name));
-  }
-
   public static Node rest(Node target) {
     checkState(target.isValidAssignmentTarget(), target);
     return new Node(Token.REST, target);
@@ -716,7 +711,7 @@ public class IR {
    * It isn't possible to always determine if a detached node is a expression,
    * so make a best guess.
    */
-  private static boolean mayBeExpression(Node n) {
+  public static boolean mayBeExpression(Node n) {
     switch (n.getToken()) {
       case FUNCTION:
       case CLASS:

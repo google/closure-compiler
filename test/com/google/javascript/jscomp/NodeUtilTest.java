@@ -161,6 +161,44 @@ public final class NodeUtilTest extends TestCase {
     assertNotLiteral(getNode("void foo()"));
   }
 
+  public void testObjectLiteralIsLiteralValue() {
+    assertTrue(isLiteralValue("{a: 20}"));
+    assertTrue(isLiteralValue("{'a': 20}"));
+    assertTrue(isLiteralValue("{a: function() {}}"));
+    assertFalse(isLiteralValueExcludingFunctions("{a: function() {}}"));
+    assertTrue(isLiteralValue("{a() {}}"));
+    assertFalse(isLiteralValueExcludingFunctions("{a() {}}"));
+    assertTrue(isLiteralValue("{'a'() {}}"));
+    assertFalse(isLiteralValueExcludingFunctions("{'a'() {}}"));
+
+    assertTrue(isLiteralValue("{['a']: 20}"));
+    assertFalse(isLiteralValue("{[b]: 20}"));
+    assertTrue(isLiteralValue("{['a']() {}}"));
+    assertFalse(isLiteralValue("{[b]() {}}"));
+    assertFalse(isLiteralValueExcludingFunctions("{['a']() {}}"));
+
+    assertTrue(isLiteralValue("{ get a() { return 0; } }"));
+    assertTrue(isLiteralValue("{ get 'a'() { return 0; } }"));
+    assertTrue(isLiteralValue("{ get ['a']() { return 0; } }"));
+    assertTrue(isLiteralValue("{ get 123() { return 0; } }"));
+    assertTrue(isLiteralValue("{ get [123]() { return 0; } }"));
+    assertFalse(isLiteralValue("{ get [b]() { return 0; } }"));
+    assertTrue(isLiteralValue("{ set a(x) { } }"));
+    assertTrue(isLiteralValue("{ set 'a'(x) { } }"));
+    assertTrue(isLiteralValue("{ set ['a'](x) { } }"));
+    assertTrue(isLiteralValue("{ set 123(x) { } }"));
+    assertTrue(isLiteralValue("{ set [123](x) { } }"));
+    assertFalse(isLiteralValue("{ set [b](x) { } }"));
+  }
+
+  private boolean isLiteralValueExcludingFunctions(String code) {
+    return NodeUtil.isLiteralValue(getNode(code), /* includeFunctions */ false);
+  }
+
+  private boolean isLiteralValue(String code) {
+    return NodeUtil.isLiteralValue(getNode(code), /* includeFunctions */ true);
+  }
+
   private void assertLiteralAndImmutable(Node n) {
     assertTrue(NodeUtil.isLiteralValue(n, true));
     assertTrue(NodeUtil.isLiteralValue(n, false));
@@ -415,6 +453,16 @@ public final class NodeUtilTest extends TestCase {
         NodeUtil.getNearestFunctionName(parent.getLastChild()));
   }
 
+  public void testConstKeywordNamespace() {
+    Node decl = parse("const ns = {};").getFirstChild();
+    checkState(decl.isConst(), decl);
+
+    Node nameNode = decl.getFirstChild();
+    checkState(nameNode.isName(), nameNode);
+
+    assertThat(NodeUtil.isNamespaceDecl(nameNode)).isTrue();
+  }
+
   private void assertGetNameResult(Node function, String name) {
     assertEquals(Token.FUNCTION, function.getToken());
     assertEquals(name, NodeUtil.getName(function));
@@ -474,6 +522,12 @@ public final class NodeUtilTest extends TestCase {
   }
 
   public void testMayHaveSideEffects() {
+    assertSideEffect(false, "[1]");
+    assertSideEffect(false, "[1, 2]");
+    assertSideEffect(false, "[...[]]");
+    assertSideEffect(false, "[...[1]]");
+    assertSideEffect(true, "[...[i++]]");
+    assertSideEffect(true, "[...f()]");
     assertSideEffect(true, "i++");
     assertSideEffect(true, "[b, [a, i++]]");
     assertSideEffect(true, "i=3");
@@ -2864,6 +2918,19 @@ public final class NodeUtilTest extends TestCase {
     assertThat(findLhsNodesInNode("var {[pname]: x = a=>a, [p2name]: y} = obj;")).hasSize(2);
     assertThat(findLhsNodesInNode("var {lhs1 = a, p2: [lhs2, lhs3 = b] = [notlhs]} = obj;"))
         .hasSize(3);
+    assertThat(findLhsNodesInNode("[this.x] = rhs;")).hasSize(1);
+    assertThat(findLhsNodesInNode("[this.x, y] = rhs;")).hasSize(2);
+    assertThat(findLhsNodesInNode("[this.x, y, this.z] = rhs;")).hasSize(3);
+    assertThat(findLhsNodesInNode("[y, this.z] = rhs;")).hasSize(2);
+    assertThat(findLhsNodesInNode("[x[y]] = rhs;")).hasSize(1);
+    assertThat(findLhsNodesInNode("[x.y.z] = rhs;")).hasSize(1);
+
+    assertThat(findLhsNodesInNode("x += 1;")).hasSize(1);
+    assertThat(findLhsNodesInNode("x.y += 1;")).hasSize(1);
+    assertThat(findLhsNodesInNode("x -= 1;")).hasSize(1);
+    assertThat(findLhsNodesInNode("x.y -= 1;")).hasSize(1);
+    assertThat(findLhsNodesInNode("x *= 2;")).hasSize(1);
+    assertThat(findLhsNodesInNode("x.y *= 2;")).hasSize(1);
   }
 
   public void testIsConstructor() {
@@ -3001,6 +3068,24 @@ public final class NodeUtilTest extends TestCase {
     assertThat(NodeUtil.isExpressionResultUsed(getNameNodeFrom("for (x; y; z) a", "z"))).isFalse();
   }
 
+  public void testIsSimpleOperator() {
+    assertTrue(NodeUtil.isSimpleOperator(parseExpr("!x")));
+    assertTrue(NodeUtil.isSimpleOperator(parseExpr("5 + x")));
+    assertTrue(NodeUtil.isSimpleOperator(parseExpr("typeof x")));
+    assertTrue(NodeUtil.isSimpleOperator(parseExpr("x instanceof y")));
+    // short curcuits aren't simple
+    assertFalse(NodeUtil.isSimpleOperator(parseExpr("5 && x")));
+    assertFalse(NodeUtil.isSimpleOperator(parseExpr("5 || x")));
+    // side-effects aren't simple
+    assertFalse(NodeUtil.isSimpleOperator(parseExpr("x = 5")));
+    assertFalse(NodeUtil.isSimpleOperator(parseExpr("x++")));
+    assertFalse(NodeUtil.isSimpleOperator(parseExpr("--y")));
+    // prop access are simple
+    assertTrue(NodeUtil.isSimpleOperator(parseExpr("y in x")));
+    assertTrue(NodeUtil.isSimpleOperator(parseExpr("x.y")));
+    assertTrue(NodeUtil.isSimpleOperator(parseExpr("x[y]")));
+  }
+
   private Node getNameNodeFrom(String code, String name) {
     Node ast = parse(code);
     Node nameNode = getNameNode(ast, name);
@@ -3042,9 +3127,22 @@ public final class NodeUtilTest extends TestCase {
     return getClassNode(root);
   }
 
+  /**
+   * @param js JavaScript node to be passed to {@code NodeUtil.findLhsNodesInNode}. Must be either
+   *     an EXPR_RESULT containing an assignment operation (e.g. =, +=, /=, etc)
+   *     in which case the assignment node will be passed to
+   *     {@code NodeUtil.findLhsNodesInNode}, or a VAR, LET, or CONST statement, in which case the
+   *     declaration statement will be passed.
+   */
   private static Iterable<Node> findLhsNodesInNode(String js) {
     Node root = parse(js);
-    return NodeUtil.findLhsNodesInNode(root.getFirstChild());
+    checkState(root.isScript(), root);
+    root = root.getOnlyChild();
+    if (root.isExprResult()) {
+      root = root.getOnlyChild();
+      checkState(NodeUtil.isAssignmentOp(root), root);
+    }
+    return NodeUtil.findLhsNodesInNode(root);
   }
 
   private static Node getClassNode(Node n) {

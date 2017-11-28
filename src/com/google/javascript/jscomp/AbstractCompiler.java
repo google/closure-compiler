@@ -245,7 +245,7 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
    *     modules.
    * @return A SCRIPT node (never null).
    */
-  abstract Node getNodeForCodeInsertion(JSModule module);
+  abstract Node getNodeForCodeInsertion(@Nullable JSModule module);
 
   /**
    * Only used by passes in the old type checker.

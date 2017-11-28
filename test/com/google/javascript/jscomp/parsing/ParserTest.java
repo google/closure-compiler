@@ -1201,46 +1201,53 @@ public final class ParserTest extends BaseJSTypeTestCase {
     expectFeatures(Feature.COMPUTED_PROPERTIES);
 
     // Method
-    testComputedProperty(Joiner.on('\n').join(
-        "var x = {",
-        "  [prop + '_']() {}",
-        "}"));
+    testComputedProperty("var x = {  [prop + '_']() {} }");
+    // NOTE: we treat string and number keys as if they were computed properties for method
+    // shorthand, but not getters and setters.
+    testComputedProperty("var x = {  'abc'() {} }");
+    testComputedProperty("var x = {  123() {} }");
 
     // Getter
-    testComputedProperty(Joiner.on('\n').join(
-        "var x = {",
-        "  get [prop + '_']() {}",
-        "}"));
+    testComputedProperty("var x = {  get [prop + '_']() {} }");
 
     // Setter
-    testComputedProperty(Joiner.on('\n').join(
-        "var x = {",
-        "  set [prop + '_'](val) {}",
-        "}"));
+    testComputedProperty("var x = { set [prop + '_'](val) {} }");
 
     // Generator method
     mode = LanguageMode.ECMASCRIPT6;
     strictMode = SLOPPY;
-    parse(Joiner.on('\n').join(
-        "var x = {",
-        "  *[prop + '_']() {}",
-        "}"));
+    parse("var x = { *[prop + '_']() {} }");
+    parse("var x = { *'abc'() {} }");
+    parse("var x = { *123() {} }");
 
+    mode = LanguageMode.ECMASCRIPT8;
+    parse("var x = { async [prop + '_']() {} }");
+    parse("var x = { async 'abc'() {} }");
+    parse("var x = { async 123() {} }");
   }
 
   public void testComputedMethodClass() {
     mode = LanguageMode.ECMASCRIPT6;
     strictMode = SLOPPY;
     expectFeatures(Feature.CLASSES, Feature.COMPUTED_PROPERTIES);
-    parse(Joiner.on('\n').join(
-        "class X {",
-        "  [prop + '_']() {}",
-        "}"));
+    parse("class X { [prop + '_']() {} }");
+    // Note that we pretend string and number keys are computed property names, because
+    // this makes it easier to treat class and object-literal cases consistently.
+    parse("class X { 'abc'() {} }");
+    parse("class X { 123() {} }");
 
-    parse(Joiner.on('\n').join(
-        "class X {",
-        "  static [prop + '_']() {}",
-        "}"));
+    parse("class X { static [prop + '_']() {} }");
+    parse("class X { static 'abc'() {} }");
+    parse("class X { static 123() {} }");
+
+    parse("class X { *[prop + '_']() {} }");
+    parse("class X { *'abc'() {} }");
+    parse("class X { *123() {} }");
+
+    mode = LanguageMode.ECMASCRIPT8;
+    parse("class X { async [prop + '_']() {} }");
+    parse("class X { async 'abc'() {} }");
+    parse("class X { async 123() {} }");
   }
 
   public void testComputedProperty() {

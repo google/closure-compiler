@@ -22,7 +22,7 @@ import com.google.javascript.jscomp.parsing.parser.trees.Comment;
 import com.google.javascript.jscomp.parsing.parser.util.ErrorReporter;
 import com.google.javascript.jscomp.parsing.parser.util.SourcePosition;
 import com.google.javascript.jscomp.parsing.parser.util.SourceRange;
-import java.util.LinkedList;
+import java.util.ArrayList;
 
 /**
  * Scans javascript source code into tokens. All entrypoints assume the
@@ -34,7 +34,7 @@ import java.util.LinkedList;
 public class Scanner {
   private final ErrorReporter errorReporter;
   private final SourceFile source;
-  private final LinkedList<Token> currentTokens = new LinkedList<>();
+  private final ArrayList<Token> currentTokens = new ArrayList<>();
   private int index;
   private final CommentRecorder commentRecorder;
   private int typeParameterLevel;
@@ -90,7 +90,7 @@ public class Scanner {
 
   public Token nextToken() {
     peekToken();
-    return currentTokens.remove();
+    return currentTokens.remove(0);
   }
 
   private void clearTokenLookahead() {

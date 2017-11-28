@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.javascript.jscomp.CompilerTestCase.lines;
+
 import com.google.javascript.jscomp.ExtractPrototypeMemberDeclarations.Pattern;
 
 /**
@@ -54,6 +56,38 @@ public final class ExtractPrototypeMemberDeclarationsTest extends CompilerTestCa
   public void testNoOpOnEs6Class() {
     testSame("class Example { method1() {} method2() {} }");
     testSame("export class Example { method1() {} method2() {} }");
+  }
+
+  public void testClassDefinedInBlock() {
+    test(
+        lines(
+            "{",
+            generatePrototypeDeclarations("x", 7),
+            "}"),
+        lines(
+            "var " + TMP + ";",
+            "{",
+            TMP + " = x.prototype;",
+            generateExtractedDeclarations(7),
+            "}"));
+  }
+
+  public void testClassDefinedInFunction() {
+    testSame(
+        lines(
+            "function f() {",
+            generatePrototypeDeclarations("x", 7),
+            "}"));
+  }
+
+  /**
+   * Currently, this does not run on classes defined in ES6 modules.
+   */
+  // TODO(tbreisacher): Make this work on modules. The initial 'var' needs to go into a non-module
+  // script node.
+  public void testEs6Module() {
+    String importStatement = "import {someValue} from './another_module.js';";
+    testSame(importStatement + generatePrototypeDeclarations("x", 17));
   }
 
   public void testExtractingTwoClassPrototype() {

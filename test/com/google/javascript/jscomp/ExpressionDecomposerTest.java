@@ -31,12 +31,18 @@ import javax.annotation.Nullable;
 import junit.framework.TestCase;
 
 /**
- * Unit tests for ExpressionDecomposer
+ * Unit tests for {@link ExpressionDecomposer}
+ *
  * @author johnlenz@google.com (John Lenz)
  */
+// Note: functions "foo" and "goo" are external functions in the helper.
 public final class ExpressionDecomposerTest extends TestCase {
-  // Note: functions "foo" and "goo" are external functions
-  // in the helper.
+  private boolean allowMethodCallDecomposing;
+
+  @Override
+  public void setUp() {
+    allowMethodCallDecomposing = false;
+  }
 
   public void testCanExposeExpression1() {
     // Can't move or decompose some classes of expressions.
@@ -133,22 +139,37 @@ public final class ExpressionDecomposerTest extends TestCase {
         "function f(){ return goo() && foo();}", "foo");
   }
 
-  public void testCanExposeExpression4() {
+  public void testCanExposeExpression4a() {
     // 'this' must be preserved in call.
     helperCanExposeExpression(
         DecompositionType.UNDECOMPOSABLE, "if (goo.a(1, foo()));", "foo");
   }
 
-  public void testCanExposeExpression5() {
+  public void testCanExposeExpression4b() {
+    allowMethodCallDecomposing = true;
+    helperCanExposeExpression(DecompositionType.DECOMPOSABLE, "if (goo.a(1, foo()));", "foo");
+  }
+
+  public void testCanExposeExpression5a() {
     // 'this' must be preserved in call.
     helperCanExposeExpression(
         DecompositionType.UNDECOMPOSABLE, "if (goo['a'](foo()));", "foo");
   }
 
-  public void testCanExposeExpression6() {
+  public void testCanExposeExpression5b() {
+    allowMethodCallDecomposing = true;
+    helperCanExposeExpression(DecompositionType.DECOMPOSABLE, "if (goo['a'](foo()));", "foo");
+  }
+
+  public void testCanExposeExpression6a() {
     // 'this' must be preserved in call.
     helperCanExposeExpression(
         DecompositionType.UNDECOMPOSABLE, "z:if (goo.a(1, foo()));", "foo");
+  }
+
+  public void testCanExposeExpression6b() {
+    allowMethodCallDecomposing = true;
+    helperCanExposeExpression(DecompositionType.DECOMPOSABLE, "z:if (goo.a(1, foo()));", "foo");
   }
 
   public void testCanExposeExpression7() {
@@ -434,6 +455,17 @@ public final class ExpressionDecomposerTest extends TestCase {
         "var temp$jscomp$0; if (temp$jscomp$0 = bar()) temp$jscomp$0=foo(); throw temp$jscomp$0;");
   }
 
+  public void testExposeExpression17() {
+    allowMethodCallDecomposing = true;
+    helperExposeExpression(
+        "x.foo(y())",
+        "y",
+        lines(
+            "var temp_const$jscomp$1 = x;",
+            "var temp_const$jscomp$0 = temp_const$jscomp$1.foo;",
+            "temp_const$jscomp$0.call(temp_const$jscomp$1, y());"));
+  }
+
   public void testMoveClass1() {
     helperMoveExpression(
         "alert(class X {});",
@@ -448,7 +480,7 @@ public final class ExpressionDecomposerTest extends TestCase {
         "var result$jscomp$0 = class X {}; console.log(1, 2, result$jscomp$0);");
   }
 
-  public void testExposeYieldExpression1() {
+  public void testMoveYieldExpression1() {
     helperMoveExpression(
         "function *f() { return { a: yield 1, c: foo(yield 2, yield 3) }; }",
         "yield",
@@ -477,7 +509,7 @@ public final class ExpressionDecomposerTest extends TestCase {
             "}"));
   }
 
-  public void testExposeYieldExpression2() {
+  public void testMoveYieldExpression2() {
     helperMoveExpression(
         "function *f() { return (yield 1) || (yield 2); }",
         "yield",
@@ -486,7 +518,20 @@ public final class ExpressionDecomposerTest extends TestCase {
             "  var result$jscomp$0 = yield 1;",
             "  return result$jscomp$0 || (yield 2);",
             "}"));
+  }
 
+  public void testMoveYieldExpression3() {
+    helperMoveExpression(
+        "function *f() { return x.y(yield 1); }",
+        "yield",
+        lines(
+            "function *f() {",
+            "  var result$jscomp$0 = yield 1;",
+            "  return x.y(result$jscomp$0);",
+            "}"));
+  }
+
+  public void testExposeYieldExpression1() {
     helperExposeExpression(
         "function *f(x) { return x || (yield 2); }",
         "yield",
@@ -495,6 +540,45 @@ public final class ExpressionDecomposerTest extends TestCase {
             "  var temp$jscomp$0;",
             "  if (temp$jscomp$0=x); else temp$jscomp$0 = yield 2;",
             "  return temp$jscomp$0",
+            "}"));
+  }
+
+  public void testExposeYieldExpression2() {
+    allowMethodCallDecomposing = true;
+    helperExposeExpression(
+        "function *f() { return x.y(yield 1); }",
+        "yield",
+        lines(
+            "function *f() {",
+            "  var temp_const$jscomp$1 = x;",
+            "  var temp_const$jscomp$0 = temp_const$jscomp$1.y;",
+            "  return temp_const$jscomp$0.call(temp_const$jscomp$1, yield 1);",
+            "}"));
+  }
+
+  public void testExposeYieldExpression3() {
+    allowMethodCallDecomposing = true;
+    helperExposeExpression(
+        "function *f() { return g.call(yield 1); }",
+        "yield",
+        lines(
+            "function *f() {",
+            "  var temp_const$jscomp$1 = g;",
+            "  var temp_const$jscomp$0 = temp_const$jscomp$1.call;",
+            "  return temp_const$jscomp$0.call(temp_const$jscomp$1, yield 1);",
+            "}"));
+  }
+
+  public void testExposeYieldExpression4() {
+    allowMethodCallDecomposing = true;
+    helperExposeExpression(
+        "function *f() { return g.apply([yield 1, yield 2]); }",
+        "yield",
+        lines(
+            "function *f() {",
+            "  var temp_const$jscomp$1 = g;",
+            "  var temp_const$jscomp$0 = temp_const$jscomp$1.apply;",
+            "  return temp_const$jscomp$0.call(temp_const$jscomp$1, [yield 1, yield 2]);",
             "}"));
   }
 
@@ -618,14 +702,14 @@ public final class ExpressionDecomposerTest extends TestCase {
     Set<String> knownConstants = new HashSet<>();
     ExpressionDecomposer decomposer = new ExpressionDecomposer(
         compiler, compiler.getUniqueNameIdSupplier(),
-        knownConstants, newScope());
+        knownConstants, newScope(), allowMethodCallDecomposing);
     Node tree = parse(compiler, code);
     assertNotNull(tree);
 
     Node externsRoot = parse(compiler, "function goo() {} function foo() {}");
     assertNotNull(externsRoot);
 
-    Node callSite = findCall(tree, null, 2);
+    Node callSite = findCall(tree, null, call);
     assertNotNull("Call " + call + " was not found.", callSite);
 
     compiler.resetUniqueNameId();
@@ -644,7 +728,7 @@ public final class ExpressionDecomposerTest extends TestCase {
     }
     ExpressionDecomposer decomposer = new ExpressionDecomposer(
         compiler, compiler.getUniqueNameIdSupplier(),
-        knownConstants, newScope());
+        knownConstants, newScope(), allowMethodCallDecomposing);
     Node tree = parse(compiler, code);
     assertNotNull(tree);
 
@@ -698,7 +782,7 @@ public final class ExpressionDecomposerTest extends TestCase {
     }
     ExpressionDecomposer decomposer = new ExpressionDecomposer(
         compiler, compiler.getUniqueNameIdSupplier(),
-        knownConstants, newScope());
+        knownConstants, newScope(), allowMethodCallDecomposing);
     decomposer.setTempNamePrefix("temp");
     decomposer.setResultNamePrefix("result");
     Node expectedRoot = parse(compiler, expectedResult);
@@ -754,7 +838,7 @@ public final class ExpressionDecomposerTest extends TestCase {
 
     ExpressionDecomposer decomposer = new ExpressionDecomposer(
         compiler, compiler.getUniqueNameIdSupplier(),
-        knownConstants, newScope());
+        knownConstants, newScope(), allowMethodCallDecomposing);
     decomposer.setTempNamePrefix("temp");
     decomposer.setResultNamePrefix("result");
     Node expectedRoot = parse(compiler, expectedResult);
@@ -778,12 +862,9 @@ public final class ExpressionDecomposerTest extends TestCase {
     CompilerOptions options = new CompilerOptions();
     options.setLanguage(LanguageMode.ECMASCRIPT_2015);
     options.setCodingConvention(new GoogleCodingConvention());
+    options.setAllowMethodCallDecomposing(allowMethodCallDecomposing);
     compiler.initOptions(options);
     return compiler;
-  }
-
-  private static Node findCall(Node n, String name) {
-    return findCall(n, name, 1);
   }
 
   @Nullable
@@ -800,6 +881,10 @@ public final class ExpressionDecomposerTest extends TestCase {
     return null;
   }
 
+  private static Node findCall(Node n, String name) {
+    return findCall(n, name, 1);
+  }
+
   /**
    * @param name The name to look for. If name is null, look for a yield expression instead.
    * @param call The call to look for.
@@ -814,9 +899,7 @@ public final class ExpressionDecomposerTest extends TestCase {
         if (n.isCall() || n.isYield()) {
           if (name == null
               || (n.isYield() && "yield".equals(name))
-              || (n.isCall()
-                  && n.getFirstChild().isName()
-                  && n.getFirstChild().getString().equals(name))) {
+              || (n.isCall() && n.getFirstChild().matchesQualifiedName(name))) {
             found++;
             if (found == call) {
               return n;

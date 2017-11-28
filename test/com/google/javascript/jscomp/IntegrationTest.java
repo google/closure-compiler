@@ -479,15 +479,12 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setLanguageIn(LanguageMode.ECMASCRIPT_2015);
     options.setLanguageOut(LanguageMode.ECMASCRIPT_2015);
 
-    NoninjectingCompiler compiler = new NoninjectingCompiler();
-    compile(
-        options,
-        new String[] {"for (const x of [1, 2, 3].values()) { alert(x); }"},
-        compiler);
+    useNoninjectingCompiler = true;
+    compile(options, new String[] {"for (const x of [1, 2, 3].values()) { alert(x); }"});
 
-    assertThat(compiler.getResult().errors).isEmpty();
-    assertThat(compiler.getResult().warnings).isEmpty();
-    assertThat(compiler.injected).containsExactly("es6/array/values");
+    assertThat(lastCompiler.getResult().errors).isEmpty();
+    assertThat(lastCompiler.getResult().warnings).isEmpty();
+    assertThat(((NoninjectingCompiler) lastCompiler).injected).containsExactly("es6/array/values");
   }
 
   public void testWindowIsTypedEs6() {
@@ -4882,6 +4879,105 @@ public final class IntegrationTest extends IntegrationTestCase {
             "}",
             "alert(countArgs(1, 1, 1, 1, 1));"),
         "alert(4);");
+  }
+
+  public void testTranspilingEs2016ToEs2015() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2015);
+
+    test(options, "alert(2 ** 5);", "alert(Math.pow(2, 5));");
+    test(options, "const n = 2 ** 5;", "const a = Math.pow(2, 5);");
+  }
+
+  public void testMethodDestructuringInTranspiledAsyncFunction() {
+    // TODO(b/69456597) Fix this test.
+    // Currently the compiler unsafely collapses A.doSomething to A$doSomething, causing
+    // JSCompiler_temp_const$jscomp$0.doSomething to be undefined and breaking at runtime.
+    CompilerOptions options = createCompilerOptions();
+    options.setCollapseProperties(true);
+    options.setOptimizeCalls(false);
+    options.setAllowMethodCallDecomposing(true);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5_STRICT);
+
+    // Create a noninjecting compiler avoid comparing all the polyfill code.
+    useNoninjectingCompiler = true;
+
+    ImmutableList.Builder<SourceFile> externsList = ImmutableList.builder();
+    externsList.addAll(externs);
+    externsList.add(SourceFile.fromCode("extraExterns", "var $jscomp = {}; Symbol.iterator;"));
+    externs = externsList.build();
+
+    test(
+        options,
+        LINE_JOINER.join(
+            "class A {",
+            "  static doSomething(i) { alert(i); }",
+            "}",
+            "async function foo() {",
+            "  A.doSomething(await 3);",
+            "}",
+            "foo();"),
+        LINE_JOINER.join(
+            " var A = function() {};",
+            "var A$doSomething = function(i) {",
+            "  alert(i)",
+            "};",
+            "function foo() {",
+            "  function $jscomp$async$generator() {",
+            "    function $jscomp$generator$impl(",
+            "        $jscomp$generator$action$arg, $jscomp$generator$next$arg,",
+            "        $jscomp$generator$throw$arg) {",
+            "      for (; 1;) switch ($jscomp$generator$state) {",
+            "        case 0:",
+            "          JSCompiler_temp_const$jscomp$0 = A;", // This alias of A should be inlined.
+            "          JSCompiler_temp_const = JSCompiler_temp_const$jscomp$0.doSomething;",
+            "          $jscomp$generator$state = 1;",
+            "          return {value: 3, done: false};",
+            "        case 1:",
+            "          if (!($jscomp$generator$action$arg == 1)) {",
+            "            $jscomp$generator$state = 2;",
+            "            break",
+            "          }",
+            "          $jscomp$generator$state = -1;",
+            "          throw $jscomp$generator$throw$arg;",
+            "        case 2:",
+            "          $jscomp$generator$next$arg2 = $jscomp$generator$next$arg;",
+            "          JSCompiler_temp_const.call(",
+            "              JSCompiler_temp_const$jscomp$0, $jscomp$generator$next$arg2);",
+            "          $jscomp$generator$state = -1;",
+            "        default:",
+            "          return {",
+            "              value: undefined, done: true",
+            "        }",
+            "      }",
+            "    }",
+            "    var $jscomp$generator$state = 0;",
+            "    var $jscomp$generator$next$arg2;",
+            "    var JSCompiler_temp_const;",
+            "    var JSCompiler_temp_const$jscomp$0;",
+            "    var iterator = {",
+            "        next: function(arg) {",
+            "      return $jscomp$generator$impl(0, arg, undefined)",
+            "    },",
+            "    throw: function(arg) {",
+            "      return $jscomp$generator$impl(1, undefined, arg)",
+            "    },",
+            "    return: function(arg) {",
+            "      throw Error('Not yet implemented');",
+            "    }",
+            "};",
+            "    $jscomp.initSymbolIterator();",
+            "    iterator[Symbol.iterator] = function() {",
+            "      return this",
+            "    };",
+            "    return iterator",
+            "  }",
+            "  return $jscomp.executeAsyncGenerator($jscomp$async$generator())",
+            "}",
+            "foo();"));
   }
 
   /** Creates a CompilerOptions object with google coding conventions. */

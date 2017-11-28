@@ -24,7 +24,7 @@ package com.google.javascript.jscomp;
 public final class OptimizeParametersTest extends CompilerTestCase {
 
   public OptimizeParametersTest() {
-    super(DEFAULT_EXTERNS);
+    super(lines(DEFAULT_EXTERNS, "var alert;"));
   }
 
   @Override
@@ -36,6 +36,7 @@ public final class OptimizeParametersTest extends CompilerTestCase {
   protected void setUp() throws Exception {
     super.setUp();
     enableNormalize();
+    enableGatherExternProperties();
   }
 
   @Override
@@ -43,9 +44,7 @@ public final class OptimizeParametersTest extends CompilerTestCase {
     return 1;
   }
 
-  // NOTE:
-
-  public void testNoRemoval() {
+  public void testNoRemoval1() {
     testSame("function foo(p1) { } foo(1); foo(2)"); // required "remove unused vars"
     testSame("function foo(p1) { } foo(this);");
     testSame("function foo(p1) { } function g() {foo(arguments)}; g();");
@@ -53,7 +52,122 @@ public final class OptimizeParametersTest extends CompilerTestCase {
     testSame("function foo(p1) { use(p1); } function g() {var x = 1; foo(x);}; g();");
   }
 
-  public void testSimpleRemoval() {
+  public void testNoRemoval2() {
+    testSame("var foo = (p1)=>{ }; foo(1); foo(2)"); // required "remove unused vars"
+    testSame("var foo = (p1)=>{ }; foo(this);");
+    testSame("var foo = (p1)=>{ }; function g() {foo(arguments)}; g();");
+    // Can't move a reference to a local.
+    testSame("var foo = (p1)=>{ use(p1); }; function g() {var x = 1; foo(x);}; g();");
+  }
+
+  public void testNoRemovalSpread() {
+    // TODO(johnlenz): make spread removable
+    testSame("function f(p1) {} f(...x);");
+  }
+
+  public void testRemovalRest1() {
+    // rest as the first parameter
+    test(
+        "function f(...p1){          } f();",
+        "function f(     ){var p1=[];} f()");
+    test(
+        "function f(...p1){           } f(1);",
+        "function f(     ){var p1=[1];} f( )");
+    test(
+        "function f(...p1){            use(p1)} f(1);",
+        "function f(     ){var p1=[1]; use(p1)} f( )");
+    test(
+        "function f(...p1){                 } f(alert());",
+        "function f(     ){var p1=[alert()];} f(       );");
+  }
+
+  public void testRemovalRest2() {
+    // rest as the second parameter
+    test(
+        "function f(p1, ...p2){          } f(x); f(y);",
+        "function f(p1,      ){var p2=[];} f(x); f(y);");
+    test(
+        "function f(p1, ...p2){           } f(x, 1); f(y, 1);",
+        "function f(p1,      ){var p2=[1];} f(x   ); f(y   );");
+    test(
+        "function f(p1, ...p2){            use(p2)} f(x, 1); f(y, 1);",
+        "function f(p1,      ){var p2=[1]; use(p2)} f(x   ); f(y   );");
+    test(
+        "function f(p1, ...p2){                 } f(x, alert()); f(y, alert());",
+        "function f(p1,      ){var p2=[alert()];} f(x         ); f(y         );");
+  }
+
+  public void testRemovalRest3() {
+    testSame(
+        "function f(...p1){} function _g(x) { f(x); f(x); }");
+  }
+
+  public void testRemovalRestWithDestructuring1() {
+    test(
+        "function f(...[a]){          } f();",
+        "function f(      ){var [a]=[];} f()");
+    test(
+        "function f(...[a]){          } f(1);",
+        "function f(      ){var [a]=[1];} f()");
+    test(
+        "function f(...{a}){          } f();",
+        "function f(      ){var {a}=[];} f()");
+    test(
+        "function f(...{a}){            } f(1);",
+        "function f(      ){var {a}=[1];} f( )");
+  }
+
+  public void testRemoveParamWithDefault1() {
+    test(
+        "function f(a = 1){          } f();",
+        "function f(     ){var a = 1;} f()");
+    test(
+        "function f(a = []){           } f();",
+        "function f(      ){var a = [];} f()");
+    test(
+        "function f(a = alert()){                } f();",
+        "function f(           ){var a = alert();} f()");
+    test(
+        "function f([a] = []){             } f();",
+        "function f(        ){var [a] = [];} f()");
+    test(
+        "function f([a = 1] = []){                 } f();",
+        "function f(            ){var [a = 1] = [];} f()");
+    test(
+        "function f([a = 1]){                 } f([]);",
+        "function f(       ){var [a = 1] = [];} f(  );");
+  }
+
+  public void testRemoveParamWithDefault2() {
+    test(
+        "function f(a = 0){          } f(1);",
+        "function f(     ){var a = 1;} f( )");
+    test(
+        "function f({a} = 0){           } f([]);",
+        "function f(       ){var {a}=[];} f(  )");
+    test(
+        "function f({a = 1} = 0){               } f([]);",
+        "function f(           ){var {a = 1}=[];} f(  )");
+    test(
+        "function f({a = 1}){               } f({});",
+        "function f(       ){var {a = 1}={};} f(  )");
+    test(
+        "function f({a: a = 1}){               } f({});",
+        "function f(          ){var {a = 1}={};} f(  )");
+  }
+
+  public void testNoRemoveParamWithDefault() {
+    // different scopes
+    testSame(
+        "function f(p = 1){} function _g(x) { f(x); f(x); }");
+
+    // TODO(johnlenz): add logic for adding an undefined check to the body of the function
+    // so that this can be inlined into the function body
+    testSame(
+        "function f(a = 2){} f(alert);");
+  }
+
+  public void testSimpleRemoval0() {
     test("function foo(p1) {       } foo(); foo()",
          "function foo(  ) {var p1;} foo(); foo()");
     test("function foo(p1) {           } foo(1); foo(1)",
@@ -64,6 +178,24 @@ public final class OptimizeParametersTest extends CompilerTestCase {
          "function foo(p1) { } foo(1  ); foo(3  );");
     test("function foo(p1) {           } foo(1,x()); foo(1,y())",
          "function foo(  ) {var p1 = 1;} foo(  x()); foo(  y())");
+  }
+
+  public void testSimpleRemoval1() {
+    // parameter never supplied
+    test("var foo = (p1)=>{       }; foo(); foo()",
+         "var foo = (  )=>{var p1;}; foo(); foo()");
+    test("let foo = (p1)=>{       }; foo(); foo()",
+         "let foo = (  )=>{var p1;}; foo(); foo()");
+    test("const foo = (p1)=>{       }; foo(); foo()",
+         "const foo = (  )=>{var p1;}; foo(); foo()");
+
+    // constant parameter
+    test("var foo = (p1)=>{           }; foo(1); foo(1)",
+         "var foo = (  )=>{var p1 = 1;}; foo( ); foo( )");
+    test("let foo = (p1)=>{           }; foo(1); foo(1)",
+         "let foo = (  )=>{var p1 = 1;}; foo( ); foo( )");
+    test("const foo = (p1)=>{           }; foo(1); foo(1)",
+         "const foo = (  )=>{var p1 = 1;}; foo( ); foo( )");
   }
 
   public void testSimpleRemoval2() {
@@ -102,6 +234,42 @@ public final class OptimizeParametersTest extends CompilerTestCase {
          "function f(  ) {var p1;} f['prop'] = 1; new f(); new f()");
    test("function f(p1) {           } f['prop'] = 1; new f(1); new f(1)",
         "function f(  ) {var p1 = 1;} f['prop'] = 1; new f( ); new f( )");
+  }
+
+  public void testSimpleRemovalAsync() {
+    // parameter never supplied
+    test("var f = async function (p1) {       }; f(); f()",
+         "var f = async function (  ) {var p1;}; f(); f()");
+    test("let f = async function (p1) {       }; f(); f()",
+         "let f = async function (  ) {var p1;}; f(); f()");
+    test("const f = async function (p1) {       }; f(); f()",
+         "const f = async function (  ) {var p1;}; f(); f()");
+
+    // constant parameter
+    test("var f = async function (p1) {          }; f(1); f(1)",
+         "var f = async function (  ) {var p1 = 1;}; f( ); f( )");
+    test("let f = async function (p1) {           }; f(1); f(1)",
+         "let f = async function (  ) {var p1 = 1;}; f( ); f( )");
+    test("const f = async function (p1) {          }; f(1); f(1)",
+         "const f = async function (  ) {var p1 = 1;}; f( ); f( )");
+  }
+
+  public void testSimpleRemovalGenerator() {
+    // parameter never supplied
+    test("var f = function * (p1) {       }; f(); f()",
+         "var f = function * (  ) {var p1;}; f(); f()");
+    test("let f = function * (p1) {       }; f(); f()",
+         "let f = function * (  ) {var p1;}; f(); f()");
+    test("const f = function * (p1) {       }; f(); f()",
+         "const f = function * (  ) {var p1;}; f(); f()");
+
+    // constant parameter
+    test("var f = function * (p1) {          }; f(1); f(1)",
+         "var f = function * (  ) {var p1 = 1;}; f( ); f( )");
+    test("let f = function * (p1) {           }; f(1); f(1)",
+         "let f = function * (  ) {var p1 = 1;}; f( ); f( )");
+    test("const f = function * (p1) {          }; f(1); f(1)",
+         "const f = function * (  ) {var p1 = 1;}; f( ); f( )");
   }
 
   public void testNotAFunction() {
@@ -233,6 +401,16 @@ public final class OptimizeParametersTest extends CompilerTestCase {
         "goog.foo = function (q1, q2) { var q3; var q4 };",
         "goog.foo = function (r1, r2) { var r3; var r4 };",
         "goog.foo(1,0); goog.foo(2,1); goog.foo()");
+    test(src, result);
+  }
+
+  public void testMultipleCalls() {
+    String src = lines(
+        "function f(p1, p2, p3, p4) { };",
+        "f(1,0); f(2,1); f()");
+    String result = lines(
+        "function f(p1, p2) { var p3; var p4 };",
+        "f(1,0); f(2,1); f()");
     test(src, result);
   }
 
@@ -719,4 +897,141 @@ public final class OptimizeParametersTest extends CompilerTestCase {
         "f(g(),h()); function f(){}",
         "f(); function f(){g();h()}");
   }
+
+  public void testNoRewriteUsedClassConstructor1() throws Exception {
+    testSame(lines(
+        "class C { constructor(a) { use(a); } }",
+        "var c = new C();"));
+  }
+
+  public void testNoRewriteUsedClassConstructor2() throws Exception {
+    // `constructor` aliases the class constructor
+    testSame(lines(
+        "class C { constructor(a) { use(a); } }",
+        "var c = new C();",
+        "new c.constructor(1);"));
+  }
+
+  public void testNoRewriteUsedClassConstructor3() throws Exception {
+    // `super` aliases the super type constructor
+    testSame(lines(
+        "class C { constructor(a) { use(a); } }",
+        "class D extends C { constructor() { super(1); } }",
+        "var d = new D(); new C();"));
+  }
+
+  public void testNoRewriteUsedClassConstructor4() throws Exception {
+    // `new.target` aliases self and subtype constructors
+    testSame(lines(
+        "class C { constructor() { var x = new.target(1); } }",
+        "class D extends C { constructor(a) { super(); } }",
+        "var d = new D(); new C();"));
+  }
+
+  public void testNoRewriteUsedClassConstructor5() throws Exception {
+    // Static class methods "this" values can alias constructors.
+    testSame(lines(
+        "class C { constructor(a) { use(a); }; static create(a) { new this(1); } }",
+        "var c = new C();",
+        "C.create();"));
+  }
+
+  public void testNoRewriteUsedClassMethodParam1() throws Exception {
+    testSame(lines(
+        "class C { method(a) { use(a); } }",
+        "var c = new C(); c.method(1); c.method(2)"));
+  }
+
+  public void testNoRewriteUnusedClassComputedMethodParam1() throws Exception {
+    testSame(lines(
+        "class C { [method](a) { } }",
+        "var c = new C(); c[method](1); c[method](2)"));
+  }
+
+  public void testRewriteUsedClassMethodParam1() throws Exception {
+    test(
+        "class C { method(a) {          }} new C().method(1)",
+        "class C { method( ) {var a = 1;}} new C().method( )");
+  }
+
+  public void testNoRewriteUnsedObjectMethodParam() throws Exception {
+    testSame("var o = { method(a) {          }}; o.method(1)");
+  }
+
+  public void testNoRewriteDestructured1() throws Exception {
+    testSame(lines(
+        "class C { m(a) {}};",
+        "var c = new C();",
+        "({m} = c);",
+        "c.m(1)"));
+    testSame(lines(
+        "class C { m(a) {}};",
+        "var c = new C();",
+        "({m:x} = c);",
+        "c.m(1)"));
+    testSame(lines(
+        "class C { m(a) {}};",
+        "var c = new C();",
+        "({xx:C.prototype.m} = {xx:function(a) {}});",
+        "c.m(1)"));
+  }
+
+  public void testNoRewriteDestructured2() throws Exception {
+    testSame(lines(
+        "var x = function(a) {};",
+        "({x} = {})",
+        "x(1)"));
+    testSame(lines(
+        "var x = function(a) {};",
+        "({x:x} = {})",
+        "x(1)"));
+    testSame(lines(
+        "var x = function(a) {};",
+        "({x:x = function(a) {}} = {})",
+        "x(1)"));
+  }
+
+  public void testNoRewriteDestructured3() throws Exception {
+    testSame(lines(
+        "var x = function(a) {};",
+        "[x = function() {}] = []",
+        "x(1)"));
+    testSame(lines(
+        "class C { method() { return 1 }}",
+        "var c = new C();",
+        "var y = C.prototype;",
+        "[y.method] = []",
+        "c.method()"));
+    testSame(lines(
+        "class C { method() { return 1 }}",
+        "[x.method] = []",
+        "y.method()"));
+  }
+
+  public void testNoRewriteTagged1() throws Exception {
+    // Optimizing methods called though tagged template literal requires
+    // specific knowledge of how tagged templated is supplied to the method.
+    testSame(lines(
+        "var f = function(a, b, c) {};",
+        "f`tagged`"));
+
+    testSame(lines(
+        "var f = function(a, b, c) {};",
+        "f`tagged`",
+        "f()"));
+  }
+
+  public void testArrow() throws Exception {
+    // Optimizing methods called though tagged template literal requires
+    // specific knowledge of how tagged templated is supplied to the method.
+    testSame(lines(
+        "var f = (a)=>{};",
+        "f`tagged`"));
+
+    testSame(lines(
+        "var f = function(a, b, c) {};",
+        "f`tagged`",
+        "f()"));
+  }
+
 }

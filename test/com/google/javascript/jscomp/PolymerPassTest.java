@@ -1782,15 +1782,13 @@ public class PolymerPassTest extends TypeICompilerTestCase {
             "  },",
             "  behaviors: [ FunBehavior ],",
             "});")),
-        new Postcondition() {
-          @Override void verify(Compiler compiler) {
-            // The original doSomethingFun definition in FunBehavior is on line 21, so make sure
-            // that line number is preserved when it's copied into the Polymer() call.
-            Node root = compiler.getRoot();
-            DoSomethingFunFinder visitor = new DoSomethingFunFinder();
-            NodeUtil.visitPreOrder(root, visitor);
-            assertThat(visitor.found).isTrue();
-          }
+        (Postcondition) (Compiler compiler) -> {
+          // The original doSomethingFun definition in FunBehavior is on line 21, so make sure
+          // that line number is preserved when it's copied into the Polymer() call.
+          Node root = compiler.getRoot();
+          DoSomethingFunFinder visitor = new DoSomethingFunFinder();
+          NodeUtil.visitPreOrder(root, visitor);
+          assertThat(visitor.found).isTrue();
         });
 
   }

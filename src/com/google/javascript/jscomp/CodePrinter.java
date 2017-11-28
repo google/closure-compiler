@@ -227,7 +227,7 @@ public final class CodePrinter {
     }
 
     /** Calculates length of each line in compiled code. */
-    private static List<Integer> computeLineLengths(String code) {
+    private static ImmutableList<Integer> computeLineLengths(String code) {
       ImmutableList.Builder<Integer> builder = ImmutableList.<Integer>builder();
       int lineStartPos = 0;
       int lineEndPos = code.indexOf('\n');
@@ -548,10 +548,7 @@ public final class CodePrinter {
     }
   }
 
-
-  static class CompactCodePrinter
-      extends MappedCodePrinter {
-
+  static class CompactCodePrinter extends MappedCodePrinter {
     // The CompactCodePrinter tries to emit just enough newlines to stop there
     // being lines longer than the threshold.  Since the output is going to be
     // gzipped, it makes sense to try to make the newlines appear in similar

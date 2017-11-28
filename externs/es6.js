@@ -51,9 +51,6 @@ Generator.prototype.return = function(value) {};
 Generator.prototype.throw = function(exception) {};
 
 
-// TODO(johnlenz): Array and Arguments should be Iterable.
-
-
 
 /**
  * @param {number} value

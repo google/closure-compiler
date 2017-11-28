@@ -399,6 +399,27 @@ public final class SuggestedFix {
       if (newCode.endsWith(";") && !needsSemicolon) {
         newCode = newCode.substring(0, newCode.length() - 1);
       }
+
+      // If the replacement has lower precedence then we may need to add parentheses.
+      if (parent != null && IR.mayBeExpression(parent)) {
+        Node replacement = newNode;
+        while ((replacement.isNormalBlock() || replacement.isScript() || replacement.isModuleBody())
+            && replacement.hasOneChild()) {
+          replacement = replacement.getOnlyChild();
+        }
+        if (replacement.isExprResult()) {
+          replacement = replacement.getOnlyChild();
+        }
+        if (IR.mayBeExpression(replacement)) {
+          int outer = NodeUtil.precedence(parent.getToken());
+          int inner = NodeUtil.precedence(original.getToken());
+          int newInner = NodeUtil.precedence(replacement.getToken());
+          if (newInner < NodeUtil.precedence(Token.CALL) && newInner <= outer && inner >= outer) {
+            newCode = "(" + newCode + ")";
+          }
+        }
+      }
+
       replacements.put(
           original.getSourceFileName(),
           CodeReplacement.create(original.getSourceOffset(), original.getLength(), newCode));

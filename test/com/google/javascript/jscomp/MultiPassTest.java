@@ -387,7 +387,11 @@ public final class MultiPassTest extends CompilerTestCase {
         new PassFactory("removeUnusedVars", false) {
           @Override
           protected CompilerPass create(AbstractCompiler compiler) {
-            return new RemoveUnusedVars(compiler, false, false);
+            return new RemoveUnusedVars(
+                compiler,
+                /* removeGlobals */ false,
+                /* preserveFunctionExpressionNames */ false,
+                /* removeUnusedProperties */ false);
           }
         });
   }

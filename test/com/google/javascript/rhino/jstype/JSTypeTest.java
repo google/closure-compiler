@@ -4695,10 +4695,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertFalse(GREATEST_FUNCTION_TYPE.isSubtype(f8));
   }
 
-  /**
-   * Types to test for symmetrical relationships.
-   */
-  private List<JSType> getTypesToTestForSymmetry() {
+  /** Types to test for symmetrical relationships. */
+  private ImmutableList<JSType> getTypesToTestForSymmetry() {
     return ImmutableList.of(
         UNKNOWN_TYPE,
         NULL_TYPE,

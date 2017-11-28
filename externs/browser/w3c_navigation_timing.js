@@ -121,6 +121,26 @@ function PerformanceNavigation() {}
 /** @type {number} */ PerformanceNavigation.prototype.type;
 /** @type {number} */ PerformanceNavigation.prototype.redirectCount;
 
+/**
+ * https://w3c.github.io/longtasks/#taskattributiontiming
+ * @constructor
+ * @extends {PerformanceEntry}
+ */
+function TaskAttributionTiming() {}
+/** @type {string} */ TaskAttributionTiming.prototype.containerId;
+/** @type {string} */ TaskAttributionTiming.prototype.containerName;
+/** @type {string} */ TaskAttributionTiming.prototype.containerSrc;
+/** @type {string} */ TaskAttributionTiming.prototype.containerType;
+
+/**
+ * https://w3c.github.io/longtasks/#performancelongtasktiming
+ * @constructor
+ * @extends {PerformanceEntry}
+ */
+function PerformanceLongTaskTiming() {}
+/** @type {!Array<!TaskAttributionTiming>} */
+PerformanceLongTaskTiming.prototype.attribution;
+
 /** @constructor */
 function Performance() {}
 /** @type {PerformanceTiming} */ Performance.prototype.timing;

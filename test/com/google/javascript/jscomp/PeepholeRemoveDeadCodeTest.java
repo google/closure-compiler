@@ -1119,4 +1119,9 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
     test("([a])", "");
     test("([foo()])", "foo()");
   }
+
+  public void testAwait() {
+    testSame("async function f() { await something(); }");
+    testSame("async function f() { await some.thing(); }");
+  }
 }

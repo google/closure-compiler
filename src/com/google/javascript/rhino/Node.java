@@ -2272,30 +2272,6 @@ public class Node implements Serializable {
   }
 
   /**
-   * Copies source file and name information from the other node to the
-   * entire tree rooted at this node.
-   * @return this
-   */
-  // TODO(nicksantos): The semantics of this method are ill-defined. Delete it.
-  @Deprecated
-  public final Node useSourceInfoWithoutLengthIfMissingFromForTree(Node other) {
-    if (getStaticSourceFile() == null) {
-      setStaticSourceFileFrom(other);
-      sourcePosition = other.sourcePosition;
-    }
-
-    if (getProp(ORIGINALNAME_PROP) == null) {
-      putProp(ORIGINALNAME_PROP, other.getProp(ORIGINALNAME_PROP));
-    }
-
-    for (Node child = first; child != null; child = child.next) {
-      child.useSourceInfoWithoutLengthIfMissingFromForTree(other);
-    }
-
-    return this;
-  }
-
-  /**
    * Overwrite all the source information in this node with
    * that of {@code other}.
    */

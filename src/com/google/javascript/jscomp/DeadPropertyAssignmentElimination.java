@@ -27,9 +27,10 @@ import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.jscomp.NodeTraversal.ChangeScopeRootCallback;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
+import java.util.ArrayDeque;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Queue;
@@ -146,7 +147,7 @@ public class DeadPropertyAssignmentElimination implements CompilerPass {
     // All writes in a list are to the same property name, but the full qualified names may
     // differ, eg, a.b.c and e.d.c can be in the list. Consecutive writes to the same qname
     // may mean that the first write can be removed (see isSafeToRemove).
-    private final LinkedList<PropertyWrite> writes = new LinkedList<>();
+    private final Deque<PropertyWrite> writes = new ArrayDeque<>();
 
     private final Set<Property> children = new HashSet<>();
 
@@ -167,7 +168,7 @@ public class DeadPropertyAssignmentElimination implements CompilerPass {
       // If a property is in propertiesSet, it has been added to the queue and processed,
       // it will not be added to the queue again.
       Set<Property> propertiesSet = new HashSet<>(children);
-      Queue<Property> propertyQueue = new LinkedList<>(propertiesSet);
+      Queue<Property> propertyQueue = new ArrayDeque<>(propertiesSet);
 
       // Ensure we don't process ourselves.
       propertiesSet.add(this);

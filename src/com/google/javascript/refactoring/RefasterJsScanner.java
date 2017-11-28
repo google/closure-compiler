@@ -130,7 +130,7 @@ public final class RefasterJsScanner extends Scanner {
   }
 
   @Override
-  public List<SuggestedFix> processMatch(Match match) {
+  public ImmutableList<SuggestedFix> processMatch(Match match) {
     SuggestedFix.Builder fix = new SuggestedFix.Builder();
     // Only replace the original source with a version serialized from the AST if the after template
     // is actually different. Otherwise, we might just add churn (e.g. single quotes into double
@@ -325,7 +325,7 @@ public final class RefasterJsScanner extends Scanner {
       return getGoogRequiresFromPattern(REMOVE_GOOG_REQUIRE_PATTERN);
     }
 
-    private List<String> getGoogRequiresFromPattern(Pattern pattern) {
+    private ImmutableList<String> getGoogRequiresFromPattern(Pattern pattern) {
       JSDocInfo jsDoc = NodeUtil.getBestJSDocInfo(beforeTemplate);
       if (jsDoc == null) {
         return ImmutableList.of();

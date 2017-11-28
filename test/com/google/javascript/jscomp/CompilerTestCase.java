@@ -1201,7 +1201,7 @@ public abstract class CompilerTestCase extends TestCase {
     testInternal(compiler, inputs, expected, diagnostic, postconditions);
   }
 
-  private static List<SourceFile> maybeCreateSources(String name, String srcText) {
+  private static ImmutableList<SourceFile> maybeCreateSources(String name, String srcText) {
     if (srcText != null) {
       return ImmutableList.of(SourceFile.fromCode(name, srcText));
     }
@@ -1786,8 +1786,7 @@ public abstract class CompilerTestCase extends TestCase {
     TranspilationPasses.addEs2017Passes(factories);
     TranspilationPasses.addEs2016Passes(factories);
     TranspilationPasses.addEs6EarlyPasses(factories);
-    TranspilationPasses.addEs6LatePassesBeforeNti(factories);
-    TranspilationPasses.addEs6LatePassesAfterNti(factories);
+    TranspilationPasses.addEs6LatePasses(factories);
     TranspilationPasses.addRewritePolyfillPass(factories);
     for (PassFactory factory : factories) {
       factory.create(compiler).process(externsRoot, codeRoot);
@@ -2197,6 +2196,10 @@ public abstract class CompilerTestCase extends TestCase {
     return match != null ? diagnostic.withMessage(match) : diagnostic;
   }
 
+  protected static Postcondition postcondition(Postcondition postcondition) {
+    return postcondition;
+  }
+
   protected void testSame(TestPart... parts) {
     testInternal(Iterables.concat(Arrays.asList(parts), ImmutableList.of(EXPECTED_SAME)));
   }
@@ -2359,7 +2362,7 @@ public abstract class CompilerTestCase extends TestCase {
     }
   }
 
-  protected abstract static class Postcondition implements TestPart {
-    abstract void verify(Compiler compiler);
+  protected interface Postcondition extends TestPart {
+    void verify(Compiler compiler);
   }
 }

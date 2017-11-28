@@ -1107,4 +1107,39 @@ public final class AmbiguatePropertiesTest extends TypeICompilerTestCase {
 
     test(js, output);
   }
+
+  public void testDontInvalidateParameterizedObjectTypes() {
+    String js = lines(
+        "/** @constructor */",
+        "function Foo() {",
+        "  this.prop = 1;",
+        "}",
+        "Foo.prototype.toString = function() { return ''; };",
+        "/** @constructor */",
+        "function Bar() {",
+        "  this.prop = 2;",
+        "}",
+        "Bar.prototype.prop2 = function() {};",
+        "/** @type {!Object<string, !Bar>} */",
+        "var x = {};",
+        "x.prop = 3;");
+
+    String output = lines(
+        "/** @constructor */",
+        "function Foo() {",
+        "  this.a = 1;",
+        "}",
+        "Foo.prototype.toString = function() { return ''; };",
+        "/** @constructor */",
+        "function Bar() {",
+        "  this.a = 2;",
+        "}",
+        "Bar.prototype.b = function() {};",
+        "/** @type {!Object<string, !Bar>} */",
+        "var x = {};",
+        "x.a = 3;");
+
+    this.mode = TypeInferenceMode.NTI_ONLY;
+    test(js, output);
+  }
 }

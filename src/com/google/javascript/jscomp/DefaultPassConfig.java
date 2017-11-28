@@ -184,8 +184,7 @@ public final class DefaultPassConfig extends PassConfig {
     // can be removed.
     if (options.needsTranspilationFrom(ES6) || options.needsTranspilationFrom(ES7)) {
       TranspilationPasses.addEs6EarlyPasses(passes);
-      TranspilationPasses.addEs6LatePassesBeforeNti(passes);
-      TranspilationPasses.addEs6LatePassesAfterNti(passes);
+      TranspilationPasses.addEs6LatePasses(passes);
       TranspilationPasses.addPostCheckPasses(passes);
       if (options.rewritePolyfills) {
         TranspilationPasses.addRewritePolyfillPass(passes);
@@ -396,9 +395,10 @@ public final class DefaultPassConfig extends PassConfig {
     }
 
     if (options.needsTranspilationFrom(ES6)) {
-      TranspilationPasses.addEs6LatePassesBeforeNti(checks);
-      if (!options.getTypeCheckEs6Natively()) {
-        TranspilationPasses.addEs6LatePassesAfterNti(checks);
+      if (options.getTypeCheckEs6Natively()) {
+        TranspilationPasses.addEs6PassesBeforeNTI(checks);
+      } else {
+        TranspilationPasses.addEs6LatePasses(checks);
       }
     }
 
@@ -438,9 +438,7 @@ public final class DefaultPassConfig extends PassConfig {
       }
 
       if (options.needsTranspilationFrom(ES6)) {
-        if (options.getTypeCheckEs6Natively()) {
-          TranspilationPasses.addEs6LatePassesAfterNti(checks);
-        }
+        TranspilationPasses.addEs6PassesAfterNTI(checks);
         checks.add(setFeatureSet(options.getLanguageOut().toFeatureSet()));
       }
     }
@@ -2783,10 +2781,12 @@ public final class DefaultPassConfig extends PassConfig {
         boolean removeOnlyLocals = options.removeUnusedLocalVars && !options.removeUnusedVars;
         boolean preserveAnonymousFunctionNames =
             options.anonymousFunctionNaming != AnonymousFunctionNamingPolicy.OFF;
+        // TODO(b/66971163): Enable removing unused properties based on compiler options.
         return new RemoveUnusedVars(
             compiler,
             !removeOnlyLocals,
-            preserveAnonymousFunctionNames);
+            preserveAnonymousFunctionNames,
+            /* removeUnusedProperties */ false);
       }
 
       @Override
@@ -2898,6 +2898,11 @@ public final class DefaultPassConfig extends PassConfig {
           }
 
           return new ExtractPrototypeMemberDeclarations(compiler, pattern);
+        }
+
+        @Override
+        protected FeatureSet featureSet() {
+          return ES8;
         }
       };
 

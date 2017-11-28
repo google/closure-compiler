@@ -759,6 +759,11 @@ public class CommandLineRunner extends
         usage = "Rewrite ES6 library calls to use polyfills provided by the compiler's runtime.")
     private boolean rewritePolyfills = true;
 
+    @Option(name = "--allow_method_call_decomposing",
+        handler = BooleanOptionHandler.class,
+        usage = "Allow decomposing x.y(); to: var tmp = x.y; tmp.call(x); Unsafe on IE 8 and 9")
+    private boolean allowMethodCallDecomposing = false;
+
     @Option(
       name = "--print_source_after_each_pass",
       handler = BooleanOptionHandler.class,
@@ -791,6 +796,11 @@ public class CommandLineRunner extends
         usage = "Specifies format for error messages."
     )
     private ErrorFormatOption errorFormat = ErrorFormatOption.STANDARD;
+
+    @Option(name = "--renaming",
+        handler = BooleanOptionHandler.class,
+        usage = "Disables variable renaming. Cannot be used with ADVANCED optimizations.")
+    private boolean renaming = true;
 
     @Argument
     private List<String> arguments = new ArrayList<>();
@@ -1562,6 +1572,12 @@ public class CommandLineRunner extends
         }
       }
 
+      if (!flags.renaming
+          && flags.compilationLevelParsed == CompilationLevel.ADVANCED_OPTIMIZATIONS) {
+        reportError("ERROR - renaming cannot be disabled when ADVANCED_OPTMIZATIONS is used.");
+        runCompiler = false;
+      }
+
       getCommandLineConfig()
           .setPrintTree(flags.printTree)
           .setPrintAst(flags.printAst)
@@ -1737,6 +1753,8 @@ public class CommandLineRunner extends
     options.rewritePolyfills =
         flags.rewritePolyfills && options.getLanguageIn().toFeatureSet().contains(FeatureSet.ES6);
 
+    options.setAllowMethodCallDecomposing(flags.allowMethodCallDecomposing);
+
     if (!flags.translationsFile.isEmpty()) {
       try {
         options.messageBundle = new XtbMessageBundle(
@@ -1800,6 +1818,11 @@ public class CommandLineRunner extends
       } catch (CmdLineException e) {
         reportError("ERROR - invalid package_json_entry_names format specified.");
       }
+    }
+
+    if (!flags.renaming) {
+      options.setVariableRenaming(VariableRenamingPolicy.OFF);
+      options.setPropertyRenaming(PropertyRenamingPolicy.OFF);
     }
 
     return options;

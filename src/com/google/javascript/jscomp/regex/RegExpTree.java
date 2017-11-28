@@ -590,7 +590,7 @@ public abstract class RegExpTree {
     }
 
     @Override
-    public final List<? extends RegExpTree> children() {
+    public final ImmutableList<? extends RegExpTree> children() {
       return ImmutableList.of();
     }
   }
@@ -870,7 +870,7 @@ public abstract class RegExpTree {
     }
 
     @Override
-    public List<? extends RegExpTree> children() {
+    public ImmutableList<? extends RegExpTree> children() {
       return ImmutableList.of(body);
     }
 
@@ -1118,7 +1118,7 @@ public abstract class RegExpTree {
     }
 
     @Override
-    public List<? extends RegExpTree> children() {
+    public ImmutableList<? extends RegExpTree> children() {
       return alternatives;
     }
 
@@ -1189,7 +1189,7 @@ public abstract class RegExpTree {
     }
 
     @Override
-    public List<? extends RegExpTree> children() {
+    public ImmutableList<? extends RegExpTree> children() {
       return ImmutableList.of(body);
     }
 
@@ -1246,7 +1246,7 @@ public abstract class RegExpTree {
     }
 
     @Override
-    public List<? extends RegExpTree> children() {
+    public ImmutableList<? extends RegExpTree> children() {
       return ImmutableList.of(body);
     }
 
@@ -1746,7 +1746,7 @@ public abstract class RegExpTree {
     }
 
     @Override
-    public List<? extends RegExpTree> children() {
+    public ImmutableList<? extends RegExpTree> children() {
       return elements;
     }
 
