@@ -10272,43 +10272,7 @@ chrome.declarativeContent = {};
 
 
 /**
- * @enum {string}
- * @see https://developer.chrome.com/extensions/declarativeContent#type-PageStateMatcherInstanceType
- */
-chrome.declarativeContent.PageStateMatcherInstanceType = {
-  DECLARATIVE_CONTENT_PAGE_STATE_MATCHER: ''
-};
-
-
-/**
- * @enum {string}
- * @see https://developer.chrome.com/extensions/declarativeContent#type-ShowPageActionInstanceType
- */
-chrome.declarativeContent.ShowPageActionInstanceType = {
-  DECLARATIVE_CONTENT_SHOW_PAGE_ACTION: ''
-};
-
-
-/**
- * @enum {string}
- * @see https://developer.chrome.com/extensions/declarativeContent#type-SetIconInstanceType
- */
-chrome.declarativeContent.SetIconInstanceType = {
-  DECLARATIVE_CONTENT_SET_ICON: ''
-};
-
-
-/**
- * @enum {string}
- * @see https://developer.chrome.com/extensions/declarativeContent#type-RequestContentScriptInstanceType
- */
-chrome.declarativeContent.RequestContentScriptInstanceType = {
-  DECLARATIVE_CONTENT_REQUEST_CONTENT_SCRIPT: ''
-};
-
-
-/**
- * @typedef {{
+ * @typedef {!{
  *   pageUrl: (!UrlFilter|undefined),
  *   css: (!Array<string>|undefined),
  *   isBookmarked: (boolean|undefined)
@@ -10334,7 +10298,7 @@ chrome.declarativeContent.ShowPageAction = function() {};
 
 
 /**
- * @typedef {{
+ * @typedef {!{
  *   imageData: (!ImageData|!Object<number, !ImageData>|undefined)
  * }}
  * @see https://developer.chrome.com/extensions/declarativeContent#type-SetIcon
@@ -10351,7 +10315,7 @@ chrome.declarativeContent.SetIcon = function(literalValue) {};
 
 
 /**
- * @typedef {{
+ * @typedef {!{
  *   css: (!Array<string>|undefined),
  *   js: (!Array<string>|undefined),
  *   allFrames: (boolean|undefined),
@@ -10371,7 +10335,7 @@ chrome.declarativeContent.RequestContentScript = function(literalValue) {};
 
 
 /**
- * @type {!ChromeEvent}
+ * @type {!ChromeVoidEvent}
  * @see https://developer.chrome.com/extensions/declarativeContent#event-onPageChanged
  */
 chrome.declarativeContent.onPageChanged;

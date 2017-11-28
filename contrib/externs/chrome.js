@@ -226,7 +226,7 @@ UrlFilter.prototype.urlSuffix;
 UrlFilter.prototype.schemes;
 
 
-/** @type {!Array<(number|Array<number>)>|undefined} */
+/** @type {!Array<(number|!Array<number>)>|undefined} */
 UrlFilter.prototype.ports;
 
 
