@@ -19,11 +19,13 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.jscomp.CompilerOptions.LanguageMode.ECMASCRIPT_2017;
+import static com.google.javascript.jscomp.NodeUtil.getFunctionBody;
+import static com.google.javascript.jscomp.testing.NodeSubject.assertNode;
 
 import com.google.common.base.Supplier;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.rhino.Node;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -36,11 +38,33 @@ import junit.framework.TestCase;
  */
 public final class FunctionArgumentInjectorTest extends TestCase {
 
-  // TODO(johnlenz): Add unit tests for:
-  //    inject
-  //    getFunctionCallParameterMap
+  // TODO(johnlenz): Add unit tests for "getFunctionCallParameterMap"
 
-  private static final Set<String> EMPTY_STRING_SET = Collections.emptySet();
+  private static final ImmutableSet<String> EMPTY_STRING_SET = ImmutableSet.of();
+
+  public void testInject0() {
+    Compiler compiler = getCompiler();
+    Node result =
+        FunctionArgumentInjector.inject(
+            compiler,
+            getFunctionBody(parseFunction("function f(x) { alert(x); }")),
+            null,
+            ImmutableMap.of("x", parse("null").getFirstFirstChild()));
+    assertNode(result).isEqualTo(getFunctionBody(parseFunction("function f(x) { alert(null); }")));
+  }
+
+  public void testInject1() {
+    Compiler compiler = getCompiler();
+    Node result =
+        FunctionArgumentInjector.inject(
+            compiler,
+            getFunctionBody(parseFunction("function f() { alert(this); }")),
+            null,
+            ImmutableMap.of("this", parse("null").getFirstFirstChild()));
+    assertNode(result).isEqualTo(getFunctionBody(parseFunction("function f() { alert(null); }")));
+  }
+
+  // TODO(johnlenz): Add more unit tests for "inject"
 
   public void testFindModifiedParameters0() {
     assertThat(
@@ -91,11 +115,10 @@ public final class FunctionArgumentInjectorTest extends TestCase {
   }
 
   public void testFindModifiedParameters8() {
-    assertEquals(ImmutableSet.of("b"),
+    assertEquals(
+        ImmutableSet.of("b"),
         FunctionArgumentInjector.findModifiedParameters(
-            parseFunction(
-                "function f(a,b){ " +
-                "a; function f(){ function g() { b; } } }")));
+            parseFunction("function f(a,b){ a; function f(){ function g() { b; } } }")));
   }
 
   public void testFindModifiedParameters9() {
@@ -111,11 +134,10 @@ public final class FunctionArgumentInjectorTest extends TestCase {
   }
 
   public void testFindModifiedParameters11() {
-    assertEquals(ImmutableSet.of("b"),
+    assertEquals(
+        ImmutableSet.of("b"),
         FunctionArgumentInjector.findModifiedParameters(
-            parseFunction(
-                "function f(a,b){ " +
-                "a; (function(){ (function () { b; }) }) }")));
+            parseFunction("function f(a,b){ a; (function(){ (function () { b; }) }) }")));
   }
 
   public void testFindModifiedParameters12() {
@@ -529,8 +551,7 @@ public final class FunctionArgumentInjectorTest extends TestCase {
     Node call = findCall(n, fnName);
     assertNotNull(call);
     Map<String, Node> args =
-      FunctionArgumentInjector.getFunctionCallParameterMap(
-          fn, call, getNameSupplier());
+        FunctionArgumentInjector.getFunctionCallParameterMap(fn, call, getNameSupplier());
 
     Set<String> actualTemps = new HashSet<>();
     FunctionArgumentInjector.maybeAddTempsForCallArguments(
@@ -556,14 +577,13 @@ public final class FunctionArgumentInjectorTest extends TestCase {
       if (NodeUtil.isGet(n.getFirstChild())) {
         callee = n.getFirstFirstChild();
         Node prop = callee.getNext();
-        // Only "call" is support at this point.
+        // Only "call" is supported at this point.
         checkArgument(prop.isString() && prop.getString().equals("call"));
       } else {
         callee = n.getFirstChild();
       }
 
-      if (callee.isName()
-          && callee.getString().equals(name)) {
+      if (callee.isName() && callee.getString().equals(name)) {
         return n;
       }
     }
@@ -600,14 +620,18 @@ public final class FunctionArgumentInjectorTest extends TestCase {
   }
 
   private static Node parse(String js) {
+    Compiler compiler = getCompiler();
+    Node n = compiler.parseTestCode(js);
+    assertThat(compiler.getErrors()).isEmpty();
+    return n;
+  }
+
+  private static Compiler getCompiler() {
     Compiler compiler = new Compiler();
     CompilerOptions options = new CompilerOptions();
     options.setLanguageIn(ECMASCRIPT_2017);
 
     compiler.initOptions(options);
-    Node n = compiler.parseTestCode(js);
-    assertEquals(0, compiler.getErrorCount());
-    return n;
+    return compiler;
   }
 }
-

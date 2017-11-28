@@ -54,20 +54,24 @@ class FunctionArgumentInjector {
 
   /**
    * With the map provided, replace the names with expression trees.
-   * @param node The root of the node tree within which to perform the
-   *     substitutions.
+   *
+   * @param node The root node of the tree within which to perform the substitutions.
    * @param parent The parent root node.
-   * @param replacements The map of names to template node trees with which
-   *     to replace the name Nodes.
+   * @param replacements The map of names to template node trees with which to replace the name
+   *     Nodes.
    * @return The root node or its replacement.
    */
-  static Node inject(AbstractCompiler compiler, Node node, Node parent,
-      Map<String, Node> replacements) {
-    return inject(compiler, node, parent, replacements, true);
+  static Node inject(
+      AbstractCompiler compiler, Node node, Node parent, Map<String, Node> replacements) {
+    return inject(compiler, node, parent, replacements, /* replaceThis */ true);
   }
 
-  static Node inject(AbstractCompiler compiler, Node node, Node parent,
-      Map<String, Node> replacements, boolean replaceThis) {
+  private static Node inject(
+      AbstractCompiler compiler,
+      Node node,
+      Node parent,
+      Map<String, Node> replacements,
+      boolean replaceThis) {
     if (node.isName()) {
       Node replacementTemplate = replacements.get(node.getString());
       if (replacementTemplate != null) {
