@@ -102,7 +102,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
 
       boolean isCommonJsModule = finder.isCommonJsModule();
       ImmutableList.Builder<ExportInfo> exports = ImmutableList.builder();
-      boolean needsRetraverse = rewriteWebpackEsmDynamicImports(finder.getWebpackEsmDynamicImports());
+      boolean needsRetraverse = false;
       if (isCommonJsModule || forceModuleDetection) {
         finder.reportModuleErrors();
 
@@ -515,84 +515,6 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
     }
   }
 
-  private boolean rewriteWebpackEsmDynamicImports(List<Node> calls) {
-    if (calls.size() == 0) {
-      return false;
-    }
-    for (Node call : calls) {
-      ArrayList<String> moduleImportPaths = new ArrayList<>();
-      moduleImportPaths.add(getCommonJsImportPath(call.getSecondChild()));
-      Node importCall = call.getFirstFirstChild();
-
-      if (importCall.getNext() != null
-          && importCall.getNext().isString()
-          && importCall.getNext().getString().equals("then")) {
-        // __webpack_require__.e(1).then(__webpack_require("2")).then(obj => {});
-        if (call.getNext() != null
-            && call.getNext().isString()
-            && call.getNext().getString().equals("then")) {
-          Node thenTarget = call.getParent().getNext();
-
-          call.replaceWith(importCall.detach());
-          reportNestedScopesDeleted(call);
-
-          Node fncParams = NodeUtil.getFunctionParameters(thenTarget);
-          Node fncBody = NodeUtil.getFunctionBody(thenTarget);
-          Node script = NodeUtil.getEnclosingScript(thenTarget);
-          CompilerInput input = compiler.getInput(script.getInputId());
-          int currentModuleNameIndex = 0;
-          if (fncParams.hasOneChild()) {
-            Node currentParam = fncParams.getFirstChild();
-
-            // We avoid using the getModuleName helper method because
-            // ESM Dynamic imports always import the module export object - never the default property
-            ModulePath moduleImportPath =
-                input
-                    .getPath()
-                    .resolveJsModule(
-                        moduleImportPaths.get(currentModuleNameIndex),
-                        currentParam.getSourceFileName(),
-                        currentParam.getLineno(),
-                        currentParam.getCharno());
-
-            if (!fncBody.isNormalBlock()) {
-              Node block = IR.block();
-              if (!NodeUtil.isStatement(fncBody)) {
-                block.addChildToFront(IR.exprResult(fncBody.detach()));
-              } else {
-                block.addChildToFront(fncBody.detach());
-              }
-              block.useSourceInfoFromForTree(fncBody);
-              thenTarget.addChildAfter(block, fncParams);
-              fncBody = block;
-            }
-
-            fncBody.addChildToFront(
-                IR.var(currentParam.detach(), IR.name(moduleImportPath.toModuleName()))
-                    .useSourceInfoIfMissingFrom(currentParam));
-
-            compiler.reportChangeToChangeScope(thenTarget);
-          }
-        } else if (call.getFirstChild().isGetProp()
-            && call.getFirstChild().getSecondChild().isString()
-            && call.getFirstChild().getSecondChild().getString().equals("then")
-            && isCommonJsImport(call.getSecondChild())) {
-          Node requireCall = call.getSecondChild();
-          Node fnc = IR.function(
-              IR.name(""),
-              IR.paramList(),
-              IR.block()).useSourceInfoIfMissingFromForTree(requireCall);
-
-          requireCall.replaceWith(fnc);
-
-          NodeUtil.getFunctionBody(fnc).addChildToFront(IR.returnNode(requireCall).useSourceInfoFrom(requireCall));
-          compiler.reportChangeToChangeScope(fnc);
-        }
-      }
-    }
-    return true;
-  }
-
   /**
    * Traverse the script. Find all references to CommonJS require (import) and module.exports or
    * export statements. Rewrites any require calls to reference the rewritten module name.
@@ -608,7 +530,6 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
     List<UmdPattern> umdPatterns = new ArrayList<>();
     List<ExportInfo> moduleExports = new ArrayList<>();
     List<ExportInfo> exports = new ArrayList<>();
-    List<Node> webpackEsmDynamicImports = new ArrayList<>();
     List<JSError> errors = new ArrayList<>();
 
     public List<ExportInfo> getModuleExports() {
@@ -617,10 +538,6 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
 
     public List<ExportInfo> getExports() {
       return ImmutableList.copyOf(exports);
-    }
-
-    public List<Node> getWebpackEsmDynamicImports() {
-      return ImmutableList.copyOf(webpackEsmDynamicImports);
     }
 
     @Override
@@ -729,20 +646,6 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
         }
       } else if (n.isThis() && n.getParent().isGetProp() && t.inGlobalScope()) {
         exports.add(new ExportInfo(n, t.getScope()));
-      }
-
-      // Look for the webpack esm dynamic import form
-      //
-      // __webpack_require.e(0).then(__webpack_require__.bind(null, path).then(importObj => {})
-      if (n.isCall()
-          && n.getFirstChild().matchesQualifiedName(WEBPACK_REQUIRE + ".e")
-          && n.getNext() != null
-          && n.getNext().isString()
-          && n.getNext().getString().equals("then")
-          && isCommonJsImport(n.getParent().getNext())
-          && n.getGrandparent() != null
-          && n.getGrandparent().isCall()) {
-        webpackEsmDynamicImports.add(n.getGrandparent());
       }
 
       if (isCommonJsImport(n)) {
