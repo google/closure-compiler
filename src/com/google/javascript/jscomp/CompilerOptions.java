@@ -215,13 +215,13 @@ public class CompilerOptions implements Serializable {
   private boolean useNewTypeInference;
 
   /**
-   * Several passes after type checking use type information. Some of these passes do not work
-   * yet with the new type inference. For this reason, we run the old type checker after NTI,
-   * so that the subsequent passes can use the old types.
-   * Turning this option off allows us to debug NTI-only builds; with the goal to eventually
-   * stop running OTI after NTI.
+   * Several passes after type checking use type information. We have converted all these passes
+   * to use TypeI, and most users of NTI use NTI types throughout their compilation.
+   * But there are a few NTI users that still use the old mode, where OTI runs after NTI
+   * and the optimizations see the old types. We plan to switch these users to NTI-only builds
+   * and delete this option.
    */
-  private boolean runOTIafterNTI = true;
+  private boolean runOTIafterNTI = false;
 
   /**
    * Relevant only when {@link #useNewTypeInference} is true, where we normally disable OTI errors.
