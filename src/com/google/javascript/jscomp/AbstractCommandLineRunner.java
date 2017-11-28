@@ -258,9 +258,16 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
   protected abstract A createCompiler();
 
   /**
-   * Returns the instance of the Options to use when {@link #run()} is called.
-   * createCompiler() is called before createOptions(), so getCompiler()
-   * will not return null when createOptions() is called.
+   * Performs any transformation needed on the given compiler input and appends it to the given
+   * output bundle.
+   */
+  protected abstract void prepForBundleAndAppendTo(
+      Appendable out, CompilerInput input, String content) throws IOException;
+
+  /**
+   * Returns the instance of the Options to use when {@link #run()} is called. createCompiler() is
+   * called before createOptions(), so getCompiler() will not return null when createOptions() is
+   * called.
    */
   protected abstract B createOptions();
 
@@ -2035,14 +2042,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
       out.append(displayName);
       out.append("\n");
 
-      if (input.isModule()) {
-        // TODO(sdh): This is copied from ClosureBundler
-        out.append("goog.loadModule(function(exports) {'use strict';");
-        out.append(input.getSourceFile().getCode());
-        out.append("\n;return exports;});\n");
-      } else {
-        out.append(input.getSourceFile().getCode());
-      }
+      prepForBundleAndAppendTo(out, input, input.getSourceFile().getCode());
 
       out.append("\n");
     }
