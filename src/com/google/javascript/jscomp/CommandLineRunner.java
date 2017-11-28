@@ -28,6 +28,7 @@ import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
 import com.google.common.io.Files;
+import com.google.javascript.jscomp.AbstractCommandLineRunner.CommandLineConfig.ErrorFormatOption;
 import com.google.javascript.jscomp.CompilerOptions.IsolationMode;
 import com.google.javascript.jscomp.SourceMap.LocationMapping;
 import com.google.javascript.jscomp.deps.ModuleLoader;
@@ -790,6 +791,9 @@ public class CommandLineRunner extends
     )
     private String packageJsonEntryNames = null;
 
+    @Option(name = "--error_format", usage = "Specifies format for error messages.")
+    private ErrorFormatOption errorFormat = ErrorFormatOption.STANDARD;
+
     @Option(name = "--renaming",
         handler = BooleanOptionHandler.class,
         usage = "Disables variable renaming. Cannot be used with ADVANCED optimizations.")
@@ -833,6 +837,7 @@ public class CommandLineRunner extends
                 "Warning and Error Management",
                 ImmutableList.of(
                     "conformance_configs",
+                    "error_format",
                     "extra_annotation_name",
                     "hide_warnings_for",
                     "jscomp_error",
@@ -1615,7 +1620,8 @@ public class CommandLineRunner extends
           .setAngularPass(flags.angularPass)
           .setInstrumentationTemplateFile(flags.instrumentationFile)
           .setNewTypeInference(flags.useNewTypeInference)
-          .setJsonStreamMode(flags.jsonStreamMode);
+          .setJsonStreamMode(flags.jsonStreamMode)
+          .setErrorFormat(flags.errorFormat);
     }
     errorStream = null;
   }
