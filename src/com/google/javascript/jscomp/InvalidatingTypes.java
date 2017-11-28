@@ -47,7 +47,7 @@ final class InvalidatingTypes {
   }
 
   boolean isInvalidating(TypeI type) {
-    if (type == null) {
+    if (type == null || type.isUnknownType() || type.isBottom()) {
       return true;
     }
     if (type.isUnionType()) {
@@ -69,8 +69,6 @@ final class InvalidatingTypes {
     }
     return types.contains(objType)
         || objType.isAmbiguousObject()
-        || objType.isUnknownType() // TODO(sdh): remove when OTI gone (always false in NTI)
-        || objType.isBottom()      // TODO(sdh): remove when OTI gone (always false in NTI)
         || (!allowEnums && objType.isEnumObject())
         || (!allowScalars && objType.isBoxableScalar());
   }

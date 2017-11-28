@@ -1483,18 +1483,12 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setGenerateExports(true);
     options.setExportLocalPropertyDefinitions(true);
 
-    test(options,
+    testSame(options,
         LINE_JOINER.join(
             "/** @constructor */",
             "function Foo() {",
             "  /** @export */",
             "  this.prop = 123;",
-            "}"),
-        LINE_JOINER.join(
-            "/** @constructor */",
-            "function Foo() {",
-            "  /** @export */",
-            "  this.Foo$prop = 123;",
             "}"));
   }
 
