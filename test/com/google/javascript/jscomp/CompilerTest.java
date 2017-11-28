@@ -1199,6 +1199,37 @@ public final class CompilerTest extends TestCase {
     assertThat(result.errors).isEmpty();
   }
 
+  // https://github.com/google/closure-compiler/issues/2692
+  public void testGoogNamespaceEntryPoint() throws Exception {
+    List<SourceFile> inputs =
+        ImmutableList.of(
+            SourceFile.fromCode(
+                "/index.js",
+                "goog.provide('foobar'); const foo = require('./foo.js').default; foo('hello');"),
+            SourceFile.fromCode("/foo.js", "export default (foo) => { alert(foo); }"));
+
+    List<ModuleIdentifier> entryPoints =
+        ImmutableList.of(ModuleIdentifier.forClosure("goog:foobar"));
+
+    CompilerOptions options = createNewFlagBasedOptions();
+    options.setLanguageIn(CompilerOptions.LanguageMode.ECMASCRIPT_2017);
+    options.setLanguageOut(CompilerOptions.LanguageMode.ECMASCRIPT5);
+    options.dependencyOptions.setDependencyPruning(true);
+    options.dependencyOptions.setDependencySorting(true);
+    options.dependencyOptions.setEntryPoints(entryPoints);
+    options.processCommonJSModules = true;
+
+    List<SourceFile> externs =
+        AbstractCommandLineRunner.getBuiltinExterns(options.getEnvironment());
+
+    Compiler compiler = new Compiler();
+    compiler.compile(externs, inputs, options);
+
+    Result result = compiler.getResult();
+    assertThat(result.warnings).isEmpty();
+    assertThat(result.errors).isEmpty();
+  }
+
   public void testEs6ModulePathWithOddCharacters() throws Exception {
     // Note that this is not yet compatible with transpilation, since the generated goog.provide
     // statements are not valid identifiers.
