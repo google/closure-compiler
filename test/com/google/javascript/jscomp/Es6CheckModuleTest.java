@@ -56,4 +56,68 @@ public final class Es6CheckModuleTest extends CompilerTestCase {
             "",
             "exports = Foo;"));
   }
+  
+  public void testCannotRenameImport() {
+    testError(
+        lines(
+            "import { p } from 'other'",
+            "p = 2;"),
+        Es6CheckModule.IMPORT_CANNOT_BE_REASSIGNED);
+
+    testSame(
+        lines(
+            "import { p } from 'other'",
+            "p.x = 2;"));
+
+    testError(
+        lines(
+            "import Default from 'other'",
+            "Default = 2;"),
+        Es6CheckModule.IMPORT_CANNOT_BE_REASSIGNED);
+
+    testSame(
+        lines(
+            "import Default from 'other'",
+            "Default.x = 2;"));
+
+    testError(
+        lines(
+            "import * as Module from 'other'",
+            "Module = 2;"),
+        Es6CheckModule.IMPORT_CANNOT_BE_REASSIGNED);
+
+    testError(
+        lines(
+            "import * as Module from 'other'",
+            "Module.x = 2;"),
+        Es6CheckModule.IMPORT_CANNOT_BE_REASSIGNED);
+
+    testSame(
+        lines(
+            "import * as Module from 'other'",
+            "Module.x.y = 2;"));
+
+
+    // Handled by VariableReferenceCheck.
+    testSame(
+        lines(
+            "import { p } from 'other'",
+            "let p = 0;"));
+    testSame(
+        lines(
+            "import { p } from 'other'",
+            "var {p} = {};"));
+    testSame(
+        lines(
+            "import { p } from 'other'",
+            "var [p] = [];"));
+    testSame(
+        lines(
+            "import { p } from 'other'",
+            "function p() {};"));
+    testSame(
+        lines(
+            "import { p } from 'other'",
+            "class p {};"));
+  }
 }
