@@ -23,7 +23,7 @@
   <packaging>pom</packaging>
 
   <name>Closure Compiler Parent</name>
-  <version>1.0-SNAPSHOT</version>
+  <version>v20171128.webpack-beta</version>
 
   <url>https://github.com/google/closure-compiler/</url>
   <description>
