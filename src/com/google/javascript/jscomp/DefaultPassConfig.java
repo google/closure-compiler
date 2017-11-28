@@ -2948,6 +2948,11 @@ public final class DefaultPassConfig extends PassConfig {
         protected CompilerPass create(AbstractCompiler compiler) {
           return new NameAnonymousFunctions(compiler);
         }
+
+        @Override
+        protected FeatureSet featureSet() {
+          return FeatureSet.ES8_MODULES;
+        }
       };
 
   private final PassFactory nameMappedAnonymousFunctions =
@@ -2964,6 +2969,11 @@ public final class DefaultPassConfig extends PassConfig {
               compiler.setAnonymousFunctionNameMap(naf.getFunctionMap());
             }
           };
+        }
+
+        @Override
+        protected FeatureSet featureSet() {
+          return FeatureSet.ES8_MODULES;
         }
       };
 
