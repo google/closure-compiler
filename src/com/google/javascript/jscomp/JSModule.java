@@ -167,8 +167,8 @@ public final class JSModule implements DependencyInfo, Serializable {
    *
    * @return A list that may be empty but not null
    */
-  public List<JSModule> getDependencies() {
-    return deps;
+  public ImmutableList<JSModule> getDependencies() {
+    return ImmutableList.copyOf(deps);
   }
 
   /**
