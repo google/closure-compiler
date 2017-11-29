@@ -86,7 +86,7 @@ class RemoveUnusedClassProperties
            * In some cases the parent of GETPROP is an EXPRRESULT, while the replacement is always
            * just a plain expression.
            */
-          Boolean replaceParent = true;
+          boolean replaceParent = true;
           if (NodeUtil.isLhsByDestructuring(n)) {
             if (parent.isStringKey()) {
               // Remove the entire object-key entry
