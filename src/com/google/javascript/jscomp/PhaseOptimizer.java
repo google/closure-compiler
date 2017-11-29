@@ -294,7 +294,7 @@ class PhaseOptimizer implements CompilerPass {
       if (tracker != null) {
         tracker.recordPassStart(name, factory.isOneTimePass());
       }
-      tracer = new Tracer("JSCompiler");
+      tracer = new Tracer("Compiler", name);
 
       compiler.beforePass(name);
 
