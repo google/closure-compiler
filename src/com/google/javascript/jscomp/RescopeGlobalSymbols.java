@@ -266,7 +266,7 @@ final class RescopeGlobalSymbols implements CompilerPass {
         Node value = null;
         if (parent.isAssign() && n == parent.getFirstChild()) {
           value = parent.getLastChild();
-        } else if (parent.isVar()) {
+        } else if (NodeUtil.isNameDeclaration(parent)) {
           value = n.getFirstChild();
         } else if (parent.isFunction()) {
           value = parent;
@@ -359,7 +359,7 @@ final class RescopeGlobalSymbols implements CompilerPass {
       if (!isCrossModule) {
         // When a non cross module name appears outside a var declaration we
         // never have to do anything.
-        if (!parent.isVar()) {
+        if (!NodeUtil.isNameDeclaration(parent)) {
           return;
         }
         boolean hasInterestingChildren = false;
@@ -402,7 +402,7 @@ final class RescopeGlobalSymbols implements CompilerPass {
       // var crossModule = i++, notCrossModule = i++
       // becomes
       // var notCrossModule;_.crossModule = i++, notCrossModule = i++
-      if (!isCrossModule && parent.isVar()) {
+      if (!isCrossModule && NodeUtil.isNameDeclaration(parent)) {
         preDeclarations.add(new ModuleGlobal(
             input.getAstRoot(compiler),
             IR.name(name).srcref(node)));
@@ -421,7 +421,7 @@ final class RescopeGlobalSymbols implements CompilerPass {
         return;
       }
       Node windowPropAccess = IR.getprop(IR.name(WINDOW), IR.string(name));
-      if (parent.isVar() && nameNode.hasOneChild()) {
+      if (NodeUtil.isNameDeclaration(parent) && nameNode.hasOneChild()) {
         Node assign = IR.assign(windowPropAccess, nameNode.removeFirstChild());
         assign.setJSDocInfo(parent.getJSDocInfo());
         parent.replaceChild(nameNode, assign.srcrefTree(parent));
@@ -462,26 +462,32 @@ final class RescopeGlobalSymbols implements CompilerPass {
   }
 
   /**
-   * Removes every occurrence of var that declares a global variable.
+   * Removes every occurrence of var/let/const that declares a global variable.
    *
    * <pre>var NS.a = 1, NS.b = 2;</pre>
+   *
    * becomes
+   *
    * <pre>NS.a = 1; NS.b = 2;</pre>
    *
    * <pre>for (var a = 0, b = 0;;)</pre>
+   *
    * becomes
+   *
    * <pre>for (NS.a = 0, NS.b = 0;;)</pre>
    *
    * Declarations without assignments are optimized away:
+   *
    * <pre>var a = 1, b;</pre>
+   *
    * becomes
+   *
    * <pre>NS.a = 1</pre>
    */
-  private class RemoveGlobalVarCallback extends
-      AbstractShallowStatementCallback {
+  private class RemoveGlobalVarCallback extends AbstractShallowStatementCallback {
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
-      if (!n.isVar()) {
+      if (!NodeUtil.isNameDeclaration(n)) {
         return;
       }
 
@@ -520,7 +526,7 @@ final class RescopeGlobalSymbols implements CompilerPass {
         Node comma = joinOnComma(commas, n);
         parent.addChildBefore(comma, n);
       }
-      // Remove the var node.
+      // Remove the var/const/let node.
       parent.removeChild(n);
       NodeUtil.markFunctionsDeleted(n, compiler);
       compiler.reportChangeToEnclosingScope(parent);
