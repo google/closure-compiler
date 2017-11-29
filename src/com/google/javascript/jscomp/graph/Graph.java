@@ -18,10 +18,10 @@ package com.google.javascript.jscomp.graph;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Deque;
-import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -241,7 +241,7 @@ public abstract class Graph<N, E> implements AdjacencyGraph<N, E> {
    */
   public final void pushNodeAnnotations() {
     if (nodeAnnotationStack == null) {
-      nodeAnnotationStack = new LinkedList<>();
+      nodeAnnotationStack = new ArrayDeque<>();
     }
     pushAnnotations(nodeAnnotationStack, getNodes());
   }
@@ -261,7 +261,7 @@ public abstract class Graph<N, E> implements AdjacencyGraph<N, E> {
    */
   public final void pushEdgeAnnotations() {
     if (edgeAnnotationStack == null) {
-      edgeAnnotationStack = new LinkedList<>();
+      edgeAnnotationStack = new ArrayDeque<>();
     }
     pushAnnotations(edgeAnnotationStack, getEdges());
   }
