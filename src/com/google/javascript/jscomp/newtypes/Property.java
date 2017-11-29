@@ -241,13 +241,12 @@ class Property implements Serializable {
 
   @Override
   public boolean equals(Object o) {
-    if (o == null) {
+    if (!(o instanceof Property)) {
       return false;
     }
     if (this == o) {
       return true;
     }
-    checkArgument(o instanceof Property);
     Property p2 = (Property) o;
     return inferredType.equals(p2.inferredType) &&
         attribute == p2.attribute;

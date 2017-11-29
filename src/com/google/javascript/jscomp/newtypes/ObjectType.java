@@ -1784,13 +1784,12 @@ final class ObjectType implements TypeWithProperties {
 
   @Override
   public boolean equals(Object o) {
-    if (o == null) {
+    if (!(o instanceof ObjectType)) {
       return false;
     }
     if (this == o) {
       return true;
     }
-    checkArgument(o instanceof ObjectType);
     ObjectType other = (ObjectType) o;
     return Objects.equals(this.fn, other.fn)
         && Objects.equals(this.ns, other.ns)

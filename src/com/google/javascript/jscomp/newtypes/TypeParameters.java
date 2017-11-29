@@ -116,8 +116,7 @@ public final class TypeParameters implements Serializable {
 
   @Override
   public boolean equals(Object o) {
-    TypeParameters other = (TypeParameters) o;
-    return this.typeParams.equals(other.typeParams);
+    return o instanceof TypeParameters && this.typeParams.equals(((TypeParameters) o).typeParams);
   }
 
   @Override
