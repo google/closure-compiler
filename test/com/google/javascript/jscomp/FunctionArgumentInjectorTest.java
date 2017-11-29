@@ -30,8 +30,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.rhino.Node;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.Map;
 import java.util.Set;
 import junit.framework.TestCase;
 
@@ -520,13 +518,13 @@ public final class FunctionArgumentInjectorTest extends TestCase {
         "function foo(...args){return args;} foo(1, 2);", "foo", ImmutableSet.of("this", "args"));
   }
 
-  private void assertArgMapHasKeys(String code, String fnName, Set<String> expectedKeys) {
+  private void assertArgMapHasKeys(String code, String fnName, ImmutableSet<String> expectedKeys) {
     Node n = parse(code);
     Node fn = findFunction(n, fnName);
     assertNotNull(fn);
     Node call = findCall(n, fnName);
     assertNotNull(call);
-    LinkedHashMap<String, Node> actualMap =
+    ImmutableMap<String, Node> actualMap =
         getFunctionCallParameterMap(fn, call, getNameSupplier());
     assertThat(actualMap.keySet()).isEqualTo(expectedKeys);
   }
@@ -537,7 +535,8 @@ public final class FunctionArgumentInjectorTest extends TestCase {
     assertNotNull(fn);
     Node call = findCall(n, fnName);
     assertNotNull(call);
-    Map<String, Node> args = getFunctionCallParameterMap(fn, call, getNameSupplier());
+    ImmutableMap<String, Node> args = ImmutableMap.copyOf(
+        getFunctionCallParameterMap(fn, call, getNameSupplier()));
 
     Set<String> actualTemps = new HashSet<>();
     maybeAddTempsForCallArguments(fn, args, actualTemps, new ClosureCodingConvention());

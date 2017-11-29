@@ -20,6 +20,7 @@ import static com.google.common.truth.Truth.assertWithMessage;
 import static com.google.javascript.jscomp.CompilerTestCase.lines;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
 import com.google.javascript.jscomp.FunctionInjector.CanInlineResult;
 import com.google.javascript.jscomp.FunctionInjector.InliningMode;
@@ -1438,8 +1439,8 @@ public final class FunctionInjectorTest extends TestCase {
     final Node tree = parse(compiler, code);
 
     final Node fnNode = findFunction(tree, fnName);
-    final Set<String> unsafe =
-        FunctionArgumentInjector.findModifiedParameters(fnNode);
+    final ImmutableSet<String> unsafe =
+        ImmutableSet.copyOf(FunctionArgumentInjector.findModifiedParameters(fnNode));
 
     // can-inline tester
     Method tester = new Method() {
@@ -1514,8 +1515,8 @@ public final class FunctionInjectorTest extends TestCase {
 
     final Node fnNode = findFunction(tree, fnName);
     assertNotNull(fnNode);
-    final Set<String> unsafe =
-        FunctionArgumentInjector.findModifiedParameters(fnNode);
+    final ImmutableSet<String> unsafe =
+        ImmutableSet.copyOf(FunctionArgumentInjector.findModifiedParameters(fnNode));
     assertNotNull(fnNode);
 
     // inline tester

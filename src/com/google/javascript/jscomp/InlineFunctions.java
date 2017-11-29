@@ -23,6 +23,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.base.Supplier;
+import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.FunctionInjector.CanInlineResult;
 import com.google.javascript.jscomp.FunctionInjector.InliningMode;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
@@ -1002,11 +1003,11 @@ class InlineFunctions implements CompilerPass {
       return getReferencesInternal().get(n);
     }
 
-    public Set<String> getNamesToAlias() {
+    public ImmutableSet<String> getNamesToAlias() {
       if (namesToAlias == null) {
-        return Collections.emptySet();
+        return ImmutableSet.of();
       }
-      return Collections.unmodifiableSet(namesToAlias);
+      return ImmutableSet.copyOf(namesToAlias);
     }
 
     public void setNamesToAlias(Set<String> names) {
