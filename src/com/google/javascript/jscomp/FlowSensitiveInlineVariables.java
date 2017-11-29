@@ -137,7 +137,7 @@ class FlowSensitiveInlineVariables implements CompilerPass, ScopedCallback {
       return;
     }
 
-    if (LiveVariablesAnalysisEs6.MAX_VARIABLES_TO_ANALYZE < t.getScope().getVarCount()) {
+    if (LiveVariablesAnalysis.MAX_VARIABLES_TO_ANALYZE < t.getScope().getVarCount()) {
       return;
     }
 

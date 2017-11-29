@@ -45,8 +45,8 @@ import javax.annotation.Nullable;
  *
  * @author simranarora@google.com (Simran Arora)
  */
-class LiveVariablesAnalysisEs6
-    extends DataFlowAnalysis<Node, LiveVariablesAnalysisEs6.LiveVariableLattice> {
+class LiveVariablesAnalysis
+    extends DataFlowAnalysis<Node, LiveVariablesAnalysis.LiveVariableLattice> {
 
   static final int MAX_VARIABLES_TO_ANALYZE = 100;
 
@@ -90,7 +90,7 @@ class LiveVariablesAnalysisEs6
 
     // There is only a version of this function with index since var.index will
     // return the wrong one. Use an instantiation of
-    // LiveVariablesAnalysisEs6 and getVarIndex(var) to get the right index.
+    // LiveVariablesAnalysis and getVarIndex(var) to get the right index.
     public boolean isLive(int index) {
       return liveSet.get(index);
     }
@@ -138,7 +138,7 @@ class LiveVariablesAnalysisEs6
    * @param compiler
    * @param scopeCreator Es6 Scope creator
    */
-  LiveVariablesAnalysisEs6(
+  LiveVariablesAnalysis(
       ControlFlowGraph<Node> cfg,
       Scope jsScope,
       @Nullable Scope jsScopeChild,

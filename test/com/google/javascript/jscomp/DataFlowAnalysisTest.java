@@ -714,7 +714,7 @@ public final class DataFlowAnalysisTest extends TestCase {
   }
 
   // test computeEscaped helper method that returns the liveness analysis performed by the
-  // LiveVariablesAnalysisES6 class
+  // LiveVariablesAnalysis class
   public Set<? extends Var> computeEscapedLocals(String... lines) {
     // Set up compiler
     Compiler compiler = new Compiler();
@@ -746,8 +746,8 @@ public final class DataFlowAnalysisTest extends TestCase {
     ControlFlowGraph<Node> cfg = cfa.getCfg();
 
     // Compute liveness of variables
-    LiveVariablesAnalysisEs6 analysis =
-        new LiveVariablesAnalysisEs6(
+    LiveVariablesAnalysis analysis =
+        new LiveVariablesAnalysis(
             cfg, scope, childScope, compiler, (Es6SyntacticScopeCreator) scopeCreator);
     analysis.analyze();
     return analysis.getEscapedLocals();

@@ -22,7 +22,7 @@ import static com.google.common.base.Preconditions.checkState;
 
 import com.google.javascript.jscomp.ControlFlowGraph.Branch;
 import com.google.javascript.jscomp.DataFlowAnalysis.FlowState;
-import com.google.javascript.jscomp.LiveVariablesAnalysisEs6.LiveVariableLattice;
+import com.google.javascript.jscomp.LiveVariablesAnalysis.LiveVariableLattice;
 import com.google.javascript.jscomp.NodeTraversal.AbstractScopedCallback;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphNode;
 import com.google.javascript.rhino.IR;
@@ -33,7 +33,7 @@ import java.util.Map;
 
 /**
  * Removes local variable assignments that are useless based on information from {@link
- * LiveVariablesAnalysisEs6}. If there is an assignment to variable {@code x} and {@code x} is dead
+ * LiveVariablesAnalysis}. If there is an assignment to variable {@code x} and {@code x} is dead
  * after this assignment, we know that the current content of {@code x} will not be read and this
  * assignment is useless.
  *
@@ -41,7 +41,7 @@ import java.util.Map;
 class DeadAssignmentsElimination extends AbstractScopedCallback implements CompilerPass {
 
   private final AbstractCompiler compiler;
-  private LiveVariablesAnalysisEs6 liveness;
+  private LiveVariablesAnalysis liveness;
   private final Deque<BailoutInformation> functionStack;
 
   private static final class BailoutInformation {
@@ -114,7 +114,7 @@ class DeadAssignmentsElimination extends AbstractScopedCallback implements Compi
 
     Scope blockScope = t.getScope();
     Scope functionScope = blockScope.getParent();
-    if (LiveVariablesAnalysisEs6.MAX_VARIABLES_TO_ANALYZE
+    if (LiveVariablesAnalysis.MAX_VARIABLES_TO_ANALYZE
         < blockScope.getVarCount() + functionScope.getVarCount()) {
       return;
     }
@@ -122,7 +122,7 @@ class DeadAssignmentsElimination extends AbstractScopedCallback implements Compi
     // Computes liveness information first.
     ControlFlowGraph<Node> cfg = t.getControlFlowGraph();
     liveness =
-        new LiveVariablesAnalysisEs6(
+        new LiveVariablesAnalysis(
             cfg, functionScope, blockScope, compiler, new Es6SyntacticScopeCreator(compiler));
     liveness.analyze();
     Map<String, Var> allVarsInFn = liveness.getAllVariables();

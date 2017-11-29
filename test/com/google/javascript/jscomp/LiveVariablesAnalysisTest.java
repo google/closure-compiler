@@ -28,14 +28,14 @@ import com.google.javascript.rhino.Token;
 import junit.framework.TestCase;
 
 /**
- * Tests for {@link LiveVariablesAnalysisEs6}. Test cases are snippets of a function and assertions
+ * Tests for {@link LiveVariablesAnalysis}. Test cases are snippets of a function and assertions
  * are made at the instruction labeled with {@code X}.
  *
  * @author simranarora@google.com (Simran Arora)
  */
-public final class LiveVariablesAnalysisEs6Test extends TestCase {
+public final class LiveVariablesAnalysisTest extends TestCase {
 
-  private LiveVariablesAnalysisEs6 liveness = null;
+  private LiveVariablesAnalysis liveness = null;
 
   public void testStraightLine() {
     // A sample of simple straight line of code with different liveness changes.
@@ -359,7 +359,7 @@ public final class LiveVariablesAnalysisEs6Test extends TestCase {
   }
 
   private void assertLiveBeforeX(String src, String var) {
-    FlowState<LiveVariablesAnalysisEs6.LiveVariableLattice> state = getFlowStateAtX(src);
+    FlowState<LiveVariablesAnalysis.LiveVariableLattice> state = getFlowStateAtX(src);
     assertNotNull(src + " should contain a label 'X:'", state);
     assertTrue(
         "Variable" + var + " should be live before X",
@@ -367,7 +367,7 @@ public final class LiveVariablesAnalysisEs6Test extends TestCase {
   }
 
   private void assertLiveAfterX(String src, String var) {
-    FlowState<LiveVariablesAnalysisEs6.LiveVariableLattice> state = getFlowStateAtX(src);
+    FlowState<LiveVariablesAnalysis.LiveVariableLattice> state = getFlowStateAtX(src);
     assertNotNull("Label X should be in the input program.", state);
     assertTrue(
         "Variable" + var + " should be live after X",
@@ -375,7 +375,7 @@ public final class LiveVariablesAnalysisEs6Test extends TestCase {
   }
 
   private void assertNotLiveAfterX(String src, String var) {
-    FlowState<LiveVariablesAnalysisEs6.LiveVariableLattice> state = getFlowStateAtX(src);
+    FlowState<LiveVariablesAnalysis.LiveVariableLattice> state = getFlowStateAtX(src);
     assertNotNull("Label X should be in the input program.", state);
     assertFalse(
         "Variable" + var + " should not be live after X",
@@ -383,19 +383,19 @@ public final class LiveVariablesAnalysisEs6Test extends TestCase {
   }
 
   private void assertNotLiveBeforeX(String src, String var) {
-    FlowState<LiveVariablesAnalysisEs6.LiveVariableLattice> state = getFlowStateAtX(src);
+    FlowState<LiveVariablesAnalysis.LiveVariableLattice> state = getFlowStateAtX(src);
     assertNotNull("Label X should be in the input program.", state);
     assertFalse(
         "Variable" + var + " should not be live before X",
         state.getIn().isLive(liveness.getVarIndex(var)));
   }
 
-  private FlowState<LiveVariablesAnalysisEs6.LiveVariableLattice> getFlowStateAtX(String src) {
+  private FlowState<LiveVariablesAnalysis.LiveVariableLattice> getFlowStateAtX(String src) {
     liveness = computeLiveness(src);
     return getFlowStateAtX(liveness.getCfg().getEntry().getValue(), liveness.getCfg());
   }
 
-  private FlowState<LiveVariablesAnalysisEs6.LiveVariableLattice> getFlowStateAtX(
+  private FlowState<LiveVariablesAnalysis.LiveVariableLattice> getFlowStateAtX(
       Node node, ControlFlowGraph<Node> cfg) {
     if (node.isLabel()) {
       if (node.getFirstChild().getString().equals("X")) {
@@ -403,7 +403,7 @@ public final class LiveVariablesAnalysisEs6Test extends TestCase {
       }
     }
     for (Node c = node.getFirstChild(); c != null; c = c.getNext()) {
-      FlowState<LiveVariablesAnalysisEs6.LiveVariableLattice> state = getFlowStateAtX(c, cfg);
+      FlowState<LiveVariablesAnalysis.LiveVariableLattice> state = getFlowStateAtX(c, cfg);
       if (state != null) {
         return state;
       }
@@ -426,7 +426,7 @@ public final class LiveVariablesAnalysisEs6Test extends TestCase {
     }
   }
 
-  private static LiveVariablesAnalysisEs6 computeLiveness(String src) {
+  private static LiveVariablesAnalysis computeLiveness(String src) {
     // Set up compiler
     Compiler compiler = new Compiler();
     CompilerOptions options = new CompilerOptions();
@@ -454,8 +454,8 @@ public final class LiveVariablesAnalysisEs6Test extends TestCase {
     ControlFlowGraph<Node> cfg = cfa.getCfg();
 
     // Compute liveness of variables
-    LiveVariablesAnalysisEs6 analysis =
-        new LiveVariablesAnalysisEs6(
+    LiveVariablesAnalysis analysis =
+        new LiveVariablesAnalysis(
             cfg, scope, childScope, compiler, new Es6SyntacticScopeCreator(compiler));
     analysis.analyze();
     return analysis;
