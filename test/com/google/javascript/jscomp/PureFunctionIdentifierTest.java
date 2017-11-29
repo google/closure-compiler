@@ -760,6 +760,15 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
   }
 
   public void testExternCalls() throws Exception {
+    testExternCallsForTypeInferenceMode(TypeInferenceMode.BOTH);
+  }
+
+  public void testExternCallsNoTypeChecking() throws Exception {
+    testExternCallsForTypeInferenceMode(TypeInferenceMode.NEITHER);
+  }
+
+  private void testExternCallsForTypeInferenceMode(TypeInferenceMode typeInferenceMode) {
+    mode = typeInferenceMode;
     String prefix = "function f(){";
     String suffix = "} f()";
 
@@ -767,6 +776,7 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
                      ImmutableList.of("externNsef1", "f"));
     assertPureCallsMarked(prefix + "externObj.nsef1()" + suffix,
                      ImmutableList.of("externObj.nsef1", "f"));
+    checkLocalityOfMarkedCalls("externNsef1(); externObj.nsef1()", ImmutableList.of());
 
     assertNoPureCalls(prefix + "externSef1()" + suffix);
     assertNoPureCalls(prefix + "externObj.sef1()" + suffix);

@@ -47,6 +47,20 @@ public final class IntegrationTest extends IntegrationTestCase {
   private static final String CLOSURE_COMPILED =
       "var COMPILED = true; var goog$exportSymbol = function() {};";
 
+  public void testIssue2365() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.addWarningsGuard(new DiagnosticGroupWarningsGuard(
+        DiagnosticGroups.CHECK_TYPES, CheckLevel.OFF));
+
+    // With type checking disabled we should assume that extern functions (even ones known not to
+    // have any side effects) return a non-local value, so it isn't safe to remove assignments to
+    // properties on them.
+    // noSideEffects() and the property 'value' are declared in the externs defined in
+    // IntegrationTestCase.
+    testSame(options, "noSideEffects().value = 'something';");
+  }
+
   public void testBug65688660() {
     CompilerOptions options = createCompilerOptions();
     options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);

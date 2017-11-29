@@ -923,7 +923,10 @@ class PureFunctionIdentifier implements CompilerPass {
       // Handle externs.
       TypeI typei = externFunction.getTypeI();
       FunctionTypeI functionType = typei == null ? null : typei.toMaybeFunctionType();
-      if (functionType != null) {
+      if (functionType == null) {
+        // Assume extern functions return tainted values when we have no type info to say otherwise.
+        setTaintsReturn();
+      } else {
         TypeI retType = functionType.getReturnType();
         if (!PureFunctionIdentifier.isLocalValueType(retType, compiler)) {
           setTaintsReturn();
