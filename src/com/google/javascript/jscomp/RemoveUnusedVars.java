@@ -532,6 +532,7 @@ class RemoveUnusedVars implements CompilerPass {
     boolean isVariableAssign = false;
     boolean isComputedPropertyAssign = false;
     boolean isNamedPropertyAssign = false;
+    boolean isPrototypeObjectPropertyAssignment = false;
 
     if (lhs.isName()) {
       isVariableAssign = true;
@@ -544,6 +545,7 @@ class RemoveUnusedVars implements CompilerPass {
       // properties of properties.
       if (possibleNameNode.isGetProp()
           && possibleNameNode.getSecondChild().getString().equals("prototype")) {
+        isPrototypeObjectPropertyAssignment = true;
         possibleNameNode = possibleNameNode.getFirstChild();
       }
       if (possibleNameNode.isName()) {
@@ -568,7 +570,10 @@ class RemoveUnusedVars implements CompilerPass {
       traverseChildren(assignNode, scope);
     } else {
       Node valueNode = assignNode.getLastChild();
-      RemovableBuilder builder = new RemovableBuilder().setAssignedValue(valueNode);
+      RemovableBuilder builder =
+          new RemovableBuilder()
+              .setAssignedValue(valueNode)
+              .setIsPrototypeObjectPropertyAssignment(isPrototypeObjectPropertyAssignment);
       if (NodeUtil.isExpressionResultUsed(assignNode) || NodeUtil.mayHaveSideEffects(valueNode)) {
         traverseNode(valueNode, scope);
       } else {
@@ -1055,6 +1060,7 @@ class RemoveUnusedVars implements CompilerPass {
     private final List<Continuation> continuations;
     @Nullable private final String propertyName;
     @Nullable private final Node assignedValue;
+    private final boolean isPrototypeObjectPropertyAssignment;
 
     private boolean continuationsAreApplied = false;
     private boolean isRemoved = false;
@@ -1063,6 +1069,7 @@ class RemoveUnusedVars implements CompilerPass {
       continuations = builder.continuations;
       propertyName = builder.propertyName;
       assignedValue = builder.assignedValue;
+      isPrototypeObjectPropertyAssignment = builder.isPrototypeObjectPropertyAssignment;
     }
 
     String getPropertyName() {
@@ -1124,8 +1131,14 @@ class RemoveUnusedVars implements CompilerPass {
       return false;
     }
 
+    /** Is this a direct assignment to `varName.prototype`? */
     boolean isPrototypeAssignment() {
       return isNamedPropertyAssignment() && propertyName.equals("prototype");
+    }
+
+    /** Is this an assignment to a property on a prototype object? */
+    boolean isPrototypeObjectNamedPropertyAssignment() {
+      return isPrototypeObjectPropertyAssignment && isNamedPropertyAssignment();
     }
   }
 
@@ -1134,6 +1147,7 @@ class RemoveUnusedVars implements CompilerPass {
 
     @Nullable String propertyName = null;
     @Nullable public Node assignedValue = null;
+    boolean isPrototypeObjectPropertyAssignment = false;
 
     RemovableBuilder addContinuation(Continuation continuation) {
       continuations.add(continuation);
@@ -1142,6 +1156,12 @@ class RemoveUnusedVars implements CompilerPass {
 
     RemovableBuilder setAssignedValue(@Nullable Node assignedValue) {
       this.assignedValue = assignedValue;
+      return this;
+    }
+
+    RemovableBuilder setIsPrototypeObjectPropertyAssignment(
+        boolean isPrototypeObjectPropertyAssignment) {
+      this.isPrototypeObjectPropertyAssignment = isPrototypeObjectPropertyAssignment;
       return this;
     }
 
@@ -1574,12 +1594,14 @@ class RemoveUnusedVars implements CompilerPass {
         }
       }
 
-      // immediately apply continuations, or save the removable for possible removal
       if (isEntirelyRemovable) {
         removables.add(removable);
       } else if (removeUnusedProperties
-          && removable.isNamedPropertyAssignment()
+          && removable.isPrototypeObjectNamedPropertyAssignment()
           && !referencedPropertyNames.contains(removable.getPropertyName())) {
+        // prototype properties may be removed even if the variable itself isn't.
+        // TODO(bradfordcsmith): maybe allow removal of non-prototype property assignments when we
+        // can be sure the variable's value is defined as a literal value that does not escape.
         removablesForPropertyNames.put(removable.getPropertyName(), removable);
       } else {
         removable.applyContinuations();
@@ -1605,9 +1627,12 @@ class RemoveUnusedVars implements CompilerPass {
         isEntirelyRemovable = false;
         for (Removable r : removables) {
           if (removeUnusedProperties
-              && r.isNamedPropertyAssignment()
+              && r.isPrototypeObjectNamedPropertyAssignment()
               && !referencedPropertyNames.contains(r.getPropertyName())) {
-            // we may yet remove individual properties
+            // we may yet remove individual prototype properties
+            // TODO(bradfordcsmith): maybe allow removal of non-prototype property assignments when
+            // we can be sure the variable's value is defined as a literal value that does not
+            // escape.
             removablesForPropertyNames.put(r.getPropertyName(), r);
           } else {
             r.applyContinuations();

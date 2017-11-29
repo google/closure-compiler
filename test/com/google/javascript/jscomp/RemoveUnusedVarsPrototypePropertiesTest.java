@@ -62,6 +62,17 @@ public final class RemoveUnusedVarsPrototypePropertiesTest extends CompilerTestC
     keepGlobals = false;
   }
 
+  public void testNonPrototypePropertiesAreKept() {
+    // foo cannot be removed because it is called
+    // x cannot be removed because a property is set on it and we don't know where it comes from
+    // x.a cannot be removed because we don't know where x comes from.
+    // x.prototype.b *can* be removed because we consider it safe to remove prototype properties
+    // that have no references.
+    test(
+        "function foo(x) { x.a = 1; x.prototype.b = 2; }; foo({});",
+        "function foo(x) { x.a = 1; }; foo({});");
+  }
+
   public void testAnalyzePrototypeProperties() {
     // Basic removal for prototype properties
     test("function e(){}" +
