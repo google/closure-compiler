@@ -2697,6 +2697,14 @@ public class InlineFunctionsTest extends CompilerTestCase {
             "a.bar;"));
   }
 
+  public void testFunctionRestParam() {
+    test(
+        lines(
+            "var f = function(...args) { return args[0]; }",
+            "f(8);"),
+        "[8][0]");
+  }
+
   public void testArrowFunctionRestParam() {
     test(
         lines(
@@ -3217,6 +3225,51 @@ public class InlineFunctionsTest extends CompilerTestCase {
             "}",
             "foo(3, [7, 8]);"),
         "{ var b$jscomp$inline_1=[7,8];3+b$jscomp$inline_1[1] }");
+  }
+
+  public void testDefaultParam_argIsUndefined() {
+    test(
+        lines(
+            "function foo(a, b = 1) {",
+            "  return a + b;",
+            "}",
+            "foo(1, undefined);"),
+        // TODO(tbreisacher): This is incorrect!
+        // If the caller passes undefined, 'b' gets its default value, 1.
+        "1+undefined");
+  }
+
+  public void testDefaultParam_argIsUnknown() {
+    testSame(
+        lines(
+            "function foo(a, b = 1) {",
+            "  return a + b;",
+            "}",
+            "foo(1, x);"),
+        // TODO(tbreisacher): This is incorrect!
+        // If x happens to be undefined, 'b' gets its default value, 1.
+        "1 + x");
+  }
+
+  // This test currently produces an invalid tree (with a "void 0" on the left side of an assign).
+  // TODO(b/69850796): Fix this and enable the test.
+  public void disabled_testDefaultParam_withAssign() {
+    test(
+        lines(
+            "function foo(x = undefined) {",
+            "  if (!x) {",
+            "    x = 2;",
+            "  }",
+            "  return x;",
+            "}",
+            "foo(4);"),
+        lines(
+            "{",
+            "  var x$jscomp$inline_0 = 4;",
+            "  if (!x$jscomp$inline_0)",
+            "    x$jscomp$inline_0 = 2;",
+            "  x$jscomp$inline_0;",
+            "}"));
   }
 
   //TODO(b/64614552): Get the following tests to pass

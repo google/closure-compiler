@@ -104,6 +104,7 @@ class FunctionArgumentInjector {
     } else if (node.isFunction()) {
       // Once we enter another scope the "this" value changes, don't try
       // to replace it within an inner scope.
+      // TODO(tbreisacher): Make sure this works correctly for arrow functions.
       replaceThis = false;
     }
 
@@ -122,7 +123,6 @@ class FunctionArgumentInjector {
   static LinkedHashMap<String, Node> getFunctionCallParameterMap(
       Node fnNode, Node callNode, Supplier<String> safeNameIdSupplier) {
     // Create an argName -> expression map
-    // NOTE: A linked map is created here to provide ordering.
     LinkedHashMap<String, Node> argMap = new LinkedHashMap<>();
 
     // CALL NODE: [ NAME, ARG1, ARG2, ... ]
@@ -132,7 +132,7 @@ class FunctionArgumentInjector {
       cArg = cArg.getNext();
     } else {
       // 'apply' isn't supported yet.
-      checkState(!NodeUtil.isFunctionObjectApply(callNode));
+      checkState(!NodeUtil.isFunctionObjectApply(callNode), callNode);
       argMap.put(THIS_MARKER, NodeUtil.newUndefinedNode(callNode));
     }
 
@@ -180,6 +180,7 @@ class FunctionArgumentInjector {
         } else if (fnParam.isDefaultValue()) {
           argMap.put(fnParam.getFirstChild().getString(), cArg);
         } else {
+          checkState(fnParam.isName(), fnParam);
           argMap.put(fnParam.getString(), cArg);
         }
         cArg = cArg.getNext();
@@ -272,8 +273,7 @@ class FunctionArgumentInjector {
    *     function.
    */
   private static Set<String> findModifiedParameters(
-      Node n, Node parent, Set<String> names, Set<String> unsafe,
-      boolean inInnerFunction) {
+      Node n, Node parent, Set<String> names, Set<String> unsafe, boolean inInnerFunction) {
     checkArgument(unsafe != null);
     if (n.isName()) {
       if (names.contains(n.getString()) && (inInnerFunction || canNameValueChange(n, parent))) {
@@ -301,7 +301,7 @@ class FunctionArgumentInjector {
    * after assignment, where in as "o = x", "o" is now "x").
    *
    * This also looks for the redefinition of a name.
-   *   function (x){var x;}
+   *   function (x) {var x;}
    *
    * @param n The NAME node in question.
    * @param parent The parent of the node.
@@ -330,7 +330,7 @@ class FunctionArgumentInjector {
       return;
     }
 
-    checkArgument(fnNode.isFunction());
+    checkArgument(fnNode.isFunction(), fnNode);
     Node block = fnNode.getLastChild();
 
     int argCount = argMap.size();
@@ -447,8 +447,8 @@ class FunctionArgumentInjector {
   }
 
   /**
-   * Boot strap a traversal to look for parameters referenced
-   * after a non-local side-effect.
+   * Bootstrap a traversal to look for parameters referenced after a non-local side-effect.
+   *
    * NOTE: This assumes no-inner functions.
    * @param parameters The set of parameter names.
    * @param root The function code block.
@@ -491,8 +491,7 @@ class FunctionArgumentInjector {
    * parameters are recorded and the decision to keep or throw away those
    * references is deferred until exiting the loop structure.
    */
-  private static class ReferencedAfterSideEffect
-      implements Visitor, Predicate<Node> {
+  private static class ReferencedAfterSideEffect implements Visitor, Predicate<Node> {
     private final Set<String> parameters;
     private final Set<String> locals;
     private boolean sideEffectSeen = false;
@@ -517,8 +516,7 @@ class FunctionArgumentInjector {
 
       // If we have found all the parameters, don't bother looking
       // at the children.
-      return !(sideEffectSeen
-          && parameters.size() == parametersReferenced.size());
+      return !(sideEffectSeen && parameters.size() == parametersReferenced.size());
     }
 
     boolean inLoop() {

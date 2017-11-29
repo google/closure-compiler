@@ -13,12 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.jscomp.CompilerOptions.LanguageMode.ECMASCRIPT_2017;
+import static com.google.javascript.jscomp.FunctionArgumentInjector.findModifiedParameters;
+import static com.google.javascript.jscomp.FunctionArgumentInjector.getFunctionCallParameterMap;
+import static com.google.javascript.jscomp.FunctionArgumentInjector.inject;
+import static com.google.javascript.jscomp.FunctionArgumentInjector.maybeAddTempsForCallArguments;
 import static com.google.javascript.jscomp.NodeUtil.getFunctionBody;
 import static com.google.javascript.jscomp.testing.NodeSubject.assertNode;
 
@@ -33,19 +36,18 @@ import java.util.Set;
 import junit.framework.TestCase;
 
 /**
- * Inline function tests.
+ * Tests for the static methods in {@link FunctionArgumentInjector}.
+ *
  * @author johnlenz@google.com (John Lenz)
  */
 public final class FunctionArgumentInjectorTest extends TestCase {
-
-  // TODO(johnlenz): Add unit tests for "getFunctionCallParameterMap"
 
   private static final ImmutableSet<String> EMPTY_STRING_SET = ImmutableSet.of();
 
   public void testInject0() {
     Compiler compiler = getCompiler();
     Node result =
-        FunctionArgumentInjector.inject(
+        inject(
             compiler,
             getFunctionBody(parseFunction("function f(x) { alert(x); }")),
             null,
@@ -56,7 +58,7 @@ public final class FunctionArgumentInjectorTest extends TestCase {
   public void testInject1() {
     Compiler compiler = getCompiler();
     Node result =
-        FunctionArgumentInjector.inject(
+        inject(
             compiler,
             getFunctionBody(parseFunction("function f() { alert(this); }")),
             null,
@@ -67,83 +69,68 @@ public final class FunctionArgumentInjectorTest extends TestCase {
   // TODO(johnlenz): Add more unit tests for "inject"
 
   public void testFindModifiedParameters0() {
-    assertThat(
-        FunctionArgumentInjector.findModifiedParameters(
-            parseFunction("function f(a){ return a; }"))).isEmpty();
+    assertThat(findModifiedParameters(parseFunction("function f(a){ return a; }"))).isEmpty();
   }
 
   public void testFindModifiedParameters1() {
-    assertThat(
-        FunctionArgumentInjector.findModifiedParameters(
-            parseFunction("function f(a){ return a==0; }"))).isEmpty();
+    assertThat(findModifiedParameters(parseFunction("function f(a){ return a==0; }"))).isEmpty();
   }
 
   public void testFindModifiedParameters2() {
-    assertThat(
-        FunctionArgumentInjector.findModifiedParameters(parseFunction("function f(a){ b=a }")))
-        .isEmpty();
+    assertThat(findModifiedParameters(parseFunction("function f(a){ b=a }"))).isEmpty();
   }
 
   public void testFindModifiedParameters3() {
-    assertEquals(ImmutableSet.of("a"),
-        FunctionArgumentInjector.findModifiedParameters(
-            parseFunction("function f(a){ a=0 }")));
+    assertThat(findModifiedParameters(parseFunction("function f(a){ a=0 }"))).containsExactly("a");
   }
 
   public void testFindModifiedParameters4() {
-    assertEquals(ImmutableSet.of("a", "b"),
-        FunctionArgumentInjector.findModifiedParameters(
-            parseFunction("function f(a,b){ a=0;b=0 }")));
+    assertThat(findModifiedParameters(parseFunction("function f(a,b){ a=0;b=0 }")))
+        .containsExactly("a", "b");
   }
 
   public void testFindModifiedParameters5() {
-    assertEquals(ImmutableSet.of("b"),
-        FunctionArgumentInjector.findModifiedParameters(
-            parseFunction("function f(a,b){ a; if (a) b=0 }")));
+    assertThat(findModifiedParameters(parseFunction("function f(a,b){ a; if (a) b=0 }")))
+        .containsExactly("b");
   }
 
   public void testFindModifiedParameters6() {
-    assertEquals(ImmutableSet.of("a", "b"),
-        FunctionArgumentInjector.findModifiedParameters(
-            parseFunction("function f(a,b){ function f(){ a;b; } }")));
+    assertThat(findModifiedParameters(parseFunction("function f(a,b){ function f(){ a;b; } }")))
+        .containsExactly("a", "b");
   }
 
   public void testFindModifiedParameters7() {
-    assertEquals(ImmutableSet.of("b"),
-        FunctionArgumentInjector.findModifiedParameters(
-            parseFunction("function f(a,b){ a; function f(){ b; } }")));
+    assertThat(findModifiedParameters(parseFunction("function f(a,b){ a; function f(){ b; } }")))
+        .containsExactly("b");
   }
 
   public void testFindModifiedParameters8() {
-    assertEquals(
-        ImmutableSet.of("b"),
-        FunctionArgumentInjector.findModifiedParameters(
-            parseFunction("function f(a,b){ a; function f(){ function g() { b; } } }")));
+    assertThat(
+            findModifiedParameters(
+                parseFunction("function f(a,b){ a; function f(){ function g() { b; } } }")))
+        .containsExactly("b");
   }
 
   public void testFindModifiedParameters9() {
-    assertEquals(ImmutableSet.of("a", "b"),
-        FunctionArgumentInjector.findModifiedParameters(
-            parseFunction("function f(a,b){ (function(){ a;b; }) }")));
+    assertThat(findModifiedParameters(parseFunction("function f(a,b){ (function(){ a;b; }) }")))
+        .containsExactly("a", "b");
   }
 
   public void testFindModifiedParameters10() {
-    assertEquals(ImmutableSet.of("b"),
-        FunctionArgumentInjector.findModifiedParameters(
-            parseFunction("function f(a,b){ a; (function (){ b; }) }")));
+    assertThat(findModifiedParameters(parseFunction("function f(a,b){ a; (function (){ b; }) }")))
+        .containsExactly("b");
   }
 
   public void testFindModifiedParameters11() {
-    assertEquals(
-        ImmutableSet.of("b"),
-        FunctionArgumentInjector.findModifiedParameters(
-            parseFunction("function f(a,b){ a; (function(){ (function () { b; }) }) }")));
+    assertThat(
+            findModifiedParameters(
+                parseFunction("function f(a,b){ a; (function(){ (function () { b; }) }) }")))
+        .containsExactly("b");
   }
 
   public void testFindModifiedParameters12() {
-    assertThat(
-        FunctionArgumentInjector.findModifiedParameters(
-            parseFunction("function f(a=5){ return a;} f(1);"))).isEmpty();
+    assertThat(findModifiedParameters(parseFunction("function f(a=5){ return a;} f(1);")))
+        .isEmpty();
   }
 
   public void testMaybeAddTempsForCallArguments1() {
@@ -540,24 +527,22 @@ public final class FunctionArgumentInjectorTest extends TestCase {
     Node call = findCall(n, fnName);
     assertNotNull(call);
     LinkedHashMap<String, Node> actualMap =
-        FunctionArgumentInjector.getFunctionCallParameterMap(fn, call, getNameSupplier());
+        getFunctionCallParameterMap(fn, call, getNameSupplier());
     assertThat(actualMap.keySet()).isEqualTo(expectedKeys);
   }
 
-  private void testNeededTemps(String code, String fnName, Set<String> expectedTemps) {
+  private void testNeededTemps(String code, String fnName, ImmutableSet<String> expectedTemps) {
     Node n = parse(code);
     Node fn = findFunction(n, fnName);
     assertNotNull(fn);
     Node call = findCall(n, fnName);
     assertNotNull(call);
-    Map<String, Node> args =
-        FunctionArgumentInjector.getFunctionCallParameterMap(fn, call, getNameSupplier());
+    Map<String, Node> args = getFunctionCallParameterMap(fn, call, getNameSupplier());
 
     Set<String> actualTemps = new HashSet<>();
-    FunctionArgumentInjector.maybeAddTempsForCallArguments(
-        fn, args, actualTemps, new ClosureCodingConvention());
+    maybeAddTempsForCallArguments(fn, args, actualTemps, new ClosureCodingConvention());
 
-    assertEquals(expectedTemps, actualTemps);
+    assertThat(actualTemps).isEqualTo(expectedTemps);
   }
 
 

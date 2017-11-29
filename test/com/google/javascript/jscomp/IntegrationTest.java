@@ -4788,7 +4788,8 @@ public final class IntegrationTest extends IntegrationTestCase {
             + "b[a-0]=arguments[a];return b[0]}(8))");
   }
 
-  public void testInlineRestParamNonTranspiling() {
+  // TODO(b/69850796): Re-enable when InlineFunctions' FeatureSet is set back to ES6+.
+  public void disabled_testInlineRestParamNonTranspiling() {
     CompilerOptions options = createCompilerOptions();
     options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
     options.setLanguageOut(LanguageMode.ECMASCRIPT_2017);
@@ -4820,7 +4821,8 @@ public final class IntegrationTest extends IntegrationTestCase {
         "var a={a:9}; a=void 0===a?{a:5}:a;alert(3+a.a)");
   }
 
-  public void testDefaultParametersNonTranspiling() {
+  // TODO(b/69850796): Re-enable when InlineFunctions' FeatureSet is set back to ES6+.
+  public void disabled_testDefaultParametersNonTranspiling() {
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
@@ -4858,7 +4860,8 @@ public final class IntegrationTest extends IntegrationTestCase {
             "}(1,1,1,1,1))"));
   }
 
-  public void testRestObjectPatternParametersNonTranspiling() {
+  // TODO(b/69850796): Re-enable when InlineFunctions' FeatureSet is set back to ES6+.
+  public void disabled_testRestObjectPatternParametersNonTranspiling() {
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
