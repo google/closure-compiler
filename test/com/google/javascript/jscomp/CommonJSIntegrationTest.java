@@ -72,7 +72,9 @@ public final class CommonJSIntegrationTest extends IntegrationTestCase {
           "var Hello = require('./i0'); /** @type {!Hello} */ var hello = new Hello();"
         },
         new String[] {
-          "/** @const */ var module$i0 = {}; /** @const */ module$i0.default = /** @constructor */ function() {};",
+          LINE_JOINER.join(
+          "/** @const */ var module$i0 = {};",
+          "/** @const */ module$i0.default = /** @constructor */ function() {};"),
           "var Hello = module$i0.default; var hello = new module$i0.default();"
         });
   }
@@ -153,7 +155,9 @@ public final class CommonJSIntegrationTest extends IntegrationTestCase {
               "util.inherits(SubHello, Hello);")
         },
         new String[] {
-          "/** @const */ var module$i0 = {}; /** @constructor */ module$i0.default = function (){};",
+          LINE_JOINER.join(
+              "/** @const */ var module$i0 = {};",
+              "/** @constructor */ module$i0.default = function (){};"),
           LINE_JOINER.join(
               "var Hello = module$i0.default;",
               "var util = { inherits : function(x,y) {} };",
@@ -205,7 +209,9 @@ public final class CommonJSIntegrationTest extends IntegrationTestCase {
               "util.inherits(SubHello, Hello);")
         },
         new String[] {
-          "/** @const */ var module$i0 = {}; /** @constructor */ module$i0.default = function (){};",
+          LINE_JOINER.join(
+              "/** @const */ var module$i0 = {};",
+              "/** @constructor */ module$i0.default = function (){};"),
           LINE_JOINER.join(
               "var Hello = module$i0.default;",
               "var util = { inherits : function(x,y) {} };",

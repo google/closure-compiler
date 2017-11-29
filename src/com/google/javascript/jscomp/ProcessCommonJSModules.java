@@ -44,7 +44,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
   private static final String EXPORTS = "exports";
   private static final String MODULE = "module";
   private static final String REQUIRE = "require";
-  private static final String exportPropertyName = "default";
+  private static final String EXPORT_PROPERTY_NAME = "default";
 
   public static final DiagnosticType UNKNOWN_REQUIRE_ENSURE =
       DiagnosticType.warning(
@@ -155,7 +155,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
       return moduleName;
     }
 
-    return moduleName + "." + exportPropertyName;
+    return moduleName + "." + EXPORT_PROPERTY_NAME;
   }
 
   /**
@@ -652,7 +652,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
       builder.recordConstancy();
       initModule.setJSDocInfo(builder.build());
       if (directAssignments == 0) {
-        Node defaultProp = IR.stringKey(exportPropertyName);
+        Node defaultProp = IR.stringKey(EXPORT_PROPERTY_NAME);
         defaultProp.addChildToFront(IR.objectlit());
         initModule.getFirstFirstChild().addChildToFront(defaultProp);
         builder = new JSDocInfoBuilder(true);
@@ -1164,7 +1164,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
         return;
       }
 
-      moduleName = moduleName + "." + exportPropertyName;
+      moduleName = moduleName + "." + EXPORT_PROPERTY_NAME;
 
       Node updatedExport =
           NodeUtil.newQName(compiler, moduleName, export.node, export.node.getQualifiedName());
@@ -1279,7 +1279,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
           visitExport(t, newExport);
         } else {
           String moduleName = getModuleName(t.getInput());
-          Var moduleVar = t.getScope().getVar(moduleName + "." + exportPropertyName);
+          Var moduleVar = t.getScope().getVar(moduleName + "." + EXPORT_PROPERTY_NAME);
           Node defaultProp = null;
           if (moduleVar == null) {
             moduleVar = t.getScope().getVar(moduleName);
@@ -1288,7 +1288,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
                 && moduleVar.getNode().getFirstChild().isObjectLit()) {
               defaultProp =
                   NodeUtil.getFirstPropMatchingKey(
-                      moduleVar.getNode().getFirstChild(), exportPropertyName);
+                      moduleVar.getNode().getFirstChild(), EXPORT_PROPERTY_NAME);
             }
           } else if (moduleVar.getNode().getFirstChild() != null
               && moduleVar.getNode().getFirstChild().isObjectLit()) {

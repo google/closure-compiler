@@ -316,11 +316,15 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
     testModules(
         "test.js",
         lines(
-            "(function (global, factory) {",
-            "  true ? module.exports = factory(typeof angular === 'undefined' ? require('./other') : angular) :",
-            "  typeof define === 'function' && define.amd ? define('angular-cache', ['angular'], factory) :",
-            "  (global.angularCacheModuleName = factory(global.angular));",
-            "}(this, function (angular) { 'use strict';",
+            "(function(global, factory) {",
+            "  true ? module.exports = factory(",
+            "             typeof angular === 'undefined' ? require('./other') :",
+            "                                              angular) :",
+            "         typeof define === 'function' && define.amd ?",
+            "         define('angular-cache', ['angular'], factory) :",
+            "         (global.angularCacheModuleName = factory(global.angular));",
+            "}(this, function(angular) {",
+            "  'use strict';",
             "  console.log(angular);",
             "  return angular;",
             "}));"),
@@ -828,11 +832,15 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
         "test.js",
         lines(
             "var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;",
-            "!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(1), __webpack_require__(2)],",
-            "      __WEBPACK_AMD_DEFINE_RESULT__ = function (b, c) {",
-            "          console.log(b, c.exportA, c.exportB);",
+            "!(__WEBPACK_AMD_DEFINE_ARRAY__ =",
+            "      [__webpack_require__(1), __webpack_require__(2)],",
+            "  __WEBPACK_AMD_DEFINE_RESULT__ =",
+            "      function(b, c) {",
+            "        console.log(b, c.exportA, c.exportB);",
             "      }.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__),",
-            "    __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));"),
+            "  __WEBPACK_AMD_DEFINE_RESULT__ !== undefined &&",
+            "      (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));",
+            ""),
         lines(
             "/** @const */ var module$test = {};",
             "var __WEBPACK_AMD_DEFINE_ARRAY__$$module$test;",
@@ -956,7 +964,9 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "/** @const */ var module$test = {};",
             "var tinymce$$module$test = { foo: 'bar' };",
             "function register$$module$test(cb) { cb(tinymce$$module$test); }",
-            "register$$module$test(function(tinymce) { /** @const */ module$test.default = tinymce; });"));
+            "register$$module$test(function(tinymce) {",
+            "  /** @const */ module$test.default = tinymce;",
+            "});"));
   }
 
   public void testIssue2616() {
@@ -982,10 +992,15 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
         lines(
             "(function (name, context, definition) {",
             "  'use strict';",
-            "  if (typeof define === 'function' && define.amd) { define(definition); }",
-            "  else if (typeof module !== 'undefined' && module.exports) { module.exports = definition(); }",
-            "  else if (context.exports) { context.exports = definition(); }",
-            "  else { context[name] = definition(); }",
+            "  if (typeof define === 'function' && define.amd) {",
+            "    define(definition);",
+            "  } else if (typeof module !== 'undefined' && module.exports) {",
+            "    module.exports = definition();",
+            "  } else if (context.exports) {",
+            "    context.exports = definition();",
+            "  } else {",
+            "    context[name] = definition();",
+            "  }",
             "})('Fingerprint2', this, function() {",
             "  var Fingerprint2 = function() {",
             "    if (!(this instanceof Fingerprint2)) { return new Fingerprint2(); }",
