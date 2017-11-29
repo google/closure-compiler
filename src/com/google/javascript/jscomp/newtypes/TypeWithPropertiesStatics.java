@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp.newtypes;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import com.google.common.collect.ImmutableSet;
 import java.util.Collection;
 import java.util.HashSet;
@@ -31,9 +33,7 @@ final class TypeWithPropertiesStatics {
 
   static JSType getProp(
       ImmutableSet<? extends TypeWithProperties> types, QualifiedName qname) {
-    if (types == null) {
-      return null;
-    }
+    checkNotNull(types);
     JSType ptype = null;
     for (TypeWithProperties t : types) {
       if (t.mayHaveProp(qname)) {
@@ -46,9 +46,7 @@ final class TypeWithPropertiesStatics {
 
   static JSType getDeclaredProp(
       ImmutableSet<? extends TypeWithProperties> types, QualifiedName qname) {
-    if (types == null) {
-      return null;
-    }
+    checkNotNull(types);
     JSType ptype = null;
     for (TypeWithProperties t : types) {
       if (t.mayHaveProp(qname)) {
@@ -63,9 +61,7 @@ final class TypeWithPropertiesStatics {
 
   static Collection<JSType> getSubtypesWithProperty(
       ImmutableSet<? extends TypeWithProperties> types, QualifiedName qname) {
-    if (types == null) {
-      return ImmutableSet.of();
-    }
+    checkNotNull(types);
     Set<JSType> typesWithProp = new HashSet<>();
     for (TypeWithProperties t : types) {
       typesWithProp.addAll(t.getSubtypesWithProperty(qname));
@@ -75,9 +71,7 @@ final class TypeWithPropertiesStatics {
 
   static boolean mayHaveProp(
       ImmutableSet<? extends TypeWithProperties> types, QualifiedName qname) {
-    if (types == null) {
-      return false;
-    }
+    checkNotNull(types);
     for (TypeWithProperties t : types) {
       if (t.mayHaveProp(qname)) {
         return true;
@@ -88,9 +82,7 @@ final class TypeWithPropertiesStatics {
 
   static boolean hasProp(
       ImmutableSet<? extends TypeWithProperties> types, QualifiedName qname) {
-    if (types == null) {
-      return false;
-    }
+    checkNotNull(types);
     for (TypeWithProperties t : types) {
       if (!t.hasProp(qname)) {
         return false;
@@ -101,9 +93,7 @@ final class TypeWithPropertiesStatics {
 
   static boolean hasConstantProp(
       ImmutableSet<? extends TypeWithProperties> types, QualifiedName qname) {
-    if (types == null) {
-      return false;
-    }
+    checkNotNull(types);
     for (TypeWithProperties t : types) {
       if (t.hasConstantProp(qname)) {
         return true;
