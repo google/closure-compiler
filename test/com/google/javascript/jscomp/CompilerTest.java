@@ -1524,6 +1524,51 @@ public final class CompilerTest extends TestCase {
         .inOrder();
   }
 
+  public void testProperEs6ModuleOrderingWithExport() throws Exception {
+    ImmutableList.Builder<SourceFile> sources = ImmutableList.builder();
+    sources.add(
+        SourceFile.fromCode(
+            "/entry.js",
+            lines(
+                "import {A, B, C1} from './a.js';",
+                "console.log(A)",
+                "console.log(B)",
+                "console.log(C1)")));
+    sources.add(
+        SourceFile.fromCode(
+            "/a.js",
+            lines(
+                "export {B} from './b.js';",
+                "export {C as C1} from './c.js';",
+                "export const A = 'a';")));
+    sources.add(SourceFile.fromCode("/b.js", "export const B = 'b';"));
+    sources.add(SourceFile.fromCode("/c.js", "export const C = 'c';"));
+
+    CompilerOptions options = new CompilerOptions();
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_2015);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    options.dependencyOptions.setEntryPoints(
+        ImmutableList.of(ModuleIdentifier.forFile("/entry.js")));
+    options.dependencyOptions.setDependencySorting(true);
+    options.dependencyOptions.setDependencyPruning(true);
+    options.dependencyOptions.setMoocherDropping(true);
+    List<SourceFile> externs =
+        AbstractCommandLineRunner.getBuiltinExterns(options.getEnvironment());
+    Compiler compiler = new Compiler();
+    Result result = compiler.compile(externs, sources.build(), options);
+    assertTrue(result.success);
+
+    List<String> orderedInputs = new ArrayList<>();
+    for (CompilerInput input : compiler.getInputsInOrder()) {
+      orderedInputs.add(input.getName());
+    }
+
+    assertThat(orderedInputs)
+        .containsExactly(
+            "/b.js", "/c.js", "/a.js", "/entry.js")
+        .inOrder();
+  }
+
   public void testProperGoogBaseOrdering() throws Exception {
     List<SourceFile> sources = new ArrayList<>();
     sources.add(SourceFile.fromCode("test.js", "goog.setTestOnly()"));
