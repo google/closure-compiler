@@ -74,7 +74,7 @@ Port.prototype.disconnect = function() {};
  * Event interfaces whose addListeners() method takes just one parameter should
  * inherit from ChromeBaseEvent instead. It extends this interface.
  *
- * @see https://developer.chrome.com/extensions/events.html
+ * @see https://developer.chrome.com/extensions/events
  * @interface
  */
 function ChromeBaseEventNoListeners() {}
@@ -144,11 +144,98 @@ Rule.prototype.priority;
 
 
 /**
+ * @see https://developer.chrome.com/extensions/events#type-UrlFilter
+ * @record
+ */
+function UrlFilter() {}
+
+
+/** @type {string|undefined} */
+UrlFilter.prototype.hostContains;
+
+
+/** @type {string|undefined} */
+UrlFilter.prototype.hostEquals;
+
+
+/** @type {string|undefined} */
+UrlFilter.prototype.hostPrefix;
+
+
+/** @type {string|undefined} */
+UrlFilter.prototype.hostSuffix;
+
+
+/** @type {string|undefined} */
+UrlFilter.prototype.pathContains;
+
+
+/** @type {string|undefined} */
+UrlFilter.prototype.pathEquals;
+
+
+/** @type {string|undefined} */
+UrlFilter.prototype.pathPrefix;
+
+
+/** @type {string|undefined} */
+UrlFilter.prototype.pathSuffix;
+
+
+/** @type {string|undefined} */
+UrlFilter.prototype.queryContains;
+
+
+/** @type {string|undefined} */
+UrlFilter.prototype.queryEquals;
+
+
+/** @type {string|undefined} */
+UrlFilter.prototype.queryPrefix;
+
+
+/** @type {string|undefined} */
+UrlFilter.prototype.querySuffix;
+
+
+/** @type {string|undefined} */
+UrlFilter.prototype.urlContains;
+
+
+/** @type {string|undefined} */
+UrlFilter.prototype.urlEquals;
+
+
+/** @type {string|undefined} */
+UrlFilter.prototype.urlMatches;
+
+
+/** @type {string|undefined} */
+UrlFilter.prototype.originAndPathMatches;
+
+
+/** @type {string|undefined} */
+UrlFilter.prototype.urlPrefix;
+
+
+/** @type {string|undefined} */
+UrlFilter.prototype.urlSuffix;
+
+
+/** @type {!Array<string>|undefined} */
+UrlFilter.prototype.schemes;
+
+
+/** @type {!Array<(number|!Array<number>)>|undefined} */
+UrlFilter.prototype.ports;
+
+
+/**
  * Base event type from which all others inherit.
  *
  * LISTENER must be a function type that returns void.
  *
- * @see https://developer.chrome.com/extensions/events.html
+ * @see https://developer.chrome.com/extensions/events
  * @interface
  * @extends {ChromeBaseEventNoListeners}
  * @template LISTENER
@@ -159,6 +246,7 @@ function ChromeBaseEvent() {}
 /**
  * @param {LISTENER} callback
  * @return {undefined}
+ * @see https://developer.chrome.com/extensions/events#method-Event-addListener
  */
 ChromeBaseEvent.prototype.addListener = function(callback) {};
 
@@ -166,6 +254,7 @@ ChromeBaseEvent.prototype.addListener = function(callback) {};
 /**
  * @param {LISTENER} callback
  * @return {undefined}
+ * @see https://developer.chrome.com/extensions/events#method-Event-removeListener
  */
 ChromeBaseEvent.prototype.removeListener = function(callback) {};
 
@@ -173,11 +262,15 @@ ChromeBaseEvent.prototype.removeListener = function(callback) {};
 /**
  * @param {LISTENER} callback
  * @return {boolean}
+ * @see https://developer.chrome.com/extensions/events#method-Event-hasListener
  */
 ChromeBaseEvent.prototype.hasListener = function(callback) {};
 
 
-/** @return {boolean} */
+/**
+ * @return {boolean}
+ * @see https://developer.chrome.com/extensions/events#method-Event-hasListeners
+ */
 ChromeBaseEvent.prototype.hasListeners = function() {};
 
 
@@ -187,7 +280,7 @@ ChromeBaseEvent.prototype.hasListeners = function() {};
  * TODO(bradfordcsmith): Definitions using this type are failing to provide
  *     information about the parameters that will actually be supplied to the
  *     listener and should be updated to use a more specific event type.
- * @see https://developer.chrome.com/extensions/events.html
+ * @see https://developer.chrome.com/extensions/events
  * @interface
  * @extends {ChromeBaseEvent<!Function>}
  */
@@ -197,7 +290,7 @@ function ChromeEvent() {}
 /**
  * Event whose listeners take no parameters.
  *
- * @see https://developer.chrome.com/extensions/events.html
+ * @see https://developer.chrome.com/extensions/events
  * @interface
  * @extends {ChromeBaseEvent<function()>}
  */

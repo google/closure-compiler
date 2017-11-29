@@ -10262,3 +10262,80 @@ chrome.downloads.DeterminingFilenameEvent = function() {};
  * https://developer.chrome.com/extensions/downloads#event-onDeterminingFilename
  */
 chrome.downloads.onDeterminingFilename;
+
+
+/**
+ * @const
+ * @see https://developer.chrome.com/extensions/declarativeContent
+ */
+chrome.declarativeContent = {};
+
+
+/**
+ * @typedef {!{
+ *   pageUrl: (!UrlFilter|undefined),
+ *   css: (!Array<string>|undefined),
+ *   isBookmarked: (boolean|undefined)
+ * }}
+ * @see https://developer.chrome.com/extensions/declarativeContent#type-PageStateMatcher
+ */
+chrome.declarativeContent.PageStateMatcherLiteral;
+
+
+/**
+ * @constructor
+ * @param {!chrome.declarativeContent.PageStateMatcherLiteral=} literalValue
+ * @see https://developer.chrome.com/extensions/declarativeContent#type-PageStateMatcher
+ */
+chrome.declarativeContent.PageStateMatcher = function(literalValue) {};
+
+
+/**
+ * @constructor
+ * @see https://developer.chrome.com/extensions/declarativeContent#type-ShowPageAction
+ */
+chrome.declarativeContent.ShowPageAction = function() {};
+
+
+/**
+ * @typedef {!{
+ *   imageData: (!ImageData|!Object<number, !ImageData>|undefined)
+ * }}
+ * @see https://developer.chrome.com/extensions/declarativeContent#type-SetIcon
+ */
+chrome.declarativeContent.SetIconLiteral;
+
+
+/**
+ * @constructor
+ * @param {!chrome.declarativeContent.SetIconLiteral=} literalValue
+ * @see https://developer.chrome.com/extensions/declarativeContent#type-SetIcon
+ */
+chrome.declarativeContent.SetIcon = function(literalValue) {};
+
+
+/**
+ * @typedef {!{
+ *   css: (!Array<string>|undefined),
+ *   js: (!Array<string>|undefined),
+ *   allFrames: (boolean|undefined),
+ *   matchAboutBlank: (boolean|undefined)
+ * }}
+ * @see https://developer.chrome.com/extensions/declarativeContent#type-RequestContentScript
+ */
+chrome.declarativeContent.RequestContentScriptLiteral;
+
+
+/**
+ * @constructor
+ * @param {!chrome.declarativeContent.RequestContentScriptLiteral=} literalValue
+ * @see https://developer.chrome.com/extensions/declarativeContent#type-RequestContentScript
+ */
+chrome.declarativeContent.RequestContentScript = function(literalValue) {};
+
+
+/**
+ * @type {!ChromeVoidEvent}
+ * @see https://developer.chrome.com/extensions/declarativeContent#event-onPageChanged
+ */
+chrome.declarativeContent.onPageChanged;
