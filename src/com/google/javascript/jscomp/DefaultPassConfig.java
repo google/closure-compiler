@@ -2504,6 +2504,11 @@ public final class DefaultPassConfig extends PassConfig {
           passes.addPass(new OptimizeParameters(compiler));
           return passes;
         }
+
+        @Override
+        protected FeatureSet featureSet() {
+          return ES8_MODULES;
+        }
       };
 
   /**
