@@ -21,6 +21,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import com.google.javascript.jscomp.CompilerInput.ModuleType;
 import com.google.javascript.jscomp.Es6RewriteModules.FindGoogProvideOrGoogModule;
 import com.google.javascript.jscomp.deps.ModuleLoader;
+import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
@@ -97,32 +98,16 @@ public class FindModuleDependencies extends NodeTraversal.AbstractPostOrderCallb
 
     if (supportsEs6Modules && n.isExport()) {
       moduleType = ModuleType.ES6;
+      if (n.getBooleanProp(Node.EXPORT_DEFAULT)) {
+        // export default
+      } else if (n.hasTwoChildren()) {
+        // export * from 'moduleIdentifier';
+        // export {x, y as z} from 'moduleIdentifier';
+        addEs6ModuleImportToGraph(t, n);
+      }
     } else if (supportsEs6Modules && n.isImport()) {
       moduleType = ModuleType.ES6;
-      String moduleName;
-      String importName = n.getLastChild().getString();
-      boolean isNamespaceImport = importName.startsWith("goog:");
-      if (isNamespaceImport) {
-        // Allow importing Closure namespace objects (e.g. from goog.provide or goog.module) as
-        //   import ... from 'goog:my.ns.Object'.
-        // These are rewritten to plain namespace object accesses.
-        moduleName = importName.substring("goog:".length());
-      } else {
-        ModuleLoader.ModulePath modulePath =
-            t.getInput()
-                .getPath()
-                .resolveJsModule(importName, n.getSourceFileName(), n.getLineno(), n.getCharno());
-        if (modulePath == null) {
-          // The module loader issues an error
-          // Fall back to assuming the module is a file path
-          modulePath = t.getInput().getPath().resolveModuleAsPath(importName);
-        }
-        moduleName = modulePath.toModuleName();
-      }
-      if (moduleName.startsWith("goog.")) {
-        t.getInput().addOrderedRequire("goog");
-      }
-      t.getInput().addOrderedRequire(moduleName);
+      addEs6ModuleImportToGraph(t, n);
     } else if (supportsCommonJsModules) {
       if (moduleType != ModuleType.GOOG && ProcessCommonJSModules.isCommonJsExport(t, n)) {
         moduleType = ModuleType.COMMONJS;
@@ -165,6 +150,42 @@ public class FindModuleDependencies extends NodeTraversal.AbstractPostOrderCallb
    */
   public boolean convertToEs6Module(Node root) {
     return this.convertToEs6Module(root, false);
+  }
+
+  /**
+   * Adds an es6 module from an import node (import or export statement) to the graph.
+   */
+  private void addEs6ModuleImportToGraph(NodeTraversal t, Node n) {
+    String moduleName = getEs6ModuleNameFromImportNode(t, n);
+    if (moduleName.startsWith("goog.")) {
+      t.getInput().addOrderedRequire("goog");
+    }
+    t.getInput().addOrderedRequire(moduleName);
+  }
+
+  /**
+   * Get the module name from an import node (import or export statement).
+   */
+  private String getEs6ModuleNameFromImportNode(NodeTraversal t, Node n) {
+    String importName = n.getLastChild().getString();
+    boolean isNamespaceImport = importName.startsWith("goog:");
+    if (isNamespaceImport) {
+      // Allow importing Closure namespace objects (e.g. from goog.provide or goog.module) as
+      //   import ... from 'goog:my.ns.Object'.
+      // These are rewritten to plain namespace object accesses.
+      return importName.substring("goog:".length());
+    } else {
+      ModuleLoader.ModulePath modulePath =
+          t.getInput()
+              .getPath()
+              .resolveJsModule(importName, n.getSourceFileName(), n.getLineno(), n.getCharno());
+      if (modulePath == null) {
+        // The module loader issues an error
+        // Fall back to assuming the module is a file path
+        modulePath = t.getInput().getPath().resolveModuleAsPath(importName);
+      }
+      return modulePath.toModuleName();
+    }
   }
 
   private boolean convertToEs6Module(Node root, boolean skipGoogProvideModuleCheck) {
