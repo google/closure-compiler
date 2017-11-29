@@ -43,6 +43,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import javax.annotation.Nullable;
 import junit.framework.TestCase;
 
 /**
@@ -2288,10 +2289,10 @@ public final class NodeUtilTest extends TestCase {
   }
 
   /**
-   * When the left side is a destructuring pattern, generally it's not possible to identify the
-   * RHS for a specific name on the LHS.
+   * When the left side is a destructuring pattern, generally it's not possible to identify the RHS
+   * for a specific name on the LHS.
    */
-  public void testGetRValueOfLValueDestructuring() {
+  public void testGetRValueOfLValueInDestructuringPattern() {
     assertThat(NodeUtil.getRValueOfLValue(getNameNode(parse("var [x] = rhs;"), "x"))).isNull();
     assertThat(NodeUtil.getRValueOfLValue(getNameNode(parse("var [x, y] = rhs;"), "x"))).isNull();
     assertThat(NodeUtil.getRValueOfLValue(getNameNode(parse("var [y, x] = rhs;"), "x"))).isNull();
@@ -2305,6 +2306,36 @@ public final class NodeUtilTest extends TestCase {
                 .getFirstChild();  //STRING_KEY
     checkState(x.isStringKey(), x);
     assertThat(NodeUtil.getRValueOfLValue(x)).isNull();
+  }
+
+  public void testGetRValueOfLValueDestructuringPattern() {
+    assertNode(NodeUtil.getRValueOfLValue(getPattern(parse("var [x] = 'rhs';"))))
+        .hasType(Token.STRING);
+    assertNode(NodeUtil.getRValueOfLValue(getPattern(parse("var [x, y] = 'rhs';"))))
+        .hasType(Token.STRING);
+    assertNode(NodeUtil.getRValueOfLValue(getPattern(parse("var [y, x] = 'rhs';"))))
+        .hasType(Token.STRING);
+    assertNode(NodeUtil.getRValueOfLValue(getPattern(parse("var {x: x} = 'rhs';"))))
+        .hasType(Token.STRING);
+    assertNode(NodeUtil.getRValueOfLValue(getPattern(parse("var {y: x} = 'rhs';"))))
+        .hasType(Token.STRING);
+    assertNode(NodeUtil.getRValueOfLValue(getPattern(parse("var {x} = 'rhs';"))))
+        .hasType(Token.STRING);
+  }
+
+  public void testGetRValueOfLValueDestructuringLhs() {
+    assertNode(NodeUtil.getRValueOfLValue(getDestructuringLhs(parse("var [x] = 'rhs';"))))
+        .hasType(Token.STRING);
+    assertNode(NodeUtil.getRValueOfLValue(getDestructuringLhs(parse("var [x, y] = 'rhs';"))))
+        .hasType(Token.STRING);
+    assertNode(NodeUtil.getRValueOfLValue(getDestructuringLhs(parse("var [y, x] = 'rhs';"))))
+        .hasType(Token.STRING);
+    assertNode(NodeUtil.getRValueOfLValue(getDestructuringLhs(parse("var {x: x} = 'rhs';"))))
+        .hasType(Token.STRING);
+    assertNode(NodeUtil.getRValueOfLValue(getDestructuringLhs(parse("var {y: x} = 'rhs';"))))
+        .hasType(Token.STRING);
+    assertNode(NodeUtil.getRValueOfLValue(getDestructuringLhs(parse("var {x} = 'rhs';"))))
+        .hasType(Token.STRING);
   }
 
   public void testIsNaN() {
@@ -3200,6 +3231,36 @@ public final class NodeUtilTest extends TestCase {
     }
     for (Node c : n.children()) {
       Node result = getNameNode(c, name);
+      if (result != null) {
+        return result;
+      }
+    }
+    return null;
+  }
+
+  /** @return The first node in {@code tree} that is an array pattern or object pattern. */
+  @Nullable
+  private static Node getPattern(Node tree) {
+    if (tree.isDestructuringPattern()) {
+      return tree;
+    }
+    for (Node c : tree.children()) {
+      Node result = getPattern(c);
+      if (result != null) {
+        return result;
+      }
+    }
+    return null;
+  }
+
+  /** @return The first node in {@code tree} that is a DESTRUCTURING_LHS. */
+  @Nullable
+  private static Node getDestructuringLhs(Node tree) {
+    if (tree.isDestructuringLhs()) {
+      return tree;
+    }
+    for (Node c : tree.children()) {
+      Node result = getDestructuringLhs(c);
       if (result != null) {
         return result;
       }

@@ -5108,6 +5108,9 @@ public final class NodeUtil {
       case VAR:
       case LET:
       case CONST:
+        return n.getLastChild();
+      case DESTRUCTURING_LHS:
+        return parent.getLastChild();
       case OBJECTLIT:
         return n.getFirstChild();
       case FUNCTION:
