@@ -114,7 +114,7 @@ class DeadAssignmentsElimination extends AbstractScopedCallback implements Compi
 
     Scope blockScope = t.getScope();
     Scope functionScope = blockScope.getParent();
-    if (LiveVariablesAnalysis.MAX_VARIABLES_TO_ANALYZE
+    if (LiveVariablesAnalysisEs6.MAX_VARIABLES_TO_ANALYZE
         < blockScope.getVarCount() + functionScope.getVarCount()) {
       return;
     }

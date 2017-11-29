@@ -668,7 +668,7 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
 
   public void testMaxVars() {
     String code = "";
-    for (int i = 0; i < LiveVariablesAnalysis.MAX_VARIABLES_TO_ANALYZE + 1; i++) {
+    for (int i = 0; i < LiveVariablesAnalysisEs6.MAX_VARIABLES_TO_ANALYZE + 1; i++) {
       code += String.format("var x%d = 0; print(x%d);", i, i);
     }
     inFunction(code);
