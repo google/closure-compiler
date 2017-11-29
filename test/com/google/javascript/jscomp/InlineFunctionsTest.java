@@ -3101,6 +3101,35 @@ public class InlineFunctionsTest extends CompilerTestCase {
         ));
   }
 
+  public void testObjectPatternParamWithMultipleDestructuredNames() {
+    // TODO(b/69850796): Inlining produces the wrong output here.
+    // We potentially cause unwanted side effects - see the comment below.
+    test(
+        lines(
+            "function f({x, y}) {",
+            "  return x + y;",
+            "}",
+            "alert(f({x: sideEffects1(), y: sideEffects2()}));"),
+        lines(
+            "var JSCompiler_temp_const$jscomp$0 = alert;",
+            "var JSCompiler_inline_result$jscomp$1;",
+            "{",
+            // Don't evaluate {x: sideEffects1(), y: sideEffects2()} twice.
+            "  var x$jscomp$inline_2 = {x: sideEffects1(), y: sideEffects2()}.x;",
+            "  var y$jscomp$inline_3 = {x: sideEffects1(), y: sideEffects2()}.y",
+            "  JSCompiler_inline_result$jscomp$1 = x$jscomp$inline_2 + y$jscomp$inline_3;",
+            "}",
+            "JSCompiler_temp_const$jscomp$0(JSCompiler_inline_result$jscomp$1);"));
+  }
+
+  public void disabled_testArrayPatternParam() {
+    // TODO(b/69850796): Causes a internal compiler error.
+    // It should be possibly to inline this, not back off, but using testSame for now
+    // since it's not decided exactly how to inline destructuring parameters.
+    testSame("function f([x]) { return x; } alert(f([3]));");
+  }
+
+
   public void testObjectPatternParamWithDefaults() {
     // TODO(b/64614552): Consider inlining in this case.
     testSame(
@@ -3380,5 +3409,24 @@ public class InlineFunctionsTest extends CompilerTestCase {
             " return new Promise((resolve, reject) => { resolve('Success'); } );",
             "}",
             "foo().then(result => { alert(result); } );"));
+  }
+
+  public void testFunctionReferencingLetInNonGlobalBlock() {
+    // TODO(b/6985076): This produces the wrong output! It will cause an error when VarCheck runs
+    // or when this code is actually evaluated.
+    test(
+        lines(
+            "if (true) {",
+            "  let value = 1;",
+            "  var g = function(x) {",
+            "    return value + x;",
+            "  }",
+            "}",
+            "alert(g(10));"),
+        lines(
+            "if (true) {",
+            "  let value = 1;",
+            "}",
+            "alert(value + 10);")); // value is not defined in the global scope.
   }
 }
