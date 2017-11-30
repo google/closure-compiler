@@ -1132,11 +1132,13 @@ public final class NodeUtil {
     // Rather than id which ops may have side effects, id the ones
     // that we know to be safe
     switch (n.getToken()) {
-      // other side-effect free statements and expressions
       // Throws are by definition side effects, and yield and export are similar.
       case THROW:
       case YIELD:
       case EXPORT:
+      case VAR:
+      case LET:
+      case CONST:
         return true;
 
       case OBJECTLIT:
@@ -1168,11 +1170,9 @@ public final class NodeUtil {
         }
         break;
 
-      case VAR:    // empty var statement (no declaration)
-      case LET:
-      case CONST:
-      case NAME:   // variable by itself
-        if (n.getFirstChild() != null) {
+      case NAME:
+        if (n.hasChildren()) {
+          // This is the left side of a var/let/const
           return true;
         }
         break;

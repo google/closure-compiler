@@ -563,6 +563,8 @@ public final class NodeUtilTest extends TestCase {
     assertSideEffect(true, "(class extends foo() { })");
 
     assertSideEffect(false, "a");
+    assertSideEffect(false, "a.b");
+    assertSideEffect(false, "a.b.c");
     assertSideEffect(false, "[b, c [d, [e]]]");
     assertSideEffect(false, "({a: x, b: y, c: z})");
     assertSideEffect(false, "({a, b, c})");
