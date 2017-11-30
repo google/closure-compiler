@@ -64,7 +64,7 @@ class MaybeReachingVariableUse extends
 
     // TODO(user): Maybe compute it somewhere else and re-use the escape
     // local set here.
-    computeEscapedEs6(jsScope.getParent(), escaped, compiler, scopeCreator);
+    computeEscaped(jsScope.getParent(), escaped, compiler, scopeCreator);
     NodeUtil.getAllVarsDeclaredInFunction(
         allVarsInFn, orderedVars, compiler, scopeCreator, jsScope.getParent());
   }
@@ -110,8 +110,8 @@ class MaybeReachingVariableUse extends
 
     @Override
     public boolean equals(Object other) {
-      return (other instanceof ReachingUses) &&
-          ((ReachingUses) other).mayUseMap.equals(this.mayUseMap);
+      return (other instanceof ReachingUses)
+          && ((ReachingUses) other).mayUseMap.equals(this.mayUseMap);
     }
 
     @Override

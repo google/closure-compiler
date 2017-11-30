@@ -154,7 +154,7 @@ class LiveVariablesAnalysis
     this.allVarsInFn = new HashMap<>();
     this.orderedVars = new ArrayList<>();
 
-    computeEscapedEs6(jsScope, escaped, compiler, scopeCreator);
+    computeEscaped(jsScope, escaped, compiler, scopeCreator);
 
     NodeUtil.getAllVarsDeclaredInFunction(
         allVarsInFn, orderedVars, compiler, scopeCreator, jsScope);
