@@ -90,6 +90,9 @@ class RhinoErrorReporter {
       DiagnosticType.warning("INVALID_OCTAL_LITERAL",
           "This style of octal literal is not supported in strict mode.");
 
+  static final DiagnosticType STRING_CONTINUATION =
+      DiagnosticType.warning("JSC_STRING_CONTINUATION", "{0}");
+
   static final DiagnosticType ES6_FEATURE =
       DiagnosticType.error("ES6_FEATURE",
           "{0}. Use --language_in=ECMASCRIPT6 or ECMASCRIPT6_STRICT " +
@@ -170,6 +173,8 @@ class RhinoErrorReporter {
 
             // Old-style octal literals
             .put(Pattern.compile("^Octal .*literal.*"), INVALID_OCTAL_LITERAL)
+
+            .put(Pattern.compile("^String continuations.*"), STRING_CONTINUATION)
 
             .put(
                 Pattern.compile("^this language feature is only supported for ECMASCRIPT6 mode.*"),
