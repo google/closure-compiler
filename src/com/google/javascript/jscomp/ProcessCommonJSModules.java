@@ -1106,7 +1106,6 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
      * module. By this point all references to the import alias should have already been renamed.
      */
     private void visitRequireCall(NodeTraversal t, Node require, Node parent) {
-      String requireName = getCommonJsImportPath(require);
       String moduleName = getImportedModuleName(t, require);
       Node moduleRef =
           NodeUtil.newQName(compiler, getBasePropertyImport(moduleName))
@@ -1181,7 +1180,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
           && rValue != null
           && export.scope.getVar("module.exports") == null
           && root.getParent().isAssign()) {
-        if (root.getParent().getParent().isExprResult() && moduleInitialization == null) {
+        if (root.getGrandparent().isExprResult() && moduleInitialization == null) {
           // Rewrite "module.exports = foo;" to "var moduleName = foo;"
           Node parent = root.getParent();
           Node exportName = IR.exprResult(IR.assign(updatedExport, rValue.detach()));

@@ -140,8 +140,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   // The JS source inputs
   private List<CompilerInput> inputs;
 
-  // The JS source inputs
-  private Map<String, CompilerInput.ModuleType> moduleTypesByName;
+  // Map of module names to module types - used for module rewriting
+  private final Map<String, CompilerInput.ModuleType> moduleTypesByName;
 
   // error manager to which error management is delegated
   private ErrorManager errorManager;
