@@ -1169,8 +1169,8 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
           NodeUtil.newQName(compiler, moduleName, export.node, export.node.getQualifiedName());
       boolean exportIsConst =
           defaultExportIsConst
-              && getBasePropertyImport(getModuleName(t.getInput()))
-                  .equals(updatedExport.getQualifiedName())
+              && updatedExport.matchesQualifiedName(
+                  getBasePropertyImport(getModuleName(t.getInput())))
               && root == export.node
               && NodeUtil.isLValue(export.node);
 
