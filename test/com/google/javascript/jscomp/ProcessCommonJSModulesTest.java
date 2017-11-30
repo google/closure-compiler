@@ -1005,7 +1005,7 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "  var Fingerprint2 = function() {",
             "    if (!(this instanceof Fingerprint2)) { return new Fingerprint2(); }",
             "  };",
-            "  return Fingerprint2$$module$test;",
+            "  return Fingerprint2;",
             "})"),
         lines(
             "/** @const */ var module$test = {};",
