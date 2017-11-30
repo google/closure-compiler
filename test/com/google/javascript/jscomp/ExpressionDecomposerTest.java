@@ -850,9 +850,9 @@ public final class ExpressionDecomposerTest extends TestCase {
     decomposer.exposeExpression(callSite);
     validateSourceInfo(compiler, tree);
     String explanation = expectedRoot.checkTreeEquals(tree);
-    assertNull("\nExpected: " + compiler.toSource(expectedRoot) +
-        "\nResult: " + compiler.toSource(tree) +
-        "\n" + explanation, explanation);
+    assertNull("\nExpected: " + compiler.toSource(expectedRoot)
+        + "\nResult:   " + compiler.toSource(tree)
+        + "\n" + explanation, explanation);
   }
 
   private void helperMoveExpression(
@@ -903,9 +903,9 @@ public final class ExpressionDecomposerTest extends TestCase {
     decomposer.moveExpression(callSite);
     validateSourceInfo(compiler, tree);
     String explanation = expectedRoot.checkTreeEquals(tree);
-    assertNull("\nExpected: " + compiler.toSource(expectedRoot) +
-        "\nResult: " + compiler.toSource(tree) +
-        "\n" + explanation, explanation);
+    assertNull("\nExpected: " + compiler.toSource(expectedRoot)
+        + "\nResult:   " + compiler.toSource(tree)
+        + "\n" + explanation, explanation);
   }
 
   private Compiler getCompiler() {

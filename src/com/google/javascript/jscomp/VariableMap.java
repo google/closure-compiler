@@ -75,12 +75,12 @@ public final class VariableMap {
     return map.inverse().get(newName);
   }
 
-  /** Returns an unmodifiable mapping from original names to new names. */
+  /** Returns an immutable mapping from original names to new names. */
   public ImmutableMap<String, String> getOriginalNameToNewNameMap() {
     return ImmutableSortedMap.copyOf(map);
   }
 
-  /** Returns an unmodifiable mapping from new names to original names. */
+  /** Returns an immutable mapping from new names to original names. */
   public ImmutableMap<String, String> getNewNameToOriginalNameMap() {
     return map.inverse();
   }

@@ -15,6 +15,7 @@
  */
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.MoreObjects.toStringHelper;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
@@ -273,6 +274,14 @@ class ExpressionDecomposer {
   private static class DecompositionState {
     boolean sideEffects;
     Node extractBeforeStatement;
+
+    @Override
+    public String toString() {
+      return toStringHelper(this)
+          .add("sideEffects", sideEffects)
+          .add("extractBeforeStatement", extractBeforeStatement)
+          .toString();
+    }
   }
 
   /**
@@ -413,7 +422,7 @@ class ExpressionDecomposer {
     }
   }
 
-  private boolean isConstantNameNode(Node n, Set<String> knownConstants) {
+  private boolean isConstantNameNode(Node n) {
     // Non-constant names values may have been changed.
     return n.isName()
         && (NodeUtil.isConstantVar(n, scope) || knownConstants.contains(n.getString()));
@@ -442,7 +451,7 @@ class ExpressionDecomposer {
     //    t1.foo = t1.foo + 2;
     if (isLhsOfAssignOp && NodeUtil.isGet(expr)) {
       for (Node n : expr.children()) {
-        if (!n.isString() && !isConstantNameNode(n, knownConstants)) {
+        if (!n.isString() && !isConstantNameNode(n)) {
           Node extractedNode = extractExpression(n, injectionPoint);
           if (firstExtractedNode == null) {
             firstExtractedNode = extractedNode;
