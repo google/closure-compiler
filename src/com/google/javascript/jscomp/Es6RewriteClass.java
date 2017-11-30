@@ -525,6 +525,7 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, HotSwapCom
       Node staticAccess, Node instanceAccess) {
     Node context = member.isStaticMember() ? staticAccess : instanceAccess;
     context = context.cloneTree();
+    context.makeNonIndexableRecursive();
     if (member.isComputedProp()) {
       return IR.getelem(context, member.removeFirstChild());
     } else {
