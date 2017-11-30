@@ -81,8 +81,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
       FindImportsAndExports finder = new FindImportsAndExports();
       NodeTraversal.traverseEs6(compiler, n, finder);
 
-      CompilerInput.ModuleType moduleType =
-          compiler.getModuleTypeByName(getModuleName(compiler.getInput(n.getInputId())));
+      CompilerInput.ModuleType moduleType = compiler.getInput(n.getInputId()).getJsModuleType();
 
       boolean forceModuleDetection = moduleType == CompilerInput.ModuleType.IMPORTED_SCRIPT;
       boolean defaultExportIsConst = true;
