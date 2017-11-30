@@ -133,7 +133,7 @@ public final class GwtRunner implements EntryPoint {
     defaultFlags.exportLocalPropertyDefinitions = false;
     defaultFlags.extraAnnotationNames = null;
     defaultFlags.generateExports = false;
-    defaultFlags.languageIn = "ECMASCRIPT6";
+    defaultFlags.languageIn = "ECMASCRIPT_2017";
     defaultFlags.languageOut = "ECMASCRIPT5";
     defaultFlags.newTypeInf = false;
     defaultFlags.isolationMode = "NONE";
