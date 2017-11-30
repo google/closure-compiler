@@ -2545,6 +2545,79 @@ public final class NodeUtilTest extends TestCase {
     assertNotLhsByDestructuring(nameNodeObj);
   }
 
+  public void testLhsByDestructuring1d() {
+    Node root = parse("var {a = defaultValue} = obj;");
+    Node destructLhs = root.getFirstFirstChild();
+    checkState(destructLhs.isDestructuringLhs(), destructLhs);
+    Node destructPat = destructLhs.getFirstChild();
+    checkState(destructPat.isObjectPattern(), destructPat);
+
+    Node defaultNodeA = destructPat.getFirstChild();
+    checkState(defaultNodeA.isDefaultValue(), defaultNodeA);
+    Node strKeyNodeA = defaultNodeA.getFirstChild();
+    checkState(strKeyNodeA.getString().equals("a"), strKeyNodeA);
+
+    Node nameNodeDefault = defaultNodeA.getSecondChild();
+    checkState(nameNodeDefault.getString().equals("defaultValue"), nameNodeDefault);
+    Node nameNodeObj = destructPat.getNext();
+    checkState(nameNodeObj.getString().equals("obj"), nameNodeObj);
+
+    assertLhsByDestructuring(strKeyNodeA);
+    assertNotLhsByDestructuring(nameNodeDefault);
+    assertNotLhsByDestructuring(nameNodeObj);
+  }
+
+  public void testLhsByDestructuring1e() {
+    Node root = parse("var {a: b = defaultValue} = obj;");
+    Node destructLhs = root.getFirstFirstChild();
+    checkState(destructLhs.isDestructuringLhs(), destructLhs);
+    Node destructPat = destructLhs.getFirstChild();
+    checkState(destructPat.isObjectPattern(), destructPat);
+
+    Node strKeyNodeA = destructPat.getFirstChild();
+    checkState(strKeyNodeA.getString().equals("a"), strKeyNodeA);
+
+    Node defaultNodeA = strKeyNodeA.getOnlyChild();
+    checkState(defaultNodeA.isDefaultValue(), defaultNodeA);
+
+    Node nameNodeB = defaultNodeA.getFirstChild();
+    checkState(nameNodeB.getString().equals("b"), nameNodeB);
+
+    Node nameNodeDefaultValue = defaultNodeA.getSecondChild();
+    checkState(nameNodeDefaultValue.getString().equals("defaultValue"), nameNodeDefaultValue);
+    Node nameNodeObj = destructPat.getNext();
+    checkState(nameNodeObj.getString().equals("obj"), nameNodeObj);
+
+    assertNotLhsByDestructuring(strKeyNodeA);
+    assertLhsByDestructuring(nameNodeB);
+    assertNotLhsByDestructuring(nameNodeDefaultValue);
+    assertNotLhsByDestructuring(nameNodeObj);
+  }
+
+  public void testLhsByDestructuring1f() {
+    Node root = parse("var [a  = defaultValue] = arr;");
+    Node destructLhs = root.getFirstFirstChild();
+    checkState(destructLhs.isDestructuringLhs(), destructLhs);
+    Node destructPat = destructLhs.getFirstChild();
+    checkState(destructPat.isArrayPattern(), destructPat);
+
+    Node defaultNodeA = destructPat.getFirstChild();
+
+    checkState(defaultNodeA.isDefaultValue(), defaultNodeA);
+
+    Node nameNodeA = defaultNodeA.getFirstChild();
+    checkState(nameNodeA.getString().equals("a"), nameNodeA);
+
+    Node nameNodeDefault = defaultNodeA.getSecondChild();
+    checkState(nameNodeDefault.getString().equals("defaultValue"), nameNodeDefault);
+    Node nameNodeObj = destructPat.getNext();
+    checkState(nameNodeObj.getString().equals("arr"), nameNodeObj);
+
+    assertLhsByDestructuring(nameNodeA);
+    assertNotLhsByDestructuring(nameNodeDefault);
+    assertNotLhsByDestructuring(nameNodeObj);
+  }
+
   public void testLhsByDestructuring2() {
     Node root = parse("var [a, [b, c]] = obj;");
     Node destructLhs = root.getFirstFirstChild();

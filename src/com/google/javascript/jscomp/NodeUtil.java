@@ -3435,27 +3435,59 @@ public final class NodeUtil {
   }
 
   /**
-   * Returns true if the node is a lhs value of a destructuring assignment
-   * For example,
-   * x in {@code var [x] = [1];}, {@code var [...x] = [1];}, and {@code var {a: x} = {a: 1}}
+   * Returns true if the node is a lhs value of a destructuring assignment For example, x in {@code
+   * var [x] = [1];}, {@code var [...x] = [1];}, and {@code var {a: x} = {a: 1}} or a.b in {@code
+   * ([a.b] = [1]);} or {@code ({key: a.b} = {key: 1});}
    */
   public static boolean isLhsByDestructuring(Node n) {
-    Node node = n;
+    if (!(n.isName() || n.isGetProp() || n.isStringKey() || n.isGetElem())) {
+      return false;
+    }
+    return isLhsByDestructuringHelper(n);
+  }
+
+  /**
+   * Returns true if the given node is either an LHS node in a destructuring pattern or if one of
+   * its descendants contains an LHS node in a destructuring pattern. For example, in {@code var {a:
+   * b = 3}}}, this returns true given the NAME b or the DEFAULT_VALUE node containing b.
+   */
+  private static boolean isLhsByDestructuringHelper(Node n) {
     Node parent = n.getParent();
-    if (parent.isRest()) {
-      node = parent;
-      parent = parent.getParent();
+    Node grandparent = n.getGrandparent();
+
+    if (parent.isArrayPattern()) {
+      // e.g. var [b] = ...
+      return true;
     }
 
-    if (parent.isDestructuringPattern()
-        || (parent.isStringKey() && parent.getParent().isObjectPattern())
-        || (parent.isComputedProp()
-            && parent.getParent().isObjectPattern()
-            && node == parent.getSecondChild())) {
-      if (node.isStringKey() && node.hasChildren()) {
-        return false;
-      }
+    if (parent.isStringKey() && grandparent.isObjectPattern()) {
+      // e.g. the "b" in "var {a: b} = ..."
       return true;
+    }
+
+    if (parent.isObjectPattern()) {
+      // STRING_KEY children of object patterns are only LHS nodes if they have no children,
+      // meaning that they represent the object pattern shorthand (e.g. "var {a} = ...").
+      // If n is not a STRING_KEY, it is an OBJECT_PATTERN, DEFAULT_VALUE, or
+      // COMPUTED_PROP and contains a LHS node.
+      return !(n.isStringKey() && n.hasChildren());
+    }
+
+    if (parent.isComputedProp() && n == parent.getSecondChild()) {
+      // The first child of a COMPUTED_PROP is the property expression, not a LHS.
+      // The second is the value, which in an object pattern will contain the LHS.
+      return isLhsByDestructuringHelper(parent);
+    }
+
+    if (parent.isRest()) {
+      // The only child of a REST node is the LHS.
+      return isLhsByDestructuringHelper(parent);
+    }
+
+    if (parent.isDefaultValue() && n == parent.getFirstChild()) {
+      // The first child of a DEFAULT_VALUE is a NAME node and a potential LHS.
+      // The second child is the value, so never a LHS node.
+      return isLhsByDestructuringHelper(parent);
     }
     return false;
   }
