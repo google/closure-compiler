@@ -3261,15 +3261,6 @@ public final class NodeUtil {
   }
 
   /**
-   * Determines if a function takes a variable number of arguments by
-   * looking for references to the "arguments" var_args object.
-   */
-  @Deprecated
-  static boolean isVarArgsFunction(Node fn) {
-    return doesFunctionReferenceOwnArgumentsObject(fn);
-  }
-
-  /**
    * @return Whether a function has a reference to its own "arguments" object.
    */
   static boolean doesFunctionReferenceOwnArgumentsObject(Node fn) {

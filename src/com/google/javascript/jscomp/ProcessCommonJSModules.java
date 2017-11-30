@@ -264,7 +264,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
       return false;
     }
 
-    if (NodeUtil.isVarArgsFunction(fnc)) {
+    if (NodeUtil.doesFunctionReferenceOwnArgumentsObject(fnc)) {
       return false;
     }
 

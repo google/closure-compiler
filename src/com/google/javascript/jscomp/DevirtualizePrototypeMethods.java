@@ -233,7 +233,7 @@ class DevirtualizePrototypeMethods implements CompilerPass {
     Node rValue = definition.getRValue();
     if (rValue == null
         || !rValue.isFunction()
-        || NodeUtil.isVarArgsFunction(rValue)) {
+        || NodeUtil.doesFunctionReferenceOwnArgumentsObject(rValue)) {
       return false;
     }
 
