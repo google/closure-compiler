@@ -1025,16 +1025,16 @@ public final class FunctionType implements Serializable {
   }
 
   /**
-   * Returns all the non-instantiated type parameter names.
-   * (Note: if this type is the result of a generic function type that has been
-   * instantiated, the type parameters have already been substituted away.)
+   * Returns all the non-instantiated type parameter names. (Note: if this type is the result of a
+   * generic function type that has been instantiated, the type parameters have already been
+   * substituted away.)
    */
-  public List<String> getTypeParameters() {
+  public ImmutableList<String> getTypeParameters() {
     return this.typeParameters.asList();
   }
 
   /** Always returns a non-null map. */
-  public Map<String, Node> getTypeTransformations() {
+  public ImmutableMap<String, Node> getTypeTransformations() {
     return this.typeParameters.getTypeTransformations();
   }
 

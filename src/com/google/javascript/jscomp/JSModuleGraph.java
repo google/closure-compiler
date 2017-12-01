@@ -399,33 +399,6 @@ public final class JSModuleGraph implements Serializable {
   }
 
   /**
-   * Applies a DependencyOptions in "dependency sorting" and "dependency pruning"
-   * mode to the given list of inputs. Returns a new list with the files sorted
-   * and removed. This module graph will be updated to reflect the new list.
-   *
-   * If you need more fine-grained dependency management, you should create your
-   * own DependencyOptions and call
-   * {@code manageDependencies(DependencyOptions, List<CompilerInput>)}.
-   *
-   * @param entryPoints The entry points into the program.
-   *     Expressed as JS symbols.
-   * @param inputs The original list of sources. Used to ensure that the sort
-   *     is stable.
-   * @throws MissingProvideException if an entry point was not provided
-   *     by any of the inputs.
-   * @see DependencyOptions for more info on how this works.
-   */
-  public List<CompilerInput> manageDependencies(
-      List<ModuleIdentifier> entryPoints, List<CompilerInput> inputs)
-      throws MissingModuleException, MissingProvideException {
-    DependencyOptions depOptions = new DependencyOptions();
-    depOptions.setDependencySorting(true);
-    depOptions.setDependencyPruning(true);
-    depOptions.setEntryPoints(entryPoints);
-    return manageDependencies(depOptions, inputs);
-  }
-
-  /**
    * Apply the dependency options to the list of sources, returning a new source list re-ordering
    * and dropping files as necessary. This module graph will be updated to reflect the new list.
    *
