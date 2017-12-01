@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
@@ -2175,10 +2176,7 @@ public abstract class CompilerTestCase extends TestCase {
   }
 
   protected static Diagnostic warning(DiagnosticType type, String match) {
-    // TODO(johnlenz): change this to reject null
-    if (type == null) {
-      return null;
-    }
+    checkNotNull(type);
     Diagnostic diagnostic = warning(type);
     return match != null ? diagnostic.withMessage(match) : diagnostic;
   }
@@ -2188,10 +2186,7 @@ public abstract class CompilerTestCase extends TestCase {
   }
 
   protected static Diagnostic error(DiagnosticType type, String match) {
-    // TODO(johnlenz): change this to reject null
-    if (type == null) {
-      return null;
-    }
+    checkNotNull(type);
     Diagnostic diagnostic = error(type);
     return match != null ? diagnostic.withMessage(match) : diagnostic;
   }
