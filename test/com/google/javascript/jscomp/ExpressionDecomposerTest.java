@@ -26,7 +26,6 @@ import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.ExpressionDecomposer.DecompositionType;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.function.Function;
@@ -41,10 +40,12 @@ import junit.framework.TestCase;
 // Note: functions "foo" and "goo" are external functions in the helper.
 public final class ExpressionDecomposerTest extends TestCase {
   private boolean allowMethodCallDecomposing;
+  private final Set<String> knownConstants = new HashSet<>();
 
   @Override
   public void setUp() {
     allowMethodCallDecomposing = false;
+    knownConstants.clear();
   }
 
   public void testCanExposeExpression1() {
@@ -740,17 +741,9 @@ public final class ExpressionDecomposerTest extends TestCase {
     return ExpressionDecomposer.findExpressionRoot(call);
   }
 
-  private void helperCanExposeExpression(
-      DecompositionType expectedResult,
-      String code,
-      String fnName) {
-    helperCanExposeExpression(expectedResult, code, fnName, null);
-  }
-
   private void helperCanExposeFunctionExpression(
       DecompositionType expectedResult, String code, int call) {
     Compiler compiler = getCompiler();
-    Set<String> knownConstants = new HashSet<>();
     ExpressionDecomposer decomposer = new ExpressionDecomposer(
         compiler, compiler.getUniqueNameIdSupplier(),
         knownConstants, newScope(), allowMethodCallDecomposing);
@@ -771,12 +764,8 @@ public final class ExpressionDecomposerTest extends TestCase {
   private void helperCanExposeExpression(
       DecompositionType expectedResult,
       String code,
-      String fnName,
-      Set<String> knownConstants) {
+      String fnName) {
     Compiler compiler = getCompiler();
-    if (knownConstants == null) {
-      knownConstants = new HashSet<>();
-    }
     ExpressionDecomposer decomposer = new ExpressionDecomposer(
         compiler, compiler.getUniqueNameIdSupplier(),
         knownConstants, newScope(), allowMethodCallDecomposing);
@@ -790,8 +779,7 @@ public final class ExpressionDecomposerTest extends TestCase {
     assertNotNull("Call to " + fnName + " was not found.", callSite);
 
     compiler.resetUniqueNameId();
-    DecompositionType result = decomposer.canExposeExpression(
-        callSite);
+    DecompositionType result = decomposer.canExposeExpression(callSite);
     assertEquals(expectedResult, result);
   }
 
@@ -799,38 +787,14 @@ public final class ExpressionDecomposerTest extends TestCase {
       String code,
       String fnName,
       String expectedResult) {
-    helperExposeExpression(code, fnName, expectedResult, null);
-  }
-
-
-  private void validateSourceInfo(Compiler compiler, Node subtree) {
-    (new LineNumberCheck(compiler)).setCheckSubTree(subtree);
-    // Source information problems are reported as compiler errors.
-    if (compiler.getErrorCount() != 0) {
-      String msg = "Error encountered: ";
-      for (JSError err : compiler.getErrors()) {
-        msg += err + "\n";
-      }
-      assertEquals(msg, 0, compiler.getErrorCount());
-    }
-  }
-  private void helperExposeExpression(
-      String code,
-      String fnName,
-      String expectedResult,
-      Set<String> knownConstants) {
-    helperExposeExpression(code, (tree) -> findCall(tree, fnName), expectedResult, knownConstants);
+    helperExposeExpression(code, (tree) -> findCall(tree, fnName), expectedResult);
   }
 
   private void helperExposeExpression(
       String code,
       Function<Node, Node> nodeFinder,
-      String expectedResult,
-      Set<String> knownConstants) {
+      String expectedResult) {
     Compiler compiler = getCompiler();
-    if (knownConstants == null) {
-      knownConstants = new HashSet<>();
-    }
     ExpressionDecomposer decomposer = new ExpressionDecomposer(
         compiler, compiler.getUniqueNameIdSupplier(),
         knownConstants, newScope(), allowMethodCallDecomposing);
@@ -840,14 +804,14 @@ public final class ExpressionDecomposerTest extends TestCase {
     Node tree = parse(compiler, code);
     assertNotNull(tree);
 
-    Node callSite = nodeFinder.apply(tree);
-    assertWithMessage("Expected node was not found.").that(callSite).isNotNull();
+    Node expr = nodeFinder.apply(tree);
+    assertWithMessage("Expected node was not found.").that(expr).isNotNull();
 
-    DecompositionType result = decomposer.canExposeExpression(callSite);
+    DecompositionType result = decomposer.canExposeExpression(expr);
     assertEquals(DecompositionType.DECOMPOSABLE, result);
 
     compiler.resetUniqueNameId();
-    decomposer.exposeExpression(callSite);
+    decomposer.exposeExpression(expr);
     validateSourceInfo(compiler, tree);
     String explanation = expectedRoot.checkTreeEquals(tree);
     assertNull("\nExpected: " + compiler.toSource(expectedRoot)
@@ -859,33 +823,14 @@ public final class ExpressionDecomposerTest extends TestCase {
       String code,
       String fnName,
       String expectedResult) {
-    helperMoveExpression(code, fnName, expectedResult, null);
+    helperMoveExpression(code, (tree) -> findCall(tree, fnName), expectedResult);
   }
 
   private void helperMoveExpression(
       String code,
       Function<Node, Node> nodeFinder,
       String expectedResult) {
-    helperMoveExpression(code, nodeFinder, expectedResult, null);
-  }
-
-  private void helperMoveExpression(
-      String code,
-      String fnName,
-      String expectedResult,
-      Set<String> knownConstants) {
-    helperMoveExpression(code, (tree) -> findCall(tree, fnName), expectedResult, knownConstants);
-  }
-
-  private void helperMoveExpression(
-      String code,
-      Function<Node, Node> nodeFinder,
-      String expectedResult,
-      Set<String> knownConstants) {
     Compiler compiler = getCompiler();
-    if (knownConstants == null) {
-      knownConstants = new HashSet<>();
-    }
 
     ExpressionDecomposer decomposer = new ExpressionDecomposer(
         compiler, compiler.getUniqueNameIdSupplier(),
@@ -896,11 +841,11 @@ public final class ExpressionDecomposerTest extends TestCase {
     Node tree = parse(compiler, code);
     assertNotNull(tree);
 
-    Node callSite = nodeFinder.apply(tree);
-    assertWithMessage("Expected node was not found.").that(callSite).isNotNull();
+    Node expr = nodeFinder.apply(tree);
+    assertWithMessage("Expected node was not found.").that(expr).isNotNull();
 
     compiler.resetUniqueNameId();
-    decomposer.moveExpression(callSite);
+    decomposer.moveExpression(expr);
     validateSourceInfo(compiler, tree);
     String explanation = expectedRoot.checkTreeEquals(tree);
     assertNull("\nExpected: " + compiler.toSource(expectedRoot)
@@ -972,14 +917,25 @@ public final class ExpressionDecomposerTest extends TestCase {
     return (new Find()).find(root);
   }
 
+  private void validateSourceInfo(Compiler compiler, Node subtree) {
+    (new LineNumberCheck(compiler)).setCheckSubTree(subtree);
+    // Source information problems are reported as compiler errors.
+    if (compiler.getErrorCount() != 0) {
+      String msg = "Error encountered: ";
+      for (JSError err : compiler.getErrors()) {
+        msg += err + "\n";
+      }
+      assertEquals(msg, 0, compiler.getErrorCount());
+    }
+  }
+
   private static Node parse(Compiler compiler, String js) {
     Node n = Normalize.parseAndNormalizeTestCode(compiler, js);
-    assertEquals(Arrays.toString(compiler.getErrors()),
-        0, compiler.getErrorCount());
+    assertThat(compiler.getErrors()).isEmpty();
     return n;
   }
 
   private Scope newScope() {
-    return Scope.createGlobalScope(new Node(Token.SCRIPT));
+    return Scope.createGlobalScope(new Node(Token.ROOT));
   }
 }
