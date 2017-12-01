@@ -21,6 +21,7 @@ import static com.google.common.truth.Truth.assertThat;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.javascript.jscomp.CollapseProperties.PropertyType;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.ReplaceStrings.Result;
 import com.google.javascript.rhino.Node;
@@ -137,7 +138,7 @@ public final class ReplaceStringsTest extends TypeICompilerTestCase {
         if (rename) {
           NodeTraversal.traverseEs6(compiler, js, new Renamer(compiler));
         }
-        new CollapseProperties(compiler).process(externs, js);
+        new CollapseProperties(compiler, PropertyType.ANY).process(externs, js);
         if (runDisambiguateProperties) {
           SourceInformationAnnotator sia =
               new SourceInformationAnnotator("test", false /* checkAnnotated */);

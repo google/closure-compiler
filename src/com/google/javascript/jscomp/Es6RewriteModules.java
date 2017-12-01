@@ -393,6 +393,7 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
       String withSuffix = entry.getValue().name;
       Node nodeForSourceInfo = entry.getValue().nodeForSourceInfo;
       Node getProp = IR.getprop(IR.name(moduleName), IR.string(exportedName));
+      getProp.putBooleanProp(Node.MODULE_EXPORT, true);
 
       if (typedefs.contains(exportedName)) {
         // /** @typedef {foo} */

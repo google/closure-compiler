@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import com.google.javascript.jscomp.CollapseProperties.PropertyType;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.Node;
@@ -887,7 +888,7 @@ public final class NormalizeTest extends CompilerTestCase {
 
       @Override
       protected CompilerPass getProcessor(Compiler compiler) {
-        return new CollapseProperties(compiler);
+        return new CollapseProperties(compiler, PropertyType.ANY);
       }
     };
 

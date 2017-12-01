@@ -636,7 +636,9 @@ public class IR {
     return new Node(Token.NULL);
   }
 
-  public static Node typeof(Node expr) { return unaryOp(Token.TYPEOF, expr); }
+  public static Node typeof(Node expr) {
+    return unaryOp(Token.TYPEOF, expr);
+  }
 
   // helper methods
 

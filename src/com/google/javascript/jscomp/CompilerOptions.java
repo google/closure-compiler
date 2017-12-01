@@ -634,6 +634,9 @@ public class CompilerOptions implements Serializable {
   /** Flattens multi-level property names (e.g. a$b = x) */
   public boolean collapseProperties;
 
+  /** Flattens property names created by module rewriting (e.g. a$b = x) */
+  public boolean collapseModuleExportProperties;
+
   /** Split object literals into individual variables when possible. */
   boolean collapseObjectLiterals;
 
@@ -1283,6 +1286,7 @@ public class CompilerOptions implements Serializable {
     preferStableNames = false;
     renamePrefix = null;
     collapseProperties = false;
+    collapseModuleExportProperties = false;
     collapseObjectLiterals = false;
     devirtualizePrototypeMethods = false;
     disambiguateProperties = false;
@@ -2388,6 +2392,10 @@ public class CompilerOptions implements Serializable {
 
   public void setCollapseProperties(boolean collapseProperties) {
     this.collapseProperties = collapseProperties;
+  }
+
+  public void setCollapseModuleExportProperties(boolean collapseModuleExportProperties) {
+    this.collapseModuleExportProperties = collapseModuleExportProperties;
   }
 
   public void setDevirtualizePrototypeMethods(boolean devirtualizePrototypeMethods) {

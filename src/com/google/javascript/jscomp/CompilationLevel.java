@@ -239,6 +239,7 @@ public enum CompilationLevel {
       case SIMPLE_OPTIMIZATIONS:
         // Enable global variable optimizations (but not property optimizations)
         options.setVariableRenaming(VariableRenamingPolicy.ALL);
+        options.setCollapseModuleExportProperties(true);
         options.setCollapseAnonymousFunctions(true);
         options.setInlineConstantVars(true);
         options.setInlineFunctions(Reach.ALL);

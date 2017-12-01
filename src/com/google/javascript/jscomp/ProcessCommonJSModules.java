@@ -47,6 +47,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
   private static final String MODULE = "module";
   private static final String REQUIRE = "require";
   private static final String WEBPACK_REQUIRE = "__webpack_require__";
+  private static final String EXPORT_PROPERTY_NAME = "default";
 
   public static final DiagnosticType UNKNOWN_REQUIRE_ENSURE =
       DiagnosticType.warning(
@@ -94,8 +95,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
       FindImportsAndExports finder = new FindImportsAndExports();
       NodeTraversal.traverseEs6(compiler, n, finder);
 
-      CompilerInput.ModuleType moduleType = compiler.getModuleTypeByName(
-          getModuleName(compiler.getInput(n.getInputId())));
+      CompilerInput.ModuleType moduleType = compiler.getInput(n.getInputId()).getJsModuleType();
 
       boolean forceModuleDetection = moduleType == CompilerInput.ModuleType.IMPORTED_SCRIPT;
       boolean defaultExportIsConst = true;
@@ -143,8 +143,8 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
       NodeTraversal.traverseEs6(
           compiler,
           n,
-          new RewriteModule(isCommonJsModule || forceModuleDetection, exports.build(),
-              defaultExportIsConst));
+          new RewriteModule(
+              isCommonJsModule || forceModuleDetection, exports.build(), defaultExportIsConst));
     }
     return false;
   }
@@ -168,7 +168,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
       return moduleName;
     }
 
-    return moduleName + "." + exportPropertyName;
+    return moduleName + "." + EXPORT_PROPERTY_NAME;
   }
 
   public boolean isCommonJsImport(Node requireCall) {
@@ -397,7 +397,8 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
 
       // We only support explicitly binding "this" to the parent "this" or "exports"
       if (!(call.getSecondChild() != null
-          && (call.getSecondChild().isThis() || call.getSecondChild().matchesQualifiedName(EXPORTS)))) {
+          && (call.getSecondChild().isThis()
+              || call.getSecondChild().matchesQualifiedName(EXPORTS)))) {
         return false;
       }
     } else {
@@ -586,12 +587,15 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
             if (existingPattern != null) {
               umdPatterns.remove(existingPattern);
             }
-            Node enclosingIf = NodeUtil.getEnclosingNode(n, new Predicate<Node>() {
-              @Override
-              public boolean apply(Node node) {
-                return node.isIf() || node.isHook();
-              }
-            });
+            Node enclosingIf =
+                NodeUtil.getEnclosingNode(
+                    n,
+                    new Predicate<Node>() {
+                      @Override
+                      public boolean apply(Node node) {
+                        return node.isIf() || node.isHook();
+                      }
+                    });
             umdPatterns.add(new UmdPattern(ifAncestor, enclosingIf.getSecondChild()));
           }
         }
@@ -623,8 +627,9 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
                 && ((n.getNext().isGetProp()
                         && n.getNext().matchesQualifiedName(MODULE + "." + EXPORTS))
                     || (n.getNext().isAssign()
-                        && n.getNext().getFirstChild().matchesQualifiedName(MODULE + "." + EXPORTS))))
-            {
+                        && n.getNext()
+                            .getFirstChild()
+                            .matchesQualifiedName(MODULE + "." + EXPORTS)))) {
               exports.add(new ExportInfo(n, t.getScope()));
             } else if (!this.hasGoogProvideOrModule) {
               errors.add(t.makeError(qNameRoot, SUSPICIOUS_EXPORTS_ASSIGNMENT));
@@ -791,10 +796,14 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
             exportsToRemove.add(export);
             compiler.reportChangeToEnclosingScope(changeRoot);
 
-          // Find compound identity assignments and remove the exports = portion
-          // exports = module.exports = foo;
+            // Find compound identity assignments and remove the exports = portion
+            // exports = module.exports = foo;
           } else if (export.node.getNext().isAssign()
-              && export.node.getNext().getFirstChild().matchesQualifiedName(MODULE + "." + EXPORTS)) {
+              && export
+                  .node
+                  .getNext()
+                  .getFirstChild()
+                  .matchesQualifiedName(MODULE + "." + EXPORTS)) {
             Node assign = export.node.getNext();
             export.node.getParent().replaceWith(assign.detach());
             exportsToRemove.add(export);
@@ -822,12 +831,13 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
         }
       }
 
-      Node initModule  = IR.var(IR.name(moduleName), IR.objectlit());
+      Node initModule = IR.var(IR.name(moduleName), IR.objectlit());
       JSDocInfoBuilder builder = new JSDocInfoBuilder(true);
       builder.recordConstancy();
       initModule.setJSDocInfo(builder.build());
       if (directAssignments == 0) {
-        Node defaultProp = IR.stringKey(exportPropertyName);
+        Node defaultProp = IR.stringKey(EXPORT_PROPERTY_NAME);
+        defaultProp.putBooleanProp(Node.MODULE_EXPORT, true);
         defaultProp.addChildToFront(IR.objectlit());
         initModule.getFirstFirstChild().addChildToFront(defaultProp);
         builder = new JSDocInfoBuilder(true);
@@ -945,7 +955,9 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
 
           FunctionToBlockMutator mutator =
               new FunctionToBlockMutator(compiler, compiler.getUniqueNameIdSupplier());
-          Node newStatements = mutator.mutateWithoutRenaming(factoryLabel, fn, enclosingFnCall, null, false, false);
+
+          Node newStatements =
+              mutator.mutateWithoutRenaming(factoryLabel, fn, enclosingFnCall, null, false, false);
 
           // Check to see if the returned block is of the form:
           // {
@@ -980,17 +992,31 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
             }
 
             if (call != null) {
-              newStatements = mutator.mutateWithoutRenaming(
-                  factoryLabel, inlinedFn, call, assignedName, false, false);
+              newStatements =
+                  mutator.mutateWithoutRenaming(
+                      factoryLabel, inlinedFn, call, assignedName, false, false);
               if (assignedName != null) {
-                Node newName = IR.var(NodeUtil.newName(compiler, assignedName, fn, expr.getFirstChild().getQualifiedName()))
-                    .useSourceInfoFromForTree(fn);
+                Node newName =
+                    IR.var(
+                            NodeUtil.newName(
+                                compiler,
+                                assignedName,
+                                fn,
+                                expr.getFirstChild().getQualifiedName()))
+                        .useSourceInfoFromForTree(fn);
                 if (newStatements.hasChildren()
                     && newStatements.getFirstChild().isExprResult()
                     && newStatements.getFirstFirstChild().isAssign()
                     && newStatements.getFirstFirstChild().getFirstChild().isName()
-                    && newStatements.getFirstFirstChild().getFirstChild().getString().equals(assignedName)) {
-                  newName.getFirstChild().addChildToFront(newStatements.getFirstFirstChild().getSecondChild().detach());
+                    && newStatements
+                        .getFirstFirstChild()
+                        .getFirstChild()
+                        .getString()
+                        .equals(assignedName)) {
+                  newName
+                      .getFirstChild()
+                      .addChildToFront(
+                          newStatements.getFirstFirstChild().getSecondChild().detach());
                   newStatements.replaceChild(newStatements.getFirstChild(), newName);
                 } else {
                   newStatements.addChildToFront(newName);
@@ -1101,7 +1127,9 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
 
           // If a function is the direct module export, move it to the top.
           for (int i = 1; i < functionsToHoist.size(); i++) {
-            if (functionsToHoist.get(i).getFirstFirstChild()
+            if (functionsToHoist
+                .get(i)
+                .getFirstFirstChild()
                 .matchesQualifiedName(getBasePropertyImport(moduleName))) {
               Node fncVar = functionsToHoist.get(i);
               functionsToHoist.remove(i);
@@ -1163,7 +1191,8 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
           // UMD Inlining can shadow global variables - these are just removed.
           //
           // var exports = exports;
-          if (n.getFirstChild().hasChildren() && n.getFirstFirstChild().isName()
+          if (n.getFirstChild().hasChildren()
+              && n.getFirstFirstChild().isName()
               && n.getFirstChild().getString().equals(n.getFirstFirstChild().getString())) {
             n.detach();
             t.reportCodeChange();
@@ -1190,12 +1219,15 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
               // Avoid renaming a shadowed global
               //
               // var angular = angular;  // value is global ref
-              Node enclosingDeclaration = NodeUtil.getEnclosingNode(n, new Predicate<Node>() {
-                @Override
-                public boolean apply(Node node) {
-                  return node == nameDeclaration.getNameNode();
-                }
-              });
+              Node enclosingDeclaration =
+                  NodeUtil.getEnclosingNode(
+                      n,
+                      new Predicate<Node>() {
+                        @Override
+                        public boolean apply(Node node) {
+                          return node == nameDeclaration.getNameNode();
+                        }
+                      });
 
               if (enclosingDeclaration == null
                   || enclosingDeclaration == n
@@ -1260,10 +1292,10 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
      * module. By this point all references to the import alias should have already been renamed.
      */
     private void visitRequireCall(NodeTraversal t, Node require, Node parent) {
-      String requireName = getCommonJsImportPath(require);
       String moduleName = getImportedModuleName(t, require);
-      Node moduleRef = NodeUtil.newQName(compiler, getBasePropertyImport(moduleName))
-          .useSourceInfoFromForTree(require);
+      Node moduleRef =
+          NodeUtil.newQName(compiler, getBasePropertyImport(moduleName))
+              .useSourceInfoFromForTree(require);
       parent.replaceChild(require, moduleRef);
 
       t.reportCodeChange();
@@ -1317,14 +1349,17 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
         return;
       }
 
-      moduleName = moduleName + "." + exportPropertyName;
+      moduleName = moduleName + "." + EXPORT_PROPERTY_NAME;
 
       Node updatedExport =
           NodeUtil.newQName(compiler, moduleName, export.node, export.node.getQualifiedName());
-      boolean exportIsConst = defaultExportIsConst
-          && getBasePropertyImport(getModuleName(t.getInput())).equals(updatedExport.getQualifiedName())
-          && root == export.node
-          && NodeUtil.isLValue(export.node);
+      updatedExport.putBooleanProp(Node.MODULE_EXPORT, true);
+      boolean exportIsConst =
+          defaultExportIsConst
+              && updatedExport.matchesQualifiedName(
+                  getBasePropertyImport(getModuleName(t.getInput())))
+              && root == export.node
+              && NodeUtil.isLValue(export.node);
 
       Node changeScope = null;
 
@@ -1332,8 +1367,8 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
           && rValue != null
           && export.scope.getVar("module.exports") == null
           && root.getParent().isAssign()) {
-        if (root.getParent().getParent().isExprResult() && moduleInitialization == null) {
-          // Rewrite "module.exports = foo;" to "var moduleName = foo;"
+        if (root.getGrandparent().isExprResult() && moduleInitialization == null) {
+          // Rewrite "module.exports = foo;" to "var moduleName = {default: foo};"
           Node parent = root.getParent();
           Node exportName = IR.exprResult(IR.assign(updatedExport, rValue.detach()));
           if (exportIsConst) {
@@ -1356,7 +1391,8 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
           // Other references to "module.exports" are just replaced with the module name.
           export.node.replaceWith(updatedExport);
           if (updatedExport.getParent().isAssign() && exportIsConst) {
-            JSDocInfoBuilder infoBuilder = JSDocInfoBuilder.maybeCopyFrom(updatedExport.getParent().getJSDocInfo());
+            JSDocInfoBuilder infoBuilder =
+                JSDocInfoBuilder.maybeCopyFrom(updatedExport.getParent().getJSDocInfo());
             infoBuilder.recordConstancy();
             updatedExport.getParent().setJSDocInfo(infoBuilder.build());
           }
@@ -1366,7 +1402,8 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
         // Other references to "module.exports" are just replaced with the module name.
         export.node.replaceWith(updatedExport);
         if (updatedExport.getParent().isAssign() && exportIsConst) {
-          JSDocInfoBuilder infoBuilder = JSDocInfoBuilder.maybeCopyFrom(updatedExport.getParent().getJSDocInfo());
+          JSDocInfoBuilder infoBuilder =
+              JSDocInfoBuilder.maybeCopyFrom(updatedExport.getParent().getJSDocInfo());
           infoBuilder.recordConstancy();
           updatedExport.getParent().setJSDocInfo(infoBuilder.build());
         }
@@ -1428,14 +1465,16 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
           visitExport(t, newExport);
         } else {
           String moduleName = getModuleName(t.getInput());
-          Var moduleVar = t.getScope().getVar(moduleName + "." + exportPropertyName);
+          Var moduleVar = t.getScope().getVar(moduleName + "." + EXPORT_PROPERTY_NAME);
           Node defaultProp = null;
           if (moduleVar == null) {
             moduleVar = t.getScope().getVar(moduleName);
-            if (moduleVar != null && moduleVar.getNode().getFirstChild() != null
+            if (moduleVar != null
+                && moduleVar.getNode().getFirstChild() != null
                 && moduleVar.getNode().getFirstChild().isObjectLit()) {
-              defaultProp = NodeUtil.getFirstPropMatchingKey(moduleVar.getNode().getFirstChild(),
-                  exportPropertyName);
+              defaultProp =
+                  NodeUtil.getFirstPropMatchingKey(
+                      moduleVar.getNode().getFirstChild(), EXPORT_PROPERTY_NAME);
             }
           } else if (moduleVar.getNode().getFirstChild() != null
               && moduleVar.getNode().getFirstChild().isObjectLit()) {
@@ -1502,10 +1541,11 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
             && exportedName != null
             && !exportedName.equals(name)
             && !var.isParam()) {
-          boolean exportPropIsConst = defaultExportIsConst
-              && getBasePropertyImport(getModuleName(t.getInput())).equals(exportedName)
-              && getBaseQualifiedNameNode(n) == n
-              && NodeUtil.isLValue(n);
+          boolean exportPropIsConst =
+              defaultExportIsConst
+                  && getBasePropertyImport(getModuleName(t.getInput())).equals(exportedName)
+                  && getBaseQualifiedNameNode(n) == n
+                  && NodeUtil.isLValue(n);
           updateNameReference(t, n, name, exportedName, true, exportPropIsConst);
 
           // If it's a global name, rename it to prevent conflicts with other scripts
@@ -1861,11 +1901,12 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
         return getBasePropertyImport(getImportedModuleName(t, rValue)) + propSuffix;
       } else if (rValue.isGetProp() && isCommonJsImport(rValue.getFirstChild())) {
         // var foo = require('bar').foo;
-        String importName =
-            getBasePropertyImport(getImportedModuleName(t, rValue.getFirstChild()));
+        String importName = getBasePropertyImport(getImportedModuleName(t, rValue.getFirstChild()));
 
-        String suffix = rValue.getSecondChild().isGetProp() ?
-            rValue.getSecondChild().getQualifiedName() : rValue.getSecondChild().getString();
+        String suffix =
+            rValue.getSecondChild().isGetProp()
+                ? rValue.getSecondChild().getQualifiedName()
+                : rValue.getSecondChild().getString();
 
         return importName + "." + suffix + propSuffix;
       }

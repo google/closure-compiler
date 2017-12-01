@@ -1695,7 +1695,7 @@ public class CommandLineRunner extends
       level.setTypeBasedOptimizationOptions(options);
     }
 
-    if (flags.assumeFunctionWrapper) {
+    if (flags.assumeFunctionWrapper || flags.isolationMode == IsolationMode.IIFE) {
       level.setWrappedOutputOptimizations(options);
     }
 

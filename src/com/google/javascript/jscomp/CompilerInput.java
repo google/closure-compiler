@@ -542,6 +542,7 @@ public class CompilerInput implements SourceAst, DependencyInfo {
     this.ast.clearAst();
   }
 
+  /** JavaScript module type. */
   public enum ModuleType {
     NONE,
     GOOG,
