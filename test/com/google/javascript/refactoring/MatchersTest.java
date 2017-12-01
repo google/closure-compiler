@@ -20,10 +20,10 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.google.common.collect.ImmutableList;
+import com.google.javascript.jscomp.BlackHoleErrorManager;
 import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerOptions;
 import com.google.javascript.jscomp.SourceFile;
-import com.google.javascript.jscomp.testing.BlackHoleErrorManager;
 import com.google.javascript.rhino.Node;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -421,9 +421,9 @@ public class MatchersTest {
 
   private static Compiler getCompiler(String externs, String jsInput) {
     Compiler compiler = new Compiler();
-    BlackHoleErrorManager.silence(compiler);
     compiler.disableThreads();
     CompilerOptions options = RefactoringDriver.getCompilerOptions();
+    options.setErrorHandler(new BlackHoleErrorManager());
     compiler.compile(
         ImmutableList.of(SourceFile.fromCode("externs", externs)),
         ImmutableList.of(SourceFile.fromCode("test", jsInput)),

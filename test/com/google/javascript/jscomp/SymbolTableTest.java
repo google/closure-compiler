@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
@@ -27,7 +26,6 @@ import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.SymbolTable.Reference;
 import com.google.javascript.jscomp.SymbolTable.Symbol;
 import com.google.javascript.jscomp.SymbolTable.SymbolScope;
-import com.google.javascript.jscomp.testing.BlackHoleErrorManager;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfo.Visibility;
 import com.google.javascript.rhino.Token;
@@ -54,11 +52,11 @@ public final class SymbolTableTest extends TestCase {
     super.setUp();
 
     options = new CompilerOptions();
+    options.setErrorHandler(new BlackHoleErrorManager());
     options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
     options.setCodingConvention(new ClosureCodingConvention());
-    CompilationLevel.SIMPLE_OPTIMIZATIONS.setOptionsForCompilationLevel(
-        options);
+    CompilationLevel.SIMPLE_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     WarningLevel.VERBOSE.setOptionsForWarningLevel(options);
     options.setChecksOnly(true);
     options.setPreserveDetailedSourceInfo(true);
@@ -1174,7 +1172,6 @@ public final class SymbolTableTest extends TestCase {
         SourceFile.fromCode("externs1", EXTERNS));
 
     Compiler compiler = new Compiler();
-    BlackHoleErrorManager.silence(compiler);
     compiler.compile(externs, inputs, options);
     return assertSymbolTableValid(compiler.buildKnownSymbolTable());
   }

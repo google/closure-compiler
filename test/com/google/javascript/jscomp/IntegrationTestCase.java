@@ -21,7 +21,6 @@ import static com.google.javascript.jscomp.testing.JSErrorSubject.assertError;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CompilerTestCase.NoninjectingCompiler;
-import com.google.javascript.jscomp.testing.BlackHoleErrorManager;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
 import java.util.List;
@@ -412,7 +411,7 @@ abstract class IntegrationTestCase extends TestCase {
     Compiler compiler = useNoninjectingCompiler ? new NoninjectingCompiler() : new Compiler();
 
     lastCompiler = compiler;
-    BlackHoleErrorManager.silence(compiler);
+    options.setErrorHandler(new BlackHoleErrorManager());
     compiler.compileModules(
         externs,
         ImmutableList.copyOf(

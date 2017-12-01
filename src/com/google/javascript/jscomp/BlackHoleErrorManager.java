@@ -13,24 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.google.javascript.jscomp.testing;
-
-import com.google.javascript.jscomp.BasicErrorManager;
-import com.google.javascript.jscomp.CheckLevel;
-import com.google.javascript.jscomp.Compiler;
-import com.google.javascript.jscomp.JSError;
+package com.google.javascript.jscomp;
 
 /** An ErrorManager that silently swallows all messages. */
 public final class BlackHoleErrorManager extends BasicErrorManager {
-
-  /**
-   * {@link Compiler} prints to the console by default. This method silences
-   * it to avoid spamming the console in tests.
-   */
-  public static void silence(Compiler compiler) {
-    compiler.setErrorManager(new BlackHoleErrorManager());
-  }
-
   @Override
   public void println(CheckLevel level, JSError error) { /* no-op */ }
 
