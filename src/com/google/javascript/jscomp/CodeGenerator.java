@@ -1722,6 +1722,7 @@ public class CodeGenerator {
       switch (s.charAt(i)) {
         case '"': doubleq++; break;
         case '\'': singleq++; break;
+        default: // skip non-quote characters
       }
     }
 
