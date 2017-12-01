@@ -1156,6 +1156,19 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
     //     "ns.f = function(x) { return x - 1; };",
     //     "function g() { ns.f('asdf'); }"),
     //     NewTypeInference.INVALID_ARGUMENT_TYPE);
+
+    typeCheck(LINE_JOINER.join(
+        "/**",
+        " * @constructor",
+        " * @return {number}",
+        " */",
+        "function foo(x) { return x - 1; }",
+        "function f() {",
+        "  function g(x) {",
+        "    foo(true);",
+        "  }",
+        "}"),
+        NewTypeInference.INVALID_ARGUMENT_TYPE);
   }
 
   public void testShadowing() {

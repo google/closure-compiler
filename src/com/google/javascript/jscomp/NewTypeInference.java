@@ -2193,8 +2193,7 @@ final class NewTypeInference implements CompilerPass {
       return analyzeLooseCallNodeFwd(expr, envAfterCallee, requiredType);
     } else if (!isConstructorCall(expr)
         && funType.isSomeConstructorOrInterface()
-        && (funType.getReturnType().isUnknown()
-            || funType.getReturnType().isUndefined())) {
+        && (funType.getReturnType().isUnknown() || funType.getReturnType().isUndefined())) {
       warnings.add(JSError.make(expr, CONSTRUCTOR_NOT_CALLABLE, funType.toString()));
       return analyzeInvocationArgsFwdWhenError(expr, envAfterCallee);
     } else if (expr.isNew()) {
@@ -2251,9 +2250,9 @@ final class NewTypeInference implements CompilerPass {
           JSType expectedRetType = requiredType;
           println("Updating deferred check with ret: ", expectedRetType, " and args: ", argTypes);
           DeferredCheck dc;
-          if (isConstructorCall(expr)) {
-            dc = new DeferredCheck(expr, null,
-                this.currentScope, this.currentScope.getScope(calleeName));
+          if (funType.isSomeConstructorOrInterface()) {
+            dc = new DeferredCheck(
+                expr, null, this.currentScope, this.currentScope.getScope(calleeName));
             deferredChecks.put(expr, dc);
           } else {
             dc = deferredChecks.get(expr);
