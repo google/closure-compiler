@@ -64,7 +64,7 @@ exports.assertIteratorContents = function(iterator, var_args) {
   var actual = [];
   for (var i = 1; i < arguments.length; i++) {
     var elem = arguments[i];
-    expected.push({value: arguments[i], done: false});
+    expected.push({value: elem, done: false});
     actual.push(iterator.next());
   }
   function normalizeDone(result) {
