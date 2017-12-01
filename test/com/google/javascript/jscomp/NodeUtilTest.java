@@ -3172,6 +3172,21 @@ public final class NodeUtilTest extends TestCase {
     assertThat(NodeUtil.isExpressionResultUsed(getNameNodeFrom("for (x; y; z) a", "x"))).isFalse();
     assertThat(NodeUtil.isExpressionResultUsed(getNameNodeFrom("for (x; y; z) a", "y"))).isTrue();
     assertThat(NodeUtil.isExpressionResultUsed(getNameNodeFrom("for (x; y; z) a", "z"))).isFalse();
+
+    assertTrue(NodeUtil.isExpressionResultUsed(getNameNodeFrom("function f() { return y }", "y")));
+    assertFalse(NodeUtil.isExpressionResultUsed(getNameNodeFrom("function f() { y }", "y")));
+
+    assertTrue(NodeUtil.isExpressionResultUsed(getNameNodeFrom("var x = ()=> y", "y")));
+    assertFalse(NodeUtil.isExpressionResultUsed(getNameNodeFrom("var x = ()=>{ y }", "y")));
+
+    assertTrue(NodeUtil.isExpressionResultUsed(getNameNodeFrom("({a: x = y} = z)", "y")));
+    assertTrue(NodeUtil.isExpressionResultUsed(getNameNodeFrom("[x = y] = z", "y")));
+
+    assertTrue(NodeUtil.isExpressionResultUsed(getNameNodeFrom("({x: y})", "y")));
+    assertTrue(NodeUtil.isExpressionResultUsed(getNameNodeFrom("[y]", "y")));
+
+    assertTrue(NodeUtil.isExpressionResultUsed(getNameNodeFrom("y()", "y")));
+    assertTrue(NodeUtil.isExpressionResultUsed(getNameNodeFrom("y``", "y")));
   }
 
   public void testIsSimpleOperator() {
