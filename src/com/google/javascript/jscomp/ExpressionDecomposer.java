@@ -135,8 +135,7 @@ class ExpressionDecomposer {
 
     // Replace the expression with a reference to the new name.
     Node expressionParent = expression.getParent();
-    expressionParent.replaceChild(
-        expression, IR.name(resultName));
+    expressionParent.replaceChild(expression, IR.name(resultName));
 
     // Re-add the expression at the appropriate place.
     Node newExpressionRoot = NodeUtil.newVarNode(resultName, expression);
@@ -430,9 +429,8 @@ class ExpressionDecomposer {
 
   /**
    * @param expr The expression to extract.
-   * @param injectionPoint The node before which to added the extracted
-   *     expression.
-   * @return The extract statement node.
+   * @param injectionPoint The node before which to added the extracted expression.
+   * @return The extracted statement node.
    */
   private Node extractExpression(Node expr, Node injectionPoint) {
     Node parent = expr.getParent();
@@ -501,6 +499,8 @@ class ExpressionDecomposer {
     if (firstExtractedNode == null) {
       firstExtractedNode = tempVarNode;
     }
+
+    checkState(firstExtractedNode.isVar());
     return firstExtractedNode;
   }
 
@@ -572,10 +572,8 @@ class ExpressionDecomposer {
     this.tempNamePrefix = prefix;
   }
 
-  /**
-   * Create a unique temp name.
-   */
-  private String getTempValueName(){
+  /** Create a unique temp name. */
+  private String getTempValueName() {
     return tempNamePrefix + ContextualRenamer.UNIQUE_ID_SEPARATOR
         + safeNameIdSupplier.get();
   }
@@ -596,15 +594,17 @@ class ExpressionDecomposer {
         + ContextualRenamer.UNIQUE_ID_SEPARATOR + safeNameIdSupplier.get();
   }
 
-  /**
-   * Create a constant unique temp name.
-   */
-  private String getTempConstantValueName(){
+  /** Create a constant unique temp name. */
+  private String getTempConstantValueName() {
     String name = tempNamePrefix + "_const"
         + ContextualRenamer.UNIQUE_ID_SEPARATOR
         + safeNameIdSupplier.get();
     this.knownConstants.add(name);
     return name;
+  }
+
+  private boolean isTempConstantValueName(String s) {
+    return s.startsWith(tempNamePrefix + "_const" + ContextualRenamer.UNIQUE_ID_SEPARATOR);
   }
 
   /**
@@ -886,6 +886,17 @@ class ExpressionDecomposer {
     if (followingSideEffectsExist) {
       // If the call to be inlined has side-effects, check to see if this
       // expression tree can be affected by any side-effects.
+
+      // Assume that "tmp1.call(...)" is safe (where tmp1 is a const temp variable created by
+      // ExpressionDecomposer) otherwise we end up trying to decompose the same tree
+      // an infinite number of times.
+      Node parent = n.getParent();
+      if (NodeUtil.isObjectCallMethod(parent, "call")
+          && n == parent.getFirstChild()
+          && n.getFirstChild().isName()
+          && isTempConstantValueName(n.getFirstChild().getString())) {
+        return false;
+      }
 
       // This is a superset of "NodeUtil.mayHaveSideEffects".
       return NodeUtil.canBeSideEffected(n, this.knownConstants, scope);

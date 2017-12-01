@@ -41,11 +41,14 @@ import junit.framework.TestCase;
 public final class ExpressionDecomposerTest extends TestCase {
   private boolean allowMethodCallDecomposing;
   private final Set<String> knownConstants = new HashSet<>();
+  // How many times to run `moveExpression` or `exposeExpression`.
+  private int times;
 
   @Override
   public void setUp() {
     allowMethodCallDecomposing = false;
     knownConstants.clear();
+    times = 1;
   }
 
   public void testCanExposeExpression1() {
@@ -576,15 +579,19 @@ public final class ExpressionDecomposerTest extends TestCase {
 
   public void testExposeYieldExpression3() {
     allowMethodCallDecomposing = true;
-    helperExposeExpression(
-        "function *f() { return g.call(yield 1); }",
-        "yield",
-        lines(
-            "function *f() {",
-            "  var temp_const$jscomp$1 = g;",
-            "  var temp_const$jscomp$0 = temp_const$jscomp$1.call;",
-            "  return temp_const$jscomp$0.call(temp_const$jscomp$1, yield 1);",
-            "}"));
+    String before = "function *f() { return g.call(yield 1); }";
+    String after = lines(
+        "function *f() {",
+        "  var temp_const$jscomp$1 = g;",
+        "  var temp_const$jscomp$0 = temp_const$jscomp$1.call;",
+        "  return temp_const$jscomp$0.call(temp_const$jscomp$1, yield 1);",
+        "}");
+    helperExposeExpression(before, "yield", after);
+
+    // Check that we don't decompose again, which would result in an infinite loop when inlining
+    // functions.
+    times = 2;
+    helperExposeExpression(before, "yield", after);
   }
 
   public void testExposeYieldExpression4() {
@@ -811,7 +818,9 @@ public final class ExpressionDecomposerTest extends TestCase {
     assertEquals(DecompositionType.DECOMPOSABLE, result);
 
     compiler.resetUniqueNameId();
-    decomposer.exposeExpression(expr);
+    for (int i = 0; i < times; i++) {
+      decomposer.exposeExpression(expr);
+    }
     validateSourceInfo(compiler, tree);
     String explanation = expectedRoot.checkTreeEquals(tree);
     assertNull("\nExpected: " + compiler.toSource(expectedRoot)
@@ -845,7 +854,9 @@ public final class ExpressionDecomposerTest extends TestCase {
     assertWithMessage("Expected node was not found.").that(expr).isNotNull();
 
     compiler.resetUniqueNameId();
-    decomposer.moveExpression(expr);
+    for (int i = 0; i < times; i++) {
+      decomposer.moveExpression(expr);
+    }
     validateSourceInfo(compiler, tree);
     String explanation = expectedRoot.checkTreeEquals(tree);
     assertNull("\nExpected: " + compiler.toSource(expectedRoot)

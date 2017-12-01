@@ -442,8 +442,7 @@ class FunctionInjector {
       // This is a simple assignment.  Example: "x = foo();"
       return CallSiteType.SIMPLE_ASSIGNMENT;
     } else if (parent.isName()
-        // TODO(nicksantos): Remove this once everyone is using
-        // the CONSTANT_VAR annotation.
+        // TODO(nicksantos): Remove this once everyone is using the CONSTANT_VAR annotation.
         && !NodeUtil.isConstantName(parent)
         && grandParent.isVar()
         && grandParent.hasOneChild()) {
@@ -470,11 +469,12 @@ class FunctionInjector {
   }
 
   private ExpressionDecomposer getDecomposer(Scope scope) {
-    // TODO(b/69375648): Change this to compiler.getOptions().allowMethodCallDecomposing()
-    boolean allowMethodCallDecomposing = false;
-
     return new ExpressionDecomposer(
-        compiler, safeNameIdSupplier, knownConstants, scope, allowMethodCallDecomposing);
+        compiler,
+        safeNameIdSupplier,
+        knownConstants,
+        scope,
+        compiler.getOptions().allowMethodCallDecomposing());
   }
 
   /**
