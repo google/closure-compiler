@@ -635,6 +635,12 @@ Polymer.Gestures.findOriginalTarget = function(ev) {};
 Polymer.Gestures.gestures = {};
 
 /**
+ * @param {Node} node
+ * @param {string} value
+ */
+Polymer.Gestures.setTouchAction = function(node, value) {};
+
+/**
  * @type {!Object}
  */
 Polymer.Gestures.gestures.tap = {};
