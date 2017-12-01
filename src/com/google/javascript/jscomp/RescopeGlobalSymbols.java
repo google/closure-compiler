@@ -271,7 +271,9 @@ final class RescopeGlobalSymbols implements CompilerPass {
         } else if (parent.isFunction()) {
           value = parent;
         }
-        if (value == null) {
+        if (value == null && !NodeUtil.isLhsByDestructuring(n)) {
+          // If n is assigned in a destructuring pattern, don't bother finding its value and just
+          // assume it may reference this.
           return;
         }
         // We already added this symbol. Done after checks above because those
@@ -287,7 +289,7 @@ final class RescopeGlobalSymbols implements CompilerPass {
         // If anything but a function is assignment we assume that possibly
         // a function referencing this is being assignment. Otherwise we
         // check whether the function that is being assigned references this.
-        if (!value.isFunction() || NodeUtil.referencesThis(value)) {
+        if (value == null || !value.isFunction() || NodeUtil.referencesThis(value)) {
           maybeReferencesThis.add(name);
         }
       }
@@ -295,32 +297,99 @@ final class RescopeGlobalSymbols implements CompilerPass {
   }
 
   /**
-   * Visits each NAME token and checks whether it refers to a global variable.
-   * If yes, rewrites the name to be a property access on the "globalSymbolNamespace".
-   * If the NAME is an extern variable, it becomes a property access on window.
+   * Visits each NAME token and checks whether it refers to a global variable. If yes, rewrites the
+   * name to be a property access on the "globalSymbolNamespace". If the NAME is an extern variable,
+   * it becomes a property access on window.
    *
    * <pre>var a = 1, b = 2, c = 3;</pre>
+   *
    * becomes
+   *
    * <pre>var NS.a = 1, NS.b = 2, NS.c = 4</pre>
+   *
    * (The var token is removed in a later traversal.)
    *
    * <pre>a + b</pre>
+   *
    * becomes
+   *
    * <pre>NS.a + NS.b</pre>
    *
    * <pre>a()</pre>
+   *
    * becomes
+   *
    * <pre>(0,NS.a)()</pre>
+   *
    * Notice the special syntax here to preserve the *this* semantics in the function call.
+   *
+   * <pre>var {a: b} = {}</pre>
+   *
+   * becomes
+   *
+   * <pre>var {a: NS.b} = {}</pre>
+   *
+   * (This is invalid syntax, but the VAR token is removed later).
    */
   private class RewriteScopeCallback extends AbstractPostOrderCallback {
     List<ModuleGlobal> preDeclarations = new ArrayList<>();
 
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
-      if (!n.isName()) {
+      if (n.isName() && !NodeUtil.isLhsByDestructuring(n)) {
+        visitName(t, n, parent);
+      } else if (n.isDestructuringPattern()) {
+        visitDestructuringPattern(t, n, parent);
+      }
+    }
+
+    private void visitDestructuringPattern(NodeTraversal t, Node n, Node parent) {
+      if (!(parent.isAssign() || parent.isParamList() || parent.isDestructuringLhs())) {
+        // Don't handle patterns that are nested within another pattern.
+        // TODO(b/69868034): What about for loop initializers or other assignments?
         return;
       }
+      List<Node> lhsNodes = NodeUtil.findLhsNodesInNode(n.getParent());
+      boolean isDeclaration = n.getParent().isDestructuringLhs();
+      boolean hasCrossModuleName = false;
+      for (Node lhs : lhsNodes) {
+        if (!lhs.isName()) {
+          continue;
+        }
+        visitName(t, lhs, lhs.getParent());
+        hasCrossModuleName = hasCrossModuleName || isCrossModuleName(lhs.getString());
+      }
+
+      // If this is a global cross-module declaration, we need to wrap it in an ASSIGN.
+      // The LET/CONST/VAR node gets removed in RemoveGlobalVarCallback.
+      Node nameDeclaration = parent.getParent();
+      if (isDeclaration
+          && hasCrossModuleName
+          && (t.inGlobalScope() || (nameDeclaration.isVar() && t.inGlobalHoistScope()))) {
+        Node value = n.getNext();
+        parent.removeChild(n);
+        parent.removeChild(value);
+        Node assign = IR.assign(n, value).srcref(n);
+        nameDeclaration.replaceChild(parent, assign);
+        compiler.reportChangeToEnclosingScope(nameDeclaration);
+
+        // If there are any declared names that are not cross module, they need to be declared
+        // before the destructuring pattern, since we converted their declaration to an assignment.
+        CompilerInput input = t.getInput();
+        for (Node lhs : lhsNodes) {
+          if (!lhs.isName()) {
+            continue;
+          }
+          String name = lhs.getString();
+          if (!isCrossModuleName(name)) {
+            preDeclarations.add(
+                new ModuleGlobal(input.getAstRoot(compiler), IR.name(name).srcref(lhs)));
+          }
+        }
+      }
+    }
+
+    private void visitName(NodeTraversal t, Node n, Node parent) {
       String name = n.getString();
       // Ignore anonymous functions
       if (parent.isFunction() && name.isEmpty()) {
@@ -359,6 +428,7 @@ final class RescopeGlobalSymbols implements CompilerPass {
       if (!isCrossModule) {
         // When a non cross module name appears outside a var declaration we
         // never have to do anything.
+        // If it's inside a destructuring pattern declaration, then it's handled elsewhere.
         if (!NodeUtil.isNameDeclaration(parent)) {
           return;
         }
@@ -497,10 +567,10 @@ final class RescopeGlobalSymbols implements CompilerPass {
       // As opposed to regular var nodes, there are always assignments
       // because the previous traversal in RewriteScopeCallback creates
       // them.
-      boolean allName = true;
+      boolean allNameOrDestructuring = true;
       for (Node c : n.children()) {
-        if (!c.isName()) {
-          allName = false;
+        if (!c.isName() && !c.isDestructuringLhs()) {
+          allNameOrDestructuring = false;
         }
         if (c.isAssign() || NodeUtil.isAnyFor(parent)) {
           interestingChildren.add(c);
@@ -509,7 +579,7 @@ final class RescopeGlobalSymbols implements CompilerPass {
       // If every child of a var declares a name, it must stay in place.
       // This is the case if none of the declared variables cross module
       // boundaries.
-      if (allName) {
+      if (allNameOrDestructuring) {
         return;
       }
       for (Node c : interestingChildren) {

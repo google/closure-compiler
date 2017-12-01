@@ -185,7 +185,7 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
     test("const _dumpException = 1;", "_._dumpException = 1");
   }
 
-  public void testconstDeclarations_acrossModules() {
+  public void testConstDeclarations_acrossModules() {
     assumeCrossModuleNames = false;
     // test references across modules.
     test(createModules("const a = 1;", "a"), new String[] {"_.a = 1", "_.a"});
@@ -208,6 +208,57 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
         new String[] {"var a, c; 1;a = 1; _.b = 1;c = 2", "_.b; if (true) { const b = 3; b; }"});
   }
 
+  public void testObjectDestructuringDeclarations() {
+    // TODO(b/69868034): Fix commented-out tests before marking this pass ES6-compatible.
+    // This pass is not guaranteed to be normalized so it must handle the object literal shorthand.
+    // test("var {a} = {}; a;", "({a: _.a} = {}); _.a;");
+    test("var {key: a} = {}; a;", "({key: _.a} = {}); _.a;");
+    // test("var {a: {b}} = {}; b;", "({a: {b: _.b}} = {}); _.b;");
+    test("var {a: {key: b}} = {}; b;", "({a: {key: _.b}} = {}); _.b;");
+    test("var {['computed']: a} = {}; a;", "({['computed']: _.a} = {}); _.a;");
+
+    // test("var {a = 3} = {}; a;", "({a: _.a = 3} = {}); _.a");
+    test("var {key: a = 3} = {}; a;", "({key: _.a = 3} = {}); _.a");
+  }
+
+  public void testObjectDestructuringDeclarations_allSameModule() {
+    assumeCrossModuleNames = false;
+    // TODO(b/69868034): Fix commented-out test before marking this pass ES6-compatible.
+    // test("var {a} = {}; a;", "var {a: a} = {}; a;");
+    testSame("var {a: a} = {}; a;");
+    testSame("var {key: a} = {}; a;");
+    testSame("var {a: {b: b}} = {}; b;");
+    testSame("var {['computed']: a} = {}; a;");
+    testSame("var {a: a = 3} = {}; a;");
+    testSame("var {key: a = 3} = {}; a;");
+    testSame("var {['computed']: a = 3} = {}; a;");
+  }
+
+  public void testObjectDestructuringDeclarations_acrossModules() {
+    assumeCrossModuleNames = false;
+    test(createModules("var {a: a} = {};", "a"), new String[] {"({a: _.a} = {});", "_.a"});
+    test(
+        createModules("var {a: a, b: b, c: c} = {};", "a; c;"),
+        new String[] {"var b;({a: _.a, b: b, c: _.c} = {});", "_.a; _.c"});
+    test(
+        createModules("var {a: a, b: b, c: c} = {};", "b; c;"),
+        new String[] {"var a;({a: a, b: _.b, c: _.c} = {});", "_.b; _.c"});
+    test(
+        createModules("var {a: a, b: b, c: c} = {}; b; c;", "a; c;"),
+        new String[] {"var b;({a: _.a, b: b, c: _.c} = {});b;_.c;", "_.a; _.c"});
+  }
+
+  public void testObjectDestructuringAssignments() {
+    test("var a, b; ({key1: a, key2: b} = {}); a; b;", "({key1: _.a, key2: _.b} = {}); _.a; _.b;");
+    // Test a destructuring assignment with mixed global and local variables.
+    test(
+        "var a; if (true) { let b; ({key1: a, key2: b} = {}); b; } a;",
+        "if (true) { let b; ({key1: _.a, key2: b} = {}); b; } _.a;");
+    test("var obj = {}; ({a: obj.a} = {}); obj.a;", "_.obj = {}; ({a: _.obj.a} = {}); _.obj.a;");
+  }
+
+  // TODO(b/69868034): Test array patterns.
+
   public void testForLoops() {
     assumeCrossModuleNames = false;
     test(createModules(
@@ -217,6 +268,7 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
         "for (var i = 0, c = 2; i < 1000; i++);", "i"),
         new String[] {"var c;for (_.i = 0, c = 2; _.i < 1000; _.i++);",
             "_.i"});
+    // TODO(b/69868034): Test destructuring in for loops..
   }
 
   public void testForLoops_acrossModules() {
@@ -266,6 +318,8 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
     test(
         "var a=function(){this};a()",
         "_.a=function(){this};(0,_.a)()");
+    // Always trigger free calls for variables assigned through destructuring.
+    test("var {a: a} = {a: function() {}}; a();", "({a:_.a}={a:function(){}});(0,_.a)()");
   }
 
   public void testFunctionStatements_freeCallSemantics2() {
@@ -284,10 +338,8 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
   public void testFunctionStatements_freeCallSemantics3() {
     disableCompareAsTree();
 
-    // Ambigious cases.
-    test(
-        "var a=1;a=function(){};a()",
-        "_.a=1;_.a=function(){};(0,_.a)()");
+    // Ambiguous cases.
+    test("var a=1;a=function(){};a()", "_.a=1;_.a=function(){};(0,_.a)()");
     test(
         "var b;var a=b;a()",
         "_.a=_.b;(0,_.a)()");
@@ -317,7 +369,7 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
         "try{_.a = 1}catch(e){throw e}");
   }
 
-  public void testShadow() {
+  public void testShadowInFunctionScope() {
     test(
         "var _ = 1; (function () { _ = 2 })()",
         "_._ = 1; (function () { _._ = 2 })()");
@@ -325,10 +377,15 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
         "function foo() { var _ = {}; _.foo = foo; _.bar = 1; }",
         "_.foo = function () { var _$ = {}; _$.foo = _.foo; _$.bar = 1}");
     test(
-        "function foo() { var _ = {}; _.foo = foo; _.bar = 1; "
-        + "(function() { var _ = 0;})() }",
-        "_.foo = function () { var _$ = {}; _$.foo = _.foo; _$.bar = 1; "
-        + "(function() { var _$ = 0;})() }");
+        "function foo() { var {key: _} = {}; _.foo = foo; _.bar = 1; }",
+        "_.foo = function () { var {key: _$} = {}; _$.foo = _.foo; _$.bar = 1}");
+    test(
+        lines(
+            "function foo() { var _ = {}; _.foo = foo; _.bar = 1; ",
+            "(function() { var _ = 0;})() }"),
+        lines(
+            "_.foo = function () { var _$ = {}; _$.foo = _.foo; _$.bar = 1; ",
+            "(function() { var _$ = 0;})() }"));
     test(
         "function foo() { var _ = {}; _.foo = foo; _.bar = 1; "
         + "var _$ = 1; }",
@@ -347,13 +404,25 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
         + "var _$$ = 1, _$$$ = 2 (function() { _$ = _$$ = _$$$; "
         + "var _$$, _$$$$ })() }");
     test(
-        "function foo() { var _a = 1;}",
-        "_.foo = function () { var _a = 1;}");
+        "var a = 5; function foo(_) { return _; }", "_.a = 5; _.foo = function(_$) { return _$; }");
+    test(
+        "var a = 5; function foo({key: _}) { return _; }",
+        "_.a = 5; _.foo = function({key: _$}) { return _$; }");
     // We accept this unnecessary renaming as acceptable to simplify pattern
     // matching in the traversal.
+    test("function foo() { var _$a = 1;}", "_.foo = function () { var _$a$ = 1;}");
+  }
+
+  public void testShadowInBlockScope() {
     test(
-        "function foo() { var _$a = 1;}",
-        "_.foo = function () { var _$a$ = 1;}");
+        "var foo = 1; if (true) { const _ = {}; _.foo = foo; _.bar = 1; }",
+        "_.foo = 1; if (true) { const _$ = {}; _$.foo = _.foo; _$.bar = 1}");
+    test(
+        "var foo = 1; if (true) { const {key: _} = {}; _.foo = foo; _.bar = 1; }",
+        "_.foo = 1; if (true) { const {key: _$} = {}; _$.foo = _.foo; _$.bar = 1}");
+    test(
+        "var foo = 1; if (true) { const _ = {}; _.foo = foo; _.bar = 1; const _$ = 1; }",
+        "_.foo = 1; if (true) { const _$ = {}; _$.foo = _.foo; _$.bar = 1;  const _$$ = 1; }");
   }
 
   public void testExterns() {
