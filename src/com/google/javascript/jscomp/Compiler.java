@@ -140,6 +140,9 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   // The JS source inputs
   private List<CompilerInput> inputs;
 
+  // Map of module names to module types - used for module rewriting
+  private final Map<String, CompilerInput.ModuleType> moduleTypesByName;
+
   // error manager to which error management is delegated
   private ErrorManager errorManager;
 
@@ -290,6 +293,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   public Compiler(PrintStream outStream) {
     addChangeHandler(recentChange);
     this.outStream = outStream;
+    this.moduleTypesByName = new HashMap<>();
   }
 
   /**
@@ -1986,6 +1990,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     if (wasImportedByModule && input.getJsModuleType() == CompilerInput.ModuleType.NONE) {
       input.setJsModuleType(CompilerInput.ModuleType.IMPORTED_SCRIPT);
     }
+    this.moduleTypesByName.put(input.getPath().toModuleName(), input.getJsModuleType());
 
     for (String requiredNamespace : input.getRequires()) {
       CompilerInput requiredInput = null;
@@ -2141,6 +2146,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       input.setCompiler(this);
       // Call getRequires to force regex-based dependency parsing to happen.
       input.getRequires();
+      input.setJsModuleType(CompilerInput.ModuleType.ES6);
     }
     return filteredInputs;
   }
@@ -3696,5 +3702,12 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     for (CompilerInput input : this.externs) {
       input.reset();
     }
+  }
+
+  /** Returns the module type for the provided namespace. */
+  @Override
+  @Nullable
+  CompilerInput.ModuleType getModuleTypeByName(String moduleName) {
+    return moduleTypesByName.get(moduleName);
   }
 }

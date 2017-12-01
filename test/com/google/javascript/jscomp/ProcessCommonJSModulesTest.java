@@ -57,93 +57,81 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
   public void testWithoutExports() {
     testModules(
         "test.js",
-        "var name = require('./other'); name()",
-        lines(
-            "var name = module$other;",
-            "module$other();"));
+        "var name = require('./other'); name.call(null)",
+        lines("var name = module$other.default;", "module$other.default.call(null);"));
     test(
         ImmutableList.of(
-            SourceFile.fromCode(Compiler.joinPathParts("mod", "name.js"), ""),
+            SourceFile.fromCode(Compiler.joinPathParts("mod", "name.js"), "module.exports = {};"),
             SourceFile.fromCode(
                 Compiler.joinPathParts("test", "sub.js"),
                 lines(
                     "var name = require('../mod/name');",
-                    "(function() { module$mod$name(); })();"))),
+                    "(function() { let foo = name; foo(); })();"))),
         ImmutableList.of(
-            SourceFile.fromCode(Compiler.joinPathParts("mod", "name.js"), ""),
+            SourceFile.fromCode(
+                Compiler.joinPathParts("mod", "name.js"),
+                "/** @const */ var module$mod$name = {/** @const */ default: {}};"),
             SourceFile.fromCode(
                 Compiler.joinPathParts("test", "sub.js"),
                 lines(
-                    "var name = module$mod$name;", "(function() { module$mod$name(); })();"))));
+                    "var name = module$mod$name.default;",
+                    "(function() { let foo = module$mod$name.default; foo(); })();"))));
   }
 
   public void testExports() {
     testModules(
         "test.js",
+        lines("var name = require('./other');", "exports.foo = 1;"),
         lines(
-            "var name = require('./other');",
-            "exports.foo = 1;"),
-        lines(
-            "/** @const */ var module$test = {};",
-            "var name$$module$test = module$other;",
-            "module$test.foo = 1;"));
+            "/** @const */ var module$test = {/** @const */ default: {}};",
+            "var name$$module$test = module$other.default;",
+            "module$test.default.foo = 1;"));
 
     testModules(
         "test.js",
+        lines("var name = require('./other');", "module.exports = function() {};"),
         lines(
-            "var name = require('./other');",
-            "module.exports = function() {};"),
-        lines(
-            "var name$$module$test = module$other;",
-            "var module$test = function () {};"));
+            "/** @const */ var module$test = {};",
+            "var name$$module$test = module$other.default;",
+            "/** @const */ module$test.default = function () {};"));
   }
 
   public void testExportsInExpression() {
     testModules(
         "test.js",
+        lines("var name = require('./other');", "var e;", "e = module.exports = function() {};"),
         lines(
-            "var name = require('./other');",
-            "var e;",
-            "e = module.exports = function() {};"),
-        lines(
-            "var module$test;",
-            "var name$$module$test = module$other;",
+            "/** @const */ var module$test = {};",
+            "var name$$module$test = module$other.default;",
             "var e$$module$test;",
-            "e$$module$test = module$test = function () {};"));
+            "e$$module$test = /** @const */ module$test.default = function () {};"));
 
     testModules(
         "test.js",
+        lines("var name = require('./other');", "var e = module.exports = function() {};"),
         lines(
-            "var name = require('./other');",
-            "var e = module.exports = function() {};"),
-        lines(
-            "var module$test;",
-            "var name$$module$test = module$other;",
-            "var e$$module$test = module$test = function () {};"));
+            "/** @const */ var module$test = {};",
+            "var name$$module$test = module$other.default;",
+            "var e$$module$test = /** @const */ module$test.default = function () {};"));
 
     testModules(
         "test.js",
+        lines("var name = require('./other');", "(module.exports = function() {})();"),
         lines(
-            "var name = require('./other');",
-            "(module.exports = function() {})();"),
-        lines(
-            "var module$test;",
-            "var name$$module$test = module$other;",
-            "(module$test = function () {})();"));
+            "/** @const */ var module$test = {};",
+            "var name$$module$test = module$other.default;",
+            "(/** @const */ module$test.default = function () {})();"));
   }
 
   public void testPropertyExports() {
     testModules(
         "test.js",
+        lines("exports.one = 1;", "module.exports.obj = {};", "module.exports.obj.two = 2;"),
         lines(
-            "exports.one = 1;",
-            "module.exports.obj = {};",
-            "module.exports.obj.two = 2;"),
-        lines(
-            "/** @const */ var module$test = {};",
-            "module$test.one = 1;",
-            "module$test.obj = {};",
-            "module$test.obj.two = 2;"));
+            "/** @const */ var module$test = {/** @const */ default: {}};",
+            "" + "module$test.default.one = 1;",
+            "module$test.default.obj = {};",
+            "module$test.default.obj.two = 2;"));
   }
 
   /**
@@ -154,21 +142,18 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
   public void testModuleExportsWrittenWithExportsRefs() {
     testModules(
         "test.js",
+        lines("exports.one = 1;", "module.exports = {};"),
         lines(
-            "exports.one = 1;",
-            "module.exports = {};"),
-        lines(
-            "/** @const */ var module$test={};",
-            "module$test.one = 1;"));
+            "/** @const */ var module$test = {/** @const */ default: {}};",
+            "module$test.default.one = 1;"));
   }
 
   public void testVarRenaming() {
     testModules(
         "test.js",
+        lines("module.exports = {};", "var a = 1, b = 2;", "(function() { var a; b = 4})();"),
         lines(
-            "module.exports = {};", "var a = 1, b = 2;", "(function() { var a; b = 4})();"),
-        lines(
-            "/** @const */ var module$test={};",
+            "/** @const */ var module$test = {/** @const */ default: {}};",
             "var a$$module$test = 1;",
             "var b$$module$test = 2;",
             "(function() { var a; b$$module$test = 4})();"));
@@ -177,25 +162,21 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
   public void testDash() {
     testModules(
         "test-test.js",
+        lines("var name = require('./other');", "exports.foo = 1;"),
         lines(
-            "var name = require('./other');",
-            "exports.foo = 1;"),
-        lines(
-            "/** @const */ var module$test_test = {};",
-            "var name$$module$test_test = module$other;",
-            "module$test_test.foo = 1;"));
+            "/** @const */ var module$test_test = {/** @const */ default: {}};",
+            "var name$$module$test_test=module$other.default",
+            "module$test_test.default.foo = 1;"));
   }
 
   public void testIndex() {
     testModules(
         "foo/index.js",
+        lines("var name = require('../other');", "exports.bar = 1;"),
         lines(
-            "var name = require('../other');",
-            "exports.bar = 1;"),
-        lines(
-            "/** @const */ var module$foo$index={};",
-            "var name$$module$foo$index = module$other;",
-            "module$foo$index.bar = 1;"));
+            "/** @const */ var module$foo$index = {/** @const */ default: {}};",
+            "var name$$module$foo$index = module$other.default;",
+            "module$foo$index.default.bar = 1;"));
   }
 
   public void testVarJsdocGoesOnAssignment() {
@@ -209,24 +190,22 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "var MyEnum = { ONE: 1, TWO: 2 };",
             "module.exports = {MyEnum: MyEnum};"),
         lines(
-            "/** @const */",
-            "var module$testcode = {};",
+            "/** @const */ var module$testcode = {/** @const */ default: {}};",
             "/**",
             " * @const",
             " * @enum {number}",
             " */",
-            "(module$testcode.MyEnum = {ONE:1, TWO:2});"));
+            "(module$testcode.default.MyEnum = {ONE:1, TWO:2});"));
   }
 
   public void testModuleName() {
     testModules(
         "foo/bar.js",
+        lines("var name = require('../other');", "module.exports = name;"),
         lines(
-            "var name = require('../other');",
-            "module.exports = name;"),
-        lines(
-            "var name$$module$foo$bar = module$other;",
-            "var module$foo$bar = module$other;"));
+            "/** @const */ var module$foo$bar = {};",
+            "var name$$module$foo$bar = module$other.default;",
+            "/** @const */ module$foo$bar.default = module$other.default;"));
 
     test(
         ImmutableList.of(
@@ -239,8 +218,9 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             SourceFile.fromCode(
                 Compiler.joinPathParts("foo", "bar.js"),
                 lines(
-                    "var name$$module$foo$bar = module$foo$name;",
-                    "var module$foo$bar = module$foo$name;"))));
+                    "/** @const */ var module$foo$bar = {};",
+                    "var name$$module$foo$bar = module$foo$name.default;",
+                    "/** @const */ module$foo$bar.default = module$foo$name.default;"))));
   }
 
   public void testModuleExportsScope() {
@@ -252,7 +232,8 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "};",
             "module.exports = foo;"),
         lines(
-            "var module$test = function (module) {",
+            "/** @const */ var module$test = {};",
+            "/** @const */ module$test.default = function (module) {",
             "  module.exports={};",
             "};"));
 
@@ -265,7 +246,8 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "};",
             "module.exports = foo;"),
         lines(
-            "var module$test = function() {",
+            "/** @const */ var module$test = {};",
+            "/** @const */ module$test.default = function() {",
             "  var module={};",
             "  module.exports={}",
             "};"));
@@ -279,7 +261,8 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "};",
             "module.exports = foo;"),
         lines(
-            "var module$test = function() {",
+            "/** @const */ var module$test = {};",
+            "/** @const */ module$test.default = function() {",
             "  if (true) var module={};",
             "  module.exports={}",
             "};"));
@@ -297,7 +280,9 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "} else {",
             "  this.foobar = foobar;",
             "}"),
-        "var module$test = {foo: 'bar'};");
+        lines(
+            "/** @const */ var module$test = {};",
+            "/** @const */ module$test.default = {foo: 'bar'};"));
 
     testModules(
         "test.js",
@@ -310,7 +295,9 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "} else {",
             "  this.foobar = foobar;",
             "}"),
-        "var module$test = {foo: 'bar'};");
+        lines(
+            "/** @const */ var module$test = {};",
+            "/** @const */ module$test.default = {foo: 'bar'};"));
 
     testModules(
         "test.js",
@@ -322,7 +309,31 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "if (typeof define === 'function' && define.amd) {",
             "  define([], function () {return foobar;});",
             "}"),
-        "var module$test = {foo: 'bar'};");
+        lines(
+            "/** @const */ var module$test = {};",
+            "/** @const */ module$test.default = {foo: 'bar'};"));
+
+    testModules(
+        "test.js",
+        lines(
+            "(function(global, factory) {",
+            "  true ? module.exports = factory(",
+            "             typeof angular === 'undefined' ? require('./other') :",
+            "                                              angular) :",
+            "         typeof define === 'function' && define.amd ?",
+            "         define('angular-cache', ['angular'], factory) :",
+            "         (global.angularCacheModuleName = factory(global.angular));",
+            "}(this, function(angular) {",
+            "  'use strict';",
+            "  console.log(angular);",
+            "  return angular;",
+            "}));"),
+        lines(
+            "/** @const */ var module$test = {};",
+            "var angular$$module$test = ",
+            "    typeof angular === 'undefined' ? module$other.default : angular;",
+            "console.log(angular$$module$test);",
+            "module$test.default = angular$$module$test;"));
   }
 
   public void testEs6ObjectShorthand() {
@@ -330,16 +341,11 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
         CompilerOptions.LanguageMode.ECMASCRIPT_2015, CompilerOptions.LanguageMode.ECMASCRIPT5);
     testModules(
         "test.js",
+        lines("function foo() {}", "module.exports = {", "  prop: 'value',", "  foo", "};"),
         lines(
-            "function foo() {}",
-            "module.exports = {",
-            "  prop: 'value',",
-            "  foo",
-            "};"),
-        lines(
-            "/** @const */ var module$test = {};",
-            "module$test.foo = function () {};",
-            "module$test.prop = 'value';"));
+            "/** @const */ var module$test = {/** @const */ default: {}};",
+            "module$test.default.foo = function () {};",
+            "module$test.default.prop = 'value';"));
 
     testModules(
         "test.js",
@@ -351,51 +357,43 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "  }",
             "};"),
         lines(
-            "/** @const */ var module$test = {};",
-            "module$test.prop = 'value';",
-            "module$test.foo = function() {",
+            "/** @const */ var module$test = {/** @const */ default: {}};",
+            "module$test.default.prop = 'value';",
+            "module$test.default.foo = function() {",
             "  console.log('bar');",
             "};"));
 
     testModules(
         "test.js",
+        lines("var a = require('./other');", "module.exports = {a: a};"),
         lines(
-            "var a = require('./other');",
-            "module.exports = {a: a};"),
-        lines(
-            "/** @const */ var module$test = {};",
-            "var a$$module$test = module$other;",
-            "module$test.a = module$other;"));
+            "/** @const */ var module$test = {/** @const */ default: {}};",
+            "var a$$module$test = module$other.default;",
+            "module$test.default.a = module$other.default;"));
 
     testModules(
         "test.js",
+        lines("var a = require('./other');", "module.exports = {a};"),
         lines(
-            "var a = require('./other');",
-            "module.exports = {a};"),
-        lines(
-            "/** @const */ var module$test = {};",
-            "var a$$module$test = module$other;",
-            "module$test.a = module$other;"));
+            "/** @const */ var module$test = {/** @const */ default: {}};",
+            "var a$$module$test = module$other.default;",
+            "module$test.default.a = module$other.default;"));
 
     testModules(
         "test.js",
+        lines("var a = 4;", "module.exports = {a};"),
         lines(
-            "var a = 4;",
-            "module.exports = {a};"),
-        lines(
-            "/** @const */ var module$test = {};",
-            "module$test.a = 4;"));
+            "/** @const */ var module$test = {/** @const */ default: {}};",
+            "module$test.default.a = 4;"));
   }
 
   public void testKeywordsInExports() {
     testModules(
         "testcode.js",
+        lines("var a = 4;", "module.exports = { else: a };"),
         lines(
-            "var a = 4;",
-            "module.exports = { else: a };"),
-        lines(
-            "/** @const */ var module$testcode = {};",
-            "module$testcode.else = 4;"));
+            "/** @const */ var module$testcode = {/** @const */ default: {}};",
+            "module$testcode.default.else = 4;"));
   }
 
   public void testRequireResultUnused() {
@@ -412,44 +410,37 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "});"),
         lines(
             "(function() {",
-            "  var other=module$other;",
-            "  var bar = module$other;",
+            "  var other = module$other.default;",
+            "  var bar = module$other.default;",
             "})()"));
   }
 
   public void testFunctionRewriting() {
     testModules(
         "test.js",
+        lines("function foo() {}", "foo.prototype = new Date();", "module.exports = foo;"),
         lines(
-            "function foo() {}",
-            "foo.prototype = new Date();",
-            "module.exports = foo;"),
-        lines(
-            "var module$test = function() {};",
-            "module$test.prototype = new Date();"));
+            "/** @const */ var module$test = {};",
+            "/** @const */ module$test.default = function() {};",
+            "module$test.default.prototype = new Date();"));
 
     testModules(
         "test.js",
+        lines("function foo() {}", "foo.prototype = new Date();", "module.exports = {foo: foo};"),
         lines(
-            "function foo() {}",
-            "foo.prototype = new Date();",
-            "module.exports = {foo: foo};"),
-        lines(
-            "/** @const */ var module$test = {};",
-            "module$test.foo = function () {}",
-            "module$test.foo.prototype = new Date();"));
+            "/** @const */ var module$test = {/** @const */ default: {}};",
+            "module$test.default.foo = function () {};",
+            "module$test.default.foo.prototype = new Date();"));
   }
 
   public void testFunctionHoisting() {
     testModules(
         "test.js",
+        lines("module.exports = foo;", "function foo() {}", "foo.prototype = new Date();"),
         lines(
-            "module.exports = foo;",
-            "function foo() {}",
-            "foo.prototype = new Date();"),
-        lines(
-            "var module$test = function() {};",
-            "module$test.prototype = new Date();"));
+            "/** @const */ var module$test = {};",
+            "/** @const */ module$test.default = function() {};",
+            "module$test.default.prototype = new Date();"));
 
     testModules(
         "test.js",
@@ -460,9 +451,10 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "module.exports = foo;",
             "module.exports.bar = foobar;"),
         lines(
-            "var module$test = function () {};",
-            "module$test.bar = function() {};",
-            "Object.assign(module$test, { bar: module$test.bar });"));
+            "/** @const */ var module$test = {};",
+            "/** @const */ module$test.default = function () {};",
+            "module$test.default.bar = function() {};",
+            "Object.assign(module$test.default, { bar: module$test.default.bar });"));
   }
 
   public void testClassRewriting() {
@@ -471,21 +463,21 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
     testModules(
         "test.js",
         lines("class foo extends Array {}", "module.exports = foo;"),
-        "let module$test = class extends Array {}");
+        lines(
+            "/** @const */ var module$test = {};",
+            "/** @const */ module$test.default = class extends Array {};"));
 
     testModules(
         "test.js",
         lines("class foo {}", "module.exports = foo;"),
-        "let module$test = class {}");
+        "/** @const */ var module$test = {}; /** @const */ module$test.default = class {}");
 
     testModules(
         "test.js",
+        lines("class foo {}", "module.exports.foo = foo;"),
         lines(
-            "class foo {}",
-            "module.exports.foo = foo;"),
-        lines(
-            "/** @const */ var module$test = {};",
-            "module$test.foo = class {};"));
+            "/** @const */ var module$test = {/** @const */ default: {}};",
+            "module$test.default.foo = class {};"));
 
     testModules(
         "test.js",
@@ -495,8 +487,9 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "  bar() { return 'bar'; }",
             "};"),
         lines(
-            "var module$test = class {",
-            "  /** @this {module$test} */",
+            "/** @const */ var module$test = {};",
+            "/** @const */ module$test.default = class {",
+            "  /** @this {module$test.default} */",
             "  bar() { return 'bar'; }",
             "};"));
   }
@@ -532,12 +525,10 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
         CompilerOptions.LanguageMode.ECMASCRIPT_2015, CompilerOptions.LanguageMode.ECMASCRIPT5);
     testModules(
         "test.js",
+        lines("const {foo, bar} = require('./other');", "var baz = foo + bar;"),
         lines(
-            "const {foo, bar} = require('./other');",
-            "var baz = foo + bar;"),
-        lines(
-            "const {foo, bar} = module$other;",
-            "var baz = module$other.foo + module$other.bar;"));
+            "const {foo, bar} = module$other.default;",
+            "var baz = module$other.default.foo + module$other.default.bar;"));
   }
 
   public void testAnnotationsCopied() {
@@ -550,9 +541,9 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "/** @type {string} */ a.prototype.foo;",
             "module.exports.a = a;"),
         lines(
-            "/** @const */ var module$test = {};",
-            "/** @interface */ module$test.a;",
-            "/** @type {string} */ module$test.a.prototype.foo;"));
+            "/** @const */ var module$test = {/** @const */ default: {}};",
+            "/** @interface */ module$test.default.a;",
+            "/** @type {string} */ module$test.default.a.prototype.foo;"));
   }
 
   public void testUMDRemoveIIFE() {
@@ -568,7 +559,9 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "} else {",
             "  this.foobar = foobar;",
             "}})()"),
-        "var module$test = {foo: 'bar'};");
+        lines(
+            "/** @const */ var module$test = {};",
+            "/** @const */ module$test.default = {foo: 'bar'};"));
 
     testModules(
         "test.js",
@@ -582,7 +575,23 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "} else {",
             "  this.foobar = foobar;",
             "}}()"),
-        "var module$test = {foo: 'bar'};");
+        "/** @const */ var module$test = {}; /** @const */ module$test.default = {foo: 'bar'};");
+
+    testModules(
+        "test.js",
+        lines(
+            "!function(){",
+            "var foobar = {foo: 'bar'};",
+            "if (typeof module === 'object' && module.exports) {",
+            "  module.exports = foobar;",
+            "} else if (typeof define === 'function' && define.amd) {",
+            "  define([], function() {return foobar;});",
+            "} else {",
+            "  this.foobar = foobar;",
+            "}}()"),
+        lines(
+            "/** @const */ var module$test = {};",
+            "/** @const */ module$test.default = {foo: 'bar'};"));
 
     testModules(
         "test.js",
@@ -596,7 +605,9 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "} else {",
             "  this.foobar = foobar;",
             "}})()"),
-        "var module$test = {foo: 'bar'};");
+        lines(
+            "/** @const */ var module$test = {};",
+            "/** @const */ module$test.default = {foo: 'bar'};"));
 
     testModules(
         "test.js",
@@ -610,7 +621,9 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "} else {",
             "  this.foobar = foobar;",
             "}}.call(this))"),
-        "var module$test = {foo: 'bar'};");
+        lines(
+            "/** @const */ var module$test = {};",
+            "/** @const */ module$test.default = {foo: 'bar'};"));
 
     testModules(
         "test.js",
@@ -626,8 +639,9 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "  global.foobar = foobar;",
             "}})(this)"),
         lines(
-            "var module$test = {foo: 'bar'};",
-            "this.foobar = module$test;"));
+            "/** @const */ var module$test = {};",
+            "/** @const */ module$test.default = {foo: 'bar'};",
+            "module$test.default.foobar = module$test.default;"));
 
     testModules(
         "test.js",
@@ -643,8 +657,9 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "  global.foobar = foobar;",
             "}}.call(this, this))"),
         lines(
-            "var module$test = {foo: 'bar'};",
-            "this.foobar = module$test;"));
+            "/** @const */ var module$test = {};",
+            "/** @const */ module$test.default = {foo: 'bar'};",
+            "module$test.default.foobar = module$test.default;"));
 
     // We can't remove IIFEs explict calls that don't use "this"
     testModules(
@@ -660,9 +675,9 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "  this.foobar = foobar;",
             "}}.call(window))"),
         lines(
-            "var module$test;",
+            "/** @const */ var module$test = {};",
             "(function(){",
-            "  module$test={foo:\"bar\"};",
+            "  /** @const */ module$test.default={foo:'bar'};",
             "}).call(window);"));
 
     // Can't remove IIFEs when there are sibling statements
@@ -680,9 +695,9 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "}})();",
             "alert('foo');"),
         lines(
-            "var module$test;",
+            "/** @const */ var module$test = {};",
             "(function(){",
-            "  module$test={foo:\"bar\"};",
+            "  /** @const */ module$test.default={foo:\"bar\"};",
             "})();",
             "alert('foo');"));
 
@@ -701,10 +716,10 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "  this.foobar = foobar;",
             "}})();"),
         lines(
-            "var module$test;",
+            "/** @const */ var module$test = {};",
             "alert('foo');",
             "(function(){",
-            "  module$test={foo:\"bar\"};",
+            "  /** @const */ module$test.default={foo:\"bar\"};",
             "})();"));
 
     // Annotations for local names should be preserved
@@ -724,13 +739,14 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "  global.foobar = foobar;",
             "}}.call(this, this))"),
         lines(
+            "/** @const */ var module$test = {};",
             "/** @param {...*} var_args */",
             "function log$$module$test(var_args){}",
-            "var module$test = {",
+            "/** @const */ module$test.default = {",
             "  foo: 'bar',",
             "  log: function() { log$$module$test.apply(null,arguments); }",
             "};",
-            "this.foobar = module$test;"));
+            "module$test.default.foobar = module$test.default;"));
   }
 
   public void testParamShadow() {
@@ -742,9 +758,10 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "Foo.prototype.test = new Bar(Foo);",
             "module.exports = Foo;"),
         lines(
-            "var module$test = /** @constructor */ function () {};",
+            "/** @const */ var module$test = {};",
+            "/** @const @constructor */ module$test.default = function () {};",
             "/** @constructor */ function Bar$$module$test(Foo) { this.foo = new Foo(); }",
-            "module$test.prototype.test = new Bar$$module$test(module$test);"));
+            "module$test.default.prototype.test = new Bar$$module$test(module$test.default);"));
   }
 
   public void testIssue2308() {
@@ -752,42 +769,45 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
         "test.js",
         "exports.y = null; var x; x = exports.y;",
         lines(
-            "/** @const */ var module$test = {};",
-            "module$test.y = null;",
+            "/** @const */ var module$test = {/** @const */ default: {}};",
+            "module$test.default.y = null;",
             "var x$$module$test;",
-            "x$$module$test = module$test.y"));
+            "x$$module$test = module$test.default.y"));
   }
 
   public void testAbsoluteImportsWithModuleRoots() {
     moduleRoots = ImmutableList.of("/base");
     test(
         ImmutableList.of(
-            SourceFile.fromCode(Compiler.joinPathParts("base", "mod", "name.js"), ""),
+            SourceFile.fromCode(
+                Compiler.joinPathParts("base", "mod", "name.js"), "module.exports = {}"),
             SourceFile.fromCode(
                 Compiler.joinPathParts("base", "test", "sub.js"),
                 lines(
-                    "var name = require('/mod/name');", "(function() { module$mod$name(); })();"))),
+                    "var name = require('/mod/name');",
+                    "(function() { let foo = name; foo(); })();"))),
         ImmutableList.of(
-            SourceFile.fromCode(Compiler.joinPathParts("base", "mod", "name.js"), ""),
+            SourceFile.fromCode(
+                Compiler.joinPathParts("base", "mod", "name.js"),
+                "/** @const */ var module$mod$name = {/** @const */ default: {}};"),
             SourceFile.fromCode(
                 Compiler.joinPathParts("base", "test", "sub.js"),
                 lines(
-                    "var name = module$mod$name;", "(function() { module$mod$name(); })();"))));
+                    "var name = module$mod$name.default;",
+                    "(function() { let foo = module$mod$name.default; foo(); })();"))));
   }
 
   public void testIssue2510() {
     testModules(
         "test.js",
-        lines(
-            "module.exports = {",
-            "  a: 1,",
-            "  get b() { return 2; }",
-            "};"),
+        lines("module.exports = {", "  a: 1,", "  get b() { return 2; }", "};"),
         lines(
             "/** @const */ var module$test = {",
-            "  get b() { return 2; }",
-            "}",
-            "module$test.a = 1"));
+            "  /** @const */ default: {",
+            "    get b() { return 2; }",
+            "  }",
+            "};",
+            "module$test.default.a = 1"));
   }
 
   public void testIssue2450() {
@@ -802,9 +822,9 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "  HASHSIZE: BCRYPT_HASHSIZE,",
             "};"),
         lines(
-            "/** @const */ var module$test={};",
-            "module$test.BLOCKS = 8;",
-            "module$test.HASHSIZE = 32;"));
+            "/** @const */ var module$test = {/** @const */ default: {}};",
+            "module$test.default.BLOCKS = 8;",
+            "module$test.default.HASHSIZE = 32;"));
   }
 
   public void testWebpackAmdPattern() {
@@ -812,20 +832,23 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
         "test.js",
         lines(
             "var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;",
-            "!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(1), __webpack_require__(2)],",
-            "      __WEBPACK_AMD_DEFINE_RESULT__ = function (b, c) {",
-            "          console.log(b, c.exportA, c.exportB);",
+            "!(__WEBPACK_AMD_DEFINE_ARRAY__ =",
+            "      [__webpack_require__(1), __webpack_require__(2)],",
+            "  __WEBPACK_AMD_DEFINE_RESULT__ =",
+            "      function(b, c) {",
+            "        console.log(b, c.exportA, c.exportB);",
             "      }.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__),",
-            "    __WEBPACK_AMD_DEFINE_RESULT__ !== undefined",
-            "    && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));"),
+            "  __WEBPACK_AMD_DEFINE_RESULT__ !== undefined &&",
+            "      (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));",
+            ""),
         lines(
-            "var module$test = {};",
+            "/** @const */ var module$test = {};",
             "var __WEBPACK_AMD_DEFINE_ARRAY__$$module$test;",
             "!(__WEBPACK_AMD_DEFINE_ARRAY__$$module$test = ",
             "    [__webpack_require__(1), __webpack_require__(2)],",
-            "    module$test = function(b,c){console.log(b,c.exportA,c.exportB)}",
-            "        .apply(module$test,__WEBPACK_AMD_DEFINE_ARRAY__$$module$test),",
-            "    module$test!==undefined && module$test)"));
+            "    module$test.default = function(b,c){console.log(b,c.exportA,c.exportB)}",
+            "        .apply(module$test.default,__WEBPACK_AMD_DEFINE_ARRAY__$$module$test),",
+            "    module$test.default!==undefined && module$test.default)"));
   }
 
   public void testIssue2593() {
@@ -840,7 +863,7 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "",
             "module.exports = {};"),
         lines(
-            "/** @const */ var module$test={};",
+            "/** @const */ var module$test = {/** @const */ default: {}};",
             "var first$$module$test=1;",
             "var second$$module$test=2;",
             "var third$$module$test=3;",
@@ -858,7 +881,7 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "   typeof define === 'function' && define.amd ?",
             "     define([], function() {return foobar;}) :",
             "     this.foobar = foobar;"),
-        "var module$test = {foo: 'bar'};");
+        "/** @const */ var module$test = {}; /** @const */ module$test.default = {foo: 'bar'};");
   }
 
   public void testLeafletUMDWrapper() {
@@ -880,18 +903,10 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "  exports.webkit = webkit",
             "})));"),
         lines(
-            "/** @const */ var module$test={};",
-            "{",
-            "  var exports$jscomp$inline_4$$module$test=module$test;",
-            "  var userAgentContains$jscomp$inline_6$$module$test=",
-            "    function(str$jscomp$inline_7){",
-            "      return navigator.userAgent.toLowerCase().indexOf(",
-            "        str$jscomp$inline_7)>=0;",
-            "    };",
-            "  var webkit$jscomp$inline_5$$module$test=",
-            "    userAgentContains$jscomp$inline_6$$module$test('webkit');",
-            "  exports$jscomp$inline_4$$module$test.webkit=",
-            "    webkit$jscomp$inline_5$$module$test;",
+            "/** @const */ var module$test={/** @const */ default: {}};",
+            "module$test.default.webkit=userAgentContains$$module$test('webkit');",
+            "function userAgentContains$$module$test(str) {",
+            "  return navigator.userAgent.toLowerCase().indexOf(str) >= 0;",
             "}"));
   }
 
@@ -909,10 +924,8 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "  return {foo: 'bar'};",
             "});"),
         lines(
-            "{",
-            "  var module$test;",
-            "  module$test = {foo: 'bar'};",
-            "}"));
+            "/** @const */ var module$test={};",
+            "/** @const */ module$test.default = {foo: 'bar'};"));
   }
 
   public void testDontSplitVarsInFor() {
@@ -920,6 +933,40 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
         "test.js",
         "for (var a, b, c; ;) {}",
         "for (var a, b, c; ;) {}");
+  }
+
+  public void testExportsDirectAssignment() {
+    testModules(
+        "test.js",
+        "exports = module.exports = {};",
+        "/** @const */ var module$test = {/** @const */ default: {}};");
+  }
+
+  public void testExportsPropertyHoisting() {
+    testModules(
+        "test.js",
+        lines(
+            "exports.Buffer = Buffer;", "Buffer.TYPED_ARRAY_SUPPORT = {};", "function Buffer() {}"),
+        lines(
+            "/** @const */ var module$test = {/** @const */ default: {}};",
+            "module$test.default.Buffer = function() {};",
+            "module$test.default.Buffer.TYPED_ARRAY_SUPPORT = {};"));
+  }
+
+  public void testExportNameInParamList() {
+    testModules(
+        "test.js",
+        lines(
+            "var tinymce = { foo: 'bar' };",
+            "function register(cb) { cb(tinymce); }",
+            "register(function(tinymce) { module.exports = tinymce; });"),
+        lines(
+            "/** @const */ var module$test = {};",
+            "var tinymce$$module$test = { foo: 'bar' };",
+            "function register$$module$test(cb) { cb(tinymce$$module$test); }",
+            "register$$module$test(function(tinymce) {",
+            "  /** @const */ module$test.default = tinymce;",
+            "});"));
   }
 
   public void testIssue2616() {
@@ -933,10 +980,68 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "  foo: foo,",
             "};"),
         lines(
-            "/** @const */ var module$test={};",
-            "module$test.foo = function foo() {",
+            "/** @const */ var module$test = {/** @const */ default: {}};",
+            "module$test.default.foo = function foo() {",
             "  return 1;",
             "};"));
+  }
+
+  public void testFingerprintUmd() {
+    testModules(
+        "test.js",
+        lines(
+            "(function (name, context, definition) {",
+            "  'use strict';",
+            "  if (typeof define === 'function' && define.amd) {",
+            "    define(definition);",
+            "  } else if (typeof module !== 'undefined' && module.exports) {",
+            "    module.exports = definition();",
+            "  } else if (context.exports) {",
+            "    context.exports = definition();",
+            "  } else {",
+            "    context[name] = definition();",
+            "  }",
+            "})('Fingerprint2', this, function() {",
+            "  var Fingerprint2 = function() {",
+            "    if (!(this instanceof Fingerprint2)) { return new Fingerprint2(); }",
+            "  };",
+            "  return Fingerprint2;",
+            "})"),
+        lines(
+            "/** @const */ var module$test = {};",
+            "var Fingerprint2$$module$test = function() {",
+            "  if (!(this instanceof Fingerprint2$$module$test)) {",
+            "    return new Fingerprint2$$module$test();",
+            "  }",
+            "};",
+            "module$test.default = Fingerprint2$$module$test;"));
+  }
+
+  public void testTypeofModuleReference() {
+    testModules(
+        "test.js",
+        lines(
+            "module.exports = 'foo';",
+            "console.log(typeof module);",
+            "console.log(typeof exports);"),
+        lines(
+            "/** @const */ var module$test={};",
+            "/** @const */ module$test.default = 'foo';",
+            "console.log('object');",
+            "console.log('object');"));
+  }
+
+  public void testUpdateGenericTypeReferences() {
+    testModules(
+        "test.js",
+        lines(
+            "const Foo = require('./other');",
+            "/** @type {!Array<!Foo>} */ const bar = [];",
+            "module.exports = bar;"),
+        lines(
+            "/** @const */ var module$test={};",
+            "const Foo$$module$test = module$other.default;",
+            "/** @const  @type {!Array<!module$other.default>} */ module$test.default = [];"));
   }
 
   public void testMissingRequire() {
@@ -955,6 +1060,35 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             " * @fileoverview",
             " * @suppress {moduleLoad}",
             " */",
-            "var foo = module$missing;"));
+            "var foo = module$missing.default;"));
+  }
+
+  /** The export reference in the if statement should not be recognized as a UMD pattern. */
+  public void testExportsUsageInIf() {
+    testModules(
+        "test.js",
+        lines(
+            "exports.merge = function(source) {",
+            "  return Object.keys(source).reduce(function (acc, key) {",
+            "    if (Object.prototype.hasOwnProperty.call(acc, key)) {",
+            "      acc[key] = exports.merge(acc[key], value, options);",
+            "    } else {",
+            "      acc[key] = value;",
+            "    }",
+            "    return acc;",
+            "  }, {});",
+            "};"),
+        lines(
+            "/** @const */ var module$test = {/** @const */ default: {}};",
+            "module$test.default.merge = function(source) {",
+            "  return Object.keys(source).reduce(function(acc,key) {",
+            "    if (Object.prototype.hasOwnProperty.call(acc,key)) {",
+            "      acc[key] = module$test.default.merge(acc[key],value,options);",
+            "    } else {",
+            "      acc[key] = value;",
+            "    }",
+            "    return acc;",
+            "  }, {});",
+            "}"));
   }
 }
