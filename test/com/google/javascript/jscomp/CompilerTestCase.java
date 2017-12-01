@@ -2335,7 +2335,7 @@ public abstract class CompilerTestCase extends TestCase {
       });
     }
 
-    protected Diagnostic withMessageContaining(final String substring) {
+    public Diagnostic withMessageContaining(final String substring) {
       checkState(messagePostcondition == null);
       return new Diagnostic(level, diagnostic, new Consumer<String>() {
         @Override public void accept(String message) {
