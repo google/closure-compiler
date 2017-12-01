@@ -86,18 +86,16 @@ public final class ProcessClosurePrimitivesTest extends CompilerTestCase {
         public void process(Node externs, Node root) {
           // Process the original code.
           new ProcessClosurePrimitives(
-              compiler, null, CheckLevel.OFF, preserveGoogProvidesAndRequires)
+                  compiler, null, CheckLevel.OFF, preserveGoogProvidesAndRequires)
               .process(externs, root);
 
           // Inject additional code at the beginning.
           if (additionalCode != null) {
-            SourceFile file =
-                SourceFile.fromCode("additionalcode", additionalCode);
+            SourceFile file = SourceFile.fromCode("additionalcode", additionalCode);
             Node scriptNode = root.getFirstChild();
             Node newScriptNode = new CompilerInput(file).getAstRoot(compiler);
             if (addAdditionalNamespace) {
-              newScriptNode.getFirstChild()
-                  .putBooleanProp(Node.IS_NAMESPACE, true);
+              newScriptNode.getFirstChild().putBooleanProp(Node.IS_NAMESPACE, true);
             }
             while (newScriptNode.getLastChild() != null) {
               Node lastChild = newScriptNode.getLastChild();
@@ -108,15 +106,13 @@ public final class ProcessClosurePrimitivesTest extends CompilerTestCase {
 
           // Inject additional code at the end.
           if (additionalEndCode != null) {
-            SourceFile file =
-                SourceFile.fromCode("additionalendcode", additionalEndCode);
+            SourceFile file = SourceFile.fromCode("additionalendcode", additionalEndCode);
             Node scriptNode = root.getFirstChild();
             Node newScriptNode = new CompilerInput(file).getAstRoot(compiler);
             if (addAdditionalNamespace) {
-              newScriptNode.getFirstChild()
-                  .putBooleanProp(Node.IS_NAMESPACE, true);
+              newScriptNode.getFirstChild().putBooleanProp(Node.IS_NAMESPACE, true);
             }
-            while (newScriptNode.getFirstChild() != null) {
+            while (newScriptNode.hasChildren()) {
               Node firstChild = newScriptNode.getFirstChild();
               newScriptNode.removeChild(firstChild);
               scriptNode.addChildToBack(firstChild);
@@ -125,7 +121,7 @@ public final class ProcessClosurePrimitivesTest extends CompilerTestCase {
 
           // Process the tree a second time.
           new ProcessClosurePrimitives(
-              compiler, null, CheckLevel.ERROR, preserveGoogProvidesAndRequires)
+                  compiler, null, CheckLevel.ERROR, preserveGoogProvidesAndRequires)
               .process(externs, root);
         }
       };

@@ -726,7 +726,7 @@ public final class SuggestedFix {
           return this;
         } else {
           // The file has no goog.provide or goog.require nodes.
-          if (script.getFirstChild() != null) {
+          if (script.hasChildren()) {
             nodeToInsertBefore = script.getFirstChild();
           } else {
             replacements.put(

@@ -1622,7 +1622,7 @@ class IRFactory {
         if (!key.isComputedProp() && !key.isQuotedString() && !currentFileIsExterns) {
           maybeWarnKeywordProperty(key);
         }
-        if (key.getFirstChild() == null) {
+        if (!key.hasChildren()) {
           maybeWarn = true;
         }
 
