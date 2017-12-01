@@ -655,7 +655,7 @@ public final class DefaultPassConfig extends PassConfig {
 
     // Collapsing properties can undo constant inlining, so we do this before
     // the main optimization loop.
-    if (options.collapseProperties) {
+    if (options.collapseProperties || options.collapseModuleExportProperties) {
       passes.add(collapseProperties);
     }
 
