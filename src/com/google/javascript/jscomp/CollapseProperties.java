@@ -68,6 +68,11 @@ import java.util.Map;
  */
 class CollapseProperties implements CompilerPass {
 
+  public enum PropertyType {
+    ANY,
+    MODULE_EXPORT
+  }
+
   // Warnings
   static final DiagnosticType UNSAFE_NAMESPACE_WARNING =
       DiagnosticType.warning(
@@ -84,6 +89,7 @@ class CollapseProperties implements CompilerPass {
       "dangerous use of ''this'' in static method {0}");
 
   private final AbstractCompiler compiler;
+  private final PropertyType propertyType;
 
   /** Global namespace tree */
   private List<Name> globalNames;
@@ -91,8 +97,9 @@ class CollapseProperties implements CompilerPass {
   /** Maps names (e.g. "a.b.c") to nodes in the global namespace tree */
   private Map<String, Name> nameMap;
 
-  CollapseProperties(AbstractCompiler compiler) {
+  CollapseProperties(AbstractCompiler compiler, PropertyType propertyType) {
     this.compiler = compiler;
+    this.propertyType = propertyType;
   }
 
   @Override
@@ -218,6 +225,9 @@ class CollapseProperties implements CompilerPass {
     }
 
     for (Name p : n.props) {
+      if (propertyType == PropertyType.MODULE_EXPORT && !n.isModuleExport()) {
+        continue;
+      }
       String propAlias = appendPropForAlias(alias, p.getBaseName());
 
       if (p.canCollapse()) {
@@ -396,6 +406,9 @@ class CollapseProperties implements CompilerPass {
    * @param alias The flattened name for {@code n}
    */
   private void collapseDeclarationOfNameAndDescendants(Name n, String alias) {
+    if (propertyType == PropertyType.MODULE_EXPORT && !n.isModuleExport()) {
+      return;
+    }
     boolean canCollapseChildNames = n.canCollapseUnannotatedChildNames();
 
     // Handle this name first so that nested object literals get unrolled.

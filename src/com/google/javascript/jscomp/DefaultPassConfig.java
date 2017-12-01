@@ -32,6 +32,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
 import com.google.javascript.jscomp.AbstractCompiler.MostRecentTypechecker;
+import com.google.javascript.jscomp.CollapseProperties.PropertyType;
 import com.google.javascript.jscomp.CompilerOptions.ExtractPrototypeMemberDeclarationsMode;
 import com.google.javascript.jscomp.CoverageInstrumentationPass.CoverageReach;
 import com.google.javascript.jscomp.CoverageInstrumentationPass.InstrumentOption;
@@ -2430,7 +2431,11 @@ public final class DefaultPassConfig extends PassConfig {
       new PassFactory(PassNames.COLLAPSE_PROPERTIES, true) {
         @Override
         protected CompilerPass create(AbstractCompiler compiler) {
-          return new CollapseProperties(compiler);
+          PropertyType propertyType = PropertyType.ANY;
+          if (!options.collapseProperties && options.collapseModuleExportProperties) {
+            propertyType = PropertyType.MODULE_EXPORT;
+          }
+          return new CollapseProperties(compiler, propertyType);
         }
 
         @Override

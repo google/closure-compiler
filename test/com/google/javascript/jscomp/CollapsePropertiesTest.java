@@ -19,6 +19,7 @@ package com.google.javascript.jscomp;
 import static com.google.javascript.jscomp.CollapseProperties.NAMESPACE_REDEFINED_WARNING;
 import static com.google.javascript.jscomp.CollapseProperties.UNSAFE_NAMESPACE_WARNING;
 
+import com.google.javascript.jscomp.CollapseProperties.PropertyType;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 
 /**
@@ -41,7 +42,7 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
-    return new CollapseProperties(compiler);
+    return new CollapseProperties(compiler, PropertyType.ANY);
   }
 
   @Override

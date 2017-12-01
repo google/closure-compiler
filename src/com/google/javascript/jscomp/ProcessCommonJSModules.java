@@ -652,6 +652,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
       initModule.setJSDocInfo(builder.build());
       if (directAssignments == 0) {
         Node defaultProp = IR.stringKey(EXPORT_PROPERTY_NAME);
+        defaultProp.putBooleanProp(Node.MODULE_EXPORT, true);
         defaultProp.addChildToFront(IR.objectlit());
         initModule.getFirstFirstChild().addChildToFront(defaultProp);
         builder = new JSDocInfoBuilder(true);
@@ -1166,6 +1167,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
 
       Node updatedExport =
           NodeUtil.newQName(compiler, moduleName, export.node, export.node.getQualifiedName());
+      updatedExport.putBooleanProp(Node.MODULE_EXPORT, true);
       boolean exportIsConst =
           defaultExportIsConst
               && updatedExport.matchesQualifiedName(
@@ -1180,7 +1182,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
           && export.scope.getVar("module.exports") == null
           && root.getParent().isAssign()) {
         if (root.getGrandparent().isExprResult() && moduleInitialization == null) {
-          // Rewrite "module.exports = foo;" to "var moduleName = foo;"
+          // Rewrite "module.exports = foo;" to "var moduleName = {default: foo};"
           Node parent = root.getParent();
           Node exportName = IR.exprResult(IR.assign(updatedExport, rValue.detach()));
           if (exportIsConst) {
