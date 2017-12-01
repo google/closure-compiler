@@ -350,11 +350,11 @@ public final class FunctionType implements Serializable {
   /**
    * Returns the formal parameter in the given (0-indexed) position,
    * or null if the position is past the end of the parameter list.
-   *
-   * @throws IllegalStateException if this is the top function (rather than returning bottom).
    */
   public JSType getFormalType(int argpos) {
-    checkState(!isTopFunction());
+    if (isTopFunction()) {
+      return this.commonTypes.UNKNOWN;
+    }
     int numReqFormals = requiredFormals.size();
     if (argpos < numReqFormals) {
       return requiredFormals.get(argpos);
@@ -659,7 +659,7 @@ public final class FunctionType implements Serializable {
    * it to represent, for example, a constructor of Foos with whatever
    * arguments.
    */
-  private boolean acceptsAnyArguments() {
+  public boolean acceptsAnyArguments() {
     return this.requiredFormals.isEmpty() && this.optionalFormals.isEmpty()
         && this.restFormals != null && this.restFormals.isUnknown();
   }
@@ -719,8 +719,7 @@ public final class FunctionType implements Serializable {
       }
 
       if (other.restFormals != null) {
-        int thisMaxTotalArity =
-            this.requiredFormals.size() + this.optionalFormals.size();
+        int thisMaxTotalArity = this.requiredFormals.size() + this.optionalFormals.size();
         if (this.restFormals != null) {
           thisMaxTotalArity++;
         }
@@ -967,8 +966,7 @@ public final class FunctionType implements Serializable {
       builder.addOptFormal(optFormalType);
     }
     if (f1.restFormals != null || f2.restFormals != null) {
-      JSType restFormalsType =
-          JSType.nullAcceptingJoin(f1.restFormals, f2.restFormals);
+      JSType restFormalsType = JSType.nullAcceptingJoin(f1.restFormals, f2.restFormals);
       if (restFormalsType.isBottom()) {
         return commonTypes.BOTTOM_FUNCTION;
       }

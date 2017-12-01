@@ -699,4 +699,66 @@ public final class NewTypeInferenceWithTranspilationTest extends NewTypeInferenc
         "};"),
         NewTypeInference.INVALID_OPERAND_TYPE);
   }
+
+  public void testGetTypeFromCalleeForCallbackWithVariableArity() {
+    typeCheck(LINE_JOINER.join(
+        "function f(/** function(): ? */ x) {}",
+        "f((...args) => args);"));
+
+    typeCheck(LINE_JOINER.join(
+        "function f(/** function(): ? */ x) {}",
+        "f((x, y, ...args) => args);"),
+        NewTypeInference.INVALID_ARGUMENT_TYPE);
+
+    typeCheck(LINE_JOINER.join(
+        "function f(/** function(?, ?): ? */ x) {}",
+        "f((x, ...args) => args);"));
+
+    typeCheck(LINE_JOINER.join(
+        "function f(/** function(number, ...number): ? */ x) {}",
+        "f((x, ...args) => { var /** !Array<?> */ n = args; });"));
+
+    // TODO(dimvar): fix when we typecheck ES6 natively
+    typeCheck(LINE_JOINER.join(
+        "function f(/** function(number, ...number): ? */ x) {}",
+        "f((x, ...args) => { var /** !Array<string> */ n = args; });"));
+
+    typeCheck(LINE_JOINER.join(
+        "/** @param {function(number, number=)} fun */",
+        "function f(fun) {}",
+        "f(function(x, y=0) {});"));
+
+    typeCheck(LINE_JOINER.join(
+        "/** @param {function(number=, number=)} fun */",
+        "function f(fun) {}",
+        "f(function(x=0, y=0) {});"));
+
+    typeCheck(LINE_JOINER.join(
+        "/** @param {function(number=, number=)} fun */",
+        "function f(fun) {}",
+        "f(function(x, y=0) {",
+        "    var /** number */ n = x;",
+        "});"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS); // x is number|undefined
+
+    typeCheck(LINE_JOINER.join(
+        "/** @param {function(...number)} fun */",
+        "function f(fun) {}",
+        "f(function(x) { var /** number */ y = x || 0; });"));
+
+    // TODO(dimvar): there should be a warning here because x is number|undefined
+    typeCheck(LINE_JOINER.join(
+        "/** @param {function(...number)} fun */",
+        "function f(fun) {}",
+        "f(function(x) { var /** number */ y = x; });"));
+
+    // We could consider warning in this case (whenever the size of callback's param list,
+    // including optionals and rests, exceeds the declared type's maximum arity) because the later
+    // parameters will never be passed anything, so it's a code smell to have it. But it's not a
+    // type error; we would need a different diagnostic type than invalid_argument_type.
+    typeCheck(LINE_JOINER.join(
+        "/** @param {function(number)} fun */",
+        "function f(fun) {}",
+        "f(function(x=0, y=0) {});"));
+  }
 }

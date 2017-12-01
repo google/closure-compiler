@@ -152,8 +152,7 @@ public final class DeclaredFunctionType implements Serializable {
   }
 
   private int getSyntacticArity() {
-    return this.getOptionalArity()
-        + (this.restFormals == null ? 0 : 1);
+    return this.getOptionalArity() + (this.restFormals == null ? 0 : 1);
   }
 
   public boolean hasRestFormals() {

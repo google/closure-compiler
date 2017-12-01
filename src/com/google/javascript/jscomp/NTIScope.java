@@ -59,9 +59,6 @@ final class NTIScope implements DeclaredTypeRegistry, Serializable, TypeIEnv<JST
     INFERRED
   }
 
-  /**
-   * Used for local variables.
-   */
   static class LocalVarInfo implements Serializable {
     // When we don't know the type of a local variable, this field is null, not ?.
     private final JSType type;

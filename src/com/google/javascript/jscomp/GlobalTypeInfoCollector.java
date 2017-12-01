@@ -2547,12 +2547,16 @@ public class GlobalTypeInfoCollector implements CompilerPass {
       }
     }
 
-    // We only return a non-null result if the arity of declNode matches the
-    // arity we get from declaredTypeAsJSType.
+    /**
+     * Computes a declared type for an unannotated callback using the corresponding formal
+     * type from the callee.
+     * We redo this in NewTypeInference and may find a better type for the callback there,
+     * but we still need to do it here as well, to infer constants inside the callback.
+     */
     private DeclaredFunctionType computeFnDeclaredTypeFromCallee(
-        Node declNode, JSType declaredTypeAsJSType) {
-      checkArgument(declNode.isFunction());
-      checkArgument(declNode.getParent().isCall());
+        Node callback, JSType declaredTypeAsJSType) {
+      checkArgument(callback.isFunction());
+      checkArgument(callback.getParent().isCall());
 
       if (declaredTypeAsJSType == null) {
         return null;
@@ -2567,14 +2571,8 @@ public class GlobalTypeInfoCollector implements CompilerPass {
       if (declType == null) {
         return null;
       }
-      int numFormals = declNode.getSecondChild().getChildCount();
-      int optArity = declType.getOptionalArity();
-      boolean hasRestFormals = declType.hasRestFormals();
-      if ((hasRestFormals && numFormals <= optArity + 1)
-          || (!hasRestFormals && numFormals <= optArity)) {
-        return declType;
-      }
-      return null;
+      return NodeUtil.getApproxRequiredArity(callback) <= declType.getMaxArity()
+          ? declType : null;
     }
 
     // Returns null if it can't find a suitable type in the context

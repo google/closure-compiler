@@ -4605,6 +4605,26 @@ public final class NodeUtil {
     return fnNode.getSecondChild();
   }
 
+  /**
+   * Counts the parameters of a function that are not marked optional or varargs.
+   * In ES5 functions, that's all parameters, in ES6 it's a prefix of the parameters.
+   * The result is an overapproximation: if a parameter is not marked as optional, it may still
+   * be optional, but it doesn't have a default value, and wasn't marked as optional
+   * during transpilation.
+   */
+  public static int getApproxRequiredArity(Node fun) {
+    checkArgument(fun.isFunction());
+    checkArgument(getBestJSDocInfo(fun) == null, "Expected unannotated function, found: %s", fun);
+    int result = 0;
+    for (Node param : fun.getSecondChild().children()) {
+      if (param.isOptionalArg() || param.isVarArgs()) {
+        break;
+      }
+      result++;
+    }
+    return result;
+  }
+
   static boolean isConstantVar(Node node, @Nullable Scope scope) {
     if (isConstantName(node)) {
       return true;

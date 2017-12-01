@@ -790,8 +790,12 @@ final class NewTypeInference implements CompilerPass {
     println("=== Analyzing function: ", scope.getReadableName(), " ===");
     currentScope = scope;
     exitEnvs = new ArrayList<>();
+    Node scopeRoot = scope.getRoot();
+    if (NodeUtil.isUnannotatedCallback(scopeRoot)) {
+      computeFnDeclaredTypeForCallback(scope);
+    }
     ControlFlowAnalysis cfa = new ControlFlowAnalysis(compiler, false, false);
-    cfa.process(null, scope.getRoot());
+    cfa.process(null, scopeRoot);
     this.cfg = cfa.getCfg();
     println(this.cfg);
     // The size is > 1 when multiple files are compiled
@@ -2230,6 +2234,7 @@ final class NewTypeInference implements CompilerPass {
       ImmutableMap<String, JSType> typeMap =
           calcTypeInstantiationFwd(expr, receiver, firstArg, funType, envAfterCallee);
       funType = instantiateCalleeMaybeWithTTL(funType, typeMap);
+      callee.setTypeI(this.commonTypes.fromFunctionType(funType));
       println("Instantiated function type: ", funType);
     }
     // argTypes collects types of actuals for deferred checks.
@@ -2385,6 +2390,8 @@ final class NewTypeInference implements CompilerPass {
       if (!pair.type.isSubtypeOf(reqThisType)) {
         warnings.add(JSError.make(call, INVALID_THIS_TYPE_IN_BIND,
                 errorMsgWithTypeDiff(reqThisType, pair.type)));
+      } else {
+        instantiateGoogBind(call.getFirstChild(), pair.type);
       }
     }
 
@@ -2392,7 +2399,7 @@ final class NewTypeInference implements CompilerPass {
         bindComponents.parameters == null
         ? ImmutableList.<Node>of()
         : bindComponents.parameters.siblings();
-    // We're passing an arraylist but don't do deferred checks for bind.
+    // We are passing an arraylist but don't do deferred checks for bind.
     env = analyzeInvocationArgumentsFwd(
         call, parametersIterable, boundFunType, new ArrayList<JSType>(), env);
     // For any formal not bound here, add it to the resulting function type.
@@ -2411,24 +2418,26 @@ final class NewTypeInference implements CompilerPass {
         builder.addRetType(boundFunType.getReturnType()).buildFunction()));
   }
 
-  private TypeEnv analyzeInvocationArgumentsFwd(Node node, Iterable<Node> args,
+  private TypeEnv analyzeInvocationArgumentsFwd(Node n, Iterable<Node> args,
       FunctionType funType, List<JSType> argTypesForDeferredCheck, TypeEnv inEnv) {
-    checkState(NodeUtil.isCallOrNew(node) || node.isTemplateLit());
+    checkState(NodeUtil.isCallOrNew(n) || n.isTemplateLit());
     TypeEnv env = inEnv;
-    int i = node.isTemplateLit() ? 1 : 0;
+    int i = n.isTemplateLit() ? 1 : 0;
     for (Node arg : args) {
       JSType formalType = funType.getFormalType(i);
       checkState(!formalType.isBottom());
       EnvTypePair pair = analyzeExprFwd(arg, env, formalType);
+      if (NodeUtil.isUnannotatedCallback(arg) && formalType.getFunType() != null) {
+        i++;
+        argTypesForDeferredCheck.add(null); // No deferred check needed.
+        continue;
+      }
       JSType argTypeForDeferredCheck = pair.type;
       // Allow passing undefined for an optional argument.
       if (funType.isOptionalArg(i) && pair.type.equals(UNDEFINED)) {
         argTypeForDeferredCheck = null; // No deferred check needed.
       } else if (!pair.type.isSubtypeOf(formalType)) {
-        String fnName = getReadableCalleeName(node.getFirstChild());
-        JSError error = JSError.make(arg, INVALID_ARGUMENT_TYPE, Integer.toString(i + 1), fnName,
-            errorMsgWithTypeDiff(formalType, pair.type));
-        registerMismatchAndWarn(error, pair.type, formalType);
+        warnAboutInvalidArgument(n, arg, i, formalType, pair.type);
         argTypeForDeferredCheck = null; // No deferred check needed.
       } else {
         registerImplicitUses(arg, pair.type, formalType);
@@ -2438,6 +2447,73 @@ final class NewTypeInference implements CompilerPass {
       i++;
     }
     return env;
+  }
+
+  private void instantiateGoogBind(Node n, JSType recvType) {
+    if (NodeUtil.isGoogBind(n)) {
+      JSType t = (JSType) n.getTypeI();
+      if (t.isFunctionType()) {
+        FunctionType ft = t.getFunType();
+        if (ft.isGeneric()) {
+          FunctionType instantiatedFunction =
+              ft.instantiateGenericsFromArgumentTypes(null, ImmutableList.of(UNKNOWN, recvType));
+          n.setTypeI(this.commonTypes.fromFunctionType(instantiatedFunction));
+        }
+      }
+    }
+  }
+
+  private void warnAboutInvalidArgument(
+      Node call, Node arg, int argIndex, JSType formal, JSType actual) {
+    String fnName = getReadableCalleeName(call.getFirstChild());
+    JSError error = JSError.make(
+        arg, INVALID_ARGUMENT_TYPE, Integer.toString(argIndex + 1), fnName,
+        errorMsgWithTypeDiff(formal, actual));
+    registerMismatchAndWarn(error, actual, formal);
+  }
+
+  /**
+   * Given a scope whose root is an unannotated callback, finds a declared type for the callback
+   * using the types in the callback's context.
+   * Similar to GlobalTypeInfoCollector#computeFnDeclaredTypeFromCallee, but not similar enough
+   * to use the same code for both.
+   */
+  private void computeFnDeclaredTypeForCallback(NTIScope scope) {
+    Node callback = scope.getRoot();
+    checkState(NodeUtil.isUnannotatedCallback(callback));
+    Node call = callback.getParent();
+    JSType calleeType = (JSType) call.getFirstChild().getTypeI();
+    if (calleeType == null) {
+      return;
+    }
+    FunctionType calleeFunType = calleeType.getFunType();
+    if (calleeFunType == null) {
+      return;
+    }
+    int argIndex = call.getIndexOfChild(callback) - 1;
+    JSType formalType = calleeFunType.getFormalType(argIndex);
+    if (formalType == null) {
+      return;
+    }
+    FunctionType ft = formalType.getFunType();
+    if (ft == null || ft.isLoose()) {
+      return;
+    }
+    DeclaredFunctionType callbackDft = scope.getDeclaredFunctionType();
+    JSType scopeType = this.commonTypes.fromFunctionType(callbackDft.toFunctionType());
+    if (ft.isUniqueConstructor() || ft.isInterfaceDefinition()) {
+      warnAboutInvalidArgument(call, callback, argIndex, formalType, scopeType);
+      return;
+    }
+    DeclaredFunctionType declaredDft = checkNotNull(ft.toDeclaredFunctionType());
+    // Only grab a type from the callee if the arity of the declared type is compatible with
+    // the arity of the callback.
+    if (ft.acceptsAnyArguments()
+        || callbackDft.getRequiredArity() <= declaredDft.getMaxArity()) {
+      scope.setDeclaredType(declaredDft);
+    } else {
+      warnAboutInvalidArgument(call, callback, argIndex, formalType, scopeType);
+    }
   }
 
   private EnvTypePair analyzeAssertionCall(
@@ -4938,8 +5014,8 @@ final class NewTypeInference implements CompilerPass {
           "Running deferred check of function: ", calleeScope.getReadableName(),
           " with FunctionSummary of: ", fnSummary, " and callsite ret: ",
           expectedRetType, " args: ", argTypes);
-      if (this.expectedRetType != null &&
-          !fnSummary.getReturnType().isSubtypeOf(this.expectedRetType)) {
+      if (this.expectedRetType != null
+          && !fnSummary.getReturnType().isSubtypeOf(this.expectedRetType)) {
         warnings.add(JSError.make(
             this.callSite, INVALID_INFERRED_RETURN_TYPE,
             errorMsgWithTypeDiff(

@@ -1079,4 +1079,19 @@ public final class NewTypeInferenceTTLTest extends NewTypeInferenceTestBase {
         "MyPromise.prototype.then = function(x, y, z) { return any(); };",
         "var x = (new MyPromise).then(null);"));
   }
+
+  public void testInferUnannotatedCallback() {
+    typeCheck(LINE_JOINER.join(
+        "/**",
+        " * @param {!Promise<!string>} a",
+        " * @return {!Promise<!number>}",
+        " */",
+        "function f(a) {",
+        "  var b = a;",
+        "  return b.then(function(x) {",
+        "    return x - 1;",
+        "  });",
+        "}"),
+        NewTypeInference.INVALID_OPERAND_TYPE);
+  }
 }
