@@ -2305,6 +2305,7 @@ public class InlineFunctionsTest extends CompilerTestCase {
         "}");
   }
 
+  // http://blickly.github.io/closure-compiler-issues/#423
   public void testIssue423() {
     assumeMinimumCapture = false;
     test(
@@ -2336,6 +2337,7 @@ public class InlineFunctionsTest extends CompilerTestCase {
             "})(jQuery)"));
   }
 
+  // http://blickly.github.io/closure-compiler-issues/#423
   public void testIssue423_minCap() {
     assumeMinimumCapture = true;
     test(
@@ -2369,6 +2371,7 @@ public class InlineFunctionsTest extends CompilerTestCase {
             "}"));
   }
 
+  // http://blickly.github.io/closure-compiler-issues/#728
   public void testIssue728() {
     String f = "var f = function() { return false; };";
     StringBuilder calls = new StringBuilder();
@@ -2627,6 +2630,7 @@ public class InlineFunctionsTest extends CompilerTestCase {
         "{var x$jscomp$inline_0=void 0;for(x$jscomp$inline_0 in y);}");
    }
 
+  // http://blickly.github.io/closure-compiler-issues/#1101
   public void testIssue1101() {
     test(
         "var x = (function (saved) {" +
