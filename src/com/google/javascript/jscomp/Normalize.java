@@ -568,7 +568,7 @@ class Normalize implements CompilerPass {
      * semantics, but the semantics are also not well-defined
      * cross-browser.
      *
-     * @see https://github.com/google/closure-compiler/pull/429
+     * See <a href="https://github.com/google/closure-compiler/pull/429">#429</a>
      */
     static boolean visitFunction(Node n, AbstractCompiler compiler) {
       checkState(n.isFunction(), n);
