@@ -94,10 +94,7 @@ public final class RemoveUnusedVarsPrototypePropertiesTest extends CompilerTestC
             "var x = new e; x.a()");
   }
 
-  public void disabledTestPropertiesDefinedInExterns() {
-    // TODO(bradfordcsmith): handle properties defined in externs
-    // Unused properties that were referenced in the externs file should not be
-    // removed
+  public void testPropertiesDefinedInExterns() {
     test("function e(){}" +
             "e.prototype.a = function(){};" +
             "e.prototype.bExtern = function(){};" +
@@ -114,8 +111,9 @@ public final class RemoveUnusedVarsPrototypePropertiesTest extends CompilerTestC
         lines(
             "class C {",
             "  constructor() {}",
-            "  bExtern() {}",
-            "}"));
+            "  bExtern() {}",  // property name defined in externs.
+            "}",
+            "new C();"));
   }
 
   public void testAliasing1() {
@@ -236,8 +234,7 @@ public final class RemoveUnusedVarsPrototypePropertiesTest extends CompilerTestC
             "new e;"));
   }
 
-  public void disabledTestExportedMethodsByNamingConvention() {
-    // TODO(bradfordcsmith): Implement this
+  public void testExportedMethodsByNamingConvention() {
     String classAndItsMethodAliasedAsExtern =
         "function Foo() {}" +
         "Foo.prototype.method = function() {};" +  // not removed
@@ -255,13 +252,15 @@ public final class RemoveUnusedVarsPrototypePropertiesTest extends CompilerTestC
   }
 
   public void disbledTestMethodsFromExternsFileNotExported() {
-    // TODO(bradfordcsmith): implement this
+    // TODO(bradfordcsmith): implementing this requires adding an optional feature to remove unused
+    // prototype properties that are defined in externs.
     String classAndItsMethodAliasedAsExtern =
-        "function Foo() {}" +
-        "Foo.prototype.bar_ = function() {};" +
-        "Foo.prototype.unused = function() {};" +
-        "var instance = new Foo;" +
-        "Foo.prototype.bar = Foo.prototype.bar_";
+        lines(
+            "function Foo() {}",
+            "Foo.prototype.bar_ = function() {};",
+            "Foo.prototype.unused = function() {};",
+            "var instance = new Foo;",
+            "Foo.prototype.bar = Foo.prototype.bar_");
 
     String compiled =
         "function Foo(){}" +
@@ -270,8 +269,7 @@ public final class RemoveUnusedVarsPrototypePropertiesTest extends CompilerTestC
     test(classAndItsMethodAliasedAsExtern, compiled);
   }
 
-  public void disabledTestExportedMethodsByNamingConventionAlwaysExported() {
-    // TODO(bradfordcsmith): implement this
+  public void testExportedMethodsByNamingConventionAlwaysExported() {
     String classAndItsMethodAliasedAsExtern =
         "function Foo() {}" +
         "Foo.prototype.method = function() {};" +  // not removed
@@ -288,8 +286,7 @@ public final class RemoveUnusedVarsPrototypePropertiesTest extends CompilerTestC
     test(classAndItsMethodAliasedAsExtern, compiled);
   }
 
-  public void disabledTestExternMethodsFromExternsFile() {
-    // TODO(bradfordcsmith): implement this
+  public void testExternMethodsFromExternsFile() {
     String classAndItsMethodAliasedAsExtern =
         "function Foo() {}" +
         "Foo.prototype.bar_ = function() {};" +  // not removed
@@ -298,10 +295,11 @@ public final class RemoveUnusedVarsPrototypePropertiesTest extends CompilerTestC
         "Foo.prototype.bar = Foo.prototype.bar_";  // aliased here
 
     String compiled =
-        "function Foo(){}" +
-        "Foo.prototype.bar_ = function(){};" +
-        "var instance = new Foo;" +
-        "Foo.prototype.bar = Foo.prototype.bar_";
+        lines(
+            "function Foo(){}",
+            "Foo.prototype.bar_ = function(){};",
+            "new Foo;",
+            "Foo.prototype.bar = Foo.prototype.bar_");
 
     test(classAndItsMethodAliasedAsExtern, compiled);
   }
@@ -656,15 +654,15 @@ public final class RemoveUnusedVarsPrototypePropertiesTest extends CompilerTestC
 
   }
 
-  public void disabledTestEs6Class() {
-    // TODO(bradfordcsmith): Implement removal of ES6 class methods
+  public void testEs6Class() {
     testSame(
         lines(
             "class C {",
-            "  constructor() {",
+            "  constructor() {",  // constructor is not removable
             "    this.x = 1;",
             "  }",
-            "}"));
+            "}",
+            "new C();"));
 
     test(
         lines(
@@ -674,15 +672,14 @@ public final class RemoveUnusedVarsPrototypePropertiesTest extends CompilerTestC
             "  }",
             "  foo() {}",
             "}",
-            "var c = new C "
-        ),
+            "var c = new C "),
         lines(
             "class C {",
-            "  constructor() {",
+            "  constructor() {",  // constructor is not removable
             "    this.x = 1;",
             "  }",
             "}",
-            "var c = new C"));
+            "new C();"));
 
     testSame(
         lines(
@@ -696,15 +693,22 @@ public final class RemoveUnusedVarsPrototypePropertiesTest extends CompilerTestC
             "c.foo()"
         ));
 
-    testSame(
+    test(
         lines(
             "class C {",
             "  constructor() {",
             "    this.x = 1;",
             "  }",
             "  static foo() {}",
-            "}"
-        ));
+            "}",
+            "new C;"),
+        lines(
+            "class C {",
+            "  constructor() {",  // constructor is not removable
+            "    this.x = 1;",
+            "  }",
+            "}",
+            "new C();"));
 
     test(
         lines(
@@ -715,15 +719,8 @@ public final class RemoveUnusedVarsPrototypePropertiesTest extends CompilerTestC
             "  get foo() {}",
             "  set foo(val) {}",
             "}",
-            "var c = new C "
-        ),
-        lines(
-            "class C {",
-            "  constructor() {",
-            "    this.x = 1;",
-            "  }",
-            "}",
-            "var c = new C"));
+            "var c = new C "),
+        "class C { constructor() { this.x = 1; } } new C");
 
     testSame(
         lines(
@@ -734,7 +731,7 @@ public final class RemoveUnusedVarsPrototypePropertiesTest extends CompilerTestC
             "  get foo() {}",
             "  set foo(val) {}",
             "}",
-            "var c = new C ",
+            "var c = new C;",
             "c.foo = 3;"));
 
     testSame(
@@ -746,12 +743,11 @@ public final class RemoveUnusedVarsPrototypePropertiesTest extends CompilerTestC
             "  get foo() {}",
             "  set foo(val) {}",
             "}",
-            "var c = new C ",
+            "var c = new C;",
             "c.foo;"));
   }
 
-  public void disabledTestEs6Extends() {
-    // TODO(bradfordcsmith): Implement removal of ES6 class methods.
+  public void testEs6Extends() {
     testSame(
         lines(
             "class C {",
@@ -761,7 +757,8 @@ public final class RemoveUnusedVarsPrototypePropertiesTest extends CompilerTestC
             "}",
             "class D extends C {",
             "  constructor() {}",
-            "}"));
+            "}",
+            "new D();"));
 
     testSame(
         lines(
@@ -794,7 +791,7 @@ public final class RemoveUnusedVarsPrototypePropertiesTest extends CompilerTestC
             "     return super.foo()",
             "  }",
             "}",
-            "var d = new D"),
+            "var d = new D;"),
         lines(
             "class C {",
             "  constructor() {",
@@ -804,22 +801,20 @@ public final class RemoveUnusedVarsPrototypePropertiesTest extends CompilerTestC
             "class D extends C {",
             "  constructor() {}",
             "}",
-            "var d = new D"));
+            "new D;"));
   }
 
-  public void disabledTestAnonClasses() {
-    // TODO(bradfordcsmith): Handle ES6 class methods
+  public void testAnonClasses() {
     test(
         lines(
-            "var C = class {",
+            "var C = class InnerC {",
             "  constructor() {",
             "    this.x = 1;",
             "  }",
             "  foo() {}",
-            "}",
+            "};",
             "new C;"),
-        lines(
-            "var C = class {", "  constructor() {", "    this.x = 1;", "  }", "}", "new C;"));
+        "var C = class { constructor() { this.x = 1; } }; new C;");
 
     testSame(
         lines(
@@ -840,21 +835,49 @@ public final class RemoveUnusedVarsPrototypePropertiesTest extends CompilerTestC
             "    this.x = 1;",
             "  }",
             "  foo() {}",
-            "}"),
+            "}",
+            "new C.D();"),
         lines(
             "var C = class {}",
             "C.D = class{",
             "  constructor() {",
             "    this.x = 1;",
             "  }",
-            "}"));
+            "}",
+            "new C.D();"));
 
+    test(
+        "foo(class C { constructor() { } bar() { } })",
+        "foo(class { constructor() { } bar() { } })");
+  }
+
+  public void testBaseClassExpressionHasSideEffects() {
     testSame(
         lines(
-            "foo(class {",
-            "  constructor() { }",
-            "  bar() { }",
-            "})"));
+            "function getBaseClass() { return class {}; }",
+            "class C extends getBaseClass() {}"));
+    test(
+        lines(
+            "function getBaseClass() { return class {}; }",
+            "const C = class InnerC extends getBaseClass() {};"),
+        lines(
+            "function getBaseClass() { return class {}; }",
+            "(class extends getBaseClass() {})"));
+    test(
+        lines(
+            "function getBaseClass() { return class {}; }",
+            "let C;",
+            "C = class InnerC extends getBaseClass() {}"),
+        lines(
+            "function getBaseClass() { return class {}; }",
+            "(class extends getBaseClass() {})"));
+    test(
+        lines(
+            "function getBaseClass() { return class {}; }",
+            "alert(class InnerC extends getBaseClass() {})"),
+        lines(
+            "function getBaseClass() { return class {}; }",
+            "alert(class extends getBaseClass() {})"));
   }
 
   public void testModules() {

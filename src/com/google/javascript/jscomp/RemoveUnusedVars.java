@@ -90,7 +90,7 @@ class RemoveUnusedVars implements CompilerPass {
 
   // Properties that are implicitly used as part of the JS language.
   private static final ImmutableSet<String> IMPLICITLY_USED_PROPERTIES =
-      ImmutableSet.of("length", "toString", "valueOf");
+      ImmutableSet.of("length", "toString", "valueOf", "constructor");
 
   private final AbstractCompiler compiler;
 
@@ -211,8 +211,7 @@ class RemoveUnusedVars implements CompilerPass {
           // If this function is a removable var, then create a continuation
           // for it instead of traversing immediately.
           if (NodeUtil.isFunctionDeclaration(n)) {
-            varInfo =
-                traverseVar(scope.getVar(n.getFirstChild().getString()));
+            varInfo = traverseVar(scope.getVar(n.getFirstChild().getString()));
             FunctionDeclaration functionDeclaration =
                 new RemovableBuilder()
                     .addContinuation(new Continuation(n, scope))
@@ -249,6 +248,10 @@ class RemoveUnusedVars implements CompilerPass {
 
       case CLASS:
         traverseClass(n, scope);
+        break;
+
+      case CLASS_MEMBERS:
+        traverseClassMembers(n, scope);
         break;
 
       case DEFAULT_VALUE:
@@ -501,7 +504,7 @@ class RemoveUnusedVars implements CompilerPass {
     // Normalization should ensure that declaration statements always have just one child.
     Node nameNode = declarationStatement.getOnlyChild();
     if (!nameNode.isName()) {
-      // TODO(bradfordcsmith): Customize handling of destructuring
+      // Destructuring declarations are handled elsewhere.
       traverseNode(nameNode, scope);
     } else {
       Node valueNode = nameNode.getFirstChild();
@@ -727,33 +730,87 @@ class RemoveUnusedVars implements CompilerPass {
     }
   }
 
+  /**
+   * Handle a class that is not the RHS child of an assignment or a variable declaration
+   * initializer.
+   *
+   * <p>For
+   * @param classNode
+   * @param scope
+   */
   private void traverseClass(Node classNode, Scope scope) {
+    checkArgument(classNode.isClass());
+    if (NodeUtil.isClassDeclaration(classNode)) {
+      traverseClassDeclaration(classNode, scope);
+    } else {
+      traverseClassExpression(classNode, scope);
+    }
+  }
+
+  private void traverseClassDeclaration(Node classNode, Scope scope) {
     checkArgument(classNode.isClass());
     Node classNameNode = classNode.getFirstChild();
     Node baseClassExpression = classNameNode.getNext();
     Node classBodyNode = baseClassExpression.getNext();
     Scope classScope = scopeCreator.createScope(classNode, scope);
-    if (!NodeUtil.isNamedClass(classNode) || classNode.getParent().isExport()) {
-      // If this isn't a named class, there's no var to consider here.
-      // If it is exported, it definitely cannot be removed.
-      traverseNode(baseClassExpression, classScope);
-      traverseNode(classBodyNode, classScope);
+
+    VarInfo varInfo = traverseVar(scope.getVar(classNameNode.getString()));
+    if (classNode.getParent().isExport()) {
+      // Cannot remove an exported class.
+      varInfo.setIsExplicitlyNotRemovable();
+      traverseNode(baseClassExpression, scope);
+      // Use traverseChildren() here, because we should not consider any properties on the exported
+      // class to be removable.
+      traverseChildren(classBodyNode, classScope);
     } else if (NodeUtil.mayHaveSideEffects(baseClassExpression)) {
       // TODO(bradfordcsmith): implement removal without losing side-effects for this case
-      traverseNode(baseClassExpression, classScope);
-      traverseNode(classBodyNode, classScope);
+      varInfo.setIsExplicitlyNotRemovable();
+      traverseNode(baseClassExpression, scope);
+      traverseClassMembers(classBodyNode, classScope);
     } else {
       RemovableBuilder builder =
           new RemovableBuilder()
               .addContinuation(new Continuation(baseClassExpression, classScope))
               .addContinuation(new Continuation(classBodyNode, classScope));
-      VarInfo varInfo =
-          traverseVar(classScope.getVar(classNameNode.getString()));
-      if (NodeUtil.isClassDeclaration(classNode)) {
-        varInfo.addRemovable(builder.buildClassDeclaration(classNode));
-      } else {
-        varInfo.addRemovable(builder.buildNamedClassExpression(classNode));
+      varInfo.addRemovable(builder.buildClassDeclaration(classNode));
+    }
+  }
+
+  private void traverseClassExpression(Node classNode, Scope scope) {
+    checkArgument(classNode.isClass());
+    Node classNameNode = classNode.getFirstChild();
+    Node baseClassExpression = classNameNode.getNext();
+    Node classBodyNode = baseClassExpression.getNext();
+    Scope classScope = scopeCreator.createScope(classNode, scope);
+
+    if (classNameNode.isName()) {
+      // We may be able to remove the name node if nothing ends up referring to it.
+      VarInfo varInfo = traverseVar(classScope.getVar(classNameNode.getString()));
+      varInfo.addRemovable(new RemovableBuilder().buildNamedClassExpression(classNode));
+    }
+    // If we're traversing the class expression, we've already decided we cannot remove it.
+    traverseNode(baseClassExpression, scope);
+    traverseClassMembers(classBodyNode, classScope);
+  }
+
+  private void traverseClassMembers(Node node, Scope scope) {
+    checkArgument(node.isClassMembers(), node);
+    if (removeUnusedProperties) {
+      for (Node member = node.getFirstChild(); member != null; member = member.getNext()) {
+        if (member.isMemberFunctionDef() || NodeUtil.isGetOrSetKey(member)) {
+          // If we get as far as traversing the members of a class, we've already decided that
+          // we cannot remove the class itself, so just consider individual members for removal.
+          considerForIndependentRemoval(
+              new RemovableBuilder()
+                  .addContinuation(new Continuation(member, scope))
+                  .buildMethodDefinition(member));
+        } else {
+          checkState(member.isComputedProp());
+          traverseChildren(member, scope);
+        }
       }
+    } else {
+      traverseChildren(node, scope);
     }
   }
 
@@ -845,6 +902,30 @@ class RemoveUnusedVars implements CompilerPass {
       for (Removable removable : removablesForPropertyNames.removeAll(propertyName)) {
         removable.applyContinuations();
       }
+    }
+  }
+
+  private void considerForIndependentRemoval(Removable removable) {
+    if (removeUnusedProperties && removable.isNamedProperty()) {
+      String propertyName = removable.getPropertyName();
+
+      if (referencedPropertyNames.contains(propertyName)
+          || codingConvention.isExported(propertyName)) {
+        // Referenced, so not removable.
+        removable.applyContinuations();
+      } else if (removable.isIndependentlyRemovableNamedProperty()) {
+        // Store for possible removal later.
+        removablesForPropertyNames.put(removable.getPropertyName(), removable);
+      } else {
+        // TODO(bradfordcsmith): Maybe allow removal of non-prototype property assignments if we
+        // can be sure the variable's value is defined as a literal value that does not escape.
+        removable.applyContinuations();
+        // This assignment counts as a reference, since we won't be removing it.
+        // This is necessary in order to preserve getters and setters for the property.
+        markPropertyNameReferenced(propertyName);
+      }
+    } else {
+      removable.applyContinuations();
     }
   }
 
@@ -1012,7 +1093,7 @@ class RemoveUnusedVars implements CompilerPass {
       Node nameNode = var.nameNode;
       Node toRemove = nameNode.getParent();
       if (toRemove == null || alreadyRemoved(toRemove)) {
-        // varInfo.removeAllRemovables () already removed it
+        // assignedVarInfo.removeAllRemovables () already removed it
       } else if (NodeUtil.isFunctionExpression(toRemove)) {
         // TODO(bradfordcsmith): Add a Removable for this case.
         if (!preserveFunctionExpressionNames) {
@@ -1025,7 +1106,7 @@ class RemoveUnusedVars implements CompilerPass {
         // Don't remove function arguments here. That's a special case
         // that's taken care of in removeUnreferencedFunctionArgs.
       } else {
-        throw new IllegalStateException("unremoved code");
+        throw new IllegalStateException("unremoved code: " + toRemove.toStringTree());
       }
     }
   }
@@ -1073,7 +1154,6 @@ class RemoveUnusedVars implements CompilerPass {
     }
 
     String getPropertyName() {
-      checkState(isNamedPropertyAssignment());
       return checkNotNull(propertyName);
     }
 
@@ -1118,9 +1198,18 @@ class RemoveUnusedVars implements CompilerPass {
       return false;
     }
 
-    /** True if this object represents assignment to a named property. */
-    boolean isNamedPropertyAssignment() {
+    /** True if this object represents a named property, either assignment or declaration. */
+    boolean isNamedProperty() {
       return propertyName != null;
+    }
+
+    /**
+     * True if this object represents assignment to a named property.
+     *
+     * <p>This does not include class or object literal member declarations.
+     */
+    boolean isNamedPropertyAssignment() {
+      return false;
     }
 
     /**
@@ -1139,6 +1228,14 @@ class RemoveUnusedVars implements CompilerPass {
     /** Is this an assignment to a property on a prototype object? */
     boolean isPrototypeObjectNamedPropertyAssignment() {
       return isPrototypeObjectPropertyAssignment && isNamedPropertyAssignment();
+    }
+
+    boolean isMethodDeclaration() {
+      return false;
+    }
+
+    boolean isIndependentlyRemovableNamedProperty() {
+      return isPrototypeObjectNamedPropertyAssignment() || isMethodDeclaration();
     }
   }
 
@@ -1175,6 +1272,12 @@ class RemoveUnusedVars implements CompilerPass {
 
     NamedClassExpression buildNamedClassExpression(Node classNode) {
       return new NamedClassExpression(this, classNode);
+    }
+
+    MethodDefinition buildMethodDefinition(Node methodNode) {
+      checkArgument(methodNode.isMemberFunctionDef() || NodeUtil.isGetOrSetKey(methodNode));
+      this.propertyName = methodNode.getString();
+      return new MethodDefinition(this, methodNode);
     }
 
     FunctionDeclaration buildFunctionDeclaration(Node functionNode) {
@@ -1336,6 +1439,25 @@ class RemoveUnusedVars implements CompilerPass {
           compiler.reportChangeToEnclosingScope(classNode);
         }
       }
+    }
+  }
+
+  private class MethodDefinition extends Removable {
+    final Node methodNode;
+
+    MethodDefinition(RemovableBuilder builder, Node methodNode) {
+      super(builder);
+      this.methodNode = methodNode;
+    }
+
+    @Override
+    boolean isMethodDeclaration() {
+      return true;
+    }
+
+    @Override
+    void removeInternal(AbstractCompiler compiler) {
+      NodeUtil.deleteNode(methodNode, compiler);
     }
   }
 
@@ -1595,16 +1717,10 @@ class RemoveUnusedVars implements CompilerPass {
       }
 
       if (isEntirelyRemovable) {
+        // Store for possible removal later.
         removables.add(removable);
-      } else if (removeUnusedProperties
-          && removable.isPrototypeObjectNamedPropertyAssignment()
-          && !referencedPropertyNames.contains(removable.getPropertyName())) {
-        // prototype properties may be removed even if the variable itself isn't.
-        // TODO(bradfordcsmith): maybe allow removal of non-prototype property assignments when we
-        // can be sure the variable's value is defined as a literal value that does not escape.
-        removablesForPropertyNames.put(removable.getPropertyName(), removable);
       } else {
-        removable.applyContinuations();
+        considerForIndependentRemoval(removable);
       }
     }
 
@@ -1626,17 +1742,7 @@ class RemoveUnusedVars implements CompilerPass {
       if (isEntirelyRemovable) {
         isEntirelyRemovable = false;
         for (Removable r : removables) {
-          if (removeUnusedProperties
-              && r.isPrototypeObjectNamedPropertyAssignment()
-              && !referencedPropertyNames.contains(r.getPropertyName())) {
-            // we may yet remove individual prototype properties
-            // TODO(bradfordcsmith): maybe allow removal of non-prototype property assignments when
-            // we can be sure the variable's value is defined as a literal value that does not
-            // escape.
-            removablesForPropertyNames.put(r.getPropertyName(), r);
-          } else {
-            r.applyContinuations();
-          }
+          considerForIndependentRemoval(r);
         }
         removables.clear();
         return true;
