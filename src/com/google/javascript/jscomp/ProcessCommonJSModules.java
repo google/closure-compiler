@@ -1072,6 +1072,15 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
             break;
           }
 
+        case GETPROP:
+          if (n.matchesQualifiedName(MODULE + ".id")) {
+            Var v = t.getScope().getVar(MODULE);
+            if (v == null || v.isExtern()) {
+              n.replaceWith(IR.string(t.getInput().getPath().toString()).useSourceInfoFrom(n));
+            }
+          }
+          break;
+
         case TYPEOF:
           if (allowFullRewrite
               && n.getFirstChild().isName()
