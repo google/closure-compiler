@@ -550,10 +550,10 @@ public class Parser {
       case TYPE:
         export = parseTypeAlias();
         break;
-      default: // unreachable, parse as a var decl to get a parse error.
       case VAR:
       case LET:
       case CONST:
+      default: // unreachable, parse as a var decl to get a parse error.
         export = isAmbient ? parseAmbientVariableDeclarationList() : parseVariableDeclarationList();
         break;
     }
@@ -3779,10 +3779,10 @@ public class Parser {
       case NAMESPACE:
         declare = parseNamespaceDeclaration(true);
         break;
-      default: // unreachable, parse as a var decl to get a parse error.
       case VAR:
       case LET:
       case CONST:
+      default: // unreachable, parse as a var decl to get a parse error.
         declare = parseAmbientVariableDeclarationList();
         eatPossibleImplicitSemiColon();
         break;
