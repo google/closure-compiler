@@ -56,6 +56,35 @@ public final class RemoveUnusedVarsTest extends CompilerTestCase {
     };
   }
 
+  public void testDeclarationInSwitch() {
+    test(
+        lines(
+            "const x = 1;",
+            "const y = 2;",
+            "switch (x) {",
+            "  case 1:",
+            "    let y = 3;",
+            "    break;",
+            "  default:",
+            "    let z = 5;",
+            "    alert(z);",
+            "    break;",
+            "}",
+            "alert(y);"),
+        lines(
+            "const x = 1;",
+            "const y = 2;",
+            "switch (x) {",
+            "  case 1:",
+            "    break;",
+            "  default:",
+            "    let z = 5;",
+            "    alert(z);",
+            "    break;",
+            "}",
+            "alert(y);"));
+  }
+
   public void testPrototypeIsAliased() {
     // without alias C is removed
     test("function C() {} C.prototype = {};", "");

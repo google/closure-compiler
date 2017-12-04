@@ -234,6 +234,7 @@ class RemoveUnusedVars implements CompilerPass {
         traverseCall(n, scope);
         break;
 
+      case SWITCH:
       case BLOCK:
         // This case if for if there are let and const variables in block scopes.
         // Otherwise other variables will be hoisted up into the global scope and already be
