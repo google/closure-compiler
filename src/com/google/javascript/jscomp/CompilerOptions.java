@@ -631,8 +631,12 @@ public class CompilerOptions implements Serializable {
     renamePrefixNamespaceAssumeCrossModuleNames = assume;
   }
 
+  private boolean collapseProperties;
+
   /** Flattens multi-level property names (e.g. a$b = x) */
-  public boolean collapseProperties;
+  public boolean shouldCollapseProperties() {
+    return collapseProperties;
+  }
 
   /** Split object literals into individual variables when possible. */
   boolean collapseObjectLiterals;

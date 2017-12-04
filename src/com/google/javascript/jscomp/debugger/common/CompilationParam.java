@@ -687,7 +687,7 @@ public enum CompilationParam {
 
     @Override
     public boolean isApplied(CompilerOptions options) {
-      return options.collapseProperties;
+      return options.shouldCollapseProperties();
     }
   },
 

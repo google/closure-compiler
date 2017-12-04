@@ -640,20 +640,20 @@ public final class DefaultPassConfig extends PassConfig {
     assertAllOneTimePasses(passes);
 
     // Inline aliases so that following optimizations don't have to understand alias chains.
-    if (options.collapseProperties) {
+    if (options.shouldCollapseProperties()) {
       passes.add(aggressiveInlineAliases);
     }
 
     // Inline getters/setters in J2CL classes so that Object.defineProperties() calls (resulting
     // from desugaring) don't block class stripping.
-    if (options.j2clPassMode.shouldAddJ2clPasses() && options.collapseProperties) {
+    if (options.j2clPassMode.shouldAddJ2clPasses() && options.shouldCollapseProperties()) {
       // Relies on collapseProperties-triggered aggressive alias inlining.
       passes.add(j2clPropertyInlinerPass);
     }
 
     // Collapsing properties can undo constant inlining, so we do this before
     // the main optimization loop.
-    if (options.collapseProperties) {
+    if (options.shouldCollapseProperties()) {
       passes.add(collapseProperties);
     }
 
