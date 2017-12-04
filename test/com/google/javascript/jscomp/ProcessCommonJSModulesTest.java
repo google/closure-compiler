@@ -957,4 +957,11 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             " */",
             "var foo = module$missing;"));
   }
+
+  public void testModuleId() {
+    testModules(
+        "test.js",
+        "module.exports = module.id;",
+        "var module$test = 'test.js';");
+  }
 }

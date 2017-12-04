@@ -880,6 +880,12 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
             break;
           }
 
+        case GETPROP:
+          if (n.matchesQualifiedName(MODULE + ".id")) {
+            n.replaceWith(IR.string(t.getInput().getPath().toString()).useSourceInfoFrom(n));
+          }
+          break;
+
         default:
           break;
       }
