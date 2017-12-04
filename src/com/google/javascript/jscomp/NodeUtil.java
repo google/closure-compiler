@@ -1132,11 +1132,13 @@ public final class NodeUtil {
     // Rather than id which ops may have side effects, id the ones
     // that we know to be safe
     switch (n.getToken()) {
-      // other side-effect free statements and expressions
       // Throws are by definition side effects, and yield and export are similar.
       case THROW:
       case YIELD:
       case EXPORT:
+      case VAR:
+      case LET:
+      case CONST:
         return true;
 
       case OBJECTLIT:
@@ -1168,11 +1170,9 @@ public final class NodeUtil {
         }
         break;
 
-      case VAR:    // empty var statement (no declaration)
-      case LET:
-      case CONST:
-      case NAME:   // variable by itself
-        if (n.getFirstChild() != null) {
+      case NAME:
+        if (n.hasChildren()) {
+          // This is the left side of a var/let/const
           return true;
         }
         break;
@@ -3261,15 +3261,6 @@ public final class NodeUtil {
   }
 
   /**
-   * Determines if a function takes a variable number of arguments by
-   * looking for references to the "arguments" var_args object.
-   */
-  @Deprecated
-  static boolean isVarArgsFunction(Node fn) {
-    return doesFunctionReferenceOwnArgumentsObject(fn);
-  }
-
-  /**
    * @return Whether a function has a reference to its own "arguments" object.
    */
   static boolean doesFunctionReferenceOwnArgumentsObject(Node fn) {
@@ -3444,27 +3435,59 @@ public final class NodeUtil {
   }
 
   /**
-   * Returns true if the node is a lhs value of a destructuring assignment
-   * For example,
-   * x in {@code var [x] = [1];}, {@code var [...x] = [1];}, and {@code var {a: x} = {a: 1}}
+   * Returns true if the node is a lhs value of a destructuring assignment For example, x in {@code
+   * var [x] = [1];}, {@code var [...x] = [1];}, and {@code var {a: x} = {a: 1}} or a.b in {@code
+   * ([a.b] = [1]);} or {@code ({key: a.b} = {key: 1});}
    */
   public static boolean isLhsByDestructuring(Node n) {
-    Node node = n;
+    if (!(n.isName() || n.isGetProp() || n.isStringKey() || n.isGetElem())) {
+      return false;
+    }
+    return isLhsByDestructuringHelper(n);
+  }
+
+  /**
+   * Returns true if the given node is either an LHS node in a destructuring pattern or if one of
+   * its descendants contains an LHS node in a destructuring pattern. For example, in {@code var {a:
+   * b = 3}}}, this returns true given the NAME b or the DEFAULT_VALUE node containing b.
+   */
+  private static boolean isLhsByDestructuringHelper(Node n) {
     Node parent = n.getParent();
-    if (parent.isRest()) {
-      node = parent;
-      parent = parent.getParent();
+    Node grandparent = n.getGrandparent();
+
+    if (parent.isArrayPattern()) {
+      // e.g. var [b] = ...
+      return true;
     }
 
-    if (parent.isDestructuringPattern()
-        || (parent.isStringKey() && parent.getParent().isObjectPattern())
-        || (parent.isComputedProp()
-            && parent.getParent().isObjectPattern()
-            && node == parent.getSecondChild())) {
-      if (node.isStringKey() && node.hasChildren()) {
-        return false;
-      }
+    if (parent.isStringKey() && grandparent.isObjectPattern()) {
+      // e.g. the "b" in "var {a: b} = ..."
       return true;
+    }
+
+    if (parent.isObjectPattern()) {
+      // STRING_KEY children of object patterns are only LHS nodes if they have no children,
+      // meaning that they represent the object pattern shorthand (e.g. "var {a} = ...").
+      // If n is not a STRING_KEY, it is an OBJECT_PATTERN, DEFAULT_VALUE, or
+      // COMPUTED_PROP and contains a LHS node.
+      return !(n.isStringKey() && n.hasChildren());
+    }
+
+    if (parent.isComputedProp() && n == parent.getSecondChild()) {
+      // The first child of a COMPUTED_PROP is the property expression, not a LHS.
+      // The second is the value, which in an object pattern will contain the LHS.
+      return isLhsByDestructuringHelper(parent);
+    }
+
+    if (parent.isRest()) {
+      // The only child of a REST node is the LHS.
+      return isLhsByDestructuringHelper(parent);
+    }
+
+    if (parent.isDefaultValue() && n == parent.getFirstChild()) {
+      // The first child of a DEFAULT_VALUE is a NAME node and a potential LHS.
+      // The second child is the value, so never a LHS node.
+      return isLhsByDestructuringHelper(parent);
     }
     return false;
   }
@@ -5108,6 +5131,9 @@ public final class NodeUtil {
       case VAR:
       case LET:
       case CONST:
+        return n.getLastChild();
+      case DESTRUCTURING_LHS:
+        return parent.getLastChild();
       case OBJECTLIT:
         return n.getFirstChild();
       case FUNCTION:
@@ -5468,7 +5494,7 @@ public final class NodeUtil {
     return n.isCall() && n.getFirstChild().matchesQualifiedName(qualifiedName);
   }
 
-  static Set<String> collectExternVariableNames(AbstractCompiler compiler, Node externs) {
+  static ImmutableSet<String> collectExternVariableNames(AbstractCompiler compiler, Node externs) {
     ReferenceCollectingCallback externsRefs =
         new ReferenceCollectingCallback(
             compiler,

@@ -53,7 +53,9 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
         "_.a = 'str'; _.b = 1; _.c = { foo: 'bar' }; _.d = function() {};");
     test("if(1){var x = 1;}", "if(1){_.x = 1;}");
     test("var x;", "");
+    test("var x; alert(x)", "window.alert(_.x);");
     test("var a, b = 1;", "_.b = 1");
+    test("var a, b = 1; alert(a);", "_.b = 1; window.alert(_.a);");
   }
 
   public void testVarDeclarations_allSameModule() {
@@ -101,6 +103,109 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
     test(createModules(
         "1;var a, b = 1, c = 2;", "b"),
         new String[] {"var a, c;1;_.b = 1;c = 2", "_.b"});
+  }
+
+  public void testLetDeclarations() {
+    test("let a = 1;", "_.a = 1;");
+    test("let a = 1, b = 2, c = 3;", "_.a = 1; _.b = 2; _.c = 3;");
+    test(
+        "let a = 'str', b = 1, c = { foo: 'bar' }, d = function() {};",
+        "_.a = 'str'; _.b = 1; _.c = { foo: 'bar' }; _.d = function() {};");
+    testSame("if(1){let x = 1;}");
+    test("let x;", "");
+    test("let x; alert(x);", "window.alert(_.x);");
+    test("let a, b = 1;", "_.b = 1");
+    test("let a, b = 1; alert(a);", "_.b = 1; window.alert(_.a);");
+  }
+
+  public void testLetDeclarations_allSameModule() {
+    assumeCrossModuleNames = false;
+    testSame("let a = 1;");
+    testSame("let a = 1, b = 2, c = 3;");
+    testSame("let a = 'str', b = 1, c = { foo: 'bar' }, d = function() {};");
+    testSame("if(1){let x = 1;}");
+    testSame("let x;");
+    testSame("let a, b = 1;");
+  }
+
+  public void testLetDeclarations_export() {
+    assumeCrossModuleNames = false;
+    test("let _dumpException = 1;", "_._dumpException = 1");
+  }
+
+  public void testLetDeclarations_acrossModules() {
+    assumeCrossModuleNames = false;
+    // test references across modules.
+    test(createModules("let a = 1;", "a"), new String[] {"_.a = 1", "_.a"});
+    test(
+        createModules("let a = 1, b = 2, c = 3;", "a;c;"),
+        new String[] {"var b;_.a = 1; b = 2; _.c = 3;", "_.a;_.c"});
+    test(
+        createModules("let a = 1, b = 2, c = 3;", "b;c;"),
+        new String[] {"var a;a = 1; _.b = 2; _.c = 3;", "_.b;_.c"});
+    test(
+        createModules("let a = 1, b = 2, c = 3;b;c;", "a;c;"),
+        new String[] {"var b;_.a = 1; b = 2; _.c = 3;b;_.c", "_.a;_.c"});
+    test(createModules("let a, b = 1;", "b"), new String[] {"var a;_.b = 1;", "_.b"});
+    test(
+        createModules("let a, b = 1, c = 2;", "b"), new String[] {"var a, c;_.b = 1;c = 2", "_.b"});
+    test(createModules("let a, b = 1, c = 2;", "a"), new String[] {"var b, c;b = 1;c = 2", "_.a"});
+    test(
+        createModules("let a=1; let b=2,c=3;", "a;c;"),
+        new String[] {"var b;_.a=1;b=2;_.c=3", "_.a;_.c"});
+    test(
+        createModules("1;let a, b = 1, c = 2;", "b"),
+        new String[] {"var a, c;1;_.b = 1;c = 2", "_.b"});
+    // test non-globals with same name as cross-module globals.
+    testSame(createModules("1;let a, b = 1, c = 2;", "if (true) { let b = 3; b; }"));
+    test(
+        createModules("1;let a, b = 1, c = 2;", "b; if (true) { let b = 3; b; }"),
+        new String[] {"var a, c; 1;_.b = 1;c = 2", "_.b; if (true) { let b = 3; b; }"});
+  }
+
+  public void testConstDeclarations() {
+    test("const a = 1;", "_.a = 1;");
+    test("const a = 1, b = 2, c = 3;", "_.a = 1; _.b = 2; _.c = 3;");
+    test(
+        "const a = 'str', b = 1, c = { foo: 'bar' }, d = function() {};",
+        "_.a = 'str'; _.b = 1; _.c = { foo: 'bar' }; _.d = function() {};");
+    testSame("if(1){const x = 1;}");
+  }
+
+  public void testConstDeclarations_allSameModule() {
+    assumeCrossModuleNames = false;
+    testSame("const a = 1;");
+    testSame("const a = 1, b = 2, c = 3;");
+    testSame("const a = 'str', b = 1, c = { foo: 'bar' }, d = function() {};");
+    testSame("if(1){const x = 1;}");
+  }
+
+  public void testConstDeclarations_export() {
+    assumeCrossModuleNames = false;
+    test("const _dumpException = 1;", "_._dumpException = 1");
+  }
+
+  public void testconstDeclarations_acrossModules() {
+    assumeCrossModuleNames = false;
+    // test references across modules.
+    test(createModules("const a = 1;", "a"), new String[] {"_.a = 1", "_.a"});
+    test(
+        createModules("const a = 1, b = 2, c = 3;", "a;c;"),
+        new String[] {"var b;_.a = 1; b = 2; _.c = 3;", "_.a;_.c"});
+    test(
+        createModules("const a = 1, b = 2, c = 3;", "b;c;"),
+        new String[] {"var a;a = 1; _.b = 2; _.c = 3;", "_.b;_.c"});
+    test(
+        createModules("const a = 1, b = 2, c = 3;b;c;", "a;c;"),
+        new String[] {"var b;_.a = 1; b = 2; _.c = 3;b;_.c", "_.a;_.c"});
+    test(
+        createModules("const a=1; const b=2,c=3;", "a;c;"),
+        new String[] {"var b;_.a=1;b=2;_.c=3", "_.a;_.c"});
+    // test non-globals with same name as cross-module globals.
+    testSame(createModules("1;const a = 1, b = 1, c = 2;", "if (true) { const b = 3; b; }"));
+    test(
+        createModules("1;const a = 1, b = 1, c = 2;", "b; if (true) { const b = 3; b; }"),
+        new String[] {"var a, c; 1;a = 1; _.b = 1;c = 2", "_.b; if (true) { const b = 3; b; }"});
   }
 
   public void testForLoops() {

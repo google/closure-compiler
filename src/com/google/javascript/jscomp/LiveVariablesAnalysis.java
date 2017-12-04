@@ -1,5 +1,5 @@
 /*
- * Copyright 2008 The Closure Compiler Authors.
+ * Copyright 2017 The Closure Compiler Authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,49 +13,46 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
-
 import com.google.javascript.jscomp.ControlFlowGraph.Branch;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphEdge;
 import com.google.javascript.jscomp.graph.LatticeElement;
 import com.google.javascript.rhino.Node;
+import java.util.ArrayList;
 import java.util.BitSet;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import javax.annotation.Nullable;
 
 /**
- * Compute the "liveness" of all local variables. A variable is "live" at a
- * point of a program if the value it is currently holding might be read later.
- * Otherwise, the variable is considered "dead" if we know for sure that it will
- * no longer be read. Dead variables are candidates for dead assignment
- * elimination and variable name sharing. The worst case safe assumption is to
- * assume that all variables are live. In that case, we will have no opportunity
- * for optimizations. This is especially the case within a TRY block when an
- * assignment is not guaranteed to take place. We bail out by assuming that
- * all variables are live.
- * <p>
- * Due to the possibility of inner functions and closures, certain "local"
- * variables can escape the function. These variables will be considered as
- * global and they can be retrieved with {@link #getEscapedLocals()}.
+ * Compute the "liveness" of all local variables. A variable is "live" at a point of a program if
+ * the value it is currently holding might be read later. Otherwise, the variable is considered
+ * "dead" if we know for sure that it will no longer be read. Dead variables are candidates for dead
+ * assignment elimination and variable name sharing. The worst case safe assumption is to assume
+ * that all variables are live. In that case, we will have no opportunity for optimizations. This is
+ * especially the case within a TRY block when an assignment is not guaranteed to take place. We
+ * bail out by assuming that all variables are live.
  *
+ * <p>Due to the possibility of inner functions and closures, certain "local" variables can escape
+ * the function. These variables will be considered as global and they can be retrieved with {@link
+ * #getEscapedLocals()}.
+ *
+ * @author simranarora@google.com (Simran Arora)
  */
-class LiveVariablesAnalysis extends
-    DataFlowAnalysis<Node, LiveVariablesAnalysis.LiveVariableLattice> {
+class LiveVariablesAnalysis
+    extends DataFlowAnalysis<Node, LiveVariablesAnalysis.LiveVariableLattice> {
 
-  // 100 = ((# of original Power Rangers) ^
-  //        (# years of Warren Harding in office)) *
-  //       (# of Ninja Turtles)
   static final int MAX_VARIABLES_TO_ANALYZE = 100;
 
   public static final String ARGUMENT_ARRAY_ALIAS = "arguments";
 
-  private static class LiveVariableJoinOp
-      implements JoinOp<LiveVariableLattice> {
+  private static class LiveVariableJoinOp implements JoinOp<LiveVariableLattice> {
     @Override
     public LiveVariableLattice apply(List<LiveVariableLattice> in) {
       LiveVariableLattice result = new LiveVariableLattice(in.get(0));
@@ -67,16 +64,14 @@ class LiveVariablesAnalysis extends
   }
 
   /**
-   * The lattice that stores the liveness of all local variables at a given
-   * point in the program. The whole lattice is the power set of all local
-   * variables and a variable is live if it is in the set.
+   * The lattice that stores the liveness of all local variables at a given point in the program.
+   * The whole lattice is the power set of all local variables and a variable is live if it is in
+   * the set.
    */
   static class LiveVariableLattice implements LatticeElement {
     private final BitSet liveSet;
 
-    /**
-     * @param numVars Number of all local variables.
-     */
+    /** @param numVars Number of all local variables. */
     private LiveVariableLattice(int numVars) {
       this.liveSet = new BitSet(numVars);
     }
@@ -89,15 +84,13 @@ class LiveVariablesAnalysis extends
     @Override
     public boolean equals(Object other) {
       checkNotNull(other);
-      return (other instanceof LiveVariableLattice) &&
-          this.liveSet.equals(((LiveVariableLattice) other).liveSet);
+      return (other instanceof LiveVariableLattice)
+          && this.liveSet.equals(((LiveVariableLattice) other).liveSet);
     }
 
-    public boolean isLive(Var v) {
-      checkNotNull(v);
-      return liveSet.get(v.index);
-    }
-
+    // There is only a version of this function with index since var.index will
+    // return the wrong one. Use an instantiation of
+    // LiveVariablesAnalysis and getVarIndex(var) to get the right index.
     public boolean isLive(int index) {
       return liveSet.get(index);
     }
@@ -115,25 +108,86 @@ class LiveVariablesAnalysis extends
 
   // The scope of the function that we are analyzing.
   private final Scope jsScope;
+
+  // The scope of the body of the function that we are analyzing.
+  private final Scope jsScopeChild;
   private final Set<Var> escaped;
 
+  // Maps the variable name to it's position
+  // in this jsScope were we to combine the function and function body scopes. The Integer
+  // represents the equivalent of the variable index property within a scope
+  private final Map<String, Integer> scopeVariables;
+
+  // obtain variables in the order in which they appear in the code
+  private final List<Var> orderedVars;
+
+  private final Map<String, Var> allVarsInFn;
+  /**
+   * Live Variables Analysis using the ES6 scope creator. This analysis should only be done on
+   * function where jsScope is the function scope. If we call LiveVariablesAnalysis from the
+   * function scope of our pass, we can pass a null value for the JsScopeChild, but if we call it
+   * from the function block scope, then JsScopeChild will be the function block scope.
+   *
+   * <p>We call from the function scope when the pass requires us to traverse nodes beginning at the
+   * function parameters, and it from the function block scope when we are ignoring function
+   * parameters.
+   *
+   * @param cfg
+   * @param jsScope the function scope
+   * @param jsScopeChild null or function block scope
+   * @param compiler
+   * @param scopeCreator Es6 Scope creator
+   */
   LiveVariablesAnalysis(
       ControlFlowGraph<Node> cfg,
       Scope jsScope,
+      @Nullable Scope jsScopeChild,
       AbstractCompiler compiler,
-      ScopeCreator scopeCreator) {
+      Es6SyntacticScopeCreator scopeCreator) {
     super(cfg, new LiveVariableJoinOp());
+    checkState(jsScope.isFunctionScope(), jsScope);
+
     this.jsScope = jsScope;
+    this.jsScopeChild = jsScopeChild;
     this.escaped = new HashSet<>();
+    this.scopeVariables = new HashMap<>();
+    this.allVarsInFn = new HashMap<>();
+    this.orderedVars = new ArrayList<>();
+
     computeEscaped(jsScope, escaped, compiler, scopeCreator);
+
+    NodeUtil.getAllVarsDeclaredInFunction(
+        allVarsInFn, orderedVars, compiler, scopeCreator, jsScope);
+    addScopeVariables();
+  }
+
+  /**
+   * Parameters belong to the function scope, but variables defined in the function body belong to
+   * the function body scope. Assign a unique index to each variable, regardless of which scope it's
+   * in.
+   */
+  private void addScopeVariables() {
+    int num = 0;
+    for (Var v : orderedVars) {
+      scopeVariables.put(v.getName(), num);
+      num++;
+    }
   }
 
   public Set<? extends Var> getEscapedLocals() {
     return escaped;
   }
 
+  public Map<String, Var> getAllVariables() {
+    return allVarsInFn;
+  }
+
+  public List<Var> getAllVariablesInOrder() {
+    return orderedVars;
+  }
+
   public int getVarIndex(String var) {
-    return jsScope.getVar(var).index;
+    return scopeVariables.get(var);
   }
 
   @Override
@@ -143,12 +197,12 @@ class LiveVariablesAnalysis extends
 
   @Override
   LiveVariableLattice createEntryLattice() {
-    return new LiveVariableLattice(jsScope.getVarCount());
+    return new LiveVariableLattice(orderedVars.size());
   }
 
   @Override
   LiveVariableLattice createInitialEstimateLattice() {
-    return new LiveVariableLattice(jsScope.getVarCount());
+    return new LiveVariableLattice(orderedVars.size());
   }
 
   @Override
@@ -176,62 +230,68 @@ class LiveVariablesAnalysis extends
    * Computes the GEN and KILL set.
    *
    * @param n Root node.
-   * @param gen Local variables that are live because of the instruction at
-   *        {@code n} will be added to this set.
-   * @param kill Local variables that are killed because of the instruction at
-   *        {@code n} will be added to this set.
-   * @param conditional {@code true} if any assignments encountered are
-   *        conditionally executed. These assignments might not kill a variable.
+   * @param gen Local variables that are live because of the instruction at {@code n} will be added
+   *     to this set.
+   * @param kill Local variables that are killed because of the instruction at {@code n} will be
+   *     added to this set.
+   * @param conditional {@code true} if any assignments encountered are conditionally executed.
+   *     These assignments might not kill a variable.
    */
-  private void computeGenKill(Node n, BitSet gen, BitSet kill,
-      boolean conditional) {
+  private void computeGenKill(Node n, BitSet gen, BitSet kill, boolean conditional) {
 
     switch (n.getToken()) {
       case SCRIPT:
-      case BLOCK:
       case ROOT:
       case FUNCTION:
+      case BLOCK:
         return;
 
       case WHILE:
       case DO:
       case IF:
-        computeGenKill(NodeUtil.getConditionExpression(n), gen, kill,
-            conditional);
-        return;
-
       case FOR:
         computeGenKill(NodeUtil.getConditionExpression(n), gen, kill, conditional);
         return;
 
-      case FOR_IN: {
-        // for(x in y) {...}
-        Node lhs = n.getFirstChild();
-        if (lhs.isVar()) {
-          // for(var x in y) {...}
-          lhs = lhs.getLastChild();
-        }
-
-        if (lhs.isName()) {
-          addToSetIfLocal(lhs, kill);
-          addToSetIfLocal(lhs, gen);
-        } else {
-          computeGenKill(lhs, gen, kill, conditional);
-        }
-
-        // rhs is executed only once so we don't go into it every loop.
-        return;
-      }
-
-      case VAR:
-        for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
-          if (c.hasChildren()) {
-            computeGenKill(c.getFirstChild(), gen, kill, conditional);
-            if (!conditional) {
-              addToSetIfLocal(c, kill);
-            }
+      case FOR_OF:
+      case FOR_IN:
+        {
+          // for (x in y) {...}
+          Node lhs = n.getFirstChild();
+          if (NodeUtil.isNameDeclaration(lhs)) {
+            // for (var x in y) {...}
+            lhs = lhs.getLastChild();
           }
+
+          if (lhs.isName()) {
+            addToSetIfLocal(lhs, kill);
+            addToSetIfLocal(lhs, gen);
+          } else {
+            computeGenKill(lhs, gen, kill, conditional);
+          }
+
+          // rhs is executed only once so we don't go into it every loop.
+          return;
         }
+
+      case LET:
+      case CONST:
+      case VAR:
+         for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
+           if (c.isName()) {
+             if (c.hasChildren()) {
+               computeGenKill(c.getFirstChild(), gen, kill, conditional);
+               if (!conditional) {
+                 addToSetIfLocal(c, kill);
+               }
+             }
+           } else {
+             Iterable<Node> allVars = NodeUtil.findLhsNodesInNode(n);
+             for (Node child : allVars) {
+               addToSetIfLocal(child, kill);
+             }
+           }
+         }
         return;
 
       case AND:
@@ -277,30 +337,60 @@ class LiveVariablesAnalysis extends
   }
 
   private void addToSetIfLocal(Node node, BitSet set) {
-    checkState(node.isName());
+    checkState(node.isName(), node);
     String name = node.getString();
-    if (!jsScope.isDeclared(name, false)) {
+
+    Var var = allVarsInFn.get(name);
+    if (var == null) {
       return;
     }
-    Var var = jsScope.getVar(name);
+
+    boolean local;
+    Scope localScope = var.getScope();
+    // add to the local set if the variable is declared in the function or function body because
+    // ES6 separates the scope but if the variable is declared in the param it should be local
+    // to the function body.
+    if (localScope.isFunctionBlockScope()) {
+      local = localScope.isDeclaredInFunctionBlockOrParameter(name);
+    } else if (localScope == jsScope && jsScopeChild != null) {
+      local = jsScopeChild.isDeclaredInFunctionBlockOrParameter(name);
+    } else {
+      local = localScope.isDeclared(name, false);
+    }
+
+    if (!local) {
+      return;
+    }
+
     if (!escaped.contains(var)) {
-      set.set(var.index);
+      set.set(getVarIndex(var.getName()));
     }
   }
 
   /**
-   * Give up computing liveness of formal parameter by putting all the parameter
-   * names in the escaped set.
+   * Give up computing liveness of formal parameter by putting all the parameter names in the
+   * escaped set.
    */
   void markAllParametersEscaped() {
-    Node lp = jsScope.getRootNode().getSecondChild();
-    for (Node arg = lp.getFirstChild(); arg != null; arg = arg.getNext()) {
-      escaped.add(jsScope.getVar(arg.getString()));
+    Node paramList = NodeUtil.getFunctionParameters(jsScope.getRootNode());
+    for (Node arg = paramList.getFirstChild(); arg != null; arg = arg.getNext()) {
+      if (arg.isRest() || arg.isDefaultValue()) {
+        escaped.add(jsScope.getVar(arg.getFirstChild().getString()));
+      } else {
+        escaped.add(jsScope.getVar(arg.getString()));
+      }
     }
   }
 
   private boolean isArgumentsName(Node n) {
-    return n.isName() && n.getString().equals(ARGUMENT_ARRAY_ALIAS)
-        && !jsScope.isDeclared(ARGUMENT_ARRAY_ALIAS, false);
+    boolean childDeclared;
+    if (jsScopeChild != null) {
+      childDeclared = jsScopeChild.isDeclared(ARGUMENT_ARRAY_ALIAS, false);
+    } else {
+      childDeclared = true;
+    }
+    return n.isName()
+        && n.getString().equals(ARGUMENT_ARRAY_ALIAS)
+        && (!jsScope.isDeclared(ARGUMENT_ARRAY_ALIAS, false) || !childDeclared);
   }
 }

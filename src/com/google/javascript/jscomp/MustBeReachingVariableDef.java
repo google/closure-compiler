@@ -61,7 +61,7 @@ final class MustBeReachingVariableDef extends
     this.escaped = new HashSet<>();
     this.allVarsInFn = new HashMap<>();
     this.orderedVars = new ArrayList<>();
-    computeEscapedEs6(jsScope.getParent(), escaped, compiler, scopeCreator);
+    computeEscaped(jsScope.getParent(), escaped, compiler, scopeCreator);
     NodeUtil.getAllVarsDeclaredInFunction(
         allVarsInFn, orderedVars, compiler, scopeCreator, jsScope.getParent());
   }
@@ -152,8 +152,7 @@ final class MustBeReachingVariableDef extends
 
     @Override
     public boolean equals(Object other) {
-      return (other instanceof MustDef) &&
-          ((MustDef) other).reachingDef.equals(this.reachingDef);
+      return (other instanceof MustDef) && ((MustDef) other).reachingDef.equals(this.reachingDef);
     }
 
     @Override

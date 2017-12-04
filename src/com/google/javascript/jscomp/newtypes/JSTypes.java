@@ -274,16 +274,6 @@ public final class JSTypes implements Serializable {
       }
 
       @Override
-      public int hashCode() {
-        throw new UnsupportedOperationException();
-      }
-
-      @Override
-      public boolean equals(Object o) {
-        return o == this;
-      }
-
-      @Override
       public String toString() {
         return "MAP_TO_UNKNOWN";
       }

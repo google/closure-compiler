@@ -43,6 +43,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import javax.annotation.Nullable;
 import junit.framework.TestCase;
 
 /**
@@ -562,6 +563,8 @@ public final class NodeUtilTest extends TestCase {
     assertSideEffect(true, "(class extends foo() { })");
 
     assertSideEffect(false, "a");
+    assertSideEffect(false, "a.b");
+    assertSideEffect(false, "a.b.c");
     assertSideEffect(false, "[b, c [d, [e]]]");
     assertSideEffect(false, "({a: x, b: y, c: z})");
     assertSideEffect(false, "({a, b, c})");
@@ -2288,10 +2291,10 @@ public final class NodeUtilTest extends TestCase {
   }
 
   /**
-   * When the left side is a destructuring pattern, generally it's not possible to identify the
-   * RHS for a specific name on the LHS.
+   * When the left side is a destructuring pattern, generally it's not possible to identify the RHS
+   * for a specific name on the LHS.
    */
-  public void testGetRValueOfLValueDestructuring() {
+  public void testGetRValueOfLValueInDestructuringPattern() {
     assertThat(NodeUtil.getRValueOfLValue(getNameNode(parse("var [x] = rhs;"), "x"))).isNull();
     assertThat(NodeUtil.getRValueOfLValue(getNameNode(parse("var [x, y] = rhs;"), "x"))).isNull();
     assertThat(NodeUtil.getRValueOfLValue(getNameNode(parse("var [y, x] = rhs;"), "x"))).isNull();
@@ -2305,6 +2308,36 @@ public final class NodeUtilTest extends TestCase {
                 .getFirstChild();  //STRING_KEY
     checkState(x.isStringKey(), x);
     assertThat(NodeUtil.getRValueOfLValue(x)).isNull();
+  }
+
+  public void testGetRValueOfLValueDestructuringPattern() {
+    assertNode(NodeUtil.getRValueOfLValue(getPattern(parse("var [x] = 'rhs';"))))
+        .hasType(Token.STRING);
+    assertNode(NodeUtil.getRValueOfLValue(getPattern(parse("var [x, y] = 'rhs';"))))
+        .hasType(Token.STRING);
+    assertNode(NodeUtil.getRValueOfLValue(getPattern(parse("var [y, x] = 'rhs';"))))
+        .hasType(Token.STRING);
+    assertNode(NodeUtil.getRValueOfLValue(getPattern(parse("var {x: x} = 'rhs';"))))
+        .hasType(Token.STRING);
+    assertNode(NodeUtil.getRValueOfLValue(getPattern(parse("var {y: x} = 'rhs';"))))
+        .hasType(Token.STRING);
+    assertNode(NodeUtil.getRValueOfLValue(getPattern(parse("var {x} = 'rhs';"))))
+        .hasType(Token.STRING);
+  }
+
+  public void testGetRValueOfLValueDestructuringLhs() {
+    assertNode(NodeUtil.getRValueOfLValue(getDestructuringLhs(parse("var [x] = 'rhs';"))))
+        .hasType(Token.STRING);
+    assertNode(NodeUtil.getRValueOfLValue(getDestructuringLhs(parse("var [x, y] = 'rhs';"))))
+        .hasType(Token.STRING);
+    assertNode(NodeUtil.getRValueOfLValue(getDestructuringLhs(parse("var [y, x] = 'rhs';"))))
+        .hasType(Token.STRING);
+    assertNode(NodeUtil.getRValueOfLValue(getDestructuringLhs(parse("var {x: x} = 'rhs';"))))
+        .hasType(Token.STRING);
+    assertNode(NodeUtil.getRValueOfLValue(getDestructuringLhs(parse("var {y: x} = 'rhs';"))))
+        .hasType(Token.STRING);
+    assertNode(NodeUtil.getRValueOfLValue(getDestructuringLhs(parse("var {x} = 'rhs';"))))
+        .hasType(Token.STRING);
   }
 
   public void testIsNaN() {
@@ -2509,6 +2542,79 @@ public final class NodeUtilTest extends TestCase {
 
     assertLhsByDestructuring(strKeyNodeA);
     assertLhsByDestructuring(strKeyNodeB);
+    assertNotLhsByDestructuring(nameNodeObj);
+  }
+
+  public void testLhsByDestructuring1d() {
+    Node root = parse("var {a = defaultValue} = obj;");
+    Node destructLhs = root.getFirstFirstChild();
+    checkState(destructLhs.isDestructuringLhs(), destructLhs);
+    Node destructPat = destructLhs.getFirstChild();
+    checkState(destructPat.isObjectPattern(), destructPat);
+
+    Node defaultNodeA = destructPat.getFirstChild();
+    checkState(defaultNodeA.isDefaultValue(), defaultNodeA);
+    Node strKeyNodeA = defaultNodeA.getFirstChild();
+    checkState(strKeyNodeA.getString().equals("a"), strKeyNodeA);
+
+    Node nameNodeDefault = defaultNodeA.getSecondChild();
+    checkState(nameNodeDefault.getString().equals("defaultValue"), nameNodeDefault);
+    Node nameNodeObj = destructPat.getNext();
+    checkState(nameNodeObj.getString().equals("obj"), nameNodeObj);
+
+    assertLhsByDestructuring(strKeyNodeA);
+    assertNotLhsByDestructuring(nameNodeDefault);
+    assertNotLhsByDestructuring(nameNodeObj);
+  }
+
+  public void testLhsByDestructuring1e() {
+    Node root = parse("var {a: b = defaultValue} = obj;");
+    Node destructLhs = root.getFirstFirstChild();
+    checkState(destructLhs.isDestructuringLhs(), destructLhs);
+    Node destructPat = destructLhs.getFirstChild();
+    checkState(destructPat.isObjectPattern(), destructPat);
+
+    Node strKeyNodeA = destructPat.getFirstChild();
+    checkState(strKeyNodeA.getString().equals("a"), strKeyNodeA);
+
+    Node defaultNodeA = strKeyNodeA.getOnlyChild();
+    checkState(defaultNodeA.isDefaultValue(), defaultNodeA);
+
+    Node nameNodeB = defaultNodeA.getFirstChild();
+    checkState(nameNodeB.getString().equals("b"), nameNodeB);
+
+    Node nameNodeDefaultValue = defaultNodeA.getSecondChild();
+    checkState(nameNodeDefaultValue.getString().equals("defaultValue"), nameNodeDefaultValue);
+    Node nameNodeObj = destructPat.getNext();
+    checkState(nameNodeObj.getString().equals("obj"), nameNodeObj);
+
+    assertNotLhsByDestructuring(strKeyNodeA);
+    assertLhsByDestructuring(nameNodeB);
+    assertNotLhsByDestructuring(nameNodeDefaultValue);
+    assertNotLhsByDestructuring(nameNodeObj);
+  }
+
+  public void testLhsByDestructuring1f() {
+    Node root = parse("var [a  = defaultValue] = arr;");
+    Node destructLhs = root.getFirstFirstChild();
+    checkState(destructLhs.isDestructuringLhs(), destructLhs);
+    Node destructPat = destructLhs.getFirstChild();
+    checkState(destructPat.isArrayPattern(), destructPat);
+
+    Node defaultNodeA = destructPat.getFirstChild();
+
+    checkState(defaultNodeA.isDefaultValue(), defaultNodeA);
+
+    Node nameNodeA = defaultNodeA.getFirstChild();
+    checkState(nameNodeA.getString().equals("a"), nameNodeA);
+
+    Node nameNodeDefault = defaultNodeA.getSecondChild();
+    checkState(nameNodeDefault.getString().equals("defaultValue"), nameNodeDefault);
+    Node nameNodeObj = destructPat.getNext();
+    checkState(nameNodeObj.getString().equals("arr"), nameNodeObj);
+
+    assertLhsByDestructuring(nameNodeA);
+    assertNotLhsByDestructuring(nameNodeDefault);
     assertNotLhsByDestructuring(nameNodeObj);
   }
 
@@ -3200,6 +3306,36 @@ public final class NodeUtilTest extends TestCase {
     }
     for (Node c : n.children()) {
       Node result = getNameNode(c, name);
+      if (result != null) {
+        return result;
+      }
+    }
+    return null;
+  }
+
+  /** @return The first node in {@code tree} that is an array pattern or object pattern. */
+  @Nullable
+  private static Node getPattern(Node tree) {
+    if (tree.isDestructuringPattern()) {
+      return tree;
+    }
+    for (Node c : tree.children()) {
+      Node result = getPattern(c);
+      if (result != null) {
+        return result;
+      }
+    }
+    return null;
+  }
+
+  /** @return The first node in {@code tree} that is a DESTRUCTURING_LHS. */
+  @Nullable
+  private static Node getDestructuringLhs(Node tree) {
+    if (tree.isDestructuringLhs()) {
+      return tree;
+    }
+    for (Node c : tree.children()) {
+      Node result = getDestructuringLhs(c);
       if (result != null) {
         return result;
       }

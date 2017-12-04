@@ -23,9 +23,9 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import com.google.common.annotations.GwtIncompatible;
 import com.google.common.base.Ascii;
 import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.regex.Matcher;
@@ -317,7 +317,7 @@ public final class JsMessage {
     private String desc;
     private boolean hidden;
 
-    private final List<CharSequence> parts = new LinkedList<>();
+    private final List<CharSequence> parts = new ArrayList<>();
     private final Set<String> placeholders = new HashSet<>();
 
     private String sourceName;

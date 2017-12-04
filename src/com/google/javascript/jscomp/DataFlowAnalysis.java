@@ -215,9 +215,9 @@ abstract class DataFlowAnalysis<N, L extends LatticeElement> {
       if (flow(curNode)) {
         // If there is a change in the current node, we want to grab the list
         // of nodes that this node affects.
-        List<DiGraphNode<N, Branch>> nextNodes = isForward() ?
-            cfg.getDirectedSuccNodes(curNode) :
-            cfg.getDirectedPredNodes(curNode);
+        List<DiGraphNode<N, Branch>> nextNodes =
+            isForward() ? cfg.getDirectedSuccNodes(curNode) : cfg.getDirectedPredNodes(curNode);
+
         for (DiGraphNode<N, Branch> nextNode : nextNodes) {
           if (nextNode != cfg.getImplicitReturn()) {
             orderedWorkSet.add(nextNode);
@@ -544,64 +544,16 @@ abstract class DataFlowAnalysis<N, L extends LatticeElement> {
 
   /**
    * Compute set of escaped variables. When a variable is escaped in a dataflow analysis, it can be
-   * reference outside of the code that we are analyzing. A variable is escaped if any of the
+   * referenced outside of the code that we are analyzing. A variable is escaped if any of the
    * following is true:
    *
-   * <p>
-   *
-   * <ol>
-   *   <li>It is defined as the exception name in CATCH clause so it became a variable local not to
-   *       our definition of scope.
-   *   <li>Exported variables as they can be needed after the script terminates.
-   *   <li>Names of named functions because in JavaScript, <i>function foo(){}</i> does not kill
-   *       <i>foo</i> in the dataflow.
-   */
-  static void computeEscaped(
-      final Scope jsScope,
-      final Set<Var> escaped,
-      AbstractCompiler compiler,
-      ScopeCreator scopeCreator) {
-    // TODO(user): Very good place to store this information somewhere.
-
-    AbstractPostOrderCallback finder = new AbstractPostOrderCallback() {
-      @Override
-      public void visit(NodeTraversal t, Node n, Node parent) {
-        if (jsScope == t.getScope() || !n.isName()
-            || parent.isFunction()) {
-          return;
-        }
-        String name = n.getString();
-        Var var = t.getScope().getVar(name);
-        if (var != null && var.scope == jsScope) {
-          escaped.add(jsScope.getVar(name));
-        }
-      }
-    };
-
-    NodeTraversal t = new NodeTraversal(compiler, finder, scopeCreator);
-    t.traverseAtScope(jsScope);
-
-    // 1: Remove the exception name in CATCH which technically isn't local to
-    //    begin with.
-    for (Var var : jsScope.getVarIterable()) {
-      if (var.getParentNode().isCatch() ||
-          compiler.getCodingConvention().isExported(var.getName())) {
-        escaped.add(var);
-      }
-    }
-  }
-
-  /**
-   * Alternate implementation of compute escaped for ES6.
-   *
-   * It should only be run when the jsScope is a function scope.
-   *
-   * The definition of escaped are
    *   1. Exported variables as they can be needed after the script terminates.
    *   2. Names of named functions because in JavaScript, function foo(){} does not kill
    *       foo in the dataflow.
+   *
+   * @param jsScope Must be a function scope
    */
-  static void computeEscapedEs6(
+  static void computeEscaped(
       final Scope jsScope,
       final Set<Var> escaped,
       AbstractCompiler compiler,

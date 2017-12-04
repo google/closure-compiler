@@ -1457,13 +1457,12 @@ public final class FunctionType implements Serializable {
 
   @Override
   public boolean equals(Object obj) {
-    if (obj == null) {
+    if (!(obj instanceof FunctionType)) {
       return false;
     }
     if (this == obj) {
       return true;
     }
-    Preconditions.checkArgument(obj instanceof FunctionType, "obj is: %s", obj);
     FunctionType f2 = (FunctionType) obj;
     return Objects.equals(this.requiredFormals, f2.requiredFormals)
         && Objects.equals(this.optionalFormals, f2.optionalFormals)

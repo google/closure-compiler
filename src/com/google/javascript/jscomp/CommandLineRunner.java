@@ -31,6 +31,7 @@ import com.google.common.io.Files;
 import com.google.javascript.jscomp.AbstractCommandLineRunner.CommandLineConfig.ErrorFormatOption;
 import com.google.javascript.jscomp.CompilerOptions.IsolationMode;
 import com.google.javascript.jscomp.SourceMap.LocationMapping;
+import com.google.javascript.jscomp.deps.ClosureBundler;
 import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.rhino.TokenStream;
@@ -1831,6 +1832,12 @@ public class CommandLineRunner extends
   @Override
   protected Compiler createCompiler() {
     return new Compiler(getErrorPrintStream());
+  }
+
+  @Override
+  protected void prepForBundleAndAppendTo(Appendable out, CompilerInput input, String content)
+      throws IOException {
+    ClosureBundler.appendInput(out, input, content);
   }
 
   @Override

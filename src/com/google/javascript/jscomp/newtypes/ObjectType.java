@@ -1748,8 +1748,8 @@ final class ObjectType implements TypeWithProperties {
       builder.append("dict");
     } else if (this.ns != null) {
       if (this.fn != null && (this.fn.isUniqueConstructor() || this.fn.isInterfaceDefinition())) {
-        // Add $ to distinguish a constructor namespace from an instance type with the same name
-        builder.append("$");
+        // Add prefix to distinguish a constructor namespace from its instance type
+        builder.append("class:");
       }
       builder.append(this.ns);
     } else if (this.fn != null) {
@@ -1784,13 +1784,12 @@ final class ObjectType implements TypeWithProperties {
 
   @Override
   public boolean equals(Object o) {
-    if (o == null) {
+    if (!(o instanceof ObjectType)) {
       return false;
     }
     if (this == o) {
       return true;
     }
-    checkArgument(o instanceof ObjectType);
     ObjectType other = (ObjectType) o;
     return Objects.equals(this.fn, other.fn)
         && Objects.equals(this.ns, other.ns)

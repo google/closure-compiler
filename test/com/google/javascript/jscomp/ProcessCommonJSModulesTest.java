@@ -1091,4 +1091,13 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "  }, {});",
             "}"));
   }
+
+  public void testModuleId() {
+    testModules(
+        "test.js",
+        "module.exports = module.id;",
+        LINE_JOINER.join(
+            "/** @const */ var module$test = {};",
+            "/** @const */ module$test.default = 'test.js';"));
+  }
 }

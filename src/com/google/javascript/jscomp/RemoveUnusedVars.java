@@ -21,7 +21,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.collect.HashMultimap;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
 import com.google.javascript.jscomp.CodingConvention.SubclassRelationship;
@@ -115,12 +114,8 @@ class RemoveUnusedVars implements CompilerPass {
 
   private final Set<String> referencedPropertyNames = new HashSet<>(IMPLICITLY_USED_PROPERTIES);
 
-  /**
-   * Map from property name to variables on which the property is defined.
-   *
-   * TODO(bradfordcsmith): Rework to avoid the need for this map.
-   */
-  private final Multimap<String, VarInfo> varInfoForPropertyNameMap = HashMultimap.create();
+  /** Stores Removable objects for each property name that is currently considered removable. */
+  private final Multimap<String, Removable> removablesForPropertyNames = HashMultimap.create();
 
   /** Single value to use for all vars for which we cannot remove anything at all. */
   private final VarInfo canonicalTotallyUnremovableVarInfo;
@@ -148,7 +143,7 @@ class RemoveUnusedVars implements CompilerPass {
 
     // All Vars that are completely unremovable will share this VarInfo instance.
     canonicalTotallyUnremovableVarInfo = new VarInfo();
-    canonicalTotallyUnremovableVarInfo.setCannotRemoveAnything();
+    canonicalTotallyUnremovableVarInfo.setIsExplicitlyNotRemovable();
   }
 
   /**
@@ -187,8 +182,8 @@ class RemoveUnusedVars implements CompilerPass {
   }
 
   private void removeUnreferencedProperties() {
-    for (VarInfo varInfo : varInfoForPropertyNameMap.values()) {
-      varInfo.removeUnreferencedProperties();
+    for (Removable removable : removablesForPropertyNames.values()) {
+      removable.remove(compiler);
     }
   }
 
@@ -405,7 +400,7 @@ class RemoveUnusedVars implements CompilerPass {
     Node block = exceptionNameNode.getNext();
     VarInfo exceptionVarInfo =
         traverseVar(scope.getVar(exceptionNameNode.getString()));
-    exceptionVarInfo.setCannotRemoveAnything();
+    exceptionVarInfo.setIsExplicitlyNotRemovable();
     traverseNode(block, scope);
   }
 
@@ -422,7 +417,7 @@ class RemoveUnusedVars implements CompilerPass {
       // NOTE: var will be null if it was declared in externs
       if (var != null) {
         VarInfo varInfo = traverseVar(var);
-        varInfo.setCannotRemoveAnything();
+        varInfo.setIsExplicitlyNotRemovable();
       }
     } else if (NodeUtil.isNameDeclaration(iterationTarget)) {
       // loop has const/var/let declaration
@@ -445,7 +440,7 @@ class RemoveUnusedVars implements CompilerPass {
         // We can never remove the loop variable of a for-in or for-of loop, because it's
         // essential to loop syntax.
         VarInfo varInfo = traverseVar(forScope.getVar(declNode.getString()));
-        varInfo.setCannotRemoveAnything();
+        varInfo.setIsExplicitlyNotRemovable();
       }
     } else {
       // using some general LHS value e.g.
@@ -537,6 +532,7 @@ class RemoveUnusedVars implements CompilerPass {
     boolean isVariableAssign = false;
     boolean isComputedPropertyAssign = false;
     boolean isNamedPropertyAssign = false;
+    boolean isPrototypeObjectPropertyAssignment = false;
 
     if (lhs.isName()) {
       isVariableAssign = true;
@@ -549,6 +545,7 @@ class RemoveUnusedVars implements CompilerPass {
       // properties of properties.
       if (possibleNameNode.isGetProp()
           && possibleNameNode.getSecondChild().getString().equals("prototype")) {
+        isPrototypeObjectPropertyAssignment = true;
         possibleNameNode = possibleNameNode.getFirstChild();
       }
       if (possibleNameNode.isName()) {
@@ -573,7 +570,10 @@ class RemoveUnusedVars implements CompilerPass {
       traverseChildren(assignNode, scope);
     } else {
       Node valueNode = assignNode.getLastChild();
-      RemovableBuilder builder = new RemovableBuilder().setAssignedValue(valueNode);
+      RemovableBuilder builder =
+          new RemovableBuilder()
+              .setAssignedValue(valueNode)
+              .setIsPrototypeObjectPropertyAssignment(isPrototypeObjectPropertyAssignment);
       if (NodeUtil.isExpressionResultUsed(assignNode) || NodeUtil.mayHaveSideEffects(valueNode)) {
         traverseNode(valueNode, scope);
       } else {
@@ -840,9 +840,10 @@ class RemoveUnusedVars implements CompilerPass {
 
   private void markPropertyNameReferenced(String propertyName) {
     if (referencedPropertyNames.add(propertyName)) {
-      // on first reference, find all vars having that property and tell them it is now referenced.
-      for (VarInfo varInfo : varInfoForPropertyNameMap.get(propertyName)) {
-        varInfo.markPropertyNameReferenced(propertyName);
+      // Continue traversal of all of the property name's values and no longer consider them for
+      // removal.
+      for (Removable removable : removablesForPropertyNames.removeAll(propertyName)) {
+        removable.applyContinuations();
       }
     }
   }
@@ -982,7 +983,6 @@ class RemoveUnusedVars implements CompilerPass {
           varInfo.setIsExplicitlyNotRemovable();
         } else if (var.getParentNode().isParamList()) {
           varInfo.propertyAssignmentsWillPreventRemoval = true;
-          varInfo.unreferencedPropertiesMayBeRemoved = false;
         }
         varInfoMap.put(var, varInfo);
       }
@@ -1060,6 +1060,7 @@ class RemoveUnusedVars implements CompilerPass {
     private final List<Continuation> continuations;
     @Nullable private final String propertyName;
     @Nullable private final Node assignedValue;
+    private final boolean isPrototypeObjectPropertyAssignment;
 
     private boolean continuationsAreApplied = false;
     private boolean isRemoved = false;
@@ -1068,6 +1069,7 @@ class RemoveUnusedVars implements CompilerPass {
       continuations = builder.continuations;
       propertyName = builder.propertyName;
       assignedValue = builder.assignedValue;
+      isPrototypeObjectPropertyAssignment = builder.isPrototypeObjectPropertyAssignment;
     }
 
     String getPropertyName() {
@@ -1129,8 +1131,14 @@ class RemoveUnusedVars implements CompilerPass {
       return false;
     }
 
+    /** Is this a direct assignment to `varName.prototype`? */
     boolean isPrototypeAssignment() {
       return isNamedPropertyAssignment() && propertyName.equals("prototype");
+    }
+
+    /** Is this an assignment to a property on a prototype object? */
+    boolean isPrototypeObjectNamedPropertyAssignment() {
+      return isPrototypeObjectPropertyAssignment && isNamedPropertyAssignment();
     }
   }
 
@@ -1139,6 +1147,7 @@ class RemoveUnusedVars implements CompilerPass {
 
     @Nullable String propertyName = null;
     @Nullable public Node assignedValue = null;
+    boolean isPrototypeObjectPropertyAssignment = false;
 
     RemovableBuilder addContinuation(Continuation continuation) {
       continuations.add(continuation);
@@ -1147,6 +1156,12 @@ class RemoveUnusedVars implements CompilerPass {
 
     RemovableBuilder setAssignedValue(@Nullable Node assignedValue) {
       this.assignedValue = assignedValue;
+      return this;
+    }
+
+    RemovableBuilder setIsPrototypeObjectPropertyAssignment(
+        boolean isPrototypeObjectPropertyAssignment) {
+      this.isPrototypeObjectPropertyAssignment = isPrototypeObjectPropertyAssignment;
       return this;
     }
 
@@ -1529,26 +1544,7 @@ class RemoveUnusedVars implements CompilerPass {
      */
     final List<Removable> removables = new ArrayList<>();
 
-    /**
-     * Objects that represent assignments to named properties on the variable or on
-     * `varName.prototype`. These can be considered for removal even if the variable itself
-     * cannot.
-     *
-     * NOTE: Once we realize that we cannot remove a property, the removables for that property
-     * will be dropped and no more will be added.
-     */
-    Multimap<String, Removable> namedPropertyRemovables = null;
-
     boolean isEntirelyRemovable = true;
-
-    /**
-     * Is it OK to remove properties that appear unused when we are leaving the variable itself in
-     * place?
-     *
-     * <p>Defaults to true if we allow this behavior at all.
-     * Once set to false, it will not be changed back to true.
-     */
-    boolean unreferencedPropertiesMayBeRemoved = removeUnusedProperties;
 
     /**
      * Used along with hasPropertyAssignments to handle cases where property assignment may have
@@ -1598,21 +1594,15 @@ class RemoveUnusedVars implements CompilerPass {
         }
       }
 
-      // immediately apply continuations, or save the removable for possible removal
-      if (removable.isNamedPropertyAssignment()) {
-        String propertyName = removable.getPropertyName();
-
-        if (isPropertyRemovable(propertyName)) {
-          if (namedPropertyRemovables == null) {
-            namedPropertyRemovables = HashMultimap.create();
-          }
-          namedPropertyRemovables.put(propertyName, removable);
-          varInfoForPropertyNameMap.put(propertyName, this);
-        } else {
-          removable.applyContinuations();
-        }
-      } else if (isEntirelyRemovable) {
+      if (isEntirelyRemovable) {
         removables.add(removable);
+      } else if (removeUnusedProperties
+          && removable.isPrototypeObjectNamedPropertyAssignment()
+          && !referencedPropertyNames.contains(removable.getPropertyName())) {
+        // prototype properties may be removed even if the variable itself isn't.
+        // TODO(bradfordcsmith): maybe allow removal of non-prototype property assignments when we
+        // can be sure the variable's value is defined as a literal value that does not escape.
+        removablesForPropertyNames.put(removable.getPropertyName(), removable);
       } else {
         removable.applyContinuations();
       }
@@ -1628,52 +1618,27 @@ class RemoveUnusedVars implements CompilerPass {
       return setIsExplicitlyNotRemovable();
     }
 
-    void markPropertyNameReferenced(String propertyName) {
-      // Only apply continuations and drop the removals for the name if we've decided we cannot
-      // remove this variable entirely.
-      if (!isEntirelyRemovable && namedPropertyRemovables != null) {
-        for (Removable r : namedPropertyRemovables.removeAll(propertyName)) {
-          r.applyContinuations();
-        }
-      }
-    }
-
     boolean isRemovable() {
       return isEntirelyRemovable;
-    }
-
-    /**
-     * Do not remove this variable or any of its property assignments.
-     */
-    void setCannotRemoveAnything() {
-      unreferencedPropertiesMayBeRemoved = false;
-      setIsExplicitlyNotRemovable();
-    }
-
-    boolean isPropertyRemovable(String propertyName) {
-      return isEntirelyRemovable
-          || (unreferencedPropertiesMayBeRemoved
-              && !referencedPropertyNames.contains(propertyName));
     }
 
     boolean setIsExplicitlyNotRemovable() {
       if (isEntirelyRemovable) {
         isEntirelyRemovable = false;
         for (Removable r : removables) {
-          r.applyContinuations();
-        }
-        removables.clear();
-        if (namedPropertyRemovables != null) {
-          // iterate over a copy to avoid ConcurrentModificationException when we remove keys
-          // within the loop
-          for (String propertyName : ImmutableList.copyOf(namedPropertyRemovables.keySet())) {
-            if (!isPropertyRemovable(propertyName)) {
-              for (Removable r : namedPropertyRemovables.removeAll(propertyName)) {
-                r.applyContinuations();
-              }
-            }
+          if (removeUnusedProperties
+              && r.isPrototypeObjectNamedPropertyAssignment()
+              && !referencedPropertyNames.contains(r.getPropertyName())) {
+            // we may yet remove individual prototype properties
+            // TODO(bradfordcsmith): maybe allow removal of non-prototype property assignments when
+            // we can be sure the variable's value is defined as a literal value that does not
+            // escape.
+            removablesForPropertyNames.put(r.getPropertyName(), r);
+          } else {
+            r.applyContinuations();
           }
         }
+        removables.clear();
         return true;
       } else {
         return false;
@@ -1686,30 +1651,8 @@ class RemoveUnusedVars implements CompilerPass {
         removable.remove(compiler);
       }
       removables.clear();
-      if (namedPropertyRemovables != null) {
-        for (Removable removable : namedPropertyRemovables.values()) {
-          removable.remove(compiler);
-        }
-        namedPropertyRemovables.clear();
-        namedPropertyRemovables = null;
-      }
     }
 
-    void removeUnreferencedProperties() {
-      if (!isEntirelyRemovable && namedPropertyRemovables != null) {
-        checkState(unreferencedPropertiesMayBeRemoved);
-        // iterate over a copy to avoid ConcurrentModificationException when we remove keys
-        // within the loop
-        for (String propertyName : ImmutableList.copyOf(namedPropertyRemovables.keySet())) {
-          // There shouldn't be any entries in namedPropertyRemovables for properties we know are
-          // referenced.
-          checkState(!referencedPropertyNames.contains(propertyName));
-          for (Removable r : namedPropertyRemovables.removeAll(propertyName)) {
-            r.remove(compiler);
-          }
-        }
-      }
-    }
   }
 
   /**

@@ -304,7 +304,7 @@ class IncrementalScopeCreator implements ScopeCreator {
     }
   }
 
-  private static final List<PersistentLocalScope> PRIMORDIAL_LIST = ImmutableList.of();
+  private static final ImmutableList<PersistentLocalScope> PRIMORDIAL_LIST = ImmutableList.of();
 
   /**
    * A subclass of the traditional Scope class that knows about its children,

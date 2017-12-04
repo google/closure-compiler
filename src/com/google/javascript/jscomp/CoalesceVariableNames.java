@@ -23,7 +23,7 @@ import com.google.common.base.Joiner;
 import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
 import com.google.javascript.jscomp.ControlFlowGraph.Branch;
 import com.google.javascript.jscomp.DataFlowAnalysis.FlowState;
-import com.google.javascript.jscomp.LiveVariablesAnalysisEs6.LiveVariableLattice;
+import com.google.javascript.jscomp.LiveVariablesAnalysis.LiveVariableLattice;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphNode;
@@ -67,9 +67,9 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
 
   private final AbstractCompiler compiler;
   private final Deque<GraphColoring<Var, Void>> colorings;
-  private final Deque<LiveVariablesAnalysisEs6> liveAnalyses;
+  private final Deque<LiveVariablesAnalysis> liveAnalyses;
   private final boolean usePseudoNames;
-  private LiveVariablesAnalysisEs6 liveness;
+  private LiveVariablesAnalysis liveness;
 
   private final Comparator<Var> coloringTieBreaker =
       new Comparator<Var>() {
@@ -118,7 +118,7 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
     NodeUtil.getAllVarsDeclaredInFunction(
         allVarsInFn, orderedVars, t.getCompiler(), t.getScopeCreator(), t.getScope());
 
-    return LiveVariablesAnalysisEs6.MAX_VARIABLES_TO_ANALYZE > orderedVars.size();
+    return LiveVariablesAnalysis.MAX_VARIABLES_TO_ANALYZE > orderedVars.size();
   }
 
   @Override
@@ -134,7 +134,7 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
     ControlFlowGraph<Node> cfg = t.getControlFlowGraph();
 
     liveness =
-        new LiveVariablesAnalysisEs6(
+        new LiveVariablesAnalysis(
             cfg, scope, null, compiler, new Es6SyntacticScopeCreator(compiler));
 
     if (compiler.getOptions().getLanguageOut() == CompilerOptions.LanguageMode.ECMASCRIPT3) {

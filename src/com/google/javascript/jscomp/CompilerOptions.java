@@ -215,13 +215,13 @@ public class CompilerOptions implements Serializable {
   private boolean useNewTypeInference;
 
   /**
-   * Several passes after type checking use type information. Some of these passes do not work
-   * yet with the new type inference. For this reason, we run the old type checker after NTI,
-   * so that the subsequent passes can use the old types.
-   * Turning this option off allows us to debug NTI-only builds; with the goal to eventually
-   * stop running OTI after NTI.
+   * Several passes after type checking use type information. We have converted all these passes
+   * to use TypeI, and most users of NTI use NTI types throughout their compilation.
+   * But there are a few NTI users that still use the old mode, where OTI runs after NTI
+   * and the optimizations see the old types. We plan to switch these users to NTI-only builds
+   * and delete this option.
    */
-  private boolean runOTIafterNTI = true;
+  private boolean runOTIafterNTI = false;
 
   /**
    * Relevant only when {@link #useNewTypeInference} is true, where we normally disable OTI errors.
@@ -984,13 +984,18 @@ public class CompilerOptions implements Serializable {
 
   private boolean allowMethodCallDecomposing;
 
+  /**
+   * @see https://github.com/google/closure-compiler/wiki/FAQ#i-get-an-undecomposable-expression-error-for-my-yield-or-await-expression-what-do-i-do
+   */
   boolean allowMethodCallDecomposing() {
     return allowMethodCallDecomposing;
   }
 
   /**
    * Setting this to true indicates that it's safe to rewrite x.y() as: fn = x.y; fn.call(x);
-   * This should be usually be false if supporting IE 8 or IE 9 is necessary.
+   * This should be false if supporting IE 8 or IE 9 is necessary.
+   *
+   * @see https://github.com/google/closure-compiler/wiki/FAQ#i-get-an-undecomposable-expression-error-for-my-yield-or-await-expression-what-do-i-do
    */
   public void setAllowMethodCallDecomposing(boolean value) {
     this.allowMethodCallDecomposing = value;
@@ -1409,11 +1414,8 @@ public class CompilerOptions implements Serializable {
     return getReplacementsHelper(tweakReplacements);
   }
 
-  /**
-   * Creates a map of String->Node from a map of String->Number/String/Boolean.
-   */
-  private static Map<String, Node> getReplacementsHelper(
-      Map<String, Object> source) {
+  /** Creates a map of String->Node from a map of String->Number/String/Boolean. */
+  private static ImmutableMap<String, Node> getReplacementsHelper(Map<String, Object> source) {
     ImmutableMap.Builder<String, Node> map = ImmutableMap.builder();
     for (Map.Entry<String, Object> entry : source.entrySet()) {
       String name = entry.getKey();

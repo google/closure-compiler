@@ -24,13 +24,13 @@ import static com.google.javascript.jscomp.FunctionArgumentInjector.THIS_MARKER;
 import com.google.common.base.Predicate;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.MakeDeclaredNamesUnique.InlineRenamer;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -139,11 +139,10 @@ class FunctionToBlockMutator {
       rewriteFunctionDeclarations(newFnNode.getLastChild());
     }
 
-    // TODO(johnlenz): Mark NAME nodes constant for parameters that are not
-    // modified.
+    // TODO(johnlenz): Mark NAME nodes constant for parameters that are not modified.
     Set<String> namesToAlias =
         FunctionArgumentInjector.findModifiedParameters(newFnNode);
-    LinkedHashMap<String, Node> args =
+    ImmutableMap<String, Node> args =
         FunctionArgumentInjector.getFunctionCallParameterMap(
             newFnNode, callNode, this.safeNameIdSupplier);
     boolean hasArgs = !args.isEmpty();
@@ -157,8 +156,7 @@ class FunctionToBlockMutator {
     newBlock.detach();
 
     if (hasArgs) {
-      Node inlineResult = aliasAndInlineArguments(newBlock,
-          args, namesToAlias);
+      Node inlineResult = aliasAndInlineArguments(newBlock, args, namesToAlias);
       checkState(newBlock == inlineResult);
     }
 
@@ -312,8 +310,7 @@ class FunctionToBlockMutator {
    * @return The node or its replacement.
    */
   private Node aliasAndInlineArguments(
-      Node fnTemplateRoot, LinkedHashMap<String, Node> argMap,
-      Set<String> namesToAlias) {
+      Node fnTemplateRoot, ImmutableMap<String, Node> argMap, Set<String> namesToAlias) {
 
     if (namesToAlias == null || namesToAlias.isEmpty()) {
       // There are no names to alias, just inline the arguments directly.

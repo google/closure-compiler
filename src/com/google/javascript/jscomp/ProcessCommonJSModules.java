@@ -405,7 +405,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
       return false;
     }
 
-    if (NodeUtil.isVarArgsFunction(fnc)) {
+    if (NodeUtil.doesFunctionReferenceOwnArgumentsObject(fnc)) {
       return false;
     }
 
@@ -1269,6 +1269,11 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
             if (v == null || v.isExtern()) {
               n.replaceWith(IR.string("object"));
             }
+          }
+
+        case GETPROP:
+          if (n.matchesQualifiedName(MODULE + ".id")) {
+            n.replaceWith(IR.string(t.getInput().getPath().toString()).useSourceInfoFrom(n));
           }
           break;
 

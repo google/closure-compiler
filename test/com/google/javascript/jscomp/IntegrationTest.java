@@ -47,6 +47,20 @@ public final class IntegrationTest extends IntegrationTestCase {
   private static final String CLOSURE_COMPILED =
       "var COMPILED = true; var goog$exportSymbol = function() {};";
 
+  public void testIssue2365() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.addWarningsGuard(new DiagnosticGroupWarningsGuard(
+        DiagnosticGroups.CHECK_TYPES, CheckLevel.OFF));
+
+    // With type checking disabled we should assume that extern functions (even ones known not to
+    // have any side effects) return a non-local value, so it isn't safe to remove assignments to
+    // properties on them.
+    // noSideEffects() and the property 'value' are declared in the externs defined in
+    // IntegrationTestCase.
+    testSame(options, "noSideEffects().value = 'something';");
+  }
+
   public void testBug65688660() {
     CompilerOptions options = createCompilerOptions();
     options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
@@ -1483,18 +1497,12 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setGenerateExports(true);
     options.setExportLocalPropertyDefinitions(true);
 
-    test(options,
+    testSame(options,
         LINE_JOINER.join(
             "/** @constructor */",
             "function Foo() {",
             "  /** @export */",
             "  this.prop = 123;",
-            "}"),
-        LINE_JOINER.join(
-            "/** @constructor */",
-            "function Foo() {",
-            "  /** @export */",
-            "  this.Foo$prop = 123;",
             "}"));
   }
 
@@ -4794,7 +4802,8 @@ public final class IntegrationTest extends IntegrationTestCase {
             + "b[a-0]=arguments[a];return b[0]}(8))");
   }
 
-  public void testInlineRestParamNonTranspiling() {
+  // TODO(b/69850796): Re-enable when InlineFunctions' FeatureSet is set back to ES6+.
+  public void disabled_testInlineRestParamNonTranspiling() {
     CompilerOptions options = createCompilerOptions();
     options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
     options.setLanguageOut(LanguageMode.ECMASCRIPT_2017);
@@ -4826,7 +4835,8 @@ public final class IntegrationTest extends IntegrationTestCase {
         "var a={a:9}; a=void 0===a?{a:5}:a;alert(3+a.a)");
   }
 
-  public void testDefaultParametersNonTranspiling() {
+  // TODO(b/69850796): Re-enable when InlineFunctions' FeatureSet is set back to ES6+.
+  public void disabled_testDefaultParametersNonTranspiling() {
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
@@ -4864,7 +4874,8 @@ public final class IntegrationTest extends IntegrationTestCase {
             "}(1,1,1,1,1))"));
   }
 
-  public void testRestObjectPatternParametersNonTranspiling() {
+  // TODO(b/69850796): Re-enable when InlineFunctions' FeatureSet is set back to ES6+.
+  public void disabled_testRestObjectPatternParametersNonTranspiling() {
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);

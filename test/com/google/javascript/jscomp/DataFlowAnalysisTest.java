@@ -714,7 +714,7 @@ public final class DataFlowAnalysisTest extends TestCase {
   }
 
   // test computeEscaped helper method that returns the liveness analysis performed by the
-  // LiveVariablesAnalysisES6 class
+  // LiveVariablesAnalysis class
   public Set<? extends Var> computeEscapedLocals(String... lines) {
     // Set up compiler
     Compiler compiler = new Compiler();
@@ -746,74 +746,9 @@ public final class DataFlowAnalysisTest extends TestCase {
     ControlFlowGraph<Node> cfg = cfa.getCfg();
 
     // Compute liveness of variables
-    LiveVariablesAnalysisEs6 analysis =
-        new LiveVariablesAnalysisEs6(
+    LiveVariablesAnalysis analysis =
+        new LiveVariablesAnalysis(
             cfg, scope, childScope, compiler, (Es6SyntacticScopeCreator) scopeCreator);
-    analysis.analyze();
-    return analysis.getEscapedLocals();
-  }
-
-  public void testEscapedES5() {
-    assertThat(
-            computeEscapedLocalsES5(
-                "function f() {",
-                "    var x = 0; ",
-                "    setTimeout(function() { x++; }); ",
-                "    alert(x);",
-                "}"))
-        .hasSize(1);
-    assertThat(computeEscapedLocalsES5("function f() {var _x}")).hasSize(1);
-
-    // Note the result of the following try-catch escaped test differs from the ES6 version because
-    // the scope creators treat catch blocks differently
-    assertThat(computeEscapedLocalsES5("function f() {try{} catch(e){}}")).hasSize(1);
-  }
-
-  public void testEscapedFunctionAssignmentES5() {
-    assertThat(computeEscapedLocalsES5("function f() {var x = function () { return 1; }; }"))
-        .isEmpty();
-    assertThat(computeEscapedLocalsES5("function f() {var x = function (y) { return y; }; }"))
-        .isEmpty();
-  }
-
-  public void testEscapedFunctionLayeredES5() {
-    assertThat(
-            computeEscapedLocalsES5(
-                "function f() {",
-                "    function ff() {",
-                "        var x = 0; ",
-                "        setTimeout(function() { x++; }); ",
-                "        alert(x);",
-                "    }",
-                "}"))
-        .isEmpty();
-  }
-
-  // test computeEscaped helper method for ES5
-  public Set<? extends Var> computeEscapedLocalsES5(String... lines) {
-    // Set up compiler
-    Compiler compiler = new Compiler();
-    CompilerOptions options = new CompilerOptions();
-    options.setCodingConvention(new GoogleCodingConvention());
-    compiler.initOptions(options);
-
-    String src = CompilerTestCase.lines(lines);
-    Node n = compiler.parseTestCode(src).removeFirstChild();
-    Node script = new Node(Token.SCRIPT, n);
-    script.setInputId(new InputId("test"));
-    assertThat(compiler.getErrors()).isEmpty();
-
-    // Create scopes
-    ScopeCreator scopeCreator = SyntacticScopeCreator.makeUntyped(compiler);
-    Scope scope = scopeCreator.createScope(n, Scope.createGlobalScope(script));
-
-    // Control flow graph
-    ControlFlowAnalysis cfa = new ControlFlowAnalysis(compiler, false, true);
-    cfa.process(null, script);
-    ControlFlowGraph<Node> cfg = cfa.getCfg();
-
-    // Compute livenss of variables
-    LiveVariablesAnalysis analysis = new LiveVariablesAnalysis(cfg, scope, compiler, scopeCreator);
     analysis.analyze();
     return analysis.getEscapedLocals();
   }

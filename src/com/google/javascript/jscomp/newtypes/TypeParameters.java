@@ -54,15 +54,15 @@ public final class TypeParameters implements Serializable {
     return new TypeParameters(builder.build());
   }
 
-  List<String> asList() {
+  ImmutableList<String> asList() {
     return this.typeParams.keySet().asList();
   }
 
   /**
-   * Returns a non-null list of type variables, by filtering out the TTL variables
-   * from this.typeParams.
+   * Returns a non-null list of type variables, by filtering out the TTL variables from
+   * this.typeParams.
    */
-  List<String> getOrdinaryTypeParams() {
+  ImmutableList<String> getOrdinaryTypeParams() {
     boolean foundTtlVariable = false;
     for (Map.Entry<String, Node> entry : this.typeParams.entrySet()) {
       if (!entry.getValue().isEmpty()) {
@@ -83,10 +83,10 @@ public final class TypeParameters implements Serializable {
   }
 
   /**
-   * Returns a non-null map from TTL variables to their ASTs, by filtering out the non-TTL
-   * variables from this.typeParams.
+   * Returns a non-null map from TTL variables to their ASTs, by filtering out the non-TTL variables
+   * from this.typeParams.
    */
-  public Map<String, Node> getTypeTransformations() {
+  public ImmutableMap<String, Node> getTypeTransformations() {
     boolean foundOrdinaryTypeVariable = false;
     for (Map.Entry<String, Node> entry : this.typeParams.entrySet()) {
       if (entry.getValue().isEmpty()) {
@@ -116,8 +116,7 @@ public final class TypeParameters implements Serializable {
 
   @Override
   public boolean equals(Object o) {
-    TypeParameters other = (TypeParameters) o;
-    return this.typeParams.equals(other.typeParams);
+    return o instanceof TypeParameters && this.typeParams.equals(((TypeParameters) o).typeParams);
   }
 
   @Override

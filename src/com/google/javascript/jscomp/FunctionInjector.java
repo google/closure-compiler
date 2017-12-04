@@ -23,6 +23,8 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.base.Supplier;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.ExpressionDecomposer.DecompositionType;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -135,8 +137,7 @@ class FunctionInjector {
    * @return Whether the function node meets the minimum requirements for
    * inlining.
    */
-  boolean doesFunctionMeetMinimumRequirements(
-      final String fnName, Node fnNode) {
+  boolean doesFunctionMeetMinimumRequirements(final String fnName, Node fnNode) {
     Node block = NodeUtil.getFunctionBody(fnNode);
 
     // Basic restrictions on functions that can be inlined:
@@ -187,7 +188,7 @@ class FunctionInjector {
    * @return Whether the inlining can occur.
    */
   CanInlineResult canInlineReferenceToFunction(
-      Reference ref, Node fnNode, Set<String> needAliases,
+      Reference ref, Node fnNode, ImmutableSet<String> needAliases,
       boolean referencesThis, boolean containsFunctions) {
     // TODO(johnlenz): This function takes too many parameter, without
     // context.  Modify the API to take a structure describing the function.
@@ -223,8 +224,7 @@ class FunctionInjector {
     if (ref.mode == InliningMode.DIRECT) {
       return canInlineReferenceDirectly(ref, fnNode, needAliases);
     } else {
-      return canInlineReferenceAsStatementBlock(
-          ref, fnNode, needAliases);
+      return canInlineReferenceAsStatementBlock(ref, fnNode, needAliases);
     }
   }
 
@@ -632,7 +632,7 @@ class FunctionInjector {
    * </pre>
    */
   private CanInlineResult canInlineReferenceAsStatementBlock(
-      Reference ref, Node fnNode, Set<String> namesToAlias) {
+      Reference ref, Node fnNode, ImmutableSet<String> namesToAlias) {
     CallSiteType callSiteType = classifyCallSite(ref);
     if (callSiteType == CallSiteType.UNSUPPORTED) {
       return CanInlineResult.NO;
@@ -644,8 +644,7 @@ class FunctionInjector {
       return CanInlineResult.NO;
     }
 
-    if (!callMeetsBlockInliningRequirements(
-            ref, fnNode, namesToAlias)) {
+    if (!callMeetsBlockInliningRequirements(ref, fnNode, namesToAlias)) {
       return CanInlineResult.NO;
     }
 
@@ -663,8 +662,7 @@ class FunctionInjector {
    * inlining would introduce new globals.
    */
   private boolean callMeetsBlockInliningRequirements(
-      Reference ref, final Node fnNode,
-      Set<String> namesToAlias) {
+      Reference ref, final Node fnNode, ImmutableSet<String> namesToAlias) {
     final boolean assumeMinimumCapture = this.assumeMinimumCapture;
     // Note: functions that contain function definitions are filtered out
     // in isCandidateFunction.
@@ -708,7 +706,7 @@ class FunctionInjector {
     // If the caller contains functions or evals, verify we aren't adding any
     // additional VAR declarations because aliasing is needed.
     if (forbidTemps) {
-      Map<String, Node> args =
+      ImmutableMap<String, Node> args =
           FunctionArgumentInjector.getFunctionCallParameterMap(
               fnNode, ref.callNode, this.safeNameIdSupplier);
       boolean hasArgs = !args.isEmpty();
@@ -764,7 +762,7 @@ class FunctionInjector {
       }
     }
 
-    Map<String, Node> args =
+    ImmutableMap<String, Node> args =
         FunctionArgumentInjector.getFunctionCallParameterMap(
             fnNode, callNode, this.throwawayNameSupplier);
     boolean hasArgs = !args.isEmpty();
@@ -829,10 +827,8 @@ class FunctionInjector {
     int callCost = estimateCallCost(fnNode, referencesThis);
     int overallCallCost = callCost * referenceCount;
 
-    int costDeltaDirect = inlineCostDelta(
-        fnNode, namesToAlias, InliningMode.DIRECT);
-    int costDeltaBlock = inlineCostDelta(
-        fnNode, namesToAlias, InliningMode.BLOCK);
+    int costDeltaDirect = inlineCostDelta(fnNode, namesToAlias, InliningMode.DIRECT);
+    int costDeltaBlock = inlineCostDelta(fnNode, namesToAlias, InliningMode.BLOCK);
 
     return doesLowerCost(fnNode, overallCallCost,
         referencesUsingDirectInlining, costDeltaDirect,
