@@ -1091,4 +1091,25 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "  }, {});",
             "}"));
   }
+
+  public void testModuleId() {
+    testModules(
+        "test.js",
+        "module.exports = module.id;",
+        LINE_JOINER.join(
+            "/** @const */ var module$test = {};",
+            "/** @const */ module$test.default = 'test.js';"));
+  }
+
+  public void testModuleIdAlias() {
+    testModules(
+        "test.js",
+        LINE_JOINER.join(
+            "module.exports = 'foo';",
+            "function foobar(module) { return module.id; }"),
+        LINE_JOINER.join(
+            "/** @const */ var module$test = {};",
+            "/** @const */ module$test.default = 'foo';",
+            "function foobar$$module$test(module) { return module.id; }"));
+  }
 }
