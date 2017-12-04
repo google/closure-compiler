@@ -1939,7 +1939,10 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       }
     }
     for (ModuleIdentifier moduleIdentifier : options.getDependencyOptions().getEntryPoints()) {
-      CompilerInput input = inputsByIdentifier.get(moduleIdentifier.toString());
+      CompilerInput input = inputsByProvide.get(moduleIdentifier.toString());
+      if (input == null) {
+        input = inputsByIdentifier.get(moduleIdentifier.toString());
+      }
       if (input != null) {
         entryPoints.add(input);
       }
