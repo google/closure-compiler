@@ -19,6 +19,7 @@ package com.google.javascript.jscomp.debugger.common;
 import com.google.javascript.jscomp.AnonymousFunctionNamingPolicy;
 import com.google.javascript.jscomp.CheckLevel;
 import com.google.javascript.jscomp.CompilerOptions;
+import com.google.javascript.jscomp.CompilerOptions.PropertyCollapseLevel;
 import com.google.javascript.jscomp.CompilerOptions.Reach;
 import com.google.javascript.jscomp.DiagnosticGroup;
 import com.google.javascript.jscomp.DiagnosticGroups;
@@ -682,7 +683,7 @@ public enum CompilationParam {
   COLLAPSE_PROPERTIES(ParamGroup.TYPE_CHECKING_OPTIMIZATION) {
     @Override
     public void apply(CompilerOptions options, boolean value) {
-      options.setCollapseProperties(value);
+      options.setCollapsePropertiesLevel(PropertyCollapseLevel.ALL);
     }
 
     @Override

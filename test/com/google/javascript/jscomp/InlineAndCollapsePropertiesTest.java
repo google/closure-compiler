@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import static com.google.javascript.jscomp.CollapseProperties.UNSAFE_NAMESPACE_WARNING;
 
+import com.google.javascript.jscomp.CompilerOptions.PropertyCollapseLevel;
 import com.google.javascript.rhino.Node;
 
 /**
@@ -42,7 +43,8 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
   protected CompilerPass getProcessor(final Compiler compiler) {
     return new CompilerPass() {
       AggressiveInlineAliases aggressiveInlineAliases = new AggressiveInlineAliases(compiler);
-      CollapseProperties collapseProperties = new CollapseProperties(compiler);
+      CollapseProperties collapseProperties =
+          new CollapseProperties(compiler, PropertyCollapseLevel.ALL);
 
       @Override
       public void process(Node externs, Node root) {

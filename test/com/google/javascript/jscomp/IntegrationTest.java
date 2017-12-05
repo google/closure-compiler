@@ -27,6 +27,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.primitives.Chars;
 import com.google.javascript.jscomp.CompilerOptions.DevMode;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import com.google.javascript.jscomp.CompilerOptions.PropertyCollapseLevel;
 import com.google.javascript.jscomp.CompilerOptions.Reach;
 import com.google.javascript.jscomp.CompilerTestCase.NoninjectingCompiler;
 import com.google.javascript.jscomp.testing.NodeSubject;
@@ -242,7 +243,7 @@ public final class IntegrationTest extends IntegrationTestCase {
 
   public void testMultipleAliasesInlined_bug31437418() {
     CompilerOptions options = createCompilerOptions();
-    options.setCollapseProperties(true);
+    options.setCollapsePropertiesLevel(PropertyCollapseLevel.ALL);
     options.setLanguageIn(LanguageMode.ECMASCRIPT_2015);
     options.setLanguageOut(LanguageMode.ECMASCRIPT3);
     test(
@@ -268,7 +269,7 @@ public final class IntegrationTest extends IntegrationTestCase {
   @GwtIncompatible // b/63595345
   public void testBug1949424() {
     CompilerOptions options = createCompilerOptions();
-    options.setCollapseProperties(true);
+    options.setCollapsePropertiesLevel(PropertyCollapseLevel.ALL);
     options.setClosurePass(true);
     test(options, CLOSURE_BOILERPLATE + "goog.provide('FOO'); FOO.bar = 3;",
         CLOSURE_COMPILED + "var FOO$bar = 3;");
@@ -277,7 +278,7 @@ public final class IntegrationTest extends IntegrationTestCase {
   @GwtIncompatible // b/63595345
   public void testBug1949424_v2() {
     CompilerOptions options = createCompilerOptions();
-    options.setCollapseProperties(true);
+    options.setCollapsePropertiesLevel(PropertyCollapseLevel.ALL);
     options.setClosurePass(true);
     test(
         options,
@@ -309,7 +310,7 @@ public final class IntegrationTest extends IntegrationTestCase {
 
   public void testBug1956277() {
     CompilerOptions options = createCompilerOptions();
-    options.setCollapseProperties(true);
+    options.setCollapsePropertiesLevel(PropertyCollapseLevel.ALL);
     options.setInlineVariables(true);
     test(
         options,
@@ -320,7 +321,7 @@ public final class IntegrationTest extends IntegrationTestCase {
 
   public void testBug1962380() {
     CompilerOptions options = createCompilerOptions();
-    options.setCollapseProperties(true);
+    options.setCollapsePropertiesLevel(PropertyCollapseLevel.ALL);
     options.setInlineVariables(true);
     options.setGenerateExports(true);
     test(
@@ -349,7 +350,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     test(options, source, ConstParamCheck.CONST_NOT_STRING_LITERAL_ERROR);
 
     // With collapsed properties.
-    options.setCollapseProperties(true);
+    options.setCollapsePropertiesLevel(PropertyCollapseLevel.ALL);
     test(options, source, ConstParamCheck.CONST_NOT_STRING_LITERAL_ERROR);
   }
 
@@ -374,7 +375,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     test(options, source, ConstParamCheck.CONST_NOT_STRING_LITERAL_ERROR);
 
     // With collapsed properties.
-    options.setCollapseProperties(true);
+    options.setCollapsePropertiesLevel(PropertyCollapseLevel.ALL);
     test(options, source, ConstParamCheck.CONST_NOT_STRING_LITERAL_ERROR);
   }
 
@@ -673,7 +674,7 @@ public final class IntegrationTest extends IntegrationTestCase {
   public void testTypedefBeforeOwner2() {
     CompilerOptions options = createCompilerOptions();
     options.setClosurePass(true);
-    options.setCollapseProperties(true);
+    options.setCollapsePropertiesLevel(PropertyCollapseLevel.ALL);
     test(
         options,
         LINE_JOINER.join(
@@ -758,7 +759,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setRenamingPolicy(
         VariableRenamingPolicy.ALL, PropertyRenamingPolicy.ALL_UNQUOTED);
     options.setGeneratePseudoNames(true);
-    options.setCollapseProperties(true);
+    options.setCollapsePropertiesLevel(PropertyCollapseLevel.ALL);
     test(options,
         new String[] {
             LINE_JOINER.join(
@@ -1339,7 +1340,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     testSame(options, code);
 
     options.setClosurePass(true);
-    options.setCollapseProperties(true);
+    options.setCollapsePropertiesLevel(PropertyCollapseLevel.ALL);
     options.setRemoveAbstractMethods(true);
     test(options, code, CLOSURE_COMPILED + " var x$bar = 3;");
   }
@@ -1351,7 +1352,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     CompilerOptions options = createCompilerOptions();
 
     options.setClosurePass(true);
-    options.setCollapseProperties(true);
+    options.setCollapsePropertiesLevel(PropertyCollapseLevel.ALL);
     options.setDefineToBooleanLiteral("FLAG", false);
 
     test(options, code, CLOSURE_COMPILED + " var FLAG = false;");
@@ -1366,7 +1367,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     CompilerOptions options = createCompilerOptions();
 
     options.setClosurePass(true);
-    options.setCollapseProperties(true);
+    options.setCollapsePropertiesLevel(PropertyCollapseLevel.ALL);
     options.setDefineToBooleanLiteral("ns.FLAG", false);
     test(options, code, CLOSURE_COMPILED + "var ns$FLAG = false;");
   }
@@ -1378,7 +1379,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     CompilerOptions options = createCompilerOptions();
     testSame(options, code);
 
-    options.setCollapseProperties(true);
+    options.setCollapsePropertiesLevel(PropertyCollapseLevel.ALL);
     test(options, code, "var x$FOO = 5; var x$bar = 3;");
   }
 
@@ -1389,7 +1390,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     CompilerOptions options = createCompilerOptions();
     testSame(options, code);
 
-    options.setCollapseProperties(true);
+    options.setCollapsePropertiesLevel(PropertyCollapseLevel.ALL);
     options.collapseObjectLiterals = true;
     test(options, code, "var x$FOO = 5; var x$bar = 3;");
   }
@@ -1722,7 +1723,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.syntheticBlockEndMarker = "synEnd";
     options.setCheckSymbols(true);
     options.processObjectPropertyString = true;
-    options.setCollapseProperties(true);
+    options.setCollapsePropertiesLevel(PropertyCollapseLevel.ALL);
     test(options, CLOSURE_BOILERPLATE, CLOSURE_COMPILED);
   }
 
@@ -1807,7 +1808,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     CompilerOptions options = createCompilerOptions();
     options.setClosurePass(true);
     options.setInlineConstantVars(true);
-    options.setCollapseProperties(true);
+    options.setCollapsePropertiesLevel(PropertyCollapseLevel.ALL);
     test(
         options,
         LINE_JOINER.join(
@@ -1825,7 +1826,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     CompilerOptions options = createCompilerOptions();
     options.setClosurePass(true);
     options.setInlineConstantVars(true);
-    options.setCollapseProperties(true);
+    options.setCollapsePropertiesLevel(PropertyCollapseLevel.ALL);
     test(
         options,
         "var goog = {}; "
@@ -1841,7 +1842,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     CompilerOptions options = createCompilerOptions();
     options.setClosurePass(true);
     options.setInlineConstantVars(true);
-    options.setCollapseProperties(true);
+    options.setCollapsePropertiesLevel(PropertyCollapseLevel.ALL);
     test(
         options,
         "var goog = {}; goog.provide('foo.Bar'); "
@@ -1854,7 +1855,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     CompilerOptions options = createCompilerOptions();
     options.setClosurePass(true);
     options.setInlineConstantVars(true);
-    options.setCollapseProperties(true);
+    options.setCollapsePropertiesLevel(PropertyCollapseLevel.ALL);
     test(
         options,
         "var goog = {}; goog.provide('foo.Bar'); "
@@ -3749,7 +3750,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     CompilerOptions options = createCompilerOptions();
     testSame(options, code);
 
-    options.setCollapseProperties(true);
+    options.setCollapsePropertiesLevel(PropertyCollapseLevel.ALL);
     options.setRenamePrefixNamespace("_");
     test(options, code, "_.x$FOO = 5; _.x$bar = 3;");
   }
@@ -3815,7 +3816,7 @@ public final class IntegrationTest extends IntegrationTestCase {
                   "i.am.on.a.Horse.prototype.x = function() {};" +
                   "i.am.on.a.Boat.prototype.y = function() {}";
     options.setClosurePass(true);
-    options.setCollapseProperties(true);
+    options.setCollapsePropertiesLevel(PropertyCollapseLevel.ALL);
     options.setSmartNameRemoval(true);
     test(options, code, "");
   }
@@ -4906,7 +4907,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     // Currently the compiler unsafely collapses A.doSomething to A$doSomething, causing
     // JSCompiler_temp_const$jscomp$0.doSomething to be undefined and breaking at runtime.
     CompilerOptions options = createCompilerOptions();
-    options.setCollapseProperties(true);
+    options.setCollapsePropertiesLevel(PropertyCollapseLevel.ALL);
     options.setOptimizeCalls(false);
     options.setAllowMethodCallDecomposing(true);
     options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
