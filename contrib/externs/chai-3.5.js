@@ -449,3 +449,10 @@ assert.throws = function(fn, constructor, opt_regexp, opt_message) {};
  * @param {string=} opt_message
  */
 assert.sameMembers = function(set1, set2, opt_message) {};
+
+/**
+ * @param {!Array<*>} set1
+ * @param {!Array<*>} set2
+ * @param {string=} opt_message
+ */
+assert.sameDeepMembers = function(set1, set2, opt_message) {};
