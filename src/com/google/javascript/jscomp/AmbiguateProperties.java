@@ -135,9 +135,6 @@ class AmbiguateProperties implements CompilerPass {
     this.reservedNonFirstCharacters = reservedNonFirstCharacters;
 
     this.invalidatingTypes = new InvalidatingTypes.Builder(compiler.getTypeIRegistry())
-        // TODO(sdh): consider allowing ambiguation on properties of global this
-        // (we already reserve extern'd names, so this should be safe).
-        .disallowGlobalThis()
         .addTypesInvalidForPropertyRenaming()
         .addAllTypeMismatches(compiler.getTypeMismatches())
         .addAllTypeMismatches(compiler.getImplicitInterfaceUses())

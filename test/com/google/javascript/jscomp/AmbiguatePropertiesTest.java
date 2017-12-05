@@ -35,7 +35,9 @@ public final class AmbiguatePropertiesTest extends TypeICompilerTestCase {
       "Object.defineProperties = function(typeRef, definitions) {};",
       "Object.prototype.toString = function() {};",
       "var google = { gears: { factory: {}, workerPool: {} } };",
-      "/** @return {?} */ function any() {};");
+      "/** @return {?} */ function any() {};",
+      "/** @constructor */ function Window() {}",
+      "/** @const */ var window = {};");
 
   public AmbiguatePropertiesTest() {
     super(EXTERNS);
@@ -448,7 +450,7 @@ public final class AmbiguatePropertiesTest extends TypeICompilerTestCase {
   }
 
   public void testSetPropertyOfGlobalThis() {
-    testSame("this.prop = 'bar'");
+    test("this.prop = 'bar'", "this.a = 'bar'");
   }
 
   public void testReadPropertyOfGlobalThis() {
