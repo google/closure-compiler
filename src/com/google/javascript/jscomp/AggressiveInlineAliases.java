@@ -140,6 +140,11 @@ class AggressiveInlineAliases implements CompilerPass {
    * variable is inlineable. If (a) and (b) and (d) are true, then inline the alias if possible (if
    * it is assigned exactly once unconditionally).
    *
+   * <p>For (a), (b), and (c) are true and the alias is of a constructor, we may also partially
+   * inline the alias - i.e. replace some references with the constructor but not all - since
+   * constructor properties are always collapsed, so we want to be more aggressive about removing
+   * aliases.
+   *
    * @see InlineVariables
    */
   private void inlineAliases(GlobalNamespace namespace) {
@@ -160,7 +165,7 @@ class AggressiveInlineAliases implements CompilerPass {
         List<Ref> refs = new ArrayList<>(name.getRefs());
         for (Ref ref : refs) {
           Scope hoistScope = ref.scope.getClosestHoistScope();
-          if (ref.type == Type.ALIASING_GET && (hoistScope.isLocal() || !mayBeGlobalAlias(ref))) {
+          if (ref.type == Type.ALIASING_GET && !mayBeGlobalAlias(ref)) {
             // {@code name} meets condition (c). Try to inline it.
             // TODO(johnlenz): consider picking up new aliases at the end
             // of the pass instead of immediately like we do for global
@@ -268,14 +273,26 @@ class AggressiveInlineAliases implements CompilerPass {
    * @return If the alias is possibly defined in the global scope.
    */
   private boolean mayBeGlobalAlias(Ref alias) {
+    // Note: alias.scope is the closest scope in which the aliasing assignment occurred.
+    // So for "if (true) { var alias = aliasedVar; }", the alias.scope would be the IF block scope.
     if (alias.scope.isGlobal()) {
       return true;
     }
+    // If the scope in which the alias is assigned is not global, look up the LHS of the assignment.
     Node aliasParent = alias.node.getParent();
-    if (aliasParent.isName()) {
-      if (aliasParent.getParent().isLet() || aliasParent.getParent().isConst()) {
-        return false;
-      }
+    if (!aliasParent.isAssign() && !aliasParent.isName()) {
+      // Only handle variable assignments and initializing declarations.
+      return true;
+    }
+    Node aliasLhsNode = aliasParent.isName() ? aliasParent : aliasParent.getFirstChild();
+    if (!aliasLhsNode.isName()) {
+      // Only handle assignments to simple names, not qualified names or GETPROPs.
+      return true;
+    }
+    String aliasVarName = aliasLhsNode.getString();
+    Var aliasVar = alias.scope.getVar(aliasVarName);
+    if (aliasVar != null) {
+      return aliasVar.scope.isGlobal();
     }
     return true;
   }
@@ -285,14 +302,17 @@ class AggressiveInlineAliases implements CompilerPass {
     // variable's declaration. If the alias's parent is a NAME,
     // then the NAME must be the child of a VAR, LET, or CONST node, and we must
     // be in a VAR, LET, or CONST assignment.
+    // Otherwise if the parent is an assign, we are in a "a = alias" case.
     Node aliasParent = alias.node.getParent();
-    if (aliasParent.isName()) {
-      // Ensure that the local variable is well defined and never reassigned.
-      Node declarationType = aliasParent.getParent();
-      Scope scope = declarationType.isVar() ? alias.scope.getClosestHoistScope() : alias.scope;
-      String aliasVarName = aliasParent.getString();
-      Var aliasVar = scope.getVar(aliasVarName);
+    if (aliasParent.isName() || aliasParent.isAssign()) {
+      Node aliasLhsNode = aliasParent.isName() ? aliasParent : aliasParent.getFirstChild();
+      String aliasVarName = aliasLhsNode.getString();
 
+      Var aliasVar = alias.scope.getVar(aliasVarName);
+      checkState(aliasVar != null, "Expected variable to be defined in scope", aliasVarName);
+      Node aliasDeclarationParent = aliasVar.getParentNode();
+      Scope scope =
+          aliasDeclarationParent.isVar() ? alias.scope.getClosestHoistScope() : alias.scope;
       ReferenceCollectingCallback collector =
           new ReferenceCollectingCallback(
               compiler,
@@ -304,6 +324,8 @@ class AggressiveInlineAliases implements CompilerPass {
       ReferenceCollection aliasRefs = collector.getReferences(aliasVar);
       Set<AstChange> newNodes = new LinkedHashSet<>();
 
+      // TODO(lharker): Is "aliasRefs.firstReferenceIsAssigningDeclaration()" necessary
+      // to inline safely?
       if (aliasRefs.isWellDefined() && aliasRefs.firstReferenceIsAssigningDeclaration()) {
         if (!aliasRefs.isAssignedOnceInLifetime()) {
           // Static properties of constructors are always collapsed.
@@ -331,11 +353,7 @@ class AggressiveInlineAliases implements CompilerPass {
         int size = aliasRefs.references.size();
         for (int i = 1; i < size; i++) {
           Reference aliasRef = aliasRefs.references.get(i);
-
-          Node newNode = alias.node.cloneTree();
-          aliasRef.getParent().replaceChild(aliasRef.getNode(), newNode);
-          compiler.reportChangeToEnclosingScope(newNode);
-          newNodes.add(new AstChange(getRefModule(aliasRef), aliasRef.getScope(), newNode));
+          newNodes.add(replaceAliasReference(alias, aliasRef));
         }
 
         // just set the original alias to null.
@@ -348,9 +366,116 @@ class AggressiveInlineAliases implements CompilerPass {
         namespace.scanNewNodes(newNodes);
         return true;
       }
+
+      if (name.isConstructor()) {
+        // TODO(lharker): the main reason this was added is because method decomposition inside
+        // generators introduces some constructor aliases that weren't getting inlined.
+        // If we find another (safer) way to avoid aliasing in method decomposition, consider
+        // removing this.
+        return partiallyInlineAlias(alias, namespace, aliasRefs, aliasLhsNode);
+      }
     }
 
     return false;
+  }
+
+  /**
+   * Inlines some references to an alias with its value. This handles cases where the alias is not
+   * declared at initialization. It does nothing if the alias is reassigned after being initialized,
+   * unless the reassignment occurs because of an enclosing function or a loop.
+   *
+   * @param alias An alias of some variable, which may not be well-defined.
+   * @param namespace The GlobalNamespace, which will be updated with all new nodes created.
+   * @param aliasRefs All references to the alias in its scope.
+   * @param aliasLhsNode The lhs name of the alias when it is first initialized.
+   * @return Whether any references to the alias were inlined.
+   */
+  private boolean partiallyInlineAlias(
+      Ref alias, GlobalNamespace namespace, ReferenceCollection aliasRefs, Node aliasLhsNode) {
+    BasicBlock aliasBlock = null;
+    // This initial iteration through all the alias references does two things:
+    // a) Find the control flow block in which the alias is assigned.
+    // b) See if the alias var is assigned to in multiple places, and return if that's the case.
+    //    NOTE: we still may inline if the alias is assigned in a loop or inner function and that
+    //    assignment statement is potentially executed multiple times.
+    //    This is more aggressive than what "inlineAliasIfPossible" does.
+    for (Reference aliasRef : aliasRefs) {
+      Node aliasRefNode = aliasRef.getNode();
+      if (aliasRefNode == aliasLhsNode) {
+        aliasBlock = aliasRef.getBasicBlock();
+        continue;
+      } else if (aliasRef.isLvalue()) {
+        // Don't replace any references if the alias is reassigned
+        return false;
+      }
+    }
+
+    Set<AstChange> newNodes = new LinkedHashSet<>();
+    boolean alreadySeenInitialAlias = false;
+    boolean foundNonReplaceableAlias = false;
+    // Do a second iteration through all the alias references, and replace any inlinable references.
+    for (Reference aliasRef : aliasRefs) {
+      Node aliasRefNode = aliasRef.getNode();
+      if (aliasRefNode == aliasLhsNode) {
+        alreadySeenInitialAlias = true;
+        continue;
+      } else if (aliasRef.isDeclaration()) {
+        // Ignore any alias declarations, e.g. "var alias;", since there's nothing to inline.
+        continue;
+      }
+
+      BasicBlock refBlock = aliasRef.getBasicBlock();
+      if ((refBlock != aliasBlock && aliasBlock.provablyExecutesBefore(refBlock))
+          || (refBlock == aliasBlock && alreadySeenInitialAlias)) {
+        // We replace the alias only if the alias and reference are in the same BasicBlock,
+        // the aliasing assignment takes place before the reference, and the alias is
+        // never reassigned.
+        codeChanged = true;
+        newNodes.add(replaceAliasReference(alias, aliasRef));
+      } else {
+        foundNonReplaceableAlias = true;
+      }
+    }
+
+    // We removed all references to the alias, so remove the original aliasing assignment.
+    if (!foundNonReplaceableAlias && canReplaceAliasAssignment(alias, aliasLhsNode)) {
+      // alias.node is the RHS of the assignment or initializing declaration.
+      Node aliasParent = alias.node.getParent();
+      // `aliasName = aliasedVar;` => `aliasName = null;`
+      aliasParent.replaceChild(alias.node, IR.nullNode());
+      compiler.reportChangeToEnclosingScope(aliasParent);
+    }
+
+    if (codeChanged) {
+      // Inlining the variable may have introduced new references
+      // to descendants of {@code name}. So those need to be collected now.
+      namespace.scanNewNodes(newNodes);
+      return true;
+    }
+    return false;
+  }
+
+  private boolean canReplaceAliasAssignment(Ref alias, Node aliasLhsNode) {
+    if (alias.getTwin() != null) {
+      return false;
+    }
+    if (NodeUtil.isNameDeclaration(aliasLhsNode)) {
+      return true;
+    }
+    Node assign = aliasLhsNode.getParent();
+    return !NodeUtil.isExpressionResultUsed(assign);
+  }
+
+  /**
+   * @param alias A GlobalNamespace.Ref of the variable being aliased
+   * @param aliasRef One particular usage of an alias that we want to replace with the aliased var.
+   * @return an AstChange representing the new node(s) added to the AST *
+   */
+  private AstChange replaceAliasReference(Ref alias, Reference aliasRef) {
+    Node newNode = alias.node.cloneTree();
+    aliasRef.getParent().replaceChild(aliasRef.getNode(), newNode);
+    compiler.reportChangeToEnclosingScope(newNode);
+    return new AstChange(getRefModule(aliasRef), aliasRef.getScope(), newNode);
   }
 
   /**

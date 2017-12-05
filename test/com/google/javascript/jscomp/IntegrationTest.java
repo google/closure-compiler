@@ -4902,9 +4902,6 @@ public final class IntegrationTest extends IntegrationTestCase {
   }
 
   public void testMethodDestructuringInTranspiledAsyncFunction() {
-    // TODO(b/69456597) Fix this test.
-    // Currently the compiler unsafely collapses A.doSomething to A$doSomething, causing
-    // JSCompiler_temp_const$jscomp$0.doSomething to be undefined and breaking at runtime.
     CompilerOptions options = createCompilerOptions();
     options.setCollapseProperties(true);
     options.setOptimizeCalls(false);
@@ -4942,8 +4939,8 @@ public final class IntegrationTest extends IntegrationTestCase {
             "        $jscomp$generator$throw$arg) {",
             "      for (; 1;) switch ($jscomp$generator$state) {",
             "        case 0:",
-            "          JSCompiler_temp_const$jscomp$0 = A;", // This alias of A should be inlined.
-            "          JSCompiler_temp_const = JSCompiler_temp_const$jscomp$0.doSomething;",
+            "          JSCompiler_temp_const$jscomp$0 = A;",
+            "          JSCompiler_temp_const = A$doSomething;",
             "          $jscomp$generator$state = 1;",
             "          return {value: 3, done: false};",
             "        case 1:",

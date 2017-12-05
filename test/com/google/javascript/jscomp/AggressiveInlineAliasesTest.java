@@ -248,6 +248,207 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
         "var a = { b: 0 };" + "var c = null;" + "a.b = 1;" + "a.b == a.b;" + "use(a);");
   }
 
+  public void testLocalNonCtorAliasCreatedAfterVarDeclaration1() {
+    // We only inline non-constructor local aliases if they are assigned upon declaration.
+    // TODO(lharker): We should be able to inline these. InlineVariables does, and it also
+    // uses ReferenceCollectingCallback to track references.
+    testSame(
+        lines(
+            "var Main = {};",
+            "Main.doSomething = function(i) {}",
+            "function f() {",
+            "  var tmp;",
+            "  tmp = Main;",
+            "  tmp.doSomething(5);",
+            "}"));
+  }
+
+  public void testLocalCtorAliasCreatedAfterVarDeclaration1() {
+    test(
+        lines(
+            "/** @constructor @struct */ var Main = function() {};",
+            "Main.doSomething = function(i) {}",
+            "function f() {",
+            "  var tmp;",
+            "  tmp = Main;",
+            "  tmp.doSomething(5);",
+            "}"),
+        lines(
+            "/** @constructor @struct */ var Main = function() {};",
+            "Main.doSomething = function(i) {}",
+            "function f() {",
+            "  var tmp;",
+            "  tmp = null;",
+            "  Main.doSomething(5);",
+            "}"));
+  }
+
+  public void testLocalCtorAliasCreatedAfterVarDeclaration2() {
+    test(
+        lines(
+            "/** @constructor @struct */ var Main = function() {};",
+            "Main.doSomething = function(i) {}",
+            "function f() {",
+            "  tmp = Main;",
+            "  tmp.doSomething(5);",
+            "  if (true) {",
+            "    tmp.doSomething(6);",
+            "  }",
+            "  var tmp;",
+            "}"),
+        lines(
+            "/** @constructor @struct */ var Main = function() {};",
+            "Main.doSomething = function(i) {}",
+            "function f() {",
+            "  tmp = null;",
+            "  Main.doSomething(5);",
+            "  if (true) {",
+            "    Main.doSomething(6);",
+            "  }",
+            "  var tmp;",
+            "}"));
+  }
+
+  public void testLocalCtorAliasCreatedAfterVarDeclaration3() {
+    test(
+        lines(
+            "/** @constructor @struct */ var Main = function() {};",
+            "Main.doSomething = function(i) {}",
+            "function f() {",
+            "  if (tmp = Main) {",
+            "    tmp.doSomething(6);",
+            "  }",
+            "  var tmp;",
+            "}"),
+        lines(
+            "/** @constructor @struct */ var Main = function() {};",
+            "Main.doSomething = function(i) {}",
+            "function f() {",
+            "  if (tmp = Main) {", // Don't set "tmp = null" because that would change control flow.
+            "    Main.doSomething(6);",
+            "  }",
+            "  var tmp;",
+            "}"));
+  }
+
+  public void testLocalCtorAliasCreatedAfterVarDeclaration4() {
+    test(
+        lines(
+            "/** @constructor @struct */ var Main = function() {};",
+            "Main.doSomething = function(i) {}",
+            "function f() {",
+            "  var a = tmp = Main;",
+            "  tmp.doSomething(6);",
+            "  a.doSomething(7);",
+            "  var tmp;",
+            "}"),
+        lines(
+            "/** @constructor @struct */ var Main = function() {};",
+            "Main.doSomething = function(i) {}",
+            "function f() {",
+            "  var a = tmp = Main;", // Don't set "tmp = null" because that would mess up a's value.
+            "  Main.doSomething(6);",
+            "  a.doSomething(7);", // Main doesn't get inlined here, which makes collapsing unsafe.
+            "  var tmp;",
+            "}"));
+  }
+
+  public void testLocalCtorAliasAssignedInLoop1() {
+    test(
+        lines(
+            "/** @constructor @struct */ var Main = function() {};",
+            "Main.doSomething = function(i) {}",
+            "function f() {",
+            "  var tmp;",
+            "  for (let i = 0; i < n(); i++) {",
+            "    tmp = Main;",
+            "    tmp.doSomething(5);",
+            "    use(tmp);",
+            "  }",
+            "  use(tmp);",
+            "  use(tmp.doSomething);",
+            "}"),
+        lines(
+            "/** @constructor @struct */ var Main = function() {};",
+            "Main.doSomething = function(i) {}",
+            "function f() {",
+            "  var tmp;",
+            "  for (let i = 0; i < n(); i++) {",
+            "    tmp = Main;",
+            "    Main.doSomething(5);",
+            "    use(Main);",
+            "  }",
+            "  use(tmp);",
+            "  use(tmp.doSomething);", // This line may break if Main$doSomething is collapsed.
+            "}"));
+  }
+
+
+  public void testLocalCtorAliasAssignedInLoop2() {
+    // Test when the alias is assigned in a loop after being used.
+    testSame(
+        lines(
+            "/** @constructor @struct */ var Main = function() {};",
+            "Main.doSomething = function(i) {}",
+            "function f() {",
+            "  var tmp;",
+            "  for (let i = 0; i < n(); i++) {",
+            "    use(tmp);", // Don't inline tmp here since it changes between loop iterations.
+            "    tmp = Main;",
+            "  }",
+            "  use(tmp);",
+            "  use(tmp.doSomething);",
+            "}"));
+  }
+
+  public void testLocalCtorAliasAssignedInSwitchCase() {
+    // This mimics how the async generator polyfill behaves.
+    test(
+        lines(
+            "/** @constructor @struct */ var Main = function() {};",
+            "Main.doSomething = function(i) {}",
+            "function f() {",
+            "  function g() {",
+            "    for (;;) {",
+            "      switch(state) {",
+            "        case 0:",
+            "          tmp1 = Main;",
+            "          tmp2 = tmp1.doSomething;",
+            "          state = 1;",
+            "          return;",
+            "         case 1:",
+            "           return tmp2.call(tmp1, 3);",
+            "      }",
+            "    }",
+            "  }",
+            "  var tmp1, tmp2, state = 0;",
+            "  g();",
+            "  return g();",
+            "}"),
+        lines(
+            "/** @constructor @struct */ var Main = function() {};",
+            "Main.doSomething = function(i) {}",
+            "function f() {",
+            "  function g() {",
+            "    for (;;) {",
+            "      switch(state) {",
+            "        case 0:",
+            "          tmp1 = Main;",
+            "          tmp2 = Main.doSomething;",
+            "          state = 1;",
+            "          return;",
+            "         case 1:",
+            "           return tmp2.call(tmp1, 3);",
+            "      }",
+            "    }",
+            "  }",
+            "  var tmp1, tmp2, state = 0;",
+            "  g();",
+            "  return g();",
+            "}"));
+  }
+
+
   public void testCodeGeneratedByGoogModule() {
     test(
         "var $jscomp = {};"

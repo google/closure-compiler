@@ -379,6 +379,34 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
          + "(function() {a$b$y = 0;})(); a$b$y;");
   }
 
+  public void testPartialLocalCtorAlias() {
+    test(
+        lines(
+            "/** @constructor */ var Main = function() {};",
+            "Main.doSomething = function(i) {}",
+            "function f() {",
+            "  var tmp;",
+            "  if (g()) {",
+            "    use(tmp.doSomething);",
+            "    tmp = Main;",
+            "    tmp.doSomething(5);",
+            "  }",
+            "  use(tmp.doSomething);",
+            "}"),
+        lines(
+            "/** @constructor */ var Main = function() {};",
+            "var Main$doSomething = function(i) {}",
+            "function f() {",
+            "  var tmp;",
+            "  if (g()) {",
+            "    use(tmp.doSomething);",
+            "    tmp = Main;",
+            "    Main$doSomething(5);",
+            "  }",
+            "  use(tmp.doSomething);", // This line will work incorrectly if g() is true.
+            "}"));
+  }
+
   public void testFunctionAlias2() {
     test("var a = {}; a.b = {}; a.b.c = function(){}; a.b.d = a.b.c;use(a.b.d)",
          "var a$b$c = function(){}; var a$b$d = null;use(a$b$c);");

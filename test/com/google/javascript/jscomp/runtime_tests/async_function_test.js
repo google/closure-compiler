@@ -218,12 +218,9 @@ testSuite({
    * Confirms that method decomposition aliasing a constructor is
    * handled correctly.
    *
-   * TODO(b/69456597): Fix this. (Currently fails with
-   * "Cannot read property 'call' of undefined".
-   *
    * @return {!Promise<?>}
    */
-  disabledTestMethodCallDecomposingInAsyncFunction() {
+  testMethodCallDecomposingInAsyncFunction() {
     async function f() {
       return C.doSomething(await 5);
     }
