@@ -27,7 +27,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.PrintStream;
-import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -140,8 +139,6 @@ public class PrintStreamJSONErrorManager extends BasicErrorManager {
       jsonWriter.endArray();
       jsonWriter.flush();
       jsonWriter.close();
-    } catch (UnsupportedEncodingException e) {
-      throw new RuntimeException(e);
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
