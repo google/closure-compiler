@@ -581,6 +581,22 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
             "use(a$$module$testcode, b$$module$testcode);"));
   }
 
+  public void testObjectDestructuringAndObjLitShorthandWithDefaultValue() {
+    testModules(
+        lines(
+            "import {f} from './other.js';",
+            "const foo = 1;",
+            "const {a = 'A', b = 'B'} = f({foo});",
+            "use(a, b);"),
+        lines(
+            "const foo$$module$testcode = 1;",
+            "const {",
+            "  a: a$$module$testcode = 'A',",
+            "  b: b$$module$testcode = 'B',",
+            "} = module$other.f({foo: foo$$module$testcode});",
+            "use(a$$module$testcode, b$$module$testcode);"));
+  }
+
   public void testImportWithoutReferences() {
     testModules("import './other.js';", "");
     // GitHub issue #1819: https://github.com/google/closure-compiler/issues/1819

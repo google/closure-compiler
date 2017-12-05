@@ -513,7 +513,11 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
         }
       }
 
-      boolean isShorthandObjLitKey = n.isStringKey() && !n.hasChildren();
+      boolean isShorthandObjLitKey =
+          (n.isStringKey() && !n.hasChildren())
+              || (n.isName()
+                  && n.getParent().isDefaultValue()
+                  && n.getGrandparent().isObjectPattern());
       if (n.isName() || isShorthandObjLitKey) {
         String name = n.getString();
         if (suffix.equals(name)) {
@@ -527,12 +531,12 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
           String newName = name + "$$" + suffix;
           if (isShorthandObjLitKey) {
             // Change {a} to {a: a$$module$foo}
-            fixShorthandObjLit(n, IR.name(newName));
+            fixShorthandObjLit(t, n, IR.name(newName));
           } else {
             n.setString(newName);
             n.setOriginalName(name);
+            t.reportCodeChange(n);
           }
-          t.reportCodeChange(n);
         } else if (var == null && importMap.containsKey(name)) {
           // Change to property access on the imported module object.
           if (parent.isCall() && parent.getFirstChild() == n) {
@@ -540,15 +544,14 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
           }
 
           ModuleOriginalNamePair pair = importMap.get(name);
-          Node moduleAccess = NodeUtil.newQName(compiler, pair.module);
           boolean isImportStar = pair.originalName.isEmpty();
+          Node moduleAccess = NodeUtil.newQName(compiler, pair.module);
           if (isShorthandObjLitKey) {
             if (isImportStar) {
-              fixShorthandObjLit(n, moduleAccess);
+              fixShorthandObjLit(t, n, moduleAccess);
             } else {
-              fixShorthandObjLit(n, IR.getprop(moduleAccess, IR.string(pair.originalName)));
+              fixShorthandObjLit(t, n, IR.getprop(moduleAccess, IR.string(pair.originalName)));
             }
-            t.reportCodeChange(n);
           } else {
             if (isImportStar) {
               n.replaceWith(moduleAccess.useSourceInfoIfMissingFromForTree(n));
@@ -567,8 +570,22 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
      * Replace shorthand object literal references to module imports with fully qualified
      * value names. Eg: {foo} becomes {foo: module$imported.foo}.
      */
-    private void fixShorthandObjLit(Node n, Node newNode) {
-      n.addChildToBack(newNode.useSourceInfoIfMissingFromForTree(n));
+    private void fixShorthandObjLit(NodeTraversal t, Node n, Node newNode) {
+      if (n.isStringKey()) {
+        n.addChildToBack(newNode.useSourceInfoIfMissingFromForTree(n));
+      } else {
+        // The AST looks like:
+        // DEFAULT_VALUE
+        //   NAME oldName
+        //   VALUE
+        // It needs a STRING_KEY oldName added as the DEFAULT_VALUE's parent.
+        // Then to replace the oldName node with the new node.
+        Node stringKeyNode = IR.stringKey(n.getString()).srcref(n);
+        n.getParent().replaceWith(stringKeyNode);
+        stringKeyNode.addChildToBack(n.getParent());
+        n.replaceWith(newNode);
+      }
+      t.reportCodeChange(newNode);
     }
 
     /**
