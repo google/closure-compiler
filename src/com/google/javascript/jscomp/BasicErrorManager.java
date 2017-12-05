@@ -35,7 +35,7 @@ import java.util.Set;
  *
  */
 public abstract class BasicErrorManager implements ErrorManager {
-  private final PriorityQueue<ErrorWithLevel> messages =
+  final PriorityQueue<ErrorWithLevel> messages =
       new PriorityQueue<>(1, new LeveledJSErrorComparator());
   private final Set<ErrorWithLevel> alreadyAdded = new HashSet<>();
   private int errorCount = 0;
