@@ -60,7 +60,8 @@ final class PolymerPassFindExterns extends AbstractPostOrderCallback {
    * @return Whether the node is the declaration of PolymerElement.
    */
   private static boolean isPolymerElementExterns(Node value) {
-    return value != null && value.isVar()
+    // Explicitly allow var, let or const.
+    return NodeUtil.isNameDeclaration(value)
         && value.getFirstChild().matchesQualifiedName(POLYMER_ELEMENT_NAME);
   }
 
