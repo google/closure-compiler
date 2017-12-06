@@ -56,7 +56,6 @@ class ValidityCheck implements CompilerPass {
   public void process(Node externs, Node root) {
     checkAst(externs, root);
     checkNormalization(externs, root);
-    checkCodeGeneration(root);
     checkVars(externs, root);
     checkExternProperties(externs);
   }
@@ -73,40 +72,6 @@ class ValidityCheck implements CompilerPass {
     if (compiler.getLifeCycleStage().isNormalized()) {
       (new VarCheck(compiler, true)).process(externs, root);
     }
-  }
-
-  /**
-   * Checks code generation by performing it once, parsing the result, then generating code from the
-   * second parse tree to verify that it matches the code generated from the first parse tree.
-   *
-   * @return The regenerated parse tree. Null on error.
-   */
-  private Node checkCodeGeneration(Node root) {
-    if (compiler.hasHaltingErrors()) {
-      // Don't even bother checking code generation if we already know the
-      // the code is bad.
-      return null;
-    }
-
-    String source = compiler.toSource(root);
-    Node root2 = compiler.parseSyntheticCode("<ValidityCheck.java>", source);
-    if (compiler.hasHaltingErrors()) {
-      compiler.report(JSError.make(CANNOT_PARSE_GENERATED_CODE,
-              Strings.truncateAtMaxLength(source, 100, true)));
-
-      // Throw an exception, so that the infrastructure will tell us which pass violated the check.
-      throw new IllegalStateException("Validity Check failed");
-    }
-
-    String source2 = compiler.toSource(root2);
-    if (!source.equals(source2)) {
-      compiler.report(JSError.make(GENERATED_BAD_CODE, source, source2));
-
-      // Throw an exception, so that the infrastructure will tell us which pass violated the check.
-      throw new IllegalStateException("Validity Check failed");
-    }
-
-    return root2;
   }
 
   /**
