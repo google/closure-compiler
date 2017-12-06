@@ -2097,11 +2097,11 @@ public abstract class CompilerTestCase extends TestCase {
     }
   }
 
-  protected static String lines(String line) {
+  public static String lines(String line) {
     return line;
   }
 
-  protected static String lines(String... lines) {
+  public static String lines(String... lines) {
     return LINE_JOINER.join(lines);
   }
 
