@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Multimap;
@@ -28,7 +30,9 @@ import com.google.javascript.rhino.ObjectTypeI;
 import com.google.javascript.rhino.StaticSourceFile;
 import com.google.javascript.rhino.TypeI;
 import com.google.javascript.rhino.TypeIRegistry;
+import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
+import com.google.javascript.rhino.jstype.ObjectType;
 import java.util.ArrayDeque;
 import javax.annotation.Nullable;
 
@@ -37,11 +41,8 @@ import javax.annotation.Nullable;
  * control restrictions indicated by JSDoc annotations, like
  * {@code @private} and {@code @deprecated}.
  *
- * Because access control restrictions are attached to type information,
- * it's important that TypedScopeCreator, TypeInference, and InferJSDocInfo
- * all run before this pass. TypedScopeCreator creates and resolves types,
- * TypeInference propagates those types across the AST, and InferJSDocInfo
- * propagates JSDoc across the types.
+ * Because access control restrictions are attached to type information, this pass must run
+ * after TypeInference, and InferJSDocInfo.
  *
  * @author nicksantos@google.com (Nick Santos)
  */
@@ -156,6 +157,9 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
         new CollectFileOverviewVisibility(compiler);
     collectPass.process(externs, root);
     defaultVisibilityForFiles = collectPass.getFileOverviewVisibilityMap();
+
+    // TODO(tbreisacher): Switch this to use traverseEs6 instead of traverseTyped (which uses a
+    // ScopeCreator that is not ES6-aware).
     NodeTraversal.traverseTyped(compiler, externs, this);
     NodeTraversal.traverseTyped(compiler, root, this);
   }
@@ -166,6 +170,9 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
         new CollectFileOverviewVisibility(compiler);
     collectPass.hotSwapScript(scriptRoot, originalRoot);
     defaultVisibilityForFiles = collectPass.getFileOverviewVisibilityMap();
+
+    // TODO(tbreisacher): Switch this to use traverseEs6 instead of traverseTyped (which uses a
+    // ScopeCreator that is not ES6-aware).
     NodeTraversal.traverseTyped(compiler, scriptRoot, this);
   }
 
@@ -326,7 +333,7 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
       return;
     }
 
-    TypedVar var = t.getTypedScope().getVar(n.getString());
+    Var var = t.getScope().getVar(n.getString());
     JSDocInfo docInfo = var == null ? null : var.getJSDocInfo();
 
     if (docInfo != null && docInfo.isDeprecated() &&
@@ -419,7 +426,7 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
    * @param name The name node.
    */
   private void checkNameVisibility(NodeTraversal t, Node name, Node parent) {
-    TypedVar var = t.getTypedScope().getVar(name.getString());
+    Var var = t.getScope().getVar(name.getString());
     if (var == null) {
       return;
     }
@@ -467,7 +474,7 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
     return v;
   }
 
-  private static boolean isPrivateAccessAllowed(TypedVar var, Node name, Node parent) {
+  private static boolean isPrivateAccessAllowed(Var var, Node name, Node parent) {
     StaticSourceFile varSrc = var.getSourceFile();
     StaticSourceFile refSrc = name.getStaticSourceFile();
     JSDocInfo docInfo = var.getJSDocInfo();
@@ -481,7 +488,7 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
     }
   }
 
-  private boolean isPackageAccessAllowed(TypedVar var, Node name) {
+  private boolean isPackageAccessAllowed(Var var, Node name) {
     StaticSourceFile varSrc = var.getSourceFile();
     StaticSourceFile refSrc = name.getStaticSourceFile();
     CodingConvention codingConvention = compiler.getCodingConvention();
@@ -938,14 +945,14 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
     Node scopeRoot = t.getScopeRoot();
     Node scopeRootParent = scopeRoot.getParent();
     return
-      // Case #1
-      (deprecatedDepth > 0) ||
-      // Case #2
-      (getTypeDeprecationInfo(t.getTypedScope().getTypeOfThis()) != null) ||
+    // Case #1
+    (deprecatedDepth > 0)
+        // Case #2
+        || (getTypeDeprecationInfo(getTypeOfThis(scopeRoot)) != null)
         // Case #3
-      (scopeRootParent != null && scopeRootParent.isAssign() &&
-       getTypeDeprecationInfo(
-           getClassOfMethod(scopeRoot, scopeRootParent)) != null);
+        || (scopeRootParent != null
+            && scopeRootParent.isAssign()
+            && getTypeDeprecationInfo(getClassOfMethod(scopeRoot, scopeRootParent)) != null);
   }
 
   /**
@@ -1058,5 +1065,21 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
   @Nullable
   private static ObjectTypeI castToObject(@Nullable TypeI type) {
     return type == null ? null : type.toMaybeObjectType();
+  }
+
+  @Nullable
+  private JSType getTypeOfThis(Node scopeRoot) {
+    if (scopeRoot.isRoot()) {
+      return ObjectType.cast(scopeRoot.getJSType());
+    }
+
+    checkState(scopeRoot.isFunction(), scopeRoot);
+    JSType nodeType = scopeRoot.getJSType();
+    if (nodeType != null && nodeType.isFunctionType()) {
+      return nodeType.toMaybeFunctionType().getTypeOfThis();
+    } else {
+      // Executed when the current scope has not been typechecked.
+      return null;
+    }
   }
 }
