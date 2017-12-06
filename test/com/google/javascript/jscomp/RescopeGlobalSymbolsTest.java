@@ -212,6 +212,7 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
     // TODO(b/69868034): Fix commented-out tests before marking this pass ES6-compatible.
     // This pass is not guaranteed to be normalized so it must handle the object literal shorthand.
     // test("var {a} = {}; a;", "({a: _.a} = {}); _.a;");
+    test("var {a: a} = {}; a;", "({a: _.a} = {}); _.a;");
     test("var {key: a} = {}; a;", "({key: _.a} = {}); _.a;");
     // test("var {a: {b}} = {}; b;", "({a: {b: _.b}} = {}); _.b;");
     test("var {a: {key: b}} = {}; b;", "({a: {key: _.b}} = {}); _.b;");
@@ -255,20 +256,74 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
         "var a; if (true) { let b; ({key1: a, key2: b} = {}); b; } a;",
         "if (true) { let b; ({key1: _.a, key2: b} = {}); b; } _.a;");
     test("var obj = {}; ({a: obj.a} = {}); obj.a;", "_.obj = {}; ({a: _.obj.a} = {}); _.obj.a;");
+    test(
+        "var obj = {}; ({a:   obj['foo bar']} = {});   obj['foo bar'];",
+        "  _.obj = {}; ({a: _.obj['foo bar']} = {}); _.obj['foo bar'];");
   }
 
-  // TODO(b/69868034): Test array patterns.
+  public void testArrayDestructuringDeclarations() {
+    test("var [a] = [1]; a", "[_.a] = [1]; _.a;");
+    test("var [a, b, c] = [1, 2, 3]; a; b; c;", "[_.a, _.b, _.c] = [1, 2, 3]; _.a; _.b; _.c");
+    test("var [[a, b], c] = []; a; b; c", "[[_.a, _.b], _.c] = []; _.a; _.b; _.c;");
+    test("var [a = 5] = [1]; a", "[_.a = 5] = [1]; _.a;");
+    test("var [a, b = 5] = [1]; a; b;", "[_.a, _.b = 5] = [1]; _.a; _.b;");
+    test("var [...a] = [1, 2, 3]; a;", "[..._.a] = [1, 2, 3]; _.a;");
+    test("var [a, ...b] = [1, 2, 3]; a; b;", "[_.a, ..._.b] = [1, 2, 3]; _.a; _.b;");
+    test("var [a] = 1, b = 2; a; b;", "[_.a] = 1; _.b = 2; _.a; _.b;");
+  }
+
+  public void testArrayDestructuringDeclarations_sameModule() {
+    assumeCrossModuleNames = false;
+    testSame("var [a] = [1]; a");
+    testSame("var [a, b] = [1, 2]; a; b;");
+    testSame("var [[a, b], c] = []; a; b; c");
+    testSame("var [a = 5] = [1]; a");
+    testSame("var [a, b = 5] = [1]; a; b;");
+    testSame("var [...a] = [1, 2, 3]; a;");
+    testSame("var [a, ...b] = [1, 2, 3]; a; b;");
+  }
+
+  public void testArrayDestructuringDeclarations_acrossModules() {
+    assumeCrossModuleNames = false;
+    test(createModules("var [a] = [];", "a"), new String[] {"[_.a] = [];", "_.a"});
+    test(
+        createModules("var [a, b, c] = [];", "a; c;"),
+        new String[] {"var b; [_.a, b, _.c] = [];", "_.a; _.c"});
+    test(
+        createModules("var [a, b, c] = [];", "b; c;"),
+        new String[] {"var a; [a, _.b, _.c] = [];", "_.b; _.c"});
+    test(
+        createModules("var [a, b, c] = []; b; c;", "a; c;"),
+        new String[] {"var b; [_.a, b, _.c] = []; b; _.c;", "_.a; _.c"});
+  }
+
+  public void testArrayDestructuringAssignments() {
+    test("var a, b; [a, b] = []; a; b;", "[_.a, _.b] = []; _.a; _.b;");
+    // Test a destructuring assignment with mixed global and local variables.
+    test(
+        "var a; if (true) { let b; [a, b] = []; b; } a;",
+        "if (true) { let b; [_.a, b] = []; b; } _.a;");
+    // Test assignments to qualified names and quoted properties.
+    test("var obj = {}; [obj.a] = []; obj.a;", "_.obj = {}; [_.obj.a] = []; _.obj.a;");
+    test(
+        "var obj = {}; [  obj['foo bar']] = [];   obj['foo bar'];",
+        "  _.obj = {}; [_.obj['foo bar']] = []; _.obj['foo bar'];");
+  }
 
   public void testForLoops() {
     assumeCrossModuleNames = false;
     test(createModules(
         "for (var i = 0, c = 2; i < 1000; i++);", "c"),
         new String[] {"var i;for (i = 0, _.c = 2; i < 1000; i++);", "_.c"});
-    test(createModules(
-        "for (var i = 0, c = 2; i < 1000; i++);", "i"),
-        new String[] {"var c;for (_.i = 0, c = 2; _.i < 1000; _.i++);",
-            "_.i"});
-    // TODO(b/69868034): Test destructuring in for loops..
+    test(
+        createModules("      for (var i = 0, c = 2;   i < 1000;   i++);", "i"),
+        new String[] {"var c;for (  _.i = 0, c = 2; _.i < 1000; _.i++);", "_.i"});
+    test(
+        createModules("       for (var {i: i, c:   c} = {};  i < 1000; i++);", "c"),
+        new String[] {"var i; for (   ({i: i, c: _.c} = {}); i < 1000; i++);", "_.c"});
+    test(
+        createModules("       for (var [i,   c] = [0, 2]; i < 1000; i++);", "c;"),
+        new String[] {"var i; for (    [i, _.c] = [0, 2]; i < 1000; i++);", "_.c;"});
   }
 
   public void testForLoops_acrossModules() {
@@ -290,9 +345,12 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
     test(
         "for (var i = 0,b; i < 1000;)i++;b++",
         "for (_.i = 0,_.b; _.i < 1000;)_.i++;_.b++");
-    test(
-        "var o={};for (var i in o)i++;",
-        "_.o={};for (_.i in _.o)_.i++;");
+    test("var o={};for (var i in o)i++;", "_.o={};for (_.i in _.o)_.i++;");
+
+    // Test destructuring.
+    test("for (var [i] = [0]; i < 1000; i++);", "for ([_.i] = [0]; _.i < 1000; _.i++);");
+    test("for (var {i: i} = {}; i < 1000; i++);", " for (({i: _.i} = {}); _.i < 1000; _.i++);");
+    testSame("for (let [i] = [0]; i  < 1000; i++);");
   }
 
   public void testFunctionStatements() {
@@ -408,6 +466,9 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
     test(
         "var a = 5; function foo({key: _}) { return _; }",
         "_.a = 5; _.foo = function({key: _$}) { return _$; }");
+    test(
+        "var a = 5; function foo([_]) { return _; }",
+        "_.a = 5; _.foo = function([_$]) { return _$; }");
     // We accept this unnecessary renaming as acceptable to simplify pattern
     // matching in the traversal.
     test("function foo() { var _$a = 1;}", "_.foo = function () { var _$a$ = 1;}");
@@ -423,6 +484,9 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
     test(
         "var foo = 1; if (true) { const _ = {}; _.foo = foo; _.bar = 1; const _$ = 1; }",
         "_.foo = 1; if (true) { const _$ = {}; _$.foo = _.foo; _$.bar = 1;  const _$$ = 1; }");
+    test(
+        "var foo = 1; if (true) { const [_] = [{}]; _.foo = foo; }",
+        "  _.foo = 1; if (true) { const [_$] = [{}]; _$.foo = _.foo; }");
   }
 
   public void testExterns() {

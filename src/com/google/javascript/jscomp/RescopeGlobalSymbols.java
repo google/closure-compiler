@@ -346,7 +346,6 @@ final class RescopeGlobalSymbols implements CompilerPass {
     private void visitDestructuringPattern(NodeTraversal t, Node n, Node parent) {
       if (!(parent.isAssign() || parent.isParamList() || parent.isDestructuringLhs())) {
         // Don't handle patterns that are nested within another pattern.
-        // TODO(b/69868034): What about for loop initializers or other assignments?
         return;
       }
       List<Node> lhsNodes = NodeUtil.findLhsNodesInNode(n.getParent());
@@ -354,6 +353,8 @@ final class RescopeGlobalSymbols implements CompilerPass {
       boolean hasCrossModuleName = false;
       for (Node lhs : lhsNodes) {
         if (!lhs.isName()) {
+          // The LHS could also be a GETPROP or GETELEM, which get handled when the traversal hits
+          // their NAME nodes.
           continue;
         }
         visitName(t, lhs, lhs.getParent());
