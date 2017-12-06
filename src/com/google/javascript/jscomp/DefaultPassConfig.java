@@ -2791,12 +2791,11 @@ public final class DefaultPassConfig extends PassConfig {
         boolean removeOnlyLocals = options.removeUnusedLocalVars && !options.removeUnusedVars;
         boolean preserveAnonymousFunctionNames =
             options.anonymousFunctionNaming != AnonymousFunctionNamingPolicy.OFF;
-        // TODO(b/66971163): Enable removing unused properties based on compiler options.
         return new RemoveUnusedVars(
             compiler,
             !removeOnlyLocals,
             preserveAnonymousFunctionNames,
-            /* removeUnusedProperties */ false);
+            options.removeUnusedPrototypeProperties);
       }
 
       @Override
