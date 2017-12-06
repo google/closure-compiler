@@ -21,6 +21,7 @@ import static com.google.javascript.jscomp.lint.CheckRequiresAndProvidesSorted.P
 import static com.google.javascript.jscomp.lint.CheckRequiresAndProvidesSorted.REQUIRES_NOT_SORTED;
 
 import com.google.javascript.jscomp.Compiler;
+import com.google.javascript.jscomp.CompilerOptions;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.CompilerPass;
 import com.google.javascript.jscomp.CompilerTestCase;
@@ -40,6 +41,14 @@ public final class CheckRequiresAndProvidesSortedTest extends CompilerTestCase {
   protected void setUp() throws Exception {
     super.setUp();
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2017);
+  }
+
+  @Override
+  protected CompilerOptions getOptions() {
+    CompilerOptions options = super.getOptions();
+    options.setPrettyPrint(true);
+    options.setPreserveTypeAnnotations(true);
+    return options;
   }
 
   public void testNoWarning_require() {

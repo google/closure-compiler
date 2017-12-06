@@ -21,8 +21,6 @@ import static com.google.common.base.Preconditions.checkState;
 import com.google.common.base.Function;
 import com.google.common.collect.Ordering;
 import com.google.javascript.jscomp.AbstractCompiler;
-import com.google.javascript.jscomp.CodePrinter;
-import com.google.javascript.jscomp.CompilerOptions;
 import com.google.javascript.jscomp.DiagnosticType;
 import com.google.javascript.jscomp.HotSwapCompilerPass;
 import com.google.javascript.jscomp.JSError;
@@ -202,13 +200,8 @@ public final class CheckRequiresAndProvidesSorted extends AbstractShallowCallbac
   private void reportIfOutOfOrder(List<Node> requiresOrProvides, DiagnosticType warning) {
     if (!alphabetical.isOrdered(requiresOrProvides)) {
       StringBuilder correctOrder = new StringBuilder();
-      for (Node require : alphabetical.sortedCopy(requiresOrProvides)) {
-        CodePrinter.Builder builder = new CodePrinter.Builder(require);
-        CompilerOptions options = new CompilerOptions();
-        options.setPrettyPrint(true);
-        options.setPreserveTypeAnnotations(true);
-        builder.setCompilerOptions(options);
-        correctOrder.append(builder.build());
+      for (Node n : alphabetical.sortedCopy(requiresOrProvides)) {
+        correctOrder.append(compiler.toSource(n));
       }
       compiler.report(
           JSError.make(requiresOrProvides.get(0), warning, correctOrder.toString()));
