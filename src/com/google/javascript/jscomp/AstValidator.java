@@ -483,9 +483,6 @@ public final class AstValidator implements CompilerPass {
   private void validateTemplateLit(Node n) {
     validateFeature(Feature.TEMPLATE_LITERALS, n);
     validateNodeType(Token.TEMPLATELIT, n);
-    if (!n.hasChildren()) {
-      return;
-    }
     for (Node child = n.getFirstChild(); child != null; child = child.getNext()) {
       if (child.isString()) {
         validateString(child);
