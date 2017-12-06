@@ -285,6 +285,12 @@ md.$dialog.ConfirmConfig_.prototype.parent = function(parent) {};
  */
 md.$dialog.ConfirmConfig_.prototype.css = function(css) {};
 
+/**
+ * @param {boolean} scroll
+ * @return {!md.$dialog.ConfirmConfig_}
+ */
+md.$dialog.ConfirmConfig_.prototype.disableParentScroll = function(scroll) {};
+
 
 /** @interface */
 md.$dialog.PromptConfig_ = function() {};
