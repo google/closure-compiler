@@ -206,7 +206,6 @@ public final class CheckRequiresAndProvidesSorted extends AbstractShallowCallbac
         CodePrinter.Builder builder = new CodePrinter.Builder(require);
         CompilerOptions options = new CompilerOptions();
         options.setPrettyPrint(true);
-        options.setPreferSingleQuotes(true);
         options.setPreserveTypeAnnotations(true);
         builder.setCompilerOptions(options);
         correctOrder.append(builder.build());

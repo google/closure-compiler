@@ -86,8 +86,8 @@ public final class CoverageInstrumenterTest extends TestCase {
       "(window.top.__jscov={fileNames:[],instrumentedLines:[],executedLines:[]});",
       "var JSCompiler_lcov_data_source_js=[];",
       "__jscov.executedLines.push(JSCompiler_lcov_data_source_js);",
-      "__jscov.instrumentedLines.push(\"01\");",
-      "__jscov.fileNames.push(\"source.js\");",
+      "__jscov.instrumentedLines.push('01');",
+      "__jscov.fileNames.push('source.js');",
       "JSCompiler_lcov_data_source_js[0]=true;var x=42;"};
 
     assertThat(result.source).isEqualTo(Joiner.on("").join(expected));

@@ -1826,10 +1826,10 @@ public final class CodePrinterTest extends CodePrinterTestBase {
 
   public void testIndirectEval() {
     Node n = parse("eval('1');");
-    assertPrintNode("eval(\"1\")", n);
+    assertPrintNode("eval('1')", n);
     n.getFirstFirstChild().getFirstChild().putBooleanProp(
         Node.DIRECT_EVAL, false);
-    assertPrintNode("(0,eval)(\"1\")", n);
+    assertPrintNode("(0,eval)('1')", n);
   }
 
   public void testFreeCall1() {
@@ -1862,7 +1862,7 @@ public final class CodePrinterTest extends CodePrinterTestBase {
         new Node(Token.EXPR_RESULT, Node.newString("f")),
         new Node(Token.EXPR_RESULT, Node.newString("g")));
     String result = new CodePrinter.Builder(ast).setPrettyPrint(true).build();
-    assertEquals("\"f\";\n\"g\";\n", result);
+    assertEquals("'f';\n'g';\n", result);
   }
 
   public void testObjectLit() {
@@ -2311,7 +2311,7 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     languageMode = LanguageMode.ECMASCRIPT5;
     Node nodes = parse("x.function=2");
     languageMode = LanguageMode.ECMASCRIPT3;
-    assertPrintNode("x[\"function\"]=2", nodes);
+    assertPrintNode("x['function']=2", nodes);
   }
 
   public void testKeywordProperties2() {
@@ -2327,7 +2327,7 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     languageMode = LanguageMode.ECMASCRIPT5;
     Node nodes = parse("x={function:2}");
     languageMode = LanguageMode.ECMASCRIPT3;
-    assertPrintNode("x={\"function\":2}", nodes);
+    assertPrintNode("x={'function':2}", nodes);
   }
 
   public void testIssue1062() {

@@ -92,7 +92,7 @@ public final class JSDocInfoPrinterTest extends TestCase {
   public void testTypeTransformationLanguageTemplate() {
     builder.recordTypeTransformation("T", IR.string("Promise"));
     JSDocInfo info = builder.buildAndReset();
-    assertEquals("/**\n @template T := \"Promise\" =:\n */\n", jsDocInfoPrinter.print(info));
+    assertEquals("/**\n @template T := 'Promise' =:\n */\n", jsDocInfoPrinter.print(info));
   }
 
   public void testParam() {

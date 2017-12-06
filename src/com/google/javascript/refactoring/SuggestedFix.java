@@ -817,7 +817,6 @@ public final class SuggestedFix {
         node.setToken(Token.SCRIPT);
       }
       CompilerOptions compilerOptions = new CompilerOptions();
-      compilerOptions.setPreferSingleQuotes(true);
       compilerOptions.setUseOriginalNamesInOutput(true);
       // We're refactoring existing code, so no need to escape values inside strings.
       compilerOptions.setTrustedStrings(true);

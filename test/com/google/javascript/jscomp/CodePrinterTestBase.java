@@ -116,6 +116,7 @@ public abstract class CodePrinterTestBase extends TestCase {
   CompilerOptions newCompilerOptions(CompilerOptionBuilder builder) {
     CompilerOptions options = new CompilerOptions();
     options.setTrustedStrings(trustedStrings);
+    options.setPreferSingleQuotes(false);
     options.preserveTypeAnnotations = preserveTypeAnnotations;
     options.setLanguageOut(languageMode);
     builder.setOptions(options);

@@ -964,8 +964,8 @@ public class CompilerOptions implements Serializable {
 
   /**
    * Normally, when there are an equal number of single and double quotes
-   * in a string, the compiler will use double quotes. Set this to true
-   * to prefer single quotes.
+   * in a string, the compiler will use single quotes. Set this to false
+   * to prefer double quotes.
    */
   public void setPreferSingleQuotes(boolean enabled) {
     this.preferSingleQuotes = enabled;
@@ -1351,6 +1351,7 @@ public class CompilerOptions implements Serializable {
     instrumentationTemplateFile = "";
 
     // Output
+    preferSingleQuotes = true;
     preserveTypeAnnotations = false;
     printInputDelimiter = false;
     prettyPrint = false;

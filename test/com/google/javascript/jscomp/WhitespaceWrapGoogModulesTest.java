@@ -49,8 +49,8 @@ public class WhitespaceWrapGoogModulesTest extends CompilerTestCase {
     test(
         lines("goog.module('test');", "var f = 5;", "exports = f;"),
         "goog.loadModule(function(exports){"
-            + "\"use strict\";"
-            + "goog.module(\"test\");"
+            + "'use strict';"
+            + "goog.module('test');"
             + "var f=5;"
             + "exports=f;"
             + "return exports"

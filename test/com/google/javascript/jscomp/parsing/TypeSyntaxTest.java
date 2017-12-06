@@ -790,7 +790,6 @@ public final class TypeSyntaxTest extends TestCase {
     options.setPreserveTypeAnnotations(true);
     options.setPrettyPrint(true);
     options.setLineLengthThreshold(80);
-    options.setPreferSingleQuotes(true);
 
     Compiler compiler = new Compiler();
     compiler.setErrorManager(testErrorManager);
