@@ -358,13 +358,11 @@ class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompile
 
   private static boolean alreadyRemoved(Node n) {
     Node parent = n.getParent();
-    if (parent == null) {
-      return true;
+    while (parent != null) {
+      n = parent;
+      parent = n.getParent();
     }
-    if (parent.isRoot()) {
-      return false;
-    }
-    return alreadyRemoved(parent);
+    return !n.isRoot();
   }
 
   /**
