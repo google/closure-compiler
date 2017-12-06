@@ -1235,7 +1235,6 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
   }
 
   public void testAliasForSuperclassNamespace_withStaticInheritance() {
-    // TODO(lharker): The last line should be "use(Foo$Builder$baz);".
     test(
         lines(
             "var ns = {};",
@@ -1251,7 +1250,7 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
             "var Foo$Builder$baz = 3;",
             "var ns$clazz = null;",
             "var Bar = class extends Foo$Builder {}",
-            "use(Bar.baz);"));
+            "use(Foo$Builder$baz);"));
   }
 
   public void testDestructuringAlias1() {

@@ -103,6 +103,7 @@ class AggressiveInlineAliases implements CompilerPass {
       prop.removeRef(ref);
       // Rescan the expression root.
       newNodes.add(new AstChange(ref.module, ref.scope, ref.node));
+      codeChanged = true;
     }
   }
 
@@ -196,7 +197,9 @@ class AggressiveInlineAliases implements CompilerPass {
 
       // Check if {@code name} has any aliases left after the
       // local-alias-inlining above.
-      if ((name.type == Name.Type.OBJECTLIT || name.type == Name.Type.FUNCTION)
+      if ((name.type == Name.Type.OBJECTLIT
+              || name.type == Name.Type.FUNCTION
+              || name.type == Name.Type.CLASS)
           && name.aliasingGets == 0
           && name.props != null) {
         // All of {@code name}'s children meet condition (a), so they can be
@@ -310,16 +313,13 @@ class AggressiveInlineAliases implements CompilerPass {
 
       Var aliasVar = alias.scope.getVar(aliasVarName);
       checkState(aliasVar != null, "Expected variable to be defined in scope", aliasVarName);
-      Node aliasDeclarationParent = aliasVar.getParentNode();
-      Scope scope =
-          aliasDeclarationParent.isVar() ? alias.scope.getClosestHoistScope() : alias.scope;
       ReferenceCollectingCallback collector =
           new ReferenceCollectingCallback(
               compiler,
               ReferenceCollectingCallback.DO_NOTHING_BEHAVIOR,
               new Es6SyntacticScopeCreator(compiler),
               Predicates.equalTo(aliasVar));
-      collector.processScope(scope);
+      collector.processScope(aliasVar.getScope());
 
       ReferenceCollection aliasRefs = collector.getReferences(aliasVar);
       Set<AstChange> newNodes = new LinkedHashSet<>();
