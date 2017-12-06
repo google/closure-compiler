@@ -28,7 +28,6 @@ public final class StatementFusionTest extends CompilerTestCase  {
   protected void setUp() throws Exception {
     super.setUp();
     favorsCommas = false;
-    setAcceptedLanguage(CompilerOptions.LanguageMode.ECMASCRIPT5);
   }
 
   @Override
@@ -87,15 +86,23 @@ public final class StatementFusionTest extends CompilerTestCase  {
   }
 
   public void testFuseIntoForIn2() {
+    // This test case causes a parse warning in ES5 strict out, but is a parse error in ES6+ out.
+    setAcceptedLanguage(CompilerOptions.LanguageMode.ECMASCRIPT5_STRICT);
     setExpectParseWarningsThisTest();
     fuseSame("a();for(var x = b() in y){}");
   }
 
-  public void testFuseIntoVanillaFor() {
+  public void testFuseIntoVanillaFor1() {
     fuse("a;b;c;for(;g;){}", "for(a,b,c;g;){}");
     fuse("a;b;c;for(d;g;){}", "for(a,b,c,d;g;){}");
     fuse("a;b;c;for(d,e;g;){}", "for(a,b,c,d,e;g;){}");
     fuseSame("a();for(var x;g;){}");
+  }
+
+  public void testFuseIntoVanillaFor2() {
+    fuseSame("a;b;c;for(var d;g;){}");
+    fuseSame("a;b;c;for(let d;g;){}");
+    fuseSame("a;b;c;for(const d = 5;g;){}");
   }
 
   public void testFuseIntoLabel() {
@@ -146,7 +153,7 @@ public final class StatementFusionTest extends CompilerTestCase  {
     test("a;b;c;if(d){}d;e;f;if(g){}", "if(a,b,c,d){}if(d,e,f,g){}");
   }
 
-  public void testNoGlobalSchopeChanges() {
+  public void testNoGlobalScopeChanges() {
     testSame("a,b,c");
   }
 

@@ -137,7 +137,7 @@ class StatementFusion extends AbstractPeepholeOptimization {
         return n.hasChildren();
       case FOR:
         // Avoid cases where we have for(var x;_;_) { ....
-        return !n.getFirstChild().isVar();
+        return !NodeUtil.isNameDeclaration(n.getFirstChild());
       case FOR_IN:
         // Avoid cases where we have for(var x = foo() in a) { ....
         return !mayHaveSideEffects(n.getFirstChild());
