@@ -666,8 +666,11 @@ class PeepholeSubstituteAlternateSyntax
 
   private Node tryTurnTemplateStringsToStrings(Node n) {
     checkState(n.isTemplateLit(), n);
+    if (n.getParent().isTaggedTemplateLit()) {
+      return n;
+    }
     String string = NodeUtil.getStringValue(n);
-    if (string == null || n.getParent().isTaggedTemplateLit()) {
+    if (string == null) {
       return n;
     }
     Node stringNode = IR.string(string).srcref(n);
