@@ -326,7 +326,7 @@ function WritableStreamSink() {};
 /** @type {(undefined|function(!WritableStreamDefaultController):(!IThenable<*>|undefined))}*/
 WritableStreamSink.prototype.start;
 
-/** @type {(undefined|function(!WritableStreamDefaultController):(!IThenable<*>|undefined))}*/
+/** @type {(undefined|function(*, !WritableStreamDefaultController):(!IThenable<*>|undefined))}*/
 WritableStreamSink.prototype.write;
 
 /** @type {(undefined|function():(!IThenable<*>|undefined))} */
