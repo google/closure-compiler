@@ -16,6 +16,9 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES5;
+import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES8_MODULES;
+
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.rhino.Node;
@@ -50,6 +53,11 @@ public final class MultiPassTest extends CompilerTestCase {
           @Override
           protected CompilerPass create(AbstractCompiler compiler) {
             return new ValidityCheck(compiler);
+          }
+
+          @Override
+          protected FeatureSet featureSet() {
+            return ES8_MODULES;
           }
         });
     compiler.setPhaseOptimizer(phaseopt);
@@ -316,6 +324,11 @@ public final class MultiPassTest extends CompilerTestCase {
             return new InlineObjectLiterals(
                 compiler, compiler.getUniqueNameIdSupplier());
           }
+
+          @Override
+          protected FeatureSet featureSet() {
+            return ES8_MODULES;
+          }
         });
   }
 
@@ -325,6 +338,11 @@ public final class MultiPassTest extends CompilerTestCase {
           @Override
           protected CompilerPass create(AbstractCompiler compiler) {
             return new UnreachableCodeElimination(compiler);
+          }
+
+          @Override
+          protected FeatureSet featureSet() {
+            return ES8_MODULES;
           }
         });
   }
@@ -339,6 +357,11 @@ public final class MultiPassTest extends CompilerTestCase {
                 true, true, true, true, true,
                 CompilerOptions.UNLIMITED_FUN_SIZE_AFTER_INLINING);
           }
+
+          @Override
+          protected FeatureSet featureSet() {
+            return ES8_MODULES;
+          }
         });
   }
 
@@ -349,6 +372,11 @@ public final class MultiPassTest extends CompilerTestCase {
           protected CompilerPass create(AbstractCompiler compiler) {
             return new InlineVariables(
                 compiler, InlineVariables.Mode.ALL, true);
+          }
+
+          @Override
+          protected FeatureSet featureSet() {
+            return ES8_MODULES;
           }
         });
   }
@@ -369,6 +397,11 @@ public final class MultiPassTest extends CompilerTestCase {
                 new PeepholeFoldConstants(late, false /* useTypes */),
                 new PeepholeCollectPropertyAssignments());
           }
+
+          @Override
+          protected FeatureSet featureSet() {
+            return ES8_MODULES;
+          }
         });
   }
 
@@ -379,6 +412,11 @@ public final class MultiPassTest extends CompilerTestCase {
           protected CompilerPass create(AbstractCompiler compiler) {
             return new RemoveUnusedClassProperties(compiler, false);
           }
+
+          @Override
+          protected FeatureSet featureSet() {
+            return ES8_MODULES;
+          }
         });
   }
 
@@ -388,6 +426,11 @@ public final class MultiPassTest extends CompilerTestCase {
           @Override
           protected CompilerPass create(AbstractCompiler compiler) {
             return new RemoveUnusedCode.Builder(compiler).build();
+          }
+
+          @Override
+          protected FeatureSet featureSet() {
+            return ES8_MODULES;
           }
         });
   }
@@ -405,6 +448,11 @@ public final class MultiPassTest extends CompilerTestCase {
                 na.removeUnreferenced();
               }
             };
+          }
+
+          @Override
+          protected FeatureSet featureSet() {
+            return ES5;
           }
         });
   }

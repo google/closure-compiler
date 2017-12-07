@@ -1790,6 +1790,11 @@ public final class DefaultPassConfig extends PassConfig {
               new PeepholeFoldConstants(late, useTypesForOptimization),
               new PeepholeReorderConstantExpression());
         }
+
+        @Override
+        protected FeatureSet featureSet() {
+          return ES8_MODULES;
+        }
       };
 
   /** Checks that all variables are defined. */
@@ -1905,6 +1910,11 @@ public final class DefaultPassConfig extends PassConfig {
         protected HotSwapCompilerPass create(AbstractCompiler compiler) {
           return new GlobalTypeResolver(compiler);
         }
+
+        @Override
+        protected FeatureSet featureSet() {
+          return ES5;
+        }
       };
 
   /** Clears the typed scope when we're done. */
@@ -1940,6 +1950,11 @@ public final class DefaultPassConfig extends PassConfig {
               makeTypeInference(compiler).inferAllScopes(scriptRoot);
             }
           };
+        }
+
+        @Override
+        protected FeatureSet featureSet() {
+          return ES5;
         }
       };
 
@@ -1988,6 +2003,11 @@ public final class DefaultPassConfig extends PassConfig {
             }
           };
         }
+
+        @Override
+        protected FeatureSet featureSet() {
+          return ES5;
+        }
       };
 
   /** Checks type usage */
@@ -2011,6 +2031,11 @@ public final class DefaultPassConfig extends PassConfig {
               makeTypeCheck(compiler).check(scriptRoot, false);
             }
           };
+        }
+
+        @Override
+        protected FeatureSet featureSet() {
+          return ES5;
         }
       };
 
@@ -2045,6 +2070,11 @@ public final class DefaultPassConfig extends PassConfig {
     protected HotSwapCompilerPass create(AbstractCompiler compiler) {
       return new CheckAccessControls(
           compiler, options.enforceAccessControlCodingConventions);
+    }
+
+    @Override
+    protected FeatureSet featureSet() {
+      return ES5;
     }
   };
 
@@ -2088,6 +2118,11 @@ public final class DefaultPassConfig extends PassConfig {
             callbacks.add(new CheckUnusedPrivateProperties(compiler));
           }
           return combineChecks(compiler, callbacks.build());
+        }
+
+        @Override
+        protected FeatureSet featureSet() {
+          return ES5;
         }
       };
 
@@ -2172,6 +2207,11 @@ public final class DefaultPassConfig extends PassConfig {
         }
       };
     }
+
+    @Override
+    protected FeatureSet featureSet() {
+      return ES5;
+    }
   };
 
   /** Checks that the code is ES5 strict compliant. */
@@ -2200,6 +2240,11 @@ public final class DefaultPassConfig extends PassConfig {
               options.getTweakReplacements()).process(externs, jsRoot);
         }
       };
+    }
+
+    @Override
+    protected FeatureSet featureSet() {
+      return ES5;
     }
   };
 
@@ -2245,6 +2290,11 @@ public final class DefaultPassConfig extends PassConfig {
           pass.process(externs, jsRoot);
         }
       };
+    }
+
+    @Override
+    protected FeatureSet featureSet() {
+      return ES5;
     }
   };
 
@@ -2329,6 +2379,11 @@ public final class DefaultPassConfig extends PassConfig {
         protected CompilerPass create(AbstractCompiler compiler) {
           return new RuntimeTypeCheck(compiler, options.runtimeTypeCheckLogFunction);
         }
+
+        @Override
+        protected FeatureSet featureSet() {
+          return ES5;
+        }
       };
 
   /** Generates unique ids. */
@@ -2351,6 +2406,11 @@ public final class DefaultPassConfig extends PassConfig {
             }
           };
         }
+
+        @Override
+        protected FeatureSet featureSet() {
+          return ES5;
+        }
       };
 
   /** Replace strings. */
@@ -2369,6 +2429,11 @@ public final class DefaultPassConfig extends PassConfig {
           compiler.setStringMap(pass.getStringMap());
         }
       };
+    }
+
+    @Override
+    protected FeatureSet featureSet() {
+      return ES5;
     }
   };
 
@@ -2393,6 +2458,11 @@ public final class DefaultPassConfig extends PassConfig {
     protected CompilerPass create(final AbstractCompiler compiler) {
       return new ClosureCodeRemoval(compiler, options.removeAbstractMethods,
           options.removeClosureAsserts);
+    }
+
+    @Override
+    protected FeatureSet featureSet() {
+      return ES5;
     }
   };
 
@@ -2422,6 +2492,11 @@ public final class DefaultPassConfig extends PassConfig {
           compiler,
           options.renamePrefixNamespace,
           options.renamePrefixNamespaceAssumeCrossModuleNames);
+    }
+
+    @Override
+    protected FeatureSet featureSet() {
+      return ES5;
     }
   };
 
@@ -2474,6 +2549,11 @@ public final class DefaultPassConfig extends PassConfig {
         protected CompilerPass create(AbstractCompiler compiler) {
           return new DisambiguateProperties(compiler, options.propertyInvalidationErrors);
         }
+
+        @Override
+        protected FeatureSet featureSet() {
+          return ES5;
+        }
       };
 
   /** Chain calls to functions that return this. */
@@ -2483,6 +2563,11 @@ public final class DefaultPassConfig extends PassConfig {
         protected CompilerPass create(AbstractCompiler compiler) {
           return new ChainCalls(compiler);
         }
+
+        @Override
+        protected FeatureSet featureSet() {
+          return ES5;
+        }
       };
 
   /** Rewrite instance methods as static methods, to make them easier to inline. */
@@ -2491,6 +2576,11 @@ public final class DefaultPassConfig extends PassConfig {
         @Override
         protected CompilerPass create(AbstractCompiler compiler) {
           return new DevirtualizePrototypeMethods(compiler);
+        }
+
+        @Override
+        protected FeatureSet featureSet() {
+          return ES5;
         }
       };
 
@@ -2540,6 +2630,11 @@ public final class DefaultPassConfig extends PassConfig {
         @Override
         protected CompilerPass create(AbstractCompiler compiler) {
           return new MarkNoSideEffectCalls(compiler);
+        }
+
+        @Override
+        protected FeatureSet featureSet() {
+          return ES5;
         }
       };
 
@@ -2773,6 +2868,11 @@ public final class DefaultPassConfig extends PassConfig {
         protected CompilerPass create(AbstractCompiler compiler) {
           return new InlineProperties(compiler);
         }
+
+        @Override
+        protected FeatureSet featureSet() {
+          return ES5;
+        }
       };
 
   private PassFactory getRemoveUnusedCode() {
@@ -2836,6 +2936,11 @@ public final class DefaultPassConfig extends PassConfig {
               // them as exports.
               options.removeUnusedPrototypePropertiesInExterns,
               options.crossModuleCodeMotionNoStubMethods);
+        }
+
+        @Override
+        protected FeatureSet featureSet() {
+          return ES5;
         }
       };
 
@@ -3026,6 +3131,11 @@ public final class DefaultPassConfig extends PassConfig {
     protected CompilerPass create(AbstractCompiler compiler) {
       return new ObjectPropertyStringPostprocess(compiler);
     }
+
+    @Override
+    protected FeatureSet featureSet() {
+      return ES5;
+    }
   };
 
   /**
@@ -3040,6 +3150,11 @@ public final class DefaultPassConfig extends PassConfig {
               compiler,
               options.getPropertyReservedNamingFirstChars(),
               options.getPropertyReservedNamingNonFirstChars());
+        }
+
+        @Override
+        protected FeatureSet featureSet() {
+          return ES5;
         }
       };
 
@@ -3082,6 +3197,11 @@ public final class DefaultPassConfig extends PassConfig {
         protected CompilerPass create(AbstractCompiler compiler) {
           return new ExternExportsPass(compiler);
         }
+
+        @Override
+        protected FeatureSet featureSet() {
+          return ES5;
+        }
       };
 
   /** Denormalize the AST for code generation. */
@@ -3103,6 +3223,11 @@ public final class DefaultPassConfig extends PassConfig {
     @Override
     protected CompilerPass create(AbstractCompiler compiler) {
       return MakeDeclaredNamesUnique.getContextualRenameInverter(compiler);
+    }
+
+    @Override
+    protected FeatureSet featureSet() {
+      return ES5;
     }
   };
 
@@ -3248,6 +3373,11 @@ public final class DefaultPassConfig extends PassConfig {
           compiler, compiler.getFunctionNames(),
           options.instrumentationTemplate, options.appNameStr);
     }
+
+    @Override
+    protected FeatureSet featureSet() {
+      return ES5;
+    }
   };
 
   private final PassFactory instrumentForCodeCoverage =
@@ -3261,6 +3391,11 @@ public final class DefaultPassConfig extends PassConfig {
           } else {
             return new CoverageInstrumentationPass(compiler, CoverageReach.CONDITIONAL);
           }
+        }
+
+        @Override
+        protected FeatureSet featureSet() {
+          return ES5;
         }
       };
 
@@ -3287,6 +3422,11 @@ public final class DefaultPassConfig extends PassConfig {
       @Override
       protected CompilerPass create(final AbstractCompiler compiler) {
         return runInSerial(options.customPasses.get(executionTime));
+      }
+
+      @Override
+      protected FeatureSet featureSet() {
+        return ES5;
       }
     };
   }
@@ -3465,6 +3605,11 @@ public final class DefaultPassConfig extends PassConfig {
           return new CheckConformance(
               compiler, ImmutableList.copyOf(options.getConformanceConfigs()));
         }
+
+        @Override
+        protected FeatureSet featureSet() {
+          return ES5;
+        }
       };
 
   /** Optimizations that output ES6 features. */
@@ -3500,6 +3645,11 @@ public final class DefaultPassConfig extends PassConfig {
         @Override
         protected CompilerPass create(AbstractCompiler compiler) {
           return new RemoveSuperMethodsPass(compiler);
+        }
+
+        @Override
+        protected FeatureSet featureSet() {
+          return ES5;
         }
       };
 

@@ -16,13 +16,15 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES5;
+
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.GlobalVarReferenceMap.GlobalVarRefCleanupPass;
 import com.google.javascript.jscomp.PassFactory.HotSwapPassFactory;
+import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.rhino.FunctionTypeI;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.TypeI;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -58,6 +60,11 @@ class CleanupPasses extends PassConfig {
             AbstractCompiler compiler) {
           return new FieldCleanupPass(compiler);
         }
+
+        @Override
+        protected FeatureSet featureSet() {
+          return ES5;
+        }
       };
 
   final PassFactory scopeCleanupPassFactory =
@@ -67,6 +74,11 @@ class CleanupPasses extends PassConfig {
             AbstractCompiler compiler) {
           return new MemoizedScopeCleanupPass(compiler);
         }
+
+        @Override
+        protected FeatureSet featureSet() {
+          return ES5;
+        }
       };
 
   final PassFactory globalVarRefCleanupPassFactory =
@@ -75,6 +87,11 @@ class CleanupPasses extends PassConfig {
         protected HotSwapCompilerPass create(
             AbstractCompiler compiler) {
           return new GlobalVarRefCleanupPass(compiler);
+        }
+
+        @Override
+        protected FeatureSet featureSet() {
+          return ES5;
         }
   };
 

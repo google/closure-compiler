@@ -71,10 +71,7 @@ public abstract class PassFactory {
    * extremely simple passes that are unlikely to be broken by new features, etc.) should return
    * FeatureSet.latest().
    */
-  protected FeatureSet featureSet() {
-    // Most passes only understand ES5 so use that as the default.
-    return FeatureSet.ES5;
-  }
+  protected abstract FeatureSet featureSet();
 
   /**
    * Any factory whose CompilerPass has a corresponding hot-swap version should
