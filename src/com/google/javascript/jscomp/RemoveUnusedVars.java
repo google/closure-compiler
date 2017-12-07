@@ -127,23 +127,58 @@ class RemoveUnusedVars implements CompilerPass {
 
   private final ScopeCreator scopeCreator;
 
-  private final boolean removeUnusedProperties;
+  private final boolean removeUnusedPrototypeProperties;
+  private final boolean allowRemovalOfExternProperties;
 
-  RemoveUnusedVars(
-      AbstractCompiler compiler,
-      boolean removeGlobals,
-      boolean preserveFunctionExpressionNames,
-      boolean removeUnusedProperties) {
-    this.compiler = compiler;
-    this.codingConvention = compiler.getCodingConvention();
-    this.removeGlobals = removeGlobals;
-    this.preserveFunctionExpressionNames = preserveFunctionExpressionNames;
-    this.removeUnusedProperties = removeUnusedProperties;
-    this.scopeCreator = new Es6SyntacticScopeCreator(compiler);
+  RemoveUnusedVars(Builder builder) {
+    this.compiler = builder.compiler;
+    this.codingConvention = builder.compiler.getCodingConvention();
+    this.removeGlobals = builder.removeGlobals;
+    this.preserveFunctionExpressionNames = builder.preserveFunctionExpressionNames;
+    this.removeUnusedPrototypeProperties = builder.removeUnusedPrototypeProperties;
+    this.allowRemovalOfExternProperties = builder.allowRemovalOfExternProperties;
+    this.scopeCreator = new Es6SyntacticScopeCreator(builder.compiler);
 
     // All Vars that are completely unremovable will share this VarInfo instance.
     canonicalTotallyUnremovableVarInfo = new VarInfo();
     canonicalTotallyUnremovableVarInfo.setIsExplicitlyNotRemovable();
+  }
+
+  public static class Builder {
+    private final AbstractCompiler compiler;
+
+    private boolean removeGlobals = false;
+    private boolean preserveFunctionExpressionNames = false;
+    private boolean removeUnusedPrototypeProperties = false;
+    private boolean allowRemovalOfExternProperties = false;
+
+    Builder(AbstractCompiler compiler) {
+      this.compiler = compiler;
+    }
+
+    Builder removeGlobals(boolean value) {
+      this.removeGlobals = value;
+      return this;
+    }
+
+    Builder preserveFunctionExpressionNames(boolean value) {
+      this.preserveFunctionExpressionNames = value;
+      return this;
+    }
+
+    Builder removeUnusedPrototypeProperties(boolean value) {
+      this.removeUnusedPrototypeProperties = value;
+      return this;
+    }
+
+    Builder allowRemovalOfExternProperties(boolean value) {
+      this.allowRemovalOfExternProperties = value;
+      return this;
+    }
+
+    RemoveUnusedVars build() {
+      return new RemoveUnusedVars(this);
+    }
   }
 
   /**
@@ -153,7 +188,7 @@ class RemoveUnusedVars implements CompilerPass {
   @Override
   public void process(Node externs, Node root) {
     checkState(compiler.getLifeCycleStage().isNormalized());
-    if (removeUnusedProperties) {
+    if (removeUnusedPrototypeProperties && !allowRemovalOfExternProperties) {
       referencedPropertyNames.addAll(compiler.getExternProperties());
     }
     traverseAndRemoveUnusedReferences(root);
@@ -173,7 +208,7 @@ class RemoveUnusedVars implements CompilerPass {
     }
 
     removeUnreferencedVars();
-    if (removeUnusedProperties) {
+    if (removeUnusedPrototypeProperties) {
       removeUnreferencedProperties();
     }
     for (Scope fparamScope : allFunctionParamScopes) {
@@ -830,7 +865,7 @@ class RemoveUnusedVars implements CompilerPass {
 
   private void traverseClassMembers(Node node, Scope scope) {
     checkArgument(node.isClassMembers(), node);
-    if (removeUnusedProperties) {
+    if (removeUnusedPrototypeProperties) {
       for (Node member = node.getFirstChild(); member != null; member = member.getNext()) {
         if (member.isMemberFunctionDef() || NodeUtil.isGetOrSetKey(member)) {
           // If we get as far as traversing the members of a class, we've already decided that
@@ -941,7 +976,7 @@ class RemoveUnusedVars implements CompilerPass {
   }
 
   private void considerForIndependentRemoval(Removable removable) {
-    if (removeUnusedProperties && removable.isNamedProperty()) {
+    if (removeUnusedPrototypeProperties && removable.isNamedProperty()) {
       String propertyName = removable.getPropertyName();
 
       if (referencedPropertyNames.contains(propertyName)
@@ -1087,7 +1122,7 @@ class RemoveUnusedVars implements CompilerPass {
     VarInfo varInfo = varInfoMap.get(var);
     if (varInfo == null) {
       boolean isGlobal = var.isGlobal();
-      if (isGlobal && !removeGlobals && !removeUnusedProperties) {
+      if (isGlobal && !removeGlobals && !removeUnusedPrototypeProperties) {
         varInfo = canonicalTotallyUnremovableVarInfo;
       } else if (codingConvention.isExported(var.getName(), !isGlobal)) {
         varInfo = canonicalTotallyUnremovableVarInfo;

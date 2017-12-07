@@ -46,11 +46,10 @@ public final class RemoveUnusedVarsTest extends CompilerTestCase {
     return new CompilerPass() {
       @Override
       public void process(Node externs, Node root) {
-        new RemoveUnusedVars(
-                compiler,
-                removeGlobal,
-                preserveFunctionExpressionNames,
-                /* removeUnusedProperties */ false)
+        new RemoveUnusedVars.Builder(compiler)
+            .removeGlobals(removeGlobal)
+            .preserveFunctionExpressionNames(preserveFunctionExpressionNames)
+            .build()
             .process(externs, root);
       }
     };

@@ -2791,11 +2791,12 @@ public final class DefaultPassConfig extends PassConfig {
         boolean removeOnlyLocals = options.removeUnusedLocalVars && !options.removeUnusedVars;
         boolean preserveAnonymousFunctionNames =
             options.anonymousFunctionNaming != AnonymousFunctionNamingPolicy.OFF;
-        return new RemoveUnusedVars(
-            compiler,
-            !removeOnlyLocals,
-            preserveAnonymousFunctionNames,
-            options.removeUnusedPrototypeProperties);
+        return new RemoveUnusedVars.Builder(compiler)
+            .removeGlobals(!removeOnlyLocals)
+            .preserveFunctionExpressionNames(preserveAnonymousFunctionNames)
+            .removeUnusedPrototypeProperties(options.removeUnusedPrototypeProperties)
+            .allowRemovalOfExternProperties(options.removeUnusedPrototypePropertiesInExterns)
+            .build();
       }
 
       @Override

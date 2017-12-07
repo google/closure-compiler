@@ -28,6 +28,7 @@ public final class RemoveUnusedVarsPrototypePropertiesTest extends CompilerTestC
       MINIMAL_EXTERNS + "IFoo.prototype.bar; var mExtern; mExtern.bExtern; mExtern['cExtern'];";
 
   private boolean keepGlobals = false;
+  private boolean allowRemovalOfExternProperties = false;
 
   public RemoveUnusedVarsPrototypePropertiesTest() {
     super(EXTERNS);
@@ -43,11 +44,11 @@ public final class RemoveUnusedVarsPrototypePropertiesTest extends CompilerTestC
     return new CompilerPass() {
       @Override
       public void process(Node externs, Node root) {
-        new RemoveUnusedVars(
-                compiler,
-                !keepGlobals,
-                /* preserveFunctionExpressionNames */ false,
-                /* removeUnusedProperties */ true)
+        new RemoveUnusedVars.Builder(compiler)
+            .removeGlobals(!keepGlobals)
+            .removeUnusedPrototypeProperties(true)
+            .allowRemovalOfExternProperties(allowRemovalOfExternProperties)
+            .build()
             .process(externs, root);
       }
     };
@@ -250,22 +251,17 @@ public final class RemoveUnusedVarsPrototypePropertiesTest extends CompilerTestC
     test(classAndItsMethodAliasedAsExtern, compiled);
   }
 
-  public void disbledTestMethodsFromExternsFileNotExported() {
-    // TODO(bradfordcsmith): implementing this requires adding an optional feature to remove unused
-    // prototype properties that are defined in externs.
-    String classAndItsMethodAliasedAsExtern =
+  public void testMethodsFromExternsFileNotExported() {
+    allowRemovalOfExternProperties = true;
+
+    test(
         lines(
             "function Foo() {}",
             "Foo.prototype.bar_ = function() {};",
             "Foo.prototype.unused = function() {};",
             "var instance = new Foo;",
-            "Foo.prototype.bar = Foo.prototype.bar_");
-
-    String compiled =
-        "function Foo(){}" +
-        "var instance = new Foo;";
-
-    test(classAndItsMethodAliasedAsExtern, compiled);
+            "Foo.prototype.bar = Foo.prototype.bar_"), // bar is declared in externs
+        "function Foo(){} new Foo;");
   }
 
   public void testExportedMethodsByNamingConventionAlwaysExported() {
