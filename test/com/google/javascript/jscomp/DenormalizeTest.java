@@ -150,6 +150,13 @@ public final class DenormalizeTest extends CompilerTestCase {
     test("function f(){ var a; for(; a < 2 ; a++) foo() }",
          "function f(){ for(var a; a < 2 ; a++) foo() }");
     testSame("function f(){ return; for(; a < 2 ; a++) foo() }");
+
+    // Verify destructuring assignments are moved.
+    test("[a, b] = [1, 2]; for (; a < 2; a = b++) foo();",
+        "for ([a, b] = [1, 2]; a < 2; a = b++) foo();");
+
+    test("var [a, b] = [1, 2]; for (; a < 2; a = b++) foo();",
+        "for (var [a, b] = [1, 2]; a < 2; a = b++) foo();");
   }
 
   public void testForIn() {
@@ -170,6 +177,9 @@ public final class DenormalizeTest extends CompilerTestCase {
 
     // Other statements are left as is.
     testSame("function f(){ return; for(a in b) foo() }");
+
+    // We don't handle destructuring patterns yet.
+    testSame("var a; var b; for ([a, b] in c) foo();");
   }
 
   public void testForOf() {
@@ -190,6 +200,9 @@ public final class DenormalizeTest extends CompilerTestCase {
 
     // Other statements are left as is.
     testSame("function f() { return; for (a of b) foo() }");
+
+    // We don't handle destructuring patterns yet.
+    testSame("var a; var b; for ([a, b] of c) foo();");
   }
 
   public void testInOperatorNotInsideFor() {

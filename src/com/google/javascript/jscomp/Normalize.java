@@ -30,6 +30,7 @@ import com.google.javascript.rhino.Token;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -709,15 +710,39 @@ class Normalize implements CompilerPass {
           case FOR_OF:
             Node first = c.getFirstChild();
             if (first.isVar()) {
-              // Transform:
-              //    for (var a = 1 in b) {}
-              // to:
-              //    var a = 1; for (a in b) {};
-              Node newStatement = first;
-              // Clone just the node, to remove any initialization.
-              Node name = newStatement.getFirstChild().cloneNode();
-              first.replaceWith(name);
-              insertBeforeParent.addChildBefore(newStatement, insertBefore);
+              Node lhs = first.getFirstChild();
+              if (lhs.isDestructuringLhs()) {
+                // Transform:
+                //    for (var [a, b = 3] in c) {}
+                // to:
+                //    var a; var b; for ([a, b = 3] in c) {}
+                List<Node> lhsNodes = NodeUtil.findLhsNodesInNode(lhs);
+                for (Node name : lhsNodes) {
+                  // Add a declaration outside the for loop for the given name.
+                  // The lhs can be a string key in property shorthand.
+                  checkState(
+                      name.isName() || name.isStringKey(),
+                      "lhs in destructuring declaration should be a simple name.",
+                      name);
+                  Node newName = IR.name(name.getString()).srcref(name);
+                  Node newVar = IR.var(newName).srcref(name);
+                  insertBeforeParent.addChildBefore(newVar, insertBefore);
+                }
+
+                // Transform for (var [a, b]... ) to for ([a, b]...
+                Node destructuringPattern = lhs.removeFirstChild();
+                c.replaceChild(first, destructuringPattern);
+              } else {
+                // Transform:
+                //    for (var a = 1 in b) {}
+                // to:
+                //    var a = 1; for (a in b) {};
+                Node newStatement = first;
+                // Clone just the node, to remove any initialization.
+                Node name = newStatement.getFirstChild().cloneNode();
+                first.replaceWith(name);
+                insertBeforeParent.addChildBefore(newStatement, insertBefore);
+              }
               reportCodeChange("FOR-IN var declaration", n);
             }
             break;

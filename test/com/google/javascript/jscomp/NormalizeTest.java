@@ -321,6 +321,10 @@ public final class NormalizeTest extends CompilerTestCase {
     // Any other expression.
     test("for(init(); a < 2 ; a++) foo();",
         "init(); for(; a < 2 ; a++) foo()");
+
+    // Verify destructuring var declarations are extracted.
+    test("for (var [a, b] = [1, 2]; a < 2; a = b++) foo();",
+        "var [a, b] = [1, 2]; for (; a < 2; a = b++) foo();");
   }
 
   public void testForIn1() {
@@ -341,6 +345,11 @@ public final class NormalizeTest extends CompilerTestCase {
     // Verify block are properly introduced for ifs.
     test("if (x) for(var a in b) foo()",
         "if (x) { var a; for(a in b) foo() }");
+
+    // Verify names in destructuring declarations are individually declared.
+    test("for (var [a, b] in c) foo();", "var a; var b; for ([a, b] in c) foo();");
+
+    test("for (var {a, b} in c) foo();", "var a; var b; for ({a: a, b: b} in c) foo();");
   }
 
   public void testForIn2() {
@@ -369,6 +378,11 @@ public final class NormalizeTest extends CompilerTestCase {
     // Verify block are properly introduced for ifs.
     test("if (x) for (var a of b) foo()",
         "if (x) { var a; for (a of b) foo() }");
+
+    // Verify names in destructuring declarations are individually declared.
+    test("for (var [a, b] of c) foo();", "var a; var b; for ([a, b] of c) foo();");
+
+    test("for (var {a, b} of c) foo();", "var a; var b; for ({a: a, b: b} of c) foo();");
   }
 
   public void testWhile() {
