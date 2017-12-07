@@ -82,6 +82,7 @@ public class Linter {
     // These are necessary to make sure that suggested fixes are printed correctly.
     options.setPrettyPrint(true);
     options.setPreserveTypeAnnotations(true);
+    options.setPreferSingleQuotes(true);
 
     options.setParseJsDocDocumentation(INCLUDE_DESCRIPTIONS_WITH_WHITESPACE);
     options.setCodingConvention(new GoogleCodingConvention());
