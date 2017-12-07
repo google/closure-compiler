@@ -337,20 +337,27 @@ final class RescopeGlobalSymbols implements CompilerPass {
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       if (n.isName() && !NodeUtil.isLhsByDestructuring(n)) {
+        // NOTE: we visit names that are lhs by destructuring in {@code visitDestructuringPattern}.
         visitName(t, n, parent);
       } else if (n.isDestructuringPattern()) {
         visitDestructuringPattern(t, n, parent);
       }
     }
 
+    /**
+     * Rewrites all cross-module names inside destructuring patterns, and converts destructuring
+     * declarations containing any cross-module names to assignments.
+     */
     private void visitDestructuringPattern(NodeTraversal t, Node n, Node parent) {
       if (!(parent.isAssign() || parent.isParamList() || parent.isDestructuringLhs())) {
         // Don't handle patterns that are nested within another pattern.
         return;
       }
       List<Node> lhsNodes = NodeUtil.findLhsNodesInNode(n.getParent());
-      boolean isDeclaration = n.getParent().isDestructuringLhs();
       boolean hasCrossModuleName = false;
+      // Go through all lhs name nodes in the destructuring pattern, and call {@code visitName}
+      // on them to rescope any cross-module globals.
+      // e.g. after the loop finishes, [a, b] = [1, 2]; becomes [NS.a, NS.b] = [1, 2];
       for (Node lhs : lhsNodes) {
         if (!lhs.isName()) {
           // The LHS could also be a GETPROP or GETELEM, which get handled when the traversal hits
@@ -361,17 +368,29 @@ final class RescopeGlobalSymbols implements CompilerPass {
         hasCrossModuleName = hasCrossModuleName || isCrossModuleName(lhs.getString());
       }
 
-      // If this is a global cross-module declaration, we need to wrap it in an ASSIGN.
-      // The LET/CONST/VAR node gets removed in RemoveGlobalVarCallback.
+      // If the parent is not a destructuring lhs, this is an assignment, not a declaration, and
+      // there's nothing left to do.
+      if (!parent.isDestructuringLhs()) {
+        return;
+      }
       Node nameDeclaration = parent.getParent();
-      if (isDeclaration
-          && hasCrossModuleName
+      // If this declaration is global and has any cross-module names, rewrite it to not be a
+      // declaration. RemoveGlobalVarCallback will remove the actual var/let/const node.
+      if (hasCrossModuleName
           && (t.inGlobalScope() || (nameDeclaration.isVar() && t.inGlobalHoistScope()))) {
         Node value = n.getNext();
-        parent.removeChild(n);
-        parent.removeChild(value);
-        Node assign = IR.assign(n, value).srcref(n);
-        nameDeclaration.replaceChild(parent, assign);
+        if (value != null) {
+          // If the destructuring pattern has an rhs, convert this to be an ASSIGN.
+          parent.removeChild(n);
+          parent.removeChild(value);
+          Node assign = IR.assign(n, value).srcref(n);
+          nameDeclaration.replaceChild(parent, assign);
+        } else {
+          // In a for-in or for-of loop initializer, the rhs value is null.
+          // Move the destructuring pattern to be a direct child of the name declaration.
+          parent.removeChild(n);
+          nameDeclaration.replaceChild(parent, n);
+        }
         compiler.reportChangeToEnclosingScope(nameDeclaration);
 
         // If there are any declared names that are not cross module, they need to be declared

@@ -353,6 +353,42 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
     testSame("for (let [i] = [0]; i  < 1000; i++);");
   }
 
+  public void testForInLoops_allSameModule() {
+    assumeCrossModuleNames = false;
+    testSame("for (var i in {});");
+    testSame("for (var [a] in {});");
+    testSame("for (var {a: a} in {});");
+  }
+
+  public void testForInLoops_acrossModules() {
+    assumeCrossModuleNames = false;
+    test(createModules("for (var i in {});", "i"), new String[] {"for (_.i in {});", "_.i"});
+    test(
+        createModules("       for (var [  a, b] in {});", "a;"),
+        new String[] {"var b; for (    [_.a, b] in {});", "_.a"});
+    test(
+        createModules("       for (var {i: i, c:   c} in {});", "c"),
+        new String[] {"var i; for (    {i: i, c: _.c} in {});", "_.c"});
+  }
+
+  public void testForOfLoops_allSameModule() {
+    assumeCrossModuleNames = false;
+    testSame("for (var i of [1, 2, 3]);");
+    testSame("for (var [a] of []);");
+    testSame("for (var {a: a} of {});");
+  }
+
+  public void testForOfLoops_acrossModules() {
+    assumeCrossModuleNames = false;
+    test(createModules("for (var i of []);", "i"), new String[] {"for (_.i of []);", "_.i"});
+    test(
+        createModules("       for (var [  a, b] of []);", "a;"),
+        new String[] {"var b; for (    [_.a, b] of []);", "_.a"});
+    test(
+        createModules("       for (var {i: i, c:   c} of []);", "c"),
+        new String[] {"var i; for (    {i: i, c: _.c} of []);", "_.c"});
+  }
+
   public void testFunctionStatements() {
     test(
         "function test(){}",
