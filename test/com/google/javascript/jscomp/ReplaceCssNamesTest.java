@@ -314,7 +314,7 @@ public final class ReplaceCssNamesTest extends TypeICompilerTestCase {
     useReplacementMap = false;
     ReplaceCssNames replacer = new ReplaceCssNames(compiler, null, null);
     replacer.process(null, root);
-    assertEquals("['test',base+'-active']", compiler.toSource(root));
+    assertEquals("[\"test\",base+\"-active\"]", compiler.toSource(root));
     assertEquals("There should be no errors", 0, errorMan.getErrorCount());
     assertEquals("There should be no warnings", 0, errorMan.getWarningCount());
   }

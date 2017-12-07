@@ -899,7 +899,7 @@ public final class CompilerTest extends TestCase {
     Result result = compiler.compile(EMPTY_EXTERNS, inputs, options);
 
     assertTrue(result.success);
-    assertThat(compiler.toSource()).isEqualTo("var b;var c;b.exportSymbol('a',c);");
+    assertThat(compiler.toSource()).isEqualTo("var b;var c;b.exportSymbol(\"a\",c);");
   }
 
   public void testGenerateExportsReservesNames() {
@@ -916,7 +916,7 @@ public final class CompilerTest extends TestCase {
     Result result = compiler.compile(EMPTY_EXTERNS, inputs, options);
 
     assertTrue(result.success);
-    assertThat(compiler.toSource()).isEqualTo("var b;var c={};b.exportSymbol('a',c);");
+    assertThat(compiler.toSource()).isEqualTo("var b;var c={};b.exportSymbol(\"a\",c);");
   }
 
   private static final DiagnosticType TEST_ERROR =

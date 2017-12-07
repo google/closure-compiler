@@ -92,7 +92,7 @@ public final class BaseTranspilerTest extends TestCase {
 
   public void testCompilerSupplier_runtime() {
     String runtime = compiler.runtime("es6_runtime");
-    assertThat(runtime).contains("$jscomp.polyfill('Map'");
+    assertThat(runtime).contains("$jscomp.polyfill(\"Map\"");
     assertThat(runtime).contains("$jscomp.makeIterator");
     assertThat(runtime).contains("$jscomp.inherits");
   }

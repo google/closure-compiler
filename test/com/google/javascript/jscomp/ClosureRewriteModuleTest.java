@@ -2108,22 +2108,22 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
                 "var {doBaz: doooBaz} = goog.require('baz')"),
         },
         new String[] {
-            "goog.module('Foo');",
+            "goog.module(\"Foo\");",
             "var module$exports$Foo=function(){};",
 
-            "goog.module('bar');",
+            "goog.module(\"bar\");",
             "var module$exports$bar={};",
             "module$exports$bar.doBar=function(){};",
 
-            "goog.module('baz');",
+            "goog.module(\"baz\");",
             "var module$exports$baz={};",
             "module$exports$baz.doBaz=function(){};",
 
-            "goog.module('leaf');",
+            "goog.module(\"leaf\");",
             "var module$exports$leaf={};",
-            "var module$contents$leaf_Foo=goog.require('Foo');",
-            "var {doBar:module$contents$leaf_doBar}=goog.require('bar');",
-            "var {doBaz:module$contents$leaf_doooBaz}=goog.require('baz')"
+            "var module$contents$leaf_Foo=goog.require(\"Foo\");",
+            "var {doBar:module$contents$leaf_doBar}=goog.require(\"bar\");",
+            "var {doBaz:module$contents$leaf_doooBaz}=goog.require(\"baz\")"
         });
   }
 

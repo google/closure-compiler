@@ -1707,8 +1707,6 @@ public class CommandLineRunner extends
 
     WarningLevel wLevel = flags.warningLevel;
     wLevel.setOptionsForWarningLevel(options);
-
-    options.setPreferSingleQuotes(false);
     for (FormattingOption formattingOption : flags.formatting) {
       formattingOption.applyToOptions(options);
     }

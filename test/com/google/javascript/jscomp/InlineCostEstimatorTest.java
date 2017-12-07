@@ -61,8 +61,8 @@ public final class InlineCostEstimatorTest extends TestCase {
     checkCost("a ? 1 : 0", "xx?1:0");
     checkCost("a.b", "xx.xx");
     checkCost("new Obj()", "new xx");
-    checkCost("function a() {return 'monkey'}",
-              "function xx(){return'monkey'}");
+    checkCost("function a() {return \"monkey\"}",
+              "function xx(){return\"monkey\"}");
   }
 
   private void checkCost(String source, String example) {
