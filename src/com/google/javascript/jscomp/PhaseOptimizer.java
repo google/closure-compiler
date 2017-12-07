@@ -95,7 +95,7 @@ class PhaseOptimizer implements CompilerPass {
           PassNames.INLINE_VARIABLES,
           PassNames.DEAD_ASSIGNMENT_ELIMINATION,
           PassNames.COLLAPSE_OBJECT_LITERALS,
-          PassNames.REMOVE_UNUSED_VARS,
+          PassNames.REMOVE_UNUSED_CODE,
           PassNames.REMOVE_UNUSED_PROTOTYPE_PROPERTIES,
           PassNames.REMOVE_UNUSED_CLASS_PROPERTIES,
           PassNames.PEEPHOLE_OPTIMIZATIONS,

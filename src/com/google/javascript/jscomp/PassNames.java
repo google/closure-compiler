@@ -84,7 +84,7 @@ public final class PassNames {
   public static final String REMOVE_UNUSED_CLASS_PROPERTIES = "removeUnusedClassProperties";
   public static final String REMOVE_UNUSED_PROTOTYPE_PROPERTIES =
       "removeUnusedPrototypeProperties";
-  public static final String REMOVE_UNUSED_VARS = "removeUnusedVars";
+  public static final String REMOVE_UNUSED_CODE = "removeUnusedCode";
   public static final String REPLACE_ID_GENERATORS = "replaceIdGenerators";
   public static final String REPLACE_MESSAGES = "replaceMessages";
   public static final String RESOLVE_TYPES = "resolveTypes";

@@ -2785,7 +2785,7 @@ public final class DefaultPassConfig extends PassConfig {
 
   private PassFactory getRemoveUnusedCode(boolean isOneTimePass) {
     /** Removes variables that are never used. */
-    return new PassFactory(PassNames.REMOVE_UNUSED_VARS, isOneTimePass) {
+    return new PassFactory(PassNames.REMOVE_UNUSED_CODE, isOneTimePass) {
       @Override
       protected CompilerPass create(AbstractCompiler compiler) {
         boolean removeOnlyLocals = options.removeUnusedLocalVars && !options.removeUnusedVars;
