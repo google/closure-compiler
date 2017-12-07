@@ -83,6 +83,7 @@ public class Linter {
     options.setPrettyPrint(true);
     options.setPreserveTypeAnnotations(true);
     options.setPreferSingleQuotes(true);
+    options.setEmitUseStrict(false);
 
     options.setParseJsDocDocumentation(INCLUDE_DESCRIPTIONS_WITH_WHITESPACE);
     options.setCodingConvention(new GoogleCodingConvention());

@@ -49,6 +49,7 @@ public final class CheckRequiresAndProvidesSortedTest extends CompilerTestCase {
     options.setPrettyPrint(true);
     options.setPreserveTypeAnnotations(true);
     options.setPreferSingleQuotes(true);
+    options.setEmitUseStrict(false);
     return options;
   }
 
