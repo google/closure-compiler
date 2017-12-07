@@ -84,8 +84,7 @@ public final class RemoveUnusedVarsPrototypePropertiesTest extends CompilerTestC
            "var x = new e; x.a()");
   }
 
-  public void disabledTestObjectLiteralPrototype() {
-    // TODO(bradfordcsmith): handle properties in object literal assigned to prototype
+  public void testObjectLiteralPrototype() {
     test("function e(){}" +
             "e.prototype = {a: function(){}, b: function(){}};" +
             "var x=new e; x.a()",
@@ -463,8 +462,7 @@ public final class RemoveUnusedVarsPrototypePropertiesTest extends CompilerTestC
     "");
   }
 
-  public void disabledTestGetterBaseline() {
-    // TODO(bradfordcsmith): remove unused getters
+  public void testGetterBaseline() {
     keepGlobals = true;
     test(
         "function Foo() {}" +
@@ -481,37 +479,41 @@ public final class RemoveUnusedVarsPrototypePropertiesTest extends CompilerTestC
         "function x() { (new Foo).methodA(); }");
   }
 
-  public void disabledTestGetter1() {
-    // TODO(bradfordcsmith): implement getters and setters
+  public void testGetter1() {
     test(
-      "function Foo() {}" +
-      "Foo.prototype = { " +
-      "  get methodA() {}," +
-      "  get methodB() { x(); }" +
-      "};" +
-      "function x() { (new Foo).methodA; }",
-
-      "function Foo() {}" +
-      "Foo.prototype = {};");
+        lines(
+            "function Foo() {}",
+            "Foo.prototype = { ",
+            "  get methodA() {},",
+            "  get methodB() { x(); }",
+            "};",
+            "function x() { (new Foo).methodA; }",
+            "new Foo();"),
+        lines(
+            "function Foo() {}",
+            // x() and all methods of Foo removed.
+            "Foo.prototype = {};",
+            "new Foo();"));
 
     keepGlobals = true;
     test(
-        "function Foo() {}" +
-        "Foo.prototype = { " +
-        "  get methodA() {}," +
-        "  get methodB() { x(); }" +
-        "};" +
-        "function x() { (new Foo).methodA; }",
-
-        "function Foo() {}" +
-        "Foo.prototype = { " +
-        "  get methodA() {}" +
-        "};" +
-        "function x() { (new Foo).methodA; }");
+        lines(
+            "function Foo() {}",
+            "Foo.prototype = { ",
+            "  get methodA() {},",
+            "  get methodB() { x(); }",
+            "};",
+            "function x() { (new Foo).methodA; }"),
+        lines(
+            "function Foo() {}",
+            "Foo.prototype = { ",
+            "  get methodA() {}",
+            "};",
+            // x() keeps methodA alive
+            "function x() { (new Foo).methodA; }"));
   }
 
-  public void disabledTestGetter2() {
-    // TODO(bradfordcsmith): remove unused getters
+  public void testGetter2() {
     keepGlobals = true;
     test(
         "function Foo() {}" +

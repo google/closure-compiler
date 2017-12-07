@@ -384,19 +384,53 @@ class RemoveUnusedVars implements CompilerPass {
   }
 
   private void traverseObjectLiteral(Node objectLiteral, Scope scope) {
+    checkArgument(objectLiteral.isObjectLit(), objectLiteral);
+    // Is this an object literal that is assigned directly to a 'prototype' property?
+    if (isAssignmentToPrototype(objectLiteral.getParent())) {
+      traversePrototypeLiteral(objectLiteral, scope);
+    } else {
+      traverseNonPrototypeObjectLiteral(objectLiteral, scope);
+    }
+  }
+
+  private void traverseNonPrototypeObjectLiteral(Node objectLiteral, Scope scope) {
     for (Node propertyNode = objectLiteral.getFirstChild();
         propertyNode != null;
         propertyNode = propertyNode.getNext()) {
       if (propertyNode.isStringKey() && !propertyNode.isQuotedString()) {
         // An unquoted property name in an object literal counts as a reference to that property
         // name, because of some reflection patterns.
-        // TODO(bradfordcsmith): Handle this better for `Foo.prototype = {a: 1, b: 2}`
         markPropertyNameReferenced(propertyNode.getString());
         traverseNode(propertyNode.getFirstChild(), scope);
       } else {
         traverseNode(propertyNode, scope);
       }
     }
+  }
+
+  private void traversePrototypeLiteral(Node objectLiteral, Scope scope) {
+    for (Node propertyNode = objectLiteral.getFirstChild();
+        propertyNode != null;
+        propertyNode = propertyNode.getNext()) {
+      if (propertyNode.isComputedProp() || propertyNode.isQuotedString()) {
+        traverseChildren(propertyNode, scope);
+      } else {
+        // If we've come this far, we already know we're keeping the prototype literal itself,
+        // but we may be able to remove unreferenced properties in it.
+        considerForIndependentRemoval(
+            new RemovableBuilder()
+                .addContinuation(new Continuation(propertyNode.getOnlyChild(), scope))
+                .buildClassOrPrototypeNamedProperty(propertyNode));
+      }
+    }
+  }
+
+  private boolean isAssignmentToPrototype(Node n) {
+    return n.isAssign() && isPrototypeGetProp(n.getFirstChild());
+  }
+
+  private boolean isPrototypeGetProp(Node n) {
+    return n.isGetProp() && n.getLastChild().getString().equals("prototype");
   }
 
   private void traverseCatch(Node catchNode, Scope scope) {
@@ -804,7 +838,7 @@ class RemoveUnusedVars implements CompilerPass {
           considerForIndependentRemoval(
               new RemovableBuilder()
                   .addContinuation(new Continuation(member, scope))
-                  .buildMethodDefinition(member));
+                  .buildClassOrPrototypeNamedProperty(member));
         } else {
           checkState(member.isComputedProp());
           traverseChildren(member, scope);
@@ -1231,12 +1265,12 @@ class RemoveUnusedVars implements CompilerPass {
       return isPrototypeObjectPropertyAssignment && isNamedPropertyAssignment();
     }
 
-    boolean isMethodDeclaration() {
+    boolean isClassOrPrototypeNamedProperty() {
       return false;
     }
 
     boolean isIndependentlyRemovableNamedProperty() {
-      return isPrototypeObjectNamedPropertyAssignment() || isMethodDeclaration();
+      return isPrototypeObjectNamedPropertyAssignment() || isClassOrPrototypeNamedProperty();
     }
   }
 
@@ -1275,10 +1309,14 @@ class RemoveUnusedVars implements CompilerPass {
       return new NamedClassExpression(this, classNode);
     }
 
-    MethodDefinition buildMethodDefinition(Node methodNode) {
-      checkArgument(methodNode.isMemberFunctionDef() || NodeUtil.isGetOrSetKey(methodNode));
-      this.propertyName = methodNode.getString();
-      return new MethodDefinition(this, methodNode);
+    ClassOrPrototypeNamedProperty buildClassOrPrototypeNamedProperty(Node propertyNode) {
+      checkArgument(
+          propertyNode.isMemberFunctionDef()
+              || NodeUtil.isGetOrSetKey(propertyNode)
+              || (propertyNode.isStringKey() && !propertyNode.isQuotedString()),
+          propertyNode);
+      this.propertyName = propertyNode.getString();
+      return new ClassOrPrototypeNamedProperty(this, propertyNode);
     }
 
     FunctionDeclaration buildFunctionDeclaration(Node functionNode) {
@@ -1443,22 +1481,22 @@ class RemoveUnusedVars implements CompilerPass {
     }
   }
 
-  private class MethodDefinition extends Removable {
-    final Node methodNode;
+  private class ClassOrPrototypeNamedProperty extends Removable {
+    final Node propertyNode;
 
-    MethodDefinition(RemovableBuilder builder, Node methodNode) {
+    ClassOrPrototypeNamedProperty(RemovableBuilder builder, Node propertyNode) {
       super(builder);
-      this.methodNode = methodNode;
+      this.propertyNode = propertyNode;
     }
 
     @Override
-    boolean isMethodDeclaration() {
+    boolean isClassOrPrototypeNamedProperty() {
       return true;
     }
 
     @Override
     void removeInternal(AbstractCompiler compiler) {
-      NodeUtil.deleteNode(methodNode, compiler);
+      NodeUtil.deleteNode(propertyNode, compiler);
     }
   }
 
