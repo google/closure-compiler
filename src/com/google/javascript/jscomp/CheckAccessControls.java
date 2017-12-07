@@ -96,8 +96,8 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
       BAD_PROPERTY_OVERRIDE_IN_FILE_WITH_FILEOVERVIEW_VISIBILITY =
       DiagnosticType.error(
           "JSC_BAD_PROPERTY_OVERRIDE_IN_FILE_WITH_FILEOVERVIEW_VISIBILITY",
-          "Overridden property {0} in file with fileoverview visibility {1}" +
-          " must explicitly redeclare superclass visibility");
+          "Overridden property {0} in file with fileoverview visibility {1}"
+              + " must explicitly redeclare superclass visibility");
 
   static final DiagnosticType PRIVATE_OVERRIDE =
       DiagnosticType.warning(
@@ -158,10 +158,12 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
     collectPass.process(externs, root);
     defaultVisibilityForFiles = collectPass.getFileOverviewVisibilityMap();
 
-    // TODO(tbreisacher): Switch this to use traverseEs6 instead of traverseTyped (which uses a
-    // ScopeCreator that is not ES6-aware).
-    NodeTraversal.traverseTyped(compiler, externs, this);
-    NodeTraversal.traverseTyped(compiler, root, this);
+    NodeTraversal t =
+        new NodeTraversal(compiler, this, SyntacticScopeCreator.makeUntyped(compiler));
+    t.traverse(externs);
+
+    t = new NodeTraversal(compiler, this, SyntacticScopeCreator.makeUntyped(compiler));
+    t.traverse(root);
   }
 
   @Override
@@ -171,9 +173,9 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
     collectPass.hotSwapScript(scriptRoot, originalRoot);
     defaultVisibilityForFiles = collectPass.getFileOverviewVisibilityMap();
 
-    // TODO(tbreisacher): Switch this to use traverseEs6 instead of traverseTyped (which uses a
-    // ScopeCreator that is not ES6-aware).
-    NodeTraversal.traverseTyped(compiler, scriptRoot, this);
+    NodeTraversal t =
+        new NodeTraversal(compiler, this, SyntacticScopeCreator.makeUntyped(compiler));
+    t.traverse(scriptRoot);
   }
 
   @Override
@@ -232,8 +234,7 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
         // type off the "a".
         return normalizeClassType(lValue.getTypeI());
       }
-    } else if (NodeUtil.isFunctionDeclaration(n) ||
-               parent.isName()) {
+    } else if (NodeUtil.isFunctionDeclaration(n) || parent.isName()) {
       return normalizeClassType(n.getTypeI());
     } else if (parent.isStringKey()
         || parent.isGetterDef() || parent.isSetterDef()) {
@@ -308,8 +309,7 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
     if (type != null) {
       String deprecationInfo = getTypeDeprecationInfo(type);
 
-      if (deprecationInfo != null &&
-          shouldEmitDeprecationWarning(t, n, parent)) {
+      if (deprecationInfo != null && shouldEmitDeprecationWarning(t, n, parent)) {
 
         if (!deprecationInfo.isEmpty()) {
             compiler.report(
@@ -328,16 +328,14 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
    */
   private void checkNameDeprecation(NodeTraversal t, Node n, Node parent) {
     // Don't bother checking definitions or constructors.
-    if (parent.isFunction() || parent.isVar() ||
-        parent.isNew()) {
+    if (parent.isFunction() || parent.isVar() || parent.isNew()) {
       return;
     }
 
     Var var = t.getScope().getVar(n.getString());
     JSDocInfo docInfo = var == null ? null : var.getJSDocInfo();
 
-    if (docInfo != null && docInfo.isDeprecated() &&
-        shouldEmitDeprecationWarning(t, n, parent)) {
+    if (docInfo != null && docInfo.isDeprecated() && shouldEmitDeprecationWarning(t, n, parent)) {
       if (docInfo.getDeprecationReason() != null) {
         compiler.report(
             t.makeError(n, DEPRECATED_NAME_REASON, n.getString(),
@@ -366,8 +364,7 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
       String deprecationInfo
           = getPropertyDeprecationInfo(objectType, propertyName);
 
-      if (deprecationInfo != null &&
-          shouldEmitDeprecationWarning(t, n, parent)) {
+      if (deprecationInfo != null && shouldEmitDeprecationWarning(t, n, parent)) {
 
         if (!deprecationInfo.isEmpty()) {
           compiler.report(
@@ -910,21 +907,18 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
     // 2) Instantiations of deprecated classes.
     // For now, we just let everything else by.
     if (t.inGlobalScope()) {
-      if (!((parent.isCall() && parent.getFirstChild() == n) ||
-              n.isNew())) {
+      if (!((parent.isCall() && parent.getFirstChild() == n) || n.isNew())) {
         return false;
       }
     }
 
     // We can always assign to a deprecated property, to keep it up to date.
-    if (n.isGetProp() && n == parent.getFirstChild() &&
-        NodeUtil.isAssignmentOp(parent)) {
+    if (n.isGetProp() && n == parent.getFirstChild() && NodeUtil.isAssignmentOp(parent)) {
       return false;
     }
 
     // Don't warn if the node is just declaring the property, not reading it.
-    if (n.isGetProp() && parent.isExprResult() &&
-        n.getJSDocInfo().isDeprecated()) {
+    if (n.isGetProp() && parent.isExprResult() && n.getJSDocInfo().isDeprecated()) {
       return false;
     }
 
