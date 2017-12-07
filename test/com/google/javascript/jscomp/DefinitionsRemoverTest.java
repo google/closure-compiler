@@ -24,7 +24,7 @@ import java.util.List;
 /**
  * Test for {@link DefinitionsRemover}. Basically test for the simple removal cases. More
  * complicated cases are tested by the clients of {@link DefinitionsRemover} such as {@link
- * PureFunctionIdentifierTest} and {@link RemoveUnusedVarsTest}.
+ * PureFunctionIdentifierTest} and {@link RemoveUnusedCodeTest}.
  *
  */
 public final class DefinitionsRemoverTest extends CompilerTestCase {

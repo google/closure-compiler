@@ -86,7 +86,7 @@ import javax.annotation.Nullable;
  *
  * @author nicksantos@google.com (Nick Santos)
  */
-class RemoveUnusedVars implements CompilerPass {
+class RemoveUnusedCode implements CompilerPass {
 
   // Properties that are implicitly used as part of the JS language.
   private static final ImmutableSet<String> IMPLICITLY_USED_PROPERTIES =
@@ -130,7 +130,7 @@ class RemoveUnusedVars implements CompilerPass {
   private final boolean removeUnusedPrototypeProperties;
   private final boolean allowRemovalOfExternProperties;
 
-  RemoveUnusedVars(Builder builder) {
+  RemoveUnusedCode(Builder builder) {
     this.compiler = builder.compiler;
     this.codingConvention = builder.compiler.getCodingConvention();
     this.removeGlobals = builder.removeGlobals;
@@ -176,8 +176,8 @@ class RemoveUnusedVars implements CompilerPass {
       return this;
     }
 
-    RemoveUnusedVars build() {
-      return new RemoveUnusedVars(this);
+    RemoveUnusedCode build() {
+      return new RemoveUnusedCode(this);
     }
   }
 

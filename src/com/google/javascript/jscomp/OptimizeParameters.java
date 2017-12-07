@@ -191,7 +191,7 @@ class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompile
         return;
       }
 
-      // NOTE: RemoveUnusedVars removes any trailing unused formals, so we don't need to
+      // NOTE: RemoveUnusedCode removes any trailing unused formals, so we don't need to
       // do for that case.
 
       BitSet unremovable = ((BitSet) used.clone());

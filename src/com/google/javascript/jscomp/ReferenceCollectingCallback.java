@@ -266,7 +266,7 @@ public final class ReferenceCollectingCallback
     // is first referenced, so that the reference lists are in the right order.
     //
     // TODO(nicksantos): Maybe generalize this to a continuation mechanism
-    // like in RemoveUnusedVars.
+    // like in RemoveUnusedCode.
     if (NodeUtil.isHoistedFunctionDeclaration(n)) {
       Node nameNode = n.getFirstChild();
       Var functionVar = nodeTraversal.getScope().getVar(nameNode.getString());

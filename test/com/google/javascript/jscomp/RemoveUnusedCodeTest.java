@@ -18,12 +18,12 @@ package com.google.javascript.jscomp;
 
 import com.google.javascript.rhino.Node;
 
-public final class RemoveUnusedVarsTest extends CompilerTestCase {
+public final class RemoveUnusedCodeTest extends CompilerTestCase {
 
   private boolean removeGlobal;
   private boolean preserveFunctionExpressionNames;
 
-  public RemoveUnusedVarsTest() {
+  public RemoveUnusedCodeTest() {
     // Set up externs to be used in the test cases.
     super("function alert() {} var externVar;");
   }
@@ -46,7 +46,7 @@ public final class RemoveUnusedVarsTest extends CompilerTestCase {
     return new CompilerPass() {
       @Override
       public void process(Node externs, Node root) {
-        new RemoveUnusedVars.Builder(compiler)
+        new RemoveUnusedCode.Builder(compiler)
             .removeGlobals(removeGlobal)
             .preserveFunctionExpressionNames(preserveFunctionExpressionNames)
             .build()

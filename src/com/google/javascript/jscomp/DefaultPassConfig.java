@@ -815,7 +815,7 @@ public final class DefaultPassConfig extends PassConfig {
       // After inlining some of the variable uses, some variables are unused.
       // Re-run remove unused vars to clean it up.
       if (options.removeUnusedVars || options.removeUnusedLocalVars) {
-        passes.add(lastRemoveUnusedVars());
+        passes.add(getRemoveUnusedCodeOnce());
       }
     }
 
@@ -1002,7 +1002,7 @@ public final class DefaultPassConfig extends PassConfig {
     }
 
     if (options.removeUnusedVars || options.removeUnusedLocalVars) {
-      passes.add(getRemoveUnusedVars());
+      passes.add(getRemoveUnusedCode());
     }
 
     if (options.j2clPassMode.shouldAddJ2clPasses()) {
@@ -2496,7 +2496,7 @@ public final class DefaultPassConfig extends PassConfig {
 
   /**
    * Optimizes unused function arguments, unused return values, and inlines constant parameters.
-   * Also runs RemoveUnusedVars.
+   * Also runs RemoveUnusedCode.
    */
   private final PassFactory optimizeCalls =
       new PassFactory(PassNames.OPTIMIZE_CALLS, false) {
@@ -2775,15 +2775,15 @@ public final class DefaultPassConfig extends PassConfig {
         }
       };
 
-  private PassFactory getRemoveUnusedVars() {
-    return getRemoveUnusedVars(false /* isOneTimePass */);
+  private PassFactory getRemoveUnusedCode() {
+    return getRemoveUnusedCode(false /* isOneTimePass */);
   }
 
-  private PassFactory lastRemoveUnusedVars() {
-    return getRemoveUnusedVars(true /* isOneTimePass */);
+  private PassFactory getRemoveUnusedCodeOnce() {
+    return getRemoveUnusedCode(true /* isOneTimePass */);
   }
 
-  private PassFactory getRemoveUnusedVars(boolean isOneTimePass) {
+  private PassFactory getRemoveUnusedCode(boolean isOneTimePass) {
     /** Removes variables that are never used. */
     return new PassFactory(PassNames.REMOVE_UNUSED_VARS, isOneTimePass) {
       @Override
@@ -2791,7 +2791,7 @@ public final class DefaultPassConfig extends PassConfig {
         boolean removeOnlyLocals = options.removeUnusedLocalVars && !options.removeUnusedVars;
         boolean preserveAnonymousFunctionNames =
             options.anonymousFunctionNaming != AnonymousFunctionNamingPolicy.OFF;
-        return new RemoveUnusedVars.Builder(compiler)
+        return new RemoveUnusedCode.Builder(compiler)
             .removeGlobals(!removeOnlyLocals)
             .preserveFunctionExpressionNames(preserveAnonymousFunctionNames)
             .removeUnusedPrototypeProperties(options.removeUnusedPrototypeProperties)

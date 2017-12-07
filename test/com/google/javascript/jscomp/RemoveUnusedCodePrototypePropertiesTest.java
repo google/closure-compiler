@@ -20,17 +20,17 @@ import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.rhino.Node;
 
 /**
- * Tests for {@link RemoveUnusedVars} that cover functionality originally in
+ * Tests for {@link RemoveUnusedCode} that cover functionality originally in
  * {@link RemoveUnusedPrototypeProperties}.
  */
-public final class RemoveUnusedVarsPrototypePropertiesTest extends CompilerTestCase {
+public final class RemoveUnusedCodePrototypePropertiesTest extends CompilerTestCase {
   private static final String EXTERNS =
       MINIMAL_EXTERNS + "IFoo.prototype.bar; var mExtern; mExtern.bExtern; mExtern['cExtern'];";
 
   private boolean keepGlobals = false;
   private boolean allowRemovalOfExternProperties = false;
 
-  public RemoveUnusedVarsPrototypePropertiesTest() {
+  public RemoveUnusedCodePrototypePropertiesTest() {
     super(EXTERNS);
   }
 
@@ -44,7 +44,7 @@ public final class RemoveUnusedVarsPrototypePropertiesTest extends CompilerTestC
     return new CompilerPass() {
       @Override
       public void process(Node externs, Node root) {
-        new RemoveUnusedVars.Builder(compiler)
+        new RemoveUnusedCode.Builder(compiler)
             .removeGlobals(!keepGlobals)
             .removeUnusedPrototypeProperties(true)
             .allowRemovalOfExternProperties(allowRemovalOfExternProperties)

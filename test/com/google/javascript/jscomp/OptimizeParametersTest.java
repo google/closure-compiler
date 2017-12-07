@@ -18,7 +18,7 @@
 package com.google.javascript.jscomp;
 
 /**
- * Tests for {@link OptimizeParameters}.  Note: interaction with {@link RemoveUnusedVars} is
+ * Tests for {@link OptimizeParameters}.  Note: interaction with {@link RemoveUnusedCode} is
  * tested in {@link OptimizeCallsTest}.
  */
 public final class OptimizeParametersTest extends CompilerTestCase {

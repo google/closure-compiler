@@ -50,7 +50,7 @@ public final class OptimizeCallsTest extends CompilerTestCase {
         defFinder.process(externs, root);
 
         new PureFunctionIdentifier(compiler, defFinder).process(externs, root);
-        new RemoveUnusedVars.Builder(compiler).removeGlobals(true).build().process(externs, root);
+        new RemoveUnusedCode.Builder(compiler).removeGlobals(true).build().process(externs, root);
 
         final OptimizeCalls passes = new OptimizeCalls(compiler);
         passes.addPass(new OptimizeReturns(compiler));
@@ -204,7 +204,7 @@ public final class OptimizeCallsTest extends CompilerTestCase {
 
   public void testCallSiteInteraction_constructors1() {
     // NOTE: Ctor1 used trailing parameter is removed by
-    // RemoveUnusedVars
+    // RemoveUnusedCode
 
     // For now, goog.inherits prevents optimizations
     test(
