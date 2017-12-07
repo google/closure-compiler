@@ -51,7 +51,7 @@ public final class JsFileParser extends JsFileLineParser {
       // but fails to match without "use strict"; since we look for semicolon, not open brace.
       Pattern.compile(
           "(?:^|;)(?:[a-zA-Z0-9$_,:{}\\s]+=)?\\s*"
-              + "goog\\.(provide|module|require|addDependency)\\s*\\((.*?)\\)");
+              + "goog\\.(provide|module|require|requireType|addDependency)\\s*\\((.*?)\\)");
 
   /**
    * Pattern for matching import ... from './path/to/file'.
@@ -99,6 +99,7 @@ public final class JsFileParser extends JsFileLineParser {
   /** The info for the file we are currently parsing. */
   private List<String> provides;
   private List<String> requires;
+  private List<String> weakRequires;
   private boolean fileHasProvidesOrRequires;
   private ModuleLoader loader = ModuleLoader.EMPTY;
   private ModuleLoader.ModulePath file;
@@ -173,6 +174,7 @@ public final class JsFileParser extends JsFileLineParser {
       String closureRelativePath, Reader fileContents) {
     this.provides = new ArrayList<>();
     this.requires = new ArrayList<>();
+    this.weakRequires = new ArrayList<>();
     this.fileHasProvidesOrRequires = false;
     this.file = loader.resolve(filePath);
     this.moduleType = ModuleType.NON_MODULE;
@@ -198,8 +200,13 @@ public final class JsFileParser extends JsFileLineParser {
         // Nothing to do here.
     }
 
-    DependencyInfo dependencyInfo = new SimpleDependencyInfo(
-        closureRelativePath, filePath, provides, requires, loadFlags);
+    DependencyInfo dependencyInfo =
+        new SimpleDependencyInfo.Builder(closureRelativePath, filePath)
+            .setProvides(provides)
+            .setRequires(requires)
+            .setWeakRequires(weakRequires)
+            .setLoadFlags(loadFlags)
+            .build();
     if (logger.isLoggable(Level.FINE)) {
       logger.fine("DepInfo: " + dependencyInfo);
     }
@@ -243,9 +250,10 @@ public final class JsFileParser extends JsFileLineParser {
         }
 
         // See if it's a require or provide.
-        char firstChar = googMatcher.group(1).charAt(0);
-        boolean isProvide = (firstChar == 'p' || firstChar == 'm');
+        String methodName = googMatcher.group(1);
+        char firstChar = methodName.charAt(0);
         boolean isModule =  firstChar == 'm';
+        boolean isProvide = (firstChar == 'p' || isModule);
         boolean isRequire = firstChar == 'r';
 
         if (isModule && this.moduleType != ModuleType.WRAPPED_GOOG_MODULE) {
@@ -257,10 +265,12 @@ public final class JsFileParser extends JsFileLineParser {
           String arg = parseJsString(googMatcher.group(2));
           // Add the dependency.
           if (isRequire) {
-            // goog is always implicit.
-            // TODO(nicksantos): I'm pretty sure we don't need this anymore.
-            // Remove this later.
-            if (!"goog".equals(arg)) {
+            if ("requireType".equals(methodName)) {
+              weakRequires.add(arg);
+            } else if (!"goog".equals(arg)) {
+              // goog is always implicit.
+              // TODO(nicksantos): I'm pretty sure we don't need this anymore.
+              // Remove this later.
               requires.add(arg);
             }
           } else {

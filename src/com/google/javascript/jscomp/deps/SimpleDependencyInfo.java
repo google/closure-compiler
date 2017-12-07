@@ -39,6 +39,9 @@ public final class SimpleDependencyInfo implements DependencyInfo {
   /** A list of required symbols. */
   private final ImmutableList<String> requires;
 
+  /** A list of required symbols. */
+  private final ImmutableList<String> weakRequires;
+
   /** A map of flags required to load this file. */
   private final ImmutableMap<String, String> loadFlags;
 
@@ -49,6 +52,7 @@ public final class SimpleDependencyInfo implements DependencyInfo {
   private final String pathOfDefiningFile;
 
   // TODO(sdh): migrate callers away and deprecate this constructor
+  @Deprecated
   public SimpleDependencyInfo(
       String srcPathRelativeToClosure, String pathOfDefiningFile,
       List<String> provides, List<String> requires, boolean isModule) {
@@ -56,25 +60,90 @@ public final class SimpleDependencyInfo implements DependencyInfo {
   }
 
   /**
-   * Constructs a DependencyInfo object with the given list of provides and
-   * requires. This does *not* copy the given collections, but uses them directly.
+   * Constructs a DependencyInfo object with the given list of provides and requires. This does
+   * *not* copy the given collections, but uses them directly.
    *
-   * @param srcPathRelativeToClosure The closure-relative path of the file
-   *     associated with this DependencyInfo.
-   * @param pathOfDefiningFile The path to the file from which this dependency
-   *     information was extracted.
+   * @param srcPathRelativeToClosure The closure-relative path of the file associated with this
+   *     DependencyInfo.
+   * @param pathOfDefiningFile The path to the file from which this dependency information was
+   *     extracted.
    * @param provides List of provided symbols.
    * @param requires List of required symbols.
    * @param loadFlags Map of file-loading information.
    */
+  @Deprecated
   public SimpleDependencyInfo(
-      String srcPathRelativeToClosure, String pathOfDefiningFile,
-      Collection<String> provides, Collection<String> requires, Map<String, String> loadFlags) {
+      String srcPathRelativeToClosure,
+      String pathOfDefiningFile,
+      Collection<String> provides,
+      Collection<String> requires,
+      Map<String, String> loadFlags) {
+    this(srcPathRelativeToClosure, pathOfDefiningFile, provides, requires, null, loadFlags);
+  }
+
+  /**
+   * Constructs a DependencyInfo object with the given list of provides and requires. This does
+   * *not* copy the given collections, but uses them directly.
+   */
+  private SimpleDependencyInfo(
+      String srcPathRelativeToClosure,
+      String pathOfDefiningFile,
+      Collection<String> provides,
+      Collection<String> requires,
+      Collection<String> weakRequires,
+      Map<String, String> loadFlags) {
     this.srcPathRelativeToClosure = srcPathRelativeToClosure;
     this.pathOfDefiningFile = pathOfDefiningFile;
     this.provides = provides != null ? ImmutableList.copyOf(provides) : ImmutableList.<String>of();
     this.requires = requires != null ? ImmutableList.copyOf(requires) : ImmutableList.<String>of();
+    this.weakRequires =
+        weakRequires != null ? ImmutableList.copyOf(weakRequires) : ImmutableList.<String>of();
     this.loadFlags = ImmutableMap.copyOf(loadFlags);
+  }
+
+  // TODO(blickly): Convert this to @AutoValue.Builder
+  static class Builder {
+    private String srcPathRelativeToClosure;
+    private String pathOfDefiningFile;
+    private Collection<String> provides;
+    private Collection<String> requires;
+    private Collection<String> weakRequires;
+    private Map<String, String> loadFlags = ImmutableMap.of();
+
+    Builder(String srcPathRelativeToClosure, String pathOfDefiningFile) {
+      this.srcPathRelativeToClosure = srcPathRelativeToClosure;
+      this.pathOfDefiningFile = pathOfDefiningFile;
+    }
+
+    Builder setProvides(Collection<String> provides) {
+      this.provides = provides;
+      return this;
+    }
+
+    Builder setRequires(Collection<String> requires) {
+      this.requires = requires;
+      return this;
+    }
+
+    Builder setWeakRequires(Collection<String> weakRequires) {
+      this.weakRequires = weakRequires;
+      return this;
+    }
+
+    Builder setLoadFlags(Map<String, String> loadFlags) {
+      this.loadFlags = loadFlags;
+      return this;
+    }
+
+    SimpleDependencyInfo build() {
+      return new SimpleDependencyInfo(
+          srcPathRelativeToClosure,
+          pathOfDefiningFile,
+          provides,
+          requires,
+          weakRequires,
+          loadFlags);
+    }
   }
 
   @Override
@@ -112,30 +181,36 @@ public final class SimpleDependencyInfo implements DependencyInfo {
   }
 
   @Override
+  public ImmutableList<String> getWeakRequires() {
+    return weakRequires;
+  }
+
+  @Override
   public boolean equals(Object obj) {
     if (!(obj instanceof SimpleDependencyInfo)) {
       return false;
     }
     SimpleDependencyInfo other = (SimpleDependencyInfo) obj;
-    return Objects.equals(other.srcPathRelativeToClosure,
-            srcPathRelativeToClosure) &&
-        Objects.equals(other.pathOfDefiningFile, pathOfDefiningFile) &&
-        Objects.equals(other.requires, this.requires) &&
-        Objects.equals(other.provides, this.provides) &&
-        Objects.equals(other.loadFlags, this.loadFlags);
+    return Objects.equals(other.srcPathRelativeToClosure, srcPathRelativeToClosure)
+        && Objects.equals(other.pathOfDefiningFile, pathOfDefiningFile)
+        && Objects.equals(other.requires, this.requires)
+        && Objects.equals(other.weakRequires, this.weakRequires)
+        && Objects.equals(other.provides, this.provides)
+        && Objects.equals(other.loadFlags, this.loadFlags);
   }
 
   @Override
   public String toString() {
-    return SimpleFormat.format("DependencyInfo(relativePath='%1$s', path='%2$s', "
-        + "provides=%3$s, requires=%4$s, loadFlags=%5$s)", srcPathRelativeToClosure,
-        pathOfDefiningFile, provides, requires, loadFlags);
+    return SimpleFormat.format(
+        "DependencyInfo(relativePath='%1$s', path='%2$s', "
+            + "provides=%3$s, requires=%4$s, weakRequires=%5$s, loadFlags=%6$s)",
+        srcPathRelativeToClosure, pathOfDefiningFile, provides, requires, weakRequires, loadFlags);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(provides, requires,
-        srcPathRelativeToClosure, pathOfDefiningFile, loadFlags);
+    return Objects.hash(
+        provides, requires, weakRequires, srcPathRelativeToClosure, pathOfDefiningFile, loadFlags);
   }
 
   public static final SimpleDependencyInfo EMPTY = new SimpleDependencyInfo(

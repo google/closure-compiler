@@ -18,9 +18,9 @@ package com.google.javascript.jscomp.deps;
 
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
-
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -46,6 +46,9 @@ public interface DependencyInfo extends Serializable {
 
   /** Gets the symbols required by this file. */
   Collection<String> getRequires();
+
+  /** Gets the symbols weakly required by this file. (i.e. for typechecking only) */
+  ImmutableCollection<String> getWeakRequires();
 
   /** Gets the loading information for this file. */
   ImmutableMap<String, String> getLoadFlags();

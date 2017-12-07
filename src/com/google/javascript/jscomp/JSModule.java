@@ -95,6 +95,12 @@ public final class JSModule implements DependencyInfo, Serializable {
   }
 
   @Override
+  public ImmutableList<String> getWeakRequires() {
+    // TODO(blickly): Actually allow weak module deps
+    return ImmutableList.of();
+  }
+
+  @Override
   public String getPathRelativeToClosureBase() {
     throw new UnsupportedOperationException();
   }

@@ -21,6 +21,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -167,6 +168,11 @@ public class CompilerInput implements SourceAst, DependencyInfo {
     }
 
     return getDependencyInfo().getRequires();
+  }
+
+  @Override
+  public ImmutableCollection<String> getWeakRequires() {
+    return getDependencyInfo().getWeakRequires();
   }
 
   /**

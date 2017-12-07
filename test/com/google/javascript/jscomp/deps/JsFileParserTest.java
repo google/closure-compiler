@@ -113,6 +113,42 @@ public final class JsFileParserTest extends TestCase {
     assertDeps(expected, result);
   }
 
+  public void testParseGoogModuleWithWeakDeps() {
+    String contents =
+        ""
+            + "goog.module('yes1');\n"
+            + "var yes2=goog.requireType('yes2');\n"
+            + "var C=goog.requireType(\"a.b.C\");\n"
+            + "const {\n  D,\n  E\n}=goog.requireType(\"a.b.d\");";
+
+    DependencyInfo expected =
+        new SimpleDependencyInfo.Builder(CLOSURE_PATH, SRC_PATH)
+            .setProvides(ImmutableList.of("yes1"))
+            .setRequires(ImmutableList.of())
+            .setWeakRequires(ImmutableList.of("yes2", "a.b.C", "a.b.d"))
+            .setLoadFlags(ImmutableMap.of("module", "goog"))
+            .build();
+
+    DependencyInfo result = parser.parseFile(SRC_PATH, CLOSURE_PATH, contents);
+
+    assertDeps(expected, result);
+  }
+
+  public void testParseScriptWithWeakDeps() {
+    String contents = "" + "goog.provide('yes1');\n" + "goog.requireType('a.b.C');";
+
+    DependencyInfo expected =
+        new SimpleDependencyInfo.Builder(CLOSURE_PATH, SRC_PATH)
+            .setProvides(ImmutableList.of("yes1"))
+            .setRequires(ImmutableList.of())
+            .setWeakRequires(ImmutableList.of("a.b.C"))
+            .build();
+
+    DependencyInfo result = parser.parseFile(SRC_PATH, CLOSURE_PATH, contents);
+
+    assertDeps(expected, result);
+  }
+
   /**
    * Tests:
    *  -Correct recording of what was parsed.
