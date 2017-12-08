@@ -1809,6 +1809,9 @@ public final class ParserTest extends BaseJSTypeTestCase {
   public void testBlockScopeFunctionDeclaration() {
     expectFeatures(Feature.BLOCK_SCOPED_FUNCTION_DECLARATION);
     parse("if (1) { function f() {} }");
+    // NOTE: currently we set this feature for all function declarations, regardless
+    // of whether they're scoped to the global scope, or a function, or a different block.
+    parse("function f() {}");
 
     expectFeatures();
     Node result = parse("if (1) { var f = function() {} }");
