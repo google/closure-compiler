@@ -1719,10 +1719,11 @@ public final class SymbolTable {
       if (result == null) {
         // If we can't find this type, it might be a reference to a
         // primitive type (like {string}). Autobox it to check.
+        // Alternatively it can be a type from externs.
         JSType type = typeRegistry.getType(dottedName);
         JSType autobox = type == null ? null : type.autoboxesTo();
         result = autobox == null
-            ? null : getSymbolForTypeHelper(autobox, true);
+            ? getSymbolForTypeHelper(type, true) : getSymbolForTypeHelper(autobox, true);
       }
       return result;
     }
