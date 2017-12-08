@@ -1285,9 +1285,23 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
             "use(Foo.baz);"));
   }
 
+  public void testStaticInheritance_superclassIsStaticProperty() {
+    test(
+        lines(
+            "class Foo {}",
+            "Foo.Builder = class {}",
+            "Foo.Builder.baz = 3;",
+            "var Bar = class extends Foo.Builder {}",
+            "use(Bar.baz);"),
+        lines(
+            "class Foo {}",
+            "Foo.Builder = class {}",
+            "Foo.Builder.baz = 3;",
+            "var Bar = class extends Foo.Builder {}",
+            "use(Foo.Builder.baz);"));
+  }
+
   public void testAliasForSuperclassNamespace_withStaticInheritance() {
-    // TODO(lharker): The last line should be "use(Foo.baz);"
-    // Make sure GlobalNamespace correctly handles aliases for superclasses.
     test(
         lines(
             "var ns = {};",
@@ -1304,6 +1318,6 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
             "Foo.Builder.baz = 3;",
             "ns.clazz = null;",
             "var Bar = class extends Foo.Builder {}",
-            "use(Bar.baz);"));
+            "use(Foo.Builder.baz);"));
   }
 }
