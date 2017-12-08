@@ -268,7 +268,10 @@ public class CheckMissingAndExtraRequires implements HotSwapCompilerPass, NodeTr
       String namespace = entry.getKey();
       Node node = entry.getValue();
       boolean isMissing = isMissingRequire(namespace, node);
-      if (isMissing && (namespace.endsWith(".call") || namespace.endsWith(".apply"))) {
+      if (isMissing
+          && (namespace.endsWith(".call")
+              || namespace.endsWith(".apply")
+              || namespace.endsWith(".bind"))) {
         // assume that the user is calling the corresponding built in function and only look for
         // imports 'above' it.
         String namespaceMinusApply = namespace.substring(0, namespace.lastIndexOf('.'));

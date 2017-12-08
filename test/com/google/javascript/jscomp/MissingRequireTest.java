@@ -413,6 +413,19 @@ public final class MissingRequireTest extends CompilerTestCase {
     testSame("goog.require('foo.bar'); " + js);
   }
 
+  public void testDotBind() {
+    String js = "foo.bar.baz.bind(this);";
+    testMissingRequireStrict(js, "missing require: 'foo.bar.baz'");
+
+    List<SourceFile> externs = ImmutableList.of(SourceFile.fromCode("externs",
+        "var foo;"));
+    testSame(externs(externs), srcs(js));
+
+    testSame("goog.require('foo.bar.baz.bind'); " + js);
+    testSame("goog.require('foo.bar.baz'); " + js);
+    testSame("goog.require('foo.bar'); " + js);
+  }
+
   public void testCallLocal() {
     testSame("function f(foo) { foo.bar.baz(); }");
   }
