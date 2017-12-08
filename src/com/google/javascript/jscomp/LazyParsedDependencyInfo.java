@@ -18,13 +18,12 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import com.google.common.collect.ImmutableCollection;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.deps.DependencyInfo;
 import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
-import java.util.Collection;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -78,17 +77,17 @@ public class LazyParsedDependencyInfo implements DependencyInfo {
   }
 
   @Override
-  public Collection<String> getRequires() {
+  public ImmutableList<String> getRequires() {
     return delegate.getRequires();
   }
 
   @Override
-  public ImmutableCollection<String> getWeakRequires() {
+  public ImmutableList<String> getWeakRequires() {
     return delegate.getWeakRequires();
   }
 
   @Override
-  public Collection<String> getProvides() {
+  public ImmutableList<String> getProvides() {
     return delegate.getProvides();
   }
 

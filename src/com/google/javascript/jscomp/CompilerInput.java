@@ -35,7 +35,6 @@ import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -162,16 +161,16 @@ public class CompilerInput implements SourceAst, DependencyInfo {
 
   /** Gets a list of types depended on by this input. */
   @Override
-  public Collection<String> getRequires() {
+  public ImmutableList<String> getRequires() {
     if (hasFullParseDependencyInfo) {
-      return orderedRequires;
+      return ImmutableList.copyOf(orderedRequires);
     }
 
     return getDependencyInfo().getRequires();
   }
 
   @Override
-  public ImmutableCollection<String> getWeakRequires() {
+  public ImmutableList<String> getWeakRequires() {
     return getDependencyInfo().getWeakRequires();
   }
 
@@ -180,7 +179,7 @@ public class CompilerInput implements SourceAst, DependencyInfo {
    * but does not attempt to regenerate the dependency information.
    * Typically this occurs from module rewriting.
    */
-  Collection<String> getKnownRequires() {
+  ImmutableCollection<String> getKnownRequires() {
     return concat(
         dependencyInfo != null ? dependencyInfo.getRequires() : ImmutableList.<String>of(),
         extraRequires);
@@ -188,7 +187,7 @@ public class CompilerInput implements SourceAst, DependencyInfo {
 
   /** Gets a list of types provided by this input. */
   @Override
-  public Collection<String> getProvides() {
+  public ImmutableList<String> getProvides() {
     return getDependencyInfo().getProvides();
   }
 
@@ -197,7 +196,7 @@ public class CompilerInput implements SourceAst, DependencyInfo {
    * regenerate the dependency information. Typically this occurs
    * from module rewriting.
    */
-  Collection<String> getKnownProvides() {
+  ImmutableCollection<String> getKnownProvides() {
     return concat(
         dependencyInfo != null ? dependencyInfo.getProvides() : ImmutableList.<String>of(),
         extraProvides);
