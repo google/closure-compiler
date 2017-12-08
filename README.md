@@ -197,7 +197,7 @@ limitations under the License.
 
   <tr>
     <td>URL</td>
-    <td>https://www.mozilla.org/rhino</td>
+    <td>https://developer.mozilla.org/en-US/docs/Mozilla/Projects/Rhino</td>
   </tr>
 
   <tr>
