@@ -629,12 +629,6 @@ public final class DefaultPassConfig extends PassConfig {
       passes.add(j2clAssertRemovalPass);
     }
 
-    // Must run after ProcessClosurePrimitives, Es6ConvertSuper, and assertion removals, but
-    // before OptimizeCalls (specifically, OptimizeParameters) and DevirtualizePrototypeMethods.
-    if (options.removeSuperMethods) {
-      passes.add(removeSuperMethodsPass);
-    }
-
     // Property disambiguation should only run once and needs to be done
     // soon after type checking, both so that it can make use of type
     // information and so that other passes can take advantage of the renamed
@@ -764,6 +758,12 @@ public final class DefaultPassConfig extends PassConfig {
       passes.add(crossModuleCodeMotion);
     }
 
+    // Must run after ProcessClosurePrimitives, Es6ConvertSuper, and assertion removals, but
+    // before OptimizeCalls (specifically, OptimizeParameters) and DevirtualizePrototypeMethods.
+    if (options.removeSuperMethods) {
+      passes.add(removeSuperMethodsPass);
+    }
+
     // Method devirtualization benefits from property disambiguation so
     // it should run after that pass but before passes that do
     // optimizations based on global names (like cross module code motion
@@ -815,7 +815,7 @@ public final class DefaultPassConfig extends PassConfig {
       // After inlining some of the variable uses, some variables are unused.
       // Re-run remove unused vars to clean it up.
       if (options.removeUnusedVars || options.removeUnusedLocalVars) {
-        passes.add(removeUnusedCodeOnce);
+        passes.add(getRemoveUnusedCodeOnce());
       }
     }
 
@@ -1002,7 +1002,7 @@ public final class DefaultPassConfig extends PassConfig {
     }
 
     if (options.removeUnusedVars || options.removeUnusedLocalVars) {
-      passes.add(removeUnusedCode);
+      passes.add(getRemoveUnusedCode());
     }
 
     if (options.j2clPassMode.shouldAddJ2clPasses()) {
@@ -1207,12 +1207,6 @@ public final class DefaultPassConfig extends PassConfig {
    * @param optimizations The list of optimization passes
    */
   private void assertValidOrderForOptimizations(List<PassFactory> optimizations) {
-    assertPassOrder(optimizations, removeSuperMethodsPass, removeUnusedCode,
-        "RemoveSuperMethodsPass must run before RemoveUnusedCode.");
-
-    assertPassOrder(optimizations, removeSuperMethodsPass, removeUnusedCodeOnce,
-        "RemoveSuperMethodsPass must run before RemoveUnusedCode.");
-
     assertPassOrder(optimizations, removeSuperMethodsPass, optimizeCalls,
         "RemoveSuperMethodsPass must run before OptimizeCalls.");
 
@@ -2881,8 +2875,13 @@ public final class DefaultPassConfig extends PassConfig {
         }
       };
 
-  private final PassFactory removeUnusedCode = getRemoveUnusedCode(false /* isOneTimePass */);
-  private final PassFactory removeUnusedCodeOnce = getRemoveUnusedCode(true /* isOneTimePass */);
+  private PassFactory getRemoveUnusedCode() {
+    return getRemoveUnusedCode(false /* isOneTimePass */);
+  }
+
+  private PassFactory getRemoveUnusedCodeOnce() {
+    return getRemoveUnusedCode(true /* isOneTimePass */);
+  }
 
   private PassFactory getRemoveUnusedCode(boolean isOneTimePass) {
     /** Removes variables that are never used. */
