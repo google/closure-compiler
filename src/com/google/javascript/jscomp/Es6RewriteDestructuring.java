@@ -62,7 +62,7 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
         visitFunction(t, n);
         break;
       case PARAM_LIST:
-        visitParamList(t, n, parent);
+        visitParamList(n, parent);
         break;
       case FOR_OF:
         visitForOf(n);
@@ -104,7 +104,7 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
   /**
    * Processes trailing default and rest parameters.
    */
-  private void visitParamList(NodeTraversal t, Node paramList, Node function) {
+  private void visitParamList(Node paramList, Node function) {
     Node insertSpot = null;
     Node body = function.getLastChild();
     int i = 0;
@@ -154,17 +154,17 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
         newParam.setOptionalArg(true);
         newParam.setJSDocInfo(jsDoc);
 
-        t.reportCodeChange();
+        compiler.reportChangeToChangeScope(function);
       } else if (param.isDestructuringPattern()) {
         insertSpot =
             replacePatternParamWithTempVar(
                 function, insertSpot, param, getTempParameterName(function, i));
-        t.reportCodeChange();
+        compiler.reportChangeToChangeScope(function);
       } else if (param.isRest() && param.getFirstChild().isDestructuringPattern()) {
         insertSpot =
             replacePatternParamWithTempVar(
                 function, insertSpot, param.getFirstChild(), getTempParameterName(function, i));
-        t.reportCodeChange();
+        compiler.reportChangeToChangeScope(function);
       }
     }
   }
