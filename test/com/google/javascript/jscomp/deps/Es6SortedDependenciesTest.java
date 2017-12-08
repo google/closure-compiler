@@ -34,16 +34,23 @@ public class Es6SortedDependenciesTest extends TestCase {
   }
 
   public void testSort() throws Exception {
-    SimpleDependencyInfo a = new SimpleDependencyInfo(
-        "a", "a", provides(), requires("b", "c"), false);
-    SimpleDependencyInfo b = new SimpleDependencyInfo(
-        "b", "b", provides("b"), requires("d"), false);
-    SimpleDependencyInfo c = new SimpleDependencyInfo(
-        "c", "c", provides("c"), requires("d"), false);
-    SimpleDependencyInfo d = new SimpleDependencyInfo(
-        "d", "d", provides("d"), requires(), false);
-    SimpleDependencyInfo e = new SimpleDependencyInfo(
-        "e", "e", provides("e"), requires(), false);
+    SimpleDependencyInfo a = SimpleDependencyInfo.builder("a", "a")
+        .setRequires("b", "c")
+        .build();
+    SimpleDependencyInfo b = SimpleDependencyInfo.builder("b", "b")
+        .setProvides("b")
+        .setRequires("d")
+        .build();
+    SimpleDependencyInfo c = SimpleDependencyInfo.builder("c", "c")
+        .setProvides("c")
+        .setRequires("d")
+        .build();
+    SimpleDependencyInfo d = SimpleDependencyInfo.builder("d", "d")
+        .setProvides("d")
+        .build();
+    SimpleDependencyInfo e = SimpleDependencyInfo.builder("e", "e")
+        .setProvides("e")
+        .build();
 
     assertSortedInputs(
         ImmutableList.of(d, b, c, a),
@@ -81,18 +88,28 @@ public class Es6SortedDependenciesTest extends TestCase {
   }
 
   public void testSort2() throws Exception {
-    SimpleDependencyInfo ab = new SimpleDependencyInfo(
-        "ab", "ab", provides("a", "b"), requires("d", "f"), false);
-    SimpleDependencyInfo c = new SimpleDependencyInfo(
-        "c", "c", provides("c"), requires("h"), false);
-    SimpleDependencyInfo d = new SimpleDependencyInfo(
-        "d", "d", provides("d"), requires("e", "f"), false);
-    SimpleDependencyInfo ef = new SimpleDependencyInfo(
-        "ef", "ef", provides("e", "f"), requires("g", "c"), false);
-    SimpleDependencyInfo g = new SimpleDependencyInfo(
-        "g", "g", provides("g"), requires(), false);
-    SimpleDependencyInfo hi = new SimpleDependencyInfo(
-        "hi", "hi", provides("h", "i"), requires(), false);
+    SimpleDependencyInfo ab = SimpleDependencyInfo.builder("ab", "ab")
+        .setProvides("a", "b")
+        .setRequires("d", "f")
+        .build();
+    SimpleDependencyInfo c = SimpleDependencyInfo.builder("c", "c")
+        .setProvides("c")
+        .setRequires("h")
+        .build();
+    SimpleDependencyInfo d = SimpleDependencyInfo.builder("d", "d")
+        .setProvides("d")
+        .setRequires("e", "f")
+        .build();
+    SimpleDependencyInfo ef = SimpleDependencyInfo.builder("ef", "ef")
+        .setProvides("e", "f")
+        .setRequires("g", "c")
+        .build();
+    SimpleDependencyInfo g = SimpleDependencyInfo.builder("g", "g")
+        .setProvides("g")
+        .build();
+    SimpleDependencyInfo hi = SimpleDependencyInfo.builder("hi", "hi")
+        .setProvides("h", "i")
+        .build();
 
     assertSortedInputs(
         ImmutableList.of(g, hi, c, ef, d, ab),
@@ -109,12 +126,18 @@ public class Es6SortedDependenciesTest extends TestCase {
   }
 
   public void testSort3() {
-    SimpleDependencyInfo a = new SimpleDependencyInfo(
-        "a", "a", provides("a"), requires("c"), false);
-    SimpleDependencyInfo b = new SimpleDependencyInfo(
-        "b", "b", provides("b"), requires("a"), false);
-    SimpleDependencyInfo c = new SimpleDependencyInfo(
-        "c", "c", provides("c"), requires("b"), false);
+    SimpleDependencyInfo a = SimpleDependencyInfo.builder("a", "a")
+        .setProvides("a")
+        .setRequires("c")
+        .build();
+    SimpleDependencyInfo b = SimpleDependencyInfo.builder("b", "b")
+        .setProvides("b")
+        .setRequires("a")
+        .build();
+    SimpleDependencyInfo c = SimpleDependencyInfo.builder("c", "c")
+        .setProvides("c")
+        .setRequires("b")
+        .build();
 
     assertOrder(
         ImmutableList.of(a, b, c), ImmutableList.of(b, c, a));
@@ -122,8 +145,10 @@ public class Es6SortedDependenciesTest extends TestCase {
 
   public void testSort4() throws Exception {
     // Check the degenerate case.
-    SimpleDependencyInfo a = new SimpleDependencyInfo(
-        "a", "a", provides("a"), requires("a"), false);
+    SimpleDependencyInfo a = SimpleDependencyInfo.builder("a", "a")
+        .setProvides("a")
+        .setRequires("a")
+        .build();
     assertSortedDeps(
         ImmutableList.of(a),
         ImmutableList.of(a),
@@ -131,12 +156,15 @@ public class Es6SortedDependenciesTest extends TestCase {
   }
 
   public void testSort5() throws Exception {
-    SimpleDependencyInfo a = new SimpleDependencyInfo(
-        "a", "a", provides("a"), requires(), false);
-    SimpleDependencyInfo b = new SimpleDependencyInfo(
-        "b", "b", provides("b"), requires(), false);
-    SimpleDependencyInfo c = new SimpleDependencyInfo(
-        "c", "c", provides("c"), requires(), false);
+    SimpleDependencyInfo a = SimpleDependencyInfo.builder("a", "a")
+        .setProvides("a")
+        .build();
+    SimpleDependencyInfo b = SimpleDependencyInfo.builder("b", "b")
+        .setProvides("b")
+        .build();
+    SimpleDependencyInfo c = SimpleDependencyInfo.builder("c", "c")
+        .setProvides("c")
+        .build();
 
     assertSortedInputs(
         ImmutableList.of(a, b, c),
@@ -147,63 +175,103 @@ public class Es6SortedDependenciesTest extends TestCase {
   }
 
   public void testSort6() {
-    SimpleDependencyInfo a = new SimpleDependencyInfo(
-        "gin", "gin", provides("gin"), requires("tonic"), false);
-    SimpleDependencyInfo b = new SimpleDependencyInfo(
-        "tonic", "tonic", provides("tonic"), requires("gin2"), false);
-    SimpleDependencyInfo c = new SimpleDependencyInfo(
-        "gin2", "gin2", provides("gin2"), requires("gin"), false);
-    SimpleDependencyInfo d = new SimpleDependencyInfo(
-        "gin3", "gin3", provides("gin3"), requires("gin"), false);
+    SimpleDependencyInfo a = SimpleDependencyInfo.builder("gin", "gin")
+        .setProvides("gin")
+        .setRequires("tonic")
+        .build();
+    SimpleDependencyInfo b = SimpleDependencyInfo.builder("tonic", "tonic")
+        .setProvides("tonic")
+        .setRequires("gin2")
+        .build();
+    SimpleDependencyInfo c = SimpleDependencyInfo.builder("gin2", "gin2")
+        .setProvides("gin2")
+        .setRequires("gin")
+        .build();
+    SimpleDependencyInfo d = SimpleDependencyInfo.builder("gin3", "gin3")
+        .setProvides("gin3")
+        .setRequires("gin")
+        .build();
 
     assertOrder(ImmutableList.of(a, b, c, d), ImmutableList.of(c, b, a, d));
   }
 
   public void testSort7() {
-    SimpleDependencyInfo a = new SimpleDependencyInfo(
-        "gin", "gin", provides("gin"), requires("tonic"), false);
-    SimpleDependencyInfo b = new SimpleDependencyInfo(
-        "tonic", "tonic", provides("tonic"), requires("gin"), false);
-    SimpleDependencyInfo c = new SimpleDependencyInfo(
-        "gin2", "gin2", provides("gin2"), requires("gin"), false);
-    SimpleDependencyInfo d = new SimpleDependencyInfo(
-        "gin3", "gin3", provides("gin3"), requires("gin"), false);
+    SimpleDependencyInfo a = SimpleDependencyInfo.builder("gin", "gin")
+        .setProvides("gin")
+        .setRequires("tonic")
+        .build();
+    SimpleDependencyInfo b = SimpleDependencyInfo.builder("tonic", "tonic")
+        .setProvides("tonic")
+        .setRequires("gin")
+        .build();
+    SimpleDependencyInfo c = SimpleDependencyInfo.builder("gin2", "gin2")
+        .setProvides("gin2")
+        .setRequires("gin")
+        .build();
+    SimpleDependencyInfo d = SimpleDependencyInfo.builder("gin3", "gin3")
+        .setProvides("gin3")
+        .setRequires("gin")
+        .build();
 
     assertOrder(
         ImmutableList.of(a, b, c, d), ImmutableList.of(b, a, c, d));
   }
 
   public void testSort8() {
-    SimpleDependencyInfo a = new SimpleDependencyInfo(
-        "A", "A", provides("A"), requires("B"), false);
-    SimpleDependencyInfo b = new SimpleDependencyInfo(
-        "B", "B", provides("B"), requires("C"), false);
-    SimpleDependencyInfo c = new SimpleDependencyInfo(
-        "C", "C", provides("C"), requires("D"), false);
-    SimpleDependencyInfo d = new SimpleDependencyInfo(
-        "D", "D", provides("D"), requires("A"), false);
+    SimpleDependencyInfo a = SimpleDependencyInfo.builder("A", "A")
+        .setProvides("A")
+        .setRequires("B")
+        .build();
+    SimpleDependencyInfo b = SimpleDependencyInfo.builder("B", "B")
+        .setProvides("B")
+        .setRequires("C")
+        .build();
+    SimpleDependencyInfo c = SimpleDependencyInfo.builder("C", "C")
+        .setProvides("C")
+        .setRequires("D")
+        .build();
+    SimpleDependencyInfo d = SimpleDependencyInfo.builder("D", "D")
+        .setProvides("D")
+        .setRequires("A")
+        .build();
 
     assertOrder(
         ImmutableList.of(a, b, c, d), ImmutableList.of(d, c, b, a));
   }
 
   public void testSort9() {
-    SimpleDependencyInfo a = new SimpleDependencyInfo(
-        "A", "A", provides("A"), requires("B"), false);
-    SimpleDependencyInfo a2 = new SimpleDependencyInfo(
-        "A", "A", provides("A"), requires("B1"), false);
-    SimpleDependencyInfo b = new SimpleDependencyInfo(
-        "B", "B", provides("B"), requires("C"), false);
-    SimpleDependencyInfo c = new SimpleDependencyInfo(
-        "C", "C", provides("C"), requires("E"), false);
-    SimpleDependencyInfo d = new SimpleDependencyInfo(
-        "D", "D", provides("D"), requires("A"), false);
-    SimpleDependencyInfo e = new SimpleDependencyInfo(
-        "B1", "B1", provides("B1"), requires("C1"), false);
-    SimpleDependencyInfo f = new SimpleDependencyInfo(
-        "C1", "C1", provides("C1"), requires("D1"), false);
-    SimpleDependencyInfo g = new SimpleDependencyInfo(
-        "D1", "D1", provides("D1"), requires("A"), false);
+    SimpleDependencyInfo a = SimpleDependencyInfo.builder("A", "A")
+        .setProvides("A")
+        .setRequires("B")
+        .build();
+    SimpleDependencyInfo a2 = SimpleDependencyInfo.builder("A", "A")
+        .setProvides("A")
+        .setRequires("B1")
+        .build();
+    SimpleDependencyInfo b = SimpleDependencyInfo.builder("B", "B")
+        .setProvides("B")
+        .setRequires("C")
+        .build();
+    SimpleDependencyInfo c = SimpleDependencyInfo.builder("C", "C")
+        .setProvides("C")
+        .setRequires("E")
+        .build();
+    SimpleDependencyInfo d = SimpleDependencyInfo.builder("D", "D")
+        .setProvides("D")
+        .setRequires("A")
+        .build();
+    SimpleDependencyInfo e = SimpleDependencyInfo.builder("B1", "B1")
+        .setProvides("B1")
+        .setRequires("C1")
+        .build();
+    SimpleDependencyInfo f = SimpleDependencyInfo.builder("C1", "C1")
+        .setProvides("C1")
+        .setRequires("D1")
+        .build();
+    SimpleDependencyInfo g = SimpleDependencyInfo.builder("D1", "D1")
+        .setProvides("D1")
+        .setRequires("A")
+        .build();
 
     assertOrder(ImmutableList.of(a, a2, b, c, d, e, f, g),
         ImmutableList.of(c, b, a, g, f, e, a2, d));
@@ -211,9 +279,16 @@ public class Es6SortedDependenciesTest extends TestCase {
 
   public void testSort10() throws Exception {
     SimpleDependencyInfo a =
-        new SimpleDependencyInfo("A", "A", provides("A"), requires("C"), false);
-    SimpleDependencyInfo b = new SimpleDependencyInfo("B", "B", provides("B"), requires(), false);
-    SimpleDependencyInfo c = new SimpleDependencyInfo("C", "C", provides("C"), requires(), false);
+        SimpleDependencyInfo.builder("A", "A")
+            .setProvides("A")
+            .setRequires("C")
+            .build();
+    SimpleDependencyInfo b = SimpleDependencyInfo.builder("B", "B")
+        .setProvides("B")
+        .build();
+    SimpleDependencyInfo c = SimpleDependencyInfo.builder("C", "C")
+        .setProvides("C")
+        .build();
 
     SortedDependencies<SimpleDependencyInfo> sorted =
         createSortedDependencies(ImmutableList.of(a, b, c));

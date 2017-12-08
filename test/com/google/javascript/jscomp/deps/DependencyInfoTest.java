@@ -20,10 +20,8 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-
-import junit.framework.TestCase;
-
 import java.io.IOException;
+import junit.framework.TestCase;
 
 /** Tests for {@link DependencyInfo}. */
 public final class DependencyInfoTest extends TestCase {
@@ -32,12 +30,11 @@ public final class DependencyInfoTest extends TestCase {
     StringBuilder sb = new StringBuilder();
     DependencyInfo.Util.writeAddDependency(
         sb,
-        new SimpleDependencyInfo(
-            "../some/relative/path.js",
-            "/unused/absolute/path.js",
-            ImmutableList.of("provided.symbol", "other.provide"),
-            ImmutableList.of("required.symbol", "other.require"),
-            ImmutableMap.of("module", "goog", "lang", "es6")));
+        SimpleDependencyInfo.builder("../some/relative/path.js", "/unused/absolute/path.js")
+            .setProvides(ImmutableList.of("provided.symbol", "other.provide"))
+            .setRequires(ImmutableList.of("required.symbol", "other.require"))
+            .setLoadFlags(ImmutableMap.of("module", "goog", "lang", "es6"))
+            .build());
     assertThat(sb.toString())
         .isEqualTo(
             "goog.addDependency('../some/relative/path.js', ['provided.symbol', 'other.provide'], "
@@ -47,13 +44,7 @@ public final class DependencyInfoTest extends TestCase {
   public void testWriteAddDependency_emptyArguments() throws IOException {
     StringBuilder sb = new StringBuilder();
     DependencyInfo.Util.writeAddDependency(
-        sb,
-        new SimpleDependencyInfo(
-            "path.js",
-            "unused.js",
-            ImmutableList.<String>of(),
-            ImmutableList.<String>of(),
-            ImmutableMap.<String, String>of()));
+        sb, SimpleDependencyInfo.builder("path.js", "unused.js").build());
     assertThat(sb.toString()).isEqualTo("goog.addDependency('path.js', [], []);\n");
   }
 }

@@ -51,7 +51,7 @@ public final class SimpleDependencyInfo implements DependencyInfo {
   /** The path to the file from which we extracted the dependency information.*/
   private final String pathOfDefiningFile;
 
-  // TODO(sdh): migrate callers away and deprecate this constructor
+  // TODO(sdh): migrate callers to use the builder, and deprecate this constructor
   @Deprecated
   public SimpleDependencyInfo(
       String srcPathRelativeToClosure, String pathOfDefiningFile,
@@ -71,6 +71,7 @@ public final class SimpleDependencyInfo implements DependencyInfo {
    * @param requires List of required symbols.
    * @param loadFlags Map of file-loading information.
    */
+  // TODO(sdh): migrate callers to use the builder, and deprecate this constructor
   @Deprecated
   public SimpleDependencyInfo(
       String srcPathRelativeToClosure,
@@ -101,8 +102,17 @@ public final class SimpleDependencyInfo implements DependencyInfo {
     this.loadFlags = ImmutableMap.copyOf(loadFlags);
   }
 
-  // TODO(blickly): Convert this to @AutoValue.Builder
-  static class Builder {
+  public static Builder builder(String srcPathRelativeToClosure, String pathOfDefiningFile) {
+    return new Builder(srcPathRelativeToClosure, pathOfDefiningFile);
+  }
+
+  /**
+   * Builder for constructing instances of SimpleDependencyInfo.
+   * Use the {@link SimpleDependencyInfo#builder(String, String)} method to create an instance.
+   *
+   * TODO(blickly): Convert this to @AutoValue.Builder
+   */
+  public static class Builder {
     private String srcPathRelativeToClosure;
     private String pathOfDefiningFile;
     private Collection<String> provides;
@@ -115,27 +125,46 @@ public final class SimpleDependencyInfo implements DependencyInfo {
       this.pathOfDefiningFile = pathOfDefiningFile;
     }
 
-    Builder setProvides(Collection<String> provides) {
+    public Builder setProvides(Collection<String> provides) {
       this.provides = provides;
       return this;
     }
 
-    Builder setRequires(Collection<String> requires) {
+    public Builder setProvides(String... provides) {
+      this.provides = ImmutableList.copyOf(provides);
+      return this;
+    }
+
+    public Builder setRequires(Collection<String> requires) {
       this.requires = requires;
       return this;
     }
 
-    Builder setWeakRequires(Collection<String> weakRequires) {
+    public Builder setRequires(String... requires) {
+      this.requires = ImmutableList.copyOf(requires);
+      return this;
+    }
+
+    public Builder setWeakRequires(Collection<String> weakRequires) {
       this.weakRequires = weakRequires;
       return this;
     }
 
-    Builder setLoadFlags(Map<String, String> loadFlags) {
+    public Builder setWeakRequires(String... weakRequires) {
+      this.weakRequires = ImmutableList.copyOf(weakRequires);
+      return this;
+    }
+
+    public Builder setLoadFlags(Map<String, String> loadFlags) {
       this.loadFlags = loadFlags;
       return this;
     }
 
-    SimpleDependencyInfo build() {
+    public Builder setGoogModule(boolean isModule) {
+      return setLoadFlags(loadFlags(isModule));
+    }
+
+    public SimpleDependencyInfo build() {
       return new SimpleDependencyInfo(
           srcPathRelativeToClosure,
           pathOfDefiningFile,

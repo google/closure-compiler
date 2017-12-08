@@ -165,14 +165,12 @@ public final class DepsFileParser extends JsFileLineParser {
         // Parse the file path.
         String path = pathTranslator.apply(parseJsString(depArgsMatch.group(1)));
 
-        DependencyInfo depInfo = new SimpleDependencyInfo(path, filePath,
-            // Parse the provides.
-            parseJsStringArray(depArgsMatch.group(2)),
-            // Parse the requires.
-            parseJsStringArray(depArgsMatch.group(3)),
-            // Parse the loadFlags map.
-            parseLoadFlags(depArgsMatch.group(4))
-            );
+        DependencyInfo depInfo =
+            SimpleDependencyInfo.builder(path, filePath)
+                .setProvides(parseJsStringArray(depArgsMatch.group(2)))
+                .setRequires(parseJsStringArray(depArgsMatch.group(3)))
+                .setLoadFlags(parseLoadFlags(depArgsMatch.group(4)))
+                .build();
 
         if (logger.isLoggable(Level.FINE)) {
           logger.fine("Found dep: " + depInfo);

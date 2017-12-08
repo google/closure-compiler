@@ -64,13 +64,26 @@ public final class DepsFileParserTest extends TestCase {
 
     List<DependencyInfo> result = parser.parseFile(SRC_PATH, contents);
     ImmutableList<DependencyInfo> expected = ImmutableList.<DependencyInfo>of(
-        new SimpleDependencyInfo("yes1", SRC_PATH, EMPTY, EMPTY, false),
-        new SimpleDependencyInfo("yes2", SRC_PATH, EMPTY, EMPTY, false),
-        new SimpleDependencyInfo(
-            "yes3", SRC_PATH, ImmutableList.of("a", "b"), ImmutableList.of("c"),
-            false),
-        new SimpleDependencyInfo(
-            "yes4", SRC_PATH, EMPTY, ImmutableList.of("a", "b", "c"), false)
+        SimpleDependencyInfo.builder("yes1", SRC_PATH)
+            .setProvides(EMPTY)
+            .setRequires(EMPTY)
+            .setGoogModule(false)
+            .build(),
+        SimpleDependencyInfo.builder("yes2", SRC_PATH)
+            .setProvides(EMPTY)
+            .setRequires(EMPTY)
+            .setGoogModule(false)
+            .build(),
+        SimpleDependencyInfo.builder("yes3", SRC_PATH)
+            .setProvides(ImmutableList.of("a", "b"))
+            .setRequires(ImmutableList.of("c"))
+            .setGoogModule(false)
+            .build(),
+        SimpleDependencyInfo.builder("yes4", SRC_PATH)
+            .setProvides(EMPTY)
+            .setRequires(ImmutableList.of("a", "b", "c"))
+            .setGoogModule(false)
+            .build()
     );
 
     assertThat(result).isEqualTo(expected);
@@ -113,8 +126,16 @@ public final class DepsFileParserTest extends TestCase {
         "goog.addDependency('yes1', [], [], true);\n" +
         "goog.addDependency('yes2', [], [], false);\n");
     ImmutableList<DependencyInfo> expected = ImmutableList.<DependencyInfo>of(
-        new SimpleDependencyInfo("yes1", SRC_PATH, EMPTY, EMPTY, true),
-        new SimpleDependencyInfo("yes2", SRC_PATH, EMPTY, EMPTY, false)
+        SimpleDependencyInfo.builder("yes1", SRC_PATH)
+            .setProvides(EMPTY)
+            .setRequires(EMPTY)
+            .setGoogModule(true)
+            .build(),
+        SimpleDependencyInfo.builder("yes2", SRC_PATH)
+            .setProvides(EMPTY)
+            .setRequires(EMPTY)
+            .setGoogModule(false)
+            .build()
         );
     assertThat(result).isEqualTo(expected);
   }
@@ -125,9 +146,21 @@ public final class DepsFileParserTest extends TestCase {
         + "goog.addDependency('yes2', [], [], {\"lang\": \"es6\"});\n"
         + "goog.addDependency('yes3', [], [], {});\n");
     ImmutableList<DependencyInfo> expected = ImmutableList.<DependencyInfo>of(
-        new SimpleDependencyInfo("yes1", SRC_PATH, EMPTY, EMPTY, ImmutableMap.of("module", "goog")),
-        new SimpleDependencyInfo("yes2", SRC_PATH, EMPTY, EMPTY, ImmutableMap.of("lang", "es6")),
-        new SimpleDependencyInfo("yes3", SRC_PATH, EMPTY, EMPTY, false));
+        SimpleDependencyInfo.builder("yes1", SRC_PATH)
+            .setProvides(EMPTY)
+            .setRequires(EMPTY)
+            .setLoadFlags(ImmutableMap.of("module", "goog"))
+            .build(),
+        SimpleDependencyInfo.builder("yes2", SRC_PATH)
+            .setProvides(EMPTY)
+            .setRequires(EMPTY)
+            .setLoadFlags(ImmutableMap.of("lang", "es6"))
+            .build(),
+        SimpleDependencyInfo.builder("yes3", SRC_PATH)
+            .setProvides(EMPTY)
+            .setRequires(EMPTY)
+            .setGoogModule(false)
+            .build());
     assertThat(result).isEqualTo(expected);
   }
 
@@ -137,7 +170,11 @@ public final class DepsFileParserTest extends TestCase {
         "foo();\n" +
         "goog.addDependency('no1', [], []);");
     ImmutableList<DependencyInfo> expected = ImmutableList.<DependencyInfo>of(
-        new SimpleDependencyInfo("yes1", SRC_PATH, EMPTY, EMPTY, false));
+        SimpleDependencyInfo.builder("yes1", SRC_PATH)
+            .setProvides(EMPTY)
+            .setRequires(EMPTY)
+            .setGoogModule(false)
+            .build());
     assertThat(result).isEqualTo(expected);
   }
 
@@ -148,8 +185,16 @@ public final class DepsFileParserTest extends TestCase {
         "foo();\n" +
         "goog.addDependency('yes2', [], []);");
     ImmutableList<DependencyInfo> expected = ImmutableList.<DependencyInfo>of(
-        new SimpleDependencyInfo("yes1", SRC_PATH, EMPTY, EMPTY, false),
-        new SimpleDependencyInfo("yes2", SRC_PATH, EMPTY, EMPTY, false));
+        SimpleDependencyInfo.builder("yes1", SRC_PATH)
+            .setProvides(EMPTY)
+            .setRequires(EMPTY)
+            .setGoogModule(false)
+            .build(),
+        SimpleDependencyInfo.builder("yes2", SRC_PATH)
+            .setProvides(EMPTY)
+            .setRequires(EMPTY)
+            .setGoogModule(false)
+            .build());
     assertThat(result).isEqualTo(expected);
   }
 }

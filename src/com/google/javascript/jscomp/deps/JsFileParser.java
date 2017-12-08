@@ -201,7 +201,7 @@ public final class JsFileParser extends JsFileLineParser {
     }
 
     DependencyInfo dependencyInfo =
-        new SimpleDependencyInfo.Builder(closureRelativePath, filePath)
+        SimpleDependencyInfo.builder(closureRelativePath, filePath)
             .setProvides(provides)
             .setRequires(requires)
             .setWeakRequires(weakRequires)

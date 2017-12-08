@@ -31,11 +31,11 @@ import org.mockito.Mockito;
  */
 public final class ClosureBundlerTest extends TestCase {
 
-  private static final DependencyInfo MODULE = new SimpleDependencyInfo(
-      null, null, null, null, true);
+  private static final DependencyInfo MODULE =
+      SimpleDependencyInfo.builder("", "").setGoogModule(true).build();
 
-  private static final DependencyInfo TRADITIONAL = new SimpleDependencyInfo(
-      null, null, null, null, false);
+  private static final DependencyInfo TRADITIONAL =
+      SimpleDependencyInfo.builder("", "").build();
 
   public void testGoogModule() throws IOException {
     StringBuilder sb = new StringBuilder();

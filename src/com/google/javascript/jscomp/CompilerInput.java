@@ -245,12 +245,12 @@ public class CompilerInput implements SourceAst, DependencyInfo {
       dependencyInfo = generateDependencyInfo();
     }
     if (!extraRequires.isEmpty() || !extraProvides.isEmpty()) {
-      dependencyInfo = new SimpleDependencyInfo(
-          getName(),
-          getName(),
-          concat(dependencyInfo.getProvides(), extraProvides),
-          concat(dependencyInfo.getRequires(), extraRequires),
-          dependencyInfo.getLoadFlags());
+      dependencyInfo =
+          SimpleDependencyInfo.builder(getName(), getName())
+              .setProvides(concat(dependencyInfo.getProvides(), extraProvides))
+              .setRequires(concat(dependencyInfo.getRequires(), extraRequires))
+              .setLoadFlags(dependencyInfo.getLoadFlags())
+              .build();
       extraRequires.clear();
       extraProvides.clear();
     }
@@ -308,7 +308,11 @@ public class CompilerInput implements SourceAst, DependencyInfo {
       // compilation scheme. The API needs to be fixed so callers aren't
       // doing weird things like this, and then we should get rid of the
       // multiple-scan strategy.
-      return new SimpleDependencyInfo("", "", finder.provides, finder.requires, finder.loadFlags);
+      return SimpleDependencyInfo.builder("", "")
+          .setProvides(finder.provides)
+          .setRequires(finder.requires)
+          .setLoadFlags(finder.loadFlags)
+          .build();
     }
   }
 

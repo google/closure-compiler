@@ -22,7 +22,6 @@ import static com.google.javascript.jscomp.deps.DefaultDependencyResolver.CLOSUR
 import com.google.javascript.jscomp.ErrorManager;
 import com.google.javascript.jscomp.LoggerErrorManager;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -117,10 +116,9 @@ public final class DependencyFile implements SourceFile {
     provides.add(CLOSURE_BASE_PROVIDE);
 
     // Add implicit base.js entry.
-    dependencies.put(CLOSURE_BASE_PROVIDE,
-        new SimpleDependencyInfo(CLOSURE_BASE, CLOSURE_BASE,
-            provides,
-            Collections.<String>emptyList(), false));
+    dependencies.put(
+        CLOSURE_BASE_PROVIDE,
+        SimpleDependencyInfo.builder(CLOSURE_BASE, CLOSURE_BASE).setProvides(provides).build());
     errorManager.generateReport();
 
     logger.info("Dependencies loaded");
