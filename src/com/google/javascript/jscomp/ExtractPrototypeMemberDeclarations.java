@@ -174,15 +174,14 @@ class ExtractPrototypeMemberDeclarations implements CompilerPass {
     String className = first.qualifiedClassName;
     if (pattern == Pattern.USE_GLOBAL_TEMP) {
       // Use the temp variable to hold the prototype.
+      Node classNameNode = NodeUtil.newQName(compiler, className);
+      classNameNode.putBooleanProp(Node.IS_CONSTANT_NAME, first.constant);
       Node stmt =
           IR.exprResult(
               IR.assign(
                   IR.name(PROTOTYPE_ALIAS),
-                  NodeUtil.newQName(
-                      compiler,
-                      className + ".prototype",
-                      instance.parent,
-                      className + ".prototype")))
+                  IR.getprop(
+                      classNameNode, IR.string("prototype"))))
           .useSourceInfoIfMissingFromForTree(first.node);
 
       instance.parent.addChildBefore(stmt, first.node);
@@ -235,6 +234,7 @@ class ExtractPrototypeMemberDeclarations implements CompilerPass {
     String originalName = accessNode.getOriginalName();
     String className = originalName != null ? originalName : "?";
     name.getFirstChild().useSourceInfoFromForTree(lhs);
+    name.putBooleanProp(Node.IS_CONSTANT_NAME, lhs.getBooleanProp(Node.IS_CONSTANT_NAME));
     name.getFirstChild().setOriginalName(className + ".prototype");
 
     assignment.replaceChild(lhs, name);
@@ -333,13 +333,16 @@ class ExtractPrototypeMemberDeclarations implements CompilerPass {
     final Node node;
     final String qualifiedClassName;
     final Node lhs;
+    final boolean constant;
 
     private PrototypeMemberDeclaration(Node lhs, Node node) {
       checkState(NodeUtil.isExprAssign(node), node);
       this.lhs = lhs;
       this.memberName = NodeUtil.getPrototypePropertyName(lhs);
       this.node = node;
-      this.qualifiedClassName = getPrototypeClassName(lhs).getQualifiedName();
+      Node classNode = getPrototypeClassName(lhs);
+      this.qualifiedClassName = classNode.getQualifiedName();
+      this.constant = classNode.getBooleanProp(Node.IS_CONSTANT_NAME);
     }
 
     private boolean isSameClass(PrototypeMemberDeclaration other) {
