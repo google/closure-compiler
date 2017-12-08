@@ -122,7 +122,8 @@ class FunctionArgumentInjector {
    * Get a mapping for function parameter names to call arguments.
    */
   static ImmutableMap<String, Node> getFunctionCallParameterMap(
-      Node fnNode, Node callNode, Supplier<String> safeNameIdSupplier) {
+      final Node fnNode, Node callNode, Supplier<String> safeNameIdSupplier) {
+    checkNotNull(fnNode);
     // Create an argName -> expression map
     ImmutableMap.Builder<String, Node> argMap = ImmutableMap.builder();
 
@@ -140,77 +141,26 @@ class FunctionArgumentInjector {
     for (Node fnParam : NodeUtil.getFunctionParameters(fnNode).children()) {
       if (cArg != null) {
         if (fnParam.isRest()) {
+          checkState(fnParam.getOnlyChild().isName(), fnParam.getOnlyChild());
           Node array = IR.arraylit();
           array.useSourceInfoIfMissingFromForTree(cArg);
           while (cArg != null) {
             array.addChildToBack(cArg.cloneTree());
             cArg = cArg.getNext();
           }
-          if (fnParam.getFirstChild().isObjectPattern()) {
-            for (Node stringKey = fnParam.getFirstFirstChild();
-                stringKey != null; stringKey = stringKey.getNext()) {
-              Node prop = IR.string(stringKey.getString());
-              char first = prop.getString().charAt(0);
-              if (Character.isDigit(first) || stringKey.isQuotedString()) {
-                Node getElem = IR.getelem(array.cloneTree(), prop);
-                getElem.useSourceInfoIfMissingFromForTree(array);
-                argMap.put(stringKey.getFirstChild().getString(), getElem);
-              } else {
-                Node getProp = IR.getprop(array.cloneTree(), prop);
-                getProp.useSourceInfoIfMissingFromForTree(array);
-                argMap.put(stringKey.getFirstChild().getString(), getProp);
-              }
-            }
-          } else {
-            argMap.put(fnParam.getFirstChild().getString(), array);
-          }
+          argMap.put(fnParam.getOnlyChild().getString(), array);
           return argMap.build();
-        } else if (fnParam.isObjectPattern()) {
-          for (Node n = fnParam.getFirstChild(); n != null; n = n.getNext()) {
-            char first = n.getString().charAt(0);
-            if (Character.isDigit(first) || n.isQuotedString()) {
-              Node getElem = IR.getelem(cArg.cloneTree(), IR.string(n.getString()));
-              getElem.useSourceInfoIfMissingFromForTree(cArg);
-              argMap.put(n.getFirstChild().getString(), getElem);
-            } else {
-              Node getProp = IR.getprop(cArg.cloneTree(), n.getString());
-              getProp.useSourceInfoIfMissingFromForTree(cArg);
-              argMap.put(n.getFirstChild().getString(), getProp);
-            }
-          }
-        } else if (fnParam.isDefaultValue()) {
-          argMap.put(fnParam.getFirstChild().getString(), cArg);
         } else {
           checkState(fnParam.isName(), fnParam);
           argMap.put(fnParam.getString(), cArg);
         }
         cArg = cArg.getNext();
-      } else {
+      } else { // cArg != null
         if (fnParam.isRest()) {
+          checkState(fnParam.getOnlyChild().isName(), fnParam);
           //No arguments for REST parameters
           Node array = IR.arraylit();
-          argMap.put(fnParam.getFirstChild().getString(), array);
-        } else if (fnParam.isDefaultValue()) {
-          if (fnParam.getFirstChild().isObjectPattern()) {
-            Node defaultValue = fnParam.getSecondChild();
-            for (Node stringKey = fnParam.getFirstFirstChild();
-                stringKey != null; stringKey = stringKey.getNext()) {
-              char first = stringKey.getString().charAt(0);
-              if (Character.isDigit(first) || stringKey.isQuotedString()) {
-                Node getElem = IR.getelem(defaultValue.cloneTree(),
-                    IR.string(stringKey.getString()));
-                getElem.useSourceInfoIfMissingFromForTree(defaultValue);
-                argMap.put(stringKey.getFirstChild().getString(), getElem);
-              } else {
-                Node getProp = IR.getprop(defaultValue.cloneTree(), stringKey.getString());
-                getProp.useSourceInfoIfMissingFromForTree(defaultValue);
-                argMap.put(stringKey.getFirstChild().getString(), getProp);
-              }
-            }
-          } else {
-            Node defaultValue = fnParam.getSecondChild().cloneTree();
-            argMap.put(fnParam.getFirstChild().getString(), defaultValue);
-          }
+          argMap.put(fnParam.getOnlyChild().getString(), array);
         } else {
           Node srcLocation = callNode;
           argMap.put(fnParam.getString(), NodeUtil.newUndefinedNode(srcLocation));
@@ -221,8 +171,7 @@ class FunctionArgumentInjector {
     // Add temp names for arguments that don't have named parameters in the
     // called function.
     while (cArg != null) {
-      String uniquePlaceholder =
-          getUniqueAnonymousParameterName(safeNameIdSupplier);
+      String uniquePlaceholder = getUniqueAnonymousParameterName(safeNameIdSupplier);
       argMap.put(uniquePlaceholder, cArg);
       cArg = cArg.getNext();
     }
@@ -628,10 +577,8 @@ class FunctionArgumentInjector {
     for (Node n : NodeUtil.getFunctionParameters(fnNode).children()) {
       if (n.isRest()){
         builder.add(REST_MARKER);
-      } else if (n.isDefaultValue()){
-        builder.add(DEFAULT_MARKER);
-      } else if (n.isObjectPattern()){
-        builder.add(OBJECT_PATTERN_MARKER);
+      } else if (n.isDefaultValue() || n.isObjectPattern() || n.isArrayPattern()) {
+        throw new IllegalStateException("Not supported: " + n);
       } else {
         builder.add(n.getString());
       }

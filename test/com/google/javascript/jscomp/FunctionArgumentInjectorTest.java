@@ -126,11 +126,6 @@ public final class FunctionArgumentInjectorTest extends TestCase {
         .containsExactly("b");
   }
 
-  public void testFindModifiedParameters12() {
-    assertThat(findModifiedParameters(parseFunction("function f(a=5){ return a;} f(1);")))
-        .isEmpty();
-  }
-
   public void testMaybeAddTempsForCallArguments1() {
     // Parameters with side-effects must be executed
     // even if they aren't referenced.
@@ -450,14 +445,6 @@ public final class FunctionArgumentInjectorTest extends TestCase {
         ImmutableSet.of("a"));
   }
 
-  public void testMaybeAddTempsForCallArgumentsDefault1() {
-    testNeededTemps("function foo(a = 5){return a;} foo(1);", "foo", EMPTY_STRING_SET);
-  }
-
-  public void testMaybeAddTempsForCallArgumentsDefault2() {
-    testNeededTemps("function foo(a = 5, b = 2){a; bar(); b;} foo(1, 2);", "foo", EMPTY_STRING_SET);
-  }
-
   public void testMaybeAddTempsForCallArgumentsRestParam1() {
     testNeededTemps("function foo(...args) {return args;} foo(1, 2);", "foo", EMPTY_STRING_SET);
   }
@@ -465,52 +452,6 @@ public final class FunctionArgumentInjectorTest extends TestCase {
   public void testMaybeAddTempsForCallArgumentsRestParam2() {
     testNeededTemps(
         "function foo(x, ...args) {return args;} foo(1, 2);", "foo", ImmutableSet.of("args"));
-  }
-
-  public void testMaybeAddTempsForCallArgumentsRestObjectLit1() {
-    testNeededTemps(
-        "function foo(x, ...{length: length}) {return length;} foo(1, 1, 1);",
-        "foo",
-        ImmutableSet.of("length"));
-  }
-
-  public void testMaybeAddTempsForCallNewObject1() {
-    testNeededTemps(
-        "function foo({x:x}) {alert(x); alert(x);} foo(new Bar());",
-        "foo",
-        ImmutableSet.of("x"));
-  }
-
-  public void testMaybeAddTempsForCallNewObject2() {
-    testNeededTemps(
-        "function foo({x:x}) {alert(x);} foo(new Bar());",
-        "foo",
-        EMPTY_STRING_SET);
-  }
-
-  public void testMaybeAddTempsForCallNewObject3() {
-    testNeededTemps(
-        "function foo({x:x, y:y}, {z:z}) {alert(z);} foo(obj, new Bar());",
-        "foo",
-        ImmutableSet.of("z"));
-  }
-
-  public void testMaybeAddTempsForCallNewObject4() {
-    testNeededTemps(
-        "function foo({x:x, y:y}, {z:z}) {alert(z); return x+y;} foo(obj, new Bar());",
-        "foo",
-        ImmutableSet.of("x", "y", "z"));
-  }
-
-  public void testArgMapWithDefaultParam1() {
-    assertArgMapHasKeys(
-        "function foo(a = 5, b = 2){return a;} foo();", "foo", ImmutableSet.of("this", "a", "b"));
-  }
-
-  public void testArgMapWithDefaultParam2() {
-    assertArgMapHasKeys(
-        "function foo({x:x}={x:5},{y:y}={y:3}) {return x+y;} foo();", "foo",
-        ImmutableSet.of("this", "x", "y"));
   }
 
   public void testArgMapWithRestParam1() {

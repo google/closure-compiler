@@ -2216,7 +2216,8 @@ public class InlineFunctionsTest extends CompilerTestCase {
   public void testIssue5159924a() {
     test(
         lines(
-            "function f() { if (x()) return y(); }", "while(1) { var m = f() || z() }"),
+            "function f() { if (x()) return y(); }",
+            "while(1) { var m = f() || z() }"),
         lines(
             "for(;1;) {",
             "  var JSCompiler_inline_result$jscomp$0;",
@@ -2235,7 +2236,9 @@ public class InlineFunctionsTest extends CompilerTestCase {
 
   public void testIssue5159924b() {
     test(
-        lines("function f() { if (x()) return y(); }", "while(1) { var m = f(); }"),
+        lines(
+            "function f() { if (x()) return y(); }",
+            "while(1) { var m = f(); }"),
         lines(
             "for(;1;) {",
             "  var m;",
@@ -2707,6 +2710,18 @@ public class InlineFunctionsTest extends CompilerTestCase {
             "var f = function(...args) { return args[0]; }",
             "f(8);"),
         "[8][0]");
+
+    test(
+        lines(
+            "var f = function(...args) { return args.length; }",
+            "f();"),
+        "[].length;");
+
+    test(
+        lines(
+            "var f = function(...args) { return args.length; }",
+            "f(3, 4);"),
+        "[3, 4].length;");
   }
 
   public void testArrowFunctionRestParam() {
@@ -2747,105 +2762,91 @@ public class InlineFunctionsTest extends CompilerTestCase {
   }
 
   public void testRestObjectPattern() {
-    test(
+    testSame(
         lines(
             "function countArgs(...{length}) {",
             "  return length;",
             "}",
-            "countArgs(1, 1, 1, 1, 1);"),
-        "[1, 1, 1, 1, 1].length;");
+            "countArgs(1, 1, 1, 1, 1);"));
 
-    test(
+    testSame(
         lines(
             "function countArgs(x, ...{length}) {",
             "  return length;",
             "}",
-            "countArgs(1, 1, 1, 1, 1);"),
-        "{var length$jscomp$inline_1=[1,1,1,1].length;length$jscomp$inline_1}");
+            "countArgs(1, 1, 1, 1, 1);"));
 
-    test(
+    testSame(
         lines(
             "function countArgs(x, ...{length: length}) {",
             "  return length;",
             "}",
-            "countArgs(1, 1, 1, 1, 1);"),
-        "{var length$jscomp$inline_1=[1,1,1,1].length;length$jscomp$inline_1}");
+            "countArgs(1, 1, 1, 1, 1);"));
 
-    test(
+    testSame(
         lines(
             "function f(...{'a': x}) { ",
             "  return x; ",
             "}",
-            "f(null,null,null,3,null);"),
-        "[null, null, null, 3, null]['a']");
+            "f(null,null,null,3,null);"));
 
-    test(
+    testSame(
         lines(
             "function f(...{3: x}) { ",
             "  return x; ",
             "}",
-            "f(null,null,null,3,null);"),
-        "[null, null, null, 3, null]['3']");
+            "f(null,null,null,3,null);"));
 
-    test(
+    testSame(
         lines(
             "function f(...{x: y}) { ",
             "  return y; ",
             "}",
-            "f(null,null,null,3,null);"),
-        "[null,null,null,3,null].x");
+            "f(null,null,null,3,null);"));
 
-    test(
+    testSame(
         lines(
             "function f(...{p: x, 3:y}) {",
             "  return y;",
             "}",
-            "f(null, null, null, 3, null);"),
-        "{var y$jscomp$inline_1=[null,null,null,3,null]['3'];y$jscomp$inline_1}");
+            "f(null, null, null, 3, null);"));
   }
 
   public void testObjectPatternParam() {
-    test(
+    testSame(
         lines(
             "function foo({x}) {",
             "  return x+1;",
             "}",
-            "foo({x:5});"),
-        "({x:5}).x+1");
+            "foo({x:5});"));
 
-    test(
+    testSame(
         lines(
             "function foo({x:y}) {",
             "  return y+1;",
             "}",
-            "foo({x:5});"),
-        "({x:5}).x+1");
+            "foo({x:5});"));
 
-    test(
+    testSame(
         lines(
             "function foo({'x':y}) {",
             "  return y+1;",
             "}",
-            "foo({x:5});"),
-        "({x:5})['x']+1");
+            "foo({x:5});"));
 
-    test(
+    testSame(
         lines(
             "function foo({x}, {y}) {",
             "  return x+y;",
             "}",
-            "foo({x:5}, {y:6});"),
-        lines(
-            "{var x$jscomp$inline_0={x:5}.x;var y$jscomp$inline_1={y:6}.y;",
-            "x$jscomp$inline_0+y$jscomp$inline_1}"));
+            "foo({x:5}, {y:6});"));
 
-    test(
+    testSame(
         lines(
             "function foo({x}, {y}) {",
             "  return x+1;",
             "}",
-            "foo({x:5}, {y:6});"),
-        "{var x$jscomp$inline_0={x:5}.x;x$jscomp$inline_0+1}");
+            "foo({x:5}, {y:6});"));
 
     testSame(
         lines(
@@ -2861,34 +2862,24 @@ public class InlineFunctionsTest extends CompilerTestCase {
             "}",
             "foo(obj);"));
 
-    test(
+    testSame(
         lines(
             "function f({x}) {",
             "  return x;",
             "}",
             "class Foo {constructor() {this.x = 0;}}",
-            "f(new Foo());"),
-        lines(
-            "class Foo {constructor() {this.x = 0;}}",
-            "(new Foo()).x"));
+            "f(new Foo());"));
 
-    test(
+    testSame(
         lines(
             "function f({x}) {",
             "  alert(x);",
             "  alert(x)",
             "}",
             "class Foo {constructor() {this.x = 0;}}",
-            "f(new Foo());"),
-        lines(
-            "class Foo {constructor() {this.x = 0;}}",
-            "{",
-            "  var x$jscomp$inline_0=(new Foo).x;",
-            "  alert(x$jscomp$inline_0);",
-            "  alert(x$jscomp$inline_0);",
-            "}"));
+            "f(new Foo());"));
 
-    test(
+    testSame(
         lines(
             "function f({x}, {y}) {",
             "  alert(x);",
@@ -2896,61 +2887,41 @@ public class InlineFunctionsTest extends CompilerTestCase {
             "  return y;",
             "}",
             "class Foo {constructor() {this.x = 0;}}",
-            "f(new Foo(), {y:6});"),
-        lines(" class Foo{constructor(){this.x=0}}",
-            "{var x$jscomp$inline_0=(new Foo).x;var y$jscomp$inline_1={y:6}.y;",
-            "alert(x$jscomp$inline_0);alert(x$jscomp$inline_0);y$jscomp$inline_1}"));
+            "f(new Foo(), {y:6});"));
 
-    test(
+    testSame(
         lines(
             "function f({x, y}) {",
             "  return x + y;",
             "}",
-            "f(obj);"),
-        "obj.x + obj.y");
+            "f(obj);"));
 
-    test(
+    testSame(
         lines(
             "function f({x, y}, {z}) {",
             "  alert(z);",
             "  return x + y;",
             "}",
-            "f(obj, new Foo());"),
-        lines(
-            "{var x$jscomp$inline_0=obj.x;",
-            "var y$jscomp$inline_1=obj.y;",
-            "var z$jscomp$inline_2=(new Foo).z;",
-            "alert(z$jscomp$inline_2);",
-            "x$jscomp$inline_0+y$jscomp$inline_1}"));
+            "f(obj, new Foo());"));
 
-    test(
-        lines(
-          "function f({x, y}) {",
+    testSame(
+        lines("function f({x, y}) {",
             "  return x + y;",
             "}",
-            "f(getArg());"
-        ),
-        lines(
-            "{var x$jscomp$inline_0=getArg().x;",
-            "var y$jscomp$inline_1=getArg().y;",
-            "x$jscomp$inline_0+y$jscomp$inline_1}"));
+            "f(getArg());"));
 
-    test(
-        lines(
-            "function f({a, b, c}) {",
+    testSame(
+        lines("function f({a, b, c}) {",
             "  return b + c;",
             "}",
-            "f(x);"
-        ),
-        "x.b + x.c");
+            "f(x);"));
 
-    test(
+    testSame(
         lines(
             "function f({3:x}) {",
             "  return x;",
             "}",
-            "f({3:1});"),
-        "({3:1})['3']");
+            "f({3:1});"));
 
     testSame(
         lines(
@@ -2959,143 +2930,114 @@ public class InlineFunctionsTest extends CompilerTestCase {
             "}",
             "f({x:{3:1}});"));
 
-    test(
-      lines(
-          "function f({p: x, 3: y}) {",
-          "  return x;",
-          "}",
-          "f({p:1, 3:2});"),
-      lines(
-          "{var x$jscomp$inline_0 = {p:1,3:2}.p;",
-          "x$jscomp$inline_0}"));
+    testSame(
+        lines(
+            "function f({p: x, 3: y}) {",
+            "  return x;",
+            "}",
+            "f({p:1, 3:2});"));
 
-    test(
-      lines(
-          "function f({prop1, prop2}) {",
-          "  return prop1;",
-          "}",
-          "f({prop1:5, prop2:6});"),
-      lines(
-          "{var prop1$jscomp$inline_0={prop1:5,prop2:6}.prop1;",
-          "prop1$jscomp$inline_0}"));
+    testSame(
+        lines(
+            "function f({prop1, prop2}) {",
+            "  return prop1;",
+            "}",
+            "f({prop1:5, prop2:6});"));
 
-    test(
-       lines(
-           "function f({'foo bar':x}) {",
-           "  return x;",
-           "}",
-           "f({'foo bar': 1});"),
-       "({'foo bar':1})['foo bar']");
+    testSame(
+        lines(
+            "function f({'foo bar':x}) {",
+            "  return x;",
+            "}",
+            "f({'foo bar': 1});"));
 
-    test(
+    testSame(
         lines(
             "function f({'foo_bar':x}) {",
             "  return x;",
             "}",
-            "f({'foo_bar': 1});"),
-        "({'foo_bar':1})['foo_bar']");
+            "f({'foo_bar': 1});"));
 
-    test(
+    testSame(
         lines(
             "function f({123: x}) {",
             " return x;",
             "}",
-            "f({123: 1});"),
-            "({123: 1})['123'];");
+            "f({123: 1});"));
 
-    test(
+    testSame(
         lines(
             "function f({'1foo': x}) {",
             "  return x;",
             "}",
-            "f({'1foo': 1});"),
-        "({'1foo': 1})['1foo'];");
+            "f({'1foo': 1});"));
 
-    test(
+    testSame(
         lines(
             "function f({foo1 : x}) {",
             "  return x;",
             "}",
-            "f({foo1 : 1});"),
-        "({foo1 : 1}).foo1;");
+            "f({foo1 : 1});"));
 
-    test(
-      lines(
+    testSame(
+        lines(
             "function f({'foo1': x}) {",
             "  return x;",
             "}",
-            "f({'foo1': 1});"),
-         "({'foo1': 1})['foo1'];");
+            "f({'foo1': 1});"));
 
-    test(
+    testSame(
         lines(
             "function f({$foo : x}) {",
             "  return x;",
             "}",
-            "f({$foo : 1});"),
-        "({$foo : 1}).$foo;");
+            "f({$foo : 1});"));
 
-    test(
+    testSame(
         lines(
             "function f({_foo : x}) {",
             "  return x;",
             "}",
-            "f({_foo : 1});"),
-        "({_foo : 1})._foo;");
+            "f({_foo : 1});"));
   }
 
   public void testDefaultObjectPatternParam() {
-    test(
+    testSame(
         lines(
             "function foo({x} = {x:5}) {",
             "  return x+1;",
             "}",
-            "foo();"),
-        "({x:5}).x+1");
+            "foo();"));
 
-    test(
+    testSame(
         lines(
             "function foo({x} = {x:5}, {y} = {y:3}) {",
             "  return x+y;",
             "}",
-            "foo();"),
-        lines(
-            "{var x$jscomp$inline_0={x:5}.x;var y$jscomp$inline_1={y:3}.y;",
-            "x$jscomp$inline_0+y$jscomp$inline_1}"));
+            "foo();"));
 
-    test(
+    testSame(
         lines(
             "let defaultObj = {x: 5};",
             "function foo({x} = defaultObj) {",
             "  return x;",
             "}",
-            "foo();"),
-        "let defaultObj = {x: 5}; defaultObj.x");
+            "foo();"));
 
-    test(
+    testSame(
         lines(
             "function f({a, b, c} = {a:1, b:2, c:3}) {",
             " return b+c;",
             "}",
-            "f();"
-        ),
-        lines(
-            "{var b$jscomp$inline_1={a:1,b:2,c:3}.b;",
-            "var c$jscomp$inline_2={a:1,b:2,c:3}.c;",
-            "b$jscomp$inline_1+c$jscomp$inline_2}"));
+            "f();"));
 
-    test(
+    testSame(
         lines(
             "function f({p:x, 3:y} = {p:1, 3:2}) {",
             " return x+y;",
             "}",
-            "f();"),
-        lines(
-            "{var x$jscomp$inline_0={p:1,3:2}.p;",
-            "var y$jscomp$inline_1={p:1,3:2}['3'];",
-            "x$jscomp$inline_0+y$jscomp$inline_1}"));
+            "f();"));
 
-  //Currently not being inlined because is too complicated to handle. Not an inherent limitation
     testSame(
         lines(
             "function foo(a, { b = '', c = '' } = {}) {",
@@ -3106,43 +3048,26 @@ public class InlineFunctionsTest extends CompilerTestCase {
   }
 
   public void testObjectPatternParamWithMultipleDestructuredNames() {
-    // TODO(b/69850796): Inlining produces the wrong output here.
-    // We potentially cause unwanted side effects - see the comment below.
-    test(
+    testSame(
         lines(
             "function f({x, y}) {",
             "  return x + y;",
             "}",
-            "alert(f({x: sideEffects1(), y: sideEffects2()}));"),
-        lines(
-            "var JSCompiler_temp_const$jscomp$0 = alert;",
-            "var JSCompiler_inline_result$jscomp$1;",
-            "{",
-            // Don't evaluate {x: sideEffects1(), y: sideEffects2()} twice.
-            "  var x$jscomp$inline_2 = {x: sideEffects1(), y: sideEffects2()}.x;",
-            "  var y$jscomp$inline_3 = {x: sideEffects1(), y: sideEffects2()}.y",
-            "  JSCompiler_inline_result$jscomp$1 = x$jscomp$inline_2 + y$jscomp$inline_3;",
-            "}",
-            "JSCompiler_temp_const$jscomp$0(JSCompiler_inline_result$jscomp$1);"));
+            "alert(f({x: sideEffects1(), y: sideEffects2()}));"));
   }
 
-  public void disabled_testArrayPatternParam() {
-    // TODO(b/69850796): Causes a internal compiler error.
-    // It should be possibly to inline this, not back off, but using testSame for now
-    // since it's not decided exactly how to inline destructuring parameters.
+  public void testArrayPatternParam() {
     testSame("function f([x]) { return x; } alert(f([3]));");
   }
 
 
   public void testObjectPatternParamWithDefaults() {
-    // TODO(b/64614552): Consider inlining in this case.
     testSame(
         lines(
             "function foo({x = 3}) {",
             "  return x;",
             "}",
-            "alert(foo({}));"
-        ));
+            "alert(foo({}));"));
 
     testSame(
         lines(
@@ -3177,99 +3102,83 @@ public class InlineFunctionsTest extends CompilerTestCase {
   }
 
   public void testDefaultParam() {
-    test(
+    testSame(
         lines(
             "function foo(a, b = 1) {",
             "  return a + b;",
             "}",
-            "foo(1);"),
-        "1+1");
+            "foo(1);"));
 
-    test(
-        lines(
-            "function foo(a, b = 1) {",
+    testSame(
+        lines("function foo(a, b = 1) {",
             "  return a + b;",
             "}",
-            "foo(1, 2);"),
-        "1+2");
+            "foo(1, 2);"));
 
-    test(
+    testSame(
         lines(
             "function foo(a = 1, b = 2) {",
             "  return a + b;",
             "}",
-            "foo(3, 4);"),
-        "3+4");
+            "foo(3, 4);"));
 
-    test(
+    testSame(
         lines(
             "function foo(a, b = {foo: 5}) {",
             "  return a + b.foo;",
             "}",
-            "foo(3, {foo: 9});"),
-        "{ var b$jscomp$inline_1={foo:9}; 3 + b$jscomp$inline_1.foo; }");
+            "foo(3, {foo: 9});"));
 
-    test(
+    testSame(
         lines(
             "function foo(a, b = {'foo': 5}) {",
             "  return a + b['foo'];",
             "}",
-            "foo(3, {'foo': 9});"),
-        "{ var b$jscomp$inline_1={'foo':9}; 3 + b$jscomp$inline_1['foo']; }");
+            "foo(3, {'foo': 9});"));
 
-    test(
+    testSame(
         lines(
             "function foo(a, b = {foo: 5, bar: 6}) {",
             "  return a + b.foo + b.bar;",
             "}",
-            "foo(3, {foo: 1, bar: 2});"),
-        "{ var b$jscomp$inline_1={foo:1,bar:2};3+b$jscomp$inline_1.foo"
-            + "+b$jscomp$inline_1.bar }");
+            "foo(3, {foo: 1, bar: 2});"));
 
-    test(
+    testSame(
         lines(
             "function foo(a, b = {foo: 5}) {",
             "  return a + b.foo;",
             "}",
-            "foo(3);"),
-        "{ var b$jscomp$inline_1={foo:5};3+b$jscomp$inline_1.foo }");
+            "foo(3);"));
 
-    test(
+    testSame(
         lines(
             "function foo(a, b = {foo: 5, bar: 6}) {",
             "  return a + b.foo + b.bar;",
             "}",
-            "foo(3, {foo: 1});"),
-        "{ var b$jscomp$inline_1={foo:1};3+b$jscomp$inline_1.foo"
-            + "+b$jscomp$inline_1.bar }");
+            "foo(3, {foo: 1});"));
 
-    test(
+    testSame(
         lines(
             "function foo(a, b = [1, 2]) {",
             "  return a + b[1];",
             "}",
-            "foo(3, [7, 8]);"),
-        "{ var b$jscomp$inline_1=[7,8];3+b$jscomp$inline_1[1] }");
+            "foo(3, [7, 8]);"));
 
-    test(
+    testSame(
         lines(
             "function foo(a, b = []) {",
             "  return a + b[1];",
             "}",
-            "foo(3, [7, 8]);"),
-        "{ var b$jscomp$inline_1=[7,8];3+b$jscomp$inline_1[1] }");
+            "foo(3, [7, 8]);"));
   }
 
   public void testDefaultParam_argIsUndefined() {
-    test(
+    testSame(
         lines(
             "function foo(a, b = 1) {",
             "  return a + b;",
             "}",
-            "foo(1, undefined);"),
-        // TODO(tbreisacher): This is incorrect!
-        // If the caller passes undefined, 'b' gets its default value, 1.
-        "1+undefined");
+            "foo(1, undefined);"));
   }
 
   public void testDefaultParam_argIsUnknown() {
@@ -3278,16 +3187,11 @@ public class InlineFunctionsTest extends CompilerTestCase {
             "function foo(a, b = 1) {",
             "  return a + b;",
             "}",
-            "foo(1, x);"),
-        // TODO(tbreisacher): This is incorrect!
-        // If x happens to be undefined, 'b' gets its default value, 1.
-        "1 + x");
+            "foo(1, x);"));
   }
 
-  // This test currently produces an invalid tree (with a "void 0" on the left side of an assign).
-  // TODO(b/69850796): Fix this and enable the test.
-  public void disabled_testDefaultParam_withAssign() {
-    test(
+  public void testDefaultParam_withAssign() {
+    testSame(
         lines(
             "function foo(x = undefined) {",
             "  if (!x) {",
@@ -3295,33 +3199,23 @@ public class InlineFunctionsTest extends CompilerTestCase {
             "  }",
             "  return x;",
             "}",
-            "foo(4);"),
-        lines(
-            "{",
-            "  var x$jscomp$inline_0 = 4;",
-            "  if (!x$jscomp$inline_0)",
-            "    x$jscomp$inline_0 = 2;",
-            "  x$jscomp$inline_0;",
-            "}"));
+            "foo(4);"));
   }
 
-  //TODO(b/64614552): Get the following tests to pass
-  public void disabled_testNestedDefaultParam() {
-    test(
+  public void testNestedDefaultParam() {
+    testSame(
         lines(
             "function foo(a = b = 1) {",
             "  return a;",
             "}",
-            "foo();"),
-        "1");
+            "foo();"));
 
-    test(
+    testSame(
         lines(
-            "function foo(c = {a:(b = 1)}}) {",
+            "function foo(c = {a:(b = 1)}) {",
             "  return c;",
             "}",
-            "foo();"),
-        "{a: 1}");
+            "foo();"));
   }
 
   public void testSpreadCall() {
