@@ -67,7 +67,6 @@ class InlineFunctions implements CompilerPass {
 
   private final FunctionInjector injector;
 
-  private final boolean blockFunctionInliningEnabled;
   private final boolean inlineGlobalFunctions;
   private final boolean inlineLocalFunctions;
   private final boolean assumeMinimumCapture;
@@ -80,7 +79,6 @@ class InlineFunctions implements CompilerPass {
       Supplier<String> safeNameIdSupplier,
       boolean inlineGlobalFunctions,
       boolean inlineLocalFunctions,
-      boolean blockFunctionInliningEnabled,
       boolean assumeStrictThis,
       boolean assumeMinimumCapture,
       int maxSizeAfterInlining) {
@@ -90,7 +88,6 @@ class InlineFunctions implements CompilerPass {
 
     this.inlineGlobalFunctions = inlineGlobalFunctions;
     this.inlineLocalFunctions = inlineLocalFunctions;
-    this.blockFunctionInliningEnabled = blockFunctionInliningEnabled;
     this.assumeMinimumCapture = assumeMinimumCapture;
 
     this.maxSizeAfterInlining = maxSizeAfterInlining;
@@ -329,12 +326,6 @@ class InlineFunctions implements CompilerPass {
 
       }
 
-      // Check if block inlining is allowed.
-      if (functionState.canInline() && !functionState.canInlineDirectly()
-          && !blockFunctionInliningEnabled) {
-        functionState.setInline(false);
-      }
-
       if (fnNode.isGeneratorFunction()) {
         functionState.setInline(false);
       }
@@ -504,7 +495,7 @@ class InlineFunctions implements CompilerPass {
       InliningMode mode = functionState.canInlineDirectly()
           ? InliningMode.DIRECT : InliningMode.BLOCK;
       boolean referenceAdded = maybeAddReferenceUsingMode(t, functionState, callNode, module, mode);
-      if (!referenceAdded && mode == InliningMode.DIRECT && blockFunctionInliningEnabled) {
+      if (!referenceAdded && mode == InliningMode.DIRECT) {
         // This reference can not be directly inlined, see if
         // block replacement inlining is possible.
         mode = InliningMode.BLOCK;

@@ -24,7 +24,6 @@ package com.google.javascript.jscomp;
 
 public class InlineFunctionsTest extends CompilerTestCase {
   boolean allowGlobalFunctionInlining;
-  boolean allowBlockInlining;
   final boolean allowExpressionDecomposition = true;
   final boolean allowFunctionExpressionInlining = true;
   final boolean allowLocalFunctionInlining = true;
@@ -50,7 +49,6 @@ public class InlineFunctionsTest extends CompilerTestCase {
     enableNormalize();
     enableComputeSideEffects();
     allowGlobalFunctionInlining = true;
-    allowBlockInlining = true;
     assumeStrictThis = false;
     assumeMinimumCapture = false;
     maxSizeAfterInlining = CompilerOptions.UNLIMITED_FUN_SIZE_AFTER_INLINING;
@@ -65,7 +63,6 @@ public class InlineFunctionsTest extends CompilerTestCase {
         compiler.getUniqueNameIdSupplier(),
         allowGlobalFunctionInlining,
         allowLocalFunctionInlining,
-        allowBlockInlining,
         assumeStrictThis,
         assumeMinimumCapture,
         maxSizeAfterInlining);
@@ -101,13 +98,6 @@ public class InlineFunctionsTest extends CompilerTestCase {
   public void testInlineEmptyFunction4() {
     // Empty function, params with side-effects forces block inlining.
     test("function foo(){}\n foo(x());", "{var JSCompiler_inline_anon_param_0 = x();}");
-  }
-
-  public void testInlineEmptyFunction5() {
-    // Empty function, call params with side-effects in expression can not
-    // be inlined.
-    allowBlockInlining = false;
-    testSame("function foo(){}\n foo(x());");
   }
 
   public void testInlineEmptyFunction6() {
@@ -212,17 +202,6 @@ public class InlineFunctionsTest extends CompilerTestCase {
     test("function f(x){return x}" +
           "var y=f(i)",
           "var y=i");
-  }
-
-  public void testInlineFunctions12() {
-    // don't inline if the input parameter has side-effects.
-    allowBlockInlining = false;
-    test("function f(x){return x}" +
-          "var y=f(i)",
-          "var y=i");
-    test(
-        "function f(x){return x} var y=f(i++)",
-        "var y = i++");
   }
 
   public void testInlineFunctions13() {
@@ -370,15 +349,6 @@ public class InlineFunctionsTest extends CompilerTestCase {
     testSame("function foo(x){return x*x+foo(3)}var bar=foo(4)");
   }
 
-  public void testInlineFunctions18() {
-    // TRICKY ... test nested inlines
-    allowBlockInlining = false;
-    test("function foo(a, b){return a+b}" +
-         "function bar(d){return c}" +
-         "var d=foo(bar(1),e)",
-         "var d=c+e");
-  }
-
   public void testInlineFunctions19() {
     // TRICKY ... test nested inlines
     // with block inlining possible
@@ -386,15 +356,6 @@ public class InlineFunctionsTest extends CompilerTestCase {
         "function bar(d){return c}" +
         "var d=foo(bar(1),e)",
         "var d=c+e;");
-  }
-
-  public void testInlineFunctions20() {
-    // Make sure both orderings work
-    allowBlockInlining = false;
-    test("function foo(a, b){return a+b}" +
-         "function bar(d){return c}" +
-         "var d=bar(foo(1,e));",
-         "var d=c");
   }
 
   public void testInlineFunctions21() {
@@ -722,26 +683,6 @@ public class InlineFunctionsTest extends CompilerTestCase {
             "}"));
   }
 
-  public void testNoInlineMutableArgs1() {
-    allowBlockInlining = false;
-    testSame("function foo(x){return x+x} foo([])");
-  }
-
-  public void testNoInlineMutableArgs2() {
-    allowBlockInlining = false;
-    testSame("function foo(x){return x+x} foo(new Date)");
-  }
-
-  public void testNoInlineMutableArgs3() {
-    allowBlockInlining = false;
-    testSame("function foo(x){return x+x} foo(true&&new Date)");
-  }
-
-  public void testNoInlineMutableArgs4() {
-    allowBlockInlining = false;
-    testSame("function foo(x){return x+x} foo({})");
-  }
-
   public void testInlineBlockMutableArgs1() {
     test("function foo(x){x+x}foo([])",
          "{var x$jscomp$inline_0=[];" +
@@ -821,15 +762,6 @@ public class InlineFunctionsTest extends CompilerTestCase {
          "var a=0;function _bar(a$jscomp$1){" +
          "a$jscomp$1=" +
          "3+a+a$jscomp$1}");
-  }
-
-  public void testShadowVariables5() {
-    // Can't yet inline multiple statements functions into expressions
-    // (though some are possible using the COMMA operator).
-    allowBlockInlining = false;
-    testSame("var a=0;" +
-        "function foo(){var a=4;return 3+a}" +
-        "function _bar(a){a=foo(4)+a}");
   }
 
   public void testShadowVariables6() {
@@ -1070,19 +1002,6 @@ public class InlineFunctionsTest extends CompilerTestCase {
         "function _t2(){return foo(2,3)}");
   }
 
-  public void testCostBasedInlining8() {
-    // Verify multiple references in the same statement:
-    // Here "f" is not known to be removable, as it is a used as parameter
-    // and is not known to be side-effect free.  The first call to f() can
-    // not be inlined on the first pass (as the call to f() as a parameter
-    // prevents this). However, the call to f() would be inlinable, if it
-    // is small enough to be inlined without removing the function declaration.
-    // but it is not in this first test.
-    allowBlockInlining = false;
-    testSame("function f(a){return chg() + a + a;}" +
-        "var a = f(f(1));");
-  }
-
   public void testCostBasedInlining9() {
     // Here both direct and block inlining is used.  The call to f as a
     // parameter is inlined directly, which the call to f with f as a parameter
@@ -1092,14 +1011,6 @@ public class InlineFunctionsTest extends CompilerTestCase {
          "var a;" +
          "{var a$jscomp$inline_0=chg()+1+1;" +
          "a=chg()+a$jscomp$inline_0+a$jscomp$inline_0}");
-  }
-
-  public void testCostBasedInlining10() {
-    allowBlockInlining = false;
-    // The remaining use of 'f' would be inlined after the constants are folded.
-    test("function f(a){return a + a;}" +
-        "var a = f(f(1));",
-        "function f(a$jscomp$1){return a$jscomp$1+a$jscomp$1}var a=f(1+1)");
   }
 
   public void testCostBasedInlining11() {
@@ -1218,14 +1129,6 @@ public class InlineFunctionsTest extends CompilerTestCase {
          "{1+1+1}{1+2+2}");
   }
 
-  public void testDoubleInlining1() {
-    allowBlockInlining = false;
-    test("var foo = function(a) { return nochg(a); };" +
-         "var bar = function(b) { return b; };" +
-         "foo(bar(x));",
-         "nochg(x)");
-  }
-
   public void testDoubleInlining2() {
     test("var foo = function(a) { return getWindow(a); };" +
          "var bar = function(b) { return b; };" +
@@ -1298,22 +1201,6 @@ public class InlineFunctionsTest extends CompilerTestCase {
     test("function f(one, two, three) { return one + two + three; }" +
          "f(1,2,3,4,5);",
          "1+2+3");
-  }
-
-  public void testArgumentsWithSideEffectsNeverInlined1() {
-    allowBlockInlining = false;
-    testSame("function f(){return 0} f(new goo());");
-  }
-
-  public void testArgumentsWithSideEffectsNeverInlined2() {
-    allowBlockInlining = false;
-    testSame("function f(g,h){return h+g}f(g(),h());");
-  }
-
-  public void testOneSideEffectCallDoesNotRuinOthers() {
-    allowBlockInlining = false;
-    test("function f(){return 0}f(new goo());f()",
-         "function f(){return 0}f(new goo());0");
   }
 
   public void testComplexInlineNoResultNoParamCall1() {
@@ -1630,75 +1517,74 @@ public class InlineFunctionsTest extends CompilerTestCase {
   }
 
   public void testComplexSample() {
-    String result = "" +
-      "{{" +
-      "var styleSheet$jscomp$inline_2=null;" +
-      "if(goog$userAgent$IE)" +
-        "styleSheet$jscomp$inline_2=0;" +
-      "else " +
-        "var head$jscomp$inline_3=0;" +
-      "{" +
-        "var element$jscomp$inline_0=" +
-            "styleSheet$jscomp$inline_2;" +
-        "var stylesString$jscomp$inline_1=a;" +
-        "if(goog$userAgent$IE)" +
-          "element$jscomp$inline_0.cssText=" +
-              "stylesString$jscomp$inline_1;" +
-        "else " +
-        "{" +
-          "var propToSet$jscomp$inline_2=" +
-              "\"innerText\";" +
-          "element$jscomp$inline_0[" +
-              "propToSet$jscomp$inline_2]=" +
-                  "stylesString$jscomp$inline_1" +
-        "}" +
-      "}" +
-      "styleSheet$jscomp$inline_2" +
-      "}}";
-
-    test("var foo = function(stylesString, opt_element) { " +
-        "var styleSheet = null;" +
-        "if (goog$userAgent$IE)" +
-          "styleSheet = 0;" +
-        "else " +
-          "var head = 0;" +
-        "" +
-        "goo$zoo(styleSheet, stylesString);" +
-        "return styleSheet;" +
-     " };\n " +
-
-     "var goo$zoo = function(element, stylesString) {" +
-        "if (goog$userAgent$IE)" +
-          "element.cssText = stylesString;" +
-        "else {" +
-          "var propToSet = 'innerText';" +
-          "element[propToSet] = stylesString;" +
-        "}" +
-      "};" +
-      "(function(){foo(a,b);})();",
-     result);
+    test(
+        lines(
+            "var foo = function(stylesString, opt_element) { ",
+            "  var styleSheet = null;",
+            "  if (goog$userAgent$IE)",
+            "    styleSheet = 0;",
+            "  else",
+            "    var head = 0;",
+            "",
+            "  goo$zoo(styleSheet, stylesString);",
+            "  return styleSheet;",
+            "};",
+            "",
+            "var goo$zoo = function(element, stylesString) {",
+            "  if (goog$userAgent$IE)",
+            "    element.cssText = stylesString;",
+            "  else {",
+            "    var propToSet = 'innerText';",
+            "    element[propToSet] = stylesString;",
+            "  }",
+            "};",
+            "(function(){foo(a,b);})();"),
+        lines(
+            "{",
+            "  {",
+            "    var styleSheet$jscomp$inline_2 = null;",
+            "    if (goog$userAgent$IE)",
+            "      styleSheet$jscomp$inline_2 = 0;",
+            "    else",
+            "      var head$jscomp$inline_3 = 0;",
+            "    {",
+            "       var element$jscomp$inline_0 = styleSheet$jscomp$inline_2;",
+            "       var stylesString$jscomp$inline_1=a;",
+            "       if (goog$userAgent$IE)",
+            "         element$jscomp$inline_0.cssText = stylesString$jscomp$inline_1;",
+            "       else {",
+            "         var propToSet$jscomp$inline_2 = 'innerText';",
+            "         element$jscomp$inline_0[propToSet$jscomp$inline_2] =",
+            "             stylesString$jscomp$inline_1",
+            "       }",
+            "    }",
+            "    styleSheet$jscomp$inline_2;",
+            "  }",
+            "}"));
   }
 
   public void testComplexSampleNoInline() {
     testSame(
-      "foo=function(stylesString,opt_element){" +
-        "var styleSheet=null;" +
-        "if(goog$userAgent$IE)" +
-          "styleSheet=0;" +
-        "else " +
-          "var head=0;" +
-        "" +
-        "goo$zoo(styleSheet,stylesString);" +
-        "return styleSheet" +
-     "};" +
-     "goo$zoo=function(element,stylesString){" +
-        "if(goog$userAgent$IE)" +
-          "element.cssText=stylesString;" +
-        "else{" +
-          "var propToSet=goog$userAgent$WEBKIT?\"innerText\":\"innerHTML\";" +
-          "element[propToSet]=stylesString" +
-        "}" +
-      "}");
+        lines(
+            "foo = function(stylesString, opt_element) {",
+            "  var styleSheet = null;",
+            "  if(goog$userAgent$IE)",
+            "    styleSheet=0;",
+            "  else",
+            "    var head=0;",
+            "",
+            "  goo$zoo(styleSheet, stylesString);",
+            "  return styleSheet",
+            "};",
+            "",
+            "goo$zoo = function(element, stylesString) {",
+            "  if (goog$userAgent$IE)",
+            "    element.cssText = stylesString;",
+            "  else{",
+            "    var propToSet = goog$userAgent$WEBKIT? 'innerText' : 'innerHTML';",
+            "    element[propToSet] = stylesString",
+            "  }",
+            "}"));
   }
 
   // Test redefinition of parameter name.
