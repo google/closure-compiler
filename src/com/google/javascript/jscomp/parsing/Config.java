@@ -46,6 +46,7 @@ public final class Config {
     ECMASCRIPT6(FeatureSet.ES6_MODULES),
     ECMASCRIPT7(FeatureSet.ES7_MODULES),
     ECMASCRIPT8(FeatureSet.ES8_MODULES),
+    ES_NEXT(FeatureSet.ES_NEXT),
     TYPESCRIPT(FeatureSet.TYPESCRIPT),
     ;
 

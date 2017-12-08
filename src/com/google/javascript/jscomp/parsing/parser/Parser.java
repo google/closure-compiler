@@ -215,6 +215,7 @@ public class Parser {
       ES6,
       ES7,
       ES8_OR_GREATER,
+      ES_NEXT,
       TYPESCRIPT,
     }
 
@@ -236,7 +237,7 @@ public class Parser {
     public Config(Mode mode, boolean isStrictMode) {
       parseTypeSyntax = mode == Mode.TYPESCRIPT;
       atLeast6 = !(mode == Mode.ES3 || mode == Mode.ES5);
-      atLeast8 = mode == Mode.ES8_OR_GREATER;
+      atLeast8 = mode == Mode.ES8_OR_GREATER || mode == Mode.ES_NEXT;
       this.isStrictMode = isStrictMode;
 
       // Generally, we allow everything that is valid in any mode

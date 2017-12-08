@@ -25,6 +25,7 @@ import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES6;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES7;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES8;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES8_MODULES;
+import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES_NEXT;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.TYPESCRIPT;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -275,6 +276,11 @@ public final class DefaultPassConfig extends PassConfig {
 
     if (options.needsTranspilationFrom(TYPESCRIPT)) {
       checks.add(convertEs6TypedToEs6);
+    }
+
+    if (options.needsTranspilationFrom(ES_NEXT)) {
+      // placeholder for a transpilation pass from ES_NEXT to ES8.
+      checks.add(setFeatureSet(ES8_MODULES));
     }
 
     if (options.enables(DiagnosticGroups.LINT_CHECKS)) {

@@ -24,6 +24,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
+import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
@@ -233,6 +234,25 @@ public abstract class NewTypeInferenceTestBase extends CompilerTypeTestCase {
     };
   }
 
+  private final PassFactory setFeatureSet(final FeatureSet featureSet) {
+    return new PassFactory("setFeatureSet:" + featureSet.version(), true) {
+      @Override
+      protected CompilerPass create(final AbstractCompiler compiler) {
+        return new CompilerPass() {
+          @Override
+          public void process(Node externs, Node root) {
+            compiler.setFeatureSet(featureSet);
+          }
+        };
+      }
+
+      @Override
+      public FeatureSet featureSet() {
+        return FeatureSet.latest();
+      }
+    };
+  }
+
   private void parseAndTypeCheck(String externs, String js) {
     initializeNewCompiler(compilerOptions);
     compiler.init(
@@ -258,6 +278,10 @@ public abstract class NewTypeInferenceTestBase extends CompilerTypeTestCase {
     if (compilerOptions.needsTranspilationFrom(FeatureSet.TYPESCRIPT)) {
       passes.add(makePassFactory("convertEs6TypedToEs6",
               new Es6TypedToEs6Converter(compiler)));
+    }
+    if (compilerOptions.needsTranspilationFrom(FeatureSet.ES_NEXT)) {
+      // placeholder for a transpilation pass from ES_NEXT to ES8.
+      passes.add(setFeatureSet(FeatureSet.ES8));
     }
     if (compilerOptions.needsTranspilationFrom(FeatureSet.ES6)) {
       TranspilationPasses.addEs2017Passes(passes);

@@ -173,6 +173,9 @@ public final class ParserRunner {
       case ECMASCRIPT8:
         parserConfigLanguageMode = Mode.ES8_OR_GREATER;
         break;
+      case ES_NEXT:
+        parserConfigLanguageMode = Mode.ES_NEXT;
+        break;
 
       default:
         throw new IllegalStateException("unexpected language mode: " + languageMode);

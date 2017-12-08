@@ -66,7 +66,9 @@ public final class FeatureSet implements Serializable {
 
   public static final FeatureSet ES8 = ES8_MODULES.without(Feature.MODULES);
 
-  public static final FeatureSet TYPESCRIPT = ES8_MODULES.with(LangVersion.TYPESCRIPT.features());
+  public static final FeatureSet ES_NEXT = ES8_MODULES.with(LangVersion.ES_NEXT.features());
+
+  public static final FeatureSet TYPESCRIPT =  ES_NEXT.with(LangVersion.TYPESCRIPT.features());
 
   // TODO(b/64536685): Remove this FeatureSet once NTI supports all of ES6.
   public static final FeatureSet NTI_SUPPORTED =
@@ -86,6 +88,7 @@ public final class FeatureSet implements Serializable {
     ES6,
     ES7,
     ES8,
+    ES_NEXT,
     TYPESCRIPT;
 
     private Set<Feature> features() {
@@ -149,6 +152,10 @@ public final class FeatureSet implements Serializable {
     ASYNC_FUNCTIONS("async function", LangVersion.ES8),
     TRAILING_COMMA_IN_PARAM_LIST("trailing comma in param list", LangVersion.ES8),
 
+    // features from tc39 https://github.com/tc39/proposal-object-rest-spread
+    OBJECT_LITERALS_WITH_SPREAD("object literals with spread", LangVersion.ES_NEXT),
+    OBJECT_PATTERN_REST("object pattern rest", LangVersion.ES_NEXT),
+
     // ES6 typed features that are not at all implemented in browsers
     ACCESSIBILITY_MODIFIER("accessibility modifier", LangVersion.TYPESCRIPT),
     AMBIENT_DECLARATION("ambient declaration", LangVersion.TYPESCRIPT),
@@ -202,6 +209,9 @@ public final class FeatureSet implements Serializable {
     }
     if (ES8_MODULES.contains(this)) {
       return "es8";
+    }
+    if (ES_NEXT.contains(this)) {
+      return "es_next";
     }
     if (TYPESCRIPT.contains(this)) {
       return "ts";
@@ -281,6 +291,8 @@ public final class FeatureSet implements Serializable {
         return ES7;
       case "es8":
         return ES8;
+      case "es_next":
+        return ES_NEXT;
       case "ts":
         return TYPESCRIPT;
       default:

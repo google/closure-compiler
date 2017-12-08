@@ -3138,8 +3138,9 @@ public class CompilerOptions implements Serializable {
         case ECMASCRIPT_2016:
           return FeatureSet.ES7_MODULES;
         case ECMASCRIPT_2017:
-        case ECMASCRIPT_NEXT:
           return FeatureSet.ES8_MODULES;
+        case ECMASCRIPT_NEXT:
+          return FeatureSet.ES_NEXT;
         case ECMASCRIPT6_TYPED:
           return FeatureSet.TYPESCRIPT;
         case NO_TRANSPILE:
