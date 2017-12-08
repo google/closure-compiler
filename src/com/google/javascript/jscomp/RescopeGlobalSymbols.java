@@ -160,9 +160,7 @@ final class RescopeGlobalSymbols implements CompilerPass {
 
     // Turn global named function statements into var assignments.
     NodeTraversal.traverseEs6(
-        compiler,
-        root,
-        new RewriteGlobalFunctionStatementsToVarAssignmentsCallback());
+        compiler, root, new RewriteGlobalClassFunctionDeclarationsToVarAssignmentsCallback());
 
     // Find global names that are used in more than one module. Those that
     // are have to be rewritten.
@@ -184,23 +182,43 @@ final class RescopeGlobalSymbols implements CompilerPass {
   }
 
   /**
-   * Rewrites function statements to var statements + assignment.
+   * Rewrites global function and class declarations to var statements + assignment. Ignores
+   * non-global function and class declarations.
    *
    * <pre>function test(){}</pre>
+   *
    * becomes
+   *
    * <pre>var test = function (){}</pre>
    *
-   * After this traversal, the special case of global function statements
-   * can be ignored.
+   * <pre>class A {}</pre>
+   *
+   * becomes
+   *
+   * <pre>var A = class {}</pre>
+   *
+   * After this traversal, the special case of global class and function statements can be ignored.
+   *
+   * <p>This is helpful when rewriting simple names to property accesses on the global symbol, since
+   * {@code class A {}} cannot be rewritten directly to {@code class NS.A {}}
    */
-  private class RewriteGlobalFunctionStatementsToVarAssignmentsCallback
+  private class RewriteGlobalClassFunctionDeclarationsToVarAssignmentsCallback
       extends AbstractShallowStatementCallback {
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
-      if (NodeUtil.isFunctionDeclaration(n)) {
-        String name = NodeUtil.getName(n);
-        n.getFirstChild().setString("");
-        compiler.reportChangeToEnclosingScope(n.getFirstChild());
+      if (NodeUtil.isFunctionDeclaration(n)
+          // Since class declarations are block-scoped, only handle them if in the global scope.
+          || (NodeUtil.isClassDeclaration(n) && t.inGlobalScope())) {
+        Node nameNode = NodeUtil.getNameNode(n);
+        String name = nameNode.getString();
+        // Remove the class or function name. Anonymous classes have an EMPTY node, while anonymous
+        // functions have a NAME node with an empty string.
+        if (n.isClass()) {
+          nameNode.replaceWith(IR.empty().srcref(nameNode));
+        } else {
+          nameNode.setString("");
+          compiler.reportChangeToEnclosingScope(nameNode);
+        }
         Node prev = n.getPrevious();
         n.detach();
         Node var = NodeUtil.newVarNode(name, n);

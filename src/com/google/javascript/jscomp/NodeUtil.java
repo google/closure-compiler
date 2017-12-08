@@ -479,13 +479,14 @@ public final class NodeUtil {
 
       default:
         // function name() ...
+        //   or
+        // class Name ...
         Node funNameNode = n.getFirstChild();
         // Don't return the name node for anonymous functions/classes.
         // TODO(tbreisacher): Currently we do two kinds of "empty" checks because
         // anonymous classes have an EMPTY name node while anonymous functions
         // have a STRING node with an empty string. Consider making these the same.
-        return (funNameNode.isEmpty() || funNameNode.getString().isEmpty())
-            ? null : funNameNode;
+        return (funNameNode.isEmpty() || funNameNode.getString().isEmpty()) ? null : funNameNode;
     }
   }
 

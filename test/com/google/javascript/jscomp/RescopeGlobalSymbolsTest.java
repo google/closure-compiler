@@ -310,6 +310,46 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
         "  _.obj = {}; [_.obj['foo bar']] = []; _.obj['foo bar'];");
   }
 
+  public void testClasses() {
+    test("class A {}", "_.A = class {};");
+    test("class A {} class B extends A {}", "_.A = class {}; _.B = class extends _.A {}");
+    test("class A {} let a = new A;", "_.A = class {}; _.a = new _.A;");
+    test(
+        lines(
+            "const PI = 3.14;",
+            "class A {",
+            "  static printPi() {",
+            "    console.log(PI);",
+            "  }",
+            "}",
+            "A.printPi();"),
+        lines(
+            "_.PI = 3.14;",
+            "_.A = class {",
+            "  static printPi() {",
+            "    window.console.log(_.PI);",
+            "  }",
+            "}",
+            "_.A.printPi();"));
+
+    // Test that class expression names are not rewritten.
+    test("var A = class Name {};", "_.A = class Name {};");
+    test("var A = class A {};", "_.A = class A {};");
+  }
+
+  public void testClasses_nonGlobal() {
+    testSame("if (true) { class A {} }");
+    test("function foo() { class A {} }", "_.foo = function() { class A {} };");
+    test("const A = 5; { class A {} }", "_.A = 5; { class A {} }");
+  }
+
+  public void testClasses_allSameModule() {
+    assumeCrossModuleNames = false;
+    test("class A {}", "var A = class {};");
+    test("class A {} class B extends A {}", "var A = class {}; var B = class extends A {}");
+    testSame("if (true) { class A {} }");
+  }
+
   public void testForLoops() {
     assumeCrossModuleNames = false;
     test(createModules(
@@ -397,6 +437,12 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
     test(
         "if(1)function test(){}",
         "if(1)_.test=function (){}");
+  }
+
+  public void testFunctionStatements_allSameModule() {
+    assumeCrossModuleNames = false;
+    test("function f() {}", "var f = function() {}");
+    test("if (true) { function f() {} }", "if (true) { var f = function() {}; }");
   }
 
   public void testFunctionStatements_freeCallSemantics1() throws Exception {
@@ -554,6 +600,7 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
         "var iframes",
         "var foo = iframes;",
         "_.foo = window.iframes;");
+    test("class A {}", "A", "window.A");
     // Special names.
     test(
         "var arguments, window, eval;",
