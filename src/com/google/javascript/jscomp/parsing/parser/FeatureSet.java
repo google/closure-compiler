@@ -122,27 +122,29 @@ public final class FeatureSet implements Serializable {
     TRAILING_COMMA("trailing comma", LangVersion.ES5),
 
     // ES6 features (besides modules): all stable browsers are now fully compliant
+    ARRAY_PATTERN_REST("array pattern rest", LangVersion.ES6),
     ARROW_FUNCTIONS("arrow function", LangVersion.ES6),
     BINARY_LITERALS("binary literal", LangVersion.ES6),
-    OCTAL_LITERALS("octal literal", LangVersion.ES6),
     CLASSES("class", LangVersion.ES6),
     COMPUTED_PROPERTIES("computed property", LangVersion.ES6),
+    CONST_DECLARATIONS("const declaration", LangVersion.ES6),
+    DEFAULT_PARAMETERS("default parameter", LangVersion.ES6),
+    DESTRUCTURING("destructuring", LangVersion.ES6),
     EXTENDED_OBJECT_LITERALS("extended object literal", LangVersion.ES6),
     FOR_OF("for-of loop", LangVersion.ES6),
     GENERATORS("generator", LangVersion.ES6),
     LET_DECLARATIONS("let declaration", LangVersion.ES6),
     MEMBER_DECLARATIONS("member declaration", LangVersion.ES6),
+    NEW_TARGET("new.target", LangVersion.ES6),
+    OCTAL_LITERALS("octal literal", LangVersion.ES6),
+    REGEXP_FLAG_U("RegExp flag 'u'", LangVersion.ES6),
     REGEXP_FLAG_Y("RegExp flag 'y'", LangVersion.ES6),
-    ARRAY_PATTERN_REST("array pattern rest", LangVersion.ES6),
     REST_PARAMETERS("rest parameter", LangVersion.ES6),
     SPREAD_EXPRESSIONS("spread expression", LangVersion.ES6),
     SUPER("super", LangVersion.ES6),
     TEMPLATE_LITERALS("template literal", LangVersion.ES6),
-    CONST_DECLARATIONS("const declaration", LangVersion.ES6),
-    DESTRUCTURING("destructuring", LangVersion.ES6),
-    NEW_TARGET("new.target", LangVersion.ES6),
-    REGEXP_FLAG_U("RegExp flag 'u'", LangVersion.ES6),
-    DEFAULT_PARAMETERS("default parameter", LangVersion.ES6),
+
+    // ES6 modules
     MODULES("modules", LangVersion.ES6),
 
     // ES 2016 only added one new feature:
