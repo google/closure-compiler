@@ -262,8 +262,8 @@ public abstract class NewTypeInferenceTestBase extends CompilerTypeTestCase {
     compiler.setFeatureSet(compiler.getFeatureSet().without(Feature.MODULES));
 
     compiler.parseInputs();
-    assertThat(compiler.getErrors()).named("parsing errors").isEmpty();
-    assertThat(compiler.getWarnings()).named("parsing warnings").isEmpty();
+    assertWithMessage("parsing errors").that(compiler.getErrors()).isEmpty();
+    assertWithMessage("parsing warnings").that(compiler.getWarnings()).isEmpty();
 
     // Run ASTValidator
     (new AstValidator(compiler)).validateRoot(compiler.getRoot());
