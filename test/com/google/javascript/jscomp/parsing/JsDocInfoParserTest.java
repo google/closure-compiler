@@ -66,12 +66,11 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     extraAnnotations =
         new HashSet<>(
             ParserRunner.createConfig(LanguageMode.ECMASCRIPT3, null, StrictMode.SLOPPY)
-                .annotationNames
-                .keySet());
+                .annotationNames());
     extraSuppressions =
         new HashSet<>(
             ParserRunner.createConfig(LanguageMode.ECMASCRIPT3, null, StrictMode.SLOPPY)
-                .suppressionNames);
+                .suppressionNames());
 
     extraSuppressions.add("x");
     extraSuppressions.add("y");
@@ -4728,14 +4727,15 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   private Node parseFull(String code, String... warnings) {
     TestErrorReporter testErrorReporter = new TestErrorReporter(null, warnings);
     Config config =
-        new Config(
-            extraAnnotations,
-            JsDocParsing.INCLUDE_DESCRIPTIONS_NO_WHITESPACE,
-            RunMode.KEEP_GOING,
-            extraSuppressions,
-            LanguageMode.ECMASCRIPT3,
-            true,
-            StrictMode.SLOPPY);
+        Config.builder()
+            .setExtraAnnotationNames(extraAnnotations)
+            .setJsDocParsingMode(JsDocParsing.INCLUDE_DESCRIPTIONS_NO_WHITESPACE)
+            .setRunMode(RunMode.KEEP_GOING)
+            .setSuppressionNames(extraSuppressions)
+            .setLanguageMode(LanguageMode.ECMASCRIPT3)
+            .setParseInlineSourceMaps(true)
+            .setStrictMode(StrictMode.SLOPPY)
+            .build();
 
     ParseResult result = ParserRunner.parse(
         new SimpleSourceFile("source", false), code, config, testErrorReporter);
@@ -4780,14 +4780,14 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     TestErrorReporter errorReporter = new TestErrorReporter(null, warnings);
 
     Config config =
-        new Config(
-            extraAnnotations,
-            parseDocumentation,
-            RunMode.STOP_AFTER_ERROR,
-            extraSuppressions,
-            LanguageMode.ECMASCRIPT3,
-            true,
-            Config.StrictMode.SLOPPY);
+        Config.builder()
+            .setExtraAnnotationNames(extraAnnotations)
+            .setJsDocParsingMode(parseDocumentation)
+            .setSuppressionNames(extraSuppressions)
+            .setLanguageMode(LanguageMode.ECMASCRIPT3)
+            .setParseInlineSourceMaps(true)
+            .setStrictMode(Config.StrictMode.SLOPPY)
+            .build();
 
     StaticSourceFile file = new SimpleSourceFile("testcode", false);
     Node templateNode = IR.script();

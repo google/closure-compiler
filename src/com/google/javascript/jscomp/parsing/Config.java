@@ -16,24 +16,29 @@
 
 package com.google.javascript.jscomp.parsing;
 
+import com.google.auto.value.AutoValue;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
-import java.util.Set;
 
 /**
- * Configuration for the AST factory. Should be shared across AST creation
- * for all files of a compilation process.
+ * Configuration for the AST factory. Should be shared across AST creation for all files of a
+ * compilation process.
  *
  * @author nicksantos@google.com (Nick Santos)
  */
-public final class Config {
+@AutoValue
+public abstract class Config {
 
   /**
    * Level of language strictness required for the input source code.
    */
   public enum StrictMode {
     STRICT, SLOPPY;
+
+    public boolean isStrict() {
+      return this == STRICT;
+    }
   }
 
   /** JavaScript mode */
@@ -95,8 +100,11 @@ public final class Config {
     boolean shouldParseDescriptions() {
       return this != TYPES_ONLY;
     }
+
+    boolean shouldPreserveWhitespace() {
+      return this == INCLUDE_DESCRIPTIONS_WITH_WHITESPACE;
+    }
   }
-  final JsDocParsing parseJsDocDocumentation;
 
   /**
    * Whether to keep going after encountering a parse error.
@@ -105,80 +113,81 @@ public final class Config {
     STOP_AFTER_ERROR,
     KEEP_GOING,
   }
-  final RunMode keepGoing;
 
-  /**
-   * Recognized JSDoc annotations, mapped from their name to their internal
-   * representation.
-   */
-  final ImmutableMap<String, Annotation> annotationNames;
+  /** Language level to accept. */
+  abstract LanguageMode languageMode();
 
-  /**
-   * Recognized names in a {@code @suppress} tag.
-   */
-  final ImmutableSet<String> suppressionNames;
+  /** Whether to assume input is strict mode compliant. */
+  abstract StrictMode strictMode();
 
-  /**
-   * Accept ECMAScript5 syntax, such as getter/setter.
-   */
-  final LanguageMode languageMode;
+  /** How to parse the descriptions of JsDoc comments. */
+  abstract JsDocParsing jsDocParsingMode();
 
-  final StrictMode strictMode;
+  /** Whether to keep going after encountering a parse error. */
+  abstract RunMode runMode();
 
-  /**
-   * Parse inline source maps (//# sourceMappingURL=data:...).
-   */
-  final boolean parseInlineSourceMaps;
+  /** Recognized JSDoc annotations, mapped from their name to their internal representation. */
+  abstract ImmutableMap<String, Annotation> annotations();
 
-  Config(
-      Set<String> annotationWhitelist,
-      Set<String> suppressionNames,
-      LanguageMode languageMode,
-      StrictMode strictMode) {
-    this(
-        annotationWhitelist,
-        JsDocParsing.TYPES_ONLY,
-        RunMode.STOP_AFTER_ERROR,
-        suppressionNames,
-        languageMode,
-        false,
-        strictMode);
+  /** Set of recognized names in a {@code @suppress} tag. */
+  abstract ImmutableSet<String> suppressionNames();
+
+  /** Whether to parse inline source maps (//# sourceMappingURL=data:...). */
+  abstract boolean parseInlineSourceMaps();
+
+  final ImmutableSet<String> annotationNames() {
+    return annotations().keySet();
   }
 
-  Config(
-      Set<String> annotationWhitelist,
-      JsDocParsing parseJsDocDocumentation,
-      RunMode keepGoing,
-      Set<String> suppressionNames,
-      LanguageMode languageMode,
-      boolean parseInlineSourceMaps,
-      StrictMode strictMode) {
-    this.parseInlineSourceMaps = parseInlineSourceMaps;
-    this.annotationNames = buildAnnotationNames(annotationWhitelist);
-    this.parseJsDocDocumentation = parseJsDocDocumentation;
-    this.keepGoing = keepGoing;
-    this.suppressionNames = ImmutableSet.copyOf(suppressionNames);
-    this.languageMode = languageMode;
-    this.strictMode = strictMode;
+  static Builder builder() {
+    return new AutoValue_Config.Builder()
+        .setLanguageMode(LanguageMode.TYPESCRIPT)
+        .setStrictMode(StrictMode.STRICT)
+        .setJsDocParsingMode(JsDocParsing.TYPES_ONLY)
+        .setRunMode(RunMode.STOP_AFTER_ERROR)
+        .setExtraAnnotationNames(ImmutableSet.<String>of())
+        .setSuppressionNames(ImmutableSet.<String>of())
+        .setParseInlineSourceMaps(false);
   }
 
-  /**
-   * Create the annotation names from the user-specified
-   * annotation whitelist.
-   */
-  private static ImmutableMap<String, Annotation> buildAnnotationNames(
-      Set<String> annotationWhitelist) {
-    ImmutableMap.Builder<String, Annotation> annotationBuilder =
-        ImmutableMap.builder();
-    annotationBuilder.putAll(Annotation.recognizedAnnotations);
-    for (String unrecognizedAnnotation : annotationWhitelist) {
+  @AutoValue.Builder
+  abstract static class Builder {
+    abstract Builder setLanguageMode(LanguageMode mode);
+
+    abstract Builder setStrictMode(StrictMode mode);
+
+    abstract Builder setJsDocParsingMode(JsDocParsing mode);
+
+    abstract Builder setRunMode(RunMode mode);
+
+    abstract Builder setParseInlineSourceMaps(boolean parseInlineSourceMaps);
+
+    final Builder setSuppressionNames(Iterable<String> names) {
+      return setSuppressionNames(ImmutableSet.copyOf(names));
+    }
+
+    final Builder setExtraAnnotationNames(Iterable<String> names) {
+      return setAnnotations(buildAnnotations(names));
+    }
+
+    abstract Config build();
+
+    // The following are intended to be used internally only (but aren't private due to AutoValue).
+    abstract Builder setSuppressionNames(ImmutableSet<String> names);
+
+    abstract Builder setAnnotations(ImmutableMap<String, Annotation> names);
+  }
+
+  /** Create the annotation names from the user-specified annotation whitelist. */
+  private static ImmutableMap<String, Annotation> buildAnnotations(Iterable<String> whitelist) {
+    ImmutableMap.Builder<String, Annotation> annotationsBuilder = ImmutableMap.builder();
+    annotationsBuilder.putAll(Annotation.recognizedAnnotations);
+    for (String unrecognizedAnnotation : whitelist) {
       if (!unrecognizedAnnotation.isEmpty()
-          && !Annotation.recognizedAnnotations.containsKey(
-              unrecognizedAnnotation)) {
-        annotationBuilder.put(
-            unrecognizedAnnotation, Annotation.NOT_IMPLEMENTED);
+          && !Annotation.recognizedAnnotations.containsKey(unrecognizedAnnotation)) {
+        annotationsBuilder.put(unrecognizedAnnotation, Annotation.NOT_IMPLEMENTED);
       }
     }
-    return annotationBuilder.build();
+    return annotationsBuilder.build();
   }
 }

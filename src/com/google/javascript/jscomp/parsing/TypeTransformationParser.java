@@ -18,13 +18,11 @@ package com.google.javascript.jscomp.parsing;
 
 import com.google.common.base.Ascii;
 import com.google.common.base.Preconditions;
-import com.google.javascript.jscomp.parsing.Config.LanguageMode;
 import com.google.javascript.jscomp.parsing.ParserRunner.ParseResult;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.SimpleErrorReporter;
 import com.google.javascript.rhino.StaticSourceFile;
-import java.util.HashSet;
 
 /**
  * A parser for the type transformation expressions (TTL-Exp) as in
@@ -251,11 +249,10 @@ public final class TypeTransformationParser {
    */
   public boolean parseTypeTransformation() {
     Config config =
-        new Config(
-            new HashSet<String>(),
-            new HashSet<String>(),
-            LanguageMode.ECMASCRIPT6,
-            Config.StrictMode.SLOPPY);
+        Config.builder()
+            .setLanguageMode(Config.LanguageMode.ECMASCRIPT6)
+            .setStrictMode(Config.StrictMode.SLOPPY)
+            .build();
     // TODO(lpino): ParserRunner reports errors if the expression is not
     // ES6 valid. We need to abort the validation of the type transformation
     // whenever an error is reported.

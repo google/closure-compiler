@@ -117,7 +117,7 @@ public final class JsDocInfoParser {
   private JSDocInfo fileOverviewJSDocInfo = null;
   private State state;
 
-  private final Map<String, Annotation> annotationNames;
+  private final Map<String, Annotation> annotations;
   private final Set<String> suppressionNames;
   private final boolean preserveWhitespace;
   private static final Set<String> modifiesAnnotationKeywords =
@@ -166,16 +166,15 @@ public final class JsDocInfoParser {
                   ErrorReporter errorReporter) {
     this.stream = stream;
 
-    boolean parseDocumentation = config.parseJsDocDocumentation.shouldParseDescriptions();
+    boolean parseDocumentation = config.jsDocParsingMode().shouldParseDescriptions();
     this.jsdocBuilder = new JSDocInfoBuilder(parseDocumentation);
     if (comment != null) {
       this.jsdocBuilder.recordOriginalCommentString(comment);
       this.jsdocBuilder.recordOriginalCommentPosition(commentPosition);
     }
-    this.annotationNames = config.annotationNames;
-    this.suppressionNames = config.suppressionNames;
-    this.preserveWhitespace =
-        config.parseJsDocDocumentation == Config.JsDocParsing.INCLUDE_DESCRIPTIONS_WITH_WHITESPACE;
+    this.annotations = config.annotations();
+    this.suppressionNames = config.suppressionNames();
+    this.preserveWhitespace = config.jsDocParsingMode().shouldPreserveWhitespace();
 
     this.errorReporter = errorReporter;
     this.templateNode = templateNode == null ? IR.script() : templateNode;
@@ -238,11 +237,10 @@ public final class JsDocInfoParser {
 
   private static JsDocInfoParser getParser(String toParse) {
     Config config =
-        new Config(
-            new HashSet<String>(),
-            new HashSet<String>(),
-            LanguageMode.ECMASCRIPT3,
-            Config.StrictMode.SLOPPY);
+        Config.builder()
+            .setLanguageMode(LanguageMode.ECMASCRIPT3)
+            .setStrictMode(Config.StrictMode.SLOPPY)
+            .build();
     JsDocInfoParser parser = new JsDocInfoParser(
         new JsDocTokenStream(toParse),
         toParse,
@@ -384,7 +382,7 @@ public final class JsDocInfoParser {
     int charno = stream.getCharno();
 
     String annotationName = stream.getString();
-    Annotation annotation = annotationNames.get(annotationName);
+    Annotation annotation = annotations.get(annotationName);
     if (annotation == null || annotationName.isEmpty()) {
       addParserWarning("msg.bad.jsdoc.tag", annotationName);
     } else {

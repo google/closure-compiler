@@ -81,14 +81,15 @@ public final class ParserRunner {
       effectiveAnnotationNames = new HashSet<>(annotationNames);
       effectiveAnnotationNames.addAll(extraAnnotationNames);
     }
-    return new Config(
-        effectiveAnnotationNames,
-        jsdocParsingMode,
-        runMode,
-        suppressionNames,
-        languageMode,
-        parseInlineSourceMaps,
-        strictMode);
+    return Config.builder()
+        .setExtraAnnotationNames(effectiveAnnotationNames)
+        .setJsDocParsingMode(jsdocParsingMode)
+        .setRunMode(runMode)
+        .setSuppressionNames(suppressionNames)
+        .setLanguageMode(languageMode)
+        .setParseInlineSourceMaps(parseInlineSourceMaps)
+        .setStrictMode(strictMode)
+        .build();
   }
 
   public static Set<String> getReservedVars() {
@@ -121,7 +122,7 @@ public final class ParserRunner {
     String sourceName = sourceFile.getName();
     try {
       SourceFile file = new SourceFile(sourceName, sourceString);
-      boolean keepGoing = config.keepGoing == Config.RunMode.KEEP_GOING;
+      boolean keepGoing = config.runMode() == Config.RunMode.KEEP_GOING;
       Es6ErrorReporter es6ErrorReporter = new Es6ErrorReporter(errorReporter, keepGoing);
       com.google.javascript.jscomp.parsing.parser.Parser.Config es6config = newParserConfig(config);
       Parser p = new Parser(es6config, es6ErrorReporter, file);
@@ -136,7 +137,7 @@ public final class ParserRunner {
         features = features.union(factory.getFeatures());
         root.putProp(Node.FEATURE_SET, features);
 
-        if (config.parseJsDocDocumentation.shouldParseDescriptions()) {
+        if (config.jsDocParsingMode().shouldParseDescriptions()) {
           comments = p.getComments();
         }
       }
@@ -148,8 +149,8 @@ public final class ParserRunner {
 
   private static com.google.javascript.jscomp.parsing.parser.Parser.Config newParserConfig(
       Config config) {
-    LanguageMode languageMode = config.languageMode;
-    boolean isStrictMode = config.strictMode == StrictMode.STRICT;
+    LanguageMode languageMode = config.languageMode();
+    boolean isStrictMode = config.strictMode().isStrict();
     Mode parserConfigLanguageMode;
     switch (languageMode) {
       case TYPESCRIPT:

@@ -36,7 +36,6 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.UnmodifiableIterator;
 import com.google.javascript.jscomp.parsing.Config.LanguageMode;
-import com.google.javascript.jscomp.parsing.Config.StrictMode;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.jscomp.parsing.parser.IdentifierToken;
@@ -287,7 +286,7 @@ class IRFactory {
     this.templateNode = createTemplateNode();
 
     this.fileLevelJsDocBuilder =
-        new JSDocInfoBuilder(config.parseJsDocDocumentation.shouldParseDescriptions());
+        new JSDocInfoBuilder(config.jsDocParsingMode().shouldParseDescriptions());
 
     // Pre-generate all the newlines in the file.
     for (int charNo = 0; true; charNo++) {
@@ -305,9 +304,9 @@ class IRFactory {
     this.errorReporter = errorReporter;
     this.transformDispatcher = new TransformDispatcher();
 
-    if (config.strictMode == StrictMode.STRICT) {
+    if (config.strictMode().isStrict()) {
       reservedKeywords = ES5_STRICT_RESERVED_KEYWORDS;
-    } else if (config.languageMode == LanguageMode.ECMASCRIPT3) {
+    } else if (config.languageMode() == LanguageMode.ECMASCRIPT3) {
       reservedKeywords = null; // use TokenStream.isKeyword instead
     } else {
       reservedKeywords = ES5_RESERVED_KEYWORDS;
@@ -375,12 +374,7 @@ class IRFactory {
     return irFactory.features;
   }
 
-  static final Config NULL_CONFIG =
-      new Config(
-          ImmutableSet.<String>of(),
-          ImmutableSet.<String>of(),
-          LanguageMode.TYPESCRIPT,
-          Config.StrictMode.STRICT);
+  static final Config NULL_CONFIG = Config.builder().build();
 
   static final ErrorReporter NULL_REPORTER = new ErrorReporter() {
     @Override
@@ -1337,7 +1331,7 @@ class IRFactory {
       if (!isArrow && !isSignature && !bodyNode.isNormalBlock()) {
         // When in "keep going" mode the parser tries to parse some constructs the
         // compiler doesn't support, repair it here.
-        checkState(config.keepGoing == Config.RunMode.KEEP_GOING);
+        checkState(config.runMode() == Config.RunMode.KEEP_GOING);
         bodyNode = IR.block();
       }
       parseDirectives(bodyNode);
@@ -1555,7 +1549,7 @@ class IRFactory {
     private void maybeWarnKeywordProperty(Node node) {
       if (TokenStream.isKeyword(node.getString())) {
         features = features.with(Feature.KEYWORDS_AS_PROPERTIES);
-        if (config.languageMode == LanguageMode.ECMASCRIPT3) {
+        if (config.languageMode() == LanguageMode.ECMASCRIPT3) {
           errorReporter.warning(INVALID_ES3_PROP_NAME, sourceName,
               node.getLineno(), node.getCharno());
         }
@@ -1567,11 +1561,11 @@ class IRFactory {
       boolean isIdentifier = false;
       if (TokenStream.isKeyword(identifier)) {
         features = features.with(Feature.ES3_KEYWORDS_AS_IDENTIFIERS);
-        isIdentifier = config.languageMode == LanguageMode.ECMASCRIPT3;
+        isIdentifier = config.languageMode() == LanguageMode.ECMASCRIPT3;
       }
       if (reservedKeywords != null && reservedKeywords.contains(identifier)) {
         features = features.with(Feature.KEYWORDS_AS_PROPERTIES);
-        isIdentifier = config.languageMode == LanguageMode.ECMASCRIPT3;
+        isIdentifier = config.languageMode() == LanguageMode.ECMASCRIPT3;
       }
       if (isIdentifier) {
         errorReporter.error(
@@ -2089,7 +2083,7 @@ class IRFactory {
     /** Reports an illegal getter and returns true if the language mode is too low. */
     boolean maybeReportGetter(ParseTree node) {
       features = features.with(Feature.GETTER);
-      if (config.languageMode == LanguageMode.ECMASCRIPT3) {
+      if (config.languageMode() == LanguageMode.ECMASCRIPT3) {
         errorReporter.error(
             GETTER_ERROR_MESSAGE,
             sourceName,
@@ -2102,7 +2096,7 @@ class IRFactory {
     /** Reports an illegal setter and returns true if the language mode is too low. */
     boolean maybeReportSetter(ParseTree node) {
       features = features.with(Feature.SETTER);
-      if (config.languageMode == LanguageMode.ECMASCRIPT3) {
+      if (config.languageMode() == LanguageMode.ECMASCRIPT3) {
         errorReporter.error(
             SETTER_ERROR_MESSAGE,
             sourceName,
@@ -2635,7 +2629,7 @@ class IRFactory {
     }
 
     void maybeWarnTypeSyntax(ParseTree node, Feature feature) {
-      if (config.languageMode != LanguageMode.TYPESCRIPT) {
+      if (config.languageMode() != LanguageMode.TYPESCRIPT) {
         errorReporter.warning(
             "type syntax is only supported in ES6 typed mode: " + feature,
             sourceName,
@@ -3070,17 +3064,17 @@ class IRFactory {
   }
 
   boolean isSupportedForInputLanguageMode(Feature feature) {
-    return config.languageMode.featureSet.has(feature);
+    return config.languageMode().featureSet.has(feature);
   }
 
   boolean isEs5OrBetterMode() {
-    return config.languageMode.featureSet.contains(FeatureSet.ES5);
+    return config.languageMode().featureSet.contains(FeatureSet.ES5);
   }
 
   private boolean inStrictContext() {
     // TODO(johnlenz): in ECMASCRIPT5/6 is a "mixed" mode and we should track the context
     // that we are in, if we want to support it.
-    return config.strictMode == StrictMode.STRICT;
+    return config.strictMode().isStrict();
   }
 
   double normalizeNumber(LiteralToken token) {
