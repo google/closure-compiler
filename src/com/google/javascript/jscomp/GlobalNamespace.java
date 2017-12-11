@@ -607,6 +607,9 @@ class GlobalNamespace
 
       Name nameObj = getOrCreateName(name, shouldCreateProp);
       nameObj.type = type;
+      if (n.getBooleanProp(Node.MODULE_EXPORT)) {
+        nameObj.isModuleProp = true;
+      }
       maybeRecordEs6Subclass(n, parent, nameObj);
 
       Ref set = new Ref(module, scope, n, nameObj, Ref.Type.SET_FROM_GLOBAL,
@@ -704,6 +707,9 @@ class GlobalNamespace
       Ref set = new Ref(module, scope, n, nameObj,
           Ref.Type.SET_FROM_LOCAL, currentPreOrderIndex++);
       nameObj.addRef(set);
+      if (n.getBooleanProp(Node.MODULE_EXPORT)) {
+        nameObj.isModuleProp = true;
+      }
 
       if (isNestedAssign(parent)) {
         // This assignment is both a set and a get that creates an alias.
@@ -1013,6 +1019,7 @@ class GlobalNamespace
     Type type;
     private boolean declaredType = false;
     private boolean isDeclared = false;
+    private boolean isModuleProp = false;
     int globalSets = 0;
     int localSets = 0;
     int localSetsWithNoCollapse = 0;
@@ -1410,6 +1417,10 @@ class GlobalNamespace
       }
 
       return null;
+    }
+
+    boolean isModuleExport() {
+      return isModuleProp;
     }
   }
 

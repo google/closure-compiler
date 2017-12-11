@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.javascript.jscomp.CompilerOptions.PropertyCollapseLevel;
 import com.google.javascript.jscomp.CompilerOptions.Reach;
 
 /**
@@ -179,7 +180,7 @@ public enum CompilationLevel {
     options.setRemoveUnusedPrototypePropertiesInExterns(false);
     options.setRemoveUnusedClassProperties(true);
     options.setCollapseAnonymousFunctions(true);
-    options.setCollapseProperties(true);
+    options.setCollapsePropertiesLevel(PropertyCollapseLevel.ALL);
     options.setCheckGlobalThisLevel(CheckLevel.WARNING);
     options.setRewriteFunctionExpressions(false);
     options.setSmartNameRemoval(true);
@@ -238,6 +239,7 @@ public enum CompilationLevel {
       case SIMPLE_OPTIMIZATIONS:
         // Enable global variable optimizations (but not property optimizations)
         options.setVariableRenaming(VariableRenamingPolicy.ALL);
+        options.setCollapsePropertiesLevel(PropertyCollapseLevel.MODULE_EXPORT);
         options.setCollapseAnonymousFunctions(true);
         options.setInlineConstantVars(true);
         options.setInlineFunctions(Reach.ALL);

@@ -22,6 +22,7 @@ import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterables;
+import com.google.javascript.jscomp.CompilerOptions.PropertyCollapseLevel;
 import com.google.javascript.jscomp.GlobalNamespace.Name;
 import com.google.javascript.jscomp.GlobalNamespace.Ref;
 import com.google.javascript.jscomp.Normalize.PropagateConstantAnnotationsOverVars;
@@ -67,7 +68,6 @@ import java.util.Map;
  *
  */
 class CollapseProperties implements CompilerPass {
-
   // Warnings
   static final DiagnosticType UNSAFE_NAMESPACE_WARNING =
       DiagnosticType.warning(
@@ -84,6 +84,7 @@ class CollapseProperties implements CompilerPass {
       "dangerous use of ''this'' in static method {0}");
 
   private final AbstractCompiler compiler;
+  private final PropertyCollapseLevel propertyCollapseLevel;
 
   /** Global namespace tree */
   private List<Name> globalNames;
@@ -91,8 +92,9 @@ class CollapseProperties implements CompilerPass {
   /** Maps names (e.g. "a.b.c") to nodes in the global namespace tree */
   private Map<String, Name> nameMap;
 
-  CollapseProperties(AbstractCompiler compiler) {
+  CollapseProperties(AbstractCompiler compiler, PropertyCollapseLevel propertyCollapseLevel) {
     this.compiler = compiler;
+    this.propertyCollapseLevel = propertyCollapseLevel;
   }
 
   @Override
@@ -116,6 +118,32 @@ class CollapseProperties implements CompilerPass {
     // This shouldn't be necessary, this pass should already be setting new constants as constant.
     // TODO(b/64256754): Investigate.
     (new PropagateConstantAnnotationsOverVars(compiler, false)).process(externs, root);
+  }
+
+  private boolean canCollapse(Name name) {
+    if (!name.canCollapse()) {
+      return false;
+    }
+
+    if (propertyCollapseLevel == PropertyCollapseLevel.MODULE_EXPORT && !name.isModuleExport()) {
+      return false;
+    }
+
+    return true;
+  }
+
+  private boolean canEliminate(Name name) {
+    if (!name.canEliminate()) {
+      return false;
+    }
+
+    if (name.props == null
+        || name.props.isEmpty()
+        || propertyCollapseLevel != PropertyCollapseLevel.MODULE_EXPORT) {
+      return true;
+    }
+
+    return false;
   }
 
   /**
@@ -220,9 +248,14 @@ class CollapseProperties implements CompilerPass {
     for (Name p : n.props) {
       String propAlias = appendPropForAlias(alias, p.getBaseName());
 
-      if (p.canCollapse()) {
+      boolean isAllowedToCollapse =
+          propertyCollapseLevel != PropertyCollapseLevel.MODULE_EXPORT || p.isModuleExport();
+
+      if (isAllowedToCollapse && p.canCollapse()) {
         flattenReferencesTo(p, propAlias);
-      } else if (p.isSimpleStubDeclaration() && !p.isCollapsingExplicitlyDenied()) {
+      } else if (isAllowedToCollapse
+          && p.isSimpleStubDeclaration()
+          && !p.isCollapsingExplicitlyDenied()) {
         flattenSimpleStubDeclaration(p, propAlias);
       }
 
@@ -399,7 +432,7 @@ class CollapseProperties implements CompilerPass {
     boolean canCollapseChildNames = n.canCollapseUnannotatedChildNames();
 
     // Handle this name first so that nested object literals get unrolled.
-    if (n.canCollapse()) {
+    if (canCollapse(n)) {
       updateGlobalNameDeclaration(n, alias, canCollapseChildNames);
     }
 
@@ -540,7 +573,7 @@ class CollapseProperties implements CompilerPass {
     boolean isObjLit = rvalue.isObjectLit();
     boolean insertedVarNode = false;
 
-    if (isObjLit && n.canEliminate()) {
+    if (isObjLit && canEliminate(n)) {
       // Eliminate the object literal altogether.
       varParent.replaceChild(grandparent, varNode);
       ref.node = null;
@@ -645,7 +678,7 @@ class CollapseProperties implements CompilerPass {
 
     addStubsForUndeclaredProperties(n, name, grandparent, variableNode);
 
-    if (isObjLit && n.canEliminate()) {
+    if (isObjLit && canEliminate(n)) {
       variableNode.removeChild(ref.node);
       compiler.reportChangeToEnclosingScope(variableNode);
       if (!variableNode.hasChildren()) {
@@ -667,7 +700,7 @@ class CollapseProperties implements CompilerPass {
    */
   private void updateGlobalNameDeclarationAtFunctionNode(
       Name n, boolean canCollapseChildNames) {
-    if (!canCollapseChildNames || !n.canCollapse()) {
+    if (!canCollapseChildNames || !canCollapse(n)) {
       return;
     }
 
@@ -683,7 +716,7 @@ class CollapseProperties implements CompilerPass {
    * @param n An object representing a global name (e.g. "a")
    */
   private void updateGlobalNameDeclarationAtClassNode(Name n, boolean canCollapseChildNames) {
-    if (!canCollapseChildNames || !n.canCollapse()) {
+    if (!canCollapseChildNames || !canCollapse(n)) {
       return;
     }
 
@@ -735,7 +768,7 @@ class CollapseProperties implements CompilerPass {
       // If the name cannot be collapsed, skip it.
       String qName = objlitName.getFullName() + '.' + propName;
       Name p = nameMap.get(qName);
-      if (p != null && !p.canCollapse()) {
+      if (p != null && !canCollapse(p)) {
         continue;
       }
 

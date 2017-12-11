@@ -69,100 +69,99 @@ public class Node implements Serializable {
 
   private static final long serialVersionUID = 1L;
 
-  public static final byte
-      JSDOC_INFO_PROP   = 29,     // contains a JSDocInfo object
-
-      VAR_ARGS_NAME     = 30,     // the name node is a variable length
-                                  // argument placeholder.
-      INCRDECR_PROP      = 32,    // whether incrdecr is pre (false) or post (true)
-      QUOTED_PROP        = 36,    // set to indicate a quoted object lit key
-      OPT_ARG_NAME       = 37,    // The name node is an optional argument.
-      SYNTHETIC_BLOCK_PROP = 38,  // A synthetic block. Used to make
-                                  // processing simpler, and does not
-                                  // represent a real block in the source.
-      ADDED_BLOCK        = 39,    // Used to indicate BLOCK that is added
-      ORIGINALNAME_PROP  = 40,    // The original name of the node, before
-                                  // renaming.
-      SIDE_EFFECT_FLAGS  = 42,    // Function or constructor call side effect
-                                  // flags
+  public static final byte JSDOC_INFO_PROP = 29, // contains a JSDocInfo object
+      VAR_ARGS_NAME = 30, // the name node is a variable length
+      // argument placeholder.
+      INCRDECR_PROP = 32, // whether incrdecr is pre (false) or post (true)
+      QUOTED_PROP = 36, // set to indicate a quoted object lit key
+      OPT_ARG_NAME = 37, // The name node is an optional argument.
+      SYNTHETIC_BLOCK_PROP = 38, // A synthetic block. Used to make
+      // processing simpler, and does not
+      // represent a real block in the source.
+      ADDED_BLOCK = 39, // Used to indicate BLOCK that is added
+      ORIGINALNAME_PROP = 40, // The original name of the node, before
+      // renaming.
+      SIDE_EFFECT_FLAGS = 42, // Function or constructor call side effect
+      // flags
       // Coding convention props
-      IS_CONSTANT_NAME   = 43,    // The variable or property is constant.
-      IS_NAMESPACE       = 46,    // The variable creates a namespace.
-      DIRECTIVES         = 48,    // The ES5 directives on this node.
-      DIRECT_EVAL        = 49,    // ES5 distinguishes between direct and
-                                  // indirect calls to eval.
-      FREE_CALL          = 50,    // A CALL without an explicit "this" value.
-      STATIC_SOURCE_FILE = 51,    // A StaticSourceFile indicating the file
-                                  // where this node lives.
-      INPUT_ID           = 53,    // The id of the input associated with this
-                                  // node.
-      SLASH_V            = 54,    // Whether a STRING node contains a \v
-                                  // vertical tab escape. This is a total hack.
-                                  // See comments in IRFactory about this.
-      INFERRED_FUNCTION  = 55,    // Marks a function whose parameter types
-                                  // have been inferred.
-      CHANGE_TIME        = 56,    // For passes that work only on changed funs.
-      REFLECTED_OBJECT   = 57,    // An object that's used for goog.object.reflect-style reflection.
-      STATIC_MEMBER      = 58,    // Set if class member definition is static
-      GENERATOR_FN       = 59,    // Set if the node is a Generator function or
-                                  // member method.
-      ARROW_FN           = 60,
-      ASYNC_FN           = 61, // http://tc39.github.io/ecmascript-asyncawait/
-      YIELD_ALL          = 62, // Set if a yield is a "yield all"
-      EXPORT_DEFAULT     = 63, // Set if a export is a "default" export
-      EXPORT_ALL_FROM    = 64, // Set if an export is a "*"
-      IS_CONSTANT_VAR    = 65, // A lexical variable is inferred const
-      GENERATOR_MARKER   = 66, // Used by the ES6-to-ES3 translator.
-      GENERATOR_SAFE     = 67, // Used by the ES6-to-ES3 translator.
-
-      RAW_STRING_VALUE   = 71,    // Used to support ES6 tagged template literal.
-      COMPUTED_PROP_METHOD = 72,  // A computed property that has the method
-                                  // syntax ( [prop]() {...} ) rather than the
-                                  // property definition syntax ( [prop]: value ).
-      COMPUTED_PROP_GETTER = 73,  // A computed property in a getter, e.g.
-                                  // var obj = { get [prop]() {...} };
-      COMPUTED_PROP_SETTER = 74,  // A computed property in a setter, e.g.
-                                  // var obj = { set [prop](val) {...} };
+      IS_CONSTANT_NAME = 43, // The variable or property is constant.
+      IS_NAMESPACE = 46, // The variable creates a namespace.
+      DIRECTIVES = 48, // The ES5 directives on this node.
+      DIRECT_EVAL = 49, // ES5 distinguishes between direct and
+      // indirect calls to eval.
+      FREE_CALL = 50, // A CALL without an explicit "this" value.
+      STATIC_SOURCE_FILE = 51, // A StaticSourceFile indicating the file
+      // where this node lives.
+      INPUT_ID = 53, // The id of the input associated with this
+      // node.
+      SLASH_V = 54, // Whether a STRING node contains a \v
+      // vertical tab escape. This is a total hack.
+      // See comments in IRFactory about this.
+      INFERRED_FUNCTION = 55, // Marks a function whose parameter types
+      // have been inferred.
+      CHANGE_TIME = 56, // For passes that work only on changed funs.
+      REFLECTED_OBJECT = 57, // An object that's used for goog.object.reflect-style reflection.
+      STATIC_MEMBER = 58, // Set if class member definition is static
+      GENERATOR_FN = 59, // Set if the node is a Generator function or
+      // member method.
+      ARROW_FN = 60,
+      ASYNC_FN = 61, // http://tc39.github.io/ecmascript-asyncawait/
+      YIELD_ALL = 62, // Set if a yield is a "yield all"
+      EXPORT_DEFAULT = 63, // Set if a export is a "default" export
+      EXPORT_ALL_FROM = 64, // Set if an export is a "*"
+      IS_CONSTANT_VAR = 65, // A lexical variable is inferred const
+      GENERATOR_MARKER = 66, // Used by the ES6-to-ES3 translator.
+      GENERATOR_SAFE = 67, // Used by the ES6-to-ES3 translator.
+      RAW_STRING_VALUE = 71, // Used to support ES6 tagged template literal.
+      COMPUTED_PROP_METHOD = 72, // A computed property that has the method
+      // syntax ( [prop]() {...} ) rather than the
+      // property definition syntax ( [prop]: value ).
+      COMPUTED_PROP_GETTER = 73, // A computed property in a getter, e.g.
+      // var obj = { get [prop]() {...} };
+      COMPUTED_PROP_SETTER = 74, // A computed property in a setter, e.g.
+      // var obj = { set [prop](val) {...} };
       COMPUTED_PROP_VARIABLE = 75, // A computed property that's a variable, e.g. [prop]: string;
-      ANALYZED_DURING_GTI  = 76,  // In GlobalTypeInfo, we mark some AST nodes
-                                  // to avoid analyzing them during
-                                  // NewTypeInference. We remove this attribute
-                                  // in the fwd direction of NewTypeInference.
+      ANALYZED_DURING_GTI = 76, // In GlobalTypeInfo, we mark some AST nodes
+      // to avoid analyzing them during
+      // NewTypeInference. We remove this attribute
+      // in the fwd direction of NewTypeInference.
       CONSTANT_PROPERTY_DEF = 77, // Used to communicate information between
-                                  // GlobalTypeInfo and NewTypeInference.
-                                  // We use this to tag getprop nodes that
-                                  // declare properties.
-      DECLARED_TYPE_EXPR = 78,    // Used to attach TypeDeclarationNode ASTs to
-                                  // Nodes which represent a typed NAME or
-                                  // FUNCTION.
-                                  //
-      TYPE_BEFORE_CAST = 79,      // The type of an expression before the cast.
-                                  // This will be present only if the expression is casted.
-      OPT_ES6_TYPED = 80,         // The node is an optional parameter or property
-                                  // in ES6 Typed syntax.
-      GENERIC_TYPE_LIST = 81,     // Generic type list in ES6 typed syntax.
-      IMPLEMENTS = 82,            // "implements" clause in ES6 typed syntax.
-      CONSTRUCT_SIGNATURE = 83,   // This node is a TypeScript ConstructSignature
-      ACCESS_MODIFIER = 84,       // TypeScript accessibility modifiers (public, protected, private)
-      NON_INDEXABLE = 85,         // Indicates the node should not be indexed by analysis tools.
-      PARSE_RESULTS = 86,         // Parse results stored on SCRIPT nodes to allow replaying
-                                  // parse warnings/errors when cloning cached ASTs.
-      GOOG_MODULE = 87,           // Indicates that a SCRIPT node is a goog.module. Remains set
-                                  // after the goog.module is desugared.
-      GOOG_MODULE_REQUIRE = 88,   // Node is a goog.require() as desugared by goog.module()
-      FEATURE_SET = 89,           // Attaches a FeatureSet to SCRIPT nodes.
-      IS_MODULE_NAME = 90,        // Indicates that a STRING node represents a namespace from
-                                  // goog.module() or goog.require() call.
+      // GlobalTypeInfo and NewTypeInference.
+      // We use this to tag getprop nodes that
+      // declare properties.
+      DECLARED_TYPE_EXPR = 78, // Used to attach TypeDeclarationNode ASTs to
+      // Nodes which represent a typed NAME or
+      // FUNCTION.
+      //
+      TYPE_BEFORE_CAST = 79, // The type of an expression before the cast.
+      // This will be present only if the expression is casted.
+      OPT_ES6_TYPED = 80, // The node is an optional parameter or property
+      // in ES6 Typed syntax.
+      GENERIC_TYPE_LIST = 81, // Generic type list in ES6 typed syntax.
+      IMPLEMENTS = 82, // "implements" clause in ES6 typed syntax.
+      CONSTRUCT_SIGNATURE = 83, // This node is a TypeScript ConstructSignature
+      ACCESS_MODIFIER = 84, // TypeScript accessibility modifiers (public, protected, private)
+      NON_INDEXABLE = 85, // Indicates the node should not be indexed by analysis tools.
+      PARSE_RESULTS = 86, // Parse results stored on SCRIPT nodes to allow replaying
+      // parse warnings/errors when cloning cached ASTs.
+      GOOG_MODULE = 87, // Indicates that a SCRIPT node is a goog.module. Remains set
+      // after the goog.module is desugared.
+      GOOG_MODULE_REQUIRE = 88, // Node is a goog.require() as desugared by goog.module()
+      FEATURE_SET = 89, // Attaches a FeatureSet to SCRIPT nodes.
+      IS_MODULE_NAME = 90, // Indicates that a STRING node represents a namespace from
+      // goog.module() or goog.require() call.
       WAS_PREVIOUSLY_PROVIDED = 91, // Indicates a namespace that was provided at some point in the
-                                  // past.
-      IS_ES6_CLASS = 92,          // Indicates that a FUNCTION node is converted from an ES6 class
-      TRANSPILED = 93,            // Indicates that a SCRIPT represents a transpiled file
-      DELETED = 94,               // For passes that work only on deleted funs.
-      GOOG_MODULE_ALIAS = 95,     // Indicates that the node is an alias of goog.require'd module.
-                                  // Aliases are desugared and inlined by compiler passes but we
-                                  // need to preserve them for building index.
-      IS_UNUSED_PARAMETER = 96;   // Mark a parameter as unused. Used to defer work from
-                                  // RemovedUnusedVars to OptimizeParameters.
+      // past.
+      IS_ES6_CLASS = 92, // Indicates that a FUNCTION node is converted from an ES6 class
+      TRANSPILED = 93, // Indicates that a SCRIPT represents a transpiled file
+      DELETED = 94, // For passes that work only on deleted funs.
+      GOOG_MODULE_ALIAS = 95, // Indicates that the node is an alias of goog.require'd module.
+      // Aliases are desugared and inlined by compiler passes but we
+      // need to preserve them for building index.
+      IS_UNUSED_PARAMETER = 96, // Mark a parameter as unused. Used to defer work from
+      // RemovedUnusedVars to OptimizeParameters.
+      MODULE_EXPORT = 97; // Mark a property as a module export so that collase properties
+  // can act on it.
 
   private static final String propToString(byte propType) {
       switch (propType) {
@@ -225,6 +224,8 @@ public class Node implements Serializable {
         case DELETED:            return "DELETED";
         case GOOG_MODULE_ALIAS:  return "goog_module_alias";
         case IS_UNUSED_PARAMETER: return "is_unused_parameter";
+      case MODULE_EXPORT:
+        return "module_export";
         default:
           throw new IllegalStateException("unexpected prop id " + propType);
       }

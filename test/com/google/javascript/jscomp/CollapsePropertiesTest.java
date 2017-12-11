@@ -20,6 +20,8 @@ import static com.google.javascript.jscomp.CollapseProperties.NAMESPACE_REDEFINE
 import static com.google.javascript.jscomp.CollapseProperties.UNSAFE_NAMESPACE_WARNING;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import com.google.javascript.jscomp.CompilerOptions.PropertyCollapseLevel;
+import java.util.ArrayList;
 
 /**
  * Tests {@link CollapseProperties}.
@@ -35,13 +37,15 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
       + "/** @constructor */ function String() {};\n"
       + "var arguments";
 
+  private PropertyCollapseLevel propertyCollapseLevel = PropertyCollapseLevel.ALL;
+
   public CollapsePropertiesTest() {
     super(EXTERNS);
   }
 
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
-    return new CollapseProperties(compiler);
+    return new CollapseProperties(compiler, propertyCollapseLevel);
   }
 
   @Override
@@ -53,6 +57,14 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
   @Override
   protected int getNumRepetitions() {
     return 1;
+  }
+
+  private void setupModuleExportsOnly() {
+    this.setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
+    this.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    enableProcessCommonJsModules();
+    enableTranspile();
+    propertyCollapseLevel = PropertyCollapseLevel.MODULE_EXPORT;
   }
 
   public void testMultiLevelCollapse() {
@@ -2102,5 +2114,130 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
     test(
         "var a = {b: 5}; function f(x=a.b) { alert(x); }",
         "var a$b = 5; function f(x=a$b) { alert(x); }");
+  }
+
+  public void testModuleExportsBasicCommonJs() {
+    this.setupModuleExportsOnly();
+
+    ArrayList<SourceFile> inputs = new ArrayList<>();
+    inputs.add(SourceFile.fromCode("mod1.js", "module.exports = 123;"));
+    inputs.add(SourceFile.fromCode("entry.js", "var mod = require('./mod1.js'); alert(mod);"));
+
+    ArrayList<SourceFile> expected = new ArrayList<>();
+    expected.add(
+        SourceFile.fromCode(
+            "mod1.js",
+            "/** @const */ var module$mod1={}; /** @const */ var module$mod1$default = 123;"));
+    expected.add(
+        SourceFile.fromCode(
+            "entry.js", "var mod = module$mod1$default; alert(module$mod1$default);"));
+
+    test(inputs, expected);
+  }
+
+  public void testModuleExportsBasicEsm() {
+    this.setupModuleExportsOnly();
+
+    ArrayList<SourceFile> inputs = new ArrayList<>();
+    inputs.add(SourceFile.fromCode("mod1.js", "export default 123; export var bar = 'bar'"));
+    inputs.add(
+        SourceFile.fromCode(
+            "entry.js", "import mod, {bar} from './mod1.js'; alert(mod); alert(bar)"));
+
+    ArrayList<SourceFile> expected = new ArrayList<>();
+    expected.add(
+        SourceFile.fromCode(
+            "mod1.js",
+            LINE_JOINER.join(
+                "/** @const */ var module$mod1={};",
+                "var $jscompDefaultExport$$module$mod1=123;",
+                "var bar$$module$mod1 = 'bar';",
+                "var module$mod1$default = $jscompDefaultExport$$module$mod1;",
+                "var module$mod1$bar = bar$$module$mod1")));
+    expected.add(
+        SourceFile.fromCode("entry.js", "alert(module$mod1$default); alert(module$mod1$bar);"));
+
+    test(inputs, expected);
+  }
+
+  public void testModuleExportsObjectCommonJs() {
+    this.setupModuleExportsOnly();
+
+    ArrayList<SourceFile> inputs = new ArrayList<>();
+    inputs.add(
+        SourceFile.fromCode(
+            "mod1.js",
+            LINE_JOINER.join(
+                "var foo ={};", "foo.bar = {};", "foo.bar.baz = 123;", "module.exports = foo;")));
+    inputs.add(
+        SourceFile.fromCode("entry.js", "var mod = require('./mod1.js'); alert(mod.bar.baz);"));
+
+    ArrayList<SourceFile> expected = new ArrayList<>();
+    expected.add(
+        SourceFile.fromCode(
+            "mod1.js",
+            LINE_JOINER.join(
+                "/** @const */ var module$mod1={};",
+                " /** @const */ var module$mod1$default = {};",
+                "module$mod1$default.bar = {};",
+                "module$mod1$default.bar.baz = 123;")));
+    expected.add(
+        SourceFile.fromCode(
+            "entry.js", "var mod = module$mod1$default; alert(module$mod1$default.bar.baz);"));
+
+    test(inputs, expected);
+  }
+
+  public void testModuleExportsObjectEsm() {
+    this.setupModuleExportsOnly();
+
+    ArrayList<SourceFile> inputs = new ArrayList<>();
+    inputs.add(
+        SourceFile.fromCode(
+            "mod1.js",
+            LINE_JOINER.join(
+                "var foo ={};", "foo.bar = {};", "foo.bar.baz = 123;", "export default foo;")));
+    inputs.add(SourceFile.fromCode("entry.js", "import mod from './mod1.js'; alert(mod.bar.baz);"));
+
+    ArrayList<SourceFile> expected = new ArrayList<>();
+    expected.add(
+        SourceFile.fromCode(
+            "mod1.js",
+            LINE_JOINER.join(
+                "/** @const */ var module$mod1={};",
+                "var foo$$module$mod1 = {};",
+                "foo$$module$mod1.bar = {};",
+                "foo$$module$mod1.bar.baz = 123;",
+                "var $jscompDefaultExport$$module$mod1 = foo$$module$mod1;",
+                "var module$mod1$default = $jscompDefaultExport$$module$mod1;")));
+    expected.add(SourceFile.fromCode("entry.js", "alert(module$mod1$default.bar.baz);"));
+
+    test(inputs, expected);
+  }
+
+  public void testModuleExportsObjectSubPropertyCommonJs() {
+    this.setupModuleExportsOnly();
+
+    ArrayList<SourceFile> inputs = new ArrayList<>();
+    inputs.add(
+        SourceFile.fromCode(
+            "mod1.js",
+            LINE_JOINER.join(
+                "var foo ={};", "module.exports = foo;", "module.exports.bar = 'bar';")));
+    inputs.add(SourceFile.fromCode("entry.js", "var mod = require('./mod1.js'); alert(mod.bar);"));
+
+    ArrayList<SourceFile> expected = new ArrayList<>();
+    expected.add(
+        SourceFile.fromCode(
+            "mod1.js",
+            LINE_JOINER.join(
+                "/** @const */ var module$mod1={};",
+                " /** @const */ var module$mod1$default = {};",
+                "module$mod1$default.bar = 'bar';")));
+    expected.add(
+        SourceFile.fromCode(
+            "entry.js", "var mod = module$mod1$default; alert(module$mod1$default.bar);"));
+
+    test(inputs, expected);
   }
 }

@@ -83,6 +83,9 @@ public abstract class CompilerTestCase extends TestCase {
   /** Whether the closure pass is run on the expected JS. */
   private boolean closurePassEnabledForExpected;
 
+  /** Whether to rewrite commons js modules before the test is run. */
+  private boolean processCommonJsModules;
+
   /** Whether to rewrite Closure code before the test is run. */
   private boolean rewriteClosureCode;
 
@@ -574,6 +577,7 @@ public abstract class CompilerTestCase extends TestCase {
     this.normalizeEnabled = false;
     this.parseTypeInfo = false;
     this.polymerPass = false;
+    this.processCommonJsModules = false;
     this.rewriteClosureCode = false;
     this.runTypeCheckAfterProcessing = false;
     this.transpileEnabled = false;
@@ -821,6 +825,12 @@ public abstract class CompilerTestCase extends TestCase {
   protected final void enableClosurePassForExpected() {
     checkState(this.setUpRan, "Attempted to configure before running setUp().");
     closurePassEnabledForExpected = true;
+  }
+
+  /** Rewrite CommonJS modules before the test run. */
+  protected final void enableProcessCommonJsModules() {
+    checkState(this.setUpRan, "Attempted to configure before running setUp().");
+    processCommonJsModules = true;
   }
 
   /**
@@ -1495,6 +1505,13 @@ public abstract class CompilerTestCase extends TestCase {
           recentChange.reset();
           new ProcessClosurePrimitives(compiler, null, CheckLevel.ERROR, false)
               .process(externsRoot, mainRoot);
+          hasCodeChanged = hasCodeChanged || recentChange.hasCodeChanged();
+        }
+
+        // Only run process closure primitives once, if asked.
+        if (processCommonJsModules && i == 0) {
+          recentChange.reset();
+          new ProcessCommonJSModules(compiler).process(externsRoot, mainRoot);
           hasCodeChanged = hasCodeChanged || recentChange.hasCodeChanged();
         }
 

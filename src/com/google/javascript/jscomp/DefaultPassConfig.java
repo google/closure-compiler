@@ -2513,7 +2513,7 @@ public final class DefaultPassConfig extends PassConfig {
       new PassFactory(PassNames.COLLAPSE_PROPERTIES, true) {
         @Override
         protected CompilerPass create(AbstractCompiler compiler) {
-          return new CollapseProperties(compiler);
+          return new CollapseProperties(compiler, options.getPropertyCollapseLevel());
         }
 
         @Override
