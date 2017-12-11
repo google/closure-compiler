@@ -337,17 +337,8 @@ class AggressiveInlineAliases implements CompilerPass {
           // properties correctly.
           // But if the aliased variable is assigned more than once, we can't
           // inline, so we warn.
-          if (name.isConstructor()) {
-            boolean accessPropsAfterAliasing = false;
-            for (Reference ref : aliasRefs.references) {
-              if (ref.getNode().getParent().isGetProp()) {
-                accessPropsAfterAliasing = true;
-                break;
-              }
-            }
-            if (accessPropsAfterAliasing) {
-              compiler.report(JSError.make(aliasParent, UNSAFE_CTOR_ALIASING, aliasVarName));
-            }
+          if (name.isConstructor() && referencesCollapsibleProperty(aliasRefs, name, namespace)) {
+            compiler.report(JSError.make(aliasParent, UNSAFE_CTOR_ALIASING, aliasVarName));
           }
           return false;
         }
@@ -467,6 +458,32 @@ class AggressiveInlineAliases implements CompilerPass {
     }
     Node assign = aliasLhsNode.getParent();
     return !NodeUtil.isExpressionResultUsed(assign);
+  }
+
+  /**
+   * Returns whether a ReferenceCollection for some aliasing variable references a property on the
+   * original aliased variable that may be collapsed in CollapseProperties.
+   *
+   * <p>See {@link GlobalNamespace.Name#canCollapse} for what can/cannot be collapsed.
+   */
+  private boolean referencesCollapsibleProperty(
+      ReferenceCollection aliasRefs, Name aliasedName, GlobalNamespace namespace) {
+    for (Reference ref : aliasRefs.references) {
+      if (ref.getParent().isGetProp()) {
+        Node propertyNode = ref.getNode().getNext();
+        // e.g. if the reference is "alias.b.someProp", this will be "b".
+        String propertyName = propertyNode.getString();
+        // e.g. if the aliased name is "originalName", this will be "originalName.b".
+        String originalPropertyName = aliasedName.getName() + "." + propertyName;
+        Name originalProperty = namespace.getOwnSlot(originalPropertyName);
+        // If the original property isn't in the namespace or can't be collapsed, keep going.
+        if (originalProperty == null || !originalProperty.canCollapse()) {
+          continue;
+        }
+        return true;
+      }
+    }
+    return false;
   }
 
   /**

@@ -90,6 +90,63 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
             + "}");
   }
 
+  public void testCtorAliasedMultipleTimesNoWarning1() {
+    // We can't inline the alias, but there are no unsafe property accesses.
+    testSame(
+        lines(
+            "/** @constructor */",
+            "function a() {}",
+            "function f() {",
+            "  var alias = a;",
+            "  use(alias.prototype);", // The prototype is not collapsible.
+            "  alias.apply();", // Can't collapse externs properties.
+            "  alias = function() {}",
+            "}"));
+  }
+
+  public void testCtorAliasedMultipleTimesNoWarning2() {
+    testSame(
+        lines(
+            "/** @constructor */",
+            "function a() {}",
+            "/** @nocollapse */",
+            "a.staticProp = 5;", // Explicitly forbid collapsing a.staticProp.
+            "function f() {",
+            "  var alias = a;",
+            "  use(alias.staticProp);", // Safe because we don't collapse a.staticProp
+            "  alias = function() {}",
+            "}"));
+  }
+
+  public void testCtorAliasedMultipleTimesWarning1() {
+    testSame(
+        lines(
+            "/** @constructor */",
+            "function a() {}",
+            "a.staticProp = 5;",
+            "function f() {",
+            "  var alias = a;",
+            "  use(alias.staticProp);", // Unsafe because a.staticProp becomes a$staticProp.
+            "  alias = function() {}",
+            "}"),
+        AggressiveInlineAliases.UNSAFE_CTOR_ALIASING);
+  }
+
+  public void testCtorAliasedMultipleTimesWarning2() {
+    testSame(
+        lines(
+            "/** @constructor */",
+            "function a() {}",
+            "a.b = {};",
+            "a.b.staticProp = 5;",
+            "function f() {",
+            "  var alias = a;",
+            "  use(alias.b.staticProp);", // Unsafe because a.b.staticProp becomes a$b$staticProp.
+            "  alias = function() {}",
+            "}"),
+        AggressiveInlineAliases.UNSAFE_CTOR_ALIASING);
+  }
+
   public void testAddPropertyToChildFuncOfUncollapsibleObjectInLocalScope() {
     test(
         "var a = {};"
