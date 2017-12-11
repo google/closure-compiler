@@ -23,7 +23,7 @@ import com.google.javascript.jscomp.newtypes.JSTypeCreatorFromJSDoc;
 /**
  * Test case for {@link GatherExternProperties}.
  */
-public final class GatherExternPropertiesTest extends TypeICompilerTestCase {
+public final class GatherExternPropertiesTest extends CompilerTestCase {
 
   private static final String EXTERNS = lines(
       "/**",
@@ -55,14 +55,6 @@ public final class GatherExternPropertiesTest extends TypeICompilerTestCase {
     super(EXTERNS);
   }
 
-  @Override void checkMinimalExterns(Iterable<SourceFile> externs) {}
-
-  @Override
-  protected void setUp() throws Exception {
-    super.setUp();
-    this.mode = TypeInferenceMode.BOTH;
-  }
-
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
     return new GatherExternProperties(compiler);
@@ -90,6 +82,27 @@ public final class GatherExternPropertiesTest extends TypeICompilerTestCase {
     // String-key access does not count.
     assertExternProperties(
         "foo['bar'] = {};");
+  }
+
+  public void testGatherExternTypedefProperties() {
+    String typedefExtern =
+        lines(
+            "/**",
+            " * @typedef {{",
+            " *    typedefPropA: { subTypedefProp: string },",
+            " *  }}",
+            " */",
+            "var TypedefExtern;",
+            "/**",
+            " * @param {!{ paramProp1, paramProp2: number }} p",
+            " */",
+            "function externFunction(p) {}");
+    assertExternProperties(
+        typedefExtern, "typedefPropA", "subTypedefProp", "paramProp1", "paramProp2");
+
+    // make sure it also works with type checking disabled
+    assertExternProperties(
+        typedefExtern, "typedefPropA", "subTypedefProp", "paramProp1", "paramProp2");
   }
 
   public void testGatherExternPropertiesIncludingRecordTypes() {
@@ -225,8 +238,7 @@ public final class GatherExternPropertiesTest extends TypeICompilerTestCase {
         expectExterns());
   }
 
-  public void testExternClassNoTypeCheck() {
-    this.mode = TypeInferenceMode.NEITHER;
+  public void testExternClass() {
     assertExternProperties(
         lines(
             "class Foo {",
@@ -239,42 +251,13 @@ public final class GatherExternPropertiesTest extends TypeICompilerTestCase {
         "bar");
   }
 
-  public void testExternClassWithTypeCheck() {
-    allowExternsChanges();
-    enableTranspile();
-    assertExternProperties(
-        lines(
-            "class Foo {",
-            "  bar() {",
-            "    return this;",
-            "  }",
-            "}",
-            "var baz = new Foo();",
-            "var bar = baz.bar;"),
-        "prototype", "bar");
-  }
-
   public void testExternWithMethod() {
-    this.mode = TypeInferenceMode.NEITHER;
     assertExternProperties(
         lines(
             "foo = {",
             "  method() {}",
             "}"),
         "method");
-  }
-
-  public void testExternAsyncFunction() {
-    this.mode = TypeInferenceMode.NEITHER;
-    assertExternProperties(
-        lines(
-            "function *gen() {",
-            " var x = 0;",
-            " yield x;",
-            "}",
-            "var foo = gen();",
-            "gen.next().value;"),
-        "next", "value");
   }
 
   private static Postcondition expectExterns(final String... properties) {
