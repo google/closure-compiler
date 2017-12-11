@@ -53,17 +53,21 @@ unit tests too).
 
 ### Using [Eclipse](https://www.eclipse.org/)
 
-1. Download and open the [Eclipse IDE](https://www.eclipse.org/).
+1. Download and open [Eclipse IDE](https://www.eclipse.org/). Disable `Project > Build automatically` during this process.
 2. On the command line, at the root of this project, run `mvn eclipse:eclipse -DdownloadSources=true` to download JARs and build Eclipse project configuration.
-3. Navigate to `File > Import > Maven > Existing Maven Projects` and browse to closure-compiler inside of Eclipse.
-4. Import both closure-compiler and the nested externs project.
-5. Disregard the warnings about maven-antrun-plugin and build errors.
-6. In Package Explorer, remove from the build path:
-    - `src/com/google/javascript/jscomp/debugger/DebuggerGwtMain.java`
-    - `src/com/google/javascript/jscomp/gwt/`
-7. [Exclude the files](https://stackoverflow.com/questions/1187868/how-can-i-exclude-some-folders-from-my-eclipse-project) in the directory `src/com/google/debugging/sourcemap/super` from the project.
-8. Build project in Eclipse (right click on the project `closure-compiler-parent` and select `Build Project`).
-9. See *Using Maven* above to build the JAR.
+3. Run `mvn clean` and `mvn -DskipTests` to ensure AutoValues are generated and updated.
+4. In Eclipse, navigate to `File > Import > Maven > Existing Maven Projects` and browse to closure-compiler.
+5. Import both closure-compiler and the nested externs project.
+6. Disregard the warnings about maven-antrun-plugin and build errors.
+7. Configure the project to use the [Google Eclipse style guide](https://github.com/google/styleguide/blob/gh-pages/eclipse-java-google-style.xml)
+8. Edit `.classpath` in closure-compiler-parent. Delete the `<classpathentry ... kind="src" path="src" ... />` line, then add:
+   ```
+   <classpathentry excluding="com/google/debugging/sourcemap/super/**|com/google/javascript/jscomp/debugger/gwt/DebuggerGwtMain.java|com/google/javascript/jscomp/gwt/|com/google/javascript/jscomp/resources/super-gwt/**" kind="src" path="src"/>
+   <classpathentry kind="src" path="target/generated-sources/annotations"/>
+   ```
+9. Ensure the Eclipse project settings specify 1.8 compliance level in "Java Compiler".
+10. Build project in Eclipse (right click on the project `closure-compiler-parent` and select `Build Project`).
+11. See *Using Maven* above to build the JAR.
 
 ## Running
 
