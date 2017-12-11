@@ -2343,7 +2343,7 @@ public class Node implements Serializable {
    * #getDeclaredTypeExpression()} which returns the syntactically specified type.
    */
   @Nullable
-  public JSType getJSType() {  // TODO(johnlenz): make this final
+  public final JSType getJSType() {
     return typei instanceof JSType ? (JSType) typei : null;
   }
 
