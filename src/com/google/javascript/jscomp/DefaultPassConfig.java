@@ -820,8 +820,8 @@ public final class DefaultPassConfig extends PassConfig {
 
       // After inlining some of the variable uses, some variables are unused.
       // Re-run remove unused vars to clean it up.
-      if (options.removeUnusedVars || options.removeUnusedLocalVars) {
-        passes.add(getRemoveUnusedCodeOnce());
+      if (shouldRunRemoveUnusedCode()) {
+        passes.add(removeUnusedCodeOnce);
       }
     }
 
@@ -1007,10 +1007,6 @@ public final class DefaultPassConfig extends PassConfig {
       passes.add(optimizeCalls);
     }
 
-    if (options.removeUnusedVars || options.removeUnusedLocalVars) {
-      passes.add(getRemoveUnusedCode());
-    }
-
     if (options.j2clPassMode.shouldAddJ2clPasses()) {
       passes.add(j2clConstantHoisterPass);
       passes.add(j2clClinitPass);
@@ -1041,8 +1037,8 @@ public final class DefaultPassConfig extends PassConfig {
       passes.add(removeUnreachableCode);
     }
 
-    if (options.removeUnusedPrototypeProperties) {
-      passes.add(removeUnusedPrototypeProperties);
+    if (shouldRunRemoveUnusedCode()) {
+      passes.add(removeUnusedCode);
     }
 
     if (options.removeUnusedClassProperties) {
@@ -1051,6 +1047,12 @@ public final class DefaultPassConfig extends PassConfig {
 
     assertAllLoopablePasses(passes);
     return passes;
+  }
+
+  private boolean shouldRunRemoveUnusedCode() {
+    return options.removeUnusedVars
+        || options.removeUnusedLocalVars
+        || options.removeUnusedPrototypeProperties;
   }
 
   private final HotSwapPassFactory checkSideEffects =
@@ -2711,23 +2713,6 @@ public final class DefaultPassConfig extends PassConfig {
   };
 
   /** Remove prototype properties that do not appear to be used. */
-  private final PassFactory removeUnusedPrototypeProperties =
-      new PassFactory(PassNames.REMOVE_UNUSED_PROTOTYPE_PROPERTIES, false) {
-        @Override
-        protected CompilerPass create(AbstractCompiler compiler) {
-          return new RemoveUnusedPrototypeProperties(
-              compiler,
-              options.removeUnusedPrototypePropertiesInExterns,
-              !options.removeUnusedVars);
-        }
-
-        @Override
-        protected FeatureSet featureSet() {
-          return ES8_MODULES;
-        }
-      };
-
-  /** Remove prototype properties that do not appear to be used. */
   private final PassFactory removeUnusedClassProperties =
       new PassFactory(PassNames.REMOVE_UNUSED_CLASS_PROPERTIES, false) {
         @Override
@@ -2880,24 +2865,19 @@ public final class DefaultPassConfig extends PassConfig {
         }
       };
 
-  private PassFactory getRemoveUnusedCode() {
-    return getRemoveUnusedCode(false /* isOneTimePass */);
-  }
-
-  private PassFactory getRemoveUnusedCodeOnce() {
-    return getRemoveUnusedCode(true /* isOneTimePass */);
-  }
+  private PassFactory removeUnusedCodeOnce = getRemoveUnusedCode(true /* isOneTimePass */);
+  private PassFactory removeUnusedCode = getRemoveUnusedCode(false /* isOneTimePass */);
 
   private PassFactory getRemoveUnusedCode(boolean isOneTimePass) {
     /** Removes variables that are never used. */
     return new PassFactory(PassNames.REMOVE_UNUSED_CODE, isOneTimePass) {
       @Override
       protected CompilerPass create(AbstractCompiler compiler) {
-        boolean removeOnlyLocals = options.removeUnusedLocalVars && !options.removeUnusedVars;
         boolean preserveAnonymousFunctionNames =
             options.anonymousFunctionNaming != AnonymousFunctionNamingPolicy.OFF;
         return new RemoveUnusedCode.Builder(compiler)
-            .removeGlobals(!removeOnlyLocals)
+            .removeLocalVars(options.removeUnusedLocalVars)
+            .removeGlobals(options.removeUnusedVars)
             .preserveFunctionExpressionNames(preserveAnonymousFunctionNames)
             .removeUnusedPrototypeProperties(options.removeUnusedPrototypeProperties)
             .allowRemovalOfExternProperties(options.removeUnusedPrototypePropertiesInExterns)

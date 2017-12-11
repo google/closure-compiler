@@ -50,7 +50,11 @@ public final class OptimizeCallsTest extends CompilerTestCase {
         defFinder.process(externs, root);
 
         new PureFunctionIdentifier(compiler, defFinder).process(externs, root);
-        new RemoveUnusedCode.Builder(compiler).removeGlobals(true).build().process(externs, root);
+        new RemoveUnusedCode.Builder(compiler)
+            .removeLocalVars(true)
+            .removeGlobals(true)
+            .build()
+            .process(externs, root);
 
         final OptimizeCalls passes = new OptimizeCalls(compiler);
         passes.addPass(new OptimizeReturns(compiler));
