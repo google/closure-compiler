@@ -647,11 +647,13 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
       }
 
       Node initModule = IR.var(IR.name(moduleName), IR.objectlit());
+      initModule.getFirstChild().putBooleanProp(Node.MODULE_EXPORT, true);
       JSDocInfoBuilder builder = new JSDocInfoBuilder(true);
       builder.recordConstancy();
       initModule.setJSDocInfo(builder.build());
       if (directAssignments == 0) {
         Node defaultProp = IR.stringKey(EXPORT_PROPERTY_NAME);
+        defaultProp.putBooleanProp(Node.MODULE_EXPORT, true);
         defaultProp.addChildToFront(IR.objectlit());
         initModule.getFirstFirstChild().addChildToFront(defaultProp);
         builder = new JSDocInfoBuilder(true);
@@ -1175,6 +1177,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
 
       Node updatedExport =
           NodeUtil.newQName(compiler, moduleName, export.node, export.node.getQualifiedName());
+      updatedExport.putBooleanProp(Node.MODULE_EXPORT, true);
       boolean exportIsConst =
           defaultExportIsConst
               && updatedExport.matchesQualifiedName(
@@ -1189,7 +1192,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
           && export.scope.getVar("module.exports") == null
           && root.getParent().isAssign()) {
         if (root.getGrandparent().isExprResult() && moduleInitialization == null) {
-          // Rewrite "module.exports = foo;" to "var moduleName = foo;"
+          // Rewrite "module.exports = foo;" to "var moduleName = {default: foo};"
           Node parent = root.getParent();
           Node exportName = IR.exprResult(IR.assign(updatedExport, rValue.detach()));
           if (exportIsConst) {
@@ -1411,6 +1414,8 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
       checkNotNull(parent);
       checkNotNull(newName);
       boolean newNameIsQualified = newName.indexOf('.') >= 0;
+      boolean newNameIsModuleExport =
+          newName.equals(getBasePropertyImport(getModuleName(t.getInput())));
 
       Var newNameDeclaration = t.getScope().getVar(newName);
 
@@ -1423,6 +1428,9 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
             rewrittenClassExpressions.add(parent);
 
             Node newNameRef = NodeUtil.newQName(compiler, newName, nameRef, originalName);
+            if (newNameIsModuleExport) {
+              newNameRef.putBooleanProp(Node.MODULE_EXPORT, true);
+            }
             Node grandparent = parent.getParent();
 
             Node expr;
@@ -1448,6 +1456,9 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
             }
           } else if (parent.getIndexOfChild(nameRef) == 1) {
             Node newNameRef = NodeUtil.newQName(compiler, newName, nameRef, originalName);
+            if (newNameIsModuleExport) {
+              newNameRef.putBooleanProp(Node.MODULE_EXPORT, true);
+            }
             parent.replaceChild(nameRef, newNameRef);
           } else {
             nameRef.setString(newName);
@@ -1464,6 +1475,9 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
               return;
             }
             Node newNameRef = NodeUtil.newQName(compiler, newName, nameRef, originalName);
+            if (newNameIsModuleExport) {
+              newNameRef.putBooleanProp(Node.MODULE_EXPORT, true);
+            }
             Node grandparent = parent.getParent();
             nameRef.setString("");
 
@@ -1515,6 +1529,9 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
 
             // Refactor a var declaration to a getprop assignment
             Node getProp = NodeUtil.newQName(compiler, newName, nameRef, originalName);
+            if (newNameIsModuleExport) {
+              getProp.putBooleanProp(Node.MODULE_EXPORT, true);
+            }
             JSDocInfo info = parent.getJSDocInfo();
             parent.setJSDocInfo(null);
             if (nameRef.hasChildren()) {
@@ -1565,6 +1582,9 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
                     ? NodeUtil.newQName(compiler, newName, nameRef, originalName)
                     : NodeUtil.newName(compiler, newName, nameRef, originalName);
 
+            if (newNameIsModuleExport) {
+              name.putBooleanProp(Node.MODULE_EXPORT, true);
+            }
             JSDocInfo info = nameRef.getJSDocInfo();
             if (info != null) {
               nameRef.setJSDocInfo(null);

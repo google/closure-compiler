@@ -75,6 +75,12 @@ public class CompilerOptions implements Serializable {
     NONE
   }
 
+  public enum PropertyCollapseLevel {
+    ALL,
+    NONE,
+    MODULE_EXPORT
+  }
+
   // TODO(nicksantos): All public properties of this class should be made
   // package-private, and have a public setter.
 
@@ -631,11 +637,15 @@ public class CompilerOptions implements Serializable {
     renamePrefixNamespaceAssumeCrossModuleNames = assume;
   }
 
-  private boolean collapseProperties;
+  private PropertyCollapseLevel collapsePropertiesLevel;
 
   /** Flattens multi-level property names (e.g. a$b = x) */
   public boolean shouldCollapseProperties() {
-    return collapseProperties;
+    return collapsePropertiesLevel != PropertyCollapseLevel.NONE;
+  }
+
+  public PropertyCollapseLevel getPropertyCollapseLevel() {
+    return collapsePropertiesLevel;
   }
 
   /** Split object literals into individual variables when possible. */
@@ -1291,7 +1301,7 @@ public class CompilerOptions implements Serializable {
     shadowVariables = false;
     preferStableNames = false;
     renamePrefix = null;
-    collapseProperties = false;
+    collapsePropertiesLevel = PropertyCollapseLevel.NONE;
     collapseObjectLiterals = false;
     devirtualizePrototypeMethods = false;
     disambiguateProperties = false;
@@ -2392,8 +2402,8 @@ public class CompilerOptions implements Serializable {
     this.renamePrefixNamespace = renamePrefixNamespace;
   }
 
-  public void setCollapseProperties(boolean collapseProperties) {
-    this.collapseProperties = collapseProperties;
+  public void setCollapsePropertiesLevel(PropertyCollapseLevel level) {
+    this.collapsePropertiesLevel = level;
   }
 
   public void setDevirtualizePrototypeMethods(boolean devirtualizePrototypeMethods) {
@@ -2868,7 +2878,7 @@ public class CompilerOptions implements Serializable {
             .add("codingConvention", getCodingConvention())
             .add("collapseAnonymousFunctions", collapseAnonymousFunctions)
             .add("collapseObjectLiterals", collapseObjectLiterals)
-            .add("collapseProperties", collapseProperties)
+            .add("collapseProperties", collapsePropertiesLevel)
             .add("collapseVariableDeclarations", collapseVariableDeclarations)
             .add("colorizeErrorOutput", shouldColorizeErrorOutput())
             .add("computeFunctionSideEffects", computeFunctionSideEffects)

@@ -19,6 +19,7 @@ package com.google.javascript.jscomp;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import com.google.javascript.jscomp.CompilerOptions.PropertyCollapseLevel;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
@@ -892,18 +893,19 @@ public final class NormalizeTest extends CompilerTestCase {
     // we call enableNormalize to make the Normalize.VerifyConstants pass run.
 
     // TODO(johnlenz): fix this so it is just another test case.
-    CompilerTestCase tester = new CompilerTestCase() {
-      @Override
-      protected int getNumRepetitions() {
-        // The normalize pass is only run once.
-        return 1;
-      }
+    CompilerTestCase tester =
+        new CompilerTestCase() {
+          @Override
+          protected int getNumRepetitions() {
+            // The normalize pass is only run once.
+            return 1;
+          }
 
-      @Override
-      protected CompilerPass getProcessor(Compiler compiler) {
-        return new CollapseProperties(compiler);
-      }
-    };
+          @Override
+          protected CompilerPass getProcessor(Compiler compiler) {
+            return new CollapseProperties(compiler, PropertyCollapseLevel.ALL);
+          }
+        };
 
     tester.setUp();
     tester.enableNormalize();

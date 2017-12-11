@@ -393,6 +393,7 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
       String withSuffix = entry.getValue().name;
       Node nodeForSourceInfo = entry.getValue().nodeForSourceInfo;
       Node getProp = IR.getprop(IR.name(moduleName), IR.string(exportedName));
+      getProp.putBooleanProp(Node.MODULE_EXPORT, true);
 
       if (typedefs.contains(exportedName)) {
         // /** @typedef {foo} */
@@ -429,6 +430,7 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
 
     if (!exportMap.isEmpty()) {
       Node moduleVar = IR.var(IR.name(moduleName), IR.objectlit());
+      moduleVar.getFirstChild().putBooleanProp(Node.MODULE_EXPORT, true);
       JSDocInfoBuilder infoBuilder = new JSDocInfoBuilder(false);
       infoBuilder.recordConstancy();
       moduleVar.setJSDocInfo(infoBuilder.build());
