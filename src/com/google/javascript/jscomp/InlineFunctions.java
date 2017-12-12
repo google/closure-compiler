@@ -199,6 +199,8 @@ class InlineFunctions implements CompilerPass {
           // Functions expressions in the form of:
           //   var fooFn = function(x) { return ... }
         case VAR:
+        case LET:
+        case CONST:
           Preconditions.checkState(n.hasOneChild(), n);
           Node nameNode = n.getFirstChild();
           if (nameNode.isName()
@@ -241,7 +243,7 @@ class InlineFunctions implements CompilerPass {
             }
           }
 
-          // If a interesting function was discovered, add it.
+          // If an interesting function was discovered, add it.
           if (fnNode != null) {
             Function fn = new FunctionExpression(fnNode, callsSeen++);
             maybeAddFunction(fn, t.getModule());
@@ -431,7 +433,7 @@ class InlineFunctions implements CompilerPass {
   static boolean isCandidateUsage(Node name) {
     Node parent = name.getParent();
     checkState(name.isName());
-    if (parent.isVar() || parent.isFunction()) {
+    if (NodeUtil.isNameDeclaration(parent) || parent.isFunction()) {
       // This is a declaration.  Duplicate declarations are handle during
       // function candidate gathering.
       return true;

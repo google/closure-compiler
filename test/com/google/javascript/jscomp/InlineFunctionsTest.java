@@ -484,6 +484,18 @@ public class InlineFunctionsTest extends CompilerTestCase {
         "lab:{{JSCompiler_inline_label_0:{4}}}");
   }
 
+  public void testInlineFunctions32() {
+    test(
+        "let f = function() { return 5; }; f();",
+        "5;");
+  }
+
+  public void testInlineFunctions33() {
+    test(
+        "const f = function() { return 5; }; f();",
+        "5;");
+  }
+
   public void testMixedModeInlining1() {
     // Base line tests, direct inlining
     test("function foo(){return 1}" +
