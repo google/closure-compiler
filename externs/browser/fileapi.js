@@ -336,6 +336,12 @@ File.prototype.lastModifiedDate;
 File.prototype.lastModified;
 
 /**
+ * @see https://wicg.github.io/entries-api/#dom-file-webkitrelativepath
+ * @type {string}
+ */
+File.prototype.webkitRelativePath;
+
+/**
  * @see http://www.w3.org/TR/file-system-api/#the-fileentry-interface
  * @constructor
  * @extends {Entry}
