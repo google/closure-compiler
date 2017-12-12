@@ -20,13 +20,14 @@ import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.rhino.Node;
 
 /**
- * Tests for {@link RemoveUnusedCode} that cover functionality originally in
- * {@link RemoveUnusedPrototypeProperties}.
+ * Tests for {@link RemoveUnusedCode} that cover removal of prototype properties and class
+ * properties.
  */
 public final class RemoveUnusedCodePrototypePropertiesTest extends CompilerTestCase {
   private static final String EXTERNS =
       MINIMAL_EXTERNS + "IFoo.prototype.bar; var mExtern; mExtern.bExtern; mExtern['cExtern'];";
 
+  private boolean keepLocals = true;
   private boolean keepGlobals = false;
   private boolean allowRemovalOfExternProperties = false;
 
@@ -45,6 +46,7 @@ public final class RemoveUnusedCodePrototypePropertiesTest extends CompilerTestC
       @Override
       public void process(Node externs, Node root) {
         new RemoveUnusedCode.Builder(compiler)
+            .removeLocalVars(!keepLocals)
             .removeGlobals(!keepGlobals)
             .removeUnusedPrototypeProperties(true)
             .allowRemovalOfExternProperties(allowRemovalOfExternProperties)
@@ -549,22 +551,6 @@ public final class RemoveUnusedCodePrototypePropertiesTest extends CompilerTestC
         "(new Foo()).method1();");
   }
 
-  public void testRemoveInBlock() {
-    test(lines(
-        "if (true) {",
-        "  if (true) {",
-        "    var foo = function() {};",
-        "  }",
-        "}"),
-         lines(
-        "if (true) {",
-        "  if (true) {",
-        "  }",
-        "}"));
-
-    test("if (true) { let foo = function() {} }", "if (true);");
-  }
-
   public void testDestructuringProperty() {
     // Makes the cases below shorter because we don't have to add references
     // to globals to keep them around and just test prototype property removal.
@@ -803,6 +789,8 @@ public final class RemoveUnusedCodePrototypePropertiesTest extends CompilerTestC
   }
 
   public void testAnonClasses() {
+    // Make sure class expression names are removed.
+    keepLocals = false;
     test(
         lines(
             "var C = class InnerC {",
@@ -850,6 +838,8 @@ public final class RemoveUnusedCodePrototypePropertiesTest extends CompilerTestC
   }
 
   public void testBaseClassExpressionHasSideEffects() {
+    // Make sure names are removed from class expressions.
+    keepLocals = false;
     testSame(
         lines(
             "function getBaseClass() { return class {}; }",

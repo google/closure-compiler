@@ -32,7 +32,7 @@ import java.util.Set;
  * constructors or interfaces. Explicitly ignored is the possibility that
  * these properties may be indirectly referenced using "for-in" or
  * "Object.keys".  This is the same assumption used with
- * RemoveUnusedPrototypeProperties but is slightly wider in scope.
+ * RemoveUnusedCode but is slightly wider in scope.
  *
  * TODO(tomnguyen) Handle destructuring of objects/classes as cases where the field is used.
  *
