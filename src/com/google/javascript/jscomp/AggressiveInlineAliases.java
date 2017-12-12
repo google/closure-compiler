@@ -313,16 +313,14 @@ class AggressiveInlineAliases implements CompilerPass {
 
       Var aliasVar = alias.scope.getVar(aliasVarName);
       checkState(aliasVar != null, "Expected variable to be defined in scope", aliasVarName);
-      Node aliasDeclarationParent = aliasVar.getParentNode();
-      Scope scope =
-          aliasDeclarationParent.isVar() ? alias.scope.getClosestHoistScope() : alias.scope;
       ReferenceCollectingCallback collector =
           new ReferenceCollectingCallback(
               compiler,
               ReferenceCollectingCallback.DO_NOTHING_BEHAVIOR,
               new Es6SyntacticScopeCreator(compiler),
               Predicates.equalTo(aliasVar));
-      collector.processScope(scope);
+      Scope aliasScope = aliasVar.getScope();
+      collector.processScope(aliasScope);
 
       ReferenceCollection aliasRefs = collector.getReferences(aliasVar);
       Set<AstChange> newNodes = new LinkedHashSet<>();

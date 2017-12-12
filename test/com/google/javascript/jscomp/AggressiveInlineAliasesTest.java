@@ -147,6 +147,20 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
         AggressiveInlineAliases.UNSAFE_CTOR_ALIASING);
   }
 
+  public void testCtorAliasedMultipleTimesWarning3() {
+    testSame(
+        lines(
+            "/** @constructor */",
+            "function a() {}",
+            "a.staticProp = 5;",
+            "function f(alias) {",
+            "  alias();",
+            "  alias = a;",
+            "  use(alias.staticProp);", // Unsafe because a.staticProp becomes a$staticProp.
+            "}"),
+        AggressiveInlineAliases.UNSAFE_CTOR_ALIASING);
+  }
+
   public void testAddPropertyToChildFuncOfUncollapsibleObjectInLocalScope() {
     test(
         "var a = {};"
@@ -1376,5 +1390,32 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
             "ns.clazz = null;",
             "var Bar = class extends Foo.Builder {}",
             "use(Foo.Builder.baz);"));
+  }
+
+  public void testGithubIssue2754() {
+    testSame(
+        lines(
+            "var ns = {};",
+            "/** @constructor */",
+            "ns.Bean = function() {}",
+            "",
+            "ns.Bean.x = function(a=null) {",
+            "  if (a == null || a === undefined) {",
+            "    a = ns.Bean;",
+            "  }",
+            "  return new a();",
+            "}"));
+  }
+
+  public void testParameterDefaultIsAlias() {
+    testSame(
+        lines(
+            "/** @constructor */",
+            "function a() {}",
+            "a.staticProp = 5;",
+            "",
+            "function f(param = a) {",
+            "  return new param();",
+            "}"));
   }
 }
