@@ -47,29 +47,12 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
       @Override
       public void process(Node externs, Node root) {
         new RemoveUnusedCode.Builder(compiler)
-            .removeLocalVars(true)
             .removeGlobals(removeGlobal)
             .preserveFunctionExpressionNames(preserveFunctionExpressionNames)
             .build()
             .process(externs, root);
       }
     };
-  }
-
-  public void testRemoveInBlock() {
-    test(lines(
-        "if (true) {",
-        "  if (true) {",
-        "    var foo = function() {};",
-        "  }",
-        "}"),
-        lines(
-            "if (true) {",
-            "  if (true) {",
-            "  }",
-            "}"));
-
-    test("if (true) { let foo = function() {} }", "if (true);");
   }
 
   public void testDeclarationInSwitch() {

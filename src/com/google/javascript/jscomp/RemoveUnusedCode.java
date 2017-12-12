@@ -96,7 +96,6 @@ class RemoveUnusedCode implements CompilerPass {
 
   private final CodingConvention codingConvention;
 
-  private final boolean removeLocalVars;
   private final boolean removeGlobals;
 
   private final boolean preserveFunctionExpressionNames;
@@ -119,7 +118,7 @@ class RemoveUnusedCode implements CompilerPass {
   private final Multimap<String, Removable> removablesForPropertyNames = HashMultimap.create();
 
   /** Single value to use for all vars for which we cannot remove anything at all. */
-  private final VarInfo canonicalUnremovableVarInfo;
+  private final VarInfo canonicalTotallyUnremovableVarInfo;
 
   /**
    * Keep track of scopes that we've traversed.
@@ -134,7 +133,6 @@ class RemoveUnusedCode implements CompilerPass {
   RemoveUnusedCode(Builder builder) {
     this.compiler = builder.compiler;
     this.codingConvention = builder.compiler.getCodingConvention();
-    this.removeLocalVars = builder.removeLocalVars;
     this.removeGlobals = builder.removeGlobals;
     this.preserveFunctionExpressionNames = builder.preserveFunctionExpressionNames;
     this.removeUnusedPrototypeProperties = builder.removeUnusedPrototypeProperties;
@@ -142,14 +140,13 @@ class RemoveUnusedCode implements CompilerPass {
     this.scopeCreator = new Es6SyntacticScopeCreator(builder.compiler);
 
     // All Vars that are completely unremovable will share this VarInfo instance.
-    canonicalUnremovableVarInfo = new VarInfo();
-    canonicalUnremovableVarInfo.setIsExplicitlyNotRemovable();
+    canonicalTotallyUnremovableVarInfo = new VarInfo();
+    canonicalTotallyUnremovableVarInfo.setIsExplicitlyNotRemovable();
   }
 
   public static class Builder {
     private final AbstractCompiler compiler;
 
-    private boolean removeLocalVars = false;
     private boolean removeGlobals = false;
     private boolean preserveFunctionExpressionNames = false;
     private boolean removeUnusedPrototypeProperties = false;
@@ -157,11 +154,6 @@ class RemoveUnusedCode implements CompilerPass {
 
     Builder(AbstractCompiler compiler) {
       this.compiler = compiler;
-    }
-
-    Builder removeLocalVars(boolean value) {
-      this.removeLocalVars = value;
-      return this;
     }
 
     Builder removeGlobals(boolean value) {
@@ -1093,8 +1085,7 @@ class RemoveUnusedCode implements CompilerPass {
    */
   private VarInfo traverseVar(Var var) {
     checkNotNull(var);
-    if (removeLocalVars && var.isArguments()) {
-      // If we are considering removing local variables, that includes parameters.
+    if (var.isArguments()) {
       // If `arguments` is used in a function we must consider all parameters to be referenced.
       Scope functionScope = var.getScope().getClosestHoistScope();
       Node paramList = NodeUtil.getFunctionParameters(functionScope.getRootNode());
@@ -1113,7 +1104,7 @@ class RemoveUnusedCode implements CompilerPass {
         getVarInfo(paramVar).markAsReferenced();
       }
       // `arguments` is never removable.
-      return canonicalUnremovableVarInfo;
+      return canonicalTotallyUnremovableVarInfo;
     } else {
       return getVarInfo(var);
     }
@@ -1128,28 +1119,26 @@ class RemoveUnusedCode implements CompilerPass {
    */
   private VarInfo getVarInfo(Var var) {
     checkNotNull(var);
-    boolean isGlobal = var.isGlobal();
-    if (isGlobal && !removeGlobals) {
-      return canonicalUnremovableVarInfo;
-    } else if (!isGlobal && !removeLocalVars) {
-      return canonicalUnremovableVarInfo;
-    } else if (codingConvention.isExported(var.getName(), !isGlobal)) {
-      return canonicalUnremovableVarInfo;
-    } else if (var.isArguments()) {
-      return canonicalUnremovableVarInfo;
-    } else {
-      VarInfo varInfo = varInfoMap.get(var);
-      if (varInfo == null) {
+    VarInfo varInfo = varInfoMap.get(var);
+    if (varInfo == null) {
+      boolean isGlobal = var.isGlobal();
+      if (isGlobal && !removeGlobals && !removeUnusedPrototypeProperties) {
+        varInfo = canonicalTotallyUnremovableVarInfo;
+      } else if (codingConvention.isExported(var.getName(), !isGlobal)) {
+        varInfo = canonicalTotallyUnremovableVarInfo;
+      } else if (var.isArguments()) {
+        varInfo = canonicalTotallyUnremovableVarInfo;
+      } else {
         varInfo = new VarInfo();
-        if (var.getParentNode().isParamList()) {
-          // We don't know where a parameter value comes from, so setting a property on it
-          // has unknown side effects and makes it not removable.
+        if (isGlobal && !removeGlobals) {
+          varInfo.setIsExplicitlyNotRemovable();
+        } else if (var.getParentNode().isParamList()) {
           varInfo.propertyAssignmentsWillPreventRemoval = true;
         }
         varInfoMap.put(var, varInfo);
       }
-      return varInfo;
     }
+    return varInfo;
   }
 
   /**
