@@ -126,6 +126,16 @@ public final class FunctionArgumentInjectorTest extends TestCase {
         .containsExactly("b");
   }
 
+  public void testFindModifiedParameters12() {
+    assertThat(
+            findModifiedParameters(parseFunction("function f(a){ { let a = 1; } }"))).isEmpty();
+  }
+
+  public void testFindModifiedParameters13() {
+    assertThat(
+            findModifiedParameters(parseFunction("function f(a){ { const a = 1; } }"))).isEmpty();
+  }
+
   public void testMaybeAddTempsForCallArguments1() {
     // Parameters with side-effects must be executed
     // even if they aren't referenced.
@@ -183,7 +193,17 @@ public final class FunctionArgumentInjectorTest extends TestCase {
   public void testMaybeAddTempsForCallArguments7() {
     // No temp needed after local side-effects.
     testNeededTemps(
-        "function foo(a){var c; c=0; a;}; foo(x);",
+        "function foo(a){var c; c = 0; a;}; foo(x);",
+        "foo",
+        EMPTY_STRING_SET);
+
+    testNeededTemps(
+        "function foo(a){let c; c = 0; a;}; foo(x);",
+        "foo",
+        EMPTY_STRING_SET);
+
+    testNeededTemps(
+        "function foo(a){const c = 0; a;}; foo(x);",
         "foo",
         EMPTY_STRING_SET);
   }

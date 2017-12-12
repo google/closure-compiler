@@ -555,7 +555,9 @@ class FunctionArgumentInjector {
       return;
     } else if (n.isName()) {
       switch (n.getParent().getToken()) {
-        case VAR:  // TODO(tbreisacher): Should this include LET and CONST too?
+        case VAR:
+        case LET:
+        case CONST:
         case CATCH:
           names.add(n.getString());
           break;
