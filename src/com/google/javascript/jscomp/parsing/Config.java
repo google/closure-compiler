@@ -19,6 +19,7 @@ package com.google.javascript.jscomp.parsing;
 import com.google.auto.value.AutoValue;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.errorprone.annotations.Immutable;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 
 /**
@@ -27,7 +28,7 @@ import com.google.javascript.jscomp.parsing.parser.FeatureSet;
  *
  * @author nicksantos@google.com (Nick Santos)
  */
-@AutoValue
+@Immutable @AutoValue @AutoValue.CopyAnnotations
 public abstract class Config {
 
   /**
@@ -162,19 +163,15 @@ public abstract class Config {
 
     abstract Builder setParseInlineSourceMaps(boolean parseInlineSourceMaps);
 
-    final Builder setSuppressionNames(Iterable<String> names) {
-      return setSuppressionNames(ImmutableSet.copyOf(names));
-    }
+    abstract Builder setSuppressionNames(Iterable<String> names);
 
-    final Builder setExtraAnnotationNames(Iterable<String> names) {
+    Builder setExtraAnnotationNames(Iterable<String> names) {
       return setAnnotations(buildAnnotations(names));
     }
 
     abstract Config build();
 
-    // The following are intended to be used internally only (but aren't private due to AutoValue).
-    abstract Builder setSuppressionNames(ImmutableSet<String> names);
-
+    // The following is intended to be used internally only (but isn't private due to AutoValue).
     abstract Builder setAnnotations(ImmutableMap<String, Annotation> names);
   }
 
