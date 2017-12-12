@@ -76,6 +76,11 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
             "/** @const {number} */ var x;",
             "/** @const {string} */ var y;",
             "/** @const {!RegExp} */ var z;"));
+
+    test(
+        "const x = cond ? true : 5;",
+        "/** @const {*} */ var x;",
+        warning(ConvertToTypedInterface.CONSTANT_WITHOUT_EXPLICIT_TYPE));
   }
 
   public void testSplitMultiDeclarations() {
@@ -277,6 +282,22 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
             "a.b.c.Foo = function() {};",
             "",
             "/** @const */ var FooAlias = a.b.c.Foo;"));
+  }
+
+  public void testConstructorAlias7() {
+    testSame(
+        lines(
+            "class Foo {}",
+            "const FooAlias = Foo;"));
+  }
+
+  public void testConstructorAlias8() {
+    testSame(
+        lines(
+            "goog.module('a.b.c');",
+            "",
+            "class Foo {}",
+            "const FooAlias = Foo;"));
   }
 
   public void testRequireAlias1() {

@@ -58,7 +58,7 @@ class ConvertToTypedInterface implements CompilerPass {
   static final DiagnosticType CONSTANT_WITHOUT_EXPLICIT_TYPE =
       DiagnosticType.warning(
           "JSC_CONSTANT_WITHOUT_EXPLICIT_TYPE",
-          "/** @const */-annotated values in library API should have types explicitly specified.");
+          "Constants in top-level should have types explicitly specified.");
 
   private static final ImmutableSet<String> CALLS_TO_PRESERVE =
       ImmutableSet.of(
@@ -721,6 +721,7 @@ class ConvertToTypedInterface implements CompilerPass {
           || isImportRhs(rhs)
           || (isExport && (rhs.isQualifiedName() || rhs.isObjectLit()))
           || (jsdoc != null && jsdoc.isConstructor() && rhs.isQualifiedName())
+          || isAliasDefinition(decl)
           || (rhs.isObjectLit()
               && !rhs.hasChildren()
               && (jsdoc == null || !JsdocUtil.hasAnnotatedType(jsdoc)))) {
@@ -729,24 +730,29 @@ class ConvertToTypedInterface implements CompilerPass {
       if (NodeUtil.isNamespaceDecl(nameNode)) {
         return RemovalType.SIMPLIFY_RHS;
       }
-      if (!isExport && (jsdoc == null || !jsdoc.containsDeclaration())) {
-        if (isDeclaration(nameNode)
-            || currentFile.isPrefixProvided(fullyQualifiedName)
-            || currentFile.isStrictPrefixDeclared(fullyQualifiedName)) {
-          jsdocNode.setJSDocInfo(JsdocUtil.getAllTypeJSDoc());
-          return RemovalType.SIMPLIFY_RHS;
-        }
-        return RemovalType.REMOVE_ALL;
-      }
       if (isConstToBeInferred(jsdoc, nameNode, isExport)) {
-        if (rhs.isQualifiedName()
-            && (currentFile.isPrefixRequired(rhs.getQualifiedName())
-                || currentFile.isNameDeclared(rhs.getQualifiedName()))) {
-          return RemovalType.PRESERVE_ALL;
-        }
         jsdocNode.setJSDocInfo(JsdocUtil.pullJsdocTypeFromAst(compiler, jsdoc, nameNode));
+        return RemovalType.SIMPLIFY_RHS;
+      }
+      if (jsdoc == null || !jsdoc.containsDeclaration()) {
+        if (!isDeclaration(nameNode)
+            && !currentFile.isPrefixProvided(fullyQualifiedName)
+            && !currentFile.isStrictPrefixDeclared(fullyQualifiedName)) {
+          // This looks like an update rather than a declaration in this file.
+          return RemovalType.REMOVE_ALL;
+        }
+        jsdocNode.setJSDocInfo(JsdocUtil.getAllTypeJSDoc());
       }
       return RemovalType.SIMPLIFY_RHS;
+    }
+
+    private boolean isAliasDefinition(PotentialDeclaration decl) {
+      boolean isExport = isExportLhs(decl.lhs);
+      if (isConstToBeInferred(decl.getJsDoc(), decl.lhs, isExport) && decl.rhs.isQualifiedName()) {
+        String aliasedName = decl.rhs.getQualifiedName();
+        return currentFile.isPrefixRequired(aliasedName) || currentFile.isNameDeclared(aliasedName);
+      }
+      return false;
     }
   }
 
