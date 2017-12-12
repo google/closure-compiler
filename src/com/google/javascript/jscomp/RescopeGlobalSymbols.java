@@ -84,6 +84,7 @@ final class RescopeGlobalSymbols implements CompilerPass {
   private final boolean addExtern;
   private final boolean assumeCrossModuleNames;
   private final Set<String> crossModuleNames = new HashSet<>();
+  /** Global identifiers that may be a non-arrow function referencing "this" */
   private final Set<String> maybeReferencesThis = new HashSet<>();
   private Set<String> externNames;
 
@@ -304,10 +305,13 @@ final class RescopeGlobalSymbols implements CompilerPass {
         if (v == null || !v.isGlobal()) {
           return;
         }
-        // If anything but a function is assignment we assume that possibly
-        // a function referencing this is being assignment. Otherwise we
-        // check whether the function that is being assigned references this.
-        if (value == null || !value.isFunction() || NodeUtil.referencesThis(value)) {
+        // If anything but a function is assigned we assume that possibly
+        // a function referencing this is being assigned. Otherwise we
+        // check whether the function assigned is a) an arrow function, which has a
+        // lexically-scoped this, or b) a non-arrow function that does not reference this.
+        if (value == null
+            || !value.isFunction()
+            || (!value.isArrowFunction() && NodeUtil.referencesThis(value))) {
           maybeReferencesThis.add(name);
         }
       }
@@ -494,8 +498,10 @@ final class RescopeGlobalSymbols implements CompilerPass {
             replacement,
             node.removeFirstChild());
         parent.replaceChild(node, assign);
+        compiler.reportChangeToEnclosingScope(assign);
       } else if (isCrossModule) {
         parent.replaceChild(node, replacement);
+        compiler.reportChangeToEnclosingScope(replacement);
         if (parent.isCall() && !maybeReferencesThis.contains(name)) {
           // Do not write calls like this: (0, _a)() but rather as _.a(). The
           // this inside the function will be wrong, but it doesn't matter

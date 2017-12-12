@@ -433,10 +433,11 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
     test(
         "function test(){}",
         "_.test=function (){}");
-    setAcceptedLanguage(CompilerOptions.LanguageMode.ECMASCRIPT_2015);
     test(
         "if(1)function test(){}",
         "if(1)_.test=function (){}");
+    test("async function test() {}", "_.test = async function() {}");
+    test("function *test() {}", "_.test = function *() {}");
   }
 
   public void testFunctionStatements_allSameModule() {
@@ -460,6 +461,10 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
         "_.a=function(){this};(0,_.a)()");
     // Always trigger free calls for variables assigned through destructuring.
     test("var {a: a} = {a: function() {}}; a();", "({a:_.a}={a:function(){}});(0,_.a)()");
+
+    test(
+        "var ns = {}; ns.a = function() {}; ns.a()",
+        "_.ns={};_.ns.a=function(){};_.ns.a()");
   }
 
   public void testFunctionStatements_freeCallSemantics2() {
@@ -473,6 +478,10 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
     test(
         "var a;a=function(){};a()",
         "_.a=function(){};_.a()");
+
+    // Test that calls to arrow functions are not forced to be free calls
+    test("var a = () => {}; a();", "_.a = () => {}; _.a();");
+    test("var a = () => this; a();", "_.a = () => this; _.a();");
   }
 
   public void testFunctionStatements_freeCallSemantics3() {
@@ -483,6 +492,10 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
     test(
         "var b;var a=b;a()",
         "_.a=_.b;(0,_.a)()");
+  }
+
+  public void testFunctionStatements_defaultParameters() {
+    test("var a = 1; function f(param = a) {}", "_.a = 1; _.f = function(param = _.a) {}");
   }
 
   public void testDeeperScopes() {
@@ -704,5 +717,20 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
         "var y;",
         "var x = 1, y = 2; function f() { return x + window.y; }",
         "var x; x = 1; window.y = 2; var f = function() { return x + window.y; }");
+  }
+
+  public void testArrowFunctions() {
+    test("const fn = () => 3;", "_.fn = () => 3;");
+    test("const PI = 3.14; const fn = () => PI;", "_.PI = 3.14; _.fn = () => _.PI");
+    test("let a = 3; const fn = () => a = 4;", "_.a = 3; _.fn = () => _.a = 4;");
+    test("const PI = 3.14; (() => PI)()", "_.PI = 3.14; (() => _.PI)();");
+    test("const PI = 3.14; (() => { return PI; })()", "_.PI = 3.14; (() => { return _.PI; })()");
+  }
+
+  public void testEnhancedObjectLiterals() {
+    test("var a = 3; var obj = {[a]: a};", "_.a = 3; _.obj = {[_.a]: _.a};");
+    test(
+        "var g = 3; var obj = {a() {}, b() { return g; }};",
+        "_.g = 3; _.obj = {a() {}, b() { return _.g; }};");
   }
 }
