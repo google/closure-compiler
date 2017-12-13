@@ -130,6 +130,8 @@ class RemoveUnusedCode implements CompilerPass {
 
   private final boolean removeUnusedPrototypeProperties;
   private final boolean allowRemovalOfExternProperties;
+  private final boolean removeUnusedThisProperties;
+  private final boolean removeUnusedConstructorProperties;
 
   RemoveUnusedCode(Builder builder) {
     this.compiler = builder.compiler;
@@ -139,6 +141,8 @@ class RemoveUnusedCode implements CompilerPass {
     this.preserveFunctionExpressionNames = builder.preserveFunctionExpressionNames;
     this.removeUnusedPrototypeProperties = builder.removeUnusedPrototypeProperties;
     this.allowRemovalOfExternProperties = builder.allowRemovalOfExternProperties;
+    this.removeUnusedThisProperties = builder.removeUnusedThisProperties;
+    this.removeUnusedConstructorProperties = builder.removeUnusedConstructorProperties;
     this.scopeCreator = new Es6SyntacticScopeCreator(builder.compiler);
 
     // All Vars that are completely unremovable will share this VarInfo instance.
@@ -154,6 +158,8 @@ class RemoveUnusedCode implements CompilerPass {
     private boolean preserveFunctionExpressionNames = false;
     private boolean removeUnusedPrototypeProperties = false;
     private boolean allowRemovalOfExternProperties = false;
+    private boolean removeUnusedThisProperties = false;
+    private boolean removeUnusedConstructorProperties = false;
 
     Builder(AbstractCompiler compiler) {
       this.compiler = compiler;
@@ -181,6 +187,16 @@ class RemoveUnusedCode implements CompilerPass {
 
     Builder allowRemovalOfExternProperties(boolean value) {
       this.allowRemovalOfExternProperties = value;
+      return this;
+    }
+
+    Builder removeUnusedThisProperties(boolean value) {
+      this.removeUnusedThisProperties = value;
+      return this;
+    }
+
+    Builder removeUnusedConstructorProperties(boolean value) {
+      this.removeUnusedConstructorProperties = value;
       return this;
     }
 
