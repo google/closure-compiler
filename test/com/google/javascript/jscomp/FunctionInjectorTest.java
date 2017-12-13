@@ -1119,112 +1119,121 @@ public final class FunctionInjectorTest extends TestCase {
 
   public void testInlineReferenceInExpression1() {
     // Call in if condition
+    allowDecomposition = true;
     helperInlineReferenceToFunction(
-        "function foo(a){return true;}; " +
-        "function x() { if (foo(1)) throw 'test'; }",
-        "function foo(a){return true;}; " +
-        "function x() { var JSCompiler_inline_result$jscomp$0; " +
-        "{JSCompiler_inline_result$jscomp$0=true;}" +
-        "if (JSCompiler_inline_result$jscomp$0) throw 'test'; }",
-        "foo", INLINE_BLOCK, true);
+        "function foo(a){return true;}; function x() { if (foo(1)) throw 'test'; }",
+        "function foo(a){return true;}; "
+            + "function x() { var JSCompiler_inline_result$jscomp$0; "
+            + "{JSCompiler_inline_result$jscomp$0=true;}"
+            + "if (JSCompiler_inline_result$jscomp$0) throw 'test'; }",
+        "foo",
+        INLINE_BLOCK);
   }
 
   public void testInlineReferenceInExpression2() {
     // Call in return expression
+    allowDecomposition = true;
     helperInlineReferenceToFunction(
-        "function foo(a){return true;}; " +
-        "function x() { return foo(1); }",
-        "function foo(a){return true;}; " +
-        "function x() { var JSCompiler_inline_result$jscomp$0; " +
-        "{JSCompiler_inline_result$jscomp$0=true;}" +
-        "return JSCompiler_inline_result$jscomp$0; }",
-        "foo", INLINE_BLOCK, true);
+        "function foo(a){return true;}; function x() { return foo(1); }",
+        "function foo(a){return true;}; "
+            + "function x() { var JSCompiler_inline_result$jscomp$0; "
+            + "{JSCompiler_inline_result$jscomp$0=true;}"
+            + "return JSCompiler_inline_result$jscomp$0; }",
+        "foo",
+        INLINE_BLOCK);
   }
 
   public void testInlineReferenceInExpression3() {
     // Call in switch expression
+    allowDecomposition = true;
     helperInlineReferenceToFunction(
-        "function foo(a){return true;}; " +
-        "function x() { switch(foo(1)) { default:break; } }",
-        "function foo(a){return true;}; " +
-        "function x() { var JSCompiler_inline_result$jscomp$0; " +
-        "{JSCompiler_inline_result$jscomp$0=true;}" +
-        "switch(JSCompiler_inline_result$jscomp$0) { default:break; } }",
-        "foo", INLINE_BLOCK, true);
+        "function foo(a){return true;}; function x() { switch(foo(1)) { default:break; } }",
+        "function foo(a){return true;}; "
+            + "function x() { var JSCompiler_inline_result$jscomp$0; "
+            + "{JSCompiler_inline_result$jscomp$0=true;}"
+            + "switch(JSCompiler_inline_result$jscomp$0) { default:break; } }",
+        "foo",
+        INLINE_BLOCK);
   }
 
   public void testInlineReferenceInExpression4() {
     // Call in hook condition
+    allowDecomposition = true;
     helperInlineReferenceToFunction(
-        "function foo(a){return true;}; " +
-        "function x() {foo(1)?0:1 }",
-        "function foo(a){return true;}; " +
-        "function x() { var JSCompiler_inline_result$jscomp$0; " +
-        "{JSCompiler_inline_result$jscomp$0=true;}" +
-        "JSCompiler_inline_result$jscomp$0?0:1 }",
-        "foo", INLINE_BLOCK, true);
+        "function foo(a){return true;}; function x() {foo(1)?0:1 }",
+        "function foo(a){return true;}; "
+            + "function x() { var JSCompiler_inline_result$jscomp$0; "
+            + "{JSCompiler_inline_result$jscomp$0=true;}"
+            + "JSCompiler_inline_result$jscomp$0?0:1 }",
+        "foo",
+        INLINE_BLOCK);
   }
 
   public void testInlineReferenceInExpression5() {
     // Call in expression statement "condition"
+    allowDecomposition = true;
     helperInlineReferenceToFunction(
-        "function foo(a){return true;}; " +
-        "function x() {foo(1)&&1 }",
-        "function foo(a){return true;}; " +
-        "function x() { var JSCompiler_inline_result$jscomp$0; " +
-        "{JSCompiler_inline_result$jscomp$0=true;}" +
-        "JSCompiler_inline_result$jscomp$0&&1 }",
-        "foo", INLINE_BLOCK, true);
+        "function foo(a){return true;}; function x() {foo(1)&&1 }",
+        "function foo(a){return true;}; "
+            + "function x() { var JSCompiler_inline_result$jscomp$0; "
+            + "{JSCompiler_inline_result$jscomp$0=true;}"
+            + "JSCompiler_inline_result$jscomp$0&&1 }",
+        "foo",
+        INLINE_BLOCK);
   }
 
   public void testInlineReferenceInExpression6() {
     // Call in expression statement after side-effect free "condition"
+    allowDecomposition = true;
     helperInlineReferenceToFunction(
-        "function foo(a){return true;}; " +
-        "function x() {1 + foo(1) }",
-        "function foo(a){return true;}; " +
-        "function x() { var JSCompiler_inline_result$jscomp$0; " +
-        "{JSCompiler_inline_result$jscomp$0=true;}" +
-        "1 + JSCompiler_inline_result$jscomp$0 }",
-        "foo", INLINE_BLOCK, true);
+        "function foo(a){return true;}; function x() {1 + foo(1) }",
+        "function foo(a){return true;}; "
+            + "function x() { var JSCompiler_inline_result$jscomp$0; "
+            + "{JSCompiler_inline_result$jscomp$0=true;}"
+            + "1 + JSCompiler_inline_result$jscomp$0 }",
+        "foo",
+        INLINE_BLOCK);
   }
 
   public void testInlineReferenceInExpression7() {
     // Call in expression statement "condition"
+    allowDecomposition = true;
     helperInlineReferenceToFunction(
-        "function foo(a){return true;}; " +
-        "function x() {foo(1) && 1 }",
-        "function foo(a){return true;}; " +
-        "function x() { var JSCompiler_inline_result$jscomp$0; " +
-        "{JSCompiler_inline_result$jscomp$0=true;}" +
-        "JSCompiler_inline_result$jscomp$0&&1 }",
-        "foo", INLINE_BLOCK, true);
+        "function foo(a){return true;}; function x() {foo(1) && 1 }",
+        "function foo(a){return true;}; "
+            + "function x() { var JSCompiler_inline_result$jscomp$0; "
+            + "{JSCompiler_inline_result$jscomp$0=true;}"
+            + "JSCompiler_inline_result$jscomp$0&&1 }",
+        "foo",
+        INLINE_BLOCK);
   }
 
   public void testInlineReferenceInExpression8() {
     // Call in expression statement after side-effect free operator
+    allowDecomposition = true;
     helperInlineReferenceToFunction(
-        "function foo(a){return true;}; " +
-        "function x() {1 + foo(1) }",
-        "function foo(a){return true;}; " +
-        "function x() { var JSCompiler_inline_result$jscomp$0;" +
-        "{JSCompiler_inline_result$jscomp$0=true;}" +
-        "1 + JSCompiler_inline_result$jscomp$0 }",
-        "foo", INLINE_BLOCK, true);
+        "function foo(a){return true;}; function x() {1 + foo(1) }",
+        "function foo(a){return true;}; "
+            + "function x() { var JSCompiler_inline_result$jscomp$0;"
+            + "{JSCompiler_inline_result$jscomp$0=true;}"
+            + "1 + JSCompiler_inline_result$jscomp$0 }",
+        "foo",
+        INLINE_BLOCK);
   }
 
   public void testInlineReferenceInExpression9() {
     // Call in VAR expression.
+    allowDecomposition = true;
     helperInlineReferenceToFunction(
-        "function foo(a){return true;}; " +
-        "function x() {var b = 1 + foo(1)}",
-        "function foo(a){return true;}; " +
-        "function x() { " +
-        "var JSCompiler_inline_result$jscomp$0;" +
-        "{JSCompiler_inline_result$jscomp$0=true;}" +
-        "var b = 1 + JSCompiler_inline_result$jscomp$0 " +
-        "}",
-        "foo", INLINE_BLOCK, true);
+        "function foo(a){return true;}; function x() {var b = 1 + foo(1)}",
+        "function foo(a){return true;}; "
+            + "function x() { "
+            + "var JSCompiler_inline_result$jscomp$0;"
+            + "{JSCompiler_inline_result$jscomp$0=true;}"
+            + "var b = 1 + JSCompiler_inline_result$jscomp$0 "
+            + "}",
+        "foo",
+        INLINE_BLOCK);
   }
 
 // TODO(nicksantos): Re-enable with side-effect detection.
@@ -1243,149 +1252,158 @@ public final class FunctionInjectorTest extends TestCase {
 
   public void testInlineReferenceInExpression11() {
     // Call under label
+    allowDecomposition = true;
     helperInlineReferenceToFunction(
-        "function foo(a){return true;}; " +
-        "function x() {a:foo(1)?0:1 }",
-        "function foo(a){return true;}; " +
-        "function x() {" +
-        "  a:{" +
-        "    var JSCompiler_inline_result$jscomp$0; " +
-        "    {JSCompiler_inline_result$jscomp$0=true;}" +
-        "    JSCompiler_inline_result$jscomp$0?0:1 " +
-        "  }" +
-        "}",
-        "foo", INLINE_BLOCK, true);
+        "function foo(a){return true;}; function x() {a:foo(1)?0:1 }",
+        "function foo(a){return true;}; "
+            + "function x() {"
+            + "  a:{"
+            + "    var JSCompiler_inline_result$jscomp$0; "
+            + "    {JSCompiler_inline_result$jscomp$0=true;}"
+            + "    JSCompiler_inline_result$jscomp$0?0:1 "
+            + "  }"
+            + "}",
+        "foo",
+        INLINE_BLOCK);
   }
 
   public void testInlineReferenceInExpression12() {
+    allowDecomposition = true;
     helperInlineReferenceToFunction(
-        "function foo(a){return true;}" +
-        "function x() { 1?foo(1):1; }",
-        "function foo(a){return true}" +
-        "function x() {" +
-        "  if(1) {" +
-        "    {true;}" +
-        "  } else {" +
-        "    1;" +
-        "  }" +
-        "}",
-        "foo", INLINE_BLOCK, true);
+        "function foo(a){return true;} function x() { 1?foo(1):1; }",
+        "function foo(a){return true}"
+            + "function x() {"
+            + "  if(1) {"
+            + "    {true;}"
+            + "  } else {"
+            + "    1;"
+            + "  }"
+            + "}",
+        "foo",
+        INLINE_BLOCK);
   }
 
   public void testInlineReferenceInExpression13() {
+    allowDecomposition = true;
     helperInlineReferenceToFunction(
-        "function foo(a){return true;}; " +
-        "function x() { goo() + (1?foo(1):1) }",
-        "function foo(a){return true;}; " +
-        "function x() { var JSCompiler_temp_const$jscomp$0=goo();" +
-            "var JSCompiler_temp$jscomp$1;" +
-            "if(1) {" +
-            "  {JSCompiler_temp$jscomp$1=true;} " +
-            "} else {" +
-            "  JSCompiler_temp$jscomp$1=1;" +
-            "}" +
-            "JSCompiler_temp_const$jscomp$0 + JSCompiler_temp$jscomp$1" +
-            "}",
-        "foo", INLINE_BLOCK, true);
+        "function foo(a){return true;}; function x() { goo() + (1?foo(1):1) }",
+        "function foo(a){return true;}; "
+            + "function x() { var JSCompiler_temp_const$jscomp$0=goo();"
+            + "var JSCompiler_temp$jscomp$1;"
+            + "if(1) {"
+            + "  {JSCompiler_temp$jscomp$1=true;} "
+            + "} else {"
+            + "  JSCompiler_temp$jscomp$1=1;"
+            + "}"
+            + "JSCompiler_temp_const$jscomp$0 + JSCompiler_temp$jscomp$1"
+            + "}",
+        "foo",
+        INLINE_BLOCK);
   }
 
   public void testInlineReferenceInExpression14() {
+    allowDecomposition = true;
     helperInlineReferenceToFunction(
-        "var z = {};" +
-        "function foo(a){z = {};return true;}; " +
-        "function x() { z.gack = foo(1) }",
-
-        "var z = {};" +
-        "function foo(a){z = {};return true;}; " +
-        "function x() {" +
-            "var JSCompiler_temp_const$jscomp$0=z;" +
-            "var JSCompiler_inline_result$jscomp$1;" +
-            "{" +
-             "z= {};" +
-             "JSCompiler_inline_result$jscomp$1 = true;" +
-            "}" +
-            "JSCompiler_temp_const$jscomp$0.gack = JSCompiler_inline_result$jscomp$1;" +
-        "}",
-        "foo", INLINE_BLOCK, true);
+        "var z = {};"
+            + "function foo(a){z = {};return true;}; "
+            + "function x() { z.gack = foo(1) }",
+        "var z = {};"
+            + "function foo(a){z = {};return true;}; "
+            + "function x() {"
+            + "var JSCompiler_temp_const$jscomp$0=z;"
+            + "var JSCompiler_inline_result$jscomp$1;"
+            + "{"
+            + "z= {};"
+            + "JSCompiler_inline_result$jscomp$1 = true;"
+            + "}"
+            + "JSCompiler_temp_const$jscomp$0.gack = JSCompiler_inline_result$jscomp$1;"
+            + "}",
+        "foo",
+        INLINE_BLOCK);
   }
 
   public void testInlineReferenceInExpression15() {
+    allowDecomposition = true;
     helperInlineReferenceToFunction(
-        "var z = {};" +
-        "function foo(a){z = {};return true;}; " +
-        "function x() { z.gack = foo.call(this,1) }",
-
-        "var z = {};" +
-        "function foo(a){z = {};return true;}; " +
-        "function x() {" +
-            "var JSCompiler_temp_const$jscomp$0=z;" +
-            "var JSCompiler_inline_result$jscomp$1;" +
-            "{" +
-             "z= {};" +
-             "JSCompiler_inline_result$jscomp$1 = true;" +
-            "}" +
-            "JSCompiler_temp_const$jscomp$0.gack = JSCompiler_inline_result$jscomp$1;" +
-        "}",
-        "foo", INLINE_BLOCK, true);
+        "var z = {};"
+            + "function foo(a){z = {};return true;}; "
+            + "function x() { z.gack = foo.call(this,1) }",
+        "var z = {};"
+            + "function foo(a){z = {};return true;}; "
+            + "function x() {"
+            + "var JSCompiler_temp_const$jscomp$0=z;"
+            + "var JSCompiler_inline_result$jscomp$1;"
+            + "{"
+            + "z= {};"
+            + "JSCompiler_inline_result$jscomp$1 = true;"
+            + "}"
+            + "JSCompiler_temp_const$jscomp$0.gack = JSCompiler_inline_result$jscomp$1;"
+            + "}",
+        "foo",
+        INLINE_BLOCK);
   }
 
   public void testInlineReferenceInExpression16() {
+    allowDecomposition = true;
     helperInlineReferenceToFunction(
-        "var z = {};" +
-        "function foo(a){z = {};return true;}; " +
-        "function x() { z[bar()] = foo(1) }",
-
-        "var z = {};" +
-        "function foo(a){z = {};return true;}; " +
-        "function x() {" +
-            "var JSCompiler_temp_const$jscomp$1=z;" +
-            "var JSCompiler_temp_const$jscomp$0=bar();" +
-            "var JSCompiler_inline_result$jscomp$2;" +
-            "{" +
-             "z= {};" +
-             "JSCompiler_inline_result$jscomp$2 = true;" +
-            "}" +
-            "JSCompiler_temp_const$jscomp$1[JSCompiler_temp_const$jscomp$0] = " +
-                "JSCompiler_inline_result$jscomp$2;" +
-        "}",
-        "foo", INLINE_BLOCK, true);
+        "var z = {};"
+            + "function foo(a){z = {};return true;}; "
+            + "function x() { z[bar()] = foo(1) }",
+        "var z = {};"
+            + "function foo(a){z = {};return true;}; "
+            + "function x() {"
+            + "var JSCompiler_temp_const$jscomp$1=z;"
+            + "var JSCompiler_temp_const$jscomp$0=bar();"
+            + "var JSCompiler_inline_result$jscomp$2;"
+            + "{"
+            + "z= {};"
+            + "JSCompiler_inline_result$jscomp$2 = true;"
+            + "}"
+            + "JSCompiler_temp_const$jscomp$1[JSCompiler_temp_const$jscomp$0] = "
+            + "JSCompiler_inline_result$jscomp$2;"
+            + "}",
+        "foo",
+        INLINE_BLOCK);
   }
 
   public void testInlineReferenceInExpression17() {
+    allowDecomposition = true;
     helperInlineReferenceToFunction(
-        "var z = {};" +
-        "function foo(a){z = {};return true;}; " +
-        "function x() { z.y.x.gack = foo(1) }",
-
-        "var z = {};" +
-        "function foo(a){z = {};return true;}; " +
-        "function x() {" +
-            "var JSCompiler_temp_const$jscomp$0=z.y.x;" +
-            "var JSCompiler_inline_result$jscomp$1;" +
-            "{" +
-             "z= {};" +
-             "JSCompiler_inline_result$jscomp$1 = true;" +
-            "}" +
-            "JSCompiler_temp_const$jscomp$0.gack = JSCompiler_inline_result$jscomp$1;" +
-        "}",
-        "foo", INLINE_BLOCK, true);
+        "var z = {};"
+            + "function foo(a){z = {};return true;}; "
+            + "function x() { z.y.x.gack = foo(1) }",
+        "var z = {};"
+            + "function foo(a){z = {};return true;}; "
+            + "function x() {"
+            + "var JSCompiler_temp_const$jscomp$0=z.y.x;"
+            + "var JSCompiler_inline_result$jscomp$1;"
+            + "{"
+            + "z= {};"
+            + "JSCompiler_inline_result$jscomp$1 = true;"
+            + "}"
+            + "JSCompiler_temp_const$jscomp$0.gack = JSCompiler_inline_result$jscomp$1;"
+            + "}",
+        "foo",
+        INLINE_BLOCK);
   }
 
 
   public void testInlineWithinCalls1() {
     // Call in within a call
+    allowDecomposition = true;
     helperInlineReferenceToFunction(
-        "function foo(){return _g;}; " +
-        "function x() {1 + foo()() }",
-        "function foo(){return _g;}; " +
-        "function x() { var JSCompiler_inline_result$jscomp$0;" +
-        "{JSCompiler_inline_result$jscomp$0=_g;}" +
-        "1 + JSCompiler_inline_result$jscomp$0() }",
-        "foo", INLINE_BLOCK, true);
+        "function foo(){return _g;}; function x() {1 + foo()() }",
+        "function foo(){return _g;}; "
+            + "function x() { var JSCompiler_inline_result$jscomp$0;"
+            + "{JSCompiler_inline_result$jscomp$0=_g;}"
+            + "1 + JSCompiler_inline_result$jscomp$0() }",
+        "foo",
+        INLINE_BLOCK);
   }
 
 // TODO(nicksantos): Re-enable with side-effect detection.
 //   public void testInlineWithinCalls2() {
+//     allowDecomposition = true;
 //     helperInlineReferenceToFunction(
 //         "/** @nosideeffects */ function foo(){return true;}; " +
 //         "function x() {1 + _g(foo()) }",
@@ -1393,22 +1411,22 @@ public final class FunctionInjectorTest extends TestCase {
 //         "function x() { {var JSCompiler_inline_result$jscomp$0; " +
 //         "JSCompiler_inline_result$jscomp$0=true;}" +
 //         "1 + _g(JSCompiler_inline_result$jscomp$0) }",
-//         "foo", INLINE_BLOCK, true);
+//         "foo", INLINE_BLOCK);
 //   }
 
   public void testInlineAssignmentToConstant() {
     // Call in within a call
+    allowDecomposition = true;
     helperInlineReferenceToFunction(
-        "function foo(){return _g;}; " +
-        "function x(){var CONSTANT_RESULT = foo(); }",
-
-        "function foo(){return _g;}; " +
-        "function x() {" +
-        "  var JSCompiler_inline_result$jscomp$0;" +
-        "  {JSCompiler_inline_result$jscomp$0=_g;}" +
-        "  var CONSTANT_RESULT = JSCompiler_inline_result$jscomp$0;" +
-        "}",
-        "foo", INLINE_BLOCK, true);
+        "function foo(){return _g;}; function x(){var CONSTANT_RESULT = foo(); }",
+        "function foo(){return _g;}; "
+            + "function x() {"
+            + "  var JSCompiler_inline_result$jscomp$0;"
+            + "  {JSCompiler_inline_result$jscomp$0=_g;}"
+            + "  var CONSTANT_RESULT = JSCompiler_inline_result$jscomp$0;"
+            + "}",
+        "foo",
+        INLINE_BLOCK);
   }
 
   public void testBug1897706() {
@@ -1487,13 +1505,6 @@ public final class FunctionInjectorTest extends TestCase {
     NodeTraversal.traverseEs6(compiler, tree, test);
   }
 
-  public void helperInlineReferenceToFunction(
-      String code, final String expectedResult,
-      final String fnName, final InliningMode mode) {
-    helperInlineReferenceToFunction(
-        code, expectedResult, fnName, mode, false);
-  }
-
   private void validateSourceInfo(Compiler compiler, Node subtree) {
     (new LineNumberCheck(compiler)).setCheckSubTree(subtree);
     // Source information problems are reported as compiler errors.
@@ -1508,11 +1519,10 @@ public final class FunctionInjectorTest extends TestCase {
 
   public void helperInlineReferenceToFunction(
       String code, final String expectedResult,
-      final String fnName, final InliningMode mode,
-      final boolean decompose) {
+      final String fnName, final InliningMode mode) {
     final Compiler compiler = new Compiler();
     final FunctionInjector injector = new FunctionInjector(
-        compiler, compiler.getUniqueNameIdSupplier(), decompose,
+        compiler, compiler.getUniqueNameIdSupplier(), allowDecomposition,
         assumeStrictThis,
         assumeMinimumCapture);
 
@@ -1557,7 +1567,7 @@ public final class FunctionInjectorTest extends TestCase {
         assertWithMessage("canInlineReferenceToFunction should not be CAN_NOT_INLINE")
             .that(canInline)
             .isNotEqualTo(CanInlineResult.NO);
-        if (decompose) {
+        if (allowDecomposition) {
           assertSame(
               "canInlineReferenceToFunction should be CAN_INLINE_AFTER_DECOMPOSITION",
               canInline,
