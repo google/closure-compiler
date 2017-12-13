@@ -89,7 +89,7 @@ public final class GatherExternPropertiesTest extends CompilerTestCase {
         lines(
             "/**",
             " * @typedef {{",
-            " *    typedefPropA: { subTypedefProp: string },",
+            " *    typedefPropA: { 'subTypedefProp': string },",  // quotes should be stripped
             " *  }}",
             " */",
             "var TypedefExtern;",
@@ -97,10 +97,6 @@ public final class GatherExternPropertiesTest extends CompilerTestCase {
             " * @param {!{ paramProp1, paramProp2: number }} p",
             " */",
             "function externFunction(p) {}");
-    assertExternProperties(
-        typedefExtern, "typedefPropA", "subTypedefProp", "paramProp1", "paramProp2");
-
-    // make sure it also works with type checking disabled
     assertExternProperties(
         typedefExtern, "typedefPropA", "subTypedefProp", "paramProp1", "paramProp2");
   }

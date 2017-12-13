@@ -121,6 +121,10 @@ class GatherExternProperties extends AbstractPostOrderCallback
       }
       checkState(fieldNameNode.isStringKey(), fieldNameNode);
       String fieldName = fieldNameNode.getString();
+      // TODO(bradfordcsmith): The JSDoc parser should do this.
+      if (fieldName.startsWith("'") || fieldName.startsWith("\"")) {
+        fieldName = fieldName.substring(1, fieldName.length() - 1);
+      }
       externProperties.add(fieldName);
       if (fieldTypeNode != null) {
         gatherPropertiesFromJsTypeExpressionNode(fieldTypeNode);
