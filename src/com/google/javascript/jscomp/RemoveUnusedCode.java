@@ -663,9 +663,9 @@ class RemoveUnusedCode implements CompilerPass {
 
       VarInfo varInfo = traverseVar(var);
       if (isNamedPropertyAssign) {
-        varInfo.addRemovable(builder.buildNamedPropertyAssign(assignNode, nameNode, propertyNode));
+        varInfo.addRemovable(builder.buildNamedPropertyAssign(assignNode, propertyNode));
       } else if (isVariableAssign) {
-        varInfo.addRemovable(builder.buildVariableAssign(assignNode, nameNode));
+        varInfo.addRemovable(builder.buildVariableAssign(assignNode));
       } else {
         checkState(isComputedPropertyAssign);
         if (NodeUtil.mayHaveSideEffects(propertyNode)) {
@@ -674,7 +674,7 @@ class RemoveUnusedCode implements CompilerPass {
           builder.addContinuation(new Continuation(propertyNode, scope));
         }
         varInfo.addRemovable(
-            builder.buildComputedPropertyAssign(assignNode, nameNode, propertyNode));
+            builder.buildComputedPropertyAssign(assignNode, propertyNode));
       }
     }
   }
@@ -1373,19 +1373,19 @@ class RemoveUnusedCode implements CompilerPass {
       return new NameDeclarationStatement(this, declarationStatement);
     }
 
-    Assign buildNamedPropertyAssign(Node assignNode, Node nameNode, Node propertyNode) {
+    Assign buildNamedPropertyAssign(Node assignNode, Node propertyNode) {
       this.propertyName = propertyNode.getString();
       checkNotNull(assignedValue);
-      return new Assign(this, assignNode, nameNode, Kind.NAMED_PROPERTY, propertyNode);
+      return new Assign(this, assignNode, Kind.NAMED_PROPERTY, propertyNode);
     }
 
-    Assign buildComputedPropertyAssign(Node assignNode, Node nameNode, Node propertyNode) {
+    Assign buildComputedPropertyAssign(Node assignNode, Node propertyNode) {
       checkNotNull(assignedValue);
-      return new Assign(this, assignNode, nameNode, Kind.COMPUTED_PROPERTY, propertyNode);
+      return new Assign(this, assignNode, Kind.COMPUTED_PROPERTY, propertyNode);
     }
 
-    Assign buildVariableAssign(Node assignNode, Node nameNode) {
-      return new Assign(this, assignNode, nameNode, Kind.VARIABLE, /* propertyNode */ null);
+    Assign buildVariableAssign(Node assignNode) {
+      return new Assign(this, assignNode, Kind.VARIABLE, /* propertyNode */ null);
     }
 
     ClassSetupCall buildClassSetupCall(Node callNode) {
@@ -1602,7 +1602,6 @@ class RemoveUnusedCode implements CompilerPass {
   private class Assign extends Removable {
 
     final Node assignNode;
-    final Node nameNode;
     final Kind kind;
 
     @Nullable final Node propertyNode;
@@ -1613,7 +1612,6 @@ class RemoveUnusedCode implements CompilerPass {
     Assign(
         RemovableBuilder builder,
         Node assignNode,
-        Node nameNode,
         Kind kind,
         @Nullable Node propertyNode) {
       super(builder);
@@ -1630,7 +1628,6 @@ class RemoveUnusedCode implements CompilerPass {
         }
       }
       this.assignNode = assignNode;
-      this.nameNode = nameNode;
       this.kind = kind;
       this.propertyNode = propertyNode;
 
