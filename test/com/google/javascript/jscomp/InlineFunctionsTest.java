@@ -3208,7 +3208,7 @@ public class InlineFunctionsTest extends CompilerTestCase {
   }
 
   public void testFunctionReferencingLetInNonGlobalBlock() {
-    // TODO(b/6985076): This produces the wrong output! It will cause an error when VarCheck runs
+    // TODO(b/69850796): This produces the wrong output! It will cause an error when VarCheck runs
     // or when this code is actually evaluated.
     test(
         lines(
