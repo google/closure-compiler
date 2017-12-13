@@ -42,11 +42,13 @@ public final class FunctionInjectorTest extends TestCase {
   static final InliningMode INLINE_BLOCK = InliningMode.BLOCK;
   private boolean assumeStrictThis = false;
   private final boolean assumeMinimumCapture = false;
+  private boolean allowDecomposition;
 
   @Override
   protected void setUp() throws Exception {
     super.setUp();
     assumeStrictThis = false;
+    allowDecomposition = false;
   }
 
   private FunctionInjector getInjector() {
@@ -162,10 +164,12 @@ public final class FunctionInjectorTest extends TestCase {
   public void testCanInlineReferenceToFunction12b() {
     // "foo" is not known to be side-effect free, it might change the value
     // of "x", so it can't be inlined.
+    allowDecomposition = true;
     helperCanInlineReferenceToFunction(
         CanInlineResult.AFTER_PREPARATION,
         "function foo(){return true;}; var x; x=x+foo();",
-        "foo", INLINE_BLOCK, true);
+        "foo",
+        INLINE_BLOCK);
   }
 
 // TODO(nicksantos): Re-enable with side-effect detection.
@@ -484,34 +488,42 @@ public final class FunctionInjectorTest extends TestCase {
 
   public void testCanInlineReferenceToFunctionInExpression1() {
     // Call in if condition
-    helperCanInlineReferenceToFunction(CanInlineResult.AFTER_PREPARATION,
-        "function foo(a){return true;}; " +
-        "function x() { if (foo(1)) throw 'test'; }",
-        "foo", INLINE_BLOCK, true);
+    allowDecomposition = true;
+    helperCanInlineReferenceToFunction(
+        CanInlineResult.AFTER_PREPARATION,
+        "function foo(a){return true;}; function x() { if (foo(1)) throw 'test'; }",
+        "foo",
+        INLINE_BLOCK);
   }
 
   public void testCanInlineReferenceToFunctionInExpression2() {
     // Call in return expression
-    helperCanInlineReferenceToFunction(CanInlineResult.AFTER_PREPARATION,
-        "function foo(a){return true;}; " +
-        "function x() { return foo(1); }",
-        "foo", INLINE_BLOCK, true);
+    allowDecomposition = true;
+    helperCanInlineReferenceToFunction(
+        CanInlineResult.AFTER_PREPARATION,
+        "function foo(a){return true;}; function x() { return foo(1); }",
+        "foo",
+        INLINE_BLOCK);
   }
 
   public void testCanInlineReferenceToFunctionInExpression3() {
     // Call in switch expression
-    helperCanInlineReferenceToFunction(CanInlineResult.AFTER_PREPARATION,
-        "function foo(a){return true;}; " +
-        "function x() { switch(foo(1)) { default:break; } }",
-        "foo", INLINE_BLOCK, true);
+    allowDecomposition = true;
+    helperCanInlineReferenceToFunction(
+        CanInlineResult.AFTER_PREPARATION,
+        "function foo(a){return true;}; function x() { switch(foo(1)) { default:break; } }",
+        "foo",
+        INLINE_BLOCK);
   }
 
   public void testCanInlineReferenceToFunctionInExpression4() {
     // Call in hook condition
-    helperCanInlineReferenceToFunction(CanInlineResult.AFTER_PREPARATION,
-        "function foo(a){return true;}; " +
-        "function x() {foo(1)?0:1 }",
-        "foo", INLINE_BLOCK, true);
+    allowDecomposition = true;
+    helperCanInlineReferenceToFunction(
+        CanInlineResult.AFTER_PREPARATION,
+        "function foo(a){return true;}; function x() {foo(1)?0:1 }",
+        "foo",
+        INLINE_BLOCK);
   }
 
   public void testCanInlineReferenceToFunctionInExpression5() {
@@ -524,19 +536,22 @@ public final class FunctionInjectorTest extends TestCase {
 
  public void testCanInlineReferenceToFunctionInExpression5a() {
     // Call in hook side-effect free condition
+    allowDecomposition = true;
     helperCanInlineReferenceToFunction(
         CanInlineResult.AFTER_PREPARATION,
-        "function foo(a){return true;}; " +
-        "function x() {true?foo(1):1 }",
-        "foo", INLINE_BLOCK, true);
+        "function foo(a){return true;}; function x() {true?foo(1):1 }",
+        "foo",
+        INLINE_BLOCK);
   }
 
   public void testCanInlineReferenceToFunctionInExpression6() {
     // Call in expression statement "condition"
-    helperCanInlineReferenceToFunction(CanInlineResult.AFTER_PREPARATION,
-        "function foo(a){return true;}; " +
-        "function x() {foo(1) && 1 }",
-        "foo", INLINE_BLOCK, true);
+    allowDecomposition = true;
+    helperCanInlineReferenceToFunction(
+        CanInlineResult.AFTER_PREPARATION,
+        "function foo(a){return true;}; function x() {foo(1) && 1 }",
+        "foo",
+        INLINE_BLOCK);
   }
 
   public void testCanInlineReferenceToFunctionInExpression7() {
@@ -549,27 +564,32 @@ public final class FunctionInjectorTest extends TestCase {
 
   public void testCanInlineReferenceToFunctionInExpression7a() {
     // Call in expression statement after side-effect free "condition"
+    allowDecomposition = true;
     helperCanInlineReferenceToFunction(
         CanInlineResult.AFTER_PREPARATION,
-        "function foo(a){return true;}; " +
-        "function x() {1 && foo(1) }",
-        "foo", INLINE_BLOCK, true);
+        "function foo(a){return true;}; function x() {1 && foo(1) }",
+        "foo",
+        INLINE_BLOCK);
   }
 
   public void testCanInlineReferenceToFunctionInExpression8() {
     // Call in expression statement after side-effect free operator
-    helperCanInlineReferenceToFunction(CanInlineResult.AFTER_PREPARATION,
-        "function foo(a){return true;}; " +
-        "function x() {1 + foo(1) }",
-        "foo", INLINE_BLOCK, true);
+    allowDecomposition = true;
+    helperCanInlineReferenceToFunction(
+        CanInlineResult.AFTER_PREPARATION,
+        "function foo(a){return true;}; function x() {1 + foo(1) }",
+        "foo",
+        INLINE_BLOCK);
   }
 
   public void testCanInlineReferenceToFunctionInExpression9() {
     // Call in VAR expression.
-    helperCanInlineReferenceToFunction(CanInlineResult.AFTER_PREPARATION,
-        "function foo(a){return true;}; " +
-        "function x() {var b = 1 + foo(1)}",
-        "foo", INLINE_BLOCK, true);
+    allowDecomposition = true;
+    helperCanInlineReferenceToFunction(
+        CanInlineResult.AFTER_PREPARATION,
+        "function foo(a){return true;}; function x() {var b = 1 + foo(1)}",
+        "foo",
+        INLINE_BLOCK);
   }
 
   public void testCanInlineReferenceToFunctionInExpression10() {
@@ -582,11 +602,12 @@ public final class FunctionInjectorTest extends TestCase {
 
   public void testCanInlineReferenceToFunctionInExpression10a() {
     // Call in assignment expression.
+    allowDecomposition = true;
     helperCanInlineReferenceToFunction(
         CanInlineResult.AFTER_PREPARATION,
-        "function foo(a){return true;}; " +
-        "function x() {var b; b += 1 + foo(1) }",
-        "foo", INLINE_BLOCK, true);
+        "function foo(a){return true;}; function x() {var b; b += 1 + foo(1) }",
+        "foo",
+        INLINE_BLOCK);
   }
 
 // TODO(nicksantos): Re-enable with side-effect detection.
@@ -598,17 +619,21 @@ public final class FunctionInjectorTest extends TestCase {
 //   }
 
   public void testCanInlineReferenceToFunctionInExpression12() {
-    helperCanInlineReferenceToFunction(CanInlineResult.AFTER_PREPARATION,
-        "function foo(a){return true;}; " +
-        "function x() {var a,b,c; a = b = c = foo(1) }",
-        "foo", INLINE_BLOCK, true);
+    allowDecomposition = true;
+    helperCanInlineReferenceToFunction(
+        CanInlineResult.AFTER_PREPARATION,
+        "function foo(a){return true;}; function x() {var a,b,c; a = b = c = foo(1) }",
+        "foo",
+        INLINE_BLOCK);
   }
 
   public void testCanInlineReferenceToFunctionInExpression13() {
-    helperCanInlineReferenceToFunction(CanInlineResult.AFTER_PREPARATION,
-        "function foo(a){return true;}; " +
-        "function x() {var a,b,c; a = b = c = 1 + foo(1) }",
-        "foo", INLINE_BLOCK, true);
+    allowDecomposition = true;
+    helperCanInlineReferenceToFunction(
+        CanInlineResult.AFTER_PREPARATION,
+        "function foo(a){return true;}; function x() {var a,b,c; a = b = c = 1 + foo(1) }",
+        "foo",
+        INLINE_BLOCK);
   }
 
   public void testCanInlineReferenceToFunctionInExpression14() {
@@ -625,15 +650,17 @@ public final class FunctionInjectorTest extends TestCase {
 
   public void testCanInlineReferenceToFunctionInExpression14a() {
     // ... foo can be inlined despite possible changes to "c".
+    allowDecomposition = true;
     helperCanInlineReferenceToFunction(
         CanInlineResult.AFTER_PREPARATION,
-        "var a = {}, b = {}, c;" +
-        "a.test = 'a';" +
-        "b.test = 'b';" +
-        "c = a;" +
-        "function foo(){c = b; return 'foo'};" +
-        "c.test=foo();",
-        "foo", INLINE_BLOCK, true);
+        "var a = {}, b = {}, c;"
+            + "a.test = 'a';"
+            + "b.test = 'b';"
+            + "c = a;"
+            + "function foo(){c = b; return 'foo'};"
+            + "c.test=foo();",
+        "foo",
+        INLINE_BLOCK);
   }
 
 // TODO(nicksantos): Re-enable with side-effect detection.
@@ -677,10 +704,12 @@ public final class FunctionInjectorTest extends TestCase {
 
   public void testCanInlineReferenceToFunctionInExpression18() {
     // Call in within a call
-    helperCanInlineReferenceToFunction(CanInlineResult.AFTER_PREPARATION,
-        "function foo(){return _g();}; " +
-        "function x() {1 + foo()() }",
-        "foo", INLINE_BLOCK, true);
+    allowDecomposition = true;
+    helperCanInlineReferenceToFunction(
+        CanInlineResult.AFTER_PREPARATION,
+        "function foo(){return _g();}; function x() {1 + foo()() }",
+        "foo",
+        INLINE_BLOCK);
   }
 
   public void testCanInlineReferenceToFunctionInExpression19() {
@@ -697,11 +726,12 @@ public final class FunctionInjectorTest extends TestCase {
     // ... unless foo is known to be side-effect free, it might actually
     // change the value of "_g" which would unfortunately change the behavior,
     // so we can't inline here.
+    allowDecomposition = true;
     helperCanInlineReferenceToFunction(
         CanInlineResult.AFTER_PREPARATION,
-        "function foo(){return a;}; " +
-        "function x() {1 + _g(foo()) }",
-        "foo", INLINE_BLOCK, true);
+        "function foo(){return a;}; function x() {1 + _g(foo()) }",
+        "foo",
+        INLINE_BLOCK);
   }
 
 // TODO(nicksantos): Re-enable with side-effect detection.
@@ -729,12 +759,14 @@ public final class FunctionInjectorTest extends TestCase {
     // as the object that is being referred to can change.
     // Note: This could be changed be inlined if we in some way make "z"
     // as not escaping from the local scope.
+    allowDecomposition = true;
     helperCanInlineReferenceToFunction(
         CanInlineResult.AFTER_PREPARATION,
-        "var z = {};" +
-        "function foo(a){z = {};return true;}; " +
-        "function x() { z.gack = foo(1) }",
-        "foo", INLINE_BLOCK, true);
+        "var z = {};"
+            + "function foo(a){z = {};return true;}; "
+            + "function x() { z.gack = foo(1) }",
+        "foo",
+        INLINE_BLOCK);
   }
 
   public void testCanInlineReferenceToFunctionInExpression22() {
@@ -747,11 +779,12 @@ public final class FunctionInjectorTest extends TestCase {
 
   public void testCanInlineReferenceToFunctionInExpression22a() {
     // ... foo() is after a side-effect
+    allowDecomposition = true;
     helperCanInlineReferenceToFunction(
         CanInlineResult.AFTER_PREPARATION,
-        "function foo(){return a;}; " +
-        "function x() {1 + _g(_a(), foo()) }",
-        "foo", INLINE_BLOCK, true);
+        "function foo(){return a;}; function x() {1 + _g(_a(), foo()) }",
+        "foo",
+        INLINE_BLOCK);
   }
 
   public void testCanInlineReferenceToFunctionInExpression23() {
@@ -764,19 +797,21 @@ public final class FunctionInjectorTest extends TestCase {
 
   public void testCanInlineReferenceToFunctionInExpression23a() {
     // ... foo() is after a side-effect
+    allowDecomposition = true;
     helperCanInlineReferenceToFunction(
         CanInlineResult.AFTER_PREPARATION,
-        "function foo(){return a;}; " +
-        "function x() {1 + _g(_a(), foo.call(this)) }",
-        "foo", INLINE_BLOCK, true);
+        "function foo(){return a;}; function x() {1 + _g(_a(), foo.call(this)) }",
+        "foo",
+        INLINE_BLOCK);
   }
 
   public void testCanInlineReferenceToFunctionInLoop1() {
+    allowDecomposition = true;
     helperCanInlineReferenceToFunction(
         CanInlineResult.YES,
-        "function foo(){return a;}; " +
-        "while(1) { foo(); }",
-        "foo", INLINE_BLOCK, true);
+        "function foo(){return a;}; while(1) { foo(); }",
+        "foo",
+        INLINE_BLOCK);
   }
 
   public void testCanInlineReferenceToFunctionInLoop2() {
@@ -784,11 +819,12 @@ public final class FunctionInjectorTest extends TestCase {
     // TODO(johnlenz): this can be improved by looking to see
     // if the inner function contains any references to values defined
     // in the outer function.
+    allowDecomposition = true;
     helperCanInlineReferenceToFunction(
         CanInlineResult.NO,
-        "function foo(){return function() {};}; " +
-        "while(1) { foo(); }",
-        "foo", INLINE_BLOCK, true);
+        "function foo(){return function() {};}; while(1) { foo(); }",
+        "foo",
+        INLINE_BLOCK);
   }
 
   public void testInline1() {
@@ -1421,16 +1457,6 @@ public final class FunctionInjectorTest extends TestCase {
       final String code,
       final String fnName,
       final InliningMode mode) {
-    helperCanInlineReferenceToFunction(
-        expectedResult, code, fnName, mode, false);
-  }
-
-  public void helperCanInlineReferenceToFunction(
-      final CanInlineResult expectedResult,
-      final String code,
-      final String fnName,
-      final InliningMode mode,
-      boolean allowDecomposition) {
     final Compiler compiler = new Compiler();
     final FunctionInjector injector = new FunctionInjector(
         compiler, compiler.getUniqueNameIdSupplier(), allowDecomposition,
