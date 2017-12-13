@@ -683,7 +683,8 @@ public enum CompilationParam {
   COLLAPSE_PROPERTIES(ParamGroup.TYPE_CHECKING_OPTIMIZATION) {
     @Override
     public void apply(CompilerOptions options, boolean value) {
-      options.setCollapsePropertiesLevel(PropertyCollapseLevel.ALL);
+      options.setCollapsePropertiesLevel(
+          value ? PropertyCollapseLevel.ALL : PropertyCollapseLevel.NONE);
     }
 
     @Override
