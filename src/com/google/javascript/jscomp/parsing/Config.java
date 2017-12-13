@@ -165,7 +165,7 @@ public abstract class Config {
 
     abstract Builder setSuppressionNames(Iterable<String> names);
 
-    Builder setExtraAnnotationNames(Iterable<String> names) {
+    final Builder setExtraAnnotationNames(Iterable<String> names) {
       return setAnnotations(buildAnnotations(names));
     }
 
