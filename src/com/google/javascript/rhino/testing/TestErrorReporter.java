@@ -42,7 +42,7 @@ package com.google.javascript.rhino.testing;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.google.javascript.rhino.ErrorReporter;
-
+import java.util.Arrays;
 import org.junit.Assert;
 
 /**
@@ -103,10 +103,16 @@ public final class TestErrorReporter implements ErrorReporter {
   }
 
   public void assertHasEncounteredAllWarnings() {
-    assertThat(warnings).hasLength(warningsIndex);
+    if (warnings.length != warningsIndex) {
+      Assert.fail(
+          "missing warnings: " + Arrays.asList(warnings).subList(warningsIndex, warnings.length));
+    }
   }
 
   public void assertHasEncounteredAllErrors() {
-    assertThat(errors).hasLength(errorsIndex);
+    if (errors.length != errorsIndex) {
+      Assert.fail(
+          "missing errors: " + Arrays.asList(errors).subList(errorsIndex, errors.length));
+    }
   }
 }
