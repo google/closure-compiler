@@ -211,12 +211,31 @@ class ScopedAliases implements HotSwapCompilerPass {
     /** Checks to see if this references another alias. */
     public boolean referencesOtherAlias() {
       Node aliasDefinition = aliasVar.getInitialValue();
-      Node root = NodeUtil.getRootOfQualifiedName(aliasDefinition);
-      Var otherAliasVar = aliasVar.getScope().getOwnSlot(root.getString());
+      String qname = getAliasedNamespace(aliasDefinition);
+      int dotIndex = qname.indexOf('.');
+      String rootName = dotIndex == -1 ? qname : qname.substring(0, dotIndex);
+      Var otherAliasVar = aliasVar.getScope().getOwnSlot(rootName);
       return otherAliasVar != null;
     }
 
     public abstract void applyAlias(AbstractCompiler compiler);
+  }
+
+  private static boolean isAliasDefinition(Node nameNode) {
+    if (!nameNode.hasChildren()) {
+      return false;
+    }
+    Node rhs = nameNode.getLastChild();
+    return rhs.isQualifiedName() || NodeUtil.isCallTo(rhs, "goog.module.get");
+  }
+
+  private static String getAliasedNamespace(Node aliasDefinition) {
+    if (aliasDefinition.isQualifiedName()) {
+      return aliasDefinition.getQualifiedName();
+    }
+    checkState(NodeUtil.isCallTo(aliasDefinition, "goog.module.get"), aliasDefinition);
+    checkState(aliasDefinition.hasTwoChildren(), aliasDefinition);
+    return aliasDefinition.getLastChild().getString();
   }
 
   private static class AliasedNode extends AliasUsage {
@@ -262,7 +281,7 @@ class ScopedAliases implements HotSwapCompilerPass {
         // Already visited.
         return;
       }
-      String aliasExpanded = checkNotNull(aliasDefinition.getQualifiedName());
+      String aliasExpanded = checkNotNull(getAliasedNamespace(aliasDefinition));
       Preconditions.checkState(typeName.startsWith(aliasName),
           "%s must start with %s", typeName, aliasName);
       String replacement =
@@ -442,7 +461,7 @@ class ScopedAliases implements HotSwapCompilerPass {
         // We use isBlock to avoid variables declared in loop headers.
         boolean isVar = NodeUtil.isNameDeclaration(parent) && parent.getParent().isNormalBlock();
         boolean isFunctionDecl = NodeUtil.isFunctionDeclaration(parent);
-        if (isVar && n.getFirstChild() != null && n.getFirstChild().isQualifiedName()) {
+        if (isVar && isAliasDefinition(n)) {
           recordAlias(v);
         } else if (v.isBleedingFunction()) {
           // Bleeding functions already get a BAD_PARAMETERS error, so just
@@ -553,8 +572,7 @@ class ScopedAliases implements HotSwapCompilerPass {
       String name = aliasVar.getName();
       aliases.put(name, aliasVar);
 
-      String qualifiedName =
-        aliasVar.getInitialValue().getQualifiedName();
+      String qualifiedName = getAliasedNamespace(aliasVar.getInitialValue());
       transformation.addAlias(name, qualifiedName);
 
       int rootIndex = qualifiedName.indexOf('.');

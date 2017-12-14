@@ -1010,6 +1010,23 @@ public final class ScopedAliasesTest extends TypeICompilerTestCase {
             "});"));
   }
 
+  public void testGoogModuleGet() {
+    test(
+        lines(
+            "goog.provide('provided');",
+            "goog.scope(function() {",
+            "  var Foo = goog.module.get('other.name.Foo')",
+            "  /** @type {!Foo} */",
+            "  provided.f = new Foo;",
+            "});",
+            ""),
+        lines(
+            "goog.provide('provided');",
+            "/** @type {!other.name.Foo} */",
+            "provided.f = new (goog.module.get('other.name.Foo'));",
+            ""));
+  }
+
   public void testObjectPattern() {
     testScopedNoChanges("", "{foo: ({bar}) => baz};");
   }
