@@ -51,8 +51,8 @@ public final class CheckJSDocStyle extends AbstractPostOrderCallback implements 
 
   public static final DiagnosticType CONSTRUCTOR_DISALLOWED_JSDOC =
       DiagnosticType.disabled("JSC_CONSTRUCTOR_DISALLOWED_JSDOC",
-          "Visibility annotations on constructors are not supported.\n"
-          + "Please mark the visibility on the class instead.");
+          "Setting visibility on constructors is not yet supported.\n"
+          + "See https://github.com/google/closure-compiler/issues/2761\n");
 
   public static final DiagnosticType CLASS_DISALLOWED_JSDOC =
       DiagnosticType.disabled("JSC_CLASS_DISALLOWED_JSDOC",
