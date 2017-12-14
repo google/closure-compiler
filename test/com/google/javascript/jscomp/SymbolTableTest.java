@@ -52,7 +52,6 @@ public final class SymbolTableTest extends TestCase {
     super.setUp();
 
     options = new CompilerOptions();
-    options.setErrorHandler(new BlackHoleErrorManager());
     options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
     options.setCodingConvention(new ClosureCodingConvention());
@@ -1171,7 +1170,7 @@ public final class SymbolTableTest extends TestCase {
     List<SourceFile> externs = ImmutableList.of(
         SourceFile.fromCode("externs1", EXTERNS));
 
-    Compiler compiler = new Compiler();
+    Compiler compiler = new Compiler(new BlackHoleErrorManager());
     compiler.compile(externs, inputs, options);
     return assertSymbolTableValid(compiler.buildKnownSymbolTable());
   }

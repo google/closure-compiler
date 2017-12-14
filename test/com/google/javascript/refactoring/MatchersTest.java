@@ -420,10 +420,9 @@ public class MatchersTest {
   }
 
   private static Compiler getCompiler(String externs, String jsInput) {
-    Compiler compiler = new Compiler();
+    Compiler compiler = new Compiler(new BlackHoleErrorManager());
     compiler.disableThreads();
     CompilerOptions options = RefactoringDriver.getCompilerOptions();
-    options.setErrorHandler(new BlackHoleErrorManager());
     compiler.compile(
         ImmutableList.of(SourceFile.fromCode("externs", externs)),
         ImmutableList.of(SourceFile.fromCode("test", jsInput)),
