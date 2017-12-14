@@ -150,22 +150,19 @@ class PhaseOptimizer implements CompilerPass {
    */
   void consume(List<PassFactory> factories) {
     Loop currentLoop = new Loop();
-    boolean isCurrentLoopPopulated = false;
     for (PassFactory factory : factories) {
       if (factory.isOneTimePass()) {
-        if (isCurrentLoopPopulated) {
+        if (currentLoop.isPopulated()) {
           passes.add(currentLoop);
           currentLoop = new Loop();
-          isCurrentLoopPopulated = false;
         }
         addOneTimePass(factory);
       } else {
         currentLoop.addLoopedPass(factory);
-        isCurrentLoopPopulated = true;
       }
     }
 
-    if (isCurrentLoopPopulated) {
+    if (currentLoop.isPopulated()) {
       passes.add(currentLoop);
     }
   }
@@ -534,6 +531,10 @@ class PhaseOptimizer implements CompilerPass {
 
       myPasses.removeAll(optimalPasses);
       myPasses.addAll(optimalPasses);
+    }
+
+    boolean isPopulated() {
+      return !myPasses.isEmpty();
     }
 
     private boolean isCodeRemovalLoop() {
