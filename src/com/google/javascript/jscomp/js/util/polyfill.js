@@ -41,6 +41,9 @@
  *     ensure that no polyfill with a lower `toLang` depends on one with a
  *     higher `toLang`.
  * @suppress {reportUnknownTypes}
+ * @nocollapse
+ * NOTE: We prevent collapsing so RemoveUnusedPolyfills can always recognize
+ * this call.
  */
 $jscomp.polyfill = function(target, polyfill, fromLang, toLang) {
   if (!polyfill) return;
