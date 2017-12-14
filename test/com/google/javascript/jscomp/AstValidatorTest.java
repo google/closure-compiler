@@ -312,6 +312,20 @@ public final class AstValidatorTest extends CompilerTestCase {
     valid("({['a']:b()['c'] = 1} = obj);");
   }
 
+  public void testObjectRestAssignment() {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_NEXT);
+    valid("var {a, ...rest} = obj;");
+    valid("({a:b, ...rest} = obj);");
+    valid("({a:b.c, ...rest} = obj);");
+    valid("({a:b().c, ...rest} = obj);");
+    valid("({a:b['c'], ...rest} = obj);");
+    valid("({a:b()['c'], ...rest} = obj);");
+    valid("({a:b.c = 1, ...rest} = obj);");
+    valid("({a:b().c = 1, ...rest} = obj);");
+    valid("({a:b['c'] = 1, ...rest} = obj);");
+    valid("({a:b()['c'] = 1, ...rest} = obj);");
+  }
+
   public void testInvalidDestructuringAssignment() {
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
 

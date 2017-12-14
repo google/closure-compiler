@@ -764,9 +764,6 @@ public final class AstValidator implements CompilerPass {
     validateNodeType(Token.PARAM_LIST, n);
     for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
       if (c.isRest()) {
-        if (c.getNext() != null) {
-          violation("Rest parameters must come after all other parameters.", c);
-        }
         validateRest(Token.PARAM_LIST, c);
       } else if (c.isDefaultValue()) {
         validateDefaultValue(Token.PARAM_LIST, c);
@@ -807,6 +804,9 @@ public final class AstValidator implements CompilerPass {
     validateNodeType(Token.REST, n);
     validateChildCount(n);
     validateLHS(contextType, n.getFirstChild());
+    if (n.getNext() != null) {
+      violation("Rest parameters must come after all other parameters.", n);
+    }
   }
 
   private void validateSpread(Node n) {
@@ -821,6 +821,7 @@ public final class AstValidator implements CompilerPass {
         }
         break;
       case ARRAYLIT:
+      case OBJECTLIT:
         break;
       default:
         violation("SPREAD node should not be the child of a " + parent.getToken() + " node.", n);
@@ -956,6 +957,9 @@ public final class AstValidator implements CompilerPass {
           break;
         case DEFAULT_VALUE:
           validateDefaultValue(type, c);
+          break;
+        case REST:
+          validateRest(type, c);
           break;
         case COMPUTED_PROP:
           validateObjectPatternComputedPropKey(type, c);
@@ -1269,6 +1273,9 @@ public final class AstValidator implements CompilerPass {
         return;
       case COMPUTED_PROP:
         validateObjectLitComputedPropKey(n);
+        return;
+      case SPREAD:
+        validateSpread(n);
         return;
       default:
         violation("Expected object literal key expression but was " + n.getToken(), n);

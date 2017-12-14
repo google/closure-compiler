@@ -1466,15 +1466,10 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
     expectFeatures(Feature.DESTRUCTURING, Feature.ARRAY_PATTERN_REST);
     parse("var [first, ...rest] = foo();");
-
-    expectFeatures(Feature.DESTRUCTURING, Feature.ARRAY_PATTERN_REST, Feature.LET_DECLARATIONS);
     parse("let [first, ...rest] = foo();");
-
-    expectFeatures(Feature.DESTRUCTURING, Feature.ARRAY_PATTERN_REST, Feature.CONST_DECLARATIONS);
     parse("const [first, ...rest] = foo();");
 
     // nested destructuring in regular parameters and rest parameters
-    expectFeatures(Feature.DESTRUCTURING, Feature.ARRAY_PATTERN_REST);
     parse("var [first, {a, b}, ...[re, st, ...{length}]] = foo();");
 
     expectFeatures();
@@ -1491,6 +1486,59 @@ public final class ParserTest extends BaseJSTypeTestCase {
         getRequiresEs6Message(Feature.ARRAY_PATTERN_REST));
   }
 
+  public void testObjectDestructuringDeclarationRest() {
+    mode = LanguageMode.ES_NEXT;
+    strictMode = SLOPPY;
+
+    expectFeatures(Feature.DESTRUCTURING, Feature.OBJECT_PATTERN_REST);
+    parse("var {first, ...rest} = foo();");
+    parse("let {first, ...rest} = foo();");
+    parse("const {first, ...rest} = foo();");
+
+    expectFeatures();
+    parseError(
+        "var {first, ...more = 'default'} = foo();",
+        "A default value cannot be specified after '...'");
+    parseError("var {first, ...more, last} = foo();", "'}' expected");
+
+    mode = LanguageMode.ECMASCRIPT6;
+    parseWarning(
+        "var {first, ...rest} = foo();",
+        getRequiresEsNextMessage(Feature.OBJECT_PATTERN_REST));
+  }
+
+  public void testArrayLiteralDeclarationSpread() {
+    mode = LanguageMode.ECMASCRIPT6;
+    strictMode = SLOPPY;
+
+    expectFeatures(Feature.SPREAD_EXPRESSIONS);
+    parse("var o = [first, ...spread];");
+
+    mode = LanguageMode.ECMASCRIPT5;
+    parseWarning(
+        "var o = [first, ...spread];",
+        getRequiresEs6Message(Feature.SPREAD_EXPRESSIONS));
+  }
+
+  public void testObjectLiteralDeclarationSpread() {
+    mode = LanguageMode.ES_NEXT;
+    strictMode = SLOPPY;
+
+    expectFeatures(Feature.OBJECT_LITERALS_WITH_SPREAD);
+    parse("var o = {first: 1, ...spread};");
+
+    mode = LanguageMode.ECMASCRIPT5;
+    parseWarning(
+        "var o = {first: 1, ...spread};",
+        getRequiresEs6Message(Feature.SPREAD_EXPRESSIONS),
+        getRequiresEsNextMessage(Feature.OBJECT_LITERALS_WITH_SPREAD));
+
+    mode = LanguageMode.ECMASCRIPT6;
+    parseWarning(
+        "var o = {first: 1, ...spread};",
+        getRequiresEsNextMessage(Feature.OBJECT_LITERALS_WITH_SPREAD));
+  }
+
   public void testArrayDestructuringAssignRest() {
     mode = LanguageMode.ECMASCRIPT6;
     strictMode = SLOPPY;
@@ -1505,6 +1553,17 @@ public final class ParserTest extends BaseJSTypeTestCase {
     parseWarning("var [first, ...rest] = foo();",
         getRequiresEs6Message(Feature.DESTRUCTURING),
         getRequiresEs6Message(Feature.ARRAY_PATTERN_REST));
+  }
+
+  public void testObjectDestructuringAssignRest() {
+    mode = LanguageMode.ES_NEXT;
+    strictMode = SLOPPY;
+    expectFeatures(Feature.DESTRUCTURING, Feature.OBJECT_PATTERN_REST);
+    parse("const {first, ...rest} = foo();");
+
+    mode = LanguageMode.ECMASCRIPT6;
+    parseWarning("var {first, ...rest} = foo();",
+        getRequiresEsNextMessage(Feature.OBJECT_PATTERN_REST));
   }
 
   public void testArrayDestructuringAssignRestInvalid() {
@@ -3738,6 +3797,10 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
   private static String getRequiresEs6Message(Feature feature) {
     return requiresLanguageModeMessage(LanguageMode.ECMASCRIPT6, feature);
+  }
+
+  private static String getRequiresEsNextMessage(Feature feature) {
+    return requiresLanguageModeMessage(LanguageMode.ES_NEXT, feature);
   }
 
   private static String requiresLanguageModeMessage(LanguageMode languageMode, Feature feature) {

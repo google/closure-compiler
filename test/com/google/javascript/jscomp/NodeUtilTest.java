@@ -529,6 +529,12 @@ public final class NodeUtilTest extends TestCase {
     assertSideEffect(false, "[...[1]]");
     assertSideEffect(true, "[...[i++]]");
     assertSideEffect(true, "[...f()]");
+    assertSideEffect(false, "({...x})");
+    assertSideEffect(false, "({...{}})");
+    assertSideEffect(false, "({...{a:1}})");
+    assertSideEffect(true, "({...{a:i++}})");
+    assertSideEffect(true, "({...{a:f()}})");
+    assertSideEffect(true, "({...f()})");
     assertSideEffect(true, "i++");
     assertSideEffect(true, "[b, [a, i++]]");
     assertSideEffect(true, "i=3");
@@ -1699,6 +1705,10 @@ public final class NodeUtilTest extends TestCase {
     assertTrue(NodeUtil.evaluatesToLocalValue(getNode("[...x]")));
     assertFalse(NodeUtil.isLiteralValue(getNode("[...x]"), false));
     assertFalse(NodeUtil.isImmutableValue(getNode("[...x]")));
+
+    assertTrue(NodeUtil.evaluatesToLocalValue(getNode("{...x}")));
+    assertFalse(NodeUtil.isLiteralValue(getNode("{...x}"), false));
+    assertFalse(NodeUtil.isImmutableValue(getNode("{...x}")));
   }
 
   public void testLocalValueAwait() {

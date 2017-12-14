@@ -53,6 +53,18 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     assertPrintSame("x**=y");
   }
 
+  public void testObjectLiteralWithSpread() {
+    languageMode = LanguageMode.ECMASCRIPT_NEXT;
+    assertPrintSame("({...{}})");
+    assertPrintSame("({...x})");
+    assertPrintSame("({...x,a:1})");
+    assertPrintSame("({a:1,...x})");
+    assertPrintSame("({a:1,...x,b:1})");
+    assertPrintSame("({...x,...y})");
+    assertPrintSame("({...x,...f()})");
+    assertPrintSame("({...{...{}}})");
+  }
+
   public void testPrint() {
     assertPrint("10 + a + b", "10+a+b");
     assertPrint("10 + (30*50)", "10+30*50");
@@ -446,6 +458,16 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     assertPrintSame("({a:b=2}=foo())");
     assertPrintSame("({a,b:{c=2}}=foo())");
     assertPrintSame("({a:{b=2},c}=foo())");
+  }
+
+  public void testPrintObjectPatternWithRest() {
+    languageMode = LanguageMode.ECMASCRIPT_NEXT;
+    assertPrintSame("const {a,...rest}=foo()");
+    assertPrintSame("var {a,...rest}=foo()");
+    assertPrintSame("let {a,...rest}=foo()");
+    assertPrintSame("({a,...rest}=foo())");
+    assertPrintSame("({a=2,...rest}=foo())");
+    assertPrintSame("({a:b=2,...rest}=foo())");
   }
 
   public void testPrettyPrintObjectPattern() {

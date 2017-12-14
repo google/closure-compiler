@@ -1001,7 +1001,7 @@ public class CodeGenerator {
               cc.listSeparator();
             }
 
-            checkState(NodeUtil.isObjLitProperty(c));
+            checkState(NodeUtil.isObjLitProperty(c) || c.isSpread(), c);
             add(c);
           }
           add("}");

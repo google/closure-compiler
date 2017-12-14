@@ -1047,8 +1047,12 @@ class IRFactory {
       maybeWarnForFeature(tree, Feature.DESTRUCTURING);
 
       Node node = newNode(Token.OBJECT_PATTERN);
-      for (ParseTree child : tree.fields) {
-        node.addChildToBack(transformNodeWithInlineJsDoc(child));
+      for (ParseTree c : tree.fields) {
+        Node child = transformNodeWithInlineJsDoc(c);
+        if (child.isRest()) {
+          maybeWarnForFeature(c, Feature.OBJECT_PATTERN_REST);
+        }
+        node.addChildToBack(child);
       }
       return node;
     }
@@ -1613,8 +1617,14 @@ class IRFactory {
         }
 
         Node key = transform(el);
-        if (!key.isComputedProp() && !key.isQuotedString() && !currentFileIsExterns) {
+        if (!key.isComputedProp()
+            && !key.isQuotedString()
+            && !key.isSpread()
+            && !currentFileIsExterns) {
           maybeWarnKeywordProperty(key);
+        }
+        if (key.isSpread()) {
+          maybeWarnForFeature(el, Feature.OBJECT_LITERALS_WITH_SPREAD);
         }
         if (!key.hasChildren()) {
           maybeWarn = true;

@@ -2395,6 +2395,7 @@ public class Parser {
         elements.add(new NullTree(getTreeLocation(getTreeStartLocation())));
       } else {
         if (peek(TokenType.SPREAD)) {
+          features = features.with(Feature.SPREAD_EXPRESSIONS);
           elements.add(parseSpreadExpression());
         } else {
           elements.add(parseAssignmentExpression());
@@ -2419,7 +2420,9 @@ public class Parser {
 
     eat(TokenType.OPEN_CURLY);
     Token commaToken = null;
-    while (peekPropertyNameOrComputedProp(0) || peek(TokenType.STAR)
+    while (peek(TokenType.SPREAD)
+        || peekPropertyNameOrComputedProp(0)
+        || peek(TokenType.STAR)
         || peekAccessibilityModifier()) {
       commaToken = null;
       result.add(parsePropertyAssignment());
@@ -2468,6 +2471,9 @@ public class Parser {
     TokenType type = peekType();
     if (type == TokenType.STAR) {
       return parsePropertyAssignmentGenerator();
+    } else if (peek(TokenType.SPREAD)) {
+      features = features.with(Feature.OBJECT_LITERALS_WITH_SPREAD);
+      return parseSpreadExpression();
     } else if (type == TokenType.STRING
         || type == TokenType.NUMBER
         || type == TokenType.IDENTIFIER
@@ -3570,21 +3576,10 @@ public class Parser {
   }
 
   private boolean peekArrayPatternElement() {
-    return peekExpression() || peek(TokenType.SPREAD);
+    return peekExpression();
   }
 
-  private ParseTree parseArrayPatternElement(PatternKind patternKind) {
-    ParseTree patternElement;
-
-    if (peek(TokenType.SPREAD)) {
-      patternElement = parseArrayPatternRest(patternKind);
-    } else {
-      patternElement = parsePatternAssignmentTarget(patternKind);
-    }
-    return patternElement;
-  }
-
-  private ParseTree parseArrayPatternRest(PatternKind patternKind) {
+  private ParseTree parsePatternRest(PatternKind patternKind) {
     SourcePosition start = getTreeStartLocation();
     eat(TokenType.SPREAD);
     ParseTree patternAssignmentTarget = parseRestAssignmentTarget(patternKind);
@@ -3609,13 +3604,9 @@ public class Parser {
         eat(TokenType.COMMA);
         elements.add(new NullTree(getTreeLocation(getTreeStartLocation())));
       } else {
-        ParseTree element = parseArrayPatternElement(kind);
-        elements.add(element);
+        elements.add(parsePatternAssignmentTarget(kind));
 
-        if (element.isAssignmentRestElement()) {
-          // Rest can only appear in the posterior, so we must be done
-          break;
-        } else if (peek(TokenType.COMMA)) {
+        if (peek(TokenType.COMMA)) {
           // Consume the comma separator
           eat(TokenType.COMMA);
         } else {
@@ -3623,6 +3614,10 @@ public class Parser {
           break;
         }
       }
+    }
+    if (peek(TokenType.SPREAD)) {
+      features = features.with(Feature.ARRAY_PATTERN_REST);
+      elements.add(parsePatternRest(kind));
     }
     eat(TokenType.CLOSE_SQUARE);
     return new ArrayPatternTree(getTreeLocation(start), elements.build());
@@ -3635,6 +3630,7 @@ public class Parser {
     eat(TokenType.OPEN_CURLY);
     while (peekObjectPatternField()) {
       fields.add(parseObjectPatternField(kind));
+
       if (peek(TokenType.COMMA)) {
         // Consume the comma separator
         eat(TokenType.COMMA);
@@ -3642,6 +3638,10 @@ public class Parser {
         // Otherwise we must be done
         break;
       }
+    }
+    if (peek(TokenType.SPREAD)) {
+      features = features.with(Feature.OBJECT_PATTERN_REST);
+      fields.add(parsePatternRest(kind));
     }
     eat(TokenType.CLOSE_CURLY);
     return new ObjectPatternTree(getTreeLocation(start), fields.build());

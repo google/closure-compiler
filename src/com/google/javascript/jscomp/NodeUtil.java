@@ -721,6 +721,10 @@ public final class NodeUtil {
                 || !isLiteralValue(child.getLastChild(), includeFunctions)) {
               return false;
             }
+          } else if (child.isSpread()) {
+            if (!isLiteralValue(child.getOnlyChild(), includeFunctions)) {
+              return false;
+            }
           } else {
             // { key: value, ... }
             // { "quoted_key": value, ... }
