@@ -163,11 +163,44 @@ public final class FunctionToBlockMutatorTest extends TestCase {
         null);
   }
 
+  public void testMutateInitializeUninitializedLets1() {
+    isCallInLoop = true;
+    helperMutate(
+        "function foo(a){let b;return a;}; foo(1);",
+        "{let b$jscomp$inline_1 = void 0; 1;}",
+        "foo",
+        null);
+  }
+
+  public void testMutateInitializeUninitializedLets2() {
+    helperMutate(
+        "function foo(a) {for(let b in c)return a;}; foo(1);",
+        lines(
+            "{",
+            "  JSCompiler_inline_label_foo_2:",
+            "  {",
+            "    for (let b$jscomp$inline_1 in c) {",
+            "      1;",
+            "      break JSCompiler_inline_label_foo_2;",
+            "    }",
+            "  }",
+            "}"),
+        "foo",
+        null);
+  }
+
   public void testMutateCallInLoopVars1() {
+    String src = lines(
+        "function foo(a) {",
+        "  var B = bar();",
+        "  a;",
+        "};",
+        "foo(1);");
+
     // baseline: outside a loop, the constant remains constant.
     isCallInLoop = false;
     helperMutate(
-        "function foo(a){var B = bar(); a;}; foo(1);",
+        src,
         "{var B$jscomp$inline_1 = bar(); 1;}",
         "foo",
         null);
@@ -175,7 +208,7 @@ public final class FunctionToBlockMutatorTest extends TestCase {
     // TODO(johnlenz): update this test to look for the const annotation.
     isCallInLoop = true;
     helperMutate(
-        "function foo(a){var B = bar(); a;}; foo(1);",
+        src,
         "{var B$jscomp$inline_1 = bar(); 1;}",
         "foo",
         null);
