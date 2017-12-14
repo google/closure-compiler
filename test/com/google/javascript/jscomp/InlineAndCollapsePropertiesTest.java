@@ -1263,6 +1263,24 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
     testSame("var a = { x: 5 }; var {b} = {b: a}; use(b.x);");
   }
 
+  public void testDestructingAliasWithConstructor() {
+    // TODO(b/69293284): Make this not warn and correctly replace "new ctor" with "new ns$ctor".
+    test(
+        lines(
+            "var ns = {};",
+            "/** @constructor */",
+            "ns.ctor = function() {}",
+            "const {ctor} = ns;",
+            "let c = new ctor;"),
+        lines(
+            "var ns = {};",
+            "/** @constructor */",
+            "var ns$ctor = function() {}",
+            "const {ctor} = ns;",
+            "let c = new ctor;"),
+        warning(CollapseProperties.UNSAFE_NAMESPACE_WARNING));
+  }
+
   public void testDefaultParamAlias1() {
     test(
         "var a = {b: 5}; var b = a; function f(x=b) { alert(x.b); }",
