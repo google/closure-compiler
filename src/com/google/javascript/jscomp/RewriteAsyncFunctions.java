@@ -25,6 +25,8 @@ import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayDeque;
 import java.util.Deque;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 /**
  * Converts async functions to valid ES6 generator functions code.
@@ -36,13 +38,16 @@ import java.util.Deque;
  *
  * <pre> {@code
  * function foo(a, b) {
- *   let $jscomp$async$arguments = arguments;
  *   let $jscomp$async$this = this;
+ *   let $jscomp$async$arguments = arguments;
+ *   let $jscomp$async$super$get$x = () => super.x;
  *   function* $jscomp$async$generator() {
  *     // original body of foo() with:
  *     // - await (x) replaced with yield (x)
  *     // - arguments replaced with $jscomp$async$arguments
  *     // - this replaced with $jscomp$async$this
+ *     // - super.x replaced with $jscomp$async$super$get$x()
+ *     // - super.x(5) replaced with $jscomp$async$super$get$x().call($jscomp$async$this, 5)
  *   }
  *   return $jscomp.executeAsyncGenerator($jscomp$async$generator());
  * }}</pre>
@@ -52,6 +57,8 @@ public final class RewriteAsyncFunctions implements NodeTraversal.Callback, HotS
   private static final String ASYNC_GENERATOR_NAME = "$jscomp$async$generator";
   private static final String ASYNC_ARGUMENTS = "$jscomp$async$arguments";
   private static final String ASYNC_THIS = "$jscomp$async$this";
+  private static final String ASYNC_SUPER_PROP_GETTER_PREFIX = "$jscomp$async$super$get$";
+
 
   /**
    * Keeps track of whether we're examining nodes within an async function & what changes are needed
@@ -60,6 +67,7 @@ public final class RewriteAsyncFunctions implements NodeTraversal.Callback, HotS
   private static final class LexicalContext {
     final Optional<Node> function; // absent for top level
     final LexicalContext thisAndArgumentsContext;
+    final Set<String> replacedSuperProperties = new LinkedHashSet<>();
     boolean mustAddAsyncThisVariable = false;
     boolean mustAddAsyncArgumentsVariable = false;
 
@@ -84,26 +92,26 @@ public final class RewriteAsyncFunctions implements NodeTraversal.Callback, HotS
       return isAsyncContext() || thisAndArgumentsContext.isAsyncContext();
     }
 
-    void recordAsyncThisReplacementWasDone() {
+    LexicalContext getAsyncThisAndArgumentsContext() {
       if (thisAndArgumentsContext.isAsyncContext()) {
-        thisAndArgumentsContext.mustAddAsyncThisVariable = true;
-      } else {
-        // The current context is an async arrow function within a non-async function,
-        // so it must define its own replacement variable.
-        checkState(isAsyncContext());
-        mustAddAsyncThisVariable = true;
+        return thisAndArgumentsContext;
       }
+      // The current context is an async arrow function within a non-async function,
+      // so it must define its own replacement variables.
+      checkState(isAsyncContext());
+      return this;
+    }
+
+    void recordAsyncThisReplacementWasDone() {
+      getAsyncThisAndArgumentsContext().mustAddAsyncThisVariable = true;
+    }
+
+    void recordAsyncSuperReplacementWasDone(String superFunctionName) {
+      getAsyncThisAndArgumentsContext().replacedSuperProperties.add(superFunctionName);
     }
 
     void recordAsyncArgumentsReplacementWasDone() {
-      if (thisAndArgumentsContext.isAsyncContext()) {
-        thisAndArgumentsContext.mustAddAsyncArgumentsVariable = true;
-      } else {
-        // The current context is an async arrow function within a non-async function,
-        // so it must define its own replacement variable.
-        checkState(isAsyncContext());
-        mustAddAsyncArgumentsVariable = true;
-      }
+      getAsyncThisAndArgumentsContext().mustAddAsyncArgumentsVariable = true;
     }
   }
 
@@ -175,6 +183,32 @@ public final class RewriteAsyncFunctions implements NodeTraversal.Callback, HotS
         }
         break;
 
+      case SUPER:
+        if (context.mustReplaceThisAndArguments()) {
+          if (!parent.isGetProp()) {
+            compiler.report(
+                JSError.make(parent, Es6ToEs3Util.CANNOT_CONVERT_YET, "super expression"));
+          }
+
+          Node medhodName = n.getNext();
+          String superPropertyName = ASYNC_SUPER_PROP_GETTER_PREFIX + medhodName.getString();
+
+          // super.x   =>   $super$get$x()
+          Node getPropReplacement = NodeUtil.newCallNode(IR.name(superPropertyName));
+          Node grandparent = parent.getParent();
+          if (grandparent.isCall() && grandparent.getFirstChild() == parent) {
+            // $super$get$x()(...)   =>   $super$get$x().call($this, ...)
+            getPropReplacement = IR.getprop(getPropReplacement, IR.string("call"));
+            grandparent.addChildAfter(IR.name(ASYNC_THIS), parent);
+            context.recordAsyncThisReplacementWasDone();
+          }
+          getPropReplacement.useSourceInfoFrom(parent);
+          grandparent.replaceChild(parent, getPropReplacement);
+          context.recordAsyncSuperReplacementWasDone(medhodName.getString());
+          compiler.reportChangeToChangeScope(context.function.get());
+        }
+        break;
+
       case AWAIT:
         checkState(context.isAsyncContext(), "await found within non-async function body");
         checkState(n.hasOneChild(), "await should have 1 operand, but has %s", n.getChildCount());
@@ -195,10 +229,21 @@ public final class RewriteAsyncFunctions implements NodeTraversal.Callback, HotS
     originalFunction.replaceChild(originalBody, newBody);
 
     if (functionContext.mustAddAsyncThisVariable) {
+      // const this$ = this;
       newBody.addChildToBack(IR.constNode(IR.name(ASYNC_THIS), IR.thisNode()));
     }
     if (functionContext.mustAddAsyncArgumentsVariable) {
+      // const arguments$ = arguments;
       newBody.addChildToBack(IR.constNode(IR.name(ASYNC_ARGUMENTS), IR.name("arguments")));
+    }
+    for (String replacedMethodName : functionContext.replacedSuperProperties) {
+      // const super$get$x = () => super.x;
+      Node arrowFunction = IR.arrowFunction(
+          IR.name(""), IR.paramList(), IR.getprop(IR.superNode(), IR.string(replacedMethodName)));
+      compiler.reportChangeToChangeScope(arrowFunction);
+
+      String superReplacementName = ASYNC_SUPER_PROP_GETTER_PREFIX + replacedMethodName;
+      newBody.addChildToBack(IR.constNode(IR.name(superReplacementName), arrowFunction));
     }
 
     // Normalize arrow function short body to block body

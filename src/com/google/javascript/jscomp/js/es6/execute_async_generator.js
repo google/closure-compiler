@@ -24,13 +24,17 @@
  *
  * ```
  * function foo(a, b) {
- *   let $jscomp$async$arguments = arguments;
  *   let $jscomp$async$this = this;
+ *   let $jscomp$async$arguments = arguments;
+ *   let $jscomp$async$super$get$x = () => super.x;
  *   function* $jscomp$async$generator() {
  *     // original body of foo() with:
  *     // - await (x) replaced with yield (x)
  *     // - arguments replaced with $jscomp$async$arguments
  *     // - this replaced with $jscomp$async$this
+ *     // - super.x replaced with $jscomp$async$super$get$x()
+ *     // - super.x(5) replaced with  $jscomp$async$super$get$x()
+ *     //      .call($jscomp$async$this, 5)
  *   }
  *   return $jscomp.executeAsyncGenerator($jscomp$async$generator());
  * }

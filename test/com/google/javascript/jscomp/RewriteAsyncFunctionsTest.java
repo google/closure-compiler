@@ -70,6 +70,69 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
             "}"));
   }
 
+  public void testInnerSuperCall() {
+    test(
+        lines(
+            "class A {",
+            "  m() {",
+            "    return this;",
+            "  }",
+            "}",
+            "class X extends A {",
+            "  async m() {",
+            "    return super.m();",
+            "  }",
+            "}"),
+        lines(
+            "class A {",
+            "  m() {",
+            "    return this;",
+            "  }",
+            "}",
+            "class X extends A {",
+            "  m() {",
+            "    const $jscomp$async$this=this;",
+            "    const $jscomp$async$super$get$m=()=>super.m;",
+            "    function* $jscomp$async$generator() {",
+            "      return $jscomp$async$super$get$m().call($jscomp$async$this);",
+            "    }",
+            "    return $jscomp.executeAsyncGenerator($jscomp$async$generator())",
+            "  }",
+            "}"));
+  }
+
+  public void testInnerSuperReference() {
+    test(
+        lines(
+            "class A {",
+            "  m() {",
+            "    return this;",
+            "  }",
+            "}",
+            "class X extends A {",
+            "  async m() {",
+            "    const tmp = super.m;",
+            "    return tmp.call(null);",
+            "  }",
+            "}"),
+        lines(
+            "class A {",
+            "  m() {",
+            "    return this;",
+            "  }",
+            "}",
+            "class X extends A {",
+            "  m() {",
+            "    const $jscomp$async$super$get$m=()=>super.m;",
+            "    function* $jscomp$async$generator() {",
+            "      const tmp = $jscomp$async$super$get$m();",
+            "      return tmp.call(null);",
+            "    }",
+            "    return $jscomp.executeAsyncGenerator($jscomp$async$generator())",
+            "  }",
+            "}"));
+  }
+
   public void testInnerArrowFunctionUsingArguments() {
     test(
         lines(

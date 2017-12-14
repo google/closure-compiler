@@ -133,6 +133,27 @@ testSuite({
     return c.delayedGetValue().then(v => assertEquals(0, v));
   },
 
+  testMemberFunctionUsingSuper() {
+    class B {
+      constructor() {
+        this.value = 0;
+      }
+
+      async delayedGetValue() {
+        return this.value;
+      }
+    }
+
+    class C extends B {
+      /** @override */
+      async delayedGetValue() {
+        return super.delayedGetValue();
+      }
+    }
+    const c = new C();
+    return c.delayedGetValue().then(v => assertEquals(0, v));
+  },
+
   testMemberFunctionUsingThisInArrowFunction() {
     class C {
       constructor() {
