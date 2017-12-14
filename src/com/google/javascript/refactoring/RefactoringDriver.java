@@ -22,6 +22,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import com.google.javascript.jscomp.BlackHoleErrorManager;
 import com.google.javascript.jscomp.CheckLevel;
 import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerOptions;
@@ -74,7 +75,7 @@ public final class RefactoringDriver {
 
   private static Compiler createCompiler(
       List<SourceFile> inputs, List<SourceFile> externs, CompilerOptions compilerOptions) {
-    Compiler compiler = new Compiler();
+    Compiler compiler = new Compiler(new BlackHoleErrorManager());
     compiler.disableThreads();
     compiler.compile(externs, inputs, compilerOptions);
     return compiler;
@@ -102,10 +103,10 @@ public final class RefactoringDriver {
     options.setBrokenClosureRequiresLevel(CheckLevel.OFF);
     // TODO(bangert): Remove this -- we want to rewrite code before closure syntax is removed.
     // Unfortunately, setClosurePass is required, or code doesn't type check.
-    options.setClosurePass(true); 
+    options.setClosurePass(true);
     options.setGenerateExports(true);
     options.setPreserveClosurePrimitives(true);
-    
+
     options.setWarningLevel(DiagnosticGroups.STRICT_MISSING_REQUIRE, CheckLevel.WARNING);
     options.setWarningLevel(DiagnosticGroups.EXTRA_REQUIRE, CheckLevel.WARNING);
     options.setWarningLevel(DiagnosticGroups.LINT_CHECKS, CheckLevel.WARNING);
