@@ -938,6 +938,45 @@ public class InlineFunctionsTest extends CompilerTestCase {
             "}"));
   }
 
+  public void testShadowVariables19() {
+    test(
+        lines(
+            "let a = 0;",
+            "function bar() { return a + a; }",
+            "function foo() { let a = 3; return bar(); }",
+            "function _goo() { let a = 2; let x = foo(); }"),
+        lines(
+            "let a = 0;",
+            "function _goo(){",
+            "  let a$jscomp$2 = 2;",
+            "  let x;",
+            "  {",
+            "    let a$jscomp$inline_0 = 3;",
+            "    x = a + a;",
+            "  }",
+            "}"));
+  }
+
+  public void testShadowVariables20() {
+    test(
+        lines(
+            "const a = 0;",
+            "function bar() { return a + a; }",
+            "function foo() { const a = 3; return bar(); }",
+            "function _goo() { const a = 2; const x = foo(); }"),
+        lines(
+            "const a = 0;",
+            "function _goo() {",
+            "  const a$jscomp$2 = 2;",
+            "  var JSCompiler_inline_result$jscomp$0;",
+            "  {",
+            "    const a$jscomp$inline_1 = 3;",
+            "    JSCompiler_inline_result$jscomp$0 = a + a;",
+            "  }",
+            "  const x = JSCompiler_inline_result$jscomp$0;",
+            "}"));
+  }
+
   public void testCostBasedInlining1() {
     testSame(
         "function foo(a){return a}" +

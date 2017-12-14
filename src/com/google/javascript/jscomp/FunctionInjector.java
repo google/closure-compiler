@@ -444,9 +444,9 @@ class FunctionInjector {
     } else if (parent.isName()
         // TODO(nicksantos): Remove this once everyone is using the CONSTANT_VAR annotation.
         && !NodeUtil.isConstantName(parent)
-        && grandParent.isVar()
+        && (grandParent.isVar() || grandParent.isLet())
         && grandParent.hasOneChild()) {
-      // This is a var declaration.  Example: "var x = foo();"
+      // This is a var/let declaration.  Example: "var x = foo();"
       // TODO(johnlenz): Should we be checking for constants on the
       // left-hand-side of the assignments and handling them as EXPRESSION?
       return CallSiteType.VAR_DECL_SIMPLE_ASSIGNMENT;
