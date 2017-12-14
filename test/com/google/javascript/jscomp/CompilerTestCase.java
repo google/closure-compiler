@@ -2088,6 +2088,14 @@ public abstract class CompilerTestCase extends TestCase {
   /** A Compiler that records requested runtime libraries, rather than injecting. */
   protected static class NoninjectingCompiler extends Compiler {
 
+    NoninjectingCompiler(ErrorManager em) {
+      super(em);
+    }
+
+    NoninjectingCompiler() {
+      super();
+    }
+
     protected final Set<String> injected = new HashSet<>();
 
     @Override

@@ -408,10 +408,12 @@ abstract class IntegrationTestCase extends TestCase {
   }
 
   protected Compiler compile(CompilerOptions options, String[] original) {
-    Compiler compiler = useNoninjectingCompiler ? new NoninjectingCompiler() : new Compiler();
+    Compiler compiler =
+        useNoninjectingCompiler
+            ? new NoninjectingCompiler(new BlackHoleErrorManager())
+            : new Compiler(new BlackHoleErrorManager());
 
     lastCompiler = compiler;
-    options.setErrorHandler(new BlackHoleErrorManager());
     compiler.compileModules(
         externs,
         ImmutableList.copyOf(
