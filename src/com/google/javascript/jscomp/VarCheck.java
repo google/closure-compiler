@@ -81,10 +81,10 @@ class VarCheck extends AbstractPostOrderCallback implements
         "JSC_VAR_ARGUMENTS_SHADOWED_ERROR",
         "Shadowing \"arguments\" is not allowed");
 
-  static final DiagnosticType LET_CONST_CLASS_MULTIPLY_DECLARED_ERROR =
+  static final DiagnosticType BLOCK_SCOPED_DECL_MULTIPLY_DECLARED_ERROR =
       DiagnosticType.error(
-          "JSC_LET_CONST_CLASS_MULTIPLY_DECLARED_ERROR",
-          "Duplicate let / const / class declaration in the same scope is not allowed.");
+          "JSC_BLOCK_SCOPED_DECL_MULTIPLY_DECLARED_ERROR",
+          "Duplicate let / const / class / function declaration in the same scope is not allowed.");
 
   // The arguments variable is special, in that it's declared in every local
   // scope, but not explicitly declared.
@@ -412,7 +412,18 @@ class VarCheck extends AbstractPostOrderCallback implements
           || parent.isClass()
           || (origParent != null
               && (origParent.isLet() || origParent.isConst() || origParent.isClass()))) {
-        compiler.report(JSError.make(n, LET_CONST_CLASS_MULTIPLY_DECLARED_ERROR));
+        compiler.report(JSError.make(n, BLOCK_SCOPED_DECL_MULTIPLY_DECLARED_ERROR));
+        return;
+      } else if (parent.isFunction()
+          // Redeclarations of functions in global scope are fairly common, so allow them
+          // (at least for now).
+          && !s.isGlobal()
+          && origParent != null
+          && (origParent.isFunction()
+              || origParent.isLet()
+              || origParent.isConst()
+              || origParent.isClass())) {
+        compiler.report(JSError.make(n, BLOCK_SCOPED_DECL_MULTIPLY_DECLARED_ERROR));
         return;
       }
 

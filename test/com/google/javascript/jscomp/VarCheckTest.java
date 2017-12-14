@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
+import static com.google.javascript.jscomp.VarCheck.BLOCK_SCOPED_DECL_MULTIPLY_DECLARED_ERROR;
 import static com.google.javascript.jscomp.VarCheck.VAR_MULTIPLY_DECLARED_ERROR;
 
 import com.google.common.collect.ImmutableList;
@@ -156,26 +157,26 @@ public final class VarCheckTest extends CompilerTestCase {
   }
 
   public void testMultiplyDeclaredLets() {
-    testError("let x = 1; let x = 2;", VarCheck.LET_CONST_CLASS_MULTIPLY_DECLARED_ERROR);
-    testError("let x = 1; var x = 2;", VarCheck.LET_CONST_CLASS_MULTIPLY_DECLARED_ERROR);
-    testError("var x = 1; let x = 2;", VarCheck.LET_CONST_CLASS_MULTIPLY_DECLARED_ERROR);
+    testError("let x = 1; let x = 2;", BLOCK_SCOPED_DECL_MULTIPLY_DECLARED_ERROR);
+    testError("let x = 1; var x = 2;", BLOCK_SCOPED_DECL_MULTIPLY_DECLARED_ERROR);
+    testError("var x = 1; let x = 2;", BLOCK_SCOPED_DECL_MULTIPLY_DECLARED_ERROR);
   }
 
   public void testMultiplyDeclaredConsts() {
-    testError("const x = 1; const x = 2;", VarCheck.LET_CONST_CLASS_MULTIPLY_DECLARED_ERROR);
-    testError("const x = 1; var x = 2;", VarCheck.LET_CONST_CLASS_MULTIPLY_DECLARED_ERROR);
-    testError("var x = 1; const x = 2;", VarCheck.LET_CONST_CLASS_MULTIPLY_DECLARED_ERROR);
+    testError("const x = 1; const x = 2;", BLOCK_SCOPED_DECL_MULTIPLY_DECLARED_ERROR);
+    testError("const x = 1; var x = 2;", BLOCK_SCOPED_DECL_MULTIPLY_DECLARED_ERROR);
+    testError("var x = 1; const x = 2;", BLOCK_SCOPED_DECL_MULTIPLY_DECLARED_ERROR);
   }
 
   public void testMultiplyDeclaredConsts_withES6Modules() {
     testError("export function f() { const x = 1; const x = 2; }",
-        VarCheck.LET_CONST_CLASS_MULTIPLY_DECLARED_ERROR);
+        BLOCK_SCOPED_DECL_MULTIPLY_DECLARED_ERROR);
 
     testError("export const x = 1; export var x = 2;",
-        VarCheck.LET_CONST_CLASS_MULTIPLY_DECLARED_ERROR);
+        BLOCK_SCOPED_DECL_MULTIPLY_DECLARED_ERROR);
 
     testError("export const a = 1, a = 2;",
-        VarCheck.LET_CONST_CLASS_MULTIPLY_DECLARED_ERROR);
+        BLOCK_SCOPED_DECL_MULTIPLY_DECLARED_ERROR);
   }
 
   public void testMultiplyDeclareLetsInDifferentScope() {
@@ -184,12 +185,12 @@ public final class VarCheckTest extends CompilerTestCase {
   }
 
   public void testReferencedVarDefinedClass() {
-    testError("var x; class x{ }", VarCheck.LET_CONST_CLASS_MULTIPLY_DECLARED_ERROR);
-    testError("let x; class x{ }", VarCheck.LET_CONST_CLASS_MULTIPLY_DECLARED_ERROR);
-    testError("const x = 1; class x{ }", VarCheck.LET_CONST_CLASS_MULTIPLY_DECLARED_ERROR);
-    testError("class x{ } let x;", VarCheck.LET_CONST_CLASS_MULTIPLY_DECLARED_ERROR);
+    testError("var x; class x{ }", BLOCK_SCOPED_DECL_MULTIPLY_DECLARED_ERROR);
+    testError("let x; class x{ }", BLOCK_SCOPED_DECL_MULTIPLY_DECLARED_ERROR);
+    testError("const x = 1; class x{ }", BLOCK_SCOPED_DECL_MULTIPLY_DECLARED_ERROR);
+    testError("class x{ } let x;", BLOCK_SCOPED_DECL_MULTIPLY_DECLARED_ERROR);
     testError("export default class x{ } let x;",
-        VarCheck.LET_CONST_CLASS_MULTIPLY_DECLARED_ERROR);
+        BLOCK_SCOPED_DECL_MULTIPLY_DECLARED_ERROR);
   }
 
   public void testNamedClass() {
@@ -575,11 +576,11 @@ public final class VarCheckTest extends CompilerTestCase {
   public void testDontAllowSuppressDupeOnLet() {
     testError(
         "let a; /** @suppress {duplicate} */ let a; ",
-        VarCheck.LET_CONST_CLASS_MULTIPLY_DECLARED_ERROR);
+        BLOCK_SCOPED_DECL_MULTIPLY_DECLARED_ERROR);
 
     testError(
         "function f() { let a; /** @suppress {duplicate} */ let a; }",
-        VarCheck.LET_CONST_CLASS_MULTIPLY_DECLARED_ERROR);
+        BLOCK_SCOPED_DECL_MULTIPLY_DECLARED_ERROR);
   }
 
   public void testDuplicateBlockScopedDeclarationInSwitch() {
@@ -595,7 +596,7 @@ public final class VarCheckTest extends CompilerTestCase {
             "      break;",
             "  }",
             "}"),
-        VarCheck.LET_CONST_CLASS_MULTIPLY_DECLARED_ERROR);
+        BLOCK_SCOPED_DECL_MULTIPLY_DECLARED_ERROR);
 
     testError(
         lines(
@@ -609,20 +610,20 @@ public final class VarCheckTest extends CompilerTestCase {
             "      break;",
             "  }",
             "}"),
-        VarCheck.LET_CONST_CLASS_MULTIPLY_DECLARED_ERROR);
+        BLOCK_SCOPED_DECL_MULTIPLY_DECLARED_ERROR);
   }
 
   public void testLetConstRedeclareWithFunctions_withEs6Modules() {
     testError("function f() {} let f = 1; export {f};",
-        VarCheck.LET_CONST_CLASS_MULTIPLY_DECLARED_ERROR);
+        BLOCK_SCOPED_DECL_MULTIPLY_DECLARED_ERROR);
     testError("let f = 1; function f() {}  export {f};",
-        VarCheck.LET_CONST_CLASS_MULTIPLY_DECLARED_ERROR);
+        BLOCK_SCOPED_DECL_MULTIPLY_DECLARED_ERROR);
     testError("const f = 1; function f() {} export {f};",
-        VarCheck.LET_CONST_CLASS_MULTIPLY_DECLARED_ERROR);
+        BLOCK_SCOPED_DECL_MULTIPLY_DECLARED_ERROR);
     testError("function f() {} const f = 1;  export {f};",
-        VarCheck.LET_CONST_CLASS_MULTIPLY_DECLARED_ERROR);
+        BLOCK_SCOPED_DECL_MULTIPLY_DECLARED_ERROR);
     testError("export default function f() {}; let f = 5;",
-        VarCheck.LET_CONST_CLASS_MULTIPLY_DECLARED_ERROR);
+        BLOCK_SCOPED_DECL_MULTIPLY_DECLARED_ERROR);
   }
 
   public void testFunctionScopeArguments() {
@@ -635,6 +636,38 @@ public final class VarCheckTest extends CompilerTestCase {
 
     validityCheck = true;
     testSame("function f() {var arguments}");
+  }
+
+  public void testFunctionRedeclared_global() {
+    // Redeclaration in global scope is allowed.
+    testSame("/** @fileoverview @suppress {duplicate} */ function f() {};function f() {};");
+  }
+
+  public void testFunctionRedeclared1() {
+    testError("{ function f() {}; function f() {}; }", BLOCK_SCOPED_DECL_MULTIPLY_DECLARED_ERROR);
+    testError(
+        "if (0) { function f() {}; function f() {}; }", BLOCK_SCOPED_DECL_MULTIPLY_DECLARED_ERROR);
+    testError(
+        "try { function f() {}; function f() {}; } catch (e) {}",
+        BLOCK_SCOPED_DECL_MULTIPLY_DECLARED_ERROR);
+  }
+
+  public void testFunctionRedeclared2() {
+    testError("{ let f = 0; function f() {}; }", BLOCK_SCOPED_DECL_MULTIPLY_DECLARED_ERROR);
+    testError(
+        "if (0) { const f = 1; function f() {}; }", BLOCK_SCOPED_DECL_MULTIPLY_DECLARED_ERROR);
+    testError(
+        "try { class f {}; function f() {}; } catch (e) {}",
+        BLOCK_SCOPED_DECL_MULTIPLY_DECLARED_ERROR);
+  }
+
+  public void testFunctionRedeclared3() {
+    testError("{ function f() {}; let f = 0; }", BLOCK_SCOPED_DECL_MULTIPLY_DECLARED_ERROR);
+    testError(
+        "if (0) { function f() {}; const f = 0;}", BLOCK_SCOPED_DECL_MULTIPLY_DECLARED_ERROR);
+    testError(
+        "try { function f() {}; class f {}; } catch (e) {}",
+        BLOCK_SCOPED_DECL_MULTIPLY_DECLARED_ERROR);
   }
 
   public void testNoUndeclaredVarWhenUsingClosurePass() {
