@@ -519,12 +519,6 @@ HTMLFrameElement.prototype.contentWindow;
 HTMLIFrameElement.prototype.allowTransparency;
 
 /**
- * @type {Window}
- * @see http://msdn.microsoft.com/en-us/library/ms533692(VS.85).aspx
- */
-HTMLIFrameElement.prototype.contentWindow;
-
-/**
  * @see http://msdn.microsoft.com/en-us/library/ms536385(VS.85).aspx
  */
 HTMLBodyElement.prototype.createControlRange;

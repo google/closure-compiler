@@ -1600,6 +1600,12 @@ HTMLIFrameElement.prototype.srcdoc;
  */
 HTMLIFrameElement.prototype.sandbox;
 
+/**
+ * @type {Window}
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/HTMLIFrameElement/contentWindow
+ */
+HTMLIFrameElement.prototype.contentWindow;
+
 /** @type {string} */
 HTMLInputElement.prototype.autocomplete;
 
