@@ -16,7 +16,7 @@
 package com.google.javascript.jscomp;
 
 public class J2clEqualitySameRewriterPassTest extends TypeICompilerTestCase {
-  private static final String EXTERN = "Equality.$same = function(a, b) {};";
+  private static final String EXTERN = "Equality.$same = function(opt_a, opt_b) {};";
 
   public J2clEqualitySameRewriterPassTest() {
     super(MINIMAL_EXTERNS + EXTERN);
@@ -102,5 +102,12 @@ public class J2clEqualitySameRewriterPassTest extends TypeICompilerTestCase {
             "/** @type {*} */",
             "var allType2 = '1';",
             "Equality.$same(allType1, allType2);"));
+  }
+
+  public void testNotRewriteEqualitySame_parametersOptimizedAway() {
+    testSame(
+        lines(
+            "Equality.$same(null);",
+            "Equality.$same();"));
   }
 }

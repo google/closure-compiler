@@ -79,7 +79,10 @@ public class J2clEqualitySameRewriterPass extends AbstractPeepholeOptimization {
   }
 
   private static boolean isEqualitySameCall(Node node) {
-    return node.isCall() && isEqualitySameMethodName(node.getFirstChild());
+    return node.isCall()
+        && isEqualitySameMethodName(node.getFirstChild())
+        // Do not optimize if one or both parameters were removed
+        && node.hasXChildren(3);
   }
 
   private static boolean isEqualitySameMethodName(Node fnName) {
