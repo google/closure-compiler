@@ -353,8 +353,11 @@ public final class MultiPassTest extends CompilerTestCase {
           @Override
           protected CompilerPass create(AbstractCompiler compiler) {
             return new InlineFunctions(
-                compiler, compiler.getUniqueNameIdSupplier(),
-                true, true, true, true,
+                compiler,
+                compiler.getUniqueNameIdSupplier(),
+                CompilerOptions.Reach.ALL,
+                true,
+                true,
                 CompilerOptions.UNLIMITED_FUN_SIZE_AFTER_INLINING);
           }
 

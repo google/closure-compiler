@@ -402,13 +402,12 @@ public enum CompilationParam {
   INLINE_FUNCTIONS(ParamGroup.TYPE_CHECKING_OPTIMIZATION) {
     @Override
     public void apply(CompilerOptions options, boolean value) {
-      options.setInlineFunctions(value);
-      options.setInlineLocalFunctions(value);
+      options.setInlineFunctions(value ? Reach.ALL : Reach.NONE);
     }
 
     @Override
     public boolean isApplied(CompilerOptions options) {
-      return options.inlineLocalFunctions && options.inlineFunctions;
+      return options.getInlineFunctionsLevel() == Reach.ALL;
     }
 
     @Override

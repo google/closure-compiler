@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.javascript.jscomp.CompilerOptions.Reach;
 
 /**
  * Inline function tests.
@@ -23,10 +24,9 @@ package com.google.javascript.jscomp;
  */
 
 public class InlineFunctionsTest extends CompilerTestCase {
-  boolean allowGlobalFunctionInlining;
+  Reach inliningReach;
   final boolean allowExpressionDecomposition = true;
   final boolean allowFunctionExpressionInlining = true;
-  final boolean allowLocalFunctionInlining = true;
   boolean assumeStrictThis;
   boolean assumeMinimumCapture;
   int maxSizeAfterInlining;
@@ -48,7 +48,7 @@ public class InlineFunctionsTest extends CompilerTestCase {
     maybeEnableInferConsts();
     enableNormalize();
     enableComputeSideEffects();
-    allowGlobalFunctionInlining = true;
+    inliningReach = Reach.ALL;
     assumeStrictThis = false;
     assumeMinimumCapture = false;
     maxSizeAfterInlining = CompilerOptions.UNLIMITED_FUN_SIZE_AFTER_INLINING;
@@ -61,8 +61,7 @@ public class InlineFunctionsTest extends CompilerTestCase {
     return new InlineFunctions(
         compiler,
         compiler.getUniqueNameIdSupplier(),
-        allowGlobalFunctionInlining,
-        allowLocalFunctionInlining,
+        inliningReach,
         assumeStrictThis,
         assumeMinimumCapture,
         maxSizeAfterInlining);
@@ -1946,14 +1945,14 @@ public class InlineFunctionsTest extends CompilerTestCase {
   }
 
   public void testLocalFunctionInliningOnly1() {
-    this.allowGlobalFunctionInlining = true;
+    this.inliningReach = Reach.ALL;
     test("function f(){} f()", "void 0;");
-    this.allowGlobalFunctionInlining = false;
+    this.inliningReach = Reach.LOCAL_ONLY;
     testSame("function f(){} f()");
   }
 
   public void testLocalFunctionInliningOnly2() {
-    this.allowGlobalFunctionInlining = false;
+    this.inliningReach = Reach.LOCAL_ONLY;
     testSame("function f(){} f()");
 
     test("function f(){ function g() {return 1} return g() }; f();",
@@ -1961,7 +1960,7 @@ public class InlineFunctionsTest extends CompilerTestCase {
   }
 
   public void testLocalFunctionInliningOnly3() {
-    this.allowGlobalFunctionInlining = false;
+    this.inliningReach = Reach.LOCAL_ONLY;
     testSame("function f(){} f()");
 
     test("(function(){ function g() {return 1} return g() })();",
@@ -1969,7 +1968,7 @@ public class InlineFunctionsTest extends CompilerTestCase {
   }
 
   public void testLocalFunctionInliningOnly4() {
-    this.allowGlobalFunctionInlining = false;
+    this.inliningReach = Reach.LOCAL_ONLY;
     testSame("function f(){} f()");
 
     test("(function(){ return (function() {return 1})() })();",
@@ -2195,7 +2194,7 @@ public class InlineFunctionsTest extends CompilerTestCase {
     disableCompareAsTree();
     enableMarkNoSideEffects();
 
-    allowGlobalFunctionInlining = false;
+    this.inliningReach = Reach.LOCAL_ONLY;
     assumeStrictThis = true;
     assumeMinimumCapture = true;
 

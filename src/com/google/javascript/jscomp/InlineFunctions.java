@@ -24,10 +24,10 @@ import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableSet;
+import com.google.javascript.jscomp.CompilerOptions.Reach;
 import com.google.javascript.jscomp.FunctionInjector.CanInlineResult;
 import com.google.javascript.jscomp.FunctionInjector.InliningMode;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
-import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.rhino.Node;
 import java.util.Collection;
 import java.util.Collections;
@@ -67,8 +67,7 @@ class InlineFunctions implements CompilerPass {
 
   private final FunctionInjector injector;
 
-  private final boolean inlineGlobalFunctions;
-  private final boolean inlineLocalFunctions;
+  private final Reach reach;
   private final boolean assumeMinimumCapture;
 
   private final boolean enforceMaxSizeAfterInlining;
@@ -77,17 +76,17 @@ class InlineFunctions implements CompilerPass {
   InlineFunctions(
       AbstractCompiler compiler,
       Supplier<String> safeNameIdSupplier,
-      boolean inlineGlobalFunctions,
-      boolean inlineLocalFunctions,
+      Reach reach,
       boolean assumeStrictThis,
       boolean assumeMinimumCapture,
       int maxSizeAfterInlining) {
     checkArgument(compiler != null);
     checkArgument(safeNameIdSupplier != null);
+    checkArgument(reach != Reach.NONE);
+
     this.compiler = compiler;
 
-    this.inlineGlobalFunctions = inlineGlobalFunctions;
-    this.inlineLocalFunctions = inlineLocalFunctions;
+    this.reach = reach;
     this.assumeMinimumCapture = assumeMinimumCapture;
 
     this.maxSizeAfterInlining = maxSizeAfterInlining;
@@ -169,22 +168,13 @@ class InlineFunctions implements CompilerPass {
   }
 
   /** Find functions that might be inlined. */
-  private class FindCandidateFunctions implements Callback {
+  private class FindCandidateFunctions extends AbstractPostOrderCallback {
     private int callsSeen = 0;
 
     @Override
-    public boolean shouldTraverse(NodeTraversal nodeTraversal, Node n, Node parent) {
-      // Don't traverse into function bodies
-      // if we aren't inlining local functions.
-      return inlineLocalFunctions || nodeTraversal.inGlobalHoistScope();
-    }
-
-    @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
-      if ((t.inGlobalHoistScope() && inlineGlobalFunctions)
-          || (!t.inGlobalHoistScope() && inlineLocalFunctions)) {
+      if (reach.includesGlobals() || !t.inGlobalHoistScope()) {
         findNamedFunctions(t, n, parent);
-
         findFunctionExpressions(t, n);
       }
     }

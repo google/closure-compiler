@@ -34,6 +34,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
 import com.google.javascript.jscomp.AbstractCompiler.MostRecentTypechecker;
 import com.google.javascript.jscomp.CompilerOptions.ExtractPrototypeMemberDeclarationsMode;
+import com.google.javascript.jscomp.CompilerOptions.Reach;
 import com.google.javascript.jscomp.CoverageInstrumentationPass.CoverageReach;
 import com.google.javascript.jscomp.CoverageInstrumentationPass.InstrumentOption;
 import com.google.javascript.jscomp.ExtractPrototypeMemberDeclarations.Pattern;
@@ -982,7 +983,7 @@ public final class DefaultPassConfig extends PassConfig {
 
     passes.addAll(getCodeRemovingPasses());
 
-    if (options.inlineFunctions || options.inlineLocalFunctions) {
+    if (options.getInlineFunctionsLevel() != Reach.NONE) {
       passes.add(inlineFunctions);
     }
 
@@ -2821,8 +2822,7 @@ public final class DefaultPassConfig extends PassConfig {
           return new InlineFunctions(
               compiler,
               compiler.getUniqueNameIdSupplier(),
-              options.inlineFunctions,
-              options.inlineLocalFunctions,
+              options.getInlineFunctionsLevel(),
               options.assumeStrictThis() || options.expectStrictModeInput(),
               options.assumeClosuresOnlyCaptureReferences,
               options.maxFunctionSizeAfterInlining);

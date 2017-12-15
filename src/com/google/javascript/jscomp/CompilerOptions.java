@@ -72,7 +72,11 @@ public class CompilerOptions implements Serializable {
   public enum Reach {
     ALL,
     LOCAL_ONLY,
-    NONE
+    NONE;
+
+    boolean includesGlobals() {
+      return this == ALL;
+    }
   }
 
   public enum PropertyCollapseLevel {
@@ -428,18 +432,12 @@ public class CompilerOptions implements Serializable {
   /** Inlines constants (symbols that are all CAPS) */
   public boolean inlineConstantVars;
 
-  /** Inlines global functions */
-  public boolean inlineFunctions;
-
   /**
    * For projects that want to avoid the creation of giant functions after
    * inlining.
    */
   int maxFunctionSizeAfterInlining;
   static final int UNLIMITED_FUN_SIZE_AFTER_INLINING = -1;
-
-  /** Inlines functions defined in local scopes */
-  public boolean inlineLocalFunctions;
 
   /** More aggressive function inlining */
   boolean assumeClosuresOnlyCaptureReferences;
@@ -1633,6 +1631,27 @@ public class CompilerOptions implements Serializable {
     this.idGeneratorsMapSerialized = previousMappings;
   }
 
+  /** Use {@link #getInlineFunctionsLevel()} instead */
+  @Deprecated
+  public boolean inlineFunctions;
+
+  /** Use {@link #getInlineFunctionsLevel()} instead */
+  @Deprecated
+  public boolean inlineLocalFunctions;
+
+  /** Use {@link #setInlineFunctions(Reach)} instead */
+  @Deprecated
+  public void setInlineFunctions(boolean inlineFunctions) {
+    this.inlineFunctions = inlineFunctions;
+  }
+
+  /** Use {@link #setInlineFunctions(Reach)} instead */
+  @Deprecated
+  public void setInlineLocalFunctions(boolean inlineLocalFunctions) {
+    this.inlineLocalFunctions = inlineLocalFunctions;
+  }
+
+
   /**
    * Set the function inlining policy for the compiler.
    */
@@ -1653,6 +1672,19 @@ public class CompilerOptions implements Serializable {
       default:
         throw new IllegalStateException("unexpected");
     }
+  }
+
+  /**
+   * Get the function inlining policy for the compiler.
+   */
+  public Reach getInlineFunctionsLevel() {
+    if (this.inlineFunctions) {
+      return Reach.ALL;
+    }
+    if (this.inlineLocalFunctions) {
+      return Reach.LOCAL_ONLY;
+    }
+    return Reach.NONE;
   }
 
   public void setMaxFunctionSizeAfterInlining(int funAstSize) {
@@ -2224,14 +2256,6 @@ public class CompilerOptions implements Serializable {
 
   public void setInlineConstantVars(boolean inlineConstantVars) {
     this.inlineConstantVars = inlineConstantVars;
-  }
-
-  public void setInlineFunctions(boolean inlineFunctions) {
-    this.inlineFunctions = inlineFunctions;
-  }
-
-  public void setInlineLocalFunctions(boolean inlineLocalFunctions) {
-    this.inlineLocalFunctions = inlineLocalFunctions;
   }
 
   public void setCrossModuleCodeMotion(boolean crossModuleCodeMotion) {

@@ -48,12 +48,11 @@ final class CompilerOptionsPreprocessor {
           + "remove_unused_prototype_props to be turned on.");
     }
 
-    if (!options.inlineFunctions
+    if (options.getInlineFunctionsLevel() == CompilerOptions.Reach.NONE
         && options.maxFunctionSizeAfterInlining
-        != CompilerOptions.UNLIMITED_FUN_SIZE_AFTER_INLINING) {
+            != CompilerOptions.UNLIMITED_FUN_SIZE_AFTER_INLINING) {
       throw new InvalidOptionsException(
-          "max_function_size_after_inlining has no effect if inlining is"
-          + " disabled.");
+          "max_function_size_after_inlining has no effect if inlining is disabled.");
     }
 
     if (options.getNewTypeInference()) {
