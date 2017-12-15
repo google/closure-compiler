@@ -74,7 +74,11 @@ public class CompilerOptions implements Serializable {
     LOCAL_ONLY,
     NONE;
 
-    boolean includesGlobals() {
+    public boolean isOn() {
+      return this != NONE;
+    }
+
+    public boolean includesGlobals() {
       return this == ALL;
     }
   }
