@@ -1132,12 +1132,6 @@ public class CompilerOptions implements Serializable {
   boolean sourceMapIncludeSourcesContent = false;
 
   /**
-   * Whether to return strings logged with AbstractCompiler#addToDebugLog
-   * in the compiler's Result.
-   */
-  boolean useDebugLog;
-
-  /**
    * Charset to use when generating code.  If null, then output ASCII.
    */
   transient Charset outputCharset;
@@ -1379,7 +1373,6 @@ public class CompilerOptions implements Serializable {
     aliasHandler = NULL_ALIAS_TRANSFORMATION_HANDLER;
     errorHandler = null;
     printSourceAfterEachPass = false;
-    useDebugLog = false;
   }
 
   /**
@@ -2219,9 +2212,6 @@ public class CompilerOptions implements Serializable {
 
   public void setCheckDeterminism(boolean checkDeterminism) {
     this.checkDeterminism = checkDeterminism;
-    if (checkDeterminism) {
-      this.useDebugLog = true;
-    }
   }
 
   public boolean getCheckDeterminism() {
@@ -3069,7 +3059,6 @@ public class CompilerOptions implements Serializable {
             .add("trustedStrings", trustedStrings)
             .add("tweakProcessing", getTweakProcessing())
             .add("tweakReplacements", getTweakReplacements())
-            .add("useDebugLog", useDebugLog)
             .add("useNewTypeInference", getNewTypeInference())
             .add("emitUseStrict", emitUseStrict)
             .add("useTypesForLocalOptimization", useTypesForLocalOptimization)

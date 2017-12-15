@@ -85,9 +85,6 @@ final class RenameVars implements CompilerPass {
   /** Counter for each assignment */
   private int assignmentCount = 0;
 
-  /** Logs all name assignments */
-  private StringBuilder assignmentLog;
-
   // Logic for bleeding functions, where the name leaks into the outer
   // scope on IE but not on other browsers.
   private final Set<Var> localBleedingFunctions = new HashSet<>();
@@ -348,7 +345,6 @@ final class RenameVars implements CompilerPass {
     this.externNames = NodeUtil.collectExternVariableNames(this.compiler, externs);
 
     originalNameByNode.clear();
-    assignmentLog = new StringBuilder();
 
     // Do variable reference counting.
     NodeTraversal.traverseEs6(compiler, root, new ProcessVars());
@@ -384,10 +380,6 @@ final class RenameVars implements CompilerPass {
     for (Node n : localNameNodes) {
       setNameAndReport(n, getNewLocalName(n));
     }
-
-    // Lastly, write the name assignments to the debug log.
-    compiler.addToDebugLog("JS var assignments:\n" + assignmentLog);
-    assignmentLog = null;
   }
 
   private void setNameAndReport(Node n, @Nullable String newName) {
@@ -559,9 +551,6 @@ final class RenameVars implements CompilerPass {
 
     // Keep track of the mapping
     renameMap.put(a.oldName, newName);
-
-    // Log the mapping
-    assignmentLog.append(a.oldName).append(" => ").append(newName).append('\n');
   }
 
   /**

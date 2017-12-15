@@ -221,7 +221,10 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
 
   /**
    * Logs a message under a central logger.
+   *
+   * @deprecated Use a java.util.logging.Logger instead.
    */
+  @Deprecated
   abstract void addToDebugLog(String... message);
 
   /**

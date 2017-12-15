@@ -200,8 +200,6 @@ class RenameProperties implements CompilerPass {
       reusePropertyNames(reservedNames, propertyMap.values());
     }
 
-    compiler.addToDebugLog("JS property assignments:");
-
     // Assign names, sorted by descending frequency to minimize code size.
     Set<Property> propsByFreq = new TreeSet<>(FREQUENCY_COMPARATOR);
     propsByFreq.addAll(propertyMap.values());
@@ -301,7 +299,6 @@ class RenameProperties implements CompilerPass {
         }
       }
       reservedNames.add(p.newName);
-      compiler.addToDebugLog(p.oldName + " => " + p.newName);
     }
   }
 

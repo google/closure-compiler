@@ -1186,7 +1186,6 @@ class RemoveUnusedCode implements CompilerPass {
       // to other unreferenced variables.
       varInfo.removeAllRemovables();
 
-      compiler.addToDebugLog("Unreferenced var: ", var.name);
       Node nameNode = var.nameNode;
       Node toRemove = nameNode.getParent();
       if (toRemove == null || alreadyRemoved(toRemove)) {

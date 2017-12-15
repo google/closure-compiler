@@ -2174,7 +2174,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
   public Node parse(SourceFile file) {
     initCompilerOptionsIfTesting();
-    addToDebugLog("Parsing: " + file.getName());
+    logger.finest("Parsing: " + file.getName());
     return new JsAst(file).getAstRoot(this);
   }
 
@@ -2892,15 +2892,16 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     return hasHaltingErrors();
   }
 
-  /** Called from the compiler passes, adds debug info */
+  /**
+   * Called from the compiler passes, adds debug info.
+   *
+   * @deprecated Use a java.util.logging.Logger instead.
+   */
+  @Deprecated
   @Override
   void addToDebugLog(String... strings) {
-    if (options.useDebugLog) {
-      String log = Joiner.on("").join(strings);
-      debugLog.append(log);
-      debugLog.append('\n');
-      logger.fine(log);
-    }
+    logger.warning("addToDebugLog is no longer supported. Use a java.util.logging.Logger instead");
+    logger.info(Joiner.on("").join(strings));
   }
 
   @Override

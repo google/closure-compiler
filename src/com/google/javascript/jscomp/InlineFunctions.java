@@ -612,7 +612,6 @@ class InlineFunctions implements CompilerPass {
       if (!newExpr.isEquivalentTo(ref.callNode)) {
         t.getCompiler().reportChangeToEnclosingScope(newExpr);
       }
-      t.getCompiler().addToDebugLog("Inlined function: ", fn.getName());
     }
   }
 

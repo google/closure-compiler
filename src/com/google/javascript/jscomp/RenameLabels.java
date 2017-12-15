@@ -169,7 +169,6 @@ final class RenameLabels implements CompilerPass {
         }
 
         String newName = getNameForId(currentDepth);
-        compiler.addToDebugLog("label renamed: ", name, " => ", newName);
       }
 
       return true;

@@ -37,6 +37,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.annotation.Nullable;
 
 /**
@@ -47,6 +49,8 @@ import javax.annotation.Nullable;
  * @author nicksantos@google.com (Nick Santos)
  */
 class ProcessDefines implements CompilerPass {
+  private static final Logger logger =
+      Logger.getLogger("com.google.javascript.jscomp.ProcessDefines");
 
   /**
    * Defines in this set will not be flagged with "unknown define" warnings. There are legacy flags
@@ -127,10 +131,11 @@ class ProcessDefines implements CompilerPass {
         String defineName = def.getKey();
         DefineInfo info = def.getValue();
         Node inputValue = dominantReplacements.get(defineName);
-        Node finalValue = inputValue != null ?
-            inputValue : info.getLastValue();
+        Node finalValue = inputValue != null ? inputValue : info.getLastValue();
         if (finalValue != info.initialValue) {
-          compiler.addToDebugLog("Overriding @define variable ", defineName);
+          if (logger.isLoggable(Level.FINE)) {
+            logger.fine("Overriding @define variable " + defineName);
+          }
           boolean changed =
               finalValue.getToken() != info.initialValue.getToken()
               || !finalValue.isEquivalentTo(info.initialValue);

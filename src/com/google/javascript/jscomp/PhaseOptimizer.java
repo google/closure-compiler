@@ -235,8 +235,7 @@ class PhaseOptimizer implements CompilerPass {
     if (printAstHashcodes) {
       String hashCodeMsg = "AST hashCode after " + passName + ": "
           + compiler.toSource(root).hashCode();
-      System.err.println(hashCodeMsg);
-      compiler.addToDebugLog(hashCodeMsg);
+      logger.info(hashCodeMsg);
     }
   }
 
