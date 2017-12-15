@@ -412,7 +412,7 @@ public enum CompilationParam {
 
     @Override
     public String getJavaInfo() {
-      return "options.setInlineFunctions(true) + options.setInlineLocalFunctions(true)";
+      return "options.setInlineFunctions(Reach.ALL)";
     }
   },
 

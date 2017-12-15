@@ -1635,13 +1635,11 @@ public class CompilerOptions implements Serializable {
     this.idGeneratorsMapSerialized = previousMappings;
   }
 
-  /** Use {@link #getInlineFunctionsLevel()} instead */
   @Deprecated
-  public boolean inlineFunctions;
+  private boolean inlineFunctions;
 
-  /** Use {@link #getInlineFunctionsLevel()} instead */
   @Deprecated
-  public boolean inlineLocalFunctions;
+  private boolean inlineLocalFunctions;
 
   /** Use {@link #setInlineFunctions(Reach)} instead */
   @Deprecated
