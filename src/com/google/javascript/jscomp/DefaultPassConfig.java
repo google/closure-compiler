@@ -40,6 +40,7 @@ import com.google.javascript.jscomp.CoverageInstrumentationPass.InstrumentOption
 import com.google.javascript.jscomp.ExtractPrototypeMemberDeclarations.Pattern;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.jscomp.PassFactory.HotSwapPassFactory;
+import com.google.javascript.jscomp.ijs.ConvertToTypedInterface;
 import com.google.javascript.jscomp.lint.CheckArrayWithGoogObject;
 import com.google.javascript.jscomp.lint.CheckDuplicateCase;
 import com.google.javascript.jscomp.lint.CheckEmptyStatements;

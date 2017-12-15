@@ -197,7 +197,7 @@ public class Var implements StaticSlot, StaticRef {
     return declarationType() == Token.PARAM_LIST;
   }
 
-  boolean isDefaultParam() {
+  public boolean isDefaultParam() {
     Node parent = nameNode.getParent();
     return parent.getParent().isParamList() && parent.isDefaultValue()
         && parent.getFirstChild() == nameNode;

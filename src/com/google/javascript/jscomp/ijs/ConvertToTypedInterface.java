@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.google.javascript.jscomp;
+package com.google.javascript.jscomp.ijs;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -25,7 +25,15 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.MultimapBuilder;
 import com.google.common.collect.Ordering;
+import com.google.javascript.jscomp.AbstractCompiler;
+import com.google.javascript.jscomp.CompilerPass;
+import com.google.javascript.jscomp.DiagnosticType;
+import com.google.javascript.jscomp.JSError;
+import com.google.javascript.jscomp.NodeTraversal;
 import com.google.javascript.jscomp.NodeTraversal.AbstractShallowStatementCallback;
+import com.google.javascript.jscomp.NodeUtil;
+import com.google.javascript.jscomp.Scope;
+import com.google.javascript.jscomp.Var;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfo.Visibility;
@@ -53,7 +61,7 @@ import javax.annotation.Nullable;
  *
  * @author blickly@google.com (Ben Lickly)
  */
-class ConvertToTypedInterface implements CompilerPass {
+public class ConvertToTypedInterface implements CompilerPass {
 
   static final DiagnosticType CONSTANT_WITHOUT_EXPLICIT_TYPE =
       DiagnosticType.warning(
@@ -71,7 +79,7 @@ class ConvertToTypedInterface implements CompilerPass {
 
   private final AbstractCompiler compiler;
 
-  ConvertToTypedInterface(AbstractCompiler compiler) {
+  public ConvertToTypedInterface(AbstractCompiler compiler) {
     this.compiler = compiler;
   }
 
@@ -100,7 +108,8 @@ class ConvertToTypedInterface implements CompilerPass {
     new SimplifyDeclarations(compiler, currentFile).simplifyAll();
   }
 
-  private static @Nullable Var findNameDeclaration(Scope scope, Node rhs) {
+  @Nullable
+  private static Var findNameDeclaration(Scope scope, Node rhs) {
     if (!rhs.isName()) {
       return null;
     }

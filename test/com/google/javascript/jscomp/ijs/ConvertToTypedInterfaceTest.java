@@ -14,9 +14,12 @@
  * limitations under the License.
  */
 
-package com.google.javascript.jscomp;
+package com.google.javascript.jscomp.ijs;
 
+import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import com.google.javascript.jscomp.CompilerPass;
+import com.google.javascript.jscomp.CompilerTestCase;
 
 /** Unit tests for {@link ConvertToTypedInterface}. */
 public final class ConvertToTypedInterfaceTest extends CompilerTestCase {

@@ -1034,7 +1034,7 @@ public final class NodeUtil {
    * /** @const * / var goog = goog || {};
    * /** @const * / goog.math = goog.math || {};
    */
-  static boolean isNamespaceDecl(Node n) {
+  public static boolean isNamespaceDecl(Node n) {
     JSDocInfo jsdoc = getBestJSDocInfo(n);
     if (jsdoc != null && !jsdoc.getTypeNodes().isEmpty()) {
       return false;
@@ -1814,7 +1814,7 @@ public final class NodeUtil {
         && (isExprAssign(grandparent) || parent.isName());
   }
 
-  enum ValueType {
+  public enum ValueType {
     UNDETERMINED,
     NULL,
     VOID,
@@ -1828,7 +1828,7 @@ public final class NodeUtil {
    * Apply the supplied predicate against
    * all possible result Nodes of the expression.
    */
-  static ValueType getKnownValueType(Node n) {
+  public static ValueType getKnownValueType(Node n) {
     switch (n.getToken()) {
       case CAST:
         return getKnownValueType(n.getFirstChild());
@@ -2715,7 +2715,7 @@ public final class NodeUtil {
           Token.NAMESPACE_ELEMENTS,
           Token.INTERFACE_MEMBERS);
 
-  static boolean isStatementParent(Node parent) {
+  public static boolean isStatementParent(Node parent) {
     // It is not possible to determine definitely if a node is a statement
     // or not if it is not part of the AST.  A FUNCTION node can be
     // either part of an expression or a statement.
@@ -3910,7 +3910,7 @@ public final class NodeUtil {
   /**
    * Gets the root node of a qualified name. Must be either NAME, THIS or SUPER.
    */
-  static Node getRootOfQualifiedName(Node qName) {
+  public static Node getRootOfQualifiedName(Node qName) {
     for (Node current = qName; true; current = current.getFirstChild()) {
       if (current.isName() || current.isThis() || current.isSuper()) {
         return current;
@@ -4129,7 +4129,7 @@ public final class NodeUtil {
   }
 
   /** Retrieves lhs nodes declared in the current declaration or ASSIGN statement. */
-  static List<Node> findLhsNodesInNode(Node declNode) {
+  public static List<Node> findLhsNodesInNode(Node declNode) {
     checkArgument(
         isNameDeclaration(declNode)
             || declNode.isParamList()
@@ -5053,7 +5053,7 @@ public final class NodeUtil {
 
   /** Return declared JSDoc type for the given name declaration, or null if none present. */
   @Nullable
-  static JSTypeExpression getDeclaredTypeExpression(Node declaration) {
+  public static JSTypeExpression getDeclaredTypeExpression(Node declaration) {
     checkArgument(declaration.isName() || declaration.isStringKey());
     JSDocInfo nameJsdoc = getBestJSDocInfo(declaration);
     if (nameJsdoc != null) {
@@ -5080,7 +5080,7 @@ public final class NodeUtil {
   }
 
   @Nullable
-  static Node getBestJSDocInfoNode(Node n) {
+  public static Node getBestJSDocInfoNode(Node n) {
     if (n.isExprResult()) {
       return getBestJSDocInfoNode(n.getFirstChild());
     }
@@ -5113,7 +5113,7 @@ public final class NodeUtil {
   }
 
   /** Find the l-value that the given r-value is being assigned to. */
-  static Node getBestLValue(Node n) {
+  public static Node getBestLValue(Node n) {
     Node parent = n.getParent();
     boolean isFunctionDeclaration = isFunctionDeclaration(n);
     if (isFunctionDeclaration) {
@@ -5136,7 +5136,7 @@ public final class NodeUtil {
   }
 
   /** Gets the r-value (or initializer) of a node returned by getBestLValue. */
-  static Node getRValueOfLValue(Node n) {
+  public static Node getRValueOfLValue(Node n) {
     Node parent = n.getParent();
     switch (parent.getToken()) {
       case ASSIGN:
@@ -5546,7 +5546,7 @@ public final class NodeUtil {
   }
 
   /** Recurses through a tree, marking all function nodes deleted. */
-  static void markFunctionsDeleted(Node node, AbstractCompiler compiler) {
+  public static void markFunctionsDeleted(Node node, AbstractCompiler compiler) {
     if (node.isFunction()) {
       compiler.reportFunctionDeleted(node);
     }
