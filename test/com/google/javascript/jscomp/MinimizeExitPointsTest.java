@@ -301,4 +301,32 @@ public final class MinimizeExitPointsTest extends CompilerTestCase {
         "switch (x) { case 1: if (x) { f(); break; } break; default: g(); break; }",
         "switch (x) { case 1: if (x) { f();        } break; default: g();        }");
   }
+
+  public void testFoldBlockScopedVariables() {
+    // TODO(b/70726762): This output is wrong, and will cause a VarCheck error.
+    // Consider either not folding in this case, or declaring "c" and "d" in the function scope.
+    fold(
+        lines(
+            "function f() {",
+            "  function inner() {",
+            "    return c + d;",
+            "  }",
+            "  if (x) {",
+            "    return;",
+            "  }",
+            "  let d = 3;",
+            "  const c = 4;",
+            "}"),
+        lines(
+            "function f() {",
+            "  function inner() {",
+            "    return c + d;", // c and d are not declared in this scope anymore.
+            "  }",
+            "  if (x);",
+            "  else {",
+            "    let d = 3;",
+            "    const c = 4;",
+            "  }",
+            "}"));
+  }
 }
