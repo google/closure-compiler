@@ -31,6 +31,7 @@ import static com.google.javascript.jscomp.ClosureRewriteModule.INVALID_PROVIDE_
 import static com.google.javascript.jscomp.ClosureRewriteModule.INVALID_REQUIRE_NAMESPACE;
 import static com.google.javascript.jscomp.ClosureRewriteModule.LATE_PROVIDE_ERROR;
 import static com.google.javascript.jscomp.ClosureRewriteModule.MISSING_FILE_REQUIRE;
+import static com.google.javascript.jscomp.ClosureRewriteModule.MISSING_MODULE_OR_PROVIDE;
 import static com.google.javascript.jscomp.ClosureRewriteModule.PATH_REQUIRE_IN_PROVIDE;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
@@ -65,6 +66,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
     CompilerOptions options = super.getOptions();
     options.setWarningLevel(DiagnosticGroups.LINT_CHECKS, CheckLevel.WARNING);
     options.setPreserveClosurePrimitives(this.preserveClosurePrimitives);
+    options.setWarningLevel(DiagnosticGroups.MISSING_PROVIDE, CheckLevel.WARNING);
     return options;
   }
 
@@ -974,6 +976,25 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
                 "function module$contents$x$y$z_f() {",
                 "  return new module$exports$a$b$c();",
                 "}")});
+  }
+
+  public void testGoogModuleGet_missing() {
+    test(
+        srcs(lines(
+            "goog.module('x.y.z');",
+            "",
+            "function f() {",
+            "  return goog.module.get('a.b.c');",
+            "}",
+            "f();")),
+        expected(lines(
+            "/** @const */",
+            "var module$exports$x$y$z={};",
+            "",
+            "function module$contents$x$y$z_f() {}",
+            "",
+            "module$contents$x$y$z_f();")),
+        warning(MISSING_MODULE_OR_PROVIDE));
   }
 
   public void testAliasedGoogModuleGet1() {

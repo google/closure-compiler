@@ -1296,14 +1296,16 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     Node legacyNamespaceNode = call.getSecondChild();
     String legacyNamespace = legacyNamespaceNode.getString();
 
-    compiler.reportChangeToEnclosingScope(call);
     // Remaining calls to goog.module.get() are not alias updates,
     // and should be replaced by a reference to the proper name.
     // Replace "goog.module.get('pkg.Foo')" with either "pkg.Foo" or "module$exports$pkg$Foo".
     String exportedNamespace = rewriteState.getExportedNamespaceOrScript(legacyNamespace);
-    Node exportedNamespaceName = NodeUtil.newQName(compiler, exportedNamespace).srcrefTree(call);
-    exportedNamespaceName.setOriginalName(legacyNamespace);
-    call.replaceWith(exportedNamespaceName);
+    if (exportedNamespace != null) {
+      compiler.reportChangeToEnclosingScope(call);
+      Node exportedNamespaceName = NodeUtil.newQName(compiler, exportedNamespace).srcrefTree(call);
+      exportedNamespaceName.setOriginalName(legacyNamespace);
+      call.replaceWith(exportedNamespaceName);
+    }
   }
 
   private void recordExportsPropertyAssignment(NodeTraversal t, Node getpropNode) {
