@@ -104,6 +104,7 @@ public final class Es6ConvertSuper extends NodeTraversal.AbstractPostOrderCallba
       memberDef.setJSDocInfo(info.build());
     }
     memberDef.useSourceInfoIfMissingFromForTree(classNode);
+    memberDef.makeNonIndexableRecursive();
     classMembers.addChildToFront(memberDef);
     compiler.reportChangeToEnclosingScope(memberDef);
   }

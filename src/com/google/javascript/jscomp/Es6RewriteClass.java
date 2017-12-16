@@ -220,8 +220,7 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, HotSwapCom
         if (shouldAddInheritsPolyfill && !classNode.isFromExterns()) {
           Node classNameNode = NodeUtil.newQName(compiler, metadata.fullClassName)
               .useSourceInfoIfMissingFrom(metadata.classNameNode);
-          Node superClassNameNode = NodeUtil.newQName(compiler, superClassString)
-              .useSourceInfoIfMissingFrom(metadata.superClassNameNode);
+          Node superClassNameNode = metadata.superClassNameNode.cloneTree();
 
           Node inherits = IR.call(
               NodeUtil.newQName(compiler, INHERITS), classNameNode, superClassNameNode);
