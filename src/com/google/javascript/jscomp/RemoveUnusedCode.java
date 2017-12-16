@@ -1580,6 +1580,7 @@ class RemoveUnusedCode implements CompilerPass {
 
     public NameDeclarationStatement(RemovableBuilder builder, Node declarationStatement) {
       super(builder);
+      checkArgument(NodeUtil.isNameDeclaration(declarationStatement), declarationStatement);
       this.declarationStatement = declarationStatement;
     }
 
@@ -1601,6 +1602,10 @@ class RemoveUnusedCode implements CompilerPass {
       return true;
     }
 
+    @Override
+    public String toString() {
+      return "NameDeclStmt:" + declarationStatement;
+    }
   }
 
   enum Kind {
@@ -1630,7 +1635,7 @@ class RemoveUnusedCode implements CompilerPass {
         Kind kind,
         @Nullable Node propertyNode) {
       super(builder);
-      checkState(NodeUtil.isAssignmentOp(assignNode));
+      checkArgument(NodeUtil.isAssignmentOp(assignNode), assignNode);
       if (kind == Kind.VARIABLE) {
         checkArgument(
             propertyNode == null,
@@ -1709,6 +1714,11 @@ class RemoveUnusedCode implements CompilerPass {
         assignNode.replaceWith(IR.number(0).useSourceInfoFrom(assignNode));
         NodeUtil.markFunctionsDeleted(assignNode, compiler);
       }
+    }
+
+    @Override
+    public String toString() {
+      return "Assign:" + assignNode;
     }
   }
 

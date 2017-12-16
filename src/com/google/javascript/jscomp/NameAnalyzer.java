@@ -671,8 +671,7 @@ final class NameAnalyzer implements CompilerPass {
       // Record global variable and function declarations
       if (t.inGlobalHoistScope()) {
         if (n.isName()
-          && ((t.inGlobalScope() && NodeUtil.isNameDeclaration(parent))
-            || parent.isVar())) {
+          && ((t.inGlobalScope() && NodeUtil.isNameDeclaration(parent)) || parent.isVar())) {
           NameInformation ns = createNameInformation(t, n);
           checkNotNull(ns, "createNameInformation returned null for: %s", n);
           recordSet(ns.name, n);
@@ -1469,7 +1468,7 @@ final class NameAnalyzer implements CompilerPass {
     // Minimize the number of connections in the graph by creating a connected
     // cluster for names that are used to modify the object and then ensure
     // there is at least one link to the cluster from the other names (which are
-    // removalable on there own) in the AliasSet.
+    // removable on their own) in the AliasSet.
 
     Set<AliasSet> sets = new HashSet<>(aliases.values());
     for (AliasSet set : sets) {
@@ -1680,8 +1679,7 @@ final class NameAnalyzer implements CompilerPass {
     if (idx != -1) {
       nameInfo.isPrototype = true;
       nameInfo.prototypeClass = name.substring(0, idx);
-      nameInfo.prototypeProperty = name.substring(
-          idx + PROTOTYPE_SUBSTRING_LEN);
+      nameInfo.prototypeProperty = name.substring(idx + PROTOTYPE_SUBSTRING_LEN);
     }
 
     nameInfo.isExternallyReferenceable = isExtern || isExternallyReferenceable(scope, name);
@@ -1777,7 +1775,7 @@ final class NameAnalyzer implements CompilerPass {
     propagateReference(window, function);
   }
 
-  private void propagateReference(JsName ... names) {
+  private void propagateReference(JsName... names) {
     Deque<DiGraphNode<JsName, RefType>> work = new ArrayDeque<>();
     for (JsName name : names) {
       work.push(referenceGraph.createDirectedGraphNode(name));
