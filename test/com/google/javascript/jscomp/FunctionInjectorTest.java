@@ -827,6 +827,22 @@ public final class FunctionInjectorTest extends TestCase {
         INLINE_BLOCK);
   }
 
+  public void testCanInlineFunctionWithInnerArrowFunction1() {
+    helperCanInlineReferenceToFunction(
+        CanInlineResult.YES,
+        "function foo(){ () => { alert(1); }; } foo();",
+        "foo",
+        INLINE_BLOCK);
+  }
+
+  public void testCanInlineFunctionWithInnerArrowFunction2() {
+    helperCanInlineReferenceToFunction(
+        CanInlineResult.NO,
+        "function foo(){ () => { this; }; } foo();",
+        "foo",
+        INLINE_BLOCK);
+  }
+
   public void testInline1() {
     helperInlineReferenceToFunction(
         "function foo(){}; foo();",
@@ -1115,6 +1131,16 @@ public final class FunctionInjectorTest extends TestCase {
             "  x$jscomp$inline_0;",
             "}"),
         "foo", INLINE_BLOCK);
+  }
+
+  public void testInlineFunctionWithInnerArrowFunction1() {
+    helperInlineReferenceToFunction(
+        "function foo(){ () => { alert(1); }; } foo();",
+        lines(
+            "function foo(){ () => { alert(1); }; }",
+            "{ () => { alert(1); }; }"),
+        "foo",
+        INLINE_BLOCK);
   }
 
   public void testInlineReferenceInExpression1() {
@@ -1632,8 +1658,7 @@ public final class FunctionInjectorTest extends TestCase {
           callee = n.getFirstChild();
         }
 
-        if (callee.isName() &&
-            callee.getString().equals(callname)) {
+        if (callee.isName() && callee.getString().equals(callname)) {
           complete = method.call(t, n, parent);
         }
       }

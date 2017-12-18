@@ -102,10 +102,9 @@ class FunctionArgumentInjector {
 
         return replacement;
       }
-    } else if (node.isFunction()) {
-      // Once we enter another scope the "this" value changes, don't try
+    } else if (node.isFunction() && !node.isArrowFunction()) {
+      // Once we enter another non-arrow function the "this" value changes. Don't try
       // to replace it within an inner scope.
-      // TODO(tbreisacher): Make sure this works correctly for arrow functions.
       replaceThis = false;
     }
 
