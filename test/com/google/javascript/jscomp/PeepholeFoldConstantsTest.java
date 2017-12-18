@@ -1199,7 +1199,7 @@ public final class PeepholeFoldConstantsTest extends TypeICompilerTestCase {
     foldSame("1 + x - 2 + 3");
     foldSame("1 + x - 2 + 3 - 1");
     foldSame("f(x)-0");
-    foldSame("x-0-0");
+    fold("x-0-0", "x-0");
     foldSame("x+2-2+2");
     foldSame("x+2-2+2-2");
     foldSame("x-2+2");
@@ -1505,6 +1505,36 @@ public final class PeepholeFoldConstantsTest extends TypeICompilerTestCase {
 
   public void testConvertToNumberNegativeInf() {
     foldSame("var x = 3 * (r ? Infinity : -Infinity);");
+  }
+
+  public void testAlgebraicIdentities() {
+    this.mode = TypeInferenceMode.BOTH;
+
+    foldNumericTypes("x+0", "x");
+    foldNumericTypes("0+x", "x");
+    foldNumericTypes("x+0+0+x+x+0", "x+x+x");
+
+    foldNumericTypes("x-0", "x");
+    foldNumericTypes("x-0-0-0", "x");
+    // 'x-0' is numeric even if x isn't
+    fold("var x='a'; x-0-0", "var x='a';x-0");
+    foldNumericTypes("0-x", "-x");
+    fold("for (var i = 0; i < 5; i++) var x = 0 + i * 1", "for(var i=0; i < 5; i++) var x=i");
+
+    foldNumericTypes("x*1", "x");
+    foldNumericTypes("1*x", "x");
+    // can't optimize these without a non-NaN prover
+    foldSame("x*0");
+    foldSame("0*x");
+    foldSame("0/x");
+
+    foldNumericTypes("x/1", "x");
+  }
+
+  private void foldNumericTypes(String js, String expected) {
+    fold(
+        "function f(/** @type {number} */ x) { " + js + " }",
+        "function f(/** @type {number} */ x) { " + expected + " }");
   }
 
   private static String join(String operandA, String op, String operandB) {

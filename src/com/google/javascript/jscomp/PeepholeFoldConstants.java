@@ -740,17 +740,75 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     // to zero so this is a little awkward here.
 
     Double lValObj = NodeUtil.getNumberValue(left);
-    if (lValObj == null) {
-      return null;
-    }
     Double rValObj = NodeUtil.getNumberValue(right);
-    if (rValObj == null) {
+    // at least one of the two operands must have a value and both must be numeric
+    if ((lValObj == null && rValObj == null) || !isNumeric(left) || !isNumeric(right)) {
       return null;
     }
-
+    // handle the operations that have algebraic identities, since we can simplify the tree without
+    // actually knowing the value statically.
+    switch (opType) {
+      case ADD:
+        if (lValObj != null && rValObj != null) {
+          return maybeReplaceBinaryOpWithNumericResult(lValObj + rValObj, lValObj, rValObj);
+        }
+        if (lValObj != null && lValObj == 0) {
+          return right.cloneTree(true);
+        } else if (rValObj != null && rValObj == 0) {
+          return left.cloneTree(true);
+        }
+        return null;
+      case SUB:
+        if (lValObj != null && rValObj != null) {
+          return maybeReplaceBinaryOpWithNumericResult(lValObj - rValObj, lValObj, rValObj);
+        }
+        if (lValObj != null && lValObj == 0) {
+          // 0 - x -> -x
+          return IR.neg(right.cloneTree(true));
+        } else if (rValObj != null && rValObj == 0) {
+          // x - 0 -> x
+          return left.cloneTree(true);
+        }
+        return null;
+      case MUL:
+        if (lValObj != null && rValObj != null) {
+          return maybeReplaceBinaryOpWithNumericResult(lValObj * rValObj, lValObj, rValObj);
+        }
+        // NOTE: 0*x != 0 for all x, if x==0, then it is NaN.  So we can't take advantage of that
+        // without some kind of non-NaN proof.  So the special cases here only deal with 1*x
+        if (lValObj != null) {
+          if (lValObj == 1) {
+            return right.cloneTree(true);
+          }
+        } else {
+          if (rValObj == 1) {
+            return left.cloneTree(true);
+          }
+        }
+        return null;
+      case DIV:
+        if (lValObj != null && rValObj != null) {
+          if (rValObj == 0) {
+            return null;
+          }
+          return maybeReplaceBinaryOpWithNumericResult(lValObj / rValObj, lValObj, rValObj);
+        }
+        // NOTE: 0/x != 0 for all x, if x==0, then it is NaN
+        if (rValObj != null) {
+          if (rValObj == 1) {
+            // x/1->x
+            return left.cloneTree(true);
+          }
+        }
+        return null;
+      default:
+        // fall-through
+    }
+    if (lValObj == null || rValObj == null) {
+      return null;
+    }
     double lval = lValObj;
     double rval = rValObj;
-
     switch (opType) {
       case BITAND:
         result = NodeUtil.toInt32(lval) & NodeUtil.toInt32(rval);
@@ -761,31 +819,24 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       case BITXOR:
         result = NodeUtil.toInt32(lval) ^ NodeUtil.toInt32(rval);
         break;
-      case ADD:
-        result = lval + rval;
-        break;
-      case SUB:
-        result = lval - rval;
-        break;
-      case MUL:
-        result = lval * rval;
-        break;
       case MOD:
         if (rval == 0) {
           return null;
         }
         result = lval % rval;
         break;
-      case DIV:
-        if (rval == 0) {
-          return null;
-        }
-        result = lval / rval;
-        break;
       default:
-        throw new Error("Unexpected arithmetic operator");
+        throw new Error("Unexpected arithmetic operator: " + opType);
     }
+    return maybeReplaceBinaryOpWithNumericResult(result, lval, rval);
+  }
 
+  private boolean isNumeric(Node n) {
+    return NodeUtil.isNumericResult(n)
+        || (shouldUseTypes && n.getTypeI() != null && n.getTypeI().isNumberValueType());
+  }
+
+  private Node maybeReplaceBinaryOpWithNumericResult(double result, double lval, double rval) {
     // TODO(johnlenz): consider removing the result length check.
     // length of the left and right value plus 1 byte for the operator.
     if ((String.valueOf(result).length() <=
