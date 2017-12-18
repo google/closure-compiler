@@ -152,7 +152,7 @@ public final class SymbolTable {
   }
 
   public Iterable<Symbol> getAllSymbols() {
-    return Collections.unmodifiableCollection(symbols.values());
+    return ImmutableList.copyOf(symbols.values());
   }
 
   /**
@@ -884,7 +884,8 @@ public final class SymbolTable {
    * at "A", and we built a property scope for "A" above.
    */
   void pruneOrphanedNames() {
-    nextSymbol: for (Symbol s : getAllSymbolsSorted()) {
+    nextSymbol:
+    for (Symbol s : getAllSymbols()) {
       if (s.isProperty()) {
         continue;
       }
@@ -897,9 +898,9 @@ public final class SymbolTable {
         Symbol owner = s.scope.getQualifiedSlot(currentName);
         if (owner != null
             && getType(owner) != null
-            && (getType(owner).isNominalConstructor() ||
-                getType(owner).isFunctionPrototypeType() ||
-                getType(owner).isEnumType())) {
+            && (getType(owner).isNominalConstructor()
+                || getType(owner).isFunctionPrototypeType()
+                || getType(owner).isEnumType())) {
           removeSymbol(s);
           continue nextSymbol;
         }
