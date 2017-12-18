@@ -319,6 +319,17 @@ public final class ParserTest extends BaseJSTypeTestCase {
     parse("foo:(function(){foo:2})");
   }
 
+  public void testLabeledFunctionDeclaration() {
+    parseError(
+        "foo:function f() {}", "Functions can only be declared at top level or inside a block.");
+  }
+
+  public void testLabeledClassDeclaration() {
+    mode = LanguageMode.ECMASCRIPT6;
+    parseError(
+        "foo:class Foo {}", "Classes can only be declared at top level or inside a block.");
+  }
+
   public void testLinenoCharnoAssign1() throws Exception {
     Node assign = parse("a = b").getFirstFirstChild();
 

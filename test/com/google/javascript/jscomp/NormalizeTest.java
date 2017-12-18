@@ -414,8 +414,6 @@ public final class NormalizeTest extends CompilerTestCase {
 
   public void testMoveFunctions2() {
     testSame("function f() { function foo() {} }");
-    test("function f() { f(); a:function bar() {} }",
-        "function f() { f(); a:{ var bar = function () {} }}");
     test("function f() { f(); {function bar() {}}}",
         "function f() { f(); {var bar = function () {}}}");
     test("function f() { f(); if (true) {function bar() {}}}",
@@ -440,8 +438,6 @@ public final class NormalizeTest extends CompilerTestCase {
     test("var f = function f() {}",
         "var f = function f$jscomp$1() {}");
     testSame("var f = function g() {}");
-    test("a:function g() {}",
-        "a:{ var g = function () {} }");
     test("{function g() {}}",
         "{var g = function () {}}");
     testSame("if (function g() {}) {}");
@@ -457,8 +453,6 @@ public final class NormalizeTest extends CompilerTestCase {
 
 
     testSameInFunction("function f() {}");
-    testInFunction("f(); a:function g() {}",
-        "f(); a:{ var g = function () {} }");
     testInFunction("f(); {function g() {}}",
         "f(); {var g = function () {}}");
     testInFunction("f(); if (true) {function g() {}}",

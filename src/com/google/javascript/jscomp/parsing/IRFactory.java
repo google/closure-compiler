@@ -1487,9 +1487,19 @@ class IRFactory {
     }
 
     Node processLabeledStatement(LabelledStatementTree labelTree) {
+      Node statement = transform(labelTree.statement);
+      if (statement.isFunction()) {
+        errorReporter.error(
+            "Functions can only be declared at top level or inside a block.",
+            sourceName, lineno(labelTree), charno(labelTree));
+      } else if (statement.isClass()) {
+        errorReporter.error(
+            "Classes can only be declared at top level or inside a block.",
+            sourceName, lineno(labelTree), charno(labelTree));
+      }
       return newNode(Token.LABEL,
           transformLabelName(labelTree.name),
-          transform(labelTree.statement));
+          statement);
     }
 
     Node processName(IdentifierExpressionTree nameNode) {

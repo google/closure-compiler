@@ -768,7 +768,6 @@ public final class NodeUtilTest extends TestCase {
   public void testIsFunctionExpression() {
     assertContainsAnonFunc(true, "(function(){})");
     assertContainsAnonFunc(true, "[function a(){}]");
-    assertContainsAnonFunc(false, "{label: function a(){}}");
     assertContainsAnonFunc(true, "({x: function a(){}})");
     assertContainsAnonFunc(true, "(function a(){})()");
     assertContainsAnonFunc(true, "x = function a(){};");
@@ -808,7 +807,6 @@ public final class NodeUtilTest extends TestCase {
   public void testIsClassExpression() {
     assertContainsAnonClass(true, "(class {})");
     assertContainsAnonClass(true, "[class Clazz {}]");
-    assertContainsAnonClass(false, "{label: class Clazz {}}");
     assertContainsAnonClass(true, "({x: class Clazz {}})");
     assertContainsAnonClass(true, "x = class Clazz {};");
     assertContainsAnonClass(true, "var x = class Clazz {};");

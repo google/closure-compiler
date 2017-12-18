@@ -1782,9 +1782,6 @@ public final class CodePrinterTest extends CodePrinterTestBase {
 
     assertPrint("if(e1)function goo(){return true}",
         "if(e1){function goo(){return true}}");
-
-    assertPrint("if(e1)A:function goo(){return true}",
-        "if(e1){A:function goo(){return true}}");
   }
 
   public void testExponents() {

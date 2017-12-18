@@ -264,7 +264,7 @@ public final class LiveVariablesAnalysisTest extends TestCase {
 
   public void testInnerFunctions() {
     assertLiveBeforeX("function a() {}; X: a()", "a");
-    assertNotLiveBeforeX("X: function a() {}", "a");
+    assertNotLiveBeforeX("X:; function a() {}", "a");
     assertLiveBeforeX("a = function(){}; function a() {}; X: a()", "a");
     // NOTE: function a() {} has no CFG node representation since it is not
     // part of the control execution.
