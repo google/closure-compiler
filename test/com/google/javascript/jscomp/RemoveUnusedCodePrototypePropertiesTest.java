@@ -74,6 +74,21 @@ public final class RemoveUnusedCodePrototypePropertiesTest extends CompilerTestC
     keepGlobals = false;
   }
 
+  public void testRenamePropertyFunctionTest() {
+    test(
+        lines(
+            "function C() {}", // preserve formatting
+            "C.prototype.unreferenced = function() {};",
+            "C.prototype.renamed = function() {};",
+            "JSCompiler_renameProperty('renamed');",
+            "new C();"),
+        lines(
+            "function C() {}", // preserve formatting
+            "C.prototype.renamed = function() {};",
+            "JSCompiler_renameProperty('renamed');",
+            "new C();"));
+  }
+
   public void testNonPrototypePropertiesAreKept() {
     // foo cannot be removed because it is called
     // x cannot be removed because a property is set on it and we don't know where it comes from

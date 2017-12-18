@@ -392,46 +392,57 @@ class RemoveUnusedCode implements CompilerPass {
   }
 
   private void traverseCall(Node callNode, Scope scope) {
-    Node parent = callNode.getParent();
-    String classVarName = null;
+    Node callee = callNode.getFirstChild();
 
-    // A call that is a statement unto itself or the left side of a comma expression might be
-    // a call to a known method for doing class setup
-    // e.g. $jscomp.inherits(Class, BaseClass) or goog.addSingletonGetter(Class)
-    // Such methods never have meaningful return values, so we won't look for them in other
-    // contexts
-    if (parent.isExprResult() || (parent.isComma() && parent.getFirstChild() == callNode)) {
-      SubclassRelationship subclassRelationship =
-          codingConvention.getClassesDefinedByCall(callNode);
-      if (subclassRelationship != null) {
-        // e.g. goog.inherits(DerivedClass, BaseClass);
-        // NOTE: DerivedClass and BaseClass must be QNames. Otherwise getClassesDefinedByCall() will
-        // return null.
-        classVarName = subclassRelationship.subclassName;
-      } else {
-        // Look for calls to addSingletonGetter calls.
-        classVarName = codingConvention.getSingletonGetterClassName(callNode);
+    if (callee.isQualifiedName()
+        && codingConvention.isPropertyRenameFunction(callee.getOriginalQualifiedName())) {
+      Node propertyNameNode = checkNotNull(callee.getNext());
+      if (propertyNameNode.isString()) {
+        markPropertyNameReferenced(propertyNameNode.getString());
       }
-    }
-
-    Var classVar = null;
-    if (classVarName != null && NodeUtil.isValidSimpleName(classVarName)) {
-      classVar = checkNotNull(scope.getVar(classVarName), classVarName);
-    }
-
-    if (classVar == null || !classVar.isGlobal()) {
-      // The call we are traversing does not modify a class definition,
-      // or the class is not specified with a simple variable name,
-      // or the variable name is not global.
-      // TODO(bradfordcsmith): It would be more correct to check whether the class name references
-      // a known constructor and expand to allow QNames.
       traverseChildren(callNode, scope);
     } else {
-      RemovableBuilder builder = new RemovableBuilder();
-      for (Node child = callNode.getFirstChild(); child != null; child = child.getNext()) {
-        builder.addContinuation(new Continuation(child, scope));
+      Node parent = callNode.getParent();
+      String classVarName = null;
+
+      // A call that is a statement unto itself or the left side of a comma expression might be
+      // a call to a known method for doing class setup
+      // e.g. $jscomp.inherits(Class, BaseClass) or goog.addSingletonGetter(Class)
+      // Such methods never have meaningful return values, so we won't look for them in other
+      // contexts
+      if (parent.isExprResult() || (parent.isComma() && parent.getFirstChild() == callNode)) {
+        SubclassRelationship subclassRelationship =
+            codingConvention.getClassesDefinedByCall(callNode);
+        if (subclassRelationship != null) {
+          // e.g. goog.inherits(DerivedClass, BaseClass);
+          // NOTE: DerivedClass and BaseClass must be QNames. Otherwise getClassesDefinedByCall()
+          // will return null.
+          classVarName = subclassRelationship.subclassName;
+        } else {
+          // Look for calls to addSingletonGetter calls.
+          classVarName = codingConvention.getSingletonGetterClassName(callNode);
+        }
       }
-      traverseVar(classVar).addRemovable(builder.buildClassSetupCall(callNode));
+
+      Var classVar = null;
+      if (classVarName != null && NodeUtil.isValidSimpleName(classVarName)) {
+        classVar = checkNotNull(scope.getVar(classVarName), classVarName);
+      }
+
+      if (classVar == null || !classVar.isGlobal()) {
+        // The call we are traversing does not modify a class definition,
+        // or the class is not specified with a simple variable name,
+        // or the variable name is not global.
+        // TODO(bradfordcsmith): It would be more correct to check whether the class name
+        // references a known constructor and expand to allow QNames.
+        traverseChildren(callNode, scope);
+      } else {
+        RemovableBuilder builder = new RemovableBuilder();
+        for (Node child = callNode.getFirstChild(); child != null; child = child.getNext()) {
+          builder.addContinuation(new Continuation(child, scope));
+        }
+        traverseVar(classVar).addRemovable(builder.buildClassSetupCall(callNode));
+      }
     }
   }
 
