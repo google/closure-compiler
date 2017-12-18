@@ -698,7 +698,7 @@ public final class SymbolTable {
    * because that would be redundant.
    */
   void fillNamespaceReferences() {
-    for (Symbol symbol : getAllSymbolsSorted()) {
+    for (Symbol symbol : getAllSymbols()) {
       String qName = symbol.getName();
       int rootIndex = qName.indexOf('.');
       if (rootIndex == -1) {
@@ -947,7 +947,7 @@ public final class SymbolTable {
     t.traverseRoots(externs, root);
 
     // Create references to parameters in the JSDoc.
-    for (Symbol sym : getAllSymbolsSorted()) {
+    for (Symbol sym : getAllSymbols()) {
       JSDocInfo info = sym.getJSDocInfo();
       if (info == null) {
         continue;
