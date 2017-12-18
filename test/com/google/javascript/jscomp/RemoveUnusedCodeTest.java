@@ -25,7 +25,18 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
 
   public RemoveUnusedCodeTest() {
     // Set up externs to be used in the test cases.
-    super("function alert() {} var externVar;");
+    super(
+        lines(
+            "var undefined;",
+            "var goog = {};",
+            "goog.reflect = {};",
+            "goog.reflect.object = function(obj, propertiesObj) {};",
+            "function goog$inherits(subClass, superClass) {}",
+            "function goog$mixin(dstPrototype, srcPrototype){}",
+            "function alert() {}",
+            "function use() {}",
+            "var externVar;",
+            "var window;"));
   }
 
   @Override
@@ -150,17 +161,15 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
     testSame("var a = {}; a.foo = function() { b.foo = 1; }; var b = {}; a.foo(); b.foo;");
   }
 
-  public void testUnknownVarDestructuredAssign() {
-    // TODO(bradfordcsmith): Require that vars actually be defined in externs instead of assuming
-    // unknowns are externs.
-    testSame("({a:x} = {a:1});");
-    testSame("({a:x = 1} = {});");
-    testSame("({['a']:x} = {a:1});");
-    testSame("({['a']:x = 1} = {});");
-    testSame("[x] = [1];");
-    testSame("[x = 1] = [];");
-    testSame("[, ...x] = [1];");
-    testSame("[, ...[x = 1]] = [1];");
+  public void testExternVarDestructuredAssign() {
+    testSame("({a:externVar} = {a:1});");
+    testSame("({a:externVar = 1} = {});");
+    testSame("({['a']:externVar} = {a:1});");
+    testSame("({['a']:externVar = 1} = {});");
+    testSame("[externVar] = [1];");
+    testSame("[externVar = 1] = [];");
+    testSame("[, ...externVar] = [1];");
+    testSame("[, ...[externVar = 1]] = [1];");
   }
 
   public void testRemoveVarDeclaration1() {
@@ -173,10 +182,9 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
 
   public void testRemoveUnusedVarsFn0() {
     // Test with function expressions in another function call
-    test("function A(){}" +
-            "if(0){function B(){}}win.setTimeout(function(){A()})",
-        "function A(){}" +
-            "if(0);win.setTimeout(function(){A()})");
+    test(
+        "function A(){} if(0){function B(){}} window.setTimeout(function(){A()})",
+        "function A(){} if(0);                window.setTimeout(function(){A()})");
   }
 
   public void testRemoveUnusedVarsFn1s() {
@@ -188,115 +196,155 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
 
   public void testRemoveUnusedVars1() {
     setAcceptedLanguage(CompilerOptions.LanguageMode.ECMASCRIPT_2015);
-    // Test lots of stuff
-    test("var a;var b=3;var c=function(){};var x=A();var y; var z;" +
-            "function A(){B()} function B(){C(b)} function C(){} " +
-            "function X(){Y()} function Y(z){Z(x)} function Z(){y} " +
-            "P=function(){A()}; " +
-            "try{0}catch(e){a}",
-
-        "var a;var b=3;A();function A(){B()}" +
-            "function B(){C(b)}" +
-            "function C(){}" +
-            "P=function(){A()}" +
-            ";try{0}catch(e){a}");
+    test(
+        lines(
+            "var a;",
+            "var b=3;",
+            "var c=function(){};",
+            "var x=A();",
+            "var y;",
+            "var z;",
+            "function A(){B()}",
+            "function B(){C(b)}",
+            "function C(){} ",
+            "function X(){Y()}",
+            "function Y(z){Z(x)}",
+            "function Z(){y} ",
+            "externVar = function(){A()}; ",
+            "try{0}catch(e){a}"),
+        lines(
+            "var a;",
+            "var b=3;",
+            "A();",
+            "function A(){B()}",
+            "function B(){C(b)}",
+            "function C(){}",
+            "externVar = function(){A()};",
+            "try{0}catch(e){a}"));
 
     // Test removal from if {} blocks
-    test("var i=0;var j=0;if(i>0){var k=1;}",
-        "var i=0;if(i>0);");
+    test(
+        "var i=0; var j=0; if(i>0){var k=1;}", // preserve alignment
+        "var i=0;          if(i>0);");
 
     // Test with for loop
-    test("for (var i in booyah) {" +
-            "  if (i > 0) x += ', ';" +
-            "  var arg = 'foo';" +
-            "  if (arg.length > 40) {" +
-            "    var unused = 'bar';" +   // this variable is unused
-            "    arg = arg.substr(0, 40) + '...';" +
-            "  }" +
-            "  x += arg;" +
+    test(
+        lines(
+            "var x = '';",
+            "for (var i in externVar) {",
+            "  if (i > 0) x += ', ';",
+            "  var arg = 'foo';",
+            "  if (arg.length > 40) {",
+            "    var unused = 'bar';",
+            "    arg = arg.substr(0, 40) + '...';",
+            "  }",
+            "  x += arg;",
             "}",
-
-        "for(var i in booyah){if(i>0)x+=\", \";" +
-            "var arg=\"foo\";if(arg.length>40)arg=arg.substr(0,40)+\"...\";" +
-            "x+=arg}");
+            "alert(x);"),
+        lines(
+            "var x = '';",
+            "for(var i in externVar) {",
+            "  if (i > 0) x += ', ';",
+            "  var arg = 'foo';",
+            "  if (arg.length > 40) arg = arg.substr(0,40) + '...';",
+            "  x += arg",
+            "}",
+            "alert(x);"));
 
     // Test with recursive functions
-    test("function A(){A()}function B(){B()}B()",
-        "function B(){B()}B()");
+    test(
+        "function A(){A()}function B(){B()}B()", // preserve alignment
+        "                 function B(){B()}B()");
 
     // Test with multiple var declarations.
-    test("var x,y=2,z=3;A(x);B(z);var a,b,c=4;C()",
-        "var x,z=3;A(x);B(z);C()");
+    test(
+        "var x,y=2,z=3; alert(x); alert(z); var a,b,c=4;", // preserve alignment
+        "var x,z=3;     alert(x); alert(z);");
 
     // Test with for loop declarations
-    test("for(var i=0,j=0;i<10;){}" +
-            "for(var x=0,y=0;;y++){}" +
-            "for(var a,b;;){a}" +
-            "for(var c,d;;);" +
-            "for(var item in items){}",
-
-        "for(var i=0;i<10;);" +
-            "for(var y=0;;y++);" +
-            "for(var a;;)a;" +
-            "for(;;);" +
-            "for(var item in items);");
+    test(
+        lines(
+            "for(var i=0,j=0;i<10;){}",
+            "for(var x=0,y=0;;y++){}",
+            "for(var a,b;;){a}",
+            "for(var c,d;;);",
+            "for(var item in externVar){}"),
+        lines(
+            "for(var i=0;i<10;);",
+            "for(var y=0;;y++);",
+            "for(var a;;)a;",
+            "for(;;);",
+            "for(var item in externVar);"));
 
     // Test multiple passes required
-    test("var a,b,c,d;var e=[b,c];var x=e[3];var f=[d];print(f[0])",
-        "var d;var f=[d];print(f[0])");
+    test(
+        "var a,b,c,d; var e=[b,c]; var x=e[3]; var f=[d]; alert(f[0])",
+        "var       d;                          var f=[d]; alert(f[0])");
 
     // Test proper scoping (static vs dynamic)
-    test("var x;function A(){var x;B()}function B(){print(x)}A()",
-        "var x;function A(){B()}function B(){print(x)}A()");
+    test(
+        "var x; function A() {var x; B()} function B(){ alert(x); } A();",
+        "var x; function A() {       B()} function B(){ alert(x); } A();");
 
     // Test closures in a return statement
-    testSame("function A(){var x;return function(){print(x)}}A()");
+    testSame("function A(){var x;return function(){alert(x)}}A()");
 
     // Test other closures, multiple passes
-    test("function A(){}function B(){" +
-            "var c,d,e,f,g,h;" +
-            "function C(){print(c)}" +
-            "var handler=function(){print(d)};" +
-            "var handler2=function(){handler()};" +
-            "e=function(){print(e)};" +
-            "if(1){function G(){print(g)}}" +
-            "arr=[function(){print(h)}];" +
-            "return function(){print(f)}}B()",
-
-        "function B(){" +
-            "var f,h;" +
-            "if(1);" +
-            "arr=[function(){print(h)}];" +
-            "return function(){print(f)}}B()");
+    test(
+        lines(
+            "function A(){}",
+            "function B() {",
+            "  var c,d,e,f,g,h;",
+            "  function C(){ alert(c) }",
+            "  var handler = function(){ alert(d) };",
+            "  var handler2 = function(){ handler() };",
+            "  e = function(){ alert(e) };",
+            "  if (1) { function G(){ alert(g) } }",
+            "  externVar = [function(){ alert(h) }];",
+            "  return function(){ alert(f) };",
+            "}",
+            "B()"),
+        lines(
+            "function B() {",
+            "  var f,h;",
+            "  if(1);",
+            "  externVar = [function(){ alert(h) }];",
+            "  return function(){ alert(f) }",
+            "}",
+            "B()"));
 
     // Test exported names
-    test("var a,b=1; function _A1() {this.foo(a)}",
-        "var a;function _A1(){this.foo(a)}");
+    test(
+        "var a,b=1; function _A1() {this.foo(a)}", // preserve alignment
+        "var a;     function _A1() {this.foo(a)}");
 
     // Test undefined (i.e. externally defined) names
-    test("undefinedVar = 1", "undefinedVar=1");
+    testSame("externVar = 1");
 
     // Test unused vars with side effects
-    test("var a,b=foo(),c=i++,d;var e=boo();var f;print(d);",
-        "foo(); i++; var d; boo(); print(d)");
+    test(
+        "var a, b = alert(), c = externVar++,     d; var e = alert(); var f; alert(d);",
+        "           alert();     externVar++; var d;         alert();        alert(d);");
 
-    test("var a,b=foo()", "foo()");
-    test("var b=foo(),a", "foo()");
-    test("var a,b=foo(a)", "var a; foo(a);");
+    test("var a, b = alert()", "alert()");
+    test("var b = alert(), a", "alert()");
+    test("var a, b = alert(a)", "var a; alert(a);");
   }
 
   public void testFunctionArgRemoval() {
     // remove all function arguments
-    test("var b=function(c,d){return};b(1,2)",
-        "var b=function(){return};b(1,2)");
+    test(
+        "var b=function(c,d){return};b(1,2)", // preserve alignment
+        "var b=function(   ){return};b(1,2)");
 
     // remove no function arguments
     testSame("var b=function(c,d){return c+d};b(1,2)");
     testSame("var b=function(e,f,c,d){return c+d};b(1,2)");
 
     // remove some function arguments
-    test("var b=function(c,d,e,f){return c+d};b(1,2)",
-        "var b=function(c,d){return c+d};b(1,2)");
+    test(
+        "var b=function(c,d,e,f){return c+d};b(1,2)", // preserve alignment
+        "var b=function(c,d    ){return c+d};b(1,2)");
     test("var b=function(e,c,f,d,g){return c+d};b(1,2)",
         "var b=function(e,c,f,d){return c+d};b(1,2)");
   }
@@ -309,7 +357,9 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
   public void testFunctionArgRemovalWithLeadingUnderscore() {
     // Coding convention usually prevents removal of variables beginning with a leading underscore,
     // but that makes no sense for parameter names.
-    test("function f(__$jscomp$1) {__$jscomp$1 = 1;} f();", "function f() {} f();");
+    test(
+        "function f(__$jscomp$1) {__$jscomp$1 = 1;} f();", // preserve alignment
+        "function f(           ) {                } f();");
   }
 
   public void testComputedPropertyDestructuring() {
@@ -317,27 +367,31 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
     testSame("var {['a']:a, ['b']:b} = {a:1, b:2}; a; b;");
 
     test(
-        "var {['a']:a, ['b']:b} = {a:1, b:2};",
-        "var {} = {a:1, b:2};");
+        "var {['a']:a, ['b']:b} = {a:1, b:2};", // preserve alignment
+        "var {                } = {a:1, b:2};");
 
-    testSame("var {[foo()]:a, [bar()]:b} = {a:1, b:2};");
+    testSame("var {[alert()]:a, [alert()]:b} = {a:1, b:2};");
 
     testSame("var a = {['foo' + 1]:1, ['foo' + 2]:2}; alert(a.foo1);");
   }
 
   public void testFunctionArgRemoval_defaultValue1() {
     test(
-        "function f(unusedParam = undefined) {}; f();",
+        "function f(unusedParam = undefined) {}; f();", // preserve alignment
         "function f(                       ) {}; f();");
   }
 
   public void testFunctionArgRemoval_defaultValue2() {
-    test("function f(unusedParam = 0) {}; f();", "function f(               ) {}; f();");
+    test(
+        "function f(unusedParam = 0) {}; f();", // preserve alignment
+        "function f(               ) {}; f();");
   }
 
   public void testFunctionArgRemoval_defaultValue3() {
     // Parameters already encountered can be used by later parameters
-    test("function f(x, y = x + 0) {}; f();", "function f(            ) {}; f();");
+    test(
+        "function f(x, y = x + 0) {}; f();", // preserve alignment
+        "function f(            ) {}; f();");
   }
 
   public void testFunctionArgRemoval_defaultValue4() {
@@ -349,7 +403,9 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
 
   public void testFunctionArgRemoval_defaultValue5() {
     // Default value inside arrow function param list
-    test("var f = (unusedParam = 0) => {}; f();", "var f = () => {}; f();");
+    test(
+        "var f = (unusedParam = 0) => {}; f();", // preserve alignment
+        "var f = (               ) => {}; f();");
 
     testSame("var f = (usedParam = 0) => { usedParam; }; f();");
 
@@ -365,74 +421,94 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
 
   public void testFunctionArgRemoval_defaultValue7() {
     // Parameters already encountered can be used by later parameters
-    test("var x = 2; function f(y = x) {}; f();", "function f() {}; f();");
+    test(
+        "var x = 2; function f(y = x) {}; f();", // preserve alignment
+        "           function f(     ) {}; f();");
   }
 
   public void testDestructuringParams() {
     // Default value not used
     test(
         "function f({a:{b:b}} = {a:{}}) { /** b is unused */ }; f();",
-        "function f({a:{}} = {a:{}}) {/** b is unused */}; f();");
+        "function f({a:{   }} = {a:{}}) { /** b is unused */ }; f();");
 
     // Default value with nested value used in default value assignment
     test(
         "function f({a:{b:b}} = {a:{b:1}}) { /** b is unused */ }; f();",
-        "function f({a:{}} = {a:{b:1}}) {/** b is unused */}; f();");
+        "function f({a:{   }} = {a:{b:1}}) { /** b is unused */ }; f();");
 
     // Default value with nested value used in function body
     testSame("function f({a:{b:b}} = {a:{b:1}}) { b; }; f();");
 
     test(
-        "function f({a:{b:b}} = {a:{b:1}}) { a.b; }; f();",
-        "function f({a:{}} = {a:{b:1}}) { a.b; }; f();");
+        "function f({a:{b:b}} = {a:{b:1}}) {}; f();", // preserve alignment
+        "function f({a:{   }} = {a:{b:1}}) {}; f();");
 
-    test("function f({a:{b:b}} = {a:{}}) { a; }; f();", "function f({a:{}} = {a:{}}) { a; }; f();");
+    test(
+        "function f({a:{b:b}} = {a:{}}) {}; f();", // preserve alignment
+        "function f({a:{   }} = {a:{}}) {}; f();");
 
     // Destructuring pattern not default and parameter not used
     test(
-        "function f({a:{b:b}}) { /** b is unused */ }; f({c:{d:d}});",
-        "function f({a:{}}) { /** b is unused */ }; f({c:{d:d}});");
+        "function f({a:{b:b}}) { /** b is unused */ }; f({c:{d:1}});",
+        "function f({a:{   }}) { /** b is unused */ }; f({c:{d:1}});");
 
     // Destructuring pattern not default and parameter used
-    testSame("function f({a:{b:b}}) { b; }; f({c:{d:d}});");
+    testSame("function f({a:{b:b}}) { b; }; f({c:{d:1}});");
   }
 
   public void testMixedParamTypes() {
     // Traditional and destructuring pattern
-    test("function f({a:{b:b}}, c, d) { c; }; f();", "function f({a:{}}, c) { c; }; f();");
+    test(
+        "function f({a:{b:b}}, c, d) { c; }; f();", // preserve alignment
+        "function f({a:{   }}, c   ) { c; }; f();");
 
-    test("function f({a:{b:b = 5}}, c, d) { c; }; f();", "function f({a:{}}, c) { c; }; f()");
+    test(
+        "function f({a:{b:b = 5}}, c, d) { c; }; f();", // preserve alignment
+        "function f({a:{       }}, c   ) { c; }; f()");
 
     testSame("function f({}, c, {d:{e:e}}) { c; e; }; f();");
 
     // Parent is the parameter list
-    test("function f({a}, b, {c}) {use(a)}; f({}, {});", "function f({a}) {use(a)}; f({}, {});");
+    test(
+        "function f({a}, b, {c}) {use(a)}; f({}, {});", // preserve alignment
+        "function f({a}        ) {use(a)}; f({}, {});");
 
     // Default and traditional
     test(
         "function f(unusedParam = undefined, z) { z; }; f();",
-        "function f(unusedParam, z) { z; }; f();");
+        "function f(unusedParam, z            ) { z; }; f();");
   }
 
   public void testDefaultParams() {
-    test("function f(x = undefined) {}; f();", "function f() {}; f();");
-    test("function f(x = 0) {}; f();", "function f() {}; f();");
+    test(
+        "function f(x = undefined) {}; f();", // preserve alignment
+        "function f(             ) {}; f();");
+    test(
+        "function f(x = 0) {}; f();", // preserve alignment
+        "function f(     ) {}; f();");
     testSame("function f(x = 0, y = x) { alert(y); }; f();");
   }
 
   public void testDefaultParamsInClass() {
     test(
         "class Foo { constructor(value = undefined) {} }; new Foo;",
-        "class Foo { constructor() {} }; new Foo;");
+        "class Foo { constructor(                 ) {} }; new Foo;");
 
     testSame("class Foo { constructor(value = undefined) { value; } }; new Foo;");
     testSame(
-        "class Foo extends Bar { constructor(value = undefined) { super(); value; } }; new Foo;");
+        lines(
+            "class Bar {}",
+            "class Foo extends Bar {",
+            "  constructor(value = undefined) { super(); value; }",
+            "}",
+            "new Foo;"));
   }
 
   public void testDefaultParamsInClassThatReferencesArguments() {
     testSame(
         lines(
+            "class Bar {}",
             "class Foo extends Bar {",
             "  constructor(value = undefined) {",
             "    super();",
@@ -445,22 +521,22 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
 
   public void testDefaultParamsWithoutSideEffects0() {
     test(
-        "function f({} = {}){}; f()",
-        "function f(){}; f()");
+        "function f({} = {}){}; f()", // preserve alignment
+        "function f(       ){}; f()");
   }
 
   public void testDefaultParamsWithoutSideEffects1() {
     test(
-        "function f(a = 1) {}; f();",
-        "function f() {}; f();");
+        "function f(a = 1) {}; f();", // preserve alignment
+        "function f(     ) {}; f();");
 
     test(
-        "function f({a:b = 1} = 1){}; f();",
-        "function f(){}; f();");
+        "function f({a:b = 1} = 1){}; f();", // preserve alignment
+        "function f(             ){}; f();");
 
     test(
-        "function f({a:b} = {}){}; f();",
-        "function f(){}; f();");
+        "function f({a:b} = {}){}; f();", // preserve alignment
+        "function f(          ){}; f();");
   }
 
   public void testDefaultParamsWithSideEffects1() {
@@ -468,42 +544,60 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
 
     testSame("function f({} = alert('foo')){}; f()");
 
-    test("function f(){var x; var {a:b} = x()}; f();", "function f(){var x; var {} = x()}; f();");
+    test(
+        "function f(){var x; var {a:b} = x()}; f();", // preserve alignment
+        "function f(){var x; var {   } = x()}; f();");
 
     test(
         "function f(){var {a:b} = alert('foo')}; f();",
         "function f(){var {} = alert('foo')}; f();");
-    test("function f({a:b} = alert('foo')){}; f();", "function f({} = alert('foo')){}; f();");
+    test(
+        "function f({a:b} = alert('foo')){}; f();", // preserve alignment
+        "function f({   } = alert('foo')){}; f();");
 
     testSame("function f({a:b = alert('bar')} = alert('foo')){}; f();");
   }
 
   public void testDefaultParamsWithSideEffects2() {
-    test("function f({a:b} = alert('foo')){}; f();", "function f({} = alert('foo')){}; f();");
+    test(
+        "function f({a:b} = alert('foo')){}; f();", // preserve alignment
+        "function f({   } = alert('foo')){}; f();");
   }
 
   public void testArrayDestructuringParams() {
     // Default values in array pattern unused
-    test("function f([x,y] = [1,2]) {}; f();", "function f() {}; f();");
+    test(
+        "function f([x,y] = [1,2]) {}; f();", // preserve alignment
+        "function f(             ) {}; f();");
 
-    test("function f([x,y] = [1,2], z) { z; }; f();", "function f([] = [1,2], z) { z; }; f();");
+    test(
+        "function f([x,y] = [1,2], z) { z; }; f();", // preserve alignment
+        "function f([   ] = [1,2], z) { z; }; f();");
 
     // Default values in array pattern used
-    test("function f([x,y,z] =[1,2,3]) { y; }; f();", "function f([,y] = [1,2,3]) { y; }; f();");
+    test(
+        "function f([x,y,z] = [1,2,3]) { y; }; f();", // preserve alignment
+        "function f([ ,y  ] = [1,2,3]) { y; }; f();");
 
     // Side effects
-    test("function f([x] = [foo()]) {}; f();", "function f([] = [foo()]) {}; f();");
+    test(
+        "function f([x] = [alert()]) {}; f();", // preserve alignment
+        "function f([ ] = [alert()]) {}; f();");
   }
 
   public void testRestPattern() {
-    test("var x; [...x] = y;", "[] = y");
-    test("var [...x] = y;", "var [] = y");
-    testSame("var x; [...x] = y; use(x);");
-    testSame("var [...x] = y; use(x);");
-    testSame("var x; [...x.y] = z;");
-    testSame("var x; [...x['y']] = z;");
-    testSame("var x; [...x().y] = z;");
-    testSame("var x; [...x()['y']] = z;");
+    test(
+        "var x; [...x] = externVar;", // preserve alignment
+        "       [    ] = externVar;");
+    test(
+        "var [...x] = externVar;", // preserve alignment
+        "var [    ] = externVar;");
+    testSame("var x; [...x] = externVar; use(x);");
+    testSame("var [...x] = externVar; use(x);");
+    testSame("var x; [...x.y] = externVar;");
+    testSame("var x; [...x['y']] = externVar;");
+    testSame("var x; [...x().y] = externVar;");
+    testSame("var x; [...x()['y']] = externVar;");
   }
 
   public void testRestParams() {
@@ -523,16 +617,16 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
 
     test(
         " function foo([...rest]) {/**rest unused*/}; foo();",
-        " function foo() {/**rest unused*/}; foo();");
+        " function foo(         ) {/**rest unused*/}; foo();");
 
     test(
-        " function foo([x, ...rest]) { x; }; foo();",
-        " function foo([x]) { x; }; foo();");
+        "function foo([x, ...rest]) { x; }; foo();", // preserve alignment
+        "function foo([x         ]) { x; }; foo();");
   }
 
   public void testFunctionsDeadButEscaped() {
-    testSame("function b(a) { a = 1; print(arguments[0]) }; b(6)");
-    testSame("function b(a) { var c = 2; a = c; print(arguments[0]) }; b(6)");
+    testSame("function b(a) { a = 1; alert(arguments[0]) }; b(6)");
+    testSame("function b(a) { var c = 2; a = c; alert(arguments[0]) }; b(6)");
   }
 
   public void testVarInControlStructure() {
@@ -546,8 +640,8 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
   }
 
   public void testRValueHoisting() {
-    test("var x = foo();", "foo()");
-    test("var x = {a: foo()};", "({a:foo()})");
+    test("var x = alert();", "alert()");
+    test("var x = {a: alert()};", "({a:alert()})");
 
     test("var x=function y(){}", "");
   }
@@ -568,24 +662,25 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
   }
 
   public void testRecursiveFunction2() {
-    test("var x = 3; (function x() { return x(); })();",
-        "(function x$jscomp$1(){return x$jscomp$1()})()");
+    test(
+        "var x = 3; (function          x() { return          x(); })();",
+        "           (function x$jscomp$1() { return x$jscomp$1(); })()");
   }
 
   public void testFunctionWithName1() {
-    test("var x=function f(){};x()",
-        "var x=function(){};x()");
+    test(
+        "var x=function f(){};x()", // preserve alignment
+        "var x=function  (){};x()");
 
     preserveFunctionExpressionNames = true;
     testSame("var x=function f(){};x()");
   }
 
   public void testFunctionWithName2() {
-    test("foo(function bar(){})",
-        "foo(function(){})");
+    test("alert(function bar(){})", "alert(function(){})");
 
     preserveFunctionExpressionNames = true;
-    testSame("foo(function bar(){})");
+    testSame("alert(function bar(){})");
   }
 
   public void testRemoveGlobal1() {
@@ -603,15 +698,17 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
   public void testRemoveGlobal3() {
     removeGlobal = false;
     testSame("var x=1");
-    test("function x(){function y(x){var z;}y()}",
-        "function x(){function y(x){}y()}");
+    test(
+        "function x(){function y(x){var z;}y()}", // preserve alignment
+        "function x(){function y(x){      }y()}");
   }
 
   public void testRemoveGlobal4() {
     removeGlobal = false;
     testSame("var x=1");
-    test("function x(){function y(x){var z;}}",
-        "function x(){}");
+    test(
+        "function x(){function y(x){var z;}}", // preserve alignment
+        "function x(){                     }");
   }
 
   public void testIssue168a() {
@@ -736,8 +833,7 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
   }
 
   public void testUnusedPropAssign5() {
-    test("var x = {foo: bar()}; x['foo'] = 5;",
-        "var x={foo:bar()};x[\"foo\"]=5");
+    testSame("var x = {foo: alert()}; x['foo'] = 5;");
   }
 
   public void testUnusedPropAssign6() {
@@ -766,25 +862,24 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
   }
 
   public void testUsedPropAssign2() {
-    testSame("try { throw z; } catch (e) { e.bar = 3; }");
+    testSame("try { throw {}; } catch (e) { e.bar = 3; }");
   }
 
   public void testUsedPropAssign3() {
     // This pass does not do flow analysis.
-    testSame("var x = {}; x.foo = 3; x = bar();");
+    testSame("var x = {}; x.foo = 3; x = alert();");
   }
 
   public void testUsedPropAssign4() {
-    testSame("var y = foo(); var x = {}; x.foo = 3; y[x.foo] = 5;");
+    testSame("var y = alert(); var x = {}; x.foo = 3; y[x.foo] = 5;");
   }
 
   public void testUsedPropAssign5() {
-    testSame("var y = foo(); var x = 3; y[x] = 5;");
+    testSame("var y = alert(); var x = 3; y[x] = 5;");
   }
 
   public void testUsedPropAssign6() {
-    test("var x = newNodeInDom(doc); x.innerHTML = 'new text';",
-        "var x=newNodeInDom(doc);x.innerHTML=\"new text\"");
+    testSame("var x = alert(externVar); x.innerHTML = 'new text';");
   }
 
   public void testUsedPropAssign7() {
@@ -796,12 +891,11 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
   }
 
   public void testUsedPropAssign9() {
-    testSame(
-        "var x = {}; x.foo = newNodeInDom(doc); x.foo.innerHTML = 'new test';");
+    testSame("var x = {}; x.foo = alert(externVar); x.foo.innerHTML = 'new test';");
   }
 
   public void testUsedPropNotAssign() {
-    testSame("function f(x) { x.a; }; f(y);");
+    testSame("function f(x) { x.a; }; f(externVar);");
   }
 
   public void testDependencies1() {
@@ -866,11 +960,11 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
         "var b=function(c){return};b(1)",
         "var b=function(){return};b(1)");
     test(
-        "var b=function(c){};b.call(null, x)",
-        "var b=function( ){};b.call(null, x)");
+        "var b=function(c){};b.call(null, externVar)",
+        "var b=function( ){};b.call(null, externVar)");
     test(
-        "var b=function(c){};b.apply(null, x)",
-        "var b=function( ){};b.apply(null, x)");
+        "var b=function(c){};b.apply(null, externVar)",
+        "var b=function( ){};b.apply(null, externVar)");
 
     // Recursive calls
     testSame(
@@ -937,7 +1031,6 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
   public void testRemoveInheritedClass1() {
     test(
         lines(
-            "function goog$inherits() {}",
             "/**@constructor*/ function a() {}",
             "/**@constructor*/ function b() {}",
             "goog$inherits(b, a);",
@@ -946,13 +1039,12 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
   }
 
   public void testRemoveInheritedClass2() {
-    test("function goog$inherits(){}" +
-            "function goog$mixin(){}" +
-            "/**@constructor*/function a(){}" +
-            "/**@constructor*/function b(){}" +
-            "/**@constructor*/function c(){}" +
-            "goog$inherits(b,a);" +
-            "goog$mixin(c.prototype,b.prototype);",
+    test(
+        lines(
+            "/**@constructor*/function a(){}",
+            "/**@constructor*/function b(){}",
+            "/**@constructor*/function c(){}",
+            "goog$inherits(b,a);"),
         "");
   }
 
@@ -990,7 +1082,6 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
   public void testRemoveInheritedClass6() {
     test(
         lines(
-            "function goog$mixin(){}",
             "/** @constructor*/ function a(){}",
             "/** @constructor*/ function b(){}",
             "/** @constructor*/ function c(){}",
@@ -999,7 +1090,6 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
             "goog$mixin(c.prototype,a.prototype); new c;",
             "goog$mixin(d.prototype,a.prototype)"),
         lines(
-            "function goog$mixin(){}",
             "/** @constructor*/ function a(){}",
             "/** @constructor*/ function c(){}",
             "goog$mixin(c.prototype,a.prototype); new c"));
@@ -1008,12 +1098,10 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
   public void testRemoveInheritedClass7() {
     test(
         lines(
-            "function goog$mixin(){}",
             "/**@constructor*/function a(){alert(goog$mixin(a, a))}",
             "/**@constructor*/function b(){}",
             "goog$mixin(b.prototype,a.prototype); new a"),
         lines(
-            "function goog$mixin(){}",
             "/**@constructor*/function a(){alert(goog$mixin(a, a))} new a"));
   }
 
@@ -1041,18 +1129,21 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
   }
 
   public void testRemoveInheritedClass10() {
-    testSame("function goog$inherits(){}" +
-        "function goog$mixin(a,b){goog$inherits(a,b)}" +
-        "/**@constructor*/function a(){}" +
-        "/**@constructor*/function b(){}" +
-        "goog$mixin(b.prototype,a.prototype);new b");
+    testSame(
+        lines(
+            "/**@constructor*/function a(){}",
+            "/**@constructor*/function b(){}",
+            "goog$mixin(b.prototype,a.prototype);",
+            "new b"));
   }
 
   public void testRemoveInheritedClass11() {
-    testSame("function goog$inherits(){}" +
-        "/**@constructor*/function a(){}" +
-        "var b = {};" +
-        "goog$inherits(b.foo, a)");
+    testSame(
+        lines(
+            "/**@constructor*/function a(){}",
+            "var b = {};",
+            // goog$inherits not treated specially when derived class is a property
+            "goog$inherits(b.foo, a)"));
   }
 
   public void testRemoveInheritedClass12() {
@@ -1061,7 +1152,6 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
     // It also simplifies removal logic.
     testSame(
         lines(
-            "function goog$inherits(){}",
             "function a(){}",
             "function b(){}",
             "goog$inherits(b, a) + 1;"));
@@ -1071,7 +1161,6 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
     // remove this case.
     test(
         lines(
-            "function goog$inherits(){}",
             "function a(){}",
             "function b(){}",
             "(goog$inherits(b, a), 1);"),
@@ -1101,10 +1190,7 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
 
   public void testIssue618_2() {
     this.removeGlobal = false;
-    testSame(
-        "var b;\n" +
-            "a.push(b = []);\n" +
-            "b[0] = 1;\n");
+    testSame("var b; externVar.push(b = []); b[0] = 1;");
   }
 
   public void testBug38457201() {
@@ -1122,9 +1208,9 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
 
     test("{const x = 1;}", "{}");
 
-    testSame("{const x =1; f(x)}");
+    testSame("{const x =1; alert(x)}");
 
-    testSame("{let x; f(x)}");
+    testSame("{let x; alert(x)}");
 
     test("let x = 1;", "");
 
@@ -1132,99 +1218,102 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
 
     test(
         lines(
-            " let x;",
-            "  { let x;}",
-            " f(x);"
-        ),
-        lines(
             "let x;",
-            "{}",
-            "f(x);"
-        )
-    );
+            "{ let x; }", // unused in block
+            "alert(x);" // keeps outer x alive
+            ),
+        lines(
+            "let x;", // outer x kept
+            "{}", // inner x removed
+            "alert(x);"));
 
     testSame(
         lines(
-            " var x;",
-            "  { var y = 1; ",
-            "    f(y);}",
-            "f(x);"
-        )
-    );
+            "var x;",
+            "{",
+            "  var y = 1;",
+            "  alert(y);", // keeps y alive
+            "}",
+            "alert(x);" // keeps x alive
+            ));
 
     testSame(
         lines(
-            " let x;",
-            "  { let x = 1; ",
-            "    f(x);}",
-            "f(x);"
-        )
-    );
+            "let x;",
+            "{",
+            "  let x = 1;",
+            "  alert(x);", // keeps inner x alive
+            "}",
+            "alert(x);" // keeps outer x alive
+            ));
 
     test(
         lines(
-            " let x;",
-            "  { let x;}",
-            " let y;",
-            " f(x);"
-        ),
-        lines(
             "let x;",
+            "{ let x; }", // inner x unused
+            "let y;", // outer y unused
+            "alert(x);"),
+        lines(
+            "let x;", // only outer x was used
             "{}",
-            "f(x);"
-        )
-    );
-
-    test(
-        lines(
-            " let x;",
-            "  { let g;",
-            "     {const y = 1; f(y);}",
-            "  }",
-            " let z;",
-            " f(x);"
-        ),
-        lines(
-            "let x;",
-            "{{const y = 1; f(y);}}",
-            "f(x);"
-        )
-    );
-
-    test(
-        lines(
-            " let x;",
-            "  { let x = 1; ",
-            "    {let y;}",
-            "    f(x);",
-            "  }",
-            "f(x);"
-        ),
-        lines(
-            " let x;",
-            "  { let x = 1; ",
-            "    {}",
-            "    f(x);",
-            "  }",
-            "f(x);"
-        )
-    );
+            "alert(x);"));
 
     test(
         lines(
             "let x;",
+            "{",
+            "  let g;",
             "  {",
-            "    let x;",
-            "    f(x);",
-            "  }"
-        ),
+            "    const y = 1;",
+            "    alert(y);", // keeps y alive
+            "  }",
+            "}",
+            "let z;",
+            "alert(x);" // keeps x alive
+            ),
+        lines(
+            "let x;", // z removed
+            "{",
+            "  {", // g removed
+            "    const y = 1;",
+            "    alert(y);",
+            "  }",
+            "}",
+            "alert(x);"));
+
+    test(
+        lines(
+            "let x;",
+            "{",
+            "  let x = 1; ",
+            "  {",
+            "    let y;",
+            "  }",
+            "  alert(x);", // keeps inner x alive
+            "}",
+            "alert(x);" // keeps outer x alive
+            ),
+        lines(
+            "let x;", // outer x kept
+            "{",
+            "  let x = 1; ", // inner x kept
+            "  {}", // y removed
+            "  alert(x);",
+            "}",
+            "alert(x);"));
+
+    test(
+        lines(
+            "let x;",
+            "{",
+            "  let x;",
+            "  alert(x);", // keeps inner x alive
+            "}"),
         lines(
             "{",
-            "  let x$jscomp$1;",
-            "  f(x$jscomp$1);",
-            "}"
-        )
-    );
+            "  let x$jscomp$1;", // inner x was renamed
+            "  alert(x$jscomp$1);",
+            "}"));
   }
 
   public void testArrowFunctions() {
@@ -1251,7 +1340,7 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
 
     test("(x) => {}", "() => {};");
 
-    testSame("(x) => {f(x)}");
+    testSame("(x) => {alert(x)}");
 
     testSame("(x) => {x + 1}");
   }
@@ -1272,43 +1361,35 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
             "class C{",
             "  g() {",
             "    var x;",
-            "    f(x);",
+            "    alert(x);", // use in alert prevents removal of x
             "  }",
             "}",
-            "new C"
-        )
-    );
+            "new C"));
 
     testSame(
         lines(
             "class C{",
             "  g() {",
-            "    let x;",
-            "    f(x);",
+            "    let x;", // same as above but with 'let'
+            "    alert(x);",
             "  }",
             "}",
-            "new C"
-        )
-    );
+            "new C"));
 
     test(
         lines(
             "class C {",
             "  g() {",
-            "    let x;",
+            "    let x;", // unused x
             "  }",
             "}",
-            "new C"
-        )
-        ,
+            "new C"),
         lines(
             "class C {",
-            "  g() {",
+            "  g() {", // x is removed
             "  }",
             "}",
-            "new C"
-        )
-    );
+            "new C"));
   }
 
   public void testReferencesInClasses() {
@@ -1376,44 +1457,39 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
   }
 
   public void testForInLet() {
-    testSame("let item; for(item in items){}");
-    testSame("for(let item in items){}");
+    testSame("let item; for(item in externVar){}");
+    testSame("for(let item in externVar){}");
   }
 
   public void testForOf() {
-    testSame("let item; for(item of items){}");
+    testSame("let item; for(item of externVar){}");
 
-    testSame("for(var item of items){}");
+    testSame("for(var item of externVar){}");
 
-    testSame("for(let item of items){}");
+    testSame("for(let item of externVar){}");
 
     testSame(
         lines(
             "var x;",
-            "for (var n of i) {",
-            "  if (x > n) {};",
-            "}"
-        )
-    );
+            "for (var n of externVar) {",
+            "  if (x > n) {};", // keeps x alive
+            "}"));
 
     test(
         lines(
-            "var x;",
-            "for (var n of i) {",
+            "var x;", // no references to this
+            "for (var n of externVar) {",
             "  if (n) {};",
-            "}"
-        ),
+            "}"),
         lines(
-            "for (var n of i) {",
+            "for (var n of externVar) {", // x removed
             "  if (n) {};",
-            "}"
-        )
-    );
+            "}"));
   }
 
   public void testEnhancedForWithExternVar() {
-    testSame("for(externVar in items){}");
-    testSame("for(externVar of items){}");
+    testSame("for(externVar in externVar){}");
+    testSame("for(externVar of externVar){}");
   }
 
   public void testExternVarNotRemovable() {
@@ -1439,17 +1515,17 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
 
     test("function f(a) {} f();", "function f() {} f();");
     test("function f([a] = 1) {} f();", "function f() {} f();");
-    test("function f([a] = g()) {} f();", "function f([] = g()) {} f();");
+    test("function f([a] = alert()) {} f();", "function f([] = alert()) {} f();");
 
     test("function f(a = 1) {} f();", "function f() {} f();");
     test("function f([a = 1]) {} f();", "function f() {} f();");
     test("function f(...[a = 1]) {} f();", "function f() {} f();");
     test("function f(...{length:a = 1}) {} f();", "function f() {} f();");
 
-    testSame("function f(a = g()) {} f();");
-    testSame("function f([a = g()]) {} f();");
-    testSame("function f(...[a = g()]) {} f();");
-    testSame("function f(...{length:a = g()}) {} f();");
+    testSame("function f(a = alert()) {} f();");
+    testSame("function f([a = alert()]) {} f();");
+    testSame("function f(...[a = alert()]) {} f();");
+    testSame("function f(...{length:a = alert()}) {} f();");
 
     test("function f([a] = []) {} f();", "function f() {} f();");
     test("function f([a]) {} f();", "function f() {} f();");
@@ -1525,7 +1601,7 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
         lines(
             "[] = [1]"));
 
-    testSame("var [a, b] = [1, 2]; f(a); f(b);");
+    testSame("var [a, b] = [1, 2]; alert(a); alert(b);");
   }
 
   public void testDestructuringObjectPattern0() {
@@ -1533,81 +1609,85 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
     test("function f({a:b}) {} f();", "function f() {} f();");
     test("function f({[a]:b}) {} f();", "function f() {} f();");
     test("function f({['a']:b}) {} f();", "function f() {} f();");
-    testSame("function f({[a()]:b}) {} f();");
+    testSame("function f({[alert()]:b}) {} f();");
     test("function f({a} = {}) {} f();", "function f() {} f();");
     test("function f({a:b} = {}) {} f();", "function f() {} f();");
-    testSame("function f({[a()]:b} = {}) {} f();");
-    test("function f({a} = g()) {} f();", "function f({} = g()) {} f();");
-    test("function f({a:b} = g()) {} f();", "function f({} = g()) {} f();");
-    testSame("function f({[a()]:b} = g()) {} f();");
+    testSame("function f({[alert()]:b} = {}) {} f();");
+    test("function f({a} = alert()) {} f();", "function f({} = alert()) {} f();");
+    test("function f({a:b} = alert()) {} f();", "function f({} = alert()) {} f();");
+    testSame("function f({[alert()]:b} = alert()) {} f();");
     test("function f({a = 1}) {} f();", "function f() {} f();");
     test("function f({a:b = 1}) {} f();", "function f() {} f();");
     test("function f({[a]:b = 1}) {} f();", "function f() {} f();");
     test("function f({['a']:b = 1}) {} f();", "function f() {} f();");
-    testSame("function f({[a()]:b = 1}) {} f();");  // fix me, remove "= 1"
+    testSame("function f({[alert()]:b = 1}) {} f();"); // fix me, remove "= 1"
     test("function f({a = 1}) {} f();", "function f() {} f();");
-    testSame("function f({a:b = g()}) {} f();");
-    testSame("function f({[a]:b = g()}) {} f();");
-    testSame("function f({['a']:b = g()}) {} f();");
-    testSame("function f({[a()]:b = g()}) {} f();");
+    testSame("function f({a:b = alert()}) {} f();");
+    testSame("function f({[externVar]:b = alert()}) {} f();");
+    testSame("function f({['a']:b = alert()}) {} f();");
+    testSame("function f({[alert()]:b = alert()}) {} f();");
 
     test("function f({a}, c) {use(c)} f();", "function f({}, c) {use(c)} f();");
     test("function f({a:b}, c) {use(c)} f();", "function f({}, c) {use(c)} f();");
-    test("function f({[a]:b}, c) {use(c)} f();", "function f({}, c) {use(c)} f();");
+    test("function f({[externVar]:b}, c) {use(c)} f();", "function f({}, c) {use(c)} f();");
     test("function f({['a']:b}, c) {use(c)} f();", "function f({}, c) {use(c)} f();");
-    testSame("function f({[a()]:b}, c) {use(c)} f();");
+    testSame("function f({[use()]:b}, c) {use(c)} f();");
     test("function f({a} = {}, c) {use(c)} f();", "function f({} = {}, c) {use(c)} f();");
     test("function f({a:b} = {}, c) {use(c)} f();", "function f({} = {}, c) {use(c)} f();");
-    testSame("function f({[a()]:b} = {}, c) {use(c)} f();");
-    test("function f({a} = g(), c) {use(c)} f();", "function f({} = g(), c) {use(c)} f();");
-    test("function f({a:b} = g(), c) {use(c)} f();", "function f({} = g(), c) {use(c)} f();");
-    testSame("function f({[a()]:b} = g(), c) {use(c)} f();");
+    testSame("function f({[use()]:b} = {}, c) {use(c)} f();");
+    test(
+        "function f({a} = use(), c) {use(c)} f();", // preserve alignment
+        "function f({ } = use(), c) {use(c)} f();");
+    test(
+        "function f({a:b} = use(), c) {use(c)} f();", // preserve alignment
+        "function f({   } = use(), c) {use(c)} f();");
+    testSame("function f({[use()]:b} = use(), c) {use(c)} f();");
     test("function f({a = 1}, c) {use(c)} f();", "function f({}, c) {use(c)} f();");
     test("function f({a:b = 1}, c) {use(c)} f();", "function f({}, c) {use(c)} f();");
     test("function f({[a]:b = 1}, c) {use(c)} f();", "function f({}, c) {use(c)} f();");
     test("function f({['a']:b = 1}, c) {use(c)} f();", "function f({}, c) {use(c)} f();");
-    testSame("function f({[a()]:b = 1}, c) {use(c)} f();");  // fix me, remove "= 1"
+    testSame("function f({[use()]:b = 1}, c) {use(c)} f();"); // fix me, remove "= 1"
 
     test("var {a} = {a:1};", "var {} = {a:1};");
     test("var {a:a} = {a:1};", "var {} = {a:1};");
     test("var {['a']:a} = {a:1};", "var {} = {a:1};");
     test("var {['a']:a = 1} = {a:1};", "var {} = {a:1};");
-    testSame("var {[f()]:a = 1} = {a:1};");
+    testSame("var {[alert()]:a = 1} = {a:1};");
     test("var {a:a = 1} = {a:1};", "var {} = {a:1};");
-    testSame("var {a:a = f()} = {a:1};");
+    testSame("var {a:a = alert()} = {a:1};");
 
     test("var a; ({a} = {a:1});", "({} = {a:1});");
     test("var a; ({a:a} = {a:1});", "({} = {a:1});");
     test("var a; ({['a']:a} = {a:1});", "({} = {a:1});");
     test("var a; ({['a']:a = 1} = {a:1});", "({} = {a:1});");
-    testSame("var a; ({[f()]:a = 1} = {a:1});");
+    testSame("var a; ({[alert()]:a = 1} = {a:1});");
     test("var a; ({a:a = 1} = {a:1});", "({} = {a:1});");
-    testSame("var a; ({a:a = f()} = {a:1});");
+    testSame("var a; ({a:a = alert()} = {a:1});");
 
     testSame("var a = {}; ({a:a.foo} = {a:1});");
     testSame("var a = {}; ({['a']:a.foo} = {a:1});");
     testSame("var a = {}; ({['a']:a.foo = 1} = {a:1});");
-    testSame("var a = {}; ({[f()]:a.foo = 1} = {a:1});");
+    testSame("var a = {}; ({[alert()]:a.foo = 1} = {a:1});");
     testSame("var a = {}; ({a:a.foo = 1} = {a:1});");
-    testSame("var a = {}; ({a:a.foo = f()} = {a:1});");
+    testSame("var a = {}; ({a:a.foo = alert()} = {a:1});");
 
-    testSame("var a = {}; ({a:a().foo} = {a:1});");
-    testSame("var a = {}; ({['a']:a().foo} = {a:1});");
-    testSame("var a = {}; ({['a']:a().foo = 1} = {a:1});");
-    testSame("var a = {}; ({[f()]:a().foo = 1} = {a:1});");
-    testSame("var a = {}; ({a:a().foo = 1} = {a:1});");
-    testSame("var a = {}; ({a:a().foo = f()} = {a:1});");
+    testSame("function a() {} ({a:a().foo} = {a:1});");
+    testSame("function a() {} ({['a']:a().foo} = {a:1});");
+    testSame("function a() {} ({['a']:a().foo = 1} = {a:1});");
+    testSame("function a() {} ({[alert()]:a().foo = 1} = {a:1});");
+    testSame("function a() {} ({a:a().foo = 1} = {a:1});");
+    testSame("function a() {} ({a:a().foo = alert()} = {a:1});");
   }
 
   public void testDestructuringObjectPattern1() {
     test("var a; var b; ({a, b} = {a:1, b:2})", "({} = {a:1, b:2});");
     test("var a; var b; ({a:a, b:b} = {a:1, b:2})", "({} = {a:1, b:2});");
-    testSame("var a; var b; ({[next()]:a, [next()]:b} = {x:1, y:2})");
+    testSame("var a; var b; ({[alert()]:a, [alert()]:b} = {x:1, y:2})");
 
     test("var a; var b; ({a} = {a:1})", "({} = {a:1})");
     test("var a; var b; ({a:a.foo} = {a:1})", "var a; ({a:a.foo} = {a:1})");
 
-    testSame("var {a, b} = {a:1, b:2}; f(a); f(b);");
+    testSame("var {a, b} = {a:1, b:2}; alert(a); alert(b);");
 
     testSame("var {a} = {p:{}, q:{}}; a.q = 4;");
 
@@ -1621,35 +1701,40 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
 
   public void testRemoveUnusedVarsDeclaredInDestructuring0() {
     // Array destructuring
-    test("var [a, b] = [1, 2]; f(a);", "var [a] = [1, 2]; f(a);");
+    test("var [a, b] = [1, 2]; alert(a);", "var [a] = [1, 2]; alert(a);");
 
     test("var [a, b] = [1, 2];", "var [] = [1, 2];");
 
     // Object pattern destructuring
-    test("var {a, b} = {a:1, b:2}; f(a);", "var {a,  } = {a:1, b:2}; f(a);");
+    test(
+        "var {a, b} = {a:1, b:2}; alert(a);", // comment to keep before/after alignment
+        "var {a,  } = {a:1, b:2}; alert(a);");
 
-    test("var {a, b} = {a:1, b:2};", "var { } = {a:1, b:2};");
+    test(
+        "var {a, b} = {a:1, b:2};", // comment to keep before/after alignment
+        "var {    } = {a:1, b:2};");
   }
 
   public void testRemoveUnusedVarsDeclaredInDestructuring1() {
     // Nested pattern
     test(
-        "var {a, b:{c}} = {a:1, b:{c:5}}; f(a);",
-        "var {a, b:{}} = {a:1, b:{c:5}}; f(a);");
+        "var {a, b:{c}} = {a:1, b:{c:5}}; alert(a);", "var {a, b:{ }} = {a:1, b:{c:5}}; alert(a);");
 
-    testSame("var {a, b:{c}} = {a:1, b:{c:5}}; f(a, c);");
+    testSame("var {a, b:{c}} = {a:1, b:{c:5}}; alert(a, c);");
 
-    test(
-        "var {a, b:{c}} = obj;",
-        "var {b:{}} = obj;");
+    test("var {a, b:{c}} = externVar;", "var {b:{}} = externVar;");
 
     // Value may have side effects
-    test("var {a, b} = {a:foo(), b:bar()};", "var {    } = {a:foo(), b:bar()};");
+    test(
+        "var {a, b} = {a:alert(), b:alert()};", // preserve before / after alignment
+        "var {    } = {a:alert(), b:alert()};");
 
-    test("var {a, b} = foo();", "var {} = foo();");
+    test(
+        "var {a, b} = alert();", // preserve before / after alignment
+        "var {    } = alert();");
 
     // Same as above case without the destructuring declaration
-    test("var a, b = foo();", "foo();");
+    test("var a, b = alert();", "alert();");
   }
 }
 

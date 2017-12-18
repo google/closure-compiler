@@ -26,7 +26,16 @@ import com.google.javascript.rhino.Node;
 public final class OptimizeCallsTest extends CompilerTestCase {
 
   public OptimizeCallsTest() {
-    super(lines(DEFAULT_EXTERNS, "var alert;"));
+    super(
+        lines(
+            DEFAULT_EXTERNS,
+            "var window;",
+            "var goog = {};",
+            "goog.reflect = {};",
+            "goog.reflect.object = function(a, b) {};",
+            "function goog$inherits(a, b) {}",
+            "var alert;",
+            "function use(x) {}"));
   }
 
   @Override
@@ -106,14 +115,15 @@ public final class OptimizeCallsTest extends CompilerTestCase {
   public void testCallSiteInteraction() {
     testSame("var b=function(){return};b()");
     test(
-        "var b=function(c){return c};b(1)",
-        "var b=function(){var c = 1; c; return}; b()");
+        "var b=function(c){              return c}; b(1)",
+        "var b=function( ){var c = 1; c; return  }; b( )");
+
     test(
-        "var b=function(c){};b.call(null, x)",
-        "var b=function(){};b.call(null)");
+        "var b=function(c){};b.call(null, 1); b(2);", // preserve alignment
+        "var b=function( ){};b.call(null   ); b( );");
     test(
-        "var b=function(c){};b.apply(null, x)",
-        "var b=function(){};b.apply(null, x)");
+        "var b=function(c){};b.apply(null, []);", // preserve alignment
+        "var b=function( ){};b.apply(null, []);");
 
     test(
         "var b=function(c){return};b(1);b(2)",
@@ -132,19 +142,21 @@ public final class OptimizeCallsTest extends CompilerTestCase {
     testSame(
         "var b=function(c,d){return d};b(1,2);b(3,4);b.f()");
 
-    test("var b=function(c){return};b(1,2);b(3,new x())",
-        "var b=function(){return};b();b(new x())");
-
-    test("var b=function(c){return};b(1,2);b(new x(),4)",
-        "var b=function(){return};b();b(new x())");
+    test(
+        "var b=function(c){return};b(1,2);b(3,new use())",
+        "var b=function( ){return};b(   );b(  new use())");
 
     test(
-        "var b=function(c,d){return d};b(1,2);use(b(new x(),4))",
-        "var b=function(c,d){return d};b(0,2);use(b(new x(),4))");
+        "var b=function(c){return};b(1,2);b(new use(),4)",
+        "var b=function( ){return};b(   );b(new use()  )");
 
     test(
-        "var b=function(c,d,e){return d};b(1,2,3);use(b(new x(),4,new x()))",
-        "var b=function(c,d){return d};b(0,2);use(b(new x(),4,new x()))");
+        "var b=function(c,d){return d};b(1,2);use(b(new use(),4))",
+        "var b=function(c,d){return d};b(0,2);use(b(new use(),4))");
+
+    test(
+        "var b=function(c,d,e){return d};b(1,2,3);use(b(new use(),4,new use()))",
+        "var b=function(c,d  ){return d};b(0,2  );use(b(new use(),4,new use()))");
 
     // Recursive calls are OK.
     test(
@@ -177,21 +189,21 @@ public final class OptimizeCallsTest extends CompilerTestCase {
   }
 
   public void testComplexDefinition1() {
-    testSame("var b = x ? function(c) { use(c) } : function(c) { use(c) }; b(1)");
+    testSame("var x; var b = x ? function(c) { use(c) } : function(c) { use(c) }; b(1)");
     test(
-        "var b = (x, function(c) { use(c) }); b(1)",
-        "var b = (x, function() { var c = 1; use(c) }); b()");
-    testSame("var b; b = x ? function(c) { use(c) } : function(c) { use(c) }; b(1)");
+        "var x; var b = (x, function(c) {            use(c) }); b(1)",
+        "var x; var b = (x, function( ) { var c = 1; use(c) }); b()");
+    testSame("var x; var b; b = x ? function(c) { use(c) } : function(c) { use(c) }; b(1)");
     test(
-        "var b; b = (x, function(c) { use(c) }); b(1)",
-        "var b; b = (x, function() { var c = 1; use(c) }); b()");
+        "var x; var b; b = (x, function(c) {            use(c) }); b(1)",
+        "var x; var b; b = (x, function( ) { var c = 1; use(c) }); b( )");
   }
 
   public void testComplexDefinition2() {
-    testSame("var b = x ? function(c) { use(c) } : function(c) { use(c) }; b(1); b(2);");
-    testSame("var b = (x, function(c) { use(c) }); b(1); b(2);");
-    testSame("var b; b = x ? function(c) { use(c) } : function(c) { use(c) }; b(1); b(2);");
-    testSame("var b; b = (x, function(c) { use(c) }); b(1); b(2);");
+    testSame("var x; var b = x ? function(c) { use(c) } : function(c) { use(c) }; b(1); b(2);");
+    testSame("var x;var b = (x, function(c) { use(c) }); b(1); b(2);");
+    testSame("var x; var b; b = x ? function(c) { use(c) } : function(c) { use(c) }; b(1); b(2);");
+    testSame("var x; var b; b = (x, function(c) { use(c) }); b(1); b(2);");
   }
 
   public void testCallSiteInteraction_constructors0() {
@@ -199,11 +211,13 @@ public final class OptimizeCallsTest extends CompilerTestCase {
     // can be removed.
     test(
         lines(
-            "var Ctor1=function(a,b){return a};",
-            "Ctor1.call(this,a,b);"),
+            "var Ctor1=function(a,b){return a};", // preserve newlines
+            "Ctor1.call(this, 1, 2);",
+            "Ctor1(3, 4)"),
         lines(
-            "var Ctor1=function(a){a; return};",
-            "Ctor1.call(this,a);"));
+            "var Ctor1=function(a  ){a; return};", // preserve newlines
+            "Ctor1.call(this,1);",
+            "Ctor1(3)"));
   }
 
   public void testCallSiteInteraction_constructors1() {
@@ -405,19 +419,19 @@ public final class OptimizeCallsTest extends CompilerTestCase {
   public void testFunctionArgRemovalFromCallSitesDestructuring() {
     // remove all function arguments
     test(
-        "function f([a] = [1], [b] = [2]){};f(v1,v2,v3);f(v4,v5,v6)",
-        "function f(                    ){};f(        );f(        )");
+        "function f([a] = [1], [b] = [2]){} f(1, 2, 3); f(4, 5, 6)",
+        "function f(                    ){} f(       ); f(       )");
     test(
-        "function f(a, [b] = alert(), [c] = alert(), d){};f(v1,v2,v3,v4);f(v4,v5,v6,v7)",
-        "function f(   [ ] = alert(), [ ] = alert()   ){};f(   v2,v3   );f(   v5,v6  )");
+        "function f(a, [b] = alert(), [c] = alert(), d){} f(1, 2, 3, 4); f(4, 5, 6, 7)",
+        "function f(   [ ] = alert(), [ ] = alert()   ){} f(   2, 3   ); f(   5, 6   )");
 
     test(
-        "function f(a, [b = alert()] = [], [c = alert()] = [], d){};f(v1,v2,v3,v4);f(v4,v5,v6,v7)",
-        "function f(   [b = alert()] = [], [c = alert()] = []   ){};f(   v2,v3   );f(   v5,v6  )");
+        "function f(a, [b = alert()] = [], [c = alert()] = [], d){} f(1, 2, 3, 4);f(4, 5, 6, 7)",
+        "function f(   [b = alert()] = [], [c = alert()] = []   ){} f(   2, 3   );f(   5, 6   )");
 
     test(
-        "function f(a, [b = alert()], [c = alert()], d){};f(v1,v2,v3,v4);f(v4,v5,v6,v7)",
-        "function f(   [b = alert()], [c = alert()]   ){};f(   v2,v3   );f(   v5,v6   )");
+        "function f(a, [b = alert()], [c = alert()], d){} f(1, 2, 3, 4); f(4, 5, 6, 7);",
+        "function f(   [b = alert()], [c = alert()]   ){} f(   2, 3   ); f(   5, 6   );");
 
   }
 

@@ -24,50 +24,55 @@ import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
  */
 public final class RemoveUnusedCodeClassPropertiesTest extends TypeICompilerTestCase {
 
-  private static final String EXTERNS = lines(
-      "/**",
-      " * @constructor",
-      " * @param {*=} opt_value",
-      " * @return {!Object}",
-      " */",
-      "function Object(opt_value) {}",
-      "/**",
-      " * @constructor",
-      " * @param {...*} var_args",
-      " */",
-      "function Function(var_args) {}",
-      "/**",
-      " * @constructor",
-      " * @param {*=} arg",
-      " * @return {string}",
-      " */",
-      "function String(arg) {}",
-      "/**",
-      " * @record",
-      " * @template VALUE",
-      " */",
-      "/**",
-      " * @template T",
-      " * @constructor ",
-      " * @param {...*} var_args",
-      " * @return {!Array<?>}",
-      " */",
-      "function Array(var_args) {}",
-      "var window;",
-      "function alert(a) {}",
-      "var EXT = {};",
-      "EXT.ext;",
-      "var foo",
-      "/** @type {Function} */",
-      "Object.defineProperties = function() {};",
-      "/** @type {Function} */",
-      "Object.prototype.constructor = function() {};",
-      // NOTE: The following are needed to prevent NTI inexistent property warnings.
-      "var $jscomp = {};",
-      "$jscomp.global = {}",
-      "/** @type {?} */",
-      "$jscomp.global.Object");
-
+  private static final String EXTERNS =
+      lines(
+          "/**",
+          " * @constructor",
+          " * @param {*=} opt_value",
+          " * @return {!Object}",
+          " */",
+          "function Object(opt_value) {}",
+          "/**",
+          " * @constructor",
+          " * @param {...*} var_args",
+          " */",
+          "function Function(var_args) {}",
+          "/**",
+          " * @constructor",
+          " * @param {*=} arg",
+          " * @return {string}",
+          " */",
+          "function String(arg) {}",
+          "/**",
+          " * @record",
+          " * @template VALUE",
+          " */",
+          "/**",
+          " * @template T",
+          " * @constructor ",
+          " * @param {...*} var_args",
+          " * @return {!Array<?>}",
+          " */",
+          "function Array(var_args) {}",
+          "var window;",
+          "function alert(a) {}",
+          "function use(x) {}",
+          "var EXT = {};",
+          "EXT.ext;",
+          "var externVar;",
+          "/** @type {Function} */",
+          "Object.defineProperties = function() {};",
+          "/** @type {Function} */",
+          "Object.prototype.constructor = function() {};",
+          // NOTE: The following are needed to prevent NTI inexistent property warnings.
+          "var $jscomp = {};",
+          "$jscomp.global = {}",
+          "/** @type {?} */",
+          "$jscomp.global.Object",
+          "function JSCompiler_renameProperty(p) {}",
+          "var goog = {};",
+          "goog.reflect = {};",
+          "goog.reflect.object = function(a, b) {};");
 
   public RemoveUnusedCodeClassPropertiesTest() {
     super(EXTERNS);
@@ -111,11 +116,11 @@ public final class RemoveUnusedCodeClassPropertiesTest extends TypeICompilerTest
 
   public void testSimple3() {
     // A property defined on an object other than "this" can not be removed.
-    testSame("y.a = 2");
+    testSame("var y = {}; y.a = 2");
     // and prevents the removal of the definition on 'this'.
-    testSame("y.a = 2; this.a = 2");
+    testSame("var y = {}; y.a = 2; this.a = 2");
     // Some use of the property "a" prevents the removal.
-    testSame("y.a = 2; this.a = 1; alert(x.a)");
+    testSame("var x; var y = {}; y.a = 2; this.a = 1; alert(x.a)");
   }
 
   public void testObjLit() {
@@ -124,7 +129,7 @@ public final class RemoveUnusedCodeClassPropertiesTest extends TypeICompilerTest
     // and prevent the removal of the definition on 'this'.
     testSame("({a:0}); this.a = 1;");
     // Some use of the property "a" prevents the removal.
-    testSame("x = ({a:0}); this.a = 1; alert(x.a)");
+    testSame("var x = ({a:0}); this.a = 1; alert(x.a)");
   }
 
   public void testExtern() {
@@ -204,7 +209,7 @@ public final class RemoveUnusedCodeClassPropertiesTest extends TypeICompilerTest
 
   public void testJSCompiler_renameProperty() {
     // JSCompiler_renameProperty introduces a use of the property
-    testSame("this.a = 2; x[JSCompiler_renameProperty('a')]");
+    testSame("var x; this.a = 2; x[JSCompiler_renameProperty('a')]");
     testSame("this.a = 2; JSCompiler_renameProperty('a')");
   }
 
@@ -227,16 +232,20 @@ public final class RemoveUnusedCodeClassPropertiesTest extends TypeICompilerTest
   public void testObjectReflection1() {
     // Verify reflection prevents removal.
     testSame(
-        "/** @constructor */ function A() {this.foo = 1;}\n" +
-        "use(goog.reflect.object(A, {foo: 'foo'}));\n");
+        lines(
+            "/** @constructor */", // preserve newlines
+            "function A() { this.foo = 1; }",
+            "use(goog.reflect.object(A, {foo: 'foo'}));"));
   }
 
   public void testObjectReflection2() {
     // Any object literal definition prevents removal.
     // Type based removal would allow this to be removed.
     testSame(
-        "/** @constructor */ function A() {this.foo = 1;}\n" +
-        "use({foo: 'foo'});\n");
+        lines(
+            "/** @constructor */", // preserve newlines
+            "function A() {this.foo = 1;}",
+            "use({foo: 'foo'});"));
   }
 
   public void testIssue730() {
@@ -302,10 +311,11 @@ public final class RemoveUnusedCodeClassPropertiesTest extends TypeICompilerTest
     this.mode = TypeInferenceMode.BOTH;
 
     testSame(
-        "/** @constructor */ function C() {} "
-        + "C.prop = 1; "
-        + "function use(a) { alert(a.prop) }; "
-        + "use(C)");
+        lines(
+            "/** @constructor */ function C() {} ",
+            "C.prop = 1; ",
+            "function foo(a) { alert(a.prop) }; ",
+            "foo(C)"));
   }
 
   public void testObjectDefineProperties1() {
@@ -315,8 +325,8 @@ public final class RemoveUnusedCodeClassPropertiesTest extends TypeICompilerTest
         lines(
             "/** @constructor */ function C() {}",
             "Object.defineProperties(C, {prop:{value:1}});",
-            "function use(a) { alert(a.prop) };",
-            "use(C)"));
+            "function foo(a) { alert(a.prop) };",
+            "foo(C)"));
   }
 
   // TODO(b/66971163): make this pass
@@ -375,8 +385,8 @@ public final class RemoveUnusedCodeClassPropertiesTest extends TypeICompilerTest
 
     // an unknown destination object doesn't prevent removal.
     test(
-        "Object.defineProperties(foo(), {prop:{value:1}});",
-        "Object.defineProperties(foo(), {});");
+        "Object.defineProperties(externVar(), {prop:{value:1}});",
+        "Object.defineProperties(externVar(), {});");
   }
 
   // TODO(b/66971163): make this pass
