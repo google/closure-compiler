@@ -16,19 +16,15 @@
 package com.google.javascript.jscomp.ijs;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.ListMultimap;
-import com.google.common.collect.MultimapBuilder;
 import com.google.common.collect.Ordering;
 import com.google.javascript.jscomp.AbstractCompiler;
 import com.google.javascript.jscomp.CompilerPass;
 import com.google.javascript.jscomp.DiagnosticType;
-import com.google.javascript.jscomp.JSError;
 import com.google.javascript.jscomp.NodeTraversal;
 import com.google.javascript.jscomp.NodeTraversal.AbstractShallowStatementCallback;
 import com.google.javascript.jscomp.NodeUtil;
@@ -36,16 +32,9 @@ import com.google.javascript.jscomp.Scope;
 import com.google.javascript.jscomp.Var;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
-import com.google.javascript.rhino.JSDocInfo.Visibility;
-import com.google.javascript.rhino.JSDocInfoBuilder;
-import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import javax.annotation.Nullable;
 
 /**
@@ -383,177 +372,6 @@ public class ConvertToTypedInterface implements CompilerPass {
     }
   }
 
-  private static class PotentialDeclaration {
-    // The LHS node of the declaration.
-    final Node lhs;
-    // The RHS node of the declaration, if it exists.
-    final @Nullable Node rhs;
-    // The scope in which the declaration is defined.
-    final @Nullable Scope scope;
-
-    PotentialDeclaration(Node lhs, Node rhs, @Nullable Scope scope) {
-      this.lhs = lhs;
-      this.rhs = rhs;
-      this.scope = scope;
-    }
-
-    static PotentialDeclaration from(Node nameNode, @Nullable Scope scope) {
-      Node rhs = NodeUtil.getRValueOfLValue(nameNode);
-      return new PotentialDeclaration(nameNode, rhs, scope);
-    }
-
-    Node getStatement() {
-      return NodeUtil.getEnclosingStatement(lhs);
-    }
-
-    JSDocInfo getJsDoc() {
-      return NodeUtil.getBestJSDocInfo(lhs);
-    }
-
-    /**
-     * Remove this "potential declaration" completely.
-     * Usually, this is because the same symbol has already been declared in this file.
-     */
-    void remove(AbstractCompiler compiler) {
-      Node statement = getStatement();
-      NodeUtil.deleteNode(statement, compiler);
-      statement.removeChildren();
-    }
-
-    void removeStringKeyValue(Node stringKey) {
-      Node value = stringKey.getOnlyChild();
-      Node replacementValue = IR.number(0).srcrefTree(value);
-      stringKey.replaceChild(value, replacementValue);
-    }
-
-    /**
-     * Simplify this declaration to only include what's necessary for typing.
-     * Usually, this means removing the RHS and leaving a type annotation.
-     */
-    void simplify(AbstractCompiler compiler) {
-      Node nameNode = lhs;
-      JSDocInfo jsdoc = getJsDoc();
-      if (jsdoc != null && jsdoc.hasEnumParameterType()) {
-        // Remove values from enums
-        if (rhs.isObjectLit() && rhs.hasChildren()) {
-          for (Node key : rhs.children()) {
-            removeStringKeyValue(key);
-          }
-          compiler.reportChangeToEnclosingScope(rhs);
-        }
-        return;
-      }
-      if (NodeUtil.isNamespaceDecl(nameNode)) {
-        Node objLit = rhs;
-        if (rhs.isOr()) {
-          objLit = rhs.getLastChild().detach();
-          rhs.replaceWith(objLit);
-          compiler.reportChangeToEnclosingScope(nameNode);
-        }
-        if (objLit.hasChildren()) {
-          for (Node key : objLit.children()) {
-            if (!isTypedRhs(key.getLastChild())) {
-              removeStringKeyValue(key);
-              JsdocUtil.updateJsdoc(compiler, key);
-              compiler.reportChangeToEnclosingScope(key);
-            }
-          }
-        }
-        return;
-      }
-      if (nameNode.matchesQualifiedName("exports")) {
-        // Replace the RHS of a default goog.module export with Unknown
-        replaceRhsWithUnknown(rhs);
-        compiler.reportChangeToEnclosingScope(nameNode);
-        return;
-      }
-      // Just completely remove the RHS, and replace with a getprop.
-      Node newStatement =
-          NodeUtil.newQNameDeclaration(compiler, nameNode.getQualifiedName(), null, jsdoc);
-      newStatement.useSourceInfoIfMissingFromForTree(nameNode);
-      Node oldStatement = getStatement();
-      NodeUtil.deleteChildren(oldStatement, compiler);
-      oldStatement.replaceWith(newStatement);
-      compiler.reportChangeToEnclosingScope(newStatement);
-    }
-  }
-
-  /**
-   * Class to keep track of what has been seen so far in a given file.
-   *
-   * This is cleared after each file to make sure that the analysis is working on a per-file basis.
-   */
-  private static class FileInfo {
-    private final Set<String> providedNamespaces = new HashSet<>();
-    private final Set<String> requiredLocalNames = new HashSet<>();
-    private final List<Node> constructorsToProcess = new ArrayList<>();
-    private final ListMultimap<String, PotentialDeclaration> declarations =
-        MultimapBuilder.linkedHashKeys().arrayListValues().build();
-
-    void recordDeclaration(Node qnameNode, Scope scope) {
-      checkArgument(qnameNode.isQualifiedName(), qnameNode);
-      String name =
-          isThisProp(qnameNode)
-              ? getPrototypeNameOfThisProp(qnameNode)
-              : qnameNode.getQualifiedName();
-      declarations.put(name, PotentialDeclaration.from(qnameNode, scope));
-    }
-
-    void recordDefine(Node callNode, Scope scope) {
-      checkArgument(NodeUtil.isCallTo(callNode, "goog.define"));
-      String name = callNode.getSecondChild().getString();
-      declarations.put(name, PotentialDeclaration.from(callNode, scope));
-    }
-
-    void recordDeclaration(String name, PotentialDeclaration decl) {
-      declarations.put(name, decl);
-    }
-
-    void recordImport(String localName) {
-      requiredLocalNames.add(localName);
-    }
-
-    boolean isNameDeclared(String fullyQualifiedName) {
-      return declarations.containsKey(fullyQualifiedName);
-    }
-
-    static boolean containsPrefix(String fullyQualifiedName, Iterable<String> prefixNamespaces) {
-      for (String prefix : prefixNamespaces) {
-        if (fullyQualifiedName.equals(prefix) || fullyQualifiedName.startsWith(prefix + ".")) {
-          return true;
-        }
-      }
-      return false;
-    }
-
-    boolean isPrefixProvided(String fullyQualifiedName) {
-      return containsPrefix(fullyQualifiedName, providedNamespaces);
-    }
-
-    boolean isPrefixRequired(String fullyQualifiedName) {
-      return containsPrefix(fullyQualifiedName, requiredLocalNames);
-    }
-
-    boolean isStrictPrefixDeclared(String fullyQualifiedName) {
-      for (String prefix : declarations.keySet()) {
-        if (fullyQualifiedName.startsWith(prefix + ".")) {
-          return true;
-        }
-      }
-      return false;
-    }
-
-    void markConstructorToProcess(Node ctorNode) {
-      checkArgument(ctorNode.isFunction(), ctorNode);
-      constructorsToProcess.add(ctorNode);
-    }
-
-    void markProvided(String providedName) {
-      checkNotNull(providedName);
-      providedNamespaces.add(providedName);
-    }
-  }
-
   private static class SimplifyDeclarations {
     private final AbstractCompiler compiler;
     private final FileInfo currentFile;
@@ -584,11 +402,11 @@ public class ConvertToTypedInterface implements CompilerPass {
     }
 
     private void removeDuplicateDeclarations() {
-      for (String name : currentFile.declarations.keySet()) {
+      for (String name : currentFile.getDeclarations().keySet()) {
         if (name.startsWith("this.")) {
           continue;
         }
-        List<PotentialDeclaration> declList = currentFile.declarations.get(name);
+        List<PotentialDeclaration> declList = currentFile.getDeclarations().get(name);
         Collections.sort(declList, DECLARATIONS_FIRST);
         while (declList.size() > 1) {
           // Don't remove the first declaration (at index 0)
@@ -603,9 +421,10 @@ public class ConvertToTypedInterface implements CompilerPass {
       removeDuplicateDeclarations();
 
       // Simplify all names in the top-level scope.
-      List<String> seenNames = SHORT_TO_LONG.immutableSortedCopy(currentFile.declarations.keySet());
+      List<String> seenNames =
+          SHORT_TO_LONG.immutableSortedCopy(currentFile.getDeclarations().keySet());
       for (String name : seenNames) {
-        for (PotentialDeclaration decl : currentFile.declarations.get(name)) {
+        for (PotentialDeclaration decl : currentFile.getDeclarations().get(name)) {
           processName(name, decl);
         }
       }
@@ -725,7 +544,7 @@ public class ConvertToTypedInterface implements CompilerPass {
       JSDocInfo jsdoc = jsdocNode.getJSDocInfo();
       boolean isExport = isExportLhs(nameNode);
       if (rhs == null
-          || isTypedRhs(rhs)
+          || PotentialDeclaration.isTypedRhs(rhs)
           || NodeUtil.isCallTo(rhs, "goog.defineClass")
           || isImportRhs(rhs)
           || (isExport && (rhs.isQualifiedName() || rhs.isObjectLit()))
@@ -765,27 +584,16 @@ public class ConvertToTypedInterface implements CompilerPass {
     }
   }
 
-  private static boolean isTypedRhs(Node rhs) {
-    return rhs.isFunction()
-        || rhs.isClass()
-        || (rhs.isQualifiedName() && rhs.matchesQualifiedName("goog.abstractMethod"))
-        || (rhs.isQualifiedName() && rhs.matchesQualifiedName("goog.nullFunction"));
-  }
-
-  private static boolean isThisProp(Node getprop) {
+  static boolean isThisProp(Node getprop) {
     return getprop.isGetProp() && getprop.getFirstChild().isThis();
   }
 
-  private static String getPrototypeNameOfThisProp(Node getprop) {
+  static String getPrototypeNameOfThisProp(Node getprop) {
     checkArgument(isThisProp(getprop));
     Node function = NodeUtil.getEnclosingFunction(getprop);
     String className = getClassName(function);
     checkState(className != null && !className.isEmpty());
     return className + ".prototype." + getprop.getLastChild().getString();
-  }
-
-  private static void replaceRhsWithUnknown(Node rhs) {
-    rhs.replaceWith(IR.cast(IR.number(0), JsdocUtil.getQmarkTypeJSDoc()).srcrefTree(rhs));
   }
 
   // TODO(blickly): Move to NodeUtil if it makes more sense there.
@@ -804,7 +612,7 @@ public class ConvertToTypedInterface implements CompilerPass {
     }
   }
 
-  private static boolean isConstToBeInferred(
+  static boolean isConstToBeInferred(
       JSDocInfo jsdoc, Node nameNode, boolean isImpliedConst) {
     boolean isConst =
         isImpliedConst
@@ -865,131 +673,5 @@ public class ConvertToTypedInterface implements CompilerPass {
         || callee.matchesQualifiedName("goog.forwardDeclare");
   }
 
-
-  private static class JsdocUtil {
-
-    static JSDocInfo updateJsdoc(AbstractCompiler compiler, Node nameNode) {
-      checkArgument(nameNode.isStringKey(), nameNode);
-      Node jsdocNode = nameNode;
-      JSDocInfo jsdoc = jsdocNode.getJSDocInfo();
-      if (jsdoc == null) {
-        jsdoc = JsdocUtil.getAllTypeJSDoc();
-      } else if (isConstToBeInferred(jsdoc, nameNode, false)) {
-        jsdoc = JsdocUtil.pullJsdocTypeFromAst(compiler, jsdoc, nameNode);
-      }
-      jsdocNode.setJSDocInfo(jsdoc);
-      return jsdoc;
-    }
-
-    private static JSDocInfo pullJsdocTypeFromAst(
-        AbstractCompiler compiler, JSDocInfo oldJSDoc, Node nameNode) {
-      checkArgument(nameNode.isQualifiedName() || nameNode.isStringKey(), nameNode);
-      if (oldJSDoc != null && oldJSDoc.getDescription() != null) {
-        return getConstJSDoc(oldJSDoc, "string");
-      }
-      if (!nameNode.isFromExterns() && !isPrivate(oldJSDoc)) {
-        compiler.report(JSError.make(nameNode, CONSTANT_WITHOUT_EXPLICIT_TYPE));
-      }
-      return getConstJSDoc(oldJSDoc, new Node(Token.STAR));
-    }
-
-    private static boolean isPrivate(@Nullable JSDocInfo jsdoc) {
-      return jsdoc != null && jsdoc.getVisibility().equals(Visibility.PRIVATE);
-    }
-
-    private static JSDocInfo getAllTypeJSDoc() {
-      return getConstJSDoc(null, new Node(Token.STAR));
-    }
-
-    private static JSDocInfo getQmarkTypeJSDoc() {
-      return getConstJSDoc(null, new Node(Token.QMARK));
-    }
-
-    private static JSTypeExpression asTypeExpression(Node typeAst) {
-      return new JSTypeExpression(typeAst, "<synthetic>");
-    }
-
-    private static JSDocInfo getConstJSDoc(JSDocInfo oldJSDoc, String contents) {
-      return getConstJSDoc(oldJSDoc, Node.newString(contents));
-    }
-
-    private static JSDocInfo getConstJSDoc(JSDocInfo oldJSDoc, Node typeAst) {
-      return getConstJSDoc(oldJSDoc, asTypeExpression(typeAst));
-    }
-
-    private static JSDocInfo getConstJSDoc(JSDocInfo oldJSDoc, JSTypeExpression newType) {
-      JSDocInfoBuilder builder = JSDocInfoBuilder.maybeCopyFrom(oldJSDoc);
-      builder.recordType(newType);
-      builder.recordConstancy();
-      return builder.build();
-    }
-
-    private static boolean hasAnnotatedType(JSDocInfo jsdoc) {
-      if (jsdoc == null) {
-        return false;
-      }
-      return jsdoc.hasType()
-          || jsdoc.hasReturnType()
-          || jsdoc.getParameterCount() > 0
-          || jsdoc.isConstructorOrInterface()
-          || jsdoc.hasThisType()
-          || jsdoc.hasEnumParameterType();
-    }
-
-    private static JSDocInfo getJSDocForRhs(Node rhs, JSDocInfo oldJSDoc) {
-      switch (NodeUtil.getKnownValueType(rhs)) {
-        case BOOLEAN:
-          return getConstJSDoc(oldJSDoc, "boolean");
-        case NUMBER:
-          return getConstJSDoc(oldJSDoc, "number");
-        case STRING:
-          return getConstJSDoc(oldJSDoc, "string");
-        case NULL:
-          return getConstJSDoc(oldJSDoc, "null");
-        case VOID:
-          return getConstJSDoc(oldJSDoc, "void");
-        case OBJECT:
-          if (rhs.isRegExp()) {
-            return getConstJSDoc(oldJSDoc, new Node(Token.BANG, IR.string("RegExp")));
-          }
-          break;
-        default:
-          break;
-      }
-      return null;
-    }
-
-    private static JSDocInfo getJSDocForName(Var decl, JSDocInfo oldJSDoc) {
-      if (decl == null) {
-        return null;
-      }
-      JSTypeExpression expr = NodeUtil.getDeclaredTypeExpression(decl.getNameNode());
-      if (expr == null) {
-        return null;
-      }
-      switch (expr.getRoot().getToken()) {
-        case EQUALS:
-          Node typeRoot = expr.getRoot().getFirstChild().cloneTree();
-          if (!decl.isDefaultParam()) {
-            typeRoot = new Node(Token.PIPE, typeRoot, IR.string("undefined"));
-          }
-          expr = asTypeExpression(typeRoot);
-          break;
-        case ELLIPSIS:
-          {
-            Node type = new Node(Token.BANG);
-            Node array = IR.string("Array");
-            type.addChildToBack(array);
-            Node block = new Node(Token.BLOCK, expr.getRoot().getFirstChild().cloneTree());
-            array.addChildToBack(block);
-            expr = asTypeExpression(type);
-            break;
-          }
-        default:
-          break;
-      }
-      return getConstJSDoc(oldJSDoc, expr);
-    }
-  }
 
 }
