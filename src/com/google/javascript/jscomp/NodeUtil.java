@@ -3471,11 +3471,10 @@ public final class NodeUtil {
     }
 
     if (parent.isObjectPattern()) {
-      // STRING_KEY children of object patterns are only LHS nodes if they have no children,
-      // meaning that they represent the object pattern shorthand (e.g. "var {a} = ...").
-      // If n is not a STRING_KEY, it is an OBJECT_PATTERN, DEFAULT_VALUE, or
-      // COMPUTED_PROP and contains a LHS node.
-      return !(n.isStringKey() && n.hasChildren());
+      // STRING_KEY children of object patterns are not LHS nodes, since shorthand (e.g.
+      // "var {a} = ...") is normalized at parse-time. If n is not a STRING_KEY, it is
+      // an OBJECT_PATTERN or a COMPUTED_PROP and contains a LHS node.
+      return !n.isStringKey();
     }
 
     if (parent.isComputedProp() && n == parent.getSecondChild()) {

@@ -58,9 +58,9 @@ public final class Es6ExternsCheckTest extends CompilerTestCase {
     return 1;
   }
 
-  public void testEs6ObjectLiteral() {
+  public void testEs6Syntax() {
     // Report the missing externs if the project includes files with ES6 syntax
-    testError("var x = {a, b};", MISSING_ES6_EXTERNS);
+    testError("const x = {a, b};", MISSING_ES6_EXTERNS);
   }
 
   public void testEs6ONoEs6() {

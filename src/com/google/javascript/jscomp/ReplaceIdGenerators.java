@@ -74,12 +74,6 @@ class ReplaceIdGenerators implements CompilerPass {
           "Object literal shorthand functions is not allowed in the "
           + "arguments of an id generator");
 
-  static final DiagnosticType SHORTHAND_ASSIGNMENT_NOT_SUPPORTED_IN_ID_GEN =
-      DiagnosticType.error(
-          "JSC_SHORTHAND_ASSIGNMENT_NOT_SUPPORTED_IN_ID_GEN",
-          "Object literal shorthand assignment is not allowed in the "
-          + "arguments of an id generator");
-
   static final DiagnosticType COMPUTED_PROP_NOT_SUPPORTED_IN_ID_GEN =
       DiagnosticType.error(
           "JSC_COMPUTED_PROP_NOT_SUPPORTED_IN_ID_GEN",
@@ -379,10 +373,6 @@ class ReplaceIdGenerators implements CompilerPass {
         for (Node key : arg.children()) {
           if (key.isMemberFunctionDef()) {
             compiler.report(t.makeError(n, SHORTHAND_FUNCTION_NOT_SUPPORTED_IN_ID_GEN));
-            return;
-          }
-          if (key.isStringKey() && !key.hasChildren()) {
-            compiler.report(t.makeError(n, SHORTHAND_ASSIGNMENT_NOT_SUPPORTED_IN_ID_GEN));
             return;
           }
           if (key.isComputedProp()) {

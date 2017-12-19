@@ -557,8 +557,14 @@ public final class AstValidator implements CompilerPass {
   private void validateEnumMembers(Node n) {
     validateNodeType(Token.ENUM_MEMBERS, n);
     for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
-      validateObjectLitStringKey(c);
+      validateEnumStringKey(c);
     }
+  }
+
+  private void validateEnumStringKey(Node n) {
+    validateNodeType(Token.STRING_KEY, n);
+    validateObjectLiteralKeyName(n);
+    validateChildCount(n, 0);
   }
 
   /**
@@ -955,9 +961,6 @@ public final class AstValidator implements CompilerPass {
         case OBJECT_PATTERN:
           validateObjectPattern(type, c);
           break;
-        case DEFAULT_VALUE:
-          validateDefaultValue(type, c);
-          break;
         case REST:
           validateRest(type, c);
           break;
@@ -1318,27 +1321,22 @@ public final class AstValidator implements CompilerPass {
     validateNodeType(Token.STRING_KEY, n);
     validateObjectLiteralKeyName(n);
 
-    validateChildCountIn(n, 0, 1);
-
-    if (n.hasOneChild()) {
-      validateExpression(n.getFirstChild());
-    }
+    validateChildCount(n, 1);
+    validateExpression(n.getFirstChild());
   }
 
   private void validateObjectPatternStringKey(Token type, Node n) {
     validateNodeType(Token.STRING_KEY, n);
     validateObjectLiteralKeyName(n);
-    validateChildCountIn(n, 0, 1);
+    validateChildCount(n, 1);
 
-    if (n.hasOneChild()) {
-      Node c = n.getFirstChild();
-      switch (c.getToken()) {
-        case DEFAULT_VALUE:
-          validateDefaultValue(type, c);
-          break;
-        default:
-          validateLHS(type, c);
-      }
+    Node c = n.getFirstChild();
+    switch (c.getToken()) {
+      case DEFAULT_VALUE:
+        validateDefaultValue(type, c);
+        break;
+      default:
+        validateLHS(type, c);
     }
   }
 

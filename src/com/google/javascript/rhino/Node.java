@@ -160,8 +160,9 @@ public class Node implements Serializable {
       // need to preserve them for building index.
       IS_UNUSED_PARAMETER = 96, // Mark a parameter as unused. Used to defer work from
       // RemovedUnusedVars to OptimizeParameters.
-      MODULE_EXPORT = 97; // Mark a property as a module export so that collase properties
-  // can act on it.
+      MODULE_EXPORT = 97, // Mark a property as a module export so that collase properties
+      // can act on it.
+      IS_SHORTHAND_PROPERTY = 98; // Indicates that a property {x:x} was originally parsed as {x}.
 
   private static final String propToString(byte propType) {
       switch (propType) {
@@ -224,8 +225,10 @@ public class Node implements Serializable {
         case DELETED:            return "DELETED";
         case GOOG_MODULE_ALIAS:  return "goog_module_alias";
         case IS_UNUSED_PARAMETER: return "is_unused_parameter";
-      case MODULE_EXPORT:
-        return "module_export";
+        case MODULE_EXPORT:
+          return "module_export";
+        case IS_SHORTHAND_PROPERTY:
+          return "is_shorthand_property";
         default:
           throw new IllegalStateException("unexpected prop id " + propType);
       }
@@ -2420,6 +2423,16 @@ public class Node implements Serializable {
    */
   public final boolean isUnusedParameter() {
     return getBooleanProp(IS_UNUSED_PARAMETER);
+  }
+
+  /** Sets the isShorthandProperty annotation. */
+  public final void setShorthandProperty(boolean shorthand) {
+    putBooleanProp(IS_SHORTHAND_PROPERTY, shorthand);
+  }
+
+  /** Whether this {x:x} property was originally parsed as {x}. */
+  public final boolean isShorthandProperty() {
+    return getBooleanProp(IS_SHORTHAND_PROPERTY);
   }
 
   /**

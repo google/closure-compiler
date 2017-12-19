@@ -18,7 +18,6 @@ package com.google.javascript.jscomp;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
-import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 
 /**
@@ -49,11 +48,10 @@ public final class Es6NormalizeShorthandProperties extends AbstractPostOrderCall
 
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
-    // Transform keys that look like {foo} into {foo: foo} by adding a NAME node
-    // with the same string as the only child of any child-less STRING_KEY node.
-    if (n.isStringKey() && !n.hasChildren()) {
-      n.addChildToFront(IR.name(n.getString()).useSourceInfoFrom(n));
-      compiler.reportChangeToEnclosingScope(n);
+    // Remove all IS_SHORTHAND_PROPERTY annotations on all nodes so that the code printer
+    // does not print it as shorthand.
+    if (n.isStringKey()) {
+      n.setShorthandProperty(false);
     }
   }
 }

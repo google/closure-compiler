@@ -414,7 +414,7 @@ public final class TypeTransformationParser {
     if (expr.isObjectLit()) {
       // Each value of a property must be a valid expression
       for (Node prop : expr.children()) {
-        if (!prop.hasChildren()) {
+        if (prop.isShorthandProperty()) {
           warnInvalid("property, missing type", prop);
           return false;
         } else if (!validTypeTransformationExpression(prop.getFirstChild())) {

@@ -1047,12 +1047,21 @@ class IRFactory {
       maybeWarnForFeature(tree, Feature.DESTRUCTURING);
 
       Node node = newNode(Token.OBJECT_PATTERN);
-      for (ParseTree c : tree.fields) {
-        Node child = transformNodeWithInlineJsDoc(c);
-        if (child.isRest()) {
-          maybeWarnForFeature(c, Feature.OBJECT_PATTERN_REST);
+      for (ParseTree child : tree.fields) {
+        Node childNode = transformNodeWithInlineJsDoc(child);
+        if (childNode.isDefaultValue()) {
+          // Children of the form {a = b} are parsed as DEFAULT_VALUE{NAME, initializer}.
+          // In this case, insert an extra STRING_KEY node.
+          Node name = childNode.getFirstChild();
+          Node stringKey = newStringNode(Token.STRING_KEY, name.getString());
+          setSourceInfo(stringKey, name);
+          stringKey.setShorthandProperty(true);
+          stringKey.addChildToBack(childNode);
+          childNode = stringKey;
+        } else if (childNode.isRest()) {
+          maybeWarnForFeature(child, Feature.OBJECT_PATTERN_REST);
         }
-        node.addChildToBack(child);
+        node.addChildToBack(childNode);
       }
       return node;
     }
@@ -1636,7 +1645,7 @@ class IRFactory {
         if (key.isSpread()) {
           maybeWarnForFeature(el, Feature.OBJECT_LITERALS_WITH_SPREAD);
         }
-        if (!key.hasChildren()) {
+        if (key.isShorthandProperty()) {
           maybeWarn = true;
         }
 
@@ -1748,6 +1757,11 @@ class IRFactory {
       key.setToken(Token.STRING_KEY);
       if (tree.value != null) {
         key.addChildToFront(transform(tree.value));
+      } else {
+        Node value = key.cloneNode();
+        key.setShorthandProperty(true);
+        value.setToken(Token.NAME);
+        key.addChildToFront(value);
       }
       return key;
     }
@@ -2216,7 +2230,14 @@ class IRFactory {
       Node body = newNode(Token.ENUM_MEMBERS);
       setSourceInfo(body, tree);
       for (ParseTree child : tree.members) {
-        body.addChildToBack(transform(child));
+        Node childNode = transform(child);
+        // NOTE: we may need to "undo" the shorthand property normalization,
+        // since this syntax has a different meaning in enums.
+        if (childNode.isShorthandProperty()) {
+          childNode.removeChild(childNode.getLastChild());
+          childNode.setShorthandProperty(false);
+        }
+        body.addChildToBack(childNode);
       }
 
       return newNode(Token.ENUM, name, body);

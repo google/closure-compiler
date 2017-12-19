@@ -1053,27 +1053,6 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
             break;
           }
 
-          // ES6 object literal shorthand notation can refer to renamed variables
-        case STRING_KEY:
-          {
-            if (n.hasChildren()
-                || n.isQuotedString()
-                || n.getParent().getParent().isDestructuringLhs()) {
-              break;
-            }
-            Var nameDeclaration = t.getScope().getVar(n.getString());
-            if (nameDeclaration == null) {
-              break;
-            }
-            String importedName = getModuleImportName(t, nameDeclaration.getNode());
-            if (nameDeclaration.isGlobal() || importedName != null) {
-              Node value = IR.name(n.getString()).useSourceInfoFrom(n);
-              n.addChildToBack(value);
-              maybeUpdateName(t, value, nameDeclaration);
-            }
-            break;
-          }
-
         case GETPROP:
           if (n.matchesQualifiedName(MODULE + ".id")) {
             Var v = t.getScope().getVar(MODULE);
@@ -1241,7 +1220,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
 
     /**
      * Since CommonJS modules may have only a single export, it's common to see the export be an
-     * object literal. We want to expand this to individual property assignments. If any individual
+     * object pattern. We want to expand this to individual property assignments. If any individual
      * property assignment has been renamed, it will be removed.
      *
      * <p>We need to keep assignments which aren't names
@@ -1725,12 +1704,15 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
     private String getModuleImportName(NodeTraversal t, Node n) {
       Node rValue = null;
       String propSuffix = "";
-      if (n.isStringKey()
-          && n.getParent().isObjectPattern()
-          && n.getParent().getParent().isDestructuringLhs()) {
-        rValue = n.getParent().getNext();
-        propSuffix = "." + n.getString();
-      } else if (n.getParent() != null) {
+      Node parent = n.getParent();
+      if (parent != null && parent.isStringKey()) {
+        Node grandparent = parent.getParent();
+        if (grandparent.isObjectPattern() && grandparent.getParent().isDestructuringLhs()) {
+          rValue = grandparent.getNext();
+          propSuffix = "." + parent.getString();
+        }
+      }
+      if (propSuffix.isEmpty() && parent != null) {
         rValue = NodeUtil.getRValueOfLValue(n);
       }
 

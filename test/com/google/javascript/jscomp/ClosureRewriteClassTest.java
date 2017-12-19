@@ -21,7 +21,6 @@ import static com.google.javascript.jscomp.ClosureRewriteClass.GOOG_CLASS_CONSTR
 import static com.google.javascript.jscomp.ClosureRewriteClass.GOOG_CLASS_DESCRIPTOR_NOT_VALID;
 import static com.google.javascript.jscomp.ClosureRewriteClass.GOOG_CLASS_ES6_ARROW_FUNCTION_NOT_SUPPORTED;
 import static com.google.javascript.jscomp.ClosureRewriteClass.GOOG_CLASS_ES6_COMPUTED_PROP_NAMES_NOT_SUPPORTED;
-import static com.google.javascript.jscomp.ClosureRewriteClass.GOOG_CLASS_ES6_SHORTHAND_ASSIGNMENT_NOT_SUPPORTED;
 import static com.google.javascript.jscomp.ClosureRewriteClass.GOOG_CLASS_NG_INJECT_ON_CLASS;
 import static com.google.javascript.jscomp.ClosureRewriteClass.GOOG_CLASS_STATICS_NOT_VALID;
 import static com.google.javascript.jscomp.ClosureRewriteClass.GOOG_CLASS_SUPER_CLASS_NOT_VALID;
@@ -698,31 +697,6 @@ public final class ClosureRewriteClassTest extends TypeICompilerTestCase {
             "  }",
             "});"),
         GOOG_CLASS_ES6_COMPUTED_PROP_NAMES_NOT_SUPPORTED,
-        LanguageMode.ECMASCRIPT_2015);
-  }
-
-  public void testExtendedObjLitShorthandAssignment1() {
-    testRewriteError(
-        lines(
-            "var FancyClass = goog.defineClass(null, {",
-            "  someShorthand, ",
-            "  constructor: function(){},",
-            "  someMethod: function() {}",
-            "});"),
-        GOOG_CLASS_ES6_SHORTHAND_ASSIGNMENT_NOT_SUPPORTED,
-        LanguageMode.ECMASCRIPT_2015);
-  }
-
-  public void testExtendedObjShorthandAssignment2() {
-    testRewriteError(
-        lines(
-            "var FancyClass = goog.defineClass(null, {",
-            "  constructor: function() {},",
-            "  statics:{",
-            "    someShorthand",
-            "  }",
-            "});"),
-        GOOG_CLASS_ES6_SHORTHAND_ASSIGNMENT_NOT_SUPPORTED,
         LanguageMode.ECMASCRIPT_2015);
   }
 

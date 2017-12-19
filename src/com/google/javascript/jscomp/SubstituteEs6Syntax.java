@@ -53,11 +53,8 @@ class SubstituteEs6Syntax extends AbstractPostOrderCallback implements HotSwapCo
         }
         break;
       case STRING_KEY:
-        if (n.hasChildren()
-            && n.getFirstChild().isName()
-            && n.getFirstChild().getString().equals(n.getString())) {
-          n.removeFirstChild();
-          compiler.reportChangeToEnclosingScope(n);
+        if (n.getFirstChild().isName() && n.getFirstChild().getString().equals(n.getString())) {
+          n.setShorthandProperty(true);
         }
         break;
       default:

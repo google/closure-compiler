@@ -1625,14 +1625,23 @@ public class CodeGenerator {
 
   void addStringKey(Node n) {
     String key = n.getString();
-    // Object literal property names don't have to be quoted if they
-    // are not JavaScript keywords
-    if (!n.isQuotedString()
-        && !(quoteKeywordProperties && TokenStream.isKeyword(key))
-        && TokenStream.isJSIdentifier(key)
-        // do not encode literally any non-literal characters that
-        // were Unicode escaped.
-        && NodeUtil.isLatin(key)) {
+    // Object literal property names don't have to be quoted if they are not JavaScript keywords.
+    boolean mustBeQuoted =
+        n.isQuotedString()
+        || (quoteKeywordProperties && TokenStream.isKeyword(key))
+        || !TokenStream.isJSIdentifier(key)
+        // do not encode literally any non-literal characters that were Unicode escaped.
+        || !NodeUtil.isLatin(key);
+    if (!mustBeQuoted) {
+      // Check if the property is eligible to be printed as shorthand.
+      if (n.isShorthandProperty()) {
+        Node child = n.getFirstChild();
+        if (child.matchesQualifiedName(key)
+            || (child.isDefaultValue() && child.getFirstChild().matchesQualifiedName(key))) {
+          add(child);
+          return;
+        }
+      }
       add(key);
     } else {
       // Determine if the string is a simple number.
@@ -1644,6 +1653,9 @@ public class CodeGenerator {
       }
     }
     if (n.hasChildren()) {
+      // NOTE: the only time a STRING_KEY node does *not* have children is when it's
+      // inside a TypeScript enum.  We should change these to their own ENUM_KEY token
+      // so that the bifurcating logic can be removed from STRING_KEY.
       add(":");
       addExpr(n.getFirstChild(), 1, Context.OTHER);
     }

@@ -279,12 +279,6 @@ public final class ReplaceIdGeneratorsTest extends CompilerTestCase {
         ReplaceIdGenerators.SHORTHAND_FUNCTION_NOT_SUPPORTED_IN_ID_GEN);
 
     testError(lines(
-        "/** @idGenerator */ ",
-        "goog.id = function() {};",
-        "things = goog.id({shorthand})"),
-        ReplaceIdGenerators.SHORTHAND_ASSIGNMENT_NOT_SUPPORTED_IN_ID_GEN);
-
-    testError(lines(
         "/** @idGenerator */",
         "goog.id = function() {};",
         "things = goog.id({['fooX']: 'test'})"),

@@ -25,7 +25,6 @@ import static com.google.javascript.jscomp.PolymerPassErrors.POLYMER_INVALID_DEC
 import static com.google.javascript.jscomp.PolymerPassErrors.POLYMER_INVALID_EXTENDS;
 import static com.google.javascript.jscomp.PolymerPassErrors.POLYMER_INVALID_PROPERTY;
 import static com.google.javascript.jscomp.PolymerPassErrors.POLYMER_MISSING_IS;
-import static com.google.javascript.jscomp.PolymerPassErrors.POLYMER_SHORTHAND_NOT_SUPPORTED;
 import static com.google.javascript.jscomp.PolymerPassErrors.POLYMER_UNANNOTATED_BEHAVIOR;
 import static com.google.javascript.jscomp.PolymerPassErrors.POLYMER_UNEXPECTED_PARAMS;
 import static com.google.javascript.jscomp.PolymerPassErrors.POLYMER_UNQUALIFIED_BEHAVIOR;
@@ -746,49 +745,6 @@ public class PolymerPassTest extends TypeICompilerTestCase {
             "a.B.prototype.name;",
             "/** @type {!Function} */",
             "a.B.prototype.thingToDo;"));
-  }
-
-  public void testPropertiesObjLitShorthand() {
-    // Type checker doesn't currently understand ES6 code. Remove when it does.
-    this.mode = TypeInferenceMode.NEITHER;
-    testError(
-        lines(
-            "var XElem = Polymer({",
-            "  is: 'x-element',",
-            "  properties: {",
-            "    name,",
-            "  },",
-            "});"),
-        POLYMER_SHORTHAND_NOT_SUPPORTED);
-
-    testError(
-        lines(
-            "var XElem = class extends Polymer.Element {",
-            "  static get is() { return 'x-element'; }",
-            "  static get properties() {",
-            "    return {",
-            "      name",
-            "    };",
-            "  }",
-            "};"),
-        POLYMER_SHORTHAND_NOT_SUPPORTED);
-
-    // Type checker doesn't currently understand ES6 code. Remove when it does.
-    this.mode = TypeInferenceMode.NEITHER;
-    testError(
-        lines(
-            "/** @constructor */",
-            "var User = function() {};",
-            "var a = {};",
-            "a.B = class extends Polymer.Element {",
-            "  static get is() { return 'x-element'; }",
-            "  static get properties() {",
-            "    return {",
-            "      name,",
-            "    };",
-            "  }",
-            "};"),
-        POLYMER_SHORTHAND_NOT_SUPPORTED);
   }
 
   public void testPropertiesDefaultValueFunctions() {
@@ -2798,9 +2754,6 @@ public class PolymerPassTest extends TypeICompilerTestCase {
     testWarning("var x = Polymer('foo-bar', {});", POLYMER_DESCRIPTOR_NOT_VALID);
     testError("var x = Polymer({},'blah');", POLYMER_UNEXPECTED_PARAMS);
     testError("var x = Polymer({});", POLYMER_MISSING_IS);
-    testError("var x = Polymer({is});", POLYMER_MISSING_IS);
-    testError("var x = Polymer({is: 'x-element', shortHand,});",
-        POLYMER_SHORTHAND_NOT_SUPPORTED);
 
     testError(
         lines(

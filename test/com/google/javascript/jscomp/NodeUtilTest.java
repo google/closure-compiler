@@ -2437,7 +2437,7 @@ public final class NodeUtilTest extends TestCase {
     assertLValueNamedX(x);
 
     assertLValueNamedX(
-        parse("({x} = obj)").getFirstFirstChild().getFirstFirstChild());
+        parse("({x} = obj)").getFirstFirstChild().getFirstFirstChild().getFirstChild());
     assertLValueNamedX(
         parse("([x] = obj)").getFirstFirstChild().getFirstFirstChild());
     assertLValueNamedX(
@@ -2542,14 +2542,20 @@ public final class NodeUtilTest extends TestCase {
 
     Node strKeyNodeA = destructPat.getFirstChild();
     Node strKeyNodeB = strKeyNodeA.getNext();
+    Node nameNodeA = strKeyNodeA.getFirstChild();
+    Node nameNodeB = strKeyNodeB.getFirstChild();
     checkState(strKeyNodeA.getString().equals("a"), strKeyNodeA);
+    checkState(nameNodeA.getString().equals("a"), nameNodeA);
     checkState(strKeyNodeB.getString().equals("b"), strKeyNodeB);
+    checkState(nameNodeB.getString().equals("b"), nameNodeB);
 
     Node nameNodeObj = destructPat.getNext();
     checkState(nameNodeObj.getString().equals("obj"), nameNodeObj);
 
-    assertLhsByDestructuring(strKeyNodeA);
-    assertLhsByDestructuring(strKeyNodeB);
+    assertNotLhsByDestructuring(strKeyNodeA);
+    assertNotLhsByDestructuring(strKeyNodeB);
+    assertLhsByDestructuring(nameNodeA);
+    assertLhsByDestructuring(nameNodeB);
     assertNotLhsByDestructuring(nameNodeObj);
   }
 
@@ -2560,17 +2566,23 @@ public final class NodeUtilTest extends TestCase {
     Node destructPat = destructLhs.getFirstChild();
     checkState(destructPat.isObjectPattern(), destructPat);
 
-    Node defaultNodeA = destructPat.getFirstChild();
-    checkState(defaultNodeA.isDefaultValue(), defaultNodeA);
-    Node strKeyNodeA = defaultNodeA.getFirstChild();
+    Node strKeyNodeA = destructPat.getFirstChild();
+    checkState(strKeyNodeA.isStringKey());
     checkState(strKeyNodeA.getString().equals("a"), strKeyNodeA);
+
+    Node defaultNodeA = strKeyNodeA.getFirstChild();
+    checkState(defaultNodeA.isDefaultValue(), defaultNodeA);
+    Node nameNodeA = defaultNodeA.getFirstChild();
+    checkState(nameNodeA.getString().equals("a"), nameNodeA);
 
     Node nameNodeDefault = defaultNodeA.getSecondChild();
     checkState(nameNodeDefault.getString().equals("defaultValue"), nameNodeDefault);
     Node nameNodeObj = destructPat.getNext();
     checkState(nameNodeObj.getString().equals("obj"), nameNodeObj);
 
-    assertLhsByDestructuring(strKeyNodeA);
+    assertNotLhsByDestructuring(strKeyNodeA);
+    assertNotLhsByDestructuring(defaultNodeA);
+    assertLhsByDestructuring(nameNodeA);
     assertNotLhsByDestructuring(nameNodeDefault);
     assertNotLhsByDestructuring(nameNodeObj);
   }

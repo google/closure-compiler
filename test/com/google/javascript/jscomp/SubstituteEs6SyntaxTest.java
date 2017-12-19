@@ -46,16 +46,20 @@ public final class SubstituteEs6SyntaxTest extends CompilerTestCase {
   }
 
   public void testObjectPattern() {
-    test("const {x: x} = y;", "const {x} = y;");
-    testSame("const {x: y} = z;");
-    testSame("const {[x]: x} = y;");
-    testSame("const {['x']: x} = y;");
+    // Tree comparisons don't fail on node property differences, so compare as strings instead.
+    disableCompareAsTree();
+    test("const {x:x}=y", "const {x}=y");
+    testSame("const {x:y}=z");
+    testSame("const {[x]:x}=y");
+    testSame("const {[\"x\"]:x}=y");
   }
 
   public void testObjectLiteral() {
-    test("const o = {x: x};", "const o = {x};");
-    testSame("const o = {x: y}");
-    testSame("const o = {[x]: x};");
-    testSame("const o = {['x']: x};");
+    // Tree comparisons don't fail on node property differences, so compare as strings instead.
+    disableCompareAsTree();
+    testSame("const o={x:y}");
+    testSame("const o={[x]:x}");
+    testSame("const o={[\"x\"]:x}");
+    test("const o={x:x}", "const o={x}");
   }
 }

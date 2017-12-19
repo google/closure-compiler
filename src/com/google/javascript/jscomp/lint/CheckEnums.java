@@ -78,7 +78,7 @@ public final class CheckEnums extends AbstractPostOrderCallback implements Compi
       return;
     }
 
-    if (node.isStringKey() && !node.hasChildren()) {
+    if (node.isStringKey() && node.isShorthandProperty()) {
       t.report(node, SHORTHAND_ASSIGNMENT_IN_ENUM);
     }
 
@@ -108,4 +108,3 @@ public final class CheckEnums extends AbstractPostOrderCallback implements Compi
     }
   }
 }
-

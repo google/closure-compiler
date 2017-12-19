@@ -781,13 +781,21 @@ public final class RenameVarsTest extends CompilerTestCase {
   }
 
   public void testObjectDestructuring() {
+    // TODO(sdh): Teach RenameVars to take advantage of shorthand properties by
+    // building up a Map from var name strings to property name multisets.  We
+    // should be able to treat this similar to the "previous names" map, where
+    // we preferentially pick names with the most lined-up properties, provided
+    // the property names are short (should be easy enough to do the math).
+    // Note, the same property name could get different var names in different
+    // scopes, so we probably need to do the comparison per scope.
+    // Also, this is only relevant if language_out >= ES6.
     test(
         lines(
             "var obj = {p: 5, h: false};",
             "var {p, h} = obj;"),
         lines(
             "var a = {p: 5, h: false};",
-            "var {p, h} = a;"));
+            "var {p: b, h: c} = a;"));
 
    test(
         lines(
