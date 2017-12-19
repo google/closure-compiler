@@ -612,14 +612,10 @@ class Normalize implements CompilerPass {
       oldNameNode.setString("");
       compiler.reportChangeToEnclosingScope(oldNameNode);
 
-      // Move the function if it's not the child of a label node
+      // Move the function to the front of the parent
       Node parent = n.getParent();
-      if (parent.isLabel()) {
-        parent.replaceChild(n, var);
-      } else {
-        parent.removeChild(n);
-        parent.addChildToFront(var);
-      }
+      parent.removeChild(n);
+      parent.addChildToFront(var);
       compiler.reportChangeToEnclosingScope(var);
       fnNameNode.addChildToFront(n);
     }
