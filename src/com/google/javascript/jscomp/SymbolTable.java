@@ -152,7 +152,7 @@ public final class SymbolTable {
     return ImmutableList.copyOf(symbol.references.values());
   }
 
-  public Iterable<Symbol> getAllSymbols() {
+  public ImmutableList<Symbol> getAllSymbols() {
     return ImmutableList.copyOf(symbols.values());
   }
 
