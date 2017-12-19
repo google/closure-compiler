@@ -21,6 +21,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Strings.isNullOrEmpty;
 
+import com.google.common.collect.ImmutableList;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
@@ -69,12 +70,123 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
       }
 
       if (NodeUtil.isGet(callTarget)) {
+        if (isASTNormalized() && callTarget.getFirstChild().isQualifiedName()) {
+          switch (callTarget.getFirstChild().getQualifiedName()) {
+            case "Math":
+              return tryFoldKnownMathMethods(subtree, callTarget);
+            default: // fall out
+          }
+        }
         subtree = tryFoldKnownStringMethods(subtree, callTarget);
       } else if (callTarget.isName()) {
         subtree = tryFoldKnownNumericMethods(subtree, callTarget);
       }
     }
 
+    return subtree;
+  }
+
+  /** Tries to evaluate a method on the Math object */
+  private strictfp Node tryFoldKnownMathMethods(Node subtree, Node callTarget) {
+    // first collect the arguments, if they are all numbers then we proceed
+    List<Double> args = ImmutableList.of();
+    for (Node arg = callTarget.getNext(); arg != null; arg = arg.getNext()) {
+      Double d = NodeUtil.getNumberValue(arg);
+      if (d != null) {
+        if (args.isEmpty()) {
+          // lazily allocate, most calls will not be optimizable
+          args = new ArrayList<>();
+        }
+        args.add(d);
+      } else {
+        return subtree;
+      }
+    }
+    Double replacement = null;
+    String methodName = callTarget.getFirstChild().getNext().getString();
+    // NOTE: the standard does not define precision for these methods, but we are conservative, so
+    // for now we only implement the methods that are guaranteed to not increase the size of the
+    // numeric constants.
+    if (args.size() == 1) {
+      double arg = args.get(0);
+      switch (methodName) {
+        case "abs":
+          replacement = Math.abs(arg);
+          break;
+        case "ceil":
+          replacement = Math.ceil(arg);
+          break;
+        case "floor":
+          replacement = Math.floor(arg);
+          break;
+        case "fround":
+          if (Double.isNaN(arg) || Double.isInfinite(arg) || arg == 0) {
+            replacement = arg;
+            // if the double is exactly representable as a float, then just cast since no rounding
+            // is involved
+          } else if ((float) arg == arg) {
+            replacement = Double.valueOf((float) arg);
+          } else {
+            // (float) arg does not necessarily use the correct rounding mode, so don't do anything
+            replacement = null;
+          }
+          break;
+        case "round":
+          if (Double.isNaN(arg) || Double.isInfinite(arg)) {
+            replacement = arg;
+          } else {
+            replacement = Double.valueOf(Math.round(arg));
+          }
+          break;
+        case "sign":
+          replacement = Math.signum(arg);
+          break;
+        case "trunc":
+          if (Double.isNaN(arg) || Double.isInfinite(arg)) {
+            replacement = arg;
+          } else {
+            replacement = Math.signum(arg) * Math.floor(Math.abs(arg));
+          }
+          break;
+        case "clz32":
+          replacement = Double.valueOf(Integer.numberOfLeadingZeros(NodeUtil.toUInt32(arg)));
+          break;
+        default: // fall out
+      }
+    }
+    // handle the variadic functions now if we haven't already
+    // For each of these we could allow for some of the values to be unknown and either reduce to
+    // NaN or simplify the existing args. e.g. Math.max(3, x, 2) -> Math.max(3, x)
+    if (replacement == null) {
+      switch (methodName) {
+        case "max":
+          {
+            double result = Double.NEGATIVE_INFINITY;
+            for (Double d : args) {
+              result = Math.max(result, d);
+            }
+            replacement = result;
+            break;
+          }
+        case "min":
+          {
+            double result = Double.POSITIVE_INFINITY;
+            for (Double d : args) {
+              result = Math.min(result, d);
+            }
+            replacement = result;
+            break;
+          }
+        default: // fall out
+      }
+    }
+
+    if (replacement != null) {
+      Node numberNode = NodeUtil.numberNode(replacement, subtree);
+      subtree.replaceWith(numberNode);
+      compiler.reportChangeToEnclosingScope(numberNode);
+      return numberNode;
+    }
     return subtree;
   }
 

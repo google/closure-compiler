@@ -342,6 +342,117 @@ public final class PeepholeReplaceKnownMethodsTest extends TypeICompilerTestCase
     foldSame("`A ${BC}`.toUpperCase()");
   }
 
+  public void testFoldMathFunctions_abs() {
+    enableNormalize();
+    foldSame("Math.abs(Math.random())");
+
+    fold("Math.abs('-1')", "1");
+    fold("Math.abs(-2)", "2");
+    fold("Math.abs(null)", "0");
+    fold("Math.abs('')", "0");
+    fold("Math.abs([])", "0");
+    fold("Math.abs([2])", "2");
+    fold("Math.abs([1,2])", "NaN");
+    fold("Math.abs({})", "NaN");
+    fold("Math.abs('string');", "NaN");
+  }
+
+  public void testFoldMathFunctions_ceil() {
+    enableNormalize();
+    foldSame("Math.ceil(Math.random())");
+
+    fold("Math.ceil(1)", "1");
+    fold("Math.ceil(1.5)", "2");
+    fold("Math.ceil(1.3)", "2");
+    fold("Math.ceil(-1.3)", "-1");
+  }
+
+  public void testFoldMathFunctions_floor() {
+    enableNormalize();
+    foldSame("Math.floor(Math.random())");
+
+    fold("Math.floor(1)", "1");
+    fold("Math.floor(1.5)", "1");
+    fold("Math.floor(1.3)", "1");
+    fold("Math.floor(-1.3)", "-2");
+  }
+
+  public void testFoldMathFunctions_fround() {
+    enableNormalize();
+    foldSame("Math.fround(Math.random())");
+    fold("Math.fround(NaN)", "NaN");
+    fold("Math.fround(1)", "1");
+    foldSame("Math.fround(1.2)");
+  }
+
+  public void testFoldMathFunctions_round() {
+    enableNormalize();
+    foldSame("Math.round(Math.random())");
+    fold("Math.round(NaN)", "NaN");
+    fold("Math.round(3.5)", "4");
+    fold("Math.round(-3.5)", "-3");
+  }
+
+  public void testFoldMathFunctions_sign() {
+    enableNormalize();
+    foldSame("Math.sign(Math.random())");
+    fold("Math.sign(NaN)", "NaN");
+    fold("Math.sign(3.5)", "1");
+    fold("Math.sign(-3.5)", "-1");
+  }
+
+  public void testFoldMathFunctions_trunc() {
+    enableNormalize();
+    foldSame("Math.trunc(Math.random())");
+    fold("Math.sign(NaN)", "NaN");
+    fold("Math.trunc(3.5)", "3");
+    fold("Math.trunc(-3.5)", "-3");
+  }
+
+  public void testFoldMathFunctions_clz32() {
+    enableNormalize();
+    fold("Math.clz32(0)", "32");
+    int x = 1;
+    for (int i = 31; i >= 0; i--) {
+      fold("Math.clz32(" + x + ")", "" + i);
+      fold("Math.clz32(" + (2 * x - 1) + ")", "" + i);
+      x *= 2;
+    }
+    fold("Math.clz32('52')", "26");
+    fold("Math.clz32([52])", "26");
+    fold("Math.clz32([52, 53])", "32");
+
+    // Overflow cases
+    fold("Math.clz32(0x100000000)", "32");
+    fold("Math.clz32(0x100000001)", "31");
+
+    // NaN -> 0
+    fold("Math.clz32(NaN)", "32");
+    fold("Math.clz32('foo')", "32");
+    fold("Math.clz32(Infinity)", "32");
+  }
+
+  public void testFoldMathFunctions_max() {
+    enableNormalize();
+    foldSame("Math.max(Math.random(), 1)");
+
+    fold("Math.max()", "-Infinity");
+    fold("Math.max(0)", "0");
+    fold("Math.max(0, 1)", "1");
+    fold("Math.max(0, 1, -1, 200)", "200");
+  }
+
+  public void testFoldMathFunctions_min() {
+    enableNormalize();
+    foldSame("Math.min(Math.random(), 1)");
+
+    fold("Math.min()", "Infinity");
+    fold("Math.min(3)", "3");
+    fold("Math.min(0, 1)", "0");
+    fold("Math.min(0, 1, -1, 200)", "-1");
+  }
+
+
   public void testFoldParseNumbers() {
     enableNormalize();
 

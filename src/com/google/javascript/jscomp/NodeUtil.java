@@ -306,7 +306,6 @@ public final class NodeUtil {
    * <code>Number()</code> JavaScript cast function.
    *
    * @param n The node.
-   * @param useType If true, return 0.0 if the type is null, and NaN if the type is undefined.
    * @return The value of a node as a Number, or null if it cannot be converted.
    */
   static Double getNumberValue(Node n) {
@@ -5414,6 +5413,24 @@ public final class NodeUtil {
 
     double two32 = 4294967296.0;
     d = d % two32;
+    // (double)(long)d == d should hold here
+
+    long l = (long) d;
+    // returning (int)d does not work as d can be outside int range
+    // but the result must always be 32 lower bits of l
+    return (int) l;
+  }
+
+  static int toUInt32(double d) {
+    if (Double.isNaN(d) || Double.isInfinite(d) || d == 0) {
+      return 0;
+    }
+
+    d = Math.signum(d) * Math.floor(Math.abs(d));
+
+    double two32 = 4294967296.0;
+    // this ensures that d is positive
+    d = ((d % two32) + two32) % two32;
     // (double)(long)d == d should hold here
 
     long l = (long) d;
