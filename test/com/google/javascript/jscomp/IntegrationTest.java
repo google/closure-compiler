@@ -460,7 +460,7 @@ public final class IntegrationTest extends IntegrationTestCase {
   public void testBug31448683() {
     CompilerOptions options = createCompilerOptions();
     WarningLevel.QUIET.setOptionsForWarningLevel(options);
-    options.setInlineFunctions(true);
+    options.setInlineFunctions(Reach.ALL);
     test(
         options,
         LINE_JOINER.join(
@@ -2444,7 +2444,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     String code = "function f() { return 3; } f(); ";
     testSame(options, code);
 
-    options.setInlineFunctions(true);
+    options.setInlineFunctions(Reach.ALL);
     test(options, code, "3;");
   }
 
@@ -2808,7 +2808,7 @@ public final class IntegrationTest extends IntegrationTestCase {
   // https://github.com/google/closure-compiler/issues/2388
   public void testNoCrash_varInCatch() {
     CompilerOptions options = createCompilerOptions();
-    options.setInlineFunctions(true);
+    options.setInlineFunctions(Reach.ALL);
 
     test(
         options,
@@ -4524,7 +4524,7 @@ public final class IntegrationTest extends IntegrationTestCase {
 
   public void testMaxFunSizeAfterInliningUsage() {
     CompilerOptions options = new CompilerOptions();
-    options.setInlineFunctions(false);
+    options.setInlineFunctions(Reach.NONE);
     options.setMaxFunctionSizeAfterInlining(1);
     try {
       test(options, "", "");
