@@ -1776,43 +1776,6 @@ public final class NodeUtil {
     }
   }
 
-  /**
-   * @return Whether the function is defined in a non-aliasing expression.
-   */
-  static boolean isSimpleFunctionDeclaration(Node fn) {
-    Node parent = fn.getParent();
-    Node grandparent = parent.getParent();
-
-    // Simple definition finder doesn't provide useful results in some
-    // cases, specifically:
-    //  - functions with recursive definitions
-    //  - functions defined in object literals
-    //  - functions defined in array literals
-    // Here we defined a set of known function declaration that are 'ok'.
-
-    // Some projects seem to actually define "JSCompiler_renameProperty"
-    // rather than simply having an extern definition.  Don't mess with it.
-    Node nameNode = getNameNode(fn);
-    if (nameNode != null
-        && nameNode.isName()) {
-      String name = nameNode.getString();
-      if (name.equals(JSC_PROPERTY_NAME_FN)
-          || name.equals(EXTERN_OBJECT_PROPERTY_STRING)) {
-        return false;
-      }
-    }
-
-    // example: function a(){};
-    if (isFunctionDeclaration(fn)) {
-      return true;
-    }
-
-    // example: a = function(){};
-    // example: var a = function(){};
-    return fn.getFirstChild().getString().isEmpty()
-        && (isExprAssign(grandparent) || parent.isName());
-  }
-
   public enum ValueType {
     UNDETERMINED,
     NULL,
