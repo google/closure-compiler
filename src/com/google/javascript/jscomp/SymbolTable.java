@@ -60,6 +60,7 @@ import java.util.Objects;
 import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
 import javax.annotation.Nullable;
 
 /**
@@ -642,9 +643,21 @@ public final class SymbolTable {
         sym.getJSDocInfo());
   }
 
+  /**
+   * Replace all \ with \\ so there will be no \0 or \n in the string, then replace all '\0'
+   * (NULL) with \0 and all '\n' (newline) with \n.
+   */
+  private static String sanitizeSpecialChars(String s) {
+    return s.replaceAll("\\\\", Matcher.quoteReplacement("\\\\"))
+        .replaceAll("\0", Matcher.quoteReplacement("\\0"))
+        .replaceAll("\n", Matcher.quoteReplacement("\\n"));
+  }
+
   private Symbol addSymbol(
       String name, JSType type, boolean inferred, SymbolScope scope,
       Node declNode) {
+    name = sanitizeSpecialChars(name);
+
     Symbol symbol = new Symbol(name, type, inferred, scope);
     Symbol replacedSymbol = symbols.put(declNode, name, symbol);
     Preconditions.checkState(

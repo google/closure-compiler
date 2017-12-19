@@ -198,6 +198,27 @@ public final class SymbolTableTest extends TestCase {
     assertNull(t);
   }
 
+  public void testObjectLiteral() throws Exception {
+    SymbolTable table = createSymbolTable("var obj = {foo: 0};");
+
+    Symbol foo = getGlobalVar(table, "obj.foo");
+    assertThat(foo.getName()).isEqualTo("foo");
+  }
+
+  public void testObjectLiteralQuoted() throws Exception {
+    SymbolTable table = createSymbolTable("var obj = {'foo': 0};");
+
+    Symbol foo = getGlobalVar(table, "obj.foo");
+    assertThat(foo.getName()).isEqualTo("foo");
+  }
+
+  public void testObjectLiteralWithNewlineInKey() throws Exception {
+    SymbolTable table = createSymbolTable("var obj = {'foo\\nbar': 0};");
+
+    Symbol foo = getGlobalVar(table, "obj.foo\\nbar");
+    assertThat(foo.getName()).isEqualTo("obj.foo\\nbar");
+  }
+
   public void testNamespacedReferences() throws Exception {
     // Because the type of goog is anonymous, we build its properties into
     // the global scope.
@@ -1156,8 +1177,7 @@ public final class SymbolTableTest extends TestCase {
   private List<Symbol> getVars(SymbolTable table) {
     List<Symbol> result = new ArrayList<>();
     for (Symbol symbol : table.getAllSymbols()) {
-      if (symbol.getDeclaration() != null &&
-          !symbol.getDeclaration().getNode().isFromExterns()) {
+      if (symbol.getDeclaration() != null && !symbol.getDeclaration().getNode().isFromExterns()) {
         result.add(symbol);
       }
     }
@@ -1194,9 +1214,9 @@ public final class SymbolTableTest extends TestCase {
 
       Symbol scope = table.getSymbolForScope(table.getScope(sym));
       assertTrue(
-          "The symbol's scope is a zombie scope that shouldn't exist.\n" +
-          "Symbol: " + sym + "\n" +
-          "Scope: " + table.getScope(sym),
+          "The symbol's scope is a zombie scope that shouldn't exist.\n"
+              + "Symbol: " + sym + "\n"
+              + "Scope: " + table.getScope(sym),
           scope == null || allSymbols.contains(scope));
     }
 
