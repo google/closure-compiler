@@ -203,6 +203,10 @@ public class Var implements StaticSlot, StaticRef {
         && parent.getFirstChild() == nameNode;
   }
 
+  boolean isImport() {
+    return declarationType() == Token.IMPORT;
+  }
+
   public boolean isArguments() {
     return false;
   }

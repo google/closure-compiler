@@ -3391,6 +3391,41 @@ public final class NodeUtil {
     }
   }
 
+  /**
+   * Determines whether this node is used as an L-value that is a declaration.
+   *
+   * <p><code>x = 5;</code> is an L-value but does not declare a variable.
+   */
+  public static boolean isDeclarationLValue(Node n) {
+    boolean isLValue = isLValue(n);
+
+    if (!isLValue) {
+      return false;
+    }
+
+    Node parent = n.getParent();
+
+    switch (parent.getToken()) {
+      case IMPORT_SPEC:
+      case VAR:
+      case LET:
+      case CONST:
+      case PARAM_LIST:
+      case IMPORT:
+      case CATCH:
+      case CLASS:
+      case FUNCTION:
+        return true;
+      case STRING_KEY:
+        return isNameDeclaration(parent.getParent().getGrandparent());
+      case OBJECT_PATTERN:
+      case ARRAY_PATTERN:
+        return isNameDeclaration(parent.getGrandparent());
+      default:
+        return false;
+    }
+  }
+
   static boolean isLhsOfAssign(Node n) {
     Node parent = n.getParent();
     return parent != null && parent.isAssign() && parent.getFirstChild() == n;

@@ -56,4 +56,46 @@ public final class Es6CheckModuleTest extends CompilerTestCase {
             "",
             "exports = Foo;"));
   }
+
+  public void testCannotRenameImport() {
+    testError("import { p } from 'other'; p = 2;", Es6CheckModule.IMPORT_CANNOT_BE_REASSIGNED);
+
+    testError("import { p } from 'other'; ({p} = {});", Es6CheckModule.IMPORT_CANNOT_BE_REASSIGNED);
+    testError(
+        "import { p } from 'other'; ({z:p} = {});", Es6CheckModule.IMPORT_CANNOT_BE_REASSIGNED);
+    testSame("import { p } from 'other'; ({p:z} = {});");
+
+    testError("import { p } from 'other'; [p] = [];", Es6CheckModule.IMPORT_CANNOT_BE_REASSIGNED);
+
+    testSame("import { p } from 'other'; p.x = 2;");
+    testSame("import { p } from 'other'; p['x'] = 2;");
+
+    testError(
+        "import Default from 'other'; Default = 2;", Es6CheckModule.IMPORT_CANNOT_BE_REASSIGNED);
+
+    testSame("import Default from 'other'; Default.x = 2;");
+    testSame("import Default from 'other'; Default['x'] = 2;");
+
+    testError(
+        "import * as Module from 'other'; Module = 2;", Es6CheckModule.IMPORT_CANNOT_BE_REASSIGNED);
+
+    testError(
+        "import * as Module from 'other'; Module.x = 2;",
+        Es6CheckModule.IMPORT_CANNOT_BE_REASSIGNED);
+
+    testError(
+        "import * as Module from 'other'; Module['x'] = 2;",
+        Es6CheckModule.IMPORT_CANNOT_BE_REASSIGNED);
+
+    testSame("import * as Module from 'other'; Module.x.y = 2;");
+
+    testSame("import * as Module from 'other'; Module['x'].y = 2;");
+
+    // Handled by VariableReferenceCheck.
+    testSame("import { p } from 'other'; let p = 0;");
+    testSame("import { p } from 'other'; var {p} = {};");
+    testSame("import { p } from 'other'; var [p] = [];");
+    testSame("import { p } from 'other'; function p() {};");
+    testSame("import { p } from 'other'; class p {};");
+  }
 }

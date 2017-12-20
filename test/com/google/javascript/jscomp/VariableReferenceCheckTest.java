@@ -1175,6 +1175,26 @@ public final class VariableReferenceCheckTest extends CompilerTestCase {
     testSame("export let x = 1; for (let y of [x]);");
   }
 
+  public void testRedeclareVariableFromImport() {
+    assertRedeclareError("import {x} from 'whatever'; let x = 0;");
+    assertRedeclareError("import {x} from 'whatever'; const x = 0;");
+    assertRedeclareError("import {x} from 'whatever'; var x = 0;");
+    assertRedeclareError("import {x} from 'whatever'; function x() {}");
+    assertRedeclareError("import {x} from 'whatever'; class x {}");
+
+    assertRedeclareError("import x from 'whatever'; let x = 0;");
+
+    assertRedeclareError("import * as ns from 'whatever'; let ns = 0;");
+
+    assertRedeclareError("import {y as x} from 'whatever'; let x = 0;");
+
+    assertRedeclareError("import {x} from 'whatever'; let {x} = {};");
+
+    assertRedeclareError("import {x} from 'whatever'; let [x] = [];");
+
+    testSame("import {x} from 'whatever'; function f() { let x = 0; }");
+  }
+
   /**
    * Expects the JS to generate one bad-read error.
    */
