@@ -20,7 +20,6 @@ import static com.google.javascript.jscomp.CompilerTestCase.lines;
 import static com.google.javascript.jscomp.parsing.Config.JsDocParsing.INCLUDE_DESCRIPTIONS_NO_WHITESPACE;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Ordering;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.SymbolTable.Reference;
@@ -1201,7 +1200,7 @@ public final class SymbolTableTest extends TestCase {
    */
   private SymbolTable assertSymbolTableValid(SymbolTable table) {
     Set<Symbol> allSymbols = new HashSet<>();
-    Iterables.addAll(allSymbols, table.getAllSymbols());
+    allSymbols.addAll(table.getAllSymbols());
     for (Symbol sym : table.getAllSymbols()) {
       // Make sure that grabbing the symbol's scope and looking it up
       // again produces the same symbol.
