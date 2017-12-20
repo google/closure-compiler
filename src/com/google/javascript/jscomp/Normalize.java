@@ -57,7 +57,7 @@ import java.util.Set;
  *   <li>Marks constants with the IS_CONSTANT_NAME annotation.
  *   <li>Finds properties marked @expose, and rewrites them in [] notation.
  *   <li>Rewrite body of arrow function as a block
- *   <li>Removes ES6 shorthand property syntax and shorthand import/export syntax.
+ *   <li>Removes ES6 shorthand import/export syntax.
  *   <li>Take var statements out from for-loop initializer.
  *       This: for(var a = 0;a<0;a++) {} becomes: var a = 0; for(var a;a<0;a++) {}
  * </ol>
@@ -348,6 +348,7 @@ class Normalize implements CompilerPass {
       this.assertOnChange = assertOnChange;
     }
 
+
     private void reportCodeChange(String changeDescription, Node n) {
       if (assertOnChange) {
         throw new IllegalStateException(
@@ -380,11 +381,6 @@ class Normalize implements CompilerPass {
           if (visitFunction(n, compiler)) {
             reportCodeChange("Function declaration", n);
           }
-          break;
-
-        case DEFAULT_VALUE:
-        case STRING_KEY:
-          rewriteEs6ObjectLiteralShorthandPropertySyntax(n);
           break;
 
         case IMPORT_SPEC:
@@ -521,38 +517,6 @@ class Normalize implements CompilerPass {
         }
 
         compiler.reportChangeToEnclosingScope(n.getParent());
-      }
-    }
-
-    /**
-     * Expand ES6 object literal shorthand property syntax.
-     *
-     * <p>From: obj = {x, y} to: obj = {x:x, y:y}
-     *
-     * <p>From: var {x = 5} = obj to: var {x:x = 5} = obj
-     */
-    private void rewriteEs6ObjectLiteralShorthandPropertySyntax(Node n) {
-      switch (n.getToken()) {
-        case STRING_KEY:
-          if (!n.hasChildren()) {
-            String objLitName = NodeUtil.getObjectLitKeyName(n);
-            Node objLitNameNode = Node.newString(Token.NAME, objLitName).useSourceInfoFrom(n);
-            n.addChildToBack(objLitNameNode);
-            reportCodeChange("Normalize ES6 shorthand property syntax", n);
-          }
-          break;
-
-        case DEFAULT_VALUE:
-          if (n.getParent().isObjectPattern()) {
-            Node stringKeyNode = IR.stringKey(n.getFirstChild().getString()).srcref(n);
-            n.replaceWith(stringKeyNode);
-            stringKeyNode.addChildToBack(n);
-            reportCodeChange("Normalize ES6 shorthand property syntax", n);
-          }
-          break;
-
-        default:
-          throw new IllegalStateException();
       }
     }
 

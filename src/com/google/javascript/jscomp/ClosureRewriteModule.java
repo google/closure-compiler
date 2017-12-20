@@ -374,10 +374,6 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
           }
           return true;
 
-        case STRING_KEY:
-          rewriteShortObjectKey(n);
-          return true;
-
         case NAME:
           preprocessExportDeclaration(n);
           return true;
@@ -812,22 +808,6 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     popScript();
 
     reportUnrecognizedRequires();
-  }
-
-  /**
-   * Rewrites ES6 shorthand property names from {name} to the expanded version {name:name}.
-   * This makes it easier for later analyses to rewrite lvalue and rvalue names correctly.
-   */
-  private void rewriteShortObjectKey(Node n) {
-    checkArgument(n.isStringKey());
-    if (!n.hasChildren()) {
-      Node nameNode = IR.name(n.getString()).srcref(n);
-      n.addChildToBack(nameNode);
-      Node changeScope = NodeUtil.getEnclosingChangeScopeRoot(n);
-      if (changeScope != null) {
-        compiler.reportChangeToChangeScope(changeScope);
-      }
-    }
   }
 
   /**
