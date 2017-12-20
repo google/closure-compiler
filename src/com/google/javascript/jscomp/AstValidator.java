@@ -958,9 +958,6 @@ public final class AstValidator implements CompilerPass {
         case STRING_KEY:
           validateObjectPatternStringKey(type, c);
           break;
-        case OBJECT_PATTERN:
-          validateObjectPattern(type, c);
-          break;
         case REST:
           validateRest(type, c);
           break;
