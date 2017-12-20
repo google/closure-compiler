@@ -31,7 +31,6 @@
 
 /**
  * @constructor
- * @noalias
  */
 function WebGLRenderingContext() {}
 
@@ -2901,7 +2900,6 @@ WebGLRenderingContext.prototype.viewport = function(x, y, width, height) {};
 
 /**
  * @constructor
- * @noalias
  */
 function WebGLContextAttributes() {}
 
@@ -2948,7 +2946,6 @@ WebGLContextAttributes.prototype.failIfMajorPerformanceCaveat;
 /**
  * @param {string} eventType
  * @constructor
- * @noalias
  * @extends {Event}
  */
 function WebGLContextEvent(eventType) {}
@@ -2961,7 +2958,6 @@ WebGLContextEvent.prototype.statusMessage;
 
 /**
  * @constructor
- * @noalias
  */
 function WebGLShaderPrecisionFormat() {}
 
@@ -2983,14 +2979,12 @@ WebGLShaderPrecisionFormat.prototype.precision;
 
 /**
  * @constructor
- * @noalias
  */
 function WebGLObject() {}
 
 
 /**
  * @constructor
- * @noalias
  * @extends {WebGLObject}
  */
 function WebGLBuffer() {}
@@ -2998,7 +2992,6 @@ function WebGLBuffer() {}
 
 /**
  * @constructor
- * @noalias
  * @extends {WebGLObject}
  */
 function WebGLFramebuffer() {}
@@ -3006,7 +2999,6 @@ function WebGLFramebuffer() {}
 
 /**
  * @constructor
- * @noalias
  * @extends {WebGLObject}
  */
 function WebGLProgram() {}
@@ -3014,7 +3006,6 @@ function WebGLProgram() {}
 
 /**
  * @constructor
- * @noalias
  * @extends {WebGLObject}
  */
 function WebGLRenderbuffer() {}
@@ -3022,7 +3013,6 @@ function WebGLRenderbuffer() {}
 
 /**
  * @constructor
- * @noalias
  * @extends {WebGLObject}
  */
 function WebGLShader() {}
@@ -3030,7 +3020,6 @@ function WebGLShader() {}
 
 /**
  * @constructor
- * @noalias
  * @extends {WebGLObject}
  */
 function WebGLTexture() {}
@@ -3038,7 +3027,6 @@ function WebGLTexture() {}
 
 /**
  * @constructor
- * @noalias
  */
 function WebGLActiveInfo() {}
 
@@ -3054,7 +3042,6 @@ WebGLActiveInfo.prototype.name;
 
 /**
  * @constructor
- * @noalias
  */
 function WebGLUniformLocation() {}
 
@@ -3062,7 +3049,6 @@ function WebGLUniformLocation() {}
 /**
  * @see http://www.khronos.org/registry/webgl/extensions/OES_texture_float/
  * @constructor
- * @noalias
  */
 function OES_texture_float() {}
 
@@ -3070,7 +3056,6 @@ function OES_texture_float() {}
 /**
  * @see http://www.khronos.org/registry/webgl/extensions/OES_texture_half_float/
  * @constructor
- * @noalias
  */
 function OES_texture_half_float() {}
 
@@ -3081,7 +3066,6 @@ OES_texture_half_float.prototype.HALF_FLOAT_OES;
 /**
  * @see http://www.khronos.org/registry/webgl/extensions/WEBGL_lose_context/
  * @constructor
- * @noalias
  */
 function WEBGL_lose_context() {}
 
@@ -3093,7 +3077,6 @@ WEBGL_lose_context.prototype.restoreContext = function() {};
 /**
  * @see http://www.khronos.org/registry/webgl/extensions/OES_standard_derivatives/
  * @constructor
- * @noalias
  */
 function OES_standard_derivatives() {}
 
@@ -3104,7 +3087,6 @@ OES_standard_derivatives.prototype.FRAGMENT_SHADER_DERIVATIVE_HINT_OES;
 /**
  * @see http://www.khronos.org/registry/webgl/extensions/OES_vertex_array_object/
  * @constructor
- * @noalias
  * @extends {WebGLObject}
  */
 function WebGLVertexArrayObjectOES() {}
@@ -3113,7 +3095,6 @@ function WebGLVertexArrayObjectOES() {}
 /**
  * @see http://www.khronos.org/registry/webgl/extensions/OES_vertex_array_object/
  * @constructor
- * @noalias
  */
 function OES_vertex_array_object() {}
 
@@ -3150,7 +3131,6 @@ OES_vertex_array_object.prototype.bindVertexArrayOES = function(arrayObject) {};
 /**
  * @see http://www.khronos.org/registry/webgl/extensions/WEBGL_debug_renderer_info/
  * @constructor
- * @noalias
  */
 function WEBGL_debug_renderer_info() {}
 
@@ -3164,7 +3144,6 @@ WEBGL_debug_renderer_info.prototype.UNMASKED_RENDERER_WEBGL;
 /**
  * @see http://www.khronos.org/registry/webgl/extensions/WEBGL_debug_shaders/
  * @constructor
- * @noalias
  */
 function WEBGL_debug_shaders() {}
 
@@ -3179,7 +3158,6 @@ WEBGL_debug_shaders.prototype.getTranslatedShaderSource = function(shader) {};
 /**
  * @see http://www.khronos.org/registry/webgl/extensions/WEBGL_compressed_texture_s3tc/
  * @constructor
- * @noalias
  */
 function WEBGL_compressed_texture_s3tc() {}
 
@@ -3199,7 +3177,6 @@ WEBGL_compressed_texture_s3tc.prototype.COMPRESSED_RGBA_S3TC_DXT5_EXT;
 /**
  * @see http://www.khronos.org/registry/webgl/extensions/OES_depth_texture/
  * @constructor
- * @noalias
  */
 function OES_depth_texture() {}
 
@@ -3207,7 +3184,6 @@ function OES_depth_texture() {}
 /**
  * @see http://www.khronos.org/registry/webgl/extensions/OES_element_index_uint/
  * @constructor
- * @noalias
  */
 function OES_element_index_uint() {}
 
@@ -3215,7 +3191,6 @@ function OES_element_index_uint() {}
 /**
  * @see http://www.khronos.org/registry/webgl/extensions/EXT_texture_filter_anisotropic/
  * @constructor
- * @noalias
  */
 function EXT_texture_filter_anisotropic() {}
 
@@ -3229,7 +3204,6 @@ EXT_texture_filter_anisotropic.prototype.MAX_TEXTURE_MAX_ANISOTROPY_EXT;
 /**
  * @see https://www.khronos.org/registry/webgl/extensions/WEBGL_draw_buffers/
  * @constructor
- * @noalias
  */
 function WEBGL_draw_buffers() {}
 
@@ -3345,7 +3319,6 @@ WEBGL_draw_buffers.prototype.drawBuffersWEBGL = function(buffers) {};
 /**
  * @see http://www.khronos.org/registry/webgl/extensions/ANGLE_instanced_arrays/
  * @constructor
- * @noalias
  */
 function ANGLE_instanced_arrays() {}
 

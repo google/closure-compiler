@@ -133,7 +133,6 @@ XPathNSResolver.prototype.lookupNamespaceURI = function(prefix) {};
  * XPath is a language for addressing parts of an XML document, designed to be
  * used by both XSLT and XPointer.
  *
- * @noalias
  * @constructor
  * @see http://www.w3.org/TR/DOM-Level-3-XPath/xpath.html#XPathResult
  */
