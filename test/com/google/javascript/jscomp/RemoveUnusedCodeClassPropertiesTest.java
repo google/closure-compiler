@@ -141,25 +141,22 @@ public final class RemoveUnusedCodeClassPropertiesTest extends TypeICompilerTest
     testSame("function f() { this.ext = 2; } window['export'] = this.ext;");
   }
 
-
-  // TODO(b/66971163): make this pass
-  public void disabledTestAssignOp1() {
+  public void testAssignOp1() {
     // Properties defined using a compound assignment can be removed if the
     // result of the assignment expression is not immediately used.
-    test("this.x += 2", "2");
+    test("this.x += 2", "");
     testSame("const x = (this.x += 2)");
     testSame("this.x += 2; const x = this.x;");
     // But, of course, a later use prevents its removal.
     testSame("this.x += 2; let x = {}; x.x;");
   }
 
-  // TODO(b/66971163): make this pass
-  public void disabledTestAssignOp2() {
+  public void testAssignOp2() {
     // Properties defined using a compound assignment can be removed if the
     // result of the assignment expression is not immediately used.
-    test("this.a += 2, f()", "2, f()");
-    test("x = (this.a += 2, f())", "x = (2, f())");
-    testSame("x = (f(), this.a += 2)");
+    test("this.a += 2, alert(1)", "0, alert(1)");
+    test("const x = (this.a += 2, alert(1))", "const x = (0, alert(1))");
+    testSame("const x = (alert(1), this.a += 2)");
   }
 
   // TODO(b/66971163): make this pass
@@ -214,15 +211,17 @@ public final class RemoveUnusedCodeClassPropertiesTest extends TypeICompilerTest
   public void testForIn() {
     // This is the basic assumption that this pass makes:
     // it can remove properties even when the object is used in a FOR-IN loop
-    test("let x = {}; this.y = 1;for (var a in x) { alert(x[a]) }",
-         "let x = {};            for (var a in x) { alert(x[a]) }");
+    test(
+        "let x = {}; this.y = 1;for (var a in x) { alert(x[a]) }",
+        "let x = {};            for (var a in x) { alert(x[a]) }");
   }
 
   public void testObjectKeys() {
     // This is the basic assumption that this pass makes:
     // it can remove properties even when the object are referenced
-    test("this.y = 1;alert(Object.keys(this))",
-         "           alert(Object.keys(this))");
+    test(
+        "this.y = 1;alert(Object.keys(this))", // preserve format
+        "           alert(Object.keys(this))");
   }
 
   public void testObjectReflection1() {

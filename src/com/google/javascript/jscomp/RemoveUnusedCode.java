@@ -292,6 +292,21 @@ class RemoveUnusedCode implements CompilerPass {
         traverseAssign(n, scope);
         break;
 
+      case ASSIGN_BITOR:
+      case ASSIGN_BITXOR:
+      case ASSIGN_BITAND:
+      case ASSIGN_LSH:
+      case ASSIGN_RSH:
+      case ASSIGN_URSH:
+      case ASSIGN_ADD:
+      case ASSIGN_SUB:
+      case ASSIGN_MUL:
+      case ASSIGN_EXPONENT:
+      case ASSIGN_DIV:
+      case ASSIGN_MOD:
+        traverseCompoundAssign(n, scope);
+        break;
+
       case CALL:
         traverseCall(n, scope);
         break;
@@ -382,6 +397,25 @@ class RemoveUnusedCode implements CompilerPass {
       default:
         traverseChildren(n, scope);
         break;
+    }
+  }
+
+  private void traverseCompoundAssign(Node compoundAssignNode, Scope scope) {
+    // We'll allow removal of compound assignment to a this property as long as the result of the
+    // assignment is unused.
+    // e.g. `this.x += 3;`
+    Node targetNode = compoundAssignNode.getFirstChild();
+    Node valueNode = compoundAssignNode.getLastChild();
+    if (targetNode.isGetProp()
+        && targetNode.getFirstChild().isThis()
+        && !NodeUtil.isExpressionResultUsed(compoundAssignNode)) {
+      RemovableBuilder builder = new RemovableBuilder().setIsThisNamedPropertyAssignment(true);
+      traverseRemovableAssignValue(valueNode, builder, scope);
+      considerForIndependentRemoval(
+          builder.buildNamedPropertyAssign(compoundAssignNode, targetNode.getLastChild()));
+    } else {
+      traverseNode(targetNode, scope);
+      traverseNode(valueNode, scope);
     }
   }
 
