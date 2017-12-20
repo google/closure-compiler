@@ -309,12 +309,6 @@ public final class LateEs6ToEs3Converter implements NodeTraversal.Callback, HotS
                     result),
                 objectType);
       } else {
-        if (!propdef.hasChildren()) {
-          Node name =
-              withType(IR.name(propdef.getString()), propdef.getTypeI())
-                  .useSourceInfoIfMissingFrom(propdef);
-          propdef.addChildToBack(name);
-        }
         Node val = propdef.removeFirstChild();
         TypeI valueType = val.getTypeI();
         propdef.setToken(Token.STRING);
