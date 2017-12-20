@@ -26,15 +26,26 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import javax.annotation.Nullable;
 
+/**
+ * Encapsulates something that could be a declaration.
+ *
+ * This includes:
+ *   var/let/const declarations,
+ *   function/class declarations,
+ *   method declarations,
+ *   assignments,
+ *   goog.define calls,
+ *   and even valueless property accesses (e.g. `/** @type {number} * / Foo.prototype.bar`)
+ */
 class PotentialDeclaration {
   // The fully qualified name of the declaration.
   private final String fullyQualifiedName;
   // The LHS node of the declaration.
-  final Node lhs;
+  private final Node lhs;
   // The RHS node of the declaration, if it exists.
-  final @Nullable Node rhs;
+  private final @Nullable Node rhs;
   // The scope in which the declaration is defined.
-  final Scope scope;
+  private final Scope scope;
 
   private PotentialDeclaration(String fullyQualifiedName, Node lhs, Node rhs, Scope scope) {
     this.fullyQualifiedName = checkNotNull(fullyQualifiedName);
@@ -47,15 +58,15 @@ class PotentialDeclaration {
     checkArgument(nameNode.isQualifiedName(), nameNode);
     Node rhs = NodeUtil.getRValueOfLValue(nameNode);
     String name =
-        ConvertToTypedInterface.isThisProp(nameNode)
-            ? ConvertToTypedInterface.getPrototypeNameOfThisProp(nameNode)
+        ClassUtil.isThisProp(nameNode)
+            ? ClassUtil.getPrototypeNameOfThisProp(nameNode)
             : nameNode.getQualifiedName();
     return new PotentialDeclaration(name, nameNode, rhs, scope);
   }
 
   static PotentialDeclaration fromMethod(Node functionNode, Scope scope) {
     checkArgument(functionNode.isFunction());
-    String name = ConvertToTypedInterface.getPrototypeNameOfMethod(functionNode);
+    String name = ClassUtil.getPrototypeNameOfMethod(functionNode);
     return new PotentialDeclaration(name, functionNode.getParent(), functionNode, scope);
   }
 
@@ -70,7 +81,7 @@ class PotentialDeclaration {
     return fullyQualifiedName;
   }
 
-  Node getStatement() {
+  private Node getStatement() {
     return NodeUtil.getEnclosingStatement(lhs);
   }
 
@@ -88,7 +99,7 @@ class PotentialDeclaration {
     statement.removeChildren();
   }
 
-  void removeStringKeyValue(Node stringKey) {
+  private void removeStringKeyValue(Node stringKey) {
     Node value = stringKey.getOnlyChild();
     Node replacementValue = IR.number(0).srcrefTree(value);
     stringKey.replaceChild(value, replacementValue);
@@ -99,23 +110,23 @@ class PotentialDeclaration {
    * Usually, this means removing the RHS and leaving a type annotation.
    */
   void simplify(AbstractCompiler compiler) {
-    Node nameNode = lhs;
+    Node nameNode = getLhs();
     JSDocInfo jsdoc = getJsDoc();
     if (jsdoc != null && jsdoc.hasEnumParameterType()) {
       // Remove values from enums
-      if (rhs.isObjectLit() && rhs.hasChildren()) {
-        for (Node key : rhs.children()) {
+      if (getRhs().isObjectLit() && getRhs().hasChildren()) {
+        for (Node key : getRhs().children()) {
           removeStringKeyValue(key);
         }
-        compiler.reportChangeToEnclosingScope(rhs);
+        compiler.reportChangeToEnclosingScope(getRhs());
       }
       return;
     }
     if (NodeUtil.isNamespaceDecl(nameNode)) {
-      Node objLit = rhs;
-      if (rhs.isOr()) {
-        objLit = rhs.getLastChild().detach();
-        rhs.replaceWith(objLit);
+      Node objLit = getRhs();
+      if (getRhs().isOr()) {
+        objLit = getRhs().getLastChild().detach();
+        getRhs().replaceWith(objLit);
         compiler.reportChangeToEnclosingScope(nameNode);
       }
       if (objLit.hasChildren()) {
@@ -131,7 +142,7 @@ class PotentialDeclaration {
     }
     if (nameNode.matchesQualifiedName("exports")) {
       // Replace the RHS of a default goog.module export with Unknown
-      replaceRhsWithUnknown(rhs);
+      replaceRhsWithUnknown(getRhs());
       compiler.reportChangeToEnclosingScope(nameNode);
       return;
     }
@@ -154,5 +165,18 @@ class PotentialDeclaration {
 
   private static void replaceRhsWithUnknown(Node rhs) {
     rhs.replaceWith(IR.cast(IR.number(0), JsdocUtil.getQmarkTypeJSDoc()).srcrefTree(rhs));
+  }
+
+  Node getLhs() {
+    return lhs;
+  }
+
+  @Nullable
+  Node getRhs() {
+    return rhs;
+  }
+
+  Scope getScope() {
+    return scope;
   }
 }

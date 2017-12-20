@@ -30,6 +30,9 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import javax.annotation.Nullable;
 
+/**
+ * Static utility methods for dealing with inspecting and constructing JSDoc objects.
+ */
 final class JsdocUtil {
   private JsdocUtil() {}
 

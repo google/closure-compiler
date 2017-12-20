@@ -66,7 +66,8 @@ final class FileInfo {
     return declarations.containsKey(fullyQualifiedName);
   }
 
-  static boolean containsPrefix(String fullyQualifiedName, Iterable<String> prefixNamespaces) {
+  private static boolean containsPrefix(
+      String fullyQualifiedName, Iterable<String> prefixNamespaces) {
     for (String prefix : prefixNamespaces) {
       if (fullyQualifiedName.equals(prefix) || fullyQualifiedName.startsWith(prefix + ".")) {
         return true;
