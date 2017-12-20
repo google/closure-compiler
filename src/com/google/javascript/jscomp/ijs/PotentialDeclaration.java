@@ -15,6 +15,9 @@
  */
 package com.google.javascript.jscomp.ijs;
 
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import com.google.javascript.jscomp.AbstractCompiler;
 import com.google.javascript.jscomp.NodeUtil;
 import com.google.javascript.jscomp.Scope;
@@ -24,24 +27,47 @@ import com.google.javascript.rhino.Node;
 import javax.annotation.Nullable;
 
 class PotentialDeclaration {
+  // The fully qualified name of the declaration.
+  private final String fullyQualifiedName;
   // The LHS node of the declaration.
   final Node lhs;
   // The RHS node of the declaration, if it exists.
-  final @Nullable
-  Node rhs;
+  final @Nullable Node rhs;
   // The scope in which the declaration is defined.
-  final @Nullable
-  Scope scope;
+  final Scope scope;
 
-  PotentialDeclaration(Node lhs, Node rhs, @Nullable Scope scope) {
-    this.lhs = lhs;
+  private PotentialDeclaration(String fullyQualifiedName, Node lhs, Node rhs, Scope scope) {
+    this.fullyQualifiedName = checkNotNull(fullyQualifiedName);
+    this.lhs = checkNotNull(lhs);
     this.rhs = rhs;
-    this.scope = scope;
+    this.scope = checkNotNull(scope);
   }
 
-  static PotentialDeclaration from(Node nameNode, @Nullable Scope scope) {
+  static PotentialDeclaration fromName(Node nameNode, Scope scope) {
+    checkArgument(nameNode.isQualifiedName(), nameNode);
     Node rhs = NodeUtil.getRValueOfLValue(nameNode);
-    return new PotentialDeclaration(nameNode, rhs, scope);
+    String name =
+        ConvertToTypedInterface.isThisProp(nameNode)
+            ? ConvertToTypedInterface.getPrototypeNameOfThisProp(nameNode)
+            : nameNode.getQualifiedName();
+    return new PotentialDeclaration(name, nameNode, rhs, scope);
+  }
+
+  static PotentialDeclaration fromMethod(Node functionNode, Scope scope) {
+    checkArgument(functionNode.isFunction());
+    String name = ConvertToTypedInterface.getPrototypeNameOfMethod(functionNode);
+    return new PotentialDeclaration(name, functionNode.getParent(), functionNode, scope);
+  }
+
+  static PotentialDeclaration fromDefine(Node callNode, Scope scope) {
+    checkArgument(NodeUtil.isCallTo(callNode, "goog.define"));
+    String name = callNode.getSecondChild().getString();
+    Node rhs = callNode.getLastChild();
+    return new PotentialDeclaration(name, callNode, rhs, scope);
+  }
+
+  String getFullyQualifiedName() {
+    return fullyQualifiedName;
   }
 
   Node getStatement() {
@@ -129,5 +155,4 @@ class PotentialDeclaration {
   private static void replaceRhsWithUnknown(Node rhs) {
     rhs.replaceWith(IR.cast(IR.number(0), JsdocUtil.getQmarkTypeJSDoc()).srcrefTree(rhs));
   }
-
 }

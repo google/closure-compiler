@@ -286,9 +286,15 @@ public class ConvertToTypedInterface implements CompilerPass {
     public void visit(NodeTraversal t, Node n, Node parent) {
       switch (n.getToken()) {
         case CLASS:
+          if (NodeUtil.isStatementParent(parent)) {
+            currentFile.recordNameDeclaration(n.getFirstChild(), t.getScope());
+          }
+          break;
         case FUNCTION:
           if (NodeUtil.isStatementParent(parent)) {
-            currentFile.recordDeclaration(n.getFirstChild(), t.getScope());
+            currentFile.recordNameDeclaration(n.getFirstChild(), t.getScope());
+          } else if (isClassMethod(n)) {
+            currentFile.recordMethod(n, t.getScope());
           }
           break;
         case EXPR_RESULT:
@@ -308,10 +314,10 @@ public class ConvertToTypedInterface implements CompilerPass {
             case ASSIGN:
               Node lhs = expr.getFirstChild();
               propagateJsdocAtName(t, lhs);
-              currentFile.recordDeclaration(lhs, t.getScope());
+              currentFile.recordNameDeclaration(lhs, t.getScope());
               break;
             case GETPROP:
-              currentFile.recordDeclaration(expr, t.getScope());
+              currentFile.recordNameDeclaration(expr, t.getScope());
               break;
             default:
               throw new RuntimeException("Unexpected declaration: " + expr);
@@ -342,7 +348,7 @@ public class ConvertToTypedInterface implements CompilerPass {
         if (isImport) {
           currentFile.recordImport(name.getString());
         } else {
-          currentFile.recordDeclaration(name, t.getScope());
+          currentFile.recordNameDeclaration(name, t.getScope());
         }
       }
     }
@@ -532,14 +538,22 @@ public class ConvertToTypedInterface implements CompilerPass {
           || (lhs.isGetProp() && lhs.getFirstChild().matchesQualifiedName("exports"));
     }
 
+    private static String rootName(String qualifiedName) {
+      int dotIndex = qualifiedName.indexOf('.');
+      if (dotIndex == -1) {
+        return qualifiedName;
+      }
+      return qualifiedName.substring(0, dotIndex);
+    }
+
     private RemovalType shouldRemove(String fullyQualifiedName, PotentialDeclaration decl) {
-      Node nameNode = decl.lhs;
-      Node rhs = decl.rhs;
-      if (NodeUtil.getRootOfQualifiedName(nameNode).matchesQualifiedName("$jscomp")) {
+      if ("$jscomp".equals(rootName(fullyQualifiedName))) {
         // These are created by goog.scope processing, but clash with each other
         // and should not be depended on.
         return RemovalType.REMOVE_ALL;
       }
+      Node nameNode = decl.lhs;
+      Node rhs = decl.rhs;
       Node jsdocNode = NodeUtil.getBestJSDocInfoNode(nameNode);
       JSDocInfo jsdoc = jsdocNode.getJSDocInfo();
       boolean isExport = isExportLhs(nameNode);
@@ -596,6 +610,13 @@ public class ConvertToTypedInterface implements CompilerPass {
     return className + ".prototype." + getprop.getLastChild().getString();
   }
 
+  static String getPrototypeNameOfMethod(Node function) {
+    checkArgument(isClassMethod(function));
+    String className = getClassName(function);
+    checkState(className != null && !className.isEmpty());
+    return className + ".prototype." + function.getParent().getString();
+  }
+
   // TODO(blickly): Move to NodeUtil if it makes more sense there.
   private static boolean isDeclaration(Node nameNode) {
     checkArgument(nameNode.isQualifiedName());
@@ -623,7 +644,7 @@ public class ConvertToTypedInterface implements CompilerPass {
         && !NodeUtil.isNamespaceDecl(nameNode);
   }
 
-  private static boolean isClassMemberFunction(Node functionNode) {
+  static boolean isClassMethod(Node functionNode) {
     checkArgument(functionNode.isFunction());
     Node parent = functionNode.getParent();
     if (parent.isMemberFunctionDef()
@@ -639,7 +660,7 @@ public class ConvertToTypedInterface implements CompilerPass {
   }
 
   private static String getClassName(Node functionNode) {
-    if (isClassMemberFunction(functionNode)) {
+    if (isClassMethod(functionNode)) {
       Node parent = functionNode.getParent();
       if (parent.isMemberFunctionDef()) {
         // ES6 class
@@ -657,7 +678,7 @@ public class ConvertToTypedInterface implements CompilerPass {
   }
 
   private static boolean isConstructor(Node functionNode) {
-    if (isClassMemberFunction(functionNode)) {
+    if (isClassMethod(functionNode)) {
       return "constructor".equals(functionNode.getParent().getString());
     }
     JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(functionNode);

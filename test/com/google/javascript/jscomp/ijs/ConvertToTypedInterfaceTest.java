@@ -197,6 +197,41 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
             "/** @const {number} */ Foo.prototype.x;"));
   }
 
+  public void testClassMethodsConflictWithOtherAssignment() {
+    test(
+        lines(
+            "class Foo {",
+            "  /** @return {number} */",
+            "  method() {}",
+            "}",
+            "Foo.prototype.method = wrap(Foo.prototype.method);"),
+        lines(
+            "class Foo {",
+            "  /** @return {number} */",
+            "  method() {}",
+            "}",
+            ""));
+
+    test(
+        lines(
+            "class Foo {",
+            "  constructor() {",
+            "    this.method = wrap(Foo.prototype.method);",
+            "  }",
+            "  /** @return {number} */",
+            "  method() {}",
+            "}",
+            ""),
+        lines(
+            "class Foo {",
+            "  constructor() {}",
+            "  /** @return {number} */",
+            "  method() {}",
+            "}",
+            ""));
+
+  }
+
   public void testMultipleSameNamedThisProperties() {
     test(
         lines(

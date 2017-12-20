@@ -3871,7 +3871,7 @@ public final class NodeUtil {
   /**
    * Gets the root node of a qualified name. Must be either NAME, THIS or SUPER.
    */
-  public static Node getRootOfQualifiedName(Node qName) {
+  static Node getRootOfQualifiedName(Node qName) {
     for (Node current = qName; true; current = current.getFirstChild()) {
       if (current.isName() || current.isThis() || current.isSuper()) {
         return current;

@@ -20,7 +20,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.MultimapBuilder;
-import com.google.javascript.jscomp.NodeUtil;
 import com.google.javascript.jscomp.Scope;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
@@ -39,27 +38,24 @@ final class FileInfo {
   private final ListMultimap<String, PotentialDeclaration> declarations =
       MultimapBuilder.linkedHashKeys().arrayListValues().build();
 
-  void recordDeclaration(Node qnameNode, Scope scope) {
-    checkArgument(qnameNode.isQualifiedName(), qnameNode);
-    String name =
-        ConvertToTypedInterface.isThisProp(qnameNode)
-            ? ConvertToTypedInterface.getPrototypeNameOfThisProp(qnameNode)
-            : qnameNode.getQualifiedName();
-    declarations.put(name, PotentialDeclaration.from(qnameNode, scope));
+  void recordNameDeclaration(Node qnameNode, Scope scope) {
+    recordDeclaration(PotentialDeclaration.fromName(qnameNode, scope));
+  }
+
+  void recordMethod(Node functionNode, Scope scope) {
+    recordDeclaration(PotentialDeclaration.fromMethod(functionNode, scope));
+  }
+
+  void recordDefine(Node callNode, Scope scope) {
+    recordDeclaration(PotentialDeclaration.fromDefine(callNode, scope));
   }
 
   ListMultimap<String, PotentialDeclaration> getDeclarations() {
     return declarations;
   }
 
-  void recordDefine(Node callNode, Scope scope) {
-    checkArgument(NodeUtil.isCallTo(callNode, "goog.define"));
-    String name = callNode.getSecondChild().getString();
-    declarations.put(name, PotentialDeclaration.from(callNode, scope));
-  }
-
-  void recordDeclaration(String name, PotentialDeclaration decl) {
-    declarations.put(name, decl);
+  void recordDeclaration(PotentialDeclaration decl) {
+    declarations.put(decl.getFullyQualifiedName(), decl);
   }
 
   void recordImport(String localName) {
