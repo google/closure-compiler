@@ -42,6 +42,7 @@ public final class OptimizeCallsTest extends CompilerTestCase {
   protected void setUp() throws Exception {
     super.setUp();
     enableNormalize();
+    enableGatherExternProperties();
   }
 
   @Override

@@ -97,21 +97,19 @@ public final class RemoveUnusedCodeClassPropertiesTest extends TypeICompilerTest
     this.mode = TypeInferenceMode.NEITHER;
   }
 
-  // TODO(b/66971163): make this pass
-  public void disabledTestSimple1() {
+  public void testSimple1() {
     // A property defined on "this" can be removed
-    test("this.a = 2", "2");
-    test("x = (this.a = 2)", "x = 2");
-    testSame("this.a = 2; x = this.a;");
+    test("this.a = 2", "");
+    test("let x = (this.a = 2)", "let x = 2");
+    testSame("this.a = 2; let x = this.a;");
   }
 
-  // TODO(b/66971163): make this pass
-  public void disabledTestSimple2() {
+  public void testSimple2() {
     // A property defined on "this" can be removed, even when defined
     // as part of an expression
-    test("this.a = 2, f()", "2, f()");
-    test("x = (this.a = 2, f())", "x = (2, f())");
-    test("x = (f(), this.a = 2)", "x = (f(), 2)");
+    test("this.a = 2, alert(1);", "0, alert(1);");
+    test("const x = (this.a = 2, alert(1));", "const x = (0, alert(1));");
+    test("const x = (alert(1), this.a = 2);", "const x = (alert(1), 2);");
   }
 
   public void testSimple3() {
@@ -149,10 +147,10 @@ public final class RemoveUnusedCodeClassPropertiesTest extends TypeICompilerTest
     // Properties defined using a compound assignment can be removed if the
     // result of the assignment expression is not immediately used.
     test("this.x += 2", "2");
-    testSame("x = (this.x += 2)");
-    testSame("this.x += 2; x = this.x;");
+    testSame("const x = (this.x += 2)");
+    testSame("this.x += 2; const x = this.x;");
     // But, of course, a later use prevents its removal.
-    testSame("this.x += 2; x.x;");
+    testSame("this.x += 2; let x = {}; x.x;");
   }
 
   // TODO(b/66971163): make this pass
@@ -213,20 +211,18 @@ public final class RemoveUnusedCodeClassPropertiesTest extends TypeICompilerTest
     testSame("this.a = 2; JSCompiler_renameProperty('a')");
   }
 
-  // TODO(b/66971163): make this pass
-  public void disabledTestForIn() {
+  public void testForIn() {
     // This is the basic assumption that this pass makes:
     // it can remove properties even when the object is used in a FOR-IN loop
-    test("this.y = 1;for (var a in x) { alert(x[a]) }",
-         "1;for (var a in x) { alert(x[a]) }");
+    test("let x = {}; this.y = 1;for (var a in x) { alert(x[a]) }",
+         "let x = {};            for (var a in x) { alert(x[a]) }");
   }
 
-  // TODO(b/66971163): make this pass
-  public void disabledTestObjectKeys() {
+  public void testObjectKeys() {
     // This is the basic assumption that this pass makes:
     // it can remove properties even when the object are referenced
     test("this.y = 1;alert(Object.keys(this))",
-         "1;alert(Object.keys(this))");
+         "           alert(Object.keys(this))");
   }
 
   public void testObjectReflection1() {

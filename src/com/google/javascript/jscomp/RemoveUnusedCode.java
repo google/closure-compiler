@@ -212,7 +212,7 @@ class RemoveUnusedCode implements CompilerPass {
   @Override
   public void process(Node externs, Node root) {
     checkState(compiler.getLifeCycleStage().isNormalized());
-    if (removeUnusedPrototypeProperties && !allowRemovalOfExternProperties) {
+    if (!allowRemovalOfExternProperties) {
       referencedPropertyNames.addAll(compiler.getExternProperties());
     }
     traverseAndRemoveUnusedReferences(root);
@@ -238,15 +238,13 @@ class RemoveUnusedCode implements CompilerPass {
     }
 
     removeUnreferencedVars();
-    if (removeUnusedPrototypeProperties) {
-      removeUnreferencedProperties();
-    }
+    removeIndependentlyRemovableProperties();
     for (Scope fparamScope : allFunctionParamScopes) {
       removeUnreferencedFunctionArgs(fparamScope);
     }
   }
 
-  private void removeUnreferencedProperties() {
+  private void removeIndependentlyRemovableProperties() {
     for (Removable removable : removablesForPropertyNames.values()) {
       removable.remove(compiler);
     }
@@ -642,76 +640,86 @@ class RemoveUnusedCode implements CompilerPass {
     checkState(NodeUtil.isAssignmentOp(assignNode));
 
     Node lhs = assignNode.getFirstChild();
-    Node nameNode = null;
-    Node propertyNode = null;
-    boolean isVariableAssign = false;
-    boolean isComputedPropertyAssign = false;
-    boolean isNamedPropertyAssign = false;
-    boolean isPrototypeObjectPropertyAssignment = false;
-
+    Node valueNode = assignNode.getLastChild();
     if (lhs.isName()) {
-      isVariableAssign = true;
-      nameNode = lhs;
-    } else if (NodeUtil.isGet(lhs)) {
-      propertyNode = lhs.getLastChild();
-      Node possibleNameNode = lhs.getFirstChild();
-      // Handle assignments to properties of a variable or its prototype property.
-      // However, don't handle any longer qualified names, because it gets hard to track
-      // properties of properties.
-      if (possibleNameNode.isGetProp()
-          && possibleNameNode.getSecondChild().getString().equals("prototype")) {
-        isPrototypeObjectPropertyAssignment = true;
-        possibleNameNode = possibleNameNode.getFirstChild();
-      }
-      if (possibleNameNode.isName()) {
-        nameNode = possibleNameNode;
-        if (lhs.isGetProp()) {
-          isNamedPropertyAssign = true;
+      // varName = something
+      VarInfo varInfo = traverseNameNode(lhs, scope);
+      RemovableBuilder builder = new RemovableBuilder();
+      traverseRemovableAssignValue(valueNode, builder, scope);
+      varInfo.addRemovable(builder.buildVariableAssign(assignNode));
+    } else if (lhs.isGetElem()) {
+      Node getElemObj = lhs.getFirstChild();
+      Node getElemKey = lhs.getLastChild();
+      Node varNameNode =
+          getElemObj.isName()
+              ? getElemObj
+              : isNameDotPrototype(getElemObj) ? getElemObj.getFirstChild() : null;
+
+      if (varNameNode != null) {
+        // varName[someExpression] = someValue
+        // OR
+        // varName.prototype[someExpression] = someValue
+        VarInfo varInfo = traverseNameNode(varNameNode, scope);
+        RemovableBuilder builder = new RemovableBuilder();
+        if (NodeUtil.mayHaveSideEffects(getElemKey)) {
+          traverseNode(getElemKey, scope);
         } else {
-          checkState(lhs.isGetElem());
-          isComputedPropertyAssign = true;
+          builder.addContinuation(new Continuation(getElemKey, scope));
         }
-      }
-    }
-    // else LHS is something else, like a destructuring pattern, which will be handled by
-    // traverseChildren() below
-    // TODO(bradfordcsmith): Handle destructuring at this level for better clarity and so we can
-    // do a better job with removal.
-
-    // If we successfully identified a name node & there is a corresponding Var,
-    // then we have a removable assignment.
-    if (nameNode == null) {
-      // Not an assignment we need to track
-      traverseChildren(assignNode, scope);
-    } else {
-      VarInfo varInfo = traverseNameNode(nameNode, scope);
-
-      Node valueNode = assignNode.getLastChild();
-      RemovableBuilder builder =
-          new RemovableBuilder()
-              .setAssignedValue(valueNode)
-              .setIsPrototypeObjectPropertyAssignment(isPrototypeObjectPropertyAssignment);
-      if (NodeUtil.isExpressionResultUsed(assignNode) || NodeUtil.mayHaveSideEffects(valueNode)) {
+        traverseRemovableAssignValue(valueNode, builder, scope);
+        varInfo.addRemovable(builder.buildComputedPropertyAssign(assignNode, getElemKey));
+      } else {
+        traverseNode(getElemObj, scope);
+        traverseNode(getElemKey, scope);
         traverseNode(valueNode, scope);
-      } else {
-        builder.addContinuation(new Continuation(valueNode, scope));
       }
+    } else if (lhs.isGetProp()) {
+      Node getPropLhs = lhs.getFirstChild();
+      Node propNameNode = lhs.getLastChild();
 
-      if (isNamedPropertyAssign) {
-        varInfo.addRemovable(builder.buildNamedPropertyAssign(assignNode, propertyNode));
-      } else if (isVariableAssign) {
-        varInfo.addRemovable(builder.buildVariableAssign(assignNode));
+      if (getPropLhs.isName()) {
+        // varName.propertyName = someValue
+        VarInfo varInfo = traverseNameNode(getPropLhs, scope);
+        RemovableBuilder builder = new RemovableBuilder();
+        traverseRemovableAssignValue(valueNode, builder, scope);
+        varInfo.addRemovable(builder.buildNamedPropertyAssign(assignNode, propNameNode));
+      } else if (isNameDotPrototype(getPropLhs)) {
+        // varName.prototype.propertyName = someValue
+        VarInfo varInfo = traverseNameNode(getPropLhs.getFirstChild(), scope);
+        RemovableBuilder builder =
+            new RemovableBuilder().setIsPrototypeObjectPropertyAssignment(true);
+        traverseRemovableAssignValue(valueNode, builder, scope);
+        varInfo.addRemovable(builder.buildNamedPropertyAssign(assignNode, propNameNode));
+      } else if (getPropLhs.isThis()) {
+        // this.propertyName = someValue
+        RemovableBuilder builder = new RemovableBuilder().setIsThisNamedPropertyAssignment(true);
+        traverseRemovableAssignValue(valueNode, builder, scope);
+        considerForIndependentRemoval(builder.buildNamedPropertyAssign(assignNode, propNameNode));
       } else {
-        checkState(isComputedPropertyAssign);
-        if (NodeUtil.mayHaveSideEffects(propertyNode)) {
-          traverseNode(propertyNode, scope);
-        } else {
-          builder.addContinuation(new Continuation(propertyNode, scope));
-        }
-        varInfo.addRemovable(
-            builder.buildComputedPropertyAssign(assignNode, propertyNode));
+        traverseNode(lhs, scope);
+        traverseNode(valueNode, scope);
       }
+    } else {
+      // no other cases are removable
+      traverseNode(lhs, scope);
+      traverseNode(valueNode, scope);
     }
+  }
+
+  private void traverseRemovableAssignValue(Node valueNode, RemovableBuilder builder, Scope scope) {
+    builder.setAssignedValue(valueNode);
+    if (NodeUtil.mayHaveSideEffects(valueNode)
+        || NodeUtil.isExpressionResultUsed(valueNode.getParent())) {
+      traverseNode(valueNode, scope);
+    } else {
+      builder.addContinuation(new Continuation(valueNode, scope));
+    }
+  }
+
+  private boolean isNameDotPrototype(Node n) {
+    return n.isGetProp()
+        && n.getFirstChild().isName()
+        && n.getLastChild().getString().equals("prototype");
   }
 
   private void traverseDefaultValue(Node defaultValueNode, Scope scope) {
@@ -1011,19 +1019,23 @@ class RemoveUnusedCode implements CompilerPass {
   }
 
   private void considerForIndependentRemoval(Removable removable) {
-    if (removeUnusedPrototypeProperties && removable.isNamedProperty()) {
+    if (removable.isNamedProperty()) {
       String propertyName = removable.getPropertyName();
 
       if (referencedPropertyNames.contains(propertyName)
           || codingConvention.isExported(propertyName)) {
         // Referenced, so not removable.
         removable.applyContinuations();
-      } else if (removable.isIndependentlyRemovableNamedProperty()) {
+      } else if (removeUnusedPrototypeProperties && removable.isPrototypeProperty()) {
         // Store for possible removal later.
-        removablesForPropertyNames.put(removable.getPropertyName(), removable);
+        removablesForPropertyNames.put(propertyName, removable);
+      } else if (removeUnusedThisProperties && removable.isThisNamedPropertyAssignment()) {
+        // Store for possible removal later.
+        removablesForPropertyNames.put(propertyName, removable);
       } else {
-        // TODO(bradfordcsmith): Maybe allow removal of non-prototype property assignments if we
-        // can be sure the variable's value is defined as a literal value that does not escape.
+        // TODO(bradfordcsmith): Maybe allow removal of `varName.propertyName = something`
+        // assignments if we can be sure the variable's value is defined as a literal value that
+        // does not escape.
         removable.applyContinuations();
         // This assignment counts as a reference, since we won't be removing it.
         // This is necessary in order to preserve getters and setters for the property.
@@ -1248,6 +1260,7 @@ class RemoveUnusedCode implements CompilerPass {
     @Nullable private final String propertyName;
     @Nullable private final Node assignedValue;
     private final boolean isPrototypeObjectPropertyAssignment;
+    private final boolean isThisNamedPropertyAssignment;
 
     private boolean continuationsAreApplied = false;
     private boolean isRemoved = false;
@@ -1257,6 +1270,7 @@ class RemoveUnusedCode implements CompilerPass {
       propertyName = builder.propertyName;
       assignedValue = builder.assignedValue;
       isPrototypeObjectPropertyAssignment = builder.isPrototypeObjectPropertyAssignment;
+      isThisNamedPropertyAssignment = builder.isThisNamedPropertyAssignment;
     }
 
     String getPropertyName() {
@@ -1340,8 +1354,12 @@ class RemoveUnusedCode implements CompilerPass {
       return false;
     }
 
-    boolean isIndependentlyRemovableNamedProperty() {
+    boolean isPrototypeProperty() {
       return isPrototypeObjectNamedPropertyAssignment() || isClassOrPrototypeNamedProperty();
+    }
+
+    boolean isThisNamedPropertyAssignment() {
+      return isThisNamedPropertyAssignment;
     }
   }
 
@@ -1351,6 +1369,7 @@ class RemoveUnusedCode implements CompilerPass {
     @Nullable String propertyName = null;
     @Nullable public Node assignedValue = null;
     boolean isPrototypeObjectPropertyAssignment = false;
+    boolean isThisNamedPropertyAssignment = false;
 
     RemovableBuilder addContinuation(Continuation continuation) {
       continuations.add(continuation);
@@ -1365,6 +1384,11 @@ class RemoveUnusedCode implements CompilerPass {
     RemovableBuilder setIsPrototypeObjectPropertyAssignment(
         boolean isPrototypeObjectPropertyAssignment) {
       this.isPrototypeObjectPropertyAssignment = isPrototypeObjectPropertyAssignment;
+      return this;
+    }
+
+    RemovableBuilder setIsThisNamedPropertyAssignment(boolean value) {
+      this.isThisNamedPropertyAssignment = value;
       return this;
     }
 

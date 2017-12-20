@@ -48,6 +48,7 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
   protected void setUp() throws Exception {
     super.setUp();
     enableNormalize();
+    enableGatherExternProperties();
     removeGlobal = true;
     preserveFunctionExpressionNames = false;
   }
@@ -842,6 +843,10 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
 
   public void testUnusedPropAssign6b() {
     test("function x() {} x.prototype.bar = function() {};", "");
+  }
+
+  public void testUnusedPropAssign6c() {
+    test("function x() {} x.prototype['bar'] = function() {};", "");
   }
 
   public void testUnusedPropAssign7() {
