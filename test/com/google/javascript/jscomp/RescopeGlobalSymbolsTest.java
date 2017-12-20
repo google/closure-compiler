@@ -209,23 +209,20 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
   }
 
   public void testObjectDestructuringDeclarations() {
-    // TODO(b/69868034): Fix commented-out tests before marking this pass ES6-compatible.
-    // This pass is not guaranteed to be normalized so it must handle the object literal shorthand.
-    // test("var {a} = {}; a;", "({a: _.a} = {}); _.a;");
+    test("var {a} = {}; a;", "({a: _.a} = {}); _.a;");
     test("var {a: a} = {}; a;", "({a: _.a} = {}); _.a;");
     test("var {key: a} = {}; a;", "({key: _.a} = {}); _.a;");
-    // test("var {a: {b}} = {}; b;", "({a: {b: _.b}} = {}); _.b;");
+    test("var {a: {b}} = {}; b;", "({a: {b: _.b}} = {}); _.b;");
     test("var {a: {key: b}} = {}; b;", "({a: {key: _.b}} = {}); _.b;");
     test("var {['computed']: a} = {}; a;", "({['computed']: _.a} = {}); _.a;");
 
-    // test("var {a = 3} = {}; a;", "({a: _.a = 3} = {}); _.a");
+    test("var {a = 3} = {}; a;", "({a: _.a = 3} = {}); _.a");
     test("var {key: a = 3} = {}; a;", "({key: _.a = 3} = {}); _.a");
   }
 
   public void testObjectDestructuringDeclarations_allSameModule() {
     assumeCrossModuleNames = false;
-    // TODO(b/69868034): Fix commented-out test before marking this pass ES6-compatible.
-    // test("var {a} = {}; a;", "var {a: a} = {}; a;");
+    testSame("var {a} = {}; a;");
     testSame("var {a: a} = {}; a;");
     testSame("var {key: a} = {}; a;");
     testSame("var {a: {b: b}} = {}; b;");
@@ -732,5 +729,15 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
     test(
         "var g = 3; var obj = {a() {}, b() { return g; }};",
         "_.g = 3; _.obj = {a() {}, b() { return _.g; }};");
+    test("var a = 1; var obj = {a}", "_.a = 1; _.obj = {a: _.a};");
+  }
+
+  public void testEs6Modules() {
+    // Test that this pass does nothing to ES6 modules.
+    testSame("var a = 3; a; export default a;");
+
+    assumeCrossModuleNames = false;
+    testSame(
+        createModules("var a = 3; export {a};", "import {a} from './input0';"));
   }
 }
