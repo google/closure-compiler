@@ -720,6 +720,12 @@ public final class JsDocInfoParser {
           }
           return eatUntilEOLIfNotAnnotation();
 
+        case NO_INLINE:
+          if (!jsdocBuilder.recordNoInline()) {
+            addParserWarning("msg.jsdoc.noinline");
+          }
+          return eatUntilEOLIfNotAnnotation();
+
         case NOT_IMPLEMENTED:
           return eatUntilEOLIfNotAnnotation();
 

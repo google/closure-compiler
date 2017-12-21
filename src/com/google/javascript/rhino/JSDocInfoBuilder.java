@@ -889,6 +889,23 @@ public final class JSDocInfoBuilder {
 
   /**
    * Records that the {@link JSDocInfo} being built should have its
+   * {@link JSDocInfo#isNoInline()} flag set to {@code true}.
+   *
+   * @return {@code true} if the no inline flag was recorded and {@code false}
+   *     if it was already recorded
+   */
+  public boolean recordNoInline() {
+    if (!currentInfo.isNoInline()) {
+      currentInfo.setNoInline(true);
+      populated = true;
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  /**
+   * Records that the {@link JSDocInfo} being built should have its
    * {@link JSDocInfo#isConstructor()} flag set to {@code true}.
    *
    * @return {@code true} if the constructor was recorded and {@code false}

@@ -63,6 +63,7 @@ enum Annotation {
   NO_ALIAS,
   NO_COLLAPSE,
   NO_COMPILE,
+  NO_INLINE,
   NO_SIDE_EFFECTS,
   NOT_IMPLEMENTED,
   OVERRIDE,
@@ -133,6 +134,7 @@ enum Annotation {
           .put("noalias", Annotation.NO_ALIAS)
           .put("nocollapse", Annotation.NO_COLLAPSE)
           .put("nocompile", Annotation.NO_COMPILE)
+          .put("noinline", Annotation.NO_INLINE)
           .put("nosideeffects", Annotation.NO_SIDE_EFFECTS)
           .put("override", Annotation.OVERRIDE)
           .put("owner", Annotation.AUTHOR)

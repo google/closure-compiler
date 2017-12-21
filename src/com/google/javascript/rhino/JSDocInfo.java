@@ -503,8 +503,7 @@ public class JSDocInfo implements Serializable {
   private static final int MASK_DEPRECATED    = 0x00000100; // @deprecated
   private static final int MASK_INTERFACE     = 0x00000200; // @interface
   private static final int MASK_EXPORT        = 0x00000400; // @export
-  @SuppressWarnings("unused")
-  private static final int MASK_UNUSED_2      = 0x00000800; //
+  private static final int MASK_NOINLINE      = 0x00000800; // @noinline
   private static final int MASK_FILEOVERVIEW  = 0x00001000; // @fileoverview
   private static final int MASK_IMPLICITCAST  = 0x00002000; // @implicitCast
   private static final int MASK_NOSIDEEFFECTS = 0x00004000; // @nosideeffects
@@ -732,6 +731,10 @@ public class JSDocInfo implements Serializable {
     setFlag(value, MASK_NOCOLLAPSE);
   }
 
+  void setNoInline(boolean value) {
+    setFlag(value, MASK_NOINLINE);
+  }
+
   private void setFlag(boolean value, int mask) {
     if (value) {
       bitset |= mask;
@@ -957,11 +960,19 @@ public class JSDocInfo implements Serializable {
   }
 
   /**
-   * Returns whether the {@code @nocompile} annotation is present on this
+   * Returns whether the {@code @nocollapse} annotation is present on this
    * {@link JSDocInfo}.
    */
   public boolean isNoCollapse() {
     return getFlag(MASK_NOCOLLAPSE);
+  }
+
+  /**
+   * Returns whether the {@code @noinline} annotation is present on this
+   * {@link JSDocInfo}.
+   */
+  public boolean isNoInline() {
+    return getFlag(MASK_NOINLINE);
   }
 
   /**
