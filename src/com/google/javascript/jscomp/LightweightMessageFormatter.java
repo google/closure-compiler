@@ -107,11 +107,6 @@ public final class LightweightMessageFormatter extends AbstractMessageFormatter 
       }
     }
 
-    // extract source excerpt
-    String sourceExcerpt = source == null ? null :
-        excerpt.get(
-            source, sourceName, lineNumber, excerptFormatter);
-
     if (includeLevel) {
       boldLine.append(getLevelName(warning ? CheckLevel.WARNING : CheckLevel.ERROR));
       boldLine.append(" - ");
@@ -121,6 +116,26 @@ public final class LightweightMessageFormatter extends AbstractMessageFormatter 
 
     b.append(maybeEmbolden(boldLine.toString()));
     b.append('\n');
+
+    String sourceExcerptWithPositionIndicator =
+        getExcerptWithPosition(error, sourceName, lineNumber, charno);
+    if (sourceExcerptWithPositionIndicator != null) {
+      b.append(sourceExcerptWithPositionIndicator);
+    }
+    return b.toString();
+  }
+
+  String getExcerptWithPosition(JSError error) {
+    return getExcerptWithPosition(error, error.sourceName, error.lineNumber, error.getCharno());
+  }
+
+  String getExcerptWithPosition(JSError error, String sourceName, int lineNumber, int charno) {
+    StringBuilder b = new StringBuilder();
+
+    SourceExcerptProvider source = getSource();
+    String sourceExcerpt =
+        source == null ? null : excerpt.get(source, sourceName, lineNumber, excerptFormatter);
+
     if (sourceExcerpt != null) {
       b.append(sourceExcerpt);
       b.append('\n');
@@ -167,9 +182,13 @@ public final class LightweightMessageFormatter extends AbstractMessageFormatter 
 
   /**
    * Formats a region by appending line numbers in front, e.g.
-   * <pre>   9| if (foo) {
+   *
+   * <pre>
+   *    9| if (foo) {
    *   10|   alert('bar');
-   *   11| }</pre>
+   *   11| }
+   * </pre>
+   *
    * and return line excerpt without any modification.
    */
   static class LineNumberingFormatter implements ExcerptFormatter {
