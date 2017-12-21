@@ -115,10 +115,6 @@ final class PolymerPassStaticUtils {
 
     ImmutableList.Builder<MemberDefinition> members = ImmutableList.builder();
     for (Node keyNode : properties.children()) {
-      if (!keyNode.hasChildren()) {
-        compiler.report(JSError.make(keyNode, PolymerPassErrors.POLYMER_SHORTHAND_NOT_SUPPORTED));
-        continue;
-      }
       members.add(new MemberDefinition(NodeUtil.getBestJSDocInfo(keyNode), keyNode,
           keyNode.getFirstChild()));
     }

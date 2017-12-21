@@ -218,12 +218,6 @@ public class CheckMissingAndExtraRequires implements HotSwapCompilerPass, NodeTr
           visitQualifiedName(t, n, parent);
         }
         break;
-      case STRING_KEY:
-        if (parent.isObjectLit() && !n.hasChildren()) {
-          // Object literal shorthand. This is a usage of the name.
-          visitQualifiedName(t, n, parent);
-        }
-        break;
       case CALL:
         visitCallNode(t, n, parent);
         break;

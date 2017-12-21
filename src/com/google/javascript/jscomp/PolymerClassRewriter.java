@@ -69,10 +69,6 @@ final class PolymerClassRewriter {
   void rewritePolymerCall(
       Node exprRoot, final PolymerClassDefinition cls, boolean isInGlobalScope) {
     Node objLit = checkNotNull(cls.descriptor);
-    if (hasShorthandAssignment(objLit)) {
-      compiler.report(JSError.make(objLit, PolymerPassErrors.POLYMER_SHORTHAND_NOT_SUPPORTED));
-      return;
-    }
 
     // Add {@code @lends} to the object literal.
     JSDocInfoBuilder objLitDoc = new JSDocInfoBuilder(true);
@@ -305,11 +301,6 @@ final class PolymerClassRewriter {
         PolymerPassStaticUtils.extractProperties(objLit, defType, compiler)) {
       if (!property.value.isObjectLit()) {
         continue;
-      }
-      if (hasShorthandAssignment(property.value)){
-        compiler.report(
-            JSError.make(property.value, PolymerPassErrors.POLYMER_SHORTHAND_NOT_SUPPORTED));
-        return;
       }
 
       Node defaultValue = NodeUtil.getFirstPropMatchingKey(property.value, "value");
@@ -596,16 +587,6 @@ final class PolymerClassRewriter {
     scopeRoot.addChildrenToBack(stmts);
 
     compiler.reportChangeToEnclosingScope(stmts);
-  }
-
-  private static boolean hasShorthandAssignment(Node objLit) {
-    checkState(objLit.isObjectLit());
-    for (Node property : objLit.children()){
-      if (property.isStringKey() && !property.hasChildren()){
-        return true;
-      }
-    }
-    return false;
   }
 
   /**

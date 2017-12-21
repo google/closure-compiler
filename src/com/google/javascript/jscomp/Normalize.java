@@ -679,9 +679,8 @@ class Normalize implements CompilerPass {
                 List<Node> lhsNodes = NodeUtil.findLhsNodesInNode(lhs);
                 for (Node name : lhsNodes) {
                   // Add a declaration outside the for loop for the given name.
-                  // The lhs can be a string key in property shorthand.
                   checkState(
-                      name.isName() || name.isStringKey(),
+                      name.isName(),
                       "lhs in destructuring declaration should be a simple name.",
                       name);
                   Node newName = IR.name(name.getString()).srcref(name);

@@ -234,8 +234,9 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
             child.isImportStar(), "Expected an IMPORT_STAR node, but was: %s", child);
         // Namespace imports cannot be imported "as *".
         if (isNamespaceImport) {
-          compiler.report(t.makeError(importDecl, NAMESPACE_IMPORT_CANNOT_USE_STAR,
-              child.getString(), moduleName));
+          compiler.report(
+              t.makeError(
+                  importDecl, NAMESPACE_IMPORT_CANNOT_USE_STAR, child.getString(), moduleName));
         }
         importMap.put(
             child.getString(),
@@ -288,8 +289,7 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
       }
     } else if (export.getBooleanProp(Node.EXPORT_ALL_FROM)) {
       //   export * from 'moduleIdentifier';
-      compiler.report(JSError.make(export, Es6ToEs3Util.CANNOT_CONVERT_YET,
-          "Wildcard export"));
+      compiler.report(JSError.make(export, Es6ToEs3Util.CANNOT_CONVERT_YET, "Wildcard export"));
     } else if (export.hasTwoChildren()) {
       //   export {x, y as z} from 'moduleIdentifier';
       Node moduleIdentifier = export.getLastChild();
@@ -314,8 +314,8 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
       for (Node exportSpec : export.getFirstChild().children()) {
         String nameFromOtherModule = exportSpec.getFirstChild().getString();
         String exportedName = exportSpec.getLastChild().getString();
-        exportMap.put(exportedName,
-            new NameNodePair(moduleName + "." + nameFromOtherModule, exportSpec));
+        exportMap.put(
+            exportedName, new NameNodePair(moduleName + "." + nameFromOtherModule, exportSpec));
       }
       parent.removeChild(export);
     } else {
@@ -468,19 +468,6 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
               compiler.report(JSError.make(parent.getParent(), LHS_OF_GOOG_REQUIRE_MUST_BE_CONST));
             }
 
-            // If the LHS is a destructuring pattern with the "shorthand" syntax,
-            // desugar it because otherwise the renaming will not be done correctly.
-            //   const {x} = goog.require('y')
-            // becomes
-            //   const {x: x} = goog.require('y');
-            if (parent.isObjectPattern()) {
-              for (Node key = parent.getFirstChild(); key != null; key = key.getNext()) {
-                if (!key.hasChildren()) {
-                  key.addChildToBack(IR.name(key.getString()).useSourceInfoFrom(key));
-                }
-              }
-            }
-
             Node replacement = NodeUtil.newQName(compiler, namespace).srcrefTree(requireCall);
             parent.replaceChild(requireCall, replacement);
             Node varNode = parent.getParent();
@@ -493,6 +480,7 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
 
   /**
    * Traverses a node tree and
+   *
    * <ol>
    *   <li>Appends a suffix to all global variable names defined in this module.
    *   <li>Changes references to imported values to be property accesses on the
@@ -515,12 +503,7 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
         }
       }
 
-      boolean isShorthandObjLitKey =
-          (n.isStringKey() && !n.hasChildren())
-              || (n.isName()
-                  && n.getParent().isDefaultValue()
-                  && n.getGrandparent().isObjectPattern());
-      if (n.isName() || isShorthandObjLitKey) {
+      if (n.isName()) {
         String name = n.getString();
         if (suffix.equals(name)) {
           // TODO(moz): Investigate whether we need to return early in this unlikely situation.
@@ -531,14 +514,9 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
         if (var != null && var.isGlobal()) {
           // Avoid polluting the global namespace.
           String newName = name + "$$" + suffix;
-          if (isShorthandObjLitKey) {
-            // Change {a} to {a: a$$module$foo}
-            fixShorthandObjLit(t, n, IR.name(newName));
-          } else {
-            n.setString(newName);
-            n.setOriginalName(name);
-            t.reportCodeChange(n);
-          }
+          n.setString(newName);
+          n.setOriginalName(name);
+          t.reportCodeChange(n);
         } else if (var == null && importMap.containsKey(name)) {
           // Change to property access on the imported module object.
           if (parent.isCall() && parent.getFirstChild() == n) {
@@ -548,46 +526,17 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
           ModuleOriginalNamePair pair = importMap.get(name);
           boolean isImportStar = pair.originalName.isEmpty();
           Node moduleAccess = NodeUtil.newQName(compiler, pair.module);
-          if (isShorthandObjLitKey) {
-            if (isImportStar) {
-              fixShorthandObjLit(t, n, moduleAccess);
-            } else {
-              fixShorthandObjLit(t, n, IR.getprop(moduleAccess, IR.string(pair.originalName)));
-            }
+
+          if (isImportStar) {
+            n.replaceWith(moduleAccess.useSourceInfoIfMissingFromForTree(n));
           } else {
-            if (isImportStar) {
-              n.replaceWith(moduleAccess.useSourceInfoIfMissingFromForTree(n));
-            } else {
-              n.replaceWith(
-                  IR.getprop(moduleAccess, IR.string(pair.originalName))
-                      .useSourceInfoIfMissingFromForTree(n));
-            }
+            n.replaceWith(
+                IR.getprop(moduleAccess, IR.string(pair.originalName))
+                    .useSourceInfoIfMissingFromForTree(n));
             t.reportCodeChange(moduleAccess);
           }
         }
       }
-    }
-
-    /**
-     * Replace shorthand object literal references to module imports with fully qualified
-     * value names. Eg: {foo} becomes {foo: module$imported.foo}.
-     */
-    private void fixShorthandObjLit(NodeTraversal t, Node n, Node newNode) {
-      if (n.isStringKey()) {
-        n.addChildToBack(newNode.useSourceInfoIfMissingFromForTree(n));
-      } else {
-        // The AST looks like:
-        // DEFAULT_VALUE
-        //   NAME oldName
-        //   VALUE
-        // It needs a STRING_KEY oldName added as the DEFAULT_VALUE's parent.
-        // Then to replace the oldName node with the new node.
-        Node stringKeyNode = IR.stringKey(n.getString()).srcref(n);
-        n.getParent().replaceWith(stringKeyNode);
-        stringKeyNode.addChildToBack(n.getParent());
-        n.replaceWith(newNode);
-      }
-      t.reportCodeChange(newNode);
     }
 
     /**
@@ -649,8 +598,7 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
         }
       }
 
-      for (Node child = typeNode.getFirstChild(); child != null;
-           child = child.getNext()) {
+      for (Node child = typeNode.getFirstChild(); child != null; child = child.getNext()) {
         fixTypeNode(t, child);
       }
     }
