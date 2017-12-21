@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.javascript.jscomp.CompilerTestCase.lines;
 import static com.google.javascript.jscomp.TypeValidator.TYPE_MISMATCH_WARNING;
 
 import com.google.common.annotations.GwtIncompatible;
@@ -47,6 +48,27 @@ public final class IntegrationTest extends IntegrationTestCase {
 
   private static final String CLOSURE_COMPILED =
       "var COMPILED = true; var goog$exportSymbol = function() {};";
+
+  public void testNoInline() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    test(
+        options,
+        lines(
+            "var namespace = {};", // preserve newlines
+            "/** @noinline */ namespace.foo = function() { alert('foo'); };",
+            "namespace.foo();"),
+        lines(
+            "function a() { alert('foo'); }", // preserve newlines
+            "a();"));
+    test(
+        options,
+        lines(
+            "var namespace = {};", // preserve newlines
+            "namespace.foo = function() { alert('foo'); };",
+            "namespace.foo();"),
+        "alert('foo');");
+  }
 
   public void testIssue2365() {
     CompilerOptions options = createCompilerOptions();
