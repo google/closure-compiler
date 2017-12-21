@@ -1231,6 +1231,21 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
         ConvertToTypedInterface.CONSTANT_WITHOUT_EXPLICIT_TYPE);
   }
 
+  public void testDuplicateClassMethods() {
+    test(
+        lines(
+            "/** @constructor */ var Foo = function() {};",
+            "Foo.prototype.method = function() {};",
+            "",
+            "Foo = class {",
+            "  method() {}",
+            "};"),
+        lines(
+            "/** @constructor */ var Foo = function() {};",
+            "Foo.prototype.method = function() {};",
+            ""));
+  }
+
   public void testGoogScopeLeftoversAreRemoved() {
     test(
         lines(
@@ -1256,6 +1271,24 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
             "",
             "/** @constructor */",
             "$jscomp.scope.strayCtor = function() { this.x = 5; };",
+            "",
+            "a.b.c.d.e.f.g.Foo = class {};"),
+        lines(
+            "goog.provide('a.b.c.d.e.f.g');",
+            "",
+            "a.b.c.d.e.f.g.Foo = class {};"));
+
+    test(
+        lines(
+            "goog.provide('a.b.c.d.e.f.g');",
+            "",
+            "/** @const */ var $jscomp = $jscomp || {};",
+            "/** @const */ $jscomp.scope = {};",
+            "",
+            "$jscomp.scope.strayClass = class {",
+            "  constructor() { this.x = 5 };",
+            "  method() {};",
+            "};",
             "",
             "a.b.c.d.e.f.g.Foo = class {};"),
         lines(

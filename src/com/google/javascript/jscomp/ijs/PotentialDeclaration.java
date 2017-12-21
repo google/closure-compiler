@@ -65,7 +65,7 @@ class PotentialDeclaration {
   }
 
   static PotentialDeclaration fromMethod(Node functionNode, Scope scope) {
-    checkArgument(functionNode.isFunction());
+    checkArgument(ClassUtil.isClassMethod(functionNode));
     String name = ClassUtil.getPrototypeNameOfMethod(functionNode);
     return new PotentialDeclaration(name, functionNode.getParent(), functionNode, scope);
   }
@@ -89,11 +89,23 @@ class PotentialDeclaration {
     return NodeUtil.getBestJSDocInfo(lhs);
   }
 
+  private boolean isDetached() {
+    for (Node current = lhs; current != null; current = current.getParent()) {
+      if (current.isScript()) {
+        return false;
+      }
+    }
+    return true;
+  }
+
   /**
    * Remove this "potential declaration" completely.
    * Usually, this is because the same symbol has already been declared in this file.
    */
   void remove(AbstractCompiler compiler) {
+    if (isDetached()) {
+      return;
+    }
     Node statement = getStatement();
     NodeUtil.deleteNode(statement, compiler);
     statement.removeChildren();
