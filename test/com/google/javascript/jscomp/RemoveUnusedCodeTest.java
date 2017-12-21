@@ -35,6 +35,7 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
             "function goog$mixin(dstPrototype, srcPrototype){}",
             "function alert() {}",
             "function use() {}",
+            "function externFunction() {}",
             "var externVar;",
             "var window;"));
   }
@@ -66,6 +67,13 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
             .process(externs, root);
       }
     };
+  }
+
+  public void testLeaveZeroBehind() {
+    // We don't need the assignment or the assigned value, but we need to keep the AST valid.
+    test(
+        "var x; (x = 15, externFunction())", // preserve formatting
+        "       (     0, externFunction())");
   }
 
   public void testRemoveInBlock() {

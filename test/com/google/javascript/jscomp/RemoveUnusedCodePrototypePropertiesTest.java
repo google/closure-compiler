@@ -71,7 +71,41 @@ public final class RemoveUnusedCodePrototypePropertiesTest extends CompilerTestC
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     enableNormalize();
     enableGatherExternProperties();
+    keepLocals = true;
     keepGlobals = false;
+    allowRemovalOfExternProperties = false;
+  }
+
+  public void testAnonymousPrototypePropertyRemoved() {
+    test("({}.prototype.x = 5, externFunction())", "0, externFunction();");
+    test("({}).prototype.x = 5;", "");
+    test("({}).prototype.x = externFunction();", "externFunction();");
+    test("externFunction({}.prototype.x = 5);", "externFunction(5);");
+    test("externFunction().prototype.x = 5;", "externFunction();");
+    test("externFunction().prototype.x = externFunction();", "externFunction(), externFunction();");
+
+    // make sure an expression with '.prototype' is traversed when it should be and not when it
+    // shouldn't.
+    test(
+        "function C() {} externFunction(C).prototype.x = 5;", // preserve format
+        "function C() {} externFunction(C);");
+    test("function C() {} ({ C: C }).prototype.x = 5;", "");
+  }
+
+  public void testAnonymousPrototypePropertyNoRemoveSideEffect1() {
+    test(
+        lines(
+            "function A() {", // preserve format
+            "  externFunction('me');",
+            "  return function(){}",
+            "}",
+            "A().prototype.foo = function() {};"),
+        lines(
+            "function A() {", // preserve format
+            "  externFunction('me');",
+            "  return function(){}",
+            "}",
+            "A();"));
   }
 
   public void testRenamePropertyFunctionTest() {

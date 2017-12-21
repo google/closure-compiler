@@ -83,6 +83,7 @@ public final class RemoveUnusedCodeClassPropertiesTest extends TypeICompilerTest
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
     return new RemoveUnusedCode.Builder(compiler)
+        .removeUnusedPrototypeProperties(true)
         .removeUnusedThisProperties(true)
         .removeUnusedConstructorProperties(true)
         .build();
@@ -157,11 +158,6 @@ public final class RemoveUnusedCodeClassPropertiesTest extends TypeICompilerTest
     test("this.a += 2, alert(1)", "0, alert(1)");
     test("const x = (this.a += 2, alert(1))", "const x = (0, alert(1))");
     testSame("const x = (alert(1), this.a += 2)");
-  }
-
-  // TODO(b/66971163): make this pass
-  public void disabledTestAssignOpPrototype() {
-    test("SomeSideEffect().prototype.x = 0", "SomeSideEffect(), 0");
   }
 
   // TODO(b/66971163): make this pass
@@ -251,15 +247,6 @@ public final class RemoveUnusedCodeClassPropertiesTest extends TypeICompilerTest
         "function B() {this.a = new A();}\n" +
         "B.prototype.dostuff = function() {this.a.foo++;alert('hi');}\n" +
         "new B().dostuff();\n");
-  }
-
-  // TODO(b/66971163): make this pass
-  public void disabledTestNoRemoveSideEffect1() {
-    test(
-        "function A() {alert('me'); return function(){}}\n" +
-        "A().prototype.foo = function() {};\n",
-        "function A() {alert('me'); return function(){}}\n" +
-        "A(),function(){};\n");
   }
 
   // TODO(b/66971163): make this pass

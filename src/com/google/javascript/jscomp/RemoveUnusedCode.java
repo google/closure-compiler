@@ -717,13 +717,28 @@ class RemoveUnusedCode implements CompilerPass {
         RemovableBuilder builder = new RemovableBuilder();
         traverseRemovableAssignValue(valueNode, builder, scope);
         varInfo.addRemovable(builder.buildNamedPropertyAssign(assignNode, propNameNode));
-      } else if (isNameDotPrototype(getPropLhs)) {
-        // varName.prototype.propertyName = someValue
-        VarInfo varInfo = traverseNameNode(getPropLhs.getFirstChild(), scope);
+      } else if (getPropLhs.isGetProp()
+          && getPropLhs.getLastChild().getString().equals("prototype")) {
+        // objExpression.prototype.propertyName = someValue
+        Node objExpression = getPropLhs.getFirstChild();
         RemovableBuilder builder =
             new RemovableBuilder().setIsPrototypeObjectPropertyAssignment(true);
         traverseRemovableAssignValue(valueNode, builder, scope);
-        varInfo.addRemovable(builder.buildNamedPropertyAssign(assignNode, propNameNode));
+        if (objExpression.isName()) {
+          // varName.prototype.propertyName = someValue
+          VarInfo varInfo = traverseNameNode(getPropLhs.getFirstChild(), scope);
+          varInfo.addRemovable(builder.buildNamedPropertyAssign(assignNode, propNameNode));
+        } else {
+          // (someExpression).prototype.propertyName = someValue
+          if (NodeUtil.mayHaveSideEffects(objExpression)) {
+            traverseNode(objExpression, scope);
+          } else {
+            builder.addContinuation(new Continuation(objExpression, scope));
+          }
+          considerForIndependentRemoval(
+              builder.buildAnonymousPrototypeNamedPropertyAssign(
+                  assignNode, propNameNode.getString()));
+        }
       } else if (getPropLhs.isThis()) {
         // this.propertyName = someValue
         RemovableBuilder builder = new RemovableBuilder().setIsThisNamedPropertyAssignment(true);
@@ -1478,6 +1493,12 @@ class RemoveUnusedCode implements CompilerPass {
     VanillaForNameDeclaration buildVanillaForNameDeclaration(Node nameNode) {
       return new VanillaForNameDeclaration(this, nameNode);
     }
+
+    AnonymousPrototypeNamedPropertyAssign buildAnonymousPrototypeNamedPropertyAssign(
+        Node assignNode, String propertyName) {
+      this.propertyName = propertyName;
+      return new AnonymousPrototypeNamedPropertyAssign(this, assignNode);
+    }
   }
 
   private class DestructuringAssign extends Removable {
@@ -1787,6 +1808,64 @@ class RemoveUnusedCode implements CompilerPass {
     @Override
     public String toString() {
       return "Assign:" + assignNode;
+    }
+  }
+
+  /** Represents `(someObjectExpression).prototype.propertyName = someValue`. */
+  private class AnonymousPrototypeNamedPropertyAssign extends Removable {
+    final Node assignNode;
+
+    AnonymousPrototypeNamedPropertyAssign(RemovableBuilder builder, Node assignNode) {
+      super(builder);
+      checkNotNull(builder.propertyName);
+      checkArgument(assignNode.isAssign(), assignNode);
+      this.assignNode = assignNode;
+    }
+
+    @Override
+    void removeInternal(AbstractCompiler compiler) {
+      if (alreadyRemoved(assignNode)) {
+        return;
+      }
+      Node parent = assignNode.getParent();
+      compiler.reportChangeToEnclosingScope(parent);
+      Node lhs = assignNode.getFirstChild();
+      Node rhs = assignNode.getLastChild();
+
+      checkState(lhs.isGetProp(), lhs);
+      Node objDotPrototype = lhs.getFirstChild();
+      checkState(objDotPrototype.isGetProp(), objDotPrototype);
+      Node objExpression = objDotPrototype.getFirstChild();
+      Node prototype = objDotPrototype.getLastChild();
+      checkState(prototype.getString().equals("prototype"), prototype);
+
+      boolean mustPreserveRhs =
+          NodeUtil.mayHaveSideEffects(rhs) || NodeUtil.isExpressionResultUsed(assignNode);
+      boolean mustPreserveObjExpression = NodeUtil.mayHaveSideEffects(objExpression);
+
+      if (mustPreserveRhs && mustPreserveObjExpression) {
+        Node replacement =
+            IR.comma(objExpression.detach(), rhs.detach()).useSourceInfoFrom(assignNode);
+        assignNode.replaceWith(replacement);
+      } else if (mustPreserveObjExpression) {
+        assignNode.replaceWith(objExpression.detach());
+        NodeUtil.markFunctionsDeleted(rhs, compiler);
+      } else if (mustPreserveRhs) {
+        assignNode.replaceWith(rhs.detach());
+        NodeUtil.markFunctionsDeleted(objExpression, compiler);
+      } else if (parent.isExprResult()) {
+        parent.detach();
+        NodeUtil.markFunctionsDeleted(parent, compiler);
+      } else {
+        // value isn't needed, but we need to keep the AST valid.
+        assignNode.replaceWith(IR.number(0).useSourceInfoFrom(assignNode));
+        NodeUtil.markFunctionsDeleted(assignNode, compiler);
+      }
+    }
+
+    @Override
+    boolean isPrototypeProperty() {
+      return true;
     }
   }
 
