@@ -224,6 +224,11 @@ public final class LinkedUndirectedGraph<N, E>
     return Collections.<GraphNode<N, E>> unmodifiableCollection(nodes.values());
   }
 
+  @Override
+  public int getNodeCount() {
+    return nodes.size();
+  }
+
   @SuppressWarnings("unchecked")
   @Override
   public List<GraphEdge<N, E>> getEdges() {

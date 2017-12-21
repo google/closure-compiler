@@ -33,6 +33,8 @@ public interface AdjacencyGraph<N, E> {
   /** Gets an immutable list of all nodes. */
   Collection<? extends GraphNode<N, E>> getNodes();
 
+  int getNodeCount();
+
   /**
    * Gets a node from the graph given a value. Values equality are compared
    * using <code>Object.equals</code>.

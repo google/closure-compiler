@@ -341,6 +341,11 @@ public class LinkedDirectedGraph<N, E>
   }
 
   @Override
+  public int getNodeCount() {
+    return nodes.size();
+  }
+
+  @Override
   public List<GraphNode<N, E>> getNeighborNodes(N value) {
     DiGraphNode<N, E> node = getDirectedGraphNode(value);
     List<GraphNode<N, E>> result = new ArrayList<>(

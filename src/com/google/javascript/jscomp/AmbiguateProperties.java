@@ -335,6 +335,11 @@ class AmbiguateProperties implements CompilerPass {
     }
 
     @Override
+    public int getNodeCount() {
+      return nodes.size();
+    }
+
+    @Override
     public GraphNode<Property, Void> getNode(Property property) {
       throw new RuntimeException("PropertyGraph#getNode is never called.");
     }
