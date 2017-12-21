@@ -307,6 +307,11 @@ class RemoveUnusedCode implements CompilerPass {
         traverseCompoundAssign(n, scope);
         break;
 
+      case INC:
+      case DEC:
+        traverseIncrementOrDecrementOp(n, scope);
+        break;
+
       case CALL:
         traverseCall(n, scope);
         break;
@@ -397,6 +402,47 @@ class RemoveUnusedCode implements CompilerPass {
       default:
         traverseChildren(n, scope);
         break;
+    }
+  }
+
+  private void traverseIncrementOrDecrementOp(Node incOrDecOp, Scope scope) {
+    checkArgument(incOrDecOp.isInc() || incOrDecOp.isDec(), incOrDecOp);
+    Node arg = incOrDecOp.getOnlyChild();
+    if (NodeUtil.isExpressionResultUsed(incOrDecOp)) {
+      // If expression result is used, then this expression is definitely not removable.
+      traverseNode(arg, scope);
+    } else if (arg.isGetProp()) {
+      Node getPropObj = arg.getFirstChild();
+      Node propertyNameNode = arg.getLastChild();
+      if (getPropObj.isThis()) {
+        // this.propName++
+        RemovableBuilder builder = new RemovableBuilder().setIsThisNamedPropertyAssignment(true);
+        considerForIndependentRemoval(builder.buildIncOrDepOp(incOrDecOp, propertyNameNode));
+      } else if (isDotPrototype(getPropObj)) {
+        // someExpression.prototype.propName++
+        Node exprObj = getPropObj.getFirstChild();
+        RemovableBuilder builder =
+            new RemovableBuilder().setIsPrototypeObjectPropertyAssignment(true);
+        if (exprObj.isName()) {
+          // varName.prototype.propName++
+          VarInfo varInfo = traverseNameNode(exprObj, scope);
+          varInfo.addRemovable(builder.buildIncOrDepOp(incOrDecOp, propertyNameNode));
+        } else {
+          // (someExpression).prototype.propName++
+          if (NodeUtil.mayHaveSideEffects(exprObj)) {
+            traverseNode(exprObj, scope);
+          } else {
+            builder.addContinuation(new Continuation(exprObj, scope));
+          }
+          considerForIndependentRemoval(builder.buildIncOrDepOp(incOrDecOp, propertyNameNode));
+        }
+      } else {
+        // someExpression.propName++ is not removable except in the cases covered above
+        traverseNode(arg, scope);
+      }
+    } else {
+      // TODO(bradfordcsmith): varName++ should be removable if varName is otherwise unused
+      traverseNode(arg, scope);
     }
   }
 
@@ -539,10 +585,11 @@ class RemoveUnusedCode implements CompilerPass {
   }
 
   private boolean isAssignmentToPrototype(Node n) {
-    return n.isAssign() && isPrototypeGetProp(n.getFirstChild());
+    return n.isAssign() && isDotPrototype(n.getFirstChild());
   }
 
-  private boolean isPrototypeGetProp(Node n) {
+  /** True for `someExpression.prototype`. */
+  private static boolean isDotPrototype(Node n) {
     return n.isGetProp() && n.getLastChild().getString().equals("prototype");
   }
 
@@ -717,8 +764,7 @@ class RemoveUnusedCode implements CompilerPass {
         RemovableBuilder builder = new RemovableBuilder();
         traverseRemovableAssignValue(valueNode, builder, scope);
         varInfo.addRemovable(builder.buildNamedPropertyAssign(assignNode, propNameNode));
-      } else if (getPropLhs.isGetProp()
-          && getPropLhs.getLastChild().getString().equals("prototype")) {
+      } else if (isDotPrototype(getPropLhs)) {
         // objExpression.prototype.propertyName = someValue
         Node objExpression = getPropLhs.getFirstChild();
         RemovableBuilder builder =
@@ -1499,6 +1545,60 @@ class RemoveUnusedCode implements CompilerPass {
       this.propertyName = propertyName;
       return new AnonymousPrototypeNamedPropertyAssign(this, assignNode);
     }
+
+    IncOrDecOp buildIncOrDepOp(Node incOrDecOp, Node propertyNode) {
+      this.propertyName = propertyNode.getString();
+      return new IncOrDecOp(this, incOrDecOp);
+    }
+  }
+
+  /** Represents an increment or decrement operation that could be removed. */
+  private class IncOrDecOp extends Removable {
+    final Node incOrDecNode;
+
+    IncOrDecOp(RemovableBuilder builder, Node incOrDecNode) {
+      super(builder);
+      checkArgument(incOrDecNode.isInc() || incOrDecNode.isDec(), incOrDecNode);
+      Node arg = incOrDecNode.getOnlyChild();
+      checkState(isThisDotProperty(arg) || isDotPrototypeDotProperty(arg), arg);
+      this.incOrDecNode = incOrDecNode;
+    }
+
+    @Override
+    void removeInternal(AbstractCompiler compiler) {
+      if (!alreadyRemoved(incOrDecNode)) {
+        Node arg = incOrDecNode.getOnlyChild();
+        checkState(arg.isGetProp(), arg);
+
+        if (isThisDotProperty(arg)) {
+          removeExpressionCompletely(incOrDecNode);
+        } else {
+          checkState(isDotPrototypeDotProperty(arg), arg);
+          // objExpression.prototype.propertyName
+          Node objExpression = arg.getFirstFirstChild();
+          if (NodeUtil.mayHaveSideEffects(objExpression)) {
+            replaceExpressionWith(incOrDecNode, objExpression.detach());
+          } else {
+            removeExpressionCompletely(incOrDecNode);
+          }
+        }
+      }
+    }
+
+    @Override
+    boolean isNamedPropertyAssignment() {
+      return isNamedProperty();
+    }
+  }
+
+  /** True for `this.propertyName` */
+  private static boolean isThisDotProperty(Node n) {
+    return n.isGetProp() && n.getFirstChild().isThis();
+  }
+
+  /** True for `(something).prototype.propertyName` */
+  private static boolean isDotPrototypeDotProperty(Node n) {
+    return n.isGetProp() && isDotPrototype(n.getFirstChild());
   }
 
   private class DestructuringAssign extends Removable {
@@ -1788,20 +1888,13 @@ class RemoveUnusedCode implements CompilerPass {
       if (mustPreserveRhs && mustPreserveGetElmExpr) {
         Node replacement =
             IR.comma(lhs.getLastChild().detach(), rhs.detach()).useSourceInfoFrom(assignNode);
-        assignNode.replaceWith(replacement);
+        replaceExpressionWith(assignNode, replacement);
       } else if (mustPreserveGetElmExpr) {
-        assignNode.replaceWith(lhs.getLastChild().detach());
-        NodeUtil.markFunctionsDeleted(rhs, compiler);
+        replaceExpressionWith(assignNode, lhs.getLastChild().detach());
       } else if (mustPreserveRhs) {
-        assignNode.replaceWith(rhs.detach());
-        NodeUtil.markFunctionsDeleted(lhs, compiler);
-      } else if (parent.isExprResult()) {
-        parent.detach();
-        NodeUtil.markFunctionsDeleted(parent, compiler);
+        replaceExpressionWith(assignNode, rhs.detach());
       } else {
-        // value isn't needed, but we need to keep the AST valid.
-        assignNode.replaceWith(IR.number(0).useSourceInfoFrom(assignNode));
-        NodeUtil.markFunctionsDeleted(assignNode, compiler);
+        removeExpressionCompletely(assignNode);
       }
     }
 
@@ -1846,20 +1939,13 @@ class RemoveUnusedCode implements CompilerPass {
       if (mustPreserveRhs && mustPreserveObjExpression) {
         Node replacement =
             IR.comma(objExpression.detach(), rhs.detach()).useSourceInfoFrom(assignNode);
-        assignNode.replaceWith(replacement);
+        replaceExpressionWith(assignNode, replacement);
       } else if (mustPreserveObjExpression) {
-        assignNode.replaceWith(objExpression.detach());
-        NodeUtil.markFunctionsDeleted(rhs, compiler);
+        replaceExpressionWith(assignNode, objExpression.detach());
       } else if (mustPreserveRhs) {
-        assignNode.replaceWith(rhs.detach());
-        NodeUtil.markFunctionsDeleted(objExpression, compiler);
-      } else if (parent.isExprResult()) {
-        parent.detach();
-        NodeUtil.markFunctionsDeleted(parent, compiler);
+        replaceExpressionWith(assignNode, rhs.detach());
       } else {
-        // value isn't needed, but we need to keep the AST valid.
-        assignNode.replaceWith(IR.number(0).useSourceInfoFrom(assignNode));
-        NodeUtil.markFunctionsDeleted(assignNode, compiler);
+        removeExpressionCompletely(assignNode);
       }
     }
 
@@ -2058,6 +2144,22 @@ class RemoveUnusedCode implements CompilerPass {
       }
       NodeUtil.markFunctionsDeleted(nameNode, compiler);
     }
+  }
 
+  void removeExpressionCompletely(Node expression) {
+    checkState(!NodeUtil.isExpressionResultUsed(expression), expression);
+    Node parent = expression.getParent();
+    if (parent.isExprResult()) {
+      NodeUtil.deleteNode(parent, compiler);
+    } else {
+      // value isn't needed, but we need to keep the AST valid.
+      replaceExpressionWith(expression, IR.number(0).useSourceInfoFrom(expression));
+    }
+  }
+
+  void replaceExpressionWith(Node expression, Node replacement) {
+    compiler.reportChangeToEnclosingScope(expression);
+    expression.replaceWith(replacement);
+    NodeUtil.markFunctionsDeleted(expression, compiler);
   }
 }

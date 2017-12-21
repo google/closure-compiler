@@ -76,6 +76,7 @@ public final class RemoveUnusedCodePrototypePropertiesTest extends CompilerTestC
     allowRemovalOfExternProperties = false;
   }
 
+
   public void testAnonymousPrototypePropertyRemoved() {
     test("({}.prototype.x = 5, externFunction())", "0, externFunction();");
     test("({}).prototype.x = 5;", "");
@@ -106,6 +107,20 @@ public final class RemoveUnusedCodePrototypePropertiesTest extends CompilerTestC
             "  return function(){}",
             "}",
             "A();"));
+  }
+
+  public void testAnonymousPrototypePropertyNoRemoveSideEffect2() {
+    test(
+        "function A() { externFunction('me'); return function(){}; } A().prototype.foo++;",
+        "function A() { externFunction('me'); return function(){}; } A();");
+  }
+
+  public void testIncPrototype() {
+    test("function A() {} A.prototype.x = 1; A.prototype.x++;", "");
+    test(
+        "function A() {} A.prototype.x = 1; A.prototype.x++; new A();",
+        "function A() {}                                     new A();");
+    test("externFunction().prototype.x++", "externFunction()");
   }
 
   public void testRenamePropertyFunctionTest() {

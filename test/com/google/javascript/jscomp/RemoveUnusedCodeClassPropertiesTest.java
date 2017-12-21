@@ -160,35 +160,28 @@ public final class RemoveUnusedCodeClassPropertiesTest extends TypeICompilerTest
     testSame("const x = (alert(1), this.a += 2)");
   }
 
-  // TODO(b/66971163): make this pass
-  public void disabledTestInc1() {
+  public void testInc1() {
     // Increments and Decrements are handled similarly to compound assignments
     // but need a placeholder value when replaced.
-    test("this.x++", "0");
-    testSame("x = (this.x++)");
-    testSame("this.x++; x = this.x;");
+    test("this.x++", "");
+    testSame("let x = (this.x++)");
+    testSame("this.x++; let x = this.x;");
 
-    test("--this.x", "0");
-    testSame("x = (--this.x)");
-    testSame("--this.x; x = this.x;");
+    test("--this.x", "");
+    testSame("let x = (--this.x)");
+    testSame("--this.x; let x = this.x;");
   }
 
-  // TODO(b/66971163): make this pass
-  public void disabledTestInc2() {
+  public void testInc2() {
     // Increments and Decrements are handled similarly to compound assignments
     // but need a placeholder value when replaced.
-    test("this.a++, f()", "0, f()");
-    test("x = (this.a++, f())", "x = (0, f())");
-    testSame("x = (f(), this.a++)");
+    test("this.a++, alert()", "0, alert()");
+    test("let x = (this.a++, alert())", "let x = (0, alert())");
+    testSame("let x = (alert(), this.a++)");
 
-    test("--this.a, f()", "0, f()");
-    test("x = (--this.a, f())", "x = (0, f())");
-    testSame("x = (f(), --this.a)");
-  }
-
-  // TODO(b/66971163): make this pass
-  public void disabledTestIncPrototype() {
-    test("SomeSideEffect().prototype.x++", "SomeSideEffect(), 0");
+    test("--this.a, alert()", "0, alert()");
+    test("let x = (--this.a, alert())", "let x = (0, alert())");
+    testSame("let x = (alert(), --this.a)");
   }
 
   // TODO(b/66971163): make this pass
@@ -243,32 +236,25 @@ public final class RemoveUnusedCodeClassPropertiesTest extends TypeICompilerTest
     // Partial removal of properties can causes problems if the object is
     // sealed.
     testSame(
-        "function A() {this.foo = 0;}\n" +
-        "function B() {this.a = new A();}\n" +
-        "B.prototype.dostuff = function() {this.a.foo++;alert('hi');}\n" +
-        "new B().dostuff();\n");
+        lines(
+            "function A() {this.foo = 0;}",
+            "function B() {this.a = new A();}",
+            "B.prototype.dostuff = function() { this.a.foo++; alert('hi'); }",
+            "new B().dostuff();"));
   }
 
-  // TODO(b/66971163): make this pass
-  public void disabledTestNoRemoveSideEffect2() {
+  public void testPrototypeProps1() {
     test(
-        "function A() {alert('me'); return function(){}}\n" +
-        "A().prototype.foo++;\n",
-        "function A() {alert('me'); return function(){}}\n" +
-        "A(),0;\n");
-  }
-
-  // TODO(b/66971163): make this pass
-  public void disabledTestPrototypeProps1() {
-    test(
-        "function A() {this.foo = 1;}\n" +
-        "A.prototype.foo = 0;\n" +
-        "A.prototype.method = function() {this.foo++};\n" +
-        "new A().method()\n",
-        "function A() {1;}\n" +
-        "0;\n" +
-        "A.prototype.method = function() {0;};\n" +
-        "new A().method()\n");
+        lines(
+            "function A() {this.foo = 1;}",
+            "A.prototype.foo = 0;",
+            "A.prototype.method = function() {this.foo++};",
+            "new A().method()"),
+        lines(
+            "function A() {             }",
+            "                    ",
+            "A.prototype.method = function() {          };",
+            "new A().method()"));
   }
 
   public void testPrototypeProps2() {
