@@ -77,6 +77,11 @@ public class InlineFunctionsTest extends CompilerTestCase {
     return 3;
   }
 
+  public void testNoInline() {
+    testSame("/** @noinline */ function foo(){} foo();foo();foo();");
+    testSame("/** @noinline */ var foo = function(){}; foo();foo();foo();");
+  }
+
   public void testInlineEmptyFunction1() {
     // Empty function, no params.
     test("function foo(){}" +

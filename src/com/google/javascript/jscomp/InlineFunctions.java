@@ -28,6 +28,7 @@ import com.google.javascript.jscomp.CompilerOptions.Reach;
 import com.google.javascript.jscomp.FunctionInjector.CanInlineResult;
 import com.google.javascript.jscomp.FunctionInjector.InliningMode;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
+import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import java.util.Collection;
 import java.util.Collections;
@@ -262,6 +263,12 @@ class InlineFunctions implements CompilerPass {
       return;
     }
     Node fnNode = fn.getFunctionNode();
+
+    if (hasNoInlineAnnotation(fnNode)) {
+      functionState.setInline(false);
+      return;
+    }
+
     if (enforceMaxSizeAfterInlining
         && !isAlwaysInlinable(fnNode)
         && maxSizeAfterInlining <= NodeUtil.countAstSizeUpToLimit(fnNode, maxSizeAfterInlining)) {
@@ -326,6 +333,11 @@ class InlineFunctions implements CompilerPass {
         functionState.setInline(false);
       }
     }
+  }
+
+  private boolean hasNoInlineAnnotation(Node fnNode) {
+    JSDocInfo jsDocInfo = NodeUtil.getBestJSDocInfo(fnNode);
+    return jsDocInfo != null && jsDocInfo.isNoInline();
   }
 
   /**
