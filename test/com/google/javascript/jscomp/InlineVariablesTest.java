@@ -110,6 +110,10 @@ public final class InlineVariablesTest extends CompilerTestCase {
     test("var x = 1; var z = x;", "var z = 1;");
   }
 
+  public void testNoInlineAnnotation() {
+    testSame("/** @noinline */ var x = 1; var z = x;");
+  }
+
   public void testNoInlineExportedName() {
     testSame("var _x = 1; var z = _x;");
   }
