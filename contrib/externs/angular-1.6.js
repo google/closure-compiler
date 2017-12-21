@@ -1899,6 +1899,12 @@ angular.$location.prototype.replace = function() {};
 angular.$location.prototype.search = function(opt_search, opt_paramValue) {};
 
 /**
+ * @param {Object=} opt_state
+ * @return {(!Object|!angular.$location)}
+ */
+angular.$location.prototype.state = function(opt_state) {};
+
+/**
  * @param {string=} opt_url
  * @return {string}
  */
