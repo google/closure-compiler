@@ -16,20 +16,22 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.auto.value.AutoValue;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.SetMultimap;
+import com.google.errorprone.annotations.Immutable;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.TypeI;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
+import javax.annotation.Nullable;
 
 /**
  * Removes any unused polyfill instance methods, using type information to
@@ -116,8 +118,8 @@ class RemoveUnusedPolyfills implements CompilerPass {
         if (unusedMethodPolyfills.put(method, n) != null) {
           throw new RuntimeException(method + " polyfilled multiple times.");
         }
-        methodsByName.put(method.method, method);
-        suffixes.add(method.method);
+        methodsByName.put(method.method(), method);
+        suffixes.add(method.method());
       } else {
         if (unusedStaticPolyfills.put(polyfillName, n) != null) {
           throw new RuntimeException(polyfillName + " polyfilled multiple times.");
@@ -151,7 +153,7 @@ class RemoveUnusedPolyfills implements CompilerPass {
       // If so, remove from the unused methods map.
       TypeI receiverType = determineReceiverType(n);
       for (PrototypeMethod method : ImmutableSet.copyOf(methods)) {
-        if (isTypeCompatible(receiverType, method.type)) {
+        if (isTypeCompatible(receiverType, method.type())) {
           unusedMethodPolyfills.remove(method);
         }
       }
@@ -278,38 +280,29 @@ class RemoveUnusedPolyfills implements CompilerPass {
       "Number", "number",
       "String", "string");
 
-  // Simple value type for a (type,method) pair.
-  private static class PrototypeMethod {
-    // Builds a new PrototypeMethod from the qualified name <TYPE>.prototype.<METHOD>,
-    // or returns null if the qualified name does not match that pattern.
+  // Package-private for AutoValue. Otherwise would be private.
+  @AutoValue
+  @Immutable
+  abstract static class PrototypeMethod {
+    abstract String type();
+    abstract String method();
+
+    /**
+     * Builds a new PrototypeMethod from the qualified name <TYPE>.prototype.<METHOD>, or returns
+     * null if the qualified name does not match that pattern.
+     */
+    @Nullable
     static PrototypeMethod split(String name) {
       int index = name.indexOf(PROTOTYPE);
       return index < 0
           ? null
-          : new PrototypeMethod(
-                name.substring(0, index), name.substring(index + PROTOTYPE.length()));
+          : new AutoValue_RemoveUnusedPolyfills_PrototypeMethod(
+              name.substring(0, index), name.substring(index + PROTOTYPE.length()));
     }
 
-    final String type;
-    final String method;
-
-    PrototypeMethod(String type, String method) {
-      this.type = type;
-      this.method = method;
-    }
-
-    @Override public boolean equals(Object other) {
-      return other instanceof PrototypeMethod
-          && ((PrototypeMethod) other).type.equals(type)
-          && ((PrototypeMethod) other).method.equals(method);
-    }
-
-    @Override public int hashCode() {
-      return Objects.hash(type, method);
-    }
-
-    @Override public String toString() {
-      return type + PROTOTYPE + method;
+    @Override
+    public String toString() {
+      return type() + PROTOTYPE + method();
     }
 
     private static final String PROTOTYPE = ".prototype.";
