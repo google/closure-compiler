@@ -441,10 +441,6 @@ public class ConvertToTypedInterface implements CompilerPass {
     }
 
     private void processDeclaration(PotentialDeclaration decl) {
-      if (NodeUtil.isCallTo(decl.getLhs(), "goog.define")) {
-        NodeUtil.deleteNode(decl.getLhs().getLastChild(), compiler);
-        return;
-      }
       switch (shouldRemove(decl)) {
         case PRESERVE_ALL:
           if (decl.getRhs() != null && decl.getRhs().isFunction()) {

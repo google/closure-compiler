@@ -20,7 +20,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.javascript.jscomp.AbstractCompiler;
 import com.google.javascript.jscomp.NodeUtil;
-import com.google.javascript.jscomp.Scope;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
@@ -37,51 +36,55 @@ import javax.annotation.Nullable;
  *   goog.define calls,
  *   and even valueless property accesses (e.g. `/** @type {number} * / Foo.prototype.bar`)
  */
-class PotentialDeclaration {
+abstract class PotentialDeclaration {
   // The fully qualified name of the declaration.
   private final String fullyQualifiedName;
   // The LHS node of the declaration.
   private final Node lhs;
   // The RHS node of the declaration, if it exists.
   private final @Nullable Node rhs;
-  // The scope in which the declaration is defined.
-  private final Scope scope;
 
-  private PotentialDeclaration(String fullyQualifiedName, Node lhs, Node rhs, Scope scope) {
+  private PotentialDeclaration(String fullyQualifiedName, Node lhs, @Nullable Node rhs) {
     this.fullyQualifiedName = checkNotNull(fullyQualifiedName);
     this.lhs = checkNotNull(lhs);
     this.rhs = rhs;
-    this.scope = checkNotNull(scope);
   }
 
-  static PotentialDeclaration fromName(Node nameNode, Scope scope) {
+  static PotentialDeclaration fromName(Node nameNode) {
     checkArgument(nameNode.isQualifiedName(), nameNode);
     Node rhs = NodeUtil.getRValueOfLValue(nameNode);
     String name =
         ClassUtil.isThisProp(nameNode)
             ? ClassUtil.getPrototypeNameOfThisProp(nameNode)
             : nameNode.getQualifiedName();
-    return new PotentialDeclaration(name, nameNode, rhs, scope);
+    return new NameDeclaration(name, nameNode, rhs);
   }
 
-  static PotentialDeclaration fromMethod(Node functionNode, Scope scope) {
+  static PotentialDeclaration fromMethod(Node functionNode) {
     checkArgument(ClassUtil.isClassMethod(functionNode));
     String name = ClassUtil.getPrototypeNameOfMethod(functionNode);
-    return new PotentialDeclaration(name, functionNode.getParent(), functionNode, scope);
+    return new MethodDeclaration(name, functionNode);
   }
 
-  static PotentialDeclaration fromDefine(Node callNode, Scope scope) {
+  static PotentialDeclaration fromDefine(Node callNode) {
     checkArgument(NodeUtil.isCallTo(callNode, "goog.define"));
-    String name = callNode.getSecondChild().getString();
-    Node rhs = callNode.getLastChild();
-    return new PotentialDeclaration(name, callNode, rhs, scope);
+    return new DefineDeclaration(callNode);
   }
 
   String getFullyQualifiedName() {
     return fullyQualifiedName;
   }
 
-  private Node getStatement() {
+  Node getLhs() {
+    return lhs;
+  }
+
+  @Nullable
+  Node getRhs() {
+    return rhs;
+  }
+
+  Node getStatement() {
     return NodeUtil.getEnclosingStatement(lhs);
   }
 
@@ -111,61 +114,112 @@ class PotentialDeclaration {
     statement.removeChildren();
   }
 
-  private void removeStringKeyValue(Node stringKey) {
-    Node value = stringKey.getOnlyChild();
-    Node replacementValue = IR.number(0).srcrefTree(value);
-    stringKey.replaceChild(value, replacementValue);
-  }
-
   /**
    * Simplify this declaration to only include what's necessary for typing.
    * Usually, this means removing the RHS and leaving a type annotation.
    */
-  void simplify(AbstractCompiler compiler) {
-    Node nameNode = getLhs();
-    JSDocInfo jsdoc = getJsDoc();
-    if (jsdoc != null && jsdoc.hasEnumParameterType()) {
-      // Remove values from enums
-      if (getRhs().isObjectLit() && getRhs().hasChildren()) {
-        for (Node key : getRhs().children()) {
-          removeStringKeyValue(key);
-        }
-        compiler.reportChangeToEnclosingScope(getRhs());
-      }
-      return;
+  abstract void simplify(AbstractCompiler compiler);
+
+  /**
+   * A potential declaration that has a fully qualified name to describe it.
+   * This includes things like:
+   *   var/let/const/function/class declarations,
+   *   assignments to a fully qualfied name,
+   *   and goog.module exports
+   * This is the most common type of potential declaration.
+   */
+  static class NameDeclaration extends PotentialDeclaration {
+
+    NameDeclaration(String fullyQualifiedName, Node lhs, Node rhs) {
+      super(fullyQualifiedName, lhs, rhs);
     }
-    if (NodeUtil.isNamespaceDecl(nameNode)) {
-      Node objLit = getRhs();
-      if (getRhs().isOr()) {
-        objLit = getRhs().getLastChild().detach();
-        getRhs().replaceWith(objLit);
-        compiler.reportChangeToEnclosingScope(nameNode);
-      }
-      if (objLit.hasChildren()) {
-        for (Node key : objLit.children()) {
-          if (!isTypedRhs(key.getLastChild())) {
+
+    @Override
+    void simplify(AbstractCompiler compiler) {
+      Node nameNode = getLhs();
+      JSDocInfo jsdoc = getJsDoc();
+      if (jsdoc != null && jsdoc.hasEnumParameterType()) {
+        // Remove values from enums
+        if (getRhs().isObjectLit() && getRhs().hasChildren()) {
+          for (Node key : getRhs().children()) {
             removeStringKeyValue(key);
-            JsdocUtil.updateJsdoc(compiler, key);
-            compiler.reportChangeToEnclosingScope(key);
+          }
+          compiler.reportChangeToEnclosingScope(getRhs());
+        }
+        return;
+      }
+      if (NodeUtil.isNamespaceDecl(nameNode)) {
+        Node objLit = getRhs();
+        if (getRhs().isOr()) {
+          objLit = getRhs().getLastChild().detach();
+          getRhs().replaceWith(objLit);
+          compiler.reportChangeToEnclosingScope(nameNode);
+        }
+        if (objLit.hasChildren()) {
+          for (Node key : objLit.children()) {
+            if (!isTypedRhs(key.getLastChild())) {
+              removeStringKeyValue(key);
+              JsdocUtil.updateJsdoc(compiler, key);
+              compiler.reportChangeToEnclosingScope(key);
+            }
           }
         }
+        return;
       }
-      return;
+      if (nameNode.matchesQualifiedName("exports")) {
+        // Replace the RHS of a default goog.module export with Unknown
+        replaceRhsWithUnknown(getRhs());
+        compiler.reportChangeToEnclosingScope(nameNode);
+        return;
+      }
+      // Just completely remove the RHS, and replace with a getprop.
+      Node newStatement =
+          NodeUtil.newQNameDeclaration(compiler, nameNode.getQualifiedName(), null, jsdoc);
+      newStatement.useSourceInfoIfMissingFromForTree(nameNode);
+      Node oldStatement = getStatement();
+      NodeUtil.deleteChildren(oldStatement, compiler);
+      oldStatement.replaceWith(newStatement);
+      compiler.reportChangeToEnclosingScope(newStatement);
     }
-    if (nameNode.matchesQualifiedName("exports")) {
-      // Replace the RHS of a default goog.module export with Unknown
-      replaceRhsWithUnknown(getRhs());
-      compiler.reportChangeToEnclosingScope(nameNode);
-      return;
+
+    private static void replaceRhsWithUnknown(Node rhs) {
+      rhs.replaceWith(IR.cast(IR.number(0), JsdocUtil.getQmarkTypeJSDoc()).srcrefTree(rhs));
     }
-    // Just completely remove the RHS, and replace with a getprop.
-    Node newStatement =
-        NodeUtil.newQNameDeclaration(compiler, nameNode.getQualifiedName(), null, jsdoc);
-    newStatement.useSourceInfoIfMissingFromForTree(nameNode);
-    Node oldStatement = getStatement();
-    NodeUtil.deleteChildren(oldStatement, compiler);
-    oldStatement.replaceWith(newStatement);
-    compiler.reportChangeToEnclosingScope(newStatement);
+
+    private static void removeStringKeyValue(Node stringKey) {
+      Node value = stringKey.getOnlyChild();
+      Node replacementValue = IR.number(0).srcrefTree(value);
+      stringKey.replaceChild(value, replacementValue);
+    }
+
+  }
+
+  /**
+   * A declaration declared by a call to `goog.define`. Note that a let, const, or var declaration
+   * annotated with @define in its JSDoc would be a NameDeclaration instead.
+   */
+  private static class DefineDeclaration extends PotentialDeclaration {
+    DefineDeclaration(Node callNode) {
+      super(callNode.getSecondChild().getString(), callNode, callNode.getLastChild());
+    }
+
+    @Override
+    void simplify(AbstractCompiler compiler) {
+      NodeUtil.deleteNode(getLhs().getLastChild(), compiler);
+    }
+  }
+
+  /**
+   * A declaration of a method defined using the ES6 method syntax or goog.defineClass. Note that
+   * a method defined as an assignment to a prototype property would be a NameDeclaration instead.
+   */
+  private static class MethodDeclaration extends PotentialDeclaration {
+    MethodDeclaration(String name, Node functionNode) {
+      super(name, functionNode.getParent(), functionNode);
+    }
+
+    @Override
+    void simplify(AbstractCompiler compiler) {}
   }
 
   static boolean isTypedRhs(Node rhs) {
@@ -173,22 +227,5 @@ class PotentialDeclaration {
         || rhs.isClass()
         || (rhs.isQualifiedName() && rhs.matchesQualifiedName("goog.abstractMethod"))
         || (rhs.isQualifiedName() && rhs.matchesQualifiedName("goog.nullFunction"));
-  }
-
-  private static void replaceRhsWithUnknown(Node rhs) {
-    rhs.replaceWith(IR.cast(IR.number(0), JsdocUtil.getQmarkTypeJSDoc()).srcrefTree(rhs));
-  }
-
-  Node getLhs() {
-    return lhs;
-  }
-
-  @Nullable
-  Node getRhs() {
-    return rhs;
-  }
-
-  Scope getScope() {
-    return scope;
   }
 }

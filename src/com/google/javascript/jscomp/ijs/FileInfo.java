@@ -39,15 +39,15 @@ final class FileInfo {
       MultimapBuilder.linkedHashKeys().arrayListValues().build();
 
   void recordNameDeclaration(Node qnameNode, Scope scope) {
-    recordDeclaration(PotentialDeclaration.fromName(qnameNode, scope));
+    recordDeclaration(PotentialDeclaration.fromName(qnameNode));
   }
 
   void recordMethod(Node functionNode, Scope scope) {
-    recordDeclaration(PotentialDeclaration.fromMethod(functionNode, scope));
+    recordDeclaration(PotentialDeclaration.fromMethod(functionNode));
   }
 
   void recordDefine(Node callNode, Scope scope) {
-    recordDeclaration(PotentialDeclaration.fromDefine(callNode, scope));
+    recordDeclaration(PotentialDeclaration.fromDefine(callNode));
   }
 
   ListMultimap<String, PotentialDeclaration> getDeclarations() {
