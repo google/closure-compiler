@@ -627,20 +627,6 @@ public final class NodeUtil {
     return false;
   }
 
-  static boolean isAssignmentTarget(Node n) {
-    Node parent = n.getParent();
-    if ((isAssignmentOp(parent) && parent.getFirstChild() == n)
-        || parent.isInc()
-        || parent.isDec()
-        || (parent.isForIn() && parent.getFirstChild() == n)) {
-      // If GETPROP/GETELEM is used as assignment target the object literal is
-      // acting as a temporary we can't fold it here:
-      //    "{a:x}.a += 1" is not "x += 1"
-      return true;
-    }
-    return false;
-  }
-
   /**
    * Returns the inverse of an operator if it is invertible.
    * ex. '>' ==> '<'

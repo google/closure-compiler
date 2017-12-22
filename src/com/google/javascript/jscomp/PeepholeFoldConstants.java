@@ -1341,7 +1341,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     // If GETPROP/GETELEM is used as assignment target the array literal is
     // acting as a temporary we can't fold it here:
     //    "[][0] += 1"
-    if (NodeUtil.isAssignmentTarget(n)) {
+    if (NodeUtil.isLValue(n)) {
       return n;
     }
 
@@ -1398,7 +1398,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     // If GETPROP/GETELEM is used as assignment target the array literal is
     // acting as a temporary we can't fold it here:
     //    "[][0] += 1"
-    if (NodeUtil.isAssignmentTarget(n)) {
+    if (NodeUtil.isLValue(n)) {
       return n;
     }
 
@@ -1452,7 +1452,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       return n;
     }
 
-    if (NodeUtil.isAssignmentTarget(n)) {
+    if (NodeUtil.isLValue(n)) {
       // If GETPROP/GETELEM is used as assignment target the object literal is
       // acting as a temporary we can't fold it here:
       //    "{a:x}.a += 1" is not "x += 1"
