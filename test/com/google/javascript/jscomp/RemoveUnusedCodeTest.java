@@ -69,6 +69,11 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
     };
   }
 
+  public void testUnusedPrototypeFieldReference() {
+    // Simply mentioning a prototype property without using it doesn't count as a reference.
+    test("function C() {} C.prototype.x;", "");
+  }
+
   public void testLeaveZeroBehind() {
     // We don't need the assignment or the assigned value, but we need to keep the AST valid.
     test(
@@ -139,7 +144,9 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
   }
 
   public void testReferencedPropertiesOnUnreferencedVar() {
-    test("var x = {}; x.a = 1; var y = {a: 2}; y.a;", "var y = {a: 2}; y.a;");
+    test(
+        "var x = {}; x.a = 1; var y = {a: 2}; y.a;", // preserve format
+        "                     var y = {a: 2}; y.a;");
   }
 
   public void testPropertyValuesAddedAfterReferenceAreRemoved() {

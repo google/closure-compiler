@@ -60,6 +60,7 @@ public final class RemoveUnusedCodeClassPropertiesTest extends TypeICompilerTest
           "var EXT = {};",
           "EXT.ext;",
           "var externVar;",
+          "function externFunction() {}",
           "/** @type {Function} */",
           "Object.defineProperties = function() {};",
           "/** @type {Function} */",
@@ -184,11 +185,9 @@ public final class RemoveUnusedCodeClassPropertiesTest extends TypeICompilerTest
     testSame("let x = (alert(), --this.a)");
   }
 
-  // TODO(b/66971163): make this pass
-  public void disabledTestExprResult() {
-    test("this.x", "0");
-    test("c.prototype.x", "0");
-    test("SomeSideEffect().prototype.x", "SomeSideEffect(),0");
+  public void testExprResult() {
+    test("this.x", "");
+    test("externFunction().prototype.x", "externFunction()");
   }
 
   public void testJSCompiler_renameProperty() {

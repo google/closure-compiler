@@ -30,6 +30,7 @@ public final class RemoveUnusedCodePrototypePropertiesTest extends CompilerTestC
           "var window;",
           "var Math = {};",
           "Math.random = function() {};",
+          "function alert(x) {}",
           "function externFunction() {}",
           "externFunction.prototype.externPropName;",
           "var mExtern;",
@@ -76,6 +77,23 @@ public final class RemoveUnusedCodePrototypePropertiesTest extends CompilerTestC
     allowRemovalOfExternProperties = false;
   }
 
+  public void testUnusedPrototypeFieldReference() {
+    test(
+        "function C() {} C.prototype.x; new C();", // x is not actually read
+        "function C() {}                new C();");
+  }
+
+  public void testUnusedReferenceToFieldWithGetter() {
+    // Reference to a field with a getter should not be removed unless we know it has no side
+    // effects.
+    // TODO(bradfordcsmith): Implement removal for the no-side-effect cases.
+    testSame("function C() {} C.prototype = { get x() {} }; new C().x");
+    testSame("function C() {} C.prototype = { get x() { alert('x'); } }; new C().x");
+    testSame("class C { get x() {} } new C().x;");
+    testSame("class C { get x() { alert('x'); } } new C().x");
+    testSame("let c = { get x() {} }; c.x;");
+    testSame("let c = { get x() { alert('x'); } }; c.x;");
+  }
 
   public void testAnonymousPrototypePropertyRemoved() {
     test("({}.prototype.x = 5, externFunction())", "0, externFunction();");

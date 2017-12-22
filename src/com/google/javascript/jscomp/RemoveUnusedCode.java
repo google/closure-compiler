@@ -392,16 +392,49 @@ class RemoveUnusedCode implements CompilerPass {
         break;
 
       case GETPROP:
-        Node objectNode = n.getFirstChild();
-        Node propertyNameNode = objectNode.getNext();
-        String propertyName = propertyNameNode.getString();
-        markPropertyNameReferenced(propertyName);
-        traverseNode(objectNode, scope);
+        traverseGetProp(n, scope);
         break;
 
       default:
         traverseChildren(n, scope);
         break;
+    }
+  }
+
+  private void traverseGetProp(Node getProp, Scope scope) {
+    Node objectNode = getProp.getFirstChild();
+    Node propertyNameNode = objectNode.getNext();
+    String propertyName = propertyNameNode.getString();
+
+    if (NodeUtil.isExpressionResultUsed(getProp)) {
+      // must record as reference to the property and continue traversal.
+      markPropertyNameReferenced(propertyName);
+      traverseNode(objectNode, scope);
+    } else if (objectNode.isThis()) {
+      // this.propName;
+      RemovableBuilder builder = new RemovableBuilder().setIsThisDotPropertyReference(true);
+      considerForIndependentRemoval(builder.buildUnusedReadReference(getProp, propertyNameNode));
+    } else if (isDotPrototype(objectNode)) {
+      // (objExpression).prototype.propName;
+      RemovableBuilder builder = new RemovableBuilder().setIsPrototypeDotPropertyReference(true);
+      Node objExpression = objectNode.getFirstChild();
+      if (objExpression.isName()) {
+        // name.prototype.propName;
+        VarInfo varInfo = traverseNameNode(objExpression, scope);
+        varInfo.addRemovable(builder.buildUnusedReadReference(getProp, propertyNameNode));
+      } else {
+        // (objExpression).prototype.propName;
+        if (NodeUtil.mayHaveSideEffects(objExpression)) {
+          traverseNode(objExpression, scope);
+        } else {
+          builder.addContinuation(new Continuation(objExpression, scope));
+        }
+        considerForIndependentRemoval(builder.buildUnusedReadReference(getProp, propertyNameNode));
+      }
+    } else {
+      // TODO(bradfordcsmith): add removal of `varName.propName;`
+      markPropertyNameReferenced(propertyName);
+      traverseNode(objectNode, scope);
     }
   }
 
@@ -416,13 +449,12 @@ class RemoveUnusedCode implements CompilerPass {
       Node propertyNameNode = arg.getLastChild();
       if (getPropObj.isThis()) {
         // this.propName++
-        RemovableBuilder builder = new RemovableBuilder().setIsThisNamedPropertyAssignment(true);
+        RemovableBuilder builder = new RemovableBuilder().setIsThisDotPropertyReference(true);
         considerForIndependentRemoval(builder.buildIncOrDepOp(incOrDecOp, propertyNameNode));
       } else if (isDotPrototype(getPropObj)) {
         // someExpression.prototype.propName++
         Node exprObj = getPropObj.getFirstChild();
-        RemovableBuilder builder =
-            new RemovableBuilder().setIsPrototypeObjectPropertyAssignment(true);
+        RemovableBuilder builder = new RemovableBuilder().setIsPrototypeDotPropertyReference(true);
         if (exprObj.isName()) {
           // varName.prototype.propName++
           VarInfo varInfo = traverseNameNode(exprObj, scope);
@@ -455,7 +487,7 @@ class RemoveUnusedCode implements CompilerPass {
     if (targetNode.isGetProp()
         && targetNode.getFirstChild().isThis()
         && !NodeUtil.isExpressionResultUsed(compoundAssignNode)) {
-      RemovableBuilder builder = new RemovableBuilder().setIsThisNamedPropertyAssignment(true);
+      RemovableBuilder builder = new RemovableBuilder().setIsThisDotPropertyReference(true);
       traverseRemovableAssignValue(valueNode, builder, scope);
       considerForIndependentRemoval(
           builder.buildNamedPropertyAssign(compoundAssignNode, targetNode.getLastChild()));
@@ -767,8 +799,7 @@ class RemoveUnusedCode implements CompilerPass {
       } else if (isDotPrototype(getPropLhs)) {
         // objExpression.prototype.propertyName = someValue
         Node objExpression = getPropLhs.getFirstChild();
-        RemovableBuilder builder =
-            new RemovableBuilder().setIsPrototypeObjectPropertyAssignment(true);
+        RemovableBuilder builder = new RemovableBuilder().setIsPrototypeDotPropertyReference(true);
         traverseRemovableAssignValue(valueNode, builder, scope);
         if (objExpression.isName()) {
           // varName.prototype.propertyName = someValue
@@ -787,7 +818,7 @@ class RemoveUnusedCode implements CompilerPass {
         }
       } else if (getPropLhs.isThis()) {
         // this.propertyName = someValue
-        RemovableBuilder builder = new RemovableBuilder().setIsThisNamedPropertyAssignment(true);
+        RemovableBuilder builder = new RemovableBuilder().setIsThisDotPropertyReference(true);
         traverseRemovableAssignValue(valueNode, builder, scope);
         considerForIndependentRemoval(builder.buildNamedPropertyAssign(assignNode, propNameNode));
       } else {
@@ -1124,7 +1155,7 @@ class RemoveUnusedCode implements CompilerPass {
       } else if (removeUnusedPrototypeProperties && removable.isPrototypeProperty()) {
         // Store for possible removal later.
         removablesForPropertyNames.put(propertyName, removable);
-      } else if (removeUnusedThisProperties && removable.isThisNamedPropertyAssignment()) {
+      } else if (removeUnusedThisProperties && removable.isThisDotPropertyReference()) {
         // Store for possible removal later.
         removablesForPropertyNames.put(propertyName, removable);
       } else {
@@ -1354,8 +1385,8 @@ class RemoveUnusedCode implements CompilerPass {
     private final List<Continuation> continuations;
     @Nullable private final String propertyName;
     @Nullable private final Node assignedValue;
-    private final boolean isPrototypeObjectPropertyAssignment;
-    private final boolean isThisNamedPropertyAssignment;
+    private final boolean isPrototypeDotPropertyReference;
+    private final boolean isThisDotPropertyReference;
 
     private boolean continuationsAreApplied = false;
     private boolean isRemoved = false;
@@ -1364,8 +1395,8 @@ class RemoveUnusedCode implements CompilerPass {
       continuations = builder.continuations;
       propertyName = builder.propertyName;
       assignedValue = builder.assignedValue;
-      isPrototypeObjectPropertyAssignment = builder.isPrototypeObjectPropertyAssignment;
-      isThisNamedPropertyAssignment = builder.isThisNamedPropertyAssignment;
+      isPrototypeDotPropertyReference = builder.isPrototypeDotPropertyReference;
+      isThisDotPropertyReference = builder.isThisDotPropertyReference;
     }
 
     String getPropertyName() {
@@ -1441,8 +1472,8 @@ class RemoveUnusedCode implements CompilerPass {
     }
 
     /** Is this an assignment to a property on a prototype object? */
-    boolean isPrototypeObjectNamedPropertyAssignment() {
-      return isPrototypeObjectPropertyAssignment && isNamedPropertyAssignment();
+    boolean isPrototypeDotPropertyReference() {
+      return isPrototypeDotPropertyReference;
     }
 
     boolean isClassOrPrototypeNamedProperty() {
@@ -1450,11 +1481,11 @@ class RemoveUnusedCode implements CompilerPass {
     }
 
     boolean isPrototypeProperty() {
-      return isPrototypeObjectNamedPropertyAssignment() || isClassOrPrototypeNamedProperty();
+      return isPrototypeDotPropertyReference() || isClassOrPrototypeNamedProperty();
     }
 
-    boolean isThisNamedPropertyAssignment() {
-      return isThisNamedPropertyAssignment;
+    boolean isThisDotPropertyReference() {
+      return isThisDotPropertyReference;
     }
   }
 
@@ -1463,8 +1494,8 @@ class RemoveUnusedCode implements CompilerPass {
 
     @Nullable String propertyName = null;
     @Nullable public Node assignedValue = null;
-    boolean isPrototypeObjectPropertyAssignment = false;
-    boolean isThisNamedPropertyAssignment = false;
+    boolean isPrototypeDotPropertyReference = false;
+    boolean isThisDotPropertyReference = false;
 
     RemovableBuilder addContinuation(Continuation continuation) {
       continuations.add(continuation);
@@ -1476,14 +1507,13 @@ class RemoveUnusedCode implements CompilerPass {
       return this;
     }
 
-    RemovableBuilder setIsPrototypeObjectPropertyAssignment(
-        boolean isPrototypeObjectPropertyAssignment) {
-      this.isPrototypeObjectPropertyAssignment = isPrototypeObjectPropertyAssignment;
+    RemovableBuilder setIsPrototypeDotPropertyReference(boolean value) {
+      this.isPrototypeDotPropertyReference = value;
       return this;
     }
 
-    RemovableBuilder setIsThisNamedPropertyAssignment(boolean value) {
-      this.isThisNamedPropertyAssignment = value;
+    RemovableBuilder setIsThisDotPropertyReference(boolean value) {
+      this.isThisDotPropertyReference = value;
       return this;
     }
 
@@ -1550,6 +1580,43 @@ class RemoveUnusedCode implements CompilerPass {
       this.propertyName = propertyNode.getString();
       return new IncOrDecOp(this, incOrDecOp);
     }
+
+    UnusedReadReference buildUnusedReadReference(Node referenceNode, Node propertyNode) {
+      this.propertyName = propertyNode.getString();
+      return new UnusedReadReference(this, referenceNode);
+    }
+  }
+
+  /** Represents a read reference whose value is not used. */
+  private class UnusedReadReference extends Removable {
+    final Node referenceNode;
+
+    UnusedReadReference(RemovableBuilder builder, Node referenceNode) {
+      super(builder);
+      // TODO(bradfordcsmith): handle `name;` and `name.property;` references
+      checkState(
+          isThisDotProperty(referenceNode) || isDotPrototypeDotProperty(referenceNode),
+          referenceNode);
+      this.referenceNode = referenceNode;
+    }
+
+    @Override
+    void removeInternal(AbstractCompiler compiler) {
+      if (!alreadyRemoved(referenceNode)) {
+        if (isThisDotProperty(referenceNode)) {
+          removeExpressionCompletely(referenceNode);
+        } else {
+          checkState(isDotPrototypeDotProperty(referenceNode), referenceNode);
+          // objExpression.prototype.propertyName
+          Node objExpression = referenceNode.getFirstFirstChild();
+          if (NodeUtil.mayHaveSideEffects(objExpression)) {
+            replaceExpressionWith(referenceNode, objExpression.detach());
+          } else {
+            removeExpressionCompletely(referenceNode);
+          }
+        }
+      }
+    }
   }
 
   /** Represents an increment or decrement operation that could be removed. */
@@ -1560,6 +1627,7 @@ class RemoveUnusedCode implements CompilerPass {
       super(builder);
       checkArgument(incOrDecNode.isInc() || incOrDecNode.isDec(), incOrDecNode);
       Node arg = incOrDecNode.getOnlyChild();
+      // TODO(bradfordcsmith): handle `name;` and `name.property;` references
       checkState(isThisDotProperty(arg) || isDotPrototypeDotProperty(arg), arg);
       this.incOrDecNode = incOrDecNode;
     }
@@ -1583,11 +1651,6 @@ class RemoveUnusedCode implements CompilerPass {
           }
         }
       }
-    }
-
-    @Override
-    boolean isNamedPropertyAssignment() {
-      return isNamedProperty();
     }
   }
 
