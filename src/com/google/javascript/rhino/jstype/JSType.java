@@ -51,6 +51,7 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.TypeI;
 import java.util.Comparator;
 import java.util.IdentityHashMap;
+import java.util.Objects;
 
 /**
  * Represents JavaScript value types.<p>
@@ -711,7 +712,12 @@ public abstract class JSType implements TypeI {
       return true;
     }
     if (this.isNoResolvedType() && that.isNoResolvedType()) {
-      return true;
+      if (this.isNamedType() && that.isNamedType()) {
+        return Objects.equals(
+            ((NamedType) this).getReferenceName(), ((NamedType) that).getReferenceName());
+      } else {
+        return true;
+      }
     }
 
     boolean thisUnknown = isUnknownType();
