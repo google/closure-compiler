@@ -309,8 +309,7 @@ public class Es6SyntacticScopeCreator implements ScopeCreator {
      * @param n The node corresponding to the variable name.
      */
     private void declareVar(Scope s, Node n) {
-      checkState(n.isName() || n.isStringKey() || n.isImportStar(),
-          "Invalid node for declareVar: %s", n);
+      checkState(n.isName() || n.isImportStar(), "Invalid node for declareVar: %s", n);
 
       String name = n.getString();
       // Because of how we scan the variables, it is possible to encounter
