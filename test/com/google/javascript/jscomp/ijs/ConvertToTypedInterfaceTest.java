@@ -114,6 +114,12 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
         warning(ConvertToTypedInterface.CONSTANT_WITHOUT_EXPLICIT_TYPE));
   }
 
+  public void testNonThisPropertiesInConstructors() {
+    test(
+        "/** @constructor */ function Foo() { const obj = {}; obj.name = () => 5; alert(obj); }",
+        "/** @constructor */ function Foo() {}");
+  }
+
   public void testThisPropertiesInConstructorsAndPrototype() {
     test(
         lines(

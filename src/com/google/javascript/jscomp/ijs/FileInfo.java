@@ -15,16 +15,13 @@
  */
 package com.google.javascript.jscomp.ijs;
 
-import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.MultimapBuilder;
 import com.google.javascript.jscomp.Scope;
 import com.google.javascript.rhino.Node;
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 /**
@@ -33,8 +30,6 @@ import java.util.Set;
 final class FileInfo {
   private final Set<String> providedNamespaces = new HashSet<>();
   private final Set<String> requiredLocalNames = new HashSet<>();
-  @Deprecated
-  final List<Node> constructorsToProcess = new ArrayList<>();
   private final ListMultimap<String, PotentialDeclaration> declarations =
       MultimapBuilder.linkedHashKeys().arrayListValues().build();
 
@@ -91,11 +86,6 @@ final class FileInfo {
       }
     }
     return false;
-  }
-
-  void markConstructorToProcess(Node ctorNode) {
-    checkArgument(ctorNode.isFunction(), ctorNode);
-    constructorsToProcess.add(ctorNode);
   }
 
   void markProvided(String providedName) {

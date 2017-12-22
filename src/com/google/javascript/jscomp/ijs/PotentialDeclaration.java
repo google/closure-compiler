@@ -53,11 +53,11 @@ abstract class PotentialDeclaration {
   static PotentialDeclaration fromName(Node nameNode) {
     checkArgument(nameNode.isQualifiedName(), nameNode);
     Node rhs = NodeUtil.getRValueOfLValue(nameNode);
-    String name =
-        ClassUtil.isThisProp(nameNode)
-            ? ClassUtil.getPrototypeNameOfThisProp(nameNode)
-            : nameNode.getQualifiedName();
-    return new NameDeclaration(name, nameNode, rhs);
+    if (ClassUtil.isThisProp(nameNode)) {
+      String name = ClassUtil.getPrototypeNameOfThisProp(nameNode);
+      return new ThisPropDeclaration(name, nameNode, rhs);
+    }
+    return new NameDeclaration(nameNode.getQualifiedName(), nameNode, rhs);
   }
 
   static PotentialDeclaration fromMethod(Node functionNode) {
@@ -136,6 +136,9 @@ abstract class PotentialDeclaration {
 
     @Override
     void simplify(AbstractCompiler compiler) {
+      if (getRhs() == null) {
+        return;
+      }
       Node nameNode = getLhs();
       JSDocInfo jsdoc = getJsDoc();
       if (jsdoc != null && jsdoc.hasEnumParameterType()) {
@@ -193,6 +196,31 @@ abstract class PotentialDeclaration {
     }
 
   }
+
+  /**
+   * A declaration of a property on `this` inside a constructor.
+   */
+  static class ThisPropDeclaration extends PotentialDeclaration {
+    private final Node insertionPoint;
+
+    ThisPropDeclaration(String fullyQualifiedName, Node lhs, Node rhs) {
+      super(fullyQualifiedName, lhs, rhs);
+      Node thisPropDefinition = NodeUtil.getEnclosingStatement(lhs);
+      this.insertionPoint = NodeUtil.getEnclosingStatement(thisPropDefinition.getParent());
+    }
+
+    @Override
+    void simplify(AbstractCompiler compiler) {
+      // Just completely remove the RHS, if present, and replace with a getprop.
+      Node newStatement =
+          NodeUtil.newQNameDeclaration(compiler, getFullyQualifiedName(), null, getJsDoc());
+      newStatement.useSourceInfoIfMissingFromForTree(getLhs());
+      NodeUtil.deleteNode(getStatement(), compiler);
+      insertionPoint.getParent().addChildAfter(newStatement, insertionPoint);
+      compiler.reportChangeToEnclosingScope(newStatement);
+    }
+  }
+
 
   /**
    * A declaration declared by a call to `goog.define`. Note that a let, const, or var declaration

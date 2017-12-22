@@ -26,7 +26,6 @@ import com.google.javascript.jscomp.AbstractCompiler;
 import com.google.javascript.jscomp.CompilerPass;
 import com.google.javascript.jscomp.DiagnosticType;
 import com.google.javascript.jscomp.NodeTraversal;
-import com.google.javascript.jscomp.NodeTraversal.AbstractShallowStatementCallback;
 import com.google.javascript.jscomp.NodeUtil;
 import com.google.javascript.jscomp.Scope;
 import com.google.javascript.jscomp.Var;
@@ -131,8 +130,12 @@ public class ConvertToTypedInterface implements CompilerPass {
               }
               return false;
             case ASSIGN:
-              if (!expr.getFirstChild().isQualifiedName()
-                  || (expr.getFirstChild().isName() && !t.inGlobalScope() && !t.inModuleScope())) {
+              Node lhs = expr.getFirstChild();
+              if (!lhs.isQualifiedName()
+                  || (lhs.isName() && !t.inGlobalScope() && !t.inModuleScope())
+                  || (!ClassUtil.isThisProp(lhs)
+                      && !t.inGlobalHoistScope()
+                      && !t.inModuleHoistScope())) {
                 NodeUtil.deleteNode(n, t.getCompiler());
                 return false;
               }
@@ -434,10 +437,6 @@ public class ConvertToTypedInterface implements CompilerPass {
           processDeclaration(decl);
         }
       }
-      // Simplify all names inside constructors.
-      for (Node ctorNode : currentFile.constructorsToProcess) {
-        processConstructor(ctorNode);
-      }
     }
 
     private void processDeclaration(PotentialDeclaration decl) {
@@ -472,9 +471,6 @@ public class ConvertToTypedInterface implements CompilerPass {
     private void processFunction(Node n) {
       checkArgument(n.isFunction());
       processFunctionParameters(n.getSecondChild());
-      if (ClassUtil.isConstructor(n) && n.getLastChild().hasChildren()) {
-        currentFile.markConstructorToProcess(n);
-      }
     }
 
     private void processFunctionParameters(Node paramList) {
@@ -487,36 +483,6 @@ public class ConvertToTypedInterface implements CompilerPass {
           compiler.reportChangeToEnclosingScope(replacement);
         }
       }
-    }
-
-    private void processConstructor(final Node function) {
-      if (ClassUtil.getClassName(function) == null) {
-        return;
-      }
-      final Node insertionPoint = NodeUtil.getEnclosingStatement(function);
-      NodeTraversal.traverseEs6(
-          compiler,
-          function.getLastChild(),
-          new AbstractShallowStatementCallback() {
-            @Override
-            public void visit(NodeTraversal t, Node n, Node parent) {
-              if (n.isExprResult()) {
-                Node expr = n.getFirstChild();
-                Node name = expr.isAssign() ? expr.getFirstChild() : expr;
-                if (ClassUtil.isThisProp(name)) {
-                  String fullyQualifiedName = ClassUtil.getPrototypeNameOfThisProp(name);
-                  JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(name);
-                  Node newProtoAssignStmt =
-                      NodeUtil.newQNameDeclaration(compiler, fullyQualifiedName, null, jsdoc);
-                  newProtoAssignStmt.useSourceInfoIfMissingFromForTree(expr);
-                  // TODO(blickly): Preserve the declaration order of the this properties.
-                  insertionPoint.getParent().addChildAfter(newProtoAssignStmt, insertionPoint);
-                  compiler.reportChangeToEnclosingScope(newProtoAssignStmt);
-                }
-                NodeUtil.deleteNode(n, compiler);
-              }
-            }
-          });
     }
 
     enum RemovalType {
@@ -554,8 +520,10 @@ public class ConvertToTypedInterface implements CompilerPass {
       Node jsdocNode = NodeUtil.getBestJSDocInfoNode(nameNode);
       JSDocInfo jsdoc = jsdocNode.getJSDocInfo();
       boolean isExport = isExportLhs(nameNode);
-      if (rhs == null
-          || PotentialDeclaration.isTypedRhs(rhs)
+      if (rhs == null) {
+        return RemovalType.SIMPLIFY_RHS;
+      }
+      if (PotentialDeclaration.isTypedRhs(rhs)
           || NodeUtil.isCallTo(rhs, "goog.defineClass")
           || isImportRhs(rhs)
           || (isExport && (rhs.isQualifiedName() || rhs.isObjectLit()))
