@@ -109,8 +109,8 @@ public final class RemoveUnusedCodeClassPropertiesTest extends TypeICompilerTest
   public void testSimple2() {
     // A property defined on "this" can be removed, even when defined
     // as part of an expression
-    test("this.a = 2, alert(1);", "0, alert(1);");
-    test("const x = (this.a = 2, alert(1));", "const x = (0, alert(1));");
+    test("this.a = 2, alert(1);", "alert(1);");
+    test("const x = (this.a = 2, alert(1));", "const x = alert(1);");
     test("const x = (alert(1), this.a = 2);", "const x = (alert(1), 2);");
   }
 
@@ -156,8 +156,8 @@ public final class RemoveUnusedCodeClassPropertiesTest extends TypeICompilerTest
   public void testAssignOp2() {
     // Properties defined using a compound assignment can be removed if the
     // result of the assignment expression is not immediately used.
-    test("this.a += 2, alert(1)", "0, alert(1)");
-    test("const x = (this.a += 2, alert(1))", "const x = (0, alert(1))");
+    test("this.a += 2, alert(1)", "alert(1)");
+    test("const x = (this.a += 2, alert(1))", "const x = alert(1)");
     testSame("const x = (alert(1), this.a += 2)");
   }
 
@@ -176,12 +176,12 @@ public final class RemoveUnusedCodeClassPropertiesTest extends TypeICompilerTest
   public void testInc2() {
     // Increments and Decrements are handled similarly to compound assignments
     // but need a placeholder value when replaced.
-    test("this.a++, alert()", "0, alert()");
-    test("let x = (this.a++, alert())", "let x = (0, alert())");
+    test("this.a++, alert()", "alert()");
+    test("let x = (this.a++, alert())", "let x = alert()");
     testSame("let x = (alert(), this.a++)");
 
-    test("--this.a, alert()", "0, alert()");
-    test("let x = (--this.a, alert())", "let x = (0, alert())");
+    test("--this.a, alert()", "alert()");
+    test("let x = (--this.a, alert())", "let x = alert()");
     testSame("let x = (alert(), --this.a)");
   }
 

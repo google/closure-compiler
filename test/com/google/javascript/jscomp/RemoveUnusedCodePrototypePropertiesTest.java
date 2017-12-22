@@ -96,7 +96,7 @@ public final class RemoveUnusedCodePrototypePropertiesTest extends CompilerTestC
   }
 
   public void testAnonymousPrototypePropertyRemoved() {
-    test("({}.prototype.x = 5, externFunction())", "0, externFunction();");
+    test("({}.prototype.x = 5, externFunction())", "externFunction();");
     test("({}).prototype.x = 5;", "");
     test("({}).prototype.x = externFunction();", "externFunction();");
     test("externFunction({}.prototype.x = 5);", "externFunction(5);");

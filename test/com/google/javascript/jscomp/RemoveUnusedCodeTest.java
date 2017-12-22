@@ -78,7 +78,7 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
     // We don't need the assignment or the assigned value, but we need to keep the AST valid.
     test(
         "var x; (x = 15, externFunction())", // preserve formatting
-        "       (     0, externFunction())");
+        "                externFunction()");
   }
 
   public void testRemoveInBlock() {

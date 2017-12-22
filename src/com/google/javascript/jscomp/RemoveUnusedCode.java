@@ -2214,6 +2214,14 @@ class RemoveUnusedCode implements CompilerPass {
     Node parent = expression.getParent();
     if (parent.isExprResult()) {
       NodeUtil.deleteNode(parent, compiler);
+    } else if (parent.isComma()) {
+      // Expression is probably the first child of the comma,
+      // but it could be the second if the entire comma expression value is unused.
+      Node otherChild = expression.getNext();
+      if (otherChild == null) {
+        otherChild = expression.getPrevious();
+      }
+      replaceExpressionWith(parent, otherChild.detach());
     } else {
       // value isn't needed, but we need to keep the AST valid.
       replaceExpressionWith(expression, IR.number(0).useSourceInfoFrom(expression));
