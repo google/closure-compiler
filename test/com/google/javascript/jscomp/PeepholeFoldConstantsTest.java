@@ -762,6 +762,12 @@ public final class PeepholeFoldConstantsTest extends TypeICompilerTestCase {
     fold("x = '' + []", "x = ''");      // cannot fold (but nice if we can)
   }
 
+  public void testStringAdd_identity() {
+    this.mode = TypeInferenceMode.BOTH;
+    foldStringTypes("x + ''", "x");
+    foldStringTypes("'' + x", "x");
+  }
+
   public void testIssue821() {
     foldSame("var a =(Math.random()>0.5? '1' : 2 ) + 3 + 4;");
     foldSame("var a = ((Math.random() ? 0 : 1) ||" +
@@ -1535,6 +1541,12 @@ public final class PeepholeFoldConstantsTest extends TypeICompilerTestCase {
     fold(
         "function f(/** @type {number} */ x) { " + js + " }",
         "function f(/** @type {number} */ x) { " + expected + " }");
+  }
+
+  private void foldStringTypes(String js, String expected) {
+    fold(
+        "function f(/** @type {string} */ x) { " + js + " }",
+        "function f(/** @type {string} */ x) { " + expected + " }");
   }
 
   private static String join(String operandA, String op, String operandB) {

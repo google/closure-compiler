@@ -907,6 +907,13 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
         // '6' + 7
         return tryFoldAddConstantString(node, left, right);
       } else {
+        if (left.isString() && left.getString().isEmpty() && isStringTyped(right)) {
+          return replace(node, right.cloneTree(true));
+        } else if (right.isString()
+            && right.getString().isEmpty()
+            && isStringTyped(left)) {
+          return replace(node, left.cloneTree(true));
+        }
         // a + 7 or 6 + a
         return tryFoldChildAddString(node, left, right);
       }
@@ -918,6 +925,18 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       }
       return tryFoldLeftChildOp(node, left, right);
     }
+  }
+
+  private Node replace(Node oldNode, Node newNode) {
+    oldNode.replaceWith(newNode);
+    compiler.reportChangeToEnclosingScope(newNode);
+    return newNode;
+  }
+
+  private boolean isStringTyped(Node n) {
+    // We could also accept !String, but it is unlikely to be very common.
+    return NodeUtil.isStringResult(n)
+        || (shouldUseTypes && n.getTypeI() != null && n.getTypeI().isStringValueType());
   }
 
   /**
