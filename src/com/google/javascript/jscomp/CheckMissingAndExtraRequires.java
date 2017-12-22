@@ -740,7 +740,7 @@ public class CheckMissingAndExtraRequires implements HotSwapCompilerPass, NodeTr
               }
               String rootName = Splitter.on('.').split(typeString).iterator().next();
               Var var = t.getScope().getVar(rootName);
-              if (var == null || !var.isExtern()) {
+              if (var == null || (var.isGlobal() && !var.isExtern())) {
                 if (markStrongUsages) {
                   usages.put(typeString, n);
                 } else {
@@ -755,9 +755,9 @@ public class CheckMissingAndExtraRequires implements HotSwapCompilerPass, NodeTr
                   addWeakUsagesOfAllPrefixes(typeString);
                 }
               } else {
-                // Even if the root namespace is in externs, add a weak usage because the full
+                // Even if the root namespace is in externs, add weak usages because the full
                 // namespace may still be goog.provided.
-                weakUsages.add(typeString);
+                addWeakUsagesOfAllPrefixes(typeString);
               }
             }
           }

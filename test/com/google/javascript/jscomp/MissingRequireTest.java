@@ -1160,6 +1160,30 @@ public final class MissingRequireTest extends CompilerTestCase {
         "func( {a: new Bar()} );"));
   }
 
+  public void testDestructuredAfterRequire() {
+    testNoWarning(lines(
+        "goog.module('x');",
+        "",
+        "const ns = goog.require('some.namespace');",
+        "",
+        "const {AnInterface} = ns;",
+        "",
+        "/** @implements {AnInterface} */",
+        "class C {}",
+        ""));
+
+    testNoWarning(lines(
+        "goog.module('x');",
+        "",
+        "const ns = goog.require('some.namespace');",
+        "",
+        "const {AnotherClass} = ns;",
+        "",
+        "/** @constructor @extends {AnotherClass} */",
+        "function C() {}",
+        ""));
+  }
+
   public void testReferenceInDefaultParam() {
     testWarning(lines(
         "function func( a = new Bar() ){}",

@@ -328,4 +328,16 @@ public final class ExtraRequireTest extends CompilerTestCase {
             "var {} = goog.require('goog.asserts');"),
         EXTRA_REQUIRE_WARNING);
   }
+
+  public void testGoogModuleWithNamespaceRequire() {
+    testNoWarning(
+        lines(
+            "goog.module('example');",
+            "",
+            "const ns = goog.require('a.namespace');",
+            "",
+            "/** @implements {ns.Interface} */",
+            "class AGreatClass {}",
+            ""));
+  }
 }
