@@ -4072,15 +4072,8 @@ public final class NodeUtil {
         return;
       case IMPORT_SPEC:
       case COMPUTED_PROP:
-        getLhsNodesHelper(n.getLastChild(), lhsNodes);
-        return;
       case STRING_KEY:
-        if (n.hasChildren()) {
-          getLhsNodesHelper(n.getLastChild(), lhsNodes);
-        } else {
-          checkState(isLValue(n));
-          lhsNodes.add(n);
-        }
+        getLhsNodesHelper(n.getLastChild(), lhsNodes);
         return;
       case NAME:
       case IMPORT_STAR:
