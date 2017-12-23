@@ -398,8 +398,10 @@ public final class RemoveUnusedCodeClassPropertiesTest extends TypeICompilerTest
   }
 
   // TODO(b/66971163): make this pass
-  public void disabledTestEs6GettersWithoutTranspilation() {
-    test("class C { get value() { return 0; } }", "class C {}");
+  public void testEs6GettersWithoutTranspilation() {
+    test(
+        "class C { get value() { return 0; } }", // preserve newline
+        "class C {                           }");
     testSame("class C { get value() { return 0; } } const x = (new C()).value");
   }
 
@@ -407,13 +409,14 @@ public final class RemoveUnusedCodeClassPropertiesTest extends TypeICompilerTest
     testSame("class C { ['test' + 3]() { return 0; } }");
   }
 
-  // TODO(b/66971163): make this pass
-  public void disabledTestEs6SettersWithoutTranspilation() {
-    test("class C { set value(val) { this.internalVal = val; } }", "class C {}");
+  public void testEs6SettersWithoutTranspilation() {
+    test(
+        "class C { set value(val) { this.internalVal = val; } }", // preserve newline
+        "class C {                                            }");
 
     test(
         "class C { set value(val) { this.internalVal = val; } } (new C()).value = 3;",
-        "class C { set value(val) { val; } } (new C()).value = 3;");
+        "class C { set value(val) {                         } } (new C()).value = 3;");
     testSame(
         lines(
             "class C {",
@@ -514,45 +517,37 @@ public final class RemoveUnusedCodeClassPropertiesTest extends TypeICompilerTest
             "$jscomp.global.Object.defineProperties(C.prototype, {});"));
   }
 
-  // TODO(b/66971163): make this pass
-  public void disabledTestEs6ArrowFunction() {
-    test("() => this.a = 1", "() => 1");
-    testSame("() => ({a: 2})");
-    testSame("() => {y.a = 2; this.a = 2;}");
+  public void testEs6ArrowFunction() {
+    test(
+        "const arrow = () => this.a = 1;", // preserve newline
+        "const arrow = () =>          1;");
+    testSame("const arrow = () => ({a: 2})");
+    testSame("var y = {}; const arrow = () => {y.a = 2; this.a = 2;}");
     test(
         lines(
-            "var A = () => {this.foo = 1;}",
+            "function A() {",
+            "  this.foo = 1;",
+            "}",
             "A.prototype.foo = 0;",
-            "A.prototype.method = () => {this.foo++};",
-            "new A().method()"),
+            "A.prototype.getIncr = function() {",
+            "  return () => { this.foo++; };",
+            "};",
+            "new A().getIncr()"),
         lines(
-            "var A = () => {1;}",
-            "0;",
-            "A.prototype.method = () => {0;};",
-            "new A().method()"));
+            "function A() {",
+            "               ",
+            "}",
+            "                  ",
+            "A.prototype.getIncr = function() {",
+            "  return () => {             };",
+            "};",
+            "new A().getIncr()"));
   }
 
-  // TODO(b/66971163): make this pass
-  public void disabledTestEs6ForOf() {
-    test("this.y = 1;for (var a of x) { alert(x[a]) }", "1; for (var a of x) { alert(x[a]) }");
-    testSame("var obj = {}; obj.a = 1; for (var a of obj) { alert(obj[a]) }");
-    testSame("this.y = {};for (var a of this.y) { alert(this.y[a]) }");
-  }
-
-  // TODO(b/66971163): make this pass
-  public void disabledTestEs6TemplateLiterals() {
+  public void testEs6Generator() {
     test(
-        lines(
-            "function tag(strings, x) { this.a = x; }",
-            "tag`tag ${0} function`"),
-        lines(
-            "function tag(strings, x) { x; }",
-            "tag`tag ${0} function`"));
-  }
-
-  // TODO(b/66971163): make this pass
-  public void disabledTestEs6Generator() {
-    test("function* gen() { yield this.a = 1; }", "function* gen() { yield 1; }");
+        "function* gen() { yield this.a = 1; }", // preserve newline
+        "function* gen() { yield          1; }");
     testSame("function* gen() { yield this.a = 1; yield this.a; }");
   }
 
@@ -674,23 +669,23 @@ public final class RemoveUnusedCodeClassPropertiesTest extends TypeICompilerTest
     test("({['a']:0}); this.a = 1;", "({['a']:0}); 1;");
   }
 
-  // TODO(b/66971163): make this pass
-  public void disabledTestEs6DefaultParameter() {
-    test("function foo(x, y = this.a = 1) {}", "function foo(x, y = 1) {}");
+  public void testEs6DefaultParameter() {
+    test(
+        "function foo(x, y = this.a = 1) {}", // preserve newline
+        "function foo(x, y =          1) {}");
     testSame("this.a = 1; function foo(x, y = this.a) {}");
   }
 
-  // TODO(b/66971163): make this pass
-  public void disabledTestEs8AsyncFunction() {
+  public void testEs8AsyncFunction() {
     test(
         lines(
-            "async function foo(promise) {",
+            "async function foo(promise) {", // preserve newlines
             "   this.x = 1;",
             "   return await promise;",
             "}"),
         lines(
-            "async function foo(promise) {",
-            "   1;",
+            "async function foo(promise) {", // preserve newlines
+            "              ",
             "   return await promise;",
             "}"));
 
