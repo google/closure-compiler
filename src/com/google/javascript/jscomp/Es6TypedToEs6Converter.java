@@ -426,19 +426,17 @@ public final class Es6TypedToEs6Converter implements NodeTraversal.Callback, Hot
         n.detach();
         NodeUtil.markFunctionsDeleted(n, compiler);
       }
-      if (!processedOverloads.contains(overloadStack)) {
-        Node original = overloadStack.peek().get(name);
-        processedOverloads.add(original);
-        Node paramList = original.getSecondChild();
-        paramList.removeChildren();
-        Node originalParent = original.getParent();
-        Node originalJsDocNode = originalParent.isMemberFunctionDef() || originalParent.isAssign()
-            ? originalParent : original;
-        JSDocInfoBuilder builder = new JSDocInfoBuilder(false);
-        builder.recordType(new JSTypeExpression(
-            convertWithLocation(TypeDeclarationsIR.namedType("Function")), n.getSourceFileName()));
-        originalJsDocNode.setJSDocInfo(builder.build());
-      }
+      Node original = overloadStack.peek().get(name);
+      processedOverloads.add(original);
+      Node paramList = original.getSecondChild();
+      paramList.removeChildren();
+      Node originalParent = original.getParent();
+      Node originalJsDocNode = originalParent.isMemberFunctionDef() || originalParent.isAssign()
+          ? originalParent : original;
+      JSDocInfoBuilder builder = new JSDocInfoBuilder(false);
+      builder.recordType(new JSTypeExpression(
+          convertWithLocation(TypeDeclarationsIR.namedType("Function")), n.getSourceFileName()));
+      originalJsDocNode.setJSDocInfo(builder.build());
       return;
     }
     overloadStack.peek().put(name, n);
