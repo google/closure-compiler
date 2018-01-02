@@ -179,12 +179,15 @@ public final class RemoveUnusedCodePrototypePropertiesTest extends CompilerTestC
   }
 
   public void testObjectLiteralPrototype() {
-    test("function e(){}" +
-            "e.prototype = {a: function(){}, b: function(){}};" +
-            "var x=new e; x.a()",
-        "function e(){}" +
-            "e.prototype = {a: function(){}};" +
-            "var x = new e; x.a()");
+    test(
+        "function e(){} e.prototype = {a: function(){}, b: function(){}}; var x = new e; x.a()",
+        "function e(){} e.prototype = {a: function(){}                 }; var x = new e; x.a()");
+  }
+
+  public void testObjectLiteralPrototypeUnusedPropDefinitionWithSideEffects() {
+    test(
+        "function e(){} e.prototype = {a: alert('a'), b: function(){}}; new e;",
+        "function e(){} e.prototype = {a: alert('a')                 }; new e;");
   }
 
   public void testPropertiesDefinedInExterns() {

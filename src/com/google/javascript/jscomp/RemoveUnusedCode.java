@@ -606,12 +606,19 @@ class RemoveUnusedCode implements CompilerPass {
       if (propertyNode.isComputedProp() || propertyNode.isQuotedString()) {
         traverseChildren(propertyNode, scope);
       } else {
-        // If we've come this far, we already know we're keeping the prototype literal itself,
-        // but we may be able to remove unreferenced properties in it.
-        considerForIndependentRemoval(
-            new RemovableBuilder()
-                .addContinuation(new Continuation(propertyNode.getOnlyChild(), scope))
-                .buildClassOrPrototypeNamedProperty(propertyNode));
+        Node valueNode = propertyNode.getOnlyChild();
+        if (NodeUtil.mayHaveSideEffects(valueNode)) {
+          // TODO(bradfordcsmith): Ideally we should preserve the side-effect without keeping the
+          // property itself alive.
+          traverseNode(valueNode, scope);
+        } else {
+          // If we've come this far, we already know we're keeping the prototype literal itself,
+          // but we may be able to remove unreferenced properties in it.
+          considerForIndependentRemoval(
+              new RemovableBuilder()
+                  .addContinuation(new Continuation(valueNode, scope))
+                  .buildClassOrPrototypeNamedProperty(propertyNode));
+        }
       }
     }
   }
