@@ -1249,6 +1249,29 @@ public class ErrorToFixMapperTest {
             "alert(new GoogWidget());"));
   }
 
+  /**
+   * Here, if the short name weren't provided the suggested fix would use 'Table' for both,
+   * but since there is a short name provided for each one, it uses those names.
+   */
+  @Test
+  public void testShortRequireInGoogModule7() {
+    assertChanges(
+        LINE_JOINER.join(
+            "goog.module('m');",
+            "",
+            "var CoffeeTable = goog.require('coffee.Table');",
+            "var KitchenTable = goog.require('kitchen.Table');",
+            "",
+            "alert(new coffee.Table(), new kitchen.Table());"),
+        LINE_JOINER.join(
+            "goog.module('m');",
+            "",
+            "var CoffeeTable = goog.require('coffee.Table');",
+            "var KitchenTable = goog.require('kitchen.Table');",
+            "",
+            "alert(new CoffeeTable(), new KitchenTable());"));
+  }
+
   @Test
   public void testBug65602711a() {
     assertChanges(
