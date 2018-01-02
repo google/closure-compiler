@@ -1115,12 +1115,9 @@ public final class ParserTest extends BaseJSTypeTestCase {
         parse("x = 1\ny = 2"),
         parse("x = 1; y = 2;"));
 
-    // This fails because an EMPTY statement
-    // is inserted after the 'x=1'.
-    // TODO(tbreisacher): Fix and re-enable.
-    //assertNodeEquality(
-    //    parse("x = 1\n;y = 2"),
-    //    parse("x = 1; y = 2;"));
+    assertNodeEquality(
+        parse("x = 1\n;y = 2"),
+        parse("x = 1;; y = 2;"));
 
     // if/else statements
     assertNodeEquality(
