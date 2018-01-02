@@ -91,6 +91,15 @@ public final class ClosureCodeRemovalTest extends CompilerTestCase {
     test("var x = goog.asserts.assert();", "var x = void 0;");
   }
 
+  public void testDoNotRemoveAbstractClass() {
+    testSame(
+        lines(
+            "var ns = {};",
+            "/** @abstract */",
+            "ns.A = class {};",
+            "ns.B = class extends ns.A {}"));
+  }
+
   @Override
   protected ClosureCodeRemoval getProcessor(Compiler compiler) {
     return new ClosureCodeRemoval(compiler, true, true);
