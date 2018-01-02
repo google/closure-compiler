@@ -259,20 +259,20 @@ class InlineFunctions implements CompilerPass {
 
     // If the function has multiple definitions, don't inline it.
     if (functionState.hasExistingFunctionDefinition()) {
-      functionState.setInline(false);
+      functionState.disallowInlining();
       return;
     }
     Node fnNode = fn.getFunctionNode();
 
     if (hasNoInlineAnnotation(fnNode)) {
-      functionState.setInline(false);
+      functionState.disallowInlining();
       return;
     }
 
     if (enforceMaxSizeAfterInlining
         && !isAlwaysInlinable(fnNode)
         && maxSizeAfterInlining <= NodeUtil.countAstSizeUpToLimit(fnNode, maxSizeAfterInlining)) {
-      functionState.setInline(false);
+      functionState.disallowInlining();
       return;
     }
 
@@ -285,7 +285,7 @@ class InlineFunctions implements CompilerPass {
       }
 
       if (hasNonInlinableParam(NodeUtil.getFunctionParameters(fnNode))) {
-        functionState.setInline(false);
+        functionState.disallowInlining();
       }
 
       // verify the function meets all the requirements.
@@ -293,7 +293,7 @@ class InlineFunctions implements CompilerPass {
       // run-time cost of this pass.
       if (!isCandidateFunction(fn)) {
         // It doesn't meet the requirements.
-        functionState.setInline(false);
+        functionState.disallowInlining();
       }
 
       // Set the module and gather names that need temporaries.
@@ -319,18 +319,18 @@ class InlineFunctions implements CompilerPass {
           // values for locals.  If there are simple values, or constants
           // we could still inline.
           if (!assumeMinimumCapture && hasLocalNames(fnNode)) {
-            functionState.setInline(false);
+            functionState.disallowInlining();
           }
         }
 
       }
 
       if (fnNode.isGeneratorFunction()) {
-        functionState.setInline(false);
+        functionState.disallowInlining();
       }
 
       if (fnNode.isAsyncFunction()) {
-        functionState.setInline(false);
+        functionState.disallowInlining();
       }
     }
   }
@@ -568,7 +568,7 @@ class InlineFunctions implements CompilerPass {
         Node target = parent.getFirstChild();
         if (target.isName() && target.getString().equals(NodeUtil.EXTERN_OBJECT_PROPERTY_STRING)) {
           // This method is going to be replaced so don't inline it anywhere.
-          functionState.setInline(false);
+          functionState.disallowInlining();
         }
       }
 
@@ -577,7 +577,7 @@ class InlineFunctions implements CompilerPass {
         // e.g. bar = something; <== we can't inline "bar"
         // so mark the function as uninlinable.
         // TODO(johnlenz): Should we just remove it from fns here?
-        functionState.setInline(false);
+        functionState.disallowInlining();
       } else {
         // e.g. var fn = bar; <== we can't inline "bar"
         // As this reference can't be inlined mark the function as
@@ -758,7 +758,7 @@ class InlineFunctions implements CompilerPass {
           // still be inlined.
           if (!minimizeCost(fsCalled)) {
             // It can't be inlined remove it from the list.
-            fsCalled.setInline(false);
+            fsCalled.disallowInlining();
           }
         }
       }
@@ -904,14 +904,13 @@ class InlineFunctions implements CompilerPass {
       return inline;
     }
 
-    public void setInline(boolean inline) {
-      this.inline = inline;
-      if (!inline) {
-        // No need to keep references to function that can't be inlined.
-        references = null;
-        // Don't remove functions that we aren't inlining.
-        remove = false;
-      }
+    public void disallowInlining() {
+      this.inline = false;
+
+      // No need to keep references to function that can't be inlined.
+      references = null;
+      // Don't remove functions that we aren't inlining.
+      remove = false;
     }
 
     public boolean canRemove() {
