@@ -570,6 +570,18 @@ public enum CompilationParam {
     }
   },
 
+  REMOVE_SUPER_METHODS(ParamGroup.TYPE_CHECKING_OPTIMIZATION) {
+    @Override
+    public void apply(CompilerOptions options, boolean value) {
+      options.setRemoveSuperMethods(value);
+    }
+
+    @Override
+    public boolean isApplied(CompilerOptions options) {
+      return options.getRemoveSuperMethods();
+    }
+  },
+
   /** Collapses multiple variable declarations into one */
   COLLAPSE_VARIABLE_DECLARATIONS(ParamGroup.TYPE_CHECKING_OPTIMIZATION) {
     @Override

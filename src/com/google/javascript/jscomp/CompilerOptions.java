@@ -1727,6 +1727,10 @@ public class CompilerOptions implements Serializable {
     this.removeSuperMethods = remove;
   }
 
+  public boolean getRemoveSuperMethods() {
+    return removeSuperMethods;
+  }
+
   public void setRemoveClosureAsserts(boolean remove) {
     this.removeClosureAsserts = remove;
   }
