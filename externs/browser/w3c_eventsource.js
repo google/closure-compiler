@@ -95,6 +95,6 @@ EventSource.prototype.onmessage = function(e) {};
 EventSource.prototype.onerror = function(e) {};
 
 /**
- * @type {function()}
+ * @return {undefined}
  */
 EventSource.prototype.close = function() {};
