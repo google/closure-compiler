@@ -161,6 +161,14 @@ public final class ExtraRequireTest extends CompilerTestCase {
         EXTRA_REQUIRE_WARNING);
 
     testError(
+        "import {Foo as Foo} from 'bar';",
+        EXTRA_REQUIRE_WARNING);
+
+    testError(
+        "import {Foo as Bar} from 'bar';",
+        EXTRA_REQUIRE_WARNING);
+
+    testError(
         lines(
             "import {Foo} from 'bar';",
             "goog.require('example.ExtraRequire');",
@@ -316,6 +324,28 @@ public final class ExtraRequireTest extends CompilerTestCase {
             "",
             "export default function() {",
             "  assert(true);",
+            "};"),
+        EXTRA_REQUIRE_WARNING);
+
+    testError(
+        lines(
+            "import 'example';",
+            "",
+            "import {assert as assert, fail as fail} from 'goog.asserts';",
+            "",
+            "export default function() {",
+            "  assert(true);",
+            "};"),
+        EXTRA_REQUIRE_WARNING);
+
+    testError(
+        lines(
+            "import 'example';",
+            "",
+            "import {assert as a, fail as f} from 'goog.asserts';",
+            "",
+            "export default function() {",
+            "  a(true);",
             "};"),
         EXTRA_REQUIRE_WARNING);
   }

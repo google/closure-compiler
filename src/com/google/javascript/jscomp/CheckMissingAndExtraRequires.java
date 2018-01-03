@@ -208,7 +208,7 @@ public class CheckMissingAndExtraRequires implements HotSwapCompilerPass, NodeTr
         }
         break;
       case NAME:
-        if (!NodeUtil.isLValue(n) && !parent.isGetProp()) {
+        if (!NodeUtil.isLValue(n) && !parent.isGetProp() && !parent.isImportSpec()) {
           visitQualifiedName(t, n, parent);
         }
         break;

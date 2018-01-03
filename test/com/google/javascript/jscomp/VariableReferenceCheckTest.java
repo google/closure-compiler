@@ -655,6 +655,8 @@ public final class VariableReferenceCheckTest extends CompilerTestCase {
   public void testES6Module_destructuring() {
     enableUnusedLocalAssignmentCheck = true;
     assertNoWarning("import 'example'; import {x} from 'y'; use(x);");
+    assertNoWarning("import 'example'; import {x as x} from 'y'; use(x);");
+    assertNoWarning("import 'example'; import {y as x} from 'y'; use(x);");
   }
 
   public void testGoogModule_require() {
@@ -1193,6 +1195,9 @@ public final class VariableReferenceCheckTest extends CompilerTestCase {
     assertRedeclareError("import {x} from 'whatever'; let [x] = [];");
 
     testSame("import {x} from 'whatever'; function f() { let x = 0; }");
+
+    testSame("import {x as x} from 'whatever'; function f() { let x = 0; }");
+    testSame("import {y as x} from 'whatever'; function f() { let x = 0; }");
   }
 
   /**

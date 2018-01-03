@@ -94,6 +94,21 @@ public final class ReferenceCollectingCallbackTest extends CompilerTestCase {
         });
   }
 
+  public void testImport2_alternate() {
+    es6ScopeCreator = true;
+    testBehavior(
+        "import {x as x} from 'm';",
+        (NodeTraversal t, ReferenceMap rm) -> {
+          if (t.getScope().isModuleScope()) {
+            ReferenceCollection x = rm.getReferences(t.getScope().getVar("x"));
+
+            assertThat(x.isAssignedOnceInLifetime()).isTrue();
+            assertThat(x.isWellDefined()).isTrue();
+            assertThat(Iterables.getOnlyElement(x).isDeclaration()).isTrue();
+          }
+        });
+  }
+
   public void testImport3() {
     es6ScopeCreator = true;
     testBehavior(
