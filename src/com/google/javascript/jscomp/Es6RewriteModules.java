@@ -218,15 +218,10 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
       } else if (child.isImportSpecs()) {
         for (Node grandChild : child.children()) {
           String origName = grandChild.getFirstChild().getString();
-          if (grandChild.hasTwoChildren()) { // import {a as foo} from "mod"
-            importMap.put(
-                grandChild.getLastChild().getString(),
-                new ModuleOriginalNamePair(moduleName, origName));
-          } else { // import {a} from "mod"
-            importMap.put(
-                origName,
-                new ModuleOriginalNamePair(moduleName, origName));
-          }
+          checkState(grandChild.hasTwoChildren());
+          importMap.put(
+              grandChild.getLastChild().getString(),
+              new ModuleOriginalNamePair(moduleName, origName));
         }
       } else {
         // import * as ns from "mod"
@@ -322,11 +317,10 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
       if (export.getFirstChild().getToken() == Token.EXPORT_SPECS) {
         //     export {Foo};
         for (Node exportSpec : export.getFirstChild().children()) {
+          checkState(exportSpec.hasTwoChildren());
           Node origName = exportSpec.getFirstChild();
           exportMap.put(
-              exportSpec.hasTwoChildren()
-                  ? exportSpec.getLastChild().getString()
-                  : origName.getString(),
+              exportSpec.getLastChild().getString(),
               new NameNodePair(origName.getString(), exportSpec));
         }
         parent.removeChild(export);

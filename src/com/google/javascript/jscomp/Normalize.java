@@ -56,8 +56,7 @@ import java.util.Set;
  *   <li>Removes duplicate variable declarations.
  *   <li>Marks constants with the IS_CONSTANT_NAME annotation.
  *   <li>Finds properties marked @expose, and rewrites them in [] notation.
- *   <li>Rewrite body of arrow function as a block
- *   <li>Removes ES6 shorthand import/export syntax.
+ *   <li>Rewrite body of arrow function as a block.
  *   <li>Take var statements out from for-loop initializer.
  *       This: for(var a = 0;a<0;a++) {} becomes: var a = 0; for(var a;a<0;a++) {}
  * </ol>
@@ -383,14 +382,6 @@ class Normalize implements CompilerPass {
           }
           break;
 
-        case IMPORT_SPEC:
-          rewriteImportSpecShorthand(n);
-          break;
-
-        case EXPORT_SPEC:
-          rewriteExportSpecShorthand(n);
-          break;
-
         case EXPORT:
           splitExportDeclaration(n);
           break;
@@ -446,38 +437,6 @@ class Normalize implements CompilerPass {
           }
           n.putBooleanProp(Node.IS_CONSTANT_NAME, true);
         }
-      }
-    }
-
-    /**
-     * Expands
-     *
-     *   import {x} from 'm';
-     *
-     * to
-     *
-     *   import {x as x} from 'm';
-     */
-    private void rewriteImportSpecShorthand(Node n) {
-      if (n.hasOneChild()) {
-        n.addChildToBack(n.getFirstChild().cloneTree());
-        compiler.reportChangeToEnclosingScope(n);
-      }
-    }
-
-    /**
-     * Expands
-     *
-     *   export {x};
-     *
-     * to
-     *
-     *   export {x as x};
-     */
-    private void rewriteExportSpecShorthand(Node n) {
-      if (n.hasOneChild()) {
-        n.addChildToBack(n.getFirstChild().cloneTree());
-        compiler.reportChangeToEnclosingScope(n);
       }
     }
 
