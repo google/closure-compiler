@@ -27,6 +27,7 @@ import com.google.javascript.jscomp.CodingConvention.SubclassRelationship;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
+import com.google.javascript.rhino.TypeI;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
@@ -131,7 +132,7 @@ class RemoveUnusedCode implements CompilerPass {
   private final boolean removeUnusedPrototypeProperties;
   private final boolean allowRemovalOfExternProperties;
   private final boolean removeUnusedThisProperties;
-  private final boolean removeUnusedConstructorProperties;
+  private final boolean removeUnusedStaticProperties;
   private final boolean removeUnusedObjectDefinePropertiesDefinitions;
 
   RemoveUnusedCode(Builder builder) {
@@ -143,7 +144,7 @@ class RemoveUnusedCode implements CompilerPass {
     this.removeUnusedPrototypeProperties = builder.removeUnusedPrototypeProperties;
     this.allowRemovalOfExternProperties = builder.allowRemovalOfExternProperties;
     this.removeUnusedThisProperties = builder.removeUnusedThisProperties;
-    this.removeUnusedConstructorProperties = builder.removeUnusedConstructorProperties;
+    this.removeUnusedStaticProperties = builder.removeUnusedStaticProperties;
     this.removeUnusedObjectDefinePropertiesDefinitions =
         builder.removeUnusedObjectDefinePropertiesDefinitions;
     this.scopeCreator = new Es6SyntacticScopeCreator(builder.compiler);
@@ -162,7 +163,7 @@ class RemoveUnusedCode implements CompilerPass {
     private boolean removeUnusedPrototypeProperties = false;
     private boolean allowRemovalOfExternProperties = false;
     private boolean removeUnusedThisProperties = false;
-    private boolean removeUnusedConstructorProperties = false;
+    private boolean removeUnusedStaticProperties = false;
     private boolean removeUnusedObjectDefinePropertiesDefinitions = false;
 
     Builder(AbstractCompiler compiler) {
@@ -200,7 +201,7 @@ class RemoveUnusedCode implements CompilerPass {
     }
 
     Builder removeUnusedConstructorProperties(boolean value) {
-      this.removeUnusedConstructorProperties = value;
+      this.removeUnusedStaticProperties = value;
       return this;
     }
 
@@ -1217,22 +1218,12 @@ class RemoveUnusedCode implements CompilerPass {
 
       if (referencedPropertyNames.contains(propertyName)
           || codingConvention.isExported(propertyName)) {
-        // Referenced, so not removable.
+        // Referenced or exported, so not removable.
         removable.applyContinuations();
-      } else if (removeUnusedObjectDefinePropertiesDefinitions
-          && removable.isObjectDefinePropertiesDefinition()) {
-        // Store for possible removal later.
-        removablesForPropertyNames.put(propertyName, removable);
-      } else if (removeUnusedPrototypeProperties && removable.isPrototypeProperty()) {
-        // Store for possible removal later.
-        removablesForPropertyNames.put(propertyName, removable);
-      } else if (removeUnusedThisProperties && removable.isThisDotPropertyReference()) {
+      } else if (isIndependentlyRemovable(removable)) {
         // Store for possible removal later.
         removablesForPropertyNames.put(propertyName, removable);
       } else {
-        // TODO(bradfordcsmith): Maybe allow removal of `varName.propertyName = something`
-        // assignments if we can be sure the variable's value is defined as a literal value that
-        // does not escape.
         removable.applyContinuations();
         // This assignment counts as a reference, since we won't be removing it.
         // This is necessary in order to preserve getters and setters for the property.
@@ -1241,6 +1232,14 @@ class RemoveUnusedCode implements CompilerPass {
     } else {
       removable.applyContinuations();
     }
+  }
+
+  private boolean isIndependentlyRemovable(Removable removable) {
+    return (removeUnusedPrototypeProperties && removable.isPrototypeProperty())
+        || (removeUnusedThisProperties && removable.isThisDotPropertyReference())
+        || (removeUnusedObjectDefinePropertiesDefinitions
+            && removable.isObjectDefinePropertiesDefinition())
+        || (removeUnusedStaticProperties && removable.isStaticProperty());
   }
 
   /**
@@ -1560,6 +1559,10 @@ class RemoveUnusedCode implements CompilerPass {
     }
 
     public boolean isObjectDefinePropertiesDefinition() {
+      return false;
+    }
+
+    public boolean isStaticProperty() {
       return false;
     }
   }
@@ -1883,8 +1886,13 @@ class RemoveUnusedCode implements CompilerPass {
     }
 
     @Override
+    public boolean isStaticProperty() {
+      return propertyNode.isStaticMember();
+    }
+
+    @Override
     boolean isClassOrPrototypeNamedProperty() {
-      return true;
+      return !isStaticProperty();
     }
 
     @Override
@@ -1979,8 +1987,6 @@ class RemoveUnusedCode implements CompilerPass {
     final Node assignNode;
     final Kind kind;
 
-    @Nullable final Node propertyNode;
-
     // If true, the value may have escaped and any modification is a use.
     final boolean maybeAliased;
 
@@ -2004,8 +2010,6 @@ class RemoveUnusedCode implements CompilerPass {
       }
       this.assignNode = assignNode;
       this.kind = kind;
-      this.propertyNode = propertyNode;
-
       this.maybeAliased = NodeUtil.isExpressionResultUsed(assignNode);
     }
 
@@ -2034,6 +2038,19 @@ class RemoveUnusedCode implements CompilerPass {
     /** True for `varName[expr] = value` and `varName.prototype[expr] = value` assignments. */
     boolean isComputedPropertyAssignment() {
       return kind == Kind.COMPUTED_PROPERTY;
+    }
+
+    @Override
+    public boolean isStaticProperty() {
+      Node lhs = assignNode.getFirstChild();
+      if (lhs.isGetProp()) {
+        // something.propName = someValue
+        Node getPropLhs = lhs.getFirstChild();
+        TypeI typeI = getPropLhs.getTypeI();
+        return typeI != null && (typeI.isConstructor() || typeI.isInterface());
+      } else {
+        return false;
+      }
     }
 
     /** Replace the current assign with its right hand side. */

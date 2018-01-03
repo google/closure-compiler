@@ -800,6 +800,7 @@ public final class RemoveUnusedCodePrototypePropertiesTest extends CompilerTestC
             "  constructor() {",  // constructor is not removable
             "    this.x = 1;",
             "  }",
+            "  static foo() {}",  // static method removal is disabled
             "}",
             "new C();"));
 

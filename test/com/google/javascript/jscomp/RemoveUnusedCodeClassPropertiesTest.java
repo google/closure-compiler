@@ -266,13 +266,12 @@ public final class RemoveUnusedCodeClassPropertiesTest extends TypeICompilerTest
         "new A().method()\n");
   }
 
-  // TODO(b/66971163): make this pass
-  public void disabledTestConstructorProperty1() {
+  public void testConstructorProperty1() {
     this.mode = TypeInferenceMode.BOTH;
 
     test(
         "/** @constructor */ function C() {} C.prop = 1;",
-        "/** @constructor */ function C() {} 1");
+        "/** @constructor */ function C() {}            ");
   }
 
   public void testConstructorProperty2() {
@@ -284,6 +283,22 @@ public final class RemoveUnusedCodeClassPropertiesTest extends TypeICompilerTest
             "C.prop = 1; ",
             "function foo(a) { alert(a.prop) }; ",
             "foo(C)"));
+  }
+
+  public void testES6StaticProperty() {
+    // TODO(bradfordcsmith): Neither type checker understands ES6 classes yet.
+    this.mode = TypeInferenceMode.NEITHER;
+
+    test(
+        "class C { static prop() {} }", // preserve newline
+        "class C {                  }");
+  }
+
+  public void testES6StaticProperty2() {
+    this.mode = TypeInferenceMode.NEITHER;
+
+    // TODO(bradfordcsmith): When NTI understands ES6 classes it will allow removal of `C.prop = 1`.
+    testSame("class C {} C.prop = 1;");
   }
 
   public void testObjectDefineProperties1() {
@@ -390,9 +405,9 @@ public final class RemoveUnusedCodeClassPropertiesTest extends TypeICompilerTest
             "Object.defineProperties(C, {'prop':{set:function (a) {return alert(a.prop)}}});"));
   }
 
-  // TODO(b/66971163): make this pass
-  public void disabledTestObjectDefineProperties_used_setter_removed() {
-    // TODO: Either remove, fix this, or document it as a limitation of advanced mode optimizations.
+  public void testObjectDefineProperties_used_setter_removed() {
+    // TODO(bradfordcsmith): Either remove, fix this, or document it as a limitation of advanced
+    // mode optimizations.
     this.mode = TypeInferenceMode.BOTH;
 
     test(
@@ -402,7 +417,7 @@ public final class RemoveUnusedCodeClassPropertiesTest extends TypeICompilerTest
             "C.prop = 2;"),
         lines(
             "/** @constructor */ function C() {}",
-            "Object.defineProperties(C, {});2"));
+            "Object.defineProperties(C, {                                  });"));
   }
 
   public void testEs6GettersWithoutTranspilation() {
@@ -467,8 +482,7 @@ public final class RemoveUnusedCodeClassPropertiesTest extends TypeICompilerTest
     testSame("function getCar(make, model, value) { return {model}; }");
   }
 
-  // TODO(b/66971163): make this pass
-  public void disabledTestEs6GettersRemoval() {
+  public void testTranspiledEs6GettersRemoval() {
     this.mode = TypeInferenceMode.BOTH;
     test(
         // This is the output of ES6->ES5 class getter converter.
@@ -490,12 +504,10 @@ public final class RemoveUnusedCodeClassPropertiesTest extends TypeICompilerTest
             "});"),
         lines(
             "/** @constructor @struct */var C=function(){};",
-            "0;",
             "$jscomp.global.Object.defineProperties(C.prototype, {});"));
   }
 
-  // TODO(b/66971163): make this pass
-  public void disabledTestEs6SettersRemoval() {
+  public void testTranspiledEs6SettersRemoval() {
     this.mode = TypeInferenceMode.BOTH;
     test(
         // This is the output of ES6->ES5 class setter converter.
@@ -519,8 +531,6 @@ public final class RemoveUnusedCodeClassPropertiesTest extends TypeICompilerTest
             "});"),
         lines(
             "/** @constructor @struct */var C=function(){};",
-            "0;",
-            "0;",
             "$jscomp.global.Object.defineProperties(C.prototype, {});"));
   }
 
