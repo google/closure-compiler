@@ -44,7 +44,11 @@ class LintPassConfig extends PassConfig.PassConfigDelegate {
 
   @Override protected List<PassFactory> getChecks() {
     return ImmutableList.of(
-        earlyLintChecks, variableReferenceCheck, closureRewriteClass, lateLintChecks);
+        earlyLintChecks,
+        checkRequires,
+        variableReferenceCheck,
+        closureRewriteClass,
+        lateLintChecks);
   }
 
   @Override protected List<PassFactory> getOptimizations() {
@@ -68,8 +72,6 @@ class LintPassConfig extends PassConfig.PassConfigDelegate {
                   new CheckPrimitiveAsObject(compiler),
                   new ClosureCheckModule(compiler),
                   new CheckRequiresAndProvidesSorted(compiler),
-                  new CheckMissingAndExtraRequires(
-                      compiler, CheckMissingAndExtraRequires.Mode.SINGLE_FILE),
                   new CheckSideEffects(
                       compiler, /* report */ true, /* protectSideEffectFreeCode */ false),
                   new CheckUnusedLabels(compiler),
@@ -88,6 +90,20 @@ class LintPassConfig extends PassConfig.PassConfigDelegate {
         @Override
         protected CompilerPass create(AbstractCompiler compiler) {
           return new VariableReferenceCheck(compiler);
+        }
+
+        @Override
+        protected FeatureSet featureSet() {
+          return FeatureSet.latest().withoutTypes();
+        }
+      };
+
+  private final PassFactory checkRequires =
+      new PassFactory("checkMissingAndExtraRequires", true) {
+        @Override
+        protected CompilerPass create(AbstractCompiler compiler) {
+          return new CheckMissingAndExtraRequires(
+              compiler, CheckMissingAndExtraRequires.Mode.SINGLE_FILE);
         }
 
         @Override
