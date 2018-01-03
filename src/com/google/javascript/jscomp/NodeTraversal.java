@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Strings.nullToEmpty;
@@ -53,8 +54,7 @@ public class NodeTraversal {
   private final Deque<Scope> scopes = new ArrayDeque<>();
 
   /**
-   * A stack of scope roots. All scopes that have not been created
-   * are represented in this Deque.
+   * A stack of scope roots. See #scopes.
    */
   private final ArrayList<Node> scopeRoots = new ArrayList<>();
 
@@ -938,15 +938,27 @@ public class NodeTraversal {
     return scope;
   }
 
+  private Scope instantiateScopes(int count) {
+    checkArgument(count <= scopeRoots.size());
+    Scope scope = scopes.peek();
+
+    for (int i = 0; i < count; i++) {
+      scope = scopeCreator.createScope(scopeRoots.get(i), scope);
+      scopes.push(scope);
+    }
+    scopeRoots.subList(0, count).clear();
+    return scope;
+  }
+
   public boolean isHoistScope() {
-    return Scope.isHoistScopeRootNode(getScopeRoot());
+    return isHoistScopeRootNode(getScopeRoot());
   }
 
   public Node getClosestHoistScopeRoot() {
     int roots = scopeRoots.size();
     for (int i = roots; i > 0; i--) {
       Node rootNode = scopeRoots.get(i - 1);
-      if (Scope.isHoistScopeRootNode(rootNode)) {
+      if (isHoistScopeRootNode(rootNode)) {
         return rootNode;
       }
     }
@@ -955,10 +967,24 @@ public class NodeTraversal {
   }
 
   public Scope getClosestHoistScope() {
-    // TODO(moz): This should not call getScope(). We should find the root of the closest hoist
-    // scope and effectively getScope() from there, which avoids scanning inner scopes that might
-    // not be needed.
-    return getScope().getClosestHoistScope();
+    for (int i = scopeRoots.size(); i > 0; i--) {
+      if (isHoistScopeRootNode(scopeRoots.get(i - 1))) {
+        return instantiateScopes(i);
+      }
+    }
+    return scopes.peek().getClosestHoistScope();
+  }
+
+  private static boolean isHoistScopeRootNode(Node n) {
+    switch (n.getToken()) {
+      case FUNCTION:
+      case MODULE_BODY:
+      case ROOT:
+      case SCRIPT:
+        return true;
+      default:
+        return NodeUtil.isFunctionBlock(n);
+    }
   }
 
   public TypedScope getTypedScope() {

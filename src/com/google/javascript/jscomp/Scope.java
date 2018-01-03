@@ -326,18 +326,6 @@ public class Scope implements StaticScope, Serializable {
     return isFunctionScope() || isFunctionBlockScope() || isGlobal() || isModuleScope();
   }
 
-  public static boolean isHoistScopeRootNode(Node n) {
-    switch (n.getToken()) {
-      case FUNCTION:
-      case MODULE_BODY:
-      case ROOT:
-      case SCRIPT:
-        return true;
-      default:
-        return NodeUtil.isFunctionBlock(n);
-    }
-  }
-
   /**
    * If a var were declared in this scope, return the scope it would be hoisted to.
    *
