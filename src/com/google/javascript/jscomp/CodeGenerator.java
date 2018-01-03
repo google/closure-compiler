@@ -458,10 +458,11 @@ public class CodeGenerator {
       case EXPORT_SPEC:
       case IMPORT_SPEC:
         add(first);
-        if (first != last) {
-          add("as");
-          add(last);
+        if (n.isShorthandProperty() && first.getString().equals(last.getString())) {
+          break;
         }
+        add("as");
+        add(last);
         break;
 
       case IMPORT_STAR:

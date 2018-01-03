@@ -1030,7 +1030,7 @@ public final class NodeUtilTest extends TestCase {
     Node importSpecs = importNode.getSecondChild();
     Node importSpec = importSpecs.getFirstChild();
 
-    Node name = importSpec.getFirstChild();
+    Node name = importSpec.getSecondChild();
 
     // bar is defined locally so isNonlocalModuleExportName is false
     assertFalse(NodeUtil.isNonlocalModuleExportName(name));

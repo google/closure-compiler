@@ -2322,7 +2322,10 @@ class IRFactory {
       Node importedName = processName(tree.importedName, true);
       importedName.setToken(Token.NAME);
       Node exportSpec = newNode(Token.EXPORT_SPEC, importedName);
-      if (tree.destinationName != null) {
+      if (tree.destinationName == null) {
+        exportSpec.setShorthandProperty(true);
+        exportSpec.addChildToBack(importedName.cloneTree());
+      } else {
         Node destinationName = processName(tree.destinationName, true);
         destinationName.setToken(Token.NAME);
         exportSpec.addChildToBack(destinationName);
@@ -2347,7 +2350,10 @@ class IRFactory {
       Node importedName = processName(tree.importedName, true);
       importedName.setToken(Token.NAME);
       Node importSpec = newNode(Token.IMPORT_SPEC, importedName);
-      if (tree.destinationName != null) {
+      if (tree.destinationName == null) {
+        importSpec.setShorthandProperty(true);
+        importSpec.addChildToBack(importedName.cloneTree());
+      } else {
         importSpec.addChildToBack(processName(tree.destinationName));
       }
       return importSpec;
