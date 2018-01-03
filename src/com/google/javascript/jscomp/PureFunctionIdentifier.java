@@ -597,8 +597,8 @@ class PureFunctionIdentifier implements CompilerPass {
       if (v.scope == scope) {
         return true;
       }
-      Node declarationRoot = NodeUtil.getEnclosingFunction(v.scope.rootNode);
-      Node scopeRoot = NodeUtil.getEnclosingFunction(scope.rootNode);
+      Node declarationRoot = NodeUtil.getEnclosingFunction(v.scope.getRootNode());
+      Node scopeRoot = NodeUtil.getEnclosingFunction(scope.getRootNode());
       return declarationRoot == scopeRoot;
     }
 

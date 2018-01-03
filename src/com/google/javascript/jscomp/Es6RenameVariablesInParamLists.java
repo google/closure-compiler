@@ -75,8 +75,8 @@ public final class Es6RenameVariablesInParamLists extends AbstractPostOrderCallb
     for (Var var : fBlockScope.getVarIterable()) {
       String oldName = var.getName();
       if (collector.currFuncReferences.contains(oldName)
-          && !renameTable.contains(fBlockScope.rootNode, oldName)) {
-        renameTable.put(fBlockScope.rootNode,
+          && !renameTable.contains(fBlockScope.getRootNode(), oldName)) {
+        renameTable.put(fBlockScope.getRootNode(),
             oldName, oldName + "$" + compiler.getUniqueNameIdSupplier().get());
       }
     }

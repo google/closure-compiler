@@ -295,7 +295,7 @@ class AggressiveInlineAliases implements CompilerPass {
     String aliasVarName = aliasLhsNode.getString();
     Var aliasVar = alias.scope.getVar(aliasVarName);
     if (aliasVar != null) {
-      return aliasVar.scope.isGlobal();
+      return aliasVar.isGlobal();
     }
     return true;
   }

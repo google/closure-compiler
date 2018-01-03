@@ -134,11 +134,11 @@ public class TypedScope extends Scope implements StaticTypedScope<JSType>, TypeI
   @Override
   public JSType getTypeOfThis() {
     if (isGlobal()) {
-      return ObjectType.cast(rootNode.getJSType());
+      return ObjectType.cast(getRootNode().getJSType());
     }
 
-    checkState(rootNode.isFunction());
-    JSType nodeType = rootNode.getJSType();
+    checkState(getRootNode().isFunction());
+    JSType nodeType = getRootNode().getJSType();
     if (nodeType != null && nodeType.isFunctionType()) {
       return nodeType.toMaybeFunctionType().getTypeOfThis();
     } else {

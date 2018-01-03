@@ -626,7 +626,7 @@ class AnalyzePrototypeProperties implements CompilerPass {
 
     GlobalFunction(Node nameNode, Var var, JSModule module) {
       Node parent = nameNode.getParent();
-      checkState((NodeUtil.isNameDeclaration(parent) && var.scope.isGlobal())
+      checkState((NodeUtil.isNameDeclaration(parent) && var.isGlobal())
           || NodeUtil.isFunctionDeclaration(parent));
       this.nameNode = nameNode;
       this.var = var;

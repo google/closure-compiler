@@ -123,7 +123,7 @@ class InlineVariables implements CompilerPass {
   private static class IdentifyLocals implements Predicate<Var> {
     @Override
     public boolean apply(Var var) {
-      return var.scope.isLocal();
+      return var.isLocal();
     }
   }
 
