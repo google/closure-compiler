@@ -290,7 +290,7 @@ public final class Es6RewriteBlockScopedDeclarationTest extends TypeICompilerTes
     test(
         lines(
             "for (let i in [0, 1]) {",
-            "  function f() {",
+            "  let f = function() {",
             "    let i = 0;",
             "    if (true) {",
             "      let i = 1;",
@@ -329,7 +329,7 @@ public final class Es6RewriteBlockScopedDeclarationTest extends TypeICompilerTes
 
     test(lines(
             "for (const i in [0, 1]) {",
-            "  function f() {",
+            "  let f = function() {",
             "    let i = 0;",
             "    if (true) {",
             "      let i = 1;",
@@ -344,22 +344,6 @@ public final class Es6RewriteBlockScopedDeclarationTest extends TypeICompilerTes
             "      var i$0 = 1;",
             "    }",
             "  }",
-            "}"));
-  }
-
-  public void testFunctionInLoop() {
-    test(
-        lines(
-            "for (var x of y) {",
-            "  function f() {",
-            "    let z;",
-            "  }",
-            "}"),
-        lines(
-            "for (var x of y) {",
-            "  var f = function() {",
-            "    var z;",
-            "  };",
             "}"));
   }
 
@@ -932,7 +916,7 @@ public final class Es6RewriteBlockScopedDeclarationTest extends TypeICompilerTes
             "label1:",
             "label2:",
             "for (let x = 1;;) {",
-            "  function f() {",
+            "  let f = function() {",
             "    return x;",
             "  }",
             "}"),
@@ -943,7 +927,7 @@ public final class Es6RewriteBlockScopedDeclarationTest extends TypeICompilerTes
             "label2:",
             "for (;; $jscomp$loop$0 = {x: $jscomp$loop$0.x}) {",
             "  var f = function($jscomp$loop$0) {",
-            "    return function f() {",
+            "    return function() {",
             "      return $jscomp$loop$0.x;",
             "    }",
             "  }($jscomp$loop$0);",
@@ -1073,7 +1057,7 @@ public final class Es6RewriteBlockScopedDeclarationTest extends TypeICompilerTes
         lines(
             "while (true) {",
             "  let x = null;",
-            "  function f() {",
+            "  let f = function() {",
             "    x();",
             "  }",
             "}"),
@@ -1082,7 +1066,7 @@ public final class Es6RewriteBlockScopedDeclarationTest extends TypeICompilerTes
             "while (true) {",
             "  $jscomp$loop$0.x = null;",
             "  var f = function($jscomp$loop$0) {",
-            "    return function f() {",
+            "    return function() {",
             "      ($jscomp$loop$0.x)();",
             "    };",
             "  }($jscomp$loop$0);",
@@ -1102,7 +1086,7 @@ public final class Es6RewriteBlockScopedDeclarationTest extends TypeICompilerTes
             "while (true) {",
             "  $jscomp$loop$0.x = null;",
             "  (function($jscomp$loop$0) {",
-            "    return function () {",
+            "    return function() {",
             "      ($jscomp$loop$0.x)();",
             "    };",
             "  })($jscomp$loop$0)();",
@@ -1115,7 +1099,7 @@ public final class Es6RewriteBlockScopedDeclarationTest extends TypeICompilerTes
     test(lines(
         "while(true) {",
         "  let x, y;",
-        "  function f() {",
+        "  let f = function() {",
         "    x = 1;",
         "    y = 2;",
         "  }",
@@ -1125,7 +1109,7 @@ public final class Es6RewriteBlockScopedDeclarationTest extends TypeICompilerTes
         "while(true) {",
         "  $jscomp$loop$0.x = undefined;",
         "  var f = function($jscomp$loop$0) {",
-        "    return function f() {",
+        "    return function() {",
         "      $jscomp$loop$0.x = 1;",
         "      $jscomp$loop$0.y = 2;",
         "    }",
@@ -1136,7 +1120,7 @@ public final class Es6RewriteBlockScopedDeclarationTest extends TypeICompilerTes
     test(lines(
         "while(true) {",
         "  let x, y;",
-        "  function f() {",
+        "  let f = function() {",
         "    y = 2;",
         "    x = 1;",
         "  }",
@@ -1146,7 +1130,7 @@ public final class Es6RewriteBlockScopedDeclarationTest extends TypeICompilerTes
         "while(true) {",
         "  $jscomp$loop$0.x = undefined;",
         "  var f = function($jscomp$loop$0) {",
-        "    return function f() {",
+        "    return function() {",
         "      $jscomp$loop$0.y = 2;",
         "      $jscomp$loop$0.x = 1;",
         "    }",
@@ -1243,27 +1227,6 @@ public final class Es6RewriteBlockScopedDeclarationTest extends TypeICompilerTes
             "  }",
             "}"));
   }
-
-  public void testBlockScopedFunctionDeclaration() {
-    test(
-        lines(
-            "function f() {",
-            "  var x = 1;",
-            "  if (a) {",
-            "    function x() { return x; }",
-            "  }",
-            "  return x;",
-            "}"),
-        lines(
-            "function f() {",
-            "  var x = 1;",
-            "  if (a) {",
-            "    var x$0 = function() { return x$0; };",
-            "  }",
-            "  return x;",
-            "}"));
-  }
-
 
   public void testClass() {
     test(lines(
@@ -1362,7 +1325,7 @@ public final class Es6RewriteBlockScopedDeclarationTest extends TypeICompilerTes
     test(lines(
         "function f(e) {",
         "  try {",
-        "    function f(e) {",
+        "    let f = function(e) {",
         "      try {} catch (e) { e++; }",
         "    }",
         "  } catch (e) { e--; }",
@@ -1375,13 +1338,6 @@ public final class Es6RewriteBlockScopedDeclarationTest extends TypeICompilerTes
         "    }",
         "  } catch (e$2) { e$2--; }",
         "}"));
-  }
-
-  public void testBlockScopedGeneratorFunction() {
-    // Functions defined in a block get translated to a var
-    test(
-        "{ function *f() {yield 1;} }",
-        "{ var f = function*() { yield 1; }; }");
   }
 
   public void testExterns() {

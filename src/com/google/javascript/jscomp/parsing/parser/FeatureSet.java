@@ -104,15 +104,6 @@ public final class FeatureSet implements Serializable {
 
   /** Specific features that can be included in a FeatureSet. */
   public enum Feature {
-    // ES3 features
-    // Functions can be declared in the block scope for all ES versions. However, for ES3 and ES5,
-    // we want to hoist the functions from the block scope by redeclaring them as vars (i.e.
-    // { function f() {} } becomes { var f = function {} }. To prevent this feature from causing
-    // code to run additional transpilation passes beyond rewriting block scoped functions, we mark
-    // block scoped functions as an ES3 feature and then manually determine whether to rewrite
-    // functions inside the processTranspile method of TranspilationPasses.java
-    BLOCK_SCOPED_FUNCTION_DECLARATION("block function", LangVersion.ES3),
-
     // ES5 features
     ES3_KEYWORDS_AS_IDENTIFIERS("ES3 keywords as identifiers", LangVersion.ES5),
     GETTER("getters", LangVersion.ES5),
@@ -125,6 +116,7 @@ public final class FeatureSet implements Serializable {
     ARRAY_PATTERN_REST("array pattern rest", LangVersion.ES6),
     ARROW_FUNCTIONS("arrow function", LangVersion.ES6),
     BINARY_LITERALS("binary literal", LangVersion.ES6),
+    BLOCK_SCOPED_FUNCTION_DECLARATION("block-scoped function declaration", LangVersion.ES6),
     CLASSES("class", LangVersion.ES6),
     COMPUTED_PROPERTIES("computed property", LangVersion.ES6),
     CONST_DECLARATIONS("const declaration", LangVersion.ES6),

@@ -23,7 +23,6 @@ import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Table;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
-import com.google.javascript.jscomp.Normalize.NormalizeStatements;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.IR;
@@ -124,25 +123,6 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
     NodeTraversal.traverseEs6(compiler, root, transformer);
     transformer.transformLoopClosure();
     rewriteDeclsToVars();
-
-    // Block scoped function declarations can occur in any language mode, however for
-    // transpilation to ES3 and ES5, we want to hoist the functions from the block-scope by
-    // redeclaring them in var assignments
-    //
-    // If block-scope-declared function is the only "ES6 feature" for which we want to transpile,
-    // then the transpilation process will not rewriteFunctions. Thus, we manually check whether
-    // we need to rewrite in that case.
-    if (compiler.getOptions().needsTranspilationFrom(FeatureSet.ES6)) {
-      RewriteBlockScopedFunctionDeclaration rewriteFunction =
-          new RewriteBlockScopedFunctionDeclaration();
-
-      for (Node singleRoot : root.children()) {
-        FeatureSet features = (FeatureSet) singleRoot.getProp(Node.FEATURE_SET);
-        if (features.has(Feature.BLOCK_SCOPED_FUNCTION_DECLARATION)) {
-          NodeTraversal.traverseEs6(compiler, singleRoot, rewriteFunction);
-        }
-      }
-    }
   }
 
   @Override
@@ -154,7 +134,6 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
     NodeTraversal.traverseEs6(compiler, scriptRoot, transformer);
     transformer.transformLoopClosure();
     rewriteDeclsToVars();
-    NodeTraversal.traverseEs6(compiler, scriptRoot, new RewriteBlockScopedFunctionDeclaration());
   }
 
   /**
@@ -226,15 +205,6 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
         }
         n.setToken(Token.VAR);
         compiler.reportChangeToEnclosingScope(n);
-      }
-    }
-  }
-
-  private class RewriteBlockScopedFunctionDeclaration extends AbstractPostOrderCallback {
-    @Override
-    public void visit(NodeTraversal t, Node n, Node parent) {
-      if (n.isFunction()) {
-        NormalizeStatements.visitFunction(n, compiler);
       }
     }
   }

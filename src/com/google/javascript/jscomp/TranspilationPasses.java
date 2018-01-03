@@ -67,6 +67,7 @@ public class TranspilationPasses {
     passes.add(es6RewriteClass);
     passes.add(earlyConvertEs6ToEs3);
     passes.add(lateConvertEs6ToEs3);
+    passes.add(rewriteBlockScopedFunctionDeclaration);
     passes.add(rewriteBlockScopedDeclaration);
     passes.add(rewriteGenerators);
   }
@@ -84,6 +85,7 @@ public class TranspilationPasses {
     passes.add(es6ExtractClasses);
     passes.add(es6RewriteClass);
     passes.add(earlyConvertEs6ToEs3);
+    passes.add(rewriteBlockScopedFunctionDeclaration);
     passes.add(rewriteBlockScopedDeclaration);
   }
 
@@ -312,6 +314,19 @@ public class TranspilationPasses {
     @Override
     protected HotSwapCompilerPass create(final AbstractCompiler compiler) {
       return new LateEs6ToEs3Converter(compiler);
+    }
+
+    @Override
+    protected FeatureSet featureSet() {
+      return ES8;
+    }
+  };
+
+  static final HotSwapPassFactory rewriteBlockScopedFunctionDeclaration =
+      new HotSwapPassFactory("Es6RewriteBlockScopedFunctionDeclaration") {
+    @Override
+    protected HotSwapCompilerPass create(final AbstractCompiler compiler) {
+      return new Es6RewriteBlockScopedFunctionDeclaration(compiler);
     }
 
     @Override

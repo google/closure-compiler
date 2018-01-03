@@ -184,7 +184,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   public void testBreakCrossFunction() {
-    parseError("while(1) { function f() { break; } }", UNLABELED_BREAK);
+    parseError("while(1) { var f = function() { break; } }", UNLABELED_BREAK);
   }
 
   public void testBreakCrossFunctionInFor() {
@@ -228,12 +228,12 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   public void testContinueNotCrossFunction1() {
-    parse("a:switch(1){case(1):function f(){a:while(1){continue a;}}}");
+    parse("a:switch(1){case(1):var f = function(){a:while(1){continue a;}}}");
   }
 
   public void testContinueNotCrossFunction2() {
     parseError(
-        "a:switch(1){case(1):function f(){while(1){continue a;}}}",
+        "a:switch(1){case(1):var f = function(){while(1){continue a;}}}",
         UNDEFINED_LABEL + " \"a\"");
   }
 
@@ -1871,19 +1871,31 @@ public final class ParserTest extends BaseJSTypeTestCase {
         getRequiresEs6Message(Feature.LET_DECLARATIONS));
   }
 
-  // Ensure that we only add the feature for function declarations (i.e.
-  // function f() {} ) and not function expressions (e.g. var f = function() {} )
-  public void testBlockScopeFunctionDeclaration() {
-    expectFeatures(Feature.BLOCK_SCOPED_FUNCTION_DECLARATION);
-    parse("if (1) { function f() {} }");
-    // NOTE: currently we set this feature for all function declarations, regardless
-    // of whether they're scoped to the global scope, or a function, or a different block.
-    parse("function f() {}");
+  public void testBlockScopedFunctionDeclaration() {
+    mode = LanguageMode.ECMASCRIPT6;
 
+    expectFeatures(Feature.BLOCK_SCOPED_FUNCTION_DECLARATION);
+    parse("{ function foo() {} }");
+    parse("if (true) { function foo() {} }");
+    parse("{ function* gen() {} }");
+    parse("if (true) function foo() {}");
+    parse("if (true) function foo() {} else {}");
+    parse("if (true) {} else function foo() {}");
+    parse("if (true) function foo() {} else function foo() {}");
+
+    mode = LanguageMode.ECMASCRIPT5;
     expectFeatures();
-    Node result = parse("if (1) { var f = function() {} }");
-    FeatureSet features = (FeatureSet) result.getProp(Node.FEATURE_SET);
-    assertFS(features).doesNotHave(Feature.BLOCK_SCOPED_FUNCTION_DECLARATION);
+    // Function expressions and functions directly inside other functions do not trigger this
+    parse("function foo() {}");
+    parse("(function foo() {})");
+    parse("function foo() { function bar() {} }");
+    parse("{ var foo = function() {}; }");
+    parse("{ var foo = function bar() {}; }");
+    parse("{ (function() {})(); }");
+    parse("{ (function foo() {})(); }");
+
+    parseWarning(
+        "{ function f() {} }", getRequiresEs6Message(Feature.BLOCK_SCOPED_FUNCTION_DECLARATION));
   }
 
   public void testLetForbidden3() {
@@ -3845,9 +3857,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
     Node script = result.ast;
 
     // check expected features if specified
-    if (expectedFeatures != null) {
-      assertFS(result.features).contains(expectedFeatures);
-    }
+    assertFS(result.features).contains(expectedFeatures);
 
     // verifying that all errors were seen
     testErrorReporter.assertHasEncounteredAllErrors();
@@ -3874,9 +3884,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
         testErrorReporter);
 
     // check expected features if specified
-    if (expectedFeatures != null) {
-      assertFS(result.features).contains(expectedFeatures);
-    }
+    assertFS(result.features).contains(expectedFeatures);
 
     // verifying that all warnings were seen
     testErrorReporter.assertHasEncounteredAllErrors();

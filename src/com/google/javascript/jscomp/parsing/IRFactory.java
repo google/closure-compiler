@@ -420,6 +420,7 @@ class IRFactory {
     validateReturn(n);
     validateNewDotTarget(n);
     validateLabel(n);
+    validateBlockScopedFunctions(n);
   }
 
   private void validateReturn(Node n) {
@@ -569,6 +570,12 @@ class IRFactory {
           }
         }
       }
+    }
+  }
+
+  private void validateBlockScopedFunctions(Node n) {
+    if (n.isFunction() && n.getParent().isNormalBlock() && !n.getGrandparent().isFunction()) {
+      maybeWarnForFeature(n, Feature.BLOCK_SCOPED_FUNCTION_DECLARATION);
     }
   }
 
@@ -877,6 +884,19 @@ class IRFactory {
               + feature,
           sourceName,
           lineno(token), charno(token));
+    }
+  }
+
+  void maybeWarnForFeature(Node node, Feature feature) {
+    features = features.with(feature);
+    if (!isSupportedForInputLanguageMode(feature)) {
+      errorReporter.warning(
+          "this language feature is only supported for "
+              + LanguageMode.minimumRequiredFor(feature)
+              + " mode or better: "
+              + feature,
+          sourceName,
+          node.getLineno(), node.getCharno());
     }
   }
 
@@ -1300,12 +1320,6 @@ class IRFactory {
 
       if (isAsync) {
         maybeWarnForFeature(functionTree, Feature.ASYNC_FUNCTIONS);
-      }
-
-      // Add a feature so that transpilation process hoists block scoped functions through
-      // var redeclaration in ES3 and ES5
-      if (isDeclaration) {
-        features = features.with(Feature.BLOCK_SCOPED_FUNCTION_DECLARATION);
       }
 
       IdentifierToken name = functionTree.name;
