@@ -13023,12 +13023,6 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         "required: (F|null)");
   }
 
-  public void testActiveXObject() throws Exception {
-    testTypes(
-        "/** @type {Object} */ var x = new ActiveXObject();" +
-        "/** @type { {impossibleProperty} } */ var y = new ActiveXObject();");
-  }
-
   public void testRecordType1() throws Exception {
     testTypes(
         LINE_JOINER.join(

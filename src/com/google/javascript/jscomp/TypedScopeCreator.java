@@ -28,7 +28,6 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.DATE_FUNCTION_TYPE
 import static com.google.javascript.rhino.jstype.JSTypeNative.ERROR_FUNCTION_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.EVAL_ERROR_FUNCTION_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.FUNCTION_FUNCTION_TYPE;
-import static com.google.javascript.rhino.jstype.JSTypeNative.FUNCTION_INSTANCE_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.GLOBAL_THIS;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NO_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NULL_TYPE;
@@ -351,11 +350,6 @@ final class TypedScopeCreator implements ScopeCreator {
     declareNativeFunctionType(s, TYPE_ERROR_FUNCTION_TYPE);
     declareNativeFunctionType(s, URI_ERROR_FUNCTION_TYPE);
     declareNativeValueType(s, "undefined", VOID_TYPE);
-
-    // There is no longer a need to special case ActiveXObject
-    // but this remains here until we can get the extern forks
-    // cleaned up.
-    declareNativeValueType(s, "ActiveXObject", FUNCTION_INSTANCE_TYPE);
 
     return s;
   }

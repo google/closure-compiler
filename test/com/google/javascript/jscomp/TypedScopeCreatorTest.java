@@ -1832,15 +1832,6 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
         proto.getPropertyType("bar").toString());
   }
 
-  public void testActiveXObject() {
-    testSame(
-        CompilerTestCase.ACTIVE_X_OBJECT_DEF,
-        "var x = new ActiveXObject();");
-    assertEquals(
-        "?",
-        findNameType("x", globalScope).toString());
-  }
-
   public void testReturnTypeInference1() {
     testSame("function f() {}");
     assertEquals(
