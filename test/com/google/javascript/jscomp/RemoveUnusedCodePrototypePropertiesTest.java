@@ -77,6 +77,14 @@ public final class RemoveUnusedCodePrototypePropertiesTest extends CompilerTestC
     allowRemovalOfExternProperties = false;
   }
 
+  public void testClassPropertiesNotRemoved() {
+    keepGlobals = true;
+    // This whole test class runs with removeUnusedClassProperties disabled.
+    testSame("/** @constructor */ function C() {} C.unused = 3;");
+    testSame(
+        "/** @constructor */ function C() {} Object.defineProperties(C, {unused: {value: 3}});");
+  }
+
   public void testUnusedPrototypeFieldReference() {
     test(
         "function C() {} C.prototype.x; new C();", // x is not actually read

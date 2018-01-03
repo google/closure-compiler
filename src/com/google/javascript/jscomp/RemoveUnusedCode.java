@@ -132,6 +132,7 @@ class RemoveUnusedCode implements CompilerPass {
   private final boolean allowRemovalOfExternProperties;
   private final boolean removeUnusedThisProperties;
   private final boolean removeUnusedConstructorProperties;
+  private final boolean removeUnusedObjectDefinePropertiesDefinitions;
 
   RemoveUnusedCode(Builder builder) {
     this.compiler = builder.compiler;
@@ -143,6 +144,8 @@ class RemoveUnusedCode implements CompilerPass {
     this.allowRemovalOfExternProperties = builder.allowRemovalOfExternProperties;
     this.removeUnusedThisProperties = builder.removeUnusedThisProperties;
     this.removeUnusedConstructorProperties = builder.removeUnusedConstructorProperties;
+    this.removeUnusedObjectDefinePropertiesDefinitions =
+        builder.removeUnusedObjectDefinePropertiesDefinitions;
     this.scopeCreator = new Es6SyntacticScopeCreator(builder.compiler);
 
     // All Vars that are completely unremovable will share this VarInfo instance.
@@ -160,6 +163,7 @@ class RemoveUnusedCode implements CompilerPass {
     private boolean allowRemovalOfExternProperties = false;
     private boolean removeUnusedThisProperties = false;
     private boolean removeUnusedConstructorProperties = false;
+    private boolean removeUnusedObjectDefinePropertiesDefinitions = false;
 
     Builder(AbstractCompiler compiler) {
       this.compiler = compiler;
@@ -197,6 +201,11 @@ class RemoveUnusedCode implements CompilerPass {
 
     Builder removeUnusedConstructorProperties(boolean value) {
       this.removeUnusedConstructorProperties = value;
+      return this;
+    }
+
+    Builder removeUnusedObjectDefinePropertiesDefinitions(boolean value) {
+      this.removeUnusedObjectDefinePropertiesDefinitions = value;
       return this;
     }
 
@@ -511,6 +520,9 @@ class RemoveUnusedCode implements CompilerPass {
         markPropertyNameReferenced(propertyNameNode.getString());
       }
       traverseChildren(callNode, scope);
+    } else if (NodeUtil.isObjectDefinePropertiesDefinition(callNode)) {
+      // TODO(bradfordcsmith): Should also handle Object.create() and Object.defineProperty().
+      traverseObjectDefinePropertiesCall(callNode, scope);
     } else {
       Node parent = callNode.getParent();
       String classVarName = null;
@@ -552,6 +564,54 @@ class RemoveUnusedCode implements CompilerPass {
           builder.addContinuation(new Continuation(child, scope));
         }
         traverseVar(classVar).addRemovable(builder.buildClassSetupCall(callNode));
+      }
+    }
+  }
+
+  /** Traverse `Object.defineProperties(someObject, propertyDefinitions);`. */
+  private void traverseObjectDefinePropertiesCall(Node callNode, Scope scope) {
+    // First child is Object.defineProperties or some equivalent of it.
+    Node callee = callNode.getFirstChild();
+    Node targetObject = callNode.getSecondChild();
+    Node propertyDefinitions = targetObject.getNext();
+    // TODO(bradfordcsmith): It should be possible to remove the entire Object.defineProperties()
+    // call if the target object is otherwise unused and evaluating the property definitions object
+    // has no side-effects.
+    // TODO(bradfordcsmith): If the affected object is a variable reference, this should be
+    // considered a variable assignment similar to a goog.inherits() call, so it won't block removal
+    // of the variable.
+    traverseNode(callee, scope);
+    traverseNode(targetObject, scope);
+    if (propertyDefinitions.isObjectLit()) {
+      traverseObjectDefinePropertiesLiteral(propertyDefinitions, scope);
+    } else {
+      traverseNode(propertyDefinitions, scope);
+    }
+  }
+
+  /** Traverse the object literal passed as the second argument to `Object.defineProperties()`. */
+  private void traverseObjectDefinePropertiesLiteral(Node propertyDefinitions, Scope scope) {
+    for (Node property = propertyDefinitions.getFirstChild();
+        property != null;
+        property = property.getNext()) {
+      if (property.isQuotedString()) {
+        // Quoted property name counts as a reference to the property and protects it from removal.
+        markPropertyNameReferenced(property.getString());
+        traverseNode(property.getOnlyChild(), scope);
+      } else if (property.isStringKey()) {
+        Node definition = property.getOnlyChild();
+        if (NodeUtil.mayHaveSideEffects(definition)) {
+          traverseNode(definition, scope);
+        } else {
+          considerForIndependentRemoval(
+              new RemovableBuilder()
+                  .addContinuation(new Continuation(definition, scope))
+                  .buildObjectDefinePropertiesDefinition(property));
+        }
+      } else {
+        // TODO(bradfordcsmith): Maybe report error for anything other than a computed property,
+        // since getters, setters, and methods don't make much sense in this context.
+        traverseNode(property, scope);
       }
     }
   }
@@ -1159,6 +1219,10 @@ class RemoveUnusedCode implements CompilerPass {
           || codingConvention.isExported(propertyName)) {
         // Referenced, so not removable.
         removable.applyContinuations();
+      } else if (removeUnusedObjectDefinePropertiesDefinitions
+          && removable.isObjectDefinePropertiesDefinition()) {
+        // Store for possible removal later.
+        removablesForPropertyNames.put(propertyName, removable);
       } else if (removeUnusedPrototypeProperties && removable.isPrototypeProperty()) {
         // Store for possible removal later.
         removablesForPropertyNames.put(propertyName, removable);
@@ -1494,6 +1558,10 @@ class RemoveUnusedCode implements CompilerPass {
     boolean isThisDotPropertyReference() {
       return isThisDotPropertyReference;
     }
+
+    public boolean isObjectDefinePropertiesDefinition() {
+      return false;
+    }
   }
 
   private class RemovableBuilder {
@@ -1544,6 +1612,11 @@ class RemoveUnusedCode implements CompilerPass {
           propertyNode);
       this.propertyName = propertyNode.getString();
       return new ClassOrPrototypeNamedProperty(this, propertyNode);
+    }
+
+    ObjectDefinePropertiesDefinition buildObjectDefinePropertiesDefinition(Node propertyNode) {
+      this.propertyName = propertyNode.getString();
+      return new ObjectDefinePropertiesDefinition(this, propertyNode);
     }
 
     FunctionDeclaration buildFunctionDeclaration(Node functionNode) {
@@ -1811,6 +1884,29 @@ class RemoveUnusedCode implements CompilerPass {
 
     @Override
     boolean isClassOrPrototypeNamedProperty() {
+      return true;
+    }
+
+    @Override
+    void removeInternal(AbstractCompiler compiler) {
+      NodeUtil.deleteNode(propertyNode, compiler);
+    }
+  }
+
+  /**
+   * Represents a single property definition in the object literal passed as the second argument to
+   * e.g. `Object.defineProperties(obj, {p1: {value: 1}, p2: {value: 3}});`.
+   */
+  private class ObjectDefinePropertiesDefinition extends Removable {
+    final Node propertyNode;
+
+    ObjectDefinePropertiesDefinition(RemovableBuilder builder, Node propertyNode) {
+      super(builder);
+      this.propertyNode = propertyNode;
+    }
+
+    @Override
+    public boolean isObjectDefinePropertiesDefinition() {
       return true;
     }
 

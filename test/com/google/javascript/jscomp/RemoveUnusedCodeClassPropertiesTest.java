@@ -87,6 +87,7 @@ public final class RemoveUnusedCodeClassPropertiesTest extends TypeICompilerTest
         .removeUnusedPrototypeProperties(true)
         .removeUnusedThisProperties(true)
         .removeUnusedConstructorProperties(true)
+        .removeUnusedObjectDefinePropertiesDefinitions(true)
         .build();
   }
 
@@ -296,8 +297,7 @@ public final class RemoveUnusedCodeClassPropertiesTest extends TypeICompilerTest
             "foo(C)"));
   }
 
-  // TODO(b/66971163): make this pass
-  public void disabledTestObjectDefineProperties2() {
+  public void testObjectDefineProperties2() {
     this.mode = TypeInferenceMode.BOTH;
 
     test(
@@ -309,8 +309,7 @@ public final class RemoveUnusedCodeClassPropertiesTest extends TypeICompilerTest
             "Object.defineProperties(C, {});"));
   }
 
-  // TODO(b/66971163): make this pass
-  public void disabledTestObjectDefineProperties3() {
+  public void testObjectDefineProperties3() {
     this.mode = TypeInferenceMode.BOTH;
 
     test(
@@ -326,13 +325,16 @@ public final class RemoveUnusedCodeClassPropertiesTest extends TypeICompilerTest
             "Object.defineProperties(C, {});"));
   }
 
-  // side-effect in definition retains property
+  // side-effect in definition retains property definition, but doesn't count as a reference
   public void testObjectDefineProperties4() {
     this.mode = TypeInferenceMode.BOTH;
 
-    testSame(
+    test(
         lines(
-            "/** @constructor */ function C() {}",
+            "/** @constructor */ function C() { this.prop = 3; }",
+            "Object.defineProperties(C, {prop:alert('')});"),
+        lines(
+            "/** @constructor */ function C() {                }",
             "Object.defineProperties(C, {prop:alert('')});"));
   }
 
@@ -346,18 +348,16 @@ public final class RemoveUnusedCodeClassPropertiesTest extends TypeICompilerTest
             "Object.defineProperties(C, {'prop': {value: 1}});"));
   }
 
-  // TODO(b/66971163): make this pass
-  public void disabledTestObjectDefineProperties6() {
+  public void testObjectDefineProperties6() {
     this.mode = TypeInferenceMode.BOTH;
 
     // an unknown destination object doesn't prevent removal.
     test(
         "Object.defineProperties(externVar(), {prop:{value:1}});",
-        "Object.defineProperties(externVar(), {});");
+        "Object.defineProperties(externVar(), {              });");
   }
 
-  // TODO(b/66971163): make this pass
-  public void disabledTestObjectDefineProperties7() {
+  public void testObjectDefineProperties7() {
     this.mode = TypeInferenceMode.BOTH;
 
     test(
@@ -369,8 +369,7 @@ public final class RemoveUnusedCodeClassPropertiesTest extends TypeICompilerTest
             "Object.defineProperties(C, {});"));
   }
 
-  // TODO(b/66971163): make this pass
-  public void disabledTestObjectDefineProperties8() {
+  public void testObjectDefineProperties8() {
     this.mode = TypeInferenceMode.BOTH;
 
     test(
@@ -380,6 +379,15 @@ public final class RemoveUnusedCodeClassPropertiesTest extends TypeICompilerTest
         lines(
             "/** @constructor */ function C() {}",
             "Object.defineProperties(C, {});"));
+  }
+
+  public void testObjectDefinePropertiesQuotesPreventRemoval() {
+    this.mode = TypeInferenceMode.BOTH;
+
+    testSame(
+        lines(
+            "/** @constructor */ function C() { this.prop = 1; }",
+            "Object.defineProperties(C, {'prop':{set:function (a) {return alert(a.prop)}}});"));
   }
 
   // TODO(b/66971163): make this pass
@@ -397,7 +405,6 @@ public final class RemoveUnusedCodeClassPropertiesTest extends TypeICompilerTest
             "Object.defineProperties(C, {});2"));
   }
 
-  // TODO(b/66971163): make this pass
   public void testEs6GettersWithoutTranspilation() {
     test(
         "class C { get value() { return 0; } }", // preserve newline
