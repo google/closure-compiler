@@ -124,7 +124,7 @@ public class TypedScope extends Scope implements StaticTypedScope<JSType>, TypeI
   }
 
   @Override
-  public StaticTypedScope<JSType> getParentScope() {
+  public TypedScope getParentScope() {
     return parent;
   }
 

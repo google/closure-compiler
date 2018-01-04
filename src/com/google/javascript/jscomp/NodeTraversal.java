@@ -562,7 +562,7 @@ public class NodeTraversal {
   void traverseInnerNode(Node node, Node parent, Scope refinedScope) {
     checkNotNull(parent);
     initTraversal(node);
-    if (refinedScope != null && getScope() != refinedScope) {
+    if (refinedScope != null && getAbstractScope() != refinedScope) {
       curNode = node;
       pushScope(refinedScope);
       traverseBranch(node, parent);
@@ -925,7 +925,7 @@ public class NodeTraversal {
   }
 
   /** Gets the current scope. */
-  public Scope getScope() {
+  public Scope getAbstractScope() {
     Scope scope = scopes.peek();
 
     for (int i = 0; i < scopeRoots.size(); i++) {
@@ -987,8 +987,14 @@ public class NodeTraversal {
     }
   }
 
+  public Scope getScope() {
+    Scope s = getAbstractScope();
+    checkState(!(s instanceof TypedScope), "getScope called for typed traversal");
+    return s;
+  }
+
   public TypedScope getTypedScope() {
-    Scope s = getScope();
+    Scope s = getAbstractScope();
     checkState(s instanceof TypedScope, "getTypedScope called for untyped traversal");
     return (TypedScope) s;
   }
