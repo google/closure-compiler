@@ -179,10 +179,6 @@ final class TypedScopeCreator implements ScopeCreator {
       checkNotNull(type);
       this.node = node;
       this.type = type;
-
-      // Other parts of this pass may read off the node.
-      // (like when we set the LHS of an assign with a typed RHS function.)
-      node.setJSType(type);
     }
 
     void resolve(TypedScope scope) {
@@ -241,16 +237,12 @@ final class TypedScopeCreator implements ScopeCreator {
 
       // Find all the classes in the global scope.
       newScope = createInitialScope(root);
-
-      GlobalScopeBuilder globalScopeBuilder = new GlobalScopeBuilder(newScope);
-      scopeBuilder = globalScopeBuilder;
-      NodeTraversal.traverseTyped(compiler, root, scopeBuilder);
+      scopeBuilder = new GlobalScopeBuilder(newScope);
     } else {
       newScope = new TypedScope(typedParent, root);
-      LocalScopeBuilder localScopeBuilder = new LocalScopeBuilder(newScope);
-      scopeBuilder = localScopeBuilder;
-      localScopeBuilder.build();
+      scopeBuilder = new LocalScopeBuilder(newScope);
     }
+    scopeBuilder.build();
 
     scopeBuilder.resolveStubDeclarations();
 
@@ -470,7 +462,16 @@ final class TypedScopeCreator implements ScopeCreator {
       this.scope = scope;
     }
 
+    /** Traverse the scope root and build it. */
+    void build() {
+      NodeTraversal.traverseTyped(compiler, scope.getRootNode(), this);
+    }
+
+    /** Set the type for a node now, and enqueue it to be updated with a resolved type later. */
     void setDeferredType(Node node, JSType type) {
+      // Other parts of this pass may read the not-yet-resolved type off the node.
+      // (like when we set the LHS of an assign with a typed RHS function.)
+      node.setJSType(type);
       deferredSetTypes.add(new DeferredSetType(node, type));
     }
 
@@ -1942,8 +1943,9 @@ final class TypedScopeCreator implements ScopeCreator {
     /**
      * Traverse the scope root and build it.
      */
+    @Override
     void build() {
-      NodeTraversal.traverseTyped(compiler, scope.getRootNode(), this);
+      super.build();
 
       AstFunctionContents contents =
           getFunctionAnalysisResults(scope.getRootNode());
