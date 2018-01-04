@@ -97,18 +97,12 @@ public class JSDocInfo implements Serializable {
         NG_INJECT = 0,
         WIZ_ACTION = 1,
 
-        // Flags for Jagger dependency injection prototype
-        JAGGER_INJECT = 2,
-        JAGGER_MODULE = 3,
-        JAGGER_PROVIDE_PROMISE = 4,
-        JAGGER_PROVIDE = 5,
-
         // Polymer specific
-        POLYMER_BEHAVIOR = 6,
-        POLYMER = 7,
-        CUSTOM_ELEMENT = 8,
-        MIXIN_CLASS = 9,
-        MIXIN_FUNCTION = 10;
+        POLYMER_BEHAVIOR = 2,
+        POLYMER = 3,
+        CUSTOM_ELEMENT = 4,
+        MIXIN_CLASS = 5,
+        MIXIN_FUNCTION = 6;
   }
 
   private static final class LazilyInitializedInfo implements Serializable {
@@ -1690,54 +1684,6 @@ public class JSDocInfo implements Serializable {
   void setNgInject(boolean ngInject) {
     lazyInitInfo();
     info.setBit(Property.NG_INJECT, ngInject);
-  }
-
-  /**
-   * Returns whether JSDoc is annotated with {@code @jaggerInject} annotation.
-   */
-  public boolean isJaggerInject() {
-    return (info != null) && info.isBitSet(Property.JAGGER_INJECT);
-  }
-
-  void setJaggerInject(boolean jaggerInject) {
-    lazyInitInfo();
-    info.setBit(Property.JAGGER_INJECT, jaggerInject);
-  }
-
-  /**
-   * Returns whether JSDoc is annotated with {@code @jaggerProvidePromise} annotation.
-   */
-  public boolean isJaggerProvide() {
-    return (info != null) && info.isBitSet(Property.JAGGER_PROVIDE);
-  }
-
-  void setJaggerProvide(boolean jaggerProvide) {
-    lazyInitInfo();
-    info.setBit(Property.JAGGER_PROVIDE, jaggerProvide);
-  }
-
-  /**
-   * Returns whether JSDoc is annotated with {@code @jaggerProvidePromise} annotation.
-   */
-  public boolean isJaggerProvidePromise() {
-    return (info != null) && info.isBitSet(Property.JAGGER_PROVIDE_PROMISE);
-  }
-
-  void setJaggerProvidePromise(boolean jaggerProvidePromise) {
-    lazyInitInfo();
-    info.setBit(Property.JAGGER_PROVIDE_PROMISE, jaggerProvidePromise);
-  }
-
-  /**
-   * Returns whether JSDoc is annotated with {@code @jaggerModule} annotation.
-   */
-  public boolean isJaggerModule() {
-    return (info != null) && info.isBitSet(Property.JAGGER_MODULE);
-  }
-
-  void setJaggerModule(boolean jaggerModule) {
-    lazyInitInfo();
-    info.setBit(Property.JAGGER_MODULE, jaggerModule);
   }
 
   /**

@@ -398,38 +398,6 @@ public final class JsDocInfoParser {
           }
           return eatUntilEOLIfNotAnnotation();
 
-        case JAGGER_INJECT:
-          if (jsdocBuilder.isJaggerInjectRecorded()) {
-            addParserWarning("msg.jsdoc.jaggerInject.extra");
-          } else {
-            jsdocBuilder.recordJaggerInject(true);
-          }
-          return eatUntilEOLIfNotAnnotation();
-
-        case JAGGER_MODULE:
-          if (jsdocBuilder.isJaggerModuleRecorded()) {
-            addParserWarning("msg.jsdoc.jaggerModule.extra");
-          } else {
-            jsdocBuilder.recordJaggerModule(true);
-          }
-          return eatUntilEOLIfNotAnnotation();
-
-        case JAGGER_PROVIDE:
-          if (jsdocBuilder.isJaggerProvideRecorded()) {
-            addParserWarning("msg.jsdoc.jaggerProvide.extra");
-          } else {
-            jsdocBuilder.recordJaggerProvide(true);
-          }
-          return eatUntilEOLIfNotAnnotation();
-
-        case JAGGER_PROVIDE_PROMISE:
-          if (jsdocBuilder.isJaggerProvidePromiseRecorded()) {
-            addParserWarning("msg.jsdoc.jaggerProvidePromise.extra");
-          } else {
-            jsdocBuilder.recordJaggerProvidePromise(true);
-          }
-          return eatUntilEOLIfNotAnnotation();
-
         case ABSTRACT:
           if (!jsdocBuilder.recordAbstract()) {
             addTypeWarning("msg.jsdoc.incompat.type");

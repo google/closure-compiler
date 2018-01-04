@@ -50,10 +50,6 @@ enum Annotation {
   IMPLICIT_CAST,
   INHERIT_DOC,
   INTERFACE,
-  JAGGER_INJECT,
-  JAGGER_MODULE,
-  JAGGER_PROVIDE,
-  JAGGER_PROVIDE_PROMISE,
   LENDS,
   LICENSE, // same as preserve
   MEANING,
@@ -121,10 +117,6 @@ enum Annotation {
           .put("inheritDoc", Annotation.INHERIT_DOC)
           .put("interface", Annotation.INTERFACE)
           .put("record", Annotation.RECORD)
-          .put("jaggerInject", Annotation.JAGGER_INJECT)
-          .put("jaggerModule", Annotation.JAGGER_MODULE)
-          .put("jaggerProvidePromise", Annotation.JAGGER_PROVIDE_PROMISE)
-          .put("jaggerProvide", Annotation.JAGGER_PROVIDE)
           .put("lends", Annotation.LENDS)
           .put("license", Annotation.LICENSE)
           .put("meaning", Annotation.MEANING)

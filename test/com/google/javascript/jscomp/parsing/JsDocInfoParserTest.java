@@ -4241,10 +4241,6 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
       "* @id \n" +
       "* @ignore \n" +
       "* @inner \n" +
-      "* @jaggerInject \n" +
-      "* @jaggerModule \n" +
-      "* @jaggerProvide \n" +
-      "* @jaggerProvidePromise \n" +
       "* @lends {string} \n" +
       "* @link \n" +
       "* @member \n" +
@@ -4299,38 +4295,6 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
 
   public void testParseNgInject2() {
     parse("@ngInject \n@ngInject*/", "extra @ngInject tag");
-  }
-
-  public void testParseJaggerInject() {
-    assertThat(parse("@jaggerInject*/").isJaggerInject()).isTrue();
-  }
-
-  public void testParseJaggerInjectExtra() {
-    parse("@jaggerInject \n@jaggerInject*/", "extra @jaggerInject tag");
-  }
-
-  public void testParseJaggerModule() {
-    assertThat(parse("@jaggerModule*/").isJaggerModule()).isTrue();
-  }
-
-  public void testParseJaggerModuleExtra() {
-    parse("@jaggerModule \n@jaggerModule*/", "extra @jaggerModule tag");
-  }
-
-  public void testParseJaggerProvide() {
-    assertThat(parse("@jaggerProvide*/").isJaggerProvide()).isTrue();
-  }
-
-  public void testParseJaggerProvideExtra() {
-    parse("@jaggerProvide \n@jaggerProvide*/", "extra @jaggerProvide tag");
-  }
-
-  public void testParseJaggerProvidePromise() {
-    assertThat(parse("@jaggerProvidePromise*/").isJaggerProvidePromise()).isTrue();
-  }
-
-  public void testParseJaggerProvidePromiseExtra() {
-    parse("@jaggerProvidePromise \n@jaggerProvidePromise*/", "extra @jaggerProvidePromise tag");
   }
 
   public void testParsePolymerBehavior() {
