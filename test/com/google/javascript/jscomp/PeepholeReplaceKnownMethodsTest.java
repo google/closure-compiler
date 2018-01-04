@@ -521,7 +521,7 @@ public final class PeepholeReplaceKnownMethodsTest extends TypeICompilerTestCase
   public void testReplaceWithCharAt() {
     this.mode = TypeInferenceMode.BOTH;
     foldStringTyped("a.substring(0, 1)", "a.charAt(0)");
-    foldStringTyped("a.substring(-4, -3)", "a.charAt(-4)");
+    foldSameStringTyped("a.substring(-4, -3)");
     foldSameStringTyped("a.substring(i, j + 1)");
     foldSameStringTyped("a.substring(i, i + 1)");
     foldSameStringTyped("a.substring(1, 2, 3)");
@@ -533,6 +533,7 @@ public final class PeepholeReplaceKnownMethodsTest extends TypeICompilerTestCase
     foldSameStringTyped("a.substring(3, 1)");
 
     foldStringTyped("a.slice(4, 5)", "a.charAt(4)");
+    foldSameStringTyped("a.slice(-2, -1)");
     foldStringTyped("var /** number */ i; a.slice(0, 1)", "var /** number */ i; a.charAt(0)");
     foldSameStringTyped("a.slice(i, j + 1)");
     foldSameStringTyped("a.slice(i, i + 1)");

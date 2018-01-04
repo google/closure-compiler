@@ -261,7 +261,8 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
               case "substring":
               case "slice":
                 int end = maybeLengthOrEnd.intValue();
-                if (end - start == 1) {
+                // unlike slice and substring, chatAt can not be used with negative indexes
+                if (start >= 0 && end - start == 1) {
                   return replaceWithCharAt(subtree, callTarget, firstArg);
                 }
                 break;
