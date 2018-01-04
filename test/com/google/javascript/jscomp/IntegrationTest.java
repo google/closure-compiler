@@ -176,8 +176,8 @@ public final class IntegrationTest extends IntegrationTestCase {
         LINE_JOINER.join(
             "function f(obj) {",
             "  {",
-            "    var {foo: obj} = obj;",
-            "    alert(obj);",
+            "    const {foo} = obj;",
+            "    alert(foo);",
             "  }",
             "  {",
             "    var {bar: obj} = obj;",

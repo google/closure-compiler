@@ -664,6 +664,52 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
 
   }
 
+  public void testDestructuringDeclarationRvalue() {
+    // Test array destructuring
+    inFunction(
+        lines(
+            "let arr = []",
+            "if (CONDITION) {",
+            "  arr = [3];",
+            "}",
+            "let [foo] = arr;",
+            "use(foo);"));
+
+    // Test object destructuring
+    inFunction(
+        lines(
+            "let obj = {}",
+            "if (CONDITION) {",
+            "  obj = {foo: 3};",
+            "}",
+            "let {foo} = obj;",
+            "use(foo);"));
+  }
+
+  public void testDestructuringAssignmentRValue() {
+    // Test array destructuring
+    inFunction(
+        lines(
+            "let arr = []",
+            "if (CONDITION) {",
+            "  arr = [3];",
+            "}",
+            "let foo;",
+            "[foo] = arr;",
+            "use(foo);"));
+
+    // Test object destructuring
+    inFunction(
+        lines(
+            "let obj = {}",
+            "if (CONDITION) {",
+            "  obj = {foo: 3};",
+            "}",
+            "let foo;",
+            "({foo} = obj);",
+            "use(foo);"));
+  }
+
   public void testDefaultParameter() {
     test(
         lines(

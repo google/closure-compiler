@@ -17,6 +17,7 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
+
 import com.google.javascript.jscomp.ControlFlowGraph.Branch;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphEdge;
 import com.google.javascript.jscomp.graph.LatticeElement;
@@ -277,21 +278,32 @@ class LiveVariablesAnalysis
       case LET:
       case CONST:
       case VAR:
-         for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
-           if (c.isName()) {
-             if (c.hasChildren()) {
-               computeGenKill(c.getFirstChild(), gen, kill, conditional);
-               if (!conditional) {
-                 addToSetIfLocal(c, kill);
-               }
-             }
-           } else {
-             Iterable<Node> allVars = NodeUtil.findLhsNodesInNode(n);
-             for (Node child : allVars) {
-               addToSetIfLocal(child, kill);
-             }
-           }
-         }
+        for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
+          if (c.isName()) {
+            if (c.hasChildren()) {
+              computeGenKill(c.getFirstChild(), gen, kill, conditional);
+              if (!conditional) {
+                addToSetIfLocal(c, kill);
+              }
+            }
+          } else {
+            computeGenKill(c, gen, kill, conditional);
+          }
+        }
+        return;
+
+      case DESTRUCTURING_LHS:
+        // Note: DESTRUCTURING_LHS nodes have two children unless they are in a for loop.
+        // e.g. for (let [key, value] of arr) {
+        if (n.hasTwoChildren()) {
+          computeGenKill(n.getSecondChild(), gen, kill, conditional);
+          if (!conditional) {
+            Iterable<Node> allVars = NodeUtil.findLhsNodesInNode(n);
+            for (Node child : allVars) {
+              addToSetIfLocal(child, kill);
+            }
+          }
+        }
         return;
 
       case AND:

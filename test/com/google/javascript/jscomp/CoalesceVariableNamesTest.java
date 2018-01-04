@@ -341,7 +341,7 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
         lines(
             "function f(obj) {",
             "  {",
-            "    var {foo: obj} = obj;",
+            "    var {foo: obj} = obj;", // TODO(lharker): could we remove the var statement?
             "    alert(obj);",
             "  }",
             "}"));
@@ -363,8 +363,8 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
         lines(
             "function f(obj) {",
             "  {",
-            "    var {foo: obj} = obj;",
-            "    alert(obj);",
+            "    const {foo: foo} = obj;",
+            "    alert(foo);",
             "  }",
             "  {",
             "    var {bar: obj} = obj;",
