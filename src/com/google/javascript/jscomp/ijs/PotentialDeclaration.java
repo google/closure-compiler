@@ -62,7 +62,7 @@ abstract class PotentialDeclaration {
 
   static PotentialDeclaration fromMethod(Node functionNode) {
     checkArgument(ClassUtil.isClassMethod(functionNode));
-    String name = ClassUtil.getPrototypeNameOfMethod(functionNode);
+    String name = ClassUtil.getFullyQualifiedNameOfMethod(functionNode);
     return new MethodDeclaration(name, functionNode);
   }
 

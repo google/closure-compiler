@@ -41,11 +41,15 @@ final class ClassUtil {
     return className + ".prototype." + getprop.getLastChild().getString();
   }
 
-  static String getPrototypeNameOfMethod(Node function) {
+  static String getFullyQualifiedNameOfMethod(Node function) {
     checkArgument(isClassMethod(function));
     String className = getClassName(function);
     checkState(className != null && !className.isEmpty());
-    return className + ".prototype." + function.getParent().getString();
+    Node memberFunctionDef = function.getParent();
+    String methodName = memberFunctionDef.getString();
+    return memberFunctionDef.isStaticMember()
+        ? className + "." + methodName
+        : className + ".prototype." + methodName;
   }
 
   static boolean isClassMethod(Node functionNode) {

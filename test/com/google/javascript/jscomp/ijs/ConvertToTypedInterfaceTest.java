@@ -1327,6 +1327,17 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
             ""));
   }
 
+  public void testSameNamedStaticAndNonstaticMethodsDontCrash() {
+    testSame(
+        lines(
+            "const Foo = class {",
+            "  static method() {}",
+            "  method() {}",
+            "}",
+            ""));
+  }
+
+
   public void testDescAnnotationCountsAsTyped() {
     test(
         lines(
