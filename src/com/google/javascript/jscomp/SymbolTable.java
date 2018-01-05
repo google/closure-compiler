@@ -1736,6 +1736,14 @@ public final class SymbolTable {
         result = autobox == null
             ? getSymbolForTypeHelper(type, true) : getSymbolForTypeHelper(autobox, true);
       }
+      if (result == null) {
+        // dotted name might be a type/variable declared in externs. In that case look it up in
+        // global scope.
+        result = globalScope.getSlot(dottedName);
+        if (result != null && !result.getDeclarationNode().getStaticSourceFile().isExtern()) {
+          result = null;
+        }
+      }
       return result;
     }
   }
