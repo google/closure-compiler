@@ -670,12 +670,6 @@ public final class JsDocInfoParser {
           }
           return token;
 
-        case NO_ALIAS:
-          if (!jsdocBuilder.recordNoAlias()) {
-            addParserWarning("msg.jsdoc.noalias");
-          }
-          return eatUntilEOLIfNotAnnotation();
-
         case NO_COMPILE:
           if (!jsdocBuilder.recordNoCompile()) {
             addParserWarning("msg.jsdoc.nocompile");

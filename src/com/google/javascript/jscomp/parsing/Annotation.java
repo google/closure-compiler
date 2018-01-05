@@ -56,7 +56,6 @@ enum Annotation {
   MIXIN_CLASS,
   MIXIN_FUNCTION,
   MODIFIES,
-  NO_ALIAS,
   NO_COLLAPSE,
   NO_COMPILE,
   NO_INLINE,
@@ -123,7 +122,6 @@ enum Annotation {
           .put("mixinClass", Annotation.MIXIN_CLASS)
           .put("mixinFunction", Annotation.MIXIN_FUNCTION)
           .put("modifies", Annotation.MODIFIES)
-          .put("noalias", Annotation.NO_ALIAS)
           .put("nocollapse", Annotation.NO_COLLAPSE)
           .put("nocompile", Annotation.NO_COMPILE)
           .put("noinline", Annotation.NO_INLINE)

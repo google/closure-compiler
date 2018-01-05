@@ -1056,20 +1056,6 @@ public final class JSDocInfoBuilder {
 
   /**
    * Records that the {@link JSDocInfo} being built should have its
-   * {@link JSDocInfo#isNoAlias()} flag set to {@code true}.
-   */
-  public boolean recordNoAlias() {
-    if (!currentInfo.isNoAlias()) {
-      currentInfo.setNoAlias(true);
-      populated = true;
-      return true;
-    } else {
-      return false;
-    }
-  }
-
-  /**
-   * Records that the {@link JSDocInfo} being built should have its
    * {@link JSDocInfo#isDeprecated()} flag set to {@code true}.
    */
   public boolean recordDeprecated() {

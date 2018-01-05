@@ -493,7 +493,7 @@ public class JSDocInfo implements Serializable {
   private static final int MASK_TYPE_SUMMARY  = 0x00000010; // @typeSummary
   private static final int MASK_FINAL         = 0x00000020; // @final
   private static final int MASK_OVERRIDE      = 0x00000040; // @override
-  private static final int MASK_NOALIAS       = 0x00000080; // @noalias
+  private static final int MASK_UNUSED_1      = 0x00000080; //
   private static final int MASK_DEPRECATED    = 0x00000100; // @deprecated
   private static final int MASK_INTERFACE     = 0x00000200; // @interface
   private static final int MASK_EXPORT        = 0x00000400; // @export
@@ -677,10 +677,6 @@ public class JSDocInfo implements Serializable {
     setFlag(value, MASK_OVERRIDE);
   }
 
-  void setNoAlias(boolean value) {
-    setFlag(value, MASK_NOALIAS);
-  }
-
   void setDeprecated(boolean value) {
     setFlag(value, MASK_DEPRECATED);
   }
@@ -862,14 +858,6 @@ public class JSDocInfo implements Serializable {
   }
 
   /**
-   * Returns whether the {@code @noalias} annotation is present on this
-   * {@link JSDocInfo}.
-   */
-  public boolean isNoAlias() {
-    return getFlag(MASK_NOALIAS);
-  }
-
-  /**
    * Returns whether the {@code @deprecated} annotation is present on this
    * {@link JSDocInfo}.
    */
@@ -984,7 +972,6 @@ public class JSDocInfo implements Serializable {
             | MASK_CONSTRUCTOR
             | MASK_DEFINE
             | MASK_OVERRIDE
-            | MASK_NOALIAS
             | MASK_EXPORT
             | MASK_EXPOSE
             | MASK_DEPRECATED

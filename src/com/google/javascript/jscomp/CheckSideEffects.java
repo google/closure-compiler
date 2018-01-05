@@ -187,9 +187,7 @@ final class CheckSideEffects extends AbstractPostOrderCallback
     Node name = IR.name(PROTECTOR_FN);
     name.putBooleanProp(Node.IS_CONSTANT_NAME, true);
     Node var = IR.var(name);
-    // Add "@noalias" so we can strip the method when AliasExternals is enabled.
     JSDocInfoBuilder builder = new JSDocInfoBuilder(false);
-    builder.recordNoAlias();
     var.setJSDocInfo(builder.build());
     CompilerInput input = compiler.getSynthesizedExternsInput();
     Node root = input.getAstRoot(compiler);

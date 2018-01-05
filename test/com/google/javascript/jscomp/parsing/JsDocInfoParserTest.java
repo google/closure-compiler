@@ -1762,14 +1762,6 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
         "Bad type annotation. extra @override/@inheritDoc tag." + BAD_TYPE_WIKI_LINK);
   }
 
-  public void testParseNoAlias1() {
-    assertThat(parse("@noalias*/").isNoAlias()).isTrue();
-  }
-
-  public void testParseNoAlias2() {
-    parse("@noalias\n@noalias*/", "extra @noalias tag");
-  }
-
   public void testParseDeprecated1() {
     assertThat(parse("@deprecated*/").isDeprecated()).isTrue();
   }
