@@ -1379,6 +1379,36 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
   }
 
 
+  public void testAnonymousClassDoesntCrash() {
+    test(
+        "let Foo = fooFactory(class { constructor() {} });",
+        "/** @const {*} */ var Foo;");
+
+    test(
+        lines(
+            "let Foo = fooFactory(class {",
+            "  constructor() {",
+            "    /** @type {number} */",
+            "    this.n = 5;",
+            "  }",
+            "});",
+            ""),
+        "/** @const {*} */ var Foo;");
+
+    test(
+        lines(
+            "/** @type {function(new:Int)} */",
+            "let Foo = fooFactory(class {",
+            "  constructor() {",
+            "    /** @type {number} */",
+            "    this.n = 5;",
+            "  }",
+            "});",
+            ""),
+        "/** @type {function(new:Int)} */ var Foo;");
+  }
+
+
   public void testDescAnnotationCountsAsTyped() {
     test(
         lines(

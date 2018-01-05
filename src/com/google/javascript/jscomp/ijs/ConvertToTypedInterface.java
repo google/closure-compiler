@@ -110,7 +110,7 @@ public class ConvertToTypedInterface implements CompilerPass {
     public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
       switch (n.getToken()) {
         case FUNCTION:
-          if (!ClassUtil.isConstructor(n)) {
+          if (!ClassUtil.isConstructor(n) || !ClassUtil.hasNamedClass(n)) {
             Node body = n.getLastChild();
             if (!body.isNormalBlock() || body.hasChildren()) {
               t.reportCodeChange(body);
@@ -296,7 +296,7 @@ public class ConvertToTypedInterface implements CompilerPass {
         case FUNCTION:
           if (NodeUtil.isStatementParent(parent)) {
             currentFile.recordNameDeclaration(n.getFirstChild(), t.getScope());
-          } else if (ClassUtil.isClassMethod(n)) {
+          } else if (ClassUtil.isClassMethod(n) && ClassUtil.hasNamedClass(n)) {
             currentFile.recordMethod(n, t.getScope());
           }
           break;

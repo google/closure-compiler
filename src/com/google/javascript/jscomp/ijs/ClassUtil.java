@@ -67,7 +67,17 @@ final class ClassUtil {
         && parent.getGrandparent().getFirstChild().matchesQualifiedName("goog.defineClass");
   }
 
+  /**
+   * Checks whether the given constructor/member function belongs to a named class, as
+   * opposed to an anonymous class.
+   */
+  static boolean hasNamedClass(Node functionNode) {
+    checkArgument(functionNode.isFunction());
+    return getClassName(functionNode) != null;
+  }
+
   static String getClassName(Node functionNode) {
+    checkArgument(functionNode.isFunction());
     if (isClassMethod(functionNode)) {
       Node parent = functionNode.getParent();
       if (parent.isMemberFunctionDef()) {
