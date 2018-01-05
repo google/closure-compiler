@@ -710,6 +710,75 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
             "use(foo);"));
   }
 
+  public void testForOfWithDestructuring() {
+    inFunction(
+        lines(
+            "let x;",
+            "x = [];",
+            "var y = 5;", // Don't eliminate because if arr is empty, y will remain 5.
+            "for ([y = x] of arr) { y; }",
+            "y;"));
+
+    // TODO(b/71546651): Fix this test. The pass shouldn't eliminate "x = []".
+    inFunction(
+        lines(
+            "let x;",
+            "x = [];",
+            "for (let [y = x] of arr) { y; }"),
+        lines(
+            "let x;",
+            "[];",
+            "for (let [y = x] of arr) { y; }"));
+  }
+
+  public void testReferenceInDestructuringPatternDefaultValue() {
+    inFunction(
+        lines(
+            "let bar = [];",
+            "const {foo = bar} = obj;",
+            "foo;"));
+
+    // TODO(b/71546651): Fix the next two tests The pass shouldn't eliminate "bar = []".
+    inFunction(
+        lines(
+            "let bar;",
+            "bar = [];",
+            "const {foo = bar} = obj;",
+            "foo;"),
+        lines(
+            "let bar;",
+            "[];",
+            "const {foo = bar} = obj;",
+            "foo;"));
+
+    inFunction(
+        lines(
+            "let bar;",
+            "bar = [];",
+            "const [foo = bar] = arr;",
+            "foo;"),
+        lines(
+            "let bar;",
+            "[];",
+            "const [foo = bar] = arr;",
+            "foo;"));
+  }
+
+  public void testReferenceInDestructuringPatternComputedProperty() {
+    // TODO(b/71546651): Fix this test. The pass shouldn't eliminate "str = 'bar'".
+    inFunction(
+        lines(
+            "let str;",
+            "str = 'bar'",
+            "const {[str + 'baz']: foo} = obj;",
+            "foo;"),
+        lines(
+            "let str;",
+            "'bar'",
+            "const {[str + 'baz']: foo} = obj;",
+            "foo;"));
+  }
+
   public void testDefaultParameter() {
     test(
         lines(
