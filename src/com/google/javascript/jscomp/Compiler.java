@@ -470,6 +470,13 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     if (!options.checkSymbols && !options.enables(DiagnosticGroups.CHECK_VARIABLES)) {
       options.setWarningLevel(DiagnosticGroups.CHECK_VARIABLES, CheckLevel.OFF);
     }
+
+    // If we're in transpile-only mode, we don't need to do checks for suspicious var usages.
+    // Since we still have to run VariableReferenceCheck before transpilation to check block-scoped
+    // variables, though, we disable the unnecessary warnings it produces relating to vars here.
+    if (options.skipNonTranspilationPasses && !options.enables(DiagnosticGroups.CHECK_VARIABLES)) {
+      options.setWarningLevel(DiagnosticGroups.CHECK_VARIABLES, CheckLevel.OFF);
+    }
   }
 
   /** Initializes the instance state needed for a compile job. */
