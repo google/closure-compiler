@@ -40,6 +40,7 @@ $jscomp.polyfill('Math.hypot', function(orig) {
       max = Math.max(max, Math.abs(arguments[i]));
     }
     if (max > 1e100 || max < 1e-100) {
+      if (!max) return max; // Handle 0 and NaN before trying to divide.
       x = x / max;
       y = y / max;
       sum = x * x + y * y;

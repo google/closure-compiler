@@ -35,5 +35,15 @@ testSuite({
 
     assertRoughlyEquals(5e-300, Math.hypot(3e-300, 4e-300), 1e290);
     assertRoughlyEquals(5e-300, Math.hypot(-3e-300, -4e-300), 1e290);
+
+    // Test zero/NaN edge cases
+    assertEquals(13, Math.hypot(13, 0));
+    assertEquals(13, Math.hypot(0, 13));
+    assertEquals(13, Math.hypot(0, 0, 13));
+    assertEquals(0, Math.hypot(0, 0));
+    assertEquals(0, Math.hypot(0, 0, 0));
+    assertNaN(Math.hypot(1, NaN));
+    assertNaN(Math.hypot(NaN, 1));
+    assertNaN(Math.hypot(1, 2, NaN));
   },
 });
