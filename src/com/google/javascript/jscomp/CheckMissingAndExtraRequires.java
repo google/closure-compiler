@@ -527,7 +527,7 @@ public class CheckMissingAndExtraRequires implements HotSwapCompilerPass, NodeTr
     checkState(n.isName() || n.isGetProp() || n.isStringKey(), n);
     String qualifiedName = n.isStringKey() ? n.getString() : n.getQualifiedName();
     addWeakUsagesOfAllPrefixes(qualifiedName);
-    if (mode != Mode.SINGLE_FILE) { // TODO(tbreisacher): Fix violations and remove this check.
+    if (mode != Mode.SINGLE_FILE) { // TODO(b/71638622): Fix violations and remove this check.
       return;
     }
     if (!n.isStringKey() && !NodeUtil.isLhsOfAssign(n) && !parent.isExprResult()) {
