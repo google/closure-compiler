@@ -84,10 +84,7 @@ abstract class PotentialDeclaration {
     return rhs;
   }
 
-  Node getStatement() {
-    return NodeUtil.getEnclosingStatement(lhs);
-  }
-
+  @Nullable
   JSDocInfo getJsDoc() {
     return NodeUtil.getBestJSDocInfo(lhs);
   }
@@ -101,6 +98,10 @@ abstract class PotentialDeclaration {
     return true;
   }
 
+  Node getRemovableNode() {
+    return NodeUtil.getEnclosingStatement(lhs);
+  }
+
   /**
    * Remove this "potential declaration" completely.
    * Usually, this is because the same symbol has already been declared in this file.
@@ -109,11 +110,7 @@ abstract class PotentialDeclaration {
     if (isDetached()) {
       return;
     }
-    doRemove(compiler);
-  }
-
-  void doRemove(AbstractCompiler compiler) {
-    Node statement = getStatement();
+    Node statement = getRemovableNode();
     NodeUtil.deleteNode(statement, compiler);
     statement.removeChildren();
   }
@@ -183,7 +180,7 @@ abstract class PotentialDeclaration {
       Node newStatement =
           NodeUtil.newQNameDeclaration(compiler, nameNode.getQualifiedName(), null, jsdoc);
       newStatement.useSourceInfoIfMissingFromForTree(nameNode);
-      Node oldStatement = getStatement();
+      Node oldStatement = getRemovableNode();
       NodeUtil.deleteChildren(oldStatement, compiler);
       oldStatement.replaceWith(newStatement);
       compiler.reportChangeToEnclosingScope(newStatement);
@@ -219,7 +216,7 @@ abstract class PotentialDeclaration {
       Node newStatement =
           NodeUtil.newQNameDeclaration(compiler, getFullyQualifiedName(), null, getJsDoc());
       newStatement.useSourceInfoIfMissingFromForTree(getLhs());
-      NodeUtil.deleteNode(getStatement(), compiler);
+      NodeUtil.deleteNode(getRemovableNode(), compiler);
       insertionPoint.getParent().addChildAfter(newStatement, insertionPoint);
       compiler.reportChangeToEnclosingScope(newStatement);
     }
@@ -254,8 +251,8 @@ abstract class PotentialDeclaration {
     void simplify(AbstractCompiler compiler) {}
 
     @Override
-    void doRemove(AbstractCompiler compiler) {
-      NodeUtil.deleteNode(getLhs(), compiler);
+    Node getRemovableNode() {
+      return getLhs();
     }
   }
 
