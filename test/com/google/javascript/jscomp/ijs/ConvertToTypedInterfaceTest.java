@@ -1337,6 +1337,47 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
             ""));
   }
 
+  public void testRedeclarationOfClassMethodDoesntCrash() {
+    test(
+        lines(
+            "class Foo {",
+            "  constructor() {",
+            "    /** @private */",
+            "    this.handleEvent_ = this.handleEvent_.bind(this);",
+            "  }",
+            "  /** @private @param {Event} e */",
+            "  handleEvent_(e) {}",
+            "}",
+            ""),
+        lines(
+            "class Foo {",
+            "  constructor() {}",
+            "}",
+            // TODO(blickly): Would be better if this included the type anntoation.
+            "/** @private */",
+            "Foo.prototype.handleEvent_",
+            ""));
+
+    test(
+        lines(
+            "class Foo {",
+            "  constructor() {",
+            "    /** @param {Event} e */",
+            "    this.handleEvent_ = function (e) {};",
+            "  }",
+            "  handleEvent_(e) {}",
+            "}",
+            ""),
+        lines(
+            "class Foo {",
+            "  constructor() {",
+            "    /** @param {Event} e */",
+            "    this.handleEvent_ = function (e) {};",
+            "  }",
+            "}",
+            ""));
+  }
+
 
   public void testDescAnnotationCountsAsTyped() {
     test(

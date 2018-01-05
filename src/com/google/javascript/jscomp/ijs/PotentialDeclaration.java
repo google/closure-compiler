@@ -105,10 +105,14 @@ abstract class PotentialDeclaration {
    * Remove this "potential declaration" completely.
    * Usually, this is because the same symbol has already been declared in this file.
    */
-  void remove(AbstractCompiler compiler) {
+  final void remove(AbstractCompiler compiler) {
     if (isDetached()) {
       return;
     }
+    doRemove(compiler);
+  }
+
+  void doRemove(AbstractCompiler compiler) {
     Node statement = getStatement();
     NodeUtil.deleteNode(statement, compiler);
     statement.removeChildren();
@@ -248,6 +252,11 @@ abstract class PotentialDeclaration {
 
     @Override
     void simplify(AbstractCompiler compiler) {}
+
+    @Override
+    void doRemove(AbstractCompiler compiler) {
+      NodeUtil.deleteNode(getLhs(), compiler);
+    }
   }
 
   static boolean isTypedRhs(Node rhs) {

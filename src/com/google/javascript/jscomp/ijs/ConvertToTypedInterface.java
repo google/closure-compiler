@@ -517,8 +517,7 @@ public class ConvertToTypedInterface implements CompilerPass {
       }
       Node nameNode = decl.getLhs();
       Node rhs = decl.getRhs();
-      Node jsdocNode = NodeUtil.getBestJSDocInfoNode(nameNode);
-      JSDocInfo jsdoc = jsdocNode.getJSDocInfo();
+      JSDocInfo jsdoc = decl.getJsDoc();
       boolean isExport = isExportLhs(nameNode);
       if (rhs == null) {
         return RemovalType.SIMPLIFY_RHS;
@@ -538,10 +537,12 @@ public class ConvertToTypedInterface implements CompilerPass {
         return RemovalType.SIMPLIFY_RHS;
       }
       if (isConstToBeInferred(jsdoc, nameNode, isExport)) {
+        Node jsdocNode = NodeUtil.getBestJSDocInfoNode(nameNode);
         jsdocNode.setJSDocInfo(JsdocUtil.pullJsdocTypeFromAst(compiler, jsdoc, nameNode));
         return RemovalType.SIMPLIFY_RHS;
       }
       if (jsdoc == null || !jsdoc.containsDeclaration()) {
+        Node jsdocNode = NodeUtil.getBestJSDocInfoNode(nameNode);
         if (!isDeclaration(nameNode)
             && !currentFile.isPrefixProvided(fullyQualifiedName)
             && !currentFile.isStrictPrefixDeclared(fullyQualifiedName)) {
