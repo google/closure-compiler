@@ -76,7 +76,7 @@ final class ClassUtil {
     return getClassName(functionNode) != null;
   }
 
-  static String getClassName(Node functionNode) {
+  private static String getClassName(Node functionNode) {
     checkArgument(functionNode.isFunction());
     if (isClassMethod(functionNode)) {
       Node parent = functionNode.getParent();

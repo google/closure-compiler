@@ -25,6 +25,7 @@ import com.google.common.collect.Ordering;
 import com.google.javascript.jscomp.AbstractCompiler;
 import com.google.javascript.jscomp.CompilerPass;
 import com.google.javascript.jscomp.DiagnosticType;
+import com.google.javascript.jscomp.JSError;
 import com.google.javascript.jscomp.NodeTraversal;
 import com.google.javascript.jscomp.NodeUtil;
 import com.google.javascript.jscomp.Scope;
@@ -71,6 +72,16 @@ public class ConvertToTypedInterface implements CompilerPass {
     this.compiler = compiler;
   }
 
+  static void maybeWarnForConstWithoutExplicitType(
+      AbstractCompiler compiler, JSDocInfo jsdoc, Node nameNode) {
+    if (isConstToBeInferred(jsdoc, nameNode)
+        && !nameNode.isFromExterns()
+        && !JsdocUtil.isPrivate(jsdoc)) {
+      compiler.report(
+          JSError.make(nameNode, CONSTANT_WITHOUT_EXPLICIT_TYPE));
+    }
+  }
+
   private void removeUselessFiles(Node externs, Node root) {
     for (Node script : Iterables.concat(externs.children(), root.children())) {
       if (!script.hasChildren()) {
@@ -88,7 +99,7 @@ public class ConvertToTypedInterface implements CompilerPass {
     }
   }
 
-  public void processFile(Node scriptNode) {
+  private void processFile(Node scriptNode) {
     checkArgument(scriptNode.isScript());
     FileInfo currentFile = new FileInfo();
     NodeTraversal.traverseEs6(compiler, scriptNode, new RemoveNonDeclarations());
@@ -290,14 +301,14 @@ public class ConvertToTypedInterface implements CompilerPass {
       switch (n.getToken()) {
         case CLASS:
           if (NodeUtil.isStatementParent(parent)) {
-            currentFile.recordNameDeclaration(n.getFirstChild(), t.getScope());
+            currentFile.recordNameDeclaration(n.getFirstChild());
           }
           break;
         case FUNCTION:
           if (NodeUtil.isStatementParent(parent)) {
-            currentFile.recordNameDeclaration(n.getFirstChild(), t.getScope());
+            currentFile.recordNameDeclaration(n.getFirstChild());
           } else if (ClassUtil.isClassMethod(n) && ClassUtil.hasNamedClass(n)) {
-            currentFile.recordMethod(n, t.getScope());
+            currentFile.recordMethod(n);
           }
           break;
         case EXPR_RESULT:
@@ -311,16 +322,16 @@ public class ConvertToTypedInterface implements CompilerPass {
               } else if (callee.matchesQualifiedName("goog.require")) {
                 currentFile.recordImport(expr.getLastChild().getString());
               } else if (callee.matchesQualifiedName("goog.define")) {
-                currentFile.recordDefine(expr, t.getScope());
+                currentFile.recordDefine(expr);
               }
               break;
             case ASSIGN:
               Node lhs = expr.getFirstChild();
               propagateJsdocAtName(t, lhs);
-              currentFile.recordNameDeclaration(lhs, t.getScope());
+              currentFile.recordNameDeclaration(lhs);
               break;
             case GETPROP:
-              currentFile.recordNameDeclaration(expr, t.getScope());
+              currentFile.recordNameDeclaration(expr);
               break;
             default:
               throw new RuntimeException("Unexpected declaration: " + expr);
@@ -331,7 +342,7 @@ public class ConvertToTypedInterface implements CompilerPass {
         case LET:
           checkState(n.hasOneChild());
           propagateJsdocAtName(t, n.getFirstChild());
-          recordNameDeclaration(t, n);
+          recordNameDeclaration(n);
           break;
         case STRING_KEY:
           if (n.hasOneChild()) {
@@ -343,7 +354,7 @@ public class ConvertToTypedInterface implements CompilerPass {
       }
     }
 
-    void recordNameDeclaration(NodeTraversal t, Node decl) {
+    private void recordNameDeclaration(Node decl) {
       checkArgument(NodeUtil.isNameDeclaration(decl));
       Node rhs = decl.getFirstChild().getLastChild();
       boolean isImport = isImportRhs(rhs);
@@ -351,7 +362,7 @@ public class ConvertToTypedInterface implements CompilerPass {
         if (isImport) {
           currentFile.recordImport(name.getString());
         } else {
-          currentFile.recordNameDeclaration(name, t.getScope());
+          currentFile.recordNameDeclaration(name);
         }
       }
     }
@@ -361,18 +372,18 @@ public class ConvertToTypedInterface implements CompilerPass {
           nameNode.isQualifiedName() || nameNode.isStringKey() || nameNode.isDestructuringLhs(),
           nameNode);
       Node jsdocNode = NodeUtil.getBestJSDocInfoNode(nameNode);
-      JSDocInfo jsdoc = jsdocNode.getJSDocInfo();
-      if (!isConstToBeInferred(jsdoc, nameNode, false)) {
+      JSDocInfo originalJsdoc = jsdocNode.getJSDocInfo();
+      if (!isConstToBeInferred(originalJsdoc, nameNode)) {
         return;
       }
       Node rhs = NodeUtil.getRValueOfLValue(nameNode);
       if (rhs == null) {
         return;
       }
-      JSDocInfo newJsdoc = JsdocUtil.getJSDocForRhs(rhs, jsdoc);
+      JSDocInfo newJsdoc = JsdocUtil.getJSDocForRhs(rhs, originalJsdoc);
       if (newJsdoc == null && ClassUtil.isThisProp(nameNode)) {
         Var decl = findNameDeclaration(t.getScope(), rhs);
-        newJsdoc = JsdocUtil.getJSDocForName(decl, jsdoc);
+        newJsdoc = JsdocUtil.getJSDocForName(decl, originalJsdoc);
       }
       if (newJsdoc != null) {
         jsdocNode.setJSDocInfo(newJsdoc);
@@ -495,11 +506,6 @@ public class ConvertToTypedInterface implements CompilerPass {
       return n.isClass() || NodeUtil.isCallTo(n, "goog.defineClass");
     }
 
-    private static boolean isExportLhs(Node lhs) {
-      return (lhs.isName() && lhs.matchesQualifiedName("exports"))
-          || (lhs.isGetProp() && lhs.getFirstChild().matchesQualifiedName("exports"));
-    }
-
     private static String rootName(String qualifiedName) {
       int dotIndex = qualifiedName.indexOf('.');
       if (dotIndex == -1) {
@@ -523,7 +529,6 @@ public class ConvertToTypedInterface implements CompilerPass {
         return RemovalType.SIMPLIFY_RHS;
       }
       if (PotentialDeclaration.isTypedRhs(rhs)
-          || NodeUtil.isCallTo(rhs, "goog.defineClass")
           || isImportRhs(rhs)
           || (isExport && (rhs.isQualifiedName() || rhs.isObjectLit()))
           || (jsdoc != null && jsdoc.isConstructor() && rhs.isQualifiedName())
@@ -536,27 +541,26 @@ public class ConvertToTypedInterface implements CompilerPass {
       if (NodeUtil.isNamespaceDecl(nameNode)) {
         return RemovalType.SIMPLIFY_RHS;
       }
-      if (isConstToBeInferred(jsdoc, nameNode, isExport)) {
-        Node jsdocNode = NodeUtil.getBestJSDocInfoNode(nameNode);
-        jsdocNode.setJSDocInfo(JsdocUtil.pullJsdocTypeFromAst(compiler, jsdoc, nameNode));
+      Node jsdocNode = NodeUtil.getBestJSDocInfoNode(nameNode);
+      if (isConstToBeInferred(jsdoc, nameNode)) {
+        jsdocNode.setJSDocInfo(JsdocUtil.getUnusableTypeJSDoc(jsdoc));
+        maybeWarnForConstWithoutExplicitType(compiler, jsdoc, nameNode);
         return RemovalType.SIMPLIFY_RHS;
       }
       if (jsdoc == null || !jsdoc.containsDeclaration()) {
-        Node jsdocNode = NodeUtil.getBestJSDocInfoNode(nameNode);
         if (!isDeclaration(nameNode)
             && !currentFile.isPrefixProvided(fullyQualifiedName)
             && !currentFile.isStrictPrefixDeclared(fullyQualifiedName)) {
           // This looks like an update rather than a declaration in this file.
           return RemovalType.REMOVE_ALL;
         }
-        jsdocNode.setJSDocInfo(JsdocUtil.getAllTypeJSDoc());
+        jsdocNode.setJSDocInfo(JsdocUtil.getUnusableTypeJSDoc(jsdoc));
       }
       return RemovalType.SIMPLIFY_RHS;
     }
 
     private boolean isAliasDefinition(PotentialDeclaration decl) {
-      boolean isExport = isExportLhs(decl.getLhs());
-      if (isConstToBeInferred(decl.getJsDoc(), decl.getLhs(), isExport)
+      if (isConstToBeInferred(decl.getJsDoc(), decl.getLhs())
           && decl.getRhs().isQualifiedName()) {
         String aliasedName = decl.getRhs().getQualifiedName();
         return currentFile.isPrefixRequired(aliasedName) || currentFile.isNameDeclared(aliasedName);
@@ -582,14 +586,19 @@ public class ConvertToTypedInterface implements CompilerPass {
   }
 
   static boolean isConstToBeInferred(
-      JSDocInfo jsdoc, Node nameNode, boolean isImpliedConst) {
+      JSDocInfo jsdoc, Node nameNode) {
     boolean isConst =
-        isImpliedConst
-            || nameNode.getParent().isConst()
+            nameNode.getParent().isConst()
+            || isExportLhs(nameNode)
             || (jsdoc != null && jsdoc.hasConstAnnotation());
     return isConst
         && !JsdocUtil.hasAnnotatedType(jsdoc)
         && !NodeUtil.isNamespaceDecl(nameNode);
+  }
+
+  private static boolean isExportLhs(Node lhs) {
+    return (lhs.isName() && lhs.matchesQualifiedName("exports"))
+        || (lhs.isGetProp() && lhs.getFirstChild().matchesQualifiedName("exports"));
   }
 
   private static boolean isImportRhs(@Nullable Node rhs) {

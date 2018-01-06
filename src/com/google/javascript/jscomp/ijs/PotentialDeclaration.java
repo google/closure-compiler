@@ -125,7 +125,7 @@ abstract class PotentialDeclaration {
    * A potential declaration that has a fully qualified name to describe it.
    * This includes things like:
    *   var/let/const/function/class declarations,
-   *   assignments to a fully qualfied name,
+   *   assignments to a fully qualified name,
    *   and goog.module exports
    * This is the most common type of potential declaration.
    */
@@ -162,8 +162,10 @@ abstract class PotentialDeclaration {
         if (objLit.hasChildren()) {
           for (Node key : objLit.children()) {
             if (!isTypedRhs(key.getLastChild())) {
+              ConvertToTypedInterface
+                  .maybeWarnForConstWithoutExplicitType(compiler, key.getJSDocInfo(), key);
               removeStringKeyValue(key);
-              JsdocUtil.updateJsdoc(compiler, key);
+              maybeUpdateJsdoc(key);
               compiler.reportChangeToEnclosingScope(key);
             }
           }
@@ -196,6 +198,15 @@ abstract class PotentialDeclaration {
       stringKey.replaceChild(value, replacementValue);
     }
 
+    private static void maybeUpdateJsdoc(Node jsdocNode) {
+      checkArgument(jsdocNode.isStringKey(), jsdocNode);
+      JSDocInfo jsdoc = jsdocNode.getJSDocInfo();
+      if (jsdoc == null
+          || !jsdoc.containsDeclaration()
+          || ConvertToTypedInterface.isConstToBeInferred(jsdoc, jsdocNode)) {
+        jsdocNode.setJSDocInfo(JsdocUtil.getUnusableTypeJSDoc(jsdoc));
+      }
+    }
   }
 
   /**
@@ -259,6 +270,7 @@ abstract class PotentialDeclaration {
   static boolean isTypedRhs(Node rhs) {
     return rhs.isFunction()
         || rhs.isClass()
+        || NodeUtil.isCallTo(rhs, "goog.defineClass")
         || (rhs.isQualifiedName() && rhs.matchesQualifiedName("goog.abstractMethod"))
         || (rhs.isQualifiedName() && rhs.matchesQualifiedName("goog.nullFunction"));
   }

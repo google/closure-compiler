@@ -15,10 +15,6 @@
  */
 package com.google.javascript.jscomp.ijs;
 
-import static com.google.common.base.Preconditions.checkArgument;
-
-import com.google.javascript.jscomp.AbstractCompiler;
-import com.google.javascript.jscomp.JSError;
 import com.google.javascript.jscomp.NodeUtil;
 import com.google.javascript.jscomp.Var;
 import com.google.javascript.rhino.IR;
@@ -36,38 +32,12 @@ import javax.annotation.Nullable;
 final class JsdocUtil {
   private JsdocUtil() {}
 
-  static JSDocInfo updateJsdoc(AbstractCompiler compiler, Node nameNode) {
-    checkArgument(nameNode.isStringKey(), nameNode);
-    Node jsdocNode = nameNode;
-    JSDocInfo jsdoc = jsdocNode.getJSDocInfo();
-    if (jsdoc == null) {
-      jsdoc = JsdocUtil.getAllTypeJSDoc();
-    } else if (ConvertToTypedInterface.isConstToBeInferred(jsdoc, nameNode, false)) {
-      jsdoc = JsdocUtil.pullJsdocTypeFromAst(compiler, jsdoc, nameNode);
-    }
-    jsdocNode.setJSDocInfo(jsdoc);
-    return jsdoc;
-  }
-
-  static JSDocInfo pullJsdocTypeFromAst(
-      AbstractCompiler compiler, JSDocInfo oldJSDoc, Node nameNode) {
-    checkArgument(nameNode.isQualifiedName() || nameNode.isStringKey(), nameNode);
-    if (oldJSDoc != null && oldJSDoc.getDescription() != null) {
-      return getConstJSDoc(oldJSDoc, "string");
-    }
-    if (!nameNode.isFromExterns() && !isPrivate(oldJSDoc)) {
-      compiler.report(
-          JSError.make(nameNode, ConvertToTypedInterface.CONSTANT_WITHOUT_EXPLICIT_TYPE));
-    }
-    return getConstJSDoc(oldJSDoc, new Node(Token.STAR));
-  }
-
-  private static boolean isPrivate(@Nullable JSDocInfo jsdoc) {
+  static boolean isPrivate(@Nullable JSDocInfo jsdoc) {
     return jsdoc != null && jsdoc.getVisibility().equals(Visibility.PRIVATE);
   }
 
-  static JSDocInfo getAllTypeJSDoc() {
-    return getConstJSDoc(null, new Node(Token.STAR));
+  static JSDocInfo getUnusableTypeJSDoc(JSDocInfo oldJSDoc) {
+    return getConstJSDoc(oldJSDoc, new Node(Token.STAR));
   }
 
   static JSDocInfo getQmarkTypeJSDoc() {
@@ -122,7 +92,10 @@ final class JsdocUtil {
           return getConstJSDoc(oldJSDoc, new Node(Token.BANG, IR.string("RegExp")));
         }
         break;
-      default:
+      case UNDETERMINED:
+        if (oldJSDoc != null && oldJSDoc.getDescription() != null) {
+          return getConstJSDoc(oldJSDoc, "string");
+        }
         break;
     }
     return null;

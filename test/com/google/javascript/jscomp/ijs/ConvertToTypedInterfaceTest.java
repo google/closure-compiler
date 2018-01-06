@@ -1353,7 +1353,7 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
             "class Foo {",
             "  constructor() {}",
             "}",
-            // TODO(blickly): Would be better if this included the type anntoation.
+            // TODO(blickly): Would be better if this included the type annotation.
             "/** @private */",
             "Foo.prototype.handleEvent_",
             ""));
