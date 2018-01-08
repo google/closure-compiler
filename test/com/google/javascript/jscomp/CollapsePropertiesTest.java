@@ -2149,13 +2149,44 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
         SourceFile.fromCode(
             "mod1.js",
             LINE_JOINER.join(
-                "/** @const */ var module$mod1={};",
                 "var $jscompDefaultExport$$module$mod1=123;",
                 "var bar$$module$mod1 = 'bar';",
+                "/** @const */ var module$mod1={};",
                 "var module$mod1$default = $jscompDefaultExport$$module$mod1;",
                 "var module$mod1$bar = bar$$module$mod1")));
     expected.add(
         SourceFile.fromCode("entry.js", "alert(module$mod1$default); alert(module$mod1$bar);"));
+
+    test(inputs, expected);
+  }
+
+  public void testMutableModuleExportsBasicEsm() {
+    this.setupModuleExportsOnly();
+
+    ArrayList<SourceFile> inputs = new ArrayList<>();
+    inputs.add(
+        SourceFile.fromCode(
+            "mod1.js",
+            lines(
+                "export default 123;", "export var bar = 'ba';", "function f() { bar += 'r'; }")));
+    inputs.add(
+        SourceFile.fromCode(
+            "entry.js", "import mod, {bar} from './mod1.js'; alert(mod); alert(bar)"));
+
+    ArrayList<SourceFile> expected = new ArrayList<>();
+    expected.add(
+        SourceFile.fromCode(
+            "mod1.js",
+            LINE_JOINER.join(
+                "var $jscompDefaultExport$$module$mod1=123;",
+                "var bar$$module$mod1 = 'ba';",
+                "function f$$module$mod1() { bar$$module$mod1 += 'r'; }",
+                "/** @const */ var module$mod1= {",
+                "  /** @return {?} */ get bar() { return bar$$module$mod1; },",
+                "};",
+                "var module$mod1$default = $jscompDefaultExport$$module$mod1;")));
+    expected.add(
+        SourceFile.fromCode("entry.js", "alert(module$mod1$default); alert(module$mod1.bar);"));
 
     test(inputs, expected);
   }
@@ -2204,11 +2235,11 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
         SourceFile.fromCode(
             "mod1.js",
             LINE_JOINER.join(
-                "/** @const */ var module$mod1={};",
                 "var foo$$module$mod1 = {};",
                 "foo$$module$mod1.bar = {};",
                 "foo$$module$mod1.bar.baz = 123;",
                 "var $jscompDefaultExport$$module$mod1 = foo$$module$mod1;",
+                "/** @const */ var module$mod1={};",
                 "var module$mod1$default = $jscompDefaultExport$$module$mod1;")));
     expected.add(SourceFile.fromCode("entry.js", "alert(module$mod1$default.bar.baz);"));
 

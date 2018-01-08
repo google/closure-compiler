@@ -21,6 +21,8 @@ import static com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature.MOD
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
+import com.google.common.collect.LinkedHashMultimap;
+import com.google.common.collect.Multimap;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.rhino.IR;
@@ -29,9 +31,9 @@ import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -57,13 +59,17 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
           "Namespace imports ('goog:some.Namespace') cannot use import * as. "
               + "Did you mean to import {0} from ''{1}'';?");
 
+  static final DiagnosticType DUPLICATE_EXPORT =
+      DiagnosticType.error("JSC_DUPLICATE_EXPORT", "Duplicate export ''{0}''.");
+
   private final AbstractCompiler compiler;
   private int scriptNodeCount;
 
   /**
-   * Maps exported names to their names in current module.
+   * Maps local names to their exported names. Multimap since the same name can be exported multiple
+   * times.
    */
-  private Map<String, NameNodePair> exportMap;
+  private Multimap<String, NameNodePair> exportsByLocalName;
 
   /**
    * Maps symbol names to a pair of (moduleName, originalName). The original
@@ -76,8 +82,6 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
 
   private Set<String> classes;
   private Set<String> typedefs;
-
-  private Set<String> alreadyRequired;
 
   /**
    * Creates a new Es6RewriteModules instance which can be used to rewrite
@@ -124,11 +128,10 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
 
   public void clearState() {
     this.scriptNodeCount = 0;
-    this.exportMap = new LinkedHashMap<>();
+    this.exportsByLocalName = LinkedHashMultimap.create();
     this.importMap = new HashMap<>();
     this.classes = new HashSet<>();
     this.typedefs = new HashSet<>();
-    this.alreadyRequired = new HashSet<>();
   }
 
   /**
@@ -239,7 +242,6 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
       }
     }
 
-    alreadyRequired.add(moduleName);
     parent.removeChild(importDecl);
     t.reportCodeChange();
   }
@@ -273,14 +275,14 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
       if (name != null) {
         Node decl = child.detach();
         parent.replaceChild(export, decl);
-        exportMap.put("default", new NameNodePair(name, child));
+        exportsByLocalName.put(name, new NameNodePair("default", child));
       } else {
         Node var = IR.var(IR.name(DEFAULT_EXPORT_NAME), export.removeFirstChild());
         var.setJSDocInfo(child.getJSDocInfo());
         child.setJSDocInfo(null);
         var.useSourceInfoIfMissingFromForTree(export);
         parent.replaceChild(export, var);
-        exportMap.put("default", new NameNodePair(DEFAULT_EXPORT_NAME, child));
+        exportsByLocalName.put(DEFAULT_EXPORT_NAME, new NameNodePair("default", child));
       }
     } else if (export.getBooleanProp(Node.EXPORT_ALL_FROM)) {
       //   export * from 'moduleIdentifier';
@@ -309,8 +311,12 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
       for (Node exportSpec : export.getFirstChild().children()) {
         String nameFromOtherModule = exportSpec.getFirstChild().getString();
         String exportedName = exportSpec.getLastChild().getString();
-        exportMap.put(
-            exportedName, new NameNodePair(moduleName + "." + nameFromOtherModule, exportSpec));
+        NameNodePair pair = new NameNodePair(exportedName, exportSpec);
+        // No way of knowing if the thing we're reexporting is mutated or not. So to be on the
+        // safe side we need to assume it is mutated.
+        // TODO(johnplaisted): Preparse ES6 modules to figure this out and support export *.
+        pair.mutated = true;
+        exportsByLocalName.put(moduleName + "." + nameFromOtherModule, pair);
       }
       parent.removeChild(export);
     } else {
@@ -318,10 +324,9 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
         //     export {Foo};
         for (Node exportSpec : export.getFirstChild().children()) {
           checkState(exportSpec.hasTwoChildren());
-          Node origName = exportSpec.getFirstChild();
-          exportMap.put(
-              exportSpec.getLastChild().getString(),
-              new NameNodePair(origName.getString(), exportSpec));
+          exportsByLocalName.put(
+              exportSpec.getFirstChild().getString(),
+              new NameNodePair(exportSpec.getLastChild().getString(), exportSpec));
         }
         parent.removeChild(export);
       } else {
@@ -339,7 +344,7 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
             break;
           }
           String name = maybeName.getString();
-          exportMap.put(name, new NameNodePair(name, maybeName));
+          exportsByLocalName.put(name, new NameNodePair(name, maybeName));
 
           // If the declaration declares a new type, create annotations for
           // the type checker.
@@ -366,6 +371,7 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
   }
 
   private void visitScript(NodeTraversal t, Node script) {
+    NodeTraversal.traverseEs6(compiler, script, new FindMutatedExports());
 
     inlineModuleToGlobalScope(script.getFirstChild());
 
@@ -382,10 +388,42 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
 
     String moduleName = t.getInput().getPath().toModuleName();
 
-    for (Map.Entry<String, NameNodePair> entry : exportMap.entrySet()) {
-      String exportedName = entry.getKey();
-      String withSuffix = entry.getValue().name;
-      Node nodeForSourceInfo = entry.getValue().nodeForSourceInfo;
+    Node moduleVar = createExportsObject(t, script);
+
+    // Rename vars to not conflict in global scope.
+    NodeTraversal.traverseEs6(compiler, script, new RenameGlobalVars(moduleName));
+
+    // Rename the exports object to something we can reference later.
+    moduleVar.getFirstChild().setString(moduleName);
+
+    t.reportCodeChange();
+  }
+
+  private Node createExportsObject(NodeTraversal t, Node script) {
+    String moduleName = t.getInput().getPath().toModuleName();
+    Set<String> exportedNames = new HashSet<>();
+
+    Node objLit = IR.objectlit();
+    // Going to get renamed by rename global vars, doesn't matter
+    Node moduleVar = IR.var(IR.name("exports"), objLit);
+    moduleVar.getFirstChild().putBooleanProp(Node.MODULE_EXPORT, true);
+    JSDocInfoBuilder infoBuilder = new JSDocInfoBuilder(false);
+    infoBuilder.recordConstancy();
+    moduleVar.setJSDocInfo(infoBuilder.build());
+    script.addChildToBack(moduleVar.useSourceInfoIfMissingFromForTree(script));
+
+    for (Map.Entry<String, NameNodePair> entry : exportsByLocalName.entries()) {
+      NameNodePair pair = entry.getValue();
+      String exportedName = pair.exportedName;
+      Node nodeForSourceInfo = pair.nodeForSourceInfo;
+
+      if (!exportedNames.add(exportedName)) {
+        t.report(nodeForSourceInfo, DUPLICATE_EXPORT, exportedName);
+        continue;
+      }
+
+      String withSuffix = entry.getKey();
+      boolean mutated = pair.mutated;
       Node getProp = IR.getprop(IR.name(moduleName), IR.string(exportedName));
       getProp.putBooleanProp(Node.MODULE_EXPORT, true);
 
@@ -401,38 +439,50 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
         Node exprResult = IR.exprResult(getProp)
             .useSourceInfoIfMissingFromForTree(nodeForSourceInfo);
         script.addChildToBack(exprResult);
+      } else if (mutated || importMap.containsKey(withSuffix)) {
+        addGetterExport(script, nodeForSourceInfo, objLit, exportedName, withSuffix);
       } else {
-        //   moduleName.foo = foo;
-        // with a @const annotation if needed.
-        Node assign = IR.assign(
-            getProp,
-            NodeUtil.newQName(compiler, withSuffix));
-        Node exprResult = IR.exprResult(assign)
-            .useSourceInfoIfMissingFromForTree(nodeForSourceInfo);
+        // This step is done before type checking and the type checker doesn't understand getters.
+        // However it does understand aliases. So if an export isn't mutated use an alias to make it
+        // actually type checkable.
+        // exports.foo = foo;
+        Node assign = IR.assign(getProp, NodeUtil.newQName(compiler, withSuffix));
         if (classes.contains(exportedName)) {
           JSDocInfoBuilder builder = new JSDocInfoBuilder(true);
           builder.recordConstancy();
           JSDocInfo info = builder.build();
           assign.setJSDocInfo(info);
         }
-        script.addChildToBack(exprResult);
+        script.addChildToBack(
+            IR.exprResult(assign).useSourceInfoIfMissingFromForTree(nodeForSourceInfo));
       }
     }
 
-    // Rename vars to not conflict in global scope.
-    NodeTraversal.traverseEs6(compiler, script, new RenameGlobalVars(moduleName));
+    exportsByLocalName.clear();
 
-    if (!exportMap.isEmpty()) {
-      Node moduleVar = IR.var(IR.name(moduleName), IR.objectlit());
-      moduleVar.getFirstChild().putBooleanProp(Node.MODULE_EXPORT, true);
-      JSDocInfoBuilder infoBuilder = new JSDocInfoBuilder(false);
-      infoBuilder.recordConstancy();
-      moduleVar.setJSDocInfo(infoBuilder.build());
-      script.addChildToFront(moduleVar.useSourceInfoIfMissingFromForTree(script));
-    }
+    return moduleVar;
+  }
 
-    exportMap.clear();
-    t.reportCodeChange();
+  private void addGetterExport(
+      Node script, Node forSourceInfo, Node objLit, String exportedName, String localName) {
+    // Type checker doesn't infer getters so mark the return as unknown.
+    // { /** @return {?} */ get foo() { return foo; } }
+    Node getter = Node.newString(Token.GETTER_DEF, exportedName);
+    getter.putBooleanProp(Node.MODULE_EXPORT, true);
+    objLit.addChildToBack(getter);
+
+    Node name = NodeUtil.newQName(compiler, localName);
+    Node function = IR.function(IR.name(""), IR.paramList(), IR.block(IR.returnNode(name)));
+    getter.addChildToFront(function);
+
+    JSDocInfoBuilder builder = new JSDocInfoBuilder(true);
+    builder.recordReturnType(
+        new JSTypeExpression(new Node(Token.QMARK), script.getSourceFileName()));
+    getter.setJSDocInfo(builder.build());
+
+    getter.useSourceInfoIfMissingFromForTree(forSourceInfo);
+    compiler.reportChangeToEnclosingScope(getter.getFirstChild().getLastChild());
+    compiler.reportChangeToEnclosingScope(getter);
   }
 
   private void rewriteRequires(Node script) {
@@ -470,6 +520,33 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
                 varNode);
           }
         });
+  }
+
+  private class FindMutatedExports extends AbstractPostOrderCallback {
+    @Override
+    public void visit(NodeTraversal t, Node n, Node parent) {
+      switch (n.getToken()) {
+        case NAME:
+          Scope scope = t.getScope();
+          if (NodeUtil.isLValue(n) && !scope.getClosestHoistScope().isModuleScope()) {
+            Collection<NameNodePair> pairs = exportsByLocalName.get(n.getString());
+            if (pairs != null) {
+              Var var = scope.getVar(n.getString());
+              // A var declared in the module scope with the same name as an export must be the
+              // export. And we know we're setting it in a function scope, so this cannot be the
+              // declaration itself. We must be mutating.
+              if (var != null && var.getScope().isModuleScope()) {
+                for (NameNodePair pair : pairs) {
+                  pair.mutated = true;
+                }
+              }
+            }
+          }
+          break;
+        default:
+          break;
+      }
+    }
   }
 
   /**
@@ -622,17 +699,19 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
   }
 
   private static class NameNodePair {
-    final String name;
+    final String exportedName;
     final Node nodeForSourceInfo;
+    boolean mutated;
 
-    private NameNodePair(String name, Node nodeForSourceInfo) {
-      this.name = name;
+    private NameNodePair(String exportedName, Node nodeForSourceInfo) {
+      this.exportedName = exportedName;
       this.nodeForSourceInfo = nodeForSourceInfo;
+      mutated = false;
     }
 
     @Override
     public String toString() {
-      return "(" + name + ", " + nodeForSourceInfo + ")";
+      return "(" + exportedName + ", " + nodeForSourceInfo + ")";
     }
   }
 }

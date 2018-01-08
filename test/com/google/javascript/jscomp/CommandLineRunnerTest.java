@@ -1795,9 +1795,9 @@ public final class CommandLineRunnerTest extends TestCase {
         },
         new String[] {
           LINE_JOINER.join(
-              "var module$foo={},",
-              "Foo$$module$foo=function(){};",
+              "var Foo$$module$foo=function(){};",
               "Foo$$module$foo.prototype.bar=function(){console.log(\"bar\")};",
+              "var module$foo={};",
               "module$foo.default=Foo$$module$foo;"),
           LINE_JOINER.join(
               "var FooBar = module$foo.default,",
@@ -1830,7 +1830,9 @@ public final class CommandLineRunnerTest extends TestCase {
               "/** @const */ var module$foo = {/** @constructor */ default: function(){} };",
               "module$foo.default.prototype.bar=function(){console.log('bar')};"),
           LINE_JOINER.join(
-              "var baz$$module$app = new module$foo();", "console.log(baz$$module$app.bar());")
+              "var baz$$module$app = new module$foo();",
+              "console.log(baz$$module$app.bar());",
+              "/** @const */ var module$app = {};")
         });
   }
 
@@ -1848,8 +1850,10 @@ public final class CommandLineRunnerTest extends TestCase {
         },
         new String[] {
           CompilerTestCase.LINE_JOINER.join(
-              "function foo$$module$foo(){ alert('foo'); }", "foo$$module$foo();"),
-          ""
+              "function foo$$module$foo(){ alert('foo'); }",
+              "foo$$module$foo();",
+              "/** @const */ var module$foo = {}"),
+          "/** @const */ var module$app = {};"
         });
   }
 
@@ -1863,16 +1867,20 @@ public final class CommandLineRunnerTest extends TestCase {
     test(
         new String[] {
           "export default 'message';",
-          "import message from './message.js';\n  function foo() { alert(message); }\n  foo();",
+          "import message from './message.js';\nfunction foo() { alert(message); }\nfoo();",
           "import './foo.js';"
         },
         new String[] {
           LINE_JOINER.join(
-              "/** @const */ var module$message={},",
-              "  $jscompDefaultExport$$module$message = 'message';",
+              "var $jscompDefaultExport$$module$message = 'message', module$message = {};",
               "module$message.default = $jscompDefaultExport$$module$message;"),
-          "function foo$$module$foo(){ alert(module$message.default); } foo$$module$foo();",
-          ""
+          LINE_JOINER.join(
+              "function foo$$module$foo(){",
+              "  alert(module$message.default);",
+              "}",
+              "foo$$module$foo();",
+              "/** @const */ var module$foo = {};"),
+          "/** @const */ var module$app = {};"
         });
   }
 
