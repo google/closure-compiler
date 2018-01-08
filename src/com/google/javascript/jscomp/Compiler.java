@@ -213,9 +213,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   /** The function information map */
   private FunctionInformationMap functionInformationMap;
 
-  /** Debugging information */
-  private final StringBuilder debugLog = new StringBuilder();
-
   /** Detects Google-specific coding conventions. */
   CodingConvention defaultCodingConvention = new ClosureCodingConvention();
 
@@ -1267,7 +1264,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
         }
       }
     }
-    return new Result(getErrors(), getWarnings(), debugLog.toString(),
+    return new Result(getErrors(), getWarnings(),
         this.variableMap, this.propertyMap,
         this.anonymousFunctionNameMap, this.stringMap, this.functionInformationMap,
         this.sourceMap, this.externExports, this.cssNames, this.idGeneratorMap, transpiledFiles);
@@ -2897,18 +2894,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
    */
   public boolean hasErrors() {
     return hasHaltingErrors();
-  }
-
-  /**
-   * Called from the compiler passes, adds debug info.
-   *
-   * @deprecated Use a java.util.logging.Logger instead.
-   */
-  @Deprecated
-  @Override
-  void addToDebugLog(String... strings) {
-    logger.warning("addToDebugLog is no longer supported. Use a java.util.logging.Logger instead");
-    logger.info(Joiner.on("").join(strings));
   }
 
   @Override

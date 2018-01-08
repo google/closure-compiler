@@ -220,14 +220,6 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
   abstract void reportFunctionDeleted(Node node);
 
   /**
-   * Logs a message under a central logger.
-   *
-   * @deprecated Use a java.util.logging.Logger instead.
-   */
-  @Deprecated
-  abstract void addToDebugLog(String... message);
-
-  /**
    * Sets the CssRenamingMap.
    */
   abstract void setCssRenamingMap(CssRenamingMap map);
