@@ -1352,10 +1352,9 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
         lines(
             "class Foo {",
             "  constructor() {}",
+            "  /** @private @param {Event} e */",
+            "  handleEvent_(e) {}",
             "}",
-            // TODO(blickly): Would be better if this included the type annotation.
-            "/** @private */",
-            "Foo.prototype.handleEvent_",
             ""));
 
     test(

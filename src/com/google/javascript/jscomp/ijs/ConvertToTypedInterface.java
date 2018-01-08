@@ -396,6 +396,13 @@ public class ConvertToTypedInterface implements CompilerPass {
     private final AbstractCompiler compiler;
     private final FileInfo currentFile;
 
+    /** Levels of JSDoc, starting from those most likely to be on the canonical declaration. */
+    enum TypingLevel {
+      TYPED_JSDOC_DECLARATION,
+      UNTYPED_JSDOC_DECLARATION,
+      NO_JSDOC,
+    }
+
     static final Ordering<String> SHORT_TO_LONG =
         Ordering.natural()
             .onResultOf(
@@ -409,10 +416,17 @@ public class ConvertToTypedInterface implements CompilerPass {
     static final Ordering<PotentialDeclaration> DECLARATIONS_FIRST =
         Ordering.natural()
             .onResultOf(
-                new Function<PotentialDeclaration, Boolean>() {
+                new Function<PotentialDeclaration, TypingLevel>() {
                   @Override
-                  public Boolean apply(PotentialDeclaration decl) {
-                    return decl.getJsDoc() == null;
+                  public TypingLevel apply(PotentialDeclaration decl) {
+                    JSDocInfo jsdoc = decl.getJsDoc();
+                    if (jsdoc == null) {
+                      return TypingLevel.NO_JSDOC;
+                    }
+                    if (jsdoc.getTypeNodes().isEmpty()) {
+                      return TypingLevel.UNTYPED_JSDOC_DECLARATION;
+                    }
+                    return TypingLevel.TYPED_JSDOC_DECLARATION;
                   }
                 });
 
