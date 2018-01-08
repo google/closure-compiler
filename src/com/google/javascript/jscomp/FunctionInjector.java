@@ -663,7 +663,6 @@ class FunctionInjector {
    */
   private boolean callMeetsBlockInliningRequirements(
       Reference ref, final Node fnNode, ImmutableSet<String> namesToAlias) {
-    final boolean assumeMinimumCapture = this.assumeMinimumCapture;
     // Note: functions that contain function definitions are filtered out
     // in isCandidateFunction.
 

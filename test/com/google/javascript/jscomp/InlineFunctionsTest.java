@@ -1199,10 +1199,15 @@ public class InlineFunctionsTest extends CompilerTestCase {
   }
 
   public void testNoInlineOfNonGlobalFunction2() {
-    test("var g;function _f(){var g=function(){return 0}}" +
-         "function _h(){return g()}",
-         "var g;function _f(){}" +
-         "function _h(){return g()}");
+    test(
+        lines(
+            "var g;",
+            "function _f() { var g = function() { return 0; }; }",
+            "function _h() { return g(); }"),
+        lines(
+             "var g;",
+             "function _f(){}",
+             "function _h(){ return g(); }"));
   }
 
   public void testNoInlineOfNonGlobalFunction3() {
@@ -1664,27 +1669,56 @@ public class InlineFunctionsTest extends CompilerTestCase {
     assumeMinimumCapture = false;
 
     // Don't inline if local names might be captured.
-    testSame("function f(a){call(function(){return})}f()");
+    testSame(
+        lines(
+            "function f(a) {",
+            "  call(function(){return});",
+            "}",
+            "f();"));
 
     assumeMinimumCapture = true;
 
-    test("(function(){" +
-         "var f = function(a){call(function(){return a})};f()})()",
-         "{{var a$jscomp$inline_0=void 0;call(function(){return a$jscomp$inline_0})}}");
+    test(
+        lines(
+            "(function() {",
+            "  var f = function(a) { call(function(){return a}); };",
+            "  f();",
+            "})();"),
+        lines(
+            "{",
+            "  {",
+            "    var a$jscomp$inline_0 = void 0;",
+            "    call(function() { return a$jscomp$inline_0; });",
+            "  }",
+            "}"));
   }
 
   public void testComplexFunctionWithFunctionDefinition2a() {
     assumeMinimumCapture = false;
 
     // Don't inline if local names might be captured.
-    testSame("(function(){" +
-        "var f = function(a){call(function(){return a})};f()})()");
+    testSame(
+        lines(
+            "(function() {",
+            "  var f = function(a) { call(function(){return a}); };",
+            "  f();",
+            "})()"));
 
     assumeMinimumCapture = true;
 
-    test("(function(){" +
-         "var f = function(a){call(function(){return a})};f()})()",
-         "{{var a$jscomp$inline_0=void 0;call(function(){return a$jscomp$inline_0})}}");
+    test(
+        lines(
+            "(function() {",
+            "  var f = function(a) { call(function(){return a}); };",
+            "  f();",
+            "})()"),
+        lines(
+            "{",
+            "  {",
+            "    var a$jscomp$inline_0 = void 0;",
+            "    call(function() { return a$jscomp$inline_0; });",
+            "  }",
+            "}"));
   }
 
   public void testComplexFunctionWithFunctionDefinition3() {
@@ -1916,9 +1950,19 @@ public class InlineFunctionsTest extends CompilerTestCase {
 
   public void testFunctionExpressionOmega() {
     // ... with unused recursive name.
-    test("(function (f){f(f)})(function(f){f(f)})",
-         "{var f$jscomp$inline_0=function(f$jscomp$1){f$jscomp$1(f$jscomp$1)};" +
-          "{{f$jscomp$inline_0(f$jscomp$inline_0)}}}");
+    test(
+        "(function (f){f(f)})(function(f){f(f)})",
+        lines(
+            "{",
+            "  var f$jscomp$inline_0 = function(f$jscomp$1) {",
+            "    f$jscomp$1(f$jscomp$1);",
+            "  };",
+            "  {",
+            "    {",
+            "       f$jscomp$inline_0(f$jscomp$inline_0);",
+            "    }",
+            "  }",
+            "}"));
   }
 
   public void testLocalFunctionInlining1() {

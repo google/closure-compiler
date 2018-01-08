@@ -228,9 +228,9 @@ class InlineFunctions implements CompilerPass {
           if (n.getFirstChild().isFunction()) {
             fnNode = n.getFirstChild();
           } else if (NodeUtil.isFunctionObjectCall(n)) {
-            Node fnIdentifingNode = n.getFirstFirstChild();
-            if (fnIdentifingNode.isFunction()) {
-              fnNode = fnIdentifingNode;
+            Node fnIdentifyingNode = n.getFirstFirstChild();
+            if (fnIdentifyingNode.isFunction()) {
+              fnNode = fnIdentifyingNode;
             }
           }
 
@@ -400,19 +400,18 @@ class InlineFunctions implements CompilerPass {
         case CALL:
           Node child = n.getFirstChild();
           String name = null;
-          // NOTE: The normalization pass insures that local names do not
-          // collide with global names.
+          // NOTE: The normalization pass ensures that local names do not collide with global names.
           if (child.isName()) {
             name = child.getString();
           } else if (child.isFunction()) {
             name = anonFunctionMap.get(child);
           } else if (NodeUtil.isFunctionObjectCall(n)) {
             checkState(NodeUtil.isGet(child));
-            Node fnIdentifingNode = child.getFirstChild();
-            if (fnIdentifingNode.isName()) {
-              name = fnIdentifingNode.getString();
-            } else if (fnIdentifingNode.isFunction()) {
-              name = anonFunctionMap.get(fnIdentifingNode);
+            Node fnIdentifyingNode = child.getFirstChild();
+            if (fnIdentifyingNode.isName()) {
+              name = fnIdentifyingNode.getString();
+            } else if (fnIdentifyingNode.isFunction()) {
+              name = anonFunctionMap.get(fnIdentifyingNode);
             }
           }
 
