@@ -679,8 +679,9 @@ public final class DefaultPassConfig extends PassConfig {
     // the method goog.string.Const.from are done with an argument which is a string literal.
     passes.add(checkConstParams);
 
-    // Running smart name removal before disambiguate properties allows disambiguate properties
-    // to be more effective if code that would prevent disambiguation can be removed.
+    // Running RemoveUnusedCode before disambiguate properties allows disambiguate properties to be
+    // more effective if code that would prevent disambiguation can be removed.
+    // TODO(b/66971163): Rename options since we're not actually using smartNameRemoval here now.
     if (options.extraSmartNameRemoval && options.smartNameRemoval) {
 
       // These passes remove code that is dead because of define flags.
@@ -692,7 +693,7 @@ public final class DefaultPassConfig extends PassConfig {
         passes.add(earlyPeepholeOptimizations);
       }
 
-      passes.add(extraSmartNamePass);
+      passes.add(removeUnusedCodeOnce);
     }
 
     // RewritePolyfills is overly generous in the polyfills it adds.  After type
@@ -2745,23 +2746,6 @@ public final class DefaultPassConfig extends PassConfig {
        return FeatureSet.latest();
      }
   };
-
-  /**
-   * Process smart name processing - removes unused classes and does referencing starting with
-   * minimum set of names.
-   */
-  private final PassFactory extraSmartNamePass =
-      new PassFactory(PassNames.SMART_NAME_PASS, true) {
-        @Override
-        protected CompilerPass create(final AbstractCompiler compiler) {
-          return new NameAnalyzer(compiler, true, options.reportPath);
-        }
-
-        @Override
-        public FeatureSet featureSet() {
-          return ES5;
-        }
-      };
 
   private final PassFactory smartNamePass =
       new PassFactory(PassNames.SMART_NAME_PASS, true) {

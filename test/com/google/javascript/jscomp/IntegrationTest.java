@@ -2172,6 +2172,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setCheckTypes(true);
     options.setDisambiguateProperties(true);
     options.setRemoveDeadCode(true);
+    options.setRemoveUnusedVariables(Reach.ALL);
     options.setRemoveUnusedPrototypeProperties(true);
     options.setSmartNameRemoval(true);
     options.extraSmartNameRemoval = true;
@@ -2217,6 +2218,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setCheckTypes(true);
     options.setDisambiguateProperties(true);
     options.setRemoveDeadCode(true);
+    options.setRemoveUnusedVariables(Reach.ALL);
     options.setRemoveUnusedPrototypeProperties(true);
     options.setSmartNameRemoval(true);
     options.extraSmartNameRemoval = true;
