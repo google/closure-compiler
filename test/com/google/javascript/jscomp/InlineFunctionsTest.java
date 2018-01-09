@@ -3295,21 +3295,14 @@ public class InlineFunctionsTest extends CompilerTestCase {
   }
 
   public void testFunctionReferencingLetInNonGlobalBlock() {
-    // TODO(b/69850796): This produces the wrong output! It will cause an error when VarCheck runs
-    // or when this code is actually evaluated.
-    test(
+    testSame(
         lines(
             "if (true) {",
             "  let value = 1;",
-            "  var g = function(x) {",
-            "    return value + x;",
+            "  var g = function() {",
+            "    return value + 1;",
             "  }",
             "}",
-            "alert(g(10));"),
-        lines(
-            "if (true) {",
-            "  let value = 1;",
-            "}",
-            "alert(value + 10);")); // value is not defined in the global scope.
+            "alert(g(10));"));
   }
 }

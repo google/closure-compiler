@@ -30,6 +30,7 @@ import com.google.javascript.jscomp.FunctionInjector.InliningMode;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.Token;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -323,6 +324,18 @@ class InlineFunctions implements CompilerPass {
           }
         }
 
+      }
+
+      if (fnNode.getGrandparent().isVar()) {
+        Node block = functionState.getFn().getDeclaringBlock();
+        if (block.isNormalBlock()
+            && !block.getParent().isFunction()
+            && (NodeUtil.containsType(block, Token.LET)
+                || NodeUtil.containsType(block, Token.CONST))) {
+          // The function might capture a variable that's not in scope at the call site,
+          // so don't inline.
+          functionState.disallowInlining();
+        }
       }
 
       if (fnNode.isGeneratorFunction()) {
