@@ -264,12 +264,10 @@ class LiveVariablesAnalysis
             lhs = lhs.getLastChild();
           }
 
-          if (lhs.isName()) {
-            addToSetIfLocal(lhs, kill);
-            addToSetIfLocal(lhs, gen);
-          } else {
-            computeGenKill(lhs, gen, kill, conditional);
-          }
+          // Note that the LHS may never be assigned to or evaluated, like in:
+          //   for (x in []) {}
+          // so should not be killed.
+          computeGenKill(lhs, gen, kill, conditional);
 
           // rhs is executed only once so we don't go into it every loop.
           return;
@@ -287,21 +285,15 @@ class LiveVariablesAnalysis
               }
             }
           } else {
-            computeGenKill(c, gen, kill, conditional);
-          }
-        }
-        return;
-
-      case DESTRUCTURING_LHS:
-        // Note: DESTRUCTURING_LHS nodes have two children unless they are in a for loop.
-        // e.g. for (let [key, value] of arr) {
-        if (n.hasTwoChildren()) {
-          computeGenKill(n.getSecondChild(), gen, kill, conditional);
-          if (!conditional) {
-            Iterable<Node> allVars = NodeUtil.findLhsNodesInNode(n);
-            for (Node child : allVars) {
-              addToSetIfLocal(child, kill);
+            checkState(c.isDestructuringLhs(), c);
+            if (!conditional) {
+              Iterable<Node> allVars = NodeUtil.findLhsNodesInNode(c);
+              for (Node lhsNode : allVars) {
+                addToSetIfLocal(lhsNode, kill);
+              }
             }
+            computeGenKill(c.getFirstChild(), gen, kill, conditional);
+            computeGenKill(c.getSecondChild(), gen, kill, conditional);
           }
         }
         return;
@@ -323,7 +315,9 @@ class LiveVariablesAnalysis
       case NAME:
         if (isArgumentsName(n)) {
           markAllParametersEscaped();
-        } else {
+          } else if (!NodeUtil.isLhsByDestructuring(n)) {
+          // Only add names in destructuring patterns if they're not lvalues.
+          // e.g. "x" in "const {foo = x} = obj;"
           addToSetIfLocal(n, gen);
         }
         return;
@@ -339,6 +333,17 @@ class LiveVariablesAnalysis
             addToSetIfLocal(lhs, gen);
           }
           computeGenKill(lhs.getNext(), gen, kill, conditional);
+        } else if (n.isAssign() && n.getFirstChild().isDestructuringPattern()) {
+          if (!conditional) {
+            Iterable<Node> allVars = NodeUtil.findLhsNodesInNode(n);
+            for (Node child : allVars) {
+              if (child.isName()) {
+                addToSetIfLocal(child, kill);
+              }
+            }
+          }
+          computeGenKill(n.getFirstChild(), gen, kill, conditional);
+          computeGenKill(n.getSecondChild(), gen, kill, conditional);
         } else {
           for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
             computeGenKill(c, gen, kill, conditional);

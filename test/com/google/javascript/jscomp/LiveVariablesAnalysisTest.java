@@ -180,6 +180,12 @@ public final class LiveVariablesAnalysisTest extends TestCase {
     assertLiveBeforeX("var a,b; for (var y of a = [0, 1, 2]) { X:a[y] }", "a");
   }
 
+  public void testForOfLoopsDestructuring() {
+    assertLiveBeforeX("var key, value; X:for ([key, value] of arr) {value;} value;", "value");
+    assertLiveBeforeX("let x = 3; X:for (var [y = x] of arr) { y; }", "x");
+    assertLiveBeforeX("for (let [key, value] in arr) { X: key; value; }", "key");
+  }
+
   public void testNestedLoops() {
     assertLiveBeforeX("var a;X:while(1){while(1){a()}}", "a");
     assertLiveBeforeX("var a;X:while(1){while(1){while(1){a()}}}", "a");
@@ -336,20 +342,36 @@ public final class LiveVariablesAnalysisTest extends TestCase {
     assertNotLiveAfterX("X:const a = 1;", "a");
   }
 
-  public void testDestructuring() {
+  public void testArrayDestructuring() {
     assertLiveBeforeX("var [a, b] = [1, 2]; X:a;", "a");
     assertNotLiveBeforeX("X: var [...a] = f();", "a");
     assertNotEscaped("var [a, ...b] = [1, 2];", "b");
     assertNotEscaped("var [a, ...b] = [1, 2];", "a");
     assertNotEscaped("var [a, ,b] = [1, 2, 3];", "a");
     assertNotEscaped("var [a, ,b] = [1, 2, 3];", "b");
+    assertNotLiveBeforeX("var x = 3; X: [x] = [4]; x;", "x");
+    assertLiveBeforeX("var x = {}; X: [x.a] = [3]; x.a;", "x");
+    assertLiveBeforeX("var x = []; X: const [c] = x;", "x");
+  }
 
-
+  public void testObjectDestructuring() {
     assertLiveBeforeX("var {a: x, b: y} = g(); X:x", "x");
     assertNotLiveBeforeX("X: var {a: x, b: y} = g();", "y");
     assertNotEscaped("var {a: x, b: y} = g()", "x");
     assertNotEscaped("var {a: x, b: y} = g()", "y");
     assertNotEscaped("var {a: x = 3, b: y} = g();", "x");
+    assertNotLiveBeforeX("var x = {}; X: ({x} = {}); x;", "x");
+    assertLiveBeforeX("var x = {}; X: ({a: x.a} = {}); x.a;", "x");
+    assertLiveBeforeX("var x = {}; X: const {c} = x;", "x");
+  }
+
+  public void testComplexDestructuringPattern() {
+    assertLiveBeforeX("var x = 3; X: var [y = x] = [];", "x");
+    assertLiveBeforeX("var x = 3, y; X: [y = x] = [];", "x");
+    assertLiveBeforeX("var x = 3; X: var {y = x} = {};", "x");
+    assertLiveBeforeX("var x = 3; X: var {key: y = x} = {};", "x");
+    assertLiveBeforeX("var x = 3; X: const {[x + x]: foo} = obj; x;", "x");
+    assertLiveBeforeX("var x = 3; X: const {[x + x]: x} = obj; x;", "x");
   }
 
   public void testComplicatedDeclaration() {

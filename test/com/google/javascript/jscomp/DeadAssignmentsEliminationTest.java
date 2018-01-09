@@ -662,6 +662,11 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
 
     inFunction("var a, b, c; [a, b, c] = [1, 2, 3]; return a + c;");
 
+    inFunction(
+        "var a, b; a = 1; b = 2; [a, b] = [3, 4]; return a + b;",
+        "var a, b; 1; 2; [a, b] = [3, 4]; return a + b;");
+
+    inFunction("var x; x = {}; [x.a] = [3];");
   }
 
   public void testDestructuringDeclarationRvalue() {
@@ -719,16 +724,16 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
             "for ([y = x] of arr) { y; }",
             "y;"));
 
-    // TODO(b/71546651): Fix this test. The pass shouldn't eliminate "x = []".
     inFunction(
         lines(
             "let x;",
             "x = [];",
-            "for (let [y = x] of arr) { y; }"),
-        lines(
-            "let x;",
-            "[];",
             "for (let [y = x] of arr) { y; }"));
+
+    inFunction("for (let [key, value] of arr) {}");
+    inFunction("for (let [key, value] of arr) { key; value; }");
+    inFunction(
+        "var a; a = 3; for (let [a] of arr) { a; }", "var a; 3; for (let [a] of arr) { a; }");
   }
 
   public void testReferenceInDestructuringPatternDefaultValue() {
@@ -738,44 +743,26 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
             "const {foo = bar} = obj;",
             "foo;"));
 
-    // TODO(b/71546651): Fix the next two tests The pass shouldn't eliminate "bar = []".
     inFunction(
         lines(
             "let bar;",
             "bar = [];",
-            "const {foo = bar} = obj;",
-            "foo;"),
-        lines(
-            "let bar;",
-            "[];",
             "const {foo = bar} = obj;",
             "foo;"));
 
-    inFunction(
-        lines(
-            "let bar;",
-            "bar = [];",
-            "const [foo = bar] = arr;",
-            "foo;"),
-        lines(
-            "let bar;",
-            "[];",
-            "const [foo = bar] = arr;",
-            "foo;"));
+    inFunction("let bar; bar = 3; const [foo = bar] = arr; foo;");
+    inFunction("let foo, bar; bar = 3; [foo = bar] = arr; foo;");
   }
 
   public void testReferenceInDestructuringPatternComputedProperty() {
-    // TODO(b/71546651): Fix this test. The pass shouldn't eliminate "str = 'bar'".
+    inFunction("let str; str = 'bar'; const {[str + 'baz']: foo} = obj; foo;");
+
     inFunction(
         lines(
-            "let str;",
-            "str = 'bar'",
-            "const {[str + 'baz']: foo} = obj;",
-            "foo;"),
-        lines(
-            "let str;",
-            "'bar'",
-            "const {[str + 'baz']: foo} = obj;",
+            "let obj = {};",
+            "let str, foo;",
+            "str = 'bar';",
+            "({[str + 'baz']: foo} = obj);",
             "foo;"));
   }
 
@@ -811,6 +798,10 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
             "  2;",
             "  }",
             "}"));
+  }
+
+  public void testObjectLiteralsComputedProperties() {
+    inFunction("let a; a = 2; let obj = {[a]: 3}; obj");
   }
 
   public void testLet() {
