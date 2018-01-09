@@ -41,13 +41,13 @@ package com.google.javascript.rhino.jstype;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.TreeMap;
 
 /**
  * Representation for a collection of properties on an object.
@@ -69,7 +69,7 @@ class PropertyMap implements Serializable {
   private final Map<String, Property> properties;
 
   PropertyMap() {
-    this(Maps.<String, Property>newTreeMap());
+    this(new TreeMap<>());
   }
 
   private PropertyMap(Map<String, Property> underlyingMap) {
