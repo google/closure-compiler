@@ -611,4 +611,12 @@ public abstract class BaseJSTypeTestCase extends TestCase {
   protected final void assertTypeNotEquals(String msg, JSType a, JSType b) {
     Asserts.assertTypeNotEquals(msg, a, b);
   }
+
+  protected static String lines(String line) {
+    return line;
+  }
+
+  protected static String lines(String ...lines) {
+    return LINE_JOINER.join(lines);
+  }
 }
