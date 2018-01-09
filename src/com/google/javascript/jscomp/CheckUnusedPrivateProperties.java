@@ -34,8 +34,7 @@ import java.util.Set;
  * these properties may be indirectly referenced using "for-in" or
  * "Object.keys".
  *
- * This class is based on RemoveUnusedClassProperties, some effort should
- * be made to extract the common pieces.
+ * This class is based on RemoveUnusedCode, some effort should be made to extract the common pieces.
  *
  * @author johnlenz@google.com (John Lenz)
  */
