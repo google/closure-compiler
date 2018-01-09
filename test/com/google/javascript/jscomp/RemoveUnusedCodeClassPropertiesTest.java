@@ -568,50 +568,58 @@ public final class RemoveUnusedCodeClassPropertiesTest extends TypeICompilerTest
     testSame("function* gen() { yield this.a = 1; yield this.a; }");
   }
 
-  // TODO(b/66971163): make this pass
-  public void disabledTestEs6Destructuring() {
+  public void testEs6Destructuring() {
     // Test normal destructuring removal
-    test("[this.x, this.y] = [1, 2]", "[, , ] = [1, 2]");
+    test(
+        "[this.x, this.y] = [1, 2]", // preserve newline
+        "[              ] = [1, 2]");
 
     // Test normal destructuring, assignment prevent removal
     test(
         lines(
-            "[this.x, this.y] = [1, 2]",
+            "[this.x, this.y] = [1, 2]", // preserve newline
             "var p = this.x;"),
         lines(
-            "[this.x, , ] = [1, 2]",
+            "[this.x        ] = [1, 2]", // preserve newline
             "var p = this.x;"));
 
     // Test rest destructuring removal
-    test("[this.x, ...this.z] = [1, 2, 3]", "[, , ] = [1, 2, 3]");
+    test(
+        "[this.x, ...this.z] = [1, 2, 3]", // preserve newline
+        "[                 ] = [1, 2, 3]");
 
     // Test rest destructuring with normal variable
-    test("[this.x, ...z] = [1, 2]", "[, ...z] = [1, 2]");
+    test(
+        "let z; [this.x, ...z] = [1, 2]", // preserve newline
+        "let z; [      , ...z] = [1, 2]");
 
     // Test rest destructuring, assignment prevent removal
     test(
         lines(
-            "[this.x, ...this.y] = [1, 2];",
+            "[this.x, ...this.y] = [1, 2];", // preserve newline
             "var p = this.y;"),
         lines(
-            "[, ...this.y] = [1, 2];",
+            "[      , ...this.y] = [1, 2];", // preserve newline
             "var p = this.y;"));
 
     // Test destructuring rhs prevent removal
     testSame(
         lines(
-            "this.x = 1;",
+            "let a;",
+            "this.x = 1;", // preserve newline
             "this.y = 2;",
             "[...a] = [this.x, this.y];"));
 
     // Test nested destructuring
-    test("[this.x, [this.y, ...z]] = [1, [2]]", "[, [, ...z]] = [1, [2]]");
+    test(
+        "let z; [this.x, [this.y, ...z]] = [1, [2]]", // preserve newline
+        "let z; [      , [      , ...z]] = [1, [2]]");
 
     // Test normal object destructuring full removal
     test("({a: this.x, b: this.y} = {a: 1, b: 2})", "({} = {a: 1, b: 2})");
 
     // Test normal object destructuring partial removal
-    test("({a: this.x, b: y} = {a: 1, b: 2})", "({b: y} = {a: 1, b: 2})");
+    test("let y; ({a: this.x, b: y} = {a: 1, b: 2})", "let y; ({           b: y} = {a: 1, b: 2})");
 
     // Test obj destructuring prevent removal
     test(
@@ -628,6 +636,7 @@ public final class RemoveUnusedCodeClassPropertiesTest extends TypeICompilerTest
             "/** @constructor */ function C () {",
             "  this.a = 1;",
             "}",
+            "let x;",
             "({a: x} = new C());"));
 
     // Test obj destructuring with new style class
@@ -638,6 +647,7 @@ public final class RemoveUnusedCodeClassPropertiesTest extends TypeICompilerTest
             "     this.a = 1;",
             "  }",
             "}",
+            "let x;",
             "({a: x} = new C());"));
 
     // Test let destructuring
@@ -659,6 +669,7 @@ public final class RemoveUnusedCodeClassPropertiesTest extends TypeICompilerTest
             "  }",
             "}",
             "var obj = new C()",
+            "let x;",
             "({a: x} = obj);"));
 
     // Test obj destructuring with default value
@@ -669,6 +680,7 @@ public final class RemoveUnusedCodeClassPropertiesTest extends TypeICompilerTest
             "     this.a = 1;",
             "  }",
             "}",
+            "let a;",
             "({a = 2} = new C());"));
 
     // Test obj nested destructuring
@@ -680,10 +692,13 @@ public final class RemoveUnusedCodeClassPropertiesTest extends TypeICompilerTest
             "  }",
             "}",
             "var obj = new C()",
+            "let a;",
             "({x: {a}} = {x: obj});"));
 
-    // No support for Computed Properties yet
-    test("({['a']:0}); this.a = 1;", "({['a']:0}); 1;");
+    // Computed Property string expression doesn't prevent removal.
+    test(
+        "({['a']:0}); this.a = 1;", // preserve newline
+        "({['a']:0});            ");
   }
 
   public void testEs6DefaultParameter() {
