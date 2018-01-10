@@ -1,0 +1,268 @@
+/*
+ * Copyright 2011 The Closure Compiler Authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.google.javascript.jscomp;
+
+import static com.google.common.base.Preconditions.checkState;
+
+import com.google.javascript.rhino.IR;
+import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.TypeI;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+/**
+ * This pass looks for properties that are never read and removes them.
+ * These can be properties created using "this", or static properties of
+ * constructors or interfaces. Explicitly ignored is the possibility that
+ * these properties may be indirectly referenced using "for-in" or
+ * "Object.keys".  This is the same assumption used with
+ * RemoveUnusedCode but is slightly wider in scope.
+ *
+ * TODO(tomnguyen) Handle destructuring of objects/classes as cases where the field is used.
+ *
+ * @author johnlenz@google.com (John Lenz)
+ */
+class RemoveUnusedClassProperties
+    implements CompilerPass, NodeTraversal.Callback {
+  private final AbstractCompiler compiler;
+  private final Set<String> used = new HashSet<>();
+  private final List<Node> candidates = new ArrayList<>();
+
+  private final boolean removeUnusedConstructorProperties;
+
+  RemoveUnusedClassProperties(
+      AbstractCompiler compiler, boolean removeUnusedConstructorProperties) {
+    this.compiler = compiler;
+    used.addAll(compiler.getExternProperties());
+    this.removeUnusedConstructorProperties = removeUnusedConstructorProperties;
+  }
+
+  @Override
+  public void process(Node externs, Node root) {
+    NodeTraversal.traverseEs6(compiler, root, this);
+    removeUnused();
+  }
+
+  private void removeUnused() {
+    for (Node n : candidates) {
+      if (NodeUtil.isObjectLitKey(n)) {
+        String propName = NodeUtil.getObjectLitKeyName(n);
+        if (!used.contains(propName)) {
+          // If the property definition has side-effect, finding a place for it
+          // can be tricky so just leave it in place.
+          if (!n.isStringKey()
+              || !NodeUtil.mayHaveSideEffects(n.getFirstChild(), compiler)) {
+            Node parent = n.getParent();
+            parent.removeChild(n);
+            NodeUtil.markFunctionsDeleted(n, compiler);
+            compiler.reportChangeToEnclosingScope(parent);
+          }
+        }
+      } else {
+        checkState(n.isGetProp(), n);
+        String propName = n.getLastChild().getString();
+        if (!used.contains(propName)) {
+
+          Node parent = n.getParent();
+          Node replacement;
+          /**
+           * Whether the parent of the GETPROP is replaced or GETPROP itself.
+           * In some cases the parent of GETPROP is an EXPRRESULT, while the replacement is always
+           * just a plain expression.
+           */
+          boolean replaceParent = true;
+          if (NodeUtil.isLhsByDestructuring(n)) {
+            if (parent.isStringKey()) {
+              // Remove the entire object-key entry
+              compiler.reportChangeToEnclosingScope(parent);
+              parent.detach();
+              continue;
+            }
+            replacement = IR.empty();
+            replaceParent = parent.isRest();
+          } else if (NodeUtil.isAssignmentOp(parent)) {
+            Node assign = parent;
+            checkState(
+                assign != null && NodeUtil.isAssignmentOp(assign) && assign.getFirstChild() == n);
+            compiler.reportChangeToEnclosingScope(assign);
+            // 'this.x = y' to 'y'
+            replacement = assign.getLastChild().detach();
+          } else if (parent.isInc() || parent.isDec()) {
+            compiler.reportChangeToEnclosingScope(parent);
+            replacement = IR.number(0).srcref(parent);
+          } else if (parent.isExprResult()) {
+            replacement = IR.number(0).srcref(n);
+            replaceParent = false;
+          } else {
+            throw new IllegalStateException("unexpected: " + parent);
+          }
+
+          // If the property expression is complex preserve that part of the
+          // expression.
+          if (!n.isQualifiedName()) {
+            Node preserved = n.getFirstChild();
+            while (preserved.isGetProp()) {
+              preserved = preserved.getFirstChild();
+            }
+            replacement = IR.comma(
+                preserved.detach(),
+                replacement)
+                .srcref(parent);
+          }
+
+          compiler.reportChangeToEnclosingScope(parent);
+          if (replaceParent) {
+            parent.replaceWith(replacement);
+          } else {
+            parent.replaceChild(n, replacement);
+          }
+        }
+      }
+    }
+  }
+
+  @Override
+  public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
+    return true;
+  }
+
+  @Override
+  public void visit(NodeTraversal t, Node n, Node parent) {
+    switch (n.getToken()) {
+       case GETPROP: {
+         String propName = n.getLastChild().getString();
+         if (compiler.getCodingConvention().isExported(propName)
+             || isPinningPropertyUse(n)
+             || !isRemovablePropertyDefinition(n)) {
+           used.add(propName);
+         } else {
+           // This is a definition of a property but it is only removable
+           // if it is defined on "this".
+           candidates.add(n);
+         }
+         break;
+      }
+      case OBJECTLIT:
+      case OBJECT_PATTERN: {
+        // Assume any object literal definition might be a reflection on the
+        // class property.
+        if (!NodeUtil.isObjectDefinePropertiesDefinition(n.getParent())) {
+          addObjectNodePropertiesToUsed(n);
+        }
+        break;
+      }
+      case CLASS: {
+        Node classMemberDefs = n.getLastChild();
+        for (Node m : classMemberDefs.children()) {
+          // Computed props are treated as unremovable for now.
+          if (!m.isComputedProp()) {
+            candidates.add(m);
+          }
+        }
+        break;
+      }
+      case CALL: {
+        // Look for properties referenced through the property rename functions.
+        Node target = n.getFirstChild();
+        if (n.hasMoreThanOneChild()
+            && compiler
+                .getCodingConvention()
+                .isPropertyRenameFunction(target.getOriginalQualifiedName())) {
+           Node propName = target.getNext();
+           if (propName.isString()) {
+             used.add(propName.getString());
+           }
+         } else if (NodeUtil.isObjectDefinePropertiesDefinition(n)) {
+           if (n.getChildCount() == 3 && n.getLastChild().isObjectLit()) {
+             Node objlit = n.getLastChild();
+             for (Node c : objlit.children()) {
+               if (!c.isQuotedString()) {
+                 candidates.add(c);
+               } else {
+                 used.add(c.getString());
+               }
+             }
+           }
+         }
+         break;
+      }
+      default:
+        break;
+    }
+  }
+
+  private boolean isRemovablePropertyDefinition(Node n) {
+    checkState(n.isGetProp(), n);
+    Node target = n.getFirstChild();
+    return target.isThis()
+        || (this.removeUnusedConstructorProperties && isConstructor(target))
+        || (target.isGetProp()
+            && target.getLastChild().getString().equals("prototype"));
+  }
+
+  private boolean isConstructor(Node n) {
+    TypeI type = n.getTypeI();
+    return type != null && (type.isConstructor() || type.isInterface());
+  }
+
+  /**
+   * @return Whether the property is used in a way that prevents its removal.
+   */
+  private static boolean isPinningPropertyUse(Node n) {
+    // Rather than looking for cases that are uses, we assume all references are
+    // pinning uses unless they are:
+    //  - a simple assignment (x.a = 1)
+    //  - an expression statement (x.a;)
+    //  - a compound assignment or increment (x++, x += 1) whose result is
+    //    otherwise unused
+    //  - a lhs of destructuring assignment ([x.a] = [1])
+
+    Node parent = n.getParent();
+
+    if (NodeUtil.isLhsByDestructuring(n)) {
+      return false;
+    } else if (n == parent.getFirstChild()) {
+      if (parent.isAssign() || parent.isExprResult()) {
+        // A simple assignment or expression statement doesn't pin the property.
+        return false;
+      } else if (NodeUtil.isAssignmentOp(parent)
+            || parent.isInc() || parent.isDec()) {
+        // In general, compound assignments are both reads and writes, but
+        // if the property is never otherwise read we can consider it simply
+        // a write.
+        // However if the assign expression is used as part of a larger
+        // expression, we must consider it a read. For example:
+        //    x = (y.a += 1);
+        return NodeUtil.isExpressionResultUsed(parent);
+      }
+    }
+    return true;
+  }
+
+  /** Adds the property names of the Object Lit or Object Pattern node n to the used set */
+  private void addObjectNodePropertiesToUsed(Node n) {
+    for (Node c : n.children()) {
+      if (!c.isComputedProp()) {
+        // Objects can contain computed_prop fields
+        // and we are ignoring computed props.
+        used.add(NodeUtil.getObjectLitKeyName(c));
+      }
+    }
+  }
+}

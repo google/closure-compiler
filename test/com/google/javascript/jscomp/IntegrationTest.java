@@ -2060,7 +2060,7 @@ public final class IntegrationTest extends IntegrationTestCase {
         "class Foo { get xx() {}; set yy(v) {}; static get init() {}; static set prop(v) {} }";
 
     // TODO(radokirov): The compiler should be removing statics too, but in this case they are
-    // kept. A similar unittest in RemoveUnusedCodeClassPropertiesTest removes everything.
+    // kept. A similar unittest in RemoveUnusedClassPropertiesTest removes everything.
     // Investigate why are they kept when ran together with other passes.
     String expected =
         LINE_JOINER.join(

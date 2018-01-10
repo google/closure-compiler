@@ -120,9 +120,12 @@ public final class MultiPassTest extends CompilerTestCase {
   public void testRemoveUnusedClassPropertiesScopeChange() {
     passes = new ArrayList<>();
     addRemoveUnusedClassProperties();
-    test(
-        "/** @constructor */ function Foo() { this.a = 1; } Foo.baz = function() {};",
-        "/** @constructor */ function Foo() {             } Foo.baz = function() {};");
+    test("/** @constructor */" +
+        "function Foo() { this.a = 1; }" +
+        "Foo.baz = function() {};",
+        "/** @constructor */" +
+        "function Foo() { 1; }" +
+        "Foo.baz = function() {};");
   }
 
   public void testRemoveUnusedVariablesScopeChange() {
@@ -410,10 +413,7 @@ public final class MultiPassTest extends CompilerTestCase {
         new PassFactory("removeUnusedClassProperties", false) {
           @Override
           protected CompilerPass create(AbstractCompiler compiler) {
-            return new RemoveUnusedCode.Builder(compiler)
-                .removeUnusedThisProperties(true)
-                .removeUnusedObjectDefinePropertiesDefinitions(true)
-                .build();
+            return new RemoveUnusedClassProperties(compiler, false);
           }
 
           @Override
