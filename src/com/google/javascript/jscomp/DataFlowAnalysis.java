@@ -151,7 +151,6 @@ abstract class DataFlowAnalysis<N, L extends LatticeElement> {
     return state.getIn();
   }
 
-  @SuppressWarnings("unchecked")
   protected L join(L latticeA, L latticeB) {
     return joinOp.apply(ImmutableList.of(latticeA, latticeB));
   }
