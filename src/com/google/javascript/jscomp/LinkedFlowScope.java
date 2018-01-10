@@ -61,26 +61,26 @@ class LinkedFlowScope implements FlowScope {
   // linked list of slots.
   private LinkedFlowSlot lastSlot;
 
-  private LinkedFlowScope(FlatFlowScopeCache cache,
-      LinkedFlowScope directParent) {
+  /**
+   * Creates a flow scope without a direct parent.  This can happen in three cases: (1) the "bottom"
+   * scope for a CFG root, (2) a direct child of a parent at the maximum depth, or (3) a joined
+   * scope with more than one direct parent.  The parent is non-null only in the second case.
+   */
+  private LinkedFlowScope(FlatFlowScopeCache cache) {
     this.cache = cache;
-    if (directParent == null) {
-      this.lastSlot = null;
-      this.depth = 0;
-      this.parent = cache.linkedEquivalent;
-    } else {
-      this.lastSlot = directParent.lastSlot;
-      this.depth = directParent.depth + 1;
-      this.parent = directParent;
-    }
+    this.lastSlot = null;
+    this.depth = 0;
+    this.parent = cache.linkedEquivalent;
   }
 
-  LinkedFlowScope(FlatFlowScopeCache cache) {
-    this(cache, null);
-  }
-
-  LinkedFlowScope(LinkedFlowScope directParent) {
-    this(directParent.cache, directParent);
+  /**
+   * Creates a child flow scope with a single parent.
+   */
+  private LinkedFlowScope(LinkedFlowScope directParent) {
+    this.cache = directParent.cache;
+    this.lastSlot = directParent.lastSlot;
+    this.depth = directParent.depth + 1;
+    this.parent = directParent;
   }
 
   /** Gets the function scope for this flow scope. */
@@ -243,7 +243,9 @@ class LinkedFlowScope implements FlowScope {
   // of blindScope. This is not necessarily true if this scope has been
   // optimize()d and blindScope has not. This should be fixed. For now,
   // we only use optimize() where we know that we won't have to do
-  // a findUniqueRefinedSlot on it.
+  // a findUniqueRefinedSlot on it (i.e. between CFG nodes, while the
+  // latter is only used within a single node to backwards-infer the LHS
+  // of short circuiting AND and OR operators).
   @Override
   public LinkedFlowScope optimize() {
     LinkedFlowScope current;
