@@ -747,8 +747,7 @@ public final class DataFlowAnalysisTest extends TestCase {
 
     // Compute liveness of variables
     LiveVariablesAnalysis analysis =
-        new LiveVariablesAnalysis(
-            cfg, scope, childScope, compiler, (Es6SyntacticScopeCreator) scopeCreator);
+        new LiveVariablesAnalysis(cfg, scope, childScope, compiler, scopeCreator);
     analysis.analyze();
     return analysis.getEscapedLocals();
   }
