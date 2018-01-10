@@ -731,7 +731,7 @@ public final class DataFlowAnalysisTest extends TestCase {
     assertThat(compiler.getErrors()).isEmpty();
 
     // Create scopes
-    ScopeCreator scopeCreator = new Es6SyntacticScopeCreator(compiler);
+    Es6SyntacticScopeCreator scopeCreator = new Es6SyntacticScopeCreator(compiler);
     Scope scope = scopeCreator.createScope(n, Scope.createGlobalScope(script));
     Scope childScope;
     if (script.getFirstChild().isFunction()) {

@@ -41,7 +41,7 @@ public final class IncrementalScopeCreatorTest extends TestCase {
         SourceFile.fromCode("testcode1.js", "var a; var b; function foo() { var inside = 1; }"),
         SourceFile.fromCode("testcode2.js", "var x;"));
     Compiler compiler = initCompiler(externs, srcs);
-    ScopeCreator creator = IncrementalScopeCreator.getInstance(compiler).freeze();
+    IncrementalScopeCreator creator = IncrementalScopeCreator.getInstance(compiler).freeze();
     Node root1 = compiler.getRoot();
 
     Scope scopeA = creator.createScope(root1, null);
@@ -71,7 +71,7 @@ public final class IncrementalScopeCreatorTest extends TestCase {
         SourceFile.fromCode("testcode1.js", "var a; var b; function foo() { var inside = 1; }"),
         SourceFile.fromCode("testcode2.js", "var x;"));
     Compiler compiler = initCompiler(externs, srcs);
-    ScopeCreator creator = IncrementalScopeCreator.getInstance(compiler).freeze();
+    IncrementalScopeCreator creator = IncrementalScopeCreator.getInstance(compiler).freeze();
 
     Node root = compiler.getRoot();
     Node fnFoo = findDecl(root, "foo");
@@ -203,7 +203,7 @@ public final class IncrementalScopeCreatorTest extends TestCase {
         SourceFile.fromCode("testcode2.js", "var a;"));
     Compiler compiler = initCompiler(externs, srcs);
 
-    ScopeCreator creator = IncrementalScopeCreator.getInstance(compiler).freeze();
+    IncrementalScopeCreator creator = IncrementalScopeCreator.getInstance(compiler).freeze();
 
     Node root = compiler.getRoot();
 
@@ -238,7 +238,7 @@ public final class IncrementalScopeCreatorTest extends TestCase {
             + " { function foo() { var inside = 1; } }"),
         SourceFile.fromCode("testcode2.js", "var x;"));
     Compiler compiler = initCompiler(externs, srcs);
-    ScopeCreator creator = IncrementalScopeCreator.getInstance(compiler).freeze();
+    IncrementalScopeCreator creator = IncrementalScopeCreator.getInstance(compiler).freeze();
 
     Node root = compiler.getRoot();
     Node fnFoo = findDecl(root, "foo");

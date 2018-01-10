@@ -41,7 +41,7 @@ public final class SyntacticScopeCreatorTest extends TestCase {
    * Helper to create a top-level scope from a JavaScript string
    */
   private Scope getScope(String js) {
-    return scopeCreator.createScope(getRoot(js), null);
+    return (Scope) scopeCreator.createScope(getRoot(js), null);
   }
 
   private Node getRoot(String js) {
@@ -71,14 +71,14 @@ public final class SyntacticScopeCreatorTest extends TestCase {
 
   public void testNestedFunctionScope() {
     Node root = getRoot("function f(x) { function g(y) {} }");
-    Scope globalScope = scopeCreator.createScope(root, null);
+    Scope globalScope = (Scope) scopeCreator.createScope(root, null);
 
     Node fNode = root.getFirstChild();
-    Scope outerFScope = scopeCreator.createScope(fNode, globalScope);
+    Scope outerFScope = (Scope) scopeCreator.createScope(fNode, globalScope);
     assertTrue(outerFScope.isDeclared("x", false));
 
     Node innerFNode = fNode.getLastChild().getFirstChild();
-    Scope innerFScope = scopeCreator.createScope(innerFNode, outerFScope);
+    Scope innerFScope = (Scope) scopeCreator.createScope(innerFNode, outerFScope);
     assertFalse(innerFScope.isDeclared("x", false));
     assertTrue(innerFScope.isDeclared("y", false));
   }
@@ -86,23 +86,23 @@ public final class SyntacticScopeCreatorTest extends TestCase {
   public void testScopeRootNode() {
     Node root = getRoot("function foo() { var x = 10; }");
 
-    Scope globalScope = scopeCreator.createScope(root, null);
+    Scope globalScope = (Scope) scopeCreator.createScope(root, null);
     assertEquals(root, globalScope.getRootNode());
 
     Node fooNode = root.getFirstChild();
     assertEquals(Token.FUNCTION, fooNode.getToken());
-    Scope fooScope = scopeCreator.createScope(fooNode, globalScope);
+    Scope fooScope = (Scope) scopeCreator.createScope(fooNode, globalScope);
     assertEquals(fooNode, fooScope.getRootNode());
     assertTrue(fooScope.isDeclared("x", false));
   }
 
   public void testFunctionExpressionInForLoopInitializer() {
     Node root = getRoot("for (function foo() {};;) {}");
-    Scope globalScope = scopeCreator.createScope(root, null);
+    Scope globalScope = (Scope) scopeCreator.createScope(root, null);
     assertFalse(globalScope.isDeclared("foo", false));
 
     Node fNode = root.getFirstFirstChild();
-    Scope fScope = scopeCreator.createScope(fNode, globalScope);
+    Scope fScope = (Scope) scopeCreator.createScope(fNode, globalScope);
     assertTrue(fScope.isDeclared("foo", false));
   }
 }

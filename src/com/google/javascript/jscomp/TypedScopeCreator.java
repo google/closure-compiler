@@ -213,7 +213,7 @@ final class TypedScopeCreator implements ScopeCreator {
    * and type properties in the type registry.
    */
   @Override
-  public TypedScope createScope(Node root, Scope parent) {
+  public TypedScope createScope(Node root, AbstractScope<?, ?> parent) {
     checkArgument(parent == null || parent instanceof TypedScope);
     TypedScope typedParent = (TypedScope) parent;
     // Constructing the global scope is very different than constructing

@@ -34,7 +34,7 @@ import java.util.Map;
  */
 class MemoizedScopeCreator implements ScopeCreator {
 
-  private final Map<Node, Scope> scopesByScopeRoot = new HashMap<>();
+  private final Map<Node, AbstractScope<?, ?>> scopesByScopeRoot = new HashMap<>();
   private final ScopeCreator delegate;
 
   /**
@@ -45,8 +45,8 @@ class MemoizedScopeCreator implements ScopeCreator {
   }
 
   @Override
-  public Scope createScope(Node n, Scope parent) {
-    Scope scope = scopesByScopeRoot.get(n);
+  public AbstractScope<?, ?> createScope(Node n, AbstractScope<?, ?> parent) {
+    AbstractScope<?, ?> scope = scopesByScopeRoot.get(n);
     if (scope == null) {
       scope = delegate.createScope(n, parent);
       scopesByScopeRoot.put(n, scope);

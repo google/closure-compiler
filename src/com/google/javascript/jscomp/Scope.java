@@ -62,7 +62,7 @@ public class Scope extends AbstractScope<Scope, Var> {
     checkArgument(!name.isEmpty());
     // Make sure that it's declared only once
     checkState(vars.get(name) == null);
-    Var var = new Var(name, nameNode, this, vars.size(), input);
+    Var var = new Var(name, nameNode, this, getVarCount(), input);
     vars.put(name, var);
     return var;
   }

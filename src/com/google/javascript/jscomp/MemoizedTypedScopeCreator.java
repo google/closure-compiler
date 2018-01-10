@@ -80,12 +80,12 @@ class MemoizedTypedScopeCreator implements ScopeCreator, StaticSymbolTable<Typed
   @SuppressWarnings("unchecked")
   // ScopeCreator#createScope has type: <T extends Scope> T createScope(...);
   // TypedScope is the only subclass of Scope, so the suppression is safe.
-  public TypedScope createScope(Node n, Scope parent) {
+  public TypedScope createScope(Node n, AbstractScope<?, ?> parent) {
     checkArgument(parent == null || parent instanceof TypedScope);
     TypedScope typedParent = (TypedScope) parent;
     TypedScope scope = scopes.get(n);
     if (scope == null) {
-      scope = delegate.createScope(n, typedParent);
+      scope = (TypedScope) delegate.createScope(n, typedParent);
       scopes.put(n, scope);
     } else {
       checkState(typedParent == scope.getParent());

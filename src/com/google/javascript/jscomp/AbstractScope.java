@@ -79,6 +79,16 @@ abstract class AbstractScope<S extends AbstractScope<S, V>, V extends AbstractVa
     return depth;
   }
 
+  public Scope untyped() {
+    checkState(!(this instanceof TypedScope));
+    return (Scope) this;
+  }
+
+  public TypedScope typed() {
+    checkState(this instanceof TypedScope);
+    return (TypedScope) this;
+  }
+
   /**
    * @return True if this scope contains {@code other}, or is the same scope as {@code other}.
    */

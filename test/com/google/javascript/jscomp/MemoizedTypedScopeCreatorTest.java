@@ -34,9 +34,9 @@ public final class MemoizedTypedScopeCreatorTest extends TestCase {
     Node root2 = new Node(Token.ROOT);
     Compiler compiler = new Compiler();
     compiler.initOptions(new CompilerOptions());
-    ScopeCreator creator = new MemoizedTypedScopeCreator(
-        SyntacticScopeCreator.makeTyped(compiler));
-    Scope scopeA = creator.createScope(root1, null);
+    MemoizedTypedScopeCreator creator =
+        new MemoizedTypedScopeCreator(SyntacticScopeCreator.makeTyped(compiler));
+    TypedScope scopeA = creator.createScope(root1, null);
     assertSame(scopeA, creator.createScope(root1, null));
     assertNotSame(scopeA, creator.createScope(root2, null));
   }
@@ -45,9 +45,9 @@ public final class MemoizedTypedScopeCreatorTest extends TestCase {
     Compiler compiler = new Compiler();
     compiler.initOptions(new CompilerOptions());
     Node root = new Node(Token.ROOT);
-    ScopeCreator creator = new MemoizedTypedScopeCreator(
-        SyntacticScopeCreator.makeTyped(compiler));
-    Scope scopeA = creator.createScope(root, null);
+    MemoizedTypedScopeCreator creator =
+        new MemoizedTypedScopeCreator(SyntacticScopeCreator.makeTyped(compiler));
+    TypedScope scopeA = creator.createScope(root, null);
 
     boolean handled = false;
     try {

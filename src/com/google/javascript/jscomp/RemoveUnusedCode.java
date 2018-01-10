@@ -127,7 +127,7 @@ class RemoveUnusedCode implements CompilerPass {
    */
   private final List<Scope> allFunctionParamScopes = new ArrayList<>();
 
-  private final ScopeCreator scopeCreator;
+  private final Es6SyntacticScopeCreator scopeCreator;
 
   private final boolean removeUnusedPrototypeProperties;
   private final boolean allowRemovalOfExternProperties;

@@ -120,7 +120,7 @@ class VarCheck extends AbstractPostOrderCallback implements
    * Creates the scope creator used by this pass. If not in validity check mode, use a {@link
    * RedeclarationCheckHandler} to check var redeclarations.
    */
-  private ScopeCreator createScopeCreator() {
+  private Es6SyntacticScopeCreator createScopeCreator() {
     if (validityCheck) {
       return new Es6SyntacticScopeCreator(compiler);
     } else {
@@ -155,7 +155,7 @@ class VarCheck extends AbstractPostOrderCallback implements
   @Override
   public void hotSwapScript(Node scriptRoot, Node originalRoot) {
     checkState(scriptRoot.isScript());
-    ScopeCreator scopeCreator = createScopeCreator();
+    Es6SyntacticScopeCreator scopeCreator = createScopeCreator();
     NodeTraversal t = new NodeTraversal(compiler, this, scopeCreator);
     // Note we use the global scope to prevent wrong "undefined-var errors" on
     // variables that are defined in other JS files.

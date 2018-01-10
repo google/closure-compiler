@@ -3126,7 +3126,7 @@ public final class NodeUtilTest extends TestCase {
     String fnString = "var h; function g(x, y) {var z; h = 2; {let a; const b = 1} let c}";
     Compiler compiler = new Compiler();
     compiler.setLifeCycleStage(LifeCycleStage.NORMALIZED);
-    ScopeCreator scopeCreator = new Es6SyntacticScopeCreator(compiler);
+    Es6SyntacticScopeCreator scopeCreator = new Es6SyntacticScopeCreator(compiler);
 
     Node ast = parse(fnString);
     Node functionNode = getFunctionNode(fnString);
@@ -3153,7 +3153,7 @@ public final class NodeUtilTest extends TestCase {
 
     Compiler compiler = new Compiler();
     compiler.setLifeCycleStage(LifeCycleStage.NORMALIZED);
-    ScopeCreator scopeCreator = new Es6SyntacticScopeCreator(compiler);
+    Es6SyntacticScopeCreator scopeCreator = new Es6SyntacticScopeCreator(compiler);
 
     Node ast = parse(fnString);
     Node functionNode = getFunctionNode(fnString);

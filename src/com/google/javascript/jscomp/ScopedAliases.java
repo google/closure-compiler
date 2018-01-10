@@ -383,7 +383,7 @@ class ScopedAliases implements HotSwapCompilerPass {
         return;
       }
       if (inGoogScopeBody()) {
-        Scope hoistedScope = t.getClosestHoistScope();
+        Scope hoistedScope = t.getClosestHoistScope().untyped();
         if (isGoogScopeFunctionBody(hoistedScope.getRootNode())) {
           findAliases(t, hoistedScope);
         }

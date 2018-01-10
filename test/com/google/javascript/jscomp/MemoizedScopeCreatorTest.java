@@ -32,7 +32,7 @@ public final class MemoizedScopeCreatorTest extends TestCase {
     Compiler compiler = new Compiler();
     compiler.initOptions(new CompilerOptions());
     ScopeCreator creator = new MemoizedScopeCreator(new Es6SyntacticScopeCreator(compiler));
-    Scope scopeA = creator.createScope(root1, null);
+    Scope scopeA = (Scope) creator.createScope(root1, null);
     assertSame(scopeA, creator.createScope(root1, null));
     assertNotSame(scopeA, creator.createScope(root2, null));
   }
@@ -42,7 +42,7 @@ public final class MemoizedScopeCreatorTest extends TestCase {
     compiler.initOptions(new CompilerOptions());
     Node root = new Node(Token.ROOT);
     ScopeCreator creator = new MemoizedScopeCreator(new Es6SyntacticScopeCreator(compiler));
-    Scope scopeA = creator.createScope(root, null);
+    Scope scopeA = (Scope) creator.createScope(root, null);
 
     boolean handled = false;
     try {

@@ -86,8 +86,8 @@ public class Es6SyntacticScopeCreator implements ScopeCreator {
   }
 
   @Override
-  public Scope createScope(Node n, Scope parent) {
-    Scope scope = scopeFactory.create(parent, n);
+  public Scope createScope(Node n, AbstractScope<?, ?> parent) {
+    Scope scope = scopeFactory.create((Scope) parent, n);
     new ScopeScanner(compiler, redeclarationHandler, scope, null).populate();
     return scope;
   }

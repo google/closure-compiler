@@ -118,7 +118,7 @@ class IncrementalScopeCreator implements ScopeCreator {
   }
 
   @Override
-  public Scope createScope(Node n, Scope parent) {
+  public Scope createScope(Node n, AbstractScope<?, ?> parent) {
     checkState(parent == null || parent instanceof PersistentScope);
     checkState(parent == null || ((PersistentScope) parent).isValid(), "parent is not valid");
     checkState(frozen, "freeze() must be called before retrieving scopes");
