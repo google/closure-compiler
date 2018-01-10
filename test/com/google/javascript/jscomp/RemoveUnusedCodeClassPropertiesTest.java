@@ -129,6 +129,8 @@ public final class RemoveUnusedCodeClassPropertiesTest extends TypeICompilerTest
     testSame("({a:2})");
     // and prevent the removal of the definition on 'this'.
     testSame("({a:0}); this.a = 1;");
+    // ... even if it's quoted
+    testSame("({'a':0}); this.a = 1;");
     // Some use of the property "a" prevents the removal.
     testSame("var x = ({a:0}); this.a = 1; alert(x.a)");
   }

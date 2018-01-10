@@ -652,9 +652,11 @@ class RemoveUnusedCode implements CompilerPass {
     for (Node propertyNode = objectLiteral.getFirstChild();
         propertyNode != null;
         propertyNode = propertyNode.getNext()) {
-      if (propertyNode.isStringKey() && !propertyNode.isQuotedString()) {
-        // An unquoted property name in an object literal counts as a reference to that property
-        // name, because of some reflection patterns.
+      if (propertyNode.isStringKey()) {
+        // A property name in an object literal counts as a reference,
+        // because of some reflection patterns.
+        // Note that we are intentionally treating both quoted and unquoted keys as
+        // references.
         markPropertyNameReferenced(propertyNode.getString());
         traverseNode(propertyNode.getFirstChild(), scope);
       } else {

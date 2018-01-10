@@ -477,9 +477,8 @@ public final class RemoveUnusedCodePrototypePropertiesTest extends CompilerTestC
     test("function Foo() {} Foo.prototype.baz = 3; new Foo;", "function Foo() {} new Foo;");
     testSame("function Foo() {} Foo.prototype.baz = 3; new Foo; var x = {}; x.baz;");
     testSame("function Foo() {} Foo.prototype.baz = 3; new Foo; var x = {baz: 5}; x;");
-    test(
-        "function Foo() {} Foo.prototype.baz = 3; new Foo; var x = {'baz': 5}; x;",
-        "function Foo() {} new Foo; var x = {'baz': 5}; x;");
+    // quoted properties still prevent removal
+    testSame("function Foo() {} Foo.prototype.baz = 3; new Foo; var x = {'baz': 5}; x;");
   }
 
   public void testGlobalFunctionsInGraph() {
