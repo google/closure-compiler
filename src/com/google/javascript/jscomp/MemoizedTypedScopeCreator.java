@@ -64,7 +64,7 @@ class MemoizedTypedScopeCreator implements ScopeCreator, StaticSymbolTable<Typed
 
   @Override
   public TypedScope getScope(TypedVar var) {
-    return var.scope;
+    return (TypedScope) var.scope;
   }
 
   @Override

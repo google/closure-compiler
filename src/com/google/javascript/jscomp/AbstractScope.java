@@ -35,7 +35,7 @@ import java.util.Map;
  * @see NodeTraversal
  *
  */
-public abstract class AbstractScope<S extends AbstractScope<S, V>, V extends Var>
+abstract class AbstractScope<S extends AbstractScope<S, V>, V extends AbstractVar<S, V>>
     implements StaticScope, Serializable {
   final Map<String, V> vars = new LinkedHashMap<>();
   S parent;
