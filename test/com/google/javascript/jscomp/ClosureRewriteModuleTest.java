@@ -58,6 +58,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
   @Override
   protected void setUp() throws Exception {
     super.setUp();
+    preserveClosurePrimitives = false;
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2017);
   }
 
@@ -994,6 +995,28 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
             "function module$contents$x$y$z_f() {}",
             "",
             "module$contents$x$y$z_f();")),
+        warning(MISSING_MODULE_OR_PROVIDE));
+  }
+
+  public void testGoogModuleGet_missing_preserve() {
+    preserveClosurePrimitives = true;
+    // Need to disable tree comparison because compiler adds MODULE_BODY token when parsing
+    // expected output but it is not present in actual tree.
+    disableCompareAsTree();
+
+    test(
+        srcs(lines(
+            "goog.module('x.y.z');",
+            "",
+            "function f() {",
+            "  return goog.module.get('a.b.c');",
+            "}",
+            "f();")),
+        expected(""
+            + "goog.module(\"x.y.z\");"
+            + "var module$exports$x$y$z={};"
+            + "function module$contents$x$y$z_f(){return goog.module.get(\"a.b.c\")}"
+            + "module$contents$x$y$z_f()"),
         warning(MISSING_MODULE_OR_PROVIDE));
   }
 

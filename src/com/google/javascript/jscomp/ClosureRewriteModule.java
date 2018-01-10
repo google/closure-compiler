@@ -229,6 +229,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
    * end.
    */
   private static final class UnrecognizedRequire {
+    // A goog.require() call, or a goog.module.get() call.
     final Node requireNode;
     final String legacyNamespace;
     final boolean mustBeOrdered;
@@ -991,7 +992,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
           new UnrecognizedRequire(
               call,
               legacyNamespace,
-              false /** mustBeOrderd */,
+              false /* mustBeOrdered */,
               false /* isPath */));
     }
 
@@ -1022,7 +1023,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
       }
 
       // Each goog.module.get() calling filling an alias will have the alias importing logic
-      // handed at the goog.forwardDeclare call, and the corresponding goog.module.get can simply
+      // handled at the goog.forwardDeclare call, and the corresponding goog.module.get can simply
       // be removed.
       compiler.reportChangeToEnclosingScope(maybeAssign);
       maybeAssign.getParent().detach();
