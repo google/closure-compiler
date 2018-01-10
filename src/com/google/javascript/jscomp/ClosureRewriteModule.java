@@ -1684,11 +1684,15 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
                         : MISSING_FILE_REQUIRE
                     : MISSING_MODULE_OR_PROVIDE,
                 legacyNamespace));
-        // Remove the require node so this problem isn't reported all over again in
-        // ProcessClosurePrimitives.
+        // Remove the require node so this problem isn't reported again in ProcessClosurePrimitives.
         if (!preserveSugar) {
-          compiler.reportChangeToEnclosingScope(requireNode);
-          NodeUtil.getEnclosingStatement(requireNode).detach();
+          Node changeScope = NodeUtil.getEnclosingChangeScopeRoot(requireNode);
+          if (changeScope == null) {
+            // It's already been removed; nothing to do.
+          } else {
+            compiler.reportChangeToChangeScope(changeScope);
+            NodeUtil.getEnclosingStatement(requireNode).detach();
+          }
         }
         continue;
       }
