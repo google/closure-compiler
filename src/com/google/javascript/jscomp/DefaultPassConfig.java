@@ -1044,10 +1044,6 @@ public final class DefaultPassConfig extends PassConfig {
       passes.add(removeUnusedCode);
     }
 
-    if (options.removeUnusedClassProperties) {
-      passes.add(removeUnusedClassProperties);
-    }
-
     assertAllLoopablePasses(passes);
     return passes;
   }
@@ -1055,7 +1051,9 @@ public final class DefaultPassConfig extends PassConfig {
   private boolean shouldRunRemoveUnusedCode() {
     return options.removeUnusedVars
         || options.removeUnusedLocalVars
-        || options.removeUnusedPrototypeProperties;
+        || options.removeUnusedPrototypeProperties
+        || options.isRemoveUnusedClassProperties()
+        || options.isRemoveUnusedConstructorProperties();
   }
 
   private final HotSwapPassFactory checkSideEffects =
@@ -2715,21 +2713,6 @@ public final class DefaultPassConfig extends PassConfig {
     }
   };
 
-  /** Remove prototype properties that do not appear to be used. */
-  private final PassFactory removeUnusedClassProperties =
-      new PassFactory(PassNames.REMOVE_UNUSED_CLASS_PROPERTIES, false) {
-        @Override
-        protected CompilerPass create(AbstractCompiler compiler) {
-          return new RemoveUnusedClassProperties(
-              compiler, options.removeUnusedConstructorProperties);
-        }
-
-        @Override
-        protected FeatureSet featureSet() {
-          return ES8_MODULES;
-        }
-      };
-
   private final PassFactory initNameAnalyzeReport = new PassFactory("initNameAnalyzeReport", true) {
      @Override
      protected CompilerPass create(final AbstractCompiler compiler) {
@@ -2866,6 +2849,9 @@ public final class DefaultPassConfig extends PassConfig {
             .preserveFunctionExpressionNames(preserveAnonymousFunctionNames)
             .removeUnusedPrototypeProperties(options.removeUnusedPrototypeProperties)
             .allowRemovalOfExternProperties(options.removeUnusedPrototypePropertiesInExterns)
+            .removeUnusedThisProperties(options.isRemoveUnusedClassProperties())
+            .removeUnusedObjectDefinePropertiesDefinitions(options.isRemoveUnusedClassProperties())
+            .removeUnusedConstructorProperties(options.isRemoveUnusedConstructorProperties())
             .build();
       }
 
