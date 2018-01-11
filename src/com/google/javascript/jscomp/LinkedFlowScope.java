@@ -217,25 +217,6 @@ class LinkedFlowScope implements FlowScope {
   }
 
   /**
-   * Look through the given scope, and try to find slots where it doesn't
-   * have enough type information. Then fill in that type information
-   * with stuff that we've inferred in the local flow.
-   */
-  @Override
-  public void completeScope(StaticTypedScope<JSType> staticScope) {
-    TypedScope scope = (TypedScope) staticScope;
-    for (TypedVar var : scope.getVarIterable()) {
-      if (var.isTypeInferred()) {
-        JSType type = var.getType();
-        if (type == null || type.isUnknownType()) {
-          JSType flowType = getSlot(var.getName()).getType();
-          var.setType(flowType);
-        }
-      }
-    }
-  }
-
-  /**
    * Remove flow scopes that add nothing to the flow.
    */
   // NOTE(nicksantos): This function breaks findUniqueRefinedSlot, because

@@ -142,15 +142,6 @@ abstract class DataFlowAnalysis<N, L extends LatticeElement> {
     return cfg;
   }
 
-  /**
-   * Returns the lattice element at the exit point.
-   */
-  L getExitLatticeElement() {
-    DiGraphNode<N, Branch> node = getCfg().getImplicitReturn();
-    FlowState<L> state = node.getAnnotation();
-    return state.getIn();
-  }
-
   protected L join(L latticeA, L latticeB) {
     return joinOp.apply(ImmutableList.of(latticeA, latticeB));
   }
@@ -420,17 +411,6 @@ abstract class DataFlowAnalysis<N, L extends LatticeElement> {
 
     BranchedForwardDataFlowAnalysis(ControlFlowGraph<N> targetCfg, JoinOp<L> joinOp) {
       super(targetCfg, joinOp);
-    }
-
-    /**
-     * Returns the lattice element at the exit point. Needs to be overridden
-     * because we use a BranchedFlowState instead of a FlowState; ugh.
-     */
-    @Override
-    L getExitLatticeElement() {
-      DiGraphNode<N, Branch> node = getCfg().getImplicitReturn();
-      BranchedFlowState<L> state = node.getAnnotation();
-      return state.getIn();
     }
 
     @Override

@@ -72,11 +72,4 @@ public interface FlowScope extends StaticTypedScope<JSType>, LatticeElement {
    * @return The unique refined variable if found or null.
    */
   StaticTypedSlot<JSType> findUniqueRefinedSlot(FlowScope blindScope);
-
-  /**
-   * Look through the given scope, and try to find slots where it doesn't
-   * have enough type information. Then fill in that type information
-   * with stuff that we've inferred in the local flow.
-   */
-  void completeScope(StaticTypedScope<JSType> scope);
 }
