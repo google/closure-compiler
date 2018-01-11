@@ -383,9 +383,19 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
     }
 
     void check(Node n) {
+      // For most AST nodes, traverse the subtree in postorder because that's how the expressions
+      // are evaluated.
       if (n == root || !ControlFlowGraph.isEnteringNewCfgNode(n)) {
-        for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
-          check(c);
+        if ((n.isDestructuringLhs() && n.hasTwoChildren())
+            || (n.isAssign() && n.getFirstChild().isDestructuringPattern())
+            || n.isDefaultValue()) {
+          // Evaluate the rhs of a destructuring assignment/declaration before the lhs.
+          check(n.getSecondChild());
+          check(n.getFirstChild());
+        } else {
+          for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
+            check(c);
+          }
         }
         visit(n, n.getParent());
       }
@@ -507,6 +517,8 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
         } else if (NodeUtil.isNameDeclaration(parent) && n.hasChildren()) {
           // If this is a VAR declaration, if the name node has a child, we are
           // assigning to that name.
+          return var.getName().equals(n.getString());
+        } else if (NodeUtil.isLhsByDestructuring(n)) {
           return var.getName().equals(n.getString());
         }
       } else if (NodeUtil.isAssignmentOp(n)) {

@@ -134,6 +134,8 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
     inFunction(
         "var x = 1,     k; x; y = 1; for (var y in k) { y }",
         "var x = 1; var k; x; x = 1; for (    x in k) { x }");
+
+    inFunction("function f(param){ var foo; for([foo] in arr); param }");
   }
 
   public void testForOf() {
@@ -143,6 +145,8 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
     inFunction(
         "var x = 1,     k; x; y = 1; for (var y of k) { y }",
         "var x = 1; var k; x; x = 1; for (    x of k) { x }");
+
+    inFunction("function f(param){ var foo; for([foo] of arr); param }");
   }
 
   public void testLoopInductionVar() {
@@ -381,6 +385,36 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
             "  const {prop1: foo, prop2: bar} = obj;",
             "  alert(foo);",
             "}"));
+  }
+
+  public void testObjDestructuringVar() {
+    test(
+        lines(
+            "function f(param) {",
+            "  const obj = {};",
+            "  var {prop1: foo, prop2: bar} = obj;",
+            "  alert(foo);",
+            "}"),
+        lines(
+            "function f(param) {",
+            "  param = {};",
+            "  var {prop1: param, prop2: bar} = param;",
+            "  alert(param);",
+            "}"));
+  }
+
+  public void testDestructuringDefaultValue() {
+    testSame("function f(param) {  var a;  [a = param] = {};  param;  }");
+
+    test(
+        "function f(param) {  var a;  [a = param] = {};  a;  }",
+        "function f(param) {  [param = param] = {};  param;  }");
+  }
+
+  public void testDestructuringEvaluationOrder() {
+    // Since the "a = 5" assignment is evaluated before "a = param" (which is
+    // conditionally evaluated), we must not coalesce param and a.
+    testSame("function f(param) { var a; [a = param] = (a = 5, {});  a; }");
   }
 
   // We would normally coalesce 'key' with 'collidesWithKey', but in doing so we'd change the 'let'
