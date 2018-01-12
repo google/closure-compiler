@@ -42,15 +42,14 @@ public final class CreateSyntheticBlocksTest extends CompilerTestCase {
       @Override
       public void process(Node externs, Node js) {
         new CreateSyntheticBlocks(compiler, START_MARKER, END_MARKER).process(externs, js);
-        new MinimizeExitPoints(compiler).asCompilerPass().process(externs, js);
         new PeepholeOptimizationsPass(
                 compiler,
                 getName(),
+                new MinimizeExitPoints(),
                 new PeepholeRemoveDeadCode(),
                 new PeepholeMinimizeConditions(true /* late */),
                 new PeepholeFoldConstants(true, false /* useTypes */))
             .process(externs, js);
-        new MinimizeExitPoints(compiler).asCompilerPass().process(externs, js);
         new Denormalize(compiler).process(externs, js);
       }
     };

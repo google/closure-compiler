@@ -1740,7 +1740,7 @@ public final class DefaultPassConfig extends PassConfig {
     final boolean late = false;
     final boolean useTypesForOptimization = compiler.getOptions().useTypesForLocalOptimization;
     List<AbstractPeepholeOptimization> optimizations = new ArrayList<>();
-    optimizations.add(new MinimizeExitPoints(compiler));
+    optimizations.add(new MinimizeExitPoints());
     optimizations.add(new PeepholeMinimizeConditions(late));
     optimizations.add(new PeepholeSubstituteAlternateSyntax(late));
     optimizations.add(new PeepholeReplaceKnownMethods(late, useTypesForOptimization));

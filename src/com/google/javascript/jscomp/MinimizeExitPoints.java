@@ -18,7 +18,6 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkState;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -32,17 +31,6 @@ import javax.annotation.Nullable;
  * @author johnlenz@google.com (John Lenz)
  */
 class MinimizeExitPoints extends AbstractPeepholeOptimization {
-  AbstractCompiler compiler;
-
-  MinimizeExitPoints(AbstractCompiler compiler) {
-    this.compiler = compiler;
-  }
-
-  @VisibleForTesting
-  final CompilerPass asCompilerPass() {
-    return new PeepholeOptimizationsPass(compiler, this.getClass().getSimpleName(), this);
-  }
-
   @Override
   Node optimizeSubtree(Node n) {
     switch (n.getToken()) {
