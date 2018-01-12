@@ -753,6 +753,11 @@ class PeepholeMinimizeConditions
    * @param n The IF node to examine.
    */
   private void tryRemoveRepeatedStatements(Node n) {
+    // Only run this if variable names are guaranteed to be unique. Otherwise bad things can happen:
+    // see PeepholeMinimizeConditionsTest#testDontRemoveDuplicateStatementsWithoutNormalization
+    if (!isASTNormalized()) {
+      return;
+    }
     checkState(n.isIf(), n);
 
     Node parent = n.getParent();

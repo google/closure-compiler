@@ -207,6 +207,7 @@ public final class PeepholeMinimizeConditionsTest extends TypeICompilerTestCase 
   }
 
   public void testRemoveDuplicateStatements() {
+    enableNormalize();
     fold("if (a) { x = 1; x++ } else { x = 2; x++ }",
          "x=(a) ? 1 : 2; x++");
     fold("if (a) { x = 1; x++; y += 1; z = pi; }" +
@@ -229,6 +230,13 @@ public final class PeepholeMinimizeConditionsTest extends TypeICompilerTestCase 
          "    else { bar(); goo(); }" +
          "  return true;" +
          "}");
+  }
+
+  public void testDontRemoveDuplicateStatementsWithoutNormalization() {
+    // In the following test case, we can't remove the duplicate "alert(x);" lines since each "x"
+    // refers to a different variable.
+    // We only try removing duplicate statements if the AST is normalized and names are unique.
+    testSame("if (Math.random() < 0.5) { const x = 3; alert(x); } else { const x = 5; alert(x); }");
   }
 
   public void testNotCond() {
