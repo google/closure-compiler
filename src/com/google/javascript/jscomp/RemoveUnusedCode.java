@@ -584,6 +584,8 @@ class RemoveUnusedCode implements CompilerPass {
     traverseNode(callee, scope);
     traverseNode(targetObject, scope);
     if (propertyDefinitions.isObjectLit()) {
+      // TODO(bradfordcsmith): Consider restricting special handling of the properties literal to
+      // cases where the target object is a known class, prototype, or this.
       traverseObjectDefinePropertiesLiteral(propertyDefinitions, scope);
     } else {
       traverseNode(propertyDefinitions, scope);
