@@ -166,7 +166,7 @@ abstract class AbstractScope<S extends AbstractScope<S, V>, V extends AbstractVa
       if (var != null) {
         return var;
       }
-      if ("arguments".equals(name) && NodeUtil.isVanillaFunction(scope.getRootNode())) {
+      if (Var.ARGUMENTS.equals(name) && NodeUtil.isVanillaFunction(scope.getRootNode())) {
         return scope.getArgumentsVar();
       }
       // Recurse up the parent Scope
@@ -176,9 +176,9 @@ abstract class AbstractScope<S extends AbstractScope<S, V>, V extends AbstractVa
   }
 
   /**
-   * Get a unique VAR object to represents "arguments" within this scope
+   * Get a unique VAR object to represent "arguments" within this scope
    */
-  public V getArgumentsVar() {
+  public final V getArgumentsVar() {
     if (isGlobal() || isModuleScope()) {
       return null;
     }

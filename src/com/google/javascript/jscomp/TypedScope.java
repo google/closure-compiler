@@ -203,8 +203,8 @@ public class TypedScope extends Scope implements StaticTypedScope<JSType>, TypeI
   }
 
   @Override
-  public Var getArgumentsVar() {
-    throw new IllegalStateException("Method getArgumentsVar cannot be called on typed scopes.");
+  TypedVar makeArgumentsVar() {
+    return TypedVar.makeArguments(this);
   }
 
   @Override

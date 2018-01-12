@@ -18,6 +18,8 @@ package com.google.javascript.jscomp;
 
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.StaticSourceFile;
+import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.TypeI;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.StaticTypedRef;
@@ -122,5 +124,40 @@ public class TypedVar extends Var implements StaticTypedSlot<JSType>, StaticType
 
   boolean isMarkedAssignedExactlyOnce() {
     return markedAssignedExactlyOnce;
+  }
+
+  static TypedVar makeArguments(TypedScope scope) {
+    // Look for an extern named "arguments" and use its type if available.
+    // TODO(sdh): consider looking for "Arguments" ctor rather than "arguments" var: this could
+    // allow deleting the variable, which doesn't really belong in externs in the first place.
+    TypedVar globalArgs = scope.getGlobalScope().getVar(Var.ARGUMENTS);
+    JSType type = globalArgs != null && globalArgs.isExtern() ? globalArgs.getType() : null;
+    return new TypedArguments(type, scope);
+  }
+
+  private static final class TypedArguments extends TypedVar {
+    TypedArguments(JSType type, TypedScope scope) {
+      super(false, Var.ARGUMENTS, null, type, scope, -1, null);
+    }
+
+    @Override
+    public boolean isArguments() {
+      return true;
+    }
+
+    @Override
+    public StaticSourceFile getSourceFile() {
+      return scope.getRootNode().getStaticSourceFile();
+    }
+
+    @Override
+    public boolean isBleedingFunction() {
+      return false;
+    }
+
+    @Override
+    protected Token declarationType() {
+      return null;
+    }
   }
 }
