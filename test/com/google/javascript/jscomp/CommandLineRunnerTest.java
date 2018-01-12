@@ -1451,8 +1451,6 @@ public final class CommandLineRunnerTest extends TestCase {
             + "  node0 -> node1 [weight=1];\n"
             + "  node1 -> RETURN [label=\"UNCOND\", "
             + "fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
-            + "  node0 -> RETURN [label=\"SYN_BLOCK\", "
-            + "fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
             + "  node0 -> node1 [label=\"UNCOND\", "
             + "fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
             + "}\n\n");
