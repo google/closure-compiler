@@ -29,26 +29,23 @@ import com.google.javascript.rhino.Node;
  * @see NodeTraversal
  *
  */
-public class Scope extends AbstractScope<Scope, Var> {
-
-  /**
-   * Creates a Scope given the parent Scope and the root node of the current scope.
-   *
-   * @param parent The parent Scope. Cannot be null.
-   * @param rootNode The root node of the current scope. Cannot be null.
-   */
-  Scope(Scope parent, Node rootNode) {
-    super(parent, rootNode);
-  }
+public abstract class Scope extends AbstractScope<Scope, Var> {
 
   Scope(Node rootNode) {
     super(rootNode);
   }
 
+  @Override
+  public Scope untyped() {
+    return this;
+  }
+
   static Scope createGlobalScope(Node rootNode) {
-    // TODO(tbreisacher): Can we tighten this to allow only ROOT nodes?
-    checkArgument(rootNode.isRoot() || rootNode.isScript(), rootNode);
-    return new Scope(rootNode);
+    return new Scope.Simple(rootNode);
+  }
+
+  static Scope createChildScope(Scope parent, Node rootNode) {
+    return new Scope.Simple(parent, rootNode);
   }
 
   /**
@@ -58,17 +55,47 @@ public class Scope extends AbstractScope<Scope, Var> {
    * @param nameNode the NAME node declaring the variable
    * @param input the input in which this variable is defined.
    */
+  // Non-final for PersisteneScope.
   Var declare(String name, Node nameNode, CompilerInput input) {
     checkArgument(!name.isEmpty());
     // Make sure that it's declared only once
-    checkState(vars.get(name) == null);
+    checkState(getOwnSlot(name) == null);
     Var var = new Var(name, nameNode, this, getVarCount(), input);
-    vars.put(name, var);
+    declareInternal(name, var);
     return var;
   }
 
   @Override
   Var makeArgumentsVar() {
     return Var.makeArgumentsVar(this);
+  }
+
+  private static final class Simple extends Scope {
+    final Scope parent;
+    final int depth;
+
+    Simple(Scope parent, Node rootNode) {
+      super(rootNode);
+      checkChildScope(parent);
+      this.parent = parent;
+      this.depth = parent.getDepth() + 1;
+    }
+
+    Simple(Node rootNode) {
+      super(rootNode);
+      checkRootScope();
+      this.parent = null;
+      this.depth = 0;
+    }
+
+    @Override
+    public int getDepth() {
+      return depth;
+    }
+
+    @Override
+    public Scope getParent() {
+      return parent;
+    }
   }
 }

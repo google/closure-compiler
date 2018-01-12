@@ -24,7 +24,10 @@ import com.google.javascript.rhino.StaticSourceFile;
 import com.google.javascript.rhino.Token;
 import java.io.Serializable;
 
-/** Represents a single declaration or reference to a variable. */
+/**
+ * Represents a single declaration or reference to a variable. Note that references can only be used
+ * with untyped scopes and traversals.
+ */
 public final class Reference implements StaticRef, Serializable {
 
   private static final ImmutableSet<Token> DECLARATION_PARENTS =

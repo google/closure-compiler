@@ -28,7 +28,8 @@ import com.google.javascript.rhino.jstype.StaticTypedSlot;
 /**
  * {@link AbstractVar} subclass for use with {@link TypedScope}.
  */
-public class TypedVar extends Var implements StaticTypedSlot<JSType>, StaticTypedRef<JSType> {
+public class TypedVar extends AbstractVar<TypedScope, TypedVar>
+    implements StaticTypedSlot<JSType>, StaticTypedRef<JSType> {
 
   private JSType type;
   // The next two fields and the associated methods are only used by
@@ -48,21 +49,6 @@ public class TypedVar extends Var implements StaticTypedSlot<JSType>, StaticType
     super(name, nameNode, scope, index, input);
     this.type = type;
     this.typeInferred = inferred;
-  }
-
-  @Override
-  public TypedVar getSymbol() {
-    return (TypedVar) super.getSymbol();
-  }
-
-  @Override
-  public TypedVar getDeclaration() {
-    return (TypedVar) super.getDeclaration();
-  }
-
-  @Override
-  public TypedScope getScope() {
-    return (TypedScope) super.getScope();
   }
 
   /**
@@ -85,7 +71,7 @@ public class TypedVar extends Var implements StaticTypedSlot<JSType>, StaticType
 
   void resolveType(ErrorReporter errorReporter) {
     if (type != null) {
-      type = type.resolve(errorReporter, (TypedScope) scope);
+      type = type.resolve(errorReporter, scope);
     }
   }
 

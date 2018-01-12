@@ -77,15 +77,13 @@ public class AbstractVar<S extends AbstractScope<S, V>, V extends AbstractVar<S,
     return nameNode.getStaticSourceFile();
   }
 
-  // Temporarily non-final for TypedVar
   @Override
-  public V getSymbol() {
+  public final V getSymbol() {
     return thisVar();
   }
 
-  // Temporarily non-final for TypedVar
   @Override
-  public V getDeclaration() {
+  public final V getDeclaration() {
     return nameNode == null ? null : thisVar();
   }
 
@@ -101,8 +99,7 @@ public class AbstractVar<S extends AbstractScope<S, V>, V extends AbstractVar<S,
     return NodeUtil.isFunctionExpression(getParentNode());
   }
 
-  // Temporarily non-final for TypedVar
-  public S getScope() {
+  public final S getScope() {
     return scope;
   }
 

@@ -81,7 +81,7 @@ public class Es6SyntacticScopeCreator implements ScopeCreator {
     public Scope create(Scope parent, Node n) {
       return (parent == null)
         ? Scope.createGlobalScope(n)
-        : new Scope(parent, n);
+        : Scope.createChildScope(parent, n);
     }
   }
 

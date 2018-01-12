@@ -37,62 +37,37 @@ import java.util.Map;
  */
 abstract class AbstractScope<S extends AbstractScope<S, V>, V extends AbstractVar<S, V>>
     implements StaticScope, Serializable {
-  final Map<String, V> vars = new LinkedHashMap<>();
-  S parent;
-  int depth;
-  final Node rootNode;
+  private final Map<String, V> vars = new LinkedHashMap<>();
+  private final Node rootNode;
   private V arguments;
 
-  /**
-   * Creates a Scope given the parent Scope and the root node of the current scope.
-   *
-   * @param parent The parent Scope. Cannot be null.
-   * @param rootNode The root node of the current scope. Cannot be null.
-   */
-  AbstractScope(S parent, Node rootNode) {
-    checkNotNull(parent);
-    checkArgument(NodeUtil.createsScope(rootNode), rootNode);
-    checkArgument(
-        rootNode != parent.rootNode, "rootNode should not be the parent's root node", rootNode);
-
-    this.parent = parent;
-    this.rootNode = rootNode;
-    this.depth = parent.depth + 1;
-  }
-
   AbstractScope(Node rootNode) {
-    // TODO(tbreisacher): Can we tighten this to just NodeUtil.createsScope?
-    checkArgument(
-        NodeUtil.createsScope(rootNode) || rootNode.isScript() || rootNode.isRoot(), rootNode);
-    this.parent = null;
     this.rootNode = rootNode;
-    this.depth = 0;
-  }
-
-  @Override
-  public String toString() {
-    return "Scope@" + rootNode;
   }
 
   /** The depth of the scope. The global scope has depth 0. */
-  public int getDepth() {
-    return depth;
+  public abstract int getDepth();
+
+  /** Returns the parent scope, or null if this is the global scope. */
+  public abstract S getParent();
+
+  @Override
+  public final String toString() {
+    return "Scope@" + rootNode;
   }
 
   public Scope untyped() {
-    checkState(!(this instanceof TypedScope));
-    return (Scope) this;
+    throw new IllegalStateException("untyped() called, but not an untyped scope.");
   }
 
   public TypedScope typed() {
-    checkState(this instanceof TypedScope);
-    return (TypedScope) this;
+    throw new IllegalStateException("typed() called, but not a typed scope.");
   }
 
   /**
    * @return True if this scope contains {@code other}, or is the same scope as {@code other}.
    */
-  boolean contains(S other) {
+  final boolean contains(S other) {
     S s = checkNotNull(other);
     while (s != null) {
       if (s == this) {
@@ -107,16 +82,14 @@ abstract class AbstractScope<S extends AbstractScope<S, V>, V extends AbstractVa
    * Gets the container node of the scope. This is typically the FUNCTION
    * node or the global BLOCK/SCRIPT node.
    */
+  // Non-final for jsdev tests
   @Override
   public Node getRootNode() {
     return rootNode;
   }
 
-  public S getParent() {
-    return parent;
-  }
-
-  S getGlobalScope() {
+  /** Walks up the tree to find the global scope. */
+  final S getGlobalScope() {
     S result = thisScope();
     while (result.getParent() != null) {
       result = result.getParent();
@@ -125,8 +98,8 @@ abstract class AbstractScope<S extends AbstractScope<S, V>, V extends AbstractVa
   }
 
   @Override
-  public S getParentScope() {
-    return parent;
+  public final S getParentScope() {
+    return getParent();
   }
 
   abstract V makeArgumentsVar();
@@ -135,34 +108,43 @@ abstract class AbstractScope<S extends AbstractScope<S, V>, V extends AbstractVa
    * Undeclares a variable, to be used when the compiler optimizes out
    * a variable and removes it from the scope.
    */
-  void undeclare(V var) {
+  final void undeclare(V var) {
     checkState(var.scope == this);
     checkState(vars.get(var.name).equals(var));
     undeclareInteral(var);
   }
 
   /** Without any safety checks */
-  void undeclareInteral(V var) {
+  final void undeclareInteral(V var) {
      vars.remove(var.name);
   }
 
+  final void declareInternal(String name, V var) {
+    vars.put(name, var);
+  }
+
+  final void clearVarsInternal() {
+    vars.clear();
+  }
+
   @Override
-  public V getSlot(String name) {
+  public final V getSlot(String name) {
     return getVar(name);
   }
 
   @Override
-  public V getOwnSlot(String name) {
+  public final V getOwnSlot(String name) {
     return vars.get(name);
   }
 
   /**
    * Returns the variable, may be null
    */
+  // Non-final for jsdev tests
   public V getVar(String name) {
     S scope = thisScope();
     while (scope != null) {
-      V var = scope.vars.get(name);
+      V var = scope.getOwnSlot(name);
       if (var != null) {
         return var;
       }
@@ -170,7 +152,7 @@ abstract class AbstractScope<S extends AbstractScope<S, V>, V extends AbstractVa
         return scope.getArgumentsVar();
       }
       // Recurse up the parent Scope
-      scope = scope.parent;
+      scope = scope.getParent();
     }
     return null;
   }
@@ -184,7 +166,7 @@ abstract class AbstractScope<S extends AbstractScope<S, V>, V extends AbstractVa
     }
 
     if (!isFunctionScope() || rootNode.isArrowFunction()) {
-      return parent.getArgumentsVar();
+      return getParent().getArgumentsVar();
     }
 
     if (arguments == null) {
@@ -195,28 +177,29 @@ abstract class AbstractScope<S extends AbstractScope<S, V>, V extends AbstractVa
 
   /**
    * Use only when in a function block scope and want to tell if a name is either at the top of the
-   * function block scope or the function parameter scope
+   * function block scope or the function parameter scope.  This obviously only applies to ES6 block
+   * scopes.
    */
-  public boolean isDeclaredInFunctionBlockOrParameter(String name) {
+  public final boolean isDeclaredInFunctionBlockOrParameter(String name) {
     // In ES6, we create a separate "function parameter scope" above the function block scope to
     // handle default parameters. Since nothing in the function block scope is allowed to shadow
     // the variables in the function scope, we treat the two scopes as one in this method.
     checkState(isFunctionBlockScope());
-    return isDeclared(name, false) || parent.isDeclared(name, false);
+    return isDeclared(name, false) || (getParent().isDeclared(name, false));
   }
 
   /**
    * Returns true if a variable is declared.
    */
-  public boolean isDeclared(String name, boolean recurse) {
+  public final boolean isDeclared(String name, boolean recurse) {
     S scope = thisScope();
     while (true) {
-      if (scope.vars.containsKey(name)) {
+      if (scope.getOwnSlot(name) != null) {
         return true;
       }
 
-      if (scope.parent != null && recurse) {
-        scope = scope.parent;
+      if (scope.getParent() != null && recurse) {
+        scope = scope.getParent();
         continue;
       }
       return false;
@@ -227,7 +210,8 @@ abstract class AbstractScope<S extends AbstractScope<S, V>, V extends AbstractVa
    * Return an iterable over all of the variables declared in this scope
    * (except the special 'arguments' variable).
    */
-  public Iterable<? extends V> getVarIterable() {
+  // Non-final for jsdev tests
+  public Iterable<V> getVarIterable() {
     return vars.values();
   }
 
@@ -243,7 +227,7 @@ abstract class AbstractScope<S extends AbstractScope<S, V>, V extends AbstractVa
    *
    * <p>We do not include the special 'arguments' variable.
    */
-  public Iterable<? extends V> getAllAccessibleVariables() {
+  public final Iterable<V> getAllAccessibleVariables() {
     Map<String, V> accessibleVars = new LinkedHashMap<>();
     S s = thisScope();
 
@@ -258,13 +242,15 @@ abstract class AbstractScope<S extends AbstractScope<S, V>, V extends AbstractVa
     return accessibleVars.values();
   }
 
-  public Iterable<? extends V> getAllSymbols() {
+  // Non-final for jsdev tests
+  public Iterable<V> getAllSymbols() {
     return Collections.unmodifiableCollection(vars.values());
   }
 
   /**
    * Returns number of variables in this scope (excluding the special 'arguments' variable)
    */
+  // Non-final for jsdev tests
   public int getVarCount() {
     return vars.size();
   }
@@ -272,34 +258,36 @@ abstract class AbstractScope<S extends AbstractScope<S, V>, V extends AbstractVa
   /**
    * Returns whether this is the global scope.
    */
+  // Non-final for jsdev tests
   public boolean isGlobal() {
-    return parent == null;
+    return getParent() == null;
   }
 
   /**
    * Returns whether this is a local scope (i.e. not the global scope).
    */
+  // Non-final for jsdev tests
   public boolean isLocal() {
-    return parent != null;
+    return getParent() != null;
   }
 
-  public boolean isBlockScope() {
+  public final boolean isBlockScope() {
     return NodeUtil.createsBlockScope(rootNode);
   }
 
-  public boolean isFunctionBlockScope() {
+  public final boolean isFunctionBlockScope() {
     return NodeUtil.isFunctionBlock(getRootNode());
   }
 
-  public boolean isFunctionScope() {
+  public final boolean isFunctionScope() {
     return getRootNode().isFunction();
   }
 
-  public boolean isModuleScope() {
+  public final boolean isModuleScope() {
     return getRootNode().isModuleBody();
   }
 
-  public boolean isCatchScope() {
+  public final boolean isCatchScope() {
     return getRootNode().isNormalBlock()
         && getRootNode().hasOneChild()
         && getRootNode().getFirstChild().isCatch();
@@ -313,7 +301,7 @@ abstract class AbstractScope<S extends AbstractScope<S, V>, V extends AbstractVa
    * inside function parameters, it would make less sense to say that if you did declare one in
    * the function parameters, it would be hoisted somewhere else.
    */
-  boolean isHoistScope() {
+  final boolean isHoistScope() {
     return isFunctionScope() || isFunctionBlockScope() || isGlobal() || isModuleScope();
   }
 
@@ -324,13 +312,13 @@ abstract class AbstractScope<S extends AbstractScope<S, V>, V extends AbstractVa
    * to declare a var inside function parameters, it would make even less sense to say that
    * such declarations would be "hoisted" somewhere else.
    */
-  public S getClosestHoistScope() {
+  public final S getClosestHoistScope() {
     S current = thisScope();
     while (current != null) {
       if (current.isHoistScope()) {
         return current;
       }
-      current = current.parent;
+      current = current.getParent();
     }
     return null;
   }
@@ -341,5 +329,21 @@ abstract class AbstractScope<S extends AbstractScope<S, V>, V extends AbstractVa
   @SuppressWarnings("unchecked")
   private S thisScope() {
     return (S) this;
+  }
+
+  /** Performs simple validity checks on when constructing a child scope. */
+  void checkChildScope(S parent) {
+    checkNotNull(parent);
+    checkArgument(NodeUtil.createsScope(rootNode), rootNode);
+    checkArgument(
+        rootNode != parent.getRootNode(),
+        "rootNode should not be the parent's root node: %s", rootNode);
+  }
+
+  /** Performs simple validity checks on when constructing a root scope. */
+  void checkRootScope() {
+    // TODO(tbreisacher): Can we tighten this to just NodeUtil.createsScope?
+    checkArgument(
+        NodeUtil.createsScope(rootNode) || rootNode.isScript() || rootNode.isRoot(), rootNode);
   }
 }

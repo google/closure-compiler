@@ -147,14 +147,21 @@ class IncrementalScopeCreator implements ScopeCreator {
    */
   private abstract static class PersistentScope extends Scope {
     boolean valid = true; // starts as valid
+    PersistentScope parent;
+    int depth;
 
     PersistentScope(PersistentScope parent, Node rootNode) {
-      super(parent, rootNode);
+      super(rootNode);
+      checkChildScope(parent);
+      this.parent = parent;
+      this.depth = parent.depth + 1;
     }
 
-    protected PersistentScope(Node rootNode) {
+    PersistentScope(Node rootNode) {
       super(rootNode);
-      checkArgument(rootNode.isRoot());
+      checkArgument(rootNode.isRoot()); // Note: this is a stronger check than checkRootScope()
+      this.parent = null;
+      this.depth = 0;
     }
 
     static PersistentScope create(PersistentScope parent, Node rootNode) {
@@ -172,10 +179,14 @@ class IncrementalScopeCreator implements ScopeCreator {
 
     @Override
     public PersistentScope getParent() {
-      PersistentScope parent = (PersistentScope) super.getParent();
       checkState(parent == null || parent.valid, "parent scope is not valid");
       // The node traversal should ask for scopes in order, so parents should always be valid.
       return parent;
+    }
+
+    @Override
+    public int getDepth() {
+      return depth;
     }
 
     abstract void refresh(AbstractCompiler compiler, PersistentScope newParent);
@@ -294,8 +305,10 @@ class IncrementalScopeCreator implements ScopeCreator {
      */
     public void redeclare(Node n) {
       checkArgument(n.isName());
+      String name = n.getString();
+      checkArgument(!Var.ARGUMENTS.equals(name));
       Node redeclareScript = getContainingScript(n);
-      Var v = vars.get(n.getString());
+      Var v = getOwnSlot(name);
       Node declarationScript = getContainingScript(v.getNode());
       if (redeclareScript != declarationScript) {
         scriptDeclarationsPairs.put(redeclareScript, declarationScript);
@@ -357,14 +370,14 @@ class IncrementalScopeCreator implements ScopeCreator {
 
       // Even if this scope hasn't been invalidated, its parent scopes may have,
       // so update the scope chaining.
-      parent = newParent;
+      this.parent = newParent;
 
       // Even if the parent hasn't changed the depth might have, update it now.
-      depth = parent.getDepth() + 1;
+      this.depth = parent.getDepth() + 1;
 
       // Update the scope if needed.
       if (!valid) {
-        vars.clear();
+        clearVarsInternal();
         new ScopeScanner(compiler, this).populate();
         valid = true;
 

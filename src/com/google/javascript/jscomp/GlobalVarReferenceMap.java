@@ -217,6 +217,8 @@ class GlobalVarReferenceMap implements ReferenceMap {
     for (ReferenceCollection collection : refMap.values()) {
       List<Reference> newRefs = new ArrayList<>(collection.references.size());
       for (Reference ref : collection) {
+        // This is only ever called with compiler.getTopScope() in production, which is
+        // a TypedScope.  But References are only ever created with
         if (ref.getScope() != globalScope) {
           newRefs.add(ref.cloneWithNewScope(globalScope));
         } else {
@@ -246,7 +248,11 @@ class GlobalVarReferenceMap implements ReferenceMap {
     public void hotSwapScript(Node scriptRoot, Node originalRoot) {
       GlobalVarReferenceMap refMap = compiler.getGlobalVarReferences();
       if (refMap != null) {
-        refMap.updateReferencesWithGlobalScope(compiler.getTopScope());
+        // We don't have a suitable untyped scope to use, but the actual scope probably doesn't
+        // matter, so long as it's a global scope and doesn't persist references to things that
+        // need to be cleaned up.  So we just generate a new simple root scope.
+        refMap.updateReferencesWithGlobalScope(
+            Scope.createGlobalScope(compiler.getTopScope().getRootNode()));
       }
     }
 

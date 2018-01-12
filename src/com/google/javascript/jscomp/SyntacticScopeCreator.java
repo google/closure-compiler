@@ -62,7 +62,10 @@ public class SyntacticScopeCreator implements ScopeCreator {
     if (parent == null) {
       scope = isTyped ? TypedScope.createGlobalScope(n) : Scope.createGlobalScope(n);
     } else {
-      scope = isTyped ? new TypedScope((TypedScope) parent, n) : new Scope((Scope) parent, n);
+      scope =
+          isTyped
+              ? new TypedScope((TypedScope) parent, n)
+              : Scope.createChildScope((Scope) parent, n);
     }
 
     scanRoot(n);
