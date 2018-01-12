@@ -1014,7 +1014,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
             "f();")),
         expected(""
             + "goog.module(\"x.y.z\");"
-            + "var module$exports$x$y$z={};"
+            + "/** @const */ var module$exports$x$y$z={};"
             + "function module$contents$x$y$z_f(){return goog.module.get(\"a.b.c\")}"
             + "module$contents$x$y$z_f()"),
         warning(MISSING_MODULE_OR_PROVIDE));
@@ -2153,20 +2153,20 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
         },
         new String[] {
             "goog.module(\"Foo\");",
-            "var module$exports$Foo=function(){};",
+            "/** @const @constructor */ var module$exports$Foo=function(){};",
 
             "goog.module(\"bar\");",
-            "var module$exports$bar={};",
-            "module$exports$bar.doBar=function(){};",
+            "/** @const */ var module$exports$bar={};",
+            "/** @const */ module$exports$bar.doBar=function(){};",
 
             "goog.module(\"baz\");",
-            "var module$exports$baz={};",
-            "module$exports$baz.doBaz=function(){};",
+            "/** @const */ var module$exports$baz={};",
+            "/** @const */ module$exports$baz.doBaz=function(){};",
 
             "goog.module(\"leaf\");",
-            "var module$exports$leaf={};",
+            "/** @const */ var module$exports$leaf={};",
             "var module$contents$leaf_Foo=goog.require(\"Foo\");",
-            "var {doBar:module$contents$leaf_doBar}=goog.require(\"bar\");",
+            "var {doBar:module$contents$leaf_doBar}=goog.require(\"bar\");\n",
             "var {doBaz:module$contents$leaf_doooBaz}=goog.require(\"baz\")"
         });
   }

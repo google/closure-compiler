@@ -617,6 +617,7 @@ public abstract class CompilerTestCase extends TestCase {
     options.setEmitUseStrict(false);
     options.setLanguageOut(languageOut);
     options.setModuleResolutionMode(moduleResolutionMode);
+    options.setPreserveTypeAnnotations(true);
 
     // This doesn't affect whether checkSymbols is run--it just affects
     // whether variable warnings are filtered.
