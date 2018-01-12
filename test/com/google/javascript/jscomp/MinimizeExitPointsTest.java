@@ -303,30 +303,49 @@ public final class MinimizeExitPointsTest extends CompilerTestCase {
   }
 
   public void testFoldBlockScopedVariables() {
-    // TODO(b/70726762): This output is wrong, and will cause a VarCheck error.
-    // Consider either not folding in this case, or declaring "c" and "d" in the function scope.
+    // When moving block-scoped variable declarations into inner blocks, first convert them to
+    // "var" declarations to avoid breaking any references in inner functions.
+
+    // For example, in the following test case, moving "let c = 3;" directly inside the else block
+    // would break the function "g"'s reference to "c".
     fold(
+        "function f() { function g() { return c; } if (x) {return;} let c = 3; }",
+        "function f() { function g() { return c; } if (x){} else {var c = 3;} }");
+    fold(
+        "function f() { function g() { return c; } if (x) {return;} const c = 3; }",
+        "function f() { function g() { return c; } if (x) {} else {var c = 3;} }");
+    // Convert let and const even they're if not referenced by any functions.
+    fold(
+        "function f() { if (x) {return;} const c = 3; }",
+        "function f() { if (x) {} else { var c = 3; } }");
+    fold(
+        "function f() { if (x) {return;} let a = 3; let b = () => a; }",
+        "function f() { if (x) {} else { var a = 3; var b = () => a;} }");
+    fold(
+        "function f() { if (x) { if (y) {return;} let c = 3; } }",
+        "function f() { if (x) { if (y) {} else { var c = 3; } } }");
+  }
+
+  public void testDontFoldBlockScopedVariablesInLoops() {
+    // Don't move block-scoped declarations into inner blocks inside a loop, since converting
+    // let/const declarations to vars in a loop can cause incorrect semantics.
+    // See the following test case for an example.
+    foldSame(
         lines(
-            "function f() {",
-            "  function inner() {",
-            "    return c + d;",
-            "  }",
-            "  if (x) {",
-            "    return;",
-            "  }",
-            "  let d = 3;",
-            "  const c = 4;",
-            "}"),
-        lines(
-            "function f() {",
-            "  function inner() {",
-            "    return c + d;", // c and d are not declared in this scope anymore.
-            "  }",
-            "  if (x);",
-            "  else {",
-            "    let d = 3;",
-            "    const c = 4;",
-            "  }",
+            "function f(param) {",
+            "  let arr = [];",
+            "  for (let x of param) {",
+            "    if (x < 0) continue;",
+            "    let y = x * 2;",
+            "    arr.push(() => y);", // If y was a var, this would capture the wrong value.
+            "   }",
+            "  return arr;",
             "}"));
+
+    // Additional tests for different kinds of loops.
+    foldSame("function f() { while (true) { if (true) {return;} let c = 3; } }");
+    foldSame("function f() { do { if (true) {return;} let c = 3; } while (x); }");
+    foldSame("function f() { for (;;) { if (true) { return; } let c = 3; } }");
+    foldSame("function f(y) { for(x in []){ if(x) { return; } let c = 3; } }");
   }
 }
