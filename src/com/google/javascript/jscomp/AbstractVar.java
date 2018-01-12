@@ -24,6 +24,7 @@ import com.google.javascript.rhino.StaticRef;
 import com.google.javascript.rhino.StaticSlot;
 import com.google.javascript.rhino.StaticSourceFile;
 import com.google.javascript.rhino.Token;
+import java.util.Objects;
 
 /**
  * Used by {@code Scope} to store information about variables.
@@ -220,5 +221,21 @@ public class AbstractVar<S extends AbstractScope<S, V>, V extends AbstractVar<S,
   @SuppressWarnings("unchecked")
   private V thisVar() {
     return (V) this;
+  }
+
+  // Non-final for jsdev tests
+  @Override
+  public boolean equals(Object other) {
+    if (!(other instanceof AbstractVar)) {
+      return false;
+    }
+    return Objects.equals(name, ((AbstractVar<?, ?>) other).name)
+        && Objects.equals(scope.getRootNode(), ((AbstractVar<?, ?>) other).scope.getRootNode());
+  }
+
+  // Non-final for jsdev tests
+  @Override
+  public int hashCode() {
+    return Objects.hash(name, scope.getRootNode());
   }
 }

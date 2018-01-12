@@ -38,21 +38,6 @@ public class Var extends AbstractVar<Scope, Var> implements StaticSlot, StaticRe
   }
 
   @Override
-  public boolean equals(Object other) {
-    if (!(other instanceof Var)) {
-      return false;
-    }
-
-    Var otherVar = (Var) other;
-    return otherVar.nameNode == nameNode;
-  }
-
-  @Override
-  public int hashCode() {
-    return nameNode.hashCode();
-  }
-
-  @Override
   public String toString() {
     return "Var " + name + " @ " + nameNode;
   }
@@ -90,17 +75,6 @@ public class Var extends AbstractVar<Scope, Var> implements StaticSlot, StaticRe
     @Override
     protected Token declarationType() {
       return null;
-    }
-
-    @Override
-    public boolean equals(Object other) {
-      // Note: Arguments vars are singletons.
-      return this == other;
-    }
-
-    @Override
-    public int hashCode() {
-      return System.identityHashCode(this);
     }
   }
 }

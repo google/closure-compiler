@@ -104,19 +104,6 @@ public class TypedVar extends Var implements StaticTypedSlot<JSType>, StaticType
   }
 
   @Override
-  public boolean equals(Object other) {
-    if (!(other instanceof TypedVar)) {
-      return false;
-    }
-    return ((TypedVar) other).nameNode == nameNode;
-  }
-
-  @Override
-  public int hashCode() {
-    return nameNode.hashCode();
-  }
-
-  @Override
   public String toString() {
     return "Var " + name + "{" + type + "}";
   }
