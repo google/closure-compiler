@@ -24,9 +24,9 @@
 
 
 /**
- * @constructor
+ * @interface
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Generator
- * @implements {IteratorIterable<VALUE>}
+ * @extends {IteratorIterable<VALUE>}
  * @template VALUE
  */
 function Generator() {}
