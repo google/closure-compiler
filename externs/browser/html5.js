@@ -1728,7 +1728,7 @@ HTMLMediaElement.prototype.autobuffer;
 /** @type {!TimeRanges} */
 HTMLMediaElement.prototype.buffered;
 
-/** @type {!MediaStream} */
+/** @type {?MediaStream} */
 HTMLMediaElement.prototype.srcObject;
 
 /**
