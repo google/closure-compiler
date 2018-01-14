@@ -340,6 +340,42 @@ public final class ModuleLoaderTest extends TestCase {
         loader.resolve("/node_modules/mymodule/client.js").resolveJsModule("./exclude/this.js"));
   }
 
+  public void testWebpack() throws Exception {
+    ImmutableMap<String, String> webpackModulesById =
+        ImmutableMap.of(
+            "1", "A/index.js",
+            "B/index.js", "B/index.js",
+            "3", "app.js");
+
+    ModuleLoader loader =
+        new ModuleLoader(
+            null,
+            ImmutableList.of("."),
+            inputs("A/index.js", "B/index.js", "app.js"),
+            ModuleLoader.PathResolver.RELATIVE,
+            ModuleLoader.ResolutionMode.WEBPACK,
+            webpackModulesById);
+
+    input("A/index.js");
+    input("B/index.js");
+    input("app.js");
+    assertUri("/A/index.js", loader.resolve("A/index.js").resolveJsModule("1"));
+    assertUri("/B/index.js", loader.resolve("A/index.js").resolveJsModule("B/index.js"));
+    assertUri("/app.js", loader.resolve("A/index.js").resolveJsModule("3"));
+    assertUri("/A/index.js", loader.resolve("B/index.js").resolveJsModule("1"));
+    assertUri("/B/index.js", loader.resolve("B/index.js").resolveJsModule("B/index.js"));
+    assertUri("/app.js", loader.resolve("B/index.js").resolveJsModule("3"));
+    assertUri("/A/index.js", loader.resolve("app.js").resolveJsModule("1"));
+    assertUri("/B/index.js", loader.resolve("app.js").resolveJsModule("B/index.js"));
+    assertUri("/app.js", loader.resolve("app.js").resolveJsModule("3"));
+
+    // Path loading falls back to the node resolver
+    assertUri("A/index.js", loader.resolve("B/index.js").resolveJsModule("../A"));
+    assertUri("A/index.js", loader.resolve("B/index.js").resolveJsModule("../A/"));
+    assertUri("A/index.js", loader.resolve("B/index.js").resolveJsModule("../A/index"));
+    assertUri("A/index.js", loader.resolve("app.js").resolveJsModule("./A/index"));
+  }
+
   CompilerInput input(String name) {
     return new CompilerInput(SourceFile.fromCode(name, ""), false);
   }

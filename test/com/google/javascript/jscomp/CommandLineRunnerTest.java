@@ -2160,6 +2160,45 @@ public final class CommandLineRunnerTest extends TestCase {
         "function a() {return 'hi'}alert(a);alert(a)");
   }
 
+  public void testWebpackModuleIds() {
+    String inputString =
+        LINE_JOINER.join(
+            "[",
+            "  {\"src\": \"__webpack_require__(2);\", \"path\":\"foo.js\", \"webpackId\": \"1\"},",
+            "  {\"src\": \"console.log('bar');\", \"path\":\"bar.js\", \"webpackId\": \"2\"}",
+            "]");
+    args.add("--json_streams=BOTH");
+    args.add("--module_resolution=WEBPACK");
+    args.add("--process_common_js_modules");
+    args.add("--entry_point=foo.js");
+    args.add("--dependency_mode=STRICT");
+    args.add("--js_output_file=out.js");
+
+    CommandLineRunner runner =
+        new CommandLineRunner(
+            args.toArray(new String[] {}),
+            new ByteArrayInputStream(inputString.getBytes(UTF_8)),
+            new PrintStream(outReader),
+            new PrintStream(errReader));
+
+    lastCompiler = runner.getCompiler();
+    try {
+      runner.doRun();
+    } catch (IOException e) {
+      e.printStackTrace();
+      fail("Unexpected exception " + e);
+    }
+    String output = new String(outReader.toByteArray(), UTF_8);
+    assertThat(output)
+        .isEqualTo(
+            "[{\"src\":\"var module$bar={default:{}};"
+                + "console.log(\\\"bar\\\");var module$foo={default:{}};\\n\",\"path\":\"out.js\","
+                + "\"source_map\":\"{\\n\\\"version\\\":3,\\n\\\"file\\\":\\\"out.js\\\",\\n\\"
+                + "\"lineCount\\\":1,\\n\\\"mappings\\\":\\\"AAAA,IAAA,WAAA,CAAA,QAAA,EAAA,CAAAA,QAAAC,"
+                + "IAAA,CAAY,KAAZ,C,CCAA,IAAA,WAAA,CAAA,QAAA,EAAA;\\\",\\n\\\"sources\\\":[\\\"bar.js\\\","
+                + "\\\"foo.js\\\"],\\n\\\"names\\\":[\\\"console\\\",\\\"log\\\"]\\n}\\n\"}]");
+  }
+
   /* Helper functions */
 
   private void testSame(String original) {
