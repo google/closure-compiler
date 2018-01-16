@@ -16,6 +16,7 @@
 
 package com.google.javascript.refactoring;
 
+import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
@@ -126,7 +127,7 @@ public class RefasterJsScannerTest {
         + "function after_foo() {\n"
         + "  'bar';\n"
         + "}\n";
-    assertChanges("", originalCode, expectedCode, template);
+    assertChanges("", originalCode, template, expectedCode);
   }
 
   @Test
@@ -148,7 +149,7 @@ public class RefasterJsScannerTest {
         + "function after_foo() {\n"
         + "  foo();\n"
         + "}\n";
-    assertChanges(externs, originalCode, expectedCode, template);
+    assertChanges(externs, originalCode, template, expectedCode);
   }
 
   @Test
@@ -165,7 +166,7 @@ public class RefasterJsScannerTest {
         "function after_foo(x) {",
         "  x == 0;",
         "}");
-    assertChanges("", originalCode, expectedCode, template);
+    assertChanges("", originalCode, template, expectedCode);
   }
 
   @Test
@@ -190,7 +191,7 @@ public class RefasterJsScannerTest {
         + "function after_foo(foo) {\n"
         + "  foo.baz();\n"
         + "}\n";
-    assertChanges(externs, originalCode, expectedCode, template);
+    assertChanges(externs, originalCode, template, expectedCode);
   }
 
   @Test
@@ -221,7 +222,7 @@ public class RefasterJsScannerTest {
         + " */\n"
         + "function after_foo(foo) {\n"
         + "}\n";
-    assertChanges(externs, originalCode, expectedCode, template);
+    assertChanges(externs, originalCode, template, expectedCode);
   }
 
   @Test
@@ -243,7 +244,7 @@ public class RefasterJsScannerTest {
         + "function after_foo(clazz) {\n"
         + "  clazz.bar();\n"
         + "}\n";
-    assertChanges(externs, originalCode, expectedCode, template);
+    assertChanges(externs, originalCode, template, expectedCode);
   }
 
   @Test
@@ -260,7 +261,7 @@ public class RefasterJsScannerTest {
         + "function after_foo() {\n"
         + "  MyClass.prototype.bar\n"
         + "}\n";
-    assertChanges(externs, originalCode, expectedCode, template);
+    assertChanges(externs, originalCode, template, expectedCode);
   }
 
   @Test
@@ -279,7 +280,7 @@ public class RefasterJsScannerTest {
         + "function after_foo() {\n"
         + "  MyClass.prototype.bar\n"
         + "}\n";
-    assertChanges(externs, originalCode, expectedCode, template);
+    assertChanges(externs, originalCode, template, expectedCode);
   }
 
   @Test
@@ -301,7 +302,7 @@ public class RefasterJsScannerTest {
         + "function after_foo(clazz) {\n"
         + "  clazz.bar();\n"
         + "}\n";
-    assertChanges(externs, originalCode, expectedCode, template);
+    assertChanges(externs, originalCode, template, expectedCode);
   }
 
   @Test
@@ -318,11 +319,11 @@ public class RefasterJsScannerTest {
         + "function after_template(msg) {\n"
         + "  throw getError();\n"
         + "}\n";
-    assertChanges(externs, originalCode, expectedCode, template);
+    assertChanges(externs, originalCode, template, expectedCode);
 
     originalCode = "function f() {throw Error('foo');}";
     expectedCode = "function f() {throw getError();}";
-    assertChanges(externs, originalCode, expectedCode, template);
+    assertChanges(externs, originalCode, template, expectedCode);
 
     originalCode = ""
         + "if (true) {\n"
@@ -332,7 +333,7 @@ public class RefasterJsScannerTest {
         + "if (true) {\n"
         + "  throw getError();\n"
         + "}";
-    assertChanges(externs, originalCode, expectedCode, template);
+    assertChanges(externs, originalCode, template, expectedCode);
 }
 
   @Test
@@ -347,7 +348,7 @@ public class RefasterJsScannerTest {
         + "function after_template() {\n"
         + "  getBar();\n"
         + "}\n";
-    assertChanges(externs, originalCode, expectedCode, template);
+    assertChanges(externs, originalCode, template, expectedCode);
   }
 
   @Test
@@ -362,7 +363,7 @@ public class RefasterJsScannerTest {
         + "function after_template() {\n"
         + "  getBar();\n"
         + "}\n";
-    assertChanges(externs, originalCode, expectedCode, template);
+    assertChanges(externs, originalCode, template, expectedCode);
   }
 
   @Test
@@ -377,11 +378,11 @@ public class RefasterJsScannerTest {
         + "function after_template() {\n"
         + "  getBar();\n"
         + "}\n";
-    assertChanges(externs, originalCode, expectedCode, template);
+    assertChanges(externs, originalCode, template, expectedCode);
 
     originalCode = "function f() { return getFoo() == 'foo'; }";
     expectedCode = "function f() { return getBar() == 'foo'; }";
-    assertChanges(externs, originalCode, expectedCode, template);
+    assertChanges(externs, originalCode, template, expectedCode);
   }
 
   @Test
@@ -404,7 +405,7 @@ public class RefasterJsScannerTest {
         + "function after_template() {\n"
         + "  getBar();\n"
         + "}\n";
-    assertChanges(externs, originalCode, expectedCode, template);
+    assertChanges(externs, originalCode, template, expectedCode);
   }
 
   @Test
@@ -429,7 +430,7 @@ public class RefasterJsScannerTest {
         + "function after_template() {\n"
         + "  getValue()\n"
         + "}\n";
-    assertChanges(externs, originalCode, expectedCode, template);
+    assertChanges(externs, originalCode, template, expectedCode);
   }
 
   @Test
@@ -447,11 +448,11 @@ public class RefasterJsScannerTest {
         + "function after_template() {\n"
         + "  CONSTANT2\n"
         + "}\n";
-    assertChanges(externs, originalCode, expectedCode, template);
+    assertChanges(externs, originalCode, template, expectedCode);
 
     originalCode = "for (var i = 0; i < CONSTANT; i++) {}";
     expectedCode = "for (var i = 0; i < CONSTANT2; i++) {}";
-    assertChanges(externs, originalCode, expectedCode, template);
+    assertChanges(externs, originalCode, template, expectedCode);
 
     originalCode = "for (var i = 0; i < CONSTANT; i++) {}";
     expectedCode = "for (var i = 0; i < obj.prop; i++) {}";
@@ -462,7 +463,7 @@ public class RefasterJsScannerTest {
         + "function after_template() {\n"
         + "  obj.prop\n"
         + "}\n";
-    assertChanges(externs, originalCode, expectedCode, template);
+    assertChanges(externs, originalCode, template, expectedCode);
 
     originalCode = "for (var prop in obj) {}";
     expectedCode = "for (var prop in getObj()) {}";
@@ -473,7 +474,7 @@ public class RefasterJsScannerTest {
         + "function after_template() {\n"
         + "  getObj()\n"
         + "}\n";
-    assertChanges(externs, originalCode, expectedCode, template);
+    assertChanges(externs, originalCode, template, expectedCode);
   }
 
   @Test
@@ -490,7 +491,7 @@ public class RefasterJsScannerTest {
         + "function after_template() {\n"
         + "  3;\n"
         + "}\n";
-    assertChanges(externs, originalCode, expectedCode, template);
+    assertChanges(externs, originalCode, template, expectedCode);
   }
 
   @Test
@@ -508,7 +509,7 @@ public class RefasterJsScannerTest {
         + "function after_template() {\n"
         + "  getNewIndex();\n"
         + "}\n";
-    assertChanges(externs, originalCode, expectedCode, template);
+    assertChanges(externs, originalCode, template, expectedCode);
   }
 
   @Test
@@ -527,7 +528,7 @@ public class RefasterJsScannerTest {
         + "function after_template(fn) {\n"
         + "  fn().someOtherFn();\n"
         + "}\n";
-    assertChanges(externs, originalCode, expectedCode, template);
+    assertChanges(externs, originalCode, template, expectedCode);
   }
 
   @Test
@@ -554,39 +555,27 @@ public class RefasterJsScannerTest {
     String expectedCode = "setP(theT);";
 
     // {!T} matches {!T}
-    assertChanges(
-        externs + "/** @type {!T} */ var theT;",
-        originalCode,
-        expectedCode,
-        template);
+    assertChanges(externs + "/** @type {!T} */ var theT;", originalCode, template, expectedCode);
 
     // {?T} in the code does not match {!T} in the template.
     assertChanges(
         externs + "/** @type {?T} */ var theT;",
         originalCode,
-        null, // No changes.
-        template);
+        template,
+        (String) null); // No changes.
 
     // {unknown} does not match {!T}
-    assertChanges(
-        externs + "var theT;",
-        originalCode,
-        null, // No changes.
-        template);
+    assertChanges(externs + "var theT;", originalCode, template, (String) null); // No changes.
 
     // {!S} matches {!T}
-    assertChanges(
-        externs + "/** @type {!S} */ var theT;",
-        originalCode,
-        expectedCode,
-        template);
+    assertChanges(externs + "/** @type {!S} */ var theT;", originalCode, template, expectedCode);
 
     // {?S} does not match {!T}
     assertChanges(
         externs + "/** @type {?S} */ var theT;",
         originalCode,
-        null, // No changes.
-        template);
+        template,
+        (String) null); // No changes.
   }
 
   @Test
@@ -628,7 +617,7 @@ public class RefasterJsScannerTest {
     //  - theS.p would match either template (see {@link #test_strictSubtypeMatching}),
     //    but since before_template_S comes first it takes precedence.
     String expectedCode = "setP(theT); setPonS(theS);";
-    assertChanges(externs, originalCode, expectedCode, template);
+    assertChanges(externs, originalCode, template, expectedCode);
   }
 
   @Test
@@ -671,7 +660,7 @@ public class RefasterJsScannerTest {
         + "  someMethod() { this.obj.baz(STR); }\n"
         + "};\n"
         + "exports.Clazz = Clazz;\n";
-    assertChanges(externs, originalCode, expectedCode, template);
+    assertChanges(externs, originalCode, template, expectedCode);
   }
 
   @Test
@@ -706,7 +695,7 @@ public class RefasterJsScannerTest {
         + "function after_template(obj, msg) {\n"
         + "  obj.showError(msg, false);\n"
         + "}\n";
-    assertChanges(externs, originalCode, null, template);
+    assertChanges(externs, originalCode, template, (String) null);
   }
 
   @Test
@@ -741,7 +730,7 @@ public class RefasterJsScannerTest {
         + "function after_template(obj, msg) {\n"
         + "  obj.showError(msg, false);\n"
         + "}\n";
-    assertChanges(externs, originalCode, null, template);
+    assertChanges(externs, originalCode, template, (String) null);
   }
 
   @Test
@@ -769,7 +758,7 @@ public class RefasterJsScannerTest {
             "function after_foo() {",
             "  var a = goog.foo.f();",
             "}");
-    assertChanges(externs, originalCode, expectedCode, template);
+    assertChanges(externs, originalCode, template, expectedCode);
   }
 
   @Test
@@ -801,7 +790,7 @@ public class RefasterJsScannerTest {
             "function after_foo() {",
             "  var a = goog.foo.f();",
             "}");
-    assertChanges(externs, originalCode, expectedCode, template);
+    assertChanges(externs, originalCode, template, expectedCode);
   }
 
   @Test
@@ -830,7 +819,86 @@ public class RefasterJsScannerTest {
             "function after_foo() {",
             "  var a = goog.foo.f();",
             "}");
-    assertChanges(externs, originalCode, expectedCode, template);
+    assertChanges(externs, originalCode, template, expectedCode);
+  }
+
+  @Test
+  public void test_multipleChoices() throws Exception {
+    String externs = "";
+
+    String originalCode = Joiner.on('\n').join("goog.module('testcase');", "", "var loc = 'str';");
+    String expectedCode1 =
+        Joiner.on('\n').join("goog.module('testcase');", "", "var loc = 'foo' + 'str';");
+    String expectedCode2 =
+        Joiner.on('\n').join("goog.module('testcase');", "", "var loc = 'bar' + 'str';");
+    String template =
+        Joiner.on('\n')
+            .join(
+                "/**",
+                "* @param {string} str",
+                "*/",
+                "function before_foo(str) {",
+                "  var a = str;",
+                "};",
+                "/**",
+                " * @param {string} str",
+                "*/",
+                "function after_option_1_foo(str) {",
+                "  var a = 'foo' + str",
+                "}",
+                "/**",
+                " * @param {string} str",
+                "*/",
+                "function after_option_2_foo(str) {",
+                "  var a = 'bar' + str",
+                "}");
+    assertChanges(externs, originalCode, template, expectedCode1, expectedCode2);
+  }
+
+  @Test
+  public void test_multipleChoicesDifferentImports() throws Exception {
+    String externs = "";
+
+    String originalCode = Joiner.on('\n').join("goog.module('testcase');", "", "var loc = 'str';");
+    String expectedCode1 =
+        Joiner.on('\n')
+            .join(
+                "goog.module('testcase');",
+                "const bar = goog.require('goog.bar');",
+                "const foo = goog.require('goog.foo');",
+                "",
+                "var loc = foo.f(bar.b('option1'));");
+    String expectedCode2 =
+        Joiner.on('\n')
+            .join(
+                "goog.module('testcase');",
+                "const baz = goog.require('goog.baz');",
+                "const foo = goog.require('goog.foo');",
+                "",
+                "var loc = foo.f(baz.f('option2'));");
+    String template =
+        Joiner.on('\n')
+            .join(
+                "/**",
+                "* +require {goog.foo}",
+                "*/",
+                "function before_foo() {",
+                "  var a = 'str';",
+                "};",
+                "/**",
+                "* +require {goog.foo}", // Duplicates should be ok
+                "* +require {goog.bar}",
+                "*/",
+                "function after_option_1_foo() {",
+                "  var a = goog.foo.f(goog.bar.b('option1'))",
+                "}",
+                "/**",
+                "* +require {goog.baz}",
+                "*/",
+                "function after_option_2_foo() {",
+                "  var a = goog.foo.f(goog.baz.f('option2'))",
+                "}");
+    assertChanges(externs, originalCode, template, expectedCode1, expectedCode2);
   }
 
   private static Compiler createCompiler() {
@@ -854,7 +922,7 @@ public class RefasterJsScannerTest {
   }
 
   private static void assertChanges(
-      String externs, String originalCode, String expectedCode, String refasterJsTemplate)
+      String externs, String originalCode, String refasterJsTemplate, String... expectedChoices)
       throws Exception {
     RefasterJsScanner scanner = new RefasterJsScanner();
     scanner.loadRefasterJsTemplateFromCode(refasterJsTemplate);
@@ -876,8 +944,13 @@ public class RefasterJsScannerTest {
                 "foo.js")
             .build();
     List<SuggestedFix> fixes = driver.drive(scanner);
-    String newCode = ApplySuggestedFixes.applySuggestedFixesToCode(
-        fixes, ImmutableMap.of("input", originalCode)).get("input");
-    assertEquals(expectedCode, newCode);
+    ImmutableList<ImmutableMap<String, String>> outputChoices =
+        ApplySuggestedFixes.applyAllSuggestedFixChoicesToCode(
+            fixes, ImmutableMap.of("input", originalCode));
+    assertThat(outputChoices).hasSize(expectedChoices.length);
+
+    for (int i = 0; i < outputChoices.size(); i++) {
+      assertEquals("Choice " + i, expectedChoices[i], outputChoices.get(i).get("input"));
+    }
   }
 }

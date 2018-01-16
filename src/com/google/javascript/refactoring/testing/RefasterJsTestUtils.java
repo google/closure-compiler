@@ -17,8 +17,10 @@ package com.google.javascript.refactoring.testing;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Files;
+import com.google.common.truth.Correspondence;
 import com.google.javascript.jscomp.CommandLineRunner;
 import com.google.javascript.jscomp.CompilerOptions;
 import com.google.javascript.refactoring.ApplySuggestedFixes;
@@ -38,15 +40,15 @@ public final class RefasterJsTestUtils {
   /**
    * Performs refactoring using a RefasterJs template and asserts that result is as expected.
    *
-   * @param refasterJsTemplate path of the file or resource containing the RefasterJs
-   *    template to apply
-   * @param testDataPathPrefix path prefix of the directory from which input and
-   *    expected-output file will be read
+   * @param refasterJsTemplate path of the file or resource containing the RefasterJs template to
+   *     apply
+   * @param testDataPathPrefix path prefix of the directory from which input and expected-output
+   *     file will be read
    * @param originalFile file name of the JavaScript source file to apply the refaster template to
-   * @param additionalSourceFiles list of additional source files to provide to the compiler
-   *    (e.g. dependencies)
-   * @param expectedFile the expected result of applying the specified template to
-   *    {@code originalFile}
+   * @param additionalSourceFiles list of additional source files to provide to the compiler (e.g.
+   *     dependencies)
+   * @param expectedFileChoices the expected result options of applying the specified template to
+   *     {@code originalFile}
    * @throws IOException
    */
   public static void assertFileRefactoring(
@@ -54,13 +56,18 @@ public final class RefasterJsTestUtils {
       String testDataPathPrefix,
       String originalFile,
       List<String> additionalSourceFiles,
-      String expectedFile)
+      String... expectedFileChoices)
       throws IOException {
     RefasterJsScanner scanner = new RefasterJsScanner();
     scanner.loadRefasterJsTemplate(refasterJsTemplate);
 
     final String originalFilePath = testDataPathPrefix + File.separator + originalFile;
-    final String expectedFilePath = testDataPathPrefix + File.separator + expectedFile;
+
+    ImmutableList.Builder<String> expectedCodeBuilder = ImmutableList.builder();
+    for (String expectedFile : expectedFileChoices) {
+      expectedCodeBuilder.add(slurpFile(testDataPathPrefix + File.separator + expectedFile));
+    }
+    final ImmutableList<String> expectedCode = expectedCodeBuilder.build();
 
     RefactoringDriver.Builder driverBuilder =
         new RefactoringDriver.Builder()
@@ -75,21 +82,37 @@ public final class RefasterJsTestUtils {
     assertThat(driver.getCompiler().getErrors()).isEmpty();
     assertThat(driver.getCompiler().getWarnings()).isEmpty();
 
-    String newCode =
-        ApplySuggestedFixes.applySuggestedFixesToCode(
+    ImmutableList<String> newCode =
+        ApplySuggestedFixes.applyAllSuggestedFixChoicesToCode(
                 fixes, ImmutableMap.of(originalFilePath, slurpFile(originalFilePath)))
-            .get(originalFilePath);
-    assertThat(replaceTrailingWhitespace(newCode))
-        .isEqualTo(replaceTrailingWhitespace(slurpFile(expectedFilePath)));
+            .stream()
+            .map(m -> m.get(originalFilePath))
+            .collect(ImmutableList.toImmutableList());
+    assertThat(newCode)
+        .comparingElementsUsing(new IgnoringWhitespaceCorrespondence())
+        .containsExactlyElementsIn(expectedCode);
   }
 
   private static String slurpFile(String originalFile) throws IOException {
     return Files.asCharSource(new File(originalFile), StandardCharsets.UTF_8).read();
   }
-  
-  private static String replaceTrailingWhitespace(String contents) {
-    return contents.replaceAll("[ \t]*\n", "\n");
-  }
 
   private RefasterJsTestUtils() {}
+
+  private static class IgnoringWhitespaceCorrespondence extends Correspondence<String, String> {
+
+    @Override
+    public boolean compare(String actual, String expected) {
+      return replaceTrailingWhitespace(actual).equals(replaceTrailingWhitespace(expected));
+    }
+
+    private String replaceTrailingWhitespace(String contents) {
+      return contents.replaceAll("[ \t]*\n", "\n");
+    }
+
+    @Override
+    public String toString() {
+      return "equals (except for whitespace)";
+    }
+  }
 }

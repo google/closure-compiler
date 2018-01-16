@@ -20,7 +20,6 @@ import com.google.common.base.Strings;
 import com.google.javascript.jscomp.NodeTraversal;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.rhino.Node;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
