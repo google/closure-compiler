@@ -4786,7 +4786,7 @@ final class NewTypeInference implements CompilerPass {
         new QualifiedName(commonTypes.createSetterPropName(pname.getLeftmostName()));
     if (recvType.hasProp(setterPname)) {
       FunctionType funType = recvType.getProp(setterPname).getFunType();
-      checkNotNull(funType);
+      checkNotNull(funType, "recvType=%s, setterPname=%s", recvType, setterPname);
       JSType formalType = funType.getFormalType(0);
       checkState(!formalType.isBottom());
       return new LValueResultFwd(inEnv, formalType, formalType, null);
