@@ -440,6 +440,14 @@ public final class TypeValidatorTest extends CompilerTestCase {
         "/** @type {number} @suppress {duplicate} */",
         "ns1.x = 3;"));
 
+    testSame(LINE_JOINER.join(
+        "/** @const */",
+        "var ns1 = {};",
+        "/** @type {number} @suppress {duplicate} */",
+        "ns1.x = 3;",
+        "/** @type {number} */",
+        "ns1.x = 3;"));
+
     testWarning(
         lines(
             "/** @const */",
@@ -457,6 +465,16 @@ public final class TypeValidatorTest extends CompilerTestCase {
             "/** @type {number} */",
             "ns3.x;",
             "/** @type {string} @suppress {duplicate} */",
+            "ns3.x;"),
+        TypeValidator.DUP_VAR_DECLARATION_TYPE_MISMATCH);
+
+    testWarning(
+        lines(
+            "/** @const */",
+            "var ns3 = {};",
+            "/** @type {number} @suppress {duplicate} */",
+            "ns3.x;",
+            "/** @type {string} */",
             "ns3.x;"),
         TypeValidator.DUP_VAR_DECLARATION_TYPE_MISMATCH);
 

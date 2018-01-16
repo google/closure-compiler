@@ -594,6 +594,12 @@ class TypeValidator implements Serializable {
       allowDupe =
           info != null && info.getSuppressions().contains("duplicate");
     }
+    // Check for @suppress duplicate on the previous variable definition.
+    if (!allowDupe) {
+      JSDocInfo info = var.getJSDocInfo();
+      allowDupe =
+          info != null && info.getSuppressions().contains("duplicate");
+    }
 
     JSType varType = var.getType();
 
