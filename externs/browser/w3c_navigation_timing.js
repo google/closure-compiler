@@ -141,10 +141,19 @@ function PerformanceLongTaskTiming() {}
 /** @type {!Array<!TaskAttributionTiming>} */
 PerformanceLongTaskTiming.prototype.attribution;
 
+
 /** @constructor */
 function Performance() {}
-/** @type {PerformanceTiming} */ Performance.prototype.timing;
-/** @type {PerformanceNavigation} */ Performance.prototype.navigation;
+
+/** @type {PerformanceTiming} */
+Performance.prototype.timing;
+
+/** @type {PerformanceNavigation} */
+Performance.prototype.navigation;
+
+/** @type {number} */
+Performance.prototype.timeOrigin;
+
 
 /**
  * Clears the buffer used to store the current list of
