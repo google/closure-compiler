@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -1334,26 +1333,6 @@ public final class CommandLineRunnerTest extends TestCase {
     assertThat(multistageOutput).isEqualTo(singleStageOutput);
   }
 
-  private String compile(String inputString, List<String> args) {
-    ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-    ByteArrayOutputStream errorStream = new ByteArrayOutputStream();
-    CommandLineRunner runner =
-        new CommandLineRunner(
-            args.toArray(new String[] {}),
-            new ByteArrayInputStream(inputString.getBytes(UTF_8)),
-            new PrintStream(outputStream),
-            new PrintStream(errorStream));
-
-    runner.getCompiler();
-    try {
-      runner.doRun();
-    } catch (IOException e) {
-      e.printStackTrace();
-      fail("Unexpected exception " + e);
-    }
-    return new String(outputStream.toByteArray(), UTF_8);
-  }
-
   public void testCharSetExpansion() {
     testSame("");
     assertThat(lastCompiler.getOptions().outputCharset).isEqualTo(US_ASCII);
@@ -2365,6 +2344,26 @@ public final class CommandLineRunnerTest extends TestCase {
       assertThat(compiler.getErrors()).hasLength(1);
       assertError(compiler.getErrors()[0]).hasType(expectedError);
     }
+  }
+
+  private String compile(String inputString, List<String> args) {
+    ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+    ByteArrayOutputStream errorStream = new ByteArrayOutputStream();
+    CommandLineRunner runner =
+        new CommandLineRunner(
+            args.toArray(new String[] {}),
+            new ByteArrayInputStream(inputString.getBytes(UTF_8)),
+            new PrintStream(outputStream),
+            new PrintStream(errorStream));
+
+    runner.getCompiler();
+    try {
+      runner.doRun();
+    } catch (IOException e) {
+      e.printStackTrace();
+      fail("Unexpected exception " + e);
+    }
+    return new String(outputStream.toByteArray(), UTF_8);
   }
 
   private Compiler compile(String[] original) {

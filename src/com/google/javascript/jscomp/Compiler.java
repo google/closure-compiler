@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -989,6 +988,12 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
    */
   public void parse() {
     parseInputs();
+  }
+
+  public Node parse(SourceFile file) {
+    initCompilerOptionsIfTesting();
+    logger.finest("Parsing: " + file.getName());
+    return new JsAst(file).getAstRoot(this);
   }
 
   PassConfig getPassConfig() {
@@ -2176,14 +2181,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     }
   }
 
-  public Node parse(SourceFile file) {
-    initCompilerOptionsIfTesting();
-    logger.finest("Parsing: " + file.getName());
-    return new JsAst(file).getAstRoot(this);
-  }
-
-
-
   /**
    * Allow subclasses to override the default CompileOptions object.
    */
@@ -2273,32 +2270,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   /**
-   * Converts the parse tree for each input back to JS code.
-   */
-  public String[] toSourceArray() {
-    return runInCompilerThread(new Callable<String[]>() {
-      @Override
-      public String[] call() throws Exception {
-        Tracer tracer = newTracer("toSourceArray");
-        try {
-          int numInputs = inputs.size();
-          String[] sources = new String[numInputs];
-          CodeBuilder cb = new CodeBuilder();
-          for (int i = 0; i < numInputs; i++) {
-            Node scriptNode = inputs.get(i).getAstRoot(Compiler.this);
-            cb.reset();
-            toSource(cb, i, scriptNode);
-            sources[i] = cb.toString();
-          }
-          return sources;
-        } finally {
-          stopTracer(tracer, "toSourceArray");
-        }
-      }
-    });
-  }
-
-  /**
    * Converts the parse tree for a module back to JS code.
    */
   public String toSource(final JSModule module) {
@@ -2320,38 +2291,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
           toSource(cb, i, scriptNode);
         }
         return cb.toString();
-      }
-    });
-  }
-
-
-  /**
-   * Converts the parse tree for each input in a module back to JS code.
-   */
-  public String[] toSourceArray(final JSModule module) {
-    return runInCompilerThread(new Callable<String[]>() {
-      @Override
-      public String[] call() throws Exception {
-        List<CompilerInput> inputs = module.getInputs();
-        int numInputs = inputs.size();
-        if (numInputs == 0) {
-          return new String[0];
-        }
-
-        String[] sources = new String[numInputs];
-        CodeBuilder cb = new CodeBuilder();
-        for (int i = 0; i < numInputs; i++) {
-          Node scriptNode = inputs.get(i).getAstRoot(Compiler.this);
-          if (scriptNode == null) {
-            throw new IllegalArgumentException(
-                "Bad module input: " + inputs.get(i).getName());
-          }
-
-          cb.reset();
-          toSource(cb, i, scriptNode);
-          sources[i] = cb.toString();
-        }
-        return sources;
       }
     });
   }
@@ -2449,6 +2388,63 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
         firstOutput && !n.isFromExterns() && options.shouldGenerateTypedExterns());
     builder.setTagAsStrict(firstOutput && options.shouldEmitUseStrict());
     return builder.build();
+  }
+
+  /**
+   * Converts the parse tree for each input back to JS code.
+   */
+  public String[] toSourceArray() {
+    return runInCompilerThread(new Callable<String[]>() {
+      @Override
+      public String[] call() throws Exception {
+        Tracer tracer = newTracer("toSourceArray");
+        try {
+          int numInputs = inputs.size();
+          String[] sources = new String[numInputs];
+          CodeBuilder cb = new CodeBuilder();
+          for (int i = 0; i < numInputs; i++) {
+            Node scriptNode = inputs.get(i).getAstRoot(Compiler.this);
+            cb.reset();
+            toSource(cb, i, scriptNode);
+            sources[i] = cb.toString();
+          }
+          return sources;
+        } finally {
+          stopTracer(tracer, "toSourceArray");
+        }
+      }
+    });
+  }
+
+  /**
+   * Converts the parse tree for each input in a module back to JS code.
+   */
+  public String[] toSourceArray(final JSModule module) {
+    return runInCompilerThread(new Callable<String[]>() {
+      @Override
+      public String[] call() throws Exception {
+        List<CompilerInput> inputs = module.getInputs();
+        int numInputs = inputs.size();
+        if (numInputs == 0) {
+          return new String[0];
+        }
+
+        String[] sources = new String[numInputs];
+        CodeBuilder cb = new CodeBuilder();
+        for (int i = 0; i < numInputs; i++) {
+          Node scriptNode = inputs.get(i).getAstRoot(Compiler.this);
+          if (scriptNode == null) {
+            throw new IllegalArgumentException(
+                "Bad module input: " + inputs.get(i).getName());
+          }
+
+          cb.reset();
+          toSource(cb, i, scriptNode);
+          sources[i] = cb.toString();
+        }
+        return sources;
+      }
+    });
   }
 
   /**
