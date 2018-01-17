@@ -16,13 +16,11 @@
 
 package com.google.javascript.jscomp;
 
-import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
-import com.google.javascript.jscomp.CodingConvention.SubclassRelationship;
 import com.google.javascript.jscomp.OptimizeCalls.ReferenceMap;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
@@ -404,16 +402,6 @@ class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompile
     return seenCandidateDefiniton && seenCandidateUse;
   }
 
-  /**
-   * Determines if a call defines a class inheritance or mixing
-   * relation, according to the current coding convention.
-   */
-  private boolean isClassDefiningCall(Node callNode) {
-    SubclassRelationship classes =
-        compiler.getCodingConvention().getClassesDefinedByCall(callNode);
-    return classes != null;
-  }
-
   private boolean isCandidateDefinition(Node n) {
     Node parent = n.getParent();
     if (parent.isFunction() && NodeUtil.isFunctionDeclaration(parent)) {
@@ -781,7 +769,8 @@ class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompile
     if (maybeRest != null && maybeRest.isRest()) {
       int restIndex = paramList.getChildCount() - 1;
       // If the rest parameter is removable they all are.
-      if (parameters.size() < restIndex || parameters.get(restIndex).shouldRemove()) {
+      if (parameters.size() < restIndex
+          || (restIndex < parameters.size() && parameters.get(restIndex).shouldRemove())) {
         Node value = IR.arraylit().srcref(maybeRest);
         for (int i = restIndex; i < parameters.size(); i++) {
           Parameter parameter = parameters.get(i);
@@ -951,24 +940,6 @@ class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompile
       fnNode.getLastChild().addChildToFront(stmt);
       compiler.reportChangeToEnclosingScope(stmt);
     }
-  }
-
-  /**
-   * Eliminates the parameter from a function definition.
-   *
-   * @param function The function node
-   * @param argIndex The index of the argument to remove.
-   * @param definitionFinder The definition and use sites index.
-   * @return The Node of the argument removed.
-   */
-  @Nullable
-  private Node eliminateFunctionParamAt(Node function, int argIndex) {
-    checkArgument(function.isFunction(), "Node must be a function.");
-    Node formalParamNode = NodeUtil.getArgumentForFunction(function, argIndex);
-    if (formalParamNode != null) {
-      NodeUtil.deleteNode(formalParamNode, compiler);
-    }
-    return formalParamNode;
   }
 
   /**

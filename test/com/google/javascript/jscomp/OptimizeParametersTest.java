@@ -63,6 +63,8 @@ public final class OptimizeParametersTest extends CompilerTestCase {
   public void testNoRemovalSpread() {
     // TODO(johnlenz): make spread removable
     testSame("function f(p1) {} f(...x);");
+    testSame("function f(...p1) {} f(...x);");
+    test("function f(p1, ...p2) {} f(1, ...x);", "function f(...p2) {var p1 = 1;} f(...x);");
   }
 
   public void testRemovalRest1() {
