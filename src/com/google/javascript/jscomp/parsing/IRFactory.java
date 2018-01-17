@@ -713,6 +713,10 @@ class IRFactory {
     return handleJsDoc(getJsDoc(node));
   }
 
+  JSDocInfo handleJsDoc(com.google.javascript.jscomp.parsing.parser.Token token) {
+    return handleJsDoc(getJsDoc(token));
+  }
+
   private boolean shouldAttachJSDocHere(ParseTree tree) {
     switch (tree.type) {
       case EXPRESSION_STATEMENT:
@@ -763,10 +767,6 @@ class IRFactory {
           return tree;
       }
     }
-  }
-
-  JSDocInfo handleJsDoc(com.google.javascript.jscomp.parsing.parser.Token token) {
-    return handleJsDoc(getJsDoc(token));
   }
 
   Node transform(ParseTree tree) {
@@ -839,21 +839,21 @@ class IRFactory {
     return lineno(node.location.start);
   }
 
-  static int charno(ParseTree node) {
-    return charno(node.location.start);
-  }
-
   static int lineno(com.google.javascript.jscomp.parsing.parser.Token token) {
     return lineno(token.location.start);
-  }
-
-  static int charno(com.google.javascript.jscomp.parsing.parser.Token token) {
-    return charno(token.location.start);
   }
 
   static int lineno(SourcePosition location) {
     // location lines start at zero, our AST starts at 1.
     return location.line + 1;
+  }
+
+  static int charno(ParseTree node) {
+    return charno(node.location.start);
+  }
+
+  static int charno(com.google.javascript.jscomp.parsing.parser.Token token) {
+    return charno(token.location.start);
   }
 
   static int charno(SourcePosition location) {

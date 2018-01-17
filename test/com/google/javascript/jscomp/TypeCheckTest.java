@@ -17820,6 +17820,89 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
     testTypes(js, type, false);
   }
 
+  void testTypes(String js, String description, boolean isError) {
+    testTypes(DEFAULT_EXTERNS, js, description, isError);
+  }
+
+  void testTypes(
+      String externs, String js, String description, boolean isError) {
+    parseAndTypeCheck(externs, js);
+
+    JSError[] errors = compiler.getErrors();
+    if (description != null && isError) {
+      assertTrue("expected an error", errors.length > 0);
+      assertEquals(description, errors[0].description);
+      errors = Arrays.asList(errors).subList(1, errors.length).toArray(
+          new JSError[errors.length - 1]);
+    }
+    if (errors.length > 0) {
+      fail("unexpected error(s):\n" + LINE_JOINER.join(errors));
+    }
+
+    JSError[] warnings = compiler.getWarnings();
+    if (description != null && !isError) {
+      assertTrue("expected a warning", warnings.length > 0);
+      assertEquals(description, warnings[0].description);
+      warnings = Arrays.asList(warnings).subList(1, warnings.length).toArray(
+          new JSError[warnings.length - 1]);
+    }
+    if (warnings.length > 0) {
+      fail("unexpected warnings(s):\n" + LINE_JOINER.join(warnings));
+    }
+  }
+
+  void testTypes(String js, DiagnosticType diagnosticType, boolean isError) {
+    testTypes(DEFAULT_EXTERNS, js, diagnosticType, isError);
+  }
+
+  void testTypes(String externs, String js, DiagnosticType diagnosticType,
+      boolean isError) {
+    parseAndTypeCheck(externs, js);
+
+    JSError[] errors = compiler.getErrors();
+    if (diagnosticType != null && isError) {
+      assertTrue("expected an error", errors.length > 0);
+      assertEquals(diagnosticType, errors[0].getType());
+      errors = Arrays.asList(errors).subList(1, errors.length).toArray(
+          new JSError[errors.length - 1]);
+    }
+    if (errors.length > 0) {
+      fail("unexpected error(s):\n" + LINE_JOINER.join(errors));
+    }
+
+    JSError[] warnings = compiler.getWarnings();
+    if (diagnosticType != null && !isError) {
+      assertTrue("expected a warning", warnings.length > 0);
+      assertEquals(diagnosticType, warnings[0].getType());
+      warnings = Arrays.asList(warnings).subList(1, warnings.length).toArray(
+          new JSError[warnings.length - 1]);
+    }
+    if (warnings.length > 0) {
+      fail("unexpected warnings(s):\n" + LINE_JOINER.join(warnings));
+    }
+  }
+
+  void testTypes(String js, String[] warnings) {
+    Node n = compiler.parseTestCode(js);
+    assertEquals(0, compiler.getErrorCount());
+    Node externsNode = IR.root();
+    // create a parent node for the extern and source blocks
+    IR.root(externsNode, n);
+
+    makeTypeCheck().processForTesting(null, n);
+    assertEquals(0, compiler.getErrorCount());
+    if (warnings != null) {
+      assertEquals(warnings.length, compiler.getWarningCount());
+      JSError[] messages = compiler.getWarnings();
+      for (int i = 0; i < warnings.length && i < compiler.getWarningCount();
+           i++) {
+        assertEquals(warnings[i], messages[i].description);
+      }
+    } else {
+      assertEquals(0, compiler.getWarningCount());
+    }
+  }
+
   private void testClosureTypes(String js, String description) {
     testClosureTypesMultipleWarnings(js,
         description == null ? null : ImmutableList.of(description));
@@ -17870,41 +17953,6 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
     }
   }
 
-  void testTypes(String js, String description, boolean isError) {
-    testTypes(DEFAULT_EXTERNS, js, description, isError);
-  }
-
-  void testTypes(
-      String externs, String js, String description, boolean isError) {
-    parseAndTypeCheck(externs, js);
-
-    JSError[] errors = compiler.getErrors();
-    if (description != null && isError) {
-      assertTrue("expected an error", errors.length > 0);
-      assertEquals(description, errors[0].description);
-      errors = Arrays.asList(errors).subList(1, errors.length).toArray(
-          new JSError[errors.length - 1]);
-    }
-    if (errors.length > 0) {
-      fail("unexpected error(s):\n" + LINE_JOINER.join(errors));
-    }
-
-    JSError[] warnings = compiler.getWarnings();
-    if (description != null && !isError) {
-      assertTrue("expected a warning", warnings.length > 0);
-      assertEquals(description, warnings[0].description);
-      warnings = Arrays.asList(warnings).subList(1, warnings.length).toArray(
-          new JSError[warnings.length - 1]);
-    }
-    if (warnings.length > 0) {
-      fail("unexpected warnings(s):\n" + LINE_JOINER.join(warnings));
-    }
-  }
-
-  void testTypes(String js, DiagnosticType diagnosticType, boolean isError) {
-    testTypes(DEFAULT_EXTERNS, js, diagnosticType, isError);
-  }
-
   void testTypesWithExterns(String externs, String js) {
     testTypes(externs, js, (String) null, false);
   }
@@ -17916,33 +17964,6 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   void testTypesWithExtraExterns(
       String externs, String js, String description) {
     testTypes(DEFAULT_EXTERNS + "\n" + externs, js, description, false);
-  }
-
-  void testTypes(String externs, String js, DiagnosticType diagnosticType,
-      boolean isError) {
-    parseAndTypeCheck(externs, js);
-
-    JSError[] errors = compiler.getErrors();
-    if (diagnosticType != null && isError) {
-      assertTrue("expected an error", errors.length > 0);
-      assertEquals(diagnosticType, errors[0].getType());
-      errors = Arrays.asList(errors).subList(1, errors.length).toArray(
-          new JSError[errors.length - 1]);
-    }
-    if (errors.length > 0) {
-      fail("unexpected error(s):\n" + LINE_JOINER.join(errors));
-    }
-
-    JSError[] warnings = compiler.getWarnings();
-    if (diagnosticType != null && !isError) {
-      assertTrue("expected a warning", warnings.length > 0);
-      assertEquals(diagnosticType, warnings[0].getType());
-      warnings = Arrays.asList(warnings).subList(1, warnings.length).toArray(
-          new JSError[warnings.length - 1]);
-    }
-    if (warnings.length > 0) {
-      fail("unexpected warnings(s):\n" + LINE_JOINER.join(warnings));
-    }
   }
 
   /**
@@ -18013,27 +18034,6 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
 
   private TypeCheck makeTypeCheck() {
     return new TypeCheck(compiler, new SemanticReverseAbstractInterpreter(registry), registry);
-  }
-
-  void testTypes(String js, String[] warnings) {
-    Node n = compiler.parseTestCode(js);
-    assertEquals(0, compiler.getErrorCount());
-    Node externsNode = IR.root();
-    // create a parent node for the extern and source blocks
-    IR.root(externsNode, n);
-
-    makeTypeCheck().processForTesting(null, n);
-    assertEquals(0, compiler.getErrorCount());
-    if (warnings != null) {
-      assertEquals(warnings.length, compiler.getWarningCount());
-      JSError[] messages = compiler.getWarnings();
-      for (int i = 0; i < warnings.length && i < compiler.getWarningCount();
-           i++) {
-        assertEquals(warnings[i], messages[i].description);
-      }
-    } else {
-      assertEquals(0, compiler.getWarningCount());
-    }
   }
 
   String suppressMissingProperty(String ... props) {

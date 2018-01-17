@@ -941,15 +941,15 @@ public class Node implements Serializable {
     return this;
   }
 
+  public final boolean hasProps() {
+    return propListHead != null;
+  }
+
   public final void removeProp(byte propType) {
     PropListItem result = removeProp(propListHead, propType);
     if (result != propListHead) {
       propListHead = result;
     }
-  }
-
-  public final boolean hasProps() {
-    return propListHead != null;
   }
 
   /**
@@ -1808,11 +1808,6 @@ public class Node implements Serializable {
     return null;
   }
 
-  /** Returns true if this node is equivalent semantically to another */
-  public final boolean isEquivalentTo(Node node) {
-    return isEquivalentTo(node, false, true, false, false);
-  }
-
   /** Checks equivalence without going into child nodes */
   public final boolean isEquivalentToShallow(Node node) {
     return isEquivalentTo(node, false, false, false, false);
@@ -1833,6 +1828,11 @@ public class Node implements Serializable {
    */
   public final boolean isEquivalentToTyped(Node node) {
     return isEquivalentTo(node, true, true, true, false);
+  }
+
+  /** Returns true if this node is equivalent semantically to another */
+  public final boolean isEquivalentTo(Node node) {
+    return isEquivalentTo(node, false, true, false, false);
   }
 
   /**

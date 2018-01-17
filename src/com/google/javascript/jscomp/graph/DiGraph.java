@@ -45,11 +45,10 @@ public abstract class DiGraph<N, E> extends Graph<N, E> {
   public abstract List<DiGraphNode<N, E>> getDirectedPredNodes(
       DiGraphNode<N, E> n);
 
+  public abstract List<DiGraphNode<N, E>> getDirectedPredNodes(N nodeValue);
+
   public abstract List<DiGraphNode<N, E>> getDirectedSuccNodes(
       DiGraphNode<N, E> n);
-
-  public abstract List<DiGraphNode<N, E>>
-      getDirectedPredNodes(N nodeValue);
 
   public abstract List<DiGraphNode<N, E>>
       getDirectedSuccNodes(N nodeValue);

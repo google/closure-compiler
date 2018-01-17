@@ -1130,45 +1130,30 @@ public class JSTypeRegistry implements TypeIRegistry {
     return namesToTypes.get(jsTypeName);
   }
 
-  @SuppressWarnings("unchecked")
-  @Override
-  public JSType getNativeType(JSTypeNative typeId) {
-    return nativeTypes[typeId.ordinal()];
-  }
-
-  @SuppressWarnings("unchecked")
-  @Override
-  public ObjectType getNativeObjectType(JSTypeNative typeId) {
-    return (ObjectType) getNativeType(typeId);
-  }
-
-  @SuppressWarnings("unchecked")
-  @Override
-  public FunctionType getNativeFunctionType(JSTypeNative typeId) {
-    return (FunctionType) getNativeType(typeId);
-  }
-
   /**
-   * Looks up a type by name. To allow for forward references to types, an
-   * unrecognized string has to be bound to a NamedType object that will be
-   * resolved later.
+   * Looks up a type by name. To allow for forward references to types, an unrecognized string has
+   * to be bound to a NamedType object that will be resolved later.
    *
    * @param scope A scope for doing type name resolution.
    * @param jsTypeName The name string.
    * @param sourceName The name of the source file where this reference appears.
    * @param lineno The line number of the reference.
-   * @return a NamedType if the string argument is not one of the known types,
-   *     otherwise the corresponding JSType object.
+   * @return a NamedType if the string argument is not one of the known types, otherwise the
+   *     corresponding JSType object.
    */
-  public JSType getType(StaticTypedScope<JSType> scope, String jsTypeName,
-      String sourceName, int lineno, int charno) {
+  public JSType getType(
+      StaticTypedScope<JSType> scope,
+      String jsTypeName,
+      String sourceName,
+      int lineno,
+      int charno) {
     return getType(scope, jsTypeName, sourceName, lineno, charno, true);
   }
 
   /**
-   * @param recordUnresolvedTypes record unresolved named types and resolve
-   *     them later. Set to false if types should be ignored for backwards
-   *     compatibility (i.e. previously unparsed template type args).
+   * @param recordUnresolvedTypes record unresolved named types and resolve them later. Set to false
+   *     if types should be ignored for backwards compatibility (i.e. previously unparsed template
+   *     type args).
    */
   private JSType getType(
       StaticTypedScope<JSType> scope,
@@ -1213,6 +1198,24 @@ public class JSTypeRegistry implements TypeIRegistry {
       type = namedType;
     }
     return type;
+  }
+
+  @SuppressWarnings("unchecked")
+  @Override
+  public JSType getNativeType(JSTypeNative typeId) {
+    return nativeTypes[typeId.ordinal()];
+  }
+
+  @SuppressWarnings("unchecked")
+  @Override
+  public ObjectType getNativeObjectType(JSTypeNative typeId) {
+    return (ObjectType) getNativeType(typeId);
+  }
+
+  @SuppressWarnings("unchecked")
+  @Override
+  public FunctionType getNativeFunctionType(JSTypeNative typeId) {
+    return (FunctionType) getNativeType(typeId);
   }
 
   /**
@@ -1372,6 +1375,16 @@ public class JSTypeRegistry implements TypeIRegistry {
   }
 
   /**
+   * @param parameters the function's parameters or {@code null} to indicate that the parameter
+   *     types are unknown.
+   * @param returnType the function's return type or {@code null} to indicate that the return type
+   *     is unknown.
+   */
+  public FunctionType createFunctionType(JSType returnType, Node parameters) {
+    return new FunctionBuilder(this).withParamsNode(parameters).withReturnType(returnType).build();
+  }
+
+  /**
    * Creates a function type. The last parameter type of the function is
    * considered a variable length argument.
    *
@@ -1425,6 +1438,27 @@ public class JSTypeRegistry implements TypeIRegistry {
   }
 
   /**
+   * Creates a tree hierarchy representing a typed argument list.
+   *
+   * @param lastVarArgs whether the last type should considered as a variable length argument.
+   * @param parameterTypes the parameter types. The last element of this array is considered a
+   *     variable length argument is {@code lastVarArgs} is {@code true}.
+   * @return a tree hierarchy representing a typed argument list
+   */
+  private Node createParameters(boolean lastVarArgs, JSType... parameterTypes) {
+    FunctionParamBuilder builder = new FunctionParamBuilder(this);
+    int max = parameterTypes.length - 1;
+    for (int i = 0; i <= max; i++) {
+      if (lastVarArgs && i == max) {
+        builder.addVarArgs(parameterTypes[i]);
+      } else {
+        builder.addRequiredParams(parameterTypes[i]);
+      }
+    }
+    return builder.build();
+  }
+
+  /**
    * Creates a tree hierarchy representing a typed argument list. The last
    * parameter type is considered a variable length argument.
    *
@@ -1447,29 +1481,6 @@ public class JSTypeRegistry implements TypeIRegistry {
   }
 
   /**
-   * Creates a tree hierarchy representing a typed argument list.
-   *
-   * @param lastVarArgs whether the last type should considered as a variable
-   *     length argument.
-   * @param parameterTypes the parameter types. The last element of this array
-   *     is considered a variable length argument is {@code lastVarArgs} is
-   *     {@code true}.
-   * @return a tree hierarchy representing a typed argument list
-   */
-  private Node createParameters(boolean lastVarArgs, JSType... parameterTypes) {
-    FunctionParamBuilder builder = new FunctionParamBuilder(this);
-    int max = parameterTypes.length - 1;
-    for (int i = 0; i <= max; i++) {
-      if (lastVarArgs && i == max) {
-        builder.addVarArgs(parameterTypes[i]);
-      } else {
-        builder.addRequiredParams(parameterTypes[i]);
-      }
-    }
-    return builder.build();
-  }
-
-  /**
    * Creates a new function type based on an existing function type but
    * with a new return type.
    * @param existingFunctionType the existing function type.
@@ -1479,20 +1490,6 @@ public class JSTypeRegistry implements TypeIRegistry {
       FunctionType existingFunctionType, JSType returnType) {
     return new FunctionBuilder(this)
         .copyFromOtherFunction(existingFunctionType)
-        .withReturnType(returnType)
-        .build();
-  }
-
-  /**
-   * @param parameters the function's parameters or {@code null}
-   *        to indicate that the parameter types are unknown.
-   * @param returnType the function's return type or {@code null} to indicate
-   *        that the return type is unknown.
-   */
-  public FunctionType createFunctionType(
-      JSType returnType, Node parameters) {
-    return new FunctionBuilder(this)
-        .withParamsNode(parameters)
         .withReturnType(returnType)
         .build();
   }

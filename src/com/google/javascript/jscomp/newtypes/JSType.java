@@ -1206,11 +1206,6 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
     return isSubtypeOfHelper(false, other, SubtypeCache.create(), null);
   }
 
-  @Override
-  public final boolean isSubtypeOf(TypeI other) {
-    return isSubtypeOf(other, SubtypeCache.create());
-  }
-
   public static MismatchInfo whyNotSubtypeOf(JSType found, JSType expected) {
     if (found.isSingletonObj() && expected.isSingletonObj()) {
       MismatchInfo[] boxedInfo = new MismatchInfo[1];
@@ -1228,6 +1223,11 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
       return boxedInfo[0];
     }
     return null;
+  }
+
+  @Override
+  public final boolean isSubtypeOf(TypeI other) {
+    return isSubtypeOf(other, SubtypeCache.create());
   }
 
   final boolean isSubtypeOf(TypeI other, SubtypeCache subSuperMap) {

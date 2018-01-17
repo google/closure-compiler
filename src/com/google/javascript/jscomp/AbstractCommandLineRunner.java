@@ -591,62 +591,14 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
   }
 
   /**
-   * Check that relative paths inside zip files are unique, since multiple files with the same path
-   * inside different zips are considered duplicate inputs. Parameter {@code sourceFiles} may be
-   * modified if duplicates are removed.
-   */
-  public static ImmutableList<JSError> removeDuplicateZipEntries(
-      List<SourceFile> sourceFiles, List<JsModuleSpec> jsModuleSpecs) throws IOException {
-    ImmutableList.Builder<JSError> errors = ImmutableList.builder();
-    Map<String, SourceFile> sourceFilesByName = new HashMap<>();
-    Iterator<SourceFile> fileIterator = sourceFiles.iterator();
-    int currentFileIndex = 0;
-    Iterator<JsModuleSpec> moduleIterator = jsModuleSpecs.iterator();
-    // Tracks the total number of js files for current module and all the previous modules.
-    int cumulatedJsFileNum = 0;
-    JsModuleSpec currentModule  = null;
-    while (fileIterator.hasNext()) {
-      SourceFile sourceFile = fileIterator.next();
-      currentFileIndex++;
-      // Check whether we reached the next module.
-      if (moduleIterator.hasNext() && currentFileIndex > cumulatedJsFileNum) {
-        currentModule = moduleIterator.next();
-        cumulatedJsFileNum += currentModule.numJsFiles;
-      }
-      String fullPath = sourceFile.getName();
-      if (!fullPath.contains("!/")) {
-        // Not a zip file
-        continue;
-      }
-      String relativePath = fullPath.split("!")[1];
-      if (!sourceFilesByName.containsKey(relativePath)) {
-        sourceFilesByName.put(relativePath, sourceFile);
-      } else {
-        SourceFile firstSourceFile = sourceFilesByName.get(relativePath);
-        if (firstSourceFile.getCode().equals(sourceFile.getCode())) {
-          fileIterator.remove();
-          if (currentModule != null) {
-            currentModule.numJsFiles--;
-          }
-        } else {
-          errors.add(JSError.make(
-              CONFLICTING_DUPLICATE_ZIP_CONTENTS, firstSourceFile.getName(), sourceFile.getName()));
-        }
-      }
-    }
-    return errors.build();
-  }
-
-  /**
    * Creates inputs from a list of source files, zips and json files.
    *
-   * Can be overridden by subclasses who want to pull files from different
-   * places.
+   * <p>Can be overridden by subclasses who want to pull files from different places.
    *
    * @param files A list of flag entries indicates js and zip file names
    * @param jsonFiles A list of json encoded files.
-   * @param allowStdIn Whether '-' is allowed appear as a filename to represent
-   *        stdin. If true, '-' is only allowed to appear once.
+   * @param allowStdIn Whether '-' is allowed appear as a filename to represent stdin. If true, '-'
+   *     is only allowed to appear once.
    * @param jsModuleSpecs A list js module specs.
    * @return An array of inputs
    */
@@ -696,12 +648,12 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
         }
 
         if (!config.outputManifests.isEmpty()) {
-          throw new FlagUsageException("Manifest files cannot be generated " +
-              "when the input is from stdin.");
+          throw new FlagUsageException(
+              "Manifest files cannot be generated when the input is from stdin.");
         }
         if (!config.outputBundles.isEmpty()) {
-          throw new FlagUsageException("Bundle files cannot be generated " +
-              "when the input is from stdin.");
+          throw new FlagUsageException(
+              "Bundle files cannot be generated when the input is from stdin.");
         }
 
         this.err.println(WAITING_FOR_INPUT_WARNING);
@@ -725,6 +677,56 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
       compiler.report(error);
     }
     return inputs;
+  }
+
+  /**
+   * Check that relative paths inside zip files are unique, since multiple files with the same path
+   * inside different zips are considered duplicate inputs. Parameter {@code sourceFiles} may be
+   * modified if duplicates are removed.
+   */
+  public static ImmutableList<JSError> removeDuplicateZipEntries(
+      List<SourceFile> sourceFiles, List<JsModuleSpec> jsModuleSpecs) throws IOException {
+    ImmutableList.Builder<JSError> errors = ImmutableList.builder();
+    Map<String, SourceFile> sourceFilesByName = new HashMap<>();
+    Iterator<SourceFile> fileIterator = sourceFiles.iterator();
+    int currentFileIndex = 0;
+    Iterator<JsModuleSpec> moduleIterator = jsModuleSpecs.iterator();
+    // Tracks the total number of js files for current module and all the previous modules.
+    int cumulatedJsFileNum = 0;
+    JsModuleSpec currentModule = null;
+    while (fileIterator.hasNext()) {
+      SourceFile sourceFile = fileIterator.next();
+      currentFileIndex++;
+      // Check whether we reached the next module.
+      if (moduleIterator.hasNext() && currentFileIndex > cumulatedJsFileNum) {
+        currentModule = moduleIterator.next();
+        cumulatedJsFileNum += currentModule.numJsFiles;
+      }
+      String fullPath = sourceFile.getName();
+      if (!fullPath.contains("!/")) {
+        // Not a zip file
+        continue;
+      }
+      String relativePath = fullPath.split("!")[1];
+      if (!sourceFilesByName.containsKey(relativePath)) {
+        sourceFilesByName.put(relativePath, sourceFile);
+      } else {
+        SourceFile firstSourceFile = sourceFilesByName.get(relativePath);
+        if (firstSourceFile.getCode().equals(sourceFile.getCode())) {
+          fileIterator.remove();
+          if (currentModule != null) {
+            currentModule.numJsFiles--;
+          }
+        } else {
+          errors.add(
+              JSError.make(
+                  CONFLICTING_DUPLICATE_ZIP_CONTENTS,
+                  firstSourceFile.getName(),
+                  sourceFile.getName()));
+        }
+      }
+    }
+    return errors.build();
   }
 
   /**

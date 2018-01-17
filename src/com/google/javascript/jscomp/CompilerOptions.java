@@ -1605,13 +1605,6 @@ public class CompilerOptions implements Serializable {
   }
 
   /**
-   * Sets the hash function to use for Xid
-   */
-  public void setXidHashFunction(Xid.HashFunction xidHashFunction) {
-    this.xidHashFunction = xidHashFunction;
-  }
-
-  /**
    * Sets the id generators to replace.
    */
   public void setIdGenerators(Map<String, RenamingMap> idGenerators) {
@@ -1625,6 +1618,13 @@ public class CompilerOptions implements Serializable {
    */
   public void setIdGeneratorsMap(String previousMappings) {
     this.idGeneratorsMapSerialized = previousMappings;
+  }
+
+  /**
+   * Sets the hash function to use for Xid
+   */
+  public void setXidHashFunction(Xid.HashFunction xidHashFunction) {
+    this.xidHashFunction = xidHashFunction;
   }
 
   private Reach inlineFunctionsLevel;
@@ -1652,6 +1652,10 @@ public class CompilerOptions implements Serializable {
   public void setMaxFunctionSizeAfterInlining(int funAstSize) {
     checkArgument(funAstSize > 0);
     this.maxFunctionSizeAfterInlining = funAstSize;
+  }
+
+  public void setInlineVariables(boolean inlineVariables) {
+    this.inlineVariables = inlineVariables;
   }
 
   /**
@@ -2242,10 +2246,6 @@ public class CompilerOptions implements Serializable {
 
   public void setCrossModuleMethodMotion(boolean crossModuleMethodMotion) {
     this.crossModuleMethodMotion = crossModuleMethodMotion;
-  }
-
-  public void setInlineVariables(boolean inlineVariables) {
-    this.inlineVariables = inlineVariables;
   }
 
   public void setInlineLocalVariables(boolean inlineLocalVariables) {

@@ -147,35 +147,14 @@ public final class JSDocInfoBuilder {
     return currentInfo.getDescription() != null;
   }
 
-
   /**
-   * Builds a {@link JSDocInfo} object based on the populated information and
-   * returns it.
+   * Builds a {@link JSDocInfo} object based on the populated information and returns it.
    *
-   * @return a {@link JSDocInfo} object populated with the values given to this
-   *     builder. If no value was populated, this method simply returns
-   *     {@code null}
+   * @return a {@link JSDocInfo} object populated with the values given to this builder. If no value
+   *     was populated, this method simply returns {@code null}
    */
   public JSDocInfo build() {
     return build(false);
-  }
-
-  /**
-   * Builds a {@link JSDocInfo} object based on the populated information and
-   * returns it. Once this method is called, the builder can be reused to build
-   * another {@link JSDocInfo} object.
-   *
-   * @return a {@link JSDocInfo} object populated with the values given to this
-   *     builder. If no value was populated, this method simply returns
-   *     {@code null}
-   */
-  public JSDocInfo buildAndReset() {
-    JSDocInfo info = build(false);
-    if (currentInfo == null) {
-      currentInfo = new JSDocInfo(parseDocumentation);
-      populated = false;
-    }
-    return info;
   }
 
   /**
@@ -198,6 +177,24 @@ public final class JSDocInfoBuilder {
     } else {
       return null;
     }
+  }
+
+  /**
+   * Builds a {@link JSDocInfo} object based on the populated information and
+   * returns it. Once this method is called, the builder can be reused to build
+   * another {@link JSDocInfo} object.
+   *
+   * @return a {@link JSDocInfo} object populated with the values given to this
+   *     builder. If no value was populated, this method simply returns
+   *     {@code null}
+   */
+  public JSDocInfo buildAndReset() {
+    JSDocInfo info = build(false);
+    if (currentInfo == null) {
+      currentInfo = new JSDocInfo(parseDocumentation);
+      populated = false;
+    }
+    return info;
   }
 
   /** Generate defaults when certain parameters are not specified. */

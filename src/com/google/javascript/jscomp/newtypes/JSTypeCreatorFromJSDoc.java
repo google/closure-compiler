@@ -243,21 +243,20 @@ public final class JSTypeCreatorFromJSDoc implements Serializable {
         ? ImmutableList.<String>of() : ownerType.getTypeParameters());
   }
 
+  private JSType getDeclaredTypeOfNode(
+      JSDocInfo jsdoc, DeclaredTypeRegistry registry, ImmutableList<String> typeParameters) {
+    if (jsdoc == null) {
+      return null;
+    }
+    return getTypeFromJSTypeExpression(jsdoc.getType(), registry, typeParameters);
+  }
+
   public JSType getTypeOfCommentNode(
       Node n, RawNominalType ownerType, DeclaredTypeRegistry registry) {
     return getTypeFromComment(
         n,
         registry,
         ownerType == null ? ImmutableList.<String>of() : ownerType.getTypeParameters());
-  }
-
-  private JSType getDeclaredTypeOfNode(JSDocInfo jsdoc,
-      DeclaredTypeRegistry registry, ImmutableList<String> typeParameters) {
-    if (jsdoc == null) {
-      return null;
-    }
-    return getTypeFromJSTypeExpression(
-        jsdoc.getType(), registry, typeParameters);
   }
 
   public Set<JSError> getWarnings() {

@@ -24,7 +24,6 @@ import com.google.javascript.jscomp.graph.GraphvizGraph.GraphvizEdge;
 import com.google.javascript.jscomp.graph.GraphvizGraph.GraphvizNode;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.TypeI;
-
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -95,6 +94,70 @@ public final class DotFormatter {
       throws IOException  {
     StringBuilder builder = new StringBuilder();
     new DotFormatter(n, inCFG, builder, false);
+    return builder.toString();
+  }
+
+  /**
+   * Outputs a string in DOT format that presents the graph.
+   *
+   * @param graph Input graph.
+   * @return A string in Dot format that presents the graph.
+   */
+  public static String toDot(GraphvizGraph graph) {
+    StringBuilder builder = new StringBuilder();
+    builder.append(graph.isDirected() ? "digraph" : "graph");
+    builder.append(INDENT);
+    builder.append(graph.getName());
+    builder.append(" {\n");
+    builder.append(INDENT);
+    builder.append("node [color=lightblue2, style=filled];\n");
+
+    final String edgeSymbol = graph.isDirected() ? ARROW : LINE;
+
+    List<GraphvizNode> nodes = graph.getGraphvizNodes();
+
+    String[] nodeNames = new String[nodes.size()];
+
+    for (int i = 0; i < nodeNames.length; i++) {
+      GraphvizNode gNode = nodes.get(i);
+      nodeNames[i] =
+          gNode.getId()
+              + " [label=\""
+              + gNode.getLabel()
+              + "\" color=\""
+              + gNode.getColor()
+              + "\"]";
+    }
+
+    // We sort the nodes so we get a deterministic output every time regardless
+    // of the implementation of the graph data structure.
+    Arrays.sort(nodeNames);
+
+    for (String nodeName : nodeNames) {
+      builder.append(INDENT);
+      builder.append(nodeName);
+      builder.append(";\n");
+    }
+
+    List<GraphvizEdge> edges = graph.getGraphvizEdges();
+
+    String[] edgeNames = new String[edges.size()];
+
+    for (int i = 0; i < edgeNames.length; i++) {
+      GraphvizEdge edge = edges.get(i);
+      edgeNames[i] = edge.getNode1Id() + edgeSymbol + edge.getNode2Id();
+    }
+
+    // Again, we sort the edges as well.
+    Arrays.sort(edgeNames);
+
+    for (String edgeName : edgeNames) {
+      builder.append(INDENT);
+      builder.append(edgeName);
+      builder.append(";\n");
+    }
+
+    builder.append("}\n");
     return builder.toString();
   }
 
@@ -207,64 +270,5 @@ public final class DotFormatter {
 
   private void formatConclusion() throws IOException {
     builder.append("}\n");
-  }
-
-  /**
-   * Outputs a string in DOT format that presents the graph.
-   *
-   * @param graph Input graph.
-   * @return A string in Dot format that presents the graph.
-   */
-  public static String toDot(GraphvizGraph graph) {
-    StringBuilder builder = new StringBuilder ();
-    builder.append(graph.isDirected() ? "digraph" : "graph");
-    builder.append(INDENT);
-    builder.append(graph.getName());
-    builder.append(" {\n");
-    builder.append(INDENT);
-    builder.append("node [color=lightblue2, style=filled];\n");
-
-    final String edgeSymbol = graph.isDirected() ? ARROW : LINE;
-
-    List<GraphvizNode> nodes = graph.getGraphvizNodes();
-
-    String[] nodeNames = new String[nodes.size()];
-
-    for (int i = 0; i < nodeNames.length; i++) {
-      GraphvizNode gNode = nodes.get(i);
-      nodeNames[i] = gNode.getId() + " [label=\"" + gNode.getLabel() +
-          "\" color=\"" + gNode.getColor() + "\"]";
-    }
-
-    // We sort the nodes so we get a deterministic output every time regardless
-    // of the implementation of the graph data structure.
-    Arrays.sort(nodeNames);
-
-    for (String nodeName : nodeNames) {
-      builder.append(INDENT);
-      builder.append(nodeName);
-      builder.append(";\n");
-    }
-
-    List<GraphvizEdge> edges = graph.getGraphvizEdges();
-
-    String[] edgeNames = new String[edges.size()];
-
-    for (int i = 0; i < edgeNames.length; i++) {
-      GraphvizEdge edge = edges.get(i);
-      edgeNames[i] = edge.getNode1Id() + edgeSymbol + edge.getNode2Id();
-    }
-
-    // Again, we sort the edges as well.
-    Arrays.sort(edgeNames);
-
-    for (String edgeName : edgeNames) {
-      builder.append(INDENT);
-      builder.append(edgeName);
-      builder.append(";\n");
-    }
-
-    builder.append("}\n");
-    return builder.toString();
   }
 }

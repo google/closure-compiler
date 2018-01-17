@@ -408,11 +408,6 @@ public class SourceFile implements StaticSourceFile, Serializable {
     return fromFile(fileName, UTF_8);
   }
 
-  @GwtIncompatible("java.io.File")
-  public static SourceFile fromPath(Path path, Charset c) {
-    return builder().withCharset(c).buildFromPath(path);
-  }
-
   /** @deprecated Use {@link SourceFile#fromPath(Path, Charset)} */
   @Deprecated
   @GwtIncompatible("java.io.File")
@@ -425,6 +420,11 @@ public class SourceFile implements StaticSourceFile, Serializable {
   @GwtIncompatible("java.io.File")
   public static SourceFile fromFile(File file) {
     return fromFile(file, UTF_8);
+  }
+
+  @GwtIncompatible("java.io.File")
+  public static SourceFile fromPath(Path path, Charset c) {
+    return builder().withCharset(c).buildFromPath(path);
   }
 
   public static SourceFile fromCode(String fileName, String code) {

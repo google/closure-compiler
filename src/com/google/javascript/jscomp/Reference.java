@@ -50,6 +50,13 @@ public final class Reference implements StaticRef, Serializable {
     this(nameNode, basicBlock, t.getScope(), t.getInput().getInputId());
   }
 
+  private Reference(Node nameNode, BasicBlock basicBlock, Scope scope, InputId inputId) {
+    this.nameNode = nameNode;
+    this.basicBlock = basicBlock;
+    this.scope = scope;
+    this.inputId = inputId;
+  }
+
   @Override
   public String toString() {
     return nameNode.toString();
@@ -63,13 +70,6 @@ public final class Reference implements StaticRef, Serializable {
   @VisibleForTesting
   static Reference createRefForTest(CompilerInput input) {
     return new Reference(new Node(Token.NAME), null, null, input.getInputId());
-  }
-
-  private Reference(Node nameNode, BasicBlock basicBlock, Scope scope, InputId inputId) {
-    this.nameNode = nameNode;
-    this.basicBlock = basicBlock;
-    this.scope = scope;
-    this.inputId = inputId;
   }
 
   /** Makes a copy of the current reference using a new Scope instance. */

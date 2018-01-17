@@ -581,19 +581,7 @@ import java.util.Set;
      */
     abstract LocationSummary calculateLocationSummary(Node node);
 
-    /**
-     * Returns an abstraction-specific EffectLocation representing
-     * no location.
-     *
-     * <p>The bottom location joined with any location should return
-     * that location.
-     */
-    abstract EffectLocation getBottomLocation();
-
-    /**
-     * Calculates the abstraction-specific side effects
-     * for the node.
-     */
+    /** Calculates the abstraction-specific side effects for the node. */
     public LocationSummary calculateLocationSummary(Set<Node> nodes) {
       EffectLocation modAccumulator = getBottomLocation();
       EffectLocation refAccumulator = getBottomLocation();
@@ -607,6 +595,13 @@ import java.util.Set;
 
       return new LocationSummary(modAccumulator, refAccumulator);
     }
+
+    /**
+     * Returns an abstraction-specific EffectLocation representing no location.
+     *
+     * <p>The bottom location joined with any location should return that location.
+     */
+    abstract EffectLocation getBottomLocation();
   }
   /**
    * A very imprecise location abstraction in which there are only two abstract

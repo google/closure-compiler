@@ -262,6 +262,11 @@ public final class CheckMissingReturnTest extends CompilerTestCase {
     testMissingInShorthandFunction(returnType, body);
   }
 
+  /** Creates function with return type {number} */
+  private void testMissing(String body) {
+    testMissing("number", body);
+  }
+
   private void testNotMissing(String returnType, String body) {
     testNotMissingInTraditionalFunction(returnType, body);
     testNotMissingInShorthandFunction(returnType, body);
@@ -270,11 +275,6 @@ public final class CheckMissingReturnTest extends CompilerTestCase {
   /** Creates function with return type {number} */
   private void testNotMissing(String body) {
     testNotMissing("number", body);
-  }
-
-  /** Creates function with return type {number} */
-  private void testMissing(String body) {
-    testMissing("number", body);
   }
 
   public void testArrowFunctions() {

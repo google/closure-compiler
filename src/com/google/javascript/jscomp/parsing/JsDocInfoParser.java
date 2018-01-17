@@ -1460,6 +1460,36 @@ public final class JsDocInfoParser {
   }
 
   /**
+   * Looks for a parameter type expression at the current token and if found, returns it. Note that
+   * this method consumes input.
+   *
+   * @param token The current token.
+   * @param lineno The line of the type expression.
+   * @param startCharno The starting character position of the type expression.
+   * @param matchingLC Whether the type expression starts with a "{".
+   * @param onlyParseSimpleNames If true, only simple type names are parsed (via a call to
+   *     parseTypeNameAnnotation instead of parseTypeExpressionAnnotation).
+   * @return The type expression found or null if none.
+   */
+  private Node parseAndRecordTypeNode(
+      JsDocToken token,
+      int lineno,
+      int startCharno,
+      boolean matchingLC,
+      boolean onlyParseSimpleNames) {
+    Node typeNode;
+
+    if (onlyParseSimpleNames) {
+      typeNode = parseTypeNameAnnotation(token);
+    } else {
+      typeNode = parseTypeExpressionAnnotation(token);
+    }
+
+    recordTypeNode(lineno, startCharno, typeNode, matchingLC);
+    return typeNode;
+  }
+
+  /**
    * Looks for a type expression at the current token and if found,
    * returns it. Note that this method consumes input.
    *
@@ -1494,35 +1524,6 @@ public final class JsDocInfoParser {
 
     Node typeNode = parseParamTypeExpressionAnnotation(token);
     recordTypeNode(lineno, startCharno, typeNode, true);
-    return typeNode;
-  }
-
-  /**
-   * Looks for a parameter type expression at the current token and if found,
-   * returns it. Note that this method consumes input.
-   *
-   * @param token The current token.
-   * @param lineno The line of the type expression.
-   * @param startCharno The starting character position of the type expression.
-   * @param matchingLC Whether the type expression starts with a "{".
-   * @param onlyParseSimpleNames If true, only simple type names are parsed
-   *     (via a call to parseTypeNameAnnotation instead of
-   *     parseTypeExpressionAnnotation).
-   * @return The type expression found or null if none.
-   */
-  private Node parseAndRecordTypeNode(JsDocToken token, int lineno,
-                                      int startCharno,
-                                      boolean matchingLC,
-                                      boolean onlyParseSimpleNames) {
-    Node typeNode;
-
-    if (onlyParseSimpleNames) {
-      typeNode = parseTypeNameAnnotation(token);
-    } else {
-      typeNode = parseTypeExpressionAnnotation(token);
-    }
-
-    recordTypeNode(lineno, startCharno, typeNode, matchingLC);
     return typeNode;
   }
 
@@ -1659,6 +1660,27 @@ public final class JsDocInfoParser {
         token, getWhitespaceOption(WhitespaceOption.SINGLE_LINE), false);
   }
 
+  /**
+   * Extracts the text found on the current line and all subsequent until either an annotation, end
+   * of comment or end of file is reached. Note that if this method detects an end of line as the
+   * first token, it will quit immediately (indicating that there is no text where it was expected).
+   * Note that token = info.token; should be called after this method is used to update the token
+   * properly in the parser.
+   *
+   * @param token The start token.
+   * @param option How to handle whitespace.
+   * @param includeAnnotations Whether the extracted text may include annotations. If set to false,
+   *     text extraction will stop on the first encountered annotation token.
+   * @return The extraction information.
+   */
+  private ExtractionInfo extractMultilineTextualBlock(
+      JsDocToken token, WhitespaceOption option, boolean includeAnnotations) {
+    if (token == JsDocToken.EOC || token == JsDocToken.EOL || token == JsDocToken.EOF) {
+      return new ExtractionInfo("", token);
+    }
+    return extractMultilineComment(token, option, true, includeAnnotations);
+  }
+
   private WhitespaceOption getWhitespaceOption(WhitespaceOption defaultValue) {
     return preserveWhitespace ? WhitespaceOption.PRESERVE : defaultValue;
   }
@@ -1675,32 +1697,6 @@ public final class JsDocInfoParser {
 
     /** Removes newlines and turns the output into a single line string. */
     SINGLE_LINE
-  }
-
-  /**
-   * Extracts the text found on the current line and all subsequent
-   * until either an annotation, end of comment or end of file is reached.
-   * Note that if this method detects an end of line as the first token, it
-   * will quit immediately (indicating that there is no text where it was
-   * expected).  Note that token = info.token; should be called after this
-   * method is used to update the token properly in the parser.
-   *
-   * @param token The start token.
-   * @param option How to handle whitespace.
-   * @param includeAnnotations Whether the extracted text may include
-   *     annotations. If set to false, text extraction will stop on the first
-   *     encountered annotation token.
-   *
-   * @return The extraction information.
-   */
-  private ExtractionInfo extractMultilineTextualBlock(JsDocToken token,
-                                                      WhitespaceOption option,
-                                                      boolean includeAnnotations) {
-    if (token == JsDocToken.EOC || token == JsDocToken.EOL ||
-        token == JsDocToken.EOF) {
-      return new ExtractionInfo("", token);
-    }
-    return extractMultilineComment(token, option, true, includeAnnotations);
   }
 
 

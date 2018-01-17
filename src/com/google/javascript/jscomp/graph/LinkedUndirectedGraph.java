@@ -140,6 +140,20 @@ public final class LinkedUndirectedGraph<N, E>
         getUndirectedGraphEdges(n1, n2));
   }
 
+  @SuppressWarnings("unchecked")
+  @Override
+  public List<GraphEdge<N, E>> getEdges() {
+    List<GraphEdge<N, E>> result = new ArrayList<>();
+    for (LinkedUndirectedGraphNode<N, E> node : nodes.values()) {
+      for (UndiGraphEdge<N, E> edge : node.getNeighborEdges()) {
+        if (edge.getNodeA() == node) {
+          result.add(edge);
+        }
+      }
+    }
+    return result;
+  }
+
   @Override
   public GraphEdge<N, E> getFirstEdge(N n1, N n2) {
     UndiGraphNode<N, E> dNode1 = getNodeOrFail(n1);
@@ -227,20 +241,6 @@ public final class LinkedUndirectedGraph<N, E>
   @Override
   public int getNodeCount() {
     return nodes.size();
-  }
-
-  @SuppressWarnings("unchecked")
-  @Override
-  public List<GraphEdge<N, E>> getEdges() {
-    List<GraphEdge<N, E>> result = new ArrayList<>();
-    for (LinkedUndirectedGraphNode<N, E> node : nodes.values()) {
-      for (UndiGraphEdge<N, E> edge : node.getNeighborEdges()) {
-        if (edge.getNodeA() == node) {
-          result.add(edge);
-        }
-      }
-    }
-    return result;
   }
 
   @Override

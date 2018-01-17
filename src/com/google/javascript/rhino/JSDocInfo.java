@@ -60,15 +60,14 @@ import java.util.Objects;
 import java.util.Set;
 
 /**
- * <p>JSDoc information describing JavaScript code. JSDoc is represented as a
- * unified object with fields for each JSDoc annotation, even though some
- * combinations are incorrect. For instance, if a JSDoc describes an enum,
- * it cannot have information about a return type. This implementation
- * takes advantage of such incompatibilities to reuse fields for multiple
- * purposes, reducing memory consumption.</p>
+ * JSDoc information describing JavaScript code. JSDoc is represented as a unified object with
+ * fields for each JSDoc annotation, even though some combinations are incorrect. For instance, if a
+ * JSDoc describes an enum, it cannot have information about a return type. This implementation
+ * takes advantage of such incompatibilities to reuse fields for multiple purposes, reducing memory
+ * consumption.
  *
- * <p>Constructing {@link JSDocInfo} objects is simplified by
- * {@link JSDocInfoBuilder} which provides early incompatibility detection.</p>
+ * <p>Constructing {@link JSDocInfo} objects is simplified by {@link JSDocInfoBuilder} which
+ * provides early incompatibility detection.
  *
  */
 public class JSDocInfo implements Serializable {
@@ -1440,10 +1439,6 @@ public class JSDocInfo implements Serializable {
     return info.parameters.size();
   }
 
-  void setType(JSTypeExpression type) {
-    setType(type, TYPEFIELD_TYPE);
-  }
-
   void setInlineType() {
     this.inlineType = true;
   }
@@ -1462,6 +1457,10 @@ public class JSDocInfo implements Serializable {
       return true;
     }
     return false;
+  }
+
+  void setType(JSTypeExpression type) {
+    setType(type, TYPEFIELD_TYPE);
   }
 
   private void setType(JSTypeExpression type, int mask) {
@@ -1496,14 +1495,6 @@ public class JSDocInfo implements Serializable {
   }
 
   /**
-   * Returns whether a type, specified using the {@code @type} annotation, is
-   * present on this JSDoc.
-   */
-  public boolean hasType() {
-    return hasType(TYPEFIELD_TYPE);
-  }
-
-  /**
    * Returns whether an enum parameter type, specified using the {@code @enum}
    * annotation, is present on this JSDoc.
    */
@@ -1527,19 +1518,20 @@ public class JSDocInfo implements Serializable {
     return hasType(TYPEFIELD_RETURN);
   }
 
+  /**
+   * Returns whether a type, specified using the {@code @type} annotation, is
+   * present on this JSDoc.
+   */
+  public boolean hasType() {
+    return hasType(TYPEFIELD_TYPE);
+  }
+
   private boolean hasType(int mask) {
     return (bitset & MASK_TYPEFIELD) == mask;
   }
 
   public boolean hasTypeInformation() {
     return (bitset & MASK_TYPEFIELD) != 0;
-  }
-
-  /**
-   * Gets the type specified by the {@code @type} annotation.
-   */
-  public JSTypeExpression getType() {
-    return getType(TYPEFIELD_TYPE);
   }
 
   /**
@@ -1568,6 +1560,13 @@ public class JSDocInfo implements Serializable {
    */
   public JSTypeExpression getTypedefType() {
     return getType(TYPEFIELD_TYPEDEF);
+  }
+
+  /**
+   * Gets the type specified by the {@code @type} annotation.
+   */
+  public JSTypeExpression getType() {
+    return getType(TYPEFIELD_TYPE);
   }
 
   private JSTypeExpression getType(int typefield) {

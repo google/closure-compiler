@@ -440,6 +440,14 @@ public abstract class BaseJSTypeTestCase extends TestCase {
     assertEquals(expected, resolve(actual));
   }
 
+  protected final void assertTypeEquals(JSType a, JSType b) {
+    Asserts.assertTypeEquals(a, b);
+  }
+
+  protected final void assertTypeEquals(String msg, JSType a, JSType b) {
+    Asserts.assertTypeEquals(msg, a, b);
+  }
+
   /**
    * Resolves a type expression, expecting the given warnings.
    */
@@ -595,14 +603,6 @@ public abstract class BaseJSTypeTestCase extends TestCase {
       + " * @constructor\n"
       + " */\n"
       + "function ActiveXObject(progId, opt_location) {}\n";
-
-  protected final void assertTypeEquals(JSType a, JSType b) {
-    Asserts.assertTypeEquals(a, b);
-  }
-
-  protected final void assertTypeEquals(String msg, JSType a, JSType b) {
-    Asserts.assertTypeEquals(msg, a, b);
-  }
 
   protected final void assertTypeNotEquals(JSType a, JSType b) {
     Asserts.assertTypeNotEquals(a, b);

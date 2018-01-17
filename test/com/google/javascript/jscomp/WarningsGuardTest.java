@@ -503,17 +503,20 @@ public final class WarningsGuardTest extends TestCase {
     return JSError.make(n, type);
   }
 
+  private static JSError makeError(String sourcePath, CheckLevel level) {
+    Node n = new Node(Token.EMPTY);
+    n.setSourceFileForTesting(sourcePath);
+    return JSError.make(n, DiagnosticType.make("FOO", level, "Foo description"));
+  }
+
+  private static JSError makeError(String sourcePath, int lineno) {
+    return JSError.make(sourcePath, lineno, -1, BAR_WARNING);
+  }
+
   private static JSError makeErrorWithType(DiagnosticType type) {
     Node n = new Node(Token.EMPTY);
     n.setSourceFileForTesting("input");
     return JSError.make(n, type);
-  }
-
-  private static JSError makeError(String sourcePath, CheckLevel level) {
-    Node n = new Node(Token.EMPTY);
-    n.setSourceFileForTesting(sourcePath);
-    return JSError.make(n,
-        DiagnosticType.make("FOO", level, "Foo description"));
   }
 
   private static JSError makeErrorWithLevel(CheckLevel level) {
@@ -521,9 +524,5 @@ public final class WarningsGuardTest extends TestCase {
     n.setSourceFileForTesting("input");
     return JSError.make(n,
         DiagnosticType.make("FOO", level, "Foo description"));
-  }
-
-  private static JSError makeError(String sourcePath, int lineno) {
-    return JSError.make(sourcePath, lineno, -1, BAR_WARNING);
   }
 }

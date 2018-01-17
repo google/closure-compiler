@@ -60,29 +60,13 @@ public final class DiagnosticGroup implements Serializable {
     this.types = ImmutableSet.of(type);
   }
 
-  // DiagnosticGroups with only a single DiagnosticType.
-  private static final Map<DiagnosticType, DiagnosticGroup> singletons =
-       new HashMap<>();
-
-  /** Create a diagnostic group that matches only the given type. */
-  public static synchronized DiagnosticGroup forType(DiagnosticType type) {
-    if (!singletons.containsKey(type)) {
-      singletons.put(type, new DiagnosticGroup(type));
-    }
-    return singletons.get(type);
-  }
-
-  /**
-   * Create a composite group.
-   */
-  public DiagnosticGroup(DiagnosticGroup ...groups) {
+  /** Create a composite group. */
+  public DiagnosticGroup(DiagnosticGroup... groups) {
     this(null, groups);
   }
 
-  /**
-   * Create a composite group.
-   */
-  public DiagnosticGroup(String name, DiagnosticGroup ...groups) {
+  /** Create a composite group. */
+  public DiagnosticGroup(String name, DiagnosticGroup... groups) {
     ImmutableSet.Builder<DiagnosticType> set = ImmutableSet.builder();
 
     for (DiagnosticGroup group : groups) {
@@ -91,6 +75,17 @@ public final class DiagnosticGroup implements Serializable {
 
     this.name = name;
     this.types = set.build();
+  }
+
+  // DiagnosticGroups with only a single DiagnosticType.
+  private static final Map<DiagnosticType, DiagnosticGroup> singletons = new HashMap<>();
+
+  /** Create a diagnostic group that matches only the given type. */
+  public static synchronized DiagnosticGroup forType(DiagnosticType type) {
+    if (!singletons.containsKey(type)) {
+      singletons.put(type, new DiagnosticGroup(type));
+    }
+    return singletons.get(type);
   }
 
   /**

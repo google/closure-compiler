@@ -2210,7 +2210,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
     testTemplateLiteral("`hello ${name} ${world}`.length;");
   }
 
-  public void testTemplateLiteral() {
+  public void testTemplateLiterals() {
     expectFeatures(Feature.TEMPLATE_LITERALS);
     testTemplateLiteral("``");
     testTemplateLiteral("`\"`");

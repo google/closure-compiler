@@ -327,6 +327,36 @@ public abstract class NewTypeInferenceTestBase extends CompilerTypeTestCase {
     }
   }
 
+  private void typeCheck(String externs, String js, DiagnosticType... warningKinds) {
+    parseAndTypeCheck(externs, js);
+    JSError[] warnings = compiler.getWarnings();
+    JSError[] errors = compiler.getErrors();
+    String errorMessage =
+        LINE_JOINER.join(
+            "Expected warning of type:",
+            "================================================================",
+            LINE_JOINER.join(warningKinds),
+            "================================================================",
+            "but found:",
+            "----------------------------------------------------------------",
+            LINE_JOINER.join(errors) + "\n" + LINE_JOINER.join(warnings),
+            "----------------------------------------------------------------\n");
+    assertEquals(
+        errorMessage + "Warning count", warningKinds.length, warnings.length + errors.length);
+    for (JSError warning : warnings) {
+      assertWithMessage("Wrong warning type\n" + errorMessage)
+          .that(warningKinds)
+          .asList()
+          .contains(warning.getType());
+    }
+    for (JSError error : errors) {
+      assertWithMessage("Wrong warning type\n" + errorMessage)
+          .that(warningKinds)
+          .asList()
+          .contains(error.getType());
+    }
+  }
+
   protected final void typeCheckCustomExterns(
       String externs, String js, DiagnosticType... warningKinds) {
     if (this.mode.checkNative()) {
@@ -340,33 +370,6 @@ public abstract class NewTypeInferenceTestBase extends CompilerTypeTestCase {
       typeCheck(externs, js, warningKinds);
       compilerOptions.setTypeCheckEs6Natively(true);
       typeCheck(externs, js, warningKinds);
-    }
-  }
-
-  private void typeCheck(String externs, String js, DiagnosticType... warningKinds) {
-    parseAndTypeCheck(externs, js);
-    JSError[] warnings = compiler.getWarnings();
-    JSError[] errors = compiler.getErrors();
-    String errorMessage = LINE_JOINER.join(
-        "Expected warning of type:",
-        "================================================================",
-        LINE_JOINER.join(warningKinds),
-        "================================================================",
-        "but found:",
-        "----------------------------------------------------------------",
-        LINE_JOINER.join(errors) + "\n" + LINE_JOINER.join(warnings),
-        "----------------------------------------------------------------\n");
-    assertEquals(
-        errorMessage + "Warning count",
-        warningKinds.length,
-        warnings.length + errors.length);
-    for (JSError warning : warnings) {
-      assertWithMessage("Wrong warning type\n" + errorMessage)
-          .that(warningKinds).asList().contains(warning.getType());
-    }
-    for (JSError error : errors) {
-      assertWithMessage("Wrong warning type\n" + errorMessage)
-          .that(warningKinds).asList().contains(error.getType());
     }
   }
 

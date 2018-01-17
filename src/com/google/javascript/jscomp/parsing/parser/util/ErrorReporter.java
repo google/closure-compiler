@@ -32,14 +32,14 @@ public abstract class ErrorReporter {
     reportError(location, message);
   }
 
+  protected abstract void reportError(SourcePosition location, String message);
+
   @FormatMethod
   public final void reportWarning(
       SourcePosition location, @FormatString String format, Object... arguments) {
     String message = SimpleFormat.format(format, arguments);
     reportWarning(location, message);
   }
-
-  protected abstract void reportError(SourcePosition location, String message);
   protected abstract void reportWarning(SourcePosition location, String message);
 
   public final boolean hadError() {

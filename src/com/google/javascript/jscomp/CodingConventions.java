@@ -128,13 +128,13 @@ public final class CodingConventions {
     }
 
     @Override
-    public String getPackageName(StaticSourceFile source) {
-      return nextConvention.getPackageName(source);
+    public final boolean isExported(String name) {
+      return isExported(name, false) || isExported(name, true);
     }
 
     @Override
-    public final boolean isExported(String name) {
-      return isExported(name, false) || isExported(name, true);
+    public String getPackageName(StaticSourceFile source) {
+      return nextConvention.getPackageName(source);
     }
 
      @Override

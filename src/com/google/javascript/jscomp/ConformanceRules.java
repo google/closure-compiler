@@ -866,24 +866,17 @@ public final class ConformanceRules {
       return ConformanceResult.CONFORMANCE;
     }
 
-    private boolean matchesProp(Node n, Restriction r) {
-      return n.isGetProp() && n.getLastChild().getString().equals(r.property);
-    }
-
     private ConformanceResult checkConformance(
         NodeTraversal t, Node n, Restriction r, boolean isCallInvocation) {
       TypeIRegistry registry = t.getCompiler().getTypeIRegistry();
       TypeI methodClassType = registry.getType(r.type);
-      Node lhs = isCallInvocation
-          ? n.getFirstFirstChild()
-          : n.getFirstChild();
+      Node lhs = isCallInvocation ? n.getFirstFirstChild() : n.getFirstChild();
       if (methodClassType != null && lhs.getTypeI() != null) {
         TypeI targetType = lhs.getTypeI().restrictByNotNullOrUndefined();
         if (targetType.isUnknownType()
-           || targetType.isUnresolved()
-           || targetType.isTop()
-           || targetType.isEquivalentTo(
-               registry.getNativeType(JSTypeNative.OBJECT_TYPE))) {
+            || targetType.isUnresolved()
+            || targetType.isTop()
+            || targetType.isEquivalentTo(registry.getNativeType(JSTypeNative.OBJECT_TYPE))) {
           if (reportLooseTypeViolations
               && !ConformanceUtil.validateCall(
                   compiler, n.getParent(), r.restrictedCallType, isCallInvocation)) {
@@ -897,6 +890,10 @@ public final class ConformanceRules {
         }
       }
       return ConformanceResult.CONFORMANCE;
+    }
+
+    private boolean matchesProp(Node n, Restriction r) {
+      return n.isGetProp() && n.getLastChild().getString().equals(r.property);
     }
 
     /**

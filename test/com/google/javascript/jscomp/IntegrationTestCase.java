@@ -335,6 +335,27 @@ abstract class IntegrationTestCase extends TestCase {
     }
   }
 
+  /** Asserts that when compiling with the given compiler options, there is an error or warning. */
+  protected void test(
+      CompilerOptions options, String[] original, String[] compiled, DiagnosticType[] warnings) {
+    Compiler compiler = compile(options, original);
+    checkUnexpectedErrorsOrWarnings(compiler, warnings.length);
+
+    if (compiled != null) {
+      Node root = compiler.getRoot().getLastChild();
+      Node expectedRoot = parseExpectedCode(compiled, options, normalizeResults);
+      String explanation = expectedRoot.checkTreeEquals(root);
+      assertNull(
+          "\nExpected: "
+              + compiler.toSource(expectedRoot)
+              + "\nResult:   "
+              + compiler.toSource(root)
+              + "\n"
+              + explanation,
+          explanation);
+    }
+  }
+
   /**
    * Asserts that there is at least one parse error.
    */
@@ -361,25 +382,6 @@ abstract class IntegrationTestCase extends TestCase {
       Node root = compiler.getRoot().getLastChild();
       Node expectedRoot = parseExpectedCode(
           new String[] {compiled}, options, normalizeResults);
-      String explanation = expectedRoot.checkTreeEquals(root);
-      assertNull("\nExpected: " + compiler.toSource(expectedRoot) +
-          "\nResult: " + compiler.toSource(root) +
-          "\n" + explanation, explanation);
-    }
-  }
-
-  /**
-   * Asserts that when compiling with the given compiler options,
-   * there is an error or warning.
-   */
-  protected void test(CompilerOptions options,
-      String[] original, String[] compiled, DiagnosticType[] warnings) {
-    Compiler compiler = compile(options, original);
-    checkUnexpectedErrorsOrWarnings(compiler, warnings.length);
-
-    if (compiled != null) {
-      Node root = compiler.getRoot().getLastChild();
-      Node expectedRoot = parseExpectedCode(compiled, options, normalizeResults);
       String explanation = expectedRoot.checkTreeEquals(root);
       assertNull("\nExpected: " + compiler.toSource(expectedRoot) +
           "\nResult: " + compiler.toSource(root) +

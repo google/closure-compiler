@@ -168,6 +168,24 @@ public final class Matchers {
   }
 
   /**
+   * Returns a Matcher that matches all nodes that are function calls that match the provided name.
+   *
+   * @param name The name of the function to match. For non-static functions, this must be the fully
+   *     qualified name that includes the type of the object. For instance: {@code
+   *     ns.AppContext.prototype.get} will match {@code appContext.get} and {@code this.get} when
+   *     called from the AppContext class.
+   */
+  public static Matcher functionCall(final String name) {
+    return new Matcher() {
+      @Override
+      public boolean matches(Node node, NodeMetadata metadata) {
+        // TODO(mknichel): Handle the case when functions are applied through .call or .apply.
+        return node.isCall() && propertyAccess(name).matches(node.getFirstChild(), metadata);
+      }
+    };
+  }
+
+  /**
    * Returns a Matcher that matches any function call that has the given
    * number of arguments.
    */
@@ -192,24 +210,6 @@ public final class Matchers {
     return allOf(functionCallWithNumArgs(numArgs), functionCall(name));
   }
 
-  /**
-   * Returns a Matcher that matches all nodes that are function calls that match
-   * the provided name.
-   * @param name The name of the function to match. For non-static functions,
-   *     this must be the fully qualified name that includes the type of the
-   *     object. For instance: {@code ns.AppContext.prototype.get} will match
-   *     {@code appContext.get} and {@code this.get} when called from the
-   *     AppContext class.
-   */
-  public static Matcher functionCall(final String name) {
-    return new Matcher() {
-      @Override public boolean matches(Node node, NodeMetadata metadata) {
-        // TODO(mknichel): Handle the case when functions are applied through .call or .apply.
-        return node.isCall() && propertyAccess(name).matches(node.getFirstChild(), metadata);
-      }
-    };
-  }
-
   public static Matcher googRequire(final String namespace) {
     return new Matcher() {
       @Override
@@ -221,12 +221,12 @@ public final class Matchers {
     };
   }
 
-  public static Matcher googModule() {
-    return functionCall("goog.module");
-  }
-
   public static Matcher googRequire() {
     return functionCall("goog.require");
+  }
+
+  public static Matcher googModule() {
+    return functionCall("goog.module");
   }
 
   public static Matcher googModuleOrProvide() {

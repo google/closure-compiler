@@ -50,11 +50,10 @@ public final class TranspilerBuilder {
   public TranspilerBuilder caching() {
     return caching(DEFAULT_CACHE_SPEC);
   }
-  private static final String DEFAULT_CACHE_SPEC = "maximumSize=10000";
 
   /**
-   * Returns a TranspilerBuilder with cached transpilations, using the given
-   * cache spec.  Note that the builder itself is not changed.
+   * Returns a TranspilerBuilder with cached transpilations, using the given cache spec. Note that
+   * the builder itself is not changed.
    */
   @CheckReturnValue
   public TranspilerBuilder caching(String spec) {
@@ -62,13 +61,15 @@ public final class TranspilerBuilder {
   }
 
   /**
-   * Returns a TranspilerBuilder with cached transpilations, using the given
-   * cache builder.  Note that the builder itself is not changed.
+   * Returns a TranspilerBuilder with cached transpilations, using the given cache builder. Note
+   * that the builder itself is not changed.
    */
   @CheckReturnValue
   public TranspilerBuilder caching(CacheBuilder builder) {
     return new TranspilerBuilder(new CachingTranspiler(transpiler, builder));
   }
+
+  private static final String DEFAULT_CACHE_SPEC = "maximumSize=10000";
 
   /**
    * Returns the built Transpiler.

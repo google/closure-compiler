@@ -25,6 +25,7 @@ import com.google.javascript.jscomp.graph.DiGraph.DiGraphEdge;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphNode;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -46,6 +47,29 @@ public final class ControlFlowAnalysisTest extends TestCase {
    */
   private void testCfg(String input, String expected) {
     testCfg(input, expected, true);
+  }
+
+  /**
+   * Given an input in JavaScript, test if the control flow analysis creates the proper control flow
+   * graph by comparing the expected Dot file output.
+   *
+   * @param input Input JavaScript.
+   * @param expected Expected Graphviz Dot file.
+   * @param shouldTraverseFunctions Whether to traverse functions when constructing the CFG (true by
+   *     default). Passed in to the constructor of {@link ControlFlowAnalysis}.
+   */
+  private void testCfg(String input, String expected, boolean shouldTraverseFunctions) {
+    Compiler compiler = new Compiler();
+    ControlFlowAnalysis cfa = new ControlFlowAnalysis(compiler, shouldTraverseFunctions, true);
+
+    Node root = compiler.parseSyntheticCode("cfgtest", input);
+    cfa.process(null, root);
+    ControlFlowGraph<Node> cfg = cfa.getCfg();
+    try {
+      assertEquals(expected, DotFormatter.toDot(root, cfg));
+    } catch (IOException e) {
+      fail("Tests failed with IOExceptions");
+    }
   }
 
   /**
@@ -229,33 +253,6 @@ public final class ControlFlowAnalysisTest extends TestCase {
 
   private ControlFlowGraph<Node> createCfg(String input) {
     return createCfg(input, false);
-  }
-
-  /**
-   * Given an input in JavaScript, test if the control flow analysis
-   * creates the proper control flow graph by comparing the expected
-   * Dot file output.
-   *
-   * @param input Input JavaScript.
-   * @param expected Expected Graphviz Dot file.
-   * @param shouldTraverseFunctions Whether to traverse functions when
-   *    constructing the CFG (true by default). Passed in to the
-   *    constructor of {@link ControlFlowAnalysis}.
-   */
-  private void testCfg(String input, String expected,
-      boolean shouldTraverseFunctions) {
-    Compiler compiler = new Compiler();
-    ControlFlowAnalysis cfa =
-        new ControlFlowAnalysis(compiler, shouldTraverseFunctions, true);
-
-    Node root = compiler.parseSyntheticCode("cfgtest", input);
-    cfa.process(null, root);
-    ControlFlowGraph<Node> cfg = cfa.getCfg();
-    try {
-      assertEquals(expected, DotFormatter.toDot(root, cfg));
-    } catch (java.io.IOException e) {
-      fail("Tests failed with IOExceptions");
-    }
   }
 
   public void testSimpleStatements() {

@@ -104,31 +104,19 @@ public class GoldenFileComparer {
   }
 
   /**
-   * Always use these options, they set --pretty_print option for easy verification.
-   */
-  public static CompilerOptions options() {
-    CompilerOptions options = new CompilerOptions();
-    options.setLanguageIn(LanguageMode.ECMASCRIPT3);
-    // Instrumentation done
-    options.setPrettyPrint(true);
-    return options;
-  }
-
-  /**
-   * Compile one input file and throw if the result does not match golden.
-   * Pass options from this class, mutated with desired options
+   * Compile one input file and throw if the result does not match golden. Pass options from this
+   * class, mutated with desired options
    */
   public static void compileAndCompare(
       String goldenFileName, CompilerOptions options, String sourceFileName) throws Exception {
-    List<SourceFile> sourceFiles =
-        ImmutableList.of(readSource(sourceFileName));
+    List<SourceFile> sourceFiles = ImmutableList.of(readSource(sourceFileName));
     List<SourceFile> externsFiles = ImmutableList.of();
     compileAndCompare(goldenFileName, options, sourceFiles, externsFiles);
   }
 
   /**
-   * Compile two input files and throw if the result does not match golden.
-   * Pass options from this class, mutated with desired options
+   * Compile two input files and throw if the result does not match golden. Pass options from this
+   * class, mutated with desired options
    */
   public static void compileAndCompare(
       String goldenFileName,
@@ -138,13 +126,21 @@ public class GoldenFileComparer {
       String externsFileName)
       throws Exception {
     // Prepare sources
-    List<SourceFile> sourceFiles = ImmutableList.of(
-        readSource(sourceFileName1),
-        readSource(sourceFileName2));
+    List<SourceFile> sourceFiles =
+        ImmutableList.of(readSource(sourceFileName1), readSource(sourceFileName2));
 
     List<SourceFile> externsFiles =
         ImmutableList.of(SourceFile.fromFile(toFullPath(externsFileName)));
 
     compileAndCompare(goldenFileName, options, sourceFiles, externsFiles);
+  }
+
+  /** Always use these options, they set --pretty_print option for easy verification. */
+  public static CompilerOptions options() {
+    CompilerOptions options = new CompilerOptions();
+    options.setLanguageIn(LanguageMode.ECMASCRIPT3);
+    // Instrumentation done
+    options.setPrettyPrint(true);
+    return options;
   }
 }

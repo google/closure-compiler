@@ -176,6 +176,15 @@ public class LinkedDirectedGraph<N, E>
   }
 
   @Override
+  public List<DiGraphEdge<N, E>> getEdges() {
+    List<DiGraphEdge<N, E>> result = new ArrayList<>();
+    for (DiGraphNode<N, E> node : nodes.values()) {
+      result.addAll(node.getOutEdges());
+    }
+    return Collections.unmodifiableList(result);
+  }
+
+  @Override
   public GraphEdge<N, E> getFirstEdge(N n1, N n2) {
     DiGraphNode<N, E> dNode1 = getNodeOrFail(n1);
     DiGraphNode<N, E> dNode2 = getNodeOrFail(n2);
@@ -277,20 +286,18 @@ public class LinkedDirectedGraph<N, E>
   }
 
   @Override
-  public List<DiGraphNode<N, E>> getDirectedSuccNodes(N nodeValue) {
-    return getDirectedSuccNodes(nodes.get(nodeValue));
-  }
-
-  @Override
-  public List<DiGraphNode<N, E>> getDirectedPredNodes(
-      DiGraphNode<N, E> dNode) {
+  public List<DiGraphNode<N, E>> getDirectedPredNodes(DiGraphNode<N, E> dNode) {
     checkNotNull(dNode);
-    List<DiGraphNode<N, E>> nodeList =
-        new ArrayList<>(dNode.getInEdges().size());
+    List<DiGraphNode<N, E>> nodeList = new ArrayList<>(dNode.getInEdges().size());
     for (DiGraphEdge<N, E> edge : dNode.getInEdges()) {
       nodeList.add(edge.getSource());
     }
     return nodeList;
+  }
+
+  @Override
+  public List<DiGraphNode<N, E>> getDirectedSuccNodes(N nodeValue) {
+    return getDirectedSuccNodes(nodes.get(nodeValue));
   }
 
   @Override
@@ -357,15 +364,6 @@ public class LinkedDirectedGraph<N, E>
       result.add(outEdge.getDestination());
     }
     return result;
-  }
-
-  @Override
-  public List<DiGraphEdge<N, E>> getEdges() {
-    List<DiGraphEdge<N, E>> result = new ArrayList<>();
-    for (DiGraphNode<N, E> node : nodes.values()) {
-      result.addAll(node.getOutEdges());
-    }
-    return Collections.unmodifiableList(result);
   }
 
   @Override

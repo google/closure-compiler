@@ -54,18 +54,19 @@ import java.util.IdentityHashMap;
 import java.util.Objects;
 
 /**
- * Represents JavaScript value types.<p>
+ * Represents JavaScript value types.
  *
- * Types are split into two separate families: value types and object types.
+ * <p>Types are split into two separate families: value types and object types.
  *
- * A special {@link UnknownType} exists to represent a wildcard type on which
- * no information can be gathered. In particular, it can assign to everyone,
- * is a subtype of everyone (and everyone is a subtype of it).<p>
+ * <p>A special {@link UnknownType} exists to represent a wildcard type on which no information can
+ * be gathered. In particular, it can assign to everyone, is a subtype of everyone (and everyone is
+ * a subtype of it).
  *
- * If you remove the {@link UnknownType}, the set of types in the type system
- * forms a lattice with the {@link #isSubtype} relation defining the partial
- * order of types. All types are united at the top of the lattice by the
- * {@link AllType} and at the bottom by the {@link NoType}.<p>
+ * <p>If you remove the {@link UnknownType}, the set of types in the type system forms a lattice
+ * with the {@link #isSubtype} relation defining the partial order of types. All types are united at
+ * the top of the lattice by the {@link AllType} and at the bottom by the {@link NoType}.
+ *
+ * <p>
  *
  */
 public abstract class JSType implements TypeI {
@@ -1120,6 +1121,11 @@ public abstract class JSType implements TypeI {
             thisType.registry.createUnionType(thisType, thatType));
   }
 
+  @Override
+  public TypeI meetWith(TypeI that) {
+    return getGreatestSubtype(this, (JSType) that);
+  }
+
   /**
    * Gets the greatest subtype of {@code this} and {@code that}.
    * The greatest subtype is the meet (&#8743;) or infimum of both types in the
@@ -1134,11 +1140,6 @@ public abstract class JSType implements TypeI {
    */
   public JSType getGreatestSubtype(JSType that) {
     return getGreatestSubtype(this, that);
-  }
-
-  @Override
-  public TypeI meetWith(TypeI that) {
-    return getGreatestSubtype(this, (JSType) that);
   }
 
   /**
@@ -1422,6 +1423,14 @@ public abstract class JSType implements TypeI {
   }
 
   /**
+   * In files translated from Java, we typecheck null and undefined loosely.
+   */
+  public static enum SubtypingMode {
+    NORMAL,
+    IGNORE_NULL_UNDEFINED
+  }
+
+  /**
    * Checks whether {@code this} is a subtype of {@code that}.<p>
    * Note this function also returns true if this type structurally
    * matches the protocol define by that type (if that type is an
@@ -1453,14 +1462,6 @@ public abstract class JSType implements TypeI {
   public boolean isSubtype(JSType that) {
     return isSubtypeHelper(this, that,
         ImplCache.create(), SubtypingMode.NORMAL);
-  }
-
-  /**
-   * In files translated from Java, we typecheck null and undefined loosely.
-   */
-  public static enum SubtypingMode {
-    NORMAL,
-    IGNORE_NULL_UNDEFINED
   }
 
   public boolean isSubtype(JSType that, SubtypingMode mode) {

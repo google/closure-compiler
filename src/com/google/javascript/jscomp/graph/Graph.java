@@ -142,6 +142,15 @@ public abstract class Graph<N, E> implements AdjacencyGraph<N, E> {
   public abstract List<? extends GraphEdge<N, E>> getEdges();
 
   /**
+   * Retrieves an edge from the graph.
+   *
+   * @param n1 Node one.
+   * @param n2 Node two.
+   * @return The list of edges between those two values in the graph.
+   */
+  public abstract List<? extends GraphEdge<N, E>> getEdges(N n1, N n2);
+
+  /**
    * Gets the degree of a node.
    *
    * @param value The node's value.
@@ -161,15 +170,6 @@ public abstract class Graph<N, E> implements AdjacencyGraph<N, E> {
    * @return A list of neighboring nodes.
    */
   public abstract List<GraphNode<N, E>> getNeighborNodes(N value);
-
-  /**
-   * Retrieves an edge from the graph.
-   *
-   * @param n1 Node one.
-   * @param n2 Node two.
-   * @return The list of edges between those two values in the graph.
-   */
-  public abstract List<? extends GraphEdge<N, E>> getEdges(N n1, N n2);
 
   /**
    * Retrieves any edge from the graph.

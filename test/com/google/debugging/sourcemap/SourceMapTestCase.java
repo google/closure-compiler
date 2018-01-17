@@ -86,17 +86,16 @@ public abstract class SourceMapTestCase extends TestCase {
     checkSourceMap("testcode", js, expectedMap);
   }
 
+  protected void checkSourceMap(String fileName, String js, String expectedMap) throws IOException {
+    RunResult result = compile(js, fileName);
+    assertThat(result.sourceMapFileContent).isEqualTo(expectedMap);
+    assertThat(getSourceMap(result)).isEqualTo(result.sourceMapFileContent);
+  }
+
   protected String getSourceMap(RunResult result) throws IOException {
     StringBuilder sb = new StringBuilder();
     result.sourceMap.appendTo(sb, "testcode");
     return sb.toString();
-  }
-
-  protected void checkSourceMap(String fileName, String js, String expectedMap)
-      throws IOException {
-    RunResult result = compile(js, fileName);
-    assertThat(result.sourceMapFileContent).isEqualTo(expectedMap);
-    assertThat(getSourceMap(result)).isEqualTo(result.sourceMapFileContent);
   }
 
   /** Finds the all the __XX__ tokens in the given JavaScript string. */
@@ -261,30 +260,18 @@ public abstract class SourceMapTestCase extends TestCase {
     return compile(js, fileName, null, null);
   }
 
-  protected CompilerOptions getCompilerOptions() {
-    CompilerOptions options = new CompilerOptions();
-    options.setLanguageIn(LanguageMode.ECMASCRIPT3);
-    options.setSourceMapOutputPath("testcode_source_map.out");
-    options.setSourceMapFormat(getSourceMapFormat());
-    options.setSourceMapDetailLevel(detailLevel);
-    options.setSourceMapIncludeSourcesContent(sourceMapIncludeSourcesContent);
-    return options;
-  }
-
-  protected RunResult compile(
-      String js1, String fileName1, String js2, String fileName2) {
+  protected RunResult compile(String js1, String fileName1, String js2, String fileName2) {
     Compiler compiler = new Compiler();
     CompilerOptions options = getCompilerOptions();
 
     options.setChecksOnly(true);
 
-    List<SourceFile> inputs =
-        ImmutableList.of(SourceFile.fromCode(fileName1, js1));
+    List<SourceFile> inputs = ImmutableList.of(SourceFile.fromCode(fileName1, js1));
 
     if (js2 != null && fileName2 != null) {
-      inputs = ImmutableList.of(
-          SourceFile.fromCode(fileName1, js1),
-          SourceFile.fromCode(fileName2, js2));
+      inputs =
+          ImmutableList.of(
+              SourceFile.fromCode(fileName1, js1), SourceFile.fromCode(fileName2, js2));
     }
 
     Result result = compiler.compile(EXTERNS, inputs, options);
@@ -307,4 +294,13 @@ public abstract class SourceMapTestCase extends TestCase {
     return rr;
   }
 
+  protected CompilerOptions getCompilerOptions() {
+    CompilerOptions options = new CompilerOptions();
+    options.setLanguageIn(LanguageMode.ECMASCRIPT3);
+    options.setSourceMapOutputPath("testcode_source_map.out");
+    options.setSourceMapFormat(getSourceMapFormat());
+    options.setSourceMapDetailLevel(detailLevel);
+    options.setSourceMapIncludeSourcesContent(sourceMapIncludeSourcesContent);
+    return options;
+  }
 }

@@ -62,13 +62,7 @@ public class CodeGenerator {
     this.jsDocInfoPrinter = new JSDocInfoPrinter(false);
   }
 
-  static CodeGenerator forCostEstimation(CodeConsumer consumer) {
-    return new CodeGenerator(consumer);
-  }
-
-  protected CodeGenerator(
-      CodeConsumer consumer,
-      CompilerOptions options) {
+  protected CodeGenerator(CodeConsumer consumer, CompilerOptions options) {
     cc = consumer;
 
     this.outputCharsetEncoder = new OutputCharsetEncoder(options.getOutputCharset());
@@ -78,6 +72,10 @@ public class CodeGenerator {
     this.quoteKeywordProperties = options.shouldQuoteKeywordProperties();
     this.useOriginalName = options.getUseOriginalNamesInOutput();
     this.jsDocInfoPrinter = new JSDocInfoPrinter(useOriginalName);
+  }
+
+  static CodeGenerator forCostEstimation(CodeConsumer consumer) {
+    return new CodeGenerator(consumer);
   }
 
   /** Insert a top-level identifying file as .i.js generated typing file. */
@@ -100,10 +98,6 @@ public class CodeGenerator {
 
   protected void add(String str) {
     cc.add(str);
-  }
-
-  private void addIdentifier(String identifier) {
-    cc.addIdentifier(identifierEscape(identifier));
   }
 
   protected void add(Node n) {
@@ -134,7 +128,8 @@ public class CodeGenerator {
       Preconditions.checkState(
           childCount == 2,
           "Bad binary operator \"%s\": expected 2 arguments but got %s",
-          opstr, childCount);
+          opstr,
+          childCount);
       int p = precedence(n);
 
       // For right-hand-side of operations, only pass context if it's
@@ -641,9 +636,7 @@ public class CodeGenerator {
 
           boolean preferLineBreaks =
               type == Token.SCRIPT
-                  || (type == Token.BLOCK
-                      && !preserveBlock
-                      && n.getParent().isScript());
+                  || (type == Token.BLOCK && !preserveBlock && n.getParent().isScript());
           for (Node c = first; c != null; c = c.getNext()) {
             add(c, Context.STATEMENT);
 
@@ -780,7 +773,9 @@ public class CodeGenerator {
       case GETELEM:
         Preconditions.checkState(
             childCount == 2,
-            "Bad GETELEM node: Expected 2 children but got %s. For node: %s", childCount, n);
+            "Bad GETELEM node: Expected 2 children but got %s. For node: %s",
+            childCount,
+            n);
         addExpr(first, NodeUtil.precedence(type), context);
         add("[");
         add(first.getNext());
@@ -1269,6 +1264,10 @@ public class CodeGenerator {
     }
 
     cc.endSourceMapping(n);
+  }
+
+  private void addIdentifier(String identifier) {
+    cc.addIdentifier(identifierEscape(identifier));
   }
 
   private int precedence(Node n) {
