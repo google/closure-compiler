@@ -30,6 +30,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
+import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfoBuilder;
@@ -981,7 +982,9 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
       t.report(legacyNamespaceNode, INVALID_GET_NAMESPACE);
       return;
     }
-    if (!currentScript.isModule && t.inGlobalScope()) {
+    if (!currentScript.isModule
+        && t.inGlobalScope()
+        && compiler.getOptions().moduleResolutionMode != ResolutionMode.WEBPACK) {
       t.report(legacyNamespaceNode, INVALID_GET_CALL_SCOPE);
       return;
     }

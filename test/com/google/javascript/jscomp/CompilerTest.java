@@ -28,6 +28,7 @@ import com.google.debugging.sourcemap.SourceMapConsumerV3;
 import com.google.debugging.sourcemap.SourceMapGeneratorV3;
 import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
@@ -1650,5 +1651,92 @@ public final class CompilerTest extends TestCase {
       assertThat(orderedInputs.indexOf("base.js")).isLessThan(orderedInputs.indexOf("entry.js"));
       assertThat(orderedInputs.indexOf("base.js")).isLessThan(orderedInputs.indexOf("test.js"));
     }
+  }
+
+  public void testDynamicImportOrdering() throws Exception {
+    List<SourceFile> sources = new ArrayList<>();
+    sources.add(SourceFile.fromCode("/entry.js", "__webpack_require__(2);"));
+    sources.add(
+        SourceFile.fromCode(
+            "/a.js",
+            lines(
+                "console.log(module.id);",
+                "__webpack_require__.e(0).then(function() { return __webpack_require__(3); });")));
+    sources.add(SourceFile.fromCode("/b.js", "console.log(module.id); __webpack_require__(4);"));
+    sources.add(SourceFile.fromCode("/c.js", "console.log(module.id);"));
+
+    HashMap<String, String> webpackModulesById = new HashMap<>();
+    webpackModulesById.put("1", "/entry.js");
+    webpackModulesById.put("2", "/a.js");
+    webpackModulesById.put("3", "/b.js");
+    webpackModulesById.put("4", "/c.js");
+
+    CompilerOptions options = new CompilerOptions();
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_2015);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    options.dependencyOptions.setEntryPoints(
+        ImmutableList.of(ModuleIdentifier.forFile("/entry.js")));
+    options.dependencyOptions.setDependencySorting(true);
+    options.dependencyOptions.setDependencyPruning(true);
+    options.dependencyOptions.setMoocherDropping(true);
+    options.setProcessCommonJSModules(true);
+    options.setModuleResolutionMode(ResolutionMode.WEBPACK);
+    List<SourceFile> externs =
+        AbstractCommandLineRunner.getBuiltinExterns(options.getEnvironment());
+    Compiler compiler = new Compiler();
+    compiler.initWebpackMap(ImmutableMap.copyOf(webpackModulesById));
+    Result result = compiler.compile(externs, ImmutableList.copyOf(sources), options);
+    assertTrue(result.success);
+
+    List<String> orderedInputs = new ArrayList<>();
+    for (CompilerInput input : compiler.getInputsInOrder()) {
+      orderedInputs.add(input.getName());
+    }
+
+    assertThat(orderedInputs).containsExactly("/a.js", "/entry.js", "/c.js", "/b.js").inOrder();
+  }
+
+  public void testDynamicImportOrdering2() throws Exception {
+    List<SourceFile> sources = new ArrayList<>();
+    sources.add(SourceFile.fromCode("/entry.js", "__webpack_require__(2);"));
+    sources.add(
+        SourceFile.fromCode(
+            "/a.js",
+            lines(
+                "console.log(module.id);",
+                "__webpack_require__.e(0).then(function() {",
+                "  const foo = __webpack_require__(3);",
+                "  console.log(foo);",
+                "});")));
+    sources.add(SourceFile.fromCode("/b.js", "console.log(module.id); module.exports = 'foo';"));
+
+    HashMap<String, String> webpackModulesById = new HashMap<>();
+    webpackModulesById.put("1", "/entry.js");
+    webpackModulesById.put("2", "/a.js");
+    webpackModulesById.put("3", "/b.js");
+
+    CompilerOptions options = new CompilerOptions();
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_2015);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    options.dependencyOptions.setEntryPoints(
+        ImmutableList.of(ModuleIdentifier.forFile("/entry.js")));
+    options.dependencyOptions.setDependencySorting(true);
+    options.dependencyOptions.setDependencyPruning(true);
+    options.dependencyOptions.setMoocherDropping(true);
+    options.setProcessCommonJSModules(true);
+    options.setModuleResolutionMode(ResolutionMode.WEBPACK);
+    List<SourceFile> externs =
+        AbstractCommandLineRunner.getBuiltinExterns(options.getEnvironment());
+    Compiler compiler = new Compiler();
+    compiler.initWebpackMap(ImmutableMap.copyOf(webpackModulesById));
+    Result result = compiler.compile(externs, ImmutableList.copyOf(sources), options);
+    assertTrue(result.success);
+
+    List<String> orderedInputs = new ArrayList<>();
+    for (CompilerInput input : compiler.getInputsInOrder()) {
+      orderedInputs.add(input.getName());
+    }
+
+    assertThat(orderedInputs).containsExactly("/a.js", "/entry.js", "/b.js").inOrder();
   }
 }

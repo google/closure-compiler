@@ -172,6 +172,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
   private transient IncrementalScopeCreator scopeCreator = null;
 
+  private ImmutableMap<String, String> inputPathByWebpackId;
+
   /**
    * Subclasses are responsible for loading sources that were not provided as explicit inputs to the
    * compiler. For example, looking up sources referenced within sourcemaps.
@@ -1755,7 +1757,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
                 inputs,
                 ModuleLoader.PathResolver.RELATIVE,
                 options.moduleResolutionMode,
-                null);
+                inputPathByWebpackId);
 
         if (options.moduleResolutionMode == ModuleLoader.ResolutionMode.NODE) {
           // processJsonInputs requires a module loader to already be defined
@@ -1995,7 +1997,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     }
 
     FindModuleDependencies findDeps =
-        new FindModuleDependencies(this, supportEs6Modules, supportCommonJSModules);
+        new FindModuleDependencies(
+            this, supportEs6Modules, supportCommonJSModules, inputPathByWebpackId);
     findDeps.process(input.getAstRoot(this));
 
     // If this input was imported by another module, it is itself a module
@@ -2005,7 +2008,10 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     }
     this.moduleTypesByName.put(input.getPath().toModuleName(), input.getJsModuleType());
 
-    for (String requiredNamespace : input.getRequires()) {
+    ArrayList<String> allDeps = new ArrayList<>();
+    allDeps.addAll(input.getRequires());
+    allDeps.addAll(input.getDynamicRequires());
+    for (String requiredNamespace : allDeps) {
       CompilerInput requiredInput = null;
       boolean requiredByModuleImport = false;
       if (inputsByProvide.containsKey(requiredNamespace)) {
@@ -3495,6 +3501,10 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       deserializedModule.setName(newModule.getName());
     }
     return;
+  }
+
+  void initWebpackMap(ImmutableMap<String, String> inputPathByWebpackId) {
+    this.inputPathByWebpackId = inputPathByWebpackId;
   }
 
   protected CompilerExecutor createCompilerExecutor() {
