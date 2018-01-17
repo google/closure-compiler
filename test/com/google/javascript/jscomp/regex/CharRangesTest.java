@@ -16,13 +16,10 @@
 
 package com.google.javascript.jscomp.regex;
 
-import com.google.javascript.jscomp.regex.CharRanges;
-
-import junit.framework.TestCase;
-
+import com.google.common.testing.EqualsTester;
 import java.util.BitSet;
 import java.util.Random;
-
+import junit.framework.TestCase;
 
 public final class CharRangesTest extends TestCase {
 
@@ -117,8 +114,7 @@ public final class CharRangesTest extends TestCase {
     CharRanges sbs2 = CharRanges.withMembers(9, 1, 4, 1, 0);
     assertEquals(sbs2.toString(), "[0x0-0x1 0x4 0x9]", sbs2.toString());
 
-    assertEquals(sbs1, sbs2);
-    assertEquals(sbs1.hashCode(), sbs2.hashCode());
+    new EqualsTester().addEqualityGroup(sbs1, sbs2).testEquals();
 
     for (int i = -10; i < 20; ++i) {
       assertEquals("" + i, sbs1.contains(i), sbs2.contains(i));

@@ -21,6 +21,7 @@ import static com.google.javascript.jscomp.parsing.Config.JsDocParsing.INCLUDE_D
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Ordering;
+import com.google.common.testing.EqualsTester;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.SymbolTable.Reference;
 import com.google.javascript.jscomp.SymbolTable.Symbol;
@@ -1137,8 +1138,7 @@ public final class SymbolTableTest extends TestCase {
     Symbol employerPrototype = getGlobalVar(table, "Employer.prototype");
     assertNotNull(employerPrototype);
 
-    assertEquals(employerPrototype.hashCode(), prototypeOfEmployer.hashCode());
-    assertEquals(employerPrototype, prototypeOfEmployer);
+    new EqualsTester().addEqualityGroup(employerPrototype, prototypeOfEmployer).testEquals();
   }
 
   private void assertSymmetricOrdering(
