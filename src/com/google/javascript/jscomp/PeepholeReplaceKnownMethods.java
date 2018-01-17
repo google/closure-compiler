@@ -610,9 +610,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
         if (!foldedStringNode.isString()) {
           // If the Node is not a string literal, ensure that
           // it is coerced to a string.
-          Node replacement = IR.add(
-              IR.string("").srcref(n),
-              foldedStringNode);
+          Node replacement = NodeUtil.newCallNode(IR.name("String").srcref(n), foldedStringNode);
           foldedStringNode = replacement;
         }
         n.getParent().replaceChild(n, foldedStringNode);
