@@ -384,6 +384,10 @@ class RemoveUnusedCode implements CompilerPass {
         traverseDeclarationStatement(n, scope);
         break;
 
+      case INSTANCEOF:
+        traverseInstanceof(n, scope);
+        break;
+
       case NAME:
         // The only cases that should reach this point are parameter declarations and references
         // to names. The name node does not have children in these cases.
@@ -408,6 +412,20 @@ class RemoveUnusedCode implements CompilerPass {
       default:
         traverseChildren(n, scope);
         break;
+    }
+  }
+
+  private void traverseInstanceof(Node instanceofNode, Scope scope) {
+    checkArgument(instanceofNode.isInstanceOf(), instanceofNode);
+    Node lhs = instanceofNode.getFirstChild();
+    Node rhs = lhs.getNext();
+    traverseNode(lhs, scope);
+    if (rhs.isName()) {
+      VarInfo varInfo = traverseNameNode(rhs, scope);
+      RemovableBuilder builder = new RemovableBuilder();
+      varInfo.addRemovable(builder.buildInstanceofName(instanceofNode));
+    } else {
+      traverseNode(rhs, scope);
     }
   }
 
@@ -1421,9 +1439,7 @@ class RemoveUnusedCode implements CompilerPass {
       if (varInfo == null) {
         varInfo = new VarInfo();
         if (var.getParentNode().isParamList()) {
-          // We don't know where a parameter value comes from, so setting a property on it
-          // has unknown side effects and makes it not removable.
-          varInfo.propertyAssignmentsWillPreventRemoval = true;
+          varInfo.hasNonLocalOrNonLiteralValue = true;
         }
         varInfoMap.put(var, varInfo);
       }
@@ -1559,11 +1575,6 @@ class RemoveUnusedCode implements CompilerPass {
       return false;
     }
 
-    /** True if this object represents assignment of a value to a property. */
-    boolean isPropertyAssignment() {
-      return false;
-    }
-
     /** True if this object represents a named property, either assignment or declaration. */
     boolean isNamedProperty() {
       return propertyName != null;
@@ -1613,6 +1624,64 @@ class RemoveUnusedCode implements CompilerPass {
     }
 
     public boolean isStaticProperty() {
+      return false;
+    }
+
+    /**
+     * Does this object represent assignment of a nonlocal or nonliteral value to a variable?
+     *
+     * <p>e.g.
+     *
+     * <pre><code>
+     *   X = 1; // false: literal value
+     *   X = [1, 2, 3]; // false, literal value
+     *   X = { prototype: { a: 1, b: 2 }}; // false: literal value
+     *   X = foo(); // true: X comes from outside local context
+     *   foo(X = { prototype: {a: 1, b: 2}}); // true: value of X escapes local context
+     *   X = Y; // true: X is an alias, so nonliteral
+     *   X.property = foo(); // false: not assignment to variable or prototype
+     *   X.prototype.y = foo(); // false: not assignment to variable or prototype
+     *   X.prototype = foo(); // true: prototype assigned non-literal value
+     *   X.prototype = { a: 1, b: 2}; // false: prototype assigned literal value
+     * </code></pre>
+     *
+     * Such cases make it hard to reason about things like assigning to properties on X or checking
+     * if something is an instance of X.
+     */
+    public boolean isNonLocalOrNonLiteralAssignmentToVariableOrPrototype() {
+      if (isVariableAssignment()) {
+        // varName = something
+        return assignedValueMayEscape() || !isLiteralValueAssignment();
+      } else if (isPrototypeAssignment()) {
+        // varName.prototype = something
+        //
+        // For a prototype assignment, it's expected that the value will be an object literal
+        // that may contain non-literal properties. At minimum the prototype object literal is
+        // likely to contain a reference back to the constructor, which is a non-literal.
+        // We still want to consider that to be a local literal.
+        return assignedValueMayEscape()
+            || !(assignedValue.isObjectLit() || isLiteralValueAssignment());
+      } else {
+        return false;
+      }
+    }
+
+    /**
+     * Would a nonlocal or nonliteral value prevent removal of a variable associated with this
+     * {@link Removable}?
+     *
+     * <p>True if the nature of this removable is such that a variable associated with it must not
+     * be removed if its value or its prototype is not a local, literal value.
+     *
+     * <p>e.g. When X or X.prototype is nonlocal and / or nonliteral we don't know whether it is
+     * safe to remove code like this.
+     *
+     * <pre><code>
+     *   X.propName = something; // Don't know the effect of setting X.propName
+     *   use(something instanceof X); // can't be certain there are no instances of X
+     * </code></pre>
+     */
+    public boolean preventsRemovalOfVariableWithNonLocalOrNonLiteralValueOrPrototype() {
       return false;
     }
   }
@@ -1718,6 +1787,10 @@ class RemoveUnusedCode implements CompilerPass {
       this.propertyName = propertyNode.getString();
       return new UnusedReadReference(this, referenceNode);
     }
+
+    public Removable buildInstanceofName(Node instanceofNode) {
+      return new InstanceofName(this, instanceofNode);
+    }
   }
 
   /** Represents a read reference whose value is not used. */
@@ -1749,6 +1822,42 @@ class RemoveUnusedCode implements CompilerPass {
           }
         }
       }
+    }
+  }
+
+  /**
+   * Represents `something instanceof varName`.
+   *
+   * <p>If `varName` is removed, this expression can be replaced with `false` or
+   * `(something, false)` to preserve side effects.
+   */
+  private class InstanceofName extends Removable {
+    final Node instanceofNode;
+
+    InstanceofName(RemovableBuilder builder, Node instanceofNode) {
+      super(builder);
+      checkArgument(instanceofNode.isInstanceOf(), instanceofNode);
+      this.instanceofNode = instanceofNode;
+    }
+
+    @Override
+    void removeInternal(AbstractCompiler compiler) {
+      if (!alreadyRemoved(instanceofNode)) {
+        Node lhs = instanceofNode.getFirstChild();
+        Node falseNode = IR.falseNode().srcref(instanceofNode);
+        if (NodeUtil.mayHaveSideEffects(lhs)) {
+          replaceNodeWith(instanceofNode, IR.comma(lhs.detach(), falseNode).srcref(instanceofNode));
+        } else {
+          replaceNodeWith(instanceofNode, falseNode);
+        }
+      }
+    }
+
+    @Override
+    public boolean preventsRemovalOfVariableWithNonLocalOrNonLiteralValueOrPrototype() {
+      // If we aren't sure where X comes from and what aliases it might have, we cannot be sure
+      // there are no instances of it.
+      return true;
     }
   }
 
@@ -1822,8 +1931,15 @@ class RemoveUnusedCode implements CompilerPass {
     }
 
     @Override
-    boolean isPropertyAssignment() {
-      return targetNode.isGetProp();
+    public boolean preventsRemovalOfVariableWithNonLocalOrNonLiteralValueOrPrototype() {
+      if (targetNode.isGetProp()) {
+        Node getPropLhs = targetNode.getFirstChild();
+        // assignment to varName.property or varName.prototype.property
+        // cannot be removed unless varName and varName.prototype have literal, local values.
+        return getPropLhs.isName() || isNameDotPrototype(getPropLhs);
+      } else {
+        return false;
+      }
     }
 
     @Override
@@ -2094,7 +2210,9 @@ class RemoveUnusedCode implements CompilerPass {
     }
 
     @Override
-    boolean isPropertyAssignment() {
+    public boolean preventsRemovalOfVariableWithNonLocalOrNonLiteralValueOrPrototype() {
+      // If we don't know where the variable comes from or where it may go, then we don't know
+      // whether it is safe to remove assignments to properties on it.
       return isNamedPropertyAssignment() || isComputedPropertyAssignment();
     }
 
@@ -2260,52 +2378,18 @@ class RemoveUnusedCode implements CompilerPass {
 
     boolean isEntirelyRemovable = true;
 
-    /**
-     * Used along with hasPropertyAssignments to handle cases where property assignment may have
-     * an unknown side-effect, and so make it unsafe to remove the variable.
-     *
-     * If we're unsure where the variable's value comes from, then setting a property on it may
-     * have a side-effect we cannot easily detect.
-     */
-    boolean propertyAssignmentsWillPreventRemoval = false;
-
-    /**
-     * Records whether any properties are set on the variable.
-     *
-     * This includes both named properties (`x.propName =`) and computed ones (`x[expr] = `).
-     * It is used in combination with propertyAssignmentsWillPreventRemoval.
-     */
-    boolean hasPropertyAssignments = false;
+    boolean hasNonLocalOrNonLiteralValue = false;
+    boolean requiresLocalLiteralValueForRemoval = false;
 
     void addRemovable(Removable removable) {
-      // determine how this removable affects removability
-      if (removable.isPropertyAssignment()) {
-        hasPropertyAssignments = true;
-        if (removable.isPrototypeAssignment() && removable.assignedValueMayEscape()) {
-          // Assignment to properties could have unexpected side-effects.
-          // x = varName.prototype = {};
-          // foo(varName.prototype = {});
-          // NOTE: Arguably we should also check for literal value assignment, but that would
-          // prevent us from removing cases like this one.
-          // Foo.prototype = {
-          //     constructor: Foo, // not considered a literal value.
-          //     ...
-          // };
-          propertyAssignmentsWillPreventRemoval = true;
-        }
-        if (propertyAssignmentsWillPreventRemoval) {
-          setIsExplicitlyNotRemovable();
-        }
-      } else if (removable.isVariableAssignment()
-          && (removable.assignedValueMayEscape() || !removable.isLiteralValueAssignment())) {
-        // Assignment to properties could have unexpected side-effects.
-        // x = varName = {};
-        // foo(varName = {});
-        // varName = foo();
-        propertyAssignmentsWillPreventRemoval = true;
-        if (hasPropertyAssignments) {
-          setIsExplicitlyNotRemovable();
-        }
+      if (removable.isNonLocalOrNonLiteralAssignmentToVariableOrPrototype()) {
+        hasNonLocalOrNonLiteralValue = true;
+      }
+      if (removable.preventsRemovalOfVariableWithNonLocalOrNonLiteralValueOrPrototype()) {
+        requiresLocalLiteralValueForRemoval = true;
+      }
+      if (hasNonLocalOrNonLiteralValue && requiresLocalLiteralValueForRemoval) {
+        setIsExplicitlyNotRemovable();
       }
 
       if (isEntirelyRemovable) {

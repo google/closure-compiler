@@ -1193,75 +1193,100 @@ public final class RemoveUnusedCodeNameAnalyzerTest extends TypeICompilerTestCas
     testSame("this['foo'] = 3;");
   }
 
-  // TODO(b/66971163): implement instanceof handling
-  public void disabledTestRemoveInstanceOfOnly() {
+  public void testRemoveInstanceOfOnly() {
     test(
-        "function Foo() {}; Foo.prototype.isBar = function() {};"
-            + "var x; if (x instanceof Foo) { window.alert(x); }",
-        ";var x; if (false) { window.alert(x); }");
+        lines(
+            "function Foo() {}",
+            "Foo.prototype.isBar = function() {};",
+            "var x;",
+            "if (x instanceof Foo) { window.alert(x); }"),
+        lines(
+            "                 ",
+            "                                    ",
+            "var x;",
+            "if (false           ) { window.alert(x); }"));
   }
 
-  // TODO(b/66971163): implement instanceof handling
-  public void disabledTestRemoveLocalScopedInstanceOfOnly() {
+  public void testRemoveLocalScopedInstanceOfOnly() {
     test(
-        "function Foo() {}; function Bar(x) { this.z = x instanceof Foo; };"
-            + "externfoo.x = new Bar({});",
-        ";function Bar(x) { this.z = false }; externfoo.x = new Bar({});");
+        lines(
+            "function Foo() {}",
+            "function Bar(x) { use(x instanceof Foo); }",
+            "externfoo.x = new Bar({});"),
+        lines(
+            "                 ",
+            "function Bar(x) { use(false           ); }",
+            "externfoo.x = new Bar({});"));
   }
 
-  // TODO(b/66971163): implement instanceof handling
-  public void disabledTestRemoveInstanceOfWithReferencedMethod() {
+  public void testRemoveInstanceOfWithReferencedMethod() {
     test(
-        "function Foo() {}; Foo.prototype.isBar = function() {};"
-            + "var x; if (x instanceof Foo) { window.alert(x.isBar()); }",
-        ";var x; if (false) { window.alert(x.isBar()); }");
+        lines(
+            "function Foo() {}",
+            "Foo.prototype.isBar = function() {};",
+            "var x;",
+            "if (x instanceof Foo) { window.alert(x.isBar()); }"),
+        lines(
+            "                 ",
+            "                                    ",
+            "var x;",
+            "if (false           ) { window.alert(x.isBar()); }"));
   }
 
-  // TODO(b/66971163): implement instanceof handling
-  public void disabledTestDoNotChangeReferencedInstanceOf() {
+  public void testDoNotChangeReferencedInstanceOf() {
     testSame(
-        "function Foo() {}; Foo.prototype.isBar = function() {};"
-            + "var x = new Foo(); if (x instanceof Foo) { window.alert(x); }");
+        lines(
+            "function Foo() {}",
+            "var x = new Foo();",
+            "if (x instanceof Foo) { window.alert(x); }"));
   }
 
-  // TODO(b/66971163): implement instanceof handling
-  public void disabledTestDoNotChangeReferencedLocalScopedInstanceOf() {
+  public void testDoNotChangeReferencedLocalScopedInstanceOf() {
     testSame(
-        "function Foo() {}; externfoo.x = new Foo();"
-            + "function Bar() { if (x instanceof Foo) { window.alert(x); } };"
-            + "externfoo.y = new Bar();");
+        lines(
+            "function Foo() {};",
+            "externfoo.x = new Foo();",
+            "function Bar() {",
+            "  var x;",
+            "  if (x instanceof Foo) { window.alert(x); }",
+            "}",
+            "externfoo.y = new Bar();"));
   }
 
-  // TODO(b/66971163): implement instanceof handling
-  public void disabledTestDoNotChangeLocalScopeReferencedInstanceOf() {
+  public void testDoNotChangeLocalScopeReferencedInstanceOf() {
     testSame(
-        "function Foo() {}; Foo.prototype.isBar = function() {};"
-            + "function Bar() { this.z = new Foo(); }; externfoo.x = new Bar();"
-            + "if (x instanceof Foo) { window.alert(x); }");
+        lines(
+            "function Foo() {}",
+            "function Bar() { use(new Foo()); }",
+            "externfoo.x = new Bar();",
+            "var x;",
+            "if (x instanceof Foo) { window.alert(x); }"));
   }
 
-  // TODO(b/66971163): implement instanceof handling
-  public void disabledTestDoNotChangeLocalScopeReferencedLocalScopedInstanceOf() {
+  public void testDoNotChangeLocalScopeReferencedLocalScopedInstanceOf() {
     testSame(
-        "function Foo() {}; Foo.prototype.isBar = function() {};"
-            + "function Bar() { this.z = new Foo(); };"
-            + "Bar.prototype.func = function(x) {"
-            + "if (x instanceof Foo) { window.alert(x); }"
-            + "}; new Bar().func();");
+        lines(
+            "function Foo() {}",
+            "function Bar() { new Foo(); }",
+            "Bar.prototype.func = function(x) {",
+            "  if (x instanceof Foo) { window.alert(x); }",
+            "};",
+            "new Bar().func();"));
   }
 
-  // TODO(b/66971163): implement instanceof handling
-  public void disabledTestDoNotChangeLocalScopeReferencedLocalScopedInstanceOf2() {
+  public void testDoNotChangeLocalScopeReferencedLocalScopedInstanceOf2() {
     test(
-        "function Foo() {}"
-            + "var createAxis = function(f) { return window.passThru(f); };"
-            + "var axis = createAxis(function(test) {"
-            + "  return test instanceof Foo;"
-            + "});",
-        "var createAxis = function(f) { return window.passThru(f); };"
-            + "createAxis(function(test) {"
-            + "  return false;"
-            + "});");
+        lines(
+            "function Foo() {}",
+            "var createAxis = function(f) { return window.passThru(f); };",
+            "var axis = createAxis(function(test) {",
+            "  return test instanceof Foo;",
+            "});"),
+        lines(
+            "var createAxis = function(f) { return window.passThru(f); };",
+            "createAxis(function(test) {",
+            "  return false;",
+            "});"));
   }
 
   public void testDoNotChangeInstanceOfGetElem() {
@@ -1760,8 +1785,8 @@ public final class RemoveUnusedCodeNameAnalyzerTest extends TypeICompilerTestCas
         lines(
             "function f(arg){ use(arg); }",
             "(function(){",
-            "  var O = {};",
-            "  O.prototype = 'foo';",
+            "  function O() {}",
+            "  O.prototype = { constructor: O };",
             "  f(O);",
             "})()"));
   }
@@ -1771,8 +1796,8 @@ public final class RemoveUnusedCodeNameAnalyzerTest extends TypeICompilerTestCas
         lines(
             "function f(arg){ use(arg); }",
             "(function h(){",
-            "  var L = {};",
-            "  L.prototype = 'foo';",
+            "  function L() {}",
+            "  L.prototype = { constructor: L };",
             "  f(L);",
             "})()"));
   }
@@ -1782,8 +1807,8 @@ public final class RemoveUnusedCodeNameAnalyzerTest extends TypeICompilerTestCas
         lines(
             "function f(arg){ use(arg); }",
             "function g(){",
-            "  var N = {};",
-            "  N.prototype = 'foo';",
+            "  function N() {}",
+            "  N.prototype = { constructor: N };",
             "  f(N);",
             "}",
             "g()"));
@@ -1791,16 +1816,16 @@ public final class RemoveUnusedCodeNameAnalyzerTest extends TypeICompilerTestCas
 
   public void testNoRemovePrototypeDefinitionsOutsideGlobalScope5() {
     test(
-        "function g(){ var R = {}; R.prototype = 'foo' } g()",
-        "function g(){                                 } g()");
+        "function g(){ function R() {} R.prototype = { constructor: R }; } g()",
+        "function g(){                                               } g()");
   }
 
   public void testRemovePrototypeDefinitionsInGlobalScope1() {
-    testSame("var M = {}; M.prototype = 'foo'; use(M);");
+    testSame("function M() {} M.prototype = { constructor: M }; use(M);");
   }
 
   public void testRemovePrototypeDefinitionsInGlobalScope2() {
-    test("var Q = {}; Q.prototype = 'foo'", "");
+    test("function Q() {} Q.prototype = { constructor: Q };", "");
   }
 
   public void testRemoveLabeledStatement() {
