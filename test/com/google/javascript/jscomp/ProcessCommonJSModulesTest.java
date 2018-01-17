@@ -17,7 +17,9 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.deps.ModuleLoader;
+import java.util.Map;
 
 /**
  * Unit tests for {@link ProcessCommonJSModules}
@@ -26,12 +28,13 @@ import com.google.javascript.jscomp.deps.ModuleLoader;
 public final class ProcessCommonJSModulesTest extends CompilerTestCase {
 
   private ImmutableList<String> moduleRoots = null;
+  private ModuleLoader.ResolutionMode resolutionMode = ModuleLoader.ResolutionMode.NODE;
 
   @Override
   protected CompilerOptions getOptions() {
     CompilerOptions options = super.getOptions();
     options.setProcessCommonJSModules(true);
-    options.setModuleResolutionMode(ModuleLoader.ResolutionMode.NODE);
+    options.setModuleResolutionMode(resolutionMode);
 
     if (moduleRoots != null) {
       options.setModuleRoots(moduleRoots);
@@ -529,6 +532,20 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
         lines(
             "const {foo, bar} = module$other.default;",
             "var baz = module$other.default.foo + module$other.default.bar;"));
+  }
+
+  public void testDestructuringImports2() {
+    setLanguage(
+        CompilerOptions.LanguageMode.ECMASCRIPT_2015, CompilerOptions.LanguageMode.ECMASCRIPT5);
+    testModules(
+        "test.js",
+        lines(
+            "const {foo, bar: {baz}} = require('./other');",
+            "module.exports = true;"),
+        lines(
+            "/** @const */ var module$test = {};",
+            "const {foo: foo$$module$test, bar: {baz: baz$$module$test}} = module$other.default;",
+            "/** @const */ module$test.default = true;"));
   }
 
   public void testAnnotationsCopied() {
@@ -1111,5 +1128,73 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "/** @const */ var module$test = {};",
             "/** @const */ module$test.default = 'foo';",
             "function foobar$$module$test(module) { return module.id; }"));
+  }
+
+  public void testWebpackRequire() {
+    Map<String, String> webpackModulesById =
+        ImmutableMap.of(
+            "1", "other.js",
+            "2", "yet_another.js",
+            "3", "test.js");
+    setWebpackModulesById(webpackModulesById);
+    resolutionMode = ModuleLoader.ResolutionMode.WEBPACK;
+
+    testModules(
+        "test.js",
+        lines("var name = __webpack_require__(1);", "exports.foo = 1;"),
+        lines(
+            "/** @const */ var module$test = {/** @const */ default: {}};",
+            "var name$$module$test = module$other.default;",
+            "module$test.default.foo = 1;"));
+  }
+
+  public void testWebpackRequireString() {
+    Map<String, String> webpackModulesById =
+        ImmutableMap.of(
+            "1", "other.js",
+            "yet_another.js", "yet_another.js",
+            "3", "test.js");
+    setWebpackModulesById(webpackModulesById);
+    resolutionMode = ModuleLoader.ResolutionMode.WEBPACK;
+
+    testModules(
+        "test.js",
+        lines("var name = __webpack_require__('yet_another.js');", "exports.foo = 1;"),
+        lines(
+            "/** @const */ var module$test = {/** @const */ default: {}};",
+            "var name$$module$test = module$yet_another.default;",
+            "module$test.default.foo = 1;"));
+  }
+
+  public void testWebpackAMDModuleShim() {
+    Map<String, String> webpackModulesById =
+        ImmutableMap.of(
+            "1", "test.js",
+            "2", "/webpack/buildin/module.js");
+    setWebpackModulesById(webpackModulesById);
+    resolutionMode = ModuleLoader.ResolutionMode.WEBPACK;
+
+    // Shared with ProcessCommonJSModulesTest.
+    ImmutableList<SourceFile> inputs =
+        ImmutableList.of(
+            SourceFile.fromCode(
+                "test.js",
+                lines(
+                    "(function(module) {",
+                    "  console.log(module.id);",
+                    "})(__webpack_require__(2)(module))")),
+            SourceFile.fromCode(
+                "/webpack/buildin/module.js",
+                "module.exports = function(module) { return module; };"));
+    ImmutableList<SourceFile> expecteds =
+        ImmutableList.of(
+            SourceFile.fromCode("test.js", "(function(){console.log('test.js')})()"),
+            SourceFile.fromCode(
+                "/webpack/buildin/module.js",
+                lines(
+                    "/** @const */ var module$webpack$buildin$module = {};",
+                    "/** @const */ module$webpack$buildin$module.default = ",
+                    "    function(module) { return module; };")));
+    test(inputs, expecteds);
   }
 }
