@@ -39,7 +39,6 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.JSType;
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -100,12 +99,12 @@ public final class SuggestedFix {
   }
 
   /** Get all possible fixes for this problem, including this fix. */
-  public List<SuggestedFix> getAlternatives() {
+  public ImmutableList<SuggestedFix> getAlternatives() {
     return alternatives;
   }
 
   /** Get all alternative fixes, excluding this fix. */
-  public List<SuggestedFix> getNonDefaultAlternatives() {
+  public ImmutableList<SuggestedFix> getNonDefaultAlternatives() {
     return alternatives.subList(1, alternatives.size());
   }
 
