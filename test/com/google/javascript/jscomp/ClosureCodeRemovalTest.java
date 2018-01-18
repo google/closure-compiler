@@ -75,6 +75,26 @@ public final class ClosureCodeRemovalTest extends CompilerTestCase {
         "function Foo() {};");
   }
 
+  public void testRemoveAbstract_annotation_es6() {
+    test(
+        lines(
+            "/** @abstract */",
+            "class Foo {",
+            "  /** @abstract */",
+            "  doSomething() {}",
+            "}"),
+        "/** @abstract */ class Foo {}");
+  }
+
+  public void testDoNotRemoveNormal_es6() {
+    testSame(
+        lines(
+            "/** @abstract */",
+            "class Foo {",
+            "  doSomething() {}",
+            "}"));
+  }
+
   public void testAssertionRemoval1() {
     test("var x = goog.asserts.assert(y(), 'message');", "var x = y();");
   }
