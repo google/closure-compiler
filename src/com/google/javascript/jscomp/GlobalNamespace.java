@@ -125,11 +125,6 @@ class GlobalNamespace
 
   @Override
   public TypeI getTypeOfThis() {
-    return getTypeIOfThis();
-  }
-
-  @Override
-  public final TypeI getTypeIOfThis() {
     return compiler.getTypeIRegistry().getNativeObjectType(GLOBAL_THIS);
   }
 
@@ -1087,11 +1082,6 @@ class GlobalNamespace
 
     @Override
     public TypeI getType() {
-      return null;
-    }
-
-    @Override
-    public final TypeI getTypeI() {
       return null;
     }
 

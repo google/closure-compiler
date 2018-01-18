@@ -55,9 +55,6 @@ public interface StaticTypedSlot<T extends TypeI> extends StaticSlot {
    */
   T getType();
 
-  /** Returns the type information as a {@link TypeI}. */
-  TypeI getTypeI();
-
   /**
    * Returns whether the type has been inferred (as opposed to declared).
    */

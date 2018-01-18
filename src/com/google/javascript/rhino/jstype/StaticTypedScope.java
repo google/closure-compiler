@@ -72,7 +72,4 @@ public interface StaticTypedScope<T extends TypeI> extends StaticScope {
 
   /** Returns the expected type of {@code this} in the current scope. */
   T getTypeOfThis();
-
-  /** Returns the expected type of {@code this} in the current scope as a {@link TypeI}. */
-  TypeI getTypeIOfThis();
 }

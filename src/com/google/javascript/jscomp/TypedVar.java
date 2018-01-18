@@ -20,7 +20,6 @@ import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.StaticSourceFile;
 import com.google.javascript.rhino.Token;
-import com.google.javascript.rhino.TypeI;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.StaticTypedRef;
 import com.google.javascript.rhino.jstype.StaticTypedSlot;
@@ -57,11 +56,6 @@ public class TypedVar extends AbstractVar<TypedScope, TypedVar>
    */
   @Override
   public JSType getType() {
-    return type;
-  }
-
-  @Override
-  public final TypeI getTypeI() {
     return type;
   }
 

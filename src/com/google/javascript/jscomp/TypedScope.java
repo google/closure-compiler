@@ -22,7 +22,6 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.TypeI;
 import com.google.javascript.rhino.TypeIEnv;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.ObjectType;
@@ -136,11 +135,6 @@ public class TypedScope extends AbstractScope<TypedScope, TypedVar>
       // Executed when the current scope has not been typechecked.
       return null;
     }
-  }
-
-  @Override
-  public TypeI getTypeIOfThis() {
-    return getTypeOfThis();
   }
 
   TypedVar declare(String name, Node nameNode, JSType type, CompilerInput input) {
