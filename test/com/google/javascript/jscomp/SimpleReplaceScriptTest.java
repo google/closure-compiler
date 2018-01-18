@@ -259,7 +259,7 @@ public final class SimpleReplaceScriptTest extends BaseReplaceScriptTestCase {
     try {
       compiler.compile(EXTVAR_EXTERNS, inputs, options);
     } catch (RuntimeException e) {
-      fail("replaceScript threw a RuntimeException on a parse error.");
+      throw new AssertionError("replaceScript threw a RuntimeException on a parse error.", e);
     }
   }
 
