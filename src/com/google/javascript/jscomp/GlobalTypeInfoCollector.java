@@ -2669,10 +2669,16 @@ public class GlobalTypeInfoCollector implements CompilerPass {
       // Find the declared type of the property.
       if (jsdoc != null && jsdoc.hasType()) {
         propDeclType = getTypeParser().getDeclaredTypeOfNode(jsdoc, rawType, currentScope);
+        // Happens when a setter (or getter) is incorrectly annotated with @type {NonFunction}.
+        if ((defSite.isGetterDef() || defSite.isSetterDef())
+            && propDeclType != null
+            && !propDeclType.isFunctionType()) {
+          propDeclType = null;
+        }
       } else if (methodType != null) {
         propDeclType = getCommonTypes().fromFunctionType(methodType.toFunctionType());
       }
-      if (defSite.isGetterDef()) {
+      if (defSite.isGetterDef() && propDeclType != null) {
         FunctionType ft = propDeclType.getFunTypeIfSingletonObj();
         if (ft != null) {
           propDeclType = ft.getReturnType();

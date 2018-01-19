@@ -10701,6 +10701,20 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "var x = { set 'a'(b) { b - 5; } };",
         "x['a'] = 'str';"),
         NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    // Test that we don't crash with the incorrect jsdoc
+    typeCheck(LINE_JOINER.join(
+        "/** @constructor */",
+        "function Foo() {}",
+        "Foo.prototype = {",
+        "  /** @type {number} */",
+        "  set visibleRows(visibleRows) {},",
+        "  /** @this {Foo} */",
+        "  fitToParent:function() {",
+        "    this.visibleRows = 1;",
+        "  }",
+        "};"),
+        JSTypeCreatorFromJSDoc.FUNCTION_WITH_NONFUNC_JSDOC);
   }
 
   public void testConstMissingInitializer() {
