@@ -4227,6 +4227,23 @@ public final class IntegrationTest extends IntegrationTestCase {
     test(options, code, "");
   }
 
+  public void testGoogDefineClassWithNti() {
+    CompilerOptions options = createCompilerOptions();
+    options.setNewTypeInference(true);
+    options.setClosurePass(true);
+
+    String code = lines(
+        "var Foo = goog.defineClass(null,",
+        "  {",
+        "    statics: {",
+        "      a: /** @type {number} */ ('asdf')",
+        "    },",
+        "    constructor: function() {}",
+        "  });");
+
+    test(options, code, NewTypeInference.INVALID_CAST);
+  }
+
   public void testCheckConstants1() {
     CompilerOptions options = createCompilerOptions();
     CompilationLevel level = CompilationLevel.SIMPLE_OPTIMIZATIONS;

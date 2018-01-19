@@ -1697,9 +1697,12 @@ public class GlobalTypeInfoCollector implements CompilerPass {
           }
           break;
         }
-        case CAST:
-          n.setTypeI(getDeclaredTypeOfNode(n.getJSDocInfo(), this.currentScope));
+        case CAST: {
+          JSType castType = getDeclaredTypeOfNode(n.getJSDocInfo(), this.currentScope);
+          checkNotNull(castType, n);
+          n.setTypeI(castType);
           break;
+        }
         case OBJECTLIT:
           if (!NodeUtil.isObjectLitKey(parent)) {
             Node lval = NodeUtil.getBestLValue(n);
