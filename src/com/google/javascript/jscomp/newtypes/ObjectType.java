@@ -972,8 +972,9 @@ final class ObjectType implements TypeWithProperties {
       resultNomType = NominalType.pickSubclass(this.nominalType, other.nominalType);
     }
     if (resultNomType.isClassy()) {
-      checkState(this.fn == null, this.fn);
-      checkState(other.fn == null, other.fn);
+      if (this.fn != null || other.fn != null) {
+        return this.commonTypes.getBottomObject();
+      }
       PersistentMap<String, Property> newProps =
           meetPropsHelper(this.commonTypes, true, resultNomType, this.props, other.props);
       if (this.commonTypes.isBottomPropertyMap(newProps)) {

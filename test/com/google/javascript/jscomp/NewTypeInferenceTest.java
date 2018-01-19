@@ -17025,6 +17025,19 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "var x = (new jasmine.Spy).length;",
         "var /** null */ n = (new jasmine.Spy)();"),
         NewTypeInference.NOT_CALLABLE);
+
+    typeCheck(LINE_JOINER.join(
+        "/**",
+        " * @constructor",
+        " * @extends {Function}",
+        " */",
+        "function Spy() {}",
+        "function f(/** !Spy */ x) {",
+        "  var y = x;",
+        "  g(y);",
+        "}",
+        "function g(/** function():number */ x) {}"),
+        NewTypeInference.INVALID_ARGUMENT_TYPE);
   }
 
   public void testDontCrashOnInheritedMethodsWithIncompatibleReturns() {
