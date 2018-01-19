@@ -232,6 +232,17 @@ public final class VarCheckTest extends CompilerTestCase {
     testSame("var asdf;", "asdf;");
   }
 
+  public void testVarReferenceInTypeSummary() {
+    testSame(
+        lines(
+            "/** @typeSummary */",
+            "var goog;",
+            "goog.addSingletonGetter;",
+            "class Foo {}",
+            "goog.addSingletonGetter(Foo);"),
+        "Foo.getInstance();");
+  }
+
   public void testFunctionDeclarationInExterns() {
     testSame("function foo(x = 7) {}", "foo();");
     testSame("function foo(...rest) {}", "foo(1,2,3);");

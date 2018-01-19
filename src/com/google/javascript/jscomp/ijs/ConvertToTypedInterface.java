@@ -59,6 +59,7 @@ public class ConvertToTypedInterface implements CompilerPass {
 
   private static final ImmutableSet<String> CALLS_TO_PRESERVE =
       ImmutableSet.of(
+          "goog.addSingletonGetter",
           "goog.define",
           "goog.forwardDeclare",
           "goog.module",

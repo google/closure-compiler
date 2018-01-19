@@ -265,6 +265,10 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
 
   }
 
+  public void testGoogAddSingletonGetter() {
+    testSame("class Foo {}  goog.addSingletonGetter(Foo);");
+  }
+
   public void testLegacyGoogModule() {
     testSame(
         lines(
