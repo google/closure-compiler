@@ -105,6 +105,10 @@ public final class RemoveUnusedCodeNameAnalyzerTest extends TypeICompilerTestCas
     this.mode = TypeInferenceMode.NEITHER;
   }
 
+  public void testDefaultingAssignmentWithAssignedProperty() {
+    test("var x = function() {}; x.externProp1 = function() {}; var x = x || {};", "");
+  }
+
   public void testRemoveVarDeclaration1() {
     test("var foo = 3;", "");
   }

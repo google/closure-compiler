@@ -1563,13 +1563,6 @@ class RemoveUnusedCode implements CompilerPass {
       }
     }
 
-    boolean isLiteralValueAssignment() {
-      // An assigned value of null occurs for a name declaration when no initializer is given.
-      // It is the same as assigning `undefined`, so it is a literal value.
-      return assignedValue == null
-          || NodeUtil.isLiteralValue(assignedValue, /* includeFunctions */ true);
-    }
-
     /** True if this object represents assignment to a variable. */
     boolean isVariableAssignment() {
       return false;
@@ -1589,12 +1582,8 @@ class RemoveUnusedCode implements CompilerPass {
       return false;
     }
 
-    /**
-     * True if this object has an assigned value that may escape to another context through aliasing
-     * or some other means.
-     */
-    boolean assignedValueMayEscape() {
-      return false;
+    boolean isAssignedValueLocal() {
+      return false; // assume non-local by default
     }
 
     /** Is this a direct assignment to `varName.prototype`? */
@@ -1628,45 +1617,6 @@ class RemoveUnusedCode implements CompilerPass {
     }
 
     /**
-     * Does this object represent assignment of a nonlocal or nonliteral value to a variable?
-     *
-     * <p>e.g.
-     *
-     * <pre><code>
-     *   X = 1; // false: literal value
-     *   X = [1, 2, 3]; // false, literal value
-     *   X = { prototype: { a: 1, b: 2 }}; // false: literal value
-     *   X = foo(); // true: X comes from outside local context
-     *   foo(X = { prototype: {a: 1, b: 2}}); // true: value of X escapes local context
-     *   X = Y; // true: X is an alias, so nonliteral
-     *   X.property = foo(); // false: not assignment to variable or prototype
-     *   X.prototype.y = foo(); // false: not assignment to variable or prototype
-     *   X.prototype = foo(); // true: prototype assigned non-literal value
-     *   X.prototype = { a: 1, b: 2}; // false: prototype assigned literal value
-     * </code></pre>
-     *
-     * Such cases make it hard to reason about things like assigning to properties on X or checking
-     * if something is an instance of X.
-     */
-    public boolean isNonLocalOrNonLiteralAssignmentToVariableOrPrototype() {
-      if (isVariableAssignment()) {
-        // varName = something
-        return assignedValueMayEscape() || !isLiteralValueAssignment();
-      } else if (isPrototypeAssignment()) {
-        // varName.prototype = something
-        //
-        // For a prototype assignment, it's expected that the value will be an object literal
-        // that may contain non-literal properties. At minimum the prototype object literal is
-        // likely to contain a reference back to the constructor, which is a non-literal.
-        // We still want to consider that to be a local literal.
-        return assignedValueMayEscape()
-            || !(assignedValue.isObjectLit() || isLiteralValueAssignment());
-      } else {
-        return false;
-      }
-    }
-
-    /**
      * Would a nonlocal or nonliteral value prevent removal of a variable associated with this
      * {@link Removable}?
      *
@@ -1681,7 +1631,7 @@ class RemoveUnusedCode implements CompilerPass {
      *   use(something instanceof X); // can't be certain there are no instances of X
      * </code></pre>
      */
-    public boolean preventsRemovalOfVariableWithNonLocalOrNonLiteralValueOrPrototype() {
+    public boolean preventsRemovalOfVariableWithNonLocalValueOrPrototype() {
       return false;
     }
   }
@@ -1854,7 +1804,7 @@ class RemoveUnusedCode implements CompilerPass {
     }
 
     @Override
-    public boolean preventsRemovalOfVariableWithNonLocalOrNonLiteralValueOrPrototype() {
+    public boolean preventsRemovalOfVariableWithNonLocalValueOrPrototype() {
       // If we aren't sure where X comes from and what aliases it might have, we cannot be sure
       // there are no instances of it.
       return true;
@@ -1931,7 +1881,7 @@ class RemoveUnusedCode implements CompilerPass {
     }
 
     @Override
-    public boolean preventsRemovalOfVariableWithNonLocalOrNonLiteralValueOrPrototype() {
+    public boolean preventsRemovalOfVariableWithNonLocalValueOrPrototype() {
       if (targetNode.isGetProp()) {
         Node getPropLhs = targetNode.getFirstChild();
         // assignment to varName.property or varName.prototype.property
@@ -1951,14 +1901,6 @@ class RemoveUnusedCode implements CompilerPass {
     String getPropertyName() {
       checkState(targetNode.isGetProp(), targetNode);
       return targetNode.getLastChild().getString();
-    }
-
-    @Override
-    boolean isLiteralValueAssignment() {
-      // TODO(bradfordcsmith): Determine assigned value when possible.
-      // We don't look at the rhs of destructuring assignments at all right now,
-      // so assume they always assign some non-literal value.
-      return false;
     }
 
     @Override
@@ -2121,6 +2063,12 @@ class RemoveUnusedCode implements CompilerPass {
     public void removeInternal(AbstractCompiler compiler) {
       NodeUtil.deleteNode(functionDeclarationNode, compiler);
     }
+
+    @Override
+    boolean isAssignedValueLocal() {
+      // The declared function is always created locally.
+      return true;
+    }
   }
 
   private class NameDeclarationStatement extends Removable {
@@ -2151,9 +2099,29 @@ class RemoveUnusedCode implements CompilerPass {
     }
 
     @Override
+    boolean isAssignedValueLocal() {
+      Node nameNode = declarationStatement.getOnlyChild();
+      Node valueNode = nameNode.getFirstChild();
+      return valueNode == null
+          || isLocalDefaultValueAssignment(nameNode, valueNode)
+          || NodeUtil.evaluatesToLocalValue(valueNode);
+    }
+
+    @Override
     public String toString() {
       return "NameDeclStmt:" + declarationStatement;
     }
+  }
+
+  /**
+   * True if targetNode is a qualified name and the valueNode is of the form `targetQualifiedName ||
+   * localValue`.
+   */
+  private static boolean isLocalDefaultValueAssignment(Node targetNode, Node valueNode) {
+    return valueNode.isOr()
+        && targetNode.isQualifiedName()
+        && valueNode.getFirstChild().isEquivalentTo(targetNode)
+        && NodeUtil.evaluatesToLocalValue(valueNode.getLastChild());
   }
 
   enum Kind {
@@ -2171,9 +2139,6 @@ class RemoveUnusedCode implements CompilerPass {
 
     final Node assignNode;
     final Kind kind;
-
-    // If true, the value may have escaped and any modification is a use.
-    final boolean maybeAliased;
 
     Assign(
         RemovableBuilder builder,
@@ -2195,12 +2160,6 @@ class RemoveUnusedCode implements CompilerPass {
       }
       this.assignNode = assignNode;
       this.kind = kind;
-      this.maybeAliased = NodeUtil.isExpressionResultUsed(assignNode);
-    }
-
-    @Override
-    boolean assignedValueMayEscape() {
-      return maybeAliased;
     }
 
     /** True for `varName = value` assignments. */
@@ -2210,7 +2169,20 @@ class RemoveUnusedCode implements CompilerPass {
     }
 
     @Override
-    public boolean preventsRemovalOfVariableWithNonLocalOrNonLiteralValueOrPrototype() {
+    boolean isAssignedValueLocal() {
+      if (NodeUtil.isExpressionResultUsed(assignNode)) {
+        // assigned value may escape or be aliased
+        return false;
+      } else {
+        Node targetNode = assignNode.getFirstChild();
+        Node valueNode = targetNode.getNext();
+        return NodeUtil.evaluatesToLocalValue(valueNode)
+            || isLocalDefaultValueAssignment(targetNode, valueNode);
+      }
+    }
+
+    @Override
+    public boolean preventsRemovalOfVariableWithNonLocalValueOrPrototype() {
       // If we don't know where the variable comes from or where it may go, then we don't know
       // whether it is safe to remove assignments to properties on it.
       return isNamedPropertyAssignment() || isComputedPropertyAssignment();
@@ -2382,10 +2354,11 @@ class RemoveUnusedCode implements CompilerPass {
     boolean requiresLocalLiteralValueForRemoval = false;
 
     void addRemovable(Removable removable) {
-      if (removable.isNonLocalOrNonLiteralAssignmentToVariableOrPrototype()) {
+      if (!removable.isAssignedValueLocal()
+          && (removable.isVariableAssignment() || removable.isPrototypeAssignment())) {
         hasNonLocalOrNonLiteralValue = true;
       }
-      if (removable.preventsRemovalOfVariableWithNonLocalOrNonLiteralValueOrPrototype()) {
+      if (removable.preventsRemovalOfVariableWithNonLocalValueOrPrototype()) {
         requiresLocalLiteralValueForRemoval = true;
       }
       if (hasNonLocalOrNonLiteralValue && requiresLocalLiteralValueForRemoval) {
