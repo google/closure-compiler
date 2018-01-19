@@ -90,6 +90,7 @@ class ConstCheck extends AbstractPostOrderCallback
       case ASSIGN_MUL:
       case ASSIGN_DIV:
       case ASSIGN_MOD:
+      case ASSIGN_EXPONENT:
         {
           Node lhs = n.getFirstChild();
           if (lhs.isName()) {
