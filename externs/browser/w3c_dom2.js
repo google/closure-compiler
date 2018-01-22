@@ -52,6 +52,32 @@ Document.prototype.createAttributeNS =
     function(namespaceURI, qualifiedName) {};
 
 /**
+ * @param {Node} root
+ * @param {number=} whatToShow
+ * @param {NodeFilter=} filter
+ * @param {boolean=} entityReferenceExpansion
+ * @return {!NodeIterator}
+ * @see https://www.w3.org/TR/2000/REC-DOM-Level-2-Traversal-Range-20001113/traversal.html#Traversal-Document
+ * @see https://dom.spec.whatwg.org/#interface-document
+ * @nosideeffects
+ */
+Document.prototype.createNodeIterator = function(
+    root, whatToShow, filter, entityReferenceExpansion) {};
+
+/**
+ * @param {Node} root
+ * @param {number=} whatToShow
+ * @param {NodeFilter=} filter
+ * @param {boolean=} entityReferenceExpansion
+ * @return {!TreeWalker}
+ * @see https://www.w3.org/TR/2000/REC-DOM-Level-2-Traversal-Range-20001113/traversal.html#Traversal-Document
+ * @see https://dom.spec.whatwg.org/#interface-document
+ * @nosideeffects
+ */
+Document.prototype.createTreeWalker = function(
+    root, whatToShow, filter, entityReferenceExpansion) {};
+
+/**
  * @param {string} namespace
  * @param {string} name
  * @return {!NodeList<!Element>}
@@ -236,30 +262,6 @@ HTMLDocument.prototype.writeln = function(text) {};
  * @nosideeffects
  */
 HTMLDocument.prototype.getElementsByName = function(elementName) {};
-
-/**
- * @param {Node} root
- * @param {number=} whatToShow
- * @param {NodeFilter=} filter
- * @param {boolean=} entityReferenceExpansion
- * @return {!NodeIterator}
- * @see http://www.w3.org/TR/DOM-Level-2-Traversal-Range/traversal.html#Traversal-Document
- * @nosideeffects
- */
-HTMLDocument.prototype.createNodeIterator = function(
-    root, whatToShow, filter, entityReferenceExpansion) {};
-
-/**
- * @param {Node} root
- * @param {number=} whatToShow
- * @param {NodeFilter=} filter
- * @param {boolean=} entityReferenceExpansion
- * @return {!TreeWalker}
- * @see http://www.w3.org/TR/DOM-Level-2-Traversal-Range/traversal.html#Traversal-Document
- * @nosideeffects
- */
-HTMLDocument.prototype.createTreeWalker = function(
-    root, whatToShow, filter, entityReferenceExpansion) {};
 
 
 /** @typedef {{
