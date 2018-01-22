@@ -76,13 +76,12 @@ class SourceInformationAnnotator extends
         break;
 
       case OBJECTLIT:
-        for (Node key = n.getFirstChild(); key != null;
-             key = key.getNext()) {
-           // We only want keys were unquoted.
-           if (!key.isComputedProp() && !key.isQuotedString()) {
-             setOriginalName(key, key.getString());
-           }
-         }
+        for (Node key = n.getFirstChild(); key != null; key = key.getNext()) {
+          // Set the original name for unquoted string properties.
+          if (!key.isComputedProp() && !key.isQuotedString() && !key.isSpread()) {
+            setOriginalName(key, key.getString());
+          }
+        }
         break;
       default:
         break;
