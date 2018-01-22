@@ -33,6 +33,7 @@ import com.google.common.primitives.Chars;
 import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.jscomp.parsing.Config;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
+import com.google.javascript.jscomp.resources.ResourceLoader;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.SourcePosition;
@@ -1181,8 +1182,13 @@ public class CompilerOptions implements Serializable {
 
   String instrumentationTemplateFile;
 
-  /** List of conformance configs to use in CheckConformance */
-  private ImmutableList<ConformanceConfig> conformanceConfigs = ImmutableList.of();
+  /**
+   * List of conformance configs to use in CheckConformance.
+   *
+   * <p>The first entry of this list is always the Global ConformanceConfig
+   */
+  private ImmutableList<ConformanceConfig> conformanceConfigs =
+      ImmutableList.of(ResourceLoader.loadGlobalConformance(CompilerOptions.class));
 
   /**
    * For use in {@link CompilationLevel#WHITESPACE_ONLY} mode, when using goog.module.
@@ -2780,16 +2786,14 @@ public class CompilerOptions implements Serializable {
     }
   }
 
-  public List<ConformanceConfig> getConformanceConfigs() {
+  public final List<ConformanceConfig> getConformanceConfigs() {
     return conformanceConfigs;
   }
 
-  /**
-   * Both enable and configure conformance checks, if non-null.
-   */
+  /** Both enable and configure conformance checks, if non-null. */
   @GwtIncompatible("Conformance")
   public void setConformanceConfig(ConformanceConfig conformanceConfig) {
-    this.conformanceConfigs = ImmutableList.of(conformanceConfig);
+    setConformanceConfigs(ImmutableList.of(conformanceConfig));
   }
 
   /**
@@ -2797,7 +2801,11 @@ public class CompilerOptions implements Serializable {
    */
   @GwtIncompatible("Conformance")
   public void setConformanceConfigs(List<ConformanceConfig> configs) {
-    this.conformanceConfigs = ImmutableList.copyOf(configs);
+    this.conformanceConfigs =
+        ImmutableList.<ConformanceConfig>builder()
+            .add(ResourceLoader.loadGlobalConformance(CompilerOptions.class))
+            .addAll(configs)
+            .build();
   }
 
   public boolean shouldEmitUseStrict() {

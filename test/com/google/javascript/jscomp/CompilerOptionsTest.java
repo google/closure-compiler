@@ -96,4 +96,5 @@ public final class CompilerOptionsTest extends TestCase {
     assertTrue(options.optimizeArgumentsArray);
     assertEquals(StandardCharsets.US_ASCII, options.getOutputCharset());
   }
+
 }

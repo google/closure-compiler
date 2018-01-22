@@ -17,4 +17,15 @@
 package com.google.javascript.jscomp;
 
 /** GWT compatible no-op replacement for {@code ConformanceConfig} */
-public final class ConformanceConfig {}
+public final class ConformanceConfig {
+  /** GWT compatible no-op replacement for {@code ConformanceConfig.Builder} */
+  public static final class Builder {
+    public ConformanceConfig build() {
+      return new ConformanceConfig();
+    }
+  }
+
+  public static final Builder newBuilder() {
+    return new Builder();
+  }
+}
