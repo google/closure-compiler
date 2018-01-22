@@ -512,6 +512,10 @@ public final class NodeUtilTest extends TestCase {
     assertEquals(se, NodeUtil.mayHaveSideEffects(n.getFirstChild()));
   }
 
+  private void assertSideEffect(boolean se, Node n) {
+    assertEquals(se, NodeUtil.mayHaveSideEffects(n));
+  }
+
   private void assertSideEffect(boolean se, String js, boolean globalRegExp) {
     Node n = parse(js);
     Compiler compiler = new Compiler();
@@ -572,9 +576,6 @@ public final class NodeUtilTest extends TestCase {
     assertSideEffect(false, "[b, c [d, [e]]]");
     assertSideEffect(false, "({a: x, b: y, c: z})");
     assertSideEffect(false, "({a, b, c})");
-    assertSideEffect(false, "({[a]: x})");
-    assertSideEffect(true, "({[a()]: x})");
-    assertSideEffect(true, "({[a]: x()})");
     assertSideEffect(false, "/abc/gi");
     assertSideEffect(false, "'a'");
     assertSideEffect(false, "0");
@@ -639,6 +640,33 @@ public final class NodeUtilTest extends TestCase {
     assertSideEffect(true, "export class X {};");
     assertSideEffect(true, "export function x() {};");
     assertSideEffect(true, "export {x};");
+  }
+
+  public void testComputedPropSideEffects() {
+    assertSideEffect(false, "({[a]: x})");
+    assertSideEffect(true, "({[a()]: x})");
+    assertSideEffect(true, "({[a]: x()})");
+
+    Node computedProp = parse("({[a]: x})")  // SCRIPT
+        .getFirstChild()   // EXPR_RESULT
+        .getFirstChild()   // OBJECT_LIT
+        .getFirstChild();  // COMPUTED_PROP
+    checkState(computedProp.isComputedProp(), computedProp);
+    assertSideEffect(false, computedProp);
+
+    computedProp = parse("({[a()]: x})")  // SCRIPT
+        .getFirstChild()   // EXPR_RESULT
+        .getFirstChild()   // OBJECT_LIT
+        .getFirstChild();  // COMPUTED_PROP
+    checkState(computedProp.isComputedProp(), computedProp);
+    assertSideEffect(true, computedProp);
+
+    computedProp = parse("({[a]: x()})")  // SCRIPT
+        .getFirstChild()   // EXPR_RESULT
+        .getFirstChild()   // OBJECT_LIT
+        .getFirstChild();  // COMPUTED_PROP
+    checkState(computedProp.isComputedProp(), computedProp);
+    assertSideEffect(true, computedProp);
   }
 
   public void testObjectMethodSideEffects() {

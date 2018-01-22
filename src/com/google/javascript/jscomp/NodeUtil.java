@@ -1235,6 +1235,7 @@ public final class NodeUtil {
       case TRY:
       case EMPTY:
       case TEMPLATELIT:
+      case COMPUTED_PROP:
         break;
 
       default:
