@@ -2786,7 +2786,7 @@ public class CompilerOptions implements Serializable {
     }
   }
 
-  public final List<ConformanceConfig> getConformanceConfigs() {
+  public final ImmutableList<ConformanceConfig> getConformanceConfigs() {
     return conformanceConfigs;
   }
 
