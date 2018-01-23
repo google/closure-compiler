@@ -516,33 +516,6 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
             "module$testcode.default = $jscompDefaultExport$$module$testcode;"));
   }
 
-  public void testExportDestructureDeclaration() {
-    testModules(
-        "export let {a, c:b} = obj;",
-        lines(
-            "let {a:a$$module$testcode, c:b$$module$testcode} = obj;",
-            "/** @const */ var module$testcode = {};",
-            "module$testcode.a = a$$module$testcode;",
-            "module$testcode.b = b$$module$testcode;"));
-
-    testModules(
-        "export let [a, b] = obj;",
-        lines(
-            "let [a$$module$testcode, b$$module$testcode] = obj;",
-            "/** @const */ var module$testcode = {};",
-            "module$testcode.a = a$$module$testcode;",
-            "module$testcode.b = b$$module$testcode;"));
-
-    testModules(
-        "export let {a, b:[c,d]} = obj;",
-        lines(
-            "let {a:a$$module$testcode, b:[c$$module$testcode, d$$module$testcode]} = obj;",
-            "/** @const */ var module$testcode = {};",
-            "module$testcode.a = a$$module$testcode;",
-            "module$testcode.c = c$$module$testcode;",
-            "module$testcode.d = d$$module$testcode;"));
-  }
-
   public void testExtendImportedClass() {
     testModules(
         lines(
