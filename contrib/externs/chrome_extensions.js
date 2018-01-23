@@ -4725,6 +4725,87 @@ chrome.permissions.onRemoved;
 
 
 /**
+ *  @see https://developer.chrome.com/extensions/platformKeys
+ */
+chrome.platformKeys = {};
+
+
+/**
+ * @see https://developer.chrome.com/extensions/platformKeys#type-Match
+ * @constructor
+ */
+chrome.platformKeys.Match = function() {};
+
+
+/** @type {!ArrayBuffer} */
+chrome.platformKeys.Match.prototype.certificate;
+
+
+/** @type {!Object} */
+chrome.platformKeys.Match.prototype.keyAlgorithm;
+
+
+/**
+ * @typedef {?{
+ *   certificateTypes: !Array<string>,
+ *   certificateAuthorities: !Array<!ArrayBuffer>
+ * }}
+ */
+chrome.platformKeys.SelectCertificateDetailRequest;
+
+
+/**
+ * @typedef {?{
+ *   request: !chrome.platformKeys.SelectCertificateDetailRequest,
+ *   clientCerts: (Array<!ArrayBuffer>|undefined),
+ *   interactive: boolean
+ * }}
+ *
+ * @see https://developer.chrome.com/extensions/platformKeys#method-selectClientCertificates
+ */
+chrome.platformKeys.SelectCertificateDetails;
+
+
+/**
+ * @param {!chrome.platformKeys.SelectCertificateDetails} details
+ * @param {!function(!Array<!chrome.platformKeys.Match>)} callback
+ */
+chrome.platformKeys.selectClientCertificates = function(details, callback) {};
+
+
+/**
+ * @param {!ArrayBuffer} certificate
+ * @param {!Object} parameters
+ * @param {!function(!Object, ?Object)} callback
+ */
+chrome.platformKeys.getKeyPair = function(certificate, parameters, callback) {};
+
+
+/**
+ * @return {!Object}
+ */
+chrome.platformKeys.subtleCrypto = function() {};
+
+
+/**
+ * @typedef {?{
+ *   serverCertificateChain: !Array<!ArrayBuffer>,
+ *   hostname: string
+ * }}
+ *
+ * @see https://developer.chrome.com/extensions/platformKeys#method-verifyTLSServerCertificate
+ */
+chrome.platformKeys.VerifyServerCertificateDetails;
+
+
+/**
+ * @param {!chrome.platformKeys.VerifyServerCertificateDetails} details
+ * @param {!function(!Object)} callback
+ */
+chrome.platformKeys.verifyTLSServerCertificate = function(details, callback) {};
+
+
+/**
  * @see http://developer.chrome.com/dev/extensions/power.html
  */
 chrome.power = {};
