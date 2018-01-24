@@ -67,6 +67,7 @@ public final class JSDocInfoPrinter {
     //   override
     //   type|define|typedef|enum
     //   implicitCast
+    //   nocollapse
     //   suppress
     //   deprecated
     //   polymer
@@ -208,6 +209,10 @@ public final class JSDocInfoPrinter {
 
     if (info.isImplicitCast()) {
       parts.add("@implicitCast");
+    }
+
+    if (info.isNoCollapse()) {
+      parts.add("@nocollapse");
     }
 
     Set<String> suppressions = info.getSuppressions();

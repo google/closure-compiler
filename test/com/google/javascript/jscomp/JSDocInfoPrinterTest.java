@@ -352,6 +352,10 @@ public final class JSDocInfoPrinterTest extends TestCase {
     testSame("/** @implicitCast */ ");
   }
 
+  public void testNoCollapse() {
+    testSame("/** @nocollapse */ ");
+  }
+
   private void testSame(String jsdoc) {
     test(jsdoc, jsdoc);
   }
