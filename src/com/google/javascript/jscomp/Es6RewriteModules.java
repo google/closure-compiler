@@ -330,37 +330,53 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
         }
         parent.removeChild(export);
       } else {
-        //    export var Foo;
-        //    export function Foo() {}
-        // etc.
-        Node declaration = export.getFirstChild();
-        Node first = declaration.getFirstChild();
-        for (Node maybeName = first; maybeName != null; maybeName = maybeName.getNext()) {
-          if (!maybeName.isName()) {
-            break;
-          }
-          // Break out on "B" in "class A extends B"
-          if (declaration.isClass() && maybeName != first) {
-            break;
-          }
-          String name = maybeName.getString();
-          exportsByLocalName.put(name, new NameNodePair(name, maybeName));
-
-          // If the declaration declares a new type, create annotations for
-          // the type checker.
-          // TODO(moz): Currently we only record ES6 classes and typedefs,
-          // need to handle other kinds of type declarations too.
-          if (declaration.isClass()) {
-            classes.add(name);
-          }
-          if (declaration.getJSDocInfo() != null && declaration.getJSDocInfo().hasTypedefType()) {
-            typedefs.add(name);
-          }
-        }
-        parent.replaceChild(export, declaration.detach());
+        visitExportDeclaration(t, export, parent);
       }
       t.reportCodeChange();
     }
+  }
+
+  private void visitExportNameDeclaration(Node declaration) {
+    //    export var Foo;
+    //    export let {a, b:[c,d]} = {};
+    List<Node> lhsNodes = NodeUtil.findLhsNodesInNode(declaration);
+
+    for (Node lhs : lhsNodes) {
+      checkState(lhs.isName());
+      String name = lhs.getString();
+      exportsByLocalName.put(name, new NameNodePair(name, lhs));
+
+      if (declaration.getJSDocInfo() != null && declaration.getJSDocInfo().hasTypedefType()) {
+        typedefs.add(name);
+      }
+    }
+  }
+
+  private void visitExportDeclaration(NodeTraversal t, Node export, Node parent) {
+    //    export var Foo;
+    //    export function Foo() {}
+    // etc.
+    Node declaration = export.getFirstChild();
+
+    if (NodeUtil.isNameDeclaration(declaration)) {
+      visitExportNameDeclaration(declaration);
+    } else {
+      checkState(declaration.isFunction() || declaration.isClass());
+      Node nameNode = declaration.getFirstChild();
+      String name = nameNode.getString();
+      exportsByLocalName.put(name, new NameNodePair(name, nameNode));
+
+      // If the declaration declares a new type, create annotations for
+      // the type checker.
+      // TODO(moz): Currently we only record ES6 classes and typedefs,
+      // need to handle other kinds of type declarations too.
+      if (declaration.isClass()) {
+        classes.add(name);
+      }
+    }
+
+    parent.replaceChild(export, declaration.detach());
+    t.reportCodeChange();
   }
 
   private void inlineModuleToGlobalScope(Node moduleNode) {
