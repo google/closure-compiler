@@ -31,6 +31,7 @@ public  final class Requirement extends
     ruleId_ = "";
     extends_ = "";
     reportLooseTypeViolations_ = true;
+    severity_ = 1;
   }
 
   @java.lang.Override
@@ -146,6 +147,19 @@ public  final class Requirement extends
             reportLooseTypeViolations_ = input.readBool();
             break;
           }
+          case 96:
+            {
+              int rawValue = input.readEnum();
+              com.google.javascript.jscomp.Requirement.Severity value =
+                  com.google.javascript.jscomp.Requirement.Severity.valueOf(rawValue);
+              if (value == null) {
+                unknownFields.mergeVarintField(12, rawValue);
+              } else {
+                bitField0_ |= 0x00000040;
+                severity_ = rawValue;
+              }
+              break;
+            }
         }
       }
     } catch (com.google.protobuf.InvalidProtocolBufferException e) {
@@ -517,6 +531,149 @@ public  final class Requirement extends
     }
 
     // @@protoc_insertion_point(enum_scope:jscomp.Requirement.Type)
+  }
+
+  /**
+   *
+   *
+   * <pre>
+   * With what severity to report the issue by default.
+   * </pre>
+   *
+   * Protobuf enum {@code jscomp.Requirement.Severity}
+   */
+  public enum Severity implements com.google.protobuf.ProtocolMessageEnum {
+    /**
+     *
+     *
+     * <pre>
+     * Currently treated the same as WARNING.
+     * </pre>
+     *
+     * <code>UNSPECIFIED = 0;</code>
+     */
+    UNSPECIFIED(0),
+    /**
+     *
+     *
+     * <pre>
+     * Allows the build to continue. Can be turned into an error by setting the
+     * jscomp_error=conformanceConfig flag.
+     * </pre>
+     *
+     * <code>WARNING = 1;</code>
+     */
+    WARNING(1),
+    /**
+     *
+     *
+     * <pre>
+     * The build fails if we are confident this is an error.
+     * This causes an error even on possible violations, e.g. when the type
+     * system is ambiguous.
+     * </pre>
+     *
+     * <code>ERROR = 2;</code>
+     */
+    ERROR(2),
+    ;
+
+    /**
+     *
+     *
+     * <pre>
+     * Currently treated the same as WARNING.
+     * </pre>
+     *
+     * <code>UNSPECIFIED = 0;</code>
+     */
+    public static final int UNSPECIFIED_VALUE = 0;
+    /**
+     *
+     *
+     * <pre>
+     * Allows the build to continue. Can be turned into an error by setting the
+     * jscomp_error=conformanceConfig flag.
+     * </pre>
+     *
+     * <code>WARNING = 1;</code>
+     */
+    public static final int WARNING_VALUE = 1;
+    /**
+     *
+     *
+     * <pre>
+     * The build fails if we are confident this is an error.
+     * This causes an error even on possible violations, e.g. when the type
+     * system is ambiguous.
+     * </pre>
+     *
+     * <code>ERROR = 2;</code>
+     */
+    public static final int ERROR_VALUE = 2;
+
+    public final int getNumber() {
+      return value;
+    }
+
+    /** @deprecated Use {@link #forNumber(int)} instead. */
+    @java.lang.Deprecated
+    public static Severity valueOf(int value) {
+      return forNumber(value);
+    }
+
+    public static Severity forNumber(int value) {
+      switch (value) {
+        case 0:
+          return UNSPECIFIED;
+        case 1:
+          return WARNING;
+        case 2:
+          return ERROR;
+        default:
+          return null;
+      }
+    }
+
+    public static com.google.protobuf.Internal.EnumLiteMap<Severity> internalGetValueMap() {
+      return internalValueMap;
+    }
+
+    private static final com.google.protobuf.Internal.EnumLiteMap<Severity> internalValueMap =
+        new com.google.protobuf.Internal.EnumLiteMap<Severity>() {
+          public Severity findValueByNumber(int number) {
+            return Severity.forNumber(number);
+          }
+        };
+
+    public final com.google.protobuf.Descriptors.EnumValueDescriptor getValueDescriptor() {
+      return getDescriptor().getValues().get(ordinal());
+    }
+
+    public final com.google.protobuf.Descriptors.EnumDescriptor getDescriptorForType() {
+      return getDescriptor();
+    }
+
+    public static final com.google.protobuf.Descriptors.EnumDescriptor getDescriptor() {
+      return com.google.javascript.jscomp.Requirement.getDescriptor().getEnumTypes().get(1);
+    }
+
+    private static final Severity[] VALUES = values();
+
+    public static Severity valueOf(com.google.protobuf.Descriptors.EnumValueDescriptor desc) {
+      if (desc.getType() != getDescriptor()) {
+        throw new java.lang.IllegalArgumentException("EnumValueDescriptor is not for this type.");
+      }
+      return VALUES[desc.getIndex()];
+    }
+
+    private final int value;
+
+    private Severity(int value) {
+      this.value = value;
+    }
+
+    // @@protoc_insertion_point(enum_scope:jscomp.Requirement.Severity)
   }
 
   private int bitField0_;
@@ -1058,6 +1215,19 @@ public  final class Requirement extends
     return reportLooseTypeViolations_;
   }
 
+  public static final int SEVERITY_FIELD_NUMBER = 12;
+  private int severity_;
+  /** <code>optional .jscomp.Requirement.Severity severity = 12 [default = WARNING];</code> */
+  public boolean hasSeverity() {
+    return ((bitField0_ & 0x00000040) == 0x00000040);
+  }
+  /** <code>optional .jscomp.Requirement.Severity severity = 12 [default = WARNING];</code> */
+  public com.google.javascript.jscomp.Requirement.Severity getSeverity() {
+    com.google.javascript.jscomp.Requirement.Severity result =
+        com.google.javascript.jscomp.Requirement.Severity.valueOf(severity_);
+    return result == null ? com.google.javascript.jscomp.Requirement.Severity.WARNING : result;
+  }
+
   private byte memoizedIsInitialized = -1;
   public final boolean isInitialized() {
     byte isInitialized = memoizedIsInitialized;
@@ -1109,6 +1279,9 @@ public  final class Requirement extends
     }
     if (((bitField0_ & 0x00000020) == 0x00000020)) {
       output.writeBool(11, reportLooseTypeViolations_);
+    }
+    if (((bitField0_ & 0x00000040) == 0x00000040)) {
+      output.writeEnum(12, severity_);
     }
     extensionWriter.writeUntil(536870912, output);
     unknownFields.writeTo(output);
@@ -1179,6 +1352,9 @@ public  final class Requirement extends
       size += com.google.protobuf.CodedOutputStream
         .computeBoolSize(11, reportLooseTypeViolations_);
     }
+    if (((bitField0_ & 0x00000040) == 0x00000040)) {
+      size += com.google.protobuf.CodedOutputStream.computeEnumSize(12, severity_);
+    }
     size += extensionsSerializedSize();
     size += unknownFields.getSerializedSize();
     memoizedSize = size;
@@ -1235,6 +1411,10 @@ public  final class Requirement extends
     if (hasReportLooseTypeViolations()) {
       result = result && (getReportLooseTypeViolations()
           == other.getReportLooseTypeViolations());
+    }
+    result = result && (hasSeverity() == other.hasSeverity());
+    if (hasSeverity()) {
+      result = result && severity_ == other.severity_;
     }
     result = result && unknownFields.equals(other.unknownFields);
     result = result &&
@@ -1293,6 +1473,10 @@ public  final class Requirement extends
       hash = (37 * hash) + REPORT_LOOSE_TYPE_VIOLATIONS_FIELD_NUMBER;
       hash = (53 * hash) + com.google.protobuf.Internal.hashBoolean(
           getReportLooseTypeViolations());
+    }
+    if (hasSeverity()) {
+      hash = (37 * hash) + SEVERITY_FIELD_NUMBER;
+      hash = (53 * hash) + severity_;
     }
     hash = hashFields(hash, getExtensionFields());
     hash = (29 * hash) + unknownFields.hashCode();
@@ -1440,6 +1624,8 @@ public  final class Requirement extends
       bitField0_ = (bitField0_ & ~0x00000200);
       reportLooseTypeViolations_ = true;
       bitField0_ = (bitField0_ & ~0x00000400);
+      severity_ = 1;
+      bitField0_ = (bitField0_ & ~0x00000800);
       return this;
     }
 
@@ -1513,6 +1699,10 @@ public  final class Requirement extends
         to_bitField0_ |= 0x00000020;
       }
       result.reportLooseTypeViolations_ = reportLooseTypeViolations_;
+      if (((from_bitField0_ & 0x00000800) == 0x00000800)) {
+        to_bitField0_ |= 0x00000040;
+      }
+      result.severity_ = severity_;
       result.bitField0_ = to_bitField0_;
       onBuilt();
       return result;
@@ -1653,6 +1843,9 @@ public  final class Requirement extends
       }
       if (other.hasReportLooseTypeViolations()) {
         setReportLooseTypeViolations(other.getReportLooseTypeViolations());
+      }
+      if (other.hasSeverity()) {
+        setSeverity(other.getSeverity());
       }
       this.mergeExtensionFields(other);
       this.mergeUnknownFields(other.unknownFields);
@@ -2934,6 +3127,36 @@ public  final class Requirement extends
       onChanged();
       return this;
     }
+
+    private int severity_ = 1;
+    /** <code>optional .jscomp.Requirement.Severity severity = 12 [default = WARNING];</code> */
+    public boolean hasSeverity() {
+      return ((bitField0_ & 0x00000800) == 0x00000800);
+    }
+    /** <code>optional .jscomp.Requirement.Severity severity = 12 [default = WARNING];</code> */
+    public com.google.javascript.jscomp.Requirement.Severity getSeverity() {
+      com.google.javascript.jscomp.Requirement.Severity result =
+          com.google.javascript.jscomp.Requirement.Severity.valueOf(severity_);
+      return result == null ? com.google.javascript.jscomp.Requirement.Severity.WARNING : result;
+    }
+    /** <code>optional .jscomp.Requirement.Severity severity = 12 [default = WARNING];</code> */
+    public Builder setSeverity(com.google.javascript.jscomp.Requirement.Severity value) {
+      if (value == null) {
+        throw new NullPointerException();
+      }
+      bitField0_ |= 0x00000800;
+      severity_ = value.getNumber();
+      onChanged();
+      return this;
+    }
+    /** <code>optional .jscomp.Requirement.Severity severity = 12 [default = WARNING];</code> */
+    public Builder clearSeverity() {
+      bitField0_ = (bitField0_ & ~0x00000800);
+      severity_ = 1;
+      onChanged();
+      return this;
+    }
+
     public final Builder setUnknownFields(
         final com.google.protobuf.UnknownFieldSet unknownFields) {
       return super.setUnknownFields(unknownFields);

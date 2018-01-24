@@ -370,4 +370,9 @@ public interface RequirementOrBuilder extends
    * <code>optional bool report_loose_type_violations = 11 [default = true];</code>
    */
   boolean getReportLooseTypeViolations();
+
+  /** <code>optional .jscomp.Requirement.Severity severity = 12 [default = WARNING];</code> */
+  boolean hasSeverity();
+  /** <code>optional .jscomp.Requirement.Severity severity = 12 [default = WARNING];</code> */
+  com.google.javascript.jscomp.Requirement.Severity getSeverity();
 }

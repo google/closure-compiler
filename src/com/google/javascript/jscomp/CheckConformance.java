@@ -39,6 +39,8 @@ import java.util.Set;
  */
 @GwtIncompatible("com.google.protobuf")
 public final class CheckConformance implements Callback, CompilerPass {
+  static final DiagnosticType CONFORMANCE_ERROR =
+      DiagnosticType.error("JSC_CONFORMANCE_ERROR", "Violation: {0}{1}{2}");
 
   static final DiagnosticType CONFORMANCE_VIOLATION =
       DiagnosticType.warning(

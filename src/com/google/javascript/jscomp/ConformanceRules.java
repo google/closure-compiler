@@ -35,6 +35,7 @@ import com.google.javascript.jscomp.CheckConformance.Rule;
 import com.google.javascript.jscomp.CodingConvention.AssertionFunctionSpec;
 import com.google.javascript.jscomp.ConformanceRules.AbstractRule;
 import com.google.javascript.jscomp.ConformanceRules.ConformanceResult;
+import com.google.javascript.jscomp.Requirement.Severity;
 import com.google.javascript.jscomp.Requirement.Type;
 import com.google.javascript.jscomp.parsing.JsDocInfoParser;
 import com.google.javascript.rhino.FunctionTypeI;
@@ -122,6 +123,7 @@ public final class ConformanceRules {
   public abstract static class AbstractRule implements Rule {
     final AbstractCompiler compiler;
     final String message;
+    final Severity severity;
     final ImmutableList<String> whitelist;
     final ImmutableList<String> onlyApplyTo;
     @Nullable final Pattern whitelistRegexp;
@@ -135,6 +137,11 @@ public final class ConformanceRules {
       }
       this.compiler = compiler;
       message = requirement.getErrorMessage();
+      if (requirement.getSeverity() == Severity.UNSPECIFIED) {
+        severity = Severity.WARNING;
+      } else {
+        severity = requirement.getSeverity();
+      }
       whitelist = ImmutableList.copyOf(requirement.getWhitelistList());
       whitelistRegexp = buildPattern(
           requirement.getWhitelistRegexpList());
@@ -220,9 +227,19 @@ public final class ConformanceRules {
      */
     protected void report(
         NodeTraversal t, Node n, ConformanceResult result) {
-      DiagnosticType msg = (result.level == ConformanceLevel.VIOLATION)
-          ? CheckConformance.CONFORMANCE_VIOLATION
-          : CheckConformance.CONFORMANCE_POSSIBLE_VIOLATION;
+      DiagnosticType msg;
+      if (severity == Severity.ERROR) {
+        // Always report findings that are errors, even if the types are too loose to be certain.
+        // TODO(bangert): If this causes problems, add another severity category that only
+        // errors when certain.
+        msg = CheckConformance.CONFORMANCE_ERROR;
+      } else {
+        if (result.level == ConformanceLevel.VIOLATION) {
+          msg = CheckConformance.CONFORMANCE_VIOLATION;
+        } else {
+          msg = CheckConformance.CONFORMANCE_POSSIBLE_VIOLATION;
+        }
+      }
       String separator = (result.note.isEmpty())
           ? ""
           : "\n";

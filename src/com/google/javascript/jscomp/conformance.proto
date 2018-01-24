@@ -144,6 +144,21 @@ message Requirement {
   // reported).
   optional bool report_loose_type_violations = 11 [default = true];
 
+  // With what severity to report the issue by default.
+  enum Severity {
+    // Currently treated the same as WARNING.
+    UNSPECIFIED = 0;
+    // Allows the build to continue. Can be turned into an error by setting the
+    // jscomp_error=conformanceConfig flag.
+    WARNING = 1;
+    // The build fails if we are confident this is an error.
+    // This causes an error even on possible violations, e.g. when the type
+    // system is ambiguous.
+    ERROR = 2;
+  }
+
+  optional Severity severity = 12 [default = WARNING];
+
   // CUSTOM requirements may use extensions, each extension should use
   // a CL number as a unique identifier.
   extensions 1000000 to max;

@@ -17,4 +17,11 @@
 package com.google.javascript.jscomp;
 
 /** GWT compatible no-op replacement for {@code Requirement} */
-public final class Requirement {}
+public final class Requirement {
+  /** No-op replacement for {@code Requirement.Severity} */
+  public enum Severity {
+    UNSPECIFIED,
+    WARNING,
+    ERROR
+  }
+}
