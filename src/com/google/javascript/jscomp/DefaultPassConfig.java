@@ -170,6 +170,11 @@ public final class DefaultPassConfig extends PassConfig {
       passes.add(dartSuperAccessorsPass);
     }
 
+    if (options.needsTranspilationFrom(ES_NEXT)) {
+      TranspilationPasses.addEs2018Passes(passes);
+      passes.add(setFeatureSet(ES8));
+    }
+
     if (options.needsTranspilationFrom(ES8)) {
       TranspilationPasses.addEs2017Passes(passes);
       passes.add(setFeatureSet(ES7));
@@ -281,8 +286,8 @@ public final class DefaultPassConfig extends PassConfig {
     }
 
     if (options.needsTranspilationFrom(ES_NEXT)) {
-      // placeholder for a transpilation pass from ES_NEXT to ES8.
-      checks.add(setFeatureSet(ES8_MODULES));
+      TranspilationPasses.addEs2018Passes(checks);
+      checks.add(setFeatureSet(ES8));
     }
 
     if (options.enables(DiagnosticGroups.LINT_CHECKS)) {

@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES8;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES8_MODULES;
+import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES_NEXT;
 
 import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.jscomp.PassFactory.HotSwapPassFactory;
@@ -33,6 +34,10 @@ public class TranspilationPasses {
 
   public static void addEs6ModulePass(List<PassFactory> passes) {
     passes.add(es6RewriteModule);
+  }
+
+  public static void addEs2018Passes(List<PassFactory> passes) {
+    passes.add(rewriteObjRestSpread);
   }
 
   public static void addEs2017Passes(List<PassFactory> passes) {
@@ -126,6 +131,19 @@ public class TranspilationPasses {
         @Override
         protected FeatureSet featureSet() {
           return ES8;
+        }
+      };
+
+  private static final PassFactory rewriteObjRestSpread =
+      new HotSwapPassFactory("rewriteObjRestSpread") {
+        @Override
+        protected HotSwapCompilerPass create(final AbstractCompiler compiler) {
+          return new EsNextToEs8Converter(compiler);
+        }
+
+        @Override
+        protected FeatureSet featureSet() {
+          return ES_NEXT;
         }
       };
 

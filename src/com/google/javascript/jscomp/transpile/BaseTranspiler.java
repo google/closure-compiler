@@ -114,7 +114,7 @@ public final class BaseTranspiler implements Transpiler {
     }
 
     protected void setOptions(CompilerOptions options) {
-      options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
+      options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT);
       // TODO(sdh): It would be nice to allow people to output code in
       // strict mode.  But currently we swallow all the input language
       // strictness checks, and there are various tests that are never
