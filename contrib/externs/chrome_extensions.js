@@ -4757,7 +4757,7 @@ chrome.platformKeys.SelectCertificateDetailRequest;
 /**
  * @typedef {?{
  *   request: !chrome.platformKeys.SelectCertificateDetailRequest,
- *   clientCerts: (Array<!ArrayBuffer>|undefined),
+ *   clientCerts: (!Array<!ArrayBuffer>|undefined),
  *   interactive: boolean
  * }}
  *
