@@ -3800,6 +3800,13 @@ public final class NodeUtil {
     return node;
   }
 
+  public static Node newDeclaration(Node lhs, @Nullable Node rhs, Token declarationType) {
+    if (rhs == null) {
+      return IR.declaration(lhs, declarationType);
+    }
+    return IR.declaration(lhs, rhs, declarationType);
+  }
+
   /**
    * Creates a node representing a qualified name, copying over the source
    * location information from the basis node and assigning the given original

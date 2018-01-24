@@ -92,6 +92,9 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
 
     test("let /** number */ x = 4, /** string */ y = 'str';",
     "/** @type {number} */ var x; /** @type {string} */ var y;");
+
+    test("let /** number */ x, /** string */ y;",
+        "let /** number */ x; let /** string */ y;");
   }
 
   public void testThisPropertiesInConstructors() {
