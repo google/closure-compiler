@@ -153,7 +153,6 @@ public final class EsNextToEs8Converter implements NodeTraversal.Callback, HotSw
       this.pattern = pattern;
       this.varName = PATTERN_TEMP_VAR + (patternVarCounter++);
       for (Node child : pattern.children()) {
-        System.err.println("PKID: " + child.toStringTree());
         if (child.isStringKey()) {
           // Add a deletion with the name of the child.
           deletions.add(
