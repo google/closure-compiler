@@ -111,7 +111,8 @@ class ExpressionDecomposer {
    */
   void exposeExpression(Node expression) {
     Node expressionRoot = findExpressionRoot(expression);
-    checkState(expressionRoot != null);
+    checkNotNull(expressionRoot);
+    checkState(NodeUtil.isStatement(expressionRoot), expressionRoot);
     Node change = expressionRoot.getParent();
     exposeExpression(expressionRoot, expression);
     compiler.reportChangeToEnclosingScope(change);
@@ -307,10 +308,18 @@ class ExpressionDecomposer {
     decomposeSubExpressions(n.getNext(), stopNode, state);
 
     // Now this node.
+
+    // If n is not an expression then it can't be extracted. For example if n is the destructuring
+    // pattern on the left side of a VAR statement:
+    //   var {pattern} = rhs();
+    // See test case: testExposeExpression18
+    if (!IR.mayBeExpression(n)) {
+      return;
+    }
+
     // TODO(johnlenz): Move "safety" code to a shared class.
     if (isExpressionTreeUnsafe(n, state.sideEffects)) {
-      // Either there were preexisting side-effects, or this node has
-      // side-effects.
+      // Either there were preexisting side-effects, or this node has side-effects.
       state.sideEffects = true;
       state.extractBeforeStatement = extractExpression(n, state.extractBeforeStatement);
     }

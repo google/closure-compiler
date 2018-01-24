@@ -487,6 +487,24 @@ public final class ExpressionDecomposerTest extends TestCase {
             "temp_const$jscomp$0.call(temp_const$jscomp$1, y());"));
   }
 
+  public void testExposeExpression18() {
+    allowMethodCallDecomposing = true;
+    helperExposeExpression(
+        lines(
+            "const {a, b, c} = condition ?",
+            "  y() :",
+            "  {a: 0, b: 0, c: 1};"),
+        "y",
+        lines(
+            "var temp$jscomp$0;",
+            "if (condition) {",
+            "  temp$jscomp$0 = y();",
+            "} else {",
+            "  temp$jscomp$0 = {a: 0, b: 0, c: 1};",
+            "}",
+            "const {a, b, c} = temp$jscomp$0;"));
+  }
+
   public void testMoveClass1() {
     helperMoveExpression(
         "alert(class X {});",
