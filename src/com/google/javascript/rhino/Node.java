@@ -791,9 +791,9 @@ public class Node implements Serializable {
   }
 
   /**
-   * Add 'child' after 'node'.
+   * Add 'newChild' after 'node'.  If 'node' is null, add it to the front of this node.
    */
-  public final void addChildAfter(Node newChild, Node node) {
+  public final void addChildAfter(Node newChild, @Nullable Node node) {
     checkArgument(newChild.next == null, "The new child node has next siblings.");
     checkArgument(newChild.previous == null, "The new child node has previous siblings.");
     // NOTE: newChild.next remains null
@@ -801,7 +801,9 @@ public class Node implements Serializable {
     addChildrenAfter(newChild, node);
   }
 
-  /** Add all children after 'node'. */
+  /**
+   * Add all children after 'node'. If 'node' is null, add them to the front of this node.
+   */
   public final void addChildrenAfter(@Nullable Node children, @Nullable Node node) {
     if (children == null) {
       return; // removeChildren() returns null when there are none
