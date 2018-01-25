@@ -120,7 +120,6 @@ public abstract class BaseJSTypeTestCase extends TestCase {
     super.setUp();
     errorReporter = new TestErrorReporter(null, null);
     registry = new JSTypeRegistry(errorReporter, ImmutableSet.of("forwardDeclared"));
-    registry.setOptimizePropertyIndex_TRANSITIONAL_METHOD(true);
     initTypes();
   }
 

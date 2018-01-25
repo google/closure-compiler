@@ -120,7 +120,6 @@ abstract class CompilerTypeTestCase extends BaseJSTypeTestCase {
     compiler.initOptions(options);
     compiler.setFeatureSet(compiler.getFeatureSet().without(Feature.MODULES));
     registry = compiler.getTypeRegistry();
-    registry.setOptimizePropertyIndex_TRANSITIONAL_METHOD(true);
     initTypes();
   }
 }

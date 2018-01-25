@@ -160,7 +160,6 @@ public class JSTypeRegistry implements TypeIRegistry {
        new HashMap<>();
 
   private JSType sentinelObjectLiteral;
-  private boolean optimizePropertyIndex = false;
 
   // To avoid blowing up the size of typesIndexedByProperty, we use the sentinel object
   // literal instead of registering arbitrarily many types.
@@ -227,10 +226,6 @@ public class JSTypeRegistry implements TypeIRegistry {
       this.sentinelObjectLiteral = createAnonymousObjectType(null);
     }
     return this.sentinelObjectLiteral;
-  }
-
-  public void setOptimizePropertyIndex_TRANSITIONAL_METHOD(boolean optimizePropIndex) {
-    this.optimizePropertyIndex = optimizePropIndex;
   }
 
   /**
@@ -777,7 +772,7 @@ public class JSTypeRegistry implements TypeIRegistry {
       typesIndexedByProperty.put(propertyName, typeSet);
     }
 
-    if (this.optimizePropertyIndex && isObjectLiteralThatCanBeSkipped(type)) {
+    if (isObjectLiteralThatCanBeSkipped(type)) {
       type = getSentinelObjectLiteral();
     }
 
