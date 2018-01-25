@@ -128,9 +128,7 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
         } else if (defaultValue.isVoid()) {
           // Any kind of 'void literal' is fine, but 'void fun()' or anything
           // else with side effects isn't.  We're not trying to be particularly
-          // smart here and treat 'void {}' for example as if it could cause
-          // side effects.  Any sane person will type 'name=undefined' or
-          // 'name=void 0' so this should not be an issue.
+          // smart here and treat 'void {}' for example as if it could cause side effects.
           isNoop = NodeUtil.isImmutableValue(defaultValue.getFirstChild());
         }
 
@@ -350,8 +348,12 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
   }
 
   /**
-   * Convert 'var [x, y] = rhs' to: var temp = $jscomp.makeIterator(rhs); var x = temp.next().value;
-   * var y = temp.next().value;
+   * Convert <pre>var [x, y] = rhs<pre> to:
+   * <pre>
+   *   var temp = $jscomp.makeIterator(rhs);
+   *   var x = temp.next().value;
+   *   var y = temp.next().value;
+   * </pre>
    */
   private void replaceArrayPattern(
       NodeTraversal t, Node arrayPattern, Node rhs, Node parent, Node nodeToDetach) {
