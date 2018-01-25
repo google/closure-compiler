@@ -17,6 +17,7 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.javascript.jscomp.Es6ToEs3Util.arrayFromIterator;
 import static com.google.javascript.jscomp.Es6ToEs3Util.makeIterator;
 
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
@@ -363,7 +364,6 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
         makeIterator(compiler, rhs.detach()));
     tempDecl.useSourceInfoIfMissingFromForTree(arrayPattern);
     nodeToDetach.getParent().addChildBefore(tempDecl, nodeToDetach);
-    boolean needsRuntime = false;
 
     for (Node child = arrayPattern.getFirstChild(), next; child != null; child = next) {
       next = child.getNext();
@@ -400,11 +400,7 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
         //   var temp = $jscomp.makeIterator(rhs);
         //   x = $jscomp.arrayFromIterator(temp);
         newLHS = child.getFirstChild().detach();
-        newRHS =
-            IR.call(
-                NodeUtil.newQName(compiler, "$jscomp.arrayFromIterator"),
-                IR.name(tempVarName));
-        needsRuntime = true;
+        newRHS = arrayFromIterator(compiler, IR.name(tempVarName));
       } else {
         // LHS is just a name (or a nested pattern).
         //   var [x] = rhs;
@@ -430,11 +426,8 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
       // destructuring pattern.
       visit(t, newLHS, newLHS.getParent());
     }
-    nodeToDetach.detach();
 
-    if (needsRuntime) {
-      compiler.ensureLibraryInjected("es6/util/arrayfromiterator", false);
-    }
+    nodeToDetach.detach();
     t.reportCodeChange();
   }
 
