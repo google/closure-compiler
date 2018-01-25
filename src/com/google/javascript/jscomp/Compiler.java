@@ -389,6 +389,10 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   public void printConfig(PrintStream printStream) {
+    printStream.println("==== Externs ====");
+    printStream.println(externs);
+    printStream.println("==== Inputs ====");
+    printStream.println(inputs);
     printStream.println("==== CompilerOptions ====");
     printStream.println(options);
     printStream.println("==== WarningsGuard ====");
