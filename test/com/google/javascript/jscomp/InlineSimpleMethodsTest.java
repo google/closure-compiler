@@ -361,22 +361,24 @@ public final class InlineSimpleMethodsTest extends CompilerTestCase {
     // pass. In practice, it's usually safe to inline even if the class
     // escapes, because method definitions aren't commonly mutated.
     test(
-        "var esc;",
-        lines(
-            "/** @constructor */",
-            "function Foo() {",
-            "  this.prop = 123;",
-            "}",
-            "Foo.prototype.m = function() {",
-            "  return this.prop;",
-            "}",
-            "(new Foo).m();",
-            "esc(Foo);"),
-        lines(
-            "/** @constructor */",
-            "function Foo(){this.prop=123}",
-            "Foo.prototype.m=function(){return this.prop}",
-            "(new Foo).m();",
-            "esc(Foo)"));
+        externs("var esc;"),
+        srcs(
+            lines(
+                "/** @constructor */",
+                "function Foo() {",
+                "  this.prop = 123;",
+                "}",
+                "Foo.prototype.m = function() {",
+                "  return this.prop;",
+                "}",
+                "(new Foo).m();",
+                "esc(Foo);")),
+        expected(
+            lines(
+                "/** @constructor */",
+                "function Foo(){this.prop=123}",
+                "Foo.prototype.m=function(){return this.prop}",
+                "(new Foo).m();",
+                "esc(Foo)")));
   }
 }

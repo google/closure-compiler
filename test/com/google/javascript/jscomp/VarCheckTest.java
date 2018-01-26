@@ -302,7 +302,10 @@ public final class VarCheckTest extends CompilerTestCase {
     testSame("asdf.foo;", "var asdf;", error(VarCheck.UNDEFINED_EXTERN_VAR_ERROR));
 
     externValidationErrorLevel = CheckLevel.OFF;
-    test("asdf.foo;", "var asdf;", "var /** @suppress {duplicate} */ asdf;");
+    test(
+        externs("asdf.foo;"),
+        srcs("var asdf;"),
+        expected("var /** @suppress {duplicate} */ asdf;"));
   }
 
   public void testPropReferenceInExterns4() {

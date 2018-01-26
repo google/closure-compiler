@@ -271,12 +271,18 @@ public final class RenameVarsTest extends CompilerTestCase {
 
   public void testRenameWithExterns1() {
     String externs = "var foo;";
-    test(externs, "var bar; foo(bar);", "var a; foo(a);");
+    test(
+        externs(externs),
+        srcs("var bar; foo(bar);"),
+        expected("var a; foo(a);"));
   }
 
   public void testRenameWithExterns2() {
     String externs = "var a;";
-    test(externs, "var b = 5", "var b = 5");
+    test(
+        externs(externs),
+        srcs("var b = 5"),
+        expected("var b = 5"));
   }
 
   public void testDoNotRenameExportedName() {
@@ -440,17 +446,28 @@ public final class RenameVarsTest extends CompilerTestCase {
 
   public void testStableRenameWithExterns1() {
     String externs = "var foo;";
-    test(externs, "var bar; foo(bar);", "var a; foo(a);");
+    test(
+        externs(externs),
+        srcs("var bar; foo(bar);"),
+        expected("var a; foo(a);"));
     previouslyUsedMap = renameVars.getVariableMap();
-    test(externs, "var bar, baz; foo(bar, baz);",
-         "var a, b; foo(a, b);");
+    test(
+        externs(externs),
+        srcs("var bar, baz; foo(bar, baz);"),
+        expected("var a, b; foo(a, b);"));
   }
 
   public void testStableRenameWithExterns2() {
     String externs = "var a;";
-    test(externs, "var b = 5", "var b = 5");
+    test(
+        externs(externs),
+        srcs("var b = 5"),
+        expected("var b = 5"));
     previouslyUsedMap = renameVars.getVariableMap();
-    test(externs, "var b = 5, catty = 9;", "var b = 5, c=9;");
+    test(
+        externs(externs),
+        srcs("var b = 5, catty = 9;"),
+        expected("var b = 5, c=9;"));
   }
 
   public void testStableRenameWithNameOverlap() {
@@ -493,8 +510,10 @@ public final class RenameVarsTest extends CompilerTestCase {
     previouslyUsedMap = renameVars.getVariableMap();
 
     String externs = "var b;";
-    test(externs, "function Foo(v1, v2) {return v1;} Foo(b);",
-         "function a(d, c) {return d;} a(b);");
+    test(
+        externs(externs),
+        srcs("function Foo(v1, v2) {return v1;} Foo(b);"),
+        expected("function a(d, c) {return d;} a(b);"));
   }
 
   public void testStableRenameSimpleGlobalNameExterned() {
@@ -504,8 +523,10 @@ public final class RenameVarsTest extends CompilerTestCase {
     previouslyUsedMap = renameVars.getVariableMap();
 
     String externs = "var Foo;";
-    test(externs, "function Foo(v1, v2, v0) {return v1;} Foo();",
-         "function Foo(b, c, a) {return b;} Foo();");
+    test(
+        externs(externs),
+        srcs("function Foo(v1, v2, v0) {return v1;} Foo();"),
+        expected("function Foo(b, c, a) {return b;} Foo();"));
   }
 
   public void testStableRenameWithPrefix1AndUnstableLocalNames() {
@@ -900,7 +921,10 @@ public final class RenameVarsTest extends CompilerTestCase {
 
   private void testRenameMap(String externs, String input, String expected,
                              VariableMap expectedRenameMap) {
-    test(externs, input, expected);
+    test(
+        externs(externs),
+        srcs(input),
+        expected(expected));
     VariableMap renameMap = renameVars.getVariableMap();
     assertVariableMapsEqual(expectedRenameMap, renameMap);
   }

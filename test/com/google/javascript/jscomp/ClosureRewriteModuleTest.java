@@ -116,12 +116,13 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
     allowExternsChanges();
     test(
         // .i.js file
-        "goog.module('external'); /** @constructor */ exports = function() {};",
+        externs("goog.module('external'); /** @constructor */ exports = function() {};"),
         // source file
-        "goog.module('ns.a'); var b = goog.require('external'); /** @type {b} */ new b;",
-        lines(
-            "/** @const */ var module$exports$ns$a = {};",
-            "/** @type {module$exports$external} */ new module$exports$external"));
+        srcs("goog.module('ns.a'); var b = goog.require('external'); /** @type {b} */ new b;"),
+        expected(
+            lines(
+                "/** @const */ var module$exports$ns$a = {};",
+                "/** @type {module$exports$external} */ new module$exports$external")));
   }
 
   public void testDestructuringInsideModule() {

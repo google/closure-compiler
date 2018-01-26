@@ -2479,7 +2479,10 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
         "function f(x) { return x; }",
         "f.prototype.method = function() {};");
 
-    test(DEFAULT_EXTERNS + externs, "" , "");
+    test(
+        externs(DEFAULT_EXTERNS + externs),
+        srcs(""),
+        expected(""));
   }
 
   public void testDontRenameStaticPropertiesOnBuiltins() {
@@ -2607,7 +2610,10 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
         "function Baz() {}",
         "Baz.prototype.Baz_prototype$firstElementChild;");
 
-    test(DEFAULT_EXTERNS + externs, js, output);
+    test(
+        externs(DEFAULT_EXTERNS + externs),
+        srcs(js),
+        expected(output));
   }
 
   public void testAccessOnSupertypeWithManySubtypes() {

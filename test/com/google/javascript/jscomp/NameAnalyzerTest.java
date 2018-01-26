@@ -334,9 +334,9 @@ public final class NameAnalyzerTest extends CompilerTestCase {
 
   public void testNoSideEffectAnnotation2() {
     test(
-        "/**@nosideeffects*/function f(){}",
-        "var a = f();",
-        "");
+        externs("/**@nosideeffects*/function f(){}"),
+        srcs("var a = f();"),
+        expected(""));
   }
 
   public void testNoSideEffectAnnotation3() {
@@ -345,8 +345,10 @@ public final class NameAnalyzerTest extends CompilerTestCase {
   }
 
   public void testNoSideEffectAnnotation4() {
-    test("var f = /**@nosideeffects*/function(){};", "var a = f();",
-         "");
+    test(
+        externs("var f = /**@nosideeffects*/function(){};"),
+        srcs("var a = f();"),
+        expected(""));
   }
 
   public void testNoSideEffectAnnotation5() {
@@ -355,32 +357,37 @@ public final class NameAnalyzerTest extends CompilerTestCase {
   }
 
   public void testNoSideEffectAnnotation6() {
-    test("f = /**@nosideeffects*/function(){};", "var a = f();",
-         "");
+    test(
+        externs("f = /**@nosideeffects*/function(){};"),
+        srcs("var a = f();"),
+        expected(""));
   }
 
   public void testNoSideEffectAnnotation7() {
-    test("f = /**@nosideeffects*/function(){};",
-         "f = function(){};" +
-         "var a = f();",
-         "f = function(){}; f();");
+    test(
+        externs("f = /**@nosideeffects*/function(){};"),
+        srcs("f = function(){};" + "var a = f();"),
+        expected("f = function(){}; f();"));
   }
 
   public void testNoSideEffectAnnotation8() {
-    test("f = function(){};" +
-         "f = /**@nosideeffects*/function(){};",
-         "var a = f();",
-         "f();");
+    test(
+        externs("f = function(){};" + "f = /**@nosideeffects*/function(){};"),
+        srcs("var a = f();"),
+        expected("f();"));
   }
 
   public void testNoSideEffectAnnotation9() {
-    test("f = /**@nosideeffects*/function(){};" +
-         "f = /**@nosideeffects*/function(){};",
-         "var a = f();",
-         "");
+    test(
+        externs(
+            "f = /**@nosideeffects*/function(){};" + "f = /**@nosideeffects*/function(){};"),
+        srcs("var a = f();"),
+        expected(""));
 
-    test("f = /**@nosideeffects*/function(){};", "var a = f();",
-         "");
+    test(
+        externs("f = /**@nosideeffects*/function(){};"),
+        srcs("var a = f();"),
+        expected(""));
   }
 
   public void testNoSideEffectAnnotation10() {
@@ -390,9 +397,9 @@ public final class NameAnalyzerTest extends CompilerTestCase {
 
   public void testNoSideEffectAnnotation11() {
     test(
-        "var o = {}; o.f = /**@nosideeffects*/function(){};",
-        "var a = o.f();",
-        "");
+        externs("var o = {}; o.f = /**@nosideeffects*/function(){};"),
+        srcs("var a = o.f();"),
+        expected(""));
   }
 
   public void testNoSideEffectAnnotation12() {
@@ -402,9 +409,9 @@ public final class NameAnalyzerTest extends CompilerTestCase {
 
   public void testNoSideEffectAnnotation13() {
     test(
-        "/**@nosideeffects*/function c(){}",
-        "var a = new c",
-        "");
+        externs("/**@nosideeffects*/function c(){}"),
+        srcs("var a = new c"),
+        expected(""));
   }
 
   public void testNoSideEffectAnnotation14() {
@@ -412,9 +419,9 @@ public final class NameAnalyzerTest extends CompilerTestCase {
         "function c(){};"
         + "c.prototype.f = /**@nosideeffects*/function(){};";
     test(
-        externs,
-        "var o = new c; var a = o.f()",
-        "new c");
+        externs(externs),
+        srcs("var o = new c; var a = o.f()"),
+        expected("new c"));
   }
 
   public void testNoSideEffectAnnotation15() {
@@ -423,10 +430,12 @@ public final class NameAnalyzerTest extends CompilerTestCase {
   }
 
   public void testNoSideEffectAnnotation16() {
-    test("/**@nosideeffects*/function c(){}" +
-         "c.prototype.f = /**@nosideeffects*/function(){};",
-         "var a = (new c).f()",
-         "");
+    test(
+        externs(
+            "/**@nosideeffects*/function c(){}"
+                + "c.prototype.f = /**@nosideeffects*/function(){};"),
+        srcs("var a = (new c).f()"),
+        expected(""));
   }
 
   public void testFunctionPrototype() {

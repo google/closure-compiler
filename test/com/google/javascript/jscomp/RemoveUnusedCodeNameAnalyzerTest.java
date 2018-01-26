@@ -380,7 +380,10 @@ public final class RemoveUnusedCodeNameAnalyzerTest extends TypeICompilerTestCas
   }
 
   public void testNoSideEffectAnnotation2() {
-    test("/**@nosideeffects*/function f(){}", "var a = f();", "");
+    test(
+        externs("/**@nosideeffects*/function f(){}"),
+        srcs("var a = f();"),
+        expected(""));
   }
 
   public void testNoSideEffectAnnotation3() {
@@ -388,7 +391,10 @@ public final class RemoveUnusedCodeNameAnalyzerTest extends TypeICompilerTestCas
   }
 
   public void testNoSideEffectAnnotation4() {
-    test("var f = /**@nosideeffects*/function(){};", "var a = f();", "");
+    test(
+        externs("var f = /**@nosideeffects*/function(){};"),
+        srcs("var a = f();"),
+        expected(""));
   }
 
   public void testNoSideEffectAnnotation5() {
@@ -396,30 +402,37 @@ public final class RemoveUnusedCodeNameAnalyzerTest extends TypeICompilerTestCas
   }
 
   public void testNoSideEffectAnnotation6() {
-    test("f = /**@nosideeffects*/function(){};", "var a = f();", "");
+    test(
+        externs("f = /**@nosideeffects*/function(){};"),
+        srcs("var a = f();"),
+        expected(""));
   }
 
   public void testNoSideEffectAnnotation7() {
     test(
-        "var f = /**@nosideeffects*/function(){};",
-        "f = function(){};var a = f();",
-        "f = function(){};        f();");
+        externs("var f = /**@nosideeffects*/function(){};"),
+        srcs("f = function(){};var a = f();"),
+        expected("f = function(){};        f();"));
   }
 
   public void testNoSideEffectAnnotation8() {
     test(
-        "var f = function(){}; f = /**@nosideeffects*/function(){};", // preserve newline
-        "var a = f();",
-        "        f();");
+        externs("var f = function(){}; f = /**@nosideeffects*/function(){};"), // preserve newline
+        srcs("var a = f();"),
+        expected("        f();"));
   }
 
   public void testNoSideEffectAnnotation9() {
     test(
-        "f = /**@nosideeffects*/function(){};" + "f = /**@nosideeffects*/function(){};",
-        "var a = f();",
-        "");
+        externs(
+            "f = /**@nosideeffects*/function(){};" + "f = /**@nosideeffects*/function(){};"),
+        srcs("var a = f();"),
+        expected(""));
 
-    test("f = /**@nosideeffects*/function(){};", "var a = f();", "");
+    test(
+        externs("f = /**@nosideeffects*/function(){};"),
+        srcs("var a = f();"),
+        expected(""));
   }
 
   public void testNoSideEffectAnnotation10() {
@@ -428,7 +441,10 @@ public final class RemoveUnusedCodeNameAnalyzerTest extends TypeICompilerTestCas
   }
 
   public void testNoSideEffectAnnotation11() {
-    test("var o = {}; o.f = /**@nosideeffects*/function(){};", "var a = o.f();", "");
+    test(
+        externs("var o = {}; o.f = /**@nosideeffects*/function(){};"),
+        srcs("var a = o.f();"),
+        expected(""));
   }
 
   public void testNoSideEffectAnnotation12() {
@@ -436,12 +452,18 @@ public final class RemoveUnusedCodeNameAnalyzerTest extends TypeICompilerTestCas
   }
 
   public void testNoSideEffectAnnotation13() {
-    test("/**@nosideeffects*/function c(){}", "var a = new c", "");
+    test(
+        externs("/**@nosideeffects*/function c(){}"),
+        srcs("var a = new c"),
+        expected(""));
   }
 
   public void testNoSideEffectAnnotation14() {
     String externs = "function c(){};" + "c.prototype.f = /**@nosideeffects*/function(){};";
-    test(externs, "var o = new c; var a = o.f()", "new c");
+    test(
+        externs(externs),
+        srcs("var o = new c; var a = o.f()"),
+        expected("new c"));
   }
 
   public void testNoSideEffectAnnotation15() {
@@ -452,9 +474,11 @@ public final class RemoveUnusedCodeNameAnalyzerTest extends TypeICompilerTestCas
 
   public void testNoSideEffectAnnotation16() {
     test(
-        "/**@nosideeffects*/function c(){}" + "c.prototype.f = /**@nosideeffects*/function(){};",
-        "var a = (new c).f()",
-        "");
+        externs(
+            "/**@nosideeffects*/function c(){}"
+                + "c.prototype.f = /**@nosideeffects*/function(){};"),
+        srcs("var a = (new c).f()"),
+        expected(""));
   }
 
   public void testFunctionPrototype() {
@@ -886,44 +910,49 @@ public final class RemoveUnusedCodeNameAnalyzerTest extends TypeICompilerTestCas
 
   public void testSetterInForStruct3() {
     test(
-        "function f(){} function g() {} function h() {}",
-        "var j = 0;                      for (var i = 1 + f() + g() + h(); i = 0; j++);",
-        "var j = 0; 1 + f() + g() + h(); for (                           ;     0; j++);");
+        externs("function f(){} function g() {} function h() {}"),
+        srcs(
+            "var j = 0;                      for (var i = 1 + f() + g() + h(); i = 0; j++);"),
+        expected(
+            "var j = 0; 1 + f() + g() + h(); for (                           ;     0; j++);"));
   }
 
   public void testSetterInForStruct4() {
     test(
-        "function f(){} function g() {} function h() {}",
-        "var i = 0; var j = 0;                      for (i = 1 + f() + g() + h(); i = 0; j++);",
-        "           var j = 0; 1 + f() + g() + h(); for (                       ;     0; j++);");
+        externs("function f(){} function g() {} function h() {}"),
+        srcs(
+          "var i = 0; var j = 0;                      for (i = 1 + f() + g() + h(); i = 0; j++);"),
+        expected(
+          "           var j = 0; 1 + f() + g() + h(); for (                       ;     0; j++);"));
   }
 
   public void testSetterInForStruct5() {
     test(
-        "function f(){} function g() {} function h() {}",
-        "var i = 0, j = 0; for (i = f(), j = g(); 0;);",
-        "                  for (    f(),     g(); 0;);");
+        externs("function f(){} function g() {} function h() {}"),
+        srcs("var i = 0, j = 0; for (i = f(), j = g(); 0;);"),
+        expected("                  for (    f(),     g(); 0;);"));
   }
 
   public void testSetterInForStruct6() {
     test(
-        "function f(){} function g() {} function h() {}",
-        "var i = 0, j = 0, k = 0; for (i = f(), j = g(), k = h(); i = 0;);",
-        "                         for (    f(),     g(),     h();     0;);");
+        externs("function f(){} function g() {} function h() {}"),
+        srcs("var i = 0, j = 0, k = 0; for (i = f(), j = g(), k = h(); i = 0;);"),
+        expected(
+            "                         for (    f(),     g(),     h();     0;);"));
   }
 
   public void testSetterInForStruct7() {
     test(
-        "function f(){} function g() {} function h() {}",
-        "var i = 0, j = 0, k = 0; for (i = 1, j = 2, k = 3; i = 0;);",
-        "                         for (                   ;     0;);");
+        externs("function f(){} function g() {} function h() {}"),
+        srcs("var i = 0, j = 0, k = 0; for (i = 1, j = 2, k = 3; i = 0;);"),
+        expected("                         for (                   ;     0;);"));
   }
 
   public void testSetterInForStruct8() {
     test(
-        "function f(){} function g() {} function h() {}",
-        "var i = 0, j = 0, k = 0; for (i = 1, j = i, k = 2; i = 0;);",
-        "                         for (                   ;     0;);");
+        externs("function f(){} function g() {} function h() {}"),
+        srcs("var i = 0, j = 0, k = 0; for (i = 1, j = i, k = 2; i = 0;);"),
+        expected("                         for (                   ;     0;);"));
   }
 
   public void testSetterInForStruct9() {

@@ -1568,18 +1568,21 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
 
   public void testInheritFromExterns() {
     test(
-        lines(
-            "/** @constructor */ function ExternsClass() {}", "ExternsClass.m = function() {};"),
-        "class CodeClass extends ExternsClass {}",
-        lines(
-            "/** @constructor @struct",
-            " * @extends {ExternsClass}",
-            " * @param {...?} var_args",
-            " */",
-            "let CodeClass = function(var_args) {",
-            "  return ExternsClass.apply(this,arguments) || this;",
-            "};",
-            "$jscomp.inherits(CodeClass,ExternsClass)"));
+        externs(
+            lines(
+                "/** @constructor */ function ExternsClass() {}",
+                "ExternsClass.m = function() {};")),
+        srcs("class CodeClass extends ExternsClass {}"),
+        expected(
+            lines(
+                "/** @constructor @struct",
+                " * @extends {ExternsClass}",
+                " * @param {...?} var_args",
+                " */",
+                "let CodeClass = function(var_args) {",
+                "  return ExternsClass.apply(this,arguments) || this;",
+                "};",
+                "$jscomp.inherits(CodeClass,ExternsClass)")));
   }
 
   public void testMockingInFunction() {

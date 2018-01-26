@@ -443,26 +443,29 @@ public class Es6ToEs3ClassSideInheritanceTest extends CompilerTestCase {
 
   public void testInheritFromExterns() {
     test(
-        lines(
-            "let x;",
-            "/** @constructor */ function ExternsClass() {}",
-            "ExternsClass.m = function() {};"),
-        lines(
-            "let y = 1;",
-            "/** @constructor @struct @extends {ExternsClass} */",
-            "var CodeClass = function(var_args) {",
-            "  ExternsClass.apply(this,arguments)",
-            "};",
-            "$jscomp.inherits(CodeClass,ExternsClass)"),
-        lines(
-            "let y = 1;",
-            "/** @constructor @struct @extends {ExternsClass} */",
-            "var CodeClass = function(var_args) {",
-            "  ExternsClass.apply(this,arguments)",
-            "};",
-            "$jscomp.inherits(CodeClass,ExternsClass);",
-            "/** @suppress {visibility} */",
-            "CodeClass.m = ExternsClass.m;"));
+        externs(
+            lines(
+                "let x;",
+                "/** @constructor */ function ExternsClass() {}",
+                "ExternsClass.m = function() {};")),
+        srcs(
+            lines(
+                "let y = 1;",
+                "/** @constructor @struct @extends {ExternsClass} */",
+                "var CodeClass = function(var_args) {",
+                "  ExternsClass.apply(this,arguments)",
+                "};",
+                "$jscomp.inherits(CodeClass,ExternsClass)")),
+        expected(
+            lines(
+                "let y = 1;",
+                "/** @constructor @struct @extends {ExternsClass} */",
+                "var CodeClass = function(var_args) {",
+                "  ExternsClass.apply(this,arguments)",
+                "};",
+                "$jscomp.inherits(CodeClass,ExternsClass);",
+                "/** @suppress {visibility} */",
+                "CodeClass.m = ExternsClass.m;")));
   }
 
   public void testAliasing() {

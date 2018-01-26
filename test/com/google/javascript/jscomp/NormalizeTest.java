@@ -291,9 +291,10 @@ public final class NormalizeTest extends CompilerTestCase {
   }
 
   public void testDuplicateVarInExterns() {
-    test("var extern;",
-        "/** @suppress {duplicate} */ var extern = 3;",
-        "/** @suppress {duplicate} */ var extern = 3;");
+    test(
+        externs("var extern;"),
+        srcs("/** @suppress {duplicate} */ var extern = 3;"),
+        expected("/** @suppress {duplicate} */ var extern = 3;"));
   }
 
   public void testUnhandled() {
@@ -628,8 +629,10 @@ public final class NormalizeTest extends CompilerTestCase {
   }
 
   public void testSkipRenamingExterns() {
-    test("var EXTERN; var ext; ext.FOO;", "var b = EXTERN; var c = ext.FOO",
-        "var b = EXTERN; var c = ext.FOO");
+    test(
+        externs("var EXTERN; var ext; ext.FOO;"),
+        srcs("var b = EXTERN; var c = ext.FOO"),
+        expected("var b = EXTERN; var c = ext.FOO"));
   }
 
   public void testIssue166e() {
@@ -739,7 +742,10 @@ public final class NormalizeTest extends CompilerTestCase {
 
   public void testIssue() {
     allowExternsChanges();
-    test("var a,b,c; var a,b", "a(), b()", "a(), b()");
+    test(
+        externs("var a,b,c; var a,b"),
+        srcs("a(), b()"),
+        expected("a(), b()"));
   }
 
   public void testNormalizeSyntheticCode() {

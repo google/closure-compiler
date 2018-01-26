@@ -468,10 +468,11 @@ public final class ProcessClosurePrimitivesTest extends CompilerTestCase {
     allowExternsChanges();
 
     test(
-        "/** @externs */ goog.provide('animals.Dog');"
-            + "/** @constructor */ animals.Dog = function() {}",
-        "goog.require('animals.Dog'); new animals.Dog()",
-        "new animals.Dog();");
+        externs(
+            "/** @externs */ goog.provide('animals.Dog');"
+                + "/** @constructor */ animals.Dog = function() {}"),
+        srcs("goog.require('animals.Dog'); new animals.Dog()"),
+        expected("new animals.Dog();"));
   }
 
   public void testAddDependency() {

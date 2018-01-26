@@ -583,44 +583,47 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
 
   public void testExterns() {
     test(
-        "var document;",
-        "document",
-        "window.document");
+        externs("var document;"),
+        srcs("document"),
+        expected("window.document"));
     test(
-        "var document;",
-        "document.getElementsByTagName('test')",
-        "window.document.getElementsByTagName('test')");
+        externs("var document;"),
+        srcs("document.getElementsByTagName('test')"),
+        expected("window.document.getElementsByTagName('test')"));
     test(
-        "var document;",
-        "window.document.getElementsByTagName('test')",
-        "window.document.getElementsByTagName('test')");
+        externs("var document;"),
+        srcs("window.document.getElementsByTagName('test')"),
+        expected("window.document.getElementsByTagName('test')"));
     test(
-        "var document;document.getElementsByTagName",
-        "document.getElementsByTagName('test')",
-        "window.document.getElementsByTagName('test')");
+        externs("var document;document.getElementsByTagName"),
+        srcs("document.getElementsByTagName('test')"),
+        expected("window.document.getElementsByTagName('test')"));
     test(
-        "var document,navigator",
-        "document.navigator;navigator",
-        "window.document.navigator;window.navigator");
+        externs("var document,navigator"),
+        srcs("document.navigator;navigator"),
+        expected("window.document.navigator;window.navigator"));
     test(
-        "var iframes",
-        "function test() { iframes.resize(); }",
-        "_.test = function() { window.iframes.resize(); }");
+        externs("var iframes"),
+        srcs("function test() { iframes.resize(); }"),
+        expected("_.test = function() { window.iframes.resize(); }"));
     test(
-        "var iframes",
-        "var foo = iframes;",
-        "_.foo = window.iframes;");
-    test("class A {}", "A", "window.A");
+        externs("var iframes"),
+        srcs("var foo = iframes;"),
+        expected("_.foo = window.iframes;"));
+    test(
+        externs("class A {}"),
+        srcs("A"),
+        expected("window.A"));
     // Special names.
     test(
-        "var arguments, window, eval;",
-        "arguments;window;eval;",
-        "arguments;window;eval;");
+        externs("var arguments, window, eval;"),
+        srcs("arguments;window;eval;"),
+        expected("arguments;window;eval;"));
     // Actually not an extern.
     test(
-        "",
-        "document",
-        "window.document");
+        externs(""),
+        srcs("document"),
+        expected("window.document"));
     // Javascript builtin objects
     testSame(
         "Object;Function;Array;String;Boolean;Number;Math;"
@@ -630,60 +633,61 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
 
   public void testSameVarDeclaredInExternsAndSource() {
     test(
-        "/** @const */ var ns = {}; function f() {}",
-        "/** @const */ var ns = ns || {};",
-        "/** @const */ window.ns = window.ns || {};");
+        externs("/** @const */ var ns = {}; function f() {}"),
+        srcs("/** @const */ var ns = ns || {};"),
+        expected("/** @const */ window.ns = window.ns || {};"));
 
     test(
-        "var x;",
-        "var x = 1; x = 2;",
-        "window.x = 1; window.x = 2;");
+        externs("var x;"),
+        srcs("var x = 1; x = 2;"),
+        expected("window.x = 1; window.x = 2;"));
 
     test(
-        "var x;",
-        "var x; x = 1;",
-        "window.x = 1;");
+        externs("var x;"),
+        srcs("var x; x = 1;"),
+        expected("window.x = 1;"));
 
     test(
-        "var x;",
-        "function f() { var x; x = 1; }",
-        "_.f = function() { var x; x = 1; }");
+        externs("var x;"),
+        srcs("function f() { var x; x = 1; }"),
+        expected("_.f = function() { var x; x = 1; }"));
 
     test(
-        "var x, y;",
-        "var x = 1, y = 2;",
-        "window.x = 1; window.y = 2;");
+        externs("var x, y;"),
+        srcs("var x = 1, y = 2;"),
+        expected("window.x = 1; window.y = 2;"));
 
     test(
-        "var x, y;",
-        "var x, y = 2;",
-        "window.y = 2;");
+        externs("var x, y;"),
+        srcs("var x, y = 2;"),
+        expected("window.y = 2;"));
 
     test(
-        "var x;",
-        "var x = 1, y = 2;",
-        "window.x = 1; _.y = 2;");
+        externs("var x;"),
+        srcs("var x = 1, y = 2;"),
+        expected("window.x = 1; _.y = 2;"));
 
     test(
-        "var x;",
-        "var y = 2, x = 1;",
-        "_.y = 2; window.x = 1;");
+        externs("var x;"),
+        srcs("var y = 2, x = 1;"),
+        expected("_.y = 2; window.x = 1;"));
 
     test(
-        "var x;",
-        "var y, x = 1;",
-        "window.x = 1;");
+        externs("var x;"),
+        srcs("var y, x = 1;"),
+        expected("window.x = 1;"));
 
     test(
-        "var foo;",
-        "var foo = function(x) { if (x > 0) { var y = foo; } };",
-        "window.foo = function(x) { if (x > 0) { var y = window.foo; } };");
+        externs("var foo;"),
+        srcs("var foo = function(x) { if (x > 0) { var y = foo; } };"),
+        expected(
+            "window.foo = function(x) { if (x > 0) { var y = window.foo; } };"));
 
     // The parameter x doesn't conflict with the x in the source
     test(
-        "function f(x) {}",
-        "var f = 1; var x = 2;",
-        "window.f = 1; _.x = 2;");
+        externs("function f(x) {}"),
+        srcs("var f = 1; var x = 2;"),
+        expected("window.f = 1; _.x = 2;"));
   }
 
   public void testSameVarDeclaredInExternsAndSource2() {
@@ -711,9 +715,10 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
     });
 
     test(
-        "var y;",
-        "var x = 1, y = 2; function f() { return x + window.y; }",
-        "var x; x = 1; window.y = 2; var f = function() { return x + window.y; }");
+        externs("var y;"),
+        srcs("var x = 1, y = 2; function f() { return x + window.y; }"),
+        expected(
+            "var x; x = 1; window.y = 2; var f = function() { return x + window.y; }"));
   }
 
   public void testArrowFunctions() {

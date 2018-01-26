@@ -888,16 +888,16 @@ public final class OptimizeParametersTest extends CompilerTestCase {
 
   public void testNamelessParameter1() {
     test(
-        "var g;",
-        "f(g()); function f(){}",
-        "f(); function f(){g()}");
+        externs("var g;"),
+        srcs("f(g()); function f(){}"),
+        expected("f(); function f(){g()}"));
   }
 
   public void testNamelessParameter2() {
     test(
-        "var g, h;",
-        "f(g(),h()); function f(){}",
-        "f(); function f(){g();h()}");
+        externs("var g, h;"),
+        srcs("f(g(),h()); function f(){}"),
+        expected("f(); function f(){g();h()}"));
   }
 
   public void testNoRewriteUsedClassConstructor1() throws Exception {

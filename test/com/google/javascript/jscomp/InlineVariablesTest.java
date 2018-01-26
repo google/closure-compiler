@@ -804,9 +804,10 @@ public final class InlineVariablesTest extends CompilerTestCase {
   public void testSideEffectOrder() {
     // z can not be changed by the call to y, so x can be inlined.
     String EXTERNS = "var z; function f(){}";
-    test(EXTERNS,
-         "var x = f(y.a, y); z = x;",
-         "z = f(y.a, y);");
+    test(
+        externs(EXTERNS),
+        srcs("var x = f(y.a, y); z = x;"),
+        expected("z = f(y.a, y);"));
     // z.b can be changed by the call to y, so x can not be inlined.
     testSame(EXTERNS, "var x = f(y.a, y); z.b = x;");
   }

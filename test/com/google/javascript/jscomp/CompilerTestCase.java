@@ -1182,20 +1182,6 @@ public abstract class CompilerTestCase extends TestCase {
     test(externs(externsInputs), srcs(js), expected(expected), diagnostic);
   }
 
-  /**
-   * Verifies that the compiler pass's JS output matches the expected output
-   * and (optionally) that an expected warning is issued. Or, if an error is
-   * expected, this method just verifies that the error is encountered.
-   *
-   * @param externs the externs
-   * @param js Input
-   * @param expected Expected output, or null if an error is expected
-   * @param diagnostic Expected warning or error
-   */
-  protected void test(String externs, String js, String expected, Diagnostic diagnostic) {
-    test(externs(externs), srcs(js), expected(expected), diagnostic);
-  }
-
   protected void testInternal(
       Externs externs,
       Sources inputs,
@@ -1227,16 +1213,6 @@ public abstract class CompilerTestCase extends TestCase {
       return ImmutableList.of(SourceFile.fromCode(name, srcText));
     }
     return null;
-  }
-
-  /**
-   * Verifies that the compiler pass's JS output matches the expected output.
-   *
-   * @param js Inputs
-   * @param expected Expected JS output
-   */
-  protected void test(String externs, String js, String expected) {
-    test(externs(externs), srcs(js), expected(expected));
   }
 
   /**

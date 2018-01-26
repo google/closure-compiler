@@ -49,7 +49,7 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
   }
 
   public void testExternsDefinitionsRespected() {
-    test("/** @type {number} */ var x;", "x = 7;", "");
+    test(externs("/** @type {number} */ var x;"), srcs("x = 7;"), expected(""));
   }
 
   public void testSimpleConstJsdocPropagation() {

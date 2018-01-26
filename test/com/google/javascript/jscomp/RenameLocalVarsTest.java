@@ -80,15 +80,17 @@ public final class RenameLocalVarsTest extends CompilerTestCase {
 
   public void testRenameWithExterns1() {
     String externs = "var bar; function alert() {}";
-    test(externs,
-        "function foo(bar) { alert(bar); } foo(3)",
-        "function foo(a) { alert(a); } foo(3)");
+    test(
+        externs(externs),
+        srcs("function foo(bar) { alert(bar); } foo(3)"),
+        expected("function foo(a) { alert(a); } foo(3)"));
   }
 
   public void testRenameWithExterns2() {
-    test("var a; function alert() {}",
-        "function foo(bar) { alert(a);alert(bar); } foo(3);",
-        "function foo(b) { alert(a);alert(b); } foo(3);");
+    test(
+        externs("var a; function alert() {}"),
+        srcs("function foo(bar) { alert(a);alert(bar); } foo(3);"),
+        expected("function foo(b) { alert(a);alert(b); } foo(3);"));
   }
 
   public void testDoNotRenameExportedName() {

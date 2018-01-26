@@ -346,11 +346,13 @@ public final class RenamePropertiesTest extends CompilerTestCase {
          "Bar.prototype = {a: function(){}, b: function(){}}; bar.a();");
     prevUsedPropertyMap = renameProperties.getPropertyMap();
     String externs = EXTERNS + "prop.b;";
-    test(externs,
-         "Bar.prototype = {new_f: function(){}, b: function(){}, " +
-         "a: function(){}};bar.b();",
-         "Bar.prototype = {c:function(){}, b:function(){}, a:function(){}};" +
-         "bar.b();");
+    test(
+        externs(externs),
+        srcs(
+            "Bar.prototype = {new_f: function(){}, b: function(){}, "
+                + "a: function(){}};bar.b();"),
+        expected(
+            "Bar.prototype = {c:function(){}, b:function(){}, a:function(){}};" + "bar.b();"));
   }
 
   public void testRenamePropertiesWithLeadingUnderscoresStable() {
