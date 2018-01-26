@@ -24,7 +24,7 @@ public class J2clPropertyInlinerPassTest extends CompilerTestCase {
   @Override
   protected void setUp() throws Exception {
     super.setUp();
-    enableNormalize(); // Inlining will fail if normailization hasn't happened yet.
+    enableNormalize(); // Inlining will fail if normalization hasn't happened yet.
   }
 
   @Override
@@ -53,19 +53,20 @@ public class J2clPropertyInlinerPassTest extends CompilerTestCase {
         Lists.newArrayList(
             SourceFile.fromCode(
                 "someFile.js",
-                "var A = function() {};"
-                    + "var A$$0clinit = function() {"
-                    + "  A$$0x = 2;"
-                    + "};"
-                    + "Object.defineProperties(A, {x :{"
-                    + "  configurable:true,"
-                    + "  enumerable:true,"
-                    + "  get:function() {"
-                    + "    return A$$0clinit(), A$$0x;"
-                    + "  }"
-                    + "}});"
-                    + "var A$$0x = null;"
-                    + "var x = A.x;")));
+                lines(
+                    "var A = function() {};",
+                    "var A$$0clinit = function() {",
+                    "  A$$0x = 2;",
+                    "};",
+                    "Object.defineProperties(A, {x :{",
+                    "  configurable:true,",
+                    "  enumerable:true,",
+                    "  get:function() {",
+                    "    return A$$0clinit(), A$$0x;",
+                    "  }",
+                    "}});",
+                    "var A$$0x = null;",
+                    "var x = A.x;"))));
   }
 
   public void testNoInlineNonJ2clPropsValue() {
@@ -73,17 +74,18 @@ public class J2clPropertyInlinerPassTest extends CompilerTestCase {
         Lists.newArrayList(
             SourceFile.fromCode(
                 "someFile.js",
-                "var A = function() {};"
-                    + "var A$$0clinit = function() {"
-                    + "  A$$0x = 2;"
-                    + "};"
-                    + "Object.defineProperties(A, {x :{"
-                    + "  configurable:true,"
-                    + "  enumerable:true,"
-                    + "  value: 2"
-                    + "}});"
-                    + "var A$$0x = null;"
-                    + "var x = A.x;")));
+                lines(
+                    "var A = function() {};",
+                    "var A$$0clinit = function() {",
+                    "  A$$0x = 2;",
+                    "};",
+                    "Object.defineProperties(A, {x :{",
+                    "  configurable:true,",
+                    "  enumerable:true,",
+                    "  value: 2",
+                    "}});",
+                    "var A$$0x = null;",
+                    "var x = A.x;"))));
   }
 
   // In this test we want to remove the J2CL property but not the entire Object.defineProperties
@@ -315,5 +317,101 @@ public class J2clPropertyInlinerPassTest extends CompilerTestCase {
                     "}});",
                     "A.$x = 3;",
                     "A.x++;"))));
+  }
+
+  public void testInlineEs6Getter() {
+    test(
+        lines(
+            "class A {",
+            "  static $clinit() {",
+            "    A.$clinit = function() {};",
+            "    A.$x = 2;",
+            "  }",
+            "  static get x() {",
+            "    return A.$clinit(), A.$x",
+            "  }",
+            "  static set x(value) {",
+            "    A.$clinit(), A.$x = value;",
+            "  }",
+            "}",
+            "A.$x = 3;",
+            "var xx = A.x"),
+        lines(
+            "class A {",
+            "  static $clinit() {",
+            "    A.$clinit = function() {};",
+            "    A.$x = 2;",
+            "  }",
+            "}",
+            "A.$x = 3;",
+            "var xx = (A.$clinit(), A.$x);"));
+  }
+
+  public void testInlineEs6Setter() {
+    test(
+        lines(
+            "class A {",
+            "  static $clinit() {",
+            "    A.$clinit = function() {};",
+            "    A.$x = 2;",
+            "  }",
+            "  static get x() {",
+            "    return A.$clinit(), A.$x",
+            "  }",
+            "  static set x(value) {",
+            "    A.$clinit(), A.$x = value;",
+            "  }",
+            "}",
+            "A.$x = 3;",
+            "A.x = 5;"),
+        lines(
+            "class A {",
+            "  static $clinit() {",
+            "    A.$clinit = function() {};",
+            "    A.$x = 2;",
+            "  }",
+            "}",
+            "A.$x = 3;",
+            "{(A.$clinit(), A.$x = 5)}"));
+  }
+
+  public void testInlineEs6GetterSetter_multiple() {
+    test(
+        lines(
+            "class A {",
+            "  static $clinit() {",
+            "    A.$clinit = function() {};",
+            "    A.$x = 2;",
+            "    A.$y = 3;",
+            "  }",
+            "  static get x() {",
+            "    return A.$clinit(), A.$x",
+            "  }",
+            "  static set y(value) {",
+            "    A.$clinit(), A.$y = value;",
+            "  }",
+            "  static get y() {",
+            "    return A.$clinit(), A.$y",
+            "  }",
+            "  static set x(value) {",
+            "    A.$clinit(), A.$x = value;",
+            "  }",
+            "}",
+            "var xx = A.x;",
+            "var yy = A.y",
+            "A.x = 5;",
+            "A.y = 5;"),
+        lines(
+            "class A {",
+            "  static $clinit() {",
+            "    A.$clinit = function() {};",
+            "    A.$x = 2;",
+            "    A.$y = 3;",
+            "  }",
+            "}",
+            "var xx = (A.$clinit(), A.$x);",
+            "var yy = (A.$clinit(), A.$y)",
+            "{(A.$clinit(), A.$x = 5)}",
+            "{(A.$clinit(), A.$y = 5)}"));
   }
 }

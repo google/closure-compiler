@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkState;
 
 import com.google.javascript.jscomp.FunctionInjector.InliningMode;
 import com.google.javascript.jscomp.FunctionInjector.Reference;
@@ -39,9 +40,9 @@ import java.util.Map;
  * <li> Avoid inlining if the property is incremented using ++ or --</li>
  * </ul>
  *
- * Since the FunctionInliner class really only works after the CollapseProperties pass has run, we
+ * Since this pass only really works after the AggressiveInlineAliases pass has run, we
  * have to look for Object.defineProperties instead of es6 get and set nodes since es6
- * transpilation has already occured.
+ * transpilation has already occurred if the language out is ES5.
  *
  */
 public class J2clPropertyInlinerPass implements CompilerPass {
@@ -62,9 +63,11 @@ public class J2clPropertyInlinerPass implements CompilerPass {
 
   class StaticFieldGetterSetterInliner {
     Node root;
+
     StaticFieldGetterSetterInliner(Node root) {
       this.root = root;
     }
+
     private void run() {
       GatherJ2CLClassGetterSetters gatherer = new GatherJ2CLClassGetterSetters();
       NodeTraversal.traverseEs6(compiler, root, gatherer);
@@ -73,10 +76,10 @@ public class J2clPropertyInlinerPass implements CompilerPass {
       new InlinePropertiesPass(result).run();
     }
 
-    private class J2clProperty {
-      private final Node getKey;
-      private final Node setKey;
-      private boolean isSafeToInline;
+    private abstract class J2clProperty {
+      final Node getKey;
+      final Node setKey;
+      boolean isSafeToInline;
 
       public J2clProperty(Node getKey, Node setKey) {
         this.getKey = getKey;
@@ -84,10 +87,22 @@ public class J2clPropertyInlinerPass implements CompilerPass {
         this.isSafeToInline = true;
       }
 
+      abstract void remove();
+    }
+
+    /** A J2CL property with a getter and setter from an Object.defineProperties call */
+    private class J2clPropertyEs5 extends J2clProperty {
+      public J2clPropertyEs5(Node getKey, Node setKey) {
+        super(getKey, setKey);
+        checkArgument(getKey.isStringKey() && getKey.getString().equals("get"), getKey);
+        checkArgument(setKey.isStringKey() && setKey.getString().equals("set"), setKey);
+      }
+
+      @Override
       void remove() {
         Node nodeToDetach = getKey.getGrandparent();
         Node objectLit = nodeToDetach.getParent();
-        checkArgument(objectLit.isObjectLit());
+        checkState(objectLit.isObjectLit(), objectLit);
         nodeToDetach.detach();
         NodeUtil.markFunctionsDeleted(nodeToDetach, compiler);
         compiler.reportChangeToEnclosingScope(objectLit);
@@ -95,6 +110,26 @@ public class J2clPropertyInlinerPass implements CompilerPass {
           // Remove the whole Object.defineProperties call if there are no properties left.
           objectLit.getParent().getParent().detach();
         }
+      }
+    }
+
+    /** A J2CL property created with a ES6-style static getter and setter */
+    private class J2clPropertyEs6 extends J2clProperty {
+      public J2clPropertyEs6(Node getKey, Node setKey) {
+        super(getKey, setKey);
+        checkArgument(getKey.isGetterDef(), getKey);
+        checkArgument(setKey.isSetterDef(), setKey);
+      }
+
+      @Override
+      void remove() {
+        Node classMembers = getKey.getParent();
+        checkState(classMembers.isClassMembers(), classMembers);
+        classMembers.removeChild(getKey);
+        classMembers.removeChild(setKey);
+        NodeUtil.markFunctionsDeleted(getKey, compiler);
+        NodeUtil.markFunctionsDeleted(setKey, compiler);
+        compiler.reportChangeToEnclosingScope(classMembers);
       }
     }
 
@@ -188,14 +223,19 @@ public class J2clPropertyInlinerPass implements CompilerPass {
 
       @Override
       public void visit(NodeTraversal t, Node n, Node parent) {
-        if (!NodeUtil.isObjectDefinePropertiesDefinition(n)) {
-          return;
+        if (n.isClass()) {
+          visitClass(n);
+        } else if (NodeUtil.isObjectDefinePropertiesDefinition(n)) {
+          visitObjectDefineProperties(n);
         }
+      }
+
+      void visitObjectDefineProperties(Node n) {
         Node className = n.getSecondChild();
         if (!className.isName()) {
           return;
         }
-        String classNameString = className.getQualifiedName();
+        String classNameString = className.getString();
         for (Node p : NodeUtil.getObjectDefinedPropertiesKeys(n)) {
           String name = p.getString();
           // J2cl static fields are always synthesized with both a getter and setter.
@@ -217,11 +257,66 @@ public class J2clPropertyInlinerPass implements CompilerPass {
                   setKey = innerKey;
                 }
                 break;
+              default: // fall out
             }
           }
           if (getKey != null && setKey != null) {
             j2clPropertiesByName.put(
-                classNameString + "." + name, new J2clProperty(getKey, setKey));
+                classNameString + "." + name, new J2clPropertyEs5(getKey, setKey));
+          }
+        }
+      }
+
+      void visitClass(Node classNode) {
+        String className = NodeUtil.getName(classNode);
+        Node classMembers = NodeUtil.getClassMembers(classNode);
+
+        Node getKey = null;
+        Node setterDef = null;
+        String name = "";
+        Map<String, Node> nameToGetterOrSetterDef = new HashMap<>();
+
+        // These J2CL-created getters and setters always come in pairs. The first time seeing a
+        // getter/setter for a given name, add it to the nameToGetterOrSetterDef map.
+        // Upon seeing another getter/setter for that name, create a new J2clProperty for the
+        // getter/setter pair.
+        for (Node memberFunction : classMembers.children()) {
+          if (!memberFunction.isStaticMember()) {
+            // The only getters and setters we care about are static.
+            continue;
+          }
+          switch (memberFunction.getToken()) {
+            case GETTER_DEF:
+              if (matchesJ2clGetKeySignature(className, memberFunction)) {
+                getKey = memberFunction;
+                name = memberFunction.getString();
+                setterDef = nameToGetterOrSetterDef.get(name);
+
+                if (setterDef != null) {
+                  j2clPropertiesByName.put(
+                      className + "." + name, new J2clPropertyEs6(getKey, setterDef));
+                  nameToGetterOrSetterDef.remove(name);
+                } else {
+                  nameToGetterOrSetterDef.put(name, getKey);
+                }
+              }
+              break;
+            case SETTER_DEF:
+              if (matchesJ2clSetKeySignature(className, memberFunction)) {
+                setterDef = memberFunction;
+                name = memberFunction.getString();
+                getKey = nameToGetterOrSetterDef.get(name);
+
+                if (getKey != null) {
+                  j2clPropertiesByName.put(
+                      className + "." + name, new J2clPropertyEs6(getKey, setterDef));
+                  nameToGetterOrSetterDef.remove(name);
+                } else {
+                  nameToGetterOrSetterDef.put(name, setterDef);
+                }
+              }
+              break;
+            default: // fall out
           }
         }
       }
