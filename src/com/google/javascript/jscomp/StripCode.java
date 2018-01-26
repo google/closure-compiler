@@ -144,6 +144,11 @@ class StripCode implements CompilerPass {
         case EXPR_RESULT:
           maybeEliminateExpressionByName(t, n, parent);
           break;
+
+        case CLASS:
+          maybeEliminateClassByNameOrExtends(t, n, parent);
+          break;
+
         default:
           break;
       }
@@ -401,6 +406,37 @@ class StripCode implements CompilerPass {
             // fall through
           default:
             key = key.getNext();
+        }
+      }
+    }
+
+    /**
+     * Removes a class definition if the name is a strip type. Warns if a non-strippable class
+     * is extending a strippable type.
+     */
+    void maybeEliminateClassByNameOrExtends(NodeTraversal t, Node classNode, Node parent) {
+      Node nameNode = NodeUtil.getNameNode(classNode);
+      String className = "<anonymous>";
+      // Replace class with null if it is a strip type
+      if (nameNode != null && nameNode.isQualifiedName()) {
+        className = nameNode.getQualifiedName();
+        if (qualifiedNameBeginsWithStripType(className)) {
+          if (NodeUtil.isStatementParent(parent)) {
+            replaceWithEmpty(classNode, parent);
+          } else {
+            replaceWithNull(classNode, parent);
+          }
+          t.reportCodeChange();
+          return;
+        }
+      }
+
+      // If the class is not a strip type, the superclass also cannot be a strip type
+      Node superclassNode = classNode.getSecondChild();
+      if (superclassNode != null && superclassNode.isQualifiedName()) {
+        String superclassName = superclassNode.getQualifiedName();
+        if (qualifiedNameBeginsWithStripType(superclassName)) {
+          t.report(classNode, STRIP_TYPE_INHERIT_ERROR, className, superclassName);
         }
       }
     }

@@ -77,6 +77,26 @@ public final class StripCodeTest extends CompilerTestCase {
          "a.b.c=function(){}");
   }
 
+  public void testLoggerDefinedInConstructorEs6() {
+    test(
+        lines(
+            "class A {",
+            "  constructor() {",
+            "    this.logger = goog.debug.Logger.getLogger('A');",
+            "    this.otherProperty = 3;",
+            "  }",
+            "}",
+            "let a = new A;",
+            "a.logger.warning('foobar');"),
+        lines(
+            "class A {",
+            "  constructor() {",
+            "    this.otherProperty = 3;",
+            "  }",
+            "}",
+            "let a = new A;"));
+  }
+
   public void testLoggerDefinedInPrototype1() {
     test("a.b.c = function() {};" +
          "a.b.c.prototype.logger = goog.debug.Logger.getLogger('a.b.c');",
@@ -363,6 +383,10 @@ public final class StripCodeTest extends CompilerTestCase {
     // listed types should be removed.
     test("goog.debug.DebugWindow = function(){}", "");
     test("goog.inherits(goog.debug.DebugWindow,Base)", "");
+    test("goog.debug.DebugWindow = class {}", "");
+    test("class GA_GoogleDebugger {}", "");
+    test("if (class GA_GoogleDebugger {}) {}", "if (null) {}");
+
 
     // types that happen to have strip types as prefix should not be
     // stripped.
@@ -370,12 +394,30 @@ public final class StripCodeTest extends CompilerTestCase {
     testSame("goog.inherits(goog.debug.DebugWindowFoo,Base)");
     testSame("goog.debug.DebugWindowFoo");
     testSame("goog.debug.DebugWindowFoo=1");
+    testSame("goog.debug.DebugWindowFoo = class {}");
 
     // qualified subtypes should be removed.
     test("goog.debug.DebugWindow.Foo=function(){}", "");
     test("goog.inherits(goog.debug.DebugWindow.Foo,Base)", "");
     test("goog.debug.DebugWindow.Foo", "");
     test("goog.debug.DebugWindow.Foo=1", "");
+    test("goog.debug.DebugWindow.Foo = class {}", "");
+  }
+
+  public void testClassInheritanceFromStripType1() {
+    // Formatter is not a strip name or type, so cannot extend a strip type.
+    testError("class Formatter extends goog.debug.Formatter {}",
+        StripCode.STRIP_TYPE_INHERIT_ERROR);
+  }
+
+  public void testClassInheritanceFromStripType2() {
+    testError("let Formatter = class extends goog.debug.Formatter {}",
+        StripCode.STRIP_TYPE_INHERIT_ERROR);
+  }
+
+  public void testClassInheritanceFromStripType3() {
+    // Both subclass and superclass are strip types, so this is okay.
+    test("goog.debug.HtmlFormatter = class extends goog.debug.Formatter {}", "");
   }
 
   public void testPropertyWithEmptyStringKey() {
@@ -522,4 +564,15 @@ public final class StripCodeTest extends CompilerTestCase {
         "");
   }
 
+  public void testAliasOfRemovedVar() {
+    test(
+        "var logger_ = goog.debug.Logger.getLogger(); var alias; alias = logger_;",
+        "                                             var alias; alias = null;");
+  }
+
+  public void testComplexExpression() {
+    test(
+        "var logger_ = goog.debug.Logger.getLogger(); var alias; alias = (logger_ = 3) + 4;",
+        "                                             var alias; alias = 3 + 4;");
+  }
 }
