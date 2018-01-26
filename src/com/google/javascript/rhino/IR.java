@@ -118,7 +118,7 @@ public class IR {
   }
 
   public static Node block(Node stmt) {
-    checkState(mayBeStatement(stmt));
+    checkState(mayBeStatement(stmt), "Block node cannot contain %s", stmt.getToken());
     Node block = new Node(Token.BLOCK, stmt);
     return block;
   }
@@ -683,6 +683,8 @@ public class IR {
       case DO:
       case EXPR_RESULT:
       case FOR:
+      case FOR_IN:
+      case FOR_OF:
       case IF:
       case LABEL:
       case LET:
