@@ -34,7 +34,6 @@ import com.google.javascript.rhino.TypeIRegistry;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -587,7 +586,7 @@ class TypeTransformation {
   }
 
   private TypeI evalRecord(Node record, NameResolver nameResolver) {
-    Map<String, TypeI> props = new HashMap<>();
+    Map<String, TypeI> props = new LinkedHashMap<>();
     for (Node propNode : record.children()) {
       // If it is a computed property then find the property name using the resolver
       if (propNode.isComputedProp()) {

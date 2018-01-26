@@ -634,7 +634,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   private static List<CompilerInput> getAllInputsFromModules(
       List<JSModule> modules) {
     List<CompilerInput> inputs = new ArrayList<>();
-    Map<String, JSModule> inputMap = new HashMap<>();
     for (JSModule module : modules) {
       for (CompilerInput input : module.getInputs()) {
         String inputName = input.getName();
@@ -643,7 +642,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
         // it will show up twice in the inputs list, and then we
         // will get an error down the line.
         inputs.add(input);
-        inputMap.put(inputName, module);
       }
     }
     return inputs;
