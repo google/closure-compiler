@@ -14,10 +14,6 @@
  * limitations under the License.
  */
 
-var CLOSURE_DEFINED = {
-  'jscomp.TRANSPILE': 'always',
-};
-
 /**
  * @fileoverview Deletes the browser's implementation of all ES6 libraries,
  * thus forcing the polyfills to be used unconditionally.

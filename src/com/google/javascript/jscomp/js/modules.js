@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 The Closure Compiler Authors.
+ * Copyright 2018 The Closure Compiler Authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,8 +15,8 @@
  */
 
 /**
- * @fileoverview Deletes the browser's implementation of Promise,
- * thus forcing the polyfill to be used unconditionally.
+ * @fileoverview
+ * @suppress {uselessCode}
  */
 
-delete Promise;
+'require es6/modules/runtime';
