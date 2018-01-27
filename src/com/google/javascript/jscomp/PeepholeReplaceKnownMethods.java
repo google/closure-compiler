@@ -119,6 +119,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
         case "floor":
           replacement = Math.floor(arg);
           break;
+        
         case "fround":
           if (Double.isNaN(arg) || Double.isInfinite(arg) || arg == 0) {
             replacement = arg;
@@ -152,6 +153,20 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
           replacement = Double.valueOf(Integer.numberOfLeadingZeros(NodeUtil.toUInt32(arg)));
           break;
         default: // fall out
+      }
+    }
+    else if(args.size() == 2) {
+      double arg1 = args.get(0);
+      double arg2 = args.get(1);
+      switch (methodName) {
+        case "pow":
+          replacement = Math.pow(arg1, arg2);
+          break;
+        case "imul":
+          replacement = (double)((int)arg1 * (int)arg2);
+          break;
+        default:
+          
       }
     }
     // handle the variadic functions now if we haven't already
