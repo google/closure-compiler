@@ -198,16 +198,14 @@ public class CompilerOptions implements Serializable {
     }
   }
 
+  // TODO(tbreisacher): When this is false, report an error if there's a goog.provide
+  // in an externs file.
   public boolean inIncrementalCheckMode() {
     return incrementalCheckMode != IncrementalCheckMode.OFF;
   }
 
   public boolean shouldGenerateTypedExterns() {
     return incrementalCheckMode == IncrementalCheckMode.GENERATE_IJS;
-  }
-
-  public boolean allowIjsInputs() {
-    return incrementalCheckMode != IncrementalCheckMode.OFF;
   }
 
   private Config.JsDocParsing parseJsDocDocumentation = Config.JsDocParsing.TYPES_ONLY;
@@ -279,12 +277,6 @@ public class CompilerOptions implements Serializable {
   //--------------------------------
 
   DependencyOptions dependencyOptions = new DependencyOptions();
-
-  // TODO(tbreisacher): When this is false, report an error if there's a goog.provide
-  // in an externs file.
-  boolean allowGoogProvideInExterns() {
-    return allowIjsInputs();
-  }
 
   /** Returns localized replacement for MSG_* variables */
   public MessageBundle messageBundle = null;
