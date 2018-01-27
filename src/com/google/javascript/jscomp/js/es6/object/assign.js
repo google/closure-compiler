@@ -14,33 +14,13 @@
  * limitations under the License.
  */
 
-'require util/owns';
+/**
+ * @fileoverview
+ * @suppress {uselessCode}
+ */
+'require es6/util/assign';
 'require util/polyfill';
 
 $jscomp.polyfill('Object.assign', function(orig) {
-  if (orig) return orig;
-
-  /**
-   * Polyfill for Object.assign() method:
-   * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/assign
-   *
-   * Copies values of all enumerable own properties from one or more
-   * sources to the given target object, and returns the target.
-   * @param {!Object} target The target object onto which to copy.
-   * @param {...?Object} var_args The source objects.
-   * @return {!Object} The target object is returned.
-   * @suppress {reportUnknownTypes}
-   */
-  var polyfill = function(target, var_args) {
-    for (var i = 1; i < arguments.length; i++) {
-      var source = arguments[i];
-      if (!source) continue;
-      for (var key in source) {
-        if ($jscomp.owns(source, key)) target[key] = source[key];
-      }
-    }
-    return target;
-  };
-
-  return polyfill;
+  return orig || $jscomp.assign;
 }, 'es6', 'es3');
