@@ -36,6 +36,10 @@ public class TranspilationPasses {
     passes.add(es6RewriteModule);
   }
 
+  public static void addEs6ModuleToCjsPass(List<PassFactory> passes) {
+    passes.add(es6RewriteModuleToCjs);
+  }
+
   public static void addEs2018Passes(List<PassFactory> passes) {
     passes.add(rewriteObjRestSpread);
   }
@@ -113,6 +117,20 @@ public class TranspilationPasses {
         @Override
         protected HotSwapCompilerPass create(AbstractCompiler compiler) {
           return new Es6RewriteModules(compiler);
+        }
+
+        @Override
+        protected FeatureSet featureSet() {
+          return ES8_MODULES;
+        }
+      };
+
+  /** Rewrites ES6 modules */
+  private static final PassFactory es6RewriteModuleToCjs =
+      new PassFactory("es6RewriteModuleToCjs", true) {
+        @Override
+        protected CompilerPass create(AbstractCompiler compiler) {
+          return new Es6RewriteModulesToCommonJsModules(compiler);
         }
 
         @Override

@@ -18,6 +18,7 @@ package com.google.javascript.jscomp.deps;
 import com.google.common.base.Strings;
 import com.google.common.io.CharSource;
 import com.google.common.io.Files;
+import com.google.javascript.jscomp.transpile.BaseTranspiler;
 import com.google.javascript.jscomp.transpile.TranspileResult;
 import com.google.javascript.jscomp.transpile.Transpiler;
 import java.io.File;
@@ -33,6 +34,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public final class ClosureBundler {
 
   private final Transpiler transpiler;
+  private final Transpiler es6ModuleTranspiler;
 
   private final EvalMode mode;
   private final String sourceUrl;
@@ -48,8 +50,7 @@ public final class ClosureBundler {
   }
 
   public ClosureBundler(Transpiler transpiler) {
-    this(transpiler, EvalMode.NORMAL, null, "unknown_source",
-        new ConcurrentHashMap<String, String>());
+    this(transpiler, EvalMode.NORMAL, null, "unknown_source", new ConcurrentHashMap<>());
   }
 
   private ClosureBundler(Transpiler transpiler, EvalMode mode, String sourceUrl, String path,
@@ -59,6 +60,7 @@ public final class ClosureBundler {
     this.sourceUrl = sourceUrl;
     this.path = path;
     this.sourceMapCache = sourceMapCache;
+    this.es6ModuleTranspiler = BaseTranspiler.ES_MODULE_TO_CJS_TRANSPILER;
   }
 
   public final ClosureBundler useEval(boolean useEval) {
@@ -105,6 +107,8 @@ public final class ClosureBundler {
       CharSource content) throws IOException {
     if (info.isModule()) {
       mode.appendGoogModule(transpile(content.read()), out, sourceUrl);
+    } else if ("es6".equals(info.getLoadFlags().get("module"))) {
+      mode.appendTraditional(transpileEs6Module(content.read()), out, sourceUrl);
     } else {
       mode.appendTraditional(transpile(content.read()), out, sourceUrl);
     }
@@ -115,6 +119,7 @@ public final class ClosureBundler {
     if (!runtime.isEmpty()) {
       mode.appendTraditional(runtime, out, null);
     }
+    mode.appendTraditional(es6ModuleTranspiler.runtime(), out, null);
   }
 
   /**
@@ -125,10 +130,18 @@ public final class ClosureBundler {
     return Strings.nullToEmpty(sourceMapCache.get(path));
   }
 
-  private String transpile(String s) {
-    TranspileResult result = transpiler.transpile(Paths.get(path), s);
+  private String transpile(String s, Transpiler t) {
+    TranspileResult result = t.transpile(Paths.get(path), s);
     sourceMapCache.put(path, result.sourceMap());
     return result.transpiled();
+  }
+
+  private String transpile(String s) {
+    return transpile(s, transpiler);
+  }
+
+  private String transpileEs6Module(String s) {
+    return transpile(transpile(s, es6ModuleTranspiler));
   }
 
   private enum EvalMode {
@@ -172,6 +185,7 @@ public final class ClosureBundler {
     };
 
     abstract void appendTraditional(String s, Appendable out, String sourceUrl) throws IOException;
+
     abstract void appendGoogModule(String s, Appendable out, String sourceUrl) throws IOException;
   }
 
