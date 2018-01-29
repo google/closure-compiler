@@ -549,7 +549,7 @@ class StripCode implements CompilerPass {
 
       if (parent != null && parent.isName()) {
         Node grandparent = parent.getParent();
-        if (grandparent != null && grandparent.isVar()) {
+        if (grandparent != null && NodeUtil.isNameDeclaration(grandparent)) {
           // The call's return value is being used to initialize a newly
           // declared variable. We should leave the call intact for now.
           // That way, when the traversal reaches the variable declaration,

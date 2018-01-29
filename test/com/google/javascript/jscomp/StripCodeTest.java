@@ -281,16 +281,44 @@ public final class StripCodeTest extends CompilerTestCase {
     test("const logger = opt_logger || goog.debug.LogManager.getRoot();", "");
   }
 
-  public void testLoggerMethodCallByVariableType() {
+  public void testLoggerMethodCallByVariableType_var() {
     test("var x = goog.debug.Logger.getLogger('a.b.c'); y.info(a); x.info(a);",
          "y.info(a)");
   }
 
-  public void testSubPropertyAccessByVariableName() {
+  public void testLoggerMethodCallByVariableType_let() {
+    test("let x = goog.debug.Logger.getLogger('a.b.c'); y.info(a); x.info(a);",
+        "y.info(a)");
+  }
+
+  public void testLoggerMethodCallByVariableType_const() {
+    test("const x = goog.debug.Logger.getLogger('a.b.c'); y.info(a); x.info(a);",
+        "y.info(a)");
+  }
+
+  public void testSubPropertyAccessByVariableName_var() {
     test("var x, y = goog.debug.Logger.getLogger('a.b.c');" +
          "var logger = x;" +
          "var curlevel = logger.level_ ? logger.getLevel().name : 3;",
          "var x;var curlevel=null?null:3");
+  }
+
+  public void testSubPropertyAccessByVariableName_let() {
+    test(
+        lines(
+            "let x, y = goog.debug.Logger.getLogger('a.b.c');",
+            "let logger = x;",
+            "let curlevel = logger.level_ ? logger.getLevel().name : 3;"),
+        "let x; let curlevel=null?null:3");
+  }
+
+  public void testSubPropertyAccessByVariableName_const() {
+    test(
+        lines(
+            "const x = undefined, y = goog.debug.Logger.getLogger('a.b.c');",
+            "const logger = x;",
+            "const curlevel = logger.level_ ? logger.getLevel().name : 3;"),
+        "const x = undefined; const curlevel=null?null:3");
   }
 
   public void testPrefixedVariableName() {
