@@ -135,10 +135,10 @@ public final class ClosureBundler {
     EVAL {
       @Override
       void appendTraditional(String s, Appendable out, String sourceUrl) throws IOException {
-        out.append("(0,eval(\"");
+        out.append("eval(\"");
         EscapeMode.ESCAPED.append(s, out);
         appendSourceUrl(out, EscapeMode.ESCAPED, sourceUrl);
-        out.append("\"));\n");
+        out.append("\");\n");
       }
 
       @Override
