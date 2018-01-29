@@ -136,6 +136,16 @@ public final class FunctionArgumentInjectorTest extends TestCase {
             findModifiedParameters(parseFunction("function f(a){ { const a = 1; } }"))).isEmpty();
   }
 
+  public void testFindModifiedParameters14() {
+    assertThat(findModifiedParameters(parseFunction("function f(a){ for (a in []) {} }")))
+        .containsExactly("a");
+  }
+
+  public void testFindModifiedParameters15() {
+    assertThat(findModifiedParameters(parseFunction("function f(a){ for (a of []) {} }")))
+        .containsExactly("a");
+  }
+
   public void testMaybeAddTempsForCallArguments1() {
     // Parameters with side-effects must be executed
     // even if they aren't referenced.

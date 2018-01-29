@@ -262,7 +262,7 @@ class FunctionArgumentInjector {
         || type == Token.INC
         || type == Token.DEC
         || (NodeUtil.isAssignmentOp(parent) && parent.getFirstChild() == n)
-        || (parent.isForIn()));
+        || (NodeUtil.isEnhancedFor(parent)));
   }
 
   /**
