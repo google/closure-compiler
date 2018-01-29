@@ -1763,6 +1763,7 @@ public final class NodeUtil {
     }
   }
 
+  /** @see #getKnownValueType(Node) */
   public enum ValueType {
     UNDETERMINED,
     NULL,
@@ -3761,6 +3762,13 @@ public final class NodeUtil {
     return addingRoot;
   }
 
+  public static Node newDeclaration(Node lhs, @Nullable Node rhs, Token declarationType) {
+    if (rhs == null) {
+      return IR.declaration(lhs, declarationType);
+    }
+    return IR.declaration(lhs, rhs, declarationType);
+  }
+
   /**
    * Creates a node representing a qualified name.
    *
@@ -3798,13 +3806,6 @@ public final class NodeUtil {
     } while (endPos != -1);
 
     return node;
-  }
-
-  public static Node newDeclaration(Node lhs, @Nullable Node rhs, Token declarationType) {
-    if (rhs == null) {
-      return IR.declaration(lhs, declarationType);
-    }
-    return IR.declaration(lhs, rhs, declarationType);
   }
 
   /**
