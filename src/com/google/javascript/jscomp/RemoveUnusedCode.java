@@ -593,19 +593,28 @@ class RemoveUnusedCode implements CompilerPass {
     Node callee = callNode.getFirstChild();
     Node targetObject = callNode.getSecondChild();
     Node propertyDefinitions = targetObject.getNext();
-    // TODO(bradfordcsmith): It should be possible to remove the entire Object.defineProperties()
-    // call if the target object is otherwise unused and evaluating the property definitions object
-    // has no side-effects.
-    // TODO(bradfordcsmith): If the affected object is a variable reference, this should be
-    // considered a variable assignment similar to a goog.inherits() call, so it won't block removal
-    // of the variable.
-    traverseNode(callee, scope);
-    traverseNode(targetObject, scope);
-    if (propertyDefinitions.isObjectLit()) {
-      // TODO(bradfordcsmith): Consider restricting special handling of the properties literal to
-      // cases where the target object is a known class, prototype, or this.
-      traverseObjectDefinePropertiesLiteral(propertyDefinitions, scope);
+
+    if ((targetObject.isName() || isNameDotPrototype(targetObject))
+        && !NodeUtil.isExpressionResultUsed(callNode)) {
+      // NOTE: Object.defineProperties() returns its first argument, so if its return value is used
+      // that counts as a use of the targetObject.
+      Node nameNode = targetObject.isName() ? targetObject : targetObject.getFirstChild();
+      VarInfo varInfo = traverseNameNode(nameNode, scope);
+      RemovableBuilder builder = new RemovableBuilder();
+      // TODO(bradfordcsmith): Is it really necessary to traverse the callee
+      // (aka. Object.defineProperties)?
+      builder.addContinuation(new Continuation(callee, scope));
+      if (NodeUtil.mayHaveSideEffects(propertyDefinitions)) {
+        traverseNode(propertyDefinitions, scope);
+      } else {
+        builder.addContinuation(new Continuation(propertyDefinitions, scope));
+      }
+      varInfo.addRemovable(builder.buildClassSetupCall(callNode));
     } else {
+      // TODO(bradfordcsmith): Is it really necessary to traverse the callee
+      // (aka. Object.defineProperties)?
+      traverseNode(callee, scope);
+      traverseNode(targetObject, scope);
       traverseNode(propertyDefinitions, scope);
     }
   }
@@ -663,9 +672,18 @@ class RemoveUnusedCode implements CompilerPass {
     // Is this an object literal that is assigned directly to a 'prototype' property?
     if (isAssignmentToPrototype(objectLiteral.getParent())) {
       traversePrototypeLiteral(objectLiteral, scope);
+    } else if (isObjectDefinePropertiesSecondArgument(objectLiteral)) {
+      // TODO(bradfordcsmith): Consider restricting special handling of the properties literal to
+      // cases where the target object is a known class, prototype, or this.
+      traverseObjectDefinePropertiesLiteral(objectLiteral, scope);
     } else {
       traverseNonPrototypeObjectLiteral(objectLiteral, scope);
     }
+  }
+
+  private boolean isObjectDefinePropertiesSecondArgument(Node n) {
+    Node parent = n.getParent();
+    return NodeUtil.isObjectDefinePropertiesDefinition(parent) && parent.getLastChild() == n;
   }
 
   private void traverseNonPrototypeObjectLiteral(Node objectLiteral, Scope scope) {
@@ -806,7 +824,6 @@ class RemoveUnusedCode implements CompilerPass {
         } else {
           VanillaForNameDeclaration vanillaForNameDeclaration =
               new RemovableBuilder()
-                  .setAssignedValue(valueNode)
                   .addContinuation(new Continuation(valueNode, scope))
                   .buildVanillaForNameDeclaration(nameNode);
           varInfo.addRemovable(vanillaForNameDeclaration);
@@ -834,7 +851,7 @@ class RemoveUnusedCode implements CompilerPass {
           builder.addContinuation(new Continuation(valueNode, scope));
         }
         NameDeclarationStatement removable =
-            builder.setAssignedValue(valueNode).buildNameDeclarationStatement(declarationStatement);
+            builder.buildNameDeclarationStatement(declarationStatement);
         varInfo.addRemovable(removable);
       }
     }
@@ -924,7 +941,6 @@ class RemoveUnusedCode implements CompilerPass {
   }
 
   private void traverseRemovableAssignValue(Node valueNode, RemovableBuilder builder, Scope scope) {
-    builder.setAssignedValue(valueNode);
     if (NodeUtil.mayHaveSideEffects(valueNode)
         || NodeUtil.isExpressionResultUsed(valueNode.getParent())) {
       traverseNode(valueNode, scope);
@@ -1520,7 +1536,6 @@ class RemoveUnusedCode implements CompilerPass {
 
     private final List<Continuation> continuations;
     @Nullable private final String propertyName;
-    @Nullable private final Node assignedValue;
     private final boolean isPrototypeDotPropertyReference;
     private final boolean isThisDotPropertyReference;
 
@@ -1530,7 +1545,6 @@ class RemoveUnusedCode implements CompilerPass {
     Removable(RemovableBuilder builder) {
       continuations = builder.continuations;
       propertyName = builder.propertyName;
-      assignedValue = builder.assignedValue;
       isPrototypeDotPropertyReference = builder.isPrototypeDotPropertyReference;
       isThisDotPropertyReference = builder.isThisDotPropertyReference;
     }
@@ -1640,17 +1654,11 @@ class RemoveUnusedCode implements CompilerPass {
     final List<Continuation> continuations = new ArrayList<>();
 
     @Nullable String propertyName = null;
-    @Nullable public Node assignedValue = null;
     boolean isPrototypeDotPropertyReference = false;
     boolean isThisDotPropertyReference = false;
 
     RemovableBuilder addContinuation(Continuation continuation) {
       continuations.add(continuation);
-      return this;
-    }
-
-    RemovableBuilder setAssignedValue(@Nullable Node assignedValue) {
-      this.assignedValue = assignedValue;
       return this;
     }
 
@@ -1701,12 +1709,10 @@ class RemoveUnusedCode implements CompilerPass {
 
     Assign buildNamedPropertyAssign(Node assignNode, Node propertyNode) {
       this.propertyName = propertyNode.getString();
-      checkNotNull(assignedValue);
       return new Assign(this, assignNode, Kind.NAMED_PROPERTY, propertyNode);
     }
 
     Assign buildComputedPropertyAssign(Node assignNode, Node propertyNode) {
-      checkNotNull(assignedValue);
       return new Assign(this, assignNode, Kind.COMPUTED_PROPERTY, propertyNode);
     }
 
@@ -2313,9 +2319,29 @@ class RemoveUnusedCode implements CompilerPass {
     @Override
     public void removeInternal(AbstractCompiler compiler) {
       Node parent = callNode.getParent();
+
+      Node replacement = null;
+      // Need to keep call args that have side effects.
+      // Easiest thing to do is break apart the call node as we go.
+      // First child is the callee (aka. Object.defineProperties or equivalent)
+      callNode.removeFirstChild();
+      for (Node arg = callNode.getLastChild(); arg != null; arg = callNode.getLastChild()) {
+        arg.detach();
+        if (NodeUtil.mayHaveSideEffects(arg)) {
+          if (replacement == null) {
+            replacement = arg;
+          } else {
+            replacement = IR.comma(arg, replacement).srcref(callNode);
+          }
+        } else {
+          NodeUtil.markFunctionsDeleted(arg, compiler);
+        }
+      }
       // NOTE: The call must either be its own statement or the LHS of a comma expression,
       // because it doesn't have a meaningful return value.
-      if (parent.isExprResult()) {
+      if (replacement != null) {
+        replaceNodeWith(callNode, replacement);
+      } else if (parent.isExprResult()) {
         NodeUtil.deleteNode(parent, compiler);
       } else {
         // `(goog.inherits(A, B), something)` -> `something`
@@ -2324,6 +2350,13 @@ class RemoveUnusedCode implements CompilerPass {
         compiler.reportChangeToEnclosingScope(parent);
         parent.replaceWith(rhs.detach());
       }
+    }
+
+    @Override
+    public boolean preventsRemovalOfVariableWithNonLocalValueOrPrototype() {
+      // If we aren't sure where X comes from and what aliases it might have, we cannot be sure
+      // it's safe to remove the class setup for it.
+      return true;
     }
   }
 

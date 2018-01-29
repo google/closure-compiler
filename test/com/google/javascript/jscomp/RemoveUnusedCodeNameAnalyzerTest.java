@@ -1982,6 +1982,11 @@ public final class RemoveUnusedCodeNameAnalyzerTest extends TypeICompilerTestCas
     testSame("function Foo() {} goog$addSingletonGetter(Foo); Foo.getInstance();");
   }
 
+  public void testObjectDefineProperty() {
+    // TODO(bradfordcsmith): Remove Object.defineProperty() like we do Object.defineProperties().
+    testSame("var a = {}; Object.defineProperty(a, 'prop', {value: 5});");
+  }
+
   public void testObjectDefinePropertiesOnNamespaceThatEscapes() {
     testSame("var a = doThing1(); Object.defineProperties(a, {'prop': {value: 5}});");
   }
@@ -1999,25 +2004,24 @@ public final class RemoveUnusedCodeNameAnalyzerTest extends TypeICompilerTestCas
     testSame("var b = 5; var a = {}; a.prop = b; use(a.prop);");
   }
 
-  // TODO(b/66971163): implement removal of defineProperties() when object is unused
-  public void disabledTestUnanalyzableObjectDefineProperties() {
-    testSame("var a = {}; Object.defineProperties(a, externfoo);");
+  public void testUnanalyzableObjectDefineProperties() {
+    test("var a = {}; Object.defineProperties(a, externfoo);", "");
   }
 
-  // TODO(b/66971163): implement removal of defineProperties() when object is unused
-  public void disabledTestObjectDefinePropertiesOnNamespace1() {
+  public void testObjectDefinePropertiesOnNamespace1() {
     testSame("var a = {}; Object.defineProperties(a, {prop: {value: 5}}); use(a.prop);");
     test("var a = {}; Object.defineProperties(a, {prop: {value: 5}});", "");
   }
 
-  // TODO(b/66971163): implement removal of defineProperties() when object is unused
-  public void disabledTestObjectDefinePropertiesOnNamespace2() {
-    // Note that since we try to remove the entire Object.defineProperties call whole hog,
-    // we can't remove a single property from the object literal.
-    testSame(
+  public void testObjectDefinePropertiesOnNamespace2() {
+    test(
         lines(
             "var a = {};",
             "Object.defineProperties(a, {p1: {value: 5}, p2: {value: 3} });",
+            "use(a.p1);"),
+        lines(
+            "var a = {};",
+            "Object.defineProperties(a, {p1: {value: 5}                 });",
             "use(a.p1);"));
 
     test(
@@ -2031,8 +2035,7 @@ public final class RemoveUnusedCodeNameAnalyzerTest extends TypeICompilerTestCas
     testSame("var a = {}; var z = Object.defineProperties(a, {'prop': {value: 5}}); use(z);");
   }
 
-  // TODO(b/66971163): implement removal of defineProperties() when object is unused
-  public void disabledTestObjectDefinePropertiesOnNamespace3() {
+  public void testObjectDefinePropertiesOnNamespace3() {
     testSame(
         "var b = 5;"
             + "var a = {};"
@@ -2047,17 +2050,16 @@ public final class RemoveUnusedCodeNameAnalyzerTest extends TypeICompilerTestCas
         "var b = 5; use(b);");
   }
 
-  // TODO(b/66971163): implement removal of defineProperties() when object is unused
-  public void disabledTestObjectDefinePropertiesOnNamespace4() {
+  public void testObjectDefinePropertiesOnNamespace4() {
     test(
-        "function b() { alert('hello'); };"
-            + "var a = {};"
-            + "Object.defineProperties(a, {prop: {value: b()}});",
-        "function b() { alert('hello'); }; b()");
+        lines(
+            "function b() { alert('hello'); };",
+            "var a = {};",
+            "Object.defineProperties(a, {prop: {value: b()}});"),
+        "function b() { alert('hello'); }; ({prop: {value: b()}});");
   }
 
-  // TODO(b/66971163): implement removal of defineProperties() when object is unused
-  public void disabledTestObjectDefinePropertiesOnNamespace5() {
+  public void testObjectDefinePropertiesOnNamespace5() {
     test(
         lines(
             "function b() { alert('hello'); };", // preserve newline
@@ -2068,17 +2070,15 @@ public final class RemoveUnusedCodeNameAnalyzerTest extends TypeICompilerTestCas
             "function b() { alert('hello'); };", // preserve newline
             "function c() { alert('world'); };",
             "           ",
-            "b(); c();"));
+            "                          ({p1: {value: b()}, p2: {value: c()}});"));
   }
 
-  // TODO(b/66971163): implement removal of defineProperties() when object is unused
-  public void disabledTestObjectDefinePropertiesOnConstructor() {
+  public void testObjectDefinePropertiesOnConstructor() {
     testSame("function Foo() {} Object.defineProperties(Foo, {prop: {value: 5}}); use(Foo.prop);");
     test("function Foo() {} Object.defineProperties(Foo, {prop: {value: 5}});", "");
   }
 
-  // TODO(b/66971163): implement removal of defineProperties() when object is unused
-  public void disabledTestObjectDefinePropertiesOnPrototype1() {
+  public void testObjectDefinePropertiesOnPrototype1() {
     testSame(
         "function Foo() {}"
             + "Object.defineProperties(Foo.prototype, {prop: {value: 5}});"
@@ -2087,8 +2087,7 @@ public final class RemoveUnusedCodeNameAnalyzerTest extends TypeICompilerTestCas
     test("function Foo() {} Object.defineProperties(Foo.prototype, {prop: {value: 5}});", "");
   }
 
-  // TODO(b/66971163): implement removal of defineProperties() when object is unused
-  public void disabledTestObjectDefinePropertiesOnPrototype2() {
+  public void testObjectDefinePropertiesOnPrototype2() {
     test(
         lines(
             "var b = 5;",
@@ -2098,18 +2097,16 @@ public final class RemoveUnusedCodeNameAnalyzerTest extends TypeICompilerTestCas
         "var b = 5; use(b);");
   }
 
-  // TODO(b/66971163): implement removal of defineProperties() when object is unused
-  public void disabledTestObjectDefinePropertiesOnPrototype3() {
+  public void testObjectDefinePropertiesOnPrototype3() {
     test(
         lines(
             "var b = function() {};",
             "function Foo() {}",
             "Object.defineProperties(Foo.prototype, {prop: {value: b()}});"),
-        "var b = function() {}; b();");
+        "var b = function() {}; ({prop: {value: b()}});");
   }
 
-  // TODO(b/66971163): implement removal of defineProperties() when object is unused
-  public void disabledTestObjectDefineGetters() {
+  public void testObjectDefineGetters() {
     test("function Foo() {} Object.defineProperties(Foo, {prop: {get: function() {}}});", "");
 
     test(
@@ -2117,8 +2114,7 @@ public final class RemoveUnusedCodeNameAnalyzerTest extends TypeICompilerTestCas
         "");
   }
 
-  // TODO(b/66971163): implement removal of defineProperties() when object is unused
-  public void disabledTestObjectDefineSetters() {
+  public void testObjectDefineSetters() {
     test("function Foo() {} Object.defineProperties(Foo, {prop: {set: function() {}}});", "");
 
     test(
@@ -2126,8 +2122,7 @@ public final class RemoveUnusedCodeNameAnalyzerTest extends TypeICompilerTestCas
         "");
   }
 
-  // TODO(b/66971163): implement removal of defineProperties() when object is unused
-  public void disabledTestObjectDefineSetters_global() {
+  public void testObjectDefineSetters_global() {
     test(
         lines(
             "function Foo() {} ",
