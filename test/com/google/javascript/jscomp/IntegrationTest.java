@@ -4868,6 +4868,53 @@ public final class IntegrationTest extends IntegrationTestCase {
         "alert(8)");
   }
 
+  // NOTE(dimvar): the jsdocs are ignored in the comparison of the before/after ASTs. It'd be nice
+  // to test the jsdocs as well, but AFAICT we can only do that in CompilerTestCase, not here.
+  public void testRestParametersWithGenerics() {
+    CompilerOptions options = new CompilerOptions();
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    options.setCheckTypes(true);
+    test(
+        options,
+        lines(
+            "/**",
+            " * @constructor",
+            " * @template T",
+            " */",
+            "function Foo() {}",
+            "/**",
+            " * @template T",
+            " * @param {...function(!Foo<T>)} x",
+            " */",
+            "function f(...x) {",
+            "  return 123;",
+            "}"),
+        lines(
+            "/**",
+            " * @constructor",
+            " * @template T",
+            " */",
+            "function Foo() {}",
+            "/**",
+            " * @param {...function(!Foo<T>)} x",
+            " * @template T",
+            " */",
+            "function f(x) {",
+            "  var $jscomp$restParams = [];",
+            "  for (var $jscomp$restIndex = 0;",
+            "       $jscomp$restIndex < arguments.length;",
+            "       ++$jscomp$restIndex) {",
+            "         $jscomp$restParams[$jscomp$restIndex - 0] =",
+            "        arguments[$jscomp$restIndex];",
+            "       }",
+            "  {",
+            "    var /** @type {!Array<function(!Foo<?>)>} */ x$0 = $jscomp$restParams;",
+            "    return 123;",
+            "  }",
+            "}"));
+  }
+
   public void testDefaultParameters() {
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
