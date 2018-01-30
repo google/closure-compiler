@@ -2022,39 +2022,6 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         "parameter y does not appear in <anonymous>'s parameter list");
   }
 
-  public void testRestParameters() {
-    testTypes(lines(
-        "/**",
-        " * @template T",
-        " * @param {...number} x",
-        " */",
-        "function f(...x) {",
-        "  var /** string */ s = x[0];",
-        "}"),
-        lines(
-            "initializing variable",
-            "found   : number",
-            "required: string"));
-  }
-
-  // Test that when transpiling we don't use T in the body of f; it would cause a spurious
-  // unknown-type warning.
-  public void testRestParametersWithGenericsNoWarning() {
-    testTypes(lines(
-        "/**",
-        " * @constructor",
-        " * @template T",
-        " */",
-        "function Foo() {}",
-        "/**",
-        " * @template T",
-        " * @param {...!Foo<T>} x",
-        " */",
-        "function f(...x) {",
-        "  return 123;",
-        "}"));
-  }
-
   public void testPrintFunctionName1() {
     // Ensures that the function name is pretty.
     testTypes(

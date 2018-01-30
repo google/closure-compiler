@@ -19,7 +19,6 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
-import com.google.javascript.jscomp.NodeUtil.Visitor;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
@@ -199,10 +198,10 @@ public final class EarlyEs6ToEs3Converter implements Callback, HotSwapCompilerPa
     // Make sure rest parameters are typechecked
     JSTypeExpression type = null;
     JSDocInfo info = restParam.getJSDocInfo();
-    JSDocInfo functionInfo = NodeUtil.getBestJSDocInfo(paramList.getParent());
     if (info != null) {
       type = info.getType();
     } else {
+      JSDocInfo functionInfo = NodeUtil.getBestJSDocInfo(paramList.getParent());
       if (functionInfo != null) {
         type = functionInfo.getParameterType(paramName);
       }
@@ -234,9 +233,6 @@ public final class EarlyEs6ToEs3Converter implements Callback, HotSwapCompilerPa
           typeNode.getToken() == Token.ELLIPSIS
               ? typeNode.getFirstChild().cloneTree()
               : typeNode.cloneTree();
-      if (functionInfo != null) {
-        memberType = replaceTypeVariablesWithUnknown(functionInfo, memberType);
-      }
       arrayType.addChildToFront(
           new Node(Token.BLOCK, memberType).useSourceInfoIfMissingFrom(typeNode));
       JSDocInfoBuilder builder = new JSDocInfoBuilder(false);
@@ -262,22 +258,6 @@ public final class EarlyEs6ToEs3Converter implements Callback, HotSwapCompilerPa
     // need to make sure changes don't invalidate the JSDoc annotations.
     // Therefore we keep the parameter list the same length and only initialize
     // the values if they are set to undefined.
-  }
-
-  private Node replaceTypeVariablesWithUnknown(JSDocInfo functionJsdoc, Node typeAst) {
-    final List<String> typeVars = functionJsdoc.getTemplateTypeNames();
-    if (typeVars.isEmpty()) {
-      return typeAst;
-    }
-    NodeUtil.visitPreOrder(typeAst, new Visitor(){
-      @Override
-      public void visit(Node n) {
-        if (n.isString() && typeVars.contains(n.getString())) {
-          n.getParent().replaceChild(n, new Node(Token.QMARK));
-        }
-      }
-    });
-    return typeAst;
   }
 
   /**
