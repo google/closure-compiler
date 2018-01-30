@@ -24,7 +24,7 @@
  *            icon: (string|undefined),
  *            requireInteraction: (boolean|undefined),
  *            actions: (!Array<!NotificationAction>|undefined),
- *            data: *}}
+ *            data: (*|undefined)}}
  * TODO(user): change the type of data to a serializable object
  * (https://html.spec.whatwg.org/multipage/structured-data.html).
  *
