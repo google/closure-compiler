@@ -1369,6 +1369,13 @@ final class TypedScopeCreator implements ScopeCreator {
         if (rValue != null) {
           JSType rValueType = getDeclaredRValueType(lValue, rValue);
           if (rValueType != null) {
+            // Treat @const-annotated aliases like @constructor/@interface if RHS has instance type
+            if (lValue.isQualifiedName()
+                && rValueType.isFunctionType()
+                && rValueType.toMaybeFunctionType().hasInstanceType()) {
+              FunctionType functionType = rValueType.toMaybeFunctionType();
+              typeRegistry.declareType(lValue.getQualifiedName(), functionType.getInstanceType());
+            }
             return rValueType;
           }
         }

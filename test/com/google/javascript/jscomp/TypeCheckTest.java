@@ -417,6 +417,19 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
             "required: string"));
   }
 
+  public void testTemplatizedObjectOnWindow2() throws Exception {
+    testTypesWithExtraExterns(
+        "/** @const */ window.Object = Object;",
+        LINE_JOINER.join(
+            "/** @param {!window.Object<number>} a",
+            " *  @return {string}",
+            " */ var f = function(a) { return a[0]; };"),
+        LINE_JOINER.join(
+            "inconsistent return type",
+            "found   : number",
+            "required: string"));
+  }
+
   public void testTemplatizedObject2() {
     testTypes("/** @param {!Object<string,number>} a\n" +
         "* @return {string}\n" +
@@ -5697,6 +5710,77 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         "inconsistent return type\n" +
         "found   : number\n" +
         "required: (FooAlias2|null)");
+  }
+
+  public void testConstAliasedTypeCastInferredCorrectly1() {
+    testTypes(
+        "// no externs",
+        lines(
+            "/** @constructor */",
+            "function Foo() {}",
+            "/** @return {number} */",
+            "Foo.prototype.foo = function() {};",
+            "",
+            "/** @const */ var FooAlias = Foo;",
+            "",
+            "var x = /** @type {!FooAlias} */ ({});",
+            "var /** null */ n = x.foo();"),
+        lines("initializing variable",
+            "found   : number",
+            "required: null"),
+        /* isError= */ false);
+  }
+
+  public void testConstAliasedTypeCastInferredCorrectly2() {
+    testTypes(
+        "// no externs",
+        lines(
+            "/** @constructor */",
+            "function Foo() {}",
+            "/** @return {number} */",
+            "Foo.prototype.foo = function() {};",
+            "",
+            "var ns = {};",
+            "/** @const */ ns.FooAlias = Foo;",
+            "",
+            "var x = /** @type {!ns.FooAlias} */ ({});",
+            "var /** null */ n = x.foo();"),
+        lines("initializing variable",
+            "found   : number",
+            "required: null"),
+        /* isError= */ false);
+  }
+
+  public void testConstructorAliasedTypeCastInferredCorrectly() {
+    testTypes(
+        "// no externs",
+        lines(
+            "/** @constructor */",
+            "function Foo() {}",
+            "/** @return {number} */",
+            "Foo.prototype.foo = function() {};",
+            "",
+            "/** @constructor */ var FooAlias = Foo;",
+            "",
+            "var x = /** @type {!FooAlias} */ ({});",
+            "var /** null */ n = x.foo();"),
+        lines("initializing variable",
+            "found   : number",
+            "required: null"),
+        /* isError= */ false);
+  }
+
+  public void testConstStringKeyDoesntCrash() {
+    testTypes(
+        "// no externs",
+        lines(
+            "/** @constructor */",
+            "function Foo() {}",
+            "var ns = {",
+            "  /** @const */ FooAlias: Foo",
+            "};"),
+        (String) null,
+        /* isError= */ false);
   }
 
   public void testClosure1() {
