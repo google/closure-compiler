@@ -578,6 +578,21 @@ public class InlineFunctionsTest extends CompilerTestCase {
         "foo(2,3,x())");
   }
 
+  /** See b/72513540 */
+  public void testDestructuringAssignInFunction() {
+    test(
+        lines(
+            "function foo(a) {",
+            "  [a] = [1];",
+            "}",
+            "foo(2);"),
+        lines(
+            "{",
+            "  var a$jscomp$inline_0 = 2;",
+            "  [a$jscomp$inline_0] = [1];",
+            "}"));
+  }
+
   public void testNoInlineIfParametersModified1() {
     // Assignment
     test("function f(x){return x=1}f(undefined)",
