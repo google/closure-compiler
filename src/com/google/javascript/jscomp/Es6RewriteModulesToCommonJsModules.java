@@ -161,6 +161,8 @@ public class Es6RewriteModulesToCommonJsModules implements CompilerPass {
       Var var = s.getVar(nameNode.getString());
 
       if (var != null
+          // variables added implicitly to the scope, like arguments, have a null name node
+          && var.getNameNode() != null
           && NodeUtil.isImportedName(var.getNameNode())
           && nameNode != var.getNameNode()) {
         return getNameOfImportedValue(var.getNameNode());

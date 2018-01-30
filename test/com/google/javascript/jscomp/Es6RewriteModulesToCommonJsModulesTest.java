@@ -401,4 +401,21 @@ public final class Es6RewriteModulesToCommonJsModulesTest extends CompilerTestCa
             "  var module$other = $$require('other');",
             "}, 'testcode', ['other']);"));
   }
+
+  public void testExportWithArguments() {
+    test(
+        lines("export default function f() { return arguments[1]; }"),
+        lines(
+            "$jscomp.registerAndLoadModule(function($$require, $$exports, $$module) {",
+            "  Object.defineProperties($$exports, {",
+            "    default: {",
+            "      enumerable: true,",
+            "      get: function() {",
+            "        return f;",
+            "      },",
+            "    },",
+            "  });",
+            "function f() { return arguments[1]; }",
+            "}, 'testcode', []);"));
+  }
 }
