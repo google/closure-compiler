@@ -20,8 +20,8 @@ import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.rhino.Node;
 
 /**
- * Tests for {@link RemoveUnusedCode} functionality that was previously implemented in {@link
- * NameAnalyzer}.
+ * Tests {@link RemoveUnusedCode} for functionality that was previously implemented in NameAnalyzer
+ * aka smartNamePass, which has now been removed.
  */
 
 public final class RemoveUnusedCodeNameAnalyzerTest extends TypeICompilerTestCase {

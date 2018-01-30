@@ -2044,13 +2044,13 @@ public final class IntegrationTest extends IntegrationTestCase {
     test(options, code, "");
   }
 
-  public void testSmartNamePass() {
+  public void testRemoveUnusedClass() {
     CompilerOptions options = createCompilerOptions();
-    String code = "function Foo() { this.bar(); } " +
-        "Foo.prototype.bar = function() { return Foo(); };";
-    testSame(options, code);
-
-    options.setSmartNameRemoval(true);
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    String code =
+        lines(
+            "/** @constructor */ function Foo() { this.bar(); }",
+            "Foo.prototype.bar = function() { return new Foo(); };");
     test(options, code, "");
   }
 
@@ -3577,20 +3577,26 @@ public final class IntegrationTest extends IntegrationTestCase {
   // http://blickly.github.io/closure-compiler-issues/#284
   public void testIssue284() {
     CompilerOptions options = createCompilerOptions();
-    options.setSmartNameRemoval(true);
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     test(
         options,
-        "var goog = {};"
-        + "goog.inherits = function(x, y) {};"
-        + "var ns = {};"
-        + "/** @constructor */"
-        + "ns.PageSelectionModel = function() {};"
-        + "/** @constructor */"
-        + "ns.PageSelectionModel.FooEvent = function() {};"
-        + "/** @constructor */"
-        + "ns.PageSelectionModel.SelectEvent = function() {};"
-        + "goog.inherits(ns.PageSelectionModel.ChangeEvent,"
-        + "    ns.PageSelectionModel.FooEvent);",
+        lines(
+            "var goog = {};",
+            "goog.inherits = function(x, y) {};",
+            "var ns = {};",
+            "/**",
+            " * @constructor",
+            " * @extends {ns.PageSelectionModel.FooEvent}",
+            " */",
+            "ns.PageSelectionModel.ChangeEvent = function() {};",
+            "/** @constructor */",
+            "ns.PageSelectionModel = function() {};",
+            "/** @constructor */",
+            "ns.PageSelectionModel.FooEvent = function() {};",
+            "/** @constructor */",
+            "ns.PageSelectionModel.SelectEvent = function() {};",
+            "goog.inherits(ns.PageSelectionModel.ChangeEvent,",
+            "    ns.PageSelectionModel.FooEvent);"),
         "");
   }
 
@@ -3832,16 +3838,16 @@ public final class IntegrationTest extends IntegrationTestCase {
     test(options, code, "_.f = function() { return 3; }; _.x = _.f;");
   }
 
-
   public void testBrokenNameSpace() {
     CompilerOptions options = createCompilerOptions();
-    String code = "var goog; goog.provide('i.am.on.a.Horse');" +
-                  "i.am.on.a.Horse = function() {};" +
-                  "i.am.on.a.Horse.prototype.x = function() {};" +
-                  "i.am.on.a.Boat.prototype.y = function() {}";
-    options.setClosurePass(true);
-    options.setCollapsePropertiesLevel(PropertyCollapseLevel.ALL);
-    options.setSmartNameRemoval(true);
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    String code =
+        lines(
+            "var goog; goog.provide('i.am.on.a.Horse');",
+            "i.am.on.a.Horse = function() {};",
+            "i.am.on.a.Horse.prototype.x = function() {};",
+            "i.am.on.a.Boat = function() {};",
+            "i.am.on.a.Boat.prototype.y = function() {}");
     test(options, code, "");
   }
 

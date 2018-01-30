@@ -57,7 +57,17 @@ public final class InlinePropertiesTest extends TypeICompilerTestCase {
   protected CompilerPass getProcessor(Compiler compiler) {
     final CompilerPass pass =  new InlineProperties(compiler);
     if (runSmartNameRemoval) {
-      final CompilerPass removalPass = new NameAnalyzer(compiler, true, null);
+      final CompilerPass removalPass =
+          new RemoveUnusedCode.Builder(compiler)
+              .removeLocalVars(true)
+              .removeGlobals(true)
+              .preserveFunctionExpressionNames(true)
+              .removeUnusedPrototypeProperties(true)
+              .allowRemovalOfExternProperties(false)
+              .removeUnusedThisProperties(true)
+              .removeUnusedObjectDefinePropertiesDefinitions(true)
+              .removeUnusedConstructorProperties(true)
+              .build();
       return new CompilerPass(){
 
         @Override

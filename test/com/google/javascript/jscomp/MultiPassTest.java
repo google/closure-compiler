@@ -16,12 +16,10 @@
 
 package com.google.javascript.jscomp;
 
-import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES5;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES8_MODULES;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
-import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -141,14 +139,6 @@ public final class MultiPassTest extends CompilerTestCase {
     addInlineVariables();
     addPeephole();
     test("var x = 1, y = x, z = x + y;", "var z = 2;");
-  }
-
-  public void testTwoOptimLoopsNoCrash() {
-    passes = new ArrayList<>();
-    addInlineVariables();
-    addSmartNamePass();
-    addInlineVariables();
-    test("var x = '';", "");
   }
 
   public void testDestructuringAndArrowFunction() {
@@ -434,28 +424,6 @@ public final class MultiPassTest extends CompilerTestCase {
           @Override
           protected FeatureSet featureSet() {
             return ES8_MODULES;
-          }
-        });
-  }
-
-  private void addSmartNamePass() {
-    passes.add(
-        new PassFactory("smartNamePass", true) {
-          @Override
-          protected CompilerPass create(final AbstractCompiler compiler) {
-            return new CompilerPass() {
-              @Override
-              public void process(Node externs, Node root) {
-                NameAnalyzer na = new NameAnalyzer(compiler, false, null);
-                na.process(externs, root);
-                na.removeUnreferenced();
-              }
-            };
-          }
-
-          @Override
-          protected FeatureSet featureSet() {
-            return ES5;
           }
         });
   }

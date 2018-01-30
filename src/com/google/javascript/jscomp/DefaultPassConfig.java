@@ -27,10 +27,12 @@ import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES8;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES8_MODULES;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES_NEXT;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.TYPESCRIPT;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.io.Files;
 import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
 import com.google.javascript.jscomp.AbstractCompiler.MostRecentTypechecker;
 import com.google.javascript.jscomp.CompilerOptions.ExtractPrototypeMemberDeclarationsMode;
@@ -58,6 +60,8 @@ import com.google.javascript.jscomp.parsing.ParserRunner;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -740,9 +744,10 @@ public final class DefaultPassConfig extends PassConfig {
       passes.add(chainCalls);
     }
 
-    if (options.smartNameRemoval || options.reportPath != null) {
+    if (options.smartNameRemoval) {
       passes.addAll(getCodeRemovingPasses());
-      passes.add(smartNamePass);
+      // TODO(b/66971163): Remove this early loop or rename the option that enables it
+      // to something more appropriate.
     }
 
     // This needs to come after the inline constants pass, which is run within
@@ -831,12 +836,6 @@ public final class DefaultPassConfig extends PassConfig {
       if (shouldRunRemoveUnusedCode()) {
         passes.add(removeUnusedCodeOnce);
       }
-    }
-
-    // Running this pass again is required to have goog.events compile down to
-    // nothing when compiled on its own.
-    if (options.smartNameRemoval) {
-      passes.add(smartNamePass2);
     }
 
     if (options.collapseAnonymousFunctions) {
@@ -2718,46 +2717,32 @@ public final class DefaultPassConfig extends PassConfig {
     }
   };
 
-  private final PassFactory initNameAnalyzeReport = new PassFactory("initNameAnalyzeReport", true) {
-     @Override
-     protected CompilerPass create(final AbstractCompiler compiler) {
-       return new CompilerPass() {
-         @Override
-         public void process(Node externs, Node root) {
-           NameAnalyzer.createEmptyReport(compiler, options.reportPath);
-         }
-       };
-     }
+  static final DiagnosticType REPORT_PATH_IO_ERROR =
+      DiagnosticType.error(
+          "JSC_REPORT_PATH_IO_ERROR", "Error writing compiler report to {0}:\n{1}");
 
-     @Override
-     protected FeatureSet featureSet() {
-       return FeatureSet.latest();
-     }
-  };
-
-  private final PassFactory smartNamePass =
-      new PassFactory(PassNames.SMART_NAME_PASS, true) {
+  // TODO(b/66971163): Remove this along with options.reportPath
+  private final PassFactory initNameAnalyzeReport =
+      new PassFactory("initNameAnalyzeReport", true) {
         @Override
         protected CompilerPass create(final AbstractCompiler compiler) {
-          return new NameAnalyzer(compiler, true, options.reportPath);
+          return new CompilerPass() {
+            @Override
+            public void process(Node externs, Node root) {
+              checkNotNull(options.reportPath);
+              try {
+                Files.write("", new File(options.reportPath), UTF_8);
+              } catch (IOException e) {
+                compiler.report(
+                    JSError.make(REPORT_PATH_IO_ERROR, options.reportPath, e.getMessage()));
+              }
+            }
+          };
         }
 
         @Override
-        public FeatureSet featureSet() {
-          return ES5;
-        }
-      };
-
-  private final PassFactory smartNamePass2 =
-      new PassFactory(PassNames.SMART_NAME_PASS, true) {
-        @Override
-        protected CompilerPass create(final AbstractCompiler compiler) {
-          return new NameAnalyzer(compiler, true, null);
-        }
-
-        @Override
-        public FeatureSet featureSet() {
-          return ES5;
+        protected FeatureSet featureSet() {
+          return FeatureSet.latest();
         }
       };
 

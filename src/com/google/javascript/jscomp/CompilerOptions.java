@@ -2255,7 +2255,14 @@ public class CompilerOptions implements Serializable {
   }
 
   public void setSmartNameRemoval(boolean smartNameRemoval) {
+    // TODO(bradfordcsmith): Remove the smart name removal option.
     this.smartNameRemoval = smartNameRemoval;
+    if (smartNameRemoval) {
+      // To get the effect this option used to have we need to enable these options.
+      // Don't disable them here if they were set explicitly, though.
+      this.removeUnusedVars = true;
+      this.removeUnusedPrototypeProperties = true;
+    }
   }
 
   public void setExtraSmartNameRemoval(boolean smartNameRemoval) {
