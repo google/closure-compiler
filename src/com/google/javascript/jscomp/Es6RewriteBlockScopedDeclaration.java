@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.common.base.Predicate;
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.HashMultimap;
@@ -23,6 +25,7 @@ import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Table;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
+import com.google.javascript.jscomp.parsing.JsDocInfoParser;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.IR;
@@ -63,7 +66,7 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
   private static final FeatureSet transpiledFeatures =
       FeatureSet.BARE_MINIMUM.with(Feature.LET_DECLARATIONS, Feature.CONST_DECLARATIONS);
 
-  public Es6RewriteBlockScopedDeclaration(AbstractCompiler compiler) {
+  Es6RewriteBlockScopedDeclaration(AbstractCompiler compiler) {
     this.compiler = compiler;
   }
 
@@ -310,6 +313,9 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
         return;
       }
 
+      // include definition of $jscomp.assign(targetObject, sourceObject);
+      compiler.ensureLibraryInjected("es6/util/assign", /* force */ false);
+
       for (Node loopNode : loopObjectMap.keySet()) {
         // Introduce objects to reflect the captured scope variables.
         // Fields are initially left as undefined to avoid cases like:
@@ -317,16 +323,26 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
         // They are initialized lazily by changing declarations into assignments
         // later.
         LoopObject object = loopObjectMap.get(loopNode);
-        Node objectLitNextIteration = IR.objectlit();
-        for (Var var : object.vars) {
-          objectLitNextIteration.addChildToBack(
-              IR.stringKey(var.name, IR.getprop(IR.name(object.name), IR.string(var.name))));
-        }
 
-        Node updateLoopObject = IR.assign(IR.name(object.name), objectLitNextIteration);
+        // Put `var $jscomp$loop$0 = {};` just before the loop
         Node objectLit =
             IR.var(IR.name(object.name), IR.objectlit()).useSourceInfoFromForTree(loopNode);
         addNodeBeforeLoop(objectLit, loopNode);
+
+        // create a new loop object that is a shallow copy of the previous loop object
+        // It must be cast to an unknown type to prevent NTI from complaining that properties
+        // referenced on it later on in the code were never set.
+        // TODO(bradfordcsmith): Remove the cast when this pass is moved after type checking.
+        // `$jscomp$loop$0 = /** @type {?} */ ($jscomp.assign({}, $jscomp$loop$0))`
+        Node updateLoopObject =
+            IR.assign(
+                IR.name(object.name),
+                IR.cast(
+                    NodeUtil.newCallNode(
+                        NodeUtil.newQName(compiler, "$jscomp.assign"),
+                        IR.objectlit(),
+                        IR.name(object.name)),
+                    createUnknownTypeJsDocInfo()));
         if (loopNode.isVanillaFor()) { // For
           // The initializer is pulled out and placed prior to the loop.
           Node initializer = loopNode.getFirstChild();
@@ -352,11 +368,15 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
                     .useSourceInfoIfMissingFromForTree(loopNode));
           }
         } else if (loopNode.isDo()) { // do-while, put at the end of the block
-          loopNode.getFirstChild().addChildToBack(IR.exprResult(updateLoopObject)
-              .useSourceInfoIfMissingFromForTree(loopNode));
+          loopNode
+              .getFirstChild()
+              .addChildToFront(
+                  IR.exprResult(updateLoopObject).useSourceInfoIfMissingFromForTree(loopNode));
         } else { // For-in, for-of or while, put at the end of the block
-          loopNode.getLastChild().addChildToBack(IR.exprResult(updateLoopObject)
-              .useSourceInfoIfMissingFromForTree(loopNode));
+          loopNode
+              .getLastChild()
+              .addChildToFront(
+                  IR.exprResult(updateLoopObject).useSourceInfoIfMissingFromForTree(loopNode));
         }
         compiler.reportChangeToEnclosingScope(loopNode);
 
@@ -369,11 +389,21 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
             // used as temporary variables for assignment.
             if (NodeUtil.isEnhancedFor(loopNode)
                 && loopNode.getFirstChild() == reference.getParent()) {
-              loopNode.getLastChild().addChildToFront(
-                  IR.exprResult(IR.assign(
-                      IR.getprop(IR.name(object.name), IR.string(var.name)),
-                      var.getNameNode().cloneNode()))
-                      .useSourceInfoIfMissingFromForTree(reference));
+              Node loopBody = loopNode.getLastChild();
+              // Code above should have inserted a statement at the beginning of the loop to
+              // create a new loop object with fields copied from the old one.
+              Node updateLoopStatement = loopBody.getFirstChild();
+              checkState(
+                  updateLoopStatement.getOnlyChild() == updateLoopObject, updateLoopStatement);
+              // assign the loop variable value into the loop object just after the object is
+              // updated.
+              Node assignLoopVarToLoopObjectProperty =
+                  IR.exprResult(
+                          IR.assign(
+                              IR.getprop(IR.name(object.name), IR.string(var.name)),
+                              var.getNameNode().cloneNode()))
+                      .useSourceInfoIfMissingFromForTree(reference);
+              loopBody.addChildAfter(assignLoopVarToLoopObjectProperty, updateLoopStatement);
             } else {
               if (NodeUtil.isNameDeclaration(reference.getParent())) {
                 Node declaration = reference.getParent();
@@ -459,5 +489,12 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
         this.name = name;
       }
     }
+  }
+
+  private JSDocInfo createUnknownTypeJsDocInfo() {
+    JSDocInfoBuilder castToUnknownBuilder = new JSDocInfoBuilder(true);
+    castToUnknownBuilder.recordType(
+        new JSTypeExpression(JsDocInfoParser.parseTypeString("?"), ""));
+    return castToUnknownBuilder.build();
   }
 }
