@@ -23,7 +23,11 @@
  *            body: (string|undefined), tag: (string|undefined),
  *            icon: (string|undefined),
  *            requireInteraction: (boolean|undefined),
- *            actions: (!Array<!NotificationAction>|undefined)}}
+ *            actions: (!Array<!NotificationAction>|undefined),
+ *            data: *}}
+ * TODO(user): change the type of data to a serializable object
+ * (https://html.spec.whatwg.org/multipage/structured-data.html).
+ *
  * @see http://notifications.spec.whatwg.org/#notificationoptions
  */
 var NotificationOptions;
@@ -109,6 +113,11 @@ Notification.prototype.tag;
  * @deprecated Use NotificationOptions.tag instead.
  */
 Notification.prototype.replaceId;
+
+/**
+ * @type {*}
+ */
+Notification.prototype.data;
 
 /**
  * The string used by clients to specify the directionality (rtl/ltr) of the
