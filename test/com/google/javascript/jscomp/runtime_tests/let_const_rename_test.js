@@ -321,22 +321,3 @@ function testRenamingDoesNotBreakObjectShorthand() {
   }
   assertObjectEquals({x: 2}, {x});
 }
-
-function testContinueDoesNotBreakClosures() {
-  // github issue #2779
-  var closures = [];
-  var x = 0;
-  while (x < 5) {
-    const y = x;
-    closures.push(function() {
-      return y;
-    });
-    x++;
-    continue;  // does this skip the update for the y variable?
-  }
-  var results = [];
-  for (let i = 0; i < closures.length; ++i) {
-    results[i] = closures[i]();
-  }
-  assertArrayEquals([0, 1, 2, 3, 4], results);
-}
