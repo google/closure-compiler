@@ -54,10 +54,12 @@ $jscomp.polyfill('Map',
   /**
    * Checks conformance of the existing Map.
    * @return {boolean} True if the browser's implementation conforms.
+   * @suppress {missingProperties} "entries" unknown prototype
    */
   function isConformant() {
     if ($jscomp.ASSUME_NO_NATIVE_MAP ||
         !NativeMap ||
+        typeof NativeMap != "function" ||
         !NativeMap.prototype.entries ||
         typeof Object.seal != 'function') {
       return false;
