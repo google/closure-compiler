@@ -3269,7 +3269,7 @@ public class Parser {
     ParseTree left = parseExponentiationExpression();
     while (peekMultiplicativeOperator()) {
       Token operator = nextToken();
-      ParseTree right = parseUnaryExpression();
+      ParseTree right = parseExponentiationExpression();
       left = new BinaryOperatorTree(getTreeLocation(start), left, operator, right);
     }
     return left;
