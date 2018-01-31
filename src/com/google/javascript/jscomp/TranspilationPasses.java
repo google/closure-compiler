@@ -121,7 +121,7 @@ public class TranspilationPasses {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES8_MODULES;
+          return ES_NEXT;
         }
       };
 
