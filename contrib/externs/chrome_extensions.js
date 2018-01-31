@@ -3551,7 +3551,7 @@ chrome.cookies = {};
  * This typedef is used for the parameters to chrome.cookies.get,
  * chrome.cookies.remove, and for the parameter to remove's callback. These uses
  * all identify a single cookie uniquely without specifying its content, and the
- * objects are identical except for the the storeId being optional vs required.
+ * objects are identical except for the storeId being optional vs required.
  * If greater divergence occurs, then going to two typedefs is recommended.
  *
  * @typedef {?{
@@ -3646,7 +3646,10 @@ CookieChangeInfo.prototype.cookie;
 CookieChangeInfo.prototype.cause;
 
 
-/** @const */
+/**
+ * @const
+ * @see https://developer.chrome.com/extensions/management
+ */
 chrome.management = {};
 
 
@@ -3659,6 +3662,14 @@ chrome.management.InstallOptions;
 
 
 /**
+ * @param {function(!Array<!ExtensionInfo>): void=} opt_callback Optional
+ *     callback function.
+ * @return {!Array<!ExtensionInfo>}
+ */
+chrome.management.getAll = function(opt_callback) {};
+
+
+/**
  * @param {string} id
  * @param {function(!ExtensionInfo): void=} opt_callback Optional callback
  *     function.
@@ -3668,11 +3679,11 @@ chrome.management.get = function(id, opt_callback) {};
 
 
 /**
- * @param {function(!Array<!ExtensionInfo>): void=} opt_callback Optional
- *     callback function.
- * @return {!Array<!ExtensionInfo>}
+ * @param {function(!ExtensionInfo): void=} opt_callback Optional
+ *     callback function
+ * @return {undefined}
  */
-chrome.management.getAll = function(opt_callback) {};
+chrome.management.getSelf = function(opt_callback) {};
 
 
 /**
@@ -3690,14 +3701,6 @@ chrome.management.getPermissionWarningsById = function(id, opt_callback) {};
  */
 chrome.management.getPermissionWarningsByManifest =
     function(manifestStr, opt_callback) {};
-
-
-/**
- * @param {string} id The id of an already installed extension.
- * @param {function(): void=} opt_callback Optional callback function.
- * @return {undefined}
- */
-chrome.management.launchApp = function(id, opt_callback) {};
 
 
 /**
@@ -3737,6 +3740,14 @@ chrome.management.uninstallSelf =
  * @param {function(): void=} opt_callback Optional callback function.
  * @return {undefined}
  */
+chrome.management.launchApp = function(id, opt_callback) {};
+
+
+/**
+ * @param {string} id The id of an already installed extension.
+ * @param {function(): void=} opt_callback Optional callback function.
+ * @return {undefined}
+ */
 chrome.management.createAppShortcut = function(id, opt_callback) {};
 
 
@@ -3763,7 +3774,11 @@ chrome.management.generateAppForLink = function(url, title, opt_callback) {};
 
 
 /** @type {!ChromeExtensionInfoEvent} */
-chrome.management.onDisabled;
+chrome.management.onInstalled;
+
+
+/** @type {!ChromeStringEvent} */
+chrome.management.onUninstalled;
 
 
 /** @type {!ChromeExtensionInfoEvent} */
@@ -3771,11 +3786,7 @@ chrome.management.onEnabled;
 
 
 /** @type {!ChromeExtensionInfoEvent} */
-chrome.management.onInstalled;
-
-
-/** @type {!ChromeStringEvent} */
-chrome.management.onUninstalled;
+chrome.management.onDisabled;
 
 
 /**
