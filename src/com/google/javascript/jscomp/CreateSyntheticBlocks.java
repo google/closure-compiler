@@ -39,8 +39,7 @@ class CreateSyntheticBlocks extends AbstractPostOrderCallback implements Compile
       "JSC_UNMATCHED_END_MARKER", "Unmatched {1} - {0} not in the same block");
 
   static final DiagnosticType INVALID_MARKER_USAGE = DiagnosticType.error(
-      "JSC_INVALID_MARKER_USAGE", "Marker {0} can only be used in a simple "
-           + "call expression");
+      "JSC_INVALID_MARKER_USAGE", "Marker {0} can only be used in a simple call expression");
 
   private final AbstractCompiler compiler;
 
@@ -80,8 +79,7 @@ class CreateSyntheticBlocks extends AbstractPostOrderCallback implements Compile
 
     // Complain about any unmatched markers.
     for (Node node : markerStack) {
-      compiler.report(
-          JSError.make(node, UNMATCHED_START_MARKER, startMarkerName));
+      compiler.report(JSError.make(node, UNMATCHED_START_MARKER, startMarkerName));
     }
 
     // Add the block for the valid marker sets.
@@ -94,14 +92,17 @@ class CreateSyntheticBlocks extends AbstractPostOrderCallback implements Compile
    * @param marker The marker to add synthetic blocks for.
    */
   private void addBlocks(Marker marker) {
-    // Add block around the template section so that it looks like this:
-    //  BLOCK (synthetic)
-    //    START
-    //      BLOCK (synthetic)
-    //        BODY
-    //    END
-    // This prevents the start or end markers from mingling with the code
-    // in the block body.
+    // Add block around the template section so that
+    //   START
+    //   BODY
+    //   END
+    // is transformed to:
+    //   BLOCK (synthetic)
+    //     START
+    //       BLOCK (synthetic)
+    //         BODY
+    //     END
+    // This prevents the start or end markers from mingling with the code in the block body.
 
 
     Node originalParent = marker.endMarker.getParent();
@@ -111,8 +112,7 @@ class CreateSyntheticBlocks extends AbstractPostOrderCallback implements Compile
 
     Node innerBlock = IR.block();
     innerBlock.setIsSyntheticBlock(true);
-    // Move everything after the start Node up to the end Node into the inner
-    // block.
+    // Move everything after the start Node up to the end Node into the inner block.
     moveSiblingExclusive(innerBlock, marker.startMarker, marker.endMarker);
 
     // Add the start node.
