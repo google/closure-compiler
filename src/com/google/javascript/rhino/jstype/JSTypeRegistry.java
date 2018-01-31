@@ -840,20 +840,29 @@ public class JSTypeRegistry implements TypeIRegistry {
     return getNativeType(NO_TYPE);
   }
 
+  /** A tristate value returned from canPropertyBeDefined. */
+  public enum PropDefinitionKind {
+    UNKNOWN, // The property is not known to be part of this type
+    KNOWN,  // The properties is known to be defined on a type or its super types
+    LOOSE    // The property is loosely associated with a type, typically one of its subtypes
+  }
+
   /**
    * Returns whether the given property can possibly be set on the given type.
    */
-  public boolean canPropertyBeDefined(JSType type, String propertyName) {
+  public PropDefinitionKind canPropertyBeDefined(JSType type, String propertyName) {
     if (type.isStruct()) {
       // We are stricter about "struct" types and only allow access to
       // properties that to the best of our knowledge are available at creation
       // time and specifically not properties only defined on subtypes.
-      return type.hasProperty(propertyName);
+      return type.hasProperty(propertyName)
+          ? PropDefinitionKind.KNOWN : PropDefinitionKind.UNKNOWN;
     } else {
       if (!type.isEmptyType() && !type.isUnknownType()
           && type.hasProperty(propertyName)) {
-        return true;
+        return PropDefinitionKind.KNOWN;
       }
+
       if (typesIndexedByProperty.containsKey(propertyName)) {
         for (JSType alt :
                  typesIndexedByProperty.get(propertyName).getAlternates()) {
@@ -866,10 +875,11 @@ public class JSTypeRegistry implements TypeIRegistry {
               continue;
             }
 
-            return true;
+            return PropDefinitionKind.LOOSE;
           }
         }
       }
+
       if (type.toMaybeRecordType() != null) {
         RecordType rec = type.toMaybeRecordType();
         boolean mayBeInUnion = false;
@@ -879,10 +889,13 @@ public class JSTypeRegistry implements TypeIRegistry {
             break;
           }
         }
-        return mayBeInUnion && this.droppedPropertiesOfUnions.contains(propertyName);
+
+        if (mayBeInUnion && this.droppedPropertiesOfUnions.contains(propertyName)) {
+          return PropDefinitionKind.LOOSE;
+        }
       }
     }
-    return false;
+    return PropDefinitionKind.UNKNOWN;
   }
 
   /**

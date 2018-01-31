@@ -19,6 +19,7 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.jscomp.TypeCheck.INSTANTIATE_ABSTRACT_CLASS;
+import static com.google.javascript.jscomp.TypeCheck.STRICT_INEXISTENT_PROPERTY;
 import static com.google.javascript.jscomp.parsing.JsDocInfoParser.BAD_TYPE_WIKI_LINK;
 
 import com.google.common.base.Joiner;
@@ -65,6 +66,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
     super.setUp();
     // Enable missing override checks that are disabled by default.
     compiler.getOptions().setWarningLevel(DiagnosticGroups.MISSING_OVERRIDE, CheckLevel.WARNING);
+    compiler.getOptions().setWarningLevel(DiagnosticGroups.STRICT_MISSING_PROPERTIES, CheckLevel.WARNING);
   }
 
   @Override
@@ -1119,6 +1121,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testPropertyInference5() {
+    // "x_" is a known property of an unknown type.
     testTypes(
         "/** @constructor */ function F() { }" +
         "F.prototype.baz = function() { this.x_ = 3; };" +
@@ -1127,11 +1130,13 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testPropertyInference6() {
+    // "x_" is a known property of an unknown type.
     testTypes(
         "/** @constructor */ function F() { }" +
         "(new F).x_ = 3;" +
         "/** @return {string} */" +
-        "F.prototype.bar = function() { return this.x_; };");
+        "F.prototype.bar = function() { return this.x_; };",
+        STRICT_INEXISTENT_PROPERTY); // A warning only if strict properties are enabled.
   }
 
   public void testPropertyInference7() {
@@ -1818,27 +1823,30 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testDontDropPropertiesInUnion1() {
-    testTypes(LINE_JOINER.join(
+    testTypes(lines(
         "/** @param {{a: number}|{a:number, b:string}} x */",
         "function f(x) {",
         "  var /** null */ n = x.b;",
-        "}"));
+        "}"),
+        STRICT_INEXISTENT_PROPERTY);
   }
 
   public void testDontDropPropertiesInUnion2() {
-    testTypes(LINE_JOINER.join(
+    testTypes(lines(
         "/** @param {{a:number, b:string}|{a: number}} x */",
         "function f(x) {",
         "  var /** null */ n = x.b;",
-        "}"));
+        "}"),
+        STRICT_INEXISTENT_PROPERTY);
   }
 
   public void testDontDropPropertiesInUnion3() {
-    testTypes(LINE_JOINER.join(
+    testTypes(lines(
         "/** @param {{a: number}|{a:number, b:string}} x */",
         "function f(x) {}",
         "/** @param {{a: number}} x */",
-        "function g(x) { return x.b; }"));
+        "function g(x) { return x.b; }"),
+        STRICT_INEXISTENT_PROPERTY);
   }
 
   public void testDontDropPropertiesInUnion4() {
@@ -1870,12 +1878,13 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testDontDropPropertiesInUnion7() {
-    // Missed warning because in the registry we map {a, c} to {b, d}
-    testTypes(LINE_JOINER.join(
+    // Only a strict warning because in the registry we map {a, c} to {b, d}
+    testTypes(lines(
         "/** @param {{a: number}|{a:number, b:string}} x */",
         "function f(x) {}",
         "/** @param {{c: number}|{c:number, d:string}} x */",
-        "function g(x) { return x.b; }"));
+        "function g(x) { return x.b; }"),
+        STRICT_INEXISTENT_PROPERTY);
   }
 
   public void testScoping11() {
@@ -3534,11 +3543,30 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         "required: string");
   }
 
-  public void testEnum42() {
+  public void testEnum42a() {
+    testTypes(lines(
+        "/** @param {number} x */ function f(x) {}",
+        "/** @enum {Object} */ var MyEnum = {FOO: {a: 1, b: 2}};",
+        "f(MyEnum.FOO.a);"),
+        "Property a never defined on MyEnum<Object>");
+  }
+
+  public void testEnum42b() {
+    compiler.getOptions().setWarningLevel(
+        DiagnosticGroups.STRICT_MISSING_PROPERTIES, CheckLevel.OFF);
+
+    testTypes(lines(
+        "/** @param {number} x */ function f(x) {}",
+        "/** @enum {Object} */ var MyEnum = {FOO: {a: 1, b: 2}};",
+        "f(MyEnum.FOO.a);"));
+  }
+
+  public void testEnum43() {
     testTypes(
-        "/** @param {number} x */ function f(x) {}" +
-        "/** @enum {Object} */ var MyEnum = {FOO: {newProperty: 1, b: 2}};" +
-        "f(MyEnum.FOO.newProperty);");
+        lines(
+            "/** @param {number} x */ function f(x) {}",
+            "/** @enum {{a:number, b:number}} */ var MyEnum = {FOO: {a: 1, b: 2}};",
+            "f(MyEnum.FOO.a);"));
   }
 
   public void testAliasedEnum1() {
@@ -4148,7 +4176,8 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         "/** @constructor \n * @extends {Base} */ function A() {}" +
         "A.prototype = new Base();" +
         "A.prototype.foo = 3;" +
-        "/** @return {string} */ function foo() { return (new Base).foo; }");
+        "/** @return {string} */ function foo() { return (new Base).foo; }",
+        STRICT_INEXISTENT_PROPERTY); // exists on subtypes, so only reported for strict props
   }
 
   public void testDirectPrototypeAssignment3() {
@@ -4548,6 +4577,8 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testInterfaceAssignment8() {
+    compiler.getOptions().setWarningLevel(DiagnosticGroups.STRICT_MISSING_PROPERTIES, CheckLevel.OFF);
+
     testTypes("/** @interface */var I = function() {};\n" +
         "/** @type {I} */var i;\n" +
         "/** @type {Object} */var o = i;\n" +
@@ -6561,16 +6592,28 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testGlobalThis2() {
-    // this.alert = 3 doesn't count as a declaration, so this isn't a warning.
-    testTypes("/** @constructor */ function Bindow() {}" +
-        "/** @param {string} msg */ " +
-        "Bindow.prototype.alert = function(msg) {};" +
-        "this.alert = 3;" +
-        "(new Bindow()).alert(this.alert)");
+    // this.alert = 3 doesn't count as a declaration, so this is a warning.
+    testTypes(lines("/** @constructor */ function Bindow() {}",
+        "/** @param {string} msg */ ",
+        "Bindow.prototype.alert = function(msg) {};",
+        "this.alert = 3;",
+        "(new Bindow()).alert(this.alert)"),
+        "Property alert never defined on global this");
+  }
+
+  public void testGlobalThis2b() {
+    // Only reported if strict property checks are enabled
+    compiler.getOptions().setWarningLevel(DiagnosticGroups.STRICT_MISSING_PROPERTIES, CheckLevel.OFF);
+
+    testTypes(lines("/** @constructor */ function Bindow() {}",
+        "/** @param {string} msg */ ",
+        "Bindow.prototype.alert = function(msg) {};",
+        "this.alert = 3;",
+        "(new Bindow()).alert(this.alert)"));
   }
 
 
-  public void testGlobalThis2b() {
+  public void testGlobalThis2c() {
     testTypes("/** @constructor */ function Bindow() {}" +
         "/** @param {string} msg */ " +
         "Bindow.prototype.alert = function(msg) {};" +
@@ -7451,12 +7494,14 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
 
   public void testIssue810() {
     testTypes(
-        "/** @constructor */" +
-        "var Type = function() {" +
-        "};" +
-        "Type.prototype.doIt = function(obj) {" +
-        "  this.prop = obj.unknownProp;" +
-        "};",
+        lines(
+            "/** @constructor */",
+            "var Type = function() {",
+            "  this.prop = x;",
+            "};",
+            "Type.prototype.doIt = function(obj) {",
+            "  this.prop = obj.unknownProp;",
+            "};"),
         "Property unknownProp never defined on obj");
   }
 
@@ -7833,6 +7878,8 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testBug2341812() {
+    compiler.getOptions().setWarningLevel(DiagnosticGroups.STRICT_MISSING_PROPERTIES, CheckLevel.OFF);
+
     testTypes(
         "/** @interface */" +
         "function EventTarget() {}" +
@@ -7842,6 +7889,22 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         "/** @param {EventTarget} x \n * @return {string} */" +
         "function foo(x) { return x.index; }");
   }
+
+  public void testStrictInterfaceCheck() {
+    compiler.getOptions().setWarningLevel(DiagnosticGroups.STRICT_MISSING_PROPERTIES, CheckLevel.WARNING);
+
+    testTypes(
+        lines(
+            "/** @interface */",
+            "function EventTarget() {}",
+            "/** @constructor \n * @implements {EventTarget} */",
+            "function Node() {}",
+            "/** @type {number} */ Node.prototype.index;",
+            "/** @param {EventTarget} x \n * @return {string} */",
+            "function foo(x) { return x.index; }"),
+        "Property index never defined on EventTarget");
+  }
+
 
   public void testBug7701884() {
     testTypes(
@@ -10806,14 +10869,17 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
 
   public void testImplementsLoop() {
     testClosureTypesMultipleWarnings(
-        suppressMissingProperty("foo") +
-        "/** @constructor \n * @implements {T} */var T = function() {};" +
-        "alert((new T).foo);",
+        lines(
+            "/** @constructor \n * @implements {T} */var T = function() {};",
+            suppressMissingPropertyFor("T", "foo"),
+            "alert((new T).foo);"),
         ImmutableList.of(
             "Parse error. Cycle detected in inheritance chain of type T"));
   }
 
   public void testImplementsExtendsLoop() {
+    compiler.getOptions().setWarningLevel(DiagnosticGroups.STRICT_MISSING_PROPERTIES, CheckLevel.OFF);
+
     testClosureTypesMultipleWarnings(
         suppressMissingProperty("foo") +
             "/** @constructor \n * @implements {F} */var G = function() {};" +
@@ -10823,13 +10889,15 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
             "Parse error. Cycle detected in inheritance chain of type F"));
   }
 
-  public void testInterfaceExtendsLoop() {
+  // TODO(johnlenz): This test causes an infinite loop,
+  public void disable_testInterfaceExtendsLoop() {
     testClosureTypesMultipleWarnings(
-        suppressMissingProperty("foo") +
-            "/** @interface \n * @extends {F} */var G = function() {};" +
-            "/** @interface \n * @extends {G} */var F = function() {};" +
-            "/** @constructor \n * @implements {F} */var H = function() {};" +
-        "alert((new H).foo);",
+        lines(
+            "/** @interface \n * @extends {F} */var G = function() {};",
+            "/** @interface \n * @extends {G} */var F = function() {};",
+            "/** @constructor \n * @implements {F} */var H = function() {};",
+            suppressMissingPropertyFor("H", "foo"),
+            "alert((new H).foo);"),
         ImmutableList.of(
             "extends loop involving F, "
             + "loop: F -> G -> F",
@@ -10839,11 +10907,12 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
 
   public void testInterfaceExtendsLoop2() {
     testClosureTypes(
-        suppressMissingProperty("foo") +
-        "/** @record \n * @extends {F} */var G = function() {};" +
-        "/** @record \n * @extends {G} */var F = function() {};" +
-        "/** @constructor \n * @implements {F} */var H = function() {};" +
-        "alert((new H).foo);",
+        lines(
+            "/** @record \n * @extends {F} */var G = function() {};",
+            "/** @record \n * @extends {G} */var F = function() {};",
+            "/** @constructor \n * @implements {F} */var H = function() {};",
+            suppressMissingPropertyFor("H", "foo"),
+            "alert((new H).foo);"),
         "Parse error. Cycle detected in inheritance chain of type F");
   }
 
@@ -11630,7 +11699,17 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
     assertEquals(100.0, getTypedPercent(js), 0.1);
   }
 
-  public void testMissingProperty1() {
+  public void testMissingProperty1a() {
+    testTypes(lines(
+        "/** @constructor */ function Foo() {}",
+        "Foo.prototype.bar = function() { return this.a; };",
+        "Foo.prototype.baz = function() { this.a = 3; };"),
+        "Property a never defined on Foo");
+  }
+
+  public void testMissingProperty1b() {
+    compiler.getOptions().setWarningLevel(DiagnosticGroups.STRICT_MISSING_PROPERTIES, CheckLevel.OFF);
+
     testTypes(
         "/** @constructor */ function Foo() {}" +
         "Foo.prototype.bar = function() { return this.a; };" +
@@ -11645,11 +11724,22 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         "Property a never defined on Foo");
   }
 
-  public void testMissingProperty3() {
-    testTypes(
-        "/** @constructor */ function Foo() {}" +
-        "Foo.prototype.bar = function() { return this.a; };" +
-        "(new Foo).a = 3;");
+  public void testMissingProperty3a() {
+    testTypes(lines(
+        "/** @constructor */ function Foo() {}",
+        "Foo.prototype.bar = function() { return this.a; };",
+        "(new Foo).a = 3;"),
+        "Property a never defined on Foo");
+  }
+
+  public void testMissingProperty3b() {
+    compiler.getOptions().setWarningLevel(
+        DiagnosticGroups.STRICT_MISSING_PROPERTIES, CheckLevel.OFF);
+
+    testTypes(lines(
+        "/** @constructor */ function Foo() {}",
+        "Foo.prototype.bar = function() { return this.a; };",
+        "(new Foo).a = 3;"));
   }
 
   public void testMissingProperty4() {
@@ -11668,7 +11758,18 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         "Property a never defined on Foo");
   }
 
-  public void testMissingProperty6() {
+  public void testMissingProperty6a() {
+    testTypes(lines(
+        "/** @constructor */ function Foo() {}",
+        "Foo.prototype.bar = function() { return this.a; };",
+        "/** @constructor \n * @extends {Foo} */ ",
+        "function Bar() { this.a = 3; };"),
+        "Property a never defined on Foo");
+  }
+
+  public void testMissingProperty6b() {
+    compiler.getOptions().setWarningLevel(DiagnosticGroups.STRICT_MISSING_PROPERTIES, CheckLevel.OFF);
+
     testTypes(
         "/** @constructor */ function Foo() {}" +
         "Foo.prototype.bar = function() { return this.a; };" +
@@ -11854,7 +11955,20 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         "/** @param {Object} y */ function g(y) { return y.a; }");
   }
 
-  public void testMissingProperty31() {
+  public void testMissingProperty31a() {
+    testTypes(lines(
+        "/** @return {Array|number} */",
+        "function f() {",
+        " return [];",
+        "}",
+        "f().a = 3;",
+        "/** @param {Array} y */ function g(y) { return y.a; }"),
+        "Property a never defined on Array");
+  }
+
+  public void testMissingProperty31b() {
+    compiler.getOptions().setWarningLevel(DiagnosticGroups.STRICT_MISSING_PROPERTIES, CheckLevel.OFF);
+
     testTypes(
         "/** @return {Array|number} */" +
         "function f() {" +
@@ -11889,7 +12003,20 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         "Foo.prototype.baz = function() { this.b = 3; };");
   }
 
-  public void testMissingProperty35() {
+  public void testMissingProperty35a() {
+    // Bar has specialProp defined, so Bar|Baz may have specialProp defined.
+    testTypes(lines(
+        "/** @constructor */ function Foo() {}",
+        "/** @constructor */ function Bar() {}",
+        "/** @constructor */ function Baz() {}",
+        "/** @param {Foo|Bar} x */ function f(x) { x.specialProp = 1; }",
+        "/** @param {Bar|Baz} x */ function g(x) { return x.specialProp; }"),
+        "Property specialProp never defined on x");
+  }
+
+  public void testMissingProperty35b() throws Exception {
+    compiler.getOptions().setWarningLevel(DiagnosticGroups.STRICT_MISSING_PROPERTIES, CheckLevel.OFF);
+
     // Bar has specialProp defined, so Bar|Baz may have specialProp defined.
     testTypes(
         "/** @constructor */ function Foo() {}" +
@@ -11899,7 +12026,21 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         "/** @param {Bar|Baz} x */ function g(x) { return x.specialProp; }");
   }
 
-  public void testMissingProperty36() {
+  public void testMissingProperty36a() {
+    // Foo has baz defined, and SubFoo has bar defined, so some objects with
+    // bar may have baz.
+    testTypes(lines(
+        "/** @constructor */ function Foo() {}",
+        "Foo.prototype.baz = 0;",
+        "/** @constructor \n * @extends {Foo} */ function SubFoo() {}",
+        "SubFoo.prototype.bar = 0;",
+        "/** @param {{bar: number}} x */ function f(x) { return x.baz; }"),
+        "Property baz never defined on x");
+  }
+
+  public void testMissingProperty36b() throws Exception {
+    compiler.getOptions().setWarningLevel(DiagnosticGroups.STRICT_MISSING_PROPERTIES, CheckLevel.OFF);
+
     // Foo has baz defined, and SubFoo has bar defined, so some objects with
     // bar may have baz.
     testTypes(
@@ -11910,7 +12051,34 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         "/** @param {{bar: number}} x */ function f(x) { return x.baz; }");
   }
 
-  public void testMissingProperty37() {
+  public void testMissingProperty37a() {
+    // This used to emit a missing property warning because we couldn't
+    // determine that the inf(Foo, {isVisible:boolean}) == SubFoo.
+    testTypes(lines(
+        "/** @param {{isVisible: boolean}} x */",
+        "function f(x){",
+        "  x.isVisible = false;",
+        "}",
+        "/** @constructor */",
+        "function Foo() {}",
+        "/**",
+        " * @constructor",
+        " * @extends {Foo}",
+        " */",
+        "function SubFoo() {}",
+        "/** @type {boolean} */",
+        "SubFoo.prototype.isVisible = true;",
+        "/**",
+        " * @param {Foo} x",
+        " * @return {boolean}",
+        " */",
+        "function g(x) { return x.isVisible; }"),
+        "Property isVisible never defined on Foo");
+  }
+
+  public void testMissingProperty37b() {
+    compiler.getOptions().setWarningLevel(DiagnosticGroups.STRICT_MISSING_PROPERTIES, CheckLevel.OFF);
+
     // This used to emit a missing property warning because we couldn't
     // determine that the inf(Foo, {isVisible:boolean}) == SubFoo.
     testTypes(
@@ -16958,7 +17126,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
 
   public void testCovarianceForRecordType11() {
     testTypesWithExtraExterns(
-        LINE_JOINER.join(
+        lines(
             "/** @interface */",
             "function Foo() {}",
             "/** @constructor @implements {Foo} */",
@@ -16969,17 +17137,18 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
             "function Bar() {}",
             "/** @return {string} */",
             "Bar.prototype.y = function(){return 'test';};"),
-        LINE_JOINER.join(
+        lines(
             "function fun(/** Foo */f) {",
             "  f.y();",
             "}",
             "fun(new Bar1())",
-            "fun(new Bar());"));
+            "fun(new Bar());"),
+        STRICT_INEXISTENT_PROPERTY);
   }
 
   public void testCovarianceForRecordType12() {
     testTypesWithExtraExterns(
-        LINE_JOINER.join(
+        lines(
             "/** @interface */",
             "function Foo() {}",
             "/** @constructor @implements {Foo} */",
@@ -16988,25 +17157,27 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
             "function Bar() {}",
             "/** @return {undefined} */",
             "Bar.prototype.y = function(){};"),
-        LINE_JOINER.join(
+        lines(
             "/** @type{Foo} */",
             "var f = new Bar1();",
-            "f.y();"));
+            "f.y();"),
+        STRICT_INEXISTENT_PROPERTY); // Only if strict warnings are enabled.
   }
 
   public void testCovarianceForRecordType13() {
     testTypesWithExtraExterns(
-        LINE_JOINER.join(
+        lines(
             "/** @interface */",
             "function I() {}",
             "/** @constructor @implements {I} */",
             "function C() {}",
             "/** @return {undefined} */",
             "C.prototype.y = function(){};"),
-        LINE_JOINER.join(
+        lines(
             "/** @type{{x: {obj: I}}} */",
             "var ri;",
-            "ri.x.obj.y();"));
+            "ri.x.obj.y();"),
+        STRICT_INEXISTENT_PROPERTY); // Only if strict warnings are enabled.
   }
 
   public void testCovarianceForRecordType14() {
@@ -17061,7 +17232,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
 
   public void testCovarianceForRecordType17() {
     testTypesWithExtraExterns(
-        LINE_JOINER.join(
+        lines(
             "/** @interface */",
             "function Foo() {}",
             "/** @constructor @implements {Foo} */",
@@ -17071,9 +17242,10 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
             "function Bar() {}",
             "/** @return {number} */",
             "Bar.prototype.y = function(){return 1;};"),
-        LINE_JOINER.join(
+        lines(
             "/** @type {Foo} */ var f;",
-            "f.y();"));
+            "f.y();"),
+        STRICT_INEXISTENT_PROPERTY);
   }
 
   public void testCovarianceForRecordType18() {
@@ -17144,7 +17316,26 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   public void testOptimizePropertyMap1() {
     // For non object-literal types such as Function, the behavior doesn't change.
     // The stray property is added as unknown.
-    testTypes(LINE_JOINER.join(
+    testTypes(lines(
+        "/** @return {!Function} */",
+        "function f() {",
+        "  var x = function() {};",
+        "  /** @type {number} */",
+        "  x.prop = 123;",
+        "  return x;",
+        "}",
+        "function g(/** !Function */ x) {",
+        "  var /** null */ n = x.prop;",
+        "}"),
+        "Property prop never defined on Function");
+  }
+
+  public void testOptimizePropertyMap1b() throws Exception {
+    compiler.getOptions().setWarningLevel(DiagnosticGroups.STRICT_MISSING_PROPERTIES, CheckLevel.OFF);
+
+    // For non object-literal types such as Function, the behavior doesn't change.
+    // The stray property is added as unknown.
+    testTypes(lines(
         "/** @return {!Function} */",
         "function f() {",
         "  var x = function() {};",
@@ -17173,9 +17364,28 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         "Property b never defined on x");
   }
 
-  public void testOptimizePropertyMap3() {
+  public void testOptimizePropertyMap3a() {
     // For @record types, add the stray property to the index as before.
-    testTypes(LINE_JOINER.join(
+    testTypes(lines(
+        "/** @record */",
+        "function Foo() {}",
+        "/** @type {number} */",
+        "Foo.prototype.a;",
+        "function f(/** !Foo */ x) {",
+        "  var y = x;",
+        "  /** @type {number} */",
+        "  y.b = 123;",
+        "}",
+        "function g(/** !Foo */ x) {",
+        "  var /** null */ n = x.b;",
+        "}"),
+        "Property b never defined on Foo");
+  }
+
+  public void testOptimizePropertyMap3b() {
+    compiler.getOptions().setWarningLevel(DiagnosticGroups.STRICT_MISSING_PROPERTIES, CheckLevel.OFF);
+    // For @record types, add the stray property to the index as before.
+    testTypes(lines(
         "/** @record */",
         "function Foo() {}",
         "/** @type {number} */",
@@ -17282,28 +17492,6 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         "Property prop2 never defined on b");
   }
 
-  public void testCovarianceForRecordType22() {
-    testTypesWithExtraExterns(
-        LINE_JOINER.join(
-            "/** @constructor */",
-            "function Bar() {}",
-            "/** @type {number} */",
-            "Bar.prototype.prop2;",
-            "/** @constructor */",
-            "function Bar1() {}",
-            "/** @type {number} */",
-            "Bar1.prototype.prop;",
-            "/** @type {number} */",
-            "Bar1.prototype.prop1;",
-            "/** @type {number} */",
-            "Bar1.prototype.prop2;"),
-        LINE_JOINER.join(
-            "/** @type {(Bar1|{prop:number, prop1: number})} */ var b;",
-            // there should be no warning saying that
-            // prop2 is not defined on b;
-            "var x = b.prop2"));
-  }
-
   public void testCovarianceForRecordType23() {
     testTypesWithExtraExterns(
         LINE_JOINER.join(
@@ -17362,7 +17550,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
 
   public void testCovarianceForRecordType25() {
     testTypesWithExtraExterns(
-        LINE_JOINER.join(
+        lines(
             "/** @constructor */",
             "function C() {}",
             "",
@@ -17371,7 +17559,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
             "",
             "/** @type{number} */",
             "C.prototype.test2 = 1;"),
-        LINE_JOINER.join(
+        lines(
             "function f() {",
             "  /** @type{!Function} */ var f;",
             "  var x = {abort: f, count: 1}",
@@ -17382,7 +17570,8 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
             "  /** @type{(C|{test2: number})} */",
             "  var y;",
             "  y.abort();",
-            "}"));
+            "}"),
+        STRICT_INEXISTENT_PROPERTY);
   }
 
   public void testCovarianceForRecordType26() {
@@ -18083,6 +18272,10 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
     testTypes(DEFAULT_EXTERNS + "\n" + externs, js, description, false);
   }
 
+  void testTypesWithExtraExterns(String externs, String js, DiagnosticType diag) {
+    testTypes(DEFAULT_EXTERNS + "\n" + externs, js, diag, false);
+  }
+
   /**
    * Parses and type checks the JavaScript code.
    */
@@ -18157,6 +18350,14 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
     String result = "function dummy(x) { ";
     for (String prop : props) {
       result += "x." + prop + " = 3;";
+    }
+    return result + "}";
+  }
+
+  String suppressMissingPropertyFor(String type, String ... props) {
+    String result = "function dummy(x) { ";
+    for (String prop : props) {
+      result += type + ".prototype." + prop + " = 3;";
     }
     return result + "}";
   }

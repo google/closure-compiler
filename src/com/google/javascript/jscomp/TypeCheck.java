@@ -46,6 +46,7 @@ import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSType.SubtypingMode;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
+import com.google.javascript.rhino.jstype.JSTypeRegistry.PropDefinitionKind;
 import com.google.javascript.rhino.jstype.NamedType;
 import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.Property;
@@ -112,6 +113,16 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
   static final DiagnosticType INEXISTENT_PROPERTY_WITH_SUGGESTION =
       DiagnosticType.disabled(
           "JSC_INEXISTENT_PROPERTY_WITH_SUGGESTION",
+          "Property {0} never defined on {1}. Did you mean {2}?");
+
+  public static final DiagnosticType STRICT_INEXISTENT_PROPERTY =
+      DiagnosticType.disabled(
+          "JSC_STRICT_INEXISTENT_PROPERTY",
+          "Property {0} never defined on {1}");
+
+  static final DiagnosticType STRICT_INEXISTENT_PROPERTY_WITH_SUGGESTION =
+      DiagnosticType.disabled(
+          "JSC_STRICT_INEXISTENT_PROPERTY_WITH_SUGGESTION",
           "Property {0} never defined on {1}. Did you mean {2}?");
 
   protected static final DiagnosticType NOT_A_CONSTRUCTOR =
@@ -1515,31 +1526,68 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
   private boolean allowLoosePropertyAccessOnNode(Node n) {
     Node parent = n.getParent();
     return NodeUtil.isPropertyTest(compiler, n)
-        // Property declaration
-        || (n.isQualifiedName() && parent.isExprResult())
-        // Property creation
-        || (n.isQualifiedName() && parent.isAssign() && parent.getFirstChild() == n);
+        // Stub property declaration
+        || (n.isQualifiedName() && parent.isExprResult());
   }
 
-  private void checkPropertyAccessHelper(JSType objectType, String propName,
-      NodeTraversal t, Node n) {
+  private boolean isQNameAssignmentTarget(Node n) {
+    Node parent = n.getParent();
+    return n.isQualifiedName() && parent.isAssign() && parent.getFirstChild() == n;
+  }
+
+  private void checkPropertyAccessHelper(
+      JSType objectType, String propName, NodeTraversal t, Node n) {
+    boolean isStruct = objectType.isStruct();
+    boolean loosePropertyDeclaration = isQNameAssignmentTarget(n) && !isStruct;
     if (!objectType.isEmptyType() && reportMissingProperties
-        && (!allowLoosePropertyAccessOnNode(n) || objectType.isStruct())
-        && !typeRegistry.canPropertyBeDefined(objectType, propName)) {
-      boolean lowConfidence =
-          objectType.isUnknownType() || objectType.isEquivalentTo(getNativeType(OBJECT_TYPE));
-      SuggestionPair pair = null;
-      if (!lowConfidence) {
-        pair = getClosestPropertySuggestion(objectType, propName);
-      }
-      if (pair != null && pair.distance * 4 < propName.length()) {
-        report(t, n.getLastChild(), INEXISTENT_PROPERTY_WITH_SUGGESTION, propName,
-            typeRegistry.getReadableTypeName(n.getFirstChild()), pair.suggestion);
-      } else {
-        DiagnosticType reportType =
-            lowConfidence ? POSSIBLE_INEXISTENT_PROPERTY : INEXISTENT_PROPERTY;
-        report(t, n.getLastChild(), reportType, propName,
-            typeRegistry.getReadableTypeName(n.getFirstChild()));
+        && (!allowLoosePropertyAccessOnNode(n) || isStruct)) {
+      PropDefinitionKind kind = typeRegistry.canPropertyBeDefined(objectType, propName);
+      if (!kind.equals(PropDefinitionKind.KNOWN)) {
+        // If the property definition is known, but only loosely associated,
+        // only report a "strict error" which can be optional as code is migrated.
+        boolean strict = kind.equals(PropDefinitionKind.LOOSE) || loosePropertyDeclaration;
+        boolean lowConfidence =
+            objectType.isUnknownType() || objectType.isEquivalentTo(getNativeType(OBJECT_TYPE));
+        SuggestionPair pair = null;
+        if (lowConfidence) {
+          if (strict) {
+            return;
+          }
+        } else {
+          pair = getClosestPropertySuggestion(objectType, propName);
+          // Traditionally, we would not report a warning for "loose" properties, but we want to be
+          // able to be more strict, so introduce an optional warning.
+        }
+        if (pair != null && pair.distance * 4 < propName.length()) {
+          DiagnosticType reportType;
+          if (strict) {
+            reportType = STRICT_INEXISTENT_PROPERTY_WITH_SUGGESTION;
+          } else {
+            reportType = INEXISTENT_PROPERTY_WITH_SUGGESTION;
+          }
+          report(
+              t,
+              n.getLastChild(),
+              reportType,
+              propName,
+              typeRegistry.getReadableTypeName(n.getFirstChild()),
+              pair.suggestion);
+        } else {
+          DiagnosticType reportType;
+          if (lowConfidence) {
+            reportType = POSSIBLE_INEXISTENT_PROPERTY;
+          } else if (strict) {
+            reportType = STRICT_INEXISTENT_PROPERTY;
+          } else {
+            reportType = INEXISTENT_PROPERTY;
+          }
+          report(
+              t,
+              n.getLastChild(),
+              reportType,
+              propName,
+              typeRegistry.getReadableTypeName(n.getFirstChild()));
+        }
       }
     }
   }

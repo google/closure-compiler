@@ -60,6 +60,26 @@ class SuppressDocWarningsGuard extends WarningsGuard {
     suppressors.put(
         "missingRequire",
         new DiagnosticGroupWarningsGuard(DiagnosticGroups.STRICT_MISSING_REQUIRE, CheckLevel.OFF));
+
+    // Hack: Allow "@suppress {missingProperties}" to mean
+    // "@suppress {strictmissingProperties}".
+    // TODO(johnlenz): Delete this when it is enabled with missingProperties
+    suppressors.put(
+        "missingProperties",
+        new DiagnosticGroupWarningsGuard(
+            new DiagnosticGroup(
+                DiagnosticGroups.MISSING_PROPERTIES,
+                DiagnosticGroups.STRICT_MISSING_PROPERTIES), CheckLevel.OFF));
+
+    // Hack: Allow "@suppress {checkTypes}" to include
+    // "strictmissingProperties".
+    // TODO(johnlenz): Delete this when it is enabled with missingProperties
+    suppressors.put(
+        "checkTypes",
+        new DiagnosticGroupWarningsGuard(
+            new DiagnosticGroup(
+                DiagnosticGroups.CHECK_TYPES,
+                DiagnosticGroups.STRICT_MISSING_PROPERTIES), CheckLevel.OFF));
   }
 
   @Override
