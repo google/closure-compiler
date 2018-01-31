@@ -306,7 +306,7 @@ public class CompilerInput implements SourceAst, DependencyInfo {
         return new LazyParsedDependencyInfo(info, (JsAst) ast, compiler);
       } catch (IOException e) {
         compiler.getErrorManager().report(CheckLevel.ERROR,
-            JSError.make(AbstractCompiler.READ_ERROR, getName()));
+            JSError.make(AbstractCompiler.READ_ERROR, getName(), e.getMessage()));
         return SimpleDependencyInfo.EMPTY;
       }
     } else {

@@ -172,7 +172,7 @@ public class JsAst implements SourceAst {
       }
     } catch (IOException e) {
       compiler.report(
-          JSError.make(AbstractCompiler.READ_ERROR, sourceFile.getName()));
+          JSError.make(AbstractCompiler.READ_ERROR, sourceFile.getName(), e.getMessage()));
     }
 
     if (root == null) {
