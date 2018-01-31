@@ -71,6 +71,9 @@ public final class MinimizeExitPointsTest extends CompilerTestCase {
     fold(
         "function f() { a: break a; }",
         "function f() {}");
+    fold(
+        "function f() { a: { break a; } }",
+        "function f() { a: {} }");
   }
 
   public void testFunctionReturnOptimization1() throws Exception {
