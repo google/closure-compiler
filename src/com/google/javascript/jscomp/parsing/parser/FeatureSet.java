@@ -318,6 +318,8 @@ public final class FeatureSet implements Serializable {
       case "es6-impl":
       case "es6":
         return ES6;
+      case "ntiSupported":
+        return NTI_SUPPORTED;
       case "es7":
         return ES7;
       case "es8":
