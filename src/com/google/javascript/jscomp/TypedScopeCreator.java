@@ -1807,6 +1807,22 @@ final class TypedScopeCreator implements ScopeCreator {
     }
 
     /**
+     * When a class has a stub for a property, and the property exists on a super interface,
+     * use that type.
+     */
+    private JSType getInheritedInterfacePropertyType(ObjectType obj, String propName) {
+      if (obj != null && obj.isPrototypeObject()) {
+        FunctionType f = obj.getOwnerFunction();
+        for (ObjectType i : f.getImplementedInterfaces()) {
+          if (i.hasProperty(propName)) {
+            return i.getPropertyType(propName);
+          }
+        }
+      }
+      return null;
+    }
+
+    /**
      * Resolve any stub declarations to unknown types if we could not
      * find types for them during traversal.
      */
@@ -1826,17 +1842,19 @@ final class TypedScopeCreator implements ScopeCreator {
         // If we see a stub property, make sure to register this property
         // in the type registry.
         ObjectType ownerType = getObjectSlot(ownerName);
-        defineSlot(n, parent, unknownType, true);
+        JSType inheritedType = getInheritedInterfacePropertyType(ownerType, propName);
+        JSType stubType = inheritedType == null ? unknownType : inheritedType;
+        defineSlot(n, parent, stubType, true);
 
         if (ownerType != null &&
             (isExtern || ownerType.isFunctionPrototypeType())) {
           // If this is a stub for a prototype, just declare it
           // as an unknown type. These are seen often in externs.
           ownerType.defineInferredProperty(
-              propName, unknownType, n);
+              propName, stubType, n);
         } else {
           typeRegistry.registerPropertyOnType(
-              propName, ownerType == null ? unknownType : ownerType);
+              propName, ownerType == null ? stubType : ownerType);
         }
       }
     }
@@ -2010,10 +2028,14 @@ final class TypedScopeCreator implements ScopeCreator {
 
     private ObjectType getThisTypeForCollectingProperties() {
       Node rootNode = scope.getRootNode();
-      if (rootNode.isFromExterns()) return null;
+      if (rootNode.isFromExterns()) {
+        return null;
+      }
 
       JSType type = rootNode.getJSType();
-      if (type == null || !type.isFunctionType()) return null;
+      if (type == null || !type.isFunctionType()) {
+        return null;
+      }
 
       FunctionType fnType = type.toMaybeFunctionType();
       JSType fnThisType = fnType.getTypeOfThis();
