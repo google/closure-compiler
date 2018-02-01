@@ -18,17 +18,16 @@ package com.google.javascript.jscomp;
 
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
 import java.util.HashMap;
 import java.util.Map;
 
 /**
  * Filters warnings based on in-code {@code @suppress} annotations.
  *
- * <p> Works by looking at the AST node associated with the warning, and looking
- * at parents of the node until it finds a function or a script.
- * For this reason, it doesn't work for warnings without an associated AST node,
- * eg, the ones in parsing/IRFactory. They can be turned off with jscomp_off.
+ * <p>Works by looking at the AST node associated with the warning, and looking at parents of the
+ * node until it finds a node declaring a symbol (class, function, variable, property, assignment,
+ * object literal key) or a script. For this reason, it doesn't work for warnings without an
+ * associated AST node, eg, the ones in parsing/IRFactory. They can be turned off with jscomp_off.
  *
  * @author nicksantos@google.com (Nick Santos)
  */
@@ -89,33 +88,25 @@ class SuppressDocWarningsGuard extends WarningsGuard {
       node = compiler.getScriptNode(error.sourceName);
     }
     if (node != null) {
-      boolean visitedFunction = false;
       for (Node current = node;
            current != null;
            current = current.getParent()) {
-        Token type = current.getToken();
+        // Search for @suppress tags on nodes introducing symbols:
+        // - class & function declarations
+        // - variables
+        // - assignments
+        // - object literal keys
+        // And on the top level script node.
         JSDocInfo info = null;
-
-        if (type == Token.FUNCTION) {
+        if (current.isFunction() || current.isClass()) {
           info = NodeUtil.getBestJSDocInfo(current);
-          visitedFunction = true;
-        } else if (type == Token.SCRIPT) {
+        } else if (current.isScript()) {
           info = current.getJSDocInfo();
-        } else if (current.isVar() || current.isAssign()) {
-          // There's one edge case we're worried about:
-          // if the warning points to an assignment to a function, we
-          // want the suppressions on that function to apply.
-          // It's OK if we double-count some cases.
-          Node rhs = NodeUtil.getRValueOfLValue(current.getFirstChild());
-          if (rhs != null) {
-            if (rhs.isCast()) {
-              rhs = rhs.getFirstChild();
-            }
-
-            if (rhs.isFunction() && !visitedFunction) {
-              info = NodeUtil.getBestJSDocInfo(current);
-            }
-          }
+        } else if (NodeUtil.isNameDeclaration(current)
+            || (current.isAssign() && current.getParent().isExprResult())
+            || (current.isGetProp() && current.getParent().isExprResult())
+            || NodeUtil.isObjectLitKey(current)) {
+          info = NodeUtil.getBestJSDocInfo(current);
         }
 
         if (info != null) {

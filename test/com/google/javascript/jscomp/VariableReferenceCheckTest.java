@@ -355,21 +355,32 @@ public final class VariableReferenceCheckTest extends CompilerTestCase {
     testWarning("a++; var {x: a} = {x: 1};", EARLY_REFERENCE);
   }
 
-  public void testNoWarnInExterns1() {
-    // Verify duplicate suppressions are properly recognized.
-    String externs = "var google; /** @suppress {duplicate} */ var google";
-    String code = "";
-    testSame(externs, code);
+  public void testSuppressDuplicate_first() {
+    String code = "/** @suppress {duplicate} */ var google; var google";
+    testSame(code);
   }
 
-  public void testNoWarnInExterns2() {
+  public void testSuppressDuplicate_second() {
+    String code = "var google; /** @suppress {duplicate} */ var google";
+    testSame(code);
+  }
+
+  public void testSuppressDuplicate_fileoverview() {
+    String code =
+        "/** @fileoverview @suppress {duplicate} */\n"
+            + "/** @type {?} */ var google;\n"
+            + " var google";
+    testSame(code);
+  }
+
+  public void testNoWarnDuplicateInExterns2() {
     // Verify we don't complain about early references in externs
     String externs = "window; var window;";
     String code = "";
     testSame(externs, code);
   }
 
-  public void testNoWarnInExterns_withES6Modules() {
+  public void testNoWarnDuplicateInExterns_withES6Modules() {
     String externs = "export var google; /** @suppress {duplicate} */ var google";
     String code = "";
     testSame(externs, code);

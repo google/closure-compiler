@@ -324,7 +324,8 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
    */
   private boolean checkRedeclaration(
       Var v, Reference reference, Node referenceNode, Reference hoistedFn, BasicBlock basicBlock) {
-    boolean allowDupe = VarCheck.hasDuplicateDeclarationSuppression(referenceNode, v);
+    boolean allowDupe =
+        VarCheck.hasDuplicateDeclarationSuppression(compiler, referenceNode, v.getNameNode());
     boolean letConstShadowsVar = v.getParentNode().isVar()
         && (reference.isLetDeclaration() || reference.isConstDeclaration());
     boolean isVarNodeSameAsReferenceNode = v.getNode() == reference.getNode();

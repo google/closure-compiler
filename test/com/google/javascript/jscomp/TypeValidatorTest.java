@@ -424,30 +424,6 @@ public final class TypeValidatorTest extends CompilerTestCase {
   }
 
   public void testDuplicateSuppression() {
-    testSame(lines(
-        "/** @const */",
-        "var ns0 = {};",
-        "/** @type {number} */",
-        "ns0.x;",
-        "/** @type {number} */",
-        "ns0.x;"));
-
-    testSame(lines(
-        "/** @const */",
-        "var ns1 = {};",
-        "/** @type {number} */",
-        "ns1.x = 3;",
-        "/** @type {number} @suppress {duplicate} */",
-        "ns1.x = 3;"));
-
-    testSame(LINE_JOINER.join(
-        "/** @const */",
-        "var ns1 = {};",
-        "/** @type {number} @suppress {duplicate} */",
-        "ns1.x = 3;",
-        "/** @type {number} */",
-        "ns1.x = 3;"));
-
     testWarning(
         lines(
             "/** @const */",
@@ -457,49 +433,162 @@ public final class TypeValidatorTest extends CompilerTestCase {
             "/** @type {number} */",
             "ns2.x = 3;"),
         TypeValidator.DUP_VAR_DECLARATION);
+    testWarning(
+        lines(
+            "/** @const */",
+            "var ns2 = {};",
+            "/** @type {number|string} */", // so that the second assignment is accepted.
+            "ns2.x = 3;",
+            "/** @type {string} */",
+            "ns2.x = 'a';"),
+        TypeValidator.DUP_VAR_DECLARATION_TYPE_MISMATCH);
 
+    // duplicates suppressed on 1st declaration.
+    testSame(
+        lines(
+            "/** @const */",
+            "var ns1 = {};",
+            "/** @type {number} @suppress {duplicate} */",
+            "ns1.x = 3;",
+            "/** @type {number} */",
+            "ns1.x = 3;"));
+
+    // duplicates suppressed on 2nd declaration.
+    testSame(
+        lines(
+            "/** @const */",
+            "var ns1 = {};",
+            "/** @type {number} */",
+            "ns1.x = 3;",
+            "/** @type {number} @suppress {duplicate} */",
+            "ns1.x = 3;"));
+
+    // duplicates suppressed on file level.
+    testSame(
+        lines(
+            "/** @fileoverview @suppress {duplicate} */",
+            "/** @const */",
+            "var ns1 = {};",
+            "/** @type {number} */",
+            "ns1.x = 3;",
+            "/** @type {number} */",
+            "ns1.x = 3;"));
+  }
+
+  public void testDuplicateSuppression_class() {
+    enableTranspile();
+    testWarning(
+        lines(
+            "class X { constructor() {} }", //
+            "function X() {}"),
+        TypeValidator.DUP_VAR_DECLARATION_TYPE_MISMATCH);
+    testSame(
+        lines(
+            "/** @suppress {duplicate} */",
+            "class X { constructor() {} }", //
+            "function X() {}"));
+  }
+
+  public void testDuplicateSuppression_typeMismatch() {
+    // duplicate diagnostic category includes type mismatches.
+    testSame(
+        lines(
+            "/** @const */",
+            "var ns1 = {};",
+            "/** @type {number} */",
+            "ns1.x = 3;",
+            "/** @type {string} @suppress {duplicate} */",
+            "ns1.x = 3;"));
+    testSame(
+        lines(
+            "/** @const */",
+            "var ns1 = {};",
+            "/** @type {number} @suppress {duplicate} */",
+            "ns1.x = 3;",
+            "/** @type {string} */",
+            "ns1.x = 3;"));
+  }
+
+  public void testDuplicateSuppression_stubs() {
+    // No duplicate warning because the first declaration is a stub declaration (property access)
+    testSame(
+        lines(
+            "/** @const */",
+            "var ns0 = {};",
+            "/** @type {number} */",
+            "ns0.x;",
+            "/** @type {number} */",
+            "ns0.x;"));
+
+    // Type mismatch on stub.
     testWarning(
         lines(
             "/** @const */",
             "var ns3 = {};",
             "/** @type {number} */",
-            "ns3.x;",
-            "/** @type {string} @suppress {duplicate} */",
-            "ns3.x;"),
-        TypeValidator.DUP_VAR_DECLARATION_TYPE_MISMATCH);
-
-    testWarning(
-        lines(
-            "/** @const */",
-            "var ns3 = {};",
-            "/** @type {number} @suppress {duplicate} */",
             "ns3.x;",
             "/** @type {string} */",
             "ns3.x;"),
         TypeValidator.DUP_VAR_DECLARATION_TYPE_MISMATCH);
+  }
 
+  public void testDuplicateSuppression_topLevelVariables() {
     testWarning(
         lines("/** @type {number} */", "var w;", "/** @type {number} */", "var w;"),
         TypeValidator.DUP_VAR_DECLARATION);
 
-    testSame(lines(
-        "/** @type {number} */",
-        "var x;",
-        "/** @type {number} @suppress {duplicate} */",
-        "var x;"));
+    testWarning(
+        lines("/** @type {number} */", "var y = 3;", "/** @type {string} */", "var y = 3;"),
+        TypeValidator.DUP_VAR_DECLARATION_TYPE_MISMATCH);
 
+    // @suppress on file level.
+    testSame(
+        lines(
+            "/** @fileoverview  @suppress {duplicate} */",
+            "/** @type {number} */",
+            "var x;",
+            "/** @type {number} */",
+            "var x;"));
+
+    // @suppress on variable declaration.
+    testSame(
+        lines(
+            "/** @type {number} */",
+            "var z;",
+            "/** @type {number} @suppress {duplicate} */",
+            "var z;"));
+  }
+
+  public void testDuplicateSuppression_topLevelFunctions() {
     testWarning(
         lines(
-            "/** @type {number} */", "var y = 3;", "/** @type {number} */", "var y = 3;"),
+            "/** @return {number} */",
+            "function f() {}",
+            "/** @return {number} */",
+            "function f() {}"),
         TypeValidator.DUP_VAR_DECLARATION);
 
     testWarning(
         lines(
-            "/** @type {number} */",
-            "var z;",
-            "/** @type {string} @suppress {duplicate} */",
-            "var z;"),
+            "/** @return {number} */",
+            "function f() {}",
+            "/** @return {string} */",
+            "function f() {}"),
         TypeValidator.DUP_VAR_DECLARATION_TYPE_MISMATCH);
+
+    testSame(
+        lines(
+            "/** @return {number} */",
+            "function f() {}",
+            "/** @return {string} @suppress {duplicate} */",
+            "function f() {}"));
+
+    testSame(
+        lines(
+            "/** @return {number} */",
+            "function f() {}",
+            "/** @return {string} @suppress {duplicate} */",
+            "function f() {}"));
   }
 
   private TypeMismatch fromNatives(JSTypeNative a, JSTypeNative b) {

@@ -13203,18 +13203,17 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "ns.Foo = { a: 123 };"),
         GlobalTypeInfoCollector.REDECLARED_PROPERTY);
 
-    typeCheck(LINE_JOINER.join(
-        "/** @const */",
-        "var ns = {};",
-        "/** @const */",
-        "ns.Foo = {};",
-        "/**",
-        " * @const",
-        // @suppress is ignored here b/c there is no @type in the jsdoc.
-        " * @suppress {duplicate}",
-        " */",
-        "ns.Foo = { a: 123 };"),
-        GlobalTypeInfoCollector.REDECLARED_PROPERTY);
+    typeCheck(
+        LINE_JOINER.join(
+            "/** @const */",
+            "var ns = {};",
+            "/** @const */",
+            "ns.Foo = {};",
+            "/**",
+            " * @const",
+            " * @suppress {duplicate}",
+            " */",
+            "ns.Foo = { a: 123 };"));
 
     typeCheck(LINE_JOINER.join(
         "/** @const */",

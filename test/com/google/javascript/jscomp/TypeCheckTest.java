@@ -2672,6 +2672,20 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         "   /** @type {!Function} */ (function(x) {});");
   }
 
+  public void testDuplicateStaticMethodDecl7() {
+    testTypes(
+        "/** @type {string} */ var foo;\n" //
+            + "var z = function foo() {};\n",
+        TypeCheck.FUNCTION_MASKS_VARIABLE);
+  }
+
+  public void testDuplicateStaticMethodDecl8() {
+    testTypes(
+        "/** @fileoverview @suppress {duplicate} */\n" //
+            + "/** @type {string} */ var foo;\n"
+            + "var z = function foo() {};\n");
+  }
+
   public void testDuplicateStaticPropertyDecl1() {
     testTypes(
         "var goog = goog || {};" +
@@ -2714,16 +2728,12 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
 
   public void testDuplicateStaticPropertyDecl5() {
     testClosureTypesMultipleWarnings(
-        "var goog = goog || {};" +
-        "/** @type {!Foo} */ goog.foo;" +
-        "/** @type {string}\n * @suppress {duplicate} */ goog.foo = 'x';" +
-        "/** @constructor */ function Foo() {}",
+        "var goog = goog || {};"
+            + "/** @type {!Foo} */ goog.foo;"
+            + "/** @type {string}\n * @suppress {duplicate} */ goog.foo = 'x';"
+            + "/** @constructor */ function Foo() {}",
         ImmutableList.of(
-            "assignment to property foo of goog\n" +
-            "found   : string\n" +
-            "required: Foo",
-            "variable goog.foo redefined with type string, " +
-            "original definition at [testcode]:1 with type Foo"));
+            "assignment to property foo of goog\n" + "found   : string\n" + "required: Foo"));
   }
 
   public void testDuplicateStaticPropertyDecl6() {

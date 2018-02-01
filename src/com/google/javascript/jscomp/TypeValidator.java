@@ -32,7 +32,6 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.VOID_TYPE;
 
 import com.google.common.base.Joiner;
 import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
-import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.TypeI.Nullability;
 import com.google.javascript.rhino.jstype.FunctionType;
@@ -585,22 +584,6 @@ class TypeValidator implements Serializable {
   TypedVar expectUndeclaredVariable(String sourceName, CompilerInput input,
       Node n, Node parent, TypedVar var, String variableName, JSType newType) {
     TypedVar newVar = var;
-    boolean allowDupe = false;
-    if (n.isGetProp() || NodeUtil.isObjectLitKey(n) || NodeUtil.isNameDeclaration(n.getParent())) {
-      JSDocInfo info = n.getJSDocInfo();
-      if (info == null) {
-        info = parent.getJSDocInfo();
-      }
-      allowDupe =
-          info != null && info.getSuppressions().contains("duplicate");
-    }
-    // Check for @suppress duplicate on the previous variable definition.
-    if (!allowDupe) {
-      JSDocInfo info = var.getJSDocInfo();
-      allowDupe =
-          info != null && info.getSuppressions().contains("duplicate");
-    }
-
     JSType varType = var.getType();
 
     // Only report duplicate declarations that have types. Other duplicates
@@ -630,24 +613,34 @@ class TypeValidator implements Serializable {
           parent.setJSType(varType);
         }
       } else {
-        // Always warn about duplicates if the overridden type does not
-        // match the original type.
-        //
-        // If the types match, suppress the warning iff there was a @suppress
-        // tag, or if the original declaration was a stub.
-        if (!(allowDupe ||
-              var.getParentNode().isExprResult()) ||
-            !newType.isEquivalentTo(varType)) {
-
-          if (newType.isEquivalentTo(varType)) {
-            report(JSError.make(n, DUP_VAR_DECLARATION,
-                variableName, var.getInputName(),
-                String.valueOf(var.nameNode.getLineno())));
-          } else {
-            report(JSError.make(n, DUP_VAR_DECLARATION_TYPE_MISMATCH,
-                variableName, newType.toString(), var.getInputName(),
-                String.valueOf(var.nameNode.getLineno()),
-                varType.toString()));
+        // Check for @suppress duplicate or similar warnings guard on the previous variable
+        // declaration location.
+        boolean allowDupe = hasDuplicateDeclarationSuppression(compiler, var.getNameNode());
+        // If the previous definition doesn't suppress the warning, emit it here (i.e. always emit
+        // on the second of the duplicate definitions). The warning might still be suppressed by an
+        // @suppress tag on this declaration.
+        if (!allowDupe) {
+          // Report specifically if it is not just a duplicate, but types also don't mismatch.
+          if (!newType.isEquivalentTo(varType)) {
+            report(
+                JSError.make(
+                    n,
+                    DUP_VAR_DECLARATION_TYPE_MISMATCH,
+                    variableName,
+                    newType.toString(),
+                    var.getInputName(),
+                    String.valueOf(var.nameNode.getLineno()),
+                    varType.toString()));
+          } else if (!var.getParentNode().isExprResult()) {
+            // If the type matches and the previous declaration was a stub declaration
+            // (isExprResult), then ignore the duplicate, otherwise emit an error.
+            report(
+                JSError.make(
+                    n,
+                    DUP_VAR_DECLARATION,
+                    variableName,
+                    var.getInputName(),
+                    String.valueOf(var.nameNode.getLineno())));
           }
         }
       }
@@ -886,5 +879,17 @@ class TypeValidator implements Serializable {
   private JSError report(JSError error) {
     compiler.report(error);
     return error;
+  }
+
+  /**
+   * @param decl The declaration to check.
+   * @return Whether duplicated declarations warnings should be suppressed for the given node.
+   */
+  static boolean hasDuplicateDeclarationSuppression(AbstractCompiler compiler, Node decl) {
+    // NB: DUP_VAR_DECLARATION is somewhat arbitrary here, but it must be one of the errors
+    // suppressed by the "duplicate" group.
+    CheckLevel originalDeclLevel =
+        compiler.getErrorLevel(JSError.make(decl, DUP_VAR_DECLARATION, "dummy", "dummy"));
+    return originalDeclLevel == CheckLevel.OFF;
   }
 }

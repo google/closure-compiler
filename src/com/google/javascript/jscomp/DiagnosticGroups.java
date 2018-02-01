@@ -452,6 +452,7 @@ public class DiagnosticGroups {
           VarCheck.VAR_MULTIPLY_DECLARED_ERROR,
           TypeValidator.DUP_VAR_DECLARATION,
           TypeValidator.DUP_VAR_DECLARATION_TYPE_MISMATCH,
+          TypeCheck.FUNCTION_MASKS_VARIABLE,
           VariableReferenceCheck.REDECLARED_VARIABLE,
           GlobalTypeInfoCollector.REDECLARED_PROPERTY);
 

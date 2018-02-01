@@ -470,13 +470,15 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         // normal type checking
         final TypedScope outerScope = t.getTypedScope();
         final String functionPrivateName = n.getFirstChild().getString();
-        if (functionPrivateName != null && functionPrivateName.length() > 0 &&
-            outerScope.isDeclared(functionPrivateName, false) &&
+        if (functionPrivateName != null
+            && functionPrivateName.length() > 0
+            && outerScope.isDeclared(functionPrivateName, false)
             // Ideally, we would want to check whether the type in the scope
             // differs from the type being defined, but then the extern
             // redeclarations of built-in types generates spurious warnings.
-            !(outerScope.getVar(
-                functionPrivateName).getType() instanceof FunctionType)) {
+            && !(outerScope.getVar(functionPrivateName).getType() instanceof FunctionType)
+            && !TypeValidator.hasDuplicateDeclarationSuppression(
+                compiler, outerScope.getVar(functionPrivateName).getNameNode())) {
           report(t, n, FUNCTION_MASKS_VARIABLE, functionPrivateName);
         }
 

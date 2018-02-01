@@ -578,6 +578,14 @@ public final class VarCheckTest extends CompilerTestCase {
     testSame(js);
   }
 
+  public void testRedeclaration4() {
+    String js =
+        " /** @fileoverview @suppress {duplicate} */\n"
+            + " /** @type {string} */ var a;\n"
+            + " var a; ";
+    testSame(js);
+  }
+
   public void testSuppressionWithInlineJsDoc() {
     testSame("/** @suppress {duplicate} */ var /** number */ a; var a;");
   }
