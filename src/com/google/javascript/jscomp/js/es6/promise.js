@@ -244,6 +244,7 @@ $jscomp.polyfill('Promise',
   /**
    * @private
    * @param {!Object} obj
+   * @suppress {strictMissingProperties} obj.then
    */
   PolyfillPromise.prototype.resolveToNonPromiseObj_ = function(obj) {
     var thenMethod = undefined;
