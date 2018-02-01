@@ -94,8 +94,9 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
       return null;
     }
 
-    if (stmt.isNormalBlock() && stmt.hasOneChild()) {
-      stmt = stmt.getFirstChild();
+    Node child = getOnlyInterestingChild(stmt);
+    if (child != null) {
+      stmt = child;
     }
     if (stmt.isBreak() && stmt.getFirstChild().getString().equals(labelName)) {
       compiler.reportChangeToEnclosingScope(n);
@@ -103,6 +104,34 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
       return null;
     }
     return n;
+  }
+
+  /**
+   * Return the only "interesting" child of {@code block}, if it has exactly one interesting child,
+   * otherwise return null. For purposes of this method, a node is considered "interesting" unless
+   * it is an empty synthetic block.
+   */
+  @Nullable
+  private static Node getOnlyInterestingChild(Node block) {
+    if (!block.isNormalBlock()) {
+      return null;
+    }
+    if (block.hasOneChild()) {
+      return block.getOnlyChild();
+    }
+
+    Node ret = null;
+    for (Node child : block.children()) {
+      if (child.isSyntheticBlock() && !child.hasChildren()) {
+        // Uninteresting child.
+      } else if (ret != null) {
+        // Found more than one interesting child.
+        return null;
+      } else {
+        ret = child;
+      }
+    }
+    return ret;
   }
 
   /**

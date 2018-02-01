@@ -3527,6 +3527,46 @@ public final class IntegrationTest extends IntegrationTestCase {
                   "x = 1, y = 3; {START(); {z = 3} END()} f()");
   }
 
+  /**
+   * Make sure this doesn't compile to code containing <pre>a: break a;</pre> which doesn't work
+   * properly on some versions of Edge. See b/72667630.
+   */
+  public void testNoSelfReferencingBreakWithSyntheticBlocks() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setWarningLevel(DiagnosticGroups.UNDEFINED_VARIABLES, CheckLevel.OFF);
+    options.syntheticBlockStartMarker = "START";
+    options.syntheticBlockEndMarker = "END";
+    test(
+        options,
+        lines(
+            "const D = false;",
+            "/**",
+            " * @param {string} m",
+            " */",
+            "function b(m) {",
+            " if (!D) return;",
+            "",
+            " START('debug');",
+            " alert('Shouldnt be here' + m);",
+            " END('debug');",
+            "}",
+            "/**",
+            " * @param {string} arg",
+            " */",
+            "function a(arg) {",
+            "  if (arg == 'log') {",
+            "    b('logging 1');",
+            "    b('logging 2');",
+            "  } else {",
+            "    alert('Hi!');",
+            "  }",
+            "}",
+            "",
+            "a(input);"),
+        "'log' != input && alert('Hi!')");
+  }
+
   public void testBug5786871() {
     CompilerOptions options = createCompilerOptions();
     options.setIdeMode(true);
