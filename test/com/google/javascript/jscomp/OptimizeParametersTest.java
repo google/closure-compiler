@@ -313,6 +313,56 @@ public final class OptimizeParametersTest extends CompilerTestCase {
          "var foo = function() {var a = 'abc'}; foo()");
   }
 
+  public void testOptimizeOnlyImmutableValues3() {
+    // "var a = null;" gets inserted after the declaration of 'goo' so the tree stays normalized.
+    test(
+        lines(
+            "function foo(a) {",
+            "  function goo() {}",
+            "  goo(a);",
+            "};",
+            "foo(null);"),
+        lines(
+            "function foo() {",
+            "  function goo() {}",
+            "  var a = null;",
+            "  goo(a);",
+            "};",
+            "foo();"));
+
+    test(
+        lines(
+            "function foo(a) {",
+            "  function goo() {}",
+            "  function boo() {}",
+            "  goo(a);",
+            "};",
+            "foo(null);"),
+        lines(
+            "function foo() {",
+            "  function goo() {}",
+            "  function boo() {}",
+            "  var a = null;",
+            "  goo(a);",
+            "};",
+            "foo();"));
+  }
+
+  public void testOptimizeOnlyImmutableValues4() {
+    test(
+        lines(
+            "function foo(a) {",
+            "  function goo() { return a; }",
+            "};",
+            "foo(null);"),
+        lines(
+            "function foo() {",
+            "  function goo() { return a; }",
+            "  var a = null;",
+            "};",
+            "foo();"));
+  }
+
   public void testRemoveOneOptionalVarAssignment() {
     test("var foo = function (p1) { }; foo()",
         "var foo = function () {var p1}; foo()");

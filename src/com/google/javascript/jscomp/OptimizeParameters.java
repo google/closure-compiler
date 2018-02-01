@@ -903,7 +903,18 @@ class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompile
     } else {
       stmt = IR.exprResult(value).useSourceInfoFrom(value);
     }
-    block.addChildToFront(stmt);
+
+    // Insert the statement at the beginning of the function body, but after any
+    // existing function declarations so that the tree stays normalized.
+    Node insertionPoint = block.getFirstChild();
+    while (insertionPoint != null && insertionPoint.isFunction()) {
+      insertionPoint = insertionPoint.getNext();
+    }
+    if (insertionPoint == null) {
+      block.addChildToBack(stmt);
+    } else {
+      block.addChildBefore(stmt, insertionPoint);
+    }
     compiler.reportChangeToEnclosingScope(stmt);
   }
 
