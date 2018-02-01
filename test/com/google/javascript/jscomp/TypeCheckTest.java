@@ -2257,16 +2257,37 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         "/** @param {boolean} x */ var g = function(x) {};");
   }
 
-  public void testFunctionInference23() {
+  public void testFunctionInference23a() {
     // We want to make sure that 'prop' isn't declared on all objects.
+
+    // This test is specifically checking loose property check behavior.
+    compiler.getOptions().setWarningLevel(
+        DiagnosticGroups.STRICT_MISSING_PROPERTIES, CheckLevel.OFF);
+
     testTypes(
-        "/** @type {!Function} */ var f = function() {\n" +
-        "  /** @type {number} */ this.prop = 3;\n" +
-        "};" +
-        "/**\n" +
-        " * @param {Object} x\n" +
-        " * @return {string}\n" +
-        " */ var g = function(x) { return x.prop; };");
+        lines(
+            "/** @type {!Function} */ var f = function() {",
+            "  /** @type {number} */ this.prop = 3;",
+            "};",
+            "/**",
+            " * @param {Object} x",
+            " * @return {string}",
+            " */ var g = function(x) { return x.prop; };"));
+  }
+
+  public void testFunctionInference23b() {
+    // We want to make sure that 'prop' isn't declared on all objects.
+
+    testTypes(
+        lines(
+            "/** @type {!Function} */ var f = function() {",
+            "  /** @type {number} */ this.prop = 3;",
+            "};",
+            "/**",
+            " * @param {Object} x",
+            " * @return {string}",
+            " */ var g = function(x) { return x.prop; };"),
+        "Property prop never defined on Object");
   }
 
   public void testInnerFunction1() {
@@ -9206,6 +9227,11 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
     // while because of the cast, it could have any type (including
     // a union).
     compiler.getOptions().setLanguageIn(CompilerOptions.LanguageMode.ECMASCRIPT_2015);
+
+    // This test is specifically checking loose property check behavior.
+    compiler.getOptions().setWarningLevel(
+        DiagnosticGroups.STRICT_MISSING_PROPERTIES, CheckLevel.OFF);
+
     testTypes(
         "for (var i = 0; i < 10; i++) {" +
           "var x = /** @type {Object|number} */ ({foo: 3});" +
@@ -9213,6 +9239,26 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
           "f(x.foo);" +
           "f([].foo);" +
         "}",
+        "Property foo never defined on Array");
+  }
+
+  public void testCast15b() {
+    // This fixes a bug where a type cast on an object literal
+    // would cause a run-time cast exception if the node was visited
+    // more than once.
+    //
+    // Some code assumes that an object literal must have a object type,
+    // while because of the cast, it could have any type (including
+    // a union).
+    compiler.getOptions().setLanguageIn(CompilerOptions.LanguageMode.ECMASCRIPT_2015);
+    testTypes(
+        lines(
+          "for (var i = 0; i < 10; i++) {",
+            "var x = /** @type {{foo:number}}|number} */ ({foo: 3});",
+            "/** @param {number} x */ function f(x) {}",
+            "f(x.foo);",
+            "f([].foo);",
+          "}"),
         "Property foo never defined on Array");
   }
 
@@ -9808,17 +9854,33 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
     testTypes("function g(f) { var x = new f(); x.a = 1; return x; }");
   }
 
-  public void testUnknownPrototypeChain() {
-    testTypes("/**\n" +
-              "* @param {Object} co\n" +
-              " * @return {Object}\n" +
-              " */\n" +
-              "function inst(co) {\n" +
-              " /** @constructor */\n" +
-              " var c = function() {};\n" +
-              " c.prototype = co.prototype;\n" +
-              " return new c;\n" +
-              "}");
+  public void testUnknownPrototypeChain1() {
+    testTypes(
+        lines("/**",
+              "* @param {Object} co",
+              " * @return {Object}",
+              " */",
+              "function inst(co) {",
+              " /** @constructor */",
+              " var c = function() {};",
+              " c.prototype = co.prototype;",
+              " return new c;",
+              "}"),
+        "Property prototype never defined on Object");
+  }
+
+  public void testUnknownPrototypeChain2() {
+    testTypes(
+        lines("/**",
+              " * @param {Function} co",
+              " * @return {Object}",
+              " */",
+              "function inst(co) {",
+              " /** @constructor */",
+              " var c = function() {};",
+              " c.prototype = co.prototype;",
+              " return new c;",
+              "}"));
   }
 
   public void testNamespacedConstructor() {
@@ -12003,7 +12065,8 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         " return {};" +
         "}" +
         "f().a = 3;" +
-        "/** @param {Object} y */ function g(y) { return y.a; }");
+        "/** @param {Object} y */ function g(y) { return y.a; }",
+        "Property a never defined on Object");
   }
 
   public void testMissingProperty31a() {
@@ -13594,10 +13657,15 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testPropertyCanBeDefinedInObject() {
-    testTypes("/** @interface */ function I() {};" +
-        "I.prototype.bar = function() {};" +
-        "/** @type {Object} */ var foo;" +
-        "foo.bar();");
+    // This test is specifically checking loose property check behavior.
+    compiler.getOptions().setWarningLevel(
+        DiagnosticGroups.STRICT_MISSING_PROPERTIES, CheckLevel.OFF);
+    testTypes(
+        lines(
+            "/** @interface */ function I() {};",
+            "I.prototype.bar = function() {};",
+            "/** @type {Object} */ var foo;",
+            "foo.bar();"));
   }
 
   private void checkObjectType(ObjectType objectType, String propertyName,
@@ -14368,17 +14436,21 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testIssue1024a() {
-     testTypes(
-        "/** @param {Object} a */\n" +
-        "function f(a) {\n" +
-        "  a.prototype = '__proto'\n" +
-        "}\n" +
-        "/** @param {Object} b\n" +
-        " *  @return {!Object}\n" +
-        " */\n" +
-        "function g(b) {\n" +
-        "  return b.prototype\n" +
-        "}\n");
+    // This test is specifically checking loose property check behavior.
+    compiler.getOptions().setWarningLevel(
+        DiagnosticGroups.STRICT_MISSING_PROPERTIES, CheckLevel.OFF);
+    testTypes(
+        lines(
+            "/** @param {Object} a */",
+            "function f(a) {",
+            "  a.prototype = '__proto'",
+            "}",
+            "/** @param {Object} b",
+            " *  @return {!Object}",
+            " */",
+            "function g(b) {",
+            "  return b.prototype",
+            "}"));
   }
 
   public void testIssue1024b() {
@@ -18163,6 +18235,19 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
             "initializing variable",
             "found   : number",
             "required: null"));
+  }
+
+  public void testMissingPropertiesWarningOnObject1() {
+    testTypes(lines(
+        "/** @constructor */",
+        "function Foo() {",
+        "  this.prop = 123;",
+        "}",
+        "/** @param {!Object} x */",
+        "function f(x) {",
+        "  return x.prop;",
+        "}"),
+        "Property prop never defined on Object");
   }
 
   private void testTypes(String js) {

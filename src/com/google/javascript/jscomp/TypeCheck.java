@@ -1540,57 +1540,62 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
   private void checkPropertyAccessHelper(
       JSType objectType, String propName, NodeTraversal t, Node n) {
     boolean isStruct = objectType.isStruct();
+    if (!reportMissingProperties
+        || objectType.isEmptyType()
+        || (!isStruct && allowLoosePropertyAccessOnNode(n))) {
+      return;
+    }
+    PropDefinitionKind kind = typeRegistry.canPropertyBeDefined(objectType, propName);
+    if (kind.equals(PropDefinitionKind.KNOWN)) {
+      return;
+    }
+    // If the property definition is known, but only loosely associated,
+    // only report a "strict error" which can be optional as code is migrated.
+    boolean isLooselyAssociated = kind.equals(PropDefinitionKind.LOOSE);
+    boolean isUnknownType = objectType.isUnknownType();
+    if (isLooselyAssociated && isUnknownType) {
+      // We still don't want to report this.
+      return;
+    }
+    boolean isObjectType = objectType.isEquivalentTo(getNativeType(OBJECT_TYPE));
+    boolean lowConfidence = isUnknownType || isObjectType;
     boolean loosePropertyDeclaration = isQNameAssignmentTarget(n) && !isStruct;
-    if (!objectType.isEmptyType() && reportMissingProperties
-        && (!allowLoosePropertyAccessOnNode(n) || isStruct)) {
-      PropDefinitionKind kind = typeRegistry.canPropertyBeDefined(objectType, propName);
-      if (!kind.equals(PropDefinitionKind.KNOWN)) {
-        // If the property definition is known, but only loosely associated,
-        // only report a "strict error" which can be optional as code is migrated.
-        boolean strict = kind.equals(PropDefinitionKind.LOOSE) || loosePropertyDeclaration;
-        boolean lowConfidence =
-            objectType.isUnknownType() || objectType.isEquivalentTo(getNativeType(OBJECT_TYPE));
-        SuggestionPair pair = null;
-        if (lowConfidence) {
-          if (strict) {
-            return;
-          }
-        } else {
-          pair = getClosestPropertySuggestion(objectType, propName);
-          // Traditionally, we would not report a warning for "loose" properties, but we want to be
-          // able to be more strict, so introduce an optional warning.
-        }
-        if (pair != null && pair.distance * 4 < propName.length()) {
-          DiagnosticType reportType;
-          if (strict) {
-            reportType = STRICT_INEXISTENT_PROPERTY_WITH_SUGGESTION;
-          } else {
-            reportType = INEXISTENT_PROPERTY_WITH_SUGGESTION;
-          }
-          report(
-              t,
-              n.getLastChild(),
-              reportType,
-              propName,
-              typeRegistry.getReadableTypeName(n.getFirstChild()),
-              pair.suggestion);
-        } else {
-          DiagnosticType reportType;
-          if (lowConfidence) {
-            reportType = POSSIBLE_INEXISTENT_PROPERTY;
-          } else if (strict) {
-            reportType = STRICT_INEXISTENT_PROPERTY;
-          } else {
-            reportType = INEXISTENT_PROPERTY;
-          }
-          report(
-              t,
-              n.getLastChild(),
-              reportType,
-              propName,
-              typeRegistry.getReadableTypeName(n.getFirstChild()));
-        }
+    // Traditionally, we would not report a warning for "loose" properties, but we want to be
+    // able to be more strict, so introduce an optional warning.
+    boolean strictReport = isLooselyAssociated || loosePropertyDeclaration;
+    SuggestionPair pair = null;
+    if (!lowConfidence) {
+      pair = getClosestPropertySuggestion(objectType, propName);
+    }
+    if (pair != null && pair.distance * 4 < propName.length()) {
+      DiagnosticType reportType;
+      if (strictReport) {
+        reportType = STRICT_INEXISTENT_PROPERTY_WITH_SUGGESTION;
+      } else {
+        reportType = INEXISTENT_PROPERTY_WITH_SUGGESTION;
       }
+      report(
+          t,
+          n.getLastChild(),
+          reportType,
+          propName,
+          typeRegistry.getReadableTypeName(n.getFirstChild()),
+          pair.suggestion);
+    } else {
+      DiagnosticType reportType;
+      if (strictReport) {
+        reportType = STRICT_INEXISTENT_PROPERTY;
+      } else if (lowConfidence) {
+        reportType = POSSIBLE_INEXISTENT_PROPERTY;
+      } else {
+        reportType = INEXISTENT_PROPERTY;
+      }
+      report(
+          t,
+          n.getLastChild(),
+          reportType,
+          propName,
+          typeRegistry.getReadableTypeName(n.getFirstChild()));
     }
   }
 
