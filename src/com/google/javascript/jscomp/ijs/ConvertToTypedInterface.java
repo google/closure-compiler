@@ -549,6 +549,7 @@ public class ConvertToTypedInterface implements CompilerPass {
           || (isExport && (rhs.isQualifiedName() || rhs.isObjectLit()))
           || (jsdoc != null && jsdoc.isConstructor() && rhs.isQualifiedName())
           || isAliasDefinition(decl)
+          || (nameNode.matchesQualifiedName("goog.global") && rhs.isThis())
           || (rhs.isObjectLit()
               && !rhs.hasChildren()
               && (jsdoc == null || !JsdocUtil.hasAnnotatedType(jsdoc)))) {

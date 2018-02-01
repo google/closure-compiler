@@ -1384,6 +1384,10 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
             ""));
   }
 
+  public void testGoogGlobalTyped() {
+    testSame("/** @const */ var goog = {}; goog.global = this;");
+  }
+
 
   public void testAnonymousClassDoesntCrash() {
     test(
