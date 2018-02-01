@@ -64,9 +64,8 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
             "/** @constructor */",
             "function f() {",
             "  for(; true; ) {",
-            "    var b = a.b;",
-            "    alert(b.staticProp); } }"),
-        warning(AggressiveInlineAliases.UNSAFE_CTOR_ALIASING));
+            "    var b = null;",
+            "    alert(a.b.staticProp); } }"));
   }
 
   public void test_b19179602_declareOutsideLoop() {
@@ -118,6 +117,18 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
             "}"));
   }
 
+  public void testGlobalCtorAliasedMultipleTimes() {
+    // TODO(lharker): Also warn for unsafe global ctor aliasing
+    testSame(
+        lines(
+            "/** @constructor */",
+            "function a() {}",
+            "a.staticProp = 5;",
+            "var alias = a;",
+            "use(alias.staticProp);", // Unsafe because a.staticProp becomes a$staticProp.
+            "alias = function() {}"));
+  }
+
   public void testCtorAliasedMultipleTimesWarning1() {
     testSame(
         lines(
@@ -157,6 +168,24 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
             "  alias();",
             "  alias = a;",
             "  use(alias.staticProp);", // Unsafe because a.staticProp becomes a$staticProp.
+            "}"),
+        AggressiveInlineAliases.UNSAFE_CTOR_ALIASING);
+  }
+
+  public void testCtorAliasedMultipleTimesWarning4() {
+    testWarning(
+        lines(
+            "/** @constructor */",
+            "function a() {}",
+            "a.staticProp = 5;",
+            "function f() {",
+            "  if (true) {",
+            "    var alias = a;",
+            "    use(alias.staticProp);",
+            "  } else {",
+            "    alias = {staticProp: 34};",
+            "    use(alias.staticProp);",
+            "  }",
             "}"),
         AggressiveInlineAliases.UNSAFE_CTOR_ALIASING);
   }
@@ -425,7 +454,7 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
   }
 
   public void testLocalCtorAliasAssignedInLoop1() {
-    test(
+    testWarning(
         lines(
             "/** @constructor @struct */ var Main = function() {};",
             "Main.doSomething = function(i) {}",
@@ -439,25 +468,13 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
             "  use(tmp);",
             "  use(tmp.doSomething);",
             "}"),
-        lines(
-            "/** @constructor @struct */ var Main = function() {};",
-            "Main.doSomething = function(i) {}",
-            "function f() {",
-            "  var tmp;",
-            "  for (let i = 0; i < n(); i++) {",
-            "    tmp = Main;",
-            "    Main.doSomething(5);",
-            "    use(Main);",
-            "  }",
-            "  use(tmp);",
-            "  use(tmp.doSomething);", // This line may break if Main$doSomething is collapsed.
-            "}"));
+        AggressiveInlineAliases.UNSAFE_CTOR_ALIASING);
   }
 
 
   public void testLocalCtorAliasAssignedInLoop2() {
     // Test when the alias is assigned in a loop after being used.
-    testSame(
+    testWarning(
         lines(
             "/** @constructor @struct */ var Main = function() {};",
             "Main.doSomething = function(i) {}",
@@ -469,7 +486,8 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
             "  }",
             "  use(tmp);",
             "  use(tmp.doSomething);",
-            "}"));
+            "}"),
+        AggressiveInlineAliases.UNSAFE_CTOR_ALIASING);
   }
 
   public void testLocalCtorAliasAssignedInSwitchCase() {

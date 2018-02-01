@@ -382,7 +382,7 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
   }
 
   public void testPartialLocalCtorAlias() {
-    test(
+    testWarning(
         lines(
             "/** @constructor */ var Main = function() {};",
             "Main.doSomething = function(i) {}",
@@ -393,20 +393,9 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
             "    tmp = Main;",
             "    tmp.doSomething(5);",
             "  }",
-            "  use(tmp.doSomething);",
+            "  use(tmp.doSomething);", // can't inline this use of tmp.
             "}"),
-        lines(
-            "/** @constructor */ var Main = function() {};",
-            "var Main$doSomething = function(i) {}",
-            "function f() {",
-            "  var tmp;",
-            "  if (g()) {",
-            "    use(tmp.doSomething);",
-            "    tmp = Main;",
-            "    Main$doSomething(5);",
-            "  }",
-            "  use(tmp.doSomething);", // This line will work incorrectly if g() is true.
-            "}"));
+        AggressiveInlineAliases.UNSAFE_CTOR_ALIASING);
   }
 
   public void testFunctionAlias2() {
@@ -737,26 +726,29 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
   }
 
   public void test_b19179602() {
+    // Note that this only collapses a.b.staticProp because a.b is a constructor.
+    // Normally AggressiveInlineAliases would not inline "b" inside the loop.
     test(
-        "var a = {};\n"
-        + "/** @constructor */ a.b = function() {};\n"
-        + "a.b.staticProp = 5;\n"
-        + "function f() {\n"
-        + "  while (true) {\n"
-        // b is declared inside a loop, so it is reassigned multiple times
-        + "    var b = a.b;\n"
-        + "    alert(b.staticProp);\n"
-        + "  }\n"
-        + "}\n", "/** @constructor */ var a$b = function() {};\n"
-        + "var a$b$staticProp = 5;\n"
-        + "\n"
-        + "function f() {\n"
-        + "  while (true) {\n"
-        + "    var b = a$b;\n"
-        + "    alert(b.staticProp);\n"
-        + "  }\n"
-        + "}",
-        warning(AggressiveInlineAliases.UNSAFE_CTOR_ALIASING));
+        lines(
+            "var a = {};",
+            "/** @constructor */ a.b = function() {};",
+            "a.b.staticProp = 5;",
+            "function f() {",
+            "  while (true) {",
+            // b is declared inside a loop, so it is reassigned multiple times
+            "    var b = a.b;",
+            "    alert(b.staticProp);",
+            "  }",
+            "}"),
+        lines(
+            "/** @constructor */ var a$b = function() {};",
+            "var a$b$staticProp = 5;",
+            "function f() {",
+            "  while (true) {",
+            "    var b = null;",
+            "    alert(a$b$staticProp);",
+            "  }",
+            "}"));
   }
 
   public void test_b19179602_declareOutsideLoop() {
