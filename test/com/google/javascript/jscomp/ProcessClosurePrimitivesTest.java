@@ -136,6 +136,37 @@ public final class ProcessClosurePrimitivesTest extends CompilerTestCase {
     test(createModuleStar(moduleInputs), expected);
   }
 
+  public void testTypedefProvides() {
+    test(
+        lines(
+            "goog.provide('ns');",
+            "goog.provide('ns.SomeType');",
+            "goog.provide('ns.SomeType.EnumValue');",
+            "goog.provide('ns.SomeType.defaultName');",
+            // subnamespace assignment happens before parent.
+            "/** @enum {number} */",
+            "ns.SomeType.EnumValue = { A: 1, B: 2 };",
+            // parent namespace isn't ever actually assigned.
+            // we're relying on goog.provide to provide it.
+            "/** @typedef {{name: string, value: ns.SomeType.EnumValue}} */",
+            "ns.SomeType;",
+            "/** @const {string} */",
+            "ns.SomeType.defaultName = 'foobarbaz';"),
+        lines(
+            // Created from goog.provide
+            "/** @const */ var ns = {};",
+            // Created from goog.provide.
+            // Cast to unknown is necessary, because the type checker does not expect a symbol
+            // used as a typedef to have a value.
+            "ns.SomeType = /** @type {?} */ ({});", // created from goog.provide
+            "/** @enum {number} */",
+            "ns.SomeType.EnumValue = {A:1, B:2};",
+            "/** @typedef {{name: string, value: ns.SomeType.EnumValue}} */",
+            "ns.SomeType;",
+            "/** @const {string} */",
+            "ns.SomeType.defaultName = 'foobarbaz';"));
+  }
+
   public void testSimpleProvides() {
     test("goog.provide('foo');", "/** @const */ var foo={};");
     test("goog.provide('foo.bar');", "/** @const */ var foo={}; /** @const */ foo.bar={};");

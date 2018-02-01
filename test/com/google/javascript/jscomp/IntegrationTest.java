@@ -709,6 +709,30 @@ public final class IntegrationTest extends IntegrationTestCase {
             "var foo$Bar = function() {};"));
   }
 
+  @GwtIncompatible // b/63595345
+  public void testTypedefProvides() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    test(
+        options,
+        lines(
+            "goog.provide('ns');",
+            "goog.provide('ns.SomeType');",
+            "goog.provide('ns.SomeType.EnumValue');",
+            "goog.provide('ns.SomeType.defaultName');",
+            // subnamespace assignment happens before parent.
+            "/** @enum {number} */",
+            "ns.SomeType.EnumValue = { A: 1, B: 2 };",
+            // parent namespace isn't ever actually assigned.
+            // we're relying on goog.provide to provide it.
+            "/** @typedef {{name: string, value: ns.SomeType.EnumValue}} */",
+            "ns.SomeType;",
+            "/** @const {string} */",
+            "ns.SomeType.defaultName = 'foobarbaz';"),
+        // the provides should be rewritten, then collapsed, then removed by RemoveUnusedCode
+        "");
+  }
+
   public void testExportedNames() {
     CompilerOptions options = createCompilerOptions();
     options.setClosurePass(true);
