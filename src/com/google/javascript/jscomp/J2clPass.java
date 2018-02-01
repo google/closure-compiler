@@ -86,43 +86,6 @@ public class J2clPass implements CompilerPass {
     }
   }
 
-  /**
-   * Forcefully inlines aliases to native types to allow further optimizations.
-   *
-   * <p>e.g. "let $RegExp = window.RegExp; var foo = new $RegExp;" becomes "var foo = new RegExp;"
-   */
-  private static class NativeAliasInliner extends AbstractPostOrderCallback {
-
-    @Override
-    public void visit(NodeTraversal t, Node n, Node parent) {
-      if (n.isName()
-          && !NodeUtil.isNameDeclaration(parent)
-          && !parent.isAssign()) {
-        Node declaringNode = getDeclaringNode(t, n);
-        if (declaringNode != null
-            && declaringNode.getFirstChild() != n
-            && isNativeAlias(declaringNode)) {
-          parent.replaceChild(n, declaringNode.getFirstFirstChild().cloneTree());
-          t.reportCodeChange();
-        }
-      }
-    }
-
-    private Node getDeclaringNode(NodeTraversal t, Node nameNode) {
-      Var var = t.getScope().getVar(nameNode.getString());
-      return var == null ? null : var.getParentNode();
-    }
-
-    private boolean isNativeAlias(Node n) {
-      return NodeUtil.isNameDeclaration(n)
-          && n.getParent().isScript()
-          && n.getJSDocInfo() != null
-          && n.getJSDocInfo().isConstructor()
-          && n.getFirstFirstChild() != null
-          && n.getFirstFirstChild().isGetProp()
-          && n.getFirstFirstChild().getQualifiedName().matches("window.[A-Z][A-Za-z]+");
-    }
-  }
 
   /**
    * Collects references to certain function definitions in a certain class and then inlines fully
@@ -276,8 +239,6 @@ public class J2clPass implements CompilerPass {
             "$setClassMetadataForEnum",
             "$setClassMetadataForPrimitive"),
         InliningMode.BLOCK);
-
-    NodeTraversal.traverseEs6(compiler, root, new NativeAliasInliner());
   }
 
   private void inlineFunctionsInFile(
