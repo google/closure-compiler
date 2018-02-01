@@ -23,7 +23,9 @@
 /**
  * Suppresses the compiler warning when multiple externs files declare the
  * google namespace.
- * @suppress {duplicate}
+ * @suppress {duplicate,strictMissingProperties}
+ * NOTE: This definition should be marked \@const, and when it is we can remove
+ * the "strictMissingProperties" suppression.
  */
 // TODO(nicksantos): Consolidate to one google namespace declaration.
 var google = {};
