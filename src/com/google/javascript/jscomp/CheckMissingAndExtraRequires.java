@@ -100,7 +100,8 @@ public class CheckMissingAndExtraRequires implements HotSwapCompilerPass, NodeTr
       DiagnosticType.disabled("JSC_MISSING_REQUIRE_STRICT_WARNING", "missing require: ''{0}''");
 
   public static final DiagnosticType EXTRA_REQUIRE_WARNING =
-      DiagnosticType.disabled("JSC_EXTRA_REQUIRE_WARNING", "extra require: ''{0}''");
+      DiagnosticType.disabled(
+          "JSC_EXTRA_REQUIRE_WARNING", "extra require: ''{0}'' is never referenced in this file");
 
   private static final ImmutableSet<String> DEFAULT_EXTRA_NAMESPACES =
       ImmutableSet.of(
