@@ -1901,9 +1901,9 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
         "/** @type {number} */",
         "I.prototype.x;",
         "",
-        "/** @constructor @implements {I} */\n" +
-        "function Foo(){}\n" +
-        "/** @type {number} */\n" +
+        "/** @constructor @implements {I} */",
+        "function Foo(){}",
+        "/** @type {number} */",
         "Foo.prototype.x;",
         "",
         "/** @constructor */",
@@ -2169,6 +2169,7 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
         "/**",
         " * @interface",
         " * @extends {MyIterable}",
+        " * @template T",
         " */",
         "function MyCollection() {}",
         "/**",
