@@ -2951,47 +2951,6 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         "function(number): number");
   }
 
-
-  public void testStubMethodDeclarationDoesntBlockTypechecking_1() {
-    testTypes(
-        lines(
-            "/** @interface */",
-            "function Foo() {}",
-            "/** @return {number} */",
-            "Foo.prototype.method = function() {};",
-            "/**",
-            " * @constructor",
-            " * @implements {Foo}",
-            " */",
-            "function Bar() {}",
-            "Bar.prototype.method;",
-            "var /** null */ n = (new Bar).method();"),
-        lines(
-            "initializing variable",
-            "found   : number",
-            "required: null"));
-  }
-
-  public void testStubMethodDeclarationDoesntBlockTypechecking_2() {
-    testTypes(
-        lines(
-            "/** @constructor */",
-            "function Foo() {}",
-            "/** @return {number} */",
-            "Foo.prototype.method = function() {};",
-            "/**",
-            " * @constructor",
-            " * @extends {Foo}",
-            " */",
-            "function Bar() {}",
-            "Bar.prototype.method;",
-            "var /** null */ n = (new Bar).method();"),
-        lines(
-            "initializing variable",
-            "found   : number",
-            "required: null"));
-  }
-
   public void testNestedFunctionInference1() {
     String nestedAssignOfFooAndBar =
         "/** @constructor */ function f() {};" +
