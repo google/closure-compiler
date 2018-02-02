@@ -541,7 +541,7 @@ public final class DefaultPassConfig extends PassConfig {
 
     // Replace 'goog.getCssName' before processing defines but after the
     // other checks have been done.
-    if (options.closurePass) {
+    if (options.closurePass && !options.shouldPreserveGoogLibraryPrimitives()) {
       checks.add(closureReplaceGetCssName);
     }
 

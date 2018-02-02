@@ -901,6 +901,39 @@ public class RefasterJsScannerTest {
     assertChanges(externs, originalCode, template, expectedCode1, expectedCode2);
   }
 
+  @Test
+  public void test_withGetCssName() throws Exception {
+    String externs = "";
+
+    String originalCode = Joiner.on('\n').join(
+        "goog.module('testcase');",
+        "",
+        "document.getElementById('foo').class = goog.getCssName('str');");
+    String expectedCode =
+        Joiner.on('\n').join(
+        "goog.module('testcase');",
+        "",
+        "document.getElementById('foo').class = 'foo' + goog.getCssName('str');");
+    String template =
+        Joiner.on('\n')
+            .join(
+                "/**",
+                "* @param {?} obj",
+                "* @param {?} value",
+                "*/",
+                "function before_foo(obj, value) {",
+                "  obj.class = value;",
+                "};",
+                "/**",
+                " * @param {?} obj",
+                " * @param {?} value",
+                "*/",
+                "function after_foo(obj, value) {",
+                "  obj.class = 'foo' + value;",
+                "}");
+    assertChanges(externs, originalCode, template, expectedCode);
+  }
+
   private static Compiler createCompiler() {
     return new Compiler();
   }

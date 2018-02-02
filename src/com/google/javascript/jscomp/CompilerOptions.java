@@ -2509,6 +2509,11 @@ public class CompilerOptions implements Serializable {
     return this.preserveClosurePrimitives;
   }
 
+  /** Do not process goog. intrinsics, such as goog.getCssName(). */
+  public boolean shouldPreserveGoogLibraryPrimitives() {
+    return this.preserveClosurePrimitives;
+  }
+
   public void setPreserveTypeAnnotations(boolean preserveTypeAnnotations) {
     this.preserveTypeAnnotations = preserveTypeAnnotations;
   }
