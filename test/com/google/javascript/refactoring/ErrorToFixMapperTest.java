@@ -31,6 +31,7 @@ import com.google.javascript.jscomp.SourceFile;
 import java.util.Collection;
 import java.util.List;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -795,6 +796,31 @@ public class ErrorToFixMapperTest {
             // TODO(tbreisacher): Change this to "@extends {Animal}"
             "/** @constructor @extends {world.util.Animal} */",
             "function Cat() {}"));
+  }
+
+  @Ignore("Currently causes a crash. See b/72864468.")
+  @Test
+  public void testBothFormsOfRequire() {
+    assertChanges(
+        LINE_JOINER.join(
+            "goog.module('example');",
+            "",
+            "const SoyRenderer = goog.require('foo.bar.SoyRenderer');",
+            "goog.require('foo.bar.SoyRenderer');",
+            "",
+            "function setUp() {",
+            "  const soyService = new foo.bar.SoyRenderer();",
+            "}",
+            ""),
+        LINE_JOINER.join(
+            "goog.module('example');",
+            "",
+            "const SoyRenderer = goog.require('foo.bar.SoyRenderer');",
+            "",
+            "function setUp() {",
+            "  const soyService = new SoyRenderer();",
+            "}",
+            ""));
   }
 
   @Test
