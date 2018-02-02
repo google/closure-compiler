@@ -2021,7 +2021,7 @@ final class TypedScopeCreator implements ScopeCreator {
 
       FunctionType fnType = type.toMaybeFunctionType();
       JSType fnThisType = fnType.getTypeOfThis();
-      return fnThisType.isUnknownType() ? null : fnThisType.toObjectType();
+      return fnThisType == null ? null : fnThisType.toObjectType();
     }
 
     private void maybeCollectMember(Node member,
