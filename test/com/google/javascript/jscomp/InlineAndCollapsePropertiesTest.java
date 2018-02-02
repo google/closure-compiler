@@ -381,6 +381,59 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
          + "(function() {a$b$y = 0;})(); a$b$y;");
   }
 
+  public void testLocalAliasCreatedAfterVarDeclaration1() {
+    test(
+        lines(
+            "var a = {b: 3};",
+            "function f() {",
+            "  var tmp;",
+            "  tmp = a;",
+            "  use(tmp.b);",
+            "}"),
+        lines(
+            "var a$b = 3",
+            "function f() {",
+            "  var tmp;",
+            "  tmp = null;",
+            "  use(a$b);",
+            "}"));
+  }
+
+  public void testLocalAliasCreatedAfterVarDeclaration2() {
+    test(
+        lines(
+            "var a = {b: 3}",
+            "function f() {",
+            "  var tmp;",
+            "  if (true) {",
+            "    tmp = a;",
+            "    use(tmp.b);",
+            "  }",
+            "}"),
+        lines(
+            "var a$b = 3;",
+            "function f() {",
+            "  var tmp;",
+            "  if (true) {",
+            "    tmp = null;",
+            "    use(a$b);",
+            "  }",
+            "}"));
+  }
+
+  public void testLocalAliasCreatedAfterVarDeclaration3() {
+    testSame(
+        lines(
+            "var a = { b : 3 };",
+            "function f() {",
+            "  var tmp;",
+            "  if (true) {",
+            "    tmp = a;",
+            "  }",
+            "  use(tmp);",
+            "}"));
+  }
+
   public void testPartialLocalCtorAlias() {
     testWarning(
         lines(

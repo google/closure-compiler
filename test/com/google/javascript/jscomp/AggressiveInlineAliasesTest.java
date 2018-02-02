@@ -348,18 +348,60 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
         "var a = { b: 0 };" + "var c = null;" + "a.b = 1;" + "a.b == a.b;" + "use(a);");
   }
 
-  public void testLocalNonCtorAliasCreatedAfterVarDeclaration1() {
-    // We only inline non-constructor local aliases if they are assigned upon declaration.
-    // TODO(lharker): We should be able to inline these. InlineVariables does, and it also
-    // uses ReferenceCollectingCallback to track references.
-    testSame(
-        lines(
-            "var Main = {};",
-            "Main.doSomething = function(i) {}",
+  public void testLocalAliasCreatedAfterVarDeclaration1() {
+test(
+    lines(
+            "var a = { b : 3 };",
             "function f() {",
             "  var tmp;",
-            "  tmp = Main;",
-            "  tmp.doSomething(5);",
+            "  if (true) {",
+            "    tmp = a;",
+            "    use(tmp);",
+            "  }",
+            "}"),
+               lines(
+                   "var a = { b : 3 };",
+            "function f() {",
+            "  var tmp;",
+            "  if (true) {",
+            "    tmp = null;",
+            "    use(a);",
+            "  }",
+            "}"));
+  }
+
+  public void testLocalAliasCreatedAfterVarDeclaration2() {
+    test(
+        lines(
+            "var a = { b : 3 };",
+            "function f() {",
+            "  var tmp;",
+            "  if (true) {",
+            "    tmp = a;",
+            "    use(tmp);",
+            "  }",
+            "}"),
+        lines(
+            "var a = { b : 3 };",
+            "function f() {",
+            "  var tmp;",
+            "  if (true) {",
+            "    tmp = null;",
+            "    use(a);",
+            "  }",
+            "}"));
+  }
+
+  public void testLocalAliasCreatedAfterVarDeclaration3() {
+    testSame(
+        lines(
+            "var a = { b : 3 };",
+            "function f() {",
+            "  var tmp;",
+            "  if (true) {",
+            "    tmp = a;",
+            "  }",
+            "  use(tmp);",
             "}"));
   }
 
@@ -862,6 +904,10 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
     test(
         "var a = { b: 3 };" + "function f() { a.b = 5;" + "var x = a;" + "f(a.b);" + "}",
         "var a = { b: 3 };" + "function f() { a.b = 5;" + "var x = null;" + "f(a.b);" + "}");
+  }
+
+  public void testLocalAliasInChainedAssignment() {
+    testSame("var a = { b: 3 }; function f() { var c; var d = c = a; a.b; d.b; }");
   }
 
   public void testMisusedConstructorTag() {

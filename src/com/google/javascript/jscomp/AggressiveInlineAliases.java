@@ -166,7 +166,7 @@ class AggressiveInlineAliases implements CompilerPass {
         List<Ref> refs = new ArrayList<>(name.getRefs());
         for (Ref ref : refs) {
           Scope hoistScope = ref.scope.getClosestHoistScope();
-          if (ref.type == Type.ALIASING_GET && !mayBeGlobalAlias(ref)) {
+          if (ref.type == Type.ALIASING_GET && !mayBeGlobalAlias(ref) && ref.getTwin() == null) {
             // {@code name} meets condition (c). Try to inline it.
             // TODO(johnlenz): consider picking up new aliases at the end
             // of the pass instead of immediately like we do for global
@@ -325,23 +325,18 @@ class AggressiveInlineAliases implements CompilerPass {
       ReferenceCollection aliasRefs = collector.getReferences(aliasVar);
       Set<AstChange> newNodes = new LinkedHashSet<>();
 
-      // TODO(lharker): Is "aliasRefs.firstReferenceIsAssigningDeclaration()" necessary
-      // to inline safely?
-      if (aliasRefs.isWellDefined()
-          && aliasRefs.firstReferenceIsAssigningDeclaration()
-          && aliasRefs.isAssignedOnceInLifetime()) {
-
+      if (aliasRefs.isWellDefined() && aliasRefs.isAssignedOnceInLifetime()) {
         // The alias is well-formed, so do the inlining now.
         int size = aliasRefs.references.size();
-        for (int i = 1; i < size; i++) {
+        // It's initialized on either the first or second reference.
+        int firstRead = aliasRefs.references.get(0).isInitializingDeclaration() ? 1 : 2;
+        for (int i = firstRead; i < size; i++) {
           Reference aliasRef = aliasRefs.references.get(i);
           newNodes.add(replaceAliasReference(alias, aliasRef));
         }
 
         // just set the original alias to null.
-        aliasParent.replaceChild(alias.node, IR.nullNode());
-        codeChanged = true;
-        compiler.reportChangeToEnclosingScope(aliasParent);
+        replaceAliasAssignment(alias, aliasLhsNode);
 
         // Inlining the variable may have introduced new references
         // to descendants of {@code name}. So those need to be collected now.
@@ -428,12 +423,8 @@ class AggressiveInlineAliases implements CompilerPass {
     }
 
     // We removed all references to the alias, so remove the original aliasing assignment.
-    if (!foundNonReplaceableAlias && canReplaceAliasAssignment(alias, aliasLhsNode)) {
-      // alias.node is the RHS of the assignment or initializing declaration.
-      Node aliasParent = alias.node.getParent();
-      // `aliasName = aliasedVar;` => `aliasName = null;`
-      aliasParent.replaceChild(alias.node, IR.nullNode());
-      compiler.reportChangeToEnclosingScope(aliasParent);
+    if (!foundNonReplaceableAlias) {
+      replaceAliasAssignment(alias, aliasLhsNode);
     }
 
     if (codeChanged) {
@@ -444,15 +435,23 @@ class AggressiveInlineAliases implements CompilerPass {
     return !foundNonReplaceableAlias;
   }
 
-  private static boolean canReplaceAliasAssignment(Ref alias, Node aliasLhsNode) {
-    if (alias.getTwin() != null) {
-      return false;
+  /**
+   * Replaces the rhs of an aliasing assignment with null, unless the assignment result is used in a
+   * complex expression.
+   */
+  private void replaceAliasAssignment(Ref alias, Node aliasLhsNode) {
+    // either VAR/CONST/LET or ASSIGN.
+    Node assignment = aliasLhsNode.getParent();
+    if (!NodeUtil.isNameDeclaration(assignment) && NodeUtil.isExpressionResultUsed(assignment)) {
+      // e.g. don't change "if (alias = someVariable)" to "if (alias = null)"
+      // TODO(lharker): instead replace the entire assignment with the RHS - "alias = x" becomes "x"
+      return;
     }
-    Node parent = aliasLhsNode.getParent();
-    if (NodeUtil.isNameDeclaration(parent)) {
-      return true;
-    }
-    return !NodeUtil.isExpressionResultUsed(parent);
+    Node aliasParent = alias.node.getParent();
+    aliasParent.replaceChild(alias.node, IR.nullNode());
+    alias.name.removeRef(alias);
+    codeChanged = true;
+    compiler.reportChangeToEnclosingScope(aliasParent);
   }
 
   /**
