@@ -566,9 +566,6 @@ public class CompilerOptions implements Serializable {
    */
   public boolean optimizeArgumentsArray;
 
-  /** Chains calls to functions that return this. */
-  boolean chainCalls;
-
   /** Use type information to enable additional optimization opportunities. */
   boolean useTypesForLocalOptimization;
 
@@ -1247,7 +1244,6 @@ public class CompilerOptions implements Serializable {
     checkMissingGetCssNameLevel = CheckLevel.OFF;
     checkMissingGetCssNameBlacklist = null;
     computeFunctionSideEffects = false;
-    chainCalls = false;
     extraAnnotationNames = null;
 
     // Optimizations
@@ -1749,12 +1745,6 @@ public class CompilerOptions implements Serializable {
     return colorizeErrorOutput;
   }
 
-  /**
-   * If true, chain calls to functions that return this.
-   */
-  public void setChainCalls(boolean value) {
-    this.chainCalls = value;
-  }
 
   /**
    * Enable run-time type checking, which adds JS type assertions for debugging.
@@ -2863,7 +2853,6 @@ public class CompilerOptions implements Serializable {
             .add("assumeClosuresOnlyCaptureReferences", assumeClosuresOnlyCaptureReferences)
             .add("assumeStrictThis", assumeStrictThis())
             .add("brokenClosureRequiresLevel", brokenClosureRequiresLevel)
-            .add("chainCalls", chainCalls)
             .add("checkDeterminism", getCheckDeterminism())
             .add("checkGlobalNamesLevel", checkGlobalNamesLevel)
             .add("checkGlobalThisLevel", checkGlobalThisLevel)

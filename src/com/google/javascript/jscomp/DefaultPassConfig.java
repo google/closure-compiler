@@ -740,10 +740,6 @@ public final class DefaultPassConfig extends PassConfig {
       passes.add(markNoSideEffectCalls);
     }
 
-    if (options.chainCalls) {
-      passes.add(chainCalls);
-    }
-
     if (options.smartNameRemoval) {
       passes.addAll(getCodeRemovingPasses());
       // TODO(b/66971163): Remove this early loop or rename the option that enables it
@@ -2561,20 +2557,6 @@ public final class DefaultPassConfig extends PassConfig {
         @Override
         protected CompilerPass create(AbstractCompiler compiler) {
           return new DisambiguateProperties(compiler, options.propertyInvalidationErrors);
-        }
-
-        @Override
-        protected FeatureSet featureSet() {
-          return ES5;
-        }
-      };
-
-  /** Chain calls to functions that return this. */
-  private final PassFactory chainCalls =
-      new PassFactory(PassNames.CHAIN_CALLS, true) {
-        @Override
-        protected CompilerPass create(AbstractCompiler compiler) {
-          return new ChainCalls(compiler);
         }
 
         @Override

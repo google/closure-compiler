@@ -1711,22 +1711,6 @@ public final class IntegrationTest extends IntegrationTestCase {
     test(options, testCode, "");
   }
 
-  public void testChainedCalls() {
-    CompilerOptions options = createCompilerOptions();
-    options.chainCalls = true;
-    test(
-        options,
-        "/** @constructor */ function Foo() {} " +
-        "Foo.prototype.bar = function() { return this; }; " +
-        "var f = new Foo();" +
-        "f.bar(); " +
-        "f.bar(); ",
-        "function Foo() {} " +
-        "Foo.prototype.bar = function() { return this; }; " +
-        "var f = new Foo();" +
-        "f.bar().bar();");
-  }
-
   public void testExtraAnnotationNames() {
     CompilerOptions options = createCompilerOptions();
     options.setExtraAnnotationNames(ImmutableSet.of("TagA", "TagB"));
