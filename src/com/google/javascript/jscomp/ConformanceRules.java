@@ -129,6 +129,7 @@ public final class ConformanceRules {
     @Nullable final Pattern whitelistRegexp;
     @Nullable final Pattern onlyApplyToRegexp;
     final boolean reportLooseTypeViolations;
+    final TypeMatchingStrategy typeMatchingStrategy;
 
     public AbstractRule(AbstractCompiler compiler, Requirement requirement)
         throws InvalidRequirementSpec {
@@ -149,6 +150,22 @@ public final class ConformanceRules {
       onlyApplyToRegexp = buildPattern(
           requirement.getOnlyApplyToRegexpList());
       reportLooseTypeViolations = requirement.getReportLooseTypeViolations();
+      typeMatchingStrategy = getTypeMatchingStrategy(requirement);
+    }
+
+    private static TypeMatchingStrategy getTypeMatchingStrategy(Requirement requirement) {
+      switch (requirement.getTypeMatchingStrategy()) {
+        case LOOSE:
+          return TypeMatchingStrategy.LOOSE;
+        case STRICT_NULLABILITY:
+          return TypeMatchingStrategy.STRICT_NULLABILITY;
+        case SUBTYPES:
+          return TypeMatchingStrategy.SUBTYPES;
+        case EXACT:
+          return TypeMatchingStrategy.EXACT;
+        default:
+          throw new IllegalStateException("Unknown TypeMatchingStrategy");
+      }
     }
 
     @Nullable
@@ -985,8 +1002,7 @@ public final class ConformanceRules {
         }
         Node templateRoot = parseRoot.getFirstChild();
         TemplateAstMatcher astMatcher =
-            new TemplateAstMatcher(
-                compiler.getTypeIRegistry(), templateRoot, TypeMatchingStrategy.LOOSE);
+            new TemplateAstMatcher(compiler.getTypeIRegistry(), templateRoot, typeMatchingStrategy);
         builder.add(astMatcher);
       }
 

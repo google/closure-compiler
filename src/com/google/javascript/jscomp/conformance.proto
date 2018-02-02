@@ -114,11 +114,35 @@ message Requirement {
     BANNED_NAME_CALL = 12;
   }
 
+  enum TypeMatchingStrategy {
+    UNKNOWN = 0;
+
+    // Matches type or any subtype. Matches types with different
+    // nullability/voidability. Allows loose matches.
+    LOOSE = 1;
+
+    // Matches type or any subtype. Does not match types with different
+    // nullability/voidability. Allows loose matches.
+    STRICT_NULLABILITY = 2;
+
+    // Matches type or any subtype. Does not match types with different
+    // nullability/voidability. Does not allow loose matches.
+    SUBTYPES = 3;
+
+    // Does not match subtypes. Does not match types with different
+    // nullability/voidability. Does not allow loose matches.
+    EXACT = 4;
+  }
+
   // Required: The type of requirement.
   optional Type type = 6;
 
   // The value banned, optional for "custom" requirements.
   repeated string value = 7;
+
+  // Strategy to use for matching types in the value parameter (e.g. for
+  // BANNED_CODE_PATTERN checks).
+  optional TypeMatchingStrategy type_matching_strategy = 13 [default = LOOSE];
 
   // For "custom" requirements, the Java class used to enforce the requirement.
   // Ignored otherwise.
