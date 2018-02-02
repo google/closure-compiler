@@ -418,4 +418,24 @@ public final class Es6RewriteModulesToCommonJsModulesTest extends CompilerTestCa
             "function f() { return arguments[1]; }",
             "}, 'testcode', []);"));
   }
+
+  public void testFileNameIsPreserved() {
+    test(
+        srcs(SourceFile.fromCode("https://example.domain.google.com/test.js", "export var x;")),
+        expected(
+            SourceFile.fromCode(
+                "https://example.domain.google.com/test.js",
+                lines(
+                    "$jscomp.registerAndLoadModule(function($$require, $$exports, $$module) {",
+                    "  Object.defineProperties($$exports, {",
+                    "    x: {",
+                    "      enumerable: true,",
+                    "      get: function() {",
+                    "        return x;",
+                    "      },",
+                    "    },",
+                    "  });",
+                    "  var x;",
+                    "}, 'https://example.domain.google.com/test.js', []);"))));
+  }
 }

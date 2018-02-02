@@ -265,7 +265,11 @@ public class Es6RewriteModulesToCommonJsModules implements CompilerPass {
               IR.call(
                   IR.getprop(IR.name("$jscomp"), IR.string("registerAndLoadModule")),
                   moduleFunction,
-                  IR.string(modulePath.toString()),
+                  // Specifically use the input's name rather than modulePath.toString(). The former
+                  // is the raw path and the latter is encoded (special characters are replaced).
+                  // This is designed to run in a web browser and we want to preserve the URL given
+                  // to us. But the encodings will replace : with - due to windows.
+                  IR.string(t.getInput().getName()),
                   shallowDeps));
 
       script.addChildToBack(exprResult.useSourceInfoIfMissingFromForTree(script));
