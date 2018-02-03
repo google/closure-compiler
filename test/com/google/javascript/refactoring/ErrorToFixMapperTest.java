@@ -31,7 +31,6 @@ import com.google.javascript.jscomp.SourceFile;
 import java.util.Collection;
 import java.util.List;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -798,9 +797,8 @@ public class ErrorToFixMapperTest {
             "function Cat() {}"));
   }
 
-  @Ignore("Currently causes a crash. See b/72864468.")
   @Test
-  public void testBothFormsOfRequire() {
+  public void testBothFormsOfRequire1() {
     assertChanges(
         LINE_JOINER.join(
             "goog.module('example');",
@@ -816,6 +814,32 @@ public class ErrorToFixMapperTest {
             "goog.module('example');",
             "",
             "const SoyRenderer = goog.require('foo.bar.SoyRenderer');",
+            "function setUp() {",
+            "  const soyService = new SoyRenderer();",
+            "}",
+            ""));
+  }
+
+  @Test
+  public void testBothFormsOfRequire2() {
+    // After this change, a second run will remove the duplicate require.
+    // See testBothFormsOfRequire1
+    assertChanges(
+        LINE_JOINER.join(
+            "goog.module('example');",
+            "",
+            "goog.require('foo.bar.SoyRenderer');",
+            "const SoyRenderer = goog.require('foo.bar.SoyRenderer');",
+            "",
+            "function setUp() {",
+            "  const soyService = new foo.bar.SoyRenderer();",
+            "}",
+            ""),
+        LINE_JOINER.join(
+            "goog.module('example');",
+            "",
+            "const SoyRenderer = goog.require('foo.bar.SoyRenderer');",
+            "goog.require('foo.bar.SoyRenderer');",
             "",
             "function setUp() {",
             "  const soyService = new SoyRenderer();",

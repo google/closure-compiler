@@ -811,23 +811,29 @@ public final class SuggestedFix {
       return this;
     }
 
+    /**
+     * Find the goog.require node for the given namespace (or null if there isn't one).
+     * If there is more than one, this will return the first standalone goog.require statement.
+     */
+    @Nullable
     private static Node findGoogRequireNode(Node n, NodeMetadata metadata, String namespace) {
       Node script = NodeUtil.getEnclosingScript(n);
       if (script.getFirstChild().isModuleBody()) {
         script = script.getFirstChild();
       }
 
-      if (script != null) {
-        Node child = script.getFirstChild();
-        while (child != null) {
-          if ((NodeUtil.isExprCall(child)
-                  && Matchers.googRequire(namespace).matches(child.getFirstChild(), metadata))
-              || (NodeUtil.isNameDeclaration(child)
-                  && child.getFirstFirstChild() != null && Matchers.googRequire(namespace)
-                      .matches(child.getFirstFirstChild(), metadata))) {
-            return child;
-          }
-          child = child.getNext();
+      for (Node child : script.children()) {
+        if (NodeUtil.isExprCall(child)
+            && Matchers.googRequire(namespace).matches(child.getFirstChild(), metadata)) {
+          return child;
+        }
+      }
+
+      for (Node child : script.children()) {
+        if (NodeUtil.isNameDeclaration(child)
+            && child.getFirstFirstChild() != null
+            && Matchers.googRequire(namespace).matches(child.getFirstFirstChild(), metadata)) {
+          return child;
         }
       }
       return null;
