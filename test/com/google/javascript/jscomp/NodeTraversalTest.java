@@ -33,6 +33,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 import junit.framework.TestCase;
 
 /**
@@ -687,6 +688,34 @@ public final class NodeTraversalTest extends TestCase {
         callback,
         true);
     assertThat(scopesEntered).hasSize(3);  // Function, function's body, and the block inside it.
+  }
+
+  public void testNodeTraversalInterruptable() {
+    Compiler compiler = new Compiler();
+    String code = "var a; \n";
+    Node tree = parse(compiler, code);
+
+    final AtomicInteger counter = new AtomicInteger(0);
+    NodeTraversal.Callback countingCallback =
+        new NodeTraversal.AbstractPostOrderCallback() {
+          @Override
+          public void visit(NodeTraversal t, Node n, Node parent) {
+            counter.incrementAndGet();
+          }
+        };
+
+    NodeTraversal.traverseEs6(compiler, tree, countingCallback);
+    assertThat(counter.get()).isEqualTo(3);
+
+    counter.set(0);
+    Thread.currentThread().interrupt();
+
+    try {
+      NodeTraversal.traverseEs6(compiler, tree, countingCallback);
+      fail("Expected a RuntimeException;");
+    } catch (RuntimeException e) {
+      assertThat(e).hasCauseThat().hasCauseThat().isInstanceOf(InterruptedException.class);
+    }
   }
 
   private static final class EnterFunctionAccumulator extends AbstractPostOrderCallback

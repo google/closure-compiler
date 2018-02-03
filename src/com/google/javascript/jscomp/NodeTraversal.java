@@ -713,6 +713,9 @@ public class NodeTraversal {
   }
 
   private void handleScript(Node n, Node parent) {
+    if (Thread.interrupted()) {
+      throw new RuntimeException(new InterruptedException());
+    }
     setChangeScope(n);
     setInputId(n.getInputId(), getSourceName(n));
 
@@ -1130,6 +1133,9 @@ public class NodeTraversal {
   }
 
   private void initTraversal(Node traversalRoot) {
+    if (Thread.interrupted()) {
+      throw new RuntimeException(new InterruptedException());
+    }
     Node changeScope = NodeUtil.getEnclosingChangeScopeRoot(traversalRoot);
     setChangeScope(changeScope);
     Node script = getEnclosingScript(changeScope);
