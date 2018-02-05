@@ -1358,9 +1358,9 @@ Number.MAX_SAFE_INTEGER;
 
 
 /**
- * Parse an integer. Use of `parseInt` without `base` is strictly
+ * Parse an integer. Use of {@code parseInt} without {@code base} is strictly
  * banned in Google. If you really want to parse octal or hex based on the
- * leader, then pass `undefined` as the base.
+ * leader, then pass {@code undefined} as the base.
  *
  * @param {string} string
  * @param {number|undefined} radix

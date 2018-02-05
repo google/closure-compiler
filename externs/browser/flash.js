@@ -44,7 +44,7 @@ HTMLObjectElement.prototype.CallFunction = function(xmlString) {};
 HTMLObjectElement.prototype.GetVariable = function(varName) {};
 
 /**
- * Activates the frame number specified by `frameNumber` in the current
+ * Activates the frame number specified by {@code frameNumber} in the current
  * movie.
  * @param {number} frameNumber A non-negative integer frame number.
  * @return {undefined}
@@ -57,7 +57,7 @@ HTMLObjectElement.prototype.GotoFrame = function(frameNumber) {};
 HTMLObjectElement.prototype.IsPlaying = function() {};
 
 /**
- * Loads the movie identified by `url` to the layer specified by {@code
+ * Loads the movie identified by {@code url} to the layer specified by {@code
  * layerNumber}.
  * @param {number} layerNumber The layer number.
  * @param {string} url The movie URL.
@@ -136,7 +136,7 @@ HTMLObjectElement.prototype.Zoom = function(percent) {};
 // TellTarget Methods.
 
 /**
- * Executes the action in the timeline specified by `target` in the
+ * Executes the action in the timeline specified by {@code target} in the
  * specified frame.
  * @param {string} target The timeline.
  * @param {number} frameNumber The frame number.
@@ -145,7 +145,7 @@ HTMLObjectElement.prototype.Zoom = function(percent) {};
 HTMLObjectElement.prototype.TCallFrame = function(target, frameNumber) {};
 
 /**
- * Executes the action in the timeline specified by `target` in the
+ * Executes the action in the timeline specified by {@code target} in the
  * specified frame.
  * @param {string} target The timeline.
  * @param {string} label The frame label.
