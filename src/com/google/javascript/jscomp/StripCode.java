@@ -165,9 +165,11 @@ class StripCode implements CompilerPass {
      */
     void removeVarDeclarationsByNameOrRvalue(NodeTraversal t, Node n, Node parent) {
       Node next = null;
-      // TODO(b/72223678): handle destructuring declarations below.
       for (Node nameNode = n.getFirstChild(); nameNode != null; nameNode = next) {
         next = nameNode.getNext();
+        if (nameNode.isDestructuringLhs()) {
+          continue;
+        }
         String name = nameNode.getString();
         if (isStripName(name)
             || isCallWhoseReturnValueShouldBeStripped(nameNode.getFirstChild())) {

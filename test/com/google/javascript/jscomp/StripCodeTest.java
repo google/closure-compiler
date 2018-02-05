@@ -281,6 +281,20 @@ public final class StripCodeTest extends CompilerTestCase {
     test("const logger = opt_logger || goog.debug.LogManager.getRoot();", "");
   }
 
+  public void testLoggerDestructuringDeclaration() {
+    // NOTE: StripCode currently does not optimize code in destructuring patterns, even if
+    // it contains "strip names" or "strip types", since it's unclear what the correct optimization
+    // would be or how much it would help users.
+
+    testSame("const {Logger} = goog.debug; Logger;");
+    testSame("const {Logger: logger} = goog.debug; logger;");
+    testSame("const [logger] = [1]; logger;");
+
+    test(
+        "const {getLogger} = goog.debug.Logger; const logger = opt_logger || getLogger('A');",
+        "const {getLogger} = goog.debug.Logger;");
+  }
+
   public void testLoggerMethodCallByVariableType_var() {
     test("var x = goog.debug.Logger.getLogger('a.b.c'); y.info(a); x.info(a);",
          "y.info(a)");
