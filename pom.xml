@@ -92,7 +92,7 @@
 
   <modules>
     <module>externs/pom.xml</module>
-    <module>pom-gwt.xml</module>
+    <!-- <module>pom&#45;gwt.xml</module> -->
     <module>pom-main.xml</module>
   </modules>
 
