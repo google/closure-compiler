@@ -2642,7 +2642,7 @@ DataTransferItem.prototype.getAsFile = function() { return null; };
 /**
  * @return {?Entry} The Entry corresponding to this item, or null. Note that
  * despite its name,this method only works in Chrome, and will eventually
- * be renamed to {@code getAsEntry}.
+ * be renamed to `getAsEntry`.
  * @nosideeffects
  */
 DataTransferItem.prototype.webkitGetAsEntry = function() { return null; };
@@ -2674,7 +2674,7 @@ DataTransferItemList.prototype.item = function(i) { return null; };
  * Adds an item to the list.
  * @param {string|!File} data Data for the item being added.
  * @param {string=} opt_type Mime type of the item being added. MUST be present
- *     if the {@code data} parameter is a string.
+ *     if the `data` parameter is a string.
  * @return {DataTransferItem}
  */
 DataTransferItemList.prototype.add = function(data, opt_type) {};

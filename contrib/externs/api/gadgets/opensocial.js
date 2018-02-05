@@ -16,7 +16,7 @@
 
 /**
  * @fileoverview Externs file for OpenSocial gadget libraries. Legacy API based
- * on the {@code _IG_...} is not supported here.
+ * on the `_IG_...` is not supported here.
  * Note this may not be comprehensive.
  *
  * @see http://code.google.com/apis/gadgets/docs/reference/

@@ -7116,7 +7116,7 @@ chrome.pushMessaging.ChannelIdResult.prototype.channelId;
 
 
 /**
- * The {@code chrome.fileSystem} API makes use of the Entry and FileEntry types
+ * The `chrome.fileSystem` API makes use of the Entry and FileEntry types
  * defined in {@code javascript/externs/fileapi.js}.
  * @const
  * @see http://developer.chrome.com/apps/fileSystem.html
@@ -7127,8 +7127,8 @@ chrome.fileSystem = {};
 /**
  * @param {!Entry} entry The entry to get the display path for. The entry can
  *     originally be obtained through
- *     {@code chrome.fileSystem.chooseEntry} or
- *     {@code chrome.fileSystem.restoreEntry}.
+ *     `chrome.fileSystem.chooseEntry` or
+ *     `chrome.fileSystem.restoreEntry`.
  * @param {function(string)} callback A success callback.
  * @see http://developer.chrome.com/apps/fileSystem.html#method-getDisplayPath
  * @return {undefined}
@@ -7301,7 +7301,7 @@ chrome.syncFileSystem.requestFileSystem = function(callback) {};
  * storage for the app. By default it is set to 'last_write_win'.
  * When conflict resolution policy is set to 'last_write_win' conflicts
  * for existing files are automatically resolved next time the file is updated.
- * {@code callback} can be optionally given to know if the request has
+ * `callback` can be optionally given to know if the request has
  * succeeded or not.
  *
  * @param {string} policy Any of 'last_write_win' or 'manual'
@@ -8068,7 +8068,7 @@ chrome.system.storage.ejectDevice = function(id, callback) {};
  * Gets the available capacity of a specified storage device.
  * @param {string} id The transient device ID from StorageUnitInfo.
  * @param {function(Object<string, number>)} callback A callback function that
- *     accepts an object with {@code id} and {@code availableCapacity} fields.
+ *     accepts an object with `id` and `availableCapacity` fields.
  * @return {undefined}
  */
 chrome.system.storage.getAvailableCapacity = function(id, callback) {};

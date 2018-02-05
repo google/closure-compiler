@@ -281,9 +281,9 @@ function isNaN(num) {}
 function parseFloat(num) {}
 
 /**
- * Parse an integer. Use of {@code parseInt} without {@code base} is strictly
+ * Parse an integer. Use of `parseInt` without `base` is strictly
  * banned in Google. If you really want to parse octal or hex based on the
- * leader, then pass {@code undefined} as the base.
+ * leader, then pass `undefined` as the base.
  *
  * @param {*} num
  * @param {number|undefined} base
@@ -467,7 +467,7 @@ Object.prototype.toString = function() {};
 Object.prototype.unwatch = function(prop) {};
 
 /**
- * Returns the object's {@code this} value.
+ * Returns the object's `this` value.
  * @return {*}
  * @nosideeffects
  * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/valueOf
