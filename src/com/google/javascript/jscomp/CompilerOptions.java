@@ -2917,6 +2917,7 @@ public class CompilerOptions implements Serializable {
             .add("generateTypedExterns", shouldGenerateTypedExterns())
             .add("idGenerators", idGenerators)
             .add("idGeneratorsMapSerialized", idGeneratorsMapSerialized)
+            .add("incrementalCheckMode", incrementalCheckMode)
             .add("inferConsts", inferConsts)
             .add("inferTypes", inferTypes)
             .add("inlineConstantVars", inlineConstantVars)
