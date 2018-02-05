@@ -241,5 +241,5 @@ Window.prototype.webkitNotifications;
  */
 function NotificationEvent(type, opt_eventInitDict) {}
 
-/** @type {?Notification} */
+/** @type {!Notification} */
 NotificationEvent.prototype.notification;
