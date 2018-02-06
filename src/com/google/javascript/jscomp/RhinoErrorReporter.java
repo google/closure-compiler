@@ -49,7 +49,7 @@ class RhinoErrorReporter {
       DiagnosticType.disabled("JSC_JSDOC_MISSING_TYPE_WARNING", "{0}");
 
   static final DiagnosticType TOO_MANY_TEMPLATE_PARAMS =
-      DiagnosticType.error("JSC_TOO_MANY_TEMPLATE_PARAMS", "{0}");
+      DiagnosticType.disabled("JSC_TOO_MANY_TEMPLATE_PARAMS", "{0}");
 
   // Special-cased errors, so that they can be configured via the
   // warnings API.
