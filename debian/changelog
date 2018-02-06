@@ -1,0 +1,126 @@
+closure-compiler (20180101) unstable; urgency=medium
+
+  * New version from Google upstream
+
+ -- Charlie Powell <charlie@evalagency.com>  Mon, 5 Feb 2018 16:47:00 -0500
+
+closure-compiler (20130227+dfsg1-10) unstable; urgency=medium
+
+  * Team upload.
+  * Removed the build dependency on libmaven-ant-tasks-java
+  * Standards-Version updated to 4.1.0
+  * Switch to debhelper level 10
+  * Use secure Vcs-* URLs
+
+ -- Emmanuel Bourg <ebourg@apache.org>  Tue, 12 Sep 2017 16:18:28 +0200
+
+closure-compiler (20130227+dfsg1-9) unstable; urgency=medium
+
+  * Team upload.
+  * Fix generated POM so that packages depending on this package
+    don’t get broken package relationships generated
+
+ -- Thorsten Glaser <tg@mirbsd.de>  Tue, 18 Oct 2016 12:56:09 +0200
+
+closure-compiler (20130227+dfsg1-8) unstable; urgency=medium
+
+  [ Emmanuel Bourg ]
+  * Team upload.
+  * debian/watch:
+    - Updated to watch the release tags on Github
+    - Filter out the jar files from the upstream tarball
+  * debian/control: Updated the Homepage field
+  * debian/copyright: Updated the Source URL
+
+  [ tony mancill ]
+  * Quote arguments to run_java. (Closes: #765563)
+
+ -- Emmanuel Bourg <ebourg@apache.org>  Thu, 16 Oct 2014 12:43:11 +0200
+
+closure-compiler (20130227+dfsg1-7) unstable; urgency=medium
+
+  * Depend on JRE >= 1.6 to prevent package from installing on gcj
+    architectures. (Closes: #764017)
+  * Bump Standards-Version to 3.9.6.
+
+ -- tony mancill <tmancill@debian.org>  Mon, 06 Oct 2014 21:23:18 -0700
+
+closure-compiler (20130227+dfsg1-6) unstable; urgency=medium
+
+  * Team upload.
+  * Correct regression introduced in -5 upload; set Main and Class-Path
+    attributes in jar manifest. (Closes: #746625)
+    Restore javahelper build-dep for jh_manifest; don't use jh sequencer.
+  * Use java-wrappers to find JVM in wrapper script.
+  * Add myself to Uploaders.
+
+ -- tony mancill <tmancill@debian.org>  Fri, 02 May 2014 22:09:32 -0700
+
+closure-compiler (20130227+dfsg1-5) unstable; urgency=medium
+
+  * Team upload.
+
+  [ Ben Finney ]
+  * debian/control, debian/rules, debian/manpage_encoding_declaration.UTF-8:
+    + Build manpage from reStructuredText source document.
+  * debian/closure-compiler.1.txt, debian/closure-compiler.manpages:
+    + Add a manpage for ‘closure-compiler(1)’.
+    (Closes: #734243)
+
+  [ tony mancill ]
+  * closure-compiler is now a separate package and provides a manpage.
+    (Closes: #733996)
+  * Drop dependency on jarwrapper in favor of a simple wrapper script.
+    (Closes: #743707, #734011)
+  * Drop build-dep on javahelper.
+  * Dependency on libguava-java is now versioned (>= 15.0)
+    (Closes: #739591)
+
+ -- tony mancill <tmancill@debian.org>  Mon, 21 Apr 2014 23:06:12 -0700
+
+closure-compiler (20130227+dfsg1-4) unstable; urgency=medium
+
+  * Team upload.
+  * Add "Provides: closure-compiler" to libclosure-compiler-java binary
+    package as a lightweight way for users to find the "binary" package.
+
+ -- tony mancill <tmancill@debian.org>  Wed, 01 Jan 2014 11:10:12 -0800
+
+closure-compiler (20130227+dfsg1-3) unstable; urgency=low
+
+  * Team upload.
+
+  [ Emmanuel Bourg ]
+  * Backported a change replacing the deprecated LimitInputStream class
+    in Guava with ByteStreams.limit(). (Closes: #724098, #724081)
+  * Added the watch file
+  * Removed the build dependency on ant1.7
+  * Removed unnecessary changes from build_xml.patch
+
+  [ Daniel Pocock ]
+  * Add manifest and symlink for runnable JAR. (Closes: #705565, #726294)
+
+  [ tony mancill ]
+  * Add ftbfs-commandlinerunner.patch to buid on Java 7.
+  * Add Depends for libclosure-compiler-java:
+    - libraries: libargs4j-java, libguava-java, libandroid-json-org-java
+    - change jarwrapper fro Suggests to Depends (lintian error)
+    - default-jre-headless (Closes: #726286)
+  * Correct capitalization for Main-Class in manifest
+  * Add lintian override for "needless-dependency-on-jre" warning
+  * Bump Standards-Version to 3.9.5.
+
+ -- tony mancill <tmancill@debian.org>  Sun, 29 Dec 2013 21:11:30 -0800
+
+closure-compiler (20130227+dfsg1-2) unstable; urgency=low
+
+  * Team upload.
+  * Upload to unstable.
+
+ -- tony mancill <tmancill@debian.org>  Sat, 18 May 2013 11:07:02 -0700
+
+closure-compiler (20130227+dfsg1-1) experimental; urgency=low
+
+  * Initial release. (Closes: #555683)
+
+ -- Thomas Koch <thomas@koch.ro>  Mon, 04 Mar 2013 21:59:30 +0100
