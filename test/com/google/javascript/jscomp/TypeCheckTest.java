@@ -3126,6 +3126,77 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         "required: boolean");
   }
 
+  public void testForOf1() {
+    testTypes(
+        "/** @type {!Iterable<number>} */ var it = [1, 2, 3]; for (let x of it) { alert(x); }");
+  }
+
+  public void testForOf2() {
+    testTypes(
+        lines(
+            "/** @param {boolean} x */ function f(x) {}",
+            "/** @type {!Iterable<number>} */ var it = [1, 2, 3];",
+            "for (let x of it) { f(x); }"),
+        lines(
+            "actual parameter 1 of f does not match formal parameter",
+            "found   : number",
+            "required: boolean"));
+  }
+
+  public void testForOf3() {
+    testTypes(
+        lines(
+            "/** @type {?Iterable<number>} */ var it = [1, 2, 3];",
+            "for (let x of it) {}"),
+        lines(
+            "actual parameter 1 of $jscomp.makeIterator does not match formal parameter",
+            "found   : (Iterable<number>|null)",
+            "required: (Arguments<number>|Iterable<number>|Iterator<number>|string)"));
+  }
+
+  // TODO(tbreisacher): This should report a warning. for/of requires an Iterable, not an Iterator.
+  public void testForOf4() {
+    testTypes(
+        lines(
+            "function f(/** !Iterator<number> */ it) {",
+            "  for (let x of it) {}",
+            "}"));
+  }
+
+  public void testForOf5() {
+    // 'string' is an Iterable<string> so it can be used in a for/of.
+    testTypes(
+        lines(
+            "function f(/** string */ ch, /** string */ str) {",
+            "  for (ch of str) {}",
+            "}"));
+  }
+
+  public void testForOf6() {
+    testTypes(
+        lines(
+            "function f(/** !Array<number> */ a) {",
+            "  for (let elem of a) {}",
+            "}"));
+  }
+
+  public void testForOf7() {
+    testTypes("for (let elem of ['array', 'literal']) {}");
+  }
+
+  // TODO(tbreisacher): This should produce a warning: Expected 'null' but got 'string|number'
+  public void testForOf8() {
+    // Union of different types of Iterables.
+    testTypes(
+        lines(
+            "function f(/** null */ x) {}",
+            "(function(/** !Array<string>|!Iterable<number> */ it) {",
+            "  for (let elem of it) {",
+            "    f(elem);",
+            "  }",
+            "})(['']);"));
+  }
+
   // TODO(nicksantos): change this to something that makes sense.
 //   public void testComparison1() {
 //     testTypes("/**@type null */var a;" +
