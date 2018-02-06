@@ -61,7 +61,6 @@ public class TranspilationPasses {
    */
   public static void addEs6EarlyPasses(List<PassFactory> passes) {
     passes.add(es6NormalizeShorthandProperties);
-    passes.add(es6SuperCheck);
     passes.add(es6ConvertSuper);
     passes.add(es6RenameVariablesInParamLists);
     passes.add(es6SplitVariableDeclarations);
@@ -183,19 +182,6 @@ public class TranspilationPasses {
         @Override
         protected HotSwapCompilerPass create(AbstractCompiler compiler) {
           return new Es6NormalizeShorthandProperties(compiler);
-        }
-
-        @Override
-        protected FeatureSet featureSet() {
-          return ES8;
-        }
-      };
-
-  private static final PassFactory es6SuperCheck =
-      new PassFactory("es6SuperCheck", true) {
-        @Override
-        protected CompilerPass create(final AbstractCompiler compiler) {
-          return new Es6SuperCheck(compiler);
         }
 
         @Override

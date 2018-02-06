@@ -165,7 +165,7 @@ public final class DefaultPassConfig extends PassConfig {
       TranspilationPasses.addEs6ModulePass(passes);
     }
 
-    passes.add(checkMissingSuper);
+    passes.add(checkSuper);
     passes.add(checkVariableReferencesForTranspileOnly);
 
     // It's important that the Dart super accessors pass run *before* es6ConvertSuper,
@@ -324,7 +324,7 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(declaredGlobalExternsOnWindow);
     }
 
-    checks.add(checkMissingSuper);
+    checks.add(checkSuper);
 
     if (options.closurePass) {
       checks.add(closureGoogScopeAliases);
@@ -1885,11 +1885,11 @@ public final class DefaultPassConfig extends PassConfig {
       };
 
   /** Checks that references to variables look reasonable. */
-  private final HotSwapPassFactory checkMissingSuper =
-      new HotSwapPassFactory("checkMissingSuper") {
+  private final HotSwapPassFactory checkSuper =
+      new HotSwapPassFactory("checkSuper") {
         @Override
         protected HotSwapCompilerPass create(AbstractCompiler compiler) {
-          return new CheckMissingSuper(compiler);
+          return new CheckSuper(compiler);
         }
 
         @Override

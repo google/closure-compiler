@@ -15,21 +15,20 @@
  */
 package com.google.javascript.jscomp;
 
-import static com.google.javascript.jscomp.CheckMissingSuper.MISSING_CALL_TO_SUPER;
-import static com.google.javascript.jscomp.CheckMissingSuper.THIS_BEFORE_SUPER;
+import static com.google.javascript.jscomp.CheckSuper.INVALID_SUPER_CALL;
+import static com.google.javascript.jscomp.CheckSuper.INVALID_SUPER_CALL_WITH_SUGGESTION;
+import static com.google.javascript.jscomp.CheckSuper.MISSING_CALL_TO_SUPER;
+import static com.google.javascript.jscomp.CheckSuper.THIS_BEFORE_SUPER;
 
-import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
-
-public final class CheckMissingSuperTest extends CompilerTestCase {
+public final class CheckSuperTest extends CompilerTestCase {
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
-    return new CheckMissingSuper(compiler);
+    return new CheckSuper(compiler);
   }
 
   @Override
   protected void setUp() throws Exception {
     super.setUp();
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2017);
   }
 
   public void testMissingSuper() {
@@ -71,5 +70,48 @@ public final class CheckMissingSuperTest extends CompilerTestCase {
   public void testNoWarning_thisWithinFunction() {
     testSame("class C extends D { constructor() { const c = () => this; super(); } }");
     testSame("class C extends D { constructor() { const c = function() { this; }; super(); } }");
+  }
+
+  public void testInConstructorNoBaseClass() {
+    testError("var i = super();", INVALID_SUPER_CALL);
+  }
+
+  public void testNoBaseClass() {
+    testError("class C { constructor() { super(); }}", INVALID_SUPER_CALL);
+    testError("class C { constructor() { super(1); }}", INVALID_SUPER_CALL);
+    testError("class C { static foo() { super(); }}", INVALID_SUPER_CALL);
+  }
+
+  public void testInConstructor() {
+    testSame("class C extends D { constructor() { super(); }}");
+    testSame("class C extends D { constructor() { super(1); }}");
+  }
+
+  public void testNestedInConstructor() {
+    testError(
+        "class C extends D { constructor() { (()=>{ super(); })(); }}", MISSING_CALL_TO_SUPER);
+  }
+
+  public void testInNonConstructor() {
+    test(
+        srcs("class C extends D { foo() { super(); }}"),
+        error(INVALID_SUPER_CALL_WITH_SUGGESTION)
+            .withMessage("super() not allowed here. Did you mean super.foo?"));
+    test(
+        srcs("class C extends D { foo() { super(1); }}"),
+        error(INVALID_SUPER_CALL_WITH_SUGGESTION)
+            .withMessage("super() not allowed here. Did you mean super.foo?"));
+  }
+
+  public void testNestedInNonConstructor() {
+    testError("class C extends D { foo() { (()=>{ super(); })(); }}", INVALID_SUPER_CALL);
+  }
+
+  public void testDotMethodInNonConstructor() {
+    testSame("class C extends D { foo() { super.foo(); }}");
+    testSame("class C extends D { foo() { super.foo(1); }}");
+
+    // TODO(tbreisacher): Consider warning for this. It's valid but likely indicates a mistake.
+    testSame("class C extends D { foo() { super.bar(); }}");
   }
 }
