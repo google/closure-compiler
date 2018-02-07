@@ -133,27 +133,13 @@ public final class CheckJSDocStyle extends AbstractPostOrderCallback implements 
         visitClass(t, n);
         break;
       case ASSIGN:
-        // If the right side is a function it will be handled when the function is visited.
-        if (!n.getLastChild().isFunction()) {
-          visitNonFunction(t, n);
-        }
         checkStyleForPrivateProperties(t, n);
         break;
       case VAR:
       case LET:
       case CONST:
-        for (Node decl : n.children()) {
-          // If the right side is a function it will be handled when the function is visited.
-          if (decl.getFirstChild() == null || !decl.getFirstChild().isFunction()) {
-            visitNonFunction(t, n);
-          }
-        }
-        break;
       case STRING_KEY:
-        // If the value is a function it will be handled when the function is visited.
-        if (n.getFirstChild() == null || !n.getFirstChild().isFunction()) {
-          visitNonFunction(t, n);
-        }
+      case SCRIPT:
         break;
       case MEMBER_FUNCTION_DEF:
       case GETTER_DEF:
@@ -175,9 +161,7 @@ public final class CheckJSDocStyle extends AbstractPostOrderCallback implements 
       return;
     }
 
-    if (!n.isScript()) {
-      checkSuppressionsOnNonFunction(t, n, jsDoc);
-    }
+    checkSuppressionsOnNonFunction(t, n, jsDoc);
   }
 
   private void checkStyleForPrivateProperties(NodeTraversal t, Node n) {

@@ -123,6 +123,11 @@ public final class CheckJSDocStyleTest extends CompilerTestCase {
     testSame("/** @suppress {const} */ var google = {};");
   }
 
+  public void testValidSuppress_onDeclaration() {
+    testSame("/** @const @suppress {newCheckTypes} */ var global = this;");
+    testSame("/** @const @suppress {newCheckTypes} */ goog.global = this;");
+  }
+
   public void testValidSuppress_withES6Modules01() {
     testSame("export /** @suppress {missingRequire} */ var x = new y.Z();");
   }
