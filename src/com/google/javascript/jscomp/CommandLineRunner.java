@@ -1572,7 +1572,7 @@ public class CommandLineRunner extends
 
       if (!flags.renaming
           && flags.compilationLevelParsed == CompilationLevel.ADVANCED_OPTIMIZATIONS) {
-        reportError("ERROR - renaming cannot be disabled when ADVANCED_OPTMIZATIONS is used.");
+        reportError("ERROR - renaming cannot be disabled when ADVANCED_OPTIMIZATIONS is used.");
         runCompiler = false;
       }
 
