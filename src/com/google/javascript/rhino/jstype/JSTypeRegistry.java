@@ -66,7 +66,6 @@ import com.google.javascript.rhino.SimpleErrorReporter;
 import com.google.javascript.rhino.StaticScope;
 import com.google.javascript.rhino.StaticSlot;
 import com.google.javascript.rhino.Token;
-import com.google.javascript.rhino.TypeIEnv;
 import com.google.javascript.rhino.jstype.FunctionType.Kind;
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -1844,8 +1843,7 @@ public class JSTypeRegistry implements Serializable {
         .build();
   }
 
-  public JSType buildRecordTypeFromObject(ObjectType obj) {
-    ObjectType objType = (ObjectType) obj;
+  public JSType buildRecordTypeFromObject(ObjectType objType) {
     RecordType recType = objType.toMaybeRecordType();
     // If it can be casted to a record type then return
     if (recType != null) {
@@ -1997,10 +1995,9 @@ public class JSTypeRegistry implements Serializable {
     return obj;
   }
 
-  @SuppressWarnings("unchecked")
   public JSType instantiateGenericType(
-      ObjectType genericType, ImmutableList<? extends JSType> typeArgs) {
-    return createTemplatizedType((ObjectType) genericType, (ImmutableList<JSType>) typeArgs);
+      ObjectType genericType, ImmutableList<JSType> typeArgs) {
+    return createTemplatizedType(genericType, typeArgs);
   }
 
   /**
@@ -2070,10 +2067,8 @@ public class JSTypeRegistry implements Serializable {
     nonNullableTypeNames.add(name);
   }
 
-  @SuppressWarnings("unchecked")
-  public JSType evaluateTypeExpression(JSTypeExpression expr, TypeIEnv<JSType> scope) {
-    return createTypeFromCommentNode(
-        expr.getRoot(), expr.getSourceName(), (StaticTypedScope<JSType>) scope);
+  public JSType evaluateTypeExpression(JSTypeExpression expr, StaticTypedScope<JSType> scope) {
+    return createTypeFromCommentNode(expr.getRoot(), expr.getSourceName(), scope);
   }
 
   public JSType createTypeFromCommentNode(Node n) {
@@ -2088,8 +2083,8 @@ public class JSTypeRegistry implements Serializable {
    */
   @SuppressWarnings("unchecked")
   public JSType createTypeFromCommentNode(
-      Node n, String sourceName, StaticTypedScope<? extends JSType> scope) {
-    return createFromTypeNodesInternal(n, sourceName, (StaticTypedScope<JSType>) scope, true);
+      Node n, String sourceName, StaticTypedScope<JSType> scope) {
+    return createFromTypeNodesInternal(n, sourceName, scope, true);
   }
 
   private JSType createFromTypeNodesInternal(Node n, String sourceName,

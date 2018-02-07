@@ -27,12 +27,12 @@ import com.google.javascript.jscomp.parsing.TypeTransformationParser.Keywords;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.TypeIEnv;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.StaticTypedScope;
+import com.google.javascript.rhino.jstype.StaticTypedSlot;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedHashMap;
@@ -94,7 +94,7 @@ class TypeTransformation {
 
   private final AbstractCompiler compiler;
   private final JSTypeRegistry registry;
-  private final TypeIEnv<JSType> typeEnv;
+  private final StaticTypedScope<JSType> typeEnv;
 
   /**
    * A helper class for holding the information about the type variables
@@ -111,10 +111,10 @@ class TypeTransformation {
   }
 
   @SuppressWarnings("unchecked")
-  TypeTransformation(AbstractCompiler compiler, TypeIEnv<? extends JSType> typeEnv) {
+  TypeTransformation(AbstractCompiler compiler, StaticTypedScope<JSType> typeEnv) {
     this.compiler = compiler;
     this.registry = compiler.getTypeRegistry();
-    this.typeEnv = (TypeIEnv<JSType>) typeEnv;
+    this.typeEnv = typeEnv;
   }
 
   private boolean isTypeVar(Node n) {
@@ -133,19 +133,13 @@ class TypeTransformation {
     return TypeTransformationParser.Keywords.valueOf(s.toUpperCase());
   }
 
-  @SuppressWarnings("unchecked")
   private JSType getType(String typeName) {
-    JSType type;
-    if (typeEnv instanceof StaticTypedScope) {
-      type = registry.getType((StaticTypedScope<JSType>) typeEnv, typeName);
-    } else {
-      // TODO(johnlenz): remove this branch once NTI is deleted.
-      type = registry.getType(null, typeName);
-    }
+    JSType type = registry.getType(typeEnv, typeName);
     if (type != null) {
       return type;
     }
-    type = typeEnv.getNamespaceOrTypedefType(typeName);
+    StaticTypedSlot<JSType> slot = typeEnv.getSlot(typeName);
+    type = slot != null ? slot.getType() : null;
     if (type != null) {
       if (type.isConstructor() || type.isInterface()) {
         return type.toMaybeFunctionType().getInstanceType().getRawType();
@@ -155,9 +149,8 @@ class TypeTransformation {
       }
       return type;
     }
-    JSDocInfo jsdoc = typeEnv.getJsdocOfTypeDeclaration(typeName);
+    JSDocInfo jsdoc = slot == null ? null : slot.getJSDocInfo();
     if (jsdoc != null && jsdoc.hasTypedefType()) {
-      // This branch is only live when we are running the old type checker
       return this.registry.evaluateTypeExpression(jsdoc.getTypedefType(), typeEnv);
     }
     return null;
@@ -768,7 +761,8 @@ class TypeTransformation {
 
   private JSType evalTypeOfVar(Node ttlAst) {
     String name = getCallArgument(ttlAst, 0).getString();
-    JSType type = typeEnv.getNamespaceOrTypedefType(name);
+    StaticTypedSlot<JSType> slot = typeEnv.getSlot(name);
+    JSType type = slot != null ? slot.getType() : null;
     if (type == null) {
       reportWarning(ttlAst, VAR_UNDEFINED, name);
       return getUnknownType();

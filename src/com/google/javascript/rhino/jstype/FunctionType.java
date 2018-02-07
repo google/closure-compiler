@@ -1498,8 +1498,7 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
 
     @Override
     public Builder withReturnType(JSType type) {
-      checkArgument(type instanceof JSType);
-      arrow = new ArrowType(registry, arrow.parameters, (JSType) type);
+      arrow = new ArrowType(registry, arrow.parameters, type);
       return this;
     }
 
