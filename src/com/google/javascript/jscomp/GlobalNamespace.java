@@ -424,6 +424,13 @@ class GlobalNamespace
           }
           name = n.getQualifiedName();
           break;
+        case CALL:
+          if (isObjectHasOwnPropertyCall(n)) {
+            String qname = n.getFirstFirstChild().getQualifiedName();
+            Name globalName = getOrCreateName(qname, true);
+            globalName.usedHasOwnProperty = true;
+          }
+          return;
         default:
           return;
       }
@@ -828,6 +835,23 @@ class GlobalNamespace
       return className != null;
     }
 
+    /** Detect calls of the form a.b.hasOwnProperty(c); that prevent property collapsing on a.b */
+    private boolean isObjectHasOwnPropertyCall(Node callNode) {
+      checkArgument(callNode.isCall(), callNode);
+      if (!callNode.hasTwoChildren()) {
+        return false;
+      }
+      Node fn = callNode.getFirstChild();
+      if (!fn.isGetProp()) {
+        return false;
+      }
+      Node callee = fn.getFirstChild();
+      Node method = fn.getSecondChild();
+      return method.isString()
+          && "hasOwnProperty".equals(method.getString())
+          && callee.isQualifiedName();
+    }
+
     /**
      * Determines whether the result of a hook (x?y:z) or boolean expression
      * (x||y) or (x&&y) is assigned to a specific global name.
@@ -1019,6 +1043,7 @@ class GlobalNamespace
     private boolean declaredType = false;
     private boolean isDeclared = false;
     private boolean isModuleProp = false;
+    private boolean usedHasOwnProperty = false;
     int globalSets = 0;
     int localSets = 0;
     int localSetsWithNoCollapse = 0;
@@ -1294,6 +1319,10 @@ class GlobalNamespace
       }
 
       if (isCollapsingExplicitlyDenied()) {
+        return false;
+      }
+
+      if (usedHasOwnProperty) {
         return false;
       }
 

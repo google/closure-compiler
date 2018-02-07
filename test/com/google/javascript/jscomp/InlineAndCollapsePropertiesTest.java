@@ -156,6 +156,12 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
          "var a$b$c$d$e = 1; var a$b$c$d$f = 2; var g = null; use(a$b$c$d$e);");
   }
 
+  public void testHasOwnProperty() {
+    test(
+        "var a = {'b': 1, 'c': 1}; var alias = a;    alert(alias.hasOwnProperty('c'));",
+        "var a = {'b': 1, 'c': 1}; var alias = null; alert(a.hasOwnProperty('c'));");
+  }
+
   public void testAliasCreatedForObjectDepth1_1() {
     // An object's properties are not collapsed if the object is referenced
     // in a such a way that an alias is created for it, if that alias is used.
