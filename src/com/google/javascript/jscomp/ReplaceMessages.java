@@ -369,6 +369,7 @@ final class ReplaceMessages extends JsMessageVisitor {
     }
     switch (node.getToken()) {
       case STRING:
+      case TEMPLATELIT:
         break;
       case ADD:
         Node c = node.getFirstChild();

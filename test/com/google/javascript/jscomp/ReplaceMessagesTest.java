@@ -322,7 +322,7 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
         "var MSG_F=function(amt_earned){return'Sum: $'+amt_earned}");
   }
 
-  public void testLegacyStyleBadPlaceholderReferenceInReplacemen() {
+  public void testLegacyStyleBadPlaceholderReferenceInReplacement() {
     style = Style.LEGACY;
 
     registerMessage(new JsMessage.Builder("MSG_B")
@@ -441,6 +441,36 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
             "/** @desc d */",
             "var MSG_B = 'msg B';",
             "var x = MSG_A;"));
+  }
+
+  public void testTemplateLiteralSimple() {
+    registerMessage(new JsMessage.Builder("MSG_A").appendStringPart("Hi\nthere").build());
+
+    test(
+        "/** @desc d */\n var MSG_A = goog.getMsg(`asdf`);",
+        "/** @desc d */\n var MSG_A='Hi\\nthere'");
+  }
+
+  public void testTemplateLiteralNameReplacement() {
+    registerMessage(
+        new JsMessage.Builder("MSG_B")
+            .appendStringPart("One ")
+            .appendPlaceholderReference("measly")
+            .appendStringPart(" ph")
+            .build());
+
+    test(
+        "/** @desc d */\n var MSG_B=goog.getMsg(`asdf {$measly}`, {measly: x});",
+        "/** @desc d */\n var MSG_B='One ' + (x + ' ph')");
+  }
+
+  public void testTemplateLiteralSubstitutions() {
+    // Only allow template literals that are constant strings
+    registerMessage(new JsMessage.Builder("MSG_C").appendStringPart("Hi\nthere").build());
+
+    testError(
+        "/** @desc d */\n var MSG_C = goog.getMsg(`asdf ${42}`);",
+        JsMessageVisitor.MESSAGE_TREE_MALFORMED);
   }
 
   private void registerMessage(JsMessage message) {
