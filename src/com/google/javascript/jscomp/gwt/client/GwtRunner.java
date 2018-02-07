@@ -337,7 +337,7 @@ public final class GwtRunner implements EntryPoint {
     }
     if (level == CompilationLevel.ADVANCED_OPTIMIZATIONS && !flags.renaming) {
       throw new RuntimeException(
-          "renaming cannot be disabled when ADVANCED_OPTMIZATIONS is used");
+          "renaming cannot be disabled when ADVANCED_OPTIMIZATIONS is used");
     }
     level.setOptionsForCompilationLevel(options);
     if (flags.assumeFunctionWrapper) {
