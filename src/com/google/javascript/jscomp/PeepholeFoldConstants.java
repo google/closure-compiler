@@ -144,6 +144,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       case ASSIGN_MUL:
       case ASSIGN_DIV:
       case ASSIGN_MOD:
+      case ASSIGN_EXPONENT:
         return tryUnfoldAssignOp(subtree, left, right);
 
       case ADD:
@@ -152,6 +153,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       case SUB:
       case DIV:
       case MOD:
+      case EXPONENT:
         return tryFoldArithmeticOp(subtree, left, right);
 
       case MUL:
@@ -224,6 +226,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       case DIV:
       case POS:
       case NEG:
+      case EXPONENT:
         tryConvertOperandsToNumber(n);
         break;
       default:
@@ -528,6 +531,9 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       case URSH:
         newType = Token.ASSIGN_URSH;
         break;
+      case EXPONENT:
+        newType = Token.ASSIGN_EXPONENT;
+        break;
       default:
         return n;
     }
@@ -799,6 +805,12 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
             // x/1->x
             return left.cloneTree(true);
           }
+        }
+        return null;
+      case EXPONENT:
+        if (lValObj != null && rValObj != null) {
+          return maybeReplaceBinaryOpWithNumericResult(
+              Math.pow(lValObj, rValObj), lValObj, rValObj);
         }
         return null;
       default:
