@@ -2951,6 +2951,78 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         "function(number): number");
   }
 
+
+  public void testStubMethodDeclarationDoesntBlockTypechecking_1() {
+    testTypes(
+        lines(
+            "/** @interface */",
+            "function Foo() {}",
+            "/** @return {number} */",
+            "Foo.prototype.method = function() {};",
+            "/**",
+            " * @constructor",
+            " * @implements {Foo}",
+            " */",
+            "function Bar() {}",
+            "Bar.prototype.method;",
+            "var /** null */ n = (new Bar).method();"),
+        lines(
+            "initializing variable",
+            "found   : number",
+            "required: null"));
+  }
+
+  public void testStubMethodDeclarationDoesntBlockTypechecking_2() {
+    testTypes(
+        lines(
+            "/** @constructor */",
+            "function Foo() {}",
+            "/** @return {number} */",
+            "Foo.prototype.method = function() {};",
+            "/**",
+            " * @constructor",
+            " * @extends {Foo}",
+            " */",
+            "function Bar() {}",
+            "Bar.prototype.method;",
+            "var /** null */ n = (new Bar).method();"),
+        lines(
+            "initializing variable",
+            "found   : number",
+            "required: null"));
+  }
+
+  public void testStubMethodDeclarationDoesntBlockTypechecking_3() {
+    testTypes(
+        lines(
+            "/** @interface */",
+            "var Foo = function() {};",
+            "/** @type {number} */",
+            "Foo.prototype.num;",
+            "/**",
+            " * @constructor",
+            " * @implements {Foo}",
+            " */",
+            "var Bar = function() {};",
+            "/** @type {?} */",
+            "Bar.prototype.num;",
+            "var /** string */ x = (new Bar).num;"));
+  }
+
+  public void testStubMethodDeclarationDoesntBlockTypechecking_4() {
+    testTypes(
+        lines(
+            "/** @interface */",
+            "class Foo {}",
+            "/** @return {number} */",
+            "Foo.prototype.num;",
+            "/** @implements {Foo} */",
+            "class Bar {",
+            "  get num() { return 1; }",
+            "}",
+            "var /** string */ x = (new Bar).num;"));
+  }
+
   public void testNestedFunctionInference1() {
     String nestedAssignOfFooAndBar =
         "/** @constructor */ function f() {};" +
