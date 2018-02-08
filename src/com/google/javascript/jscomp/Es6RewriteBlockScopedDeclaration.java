@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.common.base.Predicate;
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.HashMultimap;
@@ -32,12 +34,12 @@ import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import java.util.Collection;
-import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
+import javax.annotation.Nullable;
 
 /**
  * Rewrite "let"s and "const"s as "var"s. Rename block-scoped declarations and their references when
@@ -52,9 +54,6 @@ import java.util.Set;
  */
 public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCallback
     implements HotSwapCompilerPass {
-
-  private static final Set<Token> LOOP_TOKENS =
-      EnumSet.of(Token.WHILE, Token.FOR, Token.FOR_IN, Token.FOR_OF, Token.DO, Token.FUNCTION);
 
   private final AbstractCompiler compiler;
   private final Table<Node, String, String> renameTable = HashBasedTable.create();
@@ -141,16 +140,17 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
    * consider it to be inside a loop.
    */
   private boolean inLoop(Node n) {
-    Node enclosingNode = NodeUtil.getEnclosingNode(n, loopPredicate);
+    Node enclosingNode = NodeUtil.getEnclosingNode(n, isLoopOrFunction);
     return enclosingNode != null && !enclosingNode.isFunction();
   }
 
-  private static final Predicate<Node> loopPredicate = new Predicate<Node>() {
-    @Override
-    public boolean apply(Node n) {
-      return LOOP_TOKENS.contains(n.getToken());
-    }
-  };
+  private static final Predicate<Node> isLoopOrFunction =
+      new Predicate<Node>() {
+        @Override
+        public boolean apply(Node n) {
+          return n.isFunction() || NodeUtil.isLoopStructure(n);
+        }
+      };
 
   private static void extractInlineJSDoc(Node srcDeclaration, Node srcName, Node destDeclaration) {
     JSDocInfo existingInfo = srcDeclaration.getJSDocInfo();
@@ -316,16 +316,16 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
         //   var $jscomp$loop$0 = {i: 0, j: $jscomp$loop$0.i}
         // They are initialized lazily by changing declarations into assignments
         // later.
-        LoopObject object = loopObjectMap.get(loopNode);
+        LoopObject loopObject = loopObjectMap.get(loopNode);
         Node objectLitNextIteration = IR.objectlit();
-        for (Var var : object.vars) {
+        for (Var var : loopObject.vars) {
           objectLitNextIteration.addChildToBack(
-              IR.stringKey(var.name, IR.getprop(IR.name(object.name), IR.string(var.name))));
+              IR.stringKey(var.name, IR.getprop(IR.name(loopObject.name), IR.string(var.name))));
         }
 
-        Node updateLoopObject = IR.assign(IR.name(object.name), objectLitNextIteration);
+        Node updateLoopObject = IR.assign(IR.name(loopObject.name), objectLitNextIteration);
         Node objectLit =
-            IR.var(IR.name(object.name), IR.objectlit()).useSourceInfoFromForTree(loopNode);
+            IR.var(IR.name(loopObject.name), IR.objectlit()).useSourceInfoFromForTree(loopNode);
         addNodeBeforeLoop(objectLit, loopNode);
         if (loopNode.isVanillaFor()) { // For
           // The initializer is pulled out and placed prior to the loop.
@@ -351,29 +351,59 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
                 IR.comma(updateLoopObject, increment)
                     .useSourceInfoIfMissingFromForTree(loopNode));
           }
-        } else if (loopNode.isDo()) { // do-while, put at the end of the block
-          loopNode.getFirstChild().addChildToBack(IR.exprResult(updateLoopObject)
-              .useSourceInfoIfMissingFromForTree(loopNode));
-        } else { // For-in, for-of or while, put at the end of the block
-          loopNode.getLastChild().addChildToBack(IR.exprResult(updateLoopObject)
-              .useSourceInfoIfMissingFromForTree(loopNode));
+        } else {
+          // We need to make sure the loop object update happens on every loop iteration.
+          // We want to keep it at the end of the loop, because that makes it easier to reason
+          // about the types.
+          //
+          // TODO(bradfordcsmith): Maybe move the update to the start of the loop when this pass
+          // is moved after the type checking passes.
+          //
+          // A finally block would do it, but would have more runtime cost, so instead, if we find
+          // that there are continue statements referring to the loop we will do this.
+          //
+          // originalLoopLabel: while (condition) {
+          //   $jscomp$loop$0: {
+          //      // original loop body here
+          //      // with continue statements converted to `break $jscomp$loop$0;`
+          //      // If originalLoopLabel exists, we'll also need to traverse into innner loops
+          //      // and convert `continue originalLoopLabel;`.
+          //   }
+          //   $jscomp$loop$0 = { var1: $jscomp$loop$0.var1, var2: $jscomp$loop$0.var2, ... };
+          // }
+          // We're intentionally using the same name for the inner loop label and the loop variable
+          // object. Label names and variables are different namespaces, so they do not conflict.
+          String innerBlockLabel = loopObject.name;
+          Node loopBody = NodeUtil.getLoopCodeBlock(loopNode);
+          if (maybeUpdateContinueStatements(loopNode, innerBlockLabel)) {
+            Node innerBlock = IR.block().srcref(loopBody);
+            innerBlock.addChildrenToFront(loopBody.removeChildren());
+            loopBody.addChildToFront(
+                IR.label(IR.labelName(innerBlockLabel).srcref(loopBody), innerBlock)
+                    .srcref(loopBody));
+          }
+          loopBody.addChildToBack(
+              IR.exprResult(updateLoopObject).useSourceInfoIfMissingFromForTree(loopNode));
         }
         compiler.reportChangeToEnclosingScope(loopNode);
 
         // For captured variables, change declarations to assignments on the
         // corresponding field of the introduced object. Rename all references
         // accordingly.
-        for (Var var : object.vars) {
+        for (Var var : loopObject.vars) {
           for (Node reference : referenceMap.get(var)) {
             // For-of and for-in declarations are not altered, since they are
             // used as temporary variables for assignment.
             if (NodeUtil.isEnhancedFor(loopNode)
                 && loopNode.getFirstChild() == reference.getParent()) {
-              loopNode.getLastChild().addChildToFront(
-                  IR.exprResult(IR.assign(
-                      IR.getprop(IR.name(object.name), IR.string(var.name)),
-                      var.getNameNode().cloneNode()))
-                      .useSourceInfoIfMissingFromForTree(reference));
+              loopNode
+                  .getLastChild()
+                  .addChildToFront(
+                      IR.exprResult(
+                              IR.assign(
+                                  IR.getprop(IR.name(loopObject.name), IR.string(var.name)),
+                                  var.getNameNode().cloneNode()))
+                          .useSourceInfoIfMissingFromForTree(reference));
             } else {
               if (NodeUtil.isNameDeclaration(reference.getParent())) {
                 Node declaration = reference.getParent();
@@ -407,7 +437,7 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
               // Change reference to GETPROP.
               Node changeScope = NodeUtil.getEnclosingChangeScopeRoot(reference);
               reference.replaceWith(
-                  IR.getprop(IR.name(object.name), IR.string(var.name))
+                  IR.getprop(IR.name(loopObject.name), IR.string(var.name))
                       .useSourceInfoIfMissingFromForTree(reference));
               // TODO(johnlenz): Don't work on detached nodes.
               if (changeScope != null) {
@@ -451,8 +481,96 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
       }
     }
 
+    /**
+     * Converts all continue statements referring to the given loop to `break $jscomp$loop$0;` where
+     * `$jscomp$loop$0` is the label on the block containing the original loop body.
+     *
+     * <p>If this method returns {@code true}, then we must wrap the original loop body in a block
+     * labeled with the name from the loopObject.
+     *
+     * @return True if at least one continue statement was found and replaced.
+     */
+    private boolean maybeUpdateContinueStatements(Node loopNode, String breakLabel) {
+      Node loopParent = loopNode.getParent();
+      final String originalLoopLabel =
+          loopParent.isLabel() ? loopParent.getFirstChild().getString() : null;
+      ContinueStatementUpdater continueStatementUpdater =
+          new ContinueStatementUpdater(breakLabel, originalLoopLabel);
+      NodeTraversal.traverseEs6(
+          compiler, NodeUtil.getLoopCodeBlock(loopNode), continueStatementUpdater);
+      return continueStatementUpdater.replacedAContinueStatement;
+    }
+
+    /**
+     * Converts all continue statements referring to the given loop to `break $jscomp$loop$0;` where
+     * `$jscomp$loop$0` is the label on the block containing the original loop body.
+     */
+    private class ContinueStatementUpdater implements NodeTraversal.Callback {
+      // label to put on break statements created that replace continue statements.
+      private final String breakLabel;
+      @Nullable private final String originalLoopLabel;
+
+      // Track how many levels of loops deep we go below this one.
+      int loopDepth = 0;
+      // Set to true if a continue statement is found
+      boolean replacedAContinueStatement = false;
+
+      public ContinueStatementUpdater(String breakLabel, @Nullable String originalLoopLabel) {
+        this.breakLabel = breakLabel;
+        this.originalLoopLabel = originalLoopLabel;
+      }
+
+      @Override
+      public boolean shouldTraverse(NodeTraversal nodeTraversal, Node n, Node parent) {
+        // NOTE: This pass runs after ES6 classes have already been transpiled away.
+        checkState(!n.isClass(), n);
+        if (n.isFunction()) {
+          return false;
+        } else if (NodeUtil.isLoopStructure(n)) {
+          if (originalLoopLabel == null) {
+            // If this loop has no label, there cannot be any continue statements referring to it
+            // in inner loops.
+            return false;
+          } else {
+            loopDepth++;
+            return true;
+          }
+        } else {
+          return true;
+        }
+      }
+
+      @Override
+      public void visit(NodeTraversal t, Node n, Node parent) {
+        if (NodeUtil.isLoopStructure(n)) {
+          loopDepth--;
+        } else if (n.isContinue()) {
+          if (loopDepth == 0 && !n.hasChildren()) {
+            replaceWithBreak(n);
+          } else if (originalLoopLabel != null
+              && n.hasChildren()
+              && originalLoopLabel.equals(n.getOnlyChild().getString())) {
+            replaceWithBreak(n);
+          } // else continue belongs to some other loop
+        } // else nothing to do
+      }
+
+      private void replaceWithBreak(Node continueNode) {
+        Node labelName = IR.labelName(breakLabel).srcref(continueNode);
+        Node breakNode = IR.breakNode(labelName).srcref(continueNode);
+        continueNode.replaceWith(breakNode);
+        replacedAContinueStatement = true;
+      }
+    }
+
     private class LoopObject {
+
+      /**
+       * The name of the variable having the loop's internal variables as properties, and the label
+       * applied to the block containing the original loop body in cases where these are needed.
+       */
       private final String name;
+
       private final Set<Var> vars = new LinkedHashSet<>();
 
       private LoopObject(String name) {

@@ -645,6 +645,225 @@ public final class Es6RewriteBlockScopedDeclarationTest extends TypeICompilerTes
             "}"));
   }
 
+  public void testLoopClosureWithContinue() {
+    // We must add a labeled block and convert continue statements to breaks to ensure that the
+    // loop variable gets updated on every loop iteration of all loop types other than vanilla for.
+    // For vanilla for(;;) loops we place the loop variable update in the loop update expression at
+    // the top of the loop.
+
+    // for-in case
+    test(
+        lines(
+            "const obj = {a: 1, b: 2, c: 3, skipMe: 4};",
+            "const arr = [];",
+            "for (const p in obj) {",
+            "  if (p == 'skipMe') {",
+            "    continue;",
+            "  }",
+            "  arr.push(function() { return obj[p]; });",
+            "}",
+            ""),
+        lines(
+            "/** @const */ var obj = {a: 1, b: 2, c: 3, skipMe: 4};",
+            "/** @const */ var arr = [];",
+            "var $jscomp$loop$0 = {};",
+            "for (var p in obj) {",
+            "  $jscomp$loop$0.p = p;",
+            "  $jscomp$loop$0: {",
+            "    if ($jscomp$loop$0.p == 'skipMe') {",
+            "      break $jscomp$loop$0;", // continue becomes break to ensure loop var update
+            "    }",
+            "    arr.push(",
+            "        (function($jscomp$loop$0) {",
+            "          return function() { return obj[$jscomp$loop$0.p]; };",
+            "        })($jscomp$loop$0));",
+            "  }",
+            "  $jscomp$loop$0 = {p: $jscomp$loop$0.p};",
+            "}",
+            ""));
+
+    // for-of case
+    test(
+        lines(
+            "const values = ['a', 'b', 'c', 'skipMe'];",
+            "const arr = [];",
+            "for (const v of values) {",
+            "  if (v == 'skipMe') {",
+            "    continue;",
+            "  }",
+            "  arr.push(function() { return v; });",
+            "}",
+            ""),
+        lines(
+            "/** @const */ var values = ['a', 'b', 'c', 'skipMe'];",
+            "/** @const */ var arr = [];",
+            "var $jscomp$loop$0 = {};",
+            "for (/** @const */ var v of values) {",
+            "  $jscomp$loop$0.v = v;",
+            "  $jscomp$loop$0: {",
+            "    if ($jscomp$loop$0.v == 'skipMe') {",
+            "      break $jscomp$loop$0;", // continue becomes break to ensure loop var update
+            "    }",
+            "    arr.push(",
+            "        (function($jscomp$loop$0) {",
+            "          return function() { return $jscomp$loop$0.v; };",
+            "        })($jscomp$loop$0));",
+            "  }",
+            "  $jscomp$loop$0 = {v: $jscomp$loop$0.v};",
+            "}",
+            ""));
+
+    // while case
+    test(
+        lines(
+            "const values = ['a', 'b', 'c', 'skipMe'];",
+            "const arr = [];",
+            "while (values.length > 0) {",
+            "  const v = values.shift();",
+            "  if (v == 'skipMe') {",
+            "    continue;",
+            "  }",
+            "  arr.push(function() { return v; });",
+            "}",
+            ""),
+        lines(
+            "/** @const */ var values = ['a', 'b', 'c', 'skipMe'];",
+            "/** @const */ var arr = [];",
+            "var $jscomp$loop$0 = {};",
+            "while (values.length > 0) {",
+            "  $jscomp$loop$0: {",
+            "    /** @const */ $jscomp$loop$0.v = values.shift();",
+            "    if ($jscomp$loop$0.v == 'skipMe') {",
+            "      break $jscomp$loop$0;", // continue becomes break to ensure loop var update
+            "    }",
+            "    arr.push(",
+            "        (function($jscomp$loop$0) {",
+            "          return function() { return $jscomp$loop$0.v; };",
+            "        })($jscomp$loop$0));",
+            "  }",
+            "  $jscomp$loop$0 = {v: $jscomp$loop$0.v};",
+            "}",
+            ""));
+
+    // do-while case
+    test(
+        lines(
+            "const values = ['a', 'b', 'c', 'skipMe'];",
+            "const arr = [];",
+            "do {",
+            "  const v = values.shift();",
+            "  if (v == 'skipMe') {",
+            "    continue;",
+            "  }",
+            "  arr.push(function() { return v; });",
+            "} while (values.length > 0);",
+            ""),
+        lines(
+            "/** @const */ var values = ['a', 'b', 'c', 'skipMe'];",
+            "/** @const */ var arr = [];",
+            "var $jscomp$loop$0 = {};",
+            "do {",
+            "  $jscomp$loop$0: {",
+            "    /** @const */ $jscomp$loop$0.v = values.shift();",
+            "    if ($jscomp$loop$0.v == 'skipMe') {",
+            "      break $jscomp$loop$0;", // continue becomes break to ensure loop var update
+            "    }",
+            "    arr.push(",
+            "        (function($jscomp$loop$0) {",
+            "          return function() { return $jscomp$loop$0.v; };",
+            "        })($jscomp$loop$0));",
+            "  }",
+            "  $jscomp$loop$0 = {v: $jscomp$loop$0.v};",
+            "} while (values.length > 0);",
+            ""));
+
+    // labeled continue case
+    test(
+        lines(
+            "const values = ['a', 'b', 'c', 'skipMe'];",
+            "const arr = [];",
+            "LOOP: while (values.length > 0) {",
+            "  const v = values.shift();",
+            "  if (v == 'skipMe') {",
+            "    continue LOOP;",
+            "  }",
+            "  arr.push(function() { return v; });",
+            "}",
+            ""),
+        lines(
+            "/** @const */ var values = ['a', 'b', 'c', 'skipMe'];",
+            "/** @const */ var arr = [];",
+            "var $jscomp$loop$0 = {};",
+            "LOOP: while (values.length > 0) {",
+            "  $jscomp$loop$0: {",
+            "    /** @const */ $jscomp$loop$0.v = values.shift();",
+            "    if ($jscomp$loop$0.v == 'skipMe') {",
+            "      break $jscomp$loop$0;", // continue becomes break to ensure loop var update
+            "    }",
+            "    arr.push(",
+            "        (function($jscomp$loop$0) {",
+            "          return function() { return $jscomp$loop$0.v; };",
+            "        })($jscomp$loop$0));",
+            "  }",
+            "  $jscomp$loop$0 = {v: $jscomp$loop$0.v};",
+            "}",
+            ""));
+
+    // nested labeled continue case
+    test(
+        lines(
+            "const values = ['abc', 'def', 'ghi', 'jkl'];",
+            "const words = [];",
+            "const letters = [];",
+            "OUTER: while (values.length > 0) {",
+            "  const v = values.shift();",
+            "  for (const c of v) {",
+            "    if (c == 'a') {",
+            "      continue;",
+            "    } else if (c == 'i') {",
+            "      continue OUTER;",
+            "    } else {",
+            "      letters.push(function() { return c; });",
+            "    }",
+            "  }",
+            "  words.push(function() { return v; });",
+            "}",
+            ""),
+        lines(
+            "/** @const */ var values = ['abc', 'def', 'ghi', 'jkl'];",
+            "/** @const */ var words = [];",
+            "/** @const */ var letters = [];",
+            "var $jscomp$loop$1 = {};",
+            "OUTER: while (values.length > 0) {",
+            "  $jscomp$loop$1: {",
+            "    /** @const */ $jscomp$loop$1.v = values.shift();",
+            "    var $jscomp$loop$0 = {};",
+            "    for(/** @const */ var c of $jscomp$loop$1.v) {",
+            "      $jscomp$loop$0.c = c;",
+            "      $jscomp$loop$0: {",
+            "        if ($jscomp$loop$0.c == 'a') {",
+            "          break $jscomp$loop$0;", // continue becomes break to ensure loop var update
+            "        } else if ($jscomp$loop$0.c == 'i') {",
+            "          break $jscomp$loop$1;", // continue becomes break to ensure loop var update
+            "        } else {",
+            "          letters.push(",
+            "              (function($jscomp$loop$0) {",
+            "                return function() { return $jscomp$loop$0.c; };",
+            "              })($jscomp$loop$0));",
+            "        }",
+            "      }",
+            "      $jscomp$loop$0 = {c: $jscomp$loop$0.c};",
+            "    }",
+            "    words.push(",
+            "        (function($jscomp$loop$1) {",
+            "          return function() { return $jscomp$loop$1.v; };",
+            "        })($jscomp$loop$1));",
+            "  }",
+            "  $jscomp$loop$1 = {v: $jscomp$loop$1.v};",
+            "}",
+            ""));
+  }
+
   public void testLoopClosureCommaInBody() {
     test(
         lines(

@@ -321,3 +321,57 @@ function testRenamingDoesNotBreakObjectShorthand() {
   }
   assertObjectEquals({x: 2}, {x});
 }
+
+function testContinueDoesNotBreakClosures() {
+  // github issue #2779
+  var closures = [];
+  var x = 0;
+  while (x < 5) {
+    const y = x;
+    closures.push(function() {
+      return y;
+    });
+    x++;
+    continue;  // does this skip the update for the y variable?
+  }
+  var results = [];
+  for (let i = 0; i < closures.length; ++i) {
+    results[i] = closures[i]();
+  }
+  assertArrayEquals([0, 1, 2, 3, 4], results);
+}
+
+function testNestedContinueDoesNotBreakClosures() {
+  // github issue #2779
+  const inputWords = ['abc', 'def', 'ghi', 'jkl'];
+  const wordClosures = [];
+  const letterClosures = [];
+  OUTER: while (inputWords.length > 0) {
+    const word = inputWords.shift();
+    for (const letter of word) {
+      if (letter == 'a') {
+        continue;  // skip letter a
+      } else if (letter == 'h') {
+        continue OUTER;  // skip word containing 'i'
+      } else {
+        letterClosures.push(() => letter);
+      }
+    }
+    wordClosures.push(() => word);
+  }
+  const words = [];
+  for (const wordFunc of wordClosures) {
+    words.push(wordFunc());
+  }
+  // 'ghi' was skipped because it contained 'h'
+  assertArrayEquals(['abc', 'def', 'jkl'], words);
+
+  let letters = '';
+  for (const letterFunc of letterClosures) {
+    letters += letterFunc();
+  }
+  // a skipped explicitly
+  // h skipped explicitly
+  // i skipped because it was after h and in the same word
+  assertEquals('bcdefgjkl', letters);
+}
