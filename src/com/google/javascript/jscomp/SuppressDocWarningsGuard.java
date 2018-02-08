@@ -31,10 +31,8 @@ import java.util.Map;
  *
  * @author nicksantos@google.com (Nick Santos)
  */
-class SuppressDocWarningsGuard extends WarningsGuard {
+class SuppressDocWarningsGuard extends FileAwareWarningsGuard {
   private static final long serialVersionUID = 1L;
-
-  private final AbstractCompiler compiler;
 
   /** Warnings guards for each suppressible warnings group, indexed by name. */
   private final Map<String, DiagnosticGroupWarningsGuard> suppressors =
@@ -43,7 +41,7 @@ class SuppressDocWarningsGuard extends WarningsGuard {
   /** The suppressible groups, indexed by name. */
   SuppressDocWarningsGuard(
       AbstractCompiler compiler, Map<String, DiagnosticGroup> suppressibleGroups) {
-    this.compiler = compiler;
+    super(compiler);
     for (Map.Entry<String, DiagnosticGroup> entry : suppressibleGroups.entrySet()) {
       suppressors.put(
           entry.getKey(),
@@ -84,8 +82,8 @@ class SuppressDocWarningsGuard extends WarningsGuard {
   @Override
   public CheckLevel level(JSError error) {
     Node node = error.node;
-    if (node == null && error.sourceName != null) {
-      node = compiler.getScriptNode(error.sourceName);
+    if (node == null) {
+      node = getScriptNodeForError(error);
     }
     if (node != null) {
       for (Node current = node;
