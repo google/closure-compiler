@@ -34,12 +34,12 @@ var asyncExecute = promiseTesting.asyncExecute;
  *     a callback immediately is actually bad behavior for a Thenable, so it
  *     tests the robustness of our code when used with ill-behaved thenables.
  * @param {string} fulfillOrRejectOrThrow Should {@code then()} call
- *     {@code onFullfill} ('fulfill') or {@code onReject} ('reject') or throw an
+ *     `onFullfill` ('fulfill') or `onReject` ('reject') or throw an
  *     exception ('throw')? Throwing an exception is bad behavior, and always
  *     happens during the {@link throw()} call regardless of the value of
- *     {@code immediateOrAsync} parameter.
- * @param {*} valueOrReason The value passed to {@code onFulfill} or
- *     {@code onReject} or thrown as an exception.
+ *     `immediateOrAsync` parameter.
+ * @param {*} valueOrReason The value passed to `onFulfill` or
+ *     `onReject` or thrown as an exception.
  */
 var FakeThenable = function(
     immediateOrAsync, fulfillOrRejectOrThrow, valueOrReason) {

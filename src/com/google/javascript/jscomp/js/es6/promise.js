@@ -51,7 +51,7 @@ $jscomp.polyfill('Promise',
     /**
      * Batch of functions to execute.
      *
-     * Will be {@code null} initially and immediately after a batch finishes
+     * Will be `null` initially and immediately after a batch finishes
      * executing.
      * @private {?Array<function():?>}
      */
@@ -82,7 +82,7 @@ $jscomp.polyfill('Promise',
   };
 
   /**
-   * Schedule execution of the jobs in {@code this.batch_}.
+   * Schedule execution of the jobs in `this.batch_`.
    * @private
    */
   AsyncExecutor.prototype.asyncExecuteBatch_ = function() {

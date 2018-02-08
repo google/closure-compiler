@@ -64,7 +64,7 @@ exports.asyncAssertPromiseRejected = asyncAssertPromiseRejected;
 /**
  * Schedule a method to be executed in a later execution cycle.
  * @param {!Function} method
- * @param {?} context used as {@code this} for the method call
+ * @param {?} context used as `this` for the method call
  * @param {!Array} args arguments to pass to the call.
  */
 function asyncExecute(method, context, args) {

@@ -46,7 +46,7 @@ google.feeds.Feed.prototype.setResultFormat = function (format) { };
 
 /**
  * @param {number|null} num - sets the number of feed entries loaded by this
- *     feed to {@code num}. By default, the {@code google.feeds.Feed} class
+ *     feed to `num`. By default, the `google.feeds.Feed` class
  *     loads four entries.
  */
 google.feeds.Feed.prototype.setNumEntries = function (num) { };
