@@ -18,14 +18,11 @@ package com.google.javascript.jscomp;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
-import com.google.javascript.jscomp.parsing.parser.FeatureSet;
-import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.jscomp.type.ClosureReverseAbstractInterpreter;
 import com.google.javascript.jscomp.type.SemanticReverseAbstractInterpreter;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -244,11 +241,9 @@ public final class TypeCheckNoTranspileTest extends CompilerTypeTestCase {
         ImmutableList.of(SourceFile.fromCode("[externs]", externs)),
         ImmutableList.of(SourceFile.fromCode("[testcode]", js)),
         compiler.getOptions());
-    compiler.setFeatureSet(compiler.getFeatureSet().without(Feature.MODULES));
 
-    Node n = compiler.getInput(new InputId("[testcode]")).getAstRoot(compiler);
-    Node externsNode = compiler.getInput(new InputId("[externs]"))
-        .getAstRoot(compiler);
+    Node n = IR.root(compiler.getInput(new InputId("[testcode]")).getAstRoot(compiler));
+    Node externsNode = IR.root(compiler.getInput(new InputId("[externs]")).getAstRoot(compiler));
     Node externAndJsRoot = IR.root(externsNode, n);
     compiler.jsRoot = n;
     compiler.externsRoot = externsNode;
@@ -257,19 +252,6 @@ public final class TypeCheckNoTranspileTest extends CompilerTypeTestCase {
     assertEquals("parsing error: " +
         Joiner.on(", ").join(compiler.getErrors()),
         0, compiler.getErrorCount());
-
-    if (compiler.getOptions().needsTranspilationFrom(FeatureSet.ES6)) {
-      List<PassFactory> passes = new ArrayList<>();
-      TranspilationPasses.addEs6ModulePass(passes);
-      TranspilationPasses.addEs2017Passes(passes);
-      TranspilationPasses.addEs2016Passes(passes);
-      TranspilationPasses.addEs6EarlyPasses(passes);
-      TranspilationPasses.addEs6LatePasses(passes);
-      TranspilationPasses.addRewritePolyfillPass(passes);
-      PhaseOptimizer phaseopt = new PhaseOptimizer(compiler, null);
-      phaseopt.consume(passes);
-      phaseopt.process(externsNode, externAndJsRoot);
-    }
 
     TypedScope s = makeTypeCheck().processForTesting(externsNode, n);
     return new TypeCheckResult(n, s);

@@ -18542,11 +18542,11 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         compiler.getOptions());
     compiler.setFeatureSet(compiler.getFeatureSet().without(Feature.MODULES));
 
-    Node n = compiler.getInput(new InputId("[testcode]")).getAstRoot(compiler);
-    Node externsNode = compiler.getInput(new InputId("[externs]"))
-        .getAstRoot(compiler);
-    Node externAndJsRoot = IR.root(externsNode, n);
-    compiler.jsRoot = n;
+    Node jsNode = IR.root(compiler.getInput(new InputId("[testcode]")).getAstRoot(compiler));
+    Node externsNode = IR.root(compiler.getInput(new InputId("[externs]"))
+        .getAstRoot(compiler));
+    Node externAndJsRoot = IR.root(externsNode, jsNode);
+    compiler.jsRoot = jsNode;
     compiler.externsRoot = externsNode;
     compiler.externAndJsRoot = externAndJsRoot;
 
@@ -18560,14 +18560,13 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
       TranspilationPasses.addEs2016Passes(passes);
       TranspilationPasses.addEs6EarlyPasses(passes);
       TranspilationPasses.addEs6LatePasses(passes);
-      TranspilationPasses.addRewritePolyfillPass(passes);
       PhaseOptimizer phaseopt = new PhaseOptimizer(compiler, null);
       phaseopt.consume(passes);
-      phaseopt.process(externsNode, externAndJsRoot);
+      phaseopt.process(externsNode, jsNode);
     }
 
-    TypedScope s = makeTypeCheck().processForTesting(externsNode, n);
-    return new TypeCheckResult(n, s);
+    TypedScope s = makeTypeCheck().processForTesting(externsNode, jsNode);
+    return new TypeCheckResult(jsNode.getFirstChild(), s);
   }
 
   private Node typeCheck(Node n) {
