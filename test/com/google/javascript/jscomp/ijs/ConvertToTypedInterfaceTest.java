@@ -1418,6 +1418,24 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
         "/** @type {function(new:Int)} */ var Foo;");
   }
 
+  public void testComputedPropertyInferenceDoesntCrash() {
+    test(
+        "const SomeMap = { [foo()]: 5 };",
+        "const SomeMap = {};");
+
+    test(
+        "const SomeBagOfMethods = { /** @return {number} */ method() { return 5; } };",
+        "const SomeBagOfMethods = { /** @return {number} */ method() {} };");
+
+    test(
+        "const SomeBagOfMethods = { /** @return {number} */ get x() { return 5; } };",
+        "const SomeBagOfMethods = { /** @return {number} */ get x() {} };");
+
+    test(
+        "const RandomStuff = { [foo()]: 4, method() {}, 9.4: 'bar', set y(x) {} };",
+        "const RandomStuff = { method() {}, /** @const @type {*} */ '9.4': 0, set y(x) {} };");
+  }
+
 
   public void testDescAnnotationCountsAsTyped() {
     test(

@@ -135,6 +135,41 @@ abstract class PotentialDeclaration {
       super(fullyQualifiedName, lhs, rhs);
     }
 
+    void simplifyNamespace(AbstractCompiler compiler) {
+      Node objLit = getRhs();
+      if (getRhs().isOr()) {
+        objLit = getRhs().getLastChild().detach();
+        getRhs().replaceWith(objLit);
+        compiler.reportChangeToEnclosingScope(getLhs());
+      }
+      if (objLit.hasChildren()) {
+        for (Node key : objLit.children()) {
+          switch (key.getToken()) {
+            case STRING_KEY:
+              if (!isTypedRhs(key.getLastChild())) {
+                ConvertToTypedInterface
+                    .maybeWarnForConstWithoutExplicitType(compiler, key.getJSDocInfo(), key);
+                removeStringKeyValue(key);
+                maybeUpdateJsdoc(key);
+                compiler.reportChangeToEnclosingScope(key);
+              }
+              break;
+            case GETTER_DEF:
+            case MEMBER_FUNCTION_DEF:
+            case SETTER_DEF:
+              // Nothing to simplify here...
+              break;
+            case COMPUTED_PROP:
+              NodeUtil.deleteNode(key, compiler);
+              break;
+            default:
+              throw new IllegalStateException("Unexpected object literal body: " + key);
+          }
+        }
+      }
+
+    }
+
     @Override
     void simplify(AbstractCompiler compiler) {
       if (getRhs() == null) {
@@ -153,23 +188,7 @@ abstract class PotentialDeclaration {
         return;
       }
       if (NodeUtil.isNamespaceDecl(nameNode)) {
-        Node objLit = getRhs();
-        if (getRhs().isOr()) {
-          objLit = getRhs().getLastChild().detach();
-          getRhs().replaceWith(objLit);
-          compiler.reportChangeToEnclosingScope(nameNode);
-        }
-        if (objLit.hasChildren()) {
-          for (Node key : objLit.children()) {
-            if (!isTypedRhs(key.getLastChild())) {
-              ConvertToTypedInterface
-                  .maybeWarnForConstWithoutExplicitType(compiler, key.getJSDocInfo(), key);
-              removeStringKeyValue(key);
-              maybeUpdateJsdoc(key);
-              compiler.reportChangeToEnclosingScope(key);
-            }
-          }
-        }
+        simplifyNamespace(compiler);
         return;
       }
       if (nameNode.matchesQualifiedName("exports")) {
