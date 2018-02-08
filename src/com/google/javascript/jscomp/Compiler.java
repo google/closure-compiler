@@ -635,14 +635,10 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       List<JSModule> modules) {
     List<CompilerInput> inputs = new ArrayList<>();
     for (JSModule module : modules) {
-      for (CompilerInput input : module.getInputs()) {
-        String inputName = input.getName();
-
-        // NOTE(nicksantos): If an input is in more than one module,
-        // it will show up twice in the inputs list, and then we
-        // will get an error down the line.
-        inputs.add(input);
-      }
+      // NOTE(nicksantos): If an input is in more than one module,
+      // it will show up twice in the inputs list, and then we
+      // will get an error down the line.
+      inputs.addAll(module.getInputs());
     }
     return inputs;
   }
