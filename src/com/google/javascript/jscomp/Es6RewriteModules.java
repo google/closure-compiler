@@ -21,6 +21,7 @@ import static com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature.MOD
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
@@ -95,7 +96,7 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
    * Return whether or not the given script node represents an ES6 module file.
    */
   public static boolean isEs6ModuleRoot(Node scriptNode) {
-    checkArgument(scriptNode.isScript());
+    checkArgument(scriptNode.isScript(), scriptNode);
     if (scriptNode.getBooleanProp(Node.GOOG_MODULE)) {
       return false;
     }
@@ -104,7 +105,10 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
 
   @Override
   public void process(Node externs, Node root) {
-    for (Node file = root.getFirstChild(); file != null; file = file.getNext()) {
+    checkArgument(externs.isRoot(), externs);
+    checkArgument(root.isRoot(), root);
+    for (Node file : Iterables.concat(externs.children(), root.children())) {
+      checkState(file.isScript(), file);
       hotSwapScript(file, null);
     }
     compiler.setFeatureSet(compiler.getFeatureSet().without(MODULES));
@@ -174,12 +178,21 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
     if (n.isImport()) {
+      maybeWarnExternModule(t, n, parent);
       visitImport(t, n, parent);
     } else if (n.isExport()) {
+      maybeWarnExternModule(t, n, parent);
       visitExport(t, n, parent);
     } else if (n.isScript()) {
       scriptNodeCount++;
       visitScript(t, n);
+    }
+  }
+
+  private void maybeWarnExternModule(NodeTraversal t, Node n, Node parent) {
+    checkState(parent.isModuleBody());
+    if (parent.isFromExterns() && !NodeUtil.isFromTypeSummary(parent.getParent())) {
+      t.report(n, Es6ToEs3Util.CANNOT_CONVERT_YET, "ES6 modules in externs");
     }
   }
 

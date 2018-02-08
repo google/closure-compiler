@@ -18556,7 +18556,6 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
 
     if (compiler.getOptions().needsTranspilationFrom(FeatureSet.ES6)) {
       List<PassFactory> passes = new ArrayList<>();
-      TranspilationPasses.addEs6ModulePass(passes);
       TranspilationPasses.addEs2017Passes(passes);
       TranspilationPasses.addEs2016Passes(passes);
       TranspilationPasses.addEs6EarlyPasses(passes);

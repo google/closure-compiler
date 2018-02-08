@@ -169,6 +169,45 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
             "module$testcode.class = f$$module$testcode;"));
   }
 
+  public void testModulesInExterns() {
+    testError(
+        ImmutableList.of(
+            SourceFile.fromCode(
+                "externsMod.js",
+                lines(
+                    "/** @fileoverview @externs */",
+                    "export let /** !number */ externalName;",
+                    ""))),
+        Es6ToEs3Util.CANNOT_CONVERT_YET);
+  }
+
+  public void testModulesInTypeSummary() {
+    allowExternsChanges();
+    test(
+        // Inputs
+        ImmutableList.of(
+            SourceFile.fromCode(
+                "mod1.js",
+                lines(
+                    "/** @fileoverview @typeSummary */",
+                    "export let /** !number */ externalName;",
+                    "")),
+            SourceFile.fromCode(
+                "mod2.js",
+                lines(
+                    "import {externalName as localName} from './mod1.js'",
+                    "alert(localName);",
+                    ""))),
+        // Outputs
+        ImmutableList.of(
+            SourceFile.fromCode(
+                "mod2.js",
+                lines(
+                    "alert(module$mod1.externalName);",
+                    "/** @const */ var module$mod2 = {};",
+                    ""))));
+  }
+
   public void testMutableExport() {
     testModules(
         lines(
@@ -262,7 +301,7 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
             "  /** @return {?} */ get default() { return C$$module$testcode; },",
             "};"));
 
-    testSame(
+    testModules(
         lines("export var IN, OF;",
             "function f() {",
             "  for (IN in {});",
