@@ -1,0 +1,68 @@
+Source: closure-compiler
+Section: java
+Priority: optional
+Maintainer: Charlie Powell <charlie@evalagency.com>
+Build-Depends:
+    debhelper (>= 10),
+    default-jdk,
+    maven-repo-helper (>= 1.7.1),
+    junit4,
+    libandroid-json-org-java,
+    libprotobuf-java,
+    libargs4j-java,
+    libguava-java (>= 15.0),
+    libjsr305-java,
+    librhino-java (>= 1.7.7),
+    ant,
+    libjarjar-java,
+    protobuf-compiler,
+    python-docutils,
+    javahelper (>= 0.59)
+Build-Depends-Indep: default-jdk-doc, libmaven-javadoc-plugin-java
+Standards-Version: 4.0.0
+Vcs-Git: https://github.com/google/closure-compiler.git
+Vcs-Browser: https://github.com/google/closure-compiler
+Homepage: https://developers.google.com/closure/compiler/
+
+Package: closure-compiler
+Architecture: all
+Depends: ${misc:Depends}, libclosure-compiler-java (>= ${source:Version}),
+ default-jre-headless (>= 2:1.8~) | default-jre-headless (>= 2:1.8~), java-wrappers
+Description: JavaScript optimizing compiler
+ Closure Compiler is a JavaScript optimizing compiler. It parses your
+ JavaScript, analyzes it, removes dead code and rewrites and minimizes
+ what's left. It also checks syntax, variable references, and types, and
+ warns about common JavaScript pitfalls. It is used in many of Google's
+ JavaScript apps, including Gmail, Google Web Search, Google Maps, and
+ Google Docs.
+ .
+ This package contains the /usr/bin wrapper script and manpage.
+
+Package: libclosure-compiler-java
+Architecture: all
+Depends: ${misc:Depends}, libargs4j-java, libguava-java, libandroid-json-org-java
+Suggests: libclosure-compiler-java-doc
+Description: JavaScript optimizing compiler - library package
+ Closure Compiler is a JavaScript optimizing compiler. It parses your
+ JavaScript, analyzes it, removes dead code and rewrites and minimizes
+ what's left. It also checks syntax, variable references, and types, and
+ warns about common JavaScript pitfalls. It is used in many of Google's
+ JavaScript apps, including Gmail, Google Web Search, Google Maps, and
+ Google Docs.
+ .
+ This package contains the jar library.
+
+Package: libclosure-compiler-java-doc
+Architecture: all
+Section: doc
+Depends: ${misc:Depends}
+Suggests: libclosure-compiler-java
+Description: JavaScript optimizing compiler - Javadoc
+ Closure Compiler is a JavaScript optimizing compiler. It parses your
+ JavaScript, analyzes it, removes dead code and rewrites and minimizes
+ what's left. It also checks syntax, variable references, and types, and
+ warns about common JavaScript pitfalls. It is used in many of Google's
+ JavaScript apps, including Gmail, Google Web Search, Google Maps, and
+ Google Docs.
+ .
+ This package contains the API documentation of libclosure-compiler-java.

@@ -1,0 +1,43 @@
+#!/usr/bin/make -f
+
+JAVA_HOME := /usr/lib/jvm/default-java
+RST2MAN = rst2man
+
+# Set the m2 repo local so that fakeroot doesn't flip its s.
+M2_REPO = $(CURDIR)/target/m2
+
+# This means classpath, not copy.
+CP = "/usr/share/java/closure-compiler.jar /usr/share/java/args4j.jar /usr/share/java/guava.jar /usr/share/java/json.jar"
+
+%:
+	dh $@ --with maven_repo_helper
+
+override_dh_auto_build:
+	# To build quicker, use the -DskipTests option.
+	#mvn -Dmaven.repo.local=$(M2_REPO) -DskipTests -pl externs/pom.xml,pom-main.xml,pom-main-shaded.xml
+	# Full build, (sans GWT)
+	mvn -Dmaven.repo.local=$(M2_REPO) -pl externs/pom.xml,pom-main.xml,pom-main-shaded.xml
+	# Full build including GWT, currently does not succeed.
+	#mvn -Dmaven.repo.local=$(M2_REPO)
+
+	# build the manpage
+	$(RST2MAN) debian/closure-compiler.1.txt > debian/closure-compiler.1.tmp
+	cat debian/manpage_encoding_declaration.UTF-8 debian/closure-compiler.1.tmp > debian/closure-compiler.1
+
+	# Rename jars
+	mv target/closure-compiler-1.0-SNAPSHOT.jar target/closure-compiler.jar
+
+	# update the manifest
+	jh_manifest --verbose \
+		--classpath $(CP) \
+		--main com.google.javascript.jscomp.CommandLineRunner \
+		target/closure-compiler.jar
+
+override_dh_auto_test:
+#	ant test
+
+override_dh_auto_clean:
+	dh_testdir
+	mvn -Dmaven.repo.local=$(M2_REPO) clean
+	$(RM) -fr $(M2_REPO)
+	$(RM) -rf debian/closer-compiler.1.tmp debian/closure-compiler.1

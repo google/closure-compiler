@@ -1,0 +1,426 @@
+================
+closure-compiler
+================
+
+--------------------------------------------------------
+optimising compiler for ECMAScript (JavaScript) programs
+--------------------------------------------------------
+
+:Author: |author|
+:Date: 2018-02-03
+:Copyright: |license|.
+:Manual section: 1
+:Manual group: Closure
+
+..  |command| replace:: **closure-compiler**
+..  |license| replace:: Apache license, version 2.0
+
+
+SYNOPSIS
+========
+
+| |command| [ `OPTION` ... ]
+| |command| **--help**
+
+
+DESCRIPTION
+===========
+
+The Closure Compiler Application is the command-line interface to the
+Closure Compiler, part of the Closure Tools project.
+
+The Closure Compiler is a tool for making ECMAScript (JavaScript) download
+and run faster. It parses your program, analyzes it, removes dead code, and
+rewrites and minimizes what's left. It also checks syntax, variable
+references, and types, and warns about common pitfalls.
+
+
+OPTIONS
+=======
+
+**--help**
+
+    Describe how to use the Closure Compiler Application.
+
+**--version**
+
+    Print the Closure Compiler version to stderr.
+
+**--accept_const_keyword**
+
+    Allow usage of const keyword.
+
+**--angular_pass**
+
+    Generate $inject properties for AngularJS for functions annotated with
+    ``@ngInject``.
+
+**--charset** `CHARSET`
+
+    Specify `CHARSET` to be the input and output charset for all files. By
+    default, we accept UTF-8 as input and output US_ASCII.
+
+**--closure_entry_point** `ENTRYPOINT`
+
+    Specify entry point `ENTRYPOINT` to the program. Must be goog.provide'd
+    symbols. Any goog.provide'd symbols that are not a transitive
+    dependency of the entry points will be removed. Files without
+    goog.provides, and their dependencies, will always be left in. If any
+    entry points are specified, then the ``manage_closure_dependencies``
+    option will be set to true and all files will be sorted in dependency
+    order.
+
+**--common_js_entry_module** `MODULEFILE`
+
+    Specify the root of your common JS dependency hierarchy to be
+    `MODULEFILE`. Your main script.
+
+**--common_js_module_path_prefix** `PREFIX`
+
+    Specify a path prefix `PREFIX` to be removed from CommonJS module
+    names.
+
+**--compilation_level** `LEVEL`
+
+    Set the compilation level to `LEVEL`.
+
+    Values: ``WHITESPACE_ONLY``, ``SIMPLE_OPTIMIZATIONS``,
+    ``ADVANCED_OPTIMIZATIONS``.
+
+**--create_name_map_files**
+
+    Specify that variable renaming and property renaming map files will be
+    produced as {binary name}_vars_map.out and {binary name}_props_map.out.
+
+    Note that this flag cannot be used in conjunction with either
+    ``variable_map_output_file`` or ``property_map_output_file``.
+
+**--create_source_map** `MAPFILE`
+
+    Specify a source map file `MAPFILE`, mapping the generated source files
+    back to the original source file will be output to the specified path.
+    The ``%outname%`` placeholder will expand to the name of the output file
+    that the source map corresponds to.
+
+**--debug**
+
+    Enable debugging options.
+
+**--define** `DEFINITION`, **--D** `DEFINITION`, **-D** `DEFINITION`
+
+    Override the value of a variable annotated @define. The format of
+    `DEFINITION` is <name>[=<val>], where <name> is the name of a @define
+    variable and <val> is a boolean, number, or a single-quot ed string
+    that contains no single quotes. If [=<val>] is omitted, the variable is
+    marked true.
+
+**--externs** `EXTERNFILE`
+
+    Specify that the file `EXTERNFILE` contains JavaScript externs.
+
+    You may specify this option multiple times to specify additional
+    `EXTERNFILE` files.
+
+**--extra_annotation_name** `TAGNAME`
+
+    Specify `TAGNAME` to append to the whitelist of tag names in JSDoc.
+
+    You may specify this option multiple times to append additional
+    `TAGNAME` values.
+
+**--flagfile** `FILE`
+
+    Specify that `FILE` contains additional command-line options.
+
+**--formatting** `FORMATOPTION`
+
+    Specifies the formatting option `FORMATOPTION` to apply to the output
+    JS.
+
+    Values: ``PRETTY_PRINT``, ``PRINT_INPUT_DELIMITER``, ``SINGLE_QUOTES``
+
+**--generate_exports**
+
+    Generates export code for those marked with @export.
+
+**--js** `INFILE`
+
+    Specify `INFILE` as an input filename.
+
+    You may specify this option multiple times to append additional
+    `INFILE` names.
+
+**--js_output_file** `OUTFILE`
+
+    Specify `OUTFILE` as the primary output filename.
+
+    If not specified, output is written to stdout.
+
+**--jscomp_error** `WARNCLASS`
+
+    Make the named class of warnings `WARNCLASS` an error.
+
+    See `Warning Classes`_, below, for the list of valid `WARNCLASS` names.
+
+**--jscomp_off** `WARNCLASS`
+
+    Turn off the named class of warnings `WARNCLASS`.
+
+    See `Warning Classes`_, below, for the list of valid `WARNCLASS` names.
+
+**--jscomp_warning** `WARNCLASS`
+
+    Make the named class of warnings `WARNCLASS` a normal warning.
+
+    See `Warning Classes`_, below, for the list of valid `WARNCLASS` names.
+
+**--language_in** `LANGSPEC`
+
+    Specify the input sources conform to the language `LANGSPEC`.
+
+    Values: ``ECMASCRIPT3`` (default), ``ECMASCRIPT5``,
+    ``ECMASCRIPT5_STRICT``.
+
+**--logging_level** `LEVEL`
+
+    Specify `LEVEL` as the logging level (standard java.util. logging.Level
+    values) for Compiler progress. Does not control errors or warnings for
+    the JavaScript code under compilation.
+
+**--manage_closure_dependencies**
+
+    Automatically sort dependencies so that a file that goog.provides
+    symbol X will always come before a file that goog.requires symbol X. If
+    an input provides symbols, and those symbols are never required, then
+    that input will not be included in the compilation.
+
+**--module** `MODULESPEC`
+
+    Specify the JavaScript module specification `MODULESPEC`.
+
+    The format for `MODULESPEC` is <name>:<num-js-files>[:[<dep>,...][:]]].
+    Module names must be unique. Each dep is the name of a module that this
+    module depends on. Modules must be listed in dependency order, and JS
+    source files must be listed in the corresponding order. Where
+    **--module** flags occur in relation to **--js** flags is unimportant.
+    Provide the value ``auto`` to trigger module creation from
+    CommonJSmodules.
+
+**--module_output_path_prefix** `PREFIX`
+
+    Specify the filename prefix `PREFIX` for filenames of compiled JS
+    modules. <module-name>.js will be appended to this prefix. Directories
+    will be created as needed. Use with **--module**.
+
+**--module_wrapper** `WRAPPER`
+
+    Specify `WRAPPER` as output wrapper for a JavaScript module (optional).
+
+    The format of `WRAPPER` is <name>:<wrapper>. The module name must
+    correspond with a module specified using **--module**. The wrapper must
+    contain %s as the code placeholder. The %basename% placeholder can also
+    be used to substitute the base name of the module output file.
+
+**--only_closure_dependencies**
+
+    Only include files in the transitive dependency of the entry points
+    (specified by closure_entry_point). Files that do not provide
+    dependencies will be removed. This supersedes
+    ``manage_closure_dependencies``.
+
+**--output_manifest** `MANIFESTFILE`
+
+    Prints out a list of all the files in the compilation to
+    `MANIFESTFILE`.
+
+    If **--manage_closure_dependencies** is on, this will not include files
+    that got dropped because they were not required.
+
+    The ``%outname%`` placeholder expands to the JS output file. If you're
+    using modularization, using ``%outname%`` will create a manifest for
+    each module.
+
+**--output_module_dependencies** `DEPFILE`
+
+    Prints out a JSON file `DEPFILE` of dependencies between modules.
+
+**--output_wrapper** `WRAPPER`
+
+    Interpolate output into `WRAPPER` at the place denoted by the marker
+    token ``%output%``. Use marker token ``%output|jsstring%`` to do js
+    string escaping on the output.
+
+**--print_ast**
+
+    Print a dot file describing the internal abstract syntax tree and exit.
+
+**--print_pass_graph**
+
+    Print a dot file describing the passes that will get run and exit.
+
+**--print_tree**
+
+    Print out the parse tree and exit.
+
+**--process_closure_primitives**
+
+    Processes built-ins from the Closure library, such as goog.require(),
+    goog.provide(), and goog.exportSymbol().
+
+**--process_common_js_modules**
+
+    Process CommonJS modules to a concatenable form.
+
+**--process_jquery_primitives**
+
+    Processes built-ins from the JQuery library, such as jQuery.fn and
+    jQuery.extend().
+
+**--property_map_input_file** `MAPFILE`
+
+    Specify `MAPFILE` as containing the serialized version of the property
+    renaming map produced by a previous compilation.
+
+**--property_map_output_file** `MAPFILE`
+
+    Save the serialized version of the property renaming map produced to
+    `MAPFILE`.
+
+**--source_map_format** `FORMAT`
+
+    Product the source map in format `FORMAT`.
+
+    Values: ``V1``, ``V2``, ``V3``, ``DEFAULT``. ``DEFAULT`` produces
+    ``V2``.
+
+**--summary_detail_level** `LEVEL`
+
+    Specify the compilation summary detail level `LEVEL`.
+
+    Values: ``0`` (never print summary), ``1`` (print summary only if there
+    are errors or warnings), ``2`` (print summary if the 'checkTypes'
+    diagnostic group is enabled, see **--jscomp_warning**), ``3`` (always
+    print summary). The default level is ``1``.
+
+**--third_party**
+
+    Check source validity but do not enforce Closure style rules and
+    conventions.
+
+**--transform_amd_modules**
+
+    Transform AMD to CommonJS modules.
+
+**--translations_file** `TRANSFILE`
+
+    Specify `TRANSFILE` as the source of translated messages. Currently
+    only supports XTB.
+
+**--translations_project** `PROJECT`
+
+    Scope all translations to the specified project.
+
+    When specified, use different message ids so that messages in different
+    projects can have different translations.
+
+**--use_only_custom_externs**
+
+    Specifies that the default externs should be excluded.
+
+**--use_types_for_optimization**
+
+    Experimental: perform additional optimizations based on available
+    information. Inaccurate type annotations may result in incorrect
+    results.
+
+**--variable_map_input_file** `MAPFILE`
+
+    Specify `MAPFILE` as containing the serialized version of the variable
+    renaming map produced by a previous compilation.
+
+**--variable_map_output_file** `MAPFILE`
+
+    Save the serialized version of the variable renaming map produced to
+    `MAPFILE`.
+
+**--warning_level** `LEVEL`
+
+    Specify the warning level to use.
+
+    Values: ``QUIET``, ``DEFAULT``, ``VERBOSE``.
+
+**--warnings_whitelist_file** `LISTFILE`
+
+    Suppress warnings listed in `LISTFILE`. Each line should be of the form
+    <file-name>:<line-number>? <warning-d escription>
+
+
+Warning Classes
+---------------
+
+The ``jscomp_error``, ``jscomp_warning``, and ``jscomp_off`` flags
+require as a parameter a `WARNCLASS` warning class name. The following
+names are valid warning class names:
+
+* ``accessControls``
+* ``ambiguousFunctionDecl``
+* ``checkRegExp``
+* ``checkTypes``
+* ``checkVars``
+* ``const``
+* ``constantProperty``
+* ``deprecated``
+* ``duplicateMessage``
+* ``es5Strict``
+* ``externsValidation``
+* ``fileoverviewTags``
+* ``globalThis``
+* ``internetExplorerChecks``
+* ``invalidCasts``
+* ``misplacedTypeAnnotation``
+* ``missingProperties``
+* ``nonStandardJsDocs``
+* ``suspiciousCode``
+* ``strictModuleDepCheck``
+* ``typeInvalidation``
+* ``undefinedNames``
+* ``undefinedVars``
+* ``unknownDefines``
+* ``uselessCode``
+* ``visibility``
+
+
+EXAMPLE
+=======
+
+* | |command| --js hello.js --js_output_file hello-compiled.js
+
+  This command creates a new file called ``hello-compiled.js``, which
+  contains the compiled program.
+
+
+HISTORY
+=======
+
+The Closure Tools project is an effort by Google engineers to open source
+the tools used in many of Google's sites and web applications for use by
+the wider Web development community.
+
+This manual page was written by |author| to document the |command| command
+for Debian. It is free software and may be used by others under the terms
+of the |license|.
+
+..  |author| replace:: |authorname| |authoremail|
+..  |authorname| replace:: Ben Finney
+..  |authoremail| replace:: <ben+ecmascript@benfinney.id.au>
+
+..
+    Local variables:
+    mode: rst
+    coding: utf-8
+    time-stamp-format: "%:y-%02m-%02d"
+    time-stamp-start: "^:Date:[         ]+"
+    time-stamp-end: "$"
+    time-stamp-line-limit: 20
+    End:
+    vim: filetype=rst fileencoding=utf-8 :
