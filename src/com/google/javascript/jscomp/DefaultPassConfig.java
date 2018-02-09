@@ -418,7 +418,7 @@ public final class DefaultPassConfig extends PassConfig {
       }
     }
 
-    if (options.rewritePolyfills) {
+    if (options.rewritePolyfills && !options.checksOnly) {
       TranspilationPasses.addRewritePolyfillPass(checks);
     }
 
@@ -463,7 +463,7 @@ public final class DefaultPassConfig extends PassConfig {
       addNonTranspilationCheckPasses(checks);
     }
 
-    if (options.needsTranspilationFrom(ES6) && !options.inIncrementalCheckMode()) {
+    if (options.needsTranspilationFrom(ES6) && !options.checksOnly) {
       TranspilationPasses.addPostCheckPasses(checks);
     }
 

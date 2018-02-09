@@ -27,7 +27,7 @@ public class CheckIjsWarningsGuard extends WarningsGuard {
 
   @Override
   public CheckLevel level(JSError error) {
-    if (error.sourceName.endsWith(".i.js")) {
+    if (error.sourceName != null && error.sourceName.endsWith(".i.js")) {
       return CheckLevel.WARNING;
     }
     return null;
