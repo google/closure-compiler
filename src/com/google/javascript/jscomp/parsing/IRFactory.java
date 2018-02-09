@@ -3145,13 +3145,13 @@ class IRFactory {
     checkState(length > 0);
     checkState(value.charAt(0) != '-' && value.charAt(0) != '+');
     if (value.charAt(0) == '.') {
-      return Double.valueOf('0' + value);
+      return Double.parseDouble('0' + value);
     } else if (value.charAt(0) == '0' && length > 1) {
       switch (value.charAt(1)) {
         case '.':
         case 'e':
         case 'E':
-          return Double.valueOf(value);
+          return Double.parseDouble(value);
         case 'b':
         case 'B': {
           maybeWarnForFeature(token, Feature.BINARY_LITERALS);
@@ -3212,7 +3212,7 @@ class IRFactory {
               "Unexpected character in number literal: " + value.charAt(1));
       }
     } else {
-      return Double.valueOf(value);
+      return Double.parseDouble(value);
     }
   }
 
