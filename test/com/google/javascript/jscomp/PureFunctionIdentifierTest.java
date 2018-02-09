@@ -924,10 +924,19 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
 
   public void testLocalizedSideEffects4() throws Exception {
     // An array is a local object, assigning a local array is not a global side-effect.
-    String source = lines(
-        "function f() {var x = []; x[0] = 1;}",
-        "f()");
-    assertPureCallsMarked(source, ImmutableList.of("f"));
+    assertPureCallsMarked(
+        lines(
+            "function f() {var x = []; x[0] = 1;}", // preserve newline
+            "f()"),
+        ImmutableList.of("f"));
+
+    // TODO(bradfordcsmith): Remove NEITHER when type checker understands let/const
+    mode = TypeInferenceMode.NEITHER;
+    assertPureCallsMarked(
+        lines(
+            "function f() {const x = []; x[0] = 1;}", // preserve newline
+            "f()"),
+        ImmutableList.of("f"));
   }
 
   public void testLocalizedSideEffects5() throws Exception {
@@ -944,26 +953,47 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
   public void testLocalizedSideEffects6() throws Exception {
     // Returning a local object that has been modified
     // is not a global side-effect.
-    String source = lines(
-        "function f() {",
-        "  var x = {}; x.foo = 1; return x;",
-        "}",
-        "f()"
-    );
-    assertPureCallsMarked(source, ImmutableList.of("f"));
+    assertPureCallsMarked(
+        lines(
+            "function f() {", // preserve newline
+            "  var x = {}; x.foo = 1; return x;",
+            "}",
+            "f()"),
+        ImmutableList.of("f"));
+
+    // TODO(bradfordcsmith): Remove NEITHER when type checker understands let/const
+    mode = TypeInferenceMode.NEITHER;
+    assertPureCallsMarked(
+        lines(
+            "function f() {", // preserve newline
+            "  const x = {}; x.foo = 1; return x;",
+            "}",
+            "f()"),
+        ImmutableList.of("f"));
   }
 
   public void testLocalizedSideEffects7() throws Exception {
     // Returning a local object that has been modified
     // is not a global side-effect.
-    String source = lines(
-        "/** @constructor A */ function A() {};",
-        "function f() {",
-        "  var a = []; a[1] = 1; return a;",
-        "}",
-        "f()"
-    );
-    assertPureCallsMarked(source, ImmutableList.of("f"));
+    assertPureCallsMarked(
+        lines(
+            "/** @constructor A */ function A() {};",
+            "function f() {",
+            "  var a = []; a[1] = 1; return a;",
+            "}",
+            "f()"),
+        ImmutableList.of("f"));
+
+    // TODO(bradfordcsmith): Remove NEITHER when type checker understands let/const
+    mode = TypeInferenceMode.NEITHER;
+    assertPureCallsMarked(
+        lines(
+            "/** @constructor A */ function A() {};",
+            "function f() {",
+            "  const a = []; a[1] = 1; return a;",
+            "}",
+            "f()"),
+        ImmutableList.of("f"));
   }
 
   public void testLocalizedSideEffects8() throws Exception {
@@ -1034,10 +1064,19 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
   public void testLocalizedSideEffects12() throws Exception {
     // An array is a local object, assigning a local array is not a global
     // side-effect. This tests the behavior if the access is in a block scope.
-    String source = lines(
-        "function f() {var x = []; { x[0] = 1; } }",
-        "f()");
-    assertPureCallsMarked(source, ImmutableList.of("f"));
+    assertPureCallsMarked(
+        lines(
+            "function f() {var x = []; { x[0] = 1; } }", // preserve newline
+            "f()"),
+        ImmutableList.of("f"));
+
+    // TODO(bradfordcsmith): Remove NEITHER when type checker understands let/const
+    mode = TypeInferenceMode.NEITHER;
+    assertPureCallsMarked(
+        lines(
+            "function f() {const x = []; { x[0] = 1; } }", // preserve newline
+            "f()"),
+        ImmutableList.of("f"));
   }
 
   public void testLocalizedSideEffects13() {
@@ -1105,10 +1144,10 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
   }
 
   public void testLocalizedSideEffects21() {
+    // TODO(bradfordcsmith): Remove NEITHER when type checkers understand destructuring and
+    // let/const.
     this.mode = TypeInferenceMode.NEITHER;
-    String source = lines(
-        "function f(values) { var x = {}; [x.y, x.z] = values; }",
-        "f()");
+    String source = lines("function f(values) { const x = {}; [x.y, x.z] = values; }", "f()");
     assertPureCallsMarked(source, ImmutableList.of("f"));
   }
 
@@ -1121,10 +1160,13 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
   }
 
   public void testLocalizedSideEffects23() {
+    // TODO(bradfordcsmith): Remove NEITHER when type checkers understand destructuring and
+    // let/const.
     this.mode = TypeInferenceMode.NEITHER;
-    String source = lines(
-        "function f(values) { var x = {}; [x.y, x.z = defaultNoSideEffects] = values; }",
-        "f()");
+    String source =
+        lines(
+            "function f(values) { const x = {}; [x.y, x.z = defaultNoSideEffects] = values; }",
+            "f()");
     assertPureCallsMarked(source, ImmutableList.of("f"));
   }
 
@@ -1152,10 +1194,19 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
   }
 
   public void testUnaryOperators3() throws Exception {
-    String source = lines(
-        "function f() {var x = {foo : 0}; x.foo++}",
-        "f()");
-    assertPureCallsMarked(source, ImmutableList.of("f"));
+    assertPureCallsMarked(
+        lines(
+            "function f() {var x = {foo : 0}; x.foo++}", // preserve newline
+            "f()"),
+        ImmutableList.of("f"));
+
+    // TODO(bradfordcsmith): Remove NEITHER when type checker understands let/const
+    mode = TypeInferenceMode.NEITHER;
+    assertPureCallsMarked(
+        lines(
+            "function f() {const x = {foo : 0}; x.foo++}", // preserve newline
+            "f()"),
+        ImmutableList.of("f"));
   }
 
   public void testUnaryOperators4() throws Exception {
@@ -1167,10 +1218,19 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
   }
 
   public void testUnaryOperators5() throws Exception {
-    String source = lines(
-        "function f(x) {x.foo++}",
-        "f({foo : 0})");
-    assertPureCallsMarked(source, ImmutableList.of("f"));
+    assertPureCallsMarked(
+        lines(
+            "function f(x) {x.foo++}", // preserve newline
+            "f({foo : 0})"),
+        ImmutableList.of("f"));
+
+    // TODO(bradfordcsmith): Remove NEITHER when type checker understands destructured parameters
+    mode = TypeInferenceMode.NEITHER;
+    assertPureCallsMarked(
+        lines(
+            "function f({x}) {x.foo++}", // preserve newline
+            "f({x: {foo : 0}})"),
+        ImmutableList.of("f"));
   }
 
   public void testDeleteOperator1() throws Exception {
@@ -1450,7 +1510,7 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
   }
 
   public void testAmbiguousDefinitionsMutatesLocalArgument() throws Exception {
-    String source =
+    assertPureCallsMarked(
         lines(
             "// Mutates argument",
             "A.a = function(argument) {",
@@ -1461,8 +1521,24 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
             "var b = function() {",
             "  C.a({});",
             "};",
-            "b();");
-    assertPureCallsMarked(source, ImmutableList.of("C.a", "b"));
+            "b();"),
+        ImmutableList.of("C.a", "b"));
+
+    // TODO(bradfordcsmith): Remove NEITHER when type checker understands destructuring parameters
+    mode = TypeInferenceMode.NEITHER;
+    assertPureCallsMarked(
+        lines(
+            "// Mutates argument",
+            "A.a = function([argument]) {",
+            "  argument.x = 2;",
+            "};",
+            "// No side effects",
+            "B.a = function() {};",
+            "var b = function() {",
+            "  C.a([{}]);",
+            "};",
+            "b();"),
+        ImmutableList.of("C.a", "b"));
   }
 
   public void testAmbiguousExternDefinitions() {
@@ -1621,10 +1697,19 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
   }
 
   public void testMutatesArguments1() throws Exception {
-    String source = lines(
-        "function f(x) { x.y = 1; }",
-        "f({});");
-    assertPureCallsMarked(source, ImmutableList.of("f"));
+    assertPureCallsMarked(
+        lines(
+            "function f(x) { x.y = 1; }", // preserve newline
+            "f({});"),
+        ImmutableList.of("f"));
+
+    // TODO(bradfordcsmith): Remove NEITHER when type checker understands destructuring parameters
+    mode = TypeInferenceMode.NEITHER;
+    assertPureCallsMarked(
+        lines(
+            "function f([x]) { x.y = 1; }", // preserve newline
+            "f([{}]);"),
+        ImmutableList.of("f"));
   }
 
   public void testMutatesArguments2() throws Exception {
@@ -1644,11 +1729,21 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
   }
 
   public void testMutatesArguments4() throws Exception {
-    String source = lines(
-        "function f(x) { x.y = 1; }",
-        "function g(x) { f({}); x.y = 1; }",
-        "g({});");
-    assertPureCallsMarked(source, ImmutableList.of("f", "g"));
+    assertPureCallsMarked(
+        lines(
+            "function f(x) { x.y = 1; }", // preserve newline
+            "function g(x) { f({}); x.y = 1; }",
+            "g({});"),
+        ImmutableList.of("f", "g"));
+
+    // TODO(bradfordcsmith): Remove NEITHER when type checker understands destructuring parameters
+    mode = TypeInferenceMode.NEITHER;
+    assertPureCallsMarked(
+        lines(
+            "function f([x]) { x.y = 1; }", // preserve newline
+            "function g([x]) { f([{}]); x.y = 1; }",
+            "g([{}]);"),
+        ImmutableList.of("f", "g"));
   }
 
   public void testMutatesArguments5() throws Exception {

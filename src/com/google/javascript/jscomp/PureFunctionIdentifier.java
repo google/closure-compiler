@@ -555,8 +555,7 @@ class PureFunctionIdentifier implements CompilerPass {
         }
 
         for (Var v : t.getScope().getVarIterable()) {
-          boolean param = v.getParentNode().isParamList();
-          if (param
+          if (v.isParam()
               && !blacklistedVarsByFunction.containsEntry(function, v)
               && taintedVarsByFunction.containsEntry(function, v)) {
             sideEffectInfo.setTaintsArguments();
@@ -565,7 +564,7 @@ class PureFunctionIdentifier implements CompilerPass {
 
           boolean localVar = false;
           // Parameters and catch values can come from other scopes.
-          if (v.getParentNode().isVar()) {
+          if (!v.isParam() && !v.isCatch()) {
             // TODO(johnlenz): create a useful parameter list
             // sideEffectInfo.addKnownLocal(v.getName());
             localVar = true;
