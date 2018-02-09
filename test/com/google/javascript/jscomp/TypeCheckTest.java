@@ -12227,7 +12227,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         "/** @constructor */ function Baz() {}",
         "/** @param {Foo|Bar} x */ function f(x) { x.specialProp = 1; }",
         "/** @param {Bar|Baz} x */ function g(x) { return x.specialProp; }"),
-        "Property specialProp never defined on x");
+        "Property specialProp never defined on (Bar|Baz)");
   }
 
   public void testMissingProperty35b() throws Exception {
@@ -12320,7 +12320,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         "/** @constructor */ function Bar() {}" +
         "/** @return {Foo|Bar} */ function f() { return new Foo(); }" +
         "f().missing;",
-        "Property missing never defined on (Bar|Foo|null)");
+        "Property missing never defined on (Foo|Bar)");
   }
 
   public void testMissingProperty39() {

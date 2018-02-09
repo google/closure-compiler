@@ -1026,6 +1026,44 @@ public class JSTypeRegistry implements TypeIRegistry {
     return originalPropName;
   }
 
+  private String getSimpleReadableJSTypeName(JSType type) {
+    if (type instanceof ValueType) {
+      return type.toString();
+    } else if (type.isFunctionPrototypeType()) {
+      return type.toString();
+    } else if (type instanceof ObjectType) {
+      if (type.toObjectType() != null && type.toObjectType().getConstructor() != null) {
+        Node source = type.toObjectType().getConstructor().getSource();
+        if (source != null) {
+          checkState(source.isFunction(), source);
+          String readable = source.getFirstChild().getOriginalName();
+          if (readable != null) {
+            return readable;
+          }
+        }
+        return type.toString();
+      }
+      return null;
+    } else if (type instanceof UnionType) {
+      UnionType unionType = type.toMaybeUnionType();
+      String union = null;
+      for (JSType alternate : unionType.getAlternates()) {
+        String name = getSimpleReadableJSTypeName(alternate);
+        if (name == null) {
+          return null;
+        }
+        if (union == null) {
+          union = "(" + name;
+        } else {
+          union += "|" + name;
+        }
+      }
+      union += ")";
+      return union;
+    }
+    return null;
+  }
+
   /**
    * Given a node, get a human-readable name for the type of that node so
    * that will be easy for the programmer to find the original declaration.
@@ -1037,31 +1075,19 @@ public class JSTypeRegistry implements TypeIRegistry {
    * @param dereference If true, the type of the node will be dereferenced
    *     to an Object type, if possible.
    */
-  private String getReadableJSTypeName(Node n, boolean dereference) {
+  @VisibleForTesting
+  String getReadableJSTypeName(Node n, boolean dereference) {
     JSType type = getJSTypeOrUnknown(n);
     if (dereference) {
-      ObjectType dereferenced = type.dereference();
-      if (dereferenced != null) {
-        type = dereferenced;
+      JSType autoboxed = type.autobox();
+      if (autoboxed != getNativeType(JSTypeNative.NO_TYPE)) {
+        type = autoboxed;
       }
     }
 
-    // The best type name is the actual type name.
-    if (type.isFunctionPrototypeType()) {
-      return type.toString();
-    }
-
-    if (type.toObjectType() != null && type.toObjectType().getConstructor() != null) {
-      Node source = type.toObjectType().getConstructor().getSource();
-      if (source == null) {
-        return type.toString();
-      }
-      checkState(source.isFunction(), source);
-      String readable = source.getFirstChild().getOriginalName();
-      if (readable == null) {
-        return type.toString();
-      }
-      return readable;
+    String name = getSimpleReadableJSTypeName(type);
+    if (name != null) {
+      return name;
     }
 
     // If we're analyzing a GETPROP, the property may be inherited by the

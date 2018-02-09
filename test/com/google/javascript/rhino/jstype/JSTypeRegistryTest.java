@@ -38,8 +38,18 @@
 
 package com.google.javascript.rhino.jstype;
 
-import com.google.javascript.rhino.testing.Asserts;
+import static com.google.javascript.rhino.jstype.JSTypeNative.BOOLEAN_OBJECT_FUNCTION_TYPE;
+import static com.google.javascript.rhino.jstype.JSTypeNative.BOOLEAN_OBJECT_TYPE;
+import static com.google.javascript.rhino.jstype.JSTypeNative.BOOLEAN_TYPE;
+import static com.google.javascript.rhino.jstype.JSTypeNative.NULL_TYPE;
+import static com.google.javascript.rhino.jstype.JSTypeNative.NULL_VOID;
+import static com.google.javascript.rhino.jstype.JSTypeNative.NUMBER_TYPE;
+import static com.google.javascript.rhino.jstype.JSTypeNative.STRING_TYPE;
+import static com.google.javascript.rhino.jstype.JSTypeNative.STRING_VALUE_OR_OBJECT_TYPE;
 
+import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.Token;
+import com.google.javascript.rhino.testing.Asserts;
 import junit.framework.TestCase;
 
 /**
@@ -51,8 +61,7 @@ public class JSTypeRegistryTest extends TestCase {
   // now much larger
   public void testGetBuiltInType() {
     JSTypeRegistry typeRegistry = new JSTypeRegistry(null);
-    assertTypeEquals(typeRegistry.getNativeType(JSTypeNative.BOOLEAN_TYPE),
-        typeRegistry.getType("boolean"));
+    assertTypeEquals(typeRegistry.getNativeType(BOOLEAN_TYPE), typeRegistry.getType("boolean"));
   }
 
   public void testGetDeclaredType() {
@@ -82,6 +91,52 @@ public class JSTypeRegistryTest extends TestCase {
     }
 
     assertFalse(typeRegistry.getGreatestSubtypeWithProperty(type, "foo").isUnknownType());
+  }
+
+  public void testReadableTypeName() {
+    JSTypeRegistry registry = new JSTypeRegistry(null);
+
+    assertEquals("boolean", getReadableTypeNameHelper(registry, BOOLEAN_TYPE));
+    assertEquals("Boolean", getReadableTypeNameHelper(registry, BOOLEAN_OBJECT_TYPE));
+    assertEquals("function", getReadableTypeNameHelper(registry, BOOLEAN_OBJECT_FUNCTION_TYPE));
+
+    assertEquals(
+        "(String|string)", getReadableTypeNameHelper(registry, STRING_VALUE_OR_OBJECT_TYPE));
+
+    assertEquals("(null|undefined)", getReadableTypeNameHelper(registry, NULL_VOID));
+    assertEquals("(null|undefined)", getReadableTypeNameHelper(registry, NULL_VOID, true));
+
+    assertEquals(
+        "(number|string|null)",
+        getReadableTypeNameHelper(registry, union(registry, NUMBER_TYPE, STRING_TYPE, NULL_TYPE)));
+
+    assertEquals(
+        "(Number|String)",
+        getReadableTypeNameHelper(
+            registry, union(registry, NUMBER_TYPE, STRING_TYPE, NULL_TYPE), true));
+  }
+
+  private JSType union(JSTypeRegistry registry, JSTypeNative... types) {
+    return registry.createUnionType(types);
+  }
+
+  private String getReadableTypeNameHelper(JSTypeRegistry registry, JSTypeNative type) {
+    return getReadableTypeNameHelper(registry, registry.getNativeType(type), false);
+  }
+
+  private String getReadableTypeNameHelper(
+      JSTypeRegistry registry, JSTypeNative type, boolean deref) {
+    return getReadableTypeNameHelper(registry, registry.getNativeType(type), deref);
+  }
+
+  private String getReadableTypeNameHelper(JSTypeRegistry registry, JSType type) {
+    return getReadableTypeNameHelper(registry, type, false);
+  }
+
+  private String getReadableTypeNameHelper(JSTypeRegistry registry, JSType type, boolean deref) {
+    Node n = new Node(Token.ADD);
+    n.setTypeI(type);
+    return registry.getReadableJSTypeName(n, deref);
   }
 
   private void assertTypeEquals(JSType a, JSType b) {
