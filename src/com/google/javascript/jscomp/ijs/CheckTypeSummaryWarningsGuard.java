@@ -15,21 +15,34 @@
  */
 package com.google.javascript.jscomp.ijs;
 
+import com.google.javascript.jscomp.AbstractCompiler;
 import com.google.javascript.jscomp.CheckLevel;
+import com.google.javascript.jscomp.FileAwareWarningsGuard;
 import com.google.javascript.jscomp.JSError;
-import com.google.javascript.jscomp.WarningsGuard;
+import com.google.javascript.jscomp.NodeUtil;
+import com.google.javascript.rhino.Node;
 
 /**
- * A warnings guard that sets the errors found in .i.js files to be warnings, and only the warnings
- * found in the library in question to errors.
+ * A warnings guard that sets the errors found in type summary files to be warnings, leaving only
+ * the errors found in the original source.
  */
-public class CheckIjsWarningsGuard extends WarningsGuard {
+public class CheckTypeSummaryWarningsGuard extends FileAwareWarningsGuard {
+
+  public CheckTypeSummaryWarningsGuard(AbstractCompiler compiler) {
+    super(compiler);
+  }
 
   @Override
   public CheckLevel level(JSError error) {
-    if (error.sourceName != null && error.sourceName.endsWith(".i.js")) {
+    if (inTypeSummary(error)) {
       return CheckLevel.WARNING;
     }
     return null;
+  }
+
+  /** Return whether the given error was produced inside a type summary file */
+  private boolean inTypeSummary(JSError error) {
+    Node scriptNode = getScriptNodeForError(error);
+    return scriptNode != null && NodeUtil.isFromTypeSummary(scriptNode);
   }
 }

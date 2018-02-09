@@ -26,6 +26,7 @@ import com.google.common.base.Splitter;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Iterables;
 import com.google.debugging.sourcemap.SourceMapConsumerV3;
 import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping;
 import com.google.javascript.jscomp.CompilerOptions.DevMode;
@@ -35,6 +36,7 @@ import com.google.javascript.jscomp.WarningsGuard.DiagnosticGroupState;
 import com.google.javascript.jscomp.deps.JsFileParser;
 import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.jscomp.deps.SortedDependencies.MissingProvideException;
+import com.google.javascript.jscomp.ijs.CheckTypeSummaryWarningsGuard;
 import com.google.javascript.jscomp.parsing.Config;
 import com.google.javascript.jscomp.parsing.ParserRunner;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
@@ -403,6 +405,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     this.warningsGuard =
         new ComposeWarningsGuard(
             new SuppressDocWarningsGuard(this, getDiagnosticGroups().getRegisteredGroups()),
+            new CheckTypeSummaryWarningsGuard(this),
             warningsGuard);
   }
 
@@ -1230,7 +1233,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     if (jsRoot == null) {
       return null;
     }
-    for (Node file : jsRoot.children()) {
+    for (Node file : Iterables.concat(externsRoot.children(), jsRoot.children())) {
       if (file.getSourceFileName() != null && file.getSourceFileName().endsWith(filename)) {
         return file;
       }

@@ -1068,8 +1068,8 @@ public final class NodeUtil {
   }
 
   /** Determine if the given SCRIPT is a @typeSummary file, like an i.js file */
-  static boolean isFromTypeSummary(Node n) {
-    checkArgument(n.isScript());
+  public static boolean isFromTypeSummary(Node n) {
+    checkArgument(n.isScript(), n);
     JSDocInfo info = n.getJSDocInfo();
     return info != null && info.isTypeSummary();
   }
