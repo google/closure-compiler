@@ -76,7 +76,7 @@ class SuppressDocWarningsGuard extends FileAwareWarningsGuard {
         new DiagnosticGroupWarningsGuard(
             new DiagnosticGroup(
                 DiagnosticGroups.CHECK_TYPES,
-                DiagnosticGroups.STRICT_MISSING_PROPERTIES), CheckLevel.OFF));
+                DiagnosticGroups.STRICT_CHECK_TYPES), CheckLevel.OFF));
   }
 
   @Override

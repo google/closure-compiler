@@ -58,7 +58,8 @@ public class DiagnosticGroups {
           "newCheckTypesExtraChecks",
           "missingSourcesWarnings",
           // TODO(johnlenz): "strictMissingProperties" is here until it has a shake down cruise.
-          "strictMissingProperties");
+          "strictMissingProperties",
+          "strictCheckTypes");
 
   public DiagnosticGroups() {}
 
@@ -142,6 +143,7 @@ public class DiagnosticGroups {
           + "suspiciousCode, "
           + "strictMissingProperties, "
           + "strictModuleDepCheck, "
+          + "strictCheckTypes, "
           + "typeInvalidation, "
           + "undefinedNames, "
           + "undefinedVars, "
@@ -402,6 +404,10 @@ public class DiagnosticGroups {
       DiagnosticGroups.registerGroup("strictMissingProperties",
           TypeCheck.STRICT_INEXISTENT_PROPERTY,
           TypeCheck.STRICT_INEXISTENT_PROPERTY_WITH_SUGGESTION);
+
+  public static final DiagnosticGroup STRICT_CHECK_TYPES =
+      DiagnosticGroups.registerGroup("strictCheckTypes",
+          STRICT_MISSING_PROPERTIES);
 
   public static final DiagnosticGroup REPORT_UNKNOWN_TYPES =
       DiagnosticGroups.registerGroup("reportUnknownTypes",
