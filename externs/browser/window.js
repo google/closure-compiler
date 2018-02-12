@@ -69,6 +69,13 @@ var screen;
  */
 var self;
 
+/**
+ * @type {!VisualViewport}
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/Window/visualViewport
+ * @const
+ */
+var visualViewport;
+
 // Magic functions for Firefox's LiveConnect.
 // We'll probably never use these in practice. But redefining them
 // will fire up the JVM, so we want to reserve the symbol names.

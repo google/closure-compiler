@@ -4675,3 +4675,48 @@ InputDeviceCapabilities.prototype.pointerMovementScrolls;
 
 /** @type {?InputDeviceCapabilities} */
 MouseEvent.prototype.sourceCapabilities;
+
+/**
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/VisualViewport
+ * @constructor
+ * @implements {EventTarget}
+ */
+function VisualViewport() {}
+
+/** @type {number} */
+VisualViewport.prototype.offsetLeft;
+
+/** @type {number} */
+VisualViewport.prototype.offsetTop;
+
+/** @type {number} */
+VisualViewport.prototype.pageLeft;
+
+/** @type {number} */
+VisualViewport.prototype.pageTop;
+
+/** @type {number} */
+VisualViewport.prototype.width;
+
+/** @type {number} */
+VisualViewport.prototype.height;
+
+/** @type {number} */
+VisualViewport.prototype.scale;
+
+/** @override */
+VisualViewport.prototype.addEventListener = function(type, listener,
+    opt_options) {};
+
+/** @override */
+VisualViewport.prototype.removeEventListener = function(type, listener,
+    opt_options) {};
+
+/** @override */
+VisualViewport.prototype.dispatchEvent = function(evt) {};
+
+/** @type {?function(!Event)} */
+VisualViewport.prototype.onresize;
+
+/** @type {?function(!Event)} */
+VisualViewport.prototype.onscroll;
