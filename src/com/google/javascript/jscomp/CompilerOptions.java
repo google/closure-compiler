@@ -1024,13 +1024,6 @@ public class CompilerOptions implements Serializable {
     this.modulesToPrintAfterEachPassRegexList = modulePathRegexList;
   }
 
-  String reportPath;
-
-  /** Where to save a report of global name usage */
-  public void setReportPath(String reportPath) {
-    this.reportPath = reportPath;
-  }
-
   private TracerMode tracer;
 
   public TracerMode getTracerMode() {
@@ -1355,7 +1348,6 @@ public class CompilerOptions implements Serializable {
     prettyPrint = false;
     lineBreak = false;
     preferLineBreakAtEndOfFile = false;
-    reportPath = null;
     tracer = TracerMode.OFF;
     colorizeErrorOutput = false;
     errorFormat = ErrorFormat.SINGLELINE;
@@ -3005,7 +2997,6 @@ public class CompilerOptions implements Serializable {
             .add("replaceStringsPlaceholderToken", replaceStringsPlaceholderToken)
             .add("replaceStringsReservedStrings", replaceStringsReservedStrings)
             .add("reportOTIErrorsUnderNTI", reportOTIErrorsUnderNTI)
-            .add("reportPath", reportPath)
             .add("reserveRawExports", reserveRawExports)
             .add("rewriteFunctionExpressions", rewriteFunctionExpressions)
             .add("rewritePolyfills", rewritePolyfills)

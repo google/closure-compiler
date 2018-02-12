@@ -27,12 +27,10 @@ import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES8;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES8_MODULES;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES_NEXT;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.TYPESCRIPT;
-import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.io.Files;
 import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
 import com.google.javascript.jscomp.AbstractCompiler.MostRecentTypechecker;
 import com.google.javascript.jscomp.CompilerOptions.ExtractPrototypeMemberDeclarationsMode;
@@ -60,8 +58,6 @@ import com.google.javascript.jscomp.parsing.ParserRunner;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
-import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -676,10 +672,6 @@ public final class DefaultPassConfig extends PassConfig {
 
     if (options.inferConsts) {
       passes.add(inferConsts);
-    }
-
-    if (options.reportPath != null && options.smartNameRemoval) {
-      passes.add(initNameAnalyzeReport);
     }
 
     // TODO(mlourenco): Ideally this would be in getChecks() instead of getOptimizations(). But
@@ -2698,35 +2690,6 @@ public final class DefaultPassConfig extends PassConfig {
       return ES8_MODULES;
     }
   };
-
-  static final DiagnosticType REPORT_PATH_IO_ERROR =
-      DiagnosticType.error(
-          "JSC_REPORT_PATH_IO_ERROR", "Error writing compiler report to {0}:\n{1}");
-
-  // TODO(b/66971163): Remove this along with options.reportPath
-  private final PassFactory initNameAnalyzeReport =
-      new PassFactory("initNameAnalyzeReport", true) {
-        @Override
-        protected CompilerPass create(final AbstractCompiler compiler) {
-          return new CompilerPass() {
-            @Override
-            public void process(Node externs, Node root) {
-              checkNotNull(options.reportPath);
-              try {
-                Files.write("", new File(options.reportPath), UTF_8);
-              } catch (IOException e) {
-                compiler.report(
-                    JSError.make(REPORT_PATH_IO_ERROR, options.reportPath, e.getMessage()));
-              }
-            }
-          };
-        }
-
-        @Override
-        protected FeatureSet featureSet() {
-          return FeatureSet.latest();
-        }
-      };
 
   /** Inlines simple methods, like getters */
   private final PassFactory inlineSimpleMethods =
