@@ -47,6 +47,19 @@ webCrypto.Algorithm;
  */
 webCrypto.AlgorithmIdentifier;
 
+/**
+ * @typedef {webCrypto.AlgorithmIdentifier}
+ * @see http://www.w3.org/TR/WebCryptoAPI/#dfn-HashAlgorithmIdentifier
+ */
+webCrypto.HashAlgorithmIdentifier;
+
+
+/**
+ * @typedef {Uint8Array}
+ * @see https://www.w3.org/TR/WebCryptoAPI/#dfn-BigInteger
+ */
+webCrypto.BigInteger;
+
 
 /**
  * @constructor
@@ -268,6 +281,74 @@ webCrypto.RsaOtherPrimesInfo.prototype.t;
 
 
 /**
+ * @record
+ * @extends webCrypto.Algorithm
+ * @see https://www.w3.org/TR/WebCryptoAPI/#dfn-RsaKeyGenParams
+ */
+webCrypto.RsaKeyGenParams;
+/**
+ * @type {number}
+ */
+webCrypto.RsaKeyGenParams.prototype.modulusLength;
+/**
+ * @type {webCrypto.BigInteger}
+ */
+webCrypto.RsaKeyGenParams.prototype.publicExponent;
+
+
+/**
+ * @record
+ * @extends webCrypto.RsaKeyGenParams
+ * @see https://www.w3.org/TR/WebCryptoAPI/#dfn-RsaHashedKeyGenParams
+ */
+webCrypto.RsaHashedKeyGenParams;
+/**
+ * @type {webCrypto.HashAlgorithmIdentifier}
+ */
+webCrypto.RsaHashedKeyGenParams.prototype.hash;
+
+
+/**
+ * @record
+ * @extends webCrypto.KeyAlgorithm
+ * @see https://www.w3.org/TR/WebCryptoAPI/#dfn-RsaKeyAlgorithm
+ */
+webCrypto.RsaKeyAlgorithm;
+/**
+ * @type {number}
+ */
+webCrypto.RsaKeyAlgorithm.prototype.modulusLength;
+/**
+ * @type {webCrypto.BigInteger}
+ */
+webCrypto.RsaKeyAlgorithm.prototype.publicExponent;
+
+
+/**
+ * @record
+ * @extends webCrypto.RsaKeyAlgorithm
+ * @see https://www.w3.org/TR/WebCryptoAPI/#dfn-RsaHashedKeyAlgorithm
+ */
+webCrypto.RsaHashedKeyAlgorithm;
+/**
+ * @type {webCrypto.KeyAlgorithm}
+ */
+webCrypto.RsaHashedKeyAlgorithm.prototype.hash;
+
+
+/**
+ * @record
+ * @extends webCrypto.Algorithm
+ * @see https://www.w3.org/TR/WebCryptoAPI/#dfn-RsaHashedImportParams
+ */
+webCrypto.RsaHashedImportParams;
+/**
+ * @type {webCrypto.HashAlgorithmIdentifier}
+ */
+webCrypto.RsaHashedImportParams.prototype.hash;
+
+
+/**
  * @constructor
  * @see http://www.w3.org/TR/WebCryptoAPI/#subtlecrypto-interface
  */
@@ -332,8 +413,8 @@ webCrypto.SubtleCrypto.prototype.digest = function(algorithm, data) {};
 
 
 /**
- * @param {!webCrypto.AlgorithmIdentifier} algorithm Supported
- *     values are: SHA-1, SHA-256, SHA-384, and SHA-512.
+ * @param {!webCrypto.AlgorithmIdentifier|webCrypto.RsaHashedKeyGenParams}
+ *     algorithm Supported values are: SHA-1, SHA-256, SHA-384, and SHA-512.
  * @param {boolean} extractable If the key can be extracted from the CryptoKey
  *     object at a later stage.
  * @param {!Array<string>} keyUsages Indication of new key options i.e.
@@ -381,9 +462,9 @@ webCrypto.SubtleCrypto.prototype.deriveBits = function(algorithm,
  *     format of the key to imported.
  * @param {!BufferSource|!webCrypto.JsonWebKey} keyData The key
  *     in the given format.
- * @param {!webCrypto.AlgorithmIdentifier} algorithm Supported values
- *     are: AES-CTR, AES-CBC, AES-GCM, RSA-OAEP, AES-KW, HMAC,
- *     RSASSA-PKCS1-v1_5, ECDSA, ECDH, DH.
+ * @param {!webCrypto.AlgorithmIdentifier|webCrypto.RsaHashedImportParams}
+ *     algorithm Supported values are: AES-CTR, AES-CBC, AES-GCM, RSA-OAEP,
+ *     AES-KW, HMAC, RSASSA-PKCS1-v1_5, ECDSA, ECDH, DH.
  * @param {boolean} extractable If the key can be extracted from the CryptoKey
  *     object at a later stage.
  * @param {!Array<string>} keyUsages Indication of new key options i.e.
