@@ -16,6 +16,7 @@
 
 'require es6/array';
 'require es6/execute_async_generator';
+'require es6/generator_engine';
 'require es6/map';
 'require es6/math';
 'require es6/number';
