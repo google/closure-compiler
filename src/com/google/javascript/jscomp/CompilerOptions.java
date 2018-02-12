@@ -177,6 +177,7 @@ public class CompilerOptions implements Serializable {
     /**
      * The compiler should check type-only interface definitions generated above.
      */
+    @Deprecated
     CHECK_IJS,
   }
 
@@ -186,21 +187,17 @@ public class CompilerOptions implements Serializable {
     incrementalCheckMode = value;
     switch (value) {
       case OFF:
+      case CHECK_IJS:
         break;
       case GENERATE_IJS:
         setPreserveTypeAnnotations(true);
         setOutputJs(OutputJs.NORMAL);
         break;
-      case CHECK_IJS:
-        setChecksOnly(true);
-        setOutputJs(OutputJs.SENTINEL);
-        break;
     }
   }
 
-  // TODO(tbreisacher): When this is false, report an error if there's a goog.provide
-  // in an externs file.
-  public boolean inIncrementalCheckMode() {
+  @Deprecated
+  boolean inIncrementalCheckMode() {
     return incrementalCheckMode != IncrementalCheckMode.OFF;
   }
 

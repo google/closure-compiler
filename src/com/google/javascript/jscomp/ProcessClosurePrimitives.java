@@ -455,6 +455,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
         JSModule providedModule = provided.explicitModule;
 
         if (!provided.isFromExterns()) {
+          // TODO(tbreisacher): Report an error if there's a goog.provide in an @externs file.
           checkNotNull(providedModule, n);
 
           JSModule module = t.getModule();
