@@ -59,9 +59,9 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
         lines(
             "class X {",
             "  m() {",
-            "    const $jscomp$async$this=this;",
+            "    const $jscomp$async$this = this;",
             "    function* $jscomp$async$generator() {",
-            "      return new Promise((resolve,reject)=>{",
+            "      return new Promise((resolve, reject) => {",
             "        return $jscomp$async$this",
             "      });",
             "    }",
@@ -91,8 +91,8 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
             "}",
             "class X extends A {",
             "  m() {",
-            "    const $jscomp$async$this=this;",
-            "    const $jscomp$async$super$get$m=()=>super.m;",
+            "    const $jscomp$async$this = this;",
+            "    const $jscomp$async$super$get$m = () => super.m;",
             "    function* $jscomp$async$generator() {",
             "      return $jscomp$async$super$get$m().call($jscomp$async$this);",
             "    }",
@@ -123,12 +123,34 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
             "}",
             "class X extends A {",
             "  m() {",
-            "    const $jscomp$async$super$get$m=()=>super.m;",
+            "    const $jscomp$async$super$get$m = () => super.m;",
             "    function* $jscomp$async$generator() {",
             "      const tmp = $jscomp$async$super$get$m();",
             "      return tmp.call(null);",
             "    }",
             "    return $jscomp.executeAsyncGenerator($jscomp$async$generator())",
+            "  }",
+            "}"));
+  }
+
+  public void testNestedArrowFunctionUsingThis() {
+    test(
+        lines(
+            "class X {",
+            "  m() {",
+            "    return async () => (() => this);",
+            "  }",
+            "}"),
+        lines(
+            "class X {",
+            "  m() {",
+            "    return () => {",
+            "      const $jscomp$async$this = this;",
+            "      function* $jscomp$async$generator() {",
+            "        return () => $jscomp$async$this;",
+            "      }",
+            "      return $jscomp.executeAsyncGenerator($jscomp$async$generator())",
+            "    }",
             "  }",
             "}"));
   }
@@ -146,9 +168,9 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
         lines(
             "class X {",
             "  m() {",
-            "    const $jscomp$async$arguments=arguments;",
+            "    const $jscomp$async$arguments = arguments;",
             "    function* $jscomp$async$generator() {",
-            "      return new Promise((resolve,reject)=>{",
+            "      return new Promise((resolve,reject) => {",
             "        return $jscomp$async$arguments",
             "      });",
             "    }",
