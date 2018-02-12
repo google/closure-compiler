@@ -424,6 +424,7 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
 
     // Rename the exports object to something we can reference later.
     moduleVar.getFirstChild().setString(moduleName);
+    moduleVar.makeNonIndexableRecursive();
 
     t.reportCodeChange();
   }

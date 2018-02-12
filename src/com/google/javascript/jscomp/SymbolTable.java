@@ -38,6 +38,7 @@ import com.google.javascript.rhino.StaticScope;
 import com.google.javascript.rhino.StaticSlot;
 import com.google.javascript.rhino.StaticSourceFile;
 import com.google.javascript.rhino.StaticSymbolTable;
+import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.EnumType;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
@@ -1140,13 +1141,68 @@ public final class SymbolTable {
    * symbols that correspond to a symbol in original source code (before transpilation).
    */
   void removeGeneratedSymbols() {
+    IdentityHashMap<Node, Symbol> nodeToSymbol = null;
     // Need to iterate over copy of values list because removeSymbol() will change the map
     // and we'll get ConcurrentModificationException
     for (Symbol symbol : ImmutableList.copyOf(symbols.values())) {
       if (isSymbolGeneratedAndShouldNotBeIndexed(symbol)) {
         removeSymbol(symbol);
+      } else if (symbol.getDeclaration() != null
+          && symbol.getDeclaration().getNode().getBooleanProp(Node.MODULE_EXPORT)) {
+
+        // Lazy initialize nodeToSymbol map as it's needed only when ES6 modules are used.
+        if (nodeToSymbol == null) {
+          nodeToSymbol = new IdentityHashMap<>();
+          for (Symbol s : symbols.values()) {
+            for (Node node : s.references.keySet()) {
+              nodeToSymbol.put(node, s);
+            }
+          }
+        }
+
+        inlineEs6ExportProperty(symbol, nodeToSymbol);
       }
     }
+  }
+
+  /**
+   * Removes a layer of indirection introduced by ES6 module rewriting. Following example:
+   *
+   * <pre>
+   *   // a.js
+   *   export const foo = 1;
+   *
+   *   // b.js
+   *   import {foo} from './a';
+   *   console.log(foo);
+   * </pre>
+   *
+   * <p>Is rewritten to
+   *
+   * <pre>
+   *   // a.js
+   *   const foo = 1; module$a$exports = {}; module$a$exports.foo = foo;
+   *
+   *   // b.js
+   *   console.log(module$a$exports.foo);
+   * </pre>
+   *
+   * <p>So 'foo' in b.js now points to the generated property instead of original foo variable. This
+   * method removes module$a$exports.foo symbol and changes its references to point to foo.
+   */
+  private void inlineEs6ExportProperty(
+      Symbol exportPropertySymbol, IdentityHashMap<Node, Symbol> nodeToSymbol) {
+    // decl is module$a$exports.foo node from the example above.
+    Node decl = exportPropertySymbol.getDeclaration().getNode();
+    if (decl.getToken() != Token.GETPROP || decl.getParent().getToken() != Token.ASSIGN) {
+      return;
+    }
+    // originalSymbol is symbol declared by "const foo = 1";
+    Symbol originalSymbol = nodeToSymbol.get(decl.getNext());
+    for (Node nodeToMove : exportPropertySymbol.references.keySet()) {
+      originalSymbol.defineReferenceAt(nodeToMove);
+    }
+    removeSymbol(exportPropertySymbol);
   }
 
   /**
