@@ -17,7 +17,6 @@ package com.google.javascript.jscomp;
 
 import static com.google.javascript.jscomp.ClosureRewriteModule.DUPLICATE_MODULE;
 import static com.google.javascript.jscomp.ClosureRewriteModule.DUPLICATE_NAMESPACE;
-import static com.google.javascript.jscomp.ClosureRewriteModule.FILE_REQUIRE_FOR_NON_MODULE;
 import static com.google.javascript.jscomp.ClosureRewriteModule.ILLEGAL_DESTRUCTURING_DEFAULT_EXPORT;
 import static com.google.javascript.jscomp.ClosureRewriteModule.ILLEGAL_DESTRUCTURING_NOT_EXPORTED;
 import static com.google.javascript.jscomp.ClosureRewriteModule.IMPORT_INLINING_SHADOWS_VAR;
@@ -30,9 +29,7 @@ import static com.google.javascript.jscomp.ClosureRewriteModule.INVALID_MODULE_N
 import static com.google.javascript.jscomp.ClosureRewriteModule.INVALID_PROVIDE_CALL;
 import static com.google.javascript.jscomp.ClosureRewriteModule.INVALID_REQUIRE_NAMESPACE;
 import static com.google.javascript.jscomp.ClosureRewriteModule.LATE_PROVIDE_ERROR;
-import static com.google.javascript.jscomp.ClosureRewriteModule.MISSING_FILE_REQUIRE;
 import static com.google.javascript.jscomp.ClosureRewriteModule.MISSING_MODULE_OR_PROVIDE;
-import static com.google.javascript.jscomp.ClosureRewriteModule.PATH_REQUIRE_IN_PROVIDE;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 
@@ -2356,120 +2353,5 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
   public void testEs6Module() {
     testSame("export var x;");
     testSame("import {x} from 'y';");
-  }
-
-  public void testRelativePathBasedRequire() {
-    Expected expected =
-        expected(
-            new String[] {
-              "/** @const */ var module$exports$mod_A = 'A';",
-              lines(
-                  "/** @const */ var module$exports$mod_B = {};",
-                  "/** @const */ module$exports$mod_B.ASDF = module$exports$mod_A;"
-              )
-            }
-    );
-
-    test(
-        srcs(
-            SourceFile.fromCode(
-                "/a/project/path/dep.js",
-                lines(
-                    "goog.module('mod_A');",
-                    "exports = 'A';")
-            ),
-            SourceFile.fromCode(
-                "/a/project/path/file.js",
-                lines(
-                    "goog.module('mod_B');",
-                    "var A = goog.require('./dep.js')",
-                    "exports.ASDF = A;")
-            )
-        ),
-        expected);
-
-    test(
-        srcs(
-            SourceFile.fromCode(
-                "/a/project/path/in/some/path/dep.js",
-                lines(
-                    "goog.module('mod_A');",
-                    "exports = 'A';")
-            ),
-            SourceFile.fromCode(
-                "/a/project/path/file.js",
-                lines(
-                    "goog.module('mod_B');",
-                    "var A = goog.require('./in/some/path/dep.js')",
-                    "exports.ASDF = A;")
-            )
-        ),
-        expected);
-
-    test(
-        srcs(
-            SourceFile.fromCode(
-                "/a/project/different/path/dep.js",
-                lines(
-                    "goog.module('mod_A');",
-                    "exports = 'A';")
-            ),
-            SourceFile.fromCode(
-                "/a/project/path/file.js",
-                lines(
-                    "goog.module('mod_B');",
-                    "var A = goog.require('../different/path/dep.js')",
-                    "exports.ASDF = A;")
-            )
-        ),
-        expected);
-  }
-
-  public void testPathRequireForNonModule() {
-    testError(
-        srcs(
-            SourceFile.fromCode(
-                "/dep.js",
-                "goog.provide('p');"),
-            SourceFile.fromCode(
-                "/file.js",
-                lines(
-                    "goog.module('mod_B');",
-                    "var A = goog.require('./dep.js')"
-                )
-            )
-        ),
-        error(FILE_REQUIRE_FOR_NON_MODULE));
-  }
-
-  public void testPathRequireForMissingFile() {
-    testError(
-        srcs(
-            SourceFile.fromCode(
-                "/file.js",
-                lines(
-                    "goog.module('mod_B');",
-                    "goog.require('./dep.js');"
-                )
-            )
-        ),
-        error(MISSING_FILE_REQUIRE));
-  }
-
-  public void testPathRequireInProvide() {
-    testError(
-        srcs(
-            SourceFile.fromCode(
-                "/dep.js",
-                "goog.provide('p');"),
-            SourceFile.fromCode(
-                "/file.js",
-                lines(
-                    "goog.provide('B');",
-                    "goog.require('./dep.js');"
-                )
-            )
-        ),
-        error(PATH_REQUIRE_IN_PROVIDE));
   }
 }
