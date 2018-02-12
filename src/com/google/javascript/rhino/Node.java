@@ -745,10 +745,21 @@ public class Node implements Serializable {
     child.parent = this;
   }
 
-  public final void addChildrenToFront(Node children) {
+  /**
+   * Add all children to the front of this node.
+   *
+   * @param children first of a list of sibling nodes who have no parent.
+   *    NOTE: Usually you would get this argument from a removeChildren() call.
+   *    A single detached node will not work because its sibling pointers will not be
+   *    correctly initialized.
+   */
+  public final void addChildrenToFront(@Nullable Node children) {
     if (children == null) {
       return; // removeChildren() returns null when there are none
     }
+    // NOTE: If there is only one sibling, its previous pointer must point to itself.
+    // Null indicates a fully detached node.
+    checkNotNull(children.previous, children);
     for (Node child = children; child != null; child = child.next) {
       checkArgument(child.parent == null);
       child.parent = this;
@@ -803,13 +814,20 @@ public class Node implements Serializable {
 
   /**
    * Add all children after 'node'. If 'node' is null, add them to the front of this node.
+   *
+   * @param children first of a list of sibling nodes who have no parent.
+   *    NOTE: Usually you would get this argument from a removeChildren() call.
+   *    A single detached node will not work because its sibling pointers will not be
+   *    correctly initialized.
    */
   public final void addChildrenAfter(@Nullable Node children, @Nullable Node node) {
     if (children == null) {
       return; // removeChildren() returns null when there are none
     }
     checkArgument(node == null || node.parent == this);
-    checkNotNull(children.previous);
+    // NOTE: If there is only one sibling, its previous pointer must point to itself.
+    // Null indicates a fully detached node.
+    checkNotNull(children.previous, children);
     if (node == null) {
       addChildrenToFront(children);
       return;
