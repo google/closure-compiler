@@ -1054,7 +1054,6 @@ public final class CompilerTest extends TestCase {
             SourceFile.fromCode("hops", "/** @fileoverview @typeSummary */ goog.provide('hops');"));
 
     CompilerOptions options = createNewFlagBasedOptions();
-    options.setIncrementalChecks(CompilerOptions.IncrementalCheckMode.CHECK_IJS);
     options.dependencyOptions.setDependencySorting(true);
 
     List<SourceFile> externs = ImmutableList.of();
@@ -1129,7 +1128,6 @@ public final class CompilerTest extends TestCase {
 
     CompilerOptions options = createNewFlagBasedOptions();
     options.dependencyOptions.setDependencyPruning(true);
-    options.setIncrementalChecks(CompilerOptions.IncrementalCheckMode.CHECK_IJS);
 
     List<SourceFile> externs = ImmutableList.of();
     Compiler compiler = new Compiler();

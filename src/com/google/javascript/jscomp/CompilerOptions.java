@@ -173,12 +173,6 @@ public class CompilerOptions implements Serializable {
      * of the code being compiled.  This is useful for incremental type checking.
      */
     GENERATE_IJS,
-
-    /**
-     * The compiler should check type-only interface definitions generated above.
-     */
-    @Deprecated
-    CHECK_IJS,
   }
 
   private IncrementalCheckMode incrementalCheckMode = IncrementalCheckMode.OFF;
@@ -187,18 +181,12 @@ public class CompilerOptions implements Serializable {
     incrementalCheckMode = value;
     switch (value) {
       case OFF:
-      case CHECK_IJS:
         break;
       case GENERATE_IJS:
         setPreserveTypeAnnotations(true);
         setOutputJs(OutputJs.NORMAL);
         break;
     }
-  }
-
-  @Deprecated
-  boolean inIncrementalCheckMode() {
-    return incrementalCheckMode != IncrementalCheckMode.OFF;
   }
 
   public boolean shouldGenerateTypedExterns() {

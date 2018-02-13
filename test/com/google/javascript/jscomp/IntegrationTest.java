@@ -4651,7 +4651,6 @@ public final class IntegrationTest extends IntegrationTestCase {
 
   public void testExternsProvideIsAllowed() {
     CompilerOptions options = createCompilerOptions();
-    options.setIncrementalChecks(CompilerOptions.IncrementalCheckMode.CHECK_IJS);
     options.setClosurePass(true);
     options.setCheckTypes(true);
 
@@ -4663,7 +4662,6 @@ public final class IntegrationTest extends IntegrationTestCase {
 
   public void testIjsProvideIsAllowed1() {
     CompilerOptions options = createCompilerOptions();
-    options.setIncrementalChecks(CompilerOptions.IncrementalCheckMode.CHECK_IJS);
     options.setClosurePass(true);
     options.setCheckTypes(true);
 
@@ -4684,7 +4682,6 @@ public final class IntegrationTest extends IntegrationTestCase {
 
   public void testIjsWithGoogScopeWorks() {
     CompilerOptions options = createCompilerOptions();
-    options.setIncrementalChecks(CompilerOptions.IncrementalCheckMode.CHECK_IJS);
     options.setClosurePass(true);
     options.setCheckTypes(true);
 
