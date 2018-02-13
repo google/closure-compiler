@@ -1389,26 +1389,33 @@ public final class ConformanceRules {
       if (n.isGetProp()) {
         Node target = n.getFirstChild();
         TypeI type = target.getTypeI();
-        if (type != null && !conforms(type) && !isTypeImmediatelyTightened(n)) {
-          return ConformanceResult.VIOLATION;
+        TypeI nonConformingPart = getNonConformingPart(type);
+        if (nonConformingPart != null && !isTypeImmediatelyTightened(n)) {
+          return new ConformanceResult(
+              ConformanceLevel.VIOLATION,
+              "Reference to type '" + nonConformingPart + "' never resolved.");
         }
       }
       return ConformanceResult.CONFORMANCE;
     }
 
-    private static boolean conforms(TypeI type) {
+    private static @Nullable TypeI getNonConformingPart(TypeI type) {
+      if (type == null) {
+        return null;
+      }
       if (type.isUnionType()) {
         // unwrap union types which might contain unresolved type name
         // references for example {Foo|undefined}
         for (TypeI part : type.getUnionMembers()) {
-          if (!conforms(part)) {
-            return false;
+          TypeI nonConformingPart = getNonConformingPart(part);
+          if (nonConformingPart != null) {
+            return nonConformingPart;
           }
         }
-        return true;
-      } else {
-        return !type.isUnresolved();
+      } else if (type.isUnresolved()) {
+        return type;
       }
+      return null;
     }
   }
 
@@ -1421,9 +1428,11 @@ public final class ConformanceRules {
 
     @Override
     protected ConformanceResult checkConformance(NodeTraversal t, Node n) {
-      TypeI type = n.getTypeI();
-      if (type != null && !BanUnresolvedType.conforms(type) && !isTypeImmediatelyTightened(n)) {
-        return ConformanceResult.VIOLATION;
+      TypeI nonConformingPart = BanUnresolvedType.getNonConformingPart(n.getTypeI());
+      if (nonConformingPart != null && !isTypeImmediatelyTightened(n)) {
+        return new ConformanceResult(
+            ConformanceLevel.VIOLATION,
+            "Reference to type '" + nonConformingPart + "' never resolved.");
       }
       return ConformanceResult.CONFORMANCE;
     }

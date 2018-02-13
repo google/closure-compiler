@@ -1517,7 +1517,7 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
     testWarning(
         "goog.forwardDeclare('Foo'); /** @param {Foo} a */ function f(a) {a.foo()};",
         CheckConformance.CONFORMANCE_VIOLATION,
-        "Violation: BanUnresolvedType Message");
+        "Violation: BanUnresolvedType Message\nReference to type 'Foo' never resolved.");
 
     this.mode = TypeInferenceMode.BOTH;
     testNoWarning(lines(
@@ -1539,14 +1539,11 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
 
     // NTI doesn't model unresolved types separately from unknown, so this check always results
     // in conformance.
-    // TODO(b/67899666): Implement similar functionality in NTI for preventing uses of forward
-    // declared types by implementing support for resolving forward declarations to a new
-    // "unusable type" instead of to unknown.
     this.mode = TypeInferenceMode.OTI_ONLY;
     testWarning(
         "goog.forwardDeclare('Foo'); /** @param {Foo} a */ var f = function(a) {}",
         CheckConformance.CONFORMANCE_VIOLATION,
-        "Violation: StrictBanUnresolvedType Message");
+        "Violation: StrictBanUnresolvedType Message\nReference to type 'Foo' never resolved.");
 
     testWarning(
         new String[] {
