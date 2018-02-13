@@ -740,8 +740,77 @@ public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase  {
         "var age; `Age: ${3}`");
   }
 
-  public void testDestructuring() {
+  public void testArrayDestructuring() {
     noInline("var [a, b, c] = [1, 2, 3]; print(a + b + c);");
+    noInline("var arr = [1, 2, 3, 4]; var [a, b, ,d] = arr;");
+    noInline("var x = 3; [x] = 4; print(x);");
+    inline("var [x] = []; x = 3; print(x);", "var [x] = []; print(3);");
+  }
+
+  public void testObjectDestructuring() {
+    noInline("var {a, b} = {a: 3, b: 4}; print(a + b);");
+    noInline("var obj = {a: 3, b: 4}; var {a, b} = obj;");
+  }
+
+  public void testDestructuringDefaultValue() {
+    inline("var x = 1; var [y = x] = [];", "var x; var [y = 1] = [];");
+    inline("var x = 1; var {y = x} = {};", "var x; var {y = 1} = {};");
+    inline("var x = 1; var {[3]: y = x} = {};", "var x; var {[3]: y = 1} = {};");
+    noInline("var x = 1; var {[x]: y = x} = {};");
+    noInline("var x = 1; var [y = x] = []; print(x);");
+
+    // don't inline because x is only conditionally reassigned to 2.
+    noInline("var x = 1; var [y = (x = 2, 4)] = []; print(x);");
+  }
+
+  public void testDestructuringComputedProperty() {
+    inline("var x = 1; var {[x]: y} = {};", "var x; var {[1]: y} = {};");
+    noInline("var x = 1; var {[x]: y} = {}; print(x);");
+  }
+
+  public void testDeadAssignments() {
+    inline(
+        "let a = 3; if (3 < 4) { a = 8; } else { print(a); }",
+        "let a; if (3 < 4) { a = 8 } else { print(3); }");
+
+    inline(
+        "let a = 3; if (3 < 4) { [a] = 8; } else { print(a); }",
+        "let a; if (3 < 4) { [a] = 8 } else { print(3); }");
+  }
+
+  public void testDestructuringEvaluationOrder() {
+    // Should not inline "x = 2" in these cases because x is changed beforehand
+    noInline("var x = 2; var {x, y = x} = {x: 3};");
+    noInline("var x = 2; var {y = (x = 3), z = x} = {};");
+
+    // These examples are safe to inline, but FlowSensitiveInlineVariables never inlines variables
+    // used twice in the same CFG node even when safe to do so.
+    noInline("var x = 2; var {a: y = (x = 3)} = {a: x};");
+    noInline("var x = 1; var {a = x} = {a: (x = 2, 3)};");
+    noInline("var x = 2; var {a: x = 3} = {a: x};");
+  }
+
+  public void testDestructuringWithSideEffects() {
+    noInline("function f() { x++; }  var x = 2; var {y = x} = {key: f()}");
+
+    noInline("function f() { x++; } var x = 2; var y = x; var {z = y} = {a: f()}");
+    noInline("function f() { x++; } var x = 2; var y = x; var {a = f(), b = y} = {}");
+    noInline("function f() { x++; } var x = 2; var y = x; var {[f()]: z = y} = {}");
+    noInline("function f() { x++; } var x = 2; var y = x; var {a: {b: z = y} = f()} = {};");
+    noInline("function f() { x++; } var x = 2; var y; var {z = (y = x, 3)} = {a: f()}; print(y);");
+
+    inline(
+        "function f() { x++; }  var x = 2; var y = x; var {z = f()} = {a: y}",
+        "function f() { x++; }  var x = 2; var y    ; var {z = f()} = {a: x}");
+    inline(
+        "function f() { x++; }  var x = 2; var y = x; var {a = y, b = f()} = {}",
+        "function f() { x++; }  var x = 2; var y    ; var {a = x, b = f()} = {}");
+    inline(
+        "function f() { x++; }  var x = 2; var y = x; var {[y]: z = f()} = {}",
+        "function f() { x++; }  var x = 2; var y    ; var {[x]: z = f()} = {}");
+    inline(
+        "function f() { x++; } var x = 2; var y = x; var {a: {b: z = f()} = y} = {};",
+        "function f() { x++; } var x = 2; var y    ; var {a: {b: z = f()} = x} = {};");
   }
 
   private void noInline(String input) {

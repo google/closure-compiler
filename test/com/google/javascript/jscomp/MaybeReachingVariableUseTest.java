@@ -119,6 +119,13 @@ public final class MaybeReachingVariableUseTest extends TestCase {
         + "U: var z = x;");
   }
 
+  public void testDestructuring() {
+    assertMatch("D: var x = 1; U: var [y = x] = [];");
+    assertMatch("D: var x = 1; var y; U: [y = x] = [];");
+    assertMatch("D: var [x] = []; U: x;");
+    assertMatch("var x; x = 3; D: [x] = 5; U: x;");
+  }
+
   /**
    * The def of x at D: may be used by the read of x at U:.
    */

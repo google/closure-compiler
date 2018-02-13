@@ -17,8 +17,8 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
 
-import com.google.common.base.Preconditions;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.MultimapBuilder;
@@ -186,7 +186,13 @@ class MaybeReachingVariableUse extends
         return;
 
       case NAME:
-        addToUseIfLocal(n.getString(), cfgNode, output);
+        if (NodeUtil.isLhsByDestructuring(n)) {
+          if (!conditional) {
+            removeFromUseIfLocal(n.getString(), output);
+          }
+        } else {
+          addToUseIfLocal(n.getString(), cfgNode, output);
+        }
         return;
 
       case WHILE:
@@ -226,15 +232,23 @@ class MaybeReachingVariableUse extends
         return;
 
       case VAR:
+        // TODO(b/73123594): this should also handle LET/CONST
         Node varName = n.getFirstChild();
-        Preconditions.checkState(n.hasChildren(), "AST should be normalized", n);
+        checkState(n.hasChildren(), "AST should be normalized", n);
 
-        if (varName.hasChildren()) {
+        if (varName.isDestructuringLhs()) {
+          // Note: we never inline variables used twice in the same CFG node, so the order of
+          // traversal here isn't important. If that changes, though, MaybeReachingVariableUse
+          // must be updated to correctly handle destructuring assignment evaluation order.
+          computeMayUse(varName.getFirstChild(), cfgNode, output, conditional);
+          computeMayUse(varName.getSecondChild(), cfgNode, output, conditional);
+
+        } else if (varName.hasChildren()) {
           computeMayUse(varName.getFirstChild(), cfgNode, output, conditional);
           if (!conditional) {
             removeFromUseIfLocal(varName.getString(), output);
           }
-        }
+        } // else var name declaration with no initial value
         return;
 
       default:

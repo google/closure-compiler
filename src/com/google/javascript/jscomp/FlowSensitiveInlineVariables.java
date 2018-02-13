@@ -258,8 +258,12 @@ class FlowSensitiveInlineVariables implements CompilerPass, ScopedCallback {
 
         // Make sure that the name node is purely a read.
         if ((NodeUtil.isAssignmentOp(parent) && parent.getFirstChild() == n)
-            || parent.isVar() || parent.isInc() || parent.isDec()
-            || parent.isParamList() || parent.isCatch()) {
+            || parent.isVar()
+            || parent.isInc()
+            || parent.isDec()
+            || parent.isParamList()
+            || parent.isCatch()
+            || NodeUtil.isLhsByDestructuring(n)) {
           return;
         }
 
@@ -354,17 +358,17 @@ class FlowSensitiveInlineVariables implements CompilerPass, ScopedCallback {
         return false;
       }
 
-      // The right of the definition has side effect:
+      // A subexpression evaluated after the variable has a side effect.
       // Example, for x:
       // x = readProp(b), modifyProp(b); print(x);
-      if (checkRightOf(def, getDefCfgNode(), SIDE_EFFECT_PREDICATE)) {
+      if (checkPostExpressions(def, getDefCfgNode(), SIDE_EFFECT_PREDICATE)) {
         return false;
       }
 
       // Similar check as the above but this time, all the sub-expressions
-      // left of the use of the variable.
+      // evaluated before the variable.
       // x = readProp(b); modifyProp(b), print(x);
-      if (checkLeftOf(use, useCfgNode, SIDE_EFFECT_PREDICATE)) {
+      if (checkPreExpressions(use, useCfgNode, SIDE_EFFECT_PREDICATE)) {
         return false;
       }
 
@@ -574,14 +578,18 @@ class FlowSensitiveInlineVariables implements CompilerPass, ScopedCallback {
   }
 
   /**
-   * Given an expression by its root and sub-expression n, return true if there
-   * the predicate is true for some expression on the right of n.
+   * Given an expression by its root and sub-expression n, return true if the predicate is true for
+   * some expression evaluated after n.
    *
-   * Example:
+   * <p>NOTE: this doesn't correctly check destructuring patterns, because their order of evaluation
+   * is different from AST traversal order,  but currently this is ok because
+   * FlowSensitiveInlineVariables never inlines variable assignments inside destructuring.
    *
-   * NotChecked(), NotChecked(), n, Checked(), Checked();
+   * <p>Example:
+   *
+   * <p>NotChecked(), NotChecked(), n, Checked(), Checked();
    */
-  private static boolean checkRightOf(
+  private static boolean checkPostExpressions(
       Node n, Node expressionRoot, Predicate<Node> predicate) {
     for (Node p = n; p != expressionRoot; p = p.getParent()) {
       for (Node cur = p.getNext(); cur != null; cur = cur.getNext()) {
@@ -594,18 +602,30 @@ class FlowSensitiveInlineVariables implements CompilerPass, ScopedCallback {
   }
 
   /**
-   * Given an expression by its root and sub-expression n, return true if there
-   * the predicate is true for some expression on the left of n.
+   * Given an expression by its root and sub-expression n, return true if the predicate is true for
+   * some expression evaluated before n.
    *
-   * Example:
+   * <p>In most cases evaluation order follows left-to-right AST order. Destructuring pattern
+   * evaluation is an exception.
    *
-   * Checked(), Checked(), n, NotChecked(), NotChecked();
+   * <p>Example:
+   *
+   * <p>Checked(), Checked(), n, NotChecked(), NotChecked();
    */
-  private static boolean checkLeftOf(
+  private static boolean checkPreExpressions(
       Node n, Node expressionRoot, Predicate<Node> predicate) {
     for (Node p = n; p != expressionRoot; p = p.getParent()) {
-      for (Node cur = p.getParent().getFirstChild(); cur != p;
-          cur = cur.getNext()) {
+      Node oldestSibling = p.getParent().getFirstChild();
+      // Evaluate a destructuring assignment right-to-left.
+      if (oldestSibling.isDestructuringPattern()) {
+        if (p.isDestructuringPattern()) {
+          if (p.getNext() != null && predicate.apply(p.getNext())) {
+            return true;
+          }
+        }
+        continue;
+      }
+      for (Node cur = oldestSibling; cur != p; cur = cur.getNext()) {
         if (predicate.apply(cur)) {
           return true;
         }
