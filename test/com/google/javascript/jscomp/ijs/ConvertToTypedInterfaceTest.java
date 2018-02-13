@@ -52,6 +52,10 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
     test(externs("/** @type {number} */ var x;"), srcs("x = 7;"), expected(""));
   }
 
+  public void testUnannotatedDeclaration() {
+    test("var x;", "/** @const {*} */ var x;");
+  }
+
   public void testSimpleConstJsdocPropagation() {
     test("/** @const */ var x = 5;", "/** @const {number} */ var x;");
     test("/** @const */ var x = true;", "/** @const {boolean} */ var x;");

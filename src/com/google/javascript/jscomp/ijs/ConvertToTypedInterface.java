@@ -459,29 +459,29 @@ public class ConvertToTypedInterface implements CompilerPass {
       // Simplify all names in the top-level scope.
       List<String> seenNames =
           SHORT_TO_LONG.immutableSortedCopy(currentFile.getDeclarations().keySet());
+
       for (String name : seenNames) {
         for (PotentialDeclaration decl : currentFile.getDeclarations().get(name)) {
-          processDeclaration(decl);
+          processDeclaration(name, decl);
         }
       }
     }
 
-    private void processDeclaration(PotentialDeclaration decl) {
-      switch (shouldRemove(decl)) {
-        case PRESERVE_ALL:
-          if (decl.getRhs() != null && decl.getRhs().isFunction()) {
-            processFunction(decl.getRhs());
-          } else if (decl.getRhs() != null && isClass(decl.getRhs())) {
-            processClass(decl.getRhs());
-          }
-          break;
-        case SIMPLIFY_RHS:
-          decl.simplify(compiler);
-          break;
-        case REMOVE_ALL:
-          decl.remove(compiler);
-          break;
+    private void processDeclaration(String name, PotentialDeclaration decl) {
+      if (shouldRemove(name, decl)) {
+        decl.remove(compiler);
+        return;
       }
+      if (isAliasDefinition(decl)) {
+        return;
+      }
+      if (decl.getRhs() != null && decl.getRhs().isFunction()) {
+        processFunction(decl.getRhs());
+      } else if (decl.getRhs() != null && isClass(decl.getRhs())) {
+        processClass(decl.getRhs());
+      }
+      setUndeclaredToUnusableType(decl);
+      decl.simplify(compiler);
     }
 
     private void processClass(Node n) {
@@ -512,12 +512,6 @@ public class ConvertToTypedInterface implements CompilerPass {
       }
     }
 
-    enum RemovalType {
-      PRESERVE_ALL,
-      SIMPLIFY_RHS,
-      REMOVE_ALL,
-    }
-
     private static boolean isClass(Node n) {
       return n.isClass() || NodeUtil.isCallTo(n, "goog.defineClass");
     }
@@ -530,64 +524,48 @@ public class ConvertToTypedInterface implements CompilerPass {
       return qualifiedName.substring(0, dotIndex);
     }
 
-    private RemovalType shouldRemove(PotentialDeclaration decl) {
-      String fullyQualifiedName = decl.getFullyQualifiedName();
-      if ("$jscomp".equals(rootName(fullyQualifiedName))) {
+    private boolean shouldRemove(String name, PotentialDeclaration decl) {
+      if ("$jscomp".equals(rootName(name))) {
         // These are created by goog.scope processing, but clash with each other
         // and should not be depended on.
-        return RemovalType.REMOVE_ALL;
+        return true;
       }
+      // This looks like an update rather than a declaration in this file.
+      return !decl.isDefiniteDeclaration()
+          && !currentFile.isPrefixProvided(name)
+          && !currentFile.isStrictPrefixDeclared(name);
+    }
+
+    private void setUndeclaredToUnusableType(PotentialDeclaration decl) {
       Node nameNode = decl.getLhs();
       Node rhs = decl.getRhs();
       JSDocInfo jsdoc = decl.getJsDoc();
-      boolean isExport = isExportLhs(nameNode);
-      if (rhs == null) {
-        return RemovalType.SIMPLIFY_RHS;
+      if (decl.shouldPreserve()
+          || NodeUtil.isNamespaceDecl(nameNode)
+          || (jsdoc != null
+              && jsdoc.containsDeclaration()
+              && !isConstToBeInferred(jsdoc, nameNode))) {
+        return;
       }
-      if (PotentialDeclaration.isTypedRhs(rhs)
-          || isImportRhs(rhs)
-          || (isExport && (rhs.isQualifiedName() || rhs.isObjectLit()))
-          || (jsdoc != null && jsdoc.isConstructor() && rhs.isQualifiedName())
-          || isAliasDefinition(decl)
-          || (nameNode.matchesQualifiedName("goog.global") && rhs.isThis())
-          || (rhs.isObjectLit()
-              && !rhs.hasChildren()
-              && (jsdoc == null || !JsdocUtil.hasAnnotatedType(jsdoc)))) {
-        return RemovalType.PRESERVE_ALL;
-      }
-      if (NodeUtil.isNamespaceDecl(nameNode)) {
-        return RemovalType.SIMPLIFY_RHS;
-      }
+      maybeWarnForConstWithoutExplicitType(compiler, jsdoc, nameNode);
       Node jsdocNode = NodeUtil.getBestJSDocInfoNode(nameNode);
-      if (isConstToBeInferred(jsdoc, nameNode)) {
-        jsdocNode.setJSDocInfo(JsdocUtil.getUnusableTypeJSDoc(jsdoc));
-        maybeWarnForConstWithoutExplicitType(compiler, jsdoc, nameNode);
-        return RemovalType.SIMPLIFY_RHS;
-      }
-      if (jsdoc == null || !jsdoc.containsDeclaration()) {
-        if (!isDeclaration(nameNode)
-            && !currentFile.isPrefixProvided(fullyQualifiedName)
-            && !currentFile.isStrictPrefixDeclared(fullyQualifiedName)) {
-          // This looks like an update rather than a declaration in this file.
-          return RemovalType.REMOVE_ALL;
-        }
-        jsdocNode.setJSDocInfo(JsdocUtil.getUnusableTypeJSDoc(jsdoc));
-      }
-      return RemovalType.SIMPLIFY_RHS;
+      jsdocNode.setJSDocInfo(JsdocUtil.getUnusableTypeJSDoc(jsdoc));
     }
 
     private boolean isAliasDefinition(PotentialDeclaration decl) {
+      Node rhs = decl.getRhs();
       if (isConstToBeInferred(decl.getJsDoc(), decl.getLhs())
-          && decl.getRhs().isQualifiedName()) {
-        String aliasedName = decl.getRhs().getQualifiedName();
-        return currentFile.isPrefixRequired(aliasedName) || currentFile.isNameDeclared(aliasedName);
+          && rhs != null && rhs.isQualifiedName()) {
+        String aliasedName = rhs.getQualifiedName();
+        return rhs.isThis()
+            || currentFile.isPrefixRequired(aliasedName)
+            || currentFile.isNameDeclared(aliasedName);
       }
       return false;
     }
   }
 
-  // TODO(blickly): Move to NodeUtil if it makes more sense there.
-  private static boolean isDeclaration(Node nameNode) {
+  static boolean isDeclaration(Node nameNode) {
     checkArgument(nameNode.isQualifiedName());
     Node parent = nameNode.getParent();
     switch (parent.getToken()) {
@@ -613,12 +591,12 @@ public class ConvertToTypedInterface implements CompilerPass {
         && !NodeUtil.isNamespaceDecl(nameNode);
   }
 
-  private static boolean isExportLhs(Node lhs) {
+  static boolean isExportLhs(Node lhs) {
     return (lhs.isName() && lhs.matchesQualifiedName("exports"))
         || (lhs.isGetProp() && lhs.getFirstChild().matchesQualifiedName("exports"));
   }
 
-  private static boolean isImportRhs(@Nullable Node rhs) {
+  static boolean isImportRhs(@Nullable Node rhs) {
     if (rhs == null || !rhs.isCall()) {
       return false;
     }

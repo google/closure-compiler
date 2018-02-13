@@ -172,7 +172,7 @@ abstract class PotentialDeclaration {
 
     @Override
     void simplify(AbstractCompiler compiler) {
-      if (getRhs() == null) {
+      if (getRhs() == null || shouldPreserve()) {
         return;
       }
       Node nameNode = getLhs();
@@ -226,6 +226,23 @@ abstract class PotentialDeclaration {
         jsdocNode.setJSDocInfo(JsdocUtil.getUnusableTypeJSDoc(jsdoc));
       }
     }
+
+    @Override
+    boolean shouldPreserve() {
+      Node rhs = getRhs();
+      Node nameNode = getLhs();
+      JSDocInfo jsdoc = getJsDoc();
+      boolean isExport = ConvertToTypedInterface.isExportLhs(nameNode);
+      return super.shouldPreserve()
+          || ConvertToTypedInterface.isImportRhs(rhs)
+          || (isExport && rhs != null && (rhs.isQualifiedName() || rhs.isObjectLit()))
+          || (jsdoc != null && jsdoc.isConstructor() && rhs != null && rhs.isQualifiedName())
+          || (nameNode.matchesQualifiedName("goog.global") && rhs != null && rhs.isThis())
+          || (rhs != null
+              && rhs.isObjectLit()
+              && !rhs.hasChildren()
+              && (jsdoc == null || !JsdocUtil.hasAnnotatedType(jsdoc)));
+    }
   }
 
   /**
@@ -242,6 +259,9 @@ abstract class PotentialDeclaration {
 
     @Override
     void simplify(AbstractCompiler compiler) {
+      if (shouldPreserve()) {
+        return;
+      }
       // Just completely remove the RHS, if present, and replace with a getprop.
       Node newStatement =
           NodeUtil.newQNameDeclaration(compiler, getFullyQualifiedName(), null, getJsDoc());
@@ -284,6 +304,17 @@ abstract class PotentialDeclaration {
     Node getRemovableNode() {
       return getLhs();
     }
+  }
+
+  boolean isDefiniteDeclaration() {
+    return ConvertToTypedInterface.isExportLhs(getLhs())
+        || (getJsDoc() != null && getJsDoc().containsDeclaration())
+        || (rhs != null && PotentialDeclaration.isTypedRhs(rhs))
+        || ConvertToTypedInterface.isDeclaration(getLhs());
+  }
+
+  boolean shouldPreserve() {
+    return getRhs() != null && isTypedRhs(getRhs());
   }
 
   static boolean isTypedRhs(Node rhs) {
