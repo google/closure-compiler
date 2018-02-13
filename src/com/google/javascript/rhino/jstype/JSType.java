@@ -820,25 +820,6 @@ public abstract class JSType implements TypeI {
 
   /**
    * This predicate is used to test whether a given type can appear in a
-   * 'Int32' context.  This context includes, for example, the operands of a
-   * bitwise or operator.  Since we do not currently support integer types,
-   * this is a synonym for {@code Number}.
-   */
-  public final boolean matchesInt32Context() {
-    return matchesNumberContext();
-  }
-
-  /**
-   * This predicate is used to test whether a given type can appear in a
-   * 'Uint32' context.  This context includes the right-hand operand of a shift
-   * operator.
-   */
-  public final boolean matchesUint32Context() {
-    return matchesNumberContext();
-  }
-
-  /**
-   * This predicate is used to test whether a given type can appear in a
    * numeric context, such as an operand of a multiply operator.
    */
   public boolean matchesNumberContext() {

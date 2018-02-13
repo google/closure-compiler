@@ -347,6 +347,8 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
   // explicitly turned off.
   private boolean reportMissingProperties = true;
 
+  private boolean strictOperatorChecks = false;
+
   private InferJSDocInfo inferJSDocInfo = null;
 
   // These fields are used to calculate the percentage of expressions typed.
@@ -404,6 +406,11 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
   public void process(Node externsRoot, Node jsRoot) {
     checkNotNull(scopeCreator);
     checkNotNull(topScope);
+
+    if (this.compiler.getOptions().enables(DiagnosticGroups.STRICT_PRIMITIVE_OPERATORS)) {
+      this.strictOperatorChecks = true;
+      this.validator.setStrictOperatorChecks(true);
+    }
 
     Node externsAndJs = jsRoot.getParent();
     checkState(externsAndJs != null);
@@ -620,8 +627,10 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
 
       case BITNOT:
         childType = getJSType(n.getFirstChild());
-        if (!childType.matchesInt32Context()) {
+        if (!childType.matchesNumberContext()) {
           report(t, n, BIT_OPERATION, NodeUtil.opToStr(n.getToken()), childType.toString());
+        } else if (this.strictOperatorChecks) {
+          this.validator.expectNumberStrict(n, childType, "bitwise NOT");
         }
         ensureTyped(t, n, NUMBER_TYPE);
         break;
@@ -629,7 +638,10 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       case POS:
       case NEG:
         left = n.getFirstChild();
-        validator.expectNumber(t, left, getJSType(left), "sign operator");
+        if (n.getToken() == Token.NEG) {
+          // We are more permissive with +, because it is used to coerce to number
+          validator.expectNumber(t, left, getJSType(left), "sign operator");
+        }
         ensureTyped(t, n, NUMBER_TYPE);
         break;
 
@@ -700,6 +712,9 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
           validator.expectNumber(t, n, leftType, "left side of numeric comparison");
         } else if (leftType.isNumber()) {
           validator.expectNumber(t, n, rightType, "right side of numeric comparison");
+        } else if (this.strictOperatorChecks) {
+          String errorMsg = "expected matching types in comparison";
+          this.validator.expectMatchingTypes(n, leftType, rightType, errorMsg);
         } else if (leftType.matchesNumberContext() && rightType.matchesNumberContext()) {
           // OK.
         } else {
@@ -2032,11 +2047,16 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       case RSH:
       case ASSIGN_URSH:
       case URSH:
-        if (!leftType.matchesInt32Context()) {
-          report(t, left, BIT_OPERATION, NodeUtil.opToStr(n.getToken()), leftType.toString());
+        String opStr = NodeUtil.opToStr(n.getToken());
+        if (!leftType.matchesNumberContext()) {
+          report(t, left, BIT_OPERATION, opStr, leftType.toString());
+        } else if (this.strictOperatorChecks) {
+          this.validator.expectNumberStrict(n, leftType, "operator " + opStr);
         }
-        if (!rightType.matchesUint32Context()) {
-          report(t, right, BIT_OPERATION, NodeUtil.opToStr(n.getToken()), rightType.toString());
+        if (!rightType.matchesNumberContext()) {
+          report(t, right, BIT_OPERATION, opStr, rightType.toString());
+        } else if (this.strictOperatorChecks) {
+          this.validator.expectNumberStrict(n, rightType, "operator " + opStr);
         }
         break;
 
@@ -2058,10 +2078,8 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       case BITAND:
       case BITXOR:
       case BITOR:
-        validator.expectBitwiseable(t, left, leftType,
-            "bad left operand to bitwise operator");
-        validator.expectBitwiseable(t, right, rightType,
-            "bad right operand to bitwise operator");
+        validator.expectBitwiseable(t, left, leftType, "bad left operand to bitwise operator");
+        validator.expectBitwiseable(t, right, rightType, "bad right operand to bitwise operator");
         break;
 
       case ASSIGN_ADD:

@@ -66,7 +66,10 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
     super.setUp();
     // Enable missing override checks that are disabled by default.
     compiler.getOptions().setWarningLevel(DiagnosticGroups.MISSING_OVERRIDE, CheckLevel.WARNING);
-    compiler.getOptions().setWarningLevel(DiagnosticGroups.STRICT_MISSING_PROPERTIES, CheckLevel.WARNING);
+    compiler.getOptions().setWarningLevel(
+        DiagnosticGroups.STRICT_MISSING_PROPERTIES, CheckLevel.WARNING);
+    compiler.getOptions().setWarningLevel(
+        DiagnosticGroups.STRICT_PRIMITIVE_OPERATORS, CheckLevel.WARNING);
   }
 
   @Override
@@ -132,11 +135,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testTypeCheck5() {
-    testTypes(
-        "/**@return {void}*/function foo(){ var a = +foo(); }",
-        "sign operator\n"
-        + "found   : undefined\n"
-        + "required: number");
+    testTypes("/**@return {void}*/function foo(){ var a = +foo(); }");
   }
 
   public void testTypeCheck6() {
@@ -1614,10 +1613,14 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testNumericComparison3() {
+    compiler.getOptions().setWarningLevel(
+        DiagnosticGroups.STRICT_PRIMITIVE_OPERATORS, CheckLevel.OFF);
     testTypes("/**@param {string} a*/ function f(a) {return a < 3;}");
   }
 
   public void testNumericComparison4() {
+    compiler.getOptions().setWarningLevel(
+        DiagnosticGroups.STRICT_PRIMITIVE_OPERATORS, CheckLevel.OFF);
     testTypes("/**@param {(number|undefined)} a*/ " +
               "function f(a) {return a < 3;}");
   }
@@ -1641,10 +1644,14 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testStringComparison2() {
+    compiler.getOptions().setWarningLevel(
+        DiagnosticGroups.STRICT_PRIMITIVE_OPERATORS, CheckLevel.OFF);
     testTypes("/**@param {Object} a*/ function f(a) {return a < 'x';}");
   }
 
   public void testStringComparison3() {
+    compiler.getOptions().setWarningLevel(
+        DiagnosticGroups.STRICT_PRIMITIVE_OPERATORS, CheckLevel.OFF);
     testTypes("/**@param {number} a*/ function f(a) {return a < 'x';}");
   }
 
@@ -1659,6 +1666,8 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testStringComparison6() {
+    compiler.getOptions().setWarningLevel(
+        DiagnosticGroups.STRICT_PRIMITIVE_OPERATORS, CheckLevel.OFF);
     testTypes("/**@return {void} */ " +
         "function foo() { if ('a' >= foo()) return; }",
         "right side of comparison\n" +
@@ -1673,6 +1682,8 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testValueOfComparison2() {
+    compiler.getOptions().setWarningLevel(
+        DiagnosticGroups.STRICT_PRIMITIVE_OPERATORS, CheckLevel.OFF);
     testTypes("/** @constructor */function O() {};" +
         "/**@override*/O.prototype.valueOf = function() { return 1; };" +
         "/**@param {!O} a\n@param {number} b*/" +
@@ -1680,6 +1691,8 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testValueOfComparison3() {
+    compiler.getOptions().setWarningLevel(
+        DiagnosticGroups.STRICT_PRIMITIVE_OPERATORS, CheckLevel.OFF);
     testTypes("/** @constructor */function O() {};" +
         "/**@override*/O.prototype.toString = function() { return 'o'; };" +
         "/**@param {!O} a\n@param {string} b*/" +
@@ -8627,14 +8640,20 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testBitOperation7() {
+    compiler.getOptions().setWarningLevel(
+        DiagnosticGroups.STRICT_PRIMITIVE_OPERATORS, CheckLevel.OFF);
     testTypes("var x = null; x |= undefined; x &= 3; x ^= '3'; x |= true;");
   }
 
   public void testBitOperation8() {
+    compiler.getOptions().setWarningLevel(
+        DiagnosticGroups.STRICT_PRIMITIVE_OPERATORS, CheckLevel.OFF);
     testTypes("var x = void 0; x |= new Number(3);");
   }
 
   public void testBitOperation9() {
+    compiler.getOptions().setWarningLevel(
+        DiagnosticGroups.STRICT_PRIMITIVE_OPERATORS, CheckLevel.OFF);
     testTypes("var x = void 0; x |= {};",
         "bad right operand to bitwise operator\n" +
         "found   : {}\n" +
@@ -18350,6 +18369,117 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         "  return x.prop;",
         "}"),
         "Property prop never defined on Object");
+  }
+
+  public void testStrictNumericOperators1() {
+    testTypes(
+        "var x = 'asdf' - 1;",
+        lines(
+            "left operand",
+            "found   : string",
+            "required: number"));
+  }
+
+  public void testStrictNumericOperators2() {
+    testTypes(
+        "var x = 1 - 'asdf';",
+        lines(
+            "right operand",
+            "found   : string",
+            "required: number"));
+  }
+
+  public void testStrictNumericOperators3() {
+    testTypes(
+        "var x = 'asdf'; x++;",
+        lines(
+            "increment/decrement",
+            "found   : string",
+            "required: number"));
+  }
+
+  public void testStrictNumericOperators4a() {
+    testTypes(
+        "var x = -'asdf';",
+        lines(
+            "sign operator",
+            "found   : string",
+            "required: number"));
+  }
+
+  public void testStrictNumericOperators4b() {
+    testTypes("var x = +'asdf';");
+  }
+
+  public void testStrictNumericOperators5() {
+    testTypes(
+        "var x = 1 < 'asdf';",
+        lines(
+            "right side of numeric comparison",
+            "found   : string",
+            "required: number"));
+  }
+
+  public void testStrictNumericOperators6() {
+    testTypes(
+        "var x = 'asdf'; x *= 2;",
+        lines(
+            "left operand",
+            "found   : string",
+            "required: number"));
+  }
+
+  public void testStrictNumericOperators7() {
+    testTypes(
+        "var x = ~ 'asdf';",
+        lines(
+            "bitwise NOT",
+            "found   : string",
+            "required: number"));
+  }
+
+  public void testStrictNumericOperators8() {
+    testTypes(
+        "var x = 'asdf' | 1;",
+        lines(
+            "bad left operand to bitwise operator",
+            "found   : string",
+            "required: number"));
+  }
+
+  public void testStrictNumericOperators9() {
+    testTypes(
+        "var x = 'asdf' << 1;",
+        lines(
+            "operator <<",
+            "found   : string",
+            "required: number"));
+  }
+
+  public void testStrictNumericOperators10() {
+    testTypes(
+        "var x = 1 >>> 'asdf';",
+        lines(
+            "operator >>>",
+            "found   : string",
+            "required: number"));
+  }
+
+  public void testStrictComparison1() {
+    testTypes(
+        "var x = true < 'asdf';",
+        lines(
+            "expected matching types in comparison",
+            "found   : string",
+            "required: boolean"));
+  }
+
+  public void testStrictComparison2() {
+    testTypes(
+        lines(
+            "function f(/** (number|string) */ x, /** string */ y) {",
+            "  return x < y;",
+            "}"));
   }
 
   private void testTypes(String js) {

@@ -73,6 +73,9 @@ class TypeValidator implements Serializable {
   // In TypeCheck, when we are analyzing a file with .java.js suffix, we set
   // this field to IGNORE_NULL_UNDEFINED
   private SubtypingMode subtypingMode = SubtypingMode.NORMAL;
+  // If true, we typecheck the operands of primitive operators more strictly, without relying
+  // on implicit conversion rules.
+  private boolean strictOperatorChecks = false;
 
   // TODO(nicksantos): Provide accessors to better filter the list of type
   // mismatches. For example, if we pass (Cake|null) where only Cake is
@@ -101,9 +104,10 @@ class TypeValidator implements Serializable {
           "to  : {1}");
 
   static final DiagnosticType TYPE_MISMATCH_WARNING =
-      DiagnosticType.warning(
-          "JSC_TYPE_MISMATCH",
-          "{0}");
+      DiagnosticType.warning("JSC_TYPE_MISMATCH", "{0}");
+
+  static final DiagnosticType INVALID_OPERAND_TYPE =
+      DiagnosticType.warning("JSC_INVALID_OPERAND_TYPE", "{0}");
 
   static final DiagnosticType MISSING_EXTENDS_TAG_WARNING =
       DiagnosticType.warning(
@@ -205,6 +209,10 @@ class TypeValidator implements Serializable {
     this.subtypingMode = mode;
   }
 
+  void setStrictOperatorChecks(boolean strictChecks) {
+    this.strictOperatorChecks = strictChecks;
+  }
+
   /**
    * all uses of implicitly implemented interfaces,
    * captured during type validation and type checking
@@ -277,6 +285,26 @@ class TypeValidator implements Serializable {
   void expectNumber(NodeTraversal t, Node n, JSType type, String msg) {
     if (!type.matchesNumberContext()) {
       mismatch(t, n, msg, type, NUMBER_TYPE);
+    } else if (this.strictOperatorChecks) {
+      expectNumberStrict(n, type, msg);
+    }
+  }
+
+  /**
+   * Expect the type to be a number or a subtype.
+   */
+  void expectNumberStrict(Node n, JSType type, String msg) {
+    checkState(this.strictOperatorChecks);
+    if (!type.isSubtype(getNativeType(NUMBER_TYPE))) {
+      registerMismatchAndReport(
+          n, INVALID_OPERAND_TYPE, msg, type, getNativeType(NUMBER_TYPE), null, null);
+    }
+  }
+
+  void expectMatchingTypes(Node n, JSType left, JSType right, String msg) {
+    checkState(this.strictOperatorChecks);
+    if (!left.isSubtype(right) && !right.isSubtype(left)) {
+      registerMismatchAndReport(n, INVALID_OPERAND_TYPE, msg, right, left, null, null);
     }
   }
 
@@ -288,6 +316,8 @@ class TypeValidator implements Serializable {
   void expectBitwiseable(NodeTraversal t, Node n, JSType type, String msg) {
     if (!type.matchesNumberContext() && !type.isSubtype(allValueTypes)) {
       mismatch(t, n, msg, type, allValueTypes);
+    } else if (this.strictOperatorChecks) {
+      expectNumberStrict(n, type, msg);
     }
   }
 
@@ -815,15 +845,26 @@ class TypeValidator implements Serializable {
           }
         }
       }
-      JSError err =
-          JSError.make(
-              n,
-              TYPE_MISMATCH_WARNING,
-              formatFoundRequired(msg, found, required, missing, mismatch));
-      TypeMismatch.registerMismatch(
-          this.mismatches, this.implicitInterfaceUses, found, required, err);
-      report(err);
+      registerMismatchAndReport(n, TYPE_MISMATCH_WARNING, msg, found, required, missing, mismatch);
     }
+  }
+
+  /**
+   * Used both for TYPE_MISMATCH_WARNING and INVALID_OPERAND_TYPE.
+   */
+  private void registerMismatchAndReport(
+      Node n,
+      DiagnosticType diagnostic,
+      String msg,
+      JSType found,
+      JSType required,
+      Set<String> missing,
+      Set<String> mismatch) {
+    String foundRequiredFormatted = formatFoundRequired(msg, found, required, missing, mismatch);
+    JSError err = JSError.make(n, diagnostic, foundRequiredFormatted);
+    TypeMismatch.registerMismatch(
+        this.mismatches, this.implicitInterfaceUses, found, required, err);
+    report(err);
   }
 
   /** Formats a found/required error message. */

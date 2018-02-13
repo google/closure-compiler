@@ -369,11 +369,11 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertTrue(U2U_CONSTRUCTOR_TYPE.isObject());
 
     // matchesXxx
-    assertFalse(U2U_CONSTRUCTOR_TYPE.matchesInt32Context());
+    assertFalse(U2U_CONSTRUCTOR_TYPE.matchesNumberContext());
     assertFalse(U2U_CONSTRUCTOR_TYPE.matchesNumberContext());
     assertTrue(U2U_CONSTRUCTOR_TYPE.matchesObjectContext());
     assertFalse(U2U_CONSTRUCTOR_TYPE.matchesStringContext());
-    assertFalse(U2U_CONSTRUCTOR_TYPE.matchesUint32Context());
+    assertFalse(U2U_CONSTRUCTOR_TYPE.matchesNumberContext());
 
     // toString
     assertEquals("Function",
@@ -515,11 +515,11 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertTrue(NO_OBJECT_TYPE.isObject());
 
     // matchesXxx
-    assertTrue(NO_OBJECT_TYPE.matchesInt32Context());
+    assertTrue(NO_OBJECT_TYPE.matchesNumberContext());
     assertTrue(NO_OBJECT_TYPE.matchesNumberContext());
     assertTrue(NO_OBJECT_TYPE.matchesObjectContext());
     assertTrue(NO_OBJECT_TYPE.matchesStringContext());
-    assertTrue(NO_OBJECT_TYPE.matchesUint32Context());
+    assertTrue(NO_OBJECT_TYPE.matchesNumberContext());
 
     // toString
     assertEquals("NoObject", NO_OBJECT_TYPE.toString());
@@ -651,11 +651,11 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertTrue(NO_TYPE.isObject());
 
     // matchesXxx
-    assertTrue(NO_TYPE.matchesInt32Context());
+    assertTrue(NO_TYPE.matchesNumberContext());
     assertTrue(NO_TYPE.matchesNumberContext());
     assertTrue(NO_TYPE.matchesObjectContext());
     assertTrue(NO_TYPE.matchesStringContext());
-    assertTrue(NO_TYPE.matchesUint32Context());
+    assertTrue(NO_TYPE.matchesNumberContext());
 
     // toString
     assertEquals("None", NO_TYPE.toString());
@@ -794,11 +794,11 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertTrue(NO_RESOLVED_TYPE.isObject());
 
     // matchesXxx
-    assertTrue(NO_RESOLVED_TYPE.matchesInt32Context());
+    assertTrue(NO_RESOLVED_TYPE.matchesNumberContext());
     assertTrue(NO_RESOLVED_TYPE.matchesNumberContext());
     assertTrue(NO_RESOLVED_TYPE.matchesObjectContext());
     assertTrue(NO_RESOLVED_TYPE.matchesStringContext());
-    assertTrue(NO_RESOLVED_TYPE.matchesUint32Context());
+    assertTrue(NO_RESOLVED_TYPE.matchesNumberContext());
 
     // toString
     assertEquals("NoResolvedType", NO_RESOLVED_TYPE.toString());
@@ -958,11 +958,11 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertPropertyTypeDeclared(ARRAY_TYPE, "pop");
 
     // matchesXxx
-    assertFalse(ARRAY_TYPE.matchesInt32Context());
+    assertFalse(ARRAY_TYPE.matchesNumberContext());
     assertFalse(ARRAY_TYPE.matchesNumberContext());
     assertTrue(ARRAY_TYPE.matchesObjectContext());
     assertTrue(ARRAY_TYPE.matchesStringContext());
-    assertFalse(ARRAY_TYPE.matchesUint32Context());
+    assertFalse(ARRAY_TYPE.matchesNumberContext());
 
     // toString
     assertEquals("Array", ARRAY_TYPE.toString());
@@ -1069,11 +1069,11 @@ public class JSTypeTest extends BaseJSTypeTestCase {
         UNKNOWN_TYPE.getLeastSupertype(REGEXP_TYPE));
 
     // matchesXxx
-    assertTrue(UNKNOWN_TYPE.matchesInt32Context());
+    assertTrue(UNKNOWN_TYPE.matchesNumberContext());
     assertTrue(UNKNOWN_TYPE.matchesNumberContext());
     assertTrue(UNKNOWN_TYPE.matchesObjectContext());
     assertTrue(UNKNOWN_TYPE.matchesStringContext());
-    assertTrue(UNKNOWN_TYPE.matchesUint32Context());
+    assertTrue(UNKNOWN_TYPE.matchesNumberContext());
 
     // isPropertyType*
     assertPropertyTypeUnknown(UNKNOWN_TYPE, "XXX");
@@ -1217,11 +1217,11 @@ public class JSTypeTest extends BaseJSTypeTestCase {
         ALL_TYPE.getLeastSupertype(REGEXP_TYPE));
 
     // matchesXxx
-    assertFalse(ALL_TYPE.matchesInt32Context());
+    assertFalse(ALL_TYPE.matchesNumberContext());
     assertFalse(ALL_TYPE.matchesNumberContext());
     assertTrue(ALL_TYPE.matchesObjectContext());
     assertTrue(ALL_TYPE.matchesStringContext());
-    assertFalse(ALL_TYPE.matchesUint32Context());
+    assertFalse(ALL_TYPE.matchesNumberContext());
 
     // toString
     assertEquals("*", ALL_TYPE.toString());
@@ -1370,11 +1370,11 @@ public class JSTypeTest extends BaseJSTypeTestCase {
         OBJECT_TYPE.getPropertyType("propertyIsEnumerable"));
 
     // matchesXxx
-    assertFalse(OBJECT_TYPE.matchesInt32Context());
+    assertFalse(OBJECT_TYPE.matchesNumberContext());
     assertFalse(OBJECT_TYPE.matchesNumberContext());
     assertTrue(OBJECT_TYPE.matchesObjectContext());
     assertTrue(OBJECT_TYPE.matchesStringContext());
-    assertFalse(OBJECT_TYPE.matchesUint32Context());
+    assertFalse(OBJECT_TYPE.matchesNumberContext());
 
     // implicit prototype
     assertTypeEquals(OBJECT_PROTOTYPE, OBJECT_TYPE.getImplicitPrototype());
@@ -1517,11 +1517,11 @@ public class JSTypeTest extends BaseJSTypeTestCase {
         NUMBER_OBJECT_TYPE.getLeastSupertype(REGEXP_TYPE));
 
     // matchesXxx
-    assertTrue(NUMBER_OBJECT_TYPE.matchesInt32Context());
+    assertTrue(NUMBER_OBJECT_TYPE.matchesNumberContext());
     assertTrue(NUMBER_OBJECT_TYPE.matchesNumberContext());
     assertTrue(NUMBER_OBJECT_TYPE.matchesObjectContext());
     assertTrue(NUMBER_OBJECT_TYPE.matchesStringContext());
-    assertTrue(NUMBER_OBJECT_TYPE.matchesUint32Context());
+    assertTrue(NUMBER_OBJECT_TYPE.matchesNumberContext());
 
     // toString
     assertEquals("Number", NUMBER_OBJECT_TYPE.toString());
@@ -1644,11 +1644,11 @@ public class JSTypeTest extends BaseJSTypeTestCase {
         NUMBER_TYPE.getLeastSupertype(REGEXP_TYPE));
 
     // matchesXxx
-    assertTrue(NUMBER_TYPE.matchesInt32Context());
+    assertTrue(NUMBER_TYPE.matchesNumberContext());
     assertTrue(NUMBER_TYPE.matchesNumberContext());
     assertTrue(NUMBER_TYPE.matchesObjectContext());
     assertTrue(NUMBER_TYPE.matchesStringContext());
-    assertTrue(NUMBER_TYPE.matchesUint32Context());
+    assertTrue(NUMBER_TYPE.matchesNumberContext());
 
     // toString
     assertEquals("number", NUMBER_TYPE.toString());
@@ -1791,11 +1791,11 @@ public class JSTypeTest extends BaseJSTypeTestCase {
         NULL_TYPE.getLeastSupertype(REGEXP_TYPE));
 
     // matchesXxx
-    assertTrue(NULL_TYPE.matchesInt32Context());
+    assertTrue(NULL_TYPE.matchesNumberContext());
     assertTrue(NULL_TYPE.matchesNumberContext());
     assertFalse(NULL_TYPE.matchesObjectContext());
     assertTrue(NULL_TYPE.matchesStringContext());
-    assertTrue(NULL_TYPE.matchesUint32Context());
+    assertTrue(NULL_TYPE.matchesNumberContext());
 
     // matchesObjectContext
     assertFalse(NULL_TYPE.matchesObjectContext());
@@ -2015,11 +2015,11 @@ public class JSTypeTest extends BaseJSTypeTestCase {
         DATE_TYPE.getPropertyType("toGMTString"));
 
     // matchesXxx
-    assertTrue(DATE_TYPE.matchesInt32Context());
+    assertTrue(DATE_TYPE.matchesNumberContext());
     assertTrue(DATE_TYPE.matchesNumberContext());
     assertTrue(DATE_TYPE.matchesObjectContext());
     assertTrue(DATE_TYPE.matchesStringContext());
-    assertTrue(DATE_TYPE.matchesUint32Context());
+    assertTrue(DATE_TYPE.matchesNumberContext());
 
     // toString
     assertEquals("Date", DATE_TYPE.toString());
@@ -2166,11 +2166,11 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertTypeEquals(NUMBER_TYPE, REGEXP_TYPE.getPropertyType("lastIndex"));
 
     // matchesXxx
-    assertFalse(REGEXP_TYPE.matchesInt32Context());
+    assertFalse(REGEXP_TYPE.matchesNumberContext());
     assertFalse(REGEXP_TYPE.matchesNumberContext());
     assertTrue(REGEXP_TYPE.matchesObjectContext());
     assertTrue(REGEXP_TYPE.matchesStringContext());
-    assertFalse(REGEXP_TYPE.matchesUint32Context());
+    assertFalse(REGEXP_TYPE.matchesNumberContext());
 
     // toString
     assertEquals("RegExp", REGEXP_TYPE.toString());
@@ -2331,11 +2331,11 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertTypeEquals(NUMBER_TYPE, STRING_OBJECT_TYPE.getPropertyType("length"));
 
     // matchesXxx
-    assertTrue(STRING_OBJECT_TYPE.matchesInt32Context());
+    assertTrue(STRING_OBJECT_TYPE.matchesNumberContext());
     assertTrue(STRING_OBJECT_TYPE.matchesNumberContext());
     assertTrue(STRING_OBJECT_TYPE.matchesObjectContext());
     assertTrue(STRING_OBJECT_TYPE.matchesStringContext());
-    assertTrue(STRING_OBJECT_TYPE.matchesUint32Context());
+    assertTrue(STRING_OBJECT_TYPE.matchesNumberContext());
 
     // isNullable
     assertFalse(STRING_OBJECT_TYPE.isNullable());
@@ -2444,11 +2444,11 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertTrue(STRING_TYPE.canTestForShallowEqualityWith(UNKNOWN_TYPE));
 
     // matchesXxx
-    assertTrue(STRING_TYPE.matchesInt32Context());
+    assertTrue(STRING_TYPE.matchesNumberContext());
     assertTrue(STRING_TYPE.matchesNumberContext());
     assertTrue(STRING_TYPE.matchesObjectContext());
     assertTrue(STRING_TYPE.matchesStringContext());
-    assertTrue(STRING_TYPE.matchesUint32Context());
+    assertTrue(STRING_TYPE.matchesNumberContext());
 
     // isNullable
     assertFalse(STRING_TYPE.isNullable());
@@ -2556,11 +2556,11 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertTrue(recordType.canTestForShallowEqualityWith(UNKNOWN_TYPE));
 
     // matchesXxx
-    assertFalse(recordType.matchesInt32Context());
+    assertFalse(recordType.matchesNumberContext());
     assertFalse(recordType.matchesNumberContext());
     assertTrue(recordType.matchesObjectContext());
     assertFalse(recordType.matchesStringContext());
-    assertFalse(recordType.matchesUint32Context());
+    assertFalse(recordType.matchesNumberContext());
 
     Asserts.assertResolvesToSame(recordType);
   }
@@ -2630,11 +2630,11 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertTrue(functionInst.canTestForShallowEqualityWith(UNKNOWN_TYPE));
 
     // matchesXxx
-    assertFalse(functionInst.matchesInt32Context());
+    assertFalse(functionInst.matchesNumberContext());
     assertFalse(functionInst.matchesNumberContext());
     assertTrue(functionInst.matchesObjectContext());
     assertFalse(functionInst.matchesStringContext());
-    assertFalse(functionInst.matchesUint32Context());
+    assertFalse(functionInst.matchesNumberContext());
 
     // hasProperty
     assertTrue(functionInst.hasProperty("prototype"));
@@ -2711,11 +2711,11 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertTrue(functionType.canTestForShallowEqualityWith(UNKNOWN_TYPE));
 
     // matchesXxx
-    assertFalse(functionType.matchesInt32Context());
+    assertFalse(functionType.matchesNumberContext());
     assertFalse(functionType.matchesNumberContext());
     assertTrue(functionType.matchesObjectContext());
     assertFalse(functionType.matchesStringContext());
-    assertFalse(functionType.matchesUint32Context());
+    assertFalse(functionType.matchesNumberContext());
 
     // hasProperty
     assertTrue(functionType.hasProperty("prototype"));
@@ -3361,11 +3361,11 @@ public class JSTypeTest extends BaseJSTypeTestCase {
             createUnionType(NUMBER_TYPE, VOID_TYPE)));
 
     // matchesXxx
-    assertFalse(VOID_TYPE.matchesInt32Context());
+    assertFalse(VOID_TYPE.matchesNumberContext());
     assertFalse(VOID_TYPE.matchesNumberContext());
     assertFalse(VOID_TYPE.matchesObjectContext());
     assertTrue(VOID_TYPE.matchesStringContext());
-    assertFalse(VOID_TYPE.matchesUint32Context());
+    assertFalse(VOID_TYPE.matchesNumberContext());
 
     Asserts.assertResolvesToSame(VOID_TYPE);
   }
@@ -3462,11 +3462,11 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertFalse(BOOLEAN_TYPE.isVoidable());
 
     // matchesXxx
-    assertTrue(BOOLEAN_TYPE.matchesInt32Context());
+    assertTrue(BOOLEAN_TYPE.matchesNumberContext());
     assertTrue(BOOLEAN_TYPE.matchesNumberContext());
     assertTrue(BOOLEAN_TYPE.matchesObjectContext());
     assertTrue(BOOLEAN_TYPE.matchesStringContext());
-    assertTrue(BOOLEAN_TYPE.matchesUint32Context());
+    assertTrue(BOOLEAN_TYPE.matchesNumberContext());
 
     // toString
     assertEquals("boolean", BOOLEAN_TYPE.toString());
@@ -3571,11 +3571,11 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertFalse(BOOLEAN_OBJECT_TYPE.isVoidable());
 
     // matchesXxx
-    assertTrue(BOOLEAN_OBJECT_TYPE.matchesInt32Context());
+    assertTrue(BOOLEAN_OBJECT_TYPE.matchesNumberContext());
     assertTrue(BOOLEAN_OBJECT_TYPE.matchesNumberContext());
     assertTrue(BOOLEAN_OBJECT_TYPE.matchesObjectContext());
     assertTrue(BOOLEAN_OBJECT_TYPE.matchesStringContext());
-    assertTrue(BOOLEAN_OBJECT_TYPE.matchesUint32Context());
+    assertTrue(BOOLEAN_OBJECT_TYPE.matchesNumberContext());
 
     // toString
     assertEquals("Boolean", BOOLEAN_OBJECT_TYPE.toString());
@@ -3683,11 +3683,11 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertFalse(enumType.isVoidable());
 
     // matchesXxx
-    assertFalse(enumType.matchesInt32Context());
+    assertFalse(enumType.matchesNumberContext());
     assertFalse(enumType.matchesNumberContext());
     assertTrue(enumType.matchesObjectContext());
     assertTrue(enumType.matchesStringContext());
-    assertFalse(enumType.matchesUint32Context());
+    assertFalse(enumType.matchesNumberContext());
 
     // toString
     assertEquals("enum{Enum}", enumType.toString());
@@ -3798,11 +3798,11 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertFalse(elementsType.isVoidable());
 
     // matchesXxx
-    assertTrue(elementsType.matchesInt32Context());
+    assertTrue(elementsType.matchesNumberContext());
     assertTrue(elementsType.matchesNumberContext());
     assertTrue(elementsType.matchesObjectContext());
     assertTrue(elementsType.matchesStringContext());
-    assertTrue(elementsType.matchesUint32Context());
+    assertTrue(elementsType.matchesNumberContext());
 
     // toString
     assertEquals("Enum<number>", elementsType.toString());
@@ -3870,11 +3870,11 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertCanTestForEqualityWith(objectType, NUMBER_TYPE);
 
     // matchesXxxContext
-    assertFalse(objectType.matchesInt32Context());
+    assertFalse(objectType.matchesNumberContext());
     assertFalse(objectType.matchesNumberContext());
     assertTrue(objectType.matchesObjectContext());
     assertFalse(objectType.matchesStringContext());
-    assertFalse(objectType.matchesUint32Context());
+    assertFalse(objectType.matchesNumberContext());
 
     // isNullable
     assertFalse(objectType.isNullable());
