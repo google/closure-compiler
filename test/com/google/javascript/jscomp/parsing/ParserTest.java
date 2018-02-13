@@ -2166,17 +2166,17 @@ public final class ParserTest extends BaseJSTypeTestCase {
         "'one\\\ntwo';",
         requiresLanguageModeMessage(LanguageMode.ECMASCRIPT5, Feature.STRING_CONTINUATION),
         "String continuations are not recommended. See"
-                + " https://google.github.io/styleguide/javascriptguide.xml?showone=Multiline_string_literals#Multiline_string_literals");
+                + " https://google.github.io/styleguide/jsguide.html#features-strings-no-line-continuations");
     assertThat(n.getFirstFirstChild().getString()).isEqualTo("onetwo");
 
     mode = LanguageMode.ECMASCRIPT5;
     parseWarning("'one\\\ntwo';", "String continuations are not recommended. See"
-        + " https://google.github.io/styleguide/javascriptguide.xml?showone=Multiline_string_literals#Multiline_string_literals");
+        + " https://google.github.io/styleguide/jsguide.html#features-strings-no-line-continuations");
     assertThat(n.getFirstFirstChild().getString()).isEqualTo("onetwo");
 
     mode = LanguageMode.ECMASCRIPT6;
     parseWarning("'one\\\ntwo';", "String continuations are not recommended. See"
-        + " https://google.github.io/styleguide/javascriptguide.xml?showone=Multiline_string_literals#Multiline_string_literals");
+        + " https://google.github.io/styleguide/jsguide.html#features-strings-no-line-continuations");
     assertThat(n.getFirstFirstChild().getString()).isEqualTo("onetwo");
   }
 
@@ -2252,7 +2252,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
     expectFeatures(Feature.TEMPLATE_LITERALS);
     Node n = parseWarning("`string \\\ncontinuation`",
         "String continuations are not recommended. See"
-        + " https://google.github.io/styleguide/javascriptguide.xml?showone=Multiline_string_literals#Multiline_string_literals");
+        + " https://google.github.io/styleguide/jsguide.html#features-strings-no-line-continuations");
     Node templateLiteral = n.getFirstFirstChild();
     Node stringNode = templateLiteral.getFirstChild();
     assertNode(stringNode).hasType(Token.STRING);

@@ -196,7 +196,7 @@ class IRFactory {
 
   static final String STRING_CONTINUATION_WARNING =
       "String continuations are not recommended. See"
-      + " https://google.github.io/styleguide/javascriptguide.xml?showone=Multiline_string_literals#Multiline_string_literals";
+      + " https://google.github.io/styleguide/jsguide.html#features-strings-no-line-continuations";
 
   static final String OCTAL_STRING_LITERAL_WARNING =
       "Octal literals in strings are not supported in this language mode.";
