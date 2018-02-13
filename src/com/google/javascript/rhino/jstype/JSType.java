@@ -1102,6 +1102,10 @@ public abstract class JSType implements TypeI {
    * @return <code>this &#8744; that</code>
    */
   public JSType getLeastSupertype(JSType that) {
+    if (this == that) {
+      return this;
+    }
+
     that = filterNoResolvedType(that);
     if (that.isUnionType()) {
       // Union types have their own implementation of getLeastSupertype.
