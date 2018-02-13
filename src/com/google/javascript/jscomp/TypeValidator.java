@@ -86,9 +86,9 @@ class TypeValidator implements Serializable {
 
   // User warnings
   private static final String FOUND_REQUIRED =
-      "{0}\n" +
-      "found   : {1}\n" +
-      "required: {2}";
+      "{0}\n"
+          + "found   : {1}\n"
+          + "required: {2}";
 
   private static final String FOUND_REQUIRED_MISSING =
       "{0}\n"
@@ -99,9 +99,9 @@ class TypeValidator implements Serializable {
 
   static final DiagnosticType INVALID_CAST =
       DiagnosticType.warning("JSC_INVALID_CAST",
-          "invalid cast - must be a subtype or supertype\n" +
-          "from: {0}\n" +
-          "to  : {1}");
+          "invalid cast - must be a subtype or supertype\n"
+              + "from: {0}\n"
+              + "to  : {1}");
 
   static final DiagnosticType TYPE_MISMATCH_WARNING =
       DiagnosticType.warning("JSC_TYPE_MISMATCH", "{0}");
@@ -120,8 +120,7 @@ class TypeValidator implements Serializable {
 
   static final DiagnosticType DUP_VAR_DECLARATION_TYPE_MISMATCH =
       DiagnosticType.warning("JSC_DUP_VAR_DECLARATION_TYPE_MISMATCH",
-          "variable {0} redefined with type {1}, " +
-          "original definition at {2}:{3} with type {4}");
+          "variable {0} redefined with type {1}, original definition at {2}:{3} with type {4}");
 
   static final DiagnosticType INTERFACE_METHOD_NOT_IMPLEMENTED =
       DiagnosticType.warning(
@@ -357,8 +356,7 @@ class TypeValidator implements Serializable {
       // http://blickly.github.io/closure-compiler-issues/#109
       //
       // We do not do this inference globally.
-      if (n.isGetProp() &&
-          !t.inGlobalScope() && type.isNullType()) {
+      if (n.isGetProp() && !t.inGlobalScope() && type.isNullType()) {
         return true;
       }
 
@@ -383,22 +381,19 @@ class TypeValidator implements Serializable {
    * Expect that the type of a switch condition matches the type of its
    * case condition.
    */
-  void expectSwitchMatchesCase(NodeTraversal t, Node n, JSType switchType,
-      JSType caseType) {
+  void expectSwitchMatchesCase(NodeTraversal t, Node n, JSType switchType, JSType caseType) {
     // ECMA-262, page 68, step 3 of evaluation of CaseBlock,
     // but allowing extra autoboxing.
     // TODO(user): remove extra conditions when type annotations
     // in the code base have adapted to the change in the compiler.
-    if (!switchType.canTestForShallowEqualityWith(caseType) &&
-        (caseType.autoboxesTo() == null ||
-        !caseType.autoboxesTo().isSubtype(switchType))) {
+    if (!switchType.canTestForShallowEqualityWith(caseType)
+        && (caseType.autoboxesTo() == null || !caseType.autoboxesTo().isSubtype(switchType))) {
       mismatch(t, n.getFirstChild(),
           "case expression doesn't match switch",
           caseType, switchType);
     } else if (!switchType.canTestForShallowEqualityWith(caseType)
         && (caseType.autoboxesTo() == null
-        || !caseType.autoboxesTo()
-        .isSubtypeWithoutStructuralTyping(switchType))) {
+            || !caseType.autoboxesTo().isSubtypeWithoutStructuralTyping(switchType))) {
       TypeMismatch.recordImplicitInterfaceUses(this.implicitInterfaceUses, n, caseType, switchType);
       TypeMismatch.recordImplicitUseOfNativeObject(this.mismatches, n, caseType, switchType);
     }
@@ -481,8 +476,7 @@ class TypeValidator implements Serializable {
       }
 
       mismatch(t, n,
-          "assignment to property " + propName + " of " +
-          typeRegistry.getReadableTypeName(owner),
+          "assignment to property " + propName + " of " + typeRegistry.getReadableTypeName(owner),
           rightType, leftType);
       return false;
     } else if (!leftType.isNoType() && !rightType.isSubtypeWithoutStructuralTyping(leftType)){
@@ -530,8 +524,7 @@ class TypeValidator implements Serializable {
       JSType paramType, Node callNode, int ordinal) {
     if (!argType.isSubtype(paramType)) {
       mismatch(t, n,
-          SimpleFormat.format("actual parameter %d of %s does not match " +
-              "formal parameter", ordinal,
+          SimpleFormat.format("actual parameter %d of %s does not match formal parameter", ordinal,
               typeRegistry.getReadableTypeNameNoDeref(callNode.getFirstChild())),
           argType, paramType);
     } else if (!argType.isSubtypeWithoutStructuralTyping(paramType)){
@@ -558,9 +551,9 @@ class TypeValidator implements Serializable {
       declaredSuper =
           declaredSuper.toMaybeTemplatizedType().getReferencedType();
     }
-    if (declaredSuper != null &&
-        !(superObject instanceof UnknownType) &&
-        !declaredSuper.isEquivalentTo(superObject)) {
+    if (declaredSuper != null
+        && !(superObject instanceof UnknownType)
+        && !declaredSuper.isEquivalentTo(superObject)) {
       if (declaredSuper.isEquivalentTo(getNativeType(OBJECT_TYPE))) {
         TypeMismatch.registerMismatch(this.mismatches, this.implicitInterfaceUses,
             superObject, declaredSuper,
@@ -619,10 +612,10 @@ class TypeValidator implements Serializable {
     // Only report duplicate declarations that have types. Other duplicates
     // will be reported by the syntactic scope creator later in the
     // compilation process.
-    if (varType != null &&
-        varType != typeRegistry.getNativeType(UNKNOWN_TYPE) &&
-        newType != null &&
-        newType != typeRegistry.getNativeType(UNKNOWN_TYPE)) {
+    if (varType != null
+        && varType != typeRegistry.getNativeType(UNKNOWN_TYPE)
+        && newType != null
+        && newType != typeRegistry.getNativeType(UNKNOWN_TYPE)) {
       // If there are two typed declarations of the same variable, that
       // is an error and the second declaration is ignored, except in the
       // case of native types. A null input type means that the declaration
@@ -720,8 +713,8 @@ class TypeValidator implements Serializable {
                   implementedInterface.toString(),
                   instance.toString())));
     } else {
-      Node propNode = propSlot.getDeclaration() == null ?
-          null : propSlot.getDeclaration().getNode();
+      Node propNode =
+          propSlot.getDeclaration() == null ? null : propSlot.getDeclaration().getNode();
 
       // Fall back on the constructor node if we can't find a node for the
       // property.
