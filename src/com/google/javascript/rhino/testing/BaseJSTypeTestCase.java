@@ -462,146 +462,146 @@ public abstract class BaseJSTypeTestCase extends TestCase {
    * externs. It can also be used for any tests that want to use built-in types
    * in their externs.
    */
-  public static final String ALL_NATIVE_EXTERN_TYPES =
-      "/**\n"
-      + " * @constructor\n"
-      + " * @param {*=} opt_value\n"
-      + " * @return {!Object}\n"
-      + " */\n"
-      + "function Object(opt_value) {}\n"
-      + "\n"
-      + "/**\n"
-      + " * @constructor\n"
-      + " * @param {...*} var_args\n"
-      + " */\n"
-      + "\n"
-      + "function Function(var_args) {}\n"
-      + "/**\n"
-      + " * @constructor\n"
-      + " * @param {...*} var_args\n"
-      + " * @return {!Array.<?>}\n"
-      + " * @template T\n"
-      + " */\n"
-      + "function Array(var_args) {}\n"
-      + "\n"
-      + "/**\n"
-      + " * @constructor\n"
-      + " * @param {*=} opt_value\n"
-      + " * @return {boolean}\n"
-      + " */\n"
-      + "function Boolean(opt_value) {}\n"
-      + "\n"
-      + "/**\n"
-      + " * @constructor\n"
-      + " * @param {*=} opt_value\n"
-      + " * @return {number}\n"
-      + " */\n"
-      + "function Number(opt_value) {}\n"
-      + "\n"
-      + "/**\n"
-      + " * @constructor\n"
-      + " * @param {?=} opt_yr_num\n"
-      + " * @param {?=} opt_mo_num\n"
-      + " * @param {?=} opt_day_num\n"
-      + " * @param {?=} opt_hr_num\n"
-      + " * @param {?=} opt_min_num\n"
-      + " * @param {?=} opt_sec_num\n"
-      + " * @param {?=} opt_ms_num\n"
-      + " * @return {string}\n"
-      + " */\n"
-      + "function Date(opt_yr_num, opt_mo_num, opt_day_num, opt_hr_num,"
-      + "    opt_min_num, opt_sec_num, opt_ms_num) {}\n"
-      + "\n"
-      + "/**\n"
-      + " * @constructor\n"
-      + " * @param {*=} opt_str\n"
-      + " * @return {string}\n"
-      + " */\n"
-      + "function String(opt_str) {}\n"
-      + "\n"
-      + "/**\n"
-      + " * @constructor\n"
-      + " * @param {*=} opt_pattern\n"
-      + " * @param {*=} opt_flags\n"
-      + " * @return {!RegExp}\n"
-      + " */\n"
-      + "function RegExp(opt_pattern, opt_flags) {}\n"
-      + "\n"
-      + "/**\n"
-      + " * @constructor\n"
-      + " * @param {*=} opt_message\n"
-      + " * @param {*=} opt_file\n"
-      + " * @param {*=} opt_line\n"
-      + " * @return {!Error}\n"
-      + " */\n"
-      + "function Error(opt_message, opt_file, opt_line) {}\n"
-      + "\n"
-      + "/**\n"
-      + " * @constructor\n"
-      + " * @extends {Error}\n"
-      + " * @param {*=} opt_message\n"
-      + " * @param {*=} opt_file\n"
-      + " * @param {*=} opt_line\n"
-      + " * @return {!EvalError}\n"
-      + " */\n"
-      + "function EvalError(opt_message, opt_file, opt_line) {}\n"
-      + "\n"
-      + "/**\n"
-      + " * @constructor\n"
-      + " * @extends {Error}\n"
-      + " * @param {*=} opt_message\n"
-      + " * @param {*=} opt_file\n"
-      + " * @param {*=} opt_line\n"
-      + " * @return {!RangeError}\n"
-      + " */\n"
-      + "function RangeError(opt_message, opt_file, opt_line) {}\n"
-      + "\n"
-      + "/**\n"
-      + " * @constructor\n"
-      + " * @extends {Error}\n"
-      + " * @param {*=} opt_message\n"
-      + " * @param {*=} opt_file\n"
-      + " * @param {*=} opt_line\n"
-      + " * @return {!ReferenceError}\n"
-      + " */\n"
-      + "function ReferenceError(opt_message, opt_file, opt_line) {}\n"
-      + "\n"
-      + "/**\n"
-      + " * @constructor\n"
-      + " * @extends {Error}\n"
-      + " * @param {*=} opt_message\n"
-      + " * @param {*=} opt_file\n"
-      + " * @param {*=} opt_line\n"
-      + " * @return {!SyntaxError}\n"
-      + " */\n"
-      + "function SyntaxError(opt_message, opt_file, opt_line) {}\n"
-      + "\n"
-      + "/**\n"
-      + " * @constructor\n"
-      + " * @extends {Error}\n"
-      + " * @param {*=} opt_message\n"
-      + " * @param {*=} opt_file\n"
-      + " * @param {*=} opt_line\n"
-      + " * @return {!TypeError}\n"
-      + " */\n"
-      + "function TypeError(opt_message, opt_file, opt_line) {}\n"
-      + "\n"
-      + "/**\n"
-      + " * @constructor\n"
-      + " * @extends {Error}\n"
-      + " * @param {*=} opt_message\n"
-      + " * @param {*=} opt_file\n"
-      + " * @param {*=} opt_line\n"
-      + " * @return {!URIError}\n"
-      + " */\n"
-      + "function URIError(opt_message, opt_file, opt_line) {}\n"
-      + "\n"
-      + "/**\n"
-      + " * @param {string} progId\n"
-      + " * @param {string=} opt_location\n"
-      + " * @constructor\n"
-      + " */\n"
-      + "function ActiveXObject(progId, opt_location) {}\n";
+  public static final String ALL_NATIVE_EXTERN_TYPES = lines(
+      "/**",
+      " * @constructor",
+      " * @param {*=} opt_value",
+      " * @return {!Object}",
+      " */",
+      "function Object(opt_value) {}",
+      "",
+      "/**",
+      " * @constructor",
+      " * @param {...*} var_args",
+      " */",
+      "",
+      "function Function(var_args) {}",
+      "/**",
+      " * @constructor",
+      " * @param {...*} var_args",
+      " * @return {!Array.<?>}",
+      " * @template T",
+      " */",
+      "function Array(var_args) {}",
+      "",
+      "/**",
+      " * @constructor",
+      " * @param {*=} opt_value",
+      " * @return {boolean}",
+      " */",
+      "function Boolean(opt_value) {}",
+      "",
+      "/**",
+      " * @constructor",
+      " * @param {*=} opt_value",
+      " * @return {number}",
+      " */",
+      "function Number(opt_value) {}",
+      "",
+      "/**",
+      " * @constructor",
+      " * @param {?=} opt_yr_num",
+      " * @param {?=} opt_mo_num",
+      " * @param {?=} opt_day_num",
+      " * @param {?=} opt_hr_num",
+      " * @param {?=} opt_min_num",
+      " * @param {?=} opt_sec_num",
+      " * @param {?=} opt_ms_num",
+      " * @return {string}",
+      " */",
+      "function Date(opt_yr_num, opt_mo_num, opt_day_num, opt_hr_num,",
+      "    opt_min_num, opt_sec_num, opt_ms_num) {}",
+      "",
+      "/**",
+      " * @constructor",
+      " * @param {*=} opt_str",
+      " * @return {string}",
+      " */",
+      "function String(opt_str) {}",
+      "",
+      "/**",
+      " * @constructor",
+      " * @param {*=} opt_pattern",
+      " * @param {*=} opt_flags",
+      " * @return {!RegExp}",
+      " */",
+      "function RegExp(opt_pattern, opt_flags) {}",
+      "",
+      "/**",
+      " * @constructor",
+      " * @param {*=} opt_message",
+      " * @param {*=} opt_file",
+      " * @param {*=} opt_line",
+      " * @return {!Error}",
+      " */",
+      "function Error(opt_message, opt_file, opt_line) {}",
+      "",
+      "/**",
+      " * @constructor",
+      " * @extends {Error}",
+      " * @param {*=} opt_message",
+      " * @param {*=} opt_file",
+      " * @param {*=} opt_line",
+      " * @return {!EvalError}",
+      " */",
+      "function EvalError(opt_message, opt_file, opt_line) {}",
+      "",
+      "/**",
+      " * @constructor",
+      " * @extends {Error}",
+      " * @param {*=} opt_message",
+      " * @param {*=} opt_file",
+      " * @param {*=} opt_line",
+      " * @return {!RangeError}",
+      " */",
+      "function RangeError(opt_message, opt_file, opt_line) {}",
+      "",
+      "/**",
+      " * @constructor",
+      " * @extends {Error}",
+      " * @param {*=} opt_message",
+      " * @param {*=} opt_file",
+      " * @param {*=} opt_line",
+      " * @return {!ReferenceError}",
+      " */",
+      "function ReferenceError(opt_message, opt_file, opt_line) {}",
+      "",
+      "/**",
+      " * @constructor",
+      " * @extends {Error}",
+      " * @param {*=} opt_message",
+      " * @param {*=} opt_file",
+      " * @param {*=} opt_line",
+      " * @return {!SyntaxError}",
+      " */",
+      "function SyntaxError(opt_message, opt_file, opt_line) {}",
+      "",
+      "/**",
+      " * @constructor",
+      " * @extends {Error}",
+      " * @param {*=} opt_message",
+      " * @param {*=} opt_file",
+      " * @param {*=} opt_line",
+      " * @return {!TypeError}",
+      " */",
+      "function TypeError(opt_message, opt_file, opt_line) {}",
+      "",
+      "/**",
+      " * @constructor",
+      " * @extends {Error}",
+      " * @param {*=} opt_message",
+      " * @param {*=} opt_file",
+      " * @param {*=} opt_line",
+      " * @return {!URIError}",
+      " */",
+      "function URIError(opt_message, opt_file, opt_line) {}",
+      "",
+      "/**",
+      " * @param {string} progId",
+      " * @param {string=} opt_location",
+      " * @constructor",
+      " */",
+      "function ActiveXObject(progId, opt_location) {}");
 
   protected final void assertTypeNotEquals(JSType a, JSType b) {
     Asserts.assertTypeNotEquals(a, b);
