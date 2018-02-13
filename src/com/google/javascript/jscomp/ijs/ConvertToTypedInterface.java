@@ -542,6 +542,7 @@ public class ConvertToTypedInterface implements CompilerPass {
       JSDocInfo jsdoc = decl.getJsDoc();
       if (decl.shouldPreserve()
           || NodeUtil.isNamespaceDecl(nameNode)
+          || (rhs != null && NodeUtil.isCallTo(rhs, "Symbol"))
           || (jsdoc != null
               && jsdoc.containsDeclaration()
               && !isConstToBeInferred(jsdoc, nameNode))) {

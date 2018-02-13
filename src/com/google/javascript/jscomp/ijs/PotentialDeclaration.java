@@ -135,7 +135,7 @@ abstract class PotentialDeclaration {
       super(fullyQualifiedName, lhs, rhs);
     }
 
-    void simplifyNamespace(AbstractCompiler compiler) {
+    private void simplifyNamespace(AbstractCompiler compiler) {
       Node objLit = getRhs();
       if (getRhs().isOr()) {
         objLit = getRhs().getLastChild().detach();
@@ -167,7 +167,14 @@ abstract class PotentialDeclaration {
           }
         }
       }
+    }
 
+    private void simplifySymbol(AbstractCompiler compiler) {
+      checkArgument(NodeUtil.isCallTo(getRhs(), "Symbol"));
+      Node callNode = getRhs();
+      while (callNode.hasMoreThanOneChild()) {
+        NodeUtil.deleteNode(callNode.getLastChild(), compiler);
+      }
     }
 
     @Override
@@ -195,6 +202,10 @@ abstract class PotentialDeclaration {
         // Replace the RHS of a default goog.module export with Unknown
         replaceRhsWithUnknown(getRhs());
         compiler.reportChangeToEnclosingScope(nameNode);
+        return;
+      }
+      if (NodeUtil.isCallTo(getRhs(), "Symbol")) {
+        simplifySymbol(compiler);
         return;
       }
       // Just completely remove the RHS, and replace with a getprop.

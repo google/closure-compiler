@@ -1046,6 +1046,18 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
         "/** @const {*} */ var i; /** @type {number } */ var field;");
   }
 
+  public void testSymbols() {
+    testSame("const sym = Symbol();");
+
+    testSame("/** @const */ var sym = Symbol();");
+
+    test("const sym = Symbol(computeDescription());", "const sym = Symbol();");
+
+    test(
+        "/** @type {symbol} */ var sym = Symbol.for(computeDescription());",
+        "/** @type {symbol} */ var sym;");
+  }
+
   public void testNamespaces() {
     testSame("/** @const */ var ns = {}; /** @return {number} */ ns.fun = function(x,y,z) {}");
 
