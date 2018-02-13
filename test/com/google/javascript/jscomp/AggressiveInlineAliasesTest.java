@@ -190,18 +190,6 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
         AggressiveInlineAliases.UNSAFE_CTOR_ALIASING);
   }
 
-  public void testAliasingOfReassignedProperty1() {
-    testSame("var obj = {foo: 3}; var foo = obj.foo; obj.foo = 42; alert(foo);");
-  }
-
-  public void testAliasingOfReassignedProperty2() {
-    testSame("var obj = {foo: 3}; var foo = obj.foo; obj = {}; alert(foo);");
-  }
-
-  public void testAliasingOfReassignedProperty3() {
-    testSame("var obj = {foo: {bar: 3}}; var bar = obj.foo.bar; obj.foo = {}; alert(bar);");
-  }
-
   public void testAddPropertyToChildFuncOfUncollapsibleObjectInLocalScope() {
     test(
         "var a = {};"

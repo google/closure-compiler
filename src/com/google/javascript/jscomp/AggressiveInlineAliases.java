@@ -197,11 +197,11 @@ class AggressiveInlineAliases implements CompilerPass {
 
       // Check if {@code name} has any aliases left after the
       // local-alias-inlining above.
+      // TODO(lharker): we should really check that the name only has one global set before inlining
+      // property aliases, but doing so breaks some things relying on inlining (b/73263419).
       if ((name.type == Name.Type.OBJECTLIT
               || name.type == Name.Type.FUNCTION
               || name.type == Name.Type.CLASS)
-          && name.globalSets == 1
-          && name.localSets == 0
           && name.aliasingGets == 0
           && name.props != null) {
         // All of {@code name}'s children meet condition (a), so they can be
