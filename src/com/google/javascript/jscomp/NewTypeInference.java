@@ -462,8 +462,6 @@ final class NewTypeInference implements CompilerPass {
   private final boolean joinTypesWhenInstantiatingGenerics;
   private final boolean allowPropertyOnSubtypes;
   private final boolean areTypeVariablesUnknown;
-  // Used in per-library type checking
-  private final boolean warnForUnresolvedTypes;
 
   // Used only for development
   private static final boolean showDebuggingPrints = false;
@@ -523,7 +521,6 @@ final class NewTypeInference implements CompilerPass {
     this.joinTypesWhenInstantiatingGenerics = inCompatibilityMode;
     this.allowPropertyOnSubtypes = inCompatibilityMode;
     this.areTypeVariablesUnknown = inCompatibilityMode;
-    this.warnForUnresolvedTypes = compiler.getOptions().inIncrementalCheckMode();
   }
 
   @VisibleForTesting // Only used from tests
@@ -1688,9 +1685,6 @@ final class NewTypeInference implements CompilerPass {
     JSType resultType = resultPair.type;
     mayWarnAboutUnknownType(expr, resultType);
     if (resultType.isUnresolved()) {
-      if (this.warnForUnresolvedTypes) {
-        warnings.add(JSError.make(expr, CANNOT_USE_UNRESOLVED_TYPE, resultType.toString()));
-      }
       resultPair.type = UNKNOWN;
     }
     maybeSetTypeI(expr, resultType);

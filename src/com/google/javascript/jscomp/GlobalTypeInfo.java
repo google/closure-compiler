@@ -101,8 +101,7 @@ public class GlobalTypeInfo implements TypeIRegistry {
         this.getCommonTypes(),
         compiler.getCodingConvention(),
         this.varNameGen,
-        new RecordPropertyCallBack(),
-        compiler.getOptions().inIncrementalCheckMode());
+        new RecordPropertyCallBack());
   }
 
   class RecordPropertyCallBack implements Function<Node, Void>, Serializable {

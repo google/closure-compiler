@@ -16,7 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.javascript.jscomp.CompilerOptions.IncrementalCheckMode;
 import com.google.javascript.jscomp.newtypes.JSTypeCreatorFromJSDoc;
 
 /**
@@ -22414,82 +22413,6 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "    (function() {}).apply({}, var_args);",
         "  }",
         "}"));
-  }
-
-  public void testUnresolvedTypes() {
-    compilerOptions.setIncrementalChecks(IncrementalCheckMode.CHECK_IJS);
-
-    typeCheck(LINE_JOINER.join(
-        CLOSURE_BASE,
-        "goog.forwardDeclare('Foo');",
-        "function f(/** !Foo */ x) {}"));
-
-    typeCheck(LINE_JOINER.join(
-        "goog.forwardDeclare('Foo');",
-        "function f(/** !Foo */ x) {}",
-        "f(123);"),
-        NewTypeInference.INVALID_ARGUMENT_TYPE);
-
-    typeCheckCustomExterns(
-        LINE_JOINER.join(
-            DEFAULT_EXTERNS,
-            CLOSURE_BASE,
-            "goog.forwardDeclare('Foo');",
-            "/** @return {!Foo} */",
-            "function f(x) {}"),
-        "var x = f(123);",
-        NewTypeInference.CANNOT_USE_UNRESOLVED_TYPE);
-
-    typeCheckCustomExterns(
-        LINE_JOINER.join(
-            DEFAULT_EXTERNS,
-            CLOSURE_BASE,
-            "goog.forwardDeclare('Foo');",
-            "/** @return {!Foo} */",
-            "function f(x) {}"),
-        "var /** ? */ x = f(123);",
-        NewTypeInference.CANNOT_USE_UNRESOLVED_TYPE);
-
-    typeCheckCustomExterns(
-        LINE_JOINER.join(
-            DEFAULT_EXTERNS,
-            CLOSURE_BASE,
-            "goog.forwardDeclare('Foo');",
-            "goog.forwardDeclare('Bar');",
-            "/** @return {!Foo} */",
-            "function f(x) {}"),
-        "var /** !Bar */ x = f(123);",
-        NewTypeInference.CANNOT_USE_UNRESOLVED_TYPE);
-
-    typeCheckCustomExterns(
-        LINE_JOINER.join(
-            DEFAULT_EXTERNS,
-            CLOSURE_BASE,
-            "goog.forwardDeclare('Foo');",
-            "var /** !Foo */ x;"),
-        "var y = x;",
-        NewTypeInference.CANNOT_USE_UNRESOLVED_TYPE);
-
-    typeCheck(LINE_JOINER.join(
-        CLOSURE_BASE,
-        "goog.forwardDeclare('Foo');",
-        "/** @return {!Foo} */",
-        "function f(x) {",
-        "  return x;",
-        "}"),
-        NewTypeInference.CANNOT_USE_UNRESOLVED_TYPE);
-
-    typeCheck(LINE_JOINER.join(
-        "goog.forwardDeclare('Foo');",
-        "function f(/** (!Foo|number) */ x) {}",
-        "f(123);"),
-        NewTypeInference.INVALID_ARGUMENT_TYPE);
-
-    typeCheck(LINE_JOINER.join(
-        "goog.forwardDeclare('Foo');",
-        "function f(/** (number|!Foo) */ x) {}",
-        "f(123);"),
-        NewTypeInference.INVALID_ARGUMENT_TYPE);
   }
 
   public void testHandleAliasedTypedefs() {
