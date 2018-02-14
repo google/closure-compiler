@@ -3422,10 +3422,15 @@ public final class NodeUtil {
    * ([a.b] = [1]);} or {@code ({key: a.b} = {key: 1});}
    */
   public static boolean isLhsByDestructuring(Node n) {
-    if (!(n.isName() || n.isGetProp() || n.isStringKey() || n.isGetElem())) {
-      return false;
+    switch (n.getToken()) {
+      case NAME:
+      case GETPROP:
+      case STRING_KEY:
+      case GETELEM:
+        return isLhsByDestructuringHelper(n);
+      default:
+        return false;
     }
-    return isLhsByDestructuringHelper(n);
   }
 
   /**
@@ -3437,40 +3442,42 @@ public final class NodeUtil {
     Node parent = n.getParent();
     Node grandparent = n.getGrandparent();
 
-    if (parent.isArrayPattern()) {
-      // e.g. var [b] = ...
-      return true;
-    }
+    switch (parent.getToken()) {
+      case ARRAY_PATTERN:
+        return true; // "b" in var [b] = ...
 
-    if (parent.isStringKey() && grandparent.isObjectPattern()) {
-      // e.g. the "b" in "var {a: b} = ..."
-      return true;
-    }
+      case STRING_KEY:
+        return grandparent.isObjectPattern(); // the "b" in "var {a: b} = ..."
 
-    if (parent.isObjectPattern()) {
-      // STRING_KEY children of object patterns are not LHS nodes, since shorthand (e.g.
-      // "var {a} = ...") is normalized at parse-time. If n is not a STRING_KEY, it is
-      // an OBJECT_PATTERN or a COMPUTED_PROP and contains a LHS node.
-      return !n.isStringKey();
-    }
+      case OBJECT_PATTERN:
+        // STRING_KEY children of object patterns are not LHS nodes, since shorthand (e.g.
+        // "var {a} = ...") is normalized at parse-time. If n is not a STRING_KEY, it is
+        // an OBJECT_PATTERN or a COMPUTED_PROP and contains a LHS node.
+        return !n.isStringKey();
 
-    if (parent.isComputedProp() && n == parent.getSecondChild()) {
-      // The first child of a COMPUTED_PROP is the property expression, not a LHS.
-      // The second is the value, which in an object pattern will contain the LHS.
-      return isLhsByDestructuringHelper(parent);
-    }
+      case COMPUTED_PROP:
+        if (n == parent.getSecondChild()) {
+          // The first child of a COMPUTED_PROP is the property expression, not a LHS.
+          // The second is the value, which in an object pattern will contain the LHS.
+          return isLhsByDestructuringHelper(parent);
+        }
+        return false;
 
-    if (parent.isRest()) {
-      // The only child of a REST node is the LHS.
-      return isLhsByDestructuringHelper(parent);
-    }
+      case REST:
+        // The only child of a REST node is the LHS.
+        return isLhsByDestructuringHelper(parent);
 
-    if (parent.isDefaultValue() && n == parent.getFirstChild()) {
-      // The first child of a DEFAULT_VALUE is a NAME node and a potential LHS.
-      // The second child is the value, so never a LHS node.
-      return isLhsByDestructuringHelper(parent);
+      case DEFAULT_VALUE:
+        if (n == parent.getFirstChild()) {
+          // The first child of a DEFAULT_VALUE is a NAME node and a potential LHS.
+          // The second child is the value, so never a LHS node.
+          return isLhsByDestructuringHelper(parent);
+        }
+        return false;
+
+      default:
+        return false;
     }
-    return false;
   }
 
   /**
