@@ -1343,4 +1343,37 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
         "var a = {b: {c: 5}}; var b = a; function f(x=b.b) { alert(x.c); }",
         "var a$b = {c: 5}; var b = null; function f(x=a$b) { alert(x.c); }");
   }
+
+  public void testAliasPropertyOnUnsafelyRedefinedNamespace() {
+    // TODO(b/73076126): this produces the wrong output. obj.foo is undefined in the alert call.
+    // AggressiveInlineAliases incorrectly replaces alert(foo) with alert(obj.foo), but
+    // CollapseProperties correctly backs off collapsing obj.foo because obj is reassigned.
+    test(
+        "var obj = {foo: 3}; var foo = obj.foo; obj = {}; alert(foo);",
+        "var obj = {foo: 3}; var foo = null   ; obj = {}; alert(obj.foo);");
+  }
+
+  public void testAliasPropertyOnSafelyRedefinedNamespace() {
+    // non-constructor property doesn't get collapsed
+    test(
+        "var obj = {foo: 3}; var foo = obj.foo; obj = obj || {}; alert(foo);",
+        "var obj = {foo: 3}; var foo = null   ; obj = obj || {}; alert(obj.foo);");
+
+    // constructor property does get collapsed
+    test(
+        lines(
+            "var ns = {};",
+            "/** @constructor */ ns.ctor = function() {};",
+            "ns.ctor.foo = 3;",
+            "var foo = ns.ctor.foo;",
+            "ns = ns || {};",
+            "alert(foo);"),
+        lines(
+            "var ns = {};",
+            "/** @constructor */ var ns$ctor = function() {};",
+            "var ns$ctor$foo = 3;",
+            "var foo = null;",
+            "ns = ns || {};",
+            "alert(ns$ctor$foo);"));
+  }
 }
