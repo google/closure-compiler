@@ -500,6 +500,55 @@ public class InlineFunctionsTest extends CompilerTestCase {
         "5;");
   }
 
+  public void testInlineFunctions34() {
+    test(
+        lines(
+            "class X {}",
+            "(function(e) {",
+            "  for (var el = f(e.target); el != null; el = el.parent) {}",
+            "  function f(x) { return x instanceof X ? x : null; }",
+            "})({target:{}});",
+            ""),
+        lines(
+            "class X {}",
+            "{",
+            "  var e$jscomp$inline_0 = {target:{}};",
+            "  var el$jscomp$inline_1;",
+            "  {",
+            "    var x$jscomp$inline_2 = e$jscomp$inline_0.target;",
+            "    el$jscomp$inline_1 = x$jscomp$inline_2 instanceof X ? x$jscomp$inline_2 : null;",
+            "  }",
+            "  for(;el$jscomp$inline_1 != null; el$jscomp$inline_1 = el$jscomp$inline_1.parent);",
+            "}",
+            ""));
+  }
+
+  // Same as above, except the for loop uses a let instead of a var, which means that Normalize
+  // does not extract it out. This causes InlineFunctions to produce an invalid AST: b/73373371
+  // TODO(b/73373371): Re-enable this test.
+  public void disabled_testInlineFunctions35() {
+    test(
+        lines(
+            "class X {}",
+            "(function(e) {",
+            "  for (let el = f(e.target); el != null; el = el.parent) {}",
+            "  function f(x) { return x instanceof X ? x : null; }",
+            "})({target:{}});",
+            ""),
+        lines(
+            "class X {}",
+            "{",
+            "  var e$jscomp$inline_0 = {target:{}};",
+            "  let el$jscomp$inline_1;",
+            "  {",
+            "    var x$jscomp$inline_2 = e$jscomp$inline_0.target;",
+            "    el$jscomp$inline_1 = x$jscomp$inline_2 instanceof X ? x$jscomp$inline_2 : null;",
+            "  }",
+            "  for(;el$jscomp$inline_1 != null; el$jscomp$inline_1 = el$jscomp$inline_1.parent);",
+            "}",
+            ""));
+  }
+
   public void testMixedModeInlining1() {
     // Base line tests, direct inlining
     test("function foo(){return 1}" +
