@@ -63,6 +63,15 @@ final class JsdocUtil {
     return builder.build();
   }
 
+  static JSDocInfo mergeJsdocs(@Nullable JSDocInfo classicJsdoc, @Nullable JSDocInfo inlineJsdoc) {
+    if (inlineJsdoc == null || !inlineJsdoc.hasType()) {
+      return classicJsdoc;
+    }
+    JSDocInfoBuilder builder = JSDocInfoBuilder.maybeCopyFrom(classicJsdoc);
+    builder.recordType(inlineJsdoc.getType());
+    return builder.build();
+  }
+
   static boolean hasAnnotatedType(JSDocInfo jsdoc) {
     if (jsdoc == null) {
       return false;

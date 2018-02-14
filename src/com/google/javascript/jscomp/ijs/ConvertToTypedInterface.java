@@ -263,12 +263,14 @@ public class ConvertToTypedInterface implements CompilerPass {
     }
 
     /**
-     * Does two simplifications to const/let/var nodes.
+     * Does three simplifications to const/let/var nodes.
      * 1. Splits them so that each declaration is a separate statement.
      * 2. Removes non-import destructuring statements, which we assume are not type declarations.
+     * 3. Moves inline JSDoc annotations onto the declaration nodes.
      */
     static void splitNameDeclarationsAndRemoveDestructuring(Node n, NodeTraversal t) {
       checkArgument(NodeUtil.isNameDeclaration(n));
+      JSDocInfo sharedJsdoc = n.getJSDocInfo();
       while (n.hasChildren()) {
         Node lhsToSplit = n.getLastChild();
         if (lhsToSplit.isDestructuringLhs() && !isImportRhs(lhsToSplit.getLastChild())) {
@@ -278,13 +280,18 @@ public class ConvertToTypedInterface implements CompilerPass {
           t.reportCodeChange();
           continue;
         }
+        JSDocInfo nameJsdoc = lhsToSplit.getJSDocInfo();
+        lhsToSplit.setJSDocInfo(null);
+        JSDocInfo mergedJsdoc = JsdocUtil.mergeJsdocs(sharedJsdoc, nameJsdoc);
         if (n.hasOneChild()) {
+          n.setJSDocInfo(mergedJsdoc);
           return;
         }
         // A name declaration with more than one LHS is split into separate declarations.
         Node rhs = lhsToSplit.hasChildren() ? lhsToSplit.removeFirstChild() : null;
         Node newDeclaration =
             NodeUtil.newDeclaration(lhsToSplit.detach(), rhs, n.getToken()).srcref(n);
+        newDeclaration.setJSDocInfo(mergedJsdoc);
         n.getParent().addChildAfter(newDeclaration, n);
         t.reportCodeChange();
       }

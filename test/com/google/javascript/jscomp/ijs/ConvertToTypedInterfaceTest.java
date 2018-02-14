@@ -74,6 +74,12 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
         warning(ConvertToTypedInterface.CONSTANT_WITHOUT_EXPLICIT_TYPE));
   }
 
+  public void disabled_testConstKeywordWithAnnotatedType() {
+    // TODO(b/73306304): The @const is currently missing here. Fix this!
+    test("/** @type {number} */ const x = 5;", "/** @const {number} */ var x;");
+    test("/** @type {!Foo} */ const f = new Foo;", "/** @const {!Foo} */ var f;");
+  }
+
   public void testConstKeywordJsdocPropagation() {
     test("const x = 5;", "/** @const {number} */ var x;");
 
@@ -94,11 +100,14 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
     test("var /** number */ x = 4, /** string */ y = 'str';",
         "/** @type {number} */ var x; /** @type {string} */ var y;");
 
+    test("var /** number */ x, /** string */ y;",
+        "/** @type {number} */ var x; /** @type {string} */ var y;");
+
     test("let /** number */ x = 4, /** string */ y = 'str';",
     "/** @type {number} */ var x; /** @type {string} */ var y;");
 
     test("let /** number */ x, /** string */ y;",
-        "let /** number */ x; let /** string */ y;");
+        "/** @type {number} */ let x; /** @type {string} */ let y;");
   }
 
   public void testThisPropertiesInConstructors() {
