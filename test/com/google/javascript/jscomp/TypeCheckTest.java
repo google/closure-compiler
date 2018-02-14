@@ -4940,10 +4940,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
               " */\n" +
               "function Foo() {}\n" +
               "(new Foo()).x--;",
-              new String[] {
-                ILLEGAL_PROPERTY_CREATION_MESSAGE,
-                "Property x never defined on Foo"
-              });
+              ILLEGAL_PROPERTY_CREATION_MESSAGE);
   }
 
   public void testSetprop9() {
@@ -18480,6 +18477,91 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
             "function f(/** (number|string) */ x, /** string */ y) {",
             "  return x < y;",
             "}"));
+  }
+
+  public void testInferenceInStrictMode1() {
+    testTypes(
+        lines(
+            "function f(x) {",
+            "  var y = x - 1;",
+            "  var /** string */ z = x;",
+            "}"),
+        lines(
+            "initializing variable",
+            "found   : number",
+            "required: string"));
+  }
+
+  public void testInferenceInStrictMode2() {
+    testTypes(
+        lines(
+            "function f(x) {",
+            "  var y = 1 - x;",
+            "  var /** string */ z = x;",
+            "}"),
+        lines(
+            "initializing variable",
+            "found   : number",
+            "required: string"));
+  }
+
+  public void testInferenceInStrictMode3a() {
+    testTypes(
+        lines(
+            "function f(x) {",
+            "  var y = -x;",
+            "  var /** string */ z = x;",
+            "}"),
+        lines(
+            "initializing variable",
+            "found   : number",
+            "required: string"));
+  }
+
+  public void testInferenceInStrictMode3b() {
+    testTypes(
+        lines(
+            "function f(x) {",
+            "  var y = +x;",
+            "  var /** string */ z = x;",
+            "}"));
+  }
+
+  public void testInferenceInStrictMode4() {
+    // We can't infer recursively that x is a number
+    testTypes(
+        lines(
+            "function f(x, w) {",
+            "  var y = (x || w) - 1;",
+            "  var /** string */ z = x;",
+            "}"));
+  }
+
+  public void testInferenceInStrictMode5() {
+    testTypes(
+        lines(
+            "function f(x) {",
+            "  var y = 1;",
+            "  y *= x;",
+            "  var /** string */ z = x;",
+            "}"),
+        lines(
+            "initializing variable",
+            "found   : number",
+            "required: string"));
+  }
+
+  public void testInferenceInStrictMode6() {
+    testTypes(
+        lines(
+            "function f(x) {",
+            "  x *= 1;",
+            "  var /** string */ z = x;",
+            "}"),
+        lines(
+            "initializing variable",
+            "found   : number",
+            "required: string"));
   }
 
   private void testTypes(String js) {

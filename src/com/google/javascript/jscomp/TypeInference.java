@@ -85,6 +85,7 @@ class TypeInference
   private final FlowScope functionScope;
   private final FlowScope bottomScope;
   private final Map<String, AssertionFunctionSpec> assertionFunctionsMap;
+  private final boolean strictOperatorChecks;
 
   // For convenience
   private final ObjectType unknownType;
@@ -98,6 +99,8 @@ class TypeInference
     this.registry = compiler.getTypeRegistry();
     this.reverseInterpreter = reverseInterpreter;
     this.unknownType = registry.getNativeObjectType(UNKNOWN_TYPE);
+    this.strictOperatorChecks =
+        compiler.getOptions().enables(DiagnosticGroups.STRICT_PRIMITIVE_OPERATORS);
 
     this.syntacticScope = functionScope;
     inferArguments(functionScope);
@@ -311,6 +314,17 @@ class TypeInference
     return result;
   }
 
+  private FlowScope traverseWithType(Node n, JSType type, FlowScope scope) {
+    checkNotNull(type);
+    scope = traverse(n, scope);
+    JSType found = n.getJSType();
+    if (found == null || found.isUnknownType()) {
+      n.setJSType(type);
+      updateScopeForTypeChange(scope, n, type, type);
+    }
+    return scope;
+  }
+
   private FlowScope traverse(Node n, FlowScope scope) {
     switch (n.getToken()) {
       case ASSIGN:
@@ -331,8 +345,7 @@ class TypeInference
         break;
 
       case OR:
-        scope = traverseOr(n, scope).getJoinedFlowScope()
-            .createChildFlowScope();
+        scope = traverseOr(n, scope).getJoinedFlowScope().createChildFlowScope();
         break;
 
       case HOOK:
@@ -357,8 +370,16 @@ class TypeInference
         break;
 
       case POS:
+        scope = traverse(n.getFirstChild(), scope);
+        n.setJSType(getNativeType(NUMBER_TYPE));
+        break;
+
       case NEG:
-        scope = traverse(n.getFirstChild(), scope);  // Find types.
+        if (this.strictOperatorChecks) {
+          scope = traverseWithType(n.getFirstChild(), getNativeType(NUMBER_TYPE), scope);
+        } else {
+          scope = traverse(n.getFirstChild(), scope);
+        }
         n.setJSType(getNativeType(NUMBER_TYPE));
         break;
 
@@ -393,7 +414,11 @@ class TypeInference
       case DEC:
       case INC:
       case BITNOT:
-        scope = traverseChildren(n, scope);
+        if (this.strictOperatorChecks) {
+          scope = traverseChildrenWithType(n, getNativeType(NUMBER_TYPE), scope);
+        } else {
+          scope = traverseChildren(n, scope);
+        }
         n.setJSType(getNativeType(NUMBER_TYPE));
         break;
 
@@ -770,8 +795,7 @@ class TypeInference
     JSType type = n.getJSType();
     if (value != null) {
       scope = traverse(value, scope);
-      updateScopeForTypeChange(scope, n, n.getJSType() /* could be null */,
-          getJSType(value));
+      updateScopeForTypeChange(scope, n, n.getJSType() /* could be null */, getJSType(value));
       return scope;
     } else {
       StaticTypedSlot<JSType> var = scope.getSlot(varName);
@@ -1490,6 +1514,13 @@ class TypeInference
 
   private BooleanOutcomePair traverseAnd(Node n, FlowScope scope) {
     return traverseShortCircuitingBinOp(n, scope);
+  }
+
+  private FlowScope traverseChildrenWithType(Node n, JSType type, FlowScope scope) {
+    for (Node el = n.getFirstChild(); el != null; el = el.getNext()) {
+      scope = traverseWithType(el, type, scope);
+    }
+    return scope;
   }
 
   private FlowScope traverseChildren(Node n, FlowScope scope) {
