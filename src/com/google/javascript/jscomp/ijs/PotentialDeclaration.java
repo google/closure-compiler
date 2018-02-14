@@ -233,7 +233,7 @@ abstract class PotentialDeclaration {
       JSDocInfo jsdoc = jsdocNode.getJSDocInfo();
       if (jsdoc == null
           || !jsdoc.containsDeclaration()
-          || ConvertToTypedInterface.isConstToBeInferred(jsdoc, jsdocNode)) {
+          || isConstToBeInferred(jsdoc, jsdocNode)) {
         jsdocNode.setJSDocInfo(JsdocUtil.getUnusableTypeJSDoc(jsdoc));
       }
     }
@@ -243,9 +243,9 @@ abstract class PotentialDeclaration {
       Node rhs = getRhs();
       Node nameNode = getLhs();
       JSDocInfo jsdoc = getJsDoc();
-      boolean isExport = ConvertToTypedInterface.isExportLhs(nameNode);
+      boolean isExport = isExportLhs(nameNode);
       return super.shouldPreserve()
-          || ConvertToTypedInterface.isImportRhs(rhs)
+          || isImportRhs(rhs)
           || (isExport && rhs != null && (rhs.isQualifiedName() || rhs.isObjectLit()))
           || (jsdoc != null && jsdoc.isConstructor() && rhs != null && rhs.isQualifiedName())
           || (nameNode.matchesQualifiedName("goog.global") && rhs != null && rhs.isThis())
@@ -318,21 +318,59 @@ abstract class PotentialDeclaration {
   }
 
   boolean isDefiniteDeclaration() {
-    return ConvertToTypedInterface.isExportLhs(getLhs())
-        || (getJsDoc() != null && getJsDoc().containsDeclaration())
-        || (rhs != null && PotentialDeclaration.isTypedRhs(rhs))
-        || ConvertToTypedInterface.isDeclaration(getLhs());
+    Node parent = getLhs().getParent();
+    switch (parent.getToken()) {
+      case VAR:
+      case LET:
+      case CONST:
+      case CLASS:
+      case FUNCTION:
+        return true;
+      default:
+        return isExportLhs(getLhs())
+            || (getJsDoc() != null && getJsDoc().containsDeclaration())
+            || (getRhs() != null && PotentialDeclaration.isTypedRhs(getRhs()));
+    }
   }
 
   boolean shouldPreserve() {
     return getRhs() != null && isTypedRhs(getRhs());
   }
 
-  static boolean isTypedRhs(Node rhs) {
+  boolean isConstToBeInferred() {
+    return isConstToBeInferred(getJsDoc(), getLhs());
+  }
+
+  static boolean isConstToBeInferred(
+      JSDocInfo jsdoc, Node nameNode) {
+    boolean isConst =
+        nameNode.getParent().isConst()
+            || isExportLhs(nameNode)
+            || (jsdoc != null && jsdoc.hasConstAnnotation());
+    return isConst
+        && !JsdocUtil.hasAnnotatedType(jsdoc)
+        && !NodeUtil.isNamespaceDecl(nameNode);
+  }
+
+  private static boolean isTypedRhs(Node rhs) {
     return rhs.isFunction()
         || rhs.isClass()
         || NodeUtil.isCallTo(rhs, "goog.defineClass")
         || (rhs.isQualifiedName() && rhs.matchesQualifiedName("goog.abstractMethod"))
         || (rhs.isQualifiedName() && rhs.matchesQualifiedName("goog.nullFunction"));
+  }
+
+  private static boolean isExportLhs(Node lhs) {
+    return (lhs.isName() && lhs.matchesQualifiedName("exports"))
+        || (lhs.isGetProp() && lhs.getFirstChild().matchesQualifiedName("exports"));
+  }
+
+  static boolean isImportRhs(@Nullable Node rhs) {
+    if (rhs == null || !rhs.isCall()) {
+      return false;
+    }
+    Node callee = rhs.getFirstChild();
+    return callee.matchesQualifiedName("goog.require")
+        || callee.matchesQualifiedName("goog.forwardDeclare");
   }
 }
