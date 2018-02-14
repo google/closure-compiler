@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Strings.nullToEmpty;
 import static com.google.javascript.rhino.jstype.JSTypeNative.ARRAY_TYPE;
@@ -894,16 +895,7 @@ class TypeValidator implements Serializable {
    * present.
    */
   private JSType getJSType(Node n) {
-    JSType jsType = n.getJSType();
-    if (jsType == null) {
-      // TODO(user): This branch indicates a compiler bug, not worthy of
-      // halting the compilation but we should log this and analyze to track
-      // down why it happens. This is not critical and will be resolved over
-      // time as the type checker is extended.
-      return getNativeType(UNKNOWN_TYPE);
-    } else {
-      return jsType;
-    }
+    return checkNotNull(n.getJSType(), "%s has no JSType attached", n);
   }
 
   private JSType getNativeType(JSTypeNative typeId) {
