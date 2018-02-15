@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp.lint;
 
+import static com.google.javascript.jscomp.lint.CheckNullableReturn.NULLABLE_RETURN_WITH_NAME;
+
 import com.google.javascript.jscomp.CheckLevel;
 import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerOptions;
@@ -258,11 +260,11 @@ public final class CheckNullableReturnTest extends TypeICompilerTestCase {
   }
 
   private void testOk(String js) {
-    testSame(EXTERNS, js);
+    testSame(externs(EXTERNS), srcs(js));
   }
 
   private void testError(String js) {
-    testSame(EXTERNS, js, CheckNullableReturn.NULLABLE_RETURN_WITH_NAME);
+    test(externs(EXTERNS), srcs(js), warning(NULLABLE_RETURN_WITH_NAME));
   }
 
   private void testBodyOk(String body) {

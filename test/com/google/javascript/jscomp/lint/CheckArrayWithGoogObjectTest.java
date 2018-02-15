@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp.lint;
 
+import static com.google.javascript.jscomp.lint.CheckArrayWithGoogObject.ARRAY_PASSED_TO_GOOG_OBJECT;
+
 import com.google.javascript.jscomp.CheckLevel;
 import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerOptions;
@@ -87,10 +89,10 @@ public final class CheckArrayWithGoogObjectTest extends TypeICompilerTestCase {
   }
 
   private void testGoogObjectWarning(String js) {
-    testSame(DEFAULT_EXTERNS, js, CheckArrayWithGoogObject.ARRAY_PASSED_TO_GOOG_OBJECT);
+    test(externs(DEFAULT_EXTERNS), srcs(js), warning(ARRAY_PASSED_TO_GOOG_OBJECT));
   }
 
   private void testNoGoogObjectWarning(String js) {
-    testSame(DEFAULT_EXTERNS, js);
+    testSame(externs(DEFAULT_EXTERNS), srcs(js));
   }
 }

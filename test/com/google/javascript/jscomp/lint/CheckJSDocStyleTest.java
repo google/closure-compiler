@@ -1066,15 +1066,17 @@ public final class CheckJSDocStyleTest extends CompilerTestCase {
         EXTERNS_FILES_SHOULD_BE_ANNOTATED);
 
     testSame(
-        "/** @fileoverview Some super cool externs.\n * @externs\n */ function Example() {}",
-        "");
+        externs(
+            "/** @fileoverview Some super cool externs.\n * @externs\n */ function Example() {}"),
+        srcs(""));
 
     testSame(
-        lines(
-            "/** @fileoverview Some super cool externs.\n * @externs\n */",
-            "/** @constructor */ function Example() {}",
-            "/** @param {number} x */ function example2(x) {}"),
-        "");
+        externs(
+            lines(
+                "/** @fileoverview Some super cool externs.\n * @externs\n */",
+                "/** @constructor */ function Example() {}",
+                "/** @param {number} x */ function example2(x) {}")),
+        srcs(""));
 
     test(
         new String[] {
@@ -1090,8 +1092,13 @@ public final class CheckJSDocStyleTest extends CompilerTestCase {
 
   public void testValidExternsAnnotation_withES6Modules() {
     testSame(
-        "export /** @fileoverview Some super cool externs.\n * @externs\n */ function Example() {}",
-        "");
+        externs(
+            lines(
+                "export /** @fileoverview Some super cool externs.",
+                " * @externs",
+                " */",
+                "function Example() {}")),
+        srcs(""));
   }
 
   public void testConstructorsDontHaveVisibility() {
