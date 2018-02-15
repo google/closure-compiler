@@ -330,6 +330,16 @@ class TypeValidator implements Serializable {
       NodeTraversal t, Node n, JSType type, String msg) {
     if (!type.matchesNumberContext() && !type.matchesStringContext()) {
       mismatch(t, n, msg, type, NUMBER_STRING);
+    } else if (this.strictOperatorChecks) {
+      expectStringOrNumberStrict(n, type, msg);
+    }
+  }
+
+  void expectStringOrNumberStrict(Node n, JSType type, String msg) {
+    checkState(this.strictOperatorChecks);
+    if (!type.isSubtype(getNativeType(NUMBER_STRING))) {
+      registerMismatchAndReport(
+          n, INVALID_OPERAND_TYPE, msg, type, getNativeType(NUMBER_TYPE), null, null);
     }
   }
 

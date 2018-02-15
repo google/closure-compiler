@@ -18564,6 +18564,32 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
             "required: string"));
   }
 
+  public void testComparisonInStrictModeNoSpuriousWarning() {
+    testTypes(
+        lines(
+            "function f(x) {",
+            "  var y = 'asdf';",
+            "  var z = y < x;",
+            "}"));
+  }
+
+  public void testComparisonTreatingUnknownAsNumber() {
+    // Because 'x' is unknown, we allow either of the comparible types: number or string.
+    compiler.getOptions().setWarningLevel(
+        DiagnosticGroups.STRICT_PRIMITIVE_OPERATORS, CheckLevel.OFF);
+    testTypes(
+        lines(
+        "/** @constructor */",
+        "function Foo() {}",
+        "function f(/** ? */ x) {",
+        "  return (new Foo) < x;",
+        "}"),
+        lines(
+            "left side of comparison",
+            "found   : Foo",
+            "required: (number|string)"));
+  }
+
   private void testTypes(String js) {
     testTypes(js, (String) null);
   }
