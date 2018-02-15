@@ -442,19 +442,6 @@ public enum CompilationParam {
     }
   },
 
-  /** Flowsenstive Inlines variables */
-  FLOW_SENSITIVE_INLINE_VARIABLES(ParamGroup.TYPE_CHECKING_OPTIMIZATION) {
-    @Override
-    public void apply(CompilerOptions options, boolean value) {
-      options.setFlowSensitiveInlineVariables(value);
-    }
-
-    @Override
-    public boolean isApplied(CompilerOptions options) {
-      return options.flowSensitiveInlineVariables;
-    }
-  },
-
   INLINE_PROPERTIES(ParamGroup.TYPE_CHECKING_OPTIMIZATION) {
     @Override
     public void apply(CompilerOptions options, boolean value) {
