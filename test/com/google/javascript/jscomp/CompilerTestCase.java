@@ -1290,17 +1290,6 @@ public abstract class CompilerTestCase extends TestCase {
    * Verifies that the compiler pass's JS output is the same as its input
    * and (optionally) that an expected warning is issued.
    *
-   * @param externs Externs input
-   * @param js Input and output
-   */
-  protected void testSame(String externs, String js) {
-    test(externs(externs), srcs(js), expected(js));
-  }
-
-  /**
-   * Verifies that the compiler pass's JS output is the same as its input
-   * and (optionally) that an expected warning is issued.
-   *
    * @param js Input and output
    * @param warning Expected warning, or null if no warning is expected
    */
