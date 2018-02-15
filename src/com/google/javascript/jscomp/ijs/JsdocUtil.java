@@ -86,7 +86,6 @@ final class JsdocUtil {
         || jsdoc.hasReturnType()
         || jsdoc.getParameterCount() > 0
         || jsdoc.isConstructorOrInterface()
-        || jsdoc.hasTypedefType()
         || jsdoc.hasThisType()
         || jsdoc.hasEnumParameterType();
   }

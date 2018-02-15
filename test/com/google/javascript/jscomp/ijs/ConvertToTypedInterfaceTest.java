@@ -731,15 +731,6 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
         });
   }
 
-  public void testGoogModulesWithTypedefExports() {
-    testSame(
-        lines(
-            "goog.module('x.y.z');",
-            "",
-            "/** @typedef {number} */",
-            "exports.Foo;"));
-  }
-
   public void testGoogModulesWithUndefinedExports() {
     testWarning(
         lines(
