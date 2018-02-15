@@ -308,7 +308,7 @@ $jscomp.polyfill('Promise',
   PolyfillPromise.prototype.settle_ = function(settledState, valueOrReason) {
     if (this.state_ != PromiseState.PENDING) {
       throw new Error(
-          'Cannot settle(' + settledState + ', ' + valueOrReason |
+          'Cannot settle(' + settledState + ', ' + valueOrReason +
           '): Promise already settled in state' + this.state_);
     }
     this.state_ = settledState;
