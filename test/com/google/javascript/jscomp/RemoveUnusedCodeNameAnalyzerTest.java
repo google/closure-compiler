@@ -213,14 +213,14 @@ public final class RemoveUnusedCodeNameAnalyzerTest extends TypeICompilerTestCas
             "  let x = 1; alert(x);",
             "}"));
 
-    testSame(
-        lines(
+    test(
+        srcs(lines(
             "if (true) {", // preserve newline
             "  let x = 1;",
             "} else {",
             "  let x = 1;",
-            "}"),
-        "if (true); else;");
+            "}")),
+        expected("if (true); else;"));
   }
 
   public void testRemoveConstDeclaration1() {
