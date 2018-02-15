@@ -209,7 +209,7 @@ public final class CheckSideEffectsTest extends CompilerTestCase {
         "/** @return {boolean} */ function hasSideEffectsExtern(){}",
         "/** @return {boolean} */ var hasSideEffectsExtern2 = function(){}");
 
-    testSame(externs, "alert(noSideEffectsExtern());");
+    testSame(externs(externs), srcs("alert(noSideEffectsExtern());"));
 
     test(
         externs(externs),
@@ -229,13 +229,14 @@ public final class CheckSideEffectsTest extends CompilerTestCase {
             "Suspicious code. The result of the extern function call "
                 + "'noSideEffectsExtern2' is not being used."));
 
-    testSame(externs, "hasSideEffectsExtern()");
+    testSame(externs(externs), srcs("hasSideEffectsExtern()"));
 
-    testSame(externs, "hasSideEffectsExtern2()");
+    testSame(externs(externs), srcs("hasSideEffectsExtern2()"));
 
     // Methods redefined in inner scopes should not trigger a warning
     testSame(
-        externs, "(function() { function noSideEffectsExtern() {}; noSideEffectsExtern(); })()");
+        externs(externs),
+        srcs("(function() { function noSideEffectsExtern() {}; noSideEffectsExtern(); })()"));
   }
 
   public void testExternPropertyFunctions() {
@@ -245,7 +246,7 @@ public final class CheckSideEffectsTest extends CompilerTestCase {
         "  * @nosideeffects */",
         "foo.noSideEffectsExtern = function(){}");
 
-    testSame(externs, "alert(foo.noSideEffectsExtern());");
+    testSame(externs(externs), srcs("alert(foo.noSideEffectsExtern());"));
 
     test(
         externs(externs),

@@ -923,8 +923,7 @@ public final class NormalizeTest extends CompilerTestCase {
         "var a$FOO = 1; var b = 1; b = a$FOO;");
 
     tester.testSame(
-        "var EXTERN; var ext; ext.FOO;",
-        "var b = EXTERN; var c = ext.FOO");
+        externs("var EXTERN; var ext; ext.FOO;"), srcs("var b = EXTERN; var c = ext.FOO"));
 
     tester.test(
         "var a={}; a.ACONST = 4; var b = 1; b = a.ACONST;",

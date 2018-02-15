@@ -669,10 +669,11 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
 
   public void testGlobalAliasWithProperties5() {
     testSame(
-        "/** @constructor */ var blob = function() {}",
-        "var nullFunction = function(){};\n"
-        + "blob.init = nullFunction;\n"
-        + "use(blob.init)");
+        externs("/** @constructor */ var blob = function() {}"),
+        srcs(
+            "var nullFunction = function(){};\n"
+                + "blob.init = nullFunction;\n"
+                + "use(blob.init)"));
   }
 
   public void testLocalAliasOfEnumWithInstanceofCheck() {

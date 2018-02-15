@@ -377,13 +377,13 @@ public final class VariableReferenceCheckTest extends CompilerTestCase {
     // Verify we don't complain about early references in externs
     String externs = "window; var window;";
     String code = "";
-    testSame(externs, code);
+    testSame(externs(externs), srcs(code));
   }
 
   public void testNoWarnDuplicateInExterns_withES6Modules() {
     String externs = "export var google; /** @suppress {duplicate} */ var google";
     String code = "";
-    testSame(externs, code);
+    testSame(externs(externs), srcs(code));
   }
 
   public void testUnusedLocalVar() {

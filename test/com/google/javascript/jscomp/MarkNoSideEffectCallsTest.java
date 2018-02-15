@@ -234,7 +234,7 @@ public final class MarkNoSideEffectCallsTest extends CompilerTestCase {
 
   void testMarkCalls(
       String extraExterns, String source, List<String> expected) {
-    testSame(EXTERNS + extraExterns, source);
+    testSame(externs(EXTERNS + extraExterns), srcs(source));
     assertEquals(expected, noSideEffectCalls);
     noSideEffectCalls.clear();
   }

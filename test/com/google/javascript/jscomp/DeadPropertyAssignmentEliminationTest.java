@@ -1101,29 +1101,24 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
     );
 
     testSame(
-        externs,
-        lines(
-            "function z() {",
-            "  window.innerWidth = 10;",
-            "  window.innerWidth = 20;",
-            "}"));
+        externs(externs),
+        srcs(
+            lines(
+                "function z() {", "  window.innerWidth = 10;", "  window.innerWidth = 20;", "}")));
 
     testSame(
-        externs,
-        lines(
-            "function z() {",
-            "  var img = new Image();",
-            "  img.src = '';",
-            "  img.src = 'foo.bar';",
-            "}"));
+        externs(externs),
+        srcs(
+            lines(
+                "function z() {",
+                "  var img = new Image();",
+                "  img.src = '';",
+                "  img.src = 'foo.bar';",
+                "}")));
 
     testSame(
-        externs,
-        lines(
-            "function z(x) {",
-            "  x.src = '';",
-            "  x.src = 'foo.bar';",
-            "}"));
+        externs(externs),
+        srcs(lines("function z(x) {", "  x.src = '';", "  x.src = 'foo.bar';", "}")));
   }
 
   public void testJscompInherits() {

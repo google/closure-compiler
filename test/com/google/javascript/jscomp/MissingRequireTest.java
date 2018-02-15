@@ -762,13 +762,13 @@ public final class MissingRequireTest extends CompilerTestCase {
   public void testIgnoresNativeObject() {
     String externs = "/** @constructor */ function String(val) {}";
     String js = "var str = new String('4');";
-    testSame(externs, js);
+    testSame(externs(externs), srcs(js));
   }
 
   public void testPassExterns() {
     String externs = "/** @const */ var google = {};";
     String js = "var ll = new google.maps.LatLng();";
-    testSame(externs, js);
+    testSame(externs(externs), srcs(js));
   }
 
   public void testNewNodesWithMoreThanOneFile() {
@@ -818,9 +818,9 @@ public final class MissingRequireTest extends CompilerTestCase {
   public void testCanStillCallNumberWithoutNewOperator() {
     String externs = "/** @constructor */ function Number(opt_value) {}";
     String js = "var n = Number('42');";
-    testSame(externs, js);
+    testSame(externs(externs), srcs(js));
     js = "var n = Number();";
-    testSame(externs, js);
+    testSame(externs(externs), srcs(js));
   }
 
   public void testRequiresAreCaughtBeforeProcessed() {
@@ -1070,7 +1070,7 @@ public final class MissingRequireTest extends CompilerTestCase {
         + "goog.scope(function() {\n"
         + "  var BASE_URL = location.href;\n"
         + "});";
-    testSame(externs, js);
+    testSame(externs(externs), srcs(js));
   }
 
   public void testTypedefInGoogScope() {

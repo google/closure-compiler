@@ -369,26 +369,28 @@ public final class InlineObjectLiteralsTest extends CompilerTestCase {
             "g(object.f);"));
 
     testSame(
-        lines(
-            "var protoObject = {",
-            "  f: function() {",
-            "    return 1;",
-            "  }",
-            "};",
-            "var object = {",
-            "  __proto__: protoObject,",
-            "  g: false",
-            "};",
-            "g(object.g);"),
-        lines(
-            "var protoObject = {",
-            "  f: function() {",
-            "    return 1;",
-            "  }",
-            "};",
-            "var JSCompiler_object_inline___proto___0=protoObject;",
-            "var JSCompiler_object_inline_g_1=false;",
-            "g(JSCompiler_object_inline_g_1)"));
+        externs(
+            lines(
+                "var protoObject = {",
+                "  f: function() {",
+                "    return 1;",
+                "  }",
+                "};",
+                "var object = {",
+                "  __proto__: protoObject,",
+                "  g: false",
+                "};",
+                "g(object.g);")),
+        srcs(
+            lines(
+                "var protoObject = {",
+                "  f: function() {",
+                "    return 1;",
+                "  }",
+                "};",
+                "var JSCompiler_object_inline___proto___0=protoObject;",
+                "var JSCompiler_object_inline_g_1=false;",
+                "g(JSCompiler_object_inline_g_1)")));
   }
 
   public void testSuper() {

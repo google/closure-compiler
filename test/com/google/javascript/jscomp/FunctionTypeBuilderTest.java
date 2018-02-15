@@ -53,7 +53,7 @@ public final class FunctionTypeBuilderTest extends CompilerTestCase {
   }
 
   public void testValidBuiltInTypeRedefinition() throws Exception {
-    testSame(ALL_NATIVE_EXTERN_TYPES, "");
+    testSame(externs(ALL_NATIVE_EXTERN_TYPES), srcs(""));
   }
 
   public void testBuiltInTypeDifferentReturnType() throws Exception {
@@ -139,7 +139,7 @@ public final class FunctionTypeBuilderTest extends CompilerTestCase {
   }
 
   public void testExternSubTypes() throws Exception {
-    testSame(ALL_NATIVE_EXTERN_TYPES, "");
+    testSame(externs(ALL_NATIVE_EXTERN_TYPES), srcs(""));
 
     List<FunctionTypeI> subtypes =
         ImmutableList.copyOf(

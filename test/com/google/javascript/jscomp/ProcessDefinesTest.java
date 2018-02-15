@@ -106,15 +106,13 @@ public final class ProcessDefinesTest extends CompilerTestCase {
   }
 
   public void testDefineInExterns() {
-    testSame(
-        DEFAULT_EXTERNS + "/** @define {boolean} */ var EXTERN_DEF;",
-        "");
+    testSame(externs(DEFAULT_EXTERNS + "/** @define {boolean} */ var EXTERN_DEF;"), srcs(""));
   }
 
   public void testDefineInExternsPlusUsage() {
     testSame(
-        DEFAULT_EXTERNS + "/** @define {boolean} */ var EXTERN_DEF;",
-        "/** @define {boolean} */ var DEF = EXTERN_DEF");
+        externs(DEFAULT_EXTERNS + "/** @define {boolean} */ var EXTERN_DEF;"),
+        srcs("/** @define {boolean} */ var DEF = EXTERN_DEF"));
   }
 
   public void testNonDefineInExternsPlusUsage() {
@@ -125,9 +123,7 @@ public final class ProcessDefinesTest extends CompilerTestCase {
   }
 
   public void testDefineCompiledInExterns() {
-    testSame(
-        DEFAULT_EXTERNS + "/** @define {boolean} */ var COMPILED;",
-        "");
+    testSame(externs(DEFAULT_EXTERNS + "/** @define {boolean} */ var COMPILED;"), srcs(""));
   }
 
   public void testDefineWithDependentValue() {

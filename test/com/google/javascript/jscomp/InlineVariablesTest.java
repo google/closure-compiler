@@ -809,7 +809,7 @@ public final class InlineVariablesTest extends CompilerTestCase {
         srcs("var x = f(y.a, y); z = x;"),
         expected("z = f(y.a, y);"));
     // z.b can be changed by the call to y, so x can not be inlined.
-    testSame(EXTERNS, "var x = f(y.a, y); z.b = x;");
+    testSame(externs(EXTERNS), srcs("var x = f(y.a, y); z.b = x;"));
   }
 
   public void testInlineParameterAlias1() {
@@ -1254,7 +1254,7 @@ public final class InlineVariablesTest extends CompilerTestCase {
   public void testNoInlineRedeclaredExterns() {
     String externs = "var test = 1;";
     String code = "/** @suppress {duplicate} */ var test = 2;alert(test);";
-    testSame(externs, code);
+    testSame(externs(externs), srcs(code));
   }
 
   public void testBug6598844() {

@@ -2644,7 +2644,7 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
         "function Baz() {}",
         "Baz.prototype.firstElementChild;");
 
-    testSame(DEFAULT_EXTERNS + externs, js);
+    testSame(externs(DEFAULT_EXTERNS + externs), srcs(js));
   }
 
   public void testAccessOnObjectWithManySubtypes() {
@@ -2666,7 +2666,7 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
         "function Baz() {}",
         "Baz.prototype.firstElementChild;");
 
-    testSame(DEFAULT_EXTERNS + externs, js);
+    testSame(externs(DEFAULT_EXTERNS + externs), srcs(js));
   }
 
   private void testSets(String js, String expected, final String fieldTypes) {

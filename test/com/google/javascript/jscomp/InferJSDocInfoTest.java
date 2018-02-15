@@ -84,9 +84,9 @@ public final class InferJSDocInfoTest extends CompilerTestCase {
   }
 
   public void testNativeCtor() {
-    testSame(OBJECT_EXTERNS,
-        "var x = new Object();"
-        + "/** Another object. */ var y = new Object();");
+    testSame(
+        externs(OBJECT_EXTERNS),
+        srcs("var x = new Object();" + "/** Another object. */ var y = new Object();"));
     assertEquals(
         "Object.",
         findGlobalNameType("x").getJSDocInfo().getBlockDescription());
@@ -99,12 +99,14 @@ public final class InferJSDocInfoTest extends CompilerTestCase {
   }
 
   public void testStructuralFunctions() {
-    testSame(OBJECT_EXTERNS,
-        "/** Function. \n * @param {*} x */ "
-        + "function fn(x) {};"
-        + "var goog = {};"
-        + "/** Another object. \n * @type {Object} */ goog.x = new Object();"
-        + "/** Another function. \n * @param {number} x */ goog.y = fn;");
+    testSame(
+        externs(OBJECT_EXTERNS),
+        srcs(
+            "/** Function. \n * @param {*} x */ "
+                + "function fn(x) {};"
+                + "var goog = {};"
+                + "/** Another object. \n * @type {Object} */ goog.x = new Object();"
+                + "/** Another function. \n * @param {number} x */ goog.y = fn;"));
     assertEquals(
         "(Object|null)",
         globalScope.getVar("goog.x").getType().toString());
