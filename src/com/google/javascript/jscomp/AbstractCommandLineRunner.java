@@ -1182,9 +1182,11 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
       compiler.parseForCompilation();
       if (!compiler.hasErrors()) {
         compiler.stage1Passes();
-        compiler.saveState(serializedOutputStream);
-        compiler.performPostCompilationTasks();
       }
+      if (!compiler.hasErrors()) {
+        compiler.saveState(serializedOutputStream);
+      }
+      compiler.performPostCompilationTasks();
     } catch (IOException e) {
       compiler.report(JSError.make(COULD_NOT_SERIALIZE_AST, filename));
     } finally {
