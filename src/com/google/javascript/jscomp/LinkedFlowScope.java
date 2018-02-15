@@ -26,6 +26,7 @@ import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.SimpleSlot;
 import com.google.javascript.rhino.jstype.StaticTypedScope;
 import com.google.javascript.rhino.jstype.StaticTypedSlot;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
@@ -336,7 +337,7 @@ class LinkedFlowScope implements FlowScope {
    * a slot for x or z.
    */
   private Map<String, StaticTypedSlot<JSType>> allFlowSlots() {
-    Map<String, StaticTypedSlot<JSType>> slots = new LinkedHashMap<>();
+    Map<String, StaticTypedSlot<JSType>> slots = new HashMap<>();
     for (LinkedFlowSlot slot = lastSlot;
          slot != null; slot = slot.parent) {
       if (!slots.containsKey(slot.getName())) {
