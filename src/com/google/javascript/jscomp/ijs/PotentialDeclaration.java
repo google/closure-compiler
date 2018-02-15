@@ -208,6 +208,9 @@ abstract class PotentialDeclaration {
         simplifySymbol(compiler);
         return;
       }
+      if (getLhs().getParent().isConst()) {
+        jsdoc = JsdocUtil.markConstant(jsdoc);
+      }
       // Just completely remove the RHS, and replace with a getprop.
       Node newStatement =
           NodeUtil.newQNameDeclaration(compiler, nameNode.getQualifiedName(), null, jsdoc);

@@ -63,6 +63,12 @@ final class JsdocUtil {
     return builder.build();
   }
 
+  static JSDocInfo markConstant(JSDocInfo oldJSDoc) {
+    JSDocInfoBuilder builder = JSDocInfoBuilder.maybeCopyFrom(oldJSDoc);
+    builder.recordConstancy();
+    return builder.build();
+  }
+
   static JSDocInfo mergeJsdocs(@Nullable JSDocInfo classicJsdoc, @Nullable JSDocInfo inlineJsdoc) {
     if (inlineJsdoc == null || !inlineJsdoc.hasType()) {
       return classicJsdoc;

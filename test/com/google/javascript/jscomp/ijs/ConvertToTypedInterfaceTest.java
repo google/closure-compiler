@@ -74,8 +74,7 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
         warning(ConvertToTypedInterface.CONSTANT_WITHOUT_EXPLICIT_TYPE));
   }
 
-  public void disabled_testConstKeywordWithAnnotatedType() {
-    // TODO(b/73306304): The @const is currently missing here. Fix this!
+  public void testConstKeywordWithAnnotatedType() {
     test("/** @type {number} */ const x = 5;", "/** @const {number} */ var x;");
     test("/** @type {!Foo} */ const f = new Foo;", "/** @const {!Foo} */ var f;");
   }
