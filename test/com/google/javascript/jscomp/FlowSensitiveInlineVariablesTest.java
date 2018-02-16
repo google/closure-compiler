@@ -728,8 +728,7 @@ public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase  {
   }
 
   public void testBlockScoping_shouldntInline() {
-    // TODO(b/73123594): fix this test. It adds a reference to a block-scoped let outside its block.
-    inline(
+    noInline(
         lines(
             "var JSCompiler_inline_result;",
             "{",
@@ -739,16 +738,22 @@ public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase  {
             "  }",
             "  JSCompiler_inline_result = a;",
             "}",
-            "alert(JSCompiler_inline_result);"),
+            "alert(JSCompiler_inline_result);"));
+
+    enableNormalize();
+    // test let/const shadowing of a var
+    noInline(
         lines(
-            "var JSCompiler_inline_result;",
-            "{",
-            "  let a = 1;",
-            "  if (3 < 4) {",
-            "    a = 2;",
-            "  }",
-            "}",
-            "alert(a);")); // a is not defined here! This is wrong.
+        "var JSCompiler_inline_result;",
+        "var a = 0;",
+        "{",
+        "  let a = 1;",
+        "  if (3 < 4) {",
+        "    a = 2;",
+        "  }",
+        "  JSCompiler_inline_result = a;",
+        "}",
+        "alert(JSCompiler_inline_result);"));
   }
 
   public void testInlineInGenerators() {

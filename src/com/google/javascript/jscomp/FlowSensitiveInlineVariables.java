@@ -403,9 +403,10 @@ class FlowSensitiveInlineVariables implements CompilerPass, ScopedCallback {
       // 1) GETPROP, GETELEM,
       // 2) anything that creates a new object.
       // 3) a direct reference to a catch expression.
+      // 4) a reference to a variable not defined in the use's scope
       // Example:
       // var x = a.b.c; j.c = 1; print(x);
-      // Inlining print(a.b.c) is not safe consider j and be alias to a.b.
+      // Inlining print(a.b.c) is not safe - consider if j were an alias to a.b.
       // TODO(user): We could get more accuracy by looking more in-detail
       // what j is and what x is trying to into to.
       // TODO(johnlenz): rework catch expression handling when we
@@ -425,8 +426,10 @@ class FlowSensitiveInlineVariables implements CompilerPass, ScopedCallback {
                 case NEW:
                   return true;
                 case NAME:
-                  Var var = scope.getOwnSlot(input.getString());
+                  Var var = scope.getSlot(input.getString());
                   if (var != null && var.getParentNode().isCatch()) {
+                    return true;
+                  } else if (var == null) {
                     return true;
                   }
                   // fall through
