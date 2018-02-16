@@ -207,14 +207,20 @@ class MaybeReachingVariableUse extends
         return;
 
       case FOR_IN:
+      case FOR_OF:
         // for(x in y) {...}
         Node lhs = n.getFirstChild();
         Node rhs = lhs.getNext();
-        if (lhs.isVar()) {
+        if (NodeUtil.isNameDeclaration(lhs)) {
           lhs = lhs.getLastChild(); // for(var x in y) {...}
+          if (lhs.isDestructuringLhs()) {
+            lhs = lhs.getFirstChild(); // for (let [x] of obj) {...}
+          }
         }
         if (lhs.isName() && !conditional) {
           removeFromUseIfLocal(lhs.getString(), output);
+        } else if (lhs.isDestructuringPattern()) {
+          computeMayUse(lhs, cfgNode, output, true);
         }
         computeMayUse(rhs, cfgNode, output, conditional);
         return;
@@ -232,7 +238,8 @@ class MaybeReachingVariableUse extends
         return;
 
       case VAR:
-        // TODO(b/73123594): this should also handle LET/CONST
+      case LET:
+      case CONST:
         Node varName = n.getFirstChild();
         checkState(n.hasChildren(), "AST should be normalized", n);
 

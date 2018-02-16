@@ -68,6 +68,19 @@ public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase  {
     inline("var x = 1; x = x + 1", "var x; x = 1 + 1");
   }
 
+  public void testSimpleLet() {
+    inline("let x = 1; print(x)", "let x; print(1)");
+    inline("let x = 1; x", "let x; 1");
+    inline("let x = 1; let a = x", "let x; let a = 1");
+    inline("let x = 1; x = x + 1", "let x; x = 1 + 1");
+  }
+
+  public void testSimpleConst() {
+    inline("const x = 1; print(x)", "const x = undefined; print(1)");
+    inline("const x = 1; x", "const x = undefined; 1");
+    inline("const x = 1; const a = x", "const x = undefined; const a = 1");
+  }
+
   public void testSimpleForIn() {
     inline("var a,b,x = a in b; x",
            "var a,b,x; a in b");
@@ -477,7 +490,15 @@ public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase  {
     noInline("var x; var y = {}; for(x in y){}");
     noInline("var x; var y = {}; var z; for(x in z = y){print(z)}");
     noInline("var x; var y = {}; var z; for(x in y){print(z)}");
+  }
 
+  public void testForInDestructuring() {
+    noInline("var x = 1, y = [], z; for ({z = x} in y) {}");
+    noInline("var x = 1, y = [], z; for ([z = x] in y) {}");
+    noInline("var x = 1, y = [], z; print(x); for ({z = x} in y) {}");
+    noInline("var x = 1, y = [], z; print(x); for ([z = x] in y) {}");
+    noInline("var x = 1, y = [], z; print(x); for (let {z = x} in y) {}");
+    noInline("var x = 1, y = [], z; print(x); for (const {z = x} in y) {}");
   }
 
   public void testNotOkToSkipCheckPathBetweenNodes() {
@@ -568,7 +589,7 @@ public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase  {
         "return x;");
   }
 
-  public void testVarAssinInsideHookIssue965() {
+  public void testVarAssignInsideHookIssue965() {
     noInline("var i = 0; return 1 ? (i = 5) : 0, i;");
     noInline("var i = 0; return (1 ? (i = 5) : 0) ? i : 0;");
     noInline("var i = 0; return (1 ? (i = 5) : 0) || i;");
@@ -706,6 +727,30 @@ public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase  {
             "return(a)"));
   }
 
+  public void testBlockScoping_shouldntInline() {
+    // TODO(b/73123594): fix this test. It adds a reference to a block-scoped let outside its block.
+    inline(
+        lines(
+            "var JSCompiler_inline_result;",
+            "{",
+            "  let a = 1;",
+            "  if (3 < 4) {",
+            "    a = 2;",
+            "  }",
+            "  JSCompiler_inline_result = a;",
+            "}",
+            "alert(JSCompiler_inline_result);"),
+        lines(
+            "var JSCompiler_inline_result;",
+            "{",
+            "  let a = 1;",
+            "  if (3 < 4) {",
+            "    a = 2;",
+            "  }",
+            "}",
+            "alert(a);")); // a is not defined here! This is wrong.
+  }
+
   public void testInlineInGenerators() {
     test(
         lines(
@@ -727,6 +772,17 @@ public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase  {
     noInline("for (var x of n){} ");
 
     noInline("var x = 1; var n = {}; for(x of n) {}");
+  }
+
+  public void testForOfDestructuring() {
+    noInline("var x = 1, y = [], z; for ({z = x} of y) {}");
+    noInline("var x = 1, y = [], z; for ([z = x] of y) {}");
+
+    noInline("var x = 1, y = [], z; print(x); for ({z = x} of y) {}");
+    noInline("var x = 1, y = [], z; print(x); for ([z = x] of y) {}");
+
+    noInline("var x = 1, y = [], z; print(x); for (let [z = x] of y) {}");
+    noInline("var x = 1, y = [], z; print(x); for (const [z = x] of y) {}");
   }
 
   public void testTemplateStrings() {

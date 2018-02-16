@@ -258,13 +258,15 @@ final class MustBeReachingVariableDef extends
         return;
 
       case FOR_IN:
+      case FOR_OF:
         // for(x in y) {...}
         Node lhs = n.getFirstChild();
         Node rhs = lhs.getNext();
-        if (lhs.isVar()) {
+        if (NodeUtil.isNameDeclaration(lhs)) {
           lhs = lhs.getLastChild(); // for(var x in y) {...}
         }
         if (lhs.isName()) {
+          // TODO(lharker): This doesn't seem right - given for (x in y), the value set to x isn't y
           addToDefIfLocal(lhs.getString(), cfgNode, rhs, output);
         }
         return;

@@ -258,7 +258,7 @@ class FlowSensitiveInlineVariables implements CompilerPass, ScopedCallback {
 
         // Make sure that the name node is purely a read.
         if ((NodeUtil.isAssignmentOp(parent) && parent.getFirstChild() == n)
-            || parent.isVar()
+            || NodeUtil.isNameDeclaration(parent)
             || parent.isInc()
             || parent.isDec()
             || parent.isParamList()
