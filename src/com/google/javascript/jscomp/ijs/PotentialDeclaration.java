@@ -217,7 +217,11 @@ abstract class PotentialDeclaration {
       newStatement.useSourceInfoIfMissingFromForTree(nameNode);
       Node oldStatement = getRemovableNode();
       NodeUtil.deleteChildren(oldStatement, compiler);
-      oldStatement.replaceWith(newStatement);
+      if (oldStatement.isExport()) {
+        oldStatement.addChildToBack(newStatement);
+      } else {
+        oldStatement.replaceWith(newStatement);
+      }
       compiler.reportChangeToEnclosingScope(newStatement);
     }
 

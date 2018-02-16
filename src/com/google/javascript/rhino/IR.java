@@ -56,6 +56,10 @@ public class IR {
     return new Node(Token.EMPTY);
   }
 
+  public static Node export(Node declaration) {
+    return new Node(Token.EXPORT, declaration);
+  }
+
   public static Node importNode(Node name, Node importSpecs, Node moduleIdentifier) {
     checkState(name.isName() || name.isEmpty(), name);
     checkState(

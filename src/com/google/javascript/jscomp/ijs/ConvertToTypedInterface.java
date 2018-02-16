@@ -271,6 +271,8 @@ public class ConvertToTypedInterface implements CompilerPass {
     static void splitNameDeclarationsAndRemoveDestructuring(Node n, NodeTraversal t) {
       checkArgument(NodeUtil.isNameDeclaration(n));
       JSDocInfo sharedJsdoc = n.getJSDocInfo();
+      boolean isExport = n.getParent().isExport();
+      Node statement = isExport ? n.getParent() : n;
       while (n.hasChildren()) {
         Node lhsToSplit = n.getLastChild();
         if (lhsToSplit.isDestructuringLhs()
@@ -293,7 +295,10 @@ public class ConvertToTypedInterface implements CompilerPass {
         Node newDeclaration =
             NodeUtil.newDeclaration(lhsToSplit.detach(), rhs, n.getToken()).srcref(n);
         newDeclaration.setJSDocInfo(mergedJsdoc);
-        n.getParent().addChildAfter(newDeclaration, n);
+        if (isExport) {
+          newDeclaration = IR.export(newDeclaration).srcref(statement);
+        }
+        statement.getParent().addChildAfter(newDeclaration, statement);
         t.reportCodeChange();
       }
     }

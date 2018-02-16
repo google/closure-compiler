@@ -645,6 +645,20 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
             "export {BLAH};"));
   }
 
+  public void testEs6ModulesExportedNameDeclarations() {
+    testSame("/** @type {number} */ export let x;");
+    testSame("/** @type {number} */ export var x;");
+
+    test("/** @type {number} */ export var x = 5;", "/** @type {number} */ export var x;");
+    test("/** @type {number} */ export const X = 5;", "/** @const {number} */ export var X;");
+    //TODO(blickly): Ideally, we would leave let declarations alone
+    test("/** @type {number} */ export let x = 5;", "/** @type {number} */ export var x;");
+
+    test(
+        "/** @type {number} */ export const X = 5, Y = z;",
+        "/** @const {number} */ export var X; /** @const {number} */ export var Y;");
+  }
+
   public void testGoogModules() {
     testSame(
         lines(
