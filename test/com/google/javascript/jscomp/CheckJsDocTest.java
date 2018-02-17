@@ -528,14 +528,17 @@ public final class CheckJsDocTest extends CompilerTestCase {
   }
 
   public void testNocollapseInExterns() {
-    testSame("var foo = {}; /** @nocollapse */ foo.bar = true;", "foo.bar;", MISPLACED_ANNOTATION);
+    test(
+        externs("var foo = {}; /** @nocollapse */ foo.bar = true;"),
+        srcs("foo.bar;"),
+        warning(MISPLACED_ANNOTATION));
   }
 
   public void testNocollapseInExterns_withES6Modules() {
-    testSame(
-        "export var foo = {}; /** @nocollapse */ foo.bar = true;",
-        "foo.bar;",
-        MISPLACED_ANNOTATION);
+    test(
+        externs("export var foo = {}; /** @nocollapse */ foo.bar = true;"),
+        srcs("foo.bar;"),
+        warning(MISPLACED_ANNOTATION));
   }
 
   public void testArrowFuncAsConstructor() {

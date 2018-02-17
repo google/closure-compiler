@@ -57,85 +57,98 @@ public final class FunctionTypeBuilderTest extends CompilerTestCase {
   }
 
   public void testBuiltInTypeDifferentReturnType() throws Exception {
-    testSame(
-        "/**\n"
-        + " * @constructor\n"
-        + " * @param {*} opt_str\n"
-        + " * @return {number}\n"
-        + " */\n"
-        + "function String(opt_str) {}\n",
-        "", FunctionTypeBuilder.TYPE_REDEFINITION,
-        "attempted re-definition of type String\n"
-        + "found   : function(new:String, *=): number\n"
-        + "expected: function(new:String, *=): string");
+    test(
+        externs(
+            "/**\n"
+                + " * @constructor\n"
+                + " * @param {*} opt_str\n"
+                + " * @return {number}\n"
+                + " */\n"
+                + "function String(opt_str) {}\n"),
+        srcs(""),
+        warning(FunctionTypeBuilder.TYPE_REDEFINITION)
+            .withMessage(
+                "attempted re-definition of type String\n"
+                    + "found   : function(new:String, *=): number\n"
+                    + "expected: function(new:String, *=): string"));
   }
 
   public void testBuiltInTypeDifferentNumParams() throws Exception {
-    testSame(
-        "/**\n"
-        + " * @constructor\n"
-        + " * @return {string}\n"
-        + " */\n"
-        + "function String() {}\n",
-        "", FunctionTypeBuilder.TYPE_REDEFINITION,
-        "attempted re-definition of type String\n"
-        + "found   : function(new:String): string\n"
-        + "expected: function(new:String, *=): string");
+    test(
+        externs(
+            "/**\n"
+                + " * @constructor\n"
+                + " * @return {string}\n"
+                + " */\n"
+                + "function String() {}\n"),
+        srcs(""),
+        warning(FunctionTypeBuilder.TYPE_REDEFINITION)
+            .withMessage(
+                "attempted re-definition of type String\n"
+                    + "found   : function(new:String): string\n"
+                    + "expected: function(new:String, *=): string"));
   }
 
   public void testBuiltInTypeDifferentNumParams2() throws Exception {
-    testSame(
-        "/**\n"
-        + " * @constructor\n"
-        + " * @return {string}\n"
-        + " */\n"
-        + "function String(opt_str, opt_nothing) {}\n",
-        "", FunctionTypeBuilder.TYPE_REDEFINITION,
-        "attempted re-definition of type String\n"
-        + "found   : function(new:String, ?=, ?=): string\n"
-        + "expected: function(new:String, *=): string");
+    test(
+        externs(
+            "/**\n"
+                + " * @constructor\n"
+                + " * @return {string}\n"
+                + " */\n"
+                + "function String(opt_str, opt_nothing) {}\n"),
+        srcs(""),
+        warning(FunctionTypeBuilder.TYPE_REDEFINITION)
+            .withMessage(
+                "attempted re-definition of type String\n"
+                    + "found   : function(new:String, ?=, ?=): string\n"
+                    + "expected: function(new:String, *=): string"));
   }
 
   public void testBuiltInTypeDifferentParamType() throws Exception {
-    testSame(
-        "/**\n"
-        + " * @constructor\n"
-        + " * @return {string}\n"
-        + " */\n"
-        + "function String(opt_str) {}\n",
-        "", FunctionTypeBuilder.TYPE_REDEFINITION,
-        "attempted re-definition of type String\n"
-        + "found   : function(new:String, ?=): string\n"
-        + "expected: function(new:String, *=): string");
+    test(
+        externs(
+            "/**\n"
+                + " * @constructor\n"
+                + " * @return {string}\n"
+                + " */\n"
+                + "function String(opt_str) {}\n"),
+        srcs(""),
+        warning(FunctionTypeBuilder.TYPE_REDEFINITION)
+            .withMessage(
+                "attempted re-definition of type String\n"
+                    + "found   : function(new:String, ?=): string\n"
+                    + "expected: function(new:String, *=): string"));
   }
 
   public void testBadFunctionTypeDefinition() throws Exception {
-    testSame(
-        "/** @constructor */function Function(opt_str) {}\n",
-        "", FunctionTypeBuilder.TYPE_REDEFINITION,
-        "attempted re-definition of type Function\n"
-        + "found   : function(new:Function, ?=): ?\n"
-        + "expected: function(new:Function, ...*): ?");
+    test(
+        externs("/** @constructor */function Function(opt_str) {}\n"),
+        srcs(""),
+        warning(FunctionTypeBuilder.TYPE_REDEFINITION)
+            .withMessage(
+                "attempted re-definition of type Function\n"
+                    + "found   : function(new:Function, ?=): ?\n"
+                    + "expected: function(new:Function, ...*): ?"));
   }
 
   public void testInlineJsDoc() throws Exception {
-    testSame(
-        "/** @return {number} */ function f(/** string */ x) { return x; }", "",
-        TypeValidator.TYPE_MISMATCH_WARNING,
-        "inconsistent return type\n" +
-        "found   : string\n" +
-        "required: number");
+    test(
+        externs("/** @return {number} */ function f(/** string */ x) { return x; }"),
+        srcs(""),
+        warning(TypeValidator.TYPE_MISMATCH_WARNING)
+            .withMessage("inconsistent return type\n" + "found   : string\n" + "required: number"));
   }
 
   public void testInlineJsDoc2() throws Exception {
-    testSame(
-        "/** @return {T} \n @template T */ " +
-        "function f(/** T */ x) { return x; }" +
-        "/** @type {string} */ var x = f(1);", "",
-        TypeValidator.TYPE_MISMATCH_WARNING,
-        "initializing variable\n" +
-        "found   : number\n" +
-        "required: string");
+    test(
+        externs(
+            "/** @return {T} \n @template T */ "
+                + "function f(/** T */ x) { return x; }"
+                + "/** @type {string} */ var x = f(1);"),
+        srcs(""),
+        warning(TypeValidator.TYPE_MISMATCH_WARNING)
+            .withMessage("initializing variable\n" + "found   : number\n" + "required: string"));
   }
 
   public void testExternSubTypes() throws Exception {

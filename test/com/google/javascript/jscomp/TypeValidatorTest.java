@@ -105,33 +105,36 @@ public final class TypeValidatorTest extends CompilerTestCase {
   }
 
   public void testFunctionMismatchMediumLengthTypes() throws Exception {
-    testSame("",
-        lines(
-            "/**",
-            " * @param {{a: string, b: string, c: string, d: string, e: string}} x",
-            " */",
-            "function f(x) {}",
-            "var y = {a:'',b:'',c:'',d:'',e:0};",
-            "f(y);"),
-        TYPE_MISMATCH_WARNING,
-        lines(
-            "actual parameter 1 of f does not match formal parameter",
-            "found   : {",
-            "  a: string,",
-            "  b: string,",
-            "  c: string,",
-            "  d: string,",
-            "  e: (number|string)",
-            "}",
-            "required: {",
-            "  a: string,",
-            "  b: string,",
-            "  c: string,",
-            "  d: string,",
-            "  e: string",
-            "}",
-            "missing : []",
-            "mismatch: [e]"));
+    test(
+        externs(""),
+        srcs(
+            lines(
+                "/**",
+                " * @param {{a: string, b: string, c: string, d: string, e: string}} x",
+                " */",
+                "function f(x) {}",
+                "var y = {a:'',b:'',c:'',d:'',e:0};",
+                "f(y);")),
+        warning(TYPE_MISMATCH_WARNING)
+            .withMessage(
+                lines(
+                    "actual parameter 1 of f does not match formal parameter",
+                    "found   : {",
+                    "  a: string,",
+                    "  b: string,",
+                    "  c: string,",
+                    "  d: string,",
+                    "  e: (number|string)",
+                    "}",
+                    "required: {",
+                    "  a: string,",
+                    "  b: string,",
+                    "  c: string,",
+                    "  d: string,",
+                    "  e: string",
+                    "}",
+                    "missing : []",
+                    "mismatch: [e]")));
   }
 
   /**
@@ -139,32 +142,36 @@ public final class TypeValidatorTest extends CompilerTestCase {
    * See https://code.google.com/p/closure-compiler/issues/detail?id=719.
    */
   public void testFunctionMismatchLongTypes() throws Exception {
-    testSame("",
-        lines(
-            "/**",
-            " * @param {{a: string, b: string, c: string, d: string, e: string,",
-            " *          f: string, g: string, h: string, i: string, j: string, k: string}} x",
-            " */",
-            "function f(x) {}",
-            "var y = {a:'',b:'',c:'',d:'',e:'',f:'',g:'',h:'',i:'',j:'',k:0};",
-            "f(y);"),
-        TYPE_MISMATCH_WARNING,
-        lines(
-            "actual parameter 1 of f does not match formal parameter",
-            "found   : {a: string, b: string, c: string, d: string, e: string, f: string,"
-              + " g: string, h: string, i: string, j: string, k: (number|string)}",
-            "required: {a: string, b: string, c: string, d: string, e: string, f: string,"
-              + " g: string, h: string, i: string, j: string, k: string}",
-            "missing : []",
-            "mismatch: [k]"));
+    test(
+        externs(""),
+        srcs(
+            lines(
+                "/**",
+                " * @param {{a: string, b: string, c: string, d: string, e: string,",
+                " *          f: string, g: string, h: string, i: string, j: string, k: string}} x",
+                " */",
+                "function f(x) {}",
+                "var y = {a:'',b:'',c:'',d:'',e:'',f:'',g:'',h:'',i:'',j:'',k:0};",
+                "f(y);")),
+        warning(TYPE_MISMATCH_WARNING)
+            .withMessage(
+                lines(
+                    "actual parameter 1 of f does not match formal parameter",
+                    "found   : {a: string, b: string, c: string, d: string, e: string, f: string,"
+                        + " g: string, h: string, i: string, j: string, k: (number|string)}",
+                    "required: {a: string, b: string, c: string, d: string, e: string, f: string,"
+                        + " g: string, h: string, i: string, j: string, k: string}",
+                    "missing : []",
+                    "mismatch: [k]")));
   }
 
   /**
    * Same as testFunctionMismatchLongTypes, but with one of the types being a typedef.
    */
   public void testFunctionMismatchTypedef() throws Exception {
-    testSame("",
-        lines(
+    test(
+        externs(""),
+        srcs(lines(
             "/**",
             " * @typedef {{a: string, b: string, c: string, d: string, e: string,",
             " *            f: string, g: string, h: string, i: string, j: string, k: string}} x",
@@ -175,16 +182,17 @@ public final class TypeValidatorTest extends CompilerTestCase {
             " */",
             "function f(x) {}",
             "var y = {a:'',b:'',c:'',d:'',e:'',f:'',g:'',h:'',i:'',j:'',k:0};",
-            "f(y);"),
-        TYPE_MISMATCH_WARNING,
-        lines(
-            "actual parameter 1 of f does not match formal parameter",
-            "found   : {a: string, b: string, c: string, d: string, e: string, f: string,"
-              + " g: string, h: string, i: string, j: string, k: (number|string)}",
-            "required: {a: string, b: string, c: string, d: string, e: string, f: string,"
-              + " g: string, h: string, i: string, j: string, k: string}",
-            "missing : []",
-            "mismatch: [k]"));
+            "f(y);")),
+        warning(TYPE_MISMATCH_WARNING)
+            .withMessage(
+                lines(
+                    "actual parameter 1 of f does not match formal parameter",
+                    "found   : {a: string, b: string, c: string, d: string, e: string, f: string,"
+                        + " g: string, h: string, i: string, j: string, k: (number|string)}",
+                    "required: {a: string, b: string, c: string, d: string, e: string, f: string,"
+                        + " g: string, h: string, i: string, j: string, k: string}",
+                    "missing : []",
+                    "mismatch: [k]")));
   }
 
   public void testNullUndefined() {
