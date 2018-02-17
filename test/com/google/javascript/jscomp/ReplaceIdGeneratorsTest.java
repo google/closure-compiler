@@ -286,11 +286,14 @@ public final class ReplaceIdGeneratorsTest extends CompilerTestCase {
   }
 
   public void testClass() {
-    testSame("", lines(
-        "/** @idGenerator */",
-        "goog.id = function() {};",
-        "things = goog.id(class fooBar{})"),
-        ReplaceIdGenerators.INVALID_GENERATOR_PARAMETER);
+    testSame(
+        externs(""),
+        srcs(
+            lines(
+                "/** @idGenerator */",
+                "goog.id = function() {};",
+                "things = goog.id(class fooBar{})")),
+        warning(ReplaceIdGenerators.INVALID_GENERATOR_PARAMETER));
   }
 
   public void testSimpleConsistent() {

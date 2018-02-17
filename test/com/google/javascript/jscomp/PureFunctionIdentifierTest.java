@@ -579,16 +579,16 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
 
     this.mode = TypeInferenceMode.OTI_ONLY;
     testSame(
-        externs,
-        "o.prototype.propWithAnnotatedStubAfter",
-        TypeValidator.DUP_VAR_DECLARATION_TYPE_MISMATCH);
+        externs(externs),
+        srcs("o.prototype.propWithAnnotatedStubAfter"),
+        warning(TypeValidator.DUP_VAR_DECLARATION_TYPE_MISMATCH));
     assertThat(noSideEffectCalls).isEmpty();
 
     this.mode = TypeInferenceMode.NTI_ONLY;
     testSame(
-        TEST_EXTERNS + externs,
-        "o.prototype.propWithAnnotatedStubAfter",
-        GlobalTypeInfoCollector.REDECLARED_PROPERTY);
+        externs(TEST_EXTERNS + externs),
+        srcs("o.prototype.propWithAnnotatedStubAfter"),
+        warning(GlobalTypeInfoCollector.REDECLARED_PROPERTY));
     assertThat(noSideEffectCalls).isEmpty();
   }
 
@@ -612,15 +612,17 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
         "externObj5.prototype.propWithAnnotatedStubAfter;");
 
     this.mode = TypeInferenceMode.OTI_ONLY;
-    testSame(externs,
-        "o.prototype.propWithAnnotatedStubAfter",
-        TypeValidator.DUP_VAR_DECLARATION);
+    testSame(
+        externs(externs),
+        srcs("o.prototype.propWithAnnotatedStubAfter"),
+        warning(TypeValidator.DUP_VAR_DECLARATION));
     assertThat(noSideEffectCalls).isEmpty();
 
     this.mode = TypeInferenceMode.NTI_ONLY;
-    testSame(TEST_EXTERNS + externs,
-        "o.prototype.propWithAnnotatedStubAfter",
-        GlobalTypeInfoCollector.REDECLARED_PROPERTY);
+    testSame(
+        externs(TEST_EXTERNS + externs),
+        srcs("o.prototype.propWithAnnotatedStubAfter"),
+        warning(GlobalTypeInfoCollector.REDECLARED_PROPERTY));
     assertThat(noSideEffectCalls).isEmpty();
   }
 

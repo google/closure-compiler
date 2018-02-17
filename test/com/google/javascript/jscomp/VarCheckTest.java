@@ -153,7 +153,7 @@ public final class VarCheckTest extends CompilerTestCase {
   }
 
   public void testMultiplyDeclaredVars4() {
-    testSame("x;", "var x = 1; var x = 2;", error(VAR_MULTIPLY_DECLARED_ERROR));
+    test(externs("x;"), srcs("var x = 1; var x = 2;"), error(VAR_MULTIPLY_DECLARED_ERROR));
   }
 
   public void testMultiplyDeclaredLets() {
@@ -202,8 +202,10 @@ public final class VarCheckTest extends CompilerTestCase {
   }
 
   public void testVarReferenceInExterns() {
-    testSame("asdf;", "var /** @suppress {duplicate} */ asdf;",
-        VarCheck.NAME_REFERENCE_IN_EXTERNS_ERROR);
+    testSame(
+        externs("asdf;"),
+        srcs("var /** @suppress {duplicate} */ asdf;"),
+        warning(VarCheck.NAME_REFERENCE_IN_EXTERNS_ERROR));
   }
 
   public void testNamespaceDeclarationInExterns() {
@@ -211,8 +213,10 @@ public final class VarCheckTest extends CompilerTestCase {
   }
 
   public void testCallInExterns() {
-    testSame("yz();", "function /** @suppress {duplicate} */ yz() {}",
-        VarCheck.NAME_REFERENCE_IN_EXTERNS_ERROR);
+    testSame(
+        externs("yz();"),
+        srcs("function /** @suppress {duplicate} */ yz() {}"),
+        warning(VarCheck.NAME_REFERENCE_IN_EXTERNS_ERROR));
   }
 
   public void testDestructuringInExterns() {
@@ -283,24 +287,29 @@ public final class VarCheckTest extends CompilerTestCase {
 
   public void testNewInExterns() {
     // Class is not hoisted.
-    testSame("x = new Klass();", "class Klass{}", error(VarCheck.UNDEFINED_VAR_ERROR));
+    test(
+        externs("x = new Klass();"), srcs("class Klass{}"), error(VarCheck.UNDEFINED_VAR_ERROR));
   }
 
   public void testPropReferenceInExterns1() {
-    testSame("asdf.foo;", "var /** @suppress {duplicate} */ asdf;",
-        VarCheck.UNDEFINED_EXTERN_VAR_ERROR);
+    testSame(
+        externs("asdf.foo;"),
+        srcs("var /** @suppress {duplicate} */ asdf;"),
+        warning(VarCheck.UNDEFINED_EXTERN_VAR_ERROR));
   }
 
   public void testPropReferenceInExterns2() {
-    testSame("asdf.foo;", "", error(VarCheck.UNDEFINED_VAR_ERROR));
+    test(externs("asdf.foo;"), srcs(""), error(VarCheck.UNDEFINED_VAR_ERROR));
   }
 
   public void testPropReferenceInExterns3() {
-    testSame("asdf.foo;", "var /** @suppress {duplicate} */ asdf;",
-        VarCheck.UNDEFINED_EXTERN_VAR_ERROR);
+    testSame(
+        externs("asdf.foo;"),
+        srcs("var /** @suppress {duplicate} */ asdf;"),
+        warning(VarCheck.UNDEFINED_EXTERN_VAR_ERROR));
 
     externValidationErrorLevel = CheckLevel.ERROR;
-    testSame("asdf.foo;", "var asdf;", error(VarCheck.UNDEFINED_EXTERN_VAR_ERROR));
+    test(externs("asdf.foo;"), srcs("var asdf;"), error(VarCheck.UNDEFINED_EXTERN_VAR_ERROR));
 
     externValidationErrorLevel = CheckLevel.OFF;
     test(
@@ -310,13 +319,12 @@ public final class VarCheckTest extends CompilerTestCase {
   }
 
   public void testPropReferenceInExterns4() {
-    testSame("asdf.foo;", "let asdf;",
-        VarCheck.UNDEFINED_EXTERN_VAR_ERROR);
+    testSame(externs("asdf.foo;"), srcs("let asdf;"), warning(VarCheck.UNDEFINED_EXTERN_VAR_ERROR));
   }
 
   public void testPropReferenceInExterns5() {
-    testSame("asdf.foo;", "class asdf {}",
-        VarCheck.UNDEFINED_EXTERN_VAR_ERROR);
+    testSame(
+        externs("asdf.foo;"), srcs("class asdf {}"), warning(VarCheck.UNDEFINED_EXTERN_VAR_ERROR));
   }
 
   public void testVarInWithBlock() {
