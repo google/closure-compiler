@@ -38,8 +38,13 @@ $jscomp.polyfill('Array.prototype.includes', function(orig) {
       array = /** @type {!IArrayLike} */ (String(array));
     }
     var len = array.length;
-    for (var i = opt_fromIndex || 0; i < len; i++) {
-      if (array[i] == searchElement || Object.is(array[i], searchElement)) {
+    var i = opt_fromIndex || 0;
+    if (i < 0) {
+      i = Math.max(i + len, 0);
+    }
+    for (; i < len; i++) {
+      var element = array[i];
+      if (element === searchElement || Object.is(element, searchElement)) {
         return true;
       }
     }
