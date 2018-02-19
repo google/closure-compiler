@@ -16,12 +16,12 @@
 /**
  * @fileoverview Externs for web app manifest APIs.
  *
- * @see https://w3c.github.io/manifest/
+ * @see https://www.w3.org/TR/appmanifest/
  * @externs
  */
 
 /**
- * @see https://w3c.github.io/manifest/#beforeinstallpromptevent-interface
+ * @see https://www.w3.org/TR/appmanifest/#beforeinstallpromptevent-interface
  * @constructor
  * @extends {Event}
  */
@@ -33,14 +33,18 @@ BeforeInstallPromptEvent.prototype.userChoice;
 /** @return {!Promise<!PromptResponseObject>} */
 BeforeInstallPromptEvent.prototype.prompt = function() {};
 
-/** @typedef {string} */
+/**
+ * @typedef {string}
+ * @see https://www.w3.org/TR/appmanifest/#appbannerpromptoutcome-enum
+ * Possible values: 'accepted', 'dismissed'
+ */
 var AppBannerPromptOutcome;
 
 /** @typedef {{userChoice: !AppBannerPromptOutcome}} */
 var PromptResponseObject;
 
 /** @type {?function(!BeforeInstallPromptEvent)} */
-Window.prototype.onbeforeinstallpromptevent;
+Window.prototype.onbeforeinstallprompt;
 
 /** @type {?function(!Event)} */
 Window.prototype.onappinstalled;
