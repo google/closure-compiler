@@ -304,7 +304,7 @@ public class CodeGenerator {
         add(first);
         maybeAddTypeDecl(n);
         cc.addOp("=", true);
-        add(first.getNext());
+        addExpr(first.getNext(), 1, Context.OTHER);
         break;
 
       case COMMA:
