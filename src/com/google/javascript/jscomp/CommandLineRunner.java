@@ -1834,7 +1834,13 @@ public class CommandLineRunner extends
   @Override
   protected void prepForBundleAndAppendTo(Appendable out, CompilerInput input, String content)
       throws IOException {
-    ClosureBundler.appendInput(out, input, content);
+    new ClosureBundler().withPath(input.getName()).appendInput(out, input, content);
+  }
+
+  @Override
+  protected void appendRuntimeTo(Appendable out)
+      throws IOException {
+    new ClosureBundler().appendRuntimeTo(out);
   }
 
   @Override
