@@ -788,6 +788,11 @@ sinon.fakeServer.create = function(opt_config) {};
 var SinonFakeServer = function() {};
 
 /**
+ * @param {!Object=} opt_config
+ */
+SinonFakeServer.prototype.configure = function(opt_config) {};
+
+/**
  * @type {!Array<!SinonFakeXmlHttpRequest>}
  */
 SinonFakeServer.prototype.requests;
