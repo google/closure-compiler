@@ -2118,6 +2118,9 @@ public final class DefaultPassConfig extends PassConfig {
           if (options.enables(DiagnosticGroups.UNUSED_PRIVATE_PROPERTY)) {
             callbacks.add(new CheckUnusedPrivateProperties(compiler));
           }
+          if (options.enables(DiagnosticGroups.MISSING_CONST_PROPERTY)) {
+            callbacks.add(new CheckConstPrivateProperties(compiler));
+          }
           return combineChecks(compiler, callbacks.build());
         }
 
