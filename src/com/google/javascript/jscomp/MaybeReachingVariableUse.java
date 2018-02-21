@@ -244,12 +244,10 @@ class MaybeReachingVariableUse extends
         checkState(n.hasChildren(), "AST should be normalized", n);
 
         if (varName.isDestructuringLhs()) {
-          // Note: we never inline variables used twice in the same CFG node, so the order of
-          // traversal here isn't important. If that changes, though, MaybeReachingVariableUse
-          // must be updated to correctly handle destructuring assignment evaluation order.
+          // Note: since destructuring is evaluated in reverse AST order, we traverse the first
+          // child before the second in order to do our backwards data flow analysis.
           computeMayUse(varName.getFirstChild(), cfgNode, output, conditional);
           computeMayUse(varName.getSecondChild(), cfgNode, output, conditional);
-
         } else if (varName.hasChildren()) {
           computeMayUse(varName.getFirstChild(), cfgNode, output, conditional);
           if (!conditional) {

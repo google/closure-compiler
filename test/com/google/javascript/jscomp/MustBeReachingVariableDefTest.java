@@ -155,6 +155,13 @@ public final class MustBeReachingVariableDefTest extends TestCase {
     assertNotMatch("param1=1; var x; D:x=param1; var y=arguments; U:x");
   }
 
+  public void testSideEffects() {
+    assertNotMatch("var a = 1; D: var x = a; a++; U: print(x);");
+    // FlowSensitiveInlineVariables needs to handle this case, where a subexpression in the same CFG
+    // node as the read of x makes it unsafe to inline "x = a" into print(a++, a);
+    assertMatch("var a = 1; D: var x = a; U: print(a++, x);");
+  }
+
   /**
    * The use of x at U: is the definition of x at D:.
    */

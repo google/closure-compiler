@@ -874,6 +874,29 @@ public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase  {
         "function f() { x++; } var x = 2; var y    ; var {a: {b: z = f()} = x} = {};");
   }
 
+  public void testGithubIssue2818() {
+    noInline("var x = 1; var y = x; print(x++, y);");
+    noInline("var x = 1; var y = x; print(x = x + 3, y);");
+    // TODO(b/73559627): this should not inline x because x is also read in {x: x * 2}
+    inline(
+        "var x = 1; var y = x; print(({x} = {x: x * 2}), y); print(x);",
+        "var x    ; var y    ; print(({x} = {x: x * 2}), 1); print(x)");
+  }
+
+  public void testOkayToInlineWithSideEffects() {
+    inline(
+        "var x = 1; var y = x; var z = 1; print(z++, y);",
+        "var x    ; var y    ; var z = 1; print(z++, 1);");
+    inline(
+        "var x = 1; var y = x; var z = 1; print([z] = [], y);",
+        "var x    ; var y    ; var z = 1; print([z] = [], 1);");
+    inline("var x = 1; var y = x; print(x = 3, y);", "var x; var y; print(x = 3, 1);");
+
+    inline(
+        "var x = 1; if (true) { x = 2; } var y = x; var z; z = x = y + 1;",
+        "var x = 1; if (true) { x = 2; } var y    ; var z; z = x = x + 1;");
+  }
+
   private void noInline(String input) {
     inline(input, input);
   }
