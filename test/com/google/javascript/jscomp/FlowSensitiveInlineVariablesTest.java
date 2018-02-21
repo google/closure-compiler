@@ -499,6 +499,11 @@ public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase  {
     noInline("var x = 1, y = [], z; print(x); for ([z = x] in y) {}");
     noInline("var x = 1, y = [], z; print(x); for (let {z = x} in y) {}");
     noInline("var x = 1, y = [], z; print(x); for (const {z = x} in y) {}");
+
+    // TODO(b/73559627): this should not change alert(z) to alert(x), since x changes in value.
+    inline(
+        "var x = 1; if (true) { x = 3; } var y = [[0]], z = x; for ([x] in y) {}; alert(z);",
+        "var x = 1; if (true) { x = 3; } var y = [[0]], z    ; for ([x] in y) {}; alert(x);");
   }
 
   public void testNotOkToSkipCheckPathBetweenNodes() {
@@ -740,7 +745,6 @@ public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase  {
             "}",
             "alert(JSCompiler_inline_result);"));
 
-    enableNormalize();
     // test let/const shadowing of a var
     noInline(
         lines(
@@ -788,6 +792,12 @@ public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase  {
 
     noInline("var x = 1, y = [], z; print(x); for (let [z = x] of y) {}");
     noInline("var x = 1, y = [], z; print(x); for (const [z = x] of y) {}");
+
+
+    // TODO(b/73559627): this should not change alert(z) to alert(x), since x changes in value.
+    inline(
+        "var x = 1; if (true) { x = 3; } var y = [[0]], z = x; for ([x] of y) {}; alert(z);",
+        "var x = 1; if (true) { x = 3; } var y = [[0]], z    ; for ([x] of y) {}; alert(x);");
   }
 
   public void testTemplateStrings() {
@@ -813,6 +823,23 @@ public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase  {
     noInline("var obj = {a: 3, b: 4}; var {a, b} = obj;");
   }
 
+  public void testDontInlineOverChangingRvalue_destructuring() {
+    noInline("var x = 1; if (true) { x = 2; } var y = x; var [z = (x = 3, 4)] = []; print(y);");
+
+    // TODO(b/73559627): none of these cases should inline "y = x" into "print(y)" because x changes
+    inline(
+        "var x = 1; if (true) { x = 2; } var y = x; [x] = []; print(y);",
+        "var x = 1; if (true) { x = 2; } var y    ; [x] = []; print(x);");
+
+    inline(
+        "var x = 1; if (true) { x = 2; } var y = x; ({x} = {}); print(y);",
+        "var x = 1; if (true) { x = 2; } var y    ; ({x} = {}); print(x);");
+
+    inline(
+        "var x = 1; if (true) { x = 2; } var y = x; var [z] = [x = 3]; print(y);",
+        "var x = 1; if (true) { x = 2; } var y    ; var [z] = [x = 3]; print(x);");
+  }
+
   public void testDestructuringDefaultValue() {
     inline("var x = 1; var [y = x] = [];", "var x; var [y = 1] = [];");
     inline("var x = 1; var {y = x} = {};", "var x; var {y = 1} = {};");
@@ -822,6 +849,19 @@ public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase  {
 
     // don't inline because x is only conditionally reassigned to 2.
     noInline("var x = 1; var [y = (x = 2, 4)] = []; print(x);");
+    // TODO(b/73559627): this should not inline x because x = 2 is not executed.
+    inline(
+        "var x = 1; print(x); var [y = (x = 2, 4)] = [0]; print(x);",
+        "var x    ; print(1); var [y = (x = 2, 4)] = [0]; print(x);");
+
+    // x = 2 is executed before reading x in the default value.
+    inline(
+        "var x = 1; print(x); var obj = {}; [obj[x = 2] = x] = [];",
+        "var x    ; print(1); var obj = {}; [obj[x = 2] = x] = [];");
+    // TODO(b/73559627): this should not inline because [x] is evaluated before obj[x = 2]
+    inline(
+        "var x = 1; print(x); var obj = {}; [[obj[x = 2]] = [x]] = [];",
+        "var x    ; print(1); var obj = {}; [[obj[x = 2]] = [x]] = [];");
   }
 
   public void testDestructuringComputedProperty() {
@@ -849,6 +889,10 @@ public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase  {
     noInline("var x = 2; var {a: y = (x = 3)} = {a: x};");
     noInline("var x = 1; var {a = x} = {a: (x = 2, 3)};");
     noInline("var x = 2; var {a: x = 3} = {a: x};");
+
+    noInline("var x = 1; print(x); var {a: x} = {a: x};");
+    // TODO(b/73559627): this example should not inline x, because x is read before being written to
+    inline("var x = 1; print(x); ({a: x} = {a: x});", "var x; print(1); ({a: x} = {a: x});");
   }
 
   public void testDestructuringWithSideEffects() {
