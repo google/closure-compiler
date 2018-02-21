@@ -113,9 +113,7 @@ class ExpressionDecomposer {
     Node expressionRoot = findExpressionRoot(expression);
     checkNotNull(expressionRoot);
     checkState(NodeUtil.isStatement(expressionRoot), expressionRoot);
-    Node change = expressionRoot.getParent();
     exposeExpression(expressionRoot, expression);
-    compiler.reportChangeToEnclosingScope(change);
   }
 
   /**
