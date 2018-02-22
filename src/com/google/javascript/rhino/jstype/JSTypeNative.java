@@ -126,6 +126,10 @@ public enum JSTypeNative {
   STRING_OBJECT_FUNCTION_TYPE,
   STRING_TYPE,
 
+  SYMBOL_OBJECT_TYPE,
+  SYMBOL_OBJECT_FUNCTION_TYPE,
+  SYMBOL_TYPE,
+
   SYNTAX_ERROR_FUNCTION_TYPE,
   SYNTAX_ERROR_TYPE,
 
@@ -146,6 +150,7 @@ public enum JSTypeNative {
   TOP_LEVEL_PROTOTYPE,
   STRING_VALUE_OR_OBJECT_TYPE,
   NUMBER_VALUE_OR_OBJECT_TYPE,
+  SYMBOL_VALUE_OR_OBJECT_TYPE,
   ALL_TYPE,
   NO_TYPE,
   NO_OBJECT_TYPE,
@@ -165,6 +170,11 @@ public enum JSTypeNative {
   NULL_VOID,
 
   /**
+   * (Object,symbol)
+   */
+  OBJECT_SYMBOL,
+
+  /**
    * (Object,number,string)
    */
   OBJECT_NUMBER_STRING,
@@ -175,14 +185,39 @@ public enum JSTypeNative {
   OBJECT_NUMBER_STRING_BOOLEAN,
 
   /**
+   * (Object,number,string,boolean,symbol)
+   */
+  OBJECT_NUMBER_STRING_BOOLEAN_SYMBOL,
+
+  /**
    * (number,string,boolean)
    */
   NUMBER_STRING_BOOLEAN,
 
   /**
+   * (number,string,boolean,symbol)
+   */
+  NUMBER_STRING_BOOLEAN_SYMBOL,
+
+  /**
+   * (number,symbol)
+   */
+  NUMBER_SYMBOL,
+
+  /**
+   * (string,symbol)
+   */
+  STRING_SYMBOL,
+
+  /**
    * (number,string)
    */
   NUMBER_STRING,
+
+  /**
+   * (number,string,symbol)
+   */
+  NUMBER_STRING_SYMBOL,
 
   /** Only used in the new type inference */
   TRUTHY,

@@ -20,7 +20,7 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.ARRAY_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NO_OBJECT_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NULL_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NULL_VOID;
-import static com.google.javascript.rhino.jstype.JSTypeNative.NUMBER_STRING_BOOLEAN;
+import static com.google.javascript.rhino.jstype.JSTypeNative.NUMBER_STRING_BOOLEAN_SYMBOL;
 import static com.google.javascript.rhino.jstype.JSTypeNative.OBJECT_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.VOID_TYPE;
 
@@ -73,7 +73,7 @@ public final class ClosureReverseAbstractInterpreter
         @Override
         public JSType caseAllType() {
           return typeRegistry.createUnionType(
-              getNativeType(NUMBER_STRING_BOOLEAN), getNativeType(NULL_VOID));
+              getNativeType(NUMBER_STRING_BOOLEAN_SYMBOL), getNativeType(NULL_VOID));
         }
 
         @Override

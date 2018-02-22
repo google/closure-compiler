@@ -280,8 +280,9 @@ public abstract class ObjectType
       return result;
     }
     // objects are comparable to everything but null/undefined
+    // TODO(johnlenz): tighten this to the "canCastTo" check
     if (that.isSubtype(
-            getNativeType(JSTypeNative.OBJECT_NUMBER_STRING_BOOLEAN))) {
+            getNativeType(JSTypeNative.OBJECT_NUMBER_STRING_BOOLEAN_SYMBOL))) {
       return UNKNOWN;
     } else {
       return FALSE;

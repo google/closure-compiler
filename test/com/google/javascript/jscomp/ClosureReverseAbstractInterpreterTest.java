@@ -43,7 +43,7 @@ public final class ClosureReverseAbstractInterpreterTest extends
   public void testGoogIsDef3() throws Exception {
     testClosureFunction("goog.isDef",
         ALL_TYPE,
-        createUnionType(OBJECT_NUMBER_STRING_BOOLEAN,NULL_TYPE),
+        createUnionType(OBJECT_NUMBER_STRING_BOOLEAN_SYMBOL, NULL_TYPE),
         VOID_TYPE);
   }
 
@@ -72,7 +72,7 @@ public final class ClosureReverseAbstractInterpreterTest extends
     testClosureFunction("goog.isNull",
         ALL_TYPE,
         NULL_TYPE,
-        createUnionType(OBJECT_NUMBER_STRING_BOOLEAN, VOID_TYPE));
+        createUnionType(OBJECT_NUMBER_STRING_BOOLEAN_SYMBOL, VOID_TYPE));
   }
 
   public void testGoogIsNull4() throws Exception {
@@ -106,7 +106,7 @@ public final class ClosureReverseAbstractInterpreterTest extends
   public void testGoogIsDefAndNotNull4() throws Exception {
     testClosureFunction("goog.isDefAndNotNull",
         ALL_TYPE,
-        OBJECT_NUMBER_STRING_BOOLEAN,
+        OBJECT_NUMBER_STRING_BOOLEAN_SYMBOL,
         NULL_VOID);
   }
 
@@ -174,11 +174,18 @@ public final class ClosureReverseAbstractInterpreterTest extends
         NULL_TYPE);
   }
 
-  public void testGoogIsFunction2() throws Exception {
+  public void testGoogIsFunction2a() throws Exception {
     testClosureFunction("goog.isFunction",
         OBJECT_NUMBER_STRING_BOOLEAN,
         U2U_CONSTRUCTOR_TYPE,
         OBJECT_NUMBER_STRING_BOOLEAN);
+  }
+
+  public void testGoogIsFunction2b() throws Exception {
+    testClosureFunction("goog.isFunction",
+        OBJECT_NUMBER_STRING_BOOLEAN_SYMBOL,
+        U2U_CONSTRUCTOR_TYPE,
+        OBJECT_NUMBER_STRING_BOOLEAN_SYMBOL);
   }
 
   public void testGoogIsFunction3() throws Exception {
@@ -241,22 +248,37 @@ public final class ClosureReverseAbstractInterpreterTest extends
     testClosureFunction("goog.isObject",
         ALL_TYPE,
         NO_OBJECT_TYPE,
-        createUnionType(NUMBER_STRING_BOOLEAN, NULL_TYPE, VOID_TYPE));
+        createUnionType(NUMBER_STRING_BOOLEAN_SYMBOL, NULL_TYPE, VOID_TYPE));
   }
 
-  public void testGoogIsObject2() throws Exception {
+  public void testGoogIsObject2a() throws Exception {
     testClosureFunction("goog.isObject",
           createUnionType(OBJECT_TYPE, NUMBER_STRING_BOOLEAN),
           OBJECT_TYPE,
           NUMBER_STRING_BOOLEAN);
   }
 
-  public void testGoogIsObject3() throws Exception {
+  public void testGoogIsObject2b() throws Exception {
+    testClosureFunction("goog.isObject",
+          createUnionType(OBJECT_TYPE, NUMBER_STRING_BOOLEAN_SYMBOL),
+          OBJECT_TYPE,
+          NUMBER_STRING_BOOLEAN_SYMBOL);
+  }
+
+  public void testGoogIsObject3a() throws Exception {
     testClosureFunction("goog.isObject",
           createUnionType(
               OBJECT_TYPE, NUMBER_STRING_BOOLEAN, NULL_TYPE, VOID_TYPE),
           OBJECT_TYPE,
           createUnionType(NUMBER_STRING_BOOLEAN, NULL_TYPE, VOID_TYPE));
+  }
+
+  public void testGoogIsObject3b() throws Exception {
+    testClosureFunction("goog.isObject",
+          createUnionType(
+              OBJECT_TYPE, NUMBER_STRING_BOOLEAN_SYMBOL, NULL_TYPE, VOID_TYPE),
+          OBJECT_TYPE,
+          createUnionType(NUMBER_STRING_BOOLEAN_SYMBOL, NULL_TYPE, VOID_TYPE));
   }
 
   public void testGoogIsObject4() throws Exception {

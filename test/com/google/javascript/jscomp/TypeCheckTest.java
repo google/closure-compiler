@@ -664,6 +664,162 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         "required: boolean");
   }
 
+  public void testSymbolComparison1() {
+    testTypes(
+        lines(
+            "/**",
+            " * @param {symbol} x",
+            " * @param {symbol} y",
+            "*/",
+            "function f(x, y) { return x === y; }"));
+  }
+
+  public void testSymbolComparison2() {
+    testTypes(
+        lines(
+            "/**",
+            " * @param {symbol} x",
+            " * @param {symbol} y",
+            "*/",
+            "function f(x, y) { return x == y; }"));
+  }
+
+  public void testSymbolComparison3() {
+    testTypes(
+        lines(
+            "/**",
+            " * @param {symbol} x", // primitive
+            " * @param {!Symbol} y", // object
+            "*/",
+            "function f(x, y) { return x == y; }"));
+  }
+
+  public void testSymbolComparison4() {
+    testTypes(
+        lines(
+            "/**",
+            " * @param {symbol} x", // primitive
+            " * @param {!Symbol} y", // object
+            "*/",
+            "function f(x, y) { return x === y; }"),
+        "condition always evaluates to false\n"
+            + "left : symbol\n"
+            + "right: Symbol");
+  }
+
+  public void testSymbolComparison5() {
+    testTypes(
+        lines(
+            "/**",
+            " * @param {symbol} x", // primitive
+            " * @param {(!Symbol|null)} y", // object
+            "*/",
+            "function f(x, y) { return x == y; }"));
+  }
+
+  public void testSymbolComparison6() {
+    testTypes(
+        lines(
+            "/**",
+            " * @param {symbol} x", // primitive
+            " * @param {(!Symbol|null)} y", // object
+            "*/",
+            "function f(x, y) { return x === y; }"),
+        "condition always evaluates to false\n"
+            + "left : symbol\n"
+            + "right: (Symbol|null)");
+  }
+
+  public void testSymbolComparison7() {
+    testTypes(
+        lines(
+            "/**",
+            " * @param {symbol} x",
+            " * @param {*} y",
+            "*/",
+            "function f(x, y) { return x == y; }"));
+  }
+
+  public void testSymbolComparison8() {
+    testTypes(
+        lines(
+            "/**",
+            " * @param {symbol} x",
+            " * @param {*} y",
+            "*/",
+            "function f(x, y) { return x === y; }"));
+  }
+
+  public void testSymbolComparison9() {
+    testTypes(
+        lines(
+            "/** @enum {symbol} */ var E = {A:Symbol()};",
+            "/**",
+            " * @param {symbol} x",
+            " * @param {E} y",
+            "*/",
+            "function f(x, y) { return x == y; }"));
+  }
+
+  public void testSymbolComparison10() {
+    testTypes(
+        lines(
+            "/** @enum {symbol} */ var E = {A:Symbol()};",
+            "/**",
+            " * @param {symbol} x",
+            " * @param {E} y",
+            "*/",
+            "function f(x, y) { return x === y; }"));
+  }
+
+  public void testSymbolComparison11() {
+    testTypes(
+        lines(
+            "/** @enum {!Symbol} */ var E = {A:/** @type {!Symbol} */ (Object(Symbol()))};",
+            "/**",
+            " * @param {symbol} x",
+            " * @param {E} y",
+            "*/",
+            "function f(x, y) { return x == y; }"));
+  }
+
+  public void testSymbolComparison12() {
+    testTypes(
+        lines(
+            "/** @enum {!Symbol} */ var E = {A:/** @type {!Symbol} */ (Object(Symbol()))};",
+            "/**",
+            " * @param {symbol} x",
+            " * @param {E} y",
+            "*/",
+            "function f(x, y) { return x === y; }"),
+        "condition always evaluates to false\n"
+            + "left : symbol\n"
+            + "right: E<Symbol>");
+  }
+
+  public void testSymbolComparison13() {
+    testTypes(
+        lines(
+            "/**",
+            " * @param {symbol} x",
+            " * @param {!Object} y",
+            "*/",
+            "function f(x, y) { return x == y; }"));
+  }
+
+  public void testSymbolComparison14() {
+    testTypes(
+        lines(
+            "/**",
+            " * @param {symbol} x",
+            " * @param {!Object} y",
+            "*/",
+            "function f(x, y) { return x === y; }"),
+        "condition always evaluates to false\n"
+            + "left : symbol\n"
+            + "right: Object");
+  }
+
   public void testTypeOfReduction1() {
     testTypes("/** @param {string|number} x\n @return {string} */ " +
         "function f(x) { return typeof x == 'number' ? String(x) : x; }");
@@ -18507,6 +18663,64 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
             "found   : Foo",
             "required: (number|string)"));
   }
+
+  public void testEnumOfSymbol1() throws Exception {
+    testTypes(
+        lines("",
+            "/** @enum {symbol} */",
+            "var ES = {A: Symbol('a'), B: Symbol('b')};",
+            "",
+            "/** @type {!Object<ES, number>} */",
+            "var o = {};",
+            "",
+            "o[ES.A] = 1;"));
+  }
+
+  public void testEnumOfSymbol2() throws Exception {
+    testTypes(
+        lines("",
+            "/** @enum {symbol} */",
+            "var ES = {A: Symbol('a'), B: Symbol('b')};",
+            "",
+            "/** @type {!Object<number, number>} */",
+            "var o = {};",
+            "",
+            "o[ES.A] = 1;"),
+        lines(
+            "restricted index type",
+            "found   : ES<symbol>",
+            "required: number"));
+  }
+
+  public void testEnumOfSymbol4() throws Exception {
+    testTypes(
+        lines("",
+            "/** @enum {symbol} */",
+            "var ES = {A: Symbol('a'), B: Symbol('b')};",
+            "",
+            "/** @const */",
+            "var o = {};",
+            "",
+            "o[ES.A] = 1;"));
+  }
+
+  public void testSymbol1() throws Exception {
+    testTypes(
+        lines("",
+            "/** @const */",
+            "var o = {};",
+            "",
+            "if (o[Symbol.iterator]) { /** ok */ };"));
+  }
+
+  public void testSymbol2() throws Exception {
+    testTypes(
+        lines("",
+            "/** @const */",
+            "var o = new Symbol();"),
+        "cannot instantiate non-constructor");
+  }
+
 
   private void testTypes(String js) {
     testTypes(js, (String) null);

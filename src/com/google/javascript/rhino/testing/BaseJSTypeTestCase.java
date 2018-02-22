@@ -86,11 +86,13 @@ public abstract class BaseJSTypeTestCase extends TestCase {
   protected JSType NUMBER_OBJECT_FUNCTION_TYPE;
   protected ObjectType NUMBER_OBJECT_TYPE;
   protected JSType NUMBER_STRING_BOOLEAN;
+  protected JSType NUMBER_STRING_BOOLEAN_SYMBOL;
   protected JSType NUMBER_TYPE;
   protected FunctionType OBJECT_FUNCTION_TYPE;
   protected JSType NULL_VOID;
   protected JSType OBJECT_NUMBER_STRING;
   protected JSType OBJECT_NUMBER_STRING_BOOLEAN;
+  protected JSType OBJECT_NUMBER_STRING_BOOLEAN_SYMBOL;
   protected JSType OBJECT_PROTOTYPE;
   protected ObjectType OBJECT_TYPE;
   protected JSType RANGE_ERROR_FUNCTION_TYPE;
@@ -102,6 +104,9 @@ public abstract class BaseJSTypeTestCase extends TestCase {
   protected JSType STRING_OBJECT_FUNCTION_TYPE;
   protected ObjectType STRING_OBJECT_TYPE;
   protected JSType STRING_TYPE;
+  protected JSType SYMBOL_OBJECT_FUNCTION_TYPE;
+  protected ObjectType SYMBOL_OBJECT_TYPE;
+  protected JSType SYMBOL_TYPE;
   protected JSType SYNTAX_ERROR_FUNCTION_TYPE;
   protected ObjectType SYNTAX_ERROR_TYPE;
   protected JSType TYPE_ERROR_FUNCTION_TYPE;
@@ -174,6 +179,8 @@ public abstract class BaseJSTypeTestCase extends TestCase {
         registry.getNativeObjectType(JSTypeNative.NUMBER_OBJECT_TYPE);
     NUMBER_STRING_BOOLEAN =
         registry.getNativeType(JSTypeNative.NUMBER_STRING_BOOLEAN);
+    NUMBER_STRING_BOOLEAN_SYMBOL =
+        registry.getNativeType(JSTypeNative.NUMBER_STRING_BOOLEAN_SYMBOL);
     NUMBER_TYPE =
         registry.getNativeType(JSTypeNative.NUMBER_TYPE);
     OBJECT_FUNCTION_TYPE =
@@ -184,6 +191,8 @@ public abstract class BaseJSTypeTestCase extends TestCase {
         registry.getNativeType(JSTypeNative.OBJECT_NUMBER_STRING);
     OBJECT_NUMBER_STRING_BOOLEAN =
         registry.getNativeType(JSTypeNative.OBJECT_NUMBER_STRING_BOOLEAN);
+    OBJECT_NUMBER_STRING_BOOLEAN_SYMBOL =
+        registry.getNativeType(JSTypeNative.OBJECT_NUMBER_STRING_BOOLEAN_SYMBOL);
     OBJECT_PROTOTYPE =
         registry.getNativeType(JSTypeNative.OBJECT_PROTOTYPE);
     OBJECT_TYPE =
@@ -206,6 +215,12 @@ public abstract class BaseJSTypeTestCase extends TestCase {
         registry.getNativeObjectType(JSTypeNative.STRING_OBJECT_TYPE);
     STRING_TYPE =
         registry.getNativeType(JSTypeNative.STRING_TYPE);
+    SYMBOL_OBJECT_FUNCTION_TYPE =
+        registry.getNativeType(JSTypeNative.SYMBOL_OBJECT_FUNCTION_TYPE);
+    SYMBOL_OBJECT_TYPE =
+        registry.getNativeObjectType(JSTypeNative.SYMBOL_OBJECT_TYPE);
+    SYMBOL_TYPE =
+        registry.getNativeType(JSTypeNative.SYMBOL_TYPE);
     SYNTAX_ERROR_FUNCTION_TYPE =
         registry.getNativeType(JSTypeNative.SYNTAX_ERROR_FUNCTION_TYPE);
     SYNTAX_ERROR_TYPE =

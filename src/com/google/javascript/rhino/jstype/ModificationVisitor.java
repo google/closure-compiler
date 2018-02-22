@@ -43,7 +43,6 @@ package com.google.javascript.rhino.jstype;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
 import com.google.javascript.rhino.Node;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -225,6 +224,11 @@ public class ModificationVisitor implements Visitor<JSType> {
   @Override
   public JSType caseStringType() {
     return getNativeType(JSTypeNative.STRING_TYPE);
+  }
+
+  @Override
+  public JSType caseSymbolType() {
+    return getNativeType(JSTypeNative.SYMBOL_TYPE);
   }
 
   @Override

@@ -122,6 +122,11 @@ public interface Visitor<T> {
   T caseStringType();
 
   /**
+   * Symbol value type's case.
+   */
+  T caseSymbolType();
+
+  /**
    * Void type's case.
    */
   T caseVoidType();

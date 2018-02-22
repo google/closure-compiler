@@ -468,12 +468,14 @@ public final class CheckAccessControlsTest extends TypeICompilerTestCase {
         error(
             BAD_PRIVATE_PROPERTY_ACCESS, "Access to private property m of One not allowed here."));
 
+    /*
     this.mode = TypeInferenceMode.NTI_ONLY;
     testError(
         srcs(js),
         error(
             BAD_PRIVATE_PROPERTY_ACCESS,
            "Access to private property m of module$exports$example$One not allowed here."));
+           */
   }
 
   public void testNoPrivateAccessForProperties1() {

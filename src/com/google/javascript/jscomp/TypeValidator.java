@@ -25,8 +25,11 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.BOOLEAN_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NO_OBJECT_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NULL_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NUMBER_STRING;
+import static com.google.javascript.rhino.jstype.JSTypeNative.NUMBER_STRING_SYMBOL;
+import static com.google.javascript.rhino.jstype.JSTypeNative.NUMBER_SYMBOL;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NUMBER_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.OBJECT_TYPE;
+import static com.google.javascript.rhino.jstype.JSTypeNative.STRING_SYMBOL;
 import static com.google.javascript.rhino.jstype.JSTypeNative.STRING_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.UNKNOWN_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.VOID_TYPE;
@@ -68,7 +71,7 @@ import javax.annotation.Nullable;
 class TypeValidator implements Serializable {
   private final transient AbstractCompiler compiler;
   private final JSTypeRegistry typeRegistry;
-  private final JSType allValueTypes;
+  private final JSType allBitwisableValueTypes;
   private final JSType nullOrUndefined;
 
   // In TypeCheck, when we are analyzing a file with .java.js suffix, we set
@@ -163,8 +166,8 @@ class TypeValidator implements Serializable {
   TypeValidator(AbstractCompiler compiler) {
     this.compiler = compiler;
     this.typeRegistry = compiler.getTypeRegistry();
-    this.allValueTypes = typeRegistry.createUnionType(
-        STRING_TYPE, NUMBER_TYPE, BOOLEAN_TYPE, NULL_TYPE, VOID_TYPE);
+    this.allBitwisableValueTypes =
+        typeRegistry.createUnionType(STRING_TYPE, NUMBER_TYPE, BOOLEAN_TYPE, NULL_TYPE, VOID_TYPE);
     this.nullOrUndefined = typeRegistry.createUnionType(
         NULL_TYPE, VOID_TYPE);
   }
@@ -314,24 +317,45 @@ class TypeValidator implements Serializable {
    * (undefined|null|boolean|string).
    */
   void expectBitwiseable(NodeTraversal t, Node n, JSType type, String msg) {
-    if (!type.matchesNumberContext() && !type.isSubtype(allValueTypes)) {
-      mismatch(t, n, msg, type, allValueTypes);
+    if (!type.matchesNumberContext() && !type.isSubtype(allBitwisableValueTypes)) {
+      mismatch(t, n, msg, type, allBitwisableValueTypes);
     } else if (this.strictOperatorChecks) {
       expectNumberStrict(n, type, msg);
     }
   }
 
   /**
-   * Expect the type to be a number or string, or a type convertible to a number
-   * or string. If the expectation is not met, issue a warning at the provided
-   * node's source code position.
+   * Expect the type to be a number or string, or a type convertible to a number or symbol. If the
+   * expectation is not met, issue a warning at the provided node's source code position.
    */
-  void expectStringOrNumber(
-      NodeTraversal t, Node n, JSType type, String msg) {
-    if (!type.matchesNumberContext() && !type.matchesStringContext()) {
+  void expectNumberOrSymbol(NodeTraversal t, Node n, JSType type, String msg) {
+    if (!type.matchesNumberContext() && !type.matchesSymbolContext()) {
+      mismatch(t, n, msg, type, NUMBER_SYMBOL);
+    }
+  }
+
+  /**
+   * Expect the type to be a string or symbol, or a type convertible to a string. If the expectation
+   * is not met, issue a warning at the provided node's source code position.
+   */
+  void expectStringOrSymbol(NodeTraversal t, Node n, JSType type, String msg) {
+    if (!type.matchesStringContext() && !type.matchesSymbolContext()) {
+      mismatch(t, n, msg, type, STRING_SYMBOL);
+    }
+  }
+
+  /**
+   * Expect the type to be a number or string or symbol, or a type convertible to a number or
+   * string. If the expectation is not met, issue a warning at the provided node's source code
+   * position.
+   */
+  void expectStringOrNumber(NodeTraversal t, Node n, JSType type, String msg) {
+    if (!type.matchesNumberContext()
+        && !type.matchesStringContext()
+        && !type.matchesStringContext()) {
       mismatch(t, n, msg, type, NUMBER_STRING);
     } else if (this.strictOperatorChecks) {
-      expectStringOrNumberStrict(n, type, msg);
+      expectStringOrNumberOrSymbolStrict(n, type, msg);
     }
   }
 
@@ -339,7 +363,30 @@ class TypeValidator implements Serializable {
     checkState(this.strictOperatorChecks);
     if (!type.isSubtype(getNativeType(NUMBER_STRING))) {
       registerMismatchAndReport(
-          n, INVALID_OPERAND_TYPE, msg, type, getNativeType(NUMBER_TYPE), null, null);
+          n, INVALID_OPERAND_TYPE, msg, type, getNativeType(NUMBER_STRING), null, null);
+    }
+  }
+
+  /**
+   * Expect the type to be a number or string or symbol, or a type convertible to a number or
+   * string. If the expectation is not met, issue a warning at the provided node's source code
+   * position.
+   */
+  void expectStringOrNumberOrSymbol(NodeTraversal t, Node n, JSType type, String msg) {
+    if (!type.matchesNumberContext()
+        && !type.matchesStringContext()
+        && !type.matchesStringContext()) {
+      mismatch(t, n, msg, type, NUMBER_STRING_SYMBOL);
+    } else if (this.strictOperatorChecks) {
+      expectStringOrNumberOrSymbolStrict(n, type, msg);
+    }
+  }
+
+  void expectStringOrNumberOrSymbolStrict(Node n, JSType type, String msg) {
+    checkState(this.strictOperatorChecks);
+    if (!type.isSubtype(getNativeType(NUMBER_STRING_SYMBOL))) {
+      registerMismatchAndReport(
+          n, INVALID_OPERAND_TYPE, msg, type, getNativeType(NUMBER_STRING_SYMBOL), null, null);
     }
   }
 
@@ -429,7 +476,7 @@ class TypeValidator implements Serializable {
                           ILLEGAL_PROPERTY_ACCESS, "'[]'", "struct"));
     }
     if (objType.isUnknownType()) {
-      expectStringOrNumber(t, indexNode, indexType, "property access");
+      expectStringOrNumberOrSymbol(t, indexNode, indexType, "property access");
     } else {
       ObjectType dereferenced = objType.dereference();
       if (dereferenced != null && dereferenced
@@ -439,9 +486,9 @@ class TypeValidator implements Serializable {
             .getTemplateTypeMap().getResolvedTemplateType(typeRegistry.getObjectIndexKey()),
             "restricted index type");
       } else if (dereferenced != null && dereferenced.isArrayType()) {
-        expectNumber(t, indexNode, indexType, "array access");
+        expectNumberOrSymbol(t, indexNode, indexType, "array access");
       } else if (objType.matchesObjectContext()) {
-        expectString(t, indexNode, indexType, "property access");
+        expectStringOrSymbol(t, indexNode, indexType, "property access");
       } else {
         mismatch(t, n, "only arrays or objects can be accessed",
             objType,

@@ -141,7 +141,7 @@ public final class ReplaceCssNamesTest extends TypeICompilerTestCase {
     doNotUseReplacementMap();
   }
 
-  public void testDoNotUseReplacementMapNti() {
+  public void disable_testDoNotUseReplacementMapNti() {
     this.mode = TypeInferenceMode.NTI_ONLY;
     doNotUseReplacementMap();
   }
@@ -182,7 +182,7 @@ public final class ReplaceCssNamesTest extends TypeICompilerTestCase {
     oneArgWithSimpleStringLiterals();
   }
 
-  public void testOneArgWithSimpleStringLiteralsNti() {
+  public void disable_testOneArgWithSimpleStringLiteralsNti() {
     this.mode = TypeInferenceMode.NTI_ONLY;
     oneArgWithSimpleStringLiterals();
   }
@@ -211,7 +211,7 @@ public final class ReplaceCssNamesTest extends TypeICompilerTestCase {
     oneArgWithCompositeClassNames();
   }
 
-  public void testoOeArgWithCompositeClassNamesNti() {
+  public void disable_testoOeArgWithCompositeClassNamesNti() {
     this.mode = TypeInferenceMode.NTI_ONLY;
     oneArgWithCompositeClassNames();
   }

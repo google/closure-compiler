@@ -27,6 +27,7 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.OBJECT_FUNCTION_TY
 import static com.google.javascript.rhino.jstype.JSTypeNative.OBJECT_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.REGEXP_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.STRING_TYPE;
+import static com.google.javascript.rhino.jstype.JSTypeNative.SYMBOL_OBJECT_FUNCTION_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.UNKNOWN_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.VOID_TYPE;
 import static java.lang.Integer.MAX_VALUE;
@@ -1677,7 +1678,8 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
   private void visitNew(NodeTraversal t, Node n) {
     Node constructor = n.getFirstChild();
     JSType type = getJSType(constructor).restrictByNotNullOrUndefined();
-    if (!couldBeAConstructor(type)) {
+    if (!couldBeAConstructor(type)
+        || type.isEquivalentTo(typeRegistry.getNativeType(SYMBOL_OBJECT_FUNCTION_TYPE))) {
       report(t, n, NOT_A_CONSTRUCTOR);
       ensureTyped(t, n);
       return;
@@ -2241,24 +2243,35 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
   }
 
   /**
-   * Checks whether type is stringifiable. Stringifiable is a type that can be converted to string
+   * Checks whether type is useful as the key of an object property access.
+   * This means it should be either stringifiable or a symbol.
+   * Stringifiable types are types that can be converted to string
    * and give unique results for different objects. For example objects have native toString()
    * method that on chrome returns "[object Object]" for all objects making it useless when used
    * as keys. At the same time native types like numbers can be safely converted to strings and
    * used as keys. Also user might have provided custom toString() methods for a class making it
    * suitable for using as key.
    */
-  private boolean isStringifiable(JSType type) {
+  private boolean isReasonableObjectPropertyKey(JSType type) {
     // Check built-in types
-    if (type.isUnknownType() || type.isNumber() || type.isString() || type.isBooleanObjectType()
-        || type.isBooleanValueType() || type.isDateType() || type.isRegexpType()
-        || type.isInterface() || type.isRecordType() || type.isNullType() || type.isVoidType()) {
+    if (type.isUnknownType()
+        || type.isNumber()
+        || type.isString()
+        || type.isSymbol()
+        || type.isBooleanObjectType()
+        || type.isBooleanValueType()
+        || type.isDateType()
+        || type.isRegexpType()
+        || type.isInterface()
+        || type.isRecordType()
+        || type.isNullType()
+        || type.isVoidType()) {
       return true;
     }
 
     // For enums check that underlying type is stringifiable.
     if (type.toMaybeEnumElementType() != null) {
-      return isStringifiable(type.toMaybeEnumElementType().getPrimitiveType());
+      return isReasonableObjectPropertyKey(type.toMaybeEnumElementType().getPrimitiveType());
     }
 
     // Array is stringifiable if it doesn't have template type or if it does have it, the template
@@ -2271,20 +2284,20 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     if (type.isTemplatizedType()) {
       TemplatizedType templatizedType = type.toMaybeTemplatizedType();
       if (templatizedType.getReferencedType().isArrayType()) {
-        return isStringifiable(templatizedType.getTemplateTypes().get(0));
+        return isReasonableObjectPropertyKey(templatizedType.getTemplateTypes().get(0));
       }
     }
 
     // Named types are usually @typedefs. For such types we need to check underlying type specified
     // in @typedef annotation.
     if (type instanceof NamedType) {
-      return isStringifiable(((NamedType) type).getReferencedType());
+      return isReasonableObjectPropertyKey(((NamedType) type).getReferencedType());
     }
 
     // For union type every alternate must be stringifiable.
     if (type.isUnionType()) {
       for (JSType alternateType : type.toMaybeUnionType().getAlternates()) {
-        if (!isStringifiable(alternateType)) {
+        if (!isReasonableObjectPropertyKey(alternateType)) {
           return false;
         }
       }
@@ -2316,7 +2329,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     TemplatizedType templatizedType = type.toMaybeTemplatizedType();
     if (templatizedType.getReferencedType().isNativeObjectType()
         && templatizedType.getTemplateTypes().size() > 1) {
-      return !isStringifiable(templatizedType.getTemplateTypes().get(0));
+      return !isReasonableObjectPropertyKey(templatizedType.getTemplateTypes().get(0));
     } else {
       return false;
     }

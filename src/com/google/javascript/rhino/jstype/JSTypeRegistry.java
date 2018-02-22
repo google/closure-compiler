@@ -301,6 +301,9 @@ public class JSTypeRegistry implements TypeIRegistry {
     StringType STRING_TYPE = new StringType(this);
     registerNativeType(JSTypeNative.STRING_TYPE, STRING_TYPE);
 
+    SymbolType SYMBOL_TYPE = new SymbolType(this);
+    registerNativeType(JSTypeNative.SYMBOL_TYPE, SYMBOL_TYPE);
+
     UnknownType UNKNOWN_TYPE = new UnknownType(this, false);
     registerNativeType(JSTypeNative.UNKNOWN_TYPE, UNKNOWN_TYPE);
     UnknownType checkedUnknownType = new UnknownType(this, true);
@@ -583,10 +586,38 @@ public class JSTypeRegistry implements TypeIRegistry {
     registerNativeType(
         JSTypeNative.STRING_OBJECT_TYPE, STRING_OBJECT_TYPE);
 
+    // Symbol
+    // NOTE: While "Symbol" is a class, with an instance type and prototype
+    // it is illegal to call "new Symbol".  This is checked to in the
+    // type checker.
+    FunctionType SYMBOL_OBJECT_FUNCTION_TYPE =
+        new FunctionType(
+            this,
+            "Symbol",
+            null,
+            createArrowType(createOptionalParameters(ALL_TYPE), SYMBOL_TYPE),
+            null,
+            null,
+            true,
+            true,
+            false);
+    SYMBOL_OBJECT_FUNCTION_TYPE.getPrototype(); // Force initialization
+    registerNativeType(
+        JSTypeNative.SYMBOL_OBJECT_FUNCTION_TYPE, SYMBOL_OBJECT_FUNCTION_TYPE);
+
+    ObjectType SYMBOL_OBJECT_TYPE =
+        SYMBOL_OBJECT_FUNCTION_TYPE.getInstanceType();
+    registerNativeType(
+        JSTypeNative.SYMBOL_OBJECT_TYPE, SYMBOL_OBJECT_TYPE);
+
     // (null,void)
     JSType NULL_VOID =
         createUnionType(NULL_TYPE, VOID_TYPE);
     registerNativeType(JSTypeNative.NULL_VOID, NULL_VOID);
+
+    // (Object,symbol)
+    JSType OBJECT_SYMBOL = createUnionType(OBJECT_TYPE, SYMBOL_TYPE);
+    registerNativeType(JSTypeNative.OBJECT_SYMBOL, OBJECT_SYMBOL);
 
     // (Object,string,number)
     JSType OBJECT_NUMBER_STRING =
@@ -599,15 +630,39 @@ public class JSTypeRegistry implements TypeIRegistry {
     registerNativeType(JSTypeNative.OBJECT_NUMBER_STRING_BOOLEAN,
         OBJECT_NUMBER_STRING_BOOLEAN);
 
+    // (Object,string,number,boolean,symbol)
+    JSType OBJECT_NUMBER_STRING_BOOLEAN_SYMBOL =
+        createUnionType(OBJECT_TYPE, NUMBER_TYPE, STRING_TYPE, BOOLEAN_TYPE, SYMBOL_TYPE);
+    registerNativeType(JSTypeNative.OBJECT_NUMBER_STRING_BOOLEAN_SYMBOL,
+        OBJECT_NUMBER_STRING_BOOLEAN_SYMBOL);
+
     // (string,number,boolean)
     JSType NUMBER_STRING_BOOLEAN =
         createUnionType(NUMBER_TYPE, STRING_TYPE, BOOLEAN_TYPE);
     registerNativeType(JSTypeNative.NUMBER_STRING_BOOLEAN,
         NUMBER_STRING_BOOLEAN);
 
+    // (string,number,boolean,symbol)
+    JSType NUMBER_STRING_BOOLEAN_SYMBOL =
+        createUnionType(NUMBER_TYPE, STRING_TYPE, BOOLEAN_TYPE, SYMBOL_TYPE);
+    registerNativeType(JSTypeNative.NUMBER_STRING_BOOLEAN_SYMBOL,
+        NUMBER_STRING_BOOLEAN_SYMBOL);
+
+    // (number,symbol)
+    JSType NUMBER_SYMBOL = createUnionType(NUMBER_TYPE, SYMBOL_TYPE);
+    registerNativeType(JSTypeNative.NUMBER_SYMBOL, NUMBER_SYMBOL);
+
+    // (string,symbol)
+    JSType STRING_SYMBOL = createUnionType(STRING_TYPE, SYMBOL_TYPE);
+    registerNativeType(JSTypeNative.STRING_SYMBOL, STRING_SYMBOL);
+
     // (string,number)
     JSType NUMBER_STRING = createUnionType(NUMBER_TYPE, STRING_TYPE);
     registerNativeType(JSTypeNative.NUMBER_STRING, NUMBER_STRING);
+
+    // (string,number,symbol)
+    JSType NUMBER_STRING_SYMBOL = createUnionType(NUMBER_TYPE, STRING_TYPE, SYMBOL_TYPE);
+    registerNativeType(JSTypeNative.NUMBER_STRING_SYMBOL, NUMBER_STRING_SYMBOL);
 
     // Native object properties are filled in by externs...
 
@@ -622,6 +677,12 @@ public class JSTypeRegistry implements TypeIRegistry {
         createUnionType(NUMBER_OBJECT_TYPE, NUMBER_TYPE);
     registerNativeType(
         JSTypeNative.NUMBER_VALUE_OR_OBJECT_TYPE, NUMBER_VALUE_OR_OBJECT_TYPE);
+
+    // (Symbol, symbol)
+    JSType SYMBOL_VALUE_OR_OBJECT_TYPE =
+        createUnionType(SYMBOL_OBJECT_TYPE, SYMBOL_TYPE);
+    registerNativeType(
+        JSTypeNative.SYMBOL_VALUE_OR_OBJECT_TYPE, SYMBOL_VALUE_OR_OBJECT_TYPE);
 
     // unknown function type, i.e. (?...) -> ?
     FunctionType U2U_FUNCTION_TYPE =
@@ -713,6 +774,8 @@ public class JSTypeRegistry implements TypeIRegistry {
     register(getNativeType(JSTypeNative.REGEXP_TYPE));
     register(getNativeType(JSTypeNative.STRING_OBJECT_TYPE));
     register(getNativeType(JSTypeNative.STRING_TYPE));
+    register(getNativeType(JSTypeNative.SYMBOL_OBJECT_TYPE));
+    register(getNativeType(JSTypeNative.SYMBOL_TYPE));
     register(getNativeType(JSTypeNative.VOID_TYPE));
     register(getNativeType(JSTypeNative.VOID_TYPE), "Undefined");
     register(getNativeType(JSTypeNative.VOID_TYPE), "void");

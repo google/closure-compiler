@@ -409,8 +409,12 @@ public abstract class CompilerTestCase extends TestCase {
           " */",
           "Object.setPrototypeOf = function(obj, proto) {};",
           "/** @type {?} */ var unknown;", // For producing unknowns in tests.
-          "/** @typedef {?} */ var symbol;", // TODO(sdh): remove once primitive 'symbol' supported
-          "/** @constructor */ function Symbol() {}",
+          "/** ",
+          " * @constructor",
+          " * @param {*=} opt_description",
+          " * @return {symbol}",
+          " */",
+          "function Symbol(opt_description) {}",
           "/** @const {!symbol} */ Symbol.iterator;",
           "/**",
           " * @return {!Iterator<VALUE>}",

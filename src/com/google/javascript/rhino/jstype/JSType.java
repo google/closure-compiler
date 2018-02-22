@@ -215,6 +215,10 @@ public abstract class JSType implements TypeI {
     return false;
   }
 
+  public boolean isSymbolValueType() {
+    return false;
+  }
+
   /**
    * Tests whether the type is a string (value or Object).
    * @return <code>this &lt;: (String, string)</code>
@@ -231,6 +235,11 @@ public abstract class JSType implements TypeI {
   public final boolean isNumber() {
     return isSubtype(
         getNativeType(JSTypeNative.NUMBER_VALUE_OR_OBJECT_TYPE));
+  }
+
+  public final boolean isSymbol() {
+    return isSubtype(
+        getNativeType(JSTypeNative.SYMBOL_VALUE_OR_OBJECT_TYPE));
   }
 
   public boolean isArrayType() {
@@ -835,6 +844,14 @@ public abstract class JSType implements TypeI {
    * to add types that do not automatically convert to {@code String}.
    */
   public boolean matchesStringContext() {
+    return false;
+  }
+
+  /**
+   * This predicate is used to test whether a given type can appear in a
+   * {@code symbol} context such as property access.
+   */
+  public boolean matchesSymbolContext() {
     return false;
   }
 

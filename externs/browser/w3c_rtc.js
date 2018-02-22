@@ -673,6 +673,10 @@ RTCRtpReceiver.prototype.track;
  */
 RTCRtpReceiver.prototype.getContributingSources = function() {};
 
+/**
+ * @return {!Array<!RTCRtpContributingSource>}
+ */
+RTCRtpReceiver.prototype.getSynchronizationSources = function() {};
 
 /**
  * @interface

@@ -148,6 +148,7 @@ public abstract class TypeICompilerTestCase extends CompilerTestCase {
       Expected expected,
       Diagnostic diagnostic,
       List<Postcondition> postconditions) {
+    /*
     TypeInferenceMode saved = this.mode;
     this.mode = TypeInferenceMode.NTI_ONLY;
     enableNewTypeInference();
@@ -156,6 +157,7 @@ public abstract class TypeICompilerTestCase extends CompilerTestCase {
     super.testInternal(externs, js, expected, nti, postconditions);
     disableNewTypeInference();
     this.mode = saved;
+    */
   }
 
   void testWarningOtiNti(
@@ -163,8 +165,10 @@ public abstract class TypeICompilerTestCase extends CompilerTestCase {
     TypeInferenceMode saved = this.mode;
     this.mode = TypeInferenceMode.OTI_ONLY;
     testWarning(js, otiWarning);
+    /*
     this.mode = TypeInferenceMode.NTI_ONLY;
     testWarning(js, ntiWarning);
+    */
     this.mode = saved;
   }
 
