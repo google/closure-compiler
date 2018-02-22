@@ -38,6 +38,33 @@ goog.require('goog.string.Const');
  * global window constant with a more readable alternative
 
 /**
+ * @param {?Window|undefined} win
+ * @param {string} string_literal_url
+ */
+function do_not_change_stringLiteral(win, string_literal_url) {
+  win.open(string_literal_url);
+}
+
+/**
+ * @param {?Window|undefined} win
+ * @param {string} string_literal_url
+ * @param {string} name
+ */
+function do_not_change_stringLiteralName(win, string_literal_url, name) {
+  win.open(string_literal_url, name);
+}
+
+/**
+ * @param {?Window|undefined} win
+ * @param {string} string_literal_url
+ * @param {string} name
+ * @param {string} spec
+ */
+function do_not_change_stringLiteralSpec(win, string_literal_url, name, spec) {
+  win.open(string_literal_url, name, spec);
+}
+
+/**
  * +require {goog.dom.safe}
  * @param {string} url
  */
