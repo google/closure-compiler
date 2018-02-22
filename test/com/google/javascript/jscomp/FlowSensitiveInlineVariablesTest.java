@@ -25,10 +25,12 @@ import com.google.javascript.rhino.Node;
 
 public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase  {
 
-  public static final String EXTERN_FUNCTIONS = lines(
-      "var print;",
-      "/** @nosideeffects */ function noSFX() {}",
-      "                      function hasSFX() {}");
+  public static final String EXTERN_FUNCTIONS =
+      lines(
+          "var print;",
+          "var alert;",
+          "/** @nosideeffects */ function noSFX() {}",
+          "                      function hasSFX() {}");
 
   @Override
   protected void setUp() throws Exception {
@@ -849,24 +851,25 @@ public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase  {
 
     // don't inline because x is only conditionally reassigned to 2.
     noInline("var x = 1; var [y = (x = 2, 4)] = []; print(x);");
-    // TODO(b/73559627): this should not inline x because x = 2 is not executed.
-    inline(
-        "var x = 1; print(x); var [y = (x = 2, 4)] = [0]; print(x);",
-        "var x    ; print(1); var [y = (x = 2, 4)] = [0]; print(x);");
+    noInline("var x = 1; print(x); var [y = (x = 2, 4)] = [0]; print(x);");
 
     // x = 2 is executed before reading x in the default value.
     inline(
         "var x = 1; print(x); var obj = {}; [obj[x = 2] = x] = [];",
         "var x    ; print(1); var obj = {}; [obj[x = 2] = x] = [];");
-    // TODO(b/73559627): this should not inline because [x] is evaluated before obj[x = 2]
-    inline(
-        "var x = 1; print(x); var obj = {}; [[obj[x = 2]] = [x]] = [];",
-        "var x    ; print(1); var obj = {}; [[obj[x = 2]] = [x]] = [];");
+    // [x] is evaluated before obj[x = 2] is executed
+    noInline("var x = 1; print(x); var obj = {}; [[obj[x = 2]] = [x]] = [];");
+
+    noInline("var x = 1; alert(x); ({x = x * 2} = {});");
+    noInline("var x = 1; alert(x); [x = x * 2] = [];");
   }
 
   public void testDestructuringComputedProperty() {
     inline("var x = 1; var {[x]: y} = {};", "var x; var {[1]: y} = {};");
     noInline("var x = 1; var {[x]: y} = {}; print(x);");
+
+    noInline("var x = 1; alert(x); ({[x]: x} = {}); alert(x);");
+    inline("var x = 1; var y = x; ({[y]: x} = {});", "var x; var y; ({[1]: x} = {});");
   }
 
   public void testDeadAssignments() {
@@ -891,8 +894,12 @@ public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase  {
     noInline("var x = 2; var {a: x = 3} = {a: x};");
 
     noInline("var x = 1; print(x); var {a: x} = {a: x};");
-    // TODO(b/73559627): this example should not inline x, because x is read before being written to
-    inline("var x = 1; print(x); ({a: x} = {a: x});", "var x; print(1); ({a: x} = {a: x});");
+    noInline("var x = 1; print(x); ({a: x} = {a: x});");
+
+    noInline("var x = 1; print(x); var y; [y = x, x] = [];");
+    inline(
+        "var x = 1; print(x); var y; [x, y = x] = [2];",
+        "var x    ; print(1); var y; [x, y = x] = [2];");
   }
 
   public void testDestructuringWithSideEffects() {
@@ -921,10 +928,7 @@ public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase  {
   public void testGithubIssue2818() {
     noInline("var x = 1; var y = x; print(x++, y);");
     noInline("var x = 1; var y = x; print(x = x + 3, y);");
-    // TODO(b/73559627): this should not inline x because x is also read in {x: x * 2}
-    inline(
-        "var x = 1; var y = x; print(({x} = {x: x * 2}), y); print(x);",
-        "var x    ; var y    ; print(({x} = {x: x * 2}), 1); print(x)");
+    noInline("var x = 1; var y = x; print(({x} = {x: x * 2}), y); print(x);");
   }
 
   public void testOkayToInlineWithSideEffects() {

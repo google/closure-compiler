@@ -176,10 +176,12 @@ class MaybeReachingVariableUse extends
     return false;
   }
 
-  private void computeMayUse(
-      Node n, Node cfgNode, ReachingUses output, boolean conditional) {
+  /**
+   * @param conditional Whether {@code n} is only conditionally evaluated given that {@code cfgNode}
+   *     is evaluated. Do not remove conditionally redefined variables from the reaching uses set.
+   */
+  private void computeMayUse(Node n, Node cfgNode, ReachingUses output, boolean conditional) {
     switch (n.getToken()) {
-
       case BLOCK:
       case ROOT:
       case FUNCTION:
@@ -256,6 +258,22 @@ class MaybeReachingVariableUse extends
         } // else var name declaration with no initial value
         return;
 
+      case DEFAULT_VALUE:
+        if (n.getFirstChild().isDestructuringPattern()) {
+          computeMayUse(n.getFirstChild(), cfgNode, output, conditional);
+          computeMayUse(n.getSecondChild(), cfgNode, output, true);
+        } else if (n.getFirstChild().isName()) {
+          // assigning to the name occurs after evaluating the default value
+          if (!conditional) {
+            removeFromUseIfLocal(n.getFirstChild().getString(), output);
+          }
+          computeMayUse(n.getSecondChild(), cfgNode, output, true);
+        } else {
+          computeMayUse(n.getSecondChild(), cfgNode, output, true);
+          computeMayUse(n.getFirstChild(), cfgNode, output, conditional);
+        }
+        break;
+
       default:
         if (NodeUtil.isAssignmentOp(n) && n.getFirstChild().isName()) {
           Node name = n.getFirstChild();
@@ -269,6 +287,10 @@ class MaybeReachingVariableUse extends
           }
 
           computeMayUse(name.getNext(), cfgNode, output, conditional);
+        } else if (n.isAssign() && n.getFirstChild().isDestructuringPattern()) {
+          // Note: the rhs of destructuring is evaluated before the lhs
+          computeMayUse(n.getFirstChild(), cfgNode, output, conditional);
+          computeMayUse(n.getSecondChild(), cfgNode, output, conditional);
         } else {
           /*
            * We want to traverse in reverse order because we want the LAST
