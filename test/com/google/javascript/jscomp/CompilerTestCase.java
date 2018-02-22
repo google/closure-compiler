@@ -16,7 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
@@ -1001,7 +1000,7 @@ public abstract class CompilerTestCase extends TestCase {
    */
   protected void testError(String js, DiagnosticType error, String description) {
     assertNotNull(error);
-    test(srcs(js), error(error, description));
+    test(srcs(js), error(error).withMessage(description));
   }
 
   /**
@@ -1044,7 +1043,7 @@ public abstract class CompilerTestCase extends TestCase {
    */
   protected void testError(List<SourceFile> inputs, DiagnosticType error, String description) {
     assertNotNull(error);
-    test(srcs(inputs), error(error, description));
+    test(srcs(inputs), error(error).withMessage(description));
   }
 
   /**
@@ -1116,7 +1115,7 @@ public abstract class CompilerTestCase extends TestCase {
    */
   protected void testWarning(String js, DiagnosticType warning, String description) {
     assertNotNull(warning);
-    test(srcs(js), warning(warning, description));
+    test(srcs(js), warning(warning).withMessage(description));
   }
 
   /**
@@ -1124,7 +1123,7 @@ public abstract class CompilerTestCase extends TestCase {
    */
   protected void testWarning(List<SourceFile> inputs, DiagnosticType warning, String description) {
     assertNotNull(warning);
-    test(srcs(inputs), warning(warning, description));
+    test(srcs(inputs), warning(warning).withMessage(description));
   }
 
   /**
@@ -1133,7 +1132,7 @@ public abstract class CompilerTestCase extends TestCase {
   protected void testWarning(
       String externs, String js, DiagnosticType warning, String description) {
     assertNotNull(warning);
-    test(externs(externs), srcs(js), warning(warning, description));
+    test(externs(externs), srcs(js), warning(warning).withMessage(description));
   }
 
   /**
@@ -2142,20 +2141,8 @@ public abstract class CompilerTestCase extends TestCase {
     return new WarningDiagnostic(type);
   }
 
-  protected static Diagnostic warning(DiagnosticType type, String match) {
-    checkNotNull(type);
-    Diagnostic diagnostic = warning(type);
-    return match != null ? diagnostic.withMessage(match) : diagnostic;
-  }
-
   protected static Diagnostic error(DiagnosticType type) {
     return new ErrorDiagnostic(type);
-  }
-
-  protected static Diagnostic error(DiagnosticType type, String match) {
-    checkNotNull(type);
-    Diagnostic diagnostic = error(type);
-    return match != null ? diagnostic.withMessage(match) : diagnostic;
   }
 
   protected static Postcondition postcondition(Postcondition postcondition) {

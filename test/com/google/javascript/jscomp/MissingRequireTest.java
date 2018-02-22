@@ -52,19 +52,19 @@ public final class MissingRequireTest extends CompilerTestCase {
   }
 
   private void testMissingRequireStrict(String js, String warningText) {
-    testSame(srcs(js), warning(MISSING_REQUIRE_STRICT_WARNING, warningText));
+    testSame(srcs(js), warning(MISSING_REQUIRE_STRICT_WARNING).withMessage(warningText));
   }
 
   private void testMissingRequire(String js, String warningText) {
-    testSame(srcs(js), warning(MISSING_REQUIRE_WARNING, warningText));
+    testSame(srcs(js), warning(MISSING_REQUIRE_WARNING).withMessage(warningText));
   }
 
   private void testMissingRequire(String[] js, String warningText) {
-    testSame(srcs(js), warning(MISSING_REQUIRE_WARNING, warningText));
+    testSame(srcs(js), warning(MISSING_REQUIRE_WARNING).withMessage(warningText));
   }
 
   private void testMissingRequireForScope(String[] js, String warningText) {
-    testSame(srcs(js), warning(MISSING_REQUIRE_FOR_GOOG_SCOPE, warningText));
+    testSame(srcs(js), warning(MISSING_REQUIRE_FOR_GOOG_SCOPE).withMessage(warningText));
   }
 
   public void testPassWithNoNewNodes() {

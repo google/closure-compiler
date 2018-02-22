@@ -195,7 +195,8 @@ public final class CheckSideEffectsTest extends CompilerTestCase {
     test(
         "void f();",
         "JSCOMPILER_PRESERVE(void f());",
-        warning(e, "Suspicious code. The result of the 'void' operator is not being used."));
+        warning(e).withMessage(
+            "Suspicious code. The result of the 'void' operator is not being used."));
   }
 
   public void testExternFunctions() {
@@ -215,8 +216,7 @@ public final class CheckSideEffectsTest extends CompilerTestCase {
         externs(externs),
         srcs("noSideEffectsExtern();"),
         expected("JSCOMPILER_PRESERVE(noSideEffectsExtern());"),
-        warning(
-            e,
+        warning(e).withMessage(
             "Suspicious code. The result of the extern function call "
                 + "'noSideEffectsExtern' is not being used."));
 
@@ -224,8 +224,7 @@ public final class CheckSideEffectsTest extends CompilerTestCase {
         externs(externs),
         srcs("noSideEffectsExtern2();"),
         expected("JSCOMPILER_PRESERVE(noSideEffectsExtern2());"),
-        warning(
-            e,
+        warning(e).withMessage(
             "Suspicious code. The result of the extern function call "
                 + "'noSideEffectsExtern2' is not being used."));
 
@@ -252,8 +251,7 @@ public final class CheckSideEffectsTest extends CompilerTestCase {
         externs(externs),
         srcs("foo.noSideEffectsExtern();"),
         expected("JSCOMPILER_PRESERVE(foo.noSideEffectsExtern());"),
-        warning(
-            e,
+        warning(e).withMessage(
             "Suspicious code. The result of the extern function call "
                 + "'foo.noSideEffectsExtern' is not being used."));
 

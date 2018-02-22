@@ -2693,7 +2693,7 @@ if (false) {
         externs(DEFAULT_EXTERNS + externs),
         srcs(js),
         expected(expected),
-        warning(warning, description));
+        warning(warning).withMessage(description));
     assertEquals(fieldTypes, mapToString(lastPass.getRenamedTypesForTesting()));
   }
 
