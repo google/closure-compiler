@@ -1060,10 +1060,10 @@ public final class CheckJSDocStyleTest extends CompilerTestCase {
   }
 
   public void testExternsAnnotation() {
-    testSame(
-        "function Example() {}",
-        "",
-        EXTERNS_FILES_SHOULD_BE_ANNOTATED);
+    test(
+        externs("function Example() {}"),
+        srcs(""),
+        warning(EXTERNS_FILES_SHOULD_BE_ANNOTATED));
 
     testSame(
         externs(
@@ -1087,7 +1087,10 @@ public final class CheckJSDocStyleTest extends CompilerTestCase {
   }
 
   public void testInvalidExternsAnnotation_withES6Modules() {
-    testSame("export function Example() {}", "", EXTERNS_FILES_SHOULD_BE_ANNOTATED);
+    test(
+        externs("export function Example() {}"),
+        srcs(""),
+        warning(EXTERNS_FILES_SHOULD_BE_ANNOTATED));
   }
 
   public void testValidExternsAnnotation_withES6Modules() {

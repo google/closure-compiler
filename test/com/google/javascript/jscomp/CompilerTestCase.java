@@ -1298,46 +1298,6 @@ public abstract class CompilerTestCase extends TestCase {
   }
 
   /**
-   * Verifies that the compiler pass's JS output is the same as its input
-   * and (optionally) that an expected warning is issued.
-   *
-   * @param externs Externs input
-   * @param js Input and output
-   * @param warning Expected warning, or null if no warning is expected
-   */
-  protected void testSame(String externs, String js, DiagnosticType warning) {
-    test(externs(externs), srcs(js), expected(js), warning(warning));
-  }
-
-  /**
-   * Verifies that the compiler pass's JS output is the same as its input
-   * and (optionally) that an expected warning is issued.
-   *
-   * @param externs Externs input
-   * @param js Input and output
-   * @param diag Expected error or warning, or null if none is expected
-
-   */
-  protected void testSame(String externs, String js, Diagnostic diag) {
-    test(externs(externs), srcs(js), diag);
-  }
-
-  /**
-   * Verifies that the compiler pass's JS output is the same as its input
-   * and (optionally) that an expected warning and description is issued.
-   *
-   * @param externs Externs input
-   * @param js Input and output
-   * @param warning Expected warning, or null if no warning is expected
-   * @param description The description of the expected warning,
-   *      or null if no warning is expected or if the warning's description
-   *      should not be examined
-   */
-  protected void testSame(String externs, String js, DiagnosticType warning, String description) {
-    test(externs(externs), srcs(js), expected(js), warning(warning, description));
-  }
-
-  /**
    * Verifies that the compiler pass's JS output is the same as its input.
    *
    * @param js Inputs and outputs
