@@ -19,6 +19,7 @@ package com.google.javascript.jscomp.deps;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.google.common.collect.ImmutableList;
+import com.google.javascript.jscomp.deps.DependencyInfo.Require;
 import java.util.List;
 import junit.framework.TestCase;
 
@@ -34,17 +35,20 @@ public class Es6SortedDependenciesTest extends TestCase {
   }
 
   public void testSort() throws Exception {
-    SimpleDependencyInfo a = SimpleDependencyInfo.builder("a", "a")
-        .setRequires("b", "c")
-        .build();
-    SimpleDependencyInfo b = SimpleDependencyInfo.builder("b", "b")
-        .setProvides("b")
-        .setRequires("d")
-        .build();
-    SimpleDependencyInfo c = SimpleDependencyInfo.builder("c", "c")
-        .setProvides("c")
-        .setRequires("d")
-        .build();
+    SimpleDependencyInfo a =
+        SimpleDependencyInfo.builder("a", "a")
+            .setRequires(Require.googRequireSymbol("b"), Require.googRequireSymbol("c"))
+            .build();
+    SimpleDependencyInfo b =
+        SimpleDependencyInfo.builder("b", "b")
+            .setProvides("b")
+            .setRequires(Require.googRequireSymbol("d"))
+            .build();
+    SimpleDependencyInfo c =
+        SimpleDependencyInfo.builder("c", "c")
+            .setProvides("c")
+            .setRequires(Require.googRequireSymbol("d"))
+            .build();
     SimpleDependencyInfo d = SimpleDependencyInfo.builder("d", "d")
         .setProvides("d")
         .build();
@@ -88,22 +92,26 @@ public class Es6SortedDependenciesTest extends TestCase {
   }
 
   public void testSort2() throws Exception {
-    SimpleDependencyInfo ab = SimpleDependencyInfo.builder("ab", "ab")
-        .setProvides("a", "b")
-        .setRequires("d", "f")
-        .build();
-    SimpleDependencyInfo c = SimpleDependencyInfo.builder("c", "c")
-        .setProvides("c")
-        .setRequires("h")
-        .build();
-    SimpleDependencyInfo d = SimpleDependencyInfo.builder("d", "d")
-        .setProvides("d")
-        .setRequires("e", "f")
-        .build();
-    SimpleDependencyInfo ef = SimpleDependencyInfo.builder("ef", "ef")
-        .setProvides("e", "f")
-        .setRequires("g", "c")
-        .build();
+    SimpleDependencyInfo ab =
+        SimpleDependencyInfo.builder("ab", "ab")
+            .setProvides("a", "b")
+            .setRequires(Require.googRequireSymbol("d"), Require.googRequireSymbol("f"))
+            .build();
+    SimpleDependencyInfo c =
+        SimpleDependencyInfo.builder("c", "c")
+            .setProvides("c")
+            .setRequires(Require.googRequireSymbol("h"))
+            .build();
+    SimpleDependencyInfo d =
+        SimpleDependencyInfo.builder("d", "d")
+            .setProvides("d")
+            .setRequires(Require.googRequireSymbol("e"), Require.googRequireSymbol("f"))
+            .build();
+    SimpleDependencyInfo ef =
+        SimpleDependencyInfo.builder("ef", "ef")
+            .setProvides("e", "f")
+            .setRequires(Require.googRequireSymbol("g"), Require.googRequireSymbol("c"))
+            .build();
     SimpleDependencyInfo g = SimpleDependencyInfo.builder("g", "g")
         .setProvides("g")
         .build();
@@ -126,18 +134,21 @@ public class Es6SortedDependenciesTest extends TestCase {
   }
 
   public void testSort3() {
-    SimpleDependencyInfo a = SimpleDependencyInfo.builder("a", "a")
-        .setProvides("a")
-        .setRequires("c")
-        .build();
-    SimpleDependencyInfo b = SimpleDependencyInfo.builder("b", "b")
-        .setProvides("b")
-        .setRequires("a")
-        .build();
-    SimpleDependencyInfo c = SimpleDependencyInfo.builder("c", "c")
-        .setProvides("c")
-        .setRequires("b")
-        .build();
+    SimpleDependencyInfo a =
+        SimpleDependencyInfo.builder("a", "a")
+            .setProvides("a")
+            .setRequires(Require.googRequireSymbol("c"))
+            .build();
+    SimpleDependencyInfo b =
+        SimpleDependencyInfo.builder("b", "b")
+            .setProvides("b")
+            .setRequires(Require.googRequireSymbol("a"))
+            .build();
+    SimpleDependencyInfo c =
+        SimpleDependencyInfo.builder("c", "c")
+            .setProvides("c")
+            .setRequires(Require.googRequireSymbol("b"))
+            .build();
 
     assertOrder(
         ImmutableList.of(a, b, c), ImmutableList.of(b, c, a));
@@ -145,10 +156,11 @@ public class Es6SortedDependenciesTest extends TestCase {
 
   public void testSort4() throws Exception {
     // Check the degenerate case.
-    SimpleDependencyInfo a = SimpleDependencyInfo.builder("a", "a")
-        .setProvides("a")
-        .setRequires("a")
-        .build();
+    SimpleDependencyInfo a =
+        SimpleDependencyInfo.builder("a", "a")
+            .setProvides("a")
+            .setRequires(Require.googRequireSymbol("a"))
+            .build();
     assertSortedDeps(
         ImmutableList.of(a),
         ImmutableList.of(a),
@@ -175,103 +187,123 @@ public class Es6SortedDependenciesTest extends TestCase {
   }
 
   public void testSort6() {
-    SimpleDependencyInfo a = SimpleDependencyInfo.builder("gin", "gin")
-        .setProvides("gin")
-        .setRequires("tonic")
-        .build();
-    SimpleDependencyInfo b = SimpleDependencyInfo.builder("tonic", "tonic")
-        .setProvides("tonic")
-        .setRequires("gin2")
-        .build();
-    SimpleDependencyInfo c = SimpleDependencyInfo.builder("gin2", "gin2")
-        .setProvides("gin2")
-        .setRequires("gin")
-        .build();
-    SimpleDependencyInfo d = SimpleDependencyInfo.builder("gin3", "gin3")
-        .setProvides("gin3")
-        .setRequires("gin")
-        .build();
+    SimpleDependencyInfo a =
+        SimpleDependencyInfo.builder("gin", "gin")
+            .setProvides("gin")
+            .setRequires(Require.googRequireSymbol("tonic"))
+            .build();
+    SimpleDependencyInfo b =
+        SimpleDependencyInfo.builder("tonic", "tonic")
+            .setProvides("tonic")
+            .setRequires(Require.googRequireSymbol("gin2"))
+            .build();
+    SimpleDependencyInfo c =
+        SimpleDependencyInfo.builder("gin2", "gin2")
+            .setProvides("gin2")
+            .setRequires(Require.googRequireSymbol("gin"))
+            .build();
+    SimpleDependencyInfo d =
+        SimpleDependencyInfo.builder("gin3", "gin3")
+            .setProvides("gin3")
+            .setRequires(Require.googRequireSymbol("gin"))
+            .build();
 
     assertOrder(ImmutableList.of(a, b, c, d), ImmutableList.of(c, b, a, d));
   }
 
   public void testSort7() {
-    SimpleDependencyInfo a = SimpleDependencyInfo.builder("gin", "gin")
-        .setProvides("gin")
-        .setRequires("tonic")
-        .build();
-    SimpleDependencyInfo b = SimpleDependencyInfo.builder("tonic", "tonic")
-        .setProvides("tonic")
-        .setRequires("gin")
-        .build();
-    SimpleDependencyInfo c = SimpleDependencyInfo.builder("gin2", "gin2")
-        .setProvides("gin2")
-        .setRequires("gin")
-        .build();
-    SimpleDependencyInfo d = SimpleDependencyInfo.builder("gin3", "gin3")
-        .setProvides("gin3")
-        .setRequires("gin")
-        .build();
+    SimpleDependencyInfo a =
+        SimpleDependencyInfo.builder("gin", "gin")
+            .setProvides("gin")
+            .setRequires(Require.googRequireSymbol("tonic"))
+            .build();
+    SimpleDependencyInfo b =
+        SimpleDependencyInfo.builder("tonic", "tonic")
+            .setProvides("tonic")
+            .setRequires(Require.googRequireSymbol("gin"))
+            .build();
+    SimpleDependencyInfo c =
+        SimpleDependencyInfo.builder("gin2", "gin2")
+            .setProvides("gin2")
+            .setRequires(Require.googRequireSymbol("gin"))
+            .build();
+    SimpleDependencyInfo d =
+        SimpleDependencyInfo.builder("gin3", "gin3")
+            .setProvides("gin3")
+            .setRequires(Require.googRequireSymbol("gin"))
+            .build();
 
     assertOrder(
         ImmutableList.of(a, b, c, d), ImmutableList.of(b, a, c, d));
   }
 
   public void testSort8() {
-    SimpleDependencyInfo a = SimpleDependencyInfo.builder("A", "A")
-        .setProvides("A")
-        .setRequires("B")
-        .build();
-    SimpleDependencyInfo b = SimpleDependencyInfo.builder("B", "B")
-        .setProvides("B")
-        .setRequires("C")
-        .build();
-    SimpleDependencyInfo c = SimpleDependencyInfo.builder("C", "C")
-        .setProvides("C")
-        .setRequires("D")
-        .build();
-    SimpleDependencyInfo d = SimpleDependencyInfo.builder("D", "D")
-        .setProvides("D")
-        .setRequires("A")
-        .build();
+    SimpleDependencyInfo a =
+        SimpleDependencyInfo.builder("A", "A")
+            .setProvides("A")
+            .setRequires(Require.googRequireSymbol("B"))
+            .build();
+    SimpleDependencyInfo b =
+        SimpleDependencyInfo.builder("B", "B")
+            .setProvides("B")
+            .setRequires(Require.googRequireSymbol("C"))
+            .build();
+    SimpleDependencyInfo c =
+        SimpleDependencyInfo.builder("C", "C")
+            .setProvides("C")
+            .setRequires(Require.googRequireSymbol("D"))
+            .build();
+    SimpleDependencyInfo d =
+        SimpleDependencyInfo.builder("D", "D")
+            .setProvides("D")
+            .setRequires(Require.googRequireSymbol("A"))
+            .build();
 
     assertOrder(
         ImmutableList.of(a, b, c, d), ImmutableList.of(d, c, b, a));
   }
 
   public void testSort9() {
-    SimpleDependencyInfo a = SimpleDependencyInfo.builder("A", "A")
-        .setProvides("A")
-        .setRequires("B")
-        .build();
-    SimpleDependencyInfo a2 = SimpleDependencyInfo.builder("A", "A")
-        .setProvides("A")
-        .setRequires("B1")
-        .build();
-    SimpleDependencyInfo b = SimpleDependencyInfo.builder("B", "B")
-        .setProvides("B")
-        .setRequires("C")
-        .build();
-    SimpleDependencyInfo c = SimpleDependencyInfo.builder("C", "C")
-        .setProvides("C")
-        .setRequires("E")
-        .build();
-    SimpleDependencyInfo d = SimpleDependencyInfo.builder("D", "D")
-        .setProvides("D")
-        .setRequires("A")
-        .build();
-    SimpleDependencyInfo e = SimpleDependencyInfo.builder("B1", "B1")
-        .setProvides("B1")
-        .setRequires("C1")
-        .build();
-    SimpleDependencyInfo f = SimpleDependencyInfo.builder("C1", "C1")
-        .setProvides("C1")
-        .setRequires("D1")
-        .build();
-    SimpleDependencyInfo g = SimpleDependencyInfo.builder("D1", "D1")
-        .setProvides("D1")
-        .setRequires("A")
-        .build();
+    SimpleDependencyInfo a =
+        SimpleDependencyInfo.builder("A", "A")
+            .setProvides("A")
+            .setRequires(Require.googRequireSymbol("B"))
+            .build();
+    SimpleDependencyInfo a2 =
+        SimpleDependencyInfo.builder("A", "A")
+            .setProvides("A")
+            .setRequires(Require.googRequireSymbol("B1"))
+            .build();
+    SimpleDependencyInfo b =
+        SimpleDependencyInfo.builder("B", "B")
+            .setProvides("B")
+            .setRequires(Require.googRequireSymbol("C"))
+            .build();
+    SimpleDependencyInfo c =
+        SimpleDependencyInfo.builder("C", "C")
+            .setProvides("C")
+            .setRequires(Require.googRequireSymbol("E"))
+            .build();
+    SimpleDependencyInfo d =
+        SimpleDependencyInfo.builder("D", "D")
+            .setProvides("D")
+            .setRequires(Require.googRequireSymbol("A"))
+            .build();
+    SimpleDependencyInfo e =
+        SimpleDependencyInfo.builder("B1", "B1")
+            .setProvides("B1")
+            .setRequires(Require.googRequireSymbol("C1"))
+            .build();
+    SimpleDependencyInfo f =
+        SimpleDependencyInfo.builder("C1", "C1")
+            .setProvides("C1")
+            .setRequires(Require.googRequireSymbol("D1"))
+            .build();
+    SimpleDependencyInfo g =
+        SimpleDependencyInfo.builder("D1", "D1")
+            .setProvides("D1")
+            .setRequires(Require.googRequireSymbol("A"))
+            .build();
 
     assertOrder(ImmutableList.of(a, a2, b, c, d, e, f, g),
         ImmutableList.of(c, b, a, g, f, e, a2, d));
@@ -281,7 +313,7 @@ public class Es6SortedDependenciesTest extends TestCase {
     SimpleDependencyInfo a =
         SimpleDependencyInfo.builder("A", "A")
             .setProvides("A")
-            .setRequires("C")
+            .setRequires(Require.googRequireSymbol("C"))
             .build();
     SimpleDependencyInfo b = SimpleDependencyInfo.builder("B", "B")
         .setProvides("B")
@@ -315,13 +347,5 @@ public class Es6SortedDependenciesTest extends TestCase {
       ImmutableList<SimpleDependencyInfo> shuffle, ImmutableList<SimpleDependencyInfo> expected) {
     SortedDependencies<SimpleDependencyInfo> sorted = createSortedDependencies(shuffle);
     assertThat(sorted.getSortedList()).isEqualTo(expected);
-  }
-
-  private static ImmutableList<String> requires(String... strings) {
-    return ImmutableList.copyOf(strings);
-  }
-
-  private static ImmutableList<String> provides(String... strings) {
-    return ImmutableList.copyOf(strings);
   }
 }

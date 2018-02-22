@@ -20,6 +20,7 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.deps.DependencyInfo;
+import com.google.javascript.jscomp.deps.DependencyInfo.Require;
 import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.jscomp.deps.SimpleDependencyInfo;
 import java.util.Arrays;
@@ -31,19 +32,21 @@ import junit.framework.TestCase;
 public final class LazyParsedDependencyInfoTest extends TestCase {
 
   public void testDelegation() {
+    Require baz = Require.googRequireSymbol("baz");
+    Require qux = Require.googRequireSymbol("qux");
     Compiler compiler = new Compiler();
     JsAst ast = new JsAst(SourceFile.fromCode("file.js", "// nothing here"));
     SimpleDependencyInfo delegate =
         SimpleDependencyInfo.builder("path/to/1.js", "path/2.js")
             .setProvides("foo", "bar")
-            .setRequires("baz", "qux")
+            .setRequires(baz, qux)
             .build();
     DependencyInfo info = new LazyParsedDependencyInfo(delegate, ast, compiler);
 
     assertThat(info.getName()).isEqualTo("path/2.js");
     assertThat(info.getPathRelativeToClosureBase()).isEqualTo("path/to/1.js");
     assertThat(info.getProvides()).containsExactly("foo", "bar");
-    assertThat(info.getRequires()).containsExactly("baz", "qux");
+    assertThat(info.getRequires()).containsExactly(baz, qux);
   }
 
   public void testLoadFlagsParsesEs3() {

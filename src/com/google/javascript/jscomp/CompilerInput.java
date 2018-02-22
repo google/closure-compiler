@@ -40,12 +40,12 @@ import java.util.Map;
 import java.util.TreeMap;
 
 /**
- * A class for the internal representation of an input to the compiler.
- * Wraps a {@link SourceAst} and maintain state such as module for the input and
- * whether the input is an extern. Also calculates provided and required types.
+ * A class for the internal representation of an input to the compiler. Wraps a {@link SourceAst}
+ * and maintain state such as module for the input and whether the input is an extern. Also
+ * calculates provided and required types.
  *
  */
-public class CompilerInput implements SourceAst, DependencyInfo {
+public class CompilerInput extends DependencyInfo.Base implements SourceAst {
 
   private static final long serialVersionUID = 1L;
 
@@ -58,9 +58,9 @@ public class CompilerInput implements SourceAst, DependencyInfo {
 
   // DependencyInfo to delegate to.
   private DependencyInfo dependencyInfo;
-  private final List<String> extraRequires = new ArrayList<>();
+  private final List<Require> extraRequires = new ArrayList<>();
   private final List<String> extraProvides = new ArrayList<>();
-  private final List<String> orderedRequires = new ArrayList<>();
+  private final List<Require> orderedRequires = new ArrayList<>();
   private final List<String> dynamicRequires = new ArrayList<>();
   private boolean hasFullParseDependencyInfo = false;
   private ModuleType jsModuleType = ModuleType.NONE;
@@ -162,7 +162,7 @@ public class CompilerInput implements SourceAst, DependencyInfo {
 
   /** Gets a list of types depended on by this input. */
   @Override
-  public ImmutableList<String> getRequires() {
+  public ImmutableList<Require> getRequires() {
     if (hasFullParseDependencyInfo) {
       return ImmutableList.copyOf(orderedRequires);
     }
@@ -176,14 +176,16 @@ public class CompilerInput implements SourceAst, DependencyInfo {
   }
 
   /**
-   * Gets a list of types depended on by this input,
-   * but does not attempt to regenerate the dependency information.
-   * Typically this occurs from module rewriting.
+   * Gets a list of namespaces and paths depended on by this input, but does not attempt to
+   * regenerate the dependency information. Typically this occurs from module rewriting.
    */
-  ImmutableCollection<String> getKnownRequires() {
+  ImmutableCollection<Require> getKnownRequires() {
     return concat(
-        dependencyInfo != null ? dependencyInfo.getRequires() : ImmutableList.<String>of(),
-        extraRequires);
+        dependencyInfo != null ? dependencyInfo.getRequires() : ImmutableList.of(), extraRequires);
+  }
+
+  ImmutableList<String> getKnownRequiredSymbols() {
+    return Require.asSymbolList(getKnownRequires());
   }
 
   /** Gets a list of types provided by this input. */
@@ -212,7 +214,7 @@ public class CompilerInput implements SourceAst, DependencyInfo {
   }
 
   /** Registers a type that this input depends on in the order seen in the file. */
-  public boolean addOrderedRequire(String require) {
+  public boolean addOrderedRequire(Require require) {
     if (!orderedRequires.contains(require)) {
       orderedRequires.add(require);
       return true;
@@ -255,7 +257,7 @@ public class CompilerInput implements SourceAst, DependencyInfo {
   }
 
   /** Registers a type that this input depends on. */
-  public void addRequire(String require) {
+  public void addRequire(Require require) {
     extraRequires.add(require);
   }
 
@@ -341,7 +343,7 @@ public class CompilerInput implements SourceAst, DependencyInfo {
   private static class DepsFinder {
     private final Map<String, String> loadFlags = new TreeMap<>();
     private final List<String> provides = new ArrayList<>();
-    private final List<String> requires = new ArrayList<>();
+    private final List<Require> requires = new ArrayList<>();
     private final ModulePath modulePath;
 
     DepsFinder(ModulePath modulePath) {
@@ -369,14 +371,13 @@ public class CompilerInput implements SourceAst, DependencyInfo {
               && n.getFirstChild().isGetProp()
               && n.getFirstFirstChild().matchesQualifiedName("goog")) {
 
-            if (!requires.contains("goog")) {
-              requires.add("goog");
+            if (!requires.contains(Require.BASE)) {
+              requires.add(Require.BASE);
             }
 
             Node callee = n.getFirstChild();
             Node argument = n.getLastChild();
             switch (callee.getLastChild().getString()) {
-
               case "module":
                 loadFlags.put("module", "goog");
                 // Fall-through
@@ -391,7 +392,7 @@ public class CompilerInput implements SourceAst, DependencyInfo {
                 if (!argument.isString()) {
                   return;
                 }
-                requires.add(argument.getString());
+                requires.add(Require.googRequireSymbol(argument.getString()));
                 return;
 
               case "loadModule":
@@ -456,7 +457,8 @@ public class CompilerInput implements SourceAst, DependencyInfo {
       // into ModuleLoader.
       String moduleName = n.getString();
       if (moduleName.startsWith("goog:")) {
-        requires.add(moduleName.substring(5)); // cut off the "goog:" prefix
+        // cut off the "goog:" prefix
+        requires.add(Require.googRequireSymbol(moduleName.substring(5)));
         return;
       }
       ModulePath importedModule =
@@ -467,7 +469,7 @@ public class CompilerInput implements SourceAst, DependencyInfo {
         importedModule = modulePath.resolveModuleAsPath(moduleName);
       }
 
-      requires.add(importedModule.toModuleName());
+      requires.add(Require.es6Import(importedModule.toModuleName(), n.getString()));
     }
   }
 
@@ -523,11 +525,6 @@ public class CompilerInput implements SourceAst, DependencyInfo {
   @Override
   public ImmutableMap<String, String> getLoadFlags() {
     return getDependencyInfo().getLoadFlags();
-  }
-
-  @Override
-  public boolean isModule() {
-    return "goog".equals(getLoadFlags().get("module"));
   }
 
   private static <T> ImmutableSet<T> concat(Iterable<T> first, Iterable<T> second) {

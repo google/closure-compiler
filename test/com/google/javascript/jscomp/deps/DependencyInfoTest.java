@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp.deps;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.javascript.jscomp.deps.DependencyInfo.Require.googRequireSymbol;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -32,7 +33,7 @@ public final class DependencyInfoTest extends TestCase {
         sb,
         SimpleDependencyInfo.builder("../some/relative/path.js", "/unused/absolute/path.js")
             .setProvides(ImmutableList.of("provided.symbol", "other.provide"))
-            .setRequires(ImmutableList.of("required.symbol", "other.require"))
+            .setRequires(googRequireSymbol("required.symbol"), googRequireSymbol("other.require"))
             .setLoadFlags(ImmutableMap.of("module", "goog", "lang", "es6"))
             .build());
     assertThat(sb.toString())

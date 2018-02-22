@@ -23,6 +23,7 @@ import com.google.common.base.CharMatcher;
 import com.google.javascript.jscomp.CheckLevel;
 import com.google.javascript.jscomp.ErrorManager;
 import com.google.javascript.jscomp.JSError;
+import com.google.javascript.jscomp.deps.DependencyInfo.Require;
 import java.io.Reader;
 import java.io.StringReader;
 import java.util.ArrayList;
@@ -98,7 +99,8 @@ public final class JsFileParser extends JsFileLineParser {
 
   /** The info for the file we are currently parsing. */
   private List<String> provides;
-  private List<String> requires;
+
+  private List<Require> requires;
   private List<String> weakRequires;
   private boolean fileHasProvidesOrRequires;
   private ModuleLoader loader = ModuleLoader.EMPTY;
@@ -246,7 +248,7 @@ public final class JsFileParser extends JsFileLineParser {
 
         if (includeGoogBase && !fileHasProvidesOrRequires) {
           fileHasProvidesOrRequires = true;
-          requires.add("goog");
+          requires.add(Require.BASE);
         }
 
         // See if it's a require or provide.
@@ -269,9 +271,16 @@ public final class JsFileParser extends JsFileLineParser {
               weakRequires.add(arg);
             } else if (!"goog".equals(arg)) {
               // goog is always implicit.
-              // TODO(nicksantos): I'm pretty sure we don't need this anymore.
-              // Remove this later.
-              requires.add(arg);
+              Require require = Require.googRequireSymbol(arg);
+              if (ModuleLoader.isRelativeIdentifier(arg)) {
+                ModuleLoader.ModulePath path = file.resolveJsModule(arg);
+                if (path == null) {
+                  path = file.resolveModuleAsPath(arg);
+                }
+                String symbol = path.toModuleName();
+                require = Require.googRequirePath(symbol, arg);
+              }
+              requires.add(require);
             }
           } else {
             provides.add(arg);
@@ -295,13 +304,14 @@ public final class JsFileParser extends JsFileLineParser {
         String arg = es6Matcher.group(1);
         if (arg != null) {
           if (arg.startsWith("goog:")) {
-            requires.add(arg.substring(5)); // cut off the "goog:" prefix
+            // cut off the "goog:" prefix
+            requires.add(Require.googRequireSymbol(arg.substring(5)));
           } else {
             ModuleLoader.ModulePath path = file.resolveJsModule(arg);
             if (path == null) {
               path = file.resolveModuleAsPath(arg);
             }
-            requires.add(path.toModuleName());
+            requires.add(Require.es6Import(path.toModuleName(), arg));
           }
         }
       }
