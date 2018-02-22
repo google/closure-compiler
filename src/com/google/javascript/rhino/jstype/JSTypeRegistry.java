@@ -1090,7 +1090,9 @@ public class JSTypeRegistry implements TypeIRegistry {
   }
 
   private String getSimpleReadableJSTypeName(JSType type) {
-    if (type instanceof ValueType) {
+    if (type instanceof AllType) {
+      return type.toString();
+    } else if (type instanceof ValueType) {
       return type.toString();
     } else if (type.isFunctionPrototypeType()) {
       return type.toString();

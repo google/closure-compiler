@@ -38,6 +38,7 @@
 
 package com.google.javascript.rhino.jstype;
 
+import static com.google.javascript.rhino.jstype.JSTypeNative.ALL_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.BOOLEAN_OBJECT_FUNCTION_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.BOOLEAN_OBJECT_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.BOOLEAN_TYPE;
@@ -95,6 +96,8 @@ public class JSTypeRegistryTest extends TestCase {
 
   public void testReadableTypeName() {
     JSTypeRegistry registry = new JSTypeRegistry(null);
+
+    assertEquals("*", getReadableTypeNameHelper(registry, ALL_TYPE));
 
     assertEquals("boolean", getReadableTypeNameHelper(registry, BOOLEAN_TYPE));
     assertEquals("Boolean", getReadableTypeNameHelper(registry, BOOLEAN_OBJECT_TYPE));
