@@ -1807,7 +1807,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
         // In this case we must force module rewriting to occur on the imported file
         Map<String, CompilerInput> inputsToRewrite = new HashMap<>();
         for (CompilerInput input : inputs) {
-          for (String require : input.getKnownRequiredSymbols()) {
+          for (String require : input.getKnownRequires()) {
             if (inputModuleIdentifiers.containsKey(require)
                 && !inputsToRewrite.containsKey(require)) {
               inputsToRewrite.put(require, inputModuleIdentifiers.get(require));
@@ -2015,7 +2015,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     this.moduleTypesByName.put(input.getPath().toModuleName(), input.getJsModuleType());
 
     ArrayList<String> allDeps = new ArrayList<>();
-    allDeps.addAll(input.getRequiredSymbols());
+    allDeps.addAll(input.getRequires());
     allDeps.addAll(input.getDynamicRequires());
     for (String requiredNamespace : allDeps) {
       CompilerInput requiredInput = null;

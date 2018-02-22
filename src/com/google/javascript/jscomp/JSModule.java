@@ -35,11 +35,11 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * A JavaScript module has a unique name, consists of a list of compiler inputs, and can depend on
- * other modules.
+ * A JavaScript module has a unique name, consists of a list of compiler inputs,
+ * and can depend on other modules.
  *
  */
-public final class JSModule extends DependencyInfo.Base implements Serializable {
+public final class JSModule implements DependencyInfo, Serializable {
   private static final long serialVersionUID = 1;
 
   /** Module name */
@@ -86,10 +86,10 @@ public final class JSModule extends DependencyInfo.Base implements Serializable 
   }
 
   @Override
-  public ImmutableList<Require> getRequires() {
-    ImmutableList.Builder<Require> builder = ImmutableList.builder();
+  public ImmutableList<String> getRequires() {
+    ImmutableList.Builder<String> builder = ImmutableList.builder();
     for (JSModule m : deps) {
-      builder.add(Require.compilerModule(m.getName()));
+      builder.add(m.getName());
     }
     return builder.build();
   }

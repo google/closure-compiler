@@ -76,7 +76,7 @@ public final class Es6SortedDependencies<INPUT extends DependencyInfo>
     while (!worklist.isEmpty()) {
       INPUT input = worklist.pop();
       if (includedInputs.add(input)) {
-        for (String symbolName : input.getRequiredSymbols()) {
+        for (String symbolName : input.getRequires()) {
           INPUT importedSymbolName = exportingInputBySymbolName.get(symbolName);
           if (importedSymbolName != null) {
             worklist.add(importedSymbolName);
@@ -163,7 +163,7 @@ public final class Es6SortedDependencies<INPUT extends DependencyInfo>
       }
     }
     for (INPUT userOrderedInput : userOrderedInputs) {
-      for (String symbolName : userOrderedInput.getRequiredSymbols()) {
+      for (String symbolName : userOrderedInput.getRequires()) {
         INPUT importedInput = exportingInputBySymbolName.get(symbolName);
         if (importedInput != null) {
           importedInputByImportingInput.put(userOrderedInput, importedInput);

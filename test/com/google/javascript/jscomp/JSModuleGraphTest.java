@@ -24,7 +24,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-import com.google.javascript.jscomp.deps.DependencyInfo.Require;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.BitSet;
@@ -432,7 +431,7 @@ public final class JSModuleGraphTest extends TestCase {
       for (CompilerInput input : A.getInputs()) {
         input.setCompiler(compiler);
         for (String require : orderedRequires.get(input.getSourceFile().getName())) {
-          input.addOrderedRequire(Require.compilerModule(require));
+          input.addOrderedRequire(require);
         }
         input.setHasFullParseDependencyInfo(true);
       }

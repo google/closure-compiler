@@ -27,8 +27,10 @@ import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import java.util.Map;
 import java.util.TreeMap;
 
-/** A DependencyInfo class that determines load flags by parsing the AST just-in-time. */
-public class LazyParsedDependencyInfo extends DependencyInfo.Base {
+/**
+ * A DependencyInfo class that determines load flags by parsing the AST just-in-time.
+ */
+public class LazyParsedDependencyInfo implements DependencyInfo {
 
   private final DependencyInfo delegate;
   private final JsAst ast;
@@ -75,7 +77,7 @@ public class LazyParsedDependencyInfo extends DependencyInfo.Base {
   }
 
   @Override
-  public ImmutableList<Require> getRequires() {
+  public ImmutableList<String> getRequires() {
     return delegate.getRequires();
   }
 
@@ -87,5 +89,10 @@ public class LazyParsedDependencyInfo extends DependencyInfo.Base {
   @Override
   public ImmutableList<String> getProvides() {
     return delegate.getProvides();
+  }
+
+  @Override
+  public boolean isModule() {
+    return "goog".equals(getLoadFlags().get("module"));
   }
 }

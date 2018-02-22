@@ -20,12 +20,9 @@ import com.google.common.annotations.GwtIncompatible;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
 import com.google.javascript.jscomp.ErrorManager;
-import com.google.javascript.jscomp.deps.DependencyInfo.Require;
 import java.io.File;
 import java.io.IOException;
 import java.io.Reader;
@@ -38,7 +35,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import javax.annotation.Nullable;
 
 /**
  * A parser that can extract dependency information from existing deps.js files.
@@ -172,16 +168,7 @@ public final class DepsFileParser extends JsFileLineParser {
         DependencyInfo depInfo =
             SimpleDependencyInfo.builder(path, filePath)
                 .setProvides(parseJsStringArray(depArgsMatch.group(2)))
-                .setRequires(
-                    ImmutableList.copyOf(
-                        Iterables.transform(
-                            parseJsStringArray(depArgsMatch.group(3)),
-                            new Function<String, Require>() {
-                              @Override
-                              public Require apply(@Nullable String input) {
-                                return Require.parsedFromDeps(input);
-                              }
-                            })))
+                .setRequires(parseJsStringArray(depArgsMatch.group(3)))
                 .setLoadFlags(parseLoadFlags(depArgsMatch.group(4)))
                 .build();
 

@@ -131,7 +131,7 @@ public final class DefaultDependencyResolver implements DependencyResolver  {
       }
     } else if (!seen.containsAll(dependency.getProvides())) {
       seen.addAll(dependency.getProvides());
-      for (String require : dependency.getRequiredSymbols()) {
+      for (String require : dependency.getRequires()) {
         addDependency(require, seen, list);
       }
       list.add(dependency.getPathRelativeToClosureBase());
@@ -148,7 +148,7 @@ public final class DefaultDependencyResolver implements DependencyResolver  {
     if (addClosureBase) {
       requires.add(CLOSURE_BASE_PROVIDE);
     }
-    requires.addAll(deps.getRequiredSymbols());
+    requires.addAll(deps.getRequires());
     errorManager.generateReport();
     return requires;
   }

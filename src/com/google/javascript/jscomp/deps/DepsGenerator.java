@@ -20,11 +20,8 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMultiset;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
-import com.google.common.collect.Multiset;
 import com.google.javascript.jscomp.CheckLevel;
 import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerOptions;
@@ -34,7 +31,6 @@ import com.google.javascript.jscomp.JSError;
 import com.google.javascript.jscomp.JsAst;
 import com.google.javascript.jscomp.LazyParsedDependencyInfo;
 import com.google.javascript.jscomp.SourceFile;
-import com.google.javascript.jscomp.deps.DependencyInfo.Require;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
@@ -72,29 +68,6 @@ public class DepsGenerator {
   private final InclusionStrategy mergeStrategy;
   private final ModuleLoader loader;
   final ErrorManager errorManager;
-
-  static final DiagnosticType ES6_IMPORT_FOR_NON_ES6_MODULE =
-      DiagnosticType.warning(
-          "DEPS_ES6_IMPORT_FOR_NON_ES6_MODULE",
-          "Cannot import file \"{0}\" because it is not an ES6 module.");
-
-  static final DiagnosticType GOOG_REQUIRE_PATH_BETWEEN_ES6_MODULES =
-      DiagnosticType.warning(
-          "DEPS_GOOG_REQUIRE_PATH_BETWEEN_ES6_MODULES",
-          "Use ES6 import rather than goog.require to import ES6 module \"{0}\".");
-
-  static final DiagnosticType GOOG_REQUIRE_PATH_FOR_NON_ES6_MODULE =
-      DiagnosticType.warning(
-          "DEPS_GOOG_REQUIRE_PATH_FOR_NON_ES6_MODULE",
-          "Cannot goog.require \"{0}\" by path. It is not an ES6 module.");
-
-  static final DiagnosticType GOOG_REQUIRE_PATH_FROM_NON_GOOG_MODULE =
-      DiagnosticType.warning(
-          "DEPS_GOOG_REQUIRE_PATH_FROM_NON_GOOG_MODULE",
-          "Cannot goog.require by path outside of a goog.module.");
-
-  static final DiagnosticType UNKNOWN_PATH_IMPORT =
-      DiagnosticType.warning("DEPS_UNKNOWN_PATH_IMPORT", "Could not find file \"{0}\".");
 
   static final DiagnosticType SAME_FILE_WARNING = DiagnosticType.warning(
       "DEPS_SAME_FILE",
@@ -160,8 +133,6 @@ public class DepsGenerator {
 
     cleanUpDuplicatedFiles(depsFiles, jsFiles);
 
-    jsFiles = fixPathRequires(depsFiles, jsFiles);
-
     // Check for missing provides or other semantic inconsistencies.
     validateDependencies(depsFiles.values(), jsFiles.values());
 
@@ -199,156 +170,41 @@ public class DepsGenerator {
   }
 
   /**
-   * Makes any path based requires actual paths before writing. The parsed {@link DependencyInfo}
-   * will not use paths as symbols in their {@link Require}, they use munged symbols.
-   */
-  private Map<String, DependencyInfo> fixPathRequires(
-      Map<String, DependencyInfo> depFiles, Map<String, DependencyInfo> jsFiles) {
-    Map<String, DependencyInfo> newJsFiles = new LinkedHashMap<>();
-    Map<String, DependencyInfo> providesMap = new LinkedHashMap<>();
-    addToProvideMap(depFiles.values(), providesMap, true);
-    addToProvideMap(jsFiles.values(), providesMap, false);
-
-    for (DependencyInfo dependencyInfo : jsFiles.values()) {
-      ArrayList<Require> newRequires = new ArrayList<>();
-      for (Require require : dependencyInfo.getRequires()) {
-        if (require.getType() == Require.Type.ES6_IMPORT
-            || require.getType() == Require.Type.GOOG_REQUIRE_PATH) {
-          // Symbols are unique per file and have nothing to do with paths so map lookups are safe
-          // here.
-          DependencyInfo provider = providesMap.get(require.getSymbol());
-          if (provider == null) {
-            reportMissingFile(dependencyInfo, require.getRawText());
-          } else {
-            // If this is an ES6 module then set the symbol to be its relative path to Closure.
-            // ES6 modules in a dependency file do not "provide" anything. Requires can match
-            // a provided symbol or a relative path to Closure.
-            newRequires.add(require.withSymbol(provider.getPathRelativeToClosureBase()));
-          }
-        } else {
-          // Require is by symbol already so no need to change it.
-          newRequires.add(require);
-        }
-      }
-
-      newJsFiles.put(
-          dependencyInfo.getPathRelativeToClosureBase(),
-          SimpleDependencyInfo.builder(
-                  dependencyInfo.getPathRelativeToClosureBase(), dependencyInfo.getName())
-              .setProvides(
-                  "es6".equals(dependencyInfo.getLoadFlags().get("module"))
-                      ? ImmutableList.of()
-                      : dependencyInfo.getProvides())
-              .setRequires(newRequires)
-              .setLoadFlags(dependencyInfo.getLoadFlags())
-              .build());
-    }
-
-    return newJsFiles;
-  }
-
-  /**
    * Reports if there are any dependency problems with the given dependency
    * information. Reported problems include:
    *     - A namespace being provided more than once
    *     - A namespace being required multiple times from within one file
    *     - A namespace being provided and required in the same file
    *     - A namespace being required that is never provided
-   * @param preparsedFileDependencies Dependency information from existing
+   * @param preparsedFileDepedencies Dependency information from existing
    *     deps.js files.
    * @param parsedFileDependencies Dependency information from parsed .js files.
    */
-  private void validateDependencies(Iterable<DependencyInfo> preparsedFileDependencies,
+  private void validateDependencies(Iterable<DependencyInfo> preparsedFileDepedencies,
       Iterable<DependencyInfo> parsedFileDependencies) {
     // Create a map of namespace -> file providing it.
     // Also report any duplicate provides.
     Map<String, DependencyInfo> providesMap = new LinkedHashMap<>();
-    addToProvideMap(preparsedFileDependencies, providesMap, true);
-    addToProvideMap(parsedFileDependencies, providesMap, false);
+    addToProvideMap(preparsedFileDepedencies, providesMap);
+    addToProvideMap(parsedFileDependencies, providesMap);
     // For each require in the parsed sources:
     for (DependencyInfo depInfo : parsedFileDependencies) {
-      Multiset<String> symbols = ImmutableMultiset.copyOf(depInfo.getRequiredSymbols());
-      for (String symbol : symbols.elementSet()) {
-        if (symbols.count(symbol) > 1) {
-          reportDuplicateRequire(symbol, depInfo);
+      List<String> requires = new ArrayList<>(depInfo.getRequires());
+      for (int i = 0, l = requires.size(); i < l; ++i) {
+        String namespace = requires.get(i);
+        // Check for multiple requires.
+        if (requires.subList(i + 1, l).contains(namespace)) {
+          reportDuplicateRequire(namespace, depInfo);
         }
-      }
-
-      for (Require require : depInfo.getRequires()) {
-        String namespace = require.getSymbol();
         // Check for missing provides.
         DependencyInfo provider = providesMap.get(namespace);
         if (provider == null) {
           reportUndefinedNamespace(namespace, depInfo);
         } else if (provider == depInfo) {
           reportSameFile(namespace, depInfo);
-        } else {
-          boolean isGoogModule = depInfo.isModule();
-          boolean isEs6Module = "es6".equals(depInfo.getLoadFlags().get("module"));
-          boolean providerIsEs6Module = "es6".equals(provider.getLoadFlags().get("module"));
-
-          switch (require.getType()) {
-            case ES6_IMPORT:
-              if (!providerIsEs6Module) {
-                reportEs6ImportForNonEs6Module(provider, depInfo);
-              }
-              break;
-            case GOOG_REQUIRE_PATH:
-              if (isEs6Module && providerIsEs6Module) {
-                reportGoogRequirePathBetweenEs6Modules(provider, depInfo);
-              } else {
-                if (!isGoogModule) {
-                  reportGoogRequirePathFromNonGoogModule(depInfo);
-                }
-                if (!providerIsEs6Module) {
-                  reportGoogRequirePathForNonEs6Module(provider, depInfo);
-                }
-              }
-              break;
-            case GOOG_REQUIRE_SYMBOL:
-            case PARSED_FROM_DEPS:
-              break;
-            case COMMON_JS:
-            case COMPILER_MODULE:
-            default:
-              throw new IllegalStateException("Unexpected import type: " + require.getType());
-          }
         }
       }
     }
-  }
-
-  private void reportMissingFile(DependencyInfo depInfo, String path) {
-    errorManager.report(
-        CheckLevel.ERROR, JSError.make(depInfo.getName(), -1, -1, UNKNOWN_PATH_IMPORT, path));
-  }
-
-  private void reportEs6ImportForNonEs6Module(DependencyInfo provider, DependencyInfo depInfo) {
-    errorManager.report(
-        CheckLevel.ERROR,
-        JSError.make(depInfo.getName(), -1, -1, ES6_IMPORT_FOR_NON_ES6_MODULE, provider.getName()));
-  }
-
-  private void reportGoogRequirePathBetweenEs6Modules(
-      DependencyInfo provider, DependencyInfo depInfo) {
-    errorManager.report(
-        CheckLevel.ERROR,
-        JSError.make(
-            depInfo.getName(), -1, -1, GOOG_REQUIRE_PATH_BETWEEN_ES6_MODULES, provider.getName()));
-  }
-
-  private void reportGoogRequirePathForNonEs6Module(
-      DependencyInfo provider, DependencyInfo depInfo) {
-    errorManager.report(
-        CheckLevel.ERROR,
-        JSError.make(
-            depInfo.getName(), -1, -1, GOOG_REQUIRE_PATH_FOR_NON_ES6_MODULE, provider.getName()));
-  }
-
-  private void reportGoogRequirePathFromNonGoogModule(DependencyInfo depInfo) {
-    errorManager.report(
-        CheckLevel.ERROR,
-        JSError.make(depInfo.getName(), -1, -1, GOOG_REQUIRE_PATH_FROM_NON_GOOG_MODULE));
   }
 
   private void reportSameFile(String namespace, DependencyInfo depInfo) {
@@ -390,36 +246,13 @@ public class DepsGenerator {
   }
 
   /**
-   * Adds the given DependencyInfos to the given providesMap. Also checks for and reports duplicate
-   * provides.
+   * Adds the given DependencyInfos to the given providesMap. Also checks for
+   * and reports duplicate provides.
    */
-  private void addToProvideMap(
-      Iterable<DependencyInfo> depInfos,
-      Map<String, DependencyInfo> providesMap,
-      boolean isFromDepsFile) {
+  private void addToProvideMap(Iterable<DependencyInfo> depInfos,
+      Map<String, DependencyInfo> providesMap) {
     for (DependencyInfo depInfo : depInfos) {
-      List<String> provides = Lists.newArrayList(depInfo.getProvides());
-
-      // Add a munged symbol to the provides map so that lookups by path requires work as intended.
-      if (isFromDepsFile) {
-        // Don't add the dependency file itself but every file it says exists instead.
-        provides.add(
-            loader
-                .resolve(
-                    PathUtil.makeAbsolute(depInfo.getPathRelativeToClosureBase(), closurePathAbs))
-                .toModuleName());
-      } else {
-        // ES6 modules already provide these munged symbols.
-        if (!"es6".equals(depInfo.getLoadFlags().get("module"))) {
-          provides.add(loader.resolve(depInfo.getName()).toModuleName());
-        }
-      }
-
-      // Also add the relative closure path as a provide. At some point we'll swap out the munged
-      // symbols for these relative paths. So looks ups by either need to work.
-      provides.add(depInfo.getPathRelativeToClosureBase());
-
-      for (String provide : provides) {
+      for (String provide : depInfo.getProvides()) {
         DependencyInfo prevValue = providesMap.put(provide, depInfo);
         // Check for duplicate provides.
         if (prevValue != null) {

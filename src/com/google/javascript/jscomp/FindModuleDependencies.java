@@ -21,7 +21,6 @@ import static com.google.common.base.Preconditions.checkArgument;
 import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.CompilerInput.ModuleType;
 import com.google.javascript.jscomp.Es6RewriteModules.FindGoogProvideOrGoogModule;
-import com.google.javascript.jscomp.deps.DependencyInfo.Require;
 import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -74,8 +73,8 @@ public class FindModuleDependencies implements NodeTraversal.ScopedCallback {
     // and add "goog" as a dependency. If "goog" is a dependency of the
     // file we add it here to the ordered requires so that it's always
     // first.
-    if (input.getRequires().contains(Require.BASE)) {
-      input.addOrderedRequire(Require.BASE);
+    if (input.getRequires().contains("goog")) {
+      input.addOrderedRequire("goog");
     }
 
     NodeTraversal.traverseEs6(compiler, root, this);
@@ -160,7 +159,7 @@ public class FindModuleDependencies implements NodeTraversal.ScopedCallback {
                       .matchesQualifiedName("__webpack_require__.e"))) {
             t.getInput().addDynamicRequire(modulePath.toModuleName());
           } else {
-            t.getInput().addOrderedRequire(Require.commonJs(modulePath.toModuleName(), path));
+            t.getInput().addOrderedRequire(modulePath.toModuleName());
           }
         }
       }
@@ -176,9 +175,9 @@ public class FindModuleDependencies implements NodeTraversal.ScopedCallback {
         && n.getSecondChild().isString()) {
       String namespace = n.getSecondChild().getString();
       if (namespace.startsWith("goog.")) {
-        t.getInput().addOrderedRequire(Require.BASE);
+        t.getInput().addOrderedRequire("goog");
       }
-      t.getInput().addOrderedRequire(Require.googRequireSymbol(namespace));
+      t.getInput().addOrderedRequire(namespace);
     }
   }
 
@@ -198,9 +197,9 @@ public class FindModuleDependencies implements NodeTraversal.ScopedCallback {
   private void addEs6ModuleImportToGraph(NodeTraversal t, Node n) {
     String moduleName = getEs6ModuleNameFromImportNode(t, n);
     if (moduleName.startsWith("goog.")) {
-      t.getInput().addOrderedRequire(Require.BASE);
+      t.getInput().addOrderedRequire("goog");
     }
-    t.getInput().addOrderedRequire(Require.es6Import(moduleName, n.getLastChild().getString()));
+    t.getInput().addOrderedRequire(moduleName);
   }
 
   /**

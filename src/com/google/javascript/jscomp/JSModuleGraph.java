@@ -532,7 +532,7 @@ public final class JSModuleGraph implements Serializable {
       return orderedInputs;
     }
 
-    for (String importedNamespace : rootInput.getRequiredSymbols()) {
+    for (String importedNamespace : rootInput.getRequires()) {
       CompilerInput dependency = null;
       if (inputsByProvide.containsKey(importedNamespace)
           && unreachedInputs.contains(inputsByProvide.get(importedNamespace))) {
