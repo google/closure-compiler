@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 import static com.google.javascript.jscomp.CompilerTestCase.lines;
@@ -747,7 +748,7 @@ public final class ExpressionDecomposerTest extends TestCase {
   }
 
   public void testFindExpressionRoot5() {
-    assertThat(findExpressionRoot("for (let x = f();;) {}", "f")).isNull();
+    assertNode(findExpressionRoot("for (let x = f();;) {}", "f")).hasType(Token.FOR);
   }
 
   /** Test case helpers. */
@@ -763,7 +764,11 @@ public final class ExpressionDecomposerTest extends TestCase {
     Node call = findCall(tree, name);
     checkNotNull(call);
 
-    return ExpressionDecomposer.findExpressionRoot(call);
+    Node root = ExpressionDecomposer.findExpressionRoot(call);
+    if (root != null) {
+      checkState(NodeUtil.isStatement(root), root);
+    }
+    return root;
   }
 
   private void helperCanExposeFunctionExpression(

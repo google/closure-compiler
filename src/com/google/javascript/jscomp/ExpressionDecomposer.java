@@ -62,8 +62,8 @@ class ExpressionDecomposer {
   private final Scope scope;
 
   /**
-   * Whether to allow decomposing foo.bar to "var fn = foo.bar; fn.call(foo);"
-   * Should be false if targetting IE8 or IE9.
+   * Whether to allow decomposing foo.bar to "var fn = foo.bar; fn.call(foo);" Should be false if
+   * targeting IE8 or IE9.
    */
   private final boolean allowMethodCallDecomposing;
 
@@ -669,7 +669,7 @@ class ExpressionDecomposer {
           Preconditions.checkState(child == parent.getFirstChild());
           if (parent.getParent().isVanillaFor()
               && parent == parent.getParent().getFirstChild()) {
-            return null;
+            return parent.getParent();
           } else {
             return parent;
           }

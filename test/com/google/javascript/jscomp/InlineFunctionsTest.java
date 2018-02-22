@@ -523,10 +523,8 @@ public class InlineFunctionsTest extends CompilerTestCase {
             ""));
   }
 
-  // Same as above, except the for loop uses a let instead of a var, which means that Normalize
-  // does not extract it out. This causes InlineFunctions to produce an invalid AST: b/73373371
-  // TODO(b/73373371): Re-enable this test.
-  public void disabled_testInlineFunctions35() {
+  // Same as above, except the for loop uses a let instead of a var. See b/73373371.
+  public void testInlineFunctions35() {
     test(
         lines(
             "class X {}",
@@ -538,13 +536,16 @@ public class InlineFunctionsTest extends CompilerTestCase {
         lines(
             "class X {}",
             "{",
-            "  var e$jscomp$inline_0 = {target:{}};",
-            "  let el$jscomp$inline_1;",
+            "  var e$jscomp$inline_0 = {target: {}};",
+            "  var JSCompiler_inline_result$jscomp$inline_1;",
             "  {",
             "    var x$jscomp$inline_2 = e$jscomp$inline_0.target;",
-            "    el$jscomp$inline_1 = x$jscomp$inline_2 instanceof X ? x$jscomp$inline_2 : null;",
+            "    JSCompiler_inline_result$jscomp$inline_1 =",
+            "        x$jscomp$inline_2 instanceof X ? x$jscomp$inline_2 : null",
             "  }",
-            "  for(;el$jscomp$inline_1 != null; el$jscomp$inline_1 = el$jscomp$inline_1.parent);",
+            "  for (let el$jscomp$inline_3 = JSCompiler_inline_result$jscomp$inline_1;",
+            "       el$jscomp$inline_3 != null;",
+            "       el$jscomp$inline_3 = el$jscomp$inline_3.parent) {}",
             "}",
             ""));
   }
@@ -1015,13 +1016,14 @@ public class InlineFunctionsTest extends CompilerTestCase {
             "function _goo() { let a = 2; let x = foo(); }"),
         lines(
             "let a = 0;",
-            "function _goo(){",
+            "function _goo() {",
             "  let a$jscomp$2 = 2;",
-            "  let x;",
+            "  var JSCompiler_inline_result$jscomp$0;",
             "  {",
-            "    let a$jscomp$inline_0 = 3;",
-            "    x = a + a;",
+            "     let a$jscomp$inline_1 = 3;",
+            "     JSCompiler_inline_result$jscomp$0 = a + a;",
             "  }",
+            "  let x = JSCompiler_inline_result$jscomp$0;",
             "}"));
   }
 

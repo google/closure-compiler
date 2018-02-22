@@ -431,7 +431,7 @@ class FunctionInjector {
 
     // Verify the call site:
     if (NodeUtil.isExprCall(parent)) {
-      // This is a simple call?  Example: "foo();".
+      // This is a simple call. Example: "foo();".
       return CallSiteType.SIMPLE_CALL;
     } else if (NodeUtil.isExprAssign(grandParent)
         && !NodeUtil.isNameDeclOrSimpleAssignLhs(callNode, parent)
@@ -444,9 +444,10 @@ class FunctionInjector {
     } else if (parent.isName()
         // TODO(nicksantos): Remove this once everyone is using the CONSTANT_VAR annotation.
         && !NodeUtil.isConstantName(parent)
-        && (grandParent.isVar() || grandParent.isLet())
+        // Note: not let or const. See InlineFunctionsTest.testInlineFunctions35
+        && grandParent.isVar()
         && grandParent.hasOneChild()) {
-      // This is a var/let declaration.  Example: "var x = foo();"
+      // This is a var declaration.  Example: "var x = foo();"
       // TODO(johnlenz): Should we be checking for constants on the
       // left-hand-side of the assignments and handling them as EXPRESSION?
       return CallSiteType.VAR_DECL_SIMPLE_ASSIGNMENT;
