@@ -182,11 +182,11 @@ class CollapseProperties implements CompilerPass {
     }
   }
 
-  private boolean isSafeNamespaceReinit(Ref ref) {
-    // allow "a = a || {}" or "var a = a || {}"
+  static boolean isSafeNamespaceReinit(Ref ref) {
+    // allow "a = a || {}" or "var a = a || {}" or "var a;"
     Node valParent = getValueParent(ref);
     Node val = valParent.getLastChild();
-    if (val.isOr()) {
+    if (val != null && val.isOr()) {
       Node maybeName = val.getFirstChild();
       if (ref.node.matchesQualifiedName(maybeName)) {
         return true;

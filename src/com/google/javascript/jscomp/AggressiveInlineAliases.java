@@ -203,6 +203,7 @@ class AggressiveInlineAliases implements CompilerPass {
               || name.type == Name.Type.FUNCTION
               || name.type == Name.Type.CLASS)
           && name.aliasingGets == 0
+          && !isUnsafelyReassigned(name)
           && name.props != null) {
         // All of {@code name}'s children meet condition (a), so they can be
         // added to the worklist.
@@ -561,6 +562,25 @@ class AggressiveInlineAliases implements CompilerPass {
         // to descendants of {@code name}. So those need to be collected now.
         namespace.scanNewNodes(newNodes);
 
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /** Check if the name has multiple sets that are not of the form "a = a || {}" */
+  private boolean isUnsafelyReassigned(Name name) {
+    boolean foundOriginalDefinition = false;
+    for (Ref ref : name.getRefs()) {
+      if (!ref.isSet()) {
+        continue;
+      }
+      if (CollapseProperties.isSafeNamespaceReinit(ref)) {
+        continue;
+      }
+      if (!foundOriginalDefinition) {
+        foundOriginalDefinition = true;
+      } else {
         return true;
       }
     }

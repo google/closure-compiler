@@ -1346,12 +1346,7 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
   }
 
   public void testAliasPropertyOnUnsafelyRedefinedNamespace() {
-    // TODO(b/73076126): this produces the wrong output. obj.foo is undefined in the alert call.
-    // AggressiveInlineAliases incorrectly replaces alert(foo) with alert(obj.foo), but
-    // CollapseProperties correctly backs off collapsing obj.foo because obj is reassigned.
-    test(
-        "var obj = {foo: 3}; var foo = obj.foo; obj = {}; alert(foo);",
-        "var obj = {foo: 3}; var foo = null   ; obj = {}; alert(obj.foo);");
+    testSame("var obj = {foo: 3}; var foo = obj.foo; obj = {}; alert(foo);");
   }
 
   public void testAliasPropertyOnSafelyRedefinedNamespace() {
@@ -1376,5 +1371,23 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
             "var foo = null;",
             "ns = ns || {};",
             "alert(ns$ctor$foo);"));
+
+    // NOTE(lharker): this mirrors current code in Closure library
+    test(
+        lines(
+            "var goog = {};",
+            "goog.module = function() {};",
+            "/** @constructor */ goog.module.ModuleManager = function() {};",
+            "goog.module.ModuleManager.getInstance = function() {};",
+            "goog.module = goog.module || {};",
+            "var ModuleManager = goog.module.ModuleManager;",
+            "alert(ModuleManager.getInstance());"),
+        lines(
+            "var goog$module = function() {};",
+            "/** @constructor */ var goog$module$ModuleManager = function() {};",
+            "var goog$module$ModuleManager$getInstance = function() {};",
+            "goog$module = goog$module || {};",
+            "var ModuleManager = null;",
+            "alert(goog$module$ModuleManager$getInstance());"));
   }
 }

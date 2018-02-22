@@ -195,17 +195,11 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
   }
 
   public void testAliasingOfReassignedProperty2() {
-    // TODO(b/73076126): this produces the wrong output. obj.foo is undefined in the alert call.
-    test(
-        "var obj = {foo: 3}; var foo = obj.foo; obj = {}; alert(foo);",
-        "var obj = {foo: 3}; var foo = null   ; obj = {}; alert(obj.foo);");
+    testSame("var obj = {foo: 3}; var foo = obj.foo; obj = {}; alert(foo);");
   }
 
   public void testAliasingOfReassignedProperty3() {
-    // TODO(b/73076126): this produces the wrong output.
-    test(
-        "var obj = {foo: {bar: 3}}; var bar = obj.foo.bar; obj.foo = {}; alert(bar);",
-        "var obj = {foo: {bar: 3}}; var bar = null       ; obj.foo = {}; alert(obj.foo.bar);");
+    testSame("var obj = {foo: {bar: 3}}; var bar = obj.foo.bar; obj.foo = {}; alert(bar);");
   }
 
   public void testAliasingOfReassignedProperty4() {
@@ -218,7 +212,7 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
             "/** @constructor */ ns.ctor = function() {};",
             "ns.ctor.foo = 3;",
             "var foo = ns.ctor.foo;",
-            "ns = ns || {};",
+            "ns = ns || {};", // safe reinitialization of ns.
             "alert(foo);"),
         lines(
             "var ns = {};",
@@ -227,6 +221,12 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
             "var foo = null;",
             "ns = ns || {};",
             "alert(ns.ctor.foo);"));
+  }
+
+  public void testAliasingOfReassignedProperty5() {
+    test(
+        "var obj = {foo: {bar: 3}}; var bar = obj.foo.bar; var obj; alert(bar);",
+        "var obj = {foo: {bar: 3}}; var bar =        null; var obj; alert(obj.foo.bar);");
   }
 
   public void testAddPropertyToChildFuncOfUncollapsibleObjectInLocalScope() {
