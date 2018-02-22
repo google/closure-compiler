@@ -38,6 +38,7 @@ import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.CompilerPass;
 import com.google.javascript.jscomp.CompilerTestCase;
 import com.google.javascript.jscomp.GoogleCodingConvention;
+import com.google.javascript.jscomp.parsing.Config;
 
 /**
  * Test case for {@link CheckJSDocStyle}.
@@ -64,6 +65,7 @@ public final class CheckJSDocStyleTest extends CompilerTestCase {
   @Override
   protected CompilerOptions getOptions(CompilerOptions options) {
     super.getOptions(options);
+    options.setParseJsDocDocumentation(Config.JsDocParsing.INCLUDE_DESCRIPTIONS_NO_WHITESPACE);
     options.setWarningLevel(CheckJSDocStyle.ALL_DIAGNOSTICS, CheckLevel.WARNING);
     return options;
   }
@@ -942,7 +944,7 @@ public final class CheckJSDocStyleTest extends CompilerTestCase {
     testSame("/** @constructor */ function f() {}");
     testSame("/** @param {number} x */ function f(x) { function bar() { return x; } }");
     testSame("/** @param {number} x */ function f(x) { return; }");
-    testSame("/** @param {number} x @return {number} */ function f(x) { return x; }");
+    testSame("/** @param {number} x\n * @return {number} */ function f(x) { return x; }");
     testSame("/** @param {number} x */ function /** number */ f(x) { return x; }");
     testSame("/** @inheritDoc */ function f(x) { return x; }");
     testSame("/** @override */ function f(x) { return x; }");
@@ -957,7 +959,7 @@ public final class CheckJSDocStyleTest extends CompilerTestCase {
     testSame("/** @constructor */ f = function() {}");
     testSame("/** @param {number} x */ f = function(x) { function bar() { return x; } }");
     testSame("/** @param {number} x */ f = function(x) { return; }");
-    testSame("/** @param {number} x @return {number} */ f = function(x) { return x; }");
+    testSame("/** @param {number} x\n * @return {number} */ f = function(x) { return x; }");
     testSame("/** @inheritDoc */ f = function(x) { return x; }");
     testSame("/** @override */ f = function(x) { return x; }");
   }
@@ -967,7 +969,7 @@ public final class CheckJSDocStyleTest extends CompilerTestCase {
     testSame("/** @constructor */ var f = function() {}");
     testSame("/** @param {number} x */ var f = function(x) { function bar() { return x; } }");
     testSame("/** @param {number} x */ var f = function(x) { return; }");
-    testSame("/** @param {number} x @return {number} */ var f = function(x) { return x; }");
+    testSame("/** @param {number} x\n * @return {number} */ var f = function(x) { return x; }");
     testSame("/** @const {function(number): number} */ var f = function(x) { return x; }");
     testSame("/** @inheritDoc */ var f = function(x) { return x; }");
     testSame("/** @override */ var f = function(x) { return x; }");
