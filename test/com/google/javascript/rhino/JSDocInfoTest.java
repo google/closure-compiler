@@ -425,6 +425,20 @@ public class JSDocInfoTest extends TestCase {
     assertFalse(info.isHidden());
   }
 
+  public void testDescriptionContainsAtSignCode() {
+    JSDocInfo info = new JSDocInfo(true);
+    info.setOriginalCommentString("Blah blah {@code blah blah} blah blah.");
+
+    assertTrue(info.isAtSignCodePresent());
+  }
+
+  public void testDescriptionDoesNotContainAtSignCode() {
+    JSDocInfo info = new JSDocInfo(true);
+    info.setOriginalCommentString("Blah blah `blah blah` blah blah.");
+
+    assertFalse(info.isAtSignCodePresent());
+  }
+
   public void testClone() {
     JSDocInfo info = new JSDocInfo();
     info.setDescription("The source info");

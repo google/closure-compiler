@@ -95,6 +95,11 @@ public final class CheckJSDocStyle extends AbstractPostOrderCallback implements 
       DiagnosticType.disabled("JSC_EXTERNS_FILES_SHOULD_BE_ANNOTATED",
           "Externs files should be annotated with @externs in the @fileoverview block.");
 
+  public static final DiagnosticType PREFER_BACKTICKS_TO_AT_SIGN_CODE =
+      DiagnosticType.disabled(
+          "JSC_PREFER_BACKTICKS_TO_AT_SIGN_CODE",
+          "Use `some_code` instead of '{'@code some_code'}'.");
+
   public static final DiagnosticGroup ALL_DIAGNOSTICS =
       new DiagnosticGroup(
           INVALID_SUPPRESS,
@@ -109,7 +114,8 @@ public final class CheckJSDocStyle extends AbstractPostOrderCallback implements 
           OPTIONAL_PARAM_NOT_MARKED_OPTIONAL,
           WRONG_NUMBER_OF_PARAMS,
           INCORRECT_PARAM_NAME,
-          EXTERNS_FILES_SHOULD_BE_ANNOTATED);
+          EXTERNS_FILES_SHOULD_BE_ANNOTATED,
+          PREFER_BACKTICKS_TO_AT_SIGN_CODE);
 
   private final AbstractCompiler compiler;
 
@@ -155,17 +161,31 @@ public final class CheckJSDocStyle extends AbstractPostOrderCallback implements 
     }
   }
 
-  private void visitNonFunction(NodeTraversal t, Node n) {
-    JSDocInfo jsDoc = n.getJSDocInfo();
+  private void checkForAtSignCodePresence(NodeTraversal t, Node n, @Nullable JSDocInfo jsDoc) {
     if (jsDoc == null) {
       return;
     }
+    if (jsDoc.isAtSignCodePresent()) {
+      t.report(n, PREFER_BACKTICKS_TO_AT_SIGN_CODE);
+    }
+  }
 
+  private void visitNonFunction(NodeTraversal t, Node n) {
+    JSDocInfo jsDoc = n.getJSDocInfo();
+
+    checkForAtSignCodePresence(t, n, jsDoc);
+
+    if (jsDoc == null) {
+      return;
+    }
     checkSuppressionsOnNonFunction(t, n, jsDoc);
   }
 
   private void checkStyleForPrivateProperties(NodeTraversal t, Node n) {
     JSDocInfo jsDoc = NodeUtil.getBestJSDocInfo(n);
+
+    checkForAtSignCodePresence(t, n, jsDoc);
+
     String name;
     if (n.isMemberFunctionDef() || n.isGetterDef() || n.isSetterDef()) {
       name = n.getString();
@@ -206,6 +226,8 @@ public final class CheckJSDocStyle extends AbstractPostOrderCallback implements 
   private void visitFunction(NodeTraversal t, Node function, Node parent) {
     JSDocInfo jsDoc = NodeUtil.getBestJSDocInfo(function);
 
+    checkForAtSignCodePresence(t, function, jsDoc);
+
     if (jsDoc == null && !hasAnyInlineJsDoc(function)) {
       checkMissingJsDoc(t, function);
     } else {
@@ -228,6 +250,8 @@ public final class CheckJSDocStyle extends AbstractPostOrderCallback implements 
 
   private void visitClass(NodeTraversal t, Node cls) {
     JSDocInfo jsDoc = NodeUtil.getBestJSDocInfo(cls);
+
+    checkForAtSignCodePresence(t, cls, jsDoc);
 
     if (jsDoc == null) {
       return;

@@ -27,6 +27,7 @@ import static com.google.javascript.jscomp.lint.CheckJSDocStyle.MIXED_PARAM_JSDO
 import static com.google.javascript.jscomp.lint.CheckJSDocStyle.MUST_BE_PRIVATE;
 import static com.google.javascript.jscomp.lint.CheckJSDocStyle.MUST_HAVE_TRAILING_UNDERSCORE;
 import static com.google.javascript.jscomp.lint.CheckJSDocStyle.OPTIONAL_PARAM_NOT_MARKED_OPTIONAL;
+import static com.google.javascript.jscomp.lint.CheckJSDocStyle.PREFER_BACKTICKS_TO_AT_SIGN_CODE;
 import static com.google.javascript.jscomp.lint.CheckJSDocStyle.WRONG_NUMBER_OF_PARAMS;
 
 import com.google.javascript.jscomp.CheckLevel;
@@ -1111,5 +1112,11 @@ public final class CheckJSDocStyleTest extends CompilerTestCase {
 
     testWarning(
         inIIFE("class Foo { /** @private */ constructor() {} }"), CONSTRUCTOR_DISALLOWED_JSDOC);
+  }
+
+  public void testAtSignCodeDetectedWhenPresent() {
+    testWarning(
+        "/** blah blah {@code blah blah} blah blah */ function f() {}",
+        PREFER_BACKTICKS_TO_AT_SIGN_CODE);
   }
 }
