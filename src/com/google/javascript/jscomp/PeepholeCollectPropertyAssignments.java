@@ -104,7 +104,9 @@ final class PeepholeCollectPropertyAssignments extends AbstractPeepholeOptimizat
   }
 
   private static boolean isPropertyAssignmentToName(Node propertyCandidate) {
-    if (propertyCandidate == null) { return false; }
+    if (propertyCandidate == null) {
+      return false;
+    }
     // Must be an assignment...
     if (!NodeUtil.isExprAssign(propertyCandidate)) {
       return false;
@@ -123,8 +125,7 @@ final class PeepholeCollectPropertyAssignments extends AbstractPeepholeOptimizat
     return obj.isName();
   }
 
-  private boolean collectProperty(
-      Node propertyCandidate, String name, Node value) {
+  private boolean collectProperty(Node propertyCandidate, String name, Node value) {
     if (!isPropertyAssignmentToName(propertyCandidate)) {
       return false;
     }
@@ -165,8 +166,7 @@ final class PeepholeCollectPropertyAssignments extends AbstractPeepholeOptimizat
   }
 
 
-  private static boolean collectArrayProperty(
-      Node arrayLiteral, Node propertyCandidate) {
+  private static boolean collectArrayProperty(Node arrayLiteral, Node propertyCandidate) {
     Node assignment = propertyCandidate.getFirstChild();
     final int sizeOfArrayAtStart = arrayLiteral.getChildCount();
     int maxIndexAssigned = sizeOfArrayAtStart - 1;
@@ -221,8 +221,7 @@ final class PeepholeCollectPropertyAssignments extends AbstractPeepholeOptimizat
     return true;
   }
 
-  private static boolean collectObjectProperty(
-      Node objectLiteral, Node propertyCandidate) {
+  private boolean collectObjectProperty(Node objectLiteral, Node propertyCandidate) {
     Node assignment = propertyCandidate.getFirstChild();
     Node lhs = assignment.getFirstChild();
     Node rhs = lhs.getNext();
@@ -230,9 +229,7 @@ final class PeepholeCollectPropertyAssignments extends AbstractPeepholeOptimizat
     Node property = obj.getNext();
 
     // The property must be statically known.
-    if (lhs.isGetElem()
-        && (!property.isString()
-            && !property.isNumber())) {
+    if (lhs.isGetElem() && !property.isString() && !property.isNumber()) {
       return false;
     }
 
@@ -247,22 +244,29 @@ final class PeepholeCollectPropertyAssignments extends AbstractPeepholeOptimizat
     // Note: Duplicate keys are invalid in strict mode
     Node existingProperty = null;
     for (Node currentProperty : objectLiteral.children()) {
-      // Get the name of the current property
-      String currentPropertyName = currentProperty.getString();
-      // Get the value of the property
-      Node currentValue = currentProperty.getFirstChild();
-      // Compare the current property name with the new property name
-      if (currentPropertyName.equals(propertyName)) {
-        existingProperty = currentProperty;
-        // Check if the current value and the new value are side-effect
-        boolean isCurrentValueSideEffect = NodeUtil.canBeSideEffected(currentValue);
-        boolean isNewValueSideEffect = NodeUtil.canBeSideEffected(rhs);
-        // If they are side-effect free then replace the current value with the new one
-        if (isCurrentValueSideEffect || isNewValueSideEffect) {
+      if (currentProperty.isStringKey() || currentProperty.isMemberFunctionDef()) {
+        // Get the name of the current property
+        String currentPropertyName = currentProperty.getString();
+        // Get the value of the property
+        Node currentValue = currentProperty.getFirstChild();
+        // Compare the current property name with the new property name
+        if (currentPropertyName.equals(propertyName)) {
+          existingProperty = currentProperty;
+          // Check if the current value and the new value are side-effect
+          boolean isCurrentValueSideEffect = NodeUtil.canBeSideEffected(currentValue);
+          boolean isNewValueSideEffect = NodeUtil.canBeSideEffected(rhs);
+          // If they are side-effect free then replace the current value with the new one
+          if (isCurrentValueSideEffect || isNewValueSideEffect) {
+            return false;
+          }
+          // Break the loop if the property exists
+          break;
+        }
+      } else if (currentProperty.isGetterDef() || currentProperty.isSetterDef()) {
+        String currentPropertyName = currentProperty.getString();
+        if (currentPropertyName.equals(propertyName)) {
           return false;
         }
-        // Break the loop if the property exists
-        break;
       }
     }
 
@@ -276,7 +280,7 @@ final class PeepholeCollectPropertyAssignments extends AbstractPeepholeOptimizat
     newProperty.addChildToBack(newValue);
 
     if (existingProperty != null) {
-       objectLiteral.removeChild(existingProperty);
+       NodeUtil.deleteNode(existingProperty, compiler);
     }
     // If the property does not already exist we can safely add it
     objectLiteral.addChildToBack(newProperty);
@@ -285,8 +289,7 @@ final class PeepholeCollectPropertyAssignments extends AbstractPeepholeOptimizat
   }
 
 
-  private static boolean mightContainForwardReference(
-      Node node, String varName) {
+  private static boolean mightContainForwardReference(Node node, String varName) {
     if (node.isName()) {
       return varName.equals(node.getString());
     }
