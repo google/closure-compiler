@@ -131,8 +131,11 @@ final class InlineAliases implements CompilerPass {
             }
 
             Node newNode =
-                NodeUtil.newQName(compiler, resolveAlias(n.getQualifiedName(), n))
-                    .useSourceInfoFromForTree(n);
+                NodeUtil.newQName(compiler, resolveAlias(n.getQualifiedName(), n));
+
+            // If n is get_prop like "obj.foo" then newNode should use only location of foo, not
+            // obj.foo.
+            newNode.useSourceInfoFromForTree(n.isGetProp() ? n.getLastChild() : n);
             parent.replaceChild(n, newNode);
             t.reportCodeChange();
           }
