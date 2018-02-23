@@ -1785,7 +1785,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
    */
   private void maybeAddAliasToSymbolTable(Node n, String module) {
     if (preprocessorSymbolTable != null) {
-      n.putBooleanProp(Node.GOOG_MODULE_ALIAS, true);
+      n.putBooleanProp(Node.MODULE_ALIAS, true);
       // Alias can be used in js types. Types have node type STRING and not NAME so we have to
       // use their name as string.
       String nodeName =

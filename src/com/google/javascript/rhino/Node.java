@@ -155,8 +155,8 @@ public class Node implements Serializable {
       IS_ES6_CLASS = 92, // Indicates that a FUNCTION node is converted from an ES6 class
       TRANSPILED = 93, // Indicates that a SCRIPT represents a transpiled file
       DELETED = 94, // For passes that work only on deleted funs.
-      GOOG_MODULE_ALIAS = 95, // Indicates that the node is an alias of goog.require'd module.
-      // Aliases are desugared and inlined by compiler passes but we
+      MODULE_ALIAS = 95, // Indicates that the node is an alias or a name from goog.require'd module
+      // or ES6 module. Aliases are desugared and inlined by compiler passes but we
       // need to preserve them for building index.
       IS_UNUSED_PARAMETER = 96, // Mark a parameter as unused. Used to defer work from
       // RemovedUnusedVars to OptimizeParameters.
@@ -223,7 +223,7 @@ public class Node implements Serializable {
         case IS_ES6_CLASS:       return "is_es6_class";
         case TRANSPILED:         return "transpiled";
         case DELETED:            return "DELETED";
-        case GOOG_MODULE_ALIAS:  return "goog_module_alias";
+        case MODULE_ALIAS:       return "module_alias";
         case IS_UNUSED_PARAMETER: return "is_unused_parameter";
         case MODULE_EXPORT:
           return "module_export";

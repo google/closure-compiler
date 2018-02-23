@@ -53,7 +53,7 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
-    return new Es6RewriteModules(compiler);
+    return new Es6RewriteModules(compiler, /* preprocessorSymbolTable= */ null);
   }
 
   @Override

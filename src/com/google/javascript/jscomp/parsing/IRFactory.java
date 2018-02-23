@@ -2337,10 +2337,16 @@ class IRFactory {
       maybeWarnForFeature(tree, Feature.MODULES);
 
       Node firstChild = transformOrEmpty(tree.defaultBindingIdentifier, tree);
-      Node secondChild = (tree.nameSpaceImportIdentifier != null)
-          ? newStringNode(Token.IMPORT_STAR, tree.nameSpaceImportIdentifier.value)
-          : transformListOrEmpty(Token.IMPORT_SPECS, tree.importSpecifierList);
-      setSourceInfo(secondChild, tree);
+      Node secondChild;
+      if (tree.nameSpaceImportIdentifier == null) {
+        secondChild = transformListOrEmpty(Token.IMPORT_SPECS, tree.importSpecifierList);
+        // Currently source info is "import {foo} from '...';" expression. If needed this should be
+        // changed to use only "{foo}" part.
+        setSourceInfo(secondChild, tree);
+      } else {
+        secondChild = newStringNode(Token.IMPORT_STAR, tree.nameSpaceImportIdentifier.value);
+        setSourceInfo(secondChild, tree.nameSpaceImportIdentifier);
+      }
       Node thirdChild = processString(tree.moduleSpecifier);
 
       return newNode(Token.IMPORT, firstChild, secondChild, thirdChild);

@@ -38,6 +38,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import javax.annotation.Nullable;
 
 /**
  * Rewrites a ES6 module into a form that can be safely concatenated. Note that we treat a file as
@@ -64,6 +65,8 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
       DiagnosticType.error("JSC_DUPLICATE_EXPORT", "Duplicate export ''{0}''.");
 
   private final AbstractCompiler compiler;
+
+  @Nullable private final PreprocessorSymbolTable preprocessorSymbolTable;
   private int scriptNodeCount;
 
   /**
@@ -85,11 +88,13 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
   private Set<String> typedefs;
 
   /**
-   * Creates a new Es6RewriteModules instance which can be used to rewrite
-   * ES6 modules to a concatenable form.
+   * Creates a new Es6RewriteModules instance which can be used to rewrite ES6 modules to a
+   * concatenable form.
    */
-  public Es6RewriteModules(AbstractCompiler compiler) {
+  public Es6RewriteModules(
+      AbstractCompiler compiler, @Nullable PreprocessorSymbolTable preprocessorSymbolTable) {
     this.compiler = compiler;
+    this.preprocessorSymbolTable = preprocessorSymbolTable;
   }
 
   /**
@@ -234,6 +239,7 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
       } else if (child.isImportSpecs()) {
         for (Node grandChild : child.children()) {
           String origName = grandChild.getFirstChild().getString();
+          maybeAddAliasToSymbolTable(grandChild.getFirstChild(), t.getSourceName());
           checkState(grandChild.hasTwoChildren());
           importMap.put(
               grandChild.getLastChild().getString(),
@@ -249,6 +255,7 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
               t.makeError(
                   importDecl, NAMESPACE_IMPORT_CANNOT_USE_STAR, child.getString(), moduleName));
         }
+        maybeAddAliasToSymbolTable(child, t.getSourceName());
         importMap.put(
             child.getString(),
             new ModuleOriginalNamePair(moduleName, ""));
@@ -628,6 +635,7 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
           boolean isImportStar = pair.originalName.isEmpty();
           Node moduleAccess = NodeUtil.newQName(compiler, pair.module);
 
+          maybeAddAliasToSymbolTable(n, t.getSourceName());
           if (isImportStar) {
             n.replaceWith(moduleAccess.useSourceInfoIfMissingFromForTree(n));
           } else {
@@ -689,6 +697,7 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
             maybeSetNewName(t, typeNode, name, baseName + "$$" + suffix + rest);
           } else if (var == null && importMap.containsKey(baseName)) {
             ModuleOriginalNamePair pair = importMap.get(baseName);
+            maybeAddAliasToSymbolTable(typeNode, t.getSourceName());
             if (pair.originalName.isEmpty()) {
               maybeSetNewName(t, typeNode, name, pair.module + rest);
             } else {
@@ -710,6 +719,30 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
         node.setOriginalName(name);
         t.reportCodeChange();
       }
+    }
+  }
+
+  /**
+   * Add alias nodes to the symbol table as they going to be removed by rewriter. Example aliases:
+   *
+   * <pre>
+   *   import * as foo from './foo';
+   *   import {doBar} from './bar';
+   * </pre>
+   */
+  private void maybeAddAliasToSymbolTable(Node n, String module) {
+    if (preprocessorSymbolTable != null) {
+      n.putBooleanProp(Node.MODULE_ALIAS, true);
+      // Alias can be used in js types. Types have node type STRING and not NAME so we have to
+      // use their name as string.
+      String nodeName =
+          n.isString() || n.isImportStar()
+              ? n.getString()
+              : preprocessorSymbolTable.getQualifiedName(n);
+      // We need to include module as part of the name because aliases are local to current module.
+      // Aliases with the same name from different module should be completely different entities.
+      String name = "alias_" + module + "_" + nodeName;
+      preprocessorSymbolTable.addReference(n, name);
     }
   }
 

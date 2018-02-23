@@ -32,8 +32,22 @@ import java.util.List;
 public class TranspilationPasses {
   private TranspilationPasses() {}
 
-  public static void addEs6ModulePass(List<PassFactory> passes) {
-    passes.add(es6RewriteModule);
+  public static void addEs6ModulePass(
+      List<PassFactory> passes,
+      final PreprocessorSymbolTable.CachedInstanceFactory preprocessorTableFactory) {
+    passes.add(
+        new HotSwapPassFactory("es6RewriteModule") {
+          @Override
+          protected HotSwapCompilerPass create(AbstractCompiler compiler) {
+            preprocessorTableFactory.maybeInitialize(compiler);
+            return new Es6RewriteModules(compiler, preprocessorTableFactory.getInstanceOrNull());
+          }
+
+          @Override
+          protected FeatureSet featureSet() {
+            return ES_NEXT;
+          }
+        });
   }
 
   public static void addEs6ModuleToCjsPass(List<PassFactory> passes) {
@@ -109,20 +123,6 @@ public class TranspilationPasses {
   public static void addRewritePolyfillPass(List<PassFactory> passes) {
     passes.add(rewritePolyfills);
   }
-
-  /** Rewrites ES6 modules */
-  private static final HotSwapPassFactory es6RewriteModule =
-      new HotSwapPassFactory("es6RewriteModule") {
-        @Override
-        protected HotSwapCompilerPass create(AbstractCompiler compiler) {
-          return new Es6RewriteModules(compiler);
-        }
-
-        @Override
-        protected FeatureSet featureSet() {
-          return ES_NEXT;
-        }
-      };
 
   /** Rewrites ES6 modules */
   private static final PassFactory es6RewriteModuleToCjs =

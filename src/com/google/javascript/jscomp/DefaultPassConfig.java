@@ -65,6 +65,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import javax.annotation.Nullable;
 
 /**
  * Pass factories and meta-data for native JSCompiler passes.
@@ -99,11 +100,9 @@ public final class DefaultPassConfig extends PassConfig {
    */
   private transient GlobalNamespace namespaceForChecks = null;
 
-  /**
-   * A symbol table for registering references that get removed during
-   * preprocessing.
-   */
-  private transient PreprocessorSymbolTable preprocessorSymbolTable = null;
+  /** A symbol table for registering references that get removed during preprocessing. */
+  private final transient PreprocessorSymbolTable.CachedInstanceFactory
+      preprocessorSymbolTableFactory;
 
   /**
    * Global state necessary for doing hotswap recompilation of files with references to
@@ -124,23 +123,16 @@ public final class DefaultPassConfig extends PassConfig {
     // wrap them in a function call that is stripped later, this shouldn't
     // be done in IDE mode where AST changes may be unexpected.
     protectHiddenSideEffects = options != null && options.shouldProtectHiddenSideEffects();
+    preprocessorSymbolTableFactory = new PreprocessorSymbolTable.CachedInstanceFactory();
   }
 
   GlobalNamespace getGlobalNamespace() {
     return namespaceForChecks;
   }
 
+  @Nullable
   PreprocessorSymbolTable getPreprocessorSymbolTable() {
-    return preprocessorSymbolTable;
-  }
-
-  void maybeInitializePreprocessorSymbolTable(AbstractCompiler compiler) {
-    if (options.preservesDetailedSourceInfo()) {
-      Node root = compiler.getRoot();
-      if (preprocessorSymbolTable == null || preprocessorSymbolTable.getRootNode() != root) {
-        preprocessorSymbolTable = new PreprocessorSymbolTable(root);
-      }
-    }
+    return preprocessorSymbolTableFactory.getInstanceOrNull();
   }
 
   void maybeInitializeModuleRewriteState() {
@@ -158,7 +150,7 @@ public final class DefaultPassConfig extends PassConfig {
     }
 
     if (options.getLanguageIn().toFeatureSet().has(FeatureSet.Feature.MODULES)) {
-      TranspilationPasses.addEs6ModulePass(passes);
+      TranspilationPasses.addEs6ModulePass(passes, preprocessorSymbolTableFactory);
     }
 
     passes.add(checkSuper);
@@ -305,7 +297,7 @@ public final class DefaultPassConfig extends PassConfig {
     }
 
     if (options.getLanguageIn().toFeatureSet().has(FeatureSet.Feature.MODULES)) {
-      TranspilationPasses.addEs6ModulePass(checks);
+      TranspilationPasses.addEs6ModulePass(checks, preprocessorSymbolTableFactory);
     }
 
     checks.add(checkVariableReferences);
@@ -1363,11 +1355,11 @@ public final class DefaultPassConfig extends PassConfig {
       new HotSwapPassFactory("closurePrimitives") {
         @Override
         protected HotSwapCompilerPass create(final AbstractCompiler compiler) {
-          maybeInitializePreprocessorSymbolTable(compiler);
+          preprocessorSymbolTableFactory.maybeInitialize(compiler);
           final ProcessClosurePrimitives pass =
               new ProcessClosurePrimitives(
                   compiler,
-                  preprocessorSymbolTable,
+                  preprocessorSymbolTableFactory.getInstanceOrNull(),
                   options.brokenClosureRequiresLevel,
                   options.shouldPreservesGoogProvidesAndRequires());
 
@@ -1454,9 +1446,11 @@ public final class DefaultPassConfig extends PassConfig {
       new HotSwapPassFactory("closureGoogScopeAliases") {
         @Override
         protected HotSwapCompilerPass create(AbstractCompiler compiler) {
-          maybeInitializePreprocessorSymbolTable(compiler);
+          preprocessorSymbolTableFactory.maybeInitialize(compiler);
           return new ScopedAliases(
-              compiler, preprocessorSymbolTable, options.getAliasTransformationHandler());
+              compiler,
+              preprocessorSymbolTableFactory.getInstanceOrNull(),
+              options.getAliasTransformationHandler());
         }
 
         @Override
@@ -1610,9 +1604,10 @@ public final class DefaultPassConfig extends PassConfig {
       new HotSwapPassFactory("closureRewriteModule") {
         @Override
         protected HotSwapCompilerPass create(AbstractCompiler compiler) {
-          maybeInitializePreprocessorSymbolTable(compiler);
+          preprocessorSymbolTableFactory.maybeInitialize(compiler);
           maybeInitializeModuleRewriteState();
-          return new ClosureRewriteModule(compiler, preprocessorSymbolTable, moduleRewriteState);
+          return new ClosureRewriteModule(
+              compiler, preprocessorSymbolTableFactory.getInstanceOrNull(), moduleRewriteState);
         }
 
         @Override
