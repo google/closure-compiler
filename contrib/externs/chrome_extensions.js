@@ -5732,6 +5732,17 @@ chrome.system.display = {};
 
 
 /**
+ * @enum {string}
+ * @see https://developer.chrome.com/extensions/system.display#type-MirrorMode
+ */
+chrome.system.display.MirrorMode = {
+  OFF: '',
+  NORMAL: '',
+  MIXED: '',
+};
+
+
+/**
  * @typedef {!{
  *   left: number,
  *   top: number,
@@ -5767,6 +5778,28 @@ chrome.system.display.Point;
 
 /**
  * @typedef {!{
+ *   displayPoint: !chrome.system.display.Point,
+ *   touchPoint: !chrome.system.display.Point
+ * }}
+ * @see https://developer.chrome.com/extensions/system.display#type-TouchCalibrationPair
+ */
+chrome.system.display.TouchCalibrationPair;
+
+
+/**
+ * @typedef {!{
+ *   pair1: !chrome.system.display.TouchCalibrationPair,
+ *   pair2: !chrome.system.display.TouchCalibrationPair,
+ *   pair3: !chrome.system.display.TouchCalibrationPair,
+ *   pair4: !chrome.system.display.TouchCalibrationPair
+ * }}
+ * @see https://developer.chrome.com/extensions/system.display#type-TouchCalibrationPairQuad
+ */
+chrome.system.display.TouchCalibrationPairQuad;
+
+
+/**
+ * @typedef {!{
  *   width: number,
  *   height: number,
  *   widthInNativePixels: number,
@@ -5782,16 +5815,64 @@ chrome.system.display.DisplayMode;
 
 
 /**
+ * @enum {string}
+ * @see https://developer.chrome.com/extensions/system.display#type-LayoutPosition
+ */
+chrome.system.display.LayoutPosition = {
+  TOP: '',
+  RIGHT: '',
+  BOTTOM: '',
+  LEFT: '',
+};
+
+
+/**
  * @typedef {!{
  *   id: string,
  *   parentId: string,
- *   position: string,
+ *   position: (!chrome.system.display.LayoutPosition|string),
  *   offset: number
  * }}
  * @see https://developer.chrome.com/extensions/system.display#type-DisplayLayout
  */
 chrome.system.display.DisplayLayout;
 
+
+/**
+ * @typedef {!{
+ *   isUnified: (boolean|undefined),
+ *   mirroringSourceId: (string|undefined),
+ *   isPrimary: (boolean|undefined),
+ *   overscan: (!chrome.system.display.Insets|undefined),
+ *   rotation: (number|undefined),
+ *   boundsOriginX: (number|undefined),
+ *   boundsOriginY: (number|undefined),
+ *   displayMode: (!chrome.system.display.DisplayMode|undefined),
+ *   displayZoomFactor: (number|undefined)
+ * }}
+ * @see https://developer.chrome.com/extensions/system.display#type-DisplayProperties
+ */
+chrome.system.display.DisplayProperties;
+
+
+/**
+ * @typedef {!{
+ *   singleUnified: (boolean|undefined)
+ * }}
+ * @see https://developer.chrome.com/extensions/system.display#type-GetInfoFlags
+ */
+chrome.system.display.GetInfoFlags;
+
+
+/**
+ * @typedef {!{
+ *   mode: (!chrome.system.display.MirrorMode|string),
+ *   mirroringSourceId: (string|undefined),
+ *   mirroringDestinationIds: (!Array<string>|undefined),
+ * }}
+ * @see https://developer.chrome.com/extensions/system.display#type-MirrorModeInfo
+ */
+chrome.system.display.MirrorModeInfo;
 
 
 /**
@@ -5858,15 +5939,15 @@ chrome.system.display.DisplayUnitInfo.prototype.hasTouchSupport;
 
 
 /**
- * @param {function(!Array<!Object>):void} callback Callbacks must declare their
- *     param to be an array of objects since there is no defined type. To
- *     achieve stronger type checking, cast the objects to
- *     chrome.system.display.DisplayUnitInfo. Called with an array of objects
- *     representing display info.
+ * @param {!chrome.system.display.GetInfoFlags|
+ *     function(!Array<!chrome.system.display.DisplayUnitInfo>):void}
+ *     flags Options affecting how the information is returned.
+ * @param {function(!Array<!chrome.system.display.DisplayUnitInfo>):void=}
+ *     callback The callback to invoke with the results.
  * @return {undefined}
  * @see https://developer.chrome.com/extensions/system.display#method-getInfo
  */
-chrome.system.display.getInfo = function(callback) {};
+chrome.system.display.getInfo = function(flags, callback) {};
 
 
 /**
@@ -5879,9 +5960,9 @@ chrome.system.display.getDisplayLayout = function(callback) {};
 
 /**
  * @param {string} id The display's unique identifier.
- * @param {!Object} info The information about display properties that should be
- *     changed. A property will be changed only if a new value for it is
- *     specified in info.
+ * @param {!chrome.system.display.DisplayProperties} info The information about
+ *     display properties that should be changed. A property will be changed
+ *     only if a new value for it is specified in info.
  * @param {function():void=} callback Empty function called when the function
  *     finishes. To find out whether the function succeeded, runtime.lastError
  *     should be queried.
@@ -5899,6 +5980,17 @@ chrome.system.display.setDisplayProperties = function(id, info, callback) {};
  * @see https://developer.chrome.com/extensions/system.display#method-setDisplayLayout
  */
 chrome.system.display.setDisplayLayout = function(layouts, callback) {};
+
+
+/**
+ * @param {!chrome.system.display.MirrorModeInfo} info The information of the
+ *     mirror mode that should be applied to the display mode.
+ * @param {function():void=} callback Empty function called when the function
+ *     finishes. To find out whether the function succeeded,
+ *     $(ref:runtime.lastError) should be queried.
+ * @see https://developer.chrome.com/extensions/system.display#method-setMirrorMode
+ */
+chrome.system.display.setMirrorMode = function(info, callback) {};
 
 
 /**
@@ -5956,7 +6048,8 @@ chrome.system.display.startCustomTouchCalibration = function(id) {};
 
 
 /**
- * @param {!Object} pairs The pairs of point used to calibrate the display.
+ * @param {!chrome.system.display.TouchCalibrationPairQuad} pairs The pairs of
+ * point used to calibrate the display.
  * @param {!chrome.system.display.Bounds} bounds Bounds of the display when the
  *     touch calibration was performed. |bounds.left| and |bounds.top| values
  *     are ignored.
