@@ -1475,23 +1475,42 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     Node key = null;
     Node value = null;
     for (Node c = left.getFirstChild(); c != null; c = c.getNext()) {
-      if (c.getString().equals(right.getString())) {
-        switch (c.getToken()) {
-          case SETTER_DEF:
+      switch (c.getToken()) {
+        case SETTER_DEF:
+          continue;
+        case COMPUTED_PROP:
+          // don't handle computed properties unless the input is a simple string
+          Node prop = c.getFirstChild();
+          if (!prop.isString()) {
+            return n;
+          }
+          if (prop.getString().equals(right.getString())) {
+            if (value != null && mayHaveSideEffects(value)) {
+              // The previously found value had side-effects
+              return n;
+            }
+            key = c;
+            value = key.getSecondChild();
             continue;
-          case GETTER_DEF:
-          case STRING_KEY:
+          }
+          break;
+        case GETTER_DEF:
+        case STRING_KEY:
+        case MEMBER_FUNCTION_DEF:
+          if (c.getString().equals(right.getString())) {
             if (value != null && mayHaveSideEffects(value)) {
               // The previously found value had side-effects
               return n;
             }
             key = c;
             value = key.getFirstChild();
-            break;
-          default:
-            throw new IllegalStateException();
-        }
-      } else if (mayHaveSideEffects(c.getFirstChild())) {
+            continue;
+          }
+          break;
+        default:
+          throw new IllegalStateException();
+      }
+      if (mayHaveSideEffects(c.getFirstChild())) {
         // We don't handle the side-effects here as they might need a temporary
         // or need to be reordered.
         return n;
@@ -1501,6 +1520,13 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     // Didn't find a definition of the name in the object literal, it might
     // be coming from the Object prototype
     if (value == null) {
+      return n;
+    }
+
+    // Don't try to fold member functions, since they are unlike function expressions (they have an
+    // undefined prototype and can't be used with new) and are unlike arrow functions (they can
+    // reference new.target, this, super, or arguments).
+    if (key.isMemberFunctionDef()) {
       return n;
     }
 

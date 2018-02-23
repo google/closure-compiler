@@ -1378,6 +1378,21 @@ public final class PeepholeFoldConstantsTest extends TypeICompilerTestCase {
 
     // GETELEM is handled the same way.
     test("var x = ({'a':1})['a']", "var x = 1");
+
+    // try folding string computed properties
+    test("var a = {['a']:x}['a']", "var a = x");
+    test("var a = {'a': x, ['a']: y}['a']", "var a = y;");
+    testSame("var a = {['foo']: x}.a;");
+    // Note: it may be useful to fold symbols in the future.
+    testSame("var y = Symbol(); var a = {[y]: 3}[y];");
+
+    // don't fold member functions since they are different from fn expressions and arrow fns
+    testSame("var x = {a() {}}.a;");
+    testSame("var x = {a() { return this; }}.a;");
+    testSame("var x = {a() { return super.a; }}.a;");
+    testSame("var x = {a: 1, a() {}}.a;");
+    test("var x = {a() {}, a: 1}.a;", "var x = 1;");
+    testSame("var x = {a() {}}.b");
   }
 
   public void testFoldObjectLiteralRef2() {
