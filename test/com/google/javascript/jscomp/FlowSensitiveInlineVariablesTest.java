@@ -502,10 +502,7 @@ public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase  {
     noInline("var x = 1, y = [], z; print(x); for (let {z = x} in y) {}");
     noInline("var x = 1, y = [], z; print(x); for (const {z = x} in y) {}");
 
-    // TODO(b/73559627): this should not change alert(z) to alert(x), since x changes in value.
-    inline(
-        "var x = 1; if (true) { x = 3; } var y = [[0]], z = x; for ([x] in y) {}; alert(z);",
-        "var x = 1; if (true) { x = 3; } var y = [[0]], z    ; for ([x] in y) {}; alert(x);");
+    noInline("var x = 1; if (true) { x = 3; } var y = [[0]], z = x; for ([x] in y) {}; alert(z);");
   }
 
   public void testNotOkToSkipCheckPathBetweenNodes() {
@@ -760,6 +757,12 @@ public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase  {
         "  JSCompiler_inline_result = a;",
         "}",
         "alert(JSCompiler_inline_result);"));
+
+    // TODO(b/73559627): don't inline "g" because "value" is not defined out of the block.
+    // This causes a VarCheck error in a full compile.
+    inline(
+        lines("{ let value = 1; var g = () => value; } return g;"),
+        lines("{ let value = 1; var g;               } return () => value;"));
   }
 
   public void testInlineInGenerators() {
@@ -795,11 +798,7 @@ public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase  {
     noInline("var x = 1, y = [], z; print(x); for (let [z = x] of y) {}");
     noInline("var x = 1, y = [], z; print(x); for (const [z = x] of y) {}");
 
-
-    // TODO(b/73559627): this should not change alert(z) to alert(x), since x changes in value.
-    inline(
-        "var x = 1; if (true) { x = 3; } var y = [[0]], z = x; for ([x] of y) {}; alert(z);",
-        "var x = 1; if (true) { x = 3; } var y = [[0]], z    ; for ([x] of y) {}; alert(x);");
+    noInline("var x = 1; if (true) { x = 3; } var y = [[0]], z = x; for ([x] of y) {}; alert(z);");
   }
 
   public void testTemplateStrings() {
@@ -828,18 +827,11 @@ public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase  {
   public void testDontInlineOverChangingRvalue_destructuring() {
     noInline("var x = 1; if (true) { x = 2; } var y = x; var [z = (x = 3, 4)] = []; print(y);");
 
-    // TODO(b/73559627): none of these cases should inline "y = x" into "print(y)" because x changes
-    inline(
-        "var x = 1; if (true) { x = 2; } var y = x; [x] = []; print(y);",
-        "var x = 1; if (true) { x = 2; } var y    ; [x] = []; print(x);");
+    noInline("var x = 1; if (true) { x = 2; } var y = x; [x] = []; print(y);");
 
-    inline(
-        "var x = 1; if (true) { x = 2; } var y = x; ({x} = {}); print(y);",
-        "var x = 1; if (true) { x = 2; } var y    ; ({x} = {}); print(x);");
+    noInline("var x = 1; if (true) { x = 2; } var y = x; ({x} = {}); print(y);");
 
-    inline(
-        "var x = 1; if (true) { x = 2; } var y = x; var [z] = [x = 3]; print(y);",
-        "var x = 1; if (true) { x = 2; } var y    ; var [z] = [x = 3]; print(x);");
+    noInline("var x = 1; if (true) { x = 2; } var y = x; var [z] = [x = 3]; print(y);");
   }
 
   public void testDestructuringDefaultValue() {

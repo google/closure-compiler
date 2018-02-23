@@ -485,6 +485,8 @@ class FlowSensitiveInlineVariables implements CompilerPass, ScopedCallback {
             @Override
             public boolean apply(Node input) {
               // Recurse if the node is not a function.
+              // TODO(b/73559627): we need to check inside functions for references to block-scoped
+              // variables.
               return !input.isFunction();
             }
           })) {

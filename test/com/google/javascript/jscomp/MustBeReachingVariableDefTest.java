@@ -162,8 +162,29 @@ public final class MustBeReachingVariableDefTest extends TestCase {
     assertMatch("var a = 1; D: var x = a; U: print(a++, x);");
   }
 
+  public void testDestructuringDefinitions() {
+    assertMatch("D: var [x] = [1]; U: x;");
+    assertMatch("D: var x = [1]; U: var [y] = [x];");
+    assertMatch("var x = 1; D: [x] = [2]; U: x;");
+
+    assertNotMatch("D: var x = 1; [x] = [2]; U: x;");
+    assertNotMatch("var y = 1; D: var x = y; [y] = [2]; U: x;");
+
+    assertMatch("var x; var y; D: [x] = [x = y]; y = 1; U: x;");
+    assertMatch("var x; D: var [y] = [x = 1]; U: x;");
+  }
+
+  public void testDestructuringDefaultValue() {
+    // conditional definitions of x do not match the usage of x.
+    assertNotMatch("var x; D: var [y = x = 3] = []; U: x;");
+    assertNotMatch("var x, obj = {}; D: [obj[x = 1] = x = 2] = []; U: x;");
+
+    assertMatch("var x, obj = {}; D: [[obj[x = 1]] = [x = 2]] = []; U: x;");
+    assertMatch("var x; D: [x = x = 3] = []; U: x");
+  }
+
   /**
-   * The use of x at U: is the definition of x at D:.
+   * Asserts that the use of x at U: is the definition of x at D:.
    */
   private void assertMatch(String src) {
     computeDefUse(src);
@@ -171,7 +192,7 @@ public final class MustBeReachingVariableDefTest extends TestCase {
   }
 
   /**
-   * The use of x at U: is not the definition of x at D:.
+   * Asserts that the use of x at U: is not the definition of x at D:.
    */
   private void assertNotMatch(String src) {
     computeDefUse(src);

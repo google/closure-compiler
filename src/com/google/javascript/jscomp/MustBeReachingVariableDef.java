@@ -268,6 +268,11 @@ final class MustBeReachingVariableDef extends
         if (lhs.isName()) {
           // TODO(lharker): This doesn't seem right - given for (x in y), the value set to x isn't y
           addToDefIfLocal(lhs.getString(), cfgNode, rhs, output);
+        } else if (lhs.isDestructuringLhs()) {
+          lhs = lhs.getFirstChild();
+        }
+        if (lhs.isDestructuringPattern()) {
+          computeMustDef(lhs, cfgNode, output, true);
         }
         return;
 
@@ -288,15 +293,38 @@ final class MustBeReachingVariableDef extends
       case VAR:
         for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
           if (c.hasChildren()) {
-            computeMustDef(c.getFirstChild(), cfgNode, output, conditional);
             if (c.isName()) {
+              computeMustDef(c.getFirstChild(), cfgNode, output, conditional);
               addToDefIfLocal(c.getString(), conditional ? null : cfgNode,
                   c.getFirstChild(), output);
             } else {
               checkState(c.isDestructuringLhs(), c);
-              return;
+              computeMustDef(c.getSecondChild(), cfgNode, output, conditional);
+              computeMustDef(c.getFirstChild(), cfgNode, output, conditional);
             }
           }
+        }
+        return;
+
+      case DEFAULT_VALUE:
+        if (n.getFirstChild().isDestructuringPattern()) {
+          computeMustDef(n.getSecondChild(), cfgNode, output, true);
+          computeMustDef(n.getFirstChild(), cfgNode, output, conditional);
+        } else if (n.getFirstChild().isName()) {
+          computeMustDef(n.getSecondChild(), cfgNode, output, true);
+          addToDefIfLocal(
+              n.getFirstChild().getString(), conditional ? null : cfgNode, null, output);
+        } else {
+          computeMustDef(n.getFirstChild(), cfgNode, output, conditional);
+          computeMustDef(n.getSecondChild(), cfgNode, output, true);
+        }
+        break;
+
+      case NAME:
+        if (NodeUtil.isLhsByDestructuring(n)) {
+          addToDefIfLocal(n.getString(), conditional ? null : cfgNode, null, output);
+        } else if ("arguments".equals(n.getString())) {
+          escapeParameters(output);
         }
         return;
 
@@ -318,11 +346,11 @@ final class MustBeReachingVariableDef extends
               // number.
               escapeParameters(output);
             }
+          } else if (n.getFirstChild().isDestructuringPattern()) {
+            computeMustDef(n.getSecondChild(), cfgNode, output, conditional);
+            computeMustDef(n.getFirstChild(), cfgNode, output, conditional);
+            return;
           }
-        }
-
-        if (n.isName() && "arguments".equals(n.getString())) {
-          escapeParameters(output);
         }
 
         // DEC and INC actually defines the variable.
@@ -351,8 +379,7 @@ final class MustBeReachingVariableDef extends
       @Nullable Node rValue, MustDef def) {
     Var var = allVarsInFn.get(name);
 
-    // var might be null because the variable might be defined in the extern
-    // that we might not traverse.
+    // var might be null if the variable is defined in the externs
     if (var == null) {
       return;
     }
