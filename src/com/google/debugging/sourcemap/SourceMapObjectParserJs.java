@@ -21,6 +21,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import jsinterop.annotations.JsMethod;
+import jsinterop.annotations.JsOverlay;
 import jsinterop.annotations.JsPackage;
 import jsinterop.annotations.JsType;
 
@@ -56,8 +57,11 @@ public class SourceMapObjectParserJs {
     Section[] sections;
     String[] sources;
     String[] names;
-    @JsMethod
-    native Object getLineCount();
+
+    @JsOverlay
+    public final Object getLineCount() {
+      return this.lineCount;
+    }
   }
 
   @JsType(isNative = true, name = "Object", namespace = JsPackage.GLOBAL)
