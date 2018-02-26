@@ -3331,7 +3331,6 @@ public final class NodeUtil {
       case NAME:
       case GETPROP:
       case GETELEM:
-      case STRING_KEY:
         break;
       default:
         return false;
@@ -3362,9 +3361,9 @@ public final class NodeUtil {
       case FOR_IN:
       case FOR_OF:
         return parent.getFirstChild() == n;
-      case OBJECT_PATTERN:
       case ARRAY_PATTERN:
       case STRING_KEY:
+      case COMPUTED_PROP:
         return isLhsByDestructuring(n);
       default:
         return NodeUtil.isAssignmentOp(parent) && parent.getFirstChild() == n;

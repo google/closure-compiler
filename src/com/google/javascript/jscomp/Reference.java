@@ -223,9 +223,9 @@ public final class Reference implements StaticRef, Serializable {
       case FOR_IN:
       case FOR_OF:
         return NodeUtil.isEnhancedFor(parent) && parent.getFirstChild() == nameNode;
-      case OBJECT_PATTERN:
       case ARRAY_PATTERN:
       case STRING_KEY:
+      case COMPUTED_PROP:
         return NodeUtil.isLhsByDestructuring(nameNode);
       default:
         return (NodeUtil.isAssignmentOp(parent) && parent.getFirstChild() == nameNode);

@@ -2468,6 +2468,8 @@ public final class NodeUtilTest extends TestCase {
         parse("([x] = obj)").getFirstFirstChild().getFirstFirstChild());
     assertLValueNamedX(
         parse("function foo (...x) {}").getFirstChild().getSecondChild().getFirstFirstChild());
+    assertLValueNamedX(
+        parse("({[0]: x} = obj)").getFirstFirstChild().getFirstFirstChild().getSecondChild());
   }
 
   private void assertNotLValueNamedX(Node n) {

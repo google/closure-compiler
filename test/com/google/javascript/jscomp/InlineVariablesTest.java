@@ -1535,6 +1535,8 @@ public final class InlineVariablesTest extends CompilerTestCase {
         lines(
             "var [a, b, c] = [1, 2, 3]",
             "a; a;"));
+
+    testSame("var x = 1; ({[0]: x} = {});");
   }
 
   public void testFunctionInlinedAcrossScript() {

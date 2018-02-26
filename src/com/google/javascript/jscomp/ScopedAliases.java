@@ -677,9 +677,8 @@ class ScopedAliases implements HotSwapCompilerPass {
       }
 
       Token type = n.getToken();
-      boolean isObjLitShorthand = type == Token.STRING_KEY && !n.hasChildren();
       Var aliasVar = null;
-      if (type == Token.NAME || isObjLitShorthand) {
+      if (type == Token.NAME) {
         String name = n.getString();
         Var lexicalVar = t.getScope().getVar(name);
         if (lexicalVar != null && lexicalVar == aliases.get(name)) {
@@ -693,7 +692,7 @@ class ScopedAliases implements HotSwapCompilerPass {
       }
 
       if (isGoogScopeFunctionBody(t.getEnclosingFunction().getLastChild())) {
-        if (aliasVar != null && !isObjLitShorthand && NodeUtil.isLValue(n)) {
+        if (aliasVar != null && NodeUtil.isLValue(n)) {
           if (aliasVar.getNode() == n) {
             aliasDefinitionsInOrder.add(n);
 
