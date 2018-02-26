@@ -1754,7 +1754,7 @@ public class JSTypeRegistry implements TypeIRegistry {
   public ObjectTypeI instantiateGenericsWithUnknown(ObjectType obj) {
     if (obj.isTemplatizedType()) {
       ImmutableList.Builder<JSType> unknowns = ImmutableList.builder();
-      for (TemplateType ignore : obj.getTemplateTypeMap().getTemplateKeys()) {
+      for (TemplateType unused : obj.getTemplateTypeMap().getTemplateKeys()) {
         unknowns.add(getNativeType(UNKNOWN_TYPE));
       }
       return createTemplatizedType(obj.toMaybeTemplatizedType().getRawType(), unknowns.build());
