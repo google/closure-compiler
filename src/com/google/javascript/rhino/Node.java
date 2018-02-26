@@ -2582,14 +2582,18 @@ public class Node implements Serializable {
   }
 
   /**
-   * Sets whether this node is a marker used in the translation of generators.
+   * Sets whether this node subtree contains YIELD nodes.
+   *
+   * <p> It's used in the translation of generators.
    */
   public final void setGeneratorMarker(boolean isGeneratorMarker) {
     putBooleanProp(GENERATOR_MARKER, isGeneratorMarker);
   }
 
   /**
-   * Returns whether this node is a marker used in the translation of generators.
+   * Returns whether this node was marked as containing YIELD nodes.
+   *
+   * <p> It's used in the translation of generators.
    */
   public final boolean isGeneratorMarker() {
     return getBooleanProp(GENERATOR_MARKER);

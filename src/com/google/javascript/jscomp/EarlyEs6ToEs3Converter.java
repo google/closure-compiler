@@ -89,12 +89,6 @@ public final class EarlyEs6ToEs3Converter implements Callback, HotSwapCompilerPa
         // but we want the runtime functions to be have TypeI applied to it by the type checker.
         Es6ToEs3Util.preloadEs6RuntimeFunction(compiler, "makeIterator");
         break;
-      case YIELD:
-        if (n.isYieldAll()) {
-          Es6ToEs3Util.preloadEs6RuntimeFunction(compiler, "makeIterator");
-        }
-        Es6ToEs3Util.preloadEs6Symbol(compiler);
-        break;
       case GETTER_DEF:
       case SETTER_DEF:
         if (compiler.getOptions().getLanguageOut() == LanguageMode.ECMASCRIPT3) {
@@ -106,6 +100,9 @@ public final class EarlyEs6ToEs3Converter implements Callback, HotSwapCompilerPa
       case FUNCTION:
         if (n.isAsyncFunction()) {
           throw new IllegalStateException("async functions should have already been converted");
+        }
+        if (n.isGeneratorFunction()) {
+          compiler.ensureLibraryInjected("es6/generator_engine", /* force= */ false);
         }
         break;
       default:
@@ -135,11 +132,6 @@ public final class EarlyEs6ToEs3Converter implements Callback, HotSwapCompilerPa
             visitArrayLitOrCallWithSpread(n, parent);
             break;
           }
-        }
-        break;
-      case FUNCTION:
-        if (n.isGeneratorFunction()) {
-          Es6RewriteGenerators.preloadGeneratorSkeletonAndReportChange(compiler);
         }
         break;
       default:

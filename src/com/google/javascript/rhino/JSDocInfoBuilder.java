@@ -751,6 +751,22 @@ public final class JSDocInfoBuilder {
 
   /**
    * Records that the {@link JSDocInfo} being built should have its
+   * {@link JSDocInfo#isConstant()} flag set to {@code false}.
+   *
+   * @return {@code true} if the constancy was cleared and {@code false}
+   *     if it was not defined
+   */
+  public boolean clearConstancy() {
+    if (currentInfo.isConstant()) {
+      currentInfo.setConstant(false);
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  /**
+   * Records that the {@link JSDocInfo} being built should have its
    * {@link JSDocInfo#isFinal()} flag set to {@code true}.
    *
    * @return {@code true} if the finality was recorded and {@code false} if it was already defined

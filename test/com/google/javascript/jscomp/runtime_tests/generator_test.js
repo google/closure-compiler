@@ -111,12 +111,12 @@ function testGeneratorForOf() {
 
 function testGeneratorForIn() {
   function *f() {
-    var o = {a: 5, b: 6};
+    var o = {"": "empty", a: 5, b: 6};
     for (var n in o) {
       yield o[n];
     }
   }
-  var expected = [5, 6];
+  var expected = ["empty", 5, 6];
   var actual = [];
   for (var v of f()) {
     actual.push(v);
@@ -546,6 +546,19 @@ function testGeneratorNested() {
 
     yield arguments[0];
     yield * innerGen(arguments[1]);
+  }
+
+  compareToExpected(yieldArgumentsception, [1, 2], 1, 2);
+}
+
+function testGeneratorNestedUnnamed() {
+  function *yieldArgumentsception() {
+    var innerGen = function *() {
+      yield 2;
+    };
+
+    yield 1;
+    yield * innerGen();
   }
 
   compareToExpected(yieldArgumentsception, [1, 2], 1, 2);
@@ -990,11 +1003,8 @@ function testGeneratorThrow_tryCatch() {
 
 /**
  * Make sure thrown exception is correctly rethrown after finally block.
- *
- * TODO(bradfordcsmith): fix this
- * https://github.com/google/closure-compiler/issues/2504
  */
-function disabled_testGeneratorThrowWithYieldInFinallyBlock() {
+function testGeneratorThrowWithYieldInFinallyBlock() {
   const expectedError = new Error('error');
 
   function *f() {
