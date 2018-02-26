@@ -1234,6 +1234,13 @@ Promise.prototype.catch = function(onRejected) {};
 
 
 /**
+ * @param {function()} callback
+ * @return {!Promise<TYPE>}
+ */
+Promise.prototype.finally = function(callback) {};
+
+
+/**
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/of
  * @param {...T} var_args
  * @return {!Array<T>}
