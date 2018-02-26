@@ -591,18 +591,6 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
 
     testSets(js, output, "{a=[[function(new:Bar): undefined]," +
     " [function(new:Foo): undefined]]}");
-
-if (false) {
-    this.mode = TypeInferenceMode.NTI_ONLY;
-    output = ""
-        + "/** @constructor */ function Foo(){}"
-        + "/** @constructor */ function Bar(){}"
-        + "Foo.class_Foo$a = 0;"
-        + "Bar.class_Bar$a = 0;";
-
-    testSets(js, output,
-        "{a=[[class:Bar], [class:Foo]]}");
-}
   }
 
   public void testSupertypeWithSameField() {
@@ -2343,11 +2331,6 @@ if (false) {
         "  this.Bar$a = 3;",
         "  this.Bar$b = 2;",
         "}");
-
-    if (false) {
-      this.mode = TypeInferenceMode.NTI_ONLY;
-      testSets("", js, output, "{a=[[Bar], [Foo]], b=[[Bar], [Foo]], f=[[Foo.prototype]]}");
-    }
   }
 
   public void testIgnoreSpecializedProperties2() {
@@ -2398,11 +2381,6 @@ if (false) {
         "function Foo() {",
         "  this.Foo$num = 123;",
         "}");
-
-    if (false) {
-      this.mode = TypeInferenceMode.NTI_ONLY;
-      testSets("", js, ntiOutput, "{num=[[Foo], [ns]]}");
-    }
   }
 
   public void testIgnoreSpecializedProperties3() {
@@ -2435,11 +2413,6 @@ if (false) {
         "function Bar() {",
         "  this.Bar$num = 123;",
         "}");
-
-    if (false) {
-      this.mode = TypeInferenceMode.NTI_ONLY;
-      testSets("", js, output, "{num=[[Bar], [Foo.prototype]]}");
-    }
   }
 
   public void testErrorOnProtectedProperty() {
