@@ -4519,6 +4519,12 @@ Navigator.prototype.javaEnabled = function() {};
 Navigator.prototype.deviceMemory;
 
 /**
+ * @type {!StorageManager}
+ * @see https://storage.spec.whatwg.org
+ */
+Navigator.prototype.storage;
+
+/**
  * @constructor
  * @implements {IObject<(string|number),!Plugin>}
  * @implements {IArrayLike<!Plugin>}
@@ -4720,3 +4726,27 @@ VisualViewport.prototype.onresize;
 
 /** @type {?function(!Event)} */
 VisualViewport.prototype.onscroll;
+
+/**
+ * @see https://storage.spec.whatwg.org/
+ * @constructor
+ */
+function StorageManager() {}
+
+/** @return {!Promise<boolean>} */
+StorageManager.prototype.persisted = function() {};
+
+/** @return {!Promise<boolean>} */
+StorageManager.prototype.persist = function() {};
+
+/** @return {!Promise<StorageEstimate>} */
+StorageManager.prototype.estimate = function() {};
+
+/**
+ * @see https://storage.spec.whatwg.org/
+ * @typedef {{
+ *   usage: number,
+ *   quota: number
+ * }}
+ */
+var StorageEstimate;
