@@ -199,6 +199,10 @@ class FunctionInjector {
       return CanInlineResult.NO;
     }
 
+    if (hasSpreadCallArgument(callNode)) {
+      return CanInlineResult.NO;
+    }
+
     // Limit where functions that contain functions can be inline.  Introducing
     // an inner function into another function can capture a variable and cause
     // a memory leak.  This isn't a problem in the global scope as those values
@@ -248,6 +252,18 @@ class FunctionInjector {
     }
 
     return true;
+  }
+
+  private static boolean hasSpreadCallArgument(Node callNode) {
+    Predicate<Node> hasSpreadCallArgumentPredicate =
+        new Predicate<Node>() {
+          @Override
+          public boolean apply(Node input) {
+            return input.isSpread();
+          }
+        };
+
+    return NodeUtil.has(callNode, hasSpreadCallArgumentPredicate, Predicates.<Node>alwaysTrue());
   }
 
   /**

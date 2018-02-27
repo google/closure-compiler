@@ -454,9 +454,6 @@ class InlineFunctions implements CompilerPass {
     }
 
     if (parent.isCall() && parent.getFirstChild() == name) {
-      if (hasSpreadCallArgument(parent)) {
-        return false;
-      }
       // This is a normal reference to the function.
       return true;
     }
@@ -720,18 +717,6 @@ class InlineFunctions implements CompilerPass {
     for (FunctionState functionState : fns.values()) {
       resolveInlineConflictsForFunction(functionState);
     }
-  }
-
-  private static boolean hasSpreadCallArgument(Node callNode) {
-    Predicate<Node> hasSpreadCallArgumentPredicate =
-        new Predicate<Node>() {
-          @Override
-          public boolean apply(Node input) {
-            return input.isSpread();
-          }
-        };
-
-    return NodeUtil.has(callNode, hasSpreadCallArgumentPredicate, Predicates.<Node>alwaysTrue());
   }
 
   /**

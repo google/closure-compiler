@@ -3307,6 +3307,17 @@ public class InlineFunctionsTest extends CompilerTestCase {
             "  return args.length;",
             "}",
             "foo(...[0,1]);"));
+
+    testSame("var args = [0, 1]; (function foo(x, y) { return x + y; })(...args);");
+
+    testSame(
+        lines(
+            "var args = [0, 1];",
+            "(function foo(x, y, z) {",
+            "  return x + y + z;",
+            "})(2, ...args);"));
+
+    testSame("(function (x, y) {  return x + y; })(...[0, 1]);");
   }
 
   public void testGeneratorFunction() {
