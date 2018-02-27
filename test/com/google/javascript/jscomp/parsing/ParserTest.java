@@ -102,6 +102,8 @@ public final class ParserTest extends BaseJSTypeTestCase {
     parse("x**-y");
     parse("x/y**z");
 
+    parse("2 ** 3 > 3");
+
     mode = LanguageMode.ECMASCRIPT6;
     strictMode = SLOPPY;
     parseWarning(

@@ -53,4 +53,8 @@ public final class Es7ToEs6ConverterTest extends TypeICompilerTestCase {
   public void testExponentiationAssignmentOperator() {
     test("x **= 2;", "x=Math.pow(x,2)");
   }
+
+  public void testIssue2821() {
+    test("2 ** 3 > 0", "Math.pow(2, 3) > 0");
+  }
 }

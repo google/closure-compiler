@@ -1436,11 +1436,11 @@ class IRFactory {
     }
 
     Node processBinaryExpression(BinaryOperatorTree exprNode) {
-      if (exprNode.operator.type == TokenType.STAR_STAR
-          || exprNode.operator.type == TokenType.STAR_STAR_EQUAL) {
-        maybeWarnForFeature(exprNode, Feature.EXPONENT_OP);
-      }
       if (hasPendingCommentBefore(exprNode.right)) {
+        if (exprNode.operator.type == TokenType.STAR_STAR
+            || exprNode.operator.type == TokenType.STAR_STAR_EQUAL) {
+          maybeWarnForFeature(exprNode, Feature.EXPONENT_OP);
+        }
         return newNode(
             transformBinaryTokenType(exprNode.operator.type),
             transform(exprNode.left),
@@ -1458,6 +1458,10 @@ class IRFactory {
       Node current = null;
       Node previous = null;
       while (exprTree != null) {
+        if (exprTree.operator.type == TokenType.STAR_STAR
+            || exprTree.operator.type == TokenType.STAR_STAR_EQUAL) {
+          maybeWarnForFeature(exprTree, Feature.EXPONENT_OP);
+        }
         previous = current;
         // Skip the first child but recurse normally into the right operand as typically this isn't
         // deep and because we have already checked that there isn't any JSDoc we can traverse
