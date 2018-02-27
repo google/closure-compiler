@@ -3826,7 +3826,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
   private static String requiresLanguageModeMessage(LanguageMode languageMode, Feature feature) {
     return String.format(
-        "this language feature is only supported for %s mode or better: %s",
+        "This language feature is only supported for %s mode or better: %s",
         languageMode,
         feature);
   }

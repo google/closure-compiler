@@ -508,12 +508,12 @@ public final class CommandLineRunnerTest extends TestCase {
 
   public void testIssue70a() {
     args.add("--language_in=ECMASCRIPT5");
-    test("function foo({}) {}", RhinoErrorReporter.ES6_FEATURE);
+    test("function foo({}) {}", RhinoErrorReporter.LANGUAGE_FEATURE);
   }
 
   public void testIssue70b() {
     args.add("--language_in=ECMASCRIPT5");
-    test("function foo([]) {}", RhinoErrorReporter.ES6_FEATURE);
+    test("function foo([]) {}", RhinoErrorReporter.LANGUAGE_FEATURE);
   }
 
   public void testIssue81() {

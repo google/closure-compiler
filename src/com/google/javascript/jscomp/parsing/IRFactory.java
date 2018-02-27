@@ -860,14 +860,18 @@ class IRFactory {
     return location.column;
   }
 
+  String languageFeatureWarningMessage(Feature feature) {
+    return "This language feature is only supported for "
+              + LanguageMode.minimumRequiredFor(feature)
+              + " mode or better: "
+              + feature;
+  }
+
   void maybeWarnForFeature(ParseTree node, Feature feature) {
     features = features.with(feature);
     if (!isSupportedForInputLanguageMode(feature)) {
       errorReporter.warning(
-          "this language feature is only supported for "
-              + LanguageMode.minimumRequiredFor(feature)
-              + " mode or better: "
-              + feature,
+          languageFeatureWarningMessage(feature),
           sourceName,
           lineno(node), charno(node));
     }
@@ -878,10 +882,7 @@ class IRFactory {
     features = features.with(feature);
     if (!isSupportedForInputLanguageMode(feature)) {
       errorReporter.warning(
-          "this language feature is only supported for "
-              + LanguageMode.minimumRequiredFor(feature)
-              + " mode or better: "
-              + feature,
+          languageFeatureWarningMessage(feature),
           sourceName,
           lineno(token), charno(token));
     }
@@ -891,10 +892,7 @@ class IRFactory {
     features = features.with(feature);
     if (!isSupportedForInputLanguageMode(feature)) {
       errorReporter.warning(
-          "this language feature is only supported for "
-              + LanguageMode.minimumRequiredFor(feature)
-              + " mode or better: "
-              + feature,
+          languageFeatureWarningMessage(feature),
           sourceName,
           node.getLineno(), node.getCharno());
     }

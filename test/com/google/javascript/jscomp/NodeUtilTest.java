@@ -51,7 +51,7 @@ public final class NodeUtilTest extends TestCase {
 
   private static Node parse(String js) {
     CompilerOptions options = new CompilerOptions();
-    options.setLanguageIn(LanguageMode.ECMASCRIPT_2015);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT);
 
     // To allow octal literals such as 0123 to be parsed.
     options.setStrictModeInput(false);
