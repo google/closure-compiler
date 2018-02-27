@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import com.google.javascript.jscomp.type.ClosureReverseAbstractInterpreter;
 import com.google.javascript.jscomp.type.FlowScope;
 import com.google.javascript.rhino.Node;
@@ -302,19 +304,20 @@ public final class ClosureReverseAbstractInterpreterTest extends
     assertEquals(Token.NAME, name.getToken());
 
     flowScope.inferSlotType("a", type);
-    ClosureReverseAbstractInterpreter rai =
-        new ClosureReverseAbstractInterpreter(registry);
+    ClosureReverseAbstractInterpreter rai = new ClosureReverseAbstractInterpreter(registry);
 
     // trueScope
     Asserts.assertTypeEquals(
         trueType,
-        rai.getPreciserScopeKnowingConditionOutcome(call, flowScope, true)
-        .getSlot("a").getType());
+        rai.getPreciserScopeKnowingConditionOutcome(call, flowScope, true).getSlot("a").getType());
 
     // falseScope
-    Asserts.assertTypeEquals(
-        falseType,
-        rai.getPreciserScopeKnowingConditionOutcome(call, flowScope, false)
-        .getSlot("a").getType());
+    JSType aType = rai.getPreciserScopeKnowingConditionOutcome(call, flowScope, false)
+        .getSlot("a").getType();
+    if (falseType == null) {
+      assertThat(aType).isNull();
+    } else {
+      Asserts.assertTypeEquals(falseType, aType);
+    }
   }
 }

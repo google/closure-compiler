@@ -39,17 +39,15 @@
 
 package com.google.javascript.rhino.testing;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.truth.Truth.assertThat;
-import static org.junit.Assert.assertEquals;
 
 import com.google.common.collect.Iterables;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.StaticTypedScope;
-
-import org.junit.Assert;
-
 import java.util.Iterator;
+import org.junit.Assert;
 
 /**
  * Helper methods for making assertions about the validity of types.
@@ -69,12 +67,10 @@ public class Asserts {
   }
 
   /** @return The resolved type */
-  public static JSType assertValidResolve(
-      JSType type, StaticTypedScope<JSType> scope) {
+  public static JSType assertValidResolve(JSType type, StaticTypedScope<JSType> scope) {
     ErrorReporter t = TestErrorReporter.forNoExpectedReports();
     JSType resolvedType = type.resolve(t, scope);
-    assertTypeEquals("JSType#resolve should not affect object equality",
-        type, resolvedType);
+    assertTypeEquals("JSType#resolve should not affect object equality", type, resolvedType);
     return resolvedType;
   }
 
@@ -84,14 +80,14 @@ public class Asserts {
 
   public static void assertTypeNotEquals(String message, JSType a, JSType b) {
     Assert.assertFalse(
-        message +
-        (message.isEmpty() ? "" : "\n") +
-        "Type: " + b + "\n",
+        message + (message.isEmpty() ? "" : "\n")
+            + " Equals is not symmetric.\n"
+            + "Type: " + b + "\n",
         a.isEquivalentTo(b));
     Assert.assertFalse(
-        message +
-        " Equals is not symmetric.\n" +
-        "Type: " + b + "\n",
+        message + (message.isEmpty() ? "" : "\n")
+            + " Equals is not symmetric.\n"
+            + "Type: " + b + "\n",
         b.isEquivalentTo(a));
   }
 
@@ -100,23 +96,18 @@ public class Asserts {
   }
 
   public static void assertTypeEquals(String message, JSType a, JSType b) {
-    assertEquals(
-        "Both types must be null, or both must be non-null " + a + "," + b,
-        (b == null), (a == null));
-    if (a == null) {
-      return;
-    }
+    checkNotNull(a);
+    checkNotNull(b);
     Assert.assertTrue(
-        message +
-        (message.isEmpty() ? "" : "\n") +
-        "Expected: " + a + "\n" +
-        "Actual  : " + b,
+        message + (message.isEmpty() ? "" : "\n")
+            + "Expected: " + a + "\n"
+            + "Actual  : " + b,
         a.isEquivalentTo(b));
     Assert.assertTrue(
-        message +
-        " Equals is not symmetric.\n" +
-        "Expected: " + b + "\n" +
-        "Actual  : " + a,
+        message
+            + " Equals is not symmetric.\n"
+            + "Expected: " + b + "\n"
+            + "Actual  : " + a,
         b.isEquivalentTo(a));
   }
 
