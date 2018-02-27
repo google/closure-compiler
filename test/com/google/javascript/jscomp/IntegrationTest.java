@@ -554,6 +554,31 @@ public final class IntegrationTest extends IntegrationTestCase {
         PolymerPassErrors.POLYMER_INVALID_DECLARATION);
   }
 
+  public void testPreservedForwardDeclare() {
+    CompilerOptions options = createCompilerOptions();
+    WarningLevel.VERBOSE.setOptionsForWarningLevel(options);
+    options.setClosurePass(true);
+    options.setPreserveGoogProvidesAndRequires(true);
+
+    compile(
+        options,
+        new String[] {
+          LINE_JOINER.join(
+              "var goog = {};",
+              "goog.forwardDeclare = function(/** string */ t) {};",
+              "goog.module = function(/** string */ t) {};"),
+          "goog.module('fwd.declared.Type'); exports = class {}",
+          LINE_JOINER.join(
+              "goog.module('a.b.c');",
+              "const Type = goog.forwardDeclare('fwd.declared.Type');",
+              "",
+              "/** @type {!fwd.declared.Type} */",
+              "var y;"),
+        });
+    assertThat(lastCompiler.getResult().errors).isEmpty();
+    assertThat(lastCompiler.getResult().warnings).isEmpty();
+  }
+
   public void testForwardDeclaredTypeInTemplate() {
     CompilerOptions options = createCompilerOptions();
     WarningLevel.VERBOSE.setOptionsForWarningLevel(options);

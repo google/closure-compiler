@@ -1174,8 +1174,8 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
     if (typeDeclaration != null) {
       compiler.forwardDeclareType(typeDeclaration);
       // Forward declaration was recorded and we can remove the call.
-      compiler.reportChangeToEnclosingScope(parent);
-      parent.detach();
+      Node toRemove = parent.isExprResult() ? parent : parent.getParent();
+      NodeUtil.deleteNode(toRemove, compiler);
     }
   }
 
