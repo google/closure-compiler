@@ -369,7 +369,7 @@ public class JsfileParser implements EntryPoint {
       } else if (node.isExport()) {
         info.loadFlags.add(JsArray.of("module", "es6"));
         // export from
-        if (node.hasChildren() && node.getLastChild().isString()) {
+        if (node.hasTwoChildren() && node.getLastChild().isString()) {
           info.importedModules.add(node.getLastChild().getString());
         }
       }
