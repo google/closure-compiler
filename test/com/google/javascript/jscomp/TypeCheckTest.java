@@ -418,7 +418,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
             "required: string"));
   }
 
-  public void testTemplatizedObjectOnWindow2() throws Exception {
+  public void testTemplatizedObjectOnWindow2() {
     testTypesWithExtraExterns(
         "/** @const */ window.Object = Object;",
         lines(
@@ -12405,7 +12405,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         "Property specialProp never defined on (Bar|Baz)");
   }
 
-  public void testMissingProperty35b() throws Exception {
+  public void testMissingProperty35b() {
     compiler.getOptions().setWarningLevel(DiagnosticGroups.STRICT_MISSING_PROPERTIES, CheckLevel.OFF);
 
     // Bar has specialProp defined, so Bar|Baz may have specialProp defined.
@@ -12429,7 +12429,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         "Property baz never defined on x");
   }
 
-  public void testMissingProperty36b() throws Exception {
+  public void testMissingProperty36b() {
     compiler.getOptions().setWarningLevel(DiagnosticGroups.STRICT_MISSING_PROPERTIES, CheckLevel.OFF);
 
     // Foo has baz defined, and SubFoo has bar defined, so some objects with
@@ -17730,7 +17730,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         "Property prop never defined on Function");
   }
 
-  public void testOptimizePropertyMap1b() throws Exception {
+  public void testOptimizePropertyMap1b() {
     compiler.getOptions().setWarningLevel(DiagnosticGroups.STRICT_MISSING_PROPERTIES, CheckLevel.OFF);
 
     // For non object-literal types such as Function, the behavior doesn't change.
@@ -18664,7 +18664,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
             "required: (number|string)"));
   }
 
-  public void testEnumOfSymbol1() throws Exception {
+  public void testEnumOfSymbol1() {
     testTypes(
         lines("",
             "/** @enum {symbol} */",
@@ -18676,7 +18676,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
             "o[ES.A] = 1;"));
   }
 
-  public void testEnumOfSymbol2() throws Exception {
+  public void testEnumOfSymbol2() {
     testTypes(
         lines("",
             "/** @enum {symbol} */",
@@ -18692,7 +18692,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
             "required: number"));
   }
 
-  public void testEnumOfSymbol4() throws Exception {
+  public void testEnumOfSymbol4() {
     testTypes(
         lines("",
             "/** @enum {symbol} */",
@@ -18704,7 +18704,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
             "o[ES.A] = 1;"));
   }
 
-  public void testSymbol1() throws Exception {
+  public void testSymbol1() {
     testTypes(
         lines("",
             "/** @const */",
@@ -18713,14 +18713,13 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
             "if (o[Symbol.iterator]) { /** ok */ };"));
   }
 
-  public void testSymbol2() throws Exception {
+  public void testSymbol2() {
     testTypes(
         lines("",
             "/** @const */",
             "var o = new Symbol();"),
         "cannot instantiate non-constructor");
   }
-
 
   private void testTypes(String js) {
     testTypes(js, (String) null);
