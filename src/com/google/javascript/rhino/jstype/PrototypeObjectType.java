@@ -235,6 +235,11 @@ public class PrototypeObjectType extends ObjectType {
         isBooleanObjectType() || hasOverridenNativeProperty("toString");
   }
 
+  @Override
+  public boolean matchesSymbolContext() {
+    return isSymbolObjectType();
+  }
+
   /**
    * Given the name of a native object property, checks whether the property is
    * present on the object and different from the native one.
@@ -261,6 +266,8 @@ public class PrototypeObjectType extends ObjectType {
       return getNativeType(JSTypeNative.BOOLEAN_TYPE);
     } else if (isNumberObjectType()) {
       return getNativeType(JSTypeNative.NUMBER_TYPE);
+    } else if (isSymbolObjectType()) {
+      return getNativeType(JSTypeNative.SYMBOL_TYPE);
     } else {
       return super.unboxesTo();
     }

@@ -118,6 +118,11 @@ public class NoType extends NoObjectType {
   }
 
   @Override
+  public boolean matchesSymbolContext() {
+    return true;
+  }
+
+  @Override
   public <T> T visit(Visitor<T> visitor) {
     return visitor.caseNoType(this);
   }

@@ -126,6 +126,11 @@ class InstanceObjectType extends PrototypeObjectType {
   }
 
   @Override
+  public boolean isSymbolObjectType() {
+    return getConstructor().isNativeObjectType() && "Symbol".equals(getReferenceName());
+  }
+
+  @Override
   public boolean isBooleanObjectType() {
     return getConstructor().isNativeObjectType()
         && "Boolean".equals(getReferenceName());

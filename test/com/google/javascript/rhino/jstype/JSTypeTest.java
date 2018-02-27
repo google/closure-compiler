@@ -169,38 +169,41 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     forwardDeclaredNamedType.resolve(
         new SimpleErrorReporter(), EMPTY_SCOPE);
 
-    types = ImmutableList.of(
-        NO_OBJECT_TYPE,
-        NO_RESOLVED_TYPE,
-        NO_TYPE,
-        BOOLEAN_OBJECT_TYPE,
-        BOOLEAN_TYPE,
-        STRING_OBJECT_TYPE,
-        STRING_TYPE,
-        VOID_TYPE,
-        UNKNOWN_TYPE,
-        NULL_TYPE,
-        NUMBER_OBJECT_TYPE,
-        NUMBER_TYPE,
-        DATE_TYPE,
-        ERROR_TYPE,
-        SYNTAX_ERROR_TYPE,
-        dateMethod,
-        functionType,
-        unresolvedNamedType,
-        googBar,
-        googSubBar,
-        googSubSubBar,
-        namedGoogBar,
-        googBar.getInstanceType(),
-        subclassOfUnresolvedNamedType,
-        subclassCtor,
-        recordType,
-        enumType,
-        elementsType,
-        googBar,
-        googSubBar,
-        forwardDeclaredNamedType);
+    types =
+        ImmutableList.of(
+            NO_OBJECT_TYPE,
+            NO_RESOLVED_TYPE,
+            NO_TYPE,
+            BOOLEAN_OBJECT_TYPE,
+            BOOLEAN_TYPE,
+            STRING_OBJECT_TYPE,
+            STRING_TYPE,
+            SYMBOL_OBJECT_TYPE,
+            SYMBOL_TYPE,
+            VOID_TYPE,
+            UNKNOWN_TYPE,
+            NULL_TYPE,
+            NUMBER_OBJECT_TYPE,
+            NUMBER_TYPE,
+            DATE_TYPE,
+            ERROR_TYPE,
+            SYNTAX_ERROR_TYPE,
+            dateMethod,
+            functionType,
+            unresolvedNamedType,
+            googBar,
+            googSubBar,
+            googSubSubBar,
+            namedGoogBar,
+            googBar.getInstanceType(),
+            subclassOfUnresolvedNamedType,
+            subclassCtor,
+            recordType,
+            enumType,
+            elementsType,
+            googBar,
+            googSubBar,
+            forwardDeclaredNamedType);
   }
 
   /**
@@ -226,6 +229,9 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertFalse(U2U_CONSTRUCTOR_TYPE.isString());
     assertFalse(U2U_CONSTRUCTOR_TYPE.isStringObjectType());
     assertFalse(U2U_CONSTRUCTOR_TYPE.isStringValueType());
+    assertFalse(U2U_CONSTRUCTOR_TYPE.isSymbol());
+    assertFalse(U2U_CONSTRUCTOR_TYPE.isSymbolObjectType());
+    assertFalse(U2U_CONSTRUCTOR_TYPE.isSymbolValueType());
     assertFalse(U2U_CONSTRUCTOR_TYPE.isEnumType());
     assertFalse(U2U_CONSTRUCTOR_TYPE.isUnionType());
     assertFalse(U2U_CONSTRUCTOR_TYPE.isStruct());
@@ -256,6 +262,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertFalse(U2U_CONSTRUCTOR_TYPE.isSubtype(REGEXP_TYPE));
     assertFalse(U2U_CONSTRUCTOR_TYPE.isSubtype(STRING_TYPE));
     assertFalse(U2U_CONSTRUCTOR_TYPE.isSubtype(STRING_OBJECT_TYPE));
+    assertFalse(U2U_CONSTRUCTOR_TYPE.isSubtype(SYMBOL_TYPE));
+    assertFalse(U2U_CONSTRUCTOR_TYPE.isSubtype(SYMBOL_OBJECT_TYPE));
     assertFalse(U2U_CONSTRUCTOR_TYPE.isSubtype(SYNTAX_ERROR_TYPE));
     assertFalse(U2U_CONSTRUCTOR_TYPE.isSubtype(TYPE_ERROR_TYPE));
     assertTrue(U2U_CONSTRUCTOR_TYPE.isSubtype(ALL_TYPE));
@@ -304,6 +312,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
         canTestForEqualityWith(STRING_TYPE));
     assertTrue(U2U_CONSTRUCTOR_TYPE.
         canTestForEqualityWith(STRING_OBJECT_TYPE));
+    assertFalse(U2U_CONSTRUCTOR_TYPE.canTestForEqualityWith(SYMBOL_TYPE));
+    assertFalse(U2U_CONSTRUCTOR_TYPE.canTestForEqualityWith(SYMBOL_OBJECT_TYPE));
     assertTrue(U2U_CONSTRUCTOR_TYPE.
         canTestForEqualityWith(SYNTAX_ERROR_TYPE));
     assertTrue(U2U_CONSTRUCTOR_TYPE.
@@ -352,8 +362,9 @@ public class JSTypeTest extends BaseJSTypeTestCase {
         canTestForShallowEqualityWith(STRING_TYPE));
     assertFalse(U2U_CONSTRUCTOR_TYPE.
         canTestForShallowEqualityWith(STRING_OBJECT_TYPE));
-    assertFalse(U2U_CONSTRUCTOR_TYPE.
-        canTestForShallowEqualityWith(SYNTAX_ERROR_TYPE));
+    assertFalse(U2U_CONSTRUCTOR_TYPE.canTestForShallowEqualityWith(SYMBOL_TYPE));
+    assertFalse(U2U_CONSTRUCTOR_TYPE.canTestForShallowEqualityWith(SYMBOL_OBJECT_TYPE));
+    assertFalse(U2U_CONSTRUCTOR_TYPE.canTestForShallowEqualityWith(SYNTAX_ERROR_TYPE));
     assertFalse(U2U_CONSTRUCTOR_TYPE.
         canTestForShallowEqualityWith(TYPE_ERROR_TYPE));
     assertTrue(U2U_CONSTRUCTOR_TYPE.
@@ -370,10 +381,9 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
     // matchesXxx
     assertFalse(U2U_CONSTRUCTOR_TYPE.matchesNumberContext());
-    assertFalse(U2U_CONSTRUCTOR_TYPE.matchesNumberContext());
     assertTrue(U2U_CONSTRUCTOR_TYPE.matchesObjectContext());
     assertFalse(U2U_CONSTRUCTOR_TYPE.matchesStringContext());
-    assertFalse(U2U_CONSTRUCTOR_TYPE.matchesNumberContext());
+    assertFalse(U2U_CONSTRUCTOR_TYPE.matchesSymbolContext());
 
     // toString
     assertEquals("Function",
@@ -415,6 +425,9 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertTrue(NO_OBJECT_TYPE.isString());
     assertFalse(NO_OBJECT_TYPE.isStringObjectType());
     assertFalse(NO_OBJECT_TYPE.isStringValueType());
+    assertTrue(NO_OBJECT_TYPE.isSymbol());
+    assertFalse(NO_OBJECT_TYPE.isSymbolObjectType());
+    assertFalse(NO_OBJECT_TYPE.isSymbolValueType());
     assertFalse(NO_OBJECT_TYPE.isEnumType());
     assertFalse(NO_OBJECT_TYPE.isUnionType());
     assertFalse(NO_OBJECT_TYPE.isStruct());
@@ -445,6 +458,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertTrue(NO_OBJECT_TYPE.isSubtype(REGEXP_TYPE));
     assertFalse(NO_OBJECT_TYPE.isSubtype(STRING_TYPE));
     assertTrue(NO_OBJECT_TYPE.isSubtype(STRING_OBJECT_TYPE));
+    assertFalse(NO_OBJECT_TYPE.isSubtype(SYMBOL_TYPE));
+    assertTrue(NO_OBJECT_TYPE.isSubtype(SYMBOL_OBJECT_TYPE));
     assertTrue(NO_OBJECT_TYPE.isSubtype(SYNTAX_ERROR_TYPE));
     assertTrue(NO_OBJECT_TYPE.isSubtype(TYPE_ERROR_TYPE));
     assertTrue(NO_OBJECT_TYPE.isSubtype(ALL_TYPE));
@@ -472,6 +487,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertCanTestForEqualityWith(NO_OBJECT_TYPE, REGEXP_TYPE);
     assertCanTestForEqualityWith(NO_OBJECT_TYPE, STRING_TYPE);
     assertCanTestForEqualityWith(NO_OBJECT_TYPE, STRING_OBJECT_TYPE);
+    assertCanTestForEqualityWith(NO_OBJECT_TYPE, SYMBOL_TYPE);
+    assertCanTestForEqualityWith(NO_OBJECT_TYPE, SYMBOL_OBJECT_TYPE);
     assertCanTestForEqualityWith(NO_OBJECT_TYPE, SYNTAX_ERROR_TYPE);
     assertCanTestForEqualityWith(NO_OBJECT_TYPE, TYPE_ERROR_TYPE);
     assertCanTestForEqualityWith(NO_OBJECT_TYPE, VOID_TYPE);
@@ -501,6 +518,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertFalse(NO_OBJECT_TYPE.canTestForShallowEqualityWith(STRING_TYPE));
     assertTrue(NO_OBJECT_TYPE.
         canTestForShallowEqualityWith(STRING_OBJECT_TYPE));
+    assertFalse(NO_OBJECT_TYPE.canTestForShallowEqualityWith(SYMBOL_TYPE));
+    assertTrue(NO_OBJECT_TYPE.canTestForShallowEqualityWith(SYMBOL_OBJECT_TYPE));
     assertTrue(NO_OBJECT_TYPE.
         canTestForShallowEqualityWith(SYNTAX_ERROR_TYPE));
     assertTrue(NO_OBJECT_TYPE.canTestForShallowEqualityWith(TYPE_ERROR_TYPE));
@@ -516,16 +535,14 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
     // matchesXxx
     assertTrue(NO_OBJECT_TYPE.matchesNumberContext());
-    assertTrue(NO_OBJECT_TYPE.matchesNumberContext());
     assertTrue(NO_OBJECT_TYPE.matchesObjectContext());
     assertTrue(NO_OBJECT_TYPE.matchesStringContext());
-    assertTrue(NO_OBJECT_TYPE.matchesNumberContext());
+    assertTrue(NO_OBJECT_TYPE.matchesSymbolContext());
 
     // toString
     assertEquals("NoObject", NO_OBJECT_TYPE.toString());
     assertFalse(NO_OBJECT_TYPE.hasDisplayName());
     assertEquals(null, NO_OBJECT_TYPE.getDisplayName());
-
 
     // getPropertyType
     assertTypeEquals(NO_TYPE,
@@ -559,6 +576,9 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertTrue(NO_TYPE.isString());
     assertFalse(NO_TYPE.isStringObjectType());
     assertFalse(NO_TYPE.isStringValueType());
+    assertTrue(NO_TYPE.isSymbol());
+    assertFalse(NO_TYPE.isSymbolObjectType());
+    assertFalse(NO_TYPE.isSymbolValueType());
     assertFalse(NO_TYPE.isEnumType());
     assertFalse(NO_TYPE.isUnionType());
     assertFalse(NO_TYPE.isStruct());
@@ -588,6 +608,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertTrue(NO_TYPE.isSubtype(REGEXP_TYPE));
     assertTrue(NO_TYPE.isSubtype(STRING_TYPE));
     assertTrue(NO_TYPE.isSubtype(STRING_OBJECT_TYPE));
+    assertTrue(NO_TYPE.isSubtype(SYMBOL_TYPE));
+    assertTrue(NO_TYPE.isSubtype(SYMBOL_OBJECT_TYPE));
     assertTrue(NO_TYPE.isSubtype(SYNTAX_ERROR_TYPE));
     assertTrue(NO_TYPE.isSubtype(TYPE_ERROR_TYPE));
     assertTrue(NO_TYPE.isSubtype(ALL_TYPE));
@@ -613,6 +635,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertCanTestForEqualityWith(NO_TYPE, REGEXP_TYPE);
     assertCanTestForEqualityWith(NO_TYPE, STRING_TYPE);
     assertCanTestForEqualityWith(NO_TYPE, STRING_OBJECT_TYPE);
+    assertCanTestForEqualityWith(NO_TYPE, SYMBOL_TYPE);
+    assertCanTestForEqualityWith(NO_TYPE, SYMBOL_OBJECT_TYPE);
     assertCanTestForEqualityWith(NO_TYPE, SYNTAX_ERROR_TYPE);
     assertCanTestForEqualityWith(NO_TYPE, TYPE_ERROR_TYPE);
     assertCanTestForEqualityWith(NO_TYPE, ALL_TYPE);
@@ -638,6 +662,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertTrue(NO_TYPE.canTestForShallowEqualityWith(REGEXP_TYPE));
     assertTrue(NO_TYPE.canTestForShallowEqualityWith(STRING_TYPE));
     assertTrue(NO_TYPE.canTestForShallowEqualityWith(STRING_OBJECT_TYPE));
+    assertTrue(NO_TYPE.canTestForShallowEqualityWith(SYMBOL_TYPE));
+    assertTrue(NO_TYPE.canTestForShallowEqualityWith(SYMBOL_OBJECT_TYPE));
     assertTrue(NO_TYPE.canTestForShallowEqualityWith(SYNTAX_ERROR_TYPE));
     assertTrue(NO_TYPE.canTestForShallowEqualityWith(TYPE_ERROR_TYPE));
     assertTrue(NO_TYPE.canTestForShallowEqualityWith(ALL_TYPE));
@@ -652,10 +678,9 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
     // matchesXxx
     assertTrue(NO_TYPE.matchesNumberContext());
-    assertTrue(NO_TYPE.matchesNumberContext());
     assertTrue(NO_TYPE.matchesObjectContext());
     assertTrue(NO_TYPE.matchesStringContext());
-    assertTrue(NO_TYPE.matchesNumberContext());
+    assertTrue(NO_TYPE.matchesSymbolContext());
 
     // toString
     assertEquals("None", NO_TYPE.toString());
@@ -694,6 +719,9 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertTrue(NO_RESOLVED_TYPE.isString());
     assertFalse(NO_RESOLVED_TYPE.isStringObjectType());
     assertFalse(NO_RESOLVED_TYPE.isStringValueType());
+    assertTrue(NO_RESOLVED_TYPE.isSymbol());
+    assertFalse(NO_RESOLVED_TYPE.isSymbolObjectType());
+    assertFalse(NO_RESOLVED_TYPE.isSymbolValueType());
     assertFalse(NO_RESOLVED_TYPE.isEnumType());
     assertFalse(NO_RESOLVED_TYPE.isUnionType());
     assertFalse(NO_RESOLVED_TYPE.isStruct());
@@ -723,6 +751,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertTrue(NO_RESOLVED_TYPE.isSubtype(REGEXP_TYPE));
     assertTrue(NO_RESOLVED_TYPE.isSubtype(STRING_TYPE));
     assertTrue(NO_RESOLVED_TYPE.isSubtype(STRING_OBJECT_TYPE));
+    assertTrue(NO_RESOLVED_TYPE.isSubtype(SYMBOL_TYPE));
+    assertTrue(NO_RESOLVED_TYPE.isSubtype(SYMBOL_OBJECT_TYPE));
     assertTrue(NO_RESOLVED_TYPE.isSubtype(SYNTAX_ERROR_TYPE));
     assertTrue(NO_RESOLVED_TYPE.isSubtype(TYPE_ERROR_TYPE));
     assertTrue(NO_RESOLVED_TYPE.isSubtype(ALL_TYPE));
@@ -749,6 +779,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertCanTestForEqualityWith(NO_RESOLVED_TYPE, REGEXP_TYPE);
     assertCanTestForEqualityWith(NO_RESOLVED_TYPE, STRING_TYPE);
     assertCanTestForEqualityWith(NO_RESOLVED_TYPE, STRING_OBJECT_TYPE);
+    assertCanTestForEqualityWith(NO_RESOLVED_TYPE, SYMBOL_TYPE);
+    assertCanTestForEqualityWith(NO_RESOLVED_TYPE, SYMBOL_OBJECT_TYPE);
     assertCanTestForEqualityWith(NO_RESOLVED_TYPE, SYNTAX_ERROR_TYPE);
     assertCanTestForEqualityWith(NO_RESOLVED_TYPE, TYPE_ERROR_TYPE);
     assertCanTestForEqualityWith(NO_RESOLVED_TYPE, ALL_TYPE);
@@ -780,6 +812,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertTrue(NO_RESOLVED_TYPE.canTestForShallowEqualityWith(STRING_TYPE));
     assertTrue(
         NO_RESOLVED_TYPE.canTestForShallowEqualityWith(STRING_OBJECT_TYPE));
+    assertTrue(NO_RESOLVED_TYPE.canTestForShallowEqualityWith(SYMBOL_TYPE));
+    assertTrue(NO_RESOLVED_TYPE.canTestForShallowEqualityWith(SYMBOL_OBJECT_TYPE));
     assertTrue(
         NO_RESOLVED_TYPE.canTestForShallowEqualityWith(SYNTAX_ERROR_TYPE));
     assertTrue(NO_RESOLVED_TYPE.canTestForShallowEqualityWith(TYPE_ERROR_TYPE));
@@ -795,10 +829,9 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
     // matchesXxx
     assertTrue(NO_RESOLVED_TYPE.matchesNumberContext());
-    assertTrue(NO_RESOLVED_TYPE.matchesNumberContext());
     assertTrue(NO_RESOLVED_TYPE.matchesObjectContext());
     assertTrue(NO_RESOLVED_TYPE.matchesStringContext());
-    assertTrue(NO_RESOLVED_TYPE.matchesNumberContext());
+    assertTrue(NO_RESOLVED_TYPE.matchesSymbolContext());
 
     // toString
     assertEquals("NoResolvedType", NO_RESOLVED_TYPE.toString());
@@ -842,6 +875,9 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertFalse(ARRAY_TYPE.isString());
     assertFalse(ARRAY_TYPE.isStringObjectType());
     assertFalse(ARRAY_TYPE.isStringValueType());
+    assertFalse(ARRAY_TYPE.isSymbol());
+    assertFalse(ARRAY_TYPE.isSymbolObjectType());
+    assertFalse(ARRAY_TYPE.isSymbolValueType());
     assertFalse(ARRAY_TYPE.isEnumType());
     assertFalse(ARRAY_TYPE.isUnionType());
     assertFalse(ARRAY_TYPE.isStruct());
@@ -856,6 +892,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertFalse(ARRAY_TYPE.isSubtype(NO_OBJECT_TYPE));
     assertTrue(ARRAY_TYPE.isSubtype(ALL_TYPE));
     assertFalse(ARRAY_TYPE.isSubtype(STRING_OBJECT_TYPE));
+    assertFalse(ARRAY_TYPE.isSubtype(SYMBOL_OBJECT_TYPE));
+    assertFalse(ARRAY_TYPE.isSubtype(SYMBOL_TYPE));
     assertFalse(ARRAY_TYPE.isSubtype(NUMBER_TYPE));
     assertFalse(ARRAY_TYPE.isSubtype(functionType));
     assertFalse(ARRAY_TYPE.isSubtype(recordType));
@@ -874,6 +912,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertCanTestForEqualityWith(ARRAY_TYPE, NO_OBJECT_TYPE);
     assertCanTestForEqualityWith(ARRAY_TYPE, ALL_TYPE);
     assertCanTestForEqualityWith(ARRAY_TYPE, STRING_OBJECT_TYPE);
+    assertCannotTestForEqualityWith(ARRAY_TYPE, SYMBOL_TYPE);
+    assertCannotTestForEqualityWith(ARRAY_TYPE, SYMBOL_OBJECT_TYPE);
     assertCanTestForEqualityWith(ARRAY_TYPE, NUMBER_TYPE);
     assertCanTestForEqualityWith(ARRAY_TYPE, functionType);
     assertCanTestForEqualityWith(ARRAY_TYPE, recordType);
@@ -903,6 +943,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertFalse(ARRAY_TYPE.canTestForShallowEqualityWith(REGEXP_TYPE));
     assertFalse(ARRAY_TYPE.canTestForShallowEqualityWith(STRING_TYPE));
     assertFalse(ARRAY_TYPE.canTestForShallowEqualityWith(STRING_OBJECT_TYPE));
+    assertFalse(ARRAY_TYPE.canTestForShallowEqualityWith(SYMBOL_TYPE));
+    assertFalse(ARRAY_TYPE.canTestForShallowEqualityWith(SYMBOL_OBJECT_TYPE));
     assertFalse(ARRAY_TYPE.canTestForShallowEqualityWith(SYNTAX_ERROR_TYPE));
     assertFalse(ARRAY_TYPE.canTestForShallowEqualityWith(TYPE_ERROR_TYPE));
     assertTrue(ARRAY_TYPE.canTestForShallowEqualityWith(ALL_TYPE));
@@ -922,6 +964,9 @@ public class JSTypeTest extends BaseJSTypeTestCase {
         ARRAY_TYPE.getLeastSupertype(ALL_TYPE));
     assertTypeEquals(createUnionType(STRING_OBJECT_TYPE, ARRAY_TYPE),
         ARRAY_TYPE.getLeastSupertype(STRING_OBJECT_TYPE));
+    assertTypeEquals(
+        createUnionType(SYMBOL_OBJECT_TYPE, ARRAY_TYPE),
+        ARRAY_TYPE.getLeastSupertype(SYMBOL_OBJECT_TYPE));
     assertTypeEquals(createUnionType(NUMBER_TYPE, ARRAY_TYPE),
         ARRAY_TYPE.getLeastSupertype(NUMBER_TYPE));
     assertTypeEquals(createUnionType(ARRAY_TYPE, functionType),
@@ -959,10 +1004,9 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
     // matchesXxx
     assertFalse(ARRAY_TYPE.matchesNumberContext());
-    assertFalse(ARRAY_TYPE.matchesNumberContext());
     assertTrue(ARRAY_TYPE.matchesObjectContext());
     assertTrue(ARRAY_TYPE.matchesStringContext());
-    assertFalse(ARRAY_TYPE.matchesNumberContext());
+    assertFalse(ARRAY_TYPE.matchesSymbolContext());
 
     // toString
     assertEquals("Array", ARRAY_TYPE.toString());
@@ -996,6 +1040,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertFalse(UNKNOWN_TYPE.isRegexpType());
     assertFalse(UNKNOWN_TYPE.isStringObjectType());
     assertFalse(UNKNOWN_TYPE.isStringValueType());
+    assertFalse(UNKNOWN_TYPE.isSymbolObjectType());
+    assertFalse(UNKNOWN_TYPE.isSymbolValueType());
     assertFalse(UNKNOWN_TYPE.isEnumType());
     assertFalse(UNKNOWN_TYPE.isUnionType());
     assertFalse(UNKNOWN_TYPE.isStruct());
@@ -1011,6 +1057,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     // isSubtype
     assertTrue(UNKNOWN_TYPE.isSubtype(UNKNOWN_TYPE));
     assertTrue(UNKNOWN_TYPE.isSubtype(STRING_TYPE));
+    assertTrue(UNKNOWN_TYPE.isSubtype(SYMBOL_TYPE));
     assertTrue(UNKNOWN_TYPE.isSubtype(NUMBER_TYPE));
     assertTrue(UNKNOWN_TYPE.isSubtype(functionType));
     assertTrue(UNKNOWN_TYPE.isSubtype(recordType));
@@ -1028,6 +1075,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     // canTestForEqualityWith
     assertCanTestForEqualityWith(UNKNOWN_TYPE, UNKNOWN_TYPE);
     assertCanTestForEqualityWith(UNKNOWN_TYPE, STRING_TYPE);
+    assertCanTestForEqualityWith(UNKNOWN_TYPE, SYMBOL_TYPE);
     assertCanTestForEqualityWith(UNKNOWN_TYPE, NUMBER_TYPE);
     assertCanTestForEqualityWith(UNKNOWN_TYPE, functionType);
     assertCanTestForEqualityWith(UNKNOWN_TYPE, recordType);
@@ -1040,6 +1088,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     // canTestForShallowEqualityWith
     assertTrue(UNKNOWN_TYPE.canTestForShallowEqualityWith(UNKNOWN_TYPE));
     assertTrue(UNKNOWN_TYPE.canTestForShallowEqualityWith(STRING_TYPE));
+    assertTrue(UNKNOWN_TYPE.canTestForShallowEqualityWith(SYMBOL_TYPE));
     assertTrue(UNKNOWN_TYPE.canTestForShallowEqualityWith(NUMBER_TYPE));
     assertTrue(UNKNOWN_TYPE.canTestForShallowEqualityWith(functionType));
     assertTrue(UNKNOWN_TYPE.canTestForShallowEqualityWith(recordType));
@@ -1057,8 +1106,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
         UNKNOWN_TYPE.getLeastSupertype(UNKNOWN_TYPE));
     assertTypeEquals(UNKNOWN_TYPE,
         UNKNOWN_TYPE.getLeastSupertype(STRING_TYPE));
-    assertTypeEquals(UNKNOWN_TYPE,
-        UNKNOWN_TYPE.getLeastSupertype(NUMBER_TYPE));
+    assertTypeEquals(UNKNOWN_TYPE, UNKNOWN_TYPE.getLeastSupertype(SYMBOL_TYPE));
+    assertTypeEquals(UNKNOWN_TYPE, UNKNOWN_TYPE.getLeastSupertype(NUMBER_TYPE));
     assertTypeEquals(UNKNOWN_TYPE,
         UNKNOWN_TYPE.getLeastSupertype(functionType));
     assertTypeEquals(UNKNOWN_TYPE,
@@ -1070,10 +1119,9 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
     // matchesXxx
     assertTrue(UNKNOWN_TYPE.matchesNumberContext());
-    assertTrue(UNKNOWN_TYPE.matchesNumberContext());
     assertTrue(UNKNOWN_TYPE.matchesObjectContext());
     assertTrue(UNKNOWN_TYPE.matchesStringContext());
-    assertTrue(UNKNOWN_TYPE.matchesNumberContext());
+    assertTrue(UNKNOWN_TYPE.matchesSymbolContext());
 
     // isPropertyType*
     assertPropertyTypeUnknown(UNKNOWN_TYPE, "XXX");
@@ -1128,6 +1176,9 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertFalse(ALL_TYPE.isString());
     assertFalse(ALL_TYPE.isStringObjectType());
     assertFalse(ALL_TYPE.isStringValueType());
+    assertFalse(ALL_TYPE.isSymbol());
+    assertFalse(ALL_TYPE.isSymbolObjectType());
+    assertFalse(ALL_TYPE.isSymbolValueType());
     assertFalse(ALL_TYPE.isEnumType());
     assertFalse(ALL_TYPE.isUnionType());
     assertFalse(ALL_TYPE.isStruct());
@@ -1142,6 +1193,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertFalse(ALL_TYPE.isSubtype(NO_OBJECT_TYPE));
     assertTrue(ALL_TYPE.isSubtype(ALL_TYPE));
     assertFalse(ALL_TYPE.isSubtype(STRING_OBJECT_TYPE));
+    assertFalse(ALL_TYPE.isSubtype(SYMBOL_OBJECT_TYPE));
+    assertFalse(ALL_TYPE.isSubtype(SYMBOL_TYPE));
     assertFalse(ALL_TYPE.isSubtype(NUMBER_TYPE));
     assertFalse(ALL_TYPE.isSubtype(functionType));
     assertFalse(ALL_TYPE.isSubtype(recordType));
@@ -1160,6 +1213,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     // canTestForEqualityWith
     assertCanTestForEqualityWith(ALL_TYPE, ALL_TYPE);
     assertCanTestForEqualityWith(ALL_TYPE, STRING_OBJECT_TYPE);
+    assertCanTestForEqualityWith(ALL_TYPE, SYMBOL_OBJECT_TYPE);
+    assertCanTestForEqualityWith(ALL_TYPE, SYMBOL_TYPE);
     assertCanTestForEqualityWith(ALL_TYPE, NUMBER_TYPE);
     assertCanTestForEqualityWith(ALL_TYPE, functionType);
     assertCanTestForEqualityWith(ALL_TYPE, recordType);
@@ -1189,6 +1244,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertTrue(ALL_TYPE.canTestForShallowEqualityWith(REGEXP_TYPE));
     assertTrue(ALL_TYPE.canTestForShallowEqualityWith(STRING_TYPE));
     assertTrue(ALL_TYPE.canTestForShallowEqualityWith(STRING_OBJECT_TYPE));
+    assertTrue(ALL_TYPE.canTestForShallowEqualityWith(SYMBOL_TYPE));
+    assertTrue(ALL_TYPE.canTestForShallowEqualityWith(SYMBOL_OBJECT_TYPE));
     assertTrue(ALL_TYPE.canTestForShallowEqualityWith(SYNTAX_ERROR_TYPE));
     assertTrue(ALL_TYPE.canTestForShallowEqualityWith(TYPE_ERROR_TYPE));
     assertTrue(ALL_TYPE.canTestForShallowEqualityWith(ALL_TYPE));
@@ -1205,8 +1262,9 @@ public class JSTypeTest extends BaseJSTypeTestCase {
         ALL_TYPE.getLeastSupertype(UNKNOWN_TYPE));
     assertTypeEquals(ALL_TYPE,
         ALL_TYPE.getLeastSupertype(STRING_OBJECT_TYPE));
-    assertTypeEquals(ALL_TYPE,
-        ALL_TYPE.getLeastSupertype(NUMBER_TYPE));
+    assertTypeEquals(ALL_TYPE, ALL_TYPE.getLeastSupertype(SYMBOL_TYPE));
+    assertTypeEquals(ALL_TYPE, ALL_TYPE.getLeastSupertype(SYMBOL_OBJECT_TYPE));
+    assertTypeEquals(ALL_TYPE, ALL_TYPE.getLeastSupertype(NUMBER_TYPE));
     assertTypeEquals(ALL_TYPE,
         ALL_TYPE.getLeastSupertype(functionType));
     assertTypeEquals(ALL_TYPE,
@@ -1217,11 +1275,10 @@ public class JSTypeTest extends BaseJSTypeTestCase {
         ALL_TYPE.getLeastSupertype(REGEXP_TYPE));
 
     // matchesXxx
-    assertFalse(ALL_TYPE.matchesNumberContext());
-    assertFalse(ALL_TYPE.matchesNumberContext());
+    assertFalse(ALL_TYPE.matchesNumberContext()); // ?
     assertTrue(ALL_TYPE.matchesObjectContext());
     assertTrue(ALL_TYPE.matchesStringContext());
-    assertFalse(ALL_TYPE.matchesNumberContext());
+    assertFalse(ALL_TYPE.matchesSymbolContext()); // ?
 
     // toString
     assertEquals("*", ALL_TYPE.toString());
@@ -1261,6 +1318,9 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertFalse(OBJECT_TYPE.isString());
     assertFalse(OBJECT_TYPE.isStringObjectType());
     assertFalse(OBJECT_TYPE.isStringValueType());
+    assertFalse(OBJECT_TYPE.isSymbol());
+    assertFalse(OBJECT_TYPE.isSymbolObjectType());
+    assertFalse(OBJECT_TYPE.isSymbolValueType());
     assertFalse(OBJECT_TYPE.isEnumType());
     assertFalse(OBJECT_TYPE.isUnionType());
     assertFalse(OBJECT_TYPE.isStruct());
@@ -1274,6 +1334,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertFalse(OBJECT_TYPE.isSubtype(NO_TYPE));
     assertTrue(OBJECT_TYPE.isSubtype(ALL_TYPE));
     assertFalse(OBJECT_TYPE.isSubtype(STRING_OBJECT_TYPE));
+    assertFalse(OBJECT_TYPE.isSubtype(SYMBOL_TYPE));
+    assertFalse(OBJECT_TYPE.isSubtype(SYMBOL_OBJECT_TYPE));
     assertFalse(OBJECT_TYPE.isSubtype(NUMBER_TYPE));
     assertFalse(OBJECT_TYPE.isSubtype(functionType));
     assertFalse(OBJECT_TYPE.isSubtype(recordType));
@@ -1292,6 +1354,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     // canTestForEqualityWith
     assertCanTestForEqualityWith(OBJECT_TYPE, ALL_TYPE);
     assertCanTestForEqualityWith(OBJECT_TYPE, STRING_OBJECT_TYPE);
+    assertCanTestForEqualityWith(OBJECT_TYPE, SYMBOL_OBJECT_TYPE);
+    assertCanTestForEqualityWith(OBJECT_TYPE, SYMBOL_TYPE);
     assertCanTestForEqualityWith(OBJECT_TYPE, NUMBER_TYPE);
     assertCanTestForEqualityWith(OBJECT_TYPE, STRING_TYPE);
     assertCanTestForEqualityWith(OBJECT_TYPE, BOOLEAN_TYPE);
@@ -1326,6 +1390,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertTrue(OBJECT_TYPE.canTestForShallowEqualityWith(REGEXP_TYPE));
     assertFalse(OBJECT_TYPE.canTestForShallowEqualityWith(STRING_TYPE));
     assertTrue(OBJECT_TYPE.canTestForShallowEqualityWith(STRING_OBJECT_TYPE));
+    assertFalse(OBJECT_TYPE.canTestForShallowEqualityWith(SYMBOL_TYPE));
+    assertTrue(OBJECT_TYPE.canTestForShallowEqualityWith(SYMBOL_OBJECT_TYPE));
     assertTrue(OBJECT_TYPE.canTestForShallowEqualityWith(SYNTAX_ERROR_TYPE));
     assertTrue(OBJECT_TYPE.canTestForShallowEqualityWith(TYPE_ERROR_TYPE));
     assertTrue(OBJECT_TYPE.canTestForShallowEqualityWith(ALL_TYPE));
@@ -1341,6 +1407,9 @@ public class JSTypeTest extends BaseJSTypeTestCase {
         OBJECT_TYPE.getLeastSupertype(ALL_TYPE));
     assertTypeEquals(OBJECT_TYPE,
         OBJECT_TYPE.getLeastSupertype(STRING_OBJECT_TYPE));
+    assertTypeEquals(OBJECT_TYPE, OBJECT_TYPE.getLeastSupertype(SYMBOL_OBJECT_TYPE));
+    assertTypeEquals(
+        createUnionType(OBJECT_TYPE, SYMBOL_TYPE), OBJECT_TYPE.getLeastSupertype(SYMBOL_TYPE));
     assertTypeEquals(createUnionType(OBJECT_TYPE, NUMBER_TYPE),
         OBJECT_TYPE.getLeastSupertype(NUMBER_TYPE));
     assertTypeEquals(OBJECT_TYPE,
@@ -1371,10 +1440,9 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
     // matchesXxx
     assertFalse(OBJECT_TYPE.matchesNumberContext());
-    assertFalse(OBJECT_TYPE.matchesNumberContext());
     assertTrue(OBJECT_TYPE.matchesObjectContext());
     assertTrue(OBJECT_TYPE.matchesStringContext());
-    assertFalse(OBJECT_TYPE.matchesNumberContext());
+    assertFalse(OBJECT_TYPE.matchesSymbolContext());
 
     // implicit prototype
     assertTypeEquals(OBJECT_PROTOTYPE, OBJECT_TYPE.getImplicitPrototype());
@@ -1413,6 +1481,9 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertFalse(NUMBER_OBJECT_TYPE.isString());
     assertFalse(NUMBER_OBJECT_TYPE.isStringObjectType());
     assertFalse(NUMBER_OBJECT_TYPE.isStringValueType());
+    assertFalse(NUMBER_OBJECT_TYPE.isSymbol());
+    assertFalse(NUMBER_OBJECT_TYPE.isSymbolObjectType());
+    assertFalse(NUMBER_OBJECT_TYPE.isSymbolValueType());
     assertFalse(NUMBER_OBJECT_TYPE.isEnumType());
     assertFalse(NUMBER_OBJECT_TYPE.isUnionType());
     assertFalse(NUMBER_OBJECT_TYPE.isStruct());
@@ -1431,6 +1502,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     // isSubtype
     assertTrue(NUMBER_OBJECT_TYPE.isSubtype(ALL_TYPE));
     assertFalse(NUMBER_OBJECT_TYPE.isSubtype(STRING_OBJECT_TYPE));
+    assertFalse(NUMBER_OBJECT_TYPE.isSubtype(SYMBOL_OBJECT_TYPE));
+    assertFalse(NUMBER_OBJECT_TYPE.isSubtype(SYMBOL_TYPE));
     assertFalse(NUMBER_OBJECT_TYPE.isSubtype(NUMBER_TYPE));
     assertFalse(NUMBER_OBJECT_TYPE.isSubtype(functionType));
     assertFalse(NUMBER_OBJECT_TYPE.isSubtype(NULL_TYPE));
@@ -1453,6 +1526,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertCanTestForEqualityWith(NUMBER_OBJECT_TYPE, ALL_TYPE);
     assertCanTestForEqualityWith(NUMBER_OBJECT_TYPE, NUMBER_TYPE);
     assertCanTestForEqualityWith(NUMBER_OBJECT_TYPE, STRING_OBJECT_TYPE);
+    assertCannotTestForEqualityWith(NUMBER_OBJECT_TYPE, SYMBOL_TYPE);
+    assertCannotTestForEqualityWith(NUMBER_OBJECT_TYPE, SYMBOL_OBJECT_TYPE);
     assertCanTestForEqualityWith(NUMBER_OBJECT_TYPE, functionType);
     assertCanTestForEqualityWith(NUMBER_OBJECT_TYPE, elementsType);
     assertCannotTestForEqualityWith(NUMBER_OBJECT_TYPE, VOID_TYPE);
@@ -1489,8 +1564,9 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertFalse(NUMBER_OBJECT_TYPE.canTestForShallowEqualityWith(STRING_TYPE));
     assertFalse(NUMBER_OBJECT_TYPE.
         canTestForShallowEqualityWith(STRING_OBJECT_TYPE));
-    assertFalse(NUMBER_OBJECT_TYPE.
-        canTestForShallowEqualityWith(SYNTAX_ERROR_TYPE));
+    assertFalse(NUMBER_OBJECT_TYPE.canTestForShallowEqualityWith(SYMBOL_TYPE));
+    assertFalse(NUMBER_OBJECT_TYPE.canTestForShallowEqualityWith(SYMBOL_OBJECT_TYPE));
+    assertFalse(NUMBER_OBJECT_TYPE.canTestForShallowEqualityWith(SYNTAX_ERROR_TYPE));
     assertFalse(NUMBER_OBJECT_TYPE.
         canTestForShallowEqualityWith(TYPE_ERROR_TYPE));
     assertTrue(NUMBER_OBJECT_TYPE.canTestForShallowEqualityWith(ALL_TYPE));
@@ -1505,6 +1581,12 @@ public class JSTypeTest extends BaseJSTypeTestCase {
         NUMBER_OBJECT_TYPE.getLeastSupertype(ALL_TYPE));
     assertTypeEquals(createUnionType(NUMBER_OBJECT_TYPE, STRING_OBJECT_TYPE),
         NUMBER_OBJECT_TYPE.getLeastSupertype(STRING_OBJECT_TYPE));
+    assertTypeEquals(
+        createUnionType(NUMBER_OBJECT_TYPE, SYMBOL_OBJECT_TYPE),
+        NUMBER_OBJECT_TYPE.getLeastSupertype(SYMBOL_OBJECT_TYPE));
+    assertTypeEquals(
+        createUnionType(NUMBER_OBJECT_TYPE, SYMBOL_TYPE),
+        NUMBER_OBJECT_TYPE.getLeastSupertype(SYMBOL_TYPE));
     assertTypeEquals(createUnionType(NUMBER_OBJECT_TYPE, NUMBER_TYPE),
         NUMBER_OBJECT_TYPE.getLeastSupertype(NUMBER_TYPE));
     assertTypeEquals(createUnionType(NUMBER_OBJECT_TYPE, functionType),
@@ -1518,10 +1600,9 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
     // matchesXxx
     assertTrue(NUMBER_OBJECT_TYPE.matchesNumberContext());
-    assertTrue(NUMBER_OBJECT_TYPE.matchesNumberContext());
     assertTrue(NUMBER_OBJECT_TYPE.matchesObjectContext());
     assertTrue(NUMBER_OBJECT_TYPE.matchesStringContext());
-    assertTrue(NUMBER_OBJECT_TYPE.matchesNumberContext());
+    assertFalse(NUMBER_OBJECT_TYPE.matchesSymbolContext());
 
     // toString
     assertEquals("Number", NUMBER_OBJECT_TYPE.toString());
@@ -1553,6 +1634,9 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertFalse(NUMBER_TYPE.isString());
     assertFalse(NUMBER_TYPE.isStringObjectType());
     assertFalse(NUMBER_TYPE.isStringValueType());
+    assertFalse(NUMBER_TYPE.isSymbol());
+    assertFalse(NUMBER_TYPE.isSymbolObjectType());
+    assertFalse(NUMBER_TYPE.isSymbolValueType());
     assertFalse(NUMBER_TYPE.isEnumType());
     assertFalse(NUMBER_TYPE.isUnionType());
     assertFalse(NUMBER_TYPE.isStruct());
@@ -1568,6 +1652,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     // isSubtype
     assertTrue(NUMBER_TYPE.isSubtype(ALL_TYPE));
     assertFalse(NUMBER_TYPE.isSubtype(STRING_OBJECT_TYPE));
+    assertFalse(NUMBER_TYPE.isSubtype(SYMBOL_OBJECT_TYPE));
+    assertFalse(NUMBER_TYPE.isSubtype(SYMBOL_TYPE));
     assertTrue(NUMBER_TYPE.isSubtype(NUMBER_TYPE));
     assertFalse(NUMBER_TYPE.isSubtype(functionType));
     assertFalse(NUMBER_TYPE.isSubtype(NULL_TYPE));
@@ -1588,6 +1674,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertCanTestForEqualityWith(NUMBER_TYPE, ALL_TYPE);
     assertCanTestForEqualityWith(NUMBER_TYPE, NUMBER_TYPE);
     assertCanTestForEqualityWith(NUMBER_TYPE, STRING_OBJECT_TYPE);
+    assertCannotTestForEqualityWith(NUMBER_TYPE, SYMBOL_TYPE);
+    assertCannotTestForEqualityWith(NUMBER_TYPE, SYMBOL_OBJECT_TYPE);
     assertCannotTestForEqualityWith(NUMBER_TYPE, functionType);
     assertCannotTestForEqualityWith(NUMBER_TYPE, VOID_TYPE);
     assertCanTestForEqualityWith(NUMBER_TYPE, OBJECT_TYPE);
@@ -1615,6 +1703,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertFalse(NUMBER_TYPE.
         canTestForShallowEqualityWith(REFERENCE_ERROR_TYPE));
     assertFalse(NUMBER_TYPE.canTestForShallowEqualityWith(REGEXP_TYPE));
+    assertFalse(NUMBER_TYPE.canTestForShallowEqualityWith(SYMBOL_TYPE));
+    assertFalse(NUMBER_TYPE.canTestForShallowEqualityWith(SYMBOL_OBJECT_TYPE));
     assertFalse(NUMBER_TYPE.canTestForShallowEqualityWith(STRING_TYPE));
     assertFalse(NUMBER_TYPE.canTestForShallowEqualityWith(STRING_OBJECT_TYPE));
     assertFalse(NUMBER_TYPE.canTestForShallowEqualityWith(SYNTAX_ERROR_TYPE));
@@ -1632,6 +1722,11 @@ public class JSTypeTest extends BaseJSTypeTestCase {
         NUMBER_TYPE.getLeastSupertype(ALL_TYPE));
     assertTypeEquals(createUnionType(NUMBER_TYPE, STRING_OBJECT_TYPE),
         NUMBER_TYPE.getLeastSupertype(STRING_OBJECT_TYPE));
+    assertTypeEquals(
+        createUnionType(NUMBER_TYPE, SYMBOL_OBJECT_TYPE),
+        NUMBER_TYPE.getLeastSupertype(SYMBOL_OBJECT_TYPE));
+    assertTypeEquals(
+        createUnionType(NUMBER_TYPE, SYMBOL_TYPE), NUMBER_TYPE.getLeastSupertype(SYMBOL_TYPE));
     assertTypeEquals(NUMBER_TYPE,
         NUMBER_TYPE.getLeastSupertype(NUMBER_TYPE));
     assertTypeEquals(createUnionType(NUMBER_TYPE, functionType),
@@ -1645,10 +1740,9 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
     // matchesXxx
     assertTrue(NUMBER_TYPE.matchesNumberContext());
-    assertTrue(NUMBER_TYPE.matchesNumberContext());
     assertTrue(NUMBER_TYPE.matchesObjectContext());
     assertTrue(NUMBER_TYPE.matchesStringContext());
-    assertTrue(NUMBER_TYPE.matchesNumberContext());
+    assertFalse(NUMBER_TYPE.matchesSymbolContext());
 
     // toString
     assertEquals("number", NUMBER_TYPE.toString());
@@ -1679,6 +1773,9 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertFalse(NULL_TYPE.isString());
     assertFalse(NULL_TYPE.isStringObjectType());
     assertFalse(NULL_TYPE.isStringValueType());
+    assertFalse(NULL_TYPE.isSymbol());
+    assertFalse(NULL_TYPE.isSymbolObjectType());
+    assertFalse(NULL_TYPE.isSymbolValueType());
     assertFalse(NULL_TYPE.isEnumType());
     assertFalse(NULL_TYPE.isUnionType());
     assertFalse(NULL_TYPE.isStruct());
@@ -1697,6 +1794,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertTrue(NULL_TYPE.isSubtype(NULL_TYPE));
     assertTrue(NULL_TYPE.isSubtype(ALL_TYPE));
     assertFalse(NULL_TYPE.isSubtype(STRING_OBJECT_TYPE));
+    assertFalse(NULL_TYPE.isSubtype(SYMBOL_OBJECT_TYPE));
+    assertFalse(NULL_TYPE.isSubtype(SYMBOL_TYPE));
     assertFalse(NULL_TYPE.isSubtype(NUMBER_TYPE));
     assertFalse(NULL_TYPE.isSubtype(functionType));
     assertFalse(NULL_TYPE.isSubtype(OBJECT_TYPE));
@@ -1710,6 +1809,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertTrue(NULL_TYPE.isSubtype(createNullableType(NULL_TYPE)));
     assertTrue(NULL_TYPE.isSubtype(createNullableType(ALL_TYPE)));
     assertTrue(NULL_TYPE.isSubtype(createNullableType(STRING_OBJECT_TYPE)));
+    assertTrue(NULL_TYPE.isSubtype(createNullableType(SYMBOL_OBJECT_TYPE)));
+    assertTrue(NULL_TYPE.isSubtype(createNullableType(SYMBOL_TYPE)));
     assertTrue(NULL_TYPE.isSubtype(createNullableType(NUMBER_TYPE)));
     assertTrue(NULL_TYPE.isSubtype(createNullableType(functionType)));
     assertTrue(NULL_TYPE.isSubtype(createNullableType(OBJECT_TYPE)));
@@ -1741,6 +1842,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertCannotTestForEqualityWith(NULL_TYPE, REGEXP_TYPE);
     assertCannotTestForEqualityWith(NULL_TYPE, STRING_TYPE);
     assertCannotTestForEqualityWith(NULL_TYPE, STRING_OBJECT_TYPE);
+    assertCannotTestForEqualityWith(NULL_TYPE, SYMBOL_TYPE);
+    assertCannotTestForEqualityWith(NULL_TYPE, SYMBOL_OBJECT_TYPE);
     assertCannotTestForEqualityWith(NULL_TYPE, SYNTAX_ERROR_TYPE);
     assertCannotTestForEqualityWith(NULL_TYPE, TYPE_ERROR_TYPE);
     assertCannotTestForEqualityWith(NULL_TYPE, VOID_TYPE);
@@ -1767,6 +1870,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertFalse(NULL_TYPE.canTestForShallowEqualityWith(REGEXP_TYPE));
     assertFalse(NULL_TYPE.canTestForShallowEqualityWith(STRING_TYPE));
     assertFalse(NULL_TYPE.canTestForShallowEqualityWith(STRING_OBJECT_TYPE));
+    assertFalse(NULL_TYPE.canTestForShallowEqualityWith(SYMBOL_TYPE));
+    assertFalse(NULL_TYPE.canTestForShallowEqualityWith(SYMBOL_OBJECT_TYPE));
     assertFalse(NULL_TYPE.canTestForShallowEqualityWith(SYNTAX_ERROR_TYPE));
     assertFalse(NULL_TYPE.canTestForShallowEqualityWith(TYPE_ERROR_TYPE));
     assertTrue(NULL_TYPE.canTestForShallowEqualityWith(ALL_TYPE));
@@ -1779,6 +1884,9 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertTypeEquals(ALL_TYPE, NULL_TYPE.getLeastSupertype(ALL_TYPE));
     assertTypeEquals(createNullableType(STRING_OBJECT_TYPE),
         NULL_TYPE.getLeastSupertype(STRING_OBJECT_TYPE));
+    assertTypeEquals(
+        createNullableType(SYMBOL_OBJECT_TYPE), NULL_TYPE.getLeastSupertype(SYMBOL_OBJECT_TYPE));
+    assertTypeEquals(createNullableType(SYMBOL_TYPE), NULL_TYPE.getLeastSupertype(SYMBOL_TYPE));
     assertTypeEquals(createNullableType(NUMBER_TYPE),
         NULL_TYPE.getLeastSupertype(NUMBER_TYPE));
     assertTypeEquals(createNullableType(functionType),
@@ -1792,13 +1900,9 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
     // matchesXxx
     assertTrue(NULL_TYPE.matchesNumberContext());
-    assertTrue(NULL_TYPE.matchesNumberContext());
     assertFalse(NULL_TYPE.matchesObjectContext());
     assertTrue(NULL_TYPE.matchesStringContext());
-    assertTrue(NULL_TYPE.matchesNumberContext());
-
-    // matchesObjectContext
-    assertFalse(NULL_TYPE.matchesObjectContext());
+    assertFalse(NULL_TYPE.matchesSymbolContext());
 
     // toString
     assertEquals("null", NULL_TYPE.toString());
@@ -1820,6 +1924,10 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertTrue(NULL_TYPE.differsFrom(UNKNOWN_TYPE));
   }
 
+  public void testDateTypeX() throws Exception {
+    assertCannotTestForEqualityWith(SYMBOL_OBJECT_TYPE, functionType);
+  }
+
   /**
    * Tests the behavior of the Date type.
    */
@@ -1836,6 +1944,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertTrue(DATE_TYPE.getImplicitPrototype().isFunctionPrototypeType());
     assertFalse(DATE_TYPE.isRegexpType());
     assertFalse(DATE_TYPE.isStringValueType());
+    assertFalse(DATE_TYPE.isSymbolValueType());
     assertFalse(DATE_TYPE.isEnumType());
     assertFalse(DATE_TYPE.isUnionType());
     assertFalse(DATE_TYPE.isStruct());
@@ -1868,6 +1977,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertFalse(DATE_TYPE.isSubtype(REGEXP_TYPE));
     assertFalse(DATE_TYPE.isSubtype(STRING_TYPE));
     assertFalse(DATE_TYPE.isSubtype(STRING_OBJECT_TYPE));
+    assertFalse(DATE_TYPE.isSubtype(SYMBOL_TYPE));
+    assertFalse(DATE_TYPE.isSubtype(SYMBOL_OBJECT_TYPE));
     assertFalse(DATE_TYPE.isSubtype(SYNTAX_ERROR_TYPE));
     assertFalse(DATE_TYPE.isSubtype(TYPE_ERROR_TYPE));
     assertTrue(DATE_TYPE.isSubtype(ALL_TYPE));
@@ -1880,6 +1991,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertCanTestForEqualityWith(DATE_TYPE, ALL_TYPE);
     assertCanTestForEqualityWith(DATE_TYPE, STRING_OBJECT_TYPE);
     assertCanTestForEqualityWith(DATE_TYPE, NUMBER_TYPE);
+    assertCannotTestForEqualityWith(DATE_TYPE, SYMBOL_OBJECT_TYPE); // fix this
+    assertCannotTestForEqualityWith(DATE_TYPE, SYMBOL_TYPE); // fix this
     assertCanTestForEqualityWith(DATE_TYPE, functionType);
     assertCannotTestForEqualityWith(DATE_TYPE, VOID_TYPE);
     assertCanTestForEqualityWith(DATE_TYPE, OBJECT_TYPE);
@@ -1909,6 +2022,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertFalse(DATE_TYPE.canTestForShallowEqualityWith(REGEXP_TYPE));
     assertFalse(DATE_TYPE.canTestForShallowEqualityWith(STRING_TYPE));
     assertFalse(DATE_TYPE.canTestForShallowEqualityWith(STRING_OBJECT_TYPE));
+    assertFalse(DATE_TYPE.canTestForShallowEqualityWith(SYMBOL_TYPE));
+    assertFalse(DATE_TYPE.canTestForShallowEqualityWith(SYMBOL_OBJECT_TYPE));
     assertFalse(DATE_TYPE.canTestForShallowEqualityWith(SYNTAX_ERROR_TYPE));
     assertFalse(DATE_TYPE.canTestForShallowEqualityWith(TYPE_ERROR_TYPE));
     assertTrue(DATE_TYPE.canTestForShallowEqualityWith(ALL_TYPE));
@@ -2016,10 +2131,9 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
     // matchesXxx
     assertTrue(DATE_TYPE.matchesNumberContext());
-    assertTrue(DATE_TYPE.matchesNumberContext());
     assertTrue(DATE_TYPE.matchesObjectContext());
     assertTrue(DATE_TYPE.matchesStringContext());
-    assertTrue(DATE_TYPE.matchesNumberContext());
+    assertFalse(DATE_TYPE.matchesSymbolContext());
 
     // toString
     assertEquals("Date", DATE_TYPE.toString());
@@ -2051,6 +2165,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertTrue(REGEXP_TYPE.getImplicitPrototype().isFunctionPrototypeType());
     assertTrue(REGEXP_TYPE.isRegexpType());
     assertFalse(REGEXP_TYPE.isStringValueType());
+    assertFalse(REGEXP_TYPE.isSymbolValueType());
     assertFalse(REGEXP_TYPE.isEnumType());
     assertFalse(REGEXP_TYPE.isUnionType());
     assertFalse(REGEXP_TYPE.isStruct());
@@ -2081,6 +2196,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertTrue(REGEXP_TYPE.isSubtype(REGEXP_TYPE));
     assertFalse(REGEXP_TYPE.isSubtype(STRING_TYPE));
     assertFalse(REGEXP_TYPE.isSubtype(STRING_OBJECT_TYPE));
+    assertFalse(REGEXP_TYPE.isSubtype(SYMBOL_TYPE));
+    assertFalse(REGEXP_TYPE.isSubtype(SYMBOL_OBJECT_TYPE));
     assertFalse(REGEXP_TYPE.isSubtype(SYNTAX_ERROR_TYPE));
     assertFalse(REGEXP_TYPE.isSubtype(TYPE_ERROR_TYPE));
     assertTrue(REGEXP_TYPE.isSubtype(ALL_TYPE));
@@ -2093,6 +2210,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertCanTestForEqualityWith(REGEXP_TYPE, ALL_TYPE);
     assertCanTestForEqualityWith(REGEXP_TYPE, STRING_OBJECT_TYPE);
     assertCanTestForEqualityWith(REGEXP_TYPE, NUMBER_TYPE);
+    assertCannotTestForEqualityWith(REGEXP_TYPE, SYMBOL_OBJECT_TYPE);
+    assertCannotTestForEqualityWith(REGEXP_TYPE, SYMBOL_TYPE);
     assertCanTestForEqualityWith(REGEXP_TYPE, functionType);
     assertCannotTestForEqualityWith(REGEXP_TYPE, VOID_TYPE);
     assertCanTestForEqualityWith(REGEXP_TYPE, OBJECT_TYPE);
@@ -2122,6 +2241,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertTrue(REGEXP_TYPE.canTestForShallowEqualityWith(REGEXP_TYPE));
     assertFalse(REGEXP_TYPE.canTestForShallowEqualityWith(STRING_TYPE));
     assertFalse(REGEXP_TYPE.canTestForShallowEqualityWith(STRING_OBJECT_TYPE));
+    assertFalse(REGEXP_TYPE.canTestForShallowEqualityWith(SYMBOL_TYPE));
+    assertFalse(REGEXP_TYPE.canTestForShallowEqualityWith(SYMBOL_OBJECT_TYPE));
     assertFalse(REGEXP_TYPE.canTestForShallowEqualityWith(SYNTAX_ERROR_TYPE));
     assertFalse(REGEXP_TYPE.canTestForShallowEqualityWith(TYPE_ERROR_TYPE));
     assertTrue(REGEXP_TYPE.canTestForShallowEqualityWith(ALL_TYPE));
@@ -2167,10 +2288,9 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
     // matchesXxx
     assertFalse(REGEXP_TYPE.matchesNumberContext());
-    assertFalse(REGEXP_TYPE.matchesNumberContext());
     assertTrue(REGEXP_TYPE.matchesObjectContext());
     assertTrue(REGEXP_TYPE.matchesStringContext());
-    assertFalse(REGEXP_TYPE.matchesNumberContext());
+    assertFalse(REGEXP_TYPE.matchesSymbolContext());
 
     // toString
     assertEquals("RegExp", REGEXP_TYPE.toString());
@@ -2206,6 +2326,9 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertTrue(STRING_OBJECT_TYPE.isString());
     assertTrue(STRING_OBJECT_TYPE.isStringObjectType());
     assertFalse(STRING_OBJECT_TYPE.isStringValueType());
+    assertFalse(STRING_OBJECT_TYPE.isSymbol());
+    assertFalse(STRING_OBJECT_TYPE.isSymbolObjectType());
+    assertFalse(STRING_OBJECT_TYPE.isSymbolValueType());
     assertFalse(STRING_OBJECT_TYPE.isEnumType());
     assertFalse(STRING_OBJECT_TYPE.isUnionType());
     assertFalse(STRING_OBJECT_TYPE.isStruct());
@@ -2227,6 +2350,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertFalse(STRING_OBJECT_TYPE.isSubtype(STRING_TYPE));
     assertTrue(STRING_OBJECT_TYPE.isSubtype(OBJECT_TYPE));
     assertFalse(STRING_OBJECT_TYPE.isSubtype(NUMBER_TYPE));
+    assertFalse(STRING_OBJECT_TYPE.isSubtype(SYMBOL_OBJECT_TYPE));
+    assertFalse(STRING_OBJECT_TYPE.isSubtype(SYMBOL_TYPE));
     assertFalse(STRING_OBJECT_TYPE.isSubtype(DATE_TYPE));
     assertFalse(STRING_OBJECT_TYPE.isSubtype(REGEXP_TYPE));
     assertFalse(STRING_OBJECT_TYPE.isSubtype(ARRAY_TYPE));
@@ -2239,6 +2364,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertCanTestForEqualityWith(STRING_OBJECT_TYPE, ALL_TYPE);
     assertCanTestForEqualityWith(STRING_OBJECT_TYPE, STRING_OBJECT_TYPE);
     assertCanTestForEqualityWith(STRING_OBJECT_TYPE, STRING_TYPE);
+    assertCannotTestForEqualityWith(STRING_OBJECT_TYPE, SYMBOL_OBJECT_TYPE);
+    assertCannotTestForEqualityWith(STRING_OBJECT_TYPE, SYMBOL_TYPE);
     assertCanTestForEqualityWith(STRING_OBJECT_TYPE, functionType);
     assertCanTestForEqualityWith(STRING_OBJECT_TYPE, OBJECT_TYPE);
     assertCanTestForEqualityWith(STRING_OBJECT_TYPE, NUMBER_TYPE);
@@ -2277,6 +2404,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertFalse(STRING_OBJECT_TYPE.canTestForShallowEqualityWith(STRING_TYPE));
     assertTrue(STRING_OBJECT_TYPE.
         canTestForShallowEqualityWith(STRING_OBJECT_TYPE));
+    assertFalse(STRING_OBJECT_TYPE.canTestForShallowEqualityWith(SYMBOL_TYPE));
+    assertFalse(STRING_OBJECT_TYPE.canTestForShallowEqualityWith(SYMBOL_OBJECT_TYPE));
     assertFalse(STRING_OBJECT_TYPE.
         canTestForShallowEqualityWith(SYNTAX_ERROR_TYPE));
     assertFalse(STRING_OBJECT_TYPE.
@@ -2332,10 +2461,9 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
     // matchesXxx
     assertTrue(STRING_OBJECT_TYPE.matchesNumberContext());
-    assertTrue(STRING_OBJECT_TYPE.matchesNumberContext());
     assertTrue(STRING_OBJECT_TYPE.matchesObjectContext());
     assertTrue(STRING_OBJECT_TYPE.matchesStringContext());
-    assertTrue(STRING_OBJECT_TYPE.matchesNumberContext());
+    assertFalse(STRING_OBJECT_TYPE.matchesSymbolContext());
 
     // isNullable
     assertFalse(STRING_OBJECT_TYPE.isNullable());
@@ -2373,6 +2501,9 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertTrue(STRING_TYPE.isString());
     assertFalse(STRING_TYPE.isStringObjectType());
     assertTrue(STRING_TYPE.isStringValueType());
+    assertFalse(STRING_TYPE.isSymbol());
+    assertFalse(STRING_TYPE.isSymbolObjectType());
+    assertFalse(STRING_TYPE.isSymbolValueType());
     assertFalse(STRING_TYPE.isEnumType());
     assertFalse(STRING_TYPE.isUnionType());
     assertFalse(STRING_TYPE.isStruct());
@@ -2390,14 +2521,15 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
     // isSubtype
     assertTrue(STRING_TYPE.isSubtype(ALL_TYPE));
+    assertTrue(STRING_TYPE.isSubtype(STRING_TYPE));
     assertFalse(STRING_TYPE.isSubtype(STRING_OBJECT_TYPE));
-    assertFalse(STRING_TYPE.isSubtype(NUMBER_TYPE));
+    assertFalse(STRING_TYPE.isSubtype(SYMBOL_OBJECT_TYPE));
+    assertFalse(STRING_TYPE.isSubtype(SYMBOL_TYPE));
     assertFalse(STRING_TYPE.isSubtype(OBJECT_TYPE));
     assertFalse(STRING_TYPE.isSubtype(NUMBER_TYPE));
     assertFalse(STRING_TYPE.isSubtype(DATE_TYPE));
     assertFalse(STRING_TYPE.isSubtype(REGEXP_TYPE));
     assertFalse(STRING_TYPE.isSubtype(ARRAY_TYPE));
-    assertTrue(STRING_TYPE.isSubtype(STRING_TYPE));
     assertTrue(STRING_TYPE.isSubtype(UNKNOWN_TYPE));
 
     // canBeCalled
@@ -2411,6 +2543,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertCanTestForEqualityWith(STRING_TYPE, NUMBER_TYPE);
     assertCanTestForEqualityWith(STRING_TYPE, BOOLEAN_TYPE);
     assertCanTestForEqualityWith(STRING_TYPE, BOOLEAN_OBJECT_TYPE);
+    assertCannotTestForEqualityWith(STRING_TYPE, SYMBOL_TYPE);
+    assertCannotTestForEqualityWith(STRING_TYPE, SYMBOL_OBJECT_TYPE);
     assertCanTestForEqualityWith(STRING_TYPE, DATE_TYPE);
     assertCanTestForEqualityWith(STRING_TYPE, REGEXP_TYPE);
     assertCanTestForEqualityWith(STRING_TYPE, ARRAY_TYPE);
@@ -2437,6 +2571,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertFalse(STRING_TYPE.canTestForShallowEqualityWith(REGEXP_TYPE));
     assertTrue(STRING_TYPE.canTestForShallowEqualityWith(STRING_TYPE));
     assertFalse(STRING_TYPE.canTestForShallowEqualityWith(STRING_OBJECT_TYPE));
+    assertFalse(STRING_TYPE.canTestForShallowEqualityWith(SYMBOL_TYPE));
+    assertFalse(STRING_TYPE.canTestForShallowEqualityWith(SYMBOL_OBJECT_TYPE));
     assertFalse(STRING_TYPE.canTestForShallowEqualityWith(SYNTAX_ERROR_TYPE));
     assertFalse(STRING_TYPE.canTestForShallowEqualityWith(TYPE_ERROR_TYPE));
     assertTrue(STRING_TYPE.canTestForShallowEqualityWith(ALL_TYPE));
@@ -2445,10 +2581,9 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
     // matchesXxx
     assertTrue(STRING_TYPE.matchesNumberContext());
-    assertTrue(STRING_TYPE.matchesNumberContext());
     assertTrue(STRING_TYPE.matchesObjectContext());
     assertTrue(STRING_TYPE.matchesStringContext());
-    assertTrue(STRING_TYPE.matchesNumberContext());
+    assertFalse(STRING_TYPE.matchesSymbolContext());
 
     // isNullable
     assertFalse(STRING_TYPE.isNullable());
@@ -2467,6 +2602,212 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
     Asserts.assertResolvesToSame(STRING_TYPE);
     assertFalse(STRING_TYPE.isNominalConstructor());
+  }
+
+  /** Tests the behavior of the symbol type. */
+  public void testSymbolValueType() throws Exception {
+    // isXxx
+    assertFalse(SYMBOL_TYPE.isArrayType());
+    assertFalse(SYMBOL_TYPE.isBooleanObjectType());
+    assertFalse(SYMBOL_TYPE.isBooleanValueType());
+    assertFalse(SYMBOL_TYPE.isDateType());
+    assertFalse(SYMBOL_TYPE.isEnumElementType());
+    assertFalse(SYMBOL_TYPE.isNamedType());
+    assertFalse(SYMBOL_TYPE.isNullType());
+    assertFalse(SYMBOL_TYPE.isNumberObjectType());
+    assertFalse(SYMBOL_TYPE.isNumberValueType());
+    assertFalse(SYMBOL_TYPE.isFunctionPrototypeType());
+    assertFalse(SYMBOL_TYPE.isRegexpType());
+    assertFalse(SYMBOL_TYPE.isStringObjectType());
+    assertFalse(SYMBOL_TYPE.isStringValueType());
+    assertFalse(SYMBOL_TYPE.isEnumType());
+    assertFalse(SYMBOL_TYPE.isUnionType());
+    assertFalse(SYMBOL_TYPE.isStruct());
+    assertFalse(SYMBOL_TYPE.isDict());
+    assertFalse(SYMBOL_TYPE.isAllType());
+    assertFalse(SYMBOL_TYPE.isVoidType());
+    assertFalse(SYMBOL_TYPE.isConstructor());
+    assertFalse(SYMBOL_TYPE.isInstanceType());
+    assertTrue(SYMBOL_TYPE.isSymbol());
+    assertFalse(SYMBOL_TYPE.isSymbolObjectType());
+    assertTrue(SYMBOL_TYPE.isSymbolValueType());
+
+    // autoboxesTo
+    assertTypeEquals(SYMBOL_OBJECT_TYPE, SYMBOL_TYPE.autoboxesTo());
+
+    // unboxesTo
+    assertTypeEquals(SYMBOL_TYPE, SYMBOL_OBJECT_TYPE.unboxesTo());
+
+    // isSubtype
+    assertTrue(SYMBOL_TYPE.isSubtype(ALL_TYPE));
+    assertFalse(SYMBOL_TYPE.isSubtype(STRING_OBJECT_TYPE));
+    assertFalse(SYMBOL_TYPE.isSubtype(NUMBER_TYPE));
+    assertFalse(SYMBOL_TYPE.isSubtype(functionType));
+    assertFalse(SYMBOL_TYPE.isSubtype(NULL_TYPE));
+    assertFalse(SYMBOL_TYPE.isSubtype(OBJECT_TYPE));
+    assertFalse(SYMBOL_TYPE.isSubtype(DATE_TYPE));
+    assertTrue(SYMBOL_TYPE.isSubtype(unresolvedNamedType));
+    assertFalse(SYMBOL_TYPE.isSubtype(namedGoogBar));
+    assertFalse(SYMBOL_TYPE.isSubtype(REGEXP_TYPE));
+
+    // canBeCalled
+    assertFalse(SYMBOL_TYPE.canBeCalled());
+
+    // canTestForEqualityWith
+    assertCanTestForEqualityWith(SYMBOL_TYPE, SYMBOL_TYPE);
+    assertCanTestForEqualityWith(SYMBOL_TYPE, SYMBOL_OBJECT_TYPE);
+    assertCanTestForEqualityWith(SYMBOL_TYPE, ALL_TYPE);
+    assertCannotTestForEqualityWith(SYMBOL_TYPE, STRING_OBJECT_TYPE);
+    assertCannotTestForEqualityWith(SYMBOL_TYPE, NUMBER_TYPE);
+    assertCannotTestForEqualityWith(SYMBOL_TYPE, functionType);
+    assertCannotTestForEqualityWith(SYMBOL_TYPE, VOID_TYPE);
+    assertCanTestForEqualityWith(SYMBOL_TYPE, OBJECT_TYPE);
+    assertCannotTestForEqualityWith(SYMBOL_TYPE, DATE_TYPE);
+    assertCannotTestForEqualityWith(SYMBOL_TYPE, REGEXP_TYPE);
+    assertCanTestForEqualityWith(SYMBOL_TYPE, UNKNOWN_TYPE);
+
+    // canTestForShallowEqualityWith
+    assertTrue(SYMBOL_TYPE.canTestForShallowEqualityWith(SYMBOL_TYPE));
+    assertFalse(SYMBOL_TYPE.canTestForShallowEqualityWith(SYMBOL_OBJECT_TYPE));
+    assertTrue(SYMBOL_TYPE.canTestForShallowEqualityWith(NO_TYPE));
+    assertFalse(SYMBOL_TYPE.canTestForShallowEqualityWith(NO_OBJECT_TYPE)); // ?
+    assertFalse(SYMBOL_TYPE.canTestForShallowEqualityWith(ARRAY_TYPE));
+    assertTrue(SYMBOL_TYPE.canTestForShallowEqualityWith(SYMBOL_TYPE));
+    assertFalse(SYMBOL_TYPE.canTestForShallowEqualityWith(BOOLEAN_TYPE));
+    assertFalse(SYMBOL_TYPE.canTestForShallowEqualityWith(DATE_TYPE));
+    assertFalse(SYMBOL_TYPE.canTestForShallowEqualityWith(ERROR_TYPE));
+    assertFalse(SYMBOL_TYPE.canTestForShallowEqualityWith(EVAL_ERROR_TYPE));
+    assertFalse(SYMBOL_TYPE.canTestForShallowEqualityWith(functionType));
+    assertFalse(SYMBOL_TYPE.canTestForShallowEqualityWith(NULL_TYPE));
+    assertFalse(SYMBOL_TYPE.canTestForShallowEqualityWith(NUMBER_TYPE));
+    assertFalse(SYMBOL_TYPE.canTestForShallowEqualityWith(NUMBER_OBJECT_TYPE));
+    assertFalse(SYMBOL_TYPE.canTestForShallowEqualityWith(OBJECT_TYPE));
+    assertFalse(SYMBOL_TYPE.canTestForShallowEqualityWith(URI_ERROR_TYPE));
+    assertFalse(SYMBOL_TYPE.canTestForShallowEqualityWith(RANGE_ERROR_TYPE));
+    assertFalse(SYMBOL_TYPE.canTestForShallowEqualityWith(REFERENCE_ERROR_TYPE));
+    assertFalse(SYMBOL_TYPE.canTestForShallowEqualityWith(REGEXP_TYPE));
+    assertFalse(SYMBOL_TYPE.canTestForShallowEqualityWith(STRING_TYPE));
+    assertFalse(SYMBOL_TYPE.canTestForShallowEqualityWith(STRING_OBJECT_TYPE));
+    assertFalse(SYMBOL_TYPE.canTestForShallowEqualityWith(SYNTAX_ERROR_TYPE));
+    assertFalse(SYMBOL_TYPE.canTestForShallowEqualityWith(TYPE_ERROR_TYPE));
+    assertTrue(SYMBOL_TYPE.canTestForShallowEqualityWith(ALL_TYPE));
+    assertFalse(SYMBOL_TYPE.canTestForShallowEqualityWith(VOID_TYPE));
+    assertTrue(SYMBOL_TYPE.canTestForShallowEqualityWith(UNKNOWN_TYPE));
+
+    // isNullable
+    assertFalse(SYMBOL_TYPE.isNullable());
+    assertFalse(SYMBOL_TYPE.isVoidable());
+
+    // matchesXxx
+    assertFalse(SYMBOL_TYPE.matchesNumberContext());
+    assertTrue(SYMBOL_TYPE.matchesObjectContext());
+    assertFalse(SYMBOL_TYPE.matchesStringContext());
+    assertTrue(SYMBOL_TYPE.matchesSymbolContext());
+
+    // toString
+    assertEquals("symbol", SYMBOL_TYPE.toString());
+    assertTrue(SYMBOL_TYPE.hasDisplayName());
+    assertEquals("symbol", SYMBOL_TYPE.getDisplayName());
+
+    Asserts.assertResolvesToSame(SYMBOL_TYPE);
+  }
+
+  /** Tests the behavior of the Symbol type. */
+  public void testSymbolObjectType() throws Exception {
+    // isXxx
+    assertFalse(SYMBOL_OBJECT_TYPE.isArrayType());
+    assertFalse(SYMBOL_OBJECT_TYPE.isBooleanObjectType());
+    assertFalse(SYMBOL_OBJECT_TYPE.isBooleanValueType());
+    assertFalse(SYMBOL_OBJECT_TYPE.isDateType());
+    assertFalse(SYMBOL_OBJECT_TYPE.isEnumElementType());
+    assertFalse(SYMBOL_OBJECT_TYPE.isNamedType());
+    assertFalse(SYMBOL_OBJECT_TYPE.isNullType());
+    assertFalse(SYMBOL_OBJECT_TYPE.isNumberObjectType());
+    assertFalse(SYMBOL_OBJECT_TYPE.isNumberValueType());
+    assertFalse(SYMBOL_OBJECT_TYPE.isFunctionPrototypeType());
+    assertTrue(SYMBOL_OBJECT_TYPE.getImplicitPrototype().isFunctionPrototypeType());
+    assertFalse(SYMBOL_OBJECT_TYPE.isRegexpType());
+    assertFalse(SYMBOL_OBJECT_TYPE.isStringObjectType());
+    assertFalse(SYMBOL_OBJECT_TYPE.isStringValueType());
+    assertFalse(SYMBOL_OBJECT_TYPE.isEnumType());
+    assertFalse(SYMBOL_OBJECT_TYPE.isUnionType());
+    assertFalse(SYMBOL_OBJECT_TYPE.isStruct());
+    assertFalse(SYMBOL_OBJECT_TYPE.isDict());
+    assertFalse(SYMBOL_OBJECT_TYPE.isAllType());
+    assertFalse(SYMBOL_OBJECT_TYPE.isVoidType());
+    assertFalse(SYMBOL_OBJECT_TYPE.isConstructor());
+    assertTrue(SYMBOL_OBJECT_TYPE.isInstanceType());
+    assertTrue(SYMBOL_OBJECT_TYPE.isSymbol());
+    assertTrue(SYMBOL_OBJECT_TYPE.isSymbolObjectType());
+    assertFalse(SYMBOL_OBJECT_TYPE.isSymbolValueType());
+
+    // isSubtype
+    assertTrue(SYMBOL_OBJECT_TYPE.isSubtype(ALL_TYPE));
+    assertFalse(SYMBOL_OBJECT_TYPE.isSubtype(STRING_OBJECT_TYPE));
+    assertFalse(SYMBOL_OBJECT_TYPE.isSubtype(NUMBER_TYPE));
+    assertFalse(SYMBOL_OBJECT_TYPE.isSubtype(functionType));
+    assertFalse(SYMBOL_OBJECT_TYPE.isSubtype(NULL_TYPE));
+    assertTrue(SYMBOL_OBJECT_TYPE.isSubtype(OBJECT_TYPE));
+    assertFalse(SYMBOL_OBJECT_TYPE.isSubtype(DATE_TYPE));
+    assertTrue(SYMBOL_OBJECT_TYPE.isSubtype(unresolvedNamedType));
+    assertFalse(SYMBOL_OBJECT_TYPE.isSubtype(namedGoogBar));
+    assertFalse(SYMBOL_OBJECT_TYPE.isSubtype(REGEXP_TYPE));
+    // canBeCalled
+    assertFalse(SYMBOL_OBJECT_TYPE.canBeCalled());
+
+    // canTestForEqualityWith
+    assertCanTestForEqualityWith(SYMBOL_OBJECT_TYPE, ALL_TYPE);
+    assertCannotTestForEqualityWith(SYMBOL_OBJECT_TYPE, STRING_OBJECT_TYPE);
+    assertCannotTestForEqualityWith(SYMBOL_OBJECT_TYPE, NUMBER_TYPE);
+    assertCannotTestForEqualityWith(SYMBOL_OBJECT_TYPE, functionType);
+    assertCannotTestForEqualityWith(SYMBOL_OBJECT_TYPE, VOID_TYPE);
+    assertCanTestForEqualityWith(SYMBOL_OBJECT_TYPE, OBJECT_TYPE);
+    assertCannotTestForEqualityWith(SYMBOL_OBJECT_TYPE, DATE_TYPE);
+    assertCannotTestForEqualityWith(SYMBOL_OBJECT_TYPE, REGEXP_TYPE);
+
+    // canTestForShallowEqualityWith
+    assertTrue(SYMBOL_OBJECT_TYPE.canTestForShallowEqualityWith(NO_TYPE));
+    assertTrue(SYMBOL_OBJECT_TYPE.canTestForShallowEqualityWith(NO_OBJECT_TYPE));
+    assertFalse(SYMBOL_OBJECT_TYPE.canTestForShallowEqualityWith(ARRAY_TYPE));
+    assertFalse(SYMBOL_OBJECT_TYPE.canTestForShallowEqualityWith(SYMBOL_TYPE));
+    assertTrue(SYMBOL_OBJECT_TYPE.canTestForShallowEqualityWith(SYMBOL_OBJECT_TYPE));
+    assertFalse(SYMBOL_OBJECT_TYPE.canTestForShallowEqualityWith(DATE_TYPE));
+    assertFalse(SYMBOL_OBJECT_TYPE.canTestForShallowEqualityWith(ERROR_TYPE));
+    assertFalse(SYMBOL_OBJECT_TYPE.canTestForShallowEqualityWith(EVAL_ERROR_TYPE));
+    assertFalse(SYMBOL_OBJECT_TYPE.canTestForShallowEqualityWith(functionType));
+    assertFalse(SYMBOL_OBJECT_TYPE.canTestForShallowEqualityWith(NULL_TYPE));
+    assertFalse(SYMBOL_OBJECT_TYPE.canTestForShallowEqualityWith(NUMBER_TYPE));
+    assertFalse(SYMBOL_OBJECT_TYPE.canTestForShallowEqualityWith(NUMBER_OBJECT_TYPE));
+    assertTrue(SYMBOL_OBJECT_TYPE.canTestForShallowEqualityWith(OBJECT_TYPE));
+    assertFalse(SYMBOL_OBJECT_TYPE.canTestForShallowEqualityWith(URI_ERROR_TYPE));
+    assertFalse(SYMBOL_OBJECT_TYPE.canTestForShallowEqualityWith(RANGE_ERROR_TYPE));
+    assertFalse(SYMBOL_OBJECT_TYPE.canTestForShallowEqualityWith(REFERENCE_ERROR_TYPE));
+    assertFalse(SYMBOL_OBJECT_TYPE.canTestForShallowEqualityWith(REGEXP_TYPE));
+    assertFalse(SYMBOL_OBJECT_TYPE.canTestForShallowEqualityWith(STRING_TYPE));
+    assertFalse(SYMBOL_OBJECT_TYPE.canTestForShallowEqualityWith(STRING_OBJECT_TYPE));
+    assertFalse(SYMBOL_OBJECT_TYPE.canTestForShallowEqualityWith(SYNTAX_ERROR_TYPE));
+    assertFalse(SYMBOL_OBJECT_TYPE.canTestForShallowEqualityWith(TYPE_ERROR_TYPE));
+    assertTrue(SYMBOL_OBJECT_TYPE.canTestForShallowEqualityWith(ALL_TYPE));
+    assertFalse(SYMBOL_OBJECT_TYPE.canTestForShallowEqualityWith(VOID_TYPE));
+
+    // isNullable
+    assertFalse(SYMBOL_OBJECT_TYPE.isNullable());
+    assertFalse(SYMBOL_OBJECT_TYPE.isVoidable());
+
+    // matchesXxx
+    assertFalse(SYMBOL_OBJECT_TYPE.matchesNumberContext());
+    assertTrue(SYMBOL_OBJECT_TYPE.matchesObjectContext());
+    assertFalse(SYMBOL_OBJECT_TYPE.matchesStringContext());
+    assertTrue(SYMBOL_OBJECT_TYPE.matchesSymbolContext());
+
+    // toString
+    assertEquals("Symbol", SYMBOL_OBJECT_TYPE.toString());
+    assertTrue(SYMBOL_OBJECT_TYPE.hasDisplayName());
+    assertEquals("Symbol", SYMBOL_OBJECT_TYPE.getDisplayName());
+
+    assertTrue(SYMBOL_OBJECT_TYPE.isNativeObjectType());
+
+    Asserts.assertResolvesToSame(SYMBOL_OBJECT_TYPE);
   }
 
   private void assertPropertyTypeDeclared(ObjectType ownerType, String prop) {
@@ -2505,6 +2846,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertTrue(recordType.isSubtype(ALL_TYPE));
     assertFalse(recordType.isSubtype(STRING_OBJECT_TYPE));
     assertFalse(recordType.isSubtype(NUMBER_TYPE));
+    assertFalse(recordType.isSubtype(SYMBOL_OBJECT_TYPE));
+    assertFalse(recordType.isSubtype(SYMBOL_TYPE));
     assertFalse(recordType.isSubtype(DATE_TYPE));
     assertFalse(recordType.isSubtype(REGEXP_TYPE));
     assertTrue(recordType.isSubtype(UNKNOWN_TYPE));
@@ -2526,6 +2869,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertCanTestForEqualityWith(recordType, NUMBER_TYPE);
     assertCanTestForEqualityWith(recordType, DATE_TYPE);
     assertCanTestForEqualityWith(recordType, REGEXP_TYPE);
+    assertCanTestForEqualityWith(recordType, SYMBOL_OBJECT_TYPE);
+    assertCanTestForEqualityWith(recordType, SYMBOL_TYPE);
 
     // canTestForShallowEqualityWith
     assertTrue(recordType.canTestForShallowEqualityWith(NO_TYPE));
@@ -2549,6 +2894,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertFalse(recordType.canTestForShallowEqualityWith(REGEXP_TYPE));
     assertFalse(recordType.canTestForShallowEqualityWith(STRING_TYPE));
     assertFalse(recordType.canTestForShallowEqualityWith(STRING_OBJECT_TYPE));
+    assertFalse(recordType.canTestForShallowEqualityWith(SYMBOL_TYPE));
+    assertFalse(recordType.canTestForShallowEqualityWith(SYMBOL_OBJECT_TYPE));
     assertFalse(recordType.canTestForShallowEqualityWith(SYNTAX_ERROR_TYPE));
     assertFalse(recordType.canTestForShallowEqualityWith(TYPE_ERROR_TYPE));
     assertTrue(recordType.canTestForShallowEqualityWith(ALL_TYPE));
@@ -2557,10 +2904,9 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
     // matchesXxx
     assertFalse(recordType.matchesNumberContext());
-    assertFalse(recordType.matchesNumberContext());
     assertTrue(recordType.matchesObjectContext());
     assertFalse(recordType.matchesStringContext());
-    assertFalse(recordType.matchesNumberContext());
+    assertFalse(recordType.matchesSymbolContext());
 
     Asserts.assertResolvesToSame(recordType);
   }
@@ -2581,6 +2927,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertTrue(functionInst.isSubtype(ALL_TYPE));
     assertFalse(functionInst.isSubtype(STRING_OBJECT_TYPE));
     assertFalse(functionInst.isSubtype(NUMBER_TYPE));
+    assertFalse(functionInst.isSubtype(SYMBOL_OBJECT_TYPE));
+    assertFalse(functionInst.isSubtype(SYMBOL_TYPE));
     assertFalse(functionInst.isSubtype(DATE_TYPE));
     assertFalse(functionInst.isSubtype(REGEXP_TYPE));
     assertTrue(functionInst.isSubtype(UNKNOWN_TYPE));
@@ -2598,6 +2946,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertCanTestForEqualityWith(functionInst, functionInst);
     assertCanTestForEqualityWith(functionInst, OBJECT_TYPE);
     assertCannotTestForEqualityWith(functionInst, NUMBER_TYPE);
+    assertCannotTestForEqualityWith(functionInst, SYMBOL_OBJECT_TYPE);
+    assertCannotTestForEqualityWith(functionInst, SYMBOL_TYPE);
     assertCanTestForEqualityWith(functionInst, DATE_TYPE);
     assertCanTestForEqualityWith(functionInst, REGEXP_TYPE);
 
@@ -2623,6 +2973,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertFalse(functionInst.canTestForShallowEqualityWith(REGEXP_TYPE));
     assertFalse(functionInst.canTestForShallowEqualityWith(STRING_TYPE));
     assertFalse(functionInst.canTestForShallowEqualityWith(STRING_OBJECT_TYPE));
+    assertFalse(functionInst.canTestForShallowEqualityWith(SYMBOL_TYPE));
+    assertFalse(functionInst.canTestForShallowEqualityWith(SYMBOL_OBJECT_TYPE));
     assertFalse(functionInst.canTestForShallowEqualityWith(SYNTAX_ERROR_TYPE));
     assertFalse(functionInst.canTestForShallowEqualityWith(TYPE_ERROR_TYPE));
     assertTrue(functionInst.canTestForShallowEqualityWith(ALL_TYPE));
@@ -2631,10 +2983,9 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
     // matchesXxx
     assertFalse(functionInst.matchesNumberContext());
-    assertFalse(functionInst.matchesNumberContext());
     assertTrue(functionInst.matchesObjectContext());
     assertFalse(functionInst.matchesStringContext());
-    assertFalse(functionInst.matchesNumberContext());
+    assertFalse(functionInst.matchesSymbolContext());
 
     // hasProperty
     assertTrue(functionInst.hasProperty("prototype"));
@@ -2662,6 +3013,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertTrue(functionType.isSubtype(ALL_TYPE));
     assertFalse(functionType.isSubtype(STRING_OBJECT_TYPE));
     assertFalse(functionType.isSubtype(NUMBER_TYPE));
+    assertFalse(functionType.isSubtype(SYMBOL_OBJECT_TYPE));
+    assertFalse(functionType.isSubtype(SYMBOL_TYPE));
     assertFalse(functionType.isSubtype(DATE_TYPE));
     assertFalse(functionType.isSubtype(REGEXP_TYPE));
     assertTrue(functionType.isSubtype(UNKNOWN_TYPE));
@@ -2681,6 +3034,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertCannotTestForEqualityWith(functionType, NUMBER_TYPE);
     assertCanTestForEqualityWith(functionType, DATE_TYPE);
     assertCanTestForEqualityWith(functionType, REGEXP_TYPE);
+    assertCannotTestForEqualityWith(functionType, SYMBOL_OBJECT_TYPE);
+    assertCannotTestForEqualityWith(functionType, SYMBOL_TYPE);
 
     // canTestForShallowEqualityWith
     assertTrue(functionType.canTestForShallowEqualityWith(NO_TYPE));
@@ -2704,6 +3059,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertFalse(functionType.canTestForShallowEqualityWith(REGEXP_TYPE));
     assertFalse(functionType.canTestForShallowEqualityWith(STRING_TYPE));
     assertFalse(functionType.canTestForShallowEqualityWith(STRING_OBJECT_TYPE));
+    assertFalse(functionType.canTestForShallowEqualityWith(SYMBOL_TYPE));
+    assertFalse(functionType.canTestForShallowEqualityWith(SYMBOL_OBJECT_TYPE));
     assertFalse(functionType.canTestForShallowEqualityWith(SYNTAX_ERROR_TYPE));
     assertFalse(functionType.canTestForShallowEqualityWith(TYPE_ERROR_TYPE));
     assertTrue(functionType.canTestForShallowEqualityWith(ALL_TYPE));
@@ -2712,10 +3069,9 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
     // matchesXxx
     assertFalse(functionType.matchesNumberContext());
-    assertFalse(functionType.matchesNumberContext());
     assertTrue(functionType.matchesObjectContext());
     assertFalse(functionType.matchesStringContext());
-    assertFalse(functionType.matchesNumberContext());
+    assertFalse(functionType.matchesSymbolContext());
 
     // hasProperty
     assertTrue(functionType.hasProperty("prototype"));

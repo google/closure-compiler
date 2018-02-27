@@ -206,6 +206,21 @@ public class UnionType extends JSType {
   }
 
   /**
+   * This predicate is used to test whether a given type can appear in a {@code Symbol} context
+   *
+   * @return {@code true} if not it maybe a symbol or Symbol object
+   */
+  @Override
+  public boolean matchesSymbolContext() {
+    for (JSType t : alternatesWithoutStucturalTyping) {
+      if (t.matchesSymbolContext()) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
    * This predicate is used to test whether a given type can appear in an
    * {@code Object} context, such as the expression in a {@code with}
    * statement.<p>

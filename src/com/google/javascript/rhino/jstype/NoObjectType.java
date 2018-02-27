@@ -131,6 +131,11 @@ public class NoObjectType extends FunctionType {
   }
 
   @Override
+  public boolean matchesSymbolContext() {
+    return true;
+  }
+
+  @Override
   public int hashCode() {
     return System.identityHashCode(this);
   }

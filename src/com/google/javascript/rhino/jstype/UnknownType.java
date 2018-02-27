@@ -89,6 +89,11 @@ public class UnknownType extends ObjectType {
   }
 
   @Override
+  public boolean matchesSymbolContext() {
+    return true;
+  }
+
+  @Override
   public TernaryValue testForEquality(JSType that) {
     return UNKNOWN;
   }

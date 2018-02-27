@@ -40,6 +40,7 @@
 package com.google.javascript.rhino.jstype;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.javascript.rhino.jstype.TernaryValue.FALSE;
 import static com.google.javascript.rhino.jstype.TernaryValue.UNKNOWN;
 
 import com.google.common.base.Predicate;
@@ -203,6 +204,10 @@ public abstract class JSType implements TypeI {
   }
 
   public boolean isStringObjectType() {
+    return false;
+  }
+
+  public boolean isSymbolObjectType() {
     return false;
   }
 
@@ -921,6 +926,7 @@ public abstract class JSType implements TypeI {
     return autoboxesTo() != null;
   }
 
+  // TODO(johnlenz): this method is only used for testing, consider removing this.
   /**
    * Turn an object type to its corresponding scalar type.
    *
@@ -995,7 +1001,7 @@ public abstract class JSType implements TypeI {
     return testForEqualityHelper(this, that);
   }
 
-  TernaryValue testForEqualityHelper(JSType aType, JSType bType) {
+  final TernaryValue testForEqualityHelper(JSType aType, JSType bType) {
     if (bType.isAllType() || bType.isUnknownType() ||
         bType.isNoResolvedType() ||
         aType.isAllType() || aType.isUnknownType() ||
@@ -1015,6 +1021,12 @@ public abstract class JSType implements TypeI {
 
     if (aType.isFunctionType() || bType.isFunctionType()) {
       JSType otherType = aType.isFunctionType() ? bType : aType;
+
+      // TODO(johnlenz): tighten function type comparisons in general.
+      if (otherType.isSymbol()) {
+        return TernaryValue.FALSE;
+      }
+
       // In theory, functions are comparable to anything except
       // null/undefined. For example, on FF3:
       // function() {} == 'function () {\n}'
@@ -1029,9 +1041,24 @@ public abstract class JSType implements TypeI {
         return TernaryValue.UNKNOWN;
       }
     }
+
     if (bType.isEnumElementType() || bType.isUnionType()) {
       return bType.testForEquality(aType);
     }
+
+    // If this is a "Symbol" or that is "symbol" or "Symbol"
+    if (aType.isSymbol()) {
+      return bType.canCastTo(getNativeType(JSTypeNative.SYMBOL_VALUE_OR_OBJECT_TYPE))
+          ? UNKNOWN
+          : FALSE;
+    }
+
+    if (bType.isSymbol()) {
+      return aType.canCastTo(getNativeType(JSTypeNative.SYMBOL_VALUE_OR_OBJECT_TYPE))
+          ? UNKNOWN
+          : FALSE;
+    }
+
     return null;
   }
 

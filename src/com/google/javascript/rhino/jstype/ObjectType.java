@@ -279,14 +279,16 @@ public abstract class ObjectType
     if (result != null) {
       return result;
     }
-    // objects are comparable to everything but null/undefined
-    // TODO(johnlenz): tighten this to the "canCastTo" check
-    if (that.isSubtype(
-            getNativeType(JSTypeNative.OBJECT_NUMBER_STRING_BOOLEAN_SYMBOL))) {
+
+    // TODO: consider tighten "testForEquality" for subtypes of Object: if Foo and Bar
+    // are not related we don't want to allow "==" on them (similiarly we should disallow
+    // number == for non-number context values, etc).
+
+    if (that.isSubtype(getNativeType(JSTypeNative.OBJECT_NUMBER_STRING_BOOLEAN_SYMBOL))) {
       return UNKNOWN;
-    } else {
-      return FALSE;
     }
+
+    return FALSE;
   }
 
   /**

@@ -124,6 +124,11 @@ public class ProxyObjectType extends ObjectType {
   }
 
   @Override
+  public boolean matchesSymbolContext() {
+    return referencedType.matchesSymbolContext();
+  }
+
+  @Override
   public boolean matchesObjectContext() {
     return referencedType.matchesObjectContext();
   }
