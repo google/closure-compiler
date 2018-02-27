@@ -855,6 +855,8 @@ public class CommandLineRunner extends
                     "export_local_property_definitions",
                     "formatting",
                     "generate_exports",
+                    "rename_variable_prefix",
+                    "rename_prefix_namespace",
                     "isolation_mode",
                     "output_wrapper",
                     "output_wrapper_file"))
