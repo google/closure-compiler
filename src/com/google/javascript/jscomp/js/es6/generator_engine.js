@@ -476,6 +476,7 @@ $jscomp.generator.Context.prototype.enterFinallyBlock = function(
  * @param {number} nextAddress The state that should be run next.
  * @param {number=} finallyDepth The nesting level of current "finally" block.
  * @return {void}
+ * @suppress {strictMissingProperties}
  */
 $jscomp.generator.Context.prototype.leaveFinallyBlock = function(
     nextAddress, finallyDepth) {
@@ -787,7 +788,7 @@ $jscomp.generator.Engine_.prototype.yieldAllStep_ = function(
  * @private
  * @final
  * @return {!IIterableResult<VALUE>}
- * @suppress {reportUnknownTypes}
+ * @suppress {reportUnknownTypes, strictMissingProperties}
  */
 $jscomp.generator.Engine_.prototype.nextStep_ = function() {
   while (this.context_.nextAddress) {
