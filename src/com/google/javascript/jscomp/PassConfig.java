@@ -35,17 +35,7 @@ public abstract class PassConfig {
   // Used by the subclasses.
   protected final CompilerOptions options;
 
-  /**
-   * A memoized version of scopeCreator. It must be memoized so that
-   * we can make two separate passes over the AST, one for inferring types
-   * and one for checking types.
-   */
-  private MemoizedTypedScopeCreator typedScopeCreator;
-
-  /**
-   * This is the scope creator that {@code TypedScopeCreator} delegates to.
-   */
-  private TypedScopeCreator internalScopeCreator;
+  private TypedScopeCreator typedScopeCreator;
 
   /** The global typed scope. */
   TypedScope topScope = null;
@@ -61,13 +51,11 @@ public abstract class PassConfig {
    * @param root The root of the AST.
    */
   void regenerateGlobalTypedScope(AbstractCompiler compiler, Node root) {
-    internalScopeCreator = new TypedScopeCreator(compiler);
-    typedScopeCreator = new MemoizedTypedScopeCreator(internalScopeCreator);
+    typedScopeCreator = new TypedScopeCreator(compiler);
     topScope = typedScopeCreator.createScope(root, null);
   }
 
   void clearTypedScope() {
-    internalScopeCreator = null;
     typedScopeCreator = null;
     topScope = null;
   }
@@ -80,14 +68,14 @@ public abstract class PassConfig {
    * @param scriptRoot The root of the AST used to generate global scope.
    */
   void patchGlobalTypedScope(AbstractCompiler compiler, Node scriptRoot) {
-    checkNotNull(internalScopeCreator);
-    internalScopeCreator.patchGlobalScope(topScope, scriptRoot);
+    checkNotNull(typedScopeCreator);
+    typedScopeCreator.patchGlobalScope(topScope, scriptRoot);
   }
 
   /**
    * Gets the scope creator for typed scopes.
    */
-  MemoizedTypedScopeCreator getTypedScopeCreator() {
+  TypedScopeCreator getTypedScopeCreator() {
     return typedScopeCreator;
   }
 
@@ -266,7 +254,7 @@ public abstract class PassConfig {
       return delegate.getTranspileOnlyPasses();
     }
 
-    @Override MemoizedTypedScopeCreator getTypedScopeCreator() {
+    @Override TypedScopeCreator getTypedScopeCreator() {
       return delegate.getTypedScopeCreator();
     }
 

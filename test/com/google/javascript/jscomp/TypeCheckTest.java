@@ -12720,8 +12720,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   public void testTypeCheckStandaloneAST() {
     Node n = compiler.parseTestCode("function Foo() { }");
     typeCheck(n);
-    MemoizedTypedScopeCreator scopeCreator = new MemoizedTypedScopeCreator(
-        new TypedScopeCreator(compiler));
+    TypedScopeCreator scopeCreator = new TypedScopeCreator(compiler);
     TypedScope topScope = scopeCreator.createScope(n, null);
 
     Node second = compiler.parseTestCode("new Foo");

@@ -28,6 +28,7 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.UNKNOWN_TYPE;
 import com.google.common.base.Predicate;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
+import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.EnumType;
@@ -74,8 +75,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     return new CompilerPass() {
       @Override
       public void process(Node externs, Node root) {
-        MemoizedTypedScopeCreator scopeCreator =
-            new MemoizedTypedScopeCreator(new TypedScopeCreator(compiler));
+        TypedScopeCreator scopeCreator = new TypedScopeCreator(compiler);
         TypedScope topScope = scopeCreator.createScope(root.getParent(), null);
         (new TypeInferencePass(
             compiler, compiler.getReverseAbstractInterpreter(),
@@ -2077,6 +2077,36 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     // Note: "e" actually belongs to a inner scope but we don't
     // model catches as separate scopes currently.
     assertEquals("string", globalScope.getVar("e").getType().toString());
+  }
+
+  public void testMemoization() throws Exception {
+    Node root1 = createEmptyRoot();
+    Node root2 = createEmptyRoot();
+    Compiler compiler = new Compiler();
+    compiler.initOptions(new CompilerOptions());
+    TypedScopeCreator creator = new TypedScopeCreator(compiler);
+    TypedScope scopeA = creator.createScope(root1, null);
+    assertSame(scopeA, creator.createScope(root1, null));
+    assertNotSame(scopeA, creator.createScope(root2, null));
+  }
+
+  public void testMemoizationPreconditionCheck() throws Exception {
+    Compiler compiler = new Compiler();
+    compiler.initOptions(new CompilerOptions());
+    Node root = createEmptyRoot();
+    TypedScopeCreator creator = new TypedScopeCreator(compiler);
+    TypedScope scopeA = creator.createScope(root, null);
+
+    try {
+      creator.createScope(root, scopeA);
+      fail("Expected an IllegalStateException");
+    } catch (IllegalStateException expected) {}
+  }
+
+  private static Node createEmptyRoot() {
+    Node root = new Node(Token.ROOT, new Node(Token.SCRIPT));
+    root.getFirstChild().setInputId(new InputId("input"));
+    return root;
   }
 
   private JSType findNameType(final String name, TypedScope scope) {

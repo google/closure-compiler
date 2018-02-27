@@ -51,6 +51,9 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.VOID_TYPE;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Multiset;
 import com.google.javascript.jscomp.CodingConvention.DelegateRelationship;
 import com.google.javascript.jscomp.CodingConvention.ObjectLiteralCast;
@@ -64,6 +67,7 @@ import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.NominalTypeBuilder;
+import com.google.javascript.rhino.StaticSymbolTable;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.EnumType;
 import com.google.javascript.rhino.jstype.FunctionParamBuilder;
@@ -78,6 +82,7 @@ import com.google.javascript.rhino.jstype.TemplateType;
 import com.google.javascript.rhino.jstype.TemplateTypeMap;
 import com.google.javascript.rhino.jstype.TemplateTypeMapReplacer;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -98,7 +103,7 @@ import javax.annotation.Nullable;
  *
  * @author nicksantos@google.com (Nick Santos)
  */
-final class TypedScopeCreator implements ScopeCreator {
+final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVar, TypedVar> {
   /**
    * A suffix for naming delegate proxies differently from their base.
    */
@@ -157,6 +162,7 @@ final class TypedScopeCreator implements ScopeCreator {
   private final JSTypeRegistry typeRegistry;
   private final List<FunctionType> delegateProxyCtors = new ArrayList<>();
   private final Map<String, String> delegateCallingConventions = new HashMap<>();
+  private final Map<Node, TypedScope> memoized = new LinkedHashMap<>();
   private final boolean runsAfterNTI;
 
   // Simple properties inferred about functions.
@@ -208,6 +214,57 @@ final class TypedScopeCreator implements ScopeCreator {
     }
   }
 
+  @Override
+  public Iterable<TypedVar> getReferences(TypedVar var) {
+    return ImmutableList.of(var);
+  }
+
+  @Override
+  public TypedScope getScope(TypedVar var) {
+    return var.scope;
+  }
+
+  @Override
+  public Iterable<TypedVar> getAllSymbols() {
+    List<TypedVar> vars = new ArrayList<>();
+    for (TypedScope s : memoized.values()) {
+      Iterables.addAll(vars, s.getAllSymbols());
+    }
+    return vars;
+  }
+
+  Collection<TypedScope> getAllMemoizedScopes() {
+    // Return scopes in reverse order of creation so that IIFEs will
+    // come before the global scope.
+    return Lists.reverse(ImmutableList.copyOf(memoized.values()));
+  }
+
+  /**
+   * Removes all scopes with root nodes from a given script file.
+   *
+   * @param scriptName the name of the script file to remove nodes for.
+   */
+  void removeScopesForScript(String scriptName) {
+    for (Node scopeRoot : ImmutableSet.copyOf(memoized.keySet())) {
+      if (scriptName.equals(scopeRoot.getSourceFileName())) {
+        memoized.remove(scopeRoot);
+      }
+    }
+  }
+
+  /** Create a scope, looking up in the map for the parent scope. */
+  TypedScope createScope(Node n) {
+    // NOTE(sdh): Ideally we could just look up the node in the map,
+    // but sometimes TypedScopeCreator does not create the scope in
+    // the first place (particularly for empty blocks).  When these
+    // cases show up in the CFG, we need to do some extra legwork to
+    // ensure the scope exists.
+    TypedScope s = memoized.get(n);
+    return s != null
+        ? s
+        : createScope(n, createScope(NodeUtil.getEnclosingScopeRoot(n.getParent())));
+  }
+
   /**
    * Creates a scope with all types declared. Declares newly discovered types
    * and type properties in the type registry.
@@ -216,10 +273,23 @@ final class TypedScopeCreator implements ScopeCreator {
   public TypedScope createScope(Node root, AbstractScope<?, ?> parent) {
     checkArgument(parent == null || parent instanceof TypedScope);
     TypedScope typedParent = (TypedScope) parent;
+
+    TypedScope scope = memoized.get(root);
+    if (scope != null) {
+      checkState(typedParent == scope.getParent());
+    } else {
+      scope = createScopeInternal(root, typedParent);
+      memoized.put(root, scope);
+    }
+    return scope;
+  }
+
+  private TypedScope createScopeInternal(Node root, TypedScope typedParent) {
     // Constructing the global scope is very different than constructing
     // inner scopes, because only global scopes can contain named classes that
     // show up in the type registry.
     TypedScope newScope = null;
+
     AbstractScopeBuilder scopeBuilder = null;
     if (typedParent == null) {
       JSType globalThis =
