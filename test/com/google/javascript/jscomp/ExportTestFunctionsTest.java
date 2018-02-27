@@ -245,12 +245,12 @@ public final class ExportTestFunctionsTest extends CompilerTestCase {
         "class MyTest {"
             + "testFoo(){} setUp(){} tearDown(){} setUpPage(){} tearDownPage(){} notExported(){}"
             + "}"
+            + "google_exportProperty(MyTest.prototype, 'testFoo', MyTest.prototype.testFoo);"
+            + "google_exportProperty(MyTest.prototype, 'setUp', MyTest.prototype.setUp);"
+            + "google_exportProperty(MyTest.prototype, 'tearDown', MyTest.prototype.tearDown);"
+            + "google_exportProperty(MyTest.prototype, 'setUpPage', MyTest.prototype.setUpPage);"
             + "google_exportProperty(MyTest.prototype, 'tearDownPage', "
             + "MyTest.prototype.tearDownPage);"
-            + "google_exportProperty(MyTest.prototype, 'setUpPage', MyTest.prototype.setUpPage);"
-            + "google_exportProperty(MyTest.prototype, 'tearDown', MyTest.prototype.tearDown);"
-            + "google_exportProperty(MyTest.prototype, 'setUp', MyTest.prototype.setUp);"
-            + "google_exportProperty(MyTest.prototype, 'testFoo', MyTest.prototype.testFoo);"
             + "goog.testing.testSuite(new MyTest());");
   }
 
