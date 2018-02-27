@@ -131,6 +131,18 @@ public final class CheckConstPrivatePropertiesTest extends TypeICompilerTestCase
             + "C.prototype.bar = function() { this.foo = 2; }");
   }
 
+  public void testConstructorPropModified_lambda() {
+    testSame(
+        lines(
+            "/** @constructor */",
+            "function C() {",
+            "  /** @private */",
+            "  this.foo_ = 2;",
+            "",
+            "  (() => { this.foo_ = 1; })();",
+            "}"));
+  }
+
   public void testClassPropModified1() {
     testWarning(
         "class C { constructor() { /** @private */ this.a = 2; } }", MISSING_CONST_PROPERTY);
@@ -140,6 +152,19 @@ public final class CheckConstPrivatePropertiesTest extends TypeICompilerTestCase
 
   public void testClassPropModified_const() {
     testSame("class C { constructor() { /** @private @const */ this.a = 2; } }");
+  }
+
+  public void testClassPropModified_lambda() {
+    testSame(
+        lines(
+            "class C { ",
+            "  constructor() { ",
+            "    /** @private */",
+            "    this.foo_ = 2;",
+            "",
+            "    (() => { this.foo_ = 1; })();",
+            "  }",
+            "}"));
   }
 
   public void testClassPropModified_assignModify() {
@@ -170,6 +195,20 @@ public final class CheckConstPrivatePropertiesTest extends TypeICompilerTestCase
         "class C { constructor() { /** @private */ this.a = 2; } }", MISSING_CONST_PROPERTY);
     testSame("class C { constructor() { /** @private */ this.a = 2; delete this.a; } }");
     testSame("class C { constructor() { /** @private */ this.a = 2; } foo() { delete this.a; } }");
+  }
+
+  public void testClassPropModified_multiFile() {
+    testWarning(
+        new String[] {
+          "class A { constructor() { /** @private */ this.a = 2; } }",
+          "class B { constructor() { /** @private */ this.a = 1; this.a = 4; } }",
+        },
+        MISSING_CONST_PROPERTY);
+    testSame(
+        new String[] {
+          "class A { constructor() { /** @private */ this.a = 2; this.a = 3; } }",
+          "class B { constructor() { /** @private */ this.a = 2; this.a = 4; } }",
+        });
   }
 
   public void testPrototype_Property() {

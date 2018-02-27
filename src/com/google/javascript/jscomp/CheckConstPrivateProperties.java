@@ -85,13 +85,12 @@ class CheckConstPrivateProperties extends NodeTraversal.AbstractPostOrderCallbac
         }
         String propName = lastChild.getString();
 
-        // Only check class properties
-        if (isCandidatePropertyDefinition(n)) {
-          if (isNonConstCheckablePrivatePropDecl(n)) {
-            candidates.add(n);
-          } else if (isModificationOp(n)) {
-            modified.add(propName);
-          }
+        // Only consider non-const @private class properties as candidates
+        if (isCandidatePropertyDefinition(n) && isNonConstCheckablePrivatePropDecl(n)) {
+          candidates.add(n);
+        } else if (isModificationOp(n)) {
+          // Mark any other modification operation as a modified property, to deal with lambdas, etc
+          modified.add(propName);
         }
         break;
 
