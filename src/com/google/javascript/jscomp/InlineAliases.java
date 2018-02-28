@@ -65,6 +65,8 @@ final class InlineAliases implements CompilerPass {
     public void visit(NodeTraversal t, Node n, Node parent) {
       switch (n.getToken()) {
         case VAR:
+        case CONST:
+        case LET:
           if (n.hasOneChild() && t.inGlobalScope()) {
             visitAliasDefinition(n.getFirstChild(), NodeUtil.getBestJSDocInfo(n.getFirstChild()));
           }
@@ -85,7 +87,7 @@ final class InlineAliases implements CompilerPass {
      * the rhs will have already been substituted by the time we record the new alias.
      */
     private void visitAliasDefinition(Node lhs, JSDocInfo info) {
-      if (info != null && info.hasConstAnnotation() && !info.hasTypeInformation()
+      if (isDeclaredConst(lhs, info) && (info == null || !info.hasTypeInformation())
           && lhs.isQualifiedName()) {
         Node rhs = NodeUtil.getRValueOfLValue(lhs);
         if (rhs != null && rhs.isQualifiedName()) {
@@ -100,6 +102,13 @@ final class InlineAliases implements CompilerPass {
           }
         }
       }
+    }
+
+    private boolean isDeclaredConst(Node lhs, JSDocInfo info) {
+      if (info != null && info.hasConstAnnotation()) {
+        return true;
+      }
+      return lhs.getParent().isConst();
     }
 
     private boolean isPrivate(Node nameNode) {
@@ -130,8 +139,7 @@ final class InlineAliases implements CompilerPass {
               return;
             }
 
-            Node newNode =
-                NodeUtil.newQName(compiler, resolveAlias(n.getQualifiedName(), n));
+            Node newNode = NodeUtil.newQName(compiler, resolveAlias(n.getQualifiedName(), n));
 
             // If n is get_prop like "obj.foo" then newNode should use only location of foo, not
             // obj.foo.

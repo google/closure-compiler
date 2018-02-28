@@ -1521,7 +1521,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES6;
+          return ES8_MODULES;
         }
       };
 

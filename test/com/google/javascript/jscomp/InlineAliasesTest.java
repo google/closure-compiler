@@ -247,6 +247,29 @@ public class InlineAliasesTest extends CompilerTestCase {
             "}"));
   }
 
+  public void testShadowedAliasesNotRenamed_withBlockScope() {
+    testSame(
+        lines(
+            "var ns = {};",
+            "ns.Foo = function(){};",
+            "var /** @const */ alias = ns.Foo;",
+            "if (true) {",
+            "  const alias = 5;",
+            "  var x = alias",
+            "}"));
+
+    testSame(
+        lines(
+            "/** @const */",
+            "var x = y;",
+            "if (true) {",
+            "  const x = 123;",
+            "  function g() {",
+            "    return x;",
+            "  }",
+            "}"));
+  }
+
   public void testES6VarAliasClassDeclarationWithNew() {
     test(
         "class Foo{}; var /** @const */ alias = Foo; var x = new alias;",
@@ -462,315 +485,51 @@ public class InlineAliasesTest extends CompilerTestCase {
            "h({name: Foo, val: Foo});"));
   }
 
-  /**
-   * Tests using CONST to show behavior. Compiler inlining support not provided for CONST, may be
-   * implemented later.
-   */
   public void testSimpleConstAliasInJSDoc() {
-    testSame("function Foo(){}; const /** @const */ alias = Foo; /** @type {alias} */ var x;");
+    test(
+        "function Foo(){}; const alias = Foo; /** @type {alias} */ var x;",
+        "function Foo(){}; const alias = Foo; /** @type {Foo} */ var x;");
   }
 
   public void testSimpleConstAliasInCode() {
-    testSame("function Foo(){}; const /** @const */ alias = Foo; var x = new alias;");
-  }
-
-  public void testUnqualifiedHoistedConstAliasesInCode() {
-    testSame(
-        lines(
-            "function Foo(){};",
-            "function Bar(){ const x = alias; };",
-            "const /** @const */ alias = Foo;"));
-  }
-
-  public void testTransitiveConstAliases() {
-    testSame(
-        lines(
-            "/** @const */ const ns = {};",
-            "/** @constructor */ ns.Foo = function() {};",
-            "/** @constructor */ ns.Foo.Bar = function() {};",
-            "const /** @const */ alias = ns.Foo;",
-            "const /** @const */ alias2 = alias.Bar;",
-            "var x = new alias2"));
-  }
-
-  public void testUnqualifiedConstAliasChains() {
-    testSame(
-        lines(
-            "/** @constructor */ var Foo = function() {};",
-            "const /** @const */ alias1 = Foo;",
-            "const /** @const */ alias2 = alias1;",
-            "var x = new alias2"));
-  }
-
-  public void testQualifiedConstAliasChains() {
-    testSame(
-        lines(
-            "/** @const */ const ns = {};",
-            "/** @constructor */ ns.Foo = function() {};",
-            "const /** @const */ alias1 = ns.Foo;",
-            "const /** @const */ alias2 = alias1;",
-            "var x = new alias2"));
-  }
-
-  public void testConstAliasedEnums() {
-    testSame("/** @enum {number} */ var E = { A : 1 }; const /** @const */ alias = E.A; alias;");
-  }
-
-  public void testES6ConstAliasClassDeclarationWithNew() {
-    testSame("class Foo{}; const /** @const */ alias = Foo; var x = new alias;");
-  }
-
-  public void testES6ConstAliasClassDeclarationWithoutNew() {
-    testSame("class Foo{}; const /** @const */ alias = Foo; var x = alias;");
-  }
-
-  public void testConstArrayDestructuringVarAssign() {
-    testSame(
-        lines(
-            "var Foo = class {};",
-            "const /** @const */ A = Foo;",
-            "var a = [5, A];",
-            "var [one, two] = a;"));
-  }
-
-  public void testConstArrayDestructuringFromFunction() {
-    testSame(
-        lines(
-            "var Foo = class {};",
-            "const /** @const */ A = Foo;",
-            "function f() {",
-            "  return [A, 3];",
-            "}",
-            "var a, b;",
-            "[a, b] = f();"));
-  }
-
-  public void testConstObjectDestructuringBasicAssign() {
-    testSame(
-        lines(
-            "var Foo = class {};",
-            "const /** @const */ A = Foo;",
-            "var o = {p: A, q: 5};",
-            "var {p, q} = o;"));
-  }
-
-  public void testConstObjectDestructuringAssignWithoutDeclaration() {
-    testSame(
-        lines(
-            "var Foo = class {};", "const /** @const */ A = Foo;", "({a, b} = {a: A, b: A});"));
-  }
-
-  public void testConstObjectDestructuringAssignNewVarNames() {
-    testSame(
-        lines(
-            "var Foo = class {};",
-            "const /** @const */ A = Foo;",
-            "var o = {p: A, q: true};",
-            "var {p: newName1, q: newName2} = o;"));
-  }
-
-  public void testConstObjectDestructuringDefaultVals() {
-    testSame(
-        lines(
-            "var Foo = class {};",
-            "const /** @const */ A = Foo;",
-            "var {a = A, b = A} = {a: 13};"));
-  }
-
-  public void testConstArrayDestructuringWithParameters() {
-    testSame(
-        lines(
-            "var Foo = class {};",
-            "const /** @const */ A = Foo;",
-            "function f([name, val]) {",
-            "   console.log(name, val);",
-            "}",
-            "f([A, A]);"));
-  }
-
-  public void testConstObjectDestructuringWithParameters() {
-    testSame(
-        lines(
-            "var Foo = class {};",
-            "const /** @const */ A = Foo;",
-            "function g({",
-            "   name: n,",
-            "   val: v",
-            "}) {",
-            "   console.log(n, v);",
-            "}",
-            "g({",
-            "   name: A,",
-            "   val: A",
-            "});"));
-  }
-
-  public void testConstObjectDestructuringWithParametersAndStyleShortcut() {
-    testSame(
-        lines(
-            "var Foo = class {};",
-            "const /** @const */ A = Foo;",
-            "function h({",
-            "   name,",
-            "   val",
-            "}) {",
-            "   console.log(name, val);",
-            "}",
-            "h({name: A, val: A});"));
+    test(
+        "function Foo(){}; const alias = Foo; var x = new alias;",
+        "function Foo(){}; const alias = Foo; var x = new Foo;");
   }
 
   /**
-   * Tests using LET to show behavior. Compiler inlining support not provided for LET, may be
-   * implemented later.
+   * Note: having @const annotating a let is very strange style, but it's very little extra work
+   * to support it.
    */
   public void testSimpleLetAliasInJSDoc() {
-    testSame("function Foo(){}; let /** @const */ alias = Foo; /** @type {alias} */ var x;");
+    test(
+        "function Foo(){}; let /** @const */ alias = Foo; /** @type {alias} */ var x;",
+        "function Foo(){}; let /** @const */ alias = Foo; /** @type {Foo} */ var x;");
   }
 
   public void testSimpleLetAliasInCode() {
-    testSame("function Foo(){}; let /** @const */ alias = Foo; var x = new alias;");
+    test(
+        "function Foo(){}; let /** @const */ alias = Foo; var x = new alias;",
+        "function Foo(){}; let /** @const */ alias = Foo; var x = new Foo;");
   }
 
-  public void testUnqualifiedHoistedLetAliasesInCode() {
-    testSame(
-        lines(
-            "function Foo(){};",
-            "function Bar(){ var x = alias; };",
-            "let /** @const */ alias = Foo;"));
+  public void testClassExtendsAlias1() {
+    test(
+        "function Foo() {} const alias = Foo; class Bar extends alias {}",
+        "function Foo() {} const alias = Foo; class Bar extends Foo {}");
   }
 
-  public void testTransitiveLetAliases() {
-    testSame(
-        lines(
-            "/** @const */ var ns = {};",
-            "/** @constructor */ ns.Foo = function() {};",
-            "/** @constructor */ ns.Foo.Bar = function() {};",
-            "let /** @const */ alias = ns.Foo;",
-            "let /** @const */ alias2 = alias.Bar;",
-            "var x = new alias2"));
+  public void testClassExtendsAlias2() {
+    test(
+        "var ns = {}; ns.Foo = function () {}; const alias = ns.Foo; class Bar extends alias {}",
+        "var ns = {}; ns.Foo = function () {}; const alias = ns.Foo; class Bar extends ns.Foo {}");
   }
 
-  public void testUnqualifiedLetAliasChains() {
-    testSame(
-        lines(
-            "/** @constructor */ var Foo = function() {};",
-            "let /** @const */ alias1 = Foo;",
-            "let /** @const */ alias2 = alias1;",
-            "var x = new alias2"));
+  public void testBlockScopedAlias() {
+    testSame("function Foo() {} if (true) { const alias = Foo; alias; }");
   }
 
-  public void testQualifiedLetAliasChains() {
-    testSame(
-        lines(
-            "/** @const */ var ns = {};",
-            "/** @constructor */ ns.Foo = function() {};",
-            "let /** @const */ alias1 = ns.Foo;",
-            "let /** @const */ alias2 = alias1;",
-            "var x = new alias2"));
-  }
-
-  public void testLetAliasedEnums() {
-    testSame("/** @enum {number} */ var E = { A : 1 }; let /** @const */ alias = E.A; alias;");
-  }
-
-  public void testES6LetAliasClassDeclarationWithoutNew() {
-    testSame("class Foo{}; let /** @const */ alias = Foo; var x = alias;");
-  }
-
-  public void testArrayDestructuringLetAssign() {
-    testSame(
-        lines(
-            "var Foo = class {};",
-            "let /** @const */ A = Foo;",
-            "var a = [5, A];",
-            "var [one, two] = a;"));
-  }
-
-  public void testLetArrayDestructuringFromFunction() {
-    testSame(
-        lines(
-            "var Foo = class {};",
-            "let /** @const */ A = Foo;",
-            "function f() {",
-            "  return [A, 3];",
-            "}",
-            "var a, b;",
-            "[a, b] = f();"));
-  }
-
-  public void testLetObjectDestructuringBasicAssign() {
-    testSame(
-        lines(
-            "var Foo = class {};",
-            "let /** @const */ A = Foo;",
-            "var o = {p: A, q: 5};",
-            "var {p, q} = o;"));
-  }
-
-  public void testWithLetObjectDestructuringAssignWithoutDeclaration() {
-    testSame(
-        lines(
-            "var Foo = class {};",
-            "let /** @const */ A = Foo;",
-            "({a, b} = {a: A, b: A});"));
-  }
-
-  public void testLetObjectDestructuringAssignNewVarNames() {
-    testSame(
-        lines(
-            "var Foo = class {};",
-            "let /** @const */ A = Foo;",
-            "var o = {p: A, q: true};",
-            "var {p: newName1, q: newName2} = o;"));
-  }
-
-  public void testLetObjectDestructuringDefaultVals() {
-    testSame(
-        lines(
-            "var Foo = class {};",
-            "let /** @const */ A = Foo;", 
-            "var {a = A, b = A} = {a: 13};"));
-  }
-
-  public void testLetArrayDestructuringWithParameter() {
-    testSame(
-        lines(
-            "var Foo = class {};",
-            "let /** @const */ A = Foo;",
-            "function f([name, val]) {",
-            "   console.log(name, val);",
-            "}",
-            "f([A, A]);"));
-  }
-
-  public void testLetObjectDestructuringWithParameters() {
-    testSame(
-        lines(
-            "var Foo = class {};",
-            "let /** @const */ A = Foo;",
-            "function g({",
-            "   name: n,",
-            "   val: v",
-            "}) {",
-            "   console.log(n, v);",
-            "}",
-            "g({",
-            "   name: A,",
-            "   val: A",
-            "});"));
-  }
-
-  public void testLetObjectDestructuringWithParametersAndStyleShortcut() {
-    testSame(
-        lines(
-            "var Foo = class {};",
-            "let /** @const */ A = Foo;",
-            "function h({",
-            "   name,",
-            "   val",
-            "}) {",
-            "   console.log(name, val);",
-            "}",
-            "h({name: A, val: A});"));
+  public void testVarAliasDeclaredInBlockScope() {
+    testSame("function Foo() {} { var /** @const */ alias = Foo; alias; }");
   }
 }
