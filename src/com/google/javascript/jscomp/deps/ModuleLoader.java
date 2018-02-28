@@ -44,8 +44,10 @@ import javax.annotation.Nullable;
  */
 public final class ModuleLoader {
 
-  public static final DiagnosticType MODULE_CONFLICT = DiagnosticType.warning(
-      "JSC_MODULE_CONFLICT", "File has both goog.module and ES6 modules: {0}");
+  public static final DiagnosticType MODULE_CONFLICT =
+      DiagnosticType.warning(
+          "JSC_MODULE_CONFLICT",
+          "File cannot be a combination of goog.provide, goog.module, and/or ES6 module: {0}");
 
   /** According to the spec, the forward slash should be the delimiter on all platforms. */
   public static final String MODULE_SLASH = ModuleNames.MODULE_SLASH;

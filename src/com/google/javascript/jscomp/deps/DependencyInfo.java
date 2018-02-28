@@ -16,11 +16,13 @@
 
 package com.google.javascript.jscomp.deps;
 
+import com.google.auto.value.AutoValue;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
+import com.google.errorprone.annotations.Immutable;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -35,6 +37,110 @@ import java.util.Map;
  */
 public interface DependencyInfo extends Serializable {
 
+  /** A dependency link between two files, e.g. goog.require('namespace'), import 'file'; */
+  @AutoValue
+  @Immutable
+  abstract class Require implements Serializable {
+    public static final Require BASE = googRequireSymbol("goog");
+
+    public enum Type {
+      /** Standard goog.require call for a symbol from a goog.provide or goog.module. */
+      GOOG_REQUIRE_SYMBOL,
+      /**
+       * goog.require call with a path argument. Currently only supported in goog.modules for ES6
+       * modules.
+       */
+      GOOG_REQUIRE_PATH,
+      /** ES6 import statement. */
+      ES6_IMPORT,
+      /** Parsed from an existing Closure dependency file. */
+      PARSED_FROM_DEPS,
+      /** CommonJS require() call. */
+      COMMON_JS,
+      /** Compiler module dependencies. */
+      COMPILER_MODULE
+    }
+
+    public static ImmutableList<String> asSymbolList(Iterable<Require> requires) {
+      return ImmutableList.copyOf(
+          Iterables.transform(
+              requires,
+              new Function<Require, String>() {
+                @Override
+                public String apply(Require input) {
+                  return input.getSymbol();
+                }
+              }));
+    }
+
+    public static Require googRequireSymbol(String symbol) {
+      return builder()
+          .setRawText(symbol)
+          .setSymbol(symbol)
+          .setType(Type.GOOG_REQUIRE_SYMBOL)
+          .build();
+    }
+
+    public static Require googRequirePath(String symbol, String rawPath) {
+      return builder()
+          .setRawText(rawPath)
+          .setSymbol(symbol)
+          .setType(Type.GOOG_REQUIRE_PATH)
+          .build();
+    }
+
+    public static Require es6Import(String symbol, String rawPath) {
+      return builder().setRawText(rawPath).setSymbol(symbol).setType(Type.ES6_IMPORT).build();
+    }
+
+    public static Require commonJs(String symbol, String rawPath) {
+      return builder().setRawText(rawPath).setSymbol(symbol).setType(Type.COMMON_JS).build();
+    }
+
+    public static Require compilerModule(String symbol) {
+      return builder().setRawText(symbol).setSymbol(symbol).setType(Type.COMPILER_MODULE).build();
+    }
+
+    public static Require parsedFromDeps(String symbol) {
+      return builder().setRawText(symbol).setSymbol(symbol).setType(Type.PARSED_FROM_DEPS).build();
+    }
+
+    private static Builder builder() {
+      return new AutoValue_DependencyInfo_Require.Builder();
+    }
+
+    protected abstract Builder toBuilder();
+
+    public Require withSymbol(String symbol) {
+      return toBuilder().setSymbol(symbol).build();
+    }
+
+    /**
+     * @return symbol the symbol provided by another {@link DependencyInfo}'s {@link
+     *     DependencyInfo#getProvides()}
+     */
+    public abstract String getSymbol();
+
+    /**
+     * @return the raw text of the import string as it appears in the file. Used mostly for error
+     *     reporting.
+     */
+    public abstract String getRawText();
+
+    public abstract Type getType();
+
+    @AutoValue.Builder
+    abstract static class Builder {
+      public abstract Builder setType(Type value);
+
+      public abstract Builder setRawText(String rawText);
+
+      public abstract Builder setSymbol(String value);
+
+      public abstract Require build();
+    }
+  }
+
   /** Gets the unique name / path of this file. */
   String getName();
 
@@ -45,7 +151,9 @@ public interface DependencyInfo extends Serializable {
   ImmutableList<String> getProvides();
 
   /** Gets the symbols required by this file. */
-  ImmutableList<String> getRequires();
+  ImmutableList<Require> getRequires();
+
+  ImmutableList<String> getRequiredSymbols();
 
   /** Gets the symbols weakly required by this file. (i.e. for typechecking only) */
   ImmutableList<String> getWeakRequires();
@@ -64,6 +172,11 @@ public interface DependencyInfo extends Serializable {
     @Override public boolean isModule() {
       return "goog".equals(getLoadFlags().get("module"));
     }
+
+    @Override
+    public ImmutableList<String> getRequiredSymbols() {
+      return Require.asSymbolList(getRequires());
+    }
   }
 
   /** Utility methods. */
@@ -79,7 +192,7 @@ public interface DependencyInfo extends Serializable {
           .append("', ");
       writeJsArray(out, info.getProvides());
       out.append(", ");
-      writeJsArray(out, info.getRequires());
+      writeJsArray(out, Require.asSymbolList(info.getRequires()));
       Map<String, String> loadFlags = info.getLoadFlags();
       if (!loadFlags.isEmpty()) {
         out.append(", ");

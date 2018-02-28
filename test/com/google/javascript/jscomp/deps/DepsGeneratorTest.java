@@ -40,13 +40,19 @@ public final class DepsGeneratorTest extends TestCase {
     errorManager = new PrintStreamErrorManager(System.err);
   }
 
-  public void testEs6Modules() throws Exception {
+  // TODO(johnplaisted): This should eventually be an error. For now people are relying on this
+  // behavior for interop / ordering. Until we have official channels for these allow this behavior,
+  // but don't encourage it.
+  public void testEs6ModuleWithGoogProvide() throws Exception {
     List<SourceFile> srcs = new ArrayList<>();
-    srcs.add(SourceFile.fromCode("/base/javascript/foo/foo.js", "import '../closure/goog/array';"));
-    srcs.add(SourceFile.fromCode("/base/javascript/closure/goog/array.js", "export var array;"));
+    srcs.add(
+        SourceFile.fromCode(
+            "/base/javascript/foo/foo.js",
+                "goog.provide('my.namespace');\nimport '../closure/goog/es6.js';"));
+    srcs.add(SourceFile.fromCode("/base/javascript/closure/goog/es6.js", "export var es6;"));
     DepsGenerator depsGenerator =
         new DepsGenerator(
-            ImmutableList.<SourceFile>of(),
+            ImmutableList.of(),
             srcs,
             DepsGenerator.InclusionStrategy.ALWAYS,
             "/base/javascript/closure",
@@ -54,7 +60,44 @@ public final class DepsGeneratorTest extends TestCase {
             new ModuleLoader(
                 null,
                 ImmutableList.of("/base/"),
-                ImmutableList.<DependencyInfo>of(),
+                ImmutableList.of(),
+                ModuleLoader.PathResolver.ABSOLUTE,
+                ModuleLoader.ResolutionMode.BROWSER));
+    String output = depsGenerator.computeDependencyCalls();
+
+    assertWarnings(
+        "File cannot be a combination of goog.provide, goog.module, and/or ES6 "
+            + "module: javascript/foo/foo.js");
+
+    // Write the output.
+    assertWithMessage("There should be output").that(output).isNotEmpty();
+
+    // Write the expected output.
+    String expected =
+        LINE_JOINER.join(
+            "goog.addDependency('../foo/foo.js', ['my.namespace'], "
+                + "['goog/es6.js'], {'lang': 'es6', 'module': 'es6'});",
+            "goog.addDependency('goog/es6.js', [], " + "[], {'lang': 'es6', 'module': 'es6'});",
+            "");
+
+    assertEquals(expected, output);
+  }
+
+  public void testEs6Modules() throws Exception {
+    List<SourceFile> srcs = new ArrayList<>();
+    srcs.add(SourceFile.fromCode("/base/javascript/foo/foo.js", "import '../closure/goog/es6';"));
+    srcs.add(SourceFile.fromCode("/base/javascript/closure/goog/es6.js", "export var es6;"));
+    DepsGenerator depsGenerator =
+        new DepsGenerator(
+            ImmutableList.of(),
+            srcs,
+            DepsGenerator.InclusionStrategy.ALWAYS,
+            "/base/javascript/closure",
+            errorManager,
+            new ModuleLoader(
+                null,
+                ImmutableList.of("/base/"),
+                ImmutableList.of(),
                 ModuleLoader.PathResolver.ABSOLUTE,
                 ModuleLoader.ResolutionMode.BROWSER));
     String output = depsGenerator.computeDependencyCalls();
@@ -67,13 +110,139 @@ public final class DepsGeneratorTest extends TestCase {
     // Write the expected output.
     String expected =
         LINE_JOINER.join(
-            "goog.addDependency('../foo/foo.js', ['module$javascript$foo$foo'], "
-                + "['module$javascript$closure$goog$array'], {'lang': 'es6', 'module': 'es6'});",
-            "goog.addDependency('goog/array.js', ['module$javascript$closure$goog$array'], "
-                + "[], {'lang': 'es6', 'module': 'es6'});",
+            "goog.addDependency('../foo/foo.js', [], "
+                + "['goog/es6.js'], {'lang': 'es6', 'module': 'es6'});",
+            "goog.addDependency('goog/es6.js', [], " + "[], {'lang': 'es6', 'module': 'es6'});",
             "");
 
     assertEquals(expected, output);
+  }
+
+  public void testGoogPathRequireForEs6ModuleFromGoogModule() throws Exception {
+    List<SourceFile> srcs = new ArrayList<>();
+    srcs.add(
+        SourceFile.fromCode(
+            "/base/javascript/foo/foo.js",
+            LINE_JOINER.join(
+                "goog.module('foo');", "const es6 = goog.require('../closure/goog/es6.js');")));
+    srcs.add(SourceFile.fromCode("/base/javascript/closure/goog/es6.js", "export var es6;"));
+    DepsGenerator depsGenerator =
+        new DepsGenerator(
+            ImmutableList.of(),
+            srcs,
+            DepsGenerator.InclusionStrategy.ALWAYS,
+            "/base/javascript/closure",
+            errorManager,
+            new ModuleLoader(
+                null,
+                ImmutableList.of("/base/"),
+                ImmutableList.of(),
+                ModuleLoader.PathResolver.ABSOLUTE,
+                ModuleLoader.ResolutionMode.BROWSER));
+    String output = depsGenerator.computeDependencyCalls();
+
+    assertNoWarnings();
+
+    // Write the output.
+    assertWithMessage("There should be output").that(output).isNotEmpty();
+
+    // Write the expected output.
+    String expected =
+        LINE_JOINER.join(
+            "goog.addDependency('../foo/foo.js', ['foo'], "
+                + "['goog/es6.js'], {'lang': 'es6', 'module': 'goog'});",
+            "goog.addDependency('goog/es6.js', [], " + "[], {'lang': 'es6', 'module': 'es6'});",
+            "");
+
+    assertEquals(expected, output);
+  }
+
+  public void testGoogPathRequireForEs6ModuleInDepsFileFromGoogModule() throws Exception {
+    ImmutableList<SourceFile> deps =
+        ImmutableList.of(
+            SourceFile.fromCode(
+                "deps.js",
+                "goog.addDependency('goog/es6.js', [], [], {'lang': 'es6', 'module': 'es6'})"));
+    ImmutableList<SourceFile> srcs =
+        ImmutableList.of(
+            SourceFile.fromCode(
+                "/base/javascript/foo/foo.js",
+                LINE_JOINER.join(
+                    "goog.module('foo');", "const es6 = goog.require('../closure/goog/es6.js');")));
+    DepsGenerator depsGenerator =
+        new DepsGenerator(
+            deps,
+            srcs,
+            DepsGenerator.InclusionStrategy.ALWAYS,
+            "/base/javascript/closure",
+            errorManager,
+            new ModuleLoader(
+                null,
+                ImmutableList.of("/base/"),
+                ImmutableList.of(),
+                ModuleLoader.PathResolver.ABSOLUTE,
+                ModuleLoader.ResolutionMode.BROWSER));
+    String output = depsGenerator.computeDependencyCalls();
+
+    assertNoWarnings();
+
+    // Write the output.
+    assertWithMessage("There should be output").that(output).isNotEmpty();
+
+    // Write the expected output.
+    String expected =
+        LINE_JOINER.join(
+            "goog.addDependency('../foo/foo.js', ['foo'], "
+                + "['goog/es6.js'], {'lang': 'es6', 'module': 'goog'});",
+            "",
+            "// Included from: deps.js",
+            "goog.addDependency('goog/es6.js', [], [], {'lang': 'es6', 'module': 'es6'});",
+            "");
+
+    assertEquals(expected, output);
+  }
+
+  public void testGoogPathRequireForGoogModuleFromGoogModuleIsInvalid() throws Exception {
+    List<SourceFile> srcs = new ArrayList<>();
+    srcs.add(
+        SourceFile.fromCode(
+            "/base/javascript/foo/foo.js",
+            LINE_JOINER.join(
+                "goog.module('foo');",
+                "const examplemodule = goog.require('../closure/goog/examplemodule.js');")));
+    srcs.add(
+        SourceFile.fromCode(
+            "/base/javascript/closure/goog/examplemodule.js",
+            "goog.module('goog.examplemodule');"));
+
+    doErrorMessagesRun(
+        ImmutableList.of(),
+        srcs,
+        true /* fatal */,
+        "Cannot goog.require \"/base/javascript/closure/goog/examplemodule.js\" by path. It is "
+            + "not an ES6 module.");
+  }
+
+  public void testGoogPathRequireForGoogModuleFromEs6ModuleIsInvalid() throws Exception {
+    List<SourceFile> srcs = new ArrayList<>();
+    srcs.add(
+        SourceFile.fromCode(
+            "/base/javascript/foo/foo.js",
+            LINE_JOINER.join(
+                "const examplemodule = goog.require('../closure/goog/examplemodule.js');",
+                "export default examplemodule;")));
+    srcs.add(
+        SourceFile.fromCode(
+            "/base/javascript/closure/goog/examplemodule.js",
+            "goog.module('goog.examplemodule');"));
+
+    doErrorMessagesRun(
+        ImmutableList.of(),
+        srcs,
+        true /* fatal */,
+        "Cannot goog.require \"/base/javascript/closure/goog/examplemodule.js\" by path. It is "
+            + "not an ES6 module.",
+        "Cannot goog.require by path outside of a goog.module.");
   }
 
   /**
@@ -294,15 +463,15 @@ public final class DepsGeneratorTest extends TestCase {
 
     String output = depsGenerator.computeDependencyCalls();
 
-    assertWithMessage("There should be output files").that(output).isNotEmpty();
     assertNoWarnings();
+    assertWithMessage("There should be output files").that(output).isNotEmpty();
 
     return output;
   }
 
   private void doErrorMessagesRun(
-      List<SourceFile> deps, List<SourceFile> srcs, boolean fatal,
-      String errorMessage) throws Exception {
+      List<SourceFile> deps, List<SourceFile> srcs, boolean fatal, String... errorMessages)
+      throws Exception {
 
     DepsGenerator depsGenerator =
         new DepsGenerator(
@@ -321,10 +490,10 @@ public final class DepsGeneratorTest extends TestCase {
 
     if (fatal) {
       assertWithMessage("No output should have been created.").that(output).isNull();
-      assertError(errorMessage);
+      assertErrors(errorMessages);
     } else {
       assertWithMessage("Output should have been created.").that(output).isNotNull();
-      assertWarning(errorMessage);
+      assertWarnings(errorMessages);
     }
   }
 
@@ -441,6 +610,49 @@ public final class DepsGeneratorTest extends TestCase {
         "No dependencies found in file");
   }
 
+  public void testUnknownEs6Module() throws Exception {
+    SourceFile src1 = SourceFile.fromCode("src1.js", "import './missing.js';\n");
+
+    doErrorMessagesRun(
+        ImmutableList.of(),
+        ImmutableList.of(src1),
+        true /* fatal */,
+        "Could not find file \"./missing.js\".");
+  }
+
+  public void testGoogPathRequireFromNonModuleIsInvalid() throws Exception {
+    List<SourceFile> srcs = new ArrayList<>();
+    srcs.add(
+        SourceFile.fromCode(
+            "/base/javascript/foo/foo.js",
+            LINE_JOINER.join(
+                "goog.provide('foo');",
+                "const array = goog.require('../closure/goog/array.js');")));
+    srcs.add(SourceFile.fromCode("/base/javascript/closure/goog/array.js", "export var array;"));
+
+    doErrorMessagesRun(
+        ImmutableList.of(),
+        srcs,
+        true /* fatal */,
+        "Cannot goog.require by path outside of a goog.module.");
+  }
+
+  public void testGoogPathRequireBetweenEs6ModulesIsInvalid() throws Exception {
+    List<SourceFile> srcs = new ArrayList<>();
+    srcs.add(
+        SourceFile.fromCode(
+            "/base/javascript/foo/foo.js",
+            "export var foo; const array = goog.require('../closure/goog/array.js');"));
+    srcs.add(SourceFile.fromCode("/base/javascript/closure/goog/array.js", "export var array;"));
+
+    doErrorMessagesRun(
+        ImmutableList.of(),
+        srcs,
+        true /* fatal */,
+        "Use ES6 import rather than goog.require to import ES6 module "
+            + "\"/base/javascript/closure/goog/array.js\".");
+  }
+
   private void assertErrorWarningCount(int errorCount, int warningCount) {
     if (errorManager.getErrorCount() != errorCount) {
       fail(String.format("Expected %d errors but got\n%s",
@@ -456,14 +668,18 @@ public final class DepsGeneratorTest extends TestCase {
     assertErrorWarningCount(0, 0);
   }
 
-  private void assertWarning(String message) {
-    assertErrorWarningCount(0, 1);
-    assertThat(errorManager.getWarnings()[0].description).isEqualTo(message);
+  private void assertWarnings(String... messages) {
+    assertErrorWarningCount(0, messages.length);
+    for (int i = 0; i < messages.length; i++) {
+      assertThat(errorManager.getWarnings()[i].description).isEqualTo(messages[i]);
+    }
   }
 
-  private void assertError(String message) {
-    assertErrorWarningCount(1, 0);
-    assertThat(errorManager.getErrors()[0].description).isEqualTo(message);
+  private void assertErrors(String... messages) {
+    assertErrorWarningCount(messages.length, 0);
+    for (int i = 0; i < messages.length; i++) {
+      assertThat(errorManager.getErrors()[i].description).isEqualTo(messages[i]);
+    }
   }
 
   private static void assertContains(String part, String whole) {

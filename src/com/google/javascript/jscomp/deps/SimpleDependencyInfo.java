@@ -50,8 +50,11 @@ public abstract class SimpleDependencyInfo extends DependencyInfo.Base {
 
     public abstract Builder setProvides(Collection<String> provides);
     public abstract Builder setProvides(String... provides);
-    public abstract Builder setRequires(Collection<String> requires);
-    public abstract Builder setRequires(String... requires);
+
+    public abstract Builder setRequires(Collection<Require> requires);
+
+    public abstract Builder setRequires(Require... requires);
+
     public abstract Builder setWeakRequires(Collection<String> weakRequires);
     public abstract Builder setWeakRequires(String... weakRequires);
     public abstract Builder setLoadFlags(Map<String, String> loadFlags);
