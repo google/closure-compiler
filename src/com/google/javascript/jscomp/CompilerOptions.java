@@ -2479,7 +2479,7 @@ public class CompilerOptions implements Serializable {
   }
 
   public boolean shouldPreservesGoogProvidesAndRequires() {
-    return this.preserveClosurePrimitives || this.shouldGenerateTypedExterns();
+    return this.preserveClosurePrimitives;
   }
 
   public boolean shouldPreserveGoogModule() {
