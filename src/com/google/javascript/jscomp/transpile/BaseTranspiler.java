@@ -156,6 +156,7 @@ public final class BaseTranspiler implements Transpiler {
     @Override
     public CompileResult compile(Path path, String code) {
       CompilerOptions options = new CompilerOptions();
+      options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT);
       options.setSourceMapOutputPath("/dev/null");
       options.setSourceMapIncludeSourcesContent(true);
       options.setPrettyPrint(true);
