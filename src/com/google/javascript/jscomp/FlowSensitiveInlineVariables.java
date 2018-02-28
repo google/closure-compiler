@@ -441,55 +441,7 @@ class FlowSensitiveInlineVariables implements CompilerPass, ScopedCallback {
         return false;
       }
 
-      // We give up inlining stuff with R-Value that has:
-      // 1) GETPROP, GETELEM,
-      // 2) anything that creates a new object.
-      // 3) a direct reference to a catch expression.
-      // 4) a reference to a variable not defined in the use's scope
-      // Example:
-      // var x = a.b.c; j.c = 1; print(x);
-      // Inlining print(a.b.c) is not safe - consider if j were an alias to a.b.
-      // TODO(user): We could get more accuracy by looking more in-detail
-      // what j is and what x is trying to into to.
-      // TODO(johnlenz): rework catch expression handling when we
-      // have lexical scope support so catch expressions don't
-      // need to be special cased.
-      if (NodeUtil.has(
-          def.getLastChild(),
-          new Predicate<Node>() {
-            @Override
-            public boolean apply(Node input) {
-              switch (input.getToken()) {
-                case GETELEM:
-                case GETPROP:
-                case ARRAYLIT:
-                case OBJECTLIT:
-                case REGEXP:
-                case NEW:
-                  return true;
-                case NAME:
-                  Var var = scope.getSlot(input.getString());
-                  if (var != null && var.getParentNode().isCatch()) {
-                    return true;
-                  } else if (var == null) {
-                    return true;
-                  }
-                  // fall through
-                default:
-                  break;
-              }
-              return false;
-            }
-          },
-          new Predicate<Node>() {
-            @Override
-            public boolean apply(Node input) {
-              // Recurse if the node is not a function.
-              // TODO(b/73559627): we need to check inside functions for references to block-scoped
-              // variables.
-              return !input.isFunction();
-            }
-          })) {
+      if (!isRhsSafeToInline(scope)) {
         return false;
       }
 
@@ -621,6 +573,77 @@ class FlowSensitiveInlineVariables implements CompilerPass, ScopedCallback {
           };
 
       NodeTraversal.traverseEs6(compiler, cfgNode, gatherCb);
+    }
+
+    /**
+     * Check if the definition we're considering inline has anything that makes inlining unsafe
+     * (that hasn't already been caught).
+     *
+     * @param usageScope The scope we will inline the variable into.
+     */
+    private boolean isRhsSafeToInline(Scope usageScope) {
+      // Don't inline definitions with an R-Value that has:
+      // 1) GETPROP, GETELEM,
+      // 2) anything that creates a new object.
+      // Example:
+      // var x = a.b.c; j.c = 1; print(x);
+      // Inlining print(a.b.c) is not safe - consider if j were an alias to a.b.
+      if (NodeUtil.has(
+          def.getLastChild(),
+          new Predicate<Node>() {
+            @Override
+            public boolean apply(Node input) {
+              switch (input.getToken()) {
+                case GETELEM:
+                case GETPROP:
+                case ARRAYLIT:
+                case OBJECTLIT:
+                case REGEXP:
+                case NEW:
+                  return true; // unsafe to inline.
+                default:
+                  break;
+              }
+              return false;
+            }
+          },
+          new Predicate<Node>() {
+            @Override
+            public boolean apply(Node input) {
+              // Recurse if the node is not a function.
+              return !input.isFunction();
+            }
+          })) {
+        return false;
+      }
+
+      // Don't inline definitions with an rvalue referencing names that are not declared in the
+      // usage's scope. (Unlike the above check, this includes names referenced inside function
+      // expressions in the rvalue).
+      // e.g. the name "a" below in the definition of "b":
+      //   {
+      //     let a = 3;
+      //     var b = a;
+      //   }
+      // return b;   // "a" is not declared in this scope so we can't inline this to "return a;"
+      if (NodeUtil.has(
+          def.getLastChild(),
+          new Predicate<Node>() {
+            @Override
+            public boolean apply(Node input) {
+              if (input.isName()) {
+                String name = input.getString();
+                if (!name.isEmpty() && !usageScope.isDeclared(name, true)) {
+                  return true; // unsafe to inline.
+                }
+              }
+              return false;
+            }
+          },
+          Predicates.<Node>alwaysTrue())) {
+        return false;
+      }
+      return true;
     }
   }
 

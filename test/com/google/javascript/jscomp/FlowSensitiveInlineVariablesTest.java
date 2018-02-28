@@ -319,6 +319,10 @@ public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase  {
            "var k = z;");
   }
 
+  public void testInlineExpressions14() {
+    inline("var a = function() {}; var b = a;", "var a; var b = function() {}");
+  }
+
   public void testNoInlineIfDefinitionMayNotReach() {
     noInline("var x; if (x=1) {} x;");
   }
@@ -345,8 +349,8 @@ public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase  {
     noInline("try { } catch (x) { print(x) }");
   }
 
-  public void testNoInlineGetProp() {
-    // We don't know if j alias a.b
+  public void testNoInlineGetProp1() {
+    // We don't know if j aliases a.b
     noInline("var x = a.b.c; j.c = 1; print(x);");
   }
 
@@ -356,11 +360,12 @@ public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase  {
 
   public void testNoInlineGetProp3() {
     // Anything inside a function is fine.
-    inline("var x = function(){1 * a.b.c}; print(x);",
-           "var x; print(function(){1 * a.b.c});");
+    inline(
+        "var a = {b: {}}; var x = function(){1 * a.b.c}; print(x);",
+        "var a = {b: {}}; var x; print(function(){1 * a.b.c});");
   }
 
-  public void testNoInlineGetEle() {
+  public void testNoInlineGetElem() {
     // Again we don't know if i = j
     noInline("var x = a[i]; a[j] = 2; print(x); ");
   }
@@ -758,11 +763,7 @@ public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase  {
         "}",
         "alert(JSCompiler_inline_result);"));
 
-    // TODO(b/73559627): don't inline "g" because "value" is not defined out of the block.
-    // This causes a VarCheck error in a full compile.
-    inline(
-        lines("{ let value = 1; var g = () => value; } return g;"),
-        lines("{ let value = 1; var g;               } return () => value;"));
+    noInline("{ let value = 1; var g = () => value; } return g;");
   }
 
   public void testInlineInGenerators() {
