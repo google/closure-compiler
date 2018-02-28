@@ -128,6 +128,27 @@ public final class StatementFusionTest extends CompilerTestCase  {
     fuseSame("a;b;c;do{}while(x)");
   }
 
+  public void testNoFuseIntoBlock() {
+    // Never fuse a statement into a block that contains let/const/class declarations, or you risk
+    // colliding variable names. (unless the AST is normalized).
+    fuse("a; {b;}", "{a,b;}");
+    fuse("a; {b; var a = 1;}", "{a,b; var a = 1;}");
+    fuseSame("a; { b; let a = 1; }");
+    fuseSame("a; { b; const a = 1; }");
+    fuseSame("a; { b; class a {} }");
+    fuseSame("a; { b; function a() {} }");
+    fuseSame("a; { b; label: let a = 1; }");
+    fuseSame("a; { b; const otherVariable = 1; }");
+
+    enableNormalize();
+    test(
+        "function f(a) { if (COND) { a; { b; let a = 1; } } }",
+        "function f(a) { if (COND) { { a,b; let a$jscomp$1 = 1; } } }");
+    test(
+        "function f(a) { if (COND) { a; { b; let otherVariable = 1; } } }",
+        "function f(a) { if (COND) {  { a,b; let otherVariable = 1; } } }");
+  }
+
   public void testFavorComma1() {
     favorsCommas = true;
     test("a;b;c", "a,b,c");
