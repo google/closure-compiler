@@ -26,6 +26,14 @@ import com.google.javascript.rhino.jstype.StaticTypedSlot;
 
 /**
  * {@link AbstractVar} subclass for use with {@link TypedScope}.
+ *
+ * <p>Note that this class inherits its {@link #equals} and {@link #hashCode}
+ * implementations from {@link ScopedName}, which does not include any type
+ * information.  This is necessary because {@code Var}-keyed maps are used
+ * across multiple top scopes, but it comes with the caveat that if {@code
+ * TypedVar} instances are stored in a set, the type information is at risk
+ * of disappearing if an untyped (or differently typed) var is added for the
+ * same symbol.
  */
 public class TypedVar extends AbstractVar<TypedScope, TypedVar>
     implements StaticTypedSlot<JSType>, StaticTypedRef<JSType> {
