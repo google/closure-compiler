@@ -1336,7 +1336,8 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
         lines(
             "goog.provide('a.b.c.d.e.f.g');",
             "",
-            "a.b.c.d.e.f.g.Foo = class {};"));
+            "a.b.c.d.e.f.g.Foo = class {};"),
+        warning(ConvertToTypedInterface.GOOG_SCOPE_HIDDEN_TYPE));
 
     test(
         lines(
@@ -1354,7 +1355,8 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
         lines(
             "goog.provide('a.b.c.d.e.f.g');",
             "",
-            "a.b.c.d.e.f.g.Foo = class {};"));
+            "a.b.c.d.e.f.g.Foo = class {};"),
+    warning(ConvertToTypedInterface.GOOG_SCOPE_HIDDEN_TYPE));
   }
 
   public void testDestructuringDoesntCrash() {

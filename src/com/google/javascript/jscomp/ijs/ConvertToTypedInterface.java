@@ -57,6 +57,13 @@ public class ConvertToTypedInterface implements CompilerPass {
           "JSC_CONSTANT_WITHOUT_EXPLICIT_TYPE",
           "Constants in top-level should have types explicitly specified.");
 
+  static final DiagnosticType GOOG_SCOPE_HIDDEN_TYPE =
+      DiagnosticType.warning(
+          "JSC_GOOG_SCOPE_HIDDEN_TYPE",
+          "Please do not use goog.scope to hide declarations.\n"
+      + "It is preferable to either create an @private namespaced declaration, or migrate "
+              + "to goog.module.");
+
   private static final ImmutableSet<String> CALLS_TO_PRESERVE =
       ImmutableSet.of(
           "goog.addSingletonGetter",
@@ -541,6 +548,10 @@ public class ConvertToTypedInterface implements CompilerPass {
       if ("$jscomp".equals(rootName(name))) {
         // These are created by goog.scope processing, but clash with each other
         // and should not be depended on.
+        if (decl.getRhs() != null && decl.getRhs().isClass()
+            || decl.getJsDoc() != null && decl.getJsDoc().containsTypeDefinition()) {
+          compiler.report(JSError.make(decl.getLhs(), GOOG_SCOPE_HIDDEN_TYPE));
+        }
         return true;
       }
       // This looks like an update rather than a declaration in this file.
