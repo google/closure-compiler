@@ -996,34 +996,12 @@ angular.Scope.prototype.$on = function(name, listener) {};
 
 
 /**
- * @type {!Object}
+ * @type {{
+ *     full:string, major:number, minor:number, dot:number, codeName:string}}
  */
-angular.version = {};
+angular.version;
 
-/**
- * @type {string}
- */
-angular.version.full = '';
 
-/**
- * @type {number}
- */
-angular.version.major = 0;
-
-/**
- * @type {number}
- */
-angular.version.minor = 0;
-
-/**
- * @type {number}
- */
-angular.version.dot = 0;
-
-/**
- * @type {string}
- */
-angular.version.codeName = '';
 
 /******************************************************************************
  * $anchorScroll Service
