@@ -21,7 +21,6 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMultiset;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 import com.google.common.collect.Multiset;
@@ -419,7 +418,7 @@ public class DepsGenerator {
       Map<String, DependencyInfo> providesMap,
       boolean isFromDepsFile) {
     for (DependencyInfo depInfo : depInfos) {
-      List<String> provides = Lists.newArrayList(depInfo.getProvides());
+      List<String> provides = new ArrayList<>(depInfo.getProvides());
 
       // Add a munged symbol to the provides map so that lookups by path requires work as intended.
       if (isFromDepsFile) {
