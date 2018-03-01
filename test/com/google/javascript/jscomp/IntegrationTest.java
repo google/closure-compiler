@@ -3312,7 +3312,7 @@ public final class IntegrationTest extends IntegrationTestCase {
             "      getType.toString.apply(functionToCheck) === '[object Function]';",
             "};");
     String result =
-        "isFunction = function(a){ var b={}; return a && '[object Function]' === b.b.a(a); }";
+        "isFunction = function(a){ var b={}; return a && '[object Function]' === b.a.apply(a); }";
 
     test(options, code, result);
   }
@@ -4873,6 +4873,40 @@ public final class IntegrationTest extends IntegrationTestCase {
             "}",
             "SetCustomData1(window, 'foo', 'bar');"),
         "window._customData.foo='bar';");
+  }
+
+  public void testSpreadArgumentsPassedToSuperDoesNotPreventRemoval() {
+    CompilerOptions options = createCompilerOptions();
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+
+    // Create a noninjecting compiler avoid comparing all the polyfill code.
+    useNoninjectingCompiler = true;
+
+    // include externs definitions for the stuff that would have been injected
+    ImmutableList.Builder<SourceFile> externsList = ImmutableList.builder();
+    externsList.addAll(externs);
+    externsList.add(SourceFile.fromCode("extraExterns", "var $jscomp = {};"));
+    externs = externsList.build();
+
+    test(
+        options,
+        lines(
+            "", // preserve newlines
+            "class A {",
+            "  constructor(a, b) {",
+            "    this.a = a;",
+            "    this.b = b;",
+            "  }",
+            "}",
+            "class B extends A {",
+            "  constructor() {",
+            "    super(...arguments);",
+            "  }",
+            "}",
+            "var b = new B();"),
+        "");
   }
 
   public void testUnnecessaryBackslashInStringLiteral() {

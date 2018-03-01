@@ -16,6 +16,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkState;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
@@ -237,6 +238,7 @@ public final class EarlyEs6ToEs3Converter implements Callback, HotSwapCompilerPa
       name.setJSDocInfo(builder.build());
     }
 
+    // TODO(b/74074478): Use a general utility method instead of an inlined loop.
     Node newArr = IR.var(IR.name(REST_PARAMS), IR.arraylit());
     functionBody.addChildToFront(newArr.useSourceInfoIfMissingFromForTree(restParam));
     Node init = IR.var(IR.name(REST_INDEX), IR.number(restIndex));
@@ -282,64 +284,217 @@ public final class EarlyEs6ToEs3Converter implements Callback, HotSwapCompilerPa
    *     new Function.prototype.bind.apply(F, [].concat($jscomp.arrayFromIterable(args)))
    */
   private void visitArrayLitOrCallWithSpread(Node node, Node parent) {
-    checkArgument(node.isCall() || node.isArrayLit() || node.isNew());
+    if (node.isArrayLit()) {
+      visitArrayLitWithSpread(node, parent);
+    } else if (node.isCall()) {
+      visitCallWithSpread(node, parent);
+    } else {
+      checkArgument(node.isNew(), node);
+      visitNewWithSpread(node, parent);
+    }
+  }
+
+  /**
+   * Extracts child nodes from an array literal, call or new node that may contain spread operators
+   * into a list of nodes that may be concatenated with Array.concat() to get an array.
+   *
+   * <p>Example: [a, b, ...x, c, ...arguments] returns a list containing [ [a, b],
+   * $jscomp.arrayFromIterable(x), [c], $jscomp.arrayFromIterable(arguments) ]
+   *
+   * <p>IMPORTANT: Call and New nodes must have the first, callee, child removed already.
+   *
+   * <p>Note that all elements of the returned list will be one of:
+   *
+   * <ul>
+   *   <li>array literal
+   *   <li>$jscomp.arrayFromIterable(spreadExpression)
+   * </ul>
+   *
+   * TODO(bradfordcsmith): When this pass moves after type checking, we can use type information to
+   * avoid unnecessary calls to $jscomp.arrayFromIterable().
+   */
+  private List<Node> extractSpreadGroups(Node parentNode) {
+    checkArgument(parentNode.isCall() || parentNode.isArrayLit() || parentNode.isNew());
     List<Node> groups = new ArrayList<>();
     Node currGroup = null;
-    Node callee = node.isArrayLit() ? null : node.removeFirstChild();
-    Node currElement = node.removeFirstChild();
+    Node currElement = parentNode.removeFirstChild();
     while (currElement != null) {
       if (currElement.isSpread()) {
-        if (currGroup != null) {
-          groups.add(currGroup);
-          currGroup = null;
+        Node spreadExpression = currElement.removeFirstChild();
+        if (spreadExpression.isArrayLit()) {
+          // We can expand an array literal spread in place.
+          if (currGroup == null) {
+            // [...[spread, contents], a, b]
+            // we can use this array lit itself as a group and append following elements to it
+            currGroup = spreadExpression;
+          } else {
+            // [ a, b, ...[spread, contents], c]
+            // Just add contents of this array lit to the group we were already collecting.
+            currGroup.addChildrenToBack(spreadExpression.removeChildren());
+          }
+        } else {
+          // We need to treat the spread expression as a separate group
+          if (currGroup != null) {
+            // finish off and add the group we were collecting before
+            groups.add(currGroup);
+            currGroup = null;
+          }
+
+          groups.add(Es6ToEs3Util.arrayFromIterable(compiler, spreadExpression));
         }
-        groups.add(Es6ToEs3Util.arrayFromIterable(compiler, currElement.removeFirstChild()));
       } else {
         if (currGroup == null) {
           currGroup = IR.arraylit();
         }
         currGroup.addChildToBack(currElement);
       }
-      currElement = node.removeFirstChild();
+      currElement = parentNode.removeFirstChild();
     }
     if (currGroup != null) {
       groups.add(currGroup);
     }
-    Node result = null;
-    Node firstGroup = node.isNew() ? IR.arraylit(IR.nullNode()) : IR.arraylit();
-    Node joinedGroups =
-        IR.call(IR.getprop(firstGroup, IR.string("concat")), groups.toArray(new Node[0]));
-    if (node.isArrayLit()) {
-      result = joinedGroups;
-    } else if (node.isCall()) {
-      if (NodeUtil.mayHaveSideEffects(callee) && callee.isGetProp()) {
-        Node statement = node;
-        while (!NodeUtil.isStatement(statement)) {
-          statement = statement.getParent();
-        }
-        Node freshVar = IR.name(FRESH_SPREAD_VAR + compiler.getUniqueNameIdSupplier().get());
-        Node n = IR.var(freshVar.cloneTree());
-        n.useSourceInfoIfMissingFromForTree(statement);
-        statement.getParent().addChildBefore(n, statement);
-        callee.addChildToFront(IR.assign(freshVar.cloneTree(), callee.removeFirstChild()));
-        result = IR.call(
-            IR.getprop(callee, IR.string("apply")),
-            freshVar,
-            joinedGroups);
-      } else {
-        Node context = callee.isGetProp() ? callee.getFirstChild().cloneTree() : IR.nullNode();
-        result = IR.call(IR.getprop(callee, IR.string("apply")), context, joinedGroups);
-      }
+    return groups;
+  }
+
+  /**
+   * Processes array literals containing spreads.
+   *
+   * <p>Example:
+   *
+   * <pre><code>
+   * [1, 2, ...x, 4, 5] => [1, 2].concat($jscomp.arrayFromIterable(x), [4, 5])
+   * </code></pre>
+   */
+  private void visitArrayLitWithSpread(Node node, Node parent) {
+    checkArgument(node.isArrayLit());
+    List<Node> groups = extractSpreadGroups(node);
+    Node baseArrayLit;
+    if (groups.get(0).isArrayLit()) {
+      baseArrayLit = groups.remove(0);
     } else {
-      if (compiler.getOptions().getLanguageOut() == LanguageMode.ECMASCRIPT3) {
-        // TODO(tbreisacher): Support this in ES3 too by not relying on Function.bind.
-        Es6ToEs3Util.cannotConvert(
-            compiler, node, "\"...\" passed to a constructor (consider using --language_out=ES5)");
-      }
-      Node bindApply = NodeUtil.newQName(compiler,
-          "Function.prototype.bind.apply");
-      result = IR.newNode(IR.call(bindApply, callee, joinedGroups));
+      baseArrayLit = IR.arraylit();
+      // [].concat(g0, g1, g2, ..., gn)
     }
+    Node joinedGroups =
+        groups.isEmpty()
+            ? baseArrayLit
+            : IR.call(IR.getprop(baseArrayLit, IR.string("concat")), groups.toArray(new Node[0]));
+    joinedGroups.useSourceInfoIfMissingFromForTree(node);
+    parent.replaceChild(node, joinedGroups);
+    compiler.reportChangeToEnclosingScope(joinedGroups);
+  }
+
+  /**
+   * Processes calls containing spreads.
+   *
+   * <p>Examples:
+   *
+   * <pre><code>
+   * f(...arr) => f.apply(null, $jscomp.arrayFromIterable(arr))
+   * f(a, ...arr) => f.apply(null, [a].concat($jscomp.arrayFromIterable(arr)))
+   * f(...arr, b) => f.apply(null, [].concat($jscomp.arrayFromIterable(arr), [b]))
+   * </code></pre>
+   */
+  private void visitCallWithSpread(Node node, Node parent) {
+    checkArgument(node.isCall());
+    // must remove callee before extracting argument groups
+    Node callee = node.removeFirstChild();
+    Node joinedGroups;
+    if (node.hasOneChild() && isSpreadOfArguments(node.getOnlyChild())) {
+      // Check for special case of
+      // `foo(...arguments)` and pass `arguments` directly to `foo.apply(null, arguments)`.
+      // We want to avoid calling $jscomp.arrayFromIterable(arguments) for this case,
+      // because it can have side effects, which prevents code removal.
+      // TODO(b/74074478): generalize this to avoid ever calling $jscomp.arrayFromIterable() for
+      // `arguments`.
+      joinedGroups = node.removeFirstChild().removeFirstChild();
+    } else {
+      List<Node> groups = extractSpreadGroups(node);
+      checkState(!groups.isEmpty());
+      if (groups.size() == 1) {
+        // single group can just be passed to apply() as-is
+        // It could be `arguments`, an array literal, or $jscomp.arrayFromIterable(someExpression).
+        joinedGroups = groups.remove(0);
+      } else {
+        // If the first group is an array literal, we can just use that for concatenation,
+        // otherwise use an empty array literal.
+        Node baseArrayLit = groups.get(0).isArrayLit() ? groups.remove(0) : IR.arraylit();
+        joinedGroups =
+            groups.isEmpty()
+                ? baseArrayLit
+                : IR.call(
+                    IR.getprop(baseArrayLit, IR.string("concat")), groups.toArray(new Node[0]));
+      }
+    }
+
+    Node result = null;
+    if (NodeUtil.mayHaveSideEffects(callee) && callee.isGetProp()) {
+      // foo().method(...[a, b, c])
+      //   must convert to
+      // var freshVar;
+      // (freshVar = foo()).method.apply(freshVar, [a, b, c])
+      Node statement = node;
+      while (!NodeUtil.isStatement(statement)) {
+        statement = statement.getParent();
+      }
+      Node freshVar = IR.name(FRESH_SPREAD_VAR + compiler.getUniqueNameIdSupplier().get());
+      Node n = IR.var(freshVar.cloneTree());
+      n.useSourceInfoIfMissingFromForTree(statement);
+      statement.getParent().addChildBefore(n, statement);
+      callee.addChildToFront(IR.assign(freshVar.cloneTree(), callee.removeFirstChild()));
+      result = IR.call(IR.getprop(callee, IR.string("apply")), freshVar, joinedGroups);
+    } else {
+      // foo.method(...[a, b, c]) -> foo.method.apply(foo, [a, b, c]
+      // or
+      // foo(...[a, b, c]) -> foo.apply(null, [a, b, c])
+      Node context = callee.isGetProp() ? callee.getFirstChild().cloneTree() : IR.nullNode();
+      result = IR.call(IR.getprop(callee, IR.string("apply")), context, joinedGroups);
+    }
+    result.useSourceInfoIfMissingFromForTree(node);
+    parent.replaceChild(node, result);
+    compiler.reportChangeToEnclosingScope(result);
+  }
+
+  private boolean isSpreadOfArguments(Node n) {
+    return n.isSpread() && n.getOnlyChild().matchesQualifiedName("arguments");
+  }
+
+  /**
+   * Processes new calls containing spreads.
+   *
+   * <p>Example:
+   *
+   * <pre><code>
+   * new F(...args) =>
+   *     new Function.prototype.bind.apply(F, [].concat($jscomp.arrayFromIterable(args)))
+   * </code></pre>
+   */
+  private void visitNewWithSpread(Node node, Node parent) {
+    checkArgument(node.isNew());
+    // must remove callee before extracting argument groups
+    Node callee = node.removeFirstChild();
+    List<Node> groups = extractSpreadGroups(node);
+    // We need to generate
+    // new (Function.prototype.bind.apply(callee, [null].concat(other, args))();
+    // null stands in for the 'this' arg to bind
+    Node baseArrayLit;
+    if (groups.get(0).isArrayLit()) {
+      baseArrayLit = groups.remove(0);
+    } else {
+      baseArrayLit = IR.arraylit();
+    }
+    baseArrayLit.addChildToFront(IR.nullNode());
+    Node joinedGroups =
+        groups.isEmpty()
+            ? baseArrayLit
+            : IR.call(IR.getprop(baseArrayLit, IR.string("concat")), groups.toArray(new Node[0]));
+    if (compiler.getOptions().getLanguageOut() == LanguageMode.ECMASCRIPT3) {
+      // TODO(tbreisacher): Support this in ES3 too by not relying on Function.bind.
+      Es6ToEs3Util.cannotConvert(
+          compiler, node, "\"...\" passed to a constructor (consider using --language_out=ES5)");
+    }
+    Node bindApply = NodeUtil.newQName(compiler, "Function.prototype.bind.apply");
+    Node result = IR.newNode(IR.call(bindApply, callee, joinedGroups));
     result.useSourceInfoIfMissingFromForTree(node);
     parent.replaceChild(node, result);
     compiler.reportChangeToEnclosingScope(result);
