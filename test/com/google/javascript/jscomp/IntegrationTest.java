@@ -49,6 +49,39 @@ public final class IntegrationTest extends IntegrationTestCase {
   private static final String CLOSURE_COMPILED =
       "var COMPILED = true; var goog$exportSymbol = function() {};";
 
+  public void testIssue2822() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    test(
+        options,
+        lines(
+            // this method will get inlined into the constructor
+            "function classCallCheck(obj, ctor) {",
+            "  if (!(obj instanceof ctor)) {",
+            "    throw new Error('cannot call a class as a function');",
+            "  }",
+            "}",
+            "/** @constructor */",
+            "var C = function InnerC() {",
+            // Before inlining happens RemoveUnusedCode sees one use of InnerC,
+            // which prevents its removal.
+            // After inlining it sees `this instanceof InnerC` as the only use of InnerC.
+            // Make sure RemoveUnusedCode recognizes that the value of InnerC escapes.
+            "  classCallCheck(this, InnerC);",
+            "};",
+            // This creates an instance of InnerC, so RemoveUnusedCode should not replace
+            // `this instanceof InnerC` with `false`.
+            "alert(new C());"),
+        lines(
+            "alert(",
+            "    new function a() {",
+            "      if (!(this instanceof a)) {",
+            "        throw Error(\"cannot call a class as a function\");",
+            "      }",
+            "    })",
+            ""));
+  }
+
   public void testNoInline() {
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);

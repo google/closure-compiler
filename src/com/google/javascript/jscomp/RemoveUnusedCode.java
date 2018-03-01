@@ -1230,7 +1230,12 @@ class RemoveUnusedCode implements CompilerPass {
     if (!nameNode.getString().isEmpty()) {
       // var x = function funcName() {};
       // make sure funcName gets into the varInfoMap so it will be considered for removal.
-      traverseNameNode(nameNode, fparamScope);
+      VarInfo varInfo = traverseNameNode(nameNode, fparamScope);
+      if (NodeUtil.isExpressionResultUsed(function)) {
+        // var f = function g() {};
+        // The f is an alias for g, so g escapes from the scope where it is defined.
+        varInfo.hasNonLocalOrNonLiteralValue = true;
+      }
     }
 
     traverseChildren(paramlist, fparamScope);

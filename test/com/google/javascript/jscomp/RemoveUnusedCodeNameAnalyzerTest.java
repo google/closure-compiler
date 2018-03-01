@@ -36,6 +36,11 @@ public final class RemoveUnusedCodeNameAnalyzerTest extends TypeICompilerTestCas
           "function Object(opt_value) {}",
           "/** @type {Function} */",
           "Object.defineProperties = function() {};",
+          "/**",
+          " * @constructor",
+          " * @param {string} message",
+          " */",
+          "function Error(message) {}",
           "var window, top, console;",
           "var document;",
           "var Function;",
@@ -1331,6 +1336,18 @@ public final class RemoveUnusedCodeNameAnalyzerTest extends TypeICompilerTestCas
             + "  }"
             + "}"
             + "window['f'] = f;");
+  }
+
+  public void testIssue2822() {
+    testSame(
+        lines(
+            "var C = function C() {",
+            "  if (!(this instanceof C)) {",
+            "    throw new Error('not an instance');",
+            "  }",
+            "}",
+            "use(new C());",
+            ""));
   }
 
   public void testWeirdnessOnLeftSideOfPrototype() {
