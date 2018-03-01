@@ -1571,7 +1571,7 @@ class TypeInference
 
     // Scopes sometimes contain inferred type info about qualified names.
     String qualifiedName = n.getQualifiedName();
-    StaticTypedSlot<JSType> var = scope.getSlot(qualifiedName);
+    StaticTypedSlot<JSType> var = qualifiedName != null ? scope.getSlot(qualifiedName) : null;
     if (var != null) {
       JSType varType = var.getType();
       if (varType != null) {
