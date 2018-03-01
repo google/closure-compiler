@@ -215,7 +215,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
   }
 
   @Override
-  public Iterable<TypedVar> getReferences(TypedVar var) {
+  public ImmutableList<TypedVar> getReferences(TypedVar var) {
     return ImmutableList.of(var);
   }
 
