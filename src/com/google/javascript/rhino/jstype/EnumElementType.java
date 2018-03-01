@@ -79,7 +79,13 @@ public class EnumElementType extends ObjectType {
     return enumType;
   }
 
-  @Override public PropertyMap getPropertyMap() {
+  @Override
+  public HasPropertyKind getPropertyKind(String propertyName, boolean autobox) {
+    return primitiveType.getPropertyKind(propertyName, autobox);
+  }
+
+  @Override
+  public PropertyMap getPropertyMap() {
     return primitiveObjectType == null
         ? PropertyMap.immutableEmptyMap()
         : primitiveObjectType.getPropertyMap();

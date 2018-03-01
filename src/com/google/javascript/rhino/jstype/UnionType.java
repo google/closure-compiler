@@ -478,14 +478,33 @@ public class UnionType extends JSType {
   }
 
   @Override
-  public boolean hasProperty(String pname) {
+  public HasPropertyKind getPropertyKind(String pname, boolean autobox) {
+    boolean found = false;
+    boolean always = true;
     for (int i = 0; i < alternatesWithoutStucturalTyping.size(); i++) {
       JSType alternate = alternatesWithoutStucturalTyping.get(i);
-      if (alternate.hasProperty(pname)) {
-        return true;
+      if (alternate.isNullType() || alternate.isVoidType()) {
+        continue;
+      }
+      switch (alternate.getPropertyKind(pname, autobox)) {
+        case KNOWN_PRESENT:
+          found = true;
+          break;
+        case ABSENT:
+          always = false;
+          break;
+        case MAYBE_PRESENT:
+          found = true;
+          always = false;
+          break;
+      }
+      if (found && !always) {
+        break;
       }
     }
-    return false;
+    return found
+        ? (always ? HasPropertyKind.KNOWN_PRESENT : HasPropertyKind.MAYBE_PRESENT)
+        : HasPropertyKind.ABSENT;
   }
 
   @Override

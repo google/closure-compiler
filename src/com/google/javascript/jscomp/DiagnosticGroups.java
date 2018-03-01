@@ -405,7 +405,8 @@ public class DiagnosticGroups {
   public static final DiagnosticGroup STRICT_MISSING_PROPERTIES =
       DiagnosticGroups.registerGroup("strictMissingProperties",
           TypeCheck.STRICT_INEXISTENT_PROPERTY,
-          TypeCheck.STRICT_INEXISTENT_PROPERTY_WITH_SUGGESTION);
+          TypeCheck.STRICT_INEXISTENT_PROPERTY_WITH_SUGGESTION,
+          TypeCheck.STRICT_INEXISTENT_UNION_PROPERTY);
 
   public static final DiagnosticGroup STRICT_PRIMITIVE_OPERATORS =
       DiagnosticGroups.registerGroup("strictPrimitiveOperators",

@@ -72,6 +72,11 @@ public class ProxyObjectType extends ObjectType {
   }
 
   @Override
+  public HasPropertyKind getPropertyKind(String propertyName, boolean autobox) {
+    return referencedType.getPropertyKind(propertyName, autobox);
+  }
+
+  @Override
   PropertyMap getPropertyMap() {
     return referencedObjType == null
         ? PropertyMap.immutableEmptyMap() : referencedObjType.getPropertyMap();

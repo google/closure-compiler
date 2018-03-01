@@ -52,6 +52,7 @@
  *
  * @param {!Function} childCtor Child class.
  * @param {!Function} parentCtor Parent class.
+ * @suppress {strictMissingProperties} 'superClass_' is not defined on Function
  */
 $jscomp.inherits = function(childCtor, parentCtor) {
   childCtor.prototype = $jscomp.objectCreate(parentCtor.prototype);

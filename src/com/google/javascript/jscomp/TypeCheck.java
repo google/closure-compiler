@@ -22,6 +22,7 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.javascript.rhino.jstype.JSTypeNative.ARRAY_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.BOOLEAN_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NULL_TYPE;
+import static com.google.javascript.rhino.jstype.JSTypeNative.NULL_VOID;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NUMBER_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.OBJECT_FUNCTION_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.OBJECT_TYPE;
@@ -120,6 +121,11 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       DiagnosticType.disabled(
           "JSC_STRICT_INEXISTENT_PROPERTY",
           "Property {0} never defined on {1}");
+
+  public static final DiagnosticType STRICT_INEXISTENT_UNION_PROPERTY =
+      DiagnosticType.disabled(
+          "JSC_STRICT_INEXISTENT_UNION_PROPERTY",
+          "Property {0} not defined on all member types of {1}");
 
   static final DiagnosticType STRICT_INEXISTENT_PROPERTY_WITH_SUGGESTION =
       DiagnosticType.disabled(
@@ -1042,9 +1048,23 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
   private void checkPropCreation(NodeTraversal t, Node lvalue) {
     if (lvalue.isGetProp()) {
       JSType objType = getJSType(lvalue.getFirstChild());
-      Node prop = lvalue.getLastChild();
-      if (objType.isStruct() && !objType.hasProperty(prop.getString())) {
-        report(t, prop, ILLEGAL_PROPERTY_CREATION);
+      if (!objType.isEmptyType() && !objType.isUnknownType()) {
+        Node prop = lvalue.getLastChild();
+        String propName = prop.getString();
+        PropDefinitionKind kind = typeRegistry.canPropertyBeDefined(objType, propName);
+        if (!kind.equals(PropDefinitionKind.KNOWN)) {
+          if (objType.isStruct()) {
+            report(t, prop, ILLEGAL_PROPERTY_CREATION);
+          } else {
+            // null checks are reported elsewhere
+            if (!objType.isNoType() && !objType.isUnknownType()
+                && objType.isSubtype(getNativeType(NULL_VOID))) {
+              return;
+            }
+
+            reportMissingProperty(objType, propName, kind, t, lvalue, true);
+          }
+        }
       }
     }
   }
@@ -1514,8 +1534,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
    * *cannot be defined*, whereas a java compiler would check if the
    * property *can be undefined*.
    */
-  private void checkPropertyAccess(JSType childType, String propName,
-      NodeTraversal t, Node n) {
+  private void checkPropertyAccess(JSType childType, String propName, NodeTraversal t, Node n) {
     // If the property type is unknown, check the object type to see if it
     // can ever be defined. We explicitly exclude CHECKED_UNKNOWN (for
     // properties where we've checked that it exists, or for properties on
@@ -1533,30 +1552,29 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
           if (objectType instanceof EnumType) {
             report(t, n, INEXISTENT_ENUM_ELEMENT, propName);
           } else {
-            checkPropertyAccessHelper(objectType, propName, t, n);
+            checkPropertyAccessHelper(objectType, propName, t, n, false);
           }
         }
-
       } else {
-        checkPropertyAccessHelper(childType, propName, t, n);
+        checkPropertyAccessHelper(childType, propName, t, n, false);
       }
+    } else if (childType.isUnionType() && !isLValueGetProp(n)) {
+      checkPropertyAccessHelper(childType, propName, t, n, true);
     }
   }
 
-  private boolean allowLoosePropertyAccessOnNode(Node n) {
+  boolean isLValueGetProp(Node n) {
     Node parent = n.getParent();
-    return NodeUtil.isPropertyTest(compiler, n)
-        // Stub property declaration
-        || (n.isQualifiedName() && parent.isExprResult());
+    return (NodeUtil.isUpdateOperator(parent) || NodeUtil.isAssignmentOp(parent))
+        && parent.getFirstChild() == n;
   }
 
-  private boolean isQNameAssignmentTarget(Node n) {
-    Node parent = n.getParent();
-    return n.isQualifiedName() && parent.isAssign() && parent.getFirstChild() == n;
-  }
-
+  /**
+   * @param strictCheck Whether this is a check that is only performed when "strict missing
+   *    properties" cheks are enabled.
+   */
   private void checkPropertyAccessHelper(
-      JSType objectType, String propName, NodeTraversal t, Node n) {
+      JSType objectType, String propName, NodeTraversal t, Node n, boolean strictCheck) {
     boolean isStruct = objectType.isStruct();
     if (!reportMissingProperties
         || objectType.isEmptyType()
@@ -1569,20 +1587,36 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     }
     // If the property definition is known, but only loosely associated,
     // only report a "strict error" which can be optional as code is migrated.
-    boolean isLooselyAssociated = kind.equals(PropDefinitionKind.LOOSE);
+    boolean isLooselyAssociated = kind.equals(PropDefinitionKind.LOOSE)
+        || kind.equals(PropDefinitionKind.LOOSE_UNION);
     boolean isUnknownType = objectType.isUnknownType();
     if (isLooselyAssociated && isUnknownType) {
       // We still don't want to report this.
       return;
     }
-    boolean isObjectType = objectType.isEquivalentTo(getNativeType(OBJECT_TYPE));
-    boolean lowConfidence = isUnknownType || isObjectType;
     boolean loosePropertyDeclaration = isQNameAssignmentTarget(n) && !isStruct;
     // Traditionally, we would not report a warning for "loose" properties, but we want to be
     // able to be more strict, so introduce an optional warning.
-    boolean strictReport = isLooselyAssociated || loosePropertyDeclaration;
+    boolean strictReport = strictCheck || isLooselyAssociated || loosePropertyDeclaration;
+
+    reportMissingProperty(objectType, propName, kind, t, n, strictReport);
+  }
+
+  private void reportMissingProperty(
+      JSType objectType, String propName, PropDefinitionKind kind, NodeTraversal t, Node n,
+      boolean strictReport) {
+    checkState(n.isGetProp());
+    boolean isUnknownType = objectType.isUnknownType();
+    boolean isObjectType = objectType.isEquivalentTo(getNativeType(OBJECT_TYPE));
+    boolean lowConfidence = isUnknownType || isObjectType;
+
+    boolean isKnownToUnionMember = kind.equals(PropDefinitionKind.LOOSE_UNION);
+
+    // boolean loosePropertyDeclaration = isQNameAssignmentTarget(n) && !isStruct;
+    // Traditionally, we would not report a warning for "loose" properties, but we want to be
+    // able to be more strict, so introduce an optional warning.
     SuggestionPair pair = null;
-    if (!lowConfidence) {
+    if (!lowConfidence && !isKnownToUnionMember) {
       pair = getClosestPropertySuggestion(objectType, propName);
     }
     if (pair != null && pair.distance * 4 < propName.length()) {
@@ -1602,7 +1636,11 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     } else {
       DiagnosticType reportType;
       if (strictReport) {
-        reportType = STRICT_INEXISTENT_PROPERTY;
+        if (isKnownToUnionMember) {
+          reportType = STRICT_INEXISTENT_UNION_PROPERTY;
+        } else {
+          reportType = STRICT_INEXISTENT_PROPERTY;
+        }
       } else if (lowConfidence) {
         reportType = POSSIBLE_INEXISTENT_PROPERTY;
       } else {
@@ -1615,6 +1653,18 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
           propName,
           typeRegistry.getReadableTypeName(n.getFirstChild()));
     }
+  }
+
+  private boolean allowLoosePropertyAccessOnNode(Node n) {
+    Node parent = n.getParent();
+    return NodeUtil.isPropertyTest(compiler, n)
+        // Stub property declaration
+        || (n.isQualifiedName() && parent.isExprResult());
+  }
+
+  private boolean isQNameAssignmentTarget(Node n) {
+    Node parent = n.getParent();
+    return n.isQualifiedName() && parent.isAssign() && parent.getFirstChild() == n;
   }
 
   private static SuggestionPair getClosestPropertySuggestion(

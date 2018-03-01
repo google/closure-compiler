@@ -110,6 +110,12 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         s.getVar("URIError").getType());
   }
 
+  private void disableStrictMissingPropertyChecks() {
+    compiler
+        .getOptions()
+        .setWarningLevel(DiagnosticGroups.STRICT_MISSING_PROPERTIES, CheckLevel.OFF);
+  }
+
   public void testPrivateType() {
     testTypes(
         "/** @private {number} */ var x = false;",
@@ -1227,9 +1233,14 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testPropertyInferredPropagation() {
-    testTypes("/** @return {Object} */function f() { return {}; }\n" +
-         "function g() { var x = f(); if (x.p) x.a = 'a'; else x.a = 'b'; }\n" +
-         "function h() { var x = f(); x.a = false; }");
+    // Checking sloppy property check behavior
+    disableStrictMissingPropertyChecks();
+    testTypes(
+        lines(
+            "/** @return {Object} */",
+            "function f() { return {}; }",
+            "function g() { var x = f(); if (x.p) x.a = 'a'; else x.a = 'b'; }",
+            "function h() { var x = f(); x.a = false; }"));
   }
 
   public void testPropertyInference1() {
@@ -1276,6 +1287,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testPropertyInference5() {
+    disableStrictMissingPropertyChecks();
     // "x_" is a known property of an unknown type.
     testTypes(
         "/** @constructor */ function F() { }" +
@@ -1287,11 +1299,14 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   public void testPropertyInference6() {
     // "x_" is a known property of an unknown type.
     testTypes(
-        "/** @constructor */ function F() { }" +
-        "(new F).x_ = 3;" +
-        "/** @return {string} */" +
-        "F.prototype.bar = function() { return this.x_; };",
-        STRICT_INEXISTENT_PROPERTY); // A warning only if strict properties are enabled.
+        lines(
+            "/** @constructor */ function F() { }",
+            "(new F).x_ = 3;",
+            "/** @return {string} */",
+            "F.prototype.bar = function() { return this.x_; };"),
+        ImmutableList.of(
+            "Property x_ never defined on F",   // definition
+            "Property x_ never defined on F")); // reference
   }
 
   public void testPropertyInference7() {
@@ -1351,6 +1366,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testNoPersistentTypeInferenceForObjectProperties() {
+    disableStrictMissingPropertyChecks();
     testTypes("/** @param {Object} o\n@param {string} x */\n" +
         "function s1(o,x) { o.x = x; }\n" +
         "/** @param {Object} o\n@return {string} */\n" +
@@ -1362,6 +1378,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testNoPersistentTypeInferenceForFunctionProperties() {
+    disableStrictMissingPropertyChecks();
     testTypes("/** @param {Function} o\n@param {string} x */\n" +
         "function s1(o,x) { o.x = x; }\n" +
         "/** @param {Function} o\n@return {string} */\n" +
@@ -1372,28 +1389,177 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         "function g2(o) { return typeof o.x == 'undefined' ? 0 : o.x; }");
   }
 
-  public void testObjectPropertyTypeInferredInLocalScope1() {
-    testTypes("/** @param {!Object} o\n@return {string} */\n" +
-        "function f(o) { o.x = 1; return o.x; }",
-        "inconsistent return type\n" +
-        "found   : number\n" +
-        "required: string");
+  public void testStrictPropertiesOnFunctions2() {
+    testTypes(
+        lines(
+            "/** @param {Function} o\n @param {string} x */",
+            "function s1(o,x) { o.x = x; }"),
+        "Property x never defined on Function");
   }
 
-  public void testObjectPropertyTypeInferredInLocalScope2() {
-    testTypes("/**@param {!Object} o\n@param {number?} x\n@return {string}*/" +
-        "function f(o, x) { o.x = 'a';\nif (x) {o.x = x;}\nreturn o.x; }",
-        "inconsistent return type\n" +
-        "found   : (number|string)\n" +
-        "required: string");
+  public void testStrictPropertiesOnEnum1() {
+    testTypes(
+        lines(
+            "/** @enum {string} */ var E = {S:'s'};",
+            "/** @param {E} e\n @return {string}  */",
+            "function s1(e) { return e.slice(1); }"));
+  }
+
+  public void testStrictPropertiesOnEnum2() {
+    testTypes(
+        lines(
+            "/** @enum {?string} */ var E = {S:'s'};",
+            "/** @param {E} e\n @return {string}  */",
+            "function s1(e) { return e.slice(1); }"));
+  }
+
+  public void testStrictPropertiesOnEnum3() {
+    testTypes(
+        lines(
+            "/** @enum {string} */ var E = {S:'s'};",
+            "/** @param {?E} e\n @return {string}  */",
+            "function s1(e) { return e.slice(1); }"));
+  }
+
+  public void testStrictPropertiesOnEnum4() {
+    testTypes(
+        lines(
+            "/** @enum {?string} */ var E = {S:'s'};",
+            "/** @param {?E} e\n @return {string}  */",
+            "function s1(e) { return e.slice(1); }"));
+  }
+
+  public void testDestructuring() {
+    testTypes(
+        lines(
+            "/** @param {{id:(number|undefined)}=} o */",
+            "function f(o = {}) {",
+            "   const {id} = o;",
+            "}"));
+  }
+
+  public void testObjectPropertyTypeInferredInLocalScope1a() {
+    disableStrictMissingPropertyChecks();
+    testTypes(
+        lines(
+            "/** @param {!Object} o",
+            " * @return {string}",
+            " */",
+            "function f(o) {",
+            "  o.x = 1;",
+            "  return o.x;",
+            "}"),
+        lines(
+            "inconsistent return type",
+            "found   : number",
+            "required: string"));
+  }
+
+  public void testObjectPropertyTypeInferredInLocalScope1b() {
+    // With strict missing properties assigning a unknown property after type
+    // definition causes a warning.
+    testTypes(
+        lines(
+            "/** @param {!Object} o",
+            " * @return {string}",
+            " */",
+            "function f(o) {",
+            "  o.x = 1;",
+            "}"),
+        "Property x never defined on Object");
+  }
+
+  public void testObjectPropertyTypeInferredInLocalScope2a() {
+    // This test is specifically checking loose property check behavior.
+    disableStrictMissingPropertyChecks();
+
+    testTypes(
+        lines(
+            "/**",
+            "  @param {!Object} o",
+            "  @param {number?} x",
+            "  @return {string}",
+            " */",
+            "function f(o, x) {",
+            "  o.x = 'a';",
+            "  if (x) {o.x = x;}",
+            "  return o.x;",
+            "}"),
+        lines(
+            "inconsistent return type",
+            "found   : (number|string)",
+            "required: string"));
+  }
+
+  public void testObjectPropertyTypeInferredInLocalScope2b() {
+    testTypes(
+        lines(
+            "/**",
+            "  @param {!Object} o",
+            "  @param {number?} x",
+            " */",
+            "function f(o, x) {",
+            "  o.x = 'a';",
+            "}"),
+        "Property x never defined on Object");
+  }
+
+  public void testObjectPropertyTypeInferredInLocalScope2c() {
+    testTypes(
+        lines(
+            "/**",
+            "  @param {!Object} o",
+            "  @param {number?} x",
+            " */",
+            "function f(o, x) {",
+            "  if (x) { o.x = x; }",
+            "}"),
+        "Property x never defined on Object");
   }
 
   public void testObjectPropertyTypeInferredInLocalScope3() {
-    testTypes("/**@param {!Object} o\n@param {number?} x\n@return {string}*/" +
-        "function f(o, x) { if (x) {o.x = x;} else {o.x = 'a';}\nreturn o.x; }",
-        "inconsistent return type\n" +
-        "found   : (number|string)\n" +
-        "required: string");
+    disableStrictMissingPropertyChecks();
+
+    // inferrence of undeclared properties
+    testTypes(
+        "/**@param {!Object} o\n@param {number?} x\n@return {string}*/"
+            + "function f(o, x) { if (x) {o.x = x;} else {o.x = 'a';}\nreturn o.x; }",
+        "inconsistent return type\n"
+            + "found   : (number|string)\n"
+            + "required: string");
+  }
+
+  public void testMissingPropertyOfUnion1() {
+    testTypes(
+        "",
+        lines(
+            "/**",
+            "  @param {number|string} obj",
+            "  @return {?}",
+            " */",
+            "function f(obj, x) {",
+            "  return obj.foo;",
+            "}"),
+        "Property foo never defined on (Number|String)",
+        false);
+  }
+
+  public void testMissingPropertyOfUnion2() {
+    testTypes(
+        lines(
+            "/**",
+            "  @param {*=} opt_o",
+            "  @return {string|null}",
+            " */",
+            "function f(opt_o) {",
+            "  if (opt_o) {",
+            "    if (typeof opt_o !== 'string') {",
+            "      return opt_o.toString();",
+            "    }",
+            "  }",
+            "  return null; ",
+            "}"),
+        "Property toString never defined on *");  // ?
   }
 
   public void testMismatchingOverridingInferredPropertyBeforeDeclaredProperty1() {
@@ -1413,6 +1579,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testMismatchingOverridingInferredPropertyBeforeDeclaredProperty3() {
+    disableStrictMissingPropertyChecks();
     testTypes("/** @type {Object} */ var n = {};\n" +
         "/** @constructor */ n.T = function() { this.x = ''; };\n" +
         "/** @type {number} */ n.T.prototype.x = 0;",
@@ -2430,8 +2597,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
     // We want to make sure that 'prop' isn't declared on all objects.
 
     // This test is specifically checking loose property check behavior.
-    compiler.getOptions().setWarningLevel(
-        DiagnosticGroups.STRICT_MISSING_PROPERTIES, CheckLevel.OFF);
+    disableStrictMissingPropertyChecks();
 
     testTypes(
         lines(
@@ -3895,8 +4061,16 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testEnum42b() {
-    compiler.getOptions().setWarningLevel(
-        DiagnosticGroups.STRICT_MISSING_PROPERTIES, CheckLevel.OFF);
+    testTypes(
+        lines(
+            "/** @param {number} x */ function f(x) {}",
+            "/** @enum {!Object} */ var MyEnum = {FOO: {a: 1, b: 2}};",
+            "f(MyEnum.FOO.a);"),
+        "Property a never defined on MyEnum<Object>");
+  }
+
+  public void testEnum42c() {
+    disableStrictMissingPropertyChecks();
 
     testTypes(lines(
         "/** @param {number} x */ function f(x) {}",
@@ -4920,7 +5094,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testInterfaceAssignment8() {
-    compiler.getOptions().setWarningLevel(DiagnosticGroups.STRICT_MISSING_PROPERTIES, CheckLevel.OFF);
+    disableStrictMissingPropertyChecks();
 
     testTypes("/** @interface */var I = function() {};\n" +
         "/** @type {I} */var i;\n" +
@@ -6934,19 +7108,23 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         "required: string");
   }
 
-  public void testGlobalThis2() {
+  public void testGlobalThis2a() {
     // this.alert = 3 doesn't count as a declaration, so this is a warning.
-    testTypes(lines("/** @constructor */ function Bindow() {}",
-        "/** @param {string} msg */ ",
-        "Bindow.prototype.alert = function(msg) {};",
-        "this.alert = 3;",
-        "(new Bindow()).alert(this.alert)"),
-        "Property alert never defined on global this");
+    testTypes(
+        lines(
+            "/** @constructor */ function Bindow() {}",
+            "/** @param {string} msg */ ",
+            "Bindow.prototype.alert = function(msg) {};",
+            "this.alert = 3;",
+            "(new Bindow()).alert(this.alert)"),
+        ImmutableList.of(
+            "Property alert never defined on global this",
+            "Property alert never defined on global this"));
   }
 
   public void testGlobalThis2b() {
     // Only reported if strict property checks are enabled
-    compiler.getOptions().setWarningLevel(DiagnosticGroups.STRICT_MISSING_PROPERTIES, CheckLevel.OFF);
+    disableStrictMissingPropertyChecks();
 
     testTypes(lines("/** @constructor */ function Bindow() {}",
         "/** @param {string} msg */ ",
@@ -6957,6 +7135,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
 
 
   public void testGlobalThis2c() {
+    disableStrictMissingPropertyChecks();
     testTypes("/** @constructor */ function Bindow() {}" +
         "/** @param {string} msg */ " +
         "Bindow.prototype.alert = function(msg) {};" +
@@ -7434,7 +7613,8 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         "Parse error. Namespaces not supported yet (x.y.)");
   }
 
-  public void testIssue61() {
+  public void testIssue61a() {
+    disableStrictMissingPropertyChecks();
     testTypes(
         "var ns = {};" +
         "(function() {" +
@@ -7451,15 +7631,35 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
 
   public void testIssue61b() {
     testTypes(
-        "var ns = {};" +
-        "(function() {" +
-        "  /** @param {string} b */" +
-        "  ns.a = function(b) {};" +
-        "})();" +
-        "ns.a(123);",
-        "actual parameter 1 of ns.a does not match formal parameter\n" +
-        "found   : number\n" +
-        "required: string");
+        lines(
+            "/** @const */ var ns = {};",
+            "(function() {",
+            "  /** @param {string} b */",
+            "  ns.a = function(b) {};",
+            "})();",
+            "ns.a(123);"),
+        ImmutableList.of(
+            "actual parameter 1 of ns.a does not match formal parameter\n"
+                + "found   : number\n"
+                + "required: string"));
+  }
+
+  public void testIssue61c() {
+    // TODO(johnlenz): I'm not sure why the '@const' and inferred const cases are handled
+    // differently.
+    testTypes(
+        lines(
+            "var ns = {};",
+            "(function() {",
+            "  /** @param {string} b */",
+            "  ns.a = function(b) {};",
+            "})();",
+            "ns.a(123);"),
+        ImmutableList.of(
+            "Property a never defined on ns",
+            "actual parameter 1 of ns.a does not match formal parameter\n"
+                + "found   : number\n"
+                + "required: string"));
   }
 
   public void testIssue86() {
@@ -8124,6 +8324,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testBug1859535() {
+    disableStrictMissingPropertyChecks();
     testTypes(
         "/**\n" +
         " * @param {Function} childCtor Child class.\n" +
@@ -8153,6 +8354,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testBug1940591() {
+    disableStrictMissingPropertyChecks();;
     testTypes(
         "/** @type {Object} */" +
         "var a = {};\n" +
@@ -8210,6 +8412,8 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testBug2335992() {
+    disableStrictMissingPropertyChecks();
+
     testTypes(
         "/** @return {*} */ function f() { return 3; }" +
         "var x = f();" +
@@ -8221,7 +8425,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testBug2341812() {
-    compiler.getOptions().setWarningLevel(DiagnosticGroups.STRICT_MISSING_PROPERTIES, CheckLevel.OFF);
+    disableStrictMissingPropertyChecks();
 
     testTypes(
         "/** @interface */" +
@@ -8234,8 +8438,6 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testStrictInterfaceCheck() {
-    compiler.getOptions().setWarningLevel(DiagnosticGroups.STRICT_MISSING_PROPERTIES, CheckLevel.WARNING);
-
     testTypes(
         lines(
             "/** @interface */",
@@ -8421,6 +8623,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testQualifiedNameInference5() {
+    disableStrictMissingPropertyChecks();
     testTypes(
         "var ns = {}; " +
         "(function() { " +
@@ -8445,6 +8648,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testQualifiedNameInference7() {
+    disableStrictMissingPropertyChecks();
     testTypes(
         "var ns = {}; " +
         "(function() { " +
@@ -8459,6 +8663,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testQualifiedNameInference8() {
+    disableStrictMissingPropertyChecks();
     testClosureTypesMultipleWarnings(
         "var ns = {}; " +
         "(function() { " +
@@ -8502,6 +8707,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testQualifiedNameInference11() {
+    disableStrictMissingPropertyChecks();
     testTypes(
         "/** @constructor */ function Foo() {}" +
         "function f() {" +
@@ -8513,17 +8719,20 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testQualifiedNameInference12() {
+    disableStrictMissingPropertyChecks();
     // We should be able to tell that the two 'this' properties
     // are different.
     testTypes(
-        "/** @param {function(this:Object)} x */ function f(x) {}" +
-        "/** @constructor */ function Foo() {" +
-        "  /** @type {number} */ this.bar = 3;" +
-        "  f(function() { this.bar = true; });" +
-        "}");
+        lines(
+            "/** @param {function(this:Object)} x */ function f(x) {}",
+            "/** @constructor */ function Foo() {",
+            "  /** @type {number} */ this.bar = 3;",
+            "  f(function() { this.bar = true; });",
+            "}"));
   }
 
   public void testQualifiedNameInference13() {
+    disableStrictMissingPropertyChecks();
     testTypes(
         "/** @constructor */ function Foo() {}" +
         "function f(z) {" +
@@ -9506,8 +9715,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
     compiler.getOptions().setLanguageIn(CompilerOptions.LanguageMode.ECMASCRIPT_2015);
 
     // This test is specifically checking loose property check behavior.
-    compiler.getOptions().setWarningLevel(
-        DiagnosticGroups.STRICT_MISSING_PROPERTIES, CheckLevel.OFF);
+    disableStrictMissingPropertyChecks();
 
     testTypes(
         "for (var i = 0; i < 10; i++) {" +
@@ -10044,9 +10252,11 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testAnonymousType1() {
-    testTypes("function f() { return {}; }" +
-        "/** @constructor */\n" +
-        "f().bar = function() {};");
+    testTypes(
+        lines(
+             "function f() { return {}; }",
+             "/** @constructor */",
+             "f().bar = function() {};"));
   }
 
   public void testAnonymousType2() {
@@ -10102,21 +10312,62 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testDefinePropertyOnNullableObject1() {
-    testTypes("/** @type {Object} */ var n = {};\n" +
-        "/** @type {number} */ n.x = 1;\n" +
-        "/** @return {boolean} */function f() { return n.x; }",
-        "inconsistent return type\n" +
-        "found   : number\n" +
-        "required: boolean");
+    // checking loose property behavior
+    disableStrictMissingPropertyChecks();
+    testTypes(
+        lines(
+            "/** @type {Object} */ var n = {};",
+            "/** @type {number} */ n.x = 1;",
+            "/** @return {boolean} */ function f() { return n.x; }"),
+        lines(
+            "inconsistent return type",
+            "found   : number",
+            "required: boolean"));
+  }
+
+  public void testDefinePropertyOnNullableObject1a() {
+    testTypes(
+         lines(
+            "/** @const */ var n = {};",
+            "/** @type {number} */ n.x = 1;",
+            "/** @return {boolean} */function f() { return n.x; }"),
+         lines(
+            "inconsistent return type",
+            "found   : number",
+            "required: boolean"));
+  }
+
+  public void testDefinePropertyOnObject() {
+    // checking loose property behavior
+    disableStrictMissingPropertyChecks();;
+    testTypes(
+        lines(
+            "/** @type {!Object} */ var n = {};",
+            "/** @type {number} */ n.x = 1;",
+            "/** @return {boolean} */function f() { return n.x; }"),
+        lines(
+            "inconsistent return type",
+            "found   : number",
+            "required: boolean"));
   }
 
   public void testDefinePropertyOnNullableObject2() {
+    // checking loose property behavior
+    disableStrictMissingPropertyChecks();;
     testTypes("/** @constructor */ var T = function() {};\n" +
         "/** @param {T} t\n@return {boolean} */function f(t) {\n" +
         "t.x = 1; return t.x; }",
         "inconsistent return type\n" +
         "found   : number\n" +
         "required: boolean");
+  }
+
+  public void testDefinePropertyOnNullableObject2b() {
+    testTypes(
+        lines(
+            "/** @constructor */ var T = function() {};",
+            "/** @param {T} t */function f(t) { t.x = 1; }"),
+        "Property x never defined on T");
   }
 
   public void testUnknownConstructorInstanceType1() {
@@ -10241,13 +10492,13 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testAddingMethodsUsingPrototypeIdiomSimpleNamespace() {
+    disableStrictMissingPropertyChecks();
     Node js1Node = parseAndTypeCheck(
         "/** @constructor */function A() {}" +
         "A.prototype.m1 = 5");
 
     ObjectType instanceType = getInstanceType(js1Node);
-    assertEquals(NATIVE_PROPERTIES_COUNT + 1,
-        instanceType.getPropertiesCount());
+    assertEquals(NATIVE_PROPERTIES_COUNT + 2, instanceType.getPropertiesCount());
     checkObjectType(instanceType, "m1", NUMBER_TYPE);
   }
 
@@ -10272,13 +10523,13 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   private void testAddingMethodsUsingPrototypeIdiomComplexNamespace(
       TypeCheckResult p) {
     ObjectType goog = (ObjectType) p.scope.getVar("goog").getType();
-    assertEquals(NATIVE_PROPERTIES_COUNT + 1, goog.getPropertiesCount());
+    assertEquals(NATIVE_PROPERTIES_COUNT + 2, goog.getPropertiesCount());
     JSType googA = goog.getPropertyType("A");
     assertNotNull(googA);
     assertThat(googA).isInstanceOf(FunctionType.class);
     FunctionType googAFunction = (FunctionType) googA;
     ObjectType classA = googAFunction.getInstanceType();
-    assertEquals(NATIVE_PROPERTIES_COUNT + 1, classA.getPropertiesCount());
+    assertEquals(NATIVE_PROPERTIES_COUNT + 2, classA.getPropertiesCount());
     checkObjectType(classA, "m1", NUMBER_TYPE);
   }
 
@@ -10288,8 +10539,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         "A.prototype = {m1: 5, m2: true}");
 
     ObjectType instanceType = getInstanceType(js1Node);
-    assertEquals(NATIVE_PROPERTIES_COUNT + 2,
-        instanceType.getPropertiesCount());
+    assertEquals(NATIVE_PROPERTIES_COUNT + 3, instanceType.getPropertiesCount());
     checkObjectType(instanceType, "m1", NUMBER_TYPE);
     checkObjectType(instanceType, "m2", BOOLEAN_TYPE);
   }
@@ -10326,8 +10576,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
 
     ObjectType instanceType = getInstanceType(js1Node);
     assertEquals("A", instanceType.toString());
-    assertEquals(NATIVE_PROPERTIES_COUNT + 3,
-        instanceType.getPropertiesCount());
+    assertEquals(NATIVE_PROPERTIES_COUNT + 4, instanceType.getPropertiesCount());
     checkObjectType(instanceType, "m1", NUMBER_TYPE);
     checkObjectType(instanceType, "m2", BOOLEAN_TYPE);
     checkObjectType(instanceType, "m3", STRING_TYPE);
@@ -10345,8 +10594,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         "/** @type {boolean} */ A.prototype.m6;\n");
 
     ObjectType instanceType = getInstanceType(js1Node);
-    assertEquals(NATIVE_PROPERTIES_COUNT + 6,
-        instanceType.getPropertiesCount());
+    assertEquals(NATIVE_PROPERTIES_COUNT + 7, instanceType.getPropertiesCount());
     checkObjectType(instanceType, "m1", STRING_TYPE);
     checkObjectType(instanceType, "m2",
         createUnionType(OBJECT_TYPE, NULL_TYPE));
@@ -11248,6 +11496,8 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testPrototypeLoop() {
+    disableStrictMissingPropertyChecks();
+
     testClosureTypesMultipleWarnings(
         suppressMissingProperty("foo") +
         "/** @constructor \n * @extends {T} */var T = function() {};" +
@@ -11268,7 +11518,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testImplementsExtendsLoop() {
-    compiler.getOptions().setWarningLevel(DiagnosticGroups.STRICT_MISSING_PROPERTIES, CheckLevel.OFF);
+    disableStrictMissingPropertyChecks();
 
     testClosureTypesMultipleWarnings(
         suppressMissingProperty("foo") +
@@ -12090,15 +12340,16 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testMissingProperty1a() {
-    testTypes(lines(
-        "/** @constructor */ function Foo() {}",
-        "Foo.prototype.bar = function() { return this.a; };",
-        "Foo.prototype.baz = function() { this.a = 3; };"),
-        "Property a never defined on Foo");
+    testTypes(
+        lines(
+            "/** @constructor */ function Foo() {}",
+            "Foo.prototype.bar = function() { return this.a; };",
+            "Foo.prototype.baz = function() { this.a = 3; };"),
+        ImmutableList.of("Property a never defined on Foo", "Property a never defined on Foo"));
   }
 
   public void testMissingProperty1b() {
-    compiler.getOptions().setWarningLevel(DiagnosticGroups.STRICT_MISSING_PROPERTIES, CheckLevel.OFF);
+    disableStrictMissingPropertyChecks();;
 
     testTypes(
         "/** @constructor */ function Foo() {}" +
@@ -12106,7 +12357,8 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         "Foo.prototype.baz = function() { this.a = 3; };");
   }
 
-  public void testMissingProperty2() {
+  public void testMissingProperty2a() {
+    disableStrictMissingPropertyChecks();
     testTypes(
         "/** @constructor */ function Foo() {}" +
         "Foo.prototype.bar = function() { return this.a; };" +
@@ -12114,17 +12366,27 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         "Property a never defined on Foo");
   }
 
+  public void testMissingProperty2b() {
+    testTypes(
+        lines(
+            "/** @constructor */ function Foo() {}",
+            "Foo.prototype.baz = function() { this.b = 3; };"),
+        "Property b never defined on Foo");
+  }
+
   public void testMissingProperty3a() {
-    testTypes(lines(
-        "/** @constructor */ function Foo() {}",
-        "Foo.prototype.bar = function() { return this.a; };",
-        "(new Foo).a = 3;"),
-        "Property a never defined on Foo");
+    testTypes(
+        lines(
+            "/** @constructor */ function Foo() {}",
+            "Foo.prototype.bar = function() { return this.a; };",
+            "(new Foo).a = 3;"),
+        ImmutableList.of(
+            "Property a never defined on Foo", // method
+            "Property a never defined on Foo")); // global assignment
   }
 
   public void testMissingProperty3b() {
-    compiler.getOptions().setWarningLevel(
-        DiagnosticGroups.STRICT_MISSING_PROPERTIES, CheckLevel.OFF);
+    disableStrictMissingPropertyChecks();
 
     testTypes(lines(
         "/** @constructor */ function Foo() {}",
@@ -12132,12 +12394,21 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         "(new Foo).a = 3;"));
   }
 
-  public void testMissingProperty4() {
+  public void testMissingProperty4a() {
+    disableStrictMissingPropertyChecks();
     testTypes(
         "/** @constructor */ function Foo() {}" +
         "Foo.prototype.bar = function() { return this.a; };" +
         "(new Foo).b = 3;",
         "Property a never defined on Foo");
+  }
+
+  public void testMissingProperty4b() {
+    testTypes(
+        lines(
+            "/** @constructor */ function Foo() {}",
+            "(new Foo).b = 3;"),
+        "Property b never defined on Foo");
   }
 
   public void testMissingProperty5() {
@@ -12158,7 +12429,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testMissingProperty6b() {
-    compiler.getOptions().setWarningLevel(DiagnosticGroups.STRICT_MISSING_PROPERTIES, CheckLevel.OFF);
+    disableStrictMissingPropertyChecks();
 
     testTypes(
         "/** @constructor */ function Foo() {}" +
@@ -12335,30 +12606,37 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         "");
   }
 
-  public void testMissingProperty30() {
+  public void testMissingProperty30a() {
     testTypes(
-        "/** @return {*} */" +
-        "function f() {" +
-        " return {};" +
-        "}" +
-        "f().a = 3;" +
-        "/** @param {Object} y */ function g(y) { return y.a; }",
-        "Property a never defined on Object");
+        lines(
+            "/** @return {*} */",
+            "function f() {",
+            " return {};",
+            "}",
+            "f().a = 3;",
+            "/** @param {Object} y */ function g(y) { return y.a; }"),
+        ImmutableList.of("Property a never defined on *", "Property a never defined on Object"));
+  }
+
+  public void testMissingProperty30b() {
+    disableStrictMissingPropertyChecks();
+    testTypes(
+        "/** @return {*} */"
+            + "function f() {"
+            + " return {};"
+            + "}"
+            + "f().a = 3;"
+            + "/** @param {Object} y */ function g(y) { return y.a; }");
   }
 
   public void testMissingProperty31a() {
-    testTypes(lines(
-        "/** @return {Array|number} */",
-        "function f() {",
-        " return [];",
-        "}",
-        "f().a = 3;",
-        "/** @param {Array} y */ function g(y) { return y.a; }"),
-        "Property a never defined on Array");
+    testTypes(
+        lines("/** @return {Array|number} */", "function f() {", " return [];", "}", "f().a = 3;"),
+        "Property a never defined on (Array|Number)");
   }
 
   public void testMissingProperty31b() {
-    compiler.getOptions().setWarningLevel(DiagnosticGroups.STRICT_MISSING_PROPERTIES, CheckLevel.OFF);
+    disableStrictMissingPropertyChecks();
 
     testTypes(
         "/** @return {Array|number} */" +
@@ -12370,6 +12648,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testMissingProperty32() {
+    disableStrictMissingPropertyChecks();
     testTypes(
         "/** @return {Array|number} */" +
         "function f() {" +
@@ -12396,17 +12675,20 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
 
   public void testMissingProperty35a() {
     // Bar has specialProp defined, so Bar|Baz may have specialProp defined.
-    testTypes(lines(
-        "/** @constructor */ function Foo() {}",
-        "/** @constructor */ function Bar() {}",
-        "/** @constructor */ function Baz() {}",
-        "/** @param {Foo|Bar} x */ function f(x) { x.specialProp = 1; }",
-        "/** @param {Bar|Baz} x */ function g(x) { return x.specialProp; }"),
-        "Property specialProp never defined on (Bar|Baz)");
+    testTypes(
+        lines(
+            "/** @constructor */ function Foo() {}",
+            "/** @constructor */ function Bar() {}",
+            "/** @constructor */ function Baz() {}",
+            "/** @param {Foo|Bar} x */ function f(x) { x.specialProp = 1; }",
+            "/** @param {Bar|Baz} x */ function g(x) { return x.specialProp; }"),
+        ImmutableList.of(
+            "Property specialProp never defined on (Foo|Bar)",
+            "Property specialProp never defined on (Bar|Baz)"));
   }
 
   public void testMissingProperty35b() {
-    compiler.getOptions().setWarningLevel(DiagnosticGroups.STRICT_MISSING_PROPERTIES, CheckLevel.OFF);
+    disableStrictMissingPropertyChecks();
 
     // Bar has specialProp defined, so Bar|Baz may have specialProp defined.
     testTypes(
@@ -12430,7 +12712,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testMissingProperty36b() {
-    compiler.getOptions().setWarningLevel(DiagnosticGroups.STRICT_MISSING_PROPERTIES, CheckLevel.OFF);
+    disableStrictMissingPropertyChecks();
 
     // Foo has baz defined, and SubFoo has bar defined, so some objects with
     // bar may have baz.
@@ -12468,7 +12750,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testMissingProperty37b() {
-    compiler.getOptions().setWarningLevel(DiagnosticGroups.STRICT_MISSING_PROPERTIES, CheckLevel.OFF);
+    disableStrictMissingPropertyChecks();
 
     // This used to emit a missing property warning because we couldn't
     // determine that the inf(Foo, {isVisible:boolean}) == SubFoo.
@@ -12498,23 +12780,53 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         "Property missing never defined on (Foo|Bar)");
   }
 
-  public void testMissingProperty39() {
+  public void testMissingProperty39a() {
+    disableStrictMissingPropertyChecks();
     testTypes(
         "/** @return {string|number} */ function f() { return 3; }" +
         "f().length;");
   }
 
-  public void testMissingProperty40() {
-    testClosureTypes(
-        "goog.addDependency('zzz.js', ['MissingType'], []);" +
-        "/** @param {(Array|MissingType)} x */" +
-        "function f(x) { x.impossible(); }", null);
+  public void testMissingProperty39b() {
+    testTypes(
+        "/** @return {string|number} */ function f() { return 3; }" + "f().length;"
+        // TODO(johnlenz): enable this.
+        //"Property length not defined on all member types of (String|Number)"
+        );
   }
 
-  public void testMissingProperty41() {
+  public void testMissingProperty40a() {
+    testClosureTypes(
+        "goog.addDependency('zzz.js', ['MissingType'], []);"
+            + "/** @param {MissingType} x */"
+            + "function f(x) { x.impossible(); }",
+        null);
+  }
+
+  public void testMissingProperty40b() {
+    testClosureTypes(
+        "goog.addDependency('zzz.js', ['MissingType'], []);"
+            + "/** @param {(Array|MissingType)} x */"
+            + "function f(x) { x.impossible(); }",
+        // TODO(johnlenz): enable this.
+        // "Property impossible not defined on all member types of x"
+        null);
+  }
+
+  public void testMissingProperty41a() {
     testTypes(
-        "/** @param {(Array|Date)} x */" +
-        "function f(x) { if (x.impossible) x.impossible(); }");
+        lines(
+            "/** @param {(Array|Date)} x */",
+            "function f(x) { if (x.impossible) x.impossible(); }"),
+        "Property impossible never defined on (Array|Date)");
+  }
+
+  public void testMissingProperty41b() {
+    disableStrictMissingPropertyChecks();
+    testTypes(
+        lines(
+            "/** @param {(Array|Date)} x */",
+            "function f(x) { if (x.impossible) x.impossible(); }"));
   }
 
 
@@ -13934,8 +14246,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
 
   public void testPropertyCanBeDefinedInObject() {
     // This test is specifically checking loose property check behavior.
-    compiler.getOptions().setWarningLevel(
-        DiagnosticGroups.STRICT_MISSING_PROPERTIES, CheckLevel.OFF);
+    disableStrictMissingPropertyChecks();
     testTypes(
         lines(
             "/** @interface */ function I() {};",
@@ -14673,26 +14984,32 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testNonexistentPropertyAccessStructRecordSubtype() {
-    testTypes(lines(
-        "/**",
-        " * @record",
-        " * @struct",
-        " */",
-        "var A = function() {};",
-        "",
-        "/**",
-        " * @record",
-        " * @struct",
-        " * @extends {A}",
-        " */",
-        "var B = function() {};",
-        "/** @return {void} */ B.prototype.bar = function(){};",
-        "",
-        "/** @param {A} a */",
-        "function foo(a) {",
-        "  if (a.bar) { a.bar(); }",
-        "}"),
-        "Property bar never defined on A", false);
+    disableStrictMissingPropertyChecks();
+
+    testTypes(
+        lines(
+            "/**",
+            " * @record",
+            " * @struct",
+            " */",
+            "var A = function() {};",
+            "",
+            "/**",
+            " * @record",
+            " * @struct",
+            " * @extends {A}",
+            " */",
+            "var B = function() {};",
+            "/** @return {void} */ B.prototype.bar = function(){};",
+            "",
+            "/** @param {A} a */",
+            "function foo(a) {",
+            "  if (a.bar) {",
+            "    a.bar();",
+            "  }",
+            "}"),
+        "Property bar never defined on A",
+        false);
   }
 
 
@@ -14713,8 +15030,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
 
   public void testIssue1024a() {
     // This test is specifically checking loose property check behavior.
-    compiler.getOptions().setWarningLevel(
-        DiagnosticGroups.STRICT_MISSING_PROPERTIES, CheckLevel.OFF);
+    disableStrictMissingPropertyChecks();
     testTypes(
         lines(
             "/** @param {Object} a */",
@@ -17579,7 +17895,9 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         STRICT_INEXISTENT_PROPERTY); // Only if strict warnings are enabled.
   }
 
-  public void testCovarianceForRecordType14() {
+  public void testCovarianceForRecordType14a() {
+    // Verify loose property check behavior
+    disableStrictMissingPropertyChecks();
     testTypesWithExtraExterns(
         lines(
             "/** @interface */",
@@ -17594,7 +17912,24 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
             "ri.x.obj.y();"));
   }
 
+  public void testCovarianceForRecordType14b() {
+    testTypesWithExtraExterns(
+        lines(
+            "/** @interface */",
+            "function I() {}",
+            "/** @constructor */",
+            "function C() {}",
+            "/** @return {undefined} */",
+            "C.prototype.y = function(){};"),
+        lines("/** @type{({x: {obj: I}}|{x: {obj: C}})} */", "var ri;", "ri.x.obj.y();")
+        // TODO(johnlenz): enable this.
+        // "Property y not defined on all member types of (I|C)"
+        );
+  }
+
   public void testCovarianceForRecordType15() {
+    // Verify loose property check behavior
+    disableStrictMissingPropertyChecks();
     testTypesWithExtraExterns(
         lines(
             "/** @constructor */",
@@ -17663,7 +17998,9 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
             "f.z;"));
   }
 
-  public void testCovarianceForRecordType19() {
+  public void testCovarianceForRecordType19a() {
+    // Verify loose property check behavior
+    disableStrictMissingPropertyChecks();
     testTypesWithExtraExterns(
         lines(
             "/** @constructor */",
@@ -17679,6 +18016,25 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         lines(
             "/** @type {(Bar1|Bar2)} */ var b;",
             "var x = b.prop1"));
+  }
+
+  public void testCovarianceForRecordType19b() {
+    testTypesWithExtraExterns(
+        lines(
+            "/** @constructor */",
+            "function Bar1() {}",
+            "/** @type {number} */",
+            "Bar1.prototype.prop;",
+            "/** @type {number} */",
+            "Bar1.prototype.prop1;",
+            "/** @constructor */",
+            "function Bar2() {}",
+            "/** @type {number} */",
+            "Bar2.prototype.prop;"),
+        lines("/** @type {(Bar1|Bar2)} */ var b;", "var x = b.prop1")
+        // TODO(johnlenz): enable this.
+        // "Property prop1 not defined on all member types of (Bar1|Bar2)"
+        );
   }
 
   public void testCovarianceForRecordType20() {
@@ -17730,7 +18086,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testOptimizePropertyMap1b() {
-    compiler.getOptions().setWarningLevel(DiagnosticGroups.STRICT_MISSING_PROPERTIES, CheckLevel.OFF);
+    disableStrictMissingPropertyChecks();
 
     // For non object-literal types such as Function, the behavior doesn't change.
     // The stray property is added as unknown.
@@ -17748,6 +18104,8 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testOptimizePropertyMap2() {
+    disableStrictMissingPropertyChecks();
+
     // Don't add the inferred property to all Foo values.
     testTypes(lines(
         "/** @typedef {{a:number}} */",
@@ -17763,26 +18121,43 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         "Property b never defined on x");
   }
 
+  public void testOptimizePropertyMap2b() {
+    // Here strict missing properties warns, do we want it to?
+    testTypes(
+        lines(
+            "/** @typedef {{a:number}} */",
+            "var Foo;",
+            "function f(/** !Foo */ x) {",
+            "  var y = x;",
+            "  /** @type {number} */",
+            "  y.b = 123;",
+            "}"),
+        "Property b never defined on y");
+  }
+
   public void testOptimizePropertyMap3a() {
     // For @record types, add the stray property to the index as before.
-    testTypes(lines(
-        "/** @record */",
-        "function Foo() {}",
-        "/** @type {number} */",
-        "Foo.prototype.a;",
-        "function f(/** !Foo */ x) {",
-        "  var y = x;",
-        "  /** @type {number} */",
-        "  y.b = 123;",
-        "}",
-        "function g(/** !Foo */ x) {",
-        "  var /** null */ n = x.b;",
-        "}"),
-        "Property b never defined on Foo");
+    testTypes(
+        lines(
+            "/** @record */",
+            "function Foo() {}",
+            "/** @type {number} */",
+            "Foo.prototype.a;",
+            "function f(/** !Foo */ x) {",
+            "  var y = x;",
+            "  /** @type {number} */",
+            "  y.b = 123;",
+            "}",
+            "function g(/** !Foo */ x) {",
+            "  var /** null */ n = x.b;",
+            "}"),
+        ImmutableList.of(
+            "Property b never defined on Foo", // definition
+            "Property b never defined on Foo")); // reference
   }
 
   public void testOptimizePropertyMap3b() {
-    compiler.getOptions().setWarningLevel(DiagnosticGroups.STRICT_MISSING_PROPERTIES, CheckLevel.OFF);
+    disableStrictMissingPropertyChecks();
     // For @record types, add the stray property to the index as before.
     testTypes(lines(
         "/** @record */",
@@ -17824,6 +18199,9 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testOptimizePropertyMap6() {
+    // Checking loose property behavior
+    disableStrictMissingPropertyChecks();
+
     // The stray property doesn't appear on other inline record types.
     testTypes(lines(
         "function f(/** {a:number} */ x) {",
@@ -17860,6 +18238,9 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testOptimizePropertyMap9() {
+    // Checking loose property checks behavior
+    disableStrictMissingPropertyChecks();
+
     // Don't add the stray property to all types that meet with {a: number, c: string}.
     testTypes(lines(
         "/** @constructor */",
@@ -18738,25 +19119,51 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
 
   void testTypes(
       String externs, String js, String description, boolean isError) {
+    testTypes(
+        externs,
+        js,
+        description != null ? ImmutableList.of(description) : ImmutableList.of(),
+        isError);
+  }
+
+  void testTypes(String js, List<String> descriptions) {
+    testTypes(DEFAULT_EXTERNS, js, descriptions, false);
+  }
+
+  void testTypes(String js, List<String> descriptions, boolean isError) {
+    testTypes(DEFAULT_EXTERNS, js, descriptions, isError);
+  }
+
+  void testTypes(String externs, String js, List<String> descriptions, boolean isError) {
     parseAndTypeCheck(externs, js);
 
     JSError[] errors = compiler.getErrors();
-    if (description != null && isError) {
-      assertTrue("expected an error", errors.length > 0);
-      assertEquals(description, errors[0].description);
-      errors = Arrays.asList(errors).subList(1, errors.length).toArray(
-          new JSError[errors.length - 1]);
+    if (!descriptions.isEmpty() && isError) {
+      assertTrue(
+          "expected " + descriptions.size() + " error(s) but got " + errors.length,
+          errors.length >= descriptions.size());
+      for (int i = 0; i < descriptions.size(); i++) {
+        assertEquals(descriptions.get(i), errors[i].description);
+      }
+      errors =
+          Arrays.asList(errors).subList(descriptions.size(), errors.length).toArray(new JSError[0]);
     }
     if (errors.length > 0) {
       fail("unexpected error(s):\n" + LINE_JOINER.join(errors));
     }
 
     JSError[] warnings = compiler.getWarnings();
-    if (description != null && !isError) {
-      assertTrue("expected a warning", warnings.length > 0);
-      assertEquals(description, warnings[0].description);
-      warnings = Arrays.asList(warnings).subList(1, warnings.length).toArray(
-          new JSError[warnings.length - 1]);
+    if (!descriptions.isEmpty() && !isError) {
+      assertTrue(
+          "expected " + descriptions.size() + " warning(s) but got " + warnings.length,
+          warnings.length >= descriptions.size());
+      for (int i = 0; i < descriptions.size(); i++) {
+        assertEquals(descriptions.get(i), warnings[i].description);
+      }
+      warnings =
+          Arrays.asList(warnings)
+              .subList(descriptions.size(), warnings.length)
+              .toArray(new JSError[0]);
     }
     if (warnings.length > 0) {
       fail("unexpected warnings(s):\n" + LINE_JOINER.join(warnings));

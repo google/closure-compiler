@@ -168,8 +168,7 @@ class TypeValidator implements Serializable {
     this.typeRegistry = compiler.getTypeRegistry();
     this.allBitwisableValueTypes =
         typeRegistry.createUnionType(STRING_TYPE, NUMBER_TYPE, BOOLEAN_TYPE, NULL_TYPE, VOID_TYPE);
-    this.nullOrUndefined = typeRegistry.createUnionType(
-        NULL_TYPE, VOID_TYPE);
+    this.nullOrUndefined = typeRegistry.getNativeType(JSTypeNative.NULL_VOID);
   }
 
   /**

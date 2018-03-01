@@ -279,6 +279,7 @@ public abstract class CompilerTestCase extends TestCase {
           " * @type{number}",
           " */",
           "IArrayLike.prototype.length;",
+          "/** @type {?Object} */ Object.prototype.__proto__;",
           "/** @return {string} */",
           "Object.prototype.toString = function() {};",
           "/**",

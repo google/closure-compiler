@@ -514,9 +514,19 @@ public abstract class ObjectType
   }
 
   @Override
-  public boolean hasProperty(String propertyName) {
+  public HasPropertyKind getPropertyKind(String propertyName, boolean autobox) {
     // Unknown types have all properties.
-    return isEmptyType() || isUnknownType() || getSlot(propertyName) != null;
+    return HasPropertyKind.of(isEmptyType() || isUnknownType() || getSlot(propertyName) != null);
+  }
+
+  /**
+   * Checks whether the property whose name is given is present directly on
+   * the object.  Returns false even if it is declared on a supertype.
+   */
+  public HasPropertyKind getOwnPropertyKind(String propertyName) {
+    return getOwnSlot(propertyName) != null
+        ? HasPropertyKind.KNOWN_PRESENT
+        : HasPropertyKind.ABSENT;
   }
 
   /**
@@ -525,7 +535,7 @@ public abstract class ObjectType
    */
   @Override
   public boolean hasOwnProperty(String propertyName) {
-    return getOwnSlot(propertyName) != null;
+    return !getOwnPropertyKind(propertyName).equals(HasPropertyKind.ABSENT);
   }
 
   /**

@@ -906,8 +906,9 @@ public class JSTypeRegistry implements TypeIRegistry {
   /** A tristate value returned from canPropertyBeDefined. */
   public enum PropDefinitionKind {
     UNKNOWN, // The property is not known to be part of this type
-    KNOWN,  // The properties is known to be defined on a type or its super types
-    LOOSE    // The property is loosely associated with a type, typically one of its subtypes
+    KNOWN,   // The properties is known to be defined on a type or its super types
+    LOOSE,   // The property is loosely associated with a type, typically one of its subtypes
+    LOOSE_UNION // The property is loosely associated with a union type
   }
 
   /**
@@ -918,12 +919,28 @@ public class JSTypeRegistry implements TypeIRegistry {
       // We are stricter about "struct" types and only allow access to
       // properties that to the best of our knowledge are available at creation
       // time and specifically not properties only defined on subtypes.
-      return type.hasProperty(propertyName)
-          ? PropDefinitionKind.KNOWN : PropDefinitionKind.UNKNOWN;
+
+      switch (type.getPropertyKind(propertyName)) {
+        case KNOWN_PRESENT:
+          return PropDefinitionKind.KNOWN;
+        case MAYBE_PRESENT:
+          // TODO(johnlenz): return LOOSE_UNION here.
+          return PropDefinitionKind.KNOWN;
+        case ABSENT:
+          return PropDefinitionKind.UNKNOWN;
+      }
     } else {
-      if (!type.isEmptyType() && !type.isUnknownType()
-          && type.hasProperty(propertyName)) {
-        return PropDefinitionKind.KNOWN;
+      if (!type.isEmptyType() && !type.isUnknownType()) {
+        switch (type.getPropertyKind(propertyName)) {
+          case KNOWN_PRESENT:
+            return PropDefinitionKind.KNOWN;
+          case MAYBE_PRESENT:
+            // TODO(johnlenz): return LOOSE_UNION here.
+            return PropDefinitionKind.KNOWN;
+          case ABSENT:
+            // check for loose properties below.
+            break;
+        }
       }
 
       if (typesIndexedByProperty.containsKey(propertyName)) {

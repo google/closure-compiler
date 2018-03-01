@@ -62,4 +62,13 @@ abstract class ValueType extends JSType {
   @Override <T> T visit(RelationshipVisitor<T> visitor, JSType that) {
     return visitor.caseValueType(this, that);
   }
+
+  @Override
+  public HasPropertyKind getPropertyKind(String propertyName, boolean autobox) {
+    if (autobox && isBoxableScalar()) {
+      return autoboxesTo().getPropertyKind(propertyName, autobox);
+    } else {
+      return super.getPropertyKind(propertyName, autobox);
+    }
+  }
 }

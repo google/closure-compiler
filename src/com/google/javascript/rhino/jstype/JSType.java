@@ -40,8 +40,6 @@
 package com.google.javascript.rhino.jstype;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.javascript.rhino.jstype.TernaryValue.FALSE;
-import static com.google.javascript.rhino.jstype.TernaryValue.UNKNOWN;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.HashBasedTable;
@@ -148,12 +146,40 @@ public abstract class JSType implements TypeI {
     return displayName != null && !displayName.isEmpty();
   }
 
+  /** A tristate value returned from canPropertyBeDefined. */
+  public enum HasPropertyKind {
+    ABSENT, // The property is not known to be part of this type
+    KNOWN_PRESENT, // The properties is known to be defined on a type or its super types
+    MAYBE_PRESENT; // The property is loosely associated with a type, typically one of its subtypes
+
+    public static HasPropertyKind of(boolean has) {
+      return has ? KNOWN_PRESENT : ABSENT;
+    }
+  }
+
   /**
    * Checks whether the property is present on the object.
    * @param pname The property name.
    */
-  public boolean hasProperty(String pname) {
-    return false;
+  public HasPropertyKind getPropertyKind(String pname) {
+    return getPropertyKind(pname, true);
+  }
+
+  /**
+   * Checks whether the property is present on the object.
+   * @param pname The property name.
+   * @param autobox Whether to check for the presents on an autoboxed type
+   */
+  public HasPropertyKind getPropertyKind(String pname, boolean autobox) {
+    return HasPropertyKind.ABSENT;
+  }
+
+  /**
+   * Checks whether the property is present on the object.
+   * @param pname The property name.
+   */
+  public final boolean hasProperty(String pname) {
+    return !getPropertyKind(pname, false).equals(HasPropertyKind.ABSENT);
   }
 
   public boolean isNoType() {
@@ -981,7 +1007,7 @@ public abstract class JSType implements TypeI {
    * Algorithm (11.9.3, page 55&ndash;56) of the ECMA-262 specification.<p>
    */
   public final boolean canTestForEqualityWith(JSType that) {
-    return testForEquality(that).equals(UNKNOWN);
+    return testForEquality(that).equals(TernaryValue.UNKNOWN);
   }
 
   /**
@@ -1006,7 +1032,7 @@ public abstract class JSType implements TypeI {
         bType.isNoResolvedType() ||
         aType.isAllType() || aType.isUnknownType() ||
         aType.isNoResolvedType()) {
-      return UNKNOWN;
+      return TernaryValue.UNKNOWN;
     }
 
     boolean aIsEmpty = aType.isEmptyType();
@@ -1015,7 +1041,7 @@ public abstract class JSType implements TypeI {
       if (aIsEmpty && bIsEmpty) {
         return TernaryValue.TRUE;
       } else {
-        return UNKNOWN;
+        return TernaryValue.UNKNOWN;
       }
     }
 
@@ -1049,14 +1075,14 @@ public abstract class JSType implements TypeI {
     // If this is a "Symbol" or that is "symbol" or "Symbol"
     if (aType.isSymbol()) {
       return bType.canCastTo(getNativeType(JSTypeNative.SYMBOL_VALUE_OR_OBJECT_TYPE))
-          ? UNKNOWN
-          : FALSE;
+          ? TernaryValue.UNKNOWN
+          : TernaryValue.FALSE;
     }
 
     if (bType.isSymbol()) {
       return aType.canCastTo(getNativeType(JSTypeNative.SYMBOL_VALUE_OR_OBJECT_TYPE))
-          ? UNKNOWN
-          : FALSE;
+          ? TernaryValue.UNKNOWN
+          : TernaryValue.FALSE;
     }
 
     return null;
