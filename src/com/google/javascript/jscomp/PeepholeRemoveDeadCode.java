@@ -21,7 +21,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.base.Predicate;
-import com.google.common.base.Predicates;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -34,6 +33,37 @@ import javax.annotation.Nullable;
  *
  */
 class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
+
+  private static final Predicate<Node> IS_UNNAMED_BREAK_PREDICATE = new Predicate<Node>() {
+    @Override
+    public boolean apply(Node node) {
+      return node.isBreak() && !node.hasChildren();
+    }
+  };
+
+  private static final Predicate<Node> IS_UNNAMED_CONTINUE_PREDICATE = new Predicate<Node>() {
+    @Override
+    public boolean apply(Node node) {
+      return node.isContinue() && !node.hasChildren();
+    }
+  };
+
+  private static final Predicate<Node> CAN_CONTAIN_BREAK_PREDICATE = new Predicate<Node>() {
+    @Override
+    public boolean apply(Node node) {
+      return !IR.mayBeExpression(node) // Functions are not visited
+          && !NodeUtil.isLoopStructure(node)
+          && !node.isSwitch();
+    }
+  };
+
+  private static final Predicate<Node> CAN_CONTAIN_CONTINUE_PREDICATE = new Predicate<Node>() {
+    @Override
+    public boolean apply(Node node) {
+      return !IR.mayBeExpression(node) // Functions are not visited
+          && !NodeUtil.isLoopStructure(node);
+    }
+  };
 
   // TODO(dcc): Some (all) of these can probably be better achieved
   // using the control flow graph (like CheckUnreachableCode).
@@ -1013,20 +1043,15 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
       return n;
     }
 
-    // TODO(johnlenz): The do-while can be turned into a label with
-    // named breaks and the label optimized away (maybe).
-    if (hasBreakOrContinue(n)) {
+    Node block = NodeUtil.getLoopCodeBlock(n);
+    if (n.getParent().isLabel() || hasUnnamedBreakOrContinue(block)) {
       return n;
     }
 
-    checkState(NodeUtil.isControlStructureCodeBlock(n, n.getFirstChild()));
-    Node block = n.removeFirstChild();
-
-    Node parent =  n.getParent();
-    parent.replaceChild(n, block);
+    Node parent = n.getParent();
+    n.replaceWith(block.detach());
     if (mayHaveSideEffects(cond)) {
-      Node condStatement = IR.exprResult(cond.detach())
-          .srcref(cond);
+      Node condStatement = IR.exprResult(cond.detach()).srcref(cond);
       parent.addChildAfter(condStatement, block);
     }
     compiler.reportChangeToEnclosingScope(parent);
@@ -1044,32 +1069,24 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
     Node body = NodeUtil.getLoopCodeBlock(n);
     if (body.isNormalBlock() && !body.hasChildren()) {
       Node cond = NodeUtil.getConditionExpression(n);
-      Node whileNode =
+      Node forNode =
           IR.forNode(IR.empty().srcref(n),
                      cond.detach(),
                      IR.empty().srcref(n),
-                     body.detach())
-          .srcref(n);
-      n.replaceWith(whileNode);
-      compiler.reportChangeToEnclosingScope(whileNode);
-      return whileNode;
+                     body.detach());
+      n.replaceWith(forNode);
+      compiler.reportChangeToEnclosingScope(forNode);
+      return forNode;
     }
     return n;
   }
 
   /**
-   *
+   * Returns whether a node has any unhandled breaks or continue.
    */
-  static boolean hasBreakOrContinue(Node n) {
-    // TODO(johnlenz): This is overkill as named breaks may refer to outer
-    // loops or labels, and any break my refer to an inner loop.
-    // More generally, this check may be more expensive than we like.
-    return NodeUtil.has(
-        n,
-        Predicates.or(
-            new NodeUtil.MatchNodeType(Token.BREAK),
-            new NodeUtil.MatchNodeType(Token.CONTINUE)),
-        NodeUtil.MATCH_NOT_FUNCTION);
+  static boolean hasUnnamedBreakOrContinue(Node n) {
+    return NodeUtil.has(n, IS_UNNAMED_BREAK_PREDICATE, CAN_CONTAIN_BREAK_PREDICATE)
+        || NodeUtil.has(n, IS_UNNAMED_CONTINUE_PREDICATE, CAN_CONTAIN_CONTINUE_PREDICATE);
   }
 
   /**

@@ -234,6 +234,17 @@ function testDoWhileCapturedLet() {
   assertEquals(5, arr[5]());
 }
 
+function testDoWhileFold() {
+  let x = 1;
+  (function () {
+    do {
+      let x = 2;
+      assertEquals(2, x);
+    } while (x = 10, false);
+  })();
+  assertEquals(10, x);
+}
+
 function testMutatedLoopCapturedLet() {
   const arr = [];
   for (let i = 0; i < 10; i++) {

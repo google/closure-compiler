@@ -76,6 +76,9 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
 
     foldSame("a: { break a; console.log('unreachable'); }");
     foldSame("a: { break a; var x = 1; } x = 2;");
+
+    foldSame("b: { var x = 1; } x = 2;");
+    foldSame("a: b: { var x = 1; } x = 2;");
   }
 
   public void testFoldBlock() {
@@ -254,7 +257,19 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
 
     // Can't fold with break or continues.
     foldSame("do { foo(); continue; } while(0)");
+    foldSame("do { try { foo() } catch (e) { break; } } while (0);");
     foldSame("do { foo(); break; } while(0)");
+    fold("do { while (1) {foo(); continue;} } while(0)", "while (1) {foo(); continue;}");
+    foldSame("l1: do { while (1) { foo() } } while(0)");
+    fold("do { switch (1) { default: foo(); break} } while(0)", "foo();");
+    fold("do { switch (1) { default: foo(); continue} } while(0)",
+        "do { foo(); continue } while(0)");
+
+    fold("l1: { do { x = 1; break l1; } while (0); x = 2; }", "l1: { x = 1; break l1; x = 2;}");
+
+    fold("do { x = 1; } while (x = 0);", "x = 1; x = 0;");
+    fold("let x = 1; (function() { do { let x = 2; } while (x = 10, false); })();",
+        "let x = 1; (function() { { let x = 2 } x = 10 })();");
   }
 
   public void testFoldEmptyDo() {
