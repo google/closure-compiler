@@ -581,7 +581,7 @@ class FlowSensitiveInlineVariables implements CompilerPass, ScopedCallback {
      *
      * @param usageScope The scope we will inline the variable into.
      */
-    private boolean isRhsSafeToInline(Scope usageScope) {
+    private boolean isRhsSafeToInline(final Scope usageScope) {
       // Don't inline definitions with an R-Value that has:
       // 1) GETPROP, GETELEM,
       // 2) anything that creates a new object.
