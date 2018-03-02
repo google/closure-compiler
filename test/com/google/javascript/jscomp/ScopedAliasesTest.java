@@ -1010,7 +1010,7 @@ public final class ScopedAliasesTest extends TypeICompilerTestCase {
             "});"));
   }
 
-  public void testGoogModuleGet() {
+  public void testGoogModuleGet1() {
     test(
         lines(
             "goog.provide('provided');",
@@ -1024,6 +1024,41 @@ public final class ScopedAliasesTest extends TypeICompilerTestCase {
             "goog.provide('provided');",
             "/** @type {!other.name.Foo} */",
             "provided.f = new (goog.module.get('other.name.Foo'));",
+            ""));
+  }
+
+  public void testGoogModuleGet2() {
+    test(
+        lines(
+            "goog.provide('foo.baz');",
+            "",
+            "goog.scope(function() {",
+            "",
+            "const a = goog.module.get('other.thing');",
+            "const b = a.b;",
+            "foo.baz = b",
+            "",
+            "}); // goog.scope"),
+        lines(
+            "goog.provide('foo.baz');",
+            "foo.baz = goog.module.get('other.thing').b;",
+            ""));
+  }
+
+  public void testGoogModuleGet3() {
+    test(
+        lines(
+            "goog.provide('foo.baz');",
+            "",
+            "goog.scope(function() {",
+            "",
+            "const a = goog.module.get('other.thing').b;",
+            "foo.baz = a",
+            "",
+            "}); // goog.scope"),
+        lines(
+            "goog.provide('foo.baz');",
+            "foo.baz = goog.module.get('other.thing').b;",
             ""));
   }
 
