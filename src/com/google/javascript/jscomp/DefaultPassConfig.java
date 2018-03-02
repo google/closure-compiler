@@ -278,7 +278,7 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(convertEs6TypedToEs6);
     }
 
-    if (options.needsTranspilationFrom(ES_NEXT)) {
+    if (options.needsTranspilationFrom(ES2018)) {
       TranspilationPasses.addEs2018Passes(checks);
       checks.add(setFeatureSet(ES8));
     }
