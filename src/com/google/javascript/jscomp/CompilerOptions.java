@@ -3080,12 +3080,6 @@ public class CompilerOptions implements Serializable {
       }
     }
 
-    /** Whether this is ECMAScript 6 or higher. */
-    @Deprecated
-    public boolean isEs6OrHigher() {
-      return this.toFeatureSet().contains(FeatureSet.ES6);
-    }
-
     public static LanguageMode fromString(String value) {
       if (value == null) {
         return null;
@@ -3105,7 +3099,7 @@ public class CompilerOptions implements Serializable {
       }
     }
 
-    FeatureSet toFeatureSet() {
+    public FeatureSet toFeatureSet() {
       switch (this) {
         case ECMASCRIPT3:
           return FeatureSet.ES3;
