@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp.parsing;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -151,7 +153,7 @@ public final class ParserRunner {
       Config config) {
     LanguageMode languageMode = config.languageMode();
     boolean isStrictMode = config.strictMode().isStrict();
-    Mode parserConfigLanguageMode;
+    Mode parserConfigLanguageMode = null;
     switch (languageMode) {
       case TYPESCRIPT:
         parserConfigLanguageMode = Mode.TYPESCRIPT;
@@ -177,12 +179,9 @@ public final class ParserRunner {
       case ES_NEXT:
         parserConfigLanguageMode = Mode.ES_NEXT;
         break;
-
-      default:
-        throw new IllegalStateException("unexpected language mode: " + languageMode);
     }
     return new com.google.javascript.jscomp.parsing.parser.Parser.Config(
-        parserConfigLanguageMode, isStrictMode);
+        checkNotNull(parserConfigLanguageMode), isStrictMode);
   }
 
   // TODO(sdh): this is less useful if we end up needing the node for library version detection
