@@ -235,11 +235,9 @@ final class Es6RewriteGenerators implements HotSwapCompilerPass {
           IR.switchNode(IR.getprop(context.getJsContextNameNode(genFunc), "nextAddress"));
 
       // Prepare a "program" function:
-      //   function($jscomp$generator$context) {
-      //       while ($jscomp$generator$context.nextAddress) {
-      //           switch ($jscomp$generator$context.nextAddress) {
-      //           }
-      //       });
+      //   function ($jscomp$generator$context) {
+      //       do switch ($jscomp$generator$context.nextAddress) {
+      //       } while (0);
       //   }
       Node program =
           IR.function(
@@ -249,10 +247,10 @@ final class Es6RewriteGenerators implements HotSwapCompilerPass {
                   // Without the while loop, OTI assumes the switch statement is only executed
                   // once, which messes up its understanding of the types assigned to variables
                   // within it.
-                  IR.whileNode( // TODO(skill):  Remove while loop when this pass moves after
+                  IR.doNode( // TODO(skill):  Remove do-while loop when this pass moves after
                       // type checking or when OTI is fixed to handle this correctly.
-                      IR.getprop(context.getJsContextNameNode(genFunc), "nextAddress"),
-                      IR.block(switchNode))));
+                      IR.block(switchNode),
+                      IR.number(0))));
 
       // Propagate all suppressions from original generator function to a new "program" function.
       JSDocInfoBuilder jsDocBuilder = new JSDocInfoBuilder(false);
