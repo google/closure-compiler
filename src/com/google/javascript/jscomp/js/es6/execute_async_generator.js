@@ -92,9 +92,8 @@ $jscomp.executeAsyncGenerator = function(generator) {
  *       });
  * }
  * ```
- * @param {function(): !Generator<VALUE|!IThenable<VALUE>>} generatorFunction
- * @return {!Promise<VALUE>}
- * @template VALUE
+ * @param {function(): !Generator<?>} generatorFunction
+ * @return {!Promise<?>}
  * @suppress {reportUnknownTypes}
  */
 $jscomp.asyncExecutePromiseGeneratorFunction = function(generatorFunction) {
