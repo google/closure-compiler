@@ -66,7 +66,11 @@ public final class FeatureSet implements Serializable {
 
   public static final FeatureSet ES8 = ES8_MODULES.without(Feature.MODULES);
 
-  public static final FeatureSet ES_NEXT = ES8_MODULES.with(LangVersion.ES_NEXT.features());
+  public static final FeatureSet ES2018_MODULES = ES8_MODULES.with(LangVersion.ES2018.features());
+
+  public static final FeatureSet ES2018 = ES2018_MODULES.without(Feature.MODULES);
+
+  public static final FeatureSet ES_NEXT = ES2018_MODULES.with(LangVersion.ES_NEXT.features());
 
   public static final FeatureSet TYPESCRIPT =  ES_NEXT.with(LangVersion.TYPESCRIPT.features());
 
@@ -88,6 +92,7 @@ public final class FeatureSet implements Serializable {
     ES6,
     ES7,
     ES8,
+    ES2018,
     ES_NEXT,
     TYPESCRIPT;
 
@@ -146,9 +151,9 @@ public final class FeatureSet implements Serializable {
     ASYNC_FUNCTIONS("async function", LangVersion.ES8),
     TRAILING_COMMA_IN_PARAM_LIST("trailing comma in param list", LangVersion.ES8),
 
-    // features from tc39 https://github.com/tc39/proposal-object-rest-spread
-    OBJECT_LITERALS_WITH_SPREAD("object literals with spread", LangVersion.ES_NEXT),
-    OBJECT_PATTERN_REST("object pattern rest", LangVersion.ES_NEXT),
+    // ES 2018 adds https://github.com/tc39/proposal-object-rest-spread
+    OBJECT_LITERALS_WITH_SPREAD("object literals with spread", LangVersion.ES2018),
+    OBJECT_PATTERN_REST("object pattern rest", LangVersion.ES2018),
 
     // ES6 typed features that are not at all implemented in browsers
     ACCESSIBILITY_MODIFIER("accessibility modifier", LangVersion.TYPESCRIPT),

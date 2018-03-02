@@ -212,8 +212,7 @@ public class Parser {
     public static enum Mode {
       ES3,
       ES5,
-      ES6,
-      ES7,
+      ES6_OR_ES7,
       ES8_OR_GREATER,
       ES_NEXT,
       TYPESCRIPT,

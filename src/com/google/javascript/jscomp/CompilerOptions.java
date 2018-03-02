@@ -3060,6 +3060,9 @@ public class CompilerOptions implements Serializable {
     /** ECMAScript standard approved in 2017. Adds async/await and other syntax */
     ECMASCRIPT_2017,
 
+    /** ECMAScript standard approved in 2018. Adds "..." in object literals/patterns. */
+    ECMASCRIPT_2018,
+
     /** ECMAScript latest draft standard. */
     ECMASCRIPT_NEXT,
 
@@ -3112,6 +3115,8 @@ public class CompilerOptions implements Serializable {
           return FeatureSet.ES7_MODULES;
         case ECMASCRIPT_2017:
           return FeatureSet.ES8_MODULES;
+        case ECMASCRIPT_2018:
+          return FeatureSet.ES2018_MODULES;
         case ECMASCRIPT_NEXT:
           return FeatureSet.ES_NEXT;
         case ECMASCRIPT6_TYPED:

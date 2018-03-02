@@ -1515,7 +1515,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
     mode = LanguageMode.ECMASCRIPT6;
     parseWarning(
         "var {first, ...rest} = foo();",
-        getRequiresEsNextMessage(Feature.OBJECT_PATTERN_REST));
+        getRequiresEs2018Message(Feature.OBJECT_PATTERN_REST));
   }
 
   public void testArrayLiteralDeclarationSpread() {
@@ -1542,12 +1542,12 @@ public final class ParserTest extends BaseJSTypeTestCase {
     parseWarning(
         "var o = {first: 1, ...spread};",
         getRequiresEs6Message(Feature.SPREAD_EXPRESSIONS),
-        getRequiresEsNextMessage(Feature.OBJECT_LITERALS_WITH_SPREAD));
+        getRequiresEs2018Message(Feature.OBJECT_LITERALS_WITH_SPREAD));
 
     mode = LanguageMode.ECMASCRIPT6;
     parseWarning(
         "var o = {first: 1, ...spread};",
-        getRequiresEsNextMessage(Feature.OBJECT_LITERALS_WITH_SPREAD));
+        getRequiresEs2018Message(Feature.OBJECT_LITERALS_WITH_SPREAD));
   }
 
   public void testArrayDestructuringAssignRest() {
@@ -1574,7 +1574,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
     mode = LanguageMode.ECMASCRIPT6;
     parseWarning("var {first, ...rest} = foo();",
-        getRequiresEsNextMessage(Feature.OBJECT_PATTERN_REST));
+        getRequiresEs2018Message(Feature.OBJECT_PATTERN_REST));
   }
 
   public void testArrayDestructuringAssignRestInvalid() {
@@ -3822,8 +3822,8 @@ public final class ParserTest extends BaseJSTypeTestCase {
     return requiresLanguageModeMessage(LanguageMode.ECMASCRIPT6, feature);
   }
 
-  private static String getRequiresEsNextMessage(Feature feature) {
-    return requiresLanguageModeMessage(LanguageMode.ES_NEXT, feature);
+  private static String getRequiresEs2018Message(Feature feature) {
+    return requiresLanguageModeMessage(LanguageMode.ECMASCRIPT2018, feature);
   }
 
   private static String requiresLanguageModeMessage(LanguageMode languageMode, Feature feature) {

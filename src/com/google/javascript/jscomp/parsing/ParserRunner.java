@@ -168,12 +168,11 @@ public final class ParserRunner {
         break;
 
       case ECMASCRIPT6:
-        parserConfigLanguageMode = Mode.ES6;
-        break;
       case ECMASCRIPT7:
-        parserConfigLanguageMode = Mode.ES7;
+        parserConfigLanguageMode = Mode.ES6_OR_ES7;
         break;
       case ECMASCRIPT8:
+      case ECMASCRIPT2018:
         parserConfigLanguageMode = Mode.ES8_OR_GREATER;
         break;
       case ES_NEXT:

@@ -20,6 +20,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.javascript.jscomp.PassFactory.createEmptyPass;
+import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES2018;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES5;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES6;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES7;
@@ -162,7 +163,7 @@ public final class DefaultPassConfig extends PassConfig {
       passes.add(dartSuperAccessorsPass);
     }
 
-    if (options.needsTranspilationFrom(ES_NEXT)) {
+    if (options.needsTranspilationFrom(ES2018)) {
       TranspilationPasses.addEs2018Passes(passes);
       passes.add(setFeatureSet(ES8));
     }
