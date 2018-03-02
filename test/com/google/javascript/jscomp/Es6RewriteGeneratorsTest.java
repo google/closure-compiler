@@ -251,14 +251,32 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
             "  return $jscomp$generator$context.yield(i, 0);"));
 
     rewriteGeneratorBodyWithVars(
-        "var j = 0; while (j < 10) { yield j; j++; }",
+        "var j = 0; while (j < 10) { yield j; j++; } j += 10;",
         "var j;",
         lines(
             "  j = 0;",
             "case 2:",
             "  if (!(j < 10)) {",
-            "    $jscomp$generator$context.jumpTo(0);",
+            "    $jscomp$generator$context.jumpTo(3);",
             "    break;",
+            "  }",
+            "  return $jscomp$generator$context.yield(j, 4)",
+            "case 4:",
+            "  j++;",
+            "  $jscomp$generator$context.jumpTo(2);",
+            "  break;",
+            "case 3:",
+            "  j += 10;",
+            "  $jscomp$generator$context.jumpToEnd();"));
+
+    rewriteGeneratorBodyWithVars(
+        "var j = 0; while (j < 10) { yield j; j++; } yield 5",
+        "var j;",
+        lines(
+            "  j = 0;",
+            "case 2:",
+            "  if (!(j < 10)) {",
+            "    return $jscomp$generator$context.yield(5, 0);",
             "  }",
             "  return $jscomp$generator$context.yield(j, 4)",
             "case 4:",
@@ -437,17 +455,14 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
             "  $jscomp$generator$forin$0 = $jscomp$generator$context.forIn(gen);",
             "case 4:",
             "  if (!((response=$jscomp$generator$forin$0.getNext()) != null)) {",
-            "    $jscomp$generator$context.jumpTo(6);",
+            "    if (!gotResponse) return $jscomp$generator$context.return(undefined);",
+            "    $jscomp$generator$context.jumpTo(1);",
             "    break;",
             "  }",
             "  return $jscomp$generator$context.yield(response, 7);",
             "case 7:",
             "  gotResponse = true;",
             "  $jscomp$generator$context.jumpTo(4);",
-            "  break;",
-            "case 6:",
-            "  if (!gotResponse) return $jscomp$generator$context.return(undefined);",
-            "  $jscomp$generator$context.jumpTo(1);",
             "  break;"));
 
     rewriteGeneratorBody(

@@ -296,6 +296,7 @@ final class Es6RewriteGenerators implements HotSwapCompilerPass {
             context.callContextMethodResult(originalGeneratorBody, "jumpToEnd"));
       }
       context.currentCase.jumpTo(context.programEndCase, finalBlock);
+      context.currentCase.mayFallThrough = true;
 
       context.finalizeTransformation(switchNode);
       context.checkStateIsEmpty();
@@ -619,7 +620,7 @@ final class Es6RewriteGenerators implements HotSwapCompilerPass {
       // Unmarked "if" block (marked "else")
       if (!ifBlock.isGeneratorMarker()) {
         TranspilationContext.Case endCase = context.maybeCreateCase(breakCase);
-        Node jumoToBlock = context.createJumpToBlock(endCase, ifBlock);
+        Node jumoToBlock = context.createJumpToBlock(endCase, /** allowEmbedding=*/ false, ifBlock);
         while (jumoToBlock.hasChildren()) {
           Node jumpToNode = jumoToBlock.removeFirstChild();
           jumpToNode.setGeneratorSafe(true);
@@ -636,7 +637,7 @@ final class Es6RewriteGenerators implements HotSwapCompilerPass {
 
       // "if" and "else" blocks marked
       condition = prepareNodeForWrite(condition);
-      Node newIfBlock = context.createJumpToBlock(ifCase, n);
+      Node newIfBlock = context.createJumpToBlock(ifCase, /** allowEmbedding=*/ true, n);
       context.writeGeneratedNode(
           IR.ifNode(prepareNodeForWrite(condition), newIfBlock).useSourceInfoFrom(n));
       transpileStatement(elseBlock);
@@ -644,13 +645,6 @@ final class Es6RewriteGenerators implements HotSwapCompilerPass {
       context.switchCaseTo(ifCase);
       transpileStatement(ifBlock);
       context.switchCaseTo(endCase);
-
-      // Inline the beginning of ifBlock if possible
-      if (ifCase.references.size() == 1 && !ifCase.mayFallThrough) {
-        checkState(ifCase.jumpTo == null);
-        checkState(context.allCases.remove(ifCase));
-        newIfBlock.replaceWith(ifCase.caseBlock.detach());
-      }
     }
 
     /** Transpiles marked "for" statement. */
@@ -695,7 +689,7 @@ final class Es6RewriteGenerators implements HotSwapCompilerPass {
         context.writeGeneratedNode(
             IR.ifNode(
                     IR.not(condition).useSourceInfoFrom(condition),
-                    context.createJumpToBlock(endCase, n))
+                    context.createJumpToBlock(endCase, /** allowEmbedding=*/ true, n))
                 .useSourceInfoFrom(n));
       }
 
@@ -803,7 +797,7 @@ final class Es6RewriteGenerators implements HotSwapCompilerPass {
       context.writeGeneratedNode(
           IR.ifNode(
                   IR.not(condition).useSourceInfoFrom(condition),
-                  context.createJumpToBlock(endCase, n))
+                  context.createJumpToBlock(endCase, /** allowEmbedding=*/ true, n))
               .useSourceInfoFrom(n));
 
       // Transpile "while" body
@@ -836,7 +830,8 @@ final class Es6RewriteGenerators implements HotSwapCompilerPass {
       context.switchCaseTo(continueCase);
       Node condition = prepareNodeForWrite(maybeDecomposeExpression(n.removeFirstChild()));
       context.writeGeneratedNode(
-          IR.ifNode(condition, context.createJumpToBlock(startCase, n)).useSourceInfoFrom(n));
+          IR.ifNode(condition, context.createJumpToBlock(startCase, /** allowEmbedding=*/ false, n))
+              .useSourceInfoFrom(n));
       context.switchCaseTo(breakCase);
     }
 
@@ -1102,6 +1097,12 @@ final class Es6RewriteGenerators implements HotSwapCompilerPass {
             while (currentCase.jumpTo.jumpTo != null) {
               currentCase.jumpTo = currentCase.jumpTo.jumpTo;
             }
+
+            if (currentCase.embedInto != null && currentCase.references.size() == 1) {
+              currentCase.jumpTo.embedInto = currentCase.embedInto;
+            }
+            currentCase.embedInto = null;
+
             // Update references to jump to the final case in the chain
             for (Node reference : currentCase.references) {
               reference.setDouble(currentCase.jumpTo.id);
@@ -1124,50 +1125,60 @@ final class Es6RewriteGenerators implements HotSwapCompilerPass {
         //     doSomething();
         //     doSomethingElse();
         //     break;
-        Case prevCase = null;
-        for (Iterator<Case> it = allCases.iterator(); it.hasNext(); ) {
+        Iterator<Case> it = allCases.iterator();
+        Case prevCase = it.next();
+        checkState(prevCase.id == 1);
+        while (it.hasNext()) {
           Case currentCase = it.next();
-          if (prevCase != null) {
-            if (currentCase.references.isEmpty()) {
-              // No jump references, just append the body to a previous case if needed.
-              if (prevCase.mayFallThrough) {
-                prevCase.caseBlock.addChildrenToBack(currentCase.caseBlock.removeChildren());
-                prevCase.mayFallThrough = currentCase.mayFallThrough;
-              }
-              it.remove();
-              continue;
-            }
-            if (prevCase.jumpTo == currentCase) {
-              // Merging "case 1:" with the following case. The standard merging cannot be used
-              // as "case 1:" is an etnry point and it cannot be renamed.
-              //   case 1:
-              //   case 2:
-              //     doSomethingElse();
-              //     break;
-              //   case 102:
-              //     $context.jumpTo(2);
-              //     break;
-              // becomes:
-              //   case 1:
-              //     doSomethingElse();
-              //     break;
-              //   case 102:
-              //     $context.jumpTo(1);
-              //     break;
-              checkState(prevCase.mayFallThrough);
-              checkState(!prevCase.caseBlock.hasChildren());
-              checkState(currentCase.jumpTo == null);
-
+          if (currentCase.references.isEmpty()) {
+            // No jump references, just append the body to a previous case if needed.
+            checkState(currentCase.embedInto == null);
+            if (prevCase.mayFallThrough) {
               prevCase.caseBlock.addChildrenToBack(currentCase.caseBlock.removeChildren());
               prevCase.mayFallThrough = currentCase.mayFallThrough;
-              for (Node reference : currentCase.references) {
-                reference.setDouble(prevCase.id);
-              }
-              prevCase.jumpTo = currentCase.jumpTo;
-              prevCase.references.addAll(currentCase.references);
+            }
+            it.remove();
+            continue;
+          }
+          if (currentCase.embedInto != null) {
+            checkState(currentCase.jumpTo == null);
+            // Cases can be embedded only if they are referenced once and don't fall through.
+            if (currentCase.references.size() == 1 && !currentCase.mayFallThrough) {
+              currentCase.embedInto.replaceWith(currentCase.caseBlock.detach());
               it.remove();
               continue;
             }
+          }
+          if (prevCase.jumpTo == currentCase) {
+            // Merging "case 1:" with the following case. The standard merging cannot be used
+            // as "case 1:" is an entry point and it cannot be renamed.
+            //   case 1:
+            //   case 2:
+            //     doSomethingElse();
+            //     break;
+            //   case 102:
+            //     $context.jumpTo(2);
+            //     break;
+            // becomes:
+            //   case 1:
+            //     doSomethingElse();
+            //     break;
+            //   case 102:
+            //     $context.jumpTo(1);
+            //     break;
+            checkState(prevCase.mayFallThrough);
+            checkState(!prevCase.caseBlock.hasChildren());
+            checkState(currentCase.jumpTo == null);
+
+            prevCase.caseBlock.addChildrenToBack(currentCase.caseBlock.removeChildren());
+            prevCase.mayFallThrough = currentCase.mayFallThrough;
+            for (Node reference : currentCase.references) {
+              reference.setDouble(prevCase.id);
+            }
+            prevCase.jumpTo = currentCase.jumpTo;
+            prevCase.references.addAll(currentCase.references);
+            it.remove();
+            continue;
           }
           prevCase = currentCase;
         }
@@ -1266,18 +1277,25 @@ final class Es6RewriteGenerators implements HotSwapCompilerPass {
       /** Instructs a state machine program to jump to a selected case section. */
       void writeJumpTo(Case section, Node sourceNode) {
         currentCase.jumpTo(
-            section,
-            IR.block(
-                callContextMethodResult(sourceNode, "jumpTo", section.getNumber(sourceNode)),
-                IR.breakNode().useSourceInfoFrom(sourceNode)));
+            section, createJumpToBlock(section, /** allowEmbedding=*/ false, sourceNode));
       }
 
-      /** Creates a block node that contains a jump instruction. */
-      Node createJumpToBlock(Case section, Node sourceNode) {
-        return IR.block(
+      /**
+       * Creates a block node that contains a jump instruction.
+       *
+       * @param allowEmbedding Whether the code from the target section can be embedded into jump
+       *     block.
+       */
+      Node createJumpToBlock(Case section, boolean allowEmbedding, Node sourceNode) {
+        checkState(section.embedInto == null);
+        Node jumpBlock  = IR.block(
                 callContextMethodResult(sourceNode, "jumpTo", section.getNumber(sourceNode)),
                 IR.breakNode().useSourceInfoFrom(sourceNode))
             .useSourceInfoFrom(sourceNode);
+        if (allowEmbedding) {
+          section.embedInto = jumpBlock;
+        }
+        return jumpBlock;
       }
 
       /** Converts "break" and "continue" statements into state machine jumps. */
@@ -1580,6 +1598,12 @@ final class Es6RewriteGenerators implements HotSwapCompilerPass {
         final int id;
         final Node caseNode;
         final Node caseBlock;
+
+        /**
+         * Records number of times the section was referenced.
+         *
+         * <p>It's used to drop unreferenced sections.
+         */
         final ArrayList<Node> references = new ArrayList<>();
 
         /**
@@ -1588,14 +1612,35 @@ final class Es6RewriteGenerators implements HotSwapCompilerPass {
          */
         @Nullable Case jumpTo;
 
+        /**
+         * Indicates that the body of this case could potentially be embedded into another block
+         * node.
+         *
+         * <p>Usually "<code>if (a) {b();} else { c(); }</code>" is transpiled into:
+         * <pre>
+         *   if (a) { goto labelIf; }
+         *   c();
+         *   goto labelEnd;
+         * labelIf:
+         *   b();
+         * labelEnd:
+         * </pre>
+         *
+         * but "<code>labelIf: b();</code>" can be inlined to get shorter output:
+         *
+         * <pre>
+         *   if (a) { b(); goto labelEnd; }
+         *   c();
+         * labelEnd:
+         * </pre>
+         *
+         * In this example "labelIf" case can be embedded into "<code>{ goto labelIf; }</code>"
+         * block.
+         */
+        @Nullable Node embedInto;
+
         /** Tells whether this case might fall-through. */
         boolean mayFallThrough = true;
-
-        /**
-         * Records number of times the section was referenced.
-         *
-         * <p>It's used to drop unreferenced sections.
-         */
 
         /** Creates a Case object for an already created case node. */
         Case(Node caseNode) {
