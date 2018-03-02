@@ -435,7 +435,12 @@ class TypeInference
       case EXPR_RESULT:
         scope = traverseChildren(n, scope);
         if (n.getFirstChild().isGetProp()) {
-          ensurePropertyDeclared(n.getFirstChild());
+          Node getprop = n.getFirstChild();
+          ObjectType ownerType = ObjectType.cast(
+              getJSType(getprop.getFirstChild()).restrictByNotNullOrUndefined());
+          if (ownerType != null) {
+            ensurePropertyDeclaredHelper(getprop, ownerType);
+          }
         }
         break;
 
@@ -721,21 +726,6 @@ class TypeInference
           registry.registerPropertyOnType(propName, objectType);
         }
       }
-    }
-  }
-
-  /**
-   * Defines a declared property if it has not been defined yet.
-   *
-   * This handles the case where a property is declared on an object where
-   * the object type is inferred, and so the object type will not
-   * be known in {@code TypedScopeCreator}.
-   */
-  private void ensurePropertyDeclared(Node getprop) {
-    ObjectType ownerType = ObjectType.cast(
-        getJSType(getprop.getFirstChild()).restrictByNotNullOrUndefined());
-    if (ownerType != null) {
-      ensurePropertyDeclaredHelper(getprop, ownerType);
     }
   }
 

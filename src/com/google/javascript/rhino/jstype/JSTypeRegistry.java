@@ -1673,21 +1673,16 @@ public class JSTypeRegistry implements TypeIRegistry {
 
   /**
    * Set the implicit prototype if it's possible to do so.
-   * @return True if we were able to set the implicit prototype successfully,
-   *     false if it was not possible to do so for some reason. There are
-   *     a few different reasons why this could fail: for example, numbers
-   *     can't be implicit prototypes, and we don't want to change the implicit
-   *     prototype if other classes have already subclassed this one.
+   * There are a few different reasons why this could be a no-op: for example,
+   * numbers can't be implicit prototypes, and we don't want to change the implicit prototype
+   * if other classes have already subclassed this one.
    */
-  public boolean resetImplicitPrototype(
-      JSType type, ObjectType newImplicitProto) {
+  public void resetImplicitPrototype(JSType type, ObjectType newImplicitProto) {
     if (type instanceof PrototypeObjectType) {
       PrototypeObjectType poType = (PrototypeObjectType) type;
       poType.clearCachedValues();
       poType.setImplicitPrototype(newImplicitProto);
-      return true;
     }
-    return false;
   }
 
   /**
