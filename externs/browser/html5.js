@@ -1021,6 +1021,12 @@ HTMLImageElement.prototype.naturalHeight;
 HTMLImageElement.prototype.crossOrigin;
 
 /**
+ * @type {string}
+ * @see https://html.spec.whatwg.org/multipage/embedded-content.html#dom-img-currentsrc
+ */
+HTMLImageElement.prototype.currentSrc;
+
+/**
  * This is a superposition of the Window and Worker postMessage methods.
  * @param {*} message
  * @param {(string|!Array<!Transferable>)=} opt_targetOriginOrTransfer
