@@ -3657,6 +3657,15 @@ public final class ParserTest extends BaseJSTypeTestCase {
     parseError("export * as s from './someModule';", "'from' expected");
   }
 
+  public void testImportExportTypescriptKeyword() {
+    mode = LanguageMode.TYPESCRIPT;
+    parseError("export { namespace };", "cannot use keyword 'namespace' here.");
+
+    mode = LanguageMode.ECMASCRIPT6;
+    parse("export { namespace };");
+    parse("import { namespace } from './input0.js';");
+  }
+
   public void testGoogModule() {
     Node tree = parse("goog.module('example');");
     assertNode(tree).hasType(Token.SCRIPT);
