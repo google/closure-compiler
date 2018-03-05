@@ -1598,6 +1598,18 @@ public class ErrorToFixMapperTest {
             "alert(str.parseInt('8'));"));
   }
 
+  @Test
+  public void testDuplicateRequire_destructuring() {
+    // TODO(b/74166725): Can we merge the two requires to: "const {bar, foo} = goog.require(...)"?
+    assertNoChanges(
+        LINE_JOINER.join(
+            "const {bar} = goog.require('goog.string');",
+            "const {foo} = goog.require('goog.string');",
+            "",
+            "alert(bar('7'));",
+            "alert(foo('8'));"));
+  }
+
   private void assertChanges(String originalCode, String expectedCode) {
     compiler.compile(
         ImmutableList.<SourceFile>of(), // Externs
