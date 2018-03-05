@@ -109,8 +109,13 @@ public final class SuggestedFix {
     return alternatives.subList(1, alternatives.size());
   }
 
-  @Override public String toString() {
-    if (replacements.isEmpty()) {
+  boolean isNoOp() {
+    return replacements.isEmpty();
+  }
+
+  @Override
+  public String toString() {
+    if (this.isNoOp()) {
       return "<no-op SuggestedFix>";
     }
     StringBuilder sb = new StringBuilder();
@@ -796,6 +801,35 @@ public final class SuggestedFix {
     }
 
     /**
+     * Merge names from the lhs of |requireToMergeFrom|, which must be a destructuring require, if
+     * there is another destructuring require that its lhs can be merged into. If not, then no
+     * change is applied.
+     */
+    Builder mergeGoogRequire(
+        Node requireToMergeFrom, NodeMetadata m, String namespace, AbstractCompiler compiler) {
+      checkArgument(requireToMergeFrom.getFirstChild().isDestructuringLhs(), requireToMergeFrom);
+      checkArgument(requireToMergeFrom.getFirstFirstChild().isObjectPattern(), requireToMergeFrom);
+
+      Node googRequireNode = findGoogRequireNode(requireToMergeFrom, m, namespace);
+      if (googRequireNode == null) {
+        return this;
+      }
+      if (googRequireNode.isExprResult()) {
+        return this;
+      }
+      if (googRequireNode.getFirstChild().isDestructuringLhs()) {
+        Node objectPattern = googRequireNode.getFirstFirstChild();
+        Node newObjectPattern = objectPattern.cloneTree();
+        for (Node name : requireToMergeFrom.getFirstFirstChild().children()) {
+          newObjectPattern.addChildToBack(name.cloneTree());
+        }
+        this.replace(objectPattern, newObjectPattern, compiler);
+        this.deleteWithoutRemovingWhitespace(requireToMergeFrom);
+      }
+      return this;
+    }
+
+    /**
      * Removes a goog.require for the given namespace to the file if it
      * already exists.
      */
@@ -808,8 +842,14 @@ public final class SuggestedFix {
     }
 
     /**
-     * Find the goog.require node for the given namespace (or null if there isn't one).
-     * If there is more than one, this will return the first standalone goog.require statement.
+     * Find the goog.require node for the given namespace (or null if there isn't one). If there is
+     * more than one:
+     *
+     * <ul>
+     *   <li>If there is at least one standalone goog.require, this will return the first standalone
+     *       goog.require.
+     *   <li>If not, this will return the first goog.require.
+     * </ul>
      */
     @Nullable
     private static Node findGoogRequireNode(Node n, NodeMetadata metadata, String namespace) {

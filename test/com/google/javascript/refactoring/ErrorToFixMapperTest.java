@@ -1600,11 +1600,16 @@ public class ErrorToFixMapperTest {
 
   @Test
   public void testDuplicateRequire_destructuring1() {
-    // TODO(b/74166725): Can we merge the two requires to: "const {bar, foo} = goog.require(...)"?
-    assertNoChanges(
+    assertChanges(
         LINE_JOINER.join(
             "const {bar} = goog.require('goog.string');",
             "const {foo} = goog.require('goog.string');",
+            "",
+            "alert(bar('7'));",
+            "alert(foo('8'));"),
+        LINE_JOINER.join(
+            "const {bar, foo} = goog.require('goog.string');",
+            "",
             "",
             "alert(bar('7'));",
             "alert(foo('8'));"));
@@ -1614,13 +1619,61 @@ public class ErrorToFixMapperTest {
   public void testDuplicateRequire_destructuring2() {
     assertChanges(
         LINE_JOINER.join(
+            "const {bar} = goog.require('goog.string');",
+            "const {foo:x, qux:y} = goog.require('goog.string');",
+            "",
+            "alert(bar('7'));",
+            "alert(x(y));"),
+        LINE_JOINER.join(
+            "const {bar, foo:x, qux:y} = goog.require('goog.string');",
+            "",
+            "",
+            "alert(bar('7'));",
+            "alert(x(y));"));
+  }
+
+  @Test
+  public void testDuplicateRequire_destructuring3() {
+    assertChanges(
+        LINE_JOINER.join(
             "const {bar} = goog.require('goog.util');",
             "goog.require('goog.util');",
             "",
             "alert(bar('7'));"),
         LINE_JOINER.join(
+          "const {bar} = goog.require('goog.util');",
+          "alert(bar('7'));"));
+  }
+
+  // In this case, only the standalone require gets removed. Then a second run would merge
+  // the two remaining ones.
+  @Test
+  public void testDuplicateRequire_destructuring4() {
+    assertChanges(
+        LINE_JOINER.join(
             "const {bar} = goog.require('goog.util');",
-            "alert(bar('7'));"));
+            "const {foo} = goog.require('goog.util');",
+            "goog.require('goog.util');",
+            "",
+            "alert(bar('7'));",
+            "alert(foo('8'));"),
+        LINE_JOINER.join(
+            "const {bar} = goog.require('goog.util');",
+            "const {foo} = goog.require('goog.util');",
+            "alert(bar('7'));",
+            "alert(foo('8'));"));
+  }
+
+  @Test
+  public void testDuplicateRequire_destructuring5() {
+    // TODO(b/74166725): Here, we could remove the second require and add "const {bar} = util;".
+    assertNoChanges(
+        LINE_JOINER.join(
+            "const util = goog.require('goog.util');",
+            "const {bar} = goog.require('goog.util');",
+            "",
+            "alert(bar('7'));",
+            "alert(util.foo('8'));"));
   }
 
   private void assertChanges(String originalCode, String expectedCode) {
@@ -1633,8 +1686,9 @@ public class ErrorToFixMapperTest {
     assertThat(warningsAndErrors).named("warnings/errors").isNotEmpty();
     Collection<SuggestedFix> fixes = errorManager.getAllFixes();
     assertThat(fixes).named("fixes").isNotEmpty();
-    String newCode = ApplySuggestedFixes.applySuggestedFixesToCode(
-        fixes, ImmutableMap.of("test", originalCode)).get("test");
+    String newCode =
+        ApplySuggestedFixes.applySuggestedFixesToCode(fixes, ImmutableMap.of("test", originalCode))
+            .get("test");
     assertThat(newCode).isEqualTo(expectedCode);
   }
 

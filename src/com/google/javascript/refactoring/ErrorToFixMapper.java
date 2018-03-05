@@ -36,6 +36,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import javax.annotation.Nullable;
 
 /**
  * Maps a {@code JSError} to a list of {@code SuggestedFix}es, if possible.
@@ -323,20 +324,37 @@ public final class ErrorToFixMapper {
     return fix.build();
   }
 
+  @Nullable
   private static SuggestedFix getFixForDuplicateRequire(JSError error, AbstractCompiler compiler) {
-    if (!error.node.isExprResult()) {
-      return null;
-    }
     Matcher regexMatcher = DUPLICATE_REQUIRE.matcher(error.description);
     checkState(
         regexMatcher.matches(), "Unexpected error description: %s", error.description);
     String namespace = regexMatcher.group(1);
     NodeMetadata metadata = new NodeMetadata(compiler);
     Match match = new Match(error.node, metadata);
-    return new SuggestedFix.Builder()
-        .attachMatchedNodeInfo(error.node, compiler)
-        .removeGoogRequire(match, namespace)
-        .build();
+    if (error.node.isExprResult()) {
+      return new SuggestedFix.Builder()
+          .attachMatchedNodeInfo(error.node, compiler)
+          .removeGoogRequire(match, namespace)
+          .build();
+    } else {
+      checkState(NodeUtil.isNameDeclaration(error.node), error.node);
+      if (error.node.getFirstChild().isName()) {
+        return null;
+      }
+
+      checkState(error.node.getFirstChild().isDestructuringLhs(), error.node);
+
+      SuggestedFix fix =
+          new SuggestedFix.Builder()
+              .attachMatchedNodeInfo(error.node, compiler)
+              .mergeGoogRequire(error.node, match.getMetadata(), namespace, compiler)
+              .build();
+      if (!fix.isNoOp()) {
+        return fix;
+      }
+      return null;
+    }
   }
 
   private static SuggestedFix getFixForExtraRequire(JSError error, AbstractCompiler compiler) {
