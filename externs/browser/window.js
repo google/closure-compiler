@@ -120,11 +120,6 @@ var java;
 var netscape;
 
 /**
- * @see https://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/sun
- */
-var sun;
-
-/**
  * @param {*} message
  * @see https://developer.mozilla.org/en/DOM/window.alert
  * @return {undefined}
