@@ -19,6 +19,7 @@ package com.google.javascript.refactoring;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 
+import com.google.auto.value.AutoValue;
 import com.google.common.base.Ascii;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -171,11 +172,7 @@ public final class SuggestedFix {
      */
     public Builder attachMatchedNodeInfo(Node node, AbstractCompiler compiler) {
       matchedNodeInfo =
-          new MatchedNodeInfo(
-              NodeUtil.getSourceName(node),
-              node.getLineno(),
-              node.getCharno(),
-              isInClosurizedFile(node, new NodeMetadata(compiler)));
+          MatchedNodeInfo.create(node, isInClosurizedFile(node, new NodeMetadata(compiler)));
       return this;
     }
 
@@ -895,41 +892,30 @@ public final class SuggestedFix {
   }
 
   /**
-   * Information about the node that was matched for the suggested fix. This information can be
-   * used later on when processing the SuggestedFix.
+   * Information about the node that was matched for the suggested fix. This information can be used
+   * later on when processing the SuggestedFix.
    *
    * <p>NOTE: Since this class can be retained for a long time when running refactorings over large
    * blobs of code, it's important that it does not contain any memory intensive objects in order to
    * keep memory to a reasonable amount.
    */
-  public static class MatchedNodeInfo {
-    private final String sourceFilename;
-    private final int lineno;
-    private final int charno;
-    private final boolean isInClosurizedFile;
-
-    MatchedNodeInfo(String sourceFilename, int lineno, int charno, boolean isInClosurizedFile) {
-      this.sourceFilename = sourceFilename;
-      this.lineno = lineno;
-      this.charno = charno;
-      this.isInClosurizedFile = isInClosurizedFile;
+  @AutoValue
+  public abstract static class MatchedNodeInfo {
+    static MatchedNodeInfo create(Node node, boolean closurized) {
+      return new AutoValue_SuggestedFix_MatchedNodeInfo(
+          NodeUtil.getSourceName(node),
+          node.getLineno(),
+          node.getCharno(),
+          closurized);
     }
 
-    public String getSourceFilename() {
-      return sourceFilename;
-    }
+    public abstract String getSourceFilename();
 
-    public int getLineno() {
-      return lineno;
-    }
+    public abstract int getLineno();
 
-    public int getCharno() {
-      return charno;
-    }
+    public abstract int getCharno();
 
-    public boolean isInClosurizedFile() {
-      return isInClosurizedFile;
-    }
+    public abstract boolean isInClosurizedFile();
   }
 
   /** Traverse an AST and find {@code goog.module} or {@code const X = goog.require('...');}. */
