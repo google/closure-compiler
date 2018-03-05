@@ -662,8 +662,7 @@ public final class SuggestedFix {
     }
 
     /**
-     * Adds a goog.require for the given namespace to the file if it does not
-     * already exist.
+     * Adds a goog.require for the given namespace to the file if it does not already exist.
      */
     public Builder addGoogRequire(Match m, String namespace) {
       Node node = m.getNode();
@@ -831,8 +830,9 @@ public final class SuggestedFix {
 
       for (Node child : script.children()) {
         if (NodeUtil.isNameDeclaration(child)
-            && child.getFirstFirstChild() != null
-            && Matchers.googRequire(namespace).matches(child.getFirstFirstChild(), metadata)) {
+            && child.getFirstChild().getLastChild() != null
+            && Matchers.googRequire(namespace).matches(
+                child.getFirstChild().getLastChild(), metadata)) {
           return child;
         }
       }
