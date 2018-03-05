@@ -541,12 +541,8 @@ chrome.webstore.onDownloadProgress;
 chrome.runtime = {};
 
 
-/** @type {!Object|undefined} */
-chrome.runtime.lastError = {};
-
-
-/** @type {string|undefined} */
-chrome.runtime.lastError.message;
+/** @type {{message:(string|undefined)}|undefined} */
+chrome.runtime.lastError;
 
 
 /**
