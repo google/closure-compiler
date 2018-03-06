@@ -3605,7 +3605,7 @@ Document.prototype.webkitFullScreenKeyboardInputAllowed;
 Element.prototype.msRequestFullscreen = function() {};
 
 /** @return {void} */
-Element.prototype.msExitFullscreen = function() {};
+Document.prototype.msExitFullscreen = function() {};
 
 /** @type {boolean} */
 Document.prototype.msFullscreenEnabled;
