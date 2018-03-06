@@ -21,7 +21,7 @@ goog.setTestOnly();
 var asserts = goog.require('goog.testing.asserts');
 var userAgent = goog.require('goog.userAgent');
 
-/** @const */
+/** @const {boolean} */
 var IE8 = userAgent.IE && !userAgent.isVersionOrHigher(9);
 
 
