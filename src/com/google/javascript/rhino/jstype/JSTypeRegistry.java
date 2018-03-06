@@ -1162,7 +1162,7 @@ public class JSTypeRegistry implements TypeIRegistry {
     JSType type = getJSTypeOrUnknown(n);
     if (dereference) {
       JSType autoboxed = type.autobox();
-      if (autoboxed != getNativeType(JSTypeNative.NO_TYPE)) {
+      if (!autoboxed.isNoType()) {
         type = autoboxed;
       }
     }

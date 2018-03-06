@@ -142,8 +142,7 @@ class TypeInference
         for (Node astParameter : astParameters.children()) {
           TypedVar var = functionScope.getVar(astParameter.getString());
           checkNotNull(var);
-          if (var.isTypeInferred() &&
-              var.getType() == unknownType) {
+          if (var.isTypeInferred() && var.getType() == unknownType) {
             JSType newType = null;
 
             if (iifeArgumentNode != null) {
@@ -262,8 +261,7 @@ class TypeInference
           }
 
           if (condition != null) {
-            if (condition.isAnd() ||
-                condition.isOr()) {
+            if (condition.isAnd() || condition.isOr()) {
               // When handling the short-circuiting binary operators,
               // the outcome scope on true can be different than the outcome
               // scope on false.
@@ -279,9 +277,10 @@ class TypeInference
               // conditionOutcomes is cached from previous iterations
               // of the loop.
               if (conditionOutcomes == null) {
-                conditionOutcomes = condition.isAnd() ?
-                    traverseAnd(condition, output.createChildFlowScope()) :
-                    traverseOr(condition, output.createChildFlowScope());
+                conditionOutcomes =
+                    condition.isAnd()
+                        ? traverseAnd(condition, output.createChildFlowScope())
+                        : traverseOr(condition, output.createChildFlowScope());
               }
               newScope =
                   reverseInterpreter.getPreciserScopeKnowingConditionOutcome(
@@ -607,12 +606,10 @@ class TypeInference
             && varType != null && !var.isTypeInferred();
 
         boolean isTypelessConstDecl =
-            isVarDeclaration &&
-            NodeUtil.isConstantDeclaration(
-                compiler.getCodingConvention(),
-                var.getJSDocInfo(), var.getNameNode()) &&
-              !(var.getJSDocInfo() != null &&
-                var.getJSDocInfo().hasType());
+            isVarDeclaration
+                && NodeUtil.isConstantDeclaration(
+                    compiler.getCodingConvention(), var.getJSDocInfo(), var.getNameNode())
+                && !(var.getJSDocInfo() != null && var.getJSDocInfo().hasType());
 
         // When looking at VAR initializers for declared VARs, we tend
         // to use the declared type over the type it's being
@@ -656,8 +653,7 @@ class TypeInference
 
         if (var != null && var.isTypeInferred()) {
           JSType oldType = var.getType();
-          var.setType(oldType == null ?
-             resultType : oldType.getLeastSupertype(resultType));
+          var.setType(oldType == null ? resultType : oldType.getLeastSupertype(resultType));
         } else if (isTypelessConstDecl) {
           // /** @const */ var x = y;
           // should be redeclared, so that the type of y
@@ -699,8 +695,8 @@ class TypeInference
     JSType nodeType = getJSType(obj);
     ObjectType objectType = ObjectType.cast(
         nodeType.restrictByNotNullOrUndefined());
-    boolean propCreationInConstructor = obj.isThis() &&
-        getJSType(syntacticScope.getRootNode()).isConstructor();
+    boolean propCreationInConstructor =
+        obj.isThis() && getJSType(syntacticScope.getRootNode()).isConstructor();
 
     if (objectType == null) {
       registry.registerPropertyOnType(propName, nodeType);
@@ -717,12 +713,10 @@ class TypeInference
         //    top level and the constructor Foo is defined in the same file.
         boolean staticPropCreation = false;
         Node maybeAssignStm = getprop.getGrandparent();
-        if (syntacticScope.isGlobal() &&
-            NodeUtil.isPrototypePropertyDeclaration(maybeAssignStm)) {
+        if (syntacticScope.isGlobal() && NodeUtil.isPrototypePropertyDeclaration(maybeAssignStm)) {
           String propCreationFilename = maybeAssignStm.getSourceFileName();
           Node ctor = objectType.getOwnerFunction().getSource();
-          if (ctor != null &&
-              ctor.getSourceFileName().equals(propCreationFilename)) {
+          if (ctor != null && ctor.getSourceFileName().equals(propCreationFilename)) {
             staticPropCreation = true;
           }
         }
@@ -775,11 +769,12 @@ class TypeInference
       TypedVar var = syntacticScope.getVar(qName);
       if (var != null && !var.isTypeInferred()) {
         // Handle normal declarations that could not be addressed earlier.
-        if (propName.equals("prototype") ||
-        // Handle prototype declarations that could not be addressed earlier.
-            (!objectType.hasOwnProperty(propName) &&
-             (!objectType.isInstanceType() ||
-                 (var.isExtern() && !objectType.isNativeObjectType())))) {
+        if (propName.equals("prototype")
+            ||
+            // Handle prototype declarations that could not be addressed earlier.
+            (!objectType.hasOwnProperty(propName)
+                && (!objectType.isInstanceType()
+                    || (var.isExtern() && !objectType.isNativeObjectType())))) {
           return objectType.defineDeclaredProperty(
               propName, var.getType(), getprop);
         }
@@ -806,8 +801,7 @@ class TypeInference
         // 1) The var is escaped and assigned in an inner scope, e.g.,
         // function f() { var x = 3; function g() { x = null } (x); }
         boolean isInferred = var.isTypeInferred();
-        boolean unflowable = isInferred &&
-            isUnflowable(syntacticScope.getVar(varName));
+        boolean unflowable = isInferred && isUnflowable(syntacticScope.getVar(varName));
 
         // 2) We're reading type information from another scope for an
         // inferred variable. That variable is assigned more than once,
@@ -825,8 +819,7 @@ class TypeInference
         boolean nonLocalInferredSlot = false;
         if (isInferred && syntacticScope.isLocal()) {
           TypedVar maybeOuterVar = syntacticScope.getParent().getVar(varName);
-          if (var == maybeOuterVar &&
-              !maybeOuterVar.isMarkedAssignedExactlyOnce()) {
+          if (var == maybeOuterVar && !maybeOuterVar.isMarkedAssignedExactlyOnce()) {
             nonLocalInferredSlot = true;
           }
         }
@@ -888,8 +881,7 @@ class TypeInference
           TypedVar var = syntacticScope.getVar(qKeyName);
           JSType oldType = var == null ? null : var.getType();
           if (var != null && var.isTypeInferred()) {
-            var.setType(oldType == null ?
-                valueType : oldType.getLeastSupertype(oldType));
+            var.setType(oldType == null ? valueType : oldType.getLeastSupertype(oldType));
           }
 
           scope.inferQualifiedSlot(name, qKeyName,
@@ -917,8 +909,8 @@ class TypeInference
       boolean rightIsUnknown = rightType.isUnknownType();
       if (leftIsUnknown && rightIsUnknown) {
         type = unknownType;
-      } else if ((!leftIsUnknown && leftType.isString()) ||
-                 (!rightIsUnknown && rightType.isString())) {
+      } else if ((!leftIsUnknown && leftType.isString())
+          || (!rightIsUnknown && rightType.isString())) {
         type = getNativeType(STRING_TYPE);
       } else if (leftIsUnknown || rightIsUnknown) {
         type = unknownType;
@@ -1376,8 +1368,7 @@ class TypeInference
     public JSType caseTemplateType(TemplateType type) {
       madeChanges = true;
       JSType replacement = replacements.get(type);
-      return replacement != null ?
-          replacement : registry.getNativeType(UNKNOWN_TYPE);
+      return replacement != null ? replacement : registry.getNativeType(UNKNOWN_TYPE);
     }
   }
 
@@ -1695,8 +1686,8 @@ class TypeInference
       }
       // Exclude the boolean type if the literal set is empty because a boolean
       // can never actually be returned.
-      if (outcome.booleanValues == BooleanLiteralSet.EMPTY &&
-          getNativeType(BOOLEAN_TYPE).isSubtype(type)) {
+      if (outcome.booleanValues == BooleanLiteralSet.EMPTY
+          && getNativeType(BOOLEAN_TYPE).isSubtype(type)) {
         // Exclusion only makes sense for a union type.
         if (type.isUnionType()) {
           type = type.toMaybeUnionType().getRestrictedUnion(
@@ -1800,10 +1791,13 @@ class TypeInference
       return new BooleanOutcomePair(
           BooleanLiteralSet.BOTH, BooleanLiteralSet.BOTH, flowScope, flowScope);
     }
-    return new BooleanOutcomePair(jsType.getPossibleToBooleanOutcomes(),
-        registry.getNativeType(BOOLEAN_TYPE).isSubtype(jsType) ?
-            BooleanLiteralSet.BOTH : BooleanLiteralSet.EMPTY,
-        flowScope, flowScope);
+    return new BooleanOutcomePair(
+        jsType.getPossibleToBooleanOutcomes(),
+        registry.getNativeType(BOOLEAN_TYPE).isSubtype(jsType)
+            ? BooleanLiteralSet.BOTH
+            : BooleanLiteralSet.EMPTY,
+        flowScope,
+        flowScope);
   }
 
   private void redeclareSimpleVar(
@@ -1820,9 +1814,11 @@ class TypeInference
   }
 
   private boolean isUnflowable(TypedVar v) {
-    return v != null && v.isLocal() && v.isMarkedEscaped() &&
+    return v != null
+        && v.isLocal()
+        && v.isMarkedEscaped()
         // It's OK to flow a variable in the scope where it's escaped.
-        v.getScope() == syntacticScope;
+        && v.getScope() == syntacticScope;
   }
 
   /**
