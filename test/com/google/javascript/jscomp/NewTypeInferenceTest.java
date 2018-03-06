@@ -20379,34 +20379,37 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "  return Clazz;",
         "}");
 
-    typeCheck(LINE_JOINER.join(
-        defs,
-        "/**",
-        " * @constructor",
-        " * @extends {MyElement}",
-        " * @implements {Toggle}",
-        " */",
-        "var MyElementWithToogle = addToggle(MyElement);",
-        "(new MyElementWithToogle).foobar(123);"),
+    typeCheck(
+        LINE_JOINER.join(
+            defs,
+            "/**",
+            " * @constructor",
+            " * @extends {MyElement}",
+            " * @implements {Toggle}",
+            " */",
+            "var MyElementWithToggle = addToggle(MyElement);",
+            "(new MyElementWithToggle).foobar(123);"),
         NewTypeInference.INVALID_ARGUMENT_TYPE);
 
-    typeCheck(LINE_JOINER.join(
-        defs,
-        "/**",
-        " * @constructor",
-        " * @extends {MyElement}",
-        " * @implements {Toggle}",
-        " */",
-        "var MyElementWithToogle = addToggle(MyElement);",
-        "(new MyElementWithToogle).elemprop = 123;"),
+    typeCheck(
+        LINE_JOINER.join(
+            defs,
+            "/**",
+            " * @constructor",
+            " * @extends {MyElement}",
+            " * @implements {Toggle}",
+            " */",
+            "var MyElementWithToggle = addToggle(MyElement);",
+            "(new MyElementWithToggle).elemprop = 123;"),
         NewTypeInference.MISTYPED_ASSIGN_RHS);
 
-    typeCheck(LINE_JOINER.join(
-        defs,
-        "var MyElementWithToogle = addToggle(MyElement);",
-        "(new MyElementWithToogle).foobar(123);",
-        // The MyElementWithToogle type is unknown
-        "/** @type {MyElementWithToogle} */ var x = 123;"),
+    typeCheck(
+        LINE_JOINER.join(
+            defs,
+            "var MyElementWithToggle = addToggle(MyElement);",
+            "(new MyElementWithToggle).foobar(123);",
+            // The MyElementWithToggle type is unknown
+            "/** @type {MyElementWithToggle} */ var x = 123;"),
         NewTypeInference.INVALID_ARGUMENT_TYPE);
   }
 

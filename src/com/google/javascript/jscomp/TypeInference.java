@@ -557,6 +557,34 @@ class TypeInference
     return scope;
   }
 
+  private boolean isPossibleMixinApplication(Node lvalue, Node rvalue) {
+    JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(lvalue);
+    return jsdoc != null
+        && jsdoc.isConstructor()
+        && jsdoc.getImplementedInterfaceCount() > 0
+        && lvalue.isQualifiedName()
+        && rvalue.isCall();
+  }
+
+  /**
+   * @param constructor A constructor function defined by a call, which may be a mixin application.
+   *     The constructor implements at least one interface. If the constructor is missing some
+   *     properties of the inherited interfaces, this method declares these properties.
+   */
+  private void addMissingInterfaceProperties(JSType constructor) {
+    if (constructor.isConstructor()) {
+      FunctionType f = constructor.toMaybeFunctionType();
+      ObjectType proto = f.getPrototype();
+      for (ObjectType interf : f.getImplementedInterfaces()) {
+        for (String pname : interf.getPropertyNames()) {
+          if (!proto.hasProperty(pname)) {
+            proto.defineDeclaredProperty(pname, interf.getPropertyType(pname), null);
+          }
+        }
+      }
+    }
+  }
+
   /**
    * Updates the scope according to the result of a type change, like
    * an assignment or a type cast.
@@ -564,6 +592,12 @@ class TypeInference
   private void updateScopeForTypeChange(
       FlowScope scope, Node left, JSType leftType, JSType resultType) {
     checkNotNull(resultType);
+
+    Node right = NodeUtil.getRValueOfLValue(left);
+    if (isPossibleMixinApplication(left, right)) {
+      addMissingInterfaceProperties(leftType);
+    }
+
     switch (left.getToken()) {
       case NAME:
         String varName = left.getString();

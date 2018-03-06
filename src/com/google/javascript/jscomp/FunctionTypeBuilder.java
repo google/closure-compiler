@@ -175,19 +175,20 @@ final class FunctionTypeBuilder {
       if (objectType == null) {
         reportWarning(EXTENDS_NON_OBJECT, formatFnName(), type.toString());
         return false;
-      } else if (objectType.isEmptyType()) {
+      }
+      if (objectType.isEmptyType()) {
         reportWarning(RESOLVED_TAG_EMPTY, "@extends", formatFnName());
         return false;
-      } else if (objectType.isUnknownType()) {
-        if (hasMoreTagsToResolve(objectType)) {
+      }
+      if (objectType.isUnknownType()) {
+        if (hasMoreTagsToResolve(objectType) || type.isTemplateType()) {
           return true;
         } else {
           reportWarning(RESOLVED_TAG_EMPTY, "@extends", fnName);
           return false;
         }
-      } else {
-        return true;
       }
+      return true;
     }
   }
 
@@ -516,9 +517,8 @@ final class FunctionTypeBuilder {
 
     FunctionParamBuilder builder = new FunctionParamBuilder(typeRegistry);
     boolean warnedAboutArgList = false;
-    Set<String> allJsDocParams = (info == null) ?
-         new HashSet<String>() :
-         new HashSet<>(info.getParameterNames());
+    Set<String> allJsDocParams =
+        (info == null) ? new HashSet<>() : new HashSet<>(info.getParameterNames());
     boolean isVarArgs = false;
     for (Node arg : argsParent.children()) {
       String argumentName = arg.getString();

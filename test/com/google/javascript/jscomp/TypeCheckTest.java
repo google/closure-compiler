@@ -12094,12 +12094,12 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
 
   public void testForwardTypeDeclaration5() {
     testClosureTypes(
-        "goog.addDependency('zzz.js', ['MyType'], []);" +
-        "/**\n" +
-        " * @constructor\n" +
-        " * @extends {MyType}\n" +
-        " */ var YourType = function() {};" +
-        "/** @override */ YourType.prototype.method = function() {};",
+        "goog.addDependency('zzz.js', ['MyType'], []);"
+            + "/**\n"
+            + " * @constructor\n"
+            + " * @extends {MyType}\n"
+            + " */ var YourType = function() {};"
+            + "/** @override */ YourType.prototype.method = function() {};",
         "Could not resolve type in @extends tag of YourType");
   }
 
@@ -19099,6 +19099,113 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
             "/** @const */",
             "var o = new Symbol();"),
         "cannot instantiate non-constructor");
+  }
+
+  public void testUnknownExtends1() {
+    testTypes(
+        lines(
+            "/**",
+            " * @template T",
+            " * @param {function(new: T)} clazz",
+            " */",
+            "function f(clazz) {",
+            "  /**",
+            "   * @constructor",
+            "   * @extends {clazz}",
+            "   */",
+            "  function Foo() {}",
+            "}"));
+  }
+
+  public void testUnknownExtends2() {
+    testTypes(
+        lines(
+            "function f(/** function(new: ?) */ clazz) {",
+            "  /**",
+            "   * @constructor",
+            "   * @extends {clazz}",
+            "   */",
+            "  function Foo() {}",
+            "}"),
+        "Could not resolve type in @extends tag of Foo");
+  }
+
+  private static final String MIXIN_DEFINITIONS =
+      lines(
+          "/** @constructor */",
+          "function MyElement() {",
+          "  /** @type {string} */",
+          "  this.elemprop = 'asdf';",
+          "}",
+          "/** @record */",
+          "function Toggle() {}",
+          "/**",
+          " * @param {string} x",
+          " * @return {string}",
+          " */",
+          "Toggle.prototype.foobar = function(x) {};",
+          "/**",
+          " * @template T",
+          " * @param {function(new:T)} superclass",
+          " * @suppress {checkTypes}", // TODO(b/74120976): fix bug and remove suppression
+          " */",
+          "function addToggle(superclass) {",
+          "  /**",
+          "   * @constructor",
+          "   * @extends {superclass}",
+          "   * @implements {Toggle}",
+          "   */",
+          "  function Clazz() {",
+          "    superclass.apply(this, arguments);",
+          "  }",
+          "  Clazz.prototype = Object.create(superclass.prototype);",
+          "  /** @override */",
+          "  Clazz.prototype.foobar = function(x) { return 'foobar ' + x; };",
+          "  return Clazz;",
+          "}");
+
+  public void testMixinApplication1() {
+    testTypes(
+        lines(
+            MIXIN_DEFINITIONS,
+            "/**",
+            " * @constructor",
+            " * @extends {MyElement}",
+            " * @implements {Toggle}",
+            " */",
+            "var MyElementWithToggle = addToggle(MyElement);",
+            "(new MyElementWithToggle).foobar(123);"),
+        lines(
+            "actual parameter 1 of MyElementWithToggle.prototype.foobar"
+                + " does not match formal parameter",
+            "found   : number",
+            "required: string"));
+  }
+
+  public void testMixinApplication2() {
+    testTypes(
+        lines(
+            MIXIN_DEFINITIONS,
+            "/**",
+            " * @constructor",
+            " * @extends {MyElement}",
+            " * @implements {Toggle}",
+            " */",
+            "var MyElementWithToggle = addToggle(MyElement);",
+            "(new MyElementWithToggle).elemprop = 123;"),
+        lines(
+            "assignment to property elemprop of MyElementWithToggle",
+            "found   : number",
+            "required: string"));
+  }
+
+  public void testMixinApplication3() {
+    testTypes(
+        lines(
+            MIXIN_DEFINITIONS,
+            "var MyElementWithToggle = addToggle(MyElement);",
+            "/** @type {MyElementWithToggle} */ var x = 123;"),
+        "Bad type annotation. Unknown type MyElementWithToggle");
   }
 
   private void testTypes(String js) {
