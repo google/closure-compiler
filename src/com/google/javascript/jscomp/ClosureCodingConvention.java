@@ -552,7 +552,7 @@ public final class ClosureCodingConvention extends CodingConventions.Proxy {
     @Override
     public com.google.javascript.rhino.jstype.JSType
         getAssertedOldType(Node call, JSTypeRegistry registry) {
-      return registry.getType(typeName);
+      return registry.getGlobalType(typeName);
     }
 
     @Override

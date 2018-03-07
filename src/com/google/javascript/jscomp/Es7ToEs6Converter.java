@@ -101,7 +101,7 @@ public final class Es7ToEs6Converter implements NodeTraversal.Callback, HotSwapC
     @Override public Node get() {
       Node n = NodeUtil.newQName(compiler, "Math.pow");
       if (addTypes) {
-        TypeI mathType = compiler.getTypeIRegistry().getType("Math");
+        TypeI mathType = compiler.getTypeIRegistry().getGlobalType("Math");
         TypeI mathPowType = mathType.toMaybeObjectType().getPropertyType("pow");
         TypeI stringType =
             createType(addTypes, compiler.getTypeIRegistry(), JSTypeNative.STRING_TYPE);

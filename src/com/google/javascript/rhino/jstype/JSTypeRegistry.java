@@ -63,6 +63,7 @@ import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.ObjectTypeI;
 import com.google.javascript.rhino.SimpleErrorReporter;
+import com.google.javascript.rhino.StaticScope;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.TypeI;
 import com.google.javascript.rhino.TypeIEnv;
@@ -1053,14 +1054,26 @@ public class JSTypeRegistry implements TypeIRegistry {
    * and more robust in the common case.
    *
    * @param name The name of the type to be recorded.
-   * @param t The actual type being associated with the name.
+   * @param type The actual type being associated with the name.
    * @return True if this name is not already defined, false otherwise.
    */
-  public boolean declareType(String name, JSType t) {
+  public boolean declareType(String name, JSType type) {
+    return declareType(null, name, type);
+  }
+
+  /**
+   * Records declared global type names. This makes resolution faster
+   * and more robust in the common case.
+   *
+   * @param name The name of the type to be recorded.
+   * @param type The actual type being associated with the name.
+   * @return True if this name is not already defined, false otherwise.
+   */
+  public boolean declareType(StaticScope scope, String name, JSType type) {
     if (namesToTypes.containsKey(name)) {
       return false;
     }
-    register(t, name);
+    register(type, name);
     return true;
   }
 
@@ -1227,6 +1240,11 @@ public class JSTypeRegistry implements TypeIRegistry {
     namesToTypes.remove(jsTypeName);
   }
 
+  @Override
+  public JSType getGlobalType(String jsTypeName) {
+    return getType(null, jsTypeName);
+  }
+
   /**
    * Looks up a native type by name.
    *
@@ -1237,6 +1255,19 @@ public class JSTypeRegistry implements TypeIRegistry {
   @SuppressWarnings("unchecked")
   @Override
   public JSType getType(String jsTypeName) {
+    return getType(null, jsTypeName);
+  }
+
+  /**
+   * Looks up a native type by name.
+   *
+   * @param jsTypeName The name string.
+   * @return the corresponding JSType object or {@code null} it cannot be found
+   */
+  // Unchecked conversion of the return type, from JSType to TypeI.
+  @SuppressWarnings("unchecked")
+  @Override
+  public JSType getType(StaticScope scope, String jsTypeName) {
     // TODO(user): Push every local type name out of namesToTypes so that
     // NamedType#resolve is correct.
     TemplateType templateType = templateTypes.get(jsTypeName);

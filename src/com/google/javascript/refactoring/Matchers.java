@@ -397,7 +397,7 @@ public final class Matchers {
   }
 
   private static JSType getJsType(NodeMetadata metadata, String type) {
-    return metadata.getCompiler().getTypeRegistry().getType(type);
+    return metadata.getCompiler().getTypeRegistry().getGlobalType(type);
   }
 
   private static JSType getJsType(NodeMetadata metadata, JSTypeNative nativeType) {

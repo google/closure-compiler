@@ -675,7 +675,7 @@ public final class SimpleReplaceScriptTest extends BaseReplaceScriptTestCase {
     Result result = compiler.getResult();
     assertNoWarningsOrErrors(result);
 
-    JSType type = compiler.getTypeIRegistry().getType("ns.Foo");
+    JSType type = compiler.getTypeRegistry().getType("ns.Foo");
     FunctionType fnType = type.toObjectType().getConstructor();
     Node srcNode = fnType.getSource();
     assertNode(srcNode).hasLineno(6);
@@ -742,7 +742,7 @@ public final class SimpleReplaceScriptTest extends BaseReplaceScriptTestCase {
 
     Compiler compiler = runFullCompile(
         getOptions(), ImmutableList.of(CLOSURE_BASE, src), 0, 0, false);
-    JSType type = compiler.getTypeIRegistry().getType("ns.Foo");
+    JSType type = compiler.getTypeRegistry().getType("ns.Foo");
     FunctionType fnType = type.toObjectType().getConstructor();
     StaticTypedSlot<JSType> originalSlot = fnType.getSlot("prototype");
 
@@ -750,7 +750,7 @@ public final class SimpleReplaceScriptTest extends BaseReplaceScriptTestCase {
 
     assertNoWarningsOrErrors(compiler.getResult());
 
-    type = compiler.getTypeIRegistry().getType("ns.Foo");
+    type = compiler.getTypeRegistry().getType("ns.Foo");
     fnType = type.toObjectType().getConstructor();
     StaticTypedSlot<JSType> newSlot = fnType.getSlot("prototype");
     assertNotSame(originalSlot, newSlot);

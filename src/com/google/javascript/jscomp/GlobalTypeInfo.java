@@ -31,6 +31,7 @@ import com.google.javascript.jscomp.newtypes.UniqueNameGenerator;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.ObjectTypeI;
+import com.google.javascript.rhino.StaticScope;
 import com.google.javascript.rhino.TypeI;
 import com.google.javascript.rhino.TypeIEnv;
 import com.google.javascript.rhino.TypeIRegistry;
@@ -222,8 +223,21 @@ public class GlobalTypeInfo implements TypeIRegistry {
     return n.getTypeI().getDisplayName();
   }
 
+  @SuppressWarnings("unchecked")
   @Override
-  public JSType getType(String typeName) {
+  public TypeI getGlobalType(String typeName) {
+    return getType(null, typeName);
+  }
+
+  @SuppressWarnings("unchecked")
+  @Override
+  public TypeI getType(String typeName) {
+    return getType(null, typeName);
+  }
+
+  @SuppressWarnings("unchecked")
+  @Override
+  public JSType getType(StaticScope scope, String typeName) {
     // Primitives are not present in the global scope, so hardcode them
     switch (typeName) {
       case "boolean":

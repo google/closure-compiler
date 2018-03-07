@@ -273,7 +273,7 @@ class ReplaceStrings extends AbstractPostOrderCallback
     if (!callClassType.isBottom() && !callClassType.isSomeUnknownType()) {
       for (String declarationName : declarationNames) {
         String className = getClassFromDeclarationName(declarationName);
-        TypeI methodClassType = registry.getType(className);
+        TypeI methodClassType = registry.getGlobalType(className);
         if (methodClassType != null
             && callClassType.isSubtypeOf(methodClassType)) {
           return functions.get(declarationName);

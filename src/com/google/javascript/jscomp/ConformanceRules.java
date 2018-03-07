@@ -338,7 +338,7 @@ public final class ConformanceRules {
       List<TypeI> types = new ArrayList<>();
 
       for (String typeName : typeNames) {
-        TypeI type = registry.getType(typeName);
+        TypeI type = registry.getGlobalType(typeName);
         if (type != null) {
           types.add(type);
         }
@@ -558,7 +558,7 @@ public final class ConformanceRules {
     private ConformanceResult checkConformance(NodeTraversal t, Node propAccess, Property prop) {
       if (isCandidatePropUse(propAccess, prop)) {
         TypeIRegistry registry = t.getCompiler().getTypeIRegistry();
-        TypeI typeWithBannedProp = registry.getType(prop.type);
+        TypeI typeWithBannedProp = registry.getGlobalType(prop.type);
         Node receiver = propAccess.getFirstChild();
         if (typeWithBannedProp != null && receiver.getTypeI() != null) {
           TypeI foundType = receiver.getTypeI().restrictByNotNullOrUndefined();
@@ -903,7 +903,7 @@ public final class ConformanceRules {
     private ConformanceResult checkConformance(
         NodeTraversal t, Node n, Restriction r, boolean isCallInvocation) {
       TypeIRegistry registry = t.getCompiler().getTypeIRegistry();
-      TypeI methodClassType = registry.getType(r.type);
+      TypeI methodClassType = registry.getGlobalType(r.type);
       Node lhs = isCallInvocation ? n.getFirstFirstChild() : n.getFirstChild();
       if (methodClassType != null && lhs.getTypeI() != null) {
         TypeI targetType = lhs.getTypeI().restrictByNotNullOrUndefined();
@@ -1161,7 +1161,7 @@ public final class ConformanceRules {
     public BanThrowOfNonErrorTypes(AbstractCompiler compiler, Requirement requirement)
         throws InvalidRequirementSpec {
       super(compiler, requirement);
-      errorObjType = compiler.getTypeIRegistry().getType("Error");
+      errorObjType = compiler.getTypeIRegistry().getGlobalType("Error");
     }
 
     @Override
@@ -1524,8 +1524,8 @@ public final class ConformanceRules {
       if (bannedTags.isEmpty()) {
         throw new InvalidRequirementSpec("Specify one or more values.");
       }
-      domHelperType = compiler.getTypeIRegistry().getType("goog.dom.DomHelper");
-      documentType = compiler.getTypeIRegistry().getType("Document");
+      domHelperType = compiler.getTypeIRegistry().getGlobalType("goog.dom.DomHelper");
+      documentType = compiler.getTypeIRegistry().getGlobalType("Document");
     }
 
     @Override
@@ -1596,7 +1596,7 @@ public final class ConformanceRules {
       if (bannedTagAttrs.isEmpty()) {
         throw new InvalidRequirementSpec("Specify one or more values.");
       }
-      domHelperType = compiler.getTypeIRegistry().getType("goog.dom.DomHelper");
+      domHelperType = compiler.getTypeIRegistry().getGlobalType("goog.dom.DomHelper");
       classNameTypes = compiler.getTypeIRegistry().createUnionType(ImmutableList.of(
           compiler.getTypeIRegistry().getNativeType(JSTypeNative.STRING_TYPE),
           compiler.getTypeIRegistry().getNativeType(JSTypeNative.ARRAY_TYPE),
