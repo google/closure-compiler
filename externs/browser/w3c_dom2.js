@@ -1750,6 +1750,12 @@ HTMLImageElement.prototype.name;
 
 /**
  * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/HTMLImageElement/referrerPolicy
+ */
+HTMLImageElement.prototype.referrerPolicy;
+
+/**
+ * @type {string}
  * @implicitCast
  * @see http://www.w3.org/TR/2000/CR-DOM-Level-2-20000510/html.html#ID-87762984
  */
@@ -2106,6 +2112,11 @@ HTMLScriptElement.prototype.event;
  * @see http://www.w3.org/TR/2000/CR-DOM-Level-2-20000510/html.html#ID-66979266
  */
 HTMLScriptElement.prototype.htmlFor;
+
+/**
+ * @type {?Function}
+ */
+HTMLScriptElement.prototype.onreadystatechange;
 
 /**
  * @type {string}
