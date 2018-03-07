@@ -23,6 +23,7 @@ import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES_NEXT;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.jscomp.PassFactory.HotSwapPassFactory;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
+import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.Node;
 import java.util.List;
 
@@ -59,6 +60,12 @@ public class TranspilationPasses {
   }
 
   public static void addEs2017Passes(List<PassFactory> passes) {
+    // Trailing commas in parameter lists are flagged as present by the parser,
+    // but never actually represented in the AST.
+    // The only thing we need to do is mark them as not present in the AST.
+    passes.add(
+        createFeatureRemovalPass(
+            "markTrailingCommasInParameterListsRemoved", Feature.TRAILING_COMMA_IN_PARAM_LIST));
     passes.add(rewriteAsyncFunctions);
   }
 
@@ -74,6 +81,15 @@ public class TranspilationPasses {
    * transpile them, even if the output language is also ES6.
    */
   public static void addEs6EarlyPasses(List<PassFactory> passes) {
+    // Binary and octal literals are effectively transpiled by the parser.
+    // There's no transpilation we can do for the new regexp flags.
+    passes.add(
+        createFeatureRemovalPass(
+            "markEs6FeaturesNotRequiringTranspilationAsRemoved",
+            Feature.BINARY_LITERALS,
+            Feature.OCTAL_LITERALS,
+            Feature.REGEXP_FLAG_U,
+            Feature.REGEXP_FLAG_Y));
     passes.add(es6NormalizeShorthandProperties);
     passes.add(es6ConvertSuper);
     passes.add(es6RenameVariablesInParamLists);
@@ -484,5 +500,47 @@ public class TranspilationPasses {
 
   public static void addPostCheckPasses(List<PassFactory> passes) {
     passes.add(es6ConvertSuperConstructorCalls);
+  }
+
+  static void markFeaturesAsTranspiledAway(
+      AbstractCompiler compiler, FeatureSet transpiledFeatures) {
+    compiler.setFeatureSet(compiler.getFeatureSet().without(transpiledFeatures));
+  }
+
+  static void markFeaturesAsTranspiledAway(
+      AbstractCompiler compiler, Feature transpiledFeature, Feature... moreTranspiledFeatures) {
+    compiler.setFeatureSet(
+        compiler.getFeatureSet().without(transpiledFeature, moreTranspiledFeatures));
+  }
+
+  /**
+   * Returns a pass that just removes features from the AST FeatureSet.
+   *
+   * <p>Doing this indicates that the AST no longer contains uses of the features, or that they are
+   * no longer of concern for some other reason.
+   */
+  private static HotSwapPassFactory createFeatureRemovalPass(
+      String passName, Feature featureToRemove, Feature... moreFeaturesToRemove) {
+    return new HotSwapPassFactory(passName) {
+      @Override
+      protected HotSwapCompilerPass create(AbstractCompiler compiler) {
+        return new HotSwapCompilerPass() {
+          @Override
+          public void hotSwapScript(Node scriptRoot, Node originalRoot) {
+            markFeaturesAsTranspiledAway(compiler, featureToRemove, moreFeaturesToRemove);
+          }
+
+          @Override
+          public void process(Node externs, Node root) {
+            markFeaturesAsTranspiledAway(compiler, featureToRemove, moreFeaturesToRemove);
+          }
+        };
+      }
+
+      @Override
+      protected FeatureSet featureSet() {
+        return FeatureSet.latest();
+      }
+    };
   }
 }

@@ -22,6 +22,7 @@ import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.jscomp.NodeUtil.Visitor;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
+import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfoBuilder;
@@ -57,7 +58,12 @@ public final class EarlyEs6ToEs3Converter implements Callback, HotSwapCompilerPa
 
   private static final String FRESH_SPREAD_VAR = "$jscomp$spread$args";
   // Since there's currently no Feature for Symbol, run this pass if the code has any ES6 features.
-  private static final FeatureSet transpiledFeatures = FeatureSet.ES6.without(FeatureSet.ES5);
+  private static final FeatureSet requiredForFeatures = FeatureSet.ES6.without(FeatureSet.ES5);
+  private static final FeatureSet featuresTranspiledAway =
+      FeatureSet.BARE_MINIMUM.with(
+          Feature.ARRAY_PATTERN_REST,
+          Feature.REST_PARAMETERS,
+          Feature.SPREAD_EXPRESSIONS);
 
   public EarlyEs6ToEs3Converter(AbstractCompiler compiler) {
     this.compiler = compiler;
@@ -65,13 +71,15 @@ public final class EarlyEs6ToEs3Converter implements Callback, HotSwapCompilerPa
 
   @Override
   public void process(Node externs, Node root) {
-    TranspilationPasses.processTranspile(compiler, externs, transpiledFeatures, this);
-    TranspilationPasses.processTranspile(compiler, root, transpiledFeatures, this);
+    TranspilationPasses.processTranspile(compiler, externs, requiredForFeatures, this);
+    TranspilationPasses.processTranspile(compiler, root, requiredForFeatures, this);
+    TranspilationPasses.markFeaturesAsTranspiledAway(compiler, featuresTranspiledAway);
   }
 
   @Override
   public void hotSwapScript(Node scriptRoot, Node originalRoot) {
-    TranspilationPasses.hotSwapTranspile(compiler, scriptRoot, transpiledFeatures, this);
+    TranspilationPasses.hotSwapTranspile(compiler, scriptRoot, requiredForFeatures, this);
+    TranspilationPasses.markFeaturesAsTranspiledAway(compiler, featuresTranspiledAway);
   }
 
   /**

@@ -86,12 +86,14 @@ final class Es6RewriteGenerators implements HotSwapCompilerPass {
   public void process(Node externs, Node root) {
     TranspilationPasses.processTranspile(
         compiler, root, transpiledFeatures, new GeneratorFunctionsTranspiler());
+    TranspilationPasses.markFeaturesAsTranspiledAway(compiler, transpiledFeatures);
   }
 
   @Override
   public void hotSwapScript(Node scriptRoot, Node originalRoot) {
     TranspilationPasses.hotSwapTranspile(
         compiler, scriptRoot, transpiledFeatures, new GeneratorFunctionsTranspiler());
+    TranspilationPasses.markFeaturesAsTranspiledAway(compiler, transpiledFeatures);
   }
 
   /**

@@ -42,7 +42,8 @@ import javax.annotation.Nullable;
  */
 public final class Es6RewriteClass implements NodeTraversal.Callback, HotSwapCompilerPass {
   private final AbstractCompiler compiler;
-  private static final FeatureSet features = FeatureSet.BARE_MINIMUM.with(Feature.CLASSES);
+  private static final FeatureSet features =
+      FeatureSet.BARE_MINIMUM.with(Feature.CLASSES, Feature.NEW_TARGET);
 
   // Whether to add $jscomp.inherits(Parent, Child) for each subclass.
   private final boolean shouldAddInheritsPolyfill;
@@ -75,11 +76,23 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, HotSwapCom
   public void process(Node externs, Node root) {
     TranspilationPasses.processTranspile(compiler, externs, features, this);
     TranspilationPasses.processTranspile(compiler, root, features, this);
+    // Don't mark features as transpiled away if we had errors that prevented transpilation.
+    // We don't want a redundant error from the AstValidator complaining that the features are still
+    // there
+    if (!compiler.hasHaltingErrors()) {
+      TranspilationPasses.markFeaturesAsTranspiledAway(compiler, features);
+    }
   }
 
   @Override
   public void hotSwapScript(Node scriptRoot, Node originalRoot) {
     TranspilationPasses.hotSwapTranspile(compiler, scriptRoot, features, this);
+    // Don't mark features as transpiled away if we had errors that prevented transpilation.
+    // We don't want a redundant error from the AstValidator complaining that the features are still
+    // there
+    if (!compiler.hasHaltingErrors()) {
+      TranspilationPasses.markFeaturesAsTranspiledAway(compiler, features);
+    }
   }
 
   @Override

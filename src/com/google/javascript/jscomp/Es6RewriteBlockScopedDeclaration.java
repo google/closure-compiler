@@ -122,6 +122,7 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
     NodeTraversal.traverseEs6(compiler, root, transformer);
     transformer.transformLoopClosure();
     rewriteDeclsToVars();
+    TranspilationPasses.markFeaturesAsTranspiledAway(compiler, transpiledFeatures);
   }
 
   @Override
@@ -133,6 +134,7 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
     NodeTraversal.traverseEs6(compiler, scriptRoot, transformer);
     transformer.transformLoopClosure();
     rewriteDeclsToVars();
+    TranspilationPasses.markFeaturesAsTranspiledAway(compiler, transpiledFeatures);
   }
 
   /**

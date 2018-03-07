@@ -137,11 +137,13 @@ public final class RewriteAsyncFunctions implements NodeTraversal.Callback, HotS
   public void process(Node externs, Node root) {
     TranspilationPasses.processTranspile(compiler, externs, transpiledFeatures, this);
     TranspilationPasses.processTranspile(compiler, root, transpiledFeatures, this);
+    TranspilationPasses.markFeaturesAsTranspiledAway(compiler, transpiledFeatures);
   }
 
   @Override
   public void hotSwapScript(Node scriptRoot, Node originalRoot) {
     TranspilationPasses.hotSwapTranspile(compiler, scriptRoot, transpiledFeatures, this);
+    TranspilationPasses.markFeaturesAsTranspiledAway(compiler, transpiledFeatures);
   }
 
   @Override

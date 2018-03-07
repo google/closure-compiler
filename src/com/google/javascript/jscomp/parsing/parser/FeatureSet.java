@@ -219,8 +219,8 @@ public final class FeatureSet implements Serializable {
     throw new IllegalStateException(this.toString());
   }
 
-  public FeatureSet without(Feature feature) {
-    return new FeatureSet(difference(features, EnumSet.of(feature)));
+  public FeatureSet without(Feature featureToRemove, Feature... moreFeaturesToRemove) {
+    return new FeatureSet(difference(features, EnumSet.of(featureToRemove, moreFeaturesToRemove)));
   }
 
   public FeatureSet without(FeatureSet other) {

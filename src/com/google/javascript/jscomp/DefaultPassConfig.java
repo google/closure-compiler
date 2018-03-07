@@ -165,17 +165,14 @@ public final class DefaultPassConfig extends PassConfig {
 
     if (options.needsTranspilationFrom(ES2018)) {
       TranspilationPasses.addEs2018Passes(passes);
-      passes.add(setFeatureSet(ES8));
     }
 
     if (options.needsTranspilationFrom(ES8)) {
       TranspilationPasses.addEs2017Passes(passes);
-      passes.add(setFeatureSet(ES7));
     }
 
     if (options.needsTranspilationFrom(ES7)) {
       TranspilationPasses.addEs2016Passes(passes);
-      passes.add(setFeatureSet(ES6));
     }
 
     // If the user has specified an input language of ES7 and an output language of ES6 or lower,
@@ -189,7 +186,6 @@ public final class DefaultPassConfig extends PassConfig {
       if (options.rewritePolyfills) {
         TranspilationPasses.addRewritePolyfillPass(passes);
       }
-      passes.add(setFeatureSet(options.getLanguageOut().toFeatureSet()));
     }
 
     if (!options.forceLibraryInjection.isEmpty()) {
@@ -280,7 +276,6 @@ public final class DefaultPassConfig extends PassConfig {
 
     if (options.needsTranspilationFrom(ES2018)) {
       TranspilationPasses.addEs2018Passes(checks);
-      checks.add(setFeatureSet(ES8));
     }
 
     if (options.enables(DiagnosticGroups.LINT_CHECKS)) {
@@ -386,12 +381,10 @@ public final class DefaultPassConfig extends PassConfig {
 
     if (options.needsTranspilationFrom(ES8)) {
       TranspilationPasses.addEs2017Passes(checks);
-      checks.add(setFeatureSet(ES7));
     }
 
     if (options.needsTranspilationFrom(ES7) && !options.getTypeCheckEs6Natively()) {
       TranspilationPasses.addEs2016Passes(checks);
-      checks.add(setFeatureSet(ES6));
     }
 
     if (options.needsTranspilationFrom(ES6)) {
@@ -409,16 +402,6 @@ public final class DefaultPassConfig extends PassConfig {
 
     if (options.rewritePolyfills && !options.checksOnly) {
       TranspilationPasses.addRewritePolyfillPass(checks);
-    }
-
-    if (options.needsTranspilationFrom(ES6)) {
-      if (options.getTypeCheckEs6Natively()) {
-        checks.add(setFeatureSet(FeatureSet.NTI_SUPPORTED));
-      } else {
-        // TODO(bradfordcsmith): This marking is really about how variable scoping is handled during
-        // type checking. It should really be handled in a more direct fashion.
-        checks.add(setFeatureSet(options.getLanguageOut().toFeatureSet()));
-      }
     }
 
     if (!options.forceLibraryInjection.isEmpty()) {
@@ -439,12 +422,10 @@ public final class DefaultPassConfig extends PassConfig {
 
       if (options.needsTranspilationFrom(ES7)) {
         TranspilationPasses.addEs2016Passes(checks);
-        checks.add(setFeatureSet(ES6));
       }
 
       if (options.needsTranspilationFrom(ES6)) {
         TranspilationPasses.addEs6PassesAfterNTI(checks);
-        checks.add(setFeatureSet(options.getLanguageOut().toFeatureSet()));
       }
     }
 
@@ -1539,25 +1520,6 @@ public final class DefaultPassConfig extends PassConfig {
           return ES8_MODULES;
         }
       };
-
-  private final PassFactory setFeatureSet(final FeatureSet featureSet) {
-    return new PassFactory("setFeatureSet:" + featureSet.version(), true) {
-      @Override
-      protected CompilerPass create(final AbstractCompiler compiler) {
-        return new CompilerPass() {
-          @Override
-          public void process(Node externs, Node root) {
-            compiler.setFeatureSet(featureSet);
-          }
-        };
-      }
-
-      @Override
-      public FeatureSet featureSet() {
-        return FeatureSet.latest();
-      }
-    };
-  }
 
   private final PassFactory declaredGlobalExternsOnWindow =
       new PassFactory(PassNames.DECLARED_GLOBAL_EXTERNS_ON_WINDOW, true) {
