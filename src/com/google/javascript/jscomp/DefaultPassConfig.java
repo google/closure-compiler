@@ -490,12 +490,12 @@ public final class DefaultPassConfig extends PassConfig {
       addNewTypeCheckerPasses(checks, options);
     }
 
-    if (options.j2clPassMode.shouldAddJ2clPasses()) {
-      checks.add(j2clSourceFileChecker);
-    }
-
     if (!options.getNewTypeInference()) {
       addOldTypeCheckerPasses(checks, options);
+    }
+
+    if (options.j2clPassMode.shouldAddJ2clPasses()) {
+      checks.add(j2clSourceFileChecker);
     }
 
     if (!options.disables(DiagnosticGroups.CHECK_USELESS_CODE)
