@@ -413,48 +413,6 @@ public class TranspilationPasses {
   }
 
   /**
-   * Process checks if the input language contains the provided features, on any JS file that has
-   * ES6 features.
-   *
-   * @param compiler An AbstractCompiler
-   * @param combinedRoot The combined root for all JS files.
-   * @param featureSet The features which this check targets.
-   * @param callbacks The callbacks that should be invoked if a file has ES6 features.
-   */
-  static void processCheck(
-      AbstractCompiler compiler, Node combinedRoot, FeatureSet featureSet, Callback... callbacks) {
-    if (compiler.getOptions().getLanguageIn().toFeatureSet().contains(featureSet)) {
-      for (Node singleRoot : combinedRoot.children()) {
-        if (isScriptEs6OrHigher(singleRoot)) {
-          for (Callback callback : callbacks) {
-            NodeTraversal.traverseEs6(compiler, singleRoot, callback);
-          }
-        }
-      }
-    }
-  }
-
-  /**
-   * Hot-swap ES6+ checks if the input language contains the provided features, on any JS file that
-   * has ES6 features.
-   *
-   * @param compiler An AbstractCompiler
-   * @param scriptRoot The SCRIPT root for the JS file.
-   * @param featureSet The features which this check targets.
-   * @param callbacks The callbacks that should be invoked if the file has ES6 features.
-   */
-  static void hotSwapCheck(
-      AbstractCompiler compiler, Node scriptRoot, FeatureSet featureSet, Callback... callbacks) {
-    if (compiler.getOptions().getLanguageIn().toFeatureSet().contains(featureSet)) {
-      if (isScriptEs6OrHigher(scriptRoot)) {
-        for (Callback callback : callbacks) {
-          NodeTraversal.traverseEs6(compiler, scriptRoot, callback);
-        }
-      }
-    }
-  }
-
-  /**
    * Process transpilations if the input language needs transpilation from certain features, on any
    * JS file that has ES6 features.
    *
