@@ -1743,8 +1743,7 @@ public abstract class CompilerTestCase extends TestCase {
         factories, new PreprocessorSymbolTable.CachedInstanceFactory());
     TranspilationPasses.addEs2017Passes(factories);
     TranspilationPasses.addEs2016Passes(factories);
-    TranspilationPasses.addEs6EarlyPasses(factories);
-    TranspilationPasses.addEs6LatePasses(factories);
+    TranspilationPasses.addEs6Passes(factories);
     TranspilationPasses.addRewritePolyfillPass(factories);
     for (PassFactory factory : factories) {
       factory.create(compiler).process(externsRoot, codeRoot);

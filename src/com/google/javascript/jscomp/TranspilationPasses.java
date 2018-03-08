@@ -73,14 +73,7 @@ public class TranspilationPasses {
     passes.add(convertEs7ToEs6);
   }
 
-  /**
-   * Adds all the early ES6 transpilation passes, which go before the Dart pass.
-   *
-   * <p>Includes ES6 features that are straightforward to transpile.
-   * We won't handle them natively in the rest of the compiler, so we always
-   * transpile them, even if the output language is also ES6.
-   */
-  public static void addEs6EarlyPasses(List<PassFactory> passes) {
+  public static void addEs6Passes(List<PassFactory> passes) {
     // Binary and octal literals are effectively transpiled by the parser.
     // There's no transpilation we can do for the new regexp flags.
     passes.add(
@@ -96,11 +89,6 @@ public class TranspilationPasses {
     passes.add(es6SplitVariableDeclarations);
     passes.add(es6RewriteDestructuring);
     passes.add(es6RewriteArrowFunction);
-  }
-
-  /** Adds all the late ES6 transpilation passes, which go after the Dart pass */
-  public static void addEs6LatePasses(List<PassFactory> passes) {
-    // TODO(b/64811685): Delete this method and use addEs6PassesBeforeNTI and addEs6PassesAfterNTI.
     passes.add(es6ExtractClasses);
     passes.add(es6RewriteClass);
     passes.add(earlyConvertEs6ToEs3);
@@ -111,15 +99,27 @@ public class TranspilationPasses {
   }
 
   /**
-   * Adds all the late ES6 transpilation passes, which go after the Dart pass
-   * and go before TypeChecking
+   * Adds all the ES6 transpilation passes which must run before NTI, because it doesn't
+   * understand the features that they transpile.
    *
-   * <p>Includes ES6 features that are best handled natively by the compiler.
-   * As we convert more passes to handle these features, we will be moving the
-   * transpilation later in the compilation, and eventually only transpiling
-   * when the output is lower than ES6.
+   * TODO(b/72551201): Remove this method when NTI is removed.
    */
   public static void addEs6PassesBeforeNTI(List<PassFactory> passes) {
+    // Binary and octal literals are effectively transpiled by the parser.
+    // There's no transpilation we can do for the new regexp flags.
+    passes.add(
+        createFeatureRemovalPass(
+            "markEs6FeaturesNotRequiringTranspilationAsRemoved",
+            Feature.BINARY_LITERALS,
+            Feature.OCTAL_LITERALS,
+            Feature.REGEXP_FLAG_U,
+            Feature.REGEXP_FLAG_Y));
+    passes.add(es6NormalizeShorthandProperties);
+    passes.add(es6ConvertSuper);
+    passes.add(es6RenameVariablesInParamLists);
+    passes.add(es6SplitVariableDeclarations);
+    passes.add(es6RewriteDestructuring);
+    passes.add(es6RewriteArrowFunction);
     passes.add(es6ExtractClasses);
     passes.add(es6RewriteClass);
     passes.add(earlyConvertEs6ToEs3);
@@ -127,7 +127,11 @@ public class TranspilationPasses {
     passes.add(rewriteBlockScopedDeclaration);
   }
 
-  /** Adds all transpilation passes that runs after NTI */
+  /**
+   * Adds all transpilation passes that can run after NTI.
+   *
+   * TODO(b/72551201): Remove this method when NTI is removed.
+   */
   public static void addEs6PassesAfterNTI(List<PassFactory> passes) {
     passes.add(lateConvertEs6ToEs3);
     passes.add(rewriteGenerators);
