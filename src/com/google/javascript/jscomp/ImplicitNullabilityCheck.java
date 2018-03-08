@@ -75,7 +75,7 @@ public final class ImplicitNullabilityCheck extends AbstractPostOrderCallback
               }
             });
 
-    Scope scope = t.getScope();
+    final Scope scope = t.getScope();
     for (Node typeRoot : info.getTypeNodes()) {
       NodeUtil.visitPreOrder(
           typeRoot,
