@@ -180,8 +180,9 @@ public final class DefaultPassConfig extends PassConfig {
     // operator. If we split that into its own pass then the needsTranspilationFrom(ES7) call here
     // can be removed.
     if (options.needsTranspilationFrom(ES6) || options.needsTranspilationFrom(ES7)) {
-      TranspilationPasses.addEs6Passes(passes);
-      TranspilationPasses.addPostCheckPasses(passes);
+      TranspilationPasses.addEs6PreTypecheckPasses(passes);
+      TranspilationPasses.addEs6PostTypecheckPasses(passes);
+      TranspilationPasses.addEs6PostCheckPasses(passes);
       if (options.rewritePolyfills) {
         TranspilationPasses.addRewritePolyfillPass(passes);
       }
@@ -210,13 +211,6 @@ public final class DefaultPassConfig extends PassConfig {
       passes.add(whitespaceWrapGoogModules);
     }
     return passes;
-  }
-
-  private void addNewTypeCheckerPasses(List<PassFactory> checks, CompilerOptions options) {
-    if (options.getNewTypeInference()) {
-      checks.add(symbolTableForNewTypeInference);
-      checks.add(newTypeInference);
-    }
   }
 
   private void addOldTypeCheckerPasses(List<PassFactory> checks, CompilerOptions options) {
@@ -388,7 +382,7 @@ public final class DefaultPassConfig extends PassConfig {
 
     if (options.needsTranspilationFrom(ES6)) {
       checks.add(es6ExternsCheck);
-      TranspilationPasses.addEs6Passes(checks);
+      TranspilationPasses.addEs6PreTypecheckPasses(checks);
     }
 
     if (options.rewritePolyfills && !options.checksOnly) {
@@ -403,12 +397,89 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(convertStaticInheritance);
     }
 
-    if (!options.skipNonTranspilationPasses) {
-      addNonTranspilationCheckPasses(checks);
+    if (options.skipNonTranspilationPasses) {
+      TranspilationPasses.addEs6PostTypecheckPasses(checks);
+    } else {
+      checks.add(createEmptyPass(PassNames.BEFORE_TYPE_CHECKING));
+
+      if (options.getNewTypeInference()) {
+        // We will not be updating NTI to understand any more new features,
+        // so transpile those features before running it.
+        TranspilationPasses.addEs6PostTypecheckPasses(checks);
+        checks.add(symbolTableForNewTypeInference);
+        checks.add(newTypeInference);
+      } else {
+        addOldTypeCheckerPasses(checks, options);
+        TranspilationPasses.addEs6PostTypecheckPasses(checks);
+      }
+
+      if (options.j2clPassMode.shouldAddJ2clPasses()) {
+        checks.add(j2clSourceFileChecker);
+      }
+
+      if (!options.disables(DiagnosticGroups.CHECK_USELESS_CODE)
+          || (!options.getNewTypeInference()
+              && !options.disables(DiagnosticGroups.MISSING_RETURN))) {
+        checks.add(checkControlFlow);
+      }
+
+      // CheckAccessControls only works if check types is on.
+      if (options.isTypecheckingEnabled()
+          && (!options.disables(DiagnosticGroups.ACCESS_CONTROLS)
+              || options.enables(DiagnosticGroups.CONSTANT_PROPERTY))) {
+        checks.add(checkAccessControls);
+      }
+
+      if (!options.getNewTypeInference()) {
+        // NTI performs this check already
+        checks.add(checkConsts);
+      }
+
+      // Analyzer checks must be run after typechecking.
+      if (options.enables(DiagnosticGroups.ANALYZER_CHECKS) && options.isTypecheckingEnabled()) {
+        checks.add(analyzerChecks);
+      }
+
+      if (options.checkGlobalNamesLevel.isOn()) {
+        checks.add(checkGlobalNames);
+      }
+
+      if (!options.getConformanceConfigs().isEmpty()) {
+        checks.add(checkConformance);
+      }
+
+      // Replace 'goog.getCssName' before processing defines but after the
+      // other checks have been done.
+      if (options.closurePass && !options.shouldPreserveGoogLibraryPrimitives()) {
+        checks.add(closureReplaceGetCssName);
+      }
+
+      if (options.getTweakProcessing().isOn()) {
+        checks.add(processTweaks);
+      }
+
+      if (options.instrumentationTemplate != null || options.recordFunctionInformation) {
+        checks.add(computeFunctionNames);
+      }
+
+      if (options.checksOnly) {
+        // Run process defines here so that warnings/errors from that pass are emitted as part of
+        // checks.
+        // TODO(rluble): Split process defines into two stages, one that performs only checks to be
+        // run here, and the one that actually changes the AST that would run in the optimization
+        // phase.
+        checks.add(processDefines);
+      }
+
+      if (options.j2clPassMode.shouldAddJ2clPasses()) {
+        checks.add(j2clChecksPass);
+      }
     }
 
     if (options.needsTranspilationFrom(ES6) && !options.checksOnly) {
-      TranspilationPasses.addPostCheckPasses(checks);
+      // At this point all checks have been done.
+      // There's no need to complete transpilation if we're only running checks.
+      TranspilationPasses.addEs6PostCheckPasses(checks);
     }
 
 
@@ -437,76 +508,6 @@ public final class DefaultPassConfig extends PassConfig {
     assertValidOrderForChecks(checks);
 
     return checks;
-  }
-
-  private void addNonTranspilationCheckPasses(List<PassFactory> checks) {
-    checks.add(createEmptyPass(PassNames.BEFORE_TYPE_CHECKING));
-    addNewTypeCheckerPasses(checks, options);
-
-    if (!options.getNewTypeInference()) {
-      addOldTypeCheckerPasses(checks, options);
-    }
-
-    if (options.j2clPassMode.shouldAddJ2clPasses()) {
-      checks.add(j2clSourceFileChecker);
-    }
-
-    if (!options.disables(DiagnosticGroups.CHECK_USELESS_CODE)
-        || (!options.getNewTypeInference() && !options.disables(DiagnosticGroups.MISSING_RETURN))) {
-      checks.add(checkControlFlow);
-    }
-
-    // CheckAccessControls only works if check types is on.
-    if (options.isTypecheckingEnabled()
-        && (!options.disables(DiagnosticGroups.ACCESS_CONTROLS)
-            || options.enables(DiagnosticGroups.CONSTANT_PROPERTY))) {
-      checks.add(checkAccessControls);
-    }
-
-    if (!options.getNewTypeInference()) {
-      // NTI performs this check already
-      checks.add(checkConsts);
-    }
-
-    // Analyzer checks must be run after typechecking.
-    if (options.enables(DiagnosticGroups.ANALYZER_CHECKS) && options.isTypecheckingEnabled()) {
-      checks.add(analyzerChecks);
-    }
-
-    if (options.checkGlobalNamesLevel.isOn()) {
-      checks.add(checkGlobalNames);
-    }
-
-    if (!options.getConformanceConfigs().isEmpty()) {
-      checks.add(checkConformance);
-    }
-
-    // Replace 'goog.getCssName' before processing defines but after the
-    // other checks have been done.
-    if (options.closurePass && !options.shouldPreserveGoogLibraryPrimitives()) {
-      checks.add(closureReplaceGetCssName);
-    }
-
-    if (options.getTweakProcessing().isOn()) {
-      checks.add(processTweaks);
-    }
-
-    if (options.instrumentationTemplate != null || options.recordFunctionInformation) {
-      checks.add(computeFunctionNames);
-    }
-
-    if (options.checksOnly) {
-      // Run process defines here so that warnings/errors from that pass are emitted as part of
-      // checks.
-      // TODO(rluble): Split process defines into two stages, one that performs only checks to be
-      // run here, and the one that actually changes the AST that would run in the optimization
-      // phase.
-      checks.add(processDefines);
-    }
-
-    if (options.j2clPassMode.shouldAddJ2clPasses()) {
-      checks.add(j2clChecksPass);
-    }
   }
 
   @Override
@@ -2037,7 +2038,7 @@ public final class DefaultPassConfig extends PassConfig {
       new HotSwapPassFactory(PassNames.ANALYZER_CHECKS) {
         @Override
         protected HotSwapCompilerPass create(AbstractCompiler compiler) {
-          ImmutableList.Builder<Callback> callbacks = ImmutableList.<Callback>builder();
+          ImmutableList.Builder<Callback> callbacks = ImmutableList.builder();
           if (options.enables(DiagnosticGroups.ANALYZER_CHECKS_INTERNAL)) {
             callbacks
                 .add(new CheckNullableReturn(compiler))

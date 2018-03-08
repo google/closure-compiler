@@ -1743,7 +1743,9 @@ public abstract class CompilerTestCase extends TestCase {
         factories, new PreprocessorSymbolTable.CachedInstanceFactory());
     TranspilationPasses.addEs2017Passes(factories);
     TranspilationPasses.addEs2016Passes(factories);
-    TranspilationPasses.addEs6Passes(factories);
+    TranspilationPasses.addEs6PreTypecheckPasses(factories);
+    TranspilationPasses.addEs6PostTypecheckPasses(factories);
+    TranspilationPasses.addEs6PostCheckPasses(factories);
     TranspilationPasses.addRewritePolyfillPass(factories);
     for (PassFactory factory : factories) {
       factory.create(compiler).process(externsRoot, codeRoot);
@@ -1989,7 +1991,7 @@ public abstract class CompilerTestCase extends TestCase {
             }
           }
         },
-        Predicates.<Node>alwaysTrue());
+        Predicates.alwaysTrue());
     return matches;
   }
 

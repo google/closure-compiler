@@ -8354,7 +8354,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testBug1940591() {
-    disableStrictMissingPropertyChecks();;
+    disableStrictMissingPropertyChecks();
     testTypes(
         "/** @type {Object} */" +
         "var a = {};\n" +
@@ -10339,7 +10339,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
 
   public void testDefinePropertyOnObject() {
     // checking loose property behavior
-    disableStrictMissingPropertyChecks();;
+    disableStrictMissingPropertyChecks();
     testTypes(
         lines(
             "/** @type {!Object} */ var n = {};",
@@ -10353,7 +10353,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
 
   public void testDefinePropertyOnNullableObject2() {
     // checking loose property behavior
-    disableStrictMissingPropertyChecks();;
+    disableStrictMissingPropertyChecks();
     testTypes("/** @constructor */ var T = function() {};\n" +
         "/** @param {T} t\n@return {boolean} */function f(t) {\n" +
         "t.x = 1; return t.x; }",
@@ -12349,7 +12349,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testMissingProperty1b() {
-    disableStrictMissingPropertyChecks();;
+    disableStrictMissingPropertyChecks();
 
     testTypes(
         "/** @constructor */ function Foo() {}" +
@@ -19440,7 +19440,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
       List<PassFactory> passes = new ArrayList<>();
       TranspilationPasses.addEs2017Passes(passes);
       TranspilationPasses.addEs2016Passes(passes);
-      TranspilationPasses.addEs6Passes(passes);
+      TranspilationPasses.addEs6PreTypecheckPasses(passes);
       PhaseOptimizer phaseopt = new PhaseOptimizer(compiler, null);
       phaseopt.consume(passes);
       phaseopt.process(externsNode, jsNode);

@@ -73,7 +73,7 @@ public class TranspilationPasses {
     passes.add(convertEs7ToEs6);
   }
 
-  public static void addEs6Passes(List<PassFactory> passes) {
+  public static void addEs6PreTypecheckPasses(List<PassFactory> passes) {
     // Binary and octal literals are effectively transpiled by the parser.
     // There's no transpilation we can do for the new regexp flags.
     passes.add(
@@ -460,7 +460,18 @@ public class TranspilationPasses {
     }
   }
 
-  public static void addPostCheckPasses(List<PassFactory> passes) {
+  /**
+   * Adds transpilation passes that should run after type checking is done, but before the other
+   * checks.
+   */
+  public static void addEs6PostTypecheckPasses(List<PassFactory> passes) {
+    // TODO(b/73387406): Move passes here as typecheck passes are updated to cope with the features
+    // they transpile and as the passes themselves are updated to propagate type information to the
+    // transpiled code.
+  }
+
+  /** Adds transpilation passes that should run after all checks are done. */
+  public static void addEs6PostCheckPasses(List<PassFactory> passes) {
     passes.add(es6ConvertSuperConstructorCalls);
   }
 
