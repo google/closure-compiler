@@ -219,7 +219,7 @@ public class CompilerOptions implements Serializable {
    * and the optimizations see the old types. We plan to switch these users to NTI-only builds
    * and delete this option.
    */
-  private boolean runOTIafterNTI = false;
+  private boolean runOTIafterNTI = true;
 
   /**
    * Relevant only when {@link #useNewTypeInference} is true, where we normally disable OTI errors.
