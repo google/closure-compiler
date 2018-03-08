@@ -1658,13 +1658,14 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
      * Declare the symbol for a qualified name in the global scope.
      *
      * @param info The doc info for this property.
-     * @param n A top-level GETPROP node (it should not be contained inside another GETPROP).
+     * @param n A top-level GETPROP node (it should not be contained inside
+     *     another GETPROP).
      * @param parent The parent of {@code n}.
-     * @param rhsValue The node that {@code n} is being initialized to, or {@code null} if this is a
-     *     stub declaration.
+     * @param rhsValue The node that {@code n} is being initialized to,
+     *     or {@code null} if this is a stub declaration.
      */
-    void maybeDeclareQualifiedName(
-        NodeTraversal t, JSDocInfo info, Node n, Node parent, Node rhsValue) {
+    void maybeDeclareQualifiedName(NodeTraversal t, JSDocInfo info,
+        Node n, Node parent, Node rhsValue) {
       Node ownerNode = n.getFirstChild();
       String ownerName = ownerNode.getQualifiedName();
       String qName = n.getQualifiedName();
@@ -1717,11 +1718,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
             return;
           }
 
-          // If we don't know the rhs type, keep the default type for the prototype; don't
-          // undeclare it.
-          if (rhsValue != null && rhsValue.getJSType() != null) {
-            qVar.getScope().undeclare(qVar);
-          }
+          qVar.getScope().undeclare(qVar);
         }
       }
 
@@ -1736,11 +1733,13 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
         return;
       }
 
-      boolean inferred = isQualifiedNameInferred(qName, n, info, rhsValue, valueType);
+      boolean inferred = isQualifiedNameInferred(
+          qName, n, info, rhsValue, valueType);
       if (!inferred) {
         ObjectType ownerType = getObjectSlot(ownerName);
         if (ownerType != null) {
-          // Only declare this as an official property if it has not been declared yet.
+          // Only declare this as an official property if it has not been
+          // declared yet.
           boolean isExtern = t.getInput() != null && t.getInput().isExtern();
           if ((!ownerType.hasOwnProperty(propName) || ownerType.isPropertyTypeInferred(propName))
               && ((isExtern && !ownerType.isNativeObjectType()) || !ownerType.isInstanceType())) {

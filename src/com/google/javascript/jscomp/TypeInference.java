@@ -584,15 +584,6 @@ class TypeInference
     }
   }
 
-  private boolean isLooseAssignmentToPrototype(
-      Node getprop, JSType currentPrototype, JSType newPrototype) {
-    return NodeUtil.isPrototypeAssignment(getprop)
-        && !currentPrototype.isUnknownType()
-        && (newPrototype.isUnknownType()
-            || newPrototype.isEquivalentTo(getNativeType(JSTypeNative.OBJECT_TYPE)))
-        && currentPrototype.isSubtype(newPrototype);
-  }
-
   /**
    * Updates the scope according to the result of a type change, like
    * an assignment or a type cast.
@@ -606,17 +597,13 @@ class TypeInference
       addMissingInterfaceProperties(leftType);
     }
 
-    // Don't clobber the prototype type if we see a direct assignment with loose type information
-    if (isLooseAssignmentToPrototype(left, leftType, resultType)) {
-      return;
-    }
-
     switch (left.getToken()) {
       case NAME:
         String varName = left.getString();
         TypedVar var = syntacticScope.getVar(varName);
         JSType varType = var == null ? null : var.getType();
-        boolean isVarDeclaration = left.hasChildren() && varType != null && !var.isTypeInferred();
+        boolean isVarDeclaration = left.hasChildren()
+            && varType != null && !var.isTypeInferred();
 
         boolean isTypelessConstDecl =
             isVarDeclaration
@@ -680,7 +667,8 @@ class TypeInference
           boolean declaredSlotType = false;
           JSType rawObjType = left.getFirstChild().getJSType();
           if (rawObjType != null) {
-            ObjectType objType = ObjectType.cast(rawObjType.restrictByNotNullOrUndefined());
+            ObjectType objType = ObjectType.cast(
+                rawObjType.restrictByNotNullOrUndefined());
             if (objType != null) {
               String propName = left.getLastChild().getString();
               declaredSlotType = objType.isPropertyTypeDeclared(propName);
@@ -705,7 +693,8 @@ class TypeInference
     String propName = getprop.getLastChild().getString();
     Node obj = getprop.getFirstChild();
     JSType nodeType = getJSType(obj);
-    ObjectType objectType = ObjectType.cast(nodeType.restrictByNotNullOrUndefined());
+    ObjectType objectType = ObjectType.cast(
+        nodeType.restrictByNotNullOrUndefined());
     boolean propCreationInConstructor =
         obj.isThis() && getJSType(syntacticScope.getRootNode()).isConstructor();
 
@@ -770,10 +759,10 @@ class TypeInference
 
   /**
    * Declares a property on its owner, if necessary.
-   *
    * @return True if a property was declared.
    */
-  private boolean ensurePropertyDeclaredHelper(Node getprop, ObjectType objectType) {
+  private boolean ensurePropertyDeclaredHelper(
+      Node getprop, ObjectType objectType) {
     if (getprop.isQualifiedName()) {
       String propName = getprop.getLastChild().getString();
       String qName = getprop.getQualifiedName();
@@ -786,7 +775,8 @@ class TypeInference
             (!objectType.hasOwnProperty(propName)
                 && (!objectType.isInstanceType()
                     || (var.isExtern() && !objectType.isNativeObjectType())))) {
-          return objectType.defineDeclaredProperty(propName, var.getType(), getprop);
+          return objectType.defineDeclaredProperty(
+              propName, var.getType(), getprop);
         }
       }
     }

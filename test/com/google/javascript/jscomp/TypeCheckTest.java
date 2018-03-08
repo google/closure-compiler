@@ -10167,7 +10167,6 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         "required: string");
   }
 
-  // TODO(blickly): Fix spurious warning
   public void testConstructorType9() {
     testTypes(
         "var ns = {};" +
@@ -10181,8 +10180,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         " */\n" +
         "function f(foo) {" +
         "  return foo.x;" +
-        "}",
-        "Property x never defined on ns.Foo");
+        "}");
   }
 
   public void testConstructorType10() {
@@ -11712,13 +11710,11 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testDirectPrototypeAssign() {
+    // For now, we just ignore @type annotations on the prototype.
     testTypes(
-        lines(
-            "/** @constructor */ function Foo() {}",
-            "/** @constructor */ function Bar() {}",
-            "/** @type {Array} */ Bar.prototype = new Foo()"),
-        "variable Bar.prototype redefined with type (Array|null),"
-            + " original definition at [testcode]:2 with type Bar.prototype");
+        "/** @constructor */ function Foo() {}" +
+        "/** @constructor */ function Bar() {}" +
+        "/** @type {Array} */ Bar.prototype = new Foo()");
   }
 
   // In all testResolutionViaRegistry* tests, since u is unknown, u.T can only
@@ -19210,60 +19206,6 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
             "var MyElementWithToggle = addToggle(MyElement);",
             "/** @type {MyElementWithToggle} */ var x = 123;"),
         "Bad type annotation. Unknown type MyElementWithToggle");
-  }
-
-  public void testPrototypeAssignmentDoesntMessUpInterfaceInheritance1() {
-    testTypes(
-        lines(
-            "/** @record */",
-            "function Toggle() {}",
-            "/**",
-            " * @param {string} x",
-            " * @return {string}",
-            " */",
-            "Toggle.prototype.foobar = function(x) {};",
-            "function f() {",
-            "  /**",
-            "   * @constructor",
-            "   * @implements {Toggle}",
-            "   */",
-            "  function Foo() {}",
-            "  Foo.prototype = Object.create(Toggle.prototype);",
-            "  /** @override */",
-            "  Foo.prototype.foobar = function(x) { return ''; };",
-            "  var /** number */ s = (new Foo).foobar('asdf');",
-            "}"),
-        lines(
-            "initializing variable",
-            "found   : string",
-            "required: number"));
-  }
-
-  public void testPrototypeAssignmentDoesntMessUpInterfaceInheritance2() {
-    testTypes(
-        lines(
-            "/** @record */",
-            "function Toggle() {}",
-            "/**",
-            " * @param {string} x",
-            " * @return {string}",
-            " */",
-            "Toggle.prototype.foobar = function(x) {};",
-            "function f(x) {",
-            "  /**",
-            "   * @constructor",
-            "   * @implements {Toggle}",
-            "   */",
-            "  function Foo() {}",
-            "  Foo.prototype = x;",
-            "  /** @override */",
-            "  Foo.prototype.foobar = function(x) { return ''; };",
-            "  var /** number */ s = (new Foo).foobar('asdf');",
-            "}"),
-        lines(
-            "initializing variable",
-            "found   : string",
-            "required: number"));
   }
 
   private void testTypes(String js) {
