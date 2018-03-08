@@ -383,21 +383,15 @@ public final class DefaultPassConfig extends PassConfig {
       TranspilationPasses.addEs2017Passes(checks);
     }
 
-    if (options.needsTranspilationFrom(ES7) && !options.getTypeCheckEs6Natively()) {
+    if (options.needsTranspilationFrom(ES7)) {
       TranspilationPasses.addEs2016Passes(checks);
     }
 
     if (options.needsTranspilationFrom(ES6)) {
       checks.add(es6ExternsCheck);
       TranspilationPasses.addEs6EarlyPasses(checks);
-    }
-
-    if (options.needsTranspilationFrom(ES6)) {
-      if (options.getTypeCheckEs6Natively()) {
-        TranspilationPasses.addEs6PassesBeforeNTI(checks);
-      } else {
-        TranspilationPasses.addEs6LatePasses(checks);
-      }
+      // TODO(bradfordcsmith): Combine early and late passes into a single method.
+      TranspilationPasses.addEs6LatePasses(checks);
     }
 
     if (options.rewritePolyfills && !options.checksOnly) {
@@ -410,23 +404,6 @@ public final class DefaultPassConfig extends PassConfig {
 
     if (options.needsTranspilationFrom(ES6)) {
       checks.add(convertStaticInheritance);
-    }
-
-    // End of ES6 transpilation passes before NTI.
-
-    if (options.getTypeCheckEs6Natively()) {
-      if (!options.skipNonTranspilationPasses) {
-        checks.add(createEmptyPass(PassNames.BEFORE_TYPE_CHECKING));
-        addNewTypeCheckerPasses(checks, options);
-      }
-
-      if (options.needsTranspilationFrom(ES7)) {
-        TranspilationPasses.addEs2016Passes(checks);
-      }
-
-      if (options.needsTranspilationFrom(ES6)) {
-        TranspilationPasses.addEs6PassesAfterNTI(checks);
-      }
     }
 
     if (!options.skipNonTranspilationPasses) {
@@ -466,10 +443,8 @@ public final class DefaultPassConfig extends PassConfig {
   }
 
   private void addNonTranspilationCheckPasses(List<PassFactory> checks) {
-    if (!options.getTypeCheckEs6Natively()) {
-      checks.add(createEmptyPass(PassNames.BEFORE_TYPE_CHECKING));
-      addNewTypeCheckerPasses(checks, options);
-    }
+    checks.add(createEmptyPass(PassNames.BEFORE_TYPE_CHECKING));
+    addNewTypeCheckerPasses(checks, options);
 
     if (!options.getNewTypeInference()) {
       addOldTypeCheckerPasses(checks, options);

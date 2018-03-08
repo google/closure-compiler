@@ -28,6 +28,13 @@ import com.google.javascript.rhino.Node;
 
 /**
  * Integration tests that check types of nodes are correct after running transpilation after NTI.
+ *
+ * TODO(b/72551201): Remove this entire test class once NTI is completely removed.
+ *
+ * Some of the test cases are already disabled, because we've removed the logic from
+ * DefaultPassConfig that allows for running NTI before (some parts of) transpilation.
+ * They aren't deleted, because they may serve as good models for test cases on OTI as we update it
+ * to understand the language features tested here.
  */
 public final class TranspileAfterNTITest extends IntegrationTestCase {
 
@@ -139,7 +146,8 @@ public final class TranspileAfterNTITest extends IntegrationTestCase {
     assertType(s.getFirstFirstChild().getTypeI()).toStringIsEqualTo("function(number): string");
   }
 
-  public void testComputedProp1() {
+  // See class javadoc for why this is disabled.
+  public void disabledTestComputedProp1() {
     Node root =
         typeInfoCheckAndGetRoot(
             LINE_JOINER.join(
@@ -175,7 +183,8 @@ public final class TranspileAfterNTITest extends IntegrationTestCase {
     assertType(firstName.getTypeI()).isString();
   }
 
-  public void testComputedProp2() {
+  // See class javadoc for why this is disabled.
+  public void disabledTestComputedProp2() {
     Node root =
         typeInfoCheckAndGetRoot(
             "var i = 1; var obj = {'a': i , [i + 1]: 1};",
@@ -329,7 +338,8 @@ public final class TranspileAfterNTITest extends IntegrationTestCase {
     assertType(template.getFirstFirstChild().getSecondChild().getTypeI()).isNumber();
   }
 
-  public void testTaggedTemplate1() {
+  // See class javadoc for why this is disabled.
+  public void disabledTestTaggedTemplate1() {
     Node root =
         typeInfoCheckAndGetRoot(
             LINE_JOINER.join(
@@ -370,7 +380,8 @@ public final class TranspileAfterNTITest extends IntegrationTestCase {
     assertType(s.getFirstFirstChild().getChildAtIndex(2).getTypeI()).isNumber();
   }
 
-  public void testTaggedTemplate2() {
+  // See class javadoc for why this is disabled.
+  public void disabledTestTaggedTemplate2() {
     Node root =
         typeInfoCheckAndGetRoot(
             LINE_JOINER.join(
