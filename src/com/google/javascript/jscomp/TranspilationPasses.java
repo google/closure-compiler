@@ -493,10 +493,10 @@ public class TranspilationPasses {
    * no longer of concern for some other reason.
    */
   private static HotSwapPassFactory createFeatureRemovalPass(
-      String passName, Feature featureToRemove, Feature... moreFeaturesToRemove) {
+      String passName, final Feature featureToRemove, final Feature... moreFeaturesToRemove) {
     return new HotSwapPassFactory(passName) {
       @Override
-      protected HotSwapCompilerPass create(AbstractCompiler compiler) {
+      protected HotSwapCompilerPass create(final AbstractCompiler compiler) {
         return new HotSwapCompilerPass() {
           @Override
           public void hotSwapScript(Node scriptRoot, Node originalRoot) {
