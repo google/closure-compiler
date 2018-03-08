@@ -213,15 +213,6 @@ public class CompilerOptions implements Serializable {
   private boolean useNewTypeInference;
 
   /**
-   * Several passes after type checking use type information. We have converted all these passes
-   * to use TypeI, and most users of NTI use NTI types throughout their compilation.
-   * But there are a few NTI users that still use the old mode, where OTI runs after NTI
-   * and the optimizations see the old types. We plan to switch these users to NTI-only builds
-   * and delete this option.
-   */
-  private boolean runOTIafterNTI = true;
-
-  /**
    * Relevant only when {@link #useNewTypeInference} is true, where we normally disable OTI errors.
    * If you want both NTI and OTI errors in this case, set to true.
    * E.g. if using using a warnings guard to filter NTI or OTI warnings in new or legacy code,
@@ -2004,14 +1995,6 @@ public class CompilerOptions implements Serializable {
     return this.checkTypes || this.useNewTypeInference;
   }
 
-  public boolean getRunOTIafterNTI() {
-    return this.runOTIafterNTI;
-  }
-
-  public void setRunOTIafterNTI(boolean enable) {
-    this.runOTIafterNTI = enable;
-  }
-
   // Not dead code; used by the open-source users of the compiler.
   public void setReportOTIErrorsUnderNTI(boolean enable) {
     this.reportOTIErrorsUnderNTI = enable;
@@ -2025,7 +2008,7 @@ public class CompilerOptions implements Serializable {
     this.typeCheckEs6Natively = enable;
   }
 
-/**
+  /**
    * @return Whether assumeStrictThis is set.
    */
   public boolean assumeStrictThis() {

@@ -437,7 +437,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       options.setWarningLevel(DiagnosticGroups.ACCESS_CONTROLS_CONST, CheckLevel.OFF);
     }
     // When running OTI after NTI, turn off the warnings from OTI.
-    if (options.getNewTypeInference() && options.getRunOTIafterNTI()) {
+    if (options.getNewTypeInference()) {
       options.checkTypes = true;
       if (!options.reportOTIErrorsUnderNTI) {
         options.setWarningLevel(

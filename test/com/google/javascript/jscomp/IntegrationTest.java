@@ -1301,7 +1301,6 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setLanguageIn(LanguageMode.ECMASCRIPT3);
     options.setClosurePass(true);
     options.setNewTypeInference(true);
-    options.setRunOTIafterNTI(false);
     options.setRemoveClosureAsserts(true);
     options.setDisambiguateProperties(true);
 
@@ -1575,7 +1574,6 @@ public final class IntegrationTest extends IntegrationTestCase {
     CompilerOptions options = createCompilerOptions();
     options.setClosurePass(true);
     options.setNewTypeInference(true);
-    options.setRunOTIafterNTI(false);
     options.setDisambiguateProperties(true);
     this.externs = ImmutableList.of(SourceFile.fromCode(
         "externs",
@@ -1597,7 +1595,6 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setLanguageIn(LanguageMode.ECMASCRIPT3);
     options.setClosurePass(true);
     options.setNewTypeInference(true);
-    options.setRunOTIafterNTI(false);
     options.setDisambiguateProperties(true);
     options.setGenerateExports(true);
     options.setExportLocalPropertyDefinitions(true);
@@ -1619,7 +1616,6 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setLanguageIn(LanguageMode.ECMASCRIPT3);
     options.setClosurePass(true);
     options.setNewTypeInference(true);
-    options.setRunOTIafterNTI(false);
     options.setDisambiguateProperties(true);
 
     String js = LINE_JOINER.join(
@@ -1668,7 +1664,6 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setLanguageIn(LanguageMode.ECMASCRIPT3);
     options.setClosurePass(true);
     options.setNewTypeInference(true);
-    options.setRunOTIafterNTI(false);
     options.setDisambiguateProperties(true);
 
     String js = LINE_JOINER.join(
@@ -1723,7 +1718,6 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setLanguageIn(LanguageMode.ECMASCRIPT3);
     options.setClosurePass(true);
     options.setNewTypeInference(true);
-    options.setRunOTIafterNTI(false);
 
     testSame(
         options,

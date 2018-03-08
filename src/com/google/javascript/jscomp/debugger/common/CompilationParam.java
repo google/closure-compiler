@@ -168,7 +168,6 @@ public enum CompilationParam {
     @Override
     public void apply(CompilerOptions options, boolean value) {
       options.setNewTypeInference(value);
-      options.setRunOTIafterNTI(false);
     }
 
     @Override
