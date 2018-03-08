@@ -4218,8 +4218,9 @@ public final class NodeUtil {
       return false;
     }
     Node parent = getProp.getParent();
-    return parent.isAssign() && parent.getFirstChild() == getProp
-        && parent.getFirstChild().getLastChild().getString().equals("prototype");
+    return parent.isAssign()
+        && parent.getFirstChild() == getProp
+        && getProp.getLastChild().getString().equals("prototype");
   }
 
   /**
