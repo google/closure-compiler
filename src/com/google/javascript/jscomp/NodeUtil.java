@@ -1737,7 +1737,7 @@ public final class NodeUtil {
   };
 
   static boolean isImmutableResult(Node n) {
-    return allResultsMatch(n, IMMUTABLE_PREDICATE);
+    return allResultsMatch(n, NodeUtil::isImmutableValue);
   }
 
   /**
@@ -2230,12 +2230,12 @@ public final class NodeUtil {
 
   @CheckReturnValue
   public static Node getEnclosingBlockScopeRoot(Node n) {
-    return getEnclosingNode(n, createsBlockScope);
+    return getEnclosingNode(n, NodeUtil::createsBlockScope);
   }
 
   @CheckReturnValue
   public static Node getEnclosingScopeRoot(Node n) {
-    return getEnclosingNode(n, createsScope);
+    return getEnclosingNode(n, NodeUtil::createsScope);
   }
 
   public static boolean isInFunction(Node n) {
@@ -2244,7 +2244,7 @@ public final class NodeUtil {
 
   @CheckReturnValue
   public static Node getEnclosingStatement(Node n) {
-    return getEnclosingNode(n, isStatement);
+    return getEnclosingNode(n, NodeUtil::isStatement);
   }
 
   @CheckReturnValue
@@ -2323,7 +2323,7 @@ public final class NodeUtil {
   static boolean referencesSuper(Node n) {
     Node curr = n.getFirstChild();
     while (curr != null) {
-      if (containsType(curr, Token.SUPER, MATCH_NOT_CLASS)) {
+      if (containsType(curr, Token.SUPER, node -> !node.isClass())) {
         return true;
       }
       curr = curr.getNext();
@@ -2373,13 +2373,6 @@ public final class NodeUtil {
   public static boolean isNameDeclaration(Node n) {
     return n != null && (n.isVar() || n.isLet() || n.isConst());
   }
-
-  static final Predicate<Node> isNameDeclaration = new Predicate<Node>() {
-    @Override
-    public boolean apply(Node n) {
-      return isNameDeclaration(n);
-    }
-  };
 
   /**
    * @param n The node
@@ -2613,13 +2606,6 @@ public final class NodeUtil {
     }
   }
 
-  static final Predicate<Node> createsBlockScope = new Predicate<Node>() {
-    @Override
-    public boolean apply(Node n) {
-      return createsBlockScope(n);
-    }
-  };
-
   static boolean createsScope(Node n) {
     return createsBlockScope(n) || n.isFunction() || n.isModuleBody()
         // The ROOT nodes that are the root of the externs tree or main JS tree do not
@@ -2627,13 +2613,6 @@ public final class NodeUtil {
         // therefore has no parent, is the only ROOT node that creates a scope.
         || (n.isRoot() && n.getParent() == null);
   }
-
-  static final Predicate<Node> createsScope = new Predicate<Node>() {
-    @Override
-    public boolean apply(Node n) {
-      return createsScope(n);
-    }
-  };
 
   private static final Set<Token> DEFINITE_CFG_ROOTS =
       EnumSet.of(Token.FUNCTION, Token.SCRIPT, Token.MODULE_BODY, Token.ROOT);
@@ -2648,13 +2627,6 @@ public final class NodeUtil {
   public static boolean isStatement(Node n) {
     return !n.isModuleBody() && isStatementParent(n.getParent());
   }
-
-  private static final Predicate<Node> isStatement = new Predicate<Node>() {
-    @Override
-    public boolean apply(Node n) {
-      return isStatement(n);
-    }
-  };
 
   private static final Set<Token> IS_STATEMENT_PARENT =
       EnumSet.of(
@@ -4400,29 +4372,7 @@ public final class NodeUtil {
     }
   }
 
-  /**
-   * A predicate for matching anything except function nodes.
-   */
-  private static class MatchNotFunction implements Predicate<Node>{
-    @Override
-    public boolean apply(Node n) {
-      return !n.isFunction();
-    }
-  }
-
-  /**
-   * A predicate for matching anything except class nodes.
-   */
-  private static class MatchNotClass implements Predicate<Node> {
-    @Override
-    public boolean apply(Node n) {
-      return !n.isClass();
-    }
-  }
-
-  static final Predicate<Node> MATCH_NOT_FUNCTION = new MatchNotFunction();
-
-  static final Predicate<Node> MATCH_NOT_CLASS = new MatchNotClass();
+  static final Predicate<Node> MATCH_NOT_FUNCTION = n -> !n.isFunction();
 
   static final Predicate<Node> MATCH_NOT_THIS_BINDING = new Predicate<Node>() {
     @Override
