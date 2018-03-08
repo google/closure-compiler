@@ -725,12 +725,7 @@ final class FunctionTypeBuilder {
     if (isConstructor) {
       fnType = getOrCreateConstructor();
     } else if (isInterface) {
-      fnType = typeRegistry.createInterfaceType(
-          fnName, contents.getSourceNode(), classTemplateTypeNames, makesStructs);
-      if (getScopeDeclaredIn().isGlobal() && !fnName.isEmpty()) {
-        typeRegistry.declareType(fnName, fnType.getInstanceType());
-      }
-      maybeSetBaseType(fnType);
+      fnType = getOrCreateInterface();
     } else {
       fnType =
           new FunctionBuilder(typeRegistry)
@@ -827,6 +822,28 @@ final class FunctionTypeBuilder {
     return fnType;
   }
 
+  private FunctionType getOrCreateInterface() {
+    FunctionType fnType = null;
+
+    JSType type = typeRegistry.getType(fnName);
+    if (type != null && type.isInstanceType()) {
+      FunctionType ctor = type.toMaybeObjectType().getConstructor();
+      if (ctor.isInterface()) {
+        fnType = ctor;
+        fnType.setSource(contents.getSourceNode());
+      }
+    }
+
+    if (fnType == null) {
+      fnType = typeRegistry.createInterfaceType(
+          fnName, contents.getSourceNode(), classTemplateTypeNames, makesStructs);
+      if (getScopeDeclaredIn().isGlobal() && !fnName.isEmpty()) {
+        typeRegistry.declareType(fnName, fnType.getInstanceType());
+      }
+      maybeSetBaseType(fnType);
+    }
+    return fnType;
+  }
   private void reportWarning(DiagnosticType warning, String ... args) {
     compiler.report(JSError.make(errorRoot, warning, args));
   }

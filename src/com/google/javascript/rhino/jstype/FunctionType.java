@@ -77,7 +77,7 @@ import java.util.Set;
 public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
   private static final long serialVersionUID = 1L;
 
-  private enum Kind {
+  enum Kind {
     ORDINARY,
     CONSTRUCTOR,
     INTERFACE
@@ -154,6 +154,7 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
   private List<FunctionTypeI> subTypes;
 
   /** Creates an instance for a function that might be a constructor. */
+  @Deprecated
   FunctionType(
       JSTypeRegistry registry,
       String name,
@@ -164,6 +165,29 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
       boolean isConstructor,
       boolean nativeType,
       boolean isAbstract) {
+    this(
+        registry,
+        name,
+        source,
+        arrowType,
+        typeOfThis,
+        templateTypeMap,
+        isConstructor ? Kind.CONSTRUCTOR : Kind.ORDINARY,
+        nativeType,
+        isAbstract);
+  }
+
+  /** Creates an instance for a function that might be a constructor. */
+  FunctionType(
+      JSTypeRegistry registry,
+      String name,
+      Node source,
+      ArrowType arrowType,
+      JSType typeOfThis,
+      TemplateTypeMap templateTypeMap,
+      Kind kind,
+      boolean nativeType,
+      boolean isAbstract) {
     super(registry, name,
         registry.getNativeObjectType(JSTypeNative.FUNCTION_INSTANCE_TYPE),
         nativeType, templateTypeMap);
@@ -172,16 +196,23 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
     checkArgument(source == null || Token.FUNCTION == source.getToken());
     checkNotNull(arrowType);
     this.source = source;
-    if (isConstructor) {
-      this.kind = Kind.CONSTRUCTOR;
-      this.propAccess = PropAccess.ANY;
-      this.typeOfThis = typeOfThis != null ?
-          typeOfThis : new InstanceObjectType(registry, this, nativeType);
-    } else {
-      this.kind = Kind.ORDINARY;
-      this.typeOfThis = typeOfThis != null ?
-          typeOfThis :
-          registry.getNativeObjectType(JSTypeNative.UNKNOWN_TYPE);
+    this.kind = kind;
+    switch (kind) {
+      case CONSTRUCTOR:
+        this.propAccess = PropAccess.ANY;
+        this.typeOfThis =
+            typeOfThis != null ? typeOfThis : new InstanceObjectType(registry, this, nativeType);
+        break;
+      case ORDINARY:
+        this.typeOfThis =
+            typeOfThis != null
+                ? typeOfThis
+                : registry.getNativeObjectType(JSTypeNative.UNKNOWN_TYPE);
+        break;
+      case INTERFACE:
+        this.typeOfThis =
+            typeOfThis != null ? typeOfThis : new InstanceObjectType(registry, this, nativeType);
+        break;
     }
     this.call = arrowType;
     this.isStructuralInterface = false;
@@ -189,28 +220,11 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
   }
 
   /** Creates an instance for a function that is an interface. */
-  private FunctionType(JSTypeRegistry registry, String name, Node source,
-      TemplateTypeMap typeParameters) {
-    super(registry, name,
-        registry.getNativeObjectType(JSTypeNative.FUNCTION_INSTANCE_TYPE),
-        false, typeParameters);
-    setPrettyPrint(true);
-
-    checkArgument(source == null || Token.FUNCTION == source.getToken());
-    checkArgument(name != null);
-    this.source = source;
-    this.call = new ArrowType(registry, new Node(Token.PARAM_LIST), null);
-    this.kind = Kind.INTERFACE;
-    this.typeOfThis = new InstanceObjectType(registry, this);
-    this.isStructuralInterface = false;
-    this.isAbstract = false;
-  }
-
-  /** Creates an instance for a function that is an interface. */
   static FunctionType forInterface(
-      JSTypeRegistry registry, String name, Node source,
-      TemplateTypeMap typeParameters) {
-    return new FunctionType(registry, name, source, typeParameters);
+      JSTypeRegistry registry, String name, Node source, TemplateTypeMap typeParameters) {
+    ArrowType arrowType = new ArrowType(registry, new Node(Token.PARAM_LIST), null);
+    return new FunctionType(
+        registry, name, source, arrowType, null, typeParameters, Kind.INTERFACE, false, false);
   }
 
   @Override

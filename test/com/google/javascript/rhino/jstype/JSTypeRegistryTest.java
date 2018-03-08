@@ -42,6 +42,7 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.ALL_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.BOOLEAN_OBJECT_FUNCTION_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.BOOLEAN_OBJECT_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.BOOLEAN_TYPE;
+import static com.google.javascript.rhino.jstype.JSTypeNative.ITERABLE_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NULL_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NULL_VOID;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NUMBER_TYPE;
@@ -60,9 +61,14 @@ import junit.framework.TestCase;
 public class JSTypeRegistryTest extends TestCase {
   // TODO(user): extend this class with more tests, as JSTypeRegistry is
   // now much larger
-  public void testGetBuiltInType() {
+  public void testGetBuiltInType_boolean() {
     JSTypeRegistry typeRegistry = new JSTypeRegistry(null);
     assertTypeEquals(typeRegistry.getNativeType(BOOLEAN_TYPE), typeRegistry.getType("boolean"));
+  }
+
+  public void testGetBuiltInType_iterable() {
+    JSTypeRegistry typeRegistry = new JSTypeRegistry(null);
+    assertTypeEquals(typeRegistry.getNativeType(ITERABLE_TYPE), typeRegistry.getType("Iterable"));
   }
 
   public void testGetDeclaredType() {

@@ -68,6 +68,7 @@ import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.TypeI;
 import com.google.javascript.rhino.TypeIEnv;
 import com.google.javascript.rhino.TypeIRegistry;
+import com.google.javascript.rhino.jstype.FunctionType.Kind;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -103,6 +104,9 @@ public class JSTypeRegistry implements TypeIRegistry {
    */
   private TemplateType iObjectElementTemplateKey;
   private static final String I_OBJECT_ELEMENT_TEMPLATE = "IObject#VALUE";
+
+  /** The template variable corresponding to the VALUE type in {@code Iterable<VALUE>} */
+  private TemplateType iterableTemplate;
 
   /**
    * The template variable in {@code Array<T>}
@@ -268,6 +272,8 @@ public class JSTypeRegistry implements TypeIRegistry {
         return ImmutableList.of(iObjectIndexTemplateKey, iObjectElementTemplateKey);
       case "Array":
         return ImmutableList.of(arrayElementTemplateKey);
+      case "Iterable":
+        return ImmutableList.of(iterableTemplate);
       default:
         return null;
     }
@@ -321,6 +327,7 @@ public class JSTypeRegistry implements TypeIRegistry {
     iObjectIndexTemplateKey = new TemplateType(this, "IObject#KEY1");
     iObjectElementTemplateKey = new TemplateType(this, I_OBJECT_ELEMENT_TEMPLATE);
     arrayElementTemplateKey = new TemplateType(this, "T");
+    iterableTemplate = new TemplateType(this, "VALUE");
 
     // Top Level Prototype (the One)
     // The initializations of TOP_LEVEL_PROTOTYPE and OBJECT_FUNCTION_TYPE
@@ -407,6 +414,20 @@ public class JSTypeRegistry implements TypeIRegistry {
 
     ObjectType ARRAY_TYPE = ARRAY_FUNCTION_TYPE.getInstanceType();
     registerNativeType(JSTypeNative.ARRAY_TYPE, ARRAY_TYPE);
+
+    FunctionType iterableFunctionType =
+        new FunctionType(
+            this,
+            "Iterable",
+            null,
+            createArrowType(),
+            null,
+            createTemplateTypeMap(ImmutableList.of(iterableTemplate), null),
+            Kind.INTERFACE,
+            true,
+            false);
+    registerNativeType(JSTypeNative.ITERABLE_FUNCTION_TYPE, iterableFunctionType);
+    registerNativeType(JSTypeNative.ITERABLE_TYPE, iterableFunctionType.getInstanceType());
 
     // Boolean
     FunctionType BOOLEAN_OBJECT_FUNCTION_TYPE =
@@ -759,6 +780,7 @@ public class JSTypeRegistry implements TypeIRegistry {
     register(getNativeType(JSTypeNative.ARRAY_TYPE));
     register(getNativeType(JSTypeNative.BOOLEAN_OBJECT_TYPE));
     register(getNativeType(JSTypeNative.BOOLEAN_TYPE));
+    register(getNativeType(JSTypeNative.ITERABLE_TYPE));
     register(getNativeType(JSTypeNative.DATE_TYPE));
     register(getNativeType(JSTypeNative.NULL_TYPE));
     register(getNativeType(JSTypeNative.NULL_TYPE), "Null");
@@ -1508,6 +1530,11 @@ public class JSTypeRegistry implements TypeIRegistry {
    */
   ArrowType createArrowType(Node parametersNode) {
     return new ArrowType(this, parametersNode, null);
+  }
+
+  /** Creates an arrow type with no parameters and an unknown return type. */
+  ArrowType createArrowType() {
+    return new ArrowType(this, new Node(Token.PARAM_LIST), null);
   }
 
   /**

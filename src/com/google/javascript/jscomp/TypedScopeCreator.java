@@ -29,6 +29,7 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.ERROR_FUNCTION_TYP
 import static com.google.javascript.rhino.jstype.JSTypeNative.EVAL_ERROR_FUNCTION_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.FUNCTION_FUNCTION_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.GLOBAL_THIS;
+import static com.google.javascript.rhino.jstype.JSTypeNative.ITERABLE_FUNCTION_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NO_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NULL_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NUMBER_OBJECT_FUNCTION_TYPE;
@@ -402,6 +403,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
     declareNativeFunctionType(s, ERROR_FUNCTION_TYPE);
     declareNativeFunctionType(s, EVAL_ERROR_FUNCTION_TYPE);
     declareNativeFunctionType(s, FUNCTION_FUNCTION_TYPE);
+    declareNativeFunctionType(s, ITERABLE_FUNCTION_TYPE);
     declareNativeFunctionType(s, NUMBER_OBJECT_FUNCTION_TYPE);
     declareNativeFunctionType(s, OBJECT_FUNCTION_TYPE);
     declareNativeFunctionType(s, RANGE_ERROR_FUNCTION_TYPE);
