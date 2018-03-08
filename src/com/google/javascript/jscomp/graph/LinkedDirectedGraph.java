@@ -152,13 +152,13 @@ public class LinkedDirectedGraph<N, E>
 
   @Override
   public LinkedDirectedGraphNode<N, E> createDirectedGraphNode(N nodeValue) {
-    LinkedDirectedGraphNode<N, E> node = nodes.get(nodeValue);
-    if (node == null) {
-      node = useNodeAnnotations
-          ? new AnnotatedLinkedDirectedGraphNode<N, E>(nodeValue)
-          : new LinkedDirectedGraphNode<N, E>(nodeValue);
-      nodes.put(nodeValue, node);
-    }
+    LinkedDirectedGraphNode<N, E> node =
+        nodes.computeIfAbsent(
+            nodeValue,
+            (N k) ->
+                useNodeAnnotations
+                    ? new AnnotatedLinkedDirectedGraphNode<N, E>(k)
+                    : new LinkedDirectedGraphNode<N, E>(k));
     return node;
   }
 

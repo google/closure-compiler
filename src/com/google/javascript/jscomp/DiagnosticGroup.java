@@ -82,9 +82,7 @@ public final class DiagnosticGroup implements Serializable {
 
   /** Create a diagnostic group that matches only the given type. */
   public static synchronized DiagnosticGroup forType(DiagnosticType type) {
-    if (!singletons.containsKey(type)) {
-      singletons.put(type, new DiagnosticGroup(type));
-    }
+    singletons.computeIfAbsent(type, (DiagnosticType k) -> new DiagnosticGroup(k));
     return singletons.get(type);
   }
 

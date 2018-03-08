@@ -18,7 +18,6 @@ package com.google.javascript.jscomp.parsing.parser;
 
 import com.google.javascript.jscomp.parsing.parser.util.SourcePosition;
 import com.google.javascript.jscomp.parsing.parser.util.SourceRange;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -56,11 +55,9 @@ public class LineNumberTable {
   }
 
   public static int[] toIntArray(ArrayList<Integer> integers) {
-      int[] ret = new int[integers.size()];
-      for (int i = 0; i < ret.length; i++) {
-          ret[i] = integers.get(i).intValue();
-      }
-      return ret;
+    int[] ret = new int[integers.size()];
+    Arrays.setAll(ret, (i) -> integers.get(i).intValue());
+    return ret;
   }
 
   private static boolean isLineTerminator(char ch) {

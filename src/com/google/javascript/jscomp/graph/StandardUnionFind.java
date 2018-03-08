@@ -123,11 +123,8 @@ public class StandardUnionFind<E> implements Serializable, UnionFind<E> {
     Map<Node<E>, ImmutableSet.Builder<E>> groupsTmp = new LinkedHashMap<>();
     for (Node<E> elem : elmap.values()) {
       Node<E> root = findRoot(elem);
-      ImmutableSet.Builder<E> builder = groupsTmp.get(root);
-      if (builder == null) {
-        builder = ImmutableSet.builder();
-        groupsTmp.put(root, builder);
-      }
+      ImmutableSet.Builder<E> builder =
+          groupsTmp.computeIfAbsent(root, (Node<E> k) -> ImmutableSet.builder());
       builder.add(elem.element);
     }
     ImmutableList.Builder<Set<E>> result = ImmutableList.builder();

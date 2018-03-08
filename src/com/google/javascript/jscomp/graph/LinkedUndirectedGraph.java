@@ -82,13 +82,13 @@ public final class LinkedUndirectedGraph<N, E>
   @Override
   public UndiGraphNode<N, E> createUndirectedGraphNode(
       N nodeValue) {
-    LinkedUndirectedGraphNode<N, E> node = nodes.get(nodeValue);
-    if (node == null) {
-      node = useNodeAnnotations ?
-          new AnnotatedLinkedUndirectedGraphNode<N, E>(nodeValue) :
-          new LinkedUndirectedGraphNode<N, E>(nodeValue);
-      nodes.put(nodeValue, node);
-    }
+    LinkedUndirectedGraphNode<N, E> node =
+        nodes.computeIfAbsent(
+            nodeValue,
+            (N k) ->
+                useNodeAnnotations
+                    ? new AnnotatedLinkedUndirectedGraphNode<N, E>(k)
+                    : new LinkedUndirectedGraphNode<N, E>(k));
     return node;
   }
 

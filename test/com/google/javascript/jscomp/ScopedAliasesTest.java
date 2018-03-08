@@ -19,6 +19,8 @@ package com.google.javascript.jscomp;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ListMultimap;
+import com.google.common.collect.MultimapBuilder;
 import com.google.javascript.jscomp.CompilerOptions.AliasTransformation;
 import com.google.javascript.jscomp.CompilerOptions.AliasTransformationHandler;
 import com.google.javascript.rhino.JSDocInfo;
@@ -1216,8 +1218,8 @@ public final class ScopedAliasesTest extends TypeICompilerTestCase {
   private static class TransformationHandlerSpy
       implements AliasTransformationHandler {
 
-    private final Map<String, List<SourcePosition<AliasTransformation>>> observedPositions =
-        new HashMap<>();
+    private final ListMultimap<String, SourcePosition<AliasTransformation>> observedPositions =
+        MultimapBuilder.hashKeys().arrayListValues().build();
 
     public final List<AliasTransformation> constructedAliases =
          new ArrayList<>();
@@ -1225,11 +1227,7 @@ public final class ScopedAliasesTest extends TypeICompilerTestCase {
     @Override
     public AliasTransformation logAliasTransformation(
         String sourceFile, SourcePosition<AliasTransformation> position) {
-      if (!observedPositions.containsKey(sourceFile)) {
-        observedPositions.put(sourceFile,
-             new ArrayList<SourcePosition<AliasTransformation>>());
-      }
-      observedPositions.get(sourceFile).add(position);
+      observedPositions.put(sourceFile, position);
       AliasTransformation spy = new AliasSpy();
       constructedAliases.add(spy);
       return spy;
