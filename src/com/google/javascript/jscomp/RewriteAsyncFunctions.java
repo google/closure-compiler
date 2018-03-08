@@ -41,20 +41,19 @@ import javax.annotation.Nullable;
  *   let $jscomp$async$this = this;
  *   let $jscomp$async$arguments = arguments;
  *   let $jscomp$async$super$get$x = () => super.x;
- *   function* $jscomp$async$generator() {
- *     // original body of foo() with:
- *     // - await (x) replaced with yield (x)
- *     // - arguments replaced with $jscomp$async$arguments
- *     // - this replaced with $jscomp$async$this
- *     // - super.x replaced with $jscomp$async$super$get$x()
- *     // - super.x(5) replaced with $jscomp$async$super$get$x().call($jscomp$async$this, 5)
- *   }
- *   return $jscomp.executeAsyncGenerator($jscomp$async$generator());
+ *   return $jscomp.asyncExecutePromiseGeneratorFunction(
+ *       function* () {
+ *         // original body of foo() with:
+ *         // - await (x) replaced with yield (x)
+ *         // - arguments replaced with $jscomp$async$arguments
+ *         // - this replaced with $jscomp$async$this
+ *         // - super.x replaced with $jscomp$async$super$get$x()
+ *         // - super.x(5) replaced with $jscomp$async$super$get$x().call($jscomp$async$this, 5)
+ *       });
  * }}</pre>
  */
 public final class RewriteAsyncFunctions implements NodeTraversal.Callback, HotSwapCompilerPass {
 
-  private static final String ASYNC_GENERATOR_NAME = "$jscomp$async$generator";
   private static final String ASYNC_ARGUMENTS = "$jscomp$async$arguments";
   private static final String ASYNC_THIS = "$jscomp$async$this";
   private static final String ASYNC_SUPER_PROP_GETTER_PREFIX = "$jscomp$async$super$get$";
@@ -231,7 +230,7 @@ public final class RewriteAsyncFunctions implements NodeTraversal.Callback, HotS
     Node originalFunction = checkNotNull(functionContext.function);
     originalFunction.setIsAsyncFunction(false);
     Node originalBody = originalFunction.getLastChild();
-    Node newBody = IR.block().useSourceInfoIfMissingFrom(originalBody);
+    Node newBody = IR.block();
     originalFunction.replaceChild(originalBody, newBody);
 
     if (functionContext.mustAddAsyncThisVariable) {
@@ -254,26 +253,19 @@ public final class RewriteAsyncFunctions implements NodeTraversal.Callback, HotS
 
     // Normalize arrow function short body to block body
     if (!originalBody.isNormalBlock()) {
-      originalBody = IR.block(IR.returnNode(originalBody)).useSourceInfoFromForTree(originalBody);
+      originalBody = IR.block(IR.returnNode(originalBody).useSourceInfoFrom(originalBody))
+          .useSourceInfoFrom(originalBody);
     }
     // NOTE: visit() will already have made appropriate replacements in originalBody so it may
     // be used as the generator function body.
-    Node newFunctionName = IR.name(ASYNC_GENERATOR_NAME);
-    Node originalName = originalFunction.getFirstChild();
-    // Use the source info from the function name. Without this line, we would use the source info
-    // from originalBody for the name node near the end of this method.
-    newFunctionName.useSourceInfoIfMissingFromForTree(originalName);
-    Node generatorFunction = IR.function(newFunctionName, IR.paramList(), originalBody);
-    compiler.reportChangeToChangeScope(generatorFunction);
+    Node generatorFunction = IR.function(IR.name(""), IR.paramList(), originalBody);
     generatorFunction.setIsGeneratorFunction(true);
-    // function* $jscomp$async$generator() { ... }
-    newBody.addChildToBack(generatorFunction);
+    compiler.reportChangeToChangeScope(generatorFunction);
 
-    // return $jscomp.executeAsyncGenerator($jscomp$async$generator());
-    Node executeAsyncGenerator = IR.getprop(IR.name("$jscomp"), IR.string("executeAsyncGenerator"));
-    newBody.addChildToBack(
-        IR.returnNode(
-            IR.call(executeAsyncGenerator, NodeUtil.newCallNode(IR.name(ASYNC_GENERATOR_NAME)))));
+    // return $jscomp.asyncExecutePromiseGeneratorFunction(function* () { ... });
+    newBody.addChildToBack(IR.returnNode(IR.call(
+        IR.getprop(IR.name("$jscomp"), IR.string("asyncExecutePromiseGeneratorFunction")),
+        generatorFunction)));
 
     newBody.useSourceInfoIfMissingFromForTree(originalBody);
     compiler.reportChangeToEnclosingScope(newBody);
