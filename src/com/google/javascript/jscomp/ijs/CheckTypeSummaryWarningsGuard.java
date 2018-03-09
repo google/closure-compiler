@@ -40,6 +40,12 @@ public class CheckTypeSummaryWarningsGuard extends FileAwareWarningsGuard {
     return null;
   }
 
+  @Override
+  protected int getPriority() {
+    // Treat warnings in .i.js files as though they are whitelisted.
+    return Priority.SUPPRESS_BY_WHITELIST.getValue();
+  }
+
   /** Return whether the given error was produced inside a type summary file */
   private boolean inTypeSummary(JSError error) {
     Node scriptNode = getScriptNodeForError(error);
