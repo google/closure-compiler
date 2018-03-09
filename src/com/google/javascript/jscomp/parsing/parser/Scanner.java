@@ -32,6 +32,7 @@ import java.util.ArrayList;
  * <p>7 Lexical Conventions
  */
 public class Scanner {
+  private final boolean parseTypeSyntax;
   private final ErrorReporter errorReporter;
   private final SourceFile source;
   private final ArrayList<Token> currentTokens = new ArrayList<>();
@@ -39,13 +40,21 @@ public class Scanner {
   private final CommentRecorder commentRecorder;
   private int typeParameterLevel;
 
-  public Scanner(ErrorReporter errorReporter, CommentRecorder commentRecorder,
+  public Scanner(
+      boolean parseTypeSyntax,
+      ErrorReporter errorReporter,
+      CommentRecorder commentRecorder,
       SourceFile source) {
-    this(errorReporter, commentRecorder, source, 0);
+    this(parseTypeSyntax, errorReporter, commentRecorder, source, 0);
   }
 
-  public Scanner(ErrorReporter errorReporter, CommentRecorder commentRecorder,
-      SourceFile file, int offset) {
+  public Scanner(
+      boolean parseTypeSyntax,
+      ErrorReporter errorReporter,
+      CommentRecorder commentRecorder,
+      SourceFile file,
+      int offset) {
+    this.parseTypeSyntax = parseTypeSyntax;
     this.errorReporter = errorReporter;
     this.commentRecorder = commentRecorder;
     this.source = file;
@@ -725,7 +734,7 @@ public class Scanner {
     }
 
     Keywords k = Keywords.get(value);
-    if (k != null) {
+    if (k != null && (!Keywords.isTypeScriptSpecificKeyword(value) || parseTypeSyntax)) {
       return new Token(k.type, getTokenRange(beginToken));
     }
 
