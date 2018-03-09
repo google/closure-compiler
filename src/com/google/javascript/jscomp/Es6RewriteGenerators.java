@@ -209,7 +209,7 @@ final class Es6RewriteGenerators implements HotSwapCompilerPass {
     SingleGeneratorFunctionTranspiler(Node genFunc, int genaratorNestingLevel) {
       this.generatorNestingLevel = genaratorNestingLevel;
       this.originalGeneratorBody = genFunc.getLastChild();
-      this.context = new TranspilationContext(originalGeneratorBody);
+      this.context = new TranspilationContext();
     }
 
     public void transpile() {
@@ -250,7 +250,7 @@ final class Es6RewriteGenerators implements HotSwapCompilerPass {
                   // once, which messes up its understanding of the types assigned to variables
                   // within it.
                   IR.doNode( // TODO(skill):  Remove do-while loop when this pass moves after
-                      // type checking or when OTI is fixed to handle this correctly.
+                             // type checking or when OTI is fixed to handle this correctly.
                       IR.block(switchNode),
                       IR.number(0))));
 
@@ -275,8 +275,7 @@ final class Es6RewriteGenerators implements HotSwapCompilerPass {
                       IR.call(
                           IR.getprop(IR.name("$jscomp"), "generator", "createGenerator"),
                           genFuncName.cloneNode(),
-                          program)))
-              .useSourceInfoFromForTree(genFunc);
+                          program)).useSourceInfoFromForTree(originalGeneratorBody));
 
       // Newly introduced functions have to be reported immediately.
       compiler.reportChangeToChangeScope(program);
@@ -953,7 +952,6 @@ final class Es6RewriteGenerators implements HotSwapCompilerPass {
 
         // Allocate a new case
         TranspilationContext.Case generatedCase = context.createCase();
-        generatedCase.caseNode.useSourceInfoFrom(caseSection);
         generatedCase.caseBlock.useSourceInfoFrom(body);
 
         // Replace old body with a jump instruction.
@@ -1048,13 +1046,12 @@ final class Es6RewriteGenerators implements HotSwapCompilerPass {
       boolean thisReferenceFound;
       boolean argumentsReferenceFound;
 
-      TranspilationContext(Node sourceNode) {
-        programEndCase = new Case(IR.caseNode(IR.number(0), IR.block()));
-
-        currentCase =
-            new Case(IR.caseNode(IR.number(1), IR.block()).useSourceInfoFromForTree(sourceNode));
+      TranspilationContext() {
+        programEndCase = new Case();
+        checkState(programEndCase.id == 0);
+        currentCase = new Case();
+        checkState(currentCase.id == 1);
         allCases.add(currentCase);
-        caseIdCounter = 1;
       }
 
       /**
@@ -1146,7 +1143,7 @@ final class Es6RewriteGenerators implements HotSwapCompilerPass {
             checkState(currentCase.jumpTo == null);
             // Cases can be embedded only if they are referenced once and don't fall through.
             if (currentCase.references.size() == 1 && !currentCase.mayFallThrough) {
-              currentCase.embedInto.replaceWith(currentCase.caseBlock.detach());
+              currentCase.embedInto.replaceWith(currentCase.caseBlock);
               it.remove();
               continue;
             }
@@ -1191,7 +1188,7 @@ final class Es6RewriteGenerators implements HotSwapCompilerPass {
         optimizeCaseIds();
         // Write all state machine cases
         for (Case currentCase : allCases) {
-          switchNode.addChildToBack(currentCase.caseNode);
+          switchNode.addChildToBack(currentCase.createCaseNode());
         }
         allCases.clear();
       }
@@ -1204,6 +1201,7 @@ final class Es6RewriteGenerators implements HotSwapCompilerPass {
         checkState(catchCases.isEmpty());
         checkState(finallyCases.isEmpty());
         checkState(nestedFinallyBlockCount == 0);
+        checkState(allCases.isEmpty());
       }
 
       /** Adds a block of original code to the end of the current case. */
@@ -1219,6 +1217,13 @@ final class Es6RewriteGenerators implements HotSwapCompilerPass {
       /** Adds a new generated node to the end of the current case. */
       void writeGeneratedNode(Node n) {
         currentCase.addNode(n);
+      }
+
+      /** Adds a new generated node to the end of the current case and finializes it. */
+      void writeGeneratedNodeAndBreak(Node n) {
+        writeGeneratedNode(n);
+        writeGeneratedNode(IR.breakNode().useSourceInfoFrom(n));
+        currentCase.mayFallThrough = false;
       }
 
       /** Creates a new detached case statement. */
@@ -1313,11 +1318,9 @@ final class Es6RewriteGenerators implements HotSwapCompilerPass {
         }
         if (breakSuppressors == 0) {
           // continue;  =>  $context.jumpTo(x); break;
-          sourceNode
-              .getParent()
-              .addChildBefore(
-                  callContextMethodResult(sourceNode, jumpMethod, section.getNumber(sourceNode)),
-                  sourceNode);
+          sourceNode.getParent().addChildBefore(
+              callContextMethodResult(sourceNode, jumpMethod, section.getNumber(sourceNode)),
+              sourceNode);
           sourceNode.replaceWith(IR.breakNode());
         } else {
           // "break;" inside a loop or swtich statement:
@@ -1453,10 +1456,8 @@ final class Es6RewriteGenerators implements HotSwapCompilerPass {
         if (nextCatchCase != null) {
           args.add(nextCatchCase.getNumber(sourceNode));
         }
-        writeGeneratedNode(
+        writeGeneratedNodeAndBreak(
             callContextMethodResult(sourceNode, "leaveTryBlock", args.toArray(new Node[0])));
-        writeGeneratedNode(IR.breakNode().useSourceInfoFrom(sourceNode));
-        currentCase.mayFallThrough = false;
       }
 
       /** Writes a statement Node that should be placed at the beginning of catch block. */
@@ -1541,10 +1542,8 @@ final class Es6RewriteGenerators implements HotSwapCompilerPass {
           args.add(IR.number(nestedFinallyBlockCount).useSourceInfoFrom(sourceNode));
         }
 
-        writeGeneratedNode(
+        writeGeneratedNodeAndBreak(
             callContextMethodResult(sourceNode, "leaveFinallyBlock", args.toArray(new Node[0])));
-        writeGeneratedNode(IR.breakNode().useSourceInfoFrom(sourceNode));
-        currentCase.mayFallThrough = false;
       }
 
       /** Changes the {@link #currentCase} to a new one. */
@@ -1598,7 +1597,6 @@ final class Es6RewriteGenerators implements HotSwapCompilerPass {
       /** A case section in a switch block of generator program. */
       private class Case {
         final int id;
-        final Node caseNode;
         final Node caseBlock;
 
         /**
@@ -1644,20 +1642,15 @@ final class Es6RewriteGenerators implements HotSwapCompilerPass {
         /** Tells whether this case might fall-through. */
         boolean mayFallThrough = true;
 
-        /** Creates a Case object for an already created case node. */
-        Case(Node caseNode) {
-          checkState(caseNode.isCase());
-          this.id = NodeUtil.getNumberValue(caseNode.getFirstChild()).intValue();
-          this.caseNode = caseNode;
-          this.caseBlock = caseNode.getLastChild();
-        }
-
         /** Creates a new empty case section and assings a new id. */
         Case() {
-          id = ++caseIdCounter;
-          caseNode =
-              IR.caseNode(IR.number(id), caseBlock = IR.block())
-                  .useSourceInfoFromForTree(originalGeneratorBody);
+          this.id = caseIdCounter++;
+          this.caseBlock = IR.block().useSourceInfoFrom(originalGeneratorBody);
+        }
+
+        Node createCaseNode() {
+          return IR.caseNode(IR.number(id).useSourceInfoFrom(caseBlock), caseBlock)
+              .useSourceInfoFrom(caseBlock);
         }
 
         /** Returns the number node of the case section and increments a reference counter. */
