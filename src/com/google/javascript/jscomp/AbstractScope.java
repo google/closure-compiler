@@ -28,12 +28,27 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
- * Scope contains information about a variable scope in JavaScript.
- * Scopes can be nested, a scope points back to its parent scope.
- * A Scope contains information about variables defined in that scope.
+ * Scope contains information about a variable scope in JavaScript. Scopes can be nested, a scope
+ * points back to its parent scope. A Scope contains information about variables defined in that
+ * scope.
+ *
+ * <p>ES6 introduces new scoping rules, which adds some complexity to this class. In particular,
+ * scopes fall into four mutually exclusive categories based on their root node: block, function,
+ * module, or global. Function, module, and global scopes are collectively referred to as "non-block
+ * scopes". We also define a scope as a "hoist scope" if it is a non-block scope *or* it is the
+ * outermost block scope within a function (i.e. a "function block scope"). Hoist scopes are
+ * important because "var" declarations are hoisted to the closest hoist scope, as opposed to ES6
+ * "let" and "const" which are not hoisted, but instead added directly to whatever scope they're
+ * declared in.
+ *
+ * <p>Finally, a caution about function scopes and function block scopes: the language does not
+ * permit any shadowing to occur between them (with the exception of bleeding function names), so in
+ * many situations these scopes are treated as a single scope. Under block scoping, only function
+ * parameters (and optionally, bleeding function names) are declared in the function scope. It is
+ * kept as a separate scope so that default parameter initializers may be evaluated in a separate
+ * scope from the function body.
  *
  * @see NodeTraversal
- *
  */
 abstract class AbstractScope<S extends AbstractScope<S, V>, V extends AbstractVar<S, V>>
     implements StaticScope, Serializable {
@@ -321,6 +336,19 @@ abstract class AbstractScope<S extends AbstractScope<S, V>, V extends AbstractVa
       current = current.getParent();
     }
     return null;
+  }
+
+  /**
+   * Returns the closest non-block scope. This is equivalent to what the current scope would have
+   * been for non-block-scope creators, and is thus useful for migrating code to use block scopes.
+   */
+  public final S getClosestNonBlockScope() {
+    S scope = getClosestHoistScope();
+    if (scope.isBlockScope()) {
+      scope = scope.getParent();
+      checkState(!scope.isBlockScope());
+    }
+    return scope;
   }
 
   // This is safe because any concrete subclass of AbstractScope<S> should be assignable to S.

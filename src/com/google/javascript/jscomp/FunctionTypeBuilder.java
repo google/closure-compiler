@@ -25,12 +25,8 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.UNKNOWN_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.VOID_TYPE;
 
 import com.google.common.base.Predicate;
-import com.google.common.collect.HashMultiset;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableMultiset;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Multiset;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSTypeExpression;
@@ -919,15 +915,6 @@ final class FunctionTypeBuilder {
 
     /** Returns if this consists of a single throw. */
     boolean mayHaveSingleThrow();
-
-    /** Gets a list of variables in this scope that are escaped. */
-    Iterable<String> getEscapedVarNames();
-
-    /** Gets a list of variables whose properties are escaped. */
-    Set<String> getEscapedQualifiedNames();
-
-    /** Gets the number of times each variable has been assigned. */
-    Multiset<String> getAssignedNameCounts();
   }
 
   static class UnknownFunctionContents implements FunctionContents {
@@ -956,29 +943,11 @@ final class FunctionTypeBuilder {
     public boolean mayHaveSingleThrow() {
       return true;
     }
-
-    @Override
-    public Iterable<String> getEscapedVarNames() {
-      return ImmutableList.of();
-    }
-
-    @Override
-    public Set<String> getEscapedQualifiedNames() {
-      return ImmutableSet.of();
-    }
-
-    @Override
-    public Multiset<String> getAssignedNameCounts() {
-      return ImmutableMultiset.of();
-    }
   }
 
   static class AstFunctionContents implements FunctionContents {
     private final Node n;
     private boolean hasNonEmptyReturns = false;
-    private Set<String> escapedVarNames;
-    private Set<String> escapedQualifiedNames;
-    private final Multiset<String> assignedVarNames = HashMultiset.create();
 
     AstFunctionContents(Node n) {
       this.n = n;
@@ -1007,41 +976,6 @@ final class FunctionTypeBuilder {
     public boolean mayHaveSingleThrow() {
       Node block = n.getLastChild();
       return block.hasOneChild() && block.getFirstChild().isThrow();
-    }
-
-    @Override
-    public Iterable<String> getEscapedVarNames() {
-      return escapedVarNames == null
-          ? ImmutableList.<String>of() : escapedVarNames;
-    }
-
-    void recordEscapedVarName(String name) {
-      if (escapedVarNames == null) {
-        escapedVarNames = new HashSet<>();
-      }
-      escapedVarNames.add(name);
-    }
-
-    @Override
-    public Set<String> getEscapedQualifiedNames() {
-      return escapedQualifiedNames == null
-          ? ImmutableSet.<String>of() : escapedQualifiedNames;
-    }
-
-    void recordEscapedQualifiedName(String name) {
-      if (escapedQualifiedNames == null) {
-        escapedQualifiedNames = new HashSet<>();
-      }
-      escapedQualifiedNames.add(name);
-    }
-
-    @Override
-    public Multiset<String> getAssignedNameCounts() {
-      return assignedVarNames;
-    }
-
-    void recordAssignedName(String name) {
-      assignedVarNames.add(name);
     }
   }
 }

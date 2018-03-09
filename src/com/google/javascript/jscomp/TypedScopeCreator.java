@@ -51,8 +51,8 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.VOID_TYPE;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.HashMultiset;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multiset;
@@ -85,9 +85,12 @@ import com.google.javascript.rhino.jstype.TemplateTypeMapReplacer;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.function.Predicate;
 import javax.annotation.Nullable;
 
 /**
@@ -166,9 +169,12 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
   private final Map<Node, TypedScope> memoized = new LinkedHashMap<>();
   private final boolean runsAfterNTI;
 
-  // Simple properties inferred about functions.
-  private final Map<Node, AstFunctionContents> functionAnalysisResults =
-       new LinkedHashMap<>();
+  // Set of functions with non-empty returns, for passing to FunctionTypeBuilder.
+  private final Set<Node> functionsWithNonEmptyReturns = new HashSet<>();
+  // Includes both simple and qualified names.
+  private final Set<ScopedName> escapedVarNames = new HashSet<>();
+  // Count of how many times each variable is assigned.
+  private final Multiset<ScopedName> assignedVarNames = HashMultiset.create();
 
   // For convenience
   private final ObjectType unknownType;
@@ -246,11 +252,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
    * @param scriptName the name of the script file to remove nodes for.
    */
   void removeScopesForScript(String scriptName) {
-    for (Node scopeRoot : ImmutableSet.copyOf(memoized.keySet())) {
-      if (scriptName.equals(scopeRoot.getSourceFileName())) {
-        memoized.remove(scopeRoot);
-      }
-    }
+    memoized.keySet().removeIf(n -> scriptName.equals(NodeUtil.getSourceName(n)));
   }
 
   /** Create a scope, looking up in the map for the parent scope. */
@@ -303,8 +305,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       root.getLastChild().setJSType(globalThis);
 
       // Run a first-order analysis over the syntax tree.
-      (new FirstOrderFunctionAnalyzer(compiler, functionAnalysisResults))
-          .process(root.getFirstChild(), root.getLastChild());
+      new FirstOrderFunctionAnalyzer().process(root.getFirstChild(), root.getLastChild());
 
       // Find all the classes in the global scope.
       newScope = createInitialScope(root);
@@ -347,14 +348,14 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
 
     String scriptName = NodeUtil.getSourceName(scriptRoot);
     checkNotNull(scriptName);
-    for (Node node : ImmutableList.copyOf(functionAnalysisResults.keySet())) {
-      if (scriptName.equals(NodeUtil.getSourceName(node))) {
-        functionAnalysisResults.remove(node);
-      }
-    }
 
-    (new FirstOrderFunctionAnalyzer(
-        compiler, functionAnalysisResults)).process(null, scriptRoot);
+    Predicate<ScopedName> inScript =
+        var -> scriptName.equals(NodeUtil.getSourceName(var.getScopeRoot()));
+    escapedVarNames.removeIf(inScript);
+    assignedVarNames.elementSet().removeIf(inScript);
+    functionsWithNonEmptyReturns.removeIf(n -> scriptName.equals(NodeUtil.getSourceName(n)));
+
+    new FirstOrderFunctionAnalyzer().process(null, scriptRoot);
 
     // TODO(bashir): Variable declaration is not the only side effect of last
     // global scope generation but here we only wipe that part off.
@@ -1028,13 +1029,16 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
                 ownerType, propName, prototypeOwnerTypeMap);
           }
 
+          AstFunctionContents contents = fnRoot != null ? new AstFunctionContents(fnRoot) : null;
+          if (functionsWithNonEmptyReturns.contains(fnRoot)) {
+            contents.recordNonEmptyReturn();
+          }
           FunctionTypeBuilder builder =
-              new FunctionTypeBuilder(name, compiler, errorRoot,
-                  scope)
-              .setContents(getFunctionAnalysisResults(fnRoot))
-              .inferFromOverriddenFunction(overriddenType, parametersNode)
-              .inferTemplateTypeName(info, prototypeOwner)
-              .inferInheritance(info);
+              new FunctionTypeBuilder(name, compiler, errorRoot, scope)
+                  .setContents(contents)
+                  .inferFromOverriddenFunction(overriddenType, parametersNode)
+                  .inferTemplateTypeName(info, prototypeOwner)
+                  .inferInheritance(info);
 
           if (info == null || !info.hasReturnType()) {
             /**
@@ -1268,8 +1272,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
           setDeferredType(n, type);
         }
 
-        newVar =
-          scopeToDeclareIn.declare(variableName, n, type, input, inferred);
+        newVar = declare(scopeToDeclareIn, variableName, n, type, input, inferred);
 
         if (type instanceof EnumType) {
           Node initialValue = newVar.getInitialValue();
@@ -1320,6 +1323,26 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
         globalThisCtor
             .setPrototypeBasedOn((type.toMaybeFunctionType()).getInstanceType());
       }
+    }
+
+    /**
+     * Declares a variable with the given {@code name} and {@code type} on the given {@code scope},
+     * returning the newly-declared {@link TypedVar}. Additionally checks the {@link
+     * #escapedVarNames} and {@link #assignedVarNames} maps (which were populated during the {@link
+     * FirstOrderFunctionAnalyzer} and marks the result as escaped or assigned exactly once if
+     * appropriate.
+     */
+    private TypedVar declare(
+        TypedScope scope, String name, Node n, JSType type, CompilerInput input, boolean inferred) {
+      TypedVar var = scope.declare(name, n, type, input, inferred);
+      ScopedName scopedName = ScopedName.of(name, scope.getRootNode());
+      if (escapedVarNames.contains(scopedName)) {
+        var.markEscaped();
+      }
+      if (assignedVarNames.count(scopedName) == 1) {
+        var.markAssignedExactlyOnce();
+      }
+      return var;
     }
 
     private void finishConstructorDefinition(
@@ -1827,9 +1850,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
 
           // Check if this is assigned in an inner scope.
           // Functions assigned in inner scopes are inferred.
-          AstFunctionContents contents =
-              getFunctionAnalysisResults(scope.getRootNode());
-          if (contents == null || !contents.getEscapedQualifiedNames().contains(qName)) {
+          if (!escapedVarNames.contains(ScopedName.of(qName, scope.getRootNode()))) {
             return false;
           }
         }
@@ -2011,33 +2032,6 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
     }
 
     /**
-     * Traverse the scope root and build it.
-     */
-    @Override
-    void build() {
-      super.build();
-
-      AstFunctionContents contents =
-          getFunctionAnalysisResults(scope.getRootNode());
-      if (contents != null) {
-        for (String varName : contents.getEscapedVarNames()) {
-          TypedVar v = scope.getVar(varName);
-          checkState(v.getScope() == scope);
-          v.markEscaped();
-        }
-
-        for (Multiset.Entry<String> entry :
-                 contents.getAssignedNameCounts().entrySet()) {
-          TypedVar v = scope.getVar(entry.getElement());
-          checkState(v.getScope() == scope);
-          if (entry.getCount() == 1) {
-            v.markAssignedExactlyOnce();
-          }
-        }
-      }
-    }
-
-    /**
      * Visit a node in a local scope, and add any local variables or catch
      * parameters into the local symbol table.
      *
@@ -2180,32 +2174,16 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
   } // end LocalScopeBuilder
 
   /**
-   * Does a first-order function analysis that just looks at simple things
-   * like what variables are escaped, and whether 'this' is used.
+   * Does a first-order function analysis that just looks at simple things like what variables are
+   * escaped, and whether 'this' is used.
    */
-  private static class FirstOrderFunctionAnalyzer
-      extends AbstractScopedCallback implements CompilerPass {
-    private final AbstractCompiler compiler;
-    private final Map<Node, AstFunctionContents> data;
+  private class FirstOrderFunctionAnalyzer extends AbstractScopedCallback {
 
-    FirstOrderFunctionAnalyzer(
-        AbstractCompiler compiler, Map<Node, AstFunctionContents> outParam) {
-      this.compiler = compiler;
-      this.data = outParam;
-    }
-
-    @Override public void process(Node externs, Node root) {
+    void process(Node externs, Node root) {
       if (externs == null) {
-        NodeTraversal.traverseTyped(compiler, root, this);
+        NodeTraversal.traverseEs6(compiler, root, this);
       } else {
-        NodeTraversal.traverseRootsTyped(compiler, this, externs, root);
-      }
-    }
-
-    @Override public void enterScope(NodeTraversal t) {
-      if (!t.inGlobalScope()) {
-        Node n = t.getScopeRoot();
-        data.put(n, new AstFunctionContents(n));
+        NodeTraversal.traverseRootsEs6(compiler, this, externs, root);
       }
     }
 
@@ -2222,50 +2200,41 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
         return;
       }
 
+      Node nonBlockScopeRoot = t.getClosestNonBlockScopeRoot();
+
       if (n.isReturn() && n.getFirstChild() != null) {
-        data.get(t.getScopeRoot()).recordNonEmptyReturn();
+        functionsWithNonEmptyReturns.add(nonBlockScopeRoot);
       }
 
-      if (n.isName()
-          && NodeUtil.isLValue(n)
-          // Be careful of bleeding functions, which create variables
-          // in the inner scope, not the scope where the name appears.
-          && !NodeUtil.isBleedingFunctionName(n)) {
+      // Be careful of bleeding functions, which create variables
+      // in the inner scope, not the scope where the name appears.
+      if (n.isName() && NodeUtil.isLValue(n) && !NodeUtil.isBleedingFunctionName(n)) {
         String name = n.getString();
-        TypedScope scope = t.getTypedScope();
-        TypedVar var = scope.getVar(name);
+        Scope scope = t.getScope();
+        Var var = scope.getVar(name);
         if (var != null) {
-          TypedScope ownerScope = var.getScope();
+          Scope ownerScope = var.getScope().getClosestNonBlockScope();
           if (ownerScope.isLocal()) {
-            data.get(ownerScope.getRootNode()).recordAssignedName(name);
-          }
-
-          if (scope != ownerScope && ownerScope.isLocal()) {
-            data.get(ownerScope.getRootNode()).recordEscapedVarName(name);
+            Node ownerScopeRoot = ownerScope.getRootNode();
+            assignedVarNames.add(ScopedName.of(name, ownerScopeRoot));
+            if (nonBlockScopeRoot != ownerScopeRoot) {
+              escapedVarNames.add(ScopedName.of(name, ownerScopeRoot));
+            }
           }
         }
       } else if (n.isGetProp() && n.isUnscopedQualifiedName() && NodeUtil.isLValue(n)) {
         String name = NodeUtil.getRootOfQualifiedName(n).getString();
-        TypedScope scope = t.getTypedScope();
-        TypedVar var = scope.getVar(name);
+        Scope scope = t.getScope();
+        Var var = scope.getVar(name);
         if (var != null) {
-          TypedScope ownerScope = var.getScope();
-          if (scope != ownerScope && ownerScope.isLocal()) {
-            data.get(ownerScope.getRootNode())
-                .recordEscapedQualifiedName(n.getQualifiedName());
+          Scope ownerScope = var.getScope().getClosestNonBlockScope();
+          Node ownerScopeRoot = ownerScope.getRootNode();
+          if (ownerScope.isLocal() && nonBlockScopeRoot != ownerScopeRoot) {
+            escapedVarNames.add(ScopedName.of(n.getQualifiedName(), ownerScopeRoot));
           }
         }
       }
     }
-  }
-
-  private AstFunctionContents getFunctionAnalysisResults(@Nullable Node n) {
-    if (n == null) {
-      return null;
-    }
-
-    // Sometimes this will return null in things that build partial scopes.
-    return functionAnalysisResults.get(n);
   }
 
   @Override

@@ -967,6 +967,18 @@ public class NodeTraversal {
     return scopes.peek().getClosestHoistScope().getRootNode();
   }
 
+  public Node getClosestNonBlockScopeRoot() {
+    int roots = scopeRoots.size();
+    for (int i = roots; i > 0; i--) {
+      Node rootNode = scopeRoots.get(i - 1);
+      if (!NodeUtil.createsBlockScope(rootNode)) {
+        return rootNode;
+      }
+    }
+
+    return scopes.peek().getClosestNonBlockScope().getRootNode();
+  }
+
   public AbstractScope<?, ?> getClosestHoistScope() {
     for (int i = scopeRoots.size(); i > 0; i--) {
       if (isHoistScopeRootNode(scopeRoots.get(i - 1))) {
@@ -1050,8 +1062,7 @@ public class NodeTraversal {
 
   /** Determines whether the traversal is currently in the scope of the block of a function. */
   public boolean inFunctionBlockScope() {
-    Node scopeRoot = getScopeRoot();
-    return scopeRoot.isNormalBlock() && scopeRoot.getParent().isFunction();
+    return NodeUtil.isFunctionBlock(getScopeRoot());
   }
 
   /**
