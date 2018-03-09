@@ -43,8 +43,7 @@
  * @return {!Promise<?>}
  * @suppress {reportUnknownTypes}
  */
-// TODO(skill): rename this function to avoid confusion with "async generators"
-$jscomp.executeAsyncGenerator = function(generator) {
+$jscomp.asyncExecutePromiseGenerator = function(generator) {
   function passValueToGenerator(value) {
     return generator.next(value);
   }
@@ -97,5 +96,5 @@ $jscomp.executeAsyncGenerator = function(generator) {
  * @suppress {reportUnknownTypes}
  */
 $jscomp.asyncExecutePromiseGeneratorFunction = function(generatorFunction) {
-  return $jscomp.executeAsyncGenerator(generatorFunction());
+  return $jscomp.asyncExecutePromiseGenerator(generatorFunction());
 };
