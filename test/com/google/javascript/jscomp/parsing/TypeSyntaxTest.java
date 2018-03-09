@@ -537,7 +537,7 @@ public final class TypeSyntaxTest extends TestCase {
     expectErrors("Parse error. Semi-colon expected");
     parse("if (true) { type Foo = number; }");
 
-    testNotEs6Typed("type Foo = number;", "type alias");
+    testNotEs6TypedFullError("type Foo = number;", "Parse error. Semi-colon expected");
   }
 
   public void testAmbientDeclaration() {
@@ -566,7 +566,8 @@ public final class TypeSyntaxTest extends TestCase {
     expectErrors("Parse error. Semi-colon expected");
     parse("declare class Foo {\n  constructor() {}\n};");
 
-    testNotEs6Typed("declare var x;", "ambient declaration");
+    testNotEs6TypedFullError("declare var x;", "Parse error. Semi-colon expected");
+
   }
 
   public void testExportDeclaration() {
@@ -728,7 +729,7 @@ public final class TypeSyntaxTest extends TestCase {
     expectErrors("Parse error. Semi-colon expected");
     parse("namespace 'foo' {}"); // External modules are not supported
 
-    testNotEs6Typed("namespace foo {}", "namespace declaration");
+    testNotEs6TypedFullError("namespace foo {}", "Parse error. Semi-colon expected");
   }
 
   public void testAmbientNameSpace() {
@@ -765,7 +766,7 @@ public final class TypeSyntaxTest extends TestCase {
     expectErrors("Parse error. '}' expected");
     parse("declare namespace foo { type Foo = number; }");
 
-    testNotEs6Typed("declare namespace foo {}", "ambient declaration", "namespace declaration");
+    testNotEs6TypedFullError("declare namespace foo {}", "Parse error. Semi-colon expected");
   }
 
   private void assertVarType(String message, TypeDeclarationNode expectedType, String source) {
