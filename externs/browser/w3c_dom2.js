@@ -2114,7 +2114,7 @@ HTMLScriptElement.prototype.event;
 HTMLScriptElement.prototype.htmlFor;
 
 /**
- * @type {?Function}
+ * @type {?function(!Event)}
  */
 HTMLScriptElement.prototype.onreadystatechange;
 
