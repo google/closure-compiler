@@ -18,7 +18,6 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkState;
 
-import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
@@ -56,17 +55,6 @@ public class TypedScope extends AbstractScope<TypedScope, TypedVar>
 
   // Scope.java contains an arguments field.
   // We haven't added it here because it's unused by the passes that need typed scopes.
-
-  private static final Predicate<TypedVar> DECLARATIVELY_UNBOUND_VARS_WITHOUT_TYPES =
-    new Predicate<TypedVar>() {
-      @Override
-      public boolean apply(TypedVar var) {
-        return var.getParentNode() != null
-          && var.getType() == null
-          && var.getParentNode().isVar()
-          && !var.isExtern();
-      }
-    };
 
   TypedScope(TypedScope parent, Node rootNode) {
     super(rootNode);
@@ -155,7 +143,14 @@ public class TypedScope extends AbstractScope<TypedScope, TypedVar>
   }
 
   public Iterable<TypedVar> getDeclarativelyUnboundVarsWithoutTypes() {
-    return Iterables.filter(getVarIterable(), DECLARATIVELY_UNBOUND_VARS_WITHOUT_TYPES);
+    return Iterables.filter(
+        getVarIterable(),
+        var ->
+            // declaratively unbound vars without types
+            var.getParentNode() != null
+                && var.getType() == null
+                && var.getParentNode().isVar()
+                && !var.isExtern());
   }
 
   static interface TypeResolver {

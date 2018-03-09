@@ -1729,13 +1729,6 @@ public final class NodeUtil {
     return n.isNull() || isUndefined(n);
   }
 
-  static final Predicate<Node> IMMUTABLE_PREDICATE = new Predicate<Node>() {
-    @Override
-    public boolean apply(Node n) {
-      return isImmutableValue(n);
-    }
-  };
-
   static boolean isImmutableResult(Node n) {
     return allResultsMatch(n, NodeUtil::isImmutableValue);
   }
@@ -4015,9 +4008,7 @@ public final class NodeUtil {
         Node parent = n.getParent();
         if (parent != null && parent.isVar()) {
           String name = n.getString();
-          if (!vars.containsKey(name)) {
-            vars.put(name, n);
-          }
+          vars.putIfAbsent(name, n);
         }
       }
     }
@@ -4374,12 +4365,7 @@ public final class NodeUtil {
 
   static final Predicate<Node> MATCH_NOT_FUNCTION = n -> !n.isFunction();
 
-  static final Predicate<Node> MATCH_NOT_THIS_BINDING = new Predicate<Node>() {
-    @Override
-    public boolean apply(Node n) {
-      return !NodeUtil.isVanillaFunction(n);
-    }
-  };
+  static final Predicate<Node> MATCH_NOT_THIS_BINDING = n -> !NodeUtil.isVanillaFunction(n);
 
   /**
    * A predicate for matching statements without exiting the current scope.

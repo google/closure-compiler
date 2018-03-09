@@ -351,11 +351,8 @@ public final class ReferenceCollectingCallback
 
   private void addReference(Var v, Reference reference) {
     // Create collection if none already
-    ReferenceCollection referenceInfo = referenceMap.get(v);
-    if (referenceInfo == null) {
-      referenceInfo = new ReferenceCollection();
-      referenceMap.put(v, referenceInfo);
-    }
+    ReferenceCollection referenceInfo =
+        referenceMap.computeIfAbsent(v, k -> new ReferenceCollection());
 
     // Add this particular reference
     referenceInfo.add(reference);

@@ -2690,9 +2690,11 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
    * {field=[[Type1, Type2]]}
    */
   private void testSets(String js, final String fieldTypes, DiagnosticType warning) {
-    test(srcs(js), warning(warning), (Postcondition) (Compiler unused) -> {
-      assertEquals(fieldTypes, mapToString(lastPass.getRenamedTypesForTesting()));
-    });
+    test(
+        srcs(js),
+        warning(warning),
+        (Postcondition)
+            unused -> assertEquals(fieldTypes, mapToString(lastPass.getRenamedTypesForTesting())));
   }
 
   /** Sorts the map and converts to a string for comparison purposes. */

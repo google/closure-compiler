@@ -52,18 +52,15 @@ public final class CheckNullableReturn implements HotSwapCompilerPass, NodeTrave
           + "non-nullable.");
 
   private static final Predicate<Node> NULLABLE_RETURN_PREDICATE =
-      new Predicate<Node>() {
-    @Override
-    public boolean apply(Node input) {
-      // Check for null because the control flow graph's implicit return node is
-      // represented by null, so this value might be input.
-      if (input == null || !input.isReturn()) {
-        return false;
-      }
-      Node returnValue = input.getFirstChild();
-      return returnValue != null && isNullable(returnValue);
-    }
-  };
+      input -> {
+        // Check for null because the control flow graph's implicit return node is
+        // represented by null, so this value might be input.
+        if (input == null || !input.isReturn()) {
+          return false;
+        }
+        Node returnValue = input.getFirstChild();
+        return returnValue != null && isNullable(returnValue);
+      };
 
   public CheckNullableReturn(AbstractCompiler compiler) {
     this.compiler = compiler;

@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp.debugger.common;
 
+import static java.util.Comparator.comparing;
+
 import com.google.javascript.jscomp.AnonymousFunctionNamingPolicy;
 import com.google.javascript.jscomp.CheckLevel;
 import com.google.javascript.jscomp.CompilerOptions;
@@ -1040,14 +1042,7 @@ public enum CompilationParam {
   static CompilationParam[] getSortedValues() {
     ArrayList<CompilationParam> values = new ArrayList<>(Arrays.asList(CompilationParam.values()));
 
-    Collections.sort(
-        values,
-        new java.util.Comparator<CompilationParam>() {
-          @Override
-          public int compare(CompilationParam o1, CompilationParam o2) {
-            return o1.toString().compareTo(o2.toString());
-          }
-        });
+    Collections.sort(values, comparing(CompilationParam::toString));
 
     return values.toArray(new CompilationParam[0]);
   }

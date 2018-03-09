@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.Map.Entry.comparingByKey;
 
 import com.google.common.annotations.GwtIncompatible;
 import com.google.common.annotations.VisibleForTesting;
@@ -32,9 +33,7 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.text.ParseException;
-import java.util.Comparator;
 import java.util.Map;
-import java.util.Map.Entry;
 
 /**
  * Stores the mapping from original variable name to new variable names.
@@ -43,14 +42,6 @@ import java.util.Map.Entry;
 public final class VariableMap {
 
   private static final char SEPARATOR = ':';
-
-  private static final Comparator<Map.Entry<String, String>> ENTRY_COMPARATOR =
-      new Comparator<Map.Entry<String, String>>() {
-    @Override
-    public int compare(Entry<String, String> e1, Entry<String, String> e2) {
-      return e1.getKey().compareTo(e2.getKey());
-    }
-  };
 
   /** Maps between original source name to new name */
   private final ImmutableBiMap<String, String> map;
@@ -116,7 +107,7 @@ public final class VariableMap {
     try {
       // The output order should be stable.
       for (Map.Entry<String, String> entry :
-          ImmutableSortedSet.copyOf(ENTRY_COMPARATOR, map.entrySet())) {
+          ImmutableSortedSet.copyOf(comparingByKey(), map.entrySet())) {
         writer.write(escape(entry.getKey()));
         writer.write(SEPARATOR);
         writer.write(escape(entry.getValue()));

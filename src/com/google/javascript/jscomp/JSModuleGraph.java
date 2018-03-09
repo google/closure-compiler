@@ -390,11 +390,7 @@ public final class JSModuleGraph implements Serializable {
 
   /** Returns the transitive dependencies of the module. */
   private Set<JSModule> getTransitiveDeps(JSModule m) {
-    Set<JSModule> deps = dependencyMap.get(m);
-    if (deps == null) {
-      deps = m.getAllDependencies();
-      dependencyMap.put(m, deps);
-    }
+    Set<JSModule> deps = dependencyMap.computeIfAbsent(m, JSModule::getAllDependencies);
     return deps;
   }
 
@@ -420,9 +416,7 @@ public final class JSModuleGraph implements Serializable {
         inputsByProvide.put(provide, input);
       }
       String moduleName = input.getPath().toModuleName();
-      if (!inputsByProvide.containsKey(moduleName)) {
-        inputsByProvide.put(moduleName, input);
-      }
+      inputsByProvide.putIfAbsent(moduleName, input);
     }
 
     // Dynamically imported files must be added to the module graph, but

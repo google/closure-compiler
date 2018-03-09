@@ -19,7 +19,6 @@ package com.google.javascript.refactoring;
 import static com.google.common.base.Preconditions.checkState;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.HashMultimap;
@@ -48,23 +47,11 @@ import java.util.stream.IntStream;
  */
 public final class ApplySuggestedFixes {
 
-  private static final Ordering<CodeReplacement> ORDER_CODE_REPLACEMENTS = Ordering.natural()
-      .onResultOf(new Function<CodeReplacement, Integer>() {
-        @Override public Integer apply(CodeReplacement replacement) {
-          return replacement.getStartPosition();
-        }
-      })
-      .compound(Ordering.natural().onResultOf(new Function<CodeReplacement, Integer>() {
-        @Override public Integer apply(CodeReplacement replacement) {
-          return replacement.getLength();
-        }
-      }))
-      .compound(Ordering.natural().onResultOf(new Function<CodeReplacement, String>() {
-        @Override public String apply(CodeReplacement replacement) {
-          return replacement.getSortKey();
-        }
-      }));
-
+  private static final Ordering<CodeReplacement> ORDER_CODE_REPLACEMENTS =
+      Ordering.natural()
+          .onResultOf(CodeReplacement::getStartPosition)
+          .compound(Ordering.natural().onResultOf(CodeReplacement::getLength))
+          .compound(Ordering.natural().onResultOf(CodeReplacement::getSortKey));
 
   /**
    * Applies the provided set of suggested fixes to the files listed in the suggested fixes.

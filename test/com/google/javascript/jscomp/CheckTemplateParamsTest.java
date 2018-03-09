@@ -19,8 +19,6 @@ package com.google.javascript.jscomp;
 import static com.google.javascript.jscomp.RhinoErrorReporter.TOO_MANY_TEMPLATE_PARAMS;
 import static com.google.javascript.jscomp.newtypes.JSTypeCreatorFromJSDoc.INVALID_GENERICS_INSTANTIATION;
 
-import com.google.javascript.rhino.Node;
-
 /**
  * Tests for the "Too many template parameters" warning. Ideally this would be part of
  * JSDocInfoParserTest but that test is set up to handle warnings reported from JSDocInfoParser,
@@ -41,7 +39,7 @@ public final class CheckTemplateParamsTest extends TypeICompilerTestCase {
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
     // No-op. We're just checking for warnings during JSDoc parsing.
-    return (Node externs, Node root) -> {};
+    return (externs, root) -> {};
   }
 
   @Override

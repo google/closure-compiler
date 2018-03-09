@@ -2283,20 +2283,12 @@ public abstract class CompilerTestCase extends TestCase {
 
     protected Diagnostic withMessage(final String expected) {
       checkState(messagePostcondition == null);
-      return new Diagnostic(level, diagnostic, new Consumer<String>() {
-        @Override public void accept(String message) {
-          assertThat(message).isEqualTo(expected);
-        }
-      });
+      return new Diagnostic(level, diagnostic, message -> assertThat(message).isEqualTo(expected));
     }
 
     public Diagnostic withMessageContaining(final String substring) {
       checkState(messagePostcondition == null);
-      return new Diagnostic(level, diagnostic, new Consumer<String>() {
-        @Override public void accept(String message) {
-          assertThat(message).contains(substring);
-        }
-      });
+      return new Diagnostic(level, diagnostic, message -> assertThat(message).contains(substring));
     }
   }
 

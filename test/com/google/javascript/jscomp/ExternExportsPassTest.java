@@ -646,11 +646,11 @@ public final class ExternExportsPassTest extends TypeICompilerTestCase {
             " */",
             "var bar = function(x) {};");
 
-    compileAndExportExterns(librarySource, MINIMAL_EXTERNS, new Consumer<String>() {
-      @Override public void accept(String generatedExterns) {
-        compileAndExportExterns(clientSource, MINIMAL_EXTERNS + generatedExterns);
-      }
-    });
+    compileAndExportExterns(
+        librarySource,
+        MINIMAL_EXTERNS,
+        generatedExterns ->
+            compileAndExportExterns(clientSource, MINIMAL_EXTERNS + generatedExterns));
   }
 
   public void testDontWarnOnExportFunctionWithUnknownReturnType() {
@@ -934,21 +934,18 @@ public final class ExternExportsPassTest extends TypeICompilerTestCase {
   }
 
   private void compileAndCheck(String js, final String expected) {
-    compileAndExportExterns(js, MINIMAL_EXTERNS, new Consumer<String>() {
-      @Override public void accept(String generatedExterns) {
-        String fileoverview = lines(
-            "/**",
-            " * @fileoverview Generated externs.",
-            " * @externs",
-            " */",
-            "");
-        // NOTE(sdh): NTI produces {?=} for many params, while OTI just produces {?}.
-        // For now we will not worry about this distinction and just normalize it.
-        generatedExterns = generatedExterns.replace("?=", "?");
+    compileAndExportExterns(
+        js,
+        MINIMAL_EXTERNS,
+        generatedExterns -> {
+          String fileoverview =
+              lines("/**", " * @fileoverview Generated externs.", " * @externs", " */", "");
+          // NOTE(sdh): NTI produces {?=} for many params, while OTI just produces {?}.
+          // For now we will not worry about this distinction and just normalize it.
+          generatedExterns = generatedExterns.replace("?=", "?");
 
-        assertThat(generatedExterns).isEqualTo(fileoverview + expected);
-      }
-    });
+          assertThat(generatedExterns).isEqualTo(fileoverview + expected);
+        });
   }
 
   public void testDontWarnOnExportFunctionWithUnknownParameterTypes() {
@@ -1001,10 +998,14 @@ public final class ExternExportsPassTest extends TypeICompilerTestCase {
         "goog.exportProperty = function(a, b, c) {};",
         js);
 
-    testSame(externs(externs), srcs(js), (Postcondition) (Compiler compiler) -> {
-      if (consumer != null) {
-        consumer.accept(compiler.getResult().externExport);
-      }
-    });
+    testSame(
+        externs(externs),
+        srcs(js),
+        (Postcondition)
+            compiler -> {
+              if (consumer != null) {
+                consumer.accept(compiler.getResult().externExport);
+              }
+            });
   }
 }

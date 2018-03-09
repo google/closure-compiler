@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp.graph;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static java.util.Comparator.comparing;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -129,15 +130,17 @@ public abstract class GraphColoring<N, E> {
       List<GraphNode<N, E>> worklist = new ArrayList<>(graph.getNodes());
 
       // Sort nodes by degree.
-      Collections.sort(worklist, new Comparator<GraphNode<N, E>>() {
-        @Override
-        public int compare(GraphNode<N, E> o1, GraphNode<N, E> o2) {
-          int result = graph.getWeight(o2.getValue())
-              - graph.getWeight(o1.getValue());
-          return result == 0 && tieBreaker != null ?
-              tieBreaker.compare(o1.getValue(), o2.getValue()) : result;
-        }
-      });
+      Collections.sort(
+          worklist,
+          comparing(
+              GraphNode::getValue,
+              // TODO(b/28382956): Take better advantage of Java8 comparing() to simplify this
+              (leftProperty, rightProperty) -> {
+                int result = graph.getWeight(rightProperty) - graph.getWeight(leftProperty);
+                return result == 0 && tieBreaker != null
+                    ? tieBreaker.compare(leftProperty, rightProperty)
+                    : result;
+              }));
 
       // Idea: From the highest to lowest degree, assign any uncolored node with
       // a unique color if none of its neighbors has been assigned that color.

@@ -21,7 +21,6 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
-import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Collections2;
@@ -1487,14 +1486,7 @@ public final class FunctionType implements Serializable {
    */
   private static Collection<String> getPrettyTypeParams(
       List<String> typeParams, final ToStringContext ctx) {
-    return Collections2.transform(
-        typeParams,
-        new Function<String, String>() {
-          @Override
-          public String apply(String typeParam) {
-            return ctx.formatTypeVar(typeParam);
-          }
-        });
+    return Collections2.transform(typeParams, ctx::formatTypeVar);
   }
 
   @SuppressWarnings("ReferenceEquality")

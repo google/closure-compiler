@@ -23,7 +23,6 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.javascript.jscomp.CheckLevel;
 import com.google.javascript.jscomp.ErrorHandler;
 import com.google.javascript.jscomp.JSError;
-import java.util.Comparator;
 import java.util.Map;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -67,17 +66,15 @@ public class NodeModuleResolver extends ModuleResolver {
       Iterable<String> modulePaths) {
     SortedSet<String> registry =
         new TreeSet<>(
-            new Comparator<String>() {
-              @Override
-              public int compare(String a, String b) {
-                // Order longest path first
-                int comparison = Integer.compare(b.length(), a.length());
-                if (comparison != 0) {
-                  return comparison;
-                }
-
-                return a.compareTo(b);
+            // TODO(b/28382956): Take better advantage of Java8 comparing() to simplify this
+            (a, b) -> {
+              // Order longest path first
+              int comparison = Integer.compare(b.length(), a.length());
+              if (comparison != 0) {
+                return comparison;
               }
+
+              return a.compareTo(b);
             });
 
     // For each modulePath, find all the node_modules folders

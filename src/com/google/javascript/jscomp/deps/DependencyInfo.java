@@ -16,12 +16,14 @@
 
 package com.google.javascript.jscomp.deps;
 
+import static com.google.common.collect.ImmutableList.toImmutableList;
+
 import com.google.auto.value.AutoValue;
-import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Streams;
 import com.google.errorprone.annotations.Immutable;
 import java.io.IOException;
 import java.io.Serializable;
@@ -62,15 +64,7 @@ public interface DependencyInfo extends Serializable {
     }
 
     public static ImmutableList<String> asSymbolList(Iterable<Require> requires) {
-      return ImmutableList.copyOf(
-          Iterables.transform(
-              requires,
-              new Function<Require, String>() {
-                @Override
-                public String apply(Require input) {
-                  return input.getSymbol();
-                }
-              }));
+      return Streams.stream(requires).map(Require::getSymbol).collect(toImmutableList());
     }
 
     public static Require googRequireSymbol(String symbol) {
@@ -217,13 +211,7 @@ public interface DependencyInfo extends Serializable {
     /** Prints a list of strings formatted as a JavaScript array of string literals. */
     private static void writeJsArray(Appendable out, Collection<String> values) throws IOException {
       Iterable<String> quoted =
-          Iterables.transform(
-              values,
-              new Function<String, String>() {
-                @Override public String apply(String arg) {
-                  return "'" + arg.replace("'", "\\'") + "'";
-                }
-              });
+          Iterables.transform(values, arg -> "'" + arg.replace("'", "\\'") + "'");
       out.append("[");
       out.append(Joiner.on(", ").join(quoted));
       out.append("]");

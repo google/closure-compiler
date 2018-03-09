@@ -817,7 +817,7 @@ public final class ExpressionDecomposerTest extends TestCase {
       String code,
       String fnName,
       String expectedResult) {
-    helperExposeExpression(code, (tree) -> findCall(tree, fnName), expectedResult);
+    helperExposeExpression(code, tree -> findCall(tree, fnName), expectedResult);
   }
 
   private void helperExposeExpression(
@@ -855,7 +855,7 @@ public final class ExpressionDecomposerTest extends TestCase {
       String code,
       String fnName,
       String expectedResult) {
-    helperMoveExpression(code, (tree) -> findCall(tree, fnName), expectedResult);
+    helperMoveExpression(code, tree -> findCall(tree, fnName), expectedResult);
   }
 
   private void helperMoveExpression(

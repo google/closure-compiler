@@ -446,8 +446,8 @@ public final class ErrorToFixMapper {
 
     @Override
     public int compare(Node n1, Node n2) {
-      String namespace1 = CheckRequiresAndProvidesSorted.getSortKey.apply(n1);
-      String namespace2 = CheckRequiresAndProvidesSorted.getSortKey.apply(n2);
+      String namespace1 = CheckRequiresAndProvidesSorted.getSortKey(n1);
+      String namespace2 = CheckRequiresAndProvidesSorted.getSortKey(n2);
       return namespace1.compareTo(namespace2);
     }
   }

@@ -2431,8 +2431,8 @@ public final class CommandLineRunnerTest extends TestCase {
         Suppliers.ofInstance(externs),
         inputsSupplier,
         modulesSupplier,
-        (Integer code) -> {
-          exitCodes.add(code);
+        exitCode -> {
+          exitCodes.add(exitCode);
           return null;
         });
     runner.run();

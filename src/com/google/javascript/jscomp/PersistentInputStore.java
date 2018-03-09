@@ -55,9 +55,7 @@ public class PersistentInputStore {
       if (zipEntries.isEmpty()) {
         zipEntries = new HashMap<>();
       }
-      if (!zipEntries.containsKey(originalPath)) {
-        zipEntries.put(originalPath, CompilerInput.makePersistentInput(zipEntry));
-      }
+      zipEntries.computeIfAbsent(originalPath, k -> CompilerInput.makePersistentInput(zipEntry));
       return zipEntries.get(originalPath);
     }
 

@@ -248,9 +248,7 @@ abstract class AbstractScope<S extends AbstractScope<S, V>, V extends AbstractVa
 
     while (s != null) {
       for (V v : s.getVarIterable()) {
-        if (!accessibleVars.containsKey(v.getName())){
-          accessibleVars.put(v.getName(), v);
-        }
+        accessibleVars.putIfAbsent(v.getName(), v);
       }
       s = s.getParent();
     }

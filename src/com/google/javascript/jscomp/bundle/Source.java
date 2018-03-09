@@ -155,7 +155,7 @@ public abstract class Source {
     Source transform(Source input);
 
     static Transformer of(Function<Source, Source> function) {
-      return x -> function.apply(x);
+      return function::apply;
     }
 
     /** Returns an identity transformer. */
@@ -165,7 +165,7 @@ public abstract class Source {
 
     /** Converts this Transformer to a Function. */
     default Function<Source, Source> asFunction() {
-      return x -> transform(x);
+      return this::transform;
     }
 
     /** Concatenates two Transformers. */

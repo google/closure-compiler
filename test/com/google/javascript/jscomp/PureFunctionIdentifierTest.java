@@ -1944,14 +1944,16 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
         "g.call(x);",
         "x.bar();"
     );
-    assertPureCallsMarked(source, ImmutableList.of("F"), (Compiler compiler) -> {
-      Node lastRoot = compiler.getRoot();
-      Node call = findQualifiedNameNode("g.call", lastRoot).getParent();
-      assertEquals(
-          new Node.SideEffectFlags()
-              .clearAllFlags().setMutatesArguments().valueOf(),
-          call.getSideEffectFlags());
-    });
+    assertPureCallsMarked(
+        source,
+        ImmutableList.of("F"),
+        compiler -> {
+          Node lastRoot = compiler.getRoot();
+          Node call = findQualifiedNameNode("g.call", lastRoot).getParent();
+          assertEquals(
+              new Node.SideEffectFlags().clearAllFlags().setMutatesArguments().valueOf(),
+              call.getSideEffectFlags());
+        });
   }
 
   public void testCallCache() throws Exception {
@@ -1959,12 +1961,15 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
         "var valueFn = function() {};",
         "goog.reflect.cache(externObj, \"foo\", valueFn)"
     );
-    assertPureCallsMarked(source, ImmutableList.of("goog.reflect.cache"), (Compiler compiler) -> {
-      Node lastRoot = compiler.getRoot().getLastChild();
-      Node call = findQualifiedNameNode("goog.reflect.cache", lastRoot).getParent();
-      assertThat(call.isNoSideEffectsCall()).isTrue();
-      assertThat(call.mayMutateGlobalStateOrThrow()).isFalse();
-    });
+    assertPureCallsMarked(
+        source,
+        ImmutableList.of("goog.reflect.cache"),
+        compiler -> {
+          Node lastRoot = compiler.getRoot().getLastChild();
+          Node call = findQualifiedNameNode("goog.reflect.cache", lastRoot).getParent();
+          assertThat(call.isNoSideEffectsCall()).isTrue();
+          assertThat(call.mayMutateGlobalStateOrThrow()).isFalse();
+        });
   }
 
   public void testCallCache_withKeyFn() throws Exception {
@@ -1973,22 +1978,28 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
         "var keyFn = function(v) { return v };",
         "goog.reflect.cache(externObj, \"foo\", valueFn, keyFn)"
     );
-    assertPureCallsMarked(source, ImmutableList.of("goog.reflect.cache"), (Compiler compiler) ->{
-      Node lastRoot = compiler.getRoot().getLastChild();
-      Node call = findQualifiedNameNode("goog.reflect.cache", lastRoot).getParent();
-      assertThat(call.isNoSideEffectsCall()).isTrue();
-      assertThat(call.mayMutateGlobalStateOrThrow()).isFalse();
-    });
+    assertPureCallsMarked(
+        source,
+        ImmutableList.of("goog.reflect.cache"),
+        compiler -> {
+          Node lastRoot = compiler.getRoot().getLastChild();
+          Node call = findQualifiedNameNode("goog.reflect.cache", lastRoot).getParent();
+          assertThat(call.isNoSideEffectsCall()).isTrue();
+          assertThat(call.mayMutateGlobalStateOrThrow()).isFalse();
+        });
   }
 
   public void testCallCache_anonymousFn() throws Exception {
     String source = "goog.reflect.cache(externObj, \"foo\", function(v) { return v })";
-    assertPureCallsMarked(source, ImmutableList.of("goog.reflect.cache"), (Compiler compiler) -> {
-      Node lastRoot = compiler.getRoot().getLastChild();
-      Node call = findQualifiedNameNode("goog.reflect.cache", lastRoot).getParent();
-      assertThat(call.isNoSideEffectsCall()).isTrue();
-      assertThat(call.mayMutateGlobalStateOrThrow()).isFalse();
-    });
+    assertPureCallsMarked(
+        source,
+        ImmutableList.of("goog.reflect.cache"),
+        compiler -> {
+          Node lastRoot = compiler.getRoot().getLastChild();
+          Node call = findQualifiedNameNode("goog.reflect.cache", lastRoot).getParent();
+          assertThat(call.isNoSideEffectsCall()).isTrue();
+          assertThat(call.mayMutateGlobalStateOrThrow()).isFalse();
+        });
   }
 
   public void testCallCache_anonymousFn_hasSideEffects() throws Exception {
@@ -1996,12 +2007,14 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
         "var x = 0;",
         "goog.reflect.cache(externObj, \"foo\", function(v) { return (x+=1) })"
     );
-    assertNoPureCalls(source, (Compiler compiler) -> {
-        Node lastRoot = compiler.getRoot().getLastChild();
-        Node call = findQualifiedNameNode("goog.reflect.cache", lastRoot).getParent();
-        assertThat(call.isNoSideEffectsCall()).isFalse();
-        assertThat(call.mayMutateGlobalStateOrThrow()).isTrue();
-    });
+    assertNoPureCalls(
+        source,
+        compiler -> {
+          Node lastRoot = compiler.getRoot().getLastChild();
+          Node call = findQualifiedNameNode("goog.reflect.cache", lastRoot).getParent();
+          assertThat(call.isNoSideEffectsCall()).isFalse();
+          assertThat(call.mayMutateGlobalStateOrThrow()).isTrue();
+        });
   }
 
   public void testCallCache_hasSideEffects() throws Exception {
@@ -2010,12 +2023,14 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
         "var valueFn = function() { return (x+=1); };",
         "goog.reflect.cache(externObj, \"foo\", valueFn)"
     );
-    assertNoPureCalls(source, (Compiler compiler) -> {
-        Node lastRoot = compiler.getRoot().getLastChild();
-        Node call = findQualifiedNameNode("goog.reflect.cache", lastRoot).getParent();
-        assertThat(call.isNoSideEffectsCall()).isFalse();
-        assertThat(call.mayMutateGlobalStateOrThrow()).isTrue();
-    });
+    assertNoPureCalls(
+        source,
+        compiler -> {
+          Node lastRoot = compiler.getRoot().getLastChild();
+          Node call = findQualifiedNameNode("goog.reflect.cache", lastRoot).getParent();
+          assertThat(call.isNoSideEffectsCall()).isFalse();
+          assertThat(call.mayMutateGlobalStateOrThrow()).isTrue();
+        });
   }
 
   public void testCallCache_withKeyFn_hasSideEffects() throws Exception {
@@ -2025,12 +2040,14 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
         "var valueFn = function(v) { return v };",
         "goog.reflect.cache(externObj, \"foo\", valueFn, keyFn)"
     );
-    assertNoPureCalls(source, (Compiler compiler) -> {
-        Node lastRoot = compiler.getRoot().getLastChild();
-        Node call = findQualifiedNameNode("goog.reflect.cache", lastRoot).getParent();
-        assertThat(call.isNoSideEffectsCall()).isFalse();
-        assertThat(call.mayMutateGlobalStateOrThrow()).isTrue();
-    });
+    assertNoPureCalls(
+        source,
+        compiler -> {
+          Node lastRoot = compiler.getRoot().getLastChild();
+          Node call = findQualifiedNameNode("goog.reflect.cache", lastRoot).getParent();
+          assertThat(call.isNoSideEffectsCall()).isFalse();
+          assertThat(call.mayMutateGlobalStateOrThrow()).isTrue();
+        });
   }
 
   public void testCallCache_propagatesSideEffects() throws Exception {
@@ -2042,7 +2059,7 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
     assertPureCallsMarked(
         source,
         ImmutableList.of("goog.reflect.cache", "helper"),
-        (Compiler compiler) -> {
+        compiler -> {
           Node lastRoot = compiler.getRoot().getLastChild();
           Node cacheCall = findQualifiedNameNode("goog.reflect.cache", lastRoot).getParent();
           assertThat(cacheCall.isNoSideEffectsCall()).isTrue();
@@ -2071,7 +2088,7 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
     testSame(
         srcs(source),
         postcondition(
-            (Compiler compiler) -> {
+            compiler -> {
               assertEquals(expected, noSideEffectCalls);
               if (post != null) {
                 post.verify(compiler);

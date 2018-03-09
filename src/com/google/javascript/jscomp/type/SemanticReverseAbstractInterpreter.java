@@ -40,77 +40,47 @@ import com.google.javascript.rhino.jstype.Visitor;
 public final class SemanticReverseAbstractInterpreter
     extends ChainableReverseAbstractInterpreter {
 
-  /**
-   * Merging function for equality between types.
-   */
+  /** Merging function for equality between types. */
   private static final Function<TypePair, TypePair> EQ =
-    new Function<TypePair, TypePair>() {
-      @Override
-      public TypePair apply(TypePair p) {
+      p -> {
         if (p.typeA == null || p.typeB == null) {
           return null;
         }
         return p.typeA.getTypesUnderEquality(p.typeB);
-      }
-    };
+      };
 
-  /**
-   * Merging function for non-equality between types.
-   */
+  /** Merging function for non-equality between types. */
   private static final Function<TypePair, TypePair> NE =
-    new Function<TypePair, TypePair>() {
-      @Override
-      public TypePair apply(TypePair p) {
+      p -> {
         if (p.typeA == null || p.typeB == null) {
           return null;
         }
         return p.typeA.getTypesUnderInequality(p.typeB);
-      }
-    };
+      };
 
-  /**
-   * Merging function for strict equality between types.
-   */
-  private static final
-      Function<TypePair, TypePair> SHEQ =
-    new Function<TypePair, TypePair>() {
-      @Override
-      public TypePair apply(TypePair p) {
+  /** Merging function for strict equality between types. */
+  private static final Function<TypePair, TypePair> SHEQ =
+      p -> {
         if (p.typeA == null || p.typeB == null) {
           return null;
         }
         return p.typeA.getTypesUnderShallowEquality(p.typeB);
-      }
-    };
+      };
 
-  /**
-   * Merging function for strict non-equality between types.
-   */
-  private static final
-      Function<TypePair, TypePair> SHNE =
-    new Function<TypePair, TypePair>() {
-      @Override
-      public TypePair apply(TypePair p) {
+  /** Merging function for strict non-equality between types. */
+  private static final Function<TypePair, TypePair> SHNE =
+      p -> {
         if (p.typeA == null || p.typeB == null) {
           return null;
         }
         return p.typeA.getTypesUnderShallowInequality(p.typeB);
-      }
-    };
+      };
 
-  /**
-   * Merging function for inequality comparisons between types.
-   */
+  /** Merging function for inequality comparisons between types. */
   private final Function<TypePair, TypePair> ineq =
-    new Function<TypePair, TypePair>() {
-      @Override
-      public TypePair apply(TypePair p) {
-        return new TypePair(
-            getRestrictedWithoutUndefined(p.typeA),
-            getRestrictedWithoutUndefined(p.typeB));
-      }
-    };
-
+      p ->
+          new TypePair(
+              getRestrictedWithoutUndefined(p.typeA), getRestrictedWithoutUndefined(p.typeB));
   /**
    * Creates a semantic reverse abstract interpreter.
    */

@@ -116,11 +116,7 @@ public final class RefactoringDriver {
 
   public static class Builder {
     private static final Function<String, SourceFile> TO_SOURCE_FILE_FN =
-        new Function<String, SourceFile>() {
-          @Override public SourceFile apply(String file) {
-            return new SourceFile.Builder().buildFromFile(file);
-          }
-        };
+        file -> new SourceFile.Builder().buildFromFile(file);
 
     private final ImmutableList.Builder<SourceFile> inputs = ImmutableList.builder();
     private final ImmutableList.Builder<SourceFile> externs = ImmutableList.builder();

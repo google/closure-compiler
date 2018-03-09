@@ -18,7 +18,6 @@ package com.google.javascript.jscomp.gwt.client;
 
 import static com.google.common.base.Preconditions.checkState;
 
-import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
@@ -411,15 +410,7 @@ public class JsfileParser implements EntryPoint {
 
   /** Returns an associative multimap. */
   private static Set<JsArray<String>> assoc() {
-    return new TreeSet<>(
-        Ordering.<String>natural()
-            .lexicographical()
-            .onResultOf(
-                new Function<JsArray<String>, List<String>>() {
-                  @Override public List<String> apply(JsArray<String> arg) {
-                    return arg.asList();
-                  }
-                }));
+    return new TreeSet<>(Ordering.<String>natural().lexicographical().onResultOf(JsArray::asList));
   }
 
   /** Sparse object helper class: only adds non-trivial values. */

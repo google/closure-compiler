@@ -18,7 +18,6 @@ package com.google.javascript.jscomp.ijs;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 
-import com.google.common.base.Function;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Ordering;
@@ -34,6 +33,7 @@ import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import javax.annotation.Nullable;
 
@@ -426,31 +426,21 @@ public class ConvertToTypedInterface implements CompilerPass {
     }
 
     static final Ordering<String> SHORT_TO_LONG =
-        Ordering.natural()
-            .onResultOf(
-                new Function<String, Integer>() {
-                  @Override
-                  public Integer apply(String name) {
-                    return name.replaceAll("[^.]", "").length();
-                  }
-                });
+        // TODO(b/28382956): Take better advantage of Java8 comparing() to simplify this
+        Ordering.natural().onResultOf(name -> name.replaceAll("[^.]", "").length());
 
-    static final Ordering<PotentialDeclaration> DECLARATIONS_FIRST =
-        Ordering.natural()
-            .onResultOf(
-                new Function<PotentialDeclaration, TypingLevel>() {
-                  @Override
-                  public TypingLevel apply(PotentialDeclaration decl) {
-                    JSDocInfo jsdoc = decl.getJsDoc();
-                    if (jsdoc == null) {
-                      return TypingLevel.NO_JSDOC;
-                    }
-                    if (jsdoc.getTypeNodes().isEmpty()) {
-                      return TypingLevel.UNTYPED_JSDOC_DECLARATION;
-                    }
-                    return TypingLevel.TYPED_JSDOC_DECLARATION;
-                  }
-                });
+    static final Comparator<PotentialDeclaration> DECLARATIONS_FIRST =
+        Comparator.comparing(
+            decl -> {
+              JSDocInfo jsdoc = decl.getJsDoc();
+              if (jsdoc == null) {
+                return TypingLevel.NO_JSDOC;
+              }
+              if (jsdoc.getTypeNodes().isEmpty()) {
+                return TypingLevel.UNTYPED_JSDOC_DECLARATION;
+              }
+              return TypingLevel.TYPED_JSDOC_DECLARATION;
+            });
 
     SimplifyDeclarations(AbstractCompiler compiler, FileInfo currentFile) {
       this.compiler = compiler;

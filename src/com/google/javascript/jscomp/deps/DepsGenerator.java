@@ -18,7 +18,6 @@ package com.google.javascript.jscomp.deps;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMultiset;
 import com.google.common.collect.Multimap;
@@ -556,14 +555,8 @@ public class DepsGenerator {
     if (mergeStrategy == InclusionStrategy.ALWAYS) {
       // This multimap is just for splitting DepsInfo objects by
       // it's definition deps.js file
-      Multimap<String, DependencyInfo> infosIndex = Multimaps.index(
-          depsFiles.values(),
-          new Function<DependencyInfo, String>() {
-            @Override
-            public String apply(DependencyInfo from) {
-              return from.getName();
-            }
-          });
+      Multimap<String, DependencyInfo> infosIndex =
+          Multimaps.index(depsFiles.values(), DependencyInfo::getName);
 
       for (String depsPath : infosIndex.keySet()) {
         String path = formatPathToDepsFile(depsPath);

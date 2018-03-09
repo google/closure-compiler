@@ -96,7 +96,7 @@ public final class ModuleLoader {
     this.moduleRootPaths = createRootPaths(moduleRoots, pathResolver);
     this.modulePaths =
         resolvePaths(
-            Iterables.transform(Iterables.transform(inputs, UNWRAP_DEPENDENCY_INFO), pathResolver),
+            Iterables.transform(Iterables.transform(inputs, DependencyInfo::getName), pathResolver),
             moduleRootPaths);
 
     switch (resolutionMode) {
@@ -356,15 +356,6 @@ public final class ModuleLoader {
       }
     };
   }
-
-  private static final Function<DependencyInfo, String> UNWRAP_DEPENDENCY_INFO =
-      new Function<DependencyInfo, String>() {
-        @Override
-        public String apply(DependencyInfo info) {
-          return info.getName();
-        }
-      };
-
   /** A trivial module loader with no roots. */
   public static final ModuleLoader EMPTY =
       new ModuleLoader(

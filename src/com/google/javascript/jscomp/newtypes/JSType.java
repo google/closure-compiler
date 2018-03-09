@@ -21,7 +21,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.annotations.GwtIncompatible;
-import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
@@ -1939,14 +1938,7 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
   }
 
   private List<TypeI> transformTypeParamsToTypeVars(List<String> names) {
-    return Lists.transform(
-        names,
-        new Function<String, TypeI>() {
-          @Override
-          public TypeI apply(String name) {
-            return JSType.fromTypeVar(commonTypes, name);
-          }
-        });
+    return Lists.transform(names, name -> JSType.fromTypeVar(commonTypes, name));
   }
 
   @Override

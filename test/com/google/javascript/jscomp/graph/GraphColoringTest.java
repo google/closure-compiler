@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp.graph;
 
 import static com.google.common.truth.Truth.assertThat;
+import static java.util.Comparator.comparing;
 
 import com.google.common.collect.Ordering;
 import com.google.javascript.jscomp.graph.Graph.GraphEdge;
@@ -168,13 +169,7 @@ public final class GraphColoringTest extends TestCase {
     assertThat(coloring.getPartitionSuperNode("A")).isEqualTo("A");
     assertThat(coloring.getPartitionSuperNode("C")).isEqualTo("A");
 
-    Comparator<String> biasD =
-        new Comparator<String>() {
-          @Override
-          public int compare(String o1, String o2) {
-            return o1.replace('D', '@').compareTo(o2.replace('D', '@'));
-          }
-        };
+    Comparator<String> biasD = comparing(arg -> arg.replace('D', '@'));
 
     coloring = new GreedyGraphColoring<>(graph, biasD);
     assertThat(coloring.color()).isEqualTo(3);

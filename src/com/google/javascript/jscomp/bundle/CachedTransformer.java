@@ -31,7 +31,7 @@ public class CachedTransformer implements Source.Transformer {
 
   public CachedTransformer(
       Source.Transformer delegate, CacheBuilder<? super Source, ? super Source> builder) {
-    this.cache = builder.build(CacheLoader.from(source -> delegate.transform(source)));
+    this.cache = builder.build(CacheLoader.from(delegate::transform));
   }
 
   public CachedTransformer(Source.Transformer delegate, String spec) {

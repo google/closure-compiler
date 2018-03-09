@@ -47,12 +47,7 @@ public final class CachingTranspiler implements Transpiler {
         return delegate.transpile(key.path, key.code);
       }
     });
-    this.runtime = Suppliers.memoize(new Supplier<String>() {
-      @Override
-      public String get() {
-        return delegate.runtime();
-      }
-    });
+    this.runtime = Suppliers.memoize(delegate::runtime);
   }
 
   @Override
