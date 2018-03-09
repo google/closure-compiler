@@ -159,8 +159,7 @@ class LinkedFlowScope implements FlowScope {
 
   private StaticTypedSlot<JSType> getSlot(ScopedName var) {
     if (cache.dirtySymbols.contains(var)) {
-      for (LinkedFlowSlot slot = lastSlot;
-           slot != null; slot = slot.parent) {
+      for (LinkedFlowSlot slot = lastSlot; slot != null; slot = slot.parent) {
         if (slot.var.equals(var)) {
           return slot;
         }
@@ -222,10 +221,9 @@ class LinkedFlowScope implements FlowScope {
     for (LinkedFlowScope currentScope = this;
          currentScope != blindScope;
          currentScope = currentScope.parent) {
+      LinkedFlowSlot parentSlot = currentScope.parent != null ? currentScope.parent.lastSlot : null;
       for (LinkedFlowSlot currentSlot = currentScope.lastSlot;
-           currentSlot != null &&
-           (currentScope.parent == null ||
-            currentScope.parent.lastSlot != currentSlot);
+           currentSlot != null && currentSlot != parentSlot;
            currentSlot = currentSlot.parent) {
         if (result == null) {
           result = currentSlot;
@@ -253,8 +251,7 @@ class LinkedFlowScope implements FlowScope {
   public LinkedFlowScope optimize() {
     LinkedFlowScope current;
     for (current = this;
-         current.parent != null &&
-             current.lastSlot == current.parent.lastSlot;
+         current.parent != null && current.lastSlot == current.parent.lastSlot;
          current = current.parent) {}
     return current;
   }
@@ -360,15 +357,11 @@ class LinkedFlowScope implements FlowScope {
   private Map<ScopedName, LinkedFlowSlot> allFlowSlots() {
     Map<ScopedName, LinkedFlowSlot> slots = new HashMap<>();
     for (LinkedFlowSlot slot = lastSlot; slot != null; slot = slot.parent) {
-      if (!slots.containsKey(slot.var)) {
-        slots.put(slot.var, slot);
-      }
+      slots.putIfAbsent(slot.var, slot);
     }
 
     for (Map.Entry<ScopedName, LinkedFlowSlot> symbolEntry : cache.symbols.entrySet()) {
-      if (!slots.containsKey(symbolEntry.getKey())) {
-        slots.put(symbolEntry.getKey(), symbolEntry.getValue());
-      }
+      slots.putIfAbsent(symbolEntry.getKey(), symbolEntry.getValue());
     }
 
     return slots;
