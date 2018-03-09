@@ -23,7 +23,6 @@ import static com.google.javascript.jscomp.testing.JSErrorSubject.assertError;
 
 import com.google.common.annotations.GwtIncompatible;
 import com.google.common.base.Joiner;
-import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
@@ -1990,8 +1989,7 @@ public abstract class CompilerTestCase extends TestCase {
               matches.add(n);
             }
           }
-        },
-        Predicates.alwaysTrue());
+        });
     return matches;
   }
 

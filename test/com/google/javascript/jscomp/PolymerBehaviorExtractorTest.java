@@ -19,7 +19,6 @@ import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.jscomp.PolymerPassErrors.POLYMER_INVALID_BEHAVIOR;
 import static com.google.javascript.jscomp.testing.JSErrorSubject.assertError;
 
-import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.PolymerBehaviorExtractor.BehaviorDefinition;
 import com.google.javascript.rhino.Node;
@@ -145,11 +144,13 @@ public class PolymerBehaviorExtractorTest extends CompilerTypeTestCase {
     GlobalNamespace globalNamespace = new GlobalNamespace(compiler, root);
     extractor = new PolymerBehaviorExtractor(compiler, globalNamespace);
 
-    NodeUtil.visitPostOrder(root, (Node node) -> {
-      if (isBehaviorArrayDeclaration(node)) {
-        behaviorArray = node;
-      }
-    }, Predicates.<Node>alwaysTrue());
+    NodeUtil.visitPostOrder(
+        root,
+        node -> {
+          if (isBehaviorArrayDeclaration(node)) {
+            behaviorArray = node;
+          }
+        });
 
     assertNotNull(behaviorArray);
   }

@@ -4473,7 +4473,7 @@ public final class NodeUtil {
 
   /** A pre-order traversal, calling Visitor.visit for each decendent. */
   public static void visitPreOrder(Node node, Visitor visitor) {
-    visitPreOrder(node, visitor, Predicates.<Node>alwaysTrue());
+    visitPreOrder(node, visitor, Predicates.alwaysTrue());
   }
 
   /** A pre-order traversal, calling Visitor.visit for each child matching the predicate. */
@@ -4486,6 +4486,11 @@ public final class NodeUtil {
         visitPreOrder(c, visitor, traverseChildrenPred);
       }
     }
+  }
+
+  /** A post-order traversal, calling Visitor.visit for each decendent. */
+  public static void visitPostOrder(Node node, Visitor visitor) {
+    visitPostOrder(node, visitor, Predicates.alwaysTrue());
   }
 
   /** A post-order traversal, calling Visitor.visit for each descendant matching the predicate. */

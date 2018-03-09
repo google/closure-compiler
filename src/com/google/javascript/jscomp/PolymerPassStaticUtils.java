@@ -19,7 +19,6 @@ import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.CaseFormat;
-import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.PolymerPass.MemberDefinition;
 import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
@@ -71,8 +70,7 @@ final class PolymerPassStaticUtils {
                   compiler.reportChangeToEnclosingScope(dollarChildProp);
                 }
               }
-            },
-            Predicates.<Node>alwaysTrue());
+            });
       }
     }
   }

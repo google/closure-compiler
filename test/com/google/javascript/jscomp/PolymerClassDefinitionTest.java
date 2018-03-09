@@ -18,7 +18,6 @@ package com.google.javascript.jscomp;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.jscomp.testing.NodeSubject.assertNode;
 
-import com.google.common.base.Predicates;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
@@ -164,8 +163,7 @@ public final class PolymerClassDefinitionTest extends CompilerTypeTestCase {
               polymerCall = node;
             }
           }
-        },
-        Predicates.<Node>alwaysTrue());
+        });
 
     assertNotNull(polymerCall);
     return PolymerClassDefinition.extractFromCallNode(polymerCall, compiler, globalNamespace);
@@ -184,8 +182,7 @@ public final class PolymerClassDefinitionTest extends CompilerTypeTestCase {
               polymerCall = node;
             }
           }
-        },
-        Predicates.<Node>alwaysTrue());
+        });
 
     assertNotNull(polymerCall);
     return PolymerClassDefinition.extractFromClassNode(polymerCall, compiler, globalNamespace);
