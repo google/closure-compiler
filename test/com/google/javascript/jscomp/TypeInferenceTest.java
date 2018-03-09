@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.javascript.jscomp.CompilerTypeTestCase.lines;
 import static com.google.javascript.rhino.jstype.JSTypeNative.ALL_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.ARRAY_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.BOOLEAN_TYPE;
@@ -34,7 +35,6 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.VOID_TYPE;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CodingConvention.AssertionFunctionSpec;
-import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.DataFlowAnalysis.BranchedFlowState;
 import com.google.javascript.jscomp.type.FlowScope;
 import com.google.javascript.jscomp.type.ReverseAbstractInterpreter;
@@ -75,7 +75,6 @@ public final class TypeInferenceTest extends TestCase {
     compiler = new Compiler();
     CompilerOptions options = new CompilerOptions();
     options.setClosurePass(true);
-    options.setLanguageIn(LanguageMode.ECMASCRIPT5);
     compiler.initOptions(options);
     registry = compiler.getTypeRegistry();
     assumptions = new HashMap<>();
@@ -99,8 +98,15 @@ public final class TypeInferenceTest extends TestCase {
     String thisBlock = assumedThisType == null
         ? ""
         : "/** @this {" + assumedThisType + "} */";
-    Node root = compiler.parseTestCode(
-        "(" + thisBlock + " function() {" + js + "});");
+    parseAndRunTypeInference("(" + thisBlock + " function() {" + js + "});");
+  }
+
+  private void inGenerator(String js) {
+    parseAndRunTypeInference("(function *() {" + js + "});");
+  }
+
+  private void parseAndRunTypeInference(String js) {
+    Node root = compiler.parseTestCode(js);
     assertEquals("parsing error: " +
         Joiner.on(", ").join(compiler.getErrors()),
         0, compiler.getErrorCount());
@@ -1529,6 +1535,25 @@ public final class TypeInferenceTest extends TestCase {
     assuming("x", createUnionType(ARRAY_TYPE, NUMBER_TYPE));
     inFunction("goog.asserts.assert(!Array.isArray(x));");
     verify("x", NUMBER_TYPE);
+  }
+
+  public void testYield1() {
+    inGenerator("var x = yield 3;");
+    verify("x", registry.getNativeType(UNKNOWN_TYPE));
+  }
+
+  public void testYield2() {
+    // test that type inference happens inside the yield expression
+    inGenerator(
+        lines(
+            "var obj;",
+            "yield (obj = {a: 3, b: '4'});",
+            "var a = obj.a;",
+            "var b = obj.b;"
+        ));
+
+    verify("a", registry.getNativeType(NUMBER_TYPE));
+    verify("b", registry.getNativeType(STRING_TYPE));
   }
 
   private ObjectType getNativeObjectType(JSTypeNative t) {

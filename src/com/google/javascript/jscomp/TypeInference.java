@@ -451,6 +451,11 @@ class TypeInference
         scope = traverseReturn(n, scope);
         break;
 
+      case YIELD:
+        scope = traverseChildren(n, scope);
+        n.setJSType(getNativeType(UNKNOWN_TYPE));
+        break;
+
       case VAR:
       case THROW:
         scope = traverseChildren(n, scope);
