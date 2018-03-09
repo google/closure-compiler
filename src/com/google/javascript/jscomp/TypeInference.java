@@ -212,8 +212,7 @@ class TypeInference
 
       switch (branch) {
         case ON_TRUE:
-          if (source.isForIn()) {
-            // item is assigned a property name, so its type should be string.
+          if (source.isForIn() || source.isForOf()) {
             Node item = source.getFirstChild();
             Node obj = item.getNext();
 
@@ -222,22 +221,35 @@ class TypeInference
             if (item.isVar()) {
               item = item.getFirstChild();
             }
-            if (item.isName()) {
-              JSType iterKeyType = getNativeType(STRING_TYPE);
+            if (source.isForIn()) {
+              // item is assigned a property name, so its type should be string.
+              if (item.isName()) {
+                JSType iterKeyType = getNativeType(STRING_TYPE);
+                ObjectType objType = getJSType(obj).dereference();
+                JSType objIndexType =
+                    objType == null
+                        ? null
+                        : objType
+                            .getTemplateTypeMap()
+                            .getResolvedTemplateType(registry.getObjectIndexKey());
+                if (objIndexType != null && !objIndexType.isUnknownType()) {
+                  JSType narrowedKeyType = iterKeyType.getGreatestSubtype(objIndexType);
+                  if (!narrowedKeyType.isEmptyType()) {
+                    iterKeyType = narrowedKeyType;
+                  }
+                }
+                redeclareSimpleVar(informed, item, iterKeyType);
+              }
+            } else {
+              // for/of. The type of `item` is the type parameter of the Iterable type.
               ObjectType objType = getJSType(obj).dereference();
-              JSType objIndexType =
-                  objType == null
-                      ? null
-                      : objType
-                          .getTemplateTypeMap()
-                          .getResolvedTemplateType(registry.getObjectIndexKey());
-              if (objIndexType != null && !objIndexType.isUnknownType()) {
-                JSType narrowedKeyType = iterKeyType.getGreatestSubtype(objIndexType);
-                if (!narrowedKeyType.isEmptyType()) {
-                  iterKeyType = narrowedKeyType;
+
+              if (objType.isSubtypeOf(getNativeType(JSTypeNative.ITERABLE_TYPE))) {
+                if (objType.isTemplatizedType()) {
+                  JSType newType = objType.getTemplateTypes().get(0);
+                  redeclareSimpleVar(informed, item, newType);
                 }
               }
-              redeclareSimpleVar(informed, item, iterKeyType);
             }
             newScope = informed;
             break;
@@ -1805,9 +1817,8 @@ class TypeInference
         flowScope);
   }
 
-  private void redeclareSimpleVar(
-      FlowScope scope, Node nameNode, JSType varType) {
-    checkState(nameNode.isName());
+  private void redeclareSimpleVar(FlowScope scope, Node nameNode, JSType varType) {
+    checkState(nameNode.isName(), nameNode);
     String varName = nameNode.getString();
     if (varType == null) {
       varType = getNativeType(JSTypeNative.UNKNOWN_TYPE);

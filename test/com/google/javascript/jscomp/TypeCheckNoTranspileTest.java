@@ -53,6 +53,125 @@ public final class TypeCheckNoTranspileTest extends CompilerTypeTestCase {
     testTypes("const x = 0;", "Internal Error: TypeCheck doesn't know how to handle CONST", true);
   }
 
+  public void testForOf1() {
+    testTypes("/** @type {!Iterable} */ var it; for (var elem of it) {}");
+  }
+
+  public void testForOf2() {
+    testTypes(
+        lines(
+            "function takesString(/** string */ s) {}",
+            "/** @type {!Iterable<string>} */ var it;",
+            "for (var elem of it) { takesString(elem); }"));
+  }
+
+  public void testForOf3() {
+    testTypes(
+        lines(
+            "function takesString(/** string */ s) {}",
+            "/** @type {!Iterable<number>} */ var it;",
+            "for (var elem of it) { takesString(elem); }"),
+        lines(
+            "actual parameter 1 of takesString does not match formal parameter",
+            "found   : number",
+            "required: string"));
+  }
+
+  public void testForOf_array1() {
+    testTypes("for (var elem of [1, 2]) {}");
+  }
+
+  public void testForOf_array2() {
+    testTypes(
+        lines(
+            "/** @type {!Array<number>} */ var arr = [1, 2];",
+            "function takesString(/** string */ s) {}",
+            "for (var elem of arr) { takesString(elem); }"),
+        lines(
+            "actual parameter 1 of takesString does not match formal parameter",
+            "found   : number",
+            "required: string"));
+  }
+
+  public void testForOf_array3() {
+    testTypes(
+        lines(
+            "/** @type {!Array<number>} */ var arr = [1, 2];",
+            "function takesNumber(/** number */ n) {}",
+            "for (var elem of arr) { takesNumber(elem); }"));
+  }
+
+  // TODO(tbreisacher): Should be no warning here.
+  public void testForOf_string1() {
+    testTypes(
+        lines(
+            "function takesString(/** string */ s) {}",
+            "for (var ch of 'a string') { takesString(elem); }"),
+        lines(
+            "Can only iterate over a (non-null) Iterable type",
+            "found   : string",
+            "required: Iterable"));
+  }
+
+  // TODO(tbreisacher): Should be a type mismatch warning here because we're passing a string to
+  // takesNumber.
+  public void testForOf_string2() {
+    testTypes(
+        lines(
+            "function takesNumber(/** number */ n) {}",
+            "for (var ch of 'a string') { takesNumber(elem); }"),
+        lines(
+            "Can only iterate over a (non-null) Iterable type",
+            "found   : string",
+            "required: Iterable"));
+  }
+
+  public void testForOf_StringObject1() {
+    testTypes(
+        lines(
+            "function takesString(/** string */ s) {}",
+            "for (var ch of new String('boxed')) { takesString(elem); }"));
+  }
+
+  public void testForOf_StringObject2() {
+    testTypes(
+        lines(
+            "function takesNumber(/** number */ n) {}",
+            "for (var ch of new String('boxed')) { takesNumber(elem); }"));
+  }
+
+  public void testForOf_nullable() {
+    testTypes(
+        "/** @type {?Iterable} */ var it; for (var elem of it) {}",
+        lines(
+            "Can only iterate over a (non-null) Iterable type",
+            "found   : (Iterable|null)",
+            "required: Iterable"));
+  }
+
+  public void testForOf_maybeUndefined() {
+    testTypes(
+        "/** @type {!Iterable|undefined} */ var it; for (var elem of it) {}",
+        lines(
+            "Can only iterate over a (non-null) Iterable type",
+            "found   : (Iterable|undefined)",
+            "required: Iterable"));
+  }
+
+  public void testForOf_let() {
+    testTypes(
+        "/** @type {!Iterable} */ var it; for (let elem of it) {}",
+        "Internal Error: TypeCheck doesn't know how to handle LET",
+        /* isError = */ true);
+  }
+
+  public void testForOf_const() {
+    testTypes(
+        "/** @type {!Iterable} */ var it; for (const elem of it) {}",
+        "Internal Error: TypeCheck doesn't know how to handle CONST",
+        /* isError = */ true);
+  }
+
   private void testTypes(String js) {
     testTypes(js, (String) null);
   }

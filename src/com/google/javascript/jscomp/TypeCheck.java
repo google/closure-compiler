@@ -863,6 +863,14 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         typeable = false;
         break;
 
+      case FOR_OF:
+        ensureTyped(t, n.getSecondChild());
+        JSType iterable = getJSType(n.getSecondChild());
+        validator.expectIterable(
+            t, n.getSecondChild(), iterable, "Can only iterate over a (non-null) Iterable type");
+        typeable = false;
+        break;
+
       // These nodes are typed during the type inference.
       case AND:
       case HOOK:
