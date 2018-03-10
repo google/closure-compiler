@@ -32,6 +32,7 @@ import com.google.javascript.rhino.Token;
  * Simple static utility functions shared between the {@link PolymerPass} and its helper classes.
  */
 final class PolymerPassStaticUtils {
+  private static final String VIRTUAL_FILE = "<PolymerPassStaticUtils.java>";
 
   /** @return Whether the call represents a call to the Polymer function. */
   @VisibleForTesting
@@ -161,7 +162,7 @@ final class PolymerPassStaticUtils {
         return null;
     }
 
-    return new JSTypeExpression(typeNode, PolymerPass.VIRTUAL_FILE);
+    return new JSTypeExpression(typeNode, VIRTUAL_FILE);
   }
 
   /**

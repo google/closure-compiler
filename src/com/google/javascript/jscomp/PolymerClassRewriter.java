@@ -39,7 +39,7 @@ import java.util.Map;
  * understood by the compiler.
  */
 final class PolymerClassRewriter {
-
+  private static final String VIRTUAL_FILE = "<PolymerClassRewriter.java>";
   private final AbstractCompiler compiler;
   private final int polymerVersion;
   private final boolean propertyRenamingEnabled;
@@ -216,8 +216,8 @@ final class PolymerClassRewriter {
     if (!readOnlyProps.isEmpty() || !attributeReflectedProps.isEmpty()) {
       JSDocInfoBuilder classInfo = JSDocInfoBuilder.maybeCopyFrom(clazz.getJSDocInfo());
       String interfaceName = getInterfaceName(cls);
-      JSTypeExpression interfaceType = new JSTypeExpression(
-          new Node(Token.BANG, IR.string(interfaceName)), PolymerPass.VIRTUAL_FILE);
+      JSTypeExpression interfaceType =
+          new JSTypeExpression(new Node(Token.BANG, IR.string(interfaceName)), VIRTUAL_FILE);
       classInfo.recordImplementedInterface(interfaceType);
       clazz.setJSDocInfo(classInfo.build());
     }
@@ -229,18 +229,18 @@ final class PolymerClassRewriter {
       compiler.reportChangeToEnclosingScope(stmt);
     }
 
-    addReturnTypeIfMissing(cls, "is", new JSTypeExpression(IR.string("string"), ""));
+    addReturnTypeIfMissing(cls, "is", new JSTypeExpression(IR.string("string"), VIRTUAL_FILE));
 
     Node type = new Node(Token.BANG);
     Node array = IR.string("Array");
     type.addChildToBack(array);
     Node arrayTemplateType = new Node(Token.BLOCK, IR.string("string"));
     array.addChildToBack(arrayTemplateType);
-    addReturnTypeIfMissing(cls, "observers", new JSTypeExpression(type, ""));
+    addReturnTypeIfMissing(cls, "observers", new JSTypeExpression(type, VIRTUAL_FILE));
     addReturnTypeIfMissing(
         cls,
         "properties",
-        new JSTypeExpression(IR.string(POLYMER_ELEMENT_PROP_CONFIG), ""));
+        new JSTypeExpression(IR.string(POLYMER_ELEMENT_PROP_CONFIG), VIRTUAL_FILE));
 
     // If property renaming is enabled, wrap the properties object literal
     // in a reflection call so that the properties are renamed consistently
@@ -290,8 +290,8 @@ final class PolymerClassRewriter {
       Node value = keyNode.getLastChild();
       if (value != null && value.isFunction()) {
         JSDocInfoBuilder fnDoc = JSDocInfoBuilder.maybeCopyFrom(keyNode.getJSDocInfo());
-        fnDoc.recordThisType(new JSTypeExpression(
-            new Node(Token.BANG, IR.string(thisType)), PolymerPass.VIRTUAL_FILE));
+        fnDoc.recordThisType(
+            new JSTypeExpression(new Node(Token.BANG, IR.string(thisType)), VIRTUAL_FILE));
         keyNode.setJSDocInfo(fnDoc.build());
       }
     }
@@ -309,8 +309,8 @@ final class PolymerClassRewriter {
       }
       Node defaultValueKey = defaultValue.getParent();
       JSDocInfoBuilder fnDoc = JSDocInfoBuilder.maybeCopyFrom(defaultValueKey.getJSDocInfo());
-      fnDoc.recordThisType(new JSTypeExpression(
-          new Node(Token.BANG, IR.string(thisType)), PolymerPass.VIRTUAL_FILE));
+      fnDoc.recordThisType(
+          new JSTypeExpression(new Node(Token.BANG, IR.string(thisType)), VIRTUAL_FILE));
       fnDoc.recordReturnType(PolymerPassStaticUtils.getTypeFromProperty(property, compiler));
       defaultValueKey.setJSDocInfo(fnDoc.build());
     }
@@ -368,14 +368,15 @@ final class PolymerClassRewriter {
     JSDocInfoBuilder constructorDoc = JSDocInfoBuilder.maybeCopyFrom(cls.constructor.info);
     constructorDoc.recordConstructor();
 
-    JSTypeExpression baseType = new JSTypeExpression(
-        new Node(Token.BANG, IR.string(PolymerPassStaticUtils.getPolymerElementType(cls))),
-        PolymerPass.VIRTUAL_FILE);
+    JSTypeExpression baseType =
+        new JSTypeExpression(
+            new Node(Token.BANG, IR.string(PolymerPassStaticUtils.getPolymerElementType(cls))),
+            VIRTUAL_FILE);
     constructorDoc.recordBaseType(baseType);
 
     String interfaceName = getInterfaceName(cls);
-    JSTypeExpression interfaceType = new JSTypeExpression(
-        new Node(Token.BANG, IR.string(interfaceName)), PolymerPass.VIRTUAL_FILE);
+    JSTypeExpression interfaceType =
+        new JSTypeExpression(new Node(Token.BANG, IR.string(interfaceName)), VIRTUAL_FILE);
     constructorDoc.recordImplementedInterface(interfaceType);
 
     return constructorDoc;

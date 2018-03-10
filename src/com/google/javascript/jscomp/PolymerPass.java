@@ -44,8 +44,7 @@ import java.util.Set;
  * @author jlklein@google.com (Jeremy Klein)
  */
 final class PolymerPass extends AbstractPostOrderCallback implements HotSwapCompilerPass {
-
-  static final String VIRTUAL_FILE = "<PolymerPass.java>";
+  private static final String VIRTUAL_FILE = "<PolymerPass.java>";
 
   private final AbstractCompiler compiler;
   private final ImmutableMap<String, String> tagNameMap;
