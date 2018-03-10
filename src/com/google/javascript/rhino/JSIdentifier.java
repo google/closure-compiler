@@ -46,57 +46,32 @@
 package com.google.javascript.rhino;
 
 import com.google.common.annotations.GwtIncompatible;
-import com.google.javascript.rhino.jstype.TernaryValue;
 
 /**
- * Helper methods for parsing JavaScript.
- * These methods use unsupported features in GWT's emulation of java.lang.Character.
+ * Utility class to hold isJSIdentifier.
  *
- * TODO(moz): Add a GWT-compatible version in the super-source directory.
+ * <p>Separated into its own class because it is not GWT compatible.
+ *
+ * IMPORTANT: As of 2018-03-09 it is still not possible to use Java 8 features in this file
+ * due to limitations on some internal Google projects that depend on it.
  */
-@GwtIncompatible("Unsupported java.lang.Character fields")
-public class TokenUtil {
-  /* As defined in ECMA.  jsscan.c uses C isspace() (which allows
-   * \v, I think.)  note that code in getChar() implicitly accepts
-   * '\r' == \u000D as well.
-   */
-  public static boolean isJSSpace(int c) {
-    if (c <= 127) {
-      return c == 0x20 || c == 0x9 || c == 0xC || c == 0xB;
-    } else {
-      return c == 0xA0
-          || Character.getType((char) c) == Character.SPACE_SEPARATOR;
+@GwtIncompatible
+public class JSIdentifier {
+  static boolean isJSIdentifier(String s) {
+    int length = s.length();
+
+    if (length == 0
+        || Character.isIdentifierIgnorable(s.charAt(0))
+        || !Character.isJavaIdentifierStart(s.charAt(0))) {
+      return false;
     }
-  }
 
-  public static boolean isJSFormatChar(int c) {
-    return c > 127 && Character.getType(c) == Character.FORMAT;
-  }
-
-  public static boolean isWhitespace(int c) {
-    return Character.isWhitespace(c);
-  }
-
-  /**
-   * Copied from Rhino's ScriptRuntime
-   */
-  public static TernaryValue isStrWhiteSpaceChar(int c) {
-    switch (c) {
-      case '\u000B': // <VT>
-        return TernaryValue.UNKNOWN;  // IE says "no", ECMAScript says "yes"
-      case ' ': // <SP>
-      case '\n': // <LF>
-      case '\r': // <CR>
-      case '\t': // <TAB>
-      case '\u00A0': // <NBSP>
-      case '\u000C': // <FF>
-      case '\u2028': // <LS>
-      case '\u2029': // <PS>
-      case '\uFEFF': // <BOM>
-        return TernaryValue.TRUE;
-      default:
-        return (Character.getType(c) == Character.SPACE_SEPARATOR)
-            ? TernaryValue.TRUE : TernaryValue.FALSE;
+    for (int i = 1; i < length; i++) {
+      if (Character.isIdentifierIgnorable(s.charAt(i))
+          || !Character.isJavaIdentifierPart(s.charAt(i))) {
+        return false;
+      }
     }
+    return true;
   }
 }
