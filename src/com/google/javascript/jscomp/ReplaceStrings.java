@@ -503,7 +503,7 @@ class ReplaceStrings extends AbstractPostOrderCallback
         name,
         replacementParameters,
         colon == -1
-            ? ImmutableSet.<String>of()
+            ? ImmutableSet.of()
             : ImmutableSet.copyOf(
                 function.substring(colon + EXCLUSION_PREFIX.length()).split(",")));
   }

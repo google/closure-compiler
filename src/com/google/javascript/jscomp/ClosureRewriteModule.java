@@ -21,7 +21,6 @@ import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.MoreObjects;
-import com.google.common.base.Predicates;
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import com.google.common.collect.HashMultimap;
@@ -518,7 +517,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
    */
   private void rewriteJsdoc(JSDocInfo info) {
     for (Node typeNode : info.getTypeNodes()) {
-      NodeUtil.visitPreOrder(typeNode, replaceJsDocRefs, Predicates.<Node>alwaysTrue());
+      NodeUtil.visitPreOrder(typeNode, replaceJsDocRefs);
     }
   }
 

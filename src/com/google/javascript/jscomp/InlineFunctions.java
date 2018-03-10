@@ -733,7 +733,7 @@ class InlineFunctions implements CompilerPass {
         }
       };
 
-    return NodeUtil.has(node, pred, Predicates.<Node>alwaysTrue());
+    return NodeUtil.has(node, pred, Predicates.alwaysTrue());
   }
 
   /** @see #resolveInlineConflicts */

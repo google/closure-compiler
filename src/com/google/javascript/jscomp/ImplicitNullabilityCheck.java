@@ -124,7 +124,7 @@ public final class ImplicitNullabilityCheck extends AbstractPostOrderCallback
               }
             }
           },
-          Predicates.<Node>alwaysTrue());
+          Predicates.alwaysTrue());
     }
   }
 

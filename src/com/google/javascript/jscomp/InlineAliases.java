@@ -180,7 +180,7 @@ final class InlineAliases implements CompilerPass {
         return;
       }
       for (Node typeNode : info.getTypeNodes()) {
-        NodeUtil.visitPreOrder(typeNode, fixJsdocTypeNodes, Predicates.<Node>alwaysTrue());
+        NodeUtil.visitPreOrder(typeNode, fixJsdocTypeNodes, Predicates.alwaysTrue());
       }
     }
 

@@ -104,7 +104,7 @@ public final class RandomNameGenerator implements NameGenerator {
 
   public RandomNameGenerator(Random random) {
     this.random = random;
-    reset(ImmutableSet.<String>of(), "", null);
+    reset(ImmutableSet.of(), "", null);
   }
 
   RandomNameGenerator(
@@ -177,7 +177,7 @@ public final class RandomNameGenerator implements NameGenerator {
   }
 
   private static ImmutableSet<Character> asSet(@Nullable char[] chars) {
-    return chars == null ? ImmutableSet.<Character>of() : ImmutableSet.copyOf(Chars.asList(chars));
+    return chars == null ? ImmutableSet.of() : ImmutableSet.copyOf(Chars.asList(chars));
   }
 
   /**

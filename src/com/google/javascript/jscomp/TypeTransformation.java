@@ -243,7 +243,7 @@ class TypeTransformation {
    * @return TypeI The resulting type after the transformation
    */
   TypeI eval(Node ttlAst, ImmutableMap<String, TypeI> typeVars) {
-    return eval(ttlAst, typeVars, ImmutableMap.<String, String>of());
+    return eval(ttlAst, typeVars, ImmutableMap.of());
   }
 
   /** Evaluates the type transformation expression and returns the resulting type.

@@ -86,7 +86,7 @@ public final class ReferenceCollectingCallback
    */
   public ReferenceCollectingCallback(AbstractCompiler compiler, Behavior behavior,
       ScopeCreator creator) {
-    this(compiler, behavior, creator, Predicates.<Var>alwaysTrue());
+    this(compiler, behavior, creator, Predicates.alwaysTrue());
   }
 
   /**

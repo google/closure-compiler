@@ -125,8 +125,7 @@ public final class LinkedUndirectedGraph<N, E>
 
   @Override
   public Collection<UndiGraphNode<N, E>> getUndirectedGraphNodes() {
-    return Collections.<UndiGraphNode<N, E>>unmodifiableCollection(
-        nodes.values());
+    return Collections.unmodifiableCollection(nodes.values());
   }
 
   @Override
@@ -136,8 +135,7 @@ public final class LinkedUndirectedGraph<N, E>
 
   @Override
   public List<GraphEdge<N, E>> getEdges(N n1, N n2) {
-    return Collections.<GraphEdge<N, E>>unmodifiableList(
-        getUndirectedGraphEdges(n1, n2));
+    return Collections.unmodifiableList(getUndirectedGraphEdges(n1, n2));
   }
 
   @SuppressWarnings("unchecked")
@@ -173,7 +171,7 @@ public final class LinkedUndirectedGraph<N, E>
 
   @Override
   public boolean isConnected(N n1, N n2) {
-    return isConnected(n1, Predicates.<E>alwaysTrue(), n2);
+    return isConnected(n1, Predicates.alwaysTrue(), n2);
   }
 
   @Override
@@ -235,7 +233,7 @@ public final class LinkedUndirectedGraph<N, E>
 
   @Override
   public Collection<GraphNode<N, E>> getNodes() {
-    return Collections.<GraphNode<N, E>> unmodifiableCollection(nodes.values());
+    return Collections.unmodifiableCollection(nodes.values());
   }
 
   @Override

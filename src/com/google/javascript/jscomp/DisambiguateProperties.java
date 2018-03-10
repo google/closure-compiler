@@ -334,10 +334,7 @@ class DisambiguateProperties implements CompilerPass {
         this.registry.getNativeType(JSTypeNative.NO_OBJECT_TYPE).toMaybeObjectType();
 
     this.propertiesToErrorFor = propertiesToErrorFor;
-    this.invalidationMap =
-        propertiesToErrorFor.isEmpty()
-            ? null
-            : LinkedHashMultimap.<TypeI, Supplier<JSError>>create();
+    this.invalidationMap = propertiesToErrorFor.isEmpty() ? null : LinkedHashMultimap.create();
 
     this.invalidatingTypes = new InvalidatingTypes.Builder(registry)
         .recordInvalidations(this.invalidationMap)
@@ -596,7 +593,7 @@ class DisambiguateProperties implements CompilerPass {
 
       Iterable<JSError> invalidations =
           FluentIterable.from(invalidationMap.get(t))
-              .transform(Suppliers.<JSError>supplierFunction())
+              .transform(Suppliers.supplierFunction())
               .limit(MAX_INVALIDATION_WARNINGS_PER_PROPERTY);
       for (JSError error : invalidations) {
         errors.add(t + " at " + error.sourceName + ":" + error.lineNumber);

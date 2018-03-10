@@ -378,8 +378,7 @@ public final class SymbolTable {
       return result;
     }
     Symbol result = getSymbolForTypeHelper(type, true);
-    return result == null
-        ? ImmutableList.<Symbol>of() : ImmutableList.of(result);
+    return result == null ? ImmutableList.of() : ImmutableList.of(result);
   }
 
   /**

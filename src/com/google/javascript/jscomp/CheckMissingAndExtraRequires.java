@@ -701,7 +701,7 @@ public class CheckMissingAndExtraRequires implements HotSwapCompilerPass, NodeTr
    * require is there or not.
    */
   private void maybeAddWeakUsage(NodeTraversal t, Node n, Node typeNode) {
-    maybeAddUsage(t, n, typeNode, false, Predicates.<Node>alwaysTrue());
+    maybeAddUsage(t, n, typeNode, false, Predicates.alwaysTrue());
   }
 
   /**

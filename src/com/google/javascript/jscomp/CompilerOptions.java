@@ -2500,7 +2500,7 @@ public class CompilerOptions implements Serializable {
 
   public void addCustomPass(CustomPassExecutionTime time, CompilerPass customPass) {
     if (customPasses == null) {
-      customPasses = LinkedHashMultimap.<CustomPassExecutionTime, CompilerPass>create();
+      customPasses = LinkedHashMultimap.create();
     }
     customPasses.put(time, customPass);
   }

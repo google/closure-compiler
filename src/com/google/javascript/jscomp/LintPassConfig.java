@@ -16,7 +16,6 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.collect.ImmutableList;
-import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.jscomp.lint.CheckDuplicateCase;
 import com.google.javascript.jscomp.lint.CheckEmptyStatements;
 import com.google.javascript.jscomp.lint.CheckEnums;
@@ -61,7 +60,7 @@ class LintPassConfig extends PassConfig.PassConfigDelegate {
         protected CompilerPass create(AbstractCompiler compiler) {
           return new CombinedCompilerPass(
               compiler,
-              ImmutableList.<Callback>of(
+              ImmutableList.of(
                   new CheckDuplicateCase(compiler),
                   new CheckEmptyStatements(compiler),
                   new CheckEnums(compiler),
@@ -130,9 +129,8 @@ class LintPassConfig extends PassConfig.PassConfigDelegate {
         protected CompilerPass create(AbstractCompiler compiler) {
           return new CombinedCompilerPass(
               compiler,
-              ImmutableList.<Callback>of(
-                  new CheckInterfaces(compiler),
-                  new CheckPrototypeProperties(compiler)));
+              ImmutableList.of(
+                  new CheckInterfaces(compiler), new CheckPrototypeProperties(compiler)));
         }
 
         @Override

@@ -640,7 +640,7 @@ class FlowSensitiveInlineVariables implements CompilerPass, ScopedCallback {
               return false;
             }
           },
-          Predicates.<Node>alwaysTrue())) {
+          Predicates.alwaysTrue())) {
         return false;
       }
       return true;

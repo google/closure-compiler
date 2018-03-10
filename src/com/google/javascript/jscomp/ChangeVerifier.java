@@ -17,7 +17,6 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkState;
 
-import com.google.common.base.Predicates;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import com.google.javascript.jscomp.NodeUtil.Visitor;
@@ -90,8 +89,7 @@ public class ChangeVerifier {
               snapshotScopeNodes.add(oldNode);
             }
           }
-        },
-        Predicates.<Node>alwaysTrue());
+        });
 
     NodeUtil.visitPreOrder(
         root,
@@ -112,8 +110,7 @@ public class ChangeVerifier {
               }
             }
           }
-        },
-        Predicates.<Node>alwaysTrue());
+        });
 
     // Only actually deleted snapshot scope nodes should remain.
     verifyDeletedScopeNodes(passNameMsg, snapshotScopeNodes);

@@ -3669,7 +3669,7 @@ public final class NodeUtil {
    * @return true if n or any of its descendants are of the specified type.
    */
   public static boolean containsType(Node node, Token type) {
-    return containsType(node, type, Predicates.<Node>alwaysTrue());
+    return containsType(node, type, Predicates.alwaysTrue());
   }
 
 
@@ -4398,15 +4398,14 @@ public final class NodeUtil {
    * Whether a simple name is referenced within the node tree.
    */
   static boolean isNameReferenced(Node node, String name) {
-    return isNameReferenced(node, name, Predicates.<Node>alwaysTrue());
+    return isNameReferenced(node, name, Predicates.alwaysTrue());
   }
 
   /**
    * Finds the number of times a simple name is referenced within the node tree.
    */
   static int getNameReferenceCount(Node node, String name) {
-    return getCount(
-        node, new MatchNameNode(name), Predicates.<Node>alwaysTrue());
+    return getCount(node, new MatchNameNode(name), Predicates.alwaysTrue());
   }
 
   /** @return Whether the predicate is true for the node or any of its descendants. */
@@ -4758,7 +4757,7 @@ public final class NodeUtil {
    * or an object that has not yet escaped.
    */
   static boolean evaluatesToLocalValue(Node value) {
-    return evaluatesToLocalValue(value, Predicates.<Node>alwaysFalse());
+    return evaluatesToLocalValue(value, Predicates.alwaysFalse());
   }
 
   /**
@@ -5531,8 +5530,7 @@ public final class NodeUtil {
       return new TemplateArgsIterable(invocation.getLastChild());
     } else {
       checkState(isCallOrNew(invocation), invocation);
-      return invocation.hasOneChild()
-          ? ImmutableList.<Node>of() : invocation.getSecondChild().siblings();
+      return invocation.hasOneChild() ? ImmutableList.of() : invocation.getSecondChild().siblings();
     }
   }
 

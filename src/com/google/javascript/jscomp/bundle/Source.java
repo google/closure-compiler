@@ -80,8 +80,8 @@ public abstract class Source {
         .setSourceMap("")
         .setSourceUrl("")
         .setSourceMappingUrl("")
-        .setRuntimes(ImmutableSet.<String>of())
-        .setLoadFlags(ImmutableMap.<String, String>of())
+        .setRuntimes(ImmutableSet.of())
+        .setLoadFlags(ImmutableMap.of())
         .setEstimatedSize(0);
   }
 

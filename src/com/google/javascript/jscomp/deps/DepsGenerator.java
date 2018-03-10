@@ -512,8 +512,7 @@ public class DepsGenerator {
     Map<String, DependencyInfo> parsedFiles = new LinkedHashMap<>();
     JsFileParser jsParser = new JsFileParser(errorManager).setModuleLoader(loader);
     Compiler compiler = new Compiler();
-    compiler.init(
-        ImmutableList.<SourceFile>of(), ImmutableList.<SourceFile>of(), new CompilerOptions());
+    compiler.init(ImmutableList.of(), ImmutableList.of(), new CompilerOptions());
 
     for (SourceFile file : srcs) {
       String closureRelativePath =

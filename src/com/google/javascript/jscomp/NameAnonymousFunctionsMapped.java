@@ -60,9 +60,9 @@ class NameAnonymousFunctionsMapped implements CompilerPass {
       AbstractCompiler compiler, VariableMap previousMap) {
     this.compiler = compiler;
     Set<String> reserved =
-        previousMap != null ?
-            previousMap.getNewNameToOriginalNameMap().keySet() :
-            Collections.<String>emptySet();
+        previousMap != null
+            ? previousMap.getNewNameToOriginalNameMap().keySet()
+            : Collections.emptySet();
     this.nameGenerator = new DefaultNameGenerator(
         reserved, PREFIX_STRING, null);
     this.previousMap = previousMap;

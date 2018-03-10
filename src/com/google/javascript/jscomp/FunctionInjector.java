@@ -174,8 +174,7 @@ class FunctionInjector {
       }
     };
 
-    return !referencesArguments
-        && !NodeUtil.has(block, p, Predicates.<Node>alwaysTrue());
+    return !referencesArguments && !NodeUtil.has(block, p, Predicates.alwaysTrue());
   }
 
   /**
@@ -263,7 +262,7 @@ class FunctionInjector {
           }
         };
 
-    return NodeUtil.has(callNode, hasSpreadCallArgumentPredicate, Predicates.<Node>alwaysTrue());
+    return NodeUtil.has(callNode, hasSpreadCallArgumentPredicate, Predicates.alwaysTrue());
   }
 
   /**

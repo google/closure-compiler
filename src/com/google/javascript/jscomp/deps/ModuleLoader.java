@@ -360,8 +360,8 @@ public final class ModuleLoader {
   public static final ModuleLoader EMPTY =
       new ModuleLoader(
           null,
-          ImmutableList.<String>of(),
-          ImmutableList.<DependencyInfo>of(),
+          ImmutableList.of(),
+          ImmutableList.of(),
           ResolutionMode.BROWSER);
 
   /** An enum used to specify what algorithm to use to locate non path-based modules */

@@ -24,7 +24,6 @@ import com.google.javascript.jscomp.DiagnosticType;
 import com.google.javascript.jscomp.HotSwapCompilerPass;
 import com.google.javascript.jscomp.NodeTraversal;
 import com.google.javascript.jscomp.NodeUtil;
-import com.google.javascript.jscomp.graph.DiGraph.DiGraphEdge;
 import com.google.javascript.rhino.FunctionTypeI;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
@@ -128,9 +127,13 @@ public final class CheckNullableReturn implements HotSwapCompilerPass, NodeTrave
    * @return True if the given ControlFlowGraph could return null.
    */
   public static boolean canReturnNull(ControlFlowGraph<Node> graph) {
-    CheckPathsBetweenNodes<Node, ControlFlowGraph.Branch> test = new CheckPathsBetweenNodes<>(graph,
-        graph.getEntry(), graph.getImplicitReturn(), NULLABLE_RETURN_PREDICATE,
-        Predicates.<DiGraphEdge<Node, ControlFlowGraph.Branch>>alwaysTrue());
+    CheckPathsBetweenNodes<Node, ControlFlowGraph.Branch> test =
+        new CheckPathsBetweenNodes<>(
+            graph,
+            graph.getEntry(),
+            graph.getImplicitReturn(),
+            NULLABLE_RETURN_PREDICATE,
+            Predicates.alwaysTrue());
 
     return test.somePathsSatisfyPredicate();
   }

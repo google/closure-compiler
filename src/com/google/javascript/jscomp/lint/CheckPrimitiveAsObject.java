@@ -15,7 +15,6 @@
  */
 package com.google.javascript.jscomp.lint;
 
-import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.AbstractCompiler;
 import com.google.javascript.jscomp.DiagnosticType;
@@ -94,8 +93,7 @@ public final class CheckPrimitiveAsObject extends AbstractPostOrderCallback
               }
             }
           }
-        },
-        Predicates.<Node>alwaysTrue());
+        });
   }
 
   private void checkForPrimitiveObjectConstructor(NodeTraversal t, Node n) {

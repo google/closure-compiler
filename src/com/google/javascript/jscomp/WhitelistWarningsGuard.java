@@ -60,7 +60,7 @@ public class WhitelistWarningsGuard extends WarningsGuard {
   private static final Pattern LINE_NUMBER = Pattern.compile(":-?\\d+");
 
   public WhitelistWarningsGuard() {
-    this(ImmutableSet.<String>of());
+    this(ImmutableSet.of());
   }
 
   /**

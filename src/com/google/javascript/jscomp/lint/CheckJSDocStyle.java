@@ -328,8 +328,8 @@ public final class CheckJSDocStyle extends AbstractPostOrderCallback implements 
 
     List<String> paramsFromJsDoc =
         jsDoc == null
-            ? ImmutableList.<String>of()
-            : ImmutableList.<String>copyOf(jsDoc.getParameterNames());
+            ? ImmutableList.of()
+            : ImmutableList.copyOf(jsDoc.getParameterNames());
     if (paramsFromJsDoc.isEmpty()) {
       checkInlineParams(t, function);
     } else {
