@@ -128,8 +128,9 @@ public final class RemoveSuperMethodsPass implements CompilerPass {
 
       // Check that call references the superclass
       String calledClass = callNameSplittedByPrototypeMarker[0];
-      TypeI subclassType = compiler.getTypeIRegistry().getType(enclosingClassName);
-      TypeI calledClassType = compiler.getTypeIRegistry().getType(calledClass);
+      // TODO(moz): fix this to handle shadowing local type names
+      TypeI subclassType = compiler.getTypeIRegistry().getGlobalType(enclosingClassName);
+      TypeI calledClassType = compiler.getTypeIRegistry().getGlobalType(calledClass);
       if (subclassType == null || calledClassType == null) {
         return false;
       }

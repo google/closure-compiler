@@ -199,8 +199,8 @@ class CheckMissingReturn implements ScopedCallback {
    *     with an empty body
    */
   private static boolean isEmptyFunction(Node function) {
-    return function.getChildCount() == 3 &&
-           !function.getSecondChild().getNext().hasChildren();
+    return function.getChildCount() == 3
+           && !function.getSecondChild().getNext().hasChildren();
   }
 
   /**
@@ -208,7 +208,7 @@ class CheckMissingReturn implements ScopedCallback {
    *     containing void or unknown
    */
   private boolean isVoidOrUnknown(JSType returnType) {
-    final JSType voidType = compiler.getTypeIRegistry().getNativeType(JSTypeNative.VOID_TYPE);
+    final JSType voidType = compiler.getTypeRegistry().getNativeType(JSTypeNative.VOID_TYPE);
     return voidType.isSubtype(returnType);
   }
 }

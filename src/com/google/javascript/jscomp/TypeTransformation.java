@@ -31,7 +31,9 @@ import com.google.javascript.rhino.ObjectTypeI;
 import com.google.javascript.rhino.TypeI;
 import com.google.javascript.rhino.TypeIEnv;
 import com.google.javascript.rhino.TypeIRegistry;
+import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
+import com.google.javascript.rhino.jstype.StaticTypedScope;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedHashMap;
@@ -130,8 +132,15 @@ class TypeTransformation {
     return TypeTransformationParser.Keywords.valueOf(s.toUpperCase());
   }
 
+  @SuppressWarnings("unchecked")
   private TypeI getType(String typeName) {
-    TypeI type = registry.getType(typeName);
+    TypeI type;
+    if (typeEnv instanceof StaticTypedScope) {
+      type = registry.getType((StaticTypedScope<JSType>) typeEnv, typeName);
+    } else {
+      // TODO(johnlenz): remove this branch once NTI is deleted.
+      type = registry.getType(null, typeName);
+    }
     if (type != null) {
       return type;
     }

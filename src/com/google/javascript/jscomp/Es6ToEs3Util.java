@@ -119,7 +119,7 @@ public final class Es6ToEs3Util {
     if (!shouldCreate) {
       return null;
     }
-    ObjectTypeI genericType = registry.getNativeType(typeName);
+    ObjectTypeI genericType = (ObjectTypeI) (registry.getNativeType(typeName));
     ObjectTypeI uninstantiated = genericType.getRawType();
     return registry.instantiateGenericType(uninstantiated, ImmutableList.of(typeArg));
   }

@@ -253,11 +253,12 @@ class TypedCodeGenerator extends CodeGenerator {
     if (parent.isAssign()) {
       Node target = parent.getFirstChild();
       if (NodeUtil.isPrototypeProperty(target)) {
-        TypeI type = registry.getType(target.getFirstFirstChild().getQualifiedName());
+        // TODO(johnlenz): handle non-global types
+        TypeI type = registry.getGlobalType(target.getFirstFirstChild().getQualifiedName());
         ctor = type != null ? ((ObjectTypeI) type).getConstructor() : null;
       }
     } else if (parent.isClass()) {
-      // TODO(sdh): test this case once NTI understands ES6 classes
+      // TODO(sdh): test this case once the type checker understands ES6 classes
       ctor = parent.getTypeI().toMaybeFunctionType();
     }
     return ctor != null ? ctor.getInstanceType() : null;
