@@ -51,8 +51,10 @@ package com.google.javascript.rhino;
  * It is based on the C source files jsscan.c and jsscan.h
  * in the jsref package.
  *
+ *
+ * IMPORTANT: As of 2018-03-09 it is still not possible to use Java 8 features in this file
+ * due to limitations on some internal Google projects that depend on it.
  */
-
 public class TokenStream {
    public static boolean isKeyword(String name) {
         boolean id = false;
@@ -187,7 +189,7 @@ public class TokenStream {
         return id;
     }
 
-    public static boolean isJSIdentifier(String s) {
-      return TokenUtil.isJSIdentifier(s);
-    }
+  public static boolean isJSIdentifier(String s) {
+    return JSIdentifier.isJSIdentifier(s);
+  }
 }

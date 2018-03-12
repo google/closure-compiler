@@ -33,13 +33,7 @@ public class TokenUtil {
     native boolean test(int charcode);
   }
 
-  // TODO(moz): Support full range of valid characters.
-  private static final RegExp JS_IDENTIFIER_REGEX = new RegExp("^[a-zA-Z_$][\\w$]*$");
   private static final RegExp WHITE_SPACE_REGEX = new RegExp("\\s");
-
-  static boolean isJSIdentifier(String s) {
-    return JS_IDENTIFIER_REGEX.test(s);
-  }
 
   public static boolean isJSSpace(int c) {
     if (c <= 127) {
