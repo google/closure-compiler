@@ -12452,30 +12452,36 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testMissingProperty9() {
+    disableStrictMissingPropertyChecks();
+
     testTypes(
         "/** @param {Object} obj */" +
         "function foo(obj) { if (obj.impossible) { return true; } }");
   }
 
   public void testMissingProperty10() {
+    disableStrictMissingPropertyChecks();
     testTypes(
         "/** @param {Object} obj */" +
         "function foo(obj) { while (obj.impossible) { return true; } }");
   }
 
   public void testMissingProperty11() {
+    disableStrictMissingPropertyChecks();
     testTypes(
         "/** @param {Object} obj */" +
         "function foo(obj) { for (;obj.impossible;) { return true; } }");
   }
 
   public void testMissingProperty12() {
+    disableStrictMissingPropertyChecks();
     testTypes(
         "/** @param {Object} obj */" +
         "function foo(obj) { do { } while (obj.impossible); }");
   }
 
   public void testMissingProperty13() {
+    disableStrictMissingPropertyChecks();
     testTypes(
         "var goog = {}; goog.isDef = function(x) { return false; };" +
         "/** @param {Object} obj */" +
@@ -12483,6 +12489,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testMissingProperty14() {
+    disableStrictMissingPropertyChecks();
     testTypes(
         "var goog = {}; goog.isDef = function(x) { return false; };" +
         "/** @param {Object} obj */" +
@@ -12491,12 +12498,14 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testMissingProperty15() {
+    disableStrictMissingPropertyChecks();
     testTypes(
         "/** @param {Object} x */" +
         "function f(x) { if (x.foo) { x.foo(); } }");
   }
 
   public void testMissingProperty16() {
+    disableStrictMissingPropertyChecks();
     testTypes(
         "/** @param {Object} x */" +
         "function f(x) { x.foo(); if (x.foo) {} }",
@@ -12510,12 +12519,14 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testMissingProperty18() {
+    disableStrictMissingPropertyChecks();
     testTypes(
         "/** @param {Object} x */" +
         "function f(x) { if (x.foo instanceof Function) { x.foo(); } }");
   }
 
   public void testMissingProperty19() {
+    disableStrictMissingPropertyChecks();
     testTypes(
         "/** @param {Object} x */" +
         "function f(x) { if (x.bar) { if (x.foo) {} } else { x.foo(); } }",
@@ -12523,6 +12534,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testMissingProperty20() {
+    disableStrictMissingPropertyChecks();
     testTypes(
         "/** @param {Object} x */" +
         "function f(x) { if (x.foo) { } else { x.foo(); } }",
@@ -12530,12 +12542,14 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testMissingProperty21() {
+    disableStrictMissingPropertyChecks();
     testTypes(
         "/** @param {Object} x */" +
         "function f(x) { x.foo && x.foo(); }");
   }
 
   public void testMissingProperty22() {
+    disableStrictMissingPropertyChecks();
     testTypes(
         "/** @param {Object} x \n * @return {boolean} */" +
         "function f(x) { return x.foo ? x.foo() : true; }");
@@ -12660,6 +12674,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testMissingProperty33() {
+    disableStrictMissingPropertyChecks();
     testTypes(
       "/** @param {Object} x */" +
       "function f(x) { !x.foo || x.foo(); }");
@@ -12818,7 +12833,9 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         lines(
             "/** @param {(Array|Date)} x */",
             "function f(x) { if (x.impossible) x.impossible(); }"),
-        "Property impossible never defined on (Array|Date)");
+        ImmutableList.of(
+            "Property impossible never defined on (Array|Date)",
+            "Property impossible never defined on (Array|Date)"));
   }
 
   public void testMissingProperty41b() {
@@ -12840,6 +12857,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testMissingProperty43() {
+    disableStrictMissingPropertyChecks();
     testTypes(
         "function f(x) { " +
         " return /** @type {number} */ (x.impossible) && 1;" +
@@ -14912,6 +14930,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testNonexistentPropertyAccessOnStructOrObject() {
+    disableStrictMissingPropertyChecks();
     testTypes(
         "/**\n" +
         " * @constructor\n" +
@@ -17983,6 +18002,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testCovarianceForRecordType18() {
+    disableStrictMissingPropertyChecks();
     testTypesWithExtraExterns(
         lines(
             "/** @constructor*/",

@@ -1567,6 +1567,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         checkPropertyAccessHelper(childType, propName, t, n, false);
       }
     } else if (childType.isUnionType() && !isLValueGetProp(n)) {
+      // NOTE: strict property assignment checks are done on assignment.
       checkPropertyAccessHelper(childType, propName, t, n, true);
     }
   }
@@ -1584,9 +1585,10 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
   private void checkPropertyAccessHelper(
       JSType objectType, String propName, NodeTraversal t, Node n, boolean strictCheck) {
     boolean isStruct = objectType.isStruct();
+    boolean maybePropExistenceCheck = !isStruct && allowLoosePropertyAccessOnNode(n);
     if (!reportMissingProperties
         || objectType.isEmptyType()
-        || (!isStruct && allowLoosePropertyAccessOnNode(n))) {
+        || allowStrictPropertyAccessOnNode(n)) {
       return;
     }
     PropDefinitionKind kind = typeRegistry.canPropertyBeDefined(objectType, propName);
@@ -1605,7 +1607,8 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     boolean loosePropertyDeclaration = isQNameAssignmentTarget(n) && !isStruct;
     // Traditionally, we would not report a warning for "loose" properties, but we want to be
     // able to be more strict, so introduce an optional warning.
-    boolean strictReport = strictCheck || isLooselyAssociated || loosePropertyDeclaration;
+    boolean strictReport = strictCheck || isLooselyAssociated || loosePropertyDeclaration
+        || maybePropExistenceCheck;
 
     reportMissingProperty(objectType, propName, kind, t, n, strictReport);
   }
@@ -1661,6 +1664,10 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
           propName,
           typeRegistry.getReadableTypeName(n.getFirstChild()));
     }
+  }
+
+  private boolean allowStrictPropertyAccessOnNode(Node n) {
+    return n.getParent().isTypeOf();
   }
 
   private boolean allowLoosePropertyAccessOnNode(Node n) {
