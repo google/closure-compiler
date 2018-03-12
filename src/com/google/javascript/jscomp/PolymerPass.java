@@ -15,6 +15,7 @@
  */
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.MoreObjects.toStringHelper;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.javascript.jscomp.PolymerPassErrors.POLYMER_INVALID_DECLARATION;
@@ -224,6 +225,11 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
       this.info = info;
       this.name = name;
       this.value = value;
+    }
+
+    @Override
+    public String toString() {
+      return toStringHelper(this).add("name", name).add("value", value).toString();
     }
   }
 }

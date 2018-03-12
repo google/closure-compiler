@@ -15,6 +15,7 @@
  */
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.MoreObjects.toStringHelper;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.base.CaseFormat;
@@ -267,5 +268,16 @@ final class PolymerClassDefinition {
       }
       list.add(newMember);
     }
+  }
+
+  @Override
+  public String toString() {
+    return toStringHelper(this)
+        .add("defType", defType)
+        .add("definition", definition)
+        .add("target", target)
+        .add("nativeBaseElement", nativeBaseElement)
+        .omitNullValues()
+        .toString();
   }
 }
