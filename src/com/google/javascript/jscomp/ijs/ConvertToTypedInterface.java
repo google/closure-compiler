@@ -17,10 +17,10 @@ package com.google.javascript.jscomp.ijs;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
+import static java.util.Comparator.comparing;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Ordering;
 import com.google.javascript.jscomp.AbstractCompiler;
 import com.google.javascript.jscomp.CompilerPass;
 import com.google.javascript.jscomp.DiagnosticType;
@@ -425,12 +425,11 @@ public class ConvertToTypedInterface implements CompilerPass {
       NO_JSDOC,
     }
 
-    static final Ordering<String> SHORT_TO_LONG =
-        // TODO(b/28382956): Take better advantage of Java8 comparing() to simplify this
-        Ordering.natural().onResultOf(name -> name.replaceAll("[^.]", "").length());
+    static final Comparator<String> SHORT_TO_LONG =
+        comparing(name -> name.replaceAll("[^.]", "").length());
 
     static final Comparator<PotentialDeclaration> DECLARATIONS_FIRST =
-        Comparator.comparing(
+        comparing(
             decl -> {
               JSDocInfo jsdoc = decl.getJsDoc();
               if (jsdoc == null) {
@@ -467,8 +466,8 @@ public class ConvertToTypedInterface implements CompilerPass {
       removeDuplicateDeclarations();
 
       // Simplify all names in the top-level scope.
-      List<String> seenNames =
-          SHORT_TO_LONG.immutableSortedCopy(currentFile.getDeclarations().keySet());
+      Iterable<String> seenNames =
+          currentFile.getDeclarations().keySet().stream().sorted(SHORT_TO_LONG)::iterator;
 
       for (String name : seenNames) {
         for (PotentialDeclaration decl : currentFile.getDeclarations().get(name)) {
