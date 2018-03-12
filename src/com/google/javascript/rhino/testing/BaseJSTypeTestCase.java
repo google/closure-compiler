@@ -444,7 +444,7 @@ public abstract class BaseJSTypeTestCase extends TestCase {
    * correct {@code JSType}.
    */
   protected void assertTypeEquals(JSType expected, Node actual) {
-    assertTypeEquals(expected, new JSTypeExpression(actual, ""));
+    assertTypeEquals(expected, new JSTypeExpression(actual, "<BaseJSTypeTestCase.java>"));
   }
 
   /**

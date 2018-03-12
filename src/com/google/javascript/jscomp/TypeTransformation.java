@@ -45,6 +45,8 @@ import java.util.Map;
  * @author lpino@google.com (Luis Fernando Pino Duque)
  */
 class TypeTransformation {
+  private static final String VIRTUAL_FILE = "<TypeTransformation.java>";
+
   static final DiagnosticType UNKNOWN_TYPEVAR =
       DiagnosticType.warning("TYPEVAR_UNDEFINED",
           "Reference to an unknown type variable {0}");
@@ -785,7 +787,7 @@ class TypeTransformation {
   }
 
   private TypeI evalNativeTypeExpr(Node ttlAst) {
-    JSTypeExpression expr = new JSTypeExpression(getCallArgument(ttlAst, 0), "");
+    JSTypeExpression expr = new JSTypeExpression(getCallArgument(ttlAst, 0), VIRTUAL_FILE);
     return this.registry.evaluateTypeExpression(expr, this.typeEnv);
   }
 

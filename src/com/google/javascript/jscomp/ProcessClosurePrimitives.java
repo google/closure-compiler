@@ -1597,7 +1597,8 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
   private JSDocInfo createUnknownTypeJsDocInfo() {
     JSDocInfoBuilder castToUnknownBuilder = new JSDocInfoBuilder(true);
     castToUnknownBuilder.recordType(
-        new JSTypeExpression(JsDocInfoParser.parseTypeString("?"), ""));
+        new JSTypeExpression(
+            JsDocInfoParser.parseTypeString("?"), "<ProcessClosurePrimitives.java>"));
     return castToUnknownBuilder.build();
   }
 

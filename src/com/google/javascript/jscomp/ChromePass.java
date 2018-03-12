@@ -196,7 +196,7 @@ public class ChromePass extends AbstractPostOrderCallback implements CompilerPas
 
   private static void setJsDocWithType(Node target, Node type) {
     JSDocInfoBuilder builder = new JSDocInfoBuilder(false);
-    builder.recordType(new JSTypeExpression(type, ""));
+    builder.recordType(new JSTypeExpression(type, "<ChromePass.java>"));
     target.setJSDocInfo(builder.build());
   }
 
