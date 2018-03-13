@@ -3178,6 +3178,15 @@ public final class IntegrationTest extends IntegrationTestCase {
     testSame(options, "");
   }
 
+  public void testEs6InExterns() {
+    CompilerOptions options = createCompilerOptions();
+    options.setWarningLevel(DiagnosticGroups.CHECK_TYPES, CheckLevel.WARNING);
+    externs = ImmutableList.of(SourceFile.fromCode(
+        "externs", "class ExternalClass { externalMethod() {} }"));
+    testSame(options, "(new ExternalClass).externalMethod();");
+    test(options, "(new ExternalClass).nonexistentMethod();", TypeCheck.INEXISTENT_PROPERTY);
+  }
+
   public void testLanguageMode() {
     CompilerOptions options = createCompilerOptions();
 
