@@ -17,12 +17,15 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.javascript.jscomp.CheckJSDoc.MISPLACED_SUPPRESS;
 
+import com.google.common.collect.Iterables;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
+import java.util.Set;
 import javax.annotation.Nullable;
 
 /**
@@ -71,6 +74,12 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements HotSwapCompi
           "JSC_INVALID_DEFINE_ON_LET",
           "variables annotated with @define may only be declared with VARs, ASSIGNs, or CONSTs");
 
+  public static final DiagnosticType MISPLACED_SUPPRESS =
+      DiagnosticType.disabled(
+          "JSC_MISPLACED_SUPPRESS",
+          "@suppress annotation not allowed here. See"
+              + " https://github.com/google/closure-compiler/wiki/@suppress-annotations");
+
   private final AbstractCompiler compiler;
 
   CheckJSDoc(AbstractCompiler compiler) {
@@ -104,6 +113,50 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements HotSwapCompi
     validateNoSideEffects(n, info);
     validateAbstractJsDoc(n, info);
     validateDefinesDeclaration(n, info);
+    validateSuppress(n, info);
+  }
+
+  private void validateSuppress(Node n, JSDocInfo info) {
+    if (info == null || info.getSuppressions().isEmpty()) {
+      return;
+    }
+    switch (n.getToken()) {
+      case FUNCTION:
+      case CLASS:
+      case ASSIGN:
+      case VAR:
+      case LET:
+      case CONST:
+      case STRING_KEY:
+      case SCRIPT:
+      case MEMBER_FUNCTION_DEF:
+      case GETTER_DEF:
+      case SETTER_DEF:
+        // Suppressions are always valid here.
+        return;
+
+      case CALL:
+        if (containsOnlyCallValidSuppressions(info.getSuppressions())) {
+          return;
+        }
+        break;
+
+      default:
+        break;
+    }
+    if (!containsOnlyValidAnywhereSuppressions(info.getSuppressions())) {
+      compiler.report(JSError.make(n, MISPLACED_SUPPRESS));
+    }
+  }
+
+  private static boolean containsOnlyCallValidSuppressions(Set<String> suppressions) {
+    return suppressions.size() == 1
+        && Iterables.getOnlyElement(suppressions).equals("extraRequire");
+  }
+
+  private static boolean containsOnlyValidAnywhereSuppressions(Set<String> suppressions) {
+    return suppressions.size() == 1
+        && Iterables.getOnlyElement(suppressions).equals("missingRequire");
   }
 
   private void validateTypedefs(Node n, JSDocInfo info) {

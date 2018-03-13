@@ -19,7 +19,6 @@ import static com.google.javascript.jscomp.lint.CheckJSDocStyle.CLASS_DISALLOWED
 import static com.google.javascript.jscomp.lint.CheckJSDocStyle.CONSTRUCTOR_DISALLOWED_JSDOC;
 import static com.google.javascript.jscomp.lint.CheckJSDocStyle.EXTERNS_FILES_SHOULD_BE_ANNOTATED;
 import static com.google.javascript.jscomp.lint.CheckJSDocStyle.INCORRECT_PARAM_NAME;
-import static com.google.javascript.jscomp.lint.CheckJSDocStyle.INVALID_SUPPRESS;
 import static com.google.javascript.jscomp.lint.CheckJSDocStyle.MISSING_JSDOC;
 import static com.google.javascript.jscomp.lint.CheckJSDocStyle.MISSING_PARAMETER_JSDOC;
 import static com.google.javascript.jscomp.lint.CheckJSDocStyle.MISSING_RETURN_JSDOC;
@@ -74,56 +73,6 @@ public final class CheckJSDocStyleTest extends CompilerTestCase {
   @Override
   protected CodingConvention getCodingConvention() {
     return codingConvention;
-  }
-
-  public void testInvalidSuppress() {
-    testSame("/** @suppress {missingRequire} */ var x = new y.Z();");
-    testSame("/** @suppress {missingRequire} */ function f() { var x = new y.Z(); }");
-    testSame("/** @suppress {missingRequire} */ var f = function() { var x = new y.Z(); }");
-    testSame(
-        lines(
-            "var obj = {",
-            "  /** @suppress {uselessCode} */",
-            "  f: function() {},",
-            "}"));
-    testSame(
-        lines(
-            "var obj = {",
-            "  /** @suppress {uselessCode} */",
-            "  f() {},",
-            "}"));
-    testSame(
-        lines(
-            "class Example {",
-            "  /** @suppress {uselessCode} */",
-            "  f() {}",
-            "}"));
-    testSame(
-        lines(
-            "class Example {",
-            "  /** @suppress {uselessCode} */",
-            "  static f() {}",
-            "}"));
-    testSame(
-        lines(
-            "class Example {",
-            "  /** @suppress {uselessCode} */",
-            "  get f() {}",
-            "}"));
-    testSame(
-        lines(
-            "class Example {",
-            "  /**",
-            "   * @param {string} val",
-            "   * @suppress {uselessCode}",
-            "   */",
-            "  set f(val) {}",
-            "}"));
-
-    testWarning("/** @suppress {uselessCode} */ goog.require('unused.Class');", INVALID_SUPPRESS);
-    testSame("/** @suppress {extraRequire} */ goog.require('unused.Class');");
-    testSame("/** @const @suppress {duplicate} */ var google = {};");
-    testSame("/** @suppress {const} */ var google = {};");
   }
 
   public void testValidSuppress_onDeclaration() {

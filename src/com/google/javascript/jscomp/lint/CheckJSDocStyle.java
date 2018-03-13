@@ -19,8 +19,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.AbstractCompiler;
 import com.google.javascript.jscomp.CompilerPass;
 import com.google.javascript.jscomp.DiagnosticGroup;
@@ -35,7 +33,6 @@ import com.google.javascript.rhino.JSDocInfo.Visibility;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import java.util.List;
-import java.util.Set;
 import javax.annotation.Nullable;
 
 /**
@@ -43,12 +40,6 @@ import javax.annotation.Nullable;
  * with no corresponding {@code @param} annotation, coding conventions not being respected, etc.
  */
 public final class CheckJSDocStyle extends AbstractPostOrderCallback implements CompilerPass {
-  public static final DiagnosticType INVALID_SUPPRESS =
-      DiagnosticType.disabled(
-          "JSC_INVALID_SUPPRESS",
-          "@suppress annotation not allowed here. See"
-              + " https://github.com/google/closure-compiler/wiki/@suppress-annotations");
-
   public static final DiagnosticType CONSTRUCTOR_DISALLOWED_JSDOC =
       DiagnosticType.disabled("JSC_CONSTRUCTOR_DISALLOWED_JSDOC",
           "Setting visibility on constructors is not yet supported.\n"
@@ -102,7 +93,6 @@ public final class CheckJSDocStyle extends AbstractPostOrderCallback implements 
 
   public static final DiagnosticGroup ALL_DIAGNOSTICS =
       new DiagnosticGroup(
-          INVALID_SUPPRESS,
           CLASS_DISALLOWED_JSDOC,
           CONSTRUCTOR_DISALLOWED_JSDOC,
           MISSING_JSDOC,
@@ -174,11 +164,6 @@ public final class CheckJSDocStyle extends AbstractPostOrderCallback implements 
     JSDocInfo jsDoc = n.getJSDocInfo();
 
     checkForAtSignCodePresence(t, n, jsDoc);
-
-    if (jsDoc == null) {
-      return;
-    }
-    checkSuppressionsOnNonFunction(t, n, jsDoc);
   }
 
   private void checkStyleForPrivateProperties(NodeTraversal t, Node n) {
@@ -210,16 +195,6 @@ public final class CheckJSDocStyle extends AbstractPostOrderCallback implements 
           && jsDoc.getVisibility().equals(Visibility.PRIVATE)) {
         t.report(n, MUST_HAVE_TRAILING_UNDERSCORE, name);
       }
-    }
-  }
-  private void checkSuppressionsOnNonFunction(NodeTraversal t, Node n, JSDocInfo jsDoc) {
-    // Suppressions that are allowed to be in places other than functions and @fileoverview blocks.
-    Set<String> specialSuppressions =
-        ImmutableSet.of("const", "duplicate", "extraRequire", "missingRequire");
-
-    Set<String> suppressions = Sets.difference(jsDoc.getSuppressions(), specialSuppressions);
-    if (!suppressions.isEmpty()) {
-      t.report(n, INVALID_SUPPRESS);
     }
   }
 

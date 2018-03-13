@@ -25,6 +25,7 @@ import static com.google.javascript.jscomp.CheckJSDoc.INVALID_MODIFIES_ANNOTATIO
 import static com.google.javascript.jscomp.CheckJSDoc.INVALID_NO_SIDE_EFFECT_ANNOTATION;
 import static com.google.javascript.jscomp.CheckJSDoc.MISPLACED_ANNOTATION;
 import static com.google.javascript.jscomp.CheckJSDoc.MISPLACED_MSG_ANNOTATION;
+import static com.google.javascript.jscomp.CheckJSDoc.MISPLACED_SUPPRESS;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 
@@ -45,6 +46,13 @@ public final class CheckJsDocTest extends CompilerTestCase {
   protected void setUp() throws Exception {
     super.setUp();
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2017);
+  }
+
+  @Override
+  protected CompilerOptions getOptions() {
+    CompilerOptions options = super.getOptions();
+    options.setWarningLevel(DiagnosticGroups.MISPLACED_SUPPRESS, CheckLevel.WARNING);
+    return options;
   }
 
   public void testInlineJsDoc_ES6() {
@@ -692,5 +700,55 @@ public final class CheckJsDocTest extends CompilerTestCase {
     testError("/** @define {boolean} */ let DEF;", INVALID_DEFINE_ON_LET);
     testError("/** @define {boolean} */ let EXTERN_DEF;", INVALID_DEFINE_ON_LET);
     testSame("let a = {}; /** @define {boolean} */ a.B = false;");
+  }
+
+  public void testInvalidSuppress() {
+    testSame("/** @suppress {missingRequire} */ var x = new y.Z();");
+    testSame("/** @suppress {missingRequire} */ function f() { var x = new y.Z(); }");
+    testSame("/** @suppress {missingRequire} */ var f = function() { var x = new y.Z(); }");
+    testSame(
+        lines(
+            "var obj = {",
+            "  /** @suppress {uselessCode} */",
+            "  f: function() {},",
+            "}"));
+    testSame(
+        lines(
+            "var obj = {",
+            "  /** @suppress {uselessCode} */",
+            "  f() {},",
+            "}"));
+    testSame(
+        lines(
+            "class Example {",
+            "  /** @suppress {uselessCode} */",
+            "  f() {}",
+            "}"));
+    testSame(
+        lines(
+            "class Example {",
+            "  /** @suppress {uselessCode} */",
+            "  static f() {}",
+            "}"));
+    testSame(
+        lines(
+            "class Example {",
+            "  /** @suppress {uselessCode} */",
+            "  get f() {}",
+            "}"));
+    testSame(
+        lines(
+            "class Example {",
+            "  /**",
+            "   * @param {string} val",
+            "   * @suppress {uselessCode}",
+            "   */",
+            "  set f(val) {}",
+            "}"));
+
+    testWarning("/** @suppress {uselessCode} */ goog.require('unused.Class');", MISPLACED_SUPPRESS);
+    testSame("/** @suppress {extraRequire} */ goog.require('unused.Class');");
+    testSame("/** @const @suppress {duplicate} */ var google = {};");
+    testSame("/** @suppress {const} */ var google = {};");
   }
 }

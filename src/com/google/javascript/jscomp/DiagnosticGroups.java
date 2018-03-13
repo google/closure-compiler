@@ -593,6 +593,10 @@ public class DiagnosticGroups {
       DiagnosticGroups.registerGroup("misplacedMsgAnnotation",
           CheckJSDoc.MISPLACED_MSG_ANNOTATION);
 
+  public static final DiagnosticGroup MISPLACED_SUPPRESS =
+      DiagnosticGroups.registerGroup("misplacedSuppress",
+          CheckJSDoc.MISPLACED_SUPPRESS);
+
   public static final DiagnosticGroup SUSPICIOUS_CODE =
       DiagnosticGroups.registerGroup(
           "suspiciousCode",
