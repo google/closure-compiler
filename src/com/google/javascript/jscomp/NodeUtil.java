@@ -3729,7 +3729,7 @@ public final class NodeUtil {
 
     // make sure that the adding root looks ok
     checkState(addingRoot.isNormalBlock() || addingRoot.isModuleBody() || addingRoot.isScript());
-    checkState(addingRoot.getFirstChild() == null || !addingRoot.getFirstChild().isScript());
+    checkState(!addingRoot.hasChildren() || !addingRoot.getFirstChild().isScript());
     return addingRoot;
   }
 
@@ -3853,8 +3853,8 @@ public final class NodeUtil {
       newQName.setSourceEncodedPosition(basisNode.getSourcePosition());
     }
 
-    if (newQName.getProp(Node.ORIGINALNAME_PROP) == null) {
-      newQName.putProp(Node.ORIGINALNAME_PROP, basisNode.getProp(Node.ORIGINALNAME_PROP));
+    if (newQName.getOriginalName() == null) {
+      newQName.putProp(Node.ORIGINALNAME_PROP, basisNode.getOriginalName());
     }
 
     for (Node child = newQName.getFirstChild(); child != null; child = child.getNext()) {

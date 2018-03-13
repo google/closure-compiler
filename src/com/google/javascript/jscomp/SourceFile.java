@@ -281,7 +281,7 @@ public class SourceFile implements StaticSourceFile, Serializable {
       if (pos >= js.length()) {
         return null;
       } else {
-        return js.substring(pos, js.length());
+        return js.substring(pos);
       }
     } else {
       return js.substring(pos, js.indexOf('\n', pos));

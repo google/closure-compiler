@@ -216,7 +216,7 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback
         break;
 
       case STRING_KEY:
-        if (node.isQuotedString() || node.getFirstChild() == null) {
+        if (node.isQuotedString() || !node.hasChildren()) {
           return;
         }
         isVar = false;
