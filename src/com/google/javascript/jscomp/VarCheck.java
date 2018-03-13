@@ -166,7 +166,7 @@ class VarCheck extends AbstractPostOrderCallback implements
 
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
-    if (n.isName() || (n.isStringKey() && !n.hasChildren())) {
+    if (n.isName()) {
       String varName = n.getString();
 
       // Only a function can have an empty name.
@@ -200,8 +200,8 @@ class VarCheck extends AbstractPostOrderCallback implements
       Scope scope = t.getScope();
       Var var = scope.getVar(varName);
       if (var == null) {
-        if (NodeUtil.isFunctionExpression(parent)
-            || (NodeUtil.isClassExpression(parent) && n == parent.getFirstChild())) {
+        if ((NodeUtil.isFunctionExpression(parent) || NodeUtil.isClassExpression(parent))
+            && n == parent.getFirstChild()) {
           // e.g. [ function foo() {} ], it's okay if "foo" isn't defined in the
           // current scope.
         } else if (NodeUtil.isNonlocalModuleExportName(n)) {

@@ -104,6 +104,10 @@ public final class VarCheckTest extends CompilerTestCase {
     testError("x = 0;", VarCheck.UNDEFINED_VAR_ERROR);
   }
 
+  public void testReferencedVarNotDefined_arrowFunctionBody() {
+    testError("() => y", VarCheck.UNDEFINED_VAR_ERROR);
+  }
+
   public void testReferencedLetNotDefined() {
     testError("{ let x = 1; } var y = x;", VarCheck.UNDEFINED_VAR_ERROR);
   }
