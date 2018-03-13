@@ -1027,6 +1027,19 @@ HTMLImageElement.prototype.crossOrigin;
 HTMLImageElement.prototype.currentSrc;
 
 /**
+ * @type {string}
+ * @see https://html.spec.whatwg.org/multipage/images.html#image-decoding-hint
+ */
+HTMLImageElement.prototype.decoding;
+
+/**
+ * @return {!Promise<undefined>}
+ * @see https://html.spec.whatwg.org/multipage/embedded-content.html#dom-img-decode
+ */
+HTMLImageElement.prototype.decode;
+
+
+/**
  * This is a superposition of the Window and Worker postMessage methods.
  * @param {*} message
  * @param {(string|!Array<!Transferable>)=} opt_targetOriginOrTransfer
