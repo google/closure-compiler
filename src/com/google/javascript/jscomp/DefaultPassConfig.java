@@ -368,7 +368,7 @@ public final class DefaultPassConfig extends PassConfig {
 
     // It's important that the Dart super accessors pass run *before* es6ConvertSuper,
     // which is a "late" ES6 pass. This is enforced in the assertValidOrder method.
-    if (options.dartPass && !options.getLanguageOut().toFeatureSet().contains(FeatureSet.ES6)) {
+    if (options.dartPass && !options.getLanguageOut().toFeatureSet().contains(ES6)) {
       checks.add(dartSuperAccessorsPass);
     }
 
@@ -906,7 +906,7 @@ public final class DefaultPassConfig extends PassConfig {
     passes.add(varCheckValidity);
 
     // Raise to ES6, if allowed
-    if (options.getLanguageOut().toFeatureSet().contains(FeatureSet.ES6)) {
+    if (options.getLanguageOut().toFeatureSet().contains(ES6)) {
       passes.add(optimizeToEs6);
     }
 
@@ -2409,7 +2409,7 @@ public final class DefaultPassConfig extends PassConfig {
           return new ClosureOptimizePrimitives(
               compiler,
               compiler.getOptions().propertyRenaming == PropertyRenamingPolicy.ALL_UNQUOTED,
-              compiler.getOptions().getLanguageOut().toFeatureSet().contains(FeatureSet.ES6));
+              compiler.getOptions().getLanguageOut().toFeatureSet().contains(ES6));
         }
 
         @Override
@@ -2901,7 +2901,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return FeatureSet.ES8_MODULES;
+          return ES8_MODULES;
         }
       };
 
@@ -2923,7 +2923,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return FeatureSet.ES8_MODULES;
+          return ES8_MODULES;
         }
       };
 
@@ -2944,7 +2944,7 @@ public final class DefaultPassConfig extends PassConfig {
 
     @Override
     protected FeatureSet featureSet() {
-      return FeatureSet.ES8_MODULES;
+      return ES8_MODULES;
     }
   };
 
