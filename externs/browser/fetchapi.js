@@ -248,6 +248,9 @@ RequestInit.prototype.redirect;
 /** @type {(undefined|string)} */
 RequestInit.prototype.integrity;
 
+/** @type {(undefined|!AbortSignal)} */
+RequestInit.prototype.signal;
+
 /** @type {(undefined|null)} */
 RequestInit.prototype.window;
 
