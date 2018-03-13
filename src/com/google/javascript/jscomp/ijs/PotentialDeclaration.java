@@ -255,7 +255,6 @@ abstract class PotentialDeclaration {
           || isImportRhs(rhs)
           || (isExport && rhs != null && (rhs.isQualifiedName() || rhs.isObjectLit()))
           || (jsdoc != null && jsdoc.isConstructor() && rhs != null && rhs.isQualifiedName())
-          || (nameNode.matchesQualifiedName("goog.global") && rhs != null && rhs.isThis())
           || (rhs != null
               && rhs.isObjectLit()
               && !rhs.hasChildren()
