@@ -32,7 +32,6 @@ import com.google.javascript.jscomp.Var;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import javax.annotation.Nullable;
@@ -452,7 +451,7 @@ public class ConvertToTypedInterface implements CompilerPass {
           continue;
         }
         List<PotentialDeclaration> declList = currentFile.getDeclarations().get(name);
-        Collections.sort(declList, DECLARATIONS_FIRST);
+        declList.sort(DECLARATIONS_FIRST);
         while (declList.size() > 1) {
           // Don't remove the first declaration (at index 0)
           PotentialDeclaration decl = declList.remove(1);
