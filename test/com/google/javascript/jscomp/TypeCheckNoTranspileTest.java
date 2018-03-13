@@ -140,6 +140,30 @@ public final class TypeCheckNoTranspileTest extends CompilerTypeTestCase {
             "for (var ch of new String('boxed')) { takesNumber(elem); }"));
   }
 
+  public void testForOf_iterableTypeIsNotFirstTemplateType() {
+    testTypes(
+        lines(
+            "function takesNumber(/** number */ n) {}",
+            "",
+            "/**",
+            " * @constructor",
+            " * @implements {Iterable<T>}",
+            " * @template S, T",
+            " */",
+            "function MyIterable() {}",
+            "",
+            "// Note that 'mi' is an Iterable<string>, not an Iterable<number>.",
+            "/** @type {!MyIterable<number, string>} */",
+            "var mi;",
+            "",
+            "for (var t of mi) { takesNumber(t); }", ""),
+        lines(
+            "actual parameter 1 of takesNumber does not match formal parameter",
+            "found   : string",
+            "required: number"));
+  }
+
+
   public void testForOf_nullable() {
     testTypes(
         "/** @type {?Iterable} */ var it; for (var elem of it) {}",

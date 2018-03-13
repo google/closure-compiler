@@ -256,6 +256,13 @@ public class JSTypeRegistry implements TypeIRegistry {
     return this.iObjectIndexTemplateKey;
   }
 
+  /**
+   * @return The template variable for the Iterable interface.
+   */
+  public TemplateType getIterableTemplate() {
+    return checkNotNull(iterableTemplate);
+  }
+
   /** @return return an immutable list of template types of the given builtin. */
   public ImmutableList<TemplateType> maybeGetTemplateTypesOfBuiltin(String fnName) {
     JSType type = getType(null, fnName);

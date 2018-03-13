@@ -246,7 +246,10 @@ class TypeInference
 
               if (objType.isSubtypeOf(getNativeType(JSTypeNative.ITERABLE_TYPE))) {
                 if (objType.isTemplatizedType()) {
-                  JSType newType = objType.getTemplateTypes().get(0);
+                  JSType newType =
+                      objType
+                          .getTemplateTypeMap()
+                          .getResolvedTemplateType(registry.getIterableTemplate());
                   redeclareSimpleVar(informed, item, newType);
                 }
               }
