@@ -354,12 +354,16 @@ final class FunctionTypeBuilder {
         reportWarning(CONSTRUCTOR_REQUIRED, "@dict", formatFnName());
       }
 
-      if (typeRegistry.isTemplatedBuiltin(fnName, info)) {
-        // This case is only for setting template types
-        // for IObject<KEY1, VALUE1>.
-        // In the (old) type system, there should be only one unique template
-        // type for <KEY1> and <VALUE1> respectively
-        classTemplateTypeNames = typeRegistry.getTemplateTypesOfBuiltin(fnName);
+      // TODO(b/74253232): maybeGetNativeTypesOfBuiltin should also handle cases where a local type
+      // declaration shadows a templatized native type.
+      ImmutableList<TemplateType> nativeClassTemplateTypeNames =
+          typeRegistry.maybeGetTemplateTypesOfBuiltin(fnName);
+      ImmutableList<String> infoTemplateTypeNames = info.getTemplateTypeNames();
+      // TODO(b/73386087): Make infoTemplateTypeNames.size() == nativeClassTemplateTypeName.size() a
+      // Preconditions check. It currently fails for "var symbol" in the externs.
+      if (nativeClassTemplateTypeNames != null
+          && infoTemplateTypeNames.size() == nativeClassTemplateTypeNames.size()) {
+        classTemplateTypeNames = nativeClassTemplateTypeNames;
         typeRegistry.setTemplateTypeNames(classTemplateTypeNames);
       } else {
         // Otherwise, create new template type for

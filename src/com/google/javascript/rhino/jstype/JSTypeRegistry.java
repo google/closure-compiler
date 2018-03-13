@@ -108,6 +108,12 @@ public class JSTypeRegistry implements TypeIRegistry {
   /** The template variable corresponding to the VALUE type in {@code Iterable<VALUE>} */
   private TemplateType iterableTemplate;
 
+  /** The template variable corresponding to the VALUE type in {@code Iterator<VALUE>} */
+  private TemplateType iteratorTemplate;
+
+  /** The template variable corresponding to the VALUE type in {@code Generator<VALUE>} */
+  private TemplateType generatorTemplate;
+
   /**
    * The template variable in {@code Array<T>}
    */
@@ -250,33 +256,16 @@ public class JSTypeRegistry implements TypeIRegistry {
     return this.iObjectIndexTemplateKey;
   }
 
-  /**
-   * Check if a function declaration is one of the templated builitin contructor/interfaces,
-   *   namely one of IObject, IArrayLike, or Array
-   * @param fnName the function's name
-   * @param info the JSDoc from the function declaration
-   */
-  public boolean isTemplatedBuiltin(String fnName, JSDocInfo info) {
-    ImmutableList<TemplateType> requiredTemplateTypes = getTemplateTypesOfBuiltin(fnName);
-    ImmutableList<String> infoTemplateTypeNames = info.getTemplateTypeNames();
-    return requiredTemplateTypes != null
-        && infoTemplateTypeNames.size() == requiredTemplateTypes.size();
-  }
-
-  /**
-   * @return return an immutable list of template types of the given builtin.
-   */
-  public ImmutableList<TemplateType> getTemplateTypesOfBuiltin(String fnName) {
-    switch (fnName) {
-      case "IObject":
-        return ImmutableList.of(iObjectIndexTemplateKey, iObjectElementTemplateKey);
-      case "Array":
-        return ImmutableList.of(arrayElementTemplateKey);
-      case "Iterable":
-        return ImmutableList.of(iterableTemplate);
-      default:
-        return null;
+  /** @return return an immutable list of template types of the given builtin. */
+  public ImmutableList<TemplateType> maybeGetTemplateTypesOfBuiltin(String fnName) {
+    JSType type = getType(null, fnName);
+    ObjectType objType = type == null ? null : type.toObjectType();
+    if (objType != null && objType.isNativeObjectType()) {
+      ImmutableList<TemplateType> templateKeys =
+          objType.getTemplateTypeMap().getUnfilledTemplateKeys();
+      return templateKeys;
     }
+    return null;
   }
 
   public ErrorReporter getErrorReporter() {
@@ -326,7 +315,10 @@ public class JSTypeRegistry implements TypeIRegistry {
     // Template Types
     iObjectIndexTemplateKey = new TemplateType(this, "IObject#KEY1");
     iObjectElementTemplateKey = new TemplateType(this, I_OBJECT_ELEMENT_TEMPLATE);
+    // These should match the template type name in externs files.
     arrayElementTemplateKey = new TemplateType(this, "T");
+    iteratorTemplate = new TemplateType(this, "VALUE");
+    generatorTemplate = new TemplateType(this, "VALUE");
     iterableTemplate = new TemplateType(this, "VALUE");
 
     // Top Level Prototype (the One)
@@ -336,6 +328,22 @@ public class JSTypeRegistry implements TypeIRegistry {
     PrototypeObjectType TOP_LEVEL_PROTOTYPE =
         new PrototypeObjectType(this, null, null, true, null);
     registerNativeType(JSTypeNative.TOP_LEVEL_PROTOTYPE, TOP_LEVEL_PROTOTYPE);
+
+    // IObject
+    FunctionType iObjectFunctionType =
+        new FunctionType(
+            this,
+            "IObject",
+            null,
+            createArrowType(),
+            null,
+            createTemplateTypeMap(
+                ImmutableList.of(iObjectIndexTemplateKey, iObjectElementTemplateKey), null),
+            Kind.INTERFACE,
+            true,
+            false);
+    registerNativeType(JSTypeNative.I_OBJECT_FUNCTION_TYPE, iObjectFunctionType);
+    registerNativeType(JSTypeNative.I_OBJECT_TYPE, iObjectFunctionType.getInstanceType());
 
     // Object
     FunctionType OBJECT_FUNCTION_TYPE =
@@ -428,6 +436,34 @@ public class JSTypeRegistry implements TypeIRegistry {
             false);
     registerNativeType(JSTypeNative.ITERABLE_FUNCTION_TYPE, iterableFunctionType);
     registerNativeType(JSTypeNative.ITERABLE_TYPE, iterableFunctionType.getInstanceType());
+
+    FunctionType iteratorFunctionType =
+        new FunctionType(
+            this,
+            "Iterator",
+            null,
+            createArrowType(),
+            null,
+            createTemplateTypeMap(ImmutableList.of(iteratorTemplate), null),
+            Kind.INTERFACE,
+            true,
+            false);
+    registerNativeType(JSTypeNative.ITERATOR_FUNCTION_TYPE, iteratorFunctionType);
+    registerNativeType(JSTypeNative.ITERATOR_TYPE, iteratorFunctionType.getInstanceType());
+
+    FunctionType generatorFunctionType =
+        new FunctionType(
+            this,
+            "Generator",
+            null,
+            createArrowType(),
+            null,
+            createTemplateTypeMap(ImmutableList.of(generatorTemplate), null),
+            Kind.INTERFACE,
+            true,
+            false);
+    registerNativeType(JSTypeNative.GENERATOR_FUNCTION_TYPE, generatorFunctionType);
+    registerNativeType(JSTypeNative.GENERATOR_TYPE, generatorFunctionType.getInstanceType());
 
     // Boolean
     FunctionType BOOLEAN_OBJECT_FUNCTION_TYPE =
@@ -781,7 +817,10 @@ public class JSTypeRegistry implements TypeIRegistry {
     register(getNativeType(JSTypeNative.BOOLEAN_OBJECT_TYPE));
     register(getNativeType(JSTypeNative.BOOLEAN_TYPE));
     register(getNativeType(JSTypeNative.ITERABLE_TYPE));
+    register(getNativeType(JSTypeNative.ITERATOR_TYPE));
+    register(getNativeType(JSTypeNative.GENERATOR_TYPE));
     register(getNativeType(JSTypeNative.DATE_TYPE));
+    register(getNativeType(JSTypeNative.I_OBJECT_TYPE));
     register(getNativeType(JSTypeNative.NULL_TYPE));
     register(getNativeType(JSTypeNative.NULL_TYPE), "Null");
     register(getNativeType(JSTypeNative.NUMBER_OBJECT_TYPE));

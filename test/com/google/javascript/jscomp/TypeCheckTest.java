@@ -75,7 +75,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   @Override
   protected CompilerOptions getDefaultOptions() {
     CompilerOptions options = super.getDefaultOptions();
-    options.setLanguageIn(LanguageMode.ECMASCRIPT_2015);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
     return options;
   }
@@ -5652,6 +5652,52 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         "initializing variable\n"
         + "found   : string\n"
         + "required: null");
+  }
+
+  // These test the template types in the built-in Iterator/Iterable/Generator are set up correctly
+  public void testIteratorAccess1() {
+    testTypes(
+        lines(
+            "/** ",
+            " * @param {!Iterator<T>} x",
+            " * @return {T}",
+            " * @template T",
+            "*/",
+            "function f(x) { return x[0]; }",
+            "function g(/** !Generator<string> */ x) {",
+            "  var /** null */ y = f(x);",
+            "}"),
+        "initializing variable\n" + "found   : string\n" + "required: null");
+  }
+
+  public void testIterableAccess1() {
+    testTypes(
+        lines(
+            "/** ",
+            " * @param {!Iterable<T>} x",
+            " * @return {T}",
+            " * @template T",
+            "*/",
+            "function f(x) { return x[0]; }",
+            "function g(/** !Generator<string> */ x) {",
+            "  var /** null */ y = f(x);",
+            "}"),
+        "initializing variable\n" + "found   : string\n" + "required: null");
+  }
+
+  public void testIteratorIterableAccess1() {
+    testTypes(
+        lines(
+            "/** ",
+            " * @param {!IteratorIterable<T>} x",
+            " * @return {T}",
+            " * @template T",
+            "*/",
+            "function f(x) { return x[0]; }",
+            "function g(/** !Generator<string> */ x) {",
+            "  var /** null */ y = f(x);",
+            "}"),
+        "initializing variable\n" + "found   : string\n" + "required: null");
   }
 
   public void testArrayAccess1() {

@@ -42,7 +42,9 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.ALL_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.BOOLEAN_OBJECT_FUNCTION_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.BOOLEAN_OBJECT_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.BOOLEAN_TYPE;
+import static com.google.javascript.rhino.jstype.JSTypeNative.GENERATOR_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.ITERABLE_TYPE;
+import static com.google.javascript.rhino.jstype.JSTypeNative.ITERATOR_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NULL_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NULL_VOID;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NUMBER_TYPE;
@@ -69,6 +71,16 @@ public class JSTypeRegistryTest extends TestCase {
   public void testGetBuiltInType_iterable() {
     JSTypeRegistry typeRegistry = new JSTypeRegistry(null);
     assertTypeEquals(typeRegistry.getNativeType(ITERABLE_TYPE), typeRegistry.getType("Iterable"));
+  }
+
+  public void testGetBuiltInType_iterator() {
+    JSTypeRegistry typeRegistry = new JSTypeRegistry(null);
+    assertTypeEquals(typeRegistry.getNativeType(ITERATOR_TYPE), typeRegistry.getType("Iterator"));
+  }
+
+  public void testGetBuiltInType_generator() {
+    JSTypeRegistry typeRegistry = new JSTypeRegistry(null);
+    assertTypeEquals(typeRegistry.getNativeType(GENERATOR_TYPE), typeRegistry.getType("Generator"));
   }
 
   public void testGetDeclaredType() {
