@@ -37,7 +37,7 @@ var ReferrerPolicy;
 
 
 /**
- * @typedef {!Headers|!Array<!Array<string>>|!IObject<string,string>}
+ * @typedef {!Headers|!Array<!Array<string>>|!Object<string,string>}
  * @see https://fetch.spec.whatwg.org/#headersinit
  */
 var HeadersInit;
