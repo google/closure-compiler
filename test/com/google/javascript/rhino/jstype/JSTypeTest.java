@@ -119,7 +119,15 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
     subclassCtor =
         new FunctionType(
-            registry, null, null, createArrowType(null), null, null, true, false, false);
+            registry,
+            null,
+            null,
+            createArrowType(null),
+            null,
+            null,
+            FunctionType.Kind.CONSTRUCTOR,
+            false,
+            false);
     subclassCtor.setPrototypeBasedOn(unresolvedNamedType);
     subclassOfUnresolvedNamedType = subclassCtor.getInstanceType();
 

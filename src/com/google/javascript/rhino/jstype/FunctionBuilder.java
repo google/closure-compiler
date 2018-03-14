@@ -41,6 +41,7 @@ package com.google.javascript.rhino.jstype;
 
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.jstype.FunctionType.Kind;
 
 /**
  * A builder class for function and arrow types.
@@ -161,7 +162,7 @@ public final class FunctionBuilder {
         new ArrowType(registry, parametersNode, returnType, inferredReturnType),
         typeOfThis,
         templateTypeMap,
-        isConstructor,
+        isConstructor ? Kind.CONSTRUCTOR : Kind.ORDINARY,
         isNativeType,
         isAbstract);
   }

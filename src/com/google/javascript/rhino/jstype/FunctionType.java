@@ -154,30 +154,6 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
   private List<FunctionTypeI> subTypes;
 
   /** Creates an instance for a function that might be a constructor. */
-  @Deprecated
-  FunctionType(
-      JSTypeRegistry registry,
-      String name,
-      Node source,
-      ArrowType arrowType,
-      JSType typeOfThis,
-      TemplateTypeMap templateTypeMap,
-      boolean isConstructor,
-      boolean nativeType,
-      boolean isAbstract) {
-    this(
-        registry,
-        name,
-        source,
-        arrowType,
-        typeOfThis,
-        templateTypeMap,
-        isConstructor ? Kind.CONSTRUCTOR : Kind.ORDINARY,
-        nativeType,
-        isAbstract);
-  }
-
-  /** Creates an instance for a function that might be a constructor. */
   FunctionType(
       JSTypeRegistry registry,
       String name,
@@ -940,7 +916,7 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
         new ArrowType(registry, newParamsNode, newReturnType, newReturnTypeInferred),
         newTypeOfThis,
         null,
-        false,
+        Kind.ORDINARY,
         false,
         false);
   }
@@ -1594,7 +1570,7 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
               arrow,
               typeOfThis,
               templateTypeMap,
-              isConstructor(),
+              isConstructor() ? Kind.CONSTRUCTOR : Kind.ORDINARY,
               isNativeObjectType(),
               isAbstract);
       if (isConstructor()) {

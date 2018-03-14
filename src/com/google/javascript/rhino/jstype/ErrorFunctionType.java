@@ -60,7 +60,7 @@ class ErrorFunctionType extends FunctionType {
             null),
         null,
         null,
-        true,
+        FunctionType.Kind.CONSTRUCTOR,
         true,
         false);
 

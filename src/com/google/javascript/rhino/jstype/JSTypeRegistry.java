@@ -362,7 +362,7 @@ public class JSTypeRegistry implements TypeIRegistry {
             null,
             createTemplateTypeMap(
                 ImmutableList.of(iObjectIndexTemplateKey, iObjectElementTemplateKey), null),
-            true,
+            Kind.CONSTRUCTOR,
             true,
             false);
     OBJECT_FUNCTION_TYPE.getInternalArrowType().returnType =
@@ -386,7 +386,7 @@ public class JSTypeRegistry implements TypeIRegistry {
             createArrowType(createParametersWithVarArgs(ALL_TYPE), UNKNOWN_TYPE),
             null,
             null,
-            true,
+            Kind.CONSTRUCTOR,
             true,
             false);
     FUNCTION_FUNCTION_TYPE.setPrototypeBasedOn(OBJECT_TYPE);
@@ -418,7 +418,7 @@ public class JSTypeRegistry implements TypeIRegistry {
                     createTemplateTypeMap(
                         ImmutableList.of(iObjectElementTemplateKey),
                         ImmutableList.<JSType>of(arrayElementTemplateKey))),
-            true,
+            Kind.CONSTRUCTOR,
             true,
             false);
     ARRAY_FUNCTION_TYPE.getInternalArrowType().returnType =
@@ -481,7 +481,7 @@ public class JSTypeRegistry implements TypeIRegistry {
             createArrowType(createOptionalParameters(ALL_TYPE), BOOLEAN_TYPE),
             null,
             null,
-            true,
+            Kind.CONSTRUCTOR,
             true,
             false);
     BOOLEAN_OBJECT_FUNCTION_TYPE.getPrototype(); // Force initialization
@@ -511,7 +511,7 @@ public class JSTypeRegistry implements TypeIRegistry {
                 STRING_TYPE),
             null,
             null,
-            true,
+            Kind.CONSTRUCTOR,
             true,
             false);
     DATE_FUNCTION_TYPE.getPrototype(); // Force initialization
@@ -598,7 +598,7 @@ public class JSTypeRegistry implements TypeIRegistry {
             createArrowType(createOptionalParameters(ALL_TYPE), NUMBER_TYPE),
             null,
             null,
-            true,
+            Kind.CONSTRUCTOR,
             true,
             false);
     NUMBER_OBJECT_FUNCTION_TYPE.getPrototype(); // Force initialization
@@ -618,7 +618,7 @@ public class JSTypeRegistry implements TypeIRegistry {
             createArrowType(createOptionalParameters(ALL_TYPE, ALL_TYPE)),
             null,
             null,
-            true,
+            Kind.CONSTRUCTOR,
             true,
             false);
     REGEXP_FUNCTION_TYPE.getInternalArrowType().returnType =
@@ -639,7 +639,7 @@ public class JSTypeRegistry implements TypeIRegistry {
             createArrowType(createOptionalParameters(ALL_TYPE), STRING_TYPE),
             null,
             null,
-            true,
+            Kind.CONSTRUCTOR,
             true,
             false);
     STRING_OBJECT_FUNCTION_TYPE.getPrototype(); // Force initialization
@@ -653,8 +653,7 @@ public class JSTypeRegistry implements TypeIRegistry {
 
     // Symbol
     // NOTE: While "Symbol" is a class, with an instance type and prototype
-    // it is illegal to call "new Symbol".  This is checked to in the
-    // type checker.
+    // it is illegal to call "new Symbol".  This is checked in the type checker.
     FunctionType SYMBOL_OBJECT_FUNCTION_TYPE =
         new FunctionType(
             this,
@@ -663,7 +662,7 @@ public class JSTypeRegistry implements TypeIRegistry {
             createArrowType(createOptionalParameters(ALL_TYPE), SYMBOL_TYPE),
             null,
             null,
-            true,
+            Kind.CONSTRUCTOR,
             true,
             false);
     SYMBOL_OBJECT_FUNCTION_TYPE.getPrototype(); // Force initialization
@@ -768,7 +767,7 @@ public class JSTypeRegistry implements TypeIRegistry {
             createArrowType(createParametersWithVarArgs(UNKNOWN_TYPE), UNKNOWN_TYPE),
             UNKNOWN_TYPE,
             null,
-            true,
+            Kind.CONSTRUCTOR,
             true,
             false) {
           private static final long serialVersionUID = 1L;
@@ -802,7 +801,7 @@ public class JSTypeRegistry implements TypeIRegistry {
             createArrowType(createParameters(false, ALL_TYPE), NUMBER_TYPE),
             null,
             null,
-            true,
+            Kind.CONSTRUCTOR,
             true,
             false);
     ObjectType GLOBAL_THIS = GLOBAL_THIS_CTOR.getInstanceType();
@@ -1817,7 +1816,7 @@ public class JSTypeRegistry implements TypeIRegistry {
         createArrowType(parameters, returnType),
         null,
         createTemplateTypeMap(templateKeys, null),
-        true,
+        Kind.CONSTRUCTOR,
         false,
         isAbstract);
   }

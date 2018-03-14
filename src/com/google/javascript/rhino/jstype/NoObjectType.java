@@ -65,7 +65,15 @@ public class NoObjectType extends FunctionType {
 
   NoObjectType(JSTypeRegistry registry) {
     super(
-        registry, null, null, registry.createArrowType(null, null), null, null, true, true, false);
+        registry,
+        null,
+        null,
+        registry.createArrowType(null, null),
+        null,
+        null,
+        FunctionType.Kind.CONSTRUCTOR,
+        true,
+        false);
     getInternalArrowType().returnType = this;
     this.setInstanceType(this);
   }
