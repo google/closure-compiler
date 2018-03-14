@@ -1655,7 +1655,7 @@ public abstract class JSType implements TypeI {
    * artifacts from a previous generation, so we will eventually need
    * a generational flag instead of a boolean one.
    */
-  public final JSType resolve(ErrorReporter t, StaticTypedScope<JSType> scope) {
+  public final JSType resolve(ErrorReporter reporter, StaticTypedScope<JSType> scope) {
     if (resolved) {
       // TODO(nicksantos): Check to see if resolve() looped back on itself.
       // Preconditions.checkNotNull(resolveResult);
@@ -1665,7 +1665,7 @@ public abstract class JSType implements TypeI {
       return resolveResult;
     }
     resolved = true;
-    resolveResult = resolveInternal(t, scope);
+    resolveResult = resolveInternal(reporter, scope);
     resolveResult.setResolvedTypeInternal(resolveResult);
     return resolveResult;
   }
@@ -1673,7 +1673,7 @@ public abstract class JSType implements TypeI {
   /**
    * @see #resolve
    */
-  abstract JSType resolveInternal(ErrorReporter t, StaticTypedScope<JSType> scope);
+  abstract JSType resolveInternal(ErrorReporter reporter, StaticTypedScope<JSType> scope);
 
   void setResolvedTypeInternal(JSType type) {
     resolveResult = type;
@@ -1690,8 +1690,8 @@ public abstract class JSType implements TypeI {
    * @see #resolve
    */
   static final JSType safeResolve(
-      JSType type, ErrorReporter t, StaticTypedScope<JSType> scope) {
-    return type == null ? null : type.resolve(t, scope);
+      JSType type, ErrorReporter reporter, StaticTypedScope<JSType> scope) {
+    return type == null ? null : type.resolve(reporter, scope);
   }
 
   /**

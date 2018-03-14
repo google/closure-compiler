@@ -171,7 +171,7 @@ public class UnknownType extends ObjectType {
   }
 
   @Override
-  JSType resolveInternal(ErrorReporter t, StaticTypedScope<JSType> scope) {
+  JSType resolveInternal(ErrorReporter reporter, StaticTypedScope<JSType> scope) {
     return this;
   }
 

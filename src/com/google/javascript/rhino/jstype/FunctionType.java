@@ -1266,20 +1266,20 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
   }
 
   @Override
-  JSType resolveInternal(ErrorReporter t, StaticTypedScope<JSType> scope) {
+  JSType resolveInternal(ErrorReporter reporter, StaticTypedScope<JSType> scope) {
     setResolvedTypeInternal(this);
 
-    call = (ArrowType) safeResolve(call, t, scope);
+    call = (ArrowType) safeResolve(call, reporter, scope);
     if (prototypeSlot != null) {
       prototypeSlot.setType(
-          safeResolve(prototypeSlot.getType(), t, scope));
+          safeResolve(prototypeSlot.getType(), reporter, scope));
     }
 
     // Warning about typeOfThis if it doesn't resolve to an ObjectType
     // is handled further upstream.
     //
     // TODO(nicksantos): Handle this correctly if we have a UnionType.
-    JSType maybeTypeOfThis = safeResolve(typeOfThis, t, scope);
+    JSType maybeTypeOfThis = safeResolve(typeOfThis, reporter, scope);
     if (maybeTypeOfThis != null) {
       if (maybeTypeOfThis.isNullType() || maybeTypeOfThis.isVoidType()) {
         typeOfThis = maybeTypeOfThis;
@@ -1293,13 +1293,13 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
     }
 
     ImmutableList<ObjectType> resolvedImplemented =
-        resolveTypeListHelper(implementedInterfaces, t, scope);
+        resolveTypeListHelper(implementedInterfaces, reporter, scope);
     if (resolvedImplemented != null) {
       implementedInterfaces = resolvedImplemented;
     }
 
     ImmutableList<ObjectType> resolvedExtended =
-        resolveTypeListHelper(extendedInterfaces, t, scope);
+        resolveTypeListHelper(extendedInterfaces, reporter, scope);
     if (resolvedExtended != null) {
       extendedInterfaces = resolvedExtended;
     }
@@ -1308,11 +1308,11 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
       for (int i = 0; i < subTypes.size(); i++) {
         FunctionType subType = (FunctionType) subTypes.get(i);
         subTypes.set(
-            i, JSType.toMaybeFunctionType(subType.resolve(t, scope)));
+            i, JSType.toMaybeFunctionType(subType.resolve(reporter, scope)));
       }
     }
 
-    return super.resolveInternal(t, scope);
+    return super.resolveInternal(reporter, scope);
   }
 
   /**
@@ -1321,13 +1321,13 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
    */
   private ImmutableList<ObjectType> resolveTypeListHelper(
       ImmutableList<ObjectType> list,
-      ErrorReporter t,
+      ErrorReporter reporter,
       StaticTypedScope<JSType> scope) {
     boolean changed = false;
     ImmutableList.Builder<ObjectType> resolvedList =
         ImmutableList.builder();
     for (ObjectType type : list) {
-      ObjectType resolved = (ObjectType) type.resolve(t, scope);
+      ObjectType resolved = (ObjectType) type.resolve(reporter, scope);
       resolvedList.add(resolved);
       changed |= (resolved != type);
     }

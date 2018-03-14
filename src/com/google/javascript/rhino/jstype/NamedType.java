@@ -206,28 +206,28 @@ public class NamedType extends ProxyObjectType {
    * Resolve the referenced type within the enclosing scope.
    */
   @Override
-  JSType resolveInternal(ErrorReporter t, StaticTypedScope<JSType> enclosing) {
+  JSType resolveInternal(ErrorReporter reporter, StaticTypedScope<JSType> enclosing) {
     // TODO(user): Investigate whether it is really necessary to keep two
     // different mechanisms for resolving named types, and if so, which order
     // makes more sense. Now, resolution via registry is first in order to
     // avoid triggering the warnings built into the resolution via properties.
-    boolean resolved = resolveViaRegistry(t);
+    boolean resolved = resolveViaRegistry(reporter);
     if (detectInheritanceCycle()) {
-      handleTypeCycle(t);
+      handleTypeCycle(reporter);
     }
 
     if (resolved) {
-      super.resolveInternal(t, enclosing);
+      super.resolveInternal(reporter, enclosing);
       finishPropertyContinuations();
       return getReferencedType();
     }
 
-    resolveViaProperties(t, enclosing);
+    resolveViaProperties(reporter, enclosing);
     if (detectInheritanceCycle()) {
-      handleTypeCycle(t);
+      handleTypeCycle(reporter);
     }
 
-    super.resolveInternal(t, enclosing);
+    super.resolveInternal(reporter, enclosing);
     if (isResolved()) {
       finishPropertyContinuations();
     }
@@ -331,37 +331,37 @@ public class NamedType extends ProxyObjectType {
     setResolvedTypeInternal(getReferencedType());
   }
 
-  private void handleTypeCycle(ErrorReporter t) {
+  private void handleTypeCycle(ErrorReporter reporter) {
     setReferencedType(
         registry.getNativeObjectType(JSTypeNative.UNKNOWN_TYPE));
-    warning(t, "Cycle detected in inheritance chain of type " + reference);
+    warning(reporter, "Cycle detected in inheritance chain of type " + reference);
     setResolvedTypeInternal(getReferencedType());
   }
 
-  private void checkEnumElementCycle(ErrorReporter t) {
+  private void checkEnumElementCycle(ErrorReporter reporter) {
     JSType referencedType = getReferencedType();
     if (referencedType instanceof EnumElementType &&
         ((EnumElementType) referencedType).getPrimitiveType() == this) {
-      handleTypeCycle(t);
+      handleTypeCycle(reporter);
     }
   }
 
-  private void checkProtoCycle(ErrorReporter t) {
+  private void checkProtoCycle(ErrorReporter reporter) {
     JSType referencedType = getReferencedType();
     if (referencedType == this) {
-      handleTypeCycle(t);
+      handleTypeCycle(reporter);
     }
   }
 
   // Warns about this type being unresolved iff it's not a forward-declared
   // type name.
   private void handleUnresolvedType(
-      ErrorReporter t, boolean ignoreForwardReferencedTypes) {
+      ErrorReporter reporter, boolean ignoreForwardReferencedTypes) {
     boolean isForwardDeclared =
         ignoreForwardReferencedTypes && registry.isForwardDeclaredType(reference);
     if (!isForwardDeclared) {
       String msg = "Bad type annotation. Unknown type " + reference;
-      warning(t, msg);
+      warning(reporter, msg);
     } else {
       setReferencedType(new NoResolvedType(registry, getReferenceName(), getTemplateTypes()));
       if (validator != null) {
@@ -372,12 +372,12 @@ public class NamedType extends ProxyObjectType {
     setResolvedTypeInternal(getReferencedType());
   }
 
-  private JSType getTypedefType(ErrorReporter t, StaticTypedSlot<JSType> slot) {
+  private JSType getTypedefType(ErrorReporter reporter, StaticTypedSlot<JSType> slot) {
     JSType type = slot.getType();
     if (type != null) {
       return type;
     }
-    handleUnresolvedType(t, true);
+    handleUnresolvedType(reporter, true);
     return null;
   }
 

@@ -262,12 +262,12 @@ final class ArrowType extends JSType {
   }
 
   @Override
-  JSType resolveInternal(ErrorReporter t, StaticTypedScope<JSType> scope) {
-    returnType = safeResolve(returnType, t, scope);
+  JSType resolveInternal(ErrorReporter reporter, StaticTypedScope<JSType> scope) {
+    returnType = safeResolve(returnType, reporter, scope);
     if (parameters != null) {
       for (Node paramNode = parameters.getFirstChild();
            paramNode != null; paramNode = paramNode.getNext()) {
-        paramNode.setJSType(paramNode.getJSType().resolve(t, scope));
+        paramNode.setJSType(paramNode.getJSType().resolve(reporter, scope));
       }
     }
     return this;

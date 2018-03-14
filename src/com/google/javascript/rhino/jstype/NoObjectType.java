@@ -185,7 +185,7 @@ public class NoObjectType extends FunctionType {
   }
 
   @Override
-  JSType resolveInternal(ErrorReporter t, StaticTypedScope<JSType> scope) {
+  JSType resolveInternal(ErrorReporter reporter, StaticTypedScope<JSType> scope) {
     return this;
   }
 }

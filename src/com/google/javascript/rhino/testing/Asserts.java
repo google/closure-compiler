@@ -68,8 +68,8 @@ public class Asserts {
 
   /** @return The resolved type */
   public static JSType assertValidResolve(JSType type, StaticTypedScope<JSType> scope) {
-    ErrorReporter t = TestErrorReporter.forNoExpectedReports();
-    JSType resolvedType = type.resolve(t, scope);
+    ErrorReporter reporter = TestErrorReporter.forNoExpectedReports();
+    JSType resolvedType = type.resolve(reporter, scope);
     assertTypeEquals("JSType#resolve should not affect object equality", type, resolvedType);
     return resolvedType;
   }

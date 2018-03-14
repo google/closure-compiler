@@ -496,13 +496,13 @@ public class PrototypeObjectType extends ObjectType {
   }
 
   @Override
-  JSType resolveInternal(ErrorReporter t, StaticTypedScope<JSType> scope) {
+  JSType resolveInternal(ErrorReporter reporter, StaticTypedScope<JSType> scope) {
     setResolvedTypeInternal(this);
 
     ObjectType implicitPrototype = getImplicitPrototype();
     if (implicitPrototype != null) {
       implicitPrototypeFallback =
-          (ObjectType) implicitPrototype.resolve(t, scope);
+          (ObjectType) implicitPrototype.resolve(reporter, scope);
       FunctionType ctor = getConstructor();
       if (ctor != null) {
         FunctionType superCtor = ctor.getSuperClassConstructor();
@@ -514,7 +514,7 @@ public class PrototypeObjectType extends ObjectType {
       }
     }
     for (Property prop : properties.values()) {
-      prop.setType(safeResolve(prop.getType(), t, scope));
+      prop.setType(safeResolve(prop.getType(), reporter, scope));
     }
     return this;
   }
