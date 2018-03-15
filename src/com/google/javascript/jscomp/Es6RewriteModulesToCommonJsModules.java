@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.deps.ModuleLoader.ModulePath;
 import com.google.javascript.rhino.IR;
@@ -42,9 +43,16 @@ public class Es6RewriteModulesToCommonJsModules implements CompilerPass {
   private static final String REQUIRE = "$$require";
 
   private final AbstractCompiler compiler;
+  private final String pragma;
 
   public Es6RewriteModulesToCommonJsModules(AbstractCompiler compiler) {
+    this(compiler, "use strict");
+  }
+
+  @VisibleForTesting
+  Es6RewriteModulesToCommonJsModules(AbstractCompiler compiler, String pragma) {
     this.compiler = compiler;
+    this.pragma = pragma;
   }
 
   @Override
@@ -60,7 +68,7 @@ public class Es6RewriteModulesToCommonJsModules implements CompilerPass {
    * Rewrites a single ES6 module into a CommonJS like module designed to be loaded in the
    * compiler's module runtime.
    */
-  private static class Rewriter extends AbstractPostOrderCallback {
+  private class Rewriter extends AbstractPostOrderCallback {
     private Node requireInsertSpot;
     private final Node script;
     private final Map<String, String> exportedNameToLocalQName;
@@ -247,6 +255,8 @@ public class Es6RewriteModulesToCommonJsModules implements CompilerPass {
     private void registerAndLoadModule(NodeTraversal t) {
       Node block = IR.block();
       block.addChildrenToFront(script.removeChildren());
+
+      block.addChildToFront(IR.exprResult(IR.string(pragma)));
 
       Node moduleFunction =
           IR.function(

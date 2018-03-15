@@ -19,7 +19,6 @@ import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 
 
 public final class Es6RewriteModulesToCommonJsModulesTest extends CompilerTestCase {
-
   @Override
   protected void setUp() throws Exception {
     super.setUp();
@@ -39,7 +38,7 @@ public final class Es6RewriteModulesToCommonJsModulesTest extends CompilerTestCa
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
-    return new Es6RewriteModulesToCommonJsModules(compiler);
+    return new Es6RewriteModulesToCommonJsModules(compiler, "test pragma");
   }
 
   @Override
@@ -52,6 +51,7 @@ public final class Es6RewriteModulesToCommonJsModulesTest extends CompilerTestCa
         "export var x;",
         lines(
             "$jscomp.registerAndLoadModule(function($$require, $$exports, $$module) {",
+            "  'test pragma';",
             "  Object.defineProperties($$exports, {",
             "    x: {",
             "      enumerable: true,",
@@ -67,6 +67,7 @@ public final class Es6RewriteModulesToCommonJsModulesTest extends CompilerTestCa
         "var x;\nexport {x}",
         lines(
             "$jscomp.registerAndLoadModule(function($$require, $$exports, $$module) {",
+            "  'test pragma';",
             "  Object.defineProperties($$exports, {",
             "    x: {",
             "      enumerable: true,",
@@ -82,6 +83,7 @@ public final class Es6RewriteModulesToCommonJsModulesTest extends CompilerTestCa
         "var x;\nexport {x as y}",
         lines(
             "$jscomp.registerAndLoadModule(function($$require, $$exports, $$module) {",
+            "  'test pragma';",
             "  Object.defineProperties($$exports, {",
             "    y: {",
             "      enumerable: true,",
@@ -97,6 +99,7 @@ public final class Es6RewriteModulesToCommonJsModulesTest extends CompilerTestCa
         "export function f() {}",
         lines(
             "$jscomp.registerAndLoadModule(function($$require, $$exports, $$module) {",
+            "  'test pragma';",
             "  Object.defineProperties($$exports, {",
             "    f: {",
             "      enumerable: true,",
@@ -112,6 +115,7 @@ public final class Es6RewriteModulesToCommonJsModulesTest extends CompilerTestCa
         "export class c {}",
         lines(
             "$jscomp.registerAndLoadModule(function($$require, $$exports, $$module) {",
+            "  'test pragma';",
             "  Object.defineProperties($$exports, {",
             "    c: {",
             "      enumerable: true,",
@@ -127,6 +131,7 @@ public final class Es6RewriteModulesToCommonJsModulesTest extends CompilerTestCa
         "export default 123;",
         lines(
             "$jscomp.registerAndLoadModule(function($$require, $$exports, $$module) {",
+            "  'test pragma';",
             "  Object.defineProperties($$exports, {",
             "    default: {",
             "      enumerable: true,",
@@ -142,6 +147,7 @@ public final class Es6RewriteModulesToCommonJsModulesTest extends CompilerTestCa
         lines("const x = 0;", "export default x;", "x++;"),
         lines(
             "$jscomp.registerAndLoadModule(function($$require, $$exports, $$module) {",
+            "  'test pragma';",
             "  Object.defineProperties($$exports, {",
             "    default: {",
             "      enumerable: true,",
@@ -159,6 +165,7 @@ public final class Es6RewriteModulesToCommonJsModulesTest extends CompilerTestCa
         lines("export default function f() { return 5; }", "f = () => 0;"),
         lines(
             "$jscomp.registerAndLoadModule(function($$require, $$exports, $$module) {",
+            "  'test pragma';",
             "  Object.defineProperties($$exports, {",
             "    default: {",
             "      enumerable: true,",
@@ -175,6 +182,7 @@ public final class Es6RewriteModulesToCommonJsModulesTest extends CompilerTestCa
         "export var x, y, z;",
         lines(
             "$jscomp.registerAndLoadModule(function($$require, $$exports, $$module) {",
+            "  'test pragma';",
             "  Object.defineProperties($$exports, {",
             "    x: {",
             "      enumerable: true,",
@@ -203,6 +211,7 @@ public final class Es6RewriteModulesToCommonJsModulesTest extends CompilerTestCa
         "export var z, y, x;",
         lines(
             "$jscomp.registerAndLoadModule(function($$require, $$exports, $$module) {",
+            "  'test pragma';",
             "  Object.defineProperties($$exports, {",
             "    x: {",
             "      enumerable: true,",
@@ -231,6 +240,7 @@ public final class Es6RewriteModulesToCommonJsModulesTest extends CompilerTestCa
     test("export let {a, c:b} = obj;",
         lines(
             "$jscomp.registerAndLoadModule(function($$require, $$exports, $$module) {",
+            "  'test pragma';",
             "  Object.defineProperties($$exports, {",
             "    a: {",
             "      enumerable: true,",
@@ -251,6 +261,7 @@ public final class Es6RewriteModulesToCommonJsModulesTest extends CompilerTestCa
     test("export let [a, b] = obj;",
         lines(
             "$jscomp.registerAndLoadModule(function($$require, $$exports, $$module) {",
+            "  'test pragma';",
             "  Object.defineProperties($$exports, {",
             "    a: {",
             "      enumerable: true,",
@@ -271,6 +282,7 @@ public final class Es6RewriteModulesToCommonJsModulesTest extends CompilerTestCa
     test("export let {a, b:[c,d]}  = obj;",
         lines(
             "$jscomp.registerAndLoadModule(function($$require, $$exports, $$module) {",
+            "  'test pragma';",
             "  Object.defineProperties($$exports, {",
             "    a: {",
             "      enumerable: true,",
@@ -300,6 +312,7 @@ public final class Es6RewriteModulesToCommonJsModulesTest extends CompilerTestCa
         "import * as x from 'other'; use(x, x.y);",
         lines(
             "$jscomp.registerAndLoadModule(function($$require, $$exports, $$module) {",
+            "  'test pragma';",
             "  var module$other = $$require('other');",
             "  use(module$other, module$other.y);",
             "}, 'testcode', ['other']);"));
@@ -308,6 +321,7 @@ public final class Es6RewriteModulesToCommonJsModulesTest extends CompilerTestCa
         "import Default, {x, y as z} from './././bogus'; use(x, z, Default);",
         lines(
             "$jscomp.registerAndLoadModule(function($$require, $$exports, $$module) {",
+            "  'test pragma';",
             "  var module$bogus = $$require('./././bogus');",
             "  use(module$bogus.x, module$bogus.y, module$bogus.default);",
             "}, 'testcode', ['./././bogus']);"));
@@ -316,6 +330,7 @@ public final class Es6RewriteModulesToCommonJsModulesTest extends CompilerTestCa
         "import First from 'other'; import {Second} from 'other'; use(First, Second);",
         lines(
             "$jscomp.registerAndLoadModule(function($$require, $$exports, $$module) {",
+            "  'test pragma';",
             "  var module$other = $$require('other');",
             "  use(module$other.default, module$other.Second);",
             "}, 'testcode', ['other']);"));
@@ -324,6 +339,7 @@ public final class Es6RewriteModulesToCommonJsModulesTest extends CompilerTestCa
         "import First from 'first'; import {Second} from 'second'; use(First, Second);",
         lines(
             "$jscomp.registerAndLoadModule(function($$require, $$exports, $$module) {",
+            "  'test pragma';",
             "  var module$first = $$require('first');",
             "  var module$second = $$require('second');",
             "  use(module$first.default, module$second.Second);",
@@ -335,6 +351,7 @@ public final class Es6RewriteModulesToCommonJsModulesTest extends CompilerTestCa
         "export var x; import {y} from 'other';",
         lines(
             "$jscomp.registerAndLoadModule(function($$require, $$exports, $$module) {",
+            "  'test pragma';",
             "  Object.defineProperties($$exports, {",
             "    x: {",
             "      enumerable: true,",
@@ -351,6 +368,7 @@ public final class Es6RewriteModulesToCommonJsModulesTest extends CompilerTestCa
         "import {y} from 'other'; export var x;",
         lines(
             "$jscomp.registerAndLoadModule(function($$require, $$exports, $$module) {",
+            "  'test pragma';",
             "  Object.defineProperties($$exports, {",
             "    x: {",
             "      enumerable: true,",
@@ -367,6 +385,7 @@ public final class Es6RewriteModulesToCommonJsModulesTest extends CompilerTestCa
         "import {y as Y} from 'other'; export {Y as X};",
         lines(
             "$jscomp.registerAndLoadModule(function($$require, $$exports, $$module) {",
+            "  'test pragma';",
             "  Object.defineProperties($$exports, {",
             "    X: {",
             "      enumerable: true,",
@@ -384,6 +403,7 @@ public final class Es6RewriteModulesToCommonJsModulesTest extends CompilerTestCa
         "export {x, y as z} from 'other';",
         lines(
             "$jscomp.registerAndLoadModule(function($$require, $$exports, $$module) {",
+            "  'test pragma';",
             "  Object.defineProperties($$exports, {",
             "    x: {",
             "      enumerable: true,",
@@ -407,6 +427,7 @@ public final class Es6RewriteModulesToCommonJsModulesTest extends CompilerTestCa
         lines("export default function f() { return arguments[1]; }"),
         lines(
             "$jscomp.registerAndLoadModule(function($$require, $$exports, $$module) {",
+            "  'test pragma';",
             "  Object.defineProperties($$exports, {",
             "    default: {",
             "      enumerable: true,",
@@ -427,6 +448,7 @@ public final class Es6RewriteModulesToCommonJsModulesTest extends CompilerTestCa
                 "https://example.domain.google.com/test.js",
                 lines(
                     "$jscomp.registerAndLoadModule(function($$require, $$exports, $$module) {",
+                    "  'test pragma';",
                     "  Object.defineProperties($$exports, {",
                     "    x: {",
                     "      enumerable: true,",

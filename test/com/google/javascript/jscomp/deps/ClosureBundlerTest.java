@@ -151,9 +151,11 @@ public final class ClosureBundlerTest extends TestCase {
     String result = sb.toString();
     // ES6 module runtime should be injected.
     assertThat(result).contains("$jscomp.require = createRequire();");
-    assertThat(sb.toString())
+    assertThat(result).startsWith("var $jscomp");
+    assertThat(result)
         .endsWith(
             "$jscomp.registerAndLoadModule(function($$require, $$exports, $$module) {\n"
+                + "  \"use strict\";\n"
                 + "  Object.defineProperties($$exports, {foo:{enumerable:true, get:function() {\n"
                 + "    return foo;\n"
                 + "  }}, y:{enumerable:true, get:function() {\n"

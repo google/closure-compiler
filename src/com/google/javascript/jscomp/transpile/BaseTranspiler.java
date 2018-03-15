@@ -18,6 +18,7 @@ package com.google.javascript.jscomp.transpile;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CheckLevel;
 import com.google.javascript.jscomp.Compiler;
@@ -59,14 +60,19 @@ public final class BaseTranspiler implements Transpiler {
 
   @Override
   public String runtime() {
-    return compilerSupplier.runtime(runtimeLibraryName);
+    StringBuilder sb = new StringBuilder();
+    if (!Strings.isNullOrEmpty(runtimeLibraryName)) {
+      sb.append(compilerSupplier.runtime(runtimeLibraryName));
+    }
+    sb.append(compilerSupplier.runtime("modules"));
+    return sb.toString();
   }
 
   public static final BaseTranspiler ES5_TRANSPILER = new BaseTranspiler(
       new CompilerSupplier(), "es6_runtime");
 
   public static final BaseTranspiler ES_MODULE_TO_CJS_TRANSPILER =
-      new BaseTranspiler(new EsmToCjsCompilerSupplier(), "modules");
+      new BaseTranspiler(new EsmToCjsCompilerSupplier(), "");
 
   /**
    * Wraps the Compiler into a more relevant interface, making it
@@ -139,6 +145,7 @@ public final class BaseTranspiler implements Transpiler {
       options.setSourceMapOutputPath("/dev/null");
       options.setSourceMapIncludeSourcesContent(true);
       options.setWarningLevel(ES5_WARNINGS, CheckLevel.OFF);
+      //options.setTranspileEs6ModulesToCjsModules(true);
     }
 
     protected static final SourceFile EXTERNS =
@@ -157,6 +164,7 @@ public final class BaseTranspiler implements Transpiler {
     public CompileResult compile(Path path, String code) {
       CompilerOptions options = new CompilerOptions();
       options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT);
+      options.setEmitUseStrict(false);
       options.setSourceMapOutputPath("/dev/null");
       options.setSourceMapIncludeSourcesContent(true);
       options.setPrettyPrint(true);
@@ -172,7 +180,12 @@ public final class BaseTranspiler implements Transpiler {
       boolean transpiled = false;
 
       if (!compiler.hasErrors()
-          && compiler.getRoot().getSecondChild().getFirstFirstChild().isModuleBody()) {
+          && compiler.getRoot().getSecondChild().getFirstFirstChild().isModuleBody()
+          && !compiler
+              .getRoot()
+              .getSecondChild()
+              .getFirstChild()
+              .getBooleanProp(Node.GOOG_MODULE)) {
         new Es6RewriteModulesToCommonJsModules(compiler)
             .process(null, compiler.getRoot().getSecondChild());
         compiler.getRoot().getSecondChild().getFirstChild().putBooleanProp(Node.TRANSPILED, true);

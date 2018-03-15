@@ -151,7 +151,11 @@ public final class DefaultPassConfig extends PassConfig {
     }
 
     if (options.getLanguageIn().toFeatureSet().has(FeatureSet.Feature.MODULES)) {
-      TranspilationPasses.addEs6ModulePass(passes, preprocessorSymbolTableFactory);
+      if (options.getTranspileEs6ModulesToCjsModules()) {
+        TranspilationPasses.addEs6ModuleToCjsPass(passes);
+      } else {
+        TranspilationPasses.addEs6ModulePass(passes, preprocessorSymbolTableFactory);
+      }
     }
 
     passes.add(checkSuper);

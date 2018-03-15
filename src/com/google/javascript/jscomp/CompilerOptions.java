@@ -890,6 +890,12 @@ public class CompilerOptions implements Serializable {
   /** Rewrite CommonJS modules so that they can be concatenated together. */
   boolean processCommonJSModules = false;
 
+  /**
+   * Rewrite ES6 modules to CommonJs-like modules that can be concatenated together. Requires
+   * the module runtime.
+   */
+  private boolean transpileEs6ModulesToCjsModules = false;
+
   /** CommonJS module prefix. */
   List<String> moduleRoots = ImmutableList.of(ModuleLoader.DEFAULT_FILENAME_PREFIX);
 
@@ -2683,6 +2689,14 @@ public class CompilerOptions implements Serializable {
     this.processCommonJSModules = processCommonJSModules;
   }
 
+  public void setTranspileEs6ModulesToCjsModules(boolean transpileEs6ModulesToCjsModules) {
+    this.transpileEs6ModulesToCjsModules = transpileEs6ModulesToCjsModules;
+  }
+
+  public boolean getTranspileEs6ModulesToCjsModules() {
+    return transpileEs6ModulesToCjsModules;
+  }
+
   /**
    * Sets a path prefix for CommonJS modules (maps to {@link #setModuleRoots(List)}).
    */
@@ -2934,6 +2948,7 @@ public class CompilerOptions implements Serializable {
             .add("printInputDelimiter", printInputDelimiter)
             .add("printSourceAfterEachPass", printSourceAfterEachPass)
             .add("processCommonJSModules", processCommonJSModules)
+            .add("transpileEs6ModulesToCjsModules", transpileEs6ModulesToCjsModules)
             .add("processObjectPropertyString", processObjectPropertyString)
             .add("propertyInvalidationErrors", propertyInvalidationErrors)
             .add("propertyRenaming", propertyRenaming)

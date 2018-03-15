@@ -34,7 +34,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public final class ClosureBundler {
 
   private final Transpiler transpiler;
-  private final Transpiler es6ModuleTranspiler;
+  private static final Transpiler es6ModuleTranspiler = BaseTranspiler.ES_MODULE_TO_CJS_TRANSPILER;
 
   private final EvalMode mode;
   private final String sourceUrl;
@@ -60,7 +60,6 @@ public final class ClosureBundler {
     this.sourceUrl = sourceUrl;
     this.path = path;
     this.sourceMapCache = sourceMapCache;
-    this.es6ModuleTranspiler = BaseTranspiler.ES_MODULE_TO_CJS_TRANSPILER;
   }
 
   public final ClosureBundler useEval(boolean useEval) {
@@ -107,7 +106,10 @@ public final class ClosureBundler {
       CharSource content) throws IOException {
     if (info.isModule()) {
       mode.appendGoogModule(transpile(content.read()), out, sourceUrl);
-    } else if ("es6".equals(info.getLoadFlags().get("module"))) {
+    } else if ("es6".equals(info.getLoadFlags().get("module")) && transpiler == Transpiler.NULL) {
+      // TODO(johnplaisted): Make the default transpiler the ES_MODULE_TO_CJS_TRANSPILER. Currently
+      // some code is passing in unicode identifiers in non-ES6 modules the compiler fails to parse.
+      // Once this compiler bug is fixed we can always transpile.
       mode.appendTraditional(transpileEs6Module(content.read()), out, sourceUrl);
     } else {
       mode.appendTraditional(transpile(content.read()), out, sourceUrl);
@@ -119,7 +121,9 @@ public final class ClosureBundler {
     if (!runtime.isEmpty()) {
       mode.appendTraditional(runtime, out, null);
     }
-    mode.appendTraditional(es6ModuleTranspiler.runtime(), out, null);
+    if (transpiler == Transpiler.NULL) {
+      mode.appendTraditional(es6ModuleTranspiler.runtime(), out, null);
+    }
   }
 
   /**
@@ -141,7 +145,7 @@ public final class ClosureBundler {
   }
 
   private String transpileEs6Module(String s) {
-    return transpile(transpile(s, es6ModuleTranspiler));
+    return transpile(s, es6ModuleTranspiler);
   }
 
   private enum EvalMode {
