@@ -20,8 +20,7 @@ import static com.google.common.base.Preconditions.checkState;
 import com.google.javascript.rhino.Node;
 
 /**
- * Checks whether there are J2CL generated source files with pattern:
- * "path/foo.js.zip!path/bar.java.js".
+ * Checks whether there are J2CL generated source files with pattern "*.java.js".
  */
 final class J2clSourceFileChecker implements CompilerPass {
 
