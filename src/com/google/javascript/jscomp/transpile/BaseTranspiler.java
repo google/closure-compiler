@@ -145,7 +145,7 @@ public final class BaseTranspiler implements Transpiler {
       options.setSourceMapOutputPath("/dev/null");
       options.setSourceMapIncludeSourcesContent(true);
       options.setWarningLevel(ES5_WARNINGS, CheckLevel.OFF);
-      //options.setTranspileEs6ModulesToCjsModules(true);
+      options.setTranspileEs6ModulesToCjsModules(true);
     }
 
     protected static final SourceFile EXTERNS =
