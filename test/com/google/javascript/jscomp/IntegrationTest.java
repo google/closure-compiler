@@ -3178,13 +3178,60 @@ public final class IntegrationTest extends IntegrationTestCase {
     testSame(options, "");
   }
 
-  public void testEs6InExterns() {
+  public void testEs6ClassInExterns() {
     CompilerOptions options = createCompilerOptions();
     options.setWarningLevel(DiagnosticGroups.CHECK_TYPES, CheckLevel.WARNING);
-    externs = ImmutableList.of(SourceFile.fromCode(
-        "externs", "class ExternalClass { externalMethod() {} }"));
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT3);
+
+    ImmutableList.Builder<SourceFile> externsList = ImmutableList.builder();
+    externsList.addAll(externs);
+    externsList.add(
+        SourceFile.fromCode("extraExterns", "class ExternalClass { externalMethod() {} }"));
+    externs = externsList.build();
+
     testSame(options, "(new ExternalClass).externalMethod();");
     test(options, "(new ExternalClass).nonexistentMethod();", TypeCheck.INEXISTENT_PROPERTY);
+  }
+
+  public void testGeneratorFunctionInExterns() {
+    CompilerOptions options = createCompilerOptions();
+    options.setWarningLevel(DiagnosticGroups.CHECK_TYPES, CheckLevel.WARNING);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT3);
+
+    ImmutableList.Builder<SourceFile> externsList = ImmutableList.builder();
+    externsList.addAll(externs);
+    externsList.add(
+        SourceFile.fromCode(
+            "extraExterns", "/** @return {!Iterable<number>} */ function* gen() {}"));
+    externs = externsList.build();
+
+    test(
+        options,
+        "for (let x of gen()) { x.call(); }",
+        // Property call never defined on Number.
+        TypeCheck.INEXISTENT_PROPERTY);
+  }
+
+  public void testAsyncFunctionInExterns() {
+    CompilerOptions options = createCompilerOptions();
+    options.setWarningLevel(DiagnosticGroups.CHECK_TYPES, CheckLevel.WARNING);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT3);
+
+    ImmutableList.Builder<SourceFile> externsList = ImmutableList.builder();
+    externsList.addAll(externs);
+    externsList.add(
+        SourceFile.fromCode(
+            "extraExterns", "/** @return {!Promise<number>} */ async function init() {}"));
+    externs = externsList.build();
+
+    test(
+        options,
+        "init().then((n) => { n.call(); });",
+        // Property call never defined on Number.
+        TypeCheck.INEXISTENT_PROPERTY);
   }
 
   public void testLanguageMode() {

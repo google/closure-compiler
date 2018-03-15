@@ -262,11 +262,11 @@ public abstract class CompilerTestCase extends TestCase {
           "function IArrayLike() {};",
           "/**",
           " * @template T",
-          " * @constructor ",
+          " * @constructor",
           " * @implements {IArrayLike<T>} ",
           " * @implements {Iterable<T>}",
           " * @param {...*} var_args",
-          " * @return {!Array.<?>}",
+          " * @return {!Array<?>}",
           " */",
           "function Array(var_args) {}");
 
