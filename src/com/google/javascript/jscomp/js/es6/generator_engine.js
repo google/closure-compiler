@@ -288,15 +288,15 @@ $jscomp.generator.Context.prototype.throw_ = function(e) {
 };
 
 /**
- * Returns a value as the result of suspended yield.
+ * Returns a value as the result of generator function.
  *
  * @final
- * @param {VALUE} value
+ * @param {VALUE=} value
  * @return {void}
  * @suppress {reportUnknownTypes}
  */
 $jscomp.generator.Context.prototype.return = function(value) {
-  this.abruptCompletion_ = {return: value};
+  this.abruptCompletion_ = {return: /** @type {VALUE} */ (value)};
   this.nextAddress = this.finallyAddress_;
 };
 
