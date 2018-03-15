@@ -310,97 +310,20 @@ public class ConvertToTypedInterface implements CompilerPass {
     }
   }
 
-  private static class PropagateConstJsdoc extends NodeTraversal.AbstractPostOrderCallback {
-    final FileInfo currentFile;
+  private static class PropagateConstJsdoc extends ProcessConstJsdocCallback {
 
     PropagateConstJsdoc(FileInfo currentFile) {
-      this.currentFile = currentFile;
+      super(currentFile);
     }
 
     @Override
-    public void visit(NodeTraversal t, Node n, Node parent) {
-      switch (n.getToken()) {
-        case CLASS:
-          if (NodeUtil.isStatementParent(parent)) {
-            currentFile.recordNameDeclaration(n.getFirstChild());
-          }
-          break;
-        case FUNCTION:
-          if (NodeUtil.isStatementParent(parent)) {
-            currentFile.recordNameDeclaration(n.getFirstChild());
-          } else if (ClassUtil.isClassMethod(n) && ClassUtil.hasNamedClass(n)) {
-            currentFile.recordMethod(n);
-          }
-          break;
-        case EXPR_RESULT:
-          Node expr = n.getFirstChild();
-          switch (expr.getToken()) {
-            case CALL:
-              Node callee = expr.getFirstChild();
-              checkState(CALLS_TO_PRESERVE.contains(callee.getQualifiedName()));
-              if (callee.matchesQualifiedName("goog.provide")) {
-                currentFile.markProvided(expr.getLastChild().getString());
-              } else if (callee.matchesQualifiedName("goog.require")) {
-                currentFile.recordImport(expr.getLastChild().getString());
-              } else if (callee.matchesQualifiedName("goog.define")) {
-                currentFile.recordDefine(expr);
-              }
-              break;
-            case ASSIGN:
-              Node lhs = expr.getFirstChild();
-              propagateJsdocAtName(t, lhs);
-              currentFile.recordNameDeclaration(lhs);
-              break;
-            case GETPROP:
-              currentFile.recordNameDeclaration(expr);
-              break;
-            default:
-              throw new RuntimeException("Unexpected declaration: " + expr);
-          }
-          break;
-        case VAR:
-        case CONST:
-        case LET:
-          checkState(n.hasOneChild(), n);
-          propagateJsdocAtName(t, n.getFirstChild());
-          recordNameDeclaration(n);
-          break;
-        case STRING_KEY:
-          if (n.hasOneChild()) {
-            propagateJsdocAtName(t, n);
-          }
-          break;
-        default:
-          break;
-      }
-    }
-
-    private void recordNameDeclaration(Node decl) {
-      checkArgument(NodeUtil.isNameDeclaration(decl));
-      Node rhs = decl.getFirstChild().getLastChild();
-      boolean isImport = PotentialDeclaration.isImportRhs(rhs);
-      for (Node name : NodeUtil.findLhsNodesInNode(decl)) {
-        if (isImport) {
-          currentFile.recordImport(name.getString());
-        } else {
-          currentFile.recordNameDeclaration(name);
-        }
-      }
-    }
-
-    private void propagateJsdocAtName(NodeTraversal t, Node nameNode) {
+    protected void processConstWithRhs(NodeTraversal t, Node nameNode) {
       checkArgument(
           nameNode.isQualifiedName() || nameNode.isStringKey() || nameNode.isDestructuringLhs(),
           nameNode);
       Node jsdocNode = NodeUtil.getBestJSDocInfoNode(nameNode);
       JSDocInfo originalJsdoc = jsdocNode.getJSDocInfo();
-      if (!PotentialDeclaration.isConstToBeInferred(originalJsdoc, nameNode)) {
-        return;
-      }
       Node rhs = NodeUtil.getRValueOfLValue(nameNode);
-      if (rhs == null) {
-        return;
-      }
       JSDocInfo newJsdoc = JsdocUtil.getJSDocForRhs(rhs, originalJsdoc);
       if (newJsdoc == null && ClassUtil.isThisProp(nameNode)) {
         Var decl = findNameDeclaration(t.getScope(), rhs);

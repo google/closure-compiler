@@ -48,7 +48,7 @@ final class FileInfo {
     return declarations;
   }
 
-  private void recordDeclaration(PotentialDeclaration decl) {
+  void recordDeclaration(PotentialDeclaration decl) {
     declarations.put(decl.getFullyQualifiedName(), decl);
   }
 
