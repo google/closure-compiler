@@ -16,7 +16,6 @@
 
 'require base';
 'require es6/symbol';
-'require es6/util/setprototypeof';
 'require es6/util/makeiterator';
 
 /**
@@ -571,8 +570,8 @@ $jscomp.generator.Context.prototype.leaveFinallyBlock = function(
     //         //   continues from there.
     //       }
     //     }
-    if (abruptCompletion.jumpTo != undefined
-        && this.finallyAddress_ < abruptCompletion.jumpTo) {
+    if (abruptCompletion.jumpTo != undefined &&
+        this.finallyAddress_ < abruptCompletion.jumpTo) {
       this.nextAddress = abruptCompletion.jumpTo;
       this.abruptCompletion_ = null;
     } else {
@@ -866,11 +865,14 @@ $jscomp.generator.Generator_ = function(engine) {
  * @suppress {reportUnknownTypes}
  */
 $jscomp.generator.createGenerator = function(generator, program) {
-  /** @const */ var result =
-      new $jscomp.generator.Generator_(new $jscomp.generator.Engine_(program));
-  if ($jscomp.setPrototypeOf) {
-    /** @type {function(!Object, ?Object): !Object} */ ($jscomp.setPrototypeOf)(
-        result, generator.prototype);
-  }
-  return result;
+  // The spec says that `myGenFunc() instanceof myGenFunc` must be true.
+  // We'll make this work by setting the prototype before calling the
+  // constructor every time. All of the methods of the object are defined on the
+  // instance by the constructor, so this does no harm.
+  // We also cast Generator_ to Object to hide dynamic inheritance from
+  // jscompiler, it makes ConformanceRules$BanUnknownThis happy.
+  /** @type {!Object} */ ($jscomp.generator.Generator_).prototype =
+      generator.prototype;
+  return new $jscomp.generator.Generator_(
+      new $jscomp.generator.Engine_(program));
 };
