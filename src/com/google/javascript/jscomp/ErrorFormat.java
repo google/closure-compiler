@@ -22,15 +22,6 @@ import com.google.javascript.jscomp.SourceExcerptProvider.SourceExcerpt;
  * Error formats available.
  */
 public enum ErrorFormat {
-  LEGACY {
-    @Override
-    public MessageFormatter toFormatter(
-        SourceExcerptProvider source, boolean colorize) {
-      VerboseMessageFormatter formatter = new VerboseMessageFormatter(source);
-      formatter.setColorize(colorize);
-      return formatter;
-    }
-  },
   SINGLELINE {
     @Override
     public MessageFormatter toFormatter(
