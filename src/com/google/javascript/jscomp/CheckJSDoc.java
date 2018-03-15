@@ -123,11 +123,9 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements HotSwapCompi
     switch (n.getToken()) {
       case FUNCTION:
       case CLASS:
-      case ASSIGN:
       case VAR:
       case LET:
       case CONST:
-      case STRING_KEY:
       case SCRIPT:
       case MEMBER_FUNCTION_DEF:
       case GETTER_DEF:
@@ -135,8 +133,27 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements HotSwapCompi
         // Suppressions are always valid here.
         return;
 
+      case STRING_KEY:
+        if (n.getParent().isObjectLit()) {
+          return;
+        }
+        break;
+
+      case ASSIGN:
+      case GETPROP:
+        if (n.getParent().isExprResult()) {
+          return;
+        }
+        break;
+
       case CALL:
-        if (containsOnlyCallValidSuppressions(info.getSuppressions())) {
+        if (containsOnlySuppressionFor(info, "extraRequire")) {
+          return;
+        }
+        break;
+
+      case WITH:
+        if (containsOnlySuppressionFor(info, "with")) {
           return;
         }
         break;
@@ -144,19 +161,16 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements HotSwapCompi
       default:
         break;
     }
-    if (!containsOnlyValidAnywhereSuppressions(info.getSuppressions())) {
-      compiler.report(JSError.make(n, MISPLACED_SUPPRESS));
+    if (containsOnlySuppressionFor(info, "missingRequire")) {
+      return;
     }
+    compiler.report(JSError.make(n, MISPLACED_SUPPRESS));
   }
 
-  private static boolean containsOnlyCallValidSuppressions(Set<String> suppressions) {
+  private static boolean containsOnlySuppressionFor(JSDocInfo jsdoc, String allowedSuppression) {
+    Set<String> suppressions = jsdoc.getSuppressions();
     return suppressions.size() == 1
-        && Iterables.getOnlyElement(suppressions).equals("extraRequire");
-  }
-
-  private static boolean containsOnlyValidAnywhereSuppressions(Set<String> suppressions) {
-    return suppressions.size() == 1
-        && Iterables.getOnlyElement(suppressions).equals("missingRequire");
+        && Iterables.getOnlyElement(suppressions).equals(allowedSuppression);
   }
 
   private void validateTypedefs(Node n, JSDocInfo info) {
