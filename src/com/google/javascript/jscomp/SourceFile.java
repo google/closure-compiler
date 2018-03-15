@@ -88,12 +88,6 @@ public class SourceFile implements StaticSourceFile, Serializable {
 
   private transient String code = null;
 
-  static final DiagnosticType DUPLICATE_ZIP_CONTENTS = DiagnosticType.warning(
-      "JSC_DUPLICATE_ZIP_CONTENTS",
-      "Two zip entries containing the same relative path.\n"
-      + "Entry 1: {0}\n"
-      + "Entry 2: {1}");
-
   /**
    * Construct a new abstract source file.
    *
@@ -365,8 +359,8 @@ public class SourceFile implements StaticSourceFile, Serializable {
     return sourceFiles;
   }
 
-  static final String BANG_SLASH = "!/";
-  static final String JAR_URL_PREFIX = "jar:file:";
+  private static final String BANG_SLASH = "!/";
+  private static final String JAR_URL_PREFIX = "jar:file:";
 
   private static boolean isZipEntry(String path) {
     return path.contains(".zip!/") && (path.endsWith(".js") || path.endsWith(".js.map"));
