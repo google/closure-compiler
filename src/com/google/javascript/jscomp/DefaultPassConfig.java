@@ -478,6 +478,10 @@ public final class DefaultPassConfig extends PassConfig {
       if (options.j2clPassMode.shouldAddJ2clPasses()) {
         checks.add(j2clChecksPass);
       }
+
+      if (options.shouldRunTypeSummaryChecksLate()) {
+        checks.add(generateIjs);
+      }
     }
 
     if (options.needsTranspilationFrom(ES6) && !options.checksOnly) {

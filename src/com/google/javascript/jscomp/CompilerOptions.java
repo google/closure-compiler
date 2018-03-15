@@ -173,6 +173,13 @@ public class CompilerOptions implements Serializable {
      * of the code being compiled.  This is useful for incremental type checking.
      */
     GENERATE_IJS,
+
+    /**
+     * The compiler should run the same checks as used during type-only interface generation,
+     * but run them after typechecking to give better error messages. This only makes sense in
+     * --checks_only mode.
+     */
+    RUN_IJS_CHECKS_LATE,
   }
 
   private IncrementalCheckMode incrementalCheckMode = IncrementalCheckMode.OFF;
@@ -181,6 +188,7 @@ public class CompilerOptions implements Serializable {
     incrementalCheckMode = value;
     switch (value) {
       case OFF:
+      case RUN_IJS_CHECKS_LATE:
         break;
       case GENERATE_IJS:
         setPreserveTypeAnnotations(true);
@@ -191,6 +199,10 @@ public class CompilerOptions implements Serializable {
 
   public boolean shouldGenerateTypedExterns() {
     return incrementalCheckMode == IncrementalCheckMode.GENERATE_IJS;
+  }
+
+  public boolean shouldRunTypeSummaryChecksLate() {
+    return incrementalCheckMode == IncrementalCheckMode.RUN_IJS_CHECKS_LATE;
   }
 
   private Config.JsDocParsing parseJsDocDocumentation = Config.JsDocParsing.TYPES_ONLY;
