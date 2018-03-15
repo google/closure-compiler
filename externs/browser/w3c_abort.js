@@ -24,6 +24,7 @@
 
 /**
  * @record
+ * @extends {EventTarget}
  * @see https://dom.spec.whatwg.org/#interface-AbortSignal
  */
 function AbortSignal() {}
