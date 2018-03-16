@@ -455,7 +455,7 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
             "  $jscomp$generator$forin$0 = $jscomp$generator$context.forIn(gen);",
             "case 4:",
             "  if (!((response=$jscomp$generator$forin$0.getNext()) != null)) {",
-            "    if (!gotResponse) return $jscomp$generator$context.return(undefined);",
+            "    if (!gotResponse) return $jscomp$generator$context.return();",
             "    $jscomp$generator$context.jumpTo(1);",
             "    break;",
             "  }",
@@ -740,7 +740,7 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
   public void testReturnNoValue() {
     rewriteGeneratorBody(
         "return;",
-        "return $jscomp$generator$context.return(undefined);");
+        "return $jscomp$generator$context.return();");
   }
 
   public void testYieldExpression() {

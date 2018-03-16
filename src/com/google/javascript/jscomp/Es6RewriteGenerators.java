@@ -485,7 +485,7 @@ final class Es6RewriteGenerators implements HotSwapCompilerPass {
     void transpileReturn(Node n) {
       n.addChildToFront(
           context.returnExpression(
-              prepareNodeForWrite(maybeDecomposeExpression(n.removeFirstChild()))));
+              n, prepareNodeForWrite(maybeDecomposeExpression(n.removeFirstChild()))));
       context.writeGeneratedNode(n);
       context.currentCase.mayFallThrough = false;
     }
@@ -1363,11 +1363,11 @@ final class Es6RewriteGenerators implements HotSwapCompilerPass {
       }
 
       /** Instructs a state machine program to return a given expression. */
-      Node returnExpression(@Nullable Node expression) {
+      Node returnExpression(Node sourceNode, @Nullable Node expression) {
         if (expression == null) {
-          expression = IR.name("undefined").useSourceInfoFrom(expression);
+          return callContextMethod(sourceNode, "return");
         }
-        return callContextMethod(expression, "return", expression);
+        return callContextMethod(sourceNode, "return", expression);
       }
 
       /** Instructs a state machine program to consume a yield result after yielding. */
@@ -1774,7 +1774,7 @@ final class Es6RewriteGenerators implements HotSwapCompilerPass {
           } else if (n.isName() && n.getString().equals("arguments")) {
             visitArguments(n);
           } else if (n.isVar()) {
-            // don't transpile var in "for (var i = 0;;)"
+            // don't transpile var in "for (var i = 0; ; )"
             if (!(parent.isVanillaFor() || parent.isForIn()) || parent.getFirstChild() != n) {
               visitVar(n);
             }
@@ -1783,13 +1783,8 @@ final class Es6RewriteGenerators implements HotSwapCompilerPass {
 
         /** Adjust return statements. */
         void visitReturn(Node n) {
-          Node returnExpression = n.removeFirstChild();
-          if (returnExpression == null) {
-            // return;   =>   return $context.return(undefined);
-            returnExpression = IR.name("undefined").useSourceInfoFrom(n);
-          }
           // return ...;   =>   return $context.return(...);
-          n.addChildToFront(returnExpression(returnExpression));
+          n.addChildToFront(returnExpression(n, n.removeFirstChild()));
         }
 
         /** Converts labeled <code>break</code> or <code>continue</code> statement into a jump. */
