@@ -32,6 +32,7 @@ import com.google.javascript.jscomp.Var;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.TypeI.Nullability;
 import java.util.Comparator;
 import java.util.List;
 import javax.annotation.Nullable;
@@ -50,6 +51,11 @@ import javax.annotation.Nullable;
  * @author blickly@google.com (Ben Lickly)
  */
 public class ConvertToTypedInterface implements CompilerPass {
+  static final DiagnosticType CONSTANT_WITH_SUGGESTED_TYPE =
+      DiagnosticType.warning(
+          "JSC_CONSTANT_WITH_SUGGESTED_TYPE",
+          "Constants in top-level should have types explicitly specified.\n"
+              + "You may want specify this type as:\t@const '{'{0}'}'");
 
   static final DiagnosticType CONSTANT_WITHOUT_EXPLICIT_TYPE =
       DiagnosticType.warning(
@@ -84,8 +90,15 @@ public class ConvertToTypedInterface implements CompilerPass {
     if (PotentialDeclaration.isConstToBeInferred(jsdoc, nameNode)
         && !nameNode.isFromExterns()
         && !JsdocUtil.isPrivate(jsdoc)) {
-      compiler.report(
-          JSError.make(nameNode, CONSTANT_WITHOUT_EXPLICIT_TYPE));
+      if (nameNode.getJSType() == null) {
+        compiler.report(JSError.make(nameNode, CONSTANT_WITHOUT_EXPLICIT_TYPE));
+      } else {
+        compiler.report(
+            JSError.make(
+                nameNode,
+                CONSTANT_WITH_SUGGESTED_TYPE,
+                nameNode.getJSType().toAnnotationString(Nullability.EXPLICIT)));
+      }
     }
   }
 
