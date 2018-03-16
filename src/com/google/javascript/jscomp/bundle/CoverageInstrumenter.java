@@ -41,9 +41,7 @@ public class CoverageInstrumenter extends CompilerBasedTransformer {
     protected void setOptions(CompilerOptions options) {
       options.coalesceVariableNames = false;
       options.setLanguageOut(CompilerOptions.LanguageMode.ECMASCRIPT5);
-      // The next two options together sum to the deprecated ECMASCRIPT6, and
-      // mimic historical behavior of this class.
-      options.setLanguageIn(CompilerOptions.LanguageMode.ECMASCRIPT_2015);
+      options.setLanguageIn(CompilerOptions.LanguageMode.ECMASCRIPT_NEXT);
       options.setStrictModeInput(false);
       options.setShadowVariables(false);
       // Setting the path to any non-null value will trigger source map generation.
