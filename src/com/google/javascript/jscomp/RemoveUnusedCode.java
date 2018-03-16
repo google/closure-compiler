@@ -1784,6 +1784,11 @@ class RemoveUnusedCode implements CompilerPass {
         }
       }
     }
+
+    @Override
+    public String toString() {
+      return "UnusedReadReference:" + referenceNode;
+    }
   }
 
   /**
@@ -1820,6 +1825,11 @@ class RemoveUnusedCode implements CompilerPass {
       // there are no instances of it.
       return true;
     }
+
+    @Override
+    public String toString() {
+      return "InstanceofName:" + instanceofNode;
+    }
   }
 
   /** Represents an increment or decrement operation that could be removed. */
@@ -1854,6 +1864,11 @@ class RemoveUnusedCode implements CompilerPass {
           }
         }
       }
+    }
+
+    @Override
+    public String toString() {
+      return "IncOrDecOp:" + incOrDecNode;
     }
   }
 
@@ -1991,6 +2006,11 @@ class RemoveUnusedCode implements CompilerPass {
     public void removeInternal(AbstractCompiler compiler) {
       NodeUtil.deleteNode(classDeclarationNode, compiler);
     }
+
+    @Override
+    public String toString() {
+      return "ClassDeclaration:" + classDeclarationNode;
+    }
   }
 
   private class NamedClassExpression extends Removable {
@@ -2012,6 +2032,11 @@ class RemoveUnusedCode implements CompilerPass {
           compiler.reportChangeToEnclosingScope(classNode);
         }
       }
+    }
+
+    @Override
+    public String toString() {
+      return "NamedClassExpression:" + classNode;
     }
   }
 
@@ -2036,6 +2061,11 @@ class RemoveUnusedCode implements CompilerPass {
     @Override
     void removeInternal(AbstractCompiler compiler) {
       NodeUtil.deleteNode(propertyNode, compiler);
+    }
+
+    @Override
+    public String toString() {
+      return "ClassOrPrototypeNamedProperty:" + propertyNode;
     }
   }
 
@@ -2079,6 +2109,11 @@ class RemoveUnusedCode implements CompilerPass {
     boolean isAssignedValueLocal() {
       // The declared function is always created locally.
       return true;
+    }
+
+    @Override
+    public String toString() {
+      return "FunctionDeclaration:" + functionDeclarationNode;
     }
   }
 
@@ -2306,6 +2341,11 @@ class RemoveUnusedCode implements CompilerPass {
     boolean isPrototypeProperty() {
       return true;
     }
+
+    @Override
+    public String toString() {
+      return "AnonymousPrototypeNamedPropertyAssign:" + assignNode;
+    }
   }
 
   /**
@@ -2313,7 +2353,6 @@ class RemoveUnusedCode implements CompilerPass {
    * `goog.addSingletonGetter()`.
    */
   private class ClassSetupCall extends Removable {
-
     final Node callNode;
 
     ClassSetupCall(RemovableBuilder builder, Node callNode) {
@@ -2362,6 +2401,11 @@ class RemoveUnusedCode implements CompilerPass {
       // If we aren't sure where X comes from and what aliases it might have, we cannot be sure
       // it's safe to remove the class setup for it.
       return true;
+    }
+
+    @Override
+    public String toString() {
+      return "ClassSetupCall:" + callNode;
     }
   }
 
