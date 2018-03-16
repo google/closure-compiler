@@ -336,7 +336,7 @@ function Document() {}
 Document.prototype.doctype;
 
 /**
- * @type {!Element}
+ * @type {!HTMLHtmlElement}
  * @see http://www.w3.org/TR/1998/REC-DOM-Level-1-19981001/level-one-core.html#attribute-documentElement
  */
 Document.prototype.documentElement;
