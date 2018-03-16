@@ -255,7 +255,7 @@ public abstract class JSType implements TypeI {
    * @return <code>this &lt;: (String, string)</code>
    */
   public final boolean isString() {
-    return isSubtype(
+    return isSubtypeOf(
         getNativeType(JSTypeNative.STRING_VALUE_OR_OBJECT_TYPE));
   }
 
@@ -264,12 +264,12 @@ public abstract class JSType implements TypeI {
    * @return <code>this &lt;: (Number, number)</code>
    */
   public final boolean isNumber() {
-    return isSubtype(
+    return isSubtypeOf(
         getNativeType(JSTypeNative.NUMBER_VALUE_OR_OBJECT_TYPE));
   }
 
   public final boolean isSymbol() {
-    return isSubtype(
+    return isSubtypeOf(
         getNativeType(JSTypeNative.SYMBOL_VALUE_OR_OBJECT_TYPE));
   }
 
@@ -361,7 +361,7 @@ public abstract class JSType implements TypeI {
       ImmutableList<JSType> alternatesList = this.toMaybeUnionType().getAlternatesList();
       for (int i = 0; i < alternatesList.size(); i++) {
         JSType alternate = alternatesList.get(i);
-        if (alternate.isSubtype(arrayType)) {
+        if (alternate.isSubtypeOf(arrayType)) {
           return true;
         }
       }
@@ -1097,7 +1097,7 @@ public abstract class JSType implements TypeI {
    */
   public final boolean canTestForShallowEqualityWith(JSType that) {
     if (isEmptyType() || that.isEmptyType()) {
-      return isSubtype(that) || that.isSubtype(this);
+      return isSubtypeOf(that) || that.isSubtypeOf(this);
     }
 
     JSType inf = getGreatestSubtype(that);
@@ -1227,9 +1227,9 @@ public abstract class JSType implements TypeI {
     }  else if (thatType.isTemplatizedType()) {
       return thatType.toMaybeTemplatizedType().getGreatestSubtypeHelper(
           thisType);
-    } else if (thisType.isSubtype(thatType)) {
+    } else if (thisType.isSubtypeOf(thatType)) {
       return filterNoResolvedType(thisType);
-    } else if (thatType.isSubtype(thisType)) {
+    } else if (thatType.isSubtypeOf(thisType)) {
       return filterNoResolvedType(thatType);
     } else if (thisType.isRecordType()) {
       return thisType.toMaybeRecordType().getGreatestSubtypeHelper(thatType);

@@ -950,7 +950,7 @@ class TypeInference
   }
 
   private boolean isAddedAsNumber(JSType type) {
-    return type.isSubtype(registry.createUnionType(VOID_TYPE, NULL_TYPE,
+    return type.isSubtypeOf(registry.createUnionType(VOID_TYPE, NULL_TYPE,
         NUMBER_VALUE_OR_OBJECT_TYPE, BOOLEAN_TYPE, BOOLEAN_OBJECT_TYPE));
   }
 
@@ -1310,7 +1310,7 @@ class TypeInference
             .restrictByNotNullOrUndefined()
             .collapseUnion();
 
-        if (argObjectType.isSubtype(referencedParamType)) {
+        if (argObjectType.isSubtypeOf(referencedParamType)) {
           // If the argument type is a subtype of the parameter type, resolve any
           // template types amongst their templatized types.
           TemplateTypeMap paramTypeMap = paramType.getTemplateTypeMap();
@@ -1707,7 +1707,7 @@ class TypeInference
       // Exclude the boolean type if the literal set is empty because a boolean
       // can never actually be returned.
       if (outcome.booleanValues == BooleanLiteralSet.EMPTY
-          && getNativeType(BOOLEAN_TYPE).isSubtype(type)) {
+          && getNativeType(BOOLEAN_TYPE).isSubtypeOf(type)) {
         // Exclusion only makes sense for a union type.
         if (type.isUnionType()) {
           type = type.toMaybeUnionType().getRestrictedUnion(
@@ -1813,7 +1813,7 @@ class TypeInference
     }
     return new BooleanOutcomePair(
         jsType.getPossibleToBooleanOutcomes(),
-        registry.getNativeType(BOOLEAN_TYPE).isSubtype(jsType)
+        registry.getNativeType(BOOLEAN_TYPE).isSubtypeOf(jsType)
             ? BooleanLiteralSet.BOTH
             : BooleanLiteralSet.EMPTY,
         flowScope,

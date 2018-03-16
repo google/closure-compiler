@@ -64,7 +64,7 @@ public class NumberType extends ValueType {
     if (result != null) {
       return result;
     }
-    if (that.isUnknownType() || that.isSubtype(
+    if (that.isUnknownType() || that.isSubtypeOf(
             getNativeType(JSTypeNative.OBJECT_NUMBER_STRING_BOOLEAN))) {
       return UNKNOWN;
     }

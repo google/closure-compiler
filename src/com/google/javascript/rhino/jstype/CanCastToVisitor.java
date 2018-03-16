@@ -78,7 +78,7 @@ class CanCastToVisitor implements RelationshipVisitor<Boolean> {
       // TODO(johnlenz): visit function parts
       return true;
     } else {
-      return thisType.isSubtype(functionType)
+      return thisType.isSubtypeOf(functionType)
           || functionType.isSubtype(thisType);
     }
   }
@@ -116,7 +116,7 @@ class CanCastToVisitor implements RelationshipVisitor<Boolean> {
           thatType.toMaybeTemplatizedType().getReferencedTypeInternal());
     }
 
-    return thisType.isSubtype(thatType) || thatType.isSubtype(thisType);
+    return thisType.isSubtypeOf(thatType) || thatType.isSubtypeOf(thisType);
   }
 
   @Override

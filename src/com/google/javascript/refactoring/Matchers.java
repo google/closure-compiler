@@ -440,7 +440,7 @@ public final class Matchers {
     jsType = jsType.restrictByNotNullOrUndefined();
     if (!jsType.isUnknownType()
         && !jsType.isAllType()
-        && jsType.isSubtype(providedJsType)) {
+        && jsType.isSubtypeOf(providedJsType)) {
       if (node.isName() && propertyName.equals(node.getString())) {
         return true;
       } else if (node.isGetProp()

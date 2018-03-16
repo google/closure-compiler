@@ -566,7 +566,7 @@ public final class SemanticReverseAbstractInterpreter
 
       FunctionType funcTarget = target.toMaybeFunctionType();
       if (funcTarget.hasInstanceType()) {
-        if (type.isSubtype(funcTarget.getInstanceType())) {
+        if (type.isSubtypeOf(funcTarget.getInstanceType())) {
           return null;
         }
 

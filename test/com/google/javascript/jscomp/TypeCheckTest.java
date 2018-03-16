@@ -14957,7 +14957,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         ARRAY_TYPE, NUMBER_TYPE);
     JSType arrayOfString = createTemplatizedType(
         ARRAY_TYPE, STRING_TYPE);
-    assertFalse(arrayOfString.isSubtype(createUnionType(arrayOfNumber, NULL_VOID)));
+    assertFalse(arrayOfString.isSubtypeOf(createUnionType(arrayOfNumber, NULL_VOID)));
 
   }
 

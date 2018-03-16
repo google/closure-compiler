@@ -64,8 +64,7 @@ public class VoidType extends ValueType {
     if (UNKNOWN.equals(super.testForEquality(that))) {
       return UNKNOWN;
     }
-    if (that.isSubtype(this) ||
-        that.isSubtype(getNativeType(JSTypeNative.NULL_TYPE))) {
+    if (that.isSubtypeOf(this) || that.isSubtypeOf(getNativeType(JSTypeNative.NULL_TYPE))) {
       return TRUE;
     }
     return FALSE;

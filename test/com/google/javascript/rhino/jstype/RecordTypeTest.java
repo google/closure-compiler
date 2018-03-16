@@ -136,8 +136,8 @@ public class RecordTypeTest extends BaseJSTypeTestCase {
     JSType recordB = new RecordTypeBuilder(registry)
         .addProperty("a", UNKNOWN_TYPE, null)
         .build();
-    assertTrue(recordA.isSubtype(recordB));
-    assertTrue(recordB.isSubtype(recordA));
+    assertTrue(recordA.isSubtypeOf(recordB));
+    assertTrue(recordB.isSubtypeOf(recordA));
   }
 
   public void testSubtypeWithUnknowns2() throws Exception {
@@ -155,8 +155,8 @@ public class RecordTypeTest extends BaseJSTypeTestCase {
             .build(),
             null)
         .build();
-    assertTrue(recordA.isSubtype(recordB));
-    assertTrue(recordB.isSubtype(recordA));
+    assertTrue(recordA.isSubtypeOf(recordB));
+    assertTrue(recordB.isSubtypeOf(recordA));
   }
 
   public void testSubtypeWithFunctionProps() throws Exception {
@@ -174,8 +174,8 @@ public class RecordTypeTest extends BaseJSTypeTestCase {
             .build(),
             null)
         .build();
-    assertFalse(recordA.isSubtype(recordB));
-    assertFalse(recordB.isSubtype(recordA));
+    assertFalse(recordA.isSubtypeOf(recordB));
+    assertFalse(recordB.isSubtypeOf(recordA));
   }
 
   public void testSubtypeWithManyProps() throws Exception {
@@ -192,10 +192,10 @@ public class RecordTypeTest extends BaseJSTypeTestCase {
         .addProperty("b",
             registry.createUnionType(NUMBER_TYPE, STRING_TYPE), null)
         .build();
-    assertFalse(recordA.isSubtype(recordB));
-    assertFalse(recordB.isSubtype(recordA));
-    assertFalse(recordC.isSubtype(recordB));
-    assertTrue(recordB.isSubtype(recordC));
-    assertTrue(recordA.isSubtype(recordC));
+    assertFalse(recordA.isSubtypeOf(recordB));
+    assertFalse(recordB.isSubtypeOf(recordA));
+    assertFalse(recordC.isSubtypeOf(recordB));
+    assertTrue(recordB.isSubtypeOf(recordC));
+    assertTrue(recordA.isSubtypeOf(recordC));
   }
 }

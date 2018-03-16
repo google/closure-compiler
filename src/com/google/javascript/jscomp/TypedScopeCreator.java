@@ -724,7 +724,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
           if (type == null) {
             type = unknownType;
           }
-          if (!type.isSubtype(typeRegistry.getNativeType(OBJECT_TYPE))) {
+          if (!type.isSubtypeOf(typeRegistry.getNativeType(OBJECT_TYPE))) {
             report(JSError.make(
                 objectLit, LENDS_ON_NON_OBJECT, lendsName, type.toString()));
             type = null;

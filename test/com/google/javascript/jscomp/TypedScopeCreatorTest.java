@@ -271,7 +271,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     assertEquals("enum{goog.ui.Zippy.EventType}", x.getReferenceName());
 
     ObjectType y = (ObjectType) findNameType("y", globalScope);
-    assertTrue(y.isSubtype(getNativeType(STRING_TYPE)));
+    assertTrue(y.isSubtypeOf(getNativeType(STRING_TYPE)));
     assertTrue(y.isEnumElementType());
     assertEquals("goog.ui.Zippy.EventType", y.getReferenceName());
   }
@@ -972,7 +972,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     FunctionType windowCtor =
         (FunctionType) (globalScope.getVar("Window").getType());
     assertEquals("global this", x.toString());
-    assertTrue(x.isSubtype(windowCtor.getInstanceType()));
+    assertTrue(x.isSubtypeOf(windowCtor.getInstanceType()));
     assertFalse(x.isEquivalentTo(windowCtor.getInstanceType()));
     assertTrue(x.hasProperty("alert"));
   }
@@ -987,7 +987,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     FunctionType windowCtor =
         (FunctionType) (globalScope.getVar("Window").getType());
     assertEquals("global this", x.toString());
-    assertTrue(x.isSubtype(windowCtor.getInstanceType()));
+    assertTrue(x.isSubtypeOf(windowCtor.getInstanceType()));
     assertFalse(x.isEquivalentTo(windowCtor.getInstanceType()));
     assertTrue(x.hasProperty("alert"));
   }

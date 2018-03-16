@@ -405,7 +405,7 @@ public class UnionType extends JSType {
     if (!that.isUnknownType() && !that.isUnionType()) {
       for (int i = 0; i < alternatesWithoutStucturalTyping.size(); i++) {
         JSType alternate = alternatesWithoutStucturalTyping.get(i);
-        if (!alternate.isUnknownType() && that.isSubtype(alternate)) {
+        if (!alternate.isUnknownType() && that.isSubtypeOf(alternate)) {
           return this;
         }
       }
@@ -418,7 +418,7 @@ public class UnionType extends JSType {
     UnionTypeBuilder builder = new UnionTypeBuilder(registry);
     for (int i = 0; i < alternatesWithoutStucturalTyping.size(); i++) {
       JSType alternate = alternatesWithoutStucturalTyping.get(i);
-      if (alternate.isSubtype(that)) {
+      if (alternate.isSubtypeOf(that)) {
         builder.addAlternate(alternate);
       }
     }
@@ -428,11 +428,11 @@ public class UnionType extends JSType {
           that.toMaybeUnionType().alternatesWithoutStucturalTyping;
       for (int i = 0; i < thoseAlternatesWithoutStucturalTyping.size(); i++) {
         JSType otherAlternate = thoseAlternatesWithoutStucturalTyping.get(i);
-        if (otherAlternate.isSubtype(this)) {
+        if (otherAlternate.isSubtypeOf(this)) {
           builder.addAlternate(otherAlternate);
         }
       }
-    } else if (that.isSubtype(this)) {
+    } else if (that.isSubtypeOf(this)) {
       builder.addAlternate(that);
     }
     JSType result = builder.build();
@@ -565,7 +565,7 @@ public class UnionType extends JSType {
     for (int i = 0; i < alternatesWithoutStucturalTyping.size(); i++) {
       JSType t = alternatesWithoutStucturalTyping.get(i);
       // Keep all unknown/unresolved types.
-      if (t.isUnknownType() || t.isNoResolvedType() || !t.isSubtype(type)) {
+      if (t.isUnknownType() || t.isNoResolvedType() || !t.isSubtypeOf(type)) {
         restricted.addAlternate(t);
       }
     }

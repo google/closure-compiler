@@ -662,7 +662,7 @@ public abstract class ChainableReverseAbstractInterpreter
           return ctorType.getGreatestSubtype(type);
         } else {
           // Only filter out subtypes of "function"
-          return type.isSubtype(ctorType) ? null : type;
+          return type.isSubtypeOf(ctorType) ? null : type;
         }
       }
       return matchesExpectation("object") ? type : null;
@@ -784,7 +784,7 @@ public abstract class ChainableReverseAbstractInterpreter
         @Override
         public JSType caseObjectType(ObjectType type) {
           JSType arrayType = getNativeType(ARRAY_TYPE);
-          return arrayType.isSubtype(type) ? arrayType : null;
+          return arrayType.isSubtypeOf(type) ? arrayType : null;
         }
       };
 
@@ -795,7 +795,7 @@ public abstract class ChainableReverseAbstractInterpreter
       new RestrictByFalseTypeOfResultVisitor() {
         @Override
         public JSType caseObjectType(ObjectType type) {
-          return type.isSubtype(getNativeType(ARRAY_TYPE)) ? null : type;
+          return type.isSubtypeOf(getNativeType(ARRAY_TYPE)) ? null : type;
         }
       };
 }

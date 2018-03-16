@@ -176,7 +176,7 @@ public class RecordType extends PrototypeObjectType {
           registry.getEachReferenceTypeWithProperty(propName)) {
           JSType altPropType = alt.getPropertyType(propName);
           if (altPropType != null && !alt.isEquivalentTo(this)
-              && alt.isSubtype(that) && altPropType.isSubtype(propType)) {
+              && alt.isSubtypeOf(that) && altPropType.isSubtypeOf(propType)) {
             builder.addAlternate(alt);
           }
         }
@@ -198,7 +198,7 @@ public class RecordType extends PrototypeObjectType {
 
   @Override
   public boolean isSubtype(JSType that) {
-    return isSubtype(that, ImplCache.create(), SubtypingMode.NORMAL);
+    return this.isSubtype(that, ImplCache.create(), SubtypingMode.NORMAL);
   }
 
   @Override

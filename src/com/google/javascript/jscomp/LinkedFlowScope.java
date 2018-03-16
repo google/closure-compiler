@@ -123,8 +123,8 @@ class LinkedFlowScope implements FlowScope {
         JSType declaredType = v.getType();
         // Use the inferred type over the declared type only if the
         // inferred type is a strict subtype of the declared type.
-        if (declaredType != null && inferredType.isSubtype(declaredType)
-            && !declaredType.isSubtype(inferredType)
+        if (declaredType != null && inferredType.isSubtypeOf(declaredType)
+            && !declaredType.isSubtypeOf(inferredType)
             && !inferredType.isEquivalentTo(declaredType)) {
           inferSlotType(symbol, inferredType);
         }

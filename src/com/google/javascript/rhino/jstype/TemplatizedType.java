@@ -177,7 +177,7 @@ public final class TemplatizedType extends ProxyObjectType {
       if (!rawThat.isTemplatizedType()) {
         if (this.isSubtype(rawThat)) {
           return this;
-        } else if (rawThat.isSubtype(this)) {
+        } else if (rawThat.isSubtypeOf(this)) {
           return filterNoResolvedType(rawThat);
         }
       }

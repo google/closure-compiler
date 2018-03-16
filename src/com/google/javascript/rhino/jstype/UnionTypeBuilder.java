@@ -136,7 +136,7 @@ public class UnionTypeBuilder implements Serializable {
     boolean thatUnresolved = leftType.isTemplatizedType()
         && !leftType.toMaybeTemplatizedType().isResolved();
     if (isStructural && !thisUnresolved && !thatUnresolved) {
-      return rightType.isSubtype(leftType);
+      return rightType.isSubtypeOf(leftType);
     } else {
       return rightType.isSubtypeWithoutStructuralTyping(leftType);
     }

@@ -264,7 +264,7 @@ class TypeValidator implements Serializable {
    */
   void expectAnyObject(NodeTraversal t, Node n, JSType type, String msg) {
     JSType anyObjectType = getNativeType(NO_OBJECT_TYPE);
-    if (!anyObjectType.isSubtype(type) && !type.isEmptyType()) {
+    if (!anyObjectType.isSubtypeOf(type) && !type.isEmptyType()) {
       mismatch(t, n, msg, type, anyObjectType);
     }
   }
@@ -305,7 +305,7 @@ class TypeValidator implements Serializable {
    */
   void expectNumberStrict(Node n, JSType type, String msg) {
     checkState(this.strictOperatorChecks);
-    if (!type.isSubtype(getNativeType(NUMBER_TYPE))) {
+    if (!type.isSubtypeOf(getNativeType(NUMBER_TYPE))) {
       registerMismatchAndReport(
           n, INVALID_OPERAND_TYPE, msg, type, getNativeType(NUMBER_TYPE), null, null);
     }
@@ -313,7 +313,7 @@ class TypeValidator implements Serializable {
 
   void expectMatchingTypes(Node n, JSType left, JSType right, String msg) {
     checkState(this.strictOperatorChecks);
-    if (!left.isSubtype(right) && !right.isSubtype(left)) {
+    if (!left.isSubtypeOf(right) && !right.isSubtypeOf(left)) {
       registerMismatchAndReport(n, INVALID_OPERAND_TYPE, msg, right, left, null, null);
     }
   }
@@ -324,7 +324,7 @@ class TypeValidator implements Serializable {
    * (undefined|null|boolean|string).
    */
   void expectBitwiseable(NodeTraversal t, Node n, JSType type, String msg) {
-    if (!type.matchesNumberContext() && !type.isSubtype(allBitwisableValueTypes)) {
+    if (!type.matchesNumberContext() && !type.isSubtypeOf(allBitwisableValueTypes)) {
       mismatch(t, n, msg, type, allBitwisableValueTypes);
     } else if (this.strictOperatorChecks) {
       expectNumberStrict(n, type, msg);
@@ -368,7 +368,7 @@ class TypeValidator implements Serializable {
 
   void expectStringOrNumberStrict(Node n, JSType type, String msg) {
     checkState(this.strictOperatorChecks);
-    if (!type.isSubtype(getNativeType(NUMBER_STRING))) {
+    if (!type.isSubtypeOf(getNativeType(NUMBER_STRING))) {
       registerMismatchAndReport(
           n, INVALID_OPERAND_TYPE, msg, type, getNativeType(NUMBER_STRING), null, null);
     }
@@ -391,7 +391,7 @@ class TypeValidator implements Serializable {
 
   void expectStringOrNumberOrSymbolStrict(Node n, JSType type, String msg) {
     checkState(this.strictOperatorChecks);
-    if (!type.isSubtype(getNativeType(NUMBER_STRING_SYMBOL))) {
+    if (!type.isSubtypeOf(getNativeType(NUMBER_STRING_SYMBOL))) {
       registerMismatchAndReport(
           n, INVALID_OPERAND_TYPE, msg, type, getNativeType(NUMBER_STRING_SYMBOL), null, null);
     }
@@ -407,7 +407,7 @@ class TypeValidator implements Serializable {
   boolean expectNotNullOrUndefined(
       NodeTraversal t, Node n, JSType type, String msg, JSType expectedType) {
     if (!type.isNoType() && !type.isUnknownType()
-        && type.isSubtype(nullOrUndefined)
+        && type.isSubtypeOf(nullOrUndefined)
         && !containsForwardDeclaredUnresolvedName(type)) {
 
       // There's one edge case right now that we don't handle well, and
@@ -452,7 +452,7 @@ class TypeValidator implements Serializable {
     // TODO(user): remove extra conditions when type annotations
     // in the code base have adapted to the change in the compiler.
     if (!switchType.canTestForShallowEqualityWith(caseType)
-        && (caseType.autoboxesTo() == null || !caseType.autoboxesTo().isSubtype(switchType))) {
+        && (caseType.autoboxesTo() == null || !caseType.autoboxesTo().isSubtypeOf(switchType))) {
       mismatch(t, n.getFirstChild(),
           "case expression doesn't match switch",
           caseType, switchType);
@@ -527,7 +527,7 @@ class TypeValidator implements Serializable {
   boolean expectCanAssignToPropertyOf(NodeTraversal t, Node n, JSType rightType,
       JSType leftType, Node owner, String propName) {
     // The NoType check is a hack to make typedefs work OK.
-    if (!leftType.isNoType() && !rightType.isSubtype(leftType)) {
+    if (!leftType.isNoType() && !rightType.isSubtypeOf(leftType)) {
       // Do not type-check interface methods, because we expect that
       // they will have dummy implementations that do not match the type
       // annotations.
@@ -564,7 +564,7 @@ class TypeValidator implements Serializable {
    */
   boolean expectCanAssignTo(NodeTraversal t, Node n, JSType rightType,
       JSType leftType, String msg) {
-    if (!rightType.isSubtype(leftType)) {
+    if (!rightType.isSubtypeOf(leftType)) {
       mismatch(t, n, msg, rightType, leftType);
       return false;
     } else if (!rightType.isSubtypeWithoutStructuralTyping(leftType)) {
@@ -587,7 +587,7 @@ class TypeValidator implements Serializable {
    */
   void expectArgumentMatchesParameter(NodeTraversal t, Node n, JSType argType,
       JSType paramType, Node callNode, int ordinal) {
-    if (!argType.isSubtype(paramType)) {
+    if (!argType.isSubtypeOf(paramType)) {
       mismatch(t, n,
           SimpleFormat.format("actual parameter %d of %s does not match formal parameter", ordinal,
               typeRegistry.getReadableTypeNameNoDeref(callNode.getFirstChild())),
@@ -893,7 +893,9 @@ class TypeValidator implements Serializable {
             boolean hasProperty = foundObject.hasProperty(property);
             if (!propRequired.isExplicitlyVoidable() || hasProperty) {
               if (hasProperty) {
-                if (!foundObject.getPropertyType(property).isSubtype(propRequired, subtypingMode)) {
+                if (!foundObject
+                    .getPropertyType(property)
+                    .isSubtype(propRequired, subtypingMode)) {
                   mismatch.add(property);
                 }
               } else {

@@ -131,10 +131,10 @@ public class Asserts {
     Assert.assertTrue(b.isEquivalentTo(b));
     Assert.assertTrue(b.isEquivalentTo(a));
 
-    Assert.assertTrue(a.isSubtype(b));
-    Assert.assertTrue(a.isSubtype(a));
-    Assert.assertTrue(b.isSubtype(b));
-    Assert.assertTrue(b.isSubtype(a));
+    Assert.assertTrue(a.isSubtypeOf(b));
+    Assert.assertTrue(a.isSubtypeOf(a));
+    Assert.assertTrue(b.isSubtypeOf(b));
+    Assert.assertTrue(b.isSubtypeOf(a));
 
     assertTypeEquals(a, a.getGreatestSubtype(b));
     assertTypeEquals(a, a.getGreatestSubtype(a));

@@ -284,7 +284,7 @@ public abstract class ObjectType
     // are not related we don't want to allow "==" on them (similiarly we should disallow
     // number == for non-number context values, etc).
 
-    if (that.isSubtype(getNativeType(JSTypeNative.OBJECT_NUMBER_STRING_BOOLEAN_SYMBOL))) {
+    if (that.isSubtypeOf(getNativeType(JSTypeNative.OBJECT_NUMBER_STRING_BOOLEAN_SYMBOL))) {
       return UNKNOWN;
     }
 

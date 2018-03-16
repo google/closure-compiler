@@ -54,7 +54,7 @@ public class TemplatizedTypeTest extends BaseJSTypeTestCase {
    * Assert that a type can assign to itself.
    */
   private void assertTypeCanAssignToItself(JSType type) {
-    assertTrue(type.isSubtype(type));
+    assertTrue(type.isSubtypeOf(type));
   }
 
   /**
@@ -65,13 +65,13 @@ public class TemplatizedTypeTest extends BaseJSTypeTestCase {
         ARRAY_TYPE, STRING_TYPE);
     assertTypeCanAssignToItself(arrOfString);
     assertTrue(arrOfString.isSubtype(ARRAY_TYPE));
-    assertTrue(ARRAY_TYPE.isSubtype(arrOfString));
+    assertTrue(ARRAY_TYPE.isSubtypeOf(arrOfString));
 
     TemplatizedType arrOfNumber = createTemplatizedType(
         ARRAY_TYPE, NUMBER_TYPE);
     assertTypeCanAssignToItself(arrOfNumber);
     assertTrue(arrOfNumber.isSubtype(ARRAY_TYPE));
-    assertTrue(ARRAY_TYPE.isSubtype(arrOfNumber));
+    assertTrue(ARRAY_TYPE.isSubtypeOf(arrOfNumber));
 
     assertTrue(arrOfString.isEquivalentTo(createTemplatizedType(
         ARRAY_TYPE, STRING_TYPE)));
@@ -135,25 +135,25 @@ public class TemplatizedTypeTest extends BaseJSTypeTestCase {
     JSType templatizedType4 = registry.createTemplatizedType(
         baseType, ImmutableList.<JSType>of(UNKNOWN_TYPE, UNKNOWN_TYPE));
 
-    assertTrue(templatizedType1.isSubtype(baseType));
-    assertTrue(templatizedType2.isSubtype(baseType));
-    assertTrue(templatizedType3.isSubtype(baseType));
-    assertTrue(templatizedType4.isSubtype(baseType));
+    assertTrue(templatizedType1.isSubtypeOf(baseType));
+    assertTrue(templatizedType2.isSubtypeOf(baseType));
+    assertTrue(templatizedType3.isSubtypeOf(baseType));
+    assertTrue(templatizedType4.isSubtypeOf(baseType));
 
     assertFalse(templatizedType1.isEquivalentTo(baseType));
     assertFalse(templatizedType2.isEquivalentTo(baseType));
     assertFalse(templatizedType3.isEquivalentTo(baseType));
     assertTrue(templatizedType4.isEquivalentTo(baseType));
 
-    assertTrue(baseType.isSubtype(templatizedType1));
-    assertTrue(baseType.isSubtype(templatizedType2));
-    assertTrue(baseType.isSubtype(templatizedType3));
-    assertTrue(baseType.isSubtype(templatizedType4));
+    assertTrue(baseType.isSubtypeOf(templatizedType1));
+    assertTrue(baseType.isSubtypeOf(templatizedType2));
+    assertTrue(baseType.isSubtypeOf(templatizedType3));
+    assertTrue(baseType.isSubtypeOf(templatizedType4));
 
-    assertFalse(templatizedType1.isSubtype(templatizedType2));
-    assertFalse(templatizedType2.isSubtype(templatizedType1));
+    assertFalse(templatizedType1.isSubtypeOf(templatizedType2));
+    assertFalse(templatizedType2.isSubtypeOf(templatizedType1));
 
-    assertTrue(templatizedType2.isSubtype(templatizedType3));
-    assertTrue(templatizedType3.isSubtype(templatizedType2));
+    assertTrue(templatizedType2.isSubtypeOf(templatizedType3));
+    assertTrue(templatizedType3.isSubtypeOf(templatizedType2));
   }
 }
