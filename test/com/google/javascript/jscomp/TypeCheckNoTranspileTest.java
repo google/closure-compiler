@@ -196,6 +196,25 @@ public final class TypeCheckNoTranspileTest extends CompilerTypeTestCase {
         /* isError = */ true);
   }
 
+  public void testGenerator_noDeclaredReturnType1() {
+    testTypes("function *gen() {} var /** !Generator<?> */ g = gen();");
+  }
+
+  public void testGenerator_noDeclaredReturnType2() {
+    testTypes("function *gen() {} var /** !Generator<number> */ g = gen();");
+  }
+
+  public void testGenerator_noDeclaredReturnType3() {
+    // We infer gen() to return !Generator<?>, so don't warn for a type mismatch with string
+    testTypes(
+        lines(
+            "function *gen() {",
+            "  yield 1;",
+            "  yield 2;",
+            "}",
+            "var /** string */ g = gen().next().value;"));
+  }
+
   private void testTypes(String js) {
     testTypes(js, (String) null);
   }

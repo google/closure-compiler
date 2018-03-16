@@ -2079,6 +2079,18 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     assertEquals("string", globalScope.getVar("e").getType().toString());
   }
 
+  public void testGenerator1() {
+    testSame("function *gen() { yield 1; } var g = gen();");
+    assertEquals("function(): Generator<?>", findNameType("gen", globalScope).toString());
+    assertEquals("Generator<?>", findNameType("g", globalScope).toString());
+  }
+
+  public void testGenerator2() {
+    testSame("var gen = function *() { yield 1; }; var g = gen();");
+    assertEquals("function(): Generator<?>", findNameType("gen", globalScope).toString());
+    assertEquals("Generator<?>", findNameType("g", globalScope).toString());
+  }
+
   public void testMemoization() throws Exception {
     Node root1 = createEmptyRoot();
     Node root2 = createEmptyRoot();

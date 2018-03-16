@@ -615,6 +615,9 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         typeable = false;
         break;
 
+      case YIELD:
+        break;
+
       case DEC:
       case INC:
         left = n.getFirstChild();
