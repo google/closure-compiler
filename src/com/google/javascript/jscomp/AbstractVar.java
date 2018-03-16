@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import com.google.javascript.rhino.JSDocInfo;
@@ -78,7 +80,7 @@ public class AbstractVar<S extends AbstractScope<S, V>, V extends AbstractVar<S,
 
   @Override
   public StaticSourceFile getSourceFile() {
-    return nameNode.getStaticSourceFile();
+    return (nameNode != null ? nameNode : scope.getRootNode()).getStaticSourceFile();
   }
 
   @Override
@@ -100,7 +102,8 @@ public class AbstractVar<S extends AbstractScope<S, V>, V extends AbstractVar<S,
    * that bleeds into the inner scope).
    */
   public boolean isBleedingFunction() {
-    return NodeUtil.isFunctionExpression(getParentNode());
+    Node parent = getParentNode();
+    return parent != null && NodeUtil.isFunctionExpression(parent);
   }
 
   public final S getScope() {
@@ -191,8 +194,17 @@ public class AbstractVar<S extends AbstractScope<S, V>, V extends AbstractVar<S,
     return declarationType() == Token.IMPORT;
   }
 
-  public boolean isArguments() {
-    return false;
+  public final boolean isArguments() {
+    return Var.ARGUMENTS.equals(name) && scope.isFunctionScope();
+  }
+
+  public final boolean isThis() {
+    return "this".equals(name) && scope.isFunctionScope();
+  }
+
+  private boolean isImplicit() {
+    AbstractScope.ImplicitVar var = AbstractScope.ImplicitVar.of(name);
+    return var != null && var.isMadeByScope(scope);
   }
 
   private static final ImmutableSet<Token> DECLARATION_TYPES = Sets.immutableEnumSet(
@@ -212,8 +224,10 @@ public class AbstractVar<S extends AbstractScope<S, V>, V extends AbstractVar<S,
         return current.getToken();
       }
     }
-    throw new IllegalStateException("The nameNode for " + this + " must be a descendant"
-        + " of one of: " + DECLARATION_TYPES);
+    checkState(
+        isImplicit(),
+        "The nameNode for %s must be a descendant of one of: %s", this, DECLARATION_TYPES);
+    return null;
   }
 
   // This is safe because any concrete subclass of AbstractVar<V> should be assignable to V.

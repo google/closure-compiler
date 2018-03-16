@@ -19,8 +19,6 @@ package com.google.javascript.jscomp;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.StaticRef;
 import com.google.javascript.rhino.StaticSlot;
-import com.google.javascript.rhino.StaticSourceFile;
-import com.google.javascript.rhino.Token;
 
 /**
  * Used by {@code Scope} to store information about variables.
@@ -33,48 +31,8 @@ public class Var extends AbstractVar<Scope, Var> implements StaticSlot, StaticRe
     super(name, nameNode, scope, index, input);
   }
 
-  static Var makeArgumentsVar(Scope scope) {
-    return new Arguments(scope);
-  }
-
   @Override
   public String toString() {
     return "Var " + name + " @ " + nameNode;
-  }
-
-  /**
-   * A special subclass of Var used to distinguish "arguments" in the current
-   * scope.
-   */
-  private static class Arguments extends Var {
-    Arguments(Scope scope) {
-      super(
-          ARGUMENTS, // always arguments
-          null,  // no declaration node
-          scope,
-          -1,    // no variable index
-          null   // input
-      );
-    }
-
-    @Override
-    public boolean isArguments() {
-      return true;
-    }
-
-    @Override
-    public StaticSourceFile getSourceFile() {
-      return scope.getRootNode().getStaticSourceFile();
-    }
-
-    @Override
-    public boolean isBleedingFunction() {
-      return false;
-    }
-
-    @Override
-    protected Token declarationType() {
-      return null;
-    }
   }
 }

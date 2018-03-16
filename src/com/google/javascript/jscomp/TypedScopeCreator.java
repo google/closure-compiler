@@ -1012,7 +1012,11 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
           ObjectType ownerType = null;
           if (ownerName != null) {
             ownerVar = scope.getVar(ownerName);
-            if (ownerVar != null) {
+            // TODO(sdh): Remove the !isThis() check.  Historically scopes returned
+            // null for getVar("this"), but they now return a meaningful variable,
+            // which exposes a lot of type errors that need to be fixed before this
+            // restriction can be removed: b/74980936.
+            if (ownerVar != null && !ownerVar.isThis()) {
               ownerType = ObjectType.cast(ownerVar.getType());
             }
             if (name != null) {

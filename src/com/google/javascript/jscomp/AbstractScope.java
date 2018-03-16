@@ -24,6 +24,7 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.StaticScope;
 import java.io.Serializable;
 import java.util.Collections;
+import java.util.EnumMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -53,8 +54,8 @@ import java.util.Map;
 abstract class AbstractScope<S extends AbstractScope<S, V>, V extends AbstractVar<S, V>>
     implements StaticScope, Serializable {
   private final Map<String, V> vars = new LinkedHashMap<>();
+  private final Map<ImplicitVar, V> implicitVars = new EnumMap<>(ImplicitVar.class);
   private final Node rootNode;
-  private V arguments;
 
   AbstractScope(Node rootNode) {
     this.rootNode = rootNode;
@@ -117,7 +118,7 @@ abstract class AbstractScope<S extends AbstractScope<S, V>, V extends AbstractVa
     return getParent();
   }
 
-  abstract V makeArgumentsVar();
+  abstract V makeImplicitVar(ImplicitVar type);
 
   /**
    * Undeclares a variable, to be used when the compiler optimizes out
@@ -157,6 +158,10 @@ abstract class AbstractScope<S extends AbstractScope<S, V>, V extends AbstractVa
    */
   // Non-final for jsdev tests
   public V getVar(String name) {
+    ImplicitVar implicit = name != null ? ImplicitVar.of(name) : null;
+    if (implicit != null) {
+      return getImplicitVar(implicit, true);
+    }
     S scope = thisScope();
     while (scope != null) {
       V var = scope.getOwnSlot(name);
@@ -173,21 +178,30 @@ abstract class AbstractScope<S extends AbstractScope<S, V>, V extends AbstractVa
   }
 
   /**
-   * Get a unique VAR object to represent "arguments" within this scope
+   * Get a unique Var object to represent "arguments" within this scope
    */
   public final V getArgumentsVar() {
-    if (isGlobal() || isModuleScope()) {
-      return null;
-    }
+    return getImplicitVar(ImplicitVar.ARGUMENTS, false);
+  }
 
-    if (!isFunctionScope() || rootNode.isArrowFunction()) {
-      return getParent().getArgumentsVar();
+  private final V getImplicitVar(ImplicitVar var, boolean allowDeclaredVars) {
+    S scope = thisScope();
+    while (scope != null) {
+      if (var.isMadeByScope(scope)) {
+        V result = ((AbstractScope<S, V>) scope).implicitVars.get(var);
+        if (result == null) {
+          ((AbstractScope<S, V>) scope).implicitVars.put(var, result = scope.makeImplicitVar(var));
+        }
+        return result;
+      }
+      V result = allowDeclaredVars ? scope.getOwnSlot(var.name) : null;
+      if (result != null) {
+        return result;
+      }
+      // Recurse up the parent Scope
+      scope = scope.getParent();
     }
-
-    if (arguments == null) {
-      arguments = makeArgumentsVar();
-    }
-    return arguments;
+    return null;
   }
 
   /**
@@ -371,5 +385,45 @@ abstract class AbstractScope<S extends AbstractScope<S, V>, V extends AbstractVa
     // TODO(tbreisacher): Can we tighten this to just NodeUtil.createsScope?
     checkArgument(
         NodeUtil.createsScope(rootNode) || rootNode.isScript() || rootNode.isRoot(), rootNode);
+  }
+
+  /**
+   * The three implicit var types, which are defined implicitly (at least) in
+   * every vanilla function scope without actually being declared.
+   */
+  enum ImplicitVar {
+    ARGUMENTS("arguments"),
+    SUPER("super"),
+    // TODO(sdh): Expand THIS.isMadeByScope to check super.isMadeByScope(scope) || scope.isGlobal()
+    // Currently this causes a number of problems (see b/74980936), but could eventually lead to
+    // better type information.  We might also want to restrict this so that module-root scopes
+    // explicitly *don't* have access to the global this, though I think this is more than just
+    // returning false in isMadeByScope - rather, getVar() needs to stop checking and immediately
+    // return null.
+    THIS("this");
+
+    final String name;
+
+    ImplicitVar(String name) {
+      this.name = name;
+    }
+
+    /** Whether this kind of implicit variable is created/owned by the given scope. */
+    boolean isMadeByScope(AbstractScope<?, ?> scope) {
+      return NodeUtil.isVanillaFunction(scope.getRootNode());
+    }
+
+    static ImplicitVar of(String name) {
+      switch (name) {
+        case "arguments":
+          return ARGUMENTS;
+        case "super":
+          return SUPER;
+        case "this":
+          return THIS;
+        default:
+          return null;
+      }
+    }
   }
 }

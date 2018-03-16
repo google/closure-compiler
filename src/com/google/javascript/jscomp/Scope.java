@@ -66,8 +66,8 @@ public abstract class Scope extends AbstractScope<Scope, Var> {
   }
 
   @Override
-  Var makeArgumentsVar() {
-    return Var.makeArgumentsVar(this);
+  Var makeImplicitVar(ImplicitVar var) {
+    return new Var(var.name, null /* nameNode */, this, -1 /* index */, null /* input */);
   }
 
   private static final class Simple extends Scope {

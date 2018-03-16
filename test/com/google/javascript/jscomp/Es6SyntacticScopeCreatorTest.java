@@ -787,6 +787,58 @@ public final class Es6SyntacticScopeCreatorTest extends TestCase {
     assertThat(innerFunctionScope.getArgumentsVar()).isSameAs(arguments);
   }
 
+  public void testTheThisVariable() {
+    String js = "function f() { if (true) { function g() {} } }";
+    Node root = getRoot(js);
+    Scope global = scopeCreator.createScope(root, null);
+
+    Node function = root.getFirstChild();
+    checkState(function.isFunction(), function);
+    Scope fScope = scopeCreator.createScope(function, global);
+    assertFalse(fScope.isDeclared("this", true));
+    Var thisVar = fScope.getVar("this");
+    assertTrue(thisVar.isThis());
+
+    Node fBlock = NodeUtil.getFunctionBody(function);
+    Scope fBlockScope = scopeCreator.createScope(fBlock, fScope);
+    assertFalse(fBlockScope.isDeclared("this", true));
+    assertThat(fBlockScope.getVar("this")).isSameAs(thisVar);
+
+    Node ifBlock = fBlock.getFirstChild().getLastChild();
+    Scope blockScope = scopeCreator.createScope(ifBlock, fBlockScope);
+    assertFalse(blockScope.isDeclared("this", true));
+    assertThat(blockScope.getVar("this")).isSameAs(thisVar);
+    assertThat(blockScope.getVar("this").getScope()).isSameAs(fScope);
+
+    Node gFunction = ifBlock.getFirstChild();
+    Scope gScope = scopeCreator.createScope(gFunction, blockScope);
+    assertFalse(gScope.isDeclared("this", true));
+    assertThat(gScope.getVar("this").getScope()).isSameAs(gScope);
+  }
+
+  public void testTheThisVariableInArrowFunction() {
+    String js = "function outer() { var inner = () => this.x; }";
+    Node root = getRoot(js);
+    Scope global = scopeCreator.createScope(root, null);
+
+    Node outer = root.getFirstChild();
+    checkState(outer.isFunction(), outer);
+    checkState(!outer.isArrowFunction(), outer);
+    Scope outerFunctionScope = scopeCreator.createScope(outer, global);
+    Var thisVar = outerFunctionScope.getVar("this");
+
+    Node outerBody = NodeUtil.getFunctionBody(outer);
+    Scope outerBodyScope = scopeCreator.createScope(outerBody, outerFunctionScope);
+
+    Node inner = outerBody.getFirstChild()   // VAR
+                          .getFirstChild()   // NAME
+                          .getFirstChild();  // FUNCTION
+    checkState(inner.isFunction(), inner);
+    checkState(inner.isArrowFunction(), inner);
+    Scope innerFunctionScope = scopeCreator.createScope(inner, outerBodyScope);
+    assertThat(innerFunctionScope.getVar("this")).isSameAs(thisVar);
+  }
+
   public void testIsFunctionBlockScoped() {
     String js = "if (true) { function f() {}; }";
     Node root = getRoot(js);

@@ -622,8 +622,11 @@ class TypeInference
         String varName = left.getString();
         TypedVar var = syntacticScope.getVar(varName);
         JSType varType = var == null ? null : var.getType();
-        boolean isVarDeclaration = left.hasChildren()
-            && varType != null && !var.isTypeInferred();
+        boolean isVarDeclaration =
+            left.hasChildren()
+                && varType != null
+                && !var.isTypeInferred()
+                && var.getNameNode() != null;
 
         boolean isTypelessConstDecl =
             isVarDeclaration

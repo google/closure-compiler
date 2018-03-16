@@ -113,6 +113,8 @@ public class TypedScope extends AbstractScope<TypedScope, TypedVar>
   public JSType getTypeOfThis() {
     if (isGlobal()) {
       return ObjectType.cast(getRootNode().getJSType());
+    } else if (!getRootNode().isFunction()) {
+      return getClosestNonBlockScope().getTypeOfThis();
     }
 
     checkState(getRootNode().isFunction());
@@ -138,8 +140,22 @@ public class TypedScope extends AbstractScope<TypedScope, TypedVar>
   }
 
   @Override
-  TypedVar makeArgumentsVar() {
-    return TypedVar.makeArguments(this);
+  TypedVar makeImplicitVar(ImplicitVar var) {
+    return new TypedVar(false, var.name, null, getImplicitVarType(var), this, -1, null);
+  }
+
+  private JSType getImplicitVarType(ImplicitVar var) {
+    if (var == ImplicitVar.ARGUMENTS) {
+      // Look for an extern named "arguments" and use its type if available.
+      // TODO(sdh): consider looking for "Arguments" ctor rather than "arguments" var: this could
+      // allow deleting the variable, which doesn't really belong in externs in the first place.
+      TypedVar globalArgs = getGlobalScope().getVar(Var.ARGUMENTS);
+      return globalArgs != null && globalArgs.isExtern()
+          ? globalArgs.getType()
+          : null;
+    }
+    // TODO(sdh): get the superclass for super?
+    return getTypeOfThis();
   }
 
   public Iterable<TypedVar> getDeclarativelyUnboundVarsWithoutTypes() {
@@ -171,7 +187,6 @@ public class TypedScope extends AbstractScope<TypedScope, TypedVar>
     this.typeResolver = resolver;
   }
 
-  @SuppressWarnings("unchecked")
   @Override
   public JSType getNamespaceOrTypedefType(String typeName) {
     StaticTypedSlot<JSType> slot = getSlot(typeName);
