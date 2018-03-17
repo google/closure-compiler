@@ -572,19 +572,94 @@ public final class IntegrationTest extends IntegrationTestCase {
         TypeValidator.TYPE_MISMATCH_WARNING);
   }
 
-  public void testConstPolymerNotAllowed() {
+  private void addPolymerExterns() {
+    ImmutableList.Builder<SourceFile> externsList = ImmutableList.builder();
+    externsList.addAll(externs);
+    externsList.add(
+        SourceFile.fromCode(
+            "polymer_externs.js",
+            lines(
+                "/** @return {function(new: PolymerElement)} */",
+                "var Polymer = function(descriptor) {};",
+                "",
+                "/** @constructor @extends {HTMLElement} */",
+                "var PolymerElement = function() {};",  // Polymer 1
+                "",
+                "/** @constructor @extends {HTMLElement} */",
+                "Polymer.Element = function() {};",  // Polymer 2
+                "")));
+    externs = externsList.build();
+  }
+
+  public void testPolymer1() {
     CompilerOptions options = createCompilerOptions();
     options.setPolymerVersion(1);
-    options.setLanguageIn(LanguageMode.ECMASCRIPT_2015);
+    options.setWarningLevel(DiagnosticGroups.CHECK_TYPES, CheckLevel.ERROR);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    addPolymerExterns();
 
-    externs = ImmutableList.of(SourceFile.fromCode("<externs>",
-        "var Polymer = function() {}; var PolymerElement = function() {};"));
+    test(
+        options,
+        "var XFoo = Polymer({ is: 'x-foo' });",
+        "var XFoo=function(){};XFoo=Polymer({is:'x-foo'})");
+  }
+
+  public void testConstPolymerElementNotAllowed() {
+    CompilerOptions options = createCompilerOptions();
+    options.setPolymerVersion(1);
+    options.setWarningLevel(DiagnosticGroups.CHECK_TYPES, CheckLevel.ERROR);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    addPolymerExterns();
 
     test(
         options,
         "const Foo = Polymer({ is: 'x-foo' });",
         PolymerPassErrors.POLYMER_INVALID_DECLARATION);
+  }
+
+  public void testPolymer2_nti() {
+    CompilerOptions options = createCompilerOptions();
+    options.setPolymerVersion(2);
+    options.setNewTypeInference(true);
+    options.setWarningLevel(DiagnosticGroups.CHECK_TYPES, CheckLevel.ERROR);
+    options.declaredGlobalExternsOnWindow = true;
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    addPolymerExterns();
+
+    Compiler compiler = compile(
+        options,
+        lines(
+            "class XFoo extends PolymerElement {",
+            "  get is() { return 'x-foo'; }",
+            "  static get properties() { return { bar: Boolean, }; }",
+            "}"));
+    assertThat(compiler.getErrors()).isEmpty();
+    assertThat(compiler.getWarnings()).isEmpty();
+  }
+
+  public void testPolymer2_oti() {
+    CompilerOptions options = createCompilerOptions();
+    options.setPolymerVersion(2);
+    options.setNewTypeInference(false);
+    options.setWarningLevel(DiagnosticGroups.CHECK_TYPES, CheckLevel.ERROR);
+    options.declaredGlobalExternsOnWindow = true;
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    addPolymerExterns();
+
+    // TODO(b/74549003): Fix this so that OTI doesn't report an error.
+    test(
+        options,
+        lines(
+            "class XFoo extends Polymer.Element {",
+            "  get is() { return 'x-foo'; }",
+            "  static get properties() { return {}; }",
+            "}"),
+        // Bad type annotation. Unknown type Polymer.ElementProperties
+        RhinoErrorReporter.UNRECOGNIZED_TYPE_ERROR);
   }
 
   public void testPreservedForwardDeclare() {

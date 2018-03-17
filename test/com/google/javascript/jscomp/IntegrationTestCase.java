@@ -188,6 +188,7 @@ abstract class IntegrationTestCase extends TestCase {
                   "Object.seal;",
                   "Object.defineProperties;",
                   "Object.defineProperty;",
+                  "Object.getOwnPropertyDescriptor;",
                   "",
                   "Object.prototype;",
                   "",
@@ -271,6 +272,9 @@ abstract class IntegrationTestCase extends TestCase {
                   "function IThenable() {}",
                   "",
                   "IThenable.prototype.then = function(callback) {};",
+                  "",
+                  "/** @constructor */",
+                  "var HTMLElement = function() {};",
                   "")));
 
   protected List<SourceFile> externs = DEFAULT_EXTERNS;
