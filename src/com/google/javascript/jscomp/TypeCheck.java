@@ -616,6 +616,8 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         break;
 
       case YIELD:
+        visitYield(t, n);
+        typeable = false;
         break;
 
       case DEC:
@@ -1910,6 +1912,11 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         compiler.report(t.makeError(n, INTERFACE_EXTENDS_LOOP,
             loopPath.get(0).getDisplayName(), strPath));
       }
+    } else if (n.isGeneratorFunction()) {
+      // A generator function must return a Generator or supertype of Generator
+      JSType returnType = functionType.getReturnType();
+      validator.expectGeneratorSupertype(
+          t, n, returnType, "A generator function must return a (supertype of) Generator");
     }
   }
 
@@ -2072,10 +2079,18 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
    * @param n The node being visited.
    */
   private void visitReturn(NodeTraversal t, Node n) {
-    JSType jsType = getJSType(t.getEnclosingFunction());
+    Node enclosingFunction = t.getEnclosingFunction();
+    JSType jsType = getJSType(enclosingFunction);
 
     if (jsType.isFunctionType()) {
       FunctionType functionType = jsType.toMaybeFunctionType();
+      if (enclosingFunction.isGeneratorFunction()) {
+        // Allow "return;" in a generator function, even if it's not the declared return type.
+        // e.g. Don't warn for a generator function with JSDoc "@return {!Generator<number>}" and
+        // a "return;" in the fn body, even though "undefined" does not match "number".
+        // TODO(b/73966409): Typecheck "return [expr]" in generator fns, just not "return;"
+        return;
+      }
 
       JSType returnType = functionType.getReturnType();
 
@@ -2099,6 +2114,64 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       validator.expectCanAssignTo(t, valueNode, actualReturnType, returnType,
           "inconsistent return type");
     }
+  }
+
+  /** Visits a YIELD node. */
+  private void visitYield(NodeTraversal t, Node n) {
+    JSType jsType = getJSType(t.getEnclosingFunction());
+
+    JSType declaredYieldType = getNativeType(UNKNOWN_TYPE);
+    if (jsType.isFunctionType()) {
+      FunctionType functionType = jsType.toMaybeFunctionType();
+      ObjectType dereferencedReturnType = functionType.getReturnType().dereference();
+      if (dereferencedReturnType != null) {
+        TemplateTypeMap templateTypeMap = dereferencedReturnType.getTemplateTypeMap();
+        if (templateTypeMap.hasTemplateKey(typeRegistry.getIterableTemplate())) {
+          // Generator JSDoc says
+          // @return {!Iterable<SomeElementType>}
+          // or
+          // @return {!Generator<SomeElementType>}
+          declaredYieldType =
+              templateTypeMap.getResolvedTemplateType(typeRegistry.getIterableTemplate());
+        } else if (templateTypeMap.hasTemplateKey(typeRegistry.getIteratorTemplate())) {
+          // Generator JSDoc says
+          // @return {!Iterator<SomeElementType>}
+          declaredYieldType =
+              templateTypeMap.getResolvedTemplateType(typeRegistry.getIteratorTemplate());
+        }
+      }
+    }
+
+    // fetching the yielded value's type
+    Node valueNode = n.getFirstChild();
+    JSType actualYieldType;
+    if (valueNode == null) {
+      actualYieldType = getNativeType(VOID_TYPE);
+      valueNode = n;
+    } else {
+      actualYieldType = getJSType(valueNode);
+    }
+
+    if (n.isYieldAll()) {
+      if (!validator.expectIterable(
+          t, n, actualYieldType, "Expression yield* expects an iterable")) {
+        // don't do any further typechecking of the yield* type.
+        return;
+      }
+      actualYieldType =
+          actualYieldType
+              .dereference()
+              .getTemplateTypeMap()
+              .getResolvedTemplateType(typeRegistry.getIterableTemplate());
+    }
+
+    // verifying
+    validator.expectCanAssignTo(
+        t,
+        valueNode,
+        actualYieldType,
+        declaredYieldType,
+        "Yielded type does not match declared return type.");
   }
 
   /**

@@ -22,6 +22,7 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Strings.nullToEmpty;
 import static com.google.javascript.rhino.jstype.JSTypeNative.ARRAY_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.BOOLEAN_TYPE;
+import static com.google.javascript.rhino.jstype.JSTypeNative.GENERATOR_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.ITERABLE_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NO_OBJECT_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NULL_TYPE;
@@ -269,10 +270,23 @@ class TypeValidator implements Serializable {
     }
   }
 
-  /** Expect the type to be an Iterable. */
-  void expectIterable(NodeTraversal t, Node n, JSType type, String msg) {
+  /**
+   * Expect the type to be an Iterable.
+   *
+   * @return True if there was no warning, false if there was a mismatch.
+   */
+  boolean expectIterable(NodeTraversal t, Node n, JSType type, String msg) {
     if (!type.isSubtypeOf(getNativeType(ITERABLE_TYPE))) {
       mismatch(t, n, msg, type, ITERABLE_TYPE);
+      return false;
+    }
+    return true;
+  }
+
+  /** Expect the type to be a Generator or supertype of Generator. */
+  void expectGeneratorSupertype(NodeTraversal t, Node n, JSType type, String msg) {
+    if (!getNativeType(GENERATOR_TYPE).isSubtypeOf(type)) {
+      mismatch(t, n, msg, type, GENERATOR_TYPE);
     }
   }
 

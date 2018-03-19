@@ -263,6 +263,11 @@ public class JSTypeRegistry implements TypeIRegistry {
     return checkNotNull(iterableTemplate);
   }
 
+  /** @return The template variable for the Iterator interface. */
+  public TemplateType getIteratorTemplate() {
+    return checkNotNull(iteratorTemplate);
+  }
+
   /** @return return an immutable list of template types of the given builtin. */
   public ImmutableList<TemplateType> maybeGetTemplateTypesOfBuiltin(String fnName) {
     JSType type = getType(null, fnName);

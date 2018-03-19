@@ -196,6 +196,145 @@ public final class TypeCheckNoTranspileTest extends CompilerTypeTestCase {
         /* isError = */ true);
   }
 
+  public void testGenerator1() {
+    testTypes("/** @return {!Generator<?>} */ function* gen() {}");
+  }
+
+  public void testGenerator2() {
+    testTypes("/** @return {!Generator<number>} */ function* gen() { yield 1; }");
+  }
+
+  public void testGenerator3() {
+    testTypes(
+        "/** @return {!Generator<string>} */ function* gen() {  yield 1; }",
+        lines(
+            "Yielded type does not match declared return type.",
+            "found   : number",
+            "required: string"));
+  }
+
+  public void testGenerator4() {
+    testTypes(
+        lines(
+            "/** @return {!Generator} */", // treat Generator as Generator<?>
+            "function* gen() {",
+            "  yield 1;",
+            "}"));
+  }
+
+  public void testGenerator5() {
+    // Test more complex type inference inside the yield expression
+    testTypes(
+        lines(
+            "/** @return {!Generator<{a: number, b: string}>} */",
+            "function *gen() {",
+            "  yield {a: 3, b: '4'};",
+            "}",
+            "var g = gen();"));
+  }
+
+  public void testGenerator6() {
+    testTypes(
+        lines(
+            "/** @return {!Generator<string>} */",
+            "function* gen() {",
+            "}",
+            "var g = gen();",
+            "var /** number */ n = g.next().value;"),
+        lines(
+            "initializing variable", // test that g.next().value typechecks properly
+            "found   : string",
+            "required: number"));
+  }
+
+  public void testGenerator_nextWithParameter() {
+    // Note: we infer "var x = yield 1" to have a unknown type. Thus we don't warn "yield x + 2"
+    // actually yielding a string, or "k" not being number type.
+    testTypes(
+        lines(
+            "/** @return {!Generator<number>} */",
+            "function* gen() {",
+            "  var x = yield 1;",
+            "  yield x + 2;",
+            "}",
+            "var g = gen();",
+            "var /** number */ n = g.next().value;", // 1
+            "var /** number */ k = g.next('').value;")); // '2'
+  }
+
+  public void testGenerator_yieldUndefined1() {
+    testTypes(
+        lines(
+            "/** @return {!Generator<undefined>} */",
+            "function* gen() {",
+            "  yield undefined;",
+            "  yield;", // yield undefined
+            "}"));
+  }
+
+  public void testGenerator_yieldUndefined2() {
+    testTypes(
+        lines(
+            "/** @return {!Generator<number>} */",
+            "function* gen() {",
+            "  yield;", // yield undefined
+            "}"),
+        lines(
+            "Yielded type does not match declared return type.",
+            "found   : undefined",
+            "required: number"));
+  }
+
+  public void testGenerator_returnsIterable1() {
+    testTypes("/** @return {!Iterable<?>} */ function *gen() {}");
+  }
+
+  public void testGenerator_returnsIterable2() {
+    testTypes(
+        "/** @return {!Iterable<string>} */ function* gen() {  yield 1; }",
+        lines(
+            "Yielded type does not match declared return type.",
+            "found   : number",
+            "required: string"));
+  }
+
+  public void testGenerator_returnsIterator1() {
+    testTypes("/** @return {!Iterator<?>} */ function *gen() {}");
+  }
+
+  public void testGenerator_returnsIterator2() {
+    testTypes(
+        "/** @return {!Iterator<string>} */ function* gen() {  yield 1; }",
+        lines(
+            "Yielded type does not match declared return type.",
+            "found   : number",
+            "required: string"));
+  }
+
+  public void testGenerator_returnsIteratorIterable() {
+    testTypes("/** @return {!IteratorIterable<?>} */ function *gen() {}");
+  }
+
+  public void testGenerator_cantReturnArray() {
+    testTypes(
+        "/** @return {!Array<?>} */ function *gen() {}",
+        lines(
+            "A generator function must return a (supertype of) Generator",
+            "found   : Array<?>",
+            "required: Generator"));
+  }
+
+  public void testGenerator_notAConstructor() {
+    testTypes(
+        lines(
+            "/** @return {!Generator<number>} */",
+            "function* gen() {",
+            "  yield 1;",
+            "}",
+            "var g = new gen;"),
+        "cannot instantiate non-constructor");
+  }
+
   public void testGenerator_noDeclaredReturnType1() {
     testTypes("function *gen() {} var /** !Generator<?> */ g = gen();");
   }
@@ -213,6 +352,72 @@ public final class TypeCheckNoTranspileTest extends CompilerTypeTestCase {
             "  yield 2;",
             "}",
             "var /** string */ g = gen().next().value;"));
+  }
+
+  public void testGenerator_return1() {
+    testTypes("/** @return {!Generator<number>} */ function *gen() { return 1; }");
+  }
+
+  public void testGenerator_return2() {
+    // TODO(b/73966409): Emit a type mismatch warning here.
+    testTypes("/** @return {!Generator<string>} */ function *gen() {  return 1; }");
+  }
+
+  public void testGenerator_return3() {
+    // Allow this although returning "undefined" is inconsistent with !Generator<number>.
+    // Probably the user is not intending to use the return value.
+    testTypes("/** @return {!Generator<number>} */ function *gen() {  return; }");
+  }
+
+  // test yield*
+  public void testGenerator_yieldAll1() {
+    testTypes(
+        lines(
+            "/** @return {!Generator<number>} */",
+            "function *gen() {",
+            "  yield* [1, 2, 3];",
+            "}"));
+  }
+
+  public void testGenerator_yieldAll2() {
+    testTypes(
+        "/** @return {!Generator<number>} */ function *gen() { yield* 1; }",
+        lines(
+            "Expression yield* expects an iterable",
+            "found   : number",
+            "required: Iterable"));
+  }
+
+  public void testGenerator_yieldAll3() {
+    testTypes(
+        lines(
+            "/** @return {!Generator<number>} */",
+            "function *gen1() {",
+            "  yield 1;",
+            "}",
+            "",
+            "/** @return {!Generator<number>} */",
+            "function *gen2() {",
+            "  yield* gen1();",
+            "}"));
+  }
+
+  public void testGenerator_yieldAll4() {
+    testTypes(
+        lines(
+            "/** @return {!Generator<string>} */",
+            "function *gen1() {",
+            "  yield 'a';",
+            "}",
+            "",
+            "/** @return {!Generator<number>} */",
+            "function *gen2() {",
+            "  yield* gen1();",
+            "}"),
+        lines(
+            "Yielded type does not match declared return type.",
+            "found   : string",
+            "required: number"));
   }
 
   private void testTypes(String js) {
@@ -458,3 +663,4 @@ public final class TypeCheckNoTranspileTest extends CompilerTypeTestCase {
     }
   }
 }
+
