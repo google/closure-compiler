@@ -280,6 +280,13 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
 
   }
 
+  public void testGlobalThis() {
+    testSame("/** @const */ this.globalNamespace = {};");
+    test(
+        "/** @const */ this.globalNamespace = this.globalNamespace || {};",
+        "/** @const */ this.globalNamespace = {};");
+  }
+
   public void testGoogAddSingletonGetter() {
     testSame("class Foo {}  goog.addSingletonGetter(Foo);");
   }

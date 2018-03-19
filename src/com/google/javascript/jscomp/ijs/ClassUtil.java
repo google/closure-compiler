@@ -16,11 +16,13 @@
 package com.google.javascript.jscomp.ijs;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.javascript.jscomp.NodeUtil;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
+import javax.annotation.Nullable;
 
 /**
  * Static utility methods for dealing with classes.  The primary benefit is for papering over
@@ -30,15 +32,28 @@ final class ClassUtil {
   private ClassUtil() {}
 
   static boolean isThisProp(Node getprop) {
-    return getprop.isGetProp() && getprop.getFirstChild().isThis();
+    return getClassNameOfThisProp(getprop) != null;
   }
 
   static String getPrototypeNameOfThisProp(Node getprop) {
-    checkArgument(isThisProp(getprop));
-    Node function = NodeUtil.getEnclosingFunction(getprop);
-    String className = getClassName(function);
-    checkState(className != null && !className.isEmpty());
+    String className = checkNotNull(getClassNameOfThisProp(getprop));
     return className + ".prototype." + getprop.getLastChild().getString();
+  }
+
+  @Nullable
+  private static String getClassNameOfThisProp(Node getprop) {
+    if (!getprop.isGetProp() || !getprop.getFirstChild().isThis()) {
+      return null;
+    }
+    Node function = NodeUtil.getEnclosingFunction(getprop);
+    if (function == null) {
+      return null;
+    }
+    String className = getClassName(function);
+    if (className == null || className.isEmpty()) {
+      return null;
+    }
+    return className;
   }
 
   static String getFullyQualifiedNameOfMethod(Node function) {
