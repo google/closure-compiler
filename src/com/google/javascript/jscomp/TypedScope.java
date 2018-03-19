@@ -141,6 +141,11 @@ public class TypedScope extends AbstractScope<TypedScope, TypedVar>
 
   @Override
   TypedVar makeImplicitVar(ImplicitVar var) {
+    if (this.isGlobal()) {
+      // TODO(sdh): This is incorrect for 'global this', but since that's currently not handled
+      // by this code, it's okay to bail out now until we find the root cause.  See b/74980936.
+      return null;
+    }
     return new TypedVar(false, var.name, null, getImplicitVarType(var), this, -1, null);
   }
 

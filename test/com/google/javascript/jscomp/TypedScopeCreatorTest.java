@@ -2091,6 +2091,29 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     assertEquals("Generator<?>", findNameType("g", globalScope).toString());
   }
 
+  // Just check that this doesn't cause a StackOverflowError.
+  public void testArgumentsStackOverflow() {
+    String js = lines(
+        "/**",
+        " * @fileoverview",
+        " * @suppress {es5Strict}",
+        " */",
+        "",
+        "function getStackTrace() {",
+        "  try {",
+        "    throw new Error();",
+        "  } catch (e) {",
+        "    return 0;",
+        "  }",
+        "",
+        "  if (typeof (arguments.caller) != 'undefined') {}",
+        "",
+        "  return '';",
+        "}",
+        "");
+    testSame(js);
+  }
+
   public void testMemoization() throws Exception {
     Node root1 = createEmptyRoot();
     Node root2 = createEmptyRoot();
