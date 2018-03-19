@@ -171,10 +171,12 @@ Arguments.prototype.caller;
 Arguments.prototype.length;
 
 /**
- * Not actually a global variable, but we need it in order for the current type
- * checker to typecheck the "arguments" variable in a function correctly.
- * TODO(tbreisacher): When the old type checker is gone, delete this and add
- * an 'arguments' variable of type Array<string> in the d8 externs.
+ * Not actually a global variable, when running in a browser environment. But
+ * we need it in order for the type checker to typecheck the "arguments"
+ * variable in a function correctly.
+ *
+ * TODO(tbreisacher): There should be a separate 'arguments' variable of type
+ * `Array<string>`, in the d8 externs.
  *
  * @type {!Arguments}
  * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Functions_and_function_scope/arguments
