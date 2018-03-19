@@ -92,14 +92,8 @@ $jscomp.polyfill('Promise',
 
   // NOTE: We want to make sure AsyncExecutor will work as expected even if
   // testing code should override setTimeout()
-  /** @const {function(!Function, number):number} */
+  /** @const {function(!Function, number)} */
   var nativeSetTimeout = $jscomp.global['setTimeout'];
-  /** @const {void|function(!Function):number} */
-  var nativeSetImmediate = $jscomp.global['setImmediate'];
-  /** @const {function(number):void} */
-  var nativeClearTimeout = $jscomp.global['clearTimeout'];
-  /** @const {void|function(number):void} */
-  var nativeClearImmediate = $jscomp.global['clearImmediate'];
 
   /**
    * Schedule a function to execute asynchronously as soon as possible.
@@ -108,28 +102,9 @@ $jscomp.polyfill('Promise',
    * @package
    * @param {!Function} f
    */
-  AsyncExecutor.prototype.asyncExecuteFunction =
-      nativeSetImmediate && nativeClearImmediate ? function(f) {
-        // IE 10/11 is the most popular browser among browsers without native
-        // Promise support (as of March 2018). An effective setTimeout delay
-        // varies between 4ms and 30ms in IE, and setImmediate is a proposed
-        // alternative but it has some flaws:
-        // https://codeforhire.com/2013/09/21/setimmediate-and-messagechannel-broken-on-internet-explorer-10/
-        // The solution is to use setImmediate and fallback to setTimeout when
-        // the former doesn't work.
-        var immediateId = /** @type {function(!Function):number} */ (
-            nativeSetImmediate)(function() {
-          nativeClearTimeout(timeoutId);
-          f();
-        });
-        var timeoutId = nativeSetTimeout(function() {
-          /** @type {function(number):void} */ (nativeClearImmediate)(
-              immediateId);
-          f();
-        }, /* timeout= */ 0);
-      } : function(f) {
-        nativeSetTimeout(f, 0);
-      };
+  AsyncExecutor.prototype.asyncExecuteFunction = function(f) {
+    nativeSetTimeout(f, 0);
+  };
 
   /**
    * Execute scheduled jobs in a batch until all are executed or the batch
