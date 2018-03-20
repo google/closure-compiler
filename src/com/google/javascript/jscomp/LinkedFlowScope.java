@@ -113,25 +113,33 @@ class LinkedFlowScope implements FlowScope {
   public void inferQualifiedSlot(Node node, String symbol, JSType bottomType,
       JSType inferredType, boolean declared) {
     TypedScope functionScope = getFunctionScope();
-    if (functionScope.isLocal()) {
-      TypedVar v  = functionScope.getVar(symbol);
-      if (v == null && !functionScope.isBottom()) {
-        v = functionScope.declare(symbol, node, bottomType, null, !declared);
-      }
+    if (functionScope.isGlobal()) {
+      return;
+    }
 
-      if (v != null && !v.isTypeInferred()) {
-        JSType declaredType = v.getType();
+    TypedVar v  = functionScope.getVar(symbol);
+    if (v == null && !functionScope.isBottom()) {
+      v = functionScope.declare(symbol, node, bottomType, null, !declared);
+    }
+
+    JSType declaredType = v != null ? v.getType() : null;
+    if (v != null) {
+      if (!v.isTypeInferred()) {
         // Use the inferred type over the declared type only if the
         // inferred type is a strict subtype of the declared type.
-        if (declaredType != null && inferredType.isSubtypeOf(declaredType)
-            && !declaredType.isSubtypeOf(inferredType)
-            && !inferredType.isEquivalentTo(declaredType)) {
-          inferSlotType(symbol, inferredType);
+        if (declaredType == null
+            || !inferredType.isSubtypeOf(declaredType)
+            || declaredType.isSubtypeOf(inferredType)
+            || inferredType.isEquivalentTo(declaredType)) {
+          return;
         }
-      } else {
-        inferSlotType(symbol, inferredType);
+      } else if (declaredType != null && !inferredType.isSubtypeOf(declaredType)) {
+        // If this inferred type is incompatible with another type previously
+        // inferred and stored on the scope, then update the scope.
+        v.setType(v.getType().getLeastSupertype(inferredType));
       }
     }
+    inferSlotType(symbol, inferredType);
   }
 
   @Override

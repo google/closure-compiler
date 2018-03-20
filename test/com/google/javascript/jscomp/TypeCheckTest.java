@@ -19274,6 +19274,27 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         "Bad type annotation. Unknown type MyElementWithToggle");
   }
 
+  public void testReassignedSymbolAccessedInClosureIsFlowInsensitive() {
+    // This code is technically correct, but the compiler will probably never be able to prove it.
+    testTypes(
+        lines(
+            "function f(){",
+            "  for (var x = {}; ; x = {y: x.y}) {",
+            "    x.y = 'str';",
+            "    x.y = x.y.length",
+            "    var g = (function(x) {",
+            "      return function() {",
+            "        if (x.y) -x.y;",
+            "      };",
+            "    })(x);",
+            "  }",
+            "}"),
+        lines(
+            "sign operator",
+            "found   : (number|string)",
+            "required: number"));
+  }
+
   private void testTypes(String js) {
     testTypes(js, (String) null);
   }
