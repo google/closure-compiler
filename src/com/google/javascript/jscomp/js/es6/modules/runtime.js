@@ -238,18 +238,21 @@ function createRequire(opt_module) {
    */
   function requireEnsure(requires, callback) {
     if (currentModulePath) {
-      requires = requires.map(function(require) {
-        return maybeNormalizePath(currentModulePath, require);
-      });
+      for (var i = 0; i < requires.length; i++) {
+        requires[i] = maybeNormalizePath(currentModulePath, requires[i]);
+      }
     }
 
-    requires = requires.filter(function(require) {
-      var required = moduleCache.get(require);
-      return !required || required.blockingDeps.size;
-    });
+    var blockingRequires = [];
+    for (var i = 0; i < requires.length; i++) {
+      var required = moduleCache.get(requires[i]);
+      if (!required || required.blockingDeps.size) {
+        blockingRequires.push(requires[i]);
+      }
+    }
 
-    if (requires.length) {
-      var requireSet = new Set(requires);
+    if (blockingRequires.length) {
+      var requireSet = new Set(blockingRequires);
       var callbackEntry = new CallbackEntry(requireSet, callback);
       requireSet.forEach(function(require) {
         var arr = ensureMap.get(require);
@@ -322,16 +325,16 @@ $jscomp.registerModule = function(moduleDef, absModulePath, opt_shallowDeps) {
   }
 
   var shallowDeps = opt_shallowDeps || [];
-  shallowDeps = shallowDeps.map(function(dep) {
-    return maybeNormalizePath(absModulePath, dep);
-  });
+  for (var i = 0; i < shallowDeps.length; i++) {
+    shallowDeps[i] = maybeNormalizePath(absModulePath, shallowDeps[i]);
+  }
 
   var /** !Set<string> */ blockingDeps = new Set();
-  shallowDeps.forEach(function(dep) {
-    getTransitiveBlockingDepsOf(dep).forEach(function(transitive) {
+  for (var i = 0; i < shallowDeps.length; i++) {
+    getTransitiveBlockingDepsOf(shallowDeps[i]).forEach(function(transitive) {
       blockingDeps.add(transitive);
     });
-  });
+  }
 
   // Make sure this module isn't blocking itself in the event of a cycle.
   blockingDeps.delete(absModulePath);
