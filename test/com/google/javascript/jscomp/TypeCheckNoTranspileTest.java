@@ -359,8 +359,11 @@ public final class TypeCheckNoTranspileTest extends CompilerTypeTestCase {
   }
 
   public void testGenerator_return2() {
-    // TODO(b/73966409): Emit a type mismatch warning here.
-    testTypes("/** @return {!Generator<string>} */ function *gen() {  return 1; }");
+    testTypes("/** @return {!Generator<string>} */ function *gen() {  return 1; }",
+        lines(
+            "inconsistent return type",
+            "found   : number",
+            "required: string"));
   }
 
   public void testGenerator_return3() {
