@@ -33,7 +33,8 @@ import java.util.concurrent.TimeoutException;
 class CompilerExecutor {
   // We use many recursive algorithms that use O(d) memory in the depth
   // of the tree.
-  static final long COMPILER_STACK_SIZE = (1 << 25); // About 32MB
+  // Also, (de)serialization between phases can involve a lot of recursion.
+  static final long COMPILER_STACK_SIZE = (1 << 26); // About 64MB
 
   /**
    * Use a dedicated compiler thread per Compiler instance.
