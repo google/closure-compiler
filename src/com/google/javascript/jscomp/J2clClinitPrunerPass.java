@@ -174,12 +174,14 @@ public class J2clClinitPrunerPass implements CompilerPass {
 
     @Override
     public boolean shouldTraverse(NodeTraversal t, Node node, Node parent) {
-      if (NodeUtil.isFunctionDeclaration(node)) {
-        // Unlike function expressions, we don't know when the function in a function declaration
-        // will be executed so lets avoid inheriting anything from the current branch.
+      if (NodeUtil.isFunctionDeclaration(node) || node.isScript()) {
+        // In the case of function declarations, unlike function expressions, we don't know when the
+        // function will be executed so assume there are no clinits already executed.
+        // In the case of script roots, when using modules, we can not assume the scripts are going
+        // to be executed in program order.
         stateStack.addLast(clinitsCalledAtBranch);
         clinitsCalledAtBranch = new HierarchicalSet<>(null);
-      }
+      } 
 
       if (isNewControlBranch(parent)) {
         clinitsCalledAtBranch = new HierarchicalSet<>(clinitsCalledAtBranch);
@@ -200,9 +202,11 @@ public class J2clClinitPrunerPass implements CompilerPass {
         clinitsCalledAtBranch = clinitsCalledAtBranch.parent;
       }
 
-      if (parent != null && NodeUtil.isFunctionDeclaration(node)) {
-        // Unlike function expressions, we don't know when the function in a function declaration
-        // will be executed so lets avoid inheriting anything from the current branch.
+      if (NodeUtil.isFunctionDeclaration(node) || node.isScript()) {
+        // In the case of function declarations, unlike function expressions, we don't know when the
+        // function will be executed so assume there are no clinits already executed.
+        // In the case of script roots, when using modules, we can not assume the scripts are going
+        // to be executed in program order.
         clinitsCalledAtBranch = stateStack.removeLast();
       }
     }

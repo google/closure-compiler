@@ -15,6 +15,7 @@
  */
 package com.google.javascript.jscomp;
 
+import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 
 public class J2clClinitPrunerPassTest extends CompilerTestCase {
@@ -186,6 +187,19 @@ public class J2clClinitPrunerPassTest extends CompilerTestCase {
             "  var b = function() { someClass.$clinit(); }",
             "  someClass.$clinit();",
             "};"));
+  }
+
+  public void testRemoveDuplicates_avoidRemovalAcrossScriptRoots() {
+    testSame(
+        new FlatSources(
+            ImmutableList.of(
+                SourceFile.fromCode(
+                    "file1",
+                    lines(
+                        "var someClass = {};",
+                        "someClass.$clinit = function() {}",
+                        "someClass.$clinit();")),
+                SourceFile.fromCode("file2", lines("someClass.$clinit();")))));
   }
 
   public void testRedundantClinit_returnCtor() {
