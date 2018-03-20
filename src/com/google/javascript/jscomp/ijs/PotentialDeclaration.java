@@ -66,6 +66,13 @@ abstract class PotentialDeclaration {
     return new MethodDeclaration(name, functionNode);
   }
 
+  static PotentialDeclaration fromStringKey(Node stringKeyNode) {
+    checkArgument(stringKeyNode.isStringKey());
+    checkArgument(stringKeyNode.getParent().isObjectLit());
+    String name = "this." + stringKeyNode.getString();
+    return new StringKeyDeclaration(name, stringKeyNode);
+  }
+
   static PotentialDeclaration fromDefine(Node callNode) {
     checkArgument(NodeUtil.isCallTo(callNode, "goog.define"));
     return new DefineDeclaration(callNode);
@@ -129,43 +136,17 @@ abstract class PotentialDeclaration {
    *   and goog.module exports
    * This is the most common type of potential declaration.
    */
-  static class NameDeclaration extends PotentialDeclaration {
+  private static class NameDeclaration extends PotentialDeclaration {
 
     NameDeclaration(String fullyQualifiedName, Node lhs, Node rhs) {
       super(fullyQualifiedName, lhs, rhs);
     }
 
     private void simplifyNamespace(AbstractCompiler compiler) {
-      Node objLit = getRhs();
       if (getRhs().isOr()) {
-        objLit = getRhs().getLastChild().detach();
+        Node objLit = getRhs().getLastChild().detach();
         getRhs().replaceWith(objLit);
         compiler.reportChangeToEnclosingScope(getLhs());
-      }
-      if (objLit.hasChildren()) {
-        for (Node key : objLit.children()) {
-          switch (key.getToken()) {
-            case STRING_KEY:
-              if (!isTypedRhs(key.getLastChild())) {
-                ConvertToTypedInterface
-                    .maybeWarnForConstWithoutExplicitType(compiler, key.getJSDocInfo(), key);
-                removeStringKeyValue(key);
-                maybeUpdateJsdoc(key);
-                compiler.reportChangeToEnclosingScope(key);
-              }
-              break;
-            case GETTER_DEF:
-            case MEMBER_FUNCTION_DEF:
-            case SETTER_DEF:
-              // Nothing to simplify here...
-              break;
-            case COMPUTED_PROP:
-              NodeUtil.deleteNode(key, compiler);
-              break;
-            default:
-              throw new IllegalStateException("Unexpected object literal body: " + key);
-          }
-        }
       }
     }
 
@@ -229,22 +210,6 @@ abstract class PotentialDeclaration {
       rhs.replaceWith(IR.cast(IR.number(0), JsdocUtil.getQmarkTypeJSDoc()).srcrefTree(rhs));
     }
 
-    private static void removeStringKeyValue(Node stringKey) {
-      Node value = stringKey.getOnlyChild();
-      Node replacementValue = IR.number(0).srcrefTree(value);
-      stringKey.replaceChild(value, replacementValue);
-    }
-
-    private static void maybeUpdateJsdoc(Node jsdocNode) {
-      checkArgument(jsdocNode.isStringKey(), jsdocNode);
-      JSDocInfo jsdoc = jsdocNode.getJSDocInfo();
-      if (jsdoc == null
-          || !jsdoc.containsDeclaration()
-          || isConstToBeInferred(jsdoc, jsdocNode)) {
-        jsdocNode.setJSDocInfo(JsdocUtil.getUnusableTypeJSDoc(jsdoc));
-      }
-    }
-
     @Override
     boolean shouldPreserve() {
       Node rhs = getRhs();
@@ -265,7 +230,7 @@ abstract class PotentialDeclaration {
   /**
    * A declaration of a property on `this` inside a constructor.
    */
-  static class ThisPropDeclaration extends PotentialDeclaration {
+  private static class ThisPropDeclaration extends PotentialDeclaration {
     private final Node insertionPoint;
 
     ThisPropDeclaration(String fullyQualifiedName, Node lhs, Node rhs) {
@@ -323,6 +288,54 @@ abstract class PotentialDeclaration {
     }
   }
 
+  private static class StringKeyDeclaration extends PotentialDeclaration {
+    StringKeyDeclaration(String name, Node stringKeyNode) {
+      super(name, stringKeyNode, stringKeyNode.getLastChild());
+    }
+
+    @Override
+    void simplify(AbstractCompiler compiler) {
+      if (shouldPreserve()) {
+        return;
+      }
+      if (!isTypedRhs(getRhs())) {
+        Node key = getLhs();
+        removeStringKeyValue(key);
+        JSDocInfo jsdoc = getJsDoc();
+        if (jsdoc == null
+            || !jsdoc.containsDeclaration()
+            || isConstToBeInferred()) {
+          key.setJSDocInfo(JsdocUtil.getUnusableTypeJSDoc(jsdoc));
+        }
+        compiler.reportChangeToEnclosingScope(key);
+      }
+    }
+
+    @Override
+    boolean shouldPreserve() {
+      return super.isDetached() || super.shouldPreserve() || !isInNamespace();
+    }
+
+    private boolean isInNamespace() {
+      Node stringKey = getLhs();
+      Node objLit = stringKey.getParent();
+      Node lvalue = NodeUtil.getBestLValue(objLit);
+      if (lvalue == null) {
+        return false;
+      }
+      JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(lvalue);
+      return !isExportLhs(lvalue)
+          && !JsdocUtil.hasAnnotatedType(jsdoc)
+          && NodeUtil.isNamespaceDecl(lvalue);
+    }
+
+    @Override
+    Node getRemovableNode() {
+      return getLhs();
+    }
+
+  }
+
   boolean isDefiniteDeclaration() {
     Node parent = getLhs().getParent();
     switch (parent.getToken()) {
@@ -344,11 +357,11 @@ abstract class PotentialDeclaration {
   }
 
   boolean isConstToBeInferred() {
-    return isConstToBeInferred(getJsDoc(), getLhs());
+    return isConstToBeInferred(getLhs());
   }
 
-  static boolean isConstToBeInferred(
-      JSDocInfo jsdoc, Node nameNode) {
+  static boolean isConstToBeInferred(Node nameNode) {
+    JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(nameNode);
     boolean isConst =
         nameNode.getParent().isConst()
             || isExportLhs(nameNode)
@@ -379,4 +392,11 @@ abstract class PotentialDeclaration {
     return callee.matchesQualifiedName("goog.require")
         || callee.matchesQualifiedName("goog.forwardDeclare");
   }
+
+  private static void removeStringKeyValue(Node stringKey) {
+    Node value = stringKey.getOnlyChild();
+    Node replacementValue = IR.number(0).srcrefTree(value);
+    stringKey.replaceChild(value, replacementValue);
+  }
+
 }

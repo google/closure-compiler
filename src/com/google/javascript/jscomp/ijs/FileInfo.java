@@ -40,6 +40,10 @@ final class FileInfo {
     recordDeclaration(PotentialDeclaration.fromMethod(functionNode));
   }
 
+  void recordStringKeyDeclaration(Node stringKeyNode) {
+    recordDeclaration(PotentialDeclaration.fromStringKey(stringKeyNode));
+  }
+
   void recordDefine(Node callNode) {
     recordDeclaration(PotentialDeclaration.fromDefine(callNode));
   }

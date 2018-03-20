@@ -85,11 +85,12 @@ public class ConvertToTypedInterface implements CompilerPass {
     this.compiler = compiler;
   }
 
-  static void maybeWarnForConstWithoutExplicitType(
-      AbstractCompiler compiler, JSDocInfo jsdoc, Node nameNode) {
-    if (PotentialDeclaration.isConstToBeInferred(jsdoc, nameNode)
-        && !nameNode.isFromExterns()
-        && !JsdocUtil.isPrivate(jsdoc)) {
+  private static void maybeWarnForConstWithoutExplicitType(
+      AbstractCompiler compiler, PotentialDeclaration decl) {
+    if (decl.isConstToBeInferred()
+        && !decl.getLhs().isFromExterns()
+        && !JsdocUtil.isPrivate(decl.getJsDoc())) {
+      Node nameNode = decl.getLhs();
       if (nameNode.getJSType() == null) {
         compiler.report(JSError.make(nameNode, CONSTANT_WITHOUT_EXPLICIT_TYPE));
       } else {
@@ -181,6 +182,9 @@ public class ConvertToTypedInterface implements CompilerPass {
               NodeUtil.deleteNode(n, t.getCompiler());
               return false;
           }
+        case COMPUTED_PROP:
+          NodeUtil.deleteNode(n, t.getCompiler());
+          return false;
         case THROW:
         case RETURN:
         case BREAK:
@@ -479,7 +483,8 @@ public class ConvertToTypedInterface implements CompilerPass {
         return true;
       }
       // This looks like an update rather than a declaration in this file.
-      return !decl.isDefiniteDeclaration()
+      return !name.startsWith("this.")
+          && !decl.isDefiniteDeclaration()
           && !currentFile.isPrefixProvided(name)
           && !currentFile.isStrictPrefixDeclared(name);
     }
@@ -493,7 +498,7 @@ public class ConvertToTypedInterface implements CompilerPass {
           || (jsdoc != null && jsdoc.containsDeclaration() && !decl.isConstToBeInferred())) {
         return;
       }
-      maybeWarnForConstWithoutExplicitType(compiler, jsdoc, nameNode);
+      maybeWarnForConstWithoutExplicitType(compiler, decl);
       Node jsdocNode = NodeUtil.getBestJSDocInfoNode(nameNode);
       jsdocNode.setJSDocInfo(JsdocUtil.getUnusableTypeJSDoc(jsdoc));
     }

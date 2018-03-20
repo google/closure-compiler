@@ -20,7 +20,6 @@ import static com.google.common.base.Preconditions.checkState;
 
 import com.google.javascript.jscomp.NodeTraversal;
 import com.google.javascript.jscomp.NodeUtil;
-import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 
 /**
@@ -91,6 +90,7 @@ abstract class ProcessConstJsdocCallback extends NodeTraversal.AbstractPostOrder
       case STRING_KEY:
         if (parent.isObjectLit() && n.hasOneChild()) {
           processDeclarationWithRhs(t, n);
+          currentFile.recordStringKeyDeclaration(n);
         }
         break;
       default:
@@ -116,8 +116,7 @@ abstract class ProcessConstJsdocCallback extends NodeTraversal.AbstractPostOrder
         lhs.isQualifiedName() || lhs.isStringKey() || lhs.isDestructuringLhs(),
         lhs);
     checkState(NodeUtil.getRValueOfLValue(lhs) != null, lhs);
-    JSDocInfo originalJsdoc = NodeUtil.getBestJSDocInfo(lhs);
-    if (!PotentialDeclaration.isConstToBeInferred(originalJsdoc, lhs)) {
+    if (!PotentialDeclaration.isConstToBeInferred(lhs)) {
       return;
     }
     processConstWithRhs(t, lhs);
