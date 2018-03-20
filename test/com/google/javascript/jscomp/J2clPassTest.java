@@ -17,7 +17,6 @@ package com.google.javascript.jscomp;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-import java.util.List;
 
 /**
  * Tests for {@link J2clPass}.
@@ -30,12 +29,8 @@ public class J2clPassTest extends CompilerTestCase {
     this.enableNormalize();
   }
 
-  private void testDoesntChange(List<SourceFile> js) {
-    test(js, js);
-  }
-
   @Override
-  protected CompilerPass getProcessor(final Compiler compiler) {
+  protected CompilerPass getProcessor(Compiler compiler) {
     return new J2clPass(compiler);
   }
 
@@ -44,21 +39,6 @@ public class J2clPassTest extends CompilerTestCase {
     Compiler compiler = super.createCompiler();
     J2clSourceFileChecker.markToRunJ2clPasses(compiler);
     return compiler;
-  }
-
-  public void testUtilGetDefine() {
-    String defineAbc = "var a={}; a.b={}; /** @define {boolean} */ a.b.c = true;\n";
-    test(
-        defineAbc + "nativebootstrap.Util.$getDefine('a.b.c', 'def');",
-        defineAbc + "('def', String(a.b.c));");
-    test(
-        defineAbc + "nativebootstrap.Util.$getDefine('a.b.c');",
-        defineAbc + "(null, String(a.b.c));");
-  }
-
-  public void testUtilGetDefine_notDefined() {
-    test("nativebootstrap.Util.$getDefine('not.defined');", "null;");
-    test("nativebootstrap.Util.$getDefine('not.defined', 'def');", "'def';");
   }
 
   public void testQualifiedInlines() {
@@ -245,7 +225,7 @@ public class J2clPassTest extends CompilerTestCase {
 
   public void testUnexpectedFunctionDoesntInline() {
     // Arrays functions.
-    testDoesntChange(
+    testSame(
         Lists.newArrayList(
             SourceFile.fromCode(
                 "j2cl/transpiler/vmbootstrap/Arrays.impl.java.js",
@@ -257,7 +237,7 @@ public class J2clPassTest extends CompilerTestCase {
                     "alert(Arrays.fooBar());"))));
 
     // Casts functions.
-    testDoesntChange(
+    testSame(
         Lists.newArrayList(
             SourceFile.fromCode(
                 "j2cl/transpiler/vmbootstrap/Casts.impl.java.js",
@@ -274,7 +254,7 @@ public class J2clPassTest extends CompilerTestCase {
 
   public void testUnqualifiedDoesntInline() {
     // Arrays functions.
-    testDoesntChange(
+    testSame(
         Lists.newArrayList(
             SourceFile.fromCode(
                 "j2cl/transpiler/vmbootstrap/Arrays.impl.java.js",
@@ -291,7 +271,7 @@ public class J2clPassTest extends CompilerTestCase {
                     "alert($castTo());"))));
 
     // Casts functions.
-    testDoesntChange(
+    testSame(
         Lists.newArrayList(
             SourceFile.fromCode(
                 "j2cl/transpiler/vmbootstrap/Casts.impl.java.js",
@@ -300,7 +280,7 @@ public class J2clPassTest extends CompilerTestCase {
                     "var to = function() { return 1; }", "", "alert(to());"))));
 
     // Interface $markImplementor() functions.
-    testDoesntChange(
+    testSame(
         Lists.newArrayList(
             SourceFile.fromCode(
                 "name/doesnt/matter/Foo.impl.java.js",
@@ -316,7 +296,7 @@ public class J2clPassTest extends CompilerTestCase {
 
   public void testWrongFileNameDoesntInline() {
     // Arrays functions.
-    testDoesntChange(
+    testSame(
         Lists.newArrayList(
             SourceFile.fromCode(
                 "Arrays2.impl.java.js",
@@ -334,7 +314,7 @@ public class J2clPassTest extends CompilerTestCase {
                     "alert(Arrays.$castTo());"))));
 
     // Casts functions.
-    testDoesntChange(
+    testSame(
         Lists.newArrayList(
             SourceFile.fromCode(
                 "Casts2.impl.java.js",

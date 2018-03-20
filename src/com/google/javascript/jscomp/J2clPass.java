@@ -21,71 +21,70 @@ import com.google.javascript.jscomp.FunctionInjector.InliningMode;
 import com.google.javascript.jscomp.FunctionInjector.Reference;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
-import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-/**
- * Rewrites/inlines some J2CL constructs to be more optimizable.
- */
+/** A normalization pass to inline some J2CL calls to enable other optimizations. */
 public class J2clPass implements CompilerPass {
   private static final String ALL_CLASS_FILE_NAMES = "*";
   private final AbstractCompiler compiler;
   private final Supplier<String> safeNameIdSupplier;
 
-  private class GetDefineRewriter extends AbstractPostOrderCallback {
-    private final Set<String> defines;
-
-    GetDefineRewriter(Set<String> defines) {
-      this.defines = defines;
-    }
-
-    @Override
-    public void visit(NodeTraversal t, Node n, Node parent) {
-      if (isUtilGetDefineCall(n)) {
-        substituteUtilGetDefine(t, n);
-      }
-    }
-
-    private void substituteUtilGetDefine(NodeTraversal t, Node callNode) {
-      Node firstExpr = callNode.getSecondChild();
-      Node secondExpr = callNode.getLastChild();
-
-      if (secondExpr != firstExpr) {
-        secondExpr.detach();
-      } else {
-        // There is no secondExpr; default to null.
-        secondExpr = IR.nullNode();
-      }
-
-      Node replacement = getDefineReplacement(firstExpr, secondExpr);
-      replacement.useSourceInfoIfMissingFromForTree(callNode);
-      callNode.replaceWith(replacement);
-      t.reportCodeChange();
-    }
-
-    private Node getDefineReplacement(Node firstExpr, Node secondExpr) {
-      if (defines.contains(firstExpr.getString())) {
-        Node define = NodeUtil.newQName(compiler, firstExpr.getString());
-        Node defineStringValue = NodeUtil.newCallNode(IR.name("String"), define);
-        return IR.comma(secondExpr, defineStringValue);
-      } else {
-        return secondExpr;
-      }
-    }
-
-    private boolean isUtilGetDefineCall(Node n) {
-      return n.isCall() && isUtilGetDefineMethodName(n.getFirstChild().getQualifiedName());
-    }
-
-    private boolean isUtilGetDefineMethodName(String fnName) {
-      // TODO: Switch this to the filename + property name heuristic which is less brittle.
-      return fnName != null && fnName.endsWith(".$getDefine") && fnName.contains("Util");
-    }
+  public J2clPass(AbstractCompiler compiler) {
+    this.compiler = compiler;
+    this.safeNameIdSupplier = compiler.getUniqueNameIdSupplier();
   }
 
+  @Override
+  public void process(Node externs, Node root) {
+    if (!J2clSourceFileChecker.shouldRunJ2clPasses(compiler)) {
+      return;
+    }
+
+    /*
+     * Inlines Arrays.$create(), Arrays.$init(), Arrays.$instanceIsOfType(), Arrays.$castTo() and
+     * Casts.$to() so that all references to $isInstance() functions will be fully qualified to work
+     * with collapse properties.
+     */
+    inlineFunctionsInFile(
+        root,
+        "Arrays.impl.java.js",
+        ImmutableSet.of("$create", "$init", "$instanceIsOfType", "$castTo", "$stampType"),
+        InliningMode.DIRECT);
+    inlineFunctionsInFile(root, "Casts.impl.java.js", ImmutableSet.of("$to"), InliningMode.DIRECT);
+
+    /*
+     * Inlines all Interface.$markImplementor(FooClass) metaclass calls so that FooClass and others
+     * like it are not unnecessarily retained and so that static analysis of interface instanceof
+     * calls becomes possible.
+     *
+     * Note that this pass should NOT be restricted to j2cl .java.js files because JavaScript code
+     * implementing Java interfaces (not recommended but widely used in xplat) needs calls to
+     * $markImplementor.
+     */
+    inlineFunctionsInFile(
+        root, ALL_CLASS_FILE_NAMES, ImmutableSet.of("$markImplementor"), InliningMode.BLOCK);
+
+    /*
+     * Inlines class metadata calls so they become optimizable and avoids escaping of constructor.
+     */
+    inlineFunctionsInFile(
+        root,
+        "Util.impl.java.js",
+        ImmutableSet.of(
+            "$setClassMetadata",
+            "$setClassMetadataForInterface",
+            "$setClassMetadataForEnum",
+            "$setClassMetadataForPrimitive"),
+        InliningMode.BLOCK);
+  }
+
+  private void inlineFunctionsInFile(
+      Node root, String classFileName, Set<String> fnNamesToInline, InliningMode inliningMode) {
+    new ClassStaticFunctionsInliner(root, classFileName, fnNamesToInline, inliningMode).run();
+  }
 
   /**
    * Collects references to certain function definitions in a certain class and then inlines fully
@@ -181,68 +180,5 @@ public class J2clPass implements CompilerPass {
         t.getCompiler().reportChangeToEnclosingScope(inlinedCall);
       }
     }
-  }
-
-  public J2clPass(AbstractCompiler compiler) {
-    this.compiler = compiler;
-    this.safeNameIdSupplier = compiler.getUniqueNameIdSupplier();
-  }
-
-  @Override
-  public void process(Node externs, Node root) {
-    if (!J2clSourceFileChecker.shouldRunJ2clPasses(compiler)) {
-      return;
-    }
-
-    /*
-     * Re-writes Util.getDefine to make it work for compiled mode.
-     */
-    Set<String> defines =
-        new ProcessDefines(compiler, null, true).collectDefines(externs, root).keySet();
-    NodeTraversal.traverseEs6(compiler, root, new GetDefineRewriter(defines));
-
-    /*
-     * Inlines Arrays.$create(), Arrays.$init(), Arrays.$instanceIsOfType(), Arrays.$castTo() and
-     * Casts.$to() so that all references to Object.$isInstance() functions will be fully qualified
-     * and easy to strip.
-     */
-    inlineFunctionsInFile(
-        root,
-        "Arrays.impl.java.js",
-        ImmutableSet.of("$create", "$init", "$instanceIsOfType", "$castTo", "$stampType"),
-        InliningMode.DIRECT);
-    inlineFunctionsInFile(
-        root, "Casts.impl.java.js", ImmutableSet.of("$to"), InliningMode.DIRECT);
-
-    /*
-     * Inlines all Interface.$markImplementor(FooClass) metaclass calls so that FooClass and others
-     * like it are not unnecessarily retained and so that static analysis of interface instanceof
-     * calls becomes possible.
-     *
-     * Note that his pass should NOT be restricted to j2cl .java.js files because JavaScript code
-     * implementing Java interfaces (not recommended but widely used in xplat) needs calls to
-     * $markImplementor.
-     *
-     */
-    inlineFunctionsInFile(
-        root, ALL_CLASS_FILE_NAMES, ImmutableSet.of("$markImplementor"), InliningMode.BLOCK);
-
-    /*
-     * Inlines class metadata calls so they become optimizable and avoids escaping of constructor.
-     */
-    inlineFunctionsInFile(
-        root,
-        "Util.impl.java.js",
-        ImmutableSet.of(
-            "$setClassMetadata",
-            "$setClassMetadataForInterface",
-            "$setClassMetadataForEnum",
-            "$setClassMetadataForPrimitive"),
-        InliningMode.BLOCK);
-  }
-
-  private void inlineFunctionsInFile(
-      Node root, String classFileName, Set<String> fnNamesToInline, InliningMode inliningMode) {
-    new ClassStaticFunctionsInliner(root, classFileName, fnNamesToInline, inliningMode).run();
   }
 }

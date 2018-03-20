@@ -569,11 +569,9 @@ public final class DefaultPassConfig extends PassConfig {
       passes.add(runtimeTypeCheck);
     }
 
-    // Inlines functions that perform dynamic accesses to static properties of parameters that are
-    // typed as {Function}. This turns a dynamic access to a static property of a class definition
-    // into a fully qualified access and in so doing enables better dead code stripping.
     if (options.j2clPassMode.shouldAddJ2clPasses()) {
       passes.add(j2clPass);
+      passes.add(j2clUtilGetDefineRewriterPass);
     }
 
     passes.add(createEmptyPass(PassNames.BEFORE_STANDARD_OPTIMIZATIONS));
@@ -3384,6 +3382,20 @@ public final class DefaultPassConfig extends PassConfig {
         @Override
         protected CompilerPass create(AbstractCompiler compiler) {
           return new J2clPass(compiler);
+        }
+
+        @Override
+        protected FeatureSet featureSet() {
+          return ES8_MODULES;
+        }
+      };
+
+  /** Rewrites J2CL constructs to be more optimizable. */
+  private final PassFactory j2clUtilGetDefineRewriterPass =
+      new PassFactory("j2clUtilGetDefineRewriterPass", true) {
+        @Override
+        protected CompilerPass create(AbstractCompiler compiler) {
+          return new J2clUtilGetDefineRewriterPass(compiler);
         }
 
         @Override
