@@ -71,7 +71,7 @@ public class J2clClinitPrunerPass implements CompilerPass {
 
     // Update the function side-effect markers on the AST.
     // Removing a clinit from a function may make it side-effect free.
-    new PureFunctionIdentifier.DriverInJ2cl(compiler, null).process(externs, root);
+    new PureFunctionIdentifier.Driver(compiler, null).process(externs, root);
   }
 
   private void removeRedundantClinits(Node root, List<Node> changedScopeNodes) {
