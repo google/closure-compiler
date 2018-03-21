@@ -19295,6 +19295,21 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
             "required: number"));
   }
 
+  public void testMethodOverriddenDirectlyOnThis() {
+    testTypes(
+        lines(
+            "/** @constructor */",
+            "function Foo() {",
+            "  this.bar = function() { return 'str'; };",
+            "}",
+            "/** @return {number} */",
+            "Foo.prototype.bar = function() {};"),
+        lines(
+            "inconsistent return type",
+            "found   : string",
+            "required: number"));
+  }
+
   private void testTypes(String js) {
     testTypes(js, (String) null);
   }
