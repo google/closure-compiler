@@ -53,6 +53,12 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
   private TypedScope lastLocalScope;
 
   @Override
+  protected void setUp() throws Exception {
+    super.setUp();
+    enableTypeInfoValidation();
+  }
+
+  @Override
   protected int getNumRepetitions() {
     return 1;
   }

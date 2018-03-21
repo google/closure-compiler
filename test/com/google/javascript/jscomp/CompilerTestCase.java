@@ -178,6 +178,12 @@ public abstract class CompilerTestCase extends TestCase {
    */
   private boolean astValidationEnabled;
 
+  /**
+   * Whether we should verify that type information is present for every AST node that should have
+   * it, and not present for those that shouldn't have it.
+   */
+  private boolean typeInfoValidationEnabled;
+
   private final Set<DiagnosticType> ignoredWarnings = new HashSet<>();
 
   private final Map<String, String> webpackModulesById = new HashMap<>();
@@ -566,6 +572,7 @@ public abstract class CompilerTestCase extends TestCase {
     this.allowExternsChanges = false;
     this.allowSourcelessWarnings = false;
     this.astValidationEnabled = true;
+    this.typeInfoValidationEnabled = false;
     this.checkAccessControls = false;
     this.checkAstChangeMarking = true;
     this.checkLineNumbers = true;
@@ -920,6 +927,12 @@ public abstract class CompilerTestCase extends TestCase {
   protected final void disableAstValidation() {
     checkState(this.setUpRan, "Attempted to configure before running setUp().");
     astValidationEnabled = false;
+  }
+
+  /** Enable validating type information in the AST after each run of the pass. */
+  protected final void enableTypeInfoValidation() {
+    checkState(this.setUpRan, "Attempted to configure before running setUp().");
+    typeInfoValidationEnabled = true;
   }
 
   /**
@@ -1404,6 +1417,8 @@ public abstract class CompilerTestCase extends TestCase {
     }
 
     if (astValidationEnabled) {
+      // NOTE: We do not enable type validation here, because type information never exists
+      // immediately after parsing.
       (new AstValidator(compiler)).validateRoot(root);
     }
     Node externsRoot = root.getFirstChild();
@@ -1532,7 +1547,9 @@ public abstract class CompilerTestCase extends TestCase {
         }
 
         if (astValidationEnabled) {
-          (new AstValidator(compiler)).validateRoot(root);
+          new AstValidator(compiler)
+              .setTypeValidationEnabled(typeInfoValidationEnabled)
+              .validateRoot(root);
         }
         if (checkLineNumbers) {
           (new LineNumberCheck(compiler)).process(externsRoot, mainRoot);
