@@ -53,7 +53,7 @@ $jscomp.polyfill('Promise',
      *
      * Will be `null` initially and immediately after a batch finishes
      * executing.
-     * @private {?Array<function():?>}
+     * @private {?Array<function()>}
      */
     this.batch_ = null;
   }
@@ -176,7 +176,8 @@ $jscomp.polyfill('Promise',
     this.result_ = undefined;
 
     /**
-     * These functions must be executed when this promise settles.
+     * These functions must be asynchronously executed when this promise
+     * settles.
      * @private {?Array<function()>}
      */
     this.onSettledCallbacks_ = [];
@@ -318,12 +319,8 @@ $jscomp.polyfill('Promise',
 
   PolyfillPromise.prototype.executeOnSettledCallbacks_ = function() {
     if (this.onSettledCallbacks_ != null) {
-      // Allow nulls in callbacks so we can free memory
-      var /** !Array<?function()> */ callbacks = this.onSettledCallbacks_;
-
-      for (var i = 0; i < callbacks.length; ++i) {
-        (/** @type {function()} */ (callbacks[i])).call();
-        callbacks[i] = null;  // free memory
+      for (var i = 0; i < this.onSettledCallbacks_.length; ++i) {
+        asyncExecutor.asyncExecute(this.onSettledCallbacks_[i]);
       }
       this.onSettledCallbacks_ = null;  // free memory
     }
@@ -424,9 +421,7 @@ $jscomp.polyfill('Promise',
       // we've already settled
       asyncExecutor.asyncExecute(callback);
     } else {
-      this.onSettledCallbacks_.push(function() {
-        asyncExecutor.asyncExecute(callback);
-      });
+      this.onSettledCallbacks_.push(callback);
     }
   };
 
