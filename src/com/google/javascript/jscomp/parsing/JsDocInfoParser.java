@@ -2052,6 +2052,9 @@ public final class JsDocInfoParser {
    *     | '?'
    */
   private Node parseTypeExpression(JsDocToken token) {
+    // Save the source position before we consume additional tokens.
+    int lineno = stream.getLineno();
+    int charno = stream.getCharno();
     if (token == JsDocToken.QMARK) {
       // A QMARK could mean that a type is nullable, or that it's unknown.
       // We use look-ahead 1 to determine whether it's unknown. Otherwise,
@@ -2081,18 +2084,20 @@ public final class JsDocInfoParser {
         return newNode(Token.QMARK);
       }
 
-      return wrapNode(Token.QMARK, parseBasicTypeExpression(token));
+      return wrapNode(Token.QMARK, parseBasicTypeExpression(token), lineno, charno);
     } else if (token == JsDocToken.BANG) {
-      return wrapNode(Token.BANG, parseBasicTypeExpression(next()));
+      return wrapNode(Token.BANG, parseBasicTypeExpression(next()), lineno, charno);
     } else {
       Node basicTypeExpr = parseBasicTypeExpression(token);
+      lineno = stream.getLineno();
+      charno = stream.getCharno();
       if (basicTypeExpr != null) {
         if (match(JsDocToken.QMARK)) {
           next();
-          return wrapNode(Token.QMARK, basicTypeExpr);
+          return wrapNode(Token.QMARK, basicTypeExpr, lineno, charno);
         } else if (match(JsDocToken.BANG)) {
           next();
-          return wrapNode(Token.BANG, basicTypeExpr);
+          return wrapNode(Token.BANG, basicTypeExpr, lineno, charno);
         }
       }
 
@@ -2538,9 +2543,11 @@ public final class JsDocInfoParser {
   }
 
   private Node wrapNode(Token type, Node n) {
-    return n == null ? null :
-        new Node(type, n, n.getLineno(),
-            n.getCharno()).clonePropsFrom(templateNode);
+    return n == null ? null : wrapNode(type, n, n.getLineno(), n.getCharno());
+  }
+
+  private Node wrapNode(Token type, Node n, int lineno, int charno) {
+    return n == null ? null : new Node(type, n, lineno, charno).clonePropsFrom(templateNode);
   }
 
   private Node newNode(Token type) {

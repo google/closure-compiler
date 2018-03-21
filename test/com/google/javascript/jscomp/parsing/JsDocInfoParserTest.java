@@ -4537,6 +4537,111 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
         "this is a description ***");
   }
 
+  public void testParseTokenPositions1() {
+    // BANG
+    //   STRING
+    JSDocInfo info = parse("@type\n {!Object} */");
+    assertThat(info).isNotNull();
+    assertThat(info.getType()).isNotNull();
+    Node root = info.getType().getRoot();
+    checkTokenPosition(root, Token.BANG, 1, 2);
+    checkTokenPosition(root.getFirstChild(), Token.STRING, 1, 3);
+  }
+
+  public void testParseTokenPositions2() {
+    // QMARK
+    //   STRING
+    JSDocInfo info = parse("@type {?Object} */");
+    Node root = info.getType().getRoot();
+    checkTokenPosition(root, Token.QMARK, 0, 7);
+    checkTokenPosition(root.getFirstChild(), Token.STRING, 0, 8);
+  }
+
+  public void testParseTokenPositions3() {
+    // BANG
+    //   STRING
+    JSDocInfo info = parse("@type {Object!} */");
+    Node root = info.getType().getRoot();
+    checkTokenPosition(root, Token.BANG, 0, 13);
+    checkTokenPosition(root.getFirstChild(), Token.STRING, 0, 7);
+  }
+
+  public void testParseTokenPositions4() {
+    // QMARK
+    //   STRING
+    JSDocInfo info = parse("@type {Object?} */");
+    Node root = info.getType().getRoot();
+    checkTokenPosition(root, Token.QMARK, 0, 13);
+    checkTokenPosition(root.getFirstChild(), Token.STRING, 0, 7);
+  }
+
+  public void testParseTokenPositions5() {
+    // PIPE
+    //   STRING string
+    //   BANG
+    //     STRING Object
+    JSDocInfo info = parse("@type {(string|!Object)} */");
+    Node root = info.getType().getRoot();
+    checkTokenPosition(root.getLastChild(), Token.BANG, 0, 15);
+    checkTokenPosition(root.getLastChild().getFirstChild(), Token.STRING, 0, 16);
+  }
+
+  public void testParseTokenPositions6() {
+    // STRING Set
+    //   BANG
+    //     STRING string
+    JSDocInfo info = parse("@type {Set<!string>} */");
+    Node root = info.getType().getRoot();
+    checkTokenPosition(root.getFirstChild().getFirstChild(), Token.BANG, 0, 11);
+    checkTokenPosition(root.getFirstChild().getFirstChild().getFirstChild(), Token.STRING, 0, 12);
+  }
+
+  public void testParseTokenPositions7() {
+    // QMARK
+    //   LC
+    //     LB
+    //       COLON
+    //         STRING_KEY foo
+    //         BANG
+    //           STRING Object
+     JSDocInfo info = parse("@type {?{foo: !Object}} */");
+    Node root = info.getType().getRoot();
+    checkTokenPosition(root, Token.QMARK, 0, 7);
+    checkTokenPosition(
+        root.getFirstChild().getFirstChild().getFirstChild().getFirstChild(),
+        Token.STRING_KEY,
+        0,
+        9);
+    checkTokenPosition(
+        root.getFirstChild().getFirstChild().getFirstChild().getLastChild(), Token.BANG, 0, 14);
+    checkTokenPosition(
+        root.getFirstChild().getFirstChild().getFirstChild().getLastChild().getFirstChild(),
+        Token.STRING,
+        0,
+        15);
+  }
+
+  public void testParseTokenPositions8() {
+    // FUNCTION
+    //   PARAM_LIST
+    //     BANG
+    //       STRING Object
+    //   QMARK
+    //     STRING string
+    JSDocInfo info = parse("@type {function(!Object): ?string} */");
+    Node root = info.getType().getRoot();
+    checkTokenPosition(root.getFirstChild().getFirstChild(), Token.BANG, 0, 16);
+    checkTokenPosition(root.getFirstChild().getFirstChild().getFirstChild(), Token.STRING, 0, 17);
+    checkTokenPosition(root.getLastChild(), Token.QMARK, 0, 26);
+    checkTokenPosition(root.getLastChild().getFirstChild(), Token.STRING, 0, 27);
+  }
+
+  private static void checkTokenPosition(Node n, Token t, int lineno, int charno) {
+    assertNode(n).hasType(t);
+    assertNode(n).hasLineno(lineno);
+    assertNode(n).hasCharno(charno);
+  }
+
   /**
    * Asserts that a documentation field exists on the given marker.
    *
