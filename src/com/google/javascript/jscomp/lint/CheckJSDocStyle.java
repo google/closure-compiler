@@ -62,7 +62,7 @@ public final class CheckJSDocStyle extends AbstractPostOrderCallback implements 
   public static final DiagnosticType MISSING_RETURN_JSDOC =
       DiagnosticType.disabled(
           "JSC_MISSING_RETURN_JSDOC",
-          "Function with non-trivial return must have @return JSDoc or inline return JSDoc.");
+          "Function with non-trivial return must have JSDoc indicating the return type.");
 
   public static final DiagnosticType MUST_BE_PRIVATE =
       DiagnosticType.disabled("JSC_MUST_BE_PRIVATE", "Property {0} must be marked @private");
