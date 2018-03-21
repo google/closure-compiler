@@ -64,6 +64,24 @@ public class Es6RewriteModulesToCommonJsModules implements CompilerPass {
     }
   }
 
+  private static class LocalQName {
+    final String qName;
+
+    /**
+     * Node to use for source information. All exported properties are transpiled to ES5 getters so
+     * debuggers will automatically step into these, even with source maps. When stepping in this
+     * node will be displayed in the source map. In general it should either be the export itself
+     * (e.g. export function or class) or the specific name being exported (export specs, const,
+     * etc).
+     */
+    final Node nodeForSourceInfo;
+
+    LocalQName(String qName, Node nodeForSourceInfo) {
+      this.qName = qName;
+      this.nodeForSourceInfo = nodeForSourceInfo;
+    }
+  }
+
   /**
    * Rewrites a single ES6 module into a CommonJS like module designed to be loaded in the
    * compiler's module runtime.
@@ -71,7 +89,7 @@ public class Es6RewriteModulesToCommonJsModules implements CompilerPass {
   private class Rewriter extends AbstractPostOrderCallback {
     private Node requireInsertSpot;
     private final Node script;
-    private final Map<String, String> exportedNameToLocalQName;
+    private final Map<String, LocalQName> exportedNameToLocalQName;
     private final Set<Node> imports;
     private final Set<String> importRequests;
     private final AbstractCompiler compiler;
@@ -294,7 +312,7 @@ public class Es6RewriteModulesToCommonJsModules implements CompilerPass {
       if (!exportedNameToLocalQName.isEmpty()) {
         Node definePropertiesLit = IR.objectlit();
 
-        for (Map.Entry<String, String> entry : exportedNameToLocalQName.entrySet()) {
+        for (Map.Entry<String, LocalQName> entry : exportedNameToLocalQName.entrySet()) {
           addExport(definePropertiesLit, entry.getKey(), entry.getValue());
         }
 
@@ -309,10 +327,11 @@ public class Es6RewriteModulesToCommonJsModules implements CompilerPass {
     }
 
     /** Adds an ES5 getter to the given object literal to use an an export. */
-    private void addExport(Node definePropertiesLit, String exportedName, String localQName) {
-      Node exportedValue = NodeUtil.newQName(compiler, localQName);
+    private void addExport(Node definePropertiesLit, String exportedName, LocalQName localQName) {
+      Node exportedValue = NodeUtil.newQName(compiler, localQName.qName);
       Node getterFunction =
           IR.function(IR.name(""), IR.paramList(), IR.block(IR.returnNode(exportedValue)));
+      getterFunction.useSourceInfoFromForTree(localQName.nodeForSourceInfo);
 
       Node objLit =
           IR.objectlit(
@@ -346,7 +365,7 @@ public class Es6RewriteModulesToCommonJsModules implements CompilerPass {
         parent.replaceChild(export, var.useSourceInfoIfMissingFromForTree(export));
       }
 
-      exportedNameToLocalQName.put("default", name);
+      exportedNameToLocalQName.put("default", new LocalQName(name, export));
       t.reportCodeChange();
     }
 
@@ -363,7 +382,7 @@ public class Es6RewriteModulesToCommonJsModules implements CompilerPass {
       for (Node exportSpec : export.getFirstChild().children()) {
         exportedNameToLocalQName.put(
             exportSpec.getLastChild().getString(),
-            moduleName + "." + exportSpec.getFirstChild().getString());
+            new LocalQName(moduleName + "." + exportSpec.getFirstChild().getString(), exportSpec));
       }
 
       parent.removeChild(export);
@@ -379,7 +398,8 @@ public class Es6RewriteModulesToCommonJsModules implements CompilerPass {
           localName = maybeGetNameOfImportedValue(t.getScope(), exportSpec.getFirstChild());
           checkNotNull(localName);
         }
-        exportedNameToLocalQName.put(exportSpec.getLastChild().getString(), localName);
+        exportedNameToLocalQName.put(
+            exportSpec.getLastChild().getString(), new LocalQName(localName, exportSpec));
       }
       parent.removeChild(export);
       t.reportCodeChange();
@@ -393,7 +413,7 @@ public class Es6RewriteModulesToCommonJsModules implements CompilerPass {
       for (Node lhs : lhsNodes) {
         checkState(lhs.isName());
         String name = lhs.getString();
-        exportedNameToLocalQName.put(name, name);
+        exportedNameToLocalQName.put(name, new LocalQName(name, lhs));
       }
     }
 
@@ -408,7 +428,7 @@ public class Es6RewriteModulesToCommonJsModules implements CompilerPass {
       } else {
         checkState(declaration.isFunction() || declaration.isClass());
         String name = declaration.getFirstChild().getString();
-        exportedNameToLocalQName.put(name, name);
+        exportedNameToLocalQName.put(name, new LocalQName(name, export));
       }
 
       parent.replaceChild(export, declaration.detach());
