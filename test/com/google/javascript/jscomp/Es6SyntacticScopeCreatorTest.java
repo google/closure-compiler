@@ -20,6 +20,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.jscomp.CompilerTestCase.lines;
+import static com.google.javascript.jscomp.ScopeSubject.assertScope;
 import static com.google.javascript.jscomp.testing.NodeSubject.assertNode;
 
 import com.google.common.collect.HashMultiset;
@@ -360,22 +361,22 @@ public final class Es6SyntacticScopeCreatorTest extends TestCase {
 
   public void testArrayDestructuring() {
     Scope scope = getScope("var [x, y] = foo();");
-    assertTrue(scope.isDeclared("x", false));
-    assertTrue(scope.isDeclared("y", false));
+    assertScope(scope).declares("x").directly();
+    assertScope(scope).declares("y").directly();
   }
 
   public void testNestedArrayDestructuring() {
     Scope scope = getScope("var [x, [y,z]] = foo();");
-    assertTrue(scope.isDeclared("x", false));
-    assertTrue(scope.isDeclared("y", false));
-    assertTrue(scope.isDeclared("z", false));
+    assertScope(scope).declares("x").directly();
+    assertScope(scope).declares("y").directly();
+    assertScope(scope).declares("z").directly();
   }
 
   public void testArrayDestructuringWithName() {
     Scope scope = getScope("var a = 1, [x, y] = foo();");
-    assertTrue(scope.isDeclared("a", false));
-    assertTrue(scope.isDeclared("x", false));
-    assertTrue(scope.isDeclared("y", false));
+    assertScope(scope).declares("a").directly();
+    assertScope(scope).declares("x").directly();
+    assertScope(scope).declares("y").directly();
   }
 
   public void testArrayDestructuringLet() {
@@ -396,10 +397,10 @@ public final class Es6SyntacticScopeCreatorTest extends TestCase {
     Node functionBlock = functionNode.getLastChild();
     Scope functionBlockScope = scopeCreator.createScope(functionBlock, functionScope);
 
-    assertTrue(functionBlockScope.isDeclared("a", false));
-    assertTrue(functionBlockScope.isDeclared("b", false));
-    assertFalse(functionBlockScope.isDeclared("x", false));
-    assertFalse(functionBlockScope.isDeclared("y", false));
+    assertScope(functionBlockScope).declares("a").directly();
+    assertScope(functionBlockScope).declares("b").directly();
+    assertScope(functionBlockScope).doesNotDeclare("x");
+    assertScope(functionBlockScope).doesNotDeclare("y");
 
     Node var = functionBlock.getFirstChild();
     Node ifStmt = var.getNext();
@@ -407,14 +408,12 @@ public final class Es6SyntacticScopeCreatorTest extends TestCase {
     Scope blockScope = scopeCreator.createScope(ifBlock, functionBlockScope);
 
     // a and b are declared in the parent scope.
-    assertFalse(blockScope.isDeclared("a", false));
-    assertFalse(blockScope.isDeclared("b", false));
-    assertTrue(blockScope.isDeclared("a", true));
-    assertTrue(blockScope.isDeclared("b", true));
+    assertScope(blockScope).declares("a").onSomeParent();
+    assertScope(blockScope).declares("b").onSomeParent();
 
     // x and y are declared in this scope.
-    assertTrue(blockScope.isDeclared("x", false));
-    assertTrue(blockScope.isDeclared("y", false));
+    assertScope(blockScope).declares("x").directly();
+    assertScope(blockScope).declares("y").directly();
   }
 
   public void testArrayDestructuringVarInBlock() {
@@ -435,10 +434,10 @@ public final class Es6SyntacticScopeCreatorTest extends TestCase {
     Node functionBlock = functionNode.getLastChild();
     Scope functionBlockScope = scopeCreator.createScope(functionBlock, functionScope);
 
-    assertTrue(functionBlockScope.isDeclared("a", false));
-    assertTrue(functionBlockScope.isDeclared("b", false));
-    assertTrue(functionBlockScope.isDeclared("x", false));
-    assertTrue(functionBlockScope.isDeclared("y", false));
+    assertScope(functionBlockScope).declares("a").directly();
+    assertScope(functionBlockScope).declares("b").directly();
+    assertScope(functionBlockScope).declares("x").directly();
+    assertScope(functionBlockScope).declares("y").directly();
   }
 
   public void testObjectDestructuring() {
@@ -456,8 +455,8 @@ public final class Es6SyntacticScopeCreatorTest extends TestCase {
     Node functionBlock = functionNode.getLastChild();
     Scope functionBlockScope = scopeCreator.createScope(functionBlock, functionScope);
 
-    assertTrue(functionBlockScope.isDeclared("a", false));
-    assertTrue(functionBlockScope.isDeclared("b", false));
+    assertScope(functionBlockScope).declares("a").directly();
+    assertScope(functionBlockScope).declares("b").directly();
   }
 
   public void testObjectDestructuring2() {
@@ -475,8 +474,8 @@ public final class Es6SyntacticScopeCreatorTest extends TestCase {
     Node functionBlock = functionNode.getLastChild();
     Scope functionBlockScope = scopeCreator.createScope(functionBlock, functionScope);
 
-    assertFalse(functionBlockScope.isDeclared("a", false));
-    assertTrue(functionBlockScope.isDeclared("b", false));
+    assertScope(functionBlockScope).doesNotDeclare("a");
+    assertScope(functionBlockScope).declares("b").directly();
   }
 
   public void testObjectDestructuringComputedProp() {
@@ -494,7 +493,7 @@ public final class Es6SyntacticScopeCreatorTest extends TestCase {
     Node functionBlock = functionNode.getLastChild();
     Scope functionBlockScope = scopeCreator.createScope(functionBlock, functionScope);
 
-    assertTrue(functionBlockScope.isDeclared("a", false));
+    assertScope(functionBlockScope).declares("a").directly();
   }
 
   public void testObjectDestructuringComputedPropParam() {
@@ -505,7 +504,7 @@ public final class Es6SyntacticScopeCreatorTest extends TestCase {
 
     Node functionNode = root.getFirstChild();
     Scope functionScope = scopeCreator.createScope(functionNode, globalScope);
-    assertTrue(functionScope.isDeclared("a", false));
+    assertScope(functionScope).declares("a").directly();
   }
 
   public void testObjectDestructuringNested() {
@@ -523,8 +522,8 @@ public final class Es6SyntacticScopeCreatorTest extends TestCase {
     Node functionBlock = functionNode.getLastChild();
     Scope functionBlockScope = scopeCreator.createScope(functionBlock, functionScope);
 
-    assertFalse(functionBlockScope.isDeclared("a", false));
-    assertTrue(functionBlockScope.isDeclared("b", false));
+    assertScope(functionBlockScope).doesNotDeclare("a");
+    assertScope(functionBlockScope).declares("b").directly();
   }
 
   public void testObjectDestructuringWithInitializer() {
@@ -542,7 +541,7 @@ public final class Es6SyntacticScopeCreatorTest extends TestCase {
     Node functionBlock = functionNode.getLastChild();
     Scope functionBlockScope = scopeCreator.createScope(functionBlock, functionScope);
 
-    assertTrue(functionBlockScope.isDeclared("a", false));
+    assertScope(functionBlockScope).declares("a").directly();
   }
 
   public void testObjectDestructuringInForOfParam() {
@@ -555,7 +554,7 @@ public final class Es6SyntacticScopeCreatorTest extends TestCase {
     Node forOf = block.getFirstChild();
     Scope forOfScope = scopeCreator.createScope(forOf, blockScope);
 
-    assertTrue(forOfScope.isDeclared("x", false));
+    assertScope(forOfScope).declares("x").directly();
   }
 
   public void testFunctionScope() {
@@ -564,16 +563,16 @@ public final class Es6SyntacticScopeCreatorTest extends TestCase {
                          + "[function bar2() { var y; }];"
                          + "if (true) { function z() {} }"
                           );
-    assertTrue(scope.isDeclared("foo", false));
-    assertTrue(scope.isDeclared("x", false));
-    assertFalse(scope.isDeclared("z", false));
+    assertScope(scope).declares("foo").directly();
+    assertScope(scope).declares("x").directly();
+    assertScope(scope).doesNotDeclare("z");
 
     // The following should not be declared in this scope
-    assertFalse(scope.isDeclared("a1", false));
-    assertFalse(scope.isDeclared("bar", false));
-    assertFalse(scope.isDeclared("bar2", false));
-    assertFalse(scope.isDeclared("y", false));
-    assertFalse(scope.isDeclared("", false));
+    assertScope(scope).doesNotDeclare("a1");
+    assertScope(scope).doesNotDeclare("bar");
+    assertScope(scope).doesNotDeclare("bar2");
+    assertScope(scope).doesNotDeclare("y");
+    assertScope(scope).doesNotDeclare("");
   }
 
   public void testClassScope() {
@@ -582,16 +581,16 @@ public final class Es6SyntacticScopeCreatorTest extends TestCase {
                          + "[class Bar2 { constructor(a1) {} static y() {} }];"
                          + "if (true) { class Z {} }"
                           );
-    assertTrue(scope.isDeclared("Foo", false));
-    assertTrue(scope.isDeclared("x", false));
-    assertFalse(scope.isDeclared("Z", false));
+    assertScope(scope).declares("Foo").directly();
+    assertScope(scope).declares("x").directly();
+    assertScope(scope).doesNotDeclare("Z");
 
     // The following should not be declared in this scope
-    assertFalse(scope.isDeclared("a1", false));
-    assertFalse(scope.isDeclared("Bar", false));
-    assertFalse(scope.isDeclared("Bar2", false));
-    assertFalse(scope.isDeclared("y", false));
-    assertFalse(scope.isDeclared("", false));
+    assertScope(scope).doesNotDeclare("a1");
+    assertScope(scope).doesNotDeclare("Bar");
+    assertScope(scope).doesNotDeclare("Bar2");
+    assertScope(scope).doesNotDeclare("y");
+    assertScope(scope).doesNotDeclare("");
   }
 
   public void testScopeRootNode() {
@@ -616,52 +615,52 @@ public final class Es6SyntacticScopeCreatorTest extends TestCase {
     assertTrue(fooScope.isBlockScope());
     assertEquals(fooScope, fooScope.getClosestHoistScope());
     assertTrue(fooScope.isHoistScope());
-    assertTrue(fooScope.isDeclared("x", false));
+    assertScope(fooScope).declares("x").directly();
   }
 
   public void testBlockScopeWithVar() {
     String js = "if (true) { if (true) { var x; } }";
     Node root = getRoot(js);
     Scope globalScope = scopeCreator.createScope(root, null);
-    assertTrue(globalScope.isDeclared("x", false));
+    assertScope(globalScope).declares("x").directly();
 
     Node firstLevelBlock = root.getFirstChild().getLastChild();
     Scope firstLevelBlockScope = scopeCreator.createScope(firstLevelBlock, globalScope);
-    assertFalse(firstLevelBlockScope.isDeclared("x", false));
+    assertScope(firstLevelBlockScope).declares("x").onSomeParent();
 
     Node secondLevelBlock = firstLevelBlock.getFirstChild().getLastChild();
     Scope secondLevelBLockScope = scopeCreator.createScope(secondLevelBlock, firstLevelBlockScope);
-    assertFalse(secondLevelBLockScope.isDeclared("x", false));
+    assertScope(secondLevelBLockScope).declares("x").onSomeParent();
   }
 
   public void testBlockScopeWithLet() {
     String js = "if (true) { if (true) { let x; } }";
     Node root = getRoot(js);
     Scope globalScope = scopeCreator.createScope(root, null);
-    assertFalse(globalScope.isDeclared("x", false));
+    assertScope(globalScope).doesNotDeclare("x");
 
     Node firstLevelBlock = root.getFirstChild().getLastChild();
     Scope firstLevelBlockScope = scopeCreator.createScope(firstLevelBlock, globalScope);
-    assertFalse(firstLevelBlockScope.isDeclared("x", false));
+    assertScope(firstLevelBlockScope).doesNotDeclare("x");
 
     Node secondLevelBlock = firstLevelBlock.getFirstChild().getLastChild();
     Scope secondLevelBLockScope = scopeCreator.createScope(secondLevelBlock, firstLevelBlockScope);
-    assertTrue(secondLevelBLockScope.isDeclared("x", false));
+    assertScope(secondLevelBLockScope).declares("x").directly();
   }
 
   public void testBlockScopeWithClass() {
     String js = "if (true) { if (true) { class X {} } }";
     Node root = getRoot(js);
     Scope globalScope = scopeCreator.createScope(root, null);
-    assertFalse(globalScope.isDeclared("X", false));
+    assertScope(globalScope).doesNotDeclare("X");
 
     Node firstLevelBlock = root.getFirstChild().getLastChild();
     Scope firstLevelBlockScope = scopeCreator.createScope(firstLevelBlock, globalScope);
-    assertFalse(firstLevelBlockScope.isDeclared("X", false));
+    assertScope(firstLevelBlockScope).doesNotDeclare("X");
 
     Node secondLevelBlock = firstLevelBlock.getFirstChild().getLastChild();
     Scope secondLevelBLockScope = scopeCreator.createScope(secondLevelBlock, firstLevelBlockScope);
-    assertTrue(secondLevelBLockScope.isDeclared("X", false));
+    assertScope(secondLevelBLockScope).declares("X").directly();
   }
 
   public void testSwitchScope() {
@@ -675,47 +674,47 @@ public final class Es6SyntacticScopeCreatorTest extends TestCase {
             + "}";
     Node root = getRoot(js);
     Scope globalScope = scopeCreator.createScope(root, null);
-    assertFalse(globalScope.isDeclared("c", false));
+    assertScope(globalScope).doesNotDeclare("c");
 
     Node switchNode = root.getFirstChild();
     Scope switchScope = scopeCreator.createScope(switchNode, globalScope);
-    assertTrue(switchScope.isDeclared("c", false));
+    assertScope(switchScope).declares("c").directly();
   }
 
   public void testForLoopScope() {
     String js = "for (let i = 0;;) { let x; }";
     Node root = getRoot(js);
     Scope globalScope = scopeCreator.createScope(root, null);
-    assertFalse(globalScope.isDeclared("i", false));
-    assertFalse(globalScope.isDeclared("x", false));
+    assertScope(globalScope).doesNotDeclare("i");
+    assertScope(globalScope).doesNotDeclare("x");
 
     Node forNode = root.getFirstChild();
     Scope forScope = scopeCreator.createScope(forNode, globalScope);
-    assertTrue(forScope.isDeclared("i", false));
-    assertFalse(forScope.isDeclared("x", false));
+    assertScope(forScope).declares("i").directly();
+    assertScope(forScope).doesNotDeclare("x");
 
     Node forBlock = forNode.getLastChild();
     Scope forBlockScope = scopeCreator.createScope(forBlock, forScope);
-    assertFalse(forBlockScope.isDeclared("i", false));
-    assertTrue(forBlockScope.isDeclared("x", false));
+    assertScope(forBlockScope).declares("i").onSomeParent();
+    assertScope(forBlockScope).declares("x").directly();
   }
 
   public void testForOfLoopScope() {
     String js = "for (let i of arr) { let x; }";
     Node root = getRoot(js);
     Scope globalScope = scopeCreator.createScope(root, null);
-    assertFalse(globalScope.isDeclared("i", false));
-    assertFalse(globalScope.isDeclared("x", false));
+    assertScope(globalScope).doesNotDeclare("i");
+    assertScope(globalScope).doesNotDeclare("x");
 
     Node forNode = root.getFirstChild();
     Scope forScope = scopeCreator.createScope(forNode, globalScope);
-    assertTrue(forScope.isDeclared("i", false));
-    assertFalse(forScope.isDeclared("x", false));
+    assertScope(forScope).declares("i").directly();
+    assertScope(forScope).doesNotDeclare("x");
 
     Node forBlock = forNode.getLastChild();
     Scope forBlockScope = scopeCreator.createScope(forBlock, forScope);
-    assertFalse(forBlockScope.isDeclared("i", false));
-    assertTrue(forBlockScope.isDeclared("x", false));
+    assertScope(forBlockScope).declares("i").onSomeParent();
+    assertScope(forBlockScope).declares("x").directly();
   }
 
   public void testFunctionArgument() {
@@ -729,16 +728,15 @@ public final class Es6SyntacticScopeCreatorTest extends TestCase {
     Node functionBlock = NodeUtil.getFunctionBody(function);
     Scope fBlockScope = scopeCreator.createScope(functionBlock, functionScope);
 
-    assertFalse(fBlockScope.isDeclared("x", false));
+    assertScope(fBlockScope).declares("x").on(functionScope);
     assertTrue(fBlockScope.isDeclaredInFunctionBlockOrParameter("x"));
-    assertFalse(fBlockScope.isDeclared("y", false));
+    assertScope(fBlockScope).doesNotDeclare("y");
 
     Node ifBlock = functionBlock.getLastChild().getLastChild();
     checkState(ifBlock.isNormalBlock(), ifBlock);
     Scope blockScope = scopeCreator.createScope(ifBlock, fBlockScope);
-    assertFalse(blockScope.isDeclared("x", false));
-    assertTrue(blockScope.isDeclared("x", true));
-    assertTrue(blockScope.isDeclared("y", false));
+    assertScope(blockScope).declares("x").on(functionScope);
+    assertScope(blockScope).declares("y").directly();
   }
 
   public void testTheArgumentsVariable() {
@@ -759,7 +757,7 @@ public final class Es6SyntacticScopeCreatorTest extends TestCase {
 
     Node ifBlock = fBlock.getFirstChild().getLastChild();
     Scope blockScope = scopeCreator.createScope(ifBlock, fBlockScope);
-    assertTrue(blockScope.isDeclared("arguments", false));
+    assertScope(blockScope).declares("arguments").directly();
     assertThat(blockScope.getArgumentsVar()).isSameAs(arguments);
     assertThat(blockScope.getVar("arguments")).isNotEqualTo(arguments);
   }
@@ -843,46 +841,46 @@ public final class Es6SyntacticScopeCreatorTest extends TestCase {
     String js = "if (true) { function f() {}; }";
     Node root = getRoot(js);
     Scope globalScope = scopeCreator.createScope(root, null);
-    assertFalse(globalScope.isDeclared("f", false));
+    assertScope(globalScope).doesNotDeclare("f");
 
     Node ifBlock = root.getFirstChild().getLastChild();
     Scope blockScope = scopeCreator.createScope(ifBlock, globalScope);
-    assertTrue(blockScope.isDeclared("f", false));
+    assertScope(blockScope).declares("f").directly();
   }
 
   public void testIsClassBlockScoped() {
     String js = "if (true) { class X {}; }";
     Node root = getRoot(js);
     Scope globalScope = scopeCreator.createScope(root, null);
-    assertFalse(globalScope.isDeclared("X", false));
+    assertScope(globalScope).doesNotDeclare("X");
 
     Node ifBlock = root.getFirstChild().getLastChild();
     Scope blockScope = scopeCreator.createScope(ifBlock, globalScope);
-    assertTrue(blockScope.isDeclared("X", false));
+    assertScope(blockScope).declares("X").directly();
   }
 
   public void testIsCatchBlockScoped() {
     String js = "try { var x = 2; } catch (e) { var y = 3; let z = 4; }";
     Node root = getRoot(js);
     Scope globalScope = scopeCreator.createScope(root, null);
-    assertTrue(globalScope.isDeclared("x", false));
-    assertTrue(globalScope.isDeclared("y", false));
-    assertFalse(globalScope.isDeclared("z", false));
-    assertFalse(globalScope.isDeclared("e", false));
+    assertScope(globalScope).declares("x").directly();
+    assertScope(globalScope).declares("y").directly();
+    assertScope(globalScope).doesNotDeclare("z");
+    assertScope(globalScope).doesNotDeclare("e");
 
     Node tryBlock = root.getFirstFirstChild();
     Scope tryBlockScope = scopeCreator.createScope(tryBlock, globalScope);
-    assertFalse(tryBlockScope.isDeclared("x", false));
-    assertFalse(tryBlockScope.isDeclared("y", false));
-    assertFalse(tryBlockScope.isDeclared("z", false));
-    assertFalse(tryBlockScope.isDeclared("e", false));
+    assertScope(tryBlockScope).declares("x").onSomeParent();
+    assertScope(tryBlockScope).declares("y").onSomeParent();
+    assertScope(tryBlockScope).doesNotDeclare("z");
+    assertScope(tryBlockScope).doesNotDeclare("e");
 
     Node catchBlock = tryBlock.getNext();
     Scope catchBlockScope = scopeCreator.createScope(catchBlock, tryBlockScope);
-    assertFalse(catchBlockScope.isDeclared("x", false));
-    assertFalse(catchBlockScope.isDeclared("y", false));
-    assertTrue(catchBlockScope.isDeclared("z", false));
-    assertTrue(catchBlockScope.isDeclared("e", false));
+    assertScope(catchBlockScope).declares("x").onSomeParent();
+    assertScope(catchBlockScope).declares("y").onSomeParent();
+    assertScope(catchBlockScope).declares("z").directly();
+    assertScope(catchBlockScope).declares("e").directly();
   }
 
   public void testImport() {
@@ -899,11 +897,11 @@ public final class Es6SyntacticScopeCreatorTest extends TestCase {
     Node moduleBody = root.getFirstChild();
     checkState(moduleBody.isModuleBody(), moduleBody);
     Scope moduleScope = scopeCreator.createScope(moduleBody, globalScope);
-    assertTrue(moduleScope.isDeclared("ns", false));
-    assertTrue(moduleScope.isDeclared("d", false));
-    assertTrue(moduleScope.isDeclared("foo", false));
-    assertTrue(moduleScope.isDeclared("y", false));
-    assertFalse(moduleScope.isDeclared("x", false));
+    assertScope(moduleScope).declares("ns").directly();
+    assertScope(moduleScope).declares("d").directly();
+    assertScope(moduleScope).declares("foo").directly();
+    assertScope(moduleScope).declares("y").directly();
+    assertScope(moduleScope).doesNotDeclare("x");
   }
 
   public void testImportAsSelf() {
@@ -916,7 +914,7 @@ public final class Es6SyntacticScopeCreatorTest extends TestCase {
     Node moduleBody = root.getFirstChild();
     checkState(moduleBody.isModuleBody(), moduleBody);
     Scope moduleScope = scopeCreator.createScope(moduleBody, globalScope);
-    assertTrue(moduleScope.isDeclared("x", false));
+    assertScope(moduleScope).declares("x").directly();
   }
 
   public void testImportDefault() {
@@ -929,46 +927,46 @@ public final class Es6SyntacticScopeCreatorTest extends TestCase {
     Node moduleBody = root.getFirstChild();
     checkState(moduleBody.isModuleBody(), moduleBody);
     Scope moduleScope = scopeCreator.createScope(moduleBody, globalScope);
-    assertTrue(moduleScope.isDeclared("x", false));
+    assertScope(moduleScope).declares("x").directly();
   }
 
   public void testModuleScoped() {
     String js = "export function f() { var x; if (1) { let y; } }; var z;";
     Node root = getRoot(js);
     Scope globalScope = scopeCreator.createScope(root, null);
-    assertFalse(globalScope.isDeclared("f", false));
-    assertFalse(globalScope.isDeclared("x", false));
-    assertFalse(globalScope.isDeclared("y", false));
-    assertFalse(globalScope.isDeclared("z", false));
+    assertScope(globalScope).doesNotDeclare("f");
+    assertScope(globalScope).doesNotDeclare("x");
+    assertScope(globalScope).doesNotDeclare("y");
+    assertScope(globalScope).doesNotDeclare("z");
 
     Node moduleBlock = root.getFirstChild();
     Scope moduleBlockScope = scopeCreator.createScope(moduleBlock, globalScope);
-    assertTrue(moduleBlockScope.isDeclared("f", false));
-    assertFalse(moduleBlockScope.isDeclared("x", false));
-    assertFalse(moduleBlockScope.isDeclared("y", false));
-    assertTrue(moduleBlockScope.isDeclared("z", false));
+    assertScope(moduleBlockScope).declares("f").directly();
+    assertScope(moduleBlockScope).doesNotDeclare("x");
+    assertScope(moduleBlockScope).doesNotDeclare("y");
+    assertScope(moduleBlockScope).declares("z").directly();
   }
 
   public void testExportDefault() {
     String js = "export default function f() {};";
     Node root = getRoot(js);
     Scope globalScope = scopeCreator.createScope(root, null);
-    assertFalse(globalScope.isDeclared("f", false));
+    assertScope(globalScope).doesNotDeclare("f");
 
     Node moduleBlock = root.getFirstChild();
     Scope moduleBlockScope = scopeCreator.createScope(moduleBlock, globalScope);
-    assertTrue(moduleBlockScope.isDeclared("f", false));
+    assertScope(moduleBlockScope).declares("f").directly();
   }
 
   public void testExportFrom() {
     String js = "export {PI} from './n.js';";
     Node root = getRoot(js);
     Scope globalScope = scopeCreator.createScope(root, null);
-    assertFalse(globalScope.isDeclared("PI", false));
+    assertScope(globalScope).doesNotDeclare("PI");
 
     Node moduleBlock = root.getFirstChild();
     Scope moduleBlockScope = scopeCreator.createScope(moduleBlock, globalScope);
-    assertFalse(moduleBlockScope.isDeclared("PI", false));
+    assertScope(moduleBlockScope).doesNotDeclare("PI");
   }
 
   public void testVarAfterLet() {
@@ -988,13 +986,13 @@ public final class Es6SyntacticScopeCreatorTest extends TestCase {
     Node fBlock = root.getFirstChild().getLastChild();
     Scope fBlockScope = scopeCreator.createScope(fBlock, fScope);
     checkNotNull(fBlockScope);
-    assertFalse(fBlockScope.isDeclared("x", false));
-    assertTrue(fBlockScope.isDeclared("y", false));
+    assertScope(fBlockScope).doesNotDeclare("x");
+    assertScope(fBlockScope).declares("y").directly();
 
     Node ifBlock = fBlock.getFirstChild().getLastChild();
     Scope ifBlockScope = scopeCreator.createScope(ifBlock, fBlockScope);
-    assertTrue(ifBlockScope.isDeclared("x", false));
-    assertFalse(ifBlockScope.isDeclared("y", false));
+    assertScope(ifBlockScope).declares("x").directly();
+    assertScope(ifBlockScope).declares("y").onSomeParent();
   }
 
   public void testSimpleFunctionParam() {
@@ -1005,11 +1003,11 @@ public final class Es6SyntacticScopeCreatorTest extends TestCase {
     Node fNode = root.getFirstChild();
     checkState(fNode.isFunction(), fNode);
     Scope fScope = scopeCreator.createScope(fNode, globalScope);
-    assertTrue(fScope.isDeclared("x", false));
+    assertScope(fScope).declares("x").directly();
 
     Node fBlock = NodeUtil.getFunctionBody(fNode);
     Scope fBlockScope = scopeCreator.createScope(fBlock, fScope);
-    assertFalse(fBlockScope.isDeclared("x", false));
+    assertScope(fBlockScope).declares("x").on(fScope);
     assertTrue(fBlockScope.isDeclaredInFunctionBlockOrParameter("x"));
   }
 
@@ -1019,16 +1017,16 @@ public final class Es6SyntacticScopeCreatorTest extends TestCase {
     Node fNode = root.getFirstChild();
     Scope globalScope = scopeCreator.createScope(root, null);
     Scope fScope = scopeCreator.createScope(fNode, globalScope);
-    assertTrue(fScope.isDeclared("x", false));
+    assertScope(fScope).declares("x").directly();
 
     Node fBlock = fNode.getLastChild();
     Scope fBlockScope = scopeCreator.createScope(fBlock, fScope);
-    assertFalse(fBlockScope.isDeclared("x", false));
+    assertScope(fBlockScope).declares("x").on(fScope);
     assertTrue(fBlockScope.isDeclaredInFunctionBlockOrParameter("x"));
 
     Node ifBlock = fBlock.getFirstChild().getLastChild();
     Scope ifBlockScope = scopeCreator.createScope(ifBlock, fBlockScope);
-    assertFalse(ifBlockScope.isDeclared("x", false));
+    assertScope(ifBlockScope).declares("x").on(fScope);
   }
 
   public void testCatchInFunction() {
@@ -1037,7 +1035,7 @@ public final class Es6SyntacticScopeCreatorTest extends TestCase {
     Node fNode = root.getFirstChild();
     Scope globalScope = scopeCreator.createScope(root, null);
     Scope fScope = scopeCreator.createScope(fNode, globalScope);
-    assertTrue(fScope.isDeclared("e", false));
+    assertScope(fScope).declares("e").directly();
 
     Node fBlock = fNode.getLastChild();
     Scope fBlockScope = scopeCreator.createScope(fBlock, fScope);
@@ -1045,33 +1043,33 @@ public final class Es6SyntacticScopeCreatorTest extends TestCase {
     Scope tryScope = scopeCreator.createScope(tryBlock, fBlockScope);
     Node catchBlock = tryBlock.getNext();
     Scope catchScope = scopeCreator.createScope(catchBlock, tryScope);
-    assertTrue(catchScope.isDeclared("e", false));
+    assertScope(catchScope).declares("e").directly();
   }
 
   public void testFunctionName() {
     String js = "var f = function foo() {}";
     Node root = getRoot(js);
     Scope globalScope = scopeCreator.createScope(root, null);
-    assertTrue(globalScope.isDeclared("f", false));
-    assertFalse(globalScope.isDeclared("foo", false));
+    assertScope(globalScope).declares("f").directly();
+    assertScope(globalScope).doesNotDeclare("foo");
 
     Node fNode = root.getFirstChild().getFirstFirstChild();
     Scope fScope = scopeCreator.createScope(fNode, globalScope);
-    assertFalse(fScope.isDeclared("f", false));
-    assertTrue(fScope.isDeclared("foo", false));
+    assertScope(fScope).declares("f").onSomeParent();
+    assertScope(fScope).declares("foo").directly();
   }
 
   public void testFunctionNameMatchesParamName1() {
     String js = "var f = function foo(foo) {}";
     Node root = getRoot(js);
     Scope globalScope = scopeCreator.createScope(root, null);
-    assertTrue(globalScope.isDeclared("f", false));
-    assertFalse(globalScope.isDeclared("foo", false));
+    assertScope(globalScope).declares("f").directly();
+    assertScope(globalScope).doesNotDeclare("foo");
 
     Node fNode = root.getFirstChild().getFirstFirstChild();
     Scope fScope = scopeCreator.createScope(fNode, globalScope);
-    assertFalse(fScope.isDeclared("f", false));
-    assertTrue(fScope.isDeclared("foo", false));
+    assertScope(fScope).declares("f").onSomeParent();
+    assertScope(fScope).declares("foo").directly();
 
     // The parameter 'foo', not the function name, is the declaration of the variable 'foo' in this
     // scope.
@@ -1082,13 +1080,13 @@ public final class Es6SyntacticScopeCreatorTest extends TestCase {
     String js = "var f = function foo(x = foo, foo) {}";
     Node root = getRoot(js);
     Scope globalScope = scopeCreator.createScope(root, null);
-    assertTrue(globalScope.isDeclared("f", false));
-    assertFalse(globalScope.isDeclared("foo", false));
+    assertScope(globalScope).declares("f").directly();
+    assertScope(globalScope).doesNotDeclare("foo");
 
     Node fNode = root.getFirstChild().getFirstFirstChild();
     Scope fScope = scopeCreator.createScope(fNode, globalScope);
-    assertFalse(fScope.isDeclared("f", false));
-    assertTrue(fScope.isDeclared("foo", false));
+    assertScope(fScope).declares("f").onSomeParent();
+    assertScope(fScope).declares("foo").directly();
 
     // The parameter 'foo', not the function name, is the declaration of the variable 'foo' in this
     // scope.
@@ -1099,63 +1097,63 @@ public final class Es6SyntacticScopeCreatorTest extends TestCase {
     String js = "var Clazz = class Foo {}";
     Node root = getRoot(js);
     Scope globalScope = scopeCreator.createScope(root, null);
-    assertTrue(globalScope.isDeclared("Clazz", false));
-    assertFalse(globalScope.isDeclared("Foo", false));
+    assertScope(globalScope).declares("Clazz").directly();
+    assertScope(globalScope).doesNotDeclare("Foo");
 
     Node classNode = root.getFirstChild().getFirstFirstChild();
     Scope classScope = scopeCreator.createScope(classNode, globalScope);
-    assertFalse(classScope.isDeclared("Clazz", false));
-    assertTrue(classScope.isDeclared("Foo", false));
+    assertScope(classScope).declares("Clazz").onSomeParent();
+    assertScope(classScope).declares("Foo").directly();
   }
 
   public void testFunctionExpressionInForLoopInitializer() {
     Node root = getRoot("for (function foo() {};;) {}");
     Scope globalScope = scopeCreator.createScope(root, null);
-    assertFalse(globalScope.isDeclared("foo", false));
+    assertScope(globalScope).doesNotDeclare("foo");
 
     Node forNode = root.getFirstChild();
     Scope forScope = scopeCreator.createScope(forNode, globalScope);
-    assertFalse(forScope.isDeclared("foo", false));
+    assertScope(forScope).doesNotDeclare("foo");
 
     Node fNode = forNode.getFirstChild();
     Scope fScope = scopeCreator.createScope(fNode, forScope);
-    assertTrue(fScope.isDeclared("foo", false));
+    assertScope(fScope).declares("foo").directly();
   }
 
   public void testClassExpressionInForLoopInitializer() {
     Node root = getRoot("for (class Clazz {};;) {}");
     Scope globalScope = scopeCreator.createScope(root, null);
-    assertFalse(globalScope.isDeclared("Clazz", false));
+    assertScope(globalScope).doesNotDeclare("Clazz");
 
     Node forNode = root.getFirstChild();
     Scope forScope = scopeCreator.createScope(forNode, globalScope);
-    assertFalse(forScope.isDeclared("Clazz", false));
+    assertScope(forScope).doesNotDeclare("Clazz");
 
     Node classNode = forNode.getFirstChild();
     Scope classScope = scopeCreator.createScope(classNode, forScope);
-    assertTrue(classScope.isDeclared("Clazz", false));
+    assertScope(classScope).declares("Clazz").directly();
   }
 
   public void testClassDeclarationInExportDefault() {
     String js = "export default class Clazz {}";
     Node root = getRoot(js);
     Scope globalScope = scopeCreator.createScope(root, null);
-    assertFalse(globalScope.isDeclared("Clazz", false));
+    assertScope(globalScope).doesNotDeclare("Clazz");
 
     Node moduleBody = root.getFirstChild();
     checkState(moduleBody.isModuleBody(), moduleBody);
     Scope moduleScope = scopeCreator.createScope(moduleBody, globalScope);
-    assertTrue(moduleScope.isDeclared("Clazz", false));
+    assertScope(moduleScope).declares("Clazz").directly();
   }
 
   public void testVarsInModulesNotGlobal() {
     Node root = getRoot("goog.module('example'); var x;");
     Scope globalScope = scopeCreator.createScope(root, null);
-    assertFalse(globalScope.isDeclared("x", false));
+    assertScope(globalScope).doesNotDeclare("x");
 
     Node moduleBody = root.getFirstChild();
     checkState(moduleBody.isModuleBody(), moduleBody);
     Scope moduleScope = scopeCreator.createScope(moduleBody, globalScope);
-    assertTrue(moduleScope.isDeclared("x", false));
+    assertScope(moduleScope).declares("x").directly();
   }
 }
