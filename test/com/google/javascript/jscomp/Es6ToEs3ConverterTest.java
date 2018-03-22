@@ -136,9 +136,10 @@ public final class Es6ToEs3ConverterTest extends TypeICompilerTestCase {
         makePassFactory("convertEs6Early", new EarlyEs6ToEs3Converter(compiler)));
     optimizer.addOneTimePass(
         makePassFactory("convertEs6Late", new LateEs6ToEs3Converter(compiler)));
+    optimizer.addOneTimePass(makePassFactory("es6ForOf", new Es6ForOfConverter(compiler)));
     optimizer.addOneTimePass(
-        makePassFactory("Es6RewriteBlockScopedDeclaration",
-            new Es6RewriteBlockScopedDeclaration(compiler)));
+        makePassFactory(
+            "Es6RewriteBlockScopedDeclaration", new Es6RewriteBlockScopedDeclaration(compiler)));
     optimizer.addOneTimePass(
         makePassFactory(
             "Es6ConvertSuperConstructorCalls", new Es6ConvertSuperConstructorCalls(compiler)));
