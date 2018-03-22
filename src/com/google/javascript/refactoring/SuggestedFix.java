@@ -190,6 +190,16 @@ public final class SuggestedFix {
     }
 
     /**
+     * Replaces text starting at the given node position.
+     */
+    Builder replaceText(Node node, int length, String newContent) {
+      int startPosition = node.getSourceOffset();
+      replacements.put(
+          node.getSourceFileName(), CodeReplacement.create(startPosition, length, newContent));
+      return this;
+    }
+
+    /**
      * Inserts a new node as the first child of the provided node.
      */
     public Builder addChildToFront(Node parentNode, String content) {

@@ -63,6 +63,17 @@ public class SuggestedFixTest {
   }
 
   @Test
+  public void testReplaceText() {
+    String input = "var foo = new Bar();";
+    Compiler compiler = getCompiler(input);
+    Node root = compileToScriptRoot(compiler);
+    SuggestedFix fix = new SuggestedFix.Builder()
+        .replaceText(root.getFirstFirstChild(), 3, "quux").build();
+    CodeReplacement replacement = CodeReplacement.create(4, 3, "quux");
+    assertReplacement(fix, replacement);
+  }
+
+  @Test
   public void testDelete() {
     String input = "var foo = new Bar();";
     Compiler compiler = getCompiler(input);

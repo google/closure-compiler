@@ -111,6 +111,8 @@ public final class ErrorToFixMapper {
       case "JSC_REFERENCE_TO_FULLY_QUALIFIED_IMPORT_NAME":
         // TODO(tbreisacher): Apply this fix for JSC_JSDOC_REFERENCE_TO_FULLY_QUALIFIED_IMPORT_NAME.
         return getFixForReferenceToShortImportByLongName(error, compiler);
+      case "JSC_REDUNDANT_NULLABILITY_MODIFIER_JSDOC":
+        return getFixForRedundantNullabilityModifierJsDoc(error, compiler);
       default:
         return null;
     }
@@ -397,6 +399,14 @@ public final class ErrorToFixMapper {
     // Trim to remove the newline after the last goog.require/provide.
     String newContent = sb.toString().trim();
     return fix.replaceRange(first, last, newContent).build();
+  }
+
+  private static SuggestedFix getFixForRedundantNullabilityModifierJsDoc(
+      JSError error, AbstractCompiler compiler) {
+    return new SuggestedFix.Builder()
+        .attachMatchedNodeInfo(error.node, compiler)
+        .replaceText(error.node, 1, "")
+        .build();
   }
 
   private static class RequireProvideSorter implements NodeTraversal.Callback, Comparator<Node> {

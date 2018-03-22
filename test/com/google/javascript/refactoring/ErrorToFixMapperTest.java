@@ -184,6 +184,18 @@ public class ErrorToFixMapperTest {
   }
 
   @Test
+  public void testRedundantNullabilityModifier1() {
+    assertChanges("/** @type {!string} */ var x;", "/** @type {string} */ var x;");
+  }
+
+  @Test
+  public void testRedundantNullabilityModifier2() {
+    assertChanges(
+        "/** @type {!{foo: string, bar: !string}} */ var x;",
+        "/** @type {{foo: string, bar: string}} */ var x;");
+  }
+
+  @Test
   public void testRedeclaration() {
     String code = "function f() { var x; var x; }";
     String expectedCode = "function f() { var x; }";
@@ -1640,9 +1652,7 @@ public class ErrorToFixMapperTest {
             "goog.require('goog.util');",
             "",
             "alert(bar('7'));"),
-        LINE_JOINER.join(
-          "const {bar} = goog.require('goog.util');",
-          "alert(bar('7'));"));
+        LINE_JOINER.join("const {bar} = goog.require('goog.util');", "alert(bar('7'));"));
   }
 
   // In this case, only the standalone require gets removed. Then a second run would merge
