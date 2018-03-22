@@ -187,6 +187,18 @@ Node.prototype.insertAdjacentHTML = function(sWhere, sText) {};
 
 
 /**
+ * Inserts the given HTML Element into the node at the location.
+ * @param {string} sWhere Where to insert the HTML text, one of 'beforeBegin',
+ *     'afterBegin', 'beforeEnd', 'afterEnd'.
+ * @param {!Element} sElement DOM Element to insert.
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/Element/insertAdjacentElement
+ * @return {?Element} The element that was inserted, or null, if the
+ *     insertion failed.
+ */
+Node.prototype.insertAdjacentElement = function(sWhere, sElement) {};
+
+
+/**
  * @type {*}
  * @see http://msdn.microsoft.com/en-us/library/ms762308(VS.85).aspx
  */
