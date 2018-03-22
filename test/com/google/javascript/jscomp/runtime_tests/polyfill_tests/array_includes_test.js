@@ -32,17 +32,46 @@ testSuite({
     assertTrue(arr.includes(-0));
     assertTrue(arr.includes(1));
     assertTrue(arr.includes(NaN));
-    assertTrue(arr.includes(NaN, 2));
     assertTrue(arr.includes(3));
-    assertTrue(arr.includes(3, 3));
     assertFalse(arr.includes(2));
-    assertFalse(arr.includes(NaN, 3));
-    assertFalse(arr.includes(3, 4));
 
+    assertFalse([1, NaN, 3].includes(0));
+    assertFalse([1, NaN, 3].includes(-0));
+    assertFalse([0, 1, 3].includes(NaN));
+
+    // fromIndex
+    assertTrue(arr.includes(3, 3));
+    assertFalse(arr.includes(3, 4));
+    assertFalse(arr.includes(3, 5));
+    assertTrue(arr.includes(3, -1));
+    assertFalse(arr.includes(0, 1));
+    assertTrue(arr.includes(0, 0));
+    assertFalse(arr.includes(0, -1));
+    assertFalse(arr.includes(0, -3));
+    assertTrue(arr.includes(0, -4));
+    assertTrue(arr.includes(0, -5));
+
+    // null and undefined
+    // Make sure the compiler knows both null and undefined are allowed
+    // to avoid a type error.
+    arr = /** @type {!Array<null|undefined>} */ ([null]);
+    assertTrue(arr.includes(null));
+    assertFalse(arr.includes(undefined));
+
+    arr = /** @type {!Array<null|undefined>} */ ([undefined]);
+    assertTrue(arr.includes(undefined));
+    assertFalse(arr.includes(null));
+
+    // empty slot
+    arr = Array(1);
+    assertTrue(arr.includes(undefined));
+
+    // string
     arr = 'abcABC';
     assertTrue(Array.prototype.includes.call(arr, 'a'));
     assertFalse(Array.prototype.includes.call(arr, 'd'));
 
+    // ArrayLike
     arr = {length: 2, 0: 5, 1: 6, 2: 7};
     assertTrue(Array.prototype.includes.call(arr, 5));
     assertTrue(Array.prototype.includes.call(arr, 6));
