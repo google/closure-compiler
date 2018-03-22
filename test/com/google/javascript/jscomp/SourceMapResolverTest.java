@@ -41,6 +41,26 @@ public final class SourceMapResolverTest extends TestCase {
     assertNull(noInline);
   }
 
+  public void testResolveBase64WithCharsetInline() throws Exception {
+    String sourceMap = "{map: 'asdfasdf'}";
+    String encoded = BaseEncoding.base64().encode(sourceMap.getBytes("UTF-8"));
+    String url = "data:application/json;charset=utf-8;base64," + encoded;
+    String code = "console.log('asdf')\n//# sourceMappingURL=" + url;
+    SourceFile s =
+        SourceMapResolver.extractSourceMap(
+            SourceFile.fromCode("somePath/hello.js", code), url, true);
+    assertEquals(sourceMap, s.getCode());
+    assertEquals("somePath/hello.js.inline.map", s.getName());
+
+    // Try non supported charset.
+    String dataURLWithBadCharset = "data:application/json;charset=asdf;base64," + encoded;
+    String charsetCode = "console.log('asdf')\n//# sourceMappingURL=" + dataURLWithBadCharset;
+    SourceFile result =
+        SourceMapResolver.extractSourceMap(
+            SourceFile.fromCode("somePath/hello.js", charsetCode), dataURLWithBadCharset, true);
+    assertNull(result);
+  }
+
   public void testAbsolute() {
     SourceFile jsFile = SourceFile.fromCode("somePath/hello.js", "console.log(1)");
     // We cannot reslove absolute urls.
