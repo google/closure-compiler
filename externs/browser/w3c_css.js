@@ -520,15 +520,6 @@ CSSStyleDeclaration.prototype.removeExpression = function(name) {};
 
 /**
  * @param {string} name
- * @param {*} value
- * @param {number=} opt_flags
- * @see http://msdn.microsoft.com/en-us/library/ms536739(VS.85).aspx
- * @return {undefined}
- */
-CSSStyleDeclaration.prototype.setAttribute = function(name, value, opt_flags) {};
-
-/**
- * @param {string} name
  * @param {string} expr
  * @param {string=} opt_language
  * @return {undefined}
