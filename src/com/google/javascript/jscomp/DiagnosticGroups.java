@@ -31,6 +31,7 @@ import com.google.javascript.jscomp.lint.CheckMissingSemicolon;
 import com.google.javascript.jscomp.lint.CheckNullableReturn;
 import com.google.javascript.jscomp.lint.CheckPrimitiveAsObject;
 import com.google.javascript.jscomp.lint.CheckPrototypeProperties;
+import com.google.javascript.jscomp.lint.CheckRedundantNullabilityModifier;
 import com.google.javascript.jscomp.lint.CheckRequiresAndProvidesSorted;
 import com.google.javascript.jscomp.lint.CheckUnusedLabels;
 import com.google.javascript.jscomp.lint.CheckUselessBlocks;
@@ -658,6 +659,7 @@ public class DiagnosticGroups {
               CheckPrimitiveAsObject.NEW_PRIMITIVE_OBJECT,
               CheckPrimitiveAsObject.PRIMITIVE_OBJECT_DECLARATION,
               CheckPrototypeProperties.ILLEGAL_PROTOTYPE_MEMBER,
+              CheckRedundantNullabilityModifier.REDUNDANT_NULLABILITY_MODIFIER_JSDOC,
               CheckRequiresAndProvidesSorted.DUPLICATE_REQUIRE,
               CheckRequiresAndProvidesSorted.REQUIRES_NOT_SORTED,
               CheckRequiresAndProvidesSorted.PROVIDES_NOT_SORTED,

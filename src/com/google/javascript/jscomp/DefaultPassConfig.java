@@ -52,6 +52,7 @@ import com.google.javascript.jscomp.lint.CheckMissingSemicolon;
 import com.google.javascript.jscomp.lint.CheckNullableReturn;
 import com.google.javascript.jscomp.lint.CheckPrimitiveAsObject;
 import com.google.javascript.jscomp.lint.CheckPrototypeProperties;
+import com.google.javascript.jscomp.lint.CheckRedundantNullabilityModifier;
 import com.google.javascript.jscomp.lint.CheckRequiresAndProvidesSorted;
 import com.google.javascript.jscomp.lint.CheckUnusedLabels;
 import com.google.javascript.jscomp.lint.CheckUselessBlocks;
@@ -2030,6 +2031,7 @@ public final class DefaultPassConfig extends PassConfig {
                   .add(new CheckMissingSemicolon(compiler))
                   .add(new CheckPrimitiveAsObject(compiler))
                   .add(new CheckPrototypeProperties(compiler))
+                  .add(new CheckRedundantNullabilityModifier(compiler))
                   .add(new CheckUnusedLabels(compiler))
                   .add(new CheckUselessBlocks(compiler));
           return combineChecks(compiler, callbacks.build());

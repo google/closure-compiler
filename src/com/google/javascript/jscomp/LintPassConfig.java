@@ -24,6 +24,7 @@ import com.google.javascript.jscomp.lint.CheckJSDocStyle;
 import com.google.javascript.jscomp.lint.CheckMissingSemicolon;
 import com.google.javascript.jscomp.lint.CheckPrimitiveAsObject;
 import com.google.javascript.jscomp.lint.CheckPrototypeProperties;
+import com.google.javascript.jscomp.lint.CheckRedundantNullabilityModifier;
 import com.google.javascript.jscomp.lint.CheckRequiresAndProvidesSorted;
 import com.google.javascript.jscomp.lint.CheckUnusedLabels;
 import com.google.javascript.jscomp.lint.CheckUselessBlocks;
@@ -41,7 +42,8 @@ class LintPassConfig extends PassConfig.PassConfigDelegate {
     super(new DefaultPassConfig(options));
   }
 
-  @Override protected List<PassFactory> getChecks() {
+  @Override
+  protected List<PassFactory> getChecks() {
     return ImmutableList.of(
         earlyLintChecks,
         checkRequires,
@@ -50,7 +52,8 @@ class LintPassConfig extends PassConfig.PassConfigDelegate {
         lateLintChecks);
   }
 
-  @Override protected List<PassFactory> getOptimizations() {
+  @Override
+  protected List<PassFactory> getOptimizations() {
     return ImmutableList.of();
   }
 
@@ -70,6 +73,7 @@ class LintPassConfig extends PassConfig.PassConfigDelegate {
                   new CheckSuper(compiler),
                   new CheckPrimitiveAsObject(compiler),
                   new ClosureCheckModule(compiler),
+                  new CheckRedundantNullabilityModifier(compiler),
                   new CheckRequiresAndProvidesSorted(compiler),
                   new CheckSideEffects(
                       compiler, /* report */ true, /* protectSideEffectFreeCode */ false),
