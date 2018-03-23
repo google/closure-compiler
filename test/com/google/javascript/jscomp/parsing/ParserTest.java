@@ -1460,6 +1460,9 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
     mode = LanguageMode.ECMASCRIPT6;
     parseError("function () {}", "'identifier' expected");
+
+    isIdeMode = true;
+    parseError("function () {}", "'identifier' expected", "unnamed function statement");
   }
 
   public void testArrayDestructuringVar() {
