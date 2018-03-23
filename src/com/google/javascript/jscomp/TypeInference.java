@@ -81,17 +81,21 @@ class TypeInference
   private final AbstractCompiler compiler;
   private final JSTypeRegistry registry;
   private final ReverseAbstractInterpreter reverseInterpreter;
-  private final TypedScope syntacticScope;
   private final FlowScope functionScope;
   private final FlowScope bottomScope;
+  private final TypedScope cfgRootScope;
+  private final TypedScopeCreator scopeCreator;
   private final Map<String, AssertionFunctionSpec> assertionFunctionsMap;
+
+  // Updated with the current block scope as we flow through the CFG.
+  private TypedScope currentScope;
 
   // For convenience
   private final ObjectType unknownType;
 
   TypeInference(AbstractCompiler compiler, ControlFlowGraph<Node> cfg,
                 ReverseAbstractInterpreter reverseInterpreter,
-                TypedScope functionScope,
+                TypedScope syntacticScope, TypedScopeCreator scopeCreator,
                 Map<String, AssertionFunctionSpec> assertionFunctionsMap) {
     super(cfg, new LinkedFlowScope.FlowScopeJoinOp());
     this.compiler = compiler;
@@ -99,15 +103,17 @@ class TypeInference
     this.reverseInterpreter = reverseInterpreter;
     this.unknownType = registry.getNativeObjectType(UNKNOWN_TYPE);
 
-    this.syntacticScope = functionScope;
-    inferArguments(functionScope);
+    this.currentScope = syntacticScope;
+    this.cfgRootScope = syntacticScope;
+    inferArguments(syntacticScope);
 
-    this.functionScope = LinkedFlowScope.createEntryLattice(functionScope);
+    this.functionScope = LinkedFlowScope.createEntryLattice(syntacticScope);
+    this.scopeCreator = scopeCreator;
     this.assertionFunctionsMap = assertionFunctionsMap;
 
     // For each local variable declared with the VAR keyword, the entry
     // type is VOID.
-    for (TypedVar var : functionScope.getDeclarativelyUnboundVarsWithoutTypes()) {
+    for (TypedVar var : syntacticScope.getDeclarativelyUnboundVarsWithoutTypes()) {
       if (isUnflowable(var)) {
         continue;
       }
@@ -186,9 +192,16 @@ class TypeInference
       return input;
     }
 
+    // TODO(sdh): Change to NodeUtil.getEnclosingScopeRoot(n) once we have block scopes.
+    this.currentScope =
+        scopeCreator.createScope(NodeUtil.getEnclosingNode(n, TypeInference::createsNonBlockScope));
     FlowScope output = input.createChildFlowScope();
     output = traverse(n, output);
     return output;
+  }
+
+  private static boolean createsNonBlockScope(Node n) {
+    return NodeUtil.createsScope(n) && !NodeUtil.createsBlockScope(n);
   }
 
   @Override
@@ -484,7 +497,7 @@ class TypeInference
         scope = traverseChildren(n, scope);
         JSDocInfo info = n.getJSDocInfo();
         if (info != null && info.hasType()) {
-          n.setJSType(info.getType().evaluate(syntacticScope, registry));
+          n.setJSType(info.getType().evaluate(currentScope, registry));
         }
         break;
 
@@ -554,7 +567,7 @@ class TypeInference
     // otherwise use "unknown".
     JSDocInfo info = name.getJSDocInfo();
     if (info != null && info.hasType()) {
-      type = info.getType().evaluate(syntacticScope, registry);
+      type = info.getType().evaluate(currentScope, registry);
     } else {
       type = getNativeType(JSTypeNative.UNKNOWN_TYPE);
     }
@@ -620,7 +633,7 @@ class TypeInference
     switch (left.getToken()) {
       case NAME:
         String varName = left.getString();
-        TypedVar var = syntacticScope.getVar(varName);
+        TypedVar var = currentScope.getVar(varName);
         JSType varType = var == null ? null : var.getType();
         boolean isVarDeclaration =
             left.hasChildren()
@@ -719,7 +732,7 @@ class TypeInference
     ObjectType objectType = ObjectType.cast(
         nodeType.restrictByNotNullOrUndefined());
     boolean propCreationInConstructor =
-        obj.isThis() && getJSType(syntacticScope.getRootNode()).isConstructor();
+        obj.isThis() && getJSType(cfgRootScope.getRootNode()).isConstructor();
 
     if (objectType == null) {
       registry.registerPropertyOnType(propName, nodeType);
@@ -736,7 +749,7 @@ class TypeInference
         //    top level and the constructor Foo is defined in the same file.
         boolean staticPropCreation = false;
         Node maybeAssignStm = getprop.getGrandparent();
-        if (syntacticScope.isGlobal() && NodeUtil.isPrototypePropertyDeclaration(maybeAssignStm)) {
+        if (cfgRootScope.isGlobal() && NodeUtil.isPrototypePropertyDeclaration(maybeAssignStm)) {
           String propCreationFilename = maybeAssignStm.getSourceFileName();
           Node ctor = objectType.getOwnerFunction().getSource();
           if (ctor != null && ctor.getSourceFileName().equals(propCreationFilename)) {
@@ -789,7 +802,7 @@ class TypeInference
     if (getprop.isQualifiedName()) {
       String propName = getprop.getLastChild().getString();
       String qName = getprop.getQualifiedName();
-      TypedVar var = syntacticScope.getVar(qName);
+      TypedVar var = currentScope.getVar(qName);
       if (var != null && !var.isTypeInferred()) {
         // Handle normal declarations that could not be addressed earlier.
         if (propName.equals("prototype")
@@ -824,7 +837,7 @@ class TypeInference
         // 1) The var is escaped and assigned in an inner scope, e.g.,
         // function f() { var x = 3; function g() { x = null } (x); }
         boolean isInferred = var.isTypeInferred();
-        boolean unflowable = isInferred && isUnflowable(syntacticScope.getVar(varName));
+        boolean unflowable = isInferred && isUnflowable(currentScope.getVar(varName));
 
         // 2) We're reading type information from another scope for an
         // inferred variable. That variable is assigned more than once,
@@ -839,13 +852,10 @@ class TypeInference
         //
         // In this case, we would infer the first reference to t as
         // type {number}, even though it's undefined.
-        boolean nonLocalInferredSlot = false;
-        if (isInferred && syntacticScope.isLocal()) {
-          TypedVar maybeOuterVar = syntacticScope.getParent().getVar(varName);
-          if (var == maybeOuterVar && !maybeOuterVar.isMarkedAssignedExactlyOnce()) {
-            nonLocalInferredSlot = true;
-          }
-        }
+        TypedVar maybeOuterVar =
+            isInferred && cfgRootScope.isLocal() ? cfgRootScope.getParent().getVar(varName) : null;
+        boolean nonLocalInferredSlot =
+            var.equals(maybeOuterVar) && !maybeOuterVar.isMarkedAssignedExactlyOnce();
 
         if (!unflowable && !nonLocalInferredSlot) {
           type = var.getType();
@@ -901,7 +911,7 @@ class TypeInference
         // Do normal flow inference if this is a direct property assignment.
         if (qObjName != null && name.isStringKey()) {
           String qKeyName = qObjName + "." + memberName;
-          TypedVar var = syntacticScope.getVar(qKeyName);
+          TypedVar var = currentScope.getVar(qKeyName);
           JSType oldType = var == null ? null : var.getType();
           if (var != null && var.isTypeInferred()) {
             var.setType(oldType == null ? valueType : oldType.getLeastSupertype(oldType));
@@ -1428,7 +1438,7 @@ class TypeInference
       if (type.isTypeTransformation()) {
         // Lazy initialization when the first type transformation is found
         if (ttlObj == null) {
-          ttlObj = new TypeTransformation(compiler, syntacticScope);
+          ttlObj = new TypeTransformation(compiler, currentScope);
           typeVars = buildTypeVariables(inferredTypes);
           result = new LinkedHashMap<>();
         }
@@ -1614,7 +1624,7 @@ class TypeInference
       JSType varType = var.getType();
       if (varType != null) {
         boolean isDeclared = !var.isTypeInferred();
-        isLocallyInferred = (var != syntacticScope.getSlot(qualifiedName));
+        isLocallyInferred = (var != currentScope.getSlot(qualifiedName));
         if (isDeclared || isLocallyInferred) {
           propertyType = varType;
         }
@@ -1829,7 +1839,7 @@ class TypeInference
     if (varType == null) {
       varType = getNativeType(JSTypeNative.UNKNOWN_TYPE);
     }
-    if (isUnflowable(syntacticScope.getVar(varName))) {
+    if (isUnflowable(currentScope.getVar(varName))) {
       return;
     }
     scope.inferSlotType(varName, varType);
@@ -1840,7 +1850,7 @@ class TypeInference
         && v.isLocal()
         && v.isMarkedEscaped()
         // It's OK to flow a variable in the scope where it's escaped.
-        && v.getScope() == syntacticScope;
+        && v.getScope().getClosestNonBlockScope() == cfgRootScope;
   }
 
   /**

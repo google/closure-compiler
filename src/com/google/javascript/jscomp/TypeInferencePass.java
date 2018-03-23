@@ -113,14 +113,10 @@ class TypeInferencePass implements CompilerPass {
   void inferScope(Node n, TypedScope scope) {
     TypeInference typeInference =
         new TypeInference(
-            compiler, computeCfg(n), reverseInterpreter, scope,
+            compiler, computeCfg(n), reverseInterpreter, scope, scopeCreator,
             assertionFunctionsMap);
     try {
       typeInference.analyze();
-
-      // Resolve any new type names found during the inference.
-      compiler.getTypeRegistry().resolveTypesInScope(scope);
-
     } catch (DataFlowAnalysis.MaxIterationsExceededException e) {
       compiler.report(JSError.make(n, DATAFLOW_ERROR));
     }
@@ -144,7 +140,13 @@ class TypeInferencePass implements CompilerPass {
       // Only infer the entry root, rather than the scope root.
       // This ensures that incremental compilation only touches the root
       // that's been swapped out.
-      inferScope(t.getCurrentNode(), t.getTypedScope());
+      TypedScope scope = t.getTypedScope();
+      if (!scope.isBlockScope()) { // ignore non-cfg-root scopes.
+        inferScope(t.getCurrentNode(), scope);
+      }
+      // Resolve any new type names found during the inference.
+      // This runs for nested block scopes after infer runs on the CFG root.
+      compiler.getTypeRegistry().resolveTypesInScope(scope);
     }
 
     @Override

@@ -127,7 +127,7 @@ public final class TypeInferenceTest extends TestCase {
     ReverseAbstractInterpreter rai = compiler.getReverseAbstractInterpreter();
     // Do the type inference by data-flow analysis.
     TypeInference dfa = new TypeInference(compiler, cfg, rai, assumedScope,
-        ASSERTION_FUNCTION_MAP);
+        scopeCreator, ASSERTION_FUNCTION_MAP);
     dfa.analyze();
     // Get the scope of the implicit return.
     BranchedFlowState<FlowScope> rtnState =

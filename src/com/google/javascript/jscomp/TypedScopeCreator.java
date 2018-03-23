@@ -264,10 +264,12 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
     // the first place (particularly for empty blocks).  When these
     // cases show up in the CFG, we need to do some extra legwork to
     // ensure the scope exists.
+    // TODO(sdh): Use NodeUtil.getEnclosingScopeRoot(n.getParent()) once we're block-scoped.
     TypedScope s = memoized.get(n);
     return s != null
         ? s
-        : createScope(n, createScope(NodeUtil.getEnclosingScopeRoot(n.getParent())));
+        : createScope(
+            n, createScope(NodeUtil.getEnclosingNode(n.getParent(), NodeUtil::isValidCfgRoot)));
   }
 
   /**
