@@ -102,12 +102,6 @@ public final class ReplaceStringsTest extends TypeICompilerTestCase {
   }
 
   private static class Renamer extends AbstractPostOrderCallback {
-    final AbstractCompiler compiler;
-
-    Renamer(AbstractCompiler compiler) {
-      this.compiler = compiler;
-    }
-
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       if (n.isName()) {
@@ -136,7 +130,7 @@ public final class ReplaceStringsTest extends TypeICompilerTestCase {
         propertiesToErrorFor.put("foobar", CheckLevel.ERROR);
 
         if (rename) {
-          NodeTraversal.traverseEs6(compiler, js, new Renamer(compiler));
+          NodeTraversal.traverseEs6(compiler, js, new Renamer());
         }
         new CollapseProperties(compiler, PropertyCollapseLevel.ALL).process(externs, js);
         if (runDisambiguateProperties) {
