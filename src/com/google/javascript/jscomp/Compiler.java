@@ -3660,9 +3660,13 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
               @Override
               public CompilerState call() throws Exception {
                 Tracer tracer = newTracer(PassNames.DESERIALIZE_COMPILER_STATE);
+                logger.fine("Deserializing the CompilerState");
                 CompilerState compilerState = (CompilerState) objectInputStream.readObject();
+                logger.fine("Finished deserializing CompilerState");
                 if (compilerState.typeRegistry != null) {
+                  logger.fine("Deserializing the TypeRegistry");
                   compilerState.typeRegistry.restoreContents(objectInputStream);
+                  logger.fine("Finished deserializing TypeRegistry");
                 }
                 stopTracer(tracer, PassNames.DESERIALIZE_COMPILER_STATE);
                 return compilerState;
