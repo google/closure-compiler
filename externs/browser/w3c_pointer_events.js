@@ -43,6 +43,19 @@ Navigator.prototype.maxTouchPoints;
 
 
 /**
+ * @param {number} pointerId
+ * @see https://www.w3.org/TR/pointerevents/#widl-Element-setPointerCapture-void-long-pointerId
+ */
+Element.prototype.setPointerCapture = function(pointerId) {};
+
+/**
+ * @param {number} pointerId
+ * @see https://www.w3.org/TR/pointerevents/#widl-Element-releasePointerCapture-void-long-pointerId
+ */
+Element.prototype.releasePointerCapture = function(pointerId) {};
+
+
+/**
  * @record
  * @extends {MouseEventInit}
  * @see https://www.w3.org/TR/pointerevents/#idl-def-PointerEventInit
