@@ -449,6 +449,12 @@ jQuery.prototype.contents = function() {};
 jQuery.prototype.context;
 
 /**
+ * @param {function(!jQuery.Event)=} arg1
+  * @return {!jQuery}
+ */
+jQuery.prototype.contextmenu = function(arg1, handler) {};
+
+/**
  * @param {(string|Object<string,*>)} arg1
  * @param {(string|number|function(number,*))=} arg2
  * @return {(string|!jQuery)}
