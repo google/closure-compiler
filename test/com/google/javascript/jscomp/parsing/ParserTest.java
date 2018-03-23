@@ -921,6 +921,48 @@ public final class ParserTest extends BaseJSTypeTestCase {
     assertThat(info.getType().isVarArgs()).isTrue();
   }
 
+  public void testInlineJSDocReturnType() {
+    Node fn = parse("function /** string */ f(x) {}").getFirstChild();
+    assertNode(fn).hasType(Token.FUNCTION);
+
+    JSDocInfo info = fn.getFirstChild().getJSDocInfo();
+    assertThat(info.hasType()).isTrue();
+    assertTypeEquals(STRING_TYPE, info.getType());
+  }
+
+  public void testInlineJSDocReturnType_generator1() {
+    mode = LanguageMode.ECMASCRIPT6;
+
+    Node fn = parse("function * /** string */ f(x) {}").getFirstChild();
+    assertNode(fn).hasType(Token.FUNCTION);
+
+    JSDocInfo info = fn.getFirstChild().getJSDocInfo();
+    assertThat(info.hasType()).isTrue();
+    assertTypeEquals(STRING_TYPE, info.getType());
+  }
+
+  public void testInlineJSDocReturnType_generator2() {
+    mode = LanguageMode.ECMASCRIPT6;
+
+    Node fn = parse("function /** string */ *f(x) {}").getFirstChild();
+    assertNode(fn).hasType(Token.FUNCTION);
+
+    JSDocInfo info = fn.getFirstChild().getJSDocInfo();
+    assertThat(info.hasType()).isTrue();
+    assertTypeEquals(STRING_TYPE, info.getType());
+  }
+
+  public void testInlineJSDocReturnType_async() {
+    mode = LanguageMode.ECMASCRIPT8;
+
+    Node fn = parse("async function /** string */ f(x) {}").getFirstChild();
+    assertNode(fn).hasType(Token.FUNCTION);
+
+    JSDocInfo info = fn.getFirstChild().getJSDocInfo();
+    assertThat(info.hasType()).isTrue();
+    assertTypeEquals(STRING_TYPE, info.getType());
+  }
+
   public void testIncorrectJSDocDoesNotAlterJSParsing1() throws Exception {
     assertNodeEquality(
         parse("var a = [1,2]"),
