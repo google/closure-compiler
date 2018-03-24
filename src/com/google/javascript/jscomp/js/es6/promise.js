@@ -100,7 +100,7 @@ $jscomp.polyfill('Promise',
    *
    * NOTE: May be overridden for testing.
    * @package
-   * @param {!Function} f
+   * @param {function()} f
    */
   AsyncExecutor.prototype.asyncExecuteFunction = function(f) {
     nativeSetTimeout(f, 0);
@@ -113,13 +113,13 @@ $jscomp.polyfill('Promise',
    */
   AsyncExecutor.prototype.executeBatch_ = function() {
     while (this.batch_ && this.batch_.length) {
-      var executingBatch = this.batch_;
+      var /** !Array<?function()> */ executingBatch = this.batch_;
       // Executions scheduled while executing this batch go into a new one to
       // avoid the batch array getting too big.
       this.batch_ = [];
       for (var i = 0; i < executingBatch.length; ++i) {
-        var f = executingBatch[i];
-        delete executingBatch[i];  // free memory
+        var f = /** @type {function()} */ (executingBatch[i]);
+        executingBatch[i] = null;  // free memory
         try {
           f();
         } catch (error) {
@@ -348,7 +348,7 @@ $jscomp.polyfill('Promise',
   /**
    * Arrange to settle this promise in the same way as the given thenable.
    * @private
-   * @param {!function(
+   * @param {function(
    *     function((TYPE|IThenable<TYPE>|Thenable|null)=),
    *     function(*=))
    * } thenMethod
@@ -447,8 +447,7 @@ $jscomp.polyfill('Promise',
 
   PolyfillPromise['race'] = function(thenablesOrValues) {
     return new PolyfillPromise(function(resolve, reject) {
-      var iterator =
-          $jscomp.makeIterator(thenablesOrValues);
+      var iterator = $jscomp.makeIterator(thenablesOrValues);
       for (var /** !IIterableResult<*> */ iterRec = iterator.next();
            !iterRec.done;
            iterRec = iterator.next()) {
