@@ -43,6 +43,7 @@ import static com.google.javascript.rhino.jstype.TernaryValue.TRUE;
 import static com.google.javascript.rhino.jstype.TernaryValue.UNKNOWN;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.javascript.rhino.JSDocInfo;
@@ -53,7 +54,6 @@ import com.google.javascript.rhino.SimpleErrorReporter;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.TypeI;
 import com.google.javascript.rhino.jstype.JSType.TypePair;
-import com.google.javascript.rhino.testing.AbstractStaticScope;
 import com.google.javascript.rhino.testing.Asserts;
 import com.google.javascript.rhino.testing.BaseJSTypeTestCase;
 import com.google.javascript.rhino.testing.MapBasedScope;
@@ -98,6 +98,9 @@ public class JSTypeTest extends BaseJSTypeTestCase {
   protected void setUp() throws Exception {
     super.setUp();
 
+    final ObjectType googObject = registry.createAnonymousObjectType(null);
+    MapBasedScope scope = new MapBasedScope(ImmutableMap.of("goog", googObject));
+
     RecordTypeBuilder builder = new RecordTypeBuilder(registry);
     builder.addProperty("a", NUMBER_TYPE, null);
     builder.addProperty("b", STRING_TYPE, null);
@@ -113,9 +116,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
         .withReturnType(NUMBER_TYPE)
         .withTypeOfThis(DATE_TYPE)
         .build();
-    unresolvedNamedType =
-        new NamedType(registry, "not.resolved.named.type", null, -1, -1);
-    namedGoogBar = new NamedType(registry, "goog.Bar", null, -1, -1);
+    unresolvedNamedType = new NamedType(scope, registry, "not.resolved.named.type", null, -1, -1);
+    namedGoogBar = new NamedType(scope, registry, "goog.Bar", null, -1, -1);
 
     subclassCtor =
         new FunctionType(
@@ -157,23 +159,12 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     googSubSubBar.setPrototypeBasedOn(googSubBar.getInstanceType());
     googSubSubBarInst = googSubSubBar.getInstanceType();
 
-    final ObjectType googObject = registry.createAnonymousObjectType(null);
     googObject.defineDeclaredProperty("Bar", googBar, null);
 
-    namedGoogBar.resolve(null, new AbstractStaticScope<JSType>() {
-          @Override
-          public StaticTypedSlot<JSType> getSlot(String name) {
-            if ("goog".equals(name)) {
-              return new SimpleSlot("goog", googObject, false);
-            } else {
-              return null;
-            }
-          }
-        });
+    namedGoogBar.resolve(null, scope);
     assertNotNull(namedGoogBar.getImplicitPrototype());
 
-    forwardDeclaredNamedType =
-        new NamedType(registry, "forwardDeclared", "source", 1, 0);
+    forwardDeclaredNamedType = new NamedType(scope, registry, "forwardDeclared", "source", 1, 0);
     forwardDeclaredNamedType.resolve(
         new SimpleErrorReporter(), EMPTY_SCOPE);
 
@@ -5285,8 +5276,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     JSTypeRegistry jst = new JSTypeRegistry(null);
 
     // test == if references are equal
-    NamedType a = new NamedType(jst, "type1", "source", 1, 0);
-    NamedType b = new NamedType(jst, "type1", "source", 1, 0);
+    NamedType a = new NamedType(EMPTY_SCOPE, jst, "type1", "source", 1, 0);
+    NamedType b = new NamedType(EMPTY_SCOPE, jst, "type1", "source", 1, 0);
     assertTrue(a.isEquivalentTo(b));
 
     // test == instance of referenced type
@@ -5299,15 +5290,15 @@ public class JSTypeTest extends BaseJSTypeTestCase {
    */
   public void testNamedTypeEquals2() {
     // test == if references are equal
-    NamedType a = new NamedType(registry, "typeA", "source", 1, 0);
-    NamedType b = new NamedType(registry, "typeB", "source", 1, 0);
+    NamedType a = new NamedType(EMPTY_SCOPE, registry, "typeA", "source", 1, 0);
+    NamedType b = new NamedType(EMPTY_SCOPE, registry, "typeB", "source", 1, 0);
 
     ObjectType realA =
         registry.createConstructorType("typeA", null, null, null, null, false).getInstanceType();
     ObjectType realB = registry.createEnumType(
         "typeB", null, NUMBER_TYPE).getElementsType();
-    registry.declareType("typeA", realA);
-    registry.declareType("typeB", realB);
+    registry.declareType(null, "typeA", realA);
+    registry.declareType(null, "typeB", realB);
 
     assertTypeEquals(a, realA);
     assertTypeEquals(b, realB);
@@ -5335,8 +5326,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
    */
   public void testForwardDeclaredNamedTypeEquals() {
     // test == if references are equal
-    NamedType a = new NamedType(registry, "forwardDeclared", "source", 1, 0);
-    NamedType b = new NamedType(registry, "forwardDeclared", "source", 1, 0);
+    NamedType a = new NamedType(EMPTY_SCOPE, registry, "forwardDeclared", "source", 1, 0);
+    NamedType b = new NamedType(EMPTY_SCOPE, registry, "forwardDeclared", "source", 1, 0);
 
     assertTypeEquals(a, b);
 
@@ -5355,7 +5346,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
   }
 
   public void testForwardDeclaredNamedType() {
-    NamedType a = new NamedType(registry, "forwardDeclared", "source", 1, 0);
+    NamedType a = new NamedType(EMPTY_SCOPE, registry, "forwardDeclared", "source", 1, 0);
 
     assertTypeEquals(UNKNOWN_TYPE, a.getLeastSupertype(UNKNOWN_TYPE));
     assertTypeEquals(CHECKED_UNKNOWN_TYPE,
@@ -6021,8 +6012,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     // Normally, there is no way to create a Named NoType alias so
     // avoid confusing things by doing it here..
     if (!jstype.isNoType()) {
-      NamedType namedWrapper = new NamedType(
-          registry, name, "[testcode]", -1, -1);
+      NamedType namedWrapper = new NamedType(EMPTY_SCOPE, registry, name, "[testcode]", -1, -1);
       namedWrapper.setReferencedType(jstype);
       return namedWrapper;
     } else {

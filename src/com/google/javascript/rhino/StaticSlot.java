@@ -57,4 +57,6 @@ public interface StaticSlot extends Serializable {
 
   /** Gets the JSDoc for this slot. */
   JSDocInfo getJSDocInfo();
+
+  StaticScope getScope();
 }

@@ -61,11 +61,11 @@ public interface TypeIRegistry extends Serializable {
 
   TypeI createTypeFromCommentNode(Node n);
 
-  <T extends FunctionTypeI> T getNativeFunctionType(JSTypeNative typeId);
+  FunctionTypeI getNativeFunctionType(JSTypeNative typeId);
 
-  <T extends ObjectTypeI> T getNativeObjectType(JSTypeNative typeId);
+  ObjectTypeI getNativeObjectType(JSTypeNative typeId);
 
-  <T extends TypeI> T getNativeType(JSTypeNative typeId);
+  TypeI getNativeType(JSTypeNative typeId);
 
   String getReadableTypeName(Node n);
 

@@ -13078,7 +13078,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         + "}");
 
     // check the type of afoo when referenced
-    assertTypeEquals(registry.createNullableType(registry.getType("Foo")),
+    assertTypeEquals(registry.createNullableType(registry.getGlobalType("Foo")),
         n.getLastChild().getLastChild().getLastChild().getLastChild()
         .getLastChild().getLastChild().getJSType());
   }

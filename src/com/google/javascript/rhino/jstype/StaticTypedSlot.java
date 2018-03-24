@@ -61,5 +61,9 @@ public interface StaticTypedSlot<T extends TypeI> extends StaticSlot {
   boolean isTypeInferred();
 
   /** Gets the declaration of this symbol. May not exist. */
+  @Override
   StaticTypedRef<T> getDeclaration();
+
+  @Override
+  StaticTypedScope<T> getScope();
 }

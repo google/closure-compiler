@@ -223,15 +223,13 @@ public class GlobalTypeInfo implements TypeIRegistry {
     return n.getTypeI().getDisplayName();
   }
 
-  @SuppressWarnings("unchecked")
   @Override
-  public TypeI getGlobalType(String typeName) {
+  public JSType getGlobalType(String typeName) {
     return getType(null, typeName);
   }
 
-  @SuppressWarnings("unchecked")
   @Override
-  public TypeI getType(String typeName) {
+  public JSType getType(String typeName) {
     return getType(null, typeName);
   }
 
@@ -290,14 +288,13 @@ public class GlobalTypeInfo implements TypeIRegistry {
     return createTypeFromCommentNode(expr.getRoot());
   }
 
-  @SuppressWarnings("unchecked")
   @Override
-  public TypeI createRecordType(Map<String, ? extends TypeI> props) {
+  public JSType createRecordType(Map<String, ? extends TypeI> props) {
     return JSType.fromProperties(this.commonTypes, (Map<String, JSType>) props);
   }
 
   @Override
-  public TypeI instantiateGenericType(
+  public JSType instantiateGenericType(
       ObjectTypeI genericType, ImmutableList<? extends TypeI> typeArgs) {
     JSType t = (JSType) genericType;
     int numTypeParams = t.getTypeParameters().size();
@@ -313,7 +310,7 @@ public class GlobalTypeInfo implements TypeIRegistry {
   }
 
   @Override
-  public TypeI buildRecordTypeFromObject(ObjectTypeI obj) {
+  public JSType buildRecordTypeFromObject(ObjectTypeI obj) {
     return JSType.buildRecordTypeFromObject(this.commonTypes, (JSType) obj);
   }
 

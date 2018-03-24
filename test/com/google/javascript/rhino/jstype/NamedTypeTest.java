@@ -47,25 +47,21 @@ import com.google.javascript.rhino.testing.MapBasedScope;
  */
 public class NamedTypeTest extends BaseJSTypeTestCase {
   public void testNamedTypeProperties() {
-    NamedType namedA = new NamedType(registry, "TypeA", "source", 1, 0);
     FunctionType ctorA = registry.createConstructorType("TypeA", null, null, null, null, false);
+    MapBasedScope scope = new MapBasedScope(ImmutableMap.of("TypeA", ctorA));
     ObjectType typeA = ctorA.getInstanceType();
+    NamedType namedA = new NamedType(scope, registry, "TypeA", "source", 1, 0);
 
     namedA.defineDeclaredProperty("foo", NUMBER_TYPE, null);
-    namedA.resolve(
-        null,
-        new MapBasedScope(
-            ImmutableMap.of("TypeA", ctorA)));
+    namedA.resolve(null, scope);
     assertTypeEquals(NUMBER_TYPE, typeA.getPropertyType("foo"));
   }
 
   public void testActiveXObjectResolve() {
-    NamedType activeXObject =
-        new NamedType(registry, "ActiveXObject", "source", 1, 0);
-    activeXObject.resolve(
-        null,
-        new MapBasedScope(
-            ImmutableMap.of("ActiveXObject", NO_OBJECT_TYPE)));
+    MapBasedScope scope = new MapBasedScope(ImmutableMap.of("ActiveXObject", NO_OBJECT_TYPE));
+
+    NamedType activeXObject = new NamedType(scope, registry, "ActiveXObject", "source", 1, 0);
+    activeXObject.resolve(null, scope);
     assertEquals("ActiveXObject", activeXObject.toString());
     assertTypeEquals(NO_OBJECT_TYPE, activeXObject.getReferencedType());
   }

@@ -43,6 +43,7 @@ import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.TemplateType;
 import com.google.javascript.rhino.testing.BaseJSTypeTestCase;
+import com.google.javascript.rhino.testing.MapBasedScope;
 import com.google.javascript.rhino.testing.TestErrorReporter;
 import java.io.IOException;
 import java.util.Collection;
@@ -58,6 +59,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
 
   private static final String MISSING_TYPE_DECL_WARNING_TEXT =
       "Missing type declaration.";
+  private static final MapBasedScope EMPTY_SCOPE = MapBasedScope.emptyScope();
 
   @Override
   public void setUp() throws Exception {
@@ -133,15 +135,13 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   public void testParseNamedType5() {
     JSDocInfo info = parse("@type {!goog.\nBar}*/");
     assertTypeEquals(
-        registry.createNamedType("goog.Bar", null, -1, -1),
-        info.getType());
+        registry.createNamedType(EMPTY_SCOPE, "goog.Bar", null, -1, -1), info.getType());
   }
 
   public void testParseNamedType6() {
     JSDocInfo info = parse("@type {!goog.\n * Bar.\n * Baz}*/");
     assertTypeEquals(
-        registry.createNamedType("goog.Bar.Baz", null, -1, -1),
-        info.getType());
+        registry.createNamedType(EMPTY_SCOPE, "goog.Bar.Baz", null, -1, -1), info.getType());
   }
 
   public void testParseNamedTypeError1() {
@@ -160,9 +160,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
 
   public void testParseNamespaceType1() {
     JSDocInfo info = parse("@type {goog.}*/");
-    assertTypeEquals(
-        registry.createNamedType("goog.", null, -1, -1),
-        info.getType());
+    assertTypeEquals(registry.createNamedType(EMPTY_SCOPE, "goog.", null, -1, -1), info.getType());
   }
 
   public void testTypedefType1() {
@@ -759,9 +757,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   public void testParseNullableModifiers9() {
     JSDocInfo info = parse("@type {foo.Hello.World?}*/");
     assertTypeEquals(
-        createNullableType(
-            registry.createNamedType(
-                "foo.Hello.World", null, -1, -1)),
+        createNullableType(registry.createNamedType(EMPTY_SCOPE, "foo.Hello.World", null, -1, -1)),
         info.getType());
   }
 
@@ -826,8 +822,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     JSDocInfo info =
         parse("@this {goog.foo.Bar}*/");
     assertTypeEquals(
-        registry.createNamedType("goog.foo.Bar", null, -1, -1),
-        info.getThisType());
+        registry.createNamedType(EMPTY_SCOPE, "goog.foo.Bar", null, -1, -1), info.getThisType());
   }
 
   public void testParseThisType2() {
@@ -835,7 +830,8 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
         parse(
             "@this goog.foo.Bar*/",
             "Bad type annotation. Type annotations should have curly braces." + BAD_TYPE_WIKI_LINK);
-    assertTypeEquals(registry.createNamedType("goog.foo.Bar", null, -1, -1), info.getThisType());
+    assertTypeEquals(
+        registry.createNamedType(EMPTY_SCOPE, "goog.foo.Bar", null, -1, -1), info.getThisType());
   }
 
   public void testParseThisType3() {
@@ -1195,8 +1191,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   public void testParseExtends2() {
     JSDocInfo info = parse("@extends com.google.Foo.Bar.Hello.World*/");
     assertTypeEquals(
-        registry.createNamedType(
-            "com.google.Foo.Bar.Hello.World", null, -1, -1),
+        registry.createNamedType(EMPTY_SCOPE, "com.google.Foo.Bar.Hello.World", null, -1, -1),
         info.getBaseType());
   }
 
@@ -1204,8 +1199,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     JSDocInfo info =
         parse("@extends com.google.Foo.Bar.Hello.World.<Boolean,number>*/");
     assertTypeEquals(
-        registry.createNamedType(
-            "com.google.Foo.Bar.Hello.World", null, -1, -1),
+        registry.createNamedType(EMPTY_SCOPE, "com.google.Foo.Bar.Hello.World", null, -1, -1),
         info.getBaseType());
   }
 
@@ -1215,7 +1209,8 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
         parse("@implements {SomeInterface.<*>} */")
         .getImplementedInterfaces();
     assertThat(interfaces).hasSize(1);
-    assertTypeEquals(registry.createNamedType("SomeInterface", null, -1, -1), interfaces.get(0));
+    assertTypeEquals(
+        registry.createNamedType(EMPTY_SCOPE, "SomeInterface", null, -1, -1), interfaces.get(0));
   }
 
   public void testParseExtends4() {
@@ -1242,7 +1237,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     // If this is fixed in the future, change this test to check for a
     // warning/error message.
     assertTypeEquals(
-        registry.createNamedType("some_++#%$%_UglyString", null, -1, -1),
+        registry.createNamedType(EMPTY_SCOPE, "some_++#%$%_UglyString", null, -1, -1),
         parse("@extends {some_++#%$%_UglyString} */").getBaseType());
   }
 
@@ -1999,8 +1994,8 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
         " * @extends FooBar\n" +
         " */");
 
-    assertTypeEquals(registry.createNamedType("FooBar", null, 0, 0),
-        jsdoc.getBaseType());
+    assertTypeEquals(
+        registry.createNamedType(EMPTY_SCOPE, "FooBar", null, 0, 0), jsdoc.getBaseType());
     assertThat(jsdoc.isConstant()).isFalse();
     assertThat(jsdoc.getDescription()).isNull();
     assertThat(jsdoc.getEnumParameterType()).isNull();
@@ -2158,7 +2153,8 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     List<JSTypeExpression> interfaces = parse("@implements {SomeInterface}*/")
         .getImplementedInterfaces();
     assertThat(interfaces).hasSize(1);
-    assertTypeEquals(registry.createNamedType("SomeInterface", null, -1, -1), interfaces.get(0));
+    assertTypeEquals(
+        registry.createNamedType(EMPTY_SCOPE, "SomeInterface", null, -1, -1), interfaces.get(0));
   }
 
   public void testParseImplementsTwo() {
@@ -2169,9 +2165,10 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
             "*/")
         .getImplementedInterfaces();
     assertThat(interfaces).hasSize(2);
-    assertTypeEquals(registry.createNamedType("SomeInterface1", null, -1, -1), interfaces.get(0));
-    assertTypeEquals(registry.createNamedType("SomeInterface2", null, -1, -1),
-        interfaces.get(1));
+    assertTypeEquals(
+        registry.createNamedType(EMPTY_SCOPE, "SomeInterface1", null, -1, -1), interfaces.get(0));
+    assertTypeEquals(
+        registry.createNamedType(EMPTY_SCOPE, "SomeInterface2", null, -1, -1), interfaces.get(1));
   }
 
   public void testParseImplementsSameTwice() {
@@ -2206,8 +2203,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
      assertThat(jsdoc.isInterface()).isTrue();
      assertThat(jsdoc.getExtendedInterfacesCount()).isEqualTo(1);
      List<JSTypeExpression> types = jsdoc.getExtendedInterfaces();
-    assertTypeEquals(registry.createNamedType("Extended", null, -1, -1),
-        types.get(0));
+    assertTypeEquals(registry.createNamedType(EMPTY_SCOPE, "Extended", null, -1, -1), types.get(0));
   }
 
   public void testInterfaceMultiExtends1() {
@@ -2219,10 +2215,10 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     assertThat(jsdoc.getBaseType()).isNull();
     assertThat(jsdoc.getExtendedInterfacesCount()).isEqualTo(2);
     List<JSTypeExpression> types = jsdoc.getExtendedInterfaces();
-    assertTypeEquals(registry.createNamedType("Extended1", null, -1, -1),
-       types.get(0));
-    assertTypeEquals(registry.createNamedType("Extended2", null, -1, -1),
-        types.get(1));
+    assertTypeEquals(
+        registry.createNamedType(EMPTY_SCOPE, "Extended1", null, -1, -1), types.get(0));
+    assertTypeEquals(
+        registry.createNamedType(EMPTY_SCOPE, "Extended2", null, -1, -1), types.get(1));
   }
 
   public void testInterfaceMultiExtends2() {
@@ -2235,12 +2231,12 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     assertThat(jsdoc.getBaseType()).isNull();
     assertThat(jsdoc.getExtendedInterfacesCount()).isEqualTo(3);
     List<JSTypeExpression> types = jsdoc.getExtendedInterfaces();
-    assertTypeEquals(registry.createNamedType("Extended1", null, -1, -1),
-       types.get(0));
-    assertTypeEquals(registry.createNamedType("Extended2", null, -1, -1),
-        types.get(1));
-    assertTypeEquals(registry.createNamedType("Extended3", null, -1, -1),
-        types.get(2));
+    assertTypeEquals(
+        registry.createNamedType(EMPTY_SCOPE, "Extended1", null, -1, -1), types.get(0));
+    assertTypeEquals(
+        registry.createNamedType(EMPTY_SCOPE, "Extended2", null, -1, -1), types.get(1));
+    assertTypeEquals(
+        registry.createNamedType(EMPTY_SCOPE, "Extended3", null, -1, -1), types.get(2));
   }
 
   public void testBadClassMultiExtends() {
@@ -2265,9 +2261,9 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
             "@implements {Disposable?}\n * @constructor */",
             "Bad type annotation. expected closing }" + BAD_TYPE_WIKI_LINK);
   assertThat(jsdoc.isConstructor()).isTrue();
-  assertTypeEquals(
-      registry.createNamedType("Disposable", null, -1, -1),
-      jsdoc.getImplementedInterfaces().get(0));
+    assertTypeEquals(
+        registry.createNamedType(EMPTY_SCOPE, "Disposable", null, -1, -1),
+        jsdoc.getImplementedInterfaces().get(0));
   }
 
   public void testBadTypeDefInterfaceAndConstructor1() {

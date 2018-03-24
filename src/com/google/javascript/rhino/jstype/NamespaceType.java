@@ -68,7 +68,7 @@ class NamespaceType extends NamedType {
    */
   NamespaceType(JSTypeRegistry registry, String reference,
       String sourceName, int lineno, int charno) {
-    super(registry, reference, sourceName, lineno, charno);
+    super(null, registry, reference, sourceName, lineno, charno);
   }
 
   /**

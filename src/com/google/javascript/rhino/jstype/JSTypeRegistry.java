@@ -165,10 +165,8 @@ public class JSTypeRegistry implements TypeIRegistry {
   // try to type-check them at all.
   private final transient Set<String> forwardDeclaredTypes;
 
-  // A map of properties to the types on which those properties have been
-  // declared.
-  private final Map<String, UnionTypeBuilder> typesIndexedByProperty =
-       new HashMap<>();
+  // A map of properties to the types on which those properties have been declared.
+  private final Map<String, UnionTypeBuilder> typesIndexedByProperty = new HashMap<>();
 
   private JSType sentinelObjectLiteral;
 
@@ -195,8 +193,7 @@ public class JSTypeRegistry implements TypeIRegistry {
   // A map of properties to the greatest subtype on which those properties have
   // been declared. This is filled lazily from the types declared in
   // typesIndexedByProperty.
-  private final Map<String, JSType> greatestSubtypeByProperty =
-       new HashMap<>();
+  private final Map<String, JSType> greatestSubtypeByProperty = new HashMap<>();
 
   // A map from interface name to types that implement it.
   private transient Multimap<String, FunctionTypeI> interfaceToImplementors =
@@ -204,10 +201,6 @@ public class JSTypeRegistry implements TypeIRegistry {
 
   // All the unresolved named types.
   private final Multimap<StaticTypedScope<JSType>, NamedType> unresolvedNamedTypes =
-      ArrayListMultimap.create();
-
-  // All the resolved named types.
-  private final Multimap<StaticTypedScope<JSType>, NamedType> resolvedNamedTypes =
       ArrayListMultimap.create();
 
   // The template type name.
@@ -824,43 +817,51 @@ public class JSTypeRegistry implements TypeIRegistry {
   }
 
   private void initializeRegistry() {
-    register(getNativeType(JSTypeNative.ARRAY_TYPE));
-    register(getNativeType(JSTypeNative.BOOLEAN_OBJECT_TYPE));
-    register(getNativeType(JSTypeNative.BOOLEAN_TYPE));
-    register(getNativeType(JSTypeNative.ITERABLE_TYPE));
-    register(getNativeType(JSTypeNative.ITERATOR_TYPE));
-    register(getNativeType(JSTypeNative.GENERATOR_TYPE));
-    register(getNativeType(JSTypeNative.DATE_TYPE));
-    register(getNativeType(JSTypeNative.I_OBJECT_TYPE));
-    register(getNativeType(JSTypeNative.NULL_TYPE));
-    register(getNativeType(JSTypeNative.NULL_TYPE), "Null");
-    register(getNativeType(JSTypeNative.NUMBER_OBJECT_TYPE));
-    register(getNativeType(JSTypeNative.NUMBER_TYPE));
-    register(getNativeType(JSTypeNative.OBJECT_TYPE));
-    register(getNativeType(JSTypeNative.ERROR_TYPE));
-    register(getNativeType(JSTypeNative.URI_ERROR_TYPE));
-    register(getNativeType(JSTypeNative.EVAL_ERROR_TYPE));
-    register(getNativeType(JSTypeNative.TYPE_ERROR_TYPE));
-    register(getNativeType(JSTypeNative.RANGE_ERROR_TYPE));
-    register(getNativeType(JSTypeNative.REFERENCE_ERROR_TYPE));
-    register(getNativeType(JSTypeNative.SYNTAX_ERROR_TYPE));
-    register(getNativeType(JSTypeNative.REGEXP_TYPE));
-    register(getNativeType(JSTypeNative.STRING_OBJECT_TYPE));
-    register(getNativeType(JSTypeNative.STRING_TYPE));
-    register(getNativeType(JSTypeNative.SYMBOL_OBJECT_TYPE));
-    register(getNativeType(JSTypeNative.SYMBOL_TYPE));
-    register(getNativeType(JSTypeNative.VOID_TYPE));
-    register(getNativeType(JSTypeNative.VOID_TYPE), "Undefined");
-    register(getNativeType(JSTypeNative.VOID_TYPE), "void");
-    register(getNativeType(JSTypeNative.FUNCTION_INSTANCE_TYPE), "Function");
+    registerGlobalType(getNativeType(JSTypeNative.ARRAY_TYPE));
+    registerGlobalType(getNativeType(JSTypeNative.BOOLEAN_OBJECT_TYPE));
+    registerGlobalType(getNativeType(JSTypeNative.BOOLEAN_TYPE));
+    registerGlobalType(getNativeType(JSTypeNative.ITERABLE_TYPE));
+    registerGlobalType(getNativeType(JSTypeNative.ITERATOR_TYPE));
+    registerGlobalType(getNativeType(JSTypeNative.GENERATOR_TYPE));
+    registerGlobalType(getNativeType(JSTypeNative.DATE_TYPE));
+    registerGlobalType(getNativeType(JSTypeNative.I_OBJECT_TYPE));
+    registerGlobalType(getNativeType(JSTypeNative.NULL_TYPE));
+    registerGlobalType(getNativeType(JSTypeNative.NULL_TYPE), "Null");
+    registerGlobalType(getNativeType(JSTypeNative.NUMBER_OBJECT_TYPE));
+    registerGlobalType(getNativeType(JSTypeNative.NUMBER_TYPE));
+    registerGlobalType(getNativeType(JSTypeNative.OBJECT_TYPE));
+    registerGlobalType(getNativeType(JSTypeNative.ERROR_TYPE));
+    registerGlobalType(getNativeType(JSTypeNative.URI_ERROR_TYPE));
+    registerGlobalType(getNativeType(JSTypeNative.EVAL_ERROR_TYPE));
+    registerGlobalType(getNativeType(JSTypeNative.TYPE_ERROR_TYPE));
+    registerGlobalType(getNativeType(JSTypeNative.RANGE_ERROR_TYPE));
+    registerGlobalType(getNativeType(JSTypeNative.REFERENCE_ERROR_TYPE));
+    registerGlobalType(getNativeType(JSTypeNative.SYNTAX_ERROR_TYPE));
+    registerGlobalType(getNativeType(JSTypeNative.REGEXP_TYPE));
+    registerGlobalType(getNativeType(JSTypeNative.STRING_OBJECT_TYPE));
+    registerGlobalType(getNativeType(JSTypeNative.STRING_TYPE));
+    registerGlobalType(getNativeType(JSTypeNative.SYMBOL_OBJECT_TYPE));
+    registerGlobalType(getNativeType(JSTypeNative.SYMBOL_TYPE));
+    registerGlobalType(getNativeType(JSTypeNative.VOID_TYPE));
+    registerGlobalType(getNativeType(JSTypeNative.VOID_TYPE), "Undefined");
+    registerGlobalType(getNativeType(JSTypeNative.VOID_TYPE), "void");
+    registerGlobalType(getNativeType(JSTypeNative.FUNCTION_INSTANCE_TYPE), "Function");
   }
 
-  private void register(JSType type) {
-    register(type, type.toString());
+  private static void checkTypeName(String typeName) {
+    checkArgument(!typeName.contains("<"), "Type names cannot contain template annotations.");
+  }
+
+  private void registerGlobalType(JSType type) {
+    registerGlobalType(type, type.toString());
+  }
+
+  private void registerGlobalType(JSType type, String name) {
+    register(type, name);
   }
 
   private void register(JSType type, String name) {
-    checkArgument(!name.contains("<"), "Type names cannot contain template annotations.");
+    checkTypeName(name);
     namesToTypes.put(name, type);
   }
 
@@ -1150,12 +1151,20 @@ public class JSTypeRegistry implements TypeIRegistry {
   }
 
   /**
-   * Overrides a declared global type name. Throws an exception if this
-   * type name hasn't been declared yet.
+   * Overrides a declared global type name. Throws an exception if this type name hasn't been
+   * declared yet.
    */
-  public void overwriteDeclaredType(String name, JSType t) {
+  public void overwriteDeclaredType(String name, JSType type) {
+    overwriteDeclaredType(null, name, type);
+  }
+
+  /**
+   * Overrides a declared global type name. Throws an exception if this type name hasn't been
+   * declared yet.
+   */
+  public void overwriteDeclaredType(StaticScope scope, String name, JSType type) {
     checkState(namesToTypes.containsKey(name));
-    register(t, name);
+    register(type, name);
   }
 
   /**
@@ -1336,8 +1345,6 @@ public class JSTypeRegistry implements TypeIRegistry {
    * @param jsTypeName The name string.
    * @return the corresponding JSType object or {@code null} it cannot be found
    */
-  // Unchecked conversion of the return type, from JSType to TypeI.
-  @SuppressWarnings("unchecked")
   @Override
   public JSType getType(StaticScope scope, String jsTypeName) {
     // TODO(user): Push every local type name out of namesToTypes so that
@@ -1406,11 +1413,11 @@ public class JSTypeRegistry implements TypeIRegistry {
       }
     }
 
-    type = getType(jsTypeName);
+    type = getType(scope, jsTypeName);
     if (type == null) {
       // TODO(user): Each instance should support named type creation using
       // interning.
-      NamedType namedType = createNamedType(jsTypeName, sourceName, lineno, charno);
+      NamedType namedType = createNamedType(scope, jsTypeName, sourceName, lineno, charno);
       if (recordUnresolvedTypes) {
         unresolvedNamedTypes.put(scope, namedType);
       }
@@ -1419,19 +1426,16 @@ public class JSTypeRegistry implements TypeIRegistry {
     return type;
   }
 
-  @SuppressWarnings("unchecked")
   @Override
   public JSType getNativeType(JSTypeNative typeId) {
     return nativeTypes[typeId.ordinal()];
   }
 
-  @SuppressWarnings("unchecked")
   @Override
   public ObjectType getNativeObjectType(JSTypeNative typeId) {
     return (ObjectType) getNativeType(typeId);
   }
 
-  @SuppressWarnings("unchecked")
   @Override
   public FunctionType getNativeFunctionType(JSTypeNative typeId) {
     return (FunctionType) getNativeType(typeId);
@@ -1443,7 +1447,6 @@ public class JSTypeRegistry implements TypeIRegistry {
    * compile is run.
    */
   public void clearNamedTypes() {
-    resolvedNamedTypes.clear();
     unresolvedNamedTypes.clear();
   }
 
@@ -1455,7 +1458,7 @@ public class JSTypeRegistry implements TypeIRegistry {
       type.resolve(reporter, scope);
     }
 
-    resolvedNamedTypes.putAll(scope, unresolvedNamedTypes.removeAll(scope));
+    unresolvedNamedTypes.removeAll(scope);
 
     if (scope != null && scope.getParentScope() == null) {
       // By default, the global "this" type is just an anonymous object.
@@ -1937,16 +1940,20 @@ public class JSTypeRegistry implements TypeIRegistry {
     return createTemplatizedType(baseType, ImmutableList.copyOf(templatizedTypes));
   }
 
-  /**
-   * Creates a named type.
-   */
+  /** Creates a named type. */
   @VisibleForTesting
-  public NamedType createNamedType(String reference,
-      String sourceName, int lineno, int charno) {
+  public NamedType createNamedType(String reference, String sourceName, int lineno, int charno) {
+    return createNamedType(null, reference, sourceName, lineno, charno);
+  }
+
+  /** Creates a named type. */
+  @VisibleForTesting
+  public NamedType createNamedType(
+      StaticTypedScope<JSType> scope, String reference, String sourceName, int lineno, int charno) {
     if (reference.endsWith(".")) {
       return new NamespaceType(this, reference, sourceName, lineno, charno);
     } else {
-      return new NamedType(this, reference, sourceName, lineno, charno);
+      return new NamedType(scope, this, reference, sourceName, lineno, charno);
     }
   }
 
@@ -2092,6 +2099,7 @@ public class JSTypeRegistry implements TypeIRegistry {
               // arguments from further resolution.
               namedType =
                   new NamedType(
+                      scope,
                       this,
                       n.getString(),
                       sourceName,

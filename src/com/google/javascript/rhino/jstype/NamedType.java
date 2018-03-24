@@ -106,20 +106,12 @@ public class NamedType extends ProxyObjectType {
    */
   @Nullable private ImmutableList<JSType> templateTypes;
 
-  /**
-   * Create a named type based on the reference.
-   */
-  NamedType(JSTypeRegistry registry, String reference,
-      String sourceName, int lineno, int charno) {
-    super(registry, registry.getNativeObjectType(JSTypeNative.UNKNOWN_TYPE));
-
-    checkNotNull(reference);
-    this.reference = reference;
-    this.sourceName = sourceName;
-    this.lineno = lineno;
-    this.charno = charno;
+  // TODO(b/74253232): remove this overload
+  NamedType(JSTypeRegistry registry, String reference, String sourceName, int lineno, int charno) {
+    this(null, registry, reference, sourceName, lineno, charno, null);
   }
 
+  // TODO(b/74253232): remove this overload
   NamedType(
       JSTypeRegistry registry,
       String reference,
@@ -127,7 +119,36 @@ public class NamedType extends ProxyObjectType {
       int lineno,
       int charno,
       ImmutableList<JSType> templateTypes) {
-    this(registry, reference, sourceName, lineno, charno);
+    this(null, registry, reference, sourceName, lineno, charno, templateTypes);
+  }
+
+  NamedType(
+      StaticTypedScope<JSType> scope,
+      JSTypeRegistry registry,
+      String reference,
+      String sourceName,
+      int lineno,
+      int charno) {
+    this(scope, registry, reference, sourceName, lineno, charno, null);
+  }
+
+  NamedType(
+      StaticTypedScope<JSType> scope,
+      JSTypeRegistry registry,
+      String reference,
+      String sourceName,
+      int lineno,
+      int charno,
+      ImmutableList<JSType> templateTypes) {
+    super(registry, registry.getNativeObjectType(JSTypeNative.UNKNOWN_TYPE));
+
+    checkNotNull(reference);
+    // TODO(b/74253232): enable this
+    // this.resolutionScope = scope;
+    this.reference = reference;
+    this.sourceName = sourceName;
+    this.lineno = lineno;
+    this.charno = charno;
     this.templateTypes = templateTypes;
   }
 
@@ -231,6 +252,7 @@ public class NamedType extends ProxyObjectType {
     if (isResolved()) {
       finishPropertyContinuations();
     }
+
     return getReferencedType();
   }
 
@@ -248,12 +270,10 @@ public class NamedType extends ProxyObjectType {
   }
 
   /**
-   * Resolves a named type by looking up its first component in the scope, and
-   * subsequent components as properties. The scope must have been fully
-   * parsed and a symbol table constructed.
+   * Resolves a named type by looking up its first component in the scope, and subsequent components
+   * as properties. The scope must have been fully parsed and a symbol table constructed.
    */
-  private void resolveViaProperties(ErrorReporter reporter,
-                                    StaticTypedScope<JSType> enclosing) {
+  private void resolveViaProperties(ErrorReporter reporter, StaticTypedScope<JSType> enclosing) {
     JSType value = lookupViaProperties(reporter, enclosing);
     // last component of the chain
     if (value != null && value.isFunctionType() &&

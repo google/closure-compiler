@@ -1110,6 +1110,11 @@ class GlobalNamespace
       return null;
     }
 
+    @Override
+    public StaticTypedScope<TypeI> getScope() {
+      throw new UnsupportedOperationException();
+    }
+
     void addRef(Ref ref) {
       addRefInternal(ref);
       switch (ref.type) {

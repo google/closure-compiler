@@ -38,17 +38,20 @@
 
 package com.google.javascript.rhino.jstype;
 
-import com.google.javascript.rhino.testing.BaseJSTypeTestCase;
 import com.google.javascript.rhino.testing.Asserts;
+import com.google.javascript.rhino.testing.BaseJSTypeTestCase;
+import com.google.javascript.rhino.testing.MapBasedScope;
 
 public class UnionTypeTest extends BaseJSTypeTestCase {
+  private static final MapBasedScope EMPTY_SCOPE = MapBasedScope.emptyScope();
+
   private NamedType unresolvedNamedType;
 
   @Override
   public void setUp() throws Exception {
     super.setUp();
     unresolvedNamedType =
-        new NamedType(registry, "not.resolved.named.type", null, -1, -1);
+        new NamedType(EMPTY_SCOPE, registry, "not.resolved.named.type", null, -1, -1);
   }
 
   /**

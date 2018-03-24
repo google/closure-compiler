@@ -39,6 +39,7 @@
 package com.google.javascript.rhino.jstype;
 
 import com.google.javascript.rhino.testing.BaseJSTypeTestCase;
+import com.google.javascript.rhino.testing.MapBasedScope;
 
 /**
  * Test for {@link UnionTypeBuilder}.
@@ -46,6 +47,8 @@ import com.google.javascript.rhino.testing.BaseJSTypeTestCase;
  * @author nicksantos@google.com (Nick Santos)
  */
 public class UnionTypeBuilderTest extends BaseJSTypeTestCase {
+
+  private static final MapBasedScope EMPTY_SCOPE = MapBasedScope.emptyScope();
 
   public void testAllType() {
     assertUnion("*", ALL_TYPE);
@@ -75,12 +78,9 @@ public class UnionTypeBuilderTest extends BaseJSTypeTestCase {
   }
 
   public void testUnknownTypes() {
-    JSType unresolvedNameA1 =
-        new NamedType(registry, "not.resolved.A", null, -1, -1);
-    JSType unresolvedNameA2 =
-        new NamedType(registry, "not.resolved.A", null, -1, -1);
-    JSType unresolvedNameB =
-        new NamedType(registry, "not.resolved.B", null, -1, -1);
+    JSType unresolvedNameA1 = new NamedType(EMPTY_SCOPE, registry, "not.resolved.A", null, -1, -1);
+    JSType unresolvedNameA2 = new NamedType(EMPTY_SCOPE, registry, "not.resolved.A", null, -1, -1);
+    JSType unresolvedNameB = new NamedType(EMPTY_SCOPE, registry, "not.resolved.B", null, -1, -1);
 
     assertUnion("?", UNKNOWN_TYPE);
     assertUnion("?", UNKNOWN_TYPE, UNKNOWN_TYPE);

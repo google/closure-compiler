@@ -287,9 +287,9 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
         "/** @enum */ var FooAlias = Foo; var f = FooAlias;");
 
     assertEquals("Foo<number>",
-        registry.getType("FooAlias").toString());
-    Asserts.assertTypeEquals(registry.getType("FooAlias"),
-        registry.getType("Foo"));
+        registry.getType(null, "FooAlias").toString());
+    Asserts.assertTypeEquals(registry.getType(null, "FooAlias"),
+        registry.getType(null, "Foo"));
 
     ObjectType f = (ObjectType) findNameType("f", globalScope);
     assertTrue(f.hasProperty("BAR"));
@@ -302,9 +302,9 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
         "/** @enum */ goog.FooAlias = goog.Foo;");
 
     assertEquals("goog.Foo<number>",
-        registry.getType("goog.FooAlias").toString());
-    Asserts.assertTypeEquals(registry.getType("goog.Foo"),
-        registry.getType("goog.FooAlias"));
+        registry.getType(null, "goog.FooAlias").toString());
+    Asserts.assertTypeEquals(registry.getType(null, "goog.Foo"),
+        registry.getType(null, "goog.FooAlias"));
   }
 
   public void testCollectedFunctionStub() {
@@ -1051,8 +1051,8 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     testSame(
         "/** @constructor */ var Foo = function() {};" +
         "/** @constructor */ var FooAlias = Foo;");
-    assertEquals("Foo", registry.getType("FooAlias").toString());
-    Asserts.assertTypeEquals(registry.getType("Foo"), registry.getType("FooAlias"));
+    assertEquals("Foo", registry.getType(null, "FooAlias").toString());
+    Asserts.assertTypeEquals(registry.getType(null, "Foo"), registry.getType(null, "FooAlias"));
   }
 
   public void testNamespacedConstructorAlias() {
@@ -1060,9 +1060,9 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
         "var goog = {};" +
         "/** @constructor */ goog.Foo = function() {};" +
         "/** @constructor */ goog.FooAlias = goog.Foo;");
-    assertEquals("goog.Foo", registry.getType("goog.FooAlias").toString());
-    Asserts.assertTypeEquals(registry.getType("goog.Foo"),
-        registry.getType("goog.FooAlias"));
+    assertEquals("goog.Foo", registry.getType(null, "goog.FooAlias").toString());
+    Asserts.assertTypeEquals(registry.getType(null, "goog.Foo"),
+        registry.getType(null, "goog.FooAlias"));
   }
 
   public void testTemplateType1() {
@@ -1375,7 +1375,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
         "bind(function() { var g = this; var f = this.baz(); }, new Foo());");
     assertEquals("T", findNameType("g", lastLocalScope).toString());
     assertTrue(findNameType("g", lastLocalScope).isEquivalentTo(
-        registry.getType("Foo")));
+        registry.getType(null, "Foo")));
     assertEquals("number", findNameType("f", lastLocalScope).toString());
   }
 

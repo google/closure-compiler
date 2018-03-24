@@ -416,6 +416,11 @@ class LinkedFlowScope implements FlowScope {
     public JSDocInfo getJSDocInfo() {
       return null;
     }
+
+    @Override
+    public StaticTypedScope<JSType> getScope() {
+      throw new UnsupportedOperationException();
+    }
   }
 
   /**

@@ -84,4 +84,9 @@ public class SimpleSlot implements StaticTypedSlot<JSType>, Serializable {
   public JSDocInfo getJSDocInfo() {
     return null;
   }
+
+  @Override
+  public StaticTypedScope<JSType> getScope() {
+    throw new UnsupportedOperationException();
+  }
 }

@@ -149,6 +149,11 @@ public final class Property
   }
 
   @Override
+  public StaticTypedScope<JSType> getScope() {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
   public int hashCode() {
     return Objects.hash(name, type);
   }

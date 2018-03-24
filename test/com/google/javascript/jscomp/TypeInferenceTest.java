@@ -1284,10 +1284,10 @@ public final class TypeInferenceTest extends TestCase {
         + " *      x)))))) \n"
         + " * =:\n"
         + " */\n"
-        + "function Object(a) {}\n"
+        + "function fn(a) {}\n"
         + "/** @type {(string|null|undefined)} */\n"
         + "var o;\n"
-        + "var r = Object(o);");
+        + "var r = fn(o);");
     verify("r", OBJECT_TYPE);
   }
 
@@ -1306,10 +1306,10 @@ public final class TypeInferenceTest extends TestCase {
         + " *      x)))))) \n"
         + " * =:\n"
         + " */\n"
-        + "function Object(a) {}\n"
+        + "function fn(a) {}\n"
         + "/** @type {(Array|undefined)} */\n"
         + "var o;\n"
-        + "var r = Object(o);");
+        + "var r = fn(o);");
     verify("r", OBJECT_TYPE);
   }
 
@@ -1380,14 +1380,17 @@ public final class TypeInferenceTest extends TestCase {
   }
 
   public void testTypeTransformationWithTypeFromNamespace() {
-    inFunction("/** @constructor */\n"
-        + "wiz.async.Response = function() {};"
-        + "/**\n"
-        + " * @return {R}\n"
-        + " * @template R := typeOfVar('wiz.async.Response') =:"
-        + " */\n"
-        + "function f(){}\n"
-        + "var r = f();");
+    inFunction(
+        lines(
+            "var wiz",
+            "/** @constructor */",
+            "wiz.async.Response = function() {};",
+            "/**",
+            " * @return {R}",
+            " * @template R := typeOfVar('wiz.async.Response') =:",
+            " */",
+            "function f(){}",
+            "var r = f();"));
     verify("r", getType("wiz.async.Response"));
   }
 
