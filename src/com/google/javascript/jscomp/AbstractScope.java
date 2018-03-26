@@ -168,9 +168,6 @@ abstract class AbstractScope<S extends AbstractScope<S, V>, V extends AbstractVa
       if (var != null) {
         return var;
       }
-      if (Var.ARGUMENTS.equals(name) && NodeUtil.isVanillaFunction(scope.getRootNode())) {
-        return scope.getArgumentsVar();
-      }
       // Recurse up the parent Scope
       scope = scope.getParent();
     }
@@ -184,6 +181,7 @@ abstract class AbstractScope<S extends AbstractScope<S, V>, V extends AbstractVa
     return getImplicitVar(ImplicitVar.ARGUMENTS, false);
   }
 
+  /** Get a unique Var object of the given implicit var type. */
   private final V getImplicitVar(ImplicitVar var, boolean allowDeclaredVars) {
     S scope = thisScope();
     while (scope != null) {
