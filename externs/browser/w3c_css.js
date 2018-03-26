@@ -519,6 +519,7 @@ CSSStyleDeclaration.prototype.removeAttribute =
 CSSStyleDeclaration.prototype.removeExpression = function(name) {};
 
 /**
+ * @deprecated
  * @param {string} name
  * @param {*} value
  * @param {number=} opt_flags
