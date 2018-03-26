@@ -1850,6 +1850,117 @@ chrome.copresence.onMessagesReceived;
 chrome.copresence.onStatusUpdated;
 
 
+/** @const */
+chrome.devtools = {};
+
+
+/**
+ * @see https://developer.chrome.com/extensions/devtools_inspectedWindow
+ * @const
+ */
+chrome.devtools.inspectedWindow = {};
+
+
+/**
+ * @constructor
+ * @see https://developer.chrome.com/extensions/devtools_inspectedWindow#type-Resource
+ */
+chrome.devtools.inspectedWindow.Resource = function() {};
+
+/** @type {string} */
+chrome.devtools.inspectedWindow.Resource.prototype.url;
+
+/** @param {function(string, string): void} callback */
+chrome.devtools.inspectedWindow.Resource.prototype.getContent =
+    function(callback) {};
+
+/**
+ * @param {string} content
+ * @param {boolean} commit
+ * @param {function(!Object): void=} callback
+ */
+chrome.devtools.inspectedWindow.Resource.prototype.setContent =
+    function(content, commit, callback) {};
+
+
+/**
+ * @type {number}
+ * @see https://developer.chrome.com/extensions/devtools_inspectedWindow#property-tabId
+ */
+chrome.devtools.inspectedWindow.tabId;
+
+
+/**
+ * @typedef {?{
+ *   frameUrl: (string|undefined),
+ *   useContentScriptContext: (boolean|undefined),
+ *   contextSecurityOrigin: (string|undefined)
+ * }}
+ */
+chrome.devtools.inspectedWindow.EvalOptions;
+
+/**
+ * @param {string} expression
+ * @param {!chrome.devtools.inspectedWindow.EvalOptions=} options
+ * @param {function(!Object, !Object): void=} callback
+ * @see https://developer.chrome.com/extensions/devtools_inspectedWindow#method-eval
+ */
+chrome.devtools.inspectedWindow.eval =
+    function(expression, options, callback) {};
+
+
+/**
+ * @typedef {?{
+ *   ignoreCache: (boolean|undefined),
+ *   userAgent: (string|undefined),
+ *   injectedScript: (string|undefined)
+ * }}
+ */
+chrome.devtools.inspectedWindow.ReloadOptions;
+
+/**
+ * @param {!chrome.devtools.inspectedWindow.ReloadOptions=} reloadOptions
+ * @see https://developer.chrome.com/extensions/devtools_inspectedWindow#method-reload
+ */
+chrome.devtools.inspectedWindow.reload = function(reloadOptions) {};
+
+
+/**
+ * @param {function(!Array<!chrome.devtools.inspectedWindow.Resource>): void}
+ *     callback
+ * @see https://developer.chrome.com/extensions/devtools_inspectedWindow#method-getResources
+ */
+chrome.devtools.inspectedWindow.getResources = function(callback) {};
+
+
+/**
+ * @interface
+ * @extends {ChromeBaseEvent<
+ *     function(!chrome.devtools.inspectedWindow.Resource)>}
+ */
+chrome.devtools.inspectedWindow.ResourceEvent = function() {};
+
+/**
+ * @see https://developer.chrome.com/extensions/devtools_inspectedWindow#event-onResourceAdded
+ * @type {!chrome.devtools.inspectedWindow.ResourceEvent}
+ */
+chrome.devtools.inspectedWindow.onResourceAdded;
+
+
+/**
+ * @interface
+ * @extends {ChromeBaseEvent<
+ *     function(!chrome.devtools.inspectedWindow.Resource, string)>}
+ */
+chrome.devtools.inspectedWindow.ResourceContentEvent = function() {};
+
+/**
+ * @see https://developer.chrome.com/extensions/devtools_inspectedWindow#event-onResourceContentCommitted
+ * @type {!chrome.devtools.inspectedWindow.ResourceContentEvent}
+ */
+chrome.devtools.inspectedWindow.onResourceContentCommitted;
+
+
 /**
  * @see https://developer.chrome.com/extensions/enterprise_platformKeys
  * @const
