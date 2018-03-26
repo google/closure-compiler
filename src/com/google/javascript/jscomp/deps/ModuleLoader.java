@@ -167,8 +167,16 @@ public final class ModuleLoader {
     }
 
     /**
+     * Determines if this path is the same as another path, ignoring any potential leading slashes
+     * on both.
+     */
+    public boolean equalsIgnoreLeadingSlash(ModulePath other) {
+      return other != null && toModuleName().equals(other.toModuleName());
+    }
+
+    /**
      * Turns a filename into a JS identifier that can be used in rewritten code.
-     * Removes leading ./, replaces / with $, removes trailing .js
+     * Removes leading /, replaces / with $, removes trailing .js
      * and replaces - with _.
      */
     public String toJSIdentifier() {
@@ -177,7 +185,7 @@ public final class ModuleLoader {
 
     /**
      * Turns a filename into a JS identifier that is used for moduleNames in
-     * rewritten code. Removes leading ./, replaces / with $, removes trailing .js
+     * rewritten code. Removes leading /, replaces / with $, removes trailing .js
      * and replaces - with _. All moduleNames get a "module$" prefix.
      */
     public String toModuleName() {

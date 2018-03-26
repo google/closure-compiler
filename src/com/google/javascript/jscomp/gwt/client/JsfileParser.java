@@ -316,13 +316,24 @@ public class JsfileParser implements EntryPoint {
       this.info = info;
     }
 
+    private boolean isFromGoogImport(Var goog) {
+      Node nameNode = goog.getNameNode();
+
+      // Because other tools are regex based we force importing this file as "import * as goog".
+      return nameNode != null
+          && nameNode.isImportStar()
+          && nameNode.getString().equals("goog")
+          && nameNode.getParent().getFirstChild().isEmpty()
+          && nameNode.getParent().getLastChild().getString().endsWith("/goog.js");
+    }
+
     @Override
     public void visit(NodeTraversal traversal, Node node, Node parent) {
       // Look for goog.* calls
       if (node.isGetProp() && node.getFirstChild().isName()
           && node.getFirstChild().getString().equals("goog")) {
         Var root = traversal.getScope().getVar("goog");
-        if (root == null) {
+        if (root == null || isFromGoogImport(root)) {
           info.goog = true;
           if (parent.isCall() && parent.getChildCount() < 3) {
             Node arg;

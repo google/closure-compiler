@@ -3037,6 +3037,10 @@ public class Node implements Serializable {
     return this.token == Token.EXPORT_SPEC;
   }
 
+  public final boolean isExportSpecs() {
+    return this.token == Token.EXPORT_SPECS;
+  }
+
   public final boolean isExprResult() {
     return this.token == Token.EXPR_RESULT;
   }

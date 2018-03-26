@@ -152,6 +152,7 @@ public final class DefaultPassConfig extends PassConfig {
     }
 
     if (options.getLanguageIn().toFeatureSet().has(FeatureSet.Feature.MODULES)) {
+      passes.add(rewriteGoogJsImports);
       if (options.getTranspileEs6ModulesToCjsModules()) {
         TranspilationPasses.addEs6ModuleToCjsPass(passes);
       } else {
@@ -291,6 +292,7 @@ public final class DefaultPassConfig extends PassConfig {
     }
 
     if (options.getLanguageIn().toFeatureSet().has(FeatureSet.Feature.MODULES)) {
+      checks.add(rewriteGoogJsImports);
       TranspilationPasses.addEs6ModulePass(checks, preprocessorSymbolTableFactory);
     }
 
@@ -1551,6 +1553,20 @@ public final class DefaultPassConfig extends PassConfig {
           maybeInitializeModuleRewriteState();
           return new ClosureRewriteModule(
               compiler, preprocessorSymbolTableFactory.getInstanceOrNull(), moduleRewriteState);
+        }
+
+        @Override
+        protected FeatureSet featureSet() {
+          return ES8_MODULES;
+        }
+      };
+
+  /** Rewrite imports for Closure Library's goog.js file to global goog references. */
+  private final HotSwapPassFactory rewriteGoogJsImports =
+      new HotSwapPassFactory("rewriteGoogJsImports") {
+        @Override
+        protected HotSwapCompilerPass create(AbstractCompiler compiler) {
+          return new RewriteGoogJsImports(compiler, RewriteGoogJsImports.Mode.LINT_AND_REWRITE);
         }
 
         @Override
