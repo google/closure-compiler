@@ -17,6 +17,7 @@ package com.google.javascript.jscomp;
 
 import static com.google.javascript.jscomp.parsing.Config.JsDocParsing.INCLUDE_DESCRIPTIONS_WITH_WHITESPACE;
 
+import com.google.common.annotations.GwtIncompatible;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.refactoring.ApplySuggestedFixes;
@@ -25,45 +26,20 @@ import com.google.javascript.refactoring.SuggestedFix;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
-import org.kohsuke.args4j.Argument;
-import org.kohsuke.args4j.CmdLineException;
-import org.kohsuke.args4j.CmdLineParser;
-import org.kohsuke.args4j.Option;
 
 /**
- * Minimal binary that just runs the "lint" checks which can be run on a single file at a time.
- * This means some checks in the lintChecks DiagnosticGroup are skipped, since they depend on
- * type information.
+ * Tool for running just the lint checks which can be run on a single file at a time.
+ *
+ * <p>Run from {@link LinterMain}
  */
-public class Linter {
+@GwtIncompatible("Unnecessary")
+public final class Linter {
   // Don't try to apply fixes anymore, after trying this many times.
   // This is to avoid the unlikely event of an infinite loop of fixes.
   static final int MAX_FIXES = 5;
 
-  @Option(name = "--fix", usage = "Fix lint warnings automatically")
-  private boolean fix = false;
-
-  @Argument private List<String> files = new ArrayList<>();
-
-  public static void main(String[] args) throws IOException, CmdLineException {
-    new Linter().run(args);
-  }
-
-  private void run(String[] args) throws IOException, CmdLineException {
-    CmdLineParser parser = new CmdLineParser(this);
-    parser.parseArgument(args);
-
-    for (String filename : files) {
-      if (fix) {
-        fixRepeatedly(filename);
-      } else {
-        lint(filename);
-      }
-    }
-  }
+  private Linter() {}
 
   static void lint(String filename) throws IOException {
     lint(Paths.get(filename), new Compiler(System.out));

@@ -77,7 +77,7 @@
             <configuration>
               <transformers>
                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                  <mainClass>com.google.javascript.jscomp.Linter</mainClass>
+                  <mainClass>com.google.javascript.jscomp.LinterMain</mainClass>
                 </transformer>
               </transformers>
             </configuration>
