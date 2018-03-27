@@ -985,8 +985,7 @@ public class NodeTraversal {
         return instantiateScopes(i);
       }
     }
-    // Note: this cast is required to make j2cl output work.
-    return (AbstractScope<?, ?>) scopes.peek().getClosestHoistScope();
+    return scopes.peek().getClosestHoistScope();
   }
 
   private static boolean isHoistScopeRootNode(Node n) {
