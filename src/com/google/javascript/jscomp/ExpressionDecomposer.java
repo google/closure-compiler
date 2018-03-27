@@ -19,6 +19,7 @@ import static com.google.common.base.MoreObjects.toStringHelper;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.javascript.jscomp.Es6ToEs3Util.withType;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -27,6 +28,8 @@ import com.google.javascript.jscomp.MakeDeclaredNamesUnique.ContextualRenamer;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
+import com.google.javascript.rhino.TypeI;
+import com.google.javascript.rhino.jstype.JSTypeNative;
 import java.util.Set;
 import javax.annotation.Nullable;
 
@@ -60,6 +63,9 @@ class ExpressionDecomposer {
   private final Supplier<String> safeNameIdSupplier;
   private final Set<String> knownConstants;
   private final Scope scope;
+  private final TypeI unknownType;
+  private final TypeI voidType;
+  private final TypeI stringType;
 
   /**
    * Whether to allow decomposing foo.bar to "var fn = foo.bar; fn.call(foo);" Should be false if
@@ -81,6 +87,9 @@ class ExpressionDecomposer {
     this.knownConstants = constNames;
     this.scope = scope;
     this.allowMethodCallDecomposing = allowMethodCallDecomposing;
+    this.unknownType = compiler.getTypeIRegistry().getNativeType(JSTypeNative.UNKNOWN_TYPE);
+    this.voidType = compiler.getTypeIRegistry().getNativeType(JSTypeNative.VOID_TYPE);
+    this.stringType = compiler.getTypeIRegistry().getNativeType(JSTypeNative.STRING_TYPE);
   }
 
   // An arbitrary limit to prevent catch infinite recursion.
@@ -225,10 +234,11 @@ class ExpressionDecomposer {
 
     // Replace the expression with a reference to the new name.
     Node expressionParent = expression.getParent();
-    expressionParent.replaceChild(expression, IR.name(resultName));
+    expressionParent.replaceChild(expression, withType(IR.name(resultName), expression.getTypeI()));
 
     // Re-add the expression at the appropriate place.
     Node newExpressionRoot = NodeUtil.newVarNode(resultName, expression);
+    newExpressionRoot.getFirstChild().setTypeI(expression.getTypeI());
     injectionPointParent.addChildBefore(newExpressionRoot, injectionPoint);
 
     compiler.reportChangeToEnclosingScope(injectionPointParent);
@@ -385,12 +395,13 @@ class ExpressionDecomposer {
     if (needResult) {
       Node tempVarNode = NodeUtil.newVarNode(tempName, null)
           .useSourceInfoIfMissingFromForTree(expr);
+      tempVarNode.getFirstChild().setTypeI(voidType);
       Node injectionPointParent = injectionPoint.getParent();
       injectionPointParent.addChildBefore(tempVarNode, injectionPoint);
       injectionPointParent.addChildAfter(ifNode, tempVarNode);
 
       // Replace the expression with the temporary name.
-      Node replacementValueNode = IR.name(tempName);
+      Node replacementValueNode = withType(IR.name(tempName), expr.getTypeI());
       parent.replaceChild(expr, replacementValueNode);
     } else {
       // Only conditionals that are the direct child of an expression statement
@@ -414,7 +425,8 @@ class ExpressionDecomposer {
    */
   private static Node buildResultExpression(Node expr, boolean needResult, String tempName) {
     if (needResult) {
-      return IR.assign(IR.name(tempName), expr).srcrefTree(expr);
+      TypeI type = expr.getTypeI();
+      return withType(IR.assign(withType(IR.name(tempName), type), expr), type).srcrefTree(expr);
     } else {
       return expr;
     }
@@ -460,6 +472,7 @@ class ExpressionDecomposer {
     // The temp is known to be constant.
     String tempName = getTempConstantValueName();
     Node replacementValueNode = IR.name(tempName).srcref(expr);
+    replacementValueNode.setTypeI(expr.getTypeI());
 
     Node tempNameValue;
 
@@ -468,8 +481,9 @@ class ExpressionDecomposer {
     if (isLhsOfAssignOp) {
       checkState(expr.isName() || NodeUtil.isGet(expr), expr);
       // Transform "x += 2" into "x = temp + 2"
-      Node opNode = new Node(NodeUtil.getOpFromAssignmentOp(parent))
-          .useSourceInfoIfMissingFrom(parent);
+      Node opNode =
+          withType(new Node(NodeUtil.getOpFromAssignmentOp(parent)), parent.getTypeI())
+              .useSourceInfoIfMissingFrom(parent);
 
       Node rightOperand = parent.getLastChild();
 
@@ -491,6 +505,7 @@ class ExpressionDecomposer {
 
     // Re-add the expression in the declaration of the temporary name.
     Node tempVarNode = NodeUtil.newVarNode(tempName, tempNameValue);
+    tempVarNode.getFirstChild().setTypeI(tempNameValue.getTypeI());
 
     Node injectionPointParent = injectionPoint.getParent();
     injectionPointParent.addChildBefore(tempVarNode, injectionPoint);
@@ -518,6 +533,16 @@ class ExpressionDecomposer {
     Node first = call.getFirstChild();
     checkArgument(NodeUtil.isGet(first), first);
 
+    // Find the type of (fn expression).call
+    TypeI fnType = first.getTypeI();
+    TypeI fnCallType = null;
+    if (fnType != null) {
+      fnCallType =
+          fnType.isFunctionType()
+              ? fnType.toMaybeFunctionType().getPropertyType("call")
+              : unknownType;
+    }
+
     // Extracts the expression representing the function to call. For example:
     //   "a['b'].c" from "a['b'].c()"
     Node getVarNode = extractExpression(first, state.extractBeforeStatement);
@@ -543,10 +568,16 @@ class ExpressionDecomposer {
     //   original-parameter1
     //   original-parameter2
     //   ...
-    Node newCall = IR.call(
-        IR.getprop(
-            functionNameNode.cloneNode(), IR.string("call")),
-        thisNameNode.cloneNode()).useSourceInfoIfMissingFromForTree(call);
+
+    Node newCall =
+        IR.call(
+                withType(
+                    IR.getprop(
+                        functionNameNode.cloneNode(), withType(IR.string("call"), stringType)),
+                    fnCallType),
+                thisNameNode.cloneNode())
+            .useSourceInfoIfMissingFromForTree(call);
+    newCall.setTypeI(call.getTypeI());
 
     // Throw away the call name
     call.removeFirstChild();
