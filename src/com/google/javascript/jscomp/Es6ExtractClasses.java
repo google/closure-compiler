@@ -72,6 +72,8 @@ public final class Es6ExtractClasses
   @Override
   public void process(Node externs, Node root) {
     TranspilationPasses.processTranspile(
+        compiler, externs, features, this, new SelfReferenceRewriter());
+    TranspilationPasses.processTranspile(
         compiler, root, features, this, new SelfReferenceRewriter());
   }
 
