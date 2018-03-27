@@ -17363,6 +17363,48 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
             "i3 = r;"));
   }
 
+  public void testEmptySubtypeRecord1() {
+    // Verify that empty @record subtypes don't cause circular definition warnings.
+    testTypes(
+        lines(
+            "/** @record */ function I1() {};",
+            "/** @type {number|undefined} */ I1.prototype.prop;",
+            "",
+            "/** @record @extends {I1} */ function I2() {}",
+            "/** @record @extends {I2} */ function I3() {}",
+            "/** @type {string} */ I3.prototype.prop2;",
+            "/** @constructor @implements {I3} */ function C() {",
+            "    /** @type {number} */ this.prop = 1;",
+            "    /** @type {string} */ this.prop2 = 'str';",
+            "}",
+            "",
+            "/** @param {I3} a */ function fn(a) {}"));
+  }
+
+  public void testEmptySubtypeRecord2() {
+    testTypes(
+        lines(
+            "/** @type {!SubInterface} */ var value;",
+            "/** @record */ var SuperInterface = function () {};",
+            "/** @record @extends {SuperInterface} */ var SubInterface = function() {};"));
+  }
+
+  public void testEmptySubtypeRecord3() {
+    testTypes(
+        lines(
+            "/** @record */ var SuperInterface = function () {};",
+            "/** @record @extends {SuperInterface} */ var SubInterface = function() {};",
+            "/** @type {!SubInterface} */ var value;"));
+  }
+
+  public void testEmptySubtypeInterface1() {
+    testTypes(
+        lines(
+            "/** @type {!SubInterface} */ var value;",
+            "/** @interface */ var SuperInterface = function () {};",
+            "/** @interface @extends {SuperInterface} */ var SubInterface = function() {};"));
+  }
+
   public void testStructuralInterfaceMatching1_1() {
     testTypesWithExtraExterns(
         lines(

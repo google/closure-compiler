@@ -723,7 +723,8 @@ class TypeValidator implements Serializable {
         // @suppress tag on this declaration.
         if (!allowDupe) {
           // Report specifically if it is not just a duplicate, but types also don't mismatch.
-          if (!newType.isEquivalentTo(varType)) {
+          // NOTE: structural matches are explicitly allowed here.
+          if (!newType.isEquivalentTo(varType, true)) {
             report(
                 JSError.make(
                     n,

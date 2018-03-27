@@ -5900,8 +5900,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
             if (constructorI != null && constructorJ != null
                 && constructorI.isStructuralInterface()
                 && constructorJ.isStructuralInterface()) {
-              if (constructorI.checkEquivalenceHelper(constructorJ,
-                  EquivalenceMethod.IDENTITY)) {
+              if (constructorI.isEquivalentTo(constructorJ)) {
                 shouldCheck = false;
               }
             }

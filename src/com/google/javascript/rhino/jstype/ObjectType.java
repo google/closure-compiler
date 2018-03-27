@@ -192,13 +192,12 @@ public abstract class ObjectType
    * @return True iff a cycle was detected.
    */
   final boolean detectInheritanceCycle() {
-    // TODO(dimvar): This should get moved to preventing cycles in FunctionTypeBuilder
-    // rather than removing them here after they have been created.
-    // Also, this doesn't do the right thing for extended interfaces, though that is
-    // masked by another bug.
-    return detectImplicitPrototypeCycle()
-        || Iterables.contains(this.getCtorImplementedInterfaces(), this)
-        || Iterables.contains(this.getCtorExtendedInterfaces(), this);
+    if (detectImplicitPrototypeCycle()
+        || Iterables.contains(this.getCtorImplementedInterfaces(), this)) {
+        return true;
+    }
+    FunctionType fnType = this.getConstructor();
+    return fnType != null && fnType.checkExtendsLoop() != null;
   }
 
   /**

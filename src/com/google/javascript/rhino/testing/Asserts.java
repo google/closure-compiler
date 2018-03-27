@@ -102,13 +102,13 @@ public class Asserts {
         message + (message.isEmpty() ? "" : "\n")
             + "Expected: " + a + "\n"
             + "Actual  : " + b,
-        a.isEquivalentTo(b));
+        a.isEquivalentTo(b, true));
     Assert.assertTrue(
         message
             + " Equals is not symmetric.\n"
             + "Expected: " + b + "\n"
             + "Actual  : " + a,
-        b.isEquivalentTo(a));
+        b.isEquivalentTo(a, true));
   }
 
   public static <T extends JSType, S extends JSType> void

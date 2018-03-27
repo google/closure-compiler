@@ -451,7 +451,7 @@ public abstract class BaseJSTypeTestCase extends TestCase {
    * Asserts that a a type expression resolves to the correct {@code JSType}.
    */
   protected void assertTypeEquals(JSType expected, JSTypeExpression actual) {
-    assertEquals(expected, resolve(actual));
+    assertTypeEquals(expected, resolve(actual));
   }
 
   protected final void assertTypeEquals(JSType a, JSType b) {

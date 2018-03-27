@@ -716,7 +716,7 @@ public abstract class JSType implements TypeI {
    */
   @Override
   public final boolean isEquivalentTo(TypeI that) {
-    return checkEquivalenceHelper((JSType) that, EquivalenceMethod.IDENTITY);
+    return isEquivalentTo(that, false);
   }
 
   public final boolean isEquivalentTo(TypeI that, boolean isStructural) {
@@ -736,19 +736,21 @@ public abstract class JSType implements TypeI {
    * @see <a href="http://www.youtube.com/watch?v=_RpSv3HjpEw">Unknown unknowns</a>
    */
   public final boolean differsFrom(JSType that) {
-    return !checkEquivalenceHelper(that, EquivalenceMethod.DATA_FLOW);
+    return !checkEquivalenceHelper(that, EquivalenceMethod.DATA_FLOW, EqCache.create());
   }
 
   /**
    * An equivalence visitor.
    */
-  boolean checkEquivalenceHelper(
-      final JSType that, EquivalenceMethod eqMethod) {
-    return checkEquivalenceHelper(that, eqMethod, EqCache.create());
+  @Deprecated
+  boolean checkEquivalenceHelper(final JSType that, EquivalenceMethod eqMethod) {
+    return checkEquivalenceHelper(
+        that,
+        eqMethod,
+        EqCache.create());
   }
 
-  boolean checkEquivalenceHelper(final JSType that, EquivalenceMethod eqMethod,
-      EqCache eqCache) {
+  boolean checkEquivalenceHelper(final JSType that, EquivalenceMethod eqMethod, EqCache eqCache) {
     if (this == that) {
       return true;
     }
