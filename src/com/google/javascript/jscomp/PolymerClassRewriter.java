@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.PolymerBehaviorExtractor.BehaviorDefinition;
 import com.google.javascript.jscomp.PolymerPass.MemberDefinition;
@@ -43,7 +44,9 @@ final class PolymerClassRewriter {
   private final AbstractCompiler compiler;
   private final int polymerVersion;
   private final boolean propertyRenamingEnabled;
-  static final String POLYMER_ELEMENT_PROP_CONFIG = "Polymer.ElementProperties";
+
+  @VisibleForTesting
+  static final String POLYMER_ELEMENT_PROP_CONFIG = "PolymerElementProperties";
 
   private final Node polymerElementExterns;
 

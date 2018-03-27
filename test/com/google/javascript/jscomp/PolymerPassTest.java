@@ -1081,7 +1081,7 @@ public class PolymerPassTest extends TypeICompilerTestCase {
             "/** @implements {PolymerAInterface} */",
             "class A extends Polymer.Element {",
             "  /** @return {string} */ static get is() { return 'a-element'; }",
-            "  /** @return {Polymer.ElementProperties} */ static get properties() {",
+            "  /** @return {PolymerElementProperties} */ static get properties() {",
             "    return {",
             "      pets: {",
             "        type: Array,",

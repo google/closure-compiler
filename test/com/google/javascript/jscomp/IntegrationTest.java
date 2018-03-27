@@ -658,7 +658,7 @@ public final class IntegrationTest extends IntegrationTestCase {
             "  get is() { return 'x-foo'; }",
             "  static get properties() { return {}; }",
             "}"),
-        // Bad type annotation. Unknown type Polymer.ElementProperties
+        // Bad type annotation. Unknown type PolymerElementProperties
         RhinoErrorReporter.UNRECOGNIZED_TYPE_ERROR);
   }
 
