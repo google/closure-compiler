@@ -846,6 +846,7 @@ public class JSTypeRegistry implements TypeIRegistry {
     registerGlobalType(getNativeType(JSTypeNative.VOID_TYPE), "Undefined");
     registerGlobalType(getNativeType(JSTypeNative.VOID_TYPE), "void");
     registerGlobalType(getNativeType(JSTypeNative.FUNCTION_INSTANCE_TYPE), "Function");
+    registerGlobalType(getNativeType(JSTypeNative.GLOBAL_THIS), "Global");
   }
 
   private static void checkTypeName(String typeName) {
