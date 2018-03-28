@@ -3402,7 +3402,12 @@ public final class IntegrationTest extends IntegrationTestCase {
 
     String code = "function *gen() { arguments.callee; }";
 
-    test(options, code, StrictModeCheck.ARGUMENTS_CALLEE_FORBIDDEN);
+    DiagnosticType[] expectedErrors = new DiagnosticType[] {
+      StrictModeCheck.ARGUMENTS_CALLEE_FORBIDDEN,
+      Es6ExternsCheck.MISSING_ES6_EXTERNS,
+    };
+
+    test(options, new String[] { code }, null, expectedErrors);
   }
 
   // http://blickly.github.io/closure-compiler-issues/#701
