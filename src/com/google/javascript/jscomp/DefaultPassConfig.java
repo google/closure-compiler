@@ -379,6 +379,9 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(dartSuperAccessorsPass);
     }
 
+    // Passes running before this point should expect to see language features up to ES_2017.
+    checks.add(createEmptyPass(PassNames.BEFORE_ES_2017_TRANSPILATION));
+
     if (options.needsTranspilationFrom(ES8)) {
       TranspilationPasses.addEs2017Passes(checks);
     }

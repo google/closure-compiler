@@ -25,12 +25,11 @@ public final class PassNames {
   public static final String AFTER_STANDARD_CHECKS = "afterStandardChecks";
   public static final String AMBIGUATE_PROPERTIES = "ambiguateProperties";
   public static final String ANALYZER_CHECKS = "analyzerChecks";
-  public static final String ANALYZER_CHECKS_INTERNAL = "analyzerChecksInternal";
   public static final String ANGULAR_PASS = "angularPass";
   public static final String BEFORE_STANDARD_OPTIMIZATIONS = "beforeStandardOptimizations";
   public static final String BEFORE_MAIN_OPTIMIZATIONS = "beforeMainOptimizations";
   public static final String BEFORE_TYPE_CHECKING = "beforeTypeChecking";
-  public static final String CHAIN_CALLS = "chainCalls";
+  public static final String BEFORE_ES_2017_TRANSPILATION = "beforeES2017Transpilation";
   public static final String CHECK_CONST_PARAMS = "checkConstParams";
   public static final String CHECK_REG_EXP = "checkRegExp";
   public static final String CHECK_TYPES = "checkTypes";
@@ -69,7 +68,6 @@ public final class PassNames {
   public static final String INLINE_VARIABLES = "inlineVariables";
   public static final String LINT_CHECKS = "lintChecks";
   public static final String MARK_NO_SIDE_EFFECT_CALLS = "markNoSideEffectCalls";
-  public static final String MINIMIZE_EXIT_POINTS = "minimizeExitPoints";
   public static final String MOVE_FUNCTION_DECLARATIONS = "moveFunctionDeclarations";
   public static final String NAME_ANONYMOUS_FUNCTIONS = "nameAnonymousFunctions";
   public static final String NORMALIZE = "normalize";
@@ -90,7 +88,6 @@ public final class PassNames {
   public static final String RESOLVE_TYPES = "resolveTypes";
   public static final String REWRITE_FUNCTION_EXPRESSIONS = "rewriteFunctionExpressions";
   public static final String RUNTIME_TYPE_CHECK = "runtimeTypeCheck";
-  public static final String SMART_NAME_PASS = "smartNamePass";
   public static final String STRIP_SIDE_EFFECT_PROTECTION = "stripSideEffectProtection";
   public static final String WIZ_PASS = "wizPass";
 
