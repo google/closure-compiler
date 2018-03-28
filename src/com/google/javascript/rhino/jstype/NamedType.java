@@ -101,10 +101,10 @@ public class NamedType extends ProxyObjectType {
 
   /**
    * Template types defined on a named, not yet resolved type, or {@code null} if none. These are
-   * ignored during resolution, for backwards compatibility with existing usage.
-   * This field is not used for JSCompiler's type checking; it is only needed by Clutz.
+   * ignored during resolution, for backwards compatibility with existing usage. This field is not
+   * used for JSCompiler's type checking; it is only needed by Clutz.
    */
-  @Nullable private ImmutableList<JSType> templateTypes;
+  @Nullable private final ImmutableList<JSType> templateTypes;
 
   // TODO(b/74253232): remove this overload
   NamedType(JSTypeRegistry registry, String reference, String sourceName, int lineno, int charno) {
