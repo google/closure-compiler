@@ -3221,6 +3221,14 @@ DOMTokenList.prototype.add = function(var_args) {};
 DOMTokenList.prototype.remove = function(var_args) {};
 
 /**
+ * Replaces token with newToken.
+ * @param {string} token The CSS class to replace.
+ * @param {string} newToken The new CSS class to use.
+ * @return {undefined}
+ */
+DOMTokenList.prototype.replace = function(token, newToken) {};
+
+/**
  * @param {string} token The CSS class to toggle from this element.
  * @param {boolean=} opt_force True to add the class whether it exists
  *     or not. False to remove the class whether it exists or not.
