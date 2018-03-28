@@ -329,6 +329,9 @@ public final class FeatureSet implements Serializable {
         return ES7;
       case "es8":
         return ES8;
+      case "es2018":
+      case "es9":
+        return ES2018;
       case "es_next":
         return ES_NEXT;
       case "ts":
