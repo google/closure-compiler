@@ -66,6 +66,9 @@ public abstract class CompilerTestCase extends TestCase {
   /** Externs for the test */
   final List<SourceFile> externsInputs;
 
+  /** Whether to include synthetic code when comparing actual to expected */
+  private boolean compareSyntheticCode;
+
   /** Whether to compare input and output as trees instead of strings */
   private boolean compareAsTree;
 
@@ -580,6 +583,7 @@ public abstract class CompilerTestCase extends TestCase {
     this.closurePassEnabledForExpected = false;
     this.compareAsTree = true;
     this.compareJsDoc = true;
+    this.compareSyntheticCode = true;
     this.computeSideEffects = false;
     this.expectParseWarningsThisTest = false;
     this.expectedSymbolTableError = null;
@@ -783,6 +787,17 @@ public abstract class CompilerTestCase extends TestCase {
   protected void enableNewTypeInference() {
     checkState(this.setUpRan, "Attempted to configure before running setUp().");
     this.newTypeInferenceEnabled = true;
+  }
+
+  /**
+   * When comparing expected to actual, ignore nodes created through compiler.ensureLibraryInjected
+   *
+   * <p>This differs from using a NonInjecting compiler in that the compiler still injects the
+   * polyfills when requested.
+   */
+  protected final void disableCompareSyntheticCode() {
+    checkState(this.setUpRan, "Attempted to configure before running setUp().");
+    compareSyntheticCode = false;
   }
 
   /**
@@ -1654,6 +1669,19 @@ public abstract class CompilerTestCase extends TestCase {
       }
 
       if (expected != null) {
+        if (!compareSyntheticCode) {
+          // remove code in files starting with [synthetic:
+          Node scriptRoot = mainRoot.getFirstChild();
+          Node child = scriptRoot.getFirstChild();
+          while (child != null) {
+            Node nextChild = child.getNext();
+            String sourceFile = child.getSourceFileName();
+            if (sourceFile != null && sourceFile.startsWith(Compiler.SYNTHETIC_CODE_PREFIX)) {
+              scriptRoot.removeChild(child);
+            }
+            child = nextChild;
+          }
+        }
         if (compareAsTree) {
           String explanation;
           if (compareJsDoc) {

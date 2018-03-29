@@ -27,6 +27,7 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
     allowMethodCallDecomposing = false;
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     enableRunTypeCheckAfterProcessing();
+    disableCompareSyntheticCode();
   }
 
   @Override
@@ -1110,15 +1111,5 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
             "case 2:",
             "  thrown = $jscomp$generator$context.enterCatchBlock();",
             "  return $jscomp$generator$context.yield(thrown,0)"));
-  }
-
-  @Override
-  protected Compiler createCompiler() {
-    return new NoninjectingCompiler();
-  }
-
-  @Override
-  protected NoninjectingCompiler getLastCompiler() {
-    return (NoninjectingCompiler) super.getLastCompiler();
   }
 }

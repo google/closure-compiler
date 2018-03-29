@@ -2592,6 +2592,9 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
    */
   static final String SYNTHETIC_EXTERNS_AT_END = "{SyntheticVarsAtEnd}";
 
+  /** Prefix of the generated file name for synthetic injected libraries */
+  static final String SYNTHETIC_CODE_PREFIX = " [synthetic:";
+
   private CompilerInput synthesizedExternsInput = null;
   private CompilerInput synthesizedExternsInputAtEnd = null;
 
@@ -3397,7 +3400,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     // Load/parse the code.
     String originalCode = ResourceLoader.loadTextResource(
         Compiler.class, "js/" + resourceName + ".js");
-    Node ast = parseSyntheticCode(" [synthetic:" + resourceName + "] ", originalCode);
+    Node ast = parseSyntheticCode(SYNTHETIC_CODE_PREFIX + resourceName + "] ", originalCode);
 
     // Look for string literals of the form 'require foo bar' or 'externs baz' or 'normalize'.
     // As we process each one, remove it from its parent.
