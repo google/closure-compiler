@@ -19,6 +19,7 @@ import static com.google.javascript.jscomp.parsing.Config.JsDocParsing.INCLUDE_D
 
 import com.google.common.annotations.GwtIncompatible;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.refactoring.ApplySuggestedFixes;
 import com.google.javascript.refactoring.FixingErrorManager;
@@ -85,17 +86,28 @@ public final class Linter {
    * been applied {@code MAX_FIXES} times.
    */
   static void fixRepeatedly(String filename) throws IOException {
+    fixRepeatedly(filename, ImmutableSet.of());
+  }
+
+  /**
+   * Keep applying fixes to the given file until no more fixes can be found, or until fixes have
+   * been applied {@code MAX_FIXES} times.
+   */
+  static void fixRepeatedly(String filename, ImmutableSet<DiagnosticType> unfixableErrors)
+      throws IOException {
     for (int i = 0; i < MAX_FIXES; i++) {
-      if (!fix(filename)) {
+      if (!fix(filename, unfixableErrors)) {
         break;
       }
     }
   }
 
+
   /** @return Whether any fixes were applied. */
-  private static boolean fix(String filename) throws IOException {
+  private static boolean fix(String filename, ImmutableSet<DiagnosticType> unfixableErrors)
+      throws IOException {
     Compiler compiler = new Compiler(System.out);
-    FixingErrorManager errorManager = new FixingErrorManager();
+    FixingErrorManager errorManager = new FixingErrorManager(unfixableErrors);
     compiler.setErrorManager(errorManager);
     errorManager.setCompiler(compiler);
 

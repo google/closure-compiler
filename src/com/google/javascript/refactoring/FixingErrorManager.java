@@ -23,10 +23,12 @@ import static com.google.javascript.jscomp.ClosureCheckModule.JSDOC_REFERENCE_TO
 import static com.google.javascript.jscomp.ClosureCheckModule.REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME_INCLUDING_SHORT_NAME;
 
 import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ListMultimap;
 import com.google.javascript.jscomp.AbstractCompiler;
 import com.google.javascript.jscomp.BasicErrorManager;
 import com.google.javascript.jscomp.CheckLevel;
+import com.google.javascript.jscomp.DiagnosticType;
 import com.google.javascript.jscomp.JSError;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -38,8 +40,15 @@ import java.util.List;
 public class FixingErrorManager extends BasicErrorManager {
   private AbstractCompiler compiler;
   private final ListMultimap<JSError, SuggestedFix> fixes = ArrayListMultimap.create();
+  private final ImmutableSet<DiagnosticType> unfixableErrors;
 
-  public FixingErrorManager() {}
+  public FixingErrorManager() {
+    this(ImmutableSet.of());
+  }
+
+  public FixingErrorManager(ImmutableSet<DiagnosticType> unfixableErrors) {
+    this.unfixableErrors = unfixableErrors;
+  }
 
   public void setCompiler(AbstractCompiler compiler) {
     this.compiler = compiler;
@@ -48,7 +57,9 @@ public class FixingErrorManager extends BasicErrorManager {
   @Override
   public void report(CheckLevel level, JSError error) {
     super.report(level, error);
-    fixes.putAll(error, ErrorToFixMapper.getFixesForJsError(error, compiler));
+    if (!unfixableErrors.contains(error.getType())) {
+      fixes.putAll(error, ErrorToFixMapper.getFixesForJsError(error, compiler));
+    }
   }
 
   private boolean containsFixableShorthandModuleWarning() {
