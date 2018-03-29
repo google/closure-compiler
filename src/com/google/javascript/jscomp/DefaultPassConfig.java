@@ -408,19 +408,25 @@ public final class DefaultPassConfig extends PassConfig {
     }
 
     if (options.skipNonTranspilationPasses) {
-      TranspilationPasses.addEs6PostTypecheckPasses(checks);
+      if (options.needsTranspilationFrom(ES6)) {
+        TranspilationPasses.addEs6PostTypecheckPasses(checks);
+      }
     } else {
       checks.add(createEmptyPass(PassNames.BEFORE_TYPE_CHECKING));
 
       if (options.getNewTypeInference()) {
         // We will not be updating NTI to understand any more new features,
         // so transpile those features before running it.
-        TranspilationPasses.addEs6PostTypecheckPasses(checks);
+        if (options.needsTranspilationFrom(ES6)) {
+          TranspilationPasses.addEs6PostTypecheckPasses(checks);
+        }
         checks.add(symbolTableForNewTypeInference);
         checks.add(newTypeInference);
       } else {
         addOldTypeCheckerPasses(checks, options);
-        TranspilationPasses.addEs6PostTypecheckPasses(checks);
+        if (options.needsTranspilationFrom(ES6)) {
+          TranspilationPasses.addEs6PostTypecheckPasses(checks);
+        }
       }
 
       if (options.j2clPassMode.shouldAddJ2clPasses()) {
