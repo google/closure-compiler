@@ -115,7 +115,7 @@ public final class DepsFileParserTest extends TestCase {
     assertThat(errorManager.getWarningCount()).isEqualTo(0);
   }
 
-  public void testModule() {
+  public void testGoogModule() {
     List<DependencyInfo> result = parser.parseFile(SRC_PATH,
         "goog.addDependency('yes1', [], [], true);\n" +
         "goog.addDependency('yes2', [], [], false);\n");
@@ -123,6 +123,27 @@ public final class DepsFileParserTest extends TestCase {
         ImmutableList.of(
             SimpleDependencyInfo.builder("yes1", SRC_PATH).setGoogModule(true).build(),
             SimpleDependencyInfo.builder("yes2", SRC_PATH).build());
+    assertThat(result).isEqualTo(expected);
+  }
+
+  public void testEs6Module() {
+    List<DependencyInfo> result =
+        parser.parseFile(
+            SRC_PATH,
+            "goog.addDependency('path/from/closure.js', [], ['nexttoclosure.js'], "
+                + "{'module':'es6'});\n"
+                + "goog.addDependency('nexttoclosure.js', [], [], {'module':'es6'});\n");
+    ImmutableList<DependencyInfo> expected =
+        ImmutableList.of(
+            SimpleDependencyInfo.builder("path/from/closure.js", SRC_PATH)
+                .setLoadFlags(ImmutableMap.of("module", "es6"))
+                .setProvides(ImmutableList.of("path/from/closure.js"))
+                .setRequires(Require.parsedFromDeps("nexttoclosure.js"))
+                .build(),
+            SimpleDependencyInfo.builder("nexttoclosure.js", SRC_PATH)
+                .setLoadFlags(ImmutableMap.of("module", "es6"))
+                .setProvides(ImmutableList.of("nexttoclosure.js"))
+                .build());
     assertThat(result).isEqualTo(expected);
   }
 

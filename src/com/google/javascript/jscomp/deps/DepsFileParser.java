@@ -48,7 +48,6 @@ import java.util.regex.Pattern;
  */
 @GwtIncompatible("java.util.regex")
 public final class DepsFileParser extends JsFileLineParser {
-
   private static final Logger logger = Logger.getLogger(DepsFileParser.class.getName());
 
   /**
@@ -82,7 +81,7 @@ public final class DepsFileParser extends JsFileLineParser {
    * @param errorManager Handles parse errors.
    */
   public DepsFileParser(ErrorManager errorManager) {
-    this(Functions.<String>identity(), errorManager);
+    this(Functions.identity(), errorManager);
   }
 
   /**
@@ -166,17 +165,26 @@ public final class DepsFileParser extends JsFileLineParser {
               + addDependencyParams, true);
         }
         // Parse the file path.
-        String path = pathTranslator.apply(parseJsString(depArgsMatch.group(1)));
+        String relativePath = parseJsString(depArgsMatch.group(1));
+        String path = pathTranslator.apply(relativePath);
+
+        List<String> provides = parseJsStringArray(depArgsMatch.group(2));
+        Map<String, String> loadFlags = parseLoadFlags(depArgsMatch.group(4));
+
+        // ES6 modules are require'd by path but do not provide them in the addDependency call.
+        if ("es6".equals(loadFlags.get("module"))) {
+          provides.add(relativePath);
+        }
 
         DependencyInfo depInfo =
             SimpleDependencyInfo.builder(path, filePath)
-                .setProvides(parseJsStringArray(depArgsMatch.group(2)))
+                .setProvides(provides)
                 .setRequires(
                     parseJsStringArray(depArgsMatch.group(3))
                         .stream()
                         .map(Require::parsedFromDeps)
                         .collect(toImmutableList()))
-                .setLoadFlags(parseLoadFlags(depArgsMatch.group(4)))
+                .setLoadFlags(loadFlags)
                 .build();
 
         if (logger.isLoggable(Level.FINE)) {

@@ -45,6 +45,16 @@ public abstract class SimpleDependencyInfo extends DependencyInfo.Base {
    */
   @AutoValue.Builder
   public abstract static class Builder {
+    public static Builder from(DependencyInfo copy) {
+      return new AutoValue_SimpleDependencyInfo.Builder()
+          .setName(copy.getName())
+          .setPathRelativeToClosureBase(copy.getPathRelativeToClosureBase())
+          .setProvides(copy.getProvides())
+          .setRequires(copy.getRequires())
+          .setWeakRequires(copy.getWeakRequires())
+          .setLoadFlags(copy.getLoadFlags());
+    }
+
     abstract Builder setName(String name);
     abstract Builder setPathRelativeToClosureBase(String srcPathRelativeToClosure);
 

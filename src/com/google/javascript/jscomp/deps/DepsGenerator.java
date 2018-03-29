@@ -47,6 +47,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 /**
  * Generates deps.js files by scanning JavaScript files for
@@ -477,7 +478,18 @@ public class DepsGenerator {
           reportNoDepsInDepsFile(file.getName());
         } else {
           for (DependencyInfo info : depInfos) {
-            depsFiles.put(info.getPathRelativeToClosureBase(), info);
+            // DepsFileParser adds an ES6 module's relative path to closure as a provide so that
+            // the resulting depgraph is valid. But we don't want to write this "fake" provide
+            // back out, so remove it here.
+            depsFiles.put(
+                info.getPathRelativeToClosureBase(),
+                SimpleDependencyInfo.Builder.from(info)
+                    .setProvides(
+                        info.getProvides()
+                            .stream()
+                            .filter(p -> !p.equals(info.getPathRelativeToClosureBase()))
+                            .collect(Collectors.toList()))
+                    .build());
           }
         }
       }
