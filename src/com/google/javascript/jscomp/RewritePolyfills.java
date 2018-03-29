@@ -99,9 +99,9 @@ public class RewritePolyfills implements HotSwapCompilerPass {
      * text file with lines containing space-separated tokens:
      *   [NATIVE_SYMBOL] [NATIVE_VERSION] [POLYFILL_VERSION] [LIBRARY]
      * For example,
-     *   Array.prototype.fill es6-impl es3 es6/array/fill
-     *   Map es6-impl es3 es6/map
-     *   WeakMap es6-impl es6-impl
+     *   Array.prototype.fill es6 es3 es6/array/fill
+     *   Map es6 es3 es6/map
+     *   WeakMap es6 es6
      * The last line, WeakMap, does not have a polyfill available, so the
      * library token is empty.
      */
@@ -299,6 +299,8 @@ public class RewritePolyfills implements HotSwapCompilerPass {
     switch (features.version()) {
       case "ts":
         return languageOutIsAtLeast(LanguageMode.ECMASCRIPT6_TYPED);
+      case "es9":
+        return languageOutIsAtLeast(LanguageMode.ECMASCRIPT_2018);
       case "es8":
         return languageOutIsAtLeast(LanguageMode.ECMASCRIPT_2017);
       case "es7":

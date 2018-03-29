@@ -24,7 +24,7 @@ const fs = require('fs');
  * Provides an ordering to ensure lower-versioned polyfills don't
  * depend on higher versions.
  */
-const ORDER = ['es3', 'es5', 'es6', 'es7', 'es8'];
+const ORDER = ['es3', 'es5', 'es6', 'es7', 'es8', 'es9'];
 
 /**
  * Prints to stderr and exits.

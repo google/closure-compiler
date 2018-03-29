@@ -41,7 +41,8 @@ Object.getOwnPropertySymbols es6 es5 es6/object/getownpropertysymbols
 Object.is es6 es3 es6/object/is
 Object.setPrototypeOf es6 es5 es6/object/setprototypeof
 Object.values es8 es3 es6/object/values
-Promise es6 es3 es6/promise
+Promise es6 es3 es6/promise/promise
+Promise.prototype.finally es8 es3 es6/promise/finally
 Proxy es6 es6
 Reflect.apply es6 es3 es6/reflect/apply
 Reflect.construct es6 es3 es6/reflect/construct
