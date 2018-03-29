@@ -17,7 +17,6 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Strings.isNullOrEmpty;
 
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
@@ -425,12 +424,7 @@ public final class AstValidator implements CompilerPass {
       // TODO(b/74537281): This will fail after CAST nodes have been removed from the AST.
       // Must be fixed before this check can be done after optimizations.
       expectMatchingTypeInformation(callNode, returnTypeI);
-    } else {
-      // TODO(b/74537281): There are various non-function, non-unknown ("all" for example) types.
-      // Add test cases to cover those situations and fix this.
-      checkState(calleeTypeI.isUnknownType(), "Unexpected type: %s", calleeTypeI);
-      expectNoTypeInformation(callNode);
-    }
+    } // TODO(b/74537281): What other cases should be covered?
   }
 
   private void expectNoTypeInformation(Node n) {
