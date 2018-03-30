@@ -75,7 +75,7 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements HotSwapCompi
           "variables annotated with @define may only be declared with VARs, ASSIGNs, or CONSTs");
 
   public static final DiagnosticType MISPLACED_SUPPRESS =
-      DiagnosticType.disabled(
+      DiagnosticType.warning(
           "JSC_MISPLACED_SUPPRESS",
           "@suppress annotation not allowed here. See"
               + " https://github.com/google/closure-compiler/wiki/@suppress-annotations");
