@@ -86,6 +86,8 @@ public final class FeatureSet implements Serializable {
               Feature.MEMBER_DECLARATIONS,
               Feature.TEMPLATE_LITERALS));
 
+  public static final FeatureSet OTI_SUPPORTED = ES5.with(Feature.GENERATORS);
+
   private enum LangVersion {
     ES3,
     ES5,
@@ -203,6 +205,9 @@ public final class FeatureSet implements Serializable {
     }
     if (NTI_SUPPORTED.contains(this)) {
       return "ntiSupported";
+    }
+    if (OTI_SUPPORTED.contains(this)) {
+      return "otiSupported";
     }
     if (ES7_MODULES.contains(this)) {
       return "es7";
@@ -325,6 +330,8 @@ public final class FeatureSet implements Serializable {
         return ES6;
       case "ntiSupported":
         return NTI_SUPPORTED;
+      case "otiSupported":
+        return OTI_SUPPORTED;
       case "es7":
         return ES7;
       case "es8":
