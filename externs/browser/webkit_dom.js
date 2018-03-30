@@ -307,3 +307,16 @@ Document.prototype.getCSSCanvasContext =
  * @see https://developer.mozilla.org/en-US/docs/Web/API/Document/caretRangeFromPoint
  */
 Document.prototype.caretRangeFromPoint = function(x, y) {};
+
+/**
+ * @return {!Promise<boolean>}
+ * @nosideeffects
+ * @see https://webkit.org/blog/8124/introducing-storage-access-api
+ */
+Document.prototype.hasStorageAccess = function() {};
+
+/**
+ * @return {!Promise<boolean>}
+ * @see https://webkit.org/blog/8124/introducing-storage-access-api
+ */
+Document.prototype.requestStorageAccess = function() {};
