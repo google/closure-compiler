@@ -58,6 +58,7 @@ import com.google.javascript.jscomp.lint.CheckUnusedLabels;
 import com.google.javascript.jscomp.lint.CheckUselessBlocks;
 import com.google.javascript.jscomp.parsing.ParserRunner;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
+import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
@@ -1481,7 +1482,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES5;
+          return ES5.with(Feature.GENERATORS);
         }
       };
 
