@@ -264,6 +264,26 @@ class LinkedFlowScope implements FlowScope {
     return current;
   }
 
+  /** Returns whether this.optimize() == that.optimize(), but without walking up the chain. */
+  private boolean optimizesToSameScope(LinkedFlowScope that) {
+    // If lastSlot is null then there are no changes overlayed on top of the cache.  In this
+    // case, the flow scopes are the same only if 'that' also has a null lastSlot and has the
+    // same cache.
+    if (this.lastSlot == null) {
+      return that.lastSlot == null && this.cache == that.cache;
+    }
+    // If lastSlot is non-null, then the scopes optimize to the same thing if and only if their
+    // lastSlots are the same object.  In that case, the caches *must* be the same as well, since
+    // there's no way to change the cache without also changing lastSlot (which we verify).
+    checkState((this.cache == that.cache) || (this.lastSlot != that.lastSlot));
+    return this.lastSlot == that.lastSlot;
+  }
+
+  @Override
+  public TypedScope getDeclarationScope() {
+    return this.getFunctionScope();
+  }
+
   /** Join the two FlowScopes. */
   static class FlowScopeJoinOp extends JoinOp.BinaryJoinOp<FlowScope> {
     @SuppressWarnings("ReferenceEquality")
@@ -274,9 +294,11 @@ class LinkedFlowScope implements FlowScope {
       LinkedFlowScope linkedB = (LinkedFlowScope) b;
       linkedA.frozen = true;
       linkedB.frozen = true;
-      if (linkedA.optimize() == linkedB.optimize()) {
+      if (linkedA.optimizesToSameScope(linkedB)) {
         return linkedA.createChildFlowScope();
       }
+      // TODO(sdh): Consider reusing the input cache if both inputs are identical.
+      // We can evaluate how often this happens to see whather this would be a win.
       return new LinkedFlowScope(new FlatFlowScopeCache(linkedA, linkedB));
     }
   }
@@ -287,7 +309,7 @@ class LinkedFlowScope implements FlowScope {
       return false;
     }
     LinkedFlowScope that = (LinkedFlowScope) other;
-    if (this.optimize() == that.optimize()) {
+    if (this.optimizesToSameScope(that)) {
       return true;
     }
 

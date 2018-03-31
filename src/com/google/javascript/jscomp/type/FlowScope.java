@@ -72,4 +72,7 @@ public interface FlowScope extends StaticTypedScope<JSType>, LatticeElement {
    * @return The unique refined variable if found or null.
    */
   StaticTypedSlot<JSType> findUniqueRefinedSlot(FlowScope blindScope);
+
+  /** Returns the underlying TypedScope. */
+  StaticTypedScope<JSType> getDeclarationScope();
 }
