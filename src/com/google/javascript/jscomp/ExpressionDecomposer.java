@@ -717,6 +717,7 @@ class ExpressionDecomposer {
         case LABEL:
         case CASE:
         case DEFAULT_CASE:
+        case PARAM_LIST:
           return null;
         default:
           break;

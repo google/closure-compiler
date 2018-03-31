@@ -267,6 +267,20 @@ public final class ExpressionDecomposerTest extends TestCase {
         "yield");
   }
 
+  public void testCanExposeExpression11() {
+    // expressions in parameter lists
+    helperCanExposeExpression(DecompositionType.UNDECOMPOSABLE, "function f(x = foo()) {}", "foo");
+
+    helperCanExposeExpression(
+        DecompositionType.UNDECOMPOSABLE, "function f({[foo()]: x}) {}", "foo");
+
+    helperCanExposeExpression(
+        DecompositionType.UNDECOMPOSABLE, "(function (x = foo()) {})()", "foo");
+
+    helperCanExposeExpression(
+        DecompositionType.UNDECOMPOSABLE, "(function ({[foo()]: x}) {})()", "foo");
+  }
+
   public void testMoveExpression1() {
     // There isn't a reason to do this, but it works.
     helperMoveExpression("foo()", "foo", "var result$jscomp$0 = foo(); result$jscomp$0;");
