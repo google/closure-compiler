@@ -227,7 +227,7 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
 
       pseudoName = Joiner.on("_").join(allMergedNames);
 
-      while (t.getScope().isDeclared(pseudoName, true)) {
+      while (t.getScope().hasSlot(pseudoName)) {
         pseudoName += "$";
       }
 

@@ -15,6 +15,7 @@
  */
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.common.truth.Truth.assertAbout;
@@ -33,7 +34,7 @@ import javax.annotation.CheckReturnValue;
  *   ...
  *   assertScope(scope).declares("somevar");
  *   assertScope(scope).declares("otherVar").directly();
- *   assertScope(scope).declares("yetAnotherVar").onClosestNonBlockScope();
+ *   assertScope(scope).declares("yetAnotherVar").onClosestContainerScope();
  * </pre>
  */
 public final class ScopeSubject extends Subject<ScopeSubject, AbstractScope<?, ?>> {
@@ -47,14 +48,14 @@ public final class ScopeSubject extends Subject<ScopeSubject, AbstractScope<?, ?
   }
 
   public void doesNotDeclare(String name) {
-    AbstractVar<?, ?> var = getSubject().getVar(name);
+    AbstractVar<?, ?> var = getVar(name);
     if (var != null) {
       failWithBadResults("does not declare", name, "declared", var);
     }
   }
 
   public DeclarationSubject declares(String name) {
-    AbstractVar<?, ?> var = getSubject().getVar(name);
+    AbstractVar<?, ?> var = getVar(name);
     if (var == null) {
       ImmutableList<AbstractVar<?, ?>> declared =
           ImmutableList.copyOf(getSubject().getAllAccessibleVariables());
@@ -70,6 +71,10 @@ public final class ScopeSubject extends Subject<ScopeSubject, AbstractScope<?, ?
       failWithBadResults("declares", name, "declares", Joiner.on(", ").join(names));
     }
     return new DeclarationSubject(var);
+  }
+
+  private AbstractVar<?, ?> getVar(String name) {
+    return getSubject().hasSlot(name) ? checkNotNull(getSubject().getVar(name)) : null;
   }
 
   public final class DeclarationSubject {
@@ -108,9 +113,9 @@ public final class ScopeSubject extends Subject<ScopeSubject, AbstractScope<?, ?
       expectScope("on", scope, scope);
     }
 
-    /** Expects the declared variable to be declared on the closest non-block scope. */
-    public void onClosestNonBlockScope() {
-      expectScope("on", "the closest non-block scope", getSubject().getClosestNonBlockScope());
+    /** Expects the declared variable to be declared on the closest container scope. */
+    public void onClosestContainerScope() {
+      expectScope("on", "the closest container scope", getSubject().getClosestContainerScope());
     }
 
     /** Expects the declared variable to be declared on the closest hoist scope. */

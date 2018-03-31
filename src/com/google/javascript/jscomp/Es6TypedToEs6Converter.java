@@ -509,7 +509,7 @@ public final class Es6TypedToEs6Converter implements NodeTraversal.Callback, Hot
 
   private void visitTypeAlias(NodeTraversal t, Node n, Node parent) {
     String alias = n.getString();
-    if (t.getScope().isDeclared(alias, true)) {
+    if (t.getScope().hasSlot(alias)) {
       compiler.report(
           JSError.make(n, TYPE_ALIAS_ALREADY_DECLARED, alias));
     }

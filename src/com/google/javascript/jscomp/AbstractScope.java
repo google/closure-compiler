@@ -33,21 +33,27 @@ import java.util.Map;
  * points back to its parent scope. A Scope contains information about variables defined in that
  * scope.
  *
- * <p>ES6 introduces new scoping rules, which adds some complexity to this class. In particular,
- * scopes fall into four mutually exclusive categories based on their root node: block, function,
- * module, or global. Function, module, and global scopes are collectively referred to as "non-block
- * scopes". We also define a scope as a "hoist scope" if it is a non-block scope *or* it is the
- * outermost block scope within a function (i.e. a "function block scope"). Hoist scopes are
- * important because "var" declarations are hoisted to the closest hoist scope, as opposed to ES6
- * "let" and "const" which are not hoisted, but instead added directly to whatever scope they're
- * declared in.
+ * <p>ES 2015 introduces new scoping rules, which adds some complexity to this class. In particular,
+ * scopes fall into two mutually exclusive categories: <i>block</i> and <i>container</i>.  Block
+ * scopes are all scopes whose roots are blocks, as well as any control structures whose optional
+ * blocks are omitted.  These scopes did not exist at all prior to ES 2015.  Container scopes
+ * comprise function scopes, global scopes, and module scopes, and (aside from modules, which
+ * didn't exist in ES5) corresponds to the ES5 scope rules.  This corresponds roughly to one
+ * container scope per CFG root (but not exactly, due to SCRIPT-level CFGs).
  *
- * <p>Finally, a caution about function scopes and function block scopes: the language does not
- * permit any shadowing to occur between them (with the exception of bleeding function names), so in
- * many situations these scopes are treated as a single scope. Under block scoping, only function
- * parameters (and optionally, bleeding function names) are declared in the function scope. It is
- * kept as a separate scope so that default parameter initializers may be evaluated in a separate
- * scope from the function body.
+ * <p>All container scopes, plus the outermost block scope within a function (i.e. the <i>function
+ * block scope</i>) are considered <i>hoist scopes</i>.  Hoist scopes are relevant because "var"
+ * declarations are hoisted to the closest hoist scope, as opposed to "let" and "const" which always
+ * apply to the specific scope in which they occur.
+ *
+ * <p>Note that every function actually has two distinct hoist scopes: a container scope on the
+ * FUNCTION node, and a block-scope on the top-level BLOCK in the function (the "function block").
+ * Local variables are declared on the function block, while parameters and optionally the function
+ * name (if it bleeds, i.e. from a named function expression) are declared on the container scope.
+ * This is required so that default parameter initializers can refer to names from outside the
+ * function that could possibly be shadowed in the function block.  But these scopes are not fully
+ * independent of one another, since the language does not allow a top-level local variable to
+ * shadow a parameter name - so in some situations these scopes must be treated as a single scope.
  *
  * @see NodeTraversal
  */
@@ -145,6 +151,9 @@ abstract class AbstractScope<S extends AbstractScope<S, V>, V extends AbstractVa
 
   @Override
   public final V getSlot(String name) {
+    // TODO(sdh): This behavior is inconsistent with getOwnSlot, hasSlot, and hasOwnSlot
+    // when it comes to implicit vars.  The other three methods all exclude implicits,
+    // but this one returns them.  It would be good to clean this up one way or the other.
     return getVar(name);
   }
 
@@ -202,35 +211,21 @@ abstract class AbstractScope<S extends AbstractScope<S, V>, V extends AbstractVa
     return null;
   }
 
-  /**
-   * Use only when in a function block scope and want to tell if a name is either at the top of the
-   * function block scope or the function parameter scope.  This obviously only applies to ES6 block
-   * scopes.
-   */
-  public final boolean isDeclaredInFunctionBlockOrParameter(String name) {
-    // In ES6, we create a separate "function parameter scope" above the function block scope to
-    // handle default parameters. Since nothing in the function block scope is allowed to shadow
-    // the variables in the function scope, we treat the two scopes as one in this method.
-    checkState(isFunctionBlockScope());
-    return isDeclared(name, false) || (getParent().isDeclared(name, false));
+  /** Returns true if a variable is declared in this scope, with no recursion. */
+  public final boolean hasOwnSlot(String name) {
+    return vars.containsKey(name);
   }
 
-  /**
-   * Returns true if a variable is declared.
-   */
-  public final boolean isDeclared(String name, boolean recurse) {
+  /** Returns true if a variable is declared in this or any parent scope. */
+  public final boolean hasSlot(String name) {
     S scope = thisScope();
-    while (true) {
-      if (scope.getOwnSlot(name) != null) {
+    while (scope != null) {
+      if (scope.hasOwnSlot(name)) {
         return true;
       }
-
-      if (scope.getParent() != null && recurse) {
-        scope = scope.getParent();
-        continue;
-      }
-      return false;
+      scope = scope.getParent();
     }
+    return false;
   }
 
   /**
@@ -333,11 +328,11 @@ abstract class AbstractScope<S extends AbstractScope<S, V>, V extends AbstractVa
   /**
    * If a var were declared in this scope, return the scope it would be hoisted to.
    *
-   * For function scopes, we return back the scope itself, since even though there is no way
-   * to declare a var inside function parameters, it would make even less sense to say that
-   * such declarations would be "hoisted" somewhere else.
+   * <p>For function scopes, we return back the scope itself, since even though there is no way to
+   * declare a var inside function parameters, it would make even less sense to say that such
+   * declarations would be "hoisted" somewhere else.
    */
-  public final S getClosestHoistScope() {
+  final S getClosestHoistScope() {
     S current = thisScope();
     while (current != null) {
       if (current.isHoistScope()) {
@@ -349,10 +344,10 @@ abstract class AbstractScope<S extends AbstractScope<S, V>, V extends AbstractVa
   }
 
   /**
-   * Returns the closest non-block scope. This is equivalent to what the current scope would have
-   * been for non-block-scope creators, and is thus useful for migrating code to use block scopes.
+   * Returns the closest container scope. This is equivalent to what the current scope would have
+   * been for non-ES6 scope creators, and is thus useful for migrating code to use block scopes.
    */
-  public final S getClosestNonBlockScope() {
+  public final S getClosestContainerScope() {
     S scope = getClosestHoistScope();
     if (scope.isBlockScope()) {
       scope = scope.getParent();
@@ -383,6 +378,15 @@ abstract class AbstractScope<S extends AbstractScope<S, V>, V extends AbstractVa
     // TODO(tbreisacher): Can we tighten this to just NodeUtil.createsScope?
     checkArgument(
         NodeUtil.createsScope(rootNode) || rootNode.isScript() || rootNode.isRoot(), rootNode);
+  }
+
+  /**
+   * Whether {@code this} and the {@code other} scope have the same container scope (i.e. are in
+   * the same function, or else both in the global hoist scope). This is equivalent to asking
+   * whether the two scopes would be equivalent in a pre-ES2015-block-scopes view of the world.
+   */
+  boolean hasSameContainerScope(S other) {
+    return getClosestContainerScope() == other.getClosestContainerScope();
   }
 
   /**

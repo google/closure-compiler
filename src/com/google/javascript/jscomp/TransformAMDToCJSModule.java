@@ -181,11 +181,10 @@ public final class TransformAMDToCJSModule implements CompilerPass {
 
       String aliasName = aliasNode != null ? aliasNode.getString() : null;
       Scope globalScope = t.getScope();
-      if (aliasName != null &&
-          globalScope.isDeclared(aliasName, true)) {
+      if (aliasName != null && globalScope.hasSlot(aliasName)) {
         while (true) {
           String renamed = aliasName + VAR_RENAME_SUFFIX + renameIndex;
-          if (!globalScope.isDeclared(renamed, true)) {
+          if (!globalScope.hasSlot(renamed)) {
             NodeTraversal.traverseEs6(compiler, callback,
                 new RenameCallback(aliasName, renamed));
             aliasName = renamed;

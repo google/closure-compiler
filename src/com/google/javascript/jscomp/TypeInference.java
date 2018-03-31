@@ -83,7 +83,7 @@ class TypeInference
   private final ReverseAbstractInterpreter reverseInterpreter;
   private final FlowScope functionScope;
   private final FlowScope bottomScope;
-  private final TypedScope cfgRootScope;
+  private final TypedScope containerScope;
   private final TypedScopeCreator scopeCreator;
   private final Map<String, AssertionFunctionSpec> assertionFunctionsMap;
 
@@ -104,7 +104,7 @@ class TypeInference
     this.unknownType = registry.getNativeObjectType(UNKNOWN_TYPE);
 
     this.currentScope = syntacticScope;
-    this.cfgRootScope = syntacticScope;
+    this.containerScope = syntacticScope;
     inferArguments(syntacticScope);
 
     this.functionScope = LinkedFlowScope.createEntryLattice(syntacticScope);
@@ -193,14 +193,12 @@ class TypeInference
     }
 
     // TODO(sdh): Change to NodeUtil.getEnclosingScopeRoot(n) once we have block scopes.
-    this.currentScope =
-        scopeCreator.createScope(NodeUtil.getEnclosingNode(n, TypeInference::createsNonBlockScope));
     FlowScope output = input.createChildFlowScope();
     output = traverse(n, output);
     return output;
   }
 
-  private static boolean createsNonBlockScope(Node n) {
+  private static boolean createsContainerScope(Node n) {
     return NodeUtil.createsScope(n) && !NodeUtil.createsBlockScope(n);
   }
 
@@ -732,7 +730,7 @@ class TypeInference
     ObjectType objectType = ObjectType.cast(
         nodeType.restrictByNotNullOrUndefined());
     boolean propCreationInConstructor =
-        obj.isThis() && getJSType(cfgRootScope.getRootNode()).isConstructor();
+        obj.isThis() && getJSType(containerScope.getRootNode()).isConstructor();
 
     if (objectType == null) {
       registry.registerPropertyOnType(propName, nodeType);
@@ -749,7 +747,7 @@ class TypeInference
         //    top level and the constructor Foo is defined in the same file.
         boolean staticPropCreation = false;
         Node maybeAssignStm = getprop.getGrandparent();
-        if (cfgRootScope.isGlobal() && NodeUtil.isPrototypePropertyDeclaration(maybeAssignStm)) {
+        if (containerScope.isGlobal() && NodeUtil.isPrototypePropertyDeclaration(maybeAssignStm)) {
           String propCreationFilename = maybeAssignStm.getSourceFileName();
           Node ctor = objectType.getOwnerFunction().getSource();
           if (ctor != null && ctor.getSourceFileName().equals(propCreationFilename)) {
@@ -853,7 +851,9 @@ class TypeInference
         // In this case, we would infer the first reference to t as
         // type {number}, even though it's undefined.
         TypedVar maybeOuterVar =
-            isInferred && cfgRootScope.isLocal() ? cfgRootScope.getParent().getVar(varName) : null;
+            isInferred && containerScope.isLocal()
+                ? containerScope.getParent().getVar(varName)
+                : null;
         boolean nonLocalInferredSlot =
             var.equals(maybeOuterVar) && !maybeOuterVar.isMarkedAssignedExactlyOnce();
 
@@ -1850,7 +1850,7 @@ class TypeInference
         && v.isLocal()
         && v.isMarkedEscaped()
         // It's OK to flow a variable in the scope where it's escaped.
-        && v.getScope().getClosestNonBlockScope() == cfgRootScope;
+        && v.getScope().getClosestContainerScope() == containerScope;
   }
 
   /**

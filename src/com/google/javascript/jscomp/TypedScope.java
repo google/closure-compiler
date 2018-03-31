@@ -114,7 +114,7 @@ public class TypedScope extends AbstractScope<TypedScope, TypedVar>
     if (isGlobal()) {
       return ObjectType.cast(getRootNode().getJSType());
     } else if (!getRootNode().isFunction()) {
-      return getClosestNonBlockScope().getTypeOfThis();
+      return getClosestContainerScope().getTypeOfThis();
     }
 
     checkState(getRootNode().isFunction());

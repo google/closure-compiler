@@ -235,7 +235,7 @@ class RemoveUnusedCode implements CompilerPass {
     // Create scope from parent of root node, which also has externs as a child, so we'll
     // have extern definitions in scope.
     Scope scope = scopeCreator.createScope(root.getParent(), null);
-    if (!scope.isDeclared(NodeUtil.JSC_PROPERTY_NAME_FN, /* recurse */ true)) {
+    if (!scope.hasSlot(NodeUtil.JSC_PROPERTY_NAME_FN)) {
       // TODO(b/70730762): Passes that add references to this should ensure it is declared.
       // NOTE: null input makes this an extern var.
       scope.declare(

@@ -141,7 +141,7 @@ class TypeInferencePass implements CompilerPass {
       // This ensures that incremental compilation only touches the root
       // that's been swapped out.
       TypedScope scope = t.getTypedScope();
-      if (!scope.isBlockScope()) { // ignore non-cfg-root scopes.
+      if (!scope.isBlockScope()) { // ignore scopes that don't have their own CFGs.
         inferScope(t.getCurrentNode(), scope);
       }
       // Resolve any new type names found during the inference.

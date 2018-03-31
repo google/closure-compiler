@@ -368,11 +368,11 @@ class LiveVariablesAnalysis
     // ES6 separates the scope but if the variable is declared in the param it should be local
     // to the function body.
     if (localScope.isFunctionBlockScope()) {
-      local = localScope.isDeclaredInFunctionBlockOrParameter(name);
+      local = isDeclaredInFunctionBlockOrParameter(localScope, name);
     } else if (localScope == jsScope && jsScopeChild != null) {
-      local = jsScopeChild.isDeclaredInFunctionBlockOrParameter(name);
+      local = isDeclaredInFunctionBlockOrParameter(jsScopeChild, name);
     } else {
-      local = localScope.isDeclared(name, false);
+      local = localScope.hasOwnSlot(name);
     }
 
     if (!local) {
@@ -382,6 +382,14 @@ class LiveVariablesAnalysis
     if (!escaped.contains(var)) {
       set.set(getVarIndex(var.getName()));
     }
+  }
+
+  private static boolean isDeclaredInFunctionBlockOrParameter(Scope scope, String name) {
+    // In ES6, we create a separate container scope above the function block scope to handle
+    // default parameters. Since nothing in the function block scope is allowed to shadow
+    // the variables in the function scope, we treat the two scopes as one in this method.
+    checkState(scope.isFunctionBlockScope());
+    return scope.hasOwnSlot(name) || scope.getParent().hasOwnSlot(name);
   }
 
   /**
@@ -402,12 +410,12 @@ class LiveVariablesAnalysis
   private boolean isArgumentsName(Node n) {
     boolean childDeclared;
     if (jsScopeChild != null) {
-      childDeclared = jsScopeChild.isDeclared(ARGUMENT_ARRAY_ALIAS, false);
+      childDeclared = jsScopeChild.hasOwnSlot(ARGUMENT_ARRAY_ALIAS);
     } else {
       childDeclared = true;
     }
     return n.isName()
         && n.getString().equals(ARGUMENT_ARRAY_ALIAS)
-        && (!jsScope.isDeclared(ARGUMENT_ARRAY_ALIAS, false) || !childDeclared);
+        && (!jsScope.hasOwnSlot(ARGUMENT_ARRAY_ALIAS) || !childDeclared);
   }
 }

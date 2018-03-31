@@ -633,7 +633,7 @@ class FlowSensitiveInlineVariables implements CompilerPass, ScopedCallback {
             public boolean apply(Node input) {
               if (input.isName()) {
                 String name = input.getString();
-                if (!name.isEmpty() && !usageScope.isDeclared(name, true)) {
+                if (!name.isEmpty() && !usageScope.hasSlot(name)) {
                   return true; // unsafe to inline.
                 }
               }

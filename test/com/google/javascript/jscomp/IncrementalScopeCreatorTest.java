@@ -19,6 +19,7 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.javascript.jscomp.ScopeSubject.assertScope;
 
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
@@ -83,11 +84,11 @@ public final class IncrementalScopeCreatorTest extends TestCase {
     // recreated, so we need to inspect a Var in the scope to see if it has been freshed or not.
     Var inside = globalFunction.getVar("inside");
 
-    assertTrue(globalScope.isDeclared("a", true));
-    assertTrue(globalScope.isDeclared("b", true));
-    assertTrue(globalScope.isDeclared("x", true));
-    assertTrue(globalScope.isDeclared("ext", true));
-    assertFalse(globalScope.isDeclared("nonexistant", true));
+    assertScope(globalScope).declares("a");
+    assertScope(globalScope).declares("b");
+    assertScope(globalScope).declares("x");
+    assertScope(globalScope).declares("ext");
+    assertScope(globalScope).doesNotDeclare("nonexistant");
 
     // Make a change that affects the global scope (and report it)
     removeFirstDecl(compiler, compiler.getRoot(), "a");
@@ -98,11 +99,11 @@ public final class IncrementalScopeCreatorTest extends TestCase {
     assertSame(globalFunction, creator.createScope(fnFoo, globalScope));
     assertSame(inside, globalFunction.getVar("inside"));
 
-    assertTrue(globalScope2.isDeclared("a", true)); // still declared, scope creator is frozen
-    assertTrue(globalScope2.isDeclared("b", true));
-    assertTrue(globalScope2.isDeclared("x", true));
-    assertTrue(globalScope2.isDeclared("ext", true));
-    assertFalse(globalScope2.isDeclared("nonexistant", true));
+    assertScope(globalScope2).declares("a"); // still declared, scope creator is frozen
+    assertScope(globalScope2).declares("b");
+    assertScope(globalScope2).declares("x");
+    assertScope(globalScope2).declares("ext");
+    assertScope(globalScope2).doesNotDeclare("nonexistant");
 
     // Allow the scopes to be updated by calling "thaw" and "freeze"
 
@@ -116,11 +117,11 @@ public final class IncrementalScopeCreatorTest extends TestCase {
     assertSame(globalFunction, creator.createScope(fnFoo, globalScope));
     assertSame(inside, globalFunction.getVar("inside"));
 
-    assertFalse(globalScope3.isDeclared("a", true)); // no declared, scope creator has refreshed
-    assertTrue(globalScope3.isDeclared("b", true));
-    assertTrue(globalScope3.isDeclared("x", true));
-    assertTrue(globalScope3.isDeclared("ext", true));
-    assertFalse(globalScope3.isDeclared("nonexistant", true));
+    assertScope(globalScope3).doesNotDeclare("a"); // no declared, scope creator has refreshed
+    assertScope(globalScope3).declares("b");
+    assertScope(globalScope3).declares("x");
+    assertScope(globalScope3).declares("ext");
+    assertScope(globalScope3).doesNotDeclare("nonexistant");
 
     IncrementalScopeCreator.getInstance(compiler).thaw();
   }
@@ -144,11 +145,11 @@ public final class IncrementalScopeCreatorTest extends TestCase {
 
     Scope globalScope = creator.createScope(root, null);
 
-    assertTrue(globalScope.isDeclared("a", false));
-    assertTrue(globalScope.isDeclared("b", false));
-    assertTrue(globalScope.isDeclared("x", false));
-    assertTrue(globalScope.isDeclared("y", false));
-    assertFalse(globalScope.isDeclared("nonexistant", false));
+    assertScope(globalScope).declares("a").directly();
+    assertScope(globalScope).declares("b").directly();
+    assertScope(globalScope).declares("x").directly();
+    assertScope(globalScope).declares("y").directly();
+    assertScope(globalScope).doesNotDeclare("nonexistant");
 
     Node script1 = checkNotNull(NodeUtil.getEnclosingScript(findDecl(root, "a")));
     Node script2 = checkNotNull(NodeUtil.getEnclosingScript(findDecl(root, "x")));
@@ -171,11 +172,11 @@ public final class IncrementalScopeCreatorTest extends TestCase {
 
     globalScope = creator.createScope(root, null);
 
-    assertTrue(globalScope.isDeclared("a", false));
-    assertTrue(globalScope.isDeclared("b", false));
-    assertTrue(globalScope.isDeclared("x", false));
-    assertTrue(globalScope.isDeclared("y", false));
-    assertFalse(globalScope.isDeclared("nonexistant", false));
+    assertScope(globalScope).declares("a").directly();
+    assertScope(globalScope).declares("b").directly();
+    assertScope(globalScope).declares("x").directly();
+    assertScope(globalScope).declares("y").directly();
+    assertScope(globalScope).doesNotDeclare("nonexistant");
 
     compiler.reportChangeToChangeScope(script1); // invalidate the original scope.
 
@@ -185,11 +186,11 @@ public final class IncrementalScopeCreatorTest extends TestCase {
 
     globalScope = creator.createScope(root, null);
 
-    assertTrue(globalScope.isDeclared("a", false));
-    assertTrue(globalScope.isDeclared("b", false));
-    assertTrue(globalScope.isDeclared("x", false));
-    assertTrue(globalScope.isDeclared("y", false));
-    assertFalse(globalScope.isDeclared("nonexistant", false));
+    assertScope(globalScope).declares("a").directly();
+    assertScope(globalScope).declares("b").directly();
+    assertScope(globalScope).declares("x").directly();
+    assertScope(globalScope).declares("y").directly();
+    assertScope(globalScope).doesNotDeclare("nonexistant");
 
     creator.thaw();
   }
@@ -209,8 +210,8 @@ public final class IncrementalScopeCreatorTest extends TestCase {
 
     Scope globalScope = creator.createScope(root, null);
 
-    assertTrue(globalScope.isDeclared("a", true));
-    assertTrue(globalScope.isDeclared("b", true));
+    assertScope(globalScope).declares("a");
+    assertScope(globalScope).declares("b");
 
     removeFirstDecl(compiler, compiler.getRoot(), "a"); // leaves the second declaration
     removeFirstDecl(compiler, compiler.getRoot(), "b");
@@ -224,8 +225,8 @@ public final class IncrementalScopeCreatorTest extends TestCase {
     Scope globalScope2 = creator.createScope(compiler.getRoot(), null);
     assertSame(globalScope, globalScope2);
 
-    assertTrue(globalScope2.isDeclared("a", true)); // still declared in second file
-    assertFalse(globalScope2.isDeclared("b", true));
+    assertScope(globalScope2).declares("a"); // still declared in second file
+    assertScope(globalScope2).doesNotDeclare("b");
 
     IncrementalScopeCreator.getInstance(compiler).thaw();
   }

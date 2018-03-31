@@ -729,7 +729,6 @@ public final class Es6SyntacticScopeCreatorTest extends TestCase {
     Scope fBlockScope = scopeCreator.createScope(functionBlock, functionScope);
 
     assertScope(fBlockScope).declares("x").on(functionScope);
-    assertTrue(fBlockScope.isDeclaredInFunctionBlockOrParameter("x"));
     assertScope(fBlockScope).doesNotDeclare("y");
 
     Node ifBlock = functionBlock.getLastChild().getLastChild();
@@ -793,24 +792,24 @@ public final class Es6SyntacticScopeCreatorTest extends TestCase {
     Node function = root.getFirstChild();
     checkState(function.isFunction(), function);
     Scope fScope = scopeCreator.createScope(function, global);
-    assertFalse(fScope.isDeclared("this", true));
+    assertFalse(fScope.hasSlot("this"));
     Var thisVar = fScope.getVar("this");
     assertTrue(thisVar.isThis());
 
     Node fBlock = NodeUtil.getFunctionBody(function);
     Scope fBlockScope = scopeCreator.createScope(fBlock, fScope);
-    assertFalse(fBlockScope.isDeclared("this", true));
+    assertScope(fBlockScope).doesNotDeclare("this");
     assertThat(fBlockScope.getVar("this")).isSameAs(thisVar);
 
     Node ifBlock = fBlock.getFirstChild().getLastChild();
     Scope blockScope = scopeCreator.createScope(ifBlock, fBlockScope);
-    assertFalse(blockScope.isDeclared("this", true));
+    assertScope(blockScope).doesNotDeclare("this");
     assertThat(blockScope.getVar("this")).isSameAs(thisVar);
     assertThat(blockScope.getVar("this").getScope()).isSameAs(fScope);
 
     Node gFunction = ifBlock.getFirstChild();
     Scope gScope = scopeCreator.createScope(gFunction, blockScope);
-    assertFalse(gScope.isDeclared("this", true));
+    assertScope(gScope).doesNotDeclare("this");
     assertThat(gScope.getVar("this").getScope()).isSameAs(gScope);
   }
 
@@ -1008,7 +1007,6 @@ public final class Es6SyntacticScopeCreatorTest extends TestCase {
     Node fBlock = NodeUtil.getFunctionBody(fNode);
     Scope fBlockScope = scopeCreator.createScope(fBlock, fScope);
     assertScope(fBlockScope).declares("x").on(fScope);
-    assertTrue(fBlockScope.isDeclaredInFunctionBlockOrParameter("x"));
   }
 
   public void testOnlyOneDeclaration() {
@@ -1022,7 +1020,6 @@ public final class Es6SyntacticScopeCreatorTest extends TestCase {
     Node fBlock = fNode.getLastChild();
     Scope fBlockScope = scopeCreator.createScope(fBlock, fScope);
     assertScope(fBlockScope).declares("x").on(fScope);
-    assertTrue(fBlockScope.isDeclaredInFunctionBlockOrParameter("x"));
 
     Node ifBlock = fBlock.getFirstChild().getLastChild();
     Scope ifBlockScope = scopeCreator.createScope(ifBlock, fBlockScope);

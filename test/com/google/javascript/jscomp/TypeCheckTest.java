@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.javascript.jscomp.ScopeSubject.assertScope;
 import static com.google.javascript.jscomp.TypeCheck.INSTANTIATE_ABSTRACT_CLASS;
 import static com.google.javascript.jscomp.TypeCheck.STRICT_INEXISTENT_PROPERTY;
 import static com.google.javascript.jscomp.parsing.JsDocInfoParser.BAD_TYPE_WIKI_LINK;
@@ -2150,8 +2151,8 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
     TypeCheckResult p = parseAndTypeCheckWithScope("var a = function b(){};");
 
     // a declared, b is not
-    assertTrue(p.scope.isDeclared("a", false));
-    assertFalse(p.scope.isDeclared("b", false));
+    assertScope(p.scope).declares("a");
+    assertScope(p.scope).doesNotDeclare("b");
 
     // checking that a has the correct assigned type
     assertEquals("function(): undefined",

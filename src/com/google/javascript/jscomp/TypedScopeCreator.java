@@ -1258,7 +1258,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
 
         // don't try to declare in the global scope if there's
         // already a symbol there with this name.
-        if (!globalScope.isDeclared(variableName, false)) {
+        if (!globalScope.hasOwnSlot(variableName)) {
           scopeToDeclareIn = scope.getGlobalScope();
         }
       }
@@ -1269,7 +1269,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
 
       // declared in closest scope?
       CompilerInput input = compiler.getInput(inputId);
-      if (scopeToDeclareIn.isDeclared(variableName, false)) {
+      if (scopeToDeclareIn.hasOwnSlot(variableName)) {
         TypedVar oldVar = scopeToDeclareIn.getVar(variableName);
         newVar = validator.expectUndeclaredVariable(
             sourceName, input, n, parent, oldVar, variableName, type);
@@ -1842,7 +1842,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       if (inferred && rhsValue != null && rhsValue.isFunction()) {
         if (info != null) {
           return false;
-        } else if (!scope.isDeclared(qName, false) && n.isUnscopedQualifiedName()) {
+        } else if (!scope.hasOwnSlot(qName) && n.isUnscopedQualifiedName()) {
 
           // Check if this is in a conditional block.
           // Functions assigned in conditional blocks are inferred.
@@ -1908,7 +1908,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
         String ownerName = stub.ownerName;
         boolean isExtern = stub.isExtern;
 
-        if (scope.isDeclared(qName, false)) {
+        if (scope.hasOwnSlot(qName)) {
           continue;
         }
 
@@ -2206,10 +2206,10 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
         return;
       }
 
-      Node nonBlockScopeRoot = t.getClosestNonBlockScopeRoot();
+      Node containerScopeRoot = t.getClosestContainerScopeRoot();
 
       if (n.isReturn() && n.getFirstChild() != null) {
-        functionsWithNonEmptyReturns.add(nonBlockScopeRoot);
+        functionsWithNonEmptyReturns.add(containerScopeRoot);
       }
 
       // Be careful of bleeding functions, which create variables
@@ -2219,11 +2219,11 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
         Scope scope = t.getScope();
         Var var = scope.getVar(name);
         if (var != null) {
-          Scope ownerScope = var.getScope().getClosestNonBlockScope();
+          Scope ownerScope = var.getScope().getClosestContainerScope();
           if (ownerScope.isLocal()) {
             Node ownerScopeRoot = ownerScope.getRootNode();
             assignedVarNames.add(ScopedName.of(name, ownerScopeRoot));
-            if (nonBlockScopeRoot != ownerScopeRoot) {
+            if (containerScopeRoot != ownerScopeRoot) {
               escapedVarNames.add(ScopedName.of(name, ownerScopeRoot));
             }
           }
@@ -2233,9 +2233,9 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
         Scope scope = t.getScope();
         Var var = scope.getVar(name);
         if (var != null) {
-          Scope ownerScope = var.getScope().getClosestNonBlockScope();
+          Scope ownerScope = var.getScope().getClosestContainerScope();
           Node ownerScopeRoot = ownerScope.getRootNode();
-          if (ownerScope.isLocal() && nonBlockScopeRoot != ownerScopeRoot) {
+          if (ownerScope.isLocal() && containerScopeRoot != ownerScopeRoot) {
             escapedVarNames.add(ScopedName.of(n.getQualifiedName(), ownerScopeRoot));
           }
         }

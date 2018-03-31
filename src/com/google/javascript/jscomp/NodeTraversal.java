@@ -967,7 +967,7 @@ public class NodeTraversal {
     return scopes.peek().getClosestHoistScope().getRootNode();
   }
 
-  public Node getClosestNonBlockScopeRoot() {
+  public Node getClosestContainerScopeRoot() {
     int roots = scopeRoots.size();
     for (int i = roots; i > 0; i--) {
       Node rootNode = scopeRoots.get(i - 1);
@@ -976,7 +976,7 @@ public class NodeTraversal {
       }
     }
 
-    return scopes.peek().getClosestNonBlockScope().getRootNode();
+    return scopes.peek().getClosestContainerScope().getRootNode();
   }
 
   public AbstractScope<?, ?> getClosestHoistScope() {

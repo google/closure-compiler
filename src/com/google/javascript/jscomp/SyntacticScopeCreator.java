@@ -186,7 +186,7 @@ public class SyntacticScopeCreator implements ScopeCreator {
 
     CompilerInput input = compiler.getInput(inputId);
     String name = n.getString();
-    if (!scope.isDeclared(name, false) && !(scope.isLocal() && name.equals(Var.ARGUMENTS))) {
+    if (!scope.hasOwnSlot(name) && (!scope.isLocal() || !name.equals(Var.ARGUMENTS))) {
       if (isTyped) {
         ((TypedScope) scope).declare(name, n, null, input);
       } else {

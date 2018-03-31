@@ -1212,7 +1212,7 @@ public final class SymbolTable {
     Node otherScopeRoot = otherScope.getRootNode();
 
     // NOTE: Kythe is not set up to handle block scopes yet, so only create
-    // SymbolScopes for CFG root nodes, giving a pre-ES6 view of the world.
+    // SymbolScopes for container scope roots, giving a pre-ES6 view of the world.
     while (!NodeUtil.isValidCfgRoot(otherScopeRoot)) {
       otherScopeRoot = otherScopeRoot.getParent();
     }

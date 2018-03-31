@@ -96,10 +96,10 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
     Scope hoistScope = scope.getClosestHoistScope();
     if (scope != hoistScope) {
       String newName = oldName;
-      if (hoistScope.isDeclared(oldName, true) || undeclaredNames.contains(oldName)) {
+      if (hoistScope.hasSlot(oldName) || undeclaredNames.contains(oldName)) {
         do {
           newName = oldName + "$" + compiler.getUniqueNameIdSupplier().get();
-        } while (hoistScope.isDeclared(newName, true));
+        } while (hoistScope.hasSlot(newName));
         nameNode.setString(newName);
         compiler.reportChangeToEnclosingScope(nameNode);
         Node scopeRoot = scope.getRootNode();
@@ -218,7 +218,7 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
   private class CollectUndeclaredNames extends AbstractPostOrderCallback {
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
-      if (n.isName() && !t.getScope().isDeclared(n.getString(), true)) {
+      if (n.isName() && !t.getScope().hasSlot(n.getString())) {
         undeclaredNames.add(n.getString());
       }
     }

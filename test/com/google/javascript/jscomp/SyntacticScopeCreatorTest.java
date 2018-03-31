@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.javascript.jscomp.ScopeSubject.assertScope;
+
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import junit.framework.TestCase;
@@ -57,16 +59,16 @@ public final class SyntacticScopeCreatorTest extends TestCase {
         "[function bar2() { var y; }];" +
         "if (true) { function z() {} }");
 
-    assertTrue(scope.isDeclared("foo", false));
-    assertTrue(scope.isDeclared("x", false));
-    assertTrue(scope.isDeclared("z", false));
+    assertScope(scope).declares("foo").directly();
+    assertScope(scope).declares("x").directly();
+    assertScope(scope).declares("z").directly();
 
     // The following should not be declared in this scope
-    assertFalse(scope.isDeclared("a1", false));
-    assertFalse(scope.isDeclared("bar", false));
-    assertFalse(scope.isDeclared("bar2", false));
-    assertFalse(scope.isDeclared("y", false));
-    assertFalse(scope.isDeclared("", false));
+    assertScope(scope).doesNotDeclare("a1");
+    assertScope(scope).doesNotDeclare("bar");
+    assertScope(scope).doesNotDeclare("bar2");
+    assertScope(scope).doesNotDeclare("y");
+    assertScope(scope).doesNotDeclare("");
   }
 
   public void testNestedFunctionScope() {
@@ -75,12 +77,12 @@ public final class SyntacticScopeCreatorTest extends TestCase {
 
     Node fNode = root.getFirstChild();
     Scope outerFScope = (Scope) scopeCreator.createScope(fNode, globalScope);
-    assertTrue(outerFScope.isDeclared("x", false));
+    assertScope(outerFScope).declares("x").directly();
 
     Node innerFNode = fNode.getLastChild().getFirstChild();
     Scope innerFScope = (Scope) scopeCreator.createScope(innerFNode, outerFScope);
-    assertFalse(innerFScope.isDeclared("x", false));
-    assertTrue(innerFScope.isDeclared("y", false));
+    assertScope(innerFScope).declares("x").onSomeParent();
+    assertScope(innerFScope).declares("y").directly();
   }
 
   public void testScopeRootNode() {
@@ -93,16 +95,16 @@ public final class SyntacticScopeCreatorTest extends TestCase {
     assertEquals(Token.FUNCTION, fooNode.getToken());
     Scope fooScope = (Scope) scopeCreator.createScope(fooNode, globalScope);
     assertEquals(fooNode, fooScope.getRootNode());
-    assertTrue(fooScope.isDeclared("x", false));
+    assertScope(fooScope).declares("x").directly();
   }
 
   public void testFunctionExpressionInForLoopInitializer() {
     Node root = getRoot("for (function foo() {};;) {}");
     Scope globalScope = (Scope) scopeCreator.createScope(root, null);
-    assertFalse(globalScope.isDeclared("foo", false));
+    assertScope(globalScope).doesNotDeclare("foo");
 
     Node fNode = root.getFirstFirstChild();
     Scope fScope = (Scope) scopeCreator.createScope(fNode, globalScope);
-    assertTrue(fScope.isDeclared("foo", false));
+    assertScope(fScope).declares("foo").directly();
   }
 }
