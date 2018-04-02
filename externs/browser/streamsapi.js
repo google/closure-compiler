@@ -36,6 +36,70 @@ var IteratorResult;
  */
 var QueuingStrategy;
 
+/**
+ * The TransformStreamDefaultController class has methods that allow
+ * manipulation of the associated ReadableStream and WritableStream.
+ *
+ * This class cannot be directly constructed and is instead passed by the
+ * TransformStream to the methods of its transformer.
+ *
+ * @interface
+ * @see https://streams.spec.whatwg.org/#ts-default-controller-class
+ */
+function TransformStreamDefaultController() {};
+
+/**
+ * @type {number}
+ * @see https://streams.spec.whatwg.org/#ts-default-controller-desired-size
+ */
+TransformStreamDefaultController.prototype.desiredSize;
+
+/**
+ * @param {*} chunk
+ * @return {undefined}
+ * @see https://streams.spec.whatwg.org/#ts-default-controller-enqueue
+ */
+TransformStreamDefaultController.prototype.enqueue = function(chunk) {};
+
+/**
+ * @param {*} reason
+ * @return {undefined}
+ * @see https://streams.spec.whatwg.org/#ts-default-controller-error
+ */
+TransformStreamDefaultController.prototype.error = function(reason) {};
+
+/**
+ * @return {undefined}
+ * @see https://streams.spec.whatwg.org/#ts-default-controller-terminate
+ */
+TransformStreamDefaultController.prototype.terminate = function() {};
+
+
+/**
+ * @record
+ * @see https://streams.spec.whatwg.org/#transformer-api
+ */
+function TransformStreamTransformer() {};
+
+/**
+ * @type {(undefined|
+ *     function(!TransformStreamDefaultController):(!IThenable<*>|undefined))}
+ */
+TransformStreamTransformer.prototype.start;
+
+/**
+ * @type {(undefined|
+ *     function(*,
+ * !TransformStreamDefaultController):(!IThenable<*>|undefined))}
+ */
+TransformStreamTransformer.prototype.transform;
+
+/**
+ * @type {(undefined|
+ *     function(!TransformStreamDefaultController):(!IThenable<*>|undefined))}
+ */
+TransformStreamTransformer.prototype.flush;
+
 
 /**
  * @record
