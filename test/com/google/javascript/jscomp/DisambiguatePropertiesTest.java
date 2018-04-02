@@ -15,6 +15,9 @@
  */
 package com.google.javascript.jscomp;
 
+import static com.google.javascript.jscomp.DisambiguateProperties.Warnings.INVALIDATION;
+import static com.google.javascript.jscomp.DisambiguateProperties.Warnings.INVALIDATION_ON_TYPE;
+
 import com.google.common.collect.Multimap;
 import com.google.javascript.rhino.Node;
 import java.util.Collection;
@@ -1774,7 +1777,7 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
             "/** @param {I} arg */ function f(arg) {}",
             "/** @constructor */ function C() { this.foobar = 42; }",
             "f(new C());")),
-        error(DisambiguateProperties.Warnings.INVALIDATION).withMessageContaining("foobar"));
+        error(INVALIDATION).withMessageContaining("foobar"));
   }
 
   public void testDisambiguatePropertiesClassCastedToUnrelatedInterface() {
@@ -2418,7 +2421,7 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
   public void testErrorOnProtectedProperty() {
     test(
         srcs("function addSingletonGetter(foo) { foo.foobar = 'a'; };"),
-        error(DisambiguateProperties.Warnings.INVALIDATION).withMessageContaining("foobar"));
+        error(INVALIDATION).withMessageContaining("foobar"));
   }
 
   public void testMismatchForbiddenInvalidation() {
@@ -2427,8 +2430,7 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
             "/** @constructor */ function F() {}",
             "/** @type {number} */ F.prototype.foobar = 3;",
             "/** @return {number} */ function g() { return new F(); }")),
-        error(DisambiguateProperties.Warnings.INVALIDATION)
-            .withMessageContaining("Consider fixing errors"));
+        error(INVALIDATION).withMessageContaining("Consider fixing errors"));
   }
 
   public void testUnionTypeInvalidationError() {
@@ -2452,8 +2454,7 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
     test(
         externs(DEFAULT_EXTERNS + externs),
         srcs(js),
-        error(DisambiguateProperties.Warnings.INVALIDATION_ON_TYPE)
-            .withMessageContaining("foobar"));
+        error(INVALIDATION_ON_TYPE).withMessageContaining("foobar"));
   }
 
   public void testDontCrashOnNonConstructorsWithPrototype() {
@@ -2479,7 +2480,7 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
     test(
         externs(DEFAULT_EXTERNS + externs),
         srcs(js),
-        error(DisambiguateProperties.Warnings.INVALIDATION_ON_TYPE)
+        error(INVALIDATION_ON_TYPE)
             .withMessageContaining("foobar"));
   }
 
@@ -2648,6 +2649,21 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
         "Baz.prototype.firstElementChild;");
 
     testSame(externs(DEFAULT_EXTERNS + externs), srcs(js));
+  }
+
+  public void testInvalidationOnNamespaceType() {
+    enableTranspile();
+
+    String js = lines(
+        "var goog = {};",
+        "goog.array = {};",
+        "goog.array.foobar = function(var_args) {}",
+        "",
+        "var args = [1, 2];",
+        "goog.array.foobar(...args);");
+
+    // TODO(b/37673673): This should compile with no errors.
+    test(srcs(js), error(INVALIDATION).withMessageContaining("foobar"));
   }
 
   private void testSets(String js, String expected, final String fieldTypes) {
