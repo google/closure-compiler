@@ -1617,9 +1617,15 @@ public final class ConformanceRules {
       Collection<String> tagNames = getTagNames(n.getSecondChild());
       Node attrs = n.getChildAtIndex(2);
       TypeI attrsType = attrs.getTypeI();
+
+      // TODO(tbreisacher): Remove this after the typechecker understands ES6.
+      if (attrsType == null) {
+        // Type information is not available; don't run this check.
+        return ConformanceResult.CONFORMANCE;
+      }
+
       // String or array attribute sets the class.
-      boolean isClassName =
-          attrsType != null && !attrsType.isUnknownType() && attrsType.isSubtypeOf(classNameTypes);
+      boolean isClassName = !attrsType.isUnknownType() && attrsType.isSubtypeOf(classNameTypes);
 
       if (attrs.isNull() || (attrsType != null && attrsType.isVoidType())) {
         // goog.dom.createDom('iframe', null) is fine.
