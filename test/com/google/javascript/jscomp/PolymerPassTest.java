@@ -358,7 +358,6 @@ public class PolymerPassTest extends TypeICompilerTestCase {
    */
   public void testIIFEExtractionNoAssignmentTarget() {
     test(
-        1,
         lines(
             "(function() {",
             "  Polymer({",
@@ -373,29 +372,6 @@ public class PolymerPassTest extends TypeICompilerTestCase {
             " */",
             "var XElement = function() {};",
             "(function() {",
-            "  Polymer(/** @lends {XElement.prototype} */ {",
-            "    is: 'x',",
-            "    /** @this {XElement} */",
-            "    sayHi: function() { alert('hi'); },",
-            "  });",
-            "})()"));
-
-    test(
-        2,
-        lines(
-            "(function() {",
-            "  Polymer({",
-            "    is: 'x',",
-            "    sayHi: function() { alert('hi'); },",
-            "  });",
-            "})()"),
-        lines(
-            "(function() {",
-            "  /**",
-            "   * @constructor @extends {PolymerElement}",
-            "   * @implements {PolymerXElementInterface}",
-            "   */",
-            "  var XElement = function() {};",
             "  Polymer(/** @lends {XElement.prototype} */ {",
             "    is: 'x',",
             "    /** @this {XElement} */",

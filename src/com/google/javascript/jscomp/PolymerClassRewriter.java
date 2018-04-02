@@ -129,17 +129,14 @@ final class PolymerClassRewriter {
     Node statements = block.removeChildren();
     Node parent = exprRoot.getParent();
 
-    // For Polymer 1, If the call to Polymer() is not in the global scope and the assignment target
+    // If the call to Polymer() is not in the global scope and the assignment target
     // is not namespaced (which likely means it's exported to the global scope), put the type
     // declaration into the global scope at the start of the current script.
     //
     // This avoids unknown type warnings which are a result of the compiler's poor understanding of
     // types declared inside IIFEs or any non-global scope. We should revisit this decision after
     // moving to the new type inference system which should be able to infer these types better.
-    //
-    // Since Polymer 2 class mixins only function with NTI, we do not force Polymer 2 types to be
-    // global.
-    if (this.polymerVersion == 1 && !isInGlobalScope && !cls.target.isGetProp()) {
+    if (!isInGlobalScope && !cls.target.isGetProp()) {
       Node scriptNode = NodeUtil.getEnclosingScript(parent);
       scriptNode.addChildrenToFront(statements);
       compiler.reportChangeToChangeScope(scriptNode);
