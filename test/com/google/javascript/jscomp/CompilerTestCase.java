@@ -66,6 +66,9 @@ public abstract class CompilerTestCase extends TestCase {
   /** Externs for the test */
   final List<SourceFile> externsInputs;
 
+  /** Libraries to inject before typechecking */
+  final Set<String> librariesToInject;
+
   /** Whether to include synthetic code when comparing actual to expected */
   private boolean compareSyntheticCode;
 
@@ -554,6 +557,7 @@ public abstract class CompilerTestCase extends TestCase {
    */
   protected CompilerTestCase(String externs) {
     this.externsInputs = ImmutableList.of(SourceFile.fromCode("externs", externs));
+    librariesToInject = new HashSet<>();
   }
 
   /**
@@ -991,6 +995,11 @@ public abstract class CompilerTestCase extends TestCase {
     new GlobalTypeInfoCollector(compiler).process(externs, js);
     NewTypeInference nti = new NewTypeInference(compiler);
     nti.process(externs, js);
+  }
+
+  /** Ensures the given library is injected before typechecking */
+  protected final void ensureLibraryInjected(String resourceName) {
+    librariesToInject.add(resourceName);
   }
 
   /**
@@ -1488,6 +1497,12 @@ public abstract class CompilerTestCase extends TestCase {
           recentChange.reset();
           transpileToEs5(compiler, externsRoot, mainRoot);
           hasCodeChanged = hasCodeChanged || recentChange.hasCodeChanged();
+        }
+
+        if (!librariesToInject.isEmpty() && i == 0) {
+          for (String resourceName : librariesToInject) {
+            compiler.ensureLibraryInjected(resourceName, true);
+          }
         }
 
         // Only run the type checking pass once, if asked.

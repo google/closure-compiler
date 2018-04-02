@@ -15,18 +15,30 @@
  */
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import com.google.javascript.rhino.Node;
 
 /** Unit tests for {@link Es6RewriteGenerators}. */
 public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
   private boolean allowMethodCallDecomposing;
+
+  public Es6RewriteGeneratorsTest() {
+    super(DEFAULT_EXTERNS);
+  }
 
   @Override
   protected void setUp() throws Exception {
     super.setUp();
     allowMethodCallDecomposing = false;
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
-    enableRunTypeCheckAfterProcessing();
+    enableTypeCheck();
+    enableTypeInfoValidation();
+    // Es6RewriteGenerators uses named types declared in generator_engine.js
+    ensureLibraryInjected("es6/generator_engine");
+    // generator_engine depends on util/global, which declares externs for 'window' and 'global'
+    allowExternsChanges();
     disableCompareSyntheticCode();
   }
 
@@ -49,9 +61,15 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
 
   private void rewriteGeneratorBodyWithVars(
       String beforeBody, String varDecls, String afterBody) {
+    rewriteGeneratorBodyWithVarsAndReturnType(beforeBody, varDecls, afterBody, "?");
+  }
+
+  private void rewriteGeneratorBodyWithVarsAndReturnType(
+      String beforeBody, String varDecls, String afterBody, String returnType) {
     test(
-        "function *f() {" + beforeBody + "}",
+        "/** @return {" + returnType + "} */ function *f() {" + beforeBody + "}",
         lines(
+            "/** @return {" + returnType + "} */",
             "function f() {",
             varDecls,
             "  return $jscomp.generator.createGenerator(",
@@ -333,9 +351,11 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
 
     allowMethodCallDecomposing = true;
     rewriteGeneratorBodyWithVars(
-        "obj.bar(yield 5);",
-        lines("var JSCompiler_temp_const$jscomp$1;", "var JSCompiler_temp_const$jscomp$0;"),
+        "var obj = {bar: function(x) {}}; obj.bar(yield 5);",
         lines(
+            "var obj; var JSCompiler_temp_const$jscomp$1;", "var JSCompiler_temp_const$jscomp$0;"),
+        lines(
+            "  obj = {bar: function(x) {}};",
             "  JSCompiler_temp_const$jscomp$1 = obj;",
             "  JSCompiler_temp_const$jscomp$0 = JSCompiler_temp_const$jscomp$1.bar;",
             "  return $jscomp$generator$context.yield(5, 2);",
@@ -856,12 +876,11 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
 
     rewriteGeneratorBodyWithVars(
         lines(
-          "/** @const @type {?} */",
-          "var /** @const @type {number} */ a = 10, b, c = yield 10, d = yield 20, f, g='test';"),
+            "var /** @const @type {number} */ a = 10, b, c = yield 10, d = yield 20, f, g='test';"),
         lines(
-          "/** @type {?} */ var /** @type {number} */ a, b;",
-          "/** @type {?} */ var c;",
-          "/** @type {?} */ var d, f, g;"),
+            "var /** @type {number} */ a, b;",
+            "var c;", // note that the yields cause the var declarations to be split up
+            "var d, f, g;"),
         lines(
             "  /** @const @type {number} */ a = 10;",
             "  return $jscomp$generator$context.yield(10, 2);",
@@ -1111,5 +1130,228 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
             "case 2:",
             "  thrown = $jscomp$generator$context.enterCatchBlock();",
             "  return $jscomp$generator$context.yield(thrown,0)"));
+  }
+
+  /** Tests correctness of type information after transpilation */
+  public void testYield_withTypes() {
+    Node returnNode =
+        testAndReturnBodyForNumericGenerator(
+                "yield 1 + 2;", "", "return $jscomp$generator$context.yield(1 + 2, 0);")
+            .getSecondChild()
+            .getFirstChild();
+
+    checkState(returnNode.isReturn(), returnNode);
+    Node callNode = returnNode.getFirstChild();
+    checkState(callNode.isCall(), callNode);
+    // TODO(lharker): this should really be {value: number} and may indicate a bug in OTI
+    // Possibly the same as https://github.com/google/closure-compiler/issues/2867.
+    assertEquals("{value: VALUE}", callNode.getJSType().toString());
+
+    Node yieldFn = callNode.getFirstChild();
+    Node jscompGeneratorContext = yieldFn.getFirstChild();
+    assertTrue(yieldFn.getJSType().isFunctionType());
+    assertEquals(
+        "$jscomp.generator.Context<number>", jscompGeneratorContext.getJSType().toString());
+
+    // Check types on "1 + 2" are still present after transpilation
+    Node yieldedValue = callNode.getSecondChild(); // 1 + 2
+
+    checkState(yieldedValue.isAdd(), yieldedValue);
+    assertEquals("number", yieldedValue.getJSType().toString());
+    assertEquals("number", yieldedValue.getFirstChild().getJSType().toString()); // 1
+    assertEquals("number", yieldedValue.getSecondChild().getJSType().toString()); // 2
+
+    Node zero = yieldedValue.getNext();
+    checkState(0 == zero.getDouble(), zero);
+    assertEquals("number", zero.getJSType().toString());
+  }
+
+  public void testYieldAll_withTypes() {
+    Node returnNode =
+        testAndReturnBodyForNumericGenerator(
+                "yield * [1, 2];", "", "return $jscomp$generator$context.yieldAll([1, 2], 0);")
+            .getSecondChild()
+            .getFirstChild();
+
+    checkState(returnNode.isReturn(), returnNode);
+    Node callNode = returnNode.getFirstChild();
+    checkState(callNode.isCall(), callNode);
+    // TODO(lharker): this really should be {value: number}
+    assertEquals("(undefined|{value: VALUE})", callNode.getJSType().toString());
+
+    Node yieldAllFn = callNode.getFirstChild();
+    checkState(yieldAllFn.isGetProp());
+    assertTrue(yieldAllFn.getJSType().isFunctionType());
+
+    // Check that the original types on "[1, 2]" are still present after transpilation
+    Node yieldedValue = callNode.getSecondChild(); // [1, 2]
+
+    checkState(yieldedValue.isArrayLit(), yieldedValue);
+    assertEquals("Array", yieldedValue.getJSType().toString()); // [1, 2]
+    assertEquals("number", yieldedValue.getFirstChild().getJSType().toString()); // 1
+    assertEquals("number", yieldedValue.getSecondChild().getJSType().toString()); // 2
+
+    Node zero = yieldedValue.getNext();
+    checkState(0 == zero.getDouble(), zero);
+    assertEquals("number", zero.getJSType().toString());
+  }
+
+  public void testGeneratorForIn_withTypes() {
+    Node case1Node =
+        testAndReturnBodyForNumericGenerator(
+            "for (var i in []) { yield 3; };",
+            "var i, $jscomp$generator$forin$0;",
+            lines(
+                "$jscomp$generator$forin$0 = $jscomp$generator$context.forIn([]);",
+                "case 2:",
+                "if (!((i = $jscomp$generator$forin$0.getNext()) != null)) {",
+                "  $jscomp$generator$context.jumpTo(4);",
+                "  break;",
+                "}",
+                "return $jscomp$generator$context.yield(3, 2);",
+                "case 4:",
+                ";",
+                "$jscomp$generator$context.jumpToEnd();"));
+
+    // $jscomp$generator$forin$0 = $jscomp$generator$context.forIn([]);
+    Node assign = case1Node.getSecondChild().getFirstFirstChild();
+    checkState(assign.isAssign(), assign);
+    assertEquals("$jscomp.generator.Context.PropertyIterator", assign.getJSType().toString());
+    assertEquals(
+        "$jscomp.generator.Context.PropertyIterator",
+        assign.getFirstChild().getJSType().toString());
+    assertEquals(
+        "$jscomp.generator.Context.PropertyIterator",
+        assign.getSecondChild().getJSType().toString());
+
+    // if (!((i = $jscomp$generator$forin$0.getNext()) != null)) {
+    Node case2Node = case1Node.getNext();
+    Node ifNode = case2Node.getSecondChild().getFirstChild();
+    checkState(ifNode.isIf(), ifNode);
+    Node ifCond = ifNode.getFirstChild();
+    checkState(ifCond.isNot(), ifCond);
+    assertEquals("boolean", ifCond.getJSType().toString());
+    Node ne = ifCond.getFirstChild();
+    assertEquals("boolean", ifCond.getJSType().toString());
+
+    Node lhs = ne.getFirstChild(); // i = $jscomp$generator$forin$0.getNext()
+    assertEquals("(null|string)", lhs.getJSType().toString());
+    assertEquals("(null|string)", lhs.getFirstChild().getJSType().toString());
+    assertEquals("(null|string)", lhs.getSecondChild().getJSType().toString());
+    Node getNextFn = lhs.getSecondChild().getFirstChild();
+    assertTrue(getNextFn.getJSType().isFunctionType());
+
+    Node rhs = ne.getSecondChild();
+    checkState(rhs.isNull(), rhs);
+    assertEquals("null", rhs.getJSType().toString());
+
+    // $jscomp$generator$context.jumpToEnd()
+    Node case4Node = case2Node.getNext();
+    Node jumpToEndCall = case4Node.getSecondChild().getFirstChild().getNext().getFirstChild();
+    checkState(jumpToEndCall.isCall());
+
+    Node jumpToEndFn = jumpToEndCall.getFirstChild();
+    Node jscompGeneratorContext = jumpToEndFn.getFirstChild();
+
+    assertEquals("undefined", jumpToEndCall.getJSType().toString());
+    assertEquals(
+        "$jscomp.generator.Context<number>", jscompGeneratorContext.getJSType().toString());
+  }
+
+  public void testGeneratorTryCatch_withTypes() {
+    Node case0Node =
+        testAndReturnBodyForNumericGenerator(
+            "try {yield 1;} catch (e) {}",
+            "var e;",
+            lines(
+                "  $jscomp$generator$context.setCatchFinallyBlocks(2);",
+                "  return $jscomp$generator$context.yield(1, 4);",
+                "case 4:",
+                "  $jscomp$generator$context.leaveTryBlock(0)",
+                "  break;",
+                "case 2:",
+                "  e=$jscomp$generator$context.enterCatchBlock();",
+                "  $jscomp$generator$context.jumpToEnd();"));
+    Node case2Node = case0Node.getNext().getNext();
+
+    // Test that "e = $jscomp$generator$context.enterCatchBlock();" has the unknown type
+    Node eAssign = case2Node.getSecondChild().getFirstFirstChild();
+    checkState(eAssign.isAssign(), eAssign);
+    assertEquals("?", eAssign.getJSType().toString());
+    assertEquals("?", eAssign.getFirstChild().getJSType().toString());
+    assertEquals("?", eAssign.getSecondChild().getJSType().toString());
+
+    Node enterCatchBlockFn = eAssign.getSecondChild().getFirstChild();
+    checkState(enterCatchBlockFn.isGetProp());
+    assertTrue(enterCatchBlockFn.getJSType().isFunctionType());
+  }
+
+  public void testGeneratorMultipleVars_withTypes() {
+    Node case0Node =
+        testAndReturnBodyForNumericGenerator(
+            "var a = 1, b = '2';",
+            "var a, b;",
+            "a = 1, b = '2'; $jscomp$generator$context.jumpToEnd();");
+    Node comma = case0Node.getSecondChild().getFirstFirstChild();
+    checkState(comma.isComma(), comma);
+    assertEquals("string", comma.getJSType().toString());
+
+    // a = 1
+    Node assignA = comma.getFirstChild();
+    checkState(assignA.isAssign(), assignA);
+    assertEquals("number", assignA.getJSType().toString());
+    assertEquals("number", assignA.getFirstChild().getJSType().toString());
+    assertEquals("number", assignA.getSecondChild().getJSType().toString());
+
+    // b = '2';
+    Node assignB = comma.getSecondChild();
+    checkState(assignB.isAssign(), assignB);
+    assertEquals("string", assignB.getJSType().toString());
+    assertEquals("string", assignB.getFirstChild().getJSType().toString());
+    assertEquals("string", assignB.getSecondChild().getJSType().toString());
+  }
+
+  /**
+   * Tests that the given generator transpiles to the given body, and does some basic checks on the
+   * transpiled generator.
+   *
+   * @return The first case statement in the switch inside the transpiled generator
+   */
+  private Node testAndReturnBodyForNumericGenerator(
+      String beforeBody, String varDecls, String afterBody) {
+    rewriteGeneratorBodyWithVarsAndReturnType(
+        beforeBody, varDecls, afterBody, "!Generator<number>");
+
+    Node transpiledGenerator = getLastCompiler().getJsRoot().getLastChild().getLastChild();
+    Node program = getAndCheckGeneratorProgram(transpiledGenerator);
+
+    Node programBlock = NodeUtil.getFunctionBody(program);
+    // do switch ($jscomp$generator.context.nextAddress) {"
+    Node doNode = programBlock.getFirstChild();
+    Node switchNode = doNode.getFirstFirstChild();
+    checkState(switchNode.isSwitch());
+    Node nextAddress = switchNode.getFirstChild();
+    assertEquals("number", nextAddress.getJSType().toString());
+
+    return switchNode.getSecondChild();
+  }
+
+  /** Get the "program" function from a tranpsiled generator */
+  private Node getAndCheckGeneratorProgram(Node genFunction) {
+    Node returnNode = genFunction.getLastChild().getLastChild();
+    Node callNode = returnNode.getFirstChild();
+    checkState(callNode.isCall(), callNode);
+
+    Node createGenerator = callNode.getFirstChild();
+    assertTrue(createGenerator.getJSType().isFunctionType()); // $jscomp.generator.createGenerator
+    assertEquals(
+        "Generator<number>",
+        createGenerator.getJSType().toMaybeFunctionType().getReturnType().toString());
+
+    Node program = createGenerator.getNext().getNext();
+
+    assertTrue("Expected function: " + program.getJSType(), program.getJSType().isFunctionType());
+    assertEquals("?", program.getJSType().toMaybeFunctionType().getReturnType().toString());
+    return program;
   }
 }

@@ -17,8 +17,10 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.javascript.jscomp.Es6ToEs3Util.withType;
 
 import com.google.common.collect.Iterables;
+import com.google.javascript.jscomp.AbstractCompiler.MostRecentTypechecker;
 import com.google.javascript.jscomp.ControlFlowGraph.Branch;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphEdge;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
@@ -28,6 +30,11 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
+import com.google.javascript.rhino.jstype.FunctionType;
+import com.google.javascript.rhino.jstype.JSType;
+import com.google.javascript.rhino.jstype.JSTypeNative;
+import com.google.javascript.rhino.jstype.JSTypeRegistry;
+import com.google.javascript.rhino.jstype.ObjectType;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -77,9 +84,38 @@ final class Es6RewriteGenerators implements HotSwapCompilerPass {
 
   private final AbstractCompiler compiler;
 
+  private final JSTypeRegistry registry;
+
+  private final boolean shouldAddTypes;
+
+  private final JSType unknownType;
+  private final JSType numberType;
+  private final JSType booleanType;
+  private final JSType nullType;
+  private final JSType nullableStringType;
+
   Es6RewriteGenerators(AbstractCompiler compiler) {
     checkNotNull(compiler);
     this.compiler = compiler;
+    registry = compiler.getTypeRegistry();
+
+    if (compiler.getMostRecentTypechecker() == MostRecentTypechecker.OTI) {
+      // typechecking has run, so we must preserve and propagate type information
+      shouldAddTypes = true;
+      unknownType = registry.getNativeType(JSTypeNative.UNKNOWN_TYPE);
+      numberType = registry.getNativeType(JSTypeNative.NUMBER_TYPE);
+      booleanType = registry.getNativeType(JSTypeNative.BOOLEAN_TYPE);
+      nullType = registry.getNativeType(JSTypeNative.NULL_TYPE);
+      nullableStringType =
+          registry.createNullableType(registry.getNativeType(JSTypeNative.STRING_TYPE));
+    } else {
+      shouldAddTypes = false;
+      unknownType = null;
+      numberType = null;
+      booleanType = null;
+      nullType = null;
+      nullableStringType = null;
+    }
   }
 
   @Override
@@ -206,10 +242,35 @@ final class Es6RewriteGenerators implements HotSwapCompilerPass {
     /** The body of a replacement function. */
     Node newGeneratorBody;
 
+    /** The original inferred return type of the Generator */
+    JSType originalGenReturnType;
+
     SingleGeneratorFunctionTranspiler(Node genFunc, int genaratorNestingLevel) {
       this.generatorNestingLevel = genaratorNestingLevel;
       this.originalGeneratorBody = genFunc.getLastChild();
-      this.context = new TranspilationContext();
+      ObjectType contextType = null;
+      if (shouldAddTypes) {
+        // Find the yield type of the generator.
+        // e.g. given @return {!Generator<number>}, we want this.yieldType to be number.
+        JSType yieldType = unknownType;
+        if (genFunc.getJSType() != null && genFunc.getJSType().isFunctionType()) {
+          FunctionType fnType = genFunc.getJSType().toMaybeFunctionType();
+          this.originalGenReturnType = fnType.getReturnType();
+          yieldType = TypeCheck.getTemplateTypeOfGenerator(registry, this.originalGenReturnType);
+        }
+
+        JSType globalContextType = registry.getGlobalType("$jscomp.generator.Context");
+        if (globalContextType == null) {
+          // We don't have the es6/generator polyfill, which can happen in tests using a
+          // NonInjectingCompiler or if someone sets --inject_libraries=false. Don't crash, just
+          // back off on giving some type information.
+          contextType = registry.getNativeObjectType(JSTypeNative.OBJECT_TYPE);
+        } else {
+          contextType =
+              registry.createTemplatizedType(globalContextType.toMaybeObjectType(), yieldType);
+        }
+      }
+      this.context = new TranspilationContext(contextType);
     }
 
     public void transpile() {
@@ -233,8 +294,7 @@ final class Es6RewriteGenerators implements HotSwapCompilerPass {
 
       //  switch ($jscomp$generator$context.nextAddress) {
       //  }
-      Node switchNode =
-          IR.switchNode(IR.getprop(context.getJsContextNameNode(genFunc), "nextAddress"));
+      Node switchNode = IR.switchNode(context.getContextField(genFunc, "nextAddress"));
 
       // Prepare a "program" function:
       //   function ($jscomp$generator$context) {
@@ -250,9 +310,8 @@ final class Es6RewriteGenerators implements HotSwapCompilerPass {
                   // once, which messes up its understanding of the types assigned to variables
                   // within it.
                   IR.doNode( // TODO(skill):  Remove do-while loop when this pass moves after
-                             // type checking or when OTI is fixed to handle this correctly.
-                      IR.block(switchNode),
-                      IR.number(0))));
+                      // type checking or when OTI is fixed to handle this correctly.
+                      IR.block(switchNode), withType(IR.number(0), numberType))));
 
       // Propagate all suppressions from original generator function to a new "program" function.
       JSDocInfoBuilder jsDocBuilder = new JSDocInfoBuilder(false);
@@ -269,13 +328,23 @@ final class Es6RewriteGenerators implements HotSwapCompilerPass {
 
       // Replace original generator function body with:
       //   return $jscomp.generator.createGenerator(<origGenerator>, <program function>);
+      Node createGenerator =
+          IR.getprop(
+              withType(
+                  IR.getprop(withType(IR.name("$jscomp"), unknownType), "generator"), unknownType),
+              "createGenerator");
       newGeneratorBody =
           IR.block(
-                  IR.returnNode(
-                      IR.call(
-                          IR.getprop(IR.name("$jscomp"), "generator", "createGenerator"),
-                          genFuncName.cloneNode(),
-                          program)).useSourceInfoFromForTree(originalGeneratorBody));
+              IR.returnNode(
+                      withType(
+                          IR.call(createGenerator, genFuncName.cloneNode(), program),
+                          this.originalGenReturnType))
+                  .useSourceInfoFromForTree(originalGeneratorBody));
+
+      if (shouldAddTypes) {
+        createGenerator.setJSType(registry.createFunctionType(originalGenReturnType));
+        program.setJSType(registry.createFunctionType(unknownType));
+      }
 
       // Newly introduced functions have to be reported immediately.
       compiler.reportChangeToChangeScope(program);
@@ -612,7 +681,7 @@ final class Es6RewriteGenerators implements HotSwapCompilerPass {
 
       // Only "else" block is unmarked, swap "if" and "else" blocks and negate the condition.
       if (ifBlock.isGeneratorMarker() && !elseBlock.isGeneratorMarker()) {
-        condition = IR.not(condition).useSourceInfoFrom(condition);
+        condition = withType(IR.not(condition), booleanType).useSourceInfoFrom(condition);
         Node tmpNode = ifBlock;
         ifBlock = elseBlock;
         elseBlock = tmpNode;
@@ -689,8 +758,12 @@ final class Es6RewriteGenerators implements HotSwapCompilerPass {
         condition = prepareNodeForWrite(maybeDecomposeExpression(condition.detach()));
         context.writeGeneratedNode(
             IR.ifNode(
-                    IR.not(condition).useSourceInfoFrom(condition),
-                    context.createJumpToBlock(endCase, /** allowEmbedding=*/ true, n))
+                    withType(IR.not(condition), booleanType).useSourceInfoFrom(condition),
+                    context.createJumpToBlock(
+                        endCase,
+                        /** allowEmbedding= */
+                        true,
+                        n))
                 .useSourceInfoFrom(n));
       }
 
@@ -753,24 +826,33 @@ final class Es6RewriteGenerators implements HotSwapCompilerPass {
               .useSourceInfoFrom(target);
       // "$context.forIn(x)"
       forIn.addChildToFront(context.callContextMethod(target, "forIn", detachedCond));
+      ObjectType propertyIteratorType =
+          shouldAddTypes ? forIn.getFirstChild().getJSType().toMaybeObjectType() : null;
+      forIn.setJSType(propertyIteratorType);
       // "var ..., $for$in = $context.forIn(expr)"
       init.addChildToBack(forIn);
 
       // "(i = $for$in.getNext()) != null"
+      Node forInGetNext =
+          withType(
+                  IR.getprop(
+                      forIn.cloneNode(), IR.string("getNext").useSourceInfoFrom(detachedCond)),
+                  shouldAddTypes ? propertyIteratorType.getPropertyType("getNext") : null)
+              .useSourceInfoFrom(detachedCond);
+
       Node forCond =
           IR.ne(
-            IR.assign(
-                    target,
-                    IR.call(
-                            IR.getprop(
-                                    forIn.cloneNode(),
-                                    IR.string("getNext").useSourceInfoFrom(detachedCond))
-                                .useSourceInfoFrom(detachedCond))
-                        .useSourceInfoFrom(detachedCond))
-                .useSourceInfoFrom(detachedCond),
-                IR.nullNode().useSourceInfoFrom(forIn))
-          .useSourceInfoFrom(detachedCond);
+                  IR.assign(
+                          withType(target, nullableStringType),
+                          withType(IR.call(forInGetNext), nullableStringType)
+                              .useSourceInfoFrom(detachedCond))
+                      .useSourceInfoFrom(detachedCond),
+                  withType(IR.nullNode(), nullType).useSourceInfoFrom(forIn))
+              .useSourceInfoFrom(detachedCond);
       forCond.setGeneratorMarker(target.isGeneratorMarker());
+      // annotate types
+      forCond.setJSType(booleanType);
+      forCond.getFirstChild().setJSType(nullableStringType);
 
       // Prepare "for" statement.
       // "for (var i, $for$in = $context.forIn(expr); (i = $for$in.getNext()) != null; ) {}"
@@ -797,8 +879,12 @@ final class Es6RewriteGenerators implements HotSwapCompilerPass {
       Node body = n.removeFirstChild();
       context.writeGeneratedNode(
           IR.ifNode(
-                  IR.not(condition).useSourceInfoFrom(condition),
-                  context.createJumpToBlock(endCase, /** allowEmbedding=*/ true, n))
+                  withType(IR.not(condition), booleanType).useSourceInfoFrom(condition),
+                  context.createJumpToBlock(
+                      endCase,
+                      /** allowEmbedding= */
+                      true,
+                      n))
               .useSourceInfoFrom(n));
 
       // Transpile "while" body
@@ -1046,12 +1132,16 @@ final class Es6RewriteGenerators implements HotSwapCompilerPass {
       boolean thisReferenceFound;
       boolean argumentsReferenceFound;
 
-      TranspilationContext() {
+      /** The JSType for this context. May be null. */
+      final ObjectType contextType;
+
+      TranspilationContext(ObjectType contextType) {
         programEndCase = new Case();
         checkState(programEndCase.id == 0);
         currentCase = new Case();
         checkState(currentCase.id == 1);
         allCases.add(currentCase);
+        this.contextType = contextType;
       }
 
       /**
@@ -1241,7 +1331,8 @@ final class Es6RewriteGenerators implements HotSwapCompilerPass {
 
       /** Returns the name node of context parameter passed to the program. */
       Node getJsContextNameNode(Node sourceNode) {
-        return getScopedName(GENERATOR_CONTEXT).useSourceInfoFrom(sourceNode);
+        return withType(
+            getScopedName(GENERATOR_CONTEXT).useSourceInfoFrom(sourceNode), this.contextType);
       }
 
       /** Returns unique name in the current context. */
@@ -1251,15 +1342,25 @@ final class Es6RewriteGenerators implements HotSwapCompilerPass {
 
       /** Creates node that access a specified field of the current context. */
       Node getContextField(Node sourceNode, String fieldName) {
-        return IR.getprop(
-                getJsContextNameNode(sourceNode),
-                IR.string(fieldName).useSourceInfoFrom(sourceNode))
+        return withType(
+                IR.getprop(
+                    getJsContextNameNode(sourceNode),
+                    IR.string(fieldName).useSourceInfoFrom(sourceNode)),
+                shouldAddTypes ? this.contextType.getPropertyType(fieldName) : null)
             .useSourceInfoFrom(sourceNode);
       }
 
       /** Creates node that make a call to a context function. */
       Node callContextMethod(Node sourceNode, String methodName, Node... args) {
-        return IR.call(getContextField(sourceNode, methodName), args).useSourceInfoFrom(sourceNode);
+        Node contextField = getContextField(sourceNode, methodName);
+        Node callNode = IR.call(contextField, args).useSourceInfoFrom(sourceNode);
+        if (shouldAddTypes) {
+          callNode.setJSType(
+              contextField.getJSType().isFunctionType()
+                  ? contextField.getJSType().toMaybeFunctionType().getReturnType()
+                  : unknownType);
+        }
+        return callNode;
       }
 
       /** Creates node that make a call to a context function. */
@@ -1479,12 +1580,14 @@ final class Es6RewriteGenerators implements HotSwapCompilerPass {
           args.add(nextCatchCase.getNumber(exceptionName));
         }
 
+        Node enterCatchBlockCall =
+            callContextMethod(exceptionName, "enterCatchBlock", args.toArray(new Node[0]));
+        exceptionName.setJSType(enterCatchBlockCall.getJSType());
         writeGeneratedNode(
             IR.exprResult(
-                    IR.assign(
-                            exceptionName,
-                            callContextMethod(
-                                exceptionName, "enterCatchBlock", args.toArray(new Node[0])))
+                    withType(
+                            IR.assign(exceptionName, enterCatchBlockCall),
+                            enterCatchBlockCall.getJSType())
                         .useSourceInfoFrom(exceptionName))
                 .useSourceInfoFrom(exceptionName));
       }
@@ -1510,7 +1613,7 @@ final class Es6RewriteGenerators implements HotSwapCompilerPass {
           if (nextCatchCase != null || nextFinallyCase != null) {
             args.add(
                 nextCatchCase == null
-                    ? IR.number(0).useSourceInfoFrom(sourceNode)
+                    ? withType(IR.number(0), numberType).useSourceInfoFrom(sourceNode)
                     : nextCatchCase.getNumber(sourceNode));
             if (nextFinallyCase != null) {
               args.add(nextFinallyCase.getNumber(sourceNode));
@@ -1519,11 +1622,11 @@ final class Es6RewriteGenerators implements HotSwapCompilerPass {
         } else {
           args.add(
               nextCatchCase == null
-                  ? IR.number(0).useSourceInfoFrom(sourceNode)
+                  ? withType(IR.number(0), numberType).useSourceInfoFrom(sourceNode)
                   : nextCatchCase.getNumber(sourceNode));
           args.add(
               nextFinallyCase == null
-                  ? IR.number(0).useSourceInfoFrom(sourceNode)
+                  ? withType(IR.number(0), numberType).useSourceInfoFrom(sourceNode)
                   : nextFinallyCase.getNumber(sourceNode));
           args.add(IR.number(nestedFinallyBlockCount).useSourceInfoFrom(sourceNode));
         }
@@ -1649,7 +1752,8 @@ final class Es6RewriteGenerators implements HotSwapCompilerPass {
         }
 
         Node createCaseNode() {
-          return IR.caseNode(IR.number(id).useSourceInfoFrom(caseBlock), caseBlock)
+          return IR.caseNode(
+                  withType(IR.number(id), numberType).useSourceInfoFrom(caseBlock), caseBlock)
               .useSourceInfoFrom(caseBlock);
         }
 
@@ -1658,7 +1762,7 @@ final class Es6RewriteGenerators implements HotSwapCompilerPass {
           if (jumpTo != null) {
             return jumpTo.getNumber(sourceNode);
           }
-          Node node = IR.number(id).useSourceInfoFrom(sourceNode);
+          Node node = withType(IR.number(id).useSourceInfoFrom(sourceNode), numberType);
           references.add(node);
           return node;
         }
@@ -1904,7 +2008,8 @@ final class Es6RewriteGenerators implements HotSwapCompilerPass {
               commaExpression =
                   commaExpression == null
                       ? assignment
-                      : IR.comma(commaExpression, assignment).useSourceInfoFrom(assignment);
+                      : withType(IR.comma(commaExpression, assignment), assignment.getJSType())
+                          .useSourceInfoFrom(assignment);
             }
             varStatement.replaceWith(IR.exprResult(commaExpression));
           }

@@ -2161,13 +2161,17 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         "Yielded type does not match declared return type.");
   }
 
+  private JSType getTemplateTypeOfGenerator(JSType generator) {
+    return getTemplateTypeOfGenerator(typeRegistry, generator);
+  }
+
   /**
    * Returns the given type's resolved template type corresponding to the corresponding to the
    * Generator, Iterable or Iterator template key if possible.
    *
-   * If the given type is not an Iterator or Iterable, returns the unknown type..
+   * <p>If the given type is not an Iterator or Iterable, returns the unknown type..
    */
-  private JSType getTemplateTypeOfGenerator(JSType generator) {
+  static JSType getTemplateTypeOfGenerator(JSTypeRegistry typeRegistry, JSType generator) {
     ObjectType dereferencedType = generator.dereference();
     if (dereferencedType != null) {
       TemplateTypeMap templateTypeMap = dereferencedType.getTemplateTypeMap();
@@ -2183,7 +2187,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         return templateTypeMap.getResolvedTemplateType(typeRegistry.getIteratorTemplate());
       }
     }
-    return getNativeType(UNKNOWN_TYPE);
+    return typeRegistry.getNativeType(UNKNOWN_TYPE);
   }
 
   /**
