@@ -95,6 +95,10 @@ public final class CheckRedundantNullabilityModifierTest extends TypeICompilerTe
     checkNoWarning("/** @param {string} x */ function f(x){}");
   }
 
+  public void testParamMissingType() {
+    checkNoWarning("/** @param x */ function f(x){}");
+  }
+
   public void testReturnType() {
     checkWarning("/** @return {!string} */ function f(){ return ''; }");
 

@@ -65,7 +65,9 @@ public class CheckRedundantNullabilityModifier extends AbstractPostOrderCallback
       checkTypeExpression(t, info.getType(), false);
     }
     for (String param : info.getParameterNames()) {
-      checkTypeExpression(t, info.getParameterType(param), false);
+      if (info.hasParameterType(param)) {
+        checkTypeExpression(t, info.getParameterType(param), false);
+      }
     }
     if (info.hasReturnType()) {
       checkTypeExpression(t, info.getReturnType(), false);
