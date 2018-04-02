@@ -19,7 +19,6 @@ import static com.google.javascript.jscomp.ClosureCheckModule.DUPLICATE_NAME_SHO
 import static com.google.javascript.jscomp.ClosureCheckModule.EXPORT_NOT_A_MODULE_LEVEL_STATEMENT;
 import static com.google.javascript.jscomp.ClosureCheckModule.EXPORT_REPEATED_ERROR;
 import static com.google.javascript.jscomp.ClosureCheckModule.GOOG_MODULE_REFERENCES_THIS;
-import static com.google.javascript.jscomp.ClosureCheckModule.GOOG_MODULE_USES_GOOG_MODULE_GET;
 import static com.google.javascript.jscomp.ClosureCheckModule.GOOG_MODULE_USES_THROW;
 import static com.google.javascript.jscomp.ClosureCheckModule.INCORRECT_SHORTNAME_CAPITALIZATION;
 import static com.google.javascript.jscomp.ClosureCheckModule.INVALID_DESTRUCTURING_FORWARD_DECLARE;
@@ -27,6 +26,7 @@ import static com.google.javascript.jscomp.ClosureCheckModule.INVALID_DESTRUCTUR
 import static com.google.javascript.jscomp.ClosureCheckModule.JSDOC_REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME_INCLUDING_SHORT_NAME;
 import static com.google.javascript.jscomp.ClosureCheckModule.LET_GOOG_REQUIRE;
 import static com.google.javascript.jscomp.ClosureCheckModule.MODULE_AND_PROVIDES;
+import static com.google.javascript.jscomp.ClosureCheckModule.MODULE_USES_GOOG_MODULE_GET;
 import static com.google.javascript.jscomp.ClosureCheckModule.MULTIPLE_MODULES_IN_FILE;
 import static com.google.javascript.jscomp.ClosureCheckModule.ONE_REQUIRE_PER_DECLARATION;
 import static com.google.javascript.jscomp.ClosureCheckModule.REFERENCE_TO_FULLY_QUALIFIED_IMPORT_NAME;
@@ -98,7 +98,7 @@ public final class ClosureCheckModuleTest extends CompilerTestCase {
   }
 
   public void testGoogModuleGetAtTopLevel() {
-    testError("goog.module('xyz');\ngoog.module.get('abc');", GOOG_MODULE_USES_GOOG_MODULE_GET);
+    testError("goog.module('xyz');\ngoog.module.get('abc');", MODULE_USES_GOOG_MODULE_GET);
 
     testError(
         lines(
@@ -109,7 +109,7 @@ public final class ClosureCheckModuleTest extends CompilerTestCase {
             "if (x) {",
             "  var y = goog.module.get('abc');",
             "}"),
-        GOOG_MODULE_USES_GOOG_MODULE_GET);
+        MODULE_USES_GOOG_MODULE_GET);
 
     testSame(
         lines(

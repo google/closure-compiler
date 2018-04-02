@@ -403,6 +403,14 @@ public class CompilerInput extends DependencyInfo.Base implements SourceAst {
               default:
                 return;
             }
+          } else if (parent.isGetProp()
+              && parent.matchesQualifiedName("goog.module.declareNamespace")
+              && parent.getParent().isCall()) {
+            Node argument = parent.getParent().getSecondChild();
+            if (!argument.isString()) {
+              return;
+            }
+            provides.add(argument.getString());
           }
           break;
 
