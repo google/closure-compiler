@@ -285,7 +285,7 @@ ServiceWorkerContainer.prototype.oncontrollerchange;
 ServiceWorkerContainer.prototype.onerror;
 
 /**
- * @typedef {{scope: (string|undefined), useCache: (boolean|undefined)}}
+ * @typedef {{scope: (string|undefined), useCache: (boolean|undefined), updateViaCache: (string|undefined)}}
  */
 var RegistrationOptions;
 
