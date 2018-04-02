@@ -147,7 +147,10 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements HotSwapCompi
         break;
 
       case CALL:
-        if (containsOnlySuppressionFor(info, "extraRequire")) {
+        // TODO(blickly): Stop ignoring no-op extraProvide suppression.
+        // We don't actually support extraProvide, but if we did, it would go on a CALL.
+        if (containsOnlySuppressionFor(info, "extraRequire")
+            || containsOnlySuppressionFor(info, "extraProvide")) {
           return;
         }
         break;
