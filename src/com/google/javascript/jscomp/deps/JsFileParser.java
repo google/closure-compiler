@@ -52,8 +52,7 @@ public final class JsFileParser extends JsFileLineParser {
       // but fails to match without "use strict"; since we look for semicolon, not open brace.
       Pattern.compile(
           "(?:^|;)(?:[a-zA-Z0-9$_,:{}\\s]+=)?\\s*"
-              + "goog\\.(?<func>provide|module|require|requireType|addDependency)"
-              + "(?<subfunc>\\.declareNamespace)?\\s*\\((?<args>.*?)\\)");
+              + "goog\\.(provide|module|require|requireType|addDependency)\\s*\\((.*?)\\)");
 
   /**
    * Pattern for matching import ... from './path/to/file'.
@@ -254,12 +253,11 @@ public final class JsFileParser extends JsFileLineParser {
         }
 
         // See if it's a require or provide.
-        String methodName = googMatcher.group("func");
+        String methodName = googMatcher.group(1);
         char firstChar = methodName.charAt(0);
-        boolean isDeclareModuleNamespace = firstChar == 'm' && googMatcher.group("subfunc") != null;
-        boolean isModule = !isDeclareModuleNamespace && firstChar == 'm';
+        boolean isModule =  firstChar == 'm';
         boolean isProvide = firstChar == 'p';
-        boolean providesNamespace = isProvide || isModule || isDeclareModuleNamespace;
+        boolean providesNamespace = isProvide || isModule;
         boolean isRequire = firstChar == 'r';
 
         if (isModule && this.moduleType != ModuleType.WRAPPED_GOOG_MODULE) {
@@ -272,7 +270,7 @@ public final class JsFileParser extends JsFileLineParser {
 
         if (providesNamespace || isRequire) {
           // Parse the param.
-          String arg = parseJsString(googMatcher.group("args"));
+          String arg = parseJsString(googMatcher.group(2));
           // Add the dependency.
           if (isRequire) {
             if ("requireType".equals(methodName)) {

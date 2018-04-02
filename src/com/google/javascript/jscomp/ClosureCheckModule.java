@@ -62,11 +62,10 @@ public final class ClosureCheckModule extends AbstractModuleCallback
       "JSC_GOOG_MODULE_USES_THROW",
       "The body of a goog.module cannot use 'throw'.");
 
-  static final DiagnosticType MODULE_USES_GOOG_MODULE_GET =
-      DiagnosticType.error(
-          "JSC_MODULE_USES_GOOG_MODULE_GET",
-          "It's illegal to use a 'goog.module.get' at the module top-level."
-              + " Did you mean to use goog.require instead?");
+  static final DiagnosticType GOOG_MODULE_USES_GOOG_MODULE_GET = DiagnosticType.error(
+      "JSC_GOOG_MODULE_USES_GOOG_MODULE_GET",
+      "It's illegal to use a 'goog.module.get' at the module top-level."
+      + " Did you mean to use goog.require instead?");
 
   static final DiagnosticType DUPLICATE_NAME_SHORT_REQUIRE =
       DiagnosticType.error(
@@ -155,11 +154,6 @@ public final class ClosureCheckModule extends AbstractModuleCallback
           "JSC_REQUIRE_NOT_AT_TOP_LEVEL",
           "goog.require() must be called at file scope.");
 
-  static final DiagnosticType DECLARE_LEGACY_NAMESPACE_OUTSIDE_GOOG_MODULE =
-      DiagnosticType.error(
-          "JSC_DECLARE_LEGACY_NAMESPACE_OUTSIDE_GOOG_MODULE",
-          "goog.module.declareLegacyNamespace can only be called in goog.modules.");
-
   private final AbstractCompiler compiler;
 
   private static class ModuleInfo {
@@ -241,7 +235,7 @@ public final class ClosureCheckModule extends AbstractModuleCallback
             || callee.matchesQualifiedName("goog.forwardDeclare")) {
           checkRequireCall(t, n, parent);
         } else if (callee.matchesQualifiedName("goog.module.get") && t.inModuleHoistScope()) {
-          t.report(n, MODULE_USES_GOOG_MODULE_GET);
+          t.report(n, GOOG_MODULE_USES_GOOG_MODULE_GET);
         }
         break;
       case ASSIGN: {

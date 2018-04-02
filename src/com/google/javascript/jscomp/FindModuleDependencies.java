@@ -20,6 +20,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.CompilerInput.ModuleType;
+import com.google.javascript.jscomp.Es6RewriteModules.FindGoogProvideOrGoogModule;
 import com.google.javascript.jscomp.deps.DependencyInfo.Require;
 import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.rhino.Node;
@@ -59,38 +60,6 @@ public class FindModuleDependencies implements NodeTraversal.ScopedCallback {
     this.supportsEs6Modules = supportsEs6Modules;
     this.supportsCommonJsModules = supportsCommonJsModules;
     this.inputPathByWebpackId = inputPathByWebpackId;
-  }
-
-  private static class FindGoogProvideOrGoogModule extends NodeTraversal.AbstractPreOrderCallback {
-
-    private boolean found;
-
-    boolean isFound() {
-      return found;
-    }
-
-    @Override
-    public boolean shouldTraverse(NodeTraversal nodeTraversal, Node n, Node parent) {
-      if (found) {
-        return false;
-      }
-      // Shallow traversal, since we don't need to inspect within functions or expressions.
-      if (parent == null
-          || NodeUtil.isControlStructure(parent)
-          || NodeUtil.isStatementBlock(parent)) {
-        if (n.isExprResult()) {
-          Node maybeGetProp = n.getFirstFirstChild();
-          if (maybeGetProp != null
-              && (maybeGetProp.matchesQualifiedName("goog.provide")
-                  || maybeGetProp.matchesQualifiedName("goog.module"))) {
-            found = true;
-            return false;
-          }
-        }
-        return true;
-      }
-      return false;
-    }
   }
 
   public void process(Node root) {

@@ -331,7 +331,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
       if (!this.isModule || this.declareLegacyNamespace) {
         return null;
       }
-      return getBinaryModuleNamespace(legacyNamespace);
+      return MODULE_EXPORTS_PREFIX + this.legacyNamespace.replace('.', '$');
     }
 
     @Nullable
@@ -341,10 +341,6 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
       }
       return this.getBinaryNamespace();
     }
-  }
-
-  static String getBinaryModuleNamespace(String legacyNamespace) {
-    return MODULE_EXPORTS_PREFIX + legacyNamespace.replace('.', '$');
   }
 
   private class ScriptPreprocessor extends NodeTraversal.AbstractPreOrderCallback {

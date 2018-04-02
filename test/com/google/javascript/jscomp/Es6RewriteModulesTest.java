@@ -16,10 +16,11 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.javascript.jscomp.Es6RewriteModules.LHS_OF_GOOG_REQUIRE_MUST_BE_CONST;
+
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.deps.ModuleLoader;
-import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
 
 /**
  * Unit tests for {@link Es6RewriteModules}
@@ -52,11 +53,7 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
-    return new Es6RewriteModules(
-        compiler,
-        /* preprocessorSymbolTable= */ null,
-        /* processCommonJsModules= */ false,
-        ResolutionMode.BROWSER);
+    return new Es6RewriteModules(compiler, /* preprocessorSymbolTable= */ null);
   }
 
   @Override
@@ -738,6 +735,133 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
             "  }",
             "}",
             "/** @const */ var module$testcode = {};"));
+  }
+
+  public void testGoogRequires_noChange() {
+    testSame("goog.require('foo.bar');");
+    testSame("var bar = goog.require('foo.bar');");
+
+    testModules(
+        "goog.require('foo.bar');\nexport var x;",
+        lines(
+            "goog.require('foo.bar');",
+            "var x$$module$testcode;",
+            "/** @const */ var module$testcode = {};",
+            "module$testcode.x = x$$module$testcode;"));
+
+    testModules(
+        "export var x;\n goog.require('foo.bar');",
+        lines(
+            "var x$$module$testcode;",
+            "goog.require('foo.bar');",
+            "/** @const */ var module$testcode = {};",
+            "module$testcode.x = x$$module$testcode;"));
+
+    testModules(
+        "import * as s from './other.js';\ngoog.require('foo.bar');",
+        "goog.require('foo.bar'); /** @const */ var module$testcode = {};");
+
+    testModules(
+        "goog.require('foo.bar');\nimport * as s from './other.js';",
+        "goog.require('foo.bar'); /** @const */ var module$testcode = {};");
+  }
+
+  public void testGoogRequires_rewrite() {
+    testModules(
+        "const bar = goog.require('foo.bar')\nexport var x;",
+        lines(
+            "goog.require('foo.bar');",
+            "const bar$$module$testcode = foo.bar;",
+            "var x$$module$testcode;",
+            "/** @const */ var module$testcode = {};",
+            "module$testcode.x = x$$module$testcode;"));
+
+    testModules(
+        "export var x\nconst bar = goog.require('foo.bar');",
+        lines(
+            "var x$$module$testcode;",
+            "goog.require('foo.bar');",
+            "const bar$$module$testcode = foo.bar;",
+            "/** @const */ var module$testcode = {};",
+            "module$testcode.x = x$$module$testcode;"));
+
+    testModules(
+        "import * as s from './other.js';\nconst bar = goog.require('foo.bar');",
+        lines(
+            "goog.require('foo.bar');",
+            "const bar$$module$testcode = foo.bar;",
+            "/** @const */ var module$testcode = {};"));
+
+    testModules(
+        "const bar = goog.require('foo.bar');\nimport * as s from './other.js';",
+        lines(
+            "goog.require('foo.bar');",
+            "const bar$$module$testcode = foo.bar;",
+            "/** @const */ var module$testcode = {};"));
+  }
+
+  public void testGoogRequires_nonConst() {
+    ModulesTestUtils.testModulesError(this, "var bar = goog.require('foo.bar');\nexport var x;",
+        LHS_OF_GOOG_REQUIRE_MUST_BE_CONST);
+
+    ModulesTestUtils.testModulesError(this, "export var x;\nvar bar = goog.require('foo.bar');",
+        LHS_OF_GOOG_REQUIRE_MUST_BE_CONST);
+
+    ModulesTestUtils.testModulesError(this,
+        "import * as s from './other.js';\nvar bar = goog.require('foo.bar');",
+        LHS_OF_GOOG_REQUIRE_MUST_BE_CONST);
+
+    ModulesTestUtils.testModulesError(this,
+        "var bar = goog.require('foo.bar');\nimport * as s from './other.js';",
+        LHS_OF_GOOG_REQUIRE_MUST_BE_CONST);
+  }
+
+  public void testGoogRequiresDestructuring_rewrite() {
+    testModules(
+        lines(
+            "import * as s from './other.js';",
+            "const {foo, bar} = goog.require('some.name.space');",
+            "use(foo, bar);"),
+        lines(
+            "goog.require('some.name.space');",
+            "const {",
+            "  foo: foo$$module$testcode,",
+            "  bar: bar$$module$testcode,",
+            "} = some.name.space;",
+            "use(foo$$module$testcode, bar$$module$testcode);",
+            "/** @const */ var module$testcode = {};"));
+
+    ModulesTestUtils.testModulesError(this, lines(
+            "import * as s from './other.js';",
+            "var {foo, bar} = goog.require('some.name.space');",
+            "use(foo, bar);"), LHS_OF_GOOG_REQUIRE_MUST_BE_CONST);
+
+    ModulesTestUtils.testModulesError(this, lines(
+            "import * as s from './other.js';",
+            "let {foo, bar} = goog.require('some.name.space');",
+            "use(foo, bar);"), LHS_OF_GOOG_REQUIRE_MUST_BE_CONST);
+  }
+
+  public void testNamespaceImports() {
+    testModules(
+        lines("import Foo from 'goog:other.Foo';", "use(Foo);"),
+        "use(other.Foo); /** @const */ var module$testcode = {};");
+
+    testModules(
+        lines("import {x, y} from 'goog:other.Foo';", "use(x);", "use(y);"),
+        "use(other.Foo.x);\n use(other.Foo.y);/** @const */ var module$testcode = {};");
+
+    testModules(
+        lines(
+            "import Foo from 'goog:other.Foo';",
+            "/** @type {Foo} */ var foo = new Foo();"),
+        lines(
+            "/** @type {other.Foo} */",
+            "var foo$$module$testcode = new other.Foo();",
+            "/** @const */ var module$testcode = {};"));
+
+    ModulesTestUtils.testModulesError(this, "import * as Foo from 'goog:other.Foo';",
+        Es6RewriteModules.NAMESPACE_IMPORT_CANNOT_USE_STAR);
   }
 
   public void testObjectDestructuringAndObjLitShorthand() {

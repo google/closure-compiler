@@ -41,11 +41,7 @@ public class TranspilationPasses {
           @Override
           protected HotSwapCompilerPass create(AbstractCompiler compiler) {
             preprocessorTableFactory.maybeInitialize(compiler);
-            return new Es6RewriteModules(
-                compiler,
-                preprocessorTableFactory.getInstanceOrNull(),
-                compiler.getOptions().processCommonJSModules,
-                compiler.getOptions().moduleResolutionMode);
+            return new Es6RewriteModules(compiler, preprocessorTableFactory.getInstanceOrNull());
           }
 
           @Override

@@ -314,11 +314,10 @@ public class CheckMissingAndExtraRequires implements HotSwapCompilerPass, NodeTr
   private boolean isMissingRequire(String namespace, Node node) {
     if (namespace.startsWith("goog.global.")
         // Most functions in base.js are goog.someName, but
-        // goog.module.{get,declareLegacyNamespace,declareNamespace} are the exceptions, so just
-        // check for them explicitly.
+        // goog.module.{get,declareLegacyNamespace} are the exceptions, so just check for them
+        // explicitly.
         || namespace.equals("goog.module.get")
-        || namespace.equals("goog.module.declareLegacyNamespace")
-        || namespace.equals("goog.module.declareNamespace")) {
+        || namespace.equals("goog.module.declareLegacyNamespace")) {
       return false;
     }
 
