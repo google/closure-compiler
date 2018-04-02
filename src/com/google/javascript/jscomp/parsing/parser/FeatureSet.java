@@ -200,14 +200,14 @@ public final class FeatureSet implements Serializable {
     if (ES5.contains(this)) {
       return "es5";
     }
+    if (OTI_SUPPORTED.contains(this)) {
+      return "otiSupported";
+    }
     if (ES6_MODULES.contains(this)) {
       return "es6";
     }
     if (NTI_SUPPORTED.contains(this)) {
       return "ntiSupported";
-    }
-    if (OTI_SUPPORTED.contains(this)) {
-      return "otiSupported";
     }
     if (ES7_MODULES.contains(this)) {
       return "es7";
