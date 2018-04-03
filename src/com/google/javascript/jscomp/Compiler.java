@@ -491,11 +491,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       List<T1> externs, List<T2> sources, CompilerOptions options) {
     JSModule module = new JSModule(SINGLETON_MODULE_NAME);
     for (SourceFile source : sources) {
-      if (this.getPersistentInputStore() != null) {
-        module.add(this.getPersistentInputStore().getCachedCompilerInput(source));
-      } else {
-        module.add(new CompilerInput(source));
-      }
+      module.add(new CompilerInput(source));
     }
 
     List<JSModule> modules = new ArrayList<>(1);
@@ -3740,17 +3736,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     }
     if (tracker != null) {
       tracker.updateAfterDeserialize(jsRoot);
-    }
-  }
-
-  public void resetCompilerInput() {
-    for (JSModule module : this.modules) {
-      for (CompilerInput input : module.getInputs()) {
-        input.reset();
-      }
-    }
-    for (CompilerInput input : this.externs) {
-      input.reset();
     }
   }
 

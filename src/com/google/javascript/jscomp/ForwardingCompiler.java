@@ -550,17 +550,6 @@ class ForwardingCompiler extends AbstractCompiler {
     return abstractCompiler.getAnnotation(key);
   }
 
-  @Nullable
-  @Override
-  public PersistentInputStore getPersistentInputStore() {
-    return abstractCompiler.getPersistentInputStore();
-  }
-
-  @Override
-  public void setPersistentInputStore(PersistentInputStore persistentInputStore) {
-    abstractCompiler.setPersistentInputStore(persistentInputStore);
-  }
-
   @Override
   public String getSourceLine(String sourceName, int lineNumber) {
     return abstractCompiler.getSourceLine(sourceName, lineNumber);
