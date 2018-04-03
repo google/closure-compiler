@@ -227,6 +227,7 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
       }
 
       moduleName = modulePath.toModuleName();
+      maybeAddImportedFileReferenceToSymbolTable(importDecl.getLastChild(), modulePath.toString());
     }
 
     for (Node child : importDecl.children()) {
@@ -728,22 +729,58 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
    * <pre>
    *   import * as foo from './foo';
    *   import {doBar} from './bar';
+   *
+   *   console.log(doBar);
    * </pre>
+   *
+   * @param n Alias node. In the example above alias nodes are foo, doBar and doBar.
+   * @param module Name of the module currently being processed.
    */
   private void maybeAddAliasToSymbolTable(Node n, String module) {
-    if (preprocessorSymbolTable != null) {
-      n.putBooleanProp(Node.MODULE_ALIAS, true);
-      // Alias can be used in js types. Types have node type STRING and not NAME so we have to
-      // use their name as string.
-      String nodeName =
-          n.isString() || n.isImportStar()
-              ? n.getString()
-              : preprocessorSymbolTable.getQualifiedName(n);
-      // We need to include module as part of the name because aliases are local to current module.
-      // Aliases with the same name from different module should be completely different entities.
-      String name = "alias_" + module + "_" + nodeName;
-      preprocessorSymbolTable.addReference(n, name);
+    if (preprocessorSymbolTable == null) {
+      return;
     }
+    n.putBooleanProp(Node.MODULE_ALIAS, true);
+    // Alias can be used in js types. Types have node type STRING and not NAME so we have to
+    // use their name as string.
+    String nodeName =
+        n.isString() || n.isImportStar()
+            ? n.getString()
+            : preprocessorSymbolTable.getQualifiedName(n);
+    // We need to include module as part of the name because aliases are local to current module.
+    // Aliases with the same name from different module should be completely different entities.
+    String name = "alias_" + module + "_" + nodeName;
+    preprocessorSymbolTable.addReference(n, name);
+  }
+
+  /**
+   * Add reference to a file that current module imports. Example:
+   *
+   * <pre>
+   * import * from '../some/file.js';
+   * </pre>
+   *
+   * @param importNode String node from the import statement that references imported file. In the
+   *     example above it is the '../some/file.js' STRING node.
+   * @param importedFilePath Absolute path to the imported file. In the example above it can be
+   *     myproject/folder/some/file.js
+   */
+  private void maybeAddImportedFileReferenceToSymbolTable(
+      Node importNode, String importedFilePath) {
+    if (preprocessorSymbolTable == null) {
+      return;
+    }
+
+    // If this if the first import that mentions importedFilePath then we need to create a SCRIPT
+    // node for the imported file.
+    if (preprocessorSymbolTable.getSlot(importedFilePath) == null) {
+      Node scriptNode = compiler.getScriptNode(importedFilePath);
+      if (scriptNode != null) {
+        preprocessorSymbolTable.addReference(scriptNode, importedFilePath);
+      }
+    }
+
+    preprocessorSymbolTable.addReference(importNode, importedFilePath);
   }
 
   private static class ModuleOriginalNamePair {
