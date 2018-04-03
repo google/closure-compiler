@@ -1843,6 +1843,9 @@ HTMLImageElement.prototype.onload;
 /** @type {?function(Event)} */
 HTMLImageElement.prototype.onerror;
 
+/** @type {string} */
+HTMLMediaElement.prototype.preload;
+
 /** @type {number} */
 HTMLMediaElement.prototype.readyState;
 
