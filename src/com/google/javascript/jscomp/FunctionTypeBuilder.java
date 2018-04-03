@@ -90,6 +90,7 @@ final class FunctionTypeBuilder {
   // TODO(johnlenz): verify we want both template and class template lists instead of a unified
   // list.
   private ImmutableList<TemplateType> classTemplateTypeNames = ImmutableList.of();
+  private TypedScope declarationScope = null;
 
   static final DiagnosticType EXTENDS_WITHOUT_TYPEDEF = DiagnosticType.warning(
       "JSC_EXTENDS_WITHOUT_TYPEDEF",
@@ -243,6 +244,16 @@ final class FunctionTypeBuilder {
     if (contents != null) {
       this.contents = contents;
     }
+    return this;
+  }
+
+  /**
+   * Sets a declaration scope explicitly. This is important with block scopes because a function
+   * declared in an inner scope with 'var' needs to use the inner scope to resolve names, but needs
+   * to be declared in the outer scope.
+   */
+  FunctionTypeBuilder setDeclarationScope(TypedScope declarationScope) {
+    this.declarationScope = declarationScope;
     return this;
   }
 
@@ -876,6 +887,10 @@ final class FunctionTypeBuilder {
    * care of most scope-declaring.
    */
   private TypedScope getScopeDeclaredIn() {
+    if (declarationScope != null) {
+      return declarationScope;
+    }
+
     int dotIndex = fnName.indexOf('.');
     if (dotIndex != -1) {
       String rootVarName = fnName.substring(0, dotIndex);

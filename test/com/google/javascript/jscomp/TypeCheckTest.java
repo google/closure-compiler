@@ -4087,6 +4087,17 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
             "f(MyEnum.FOO.a);"));
   }
 
+  public void testEnumDefinedInObjectLiteral() {
+    testTypes(
+        lines(
+            "var ns = {",
+            "  /** @enum {number} */",
+            "  Enum: {A: 1, B: 2},",
+            "};",
+            "/** @param {!ns.Enum} arg */",
+            "function f(arg) {}"));
+  }
+
   public void testAliasedEnum1() {
     testTypes(
         "/** @enum */ var YourEnum = {FOO: 3};" +
@@ -5989,6 +6000,17 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
          "assignment\n" +
          "found   : string\n" +
          "required: number");
+  }
+
+  public void testOr6() {
+    testTypes(
+        lines(
+            "/** @param {!Array=} opt_x */",
+            "function removeDuplicates(opt_x) {",
+            "  var x = opt_x || [];",
+            "  var /** undefined */ y = x;",
+            "}"),
+        lines("initializing variable", "found   : Array", "required: undefined"));
   }
 
   public void testAnd1() {
@@ -8790,6 +8812,44 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         "    x.onload = null;" +
         "  };" +
         "}");
+  }
+
+  public void testQualifiedNameInference14() {
+    // Unconditional blocks don't cause functions to be treated as inferred.
+    disableStrictMissingPropertyChecks();
+    testTypes(
+        lines(
+            "/** @constructor */ function Foo() {}",
+            "function f(z) {",
+            "  var x = new Foo();",
+            "  {",
+            "    x.onload = function() {};",
+            "  }",
+            "  {",
+            "    x.onload = null;",
+            "  };",
+            "}"),
+        lines("assignment", "found   : null", "required: function(): undefined"));
+  }
+
+  public void testScopeQualifiedNamesOnThis() {
+    // Ensure that we don't flow-scope qualified names on 'this' too broadly.
+    testTypes(
+        lines(
+            "/** @constructor */ function Foo() {",
+            "  /** @type {!Bar} */",
+            "  this.baz = new Bar();",
+            "}",
+            "Foo.prototype.foo = function() {",
+            "  this.baz.bar();",
+            "};",
+            "/** @constructor */ function Bar() {",
+            "  /** @type {!Foo} */",
+            "  this.baz = new Foo();",
+            "}",
+            "Bar.prototype.bar = function() {",
+            "  this.baz.foo();",
+            "};"));
   }
 
   public void testSheqRefinedScope() {
@@ -19351,6 +19411,44 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
             "inconsistent return type",
             "found   : string",
             "required: number"));
+  }
+
+  public void testSuperclassDefinedInBlockUsingVar() {
+    testTypes(
+        lines(
+            "{",
+            "  /** @constructor */",
+            "  var Base = function() {};",
+            "  /** @param {number} x */",
+            "  Base.prototype.baz = function(x) {};",
+            "}",
+            "/** @constructor @extends {Base} */",
+            "var Foo = function() {};",
+            "/** @override */",
+            "Foo.prototype.baz = function(x) {",
+            "  var /** string */ y = x;",
+            "};"),
+        lines("initializing variable", "found   : number", "required: string"));
+  }
+
+  public void testSuperclassDefinedInBlockOnNamespace() {
+    testTypes(
+        lines(
+            "/** @const */",
+            "var ns = {};",
+            "{",
+            "  /** @constructor */",
+            "  ns.Base = function() {};",
+            "  /** @param {number} x */",
+            "  ns.Base.prototype.baz = function(x) {};",
+            "}",
+            "/** @constructor @extends {ns.Base} */",
+            "ns.Foo = function() {};",
+            "/** @override */",
+            "ns.Foo.prototype.baz = function(x) {",
+            "  var /** string */ y = x;",
+            "};"),
+        lines("initializing variable", "found   : number", "required: string"));
   }
 
   private void testTypes(String js) {

@@ -5133,6 +5133,27 @@ public final class NodeUtil {
     return lValue.getQualifiedName();
   }
 
+  /** Gets the root of a qualified name l-value. */
+  static Node getBestLValueRoot(@Nullable Node lValue) {
+    if (lValue == null) {
+      return null;
+    }
+    switch (lValue.getToken()) {
+      case STRING_KEY:
+        // NOTE: beware of getBestLValue returning null (or be null-permissive?)
+        return getBestLValueRoot(NodeUtil.getBestLValue(lValue.getParent()));
+      case GETPROP:
+      case GETELEM:
+        return getBestLValueRoot(lValue.getFirstChild());
+      case THIS:
+      case SUPER:
+      case NAME:
+        return lValue;
+      default:
+        return null;
+    }
+  }
+
   /**
    * @return true iff the result of the expression is consumed.
    */
