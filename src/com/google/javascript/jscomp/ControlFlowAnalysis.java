@@ -970,6 +970,7 @@ public final class ControlFlowAnalysis implements Callback, CompilerPass {
       case DEC:
       case INSTANCEOF:
       case IN:
+      case YIELD:
         return true;
       case FUNCTION:
         return false;
