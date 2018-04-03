@@ -483,6 +483,9 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       case FUNCTION:
         // normal type checking
         final TypedScope outerScope = t.getTypedScope();
+        // Check for a bug in IE9 (quirks mode) and earlier where bleeding function names would
+        // refer to the wrong variable (i.e. "var x; var y = function x() { use(x); }" would pass
+        // the 'x' from the outer scope, rather than the local alias bled into the function).
         final TypedVar var = outerScope.getVar(n.getFirstChild().getString());
         if (var != null
             && var.getScope().hasSameContainerScope(outerScope)
