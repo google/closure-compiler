@@ -2334,6 +2334,8 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
         "  this.Bar$a = 3;",
         "  this.Bar$b = 2;",
         "}");
+
+    test(srcs(js), expected(output));
   }
 
   public void testIgnoreSpecializedProperties2() {
@@ -2384,6 +2386,9 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
         "function Foo() {",
         "  this.Foo$num = 123;",
         "}");
+
+    this.mode = TypeInferenceMode.NTI_ONLY;
+    testSets("", js, ntiOutput, "{num=[[Foo], [function(): undefined]]}");
   }
 
   public void testIgnoreSpecializedProperties3() {
@@ -2416,6 +2421,8 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
         "function Bar() {",
         "  this.Bar$num = 123;",
         "}");
+
+    test(srcs(js), expected(output));
   }
 
   public void testErrorOnProtectedProperty() {
