@@ -218,6 +218,7 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
 
     test("var {a = 3} = {}; a;", "({a: _.a = 3} = {}); _.a");
     test("var {key: a = 3} = {}; a;", "({key: _.a = 3} = {}); _.a");
+    test("var {a} = {}, [b] = [], c = 3", "({a: _.a} = {}); [_.b] = []; _.c = 3;");
   }
 
   public void testObjectDestructuringDeclarations_allSameModule() {
@@ -230,6 +231,9 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
     testSame("var {a: a = 3} = {}; a;");
     testSame("var {key: a = 3} = {}; a;");
     testSame("var {['computed']: a = 3} = {}; a;");
+    testSame("var {a} = {}, b = 3;");
+    testSame("var [a] = [], b = 3;");
+    testSame("var a = 1, [b] = [], {c} = {};");
   }
 
   public void testObjectDestructuringDeclarations_acrossModules() {
@@ -244,6 +248,13 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
     test(
         createModules("var {a: a, b: b, c: c} = {}; b; c;", "a; c;"),
         new String[] {"var b;({a: _.a, b: b, c: _.c} = {});b;_.c;", "_.a; _.c"});
+
+    // Test var declarations containing a mix of destructuring and regular names
+    test(createModules("var {a} = {}, b;", "a"), new String[] {"var b; ({a: _.a} = {});", "_.a"});
+
+    test(
+        createModules("var {a} = {}, b = 3;", "b"),
+        new String[] {"var a; ({a} = {}); _.b = 3;", "_.b"});
   }
 
   public void testObjectDestructuringAssignments() {
@@ -651,6 +662,11 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
         externs("var x;"),
         srcs("function f() { var x; x = 1; }"),
         expected("_.f = function() { var x; x = 1; }"));
+
+    test(
+        externs("var x;"),
+        srcs("function f() { x = 1; }"),
+        expected("_.f = function() { window.x = 1; };"));
 
     test(
         externs("var x, y;"),
