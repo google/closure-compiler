@@ -166,13 +166,7 @@ abstract class PotentialDeclaration {
       Node nameNode = getLhs();
       JSDocInfo jsdoc = getJsDoc();
       if (jsdoc != null && jsdoc.hasEnumParameterType()) {
-        // Remove values from enums
-        if (getRhs().isObjectLit() && getRhs().hasChildren()) {
-          for (Node key : getRhs().children()) {
-            removeStringKeyValue(key);
-          }
-          compiler.reportChangeToEnclosingScope(getRhs());
-        }
+        super.simplifyEnumValues(compiler);
         return;
       }
       if (NodeUtil.isNamespaceDecl(nameNode)) {
@@ -298,16 +292,18 @@ abstract class PotentialDeclaration {
       if (shouldPreserve()) {
         return;
       }
-      if (!isTypedRhs(getRhs())) {
-        Node key = getLhs();
-        removeStringKeyValue(key);
-        JSDocInfo jsdoc = getJsDoc();
-        if (jsdoc == null
-            || !jsdoc.containsDeclaration()
-            || isConstToBeInferred()) {
-          key.setJSDocInfo(JsdocUtil.getUnusableTypeJSDoc(jsdoc));
-        }
-        compiler.reportChangeToEnclosingScope(key);
+      JSDocInfo jsdoc = getJsDoc();
+      if (jsdoc != null && jsdoc.hasEnumParameterType()) {
+        super.simplifyEnumValues(compiler);
+        return;
+      }
+      Node key = getLhs();
+      removeStringKeyValue(key);
+      compiler.reportChangeToEnclosingScope(key);
+      if (jsdoc == null
+          || !jsdoc.containsDeclaration()
+          || isConstToBeInferred()) {
+        key.setJSDocInfo(JsdocUtil.getUnusableTypeJSDoc(jsdoc));
       }
     }
 
@@ -334,6 +330,16 @@ abstract class PotentialDeclaration {
       return getLhs();
     }
 
+  }
+
+  /** Remove values from enums */
+  private void simplifyEnumValues(AbstractCompiler compiler) {
+    if (getRhs().isObjectLit() && getRhs().hasChildren()) {
+      for (Node key : getRhs().children()) {
+        removeStringKeyValue(key);
+      }
+      compiler.reportChangeToEnclosingScope(getRhs());
+    }
   }
 
   boolean isDefiniteDeclaration() {

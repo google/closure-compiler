@@ -887,6 +887,12 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
         "/** @const {*} */ var x; /** @enum {number} */ var E = { A: 0 };");
   }
 
+  public void testEnumInsideNamespace() {
+    test(
+        "const ns = { /** @enum {number} */ ENUM: { A: 1, B: 2, C: 3} };",
+        "const ns = { /** @enum {number} */ ENUM: { A: 0, B: 0, C: 0} };");
+  }
+
   public void testTryCatch() {
     test(
         "try { /** @type {number} */ var n = foo(); } catch (e) { console.log(e); }",
