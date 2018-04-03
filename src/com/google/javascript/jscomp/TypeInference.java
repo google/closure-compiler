@@ -57,6 +57,7 @@ import com.google.javascript.rhino.jstype.TemplatizedType;
 import com.google.javascript.rhino.jstype.UnionType;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -87,6 +88,9 @@ class TypeInference
   private final TypedScopeCreator scopeCreator;
   private final Map<String, AssertionFunctionSpec> assertionFunctionsMap;
 
+  // Scopes that have had their unbound untyped vars inferred as undefined.
+  private final Set<TypedScope> inferredUnboundVars = new HashSet<>();
+
   // For convenience
   private final ObjectType unknownType;
 
@@ -107,19 +111,27 @@ class TypeInference
     this.scopeCreator = scopeCreator;
     this.assertionFunctionsMap = assertionFunctionsMap;
 
+    inferDeclarativelyUnboundVarsWithoutTypes(functionScope);
+
+    this.bottomScope =
+        LinkedFlowScope.createEntryLattice(
+            TypedScope.createLatticeBottom(syntacticScope.getRootNode()));
+  }
+
+  private void inferDeclarativelyUnboundVarsWithoutTypes(FlowScope flow) {
+    TypedScope scope = (TypedScope) flow.getDeclarationScope();
+    if (!inferredUnboundVars.add(scope)) {
+      return;
+    }
     // For each local variable declared with the VAR keyword, the entry
     // type is VOID.
-    for (TypedVar var : syntacticScope.getDeclarativelyUnboundVarsWithoutTypes()) {
+    for (TypedVar var : scope.getDeclarativelyUnboundVarsWithoutTypes()) {
       if (isUnflowable(var)) {
         continue;
       }
 
-      this.functionScope.inferSlotType(
-          var.getName(), getNativeType(VOID_TYPE));
+      flow.inferSlotType(var.getName(), getNativeType(VOID_TYPE));
     }
-
-    this.bottomScope = LinkedFlowScope.createEntryLattice(
-        TypedScope.createLatticeBottom(functionScope.getRootNode()));
   }
 
   /**
@@ -189,7 +201,9 @@ class TypeInference
     }
 
     // TODO(sdh): Change to NodeUtil.getEnclosingScopeRoot(n) once we have block scopes.
-    FlowScope output = input.createChildFlowScope();
+    Node root = NodeUtil.getEnclosingNode(n, TypeInference::createsContainerScope);
+    FlowScope output = input.createChildFlowScope(scopeCreator.createScope(root));
+    inferDeclarativelyUnboundVarsWithoutTypes(output);
     output = traverse(n, output);
     return output;
   }
@@ -716,9 +730,7 @@ class TypeInference
     }
   }
 
-  /**
-   * Defines a property if the property has not been defined yet.
-   */
+  /** Defines a property if the property has not been defined yet. */
   private void ensurePropertyDefined(Node getprop, JSType rightType, FlowScope scope) {
     String propName = getprop.getLastChild().getString();
     Node obj = getprop.getFirstChild();
@@ -789,6 +801,7 @@ class TypeInference
 
   /**
    * Declares a property on its owner, if necessary.
+   *
    * @return True if a property was declared.
    */
   private boolean ensurePropertyDeclaredHelper(
@@ -1073,29 +1086,24 @@ class TypeInference
   }
 
   /**
-   * We only do forward type inference. We do not do full backwards
-   * type inference.
+   * We only do forward type inference. We do not do full backwards type inference.
    *
-   * In other words, if we have,
-   * <code>
+   * <p>In other words, if we have, <code>
    * var x = f();
    * g(x);
-   * </code>
-   * a forward type-inference engine would try to figure out the type
-   * of "x" from the return type of "f". A backwards type-inference engine
-   * would try to figure out the type of "x" from the parameter type of "g".
+   * </code> a forward type-inference engine would try to figure out the type of "x" from the return
+   * type of "f". A backwards type-inference engine would try to figure out the type of "x" from the
+   * parameter type of "g".
    *
-   * However, there are a few special syntactic forms where we do some
-   * some half-assed backwards type-inference, because programmers
-   * expect it in this day and age. To take an example from Java,
-   * <code>
+   * <p>However, there are a few special syntactic forms where we do some some half-assed backwards
+   * type-inference, because programmers expect it in this day and age. To take an example from
+   * Java, <code>
    * List<String> x = Lists.newArrayList();
-   * </code>
-   * The Java compiler will be able to infer the generic type of the List
-   * returned by newArrayList().
+   * </code> The Java compiler will be able to infer the generic type of the List returned by
+   * newArrayList().
    *
-   * In much the same way, we do some special-case backwards inference for
-   * JS. Those cases are enumerated here.
+   * <p>In much the same way, we do some special-case backwards inference for JS. Those cases are
+   * enumerated here.
    */
   private void backwardsInferenceFromCallSite(Node n, FunctionType fnType, FlowScope scope) {
     boolean updatedFnType = inferTemplatedTypesForCall(n, fnType, scope);
@@ -1417,10 +1425,7 @@ class TypeInference
     return typeVars;
   }
 
-  /**
-   * This function will evaluate the type transformations associated to the
-   * template types
-   */
+  /** This function will evaluate the type transformations associated to the template types */
   private Map<TemplateType, JSType> evaluateTypeTransformations(
       ImmutableList<TemplateType> templateTypes,
       Map<TemplateType, JSType> inferredTypes,
@@ -1453,10 +1458,9 @@ class TypeInference
   }
 
   /**
-   * For functions that use template types, specialize the function type for
-   * the call target based on the call-site specific arguments.
-   * Specifically, this enables inference to set the type of any function
-   * literal parameters based on these inferred types.
+   * For functions that use template types, specialize the function type for the call target based
+   * on the call-site specific arguments. Specifically, this enables inference to set the type of
+   * any function literal parameters based on these inferred types.
    */
   private boolean inferTemplatedTypesForCall(Node n, FunctionType fnType, FlowScope scope) {
     ImmutableList<TemplateType> keys = fnType.getTemplateTypeMap().getTemplateKeys();
