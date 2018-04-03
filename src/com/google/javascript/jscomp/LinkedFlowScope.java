@@ -314,6 +314,17 @@ class LinkedFlowScope implements FlowScope {
 
   /** Join the two FlowScopes. */
   static class FlowScopeJoinOp extends JoinOp.BinaryJoinOp<FlowScope> {
+    // NOTE(sdh): When joining flow scopes with different syntactic scopes,
+    // we do not attempt to recover the correct syntactic scope.  This is
+    // okay because joins only occur in two situations: (1) performed by
+    // the DataFlowAnalysis class automatically between CFG nodes, and (2)
+    // requested manually while traversing a single expression within a CFG
+    // node.  The syntactic scope is always set at the beginning of flowing
+    // through a CFG node.  In the case of (1), the join result's syntactic
+    // scope is immediately replaced with the correct one when we flow through
+    // the next node.  In the case of (2), both inputs will always have the
+    // same syntactic scope.  So simply propagating either input's scope is
+    // perfectly fine.
     @SuppressWarnings("ReferenceEquality")
     @Override
     public FlowScope apply(FlowScope a, FlowScope b) {

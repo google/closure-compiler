@@ -839,8 +839,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
           }
         } else if (FunctionTypeBuilder.isFunctionTypeDeclaration(info)) {
           String fnName = node.getQualifiedName();
-          jsType = createFunctionTypeFromNodes(
-              null, fnName, info, node);
+          jsType = createFunctionTypeFromNodes(null, fnName, info, node);
         }
       }
       return jsType;
@@ -861,9 +860,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
     void defineCatch(Node n) {
       assertDefinitionNode(n, Token.CATCH);
       Node catchName = n.getFirstChild();
-      defineSlot(catchName, n,
-          getDeclaredType(
-              catchName.getJSDocInfo(), catchName, null));
+      defineSlot(catchName, n, getDeclaredType(catchName.getJSDocInfo(), catchName, null));
     }
 
     /**
@@ -1493,8 +1490,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
                 rValue, lValue.getQualifiedName(), info, isLValueRootedInGlobalScope(lValue));
           }
         } else if (info.isConstructorOrInterface()) {
-          return createFunctionTypeFromNodes(
-              rValue, lValue.getQualifiedName(), info, lValue);
+          return createFunctionTypeFromNodes(rValue, lValue.getQualifiedName(), info, lValue);
         }
       }
 
@@ -1866,8 +1862,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
      * or a function literal with a name we haven't seen before.
      */
     private boolean isQualifiedNameInferred(
-        String qName, Node n, JSDocInfo info,
-        Node rhsValue, JSType valueType) {
+        String qName, Node n, JSDocInfo info, Node rhsValue, JSType valueType) {
       if (valueType == null) {
         return true;
       }
@@ -1877,46 +1872,76 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
         String className = qName.substring(0, qName.lastIndexOf(".prototype"));
         TypedVar slot = currentScope.getVar(className);
         JSType classType = slot == null ? null : slot.getType();
-        if (classType != null
-            && (classType.isConstructor() || classType.isInterface())) {
+        if (classType != null && (classType.isConstructor() || classType.isInterface())) {
           return false;
         }
       }
 
-      boolean inferred = true;
-      if (info != null) {
-        inferred = !(info.hasType()
-            || info.hasEnumParameterType()
-            || (NodeUtil.isConstantDeclaration(
-                    compiler.getCodingConvention(), info, n)
-                && valueType != null
-                && !valueType.isUnknownType())
-            || FunctionTypeBuilder.isFunctionTypeDeclaration(info));
+      // If the jsdoc or RHS specifies a concrete type, it's not inferred.
+      if (info != null
+          && (info.hasType()
+              || info.hasEnumParameterType()
+              || isConstantDeclarationWithKnownType(info, n, valueType)
+              || FunctionTypeBuilder.isFunctionTypeDeclaration(info)
+              || rhsValue != null && rhsValue.isFunction())) {
+        return false;
       }
 
-      if (inferred && rhsValue != null && rhsValue.isFunction()) {
-        if (info != null) {
-          return false;
-        } else if (!currentScope.hasOwnSlot(qName) && n.isUnscopedQualifiedName()) {
+      // At this point, we're pretty sure it's inferred, since there's neither
+      // useful jsdoc info, nor a useful const or doc'd function RHS.  But
+      // there's still one case where it may still not be: if the RHS is a
+      // function that is not
+      //   (1) a scoped qualified name (i.e. this.b.c or super.b.c),
+      //   (2) already declared in a scope,
+      //   (3) assigned in a conditional block, or
+      //   (4) escaped to a closure,
+      // then we treat it as if it is declared, rather than inferred.
+      // Stubs and non-functions are always considered inferred at this point.
+      if (rhsValue == null || !rhsValue.isFunction()) {
+        return true;
+      }
 
-          // Check if this is in a conditional block.
-          // Functions assigned in conditional blocks are inferred.
-          for (Node current = n.getParent();
-               !(current.isScript() || current.isFunction());
-               current = current.getParent()) {
-            if (NodeUtil.isControlStructure(current)) {
-              return true;
-            }
-          }
+      // "Scoped" qualified names (e.g. this.b.c or super.d) are inferred.
+      if (!n.isUnscopedQualifiedName()) {
+        return true;
+      }
 
-          // Check if this is assigned in an inner scope.
-          // Functions assigned in inner scopes are inferred.
-          if (!escapedVarNames.contains(ScopedName.of(qName, currentScope.getRootNode()))) {
-            return false;
-          }
+      // If this qname is already declared then treat this definition as inferred.
+      TypedScope ownerScope = getLValueRootScope(n);
+      if (ownerScope != null && ownerScope.hasOwnSlot(qName)) {
+        return true;
+      }
+
+      // Check if this is in a conditional block.
+      // Functions assigned in conditional blocks are inferred.
+      if (hasControlStructureAncestor(n.getParent())) {
+        return true;
+      }
+
+      // Check if this is assigned in an inner scope.
+      // Functions assigned in inner scopes are inferred.
+      if (ownerScope != null
+          && escapedVarNames.contains(ScopedName.of(qName, ownerScope.getRootNode()))) {
+        return true;
+      }
+
+      return false;
+    }
+
+    private boolean isConstantDeclarationWithKnownType(JSDocInfo info, Node n, JSType valueType) {
+      return NodeUtil.isConstantDeclaration(compiler.getCodingConvention(), info, n)
+          && valueType != null
+          && !valueType.isUnknownType();
+    }
+
+    private boolean hasControlStructureAncestor(Node n) {
+      while (!(n.isScript() || n.isFunction())) {
+        if (NodeUtil.isControlStructure(n)) {
+          return true;
         }
+        n = n.getParent();
       }
-      return inferred;
+      return false;
     }
 
     /**

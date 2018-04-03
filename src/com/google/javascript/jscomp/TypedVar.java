@@ -71,7 +71,7 @@ public class TypedVar extends AbstractVar<TypedScope, TypedVar>
 
   void resolveType(ErrorReporter errorReporter) {
     if (type != null) {
-      type = type.resolve(errorReporter, scope);
+      this.type = type.resolve(errorReporter, scope);
     }
   }
 

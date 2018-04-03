@@ -1088,18 +1088,22 @@ class TypeInference
   /**
    * We only do forward type inference. We do not do full backwards type inference.
    *
-   * <p>In other words, if we have, <code>
+   * In other words, if we have,
+   * <code>
    * var x = f();
    * g(x);
-   * </code> a forward type-inference engine would try to figure out the type of "x" from the return
-   * type of "f". A backwards type-inference engine would try to figure out the type of "x" from the
-   * parameter type of "g".
+   * </code>
+   * a forward type-inference engine would try to figure out the type
+   * of "x" from the return type of "f". A backwards type-inference engine
+   * would try to figure out the type of "x" from the parameter type of "g".
    *
    * <p>However, there are a few special syntactic forms where we do some some half-assed backwards
    * type-inference, because programmers expect it in this day and age. To take an example from
-   * Java, <code>
+   * Java,
+   * <code>
    * List<String> x = Lists.newArrayList();
-   * </code> The Java compiler will be able to infer the generic type of the List returned by
+   * </code>
+   * The Java compiler will be able to infer the generic type of the List returned by
    * newArrayList().
    *
    * <p>In much the same way, we do some special-case backwards inference for JS. Those cases are

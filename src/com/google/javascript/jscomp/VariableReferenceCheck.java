@@ -182,9 +182,11 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
           compiler,
           param.getParentNode().getSecondChild(),
           /**
-           * Do a shallow check since cases like: {@code function f(y = () => x, x = 5) { return
-           * y(); } } is legal. We are going to miss cases like: {@code function f(y = (() => x)(),
-           * x = 5) { return y(); } } but this should be rare.
+           * Do a shallow check since cases like: {@code
+           *   function f(y = () => x, x = 5) { return y(); }
+           * } is legal. We are going to miss cases like: {@code
+           *   function f(y = (() => x)(), x = 5) { return y(); }
+           * } but this should be rare.
            */
           new AbstractShallowCallback() {
             @Override

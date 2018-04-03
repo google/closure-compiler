@@ -6010,7 +6010,10 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
             "  var x = opt_x || [];",
             "  var /** undefined */ y = x;",
             "}"),
-        lines("initializing variable", "found   : Array", "required: undefined"));
+        lines(
+            "initializing variable",
+            "found   : Array",
+            "required: undefined"));
   }
 
   public void testAnd1() {
@@ -8829,7 +8832,10 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
             "    x.onload = null;",
             "  };",
             "}"),
-        lines("assignment", "found   : null", "required: function(): undefined"));
+        lines(
+            "assignment",
+            "found   : null",
+            "required: function(): undefined"));
   }
 
   public void testScopeQualifiedNamesOnThis() {
@@ -19428,7 +19434,10 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
             "Foo.prototype.baz = function(x) {",
             "  var /** string */ y = x;",
             "};"),
-        lines("initializing variable", "found   : number", "required: string"));
+        lines(
+            "initializing variable",
+            "found   : number",
+            "required: string"));
   }
 
   public void testSuperclassDefinedInBlockOnNamespace() {
@@ -19448,7 +19457,10 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
             "ns.Foo.prototype.baz = function(x) {",
             "  var /** string */ y = x;",
             "};"),
-        lines("initializing variable", "found   : number", "required: string"));
+        lines(
+            "initializing variable",
+            "found   : number",
+            "required: string"));
   }
 
   private void testTypes(String js) {

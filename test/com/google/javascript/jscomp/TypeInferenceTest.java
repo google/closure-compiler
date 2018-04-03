@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkState;
 import static com.google.javascript.jscomp.CompilerTypeTestCase.lines;
 import static com.google.javascript.rhino.jstype.JSTypeNative.ALL_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.ARRAY_TYPE;
@@ -102,6 +103,7 @@ public final class TypeInferenceTest extends TestCase {
   }
 
   private void inGenerator(String js) {
+    checkState(assumedThisType == null);
     parseAndRunTypeInference("(function *() {" + js + "});");
   }
 
