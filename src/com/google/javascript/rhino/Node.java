@@ -3294,7 +3294,7 @@ public class Node implements Serializable {
 
   @GwtIncompatible("ObjectOutputStream")
   private void writeObject(java.io.ObjectOutputStream out) throws Exception {
-    // Do not call out.defaultWriteObject() as all the fields and transient and this class does not
+    // Do not call out.defaultWriteObject() as all the fields are transient and this class does not
     // have a superclass.
 
     checkState(Token.values().length < Byte.MAX_VALUE - Byte.MIN_VALUE);
@@ -3336,7 +3336,7 @@ public class Node implements Serializable {
 
   @GwtIncompatible("ObjectInputStream")
   private void readObject(java.io.ObjectInputStream in) throws Exception {
-    // Do not call in.defaultReadObject() as all the fields and transient and this class does not
+    // Do not call in.defaultReadObject() as all the fields are transient and this class does not
     // have a superclass.
 
     token = Token.values()[in.readUnsignedByte()];
