@@ -456,11 +456,6 @@ final class RescopeGlobalSymbols implements CompilerPass {
       if (!var.isGlobal()) {
         return;
       }
-      Node nameNode = var.getNameNode();
-      // The exception variable (e in try{}catch(e){}) should not be rewritten.
-      if (nameNode != null && nameNode.getParent() != null && nameNode.getParent().isCatch()) {
-        return;
-      }
       replaceSymbol(t, n, name, t.getInput());
     }
 
