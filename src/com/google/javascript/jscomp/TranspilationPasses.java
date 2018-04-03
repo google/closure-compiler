@@ -96,7 +96,6 @@ public class TranspilationPasses {
     passes.add(es6ForOf);
     passes.add(rewriteBlockScopedFunctionDeclaration);
     passes.add(rewriteBlockScopedDeclaration);
-    passes.add(rewriteGenerators);
   }
 
   /**
@@ -481,6 +480,7 @@ public class TranspilationPasses {
     // TODO(b/73387406): Move passes here as typecheck passes are updated to cope with the features
     // they transpile and as the passes themselves are updated to propagate type information to the
     // transpiled code.
+    passes.add(rewriteGenerators);
   }
 
   /** Adds transpilation passes that should run after all checks are done. */
