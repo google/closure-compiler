@@ -31,6 +31,6 @@ showdown.Converter = function(opt_options) {};
 
 /**
  * @param {string} txt
- * @return (string)
+ * @return {string}
  */
 showdown.Converter.prototype.makeHtml = function(txt) {};
