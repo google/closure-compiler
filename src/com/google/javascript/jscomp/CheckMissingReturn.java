@@ -98,6 +98,12 @@ class CheckMissingReturn implements ScopedCallback {
       return;
     }
 
+    if (n.isGeneratorFunction()) {
+      // Generator functions always return a Generator. No need to check return statements.
+      // TODO(b/73387406): Investigate adding a warning for generators with no yields.
+      return;
+    }
+
     if (n.isArrowFunction()) {
       Node functionBody = NodeUtil.getFunctionBody(n);
       if (!functionBody.isNormalBlock()) {
