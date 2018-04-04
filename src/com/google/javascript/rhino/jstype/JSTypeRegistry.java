@@ -114,6 +114,9 @@ public class JSTypeRegistry implements TypeIRegistry {
   /** The template variable corresponding to the VALUE type in {@code Generator<VALUE>} */
   private TemplateType generatorTemplate;
 
+  /** The template variable corresponding to the VALUE type in {@code IThenable<VALUE>} */
+  private TemplateType iThenableTemplateKey;
+
   /**
    * The template variable in {@code Array<T>}
    */
@@ -226,10 +229,10 @@ public class JSTypeRegistry implements TypeIRegistry {
   }
 
   private JSType getSentinelObjectLiteral() {
-    if (this.sentinelObjectLiteral == null) {
-      this.sentinelObjectLiteral = createAnonymousObjectType(null);
+    if (sentinelObjectLiteral == null) {
+      sentinelObjectLiteral = createAnonymousObjectType(null);
     }
-    return this.sentinelObjectLiteral;
+    return sentinelObjectLiteral;
   }
 
   /**
@@ -237,7 +240,7 @@ public class JSTypeRegistry implements TypeIRegistry {
    * Javascript Objects and Arrays.
    */
   public TemplateType getObjectElementKey() {
-    return this.iObjectElementTemplateKey;
+    return iObjectElementTemplateKey;
   }
 
   /**
@@ -246,7 +249,16 @@ public class JSTypeRegistry implements TypeIRegistry {
    */
   public TemplateType getObjectIndexKey() {
     checkNotNull(iObjectIndexTemplateKey);
-    return this.iObjectIndexTemplateKey;
+    return iObjectIndexTemplateKey;
+  }
+
+  /**
+   * @return The template variable corresponding to the
+   * property key type of the built-in Javascript object.
+   */
+  public TemplateType getThenableValueKey() {
+    checkNotNull(iThenableTemplateKey);
+    return iThenableTemplateKey;
   }
 
   /**
@@ -325,6 +337,7 @@ public class JSTypeRegistry implements TypeIRegistry {
     iteratorTemplate = new TemplateType(this, "VALUE");
     generatorTemplate = new TemplateType(this, "VALUE");
     iterableTemplate = new TemplateType(this, "VALUE");
+    iThenableTemplateKey = new TemplateType(this, "TYPE");
 
     // Top Level Prototype (the One)
     // The initializations of TOP_LEVEL_PROTOTYPE and OBJECT_FUNCTION_TYPE
@@ -469,6 +482,20 @@ public class JSTypeRegistry implements TypeIRegistry {
             false);
     registerNativeType(JSTypeNative.GENERATOR_FUNCTION_TYPE, generatorFunctionType);
     registerNativeType(JSTypeNative.GENERATOR_TYPE, generatorFunctionType.getInstanceType());
+
+    FunctionType ithenableFunctionType =
+        new FunctionType(
+            this,
+            "IThenable",
+            null,
+            createArrowType(),
+            null,
+            createTemplateTypeMap(ImmutableList.of(iThenableTemplateKey), null),
+            Kind.INTERFACE,
+            true,
+            false);
+    registerNativeType(JSTypeNative.I_THENABLE_FUNCTION_TYPE, ithenableFunctionType);
+    registerNativeType(JSTypeNative.I_THENABLE_TYPE, ithenableFunctionType.getInstanceType());
 
     // Boolean
     FunctionType BOOLEAN_OBJECT_FUNCTION_TYPE =
@@ -825,6 +852,7 @@ public class JSTypeRegistry implements TypeIRegistry {
     registerGlobalType(getNativeType(JSTypeNative.GENERATOR_TYPE));
     registerGlobalType(getNativeType(JSTypeNative.DATE_TYPE));
     registerGlobalType(getNativeType(JSTypeNative.I_OBJECT_TYPE));
+    registerGlobalType(getNativeType(JSTypeNative.I_THENABLE_TYPE));
     registerGlobalType(getNativeType(JSTypeNative.NULL_TYPE));
     registerGlobalType(getNativeType(JSTypeNative.NULL_TYPE), "Null");
     registerGlobalType(getNativeType(JSTypeNative.NUMBER_OBJECT_TYPE));

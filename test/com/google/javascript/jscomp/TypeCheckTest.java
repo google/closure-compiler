@@ -19463,6 +19463,112 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
             "required: string"));
   }
 
+    public void testCovariantIThenable1() {
+    testTypes(
+        lines(
+            "/** @type {!IThenable<string|number>} */ var x;",
+            "function fn(/** !IThenable<string> */ a ) {",
+            "  x = a;",
+            "}"));
+  }
+
+  public void testCovariantIThenable2() {
+    testTypes(
+        lines(
+            "/** @type {!IThenable<string>} */ var x;",
+            "function fn(/** !IThenable<string|number> */ a ) {",
+            "  x = a;",
+            "}"),
+        lines(
+            "assignment",
+            "found   : IThenable<(number|string)>",
+            "required: IThenable<string>"));
+  }
+
+  public void testCovariantIThenable3() {
+    testTypes(
+        lines(
+            "/** @type {!Promise<string|number>} */ var x;",
+            "function fn(/** !Promise<string> */ a ) {",
+            "  x = a;",
+            "}"));
+  }
+
+  public void testCovariantIThenable4() {
+    testTypes(
+        lines(
+            "/** @type {!Promise<string>} */ var x;",
+            "function fn(/** !Promise<string|number> */ a ) {",
+            "  x = a;",
+            "}"),
+        lines(
+            "assignment",
+            "found   : Promise<(number|string)>",
+            "required: Promise<string>"));
+  }
+
+  public void testCovariantIThenableNonThenable1() {
+    testTypes(
+        lines(
+            "/** @type {!Array<string>} */ var x;",
+            "function fn(/** !IThenable<string> */ a ) {",
+            "  x = a;",
+            "}"),
+        lines(
+            "assignment", //
+            "found   : IThenable<string>",
+            "required: Array<string>"));
+  }
+
+  public void testCovariantIThenableNonThenable2() {
+    testTypes(
+        lines(
+            "/** @type {!IThenable<string>} */ var x;",
+            "function fn(/** !Array<string> */ a ) {",
+            "  x = a;",
+            "}"),
+        lines(
+            "assignment", //
+            "found   : Array<string>",
+            "required: IThenable<string>"));
+  }
+
+  public void testCovariantIThenableNonThenable3() {
+    testTypes(
+        lines(
+            "/** ",
+            "  @constructor",
+            "  @template T",
+            " */",
+            "function C() {}",
+            "/** @type {!C<string>} */ var x;",
+            "function fn(/** !IThenable<string> */ a ) {",
+            "  x = a;",
+            "}"),
+        lines(
+            "assignment", //
+            "found   : IThenable<string>",
+            "required: C<string>"));
+  }
+
+  public void testCovariantIThenableNonThenable4() {
+    testTypes(
+        lines(
+            "/** ",
+            "  @constructor",
+            "  @template T",
+            " */",
+            "function C() {}",
+            "/** @type {!IThenable<string>} */ var x;",
+            "function fn(/** !C<string> */ a ) {",
+            "  x = a;",
+            "}"),
+        lines(
+            "assignment", //
+            "found   : C<string>",
+            "required: IThenable<string>"));
+  }
+
   private void testTypes(String js) {
     testTypes(js, (String) null);
   }

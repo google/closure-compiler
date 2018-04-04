@@ -79,7 +79,7 @@ public abstract class JSType implements TypeI {
   private static final CanCastToVisitor CAN_CAST_TO_VISITOR =
       new CanCastToVisitor();
 
-  private static final ImmutableSet<String> COVARIANT_TYPES =
+  private static final ImmutableSet<String> BIVARIANT_TYPES =
       ImmutableSet.of("Object", "IArrayLike", "Array");
 
   /**
@@ -1579,16 +1579,25 @@ public abstract class JSType implements TypeI {
     TemplateTypeMap thisTypeParams = thisType.getTemplateTypeMap();
     TemplateTypeMap thatTypeParams = thatType.getTemplateTypeMap();
     boolean templateMatch = true;
-    if (isExemptFromTemplateTypeInvariance(thatType)) {
+    if (isBivariantType(thatType)) {
       // Array and Object are exempt from template type invariance; their
-      // template types maps are considered a match only if the ObjectElementKey
-      // values are subtypes/supertypes of one another.
+      // template types maps are bivariant.  That is they are considered
+      // a match if either ObjectElementKey values are subtypes of the
+      // other.
       TemplateType key = thisType.registry.getObjectElementKey();
       JSType thisElement = thisTypeParams.getResolvedTemplateType(key);
       JSType thatElement = thatTypeParams.getResolvedTemplateType(key);
 
       templateMatch = thisElement.isSubtype(thatElement, implicitImplCache, subtypingMode)
           || thatElement.isSubtype(thisElement, implicitImplCache, subtypingMode);
+    } else if (isIThenableSubtype(thatType)) {
+      // NOTE: special case IThenable subclass (Promise, etc).  These classes are expected to be
+      // covariant.
+      TemplateType key = thisType.registry.getThenableValueKey();
+      JSType thisElement = thisTypeParams.getResolvedTemplateType(key);
+      JSType thatElement = thatTypeParams.getResolvedTemplateType(key);
+
+      templateMatch = thisElement.isSubtype(thatElement, implicitImplCache, subtypingMode);
     } else {
       templateMatch = thisTypeParams.checkEquivalenceHelper(
           thatTypeParams, EquivalenceMethod.INVARIANT, subtypingMode);
@@ -1622,12 +1631,26 @@ public abstract class JSType implements TypeI {
   }
 
   /**
-   * Determines if the specified type is exempt from standard invariant
-   * templatized typing rules.
+   * Determines if the supplied type should be checked as a bivariant
+   * templatized type rather the standard invariant templatized type
+   * rules.
    */
-  static boolean isExemptFromTemplateTypeInvariance(JSType type) {
+  static boolean isBivariantType(JSType type) {
     ObjectType objType = type.toObjectType();
-    return objType == null || COVARIANT_TYPES.contains(objType.getReferenceName());
+    return objType != null
+        // && objType.isNativeObjectType()
+        && BIVARIANT_TYPES.contains(objType.getReferenceName());
+  }
+
+  /**
+   * Determines if the specified type is exempt from standard invariant templatized typing rules.
+   */
+  static boolean isIThenableSubtype(JSType type) {
+    if (type.isTemplatizedType()) {
+      TemplatizedType ttype = type.toMaybeTemplatizedType();
+      return ttype.getTemplateTypeMap().hasTemplateKey(ttype.registry.getThenableValueKey());
+    }
+    return false;
   }
 
   /**
