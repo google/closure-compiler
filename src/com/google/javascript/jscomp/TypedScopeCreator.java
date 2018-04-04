@@ -1883,7 +1883,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
               || info.hasEnumParameterType()
               || isConstantDeclarationWithKnownType(info, n, valueType)
               || FunctionTypeBuilder.isFunctionTypeDeclaration(info)
-              || rhsValue != null && rhsValue.isFunction())) {
+              || (rhsValue != null && rhsValue.isFunction()))) {
         return false;
       }
 
