@@ -391,6 +391,7 @@ public class DeadPropertyAssignmentElimination implements CompilerPass {
           }
           return true;
         case CALL:
+        case YIELD:
           if (ASSUME_CONSTRUCTORS_HAVENT_ESCAPED && isConstructor && !NodeUtil.referencesThis(n)
               && NodeUtil.getEnclosingType(n, Token.TRY) == null) {
             // this.x properties are okay.

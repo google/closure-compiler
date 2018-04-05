@@ -194,6 +194,54 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
             "  doSomething(this.c);",
             "  this.c = 30;",
             "}"));
+
+    // TODO(b/77600088): a.b.c = 20 is dead because of a.b.c = 25.
+    testSame(
+        lines(
+            "var foo = function() {",
+            "  a.b.c = 20;",
+            "  doSomething(a.b.c = 25);", // this should actually deaden "a.b.c = 20". oh well
+            "  a.b.c = 30;",
+            "}"));
+  }
+
+  public void testYield() {
+    // Assume that properties may be read during a yield
+    testSame(
+        lines(
+            "var foo = function*() {",
+            "  a.b.c = 20;",
+            "  yield;",
+            "  a.b.c = 30;",
+            "}"));
+
+    testSame(
+        lines(
+            "/** @constructor */",
+            "var foo = function*() {",
+            "  this.c = 20;",
+            "  yield;",
+            "  this.c = 30;",
+            "}"));
+
+    testSame(
+        lines(
+            "var obj = {",
+            "  *gen() {",
+            "    this.c = 20;",
+            "    yield;",
+            "    this.c = 30;",
+            "  }",
+            "}"));
+
+    // TODO(b/77600088): a.b.c = 20 is dead because of a.b.c = 25, and should be eliminated.
+    testSame(
+        lines(
+            "var foo = function*() {",
+            "  a.b.c = 20;",
+            "  yield a.b.c = 25;",
+            "  a.b.c = 30;",
+            "}"));
   }
 
   public void testUnknownLookup() {
