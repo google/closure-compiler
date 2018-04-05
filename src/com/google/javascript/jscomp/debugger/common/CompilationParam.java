@@ -165,21 +165,17 @@ public enum CompilationParam {
     }
   },
 
-  /** Checks types on expressions */
-  CHECK_TYPES_NEW_INFERENCE(ParamGroup.TYPE_CHECKING_OPTIMIZATION) {
+  /** Checks types on expressions more strictly */
+  STRICT_CHECK_TYPES(ParamGroup.TYPE_CHECKING_OPTIMIZATION) {
     @Override
     public void apply(CompilerOptions options, boolean value) {
-      options.setNewTypeInference(value);
+      options.setWarningLevel(
+          DiagnosticGroups.STRICT_CHECK_TYPES, value ? CheckLevel.WARNING : CheckLevel.OFF);
     }
 
     @Override
     public String getJavaInfo() {
-      return "options.setNewTypeInference(true)";
-    }
-
-    @Override
-    public boolean isApplied(CompilerOptions options) {
-      return options.getNewTypeInference();
+      return diagGroupWarningInfo("STRICT_CHECK_TYPES");
     }
   },
 
