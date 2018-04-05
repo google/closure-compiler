@@ -95,6 +95,14 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
         warning(ConvertToTypedInterface.CONSTANT_WITHOUT_EXPLICIT_TYPE));
   }
 
+  public void testPropagateConstCast() {
+    test("const x = /** @type {!Array<number>} */ ([]);", "/** @const {!Array<number>} */ var x;");
+
+    test(
+        "let /** (string|number) */ x = /** @type {number} */ (5);",
+        "/** @type {(string|number)} */ var x;");
+  }
+
   public void testSplitMultiDeclarations() {
     test("var /** number */ x = 4, /** string */ y = 'str';",
         "/** @type {number} */ var x; /** @type {string} */ var y;");
