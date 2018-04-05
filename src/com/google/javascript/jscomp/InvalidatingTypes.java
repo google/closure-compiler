@@ -91,7 +91,7 @@ final class InvalidatingTypes {
     // TODO(sdh): Investigate whether this can be consolidated between all three passes.
     // In particular, mutation testing suggests allowEnums=true should work everywhere.
     // We should revisit what breaks when we disallow scalars everywhere.
-    Builder recordInvalidations(@Nullable Multimap<TypeI, Supplier<JSError>> invalidationMap) {
+    Builder writeInvalidationsInto(@Nullable Multimap<TypeI, Supplier<JSError>> invalidationMap) {
       this.invalidationMap = invalidationMap;
       return this;
     }

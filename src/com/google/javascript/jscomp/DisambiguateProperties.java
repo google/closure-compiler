@@ -337,7 +337,7 @@ class DisambiguateProperties implements CompilerPass {
     this.invalidationMap = propertiesToErrorFor.isEmpty() ? null : LinkedHashMultimap.create();
 
     this.invalidatingTypes = new InvalidatingTypes.Builder(registry)
-        .recordInvalidations(this.invalidationMap)
+        .writeInvalidationsInto(this.invalidationMap)
         .addTypesInvalidForPropertyRenaming()
         .addAllTypeMismatches(compiler.getTypeMismatches())
         .addAllTypeMismatches(compiler.getImplicitInterfaceUses())
