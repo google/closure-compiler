@@ -285,6 +285,13 @@ public class Parser {
         && (!Keywords.isTypeScriptSpecificKeyword(value) || config.parseTypeSyntax);
   }
 
+  /**
+   * Returns true if strict mode is enabled and the next token is a strict keyword.
+   */
+  private boolean peekReservedWordAsId() {
+    return !inStrictContext() && Keywords.isStrictKeyword(peekType());
+  }
+
   // 14 Program
   public ProgramTree parseProgram() {
     Timer t = new Timer("Parse Program");
@@ -2833,11 +2840,15 @@ public class Parser {
 
   // 12.14 Assignment operators
   private ParseTree parseAssignmentExpression() {
+    if (peekReservedWordAsId()) {
+      return parseIdentifierExpression();
+    }
+
     return parseAssignment(Expression.NORMAL);
   }
 
   private boolean peekAssignmentExpression() {
-    return peekExpression();
+    return peekExpression() || peekReservedWordAsId();
   }
 
   private ParseTree parseAssignment(Expression expressionIn) {
@@ -3880,7 +3891,7 @@ public class Parser {
         TokenType.MODULE,
         TokenType.NAMESPACE)
             .contains(type)
-        || (!inStrictContext() && Keywords.isStrictKeyword(type));
+        || (peekReservedWordAsId());
   }
 
   private boolean peekIdOrKeyword() {
