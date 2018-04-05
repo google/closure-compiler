@@ -5320,6 +5320,42 @@ public final class IntegrationTest extends IntegrationTestCase {
             "foo();"));
   }
 
+  public void testGithubIssue2874() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.SIMPLE_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setVariableRenaming(VariableRenamingPolicy.OFF);
+
+    test(
+        options,
+        lines(
+            "var globalObj = {i0:0, i1: 0};",
+            "function func(b) {",
+            "  var g = globalObj;",
+            "  var f = b;",
+            "  g.i0 = f.i0|0;",
+            "  g.i1 = f.i1|0;",
+            "  g = b;",
+            "  g.i0 = 0;",
+            "  g.i1 = 0;",
+            "}",
+            "console.log(globalObj);",
+            "func({i0:2, i1: 3});",
+            "console.log(globalObj);"),
+        lines(
+            "var globalObj = {i0: 0, i1: 0};",
+            "function func(b) {",
+            "  var g = globalObj;",
+            "  g.i0 = b.i0 | 0;",
+            "  g.i1 = b.i1 | 0;",
+            "  g = b;",
+            "  g.i0 = 0;",
+            "  g.i1 = 0;",
+            "}",
+            "console.log(globalObj);",
+            "func({i0:2, i1: 3});",
+            "console.log(globalObj);"));
+  }
+
   /** Creates a CompilerOptions object with google coding conventions. */
   @Override
   protected CompilerOptions createCompilerOptions() {

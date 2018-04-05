@@ -1195,6 +1195,21 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
             "}"));
   }
 
+  public void testGithubIssue2874() {
+    testSame(
+        lines(
+            "var globalObj = {i0:0};\n",
+            "function func(b) {",
+            "  var g = globalObj;",
+            "  var f = b;",
+            "  g.i0 = f.i0;",
+            "  g = b;",
+            "  g.i0 = 0;",
+            "}",
+            "func({i0:2});",
+            "alert(globalObj);"));
+  }
+
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
     return new DeadPropertyAssignmentElimination(compiler);
