@@ -426,9 +426,6 @@ public final class DefaultPassConfig extends PassConfig {
         checks.add(newTypeInference);
       } else {
         addOldTypeCheckerPasses(checks, options);
-        if (options.needsTranspilationFrom(ES6)) {
-          TranspilationPasses.addEs6PostTypecheckPasses(checks);
-        }
       }
 
       if (options.j2clPassMode.shouldAddJ2clPasses()) {
@@ -439,6 +436,10 @@ public final class DefaultPassConfig extends PassConfig {
           || (!options.getNewTypeInference()
               && !options.disables(DiagnosticGroups.MISSING_RETURN))) {
         checks.add(checkControlFlow);
+      }
+
+      if (options.needsTranspilationFrom(ES6) && !options.getNewTypeInference()) {
+        TranspilationPasses.addEs6PostTypecheckPasses(checks);
       }
 
       // CheckAccessControls only works if check types is on.
