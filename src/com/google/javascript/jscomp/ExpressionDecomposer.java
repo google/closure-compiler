@@ -808,8 +808,8 @@ class ExpressionDecomposer {
         // Only inline the call if none of the preceding siblings in the
         // expression have side-effects, and are unaffected by the side-effects,
         // if any, of the call in question.
-        // NOTE: This depends on the siblings being in the same order as they
-        // are evaluated.
+        // NOTE: The siblings are not always in the order in which they are evaluated, so we call
+        // getEvaluationDirection to see in which order to traverse the siblings.
 
         // SPECIAL CASE: Assignment to a simple name
         if (isSafeAssign(parent, seenSideEffects)) {
@@ -825,7 +825,10 @@ class ExpressionDecomposer {
           // in these cases the checks below are necessary.
         } else {
           // Everything else.
-          for (Node n : parent.children()) {
+          EvaluationDirection direction = getEvaluationDirection(parent);
+          for (Node n = getFirstEvaluatedChild(parent, direction);
+              n != null;
+              n = getNextEvaluatedSibling(n, direction)) {
             if (n == child) {
               // None of the preceding siblings have side-effects.
               // This is OK.
@@ -869,6 +872,42 @@ class ExpressionDecomposer {
 
     // With a valid tree we should never get here.
     throw new IllegalStateException("Unexpected.");
+  }
+
+
+  private enum EvaluationDirection {FORWARD, REVERSE};
+
+  /**
+   * Returns the order in which the given node's children should be evaluated.
+   *
+   * <p>In most cases, this is EvaluationDirection.FORWARD because the AST order matches the actual
+   * evaluation order. A few nodes require reversed evaluation instead.
+   */
+  private static EvaluationDirection getEvaluationDirection(Node node) {
+    switch (node.getToken()) {
+      case DESTRUCTURING_LHS:
+      case ASSIGN:
+      case DEFAULT_VALUE:
+        if (node.getFirstChild().isDestructuringPattern()) {
+          // The lhs of a destructuring assignment is evaluated AFTER the rhs. This is only true for
+          // destructuring, though, not assignments like "first().x = second()" where "first()" is
+          // evaluated first.
+          return EvaluationDirection.REVERSE;
+        }
+        // fall through
+      default:
+        return EvaluationDirection.FORWARD;
+    }
+  }
+
+  private Node getFirstEvaluatedChild(Node parent, EvaluationDirection direction) {
+    return direction == EvaluationDirection.FORWARD
+        ? parent.getFirstChild()
+        : parent.getLastChild();
+  }
+
+  private Node getNextEvaluatedSibling(Node node, EvaluationDirection direction) {
+    return direction == EvaluationDirection.FORWARD ? node.getNext() : node.getPrevious();
   }
 
   /**

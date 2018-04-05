@@ -281,6 +281,22 @@ public final class ExpressionDecomposerTest extends TestCase {
         DecompositionType.UNDECOMPOSABLE, "(function ({[foo()]: x}) {})()", "foo");
   }
 
+  public void testCanExposeExpression12() {
+    // Test destructuring rhs is evaluated before the lhs
+    shouldTestTypes = false;
+    helperCanExposeExpression(DecompositionType.MOVABLE, "const {a, b = goo()} = foo();", "foo");
+
+    helperCanExposeExpression(DecompositionType.MOVABLE, "const [a, b = goo()] = foo();", "foo");
+
+    helperCanExposeExpression(DecompositionType.MOVABLE, "({a, b = goo()} = foo());", "foo");
+
+    // TODO(b/73902507): We probably want to treat this as UNDECOMPOSABLE, since it's a lot of work
+    // to handle default values correctly. See also testMoveExpression15.
+    helperCanExposeExpression(DecompositionType.DECOMPOSABLE,
+        "[{ [foo()]: a } = goo()] = arr;",
+        "foo");
+  }
+
   public void testMoveExpression1() {
     // There isn't a reason to do this, but it works.
     helperMoveExpression("foo()", "foo", "var result$jscomp$0 = foo(); result$jscomp$0;");
@@ -363,6 +379,35 @@ public final class ExpressionDecomposerTest extends TestCase {
         "x = foo() ? 0 : 1",
         "foo",
         "var result$jscomp$0 = foo(); x = result$jscomp$0 ? 0 : 1");
+  }
+
+  public void testMoveExpression13() {
+    shouldTestTypes = false;
+    helperMoveExpression(
+        "const {a, b} = foo();",
+        "foo",
+        "var result$jscomp$0 = foo(); const {a, b} = result$jscomp$0;");
+  }
+
+  public void testMoveExpression14() {
+    shouldTestTypes = false;
+    helperMoveExpression(
+        "({a, b} = foo());",
+        "foo",
+        "var result$jscomp$0 = foo(); ({a, b} = result$jscomp$0);");
+  }
+
+  public void testMoveExpression15() {
+    // TODO(b/73902507): fix this test. we can't just unilaterally call foo() before the
+    // the destructuring, since foo() is conditionally evaluated.
+    // We could do something like what happens in transpilation to correctly decompose this
+    // expression. However, that would be a lot of work for probably little gain, and we
+    // should just treat foo() as undecomposable for now.
+    shouldTestTypes = false;
+    helperMoveExpression(
+        "const [a = foo()] = arr;",
+        "foo",
+        "var result$jscomp$0 = foo(); const [a = result$jscomp$0] = arr;");
   }
 
   /* Decomposition tests. */
@@ -535,7 +580,6 @@ public final class ExpressionDecomposerTest extends TestCase {
             "}",
             "const {a, b, c} = temp$jscomp$0;"));
   }
-
   public void testMoveClass1() {
     shouldTestTypes = false;
     helperMoveExpression(
