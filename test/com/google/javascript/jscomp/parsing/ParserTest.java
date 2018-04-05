@@ -2575,6 +2575,8 @@ public final class ParserTest extends BaseJSTypeTestCase {
     mode = LanguageMode.ECMASCRIPT6;
     strictMode = SLOPPY;
     parseError("const else = 1;", "'identifier' expected");
+    parse("(function x(interface) { console.log(interface); })('test')");
+    parse("(function x(interface, yield, let) { console.log(interface, yield, let); })('test')");
   }
 
   public void testTypeScriptKeywords() {
