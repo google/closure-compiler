@@ -2738,6 +2738,11 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     assertPrintSame("export function f(){}export default class Foo{}");
   }
 
+  public void testExportAsyncFunction() {
+    languageMode = LanguageMode.ECMASCRIPT_2017;
+    assertPrintSame("export async function f(){}");
+  }
+
   public void testTemplateLiteral() {
     languageMode = LanguageMode.ECMASCRIPT_NEXT;
     assertPrintSame("`hello`");

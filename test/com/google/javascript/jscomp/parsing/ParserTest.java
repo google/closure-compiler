@@ -3702,6 +3702,14 @@ public final class ParserTest extends BaseJSTypeTestCase {
     parseError("export * as s from './someModule';", "'from' expected");
   }
 
+  public void testExportAsync() {
+    mode = LanguageMode.ECMASCRIPT8;
+    strictMode = SLOPPY;
+
+    expectFeatures(Feature.MODULES, Feature.ASYNC_FUNCTIONS);
+    parse("export async function f() {}");
+  }
+
   public void testImportExportTypescriptKeyword() {
     mode = LanguageMode.TYPESCRIPT;
     parseError("export { namespace };", "cannot use keyword 'namespace' here.");

@@ -518,8 +518,10 @@ public class Parser {
         isExportAll = true;
         nextToken();
         break;
+      case IDENTIFIER:
+        export = parseAsyncFunctionDeclaration();
+        break;
       case FUNCTION:
-        // TODO(bradfordcsmith): handle async functions here
         export = isAmbient ? parseAmbientFunctionDeclaration() : parseFunctionDeclaration();
         needsSemiColon = isAmbient;
         break;
