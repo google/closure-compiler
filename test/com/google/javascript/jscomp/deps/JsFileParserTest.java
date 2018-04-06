@@ -342,6 +342,28 @@ public final class JsFileParserTest extends TestCase {
     assertThat(errorManager.getWarnings()[0].getType()).isEqualTo(ModuleLoader.MODULE_CONFLICT);
   }
 
+  public void testEs6ModuleWithDeclareNamespace() {
+    ModuleLoader loader =
+        new ModuleLoader(
+            null,
+            ImmutableList.of("/foo"),
+            ImmutableList.of(),
+            ModuleLoader.ResolutionMode.BROWSER);
+
+    String contents = "goog.module.declareNamespace('my.namespace');\nexport {};";
+
+    DependencyInfo expected =
+        SimpleDependencyInfo.builder("../bar/baz.js", "/foo/js/bar/baz.js")
+            .setProvides(ImmutableList.of("my.namespace", "module$js$bar$baz"))
+            .setLoadFlags(ImmutableMap.of("module", "es6"))
+            .build();
+
+    DependencyInfo result =
+        parser.setModuleLoader(loader).parseFile("/foo/js/bar/baz.js", "../bar/baz.js", contents);
+
+    assertDeps(expected, result);
+  }
+
   /**
    * Tests:
    *  -Shortcut mode doesn't stop at setTestOnly() or declareLegacyNamespace().

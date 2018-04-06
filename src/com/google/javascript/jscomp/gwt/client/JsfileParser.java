@@ -365,6 +365,13 @@ public class JsfileParser implements EntryPoint {
               default:
                 // Do nothing
             }
+          } else if (parent.isGetProp()
+              && parent.matchesQualifiedName("goog.module.declareNamespace")
+              && parent.getParent().isCall()) {
+            Node arg = parent.getParent().getSecondChild();
+            if (arg.isString()) {
+              info.provides.add(arg.getString());
+            } // TODO(johnplaisted): else warning?
           }
         }
       }
