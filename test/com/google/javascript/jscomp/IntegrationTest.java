@@ -587,6 +587,9 @@ public final class IntegrationTest extends IntegrationTestCase {
                 "",
                 "/** @constructor @extends {HTMLElement} */",
                 "Polymer.Element = function() {};",  // Polymer 2
+                "",
+                "/** @typedef {Object} */",
+                "let PolymerElementProperties;",
                 "")));
     externs = externsList.build();
   }
@@ -650,16 +653,15 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
     addPolymerExterns();
 
-    // TODO(b/74549003): Fix this so that OTI doesn't report an error.
-    test(
+    Compiler compiler = compile(
         options,
         lines(
             "class XFoo extends Polymer.Element {",
             "  get is() { return 'x-foo'; }",
             "  static get properties() { return {}; }",
-            "}"),
-        // Bad type annotation. Unknown type PolymerElementProperties
-        RhinoErrorReporter.UNRECOGNIZED_TYPE_ERROR);
+            "}"));
+    assertThat(compiler.getErrors()).isEmpty();
+    assertThat(compiler.getWarnings()).isEmpty();
   }
 
   public void testPreservedForwardDeclare() {
