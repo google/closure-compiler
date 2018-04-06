@@ -1158,13 +1158,15 @@ public class CompilerOptions implements Serializable {
 
   String instrumentationTemplateFile;
 
+  private static final ImmutableList<ConformanceConfig> GLOBAL_CONFORMANCE_CONFIGS =
+      ImmutableList.of(ResourceLoader.loadGlobalConformance(CompilerOptions.class));
+
   /**
    * List of conformance configs to use in CheckConformance.
    *
    * <p>The first entry of this list is always the Global ConformanceConfig
    */
-  private ImmutableList<ConformanceConfig> conformanceConfigs =
-      ImmutableList.of(ResourceLoader.loadGlobalConformance(CompilerOptions.class));
+  private ImmutableList<ConformanceConfig> conformanceConfigs = GLOBAL_CONFORMANCE_CONFIGS;
 
   /**
    * For use in {@link CompilationLevel#WHITESPACE_ONLY} mode, when using goog.module.
