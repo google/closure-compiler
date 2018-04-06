@@ -27,7 +27,6 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.UNKNOWN_TYPE;
 
 import com.google.common.base.Predicate;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
-import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -51,6 +50,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
   private JSTypeRegistry registry;
   private TypedScope globalScope;
   private TypedScope lastLocalScope;
+  private TypedScope lastFunctionScope;
 
   @Override
   protected void setUp() throws Exception {
@@ -63,14 +63,16 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     return 1;
   }
 
-  private final Callback callback = new AbstractPostOrderCallback() {
+  private class ScopeFinder extends AbstractPostOrderCallback {
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       TypedScope s = t.getTypedScope();
       if (s.isGlobal()) {
         globalScope = s;
-      } else {
+      } else if (s.isBlockScope()) {
         lastLocalScope = s;
+      } else if (s.isFunctionScope()) {
+        lastFunctionScope = s;
       }
     }
   };
@@ -86,8 +88,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
         (new TypeInferencePass(
             compiler, compiler.getReverseAbstractInterpreter(),
             topScope, scopeCreator)).process(externs, root);
-        NodeTraversal t = new NodeTraversal(compiler, callback, scopeCreator);
-        t.traverseRoots(externs, root);
+        new NodeTraversal(compiler, new ScopeFinder(), scopeCreator).traverseRoots(externs, root);
       }
     };
   }
@@ -1269,13 +1270,11 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
         "var result = goog.array.filter(arr," +
         "  function(a,b,c) {var self=this;}, new Foo());");
 
-    assertEquals("Foo", findNameType("self", lastLocalScope).toString());
-    assertEquals("string", findNameType("a", lastLocalScope).toString());
-    assertEquals("number", findNameType("b", lastLocalScope).toString());
-    assertEquals("Array<string>",
-        findNameType("c", lastLocalScope).toString());
-    assertEquals("Array<string>",
-        findNameType("result", globalScope).toString());
+    assertEquals("Foo", findNameType("self", lastFunctionScope).toString());
+    assertEquals("string", findNameType("a", lastFunctionScope).toString());
+    assertEquals("number", findNameType("b", lastFunctionScope).toString());
+    assertEquals("Array<string>", findNameType("c", lastFunctionScope).toString());
+    assertEquals("Array<string>", findNameType("result", globalScope).toString());
   }
 
   public void testTemplateType7b() {
@@ -1305,13 +1304,11 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
         "var result = goog.array.filter(arr," +
         "  function(a,b,c) {var self=this;}, new Foo());");
 
-    assertEquals("Foo", findNameType("self", lastLocalScope).toString());
-    assertEquals("string", findNameType("a", lastLocalScope).toString());
-    assertEquals("number", findNameType("b", lastLocalScope).toString());
-    assertEquals("Array<string>",
-        findNameType("c", lastLocalScope).toString());
-    assertEquals("Array<string>",
-        findNameType("result", globalScope).toString());
+    assertEquals("Foo", findNameType("self", lastFunctionScope).toString());
+    assertEquals("string", findNameType("a", lastFunctionScope).toString());
+    assertEquals("number", findNameType("b", lastFunctionScope).toString());
+    assertEquals("Array<string>", findNameType("c", lastFunctionScope).toString());
+    assertEquals("Array<string>", findNameType("result", globalScope).toString());
   }
 
   public void testTemplateType7c() {
@@ -1341,13 +1338,11 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
         "var result = goog.array.filter(arr," +
         "  function(a,b,c) {var self=this;}, new Foo());");
 
-    assertEquals("Foo", findNameType("self", lastLocalScope).toString());
-    assertEquals("string", findNameType("a", lastLocalScope).toString());
-    assertEquals("number", findNameType("b", lastLocalScope).toString());
-    assertEquals("(Array<string>|null)",
-        findNameType("c", lastLocalScope).toString());
-    assertEquals("Array<string>",
-        findNameType("result", globalScope).toString());
+    assertEquals("Foo", findNameType("self", lastFunctionScope).toString());
+    assertEquals("string", findNameType("a", lastFunctionScope).toString());
+    assertEquals("number", findNameType("b", lastFunctionScope).toString());
+    assertEquals("(Array<string>|null)", findNameType("c", lastFunctionScope).toString());
+    assertEquals("Array<string>", findNameType("result", globalScope).toString());
   }
 
   public void disable_testTemplateType8() {
@@ -2072,17 +2067,13 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
   public void testDeclaredCatchExpression1() {
     testSame(
         "try {} catch (e) {}");
-    // Note: "e" actually belongs to a inner scope but we don't
-    // model catches as separate scopes currently.
-    assertNull(globalScope.getVar("e").getType());
+    assertNull(lastLocalScope.getVar("e").getType());
   }
 
   public void testDeclaredCatchExpression2() {
     testSame(
         "try {} catch (/** @type {string} */ e) {}");
-    // Note: "e" actually belongs to a inner scope but we don't
-    // model catches as separate scopes currently.
-    assertEquals("string", globalScope.getVar("e").getType().toString());
+    assertEquals("string", lastLocalScope.getVar("e").getType().toString());
   }
 
   public void testGenerator1() {

@@ -939,6 +939,16 @@ public class NodeTraversal {
     return scope;
   }
 
+  /**
+   * Instantiate some, but not necessarily all, scopes from stored roots.
+   *
+   * <p>NodeTraversal instantiates scopes lazily when getScope() or similar is called, by iterating
+   * over a stored list of not-yet-instantiated scopeRoots.  When a not-yet-instantiated parent
+   * scope is requested, it doesn't make sense to instantiate <i>all</i> pending scopes.  Instead,
+   * we count the number that are needed to ensure the requested parent is instantiated and call
+   * this function to instantiate only as many scopes as are needed, shifting their roots off the
+   * queue, and returning the deepest scope actually created.
+   */
   private AbstractScope<?, ?> instantiateScopes(int count) {
     checkArgument(count <= scopeRoots.size());
     AbstractScope<?, ?> scope = scopes.peek();
@@ -967,16 +977,13 @@ public class NodeTraversal {
     return scopes.peek().getClosestHoistScope().getRootNode();
   }
 
-  public Node getClosestContainerScopeRoot() {
-    int roots = scopeRoots.size();
-    for (int i = roots; i > 0; i--) {
-      Node rootNode = scopeRoots.get(i - 1);
-      if (!NodeUtil.createsBlockScope(rootNode)) {
-        return rootNode;
+  public AbstractScope<?, ?> getClosestContainerScope() {
+    for (int i = scopeRoots.size(); i > 0; i--) {
+      if (!NodeUtil.createsBlockScope(scopeRoots.get(i - 1))) {
+        return instantiateScopes(i);
       }
     }
-
-    return scopes.peek().getClosestContainerScope().getRootNode();
+    return scopes.peek().getClosestContainerScope();
   }
 
   public AbstractScope<?, ?> getClosestHoistScope() {

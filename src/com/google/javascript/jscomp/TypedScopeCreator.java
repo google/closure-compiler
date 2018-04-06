@@ -257,19 +257,12 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
     memoized.keySet().removeIf(n -> scriptName.equals(NodeUtil.getSourceName(n)));
   }
 
-  /** Create a scope, looking up in the map for the parent scope. */
+  /** Create a scope if it doesn't already exist, looking up in the map for the parent scope. */
   TypedScope createScope(Node n) {
-    // NOTE(sdh): Ideally we could just look up the node in the map,
-    // but sometimes TypedScopeCreator does not create the scope in
-    // the first place (particularly for empty blocks).  When these
-    // cases show up in the CFG, we need to do some extra legwork to
-    // ensure the scope exists.
-    // TODO(sdh): Use NodeUtil.getEnclosingScopeRoot(n.getParent()) once we're block-scoped.
     TypedScope s = memoized.get(n);
     return s != null
         ? s
-        : createScope(
-            n, createScope(NodeUtil.getEnclosingNode(n.getParent(), NodeUtil::isValidCfgRoot)));
+        : createScope(n, createScope(NodeUtil.getEnclosingScopeRoot(n.getParent())));
   }
 
   /**
@@ -575,18 +568,24 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
     @Override
     public final boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
       inputId = t.getInputId();
-      if (n.isFunction() || n.isScript()) {
+      if (n.isFunction() || n.isScript() || (n == currentScope.getRootNode() && inputId != null)) {
         checkNotNull(inputId);
         sourceName = NodeUtil.getSourceName(n);
       }
 
-      // We do want to traverse the name of a named function, but we don't
-      // want to traverse the arguments or body.
+      // The choice of whether to descend depends on the type of scope.  Function scopes
+      // should traverse the outer FUNCTION node, and the NAME and PARAM_LIST nodes, but
+      // should not descend into the body.  Non-function nodes need to at least look at
+      // every child node (parent == currentScope.root), but should not descend *into*
+      // any nodes that create scopes.  The only exception to this is that we do want
+      // to inspect the first (NAME) child of a named function.
       boolean descend =
-          parent == null
-              || !parent.isFunction()
-              || n == parent.getFirstChild()
-              || parent == currentScope.getRootNode();
+          currentScope.isFunctionScope()
+              ? !n.isNormalBlock()
+              : parent == null
+                  || !NodeUtil.createsScope(parent)
+                  || (parent.isFunction() && n == parent.getFirstChild())
+                  || parent == currentScope.getRootNode();
 
       if (descend) {
         // Handle hoisted functions on pre-order traversal, so that they
@@ -599,6 +598,24 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
               defineFunctionLiteral(child);
             }
           }
+        }
+      }
+
+      // Create any child block scopes "pre-order" as we see them. This is required because hoisted
+      // or qualified names defined in earlier blocks might be referred to later outside the block.
+      // This isn't a big deal in most cases since a NamedType will be created and resolved later,
+      // but if a NamedType is used for a superclass, we lose a lot of valuable checking. Recursing
+      // into child blocks immediately prevents this from being a problem.
+      if (NodeUtil.createsBlockScope(n) && n != currentScope.getRootNode()) {
+        // Only create immediately-nested scopes.  We sometimes encounter nodes that create
+        // grandchild scopes, such as a BLOCK inside a FOR - in that case, don't create the
+        // scope here - it will be created while traversing its parent scope.
+        Node ancestor = parent;
+        while (ancestor != null && !NodeUtil.createsScope(ancestor)) {
+          ancestor = ancestor.getParent();
+        }
+        if (ancestor != null && ancestor == currentScope.getRootNode()) {
+          createScope(n, currentScope);
         }
       }
 
@@ -1265,9 +1282,8 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       // who declare "global" names in an anonymous namespace.
       TypedScope ownerScope = null;
       if (n.isGetProp()) {
-        ownerScope = getLValueRootScope(n);
+        ownerScope = scopeToDeclareIn;
       } else if (variableName.contains(".")) {
-        // TODO(sdh): can we pull this from 'n' instead of munging the string?
         TypedVar rootVar =
             currentScope.getVar(variableName.substring(0, variableName.indexOf('.')));
         if (rootVar != null) {
@@ -1305,7 +1321,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
 
       // declared in closest scope?
       CompilerInput input = compiler.getInput(inputId);
-      if (scopeToDeclareIn.hasOwnSlot(variableName)) {
+      if (!scopeToDeclareIn.canDeclare(variableName)) {
         TypedVar oldVar = scopeToDeclareIn.getVar(variableName);
         newVar = validator.expectUndeclaredVariable(
             sourceName, input, n, parent, oldVar, variableName, type);
@@ -2249,10 +2265,10 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
         return;
       }
 
-      Node containerScopeRoot = t.getClosestContainerScopeRoot();
+      Scope containerScope = (Scope) t.getClosestContainerScope();
 
       if (n.isReturn() && n.getFirstChild() != null) {
-        functionsWithNonEmptyReturns.add(containerScopeRoot);
+        functionsWithNonEmptyReturns.add(containerScope.getRootNode());
       }
 
       // Be careful of bleeding functions, which create variables
@@ -2261,13 +2277,17 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
         String name = n.getString();
         Scope scope = t.getScope();
         Var var = scope.getVar(name);
+        // TODO(sdh): consider checking hasSameHoistScope instead of container scope here and
+        // below. This will detect function(a) { a.foo = bar } as an escaped qualified name,
+        // which seems like the right thing to do (but could possibly break things?)
+        // Doing so will allow removing the warning on TypeCheckTest#testIssue1024b.
         if (var != null) {
-          Scope ownerScope = var.getScope().getClosestContainerScope();
+          Scope ownerScope = var.getScope();
           if (ownerScope.isLocal()) {
-            Node ownerScopeRoot = ownerScope.getRootNode();
-            assignedVarNames.add(ScopedName.of(name, ownerScopeRoot));
-            if (containerScopeRoot != ownerScopeRoot) {
-              escapedVarNames.add(ScopedName.of(name, ownerScopeRoot));
+            ScopedName scopedName = ScopedName.of(name, ownerScope.getRootNode());
+            assignedVarNames.add(scopedName);
+            if (!containerScope.hasSameContainerScope(ownerScope)) {
+              escapedVarNames.add(scopedName);
             }
           }
         }
@@ -2276,10 +2296,9 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
         Scope scope = t.getScope();
         Var var = scope.getVar(name);
         if (var != null) {
-          Scope ownerScope = var.getScope().getClosestContainerScope();
-          Node ownerScopeRoot = ownerScope.getRootNode();
-          if (ownerScope.isLocal() && containerScopeRoot != ownerScopeRoot) {
-            escapedVarNames.add(ScopedName.of(n.getQualifiedName(), ownerScopeRoot));
+          Scope ownerScope = var.getScope();
+          if (ownerScope.isLocal() && !containerScope.hasSameContainerScope(ownerScope)) {
+            escapedVarNames.add(ScopedName.of(n.getQualifiedName(), ownerScope.getRootNode()));
           }
         }
       }
@@ -2288,6 +2307,6 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
 
   @Override
   public boolean hasBlockScope() {
-    return false;
+    return true;
   }
 }

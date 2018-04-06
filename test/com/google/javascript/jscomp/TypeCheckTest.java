@@ -3146,6 +3146,28 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
             "required: number"));
   }
 
+  public void testDuplicateLocalVarDeclSuppressed() {
+    // We can't just leave this to VarCheck since otherwise if that warning is suppressed, we'll end
+    // up redeclaring it as undefined in the function block, which can cause spurious errors.
+    testTypes(
+        lines(
+            "/** @suppress {duplicate} */",
+            "function f(x) {",
+            "  var x = x;",
+            "  x.y = true;",
+            "}"));
+  }
+
+  public void testShadowBleedingFunctionName() {
+    // This is allowed and creates a new binding inside the function shadowing the bled name.
+    testTypes(
+        lines(
+            "var f = function x() {",
+            "  var x;",
+            "  var /** undefined */ y = x;",
+            "};"));
+  }
+
   public void testDuplicateInstanceMethod1() {
     // If there's no jsdoc on the methods, then we treat them like
     // any other inferred properties.
@@ -19463,7 +19485,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
             "required: string"));
   }
 
-    public void testCovariantIThenable1() {
+  public void testCovariantIThenable1() {
     testTypes(
         lines(
             "/** @type {!IThenable<string|number>} */ var x;",

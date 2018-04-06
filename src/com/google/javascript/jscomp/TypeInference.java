@@ -200,8 +200,7 @@ class TypeInference
       return input;
     }
 
-    // TODO(sdh): Change to NodeUtil.getEnclosingScopeRoot(n) once we have block scopes.
-    Node root = NodeUtil.getEnclosingNode(n, TypeInference::createsContainerScope);
+    Node root = NodeUtil.getEnclosingScopeRoot(n);
     FlowScope output = input.createChildFlowScope(scopeCreator.createScope(root));
     inferDeclarativelyUnboundVarsWithoutTypes(output);
     output = traverse(n, output);

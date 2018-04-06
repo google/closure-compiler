@@ -65,7 +65,7 @@ abstract class AbstractScope<S extends AbstractScope<S, V>, V extends AbstractVa
   private final Node rootNode;
 
   AbstractScope(Node rootNode) {
-    this.rootNode = rootNode;
+    this.rootNode = checkNotNull(rootNode);
   }
 
   /** The depth of the scope. The global scope has depth 0. */
@@ -143,6 +143,7 @@ abstract class AbstractScope<S extends AbstractScope<S, V>, V extends AbstractVa
   }
 
   final void declareInternal(String name, V var) {
+    checkState(hasOwnSlot(name) || canDeclare(name), "Illegal shadow: %s", var.getNode());
     vars.put(name, var);
   }
 
@@ -227,6 +228,34 @@ abstract class AbstractScope<S extends AbstractScope<S, V>, V extends AbstractVa
       scope = scope.getParent();
     }
     return false;
+  }
+
+  /**
+   * Returns true if the name can be declared on this scope without causing illegal shadowing.
+   * Specifically, this is aware of the connection between function container scopes and function
+   * block scopes and returns false for redeclaring parameters on the block scope.
+   */
+  final boolean canDeclare(String name) {
+    return !hasOwnSlot(name)
+        && (!isFunctionBlockScope()
+            || !getParent().hasOwnSlot(name)
+            || isBleedingFunctionName(name));
+  }
+
+  /**
+   * Returns true if the given name is a bleeding function name in this scope. Local variables in
+   * the function block are not allowed to shadow parameters, but they are allowed to shadow a
+   * bleeding function name.
+   */
+  private boolean isBleedingFunctionName(String name) {
+    V var = getVar(name);
+    if (var == null) {
+      return false;
+    }
+    Node n = var.getScopeRoot();
+    return n.isFunction()
+        && NodeUtil.isBleedingFunctionName(n.getFirstChild())
+        && name.equals(n.getFirstChild().getString());
   }
 
   /**

@@ -37,6 +37,7 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CodingConvention.AssertionFunctionSpec;
 import com.google.javascript.jscomp.DataFlowAnalysis.BranchedFlowState;
+import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.type.FlowScope;
 import com.google.javascript.jscomp.type.ReverseAbstractInterpreter;
 import com.google.javascript.rhino.Node;
@@ -116,8 +117,13 @@ public final class TypeInferenceTest extends TestCase {
     Node n = root.getFirstFirstChild();
     // Create the scope with the assumptions.
     TypedScopeCreator scopeCreator = new TypedScopeCreator(compiler);
-    TypedScope assumedScope = scopeCreator.createScope(
-        n, scopeCreator.createScope(root, null));
+    new NodeTraversal(compiler, new AbstractPostOrderCallback() {
+      @Override
+      public void visit(NodeTraversal t, Node n, Node parent) {
+        t.getTypedScope();
+      }
+    }, scopeCreator).traverse(root);
+    TypedScope assumedScope = scopeCreator.createScope(n);
     for (Map.Entry<String,JSType> entry : assumptions.entrySet()) {
       assumedScope.declare(entry.getKey(), null, entry.getValue(), null, false);
     }
@@ -134,7 +140,10 @@ public final class TypeInferenceTest extends TestCase {
     // Get the scope of the implicit return.
     BranchedFlowState<FlowScope> rtnState =
         cfg.getImplicitReturn().getAnnotation();
-    returnScope = rtnState.getIn();
+    // Reset the flow scope's syntactic scope to the function block, rather than the function node
+    // itself.  This allows pulling out local vars from the function by name to verify their types.
+    returnScope =
+        rtnState.getIn().createChildFlowScope(scopeCreator.createScope(n.getLastChild()));
   }
 
   private JSType getType(String name) {
