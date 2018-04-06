@@ -4270,6 +4270,37 @@ function HTMLDataListElement() {}
 HTMLDataListElement.prototype.options;
 
 
+/**
+ * @return {boolean}
+ * @see https://html.spec.whatwg.org/multipage/iframe-embed-object.html#the-object-element
+ */
+HTMLObjectElement.prototype.checkValidity;
+
+/**
+ * @param {string} message
+ * @see https://html.spec.whatwg.org/multipage/iframe-embed-object.html#the-object-element
+ * @return {undefined}
+ */
+HTMLObjectElement.prototype.setCustomValidity;
+
+/**
+ * @type {string}
+ * @see https://html.spec.whatwg.org/multipage/iframe-embed-object.html#the-object-element
+ */
+HTMLObjectElement.prototype.validationMessage;
+
+/**
+ * @type {!ValidityState}
+ * @see https://html.spec.whatwg.org/multipage/iframe-embed-object.html#the-object-element
+ */
+HTMLObjectElement.prototype.validity;
+
+/**
+ * @type {boolean}
+ * @see https://html.spec.whatwg.org/multipage/iframe-embed-object.html#the-object-element
+ */
+HTMLObjectElement.prototype.willValidate;
+
 
 /**
  * @see https://html.spec.whatwg.org/multipage/forms.html#the-output-element
