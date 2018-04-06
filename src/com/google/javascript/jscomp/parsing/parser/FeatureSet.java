@@ -215,6 +215,9 @@ public final class FeatureSet implements Serializable {
     if (ES8_MODULES.contains(this)) {
       return "es8";
     }
+    if (ES2018_MODULES.contains(this)) {
+      return "es9";
+    }
     if (ES_NEXT.contains(this)) {
       return "es_next";
     }

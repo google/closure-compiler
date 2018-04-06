@@ -40,4 +40,4 @@ $jscomp.polyfill('Promise.prototype.finally', function(orig) {
   };
 
   return polyfill;
-}, 'es8', 'es3');
+}, 'es9', 'es3');
