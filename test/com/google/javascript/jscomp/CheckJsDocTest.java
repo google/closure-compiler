@@ -427,6 +427,13 @@ public final class CheckJsDocTest extends CompilerTestCase {
         MISPLACED_MSG_ANNOTATION);
     testWarning("/** @desc Foo. */ bar = goog.getMsg('x');",
         MISPLACED_MSG_ANNOTATION);
+
+    testWarning("/** @desc Foo. */ var {bar} = goog.getMsg('x');", MISPLACED_MSG_ANNOTATION);
+    testWarning("/** @desc Foo. */ let {bar} = goog.getMsg('x');", MISPLACED_MSG_ANNOTATION);
+    testWarning("/** @desc Foo. */ const {bar} = goog.getMsg('x');", MISPLACED_MSG_ANNOTATION);
+    testWarning(
+        "var bar;\n/** @desc Foo. */ ({bar} = goog.getMsg('x'));",
+        MISPLACED_MSG_ANNOTATION);
   }
 
   public void testJSDocDescInExterns() {

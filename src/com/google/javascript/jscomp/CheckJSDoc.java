@@ -16,7 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-import static com.google.common.base.Preconditions.checkState;
 import static com.google.javascript.jscomp.CheckJSDoc.MISPLACED_SUPPRESS;
 
 import com.google.common.collect.Iterables;
@@ -448,9 +447,10 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements HotSwapCompi
   private boolean isValidMsgName(Node nameNode) {
     if (nameNode.isName() || nameNode.isStringKey()) {
       return nameNode.getString().startsWith("MSG_");
-    } else {
-      checkState(nameNode.isQualifiedName());
+    } else if (nameNode.isQualifiedName()) {
       return nameNode.getLastChild().getString().startsWith("MSG_");
+    } else {
+      return false;
     }
   }
 
