@@ -1345,10 +1345,14 @@ public final class PeepholeFoldConstantsTest extends TypeICompilerTestCase {
     testSame("({a:x}).a ++");
     testSame("({a:x}).a --");
 
-    // functions can't reference the object through 'this'.
-    testSame("({a:function(){return this}}).a");
-    testSame("({get a() {return this}}).a");
+    // It's okay to inline functions, as long as they're not immediately called.
+    // (For tests where they are immediately called, see testFoldObjectLiteralRefCall)
+    test("({a:function(){return this}}).a", "(function(){return this})");
+    test("({get a() {return this}}).a", "(function(){return this})()");
+
+    // Don't inline setters.
     testSame("({set a(b) {return this}}).a");
+    testSame("({set a(b) {this._a = b}}).a");
 
     // Leave unknown props alone, the might be on the prototype
     testSame("({}).a");
@@ -1400,6 +1404,13 @@ public final class PeepholeFoldConstantsTest extends TypeICompilerTestCase {
     test("({a:x}).a += 1", "({a:x}).a = x + 1");
     late = true;
     testSame("({a:x}).a += 1");
+  }
+
+  // Regression test for https://github.com/google/closure-compiler/issues/2873
+  // It would be incorrect to fold this to "x();" because the 'this' value inside the function
+  // will be the global object, instead of the object {a:x} as it should be.
+  public void testFoldObjectLiteralRefCall() {
+    testSame("({a:x}).a()");
   }
 
   public void testIEString() {

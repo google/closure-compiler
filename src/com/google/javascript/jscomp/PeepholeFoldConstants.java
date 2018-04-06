@@ -1460,6 +1460,10 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
   private Node tryFoldObjectPropAccess(Node n, Node left, Node right) {
     checkArgument(NodeUtil.isGet(n));
 
+    if (n.getParent().isCall()) {
+      return n;
+    }
+
     if (!left.isObjectLit() || !right.isString()) {
       return n;
     }
@@ -1527,11 +1531,6 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     // undefined prototype and can't be used with new) and are unlike arrow functions (they can
     // reference new.target, this, super, or arguments).
     if (key.isMemberFunctionDef()) {
-      return n;
-    }
-
-    if (value.isFunction() && NodeUtil.referencesThis(value)) {
-      // 'this' may refer to the object we are trying to remove
       return n;
     }
 
