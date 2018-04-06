@@ -666,6 +666,7 @@ public class DiagnosticGroups {
               CheckRequiresAndProvidesSorted.PROVIDES_AFTER_REQUIRES,
               CheckUnusedLabels.UNUSED_LABEL,
               CheckUselessBlocks.USELESS_BLOCK,
+              ClosureCheckModule.DECLARE_LEGACY_NAMESPACE_IN_NON_MODULE,
               ClosureCheckModule.GOOG_MODULE_IN_NON_MODULE,
               ClosureCheckModule.INCORRECT_SHORTNAME_CAPITALIZATION,
               ClosureCheckModule.LET_GOOG_REQUIRE,

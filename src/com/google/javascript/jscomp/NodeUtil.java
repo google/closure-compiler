@@ -5417,7 +5417,7 @@ public final class NodeUtil {
     return call.getParent().isExprResult() && call.getGrandparent().isScript();
   }
 
-  private static boolean isGoogModuleDeclareLegacyNamespaceCall(Node n) {
+  static boolean isGoogModuleDeclareLegacyNamespaceCall(Node n) {
     if (isExprCall(n)) {
       Node target = n.getFirstFirstChild();
       return (target.matchesQualifiedName("goog.module.declareLegacyNamespace"));

@@ -54,6 +54,11 @@ public final class ClosureCheckModule extends AbstractModuleCallback
           "JSC_GOOG_MODULE_IN_NON_MODULE",
           "goog.module() call must be the first statement in a module.");
 
+  static final DiagnosticType DECLARE_LEGACY_NAMESPACE_IN_NON_MODULE =
+      DiagnosticType.error(
+          "JSC_DECLARE_LEGACY_NAMESPACE_IN_NON_MODULE",
+          "goog.module.declareLegacyNamespace may only be called in a module.");
+
   static final DiagnosticType GOOG_MODULE_REFERENCES_THIS = DiagnosticType.error(
       "JSC_GOOG_MODULE_REFERENCES_THIS",
       "The body of a goog.module cannot reference 'this'.");
@@ -216,6 +221,8 @@ public final class ClosureCheckModule extends AbstractModuleCallback
     if (currentModule == null) {
       if (NodeUtil.isCallTo(n, "goog.module")) {
         t.report(n, GOOG_MODULE_IN_NON_MODULE);
+      } else if (NodeUtil.isGoogModuleDeclareLegacyNamespaceCall(n)) {
+        t.report(n, DECLARE_LEGACY_NAMESPACE_IN_NON_MODULE);
       }
       return;
     }
