@@ -1593,6 +1593,8 @@ public abstract class JSType implements TypeI {
     } else if (isIThenableSubtype(thatType)) {
       // NOTE: special case IThenable subclass (Promise, etc).  These classes are expected to be
       // covariant.
+      // Also note that this ignores any additional template type arguments that might be defined
+      // on subtypes.  If we expand this to other types, a more correct solution will be needed.
       TemplateType key = thisType.registry.getThenableValueKey();
       JSType thisElement = thisTypeParams.getResolvedTemplateType(key);
       JSType thatElement = thatTypeParams.getResolvedTemplateType(key);
