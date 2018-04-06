@@ -292,6 +292,19 @@ public class DeadPropertyAssignmentElimination implements CompilerPass {
         visitAssignmentLhs(n.getFirstChild());
       }
 
+      // Assume that all properties may be read when leaving the function in a CALL or YIELD
+      if (n.isCall() || n.isYield()) {
+        if (ASSUME_CONSTRUCTORS_HAVENT_ESCAPED
+            && isConstructor
+            && !NodeUtil.referencesThis(n)
+            && NodeUtil.getEnclosingType(n, Token.TRY) == null) {
+          // this.x properties are okay.
+          markAllPropsReadExceptThisProps();
+        } else {
+          markAllPropsRead();
+        }
+      }
+
       // Mark all properties as read when leaving a block since we haven't proven that the block
       // will execute.
       if (n.isNormalBlock()) {
@@ -386,16 +399,6 @@ public class DeadPropertyAssignmentElimination implements CompilerPass {
             }
           }
           return true;
-        case CALL:
-        case YIELD:
-          if (ASSUME_CONSTRUCTORS_HAVENT_ESCAPED && isConstructor && !NodeUtil.referencesThis(n)
-              && NodeUtil.getEnclosingType(n, Token.TRY) == null) {
-            // this.x properties are okay.
-            markAllPropsReadExceptThisProps();
-          } else {
-            markAllPropsRead();
-          }
-          return false;
 
         case THIS:
         case NAME:

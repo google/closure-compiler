@@ -195,12 +195,17 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
             "  this.c = 30;",
             "}"));
 
-    // TODO(b/77600088): a.b.c = 20 is dead because of a.b.c = 25.
-    testSame(
+    test(
         lines(
             "var foo = function() {",
             "  a.b.c = 20;",
-            "  doSomething(a.b.c = 25);", // this should actually deaden "a.b.c = 20". oh well
+            "  doSomething(a.b.c = 25);",
+            "  a.b.c = 30;",
+            "}"),
+        lines(
+            "var foo = function() {",
+            "  20;",
+            "  doSomething(a.b.c = 25);",
             "  a.b.c = 30;",
             "}"));
   }
@@ -234,11 +239,16 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
             "  }",
             "}"));
 
-    // TODO(b/77600088): a.b.c = 20 is dead because of a.b.c = 25, and should be eliminated.
-    testSame(
+    test(
         lines(
             "var foo = function*() {",
             "  a.b.c = 20;",
+            "  yield a.b.c = 25;",
+            "  a.b.c = 30;",
+            "}"),
+        lines(
+            "var foo = function*() {",
+            "  20;",
             "  yield a.b.c = 25;",
             "  a.b.c = 30;",
             "}"));
