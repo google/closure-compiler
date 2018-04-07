@@ -108,6 +108,14 @@ public final class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
     test(wrapInFunction(original), wrapInFunction(expected));
   }
 
+  public void testShadowedBleedingName() {
+    this.useDefaultRenamer = true;
+
+    test(
+        "var foo; var x = function foo(){var foo;}",
+        "var foo; var x = function foo$jscomp$1(){var foo$jscomp$2}");
+  }
+
   public void testMakeLocalNamesUniqueWithContext1() {
     this.useDefaultRenamer = true;
 

@@ -249,13 +249,7 @@ abstract class AbstractScope<S extends AbstractScope<S, V>, V extends AbstractVa
    */
   private boolean isBleedingFunctionName(String name) {
     V var = getVar(name);
-    if (var == null) {
-      return false;
-    }
-    Node n = var.getScopeRoot();
-    return n.isFunction()
-        && NodeUtil.isBleedingFunctionName(n.getFirstChild())
-        && name.equals(n.getFirstChild().getString());
+    return var != null && var.getNode().getParent().isFunction();
   }
 
   /**
