@@ -364,6 +364,8 @@ public class Node implements Serializable {
     @SuppressWarnings("ReferenceEquality")
     public boolean isEquivalentTo(
         Node node, boolean compareType, boolean recur, boolean jsDoc, boolean sideEffect) {
+      // NOTE: we take advantage of the string interning done in #setString and use
+      // '==' rather than 'equals' here to avoid doing unnecessary string equalities.
       return (super.isEquivalentTo(node, compareType, recur, jsDoc, sideEffect)
           && this.str == (((StringNode) node).str));
     }
