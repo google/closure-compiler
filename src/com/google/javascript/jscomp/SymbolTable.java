@@ -38,7 +38,6 @@ import com.google.javascript.rhino.StaticScope;
 import com.google.javascript.rhino.StaticSlot;
 import com.google.javascript.rhino.StaticSourceFile;
 import com.google.javascript.rhino.StaticSymbolTable;
-import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.EnumType;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
@@ -1111,11 +1110,27 @@ public final class SymbolTable {
       Symbol exportPropertySymbol, IdentityHashMap<Node, Symbol> nodeToSymbol) {
     // decl is module$a$exports.foo node from the example above.
     Node decl = exportPropertySymbol.getDeclaration().getNode();
-    if (decl.getToken() != Token.GETPROP || decl.getParent().getToken() != Token.ASSIGN) {
+    // originalSymbol is symbol declared by "const foo = 1";
+    Symbol originalSymbol = null;
+    if (decl.isGetProp() && decl.getParent().isAssign()) {
+      originalSymbol = nodeToSymbol.get(decl.getNext());
+    } else if (decl.isGetProp() && decl.getParent().isExprResult()) {
+      // Typedefs are special.
+      //
+      // /** @typedef {number} */ export Foo;
+      //
+      // is rewritten to
+      //
+      // Foo; module$a$exports = {}; module$a$exports.Foo;
+      //
+      // So we need to get type of module$a$exports.Foo in order to get hold of the original "foo"
+      // node.
+      Node originalTypedefNode = decl.getJSDocInfo().getTypedefType().getRoot();
+      originalSymbol = nodeToSymbol.get(originalTypedefNode);
+    }
+    if (originalSymbol == null) {
       return;
     }
-    // originalSymbol is symbol declared by "const foo = 1";
-    Symbol originalSymbol = nodeToSymbol.get(decl.getNext());
     for (Node nodeToMove : exportPropertySymbol.references.keySet()) {
       originalSymbol.defineReferenceAt(nodeToMove);
     }
