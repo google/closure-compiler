@@ -61,6 +61,14 @@ public final class PeepholeCollectPropertyAssignmentsTest extends CompilerTestCa
     testSame("var a; a.b = []; a.b[0] = 1; a.b[1] = 2; a.b[2] = 3;");
   }
 
+  public final void testArrayOptimizationWithLet() {
+    test("let a = []; a[0] = 1; a[1] = 2; a[2] = 3;", "let a = [1, 2, 3];");
+  }
+
+  public final void testArrayOptimizationWithConst() {
+    test("const a = []; a[0] = 1; a[1] = 2; a[2] = 3;", "const a = [1, 2, 3];");
+  }
+
   public final void testCompoundAssignment() {
     testSame("var x, a; a = []; a[0] *= x;");
   }
@@ -188,6 +196,14 @@ public final class PeepholeCollectPropertyAssignmentsTest extends CompilerTestCa
   public final void testObjectOptimization2() {
     test("var o; o = {}; o.x = 0; o['y'] = 1; o[2] = 2;",
          "var o; o = { x: 0, \"y\": 1, \"2\": 2 };");
+  }
+
+  public final void testObjectOptimizationWithLet() {
+    test("let o = {}; o.x = 0; o['y'] = 1; o[2] = 2;", "let o = { x: 0, 'y': 1, '2': 2 };");
+  }
+
+  public final void testObjectOptimizationWithConst() {
+    test("const o = {}; o.x = 0; o['y'] = 1; o[2] = 2;", "const o = { x: 0, 'y': 1, '2': 2 };");
   }
 
   public final void testObjectReassignedInValue1() {
