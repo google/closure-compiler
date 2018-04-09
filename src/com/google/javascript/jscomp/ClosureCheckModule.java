@@ -57,7 +57,7 @@ public final class ClosureCheckModule extends AbstractModuleCallback
   static final DiagnosticType DECLARE_LEGACY_NAMESPACE_IN_NON_MODULE =
       DiagnosticType.error(
           "JSC_DECLARE_LEGACY_NAMESPACE_IN_NON_MODULE",
-          "goog.module.declareLegacyNamespace may only be called in a module.");
+          "goog.module.declareLegacyNamespace may only be called in a goog.module.");
 
   static final DiagnosticType GOOG_MODULE_REFERENCES_THIS = DiagnosticType.error(
       "JSC_GOOG_MODULE_REFERENCES_THIS",
@@ -159,11 +159,6 @@ public final class ClosureCheckModule extends AbstractModuleCallback
       DiagnosticType.error(
           "JSC_REQUIRE_NOT_AT_TOP_LEVEL",
           "goog.require() must be called at file scope.");
-
-  static final DiagnosticType DECLARE_LEGACY_NAMESPACE_OUTSIDE_GOOG_MODULE =
-      DiagnosticType.error(
-          "JSC_DECLARE_LEGACY_NAMESPACE_OUTSIDE_GOOG_MODULE",
-          "goog.module.declareLegacyNamespace can only be called in goog.modules.");
 
   private final AbstractCompiler compiler;
 

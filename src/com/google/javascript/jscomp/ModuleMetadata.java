@@ -18,7 +18,7 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
-import static com.google.javascript.jscomp.ClosureCheckModule.DECLARE_LEGACY_NAMESPACE_OUTSIDE_GOOG_MODULE;
+import static com.google.javascript.jscomp.ClosureCheckModule.DECLARE_LEGACY_NAMESPACE_IN_NON_MODULE;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -256,7 +256,7 @@ final class ModuleMetadata {
           } else {
             compiler.report(
                 JSError.make(
-                    declaresLegacyNamespace, DECLARE_LEGACY_NAMESPACE_OUTSIDE_GOOG_MODULE));
+                    declaresLegacyNamespace, DECLARE_LEGACY_NAMESPACE_IN_NON_MODULE));
           }
         }
       }
