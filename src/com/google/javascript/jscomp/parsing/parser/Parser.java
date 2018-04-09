@@ -281,8 +281,7 @@ public class Parser {
 
   /** Returns true if the string value should be treated as a keyword in the current context. */
   private boolean isKeyword(String value) {
-    return Keywords.isKeyword(value)
-        && (!Keywords.isTypeScriptSpecificKeyword(value) || config.parseTypeSyntax);
+    return Keywords.isKeyword(value, config.parseTypeSyntax);
   }
 
   // 14 Program
@@ -888,7 +887,7 @@ public class Parser {
       if (peekIdOrKeyword()) {
         nameExpr = null;
         name = eatIdOrKeywordAsId();
-        if (Keywords.isKeyword(name.value)) {
+        if (Keywords.isKeyword(name.value, /* includeTypeScriptKeywords= */ false)) {
           features = features.with(Feature.KEYWORDS_AS_PROPERTIES);
         }
       } else {
@@ -2649,8 +2648,8 @@ public class Parser {
     if (colon == null) {
       if (name.type != TokenType.IDENTIFIER) {
         reportExpectedError(peekToken(), TokenType.COLON);
-      } else if (Keywords.isKeyword(name.asIdentifier().value)
-          && !Keywords.isTypeScriptSpecificKeyword(name.asIdentifier().value)) {
+      } else if (Keywords.isKeyword(
+          name.asIdentifier().value, /* includeTypeScriptKeywords= */ false)) {
         reportError(name, "Cannot use keyword in short object literal");
       } else if (peek(TokenType.EQUAL)) {
         IdentifierExpressionTree idTree = new IdentifierExpressionTree(
@@ -3673,8 +3672,7 @@ public class Parser {
       name = eatIdOrKeywordAsId();
       if (!peek(TokenType.COLON)) {
         IdentifierToken idToken = (IdentifierToken) name;
-        if (Keywords.isKeyword(idToken.value)
-            && !Keywords.isTypeScriptSpecificKeyword(idToken.value)) {
+        if (Keywords.isKeyword(idToken.value, /* includeTypeScriptKeywords = */ false)) {
           reportError("cannot use keyword '%s' here.", name);
         }
         if (peek(TokenType.EQUAL)) {

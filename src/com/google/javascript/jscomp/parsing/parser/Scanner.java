@@ -733,8 +733,8 @@ public class Scanner {
       return createToken(TokenType.ERROR, beginToken);
     }
 
-    Keywords k = Keywords.get(value);
-    if (k != null && (!Keywords.isTypeScriptSpecificKeyword(value) || parseTypeSyntax)) {
+    Keywords k = Keywords.get(value, parseTypeSyntax);
+    if (k != null) {
       return new Token(k.type, getTokenRange(beginToken));
     }
 
