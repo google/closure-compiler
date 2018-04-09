@@ -16,8 +16,9 @@
 package com.google.javascript.jscomp.graph;
 
 import com.google.common.annotations.GwtCompatible;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
-import java.util.Collection;
 import java.util.Set;
 
 /**
@@ -70,11 +71,11 @@ public interface UnionFind<E> {
   public Set<E> elements();
 
   /**
-   * Returns an immutable collection containing all equivalence classes.  The
-   * returned collection represents a snapshot of the current state and will not
-   * reflect changes made to the data structure.
+   * Returns an immutable collection containing all equivalence classes. The returned collection
+   * represents a snapshot of the current state and will not reflect changes made to the data
+   * structure.
    */
-  public Collection<Set<E>> allEquivalenceClasses();
+  public ImmutableList<ImmutableSet<E>> allEquivalenceClasses();
 
   /**
    * Returns the elements in the same equivalence class as {@code value}.
