@@ -1378,6 +1378,20 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
             "",
             "a.b.c.d.e.f.g.Foo = class {};"),
     warning(ConvertToTypedInterface.GOOG_SCOPE_HIDDEN_TYPE));
+
+    test(
+        lines(
+            "/** @const */ var $jscomp = $jscomp || {};",
+            "/** @const */ $jscomp.scope = {};",
+            "",
+            "$jscomp.scope.strayClass = class {",
+            "  constructor() {",
+            "    this.Foo = class {};",
+            "  };",
+            "};",
+            ""),
+        "",
+    warning(ConvertToTypedInterface.GOOG_SCOPE_HIDDEN_TYPE));
   }
 
   public void testDestructuringDoesntCrash() {

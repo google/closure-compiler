@@ -96,7 +96,7 @@ abstract class PotentialDeclaration {
     return NodeUtil.getBestJSDocInfo(lhs);
   }
 
-  private boolean isDetached() {
+  boolean isDetached() {
     for (Node current = lhs; current != null; current = current.getParent()) {
       if (current.isScript()) {
         return false;
