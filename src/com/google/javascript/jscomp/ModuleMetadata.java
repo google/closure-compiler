@@ -255,7 +255,8 @@ final class ModuleMetadata {
             moduleType = ModuleType.LEGACY_GOOG_MODULE;
           } else {
             compiler.report(
-                JSError.make(declaresNamespace, DECLARE_LEGACY_NAMESPACE_OUTSIDE_GOOG_MODULE));
+                JSError.make(
+                    declaresLegacyNamespace, DECLARE_LEGACY_NAMESPACE_OUTSIDE_GOOG_MODULE));
           }
         }
       }
