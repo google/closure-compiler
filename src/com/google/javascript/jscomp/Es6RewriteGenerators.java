@@ -292,26 +292,16 @@ final class Es6RewriteGenerators implements HotSwapCompilerPass {
         genFuncName.setString(context.getScopedName(GENERATOR_FUNCTION).getString());
       }
 
-      //  switch ($jscomp$generator$context.nextAddress) {
-      //  }
-      Node switchNode = IR.switchNode(context.getContextField(genFunc, "nextAddress"));
+      Node generatorBody = IR.block();
 
       // Prepare a "program" function:
       //   function ($jscomp$generator$context) {
-      //       do switch ($jscomp$generator$context.nextAddress) {
-      //       } while (0);
       //   }
       Node program =
           IR.function(
               IR.name(""),
-              IR.paramList(context.getJsContextNameNode(genFunc)),
-              IR.block(
-                  // Without the while loop, OTI assumes the switch statement is only executed
-                  // once, which messes up its understanding of the types assigned to variables
-                  // within it.
-                  IR.doNode( // TODO(skill):  Remove do-while loop when this pass moves after
-                      // type checking or when OTI is fixed to handle this correctly.
-                      IR.block(switchNode), withType(IR.number(0), numberType))));
+              IR.paramList(context.getJsContextNameNode(originalGeneratorBody)),
+              generatorBody);
 
       // Propagate all suppressions from original generator function to a new "program" function.
       JSDocInfoBuilder jsDocBuilder = new JSDocInfoBuilder(false);
@@ -355,8 +345,7 @@ final class Es6RewriteGenerators implements HotSwapCompilerPass {
 
       // Transpile statements from original generator function
       while (originalGeneratorBody.hasChildren()) {
-        Node statement = originalGeneratorBody.getFirstChild().detach();
-        transpileStatement(statement);
+        transpileStatement(originalGeneratorBody.removeFirstChild());
       }
 
       // Ensure that the state machine program ends
@@ -368,7 +357,7 @@ final class Es6RewriteGenerators implements HotSwapCompilerPass {
       context.currentCase.jumpTo(context.programEndCase, finalBlock);
       context.currentCase.mayFallThrough = true;
 
-      context.finalizeTransformation(switchNode);
+      context.finalizeTransformation(generatorBody);
       context.checkStateIsEmpty();
 
       genFunc.putBooleanProp(Node.GENERATOR_FN, false);
@@ -1112,8 +1101,11 @@ final class Es6RewriteGenerators implements HotSwapCompilerPass {
       final ArrayDeque<Case> finallyCases = new ArrayDeque<>();
       final HashSet<String> catchNames = new HashSet<>();
 
-      /** All case sections that will be added to generator program. */
+      /** All "case" sections that will be added to generator program. */
       final ArrayList<Case> allCases = new ArrayList<>();
+
+      /** All "break" nodes that exit from the generator primary switch statement */
+      final ArrayList<Node> switchBreaks = new ArrayList<>();
 
       /** A virtual case that indicates end of program */
       final Case programEndCase;
@@ -1273,10 +1265,78 @@ final class Es6RewriteGenerators implements HotSwapCompilerPass {
         }
       }
 
+      /**
+       * Replaces "...; break;" with "return ...;".
+       */
+      void eliminateSwitchBreaks() {
+        for (Node breakNode : switchBreaks) {
+          Node prevStatement = breakNode.getPrevious();
+          checkState(prevStatement != null);
+          checkState(prevStatement.isExprResult());
+          prevStatement.replaceWith(IR.returnNode(prevStatement.removeFirstChild()));
+          breakNode.detach();
+        }
+        switchBreaks.clear();
+      }
+
       /** Finalizes transpilation by dumping all generated "case" nodes. */
-      public void finalizeTransformation(Node switchNode) {
+      public void finalizeTransformation(Node generatorBody) {
         optimizeCaseIds();
-        // Write all state machine cases
+
+        // If number of cases is small we render them without using "switch"
+        //   switch ($context.nextAddress) {
+        //     case 1: a();
+        //     case 2: b();
+        //     case 3: c();
+        //   }
+        // are rendered as:
+        //   if ($context.nextAddress == 1) a();
+        //   if ($context.nextAddress != 3) b();
+        //   c();
+        if (allCases.size() == 2 || allCases.size() == 3) {
+          generatorBody.addChildToBack(
+              IR.ifNode(
+                  withType(
+                      IR.eq(getContextField(generatorBody, "nextAddress"),
+                      withType(IR.number(1), numberType)), booleanType),
+                  allCases.remove(0).caseBlock).useSourceInfoIfMissingFromForTree(generatorBody));
+        }
+
+        // If number of cases is small we render them without using "switch"
+        //   switch ($context.nextAddress) {
+        //     case 1: a();
+        //     case 2: b();
+        //   }
+        // are rendered as:
+        //   if ($context.nextAddress == 1) a();
+        //   b();
+        if (allCases.size() == 2) {
+          generatorBody.addChildToBack(
+              IR.ifNode(
+                  withType(
+                      IR.ne(getContextField(generatorBody, "nextAddress"),
+                          withType(IR.number(allCases.get(1).id), numberType)), booleanType),
+                  allCases.remove(0).caseBlock).useSourceInfoIfMissingFromForTree(generatorBody));
+        }
+
+        // If number of cases is small we render them without using "switch"
+        //   switch ($context.nextAddress) {
+        //     case 1: a();
+        //   }
+        // are rendered as:
+        //   a();
+        if (allCases.size() == 1) {
+          generatorBody.addChildrenToBack(allCases.remove(0).caseBlock.removeChildren());
+          eliminateSwitchBreaks();
+          return;
+        }
+
+        //  switch ($jscomp$generator$context.nextAddress) {}
+        Node switchNode = IR.switchNode(getContextField(generatorBody, "nextAddress"))
+            .useSourceInfoFrom(generatorBody);
+        generatorBody.addChildToBack(switchNode);
+
+        // Populate "switch" statement with "case"s.
         for (Case currentCase : allCases) {
           switchNode.addChildToBack(currentCase.createCaseNode());
         }
@@ -1312,7 +1372,7 @@ final class Es6RewriteGenerators implements HotSwapCompilerPass {
       /** Adds a new generated node to the end of the current case and finializes it. */
       void writeGeneratedNodeAndBreak(Node n) {
         writeGeneratedNode(n);
-        writeGeneratedNode(IR.breakNode().useSourceInfoFrom(n));
+        writeGeneratedNode(createBreakNodeFor(n));
         currentCase.mayFallThrough = false;
       }
 
@@ -1376,6 +1436,29 @@ final class Es6RewriteGenerators implements HotSwapCompilerPass {
       }
 
       /**
+       * Creates a "break;" statement that will follow {@code preBreak} node.
+       *
+       * <p>This is used to be able to generatate a state machine program outside of "swtich"
+       * statement so:
+       *
+       * <pre>
+       *   $context.jumpTo(5);
+       *   break;
+       * </pre>
+       *
+       * could be converted into:
+       *
+       * <pre>
+       *   return $context.jumpTo(5);
+       * </pre>
+       */
+      Node createBreakNodeFor(Node preBreak) {
+        Node breakNode = IR.breakNode().useSourceInfoFrom(preBreak);
+        switchBreaks.add(breakNode);
+        return breakNode;
+      }
+
+      /**
        * Returns a node that instructs a state machine program to jump to a selected case section.
        */
       Node createJumpToNode(Case section, Node sourceNode) {
@@ -1398,7 +1481,7 @@ final class Es6RewriteGenerators implements HotSwapCompilerPass {
         checkState(section.embedInto == null);
         Node jumpBlock  = IR.block(
                 callContextMethodResult(sourceNode, "jumpTo", section.getNumber(sourceNode)),
-                IR.breakNode().useSourceInfoFrom(sourceNode))
+                createBreakNodeFor(sourceNode))
             .useSourceInfoFrom(sourceNode);
         if (allowEmbedding) {
           section.embedInto = jumpBlock;
@@ -1422,7 +1505,7 @@ final class Es6RewriteGenerators implements HotSwapCompilerPass {
           sourceNode.getParent().addChildBefore(
               callContextMethodResult(sourceNode, jumpMethod, section.getNumber(sourceNode)),
               sourceNode);
-          sourceNode.replaceWith(IR.breakNode());
+          sourceNode.replaceWith(createBreakNodeFor(sourceNode));
         } else {
           // "break;" inside a loop or swtich statement:
           // for (...) {
@@ -1762,7 +1845,7 @@ final class Es6RewriteGenerators implements HotSwapCompilerPass {
           if (jumpTo != null) {
             return jumpTo.getNumber(sourceNode);
           }
-          Node node = withType(IR.number(id).useSourceInfoFrom(sourceNode), numberType);
+          Node node = withType(IR.number(id), numberType).useSourceInfoFrom(sourceNode);
           references.add(node);
           return node;
         }

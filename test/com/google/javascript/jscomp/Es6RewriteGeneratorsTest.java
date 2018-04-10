@@ -59,6 +59,9 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
     rewriteGeneratorBodyWithVars(beforeBody, "", afterBody);
   }
 
+  /**
+   * Verifies that generator functions are rewritten to a state machine program.
+   */
   private void rewriteGeneratorBodyWithVars(
       String beforeBody, String varDecls, String afterBody) {
     rewriteGeneratorBodyWithVarsAndReturnType(beforeBody, varDecls, afterBody, "?");
@@ -76,11 +79,28 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
             "      f,",
             "      /** @suppress {uselessCode} */",
             "      function ($jscomp$generator$context) {",
-            "        do switch ($jscomp$generator$context.nextAddress) {",
-            "          case 1:",
             afterBody,
-            "        } while (0);",
             "      });",
+            "}"));
+  }
+
+  private void rewriteGeneratorSwitchBody(String beforeBody, String afterBody) {
+    rewriteGeneratorSwitchBodyWithVars(beforeBody, "", afterBody);
+  }
+
+  /**
+   * Verifies that generator functions are rewriteen to a state machine program contining
+   * {@code switch} statement.
+   *
+   * <p>This is the case when total number of program states is more than 3.
+   */
+  private void rewriteGeneratorSwitchBodyWithVars(
+      String beforeBody, String varDecls, String afterBody) {
+    rewriteGeneratorBodyWithVars(beforeBody, varDecls,
+        lines(
+            "switch ($jscomp$generator$context.nextAddress) {",
+            "  case 1:",
+            afterBody,
             "}"));
   }
 
@@ -93,10 +113,7 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
             "      $jscomp$generator$function,",
             "      /** @suppress {uselessCode} */",
             "      function ($jscomp$generator$context) {",
-            "        do switch ($jscomp$generator$context.nextAddress) {",
-            "          case 1:",
-            "            $jscomp$generator$context.jumpToEnd();",
-            "        } while (0);",
+            "         $jscomp$generator$context.jumpToEnd();",
             "      });",
             "}"));
   }
@@ -125,10 +142,7 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
             "      f,",
             "      /** @suppress {uselessCode} */",
             "      function($jscomp$generator$context) {",
-            "        do switch ($jscomp$generator$context.nextAddress) {",
-            "          case 1:",
-            "            $jscomp$generator$context.jumpToEnd();",
-            "        } while (0);",
+            "        $jscomp$generator$context.jumpToEnd();",
             "      });",
             "}"));
 
@@ -143,14 +157,16 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
         "var i = 0; yield i; i = 1; yield i; i = i + 1; yield i;",
         "var i;",
         lines(
+            "if ($jscomp$generator$context.nextAddress == 1) {",
             "  i = 0;",
             "  return $jscomp$generator$context.yield(i, 2);",
-            "case 2:",
+            "}",
+            "if ($jscomp$generator$context.nextAddress != 3) {",
             "  i = 1;",
             "  return $jscomp$generator$context.yield(i, 3);",
-            "case 3:",
-            "  i = i + 1;",
-            "  return $jscomp$generator$context.yield(i, 0);"));
+            "}",
+            "i = i + 1;",
+            "return $jscomp$generator$context.yield(i, 0);"));
   }
 
   public void testReturnGenerator() {
@@ -163,10 +179,7 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
             "        g,",
             "        /** @suppress {uselessCode} */",
             "        function($jscomp$generator$context) {",
-            "          do switch ($jscomp$generator$context.nextAddress) {",
-            "            case 1:",
-            "              return $jscomp$generator$context.yield(1, 0);",
-            "          } while (0);",
+            "          return $jscomp$generator$context.yield(1, 0);",
             "        });",
             "  }",
             "}"));
@@ -182,20 +195,14 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
             "        g,",
             "        /** @suppress {uselessCode} */",
             "        function($jscomp$generator$context$1) {",
-            "          do switch ($jscomp$generator$context$1.nextAddress) {",
-            "            case 1:",
-            "              return $jscomp$generator$context$1.yield(2, 0);",
-            "          } while (0);",
+            "          return $jscomp$generator$context$1.yield(2, 0);",
             "        });",
             "  }",
             "  return $jscomp.generator.createGenerator(",
             "      f,",
             "      /** @suppress {uselessCode} */",
             "      function($jscomp$generator$context) {",
-            "        do switch ($jscomp$generator$context.nextAddress) {",
-            "          case 1:",
-            "            return $jscomp$generator$context.yield(1, 0);",
-            "        } while (0);",
+            "        return $jscomp$generator$context.yield(1, 0);",
             "      });",
             "}"));
   }
@@ -206,19 +213,20 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
         "var i = 0; for (var j = 0; j < 10; j++) { i += j; }",
         "var i;",
         lines(
-            "  i = 0;",
-            "  for (var j = 0; j < 10; j++) { i += j; }",
-            "  $jscomp$generator$context.jumpToEnd();"));
+            "i = 0;",
+            "for (var j = 0; j < 10; j++) { i += j; }",
+            "$jscomp$generator$context.jumpToEnd();"));
 
     rewriteGeneratorBodyWithVars(
         "var i = 0; for (var j = yield; j < 10; j++) { i += j; }",
         "var i;",
         lines(
+            "if ($jscomp$generator$context.nextAddress == 1) {",
             "  i = 0;",
             "  return $jscomp$generator$context.yield(undefined, 2);",
-            "case 2:",
-            "  for (var j = $jscomp$generator$context.yieldResult; j < 10; j++) { i += j; }",
-            "  $jscomp$generator$context.jumpToEnd();"));
+            "}",
+            "for (var j = $jscomp$generator$context.yieldResult; j < 10; j++) { i += j; }",
+            "$jscomp$generator$context.jumpToEnd();"));
 
     rewriteGeneratorBody(
         "for (;;) { yield 1; }",
@@ -229,35 +237,35 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
         "for (var j = 0; j < 10; j++) { yield j; }",
         "var j;",
         lines(
+            "if ($jscomp$generator$context.nextAddress == 1) {",
             "  j = 0;",
-            "case 2:",
+            "}",
+            "if ($jscomp$generator$context.nextAddress != 3) {",
             "  if (!(j < 10)) {",
-            "    $jscomp$generator$context.jumpTo(0);",
-            "    break;",
+            "    return $jscomp$generator$context.jumpTo(0);",
             "  }",
             "  return $jscomp$generator$context.yield(j, 3);",
-            "case 3:",
-            "  j++;",
-            "  $jscomp$generator$context.jumpTo(2);",
-            "  break;"));
+            "}",
+            "j++;",
+            "return $jscomp$generator$context.jumpTo(2);"));
 
     rewriteGeneratorBodyWithVars(
         "var i = 0; for (var j = 0; j < 10; j++) { i += j; yield 5; }",
         "var i; var j;",
         lines(
+            "if ($jscomp$generator$context.nextAddress == 1) {",
             "  i = 0;",
             "  j = 0;",
-            "case 2:",
+            "}",
+            "if ($jscomp$generator$context.nextAddress != 3) {",
             "  if (!(j < 10)) {",
-            "    $jscomp$generator$context.jumpTo(0);",
-            "    break;",
+            "    return $jscomp$generator$context.jumpTo(0);",
             "  }",
             "  i += j;",
             "  return $jscomp$generator$context.yield(5, 3);",
-            "case 3:",
-            "  j++;",
-            "  $jscomp$generator$context.jumpTo(2);",
-            "  break;"));
+            "}",
+            "j++;",
+            "return $jscomp$generator$context.jumpTo(2);"));
   }
 
   public void testWhileLoops() {
@@ -265,11 +273,11 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
         "var i = 0; while (i < 10) { i++; i++; i++; } yield i;",
         "  var i;",
         lines(
-            "  i = 0;",
-            "  while (i < 10) { i ++; i++; i++; }",
-            "  return $jscomp$generator$context.yield(i, 0);"));
+            "i = 0;",
+            "while (i < 10) { i ++; i++; i++; }",
+            "return $jscomp$generator$context.yield(i, 0);"));
 
-    rewriteGeneratorBodyWithVars(
+    rewriteGeneratorSwitchBodyWithVars(
         "var j = 0; while (j < 10) { yield j; j++; } j += 10;",
         "var j;",
         lines(
@@ -292,36 +300,38 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
         "var j = 0; while (j < 10) { yield j; j++; } yield 5",
         "var j;",
         lines(
+            "if ($jscomp$generator$context.nextAddress == 1) {",
             "  j = 0;",
-            "case 2:",
+            "}",
+            "if ($jscomp$generator$context.nextAddress != 4) {",
             "  if (!(j < 10)) {",
             "    return $jscomp$generator$context.yield(5, 0);",
             "  }",
             "  return $jscomp$generator$context.yield(j, 4)",
-            "case 4:",
+            "}",
             "  j++;",
-            "  $jscomp$generator$context.jumpTo(2);",
-            "  break;"));
+            "  return $jscomp$generator$context.jumpTo(2);"));
 
     rewriteGeneratorBodyWithVars(
         "var j = 0; while (yield) { j++; }",
         "var j;",
         lines(
+            "if ($jscomp$generator$context.nextAddress == 1) {",
             "  j = 0;",
-            "case 2:",
+            "}",
+            "if ($jscomp$generator$context.nextAddress != 4) {",
             "  return $jscomp$generator$context.yield(undefined, 4);",
-            "case 4:",
-            "  if (!($jscomp$generator$context.yieldResult)) {",
-            "    $jscomp$generator$context.jumpTo(0);",
-            "    break;",
-            "  }",
-            "  j++;",
-            "  $jscomp$generator$context.jumpTo(2);",
-            "  break;"));
+            "}",
+            "if (!($jscomp$generator$context.yieldResult)) {",
+            "  return $jscomp$generator$context.jumpTo(0);",
+            "}",
+            "j++;",
+            "return $jscomp$generator$context.jumpTo(2);"));
   }
 
   public void testUndecomposableExpression() {
     testError("function *f() { obj.bar(yield 5); }", Es6ToEs3Util.CANNOT_CONVERT);
+    //testError("function *f() { (yield 5) && obj.bar(yield 5); }", Es6ToEs3Util.CANNOT_CONVERT);
   }
 
   public void testDecomposableExpression() {
@@ -329,13 +339,14 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
         "return a + (a = b) + (b = yield) + a;",
         lines("var JSCompiler_temp_const$jscomp$0;"),
         lines(
-            "  JSCompiler_temp_const$jscomp$0 = a + (a = b);",
-            "  return $jscomp$generator$context.yield(undefined, 2);",
-            "case 2:",
+            "  if ($jscomp$generator$context.nextAddress == 1) {",
+            "    JSCompiler_temp_const$jscomp$0 = a + (a = b);",
+            "    return $jscomp$generator$context.yield(undefined, 2);",
+            "  }",
             "  return $jscomp$generator$context.return(",
             "JSCompiler_temp_const$jscomp$0 + (b = $jscomp$generator$context.yieldResult) + a);"));
 
-    rewriteGeneratorBodyWithVars(
+    rewriteGeneratorSwitchBodyWithVars(
         "return (yield ((yield 1) + (yield 2)));",
         lines("var JSCompiler_temp_const$jscomp$0;"),
         lines(
@@ -353,16 +364,19 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
     rewriteGeneratorBodyWithVars(
         "var obj = {bar: function(x) {}}; obj.bar(yield 5);",
         lines(
-            "var obj; var JSCompiler_temp_const$jscomp$1;", "var JSCompiler_temp_const$jscomp$0;"),
+            "var obj;",
+            "var JSCompiler_temp_const$jscomp$1;",
+            "var JSCompiler_temp_const$jscomp$0;"),
         lines(
+            "if ($jscomp$generator$context.nextAddress == 1) {",
             "  obj = {bar: function(x) {}};",
             "  JSCompiler_temp_const$jscomp$1 = obj;",
             "  JSCompiler_temp_const$jscomp$0 = JSCompiler_temp_const$jscomp$1.bar;",
             "  return $jscomp$generator$context.yield(5, 2);",
-            "case 2:",
-            "  JSCompiler_temp_const$jscomp$0.call(",
-            "      JSCompiler_temp_const$jscomp$1, $jscomp$generator$context.yieldResult);",
-            "  $jscomp$generator$context.jumpToEnd();"));
+            "}",
+            "JSCompiler_temp_const$jscomp$0.call(",
+            "    JSCompiler_temp_const$jscomp$1, $jscomp$generator$context.yieldResult);",
+            "$jscomp$generator$context.jumpToEnd();"));
   }
 
   public void testGeneratorCannotConvertYet() {
@@ -386,49 +400,47 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
     rewriteGeneratorBody(
         "l: if (yield) { break l; }",
         lines(
-            "  return $jscomp$generator$context.yield(undefined, 3);",
-            "case 3:",
+            "  if ($jscomp$generator$context.nextAddress == 1)",
+            "    return $jscomp$generator$context.yield(undefined, 3);",
             "  if ($jscomp$generator$context.yieldResult) {",
-            "   $jscomp$generator$context.jumpTo(0);",
-            "   break;",
+            "    return $jscomp$generator$context.jumpTo(0);",
             "  }",
             "  $jscomp$generator$context.jumpToEnd();"));
 
     rewriteGeneratorBody(
         "l: if (yield) { while (1) {break l;} }",
         lines(
+            "if ($jscomp$generator$context.nextAddress == 1) {",
             "  return $jscomp$generator$context.yield(undefined, 3);",
-            "case 3:",
-            "  if ($jscomp$generator$context.yieldResult) {",
-            "    while (1) {",
-            "      return $jscomp$generator$context.jumpTo(0);",
-            "    }",
+            "}",
+            "if ($jscomp$generator$context.yieldResult) {",
+            "  while (1) {",
+            "    return $jscomp$generator$context.jumpTo(0);",
             "  }",
-            "  $jscomp$generator$context.jumpToEnd();"));
+            "}",
+            "$jscomp$generator$context.jumpToEnd();"));
 
     rewriteGeneratorBody(
         "l: for (;;) { yield i; continue l; }",
         lines(
+            "if ($jscomp$generator$context.nextAddress == 1) {",
             "  return $jscomp$generator$context.yield(i, 5);",
-            "case 5:",
-            "  $jscomp$generator$context.jumpTo(1);",
-            "  break;",
-            "  $jscomp$generator$context.jumpTo(1);",
-            "  break;"));
+            "}",
+            "return $jscomp$generator$context.jumpTo(1);",
+            "return $jscomp$generator$context.jumpTo(1);"));
 
     rewriteGeneratorBody(
         "l1: l2: if (yield) break l1; else break l2;",
         lines(
+            "if ($jscomp$generator$context.nextAddress == 1) {",
             "  return $jscomp$generator$context.yield(undefined, 3);",
-            "case 3:",
-            "  if($jscomp$generator$context.yieldResult) {",
-            "    $jscomp$generator$context.jumpTo(0);",
-            "    break;",
-            "  } else {",
-            "    $jscomp$generator$context.jumpTo(0);",
-            "    break;",
-            "  }",
-            "  $jscomp$generator$context.jumpToEnd();"));
+            "}",
+            "if($jscomp$generator$context.yieldResult) {",
+            "  return $jscomp$generator$context.jumpTo(0);",
+            "} else {",
+            "  return $jscomp$generator$context.jumpTo(0);",
+            "}",
+            "$jscomp$generator$context.jumpToEnd();"));
   }
 
   public void testUnreachable() {
@@ -436,16 +448,14 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
     rewriteGeneratorBody(
         "while (true) {yield; break;}",
         lines(
+            "if ($jscomp$generator$context.nextAddress == 1) {",
             "  if (!true) {",
-            "    $jscomp$generator$context.jumpTo(0);",
-            "    break;",
+            "    return $jscomp$generator$context.jumpTo(0);",
             "  }",
             "  return $jscomp$generator$context.yield(undefined, 4);",
-            "case 4:",
-            "  $jscomp$generator$context.jumpTo(0);",
-            "  break;",
-            "  $jscomp$generator$context.jumpTo(1);",
-            "  break;"));
+            "}",
+            "return $jscomp$generator$context.jumpTo(0);",
+            "return $jscomp$generator$context.jumpTo(1);"));
   }
 
   public void testCaseNumberOptimization() {
@@ -467,43 +477,40 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
             "var gotResponse;",
             "var response, $jscomp$generator$forin$0;"),
         lines(
+            "if ($jscomp$generator$context.nextAddress == 1) {",
             "  if (!true) {",
-            "    $jscomp$generator$context.jumpTo(0);",
-            "    break;",
+            "    return $jscomp$generator$context.jumpTo(0);",
             "  }",
             "  gen = generatorSrc();",
             "  gotResponse = false;",
             "  $jscomp$generator$forin$0 = $jscomp$generator$context.forIn(gen);",
-            "case 4:",
+            "}",
+            "if ($jscomp$generator$context.nextAddress != 7) {",
             "  if (!((response=$jscomp$generator$forin$0.getNext()) != null)) {",
             "    if (!gotResponse) return $jscomp$generator$context.return();",
-            "    $jscomp$generator$context.jumpTo(1);",
-            "    break;",
+            "    return $jscomp$generator$context.jumpTo(1);",
             "  }",
             "  return $jscomp$generator$context.yield(response, 7);",
-            "case 7:",
-            "  gotResponse = true;",
-            "  $jscomp$generator$context.jumpTo(4);",
-            "  break;"));
+            "}",
+            "gotResponse = true;",
+            "return $jscomp$generator$context.jumpTo(4);"));
 
     rewriteGeneratorBody(
         "do { do { do { yield; } while (3) } while (2) } while (1)",
         lines(
+            "if ($jscomp$generator$context.nextAddress == 1) {",
             "  return $jscomp$generator$context.yield(undefined, 10);",
-            "case 10:",
-            "  if (3) {",
-            "    $jscomp$generator$context.jumpTo(1);",
-            "    break;",
-            "  }",
-            "  if (2) {",
-            "    $jscomp$generator$context.jumpTo(1);",
-            "    break;",
-            "  }",
-            "  if (1) {",
-            "    $jscomp$generator$context.jumpTo(1);",
-            "    break;",
-            "  }",
-            "  $jscomp$generator$context.jumpToEnd();"));
+            "}",
+            "if (3) {",
+            "  return $jscomp$generator$context.jumpTo(1);",
+            "}",
+            "if (2) {",
+            "  return $jscomp$generator$context.jumpTo(1);",
+            "}",
+            "if (1) {",
+            "  return $jscomp$generator$context.jumpTo(1);",
+            "}",
+            "$jscomp$generator$context.jumpToEnd();"));
   }
 
   public void testIf() {
@@ -511,23 +518,23 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
         "var j = 0; if (yield) { j = 1; }",
         "var j;",
         lines(
+            "if ($jscomp$generator$context.nextAddress == 1) {",
             "  j = 0;",
             "  return $jscomp$generator$context.yield(undefined, 2);",
-            "case 2:",
-            "  if ($jscomp$generator$context.yieldResult) { j = 1; }",
-            "  $jscomp$generator$context.jumpToEnd();"));
+            "}",
+            "if ($jscomp$generator$context.yieldResult) { j = 1; }",
+            "$jscomp$generator$context.jumpToEnd();"));
 
     rewriteGeneratorBodyWithVars(
         "var j = 0; if (j < 1) { j = 5; } else { yield j; }",
         "var j;",
         lines(
-            "  j = 0;",
-            "  if (j < 1) {",
-            "    j = 5;",
-            "    $jscomp$generator$context.jumpTo(0);",
-            "    break;",
-            "  }",
-            "  return $jscomp$generator$context.yield(j, 0);"));
+            "j = 0;",
+            "if (j < 1) {",
+            "  j = 5;",
+            "  return $jscomp$generator$context.jumpTo(0);",
+            "}",
+            "return $jscomp$generator$context.yield(j, 0);"));
 
     // When "else" doesn't contain yields, it's more optimal to swap "if" and else "blocks" and
     // negate the condition.
@@ -535,35 +542,33 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
         "var j = 0; if (j < 1) { yield j; } else { j = 5; }",
         "var j;",
         lines(
-            "  j = 0;",
-            "  if (!(j < 1)) {",
-            "    j = 5;",
-            "    $jscomp$generator$context.jumpTo(0);",
-            "    break;",
-            "  }",
-            "  return $jscomp$generator$context.yield(j, 0);"));
+            "j = 0;",
+            "if (!(j < 1)) {",
+            "  j = 5;",
+            "  return $jscomp$generator$context.jumpTo(0);",
+            "}",
+            "return $jscomp$generator$context.yield(j, 0);"));
 
     // No "else" block, pretend as it's empty
     rewriteGeneratorBodyWithVars(
         "var j = 0; if (j < 1) { yield j; }",
         "var j;",
         lines(
-            "  j = 0;",
-            "  if (!(j < 1)) {",
-            "    $jscomp$generator$context.jumpTo(0);",
-            "    break;",
-            "  }",
-            "  return $jscomp$generator$context.yield(j, 0);"));
+            "j = 0;",
+            "if (!(j < 1)) {",
+            "  return $jscomp$generator$context.jumpTo(0);",
+            "}",
+            "return $jscomp$generator$context.yield(j, 0);"));
 
     rewriteGeneratorBody(
         "if (i < 1) { yield i; } else { yield 1; }",
         lines(
-            "  if (i < 1) {",
-            "    return $jscomp$generator$context.yield(i, 0);",
-            "  }",
-            "  return $jscomp$generator$context.yield(1, 0);"));
+            "if (i < 1) {",
+            "  return $jscomp$generator$context.yield(i, 0);",
+            "}",
+            "return $jscomp$generator$context.yield(1, 0);"));
 
-    rewriteGeneratorBody(
+    rewriteGeneratorSwitchBody(
         "if (i < 1) { yield i; yield i + 1; i = 10; } else { yield 1; yield 2; i = 5;}",
         lines(
             "  if (i < 1) {",
@@ -585,45 +590,43 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
     rewriteGeneratorBody(
         "if (i < 1) { while (true) { yield 1;} } else {  while (false) { yield 2;}}",
         lines(
+            "if ($jscomp$generator$context.nextAddress == 1) {",
             "  if (i < 1) {",
-            "    $jscomp$generator$context.jumpTo(7);",
-            "    break;",
+            "    return $jscomp$generator$context.jumpTo(7);",
             "  }",
-            "case 4:",
+            "}",
+            "if ($jscomp$generator$context.nextAddress != 7) {",
             "  if (!false) {",
-            "    $jscomp$generator$context.jumpTo(0);",
-            "    break;",
+            "    return $jscomp$generator$context.jumpTo(0);",
             "  }",
             "  return $jscomp$generator$context.yield(2, 4);",
-            "case 7:",
-            "  if (!true) {",
-            "    $jscomp$generator$context.jumpTo(0);",
-            "    break;",
-            "  }",
-            "  return $jscomp$generator$context.yield(1, 7);"));
+            "}",
+            "if (!true) {",
+            "  return $jscomp$generator$context.jumpTo(0);",
+            "}",
+            "return $jscomp$generator$context.yield(1, 7);"));
 
     rewriteGeneratorBody(
         "if (i < 1) { if (i < 2) {yield 2; } } else { yield 1; }",
         lines(
-            "  if (i < 1) {",
-            "    if (!(i < 2)) {",
-            "      $jscomp$generator$context.jumpTo(0);",
-            "      break;",
-            "    }",
-            "    return $jscomp$generator$context.yield(2, 0);",
+            "if (i < 1) {",
+            "  if (!(i < 2)) {",
+            "    return $jscomp$generator$context.jumpTo(0);",
             "  }",
-            "  return $jscomp$generator$context.yield(1, 0)"));
+            "  return $jscomp$generator$context.yield(2, 0);",
+            "}",
+            "return $jscomp$generator$context.yield(1, 0)"));
 
     rewriteGeneratorBody(
         "if (i < 1) { if (i < 2) {yield 2; } else { yield 3; } } else { yield 1; }",
         lines(
-            "  if (i < 1) {",
-            "    if (i < 2) {",
-            "      return $jscomp$generator$context.yield(2, 0);",
-            "    }",
-            "    return $jscomp$generator$context.yield(3, 0);",
+            "if (i < 1) {",
+            "  if (i < 2) {",
+            "    return $jscomp$generator$context.yield(2, 0);",
             "  }",
-            "  return $jscomp$generator$context.yield(1, 0)"));
+            "  return $jscomp$generator$context.yield(3, 0);",
+            "}",
+            "return $jscomp$generator$context.yield(1, 0)"));
   }
 
   public void testReturn() {
@@ -648,10 +651,10 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
         "return this[yield];",
         "/** @const */ var $jscomp$generator$this = this;",
         lines(
+            "if ($jscomp$generator$context.nextAddress == 1)",
             "  return $jscomp$generator$context.yield(undefined, 2);",
-            "case 2:",
-            "  return $jscomp$generator$context.return(",
-            "      $jscomp$generator$this[$jscomp$generator$context.yieldResult]);"));
+            "return $jscomp$generator$context.return(",
+            "    $jscomp$generator$this[$jscomp$generator$context.yieldResult]);"));
   }
 
   public void testBreakContinue() {
@@ -659,55 +662,52 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
         "var j = 0; while (j < 10) { yield j; break; }",
         "var j;",
         lines(
+            "if ($jscomp$generator$context.nextAddress == 1) {",
             "  j = 0;",
-            "case 2:",
+            "}",
+            "if ($jscomp$generator$context.nextAddress != 4) {",
             "  if (!(j < 10)) {",
-            "    $jscomp$generator$context.jumpTo(0);",
-            "    break;",
+            "    return $jscomp$generator$context.jumpTo(0);",
             "  }",
             "  return $jscomp$generator$context.yield(j, 4);",
-            "case 4:",
-            "  $jscomp$generator$context.jumpTo(0);",
-            "  break;",
-            "  $jscomp$generator$context.jumpTo(2)",
-            "  break;"));
+            "}",
+            "return $jscomp$generator$context.jumpTo(0);",
+            "return $jscomp$generator$context.jumpTo(2)"));
 
     rewriteGeneratorBodyWithVars(
         "var j = 0; while (j < 10) { yield j; continue; }",
         "var j;",
         lines(
+            "if ($jscomp$generator$context.nextAddress == 1) {",
             "  j = 0;",
-            "case 2:",
+            "}",
+            "if ($jscomp$generator$context.nextAddress != 4) {",
             "  if (!(j < 10)) {",
-            "    $jscomp$generator$context.jumpTo(0);",
-            "    break;",
+            "    return $jscomp$generator$context.jumpTo(0);",
             "  }",
             "  return $jscomp$generator$context.yield(j, 4);",
-            "case 4:",
-            "  $jscomp$generator$context.jumpTo(2);",
-            "  break;",
-            "  $jscomp$generator$context.jumpTo(2)",
-            "  break;"));
+            "}",
+            "return $jscomp$generator$context.jumpTo(2);",
+            "return $jscomp$generator$context.jumpTo(2)"));
 
     rewriteGeneratorBodyWithVars(
         "for (var j = 0; j < 10; j++) { yield j; break; }",
         "var j;",
         lines(
+            "if ($jscomp$generator$context.nextAddress == 1) {",
             "  j = 0;",
-            "case 2:",
+            "}",
+            "if ($jscomp$generator$context.nextAddress != 5) {",
             "  if (!(j < 10)) {",
-            "    $jscomp$generator$context.jumpTo(0);",
-            "    break;",
+            "    return $jscomp$generator$context.jumpTo(0);",
             "  }",
             "  return $jscomp$generator$context.yield(j, 5);",
-            "case 5:",
-            "  $jscomp$generator$context.jumpTo(0);",
-            "  break;",
-            "  j++;",
-            "  $jscomp$generator$context.jumpTo(2)",
-            "  break;"));
+            "}",
+            "return $jscomp$generator$context.jumpTo(0);",
+            "j++;",
+            "return $jscomp$generator$context.jumpTo(2)"));
 
-    rewriteGeneratorBodyWithVars(
+    rewriteGeneratorSwitchBodyWithVars(
         "for (var j = 0; j < 10; j++) { yield j; continue; }",
         "var j;",
         lines(
@@ -731,31 +731,30 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
     rewriteGeneratorBody(
         "do { yield j; } while (j < 10);",
         lines(
+            "if ($jscomp$generator$context.nextAddress == 1) {",
             "  return $jscomp$generator$context.yield(j, 4);",
-            "case 4:",
-            "  if (j<10) {",
-            "    $jscomp$generator$context.jumpTo(1);",
-            "    break;",
-            "  }",
-            "  $jscomp$generator$context.jumpToEnd();"));
+            "}",
+            "if (j<10) {",
+            "  return $jscomp$generator$context.jumpTo(1);",
+            "}",
+            "$jscomp$generator$context.jumpToEnd();"));
 
     rewriteGeneratorBody(
         "do {} while (yield 1);",
         lines(
+            "if ($jscomp$generator$context.nextAddress == 1) {",
             "  return $jscomp$generator$context.yield(1, 5);",
-            "case 5:",
-            "  if ($jscomp$generator$context.yieldResult) {",
-            "    $jscomp$generator$context.jumpTo(1);",
-            "    break;",
-            "  }",
-            "  $jscomp$generator$context.jumpToEnd();"));
+            "}",
+            "if ($jscomp$generator$context.yieldResult) {",
+            "  return $jscomp$generator$context.jumpTo(1);",
+            "}",
+            "$jscomp$generator$context.jumpToEnd();"));
   }
 
   public void testYieldNoValue() {
     rewriteGeneratorBody(
         "yield;",
-        lines(
-            "  return $jscomp$generator$context.yield(undefined, 0);"));
+        "return $jscomp$generator$context.yield(undefined, 0);");
   }
 
   public void testReturnNoValue() {
@@ -768,9 +767,10 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
     rewriteGeneratorBody(
         "return (yield 1);",
         lines(
+            "if ($jscomp$generator$context.nextAddress == 1) {",
             "  return $jscomp$generator$context.yield(1, 2);",
-            "case 2:",
-            "  return $jscomp$generator$context.return($jscomp$generator$context.yieldResult);"));
+            "}",
+            "return $jscomp$generator$context.return($jscomp$generator$context.yieldResult);"));
   }
 
   public void testFunctionInGenerator() {
@@ -790,10 +790,11 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
         "var i = yield * n;",
         "var i;",
         lines(
+            "if ($jscomp$generator$context.nextAddress == 1) {",
             "  return $jscomp$generator$context.yieldAll(n, 2);",
-            "case 2:",
-            "  i=$jscomp$generator$context.yieldResult;",
-            "  $jscomp$generator$context.jumpToEnd();"));
+            "}",
+            "i = $jscomp$generator$context.yieldResult;",
+            "$jscomp$generator$context.jumpToEnd();"));
   }
 
   public void testYieldArguments() {
@@ -801,7 +802,7 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
         "yield arguments[0];",
         "/** @const */ var $jscomp$generator$arguments = arguments;",
         lines(
-            "  return $jscomp$generator$context.yield($jscomp$generator$arguments[0], 0);"));
+            "return $jscomp$generator$context.yield($jscomp$generator$arguments[0], 0);"));
   }
 
   public void testYieldThis() {
@@ -809,7 +810,7 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
         "yield this;",
         "/** @const */ var $jscomp$generator$this = this;",
         lines(
-            "  return $jscomp$generator$context.yield($jscomp$generator$this, 0);"));
+            "return $jscomp$generator$context.yield($jscomp$generator$this, 0);"));
   }
 
   public void testGeneratorShortCircuit() {
@@ -817,47 +818,50 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
         "0 || (yield 1);",
         "var JSCompiler_temp$jscomp$0;",
         lines(
+            "if ($jscomp$generator$context.nextAddress == 1) {",
             "  if(JSCompiler_temp$jscomp$0 = 0) {",
-            "    $jscomp$generator$context.jumpTo(2);",
-            "    break;",
+            "    return $jscomp$generator$context.jumpTo(2);",
             "  }",
             "  return $jscomp$generator$context.yield(1, 3);",
-            "case 3:",
+            "}",
+            "if ($jscomp$generator$context.nextAddress != 2) {",
             "  JSCompiler_temp$jscomp$0=$jscomp$generator$context.yieldResult;",
-            "case 2:",
-            "  JSCompiler_temp$jscomp$0;",
-            "  $jscomp$generator$context.jumpToEnd();"));
+            "}",
+            "JSCompiler_temp$jscomp$0;",
+            "$jscomp$generator$context.jumpToEnd();"));
 
     rewriteGeneratorBodyWithVars(
         "0 && (yield 1);",
         "var JSCompiler_temp$jscomp$0;",
         lines(
+            "if ($jscomp$generator$context.nextAddress == 1) {",
             "  if(!(JSCompiler_temp$jscomp$0=0)) {",
-            "    $jscomp$generator$context.jumpTo(2);",
-            "    break;",
+            "    return $jscomp$generator$context.jumpTo(2);",
             "  }",
             "  return $jscomp$generator$context.yield(1, 3);",
-            "case 3:",
+            "}",
+            "if ($jscomp$generator$context.nextAddress != 2) {",
             "  JSCompiler_temp$jscomp$0=$jscomp$generator$context.yieldResult;",
-            "case 2:",
-            "  JSCompiler_temp$jscomp$0;",
-            "  $jscomp$generator$context.jumpToEnd();"));
+            "}",
+            "JSCompiler_temp$jscomp$0;",
+            "$jscomp$generator$context.jumpToEnd();"));
 
     rewriteGeneratorBodyWithVars(
         "0 ? 1 : (yield 1);",
         "var JSCompiler_temp$jscomp$0;",
         lines(
+            "if ($jscomp$generator$context.nextAddress == 1) {",
             "  if(0) {",
             "    JSCompiler_temp$jscomp$0 = 1;",
-            "    $jscomp$generator$context.jumpTo(2);",
-            "    break;",
+            "    return $jscomp$generator$context.jumpTo(2);",
             "  }",
             "  return $jscomp$generator$context.yield(1, 3);",
-            "case 3:",
+            "}",
+            "if ($jscomp$generator$context.nextAddress != 2) {",
             "  JSCompiler_temp$jscomp$0 = $jscomp$generator$context.yieldResult;",
-            "case 2:",
-            "  JSCompiler_temp$jscomp$0;",
-            "  $jscomp$generator$context.jumpToEnd();"));
+            "}",
+            "JSCompiler_temp$jscomp$0;",
+            "$jscomp$generator$context.jumpToEnd();"));
   }
 
   public void testVar() {
@@ -865,14 +869,16 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
         "var a = 10, b, c = yield 10, d = yield 20, f, g='test';",
         "var a, b; var c; var d, f, g;",
         lines(
+            "if ($jscomp$generator$context.nextAddress == 1) {",
             "  a = 10;",
             "  return $jscomp$generator$context.yield(10, 2);",
-            "case 2:",
+            "}",
+            "if ($jscomp$generator$context.nextAddress != 3) {",
             "  c = $jscomp$generator$context.yieldResult;",
             "  return $jscomp$generator$context.yield(20, 3);",
-            "case 3:",
-            "  d = $jscomp$generator$context.yieldResult, g = 'test';",
-            "  $jscomp$generator$context.jumpToEnd();"));
+            "}",
+            "d = $jscomp$generator$context.yieldResult, g = 'test';",
+            "$jscomp$generator$context.jumpToEnd();"));
 
     rewriteGeneratorBodyWithVars(
         lines(
@@ -882,18 +888,20 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
             "var c;", // note that the yields cause the var declarations to be split up
             "var d, f, g;"),
         lines(
+            "if ($jscomp$generator$context.nextAddress == 1) {",
             "  /** @const @type {number} */ a = 10;",
             "  return $jscomp$generator$context.yield(10, 2);",
-            "case 2:",
+            "}",
+            "if ($jscomp$generator$context.nextAddress != 3) {",
             "  c = $jscomp$generator$context.yieldResult;",
             "  return $jscomp$generator$context.yield(20, 3);",
-            "case 3:",
-            "  d = $jscomp$generator$context.yieldResult, g = 'test';",
-            "  $jscomp$generator$context.jumpToEnd();"));
+            "}",
+            "d = $jscomp$generator$context.yieldResult, g = 'test';",
+            "$jscomp$generator$context.jumpToEnd();"));
   }
 
   public void testYieldSwitch() {
-    rewriteGeneratorBody(
+    rewriteGeneratorSwitchBody(
         lines(
             "while (1) {",
             "  switch (i) {",
@@ -945,79 +953,83 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
           "  case 1:",
           "    yield 1;}"),
         lines(
+            "if ($jscomp$generator$context.nextAddress == 1) {",
             "  return $jscomp$generator$context.yield(undefined, 2);",
-            "case 2:",
+            "}",
+            "if ($jscomp$generator$context.nextAddress != 3) {",
             "  switch ($jscomp$generator$context.yieldResult) {",
             "    default:",
             "    case 1:",
             "      return $jscomp$generator$context.jumpTo(3)",
             "  }",
-            "  $jscomp$generator$context.jumpTo(0);",
-            "  break;",
-            "case 3: return $jscomp$generator$context.yield(1, 0);"));
+            "  return $jscomp$generator$context.jumpTo(0);",
+            "}",
+            "return $jscomp$generator$context.yield(1, 0);"));
   }
 
   public void testNoTranslate() {
     rewriteGeneratorBody(
         "if (1) { try {} catch (e) {} throw 1; }",
         lines(
-            "  if (1) { try {} catch (e) {} throw 1; }",
-            "  $jscomp$generator$context.jumpToEnd();"));
+            "if (1) { try {} catch (e) {} throw 1; }",
+            "$jscomp$generator$context.jumpToEnd();"));
   }
 
   public void testForIn() {
     rewriteGeneratorBody(
         "for (var i in yield) { }",
         lines(
+            "if ($jscomp$generator$context.nextAddress == 1) {",
             "  return $jscomp$generator$context.yield(undefined, 2);",
-            "case 2:",
-            "  for (var i in $jscomp$generator$context.yieldResult) { }",
-            "  $jscomp$generator$context.jumpToEnd();"));
+            "}",
+            "for (var i in $jscomp$generator$context.yieldResult) { }",
+            "$jscomp$generator$context.jumpToEnd();"));
 
 
     rewriteGeneratorBodyWithVars(
         "for (var i in j) { yield i; }",
         "var i, $jscomp$generator$forin$0;",
         lines(
+            "if ($jscomp$generator$context.nextAddress == 1) {",
             "  $jscomp$generator$forin$0 = $jscomp$generator$context.forIn(j);",
-            "case 2:",
-            "  if (!((i = $jscomp$generator$forin$0.getNext()) != null)) {",
-            "    $jscomp$generator$context.jumpTo(0);",
-            "    break;",
-            "  }",
-            "  return $jscomp$generator$context.yield(i, 2);"));
+            "}",
+            "if (!((i = $jscomp$generator$forin$0.getNext()) != null)) {",
+            "  return $jscomp$generator$context.jumpTo(0);",
+            "}",
+            "return $jscomp$generator$context.yield(i, 2);"));
 
     rewriteGeneratorBodyWithVars(
         "for (var i in yield) { yield i; }",
         "var i, $jscomp$generator$forin$0;",
         lines(
+            "if ($jscomp$generator$context.nextAddress == 1) {",
             "  return $jscomp$generator$context.yield(undefined, 2)",
-            "case 2:",
+            "}",
+            "if ($jscomp$generator$context.nextAddress != 3) {",
             "  $jscomp$generator$forin$0 = ",
             "      $jscomp$generator$context.forIn($jscomp$generator$context.yieldResult);",
-            "case 3:",
-            "  if (!((i = $jscomp$generator$forin$0.getNext()) != null)) {",
-            "    $jscomp$generator$context.jumpTo(0);",
-            "    break;",
-            "  }",
-            "  return $jscomp$generator$context.yield(i, 3);"));
+            "}",
+            "if (!((i = $jscomp$generator$forin$0.getNext()) != null)) {",
+            "  return $jscomp$generator$context.jumpTo(0);",
+            "}",
+            "return $jscomp$generator$context.yield(i, 3);"));
 
     rewriteGeneratorBodyWithVars(
         "for (i[yield] in j) {}",
         "var $jscomp$generator$forin$0; var JSCompiler_temp_const$jscomp$1;",
         lines(
+            "if ($jscomp$generator$context.nextAddress == 1) {",
             "  $jscomp$generator$forin$0 = $jscomp$generator$context.forIn(j);",
-            "case 2:",
+            "}",
+            "if ($jscomp$generator$context.nextAddress != 5) {",
             "  JSCompiler_temp_const$jscomp$1 = i;",
             "  return $jscomp$generator$context.yield(undefined, 5);",
-            "case 5:",
-            "  if (!((JSCompiler_temp_const$jscomp$1[$jscomp$generator$context.yieldResult] =",
-            "      $jscomp$generator$forin$0.getNext()) != null)) {",
-            "    $jscomp$generator$context.jumpTo(0);",
-            "    break;",
-            "  }",
-            "  $jscomp$generator$context.jumpTo(2);",
-            "  break;"));
+            "}",
+            "if (!((JSCompiler_temp_const$jscomp$1[$jscomp$generator$context.yieldResult] =",
+            "    $jscomp$generator$forin$0.getNext()) != null)) {",
+            "  return $jscomp$generator$context.jumpTo(0);",
+            "}",
+            "return $jscomp$generator$context.jumpTo(2);"));
   }
 
   public void testTryCatch() {
@@ -1025,16 +1037,17 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
         "try {yield 1;} catch (e) {}",
         "var e;",
         lines(
+            "if ($jscomp$generator$context.nextAddress == 1) {",
             "  $jscomp$generator$context.setCatchFinallyBlocks(2);",
             "  return $jscomp$generator$context.yield(1, 4);",
-            "case 4:",
-            "  $jscomp$generator$context.leaveTryBlock(0)",
-            "  break;",
-            "case 2:",
-            "  e=$jscomp$generator$context.enterCatchBlock();",
-            "  $jscomp$generator$context.jumpToEnd();"));
+            "}",
+            "if ($jscomp$generator$context.nextAddress != 2) {",
+            "  return $jscomp$generator$context.leaveTryBlock(0)",
+            "}",
+            "e = $jscomp$generator$context.enterCatchBlock();",
+            "$jscomp$generator$context.jumpToEnd();"));
 
-    rewriteGeneratorBodyWithVars(
+    rewriteGeneratorSwitchBodyWithVars(
         lines(
             "try {yield 1;} catch (e) {}",
             "try {yield 1;} catch (e) {}"),
@@ -1061,16 +1074,16 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
         "l1: try { break l1; } catch (e) { yield; } finally {}",
         "var e;",
         lines(
+            "if ($jscomp$generator$context.nextAddress == 1) {",
             "  $jscomp$generator$context.setCatchFinallyBlocks(3, 4);",
-            "  $jscomp$generator$context.jumpThroughFinallyBlocks(0);",
-            "  break;",
-            "case 4:",
+            "  return $jscomp$generator$context.jumpThroughFinallyBlocks(0);",
+            "}",
+            "if ($jscomp$generator$context.nextAddress != 3) {",
             "  $jscomp$generator$context.enterFinallyBlock();",
-            "  $jscomp$generator$context.leaveFinallyBlock(0);",
-            "  break;",
-            "case 3:",
-            "  e = $jscomp$generator$context.enterCatchBlock();",
-            "  return $jscomp$generator$context.yield(undefined, 4)"));
+            "  return $jscomp$generator$context.leaveFinallyBlock(0);",
+            "}",
+            "e = $jscomp$generator$context.enterCatchBlock();",
+            "return $jscomp$generator$context.yield(undefined, 4)"));
   }
 
   public void testFinally() {
@@ -1078,19 +1091,19 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
         "try {yield 1;} catch (e) {} finally {b();}",
         "var e;",
         lines(
+            "if ($jscomp$generator$context.nextAddress == 1) {",
             "  $jscomp$generator$context.setCatchFinallyBlocks(2, 3);",
             "  return $jscomp$generator$context.yield(1, 3);",
-            "case 3:",
+            "}",
+            "if ($jscomp$generator$context.nextAddress != 2) {",
             "  $jscomp$generator$context.enterFinallyBlock();",
             "  b();",
-            "  $jscomp$generator$context.leaveFinallyBlock(0);",
-            "  break;",
-            "case 2:",
-            "  e = $jscomp$generator$context.enterCatchBlock();",
-            "  $jscomp$generator$context.jumpTo(3);",
-            "  break;"));
+            "  return $jscomp$generator$context.leaveFinallyBlock(0);",
+            "}",
+            "e = $jscomp$generator$context.enterCatchBlock();",
+            "return $jscomp$generator$context.jumpTo(3);"));
 
-    rewriteGeneratorBodyWithVars(
+    rewriteGeneratorSwitchBodyWithVars(
         lines(
             "try {",
             "  try {",
@@ -1136,9 +1149,7 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
   public void testYield_withTypes() {
     Node returnNode =
         testAndReturnBodyForNumericGenerator(
-                "yield 1 + 2;", "", "return $jscomp$generator$context.yield(1 + 2, 0);")
-            .getSecondChild()
-            .getFirstChild();
+                "yield 1 + 2;", "", "return $jscomp$generator$context.yield(1 + 2, 0);");
 
     checkState(returnNode.isReturn(), returnNode);
     Node callNode = returnNode.getFirstChild();
@@ -1169,9 +1180,7 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
   public void testYieldAll_withTypes() {
     Node returnNode =
         testAndReturnBodyForNumericGenerator(
-                "yield * [1, 2];", "", "return $jscomp$generator$context.yieldAll([1, 2], 0);")
-            .getSecondChild()
-            .getFirstChild();
+            "yield * [1, 2];", "", "return $jscomp$generator$context.yieldAll([1, 2], 0);");
 
     checkState(returnNode.isReturn(), returnNode);
     Node callNode = returnNode.getFirstChild();
@@ -1202,14 +1211,15 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
             "for (var i in []) { yield 3; };",
             "var i, $jscomp$generator$forin$0;",
             lines(
-                "$jscomp$generator$forin$0 = $jscomp$generator$context.forIn([]);",
-                "case 2:",
-                "if (!((i = $jscomp$generator$forin$0.getNext()) != null)) {",
-                "  $jscomp$generator$context.jumpTo(4);",
-                "  break;",
+                "if ($jscomp$generator$context.nextAddress == 1) {",
+                "  $jscomp$generator$forin$0 = $jscomp$generator$context.forIn([]);",
                 "}",
-                "return $jscomp$generator$context.yield(3, 2);",
-                "case 4:",
+                "if ($jscomp$generator$context.nextAddress != 4) {",
+                "  if (!((i = $jscomp$generator$forin$0.getNext()) != null)) {",
+                "    return $jscomp$generator$context.jumpTo(4);",
+                "  }",
+                "  return $jscomp$generator$context.yield(3, 2);",
+                "}",
                 ";",
                 "$jscomp$generator$context.jumpToEnd();"));
 
@@ -1247,7 +1257,7 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
 
     // $jscomp$generator$context.jumpToEnd()
     Node case4Node = case2Node.getNext();
-    Node jumpToEndCall = case4Node.getSecondChild().getFirstChild().getNext().getFirstChild();
+    Node jumpToEndCall = case4Node.getNext().getFirstChild();
     checkState(jumpToEndCall.isCall());
 
     Node jumpToEndFn = jumpToEndCall.getFirstChild();
@@ -1259,23 +1269,24 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
   }
 
   public void testGeneratorTryCatch_withTypes() {
-    Node case0Node =
+    Node case1Node =
         testAndReturnBodyForNumericGenerator(
             "try {yield 1;} catch (e) {}",
             "var e;",
             lines(
+                "if ($jscomp$generator$context.nextAddress == 1) {",
                 "  $jscomp$generator$context.setCatchFinallyBlocks(2);",
                 "  return $jscomp$generator$context.yield(1, 4);",
-                "case 4:",
-                "  $jscomp$generator$context.leaveTryBlock(0)",
-                "  break;",
-                "case 2:",
-                "  e=$jscomp$generator$context.enterCatchBlock();",
-                "  $jscomp$generator$context.jumpToEnd();"));
-    Node case2Node = case0Node.getNext().getNext();
+                "}",
+                "if ($jscomp$generator$context.nextAddress != 2) {",
+                "  return $jscomp$generator$context.leaveTryBlock(0)",
+                "}",
+                "e = $jscomp$generator$context.enterCatchBlock();",
+                "$jscomp$generator$context.jumpToEnd();"));
+    Node case2Node = case1Node.getNext().getNext();
 
     // Test that "e = $jscomp$generator$context.enterCatchBlock();" has the unknown type
-    Node eAssign = case2Node.getSecondChild().getFirstFirstChild();
+    Node eAssign = case2Node.getFirstChild();
     checkState(eAssign.isAssign(), eAssign);
     assertEquals("?", eAssign.getJSType().toString());
     assertEquals("?", eAssign.getFirstChild().getJSType().toString());
@@ -1287,12 +1298,12 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
   }
 
   public void testGeneratorMultipleVars_withTypes() {
-    Node case0Node =
+    Node exprResultNode =
         testAndReturnBodyForNumericGenerator(
             "var a = 1, b = '2';",
             "var a, b;",
             "a = 1, b = '2'; $jscomp$generator$context.jumpToEnd();");
-    Node comma = case0Node.getSecondChild().getFirstFirstChild();
+    Node comma = exprResultNode.getFirstChild();
     checkState(comma.isComma(), comma);
     assertEquals("string", comma.getJSType().toString());
 
@@ -1326,14 +1337,7 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
     Node program = getAndCheckGeneratorProgram(transpiledGenerator);
 
     Node programBlock = NodeUtil.getFunctionBody(program);
-    // do switch ($jscomp$generator.context.nextAddress) {"
-    Node doNode = programBlock.getFirstChild();
-    Node switchNode = doNode.getFirstFirstChild();
-    checkState(switchNode.isSwitch());
-    Node nextAddress = switchNode.getFirstChild();
-    assertEquals("number", nextAddress.getJSType().toString());
-
-    return switchNode.getSecondChild();
+    return programBlock.getFirstChild();
   }
 
   /** Get the "program" function from a tranpsiled generator */
