@@ -124,6 +124,8 @@ public final class JsDocInfoParser {
       ImmutableSet.of("this", "arguments");
   private static final Set<String> idGeneratorAnnotationKeywords =
       ImmutableSet.of("unique", "consistent", "stable", "mapped", "xid");
+  private static final Set<String> primitiveTypes =
+      ImmutableSet.of("number", "string", "boolean", "symbol");
 
   private JSDocInfoBuilder fileLevelJsDocBuilder;
 
@@ -547,8 +549,7 @@ public final class JsDocInfoParser {
             Node typeNode = parseAndRecordTypeNode(token);
             if (typeNode != null && typeNode.isString()) {
               String typeName = typeNode.getString();
-              if (!typeName.equals("number") && !typeName.equals("string")
-                  && !typeName.equals("boolean")) {
+              if (!primitiveTypes.contains(typeName)) {
                 typeNode = wrapNode(Token.BANG, typeNode);
               }
             }

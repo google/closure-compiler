@@ -1261,6 +1261,27 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   }
 
   public void testParseEnum3() {
+    assertTypeEquals(NUMBER_TYPE,
+        parse("@enum {number}*/").getEnumParameterType());
+  }
+
+  public void testParseEnum4() {
+    assertTypeEquals(BOOLEAN_TYPE,
+        parse("@enum {boolean}*/").getEnumParameterType());
+  }
+
+  public void testParseEnum5() {
+    assertTypeEquals(SYMBOL_TYPE,
+        parse("@enum {symbol}*/").getEnumParameterType());
+  }
+
+  public void testParseEnum6() {
+    JSDocInfo jsdoc = parse(" @enum {Foo} */");
+    Node enumTypeNode = jsdoc.getEnumParameterType().getRoot();
+    assertThat(enumTypeNode.getToken()).isEqualTo(Token.BANG);
+  }
+
+  public void testParseEnum7() {
     assertTypeEquals(
         STRING_TYPE,
         parse(
@@ -1268,12 +1289,6 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
                 "Bad type annotation. Type annotations should have curly braces."
                     + BAD_TYPE_WIKI_LINK)
             .getEnumParameterType());
-  }
-
-  public void testParseEnum4() {
-    JSDocInfo jsdoc = parse(" @enum {Foo} */");
-    Node enumTypeNode = jsdoc.getEnumParameterType().getRoot();
-    assertThat(enumTypeNode.getToken()).isEqualTo(Token.BANG);
   }
 
   public void testParseBadEnumNoCrash() {
