@@ -5356,6 +5356,14 @@ public final class IntegrationTest extends IntegrationTestCase {
             "console.log(globalObj);"));
   }
 
+  public void testDestructuringCannotConvert() {
+    CompilerOptions options = createCompilerOptions();
+
+    test(options, "for (var   [x] = [], {y} = {}, z = 2;;) {}", Es6ToEs3Util.CANNOT_CONVERT_YET);
+    test(options, "for (let   [x] = [], {y} = {}, z = 2;;) {}", Es6ToEs3Util.CANNOT_CONVERT_YET);
+    test(options, "for (const [x] = [], {y} = {}, z = 2;;) {}", Es6ToEs3Util.CANNOT_CONVERT_YET);
+  }
+
   /** Creates a CompilerOptions object with google coding conventions. */
   @Override
   protected CompilerOptions createCompilerOptions() {
