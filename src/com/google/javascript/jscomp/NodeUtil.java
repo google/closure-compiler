@@ -4605,6 +4605,11 @@ public final class NodeUtil {
    */
   static boolean isConstantDeclaration(
       CodingConvention convention, JSDocInfo info, Node node) {
+    // TODO(b/77597706): Update this method to handle destructured declarations.
+    if (node.isName() && node.getParent().isConst()) {
+      return true;
+    }
+
     if (info != null && info.isConstant()) {
       return true;
     }

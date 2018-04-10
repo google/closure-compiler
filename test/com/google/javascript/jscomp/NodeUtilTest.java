@@ -20,6 +20,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 import static com.google.javascript.jscomp.DiagnosticGroups.ES5_STRICT;
 import static com.google.javascript.jscomp.testing.NodeSubject.assertNode;
 
@@ -31,6 +32,7 @@ import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.rhino.IR;
+import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -2494,6 +2496,28 @@ public final class NodeUtilTest extends TestCase {
         .getFirstChild()  // spread
         .getFirstChild();  // x
     assertNotLValueNamedX(x);
+  }
+
+  public void testIsConstantDeclaration() {
+    assertIsConstantDeclaration(false, parse("var x = 1;").getFirstFirstChild());
+    assertIsConstantDeclaration(false, parse("let x = 1;").getFirstFirstChild());
+    assertIsConstantDeclaration(true, parse("const x = 1;").getFirstFirstChild());
+
+    assertIsConstantDeclaration(true, parse("/** @const */ var x = 1;").getFirstFirstChild());
+    assertIsConstantDeclaration(true, parse("var /** @const */ x = 1;").getFirstFirstChild());
+    assertIsConstantDeclaration(false, parse("var x, /** @const */ y = 1;").getFirstFirstChild());
+
+    // TODO(b/77597706): Update this NodeUtil.isConstantDeclaration() to handle destructured
+    //     declarations.
+    // TODO(bradfordcsmith): Add test cases for other coding conventions.
+  }
+
+  private void assertIsConstantDeclaration(boolean isConstantDeclaration, Node node) {
+    CodingConvention codingConvention = new ClosureCodingConvention();
+    JSDocInfo jsDocInfo = NodeUtil.getBestJSDocInfo(node);
+    assertWithMessage("Is %s a constant declaration?", node)
+        .that(NodeUtil.isConstantDeclaration(codingConvention, jsDocInfo, node))
+        .isEqualTo(isConstantDeclaration);
   }
 
   public void testIsNestedObjectPattern() {
