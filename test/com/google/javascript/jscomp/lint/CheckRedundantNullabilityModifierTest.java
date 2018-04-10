@@ -78,8 +78,15 @@ public final class CheckRedundantNullabilityModifierTest extends TypeICompilerTe
 
   public void testEnumType() {
     checkWarning("/** @enum {!string} */ var o = {foo: 'foo'};");
+    checkWarning("/** @enum {!number} */ var o = {foo: 42};");
+    checkWarning("/** @enum {!boolean} */ var o = {foo: true};");
+    checkWarning("/** @enum {!symbol} */ var o = {foo: Symbol('foo')};");
 
     checkNoWarning("/** @enum {string} */ var o = {foo: 'foo'};");
+    checkNoWarning("/** @enum {number} */ var o = {foo: 42};");
+    checkNoWarning("/** @enum {boolean} */ var o = {foo: true};");
+    checkNoWarning("/** @enum {symbol} */ var o = {foo: Symbol('foo')};");
+    checkNoWarning("/** @enum {!Object} */ var o = {foo: {}};");
   }
 
   public void testTemplateType() {
