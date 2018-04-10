@@ -1460,10 +1460,6 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
   private Node tryFoldObjectPropAccess(Node n, Node left, Node right) {
     checkArgument(NodeUtil.isGet(n));
 
-    if (n.getParent().isCall()) {
-      return n;
-    }
-
     if (!left.isObjectLit() || !right.isString()) {
       return n;
     }
@@ -1532,6 +1528,22 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     // reference new.target, this, super, or arguments).
     if (key.isMemberFunctionDef()) {
       return n;
+    }
+
+    if (n.getParent().isCall()) {
+      // When the code looks like:
+      //   {x: f}.x()
+      // it's not safe to convert that to
+      //   f()
+      // because the 'this' value will be wrong.
+
+      // Except, if f is a function literal that does not reference 'this' then it's safe
+      if (value.isFunction() && !NodeUtil.referencesThis(value)) {
+        // Safe to convert, but now the call becomes a free call.
+        n.getParent().putBooleanProp(Node.FREE_CALL, true);
+      } else {
+        return n;
+      }
     }
 
     Node replacement = value.detach();
