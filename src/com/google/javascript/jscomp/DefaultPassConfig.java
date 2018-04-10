@@ -438,10 +438,6 @@ public final class DefaultPassConfig extends PassConfig {
         checks.add(checkControlFlow);
       }
 
-      if (options.needsTranspilationFrom(ES6) && !options.getNewTypeInference()) {
-        TranspilationPasses.addEs6PostTypecheckPasses(checks);
-      }
-
       // CheckAccessControls only works if check types is on.
       if (options.isTypecheckingEnabled()
           && (!options.disables(DiagnosticGroups.ACCESS_CONTROLS)
@@ -497,6 +493,12 @@ public final class DefaultPassConfig extends PassConfig {
       if (options.shouldRunTypeSummaryChecksLate()) {
         checks.add(generateIjs);
       }
+    }
+
+    if (options.needsTranspilationFrom(ES6) && !options.getNewTypeInference()) {
+      // Note that TranspilationPasses.addEs6PostTypecheckPasses is really only "post typecheck"
+      // for OTI. The code path for NTI includes an earlier call to addEs6PostTypecheckPasses.
+      TranspilationPasses.addEs6PostTypecheckPasses(checks);
     }
 
     if (options.needsTranspilationFrom(ES6) && !options.checksOnly) {
@@ -2042,7 +2044,7 @@ public final class DefaultPassConfig extends PassConfig {
 
     @Override
     protected FeatureSet featureSet() {
-      return ES5;
+      return OTI_SUPPORTED;
     }
   };
 
@@ -2094,7 +2096,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES5;
+          return OTI_SUPPORTED;
         }
       };
 
@@ -2182,7 +2184,7 @@ public final class DefaultPassConfig extends PassConfig {
 
     @Override
     protected FeatureSet featureSet() {
-      return ES5;
+      return OTI_SUPPORTED;
     }
   };
 
@@ -2216,7 +2218,7 @@ public final class DefaultPassConfig extends PassConfig {
 
     @Override
     protected FeatureSet featureSet() {
-      return ES5;
+      return OTI_SUPPORTED;
     }
   };
 
@@ -3483,7 +3485,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES5;
+          return OTI_SUPPORTED;
         }
       };
 
