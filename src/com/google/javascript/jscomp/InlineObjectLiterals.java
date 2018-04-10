@@ -199,6 +199,14 @@ class InlineObjectLiterals implements CompilerPass {
            return false;
         }
 
+        // Don't try to handle rewriting VAR/CONST/LET declarations inside for loops.
+        // Currently, normalization moves var declarations out of for loop initializers anyway.
+        // let/const are more difficult. Declaring each property outside the for loop puts them
+        // in an incorrect scope. Declaring them in the loop would initialize them multiple times.
+        if (NodeUtil.isNameDeclaration(parent) && NodeUtil.isAnyFor(grandparent)) {
+          return false;
+        }
+
         Node val = ref.getAssignedValue();
         if (val == null) {
           // A var with no assignment.
@@ -259,7 +267,7 @@ class InlineObjectLiterals implements CompilerPass {
 
     private boolean isVarOrAssignExprLhs(Node n) {
       Node parent = n.getParent();
-      return parent.isVar()
+      return NodeUtil.isNameDeclaration(parent)
           || (parent.isAssign()
               && parent.getFirstChild() == n
               && parent.getParent().isExprResult());
@@ -293,7 +301,7 @@ class InlineObjectLiterals implements CompilerPass {
               varmap.put(varname, var);
             }
           }
-        } else if (ref.getParent().isVar()) {
+        } else if (NodeUtil.isNameDeclaration(ref.getParent())) {
           // This is the var. There is no value.
         } else {
           Node getprop = ref.getParent();
@@ -388,7 +396,7 @@ class InlineObjectLiterals implements CompilerPass {
       Node replace = ref.getParent();
       replacement.useSourceInfoIfMissingFromForTree(replace);
 
-      if (replace.isVar()) {
+      if (NodeUtil.isNameDeclaration(replace)) {
         replace.replaceWith(NodeUtil.newExpr(replacement));
       } else {
         replace.replaceWith(replacement);
@@ -410,7 +418,8 @@ class InlineObjectLiterals implements CompilerPass {
       // ASSIGN, then there's an EXPR_STATEMENT above it, if it's a
       // VAR then it should be directly replaced.
       Node vnode;
-      boolean defined = referenceInfo.isWellDefined() && init.getParent().isVar();
+      boolean defined =
+          referenceInfo.isWellDefined() && NodeUtil.isNameDeclaration(init.getParent());
       if (defined) {
         vnode = init.getParent();
         fillInitialValues(init, initvals);
@@ -450,7 +459,7 @@ class InlineObjectLiterals implements CompilerPass {
           // Assignments have to be handled specially, since they
           // expand out into multiple assignments.
           replaceAssignmentExpression(v, ref, varmap);
-        } else if (ref.getParent().isVar()) {
+        } else if (NodeUtil.isNameDeclaration(ref.getParent())) {
           // The old variable declaration. It didn't have a
           // value. Remove it entirely as it should now be unused.
           ref.getGrandparent().removeChild(ref.getParent());
