@@ -100,6 +100,10 @@ public final class ConstCheckTest extends CompilerTestCase {
     testWarning("const xyz = 1; xyz = 2;");
   }
 
+  public void testConstantRedefined4() {
+    testError("let XYZ = 1; XYZ = 2;");
+  }
+
   public void testConstantRedefinedInLocalScope1() {
     testError("var XYZ = 1; (function(){ XYZ = 2; })();");
   }
@@ -178,6 +182,10 @@ public final class ConstCheckTest extends CompilerTestCase {
 
   public void testConstAnnotation1() {
     testWarning("/** @const */ var XYZ = 1; XYZ = 2;");
+  }
+
+  public void testConstAnnotation2() {
+    testWarning("/** @const */ let x = 1; x = 2;");
   }
 
   public void testConstAnnotation3() {

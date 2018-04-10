@@ -60,8 +60,7 @@ class ConstCheck extends AbstractPostOrderCallback
   public void visit(NodeTraversal t, Node n, Node parent) {
     switch (n.getToken()) {
       case NAME:
-        if (parent != null &&
-            parent.isVar()) {
+        if (parent != null && NodeUtil.isNameDeclaration(parent)) {
           String name = n.getString();
           Var var = t.getScope().getVar(name);
           if (isConstant(var)) {
