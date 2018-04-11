@@ -19,10 +19,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.javascript.jscomp.Es6ToEs3Util.withType;
 
-import com.google.common.collect.Iterables;
 import com.google.javascript.jscomp.AbstractCompiler.MostRecentTypechecker;
-import com.google.javascript.jscomp.ControlFlowGraph.Branch;
-import com.google.javascript.jscomp.graph.DiGraph.DiGraphEdge;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.IR;
@@ -40,7 +37,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
 import javax.annotation.Nullable;
 
 /**
@@ -236,9 +232,6 @@ final class Es6RewriteGenerators implements HotSwapCompilerPass {
     /** The body of original generator function that should be transpiled */
     final Node originalGeneratorBody;
 
-    /** Control Flow graph that is used to avoid generation of unreachable code.*/
-    ControlFlowGraph<Node> controlFlowGraph;
-
     /** The body of a replacement function. */
     Node newGeneratorBody;
 
@@ -275,13 +268,7 @@ final class Es6RewriteGenerators implements HotSwapCompilerPass {
 
     public void transpile() {
       // Test if end of generator function is reachable
-      Node returnNode = IR.returnNode();
-      originalGeneratorBody.addChildToBack(returnNode);
-      // TODO(skill): figure out a better solution as CGF is not the best option due to b/73762053
-      controlFlowGraph = ControlFlowAnalysis.getCfg(compiler, originalGeneratorBody.getParent());
-      boolean shouldAddFinalJump = !controlFlowGraph.getInEdges(returnNode).isEmpty();
-      returnNode.detach();
-
+      boolean shouldAddFinalJump = !isEndOfBlockUnreachable(originalGeneratorBody);
       Node genFunc = originalGeneratorBody.getParent();
       checkState(genFunc.isGeneratorFunction());
 
@@ -783,13 +770,13 @@ final class Es6RewriteGenerators implements HotSwapCompilerPass {
         @Nullable TranspilationContext.Case breakCase,
         @Nullable TranspilationContext.Case continueCase) {
       // Decompose condition first
-      Node detachedCond = maybeDecomposeExpression(n.getSecondChild().detach());
+      Node detachedExpr = maybeDecomposeExpression(n.getSecondChild().detach());
       Node target = n.getFirstChild();
       Node body = n.getSecondChild();
 
       // No transpilation is needed
       if (!target.isGeneratorMarker() && !body.isGeneratorMarker()) {
-        n.addChildAfter(detachedCond, target);
+        n.addChildAfter(detachedExpr, target);
         n.setGeneratorMarker(false);
         transpileUnmarkedNode(n);
         return;
@@ -814,34 +801,32 @@ final class Es6RewriteGenerators implements HotSwapCompilerPass {
               .getScopedName(GENERATOR_FORIN_PREFIX + compiler.getUniqueNameIdSupplier().get())
               .useSourceInfoFrom(target);
       // "$context.forIn(x)"
-      forIn.addChildToFront(context.callContextMethod(target, "forIn", detachedCond));
+      forIn.addChildToFront(context.callContextMethod(target, "forIn", detachedExpr));
       ObjectType propertyIteratorType =
           shouldAddTypes ? forIn.getFirstChild().getJSType().toMaybeObjectType() : null;
       forIn.setJSType(propertyIteratorType);
       // "var ..., $for$in = $context.forIn(expr)"
       init.addChildToBack(forIn);
 
-      // "(i = $for$in.getNext()) != null"
+      // "$for$in.getNext()"
       Node forInGetNext =
           withType(
                   IR.getprop(
-                      forIn.cloneNode(), IR.string("getNext").useSourceInfoFrom(detachedCond)),
+                      forIn.cloneNode(), IR.string("getNext").useSourceInfoFrom(detachedExpr)),
                   shouldAddTypes ? propertyIteratorType.getPropertyType("getNext") : null)
-              .useSourceInfoFrom(detachedCond);
+              .useSourceInfoFrom(detachedExpr);
 
+      // "(i = $for$in.getNext()) != null"
       Node forCond =
-          IR.ne(
-                  IR.assign(
+          withType(IR.ne(
+              withType(IR.assign(
                           withType(target, nullableStringType),
                           withType(IR.call(forInGetNext), nullableStringType)
-                              .useSourceInfoFrom(detachedCond))
-                      .useSourceInfoFrom(detachedCond),
-                  withType(IR.nullNode(), nullType).useSourceInfoFrom(forIn))
-              .useSourceInfoFrom(detachedCond);
+                              .useSourceInfoFrom(detachedExpr)), nullableStringType)
+                      .useSourceInfoFrom(detachedExpr),
+                  withType(IR.nullNode(), nullType).useSourceInfoFrom(forIn)), booleanType)
+              .useSourceInfoFrom(detachedExpr);
       forCond.setGeneratorMarker(target.isGeneratorMarker());
-      // annotate types
-      forCond.setJSType(booleanType);
-      forCond.getFirstChild().setJSType(nullableStringType);
 
       // Prepare "for" statement.
       // "for (var i, $for$in = $context.forIn(expr); (i = $for$in.getNext()) != null; ) {}"
@@ -1011,17 +996,8 @@ final class Es6RewriteGenerators implements HotSwapCompilerPass {
           continue;
         }
 
-        canSkipUnmarkedCases = false;
-
         // Check whether we can start skipping unmarked cases again
-        if (!canSkipUnmarkedCases && !body.isGeneratorMarker()) {
-          List<DiGraphEdge<Node, Branch>> inEdges = controlFlowGraph.getInEdges(body);
-          if (inEdges.size() == 1) {
-            checkState(Iterables.getOnlyElement(inEdges).getSource().getValue() == caseSection);
-            canSkipUnmarkedCases = true;
-            continue;
-          }
-        }
+        canSkipUnmarkedCases = isEndOfBlockUnreachable(body);
 
         // Move case's body under a global switch statement...
 
@@ -1090,6 +1066,32 @@ final class Es6RewriteGenerators implements HotSwapCompilerPass {
         return yieldNode;
       }
     }
+
+    /**
+     * Returns whether any statements added to the end of the block would be unreachable.
+     *
+     * <p>It's OK for this method to return false-negatives.
+     */
+    private boolean isEndOfBlockUnreachable(Node block) {
+      checkState(block.isNormalBlock());
+      if (!block.hasChildren()) {
+        return false;
+      }
+      switch (block.getLastChild().getToken()) {
+        case BLOCK:
+          return isEndOfBlockUnreachable(block.getLastChild());
+
+        case RETURN:
+        case THROW:
+        case CONTINUE:
+        case BREAK:
+          return true;
+
+        default:
+          return false;
+      }
+    }
+
 
     /** State machine context that is used during generator function transpilation. */
     private class TranspilationContext {

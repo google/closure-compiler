@@ -169,6 +169,19 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
             "return $jscomp$generator$context.yield(i, 0);"));
   }
 
+  public void testUnreachableCodeGeneration() {
+    rewriteGeneratorBody(
+        "if (i) return 1; else return 2;",
+        lines(
+            "  if (i) {",
+            "    return $jscomp$generator$context.return(1);",
+            "  } else {",
+            "    return $jscomp$generator$context.return(2);",
+            "  }",
+            // TODO(b/73762053): Avoid generating unreachable statements.
+            "  $jscomp$generator$context.jumpToEnd();"));
+  }
+
   public void testReturnGenerator() {
     test(
         "function f() { return function *g() {yield 1;} }",
