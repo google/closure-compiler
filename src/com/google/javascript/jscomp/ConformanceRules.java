@@ -1464,7 +1464,8 @@ public final class ConformanceRules {
     }
 
     private boolean isWhitelisted(Node n) {
-      return (n.isVar() || n.isFunction()) && isWhitelistedName(n.getFirstChild().getString());
+      return (NodeUtil.isNameDeclaration(n) || n.isFunction())
+          && isWhitelistedName(n.getFirstChild().getString());
     }
 
     private boolean isWhitelistedName(String name) {

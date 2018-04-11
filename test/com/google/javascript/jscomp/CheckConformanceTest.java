@@ -1467,6 +1467,25 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
             + "     [x.y]: 2\n"
             + "  }\n"
             + "});");
+
+    // Test with let and const
+    testNoWarning(
+        lines(
+            "goog.scope(function() {",
+            "  let x = {y: 'y'}",
+            "  let z = {",
+            "     [x.y]: 2",
+            "  }",
+            "});"));
+
+    testNoWarning(
+        lines(
+            "goog.scope(function() {",
+            "  const x = {y: 'y'}",
+            "  const z = {",
+            "     [x.y]: 2",
+            "  }",
+            "});"));
   }
 
   public void testRequireFileoverviewVisibility() {

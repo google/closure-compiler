@@ -317,7 +317,7 @@ class CheckAccessControls extends AbstractPostOrderCallback
    */
   private void checkNameDeprecation(NodeTraversal t, Node n, Node parent) {
     // Don't bother checking definitions or constructors.
-    if (parent.isFunction() || parent.isVar() || parent.isNew()) {
+    if (parent.isFunction() || NodeUtil.isNameDeclaration(parent) || parent.isNew()) {
       return;
     }
 
