@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 The Closure Compiler Authors.
+ * Copyright 2018 The Closure Compiler Authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,8 +15,8 @@
  */
 
 /**
- * @fileoverview Externs for the Google Maps v3.32 API.
- * @see https://developers.google.com/maps/documentation/javascript/reference/3.exp
+ * @fileoverview Externs for the Google Maps v3.31 API.
+ * @see http://code.google.com/apis/maps/documentation/javascript/reference.html
  * @externs
  */
 
@@ -2996,10 +2996,9 @@ google.maps.Map.prototype.panTo = function(latLng) {};
 
 /**
  * @param {google.maps.LatLngBounds|google.maps.LatLngBoundsLiteral} latLngBounds
- * @param {(number|!google.maps.Padding)=} padding
  * @return {undefined}
  */
-google.maps.Map.prototype.panToBounds = function(latLngBounds, padding) {};
+google.maps.Map.prototype.panToBounds = function(latLngBounds) {};
 
 /**
  * @param {google.maps.LatLng|google.maps.LatLngLiteral} latlng
@@ -3316,6 +3315,11 @@ google.maps.MapType.prototype.minZoom;
 google.maps.MapType.prototype.name;
 
 /**
+ * @type {?google.maps.Projection}
+ */
+google.maps.MapType.prototype.projection;
+
+/**
  * @type {number}
  */
 google.maps.MapType.prototype.radius;
@@ -3470,6 +3474,11 @@ google.maps.Marker.prototype.getMap = function() {};
 google.maps.Marker.prototype.getOpacity = function() {};
 
 /**
+ * @return {google.maps.MarkerPlace}
+ */
+google.maps.Marker.prototype.getPlace = function() {};
+
+/**
  * @return {google.maps.LatLng}
  */
 google.maps.Marker.prototype.getPosition = function() {};
@@ -3547,6 +3556,12 @@ google.maps.Marker.prototype.setOpacity = function(opacity) {};
  * @return {undefined}
  */
 google.maps.Marker.prototype.setOptions = function(options) {};
+
+/**
+ * @param {google.maps.MarkerPlace} place
+ * @return {undefined}
+ */
+google.maps.Marker.prototype.setPlace = function(place) {};
 
 /**
  * @param {google.maps.LatLng|google.maps.LatLngLiteral} latlng
@@ -3675,6 +3690,11 @@ google.maps.MarkerOptions.prototype.opacity;
 google.maps.MarkerOptions.prototype.optimized;
 
 /**
+ * @type {?google.maps.MarkerPlace|undefined}
+ */
+google.maps.MarkerOptions.prototype.place;
+
+/**
  * @type {?google.maps.LatLng|?google.maps.LatLngLiteral|undefined}
  */
 google.maps.MarkerOptions.prototype.position;
@@ -3698,6 +3718,26 @@ google.maps.MarkerOptions.prototype.visible;
  * @type {?number|undefined}
  */
 google.maps.MarkerOptions.prototype.zIndex;
+
+/**
+ * @record
+ */
+google.maps.MarkerPlace = function() {};
+
+/**
+ * @type {?google.maps.LatLng|?google.maps.LatLngLiteral|undefined}
+ */
+google.maps.MarkerPlace.prototype.location;
+
+/**
+ * @type {?string|undefined}
+ */
+google.maps.MarkerPlace.prototype.placeId;
+
+/**
+ * @type {?string|undefined}
+ */
+google.maps.MarkerPlace.prototype.query;
 
 /**
  * @record
@@ -5730,7 +5770,7 @@ google.maps.places = {};
 google.maps.places.Autocomplete = function(inputField, opts) {};
 
 /**
- * @return {!google.maps.LatLngBounds|undefined}
+ * @return {google.maps.LatLngBounds}
  */
 google.maps.places.Autocomplete.prototype.getBounds = function() {};
 
@@ -5740,7 +5780,7 @@ google.maps.places.Autocomplete.prototype.getBounds = function() {};
 google.maps.places.Autocomplete.prototype.getPlace = function() {};
 
 /**
- * @param {!google.maps.LatLngBounds|!google.maps.LatLngBoundsLiteral|undefined} bounds
+ * @param {google.maps.LatLngBounds|google.maps.LatLngBoundsLiteral} bounds
  * @return {undefined}
  */
 google.maps.places.Autocomplete.prototype.setBounds = function(bounds) {};
@@ -5769,7 +5809,7 @@ google.maps.places.Autocomplete.prototype.setTypes = function(types) {};
 google.maps.places.AutocompleteOptions = function() {};
 
 /**
- * @type {!google.maps.LatLngBounds|!google.maps.LatLngBoundsLiteral|undefined}
+ * @type {!google.maps.LatLngBounds|!google.maps.LatLngBoundsLiteral}
  */
 google.maps.places.AutocompleteOptions.prototype.bounds;
 
