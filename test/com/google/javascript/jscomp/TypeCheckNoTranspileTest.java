@@ -77,6 +77,18 @@ public final class TypeCheckNoTranspileTest extends CompilerTypeTestCase {
             "required: string"));
   }
 
+  public void testForOf_wrongLoopVarType() {
+    // TODO(b/77905791): this should generate an error
+    testTypes(
+        lines(
+            "/** @type {!Array<number>} */",
+            "var numArray = [1, 2];",
+            "/** @type {string} */",
+            "var elem = '';",
+            "for (elem of numArray) {}", "")
+    );
+  }
+
   public void testForOf_array1() {
     testTypes("for (var elem of [1, 2]) {}");
   }
