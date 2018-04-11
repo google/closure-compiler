@@ -3871,15 +3871,15 @@ public class Parser {
     return peekId(0);
   }
 
+  /** @return whether the next token is an identifier. */
   private boolean peekId(int index) {
     TokenType type = peekType(index);
-    return EnumSet.of(
-        TokenType.IDENTIFIER,
-        TokenType.TYPE,
-        TokenType.DECLARE,
-        TokenType.MODULE,
-        TokenType.NAMESPACE)
-            .contains(type)
+    // There are two special cases to handle here:
+    //   * outside of strict-mode code strict-mode keywords can be used as identifiers
+    //   * when configured to parse TypeScript code the scanner will return TypeScript
+    //       keyword token but these contextual keywords can always be used as idenifiers.
+    return TokenType.IDENTIFIER == type
+        || (config.parseTypeSyntax && Keywords.isTypeScriptSpecificKeyword(type))
         || (!inStrictContext() && Keywords.isStrictKeyword(type));
   }
 

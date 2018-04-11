@@ -122,7 +122,7 @@ public enum Keywords {
     return get(token) != null;
   }
 
-  private static boolean isTypeScriptSpecificKeyword(TokenType type) {
+  public static boolean isTypeScriptSpecificKeyword(TokenType type) {
     switch (type) {
       case DECLARE:
       case TYPE:
