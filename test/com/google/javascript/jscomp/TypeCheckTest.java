@@ -6644,6 +6644,18 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         "inconsistent return type\n" + "found   : number\n" + "required: undefined");
   }
 
+  public void testInferredReturn9() {
+    testTypes(
+        lines(
+            "/** @param {function():string} x */",
+            "function f(x) {}",
+            "f(/** asdf */ function() { return 123; });"),
+        lines(
+            "inconsistent return type",
+            "found   : number",
+            "required: string"));
+  }
+
   public void testInferredParam1() {
     testTypes(
         "/** @constructor */ function Foo() {}" +
@@ -6730,6 +6742,27 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         "actual parameter 1 of f does not match formal parameter\n" +
         "found   : (number|undefined)\n" +
         "required: string");
+  }
+
+  public void testInferredParam8() {
+    testTypes(
+        lines(
+            "/** @param {function(string)} callback */",
+            "function foo(callback) {}",
+            "foo(/** random JSDoc */ function(x) { var /** number */ n = x; });"),
+        lines(
+            "initializing variable",
+            "found   : string", // type of "x" is inferred to be string
+            "required: number"));
+  }
+
+  public void testInferredParam9() {
+    // TODO(b/77731069) This should warn "parameter 1 of f does not match formal parameter"
+    testTypes(
+        lines(
+            "/** @param {function(string)} callback */",
+            "function foo(callback) {}",
+            "foo(function(/** number */ x) {});"));
   }
 
   public void testOverriddenParams1() {
