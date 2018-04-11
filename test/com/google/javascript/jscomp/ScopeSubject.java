@@ -163,9 +163,11 @@ public final class ScopeSubject extends Subject<ScopeSubject, AbstractScope<?, ?
   private String getLabel(Node n) {
     // If the node is labeled it will be the second child of a LABEL and the first child
     // will be a LABEL_NAME.
-    Node labelNameNode = n.getPrevious();
-    if (labelNameNode != null && labelNameNode.isLabelName()) {
-      checkState(labelNameNode.getParent().isLabel());
+    Node parent = n.getParent();
+    if (parent != null && parent.isLabel()) {
+      Node labelNameNode = parent.getFirstChild();
+      checkState(labelNameNode.isLabelName(), labelNameNode);
+      checkState(labelNameNode.getNext() == n, n);
       return labelNameNode.getString();
     } else {
       return null;
