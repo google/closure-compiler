@@ -1345,8 +1345,11 @@ public final class PeepholeFoldConstantsTest extends TypeICompilerTestCase {
     testSame("({a:x}).a ++");
     testSame("({a:x}).a --");
 
-    // TODO(b/77858063): This should not be inlined.
-    test("({get a() {return this}}).a", "(function(){return this})()");
+    // Getters should not be inlined.
+    testSame("({get a() {return this}}).a");
+
+    // Except, if we can see that the getter function never references 'this'.
+    test("({get a() {return 0}}).a", "(function() {return 0})()");
 
     // It's okay to inline functions, as long as they're not immediately called.
     // (For tests where they are immediately called, see testFoldObjectLiteralRefCall)

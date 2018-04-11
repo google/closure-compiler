@@ -1530,17 +1530,18 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       return n;
     }
 
-    if (n.getParent().isCall()) {
+    if (n.getParent().isCall() || key.isGetterDef()) {
       // When the code looks like:
-      //   {x: f}.x()
-      // it's not safe to convert that to
-      //   f()
-      // because the 'this' value will be wrong.
-
-      // Except, if f is a function literal that does not reference 'this' then it's safe
+      //   {x: f}.x();
+      // or
+      //   {get x() {...}}.x;
+      // it's not safe, in general, to convert that to just a function call, because the 'this'
+      // value will be wrong. Except, if the function is a function literal and does not reference
+      // 'this' then it is safe:
       if (value.isFunction() && !NodeUtil.referencesThis(value)) {
-        // Safe to convert, but now the call becomes a free call.
-        n.getParent().putBooleanProp(Node.FREE_CALL, true);
+        if (n.getParent().isCall()) {
+          n.getParent().putBooleanProp(Node.FREE_CALL, true);
+        }
       } else {
         return n;
       }
