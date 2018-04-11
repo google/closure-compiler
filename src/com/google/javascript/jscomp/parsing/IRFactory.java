@@ -153,7 +153,6 @@ import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.TokenStream;
 import com.google.javascript.rhino.dtoa.DToA;
 import java.util.ArrayDeque;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -220,7 +219,6 @@ class IRFactory {
   static final String UNDEFINED_LABEL = "undefined label \"%s\"";
 
   private final String sourceString;
-  private final List<Integer> newlines;
   private final StaticSourceFile sourceFile;
   private final String sourceName;
   private final Config config;
@@ -280,22 +278,12 @@ class IRFactory {
     this.sourceString = sourceString;
     this.nextCommentIter = comments.iterator();
     this.currentComment = skipNonJsDoc(nextCommentIter);
-    this.newlines = new ArrayList<>();
     this.sourceFile = sourceFile;
     // The template node properties are applied to all nodes in this transform.
     this.templateNode = createTemplateNode();
 
     this.fileLevelJsDocBuilder =
         new JSDocInfoBuilder(config.jsDocParsingMode().shouldParseDescriptions());
-
-    // Pre-generate all the newlines in the file.
-    for (int charNo = 0; true; charNo++) {
-      charNo = sourceString.indexOf('\n', charNo);
-      if (charNo == -1) {
-        break;
-      }
-      newlines.add(charNo);
-    }
 
     // Sometimes this will be null in tests.
     this.sourceName = sourceFile == null ? null : sourceFile.getName();
