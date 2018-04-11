@@ -305,7 +305,7 @@ class FunctionInjector {
       newExpression = NodeUtil.newUndefinedNode(srcLocation);
     } else {
       Node returnNode = block.getFirstChild();
-      checkArgument(returnNode.isReturn());
+      checkArgument(returnNode.isReturn(), returnNode);
 
       // Clone the return node first.
       Node safeReturnNode = returnNode.cloneTree();
