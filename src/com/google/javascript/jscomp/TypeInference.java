@@ -1200,9 +1200,9 @@ class TypeInference
           && iArgument.isFunction()
           && iArgumentType.isFunctionType()) {
         FunctionType argFnType = iArgumentType.toMaybeFunctionType();
-        JSDocInfo argJsdoc = iArgument.getJSDocInfo();
-        boolean declared = argJsdoc != null && argJsdoc.containsDeclaration();
-        iArgument.setJSType(matchFunction(restrictedParameter, argFnType, declared));
+        boolean declared = iArgument.getJSDocInfo() != null;
+        iArgument.setJSType(
+            matchFunction(restrictedParameter, argFnType, declared));
       }
       i++;
     }
