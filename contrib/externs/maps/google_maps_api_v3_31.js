@@ -22,7 +22,7 @@
 
 /**
  * @const
- * @suppress {const|duplicate}
+ * @suppress {const,duplicate,strictMissingProperties}
  */
 var google = {};
 
@@ -6549,4 +6549,3 @@ google.maps.visualization.WeightedLocation.prototype.location;
  * @type {number}
  */
 google.maps.visualization.WeightedLocation.prototype.weight;
-
