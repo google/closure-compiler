@@ -272,8 +272,17 @@ function createRequire(opt_module) {
 }
 
 
-/** @const {!function(string): ?} */
+/** @const {function(string): ?} */
 $jscomp.require = createRequire();
+
+
+/**
+ * @param {string} id
+ * @return {boolean}
+ */
+$jscomp.hasModule = function(id) {
+  return moduleCache.has(id);
+};
 
 
 /**
