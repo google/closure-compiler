@@ -290,19 +290,6 @@ final class Es6RewriteGenerators implements HotSwapCompilerPass {
               IR.paramList(context.getJsContextNameNode(originalGeneratorBody)),
               generatorBody);
 
-      // Propagate all suppressions from original generator function to a new "program" function.
-      JSDocInfoBuilder jsDocBuilder = new JSDocInfoBuilder(false);
-      if (genFunc.getJSDocInfo() != null) {
-        if (!genFunc.getJSDocInfo().getSuppressions().isEmpty()) {
-          jsDocBuilder.recordSuppressions(genFunc.getJSDocInfo().getSuppressions());
-        }
-      }
-      // Add "uselessCode" suppression as we don't ensure that program's code don't have unreachable
-      // statements.
-      // TODO(skill): ensure that program doesn't emit unreachable code.
-      jsDocBuilder.addSuppression("uselessCode");
-      program.setJSDocInfo(jsDocBuilder.build());
-
       // Replace original generator function body with:
       //   return $jscomp.generator.createGenerator(<origGenerator>, <program function>);
       Node createGenerator =
