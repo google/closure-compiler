@@ -227,6 +227,9 @@ var MailboxItem = function() {};
  */
 MailboxItem.prototype.body;
 
+/** @type {!NotificationMessages} */
+MailboxItem.prototype.notificationMessages;
+
 
 /**
  * See https://dev.office.com/reference/add-ins/outlook/1.1/Body
@@ -234,6 +237,12 @@ MailboxItem.prototype.body;
  * @const
  */
 var MailboxItemBody = function() {};
+
+/**
+ * @param {string} coercionType
+ * @param {function(!AsyncResult)} callback
+ */
+MailboxItemBody.prototype.getAsync = function(coercionType, callback) {};
 
 /**
  * @param {{
@@ -244,7 +253,7 @@ var MailboxItemBody = function() {};
 MailboxItemBody.prototype.getTypeAsync = function(params, callback) {};
 
 /**
- * @param {!string} content
+ * @param {string} content
  * @param {{
  *   coercionType: string,
  *   asyncContet: (!Object|undefined)
@@ -265,6 +274,24 @@ MailboxItemBody.prototype.setSelectedDataAsync = function(
 
 /** @type {string} */
 MailboxItemBody.prototype.itemType;
+
+
+/**
+ * See
+ * https://dev.office.com/reference/add-ins/outlook/1.3/NotificationMessages
+ * @interface
+ * @const
+ */
+var NotificationMessages = function() {};
+
+/**
+ * @param {string} key
+ * @param {{
+ *   type: string,
+ *   message: string
+ * }} message
+ */
+NotificationMessages.prototype.replaceAsync = function(key, message) {};
 
 
 /**
