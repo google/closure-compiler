@@ -122,7 +122,6 @@ import com.google.javascript.jscomp.parsing.parser.util.LookaheadErrorReporter;
 import com.google.javascript.jscomp.parsing.parser.util.LookaheadErrorReporter.ParseException;
 import com.google.javascript.jscomp.parsing.parser.util.SourcePosition;
 import com.google.javascript.jscomp.parsing.parser.util.SourceRange;
-import com.google.javascript.jscomp.parsing.parser.util.Timer;
 import java.util.ArrayDeque;
 import java.util.EnumSet;
 import java.util.LinkedHashMap;
@@ -286,12 +285,10 @@ public class Parser {
 
   // 14 Program
   public ProgramTree parseProgram() {
-    Timer t = new Timer("Parse Program");
     try {
       SourcePosition start = getTreeStartLocation();
       ImmutableList<ParseTree> sourceElements = parseGlobalSourceElements();
       eat(TokenType.END_OF_FILE);
-      t.end();
       return new ProgramTree(
           getTreeLocation(start), sourceElements, commentRecorder.getComments());
     } catch (StackOverflowError e) {
