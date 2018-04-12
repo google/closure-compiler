@@ -35,6 +35,8 @@ public class Scanner {
   private final boolean parseTypeSyntax;
   private final ErrorReporter errorReporter;
   private final SourceFile source;
+  private final String contents;
+  private final int contentsLength;
   private final ArrayList<Token> currentTokens = new ArrayList<>();
   private int index;
   private final CommentRecorder commentRecorder;
@@ -58,6 +60,10 @@ public class Scanner {
     this.errorReporter = errorReporter;
     this.commentRecorder = commentRecorder;
     this.source = file;
+    // To help reason about the expected JVM performance unwrap "file" values.
+    // The scanner is key to the parsing speed.
+    this.contents = file.contents;
+    this.contentsLength = file.contents.length();
     this.index = offset;
     this.typeParameterLevel = 0;
   }
@@ -251,7 +257,7 @@ public class Scanner {
   }
 
   private boolean isValidIndex(int index) {
-    return index >= 0 && index < source.contents.length();
+    return index >= 0 & index < contentsLength;
   }
 
   // 7.2 White Space
@@ -374,7 +380,7 @@ public class Scanner {
       nextChar();
     }
     SourceRange range = getLineNumberTable().getSourceRange(startOffset, index);
-    String value = this.source.contents.substring(startOffset, index);
+    String value = this.contents.substring(startOffset, index);
     recordComment(type, range, value);
   }
 
@@ -395,16 +401,14 @@ public class Scanner {
       nextChar();
       Comment.Type type = Comment.Type.BLOCK;
       if (index - startOffset > 4) {
-        if (this.source.contents.charAt(startOffset + 2) == '*') {
+        if (this.contents.charAt(startOffset + 2) == '*') {
           type = Comment.Type.JSDOC;
-        } else if (this.source.contents.charAt(startOffset + 2) == '!') {
+        } else if (this.contents.charAt(startOffset + 2) == '!') {
           type = Comment.Type.IMPORTANT;
         }
       }
-      SourceRange range = getLineNumberTable().getSourceRange(
-          startOffset, index);
-      String value = this.source.contents.substring(
-          startOffset, index);
+      SourceRange range = getLineNumberTable().getSourceRange(startOffset, index);
+      String value = this.contents.substring(startOffset, index);
       recordComment(type, range, value);
     } else {
       reportError("unterminated comment");
@@ -859,7 +863,7 @@ public class Scanner {
   }
 
   private String getTokenString(int beginIndex) {
-    return this.source.contents.substring(beginIndex, index);
+    return this.contents.substring(beginIndex, index);
   }
 
   private boolean peekStringLiteralChar(char terminator) {
@@ -1083,7 +1087,7 @@ public class Scanner {
     if (isAtEnd()) {
       return '\0';
     }
-    return source.contents.charAt(index++);
+    return contents.charAt(index++);
   }
 
   private boolean peek(char ch) {
@@ -1095,7 +1099,7 @@ public class Scanner {
   }
 
   private char peekChar(int offset) {
-    return !isValidIndex(index + offset) ? '\0' : source.contents.charAt(index + offset);
+    return !isValidIndex(index + offset) ? '\0' : contents.charAt(index + offset);
   }
 
   @FormatMethod
