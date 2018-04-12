@@ -1237,14 +1237,13 @@ WebWorker.prototype.postMessage = function(message) {};
 
 /**
  * Sent when the worker thread posts a message to its creator.
- * @type {?function(!MessageEvent<*>)}
+ * @type {?function(!MessageEvent<*>): void}
  */
 WebWorker.prototype.onmessage;
 
 /**
  * Sent when the worker thread encounters an error.
- * TODO(tbreisacher): Should this change to function(!ErrorEvent)?
- * @type {?function(!Event)}
+ * @type {?function(!ErrorEvent): void}
  */
 WebWorker.prototype.onerror;
 
@@ -1288,14 +1287,13 @@ Worker.prototype.webkitPostMessage = function(message, opt_transfer) {};
 
 /**
  * Sent when the worker thread posts a message to its creator.
- * @type {?function(!MessageEvent<*>)}
+ * @type {?function(!MessageEvent<*>): void}
  */
 Worker.prototype.onmessage;
 
 /**
  * Sent when the worker thread encounters an error.
- * TODO(tbreisacher): Should this change to function(!ErrorEvent)?
- * @type {?function(!Event)}
+ * @type {?function(!ErrorEvent): void}
  */
 Worker.prototype.onerror;
 
@@ -1327,8 +1325,7 @@ SharedWorker.prototype.port;
 
 /**
  * Called on network errors for loading the initial script.
- * TODO(tbreisacher): Should this change to function(!ErrorEvent)?
- * @type {?function(!Event)}
+ * @type {?function(!ErrorEvent): void}
  */
 SharedWorker.prototype.onerror;
 
@@ -1387,19 +1384,19 @@ WorkerGlobalScope.prototype.close = function() {};
 
 /**
  * Sent when the worker encounters an error.
- * @type {?function(!Event)}
+ * @type {?function(!ErrorEvent): void}
  */
 WorkerGlobalScope.prototype.onerror;
 
 /**
  * Sent when the worker goes offline.
- * @type {?function(!Event)}
+ * @type {?function(!Event): void}
  */
 WorkerGlobalScope.prototype.onoffline;
 
 /**
  * Sent when the worker goes online.
- * @type {?function(!Event)}
+ * @type {?function(!Event): void}
  */
 WorkerGlobalScope.prototype.ononline;
 
@@ -1433,7 +1430,7 @@ DedicatedWorkerGlobalScope.prototype.webkitPostMessage =
 
 /**
  * Sent when the creator posts a message to this worker.
- * @type {?function(!MessageEvent<*>)}
+ * @type {?function(!MessageEvent<*>): void}
  */
 DedicatedWorkerGlobalScope.prototype.onmessage;
 
