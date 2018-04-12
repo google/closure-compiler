@@ -207,10 +207,6 @@ class TypeInference
     return output;
   }
 
-  private static boolean createsContainerScope(Node n) {
-    return NodeUtil.createsScope(n) && !NodeUtil.createsBlockScope(n);
-  }
-
   @Override
   @SuppressWarnings({"fallthrough", "incomplete-switch"})
   List<FlowScope> branchedFlowThrough(Node source, FlowScope input) {
