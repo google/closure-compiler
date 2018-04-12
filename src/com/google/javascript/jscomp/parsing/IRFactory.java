@@ -352,16 +352,6 @@ class IRFactory {
     return irFactory;
   }
 
-  static FeatureSet detectFeatures(
-      ProgramTree tree, StaticSourceFile sourceFile, String sourceString) {
-    IRFactory irFactory =
-        new IRFactory(sourceString, sourceFile, NULL_CONFIG, NULL_REPORTER, tree.sourceComments);
-    Node n = irFactory.transformDispatcher.process(tree);
-    irFactory.validateAll(n);
-
-    return irFactory.features;
-  }
-
   static final Config NULL_CONFIG = Config.builder().build();
 
   static final ErrorReporter NULL_REPORTER = new ErrorReporter() {
