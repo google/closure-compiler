@@ -516,15 +516,15 @@ public final class DefaultPassConfig extends PassConfig {
 
     checks.add(createEmptyPass(PassNames.AFTER_STANDARD_CHECKS));
 
-    if (options.needsTranspilationFrom(ES6) && !options.getNewTypeInference()) {
-      // Note that TranspilationPasses.addEs6PostTypecheckPasses is really only "post typecheck"
-      // for OTI. The code path for NTI includes an earlier call to addEs6PostTypecheckPasses.
-      TranspilationPasses.addEs6PostTypecheckPasses(checks);
-    }
-
     if (options.needsTranspilationFrom(ES6) && !options.checksOnly) {
       // At this point all checks have been done.
       // There's no need to complete transpilation if we're only running checks.
+
+      if (!options.getNewTypeInference()) {
+        // Note that TranspilationPasses.addEs6PostTypecheckPasses is really only "post typecheck"
+        // for OTI. The code path for NTI includes an earlier call to addEs6PostTypecheckPasses.
+        TranspilationPasses.addEs6PostTypecheckPasses(checks);
+      }
       TranspilationPasses.addEs6PostCheckPasses(checks);
     }
 
