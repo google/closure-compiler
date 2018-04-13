@@ -742,8 +742,7 @@ public class Scanner {
       return new Token(k.type, getTokenRange(beginToken));
     }
 
-    // Intern the value to avoid creating lots of copies of the same string.
-    return new IdentifierToken(getTokenRange(beginToken), value.intern());
+    return new IdentifierToken(getTokenRange(beginToken), value);
   }
 
   /**
