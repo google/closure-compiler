@@ -806,7 +806,7 @@ public final class SuggestedFix {
         return true;
       }
       HasConstRequireOrModuleCallback callback = new HasConstRequireOrModuleCallback(metadata);
-      NodeTraversal.traverseEs6(metadata.getCompiler(), script, callback);
+      NodeTraversal.traverse(metadata.getCompiler(), script, callback);
       return callback.getUsesConstRequires();
     }
 
