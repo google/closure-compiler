@@ -580,15 +580,16 @@ public final class DefaultPassConfig extends PassConfig {
       passes.add(instrumentForCodeCoverage);
     }
 
+    // Should be run before runtimeTypeCheck.
+    if (options.j2clPassMode.shouldAddJ2clPasses()) {
+      passes.add(j2clPass);
+      passes.add(j2clUtilGetDefineRewriterPass);
+    }
+
     // TODO(dimvar): convert this pass to use NTI. Low priority since it's
     // mostly unused. Converting it shouldn't block switching to NTI.
     if (options.runtimeTypeCheck && !options.getNewTypeInference()) {
       passes.add(runtimeTypeCheck);
-    }
-
-    if (options.j2clPassMode.shouldAddJ2clPasses()) {
-      passes.add(j2clPass);
-      passes.add(j2clUtilGetDefineRewriterPass);
     }
 
     passes.add(createEmptyPass(PassNames.BEFORE_STANDARD_OPTIMIZATIONS));

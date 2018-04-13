@@ -145,6 +145,7 @@ public class J2clPass implements CompilerPass {
         String qualifiedFnName = qualifiedNameNode.getQualifiedName();
         String fnName = qualifiedNameNode.getLastChild().getString();
         if (fnNamesToInline.contains(fnName)) {
+
           // Then store a reference to it.
           fnsToInlineByQualifiedName.put(qualifiedFnName, fnNode);
         }
@@ -171,6 +172,15 @@ public class J2clPass implements CompilerPass {
         Node fnImpl = fnsToInlineByQualifiedName.get(qualifiedFnName);
         if (fnImpl == null) {
           return;
+        }
+
+        // Ensure that the function only has a single return statement when direct inlining.
+        if (inliningMode == InliningMode.DIRECT
+            && !NodeUtil.getFunctionBody(fnImpl).getFirstChild().isReturn()) {
+          throw new IllegalStateException(
+              "Attempted to direct inline function "
+                  + qualifiedFnName
+                  + ", but function is not a simple return.");
         }
 
         // Otherwise inline the call.
