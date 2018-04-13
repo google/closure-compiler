@@ -981,6 +981,7 @@ angular.Scope.Event.prototype.name;
 
 angular.Scope.Event.prototype.preventDefault = function() {};
 
+/** @type {!Function|undefined} */
 angular.Scope.Event.prototype.stopPropagation = function() {};
 
 /** @type {!angular.Scope} */
