@@ -448,7 +448,7 @@ public class TranspilationPasses {
         if (isScriptEs6OrHigher(singleRoot)) {
           for (Callback callback : callbacks) {
             singleRoot.putBooleanProp(Node.TRANSPILED, true);
-            NodeTraversal.traverseEs6(compiler, singleRoot, callback);
+            NodeTraversal.traverse(compiler, singleRoot, callback);
           }
         }
       }
@@ -470,7 +470,7 @@ public class TranspilationPasses {
       if (isScriptEs6OrHigher(scriptRoot)) {
         for (Callback callback : callbacks) {
           scriptRoot.putBooleanProp(Node.TRANSPILED, true);
-          NodeTraversal.traverseEs6(compiler, scriptRoot, callback);
+          NodeTraversal.traverse(compiler, scriptRoot, callback);
         }
       }
     }

@@ -46,8 +46,8 @@ public final class RemoveSuperMethodsPass implements CompilerPass {
 
   @Override
   public void process(Node externs, Node root) {
-    NodeTraversal.traverseEs6(compiler, root, new RemoveSuperMethodsCallback());
-    NodeTraversal.traverseEs6(compiler, root, new FilterDuplicateMethods());
+    NodeTraversal.traverse(compiler, root, new RemoveSuperMethodsCallback());
+    NodeTraversal.traverse(compiler, root, new FilterDuplicateMethods());
     for (Map.Entry<String, Node> entry : removeCandidates.entrySet()) {
       Node removalTarget = entry.getValue().getGrandparent();
       Node removalParent = removalTarget.getParent();

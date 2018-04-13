@@ -174,7 +174,7 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
     if (isEs6ModuleRoot(scriptNode)) {
       processFile(scriptNode);
     } else {
-      NodeTraversal.traverseEs6(compiler, scriptNode, new RewriteRequiresForEs6Modules());
+      NodeTraversal.traverse(compiler, scriptNode, new RewriteRequiresForEs6Modules());
     }
   }
 
@@ -184,7 +184,7 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
   private void processFile(Node root) {
     checkArgument(isEs6ModuleRoot(root), root);
     clearState();
-    NodeTraversal.traverseEs6(compiler, root, this);
+    NodeTraversal.traverse(compiler, root, this);
   }
 
   public void clearState() {
@@ -562,7 +562,7 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
   }
 
   private void visitScript(NodeTraversal t, Node script) {
-    NodeTraversal.traverseEs6(compiler, script, new FindMutatedExports());
+    NodeTraversal.traverse(compiler, script, new FindMutatedExports());
 
     inlineModuleToGlobalScope(script.getFirstChild());
 
@@ -581,7 +581,7 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
     Node moduleVar = createExportsObject(t, script);
 
     // Rename vars to not conflict in global scope.
-    NodeTraversal.traverseEs6(compiler, script, new RenameGlobalVars(moduleName));
+    NodeTraversal.traverse(compiler, script, new RenameGlobalVars(moduleName));
 
     // Rename the exports object to something we can reference later.
     moduleVar.getFirstChild().setString(moduleName);
@@ -677,7 +677,7 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
   }
 
   private void rewriteRequires(Node script) {
-    NodeTraversal.traverseEs6(
+    NodeTraversal.traverse(
         compiler,
         script,
         new AbstractPostOrderCallback() {

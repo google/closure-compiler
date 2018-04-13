@@ -85,12 +85,12 @@ class CoverageInstrumentationPass implements CompilerPass {
   public void process(Node externsNode, Node rootNode) {
     if (rootNode.hasChildren()) {
       if (instrumentOption == InstrumentOption.BRANCH_ONLY) {
-        NodeTraversal.traverseEs6(
+        NodeTraversal.traverse(
             compiler,
             rootNode,
             new BranchCoverageInstrumentationCallback(compiler, instrumentationData));
       } else {
-        NodeTraversal.traverseEs6(
+        NodeTraversal.traverse(
             compiler,
             rootNode,
             new CoverageInstrumentationCallback(compiler, instrumentationData, reach));

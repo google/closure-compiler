@@ -608,7 +608,7 @@ public final class SideEffectsAnalysisTest extends CompilerTestCase {
   private Node findLabeledStatement(String label) {
     LabeledStatementSearcher s = new LabeledStatementSearcher(label);
 
-    NodeTraversal.traverseEs6(getLastCompiler(), getLastCompiler().jsRoot, s);
+    NodeTraversal.traverse(getLastCompiler(), getLastCompiler().jsRoot, s);
     assertNotNull("Label " + label + " should be in the source code", s.found);
 
     return s.found;

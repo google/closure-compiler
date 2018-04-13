@@ -67,7 +67,7 @@ public class PolymerPassSuppressBehaviorsTest extends TypeICompilerTestCase {
       public void process(Node externs, Node root) {
         PolymerPassSuppressBehaviors suppressBehaviorsCallback =
             new PolymerPassSuppressBehaviors(compiler);
-        NodeTraversal.traverseEs6(compiler, root, suppressBehaviorsCallback);
+        NodeTraversal.traverse(compiler, root, suppressBehaviorsCallback);
       }
     };
   }

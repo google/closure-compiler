@@ -334,10 +334,10 @@ public class GlobalTypeInfoCollector implements CompilerPass {
     // (1) Find names of classes, interfaces, typedefs, enums, and namespaces
     //   defined in the global scope.
     CollectNamedTypes rootCnt = new CollectNamedTypes(globalScope);
-    NodeTraversal.traverseEs6(this.compiler, externs, this.orderedExterns);
+    NodeTraversal.traverse(this.compiler, externs, this.orderedExterns);
     rootCnt.collectNamedTypesInExterns();
     defineObjectAndFunctionIfMissing();
-    NodeTraversal.traverseEs6(compiler, root, rootCnt);
+    NodeTraversal.traverse(compiler, root, rootCnt);
     // (2) Determine the type represented by each typedef and each enum
     globalScope.resolveTypedefs(getTypeParser());
     globalScope.resolveEnums(getTypeParser());
@@ -345,7 +345,7 @@ public class GlobalTypeInfoCollector implements CompilerPass {
     for (int i = 1; i < this.scopes.size(); i++) {
       NTIScope s = this.scopes.get(i);
       CollectNamedTypes cnt = new CollectNamedTypes(s);
-      NodeTraversal.traverseEs6(compiler, s.getBody(), cnt);
+      NodeTraversal.traverse(compiler, s.getBody(), cnt);
       s.resolveTypedefs(getTypeParser());
       s.resolveEnums(getTypeParser());
       if (NewTypeInference.measureMem) {
@@ -358,9 +358,9 @@ public class GlobalTypeInfoCollector implements CompilerPass {
     //     - Declare properties on types
     ProcessScope rootPs = new ProcessScope(globalScope);
     if (externs != null) {
-      NodeTraversal.traverseEs6(compiler, externs, rootPs);
+      NodeTraversal.traverse(compiler, externs, rootPs);
     }
-    NodeTraversal.traverseEs6(compiler, root, rootPs);
+    NodeTraversal.traverse(compiler, root, rootPs);
     // (5) Things that must happen after the traversal of the scope
     rootPs.finishProcessingScope();
 
@@ -368,7 +368,7 @@ public class GlobalTypeInfoCollector implements CompilerPass {
     for (int i = 1; i < this.scopes.size(); i++) {
       NTIScope s = this.scopes.get(i);
       ProcessScope ps = new ProcessScope(s);
-      NodeTraversal.traverseEs6(compiler, s.getBody(), ps);
+      NodeTraversal.traverse(compiler, s.getBody(), ps);
       ps.finishProcessingScope();
       if (NewTypeInference.measureMem) {
         NewTypeInference.updatePeakMem();
@@ -422,7 +422,7 @@ public class GlobalTypeInfoCollector implements CompilerPass {
 
     // Traverse the externs and annotate them with types.
     // Only works for the top level, not inside function bodies.
-    NodeTraversal.traverseEs6(
+    NodeTraversal.traverse(
         this.compiler, externs, new NodeTraversal.AbstractShallowCallback() {
           @Override
           public void visit(NodeTraversal t, Node n, Node parent) {

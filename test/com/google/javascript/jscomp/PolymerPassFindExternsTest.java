@@ -67,7 +67,7 @@ public final class PolymerPassFindExternsTest extends TypeICompilerTestCase {
     return new CompilerPass() {
       @Override
       public void process(Node externs, Node root) {
-        NodeTraversal.traverseEs6(compiler, externs, findExternsCallback);
+        NodeTraversal.traverse(compiler, externs, findExternsCallback);
       }
     };
   }

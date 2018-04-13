@@ -74,7 +74,7 @@ class GenerateExports implements CompilerPass {
   public void process(Node externs, Node root) {
     FindExportableNodes findExportableNodes = new FindExportableNodes(
         compiler, allowNonGlobalExports);
-    NodeTraversal.traverseEs6(compiler, root, findExportableNodes);
+    NodeTraversal.traverse(compiler, root, findExportableNodes);
     Map<String, Node> exports = findExportableNodes.getExports();
     Set<String> localExports = findExportableNodes.getLocalExports();
 
@@ -206,7 +206,7 @@ class GenerateExports implements CompilerPass {
   }
 
   private void annotate(Node node) {
-    NodeTraversal.traverseEs6(
+    NodeTraversal.traverse(
         compiler, node, new PrepareAst.PrepareAnnotations());
   }
 

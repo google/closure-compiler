@@ -189,7 +189,7 @@ class FlowSensitiveInlineVariables implements CompilerPass, ScopedCallback {
 
     // Using the forward reaching definition search to find all the inline
     // candidates
-    NodeTraversal.traverseEs6(compiler, t.getScopeRoot(), new GatherCandidates());
+    NodeTraversal.traverse(compiler, t.getScopeRoot(), new GatherCandidates());
     // Compute the backward reaching use. The CFG can be reused.
     reachingUses = new MaybeReachingVariableUse(cfg, t.getScope(), compiler, scopeCreator);
     reachingUses.analyze();
@@ -335,7 +335,7 @@ class FlowSensitiveInlineVariables implements CompilerPass, ScopedCallback {
       final Node cfgNode = n;
 
       gatherCb.setCfgNode(cfgNode);
-      NodeTraversal.traverseEs6(compiler, cfgNode, gatherCb);
+      NodeTraversal.traverse(compiler, cfgNode, gatherCb);
     }
   }
 
@@ -531,7 +531,7 @@ class FlowSensitiveInlineVariables implements CompilerPass, ScopedCallback {
               }
             }
           };
-      NodeTraversal.traverseEs6(compiler, n, gatherCb);
+      NodeTraversal.traverse(compiler, n, gatherCb);
     }
 
     /**
@@ -572,7 +572,7 @@ class FlowSensitiveInlineVariables implements CompilerPass, ScopedCallback {
             }
           };
 
-      NodeTraversal.traverseEs6(compiler, cfgNode, gatherCb);
+      NodeTraversal.traverse(compiler, cfgNode, gatherCb);
     }
 
     /**

@@ -325,9 +325,9 @@ class ReplaceIdGenerators implements CompilerPass {
 
   @Override
   public void process(Node externs, Node root) {
-    NodeTraversal.traverseEs6(compiler, root, new GatherGenerators());
+    NodeTraversal.traverse(compiler, root, new GatherGenerators());
     if (!nameGenerators.isEmpty()) {
-      NodeTraversal.traverseEs6(compiler, root, new ReplaceGenerators());
+      NodeTraversal.traverse(compiler, root, new ReplaceGenerators());
     }
   }
 

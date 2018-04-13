@@ -95,8 +95,8 @@ final class InlineProperties implements CompilerPass {
   @Override
   public void process(Node externs, Node root) {
     // Find and replace the properties in non-extern AST.
-    NodeTraversal.traverseEs6(compiler, root, new GatherCandidates());
-    NodeTraversal.traverseEs6(compiler, root, new ReplaceCandidates());
+    NodeTraversal.traverse(compiler, root, new GatherCandidates());
+    NodeTraversal.traverse(compiler, root, new ReplaceCandidates());
   }
 
   class GatherCandidates extends AbstractPostOrderCallback {

@@ -39,7 +39,7 @@ public final class CheckEmptyStatements extends AbstractPostOrderCallback implem
 
   @Override
   public void process(Node externs, Node root) {
-    NodeTraversal.traverseEs6(compiler, root, this);
+    NodeTraversal.traverse(compiler, root, this);
   }
 
   @Override

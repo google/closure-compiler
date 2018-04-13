@@ -445,8 +445,8 @@ final class ModuleMetadata {
 
   public void process(Node externs, Node root) {
     finder = new Finder();
-    NodeTraversal.traverseEs6(compiler, externs, finder);
-    NodeTraversal.traverseEs6(compiler, root, finder);
+    NodeTraversal.traverse(compiler, externs, finder);
+    NodeTraversal.traverse(compiler, root, finder);
   }
 
   private void remove(Module module) {
@@ -467,7 +467,7 @@ final class ModuleMetadata {
     Module existing =
         modulesByPath.get(compiler.getInput(scriptRoot.getInputId()).getPath().toString());
     remove(existing);
-    NodeTraversal.traverseEs6(compiler, scriptRoot, finder);
+    NodeTraversal.traverse(compiler, scriptRoot, finder);
   }
 
   /**

@@ -162,7 +162,7 @@ final class RescopeGlobalSymbols implements CompilerPass {
     // Rewrite all references to global symbols to properties of a single symbol:
 
     // Turn global named function statements into var assignments.
-    NodeTraversal.traverseEs6(
+    NodeTraversal.traverse(
         compiler, root, new RewriteGlobalClassFunctionDeclarationsToVarAssignmentsCallback());
 
     // Find global names that are used in more than one module. Those that
@@ -176,11 +176,11 @@ final class RescopeGlobalSymbols implements CompilerPass {
 
     // Rewrite all references to be property accesses of the single symbol.
     RewriteScopeCallback rewriteScope = new RewriteScopeCallback();
-    NodeTraversal.traverseEs6(compiler, root, rewriteScope);
+    NodeTraversal.traverse(compiler, root, rewriteScope);
 
     // Remove the var from statements in global scope if the declared names have been rewritten
     // in the previous pass.
-    NodeTraversal.traverseEs6(compiler, root, new RemoveGlobalVarCallback());
+    NodeTraversal.traverse(compiler, root, new RemoveGlobalVarCallback());
     rewriteScope.declareModuleGlobals();
   }
 

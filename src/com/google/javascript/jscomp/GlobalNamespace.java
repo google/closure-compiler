@@ -230,11 +230,11 @@ class GlobalNamespace
   private void process() {
     if (hasExternsRoot()) {
       inExterns = true;
-      NodeTraversal.traverseEs6(compiler, externsRoot, new BuildGlobalNamespace());
+      NodeTraversal.traverse(compiler, externsRoot, new BuildGlobalNamespace());
     }
     inExterns = false;
 
-    NodeTraversal.traverseEs6(compiler, root, new BuildGlobalNamespace());
+    NodeTraversal.traverse(compiler, root, new BuildGlobalNamespace());
     generated = true;
     externsScope = null;
   }

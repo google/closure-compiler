@@ -220,7 +220,7 @@ class ProcessDefines implements CompilerPass {
     }
 
     CollectDefines pass = new CollectDefines(compiler, allDefines);
-    NodeTraversal.traverseRootsEs6(compiler, pass, externs, root);
+    NodeTraversal.traverseRoots(compiler, pass, externs, root);
     return pass.getAllDefines();
   }
 

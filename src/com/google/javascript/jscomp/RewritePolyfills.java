@@ -168,7 +168,7 @@ public class RewritePolyfills implements HotSwapCompilerPass {
   @Override
   public void hotSwapScript(Node scriptRoot, Node originalRoot) {
     Traverser traverser = new Traverser();
-    NodeTraversal.traverseEs6(compiler, scriptRoot, traverser);
+    NodeTraversal.traverse(compiler, scriptRoot, traverser);
 
     if (!traverser.libraries.isEmpty()) {
       Node lastNode = null;

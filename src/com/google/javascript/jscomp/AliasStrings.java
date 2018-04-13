@@ -116,7 +116,7 @@ class AliasStrings implements CompilerPass, NodeTraversal.Callback {
     logger.fine("Aliasing common strings");
 
     // Traverse the tree and collect strings
-    NodeTraversal.traverseEs6(compiler, root, this);
+    NodeTraversal.traverse(compiler, root, this);
 
     // 1st edit pass: replace some strings with aliases
     replaceStringsWithAliases();

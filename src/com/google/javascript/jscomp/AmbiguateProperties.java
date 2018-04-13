@@ -176,7 +176,7 @@ class AmbiguateProperties implements CompilerPass {
   public void process(Node externs, Node root) {
     // Find all property references and record the types on which they occur.
     // Populate stringNodesToRename, propertyMap, quotedNames.
-    NodeTraversal.traverseEs6(compiler, root, new ProcessProperties());
+    NodeTraversal.traverse(compiler, root, new ProcessProperties());
 
     ImmutableSet.Builder<String> reservedNames = ImmutableSet.<String>builder()
         .addAll(externedNames)

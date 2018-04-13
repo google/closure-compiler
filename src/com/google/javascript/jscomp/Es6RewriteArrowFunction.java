@@ -140,7 +140,7 @@ public class Es6RewriteArrowFunction implements NodeTraversal.Callback, HotSwapC
     }
 
     UpdateThisAndArgumentsReferences updater = new UpdateThisAndArgumentsReferences(compiler);
-    NodeTraversal.traverseEs6(compiler, body, updater);
+    NodeTraversal.traverse(compiler, body, updater);
     thisContext.needsThisVar = thisContext.needsThisVar || updater.changedThis;
     thisContext.needsArgumentsVar = thisContext.needsArgumentsVar || updater.changedArguments;
 

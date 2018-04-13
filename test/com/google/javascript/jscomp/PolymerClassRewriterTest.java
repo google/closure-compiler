@@ -165,7 +165,7 @@ public final class PolymerClassRewriterTest extends CompilerTypeTestCase {
     globalNamespace =  new GlobalNamespace(compiler, rootNode);
     PolymerPassFindExterns findExternsCallback = new PolymerPassFindExterns();
     Node externs = compiler.parseTestCode(EXTERNS);
-    NodeTraversal.traverseEs6(compiler, externs, findExternsCallback);
+    NodeTraversal.traverse(compiler, externs, findExternsCallback);
 
     rewriter =
         new PolymerClassRewriter(

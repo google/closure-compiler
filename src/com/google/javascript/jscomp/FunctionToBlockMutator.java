@@ -255,7 +255,7 @@ class FunctionToBlockMutator {
   private void makeLocalNamesUnique(Node fnNode, boolean isCallInLoop) {
     Supplier<String> idSupplier = compiler.getUniqueNameIdSupplier();
     // Make variable names unique to this instance.
-    NodeTraversal.traverseEs6ScopeRoots(
+    NodeTraversal.traverseScopeRoots(
         compiler,
         null,
         ImmutableList.of(fnNode),

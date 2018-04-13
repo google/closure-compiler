@@ -78,9 +78,9 @@ class Normalize implements CompilerPass {
 
   static void normalizeSyntheticCode(
       AbstractCompiler compiler, Node js, String prefix) {
-    NodeTraversal.traverseEs6(compiler, js,
+    NodeTraversal.traverse(compiler, js,
         new Normalize.NormalizeStatements(compiler, false));
-    NodeTraversal.traverseEs6(
+    NodeTraversal.traverse(
         compiler,
         js,
         new MakeDeclaredNamesUnique(
@@ -93,7 +93,7 @@ class Normalize implements CompilerPass {
   static Node parseAndNormalizeTestCode(
       AbstractCompiler compiler, String code) {
     Node js = compiler.parseTestCode(code);
-    NodeTraversal.traverseEs6(compiler, js,
+    NodeTraversal.traverse(compiler, js,
         new Normalize.NormalizeStatements(compiler, false));
     return js;
   }
@@ -108,19 +108,19 @@ class Normalize implements CompilerPass {
 
   @Override
   public void process(Node externs, Node root) {
-    NodeTraversal.traverseEs6(compiler, root, new RemoveEmptyClassMembers());
-    NodeTraversal.traverseRootsEs6(
+    NodeTraversal.traverse(compiler, root, new RemoveEmptyClassMembers());
+    NodeTraversal.traverseRoots(
         compiler, new NormalizeStatements(compiler, assertOnChange), externs, root);
     removeDuplicateDeclarations(externs, root);
     MakeDeclaredNamesUnique renamer = new MakeDeclaredNamesUnique();
-    NodeTraversal.traverseRootsEs6(compiler, renamer, externs, root);
+    NodeTraversal.traverseRoots(compiler, renamer, externs, root);
     new PropagateConstantAnnotationsOverVars(compiler, assertOnChange)
         .process(externs, root);
 
     FindExposeAnnotations findExposeAnnotations = new FindExposeAnnotations();
-    NodeTraversal.traverseEs6(compiler, root, findExposeAnnotations);
+    NodeTraversal.traverse(compiler, root, findExposeAnnotations);
     if (!findExposeAnnotations.exposedProperties.isEmpty()) {
-      NodeTraversal.traverseEs6(compiler, root,
+      NodeTraversal.traverse(compiler, root,
           new RewriteExposedProperties(
               findExposeAnnotations.exposedProperties));
     }
@@ -217,7 +217,7 @@ class Normalize implements CompilerPass {
 
     @Override
     public void process(Node externs, Node root) {
-      NodeTraversal.traverseRootsEs6(compiler, this, externs, root);
+      NodeTraversal.traverseRoots(compiler, this, externs, root);
     }
 
     @Override
@@ -272,7 +272,7 @@ class Normalize implements CompilerPass {
       Node externsAndJs = root.getParent();
       checkState(externsAndJs != null);
       checkState(externsAndJs.hasChild(externs));
-      NodeTraversal.traverseRootsEs6(compiler, this, externs, root);
+      NodeTraversal.traverseRoots(compiler, this, externs, root);
     }
 
     private final Map<String, Boolean> constantMap = new HashMap<>();

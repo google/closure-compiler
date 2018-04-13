@@ -130,13 +130,13 @@ public final class ReplaceStringsTest extends TypeICompilerTestCase {
         propertiesToErrorFor.put("foobar", CheckLevel.ERROR);
 
         if (rename) {
-          NodeTraversal.traverseEs6(compiler, js, new Renamer());
+          NodeTraversal.traverse(compiler, js, new Renamer());
         }
         new CollapseProperties(compiler, PropertyCollapseLevel.ALL).process(externs, js);
         if (runDisambiguateProperties) {
           SourceInformationAnnotator sia =
               new SourceInformationAnnotator("test", false /* checkAnnotated */);
-          NodeTraversal.traverseEs6(compiler, js, sia);
+          NodeTraversal.traverse(compiler, js, sia);
 
           new DisambiguateProperties(compiler, propertiesToErrorFor).process(externs, js);
         }

@@ -358,7 +358,7 @@ class OptimizeCalls implements CompilerPass {
   static ReferenceMap buildPropAndGlobalNameReferenceMap(
       AbstractCompiler compiler, Node externs, Node root) {
     final ReferenceMap references = new ReferenceMap();
-    NodeTraversal.traverseRootsEs6(compiler, new ReferenceMapBuildingCallback(
+    NodeTraversal.traverseRoots(compiler, new ReferenceMapBuildingCallback(
         compiler, references), externs, root);
     return references;
   }

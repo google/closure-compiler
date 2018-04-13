@@ -59,7 +59,7 @@ class DeadAssignmentsElimination extends AbstractScopedCallback implements Compi
     checkNotNull(externs);
     checkNotNull(root);
     checkState(compiler.getLifeCycleStage().isNormalized());
-    NodeTraversal.traverseEs6(compiler, root, this);
+    NodeTraversal.traverse(compiler, root, this);
   }
 
   @Override

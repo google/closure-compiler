@@ -132,7 +132,7 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, HotSwapCom
       return;
     }
     CheckClassAssignments checkAssigns = new CheckClassAssignments(name);
-    NodeTraversal.traverseEs6(compiler, enclosingFunction, checkAssigns);
+    NodeTraversal.traverse(compiler, enclosingFunction, checkAssigns);
   }
 
   /**

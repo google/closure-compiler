@@ -309,7 +309,7 @@ class ProcessTweaks implements CompilerPass {
    */
   private CollectTweaksResult collectTweaks(Node root) {
     CollectTweaks pass = new CollectTweaks();
-    NodeTraversal.traverseEs6(compiler, root, pass);
+    NodeTraversal.traverse(compiler, root, pass);
 
     Map<String, TweakInfo> tweakInfos = pass.allTweaks;
     for (TweakInfo tweakInfo : tweakInfos.values()) {

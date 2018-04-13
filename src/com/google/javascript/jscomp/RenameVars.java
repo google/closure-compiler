@@ -347,7 +347,7 @@ final class RenameVars implements CompilerPass {
     originalNameByNode.clear();
 
     // Do variable reference counting.
-    NodeTraversal.traverseEs6(compiler, root, new ProcessVars());
+    NodeTraversal.traverse(compiler, root, new ProcessVars());
 
     // Make sure that new names don't overlap with extern names.
     reservedNames.addAll(externNames);

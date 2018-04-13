@@ -239,7 +239,7 @@ class MakeDeclaredNamesUnique extends NodeTraversal.AbstractScopedCallback {
 
     @Override
     public void process(Node externs, Node js) {
-      NodeTraversal.traverseEs6(compiler, js, this);
+      NodeTraversal.traverse(compiler, js, this);
     }
 
     public static String getOriginalName(String name) {

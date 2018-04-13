@@ -280,7 +280,7 @@ final class RenameLabels implements CompilerPass {
   @Override
   public void process(Node externs, Node root) {
     // Do variable reference counting.
-    NodeTraversal.traverseEs6(compiler, root, new ProcessLabels(markChanges));
+    NodeTraversal.traverse(compiler, root, new ProcessLabels(markChanges));
   }
 
   private static class LabelInfo {

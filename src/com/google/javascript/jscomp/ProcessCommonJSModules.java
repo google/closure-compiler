@@ -71,7 +71,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
 
   @Override
   public void process(Node externs, Node root) {
-    NodeTraversal.traverseEs6(compiler, root, this);
+    NodeTraversal.traverse(compiler, root, this);
   }
 
   @Override
@@ -84,7 +84,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
       }
 
       FindImportsAndExports finder = new FindImportsAndExports();
-      NodeTraversal.traverseEs6(compiler, n, finder);
+      NodeTraversal.traverse(compiler, n, finder);
 
       CompilerInput.ModuleType moduleType = compiler.getInput(n.getInputId()).getJsModuleType();
 
@@ -109,7 +109,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
 
           if (needsRetraverse) {
             finder = new FindImportsAndExports();
-            NodeTraversal.traverseEs6(compiler, n, finder);
+            NodeTraversal.traverse(compiler, n, finder);
           }
         }
 
@@ -128,10 +128,10 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
         }
       } else if (needsRetraverse) {
         finder = new FindImportsAndExports();
-        NodeTraversal.traverseEs6(compiler, n, finder);
+        NodeTraversal.traverse(compiler, n, finder);
       }
 
-      NodeTraversal.traverseEs6(
+      NodeTraversal.traverse(
           compiler,
           n,
           new RewriteModule(

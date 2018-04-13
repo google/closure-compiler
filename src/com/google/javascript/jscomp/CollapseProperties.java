@@ -638,7 +638,7 @@ class CollapseProperties implements CompilerPass {
         (docInfo != null && (docInfo.isConstructorOrInterface() || docInfo.hasThisType()))
         || function.isArrowFunction();
     if (!isAllowedToReferenceThis) {
-      NodeTraversal.traverseEs6(compiler, function.getLastChild(),
+      NodeTraversal.traverse(compiler, function.getLastChild(),
           new NodeTraversal.AbstractShallowCallback() {
             @Override
             public void visit(NodeTraversal t, Node n, Node parent) {

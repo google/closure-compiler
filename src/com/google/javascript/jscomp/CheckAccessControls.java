@@ -157,8 +157,8 @@ class CheckAccessControls extends AbstractPostOrderCallback
     collectPass.process(externs, root);
     defaultVisibilityForFiles = collectPass.getFileOverviewVisibilityMap();
 
-    NodeTraversal.traverseEs6(compiler, externs, this);
-    NodeTraversal.traverseEs6(compiler, root, this);
+    NodeTraversal.traverse(compiler, externs, this);
+    NodeTraversal.traverse(compiler, root, this);
   }
 
   @Override
@@ -168,7 +168,7 @@ class CheckAccessControls extends AbstractPostOrderCallback
     collectPass.hotSwapScript(scriptRoot, originalRoot);
     defaultVisibilityForFiles = collectPass.getFileOverviewVisibilityMap();
 
-    NodeTraversal.traverseEs6(compiler, scriptRoot, this);
+    NodeTraversal.traverse(compiler, scriptRoot, this);
   }
 
   @Override

@@ -49,7 +49,7 @@ class CheckProvides implements HotSwapCompilerPass {
   public void hotSwapScript(Node scriptRoot, Node originalRoot) {
     CheckProvidesCallback callback =
         new CheckProvidesCallback(codingConvention);
-    NodeTraversal.traverseEs6(compiler, scriptRoot, callback);
+    NodeTraversal.traverse(compiler, scriptRoot, callback);
   }
 
   private class CheckProvidesCallback extends AbstractShallowCallback {

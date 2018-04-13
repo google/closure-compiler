@@ -108,10 +108,10 @@ public final class Es6TypedToEs6Converter implements NodeTraversal.Callback, Hot
   @Override
   public void process(Node externs, Node scriptRoot) {
     ScanNamespaces scanner = new ScanNamespaces();
-    NodeTraversal.traverseEs6(compiler, externs, scanner);
-    NodeTraversal.traverseEs6(compiler, scriptRoot, scanner);
-    NodeTraversal.traverseEs6(compiler, externs, this);
-    NodeTraversal.traverseEs6(compiler, scriptRoot, this);
+    NodeTraversal.traverse(compiler, externs, scanner);
+    NodeTraversal.traverse(compiler, scriptRoot, scanner);
+    NodeTraversal.traverse(compiler, externs, this);
+    NodeTraversal.traverse(compiler, scriptRoot, this);
     if (!compiler.hasHaltingErrors()) {
       compiler.setFeatureSet(compiler.getFeatureSet().withoutTypes());
     }
@@ -120,8 +120,8 @@ public final class Es6TypedToEs6Converter implements NodeTraversal.Callback, Hot
   @Override
   public void hotSwapScript(Node scriptRoot, Node originalRoot) {
     ScanNamespaces scanner = new ScanNamespaces();
-    NodeTraversal.traverseEs6(compiler, scriptRoot, scanner);
-    NodeTraversal.traverseEs6(compiler, scriptRoot, this);
+    NodeTraversal.traverse(compiler, scriptRoot, scanner);
+    NodeTraversal.traverse(compiler, scriptRoot, this);
   }
 
   @Override

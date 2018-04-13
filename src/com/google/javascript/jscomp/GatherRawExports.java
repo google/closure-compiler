@@ -51,7 +51,7 @@ class GatherRawExports extends AbstractPostOrderCallback
   @Override
   public void process(Node externs, Node root) {
     checkState(compiler.getLifeCycleStage().isNormalized());
-    NodeTraversal.traverseEs6(compiler, root, this);
+    NodeTraversal.traverse(compiler, root, this);
   }
 
   @Override

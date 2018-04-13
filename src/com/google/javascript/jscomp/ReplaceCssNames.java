@@ -136,7 +136,7 @@ class ReplaceCssNames implements CompilerPass {
     // only be called before this pass is actually run.
     symbolMap = getCssRenamingMap();
 
-    NodeTraversal.traverseEs6(compiler, root, new Traversal());
+    NodeTraversal.traverse(compiler, root, new Traversal());
   }
 
   @VisibleForTesting

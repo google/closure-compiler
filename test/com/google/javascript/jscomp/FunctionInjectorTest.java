@@ -1528,7 +1528,7 @@ public final class FunctionInjectorTest extends TestCase {
 
     compiler.resetUniqueNameId();
     TestCallback test = new TestCallback(fnName, tester);
-    NodeTraversal.traverseEs6(compiler, tree, test);
+    NodeTraversal.traverse(compiler, tree, test);
   }
 
   private void validateSourceInfo(Compiler compiler, Node subtree) {
@@ -1623,7 +1623,7 @@ public final class FunctionInjectorTest extends TestCase {
 
     ChangeVerifier verifier = new ChangeVerifier(compiler).snapshot(mainRoot);
     TestCallback test = new TestCallback(fnName, tester);
-    NodeTraversal.traverseEs6(compiler, tree, test);
+    NodeTraversal.traverse(compiler, tree, test);
     verifier.checkRecordedChanges("helperInlineReferenceToFunction", mainRoot);
   }
 

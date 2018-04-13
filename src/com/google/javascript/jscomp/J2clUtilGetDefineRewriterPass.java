@@ -36,7 +36,7 @@ public class J2clUtilGetDefineRewriterPass extends AbstractPostOrderCallback
       return;
     }
     defines = new ProcessDefines(compiler, null, true).collectDefines(externs, root).keySet();
-    NodeTraversal.traverseEs6(compiler, root, this);
+    NodeTraversal.traverse(compiler, root, this);
   }
 
   @Override

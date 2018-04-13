@@ -291,7 +291,7 @@ public final class FunctionToBlockMutatorTest extends TestCase {
 
     compiler.resetUniqueNameId();
     TestCallback test = new TestCallback(fnName, tester);
-    NodeTraversal.traverseEs6(compiler, script, test);
+    NodeTraversal.traverse(compiler, script, test);
   }
 
   @FunctionalInterface

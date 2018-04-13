@@ -76,7 +76,7 @@ public class DeadPropertyAssignmentElimination implements CompilerPass {
     }
 
     GetterSetterCollector getterSetterCollector = new GetterSetterCollector();
-    NodeTraversal.traverseEs6(compiler, root, getterSetterCollector);
+    NodeTraversal.traverse(compiler, root, getterSetterCollector);
 
     // If there's any potentially unknown getter/setter property, back off of the optimization.
     if (getterSetterCollector.unknownGetterSetterPresent) {
@@ -113,7 +113,7 @@ public class DeadPropertyAssignmentElimination implements CompilerPass {
 
       FindCandidateAssignmentTraversal traversal =
           new FindCandidateAssignmentTraversal(blacklistedPropNames, NodeUtil.isConstructor(root));
-      NodeTraversal.traverseEs6(compiler, body, traversal);
+      NodeTraversal.traverse(compiler, body, traversal);
 
       // Any candidate property assignment can have a write removed if that write is never read
       // and it's written to at least one more time.

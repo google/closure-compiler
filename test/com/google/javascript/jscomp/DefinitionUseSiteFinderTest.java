@@ -577,8 +577,8 @@ public final class DefinitionUseSiteFinderTest extends CompilerTestCase {
     @Override
     public void process(Node externs, Node root) {
       passUnderTest.process(externs, root);
-      NodeTraversal.traverseEs6(compiler, externs, this);
-      NodeTraversal.traverseEs6(compiler, root, this);
+      NodeTraversal.traverse(compiler, externs, this);
+      NodeTraversal.traverse(compiler, root, this);
 
       buildFound(passUnderTest, found);
     }

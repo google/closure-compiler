@@ -2132,7 +2132,7 @@ public final class DefaultPassConfig extends PassConfig {
     public void process(Node externs, Node root) {
       // If NTI is enabled, erase the NTI types from the AST before adding the old types.
       if (this.compiler.getOptions().getNewTypeInference()) {
-        NodeTraversal.traverseEs6(
+        NodeTraversal.traverse(
             this.compiler, root,
             new NodeTraversal.AbstractPostOrderCallback(){
               @Override

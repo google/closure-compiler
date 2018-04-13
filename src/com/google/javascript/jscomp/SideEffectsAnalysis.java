@@ -769,7 +769,7 @@ import java.util.Set;
     private Set<Node> findStorageLocationReferences(Node root) {
       final Set<Node> references = new HashSet<>();
 
-      NodeTraversal.traverseEs6(compiler, root, new AbstractShallowCallback() {
+      NodeTraversal.traverse(compiler, root, new AbstractShallowCallback() {
         @Override
         public void visit(NodeTraversal t, Node n, Node parent) {
           if (NodeUtil.isGet(n)

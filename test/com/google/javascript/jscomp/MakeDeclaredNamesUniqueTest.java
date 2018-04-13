@@ -49,7 +49,7 @@ public final class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
             renamer = new MakeDeclaredNamesUnique(new InlineRenamer(compiler.getCodingConvention(),
                 compiler.getUniqueNameIdSupplier(), localNamePrefix, removeConst, true, null));
           }
-          NodeTraversal.traverseRootsEs6(compiler, renamer, externs, root);
+          NodeTraversal.traverseRoots(compiler, renamer, externs, root);
         }
       };
     } else {

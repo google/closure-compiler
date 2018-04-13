@@ -438,7 +438,7 @@ final class ExternExportsPass extends NodeTraversal.AbstractPostOrderCallback
 
   @Override
   public void process(Node externs, Node root) {
-    NodeTraversal.traverseEs6(compiler, root, this);
+    NodeTraversal.traverse(compiler, root, this);
 
     // Sort by path length to ensure that the longer
     // paths (which may depend on the shorter ones)

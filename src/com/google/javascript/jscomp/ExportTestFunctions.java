@@ -217,7 +217,7 @@ public class ExportTestFunctions implements CompilerPass {
 
   @Override
   public void process(Node externs, Node root) {
-    NodeTraversal.traverseEs6(compiler, root, new ExportTestFunctionsNodes());
+    NodeTraversal.traverse(compiler, root, new ExportTestFunctionsNodes());
   }
 
   // Adds exportSymbol(testFunctionName, testFunction);

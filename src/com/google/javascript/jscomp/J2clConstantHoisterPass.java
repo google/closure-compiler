@@ -46,7 +46,7 @@ public class J2clConstantHoisterPass implements CompilerPass {
 
     final Multimap<String, Node> fieldAssignments = ArrayListMultimap.create();
     final Set<Node> hoistableFunctions = new HashSet<>();
-    NodeTraversal.traverseEs6(
+    NodeTraversal.traverse(
         compiler,
         root,
         new AbstractPostOrderCallback() {

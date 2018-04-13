@@ -309,6 +309,12 @@ public class NodeTraversal {
     }
   }
 
+  /** Traverses using the ES6SyntacticScopeCreator */
+  public static void traverse(AbstractCompiler compiler, Node root, Callback cb) {
+    NodeTraversal t = new NodeTraversal(compiler, cb, new Es6SyntacticScopeCreator(compiler));
+    t.traverse(root);
+  }
+
   void traverseRoots(Node externs, Node root) {
     try {
       Node scopeRoot = externs.getParent();
@@ -326,6 +332,12 @@ public class NodeTraversal {
     } catch (Error | Exception unexpectedException) {
       throwUnexpectedException(unexpectedException);
     }
+  }
+
+  public static void traverseRoots(
+      AbstractCompiler compiler, Callback cb, Node externs, Node root) {
+    NodeTraversal t = new NodeTraversal(compiler, cb, new Es6SyntacticScopeCreator(compiler));
+    t.traverseRoots(externs, root);
   }
 
   private static final String MISSING_SOURCE = "[source unknown]";
@@ -445,13 +457,13 @@ public class NodeTraversal {
    * @param root If scopeNodes is null, this method will just traverse 'root' instead. If scopeNodes
    *     is not null, this parameter is ignored.
    */
-  public static void traverseEs6ScopeRoots(
+  public static void traverseScopeRoots(
       AbstractCompiler compiler,
       @Nullable Node root,
       @Nullable List<Node> scopeNodes,
       final Callback cb,
       final boolean traverseNested) {
-    traverseEs6ScopeRoots(compiler, root, scopeNodes, cb, null, traverseNested);
+    traverseScopeRoots(compiler, root, scopeNodes, cb, null, traverseNested);
   }
 
   /**
@@ -462,7 +474,7 @@ public class NodeTraversal {
    * @param root If scopeNodes is null, this method will just traverse 'root' instead. If scopeNodes
    *     is not null, this parameter is ignored.
    */
-  public static void traverseEs6ScopeRoots(
+  public static void traverseScopeRoots(
       AbstractCompiler compiler,
       @Nullable Node root,
       @Nullable List<Node> scopeNodes,
@@ -470,19 +482,19 @@ public class NodeTraversal {
       @Nullable final ChangeScopeRootCallback changeCallback,
       final boolean traverseNested) {
     if (scopeNodes == null) {
-      NodeTraversal.traverseEs6(compiler, root, cb);
+      NodeTraversal.traverse(compiler, root, cb);
     } else {
       MemoizedScopeCreator scopeCreator =
           new MemoizedScopeCreator(new Es6SyntacticScopeCreator(compiler));
 
       for (final Node scopeNode : scopeNodes) {
-        traverseSingleEs6ScopeRoot(
+        traverseSingleScopeRoot(
             compiler, cb, changeCallback, traverseNested, scopeCreator, scopeNode);
       }
     }
   }
 
-  private static void traverseSingleEs6ScopeRoot(
+  private static void traverseSingleScopeRoot(
       AbstractCompiler compiler,
       final Callback cb,
       @Nullable ChangeScopeRootCallback changeCallback,
@@ -659,7 +671,7 @@ public class NodeTraversal {
   public static void traverseChangedFunctions(
       final AbstractCompiler compiler, final ChangeScopeRootCallback callback) {
     final Node jsRoot = compiler.getJsRoot();
-    NodeTraversal.traverseEs6(compiler, jsRoot,
+    NodeTraversal.traverse(compiler, jsRoot,
         new AbstractPreOrderCallback() {
           @Override
           public final boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
@@ -672,12 +684,11 @@ public class NodeTraversal {
   }
 
   /**
-   * Traverses using the ES6SyntacticScopeCreator
+   * Use #traverse(AbstractCompiler, Node, Callback)
    */
-  // TODO (stephshi): rename to "traverse" when the old traverse method is no longer used
+  @Deprecated
   public static void traverseEs6(AbstractCompiler compiler, Node root, Callback cb) {
-    NodeTraversal t = new NodeTraversal(compiler, cb, new Es6SyntacticScopeCreator(compiler));
-    t.traverse(root);
+    traverse(compiler, root, cb);
   }
 
   /** Traverses from a particular scope node using the ES6SyntacticScopeCreator */
@@ -694,12 +705,6 @@ public class NodeTraversal {
   public static void traverseTyped(AbstractCompiler compiler, Node root, Callback cb) {
     NodeTraversal t = new NodeTraversal(compiler, cb, SyntacticScopeCreator.makeTyped(compiler));
     t.traverse(root);
-  }
-
-  public static void traverseRootsEs6(
-      AbstractCompiler compiler, Callback cb, Node externs, Node root) {
-    NodeTraversal t = new NodeTraversal(compiler, cb, new Es6SyntacticScopeCreator(compiler));
-    t.traverseRoots(externs, root);
   }
 
   /**

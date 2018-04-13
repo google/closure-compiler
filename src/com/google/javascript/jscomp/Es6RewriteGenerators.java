@@ -315,7 +315,7 @@ final class Es6RewriteGenerators implements HotSwapCompilerPass {
 
       originalGeneratorBody.replaceWith(newGeneratorBody);
 
-      NodeTraversal.traverseEs6(compiler, originalGeneratorBody, new YieldNodeMarker());
+      NodeTraversal.traverse(compiler, originalGeneratorBody, new YieldNodeMarker());
 
       // Transpile statements from original generator function
       while (originalGeneratorBody.hasChildren()) {
@@ -548,10 +548,10 @@ final class Es6RewriteGenerators implements HotSwapCompilerPass {
       // If expression put into expression result YieldExposer may turn it into an "if" statement.
       boolean isExpression = IR.mayBeExpression(n);
       Node block = IR.block(isExpression ? IR.returnNode(n) : n);
-      NodeTraversal.traverseEs6(compiler, n, new YieldExposer());
+      NodeTraversal.traverse(compiler, n, new YieldExposer());
       // Make sure newly created statements are correctly marked for recursive transpileStatement()
       // calls.
-      NodeTraversal.traverseEs6(compiler, block, new YieldNodeMarker());
+      NodeTraversal.traverse(compiler, block, new YieldNodeMarker());
 
       // The last child of decomposed block free of side effects.
       Node decomposed = block.getLastChild().detach();
@@ -578,7 +578,7 @@ final class Es6RewriteGenerators implements HotSwapCompilerPass {
 
       // Need to wrap a node so it can be replaced in the tree with some other node if nessesary.
       Node wrapper = IR.mayBeStatement(n) ? IR.block(n) : IR.exprResult(n);
-      NodeTraversal.traverseEs6(compiler, wrapper, context.new UnmarkedNodeTranspiler());
+      NodeTraversal.traverse(compiler, wrapper, context.new UnmarkedNodeTranspiler());
       checkState(wrapper.hasOneChild());
       return wrapper.removeFirstChild();
     }
@@ -1026,7 +1026,7 @@ final class Es6RewriteGenerators implements HotSwapCompilerPass {
     /** Finds the only YIELD node in a tree. */
     Node findYield(Node n) {
       YieldFinder yieldFinder = new YieldFinder();
-      NodeTraversal.traverseEs6(compiler, n, yieldFinder);
+      NodeTraversal.traverse(compiler, n, yieldFinder);
       return yieldFinder.getYieldNode();
     }
 
@@ -1346,7 +1346,7 @@ final class Es6RewriteGenerators implements HotSwapCompilerPass {
       /** Adds a block of original code to the end of the current case. */
       void transpileUnmarkedBlock(Node block) {
         if (block.hasChildren()) {
-          NodeTraversal.traverseEs6(compiler, block, new UnmarkedNodeTranspiler());
+          NodeTraversal.traverse(compiler, block, new UnmarkedNodeTranspiler());
           while (block.hasChildren()) {
             writeGeneratedNode(block.removeFirstChild());
           }

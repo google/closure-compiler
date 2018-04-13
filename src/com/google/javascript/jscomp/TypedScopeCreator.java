@@ -2246,9 +2246,9 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
 
     void process(Node externs, Node root) {
       if (externs == null) {
-        NodeTraversal.traverseEs6(compiler, root, this);
+        NodeTraversal.traverse(compiler, root, this);
       } else {
-        NodeTraversal.traverseRootsEs6(compiler, this, externs, root);
+        NodeTraversal.traverseRoots(compiler, this, externs, root);
       }
     }
 

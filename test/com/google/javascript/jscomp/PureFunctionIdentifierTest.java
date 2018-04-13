@@ -227,8 +227,8 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
       // Ensure that debug report computation doesn't crash.
       pureFunctionIdentifier.getDebugReport();
 
-      NodeTraversal.traverseEs6(compiler, externs, this);
-      NodeTraversal.traverseEs6(compiler, root, this);
+      NodeTraversal.traverse(compiler, externs, this);
+      NodeTraversal.traverse(compiler, root, this);
     }
 
     @Override

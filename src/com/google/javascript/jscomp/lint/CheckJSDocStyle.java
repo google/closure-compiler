@@ -115,8 +115,8 @@ public final class CheckJSDocStyle extends AbstractPostOrderCallback implements 
 
   @Override
   public void process(Node externs, Node root) {
-    NodeTraversal.traverseEs6(compiler, root, this);
-    NodeTraversal.traverseEs6(compiler, externs, new ExternsCallback());
+    NodeTraversal.traverse(compiler, root, this);
+    NodeTraversal.traverse(compiler, externs, new ExternsCallback());
   }
 
   @Override
@@ -410,7 +410,7 @@ public final class CheckJSDocStyle extends AbstractPostOrderCallback implements 
     }
 
     FindNonTrivialReturn finder = new FindNonTrivialReturn();
-    NodeTraversal.traverseEs6(compiler, function.getLastChild(), finder);
+    NodeTraversal.traverse(compiler, function.getLastChild(), finder);
     if (finder.found) {
       t.report(function, MISSING_RETURN_JSDOC);
     }

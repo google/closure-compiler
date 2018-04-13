@@ -1859,7 +1859,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
           SourceInformationAnnotator sia =
               new SourceInformationAnnotator(
                   input.getName(), options.devMode != DevMode.OFF);
-          NodeTraversal.traverseEs6(this, n, sia);
+          NodeTraversal.traverse(this, n, sia);
         }
 
         if (NodeUtil.isFromTypeSummary(n)) {

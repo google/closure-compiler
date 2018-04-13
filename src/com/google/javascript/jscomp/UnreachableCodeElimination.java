@@ -74,7 +74,7 @@ class UnreachableCodeElimination implements CompilerPass {
           }
           do {
             codeChanged = false;
-            NodeTraversal.traverseEs6(compiler, root, new EliminationPass(cfg));
+            NodeTraversal.traverse(compiler, root, new EliminationPass(cfg));
           } while (codeChanged);
         }
       });

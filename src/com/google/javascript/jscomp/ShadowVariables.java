@@ -111,8 +111,8 @@ class ShadowVariables implements CompilerPass {
     //    variable usage frequency map.
     //
     // 3. Updates the pseudo naming map if needed.
-    NodeTraversal.traverseEs6(compiler, root, new GatherReferenceInfo());
-    NodeTraversal.traverseEs6(compiler, root, new DoShadowVariables());
+    NodeTraversal.traverse(compiler, root, new GatherReferenceInfo());
+    NodeTraversal.traverse(compiler, root, new DoShadowVariables());
 
     if (oldPseudoNameMap != null) {
       oldPseudoNameMap.putAll(deltaPseudoNameMap);

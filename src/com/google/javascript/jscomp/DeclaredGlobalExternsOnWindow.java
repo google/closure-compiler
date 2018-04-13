@@ -43,7 +43,7 @@ class DeclaredGlobalExternsOnWindow implements CompilerPass, NodeTraversal.Callb
 
   @Override
   public void process(Node externs, Node root) {
-    NodeTraversal.traverseEs6(compiler, externs, this);
+    NodeTraversal.traverse(compiler, externs, this);
     addWindowProperties();
   }
 

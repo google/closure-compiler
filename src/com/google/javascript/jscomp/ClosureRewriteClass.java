@@ -103,7 +103,7 @@ class ClosureRewriteClass extends AbstractPostOrderCallback
 
   @Override
   public void hotSwapScript(Node scriptRoot, Node originalRoot) {
-    NodeTraversal.traverseEs6(compiler, scriptRoot, this);
+    NodeTraversal.traverse(compiler, scriptRoot, this);
   }
 
   @Override
@@ -498,7 +498,7 @@ class ClosureRewriteClass extends AbstractPostOrderCallback
       Node argList = cls.classModifier.getSecondChild();
       Node arg = argList.getFirstChild();
       final String argName = arg.getString();
-      NodeTraversal.traverseEs6(
+      NodeTraversal.traverse(
           compiler,
           cls.classModifier.getLastChild(),
           new AbstractPostOrderCallback() {

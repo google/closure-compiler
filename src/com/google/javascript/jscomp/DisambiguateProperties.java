@@ -351,10 +351,10 @@ class DisambiguateProperties implements CompilerPass {
     this.ancestorInterfaces = new HashMap<>();
     this.gtwpCache = new HashMap<>();
     // Gather names of properties in externs; these properties can't be renamed.
-    NodeTraversal.traverseEs6(compiler, externs, new FindExternProperties());
+    NodeTraversal.traverse(compiler, externs, new FindExternProperties());
     // Look at each unquoted property access and decide if that property will
     // be renamed.
-    NodeTraversal.traverseEs6(compiler, root, new FindRenameableProperties());
+    NodeTraversal.traverse(compiler, root, new FindRenameableProperties());
     // Do the actual renaming.
     renameProperties();
   }

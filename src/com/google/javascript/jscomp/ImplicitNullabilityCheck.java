@@ -50,7 +50,7 @@ public final class ImplicitNullabilityCheck extends AbstractPostOrderCallback
 
   @Override
   public void process(Node externs, Node root) {
-    NodeTraversal.traverseRootsEs6(compiler, this, externs, root);
+    NodeTraversal.traverseRoots(compiler, this, externs, root);
   }
 
   /**

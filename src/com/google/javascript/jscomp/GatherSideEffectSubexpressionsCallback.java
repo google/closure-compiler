@@ -159,7 +159,7 @@ class GatherSideEffectSubexpressionsCallback implements Callback {
 
     private Node simplifyShortCircuitBranch(Node node) {
       List<Node> parts = new ArrayList<>();
-      NodeTraversal.traverseEs6(
+      NodeTraversal.traverse(
           compiler, node,
           new GatherSideEffectSubexpressionsCallback(
               compiler,

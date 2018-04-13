@@ -39,7 +39,7 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
     return new CompilerPass() {
       @Override
       public void process(Node externs, Node js) {
-        NodeTraversal.traverseEs6(
+        NodeTraversal.traverse(
             compiler, js, new DeadAssignmentsElimination(compiler));
       }
     };

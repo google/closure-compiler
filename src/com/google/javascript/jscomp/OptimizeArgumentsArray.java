@@ -90,7 +90,7 @@ class OptimizeArgumentsArray implements CompilerPass, ScopedCallback {
 
   @Override
   public void process(Node externs, Node root) {
-    NodeTraversal.traverseEs6(compiler, checkNotNull(root), this);
+    NodeTraversal.traverse(compiler, checkNotNull(root), this);
   }
 
   @Override

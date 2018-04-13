@@ -113,8 +113,8 @@ public class J2clPass implements CompilerPass {
     }
 
     private void run() {
-      NodeTraversal.traverseEs6(compiler, root, new FunctionDefsCollector());
-      NodeTraversal.traverseEs6(compiler, root, new StaticCallInliner());
+      NodeTraversal.traverse(compiler, root, new FunctionDefsCollector());
+      NodeTraversal.traverse(compiler, root, new StaticCallInliner());
     }
 
     private class FunctionDefsCollector implements Callback {

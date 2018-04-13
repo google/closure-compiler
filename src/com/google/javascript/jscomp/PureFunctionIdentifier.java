@@ -127,8 +127,8 @@ class PureFunctionIdentifier implements CompilerPass {
 
     buildGraph();
 
-    NodeTraversal.traverseEs6(compiler, externs, new FunctionAnalyzer(true));
-    NodeTraversal.traverseEs6(compiler, root, new FunctionAnalyzer(false));
+    NodeTraversal.traverse(compiler, externs, new FunctionAnalyzer(true));
+    NodeTraversal.traverse(compiler, root, new FunctionAnalyzer(false));
 
     propagateSideEffects();
 

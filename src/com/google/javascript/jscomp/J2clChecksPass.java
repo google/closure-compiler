@@ -100,6 +100,6 @@ public class J2clChecksPass extends AbstractPostOrderCallback implements Compile
 
   @Override
   public void process(Node externs, Node root) {
-    NodeTraversal.traverseEs6(compiler, root, this);
+    NodeTraversal.traverse(compiler, root, this);
   }
 }

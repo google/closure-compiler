@@ -62,7 +62,7 @@ public class RewriteJsonToModule extends NodeTraversal.AbstractPostOrderCallback
   @Override
   public void process(Node externs, Node root) {
     checkState(root.isScript());
-    NodeTraversal.traverseEs6(compiler, root, this);
+    NodeTraversal.traverse(compiler, root, this);
   }
 
   @Override

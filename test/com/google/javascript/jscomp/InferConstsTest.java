@@ -44,7 +44,7 @@ public final class InferConstsTest extends CompilerTestCase {
       @Override
       public void process(Node externs, Node root) {
         new InferConsts(compiler).process(externs, root);
-        NodeTraversal.traverseEs6(compiler, root, constFinder);
+        NodeTraversal.traverse(compiler, root, constFinder);
       }
     };
   }
