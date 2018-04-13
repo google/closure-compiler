@@ -17,8 +17,10 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.javascript.jscomp.ScopeSubject.assertScope;
 import static com.google.javascript.jscomp.TypedScopeCreator.CTOR_INITIALIZER;
 import static com.google.javascript.jscomp.TypedScopeCreator.IFACE_INITIALIZER;
+import static com.google.javascript.jscomp.testing.TypeSubject.assertType;
 import static com.google.javascript.rhino.jstype.JSTypeNative.BOOLEAN_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NUMBER_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.OBJECT_TYPE;
@@ -254,7 +256,23 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     testSame("/** @enum */ var Foo = {BAR: 1}; var f = Foo;");
     ObjectType f = (ObjectType) findNameType("f", globalScope);
     assertTrue(f.hasProperty("BAR"));
-    assertEquals("Foo<number>", f.getPropertyType("BAR").toString());
+    assertType(f.getPropertyType("BAR")).toStringIsEqualTo("Foo<number>");
+    assertThat(f).isInstanceOf(EnumType.class);
+  }
+
+  public void testLetEnum() {
+    testSame("/** @enum */ let Foo = {BAR: 1}; let f = Foo;");
+    ObjectType f = (ObjectType) findNameType("f", globalScope);
+    assertTrue(f.hasProperty("BAR"));
+    assertType(f.getPropertyType("BAR")).toStringIsEqualTo("Foo<number>");
+    assertThat(f).isInstanceOf(EnumType.class);
+  }
+
+  public void testConstEnum() {
+    testSame("/** @enum */ const Foo = {BAR: 1}; const f = Foo;");
+    ObjectType f = (ObjectType) findNameType("f", globalScope);
+    assertTrue(f.hasProperty("BAR"));
+    assertType(f.getPropertyType("BAR")).toStringIsEqualTo("Foo<number>");
     assertThat(f).isInstanceOf(EnumType.class);
   }
 
@@ -262,7 +280,21 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     testSame("/** @enum */ var Foo = {BAR: 1}; var f = Foo;");
     TypedVar bar = globalScope.getVar("Foo.BAR");
     assertNotNull(bar);
-    assertEquals("Foo<number>", bar.getType().toString());
+    assertType(bar.getType()).toStringIsEqualTo("Foo<number>");
+  }
+
+  public void testLetEnumElement() {
+    testSame("/** @enum */ let Foo = {BAR: 1}; let f = Foo;");
+    TypedVar bar = globalScope.getVar("Foo.BAR");
+    assertNotNull(bar);
+    assertType(bar.getType()).toStringIsEqualTo("Foo<number>");
+  }
+
+  public void testConstEnumElement() {
+    testSame("/** @enum */ const Foo = {BAR: 1}; const f = Foo;");
+    TypedVar bar = globalScope.getVar("Foo.BAR");
+    assertNotNull(bar);
+    assertType(bar.getType()).toStringIsEqualTo("Foo<number>");
   }
 
   public void testNamespacedEnum() {
@@ -281,6 +313,56 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     assertTrue(y.isSubtypeOf(getNativeType(STRING_TYPE)));
     assertTrue(y.isEnumElementType());
     assertEquals("goog.ui.Zippy.EventType", y.getReferenceName());
+  }
+
+  public void testGlobalTypedefs() {
+    testSame(
+        lines(
+            "", // preserve newlines
+            "/** @typedef {number} */",
+            "var VarTypedef;",
+            "{",
+            "  /** @typedef {number} */",
+            "  var VarTypedefInBlock;", // still global despite enclosing block
+            "}",
+            "/** @typedef {number} */",
+            "let LetTypedef;",
+            // TODO(bradfordcsmith): We should probably disallow @typedef on const.
+            "/** @typedef {number} */",
+            "const ConstTypedef = undefined;",
+            ""));
+    assertType(registry.getType("VarTypedef")).isNumber();
+    assertType(registry.getType("VarTypedefInBlock")).isNumber();
+    assertType(registry.getType("LetTypedef")).isNumber();
+    assertType(registry.getType("ConstTypedef")).isNumber();
+  }
+
+  public void testLocalTypedefs() {
+    testSame(
+        lines(
+            "", // preserve newlines
+            "function f() {",
+            "  /** @typedef {number} */",
+            "  var VarTypedefInFunc;",
+            "  /** @typedef {number} */",
+            "  let LetTypedefInFunc;",
+            "  /** @typedef {number} */",
+            // TODO(bradfordcsmith): We should probably disallow @typedef on const.
+            "  const ConstTypedefInFunc = undefined;",
+            "}",
+            "{",
+            "  /** @typedef {number} */",
+            "  let LetTypedefInBlock;",
+            "  /** @typedef {number} */",
+            "  const ConstTypedefInBlock = undefined;",
+            "}",
+            ""));
+    // TODO(bradfordcsmith): It should be possible to define local typedefs.
+    assertThat(registry.getType("VarTypedefInFunc")).isNull();
+    assertThat(registry.getType("LetTypedefInFunc")).isNull();
+    assertThat(registry.getType("LetTypedefInBlock")).isNull();
+    assertThat(registry.getType("ConstTypedefInFunc")).isNull();
+    assertThat(registry.getType("ConstTypedefInBlock")).isNull();
   }
 
   public void testEnumAlias() {
@@ -663,16 +745,71 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     testSame("var x = 3; x = 'x'; x = true;");
 
     TypedVar x = globalScope.getVar("x");
-    assertEquals("(boolean|number|string)", x.getType().toString());
+    assertType(x.getType()).toStringIsEqualTo("(boolean|number|string)");
     assertTrue(x.isTypeInferred());
+  }
+
+  public void testInferredLet() throws Exception {
+    testSame("let x = 3; x = 'x'; x = true;");
+
+    TypedVar x = globalScope.getVar("x");
+    assertType(x.getType()).toStringIsEqualTo("(boolean|number|string)");
+    assertTrue(x.isTypeInferred());
+  }
+
+  public void testInferredConst() throws Exception {
+    testSame("const x = 3;");
+
+    TypedVar x = globalScope.getVar("x");
+    assertType(x.getType()).isNumber();
+    assertTrue(x.isConst());
+    // Although we did infer the type, we'll consider it effectively declared because the variable
+    // was declared to be constant. This is consistent with the way we handle the @const annotation
+    // on var declarations.
+    assertFalse(x.isTypeInferred());
+  }
+
+  public void testInferredAnnotatedConst() throws Exception {
+    testSame("/** @const */ var x = 3;");
+
+    TypedVar x = globalScope.getVar("x");
+    assertType(x.getType()).isNumber();
+    assertFalse(x.isConst());
+    assertFalse(x.isTypeInferred());
   }
 
   public void testDeclaredVar() throws Exception {
     testSame("/** @type {?number} */ var x = 3; var y = x;");
 
+    assertScope(globalScope).declares("x").directly();
     TypedVar x = globalScope.getVar("x");
-    assertEquals("(null|number)", x.getType().toString());
+    assertType(x.getType()).toStringIsEqualTo("(null|number)");
     assertFalse(x.isTypeInferred());
+
+    JSType y = findNameType("y", globalScope);
+    assertEquals("(null|number)", y.toString());
+  }
+
+  public void testDeclaredLet() throws Exception {
+    testSame("/** @type {?number} */ let x = 3; let y = x;");
+
+    assertScope(globalScope).declares("x").directly();
+    TypedVar x = globalScope.getVar("x");
+    assertType(x.getType()).toStringIsEqualTo("(null|number)");
+    assertFalse(x.isTypeInferred());
+
+    JSType y = findNameType("y", globalScope);
+    assertEquals("(null|number)", y.toString());
+  }
+
+  public void testDeclaredConst() throws Exception {
+    testSame("/** @type {?number} */ const x = 3; const y = x;");
+
+    assertScope(globalScope).declares("x").directly();
+    TypedVar x = globalScope.getVar("x");
+    assertType(x.getType()).toStringIsEqualTo("(null|number)");
+    assertFalse(x.isTypeInferred());
+    assertTrue(x.isConst());
 
     JSType y = findNameType("y", globalScope);
     assertEquals("(null|number)", y.toString());

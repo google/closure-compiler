@@ -390,8 +390,8 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
   @VisibleForTesting
   TypedScope createInitialScope(Node root) {
 
-    NodeTraversal.traverseTyped(
-        compiler, root, new DiscoverEnumsAndTypedefs(typeRegistry));
+    NodeTraversal.traverseEs6(
+        compiler, root, new IdentifyGlobalEnumsAndTypedefsAsNonNullable(typeRegistry));
 
     TypedScope s = TypedScope.createGlobalScope(root);
     declareNativeFunctionType(s, ARRAY_FUNCTION_TYPE);
@@ -433,22 +433,34 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
     scope.declare(name, null, t, null, false);
   }
 
-  private static class DiscoverEnumsAndTypedefs
+  /**
+   * Adds all globally-defined enums and typedefs to the registry's list of non-nullable types.
+   *
+   * TODO(bradfordcsmith): We should also make locally-defined enums and typedefs non-nullable.
+   */
+  private static class IdentifyGlobalEnumsAndTypedefsAsNonNullable
       extends AbstractShallowStatementCallback {
     private final JSTypeRegistry registry;
 
-    DiscoverEnumsAndTypedefs(JSTypeRegistry registry) {
+    IdentifyGlobalEnumsAndTypedefsAsNonNullable(JSTypeRegistry registry) {
       this.registry = registry;
     }
 
     @Override
     public void visit(NodeTraversal t, Node node, Node parent) {
       switch (node.getToken()) {
+        case LET:
+        case CONST:
         case VAR:
-          for (Node child = node.getFirstChild();
-               child != null; child = child.getNext()) {
-            identifyNameNode(
-                child, NodeUtil.getBestJSDocInfo(child));
+          // Note that this class expects to be invoked on the root node and does not traverse into
+          // functions.
+          Scope scope = t.getScope();
+          checkState(scope.isGlobal() || scope.getClosestHoistScope().isGlobal());
+          if (node.isVar() || scope.isGlobal()) {
+            for (Node child = node.getFirstChild();
+                 child != null; child = child.getNext()) {
+              identifyNameNode(child, NodeUtil.getBestJSDocInfo(child));
+            }
           }
           break;
         case EXPR_RESULT:
@@ -657,9 +669,12 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
           break;
 
         case VAR:
+        case LET:
+        case CONST:
           defineVar(n);
           // Handle typedefs.
-          if (currentHoistScope.isGlobal() && n.hasOneChild()) {
+          if ((n.isVar() ? currentHoistScope : currentScope).isGlobal() && n.hasOneChild()) {
+            // TODO(bradfordcsmith): Defining typedefs in local scopes should be possible.
             checkForTypedef(n.getFirstChild(), n.getJSDocInfo());
           }
           break;
@@ -884,7 +899,8 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
      * Defines a VAR initialization.
      */
     void defineVar(Node n) {
-      assertDefinitionNode(n, Token.VAR);
+      checkState(sourceName != null);
+      checkState(NodeUtil.isNameDeclaration(n));
       JSDocInfo info = n.getJSDocInfo();
       if (n.hasMoreThanOneChild()) {
         if (info != null) {
@@ -1250,7 +1266,10 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       // Object literal keys will have to compute their names themselves.
       if (n.isName()) {
         checkArgument(
-            parent.isFunction() || parent.isVar() || parent.isParamList() || parent.isCatch());
+            parent.isFunction()
+                || NodeUtil.isNameDeclaration(parent)
+                || parent.isParamList()
+                || parent.isCatch());
       } else {
         checkArgument(n.isGetProp() && (parent.isAssign() || parent.isExprResult()));
       }

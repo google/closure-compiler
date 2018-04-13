@@ -234,7 +234,7 @@ class TypeInference
 
             FlowScope informed = traverse(obj, output.createChildFlowScope());
 
-            if (item.isVar()) {
+            if (NodeUtil.isNameDeclaration(item)) {
               item = item.getFirstChild();
             }
             if (source.isForIn()) {
@@ -488,6 +488,8 @@ class TypeInference
         break;
 
       case VAR:
+      case LET:
+      case CONST:
       case THROW:
         scope = traverseChildren(n, scope);
         break;

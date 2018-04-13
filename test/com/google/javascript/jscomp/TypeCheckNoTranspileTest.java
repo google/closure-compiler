@@ -49,8 +49,139 @@ public final class TypeCheckNoTranspileTest extends CompilerTypeTestCase {
     return options;
   }
 
-  public void testUnsupported() {
-    testTypes("const x = 0;", "Internal Error: TypeCheck doesn't know how to handle CONST", true);
+  public void testGetTypedPercent() {
+    // Make sure names declared with `const` and `let` are counted correctly for typed percentage.
+    // This was created my a modifying a copy of TypeCheckTest.testGetTypedPercent1()
+    String js =
+        lines(
+            "const id = function(x) { return x; }",
+            "let id2 = function(x) { return id(x); }");
+    assertEquals(50.0, getTypedPercent(js), 0.1);
+  }
+
+  private double getTypedPercent(String js) {
+    Node n = compiler.parseTestCode(js);
+
+    Node externs = IR.root();
+    IR.root(externs, n);
+
+    TypeCheck t = makeTypeCheck();
+    t.processForTesting(null, n);
+    return t.getTypedPercent();
+  }
+
+  public void testGlobalEnumWithLet() {
+    testTypes(
+        lines(
+            "/** @enum */", // type defaults to {number}
+            "let E = {A: 1, B: 2};",
+            "",
+            "/**",
+            " * @param {E} x",
+            " * @return {number}",
+            " */",
+            "function f(x) {return x}"));
+  }
+
+  public void testGlobalEnumWithConst() {
+    testTypes(
+        lines(
+            "/** @enum */", // type defaults to {number}
+            "const E = {A: 1, B: 2};",
+            "",
+            "/**",
+            " * @param {E} x",
+            " * @return {number}",
+            " */",
+            "function f(x) {return x}"));
+  }
+
+  public void testLocalEnumWithLet() {
+    // TODO(bradfordcsmith): Local enum types should be non-nullable just like the global ones.
+    testTypes(
+        lines(
+            "{",
+            "  /** @enum */", // type defaults to {number}
+            "  let E = {A: 1, B: 2};",
+            "",
+            "  /**",
+            "   * @param {E} x",
+            "   * @return {number}",
+            "   */",
+            "  function f(x) {return x}",
+            "}"),
+        lines(
+            "inconsistent return type",
+            "found   : (E|null)",
+            "required: number"));
+  }
+
+  public void testLocalEnumWithConst() {
+    // TODO(bradfordcsmith): Local enum types should be non-nullable just like the global ones.
+    testTypes(
+        lines(
+            "{",
+            "  /** @enum */", // type defaults to {number}
+            "  const E = {A: 1, B: 2};",
+            "",
+            "  /**",
+            "   * @param {E} x",
+            "   * @return {number}",
+            "   */",
+            "  function f(x) {return x}",
+            "}"),
+        lines(
+            "inconsistent return type",
+            "found   : (E|null)",
+            "required: number"));
+  }
+
+  public void testGlobalTypedefWithLet() {
+    testTypes(
+        lines(
+            "/** @typedef {number} */",
+            "let Bar;",
+            "/** @param {Bar} x */",
+            "function f(x) {}",
+            "f('3');",
+            ""),
+        lines(
+            "actual parameter 1 of f does not match formal parameter",
+            "found   : string",
+            "required: number"));
+  }
+
+  public void testLocalTypedefWithLet() {
+    // TODO(bradfordcsmith): It should be possible to define local typedefs.
+    testTypes(
+        lines(
+            "{",
+            "  /** @typedef {number} */",
+            "  let Bar;",
+            "  /** @param {Bar} x */",
+            "  function f(x) {}",
+            "  f('3');",
+            "}",
+            ""),
+        "Bad type annotation. Unknown type Bar");
+  }
+
+  public void testConstWrongType() {
+    testTypes(
+        "/** @type {number} */ const x = 'hi';",
+        lines(
+            "initializing variable", // preserve newlines
+            "found   : string",
+            "required: number"));
+  }
+
+  public void testLetWrongType() {
+    testTypes(
+        "/** @type {number} */ let x = 'hi';",
+        lines(
+            "initializing variable", // preserve newlines
+            "found   : string",
+            "required: number"));
   }
 
   public void testForOf1() {
@@ -195,17 +326,13 @@ public final class TypeCheckNoTranspileTest extends CompilerTypeTestCase {
   }
 
   public void testForOf_let() {
-    testTypes(
-        "/** @type {!Iterable} */ var it; for (let elem of it) {}",
-        "Internal Error: TypeCheck doesn't know how to handle LET",
-        /* isError = */ true);
+    // TypeCheck can now handle `let`
+    testTypes("/** @type {!Iterable} */ let it; for (let elem of it) {}");
   }
 
   public void testForOf_const() {
-    testTypes(
-        "/** @type {!Iterable} */ var it; for (const elem of it) {}",
-        "Internal Error: TypeCheck doesn't know how to handle CONST",
-        /* isError = */ true);
+    // TypeCheck can now handle const
+    testTypes("/** @type {!Iterable} */ const it = []; for (const elem of it) {}");
   }
 
   public void testGenerator1() {

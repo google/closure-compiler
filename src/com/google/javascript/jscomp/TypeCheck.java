@@ -598,6 +598,8 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         break;
 
       case VAR:
+      case LET:
+      case CONST:
         visitVar(t, n);
         typeable = false;
         break;
@@ -1492,7 +1494,8 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     if (parentNodeType == Token.FUNCTION
         || parentNodeType == Token.CATCH
         || parentNodeType == Token.PARAM_LIST
-        || parentNodeType == Token.VAR) {
+        || NodeUtil.isNameDeclaration(parent)
+        ) {
       return false;
     }
 
