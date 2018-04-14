@@ -789,21 +789,29 @@ public class Scanner {
   }
 
   private static boolean isIdentifierStart(char ch) {
-    switch (ch) {
-      case '$':
-      case '_':
-        return true;
-      default:
-        // Workaround b/36459436
-        // When running under GWT, Character.isLetter only handles ASCII
-        // Angular relies heavily on U+0275 (Latin Barred O)
-        return ch == 0x0275
-            // TODO: UnicodeLetter also includes Letter Number (NI)
-            || Character.isLetter(ch);
+    // Most code is written in pure ASCII create a fast path here.
+    if (ch <= 127) {
+      return ((ch >= 'A' & ch <= 'Z')
+          | (ch >= 'a' & ch <= 'z')
+          | (ch == '_' | ch == '$'));
     }
+
+    // Workaround b/36459436
+    // When running under GWT, Character.isLetter only handles ASCII
+    // Angular relies heavily on U+0275 (Latin Barred O)
+    return ch == 0x0275
+        // TODO: UnicodeLetter also includes Letter Number (NI)
+        || Character.isLetter(ch);
   }
 
   private static boolean isIdentifierPart(char ch) {
+    // Most code is written in pure ASCII create a fast path here.
+    if (ch <= 127) {
+      return ((ch >= 'A' & ch <= 'Z')
+          | (ch >= 'a' & ch <= 'z')
+          | (ch >= '0' & ch <= '9')
+          | (ch == '_' | ch == '$')); // _ or $
+    }
     // TODO: identifier part character classes
     // CombiningMark
     //   Non-Spacing mark (Mn)
