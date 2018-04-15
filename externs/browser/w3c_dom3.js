@@ -559,13 +559,6 @@ Element.prototype.setIdAttributeNS = function(namespaceURI, localName, isId) {};
 Text.prototype.wholeText;
 
 /**
- * @param {string} newText
- * @return {Text}
- * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#Text3-replaceWholeText
- */
-Text.prototype.replaceWholeText = function(newText) {};
-
-/**
  * @constructor
  * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#TypeInfo
  */
