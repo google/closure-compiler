@@ -60,6 +60,7 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
     test("/** @const */ var x = 5;", "/** @const {number} */ var x;");
     test("/** @const */ var x = true;", "/** @const {boolean} */ var x;");
     test("/** @const */ var x = 'str';", "/** @const {string} */ var x;");
+    test("/** @const */ var x = `str`;", "/** @const {string} */ var x;");
     test("/** @const */ var x = null;", "/** @const {null} */ var x;");
     test("/** @const */ var x = void 0;", "/** @const {void} */ var x;");
     test("/** @const */ var x = /a/;", "/** @const {!RegExp} */ var x;");

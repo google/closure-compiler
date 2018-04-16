@@ -1892,6 +1892,7 @@ public final class NodeUtil {
 
       case TYPEOF:
       case STRING:
+      case TEMPLATELIT:
         return ValueType.STRING;
 
       case NULL:
