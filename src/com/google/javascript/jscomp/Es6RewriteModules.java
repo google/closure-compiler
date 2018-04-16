@@ -887,11 +887,20 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
           } else if ((var == null || importedGoogNames.contains(var.getNameNode()))
               && importMap.containsKey(baseName)) {
             ModuleOriginalNamePair pair = importMap.get(baseName);
-            maybeAddAliasToSymbolTable(typeNode, t.getSourceName());
             if (pair.originalName.isEmpty()) {
               maybeSetNewName(t, typeNode, name, pair.module + rest);
             } else {
               maybeSetNewName(t, typeNode, name, baseName + "$$" + pair.module + rest);
+            }
+
+            if (preprocessorSymbolTable != null) {
+              // Jsdoc type node is a single STRING node that spans the whole type. For example
+              // STRING node "bar.Foo". ES6 import rewrite replaces only "module"
+              // part of the type: "bar.Foo" => "module$full$path$bar$Foo". We have to record
+              // "bar" as alias.
+              Node onlyBaseName = Node.newString(baseName).useSourceInfoFrom(typeNode);
+              onlyBaseName.setLength(baseName.length());
+              maybeAddAliasToSymbolTable(onlyBaseName, t.getSourceName());
             }
           }
           typeNode.setOriginalName(name);
