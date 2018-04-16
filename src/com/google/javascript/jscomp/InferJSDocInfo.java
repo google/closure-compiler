@@ -94,11 +94,10 @@ class InferJSDocInfo extends AbstractPostOrderCallback
           return;
         }
 
-        // Only allow JSDoc on VARs, function declarations, and assigns.
-        if (!parent.isVar() &&
-            !NodeUtil.isFunctionDeclaration(parent) &&
-            !(parent.isAssign() &&
-              n == parent.getFirstChild())) {
+        // Only allow JSDoc on variable declarations, function declarations, and assigns.
+        if (!NodeUtil.isNameDeclaration(parent)
+            && !NodeUtil.isFunctionDeclaration(parent)
+            && !(parent.isAssign() && n == parent.getFirstChild())) {
           return;
         }
 
@@ -109,12 +108,10 @@ class InferJSDocInfo extends AbstractPostOrderCallback
         // /** ... */ x = function () { ... }
         // 3) A NAME parent.
         // var x, /** ... */ y = function() { ... }
-        // 4) A VAR grandparent.
+        // 4) A VAR, CONST, or LET grandparent.
         // /** ... */ var x = function() { ... }
         docInfo = n.getJSDocInfo();
-        if (docInfo == null &&
-            !(parent.isVar() &&
-                !parent.hasOneChild())) {
+        if (docInfo == null && !(NodeUtil.isNameDeclaration(parent) && !parent.hasOneChild())) {
           docInfo = parent.getJSDocInfo();
         }
 
