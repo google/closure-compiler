@@ -507,11 +507,6 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
          new ArrayList<>();
 
     /**
-     * Functions that we found in the global scope and not in externs.
-     */
-    private final List<Node> nonExternFunctions = new ArrayList<>();
-
-    /**
      * Object literals with a @lends annotation aren't analyzed until we
      * reach the root of the statement they're defined in.
      *
@@ -645,10 +640,6 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
           break;
 
         case FUNCTION:
-          if (t.getInput() == null || !t.getInput().isExtern()) {
-            nonExternFunctions.add(n);
-          }
-
           // Hoisted functions are handled during pre-traversal.
           if (!NodeUtil.isHoistedFunctionDeclaration(n)) {
             defineFunctionLiteral(n);
