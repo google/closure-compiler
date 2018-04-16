@@ -289,6 +289,8 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
             "}");
 
     testNoWarning("/** @const */ var x = 0;");
+    testNoWarning("/** @const */ var x = unknown;");
+    testNoWarning("const x = unknown;");
 
     // We @suppress {newCheckTypes} to suppress NTI uninferred const and global this warnings.
 

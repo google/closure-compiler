@@ -38,7 +38,6 @@ public final class ImplicitNullabilityCheckTest extends TypeICompilerTestCase {
   @Override
   protected void setUp() throws Exception {
     super.setUp();
-    enableTranspile();
   }
 
   public void testExplicitJsdocDoesntWarn() {
@@ -50,6 +49,13 @@ public final class ImplicitNullabilityCheckTest extends TypeICompilerTestCase {
     noWarning("/** @type {function(new:Object)} */ function f(){}");
     noWarning("/** @type {function(this:Object)} */ function f(){}");
     noWarning("/** @typedef {!Object} */ var Obj; var /** Obj */ x;");
+
+    // Test let and const
+    noWarning("/** @type {boolean} */ let x;");
+    noWarning("/** @type {!Object} */ let x;");
+
+    noWarning("/** @type {!Object} */ const x = {};");
+    noWarning("/** @type {boolean} */ const x = true;");
   }
 
   public void testExplicitlyNullableUnion() {
@@ -58,6 +64,12 @@ public final class ImplicitNullabilityCheckTest extends TypeICompilerTestCase {
     noWarning("/** @type {?(Object|number)} */ var x;");
     noWarning("/** @type {(Object|?number)} */ var x;");
     warnImplicitlyNullable("/** @type {(Object|number)} */ var x;");
+
+    noWarning("/** @type {(Object|null)} */ let x;");
+    warnImplicitlyNullable("/** @type {(Object|number)} */ let x;");
+
+    noWarning("/** @type {(Object|null)} */ const x = null;");
+    warnImplicitlyNullable("/** @type {(Object|number)} */ const x = 3;;");
   }
 
   public void testJsdocPositions() {
@@ -66,6 +78,9 @@ public final class ImplicitNullabilityCheckTest extends TypeICompilerTestCase {
     warnImplicitlyNullable("/** @typedef {Object} */ var x;");
     warnImplicitlyNullable("/** @param {Object} x */ function f(x){}");
     warnImplicitlyNullable("/** @return {Object} */ function f(x){ return {}; }");
+
+    warnImplicitlyNullable("/** @type {Object} */ let x;");
+    warnImplicitlyNullable("/** @type {Object} */ const x = {};");
   }
 
   public void testParameterizedObject() {

@@ -115,6 +115,12 @@ public final class CheckAccessControlsTest extends TypeICompilerTestCase {
         "Variable f has been deprecated: Another reason");
   }
 
+  public void testWarningOnDeprecatedConstVariableWithConst() {
+    testDepName(
+        "/** @deprecated Another reason */ const f = 4; function g() { alert(f); }",
+        "Variable f has been deprecated: Another reason");
+  }
+
   public void testThatNumbersArentDeprecated() {
     testSame("/** @deprecated */ var f = 4; var h = 3; function g() { alert(h); }");
   }
