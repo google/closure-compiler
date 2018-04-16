@@ -129,13 +129,36 @@ public class NodeTraversal {
   }
 
   /**
-   * Abstract callback to visit all nodes in postorder.
+   * Abstract callback to visit all nodes in postorder. Note: Do not create anonymous subclasses of
+   * this. Instead, write a lambda expression which will be interpreted as an
+   * AbstractPostOrderCallbackInterface.
+   *
    */
   public abstract static class AbstractPostOrderCallback implements Callback {
     @Override
     public final boolean shouldTraverse(NodeTraversal nodeTraversal, Node n, Node parent) {
       return true;
     }
+  }
+
+  /** Abstract callback to visit all nodes in postorder. */
+  @FunctionalInterface
+  public static interface AbstractPostOrderCallbackInterface {
+    void visit(NodeTraversal t, Node n, Node parent);
+  }
+
+  private static Callback makePostOrderCallback(AbstractPostOrderCallbackInterface lambda) {
+    return new Callback() {
+      @Override
+      public final boolean shouldTraverse(NodeTraversal nodeTraversal, Node n, Node parent) {
+        return true;
+      }
+
+      @Override
+      public final void visit(NodeTraversal t, Node n, Node parent) {
+        lambda.visit(t, n, parent);
+      }
+    };
   }
 
   /** Abstract callback to visit all nodes in preorder. */
@@ -313,6 +336,12 @@ public class NodeTraversal {
   public static void traverse(AbstractCompiler compiler, Node root, Callback cb) {
     NodeTraversal t = new NodeTraversal(compiler, cb, new Es6SyntacticScopeCreator(compiler));
     t.traverse(root);
+  }
+
+  /** Traverses in post order. */
+  public static void traversePostOrder(
+      AbstractCompiler compiler, Node root, AbstractPostOrderCallbackInterface cb) {
+    traverse(compiler, root, makePostOrderCallback(cb));
   }
 
   void traverseRoots(Node externs, Node root) {

@@ -498,17 +498,14 @@ class ClosureRewriteClass extends AbstractPostOrderCallback
       Node argList = cls.classModifier.getSecondChild();
       Node arg = argList.getFirstChild();
       final String argName = arg.getString();
-      NodeTraversal.traverse(
+      NodeTraversal.traversePostOrder(
           compiler,
           cls.classModifier.getLastChild(),
-          new AbstractPostOrderCallback() {
-            @Override
-            public void visit(NodeTraversal t, Node n, Node parent) {
-              if (n.isName() && n.getString().equals(argName)) {
-                Node newName = cls.name.cloneTree();
-                parent.replaceChild(n, newName);
-                compiler.reportChangeToEnclosingScope(newName);
-              }
+          (NodeTraversal unused, Node n, Node parent) -> {
+            if (n.isName() && n.getString().equals(argName)) {
+              Node newName = cls.name.cloneTree();
+              parent.replaceChild(n, newName);
+              compiler.reportChangeToEnclosingScope(newName);
             }
           });
 

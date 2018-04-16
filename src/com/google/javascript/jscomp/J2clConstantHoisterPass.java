@@ -20,7 +20,6 @@ import static com.google.common.base.Preconditions.checkState;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimap;
-import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.Node;
 import java.util.Collection;
 import java.util.HashSet;
@@ -46,22 +45,19 @@ public class J2clConstantHoisterPass implements CompilerPass {
 
     final Multimap<String, Node> fieldAssignments = ArrayListMultimap.create();
     final Set<Node> hoistableFunctions = new HashSet<>();
-    NodeTraversal.traverse(
+    NodeTraversal.traversePostOrder(
         compiler,
         root,
-        new AbstractPostOrderCallback() {
-          @Override
-          public void visit(NodeTraversal t, Node node, Node parent) {
-            // TODO(stalcup): don't gather assignments ourselves, switch to a persistent
-            // DefinitionUseSiteFinder instead.
-            if (parent != null && NodeUtil.isLValue(node)) {
-              fieldAssignments.put(node.getQualifiedName(), parent);
-            }
+        (NodeTraversal t, Node node, Node parent) -> {
+          // TODO(stalcup): don't gather assignments ourselves, switch to a persistent
+          // DefinitionUseSiteFinder instead.
+          if (parent != null && NodeUtil.isLValue(node)) {
+            fieldAssignments.put(node.getQualifiedName(), parent);
+          }
 
-            // TODO(stalcup): convert to a persistent index of hoistable functions.
-            if (isHoistableFunction(t, node)) {
-              hoistableFunctions.add(node);
-            }
+          // TODO(stalcup): convert to a persistent index of hoistable functions.
+          if (isHoistableFunction(t, node)) {
+            hoistableFunctions.add(node);
           }
         });
 

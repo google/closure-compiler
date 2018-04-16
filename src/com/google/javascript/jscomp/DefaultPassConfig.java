@@ -2133,13 +2133,11 @@ public final class DefaultPassConfig extends PassConfig {
     public void process(Node externs, Node root) {
       // If NTI is enabled, erase the NTI types from the AST before adding the old types.
       if (this.compiler.getOptions().getNewTypeInference()) {
-        NodeTraversal.traverse(
-            this.compiler, root,
-            new NodeTraversal.AbstractPostOrderCallback(){
-              @Override
-              public void visit(NodeTraversal t, Node n, Node parent) {
-                n.setTypeI(null);
-              }
+        NodeTraversal.traversePostOrder(
+            this.compiler,
+            root,
+            (NodeTraversal t, Node n, Node parent) -> {
+              n.setTypeI(null);
             });
         this.compiler.clearTypeIRegistry();
       }

@@ -677,78 +677,74 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
   }
 
   private void rewriteRequires(Node script) {
-    NodeTraversal.traverse(
+    NodeTraversal.traversePostOrder(
         compiler,
         script,
-        new AbstractPostOrderCallback() {
-          @Override
-          public void visit(NodeTraversal t, Node n, Node parent) {
-            if (n.isCall()) {
-              if (n.getFirstChild().matchesQualifiedName("goog.require")) {
-                visitRequire(t, n, parent, true /* checkScope */);
-              } else if (n.getFirstChild().matchesQualifiedName("goog.module.get")) {
-                visitGoogModuleGet(t, n, parent);
-              }
-            }
-          }
-
-          private void visitGoogModuleGet(NodeTraversal t, Node getCall, Node parent) {
-            if (!getCall.hasTwoChildren() || !getCall.getLastChild().isString()) {
-              t.report(getCall, INVALID_GET_NAMESPACE);
-              return;
-            }
-
-            // Module has already been turned into a script at this point.
-            if (t.inGlobalHoistScope()) {
-              t.report(getCall, MODULE_USES_GOOG_MODULE_GET);
-              return;
-            }
-
-            visitRequire(t, getCall, parent, false /* checkScope */);
-          }
-
-          private void visitRequire(
-              NodeTraversal t, Node requireCall, Node parent, boolean checkScope) {
-            if (!requireCall.hasTwoChildren() || !requireCall.getLastChild().isString()) {
-              t.report(requireCall, INVALID_REQUIRE_NAMESPACE);
-              return;
-            }
-
-            // Module has already been turned into a script at this point.
-            if (checkScope && !t.getScope().isGlobal()) {
-              t.report(requireCall, INVALID_CLOSURE_CALL_ERROR);
-              return;
-            }
-
-            String namespace = requireCall.getLastChild().getString();
-
-            boolean isStoredInDeclaration = NodeUtil.isDeclaration(parent.getParent());
-
-            if (isStoredInDeclaration && !parent.getParent().isConst()) {
-              compiler.report(JSError.make(parent.getParent(), LHS_OF_GOOG_REQUIRE_MUST_BE_CONST));
-            }
-
-            Module m = moduleMetadata.getModulesByGoogNamespace().get(namespace);
-
-            if (m == null) {
-              if (ModuleLoader.isRelativeIdentifier(namespace)) {
-                t.report(requireCall, PATH_REQUIRE_IN_ES6_MODULE, namespace);
-              } else {
-                t.report(requireCall, MISSING_MODULE_OR_PROVIDE, namespace);
-              }
-              return;
-            }
-
-            if (isStoredInDeclaration) {
-              Node replacement =
-                  NodeUtil.newQName(compiler, m.getGlobalName(namespace)).srcrefTree(requireCall);
-              parent.replaceChild(requireCall, replacement);
-            } else {
-              checkState(requireCall.getParent().isExprResult());
-              requireCall.getParent().detach();
+        (NodeTraversal t, Node n, Node parent) -> {
+          if (n.isCall()) {
+            if (n.getFirstChild().matchesQualifiedName("goog.require")) {
+              visitRequire(t, n, parent, true /* checkScope */);
+            } else if (n.getFirstChild().matchesQualifiedName("goog.module.get")) {
+              visitGoogModuleGet(t, n, parent);
             }
           }
         });
+  }
+
+  private void visitGoogModuleGet(NodeTraversal t, Node getCall, Node parent) {
+    if (!getCall.hasTwoChildren() || !getCall.getLastChild().isString()) {
+      t.report(getCall, INVALID_GET_NAMESPACE);
+      return;
+    }
+
+    // Module has already been turned into a script at this point.
+    if (t.inGlobalHoistScope()) {
+      t.report(getCall, MODULE_USES_GOOG_MODULE_GET);
+      return;
+    }
+
+    visitRequire(t, getCall, parent, false /* checkScope */);
+  }
+
+  private void visitRequire(NodeTraversal t, Node requireCall, Node parent, boolean checkScope) {
+    if (!requireCall.hasTwoChildren() || !requireCall.getLastChild().isString()) {
+      t.report(requireCall, INVALID_REQUIRE_NAMESPACE);
+      return;
+    }
+
+    // Module has already been turned into a script at this point.
+    if (checkScope && !t.getScope().isGlobal()) {
+      t.report(requireCall, INVALID_CLOSURE_CALL_ERROR);
+      return;
+    }
+
+    String namespace = requireCall.getLastChild().getString();
+
+    boolean isStoredInDeclaration = NodeUtil.isDeclaration(parent.getParent());
+
+    if (isStoredInDeclaration && !parent.getParent().isConst()) {
+      compiler.report(JSError.make(parent.getParent(), LHS_OF_GOOG_REQUIRE_MUST_BE_CONST));
+    }
+
+    Module m = moduleMetadata.getModulesByGoogNamespace().get(namespace);
+
+    if (m == null) {
+      if (ModuleLoader.isRelativeIdentifier(namespace)) {
+        t.report(requireCall, PATH_REQUIRE_IN_ES6_MODULE, namespace);
+      } else {
+        t.report(requireCall, MISSING_MODULE_OR_PROVIDE, namespace);
+      }
+      return;
+    }
+
+    if (isStoredInDeclaration) {
+      Node replacement =
+          NodeUtil.newQName(compiler, m.getGlobalName(namespace)).srcrefTree(requireCall);
+      parent.replaceChild(requireCall, replacement);
+    } else {
+      checkState(requireCall.getParent().isExprResult());
+      requireCall.getParent().detach();
+    }
   }
 
   private class FindMutatedExports extends AbstractPostOrderCallback {

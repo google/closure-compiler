@@ -25,6 +25,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.NodeTraversal.AbstractNodeTypePruningCallback;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
+import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallbackInterface;
 import com.google.javascript.jscomp.NodeTraversal.ChangeScopeRootCallback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
@@ -106,19 +107,17 @@ public final class NodeTraversalTest extends TestCase {
 
   public void testUnexpectedException() {
 
-    NodeTraversal.Callback cb = new NodeTraversal.AbstractPostOrderCallback() {
-      @Override
-      public void visit(NodeTraversal t, Node n, Node parent) {
-        throw new RuntimeException(TEST_EXCEPTION);
-      }
-    };
+    AbstractPostOrderCallbackInterface cb =
+        (NodeTraversal t, Node n, Node parent) -> {
+          throw new RuntimeException(TEST_EXCEPTION);
+        };
 
     Compiler compiler = new Compiler();
 
     try {
       String code = "function foo() {}";
       Node tree = parse(compiler, code);
-      NodeTraversal.traverse(compiler, tree, cb);
+      NodeTraversal.traversePostOrder(compiler, tree, cb);
       fail("Expected RuntimeException");
     } catch (RuntimeException e) {
       assertThat(e)
@@ -696,22 +695,19 @@ public final class NodeTraversalTest extends TestCase {
     Node tree = parse(compiler, code);
 
     final AtomicInteger counter = new AtomicInteger(0);
-    NodeTraversal.Callback countingCallback =
-        new NodeTraversal.AbstractPostOrderCallback() {
-          @Override
-          public void visit(NodeTraversal t, Node n, Node parent) {
-            counter.incrementAndGet();
-          }
+    AbstractPostOrderCallbackInterface countingCallback =
+        (NodeTraversal t, Node n, Node parent) -> {
+          counter.incrementAndGet();
         };
 
-    NodeTraversal.traverse(compiler, tree, countingCallback);
+    NodeTraversal.traversePostOrder(compiler, tree, countingCallback);
     assertThat(counter.get()).isEqualTo(3);
 
     counter.set(0);
     Thread.currentThread().interrupt();
 
     try {
-      NodeTraversal.traverse(compiler, tree, countingCallback);
+      NodeTraversal.traversePostOrder(compiler, tree, countingCallback);
       fail("Expected a RuntimeException;");
     } catch (RuntimeException e) {
       assertThat(e).hasCauseThat().hasCauseThat().isInstanceOf(InterruptedException.class);
