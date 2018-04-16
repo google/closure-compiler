@@ -390,7 +390,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
   @VisibleForTesting
   TypedScope createInitialScope(Node root) {
 
-    NodeTraversal.traverseEs6(
+    NodeTraversal.traverse(
         compiler, root, new IdentifyGlobalEnumsAndTypedefsAsNonNullable(typeRegistry));
 
     TypedScope s = TypedScope.createGlobalScope(root);
