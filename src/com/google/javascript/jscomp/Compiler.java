@@ -1623,7 +1623,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
         new ReferenceCollectingCallback(
             this,
             ReferenceCollectingCallback.DO_NOTHING_BEHAVIOR,
-            SyntacticScopeCreator.makeUntyped(this));
+            new Es6SyntacticScopeCreator(this));
     refCollector.process(getRoot());
     symbolTable.addSymbolsFrom(refCollector);
 
