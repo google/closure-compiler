@@ -86,7 +86,8 @@ public final class FeatureSet implements Serializable {
               Feature.MEMBER_DECLARATIONS,
               Feature.TEMPLATE_LITERALS));
 
-  public static final FeatureSet OTI_SUPPORTED = ES5.with(Feature.GENERATORS);
+  public static final FeatureSet OTI_SUPPORTED =
+      ES5.with(Feature.GENERATORS, Feature.LET_DECLARATIONS, Feature.CONST_DECLARATIONS);
 
   private enum LangVersion {
     ES3,
@@ -194,6 +195,40 @@ public final class FeatureSet implements Serializable {
 
   /** Returns a string representation suitable for encoding in depgraph and deps.js files. */
   public String version() {
+    if (ES3.contains(this)) {
+      return "es3";
+    }
+    if (ES5.contains(this)) {
+      return "es5";
+    }
+    if (ES6_MODULES.contains(this)) {
+      return "es6";
+    }
+    if (ES7_MODULES.contains(this)) {
+      return "es7";
+    }
+    if (ES8_MODULES.contains(this)) {
+      return "es8";
+    }
+    if (ES2018_MODULES.contains(this)) {
+      return "es9";
+    }
+    if (ES_NEXT.contains(this)) {
+      return "es_next";
+    }
+    if (TYPESCRIPT.contains(this)) {
+      return "ts";
+    }
+    throw new IllegalStateException(this.toString());
+  }
+
+  /**
+   * Returns a string representation useful for debugging.
+   *
+   * <p>This is not suitable for encoding in deps.js or depgraph files, because it may return
+   * strings like 'otiSupported' and 'ntiSupported' which are not real language modes.
+   */
+  public String versionForDebugging() {
     if (ES3.contains(this)) {
       return "es3";
     }
