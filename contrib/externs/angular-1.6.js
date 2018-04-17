@@ -926,7 +926,7 @@ angular.Scope.prototype.$eval = function(opt_exp, opt_locals) {};
  */
 angular.Scope.prototype.$evalAsync = function(opt_exp, opt_locals) {};
 
-/** @type {string} */
+/** @type {number} */
 angular.Scope.prototype.$id;
 
 /**
