@@ -3826,10 +3826,24 @@ public final class NodeUtil {
    */
   public static Node newQNameDeclaration(
       AbstractCompiler compiler, String name, Node value, JSDocInfo info) {
+    return newQNameDeclaration(compiler, name, value, info, Token.VAR);
+  }
+
+  /**
+   * Creates a node representing a qualified name.
+   *
+   * @param name A qualified name (e.g. "foo" or "foo.bar.baz")
+   * @param type Must be VAR, CONST, or LET. Ignored if {@code name} is dotted.
+   * @return A VAR/CONST/LET node, or an EXPR_RESULT node containing an ASSIGN or NAME node.
+   */
+  public static Node newQNameDeclaration(
+      AbstractCompiler compiler, String name, Node value, JSDocInfo info, Token type) {
+    checkState(type == Token.VAR || type == Token.LET || type == Token.CONST, type);
     Node result;
     Node nameNode = newQName(compiler, name);
     if (nameNode.isName()) {
-      result = value == null ? IR.var(nameNode) : IR.var(nameNode, value);
+      result =
+          value == null ? IR.declaration(nameNode, type) : IR.declaration(nameNode, value, type);
       result.setJSDocInfo(info);
     } else if (value != null) {
       result = IR.exprResult(IR.assign(nameNode, value));

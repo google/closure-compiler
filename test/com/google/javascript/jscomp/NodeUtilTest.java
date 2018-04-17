@@ -3021,6 +3021,35 @@ public final class NodeUtilTest extends TestCase {
     assertNodeTreesEqual(expected, actual);
   }
 
+  public void testNewQNameDeclarationWithQualifiedName() {
+    assertNode(createNewQNameDeclaration("ns.prop", IR.number(0), Token.VAR))
+        .isEqualTo(
+            IR.exprResult(IR.assign(IR.getprop(IR.name("ns"), IR.string("prop")), IR.number(0))));
+  }
+
+  public void testNewQNameDeclarationWithVar() {
+    assertNode(createNewQNameDeclaration("x", IR.number(0), Token.VAR))
+        .isEqualTo(IR.var(IR.name("x"), IR.number(0)));
+  }
+
+  public void testNewQNameDeclarationWithLet() {
+    assertNode(createNewQNameDeclaration("x", IR.number(0), Token.LET))
+        .isEqualTo(IR.let(IR.name("x"), IR.number(0)));
+  }
+
+  public void testNewQNameDeclarationWithConst() {
+    assertNode(createNewQNameDeclaration("x", IR.number(0), Token.CONST))
+        .isEqualTo(IR.constNode(IR.name("x"), IR.number(0)));
+  }
+
+  private Node createNewQNameDeclaration(String name, Node value, Token type) {
+    Compiler compiler = new Compiler();
+    CompilerOptions options = new CompilerOptions();
+    options.setCodingConvention(new GoogleCodingConvention());
+    compiler.init(ImmutableList.<SourceFile>of(), ImmutableList.<SourceFile>of(), options);
+    return NodeUtil.newQNameDeclaration(compiler, name, value, null, type);
+  }
+
   public void testGetBestJsDocInfoForClasses() {
     Node classNode = getClassNode("/** @export */ class Foo {}");
     assertTrue(NodeUtil.getBestJSDocInfo(classNode).isExport());
