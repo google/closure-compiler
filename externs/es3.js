@@ -1874,7 +1874,7 @@ String.prototype.localeCompare = function(compareString, locales, options) {};
  * expression.
  *
  * @this {String|string}
- * @param {*} regexp
+ * @param {RegExp|string} regexp
  * @return {Array<string>} This should really return an Array with a few
  *     special properties, but we do not have a good way to model this in
  *     our type system. Also see Regexp.prototype.exec.
@@ -1935,7 +1935,7 @@ String.prototype.small = function() {};
 
 /**
  * @this {String|string}
- * @param {*=} opt_separator
+ * @param {(RegExp|string)=} opt_separator
  * @param {number=} opt_limit
  * @return {!Array<string>}
  * @nosideeffects
@@ -2049,8 +2049,8 @@ String.prototype.length;
 
 /**
  * @constructor
- * @param {*=} opt_pattern
- * @param {*=} opt_flags
+ * @param {(RegExp|string)=} opt_pattern
+ * @param {string=} opt_flags
  * @return {!RegExp}
  * @throws {SyntaxError} if opt_pattern is an invalid pattern.
  * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp
@@ -2058,8 +2058,8 @@ String.prototype.length;
 function RegExp(opt_pattern, opt_flags) {}
 
 /**
- * @param {*} pattern
- * @param {*=} opt_flags
+ * @param {string} pattern
+ * @param {string=} opt_flags
  * @return {void}
  * @modifies {this}
  * @deprecated
@@ -2069,7 +2069,7 @@ function RegExp(opt_pattern, opt_flags) {}
 RegExp.prototype.compile = function(pattern, opt_flags) {};
 
 /**
- * @param {*} str The string to search.
+ * @param {string} str The string to search.
  * @return {Array<string>} This should really return an Array with a few
  *     special properties, but we do not have a good way to model this in
  *     our type system. Also see String.prototype.match.
@@ -2079,7 +2079,7 @@ RegExp.prototype.compile = function(pattern, opt_flags) {};
 RegExp.prototype.exec = function(str) {};
 
 /**
- * @param {*} str The string to search.
+ * @param {string} str The string to search.
  * @return {boolean} Whether the string was matched.
  * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp/test
  */
