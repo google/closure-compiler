@@ -100,8 +100,6 @@ public abstract class ObjectType
     super(registry, templateTypeMap);
   }
 
-  public Node getRootNode() { return null; }
-
   public final ObjectType getParentScope() {
     return getImplicitPrototype();
   }
