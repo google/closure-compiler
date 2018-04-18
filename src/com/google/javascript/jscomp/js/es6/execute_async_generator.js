@@ -16,6 +16,7 @@
 
 'require base';
 'require es6/promise';
+'require es6/generator_engine';
 
 /**
  * Handles the execution of an async function.
@@ -97,4 +98,20 @@ $jscomp.asyncExecutePromiseGenerator = function(generator) {
  */
 $jscomp.asyncExecutePromiseGeneratorFunction = function(generatorFunction) {
   return $jscomp.asyncExecutePromiseGenerator(generatorFunction());
+};
+
+/**
+ * Handles the execution of a state machine program that represents transpiled
+ * async function.
+ *
+ * @final
+ * @param {function(!$jscomp.generator.Context<?>): (void|{value: ?})} program
+ * @return {!Promise<?>}
+ * @suppress {reportUnknownTypes, visibility}
+ */
+$jscomp.asyncExecutePromiseGeneratorProgram = function(program) {
+  return $jscomp.asyncExecutePromiseGenerator(
+      new $jscomp.generator.Generator_(
+          new $jscomp.generator.Engine_(
+              program)));
 };
