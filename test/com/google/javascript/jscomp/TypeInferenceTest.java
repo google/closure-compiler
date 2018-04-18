@@ -928,6 +928,23 @@ public final class TypeInferenceTest extends TestCase {
     verify("x", NUMBER_TYPE);
   }
 
+  public void testFunctionDeclarationHasBlockScope() {
+    inFunction(
+        lines(
+            "BLOCK_SCOPE: {",
+            "  BEFORE_DEFINITION: f;",
+            "  function f() {}",
+            "  AFTER_DEFINITION: f;",
+            "}",
+            "AFTER_BLOCK: f;"));
+    // A block-scoped function declaration is hoisted to the beginning of its block, so it is always
+    // defined within the block.
+    assertScopeEnclosing("BEFORE_DEFINITION").declares("f").onScopeLabeled("BLOCK_SCOPE");
+    assertTypeOfExpression("BEFORE_DEFINITION").toStringIsEqualTo("function(): undefined");
+    assertTypeOfExpression("AFTER_DEFINITION").toStringIsEqualTo("function(): undefined");
+    assertScopeEnclosing("AFTER_BLOCK").doesNotDeclare("f");
+  }
+
   public void testHook() {
     assuming("x", createNullableType(OBJECT_TYPE));
     inFunction("var y = x ? x : {};");
