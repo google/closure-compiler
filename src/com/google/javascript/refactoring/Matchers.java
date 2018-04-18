@@ -333,19 +333,24 @@ public final class Matchers {
    */
   public static Matcher jsDocType(final String type) {
     return new Matcher() {
-      @Override public boolean matches(Node node, NodeMetadata metadata) {
+      @Override
+      public boolean matches(Node node, NodeMetadata metadata) {
         JSType providedJsType = getJsType(metadata, type);
         if (providedJsType == null) {
           return false;
         }
         providedJsType = providedJsType.restrictByNotNullOrUndefined();
-        // The JSDoc for a var declaration is on the VAR node, but the type only
+        // The JSDoc for a variable declaration is on the VAR/CONST/LET node, but the type only
         // exists on the NAME node.
         // TODO(mknichel): Make NodeUtil.getBestJSDoc public and use that.
-        JSDocInfo jsDoc = node.getParent().isVar()
-            ? node.getParent().getJSDocInfo() : node.getJSDocInfo();
+        JSDocInfo jsDoc =
+            NodeUtil.isNameDeclaration(node.getParent())
+                ? node.getParent().getJSDocInfo()
+                : node.getJSDocInfo();
         JSType jsType = node.getJSType();
-        return jsDoc != null && jsDoc.hasType() && jsType != null
+        return jsDoc != null
+            && jsDoc.hasType()
+            && jsType != null
             && providedJsType.isEquivalentTo(jsType.restrictByNotNullOrUndefined());
       }
     };
