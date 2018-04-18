@@ -16,6 +16,7 @@
 
 'require base';
 'require es6/symbol';
+'require es6/util/setprototypeof';
 'require es6/util/makeiterator';
 
 /**
@@ -865,14 +866,17 @@ $jscomp.generator.Generator_ = function(engine) {
  * @suppress {reportUnknownTypes}
  */
 $jscomp.generator.createGenerator = function(generator, program) {
+  /** @const */ var result =
+      new $jscomp.generator.Generator_(new $jscomp.generator.Engine_(program));
   // The spec says that `myGenFunc() instanceof myGenFunc` must be true.
   // We'll make this work by setting the prototype before calling the
   // constructor every time. All of the methods of the object are defined on the
   // instance by the constructor, so this does no harm.
   // We also cast Generator_ to Object to hide dynamic inheritance from
   // jscompiler, it makes ConformanceRules$BanUnknownThis happy.
-  /** @type {!Function} */ ($jscomp.generator.Generator_).prototype =
-      generator.prototype;
-  return new $jscomp.generator.Generator_(
-      new $jscomp.generator.Engine_(program));
+  if ($jscomp.setPrototypeOf) {
+    /** @type {function(!Object, ?Object): !Object} */ ($jscomp.setPrototypeOf)(
+        result, generator.prototype);
+  }
+  return result;
 };
