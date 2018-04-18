@@ -386,7 +386,8 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
         if (n.getFirstChild().isName()
             && !parent.isCall()
             && !parent.isAssign()
-            && n.matchesQualifiedName("goog.base")) {
+            && n.matchesQualifiedName("goog.base")
+            && !n.getSourceFileName().endsWith("goog.js")) {
           reportBadGoogBaseUse(t, n, "May only be called directly.");
         }
         break;
