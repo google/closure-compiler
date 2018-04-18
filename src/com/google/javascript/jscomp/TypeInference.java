@@ -260,7 +260,8 @@ class TypeInference
               // for/of. The type of `item` is the type parameter of the Iterable type.
               ObjectType objType = getJSType(obj).dereference();
 
-              if (objType.isSubtypeOf(getNativeType(JSTypeNative.ITERABLE_TYPE))) {
+              if (objType != null
+                  && objType.isSubtypeOf(getNativeType(JSTypeNative.ITERABLE_TYPE))) {
                 if (objType.isTemplatizedType()) {
                   JSType newType =
                       objType

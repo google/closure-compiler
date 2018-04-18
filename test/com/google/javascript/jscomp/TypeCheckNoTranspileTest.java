@@ -306,6 +306,30 @@ public final class TypeCheckNoTranspileTest extends CompilerTypeTestCase {
             "required: number"));
   }
 
+  public void testForOf_unionType1() {
+    testTypes(
+        lines(
+            "function takesNumber(/** number */ n) {}",
+            "/** @param {(!Array<string>|undefined)} arr */",
+            "function f(arr) {",
+            "  for (let x of (arr || [])) {",
+            "    takesNumber(x);", // TODO(b/77904110): Can we warn here? Currently we infer x to
+            "  }",                 // have the unknown type because (arr || []) has type Array.
+            "}"));
+  }
+
+  public void testForOf_unionType2() {
+    testTypes(
+        lines(
+            "/** @param {(number|undefined)} n */",
+            "function f(n) {",
+            "  for (let x of (n || [])) {}",
+            "}"),
+        lines(
+            "Can only iterate over a (non-null) Iterable type",
+            "found   : (Array|number)",
+            "required: Iterable"));
+  }
 
   public void testForOf_nullable() {
     testTypes(
