@@ -86,29 +86,21 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         CodingConventions.getDefault()).createInitialScope(
             new Node(Token.ROOT));
 
-    assertTypeEquals(ARRAY_FUNCTION_TYPE, s.getVar("Array").getType());
-    assertTypeEquals(BOOLEAN_OBJECT_FUNCTION_TYPE,
-        s.getVar("Boolean").getType());
-    assertTypeEquals(DATE_FUNCTION_TYPE, s.getVar("Date").getType());
-    assertTypeEquals(ERROR_FUNCTION_TYPE, s.getVar("Error").getType());
-    assertTypeEquals(EVAL_ERROR_FUNCTION_TYPE,
-        s.getVar("EvalError").getType());
-    assertTypeEquals(NUMBER_OBJECT_FUNCTION_TYPE,
-        s.getVar("Number").getType());
-    assertTypeEquals(OBJECT_FUNCTION_TYPE, s.getVar("Object").getType());
-    assertTypeEquals(RANGE_ERROR_FUNCTION_TYPE,
-        s.getVar("RangeError").getType());
-    assertTypeEquals(REFERENCE_ERROR_FUNCTION_TYPE,
-        s.getVar("ReferenceError").getType());
-    assertTypeEquals(REGEXP_FUNCTION_TYPE, s.getVar("RegExp").getType());
-    assertTypeEquals(STRING_OBJECT_FUNCTION_TYPE,
-        s.getVar("String").getType());
-    assertTypeEquals(SYNTAX_ERROR_FUNCTION_TYPE,
-        s.getVar("SyntaxError").getType());
-    assertTypeEquals(TYPE_ERROR_FUNCTION_TYPE,
-        s.getVar("TypeError").getType());
-    assertTypeEquals(URI_ERROR_FUNCTION_TYPE,
-        s.getVar("URIError").getType());
+    assertTypeEquals(getNativeArrayConstructorType(), s.getVar("Array").getType());
+    assertTypeEquals(getNativeBooleanObjectConstructorType(), s.getVar("Boolean").getType());
+    assertTypeEquals(getNativeDateConstructorType(), s.getVar("Date").getType());
+    assertTypeEquals(getNativeErrorConstructorType(), s.getVar("Error").getType());
+    assertTypeEquals(getNativeEvalErrorConstructorType(), s.getVar("EvalError").getType());
+    assertTypeEquals(getNativeNumberObjectConstructorType(), s.getVar("Number").getType());
+    assertTypeEquals(getNativeObjectConstructorType(), s.getVar("Object").getType());
+    assertTypeEquals(getNativeRangeErrorConstructorType(), s.getVar("RangeError").getType());
+    assertTypeEquals(
+        getNativeReferenceErrorConstructorType(), s.getVar("ReferenceError").getType());
+    assertTypeEquals(getNativeRegexpConstructorType(), s.getVar("RegExp").getType());
+    assertTypeEquals(getNativeStringObjectConstructorType(), s.getVar("String").getType());
+    assertTypeEquals(getNativeSyntaxErrorConstructorType(), s.getVar("SyntaxError").getType());
+    assertTypeEquals(getNativeTypeErrorConstructorType(), s.getVar("TypeError").getType());
+    assertTypeEquals(getNativeUriErrorConstructorType(), s.getVar("URIError").getType());
   }
 
   private void disableStrictMissingPropertyChecks() {
@@ -304,11 +296,16 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testTypeCheckDefaultExterns() {
-    testTypes("/** @param {string} x */ function f(x) {}" +
-        "f([].length);" ,
-        "actual parameter 1 of f does not match formal parameter\n" +
-        "found   : number\n" +
-        "required: string");
+    testTypesWithExterns(
+        new TestExternsBuilder().addArray().build(),
+        lines(
+            "/** @param {string} x */", // preserve newlines
+            "function f(x) {}",
+            "f([].length);"),
+        lines(
+            "actual parameter 1 of f does not match formal parameter",
+            "found   : number",
+            "required: string"));
   }
 
   public void testTypeCheckCustomExterns() {
@@ -854,10 +851,16 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testTypeOfReduction6() {
-    testTypes("/** @param {number|string} x\n@return {string} */\n" +
-        "function f(x) {\n" +
-        "return typeof x == 'string' && x.length == 3 ? x : 'a';\n" +
-        "}");
+    testTypesWithExterns(
+        new TestExternsBuilder().addString().build(),
+        lines(
+            "/**",
+            " * @param {number|string} x",
+            " * @return {string}",
+            " */",
+            "function f(x) {",
+            "  return typeof x == 'string' && x.length == 3 ? x : 'a';",
+            "}"));
   }
 
   public void testTypeOfReduction7() {
@@ -1399,7 +1402,8 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testStrictPropertiesOnEnum1() {
-    testTypes(
+    testTypesWithExterns(
+        new TestExternsBuilder().addString().build(),
         lines(
             "/** @enum {string} */ var E = {S:'s'};",
             "/** @param {E} e\n @return {string}  */",
@@ -1407,7 +1411,8 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testStrictPropertiesOnEnum2() {
-    testTypes(
+    testTypesWithExterns(
+        new TestExternsBuilder().addString().build(),
         lines(
             "/** @enum {?string} */ var E = {S:'s'};",
             "/** @param {E} e\n @return {string}  */",
@@ -1415,7 +1420,8 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testStrictPropertiesOnEnum3() {
-    testTypes(
+    testTypesWithExterns(
+        new TestExternsBuilder().addString().build(),
         lines(
             "/** @enum {string} */ var E = {S:'s'};",
             "/** @param {?E} e\n @return {string}  */",
@@ -1423,7 +1429,8 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testStrictPropertiesOnEnum4() {
-    testTypes(
+    testTypesWithExterns(
+        new TestExternsBuilder().addString().build(),
         lines(
             "/** @enum {?string} */ var E = {S:'s'};",
             "/** @param {?E} e\n @return {string}  */",
@@ -2000,27 +2007,42 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testValueOfComparison1() {
-    testTypes("/** @constructor */function O() {};" +
-        "/**@override*/O.prototype.valueOf = function() { return 1; };" +
-        "/**@param {!O} a\n@param {!O} b*/ function f(a,b) { return a < b; }");
+    testTypesWithExterns(
+        new TestExternsBuilder().addObject().build(),
+        lines(
+            "/** @constructor */function O() {};",
+            "/**@override*/O.prototype.valueOf = function() { return 1; };",
+            "/**@param {!O} a\n@param {!O} b*/ function f(a,b) { return a < b; }"));
   }
 
   public void testValueOfComparison2() {
     compiler.getOptions().setWarningLevel(
         DiagnosticGroups.STRICT_PRIMITIVE_OPERATORS, CheckLevel.OFF);
-    testTypes("/** @constructor */function O() {};" +
-        "/**@override*/O.prototype.valueOf = function() { return 1; };" +
-        "/**@param {!O} a\n@param {number} b*/" +
-        "function f(a,b) { return a < b; }");
+    testTypesWithExterns(
+        new TestExternsBuilder().addObject().build(),
+        lines(
+            "/** @constructor */function O() {};",
+            "/**@override*/O.prototype.valueOf = function() { return 1; };",
+            "/**",
+            " * @param {!O} a",
+            " * @param {number} b",
+            " */",
+            "function f(a,b) { return a < b; }"));
   }
 
   public void testValueOfComparison3() {
     compiler.getOptions().setWarningLevel(
         DiagnosticGroups.STRICT_PRIMITIVE_OPERATORS, CheckLevel.OFF);
-    testTypes("/** @constructor */function O() {};" +
-        "/**@override*/O.prototype.toString = function() { return 'o'; };" +
-        "/**@param {!O} a\n@param {string} b*/" +
-        "function f(a,b) { return a < b; }");
+    testTypesWithExterns(
+        new TestExternsBuilder().addObject().build(),
+        lines(
+            "/** @constructor */function O() {};",
+            "/**@override*/O.prototype.toString = function() { return 'o'; };",
+            "/**",
+            " * @param {!O} a",
+            " * @param {string} b",
+            " */",
+            "function f(a,b) { return a < b; }"));
   }
 
   public void testGenericRelationalExpression() {
@@ -2382,16 +2404,18 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testRestParameters() {
-    testTypes(lines(
-        "/**",
-        " * @template T",
-        " * @param {...number} x",
-        " */",
-        "function f(...x) {",
-        "  var /** string */ s = x[0];",
-        "}"),
+    testTypesWithExterns(
+        new TestExternsBuilder().addArray().build(),
         lines(
-            "initializing variable",
+            "/**",
+            " * @template T",
+            " * @param {...number} x",
+            " */",
+            "function f(...x) {",
+            "  var /** string */ s = x[0];",
+            "}"),
+        lines(
+            "initializing variable", // preserve newlines
             "found   : number",
             "required: string"));
   }
@@ -2399,19 +2423,21 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   // Test that when transpiling we don't use T in the body of f; it would cause a spurious
   // unknown-type warning.
   public void testRestParametersWithGenericsNoWarning() {
-    testTypes(lines(
-        "/**",
-        " * @constructor",
-        " * @template T",
-        " */",
-        "function Foo() {}",
-        "/**",
-        " * @template T",
-        " * @param {...!Foo<T>} x",
-        " */",
-        "function f(...x) {",
-        "  return 123;",
-        "}"));
+    testTypesWithExterns(
+        new TestExternsBuilder().addObject().addArray().build(),
+        lines(
+            "/**",
+            " * @constructor",
+            " * @template T",
+            " */",
+            "function Foo() {}",
+            "/**",
+            " * @template T",
+            " * @param {...!Foo<T>} x",
+            " */",
+            "function f(...x) {",
+            "  return 123;",
+            "}"));
   }
 
   public void testPrintFunctionName1() {
@@ -3265,34 +3291,37 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
 
   public void testStubFunctionDeclaration5() {
     testFunctionType(
-        "/** @constructor */ function f() { " +
-        "  /** @type {Function} */ this.foo;" +
-        "}",
+        lines(
+            "/** @constructor */ function f() { ", // preserve newlines
+            "  /** @type {Function} */ this.foo;",
+            "}"),
         "(new f).foo",
-        createNullableType(U2U_CONSTRUCTOR_TYPE).toString());
+        createNullableType(getNativeU2UConstructorType()).toString());
   }
 
   public void testStubFunctionDeclaration6() {
     testFunctionType(
-        "/** @constructor */ function f() {} " +
-        "/** @type {Function} */ f.prototype.foo;",
+        lines(
+            "/** @constructor */ function f() {} ", // preserve newlines
+            "/** @type {Function} */ f.prototype.foo;"),
         "(new f).foo",
-        createNullableType(U2U_CONSTRUCTOR_TYPE).toString());
+        createNullableType(getNativeU2UConstructorType()).toString());
   }
 
   public void testStubFunctionDeclaration7() {
     testFunctionType(
-        "/** @constructor */ function f() {} " +
-        "/** @type {Function} */ f.prototype.foo = function() {};",
+        lines(
+            "/** @constructor */ function f() {} ", // preserve newlines
+            "/** @type {Function} */ f.prototype.foo = function() {};"),
         "(new f).foo",
-        createNullableType(U2U_CONSTRUCTOR_TYPE).toString());
+        createNullableType(getNativeU2UConstructorType()).toString());
   }
 
   public void testStubFunctionDeclaration8() {
     testFunctionType(
         "/** @type {Function} */ var f = function() {}; ",
         "f",
-        createNullableType(U2U_CONSTRUCTOR_TYPE).toString());
+        createNullableType(getNativeU2UConstructorType()).toString());
   }
 
   public void testStubFunctionDeclaration9() {
@@ -3543,17 +3572,20 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testForIn5() {
-    testTypes(
-        "/** @param {boolean} x */ function f(x) {}" +
-        "/** @constructor */ var E = function(){};" +
-        "/** @override */ E.prototype.toString = function() { return ''; };" +
-        "/** @type {Object<!E, number>} */ var obj = {};" +
-        "for (var k in obj) {" +
-        "  f(k);" +
-        "}",
-        "actual parameter 1 of f does not match formal parameter\n" +
-        "found   : string\n" +
-        "required: boolean");
+    testTypesWithExterns(
+        new TestExternsBuilder().addObject().build(),
+        lines(
+            "/** @param {boolean} x */ function f(x) {}",
+            "/** @constructor */ var E = function(){};",
+            "/** @override */ E.prototype.toString = function() { return ''; };",
+            "/** @type {Object<!E, number>} */ var obj = {};",
+            "for (var k in obj) {",
+            "  f(k);",
+            "}"),
+        lines(
+            "actual parameter 1 of f does not match formal parameter",
+            "found   : string",
+            "required: boolean"));
   }
 
   public void testForOf1() {
@@ -5837,8 +5869,8 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
     TypeCheckResult p =
         parseAndTypeCheckWithScope("/** @type {(string|null)} */var a = null");
 
-    assertTypeEquals(createUnionType(STRING_TYPE, NULL_TYPE),
-        p.scope.getVar("a").getType());
+    assertTypeEquals(
+        createUnionType(getNativeStringType(), getNativeNullType()), p.scope.getVar("a").getType());
   }
 
   public void testVar2() {
@@ -5848,14 +5880,15 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   public void testVar3() {
     TypeCheckResult p = parseAndTypeCheckWithScope("var a = 3;");
 
-    assertTypeEquals(NUMBER_TYPE, p.scope.getVar("a").getType());
+    assertTypeEquals(getNativeNumberType(), p.scope.getVar("a").getType());
   }
 
   public void testVar4() {
     TypeCheckResult p = parseAndTypeCheckWithScope(
         "var a = 3; a = 'string';");
 
-    assertTypeEquals(createUnionType(STRING_TYPE, NUMBER_TYPE),
+    assertTypeEquals(
+        createUnionType(getNativeStringType(), getNativeNumberType()),
         p.scope.getVar("a").getType());
   }
 
@@ -7200,20 +7233,20 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testThisTypeOfFunction4() {
-    testTypes(
-        "/** @constructor */ function F() {}" +
-        "F.prototype.moveTo = function(x, y) {};" +
-        "F.prototype.lineTo = function(x, y) {};" +
-        "function demo() {" +
-        "  var path = new F();" +
-        "  var points = [[1,1], [2,2]];" +
-        "  for (var i = 0; i < points.length; i++) {" +
-        "    (i == 0 ? path.moveTo : path.lineTo)(" +
-        "       points[i][0], points[i][1]);" +
-        "  }" +
-        "}",
-        "\"function(this:F, ?, ?): undefined\" " +
-        "must be called with a \"this\" type");
+    testTypesWithExterns(
+        new TestExternsBuilder().addArray().addObject().build(),
+        lines(
+            "/** @constructor */ function F() {}",
+            "F.prototype.moveTo = function(x, y) {};",
+            "F.prototype.lineTo = function(x, y) {};",
+            "function demo() {",
+            "  var path = new F();",
+            "  var points = [[1,1], [2,2]];",
+            "  for (var i = 0; i < points.length; i++) {",
+            "    (i == 0 ? path.moveTo : path.lineTo)(points[i][0], points[i][1]);",
+            "  }",
+            "}"),
+        "\"function(this:F, ?, ?): undefined\" must be called with a \"this\" type");
   }
 
   public void testThisTypeOfFunction5() {
@@ -7571,25 +7604,25 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   public void testNumberNode() {
     Node n = typeCheck(Node.newNumber(0));
 
-    assertTypeEquals(NUMBER_TYPE, n.getJSType());
+    assertTypeEquals(getNativeNumberType(), n.getJSType());
   }
 
   public void testStringNode() {
     Node n = typeCheck(Node.newString("hello"));
 
-    assertTypeEquals(STRING_TYPE, n.getJSType());
+    assertTypeEquals(getNativeStringType(), n.getJSType());
   }
 
   public void testBooleanNodeTrue() {
     Node trueNode = typeCheck(new Node(Token.TRUE));
 
-    assertTypeEquals(BOOLEAN_TYPE, trueNode.getJSType());
+    assertTypeEquals(getNativeBooleanType(), trueNode.getJSType());
   }
 
   public void testBooleanNodeFalse() {
     Node falseNode = typeCheck(new Node(Token.FALSE));
 
-    assertTypeEquals(BOOLEAN_TYPE, falseNode.getJSType());
+    assertTypeEquals(getNativeBooleanType(), falseNode.getJSType());
   }
 
   public void testUndefinedNode() {
@@ -7599,7 +7632,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
     p.addChildToBack(Node.newNumber(5));
     typeCheck(p);
 
-    assertTypeEquals(VOID_TYPE, n.getJSType());
+    assertTypeEquals(getNativeVoidType(), n.getJSType());
   }
 
   public void testNumberAutoboxing() {
@@ -7836,10 +7869,12 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testIssue301() {
-    testTypes(
-        "Array.indexOf = function() {};" +
-        "var s = 'hello';" +
-        "alert(s.toLowerCase.indexOf('1'));",
+    testTypesWithExterns(
+        new TestExternsBuilder().addString().addArray().build(),
+        lines(
+            "Array.indexOf = function() {};",
+            "var s = 'hello';",
+            "alert(s.toLowerCase.indexOf('1'));"),
         "Property indexOf never defined on String.prototype.toLowerCase");
   }
 
@@ -7865,28 +7900,33 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testIssue380() {
-    testTypes(
-        "/** @type { function(string): {innerHTML: string} } */\n" +
-        "document.getElementById;\n" +
-        "var list = /** @type {!Array<string>} */ ['hello', 'you'];\n" +
-        "list.push('?');\n" +
-        "document.getElementById('node').innerHTML = list.toString();");
+    testTypesWithExterns(
+        new TestExternsBuilder().addArray().addObject().build(),
+        lines(
+            "/** @type { function(string): {innerHTML: string} } */",
+            "document.getElementById;",
+            "var list = /** @type {!Array<string>} */ ['hello', 'you'];",
+            "list.push('?');",
+            "document.getElementById('node').innerHTML = list.toString();"));
   }
 
   public void testIssue483() {
-    testTypes(
-        "/** @constructor */ function C() {" +
-        "  /** @type {?Array} */ this.a = [];" +
-        "}" +
-        "C.prototype.f = function() {" +
-        "  if (this.a.length > 0) {" +
-        "    g(this.a);" +
-        "  }" +
-        "};" +
-        "/** @param {number} a */ function g(a) {}",
-        "actual parameter 1 of g does not match formal parameter\n" +
-        "found   : Array\n" +
-        "required: number");
+    testTypesWithExterns(
+        new TestExternsBuilder().addArray().build(),
+        lines(
+            "/** @constructor */ function C() {",
+            "  /** @type {?Array} */ this.a = [];",
+            "}",
+            "C.prototype.f = function() {",
+            "  if (this.a.length > 0) {",
+            "    g(this.a);",
+            "  }",
+            "};",
+            "/** @param {number} a */ function g(a) {}"),
+        lines(
+            "actual parameter 1 of g does not match formal parameter",
+            "found   : Array",
+            "required: number"));
   }
 
   public void testIssue537a() {
@@ -8379,8 +8419,11 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
    * Tests that the match method of strings returns nullable arrays.
    */
   public void testBug908701() {
-    testTypes("/** @type {String} */var s = new String('foo');" +
-        "var b = s.match(/a/) != null;");
+    testTypesWithExterns(
+        new TestExternsBuilder().addString().build(),
+        lines(
+            "/** @type {String} */ var s = new String('foo');", // preserve newlines
+            "var b = s.match(/a/) != null;"));
   }
 
   /**
@@ -8579,23 +8622,25 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
 
 
   public void testBug7701884() {
-    testTypes(
-        "/**\n" +
-        " * @param {Array<T>} x\n" +
-        " * @param {function(T)} y\n" +
-        " * @template T\n" +
-        " */\n" +
-        "var forEach = function(x, y) {\n" +
-        "  for (var i = 0; i < x.length; i++) y(x[i]);\n" +
-        "};" +
-        "/** @param {number} x */" +
-        "function f(x) {}" +
-        "/** @param {?} x */" +
-        "function h(x) {" +
-        "  var top = null;" +
-        "  forEach(x, function(z) { top = z; });" +
-        "  if (top) f(top);" +
-        "}");
+    testTypesWithExterns(
+        new TestExternsBuilder().addArray().build(),
+        lines(
+            "/**",
+            " * @param {Array<T>} x",
+            " * @param {function(T)} y",
+            " * @template T",
+            " */",
+            "var forEach = function(x, y) {",
+            "  for (var i = 0; i < x.length; i++) y(x[i]);",
+            "};",
+            "/** @param {number} x */",
+            "function f(x) {}",
+            "/** @param {?} x */",
+            "function h(x) {",
+            "  var top = null;",
+            "  forEach(x, function(z) { top = z; });",
+            "  if (top) f(top);",
+            "}"));
   }
 
   public void testBug8017789() {
@@ -9028,7 +9073,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
     TypeCheckResult p = parseAndTypeCheckWithScope("var a = new Array();");
     TypedVar a = p.scope.getVar("a");
 
-    assertTypeEquals(ARRAY_TYPE, a.getType());
+    assertTypeEquals(getNativeArrayType(), a.getType());
   }
 
   public void testNew13() {
@@ -9104,23 +9149,23 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testName1() {
-    assertTypeEquals(VOID_TYPE, testNameNode("undefined"));
+    assertTypeEquals(getNativeVoidType(), testNameNode("undefined"));
   }
 
   public void testName2() {
-    assertTypeEquals(OBJECT_FUNCTION_TYPE, testNameNode("Object"));
+    assertTypeEquals(getNativeObjectConstructorType(), testNameNode("Object"));
   }
 
   public void testName3() {
-    assertTypeEquals(ARRAY_FUNCTION_TYPE, testNameNode("Array"));
+    assertTypeEquals(getNativeArrayConstructorType(), testNameNode("Array"));
   }
 
   public void testName4() {
-    assertTypeEquals(DATE_FUNCTION_TYPE, testNameNode("Date"));
+    assertTypeEquals(getNativeDateConstructorType(), testNameNode("Date"));
   }
 
   public void testName5() {
-    assertTypeEquals(REGEXP_FUNCTION_TYPE, testNameNode("RegExp"));
+    assertTypeEquals(getNativeRegexpConstructorType(), testNameNode("RegExp"));
   }
 
   /**
@@ -9516,7 +9561,8 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
 
   // GitHub issue #2262: https://github.com/google/closure-compiler/issues/2262
   public void testAbstractMethodCall_Es6ClassWithSpread() {
-    testTypesWithCommonExterns(
+    testTypesWithExterns(
+        new TestExternsBuilder().addObject().addArray().build(),
         lines(
             "/** @abstract */",
             "class Base {",
@@ -10654,8 +10700,10 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         googFooGetprop2ObjectType.hasProperty("foo"));
     assertTrue("bar property not present on goog.foo type",
         googFooGetprop2ObjectType.hasProperty("bar"));
-    assertTypeEquals("bar property on goog.foo type incorrectly inferred",
-        NUMBER_TYPE, googFooGetprop2ObjectType.getPropertyType("bar"));
+    assertTypeEquals(
+        "bar property on goog.foo type incorrectly inferred",
+        getNativeNumberType(),
+        googFooGetprop2ObjectType.getPropertyType("bar"));
   }
 
   public void testAddingMethodsUsingPrototypeIdiomSimpleNamespace() {
@@ -10666,8 +10714,8 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         "A.prototype.m1 = 5");
 
     ObjectType instanceType = getInstanceType(js1Node);
-    assertEquals(NATIVE_PROPERTIES_COUNT + 2, instanceType.getPropertiesCount());
-    checkObjectType(instanceType, "m1", NUMBER_TYPE);
+    assertHasXMorePropertiesThanNativeObject(instanceType, 1);
+    checkObjectType(instanceType, "m1", getNativeNumberType());
   }
 
   public void testAddingMethodsUsingPrototypeIdiomComplexNamespace1() {
@@ -10693,14 +10741,14 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   private void testAddingMethodsUsingPrototypeIdiomComplexNamespace(
       TypeCheckResult p) {
     ObjectType goog = (ObjectType) p.scope.getVar("goog").getType();
-    assertEquals(NATIVE_PROPERTIES_COUNT + 2, goog.getPropertiesCount());
+    assertHasXMorePropertiesThanNativeObject(goog, 1);
     JSType googA = goog.getPropertyType("A");
     assertNotNull(googA);
     assertThat(googA).isInstanceOf(FunctionType.class);
     FunctionType googAFunction = (FunctionType) googA;
     ObjectType classA = googAFunction.getInstanceType();
-    assertEquals(NATIVE_PROPERTIES_COUNT + 2, classA.getPropertiesCount());
-    checkObjectType(classA, "m1", NUMBER_TYPE);
+    assertHasXMorePropertiesThanNativeObject(classA, 1);
+    checkObjectType(classA, "m1", getNativeNumberType());
   }
 
   public void testAddingMethodsPrototypeIdiomAndObjectLiteralSimpleNamespace() {
@@ -10710,9 +10758,9 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         "A.prototype = {m1: 5, m2: true}");
 
     ObjectType instanceType = getInstanceType(js1Node);
-    assertEquals(NATIVE_PROPERTIES_COUNT + 3, instanceType.getPropertiesCount());
-    checkObjectType(instanceType, "m1", NUMBER_TYPE);
-    checkObjectType(instanceType, "m2", BOOLEAN_TYPE);
+    assertHasXMorePropertiesThanNativeObject(instanceType, 2);
+    checkObjectType(instanceType, "m1", getNativeNumberType());
+    checkObjectType(instanceType, "m2", getNativeBooleanType());
   }
 
   public void testDontAddMethodsIfNoConstructor() {
@@ -10722,10 +10770,8 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
 
     JSType functionAType = js1Node.getFirstChild().getJSType();
     assertEquals("function(): undefined", functionAType.toString());
-    assertTypeEquals(UNKNOWN_TYPE,
-        U2U_FUNCTION_TYPE.getPropertyType("m1"));
-    assertTypeEquals(UNKNOWN_TYPE,
-        U2U_FUNCTION_TYPE.getPropertyType("m2"));
+    assertTypeEquals(getNativeUnknownType(), getNativeU2UFunctionType().getPropertyType("m1"));
+    assertTypeEquals(getNativeUnknownType(), getNativeU2UFunctionType().getPropertyType("m2"));
   }
 
   public void testFunctionAssignement() {
@@ -10748,10 +10794,10 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
 
     ObjectType instanceType = getInstanceType(js1Node);
     assertEquals("A", instanceType.toString());
-    assertEquals(NATIVE_PROPERTIES_COUNT + 4, instanceType.getPropertiesCount());
-    checkObjectType(instanceType, "m1", NUMBER_TYPE);
-    checkObjectType(instanceType, "m2", BOOLEAN_TYPE);
-    checkObjectType(instanceType, "m3", STRING_TYPE);
+    assertHasXMorePropertiesThanNativeObject(instanceType, 3);
+    checkObjectType(instanceType, "m1", getNativeNumberType());
+    checkObjectType(instanceType, "m2", getNativeBooleanType());
+    checkObjectType(instanceType, "m3", getNativeStringType());
   }
 
   public void testPrototypePropertyTypes() {
@@ -10767,28 +10813,31 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         "/** @type {boolean} */ A.prototype.m6;\n");
 
     ObjectType instanceType = getInstanceType(js1Node);
-    assertEquals(NATIVE_PROPERTIES_COUNT + 7, instanceType.getPropertiesCount());
-    checkObjectType(instanceType, "m1", STRING_TYPE);
-    checkObjectType(instanceType, "m2",
-        createUnionType(OBJECT_TYPE, NULL_TYPE));
-    checkObjectType(instanceType, "m3", BOOLEAN_TYPE);
-    checkObjectType(instanceType, "m4", STRING_TYPE);
-    checkObjectType(instanceType, "m5", NUMBER_TYPE);
-    checkObjectType(instanceType, "m6", BOOLEAN_TYPE);
+    assertHasXMorePropertiesThanNativeObject(instanceType, 6);
+    checkObjectType(instanceType, "m1", getNativeStringType());
+    checkObjectType(
+        instanceType, "m2", createUnionType(getNativeObjectType(), getNativeNullType()));
+    checkObjectType(instanceType, "m3", getNativeBooleanType());
+    checkObjectType(instanceType, "m4", getNativeStringType());
+    checkObjectType(instanceType, "m5", getNativeNumberType());
+    checkObjectType(instanceType, "m6", getNativeBooleanType());
   }
 
   public void testValueTypeBuiltInPrototypePropertyType() {
-    Node node = parseAndTypeCheck("\"x\".charAt(0)");
-    assertTypeEquals(STRING_TYPE, node.getFirstFirstChild().getJSType());
+    Node node = parseAndTypeCheck(new TestExternsBuilder().addString().build(), "\"x\".charAt(0)");
+    assertTypeEquals(getNativeStringType(), node.getFirstFirstChild().getJSType());
   }
 
   public void testDeclareBuiltInConstructor() {
     // Built-in prototype properties should be accessible
     // even if the built-in constructor is declared.
-    Node node = parseAndTypeCheck(
-        "/** @constructor */ var String = function(opt_str) {};\n" +
-        "(new String(\"x\")).charAt(0)");
-    assertTypeEquals(STRING_TYPE, node.getLastChild().getFirstChild().getJSType());
+    Node node =
+        parseAndTypeCheck(
+            new TestExternsBuilder().addString().build(),
+            lines(
+                "/** @constructor */ var String = function(opt_str) {};",
+                "(new String(\"x\")).charAt(0)"));
+    assertTypeEquals(getNativeStringType(), node.getLastChild().getFirstChild().getJSType());
   }
 
   public void testExtendBuiltInType1() {
@@ -10801,7 +10850,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         "*/\n" +
         "String.prototype.substr = function(start, opt_length) {};\n";
     Node n1 = parseAndTypeCheck(externs + "(new String(\"x\")).substr(0,1);");
-    assertTypeEquals(STRING_TYPE, n1.getLastChild().getFirstChild().getJSType());
+    assertTypeEquals(getNativeStringType(), n1.getLastChild().getFirstChild().getJSType());
   }
 
   public void testExtendBuiltInType2() {
@@ -10814,7 +10863,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         "*/\n" +
         "String.prototype.substr = function(start, opt_length) {};\n";
     Node n2 = parseAndTypeCheck(externs + "\"x\".substr(0,1);");
-    assertTypeEquals(STRING_TYPE, n2.getLastChild().getFirstChild().getJSType());
+    assertTypeEquals(getNativeStringType(), n2.getLastChild().getFirstChild().getJSType());
   }
 
   public void testExtendFunction1() {
@@ -10822,7 +10871,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         "function() { return 1; };\n" +
         "(new Function()).f();");
     JSType type = n.getLastChild().getLastChild().getJSType();
-    assertTypeEquals(NUMBER_TYPE, type);
+    assertTypeEquals(getNativeNumberType(), type);
   }
 
   public void testExtendFunction2() {
@@ -10830,7 +10879,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         "function() { return 1; };\n" +
         "(function() {}).f();");
     JSType type = n.getLastChild().getLastChild().getJSType();
-    assertTypeEquals(NUMBER_TYPE, type);
+    assertTypeEquals(getNativeNumberType(), type);
   }
 
   public void testInheritanceCheck1() {
@@ -11311,8 +11360,8 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
     // value's type
     ObjectType objectType =
         (ObjectType) objectNode.getJSType();
-    assertTypeEquals(NUMBER_TYPE, objectType.getPropertyType("m1"));
-    assertTypeEquals(STRING_TYPE, objectType.getPropertyType("m2"));
+    assertTypeEquals(getNativeNumberType(), objectType.getPropertyType("m1"));
+    assertTypeEquals(getNativeStringType(), objectType.getPropertyType("m2"));
 
     // variable's type
     assertTypeEquals(objectType, nameNode.getJSType());
@@ -11407,7 +11456,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
     // ECMA-262 15.9.2: When Date is called as a function rather than as a
     // constructor, it returns a string.
     Node n = parseAndTypeCheck("Date()");
-    assertTypeEquals(STRING_TYPE, n.getFirstFirstChild().getJSType());
+    assertTypeEquals(getNativeStringType(), n.getFirstFirstChild().getJSType());
   }
 
   // According to ECMA-262, Error & Array function calls are equivalent to
@@ -11415,14 +11464,12 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
 
   public void testCallErrorConstructorAsFunction() {
     Node n = parseAndTypeCheck("Error('x')");
-    assertTypeEquals(ERROR_TYPE,
-                 n.getFirstFirstChild().getJSType());
+    assertTypeEquals(getNativeErrorType(), n.getFirstFirstChild().getJSType());
   }
 
   public void testCallArrayConstructorAsFunction() {
     Node n = parseAndTypeCheck("Array()");
-    assertTypeEquals(ARRAY_TYPE,
-                 n.getFirstFirstChild().getJSType());
+    assertTypeEquals(getNativeArrayType(), n.getFirstFirstChild().getJSType());
   }
 
   public void testPropertyTypeOfUnionType() {
@@ -11970,7 +12017,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
     Node n = ns.root;
     JSType type = n.getLastChild().getLastChild().getJSType();
     assertFalse(type.isUnknownType());
-    assertTypeEquals(type, OBJECT_TYPE);
+    assertTypeEquals(type, getNativeObjectType());
     assertThat(type).isInstanceOf(ObjectType.class);
     ObjectType objectType = (ObjectType) type;
     assertFalse(objectType.hasProperty("x"));
@@ -12456,10 +12503,14 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   private double getTypedPercent(String js) {
+    return getTypedPercentWithExterns("", js);
+  }
+
+  private double getTypedPercentWithExterns(String externs, String js) {
     Node n = compiler.parseTestCode(js);
 
-    Node externs = IR.root();
-    IR.root(externs, n);
+    Node externsRoot = compiler.parseTestCode(externs);
+    IR.root(externsRoot, n);
 
     TypeCheck t = makeTypeCheck();
     t.processForTesting(null, n);
@@ -12497,21 +12548,23 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testResolvingNamedTypes() {
-    String js = ""
-        + "/** @constructor */\n"
-        + "var Foo = function() {}\n"
-        + "/** @param {number} a */\n"
-        + "Foo.prototype.foo = function(a) {\n"
-        + "  return this.baz().toString();\n"
-        + "};\n"
-        + "/** @return {Baz} */\n"
-        + "Foo.prototype.baz = function() { return new Baz(); };\n"
-        + "/** @constructor\n"
-        + "  * @extends Foo */\n"
-        + "var Bar = function() {};"
-        + "/** @constructor */\n"
-        + "var Baz = function() {};";
-    assertEquals(100.0, getTypedPercent(js), 0.1);
+    String externs = new TestExternsBuilder().addObject().build();
+    String js =
+        lines(
+            "/** @constructor */",
+            "var Foo = function() {}",
+            "/** @param {number} a */",
+            "Foo.prototype.foo = function(a) {",
+            "  return this.baz().toString();",
+            "};",
+            "/** @return {Baz} */",
+            "Foo.prototype.baz = function() { return new Baz(); };",
+            "/** @constructor",
+            "  * @extends Foo */",
+            "var Bar = function() {};",
+            "/** @constructor */",
+            "var Baz = function() {};");
+    assertEquals(100.0, getTypedPercentWithExterns(externs, js), 0.1);
   }
 
   public void testMissingProperty1a() {
@@ -12972,16 +13025,21 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
 
   public void testMissingProperty39a() {
     disableStrictMissingPropertyChecks();
-    testTypes(
-        "/** @return {string|number} */ function f() { return 3; }" +
-        "f().length;");
+    testTypesWithExterns(
+        new TestExternsBuilder().addString().build(),
+        lines(
+            "/** @return {string|number} */ function f() { return 3; }", // preserve newlines
+            "f().length;"));
   }
 
   public void testMissingProperty39b() {
-    testTypes(
-        "/** @return {string|number} */ function f() { return 3; }" + "f().length;"
+    testTypesWithExterns(
+        new TestExternsBuilder().addString().build(),
+        lines(
+            "/** @return {string|number} */ function f() { return 3; }", // preserve newlines
+            "f().length;")
         // TODO(johnlenz): enable this.
-        //"Property length not defined on all member types of (String|Number)"
+        // "Property length not defined on all member types of (String|Number)"
         );
   }
 
@@ -13167,14 +13225,14 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
 
   public void testDeclaredNativeTypeEquality() {
     Node n = parseAndTypeCheck("/** @constructor */ function Object() {};");
-    assertTypeEquals(registry.getNativeType(JSTypeNative.OBJECT_FUNCTION_TYPE),
-                 n.getFirstChild().getJSType());
+    assertTypeEquals(
+        registry.getNativeType(JSTypeNative.OBJECT_FUNCTION_TYPE), n.getFirstChild().getJSType());
   }
 
   public void testUndefinedVar() {
     Node n = parseAndTypeCheck("var undefined;");
-    assertTypeEquals(registry.getNativeType(JSTypeNative.VOID_TYPE),
-                 n.getFirstFirstChild().getJSType());
+    assertTypeEquals(
+        registry.getNativeType(JSTypeNative.VOID_TYPE), n.getFirstFirstChild().getJSType());
   }
 
   public void testFlowScopeBug1() {
@@ -13186,9 +13244,15 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         + "for (; (i + a) < b; ++i) {}}");
 
     // check the type of the add node for i + f
-    assertTypeEquals(registry.getNativeType(JSTypeNative.NUMBER_TYPE),
-        n.getFirstChild().getLastChild().getLastChild().getFirstChild()
-        .getNext().getFirstChild().getJSType());
+    assertTypeEquals(
+        registry.getNativeType(JSTypeNative.NUMBER_TYPE),
+        n.getFirstChild()
+            .getLastChild()
+            .getLastChild()
+            .getFirstChild()
+            .getNext()
+            .getFirstChild()
+            .getJSType());
   }
 
   public void testFlowScopeBug2() {
@@ -13207,9 +13271,15 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         + "}");
 
     // check the type of afoo when referenced
-    assertTypeEquals(registry.createNullableType(registry.getGlobalType("Foo")),
-        n.getLastChild().getLastChild().getLastChild().getLastChild()
-        .getLastChild().getLastChild().getJSType());
+    assertTypeEquals(
+        registry.createNullableType(registry.getGlobalType("Foo")),
+        n.getLastChild()
+            .getLastChild()
+            .getLastChild()
+            .getLastChild()
+            .getLastChild()
+            .getLastChild()
+            .getJSType());
   }
 
   public void testAddSingletonGetter() {
@@ -13234,9 +13304,11 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
     IR.root(externs, second);
 
     new TypeCheck(
-        compiler,
-        new SemanticReverseAbstractInterpreter(registry),
-        registry, topScope, scopeCreator)
+            compiler,
+            new SemanticReverseAbstractInterpreter(registry),
+            registry,
+            topScope,
+            scopeCreator)
         .process(null, second);
 
     assertEquals(1, compiler.getWarningCount());
@@ -13408,13 +13480,16 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testTemplateType7() {
-    // TODO(johnlenz): As the @this type for Array.prototype.push includes
-    // "{length:number}" (and this includes "Array<number>") we don't
-    // get a type warning here. Consider special-casing array methods.
-    testTypes(
-        "/** @type {!Array<string>} */\n" +
-        "var query = [];\n" +
-        "query.push(1);\n");
+    testTypesWithExterns(
+        new TestExternsBuilder().addArray().build(),
+        lines(
+            "/** @type {!Array<string>} */", // preserve newlines
+            "var query = [];",
+            "query.push(1);"),
+        lines(
+            "actual parameter 1 of Array.prototype.push does not match formal parameter",
+            "found   : number",
+            "required: (string|undefined)"));
   }
 
   public void testTemplateType8() {
@@ -14161,18 +14236,21 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testFunctionLiteralDefinedThisArgument2() {
-    testTypes(""
-        + "/** @param {string} x */ function f(x) {}"
-        + "/**\n"
-        + " * @param {?function(this:T, ...)} fn\n"
-        + " * @param {T=} opt_obj\n"
-        + " * @template T\n"
-        + " */\n"
-        + "function baz(fn, opt_obj) {}\n"
-        + "function g() { baz(function() { f(this.length); }, []); }",
-        "actual parameter 1 of f does not match formal parameter\n"
-        + "found   : number\n"
-        + "required: string");
+    testTypesWithExterns(
+        new TestExternsBuilder().addArray().build(),
+        lines(
+            "/** @param {string} x */ function f(x) {}",
+            "/**",
+            " * @param {?function(this:T, ...)} fn",
+            " * @param {T=} opt_obj",
+            " * @template T",
+            " */",
+            "function baz(fn, opt_obj) {}",
+            "function g() { baz(function() { f(this.length); }, []); }"),
+        lines(
+            "actual parameter 1 of f does not match formal parameter",
+            "found   : number",
+            "required: string"));
   }
 
   public void testFunctionLiteralUnreadNullThisArgument() {
@@ -14787,16 +14865,18 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
 
   public void testBackwardsInferenceGoogArrayFilter4() {
     testClosureTypes(
-        CLOSURE_DEFS +
-        "/** @type {string} */" +
-        "var out;" +
-        "/** @type {Array<string>} */ var arr;\n" +
-        "var out4 = goog.array.filter(" +
-        "   arr," +
-        "   function(item,index,srcArr) {out = srcArr;});",
-        "assignment\n" +
-        "found   : (null|{length: number})\n" +
-        "required: string");
+        lines(
+            CLOSURE_DEFS,
+            "/** @type {string} */",
+            "var out;",
+            "/** @type {Array<string>} */ var arr;",
+            "var out4 = goog.array.filter(",
+            "   arr,",
+            "   function(item,index,srcArr) {out = srcArr;});"),
+        lines(
+            "assignment", // keep newlines
+            "found   : (Array|null|{length: number})",
+            "required: string"));
   }
 
   public void testCatchExpression1() {
@@ -15082,12 +15162,9 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testTemplatizedTypeSubtypes2() {
-    JSType arrayOfNumber = createTemplatizedType(
-        ARRAY_TYPE, NUMBER_TYPE);
-    JSType arrayOfString = createTemplatizedType(
-        ARRAY_TYPE, STRING_TYPE);
-    assertFalse(arrayOfString.isSubtypeOf(createUnionType(arrayOfNumber, NULL_VOID)));
-
+    JSType arrayOfNumber = createTemplatizedType(getNativeArrayType(), getNativeNumberType());
+    JSType arrayOfString = createTemplatizedType(getNativeArrayType(), getNativeStringType());
+    assertFalse(arrayOfString.isSubtypeOf(createUnionType(arrayOfNumber, getNativeNullVoidType())));
   }
 
   public void testNonexistentPropertyAccessOnStruct() {
@@ -15447,42 +15524,43 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testCheckObjectKeysClassWithToString() {
-    testTypes(
-        "/** @constructor */\n" +
-        "var MyClass = function() {};\n" +
-        "/** @override*/\n" +
-        "MyClass.prototype.toString = function() { return ''; };\n" +
-
-        "/** @type {!Object<!MyClass, number>} */\n" +
-        "var k;");
+    testTypesWithExterns(
+        new TestExternsBuilder().addObject().build(),
+        lines(
+            "/** @constructor */",
+            "var MyClass = function() {};",
+            "/** @override*/",
+            "MyClass.prototype.toString = function() { return ''; };",
+            "/** @type {!Object<!MyClass, number>} */",
+            "var k;"));
   }
 
   public void testCheckObjectKeysClassInheritsToString() {
-    testTypes(
-        "/** @constructor */\n" +
-        "var Parent = function() {};\n" +
-        "/** @override */\n" +
-        "Parent.prototype.toString = function() { return ''; };\n" +
-
-        "/** @constructor @extends {Parent} */\n" +
-        "var Child = function() {};\n" +
-
-        "/** @type {!Object<!Child, number>} */\n" +
-        "var k;");
+    testTypesWithExterns(
+        new TestExternsBuilder().addObject().build(),
+        lines(
+            "/** @constructor */",
+            "var Parent = function() {};",
+            "/** @override */",
+            "Parent.prototype.toString = function() { return ''; };",
+            "/** @constructor @extends {Parent} */",
+            "var Child = function() {};",
+            "/** @type {!Object<!Child, number>} */",
+            "var k;"));
   }
 
   public void testCheckObjectKeysForEnumUsingClassWithToString() {
-    testTypes(
-        "/** @constructor */\n" +
-        "var MyClass = function() {};\n" +
-        "/** @override*/\n" +
-        "MyClass.prototype.toString = function() { return ''; };\n" +
-
-        "/** @enum{!MyClass} */\n" +
-        "var Enum = {};\n" +
-
-        "/** @type {!Object<Enum, number>} */\n" +
-        "var k;");
+    testTypesWithExterns(
+        new TestExternsBuilder().addObject().build(),
+        lines(
+            "/** @constructor */",
+            "var MyClass = function() {};",
+            "/** @override*/",
+            "MyClass.prototype.toString = function() { return ''; };",
+            "/** @enum{!MyClass} */",
+            "var Enum = {};",
+            "/** @type {!Object<Enum, number>} */",
+            "var k;"));
   }
 
   public void testBadSuperclassInheritance1() {
@@ -19447,7 +19525,8 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
 
   public void testReassignedSymbolAccessedInClosureIsFlowInsensitive() {
     // This code is technically correct, but the compiler will probably never be able to prove it.
-    testTypes(
+    testTypesWithExterns(
+        new TestExternsBuilder().addString().build(),
         lines(
             "function f(){",
             "  for (var x = {}; ; x = {y: x.y}) {",
@@ -19461,7 +19540,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
             "  }",
             "}"),
         lines(
-            "sign operator",
+            "sign operator", // preserve newlines
             "found   : (number|string)",
             "required: number"));
   }
@@ -19760,6 +19839,10 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
     }
   }
 
+  void testTypesWithExterns(String externs, String js, String description) {
+    testTypesWithExterns(externs, js, description, false);
+  }
+
   void testTypesWithExterns(String externs, String js) {
     testTypesWithExterns(externs, js, (String) null, false);
   }
@@ -19773,7 +19856,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
       String js, List<String> descriptions) {
     compiler.initOptions(compiler.getOptions());
     Node n = compiler.parseTestCode(js);
-    Node externs = IR.root();
+    Node externs = compiler.parseTestCode(new TestExternsBuilder().addString().build());
     IR.root(externs, n);
 
     assertEquals("parsing error: " +
@@ -19918,5 +20001,15 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
       this.root = root;
       this.scope = scope;
     }
+  }
+
+  private void assertHasXMorePropertiesThanNativeObject(
+      ObjectType instanceType, int numExtraProperties) {
+    assertEquals(
+        getNativeObjectPropertiesCount() + numExtraProperties, instanceType.getPropertiesCount());
+  }
+
+  private int getNativeObjectPropertiesCount() {
+    return getNativeObjectType().getPropertiesCount();
   }
 }

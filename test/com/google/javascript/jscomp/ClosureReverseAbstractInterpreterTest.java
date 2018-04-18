@@ -29,265 +29,293 @@ public final class ClosureReverseAbstractInterpreterTest extends
     CompilerTypeTestCase {
 
   public void testGoogIsDef1() throws Exception {
-    testClosureFunction("goog.isDef",
-        createOptionalType(NUMBER_TYPE),
-        NUMBER_TYPE,
-        VOID_TYPE);
+    testClosureFunction(
+        "goog.isDef",
+        createOptionalType(getNativeNumberType()),
+        getNativeNumberType(),
+        getNativeVoidType());
   }
 
   public void testGoogIsDef2() throws Exception {
-    testClosureFunction("goog.isDef",
-        createNullableType(NUMBER_TYPE),
-        createNullableType(NUMBER_TYPE),
-        NO_TYPE);
+    testClosureFunction(
+        "goog.isDef",
+        createNullableType(getNativeNumberType()),
+        createNullableType(getNativeNumberType()),
+        getNativeNoType());
   }
 
   public void testGoogIsDef3() throws Exception {
-    testClosureFunction("goog.isDef",
-        ALL_TYPE,
-        createUnionType(OBJECT_NUMBER_STRING_BOOLEAN_SYMBOL, NULL_TYPE),
-        VOID_TYPE);
+    testClosureFunction(
+        "goog.isDef",
+        getNativeAllType(),
+        createUnionType(getNativeObjectNumberStringBooleanSymbolType(), getNativeNullType()),
+        getNativeVoidType());
   }
 
   public void testGoogIsDef4() throws Exception {
-    testClosureFunction("goog.isDef",
-        UNKNOWN_TYPE,
-        UNKNOWN_TYPE,  // TODO(johnlenz): should be CHECKED_UNKNOWN_TYPE
-        UNKNOWN_TYPE);
+    testClosureFunction(
+        "goog.isDef",
+        getNativeUnknownType(),
+        getNativeUnknownType(), // TODO(johnlenz): should be getNativeCheckedUnknownType()
+        getNativeUnknownType());
   }
 
   public void testGoogIsNull1() throws Exception {
-    testClosureFunction("goog.isNull",
-        createOptionalType(NUMBER_TYPE),
-        NO_TYPE,
-        createOptionalType(NUMBER_TYPE));
+    testClosureFunction(
+        "goog.isNull",
+        createOptionalType(getNativeNumberType()),
+        getNativeNoType(),
+        createOptionalType(getNativeNumberType()));
   }
 
   public void testGoogIsNull2() throws Exception {
-    testClosureFunction("goog.isNull",
-        createNullableType(NUMBER_TYPE),
-        NULL_TYPE,
-        NUMBER_TYPE);
+    testClosureFunction(
+        "goog.isNull",
+        createNullableType(getNativeNumberType()),
+        getNativeNullType(),
+        getNativeNumberType());
   }
 
   public void testGoogIsNull3() throws Exception {
-    testClosureFunction("goog.isNull",
-        ALL_TYPE,
-        NULL_TYPE,
-        createUnionType(OBJECT_NUMBER_STRING_BOOLEAN_SYMBOL, VOID_TYPE));
+    testClosureFunction(
+        "goog.isNull",
+        getNativeAllType(),
+        getNativeNullType(),
+        createUnionType(getNativeObjectNumberStringBooleanSymbolType(), getNativeVoidType()));
   }
 
   public void testGoogIsNull4() throws Exception {
-    testClosureFunction("goog.isNull",
-        UNKNOWN_TYPE,
-        UNKNOWN_TYPE,
-        UNKNOWN_TYPE); // TODO(johnlenz): this should be CHECK_UNKNOWN
+    testClosureFunction(
+        "goog.isNull",
+        getNativeUnknownType(),
+        getNativeUnknownType(),
+        getNativeUnknownType()); // TODO(johnlenz): this should be CHECK_UNKNOWN
   }
 
   public void testGoogIsDefAndNotNull1() throws Exception {
-    testClosureFunction("goog.isDefAndNotNull",
-        createOptionalType(NUMBER_TYPE),
-        NUMBER_TYPE,
-        VOID_TYPE);
+    testClosureFunction(
+        "goog.isDefAndNotNull",
+        createOptionalType(getNativeNumberType()),
+        getNativeNumberType(),
+        getNativeVoidType());
   }
 
   public void testGoogIsDefAndNotNull2() throws Exception {
-    testClosureFunction("goog.isDefAndNotNull",
-        createNullableType(NUMBER_TYPE),
-        NUMBER_TYPE,
-        NULL_TYPE);
+    testClosureFunction(
+        "goog.isDefAndNotNull",
+        createNullableType(getNativeNumberType()),
+        getNativeNumberType(),
+        getNativeNullType());
   }
 
   public void testGoogIsDefAndNotNull3() throws Exception {
-    testClosureFunction("goog.isDefAndNotNull",
-        createOptionalType(createNullableType(NUMBER_TYPE)),
-        NUMBER_TYPE,
-        NULL_VOID);
+    testClosureFunction(
+        "goog.isDefAndNotNull",
+        createOptionalType(createNullableType(getNativeNumberType())),
+        getNativeNumberType(),
+        getNativeNullVoidType());
   }
 
   public void testGoogIsDefAndNotNull4() throws Exception {
-    testClosureFunction("goog.isDefAndNotNull",
-        ALL_TYPE,
-        OBJECT_NUMBER_STRING_BOOLEAN_SYMBOL,
-        NULL_VOID);
+    testClosureFunction(
+        "goog.isDefAndNotNull",
+        getNativeAllType(),
+        getNativeObjectNumberStringBooleanSymbolType(),
+        getNativeNullVoidType());
   }
 
   public void testGoogIsDefAndNotNull5() throws Exception {
-    testClosureFunction("goog.isDefAndNotNull",
-        UNKNOWN_TYPE,
-        UNKNOWN_TYPE,  // TODO(johnlenz): this should be "CHECKED_UNKNOWN"
-        UNKNOWN_TYPE);
+    testClosureFunction(
+        "goog.isDefAndNotNull",
+        getNativeUnknownType(),
+        getNativeUnknownType(), // TODO(johnlenz): this should be "CHECKED_UNKNOWN"
+        getNativeUnknownType());
   }
 
   public void testGoogIsString1() throws Exception {
-    testClosureFunction("goog.isString",
-        createNullableType(STRING_TYPE),
-        STRING_TYPE,
-        NULL_TYPE);
+    testClosureFunction(
+        "goog.isString",
+        createNullableType(getNativeStringType()),
+        getNativeStringType(),
+        getNativeNullType());
   }
 
   public void testGoogIsString2() throws Exception {
-    testClosureFunction("goog.isString",
-        createNullableType(NUMBER_TYPE),
-        createNullableType(NUMBER_TYPE),
-        createNullableType(NUMBER_TYPE));
+    testClosureFunction(
+        "goog.isString",
+        createNullableType(getNativeNumberType()),
+        createNullableType(getNativeNumberType()),
+        createNullableType(getNativeNumberType()));
   }
 
   public void testGoogIsBoolean1() throws Exception {
-    testClosureFunction("goog.isBoolean",
-        createNullableType(BOOLEAN_TYPE),
-        BOOLEAN_TYPE,
-        NULL_TYPE);
+    testClosureFunction(
+        "goog.isBoolean",
+        createNullableType(getNativeBooleanType()),
+        getNativeBooleanType(),
+        getNativeNullType());
   }
 
   public void testGoogIsBoolean2() throws Exception {
-    testClosureFunction("goog.isBoolean",
-        createUnionType(BOOLEAN_TYPE, STRING_TYPE, NO_OBJECT_TYPE),
-        BOOLEAN_TYPE,
-        createUnionType(STRING_TYPE, NO_OBJECT_TYPE));
+    testClosureFunction(
+        "goog.isBoolean",
+        createUnionType(getNativeBooleanType(), getNativeStringType(), getNativeNoObjectType()),
+        getNativeBooleanType(),
+        createUnionType(getNativeStringType(), getNativeNoObjectType()));
   }
 
   public void testGoogIsBoolean3() throws Exception {
-    testClosureFunction("goog.isBoolean",
-        ALL_TYPE,
-        BOOLEAN_TYPE,
-        ALL_TYPE); // TODO(johnlenz): this should be:
-                   //   {Object|number|string|null|void}
+    testClosureFunction(
+        "goog.isBoolean",
+        getNativeAllType(),
+        getNativeBooleanType(),
+        // TODO(johnlenz): this should be: {Object|number|string|null|void}
+        getNativeAllType());
   }
 
   public void testGoogIsBoolean4() throws Exception {
-    testClosureFunction("goog.isBoolean",
-        UNKNOWN_TYPE,
-        BOOLEAN_TYPE,
-        CHECKED_UNKNOWN_TYPE);
+    testClosureFunction(
+        "goog.isBoolean",
+        getNativeUnknownType(),
+        getNativeBooleanType(),
+        getNativeCheckedUnknownType());
   }
 
   public void testGoogIsNumber() throws Exception {
-    testClosureFunction("goog.isNumber",
-        createNullableType(NUMBER_TYPE),
-        NUMBER_TYPE,
-        NULL_TYPE);
+    testClosureFunction(
+        "goog.isNumber",
+        createNullableType(getNativeNumberType()),
+        getNativeNumberType(),
+        getNativeNullType());
   }
 
   public void testGoogIsFunction() throws Exception {
-    testClosureFunction("goog.isFunction",
-        createNullableType(OBJECT_FUNCTION_TYPE),
-        OBJECT_FUNCTION_TYPE,
-        NULL_TYPE);
+    testClosureFunction(
+        "goog.isFunction",
+        createNullableType(getNativeObjectConstructorType()),
+        getNativeObjectConstructorType(),
+        getNativeNullType());
   }
 
   public void testGoogIsFunction2a() throws Exception {
-    testClosureFunction("goog.isFunction",
-        OBJECT_NUMBER_STRING_BOOLEAN,
-        U2U_CONSTRUCTOR_TYPE,
-        OBJECT_NUMBER_STRING_BOOLEAN);
+    testClosureFunction(
+        "goog.isFunction",
+        getNativeObjectNumberStringBooleanType(),
+        getNativeU2UConstructorType(),
+        getNativeObjectNumberStringBooleanType());
   }
 
   public void testGoogIsFunction2b() throws Exception {
-    testClosureFunction("goog.isFunction",
-        OBJECT_NUMBER_STRING_BOOLEAN_SYMBOL,
-        U2U_CONSTRUCTOR_TYPE,
-        OBJECT_NUMBER_STRING_BOOLEAN_SYMBOL);
+    testClosureFunction(
+        "goog.isFunction",
+        getNativeObjectNumberStringBooleanSymbolType(),
+        getNativeU2UConstructorType(),
+        getNativeObjectNumberStringBooleanSymbolType());
   }
 
   public void testGoogIsFunction3() throws Exception {
-    testClosureFunction("goog.isFunction",
-        createUnionType(U2U_CONSTRUCTOR_TYPE, NUMBER_STRING_BOOLEAN),
-        U2U_CONSTRUCTOR_TYPE,
-        NUMBER_STRING_BOOLEAN);
+    testClosureFunction(
+        "goog.isFunction",
+        createUnionType(getNativeU2UConstructorType(), getNativeNumberStringBooleanType()),
+        getNativeU2UConstructorType(),
+        getNativeNumberStringBooleanType());
   }
 
   public void testGoogIsFunctionOnNull() throws Exception {
-    testClosureFunction("goog.isFunction",
-        null,
-        U2U_CONSTRUCTOR_TYPE,
-        null);
+    testClosureFunction("goog.isFunction", null, getNativeU2UConstructorType(), null);
   }
 
   public void testGoogIsArray1() throws Exception {
-    testClosureFunction("goog.isArray",
-        OBJECT_TYPE,
-        ARRAY_TYPE,
-        OBJECT_TYPE);
+    testClosureFunction(
+        "goog.isArray", getNativeObjectType(), getNativeArrayType(), getNativeObjectType());
   }
 
   public void testGoogIsArray2() throws Exception {
-    testClosureFunction("goog.isArray",
-        ALL_TYPE,
-        ARRAY_TYPE,
-        ALL_TYPE);
+    testClosureFunction(
+        "goog.isArray", getNativeAllType(), getNativeArrayType(), getNativeAllType());
   }
 
   public void testGoogIsArray3() throws Exception {
-    testClosureFunction("goog.isArray",
-        UNKNOWN_TYPE,
-        CHECKED_UNKNOWN_TYPE,
-        CHECKED_UNKNOWN_TYPE);
+    testClosureFunction(
+        "goog.isArray",
+        getNativeUnknownType(),
+        getNativeCheckedUnknownType(),
+        getNativeCheckedUnknownType());
   }
 
   public void testGoogIsArray4() throws Exception {
-    testClosureFunction("goog.isArray",
-        createUnionType(ARRAY_TYPE, NULL_TYPE),
-        ARRAY_TYPE,
-        NULL_TYPE);
+    testClosureFunction(
+        "goog.isArray",
+        createUnionType(getNativeArrayType(), getNativeNullType()),
+        getNativeArrayType(),
+        getNativeNullType());
   }
 
   public void testGoogIsArrayOnNull() throws Exception {
-    testClosureFunction("goog.isArray",
-        null,
-        ARRAY_TYPE,
-        null);
+    testClosureFunction("goog.isArray", null, getNativeArrayType(), null);
   }
 
   public void testGoogIsObjectOnNull() throws Exception {
-    testClosureFunction("goog.isObject",
-        null,
-        OBJECT_TYPE,
-        null);
+    testClosureFunction("goog.isObject", null, getNativeObjectType(), null);
   }
 
   public void testGoogIsObject1() throws Exception {
-    testClosureFunction("goog.isObject",
-        ALL_TYPE,
-        NO_OBJECT_TYPE,
-        createUnionType(NUMBER_STRING_BOOLEAN_SYMBOL, NULL_TYPE, VOID_TYPE));
+    testClosureFunction(
+        "goog.isObject",
+        getNativeAllType(),
+        getNativeNoObjectType(),
+        createUnionType(
+            getNativeNumberStringBooleanSymbolType(), getNativeNullType(), getNativeVoidType()));
   }
 
   public void testGoogIsObject2a() throws Exception {
-    testClosureFunction("goog.isObject",
-          createUnionType(OBJECT_TYPE, NUMBER_STRING_BOOLEAN),
-          OBJECT_TYPE,
-          NUMBER_STRING_BOOLEAN);
+    testClosureFunction(
+        "goog.isObject",
+        createUnionType(getNativeObjectType(), getNativeNumberStringBooleanType()),
+        getNativeObjectType(),
+        getNativeNumberStringBooleanType());
   }
 
   public void testGoogIsObject2b() throws Exception {
-    testClosureFunction("goog.isObject",
-          createUnionType(OBJECT_TYPE, NUMBER_STRING_BOOLEAN_SYMBOL),
-          OBJECT_TYPE,
-          NUMBER_STRING_BOOLEAN_SYMBOL);
+    testClosureFunction(
+        "goog.isObject",
+        createUnionType(getNativeObjectType(), getNativeNumberStringBooleanSymbolType()),
+        getNativeObjectType(),
+        getNativeNumberStringBooleanSymbolType());
   }
 
   public void testGoogIsObject3a() throws Exception {
-    testClosureFunction("goog.isObject",
-          createUnionType(
-              OBJECT_TYPE, NUMBER_STRING_BOOLEAN, NULL_TYPE, VOID_TYPE),
-          OBJECT_TYPE,
-          createUnionType(NUMBER_STRING_BOOLEAN, NULL_TYPE, VOID_TYPE));
+    testClosureFunction(
+        "goog.isObject",
+        createUnionType(
+            getNativeObjectType(),
+            getNativeNumberStringBooleanType(),
+            getNativeNullType(),
+            getNativeVoidType()),
+        getNativeObjectType(),
+        createUnionType(
+            getNativeNumberStringBooleanType(), getNativeNullType(), getNativeVoidType()));
   }
 
   public void testGoogIsObject3b() throws Exception {
-    testClosureFunction("goog.isObject",
-          createUnionType(
-              OBJECT_TYPE, NUMBER_STRING_BOOLEAN_SYMBOL, NULL_TYPE, VOID_TYPE),
-          OBJECT_TYPE,
-          createUnionType(NUMBER_STRING_BOOLEAN_SYMBOL, NULL_TYPE, VOID_TYPE));
+    testClosureFunction(
+        "goog.isObject",
+        createUnionType(
+            getNativeObjectType(),
+            getNativeNumberStringBooleanSymbolType(),
+            getNativeNullType(),
+            getNativeVoidType()),
+        getNativeObjectType(),
+        createUnionType(
+            getNativeNumberStringBooleanSymbolType(), getNativeNullType(), getNativeVoidType()));
   }
 
   public void testGoogIsObject4() throws Exception {
-    testClosureFunction("goog.isObject",
-        UNKNOWN_TYPE,
-        NO_OBJECT_TYPE,  // ? Should this be CHECKED_UNKNOWN?
-        CHECKED_UNKNOWN_TYPE);
+    testClosureFunction(
+        "goog.isObject",
+        getNativeUnknownType(),
+        getNativeNoObjectType(), // ? Should this be CHECKED_UNKNOWN?
+        getNativeCheckedUnknownType());
   }
 
   private void testClosureFunction(String function, JSType type,
