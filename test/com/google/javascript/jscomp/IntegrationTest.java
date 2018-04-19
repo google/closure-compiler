@@ -635,12 +635,122 @@ public final class IntegrationTest extends IntegrationTestCase {
     Compiler compiler = compile(
         options,
         lines(
-            "class XFoo extends PolymerElement {",
+            "class XFoo extends Polymer.Element {",
             "  get is() { return 'x-foo'; }",
             "  static get properties() { return { bar: Boolean, }; }",
             "}"));
     assertThat(compiler.getErrors()).isEmpty();
     assertThat(compiler.getWarnings()).isEmpty();
+  }
+
+  private void addPolymer2Externs() {
+    ImmutableList.Builder<SourceFile> externsList = ImmutableList.builder();
+    externsList.addAll(externs);
+
+    externsList.add(
+        SourceFile.fromCode(
+            "polymer_externs.js",
+            lines(
+                "function Polymer() {}",
+                "",
+                "Polymer.ElementMixin = function(mixin) {}",
+                "",
+                "/** @typedef {!Object} */",
+                "var PolymerElementProperties;",
+                "",
+                "/** @interface */",
+                "function Polymer_ElementMixin() {}")));
+
+    externsList.add(
+        SourceFile.fromCode(
+            "html5.js",
+            lines(
+                "/** @constructor */",
+                "function Element() {}",
+                "",
+                "/**",
+                " * @see https://html.spec.whatwg.org/multipage/scripting.html#custom-elements",
+                " * @constructor",
+                " */",
+                "function CustomElementRegistry() {}",
+                "",
+                "/**",
+                " * @param {string} tagName",
+                " * @param {!function(new:HTMLElement)} klass",
+                " * @param {{extends: string}=} options",
+                " * @return {undefined}",
+                " */",
+                "CustomElementRegistry.prototype.define = function (tagName, klass, options) {};",
+                "",
+                "/**",
+                " * @param {string} tagName",
+                " * @return {?function(new:HTMLElement)}",
+                " */",
+                "CustomElementRegistry.prototype.get = function(tagName) {};",
+                "",
+                "/**",
+                " * @param {string} tagName",
+                " * @return {Promise<!function(new:HTMLElement)>}",
+                " */",
+                "CustomElementRegistry.prototype.whenDefined = function(tagName) {};",
+                "",
+                "/** @type {!CustomElementRegistry} */",
+                "var customElements;",
+                "")));
+
+    externs = externsList.build();
+  }
+
+  // Regression test for b/77650996
+  public void testPolymer2_oti2() {
+    CompilerOptions options = createCompilerOptions();
+    options.setPolymerVersion(2);
+    options.setNewTypeInference(false);
+    options.setWarningLevel(DiagnosticGroups.CHECK_TYPES, CheckLevel.ERROR);
+    options.declaredGlobalExternsOnWindow = true;
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    addPolymer2Externs();
+
+    test(
+        options,
+        new String[] {
+          lines(
+              "class DeviceConfigEditor extends Polymer.Element {",
+              "",
+              "  static get is() {",
+              "    return 'device-config-editor';",
+              "  }",
+              "",
+              "  static get properties() {",
+              "    return {};",
+              "  }",
+              "}",
+              "",
+              "window.customElements.define(DeviceConfigEditor.is, DeviceConfigEditor);"),
+          lines(
+              "(function() {",
+              "  /**",
+              "   * @customElement",
+              "   * @polymer",
+              "   * @memberof Polymer",
+              "   * @constructor",
+              "   * @implements {Polymer_ElementMixin}",
+              "   * @extends HTMLElement",
+              "   */",
+              "  const Element = Polymer.ElementMixin(HTMLElement);",
+              "",
+              "  /**",
+              "   * @constructor",
+              "   * @implements {Polymer_ElementMixin}",
+              "   * @extends {HTMLElement}",
+              "   */",
+              "  Polymer.Element = Element;",
+              "})();",
+              ""),
+        },
+        // TODO(b/77650996): there should be no mismatch
+        TypeValidator.TYPE_MISMATCH_WARNING);
   }
 
   public void testPolymer2_oti() {
