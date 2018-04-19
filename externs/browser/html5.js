@@ -4589,6 +4589,28 @@ Navigator.prototype.deviceMemory;
 Navigator.prototype.storage;
 
 /**
+ * @param {!ShareData=} data
+ * @return {!Promise<undefined>}
+ * @see https://wicg.github.io/web-share/#share-method
+ */
+Navigator.prototype.share = function(data) {};
+
+/**
+ * @record
+ * @see https://wicg.github.io/web-share/#sharedata-dictionary
+ */
+function ShareData() {}
+
+/** @type {string|undefined} */
+ShareData.prototype.title;
+
+/** @type {string|undefined} */
+ShareData.prototype.text;
+
+/** @type {string|undefined} */
+ShareData.prototype.url;
+
+/**
  * @constructor
  * @implements {IObject<(string|number),!Plugin>}
  * @implements {IArrayLike<!Plugin>}
