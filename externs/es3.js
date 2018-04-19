@@ -2070,9 +2070,7 @@ RegExp.prototype.compile = function(pattern, opt_flags) {};
 
 /**
  * @param {*} str The string to search.
- * @return {Array<string>} This should really return an Array with a few
- *     special properties, but we do not have a good way to model this in
- *     our type system. Also see String.prototype.match.
+ * @return {?RegExpResult}
  * @see http://msdn.microsoft.com/en-us/library/z908hy33(VS.85).aspx
  * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp/exec
  */
@@ -2092,6 +2090,34 @@ RegExp.prototype.test = function(str) {};
  * @override
  */
 RegExp.prototype.toString = function() {};
+
+/**
+ * @constructor
+ * @extends {Array<string>}
+ */
+var RegExpResult = function() {};
+
+
+/** @type {number} */
+RegExpResult.prototype.index;
+
+
+/** @type {string} */
+RegExpResult.prototype.input;
+
+
+/** @type {number} */
+RegExpResult.prototype.length;
+
+
+/**
+ * Not actually part of ES3; was added in 2018.
+ * https://github.com/tc39/proposal-regexp-named-groups
+ *
+ * @type {!Object<string, string>}
+ */
+RegExpResult.prototype.groups;
+
 
 // Constructor properties:
 
