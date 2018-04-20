@@ -177,8 +177,8 @@ public class TypedScope extends AbstractScope<TypedScope, TypedVar>
   private boolean isDeclarativelyUnboundVarWithoutType(TypedVar var) {
     return var.getParentNode() != null
         && var.getType() == null
-        // TODO(sdh): should we include LET here as well?
-        && var.getParentNode().isVar()
+        // TODO(bradfordcsmith): update this for destructuring
+        && NodeUtil.isNameDeclaration(var.getParentNode())
         && !var.isExtern();
   }
 

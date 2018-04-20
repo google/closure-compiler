@@ -40,7 +40,9 @@ import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.testing.Asserts;
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.Deque;
+import java.util.List;
 
 /**
  * Tests for {@link TypedScopeCreator} and {@link TypeInference}. Admittedly,
@@ -93,6 +95,47 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
         new NodeTraversal(compiler, new ScopeFinder(), scopeCreator).traverseRoots(externs, root);
       }
     };
+  }
+
+  public void testDeclarativelyUnboundVarsWithoutTypes() {
+    testSame(
+        lines(
+            "var uninitializedVar;",
+            "var uninitializedLet;",
+            "",
+            "/** @type {?} */ var uninitializedVarWithType;",
+            "/** @type {?} */ let uninitializedLetWithType;",
+            "",
+            "/** @typedef {number} */ var typedefVar;",
+            "/** @typedef {number} */ var typedefLet;",
+            "",
+            "var initializedVar = 1;",
+            "let initializedLet = 1;",
+            "",
+            "/** @type {number} */ var initializedVarWithType = 1;",
+            "/** @type {number} */ let initializedLetWithType = 1;",
+            "",
+            "/** @const */ var CONST_VAR = 1;",
+            "/** @const */ let CONST_LET = 1;",
+            "const CONST = 1;",
+            "",
+            "/** @const {number} */ var   CONST_VAR_WITH_TYPE = 1;",
+            "/** @const {number} */ let   CONST_LET_WITH_TYPE = 1;",
+            "/** @type  {number} */ const CONST_WITH_TYPE     = 1;",
+            ""));
+    String[] expectedVarNames =
+        new String[] {
+          "uninitializedVar",
+          "uninitializedLet",
+          "typedefVar",
+          "typedefLet",
+        };
+    List<TypedVar> expectedVars = new ArrayList<>();
+    for (String varName : expectedVarNames) {
+      expectedVars.add(globalScope.getVar(varName));
+    }
+    assertThat(globalScope.getDeclarativelyUnboundVarsWithoutTypes())
+        .containsExactlyElementsIn(expectedVars);
   }
 
   public void testStubProperty() {

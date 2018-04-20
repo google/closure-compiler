@@ -49,6 +49,22 @@ public final class TypeCheckNoTranspileTest extends CompilerTypeTestCase {
     return options;
   }
 
+  public void testTypedefAlias() {
+    // Ensure that the type of a variable representing a typedef is "undefined"
+    testTypes(
+        lines(
+            "/** @typedef {number} */", // preserve newlines
+            "var MyNumber;",
+            "var ns = {};",
+            "ns.MyNumber = MyNumber;",
+            "/** @type {string} */ (ns.MyNumber);",
+            ""),
+        lines(
+            "invalid cast - must be a subtype or supertype", // preserve newlines
+            "from: undefined",
+            "to  : string"));
+  }
+
   public void testGetTypedPercent() {
     // Make sure names declared with `const` and `let` are counted correctly for typed percentage.
     // This was created my a modifying a copy of TypeCheckTest.testGetTypedPercent1()
@@ -313,9 +329,13 @@ public final class TypeCheckNoTranspileTest extends CompilerTypeTestCase {
             "/** @param {(!Array<string>|undefined)} arr */",
             "function f(arr) {",
             "  for (let x of (arr || [])) {",
-            "    takesNumber(x);", // TODO(b/77904110): Can we warn here? Currently we infer x to
-            "  }",                 // have the unknown type because (arr || []) has type Array.
-            "}"));
+            "    takesNumber(x);",
+            "  }",
+            "}"),
+        lines(
+            "actual parameter 1 of takesNumber does not match formal parameter",
+            "found   : undefined",  // TODO(b/77904110): Should be number
+            "required: number"));
   }
 
   public void testForOf_unionType2() {
