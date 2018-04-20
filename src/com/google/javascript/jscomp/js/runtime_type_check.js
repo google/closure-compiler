@@ -242,6 +242,7 @@ $jscomp.typecheck.ExternClassChecker_.trackOpenOnWindow = function(win) {
   if (win.tracked) {
     return;
   }
+  /** @type {boolean} */
   win.tracked = true;
 
   var key = $jscomp.typecheck.ExternClassChecker_.oldOpenFuns.length;

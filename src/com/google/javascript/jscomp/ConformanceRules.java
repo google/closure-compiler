@@ -1329,8 +1329,7 @@ public final class ConformanceRules {
       return (filename != null
           && (filename.contains("synthetic:es6/map")
               || filename.contains("synthetic:es6/weakmap")
-              || filename.contains("synthetic:es6/weakset")
-              || filename.contains("synthetic:runtime_type_check")));
+              || filename.contains("synthetic:es6/weakset")));
     }
 
     private boolean isCheckablePropertySource(Node n) {
