@@ -19,6 +19,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.javascript.jscomp.Es6ToEs3Util.withType;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.AbstractCompiler.MostRecentTypechecker;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
@@ -237,6 +238,7 @@ final class Es6RewriteGenerators implements HotSwapCompilerPass {
 
     /** The original inferred return type of the Generator */
     JSType originalGenReturnType;
+    JSType yieldType;
 
     SingleGeneratorFunctionTranspiler(Node genFunc, int genaratorNestingLevel) {
       this.generatorNestingLevel = genaratorNestingLevel;
@@ -245,11 +247,11 @@ final class Es6RewriteGenerators implements HotSwapCompilerPass {
       if (shouldAddTypes) {
         // Find the yield type of the generator.
         // e.g. given @return {!Generator<number>}, we want this.yieldType to be number.
-        JSType yieldType = unknownType;
+        yieldType = unknownType;
         if (genFunc.getJSType() != null && genFunc.getJSType().isFunctionType()) {
           FunctionType fnType = genFunc.getJSType().toMaybeFunctionType();
           this.originalGenReturnType = fnType.getReturnType();
-          yieldType = TypeCheck.getTemplateTypeOfGenerator(registry, this.originalGenReturnType);
+          yieldType = TypeCheck.getTemplateTypeOfGenerator(registry, originalGenReturnType);
         }
 
         JSType globalContextType = registry.getGlobalType("$jscomp.generator.Context");
@@ -307,7 +309,12 @@ final class Es6RewriteGenerators implements HotSwapCompilerPass {
 
       if (shouldAddTypes) {
         createGenerator.setJSType(registry.createFunctionType(originalGenReturnType));
-        program.setJSType(registry.createFunctionType(unknownType));
+        // function(!Context<YIELD_TYPE>): (void|{value: YIELD_TYPE})
+        program.setJSType(registry.createFunctionType(
+            registry.createUnionType(
+                registry.getNativeType(JSTypeNative.VOID_TYPE),
+                registry.createRecordType(ImmutableMap.of("value", yieldType))),
+            context.contextType));
       }
 
       // Newly introduced functions have to be reported immediately.
@@ -1380,8 +1387,8 @@ final class Es6RewriteGenerators implements HotSwapCompilerPass {
 
       /** Returns the name node of context parameter passed to the program. */
       Node getJsContextNameNode(Node sourceNode) {
-        return withType(
-            getScopedName(GENERATOR_CONTEXT).useSourceInfoFrom(sourceNode), this.contextType);
+        return withType(getScopedName(GENERATOR_CONTEXT), this.contextType)
+            .useSourceInfoFrom(sourceNode);
       }
 
       /** Returns unique name in the current context. */
@@ -1395,7 +1402,7 @@ final class Es6RewriteGenerators implements HotSwapCompilerPass {
                 IR.getprop(
                     getJsContextNameNode(sourceNode),
                     IR.string(fieldName).useSourceInfoFrom(sourceNode)),
-                shouldAddTypes ? this.contextType.getPropertyType(fieldName) : null)
+                shouldAddTypes ? contextType.getPropertyType(fieldName) : null)
             .useSourceInfoFrom(sourceNode);
       }
 

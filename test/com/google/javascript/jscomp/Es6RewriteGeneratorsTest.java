@@ -1362,7 +1362,8 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
     Node program = createGenerator.getNext().getNext();
 
     assertTrue("Expected function: " + program.getJSType(), program.getJSType().isFunctionType());
-    assertEquals("?", program.getJSType().toMaybeFunctionType().getReturnType().toString());
+    assertEquals("(undefined|{value: number})",
+        program.getJSType().toMaybeFunctionType().getReturnType().toString());
     return program;
   }
 }
