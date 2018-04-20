@@ -48,7 +48,7 @@ public final class TranspileResultTest extends TestCase {
     TranspileResult result = new TranspileResult(Paths.get("a"), "b", "c", "{\"version\": 3}");
     assertThat(result.embedSourcemap())
         .isEqualTo(new TranspileResult(
-            Paths.get("a"), "b", "c\n//# sourceMappingURL=data:,%7B%22version%22%3A+3%7D\n", ""));
+            Paths.get("a"), "b", "c\n//# sourceMappingURL=data:,%7B%22version%22%3A%203%7D\n", ""));
     assertThat(result.embedSourcemapUrl("foo.js.map"))
         .isEqualTo(new TranspileResult(
             Paths.get("a"), "b", "c\n//# sourceMappingURL=foo.js.map\n", "{\"version\": 3}"));

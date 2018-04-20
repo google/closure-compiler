@@ -18,7 +18,8 @@ package com.google.javascript.jscomp.transpile;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import java.net.URLEncoder;
+import com.google.common.escape.Escaper;
+import com.google.common.net.PercentEscaper;
 import java.nio.file.Path;
 import java.util.Objects;
 
@@ -67,12 +68,15 @@ public final class TranspileResult {
     return new TranspileResult(path, original, embedded, sourceMap);
   }
 
+  // sourcemaps must escape :, and cannot escape space as +, so we need a custom escaper.
+  private static final Escaper ESCAPER = new PercentEscaper("-_.*", false /* plusForSpace */);
+
   public TranspileResult embedSourcemap() {
     if (sourceMap.isEmpty()) {
       return this;
     }
     String embedded =
-        transpiled + "\n//# sourceMappingURL=data:," + URLEncoder.encode(sourceMap) + "\n";
+        transpiled + "\n//# sourceMappingURL=data:," + ESCAPER.escape(sourceMap) + "\n";
     return new TranspileResult(path, original, embedded, "");
   }
 

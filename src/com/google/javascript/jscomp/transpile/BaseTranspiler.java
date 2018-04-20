@@ -30,6 +30,7 @@ import com.google.javascript.jscomp.Es6RewriteModulesToCommonJsModules;
 import com.google.javascript.jscomp.PropertyRenamingPolicy;
 import com.google.javascript.jscomp.Result;
 import com.google.javascript.jscomp.SourceFile;
+import com.google.javascript.jscomp.SourceMap;
 import com.google.javascript.jscomp.VariableRenamingPolicy;
 import com.google.javascript.jscomp.bundle.TranspilationException;
 import com.google.javascript.rhino.Node;
@@ -142,10 +143,15 @@ public final class BaseTranspiler implements Transpiler {
       options.setPropertyRenaming(PropertyRenamingPolicy.OFF);
       options.setWrapGoogModulesForWhitespaceOnly(false);
       options.setPrettyPrint(true);
-      options.setSourceMapOutputPath("/dev/null");
-      options.setSourceMapIncludeSourcesContent(true);
       options.setWarningLevel(ES5_WARNINGS, CheckLevel.OFF);
       options.setTranspileEs6ModulesToCjsModules(true);
+
+      options.setSourceMapOutputPath("/dev/null");
+      options.setSourceMapIncludeSourcesContent(true);
+      // Make sourcemaps use absolute paths, so that the path is not duplicated if a build tool adds
+      // a sourceurl.
+      options.setSourceMapLocationMappings(
+          ImmutableList.of(new SourceMap.LocationMapping("", "/")));
     }
 
     protected static final SourceFile EXTERNS =
