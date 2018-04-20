@@ -5309,7 +5309,7 @@ public final class IntegrationTest extends IntegrationTestCase {
         "var a={a:9}; a=void 0===a?{a:5}:a;alert(3+a.a)");
   }
 
-  // TODO(b/69850796): Re-enable if/when InlineFunctions supports inlining default parameters
+  // TODO(b/78345133): Re-enable if/when InlineFunctions supports inlining default parameters
   public void disabled_testDefaultParametersNonTranspiling() {
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
@@ -5348,7 +5348,7 @@ public final class IntegrationTest extends IntegrationTestCase {
             "}(1,1,1,1,1))"));
   }
 
-  // TODO(b/69850796): Re-enable if/when InlineFunctions supports rest parameters that are
+  // TODO(tbreisacher): Re-enable if/when InlineFunctions supports rest parameters that are
   // object patterns.
   public void disabled_testRestObjectPatternParametersNonTranspiling() {
     CompilerOptions options = createCompilerOptions();
