@@ -104,20 +104,6 @@ public interface TypeIRegistry extends Serializable {
    * where you'd get the Foo constructor.
    *
    * If Foo is not a nominal type, returns the namespace type.
-   *
-   * @deprecated Use #getGlobalType instead.
-   */
-   @Deprecated
-   TypeI getType(String typeName);
-
-  /**
-   * Returns the type represented by typeName or null if not found.
-   *
-   * If you pass Foo to this method, and Foo can be an instance or a constructor,
-   * you get the Foo instance, in contrast to TypeIEnv#getNamespaceType,
-   * where you'd get the Foo constructor.
-   *
-   * If Foo is not a nominal type, returns the namespace type.
    */
   TypeI getGlobalType(String typeName);
 

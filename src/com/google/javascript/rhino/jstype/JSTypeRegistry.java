@@ -51,11 +51,13 @@ import com.google.common.annotations.GwtIncompatible;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
+import com.google.common.collect.Table;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.FunctionTypeI;
 import com.google.javascript.rhino.JSDocInfo;
@@ -64,6 +66,7 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.ObjectTypeI;
 import com.google.javascript.rhino.SimpleErrorReporter;
 import com.google.javascript.rhino.StaticScope;
+import com.google.javascript.rhino.StaticSlot;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.TypeI;
 import com.google.javascript.rhino.TypeIEnv;
@@ -82,6 +85,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import javax.annotation.Nullable;
 
 /**
  * The type registry is used to resolve named types.
@@ -146,7 +150,11 @@ public class JSTypeRegistry implements TypeIRegistry {
   // CPU time on bounds checking inside get().
   private final JSType[] nativeTypes;
 
-  private final Map<String, JSType> namesToTypes;
+  private final Table<Node, String, JSType> scopedNameTable = HashBasedTable.create();
+
+  // NOTE: This would normally be "static final" but that causes unit test failures
+  // when serializing and deserializing compiler state for multistage builds.
+  private final Node nameTableGlobalRoot = new Node(Token.ROOT);
 
   // NOTE(nicksantos): This is a terrible terrible hack. When type expressions
   // are evaluated, we need to be able to decide whether that type name
@@ -224,7 +232,6 @@ public class JSTypeRegistry implements TypeIRegistry {
     this.emptyTemplateTypeMap = new TemplateTypeMap(
         this, ImmutableList.<TemplateType>of(), ImmutableList.<JSType>of());
     nativeTypes = new JSType[JSTypeNative.values().length];
-    namesToTypes = new HashMap<>();
     resetForTypeCheck();
   }
 
@@ -296,7 +303,7 @@ public class JSTypeRegistry implements TypeIRegistry {
     typesIndexedByProperty.clear();
     eachRefTypeIndexedByProperty.clear();
     initializeBuiltInTypes();
-    namesToTypes.clear();
+    scopedNameTable.clear();
     initializeRegistry();
   }
 
@@ -813,9 +820,8 @@ public class JSTypeRegistry implements TypeIRegistry {
     U2U_CONSTRUCTOR_TYPE.setImplicitPrototype(FUNCTION_PROTOTYPE);
 
     // least function type, i.e. (All...) -> NoType
-    FunctionType LEAST_FUNCTION_TYPE =
-        createNativeFunctionTypeWithVarArgs(NO_TYPE, ALL_TYPE);
-    registerNativeType(JSTypeNative.LEAST_FUNCTION_TYPE, LEAST_FUNCTION_TYPE);
+    FunctionType leastFunctionType = createNativeFunctionTypeWithVarArgs(NO_TYPE, ALL_TYPE);
+    registerNativeType(JSTypeNative.LEAST_FUNCTION_TYPE, leastFunctionType);
 
     // the 'this' object in the global scope
     FunctionType GLOBAL_THIS_CTOR =
@@ -877,21 +883,107 @@ public class JSTypeRegistry implements TypeIRegistry {
     registerGlobalType(getNativeType(JSTypeNative.GLOBAL_THIS), "Global");
   }
 
+  private static boolean isCompoundName(String name) {
+    return name.indexOf(".") != -1;
+  }
+
+  private static String getRootElementOfName(String name) {
+    int index = name.indexOf(".");
+    if (index != -1) {
+      return name.substring(0, index);
+    }
+    return name;
+  }
+
+  /**
+   * @return Which scope in the provided scope chain the provided name is declared in, or else null.
+   *
+   * This assumed that the Scope construction is
+   * complete.  It can not be used during scope construction to determine if a name is already
+   * defined as a shadowed name from a parent scope would be returned.
+   */
+  private static StaticScope getLookupScope(StaticScope scope, String name) {
+    if (scope != null && scope.getParentScope() != null) {
+      StaticSlot slot = scope.getSlot(getRootElementOfName(name));
+      return slot != null ? slot.getScope() : null;
+    }
+    return scope;
+  }
+
+  // TODO(johnlenz): Remove the use of this.  Instead the callers should provide the correct scope.
+  // This method isn't valid if the scope is under construction.  The type registry does not
+  // have enough context to select the correct scope if the symbol isn't already present.
+  // Specifically, a "var" declaration in a block belongs in an outer scope.
+  /**
+   * @return Which scope in the provided scope chain the provided name is declared in, or else
+   * the provide scope if it is not declared.  The assumption is that provided scopes is the
+   * correct scope for new names.
+   */
+  private static StaticScope getCreationScope(StaticScope scope, String name) {
+    if (scope != null && scope.getParentScope() != null) {
+      String rootName = getRootElementOfName(name);
+      StaticSlot slot = scope.getSlot(rootName);
+      checkState(
+          slot != null || !isCompoundName(name) || rootName.equals("this"), "missing %s", name);
+      return slot != null ? slot.getScope() : scope;
+    }
+    return scope;
+  }
+
+  @Nullable
+  private Node getRootNodeForScope(StaticScope scope) {
+    Node root = scope != null ? scope.getRootNode() : null;
+    return (root == null || root.isRoot() || root.isScript()) ? nameTableGlobalRoot : root;
+  }
+
+  private boolean isDeclaredForScope(StaticScope scope, String name) {
+    return getTypeInternal(scope, name) != null;
+  }
+
   private static void checkTypeName(String typeName) {
     checkArgument(!typeName.contains("<"), "Type names cannot contain template annotations.");
   }
 
+  private JSType getTypeInternal(StaticScope scope, String name) {
+    checkTypeName(name);
+    return getTypeForScopeInternal(getLookupScope(scope, name), name);
+  }
+
+  private JSType getTypeForScopeInternal(StaticScope scope, String name) {
+    Node rootNode = getRootNodeForScope(scope);
+    JSType type = scopedNameTable.get(rootNode, name);
+    return type;
+  }
+
   private void registerGlobalType(JSType type) {
-    registerGlobalType(type, type.toString());
+    register(null, type, type.toString());
   }
 
   private void registerGlobalType(JSType type, String name) {
-    register(type, name);
+    register(null, type, name);
   }
 
-  private void register(JSType type, String name) {
+  private void reregister(StaticScope scope, JSType type, String name) {
     checkTypeName(name);
-    namesToTypes.put(name, type);
+    registerForScope(getLookupScope(scope, name), type, name);
+  }
+
+  private void register(StaticScope scope, JSType type, String name) {
+    checkTypeName(name);
+    registerForScope(getCreationScope(scope, name), type, name);
+  }
+
+  private void registerForScope(StaticScope scope, JSType type, String name) {
+    scopedNameTable.put(getRootNodeForScope(scope), name, type);
+  }
+
+  /**
+   * Removes a type by name.
+   *
+   * @param name The name string.
+   */
+  public void removeType(StaticScope scope, String name) {
+    scopedNameTable.remove(getRootNodeForScope(getLookupScope(scope, name)), name);
   }
 
   private void registerNativeType(JSTypeNative typeId, JSType type) {
@@ -1159,8 +1251,14 @@ public class JSTypeRegistry implements TypeIRegistry {
    * @param type The actual type being associated with the name.
    * @return True if this name is not already defined, false otherwise.
    */
-  public boolean declareType(String name, JSType type) {
-    return declareType(null, name, type);
+  public boolean declareType(StaticScope scope, String name, JSType type) {
+    checkState(!name.isEmpty());
+    if (getTypeForScopeInternal(getCreationScope(scope, name), name) != null) {
+      return false;
+    }
+
+    register(scope, type, name);
+    return true;
   }
 
   /**
@@ -1171,11 +1269,13 @@ public class JSTypeRegistry implements TypeIRegistry {
    * @param type The actual type being associated with the name.
    * @return True if this name is not already defined, false otherwise.
    */
-  public boolean declareType(StaticScope scope, String name, JSType type) {
-    if (namesToTypes.containsKey(name)) {
+  public boolean declareTypeForExactScope(StaticScope scope, String name, JSType type) {
+    checkState(!name.isEmpty());
+    if (getTypeForScopeInternal(scope, name) != null) {
       return false;
     }
-    register(type, name);
+
+    registerForScope(scope, type, name);
     return true;
   }
 
@@ -1192,8 +1292,8 @@ public class JSTypeRegistry implements TypeIRegistry {
    * declared yet.
    */
   public void overwriteDeclaredType(StaticScope scope, String name, JSType type) {
-    checkState(namesToTypes.containsKey(name));
-    register(type, name);
+    checkState(isDeclaredForScope(scope, name), "missing name %s", name);
+    reregister(scope, type, name);
   }
 
   /**
@@ -1342,12 +1442,18 @@ public class JSTypeRegistry implements TypeIRegistry {
   }
 
   /**
-   * Removes a type by name.
+   * Looks up a native type by name.
    *
    * @param jsTypeName The name string.
+   * @return the corresponding JSType object or {@code null} it cannot be found
    */
-  public void removeType(String jsTypeName) {
-    namesToTypes.remove(jsTypeName);
+  public JSType getTypeForScope(StaticScope scope, String jsTypeName) {
+    TemplateType templateType = templateTypes.get(jsTypeName);
+    if (templateType != null) {
+      return templateType;
+    }
+
+    return getTypeForScopeInternal(scope, jsTypeName);
   }
 
   @Override
@@ -1361,28 +1467,14 @@ public class JSTypeRegistry implements TypeIRegistry {
    * @param jsTypeName The name string.
    * @return the corresponding JSType object or {@code null} it cannot be found
    */
-  // Unchecked conversion of the return type, from JSType to TypeI.
-  @SuppressWarnings("unchecked")
-  @Override
-  public JSType getType(String jsTypeName) {
-    return getType(null, jsTypeName);
-  }
-
-  /**
-   * Looks up a native type by name.
-   *
-   * @param jsTypeName The name string.
-   * @return the corresponding JSType object or {@code null} it cannot be found
-   */
   @Override
   public JSType getType(StaticScope scope, String jsTypeName) {
-    // TODO(user): Push every local type name out of namesToTypes so that
-    // NamedType#resolve is correct.
     TemplateType templateType = templateTypes.get(jsTypeName);
     if (templateType != null) {
       return templateType;
     }
-    return namesToTypes.get(jsTypeName);
+
+    return getTypeInternal(scope, jsTypeName);
   }
 
   /**
@@ -1442,12 +1534,20 @@ public class JSTypeRegistry implements TypeIRegistry {
       }
     }
 
+    // TODO(sdh): The use of "getType" here is incorrect. This currently will pick up a type\
+    // in an outer scope if it will be shadowed by a local type.  But creating a unique NamedType
+    // object for every name referenced (even if interned) in every scope would be expensive.
+    //
+    // Instead perhaps a standard (untyped) scope object might be used to pick the right scope
+    // during type construction.
     type = getType(scope, jsTypeName);
     if (type == null) {
       // TODO(user): Each instance should support named type creation using
       // interning.
       NamedType namedType = createNamedType(scope, jsTypeName, sourceName, lineno, charno);
       if (recordUnresolvedTypes) {
+
+
         unresolvedNamedTypes.put(scope, namedType);
       }
       type = namedType;
@@ -1495,7 +1595,7 @@ public class JSTypeRegistry implements TypeIRegistry {
       // implicit prototype of "this".
       PrototypeObjectType globalThis = (PrototypeObjectType) getNativeType(
           JSTypeNative.GLOBAL_THIS);
-      JSType windowType = getType("Window");
+      JSType windowType = getTypeInternal(null, "Window");
       if (globalThis.isUnknownType()) {
         ObjectType windowObjType = ObjectType.cast(windowType);
         if (windowObjType != null) {
@@ -1971,14 +2071,8 @@ public class JSTypeRegistry implements TypeIRegistry {
 
   /** Creates a named type. */
   @VisibleForTesting
-  public NamedType createNamedType(String reference, String sourceName, int lineno, int charno) {
-    return createNamedType(null, reference, sourceName, lineno, charno);
-  }
-
-  /** Creates a named type. */
-  @VisibleForTesting
-  public NamedType createNamedType(
-      StaticTypedScope<JSType> scope, String reference, String sourceName, int lineno, int charno) {
+  public NamedType createNamedType(StaticTypedScope<JSType> scope, String reference,
+      String sourceName, int lineno, int charno) {
     if (reference.endsWith(".")) {
       return new NamespaceType(this, reference, sourceName, lineno, charno);
     } else {

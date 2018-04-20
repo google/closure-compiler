@@ -373,8 +373,8 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       String typeName = var.getName();
       globalScope.undeclare(var);
       globalScope.getTypeOfThis().toObjectType().removeProperty(typeName);
-      if (typeRegistry.getType(typeName) != null) {
-        typeRegistry.removeType(typeName);
+      if (typeRegistry.getType(globalScope, typeName) != null) {
+        typeRegistry.removeType(globalScope, typeName);
       }
     }
 
@@ -664,8 +664,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
         case CONST:
           defineVar(n);
           // Handle typedefs.
-          if ((n.isVar() ? currentHoistScope : currentScope).isGlobal() && n.hasOneChild()) {
-            // TODO(bradfordcsmith): Defining typedefs in local scopes should be possible.
+          if (n.hasOneChild()) {
             checkForTypedef(n.getFirstChild(), n.getJSDocInfo());
           }
           break;
@@ -769,8 +768,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       String lValueName = NodeUtil.getBestLValueName(lValue);
       boolean createdEnumType = false;
       if (info != null && info.hasEnumParameterType()) {
-        boolean global = isLValueRootedInGlobalScope(lValue);
-        type = createEnumTypeFromNodes(objectLit, lValueName, info, global);
+        type = createEnumTypeFromNodes(objectLit, lValueName, info);
         createdEnumType = true;
       }
 
@@ -918,8 +916,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       Node lValue = NodeUtil.getBestLValue(n);
       JSDocInfo info = NodeUtil.getBestJSDocInfo(n);
       String functionName = NodeUtil.getBestLValueName(lValue);
-      FunctionType functionType =
-          createFunctionTypeFromNodes(n, functionName, info, lValue);
+      FunctionType functionType = createFunctionTypeFromNodes(n, functionName, info, lValue);
 
       // Assigning the function type to the function node
       setDeferredType(n, functionType);
@@ -967,6 +964,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       if (lValue != null && NodeUtil.isObjectLitKey(lValue)) {
         return false;
       }
+      // TODO(johnlenz): consider unifying global and local behavior
       return isLValueRootedInGlobalScope(lValue) || !type.isReturnTypeInferred();
     }
 
@@ -1000,9 +998,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       FunctionType functionType = null;
       if (rValue != null
           && rValue.isQualifiedName()
-          && lvalueNode != null
-          // TODO(sdh): Try deleting this global scope check and see what happens.
-          && isLValueRootedInGlobalScope(lvalueNode)) {
+          && lvalueNode != null) {
         TypedVar var = currentScope.getVar(rValue.getQualifiedName());
         if (var != null && var.getType() != null && var.getType().isFunctionType()) {
           FunctionType aliasedType  = var.getType().toMaybeFunctionType();
@@ -1012,7 +1008,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
 
             // TODO(nick): Remove this. This should already be handled by normal type resolution.
             if (name != null) {
-              typeRegistry.declareType(name, functionType.getInstanceType());
+              typeRegistry.declareType(currentScope, name, functionType.getInstanceType());
             }
           }
         }
@@ -1187,10 +1183,8 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
      * @param rValue The node of the enum.
      * @param name The enum's name
      * @param info The {@link JSDocInfo} attached to the enum definition.
-     * @param global Whether to declare the type in the global type registry.
      */
-    private EnumType createEnumTypeFromNodes(
-        Node rValue, String name, JSDocInfo info, boolean global) {
+    private EnumType createEnumTypeFromNodes(Node rValue, String name, JSDocInfo info) {
       checkNotNull(info);
       checkState(info.hasEnumParameterType());
 
@@ -1219,8 +1213,8 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
         }
       }
 
-      if (name != null && global) {
-        typeRegistry.declareType(name, enumType.getElementsType());
+      if (name != null) {
+        typeRegistry.declareType(currentScope, name, enumType.getElementsType());
       }
 
       return enumType;
@@ -1512,8 +1506,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
           if (rValue != null && rValue.isObjectLit()) {
             return rValue.getJSType();
           } else {
-            return createEnumTypeFromNodes(
-                rValue, lValue.getQualifiedName(), info, isLValueRootedInGlobalScope(lValue));
+            return createEnumTypeFromNodes(rValue, lValue.getQualifiedName(), info);
           }
         } else if (info.isConstructorOrInterface()) {
           return createFunctionTypeFromNodes(rValue, lValue.getQualifiedName(), info, lValue);
@@ -1531,7 +1524,8 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
                 && rValueType.isFunctionType()
                 && rValueType.toMaybeFunctionType().hasInstanceType()) {
               FunctionType functionType = rValueType.toMaybeFunctionType();
-              typeRegistry.declareType(lValue.getQualifiedName(), functionType.getInstanceType());
+              typeRegistry.declareType(
+                  currentScope, lValue.getQualifiedName(), functionType.getInstanceType());
             }
             return rValueType;
           }
@@ -1669,11 +1663,10 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
         }
       }
 
-      String singletonGetterClassName =
-          codingConvention.getSingletonGetterClassName(n);
+      String singletonGetterClassName = codingConvention.getSingletonGetterClassName(n);
       if (singletonGetterClassName != null) {
         ObjectType objectType = ObjectType.cast(
-            typeRegistry.getType(singletonGetterClassName));
+            typeRegistry.getType(currentScope, singletonGetterClassName));
         if (objectType != null) {
           FunctionType functionType = objectType.getConstructor();
 
@@ -1696,7 +1689,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       if (objectLiteralCast != null) {
         if (objectLiteralCast.diagnosticType == null) {
           ObjectType type = ObjectType.cast(
-              typeRegistry.getType(objectLiteralCast.typeName));
+              typeRegistry.getType(currentScope, objectLiteralCast.typeName));
           if (type != null && type.getConstructor() != null) {
             setDeferredType(objectLiteralCast.objectNode, type);
             objectLiteralCast.objectNode.putBooleanProp(
@@ -1716,12 +1709,14 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
     private void applyDelegateRelationship(
         DelegateRelationship delegateRelationship) {
       ObjectType delegatorObject = ObjectType.cast(
-          typeRegistry.getType(delegateRelationship.delegator));
+          typeRegistry.getType(currentScope, delegateRelationship.delegator));
       ObjectType delegateBaseObject = ObjectType.cast(
-          typeRegistry.getType(delegateRelationship.delegateBase));
+          typeRegistry.getType(currentScope, delegateRelationship.delegateBase));
       ObjectType delegateSuperObject = ObjectType.cast(
-          typeRegistry.getType(codingConvention.getDelegateSuperclassName()));
-      if (delegatorObject != null && delegateBaseObject != null && delegateSuperObject != null) {
+          typeRegistry.getType(currentScope, codingConvention.getDelegateSuperclassName()));
+      if (delegatorObject != null
+          && delegateBaseObject != null
+          && delegateSuperObject != null) {
         FunctionType delegatorCtor = delegatorObject.getConstructor();
         FunctionType delegateBaseCtor = delegateBaseObject.getConstructor();
         FunctionType delegateSuperCtor = delegateSuperObject.getConstructor();
@@ -1768,9 +1763,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
      */
     void maybeDeclareQualifiedName(NodeTraversal t, JSDocInfo info,
         Node n, Node parent, Node rhsValue) {
-      if (currentHoistScope.isGlobal()) {
-        checkForTypedef(n, info);
-      }
+      checkForTypedef(n, info);
 
       Node ownerNode = n.getFirstChild();
       String ownerName = ownerNode.getQualifiedName();
@@ -2055,17 +2048,16 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       // TODO(nicksantos|user): This is a terrible, terrible hack
       // to bail out on recursive typedefs. We'll eventually need
       // to handle these properly.
-      typeRegistry.declareType(typedef, unknownType);
+      typeRegistry.declareType(currentScope, typedef, unknownType);
 
       JSType realType = info.getTypedefType().evaluate(currentScope, typeRegistry);
       if (realType == null) {
         report(JSError.make(candidate, MALFORMED_TYPEDEF, typedef));
       }
 
-      typeRegistry.overwriteDeclaredType(typedef, realType);
+      typeRegistry.overwriteDeclaredType(currentScope, typedef, realType);
       if (candidate.isGetProp()) {
-        defineSlot(candidate, candidate.getParent(),
-            getNativeType(NO_TYPE), false);
+        defineSlot(candidate, candidate.getParent(), getNativeType(NO_TYPE), false);
       }
     }
   }

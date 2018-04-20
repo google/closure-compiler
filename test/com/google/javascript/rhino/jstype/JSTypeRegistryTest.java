@@ -65,35 +65,40 @@ public class JSTypeRegistryTest extends TestCase {
   // now much larger
   public void testGetBuiltInType_boolean() {
     JSTypeRegistry typeRegistry = new JSTypeRegistry(null);
-    assertTypeEquals(typeRegistry.getNativeType(BOOLEAN_TYPE), typeRegistry.getType("boolean"));
+    assertTypeEquals(
+        typeRegistry.getNativeType(JSTypeNative.BOOLEAN_TYPE),
+        typeRegistry.getType(null, "boolean"));
   }
 
   public void testGetBuiltInType_iterable() {
     JSTypeRegistry typeRegistry = new JSTypeRegistry(null);
-    assertTypeEquals(typeRegistry.getNativeType(ITERABLE_TYPE), typeRegistry.getType("Iterable"));
+    assertTypeEquals(
+        typeRegistry.getNativeType(ITERABLE_TYPE), typeRegistry.getGlobalType("Iterable"));
   }
 
   public void testGetBuiltInType_iterator() {
     JSTypeRegistry typeRegistry = new JSTypeRegistry(null);
-    assertTypeEquals(typeRegistry.getNativeType(ITERATOR_TYPE), typeRegistry.getType("Iterator"));
+    assertTypeEquals(
+        typeRegistry.getNativeType(ITERATOR_TYPE), typeRegistry.getGlobalType("Iterator"));
   }
 
   public void testGetBuiltInType_generator() {
     JSTypeRegistry typeRegistry = new JSTypeRegistry(null);
-    assertTypeEquals(typeRegistry.getNativeType(GENERATOR_TYPE), typeRegistry.getType("Generator"));
+    assertTypeEquals(
+        typeRegistry.getNativeType(GENERATOR_TYPE), typeRegistry.getGlobalType("Generator"));
   }
 
   public void testGetDeclaredType() {
     JSTypeRegistry typeRegistry = new JSTypeRegistry(null);
     JSType type = typeRegistry.createAnonymousObjectType(null);
     String name = "Foo";
-    typeRegistry.declareType(name, type);
-    assertTypeEquals(type, typeRegistry.getType(name));
+    typeRegistry.declareType(null, name, type);
+    assertTypeEquals(type, typeRegistry.getType(null, name));
 
     // Ensure different instances are independent.
     JSTypeRegistry typeRegistry2 = new JSTypeRegistry(null);
-    assertEquals(null, typeRegistry2.getType(name));
-    assertTypeEquals(type, typeRegistry.getType(name));
+    assertEquals(null, typeRegistry2.getType(null, name));
+    assertTypeEquals(type, typeRegistry.getType(null, name));
   }
 
   public void testPropertyOnManyTypes() {

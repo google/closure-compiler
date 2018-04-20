@@ -309,7 +309,7 @@ class LinkedFlowScope implements FlowScope {
 
   @Override
   public TypedScope getDeclarationScope() {
-    return this.syntacticScope;
+    return syntacticScope;
   }
 
   /** Join the two FlowScopes. */

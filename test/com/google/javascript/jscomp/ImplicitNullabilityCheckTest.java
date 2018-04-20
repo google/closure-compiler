@@ -122,8 +122,7 @@ public final class ImplicitNullabilityCheckTest extends TypeICompilerTestCase {
         "function Foo() {}",
         "/** @type {Foo} */ var x;"));
 
-    // TODO(aravindpg): this ought to warn under both, or at any rate NTI.
-    noWarning(lines(
+    warnImplicitlyNullable(lines(
         "function f() {",
         "  /** @constructor */",
         "  function Foo() {}",

@@ -799,7 +799,9 @@ final class FunctionTypeBuilder {
             returnType,
             classTemplateTypeNames,
             isAbstract);
-    JSType existingType = typeRegistry.getType(fnName);
+    // We use "getTypeForScope" to specifically check if this was defined for getScopeDeclaredIn()
+    // so we don't pick up types that are going to be shadowed.
+    JSType existingType = typeRegistry.getTypeForScope(getScopeDeclaredIn(), fnName);
 
     if (makesStructs) {
       fnType.setStruct();
@@ -833,8 +835,12 @@ final class FunctionTypeBuilder {
 
     maybeSetBaseType(fnType);
 
-    if (getScopeDeclaredIn().isGlobal() && !fnName.isEmpty()) {
-      typeRegistry.declareType(fnName, fnType.getInstanceType());
+    // TODO(johnlenz): determine what we are supposed to do for:
+    //   @constructor
+    //   this.Foo = ...
+    //
+    if (!fnName.isEmpty() && !fnName.startsWith("this.")) {
+      typeRegistry.declareTypeForExactScope(getScopeDeclaredIn(), fnName, fnType.getInstanceType());
     }
     return fnType;
   }
@@ -842,7 +848,7 @@ final class FunctionTypeBuilder {
   private FunctionType getOrCreateInterface() {
     FunctionType fnType = null;
 
-    JSType type = typeRegistry.getType(fnName);
+    JSType type = typeRegistry.getType(getScopeDeclaredIn(), fnName);
     if (type != null && type.isInstanceType()) {
       FunctionType ctor = type.toMaybeObjectType().getConstructor();
       if (ctor.isInterface()) {
@@ -854,8 +860,9 @@ final class FunctionTypeBuilder {
     if (fnType == null) {
       fnType = typeRegistry.createInterfaceType(
           fnName, contents.getSourceNode(), classTemplateTypeNames, makesStructs);
-      if (getScopeDeclaredIn().isGlobal() && !fnName.isEmpty()) {
-        typeRegistry.declareType(fnName, fnType.getInstanceType());
+      if (!fnName.isEmpty()) {
+        typeRegistry.declareTypeForExactScope(
+            getScopeDeclaredIn(), fnName, fnType.getInstanceType());
       }
       maybeSetBaseType(fnType);
     }

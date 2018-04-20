@@ -19209,6 +19209,64 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
             "required: null"));
   }
 
+  public void testLocalType1() throws Exception {
+    testTypes(
+        lines(
+            "/** @constructor */ function C(){ /** @const */ this.a = true;}",
+            "function f() {",
+            "  // shadow",
+            "  /** @constructor */ function C(){ /** @const */ this.a = 1;}",
+            "}"
+        )
+    );
+  }
+
+  public void testLocalType2() throws Exception {
+    testTypes(
+        lines(
+            "/** @constructor */ function C(){ /** @const */ this.a = true;}",
+            "function f() {",
+            "  // shadow",
+            "  /** @constructor */ function C(){ /** @const */ this.a = 1;}",
+            "  /** @type {null} */ var x = new C().a;",
+            "}"
+        ),
+        lines(
+            "initializing variable",
+            "found   : number",
+            "required: null")
+    );
+  }
+
+  public void testForwardDecl1() throws Exception {
+    testTypes(
+        lines(
+            "/** @const */ var ns = {};",
+            "/** @constructor */ ns.Outer = function C() {};",
+            "/** @return {!ns.Outer.Inner} */",
+            "ns.Outer.prototype.method = function() {",
+            "  return new ns.Outer.Inner();",
+            "};",
+            "/** @constructor */ ns.Outer.Inner = function () {};"
+        )
+    );
+  }
+
+  public void testForwardDecl2() throws Exception {
+    testTypes(
+        lines(
+            "/** @const */ var ns1 = {};",
+            "/** @const */ ns1.ns2 = {};",
+            "/** @constructor */ ns1.ns2.Outer = function C() {};",
+            "/** @return {!ns1.ns2.Outer.Inner} */",
+            "ns1.ns2.Outer.prototype.method = function() {",
+            "  return new ns1.ns2.Outer.Inner();",
+            "};",
+            "/** @constructor */ ns1.ns2.Outer.Inner = function () {};"
+        )
+    );
+  }
+
   public void testMissingPropertiesWarningOnObject1() {
     testTypes(lines(
         "/** @constructor */",
@@ -19709,6 +19767,40 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
             "found   : C<string>",
             "required: IThenable<string>"));
   }
+
+  public void testShadowedForwardReferenceHoisted() {
+    testTypes(
+        lines(
+            "/** @constructor */ var C = function() { /** @type {string} */ this.prop = 's'; };",
+            "var fn = function() {",
+            "  /** @type {C} */ var x = f();",
+            "  /** @type {number} */ var n1 = x.prop;",
+            "  /** @type {number} */ var n2 = new C().prop;",
+            "  /** @constructor */ function C() { /** @type {number} */ this.prop = 1; };",
+            "  /** @return {C} */ function fn() { return new C(); };",
+            "",
+            "}"));
+  }
+
+  public void testShadowedForwardReference() {
+    // TODO(sdh): fix this.
+    testTypes(
+        lines(
+            "/** @constructor */ var C = function() { /** @type {string} */ this.prop = 's'; };",
+            "var fn = function() {",
+            "/** @type {C} */ var x",
+            "/** @constructor */ var C = function() { /** @type {number} */ this.prop = 1; };",
+            "/** @return {C} */ function fn() { return new C(); };",
+            "/** @type {number} */ var n1 = x.prop;",
+            "/** @type {number} */ var n2 = new C().prop;",
+            "",
+            "}"),
+        lines(
+            "initializing variable", //
+            "found   : string", // should be "number"
+            "required: number"));
+  }
+
 
   private void testTypes(String js) {
     testTypes(js, (String) null);

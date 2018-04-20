@@ -595,7 +595,15 @@ class TypeInference
     return scope;
   }
 
-  private boolean isPossibleMixinApplication(Node lvalue, Node rvalue) {
+  private static boolean isInExternFile(Node n) {
+    return NodeUtil.getSourceFile(n).isExtern();
+  }
+
+  private static boolean isPossibleMixinApplication(Node lvalue, Node rvalue) {
+    if (isInExternFile(lvalue)) {
+      return true;
+    }
+
     JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(lvalue);
     return jsdoc != null
         && jsdoc.isConstructor()
@@ -609,8 +617,8 @@ class TypeInference
    *     The constructor implements at least one interface. If the constructor is missing some
    *     properties of the inherited interfaces, this method declares these properties.
    */
-  private void addMissingInterfaceProperties(JSType constructor) {
-    if (constructor.isConstructor()) {
+  private static void addMissingInterfaceProperties(JSType constructor) {
+    if (constructor != null && constructor.isConstructor()) {
       FunctionType f = constructor.toMaybeFunctionType();
       ObjectType proto = f.getPrototype();
       for (ObjectType interf : f.getImplementedInterfaces()) {
@@ -1655,7 +1663,8 @@ class TypeInference
     if ((propertyType == null || propertyType.isUnknownType())
         && qualifiedName != null) {
       // If we find this node in the registry, then we can infer its type.
-      ObjectType regType = ObjectType.cast(registry.getType(qualifiedName));
+      ObjectType regType = ObjectType.cast(
+          registry.getType(scope.getDeclarationScope(), qualifiedName));
       if (regType != null) {
         propertyType = regType.getConstructor();
       }

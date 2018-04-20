@@ -229,12 +229,6 @@ public class GlobalTypeInfo implements TypeIRegistry {
   }
 
   @Override
-  public JSType getType(String typeName) {
-    return getType(null, typeName);
-  }
-
-  @SuppressWarnings("unchecked")
-  @Override
   public JSType getType(StaticScope scope, String typeName) {
     // Primitives are not present in the global scope, so hardcode them
     switch (typeName) {

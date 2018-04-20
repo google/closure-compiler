@@ -128,7 +128,7 @@ public final class TypeCheckNoTranspileTest extends CompilerTypeTestCase {
             "}"),
         lines(
             "inconsistent return type",
-            "found   : (E|null)",
+            "found   : (E<number>|null)",
             "required: number"));
   }
 
@@ -148,7 +148,7 @@ public final class TypeCheckNoTranspileTest extends CompilerTypeTestCase {
             "}"),
         lines(
             "inconsistent return type",
-            "found   : (E|null)",
+            "found   : (E<number>|null)",
             "required: number"));
   }
 
@@ -168,7 +168,6 @@ public final class TypeCheckNoTranspileTest extends CompilerTypeTestCase {
   }
 
   public void testLocalTypedefWithLet() {
-    // TODO(bradfordcsmith): It should be possible to define local typedefs.
     testTypes(
         lines(
             "{",
@@ -179,7 +178,10 @@ public final class TypeCheckNoTranspileTest extends CompilerTypeTestCase {
             "  f('3');",
             "}",
             ""),
-        "Bad type annotation. Unknown type Bar");
+        lines(
+            "actual parameter 1 of f does not match formal parameter",
+            "found   : string",
+            "required: number"));
   }
 
   public void testConstWrongType() {

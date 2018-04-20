@@ -651,7 +651,12 @@ public final class IntegrationTest extends IntegrationTestCase {
         SourceFile.fromCode(
             "polymer_externs.js",
             lines(
-                "function Polymer() {}",
+                "",
+                "/**",
+                " * @param {!Object} init",
+                " * @return {!function(new:HTMLElement)}",
+                " */",
+                "function Polymer(init) {}",
                 "",
                 "Polymer.ElementMixin = function(mixin) {}",
                 "",
@@ -659,7 +664,28 @@ public final class IntegrationTest extends IntegrationTestCase {
                 "var PolymerElementProperties;",
                 "",
                 "/** @interface */",
-                "function Polymer_ElementMixin() {}")));
+                "function Polymer_ElementMixin() {}",
+                "/** @type {string} */",
+                "Polymer_ElementMixin.prototype._importPath;",
+
+                "",
+                "/**",
+                "* @interface",
+                "* @extends {Polymer_ElementMixin}",
+                "*/",
+                "function Polymer_LegacyElementMixin(){}",
+                "/** @type {boolean} */",
+                "Polymer_LegacyElementMixin.prototype.isAttached;",
+
+                "/**",
+                " * @constructor",
+                " * @extends {HTMLElement}",
+                " * @implements {Polymer_LegacyElementMixin}",
+                " */",
+                "var PolymerElement = function() {};",
+
+                ""
+                )));
 
     externsList.add(
         SourceFile.fromCode(
@@ -749,8 +775,48 @@ public final class IntegrationTest extends IntegrationTestCase {
               "})();",
               ""),
         },
-        // TODO(b/77650996): there should be no mismatch
-        TypeValidator.TYPE_MISMATCH_WARNING);
+        (String []) null);
+  }
+
+  public void testPolymer1_oti2() {
+    CompilerOptions options = createCompilerOptions();
+    options.setPolymerVersion(2);
+    options.setNewTypeInference(false);
+    options.setWarningLevel(DiagnosticGroups.CHECK_TYPES, CheckLevel.ERROR);
+    options.declaredGlobalExternsOnWindow = true;
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    addPolymer2Externs();
+
+    test(
+        options,
+        new String[] {
+          lines(
+              "Polymer({",
+              "  is: 'paper-button'",
+              "});"),
+          lines(
+              "(function() {",
+              "  /**",
+              "   * @customElement",
+              "   * @polymer",
+              "   * @memberof Polymer",
+              "   * @constructor",
+              "   * @implements {Polymer_ElementMixin}",
+              "   * @extends HTMLElement",
+              "   */",
+              "  const Element = Polymer.ElementMixin(HTMLElement);",
+              "",
+              "  /**",
+              "   * @constructor",
+              "   * @implements {Polymer_ElementMixin}",
+              "   * @extends {HTMLElement}",
+              "   */",
+              "  Polymer.Element = Element;",
+              "})();",
+              ""),
+        },
+        (String []) null);
   }
 
   public void testPolymer2_oti() {
@@ -778,7 +844,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     CompilerOptions options = createCompilerOptions();
     WarningLevel.VERBOSE.setOptionsForWarningLevel(options);
     options.setClosurePass(true);
-    options.setPreserveGoogProvidesAndRequires(true);
+    options.setPreserveClosurePrimitives(true);
 
     compile(
         options,

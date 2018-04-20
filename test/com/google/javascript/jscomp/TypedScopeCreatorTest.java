@@ -79,7 +79,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
         lastFunctionScope = s;
       }
     }
-  };
+  }
 
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
@@ -358,7 +358,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     assertEquals("goog.ui.Zippy.EventType", y.getReferenceName());
   }
 
-  public void testGlobalTypedefs() {
+  public void testGlobalTypedefs1() {
     testSame(
         lines(
             "", // preserve newlines
@@ -374,13 +374,24 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
             "/** @typedef {number} */",
             "const ConstTypedef = undefined;",
             ""));
-    assertType(registry.getType("VarTypedef")).isNumber();
-    assertType(registry.getType("VarTypedefInBlock")).isNumber();
-    assertType(registry.getType("LetTypedef")).isNumber();
-    assertType(registry.getType("ConstTypedef")).isNumber();
+    assertType(registry.getGlobalType("VarTypedef")).isNumber();
+    assertType(registry.getGlobalType("VarTypedefInBlock")).isNumber();
+    assertType(registry.getGlobalType("LetTypedef")).isNumber();
+    assertType(registry.getGlobalType("ConstTypedef")).isNumber();
   }
 
-  public void testLocalTypedefs() {
+  public void testGlobalTypedefs2() {
+    testSame(
+        lines(
+            "", // preserve newlines
+            "{",
+            "  /** @typedef {number} */",
+            "  var VarTypedefInBlock;", // still global despite enclosing block
+            "}",
+            ""));
+  }
+
+  public void testLocalTypedefs1() {
     testSame(
         lines(
             "", // preserve newlines
@@ -393,6 +404,17 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
             // TODO(bradfordcsmith): We should probably disallow @typedef on const.
             "  const ConstTypedefInFunc = undefined;",
             "}",
+            ""));
+    TypedScope fnRoot = lastLocalScope;
+    assertType(registry.getType(fnRoot, "VarTypedefInFunc")).isNumber();
+    assertType(registry.getType(fnRoot, "LetTypedefInFunc")).isNumber();
+    assertType(registry.getType(fnRoot, "ConstTypedefInFunc")).isNumber();
+  }
+
+  public void testLocalTypedefs2() {
+    testSame(
+        lines(
+            "", // preserve newlines
             "{",
             "  /** @typedef {number} */",
             "  let LetTypedefInBlock;",
@@ -400,12 +422,10 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
             "  const ConstTypedefInBlock = undefined;",
             "}",
             ""));
-    // TODO(bradfordcsmith): It should be possible to define local typedefs.
-    assertThat(registry.getType("VarTypedefInFunc")).isNull();
-    assertThat(registry.getType("LetTypedefInFunc")).isNull();
-    assertThat(registry.getType("LetTypedefInBlock")).isNull();
-    assertThat(registry.getType("ConstTypedefInFunc")).isNull();
-    assertThat(registry.getType("ConstTypedefInBlock")).isNull();
+    TypedScope fnRoot = lastLocalScope;
+
+    assertType(registry.getType(fnRoot, "LetTypedefInBlock")).isNumber();
+    assertType(registry.getType(fnRoot, "ConstTypedefInBlock")).isNumber();
   }
 
   public void testEnumAlias() {
