@@ -187,7 +187,7 @@ public final class DefaultPassConfig extends PassConfig {
     // operator. If we split that into its own pass then the needsTranspilationFrom(ES7) call here
     // can be removed.
     if (options.needsTranspilationFrom(ES6) || options.needsTranspilationFrom(ES7)) {
-      TranspilationPasses.addEs6PreTypecheckPasses(passes, options);
+      TranspilationPasses.addEs6PreTypecheckPasses(passes);
       TranspilationPasses.addEs6PostTypecheckPasses(passes);
       TranspilationPasses.addEs6PostCheckPasses(passes);
       if (options.rewritePolyfills) {
@@ -393,7 +393,7 @@ public final class DefaultPassConfig extends PassConfig {
 
     if (options.needsTranspilationFrom(ES6)) {
       checks.add(es6ExternsCheck);
-      TranspilationPasses.addEs6PreTypecheckPasses(checks, options);
+      TranspilationPasses.addEs6PreTypecheckPasses(checks);
     }
 
     if (options.rewritePolyfills && !options.checksOnly) {
