@@ -49,6 +49,56 @@ public final class TypeCheckNoTranspileTest extends CompilerTypeTestCase {
     return options;
   }
 
+  public void testTypedefFieldInLoopLocal() {
+    testTypes(
+        lines(
+            "/** @typedef {{num: number, maybeNum: ?number}} */",
+            "let XType;",
+            "",
+            "/** @param {!Array<!XType>} xlist */",
+            "function f(xlist) {",
+            "  for (let i = 0; i < xlist.length; i++) {",
+            "    /** @type {!XType} */",
+            "    const x = xlist[i];",
+            "    if (x.maybeNum === null) {",
+            "      continue;",
+            "    }",
+            // TODO(b/78364240): Compiler should realize that x.maybeNum must be a number here
+            "    x.num = x.maybeNum;",
+            "  }",
+            "}",
+            ""),
+        lines(
+            "assignment to property num of x", // preserve newlines
+            "found   : null",
+            "required: number"));
+  }
+
+  public void testTypedefFieldInLoopGlobal() {
+    testTypes(
+        lines(
+            "/** @typedef {{num: number, maybeNum: ?number}} */",
+            "let XType;",
+            "",
+            "/** @type {!Array<!XType>} */",
+            "const xlist = [{maybeNum: null, num: 0}, {maybeNum: 1, num: 1}];",
+            "",
+            "for (let i = 0; i < xlist.length; i++) {",
+            "  /** @type {!XType} */",
+            "  const x = xlist[i];",
+            "  if (x.maybeNum === null) {",
+            "    continue;",
+            "  }",
+            // TODO(b/78364240): Compiler should realize that x.maybeNum must be a number here
+            "  x.num = x.maybeNum;",
+            "}",
+            ""),
+        lines(
+            "assignment to property num of x", // preserve newlines
+            "found   : (null|number)",
+            "required: number"));
+  }
+
   public void testTypedefAlias() {
     // Ensure that the type of a variable representing a typedef is "undefined"
     testTypes(
