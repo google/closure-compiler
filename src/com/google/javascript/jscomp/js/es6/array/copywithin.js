@@ -15,8 +15,12 @@
  */
 
 'require util/polyfill';
+'require util/tointeger';
 
 $jscomp.polyfill('Array.prototype.copyWithin', function(orig) {
+  // requires strict mode to throw for invalid `this` or params
+  'use strict';
+
   if (orig) return orig;
 
   /**
@@ -30,33 +34,41 @@ $jscomp.polyfill('Array.prototype.copyWithin', function(orig) {
    * @template VALUE
    */
   var polyfill = function(target, start, opt_end) {
+    if (this == null) {
+      throw new TypeError('this is null or not defined');
+    }
     var len = this.length;
-    target = Number(target);
-    start = Number(start);
-    opt_end = Number(opt_end != null ? opt_end : len);
-    if (target < start) {
-      opt_end = Math.min(opt_end, len);
-      while (start < opt_end) {
-        if (start in this) {
-          this[target++] = this[start++];
+    target = $jscomp.toInteger(target);
+    start = $jscomp.toInteger(start);
+    var end = opt_end === undefined ? len : $jscomp.toInteger(opt_end);
+    var to = target < 0 ? Math.max(len + target, 0) : Math.min(target, len);
+    var from = start < 0 ? Math.max(len + start, 0) : Math.min(start, len);
+    var final = end < 0 ? Math.max(len + end, 0) : Math.min(end, len);
+    if (to < from) {
+      while (from < final) {
+        if (from in this) {
+          this[to++] = this[from++];
         } else {
-          delete this[target++];
-          start++;
+          delete this[to++];
+          from++;
         }
       }
     } else {
-      opt_end = Math.min(opt_end, len + start - target);
-      target += opt_end - start;
-      while (opt_end > start) {
-        if (--opt_end in this) {
-          this[--target] = this[opt_end];
+      final = Math.min(final, len + from - to);
+      to += final - from;
+      while (final > from) {
+        if (--final in this) {
+          this[--to] = this[final];
         } else {
-          delete this[target];
+          delete this[--to];
         }
       }
     }
     return this;
   };
+
+  $jscomp.defineProperty(polyfill, 'name', {value: 'copyWithin', configurable: true});
+  $jscomp.defineProperty(polyfill, 'length', {value: 2, configurable: true});
 
   return polyfill;
 }, 'es6', 'es3');
