@@ -16,7 +16,12 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.javascript.rhino.jstype.JSTypeNative.OBJECT_TYPE;
+import static com.google.javascript.rhino.jstype.JSTypeNative.STRING_TYPE;
+import static com.google.javascript.rhino.jstype.JSTypeNative.UNKNOWN_TYPE;
+import static com.google.javascript.rhino.jstype.JSTypeNative.VOID_TYPE;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.HashBasedTable;
@@ -24,6 +29,7 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Table;
+import com.google.javascript.jscomp.AbstractCompiler.MostRecentTypechecker;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
@@ -33,6 +39,9 @@ import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
+import com.google.javascript.rhino.jstype.FunctionBuilder;
+import com.google.javascript.rhino.jstype.JSType;
+import com.google.javascript.rhino.jstype.JSTypeNative;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -62,6 +71,9 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
   private static final FeatureSet transpiledFeatures =
       FeatureSet.BARE_MINIMUM.with(Feature.LET_DECLARATIONS, Feature.CONST_DECLARATIONS);
 
+  /** Should we generate type information for newly generated AST nodes? */
+  private boolean shouldAddTypesOnNewAstNodes;
+
   public Es6RewriteBlockScopedDeclaration(AbstractCompiler compiler) {
     this.compiler = compiler;
   }
@@ -74,17 +86,20 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
 
     Scope scope = t.getScope();
     Node nameNode = n.getFirstChild();
-    if (!n.isClass() && !n.isFunction() && !nameNode.hasChildren()
-        && (parent == null || !NodeUtil.isEnhancedFor(parent))
+    // NOTE: This pass depends on for-of being transpiled away before it runs.
+    checkState(parent == null || !parent.isForOf(), parent);
+    // NOTE: This pass depends on classes being transpiled away before it runs.
+    checkState(!n.isClass(), n);
+    if (!n.isFunction()
+        && !nameNode.hasChildren()
+        && (parent == null || !parent.isForIn())
         && !n.isCatch()
         && inLoop(n)) {
-      Node undefined = IR.name("undefined");
+      Node undefined = createUndefinedNode().srcref(nameNode);
       if (nameNode.getJSDocInfo() != null || n.getJSDocInfo() != null) {
-        JSDocInfoBuilder jsDoc = new JSDocInfoBuilder(false);
-        jsDoc.recordType(new JSTypeExpression(new Node(Token.QMARK), n.getSourceFileName()));
-        undefined = IR.cast(undefined, jsDoc.build());
+        // TODO(b/77323139): Remove cast when this pass moves after type checking.
+        undefined = wrapWithCastToUnknown(undefined);
       }
-      undefined.useSourceInfoFromForTree(nameNode);
       nameNode.addChildToFront(undefined);
       compiler.reportChangeToEnclosingScope(undefined);
     }
@@ -113,6 +128,7 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
 
   @Override
   public void process(Node externs, Node root) {
+    shouldAddTypesOnNewAstNodes = getShouldAddTypesOnNewAstNodes();
     NodeTraversal.traverse(compiler, root, new CollectUndeclaredNames());
     NodeTraversal.traverse(compiler, root, this);
     // Needed for let / const declarations in .d.ts externs.
@@ -127,6 +143,7 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
 
   @Override
   public void hotSwapScript(Node scriptRoot, Node originalRoot) {
+    shouldAddTypesOnNewAstNodes = getShouldAddTypesOnNewAstNodes();
     NodeTraversal.traverse(compiler, scriptRoot, new CollectUndeclaredNames());
     NodeTraversal.traverse(compiler, scriptRoot, this);
     NodeTraversal.traverse(compiler, scriptRoot, new Es6RenameReferences(renameTable));
@@ -135,6 +152,12 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
     transformer.transformLoopClosure();
     rewriteDeclsToVars();
     TranspilationPasses.markFeaturesAsTranspiledAway(compiler, transpiledFeatures);
+  }
+
+  private boolean getShouldAddTypesOnNewAstNodes() {
+    // TODO(bradfordcsmith): Once NTI is gone, we'll need a better way to determine whether the
+    // type checker has already run.
+    return compiler.getMostRecentTypechecker() == MostRecentTypechecker.OTI;
   }
 
   /**
@@ -216,6 +239,7 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
    * Eg: In "{ let inner; } use(inner);", we rename the let declared variable.
    */
   private class CollectUndeclaredNames extends AbstractPostOrderCallback {
+
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       if (n.isName() && !t.getScope().hasSlot(n.getString())) {
@@ -223,19 +247,18 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
       }
     }
   }
-
   /**
    * Transforms let/const declarations captured by loop closures.
    */
   private class LoopClosureTransformer extends AbstractPostOrderCallback {
-    private static final String LOOP_OBJECT_NAME = "$jscomp$loop";
 
+    private static final String LOOP_OBJECT_NAME = "$jscomp$loop";
     private final Map<Node, LoopObject> loopObjectMap = new LinkedHashMap<>();
+
     private final Multimap<Node, LoopObject> functionLoopObjectsMap =
         LinkedHashMultimap.create();
     private final Multimap<Node, String> functionHandledMap = HashMultimap.create();
     private final Multimap<Var, Node> referenceMap = LinkedHashMultimap.create();
-
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       if (!NodeUtil.isReferenceName(n)) {
@@ -264,7 +287,7 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
       Node loopNode = null;
       for (Scope s = declaredIn;; s = s.getParent()) {
         Node scopeRoot = s.getRootNode();
-        if (NodeUtil.isLoopStructure(s.getRootNode())) {
+        if (NodeUtil.isLoopStructure(scopeRoot)) {
           loopNode = scopeRoot;
           break;
         } else if (scopeRoot.getParent() != null
@@ -319,15 +342,18 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
         // They are initialized lazily by changing declarations into assignments
         // later.
         LoopObject loopObject = loopObjectMap.get(loopNode);
-        Node objectLitNextIteration = IR.objectlit();
+        Node objectLitNextIteration = createObjectLit();
         for (Var var : loopObject.vars) {
           objectLitNextIteration.addChildToBack(
-              IR.stringKey(var.name, IR.getprop(IR.name(loopObject.name), IR.string(var.name))));
+              IR.stringKey(
+                  var.name, createLoopVarReferenceReplacement(loopObject, var.getNameNode())));
         }
 
-        Node updateLoopObject = IR.assign(IR.name(loopObject.name), objectLitNextIteration);
+        Node updateLoopObject =
+            createAssignNode(createLoopObjectNameNode(loopObject), objectLitNextIteration);
         Node objectLit =
-            IR.var(IR.name(loopObject.name), IR.objectlit()).useSourceInfoFromForTree(loopNode);
+            IR.var(createLoopObjectNameNode(loopObject), createObjectLit())
+                .useSourceInfoFromForTree(loopNode);
         addNodeBeforeLoop(objectLit, loopNode);
         if (loopNode.isVanillaFor()) { // For
           // The initializer is pulled out and placed prior to the loop.
@@ -350,7 +376,7 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
             loopNode.replaceChild(increment, placeHolder);
             loopNode.replaceChild(
                 placeHolder,
-                IR.comma(updateLoopObject, increment)
+                createCommaNode(updateLoopObject, increment)
                     .useSourceInfoIfMissingFromForTree(loopNode));
           }
         } else {
@@ -394,17 +420,36 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
         // accordingly.
         for (Var var : loopObject.vars) {
           for (Node reference : referenceMap.get(var)) {
+            // for-of loops are transpiled away before this pass runs
+            checkState(!loopNode.isForOf(), loopNode);
             // For-of and for-in declarations are not altered, since they are
             // used as temporary variables for assignment.
-            if (NodeUtil.isEnhancedFor(loopNode)
-                && loopNode.getFirstChild() == reference.getParent()) {
+            if (loopNode.isForIn() && loopNode.getFirstChild() == reference.getParent()) {
+              // reference is the node loopVar in a for-in or for-of that looks like this:
+              // `for (const loopVar of list) {`
+              checkState(reference == var.getNameNode(), reference);
+              Node referenceParent = reference.getParent();
+              checkState(NodeUtil.isNameDeclaration(referenceParent), referenceParent);
+              checkState(reference.isName(), reference);
+              // Start transpiled form of
+              // `for (const p in obj) { ... }`
+              // with this statement to copy the loop variable into the corresponding loop object
+              // property.
+              // `$jscomp$loop$0.p = p;`
+              Node loopVarReference = reference.cloneNode();
+              if (shouldAddTypesOnNewAstNodes) {
+                // Note that name nodes in declarations are not given types by the type checker
+                // passes.
+                // Luckily we know that for-in loops over string property names.
+                loopVarReference.setJSType(getNativeType(STRING_TYPE));
+              }
               loopNode
                   .getLastChild()
                   .addChildToFront(
                       IR.exprResult(
-                              IR.assign(
-                                  IR.getprop(IR.name(loopObject.name), IR.string(var.name)),
-                                  var.getNameNode().cloneNode()))
+                              createAssignNode(
+                                  createLoopVarReferenceReplacement(loopObject, reference),
+                                  loopVarReference))
                           .useSourceInfoIfMissingFromForTree(reference));
             } else {
               if (NodeUtil.isNameDeclaration(reference.getParent())) {
@@ -415,8 +460,8 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
                 // Change declaration to assignment, or just drop it if there's
                 // no initial value.
                 if (reference.hasChildren()) {
-                  Node newReference = reference.cloneNode();
-                  Node assign = IR.assign(newReference, reference.removeFirstChild());
+                  Node newReference = cloneWithType(reference);
+                  Node assign = createAssignNode(newReference, reference.removeFirstChild());
                   extractInlineJSDoc(declaration, reference, declaration);
                   maybeAddConstJSDoc(declaration, grandParent, reference, declaration);
                   assign.setJSDocInfo(declaration.getJSDocInfo());
@@ -438,9 +483,7 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
               }
               // Change reference to GETPROP.
               Node changeScope = NodeUtil.getEnclosingChangeScopeRoot(reference);
-              reference.replaceWith(
-                  IR.getprop(IR.name(loopObject.name), IR.string(var.name))
-                      .useSourceInfoIfMissingFromForTree(reference));
+              reference.replaceWith(createLoopVarReferenceReplacement(loopObject, reference));
               // TODO(johnlenz): Don't work on detached nodes.
               if (changeScope != null) {
                 compiler.reportChangeToChangeScope(changeScope);
@@ -457,9 +500,14 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
         Node[] objectNames = new Node[objects.size()];
         Node[] objectNamesForCall = new Node[objects.size()];
         int i = 0;
+        JSType[] objectTypes = new JSType[objects.size()];
         for (LoopObject object : objects) {
-          objectNames[i] = IR.name(object.name);
-          objectNamesForCall[i] = IR.name(object.name);
+          Node paramObjectName = createLoopObjectNameNode(object);
+          objectNames[i] = paramObjectName;
+          if (shouldAddTypesOnNewAstNodes) {
+            objectTypes[i] = checkNotNull(paramObjectName.getJSType());
+          }
+          objectNamesForCall[i] = createLoopObjectNameNode(object);
           i++;
         }
 
@@ -467,8 +515,20 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
             IR.name(""),
             IR.paramList(objectNames),
             IR.block(returnNode));
+        if (shouldAddTypesOnNewAstNodes) {
+          FunctionBuilder functionBuilder = new FunctionBuilder(compiler.getTypeRegistry());
+          functionBuilder
+              .withName("")
+              .withSourceNode(iife)
+              .withParamsNode(compiler.getTypeRegistry().createParameters(objectTypes))
+              .withReturnType(function.getJSType());
+          iife.setJSType(functionBuilder.build());
+        }
         compiler.reportChangeToChangeScope(iife);
         Node call = IR.call(iife, objectNamesForCall);
+        if (shouldAddTypesOnNewAstNodes) {
+          call.setJSType(function.getJSType());
+        }
         call.putBooleanProp(Node.FREE_CALL, true);
         Node replacement;
         if (NodeUtil.isFunctionDeclaration(function)) {
@@ -481,6 +541,31 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
         returnNode.addChildToFront(function);
         compiler.reportChangeToEnclosingScope(replacement);
       }
+    }
+
+    /** Creates a `$jscomp$loop$0.varName` replacement for a reference to `varName`. */
+    private Node createLoopVarReferenceReplacement(LoopObject loopObject, Node reference) {
+      Node replacement =
+          IR.getprop(createLoopObjectNameNode(loopObject), IR.string(reference.getString()));
+      if (shouldAddTypesOnNewAstNodes) {
+        // If the reference is the name node in a declaration (e.g. `x` in `let x;`),
+        // it won't have a type, so just use unknown.
+        JSType jsType = reference.getJSType();
+        if (jsType == null) {
+          jsType = getNativeType(UNKNOWN_TYPE);
+        }
+        replacement.setJSType(jsType);
+      }
+      replacement.useSourceInfoFromForTree(reference);
+      return replacement;
+    }
+
+    private Node createLoopObjectNameNode(LoopObject loopObject) {
+      Node loopObjectNameNode = IR.name(loopObject.name);
+      if (shouldAddTypesOnNewAstNodes) {
+        loopObjectNameNode.setJSType(getNativeType(OBJECT_TYPE));
+      }
+      return loopObjectNameNode;
     }
 
     /**
@@ -508,15 +593,15 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
      * `$jscomp$loop$0` is the label on the block containing the original loop body.
      */
     private class ContinueStatementUpdater implements NodeTraversal.Callback {
+
       // label to put on break statements created that replace continue statements.
       private final String breakLabel;
       @Nullable private final String originalLoopLabel;
-
       // Track how many levels of loops deep we go below this one.
+
       int loopDepth = 0;
       // Set to true if a continue statement is found
       boolean replacedAContinueStatement = false;
-
       public ContinueStatementUpdater(String breakLabel, @Nullable String originalLoopLabel) {
         this.breakLabel = breakLabel;
         this.originalLoopLabel = originalLoopLabel;
@@ -579,5 +664,67 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
         this.name = name;
       }
     }
+  }
+
+  private Node cloneWithType(Node node) {
+    Node clone = node.cloneNode();
+    if (shouldAddTypesOnNewAstNodes) {
+      clone.setJSType(node.getJSType());
+    }
+    return clone;
+  }
+
+  /** Creates an ASSIGN node with type information matching its RHS. */
+  private Node createAssignNode(Node lhs, Node rhs) {
+    Node assignNode = IR.assign(lhs, rhs);
+    if (shouldAddTypesOnNewAstNodes) {
+      assignNode.setJSType(rhs.getJSType());
+    }
+    return assignNode;
+  }
+
+  /** Creates a COMMA node with type information matching its second argument. */
+  private Node createCommaNode(Node expr1, Node expr2) {
+    Node commaNode = IR.comma(expr1, expr2);
+    if (shouldAddTypesOnNewAstNodes) {
+      commaNode.setJSType(expr2.getJSType());
+    }
+    return commaNode;
+  }
+
+  /**
+   * Return a cast to unknown type containing the given node.
+   *
+   * <p>The Node must already have correct source info, since it will be used to create the cast
+   * node.
+   */
+  private Node wrapWithCastToUnknown(Node n) {
+    JSDocInfoBuilder jsDoc = new JSDocInfoBuilder(false);
+    jsDoc.recordType(new JSTypeExpression(new Node(Token.QMARK), n.getSourceFileName()));
+    n = IR.cast(n, jsDoc.build()).srcref(n);
+    if (shouldAddTypesOnNewAstNodes) {
+      n.setJSType(getNativeType(UNKNOWN_TYPE));
+    }
+    return n;
+  }
+
+  private Node createObjectLit() {
+    Node objectlit = IR.objectlit();
+    if (shouldAddTypesOnNewAstNodes) {
+      objectlit.setJSType(getNativeType(OBJECT_TYPE));
+    }
+    return objectlit;
+  }
+
+  private Node createUndefinedNode() {
+    Node undefined = IR.name("undefined");
+    if (shouldAddTypesOnNewAstNodes) {
+      undefined.setJSType(getNativeType(VOID_TYPE));
+    }
+    return undefined;
+  }
+
+  private JSType getNativeType(JSTypeNative jsNativeType) {
+    return compiler.getTypeRegistry().getNativeType(jsNativeType);
   }
 }

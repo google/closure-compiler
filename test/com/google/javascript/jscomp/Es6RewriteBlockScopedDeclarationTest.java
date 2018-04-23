@@ -25,12 +25,17 @@ import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
  */
 public final class Es6RewriteBlockScopedDeclarationTest extends TypeICompilerTestCase {
 
+  public Es6RewriteBlockScopedDeclarationTest() {
+    super(DEFAULT_EXTERNS);
+  }
+
   @Override
   protected void setUp() throws Exception {
     super.setUp();
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
-    enableRunTypeCheckAfterProcessing();
-    this.mode = TypeInferenceMode.NEITHER;
+    enableTypeCheck();
+    enableTypeInfoValidation();
+    this.mode = TypeInferenceMode.OTI_ONLY;
   }
 
   @Override
@@ -226,65 +231,27 @@ public final class Es6RewriteBlockScopedDeclarationTest extends TypeICompilerTes
             "}"));
   }
 
-  public void testForOfLoop() {
-    test(
-        lines(
-            "function f() {",
-            "  let x = 5;",
-            "  for (let x of [1,2,3]) {",
-            "    console.log(x);",
-            "  }",
-            "  console.log(x);",
-            "}"),
-        lines(
-            "function f() {",
-            "  var x = 5;",
-            "  for(var x$0 of [1,2,3]) {",
-            "    console.log(x$0);",
-            "  }",
-            "  console.log(x);",
-            "}"));
-
-    test(
-        lines(
-            "function f() {",
-            "  let x = 5;",
-            "  for (let x of [1,2,3]) {",
-            "    let x = 123;",
-            "    console.log(x);",
-            "  }",
-            "  console.log(x);",
-            "}"),
-        lines(
-            "function f() {",
-            "  var x = 5;",
-            "  for(var x$0 of [1,2,3]) {",
-            "    var x$1 = 123;",
-            "    console.log(x$1);",
-            "  }",
-            "  console.log(x);",
-            "}"));
-  }
-
   public void testForLoop() {
     test(
         lines(
+            "function use(x) {}",
             "function f() {",
             "  const y = 0;",
             "  for (let x = 0; x < 10; x++) {",
             "    const y = x * 2;",
             "    const z = y;",
             "  }",
-            "  console.log(y);",
+            "  use(y);",
             "}"),
         lines(
+            "function use(x) {}",
             "function f() {",
             "  /** @const */ var y = 0;",
             "  for (var x = 0; x < 10; x++) {",
             "    /** @const */ var y$0 = x * 2;",
             "    /** @const */ var z = y$0;",
             "  }",
-            "  console.log(y);",
+            "  use(y);",
             "}"));
 
     test(
@@ -682,37 +649,6 @@ public final class Es6RewriteBlockScopedDeclarationTest extends TypeICompilerTes
             "}",
             ""));
 
-    // for-of case
-    test(
-        lines(
-            "const values = ['a', 'b', 'c', 'skipMe'];",
-            "const arr = [];",
-            "for (const v of values) {",
-            "  if (v == 'skipMe') {",
-            "    continue;",
-            "  }",
-            "  arr.push(function() { return v; });",
-            "}",
-            ""),
-        lines(
-            "/** @const */ var values = ['a', 'b', 'c', 'skipMe'];",
-            "/** @const */ var arr = [];",
-            "var $jscomp$loop$0 = {};",
-            "for (/** @const */ var v of values) {",
-            "  $jscomp$loop$0.v = v;",
-            "  $jscomp$loop$0: {",
-            "    if ($jscomp$loop$0.v == 'skipMe') {",
-            "      break $jscomp$loop$0;", // continue becomes break to ensure loop var update
-            "    }",
-            "    arr.push(",
-            "        (function($jscomp$loop$0) {",
-            "          return function() { return $jscomp$loop$0.v; };",
-            "        })($jscomp$loop$0));",
-            "  }",
-            "  $jscomp$loop$0 = {v: $jscomp$loop$0.v};",
-            "}",
-            ""));
-
     // while case
     test(
         lines(
@@ -817,14 +753,18 @@ public final class Es6RewriteBlockScopedDeclarationTest extends TypeICompilerTes
             "const letters = [];",
             "OUTER: while (values.length > 0) {",
             "  const v = values.shift();",
-            "  for (const c of v) {",
+            "  let i = 0;",
+            "  while (i < v.length) {",
+            "    const c = v.charAt(i);",
             "    if (c == 'a') {",
+            "      i++;",
             "      continue;",
             "    } else if (c == 'i') {",
             "      continue OUTER;",
             "    } else {",
             "      letters.push(function() { return c; });",
             "    }",
+            "    i++;",
             "  }",
             "  words.push(function() { return v; });",
             "}",
@@ -837,11 +777,13 @@ public final class Es6RewriteBlockScopedDeclarationTest extends TypeICompilerTes
             "OUTER: while (values.length > 0) {",
             "  $jscomp$loop$1: {",
             "    /** @const */ $jscomp$loop$1.v = values.shift();",
+            "    var i = 0;",
             "    var $jscomp$loop$0 = {};",
-            "    for(/** @const */ var c of $jscomp$loop$1.v) {",
-            "      $jscomp$loop$0.c = c;",
+            "    while (i < $jscomp$loop$1.v.length) {",
             "      $jscomp$loop$0: {",
+            "        /** @const */ $jscomp$loop$0.c = $jscomp$loop$1.v.charAt(i);",
             "        if ($jscomp$loop$0.c == 'a') {",
+            "          i++;",
             "          break $jscomp$loop$0;", // continue becomes break to ensure loop var update
             "        } else if ($jscomp$loop$0.c == 'i') {",
             "          break $jscomp$loop$1;", // continue becomes break to ensure loop var update
@@ -851,6 +793,7 @@ public final class Es6RewriteBlockScopedDeclarationTest extends TypeICompilerTes
             "                return function() { return $jscomp$loop$0.c; };",
             "              })($jscomp$loop$0));",
             "        }",
+            "        i++;",
             "      }",
             "      $jscomp$loop$0 = {c: $jscomp$loop$0.c};",
             "    }",
@@ -1173,24 +1116,6 @@ public final class Es6RewriteBlockScopedDeclarationTest extends TypeICompilerTes
 
     test(
         lines(
-            "const arr = [];",
-            "for (let i of [0, 1]) {",
-            "  let i = 0;",
-            "  arr.push(function() { return i; });",
-            "}"),
-        lines(
-            "/** @const */ var arr = [];",
-            "var $jscomp$loop$1 = {};",
-            "for (var i of [0, 1]) {",
-            "  $jscomp$loop$1.i$0 = 0;",
-            "  arr.push((function($jscomp$loop$1) {",
-            "      return function() { return $jscomp$loop$1.i$0; };",
-            "  })($jscomp$loop$1));",
-            "  $jscomp$loop$1 = {i$0: $jscomp$loop$1.i$0}",
-            "}"));
-
-    test(
-        lines(
             "for (;;) {",
             "  let a = getArray();",
             "  f = function() {",
@@ -1217,13 +1142,14 @@ public final class Es6RewriteBlockScopedDeclarationTest extends TypeICompilerTes
             "}"));
   }
 
-  public void testDoWhileForOfCapturedLet() {
+  public void testDoWhileForInCapturedLet() {
     test(
         lines(
             "const arr = [];",
             "do {",
             "  let special = 99;",
-            "  for (let i of [0, 1, special, 3, 4, 5]) {",
+            "  const obj = { 0: 0, 1: 1, 2: special, 3: 3, 4: 4, 5: 5 };",
+            "  for (let i in obj) {",
             "    i = Number(i);",
             "    arr.push(function() { return i++; });",
             "    arr.push(function() { return i + special; });",
@@ -1234,8 +1160,10 @@ public final class Es6RewriteBlockScopedDeclarationTest extends TypeICompilerTes
             "var $jscomp$loop$1 = {};",
             "do {",
             "  $jscomp$loop$1.special = 99;",
+            "  /** @const */",
+            "  var obj = { 0: 0, 1: 1, 2: $jscomp$loop$1.special, 3: 3, 4: 4, 5: 5 };",
             "  var $jscomp$loop$0 = {};",
-            "  for (var i of [0, 1, $jscomp$loop$1.special, 3, 4, 5]) {",
+            "  for (var i in obj) {",
             "    $jscomp$loop$0.i = i",
             "    $jscomp$loop$0.i = Number($jscomp$loop$0.i);",
             "    arr.push((function($jscomp$loop$0) {",
@@ -1445,25 +1373,6 @@ public final class Es6RewriteBlockScopedDeclarationTest extends TypeICompilerTes
             "    }($jscomp$loop$0));",
             "  }",
             "}"));
-  }
-
-  public void testClass() {
-    test(lines(
-            "class C {}",
-            "var c1 = C;",
-            "{",
-            "  class C {}",
-            "  var c2 = C;",
-            "}",
-            "C === c1;"),
-        lines(
-            "class C {}",
-            "var c1 = C;",
-            "{",
-            "  class C$0 {}",
-            "  var c2 = C$0;",
-            "}",
-            "C === c1;"));
   }
 
   public void testRenameJsDoc() {
