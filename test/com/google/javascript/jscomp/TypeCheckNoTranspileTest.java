@@ -312,29 +312,22 @@ public final class TypeCheckNoTranspileTest extends CompilerTypeTestCase {
             "for (var elem of arr) { takesNumber(elem); }"));
   }
 
-  // TODO(tbreisacher): Should be no warning here.
   public void testForOf_string1() {
     testTypes(
         lines(
             "function takesString(/** string */ s) {}",
-            "for (var ch of 'a string') { takesString(elem); }"),
-        lines(
-            "Can only iterate over a (non-null) Iterable type",
-            "found   : string",
-            "required: Iterable"));
+            "for (var ch of 'a string') { takesString(ch); }"));
   }
 
-  // TODO(tbreisacher): Should be a type mismatch warning here because we're passing a string to
-  // takesNumber.
   public void testForOf_string2() {
     testTypes(
         lines(
             "function takesNumber(/** number */ n) {}",
-            "for (var ch of 'a string') { takesNumber(elem); }"),
+            "for (var ch of 'a string') { takesNumber(ch); }"),
         lines(
-            "Can only iterate over a (non-null) Iterable type",
+            "actual parameter 1 of takesNumber does not match formal parameter",
             "found   : string",
-            "required: Iterable"));
+            "required: number"));
   }
 
   public void testForOf_StringObject1() {
@@ -375,6 +368,7 @@ public final class TypeCheckNoTranspileTest extends CompilerTypeTestCase {
   }
 
   public void testForOf_unionType1() {
+    // TODO(b/77904110): Should be a type mismatch warning for passing a string to takesNumber
     testTypes(
         lines(
             "function takesNumber(/** number */ n) {}",
@@ -383,11 +377,7 @@ public final class TypeCheckNoTranspileTest extends CompilerTypeTestCase {
             "  for (let x of (arr || [])) {",
             "    takesNumber(x);",
             "  }",
-            "}"),
-        lines(
-            "actual parameter 1 of takesNumber does not match formal parameter",
-            "found   : undefined",  // TODO(b/77904110): Should be number
-            "required: number"));
+            "}"));
   }
 
   public void testForOf_unionType2() {

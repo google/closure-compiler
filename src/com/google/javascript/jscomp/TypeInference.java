@@ -260,16 +260,18 @@ class TypeInference
               // for/of. The type of `item` is the type parameter of the Iterable type.
               ObjectType objType = getJSType(obj).dereference();
 
-              if (objType != null
-                  && objType.isSubtypeOf(getNativeType(JSTypeNative.ITERABLE_TYPE))) {
-                if (objType.isTemplatizedType()) {
-                  JSType newType =
-                      objType
+              JSType newType =
+                  objType == null
+                      ? getNativeType(UNKNOWN_TYPE)
+                      : objType
                           .getTemplateTypeMap()
+                          // returns the UNKNOWN_TYPE if it can't find the Iterable template
                           .getResolvedTemplateType(registry.getIterableTemplate());
-                  redeclareSimpleVar(informed, item, newType);
-                }
-              }
+
+              // Redeclare the loop var. Note that if we can't determine the type of the "object"
+              // we declare the var as the unknown type and let TypeCheck warn for using a non-
+              // Iterable in a for/of loop.
+              redeclareSimpleVar(informed, item, newType);
             }
             newScope = informed;
             break;

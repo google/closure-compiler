@@ -874,6 +874,10 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       case FOR_OF:
         ensureTyped(t, n.getSecondChild());
         JSType iterable = getJSType(n.getSecondChild());
+        // If iterable is a primitive type, autobox it to the corresponding object type. Otherwise,
+        // the type validator will warn that a string is not a subtype of Iterable.
+        JSType autoboxedIterable = iterable.autoboxesTo();
+        iterable = autoboxedIterable != null ? autoboxedIterable : iterable;
         validator.expectIterable(
             t, n.getSecondChild(), iterable, "Can only iterate over a (non-null) Iterable type");
         typeable = false;
