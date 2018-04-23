@@ -1313,23 +1313,13 @@ public final class ConformanceRules {
           && !isTypeImmediatelyTightened(n)
           && isCheckablePropertySource(n.getFirstChild()) // not a cascading unknown
           && !isTypeVariable(n)
-          && !isDeclaredUnknown(n)
-          && !isInWhitelistedSyntheticFile(n)) {
+          && !isDeclaredUnknown(n)) {
         String propName = n.getLastChild().getString();
         String typeName = n.getFirstChild().getTypeI().toString();
         return new ConformanceResult(ConformanceLevel.VIOLATION,
             "The property \"" + propName + "\" on type \"" + typeName + "\"");
       }
       return ConformanceResult.CONFORMANCE;
-    }
-
-    private boolean isInWhitelistedSyntheticFile(Node n) {
-      // TODO(tbreisacher): Figure out how to remove this restriction.
-      String filename = n.getSourceFileName();
-      return (filename != null
-          && (filename.contains("synthetic:es6/map")
-              || filename.contains("synthetic:es6/weakmap")
-              || filename.contains("synthetic:es6/weakset")));
     }
 
     private boolean isCheckablePropertySource(Node n) {
