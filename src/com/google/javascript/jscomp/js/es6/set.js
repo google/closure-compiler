@@ -109,6 +109,8 @@ $jscomp.polyfill('Set',
 
   /** @override */
   PolyfillSet.prototype.add = function(value) {
+    // normalize -0/+0 to +0
+    value = value === 0 ? 0 : value;
     this.map_.set(value, value);
     this.size = this.map_.size;
     return this;
