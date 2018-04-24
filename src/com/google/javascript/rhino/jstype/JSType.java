@@ -51,6 +51,7 @@ import com.google.javascript.rhino.TypeI;
 import java.util.Comparator;
 import java.util.IdentityHashMap;
 import java.util.Objects;
+import javax.annotation.Nullable;
 
 /**
  * Represents JavaScript value types.
@@ -975,7 +976,7 @@ public abstract class JSType implements TypeI {
   }
 
   /**
-   * Dereference a type for property access.
+   * Dereferences a type for property access.
    *
    * Filters null/undefined and autoboxes the resulting type.
    * Never returns null.
@@ -988,11 +989,12 @@ public abstract class JSType implements TypeI {
   }
 
   /**
-   * Dereference a type for property access.
+   * Dereferences a type for property access.
    *
    * Filters null/undefined, autoboxes the resulting type, and returns it
-   * iff it's an object.
+   * iff it's an object. If not an object, returns null.
    */
+  @Nullable
   public final ObjectType dereference() {
     return autobox().toObjectType();
   }

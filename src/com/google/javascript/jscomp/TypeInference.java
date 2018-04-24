@@ -241,13 +241,11 @@ class TypeInference
               // item is assigned a property name, so its type should be string.
               if (item.isName()) {
                 JSType iterKeyType = getNativeType(STRING_TYPE);
-                ObjectType objType = getJSType(obj).dereference();
+                JSType objType = getJSType(obj).autobox();
                 JSType objIndexType =
-                    objType == null
-                        ? null
-                        : objType
-                            .getTemplateTypeMap()
-                            .getResolvedTemplateType(registry.getObjectIndexKey());
+                    objType
+                        .getTemplateTypeMap()
+                        .getResolvedTemplateType(registry.getObjectIndexKey());
                 if (objIndexType != null && !objIndexType.isUnknownType()) {
                   JSType narrowedKeyType = iterKeyType.getGreatestSubtype(objIndexType);
                   if (!narrowedKeyType.isEmptyType()) {
@@ -258,15 +256,12 @@ class TypeInference
               }
             } else {
               // for/of. The type of `item` is the type parameter of the Iterable type.
-              ObjectType objType = getJSType(obj).dereference();
-
+              JSType objType = getJSType(obj).autobox();
               JSType newType =
-                  objType == null
-                      ? getNativeType(UNKNOWN_TYPE)
-                      : objType
-                          .getTemplateTypeMap()
-                          // returns the UNKNOWN_TYPE if it can't find the Iterable template
-                          .getResolvedTemplateType(registry.getIterableTemplate());
+                  objType
+                      .getTemplateTypeMap()
+                      // returns the UNKNOWN_TYPE if it can't find the Iterable template
+                      .getResolvedTemplateType(registry.getIterableTemplate());
 
               // Redeclare the loop var. Note that if we can't determine the type of the "object"
               // we declare the var as the unknown type and let TypeCheck warn for using a non-

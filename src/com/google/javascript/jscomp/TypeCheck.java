@@ -2157,7 +2157,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       }
       actualYieldType =
           actualYieldType
-              .dereference()
+              .autobox()
               .getTemplateTypeMap()
               .getResolvedTemplateType(typeRegistry.getIterableTemplate());
     }
@@ -2182,20 +2182,17 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
    * <p>If the given type is not an Iterator or Iterable, returns the unknown type..
    */
   static JSType getTemplateTypeOfGenerator(JSTypeRegistry typeRegistry, JSType generator) {
-    ObjectType dereferencedType = generator.dereference();
-    if (dereferencedType != null) {
-      TemplateTypeMap templateTypeMap = dereferencedType.getTemplateTypeMap();
-      if (templateTypeMap.hasTemplateKey(typeRegistry.getIterableTemplate())) {
-        // Generator JSDoc says
-        // @return {!Iterable<SomeElementType>}
-        // or
-        // @return {!Generator<SomeElementType>}
-        return templateTypeMap.getResolvedTemplateType(typeRegistry.getIterableTemplate());
-      } else if (templateTypeMap.hasTemplateKey(typeRegistry.getIteratorTemplate())) {
-        // Generator JSDoc says
-        // @return {!Iterator<SomeElementType>}
-        return templateTypeMap.getResolvedTemplateType(typeRegistry.getIteratorTemplate());
-      }
+    TemplateTypeMap templateTypeMap = generator.autobox().getTemplateTypeMap();
+    if (templateTypeMap.hasTemplateKey(typeRegistry.getIterableTemplate())) {
+      // Generator JSDoc says
+      // @return {!Iterable<SomeElementType>}
+      // or
+      // @return {!Generator<SomeElementType>}
+      return templateTypeMap.getResolvedTemplateType(typeRegistry.getIterableTemplate());
+    } else if (templateTypeMap.hasTemplateKey(typeRegistry.getIteratorTemplate())) {
+      // Generator JSDoc says
+      // @return {!Iterator<SomeElementType>}
+      return templateTypeMap.getResolvedTemplateType(typeRegistry.getIteratorTemplate());
     }
     return typeRegistry.getNativeType(UNKNOWN_TYPE);
   }
