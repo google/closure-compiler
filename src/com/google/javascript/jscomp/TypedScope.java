@@ -164,11 +164,13 @@ public class TypedScope extends AbstractScope<TypedScope, TypedVar>
   }
 
   /**
-   * Returns the variables in this scope that have been declared with 'var' (or 'let') and not
-   * declared with a known type. These variables can safely be set to undefined (rather than
-   * unknown) at the start of type inference, and will be reset to the correct type when analyzing
-   * the first assignment to them. Parameters and externs are excluded because they are not
-   * initialized in the function body.
+   * Returns the variables in this scope that have been declared with 'var' and not declared with a
+   * known type. These variables can safely be set to undefined (rather than unknown) at the start
+   * of type inference, and will be reset to the correct type when analyzing the first assignment to
+   * them. Parameters and externs are excluded because they are not initialized in the function
+   * body, and lexically-bound variables (let and const) are excluded because they are initialized
+   * when inferring the LET/CONST node, which is guaranteed to occur before any use, since they are
+   * not hoisted.
    */
   public Iterable<TypedVar> getDeclarativelyUnboundVarsWithoutTypes() {
     return Iterables.filter(getVarIterable(), this::isDeclarativelyUnboundVarWithoutType);
@@ -178,7 +180,7 @@ public class TypedScope extends AbstractScope<TypedScope, TypedVar>
     return var.getParentNode() != null
         && var.getType() == null
         // TODO(bradfordcsmith): update this for destructuring
-        && NodeUtil.isNameDeclaration(var.getParentNode())
+        && var.getParentNode().isVar()  // NOTE: explicitly excludes let/const
         && !var.isExtern();
   }
 

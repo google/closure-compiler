@@ -835,9 +835,19 @@ class TypeInference
     JSType type = n.getJSType();
     if (value != null) {
       scope = traverse(value, scope);
-      updateScopeForTypeChange(scope, n, n.getJSType() /* could be null */,
-          getJSType(value));
+      updateScopeForTypeChange(
+          scope, n, n.getJSType() /* could be null */, getJSType(value));
       return scope;
+    } else if (n.getParent().isLet()) {
+      // Whenever we see a LET, we're guaranteed it's not yet in the scope, and we don't need to
+      // worry about it being from an outer scope.  In this case, it has no child, so the actual
+      // type should be undefined, but we make a special allowance for type-annotated variables.
+      // In that case, we use the annotated type instead.
+      // TODO(sdh): I would have thought that #updateScopeForTypeChange would handle using the
+      // declared type correctly, but for some reason it doesn't so we handle it here.
+      JSType resultType = type != null ? type : getNativeType(VOID_TYPE);
+      updateScopeForTypeChange(scope, n, type, resultType);
+      type = resultType;
     } else {
       StaticTypedSlot<JSType> var = scope.getSlot(varName);
       if (var != null) {

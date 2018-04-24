@@ -63,15 +63,10 @@ public final class TypeCheckNoTranspileTest extends CompilerTypeTestCase {
             "    if (x.maybeNum === null) {",
             "      continue;",
             "    }",
-            // TODO(b/78364240): Compiler should realize that x.maybeNum must be a number here
             "    x.num = x.maybeNum;",
             "  }",
             "}",
-            ""),
-        lines(
-            "assignment to property num of x", // preserve newlines
-            "found   : null",
-            "required: number"));
+            ""));
   }
 
   public void testTypedefFieldInLoopGlobal() {
@@ -134,6 +129,35 @@ public final class TypeCheckNoTranspileTest extends CompilerTypeTestCase {
     TypeCheck t = makeTypeCheck();
     t.processForTesting(null, n);
     return t.getTypedPercent();
+  }
+
+  public void testBlockScopedVarInLoop1() {
+    disableStrictMissingPropertyChecks();
+    testTypes(
+        lines(
+            "/** @constructor */ function Node() {};",
+            "function g(/** Node */ n){",
+            "  n.foo = {bar: 3};",
+            "}",
+            "function f(/** !Array<!Node> */ arr){",
+            "  for (var i = 0; i < arr.length; i++) {",
+            "    const tile = arr[i];",
+            "    const bar = tile.foo.bar;",
+            // this assignment shouldn't cause 'tile.foo' to be inferred as undefined above.
+            "    tile.foo = undefined",
+            "  }",
+            "}"));
+  }
+
+  public void testBlockScopedVarInLoop2() {
+    testTypes(
+        lines(
+            "while (true) {",
+            "  let num;",
+            "  let /** undefined */ y = num;",
+            // null assignment shouldn't make us think num could be null on the previous line.
+            "  num = null;",
+            "}"));
   }
 
   public void testGlobalEnumWithLet() {
@@ -881,6 +905,12 @@ public final class TypeCheckNoTranspileTest extends CompilerTypeTestCase {
     return result + "}";
   }
 
+  private void disableStrictMissingPropertyChecks() {
+    compiler
+        .getOptions()
+        .setWarningLevel(DiagnosticGroups.STRICT_MISSING_PROPERTIES, CheckLevel.OFF);
+  }
+
   private static class TypeCheckResult {
     private final Node root;
     private final TypedScope scope;
@@ -891,4 +921,3 @@ public final class TypeCheckNoTranspileTest extends CompilerTypeTestCase {
     }
   }
 }
-

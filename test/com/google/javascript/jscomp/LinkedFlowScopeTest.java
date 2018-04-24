@@ -29,8 +29,8 @@ import com.google.javascript.rhino.jstype.JSType;
 
 public final class LinkedFlowScopeTest extends CompilerTypeTestCase {
 
-  private final Node rootNode = new Node(Token.ROOT);
   private final Node functionNode = new Node(Token.FUNCTION);
+  private final Node rootNode = new Node(Token.ROOT, functionNode);
   private static final int LONG_CHAIN_LENGTH = 1050;
 
   private TypedScope globalScope;

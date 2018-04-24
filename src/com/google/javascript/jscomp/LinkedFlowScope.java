@@ -336,10 +336,6 @@ class LinkedFlowScope implements FlowScope {
       if (linkedA.optimizesToSameScope(linkedB)) {
         return linkedA.createChildFlowScope();
       }
-      // TODO(sdh): Consider reusing the input cache if both inputs are identical.
-      // We can evaluate how often this happens to see whather this would be a win.
-      FlatFlowScopeCache cache = new FlatFlowScopeCache(linkedA, linkedB);
-
       // NOTE: it would be nice to put 'null' as the syntactic scope if they're not
       // equal, but this is not currently feasible.  For joins that occur within a
       // single CFG node's flow, it's irrelevant, but for joins between separate
@@ -354,7 +350,12 @@ class LinkedFlowScope implements FlowScope {
       // excessive map entry creation: find a common ancestor, etc.  One
       // interesting consequence of the current approach is that we may end up
       // adding irrelevant block-local variables to the joined scope unnecessarily.
-      return new LinkedFlowScope(cache, getCommonParentDeclarationScope(linkedA, linkedB));
+      TypedScope common = getCommonParentDeclarationScope(linkedA, linkedB);
+
+      // TODO(sdh): Consider reusing the input cache if both inputs are identical.
+      // We can evaluate how often this happens to see whather this would be a win.
+      FlatFlowScopeCache cache = new FlatFlowScopeCache(linkedA, linkedB, common.getRootNode());
+      return new LinkedFlowScope(cache, common);
     }
   }
 
@@ -549,9 +550,11 @@ class LinkedFlowScope implements FlowScope {
       this.linkedEquivalent = directParent;
     }
 
-    // A cache at the join of two scope chains.
+    // A cache at the join of two scope chains.  The 'common' node is the root of the closest shared
+    // ancestor scope between the two joined scopes.  Any symbols in more deeply nested scopes than
+    // this are excluded from the join operations.
     @SuppressWarnings("ReferenceEquality")
-    FlatFlowScopeCache(LinkedFlowScope joinedScopeA, LinkedFlowScope joinedScopeB) {
+    FlatFlowScopeCache(LinkedFlowScope joinedScopeA, LinkedFlowScope joinedScopeB, Node common) {
       this.linkedEquivalent = null;
 
       // Always prefer the "real" function scope to the faked-out
@@ -563,6 +566,15 @@ class LinkedFlowScope implements FlowScope {
 
       Map<ScopedName, LinkedFlowSlot> slotsA = joinedScopeA.allFlowSlots();
       Map<ScopedName, LinkedFlowSlot> slotsB = joinedScopeB.allFlowSlots();
+      Set<Node> commonAncestorScopeRootNodes = new HashSet<>();
+      commonAncestorScopeRootNodes.add(common);
+      if (common.getParent() != null) {
+        for (Node n : common.getAncestors()) {
+          if (NodeUtil.createsScope(n)) {
+            commonAncestorScopeRootNodes.add(n);
+          }
+        }
+      }
 
       this.symbols = slotsA;
 
@@ -579,6 +591,10 @@ class LinkedFlowScope implements FlowScope {
       //    the two types.
 
       for (ScopedName var : Sets.union(slotsA.keySet(), slotsB.keySet())) {
+        if (!commonAncestorScopeRootNodes.contains(var.getScopeRoot())) {
+          // Variables not defined in a common ancestor no longer exist after the join.
+          continue;
+        }
         LinkedFlowSlot slotA = slotsA.get(var);
         LinkedFlowSlot slotB = slotsB.get(var);
         JSType joinedType = null;
