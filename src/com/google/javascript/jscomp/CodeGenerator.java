@@ -136,7 +136,9 @@ public class CodeGenerator {
       // the IN_FOR_INIT_CLAUSE one.
       Context rhsContext = getContextForNoInOperator(context);
 
-      boolean needsParens = (context == Context.START_OF_EXPR) && first.isObjectPattern();
+      boolean needsParens =
+          (context == Context.START_OF_EXPR || context.atArrowFunctionBody())
+              && first.isObjectPattern();
       if (n.isAssign() && needsParens) {
         add("(");
       }
@@ -987,7 +989,7 @@ public class CodeGenerator {
 
       case OBJECTLIT:
         {
-          boolean needsParens = (context == Context.START_OF_EXPR);
+          boolean needsParens = context == Context.START_OF_EXPR || context.atArrowFunctionBody();
           if (needsParens) {
             add("(");
           }
@@ -1099,10 +1101,10 @@ public class CodeGenerator {
       case CAST:
         if (preserveTypeAnnotations) {
           add("(");
-        }
-        add(first);
-        if (preserveTypeAnnotations) {
+          add(first); // drop context because of added parentheses
           add(")");
+        } else {
+          add(first, context); // preserve context
         }
         break;
 
@@ -1349,7 +1351,7 @@ public class CodeGenerator {
     } else {
       // This is a hack. Arrow functions have no token type, but
       // blockless arrow function bodies have lower precedence than anything other than commas.
-      addExpr(last, NodeUtil.precedence(Token.COMMA) + 1, context);
+      addExpr(last, NodeUtil.precedence(Token.COMMA) + 1, getContextForArrowFunctionBody(context));
     }
     cc.endFunction(context == Context.STATEMENT);
 
@@ -1575,7 +1577,7 @@ public class CodeGenerator {
   }
 
   private boolean opRequiresParentheses(Node n, int minPrecedence, Context context) {
-    if (context == Context.IN_FOR_INIT_CLAUSE && n.isIn()) {
+    if (context.inForInInitClause() && n.isIn()) {
       // make sure this operator 'in' isn't confused with the for-loop 'in'
       return true;
     } else if (NodeUtil.isUnaryOperator(n) && isFirstOperandOfExponentiationExpression(n)) {
@@ -1583,17 +1585,9 @@ public class CodeGenerator {
       // ExponentiationExpression cannot expand to
       //     UnaryExpression ** ExponentiationExpression
       return true;
-    } else if (isObjectLitOrCastOfObjectLit(n) && n.getParent().isArrowFunction()) {
-      // If the body of an arrow function is an object literal, the braces are treated as a
-      // statement block with higher precedence, which we avoid with parentheses.
-      return true;
     } else {
       return precedence(n) < minPrecedence;
     }
-  }
-
-  private boolean isObjectLitOrCastOfObjectLit(Node n) {
-    return n.isObjectLit() || (n.isCast() && n.getFirstChild().isObjectLit());
   }
 
   private boolean isFirstOperandOfExponentiationExpression(Node n) {
@@ -1940,8 +1934,46 @@ public class CodeGenerator {
     // Are we inside the init clause of a for loop?  If so, the containing
     // expression can't contain an in operator.  Pass this context flag down
     // until we reach expressions which no longer have the limitation.
-    IN_FOR_INIT_CLAUSE,
-    OTHER
+    IN_FOR_INIT_CLAUSE(
+        /** inForInitClause */
+        true,
+        /** at start of arrow fn */
+        false),
+    // Handle object literals at the start of a non-block arrow function body.
+    // This is only important when the first token after the "=>" is "{".
+    START_OF_ARROW_FN_BODY(
+        /** inForInitClause */
+        false,
+        /** at start of arrow fn */
+        true),
+    START_OF_ARROW_FN_IN_FOR_INIT(
+        /** inForInitClause */
+        true,
+        /** atArrowFunctionBody */
+        true),
+    OTHER; // nothing special to watch out for.
+
+    // The following two cases are independent, unlike the other enum states, so we have separate
+    // booleans for them.
+    private final boolean inForInitClause;
+    private final boolean atArrowFnBody;
+
+    Context() {
+      this(false, false);
+    }
+
+    Context(boolean inForInitClause, boolean atStartOfArrowFnBody) {
+      this.inForInitClause = inForInitClause;
+      this.atArrowFnBody = atStartOfArrowFnBody;
+    }
+
+    public boolean inForInInitClause() {
+      return inForInitClause;
+    }
+
+    public boolean atArrowFunctionBody() {
+      return atArrowFnBody;
+    }
   }
 
   private static Context getContextForNonEmptyExpression(Context currentContext) {
@@ -1955,8 +1987,17 @@ public class CodeGenerator {
    * expression.  Pass on the IN_FOR_INIT_CLAUSE flag through subexpressions.
    */
   private static Context getContextForNoInOperator(Context context) {
-    return (context == Context.IN_FOR_INIT_CLAUSE
-        ? Context.IN_FOR_INIT_CLAUSE : Context.OTHER);
+    return (context.inForInInitClause() ? context : Context.OTHER);
+  }
+
+  /**
+   * If we're at the start of an arrow function body, we need parentheses around object literals and
+   * object patterns. We also must also pass the IN_FOR_INIT_CLAUSE flag into subexpressions.
+   */
+  private static Context getContextForArrowFunctionBody(Context context) {
+    return context.inForInInitClause()
+        ? Context.START_OF_ARROW_FN_IN_FOR_INIT
+        : Context.START_OF_ARROW_FN_BODY;
   }
 
   private void processEnd(Node n, Context context) {

@@ -661,6 +661,13 @@ public final class CodePrinterTest extends CodePrinterTestBase {
 
     // And in operator inside a hook.
     assertPrintSame("for(a=c?0:(0 in d);;)foo()");
+
+    // And inside an arrow function body
+    languageMode = LanguageMode.ECMASCRIPT_2015;
+    assertPrint(
+        "var a={}; for(var i = () => (0 in a); i;) {}", "var a={};for(var i=()=>(0 in a);i;);");
+    assertPrint(
+        "var a={}; for(var i = () => ({} in a); i;) {}", "var a={};for(var i=()=>({}in a);i;);");
   }
 
   public void testForOf() {
@@ -2597,6 +2604,7 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     assertPrint("()=>/** @type {Object} */({a:1})", "()=>({a:1})");
     assertPrint("()=>/** @type {Object} */({a:1,b:2})", "()=>({a:1,b:2})");
     assertPrint("()=>/** @type {number} */(3)", "()=>3");
+    assertPrint("()=>/** @type {Object} */ ({}={})", "()=>({}={})");
 
     assertPrintSame("()=>(1,2)");
     assertPrintSame("()=>({},2)");
@@ -2604,6 +2612,16 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     assertPrint("()=>/** @type {?} */(1,2)", "()=>(1,2)");
     assertPrint("()=>/** @type {?} */({},2)", "()=>({},2)");
     assertPrint("()=>/** @type {?} */(1,{})", "()=>(1,{})");
+
+    // Test object literals more deeply nested
+    assertPrintSame("fn=()=>({})||3");
+    assertPrintSame("fn=()=>3||{}");
+    assertPrintSame("fn=()=>({}={})");
+    assertPrintSame("()=>function(){}"); // don't need parentheses around a function
+    assertPrintSame("for(var i=()=>({});;);");
+
+    preserveTypeAnnotations = true;
+    assertPrintSame("()=>/** @type {Object} */ ({})");
   }
 
   public void testPrettyArrowFunction() {
