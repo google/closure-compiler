@@ -487,10 +487,6 @@ public final class DefaultPassConfig extends PassConfig {
 
       if (options.j2clPassMode.shouldAddJ2clPasses()) {
         checks.add(j2clChecksPass);
-        // Needs to run before generator re-writing.
-        checks.add(j2clPass);
-        // Needs to run after processDefines
-        checks.add(j2clUtilGetDefineRewriterPass);
       }
 
       if (options.shouldRunTypeSummaryChecksLate()) {
@@ -581,6 +577,12 @@ public final class DefaultPassConfig extends PassConfig {
 
     if (options.instrumentForCoverage) {
       passes.add(instrumentForCodeCoverage);
+    }
+
+    // Should be run before runtimeTypeCheck.
+    if (options.j2clPassMode.shouldAddJ2clPasses()) {
+      passes.add(j2clPass);
+      passes.add(j2clUtilGetDefineRewriterPass);
     }
 
     // TODO(dimvar): convert this pass to use NTI. Low priority since it's

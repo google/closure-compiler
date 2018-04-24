@@ -270,14 +270,6 @@ class FunctionInjector {
    */
   Node inline(Reference ref, String fnName, Node fnNode) {
     checkState(compiler.getLifeCycleStage().isNormalized());
-    return unsafeInline(ref, fnName, fnNode);
-  }
-
-  /**
-   * Inline a function into the call site. Note that this unsafe version doesn't verify if the AST
-   * is normalized. You should use {@link inline} instead.
-   */
-  Node unsafeInline(Reference ref, String fnName, Node fnNode) {
     Node result;
     if (ref.mode == InliningMode.DIRECT) {
       result = inlineReturnValue(ref, fnNode);
