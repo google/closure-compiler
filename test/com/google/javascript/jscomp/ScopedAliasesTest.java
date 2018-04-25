@@ -1111,7 +1111,7 @@ public final class ScopedAliasesTest extends TypeICompilerTestCase {
     assertThat(spy.observedPositions).containsKey("testcode");
     List<SourcePosition<AliasTransformation>> positions = spy.observedPositions.get("testcode");
     assertThat(positions).hasSize(1);
-    verifyAliasTransformationPosition(1, 0, 2, 1, positions.get(0));
+    verifyAliasTransformationPosition(1, 10, 2, 1, positions.get(0));
 
     assertThat(spy.constructedAliases).hasSize(1);
     AliasSpy aliasSpy = (AliasSpy) spy.constructedAliases.get(0);
@@ -1131,7 +1131,7 @@ public final class ScopedAliasesTest extends TypeICompilerTestCase {
     assertThat(spy.observedPositions).containsKey("testcode");
     List<SourcePosition<AliasTransformation>> positions = spy.observedPositions.get("testcode");
     assertThat(positions).hasSize(1);
-    verifyAliasTransformationPosition(1, 0, 2, 1, positions.get(0));
+    verifyAliasTransformationPosition(1, 10, 2, 1, positions.get(0));
 
     assertThat(spy.constructedAliases).hasSize(1);
     AliasSpy aliasSpy = (AliasSpy) spy.constructedAliases.get(0);
@@ -1152,7 +1152,7 @@ public final class ScopedAliasesTest extends TypeICompilerTestCase {
     assertThat(spy.observedPositions).containsKey("testcode");
     List<SourcePosition<AliasTransformation>> positions = spy.observedPositions.get("testcode");
     assertThat(positions).hasSize(1);
-    verifyAliasTransformationPosition(1, 0, 3, 1, positions.get(0));
+    verifyAliasTransformationPosition(1, 10, 3, 1, positions.get(0));
 
     assertThat(spy.constructedAliases).hasSize(1);
     AliasSpy aliasSpy = (AliasSpy) spy.constructedAliases.get(0);
@@ -1182,9 +1182,9 @@ public final class ScopedAliasesTest extends TypeICompilerTestCase {
     List<SourcePosition<AliasTransformation>> positions = spy.observedPositions.get("testcode");
     assertThat(positions).hasSize(2);
 
-    verifyAliasTransformationPosition(1, 0, 6, 0, positions.get(0));
+    verifyAliasTransformationPosition(1, 10, 6, 0, positions.get(0));
 
-    verifyAliasTransformationPosition(8, 0, 11, 4, positions.get(1));
+    verifyAliasTransformationPosition(8, 10, 11, 4, positions.get(1));
 
     assertThat(spy.constructedAliases).hasSize(2);
     AliasSpy aliasSpy = (AliasSpy) spy.constructedAliases.get(0);

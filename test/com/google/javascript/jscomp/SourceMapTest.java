@@ -45,7 +45,7 @@ public final class SourceMapTest extends SourceMapTestCase {
         "\"version\":3,\n" +
         "\"file\":\"testcode\",\n" +
         "\"lineCount\":1,\n" +
-        "\"mappings\":\"AAAAA,KAAA,CAAM,CAAN,C,CCAAA,KAAA,CAAM,CAAN;\",\n" +
+        "\"mappings\":\"AAAAA,KAAK,CAAC,CAAD,C,CCALA,KAAK,CAAC,CAAD;\",\n" +
         "\"sources\":[\"file1\",\"file2\"],\n" +
         "\"names\":[\"alert\"]\n" +
         "}\n");
@@ -60,7 +60,7 @@ public final class SourceMapTest extends SourceMapTestCase {
         "\"version\":3,\n" +
         "\"file\":\"testcode\",\n" +
         "\"lineCount\":1,\n" +
-        "\"mappings\":\"AAAAA,KAAA,CAAM,CAAN,C,CCAAA,KAAA,CAAM,CAAN;\",\n" +
+        "\"mappings\":\"AAAAA,KAAK,CAAC,CAAD,C,CCALA,KAAK,CAAC,CAAD;\",\n" +
         "\"sources\":[\"src1\",\"src2\"],\n" +
         "\"names\":[\"alert\"]\n" +
         "}\n");
@@ -74,7 +74,7 @@ public final class SourceMapTest extends SourceMapTestCase {
         "\"version\":3,\n" +
         "\"file\":\"testcode\",\n" +
         "\"lineCount\":1,\n" +
-        "\"mappings\":\"AAAAA,KAAA,CAAM,CAAN,C,CCAAA,KAAA,CAAM,CAAN;\",\n" +
+        "\"mappings\":\"AAAAA,KAAK,CAAC,CAAD,C,CCALA,KAAK,CAAC,CAAD;\",\n" +
         "\"sources\":[\"x\",\"y\"],\n" +
         "\"names\":[\"alert\"]\n" +
         "}\n");
@@ -88,7 +88,7 @@ public final class SourceMapTest extends SourceMapTestCase {
         "\"version\":3,\n" +
         "\"file\":\"testcode\",\n" +
         "\"lineCount\":1,\n" +
-        "\"mappings\":\"AAAAA,KAAA,CAAM,CAAN,C,CCAAA,KAAA,CAAM,CAAN;\",\n" +
+        "\"mappings\":\"AAAAA,KAAK,CAAC,CAAD,C,CCALA,KAAK,CAAC,CAAD;\",\n" +
         "\"sources\":[\"x\",\"y2\"],\n" +
         "\"names\":[\"alert\"]\n" +
         "}\n");
