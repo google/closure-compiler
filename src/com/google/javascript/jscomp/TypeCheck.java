@@ -881,6 +881,30 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         validator.expectIterable(
             t, n.getSecondChild(), iterable, "Can only iterate over a (non-null) Iterable type");
         typeable = false;
+
+        // Check the declared type of the loop variable. Note that TypeInference does not set the
+        // loop variable name node's JSType. The node will only have a non-null JSType if one was
+        // actually declared and set in TypedScopeCreator.
+
+        // Get the name node for the loop variable, e.g. "loopVar" in
+        //   for (let /** string */ loopVar in obj) {
+        Node loopVarNode =
+            NodeUtil.isNameDeclaration(n.getFirstChild())
+                ? n.getFirstFirstChild()
+                : n.getFirstChild();
+        JSType declaredType = loopVarNode.getJSType();
+        if (declaredType != null) {
+          JSType actualType =
+              iterable
+                  .getTemplateTypeMap()
+                  .getResolvedTemplateType(typeRegistry.getIterableTemplate());
+          validator.expectCanAssignTo(
+              t,
+              loopVarNode,
+              declaredType,
+              actualType,
+              "declared type of for-of loop variable does not match inferred type");
+        }
         break;
 
       // These nodes are typed during the type inference.

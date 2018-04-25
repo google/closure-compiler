@@ -300,16 +300,43 @@ public final class TypeCheckNoTranspileTest extends CompilerTypeTestCase {
             "required: string"));
   }
 
-  public void testForOf_wrongLoopVarType() {
-    // TODO(b/77905791): this should generate an error
+  public void testForOf_wrongLoopVarType1() {
     testTypes(
         lines(
             "/** @type {!Array<number>} */",
             "var numArray = [1, 2];",
             "/** @type {string} */",
             "var elem = '';",
-            "for (elem of numArray) {}", "")
-    );
+            "for (elem of numArray) {",
+            "}"),
+        lines(
+            "declared type of for-of loop variable does not match inferred type",
+            "found   : string",
+            "required: number"));
+  }
+
+  public void testForOf_wrongLoopVarType2() {
+    testTypes(
+        lines(
+            "/** @type {!Array<number>} */",
+            "var numArray = [1, 2];",
+            "for (let /** string */ elem of numArray) {",
+            "}"),
+        lines(
+            "declared type of for-of loop variable does not match inferred type",
+            "found   : string",
+            "required: number"));
+  }
+
+  public void testForOf_wrongLoopVarType3() {
+    // If the thing we're trying to iterate over is not actually an Iterable, we treat the inferred
+    // type of the for-of loop variable as unknown and only warn for the non-Iterable item.
+    testTypes(
+            "for (var /** number */ x of 3) {}",
+        lines(
+            "Can only iterate over a (non-null) Iterable type",
+            "found   : Number",
+            "required: Iterable"));
   }
 
   public void testForOf_array1() {
