@@ -444,6 +444,7 @@ function removeAsBlocking(cacheEntry) {
  * @param {function(function(string), ?, !Module)} moduleDef
  * @param {string} absModulePath
  * @param {!Array<string>} shallowDeps
+ * @suppress {strictMissingProperties} "ensure" is not declared.
  */
 $jscomp.registerAndLoadModule = function(
     moduleDef, absModulePath, shallowDeps) {
