@@ -141,11 +141,6 @@ public final class ReplaceCssNamesTest extends TypeICompilerTestCase {
     doNotUseReplacementMap();
   }
 
-  public void disable_testDoNotUseReplacementMapNti() {
-    this.mode = TypeInferenceMode.NTI_ONLY;
-    doNotUseReplacementMap();
-  }
-
   public void testOneArgWithUnknownStringLiterals() {
     test(
         "var x = goog.getCssName('unknown')",
@@ -182,11 +177,6 @@ public final class ReplaceCssNamesTest extends TypeICompilerTestCase {
     oneArgWithSimpleStringLiterals();
   }
 
-  public void disable_testOneArgWithSimpleStringLiteralsNti() {
-    this.mode = TypeInferenceMode.NTI_ONLY;
-    oneArgWithSimpleStringLiterals();
-  }
-
   private void oneArgWithCompositeClassNames() {
     test("var x = goog.getCssName('goog-footer-active')",
          "var x = 'g-f-a'");
@@ -208,11 +198,6 @@ public final class ReplaceCssNamesTest extends TypeICompilerTestCase {
 
   public void testOneArgWithCompositeClassNamesOti() {
     this.mode = TypeInferenceMode.OTI_ONLY;
-    oneArgWithCompositeClassNames();
-  }
-
-  public void disable_testoOeArgWithCompositeClassNamesNti() {
-    this.mode = TypeInferenceMode.NTI_ONLY;
     oneArgWithCompositeClassNames();
   }
 

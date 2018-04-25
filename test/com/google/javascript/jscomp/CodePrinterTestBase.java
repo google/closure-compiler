@@ -57,7 +57,6 @@ public abstract class CodePrinterTestBase extends TestCase {
     // Allow getters and setters.
     options.setLanguageIn(languageMode);
     options.setWarningLevel(DiagnosticGroups.NEW_CHECK_TYPES_EXTRA_CHECKS, CheckLevel.OFF);
-    options.setNewTypeInference(mode.runsNTI());
 
     compiler.init(
         ImmutableList.of(SourceFile.fromCode("externs", CompilerTestCase.MINIMAL_EXTERNS)),
@@ -68,11 +67,7 @@ public abstract class CodePrinterTestBase extends TestCase {
     Node root = externsAndJs.getLastChild();
     Node externs = externsAndJs.getFirstChild();
 
-    if (mode.runsNTI()) {
-      new GlobalTypeInfoCollector(compiler).process(externs, root);
-      NewTypeInference nti = new NewTypeInference(compiler);
-      nti.process(externs, root);
-    } else if (mode.runsOTI()) {
+    if (mode.runsOTI()) {
       DefaultPassConfig passConfig = new DefaultPassConfig(null);
       CompilerPass typeResolver = passConfig.resolveTypes.create(compiler);
       typeResolver.process(externs, root);

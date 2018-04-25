@@ -103,12 +103,6 @@ public final class ImplicitNullabilityCheckTest extends TypeICompilerTestCase {
         externs(DEFAULT_EXTERNS),
         srcs("/** @type {gibberish} */ var x;"),
         warning(RhinoErrorReporter.UNRECOGNIZED_TYPE_ERROR));
-
-    this.mode = TypeInferenceMode.NTI_ONLY;
-    test(
-        externs(DEFAULT_EXTERNS),
-        srcs("/** @type {gibberish} */ var x;"),
-        warning(GlobalTypeInfoCollector.UNRECOGNIZED_TYPE_NAME));
   }
 
   public void testThrowsDoesntWarn() {

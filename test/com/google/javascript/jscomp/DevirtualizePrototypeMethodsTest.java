@@ -92,10 +92,6 @@ public final class DevirtualizePrototypeMethodsTest extends TypeICompilerTestCas
     this.mode = TypeInferenceMode.OTI_ONLY;
     test(input, expected);
     checkTypeOfRewrittenMethods();
-
-    this.mode = TypeInferenceMode.NTI_ONLY;
-    test(input, expected);
-    checkTypeOfRewrittenMethods();
   }
 
   private void checkTypeOfRewrittenMethods() {

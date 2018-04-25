@@ -2011,16 +2011,5 @@ public final class CheckAccessControlsTest extends TypeICompilerTestCase {
             "/** @const */ Foo.prop = 1;",
             "Foo.prop = 2;"),
         CONST_PROPERTY_REASSIGNED_VALUE);
-
-    // In OTI this next test causes a stack overflow.
-    this.mode = TypeInferenceMode.NTI_ONLY;
-
-    testError(
-        lines(
-            "/** @constructor */ function Foo() {}",
-            "/** @type {!Foo} */ Foo.prototype = new Foo();",
-            "/** @const */ Foo.prop = 1;",
-            "Foo.prop = 2;"),
-        CONST_PROPERTY_REASSIGNED_VALUE);
   }
 }

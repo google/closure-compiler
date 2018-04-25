@@ -583,13 +583,6 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
         srcs("o.prototype.propWithAnnotatedStubAfter"),
         warning(TypeValidator.DUP_VAR_DECLARATION_TYPE_MISMATCH));
     assertThat(noSideEffectCalls).isEmpty();
-
-    this.mode = TypeInferenceMode.NTI_ONLY;
-    testSame(
-        externs(TEST_EXTERNS + externs),
-        srcs("o.prototype.propWithAnnotatedStubAfter"),
-        warning(GlobalTypeInfoCollector.REDECLARED_PROPERTY));
-    assertThat(noSideEffectCalls).isEmpty();
   }
 
   public void testAnnotationInExternStubs5() throws Exception {
@@ -616,13 +609,6 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
         externs(externs),
         srcs("o.prototype.propWithAnnotatedStubAfter"),
         warning(TypeValidator.DUP_VAR_DECLARATION));
-    assertThat(noSideEffectCalls).isEmpty();
-
-    this.mode = TypeInferenceMode.NTI_ONLY;
-    testSame(
-        externs(TEST_EXTERNS + externs),
-        srcs("o.prototype.propWithAnnotatedStubAfter"),
-        warning(GlobalTypeInfoCollector.REDECLARED_PROPERTY));
     assertThat(noSideEffectCalls).isEmpty();
   }
 

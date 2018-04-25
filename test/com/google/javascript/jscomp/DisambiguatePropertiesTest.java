@@ -471,10 +471,6 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
 
     this.mode = TypeInferenceMode.OTI_ONLY;
     testSets(js, expected, "{}");
-
-    this.mode = TypeInferenceMode.NTI_ONLY;
-    testSets("", js, expected, "{}", NewTypeInference.INEXISTENT_PROPERTY,
-        "Property blah never defined on Object{}");
   }
 
   public void testIgnoreUnknownType1() {
@@ -707,15 +703,6 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
         + "z.Foo$p1;\n";
     this.mode = TypeInferenceMode.OTI_ONLY;
     testSets(js, output, "{p1=[[Bar], [Foo]]}");
-    this.mode = TypeInferenceMode.NTI_ONLY;
-    testSets("", js, output, "{p1=[[Bar], [Foo]]}",
-        NewTypeInference.MISTYPED_ASSIGN_RHS,
-        lines(
-        "The right side in the assignment is not a subtype of the left side.",
-        "Expected : Foo",
-        "Found    : (Bar|Foo)",
-        "More details:",
-        "The found type is a union that includes an unexpected type: Bar"));
   }
 
   // When objects flow to untyped code, it is the programmer's responsibility to
@@ -1382,8 +1369,6 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
         + "I.prototype.a;\n";
     this.mode = TypeInferenceMode.OTI_ONLY;
     testSets(js, "{}", TypeValidator.TYPE_MISMATCH_WARNING);
-    this.mode = TypeInferenceMode.NTI_ONLY;
-    testSets(js, "{}", NewTypeInference.MISTYPED_ASSIGN_RHS);
   }
 
   public void testMultipleInterfaces() {
@@ -1574,17 +1559,6 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
     testSets("", js, js, "{}", TypeValidator.TYPE_MISMATCH_WARNING, "assignment\n"
             + "found   : function(new:Foo): undefined\n"
             + "required: function(new:Bar): undefined");
-    this.mode = TypeInferenceMode.NTI_ONLY;
-    testSets("", js, js, "{}",
-        NewTypeInference.MISTYPED_ASSIGN_RHS,
-        lines(
-            "The right side in the assignment is not a subtype of the left side.",
-            "Expected : class:Bar",
-            "Found    : class:Foo",
-            "More details:",
-            "Incompatible types for property prototype.",
-            "Expected : Bar.prototype",
-            "Found    : Foo.prototype"));
   }
 
   public void testStructuralTypingWithDisambiguatePropertyRenaming1() {
@@ -1836,13 +1810,6 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
 
     this.mode = TypeInferenceMode.OTI_ONLY;
     testSets(js, output, "{prop=[[Bar], [Foo]]}");
-    this.mode = TypeInferenceMode.NTI_ONLY;
-    testSets("", js, output, "{prop=[[Bar], [Foo]]}",
-        NewTypeInference.INVALID_CAST,
-        lines(
-            "invalid cast - the types do not have a common subtype",
-            "from: Foo<number>",
-            "to  : Foo<string>"));
   }
 
   public void testStructuralTypingWithDisambiguatePropertyRenaming2() {
@@ -2001,13 +1968,6 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
             "initializing variable",
             "found   : Bar",
             "required: (Foo|null)"));
-
-    this.mode = TypeInferenceMode.NTI_ONLY;
-    testSets("", js, js, "{}", NewTypeInference.MISTYPED_ASSIGN_RHS,
-        lines(
-            "The right side in the assignment is not a subtype of the left side.",
-            "Expected : (Foo|null)",
-            "Found    : Bar\n"));
   }
 
   public void testBadCast() {
@@ -2020,11 +1980,6 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
     this.mode = TypeInferenceMode.OTI_ONLY;
     testSets("", js, js, "{}", TypeValidator.INVALID_CAST,
              "invalid cast - must be a subtype or supertype\n"
-             + "from: Bar\n"
-             + "to  : Foo");
-    this.mode = TypeInferenceMode.NTI_ONLY;
-    testSets("", js, js, "{}", NewTypeInference.INVALID_CAST,
-             "invalid cast - the types do not have a common subtype\n"
              + "from: Bar\n"
              + "to  : Foo");
   }
@@ -2070,9 +2025,6 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
 
     this.mode = TypeInferenceMode.OTI_ONLY;
     testSets(js, output, "{a=[[Bar.prototype], [Foo.prototype]]}");
-
-    this.mode = TypeInferenceMode.NTI_ONLY;
-    testSets(js, "{}", NewTypeInference.INVALID_CAST);
   }
 
   public void testCustomInherits() {
@@ -2371,24 +2323,6 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
 
     this.mode = TypeInferenceMode.OTI_ONLY;
     testSets("", js, otiOutput, "{num=[[Foo], [function(): undefined]]}");
-
-    String ntiOutput = lines(
-        "/** @const */",
-        "var ns = function() {};",
-        "/** @type {?number} */",
-        "ns.ns$num;",
-        "function f() {",
-        "  if (ns.ns$num !== null) {",
-        "    return ns.ns$num + 1;",
-        "  }",
-        "}",
-        "/** @constructor */",
-        "function Foo() {",
-        "  this.Foo$num = 123;",
-        "}");
-
-    this.mode = TypeInferenceMode.NTI_ONLY;
-    testSets("", js, ntiOutput, "{num=[[Foo], [function(): undefined]]}");
   }
 
   public void testIgnoreSpecializedProperties3() {

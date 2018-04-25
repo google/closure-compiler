@@ -29,7 +29,7 @@ public final class StrictModeCheckTest extends TypeICompilerTestCase {
   protected void setUp() throws Exception {
     super.setUp();
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2017);
-    this.mode = TypeInferenceMode.NTI_ONLY;
+    this.mode = TypeInferenceMode.OTI_ONLY;
   }
 
   @Override

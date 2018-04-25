@@ -582,10 +582,8 @@ public final class ExternExportsPassTest extends TypeICompilerTestCase {
         "");
 
     this.mode = TypeInferenceMode.OTI_ONLY;
-    // NOTE: OTI should print {E} for the @param, but does not.
+    // NOTE: The type should print {E} for the @param, but is not.
     compileAndCheck(js, expected.replace("{E}", "{number}"));
-    this.mode = TypeInferenceMode.NTI_ONLY;
-    compileAndCheck(js, expected);
   }
 
   /** If we export a property with "prototype" as a path component, there
