@@ -17,7 +17,6 @@
 package com.google.javascript.jscomp;
 
 import static com.google.javascript.jscomp.RhinoErrorReporter.TOO_MANY_TEMPLATE_PARAMS;
-import static com.google.javascript.jscomp.newtypes.JSTypeCreatorFromJSDoc.INVALID_GENERICS_INSTANTIATION;
 
 /**
  * Tests for the "Too many template parameters" warning. Ideally this would be part of
@@ -25,12 +24,6 @@ import static com.google.javascript.jscomp.newtypes.JSTypeCreatorFromJSDoc.INVAL
  * (as strings) not ones from JSTypeRegistry (as DiagnosticTypes).
  */
 public final class CheckTemplateParamsTest extends TypeICompilerTestCase {
-  @Override
-  protected void setUp() throws Exception {
-    super.setUp();
-    this.mode = TypeInferenceMode.BOTH;
-  }
-
   @Override
   protected int getNumRepetitions() {
     return 1;
@@ -54,7 +47,7 @@ public final class CheckTemplateParamsTest extends TypeICompilerTestCase {
     testSame("/** @type {!Array<string>} */ var x;");
     test(
         srcs("/** @type {!Array<string, number>} */ var x;"),
-        warningOtiNti(TOO_MANY_TEMPLATE_PARAMS, INVALID_GENERICS_INSTANTIATION));
+        warning(TOO_MANY_TEMPLATE_PARAMS));
   }
 
   public void testObject() {
@@ -63,7 +56,7 @@ public final class CheckTemplateParamsTest extends TypeICompilerTestCase {
     testSame("/** @type {!Object<string, number>} */ var x;");
     test(
         srcs("/** @type {!Object<string, number, boolean>} */ var x;"),
-        warningOtiNti(TOO_MANY_TEMPLATE_PARAMS, INVALID_GENERICS_INSTANTIATION));
+        warning(TOO_MANY_TEMPLATE_PARAMS));
   }
 
   public void testClass() {
@@ -72,7 +65,7 @@ public final class CheckTemplateParamsTest extends TypeICompilerTestCase {
         srcs(lines(
             "/** @constructor */ function SomeClass() {};",
             "/** @type {!SomeClass<string>} */ var x;")),
-        warningOtiNti(TOO_MANY_TEMPLATE_PARAMS, INVALID_GENERICS_INSTANTIATION));
+        warning(TOO_MANY_TEMPLATE_PARAMS));
 
     testSame(lines(
         "/** @constructor @template T */ function SomeClass() {};",
@@ -82,7 +75,7 @@ public final class CheckTemplateParamsTest extends TypeICompilerTestCase {
         srcs(lines(
             "/** @constructor @template T */ function SomeClass() {};",
             "/** @type {!SomeClass<number, string>} */ var x;")),
-        warningOtiNti(TOO_MANY_TEMPLATE_PARAMS, INVALID_GENERICS_INSTANTIATION));
+        warning(TOO_MANY_TEMPLATE_PARAMS));
   }
 
 }

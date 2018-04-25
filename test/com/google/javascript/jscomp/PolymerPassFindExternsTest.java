@@ -76,7 +76,6 @@ public final class PolymerPassFindExternsTest extends TypeICompilerTestCase {
   protected void setUp() throws Exception {
     super.setUp();
     allowExternsChanges();
-    this.mode = TypeInferenceMode.BOTH;
     enableRunTypeCheckAfterProcessing();
     enableParseTypeInfo();
   }

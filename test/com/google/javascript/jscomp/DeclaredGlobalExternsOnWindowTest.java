@@ -30,7 +30,6 @@ public final class DeclaredGlobalExternsOnWindowTest extends TypeICompilerTestCa
     super.setUp();
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2017);
     allowExternsChanges();
-    this.mode = TypeInferenceMode.BOTH;
     enableRunTypeCheckAfterProcessing();
   }
 
@@ -177,12 +176,10 @@ public final class DeclaredGlobalExternsOnWindowTest extends TypeICompilerTestCa
             "/** @param {number} n*/",
             "function f(n) {}",
             "f(window.x);")),
-        warningOtiNti(TypeValidator.TYPE_MISMATCH_WARNING, NewTypeInference.INVALID_ARGUMENT_TYPE));
+        warning(TypeValidator.TYPE_MISMATCH_WARNING));
   }
 
   public void testEnum() {
-    // TODO(sdh): figure out why NTI doesn't recognize props if 'window' not explicitly declared
-    this.mode = TypeInferenceMode.OTI_ONLY;
     testSame(
         externs(lines(
             MINIMAL_EXTERNS,
@@ -208,8 +205,6 @@ public final class DeclaredGlobalExternsOnWindowTest extends TypeICompilerTestCa
             "function bar(f) {}",
             "bar(new Foo());")));
 
-    // TODO(sdh): figure out why NTI doesn't recognize props if 'window' not explicitly declared
-    this.mode = TypeInferenceMode.OTI_ONLY;
     testSame(
         externs(lines(
             MINIMAL_EXTERNS,

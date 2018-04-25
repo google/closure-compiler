@@ -15,8 +15,6 @@
  */
 package com.google.javascript.jscomp;
 
-import static com.google.common.base.Preconditions.checkArgument;
-
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.TypeICompilerTestCase.TypeInferenceMode;
@@ -44,11 +42,10 @@ public abstract class CodePrinterTestBase extends TestCase {
   }
 
   Node parse(String js) {
-    return parse(js, TypeInferenceMode.NEITHER);
+    return parse(js, TypeInferenceMode.DISABLED);
   }
 
   Node parse(String js, TypeInferenceMode mode) {
-    checkArgument(mode != TypeInferenceMode.BOTH);
     Compiler compiler = new Compiler();
     lastCompiler = compiler;
     CompilerOptions options = new CompilerOptions();
@@ -67,7 +64,7 @@ public abstract class CodePrinterTestBase extends TestCase {
     Node root = externsAndJs.getLastChild();
     Node externs = externsAndJs.getFirstChild();
 
-    if (mode.runsOTI()) {
+    if (mode.runsTypeCheck()) {
       DefaultPassConfig passConfig = new DefaultPassConfig(null);
       CompilerPass typeResolver = passConfig.resolveTypes.create(compiler);
       typeResolver.process(externs, root);

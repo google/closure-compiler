@@ -48,7 +48,7 @@ public final class PeepholeFoldConstantsTest extends TypeICompilerTestCase {
     useTypes = true;
     // Reduce this to 1 if we get better expression evaluators.
     numRepetitions = 2;
-    mode = TypeInferenceMode.NEITHER;
+    mode = TypeInferenceMode.DISABLED;
   }
 
   @Override
@@ -763,7 +763,7 @@ public final class PeepholeFoldConstantsTest extends TypeICompilerTestCase {
   }
 
   public void testStringAdd_identity() {
-    this.mode = TypeInferenceMode.BOTH;
+    this.mode = TypeInferenceMode.CHECKED;
     foldStringTypes("x + ''", "x");
     foldStringTypes("'' + x", "x");
   }
@@ -1431,7 +1431,7 @@ public final class PeepholeFoldConstantsTest extends TypeICompilerTestCase {
   }
 
   public void testTypeBasedFoldConstant() {
-    this.mode = TypeInferenceMode.BOTH;
+    this.mode = TypeInferenceMode.CHECKED;
     test("function f(/** number */ x) { x + 1 + 1 + x; }",
          "function f(/** number */ x) { x + 2 + x; }");
 
@@ -1585,7 +1585,7 @@ public final class PeepholeFoldConstantsTest extends TypeICompilerTestCase {
   }
 
   public void testAlgebraicIdentities() {
-    this.mode = TypeInferenceMode.BOTH;
+    this.mode = TypeInferenceMode.CHECKED;
 
     foldNumericTypes("x+0", "x");
     foldNumericTypes("0+x", "x");

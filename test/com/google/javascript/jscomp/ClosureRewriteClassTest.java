@@ -41,17 +41,12 @@ public final class ClosureRewriteClassTest extends TypeICompilerTestCase {
       "goog.defineClass = function(a,b) {};",
       "var use;");
 
-  private static final Diagnostic INSTANTIATE_ABSTRACT_CLASS = warningOtiNti(
-      TypeCheck.INSTANTIATE_ABSTRACT_CLASS,
-      NewTypeInference.CANNOT_INSTANTIATE_ABSTRACT_CLASS);
+  private static final Diagnostic INSTANTIATE_ABSTRACT_CLASS =
+      warning(TypeCheck.INSTANTIATE_ABSTRACT_CLASS);
 
-  private static final Diagnostic NOT_A_CONSTRUCTOR = warningOtiNti(
-      TypeCheck.NOT_A_CONSTRUCTOR,
-      NewTypeInference.NOT_A_CONSTRUCTOR);
+  private static final Diagnostic NOT_A_CONSTRUCTOR = warning(TypeCheck.NOT_A_CONSTRUCTOR);
 
-  private static final Diagnostic INEXISTENT_PROPERTY = warningOtiNti(
-      TypeCheck.INEXISTENT_PROPERTY,
-      NewTypeInference.INEXISTENT_PROPERTY);
+  private static final Diagnostic INEXISTENT_PROPERTY = warning(TypeCheck.INEXISTENT_PROPERTY);
 
   public ClosureRewriteClassTest() {
     super(EXTERNS);
@@ -65,7 +60,7 @@ public final class ClosureRewriteClassTest extends TypeICompilerTestCase {
   @Override
   protected void setUp() throws Exception {
     super.setUp();
-    this.mode = TypeInferenceMode.NEITHER;
+    this.mode = TypeInferenceMode.DISABLED;
     enableRunTypeCheckAfterProcessing();
   }
 
@@ -154,7 +149,7 @@ public final class ClosureRewriteClassTest extends TypeICompilerTestCase {
 
   public void testAnnotations1() {
     // verify goog.defineClass values are constructible, by default
-    this.mode = TypeInferenceMode.BOTH;
+    this.mode = TypeInferenceMode.CHECKED;
     testRewrite(
         "var x = goog.defineClass(Object, {\n"
         + "  constructor: function(){}\n"
@@ -168,7 +163,7 @@ public final class ClosureRewriteClassTest extends TypeICompilerTestCase {
 
   public void testAnnotations2a() {
     // @interface is preserved
-    this.mode = TypeInferenceMode.BOTH;
+    this.mode = TypeInferenceMode.CHECKED;
     testRewriteWarning(
         lines(
             "var x = goog.defineClass(null, {",
@@ -185,7 +180,7 @@ public final class ClosureRewriteClassTest extends TypeICompilerTestCase {
 
   public void testAnnotations2b() {
     // @interface is preserved, at the class level too
-    this.mode = TypeInferenceMode.BOTH;
+    this.mode = TypeInferenceMode.CHECKED;
     testRewriteWarning(
         lines(
             "/** @interface */",
@@ -200,7 +195,7 @@ public final class ClosureRewriteClassTest extends TypeICompilerTestCase {
 
   public void testAnnotations3a() {
     // verify goog.defineClass is a @struct by default
-    this.mode = TypeInferenceMode.BOTH;
+    this.mode = TypeInferenceMode.CHECKED;
     testRewriteWarning(
         lines(
             "var y = goog.defineClass(null, {",
@@ -222,8 +217,8 @@ public final class ClosureRewriteClassTest extends TypeICompilerTestCase {
 
   public void testAnnotations3b() {
     // verify goog.defineClass is a @struct by default, but can be overridden (only in OTI)
-    this.mode = TypeInferenceMode.BOTH;
-    testRewriteWarning(
+    this.mode = TypeInferenceMode.CHECKED;
+    testRewrite(
         lines(
             "/** @unrestricted */",
             "var y = goog.defineClass(null, {",
@@ -239,8 +234,7 @@ public final class ClosureRewriteClassTest extends TypeICompilerTestCase {
             "/** @constructor @struct @extends {y} */",
             "var x = function() {this.a = 1};",
             "goog.inherits(x,y);",
-            "use(new y().a);"),
-        warningOtiNti(null, NewTypeInference.INEXISTENT_PROPERTY));
+            "use(new y().a);"));
   }
 
   public void testRecordAnnotations() {
@@ -255,7 +249,7 @@ public final class ClosureRewriteClassTest extends TypeICompilerTestCase {
   }
 
   public void testRecordAnnotations2() {
-    this.mode = TypeInferenceMode.BOTH;
+    this.mode = TypeInferenceMode.CHECKED;
     testRewrite(
         "/** @record */\n"
         + "var Rec = goog.defineClass(null, {f : function() {}});\n"
@@ -269,7 +263,7 @@ public final class ClosureRewriteClassTest extends TypeICompilerTestCase {
 
   public void testAbstract1() {
     // @abstract is preserved
-    this.mode = TypeInferenceMode.BOTH;
+    this.mode = TypeInferenceMode.CHECKED;
     testRewriteWarning(
         lines(
             "var x = goog.defineClass(null, {",
@@ -286,7 +280,7 @@ public final class ClosureRewriteClassTest extends TypeICompilerTestCase {
 
   public void testAbstract2() {
     // @abstract is preserved, at the class level too
-    this.mode = TypeInferenceMode.BOTH;
+    this.mode = TypeInferenceMode.CHECKED;
     testRewriteWarning(
         lines(
             "/** @abstract */",

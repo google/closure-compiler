@@ -27,7 +27,6 @@ public class J2clCheckPassTest extends TypeICompilerTestCase {
   @Override
   protected void setUp() throws Exception {
     super.setUp();
-    this.mode = TypeInferenceMode.BOTH;
   }
 
   @Override

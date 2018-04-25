@@ -136,8 +136,7 @@ public final class ReplaceCssNamesTest extends TypeICompilerTestCase {
     assertThat(cssNames).isEqualTo(expected);
   }
 
-  public void testDoNotUseReplacementMapOti() {
-    this.mode = TypeInferenceMode.OTI_ONLY;
+  public void testDoNotUseReplacementMap() {
     doNotUseReplacementMap();
   }
 
@@ -172,8 +171,7 @@ public final class ReplaceCssNamesTest extends TypeICompilerTestCase {
     assertThat(cssNames).isEqualTo(expected);
   }
 
-  public void testOneArgWithSimpleStringLiteralsOti() {
-    this.mode = TypeInferenceMode.OTI_ONLY;
+  public void testOneArgWithSimpleStringLiterals() {
     oneArgWithSimpleStringLiterals();
   }
 
@@ -196,8 +194,7 @@ public final class ReplaceCssNamesTest extends TypeICompilerTestCase {
     assertThat(cssNames).isEqualTo(expected);
   }
 
-  public void testOneArgWithCompositeClassNamesOti() {
-    this.mode = TypeInferenceMode.OTI_ONLY;
+  public void testOneArgWithCompositeClassNames() {
     oneArgWithCompositeClassNames();
   }
 

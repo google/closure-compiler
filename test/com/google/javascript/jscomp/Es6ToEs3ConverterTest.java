@@ -21,12 +21,10 @@ import static com.google.javascript.jscomp.Es6RewriteClass.CONFLICTING_GETTER_SE
 import static com.google.javascript.jscomp.Es6RewriteClass.DYNAMIC_EXTENDS_TYPE;
 import static com.google.javascript.jscomp.Es6ToEs3Util.CANNOT_CONVERT;
 import static com.google.javascript.jscomp.Es6ToEs3Util.CANNOT_CONVERT_YET;
-import static com.google.javascript.jscomp.NewTypeInference.CANNOT_INSTANTIATE_ABSTRACT_CLASS;
 import static com.google.javascript.jscomp.TypeCheck.INSTANTIATE_ABSTRACT_CLASS;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES7_MODULES;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
-import com.google.javascript.jscomp.newtypes.JSTypeCreatorFromJSDoc;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 
 /**
@@ -101,7 +99,7 @@ public final class Es6ToEs3ConverterTest extends TypeICompilerTestCase {
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2016);
     setLanguageOut(LanguageMode.ECMASCRIPT3);
     enableRunTypeCheckAfterProcessing();
-    this.mode = TypeInferenceMode.NEITHER;
+    this.mode = TypeInferenceMode.DISABLED;
   }
 
   protected final PassFactory makePassFactory(
@@ -549,11 +547,11 @@ public final class Es6ToEs3ConverterTest extends TypeICompilerTestCase {
   }
 
   public void testAbstractClass() {
-    this.mode = TypeInferenceMode.BOTH;
+    this.mode = TypeInferenceMode.CHECKED;
     test(
         "/** @abstract */ class Foo {} var x = new Foo();",
         "/** @abstract @constructor @struct */ var Foo = function() {}; var x = new Foo();",
-        warningOtiNti(INSTANTIATE_ABSTRACT_CLASS, CANNOT_INSTANTIATE_ABSTRACT_CLASS));
+        warning(INSTANTIATE_ABSTRACT_CLASS));
   }
 
   /**
@@ -1657,7 +1655,7 @@ public final class Es6ToEs3ConverterTest extends TypeICompilerTestCase {
   }
 
   public void testInvalidClassUse() {
-    this.mode = TypeInferenceMode.BOTH;
+    this.mode = TypeInferenceMode.CHECKED;
 
     test(
         lines(
@@ -1687,7 +1685,7 @@ public final class Es6ToEs3ConverterTest extends TypeICompilerTestCase {
                 "Foo.f = function() {};",
                 "class Sub extends Foo {}",
                 "Sub.f();")),
-        warningOtiNti(TypeCheck.INEXISTENT_PROPERTY, NewTypeInference.INEXISTENT_PROPERTY));
+        warning(TypeCheck.INEXISTENT_PROPERTY));
 
     test(
         lines(
@@ -1918,7 +1916,7 @@ public final class Es6ToEs3ConverterTest extends TypeICompilerTestCase {
   }
 
   public void testClassEs5GetterSetterIncorrectTypes() {
-    this.mode = TypeInferenceMode.BOTH;
+    this.mode = TypeInferenceMode.CHECKED;
     setLanguageOut(LanguageMode.ECMASCRIPT5);
     ignoreWarnings(
         NewTypeInference.INEXISTENT_PROPERTY, NewTypeInference.INVALID_OBJLIT_PROPERTY_TYPE);
@@ -1939,9 +1937,7 @@ public final class Es6ToEs3ConverterTest extends TypeICompilerTestCase {
             "    get: function() {}",
             "  }",
             "});"),
-        warningOtiNti(
-            TypeValidator.TYPE_MISMATCH_WARNING,
-            JSTypeCreatorFromJSDoc.FUNCTION_WITH_NONFUNC_JSDOC));
+        warning(TypeValidator.TYPE_MISMATCH_WARNING));
 
     // Using @type instead of @param on a setter.
     test(
@@ -1959,9 +1955,7 @@ public final class Es6ToEs3ConverterTest extends TypeICompilerTestCase {
             "    set: function(v) {}",
             "  }",
             "});"),
-        warningOtiNti(
-            TypeValidator.TYPE_MISMATCH_WARNING,
-            JSTypeCreatorFromJSDoc.FUNCTION_WITH_NONFUNC_JSDOC));
+        warning(TypeValidator.TYPE_MISMATCH_WARNING));
   }
 
   /**
@@ -2486,8 +2480,7 @@ public final class Es6ToEs3ConverterTest extends TypeICompilerTestCase {
   }
 
   public void testForOfOnNonIterable() {
-    // TODO(sdh): figure out why NTI is not complaining about invalid argument type to makeIterator
-    this.mode = TypeInferenceMode.OTI_ONLY;
+    this.mode = TypeInferenceMode.CHECKED;
     test(
         srcs(
             lines(
@@ -2497,7 +2490,7 @@ public final class Es6ToEs3ConverterTest extends TypeICompilerTestCase {
                 "  length: 2,",
                 "};",
                 "for (var x of arrayLike) {}")),
-        warningOtiNti(TypeValidator.TYPE_MISMATCH_WARNING, NewTypeInference.INVALID_ARGUMENT_TYPE));
+        warning(TypeValidator.TYPE_MISMATCH_WARNING));
   }
 
   public void testSpreadCall() {
@@ -2543,7 +2536,7 @@ public final class Es6ToEs3ConverterTest extends TypeICompilerTestCase {
             "($jscomp$spread$args1 = G.d()).n.apply($jscomp$spread$args1,",
             "    $jscomp.arrayFromIterable(b));"));
 
-    this.mode = TypeInferenceMode.BOTH;
+    this.mode = TypeInferenceMode.CHECKED;
 
     test(
         srcs(
@@ -2555,7 +2548,7 @@ public final class Es6ToEs3ConverterTest extends TypeICompilerTestCase {
                 "}",
                 "var arr = [1,2]",
                 "Factory.create().m(...arr);")),
-        warningOtiNti(TypeCheck.INEXISTENT_PROPERTY, NewTypeInference.INEXISTENT_PROPERTY));
+        warning(TypeCheck.INEXISTENT_PROPERTY));
 
     test(
         lines(

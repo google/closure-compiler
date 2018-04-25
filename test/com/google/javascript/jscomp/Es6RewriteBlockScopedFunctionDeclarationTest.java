@@ -19,14 +19,13 @@ package com.google.javascript.jscomp;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 
 /** Test case for {@link Es6RewriteBlockScopedFunctionDeclaration}. */
-public final class Es6RewriteBlockScopedFunctionDeclarationTest extends TypeICompilerTestCase {
+public final class Es6RewriteBlockScopedFunctionDeclarationTest extends CompilerTestCase {
 
   @Override
   protected void setUp() throws Exception {
     super.setUp();
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     enableRunTypeCheckAfterProcessing();
-    this.mode = TypeInferenceMode.NEITHER;
   }
 
   @Override

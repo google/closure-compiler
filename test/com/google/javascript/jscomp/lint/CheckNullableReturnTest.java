@@ -75,9 +75,7 @@ public final class CheckNullableReturnTest extends TypeICompilerTestCase {
   public void testNotNullableReturn()  {
     // Empty function body. Ignore this case. The remainder of the functions in
     // this test have non-empty bodies.
-    this.mode = TypeInferenceMode.OTI_ONLY;
     testBodyOk("");
-    this.mode = TypeInferenceMode.BOTH;
 
     // Simple case.
     testBodyError("return {};");
@@ -98,7 +96,6 @@ public final class CheckNullableReturnTest extends TypeICompilerTestCase {
     testBodyOk("try { } finally { return null; }");
     testBodyOk("try { return {}; } finally { return null; }");
     testBodyOk("try { return null; } finally { return {}; }");
-    this.mode = TypeInferenceMode.OTI_ONLY;
     testBodyError("try { } catch (e) { return null; } finally { return {}; }");
   }
 
@@ -124,7 +121,6 @@ public final class CheckNullableReturnTest extends TypeICompilerTestCase {
     testBodyError("while (0) {} return {}");
 
     // Not known.
-    this.mode = TypeInferenceMode.OTI_ONLY;
     testBodyError("while(x) { return {}; }");
   }
 
@@ -189,7 +185,6 @@ public final class CheckNullableReturnTest extends TypeICompilerTestCase {
   }
 
   public void testNoExplicitReturn() {
-    this.mode = TypeInferenceMode.OTI_ONLY;
     testError(lines(
         "/** @return {SomeType} */",
         "function f() {",
@@ -212,7 +207,6 @@ public final class CheckNullableReturnTest extends TypeICompilerTestCase {
   }
 
   public void testNoWarningOnEmptyFunction() {
-    this.mode = TypeInferenceMode.OTI_ONLY;
     testOk(lines(
         "/** @return {SomeType} */",
         "function f() {}"));

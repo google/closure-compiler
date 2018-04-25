@@ -91,7 +91,6 @@ public final class ReplaceStringsTest extends TypeICompilerTestCase {
   @Override
   protected void setUp() throws Exception {
     super.setUp();
-    this.mode = TypeInferenceMode.BOTH;
     enableNormalize();
     enableParseTypeInfo();
     functionsToInspect = defaultFunctionsToInspect;
@@ -382,9 +381,6 @@ public final class ReplaceStringsTest extends TypeICompilerTestCase {
   }
 
   public void testLoggerOnThis() {
-    // This fails in NTI because NTI doesn't specialize the type of THIS after the assignment;
-    // THIS remains unknown. Working as intended.
-    this.mode = TypeInferenceMode.OTI_ONLY;
     testDebugStrings(
         "function f() {" +
         "  this.logger_ = goog.debug.Logger.getLogger('foo');" +

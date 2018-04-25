@@ -82,7 +82,7 @@ public final class CheckUnusedPrivatePropertiesTest extends TypeICompilerTestCas
   }
 
   public void testClassPropUnused1() {
-    this.mode = TypeInferenceMode.NEITHER;
+    this.mode = TypeInferenceMode.DISABLED;
 
     // A property defined on "this" can be removed
     unused("class C { constructor() { /** @private */ this.a = 2 } }");
@@ -94,7 +94,7 @@ public final class CheckUnusedPrivatePropertiesTest extends TypeICompilerTestCas
   }
 
   public void testClassMethodUnused1() {
-    this.mode = TypeInferenceMode.NEITHER;
+    this.mode = TypeInferenceMode.DISABLED;
 
     unused("class C { constructor() {}  /** @private */ method() {} }");
     used("class C { constructor() {}  /** @private */ method() {} }\n new C().method();");
@@ -102,7 +102,7 @@ public final class CheckUnusedPrivatePropertiesTest extends TypeICompilerTestCas
 
   // The JSDoc seems to be missing here, reenable this test when it is fixed.
   public void disable_testClassMethodUnused2() {
-    this.mode = TypeInferenceMode.NEITHER;
+    this.mode = TypeInferenceMode.DISABLED;
 
     unused("class C { constructor() {}\n  /** @private */ ['method']() {} }");
     used("class C { constructor() {}\n  /** @private */ ['method']() {} }\n new C()['method']();");

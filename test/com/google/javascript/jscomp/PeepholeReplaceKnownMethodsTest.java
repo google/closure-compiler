@@ -43,7 +43,7 @@ public final class PeepholeReplaceKnownMethodsTest extends TypeICompilerTestCase
     super.setUp();
     late = true;
     useTypes = true;
-    this.mode = TypeInferenceMode.NEITHER;
+    this.mode = TypeInferenceMode.DISABLED;
   }
 
   @Override
@@ -520,7 +520,7 @@ public final class PeepholeReplaceKnownMethodsTest extends TypeICompilerTestCase
   }
 
   public void testReplaceWithCharAt() {
-    this.mode = TypeInferenceMode.BOTH;
+    this.mode = TypeInferenceMode.CHECKED;
     foldStringTyped("a.substring(0, 1)", "a.charAt(0)");
     foldSameStringTyped("a.substring(-4, -3)");
     foldSameStringTyped("a.substring(i, j + 1)");
@@ -558,16 +558,13 @@ public final class PeepholeReplaceKnownMethodsTest extends TypeICompilerTestCase
     foldSameStringTyped("a.substr(1, 2)");
     foldSameStringTyped("a.substr(1, 2, 3)");
 
-    this.mode = TypeInferenceMode.OTI_ONLY;
-    // TODO(sdh): NTI currently infers that a is a string, allowing the peephole pass
-    // to rewrite substring to charAt.  We need to figure out if this is desirable.
+    this.mode = TypeInferenceMode.CHECKED;
     foldSame("function f(/** ? */ a) { a.substring(0, 1); }");
     foldSame("function f(/** ? */ a) { a.substr(0, 1); }");
     foldSame(lines(
         "/** @constructor */ function A() {};",
         "A.prototype.substring = function() {};",
         "function f(/** ? */ a) { a.substring(0, 1); }"));
-    this.mode = TypeInferenceMode.BOTH;
     foldSame("function f(/** ? */ a) { a.slice(0, 1); }");
 
     useTypes = false;

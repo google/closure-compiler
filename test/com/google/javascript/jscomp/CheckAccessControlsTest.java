@@ -329,10 +329,6 @@ public final class CheckAccessControlsTest extends TypeICompilerTestCase {
   }
 
   public void testWarningForBind() {
-    // NTI reports NTI_REDCLARED_PROPERTY here, which is as intended. If this were a new
-    // property and not the existing `bind`, then we'd report the deprecation warning as expected
-    // (see testAutoboxedDeprecatedProperty and testAutoboxedPrivateProperty).
-    this.mode = TypeInferenceMode.OTI_ONLY;
     testDepProp(
         "/** @deprecated I'm bound to this method... */ Function.prototype.bind = function() {};"
             + "(function() {}).bind();",
@@ -467,19 +463,10 @@ public final class CheckAccessControlsTest extends TypeICompilerTestCase {
               "(new One()).m();"),
         };
 
-    this.mode = TypeInferenceMode.OTI_ONLY;
     testError(
         srcs(js),
         error(BAD_PRIVATE_PROPERTY_ACCESS)
             .withMessage("Access to private property m of One not allowed here."));
-
-    /*
-    this.mode = TypeInferenceMode.NTI_ONLY;
-    testError(
-        srcs(js),
-        error(BAD_PRIVATE_PROPERTY_ACCESS).withMessage(
-           "Access to private property m of module$exports$example$One not allowed here."));
-           */
   }
 
   public void testNoPrivateAccessForProperties1() {
@@ -1698,9 +1685,6 @@ public final class CheckAccessControlsTest extends TypeICompilerTestCase {
   }
 
   public void testNamespaceConstantProperty2() {
-    // NTI requires an @const annotation on namespaces, as in testNamespaceConstantProperty1.
-    // This is the only difference between the two tests.
-    this.mode = TypeInferenceMode.OTI_ONLY;
     testError(
         "var o = {};\n"
         + "/** @const */ o.x = 1;\n"
@@ -1742,8 +1726,6 @@ public final class CheckAccessControlsTest extends TypeICompilerTestCase {
   }
 
   public void testConstantProperty3b2() {
-    // NTI reports NTI_REDECLARED_PROPERTY
-    this.mode = TypeInferenceMode.OTI_ONLY;
     // The old type checker should report this but it doesn't.
     testSame("/** @const */ var o = { XYZ: 1 };"
         + "o.XYZ = 2;");
@@ -1807,8 +1789,6 @@ public final class CheckAccessControlsTest extends TypeICompilerTestCase {
   }
 
   public void testConstantProperty10b() {
-    // NTI reports NTI_REDECLARED_PROPERTY
-    this.mode = TypeInferenceMode.OTI_ONLY;
     testSame("/** @constructor */ function Foo() { this.PROP = 1;}"
         + "Foo.prototype.PROP;");
   }
@@ -1825,9 +1805,6 @@ public final class CheckAccessControlsTest extends TypeICompilerTestCase {
   }
 
   public void testConstantProperty12() {
-    // NTI deliberately disallows this pattern (separate declaration and initialization
-    // of const properties). (b/30205953)
-    this.mode = TypeInferenceMode.OTI_ONLY;
     testSame("/** @constructor */ function Foo() {}"
         + "/** @const */ Foo.prototype.bar;"
         + "/**\n"

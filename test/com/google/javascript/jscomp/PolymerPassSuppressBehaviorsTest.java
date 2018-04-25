@@ -77,7 +77,6 @@ public class PolymerPassSuppressBehaviorsTest extends TypeICompilerTestCase {
     super.setUp();
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2017);
     allowExternsChanges();
-    this.mode = TypeInferenceMode.BOTH;
     enableRunTypeCheckAfterProcessing();
     enableParseTypeInfo();
   }
@@ -171,7 +170,7 @@ public class PolymerPassSuppressBehaviorsTest extends TypeICompilerTestCase {
   }
 
   public void testConstBehaviours() {
-    this.mode = TypeInferenceMode.NEITHER;
+    this.mode = TypeInferenceMode.DISABLED;
     test(
         lines(
             "/** @polymerBehavior */",
@@ -185,7 +184,7 @@ public class PolymerPassSuppressBehaviorsTest extends TypeICompilerTestCase {
   }
 
   public void testLetBehaviours() {
-    this.mode = TypeInferenceMode.NEITHER;
+    this.mode = TypeInferenceMode.DISABLED;
     test(
         lines(
             "/** @polymerBehavior */",

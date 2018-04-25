@@ -1543,7 +1543,7 @@ public final class CodePrinterTest extends CodePrinterTestBase {
   private void assertTypeAnnotations(String js, String expected) {
     assertEquals(
         expected,
-        new CodePrinter.Builder(parse(js, TypeInferenceMode.OTI_ONLY))
+        new CodePrinter.Builder(parse(js, TypeInferenceMode.CHECKED))
             .setCompilerOptions(newCompilerOptions(new CompilerOptionBuilder() {
               @Override
               void setOptions(CompilerOptions options) {
@@ -1994,13 +1994,13 @@ public final class CodePrinterTest extends CodePrinterTestBase {
 
   public void testStrict() {
     String result =
-        defaultBuilder(parse("var x", TypeInferenceMode.OTI_ONLY)).setTagAsStrict(true).build();
+        defaultBuilder(parse("var x", TypeInferenceMode.CHECKED)).setTagAsStrict(true).build();
     assertEquals("'use strict';var x", result);
   }
 
   public void testStrictPretty() {
     String result =
-        defaultBuilder(parse("var x", TypeInferenceMode.OTI_ONLY))
+        defaultBuilder(parse("var x", TypeInferenceMode.CHECKED))
             .setTagAsStrict(true)
             .setPrettyPrint(true)
             .build();
@@ -2009,13 +2009,13 @@ public final class CodePrinterTest extends CodePrinterTestBase {
 
   public void testExterns() {
     String result =
-        defaultBuilder(parse("var x", TypeInferenceMode.OTI_ONLY)).setTagAsExterns(true).build();
+        defaultBuilder(parse("var x", TypeInferenceMode.CHECKED)).setTagAsExterns(true).build();
     assertEquals("/** @externs */\nvar x", result);
   }
 
   public void testIjs() {
     String result =
-        defaultBuilder(parse("var x", TypeInferenceMode.OTI_ONLY))
+        defaultBuilder(parse("var x", TypeInferenceMode.CHECKED))
             .setTagAsTypeSummary(true)
             .build();
     assertEquals("/** @fileoverview @typeSummary */\nvar x", result);

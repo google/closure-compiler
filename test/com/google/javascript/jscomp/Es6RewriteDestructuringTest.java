@@ -25,7 +25,7 @@ public class Es6RewriteDestructuringTest extends TypeICompilerTestCase {
   protected void setUp() throws Exception {
     super.setUp();
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
-    this.mode = TypeInferenceMode.NEITHER;
+    this.mode = TypeInferenceMode.DISABLED;
     enableRunTypeCheckAfterProcessing();
   }
 
@@ -468,7 +468,7 @@ public class Es6RewriteDestructuringTest extends TypeICompilerTestCase {
   }
 
   public void testDefaultParameters() {
-    this.mode = TypeInferenceMode.BOTH;
+    this.mode = TypeInferenceMode.CHECKED;
     test(
         "function f(/** ? */ zero, /** ?= */ one = 1, /** ?= */ two = 2) {}; f(1); f(1,2,3);",
         lines(
@@ -486,7 +486,7 @@ public class Es6RewriteDestructuringTest extends TypeICompilerTestCase {
                 "  one = (one === undefined) ? 1 : one;",
                 "  two = (two === undefined) ? 2 : two;",
                 "}; f();")),
-        warningOtiNti(TypeCheck.WRONG_ARGUMENT_COUNT, NewTypeInference.WRONG_ARGUMENT_COUNT));
+        warning(TypeCheck.WRONG_ARGUMENT_COUNT));
   }
 
   public void testDefaultAndRestParameters() {
@@ -506,7 +506,7 @@ public class Es6RewriteDestructuringTest extends TypeICompilerTestCase {
   }
 
   public void testDefaultUndefinedParameters() {
-    this.mode = TypeInferenceMode.BOTH;
+    this.mode = TypeInferenceMode.CHECKED;
 
     test("function f(zero, one=undefined) {}", "function f(zero, one) {}");
 
@@ -536,7 +536,7 @@ public class Es6RewriteDestructuringTest extends TypeICompilerTestCase {
   }
 
   public void testTypeCheck() {
-    this.mode = TypeInferenceMode.BOTH;
+    this.mode = TypeInferenceMode.CHECKED;
 
     test(
         "/** @param {{x: number}} obj */ function f({x}) {}",
@@ -549,7 +549,7 @@ public class Es6RewriteDestructuringTest extends TypeICompilerTestCase {
 
     test(
         srcs(lines("/** @param {{x: number}} obj */", "function f({x}) {}", "f({ x: 'str'});")),
-        warningOtiNti(TypeValidator.TYPE_MISMATCH_WARNING, NewTypeInference.INVALID_ARGUMENT_TYPE));
+        warning(TypeValidator.TYPE_MISMATCH_WARNING));
 
     test(
         lines(
@@ -606,7 +606,7 @@ public class Es6RewriteDestructuringTest extends TypeICompilerTestCase {
   }
 
   public void testDestructuringPatternInExterns() {
-    this.mode = TypeInferenceMode.BOTH;
+    this.mode = TypeInferenceMode.CHECKED;
     allowExternsChanges();
 
     testSame(
@@ -618,12 +618,12 @@ public class Es6RewriteDestructuringTest extends TypeICompilerTestCase {
                 "",
                 "Foo.prototype.bar = function({a}) {};")),
         srcs("(new Foo).bar({b: 0});"),
-        warningOtiNti(TypeCheck.POSSIBLE_INEXISTENT_PROPERTY, null));
+        warning(TypeCheck.POSSIBLE_INEXISTENT_PROPERTY));
     // TODO(sdh): figure out what's going on here
   }
 
   public void testTypeCheck_inlineAnnotations() {
-    this.mode = TypeInferenceMode.BOTH;
+    this.mode = TypeInferenceMode.CHECKED;
 
     test(
         "function f(/** {x: number} */ {x}) {}",
@@ -635,7 +635,7 @@ public class Es6RewriteDestructuringTest extends TypeICompilerTestCase {
 
     test(
         srcs(lines("function f(/** {x: number} */ {x}) {}", "f({ x: 'str'});")),
-        warningOtiNti(TypeValidator.TYPE_MISMATCH_WARNING, NewTypeInference.INVALID_ARGUMENT_TYPE));
+        warning(TypeValidator.TYPE_MISMATCH_WARNING));
   }
 
   public void testDestructuringArrayNotInExprResult() {

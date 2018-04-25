@@ -91,7 +91,6 @@ public final class InlinePropertiesTest extends TypeICompilerTestCase {
     enableNormalize();
     enableClosurePass();
     enableGatherExternProperties();
-    this.mode = TypeInferenceMode.BOTH;
     this.runSmartNameRemoval = false;
   }
 

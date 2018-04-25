@@ -1400,7 +1400,6 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
             "  a.gak();",
             "}");
 
-    this.mode = TypeInferenceMode.OTI_ONLY;
     testWarning(
         js,
         CheckConformance.CONFORMANCE_VIOLATION,
@@ -1524,17 +1523,11 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
         + "  error_message: 'BanUnresolvedType Message'\n"
         + "}";
 
-    // NOTE(aravindpg): In NTI we annotate the node `a` with its inferred type instead of Unknown,
-    // and so this test doesn't recognize `a` as unresolved. Fixing this is undesirable.
-    // However, we do intend to add warnings for unfulfilled forward declares, which essentially
-    // addresses this use case.
-    this.mode = TypeInferenceMode.OTI_ONLY;
     testWarning(
         "goog.forwardDeclare('Foo'); /** @param {Foo} a */ function f(a) {a.foo()};",
         CheckConformance.CONFORMANCE_VIOLATION,
         "Violation: BanUnresolvedType Message\nReference to type 'Foo' never resolved.");
 
-    this.mode = TypeInferenceMode.BOTH;
     testNoWarning(lines(
         "/** @suppress {newCheckTypes}",
         " *  @param {!Object<string, ?>} data",
@@ -1552,9 +1545,6 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
         + "  error_message: 'StrictBanUnresolvedType Message'\n"
         + "}";
 
-    // NTI doesn't model unresolved types separately from unknown, so this check always results
-    // in conformance.
-    this.mode = TypeInferenceMode.OTI_ONLY;
     testWarning(
         "goog.forwardDeclare('Foo'); /** @param {Foo} a */ var f = function(a) {}",
         CheckConformance.CONFORMANCE_VIOLATION,

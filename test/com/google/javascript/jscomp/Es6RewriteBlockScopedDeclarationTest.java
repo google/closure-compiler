@@ -35,7 +35,6 @@ public final class Es6RewriteBlockScopedDeclarationTest extends TypeICompilerTes
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     enableTypeCheck();
     enableTypeInfoValidation();
-    this.mode = TypeInferenceMode.OTI_ONLY;
   }
 
   @Override
@@ -1287,10 +1286,8 @@ public final class Es6RewriteBlockScopedDeclarationTest extends TypeICompilerTes
   }
 
   public void testTypeAnnotationsOnLetConst() {
-    this.mode = TypeInferenceMode.BOTH;
-
     Diagnostic mismatch =
-        warningOtiNti(TypeValidator.TYPE_MISMATCH_WARNING, NewTypeInference.MISTYPED_ASSIGN_RHS);
+        warning(TypeValidator.TYPE_MISMATCH_WARNING);
 
     test(srcs("/** @type {number} */ let x = 5; x = 'str';"), mismatch);
     test(srcs("let /** number */ x = 5; x = 'str';"), mismatch);
@@ -1304,8 +1301,6 @@ public final class Es6RewriteBlockScopedDeclarationTest extends TypeICompilerTes
   }
 
   public void testDoWhileForOfCapturedLetAnnotated() {
-    this.mode = TypeInferenceMode.BOTH;
-
     test(
         lines(
             "while (true) {",
@@ -1334,7 +1329,7 @@ public final class Es6RewriteBlockScopedDeclarationTest extends TypeICompilerTes
                 "  (function() { x++; })();",
                 "  x = 'str';",
                 "}")),
-        warningOtiNti(TypeValidator.TYPE_MISMATCH_WARNING, null));
+        warning(TypeValidator.TYPE_MISMATCH_WARNING));
 
     test(
         srcs(
@@ -1343,7 +1338,7 @@ public final class Es6RewriteBlockScopedDeclarationTest extends TypeICompilerTes
                 "  (function() { x++; })();",
                 "  x = 'str';",
                 "}")),
-        warningOtiNti(TypeValidator.TYPE_MISMATCH_WARNING, null));
+        warning(TypeValidator.TYPE_MISMATCH_WARNING));
   }
 
   public void testLetForInitializers() {

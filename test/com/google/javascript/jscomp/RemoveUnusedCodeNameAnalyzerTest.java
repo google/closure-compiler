@@ -24,7 +24,7 @@ import com.google.javascript.rhino.Node;
  * aka smartNamePass, which has now been removed.
  */
 
-public final class RemoveUnusedCodeNameAnalyzerTest extends TypeICompilerTestCase {
+public final class RemoveUnusedCodeNameAnalyzerTest extends CompilerTestCase {
 
   private static final String EXTERNS =
       lines(
@@ -73,7 +73,6 @@ public final class RemoveUnusedCodeNameAnalyzerTest extends TypeICompilerTestCas
   }
 
   private static class MarkNoSideEffectCallsAndRemoveUnusedCodeRunner implements CompilerPass {
-    VarCheck varCheck;
     MarkNoSideEffectCalls markNoSideEffectCalls;
     RemoveUnusedCode removeUnusedCode;
 
@@ -106,8 +105,6 @@ public final class RemoveUnusedCodeNameAnalyzerTest extends TypeICompilerTestCas
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2017);
     enableNormalize();
     enableGatherExternProperties();
-    // Change this for the test cases that require type information.
-    this.mode = TypeInferenceMode.NEITHER;
   }
 
   public void testDefaultingAssignmentWithAssignedProperty() {

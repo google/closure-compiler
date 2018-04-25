@@ -29,7 +29,6 @@ public final class ExternExportsPassTest extends TypeICompilerTestCase {
   protected void setUp() throws Exception {
     super.setUp();
     enableNormalize();
-    this.mode = TypeInferenceMode.BOTH;
   }
 
   @Override
@@ -158,8 +157,6 @@ public final class ExternExportsPassTest extends TypeICompilerTestCase {
   }
 
   public void testExportMultiple2() throws Exception {
-    // TODO(sdh): NTI leaves out the annotation for hello for some reason.
-    this.mode = TypeInferenceMode.OTI_ONLY;
     compileAndCheck(
         lines(
             "/** @const */ var a = {};",
@@ -334,7 +331,7 @@ public final class ExternExportsPassTest extends TypeICompilerTestCase {
   public void testExportSymbolWithoutTypeCheck() {
     // ExternExportsPass should not emit annotations
     // if there is no type information available.
-    this.mode = TypeInferenceMode.NEITHER;
+    this.mode = TypeInferenceMode.DISABLED;
 
     compileAndCheck(
         lines(
@@ -411,7 +408,7 @@ public final class ExternExportsPassTest extends TypeICompilerTestCase {
     // to JSTypes and not Nodes (and no JSTypes are created when checkTypes
     // is false), we don't really have a choice.
 
-    this.mode = TypeInferenceMode.NEITHER;
+    this.mode = TypeInferenceMode.DISABLED;
 
     compileAndCheck(
         lines(
@@ -581,7 +578,6 @@ public final class ExternExportsPassTest extends TypeICompilerTestCase {
         "};",
         "");
 
-    this.mode = TypeInferenceMode.OTI_ONLY;
     // NOTE: The type should print {E} for the @param, but is not.
     compileAndCheck(js, expected.replace("{E}", "{number}"));
   }

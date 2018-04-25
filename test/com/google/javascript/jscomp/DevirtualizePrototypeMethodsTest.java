@@ -44,7 +44,7 @@ public final class DevirtualizePrototypeMethodsTest extends TypeICompilerTestCas
   @Override
   protected void setUp() throws Exception {
     super.setUp();
-    this.mode = TypeInferenceMode.NEITHER;
+    this.mode = TypeInferenceMode.DISABLED;
   }
 
   /**
@@ -89,7 +89,7 @@ public final class DevirtualizePrototypeMethodsTest extends TypeICompilerTestCas
             "JSCompiler_StaticMethods_bar(o, 2);",
             "JSCompiler_StaticMethods_baz(o)");
 
-    this.mode = TypeInferenceMode.OTI_ONLY;
+    this.mode = TypeInferenceMode.CHECKED;
     test(input, expected);
     checkTypeOfRewrittenMethods();
   }

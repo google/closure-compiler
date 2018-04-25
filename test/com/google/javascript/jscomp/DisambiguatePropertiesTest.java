@@ -469,7 +469,6 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
         + "var F = new Foo;F.blah=0;"
         + "var U=function(){return{}};U().blah()";
 
-    this.mode = TypeInferenceMode.OTI_ONLY;
     testSets(js, expected, "{}");
   }
 
@@ -581,7 +580,6 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
       + "Bar.a = 0;";
     String output;
 
-    this.mode = TypeInferenceMode.OTI_ONLY;
     output = ""
         + "/** @constructor */ function Foo(){}"
         + "/** @constructor */ function Bar(){}"
@@ -701,7 +699,6 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
         + "var arr = [new Foo, new Bar];\n"
         + "var /** !Foo */z = arr[1];\n"
         + "z.Foo$p1;\n";
-    this.mode = TypeInferenceMode.OTI_ONLY;
     testSets(js, output, "{p1=[[Bar], [Foo]]}");
   }
 
@@ -1367,7 +1364,6 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
         + "(new Foo).a = 0;"
         + "/** @interface */ function I() {};\n"
         + "I.prototype.a;\n";
-    this.mode = TypeInferenceMode.OTI_ONLY;
     testSets(js, "{}", TypeValidator.TYPE_MISMATCH_WARNING);
   }
 
@@ -1555,7 +1551,6 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
         "",
         "(new Bar()).alias();");
 
-    this.mode = TypeInferenceMode.OTI_ONLY;
     testSets("", js, js, "{}", TypeValidator.TYPE_MISMATCH_WARNING, "assignment\n"
             + "found   : function(new:Foo): undefined\n"
             + "required: function(new:Bar): undefined");
@@ -1808,7 +1803,6 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
         "  this.Bar$prop = 123;",
         "}");
 
-    this.mode = TypeInferenceMode.OTI_ONLY;
     testSets(js, output, "{prop=[[Bar], [Foo]]}");
   }
 
@@ -1962,7 +1956,6 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
         + "var F = new Bar;\n"
         + "F.a = 0;";
 
-    this.mode = TypeInferenceMode.OTI_ONLY;
     testSets("", js, js, "{}", TypeValidator.TYPE_MISMATCH_WARNING,
         lines(
             "initializing variable",
@@ -1977,7 +1970,6 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
         + "Bar.prototype.a = 0;\n"
         + "var a = /** @type {!Foo} */ (new Bar);\n"
         + "a.a = 4;";
-    this.mode = TypeInferenceMode.OTI_ONLY;
     testSets("", js, js, "{}", TypeValidator.INVALID_CAST,
              "invalid cast - must be a subtype or supertype\n"
              + "from: Bar\n"
@@ -2023,7 +2015,6 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
         + "Bar.prototype.Bar_prototype$a;\n"
         + "var F = /** @type {Foo} */ ({ Foo_prototype$a: 'a' });";
 
-    this.mode = TypeInferenceMode.OTI_ONLY;
     testSets(js, output, "{a=[[Bar.prototype], [Foo.prototype]]}");
   }
 
@@ -2321,7 +2312,6 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
         "  this.Foo$num = 123;",
         "}");
 
-    this.mode = TypeInferenceMode.OTI_ONLY;
     testSets("", js, otiOutput, "{num=[[Foo], [function(): undefined]]}");
   }
 

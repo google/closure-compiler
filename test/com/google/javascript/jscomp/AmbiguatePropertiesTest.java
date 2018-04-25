@@ -49,7 +49,6 @@ public final class AmbiguatePropertiesTest extends TypeICompilerTestCase {
     enableNormalize();
     enableClosurePass();
     enableGatherExternProperties();
-    this.mode = TypeInferenceMode.BOTH;
     ignoreWarnings(
         NewTypeInference.GLOBAL_THIS,
         NewTypeInference.PROPERTY_ACCESS_ON_NONOBJECT);
@@ -1123,8 +1122,6 @@ public final class AmbiguatePropertiesTest extends TypeICompilerTestCase {
       "/** @return {!Foo} */",
       "Foo.prototype.a = function() {};");
 
-    // NTI reqires at least the MINIMAL_EXTERNS.
-    this.mode = TypeInferenceMode.OTI_ONLY;
     test(externs(""), srcs(js), expected(output));
   }
 }

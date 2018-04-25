@@ -79,8 +79,6 @@ public final class RemoveUnusedCodeClassPropertiesTest extends TypeICompilerTest
     super(EXTERNS);
   }
 
-  @Override void checkMinimalExterns(Iterable<SourceFile> externs) {}
-
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
     return new RemoveUnusedCode.Builder(compiler)
@@ -97,7 +95,7 @@ public final class RemoveUnusedCodeClassPropertiesTest extends TypeICompilerTest
     enableNormalize();
     enableGatherExternProperties();
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2017);
-    this.mode = TypeInferenceMode.NEITHER;
+    this.mode = TypeInferenceMode.DISABLED;
   }
 
   public void testSimple1() {
@@ -269,7 +267,7 @@ public final class RemoveUnusedCodeClassPropertiesTest extends TypeICompilerTest
   }
 
   public void testConstructorProperty1() {
-    this.mode = TypeInferenceMode.BOTH;
+    this.mode = TypeInferenceMode.CHECKED;
 
     test(
         "/** @constructor */ function C() {} C.prop = 1;",
@@ -277,7 +275,7 @@ public final class RemoveUnusedCodeClassPropertiesTest extends TypeICompilerTest
   }
 
   public void testConstructorProperty2() {
-    this.mode = TypeInferenceMode.BOTH;
+    this.mode = TypeInferenceMode.CHECKED;
 
     testSame(
         lines(
@@ -289,7 +287,7 @@ public final class RemoveUnusedCodeClassPropertiesTest extends TypeICompilerTest
 
   public void testES6StaticProperty() {
     // TODO(bradfordcsmith): Neither type checker understands ES6 classes yet.
-    this.mode = TypeInferenceMode.NEITHER;
+    this.mode = TypeInferenceMode.DISABLED;
 
     test(
         "class C { static prop() {} }", // preserve newline
@@ -297,14 +295,14 @@ public final class RemoveUnusedCodeClassPropertiesTest extends TypeICompilerTest
   }
 
   public void testES6StaticProperty2() {
-    this.mode = TypeInferenceMode.NEITHER;
+    this.mode = TypeInferenceMode.DISABLED;
 
     // TODO(bradfordcsmith): When NTI understands ES6 classes it will allow removal of `C.prop = 1`.
     testSame("class C {} C.prop = 1;");
   }
 
   public void testObjectDefineProperties1() {
-    this.mode = TypeInferenceMode.BOTH;
+    this.mode = TypeInferenceMode.CHECKED;
 
     testSame(
         lines(
@@ -315,7 +313,7 @@ public final class RemoveUnusedCodeClassPropertiesTest extends TypeICompilerTest
   }
 
   public void testObjectDefineProperties2() {
-    this.mode = TypeInferenceMode.BOTH;
+    this.mode = TypeInferenceMode.CHECKED;
 
     test(
         lines(
@@ -327,7 +325,7 @@ public final class RemoveUnusedCodeClassPropertiesTest extends TypeICompilerTest
   }
 
   public void testObjectDefineProperties3() {
-    this.mode = TypeInferenceMode.BOTH;
+    this.mode = TypeInferenceMode.CHECKED;
 
     test(
         lines(
@@ -344,7 +342,7 @@ public final class RemoveUnusedCodeClassPropertiesTest extends TypeICompilerTest
 
   // side-effect in definition retains property definition, but doesn't count as a reference
   public void testObjectDefineProperties4() {
-    this.mode = TypeInferenceMode.BOTH;
+    this.mode = TypeInferenceMode.CHECKED;
 
     test(
         lines(
@@ -357,7 +355,7 @@ public final class RemoveUnusedCodeClassPropertiesTest extends TypeICompilerTest
 
   // quoted properties retains property
   public void testObjectDefineProperties5() {
-    this.mode = TypeInferenceMode.BOTH;
+    this.mode = TypeInferenceMode.CHECKED;
 
     testSame(
         lines(
@@ -366,7 +364,7 @@ public final class RemoveUnusedCodeClassPropertiesTest extends TypeICompilerTest
   }
 
   public void testObjectDefineProperties6() {
-    this.mode = TypeInferenceMode.BOTH;
+    this.mode = TypeInferenceMode.CHECKED;
 
     // an unknown destination object doesn't prevent removal.
     test(
@@ -375,7 +373,7 @@ public final class RemoveUnusedCodeClassPropertiesTest extends TypeICompilerTest
   }
 
   public void testObjectDefineProperties7() {
-    this.mode = TypeInferenceMode.BOTH;
+    this.mode = TypeInferenceMode.CHECKED;
 
     test(
         lines(
@@ -387,7 +385,7 @@ public final class RemoveUnusedCodeClassPropertiesTest extends TypeICompilerTest
   }
 
   public void testObjectDefineProperties8() {
-    this.mode = TypeInferenceMode.BOTH;
+    this.mode = TypeInferenceMode.CHECKED;
 
     test(
         lines(
@@ -399,7 +397,7 @@ public final class RemoveUnusedCodeClassPropertiesTest extends TypeICompilerTest
   }
 
   public void testObjectDefinePropertiesQuotesPreventRemoval() {
-    this.mode = TypeInferenceMode.BOTH;
+    this.mode = TypeInferenceMode.CHECKED;
 
     testSame(
         lines(
@@ -410,7 +408,7 @@ public final class RemoveUnusedCodeClassPropertiesTest extends TypeICompilerTest
   public void testObjectDefineProperties_used_setter_removed() {
     // TODO(bradfordcsmith): Either remove, fix this, or document it as a limitation of advanced
     // mode optimizations.
-    this.mode = TypeInferenceMode.BOTH;
+    this.mode = TypeInferenceMode.CHECKED;
 
     test(
         lines(
@@ -485,7 +483,7 @@ public final class RemoveUnusedCodeClassPropertiesTest extends TypeICompilerTest
   }
 
   public void testTranspiledEs6GettersRemoval() {
-    this.mode = TypeInferenceMode.BOTH;
+    this.mode = TypeInferenceMode.CHECKED;
     test(
         // This is the output of ES6->ES5 class getter converter.
         // See Es6ToEs3ConverterTest.testEs5GettersAndSettersClasses test method.
@@ -510,7 +508,7 @@ public final class RemoveUnusedCodeClassPropertiesTest extends TypeICompilerTest
   }
 
   public void testTranspiledEs6SettersRemoval() {
-    this.mode = TypeInferenceMode.BOTH;
+    this.mode = TypeInferenceMode.CHECKED;
     test(
         // This is the output of ES6->ES5 class setter converter.
         // See Es6ToEs3ConverterTest.testEs5GettersAndSettersClasses test method.
