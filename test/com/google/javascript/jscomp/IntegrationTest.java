@@ -622,27 +622,6 @@ public final class IntegrationTest extends IntegrationTestCase {
         PolymerPassErrors.POLYMER_INVALID_DECLARATION);
   }
 
-  public void testPolymer2_nti() {
-    CompilerOptions options = createCompilerOptions();
-    options.setPolymerVersion(2);
-    options.setNewTypeInference(true);
-    options.setWarningLevel(DiagnosticGroups.CHECK_TYPES, CheckLevel.ERROR);
-    options.declaredGlobalExternsOnWindow = true;
-    options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
-    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
-    addPolymerExterns();
-
-    Compiler compiler = compile(
-        options,
-        lines(
-            "class XFoo extends Polymer.Element {",
-            "  get is() { return 'x-foo'; }",
-            "  static get properties() { return { bar: Boolean, }; }",
-            "}"));
-    assertThat(compiler.getErrors()).isEmpty();
-    assertThat(compiler.getWarnings()).isEmpty();
-  }
-
   private void addPolymer2Externs() {
     ImmutableList.Builder<SourceFile> externsList = ImmutableList.builder();
     externsList.addAll(externs);
@@ -731,7 +710,6 @@ public final class IntegrationTest extends IntegrationTestCase {
   public void testPolymer2_oti2() {
     CompilerOptions options = createCompilerOptions();
     options.setPolymerVersion(2);
-    options.setNewTypeInference(false);
     options.setWarningLevel(DiagnosticGroups.CHECK_TYPES, CheckLevel.ERROR);
     options.declaredGlobalExternsOnWindow = true;
     options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
@@ -781,7 +759,6 @@ public final class IntegrationTest extends IntegrationTestCase {
   public void testPolymer1_oti2() {
     CompilerOptions options = createCompilerOptions();
     options.setPolymerVersion(2);
-    options.setNewTypeInference(false);
     options.setWarningLevel(DiagnosticGroups.CHECK_TYPES, CheckLevel.ERROR);
     options.declaredGlobalExternsOnWindow = true;
     options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
@@ -822,7 +799,6 @@ public final class IntegrationTest extends IntegrationTestCase {
   public void testPolymer2_oti() {
     CompilerOptions options = createCompilerOptions();
     options.setPolymerVersion(2);
-    options.setNewTypeInference(false);
     options.setWarningLevel(DiagnosticGroups.CHECK_TYPES, CheckLevel.ERROR);
     options.declaredGlobalExternsOnWindow = true;
     options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
@@ -1326,132 +1302,6 @@ public final class IntegrationTest extends IntegrationTestCase {
     test(options, "var x = x || {}; x.f = function() {}; x.f(3);", TypeCheck.WRONG_ARGUMENT_COUNT);
   }
 
-  public void testRenamingOfTypedefPropertiesWithNTI() {
-    CompilerOptions options = new CompilerOptions();
-    options.setLanguageIn(LanguageMode.ECMASCRIPT3);
-    options.setNewTypeInference(true);
-    options.setPropertyRenaming(PropertyRenamingPolicy.ALL_UNQUOTED);
-
-    test(options,
-        LINE_JOINER.join(
-            "/** @constructor */",
-            "function Foo() {",
-            "  this.myprop = 123;",
-            "}",
-            "/** @typedef {{myprop: number}} */",
-            "var MyType;"),
-        LINE_JOINER.join(
-            "/** @constructor */",
-            "function Foo() {",
-            "  this.a = 123;",
-            "}",
-            "/** @typedef {{myprop: number}} */",
-            "var MyType;"));
-
-    ImmutableList.Builder<SourceFile> externsList = ImmutableList.builder();
-    externsList.addAll(externs);
-    externsList.add(
-        SourceFile.fromCode("extraExterns", "/** @typedef {{myprop: number}} */ var MyType;"));
-    externs = externsList.build();
-    testSame(options,
-        LINE_JOINER.join(
-            "/** @constructor */",
-            "function Foo() {",
-            "  this.myprop = 123;",
-            "}"));
-  }
-
-  public void testBothTypeCheckersRunNoDupWarning() {
-    CompilerOptions options = createCompilerOptions();
-    options.setCheckTypes(true);
-    options.setNewTypeInference(true);
-
-    test(
-        options,
-        LINE_JOINER.join(
-            "/** @return {number} */",
-            "function f() {",
-            "  return 'asdf';",
-            "}"),
-        NewTypeInference.RETURN_NONDECLARED_TYPE);
-
-    test(
-        options,
-        "/** @type {ASDF} */ var x;",
-        GlobalTypeInfoCollector.UNRECOGNIZED_TYPE_NAME);
-
-    options.setWarningLevel(
-        DiagnosticGroups.REPORT_UNKNOWN_TYPES, CheckLevel.WARNING);
-    test(
-        options,
-        "function f(/** ? */ x) { var y = x; }",
-        NewTypeInference.UNKNOWN_EXPR_TYPE);
-    options.setWarningLevel(
-        DiagnosticGroups.REPORT_UNKNOWN_TYPES, CheckLevel.OFF);
-
-    testSame(
-        options,
-        LINE_JOINER.join(
-            "(function() {",
-            "  /** @constructor */",
-            "  var Boolean = function() {};",
-            "})();"));
-  }
-
-  public void testSilenceUnknownTypeWarningFromOTI() {
-    CompilerOptions options = new CompilerOptions();
-    options.setLanguageIn(LanguageMode.ECMASCRIPT3);
-    options.setCheckTypes(true);
-    options.setNewTypeInference(true);
-
-    test(options,
-        LINE_JOINER.join(
-            "/**",
-            " * @param {T} x",
-            " * @template T",
-            " */",
-            "function f(x) {",
-            "  function g(y) {",
-            "    var w = /** @type {T} */ (y);",
-            "    var /** T */ z = x;",
-            "  };",
-            "}"),
-        LINE_JOINER.join(
-            "/**",
-            " * @param {T} x",
-            " * @template T",
-            " */",
-            "function f(x) {",
-            "  function g(y) {",
-            "    var w = y;",
-            "    var /** T */ z = x;",
-            "  };",
-            "}"));
-  }
-
-  public void testNTIConstWarningsOverrideAccessControls() {
-    CompilerOptions options = createCompilerOptions();
-    options.setCheckTypes(true);
-    String js =
-        LINE_JOINER.join(
-            "/** @constructor */ function Foo(name) {}",
-            "/** @const */ Foo.prop = 1;",
-            "Foo.prop = 2;");
-    test(options, js, CheckAccessControls.CONST_PROPERTY_REASSIGNED_VALUE);
-    options.setNewTypeInference(true);
-    test(options, js, NewTypeInference.CONST_PROPERTY_REASSIGNED);
-  }
-
-  public void testNTInoMaskTypeParseError() {
-    CompilerOptions options = createCompilerOptions();
-    options.setCheckTypes(true);
-    options.setNewTypeInference(true);
-    test(options, LINE_JOINER.join(
-        "/** @param {(boolean|number} x */",
-        "function f(x) {}"),
-        RhinoErrorReporter.TYPE_PARSE_ERROR);
-  }
-
   public void testLegacyCompileOverridesStrict() {
     CompilerOptions options = new CompilerOptions();
     options.setLanguageIn(LanguageMode.ECMASCRIPT3);
@@ -1547,49 +1397,6 @@ public final class IntegrationTest extends IntegrationTestCase {
         "var goog = {};"
         + "goog.asserts.assert(goog);",
         "var goog = {};");
-  }
-
-  public void testRemoveClosureAsserts2() {
-    CompilerOptions options = new CompilerOptions();
-    options.setLanguageIn(LanguageMode.ECMASCRIPT3);
-    options.setClosurePass(true);
-    options.setNewTypeInference(true);
-    options.setRemoveClosureAsserts(true);
-    options.setDisambiguateProperties(true);
-
-    String js = LINE_JOINER.join(
-        "/** @const */ var goog = {};",
-        "goog.asserts;",
-        "goog.asserts.assertInstanceof;",
-        "/** @constructor */",
-        "function Bar() {",
-        "  this.a = 1;",
-        "}",
-        "/** @constructor */",
-        "function Baz() {",
-        "  this.a = 1;",
-        "}",
-        "function f(x) {",
-        "  return (goog.asserts.assertInstanceof(x, Bar)).a;",
-        "}");
-
-    String output = LINE_JOINER.join(
-        "/** @const */ var goog = {};",
-        "goog.asserts;",
-        "goog.asserts.assertInstanceof;",
-        "/** @constructor */",
-        "function Bar() {",
-        "  this.Bar$a = 1;",
-        "}",
-        "/** @constructor */",
-        "function Baz() {",
-        "  this.Baz$a = 1;",
-        "}",
-        "function f(x) {",
-        "  return x.Bar$a;",
-        "}");
-
-    test(options, js, output);
   }
 
   public void testDeprecation() {
@@ -1821,177 +1628,6 @@ public final class IntegrationTest extends IntegrationTestCase {
             "function Foo(){}",
             "function Bar(){}",
             "Bar.prototype.a=function(x){};"));
-  }
-
-  public void testDisambiguatePropertiesWithNtiNoCrash() {
-    CompilerOptions options = createCompilerOptions();
-    options.setClosurePass(true);
-    options.setNewTypeInference(true);
-    options.setDisambiguateProperties(true);
-    this.externs = ImmutableList.of(SourceFile.fromCode(
-        "externs",
-        LINE_JOINER.join(
-            "/** @constructor */",
-            "function Object() {}",
-            "/** @constructor */",
-            "function Function() {}",
-            "/** @const */",
-            "var ns = {};",
-            "ns.subns = {};",
-            "ns.subns.prototype.f = function() {};")));
-
-    testSame(options, "");
-  }
-
-  public void testDisambiguatePropertiesWithNtiNoCrash2() {
-    CompilerOptions options = new CompilerOptions();
-    options.setLanguageIn(LanguageMode.ECMASCRIPT3);
-    options.setClosurePass(true);
-    options.setNewTypeInference(true);
-    options.setDisambiguateProperties(true);
-    options.setGenerateExports(true);
-    options.setExportLocalPropertyDefinitions(true);
-
-    testSame(options,
-        LINE_JOINER.join(
-            "/** @constructor */",
-            "function Foo() {",
-            "  /** @export */",
-            "  this.prop = 123;",
-            "}"));
-  }
-
-  // Test that NTI doesn't invalidate types involved in type mismatches with type variables.
-  // This behavior is generally unsafe (as in the code tested here), but also allows more
-  // disambiguation.
-  public void testNtiTypeVariableErrorsDontBlockDisambiguation() {
-    CompilerOptions options = new CompilerOptions();
-    options.setLanguageIn(LanguageMode.ECMASCRIPT3);
-    options.setClosurePass(true);
-    options.setNewTypeInference(true);
-    options.setDisambiguateProperties(true);
-
-    String js = LINE_JOINER.join(
-        "/** @constructor */",
-        "function Foo() {",
-        "  this.a = 1;",
-        "}",
-        "/** @constructor */",
-        "function Bar() {",
-        "  this.a = 2;",
-        "}",
-        "/**",
-        " * @template T",
-        " * @return {T}",
-        " */",
-        "function f() {",
-        "  return new Foo;",
-        "}",
-        "var /** !Bar */ x = f();",
-        "var y = x.a;");
-
-    String output = LINE_JOINER.join(
-        "/** @constructor */",
-        "function Foo() {",
-        "  this.Foo$a = 1;",
-        "}",
-        "/** @constructor */",
-        "function Bar() {",
-        "  this.Bar$a = 2;",
-        "}",
-        "/**",
-        " * @template T",
-        " * @return {T}",
-        " */",
-        "function f() {",
-        "  return new Foo;",
-        "}",
-        "var /** !Bar */ x = f();",
-        "var y = x.Bar$a;");
-
-    test(options, js, output, NewTypeInference.RETURN_NONDECLARED_TYPE);
-  }
-
-  public void testNtiTypeVariableErrorsDontBlockDisambiguation2() {
-    CompilerOptions options = new CompilerOptions();
-    options.setLanguageIn(LanguageMode.ECMASCRIPT3);
-    options.setClosurePass(true);
-    options.setNewTypeInference(true);
-    options.setDisambiguateProperties(true);
-
-    String js = LINE_JOINER.join(
-        "/**",
-        " * @constructor",
-        " * @template T",
-        " */",
-        "function Foo() {",
-        "  /** @type {T} */",
-        "  this.p;",
-        "}",
-        "/** @return {!Bar} */",
-        "Foo.prototype.f = function() {",
-        "  return /** @type {!Bar} */ (this.p);",
-        "};",
-        "/** @constructor */",
-        "function Bar() {",
-        "  this.a = 1;",
-        "}",
-        "/** @constructor */",
-        "function Baz() {",
-        "  this.a = 1;",
-        "}");
-
-    String output = LINE_JOINER.join(
-        "/**",
-        " * @constructor",
-        " * @template T",
-        " */",
-        "function Foo() {",
-        "  /** @type {T} */",
-        "  this.p;",
-        "}",
-        "/** @return {!Bar} */",
-        "Foo.prototype.f = function() {",
-        "  return this.p;",
-        "};",
-        "/** @constructor */",
-        "function Bar() {",
-        "  this.Bar$a = 1;",
-        "}",
-        "/** @constructor */",
-        "function Baz() {",
-        "  this.Baz$a = 1;",
-        "}");
-
-    test(options, js, output);
-  }
-
-  public void testTurnOffConstChecksOfCheckAccessControlsWithNtiOn() {
-    CompilerOptions options = new CompilerOptions();
-    options.setLanguageIn(LanguageMode.ECMASCRIPT3);
-    options.setClosurePass(true);
-    options.setNewTypeInference(true);
-
-    testSame(
-        options,
-        LINE_JOINER.join(
-            "/** @constructor  */",
-            "var Foo = function() {};",
-            "/** @const {number|undefined} */",
-            "Foo.prototype.p;",
-            "/**",
-            " * @constructor",
-            " * @extends {Foo}",
-            " */",
-            "var Bar = function() {};",
-            "/** @const */",
-            "Bar.prototype.p = 123;",
-            "/**",
-            " * @constructor",
-            " * @extends {Foo}",
-            " */",
-            "var Baz = function() {};",
-            "Baz.prototype.p = 345;"));
   }
 
   public void testMarkPureCalls() {
@@ -4647,23 +4283,6 @@ public final class IntegrationTest extends IntegrationTestCase {
     test(options, code, "");
   }
 
-  public void testGoogDefineClassWithNti() {
-    CompilerOptions options = createCompilerOptions();
-    options.setNewTypeInference(true);
-    options.setClosurePass(true);
-
-    String code = lines(
-        "var Foo = goog.defineClass(null,",
-        "  {",
-        "    statics: {",
-        "      a: /** @type {number} */ ('asdf')",
-        "    },",
-        "    constructor: function() {}",
-        "  });");
-
-    test(options, code, NewTypeInference.INVALID_CAST);
-  }
-
   public void testCheckConstants1() {
     CompilerOptions options = createCompilerOptions();
     CompilationLevel level = CompilationLevel.SIMPLE_OPTIMIZATIONS;
@@ -4946,28 +4565,6 @@ public final class IntegrationTest extends IntegrationTestCase {
             + "/** @export */ this.abc = 1;};\n"
             + "alert(new X() + new Y());",
         "alert((new function(){this.abc = 1}) + (new function(){this.abc = 1}));");
-  }
-
-  public void testGatherExternPropsWithNTI() {
-    CompilerOptions options = new CompilerOptions();
-    options.setLanguageIn(LanguageMode.ECMASCRIPT3);
-    options.setNewTypeInference(true);
-    options.setGenerateExports(true);
-    options.setExportLocalPropertyDefinitions(true);
-    options.setPropertyRenaming(PropertyRenamingPolicy.ALL_UNQUOTED);
-
-    testSame(options,
-        LINE_JOINER.join(
-            "(function exportedTokensFromTemplate() {",
-            "  function unusedFn(a) {}",
-            "  var UNUSED = 1;",
-            "  unusedFn({ /** @export */ foo: UNUSED });",
-            "})();",
-            "/** @constructor */",
-            "function Bar() {",
-            "  // Should not be renamed",
-            "  this.foo = 1;",
-            "}"));
   }
 
   public void testRmUnusedProtoPropsInExternsUsage() {
