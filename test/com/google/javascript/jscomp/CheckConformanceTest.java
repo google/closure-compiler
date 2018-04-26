@@ -162,9 +162,8 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
     testWarning(
         "function f() { new Object().callee }", CheckConformance.CONFORMANCE_POSSIBLE_VIOLATION);
 
-    // NTI warns since "callee" doesn't exist on *
     testWarning(
-        "/** @suppress {newCheckTypes} */ function f() { /** @type {*} */ var x; x.callee }",
+        "function f() { /** @type {*} */ var x; x.callee }",
         CheckConformance.CONFORMANCE_POSSIBLE_VIOLATION);
 
     testNoWarning("function f() {/** @const */ var x = {}; x.callee = 1; x.callee}");
@@ -292,11 +291,9 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
     testNoWarning("/** @const */ var x = unknown;");
     testNoWarning("const x = unknown;");
 
-    // We @suppress {newCheckTypes} to suppress NTI uninferred const and global this warnings.
-
     testWarning(
         lines(
-            "/** @constructor @suppress {newCheckTypes} */",
+            "/** @constructor */",
             "function f() {",
             "  /** @const */ this.foo = unknown;",
             "}",
@@ -307,7 +304,7 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
         lines(
             "/** @constructor */",
             "function f() {}",
-            "/** @this {f} @suppress {newCheckTypes} */",
+            "/** @this {f} */",
             "var init_f = function() {",
             "  /** @const */ this.foo = unknown;",
             "};",
@@ -318,7 +315,6 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
         lines(
             "/** @constructor */",
             "function f() {}",
-            "/** @suppress {newCheckTypes} */",
             "var init_f = function() {",
             "  /** @const */ this.FOO = unknown;",
             "};",
@@ -329,7 +325,6 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
         lines(
             "/** @constructor */",
             "function f() {}",
-            "/** @suppress {newCheckTypes} */",
             "f.prototype.init_f = function() {",
             "  /** @const */ this.FOO = unknown;",
             "};",
@@ -355,7 +350,7 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
     // We only check @const nodes, not @final nodes.
     testNoWarning(
         lines(
-            "/** @constructor @suppress {newCheckTypes} */",
+            "/** @constructor */",
             "function f() {",
             "  /** @final */ this.foo = unknown;",
             "}",
@@ -585,7 +580,7 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
         "C.prototype.p;");
     String ddecl = lines(
         "/** @constructor @template T */ function D() {}",
-        "/** @suppress {newCheckTypes} @param {T} a */",
+        "/** @param {T} a */",
         "D.prototype.method = function(a) {",
         "  use(a.p);",
         "};");
@@ -1529,7 +1524,7 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
         "Violation: BanUnresolvedType Message\nReference to type 'Foo' never resolved.");
 
     testNoWarning(lines(
-        "/** @suppress {newCheckTypes}",
+        "/**",
         " *  @param {!Object<string, ?>} data",
         " */",
         "function foo(data) {",
@@ -1609,7 +1604,7 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
 
     testWarning(
         externs,
-        "/** @param {string|null} n  @suppress {newCheckTypes} */"
+        "/** @param {string|null} n */"
         + "function f(n) { alert('prop' in n); }",
         CheckConformance.CONFORMANCE_VIOLATION,
         "Violation: My rule message");
@@ -1665,17 +1660,16 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
     configuration =
         config(rule("BanNullDeref"), "My rule message");
 
-    // Test doesn't run without warnings in NTI because of the way it handles typedefs.
     final String typedefExterns = lines(
         EXTERNS,
-        "/** @fileoverview @suppress {newCheckTypes} */",
+        "/** @fileoverview */",
         "/** @const */ var ns = {};",
         "/** @enum {number} */ ns.Type.State = {OPEN: 0};",
         "/** @typedef {{a:string}} */ ns.Type;",
         "");
 
     final String code = lines(
-        "/** @suppress {newCheckTypes} @return {void} n */",
+        "/** @return {void} n */",
         "function f() { alert(ns.Type.State.OPEN); }");
     testNoWarning(typedefExterns, code);
   }
@@ -1686,7 +1680,7 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
 
     testNoWarning(
         lines(
-            "/** @suppress {newCheckTypes} @param {*} x */",
+            "/** @param {*} x */",
             "function f(x) {",
             "  return x.toString();",
             "}"));

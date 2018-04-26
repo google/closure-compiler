@@ -687,7 +687,6 @@ public final class CheckAccessControlsTest extends TypeICompilerTestCase {
   }
 
   public void testProtectedAccessForProperties10() {
-    // NTI throws NTI_CTOR_IN_DIFFERENT_SCOPE
     testSame(ImmutableList.of(
         SourceFile.fromCode(
             "foo.js",
@@ -697,7 +696,7 @@ public final class CheckAccessControlsTest extends TypeICompilerTestCase {
             "sub_foo.js",
             "/** @constructor @extends {Foo} */"
             + "var SubFoo = function() {};"
-            + "(/** @suppress {newCheckTypes} */ function() {"
+            + "(function() {"
             + "SubFoo.prototype.baz = function() { this.bar(); }"
             + "})();")));
   }

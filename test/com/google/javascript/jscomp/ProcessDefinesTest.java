@@ -219,15 +219,11 @@ public final class ProcessDefinesTest extends CompilerTestCase {
   }
 
   public void testSimpleReassign1() {
-    // Here and in other tests where we reassign to @defined values, we @suppress newCheckTypes
-    // to suppress NTI_CONST_REASSIGNED warnings.
     test(
         lines(
-            "/** @fileoverview @suppress {newCheckTypes} */",
             "/** @define {boolean} */ var DEF = false;",
             "DEF = true;"),
         lines(
-            "/** @fileoverview @suppress {newCheckTypes} */",
             "/** @define {boolean} */ var DEF=true;",
             "true"));
   }
@@ -235,12 +231,10 @@ public final class ProcessDefinesTest extends CompilerTestCase {
   public void testSimpleReassign2() {
     test(
         lines(
-            "/** @fileoverview @suppress {newCheckTypes} */",
             "/** @define {number|boolean} */ var DEF=false;",
             "DEF=true;",
             "DEF=3"),
         lines(
-            "/** @fileoverview @suppress {newCheckTypes} */",
             "/** @define {number|boolean} */ var DEF=3;",
             "true;3"));
 
@@ -253,12 +247,10 @@ public final class ProcessDefinesTest extends CompilerTestCase {
   public void testSimpleReassign3() {
     test(
         lines(
-            "/** @fileoverview @suppress {newCheckTypes} */",
             "/** @define {boolean} */ var DEF = false;",
             "var x;",
             "x = DEF = true;"),
         lines(
-            "/** @fileoverview @suppress {newCheckTypes} */",
             "/** @define {boolean} */ var DEF = true;",
             "var x;",
             "x = true"));
@@ -299,12 +291,10 @@ public final class ProcessDefinesTest extends CompilerTestCase {
   public void testReassignAfterNonGlobalRef() {
     test(
         lines(
-            "/** @fileoverview @suppress {newCheckTypes} */",
             "/** @define {boolean} */ var DEF=true;",
             "var x=function(){var y=DEF};",
             "DEF=false"),
         lines(
-            "/** @fileoverview @suppress {newCheckTypes} */",
             "/** @define {boolean} */ var DEF = false;",
             "var x = function(){var y = DEF; };",
             "false"));
@@ -420,11 +410,9 @@ public final class ProcessDefinesTest extends CompilerTestCase {
   public void testSimpleConstReassign() {
     test(
         lines(
-            "/** @fileoverview @suppress {newCheckTypes} */",
             "/** @define {boolean} */ const DEF = false;",
             "DEF = true;"),
         lines(
-            "/** @fileoverview @suppress {newCheckTypes} */",
             "/** @define {boolean} */ const DEF=true;",
             "true"));
   }
