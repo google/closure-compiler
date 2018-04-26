@@ -70,6 +70,13 @@ var screen;
 var self;
 
 /**
+ * @type {boolean}
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/Window/isSecureContext
+ * @const
+ */
+var isSecureContext;
+
+/**
  * @type {!VisualViewport}
  * @see https://developer.mozilla.org/en-US/docs/Web/API/Window/visualViewport
  * @const
