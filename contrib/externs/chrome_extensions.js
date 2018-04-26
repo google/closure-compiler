@@ -2105,14 +2105,8 @@ chrome.extension.ViewType = {
 };
 
 
-/** @type {!Object|undefined} */
+/** @type {{message:(string|undefined)}|undefined} */
 chrome.extension.lastError = {};
-
-
-/**
- * @type {string|undefined}
- */
-chrome.extension.lastError.message;
 
 
 /** @type {boolean|undefined} */
