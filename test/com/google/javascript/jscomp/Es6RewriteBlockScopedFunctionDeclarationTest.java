@@ -25,7 +25,8 @@ public final class Es6RewriteBlockScopedFunctionDeclarationTest extends Compiler
   protected void setUp() throws Exception {
     super.setUp();
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
-    enableRunTypeCheckAfterProcessing();
+    enableTypeCheck();
+    enableTypeInfoValidation();
   }
 
   @Override
@@ -50,7 +51,17 @@ public final class Es6RewriteBlockScopedFunctionDeclarationTest extends Compiler
   }
 
   public void testHoistsFunctionToStartOfBlock() {
-    test("{ console.log(f()); function f(){} }", "{ let f = function(){}; console.log(f()); }");
+    test(
+        lines(
+            "", // preserve newlines
+            "function use(x) {}",
+            "{ use(f()); function f(){} }",
+            ""),
+        lines(
+            "", // preserve newlines
+            "function use(x) {}",
+            "{ let f = function(){}; use(f()); }",
+            ""));
   }
 
   public void testBlockScopedGeneratorFunction() {
