@@ -75,7 +75,7 @@ class NamespaceType extends NamedType {
    * Resolve the referenced type within the enclosing scope.
    */
   @Override
-  JSType resolveInternal(ErrorReporter reporter, StaticTypedScope<JSType> enclosing) {
+  JSType resolveInternal(ErrorReporter reporter) {
     warning(reporter, "Namespaces not supported yet (" + getReferenceName() + ")");
     return registry.getNativeObjectType(JSTypeNative.UNKNOWN_TYPE);
   }

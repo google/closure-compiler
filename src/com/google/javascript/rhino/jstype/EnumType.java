@@ -175,8 +175,8 @@ public class EnumType extends PrototypeObjectType {
   }
 
   @Override
-  JSType resolveInternal(ErrorReporter reporter, StaticTypedScope<JSType> scope) {
-    elementsType = (EnumElementType) elementsType.resolve(reporter, scope);
-    return super.resolveInternal(reporter, scope);
+  JSType resolveInternal(ErrorReporter reporter) {
+    elementsType = (EnumElementType) elementsType.resolve(reporter);
+    return super.resolveInternal(reporter);
   }
 }

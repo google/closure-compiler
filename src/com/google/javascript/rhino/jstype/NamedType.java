@@ -210,7 +210,7 @@ public class NamedType extends ProxyObjectType {
    * Resolve the referenced type within the enclosing scope.
    */
   @Override
-  JSType resolveInternal(ErrorReporter reporter, StaticTypedScope<JSType> enclosing) {
+  JSType resolveInternal(ErrorReporter reporter) {
 
     // TODO(user): Investigate whether it is really necessary to keep two
     // different mechanisms for resolving named types, and if so, which order
@@ -222,7 +222,7 @@ public class NamedType extends ProxyObjectType {
     }
 
     if (resolved) {
-      super.resolveInternal(reporter, enclosing);
+      super.resolveInternal(reporter);
       finishPropertyContinuations();
     } else {
 
@@ -231,7 +231,7 @@ public class NamedType extends ProxyObjectType {
         handleTypeCycle(reporter);
       }
 
-      super.resolveInternal(reporter, enclosing);
+      super.resolveInternal(reporter);
       if (isResolved()) {
         finishPropertyContinuations();
       }

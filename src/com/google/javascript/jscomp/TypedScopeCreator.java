@@ -196,8 +196,8 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       this.type = type;
     }
 
-    void resolve(TypedScope scope) {
-      node.setJSType(type.resolve(typeParsingErrorReporter, scope));
+    void resolve() {
+      node.setJSType(type.resolve(typeParsingErrorReporter));
     }
   }
 
@@ -559,7 +559,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
     public void resolveTypes() {
       // Resolve types and attach them to nodes.
       for (DeferredSetType deferred : deferredSetTypes) {
-        deferred.resolve(currentScope);
+        deferred.resolve();
       }
 
       // Resolve types and attach them to scope slots.

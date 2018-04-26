@@ -110,7 +110,7 @@ public final class AllType extends JSType {
   }
 
   @Override
-  JSType resolveInternal(ErrorReporter reporter, StaticTypedScope<JSType> scope) {
+  JSType resolveInternal(ErrorReporter reporter) {
     return this;
   }
 

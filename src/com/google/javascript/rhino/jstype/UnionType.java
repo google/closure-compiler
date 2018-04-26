@@ -709,12 +709,12 @@ public class UnionType extends JSType {
   }
 
   @Override
-  JSType resolveInternal(ErrorReporter reporter, StaticTypedScope<JSType> scope) {
+  JSType resolveInternal(ErrorReporter reporter) {
     setResolvedTypeInternal(this); // for circularly defined types.
 
     for (int i = 0; i < alternatesWithoutStucturalTyping.size(); i++) {
       JSType alternate = alternatesWithoutStucturalTyping.get(i);
-      alternate.resolve(reporter, scope);
+      alternate.resolve(reporter);
     }
     // Ensure the union is in a normalized state.
     rebuildAlternates();

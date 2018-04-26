@@ -145,8 +145,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     subInterfaceInstType = subInterfaceType.getInstanceType();
 
     googBar = registry.createConstructorType("goog.Bar", null, null, null, null, false);
-    googBar.getPrototype().defineDeclaredProperty("date", DATE_TYPE,
-        null);
+    googBar.getPrototype().defineDeclaredProperty("date", DATE_TYPE, null);
     googBar.setImplementedInterfaces(
         Lists.<ObjectType>newArrayList(interfaceInstType));
     googBarInst = googBar.getInstanceType();
@@ -161,12 +160,11 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
     googObject.defineDeclaredProperty("Bar", googBar, null);
 
-    namedGoogBar.resolve(null, scope);
+    namedGoogBar.resolve(null);
     assertNotNull(namedGoogBar.getImplicitPrototype());
 
     forwardDeclaredNamedType = new NamedType(scope, registry, "forwardDeclared", "source", 1, 0);
-    forwardDeclaredNamedType.resolve(
-        new SimpleErrorReporter(), EMPTY_SCOPE);
+    forwardDeclaredNamedType.resolve(new SimpleErrorReporter());
 
     types =
         ImmutableList.of(
@@ -5303,8 +5301,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertTypeEquals(a, realA);
     assertTypeEquals(b, realB);
 
-    a.resolve(null, null);
-    b.resolve(null, null);
+    a.resolve(null);
+    b.resolve(null);
 
     assertTrue(a.isResolved());
     assertTrue(b.isResolved());
@@ -5331,7 +5329,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
     assertTypeEquals(a, b);
 
-    a.resolve(null, EMPTY_SCOPE);
+    a.resolve(null);
 
     assertTrue(a.isResolved());
     assertFalse(b.isResolved());

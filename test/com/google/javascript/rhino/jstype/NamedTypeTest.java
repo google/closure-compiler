@@ -53,7 +53,7 @@ public class NamedTypeTest extends BaseJSTypeTestCase {
     NamedType namedA = new NamedType(scope, registry, "TypeA", "source", 1, 0);
 
     namedA.defineDeclaredProperty("foo", NUMBER_TYPE, null);
-    namedA.resolve(null, scope);
+    namedA.resolve(null);
     assertTypeEquals(NUMBER_TYPE, typeA.getPropertyType("foo"));
   }
 
@@ -61,7 +61,7 @@ public class NamedTypeTest extends BaseJSTypeTestCase {
     MapBasedScope scope = new MapBasedScope(ImmutableMap.of("ActiveXObject", NO_OBJECT_TYPE));
 
     NamedType activeXObject = new NamedType(scope, registry, "ActiveXObject", "source", 1, 0);
-    activeXObject.resolve(null, scope);
+    activeXObject.resolve(null);
     assertEquals("ActiveXObject", activeXObject.toString());
     assertTypeEquals(NO_OBJECT_TYPE, activeXObject.getReferencedType());
   }

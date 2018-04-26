@@ -1584,7 +1584,7 @@ public class JSTypeRegistry implements TypeIRegistry {
    */
   public void resolveTypesInScope(StaticTypedScope<JSType> scope) {
     for (NamedType type : unresolvedNamedTypes.get(scope)) {
-      type.resolve(reporter, scope);
+      type.resolve(reporter);
     }
 
     unresolvedNamedTypes.removeAll(scope);

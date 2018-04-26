@@ -185,5 +185,5 @@ class InstanceObjectType extends PrototypeObjectType {
   // The owner will always be a resolved type, so there's no need to set
   // the constructor in resolveInternal.
   // (it would lead to infinite loops if we did).
-  // JSType resolveInternal(ErrorReporter reporter, StaticTypedScope<JSType> scope);
+  // JSType resolveInternal(ErrorReporter reporter);
 }
