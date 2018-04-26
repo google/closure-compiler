@@ -14,6 +14,10 @@
  * limitations under the License.
  */
 
+/**
+ * @fileoverview Implements Math.expm1 polyfill
+ * @suppress {uselessCode}
+ */
 'require util/polyfill';
 
 $jscomp.polyfill('Math.expm1', function(orig) {

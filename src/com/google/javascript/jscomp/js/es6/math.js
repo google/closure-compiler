@@ -16,6 +16,7 @@
 
 /**
  * @fileoverview Brings in all ES6 Math polyfills.
+ * @suppress {uselessCode}
  */
 'require es6/math/acosh';
 'require es6/math/asinh';
@@ -23,7 +24,7 @@
 'require es6/math/cbrt';
 'require es6/math/clz32';
 'require es6/math/cosh';
-'require es6/math/exp1m';
+'require es6/math/expm1';
 'require es6/math/hypot';
 'require es6/math/imul';
 'require es6/math/log10';
