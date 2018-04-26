@@ -32,7 +32,6 @@ import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping;
 import com.google.javascript.jscomp.CompilerOptions.DevMode;
 import com.google.javascript.jscomp.CoverageInstrumentationPass.CoverageReach;
 import com.google.javascript.jscomp.CoverageInstrumentationPass.InstrumentOption;
-import com.google.javascript.jscomp.WarningsGuard.DiagnosticGroupState;
 import com.google.javascript.jscomp.deps.JsFileParser;
 import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.jscomp.deps.SortedDependencies.MissingProvideException;
@@ -426,35 +425,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
           DiagnosticGroup.forType(
               RhinoErrorReporter.TYPE_PARSE_ERROR),
           CheckLevel.OFF);
-    }
-    DiagnosticGroupState ntiState =
-        options.getWarningsGuard().enablesExplicitly(DiagnosticGroups.NEW_CHECK_TYPES);
-    if (ntiState == DiagnosticGroupState.ON) {
-      options.setNewTypeInference(true);
-    } else if (ntiState == DiagnosticGroupState.OFF) {
-      options.setNewTypeInference(false);
-    }
-    if (options.getNewTypeInference()) {
-      // Suppress the const checks of CheckAccessControls; NTI performs these checks better.
-      options.setWarningLevel(DiagnosticGroups.ACCESS_CONTROLS_CONST, CheckLevel.OFF);
-    }
-    // When running OTI after NTI, turn off the warnings from OTI.
-    if (options.getNewTypeInference()) {
-      options.checkTypes = true;
-      if (!options.reportOTIErrorsUnderNTI) {
-        options.setWarningLevel(
-            DiagnosticGroups.OLD_CHECK_TYPES,
-            CheckLevel.OFF);
-        options.setWarningLevel(
-            DiagnosticGroups.OLD_REPORT_UNKNOWN_TYPES,
-            CheckLevel.OFF);
-        options.setWarningLevel(
-            FunctionTypeBuilder.ALL_DIAGNOSTICS,
-            CheckLevel.OFF);
-      }
-      options.setWarningLevel(
-          DiagnosticGroup.forType(RhinoErrorReporter.TYPE_PARSE_ERROR),
-          CheckLevel.WARNING);
     }
 
     if (options.checkGlobalThisLevel.isOn() && !options.disables(DiagnosticGroups.GLOBAL_THIS)) {

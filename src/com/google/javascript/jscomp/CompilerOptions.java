@@ -222,7 +222,7 @@ public class CompilerOptions implements Serializable {
    */
   boolean inferTypes;
 
-  private boolean useNewTypeInference;
+  private final boolean useNewTypeInference = false;
 
   /**
    * Relevant only when {@link #useNewTypeInference} is true, where we normally disable OTI errors.
@@ -2001,11 +2001,12 @@ public class CompilerOptions implements Serializable {
   }
 
   public boolean getNewTypeInference() {
-    return this.useNewTypeInference;
+    return false;
   }
 
+  /** @deprecated no-op */
+  @Deprecated
   public void setNewTypeInference(boolean enable) {
-    this.useNewTypeInference = enable;
   }
 
   /**
@@ -3019,7 +3020,6 @@ public class CompilerOptions implements Serializable {
             .add("trustedStrings", trustedStrings)
             .add("tweakProcessing", getTweakProcessing())
             .add("tweakReplacements", getTweakReplacements())
-            .add("useNewTypeInference", getNewTypeInference())
             .add("emitUseStrict", emitUseStrict)
             .add("useTypesForLocalOptimization", useTypesForLocalOptimization)
             .add("variableRenaming", variableRenaming)
