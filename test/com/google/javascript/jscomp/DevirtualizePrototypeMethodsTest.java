@@ -27,7 +27,7 @@ import com.google.javascript.rhino.TypeI;
  * Tests for {@link DevirtualizePrototypeMethods}
  *
  */
-public final class DevirtualizePrototypeMethodsTest extends TypeICompilerTestCase {
+public final class DevirtualizePrototypeMethodsTest extends CompilerTestCase {
   private static final String EXTERNAL_SYMBOLS =
       DEFAULT_EXTERNS + "var extern;extern.externalMethod";
 
@@ -44,7 +44,7 @@ public final class DevirtualizePrototypeMethodsTest extends TypeICompilerTestCas
   @Override
   protected void setUp() throws Exception {
     super.setUp();
-    this.mode = TypeInferenceMode.DISABLED;
+    disableTypeCheck();
   }
 
   /**
@@ -89,7 +89,7 @@ public final class DevirtualizePrototypeMethodsTest extends TypeICompilerTestCas
             "JSCompiler_StaticMethods_bar(o, 2);",
             "JSCompiler_StaticMethods_baz(o)");
 
-    this.mode = TypeInferenceMode.CHECKED;
+    enableTypeCheck();
     test(input, expected);
     checkTypeOfRewrittenMethods();
   }

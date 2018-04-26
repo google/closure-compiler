@@ -32,7 +32,7 @@ import java.util.TreeSet;
  *
  */
 
-public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
+public final class DisambiguatePropertiesTest extends CompilerTestCase {
   private DisambiguateProperties lastPass;
   private static final String RENAME_FUNCTION_DEFINITION =
       "/** @const */ var goog = {};\n"
@@ -47,6 +47,7 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
   @Override
   protected void setUp() throws Exception {
     super.setUp();
+    enableTypeCheck();
     enableNormalize();
     enableParseTypeInfo();
     ignoreWarnings(DiagnosticGroups.NEW_CHECK_TYPES_EXTRA_CHECKS);

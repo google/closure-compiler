@@ -19,7 +19,7 @@ package com.google.javascript.jscomp;
 import com.google.javascript.rhino.Node;
 
 /** @author johnlenz@google.com (John Lenz) */
-public final class InlinePropertiesTest extends TypeICompilerTestCase {
+public final class InlinePropertiesTest extends CompilerTestCase {
 
   private static final String EXTERNS =
       lines(
@@ -88,6 +88,7 @@ public final class InlinePropertiesTest extends TypeICompilerTestCase {
   @Override
   protected void setUp() throws Exception {
     super.setUp();
+    enableTypeCheck();
     enableNormalize();
     enableClosurePass();
     enableGatherExternProperties();

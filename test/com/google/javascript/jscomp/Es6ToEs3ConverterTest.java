@@ -36,7 +36,7 @@ import com.google.javascript.jscomp.parsing.parser.FeatureSet;
  */
 // TODO(tbreisacher): Rename this to Es6TranspilationIntegrationTest since it's really testing
 // a lot of different passes. Also create a unit test for Es6ToEs3Converter.
-public final class Es6ToEs3ConverterTest extends TypeICompilerTestCase {
+public final class Es6ToEs3ConverterTest extends CompilerTestCase {
 
   private static final String EXTERNS_BASE =
       lines(
@@ -99,7 +99,7 @@ public final class Es6ToEs3ConverterTest extends TypeICompilerTestCase {
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2016);
     setLanguageOut(LanguageMode.ECMASCRIPT3);
     enableRunTypeCheckAfterProcessing();
-    this.mode = TypeInferenceMode.DISABLED;
+    disableTypeCheck();
   }
 
   protected final PassFactory makePassFactory(
@@ -547,7 +547,8 @@ public final class Es6ToEs3ConverterTest extends TypeICompilerTestCase {
   }
 
   public void testAbstractClass() {
-    this.mode = TypeInferenceMode.CHECKED;
+    enableTypeCheck();
+
     test(
         "/** @abstract */ class Foo {} var x = new Foo();",
         "/** @abstract @constructor @struct */ var Foo = function() {}; var x = new Foo();",
@@ -1655,7 +1656,7 @@ public final class Es6ToEs3ConverterTest extends TypeICompilerTestCase {
   }
 
   public void testInvalidClassUse() {
-    this.mode = TypeInferenceMode.CHECKED;
+    enableTypeCheck();
 
     test(
         lines(
@@ -1916,7 +1917,7 @@ public final class Es6ToEs3ConverterTest extends TypeICompilerTestCase {
   }
 
   public void testClassEs5GetterSetterIncorrectTypes() {
-    this.mode = TypeInferenceMode.CHECKED;
+    enableTypeCheck();
     setLanguageOut(LanguageMode.ECMASCRIPT5);
     ignoreWarnings(
         NewTypeInference.INEXISTENT_PROPERTY, NewTypeInference.INVALID_OBJLIT_PROPERTY_TYPE);
@@ -2480,7 +2481,8 @@ public final class Es6ToEs3ConverterTest extends TypeICompilerTestCase {
   }
 
   public void testForOfOnNonIterable() {
-    this.mode = TypeInferenceMode.CHECKED;
+    enableTypeCheck();
+
     test(
         srcs(
             lines(
@@ -2536,7 +2538,7 @@ public final class Es6ToEs3ConverterTest extends TypeICompilerTestCase {
             "($jscomp$spread$args1 = G.d()).n.apply($jscomp$spread$args1,",
             "    $jscomp.arrayFromIterable(b));"));
 
-    this.mode = TypeInferenceMode.CHECKED;
+    enableTypeCheck();
 
     test(
         srcs(

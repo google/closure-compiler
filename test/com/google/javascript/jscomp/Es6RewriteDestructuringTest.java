@@ -19,13 +19,13 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 
-public class Es6RewriteDestructuringTest extends TypeICompilerTestCase {
+public class Es6RewriteDestructuringTest extends CompilerTestCase {
 
   @Override
   protected void setUp() throws Exception {
     super.setUp();
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
-    this.mode = TypeInferenceMode.DISABLED;
+    disableTypeCheck();
     enableRunTypeCheckAfterProcessing();
   }
 
@@ -468,7 +468,8 @@ public class Es6RewriteDestructuringTest extends TypeICompilerTestCase {
   }
 
   public void testDefaultParameters() {
-    this.mode = TypeInferenceMode.CHECKED;
+    enableTypeCheck();
+
     test(
         "function f(/** ? */ zero, /** ?= */ one = 1, /** ?= */ two = 2) {}; f(1); f(1,2,3);",
         lines(
@@ -506,7 +507,7 @@ public class Es6RewriteDestructuringTest extends TypeICompilerTestCase {
   }
 
   public void testDefaultUndefinedParameters() {
-    this.mode = TypeInferenceMode.CHECKED;
+    enableTypeCheck();
 
     test("function f(zero, one=undefined) {}", "function f(zero, one) {}");
 
@@ -536,7 +537,7 @@ public class Es6RewriteDestructuringTest extends TypeICompilerTestCase {
   }
 
   public void testTypeCheck() {
-    this.mode = TypeInferenceMode.CHECKED;
+    enableTypeCheck();
 
     test(
         "/** @param {{x: number}} obj */ function f({x}) {}",
@@ -606,7 +607,7 @@ public class Es6RewriteDestructuringTest extends TypeICompilerTestCase {
   }
 
   public void testDestructuringPatternInExterns() {
-    this.mode = TypeInferenceMode.CHECKED;
+    enableTypeCheck();
     allowExternsChanges();
 
     testSame(
@@ -623,7 +624,7 @@ public class Es6RewriteDestructuringTest extends TypeICompilerTestCase {
   }
 
   public void testTypeCheck_inlineAnnotations() {
-    this.mode = TypeInferenceMode.CHECKED;
+    enableTypeCheck();
 
     test(
         "function f(/** {x: number} */ {x}) {}",

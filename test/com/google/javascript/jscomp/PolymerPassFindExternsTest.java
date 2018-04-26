@@ -20,7 +20,7 @@ import static com.google.common.truth.Truth.assertThat;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.rhino.Node;
 
-public final class PolymerPassFindExternsTest extends TypeICompilerTestCase {
+public final class PolymerPassFindExternsTest extends CompilerTestCase {
 
   private static final String EXTERNS =
       lines(
@@ -75,6 +75,7 @@ public final class PolymerPassFindExternsTest extends TypeICompilerTestCase {
   @Override
   protected void setUp() throws Exception {
     super.setUp();
+    enableTypeCheck();
     allowExternsChanges();
     enableRunTypeCheckAfterProcessing();
     enableParseTypeInfo();

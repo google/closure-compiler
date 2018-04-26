@@ -31,7 +31,7 @@ import java.util.List;
  * @author johnlenz@google.com (John Lenz)
  */
 
-public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
+public final class PureFunctionIdentifierTest extends CompilerTestCase {
   List<String> noSideEffectCalls;
   List<String> localResultCalls;
 
@@ -190,7 +190,7 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
   @Override
   protected void setUp() throws Exception {
     super.setUp();
-    ignoreWarnings(NewTypeInference.GLOBAL_THIS, NewTypeInference.INEXISTENT_PROPERTY);
+    enableTypeCheck();
   }
 
   @Override
@@ -577,7 +577,7 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
         " */",
         "externObj5.prototype.propWithAnnotatedStubAfter;");
 
-    this.mode = TypeInferenceMode.CHECKED;
+    enableTypeCheck();
     testSame(
         externs(externs),
         srcs("o.prototype.propWithAnnotatedStubAfter"),
@@ -604,7 +604,7 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
         " */",
         "externObj5.prototype.propWithAnnotatedStubAfter;");
 
-    this.mode = TypeInferenceMode.CHECKED;
+    enableTypeCheck();
     testSame(
         externs(externs),
         srcs("o.prototype.propWithAnnotatedStubAfter"),
@@ -748,15 +748,19 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
   }
 
   public void testExternCalls() throws Exception {
-    testExternCallsForTypeInferenceMode(TypeInferenceMode.CHECKED);
+    testExternCallsForTypeInferenceMode(/* typeChecked= */ true);
   }
 
   public void testExternCallsNoTypeChecking() throws Exception {
-    testExternCallsForTypeInferenceMode(TypeInferenceMode.DISABLED);
+    testExternCallsForTypeInferenceMode(/* typeChecked= */ false);
   }
 
-  private void testExternCallsForTypeInferenceMode(TypeInferenceMode typeInferenceMode) {
-    mode = typeInferenceMode;
+  private void testExternCallsForTypeInferenceMode(boolean typeChecked) {
+    if (typeChecked) {
+      enableTypeCheck();
+    } else {
+      disableTypeCheck();
+    }
     String prefix = "function f(){";
     String suffix = "} f()";
 
@@ -919,7 +923,7 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
         ImmutableList.of("f"));
 
     // TODO(bradfordcsmith): Remove NEITHER when type checker understands let/const
-    mode = TypeInferenceMode.DISABLED;
+    disableTypeCheck();
     assertPureCallsMarked(
         lines(
             "function f() {const x = []; x[0] = 1;}", // preserve newline
@@ -950,7 +954,7 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
         ImmutableList.of("f"));
 
     // TODO(bradfordcsmith): Remove NEITHER when type checker understands let/const
-    mode = TypeInferenceMode.DISABLED;
+    disableTypeCheck();
     assertPureCallsMarked(
         lines(
             "function f() {", // preserve newline
@@ -973,7 +977,7 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
         ImmutableList.of("f"));
 
     // TODO(bradfordcsmith): Remove NEITHER when type checker understands let/const
-    mode = TypeInferenceMode.DISABLED;
+    disableTypeCheck();
     assertPureCallsMarked(
         lines(
             "/** @constructor A */ function A() {};",
@@ -1059,7 +1063,7 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
         ImmutableList.of("f"));
 
     // TODO(bradfordcsmith): Remove NEITHER when type checker understands let/const
-    mode = TypeInferenceMode.DISABLED;
+    disableTypeCheck();
     assertPureCallsMarked(
         lines(
             "function f() {const x = []; { x[0] = 1; } }", // preserve newline
@@ -1068,7 +1072,7 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
   }
 
   public void testLocalizedSideEffects13() {
-    this.mode = TypeInferenceMode.DISABLED;
+    disableTypeCheck();
     String source = lines(
         "function f() {var [x, y] = [3, 4]; }",
         "f()");
@@ -1076,7 +1080,7 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
   }
 
   public void testLocalizedSideEffects14() {
-    this.mode = TypeInferenceMode.DISABLED;
+    disableTypeCheck();
     String source = lines(
         "function f() {var x; if (true) { [x] = [5]; } }",
         "f()");
@@ -1084,7 +1088,7 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
   }
 
   public void testLocalizedSideEffects15() {
-    this.mode = TypeInferenceMode.DISABLED;
+    disableTypeCheck();
     String source = lines(
         "function f() {var {length} = 'a string'; }",
         "f()");
@@ -1092,7 +1096,7 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
   }
 
   public void testLocalizedSideEffects16() {
-    this.mode = TypeInferenceMode.DISABLED;
+    disableTypeCheck();
     String source = lines(
         "function f(someArray) {var [a, , b] = someArray; }",
         "f()");
@@ -1100,7 +1104,7 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
   }
 
   public void testLocalizedSideEffects17() {
-    this.mode = TypeInferenceMode.DISABLED;
+    disableTypeCheck();
     String source = lines(
         "function f(someObj) {var { very: { nested: { lhs: pattern }} } = someObj; }",
         "f()");
@@ -1108,7 +1112,7 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
   }
 
   public void testLocalizedSideEffects18() {
-    this.mode = TypeInferenceMode.DISABLED;
+    disableTypeCheck();
     String source = lines(
         "function SomeCtor() { [this.x, this.y] = getCoordinates(); }",
         "new SomeCtor()");
@@ -1116,7 +1120,7 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
   }
 
   public void testLocalizedSideEffects19() {
-    this.mode = TypeInferenceMode.DISABLED;
+    disableTypeCheck();
     String source = lines(
         "function SomeCtor() { [this.x, this.y] = [0, 1]; }",
         "new SomeCtor()");
@@ -1124,7 +1128,7 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
   }
 
   public void testLocalizedSideEffects20() {
-    this.mode = TypeInferenceMode.DISABLED;
+    disableTypeCheck();
     String source = lines(
         "function SomeCtor() { this.x += 1; }",
         "new SomeCtor()");
@@ -1134,13 +1138,13 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
   public void testLocalizedSideEffects21() {
     // TODO(bradfordcsmith): Remove NEITHER when type checkers understand destructuring and
     // let/const.
-    this.mode = TypeInferenceMode.DISABLED;
+    disableTypeCheck();
     String source = lines("function f(values) { const x = {}; [x.y, x.z] = values; }", "f()");
     assertPureCallsMarked(source, ImmutableList.of("f"));
   }
 
   public void testLocalizedSideEffects22() {
-    this.mode = TypeInferenceMode.DISABLED;
+    disableTypeCheck();
     String source = lines(
         "var x = {}; function f(values) { [x.y, x.z] = values; }",
         "f()");
@@ -1150,7 +1154,7 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
   public void testLocalizedSideEffects23() {
     // TODO(bradfordcsmith): Remove NEITHER when type checkers understand destructuring and
     // let/const.
-    this.mode = TypeInferenceMode.DISABLED;
+    disableTypeCheck();
     String source =
         lines(
             "function f(values) { const x = {}; [x.y, x.z = defaultNoSideEffects] = values; }",
@@ -1159,7 +1163,7 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
   }
 
   public void testLocalizedSideEffects24() {
-    this.mode = TypeInferenceMode.DISABLED;
+    disableTypeCheck();
     String source = lines(
         "function f(values) { var x = {}; [x.y, x.z = defaultWithSideEffects()] = values; }",
         "f()");
@@ -1189,7 +1193,7 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
         ImmutableList.of("f"));
 
     // TODO(bradfordcsmith): Remove NEITHER when type checker understands let/const
-    mode = TypeInferenceMode.DISABLED;
+    disableTypeCheck();
     assertPureCallsMarked(
         lines(
             "function f() {const x = {foo : 0}; x.foo++}", // preserve newline
@@ -1213,7 +1217,7 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
         ImmutableList.of("f"));
 
     // TODO(bradfordcsmith): Remove NEITHER when type checker understands destructured parameters
-    mode = TypeInferenceMode.DISABLED;
+    disableTypeCheck();
     assertPureCallsMarked(
         lines(
             "function f({x}) {x.foo++}", // preserve newline
@@ -1513,7 +1517,7 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
         ImmutableList.of("C.a", "b"));
 
     // TODO(bradfordcsmith): Remove NEITHER when type checker understands destructuring parameters
-    mode = TypeInferenceMode.DISABLED;
+    disableTypeCheck();
     assertPureCallsMarked(
         lines(
             "// Mutates argument",
@@ -1692,7 +1696,7 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
         ImmutableList.of("f"));
 
     // TODO(bradfordcsmith): Remove NEITHER when type checker understands destructuring parameters
-    mode = TypeInferenceMode.DISABLED;
+    disableTypeCheck();
     assertPureCallsMarked(
         lines(
             "function f([x]) { x.y = 1; }", // preserve newline
@@ -1725,7 +1729,7 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
         ImmutableList.of("f", "g"));
 
     // TODO(bradfordcsmith): Remove NEITHER when type checker understands destructuring parameters
-    mode = TypeInferenceMode.DISABLED;
+    disableTypeCheck();
     assertPureCallsMarked(
         lines(
             "function f([x]) { x.y = 1; }", // preserve newline
@@ -1769,7 +1773,7 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
   }
 
   public void testCallGenerator1() {
-    this.mode = TypeInferenceMode.DISABLED; // type check for yield not yet implemented
+    disableTypeCheck(); // type check for yield not yet implemented
     String source =
         lines(
             "var x = 0;",
@@ -1789,7 +1793,7 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
   }
 
   public void testCallGenerator2() {
-    this.mode = TypeInferenceMode.DISABLED; // type check for yield not yet implemented
+    disableTypeCheck(); // type check for yield not yet implemented
     String source = lines(
             "function* f() {",
             "  while (true) {",
@@ -1902,19 +1906,19 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
   }
 
   public void testClassMethod1() {
-    this.mode = TypeInferenceMode.DISABLED;
+    disableTypeCheck();
     String source = "class C { m() { alert(1); } }; (new C).m();";
     assertNoPureCalls(source);
   }
 
   public void testClassMethod2() {
-    this.mode = TypeInferenceMode.DISABLED;
+    disableTypeCheck();
     String source = "class C { m() { } }; (new C).m();";
     assertPureCallsMarked(source, ImmutableList.of("NEW STRING m"));
   }
 
   public void testClassMethod3() {
-    this.mode = TypeInferenceMode.DISABLED;
+    disableTypeCheck();
     String source = "class C { m1() { } m2() { this.m1(); }}; (new C).m2();";
     assertPureCallsMarked(source, ImmutableList.of("this.m1", "NEW STRING m2"));
   }

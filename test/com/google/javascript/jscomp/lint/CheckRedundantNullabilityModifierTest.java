@@ -19,11 +19,11 @@ import com.google.javascript.jscomp.CheckLevel;
 import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerOptions;
 import com.google.javascript.jscomp.CompilerPass;
+import com.google.javascript.jscomp.CompilerTestCase;
 import com.google.javascript.jscomp.DiagnosticGroups;
-import com.google.javascript.jscomp.TypeICompilerTestCase;
 
 /** Unit tests for {@link CheckRedundantNullabilityModifier}. */
-public final class CheckRedundantNullabilityModifierTest extends TypeICompilerTestCase {
+public final class CheckRedundantNullabilityModifierTest extends CompilerTestCase {
   @Override
   protected CompilerOptions getOptions(CompilerOptions options) {
     options.setWarningLevel(DiagnosticGroups.ANALYZER_CHECKS, CheckLevel.WARNING);
@@ -138,5 +138,11 @@ public final class CheckRedundantNullabilityModifierTest extends TypeICompilerTe
 
   private void checkWarning(String js) {
     testWarning(js, CheckRedundantNullabilityModifier.REDUNDANT_NULLABILITY_MODIFIER_JSDOC);
+  }
+
+  @Override
+  protected void setUp() throws Exception {
+    super.setUp();
+    enableTypeCheck();
   }
 }

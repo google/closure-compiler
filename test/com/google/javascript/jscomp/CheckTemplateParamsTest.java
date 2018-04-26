@@ -23,7 +23,14 @@ import static com.google.javascript.jscomp.RhinoErrorReporter.TOO_MANY_TEMPLATE_
  * JSDocInfoParserTest but that test is set up to handle warnings reported from JSDocInfoParser,
  * (as strings) not ones from JSTypeRegistry (as DiagnosticTypes).
  */
-public final class CheckTemplateParamsTest extends TypeICompilerTestCase {
+public final class CheckTemplateParamsTest extends CompilerTestCase {
+
+  @Override
+  protected void setUp() throws Exception {
+    super.setUp();
+    enableTypeCheck();
+  }
+
   @Override
   protected int getNumRepetitions() {
     return 1;

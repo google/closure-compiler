@@ -22,7 +22,7 @@ import static com.google.javascript.jscomp.CheckAccessControls.BAD_PRIVATE_PROPE
  * Integration test to check that {@link PolymerPass} and {@link CheckAccessControls} work together
  * as expected.
  */
-public final class CheckAccessControlsPolymerTest extends TypeICompilerTestCase {
+public final class CheckAccessControlsPolymerTest extends CompilerTestCase {
   private static final String EXTERNS = lines(
       CompilerTypeTestCase.DEFAULT_EXTERNS,
       "var Polymer = function(descriptor) {};",
@@ -36,6 +36,7 @@ public final class CheckAccessControlsPolymerTest extends TypeICompilerTestCase 
   @Override
   protected void setUp() throws Exception {
     super.setUp();
+    enableTypeCheck();
     enableParseTypeInfo();
     enablePolymerPass();
     allowExternsChanges();

@@ -25,7 +25,7 @@ import java.util.Map;
  *
  */
 
-public final class AmbiguatePropertiesTest extends TypeICompilerTestCase {
+public final class AmbiguatePropertiesTest extends CompilerTestCase {
   private AmbiguateProperties lastPass;
 
   private static final String EXTERNS = lines(
@@ -46,12 +46,10 @@ public final class AmbiguatePropertiesTest extends TypeICompilerTestCase {
   @Override
   protected void setUp() throws Exception {
     super.setUp();
+    enableTypeCheck();
     enableNormalize();
     enableClosurePass();
     enableGatherExternProperties();
-    ignoreWarnings(
-        NewTypeInference.GLOBAL_THIS,
-        NewTypeInference.PROPERTY_ACCESS_ON_NONOBJECT);
   }
 
   @Override

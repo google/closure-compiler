@@ -19,7 +19,7 @@ package com.google.javascript.jscomp;
 /**
  * @author johnlenz@google.com (John Lenz)
  */
-public final class CheckUnusedPrivatePropertiesTest extends TypeICompilerTestCase {
+public final class CheckUnusedPrivatePropertiesTest extends CompilerTestCase {
 
   private static final String EXTERNS = lines(
       DEFAULT_EXTERNS,
@@ -45,6 +45,7 @@ public final class CheckUnusedPrivatePropertiesTest extends TypeICompilerTestCas
     super.setUp();
     enableGatherExternProperties();
     enableTranspile();
+    enableTypeCheck();
   }
 
   @Override
@@ -82,7 +83,7 @@ public final class CheckUnusedPrivatePropertiesTest extends TypeICompilerTestCas
   }
 
   public void testClassPropUnused1() {
-    this.mode = TypeInferenceMode.DISABLED;
+    disableTypeCheck();
 
     // A property defined on "this" can be removed
     unused("class C { constructor() { /** @private */ this.a = 2 } }");
@@ -94,7 +95,7 @@ public final class CheckUnusedPrivatePropertiesTest extends TypeICompilerTestCas
   }
 
   public void testClassMethodUnused1() {
-    this.mode = TypeInferenceMode.DISABLED;
+    disableTypeCheck();
 
     unused("class C { constructor() {}  /** @private */ method() {} }");
     used("class C { constructor() {}  /** @private */ method() {} }\n new C().method();");
@@ -102,7 +103,7 @@ public final class CheckUnusedPrivatePropertiesTest extends TypeICompilerTestCas
 
   // The JSDoc seems to be missing here, reenable this test when it is fixed.
   public void disable_testClassMethodUnused2() {
-    this.mode = TypeInferenceMode.DISABLED;
+    disableTypeCheck();
 
     unused("class C { constructor() {}\n  /** @private */ ['method']() {} }");
     used("class C { constructor() {}\n  /** @private */ ['method']() {} }\n new C()['method']();");

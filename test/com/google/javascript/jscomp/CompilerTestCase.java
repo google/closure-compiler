@@ -103,12 +103,6 @@ public abstract class CompilerTestCase extends TestCase {
   private boolean typeCheckEnabled;
 
   /**
-   * If true, run NTI together with the pass being tested. A separate
-   * flag controls whether NTI runs before or after the pass.
-   */
-  private boolean newTypeInferenceEnabled;
-
-  /**
    * If true performs the test using multistage compilation.
    */
   private boolean multistageCompilation;
@@ -596,7 +590,6 @@ public abstract class CompilerTestCase extends TestCase {
     this.languageOut = LanguageMode.ECMASCRIPT5;
     this.markNoSideEffects = false;
     this.multistageCompilation = true;
-    this.newTypeInferenceEnabled = false;
     this.normalizeEnabled = false;
     this.parseTypeInfo = false;
     this.polymerPass = false;
@@ -786,11 +779,18 @@ public abstract class CompilerTestCase extends TestCase {
     typeCheckEnabled = true;
   }
 
-  // Run the new type inference after the test pass. Useful for testing passes
-  // that rewrite the AST prior to typechecking, eg, AngularPass or PolymerPass.
-  protected void enableNewTypeInference() {
+  protected final boolean isTypeCheckEnabled() {
+    return typeCheckEnabled;
+  }
+
+  /**
+   * Do not run type checking before running the test pass.
+   *
+   * @see TypeCheck
+   */
+  protected final void disableTypeCheck() {
     checkState(this.setUpRan, "Attempted to configure before running setUp().");
-    this.newTypeInferenceEnabled = true;
+    typeCheckEnabled = false;
   }
 
   /**
@@ -832,21 +832,6 @@ public abstract class CompilerTestCase extends TestCase {
   protected final void disableValidateAstChangeMarking() {
     checkState(this.setUpRan, "Attempted to configure before running setUp().");
     checkAstChangeMarking = false;
-  }
-
-  /**
-   * Do not run type checking before running the test pass.
-   *
-   * @see TypeCheck
-   */
-  protected final void disableTypeCheck() {
-    checkState(this.setUpRan, "Attempted to configure before running setUp().");
-    typeCheckEnabled = false;
-  }
-
-  protected final void disableNewTypeInference() {
-    checkState(this.setUpRan, "Attempted to configure before running setUp().");
-    this.newTypeInferenceEnabled = false;
   }
 
   /**
@@ -989,12 +974,6 @@ public abstract class CompilerTestCase extends TestCase {
         new SemanticReverseAbstractInterpreter(compiler.getTypeRegistry());
     compiler.setMostRecentTypechecker(MostRecentTypechecker.OTI);
     return new TypeCheck(compiler, rai, compiler.getTypeRegistry());
-  }
-
-  protected static void runNewTypeInference(Compiler compiler, Node externs, Node js) {
-    new GlobalTypeInfoCollector(compiler).process(externs, js);
-    NewTypeInference nti = new NewTypeInference(compiler);
-    nti.process(externs, js);
   }
 
   /** Ensures the given library is injected before typechecking */
@@ -1406,12 +1385,9 @@ public abstract class CompilerTestCase extends TestCase {
             ? ((FlatSources) inputsObj).sources
             : null;
     List<SourceFile> expected = expectedObj != null ? expectedObj.expected : null;
-    checkState(!this.typeCheckEnabled || !this.newTypeInferenceEnabled);
     checkState(this.setUpRan, "CompilerTestCase.setUp not run: call super.setUp() from overrides.");
     RecentChange recentChange = new RecentChange();
     compiler.addChangeHandler(recentChange);
-
-    compiler.getOptions().setNewTypeInference(this.newTypeInferenceEnabled);
 
     Node root = compiler.parseInputs();
 
@@ -1512,8 +1488,6 @@ public abstract class CompilerTestCase extends TestCase {
         if (!runTypeCheckAfterProcessing && typeCheckEnabled && i == 0) {
           TypeCheck check = createTypeCheck(compiler);
           check.processForTesting(externsRoot, mainRoot);
-        } else if (!this.runTypeCheckAfterProcessing && this.newTypeInferenceEnabled && i == 0) {
-          runNewTypeInference(compiler, externsRoot, mainRoot);
         }
 
         boolean runNormalization = normalizeEnabled && i == 0;
@@ -1588,8 +1562,6 @@ public abstract class CompilerTestCase extends TestCase {
         if (runTypeCheckAfterProcessing && typeCheckEnabled && i == 0) {
           TypeCheck check = createTypeCheck(compiler);
           check.processForTesting(externsRoot, mainRoot);
-        } else if (this.runTypeCheckAfterProcessing && this.newTypeInferenceEnabled && i == 0) {
-          runNewTypeInference(compiler, externsRoot, mainRoot);
         }
 
         if (checkAccessControls) {

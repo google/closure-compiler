@@ -22,14 +22,14 @@ import com.google.javascript.jscomp.CheckLevel;
 import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerOptions;
 import com.google.javascript.jscomp.CompilerPass;
+import com.google.javascript.jscomp.CompilerTestCase;
 import com.google.javascript.jscomp.DiagnosticGroups;
-import com.google.javascript.jscomp.TypeICompilerTestCase;
 
 /**
  * Test case for {@link CheckNullableReturn}.
  *
  */
-public final class CheckNullableReturnTest extends TypeICompilerTestCase {
+public final class CheckNullableReturnTest extends CompilerTestCase {
   private static final String EXTERNS =
       DEFAULT_EXTERNS + "/** @constructor */ function SomeType() {}";
 
@@ -53,6 +53,7 @@ public final class CheckNullableReturnTest extends TypeICompilerTestCase {
   @Override
   public void setUp() throws Exception {
     super.setUp();
+    enableTypeCheck();
     enableTranspile();
   }
 

@@ -18,7 +18,7 @@ package com.google.javascript.jscomp;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 
-public final class DeclaredGlobalExternsOnWindowTest extends TypeICompilerTestCase {
+public final class DeclaredGlobalExternsOnWindowTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
@@ -28,6 +28,7 @@ public final class DeclaredGlobalExternsOnWindowTest extends TypeICompilerTestCa
   @Override
   protected void setUp() throws Exception {
     super.setUp();
+    enableTypeCheck();
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2017);
     allowExternsChanges();
     enableRunTypeCheckAfterProcessing();

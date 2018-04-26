@@ -22,7 +22,7 @@ import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
  * Unit tests for {#link {@link PeepholeReplaceKnownMethods}
  *
  */
-public final class PeepholeReplaceKnownMethodsTest extends TypeICompilerTestCase {
+public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
 
   private boolean late = true;
   private boolean useTypes = true;
@@ -43,7 +43,7 @@ public final class PeepholeReplaceKnownMethodsTest extends TypeICompilerTestCase
     super.setUp();
     late = true;
     useTypes = true;
-    this.mode = TypeInferenceMode.DISABLED;
+    disableTypeCheck();
   }
 
   @Override
@@ -520,7 +520,8 @@ public final class PeepholeReplaceKnownMethodsTest extends TypeICompilerTestCase
   }
 
   public void testReplaceWithCharAt() {
-    this.mode = TypeInferenceMode.CHECKED;
+    enableTypeCheck();
+
     foldStringTyped("a.substring(0, 1)", "a.charAt(0)");
     foldSameStringTyped("a.substring(-4, -3)");
     foldSameStringTyped("a.substring(i, j + 1)");
@@ -558,7 +559,8 @@ public final class PeepholeReplaceKnownMethodsTest extends TypeICompilerTestCase
     foldSameStringTyped("a.substr(1, 2)");
     foldSameStringTyped("a.substr(1, 2, 3)");
 
-    this.mode = TypeInferenceMode.CHECKED;
+    enableTypeCheck();
+
     foldSame("function f(/** ? */ a) { a.substring(0, 1); }");
     foldSame("function f(/** ? */ a) { a.substr(0, 1); }");
     foldSame(lines(

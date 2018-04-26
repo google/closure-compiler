@@ -42,7 +42,7 @@ import com.google.common.collect.ImmutableList;
  * @author nicksantos@google.com (Nick Santos)
  */
 
-public final class CheckAccessControlsTest extends TypeICompilerTestCase {
+public final class CheckAccessControlsTest extends CompilerTestCase {
 
   private static final DiagnosticGroup NTI_CONST =
       new DiagnosticGroup(
@@ -60,6 +60,7 @@ public final class CheckAccessControlsTest extends TypeICompilerTestCase {
   @Override
   protected void setUp() throws Exception {
     super.setUp();
+    enableTypeCheck();
     enableParseTypeInfo();
     enableClosurePass();
     enableRewriteClosureCode();

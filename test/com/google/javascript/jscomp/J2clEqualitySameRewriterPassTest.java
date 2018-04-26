@@ -15,7 +15,7 @@
  */
 package com.google.javascript.jscomp;
 
-public class J2clEqualitySameRewriterPassTest extends TypeICompilerTestCase {
+public class J2clEqualitySameRewriterPassTest extends CompilerTestCase {
   private static final String EXTERN = "Equality.$same = function(opt_a, opt_b) {};";
 
   public J2clEqualitySameRewriterPassTest() {
@@ -25,6 +25,7 @@ public class J2clEqualitySameRewriterPassTest extends TypeICompilerTestCase {
   @Override
   protected void setUp() throws Exception {
     super.setUp();
+    enableTypeCheck();
   }
 
   @Override

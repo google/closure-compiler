@@ -35,7 +35,7 @@ import java.util.Set;
  * Tests for {@link ReplaceStrings}.
  *
  */
-public final class ReplaceStringsTest extends TypeICompilerTestCase {
+public final class ReplaceStringsTest extends CompilerTestCase {
   private ReplaceStrings pass;
   private Set<String> reserved;
   private VariableMap previous;
@@ -91,6 +91,7 @@ public final class ReplaceStringsTest extends TypeICompilerTestCase {
   @Override
   protected void setUp() throws Exception {
     super.setUp();
+    enableTypeCheck();
     enableNormalize();
     enableParseTypeInfo();
     functionsToInspect = defaultFunctionsToInspect;

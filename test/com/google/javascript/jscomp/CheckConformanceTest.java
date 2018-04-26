@@ -32,7 +32,7 @@ import java.util.List;
  * Tests for {@link CheckConformance}.
  *
  */
-public final class CheckConformanceTest extends TypeICompilerTestCase {
+public final class CheckConformanceTest extends CompilerTestCase {
   private String configuration;
 
   private static final String EXTERNS =
@@ -75,6 +75,7 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
   @Override
   protected void setUp() throws Exception {
     super.setUp();
+    enableTypeCheck();
     enableTranspile();
     enableClosurePass();
     enableClosurePassForExpected();

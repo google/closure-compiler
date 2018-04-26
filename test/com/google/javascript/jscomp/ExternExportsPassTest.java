@@ -23,12 +23,13 @@ import java.util.function.Consumer;
  * Tests for {@link ExternExportsPass}.
  *
  */
-public final class ExternExportsPassTest extends TypeICompilerTestCase {
+public final class ExternExportsPassTest extends CompilerTestCase {
 
   @Override
   protected void setUp() throws Exception {
     super.setUp();
     enableNormalize();
+    enableTypeCheck();
   }
 
   @Override
@@ -331,7 +332,7 @@ public final class ExternExportsPassTest extends TypeICompilerTestCase {
   public void testExportSymbolWithoutTypeCheck() {
     // ExternExportsPass should not emit annotations
     // if there is no type information available.
-    this.mode = TypeInferenceMode.DISABLED;
+    disableTypeCheck();
 
     compileAndCheck(
         lines(
@@ -408,7 +409,7 @@ public final class ExternExportsPassTest extends TypeICompilerTestCase {
     // to JSTypes and not Nodes (and no JSTypes are created when checkTypes
     // is false), we don't really have a choice.
 
-    this.mode = TypeInferenceMode.DISABLED;
+    disableTypeCheck();
 
     compileAndCheck(
         lines(

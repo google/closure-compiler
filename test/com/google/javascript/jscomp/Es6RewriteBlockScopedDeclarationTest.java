@@ -23,7 +23,7 @@ import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
  *
  * @author moz@google.com (Michael Zhou)
  */
-public final class Es6RewriteBlockScopedDeclarationTest extends TypeICompilerTestCase {
+public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase {
 
   public Es6RewriteBlockScopedDeclarationTest() {
     super(DEFAULT_EXTERNS);

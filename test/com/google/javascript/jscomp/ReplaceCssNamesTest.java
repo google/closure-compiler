@@ -31,7 +31,7 @@ import java.util.Set;
  * Tests for ReplaceCssNames.java.
  *
  */
-public final class ReplaceCssNamesTest extends TypeICompilerTestCase {
+public final class ReplaceCssNamesTest extends CompilerTestCase {
   /** Whether to pass the map of replacements as opposed to null */
   boolean useReplacementMap;
 
@@ -98,6 +98,7 @@ public final class ReplaceCssNamesTest extends TypeICompilerTestCase {
   @Override
   protected void setUp() throws Exception {
     super.setUp();
+    enableTypeCheck();
     cssNames = new HashMap<>();
     useReplacementMap = true;
     renamingMap = getPartialMap();

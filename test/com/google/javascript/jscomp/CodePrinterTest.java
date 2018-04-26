@@ -21,7 +21,6 @@ import static com.google.common.truth.Truth.assertThat;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
-import com.google.javascript.jscomp.TypeICompilerTestCase.TypeInferenceMode;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -1543,7 +1542,7 @@ public final class CodePrinterTest extends CodePrinterTestBase {
   private void assertTypeAnnotations(String js, String expected) {
     assertEquals(
         expected,
-        new CodePrinter.Builder(parse(js, TypeInferenceMode.CHECKED))
+        new CodePrinter.Builder(parse(js, /* typeChecked= */ true))
             .setCompilerOptions(newCompilerOptions(new CompilerOptionBuilder() {
               @Override
               void setOptions(CompilerOptions options) {
@@ -1994,13 +1993,13 @@ public final class CodePrinterTest extends CodePrinterTestBase {
 
   public void testStrict() {
     String result =
-        defaultBuilder(parse("var x", TypeInferenceMode.CHECKED)).setTagAsStrict(true).build();
+        defaultBuilder(parse("var x", /* typeChecked= */ true)).setTagAsStrict(true).build();
     assertEquals("'use strict';var x", result);
   }
 
   public void testStrictPretty() {
     String result =
-        defaultBuilder(parse("var x", TypeInferenceMode.CHECKED))
+        defaultBuilder(parse("var x", /* typeChecked= */ true))
             .setTagAsStrict(true)
             .setPrettyPrint(true)
             .build();
@@ -2009,13 +2008,13 @@ public final class CodePrinterTest extends CodePrinterTestBase {
 
   public void testExterns() {
     String result =
-        defaultBuilder(parse("var x", TypeInferenceMode.CHECKED)).setTagAsExterns(true).build();
+        defaultBuilder(parse("var x", /* typeChecked= */ true)).setTagAsExterns(true).build();
     assertEquals("/** @externs */\nvar x", result);
   }
 
   public void testIjs() {
     String result =
-        defaultBuilder(parse("var x", TypeInferenceMode.CHECKED))
+        defaultBuilder(parse("var x", /* typeChecked= */ true))
             .setTagAsTypeSummary(true)
             .build();
     assertEquals("/** @fileoverview @typeSummary */\nvar x", result);

@@ -38,7 +38,7 @@ import java.util.Map;
  *
  * @author robbyw@google.com (Robby Walker)
  */
-public final class ScopedAliasesTest extends TypeICompilerTestCase {
+public final class ScopedAliasesTest extends CompilerTestCase {
 
   private static final String GOOG_SCOPE_START_BLOCK =
       "goog.scope(function() {";
@@ -61,7 +61,7 @@ public final class ScopedAliasesTest extends TypeICompilerTestCase {
   @Override
   protected void setUp() throws Exception {
     super.setUp();
-    this.mode = TypeInferenceMode.DISABLED;
+    disableTypeCheck();
     enableRunTypeCheckAfterProcessing();
   }
 
@@ -407,7 +407,7 @@ public final class ScopedAliasesTest extends TypeICompilerTestCase {
   }
 
   public void testJsDocNotIgnored() {
-    this.mode = TypeInferenceMode.CHECKED;
+    enableTypeCheck();
 
     String externs =
         lines(
@@ -576,7 +576,7 @@ public final class ScopedAliasesTest extends TypeICompilerTestCase {
   }
 
   public void testJsDocRecord() {
-    this.mode = TypeInferenceMode.CHECKED;
+    enableTypeCheck();
     test(
         lines(
             "/** @const */ var ns = {};",
@@ -702,7 +702,7 @@ public final class ScopedAliasesTest extends TypeICompilerTestCase {
   }
 
   public void testInlineJsDoc() {
-    this.mode = TypeInferenceMode.CHECKED;
+    enableTypeCheck();
     test(
         srcs(lines(
             "/** @const */ var ns = {};",
@@ -721,7 +721,7 @@ public final class ScopedAliasesTest extends TypeICompilerTestCase {
   }
 
   public void testInlineReturn() {
-    this.mode = TypeInferenceMode.CHECKED;
+    enableTypeCheck();
     test(
         srcs(lines(
             "/** @const */ var ns = {};",
@@ -742,7 +742,7 @@ public final class ScopedAliasesTest extends TypeICompilerTestCase {
   }
 
   public void testInlineParam() {
-    this.mode = TypeInferenceMode.CHECKED;
+    enableTypeCheck();
     test(
         srcs(lines(
             "/** @const */ var ns = {};",
@@ -1067,7 +1067,7 @@ public final class ScopedAliasesTest extends TypeICompilerTestCase {
   }
 
   public void testTypeCheck() {
-    this.mode = TypeInferenceMode.CHECKED;
+    enableTypeCheck();
 
     test(
         lines(

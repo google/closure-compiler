@@ -31,7 +31,7 @@ import java.util.Set;
  * {@link PeepholeIntegrationTest}.
  */
 
-public final class PeepholeFoldConstantsTest extends TypeICompilerTestCase {
+public final class PeepholeFoldConstantsTest extends CompilerTestCase {
 
   public PeepholeFoldConstantsTest() {
     super(DEFAULT_EXTERNS);
@@ -44,11 +44,11 @@ public final class PeepholeFoldConstantsTest extends TypeICompilerTestCase {
   @Override
   protected void setUp() throws Exception {
     super.setUp();
+    disableTypeCheck();
     late = false;
     useTypes = true;
     // Reduce this to 1 if we get better expression evaluators.
     numRepetitions = 2;
-    mode = TypeInferenceMode.DISABLED;
   }
 
   @Override
@@ -763,7 +763,7 @@ public final class PeepholeFoldConstantsTest extends TypeICompilerTestCase {
   }
 
   public void testStringAdd_identity() {
-    this.mode = TypeInferenceMode.CHECKED;
+    enableTypeCheck();
     foldStringTypes("x + ''", "x");
     foldStringTypes("'' + x", "x");
   }
@@ -1431,7 +1431,7 @@ public final class PeepholeFoldConstantsTest extends TypeICompilerTestCase {
   }
 
   public void testTypeBasedFoldConstant() {
-    this.mode = TypeInferenceMode.CHECKED;
+    enableTypeCheck();
     test("function f(/** number */ x) { x + 1 + 1 + x; }",
          "function f(/** number */ x) { x + 2 + x; }");
 
@@ -1585,7 +1585,7 @@ public final class PeepholeFoldConstantsTest extends TypeICompilerTestCase {
   }
 
   public void testAlgebraicIdentities() {
-    this.mode = TypeInferenceMode.CHECKED;
+    enableTypeCheck();
 
     foldNumericTypes("x+0", "x");
     foldNumericTypes("0+x", "x");

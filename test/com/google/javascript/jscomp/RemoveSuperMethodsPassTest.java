@@ -18,7 +18,7 @@ package com.google.javascript.jscomp;
 import com.google.common.collect.ImmutableList;
 
 /** Tests for {@link RemoveSuperMethodsPass} */
-public final class RemoveSuperMethodsPassTest extends TypeICompilerTestCase {
+public final class RemoveSuperMethodsPassTest extends CompilerTestCase {
 
   private static final String BOILERPLATE =
       lines(
@@ -45,6 +45,12 @@ public final class RemoveSuperMethodsPassTest extends TypeICompilerTestCase {
 
   public RemoveSuperMethodsPassTest() {
     super(DEFAULT_EXTERNS);
+  }
+
+  @Override
+  protected void setUp() throws Exception {
+    super.setUp();
+    enableTypeCheck();
   }
 
   @Override

@@ -38,7 +38,7 @@ import com.google.javascript.rhino.Node;
  * Unit tests for PolymerPass
  * @author jlklein@google.com (Jeremy Klein)
  */
-public class PolymerPassTest extends TypeICompilerTestCase {
+public class PolymerPassTest extends CompilerTestCase {
   private static final String EXTERNS_PREFIX =
       lines(
           MINIMAL_EXTERNS,
@@ -129,6 +129,7 @@ public class PolymerPassTest extends TypeICompilerTestCase {
   @Override
   protected void setUp() throws Exception {
     super.setUp();
+    enableTypeCheck();
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2017);
     allowExternsChanges();
     enableRunTypeCheckAfterProcessing();
@@ -155,7 +156,8 @@ public class PolymerPassTest extends TypeICompilerTestCase {
             "});"));
 
     // Type checker doesn't currently understand ES6 code. Remove when it does.
-    this.mode = TypeInferenceMode.DISABLED;
+    disableTypeCheck();
+
     test(
         lines(
             "var X = class extends Polymer.Element {",
@@ -173,7 +175,8 @@ public class PolymerPassTest extends TypeICompilerTestCase {
 
   public void testLetTarget() {
     // Type checker doesn't currently understand ES6 code. Remove when it does.
-    this.mode = TypeInferenceMode.DISABLED;
+    disableTypeCheck();
+
     test(
         lines(
             "let X = Polymer({",
@@ -189,7 +192,8 @@ public class PolymerPassTest extends TypeICompilerTestCase {
             "X = Polymer(/** @lends {X.prototype} */ {is:'x-element'});"));
 
     // Type checker doesn't currently understand ES6 code. Remove when it does.
-    this.mode = TypeInferenceMode.DISABLED;
+    disableTypeCheck();
+
     test(
         lines(
             "let X = class extends Polymer.Element {",
@@ -207,7 +211,8 @@ public class PolymerPassTest extends TypeICompilerTestCase {
 
   public void testConstTarget() {
     // Type checker doesn't currently understand ES6 code. Remove when it does.
-    this.mode = TypeInferenceMode.DISABLED;
+    disableTypeCheck();
+
     testError(
         lines(
             "const X = Polymer({",
@@ -264,7 +269,8 @@ public class PolymerPassTest extends TypeICompilerTestCase {
             "});"));
 
     // Type checker doesn't currently understand ES6 code. Remove when it does.
-    this.mode = TypeInferenceMode.DISABLED;
+    disableTypeCheck();
+
     test(
         lines(
             "const x = {};",
@@ -285,7 +291,8 @@ public class PolymerPassTest extends TypeICompilerTestCase {
   public void testComputedPropName() {
     // Type checker doesn't currently understand ES6 code. Remove when it does.
     // TypeCheck cannot grab a name from a complicated computedPropName
-    this.mode = TypeInferenceMode.DISABLED;
+    disableTypeCheck();
+
     test("var X = Polymer({is:'x-element', [name + (() => 42)]: function() {return 42;}});",
         lines(
             "/** @constructor @extends {PolymerElement} @implements {PolymerXInterface} */",
@@ -327,7 +334,8 @@ public class PolymerPassTest extends TypeICompilerTestCase {
             "})()"));
 
     // Type checker doesn't currently understand ES6 code. Remove when it does.
-    this.mode = TypeInferenceMode.DISABLED;
+    disableTypeCheck();
+
     test(
         lines(
             "const x = {};",
@@ -378,7 +386,8 @@ public class PolymerPassTest extends TypeICompilerTestCase {
             "})()"));
 
     // Type checker doesn't currently understand ES6 code. Remove when it does.
-    this.mode = TypeInferenceMode.DISABLED;
+    disableTypeCheck();
+
     test(
         lines(
             "(function() {",
@@ -507,7 +516,8 @@ public class PolymerPassTest extends TypeICompilerTestCase {
             "});"));
 
     // Type checker doesn't currently understand ES6 code. Remove when it does.
-    this.mode = TypeInferenceMode.DISABLED;
+    disableTypeCheck();
+
     test(
         lines(
             "class X extends Polymer.Element {",
@@ -670,7 +680,8 @@ public class PolymerPassTest extends TypeICompilerTestCase {
             "});"));
 
     // Type checker doesn't currently understand ES6 code. Remove when it does.
-    this.mode = TypeInferenceMode.DISABLED;
+    disableTypeCheck();
+
     test(
         lines(
             "/** @constructor */",
@@ -775,7 +786,8 @@ public class PolymerPassTest extends TypeICompilerTestCase {
             "});"));
 
     // Type checker doesn't currently understand ES6 code. Remove when it does.
-    this.mode = TypeInferenceMode.DISABLED;
+    disableTypeCheck();
+
     test(
         lines(
             "/** @constructor */",
@@ -870,7 +882,8 @@ public class PolymerPassTest extends TypeICompilerTestCase {
             "});"));
 
     // Type checker doesn't currently understand ES6 code. Remove when it does.
-    this.mode = TypeInferenceMode.DISABLED;
+    disableTypeCheck();
+
     test(
         lines(
             "/** @constructor */",
@@ -1021,7 +1034,8 @@ public class PolymerPassTest extends TypeICompilerTestCase {
             "Polymera_BInterface.prototype._setPets;"));
 
     // Type checker doesn't currently understand ES6 code. Remove when it does.
-    this.mode = TypeInferenceMode.DISABLED;
+    disableTypeCheck();
+
     String jsClass = lines(
         "class A extends Polymer.Element {",
         "  static get is() { return 'a-element'; }",
@@ -1166,7 +1180,7 @@ public class PolymerPassTest extends TypeICompilerTestCase {
 
   public void testPolymerClassObserversTyped() {
     // Type checker doesn't currently understand ES6 code. Remove when it does.
-    this.mode = TypeInferenceMode.DISABLED;
+    disableTypeCheck();
     test(
         lines(
             "class FooElement extends Polymer.Element {",
@@ -1330,7 +1344,7 @@ public class PolymerPassTest extends TypeICompilerTestCase {
             "});"));
 
     // Type checker doesn't currently understand ES6 code. Remove when it does.
-    this.mode = TypeInferenceMode.DISABLED;
+    disableTypeCheck();
     test(
         lines(
             "class Foo extends Polymer.Element {",
@@ -1444,7 +1458,7 @@ public class PolymerPassTest extends TypeICompilerTestCase {
             "});"));
 
     // Type checker doesn't currently understand ES6 code. Remove when it does.
-    this.mode = TypeInferenceMode.DISABLED;
+    disableTypeCheck();
     test(
         lines(
             "class Foo extends Polymer.Element {",
@@ -2723,7 +2737,7 @@ public class PolymerPassTest extends TypeICompilerTestCase {
 
   public void testInvalid1() {
     // Type checker doesn't currently understand ES6 code. Remove when it does.
-    this.mode = TypeInferenceMode.DISABLED;
+    disableTypeCheck();
     testWarning("var x = Polymer('blah');", POLYMER_DESCRIPTOR_NOT_VALID);
     testWarning("var x = Polymer('foo-bar', {});", POLYMER_DESCRIPTOR_NOT_VALID);
     testError("var x = Polymer({},'blah');", POLYMER_UNEXPECTED_PARAMS);
@@ -2785,7 +2799,7 @@ public class PolymerPassTest extends TypeICompilerTestCase {
         POLYMER_INVALID_PROPERTY);
 
     // Type checker doesn't currently understand ES6 code. Remove when it does.
-    this.mode = TypeInferenceMode.DISABLED;
+    disableTypeCheck();
     testError(
         lines(
             "var x = class extends Polymer.Element {",
@@ -2927,7 +2941,7 @@ public class PolymerPassTest extends TypeICompilerTestCase {
 
   public void testFeaturesInFunctionBody() {
     // Type checker doesn't currently understand ES6 code. Remove when it does.
-    this.mode = TypeInferenceMode.DISABLED;
+    disableTypeCheck();
     test(
         lines(
             "var X = Polymer({",
@@ -2966,7 +2980,7 @@ public class PolymerPassTest extends TypeICompilerTestCase {
 
   public void testPolymerElementAnnotation1() {
     // Type checker doesn't currently understand ES6 code. Remove when it does.
-    this.mode = TypeInferenceMode.DISABLED;
+    disableTypeCheck();
     test(
         lines(
             "/** @constructor */",
@@ -3019,7 +3033,7 @@ public class PolymerPassTest extends TypeICompilerTestCase {
 
   public void testPolymerElementAnnotation2() {
     // Type checker doesn't currently understand ES6 code. Remove when it does.
-    this.mode = TypeInferenceMode.DISABLED;
+    disableTypeCheck();
     test(
         lines(
             "/** @constructor */",
@@ -3122,7 +3136,7 @@ public class PolymerPassTest extends TypeICompilerTestCase {
             "});"));
 
     // Type checker doesn't currently understand ES6 code. Remove when it does.
-    this.mode = TypeInferenceMode.DISABLED;
+    disableTypeCheck();
     test(
         2,
         lines(
@@ -3223,7 +3237,7 @@ public class PolymerPassTest extends TypeICompilerTestCase {
             "});"));
 
     // Type checker doesn't currently understand ES6 code. Remove when it does.
-    this.mode = TypeInferenceMode.DISABLED;
+    disableTypeCheck();
     test(
         2,
         lines(
@@ -3325,7 +3339,7 @@ public class PolymerPassTest extends TypeICompilerTestCase {
             "});"));
 
     // Type checker doesn't currently understand ES6 code. Remove when it does.
-    this.mode = TypeInferenceMode.DISABLED;
+    disableTypeCheck();
     test(
         2,
         lines(
