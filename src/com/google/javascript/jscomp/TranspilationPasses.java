@@ -77,7 +77,7 @@ public class TranspilationPasses {
     passes.add(convertEs7ToEs6);
   }
 
-  public static void addEs6PreTypecheckPasses(List<PassFactory> passes) {
+  public static void addEs6PreTypecheckPasses(List<PassFactory> passes, CompilerOptions options) {
     // Binary and octal literals are effectively transpiled by the parser.
     // There's no transpilation we can do for the new regexp flags.
     passes.add(
@@ -100,6 +100,11 @@ public class TranspilationPasses {
     passes.add(es6ForOf);
     passes.add(rewriteBlockScopedFunctionDeclaration);
     passes.add(rewriteBlockScopedDeclaration);
+    if (!options.checksOnly || options.getNewTypeInference()) {
+      // Don't run these passes in checksOnly mode since all the OTI typechecking & checks passes
+      // support the transpiled features.
+      passes.add(rewriteBlockScopedDeclaration);
+    }
   }
 
   /**
