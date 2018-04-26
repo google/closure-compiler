@@ -618,11 +618,14 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
 
   public void testCollectedCtorProperty12() {
     testSame(
-        "/** @constructor */ function f() {}\n" +
-        "f.prototype.init_f = function() {" +
-        "  /** @const */ this.foo = !!unknown;" +
-        "};" +
-        "var x = new f();");
+        externs("/** @type {?} */ let unknown;"),
+        srcs(
+            lines(
+                "/** @constructor */ function f() {}",
+                "f.prototype.init_f = function() {",
+                "  /** @const */ this.foo = !!unknown;",
+                "};",
+                "var x = new f();")));
     ObjectType x = (ObjectType) findNameType("x", globalScope);
     assertEquals("f", x.toString());
     assertTrue(x.hasProperty("foo"));
@@ -633,11 +636,14 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
 
   public void testCollectedCtorProperty13() {
     testSame(
-        "/** @constructor */ function f() {}\n" +
-        "f.prototype.init_f = function() {" +
-        "  /** @const */ this.foo = +unknown;" +
-        "};" +
-        "var x = new f();");
+        externs("/** @type {?} */ let unknown;"),
+        srcs(
+            lines(
+                "/** @constructor */ function f() {}",
+                "f.prototype.init_f = function() {",
+                "  /** @const */ this.foo = +unknown;",
+                "};",
+                "var x = new f();")));
     ObjectType x = (ObjectType) findNameType("x", globalScope);
     assertEquals("f", x.toString());
     assertTrue(x.hasProperty("foo"));
@@ -648,11 +654,14 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
 
   public void testCollectedCtorProperty14() {
     testSame(
-        "/** @constructor */ function f() {}\n" +
-        "f.prototype.init_f = function() {" +
-        "  /** @const */ this.foo = unknown + '';" +
-        "};" +
-        "var x = new f();");
+        externs("/** @type {?} */ let unknown;"),
+        srcs(
+            lines(
+                "/** @constructor */ function f() {}",
+                "f.prototype.init_f = function() {",
+                "  /** @const */ this.foo = unknown + '';",
+                "};",
+                "var x = new f();")));
     ObjectType x = (ObjectType) findNameType("x", globalScope);
     assertEquals("f", x.toString());
     assertTrue(x.hasProperty("foo"));
@@ -1445,30 +1454,32 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
 
   public void testTemplateType7() {
     testSame(
-        "var goog = {};\n" +
-        "goog.array = {};\n" +
-        "/**\n" +
-        " * @param {Array<T>} arr\n" +
-        " * @param {function(this:S, !T, number, !Array<!T>):boolean} f\n" +
-        " * @param {!S=} opt_obj\n" +
-        " * @return {!Array<T>}\n" +
-        " * @template T,S\n" +
-        " */\n" +
-        "goog.array.filter = function(arr, f, opt_obj) {\n" +
-        "  var res = [];\n" +
-        "  for (var i = 0; i < arr.length; i++) {\n" +
-        "     if (f.call(opt_obj, arr[i], i, arr)) {\n" +
-        "        res.push(val);\n" +
-        "     }\n" +
-        "  }\n" +
-        "  return res;\n" +
-        "}" +
-        "/** @constructor */\n" +
-        "function Foo() {}\n" +
-        "/** @type {Array<string>} */\n" +
-        "var arr = [];\n" +
-        "var result = goog.array.filter(arr," +
-        "  function(a,b,c) {var self=this;}, new Foo());");
+        lines(
+            "var goog = {};",
+            "goog.array = {};",
+            "/**",
+            " * @param {Array<T>} arr",
+            " * @param {function(this:S, !T, number, !Array<!T>):boolean} f",
+            " * @param {!S=} opt_obj",
+            " * @return {!Array<T>}",
+            " * @template T,S",
+            " */",
+            "goog.array.filter = function(arr, f, opt_obj) {",
+            "  var res = [];",
+            "  for (var i = 0; i < arr.length; i++) {",
+            "     const val = arr[i];",
+            "     if (f.call(opt_obj, val, i, arr)) {",
+            "        res.push(val);",
+            "     }",
+            "  }",
+            "  return res;",
+            "}",
+            "/** @constructor */",
+            "function Foo() {}",
+            "/** @type {Array<string>} */",
+            "var arr = [];",
+            "var result = goog.array.filter(arr,",
+            "  function(a,b,c) {var self=this;}, new Foo());"));
 
     assertEquals("Foo", findNameType("self", lastFunctionScope).toString());
     assertEquals("string", findNameType("a", lastFunctionScope).toString());
@@ -1479,30 +1490,32 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
 
   public void testTemplateType7b() {
     testSame(
-        "var goog = {};\n" +
-        "goog.array = {};\n" +
-        "/**\n" +
-        " * @param {Array<T>} arr\n" +
-        " * @param {function(this:S, !T, number, !Array<T>):boolean} f\n" +
-        " * @param {!S=} opt_obj\n" +
-        " * @return {!Array<T>}\n" +
-        " * @template T,S\n" +
-        " */\n" +
-        "goog.array.filter = function(arr, f, opt_obj) {\n" +
-        "  var res = [];\n" +
-        "  for (var i = 0; i < arr.length; i++) {\n" +
-        "     if (f.call(opt_obj, arr[i], i, arr)) {\n" +
-        "        res.push(val);\n" +
-        "     }\n" +
-        "  }\n" +
-        "  return res;\n" +
-        "}" +
-        "/** @constructor */\n" +
-        "function Foo() {}\n" +
-        "/** @type {Array<string>} */\n" +
-        "var arr = [];\n" +
-        "var result = goog.array.filter(arr," +
-        "  function(a,b,c) {var self=this;}, new Foo());");
+        lines(
+            "var goog = {};",
+            "goog.array = {};",
+            "/**",
+            " * @param {Array<T>} arr",
+            " * @param {function(this:S, !T, number, !Array<T>):boolean} f",
+            " * @param {!S=} opt_obj",
+            " * @return {!Array<T>}",
+            " * @template T,S",
+            " */",
+            "goog.array.filter = function(arr, f, opt_obj) {",
+            "  var res = [];",
+            "  for (var i = 0; i < arr.length; i++) {",
+            "     const val = arr[i];",
+            "     if (f.call(opt_obj, val, i, arr)) {",
+            "        res.push(val);",
+            "     }",
+            "  }",
+            "  return res;",
+            "}",
+            "/** @constructor */",
+            "function Foo() {}",
+            "/** @type {Array<string>} */",
+            "var arr = [];",
+            "var result = goog.array.filter(arr,",
+            "  function(a,b,c) {var self=this;}, new Foo());"));
 
     assertEquals("Foo", findNameType("self", lastFunctionScope).toString());
     assertEquals("string", findNameType("a", lastFunctionScope).toString());
@@ -1513,30 +1526,32 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
 
   public void testTemplateType7c() {
     testSame(
-        "var goog = {};\n" +
-        "goog.array = {};\n" +
-        "/**\n" +
-        " * @param {Array<T>} arr\n" +
-        " * @param {function(this:S, T, number, Array<T>):boolean} f\n" +
-        " * @param {!S=} opt_obj\n" +
-        " * @return {!Array<T>}\n" +
-        " * @template T,S\n" +
-        " */\n" +
-        "goog.array.filter = function(arr, f, opt_obj) {\n" +
-        "  var res = [];\n" +
-        "  for (var i = 0; i < arr.length; i++) {\n" +
-        "     if (f.call(opt_obj, arr[i], i, arr)) {\n" +
-        "        res.push(val);\n" +
-        "     }\n" +
-        "  }\n" +
-        "  return res;\n" +
-        "}" +
-        "/** @constructor */\n" +
-        "function Foo() {}\n" +
-        "/** @type {Array<string>} */\n" +
-        "var arr = [];\n" +
-        "var result = goog.array.filter(arr," +
-        "  function(a,b,c) {var self=this;}, new Foo());");
+        lines(
+            "var goog = {};",
+            "goog.array = {};",
+            "/**",
+            " * @param {Array<T>} arr",
+            " * @param {function(this:S, T, number, Array<T>):boolean} f",
+            " * @param {!S=} opt_obj",
+            " * @return {!Array<T>}",
+            " * @template T,S",
+            " */",
+            "goog.array.filter = function(arr, f, opt_obj) {",
+            "  var res = [];",
+            "  for (var i = 0; i < arr.length; i++) {",
+            "     const val = arr[i];",
+            "     if (f.call(opt_obj, val, i, arr)) {",
+            "        res.push(val);",
+            "     }",
+            "  }",
+            "  return res;",
+            "}",
+            "/** @constructor */",
+            "function Foo() {}",
+            "/** @type {Array<string>} */",
+            "var arr = [];",
+            "var result = goog.array.filter(arr,",
+            "  function(a,b,c) {var self=this;}, new Foo());"));
 
     assertEquals("Foo", findNameType("self", lastFunctionScope).toString());
     assertEquals("string", findNameType("a", lastFunctionScope).toString());
@@ -1786,15 +1801,18 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
   public void testClassTemplateType8() {
     // Verify that template types used in casts are recognized.
     testSame(
-        "/**\n" +
-        " * @constructor\n" +
-        " * @template T\n" +
-        " */\n" +
-        "function C() {};\n" +
-        "" +
-        "C.prototype.method = function() {\n" +
-        "  var local = /** @type {T} */ (x);" +
-        "}\n");
+        externs("/** @type {?} */ let unknown;"),
+        srcs(
+            lines(
+                "/**",
+                " * @constructor",
+                " * @template T",
+                " */",
+                "function C() {};",
+                "",
+                "C.prototype.method = function() {",
+                "  var local = /** @type {T} */ (unknown);",
+                "}")));
     assertEquals("T", findNameType("local", lastLocalScope).toString());
   }
 

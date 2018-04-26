@@ -90,6 +90,7 @@ final class Es6RewriteGenerators implements HotSwapCompilerPass {
   private final JSType booleanType;
   private final JSType nullType;
   private final JSType nullableStringType;
+  private final JSType voidType;
 
   Es6RewriteGenerators(AbstractCompiler compiler) {
     checkNotNull(compiler);
@@ -105,6 +106,7 @@ final class Es6RewriteGenerators implements HotSwapCompilerPass {
       nullType = registry.getNativeType(JSTypeNative.NULL_TYPE);
       nullableStringType =
           registry.createNullableType(registry.getNativeType(JSTypeNative.STRING_TYPE));
+      voidType = registry.getNativeType(JSTypeNative.VOID_TYPE);
     } else {
       shouldAddTypes = false;
       unknownType = null;
@@ -112,6 +114,7 @@ final class Es6RewriteGenerators implements HotSwapCompilerPass {
       booleanType = null;
       nullType = null;
       nullableStringType = null;
+      voidType = null;
     }
   }
 
@@ -303,7 +306,12 @@ final class Es6RewriteGenerators implements HotSwapCompilerPass {
           IR.block(
               IR.returnNode(
                       withType(
-                          IR.call(createGenerator, genFuncName.cloneNode(), program),
+                          IR.call(
+                              createGenerator,
+                              // function name passed as parameter must have the type of the
+                              // generator function itself
+                              withType(genFuncName.cloneNode(), genFunc.getTypeI()),
+                              program),
                           this.originalGenReturnType))
                   .useSourceInfoFromForTree(originalGeneratorBody));
 
@@ -1524,7 +1532,9 @@ final class Es6RewriteGenerators implements HotSwapCompilerPass {
           @Nullable Node expression, TranspilationContext.Case jumpToSection, Node sourceNode) {
         ArrayList<Node> args = new ArrayList<>();
         args.add(
-            expression == null ? IR.name("undefined").useSourceInfoFrom(sourceNode) : expression);
+            expression == null
+                ? withType(IR.name("undefined"), voidType).useSourceInfoFrom(sourceNode)
+                : expression);
         args.add(jumpToSection.getNumber(sourceNode));
         context.writeGeneratedNode(
             returnContextMethod(sourceNode, "yield", args.toArray(new Node[0])));
@@ -1996,7 +2006,8 @@ final class Es6RewriteGenerators implements HotSwapCompilerPass {
 
         /** Replaces reference to <code>this</code> with <code>$jscomp$generator$this</code>. */
         void visitThis(Node n) {
-          Node newThis = context.getScopedName(GENERATOR_THIS).useSourceInfoFrom(n);
+          Node newThis =
+              withType(context.getScopedName(GENERATOR_THIS), n.getTypeI()).useSourceInfoFrom(n);
           n.replaceWith(newThis);
           if (!thisReferenceFound) {
             Node var = IR.var(newThis.cloneNode(), n).useSourceInfoFrom(newGeneratorBody);

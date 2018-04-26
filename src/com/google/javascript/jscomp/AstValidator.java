@@ -409,8 +409,18 @@ public final class AstValidator implements CompilerPass {
   }
 
   private void validateNameType(Node nameNode) {
-    // TODO(b/74537281): Determine when NAME nodes should and shouldn't have type information.
-    // Shouldn't they always? They don't now.
+    // TODO(bradfordcsmith): Looking at ancestors of nameNode is a hack that will prevent validation
+    // from working on detached nodes.
+    // Calling code should correctly determine the context and call different methods as
+    // appropriate.
+    if (NodeUtil.isExpressionResultUsed(nameNode) && !NodeUtil.isGet(nameNode.getParent())) {
+      // If the expression result is used, it must have a type.
+      // However, we don't always add a type when the name is just part of a getProp or getElem.
+      // That's OK, because we'll do type checking on the getProp/Elm itself, which has a type.
+      // TODO(b/74537281): Why do we sometimes have type information for names used in getprop
+      // or getelem expressions and sometimes not?
+      expectSomeTypeInformation(nameNode);
+    }
   }
 
   private void validateCallType(Node callNode) {
@@ -427,16 +437,11 @@ public final class AstValidator implements CompilerPass {
     } // TODO(b/74537281): What other cases should be covered?
   }
 
-  private void expectNoTypeInformation(Node n) {
-    TypeI typeI = n.getTypeI();
-    if (typeI != null) {
-      violation("Unexpected type information: " + getTypeAnnotationString(typeI), n);
-    }
-  }
-
   private void expectSomeTypeInformation(Node n) {
     if (n.getTypeI() == null) {
-      violation("Type information missing", n);
+      violation(
+          "Type information missing" + "\n" + compiler.toSource(NodeUtil.getEnclosingStatement(n)),
+          n);
     }
   }
 
