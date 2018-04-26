@@ -698,7 +698,12 @@ class TypeInference
         }
         left.setJSType(resultType);
 
-        if (var != null && var.isTypeInferred()) {
+        if (var != null
+            && var.isTypeInferred()
+            // Don't change the typed scope to include "undefined" upon seeing "let foo;", because
+            // this is incompatible with how we currently handle VARs and breaks existing code.
+            // TODO(sdh): remove this condition after cleaning up code depending on it.
+            && !(left.getParent().isLet() && !left.hasChildren())) {
           JSType oldType = var.getType();
           var.setType(oldType == null ? resultType : oldType.getLeastSupertype(resultType));
         } else if (isTypelessConstDecl) {

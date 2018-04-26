@@ -276,6 +276,35 @@ public final class TypeCheckNoTranspileTest extends CompilerTypeTestCase {
             "required: number"));
   }
 
+  public void testLetInitializedToUndefined1() {
+    testTypes(
+        "let foo; let /** number */ bar = foo;",
+        lines(
+            "initializing variable", // preserve newline
+            "found   : undefined",
+            "required: number"));
+  }
+
+  public void testLetInitializedToUndefined2() {
+    // Use the declared type of foo instead of inferring it to be undefined.
+    testTypes("let /** number */ foo; let /** number */ bar = foo;");
+  }
+
+  public void testLetInitializedToUndefined3() {
+    // TODO(sdh): this should warn because foo is potentially undefined when getFoo() is called.
+    // See comment in TypeInference#updateScopeForTypeChange
+    testTypes(
+        lines(
+            "let foo;",
+            "/** @return {number} */",
+            "function getFoo() {",
+            "  return foo;",
+            "}",
+            "function setFoo(/** number */ num) {",
+            "  foo = num;",
+            "}"));
+  }
+
   public void testForOf1() {
     testTypes("/** @type {!Iterable} */ var it; for (var elem of it) {}");
   }
