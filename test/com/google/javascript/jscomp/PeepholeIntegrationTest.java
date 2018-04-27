@@ -377,6 +377,7 @@ public class PeepholeIntegrationTest extends CompilerTestCase {
     test("x = `abcdef`.charCodeAt(0)", "x = 97");
     test("x = `abc`.toUpperCase()", "x = 'ABC'");
     test("x = `ABC`.toLowerCase()", "x = 'abc'");
+    test("x = `\t\n\uFEFF\t asd foo bar \r\n`.trim()", "x = 'asd foo bar'");
     test("x = parseInt(`123`)", "x = 123");
     test("x = parseFloat(`1.23`)", "x = 1.23");
   }
