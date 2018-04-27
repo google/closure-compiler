@@ -20,7 +20,6 @@ import com.google.javascript.jscomp.graph.LatticeElement;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.StaticTypedScope;
-import com.google.javascript.rhino.jstype.StaticTypedSlot;
 
 /**
  * A symbol table for inferring types during data flow analysis.
@@ -69,15 +68,6 @@ public interface FlowScope extends StaticTypedScope<JSType>, LatticeElement {
    * Optimize this scope and return a new FlowScope with faster lookup.
    */
   FlowScope optimize();
-
-  /**
-   * Tries to find a unique refined variable in the refined scope, up to the
-   * the blind scope.
-   * @param blindScope The scope before the refinement, i.e. some parent of the
-   *     this scope or itself.
-   * @return The unique refined variable if found or null.
-   */
-  StaticTypedSlot<JSType> findUniqueRefinedSlot(FlowScope blindScope);
 
   /** Returns the underlying TypedScope. */
   StaticTypedScope<JSType> getDeclarationScope();

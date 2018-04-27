@@ -235,43 +235,8 @@ class LinkedFlowScope implements FlowScope {
   }
 
   /**
-   * Iterate through all the linked flow scopes before this one.
-   * If there's one and only one slot defined between this scope
-   * and the blind scope, return it.
-   */
-  @Override
-  public StaticTypedSlot<JSType> findUniqueRefinedSlot(FlowScope blindScope) {
-    LinkedFlowSlot result = null;
-
-    for (LinkedFlowScope currentScope = this;
-         currentScope != blindScope;
-         currentScope = currentScope.parent) {
-      LinkedFlowSlot parentSlot = currentScope.parent != null ? currentScope.parent.lastSlot : null;
-      for (LinkedFlowSlot currentSlot = currentScope.lastSlot;
-           currentSlot != null && currentSlot != parentSlot;
-           currentSlot = currentSlot.parent) {
-        if (result == null) {
-          result = currentSlot;
-        } else if (!currentSlot.var.equals(result.var)) {
-          return null;
-        }
-      }
-    }
-
-    return result;
-  }
-
-  /**
    * Remove flow scopes that add nothing to the flow.
    */
-  // NOTE(nicksantos): This function breaks findUniqueRefinedSlot, because
-  // findUniqueRefinedSlot assumes that this scope is a direct descendant
-  // of blindScope. This is not necessarily true if this scope has been
-  // optimize()d and blindScope has not. This should be fixed. For now,
-  // we only use optimize() where we know that we won't have to do
-  // a findUniqueRefinedSlot on it (i.e. between CFG nodes, while the
-  // latter is only used within a single node to backwards-infer the LHS
-  // of short circuiting AND and OR operators).
   @Override
   public LinkedFlowScope optimize() {
     LinkedFlowScope current = this;

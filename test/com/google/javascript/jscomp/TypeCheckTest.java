@@ -19801,6 +19801,30 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
             "required: number"));
   }
 
+  public void testRefinedTypeInNestedShortCircuitingAndOr() {
+    // Ensure we don't have a strict property warning, and do get the right type.
+    // In particular, ensure we don't forget about tracking refinements in between the two.
+    testTypes(
+        lines(
+            "/** @constructor */ function B() {}",
+            "/** @constructor @extends {B} */ function C() {}",
+            "/** @return {string} */ C.prototype.foo = function() {};",
+            "/** @return {boolean} */ C.prototype.bar = function() {};",
+            "/** @constructor @extends {B} */ function D() {}",
+            "/** @return {number} */ D.prototype.foo = function() {};",
+            "/** @param {!B} arg",
+            "    @return {null} */",
+            "function f(arg) {",
+            "  if ((arg instanceof C && arg.bar()) || arg instanceof D) {",
+            "    return arg.foo();",
+            "  }",
+            "  return null;",
+            "}"),
+        lines(
+            "inconsistent return type", //
+            "found   : (number|string)",
+            "required: null"));
+  }
 
   private void testTypes(String js) {
     testTypes(js, (String) null);

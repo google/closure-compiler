@@ -27,9 +27,12 @@ import com.google.javascript.rhino.jstype.JSType.TypePair;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
+import com.google.javascript.rhino.jstype.StaticTypedScope;
 import com.google.javascript.rhino.jstype.StaticTypedSlot;
 import com.google.javascript.rhino.jstype.UnionType;
 import com.google.javascript.rhino.jstype.Visitor;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * A reverse abstract interpreter using the semantics of the JavaScript
@@ -344,27 +347,35 @@ public final class SemanticReverseAbstractInterpreter
 
   private FlowScope caseAndOrMaybeShortCircuiting(Node left, Node right,
       FlowScope blindScope, boolean outcome) {
-    FlowScope leftScope = firstPreciserScopeKnowingConditionOutcome(
-        left, blindScope, !outcome);
-    StaticTypedSlot<JSType> leftVar = leftScope.findUniqueRefinedSlot(blindScope);
+    // Perform two separate refinements, one for if short-circuiting occurred, and one for if it did
+    // not.  Because it's not clear whether short-circuiting occurred, we actually have to ignore
+    // both separate result flow scopes individually, but if they both refined the same slot, we
+    // can join the two refinements.  TODO(sdh): look into simplifying this.  If joining were
+    // more efficient, we should just be able to join the scopes unconditionally?
+    Set<String> refinements = new HashSet<>();
+    blindScope = new RefinementTrackingFlowScope(blindScope, refinements);
+    FlowScope leftScope = firstPreciserScopeKnowingConditionOutcome(left, blindScope, !outcome);
+    StaticTypedSlot<JSType> leftVar =
+        refinements.size() == 1 ? leftScope.getSlot(refinements.iterator().next()) : null;
     if (leftVar == null) {
       // If we did create a more precise scope, blindScope has a child and
       // it is frozen. We can't just throw it away to return it. So we
       // must create a child instead.
-      return blindScope == leftScope ?
-          blindScope : blindScope.createChildFlowScope();
+      return unwrap(blindScope == leftScope ? blindScope : blindScope.createChildFlowScope());
     }
-    FlowScope rightScope = firstPreciserScopeKnowingConditionOutcome(
-        left, blindScope, outcome);
-    rightScope = firstPreciserScopeKnowingConditionOutcome(
-        right, rightScope, !outcome);
-    StaticTypedSlot<JSType> rightVar = rightScope.findUniqueRefinedSlot(blindScope);
+    refinements.clear();
+    // Note: re-wrap the scope, in case it was unwrapped by a nested call to this method.
+    FlowScope rightScope =
+        new RefinementTrackingFlowScope(
+            firstPreciserScopeKnowingConditionOutcome(left, blindScope, outcome), refinements);
+    rightScope = firstPreciserScopeKnowingConditionOutcome(right, rightScope, !outcome);
+    StaticTypedSlot<JSType> rightVar =
+        refinements.size() == 1 ? rightScope.getSlot(refinements.iterator().next()) : null;
     if (rightVar == null || !leftVar.getName().equals(rightVar.getName())) {
-      return blindScope == rightScope ?
-          blindScope : blindScope.createChildFlowScope();
+      return unwrap(blindScope == rightScope ? blindScope : blindScope.createChildFlowScope());
     }
     JSType type = leftVar.getType().getLeastSupertype(rightVar.getType());
-    FlowScope informed = blindScope.createChildFlowScope();
+    FlowScope informed = unwrap(blindScope).createChildFlowScope();
     informed.inferSlotType(leftVar.getName(), type);
     return informed;
   }
@@ -593,6 +604,84 @@ public final class SemanticReverseAbstractInterpreter
     @Override
     public JSType caseFunctionType(FunctionType type) {
       return caseObjectType(type);
+    }
+  }
+
+  /** Unwraps any RefinementTrackingFlowScopes. */
+  private static FlowScope unwrap(FlowScope scope) {
+    while (scope instanceof RefinementTrackingFlowScope) {
+      scope = ((RefinementTrackingFlowScope) scope).delegate;
+    }
+    return scope;
+  }
+
+  /** A wrapper around FlowScope that keeps track of which vars were refined. */
+  private static class RefinementTrackingFlowScope implements FlowScope {
+    final FlowScope delegate;
+    final Set<String> refinements;
+
+    RefinementTrackingFlowScope(FlowScope delegate, Set<String> refinements) {
+      this.delegate = delegate;
+      this.refinements = refinements;
+    }
+
+    @Override
+    public FlowScope createChildFlowScope() {
+      return new RefinementTrackingFlowScope(delegate.createChildFlowScope(), refinements);
+    }
+
+    @Override
+    public FlowScope createChildFlowScope(StaticTypedScope<JSType> scope) {
+      return new RefinementTrackingFlowScope(delegate.createChildFlowScope(scope), refinements);
+    }
+
+    @Override
+    public void inferSlotType(String symbol, JSType type) {
+      refinements.add(symbol);
+      delegate.inferSlotType(symbol, type);
+    }
+
+    @Override
+    public void inferQualifiedSlot(Node node, String symbol, JSType bottomType,
+        JSType inferredType, boolean declare) {
+      refinements.add(symbol);
+      delegate.inferQualifiedSlot(node, symbol, bottomType, inferredType, declare);
+    }
+
+    @Override
+    public FlowScope optimize() {
+      FlowScope optimized = delegate.optimize();
+      return optimized != delegate ? new RefinementTrackingFlowScope(optimized, refinements) : this;
+    }
+
+    @Override
+    public StaticTypedScope<JSType> getDeclarationScope() {
+      return delegate.getDeclarationScope();
+    }
+
+    @Override
+    public Node getRootNode() {
+      return delegate.getRootNode();
+    }
+
+    @Override
+    public StaticTypedScope<JSType> getParentScope() {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public StaticTypedSlot<JSType> getSlot(String name) {
+      return delegate.getSlot(name);
+    }
+
+    @Override
+    public StaticTypedSlot<JSType> getOwnSlot(String name) {
+      return delegate.getOwnSlot(name);
+    }
+
+    @Override
+    public JSType getTypeOfThis() {
+      return delegate.getTypeOfThis();
     }
   }
 }
