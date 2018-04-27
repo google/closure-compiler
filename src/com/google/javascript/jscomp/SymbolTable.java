@@ -1648,8 +1648,7 @@ public final class SymbolTable {
 
         for (Node typeAst : info.getTypeNodes()) {
           SymbolScope scope = scopes.get(t.getScopeRoot());
-          visitTypeNode(
-              n, info.getTemplateTypeNames(), scope == null ? globalScope : scope, typeAst);
+          visitTypeNode(info.getTemplateTypeNames(), scope == null ? globalScope : scope, typeAst);
         }
       }
     }
@@ -1666,19 +1665,31 @@ public final class SymbolTable {
       }
     }
 
-    public void visitTypeNode(
-        Node refNode, ImmutableList<String> templateTypeNames, SymbolScope scope, Node n) {
+    public void visitTypeNode(ImmutableList<String> templateTypeNames, SymbolScope scope, Node n) {
       if (n.isString()
           && !isNativeSourcelessType(n.getString())
           && !templateTypeNames.contains(n.getString())) {
         Symbol symbol = lookupPossiblyDottedName(scope, n.getString());
         if (symbol != null) {
-          symbol.defineReferenceAt(n);
+          Node ref = n;
+          String typeString = n.getOriginalName() != null ? n.getOriginalName() : n.getString();
+          // Qualified names in JSDoc types are kept as a single string: "foo.bar.MyType". In order
+          // to have good indexing we need to make the SymbolTable reference include only "MyType"
+          // instead of "foo.bar.MyType". To do that we clone the type node and change the source
+          // info of the clone to include only the last part of the type ("MyType").
+          if (typeString.contains(".")) {
+            String lastPart = typeString.substring(typeString.lastIndexOf(".") + 1);
+            Node copy = n.cloneNode();
+            copy.setCharno(copy.getCharno() + copy.getLength() - lastPart.length());
+            copy.setLength(lastPart.length());
+            ref = copy;
+          }
+          symbol.defineReferenceAt(ref);
         }
       }
 
       for (Node child = n.getFirstChild(); child != null; child = child.getNext()) {
-        visitTypeNode(refNode, templateTypeNames, scope, child);
+        visitTypeNode(templateTypeNames, scope, child);
       }
     }
 

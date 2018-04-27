@@ -650,16 +650,16 @@ public final class SymbolTableTest extends TestCase {
     assertEquals(8, refs.get(0).getNode().getLength());
 
     assertEquals(3, refs.get(1).getNode().getLineno());
-    assertEquals(11, refs.get(1).getNode().getCharno());
+    assertEquals(16, refs.get(1).getNode().getCharno());
 
     assertEquals(4, refs.get(2).getNode().getLineno());
-    assertEquals(12, refs.get(2).getNode().getCharno());
+    assertEquals(17, refs.get(2).getNode().getCharno());
 
     assertEquals(5, refs.get(3).getNode().getLineno());
-    assertEquals(25, refs.get(3).getNode().getCharno());
+    assertEquals(30, refs.get(3).getNode().getCharno());
 
     assertEquals(8, refs.get(4).getNode().getLineno());
-    assertEquals(13, refs.get(4).getNode().getCharno());
+    assertEquals(18, refs.get(4).getNode().getCharno());
   }
 
   public void testReferencesInJSDocName() {
