@@ -220,7 +220,7 @@ public final class DefaultPassConfig extends PassConfig {
     return passes;
   }
 
-  private void addOldTypeCheckerPasses(List<PassFactory> checks, CompilerOptions options) {
+  private void addTypeCheckerPasses(List<PassFactory> checks, CompilerOptions options) {
     if (!options.allowsHotswapReplaceScript()) {
       checks.add(inlineTypeAliases);
     }
@@ -415,25 +415,14 @@ public final class DefaultPassConfig extends PassConfig {
     } else {
       checks.add(createEmptyPass(PassNames.BEFORE_TYPE_CHECKING));
 
-      if (options.getNewTypeInference()) {
-        // We will not be updating NTI to understand any more new features,
-        // so transpile those features before running it.
-        if (options.needsTranspilationFrom(ES6)) {
-          TranspilationPasses.addEs6PostTypecheckPasses(checks);
-        }
-        checks.add(symbolTableForNewTypeInference);
-        checks.add(newTypeInference);
-      } else {
-        addOldTypeCheckerPasses(checks, options);
-      }
+      addTypeCheckerPasses(checks, options);
 
       if (options.j2clPassMode.shouldAddJ2clPasses()) {
         checks.add(j2clSourceFileChecker);
       }
 
       if (!options.disables(DiagnosticGroups.CHECK_USELESS_CODE)
-          || (!options.getNewTypeInference()
-              && !options.disables(DiagnosticGroups.MISSING_RETURN))) {
+          || !options.disables(DiagnosticGroups.MISSING_RETURN)) {
         checks.add(checkControlFlow);
       }
 
@@ -444,10 +433,7 @@ public final class DefaultPassConfig extends PassConfig {
         checks.add(checkAccessControls);
       }
 
-      if (!options.getNewTypeInference()) {
-        // NTI performs this check already
-        checks.add(checkConsts);
-      }
+      checks.add(checkConsts);
 
       // Analyzer checks must be run after typechecking.
       if (options.enables(DiagnosticGroups.ANALYZER_CHECKS) && options.isTypecheckingEnabled()) {
@@ -494,18 +480,8 @@ public final class DefaultPassConfig extends PassConfig {
       }
     }
 
-    // NOTE(dimvar): Tried to move this into the optimizations, but had to back off
-    // because the very first pass, normalization, rewrites the code in a way that
-    // causes loss of type information.
-    // So, I will convert the remaining optimizations to use TypeI and test that only
-    // in unit tests, not full builds. Once all passes are converted, then
-    // drop the OTI-after-NTI altogether.
-    // In addition, I will probably have a local edit of the repo that retains both
-    // types on Nodes, so I can test full builds on my machine. We can't check in such
-    // a change because it would greatly increase memory usage.
-    if (options.getNewTypeInference()) {
-      addOldTypeCheckerPasses(checks, options);
-    }
+
+
 
     // When options.generateExportsAfterTypeChecking is true, run GenerateExports after
     // both type checkers, not just after NTI.
@@ -519,11 +495,7 @@ public final class DefaultPassConfig extends PassConfig {
       // At this point all checks have been done.
       // There's no need to complete transpilation if we're only running checks.
 
-      if (!options.getNewTypeInference()) {
-        // Note that TranspilationPasses.addEs6PostTypecheckPasses is really only "post typecheck"
-        // for OTI. The code path for NTI includes an earlier call to addEs6PostTypecheckPasses.
-        TranspilationPasses.addEs6PostTypecheckPasses(checks);
-      }
+      TranspilationPasses.addEs6PostTypecheckPasses(checks);
       TranspilationPasses.addEs6PostCheckPasses(checks);
     }
 
@@ -585,9 +557,7 @@ public final class DefaultPassConfig extends PassConfig {
       passes.add(j2clUtilGetDefineRewriterPass);
     }
 
-    // TODO(dimvar): convert this pass to use NTI. Low priority since it's
-    // mostly unused. Converting it shouldn't block switching to NTI.
-    if (options.runtimeTypeCheck && !options.getNewTypeInference()) {
+    if (options.runtimeTypeCheck) {
       passes.add(runtimeTypeCheck);
     }
 
@@ -1928,32 +1898,6 @@ public final class DefaultPassConfig extends PassConfig {
         }
       };
 
-  private final PassFactory symbolTableForNewTypeInference =
-      new PassFactory("GlobalTypeInfo", true) {
-        @Override
-        protected CompilerPass create(final AbstractCompiler compiler) {
-          return new GlobalTypeInfoCollector(compiler);
-        }
-
-        @Override
-        protected FeatureSet featureSet() {
-          return FeatureSet.NTI_SUPPORTED;
-        }
-      };
-
-  private final PassFactory newTypeInference =
-      new PassFactory("NewTypeInference", true) {
-        @Override
-        protected CompilerPass create(final AbstractCompiler compiler) {
-          return new NewTypeInference(compiler);
-        }
-
-        @Override
-        protected FeatureSet featureSet() {
-          return FeatureSet.NTI_SUPPORTED;
-        }
-      };
-
   private final HotSwapPassFactory inferJsDocInfo =
       new HotSwapPassFactory("inferJsDocInfo") {
         @Override
@@ -2010,28 +1954,28 @@ public final class DefaultPassConfig extends PassConfig {
       };
 
   /**
-   * Checks possible execution paths of the program for problems: missing return
-   * statements and dead code.
+   * Checks possible execution paths of the program for problems: missing return statements and dead
+   * code.
    */
   private final HotSwapPassFactory checkControlFlow =
       new HotSwapPassFactory("checkControlFlow") {
-    @Override
-    protected HotSwapCompilerPass create(AbstractCompiler compiler) {
-      List<Callback> callbacks = new ArrayList<>();
-      if (!options.disables(DiagnosticGroups.CHECK_USELESS_CODE)) {
-        callbacks.add(new CheckUnreachableCode(compiler));
-      }
-      if (!options.getNewTypeInference() && !options.disables(DiagnosticGroups.MISSING_RETURN)) {
-        callbacks.add(new CheckMissingReturn(compiler));
-      }
-      return combineChecks(compiler, callbacks);
-    }
+        @Override
+        protected HotSwapCompilerPass create(AbstractCompiler compiler) {
+          List<Callback> callbacks = new ArrayList<>();
+          if (!options.disables(DiagnosticGroups.CHECK_USELESS_CODE)) {
+            callbacks.add(new CheckUnreachableCode(compiler));
+          }
+          if (!options.disables(DiagnosticGroups.MISSING_RETURN)) {
+            callbacks.add(new CheckMissingReturn(compiler));
+          }
+          return combineChecks(compiler, callbacks);
+        }
 
-    @Override
-    public FeatureSet featureSet() {
-      return ES8_MODULES;
-    }
-  };
+        @Override
+        public FeatureSet featureSet() {
+          return ES8_MODULES;
+        }
+      };
 
   /** Checks access controls. Depends on type-inference. */
   private final HotSwapPassFactory checkAccessControls =
@@ -2130,17 +2074,6 @@ public final class DefaultPassConfig extends PassConfig {
 
     @Override
     public void process(Node externs, Node root) {
-      // If NTI is enabled, erase the NTI types from the AST before adding the old types.
-      if (this.compiler.getOptions().getNewTypeInference()) {
-        NodeTraversal.traversePostOrder(
-            this.compiler,
-            root,
-            (NodeTraversal t, Node n, Node parent) -> {
-              n.setTypeI(null);
-            });
-        this.compiler.clearTypeIRegistry();
-      }
-
       this.compiler.setMostRecentTypechecker(MostRecentTypechecker.OTI);
       if (topScope == null) {
         regenerateGlobalTypedScope(compiler, root.getParent());

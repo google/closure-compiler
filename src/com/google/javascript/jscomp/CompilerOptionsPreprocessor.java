@@ -55,10 +55,6 @@ final class CompilerOptionsPreprocessor {
           "max_function_size_after_inlining has no effect if inlining is disabled.");
     }
 
-    if (options.getNewTypeInference()) {
-      options.checkGlobalThisLevel = CheckLevel.OFF;
-    }
-
     if (options.dartPass) {
       if (!options.getLanguageOut().toFeatureSet().contains(FeatureSet.ES5)) {
         throw new InvalidOptionsException("Dart requires --language_out=ES5 or higher.");

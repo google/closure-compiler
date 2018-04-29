@@ -52,7 +52,7 @@ public final class EsNextToEs8Converter implements NodeTraversal.Callback, HotSw
 
   public EsNextToEs8Converter(AbstractCompiler compiler) {
     this.compiler = compiler;
-    this.addTypes = MostRecentTypechecker.NTI.equals(compiler.getMostRecentTypechecker());
+    this.addTypes = MostRecentTypechecker.OTI.equals(compiler.getMostRecentTypechecker());
   }
 
   @Override

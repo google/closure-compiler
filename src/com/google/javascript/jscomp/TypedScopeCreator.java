@@ -64,7 +64,6 @@ import com.google.javascript.jscomp.CodingConvention.SubclassRelationship;
 import com.google.javascript.jscomp.FunctionTypeBuilder.AstFunctionContents;
 import com.google.javascript.jscomp.NodeTraversal.AbstractScopedCallback;
 import com.google.javascript.jscomp.NodeTraversal.AbstractShallowStatementCallback;
-import com.google.javascript.jscomp.parsing.NullErrorReporter;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.JSDocInfo;
@@ -169,7 +168,6 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
   private final List<FunctionType> delegateProxyCtors = new ArrayList<>();
   private final Map<String, String> delegateCallingConventions = new HashMap<>();
   private final Map<Node, TypedScope> memoized = new LinkedHashMap<>();
-  private final boolean runsAfterNTI;
 
   // Set of functions with non-empty returns, for passing to FunctionTypeBuilder.
   private final Set<Node> functionsWithNonEmptyReturns = new HashSet<>();
@@ -205,22 +203,17 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
     this(compiler, compiler.getCodingConvention());
   }
 
-  TypedScopeCreator(AbstractCompiler compiler,
-      CodingConvention codingConvention) {
+  TypedScopeCreator(AbstractCompiler compiler, CodingConvention codingConvention) {
     this.compiler = compiler;
-    this.runsAfterNTI = compiler.getOptions().getNewTypeInference();
     this.validator = compiler.getTypeValidator();
     this.codingConvention = codingConvention;
     this.typeRegistry = compiler.getTypeRegistry();
-    this.typeParsingErrorReporter = this.runsAfterNTI
-        ? NullErrorReporter.forOldRhino() : typeRegistry.getErrorReporter();
+    this.typeParsingErrorReporter = typeRegistry.getErrorReporter();
     this.unknownType = typeRegistry.getNativeObjectType(UNKNOWN_TYPE);
   }
 
   private void report(JSError error) {
-    if (!this.runsAfterNTI || compiler.getOptions().reportOTIErrorsUnderNTI) {
-      compiler.report(error);
-    }
+    compiler.report(error);
   }
 
   @Override

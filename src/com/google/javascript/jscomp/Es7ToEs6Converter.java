@@ -42,7 +42,7 @@ public final class Es7ToEs6Converter implements NodeTraversal.Callback, HotSwapC
 
   public Es7ToEs6Converter(AbstractCompiler compiler) {
     this.compiler = compiler;
-    this.addTypes = MostRecentTypechecker.NTI.equals(compiler.getMostRecentTypechecker());
+    this.addTypes = MostRecentTypechecker.OTI.equals(compiler.getMostRecentTypechecker());
   }
 
   @Override

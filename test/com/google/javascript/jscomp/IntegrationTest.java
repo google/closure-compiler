@@ -707,7 +707,7 @@ public final class IntegrationTest extends IntegrationTestCase {
   }
 
   // Regression test for b/77650996
-  public void testPolymer2_oti2() {
+  public void testPolymer2b() {
     CompilerOptions options = createCompilerOptions();
     options.setPolymerVersion(2);
     options.setWarningLevel(DiagnosticGroups.CHECK_TYPES, CheckLevel.ERROR);
@@ -756,7 +756,7 @@ public final class IntegrationTest extends IntegrationTestCase {
         (String []) null);
   }
 
-  public void testPolymer1_oti2() {
+  public void testPolymer1b() {
     CompilerOptions options = createCompilerOptions();
     options.setPolymerVersion(2);
     options.setWarningLevel(DiagnosticGroups.CHECK_TYPES, CheckLevel.ERROR);
@@ -796,7 +796,7 @@ public final class IntegrationTest extends IntegrationTestCase {
         (String []) null);
   }
 
-  public void testPolymer2_oti() {
+  public void testPolymer2a() {
     CompilerOptions options = createCompilerOptions();
     options.setPolymerVersion(2);
     options.setWarningLevel(DiagnosticGroups.CHECK_TYPES, CheckLevel.ERROR);

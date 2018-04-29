@@ -64,7 +64,7 @@ public final class LateEs6ToEs3Converter implements NodeTraversal.Callback, HotS
   public LateEs6ToEs3Converter(AbstractCompiler compiler) {
     this.compiler = compiler;
     // Only add type information if NTI has been run.
-    this.addTypes = MostRecentTypechecker.NTI.equals(compiler.getMostRecentTypechecker());
+    this.addTypes = MostRecentTypechecker.OTI.equals(compiler.getMostRecentTypechecker());
     this.registry = compiler.getTypeIRegistry();
     this.unknownType = createType(addTypes, registry, JSTypeNative.UNKNOWN_TYPE);
   }

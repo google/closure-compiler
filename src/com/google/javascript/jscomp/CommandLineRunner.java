@@ -1622,7 +1622,6 @@ public class CommandLineRunner extends
           .setHideWarningsFor(flags.hideWarningsFor)
           .setAngularPass(flags.angularPass)
           .setInstrumentationTemplateFile(flags.instrumentationFile)
-          .setNewTypeInference(false)
           .setJsonStreamMode(flags.jsonStreamMode)
           .setErrorFormat(flags.errorFormat);
     }

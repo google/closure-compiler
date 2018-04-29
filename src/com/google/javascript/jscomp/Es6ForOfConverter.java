@@ -53,7 +53,7 @@ public final class Es6ForOfConverter implements NodeTraversal.Callback, HotSwapC
   public Es6ForOfConverter(AbstractCompiler compiler) {
     this.compiler = compiler;
     // Only add type information if NTI has been run.
-    this.addTypes = MostRecentTypechecker.NTI.equals(compiler.getMostRecentTypechecker());
+    this.addTypes = MostRecentTypechecker.OTI.equals(compiler.getMostRecentTypechecker());
     this.registry = compiler.getTypeIRegistry();
     this.unknownType = createType(addTypes, registry, JSTypeNative.UNKNOWN_TYPE);
     this.stringType = createType(addTypes, registry, JSTypeNative.STRING_TYPE);

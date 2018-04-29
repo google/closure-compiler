@@ -419,7 +419,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       options.checkTypes = false;
     } else if (!options.checkTypes) {
       // If DiagnosticGroups did not override the plain checkTypes
-      // option, and checkTypes is enabled, then turn off the
+      // option, and checkTypes is disabled, then turn off the
       // parser type warnings.
       options.setWarningLevel(
           DiagnosticGroup.forType(
@@ -1498,7 +1498,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
         // the constructor asks for a type registry, and this may happen before type checking
         // runs. So, in the NONE case, if NTI is enabled, return a new registry, since NTI is
         // the relevant type checker. If NTI is not enabled, return an old registry.
-        return options.getNewTypeInference() ? getGlobalTypeInfo() : getTypeRegistry();
+        return getTypeRegistry();
       case OTI:
         return getTypeRegistry();
       case NTI:

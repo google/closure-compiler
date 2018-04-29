@@ -222,17 +222,6 @@ public class CompilerOptions implements Serializable {
    */
   boolean inferTypes;
 
-  private final boolean useNewTypeInference = false;
-
-  /**
-   * Relevant only when {@link #useNewTypeInference} is true, where we normally disable OTI errors.
-   * If you want both NTI and OTI errors in this case, set to true.
-   * E.g. if using using a warnings guard to filter NTI or OTI warnings in new or legacy code,
-   * respectively.
-   * This will be removed when NTI entirely replaces OTI.
-   */
-  boolean reportOTIErrorsUnderNTI = false;
-
   /**
    * Run type checking natively on the subset of ES6 features that we are able to typecheck
    * natively, and then transpile them after NTI.
@@ -2000,11 +1989,7 @@ public class CompilerOptions implements Serializable {
     return inferTypes;
   }
 
-  public boolean getNewTypeInference() {
-    return false;
-  }
-
-  /** @deprecated no-op */
+  /** @deprecated This is a no-op. */
   @Deprecated
   public void setNewTypeInference(boolean enable) {
   }
@@ -2013,12 +1998,7 @@ public class CompilerOptions implements Serializable {
    * @return true if either typechecker is ON.
    */
   public boolean isTypecheckingEnabled() {
-    return this.checkTypes || this.useNewTypeInference;
-  }
-
-  // Not dead code; used by the open-source users of the compiler.
-  public void setReportOTIErrorsUnderNTI(boolean enable) {
-    this.reportOTIErrorsUnderNTI = enable;
+    return this.checkTypes;
   }
 
   public boolean getTypeCheckEs6Natively() {
@@ -2994,7 +2974,6 @@ public class CompilerOptions implements Serializable {
             .add("replaceStringsInputMap", replaceStringsInputMap)
             .add("replaceStringsPlaceholderToken", replaceStringsPlaceholderToken)
             .add("replaceStringsReservedStrings", replaceStringsReservedStrings)
-            .add("reportOTIErrorsUnderNTI", reportOTIErrorsUnderNTI)
             .add("reserveRawExports", reserveRawExports)
             .add("rewriteFunctionExpressions", rewriteFunctionExpressions)
             .add("rewritePolyfills", rewritePolyfills)

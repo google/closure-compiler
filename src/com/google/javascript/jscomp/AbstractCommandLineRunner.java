@@ -449,7 +449,6 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
     options.processCommonJSModules = config.processCommonJSModules;
     options.moduleRoots = config.moduleRoots;
     options.angularPass = config.angularPass;
-    options.setNewTypeInference(config.useNewTypeInference);
     options.instrumentationTemplateFile = config.instrumentationTemplateFile;
 
     if (config.errorFormat == CommandLineConfig.ErrorFormatOption.JSON) {
@@ -2691,13 +2690,6 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
      */
     public CommandLineConfig setAngularPass(boolean angularPass) {
       this.angularPass = angularPass;
-      return this;
-    }
-
-    private boolean useNewTypeInference = false;
-
-    public CommandLineConfig setNewTypeInference(boolean useNewTypeInference) {
-      this.useNewTypeInference = useNewTypeInference;
       return this;
     }
 
