@@ -2311,71 +2311,6 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
   }
 
   public void testForOf() {
-
-    // With array literal and declaring new bound variable.
-    test(
-        "for (var i of [1,2,3]) { console.log(i); }",
-        lines(
-            "for (var $jscomp$iter$0 = $jscomp.makeIterator([1,2,3]),",
-            "    $jscomp$key$i = $jscomp$iter$0.next();",
-            "    !$jscomp$key$i.done; $jscomp$key$i = $jscomp$iter$0.next()) {",
-            "  var i = $jscomp$key$i.value;",
-            "  {",
-            "    console.log(i);",
-            "  }",
-            "}"));
-    assertThat(getLastCompiler().injected).containsExactly("es6/util/makeiterator");
-
-    // With simple assign instead of var declaration in bound variable.
-    test(
-        "for (i of [1,2,3]) { console.log(i); }",
-        lines(
-            "for (var $jscomp$iter$0 = $jscomp.makeIterator([1,2,3]),",
-            "    $jscomp$key$i = $jscomp$iter$0.next();",
-            "    !$jscomp$key$i.done; $jscomp$key$i = $jscomp$iter$0.next()) {",
-            "  i = $jscomp$key$i.value;",
-            "  {",
-            "    console.log(i);",
-            "  }",
-            "}"));
-
-    // With name instead of array literal.
-    test(
-        "for (var i of arr) { console.log(i); }",
-        lines(
-            "for (var $jscomp$iter$0 = $jscomp.makeIterator(arr),",
-            "    $jscomp$key$i = $jscomp$iter$0.next();",
-            "    !$jscomp$key$i.done; $jscomp$key$i = $jscomp$iter$0.next()) {",
-            "  var i = $jscomp$key$i.value;",
-            "  {",
-            "    console.log(i);",
-            "  }",
-            "}"));
-
-    // With empty loop body.
-    test(
-        "for (var i of [1,2,3]);",
-        lines(
-            "for (var $jscomp$iter$0 = $jscomp.makeIterator([1,2,3]),",
-            "    $jscomp$key$i = $jscomp$iter$0.next();",
-            "    !$jscomp$key$i.done; $jscomp$key$i = $jscomp$iter$0.next()) {",
-            "  var i = $jscomp$key$i.value;",
-            "  {}",
-            "}"));
-
-    // With no block in for loop body.
-    test(
-        "for (var i of [1,2,3]) console.log(i);",
-        lines(
-            "for (var $jscomp$iter$0 = $jscomp.makeIterator([1,2,3]),",
-            "    $jscomp$key$i = $jscomp$iter$0.next();",
-            "    !$jscomp$key$i.done; $jscomp$key$i = $jscomp$iter$0.next()) {",
-            "  var i = $jscomp$key$i.value;",
-            "  {",
-            "    console.log(i);",
-            "  }",
-            "}"));
-
     // Iteration var shadows an outer var ()
     test(
         "var i = 'outer'; for (let i of [1, 2, 3]) { alert(i); } alert(i);",
@@ -2406,29 +2341,6 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             "  {",
             "    var x$1 = 0;",
             "  }",
-            "}"));
-  }
-
-  public void testForOfJSDoc() {
-    test(
-        "for (/** @type {string} */ let x of []) {}",
-        lines(
-            "for(var $jscomp$iter$0=$jscomp.makeIterator([]),",
-            "    $jscomp$key$x=$jscomp$iter$0.next();",
-            "    !$jscomp$key$x.done;$jscomp$key$x=$jscomp$iter$0.next()) {",
-            "  /** @type {string} */",
-            "  var x = $jscomp$key$x.value;",
-            "  {}",
-            "}"));
-    test(
-        "for (/** @type {string} */ x of []) {}",
-        lines(
-            "for(var $jscomp$iter$0=$jscomp.makeIterator([]),",
-            "    $jscomp$key$x=$jscomp$iter$0.next();",
-            "    !$jscomp$key$x.done;$jscomp$key$x=$jscomp$iter$0.next()) {",
-            "  /** @type {string} */",
-            "  x = $jscomp$key$x.value;",
-            "  {}",
             "}"));
   }
 
@@ -2478,21 +2390,6 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             "function f() {",
             "  return g(arguments);",
             "}"));
-  }
-
-  public void testForOfOnNonIterable() {
-    enableTypeCheck();
-
-    test(
-        srcs(
-            lines(
-                "var arrayLike = {",
-                "  0: 'x',",
-                "  1: 'y',",
-                "  length: 2,",
-                "};",
-                "for (var x of arrayLike) {}")),
-        warning(TypeValidator.TYPE_MISMATCH_WARNING));
   }
 
   public void testSpreadCall() {
