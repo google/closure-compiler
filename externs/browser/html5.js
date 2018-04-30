@@ -1450,16 +1450,6 @@ SharedWorkerGlobalScope.prototype.name;
  */
 SharedWorkerGlobalScope.prototype.onconnect;
 
-/**
- * @see http://www.w3.org/TR/html5/dom.html#dom-getelementsbyclassname
- * @param {string} classNames
- * @return {!NodeList<!Element>}
- * @nosideeffects
- */
-Element.prototype.getElementsByClassName = function(classNames) {};
-// NOTE: Document.prototype.getElementsByClassName is in gecko_dom.js
-
-
 /** @type {!Array<string>|undefined} */
 HTMLElement.observedAttributes;
 
@@ -1504,6 +1494,15 @@ HTMLElement.prototype.draggable;
  * @type {Object}
  */
 HTMLElement.prototype.dropzone;
+
+/**
+ * @see http://www.w3.org/TR/html5/dom.html#dom-getelementsbyclassname
+ * @param {string} classNames
+ * @return {!NodeList<!Element>}
+ * @nosideeffects
+ */
+HTMLElement.prototype.getElementsByClassName = function(classNames) {};
+// NOTE: Document.prototype.getElementsByClassName is in gecko_dom.js
 
 /** @type {boolean} */
 HTMLElement.prototype.hidden;
