@@ -99,7 +99,6 @@ public class TranspilationPasses {
     passes.add(lateConvertEs6ToEs3);
     passes.add(es6ForOf);
     passes.add(rewriteBlockScopedFunctionDeclaration);
-    passes.add(rewriteBlockScopedDeclaration);
     if (!options.checksOnly) {
       // Don't run these passes in checksOnly mode since all the OTI typechecking & checks passes
       // support the transpiled features.
