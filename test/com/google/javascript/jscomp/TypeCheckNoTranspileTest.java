@@ -340,8 +340,8 @@ public final class TypeCheckNoTranspileTest extends CompilerTypeTestCase {
             "}"),
         lines(
             "declared type of for-of loop variable does not match inferred type",
-            "found   : string",
-            "required: number"));
+            "found   : number",
+            "required: string"));
   }
 
   public void testForOf_wrongLoopVarType2() {
@@ -353,8 +353,8 @@ public final class TypeCheckNoTranspileTest extends CompilerTypeTestCase {
             "}"),
         lines(
             "declared type of for-of loop variable does not match inferred type",
-            "found   : string",
-            "required: number"));
+            "found   : number",
+            "required: string"));
   }
 
   public void testForOf_wrongLoopVarType3() {
@@ -366,6 +366,28 @@ public final class TypeCheckNoTranspileTest extends CompilerTypeTestCase {
             "Can only iterate over a (non-null) Iterable type",
             "found   : Number",
             "required: Iterable"));
+  }
+
+  public void testForOf_wrongLoopVarType4a() {
+    testTypes(
+        lines(
+            "/** @type {!Array<!Object>} */",
+            "var arr = [1, 2];",
+            "for (let /** ?Object */ elem of arr) {",
+            "}"));
+  }
+
+  public void testForOf_wrongLoopVarType4b() {
+    testTypes(
+        lines(
+            "/** @type {!Array<?Object>} */",
+            "var arr = [1, 2];",
+            "for (let /** !Object */ elem of arr) {",
+            "}"),
+        lines(
+            "declared type of for-of loop variable does not match inferred type",
+            "found   : (Object|null)",
+            "required: Object"));
   }
 
   public void testForOf_array1() {

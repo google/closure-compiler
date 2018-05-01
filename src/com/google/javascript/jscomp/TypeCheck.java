@@ -901,8 +901,8 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
           validator.expectCanAssignTo(
               t,
               loopVarNode,
-              declaredType,
               actualType,
+              declaredType,
               "declared type of for-of loop variable does not match inferred type");
         }
         break;
