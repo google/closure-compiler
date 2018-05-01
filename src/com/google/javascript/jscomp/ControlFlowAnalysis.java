@@ -766,15 +766,11 @@ public final class ControlFlowAnalysis implements Callback, CompilerPass {
         } else {
           return computeFollowNode(fromNode, parent, cfa);
         }
+      case FOR_IN:
       case FOR_OF:
         return parent;
       case FOR:
-      case FOR_IN:
-        if (parent.isForIn()) {
-          return parent;
-        } else {
-          return parent.getSecondChild().getNext();
-        }
+        return parent.getSecondChild().getNext();
       case WHILE:
       case DO:
         return parent;

@@ -2555,8 +2555,8 @@ public final class NodeUtil {
       case DO:
         return n.getLastChild();
       case FOR:
+        return n.getSecondChild();
       case FOR_IN:
-        return n.isForIn() ? null : n.getSecondChild();
       case FOR_OF:
       case CASE:
         return null;
