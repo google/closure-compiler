@@ -44,15 +44,6 @@ import com.google.common.collect.ImmutableList;
 
 public final class CheckAccessControlsTest extends CompilerTestCase {
 
-  private static final DiagnosticGroup NTI_CONST =
-      new DiagnosticGroup(
-          GlobalTypeInfoCollector.CONST_WITHOUT_INITIALIZER,
-          GlobalTypeInfoCollector.COULD_NOT_INFER_CONST_TYPE,
-          GlobalTypeInfoCollector.MISPLACED_CONST_ANNOTATION,
-          NewTypeInference.CONST_REASSIGNED,
-          NewTypeInference.CONST_PROPERTY_REASSIGNED,
-          NewTypeInference.CONST_PROPERTY_DELETED);
-
   public CheckAccessControlsTest() {
     super(CompilerTypeTestCase.DEFAULT_EXTERNS);
   }
@@ -82,9 +73,6 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
     options.setWarningLevel(DiagnosticGroups.ACCESS_CONTROLS, CheckLevel.ERROR);
     options.setWarningLevel(DiagnosticGroups.DEPRECATED, CheckLevel.ERROR);
     options.setWarningLevel(DiagnosticGroups.CONSTANT_PROPERTY, CheckLevel.ERROR);
-    // Disable NTI's native const checks so as to suppress duplicate warnings that
-    // prevent us from testing the const checks of CheckAccessControls itself.
-    options.setWarningLevel(NTI_CONST, CheckLevel.OFF);
     return options;
   }
 

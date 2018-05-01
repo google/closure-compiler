@@ -553,7 +553,6 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
 
   public void testTypeMismatch() {
     ignoreWarnings(
-        NewTypeInference.MISTYPED_ASSIGN_RHS,
         TypeValidator.TYPE_MISMATCH_WARNING);
     testSame(lines(
         "/** @constructor */var Foo = function(){};",
@@ -693,7 +692,6 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
 
   public void testInterfaceWithSubInterfaceAndDirectImplementors() {
     ignoreWarnings(
-        GlobalTypeInfoCollector.INTERFACE_METHOD_NOT_IMPLEMENTED,
         TypeValidator.INTERFACE_METHOD_NOT_IMPLEMENTED);
     test(
         lines(

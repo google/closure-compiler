@@ -35,7 +35,6 @@ import com.google.javascript.jscomp.lint.CheckRedundantNullabilityModifier;
 import com.google.javascript.jscomp.lint.CheckRequiresAndProvidesSorted;
 import com.google.javascript.jscomp.lint.CheckUnusedLabels;
 import com.google.javascript.jscomp.lint.CheckUselessBlocks;
-import com.google.javascript.jscomp.newtypes.JSTypeCreatorFromJSDoc;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -205,8 +204,7 @@ public class DiagnosticGroups {
 
   public static final DiagnosticGroup INVALID_CASTS =
       DiagnosticGroups.registerGroup("invalidCasts",
-          TypeValidator.INVALID_CAST,
-          NewTypeInference.INVALID_CAST);
+          TypeValidator.INVALID_CAST);
 
   @Deprecated
   public static final DiagnosticGroup FILEOVERVIEW_JSDOC =
@@ -250,9 +248,7 @@ public class DiagnosticGroups {
       DiagnosticGroups.registerGroup("missingProperties",
           TypeCheck.INEXISTENT_PROPERTY,
           TypeCheck.INEXISTENT_PROPERTY_WITH_SUGGESTION,
-          TypeCheck.POSSIBLE_INEXISTENT_PROPERTY,
-          NewTypeInference.INEXISTENT_PROPERTY,
-          NewTypeInference.POSSIBLY_INEXISTENT_PROPERTY);
+          TypeCheck.POSSIBLE_INEXISTENT_PROPERTY);
 
   public static final DiagnosticGroup J2CL_CHECKS =
       DiagnosticGroups.registerGroup("j2clChecks",
@@ -295,100 +291,26 @@ public class DiagnosticGroups {
   // Run the new type inference, but omit many warnings that are not
   // found by the old type checker. This makes migration to NTI more manageable.
   public static final DiagnosticGroup NEW_CHECK_TYPES_COMPATIBILITY_MODE =
-      DiagnosticGroups.registerGroup("newCheckTypesCompatibility",  // undocumented
-          JSTypeCreatorFromJSDoc.COMPATIBLE_DIAGNOSTICS,
-          GlobalTypeInfoCollector.COMPATIBLE_DIAGNOSTICS,
-          NewTypeInference.COMPATIBLE_DIAGNOSTICS);
+      DiagnosticGroups.registerDeprecatedGroup("newCheckTypesCompatibility");
 
+  // no op
   public static final DiagnosticGroup NEW_CHECK_TYPES_EXTRA_CHECKS =
-      DiagnosticGroups.registerGroup("newCheckTypesExtraChecks",  // undocumented
-          JSTypeCreatorFromJSDoc.NEW_DIAGNOSTICS,
-          GlobalTypeInfoCollector.NEW_DIAGNOSTICS,
-          NewTypeInference.NEW_DIAGNOSTICS);
+      DiagnosticGroups.registerDeprecatedGroup("newCheckTypesExtraChecks");
 
   // Part of the new type inference
   public static final DiagnosticGroup NEW_CHECK_TYPES =
-      DiagnosticGroups.registerGroup("newCheckTypes",
-          NEW_CHECK_TYPES_COMPATIBILITY_MODE,
-          NEW_CHECK_TYPES_EXTRA_CHECKS);
+      DiagnosticGroups.registerDeprecatedGroup("newCheckTypes");
 
   public static final DiagnosticGroup CHECK_TYPES =
       DiagnosticGroups.registerGroup("checkTypes",
-          OLD_CHECK_TYPES,
-          NEW_CHECK_TYPES);
+          OLD_CHECK_TYPES);
 
   public static final DiagnosticGroup NEW_CHECK_TYPES_ALL_CHECKS =
-      DiagnosticGroups.registerGroup("newCheckTypesAllChecks",
-          NewTypeInference.NULLABLE_DEREFERENCE);
+      DiagnosticGroups.registerDeprecatedGroup("newCheckTypesAllChecks");
 
   static {
       // Warnings that are absent in closure library
-      DiagnosticGroups.registerGroup("newCheckTypesClosureClean",
-          JSTypeCreatorFromJSDoc.CONFLICTING_EXTENDED_TYPE,
-          JSTypeCreatorFromJSDoc.CONFLICTING_IMPLEMENTED_TYPE,
-          JSTypeCreatorFromJSDoc.DICT_IMPLEMENTS_INTERF,
-          JSTypeCreatorFromJSDoc.EXTENDS_NON_OBJECT,
-          JSTypeCreatorFromJSDoc.EXTENDS_NOT_ON_CTOR_OR_INTERF,
-          JSTypeCreatorFromJSDoc.IMPLEMENTS_WITHOUT_CONSTRUCTOR,
-          JSTypeCreatorFromJSDoc.INHERITANCE_CYCLE,
-          JSTypeCreatorFromJSDoc.UNION_IS_UNINHABITABLE,
-          GlobalTypeInfoCollector.ABSTRACT_METHOD_IN_CONCRETE_CLASS,
-          GlobalTypeInfoCollector.ANCESTOR_TYPES_HAVE_INCOMPATIBLE_PROPERTIES,
-          GlobalTypeInfoCollector.ANONYMOUS_NOMINAL_TYPE,
-          GlobalTypeInfoCollector.CANNOT_INIT_TYPEDEF,
-          GlobalTypeInfoCollector.CANNOT_OVERRIDE_FINAL_METHOD,
-          GlobalTypeInfoCollector.CONST_WITHOUT_INITIALIZER,
-          GlobalTypeInfoCollector.COULD_NOT_INFER_CONST_TYPE,
-          GlobalTypeInfoCollector.CTOR_IN_DIFFERENT_SCOPE,
-          GlobalTypeInfoCollector.DICT_WITHOUT_CTOR,
-          GlobalTypeInfoCollector.DUPLICATE_JSDOC,
-          GlobalTypeInfoCollector.DUPLICATE_PROP_IN_ENUM,
-          GlobalTypeInfoCollector.EXPECTED_CONSTRUCTOR,
-          GlobalTypeInfoCollector.EXPECTED_INTERFACE,
-          GlobalTypeInfoCollector.INEXISTENT_PARAM,
-          GlobalTypeInfoCollector.INTERFACE_METHOD_NOT_IMPLEMENTED,
-          // GlobalTypeInfoCollector.INVALID_PROP_OVERRIDE,
-          GlobalTypeInfoCollector.LENDS_ON_BAD_TYPE,
-          GlobalTypeInfoCollector.MALFORMED_ENUM,
-          GlobalTypeInfoCollector.MISPLACED_CONST_ANNOTATION,
-          GlobalTypeInfoCollector.ONE_TYPE_FOR_MANY_VARS,
-          // GlobalTypeInfoCollector.REDECLARED_PROPERTY,
-          GlobalTypeInfoCollector.STRUCT_WITHOUT_CTOR_OR_INTERF,
-          GlobalTypeInfoCollector.UNKNOWN_OVERRIDE,
-          GlobalTypeInfoCollector.UNRECOGNIZED_TYPE_NAME,
-          NewTypeInference.ABSTRACT_SUPER_METHOD_NOT_CALLABLE,
-          NewTypeInference.ASSERT_FALSE,
-          NewTypeInference.CANNOT_BIND_CTOR,
-          NewTypeInference.CONST_REASSIGNED,
-          NewTypeInference.CONSTRUCTOR_NOT_CALLABLE,
-          NewTypeInference.CROSS_SCOPE_GOTCHA,
-          // NewTypeInference.FORIN_EXPECTS_OBJECT,
-          NewTypeInference.FORIN_EXPECTS_STRING_KEY,
-          // NewTypeInference.GLOBAL_THIS,
-          // NewTypeInference.GOOG_BIND_EXPECTS_FUNCTION,
-          NewTypeInference.ILLEGAL_OBJLIT_KEY,
-          NewTypeInference.ILLEGAL_PROPERTY_ACCESS,
-          NewTypeInference.ILLEGAL_PROPERTY_CREATION,
-          NewTypeInference.IN_USED_WITH_STRUCT,
-          // NewTypeInference.INEXISTENT_PROPERTY,
-          // NewTypeInference.INVALID_ARGUMENT_TYPE,
-          // NewTypeInference.INVALID_CAST,
-          // NewTypeInference.INVALID_INDEX_TYPE,
-          NewTypeInference.INVALID_INFERRED_RETURN_TYPE,
-          NewTypeInference.INVALID_OBJLIT_PROPERTY_TYPE,
-          // NewTypeInference.INVALID_OPERAND_TYPE,
-          NewTypeInference.INVALID_THIS_TYPE_IN_BIND,
-          NewTypeInference.MISSING_RETURN_STATEMENT,
-          // NewTypeInference.MISTYPED_ASSIGN_RHS,
-          NewTypeInference.NOT_A_CONSTRUCTOR,
-          NewTypeInference.NOT_CALLABLE,
-          // NewTypeInference.NOT_UNIQUE_INSTANTIATION,
-          // NewTypeInference.POSSIBLY_INEXISTENT_PROPERTY,
-          // NewTypeInference.PROPERTY_ACCESS_ON_NONOBJECT,
-          // NewTypeInference.RETURN_NONDECLARED_TYPE,
-          // NewTypeInference.WRONG_ARGUMENT_COUNT,
-          NewTypeInference.UNKNOWN_ASSERTION_TYPE,
-          NewTypeInference.UNKNOWN_TYPEOF_VALUE);
+      DiagnosticGroups.registerDeprecatedGroup("newCheckTypesClosureClean");
   }
 
   public static final DiagnosticGroup TOO_MANY_TYPE_PARAMS =
@@ -420,8 +342,7 @@ public class DiagnosticGroups {
 
   public static final DiagnosticGroup REPORT_UNKNOWN_TYPES =
       DiagnosticGroups.registerGroup("reportUnknownTypes",
-          TypeCheck.UNKNOWN_EXPR_TYPE,
-          NewTypeInference.UNKNOWN_EXPR_TYPE);
+          TypeCheck.UNKNOWN_EXPR_TYPE);
 
   public static final DiagnosticGroup CHECK_VARIABLES =
       DiagnosticGroups.registerGroup("checkVars",
@@ -439,10 +360,7 @@ public class DiagnosticGroups {
       DiagnosticGroups.registerGroup("const",
           CheckAccessControls.CONST_PROPERTY_DELETED,
           CheckAccessControls.CONST_PROPERTY_REASSIGNED_VALUE,
-          ConstCheck.CONST_REASSIGNED_VALUE_ERROR,
-          NewTypeInference.CONST_REASSIGNED,
-          NewTypeInference.CONST_PROPERTY_REASSIGNED,
-          NewTypeInference.CONST_PROPERTY_DELETED);
+          ConstCheck.CONST_REASSIGNED_VALUE_ERROR);
 
   static final DiagnosticGroup ACCESS_CONTROLS_CONST =
       DiagnosticGroups.registerGroup("accessControlsConst",
@@ -452,9 +370,7 @@ public class DiagnosticGroups {
   public static final DiagnosticGroup CONSTANT_PROPERTY =
       DiagnosticGroups.registerGroup("constantProperty",
           CheckAccessControls.CONST_PROPERTY_DELETED,
-          CheckAccessControls.CONST_PROPERTY_REASSIGNED_VALUE,
-          NewTypeInference.CONST_PROPERTY_REASSIGNED,
-          NewTypeInference.CONST_PROPERTY_DELETED);
+          CheckAccessControls.CONST_PROPERTY_REASSIGNED_VALUE);
 
   public static final DiagnosticGroup TYPE_INVALIDATION =
       DiagnosticGroups.registerGroup("typeInvalidation",
@@ -468,8 +384,7 @@ public class DiagnosticGroups {
           TypeValidator.DUP_VAR_DECLARATION,
           TypeValidator.DUP_VAR_DECLARATION_TYPE_MISMATCH,
           TypeCheck.FUNCTION_MASKS_VARIABLE,
-          VariableReferenceCheck.REDECLARED_VARIABLE,
-          GlobalTypeInfoCollector.REDECLARED_PROPERTY);
+          VariableReferenceCheck.REDECLARED_VARIABLE);
 
   public static final DiagnosticGroup ES3 =
       DiagnosticGroups.registerGroup("es3",

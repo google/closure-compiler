@@ -17,14 +17,13 @@ package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
 import com.google.errorprone.annotations.Immutable;
-import com.google.javascript.jscomp.newtypes.DeclaredTypeRegistry;
-import com.google.javascript.jscomp.newtypes.JSType;
 import com.google.javascript.rhino.FunctionTypeI;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.NominalTypeBuilder;
 import com.google.javascript.rhino.ObjectTypeI;
 import com.google.javascript.rhino.StaticSourceFile;
 import com.google.javascript.rhino.TypeIRegistry;
+import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import java.io.Serializable;
@@ -516,18 +515,8 @@ public interface CodingConvention extends Serializable {
      * the function asserts that the node must not be null or undefined.
      * @param call The asserting call
      */
-    public com.google.javascript.rhino.jstype.JSType
-        getAssertedOldType(Node call, JSTypeRegistry registry) {
+    public JSType getAssertedOldType(Node call, JSTypeRegistry registry) {
       return assertedType != null ? registry.getNativeType(assertedType) : null;
-    }
-
-    /**
-     * Returns the new type system type for a type assertion.
-     * @param call The asserting call
-     */
-    public JSType getAssertedNewType(Node call, DeclaredTypeRegistry scope) {
-      return assertedType != null
-          ? scope.getCommonTypes().getNativeType(assertedType) : null;
     }
   }
 }

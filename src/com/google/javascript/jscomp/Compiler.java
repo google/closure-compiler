@@ -233,9 +233,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   // Types that have been forward declared
   private Set<String> forwardDeclaredTypes = new HashSet<>();
 
-  // Type registry used by new type inference.
-  private GlobalTypeInfo globalTypeInfo;
-
   private MostRecentTypechecker mostRecentTypechecker = MostRecentTypechecker.NONE;
 
   // This error reporter gets the messages from the current Rhino parser or TypeRegistry.
@@ -1501,8 +1498,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
         return getTypeRegistry();
       case OTI:
         return getTypeRegistry();
-      case NTI:
-        return getGlobalTypeInfo();
       default:
         throw new RuntimeException("Unhandled typechecker " + mostRecentTypechecker);
     }
@@ -1513,9 +1508,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     switch (mostRecentTypechecker) {
       case OTI:
         typeRegistry = null;
-        return;
-      case NTI:
-        globalTypeInfo = null;
         return;
       case NONE:
         return;
@@ -1647,8 +1639,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     switch (this.mostRecentTypechecker) {
       case OTI:
         return getTypeValidator().getMismatches();
-      case NTI:
-        return getGlobalTypeInfo().getMismatches();
       default:
         throw new RuntimeException("Can't ask for type mismatches before type checking.");
     }
@@ -1659,19 +1649,9 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     switch (this.mostRecentTypechecker) {
       case OTI:
         return getTypeValidator().getImplicitInterfaceUses();
-      case NTI:
-        return getGlobalTypeInfo().getImplicitInterfaceUses();
       default:
         throw new RuntimeException("Can't ask for type mismatches before type checking.");
     }
-  }
-
-  @Override
-  GlobalTypeInfo getGlobalTypeInfo() {
-    if (this.globalTypeInfo == null) {
-      this.globalTypeInfo = new GlobalTypeInfo(this, forwardDeclaredTypes);
-    }
-    return this.globalTypeInfo;
   }
 
   public void maybeSetTracker() {
@@ -3532,7 +3512,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     private final CompilerInput synthesizedExternsInputAtEnd;
     private final Map<String, Node> injectedLibraries;
     private final Node lastInjectedLibrary;
-    private final GlobalTypeInfo globalTypeInfo;
     private final boolean hasRegExpGlobalReferences;
     private final LifeCycleStage lifeCycleStage;
     private final Set<String> externProperties;
@@ -3569,7 +3548,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       this.synthesizedExternsInputAtEnd = compiler.synthesizedExternsInputAtEnd;
       this.injectedLibraries = compiler.injectedLibraries;
       this.lastInjectedLibrary = compiler.lastInjectedLibrary;
-      this.globalTypeInfo = compiler.globalTypeInfo;
       this.hasRegExpGlobalReferences = compiler.hasRegExpGlobalReferences;
       this.typeValidator = compiler.typeValidator;
       this.lifeCycleStage = compiler.getLifeCycleStage();
@@ -3667,7 +3645,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     injectedLibraries.clear();
     injectedLibraries.putAll(compilerState.injectedLibraries);
     lastInjectedLibrary = compilerState.lastInjectedLibrary;
-    globalTypeInfo = compilerState.globalTypeInfo;
     hasRegExpGlobalReferences = compilerState.hasRegExpGlobalReferences;
     typeValidator = compilerState.typeValidator;
     setLifeCycleStage(compilerState.lifeCycleStage);

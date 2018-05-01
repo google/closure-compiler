@@ -1919,8 +1919,6 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
   public void testClassEs5GetterSetterIncorrectTypes() {
     enableTypeCheck();
     setLanguageOut(LanguageMode.ECMASCRIPT5);
-    ignoreWarnings(
-        NewTypeInference.INEXISTENT_PROPERTY, NewTypeInference.INVALID_OBJLIT_PROPERTY_TYPE);
 
     // Using @type instead of @return on a getter.
     test(

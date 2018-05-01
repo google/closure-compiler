@@ -50,7 +50,6 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
     enableTypeCheck();
     enableNormalize();
     enableParseTypeInfo();
-    ignoreWarnings(DiagnosticGroups.NEW_CHECK_TYPES_EXTRA_CHECKS);
   }
 
   @Override

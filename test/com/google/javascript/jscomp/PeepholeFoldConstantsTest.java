@@ -67,10 +67,6 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
   @Override
   protected CompilerOptions getOptions() {
     CompilerOptions options = super.getOptions();
-    // NTI is stricter than OTI w.r.t. implicitly casting boolean/null/undefined to numbers,
-    // but that's irrelevant to this test.
-    options.setWarningLevel(
-        new DiagnosticGroup(NewTypeInference.INVALID_OPERAND_TYPE), CheckLevel.OFF);
     return options;
   }
 

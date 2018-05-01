@@ -172,8 +172,6 @@ public final class RemoveSuperMethodsPassTest extends CompilerTestCase {
             "  return Foo.prototype.baw.superClass_.baz.call(this, time, loc);",
             "};"));
 
-    ignoreWarnings(
-        NewTypeInference.INEXISTENT_PROPERTY, NewTypeInference.UNKNOWN_NAMESPACE_PROPERTY);
     testNoOptimize(
         lines(
             "Foo.prototype.baw = {};",
@@ -208,7 +206,6 @@ public final class RemoveSuperMethodsPassTest extends CompilerTestCase {
   }
 
   public void testNoOptimize_missingReturn() {
-    ignoreWarnings(NewTypeInference.MISSING_RETURN_STATEMENT);
     testNoOptimize(
         lines(
             "/** @override */",

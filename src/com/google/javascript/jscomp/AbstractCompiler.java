@@ -142,7 +142,6 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
   static enum MostRecentTypechecker {
     NONE,
     OTI,
-    NTI
   }
 
   /**
@@ -258,11 +257,6 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
    * recorded as TypeMismatchs only for convenience
    */
   abstract Iterable<TypeMismatch> getImplicitInterfaceUses();
-
-  /**
-   * Global type registry used by NTI.
-   */
-  abstract <T extends TypeIRegistry> T getGlobalTypeInfo();
 
   abstract void setExternExports(String externExports);
 

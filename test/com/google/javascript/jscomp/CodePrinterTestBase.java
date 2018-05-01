@@ -52,7 +52,6 @@ public abstract class CodePrinterTestBase extends TestCase {
     options.preserveTypeAnnotations = preserveTypeAnnotations;
     // Allow getters and setters.
     options.setLanguageIn(languageMode);
-    options.setWarningLevel(DiagnosticGroups.NEW_CHECK_TYPES_EXTRA_CHECKS, CheckLevel.OFF);
 
     compiler.init(
         ImmutableList.of(SourceFile.fromCode("externs", CompilerTestCase.MINIMAL_EXTERNS)),

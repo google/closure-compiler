@@ -45,9 +45,6 @@ public final class InlinePropertiesTest extends CompilerTestCase {
     DiagnosticGroup ignored =
         new DiagnosticGroup(
             TypeCheck.INEXISTENT_PROPERTY,
-            NewTypeInference.GLOBAL_THIS,
-            NewTypeInference.INEXISTENT_PROPERTY,
-            NewTypeInference.INVALID_ARGUMENT_TYPE,
             TypeValidator.TYPE_MISMATCH_WARNING);
     options.setWarningLevel(ignored, CheckLevel.OFF);
     return options;

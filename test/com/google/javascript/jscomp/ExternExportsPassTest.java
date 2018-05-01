@@ -733,7 +733,6 @@ public final class ExternExportsPassTest extends CompilerTestCase {
   }
 
   public void testExportLocalPropertyInConstructor2() throws Exception {
-    ignoreWarnings(NewTypeInference.INEXISTENT_PROPERTY);
     compileAndCheck(
         lines(
             "/** @constructor */function F() { /** @export */ this.x = 5;}",

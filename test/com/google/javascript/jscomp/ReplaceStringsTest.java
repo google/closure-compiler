@@ -352,7 +352,6 @@ public final class ReplaceStringsTest extends CompilerTestCase {
 
   // Non-matching "info" prototype property.
   public void testLoggerOnObject3b() {
-    ignoreWarnings(NewTypeInference.GLOBAL_THIS);
     testSame(
       "/** @constructor */\n" +
       "var x = function() {};\n" +

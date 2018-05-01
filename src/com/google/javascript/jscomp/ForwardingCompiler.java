@@ -256,11 +256,6 @@ class ForwardingCompiler extends AbstractCompiler {
   }
 
   @Override
-  public <T extends TypeIRegistry> T getGlobalTypeInfo() {
-    return abstractCompiler.getGlobalTypeInfo();
-  }
-
-  @Override
   public void setExternExports(String externExports) {
     abstractCompiler.setExternExports(externExports);
   }

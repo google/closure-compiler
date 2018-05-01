@@ -16,9 +16,9 @@
 
 package com.google.javascript.jscomp;
 
+import java.util.List;
 import junit.framework.TestCase;
 
-import java.util.List;
 
 /**
  * @author tylerg@google.com (Tyler Goodwin)

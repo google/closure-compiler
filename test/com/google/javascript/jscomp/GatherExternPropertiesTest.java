@@ -18,8 +18,6 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import com.google.javascript.jscomp.newtypes.JSTypeCreatorFromJSDoc;
-
 /**
  * Test case for {@link GatherExternProperties}.
  */
@@ -209,7 +207,6 @@ public final class GatherExternPropertiesTest extends CompilerTestCase {
         "a", "b");
 
     // Recursive types
-    ignoreWarnings(JSTypeCreatorFromJSDoc.CIRCULAR_TYPEDEF_ENUM);
     assertExternProperties(lines(
         "/** @typedef {{a: D2}} */",
         "var D1;",
