@@ -57,7 +57,7 @@ function executeTest(testBody) {
  *
  * <p>The return value from this function must be returned from the test method.
  * @template TEST_DATA
- * @param {!Array<TEST_DATA>} testData one element per test case
+ * @param {!Array<TEST_DATA>} testDataArray one element per test case
  * @param {!function(TEST_DATA, function(*), function(*))} testMethod is passed
  *     one element from testData followed by the passTest(), and
  *     failTest(reason) functions. It executes the test case and
@@ -65,16 +65,16 @@ function executeTest(testBody) {
  *     test results are known.
  * @return {!Thenable} that is settled when all test cases are complete
  */
-function executeTests(testData, testMethod) {
+function executeTests(testDataArray, testMethod) {
   function createTestBody(testData) {
     return (passTest, failTest) => testMethod(testData, passTest, failTest);
   }
   let testResultPromise = Promise.resolve();
   // NOTE: Not using Promise.all() here, because this test is going to be
   //       submitted before its implementation.
-  for (let i = 0; i < testData.length; ++i) {
-    testResultPromise =
-        testResultPromise.then(() => executeTest(createTestBody(testData[i])));
+  for (let i = 0; i < testDataArray.length; ++i) {
+    testResultPromise = testResultPromise.then(
+        () => executeTest(createTestBody(testDataArray[i])));
   }
   return testResultPromise;
 }
@@ -189,8 +189,7 @@ testSuite({
 
     return executeTests(onResolveValues, (onResolve, passTest, failTest) => {
       p.then(
-           /** @type {null|undefined|function(this:undefined, !Object): ?} */
-           (onResolve))
+           /** @type {?} */ (onResolve))
           .then(value => assertEquals(fulfilledValue, value))
           .then(passTest, failTest);
     });
@@ -204,8 +203,7 @@ testSuite({
     return executeTests(onRejectValues, (onReject, passTest, failTest) => {
       p.then(
            undefined,
-           /** @type {null|undefined|function(this:undefined, *): ?} */
-           (onReject))
+           /** @type {?} */ (onReject))
           .then(
               value => fail('promise unexpectedly fulfilled: ' + value),
               reason => assertEquals(rejectedReason, reason))
