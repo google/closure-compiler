@@ -39,7 +39,8 @@ function inject(var_args) {}
 
 /**
  * Provided by angular-mocks.js.
- * @param {...(string|Function|Array<string|Function>)} var_args
+ * @param {...(string|Function|Array<string|Function>|Object<string, *>)}
+ *     var_args
  * @suppress {checkTypes}
  */
 function module(var_args) {}
