@@ -1721,6 +1721,11 @@ public final class TypeInferenceTest extends TestCase {
     verify("b", registry.getNativeType(STRING_TYPE));
   }
 
+  public void testTemplateLiteral1() {
+    inFunction("var x = `foobar`; X: x;");
+    assertTypeOfExpression("X").isString();
+  }
+
   private ObjectType getNativeObjectType(JSTypeNative t) {
     return registry.getNativeObjectType(t);
   }

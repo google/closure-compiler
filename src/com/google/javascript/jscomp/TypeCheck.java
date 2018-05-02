@@ -640,6 +640,10 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         ensureTyped(t, n, STRING_TYPE);
         break;
 
+       case TEMPLATELIT:
+        ensureTyped(t, n, STRING_TYPE);
+        break;
+
       case BITNOT:
         childType = getJSType(n.getFirstChild());
         if (!childType.matchesNumberContext()) {
@@ -860,6 +864,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       case IF:
       case WHILE:
       case FOR:
+      case TEMPLATELIT_SUB:
         typeable = false;
         break;
 

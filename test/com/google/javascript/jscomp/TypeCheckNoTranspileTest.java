@@ -767,6 +767,63 @@ public final class TypeCheckNoTranspileTest extends CompilerTypeTestCase {
             "required: number"));
   }
 
+  public void testTemplateLiteral1() {
+    testTypes(
+        lines(
+            "", // preserve newline
+            "var a, b",
+            "var /** string */ s = `template ${a} string ${b}`;"));
+  }
+
+  public void testTemplateLiteral2() {
+    // Check that type inference happens inside the TEMPLATE_SUB expression
+    testTypes(
+        "var n; var s = `${n = 'str'}`; var /** number */ m = n;",
+        lines(
+            "initializing variable", // preserve newline
+            "found   : string",
+            "required: number"));
+  }
+
+  public void testTemplateLiteral3() {
+    // Check that we analyze types inside the TEMPLATE_SUB expression
+    testTypes(
+        "var /** number */ n = 1; var s = `template ${n = 'str'} string`;",
+        lines(
+            "assignment", // preserve newline
+            "found   : string",
+            "required: number"));
+  }
+
+  public void testTemplateLiteral_substitutionsHaveAnyType() {
+    // Template strings can take any type.
+    testTypes(
+        lines(
+            "function f(/** * */ anyTypeParam) {",
+            "  var /** string */ s = `template ${anyTypeParam} string`;",
+            "}"));
+  }
+
+  public void testTemplateLiteral_isStringType() {
+    // Check template literal has type string
+    testTypes(
+        "var /** number */ n = `${1}`;",
+        lines(
+            "initializing variable", // preserve newline
+            "found   : string",
+            "required: number"));
+  }
+
+  public void disabled_testTaggedTemplateLiteral1() {
+    // TODO(b/78891530): Make the typechecker handle tagged template lits. Currently this crashes.
+    testTypes(
+        lines(
+            "function tag(/** !Array<string> */ strings, /** number */ num) {",
+            "  return num;",
+            "}",
+            "tag`foo ${3} bar`"));
+  }
+
   private void testTypes(String js) {
     testTypes(js, (String) null);
   }

@@ -425,19 +425,20 @@ class TypeInference
         n.setJSType(getNativeType(NUMBER_TYPE));
         break;
 
-      case PARAM_LIST:
-        scope = traverse(n.getFirstChild(), scope);
-        n.setJSType(getJSType(n.getFirstChild()));
-        break;
-
       case COMMA:
         scope = traverseChildren(n, scope);
         n.setJSType(getJSType(n.getLastChild()));
         break;
 
+      case TEMPLATELIT:
       case TYPEOF:
         scope = traverseChildren(n, scope);
         n.setJSType(getNativeType(STRING_TYPE));
+        break;
+
+      case TEMPLATELIT_SUB:
+        // TEMPLATELIT_SUBs are untyped but we do need to traverse their children.
+        scope = traverseChildren(n, scope);
         break;
 
       case DELPROP:
