@@ -160,6 +160,23 @@ public final class TypeCheckNoTranspileTest extends CompilerTypeTestCase {
             "}"));
   }
 
+  public void testBlockScopedVarInLoop3() {
+     // Tests that the qualified name alias.num is reset between loop iterations
+    testTypes(
+        lines(
+            "function takesNumber(/** number */ n) {}",
+            "",
+            "function f(/** {num: ?number} */ obj) {",
+            "  for (const _ in {}) {",
+            "    const alias = obj;",
+            "    if (alias.num === null) {",
+            "     continue;",
+            "    }",
+            "    takesNumber(alias.num);",
+            "  }",
+            "}"));
+  }
+
   public void testGlobalEnumWithLet() {
     testTypes(
         lines(

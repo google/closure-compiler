@@ -555,9 +555,14 @@ class LinkedFlowScope implements FlowScope {
       // 5) The type is declared in joinedScopeA and joinedScopeB. Join
       //    the two types.
 
+      // Stores names that are not in a common ancestor of slotsA and slotsB for later removal
+      Set<ScopedName> obsoleteNames = new HashSet<>();
       for (ScopedName var : Sets.union(slotsA.keySet(), slotsB.keySet())) {
         if (!commonAncestorScopeRootNodes.contains(var.getScopeRoot())) {
           // Variables not defined in a common ancestor no longer exist after the join.
+          // Since this.symbols is initialized to slotsA, this.symbols may already contain var.
+          // Remove obsolete names after this for loop (to avoid a ConcurrentModificationException)
+          obsoleteNames.add(var);
           continue;
         }
         LinkedFlowSlot slotA = slotsA.get(var);
@@ -590,6 +595,9 @@ class LinkedFlowScope implements FlowScope {
         if (joinedType != null && (slotA == null || joinedType != slotA.getType())) {
           symbols.put(var, new LinkedFlowSlot(var, joinedType, null));
         }
+      }
+      for (ScopedName var : obsoleteNames) {
+        this.symbols.remove(var);
       }
     }
   }
