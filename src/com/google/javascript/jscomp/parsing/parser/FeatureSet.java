@@ -87,7 +87,12 @@ public final class FeatureSet implements Serializable {
               Feature.TEMPLATE_LITERALS));
 
   public static final FeatureSet OTI_SUPPORTED =
-      ES5.with(Feature.GENERATORS, Feature.LET_DECLARATIONS, Feature.CONST_DECLARATIONS);
+      ES5.with(
+          Feature.GENERATORS,
+          Feature.LET_DECLARATIONS,
+          Feature.CONST_DECLARATIONS,
+          Feature.BLOCK_SCOPED_FUNCTION_DECLARATION,
+          Feature.FOR_OF);
 
   private enum LangVersion {
     ES3,
