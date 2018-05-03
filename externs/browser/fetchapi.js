@@ -85,7 +85,7 @@ Headers.prototype.getAll = function(name) {};
  */
 Headers.prototype.has = function(name) {};
 
-/** @return {!Iterator<string>} */
+/** @return {!IteratorIterable<string>} */
 Headers.prototype.keys = function() {};
 
 /**
