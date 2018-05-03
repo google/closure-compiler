@@ -103,6 +103,66 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
             "}"));
   }
 
+  public void testGeneratorForAsyncFunction() {
+    ensureLibraryInjected("es6/execute_async_generator");
+
+    test(
+        lines(
+            "f = function() {",
+            "  return $jscomp.asyncExecutePromiseGeneratorFunction(",
+            "      function *() {",
+            "        var x = 6;",
+            "        yield x;",
+            "      });",
+            "}"),
+        lines(
+            "f = function () {",
+            "  var x;",
+            "  return $jscomp.asyncExecutePromiseGeneratorProgram(",
+            "      function ($jscomp$generator$context) {",
+            "         x = 6;",
+            "         return $jscomp$generator$context.yield(x, 0);",
+            "      });",
+            "}"));
+
+    test(
+        lines(
+            "f = function(a) {",
+            "  var $jscomp$restParams = [];",
+            "  for (var $jscomp$restIndex = 0;",
+            "      $jscomp$restIndex < arguments.length;",
+            "      ++$jscomp$restIndex) {",
+            "    $jscomp$restParams[$jscomp$restIndex - 0] = arguments[$jscomp$restIndex];",
+            "  }",
+            "  {",
+            "    var bla$0 = $jscomp$restParams;",
+            "    return $jscomp.asyncExecutePromiseGeneratorFunction(",
+            "        function *() {",
+            "          var x = bla$0[0];",
+            "        yield x;",
+            "        });",
+            "  }",
+            "}"),
+        lines(
+            "f = function (a) {",
+            "  var $jscomp$restParams = [];",
+            "  for (var $jscomp$restIndex = 0;",
+            "      $jscomp$restIndex < arguments.length;",
+            "      ++$jscomp$restIndex) {",
+            "    $jscomp$restParams[$jscomp$restIndex - 0] = arguments[$jscomp$restIndex];",
+            "  }",
+            "  {",
+            "    var bla$0 = $jscomp$restParams;",
+            "    var x;",
+            "    return $jscomp.asyncExecutePromiseGeneratorProgram(",
+            "        function ($jscomp$generator$context) {",
+            "          x = bla$0[0];",
+            "          return $jscomp$generator$context.yield(x, 0);",
+            "        });",
+            "  }",
+            "}"));
+  }
+
   public void testUnnamed() {
     test(
         lines("f = function *() {};"),
