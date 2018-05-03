@@ -1940,7 +1940,7 @@ RTCPeerConnection.prototype.createAnswer =
  * @param {!RTCSessionDescription} description
  * @param {!RTCVoidCallback=} successCallback
  * @param {!RTCPeerConnectionErrorCallback=} errorCallback
- * @return {!Promise<!RTCSessionDescription>|undefined}
+ * @return {!Promise<!RTCSessionDescription>}
  */
 RTCPeerConnection.prototype.setLocalDescription = function(description,
     successCallback, errorCallback) {};
@@ -1949,7 +1949,7 @@ RTCPeerConnection.prototype.setLocalDescription = function(description,
  * @param {!RTCSessionDescription} description
  * @param {!RTCVoidCallback=} successCallback
  * @param {!RTCPeerConnectionErrorCallback=} errorCallback
- * @return {!Promise<!RTCSessionDescription>|undefined}
+ * @return {!Promise<!RTCSessionDescription>}
  */
 RTCPeerConnection.prototype.setRemoteDescription = function(description,
     successCallback, errorCallback) {};
