@@ -284,6 +284,7 @@ public final class TemplateAstMatcher {
     return (n.getToken() == TEMPLATE_TYPE_PARAM);
   }
 
+  /** Matches parameters (in the refasterJS template) whose names start with 'string_literal_'. */
   private boolean isTemplateParameterStringLiteralNode(Node n) {
     return (n.getToken() == TEMPLATE_STRING_LITERAL);
   }
@@ -341,7 +342,8 @@ public final class TemplateAstMatcher {
         return false;
       }
     } else if (isTemplateParameterStringLiteralNode(template)) {
-      return NodeUtil.isStringLiteralValue(ast);
+      // Matches parameters (in the refasterJS template) whose names start with 'string_literal_'.
+      return NodeUtil.isSomeCompileTimeConstStringValue(ast);
     } else if (template.isCall()) {
       // Loosely match CALL nodes. isEquivalentToShallow checks free calls against non-free calls,
       // but the template should ignore that distinction.
@@ -451,7 +453,7 @@ public final class TemplateAstMatcher {
         return ast.isEquivalentTo(previousMatch);
       }
 
-      if (NodeUtil.isStringLiteralValue(ast)) {
+      if (NodeUtil.isSomeCompileTimeConstStringValue(ast)) {
         paramNodeMatches.set(paramIndex, ast);
         return true;
       }

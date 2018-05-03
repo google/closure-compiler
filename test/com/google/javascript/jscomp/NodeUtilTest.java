@@ -218,6 +218,40 @@ public final class NodeUtilTest extends TestCase {
     assertFalse(NodeUtil.isImmutableValue(n));
   }
 
+  public void testIsStringLiteralStringLiteral() {
+    assertTrue(NodeUtil.isSomeCompileTimeConstStringValue(parseExpr("'b'"))); // String
+  }
+
+  public void testIsStringLiteralTemplateNoSubst() {
+    assertTrue(NodeUtil.isSomeCompileTimeConstStringValue(parseExpr("`b`"))); // Template
+  }
+
+  public void testIsStringLiteralTemplateWithSubstitution() {
+    // Template with substitution
+    assertFalse(NodeUtil.isSomeCompileTimeConstStringValue(parseExpr("`foo${bar}`")));
+  }
+
+  public void testIsStringLiteralVariable() {
+    assertFalse(NodeUtil.isSomeCompileTimeConstStringValue(parseExpr("b"))); // Variable
+  }
+
+  public void testIsStringLiteralConcatLiterals() {
+    assertTrue(
+        NodeUtil.isSomeCompileTimeConstStringValue(parseExpr("'b' + 'c'"))); // String concatenation
+  }
+
+  public void testIsStringLiteralConcatLiteralVariable() {
+    assertFalse(NodeUtil.isSomeCompileTimeConstStringValue(parseExpr("b + 'c'")));
+    assertFalse(NodeUtil.isSomeCompileTimeConstStringValue(parseExpr("'b' + c")));
+  }
+
+  public void testIsStringLiteralTernary() {
+    assertTrue(NodeUtil.isSomeCompileTimeConstStringValue(parseExpr("a ? 'b' : 'c'")));
+    assertFalse(NodeUtil.isSomeCompileTimeConstStringValue(parseExpr("a ? b : 'c'")));
+    assertFalse(NodeUtil.isSomeCompileTimeConstStringValue(parseExpr("a ? 'b' : c")));
+    assertFalse(NodeUtil.isSomeCompileTimeConstStringValue(parseExpr("a ? b : c")));
+  }
+
   public void testGetBooleanValue() {
     assertPureBooleanTrue("true");
     assertPureBooleanTrue("10");

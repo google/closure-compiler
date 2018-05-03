@@ -740,17 +740,23 @@ public final class NodeUtil {
   }
 
   /**
-   * Returns true iff the value associated with the node is a JS string literal,
-   * or a concatenation thereof.
+   * Returns true iff the value associated with the node is a JS string literal, a concatenation
+   * thereof or a ternary operator choosing between string literals.
    */
-  static boolean isStringLiteralValue(Node node) {
-    if (node.isString()) {
+  static boolean isSomeCompileTimeConstStringValue(Node node) {
+    // TODO(bangert): Support constants, using a Scope argument. See ConstParamCheck
+    if (node.isString() || (node.isTemplateLit() && node.hasOneChild())) {
       return true;
     } else if (node.isAdd()) {
       checkState(node.hasTwoChildren(), node);
       Node left = node.getFirstChild();
       Node right = node.getLastChild();
-      return isStringLiteralValue(left) && isStringLiteralValue(right);
+      return isSomeCompileTimeConstStringValue(left) && isSomeCompileTimeConstStringValue(right);
+    } else if (node.isHook()) {
+      // Ternary operator a ? b : c
+      Node left = node.getSecondChild();
+      Node right = node.getLastChild();
+      return isSomeCompileTimeConstStringValue(left) && isSomeCompileTimeConstStringValue(right);
     }
     return false;
   }

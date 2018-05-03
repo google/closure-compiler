@@ -33,8 +33,6 @@ import com.google.common.reflect.TypeToken;
 import com.google.javascript.jscomp.CheckConformance.InvalidRequirementSpec;
 import com.google.javascript.jscomp.CheckConformance.Rule;
 import com.google.javascript.jscomp.CodingConvention.AssertionFunctionSpec;
-import com.google.javascript.jscomp.ConformanceRules.AbstractRule;
-import com.google.javascript.jscomp.ConformanceRules.ConformanceResult;
 import com.google.javascript.jscomp.Requirement.Severity;
 import com.google.javascript.jscomp.Requirement.Type;
 import com.google.javascript.jscomp.parsing.JsDocInfoParser;
@@ -626,7 +624,7 @@ public final class ConformanceRules {
           }
           if (NodeUtil.isLhsOfAssign(propAccess)
               && (NodeUtil.isLiteralValue(propAccess.getNext(), false /* includeFunctions */)
-                  || NodeUtil.isStringLiteralValue(propAccess.getNext()))) {
+                  || NodeUtil.isSomeCompileTimeConstStringValue(propAccess.getNext()))) {
             return false;
           }
           return true;
@@ -1653,7 +1651,7 @@ public final class ConformanceRules {
         }
         Node prop = NodeUtil.getFirstPropMatchingKey(attrs, tagAttr[1]);
         if (prop != null) {
-          if (NodeUtil.isStringLiteralValue(prop)) {
+          if (NodeUtil.isSomeCompileTimeConstStringValue(prop)) {
             // Ignore string literal values.
             continue;
           }

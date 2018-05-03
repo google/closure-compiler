@@ -123,6 +123,27 @@ public final class ConstParamCheckTest extends CompilerTestCase {
     testError("goog$string$Const$from(null);", ConstParamCheck.CONST_NOT_STRING_LITERAL_ERROR);
   }
 
+  public void testStringLiteralTernaryArgument() {
+    testSame(CLOSURE_DEFS + "var a = false;" + "goog.string.Const.from(a ? 'foo' : 'bar');");
+  }
+
+  public void testStringLiteralComplexExpression() {
+    testSame(
+        CLOSURE_DEFS
+            + "const domain = 'example.org';"
+            + "goog.string.Const.from("
+            + "'http' + (Math.random() ? 's' : '') + ':' +  domain + '/ponies/');");
+  }
+
+  public void testStringLiteralTernaryArgumentNonConstant() {
+    testError(
+        CLOSURE_DEFS
+            + "var a = false;"
+            + "var f = function() { return 'foo'; };"
+            + "goog.string.Const.from(a ? f() : 'bar');",
+        ConstParamCheck.CONST_NOT_STRING_LITERAL_ERROR);
+  }
+
   // Tests for string literal constant arguments.
 
   public void testStringLiteralConstantArgument() {
