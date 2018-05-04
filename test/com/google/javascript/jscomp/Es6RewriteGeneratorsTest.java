@@ -703,20 +703,20 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
 
     rewriteGeneratorBodyWithVars(
         "return this;",
-        "/** @const */ var $jscomp$generator$this = this;",
+        "var $jscomp$generator$this = this;",
         lines(
             "return $jscomp$generator$context.return($jscomp$generator$this);"));
 
     rewriteGeneratorBodyWithVars(
         "return this.test({value: this});",
-        "/** @const */ var $jscomp$generator$this = this;",
+        "var $jscomp$generator$this = this;",
         lines(
             "return $jscomp$generator$context.return(",
             "    $jscomp$generator$this.test({value: $jscomp$generator$this}));"));
 
     rewriteGeneratorBodyWithVars(
         "return this[yield];",
-        "/** @const */ var $jscomp$generator$this = this;",
+        "var $jscomp$generator$this = this;",
         lines(
             "if ($jscomp$generator$context.nextAddress == 1)",
             "  return $jscomp$generator$context.yield(undefined, 2);",
@@ -867,7 +867,7 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
   public void testYieldArguments() {
     rewriteGeneratorBodyWithVars(
         "yield arguments[0];",
-        "/** @const */ var $jscomp$generator$arguments = arguments;",
+        "var $jscomp$generator$arguments = arguments;",
         lines(
             "return $jscomp$generator$context.yield($jscomp$generator$arguments[0], 0);"));
   }
@@ -875,7 +875,7 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
   public void testYieldThis() {
     rewriteGeneratorBodyWithVars(
         "yield this;",
-        "/** @const */ var $jscomp$generator$this = this;",
+        "var $jscomp$generator$this = this;",
         lines(
             "return $jscomp$generator$context.yield($jscomp$generator$this, 0);"));
   }
@@ -949,14 +949,14 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
 
     rewriteGeneratorBodyWithVars(
         lines(
-            "var /** @const @type {number} */ a = 10, b, c = yield 10, d = yield 20, f, g='test';"),
+            "var /** @const */ a = 10, b, c = yield 10, d = yield 20, f, g='test';"),
         lines(
-            "var /** @type {number} */ a, b;",
+            "var /** @const */ a, b;",
             "var c;", // note that the yields cause the var declarations to be split up
             "var d, f, g;"),
         lines(
             "if ($jscomp$generator$context.nextAddress == 1) {",
-            "  /** @const @type {number} */ a = 10;",
+            "  a = 10;",
             "  return $jscomp$generator$context.yield(10, 2);",
             "}",
             "if ($jscomp$generator$context.nextAddress != 3) {",

@@ -24,8 +24,6 @@ import com.google.javascript.jscomp.AbstractCompiler.MostRecentTypechecker;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.IR;
-import com.google.javascript.rhino.JSDocInfo;
-import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.FunctionType;
@@ -2096,9 +2094,6 @@ final class Es6RewriteGenerators implements HotSwapCompilerPass {
           if (!thisReferenceFound) {
             Node var = IR.var(newThis.cloneNode().useSourceInfoFrom(n), n)
                 .useSourceInfoFrom(newGeneratorHoistBlock);
-            JSDocInfoBuilder jsDoc = new JSDocInfoBuilder(false);
-            jsDoc.recordConstancy();
-            var.setJSDocInfo(jsDoc.build());
             hoistNode(var);
             thisReferenceFound = true;
           }
@@ -2114,31 +2109,8 @@ final class Es6RewriteGenerators implements HotSwapCompilerPass {
           if (!argumentsReferenceFound) {
             Node var =
                 IR.var(newArguments.cloneNode(), n).useSourceInfoFrom(newGeneratorHoistBlock);
-            JSDocInfoBuilder jsDoc = new JSDocInfoBuilder(false);
-            jsDoc.recordConstancy();
-            var.setJSDocInfo(jsDoc.build());
             hoistNode(var);
             argumentsReferenceFound = true;
-          }
-        }
-
-        /** Removes {@code @const} annotation from the node if present. */
-        void maybeRemoveConstAnnotation(Node n) {
-          if (n.getJSDocInfo() != null && n.getJSDocInfo().hasConstAnnotation()) {
-            // TODO(skill): report a warning that @const will be ignored.
-            JSDocInfoBuilder fixedJSDoc = JSDocInfoBuilder.copyFrom(n.getJSDocInfo());
-            fixedJSDoc.clearConstancy();
-            n.setJSDocInfo(fixedJSDoc.build());
-          }
-        }
-
-        /** Moves JsDocInfo from one node to another */
-        void moveJsDocInfo(Node from, Node to) {
-          checkState(to.getJSDocInfo() == null);
-          JSDocInfo jsDocInfo = from.getJSDocInfo();
-          if (jsDocInfo != null) {
-            from.setJSDocInfo(null);
-            to.setJSDocInfo(jsDocInfo);
           }
         }
 
@@ -2160,20 +2132,15 @@ final class Es6RewriteGenerators implements HotSwapCompilerPass {
          * </pre>
          */
         void visitVar(Node varStatement) {
-          maybeRemoveConstAnnotation(varStatement);
           ArrayList<Node> assignments = new ArrayList<>();
           for (Node varName : varStatement.children()) {
             if (varName.hasChildren()) {
-              Node copiedVarName = varName.cloneNode();
+              Node copiedVarName = varName.cloneNode().setJSDocInfo(null);
               Node assign =
-                  IR.assign(copiedVarName, varName.removeFirstChild()).useSourceInfoFrom(varName);
-              moveJsDocInfo(copiedVarName, assign);
-              assign.setTypeI(varName.getTypeI());
+                  withType(IR.assign(copiedVarName, varName.removeFirstChild()), varName.getTypeI())
+                      .useSourceInfoFrom(varName);
               assignments.add(assign);
             }
-            // Variable assignment will keep @const declaration, if any, but we must remove it from
-            // the name declaration.
-            maybeRemoveConstAnnotation(varName);
           }
           if (assignments.isEmpty()) {
             varStatement.detach();
