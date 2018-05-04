@@ -60,11 +60,23 @@ testSuite({
       checkAddHas(set, keys[i]);
     }
     assertEquals(37, set.size);
+  },
 
+  testAdd_normalizeZero() {
     // Note: +0 and -0 are the same
+    const set = new Set().add(-0);
+    assertTrue(set.has(0));
     assertTrue(set.has(-0));
+    // stored value should be +0
+    assertEquals(Infinity, 1 / set.keys().next().value);
+    assertEquals(Infinity, 1 / set.entries().next().value[0]);
+    set.forEach(
+        (value) => {
+          assertEquals(Infinity, 1 / value);
+        });
     assertTrue(set.delete(-0));
     assertFalse(set.has(0));
+    assertFalse(set.has(-0));
   },
 
   testAdd_nans() {
@@ -149,6 +161,18 @@ testSuite({
     assertEquals(2, set.size);
     assertTrue(set.has('a'));
     assertTrue(set.has('b'));
+  },
+
+  testConstructor_normalizeZero() {
+    const set = new Set([-0]);
+    assertEquals(Infinity, 1 / set.keys().next().value);
+    assertEquals(Infinity, 1 / set.entries().next().value[0]);
+    set.forEach(
+        (value) => {
+          assertEquals(Infinity, 1 / value);
+        });
+    assertTrue(set.has(0));
+    assertTrue(set.has(-0));
   },
 
   testForEach() {
