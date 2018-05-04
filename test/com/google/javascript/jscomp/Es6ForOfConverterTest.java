@@ -32,11 +32,13 @@ public final class Es6ForOfConverterTest extends CompilerTestCase {
           "/** @constructor @template T */",
           "function Arguments() {}",
           "/**",
-          " * @param {string|!Array<T>|!Iterable<T>|!Iterator<T>|!Arguments<T>} iterable",
+          " * @param {string|!Iterable<T>|!Iterator<T>|!Arguments<T>} iterable",
           " * @return {!Iterator<T>}",
           " * @template T",
           " */",
-          "$jscomp.makeIterator = function(iterable) {};");
+          "$jscomp.makeIterator = function(iterable) {};",
+          "var console;",
+          "console.log = function(s) {}");
 
   public Es6ForOfConverterTest() {
     super(EXTERNS_BASE);
@@ -47,7 +49,8 @@ public final class Es6ForOfConverterTest extends CompilerTestCase {
     super.setUp();
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     setLanguageOut(LanguageMode.ECMASCRIPT3);
-    enableRunTypeCheckAfterProcessing();
+    enableTypeCheck();
+    enableTypeInfoValidation();
   }
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
@@ -179,7 +182,6 @@ public final class Es6ForOfConverterTest extends CompilerTestCase {
   }
 
   public void testForOfOnNonIterable() {
-    enableTypeCheck();
     testWarning(
         lines(
             "var arrayLike = {",

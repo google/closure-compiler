@@ -22,14 +22,17 @@ import com.google.common.base.Preconditions;
 import com.google.javascript.jscomp.AbstractCompiler.MostRecentTypechecker;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
+import com.google.javascript.rhino.FunctionTypeI;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.ObjectTypeI;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.TypeI;
-import com.google.javascript.rhino.TypeIRegistry;
+import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
+import com.google.javascript.rhino.jstype.JSTypeRegistry;
+import com.google.javascript.rhino.jstype.ObjectType;
+import com.google.javascript.rhino.jstype.UnionTypeBuilder;
 
 /**
  * Converts ES6 "for of" loops to ES5.
@@ -41,7 +44,7 @@ public final class Es6ForOfConverter implements NodeTraversal.Callback, HotSwapC
   private static final FeatureSet transpiledFeatures = FeatureSet.BARE_MINIMUM.with(Feature.FOR_OF);
   // addTypes indicates whether we should add type information when transpiling.
   private final boolean addTypes;
-  private final TypeIRegistry registry;
+  private final JSTypeRegistry registry;
   private final TypeI unknownType;
   private final TypeI stringType;
   private final TypeI booleanType;
@@ -52,9 +55,9 @@ public final class Es6ForOfConverter implements NodeTraversal.Callback, HotSwapC
 
   public Es6ForOfConverter(AbstractCompiler compiler) {
     this.compiler = compiler;
-    // Only add type information if NTI has been run.
+    // Only add type information if OTI has been run.
     this.addTypes = MostRecentTypechecker.OTI.equals(compiler.getMostRecentTypechecker());
-    this.registry = compiler.getTypeIRegistry();
+    this.registry = compiler.getTypeRegistry();
     this.unknownType = createType(addTypes, registry, JSTypeNative.UNKNOWN_TYPE);
     this.stringType = createType(addTypes, registry, JSTypeNative.STRING_TYPE);
     this.booleanType = createType(addTypes, registry, JSTypeNative.BOOLEAN_TYPE);
@@ -82,14 +85,15 @@ public final class Es6ForOfConverter implements NodeTraversal.Callback, HotSwapC
   public void visit(NodeTraversal t, Node n, Node parent) {
     switch (n.getToken()) {
       case FOR_OF:
-        visitForOf(t, n, parent);
+        visitForOf(n, parent);
         break;
       default:
         break;
     }
   }
 
-  private void visitForOf(NodeTraversal t, Node node, Node parent) {
+  // TODO(lharker): break up this method
+  private void visitForOf(Node node, Node parent) {
     Node variable = node.removeFirstChild();
     Node iterable = node.removeFirstChild();
     Node body = node.removeFirstChild();
@@ -98,17 +102,23 @@ public final class Es6ForOfConverter implements NodeTraversal.Callback, HotSwapC
     if (addTypes) {
       // TODO(sdh): This is going to be null if the iterable is nullable or unknown. We might want
       // to consider some way of unifying rather than simply looking at the nominal type.
-      ObjectTypeI iterableType = iterable.getTypeI().autobox().toMaybeObjectType();
+      ObjectType iterableType = iterable.getJSType().autobox().toMaybeObjectType();
       if (iterableType != null) {
-        TypeIRegistry registry = compiler.getTypeIRegistry();
-        TypeI iterableBaseType = registry.getNativeType(JSTypeNative.ITERABLE_TYPE);
-        typeParam = iterableType.getInstantiatedTypeArgument(iterableBaseType);
+        // TODO(lharker): create a simpler way to get the resolved template type (something like
+        // TypeI.getInstantiatedTypeArgument)
+        // This will be the unknown type if iterableType is not actually a subtype of Iterable
+        typeParam =
+            iterableType
+                .getTemplateTypeMap()
+                .getResolvedTemplateType(registry.getIterableTemplate());
       }
     }
     TypeI iteratorType = createGenericType(JSTypeNative.ITERATOR_TYPE, typeParam);
-    TypeI iIterableResultType = createGenericType(JSTypeNative.I_ITERABLE_RESULT_TYPE, typeParam);
-    TypeI iteratorNextType =
-        addTypes ? iteratorType.toMaybeObjectType().getPropertyType("next") : null;
+    FunctionTypeI iteratorNextType =
+        addTypes
+            ? iteratorType.toMaybeObjectType().getPropertyType("next").toMaybeFunctionType()
+            : null;
+    TypeI iIterableResultType = addTypes ? iteratorNextType.getReturnType() : null;
 
     JSDocInfo varJSDocInfo = variable.getJSDocInfo();
     Node iterName =
@@ -137,12 +147,33 @@ public final class Es6ForOfConverter implements NodeTraversal.Callback, HotSwapC
 
     Node call = Es6ToEs3Util.makeIterator(compiler, iterable);
     if (addTypes) {
-      TypeI jscompType = t.getScope().getVar("$jscomp").getNode().getTypeI();
-      TypeI makeIteratorType = jscompType.toMaybeObjectType().getPropertyType("makeIterator");
-      call.getFirstChild().setTypeI(makeIteratorType);
-      call.getFirstFirstChild().setTypeI(jscompType);
+      // Create the function type for $jscomp.makeIterator.
+      // Build "@param {string|!Iterable<T>|!Iterator<T>|!Arguments<T>}"
+      UnionTypeBuilder paramBuilder =
+          new UnionTypeBuilder(registry)
+              .addAlternate(registry.getNativeType(JSTypeNative.STRING_TYPE))
+              .addAlternate(registry.getNativeType(JSTypeNative.ITERATOR_TYPE))
+              .addAlternate(registry.getNativeType(JSTypeNative.ITERABLE_TYPE));
+      JSType argumentsType = registry.getGlobalType("Arguments");
+      // If the user didn't provide externs for Arguments, let TypeCheck take care of issuing a
+      // warning.
+      if (argumentsType != null) {
+        paramBuilder.addAlternate(argumentsType);
+      }
+      FunctionTypeI makeIteratorType =
+          registry.createFunctionType((JSType) iteratorType, paramBuilder.build());
+
+      // Put types on the $jscomp.makeIterator getprop
+      Node getProp = call.getFirstChild();
+      getProp.setTypeI(makeIteratorType);
+      // typing $jscomp as unknown since the $jscomp polyfill may not be injected before
+      // typechecking. (See https://github.com/google/closure-compiler/issues/2908)
+      getProp.getFirstChild().setJSType(registry.getNativeType(JSTypeNative.UNKNOWN_TYPE));
+      getProp.getSecondChild().setJSType(registry.getNativeType(JSTypeNative.STRING_TYPE));
+
+      call.setTypeI(iteratorType);
     }
-    Node init = IR.var(iterName.cloneTree(), withType(call, iteratorType));
+    Node init = IR.var(withType(iterName.cloneTree(), iterName.getTypeI()), call);
     Node initIterResult = iterResult.cloneTree();
     initIterResult.addChildToFront(getNext.cloneTree());
     init.addChildToBack(initIterResult);
