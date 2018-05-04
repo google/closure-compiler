@@ -23,7 +23,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.transpile.TranspileResult;
 import com.google.javascript.jscomp.transpile.Transpiler;
 import java.io.IOException;
-import java.nio.file.Paths;
+import java.net.URI;
 import junit.framework.TestCase;
 import org.mockito.Mockito;
 
@@ -109,13 +109,14 @@ public final class ClosureBundlerTest extends TestCase {
         .isEqualTo("eval(\"\\x22a string\\x22\\n//# sourceURL\\x3dURL\\n\");\n");
   }
 
-  public void testTranspilation() throws IOException {
+  public void testTranspilation() throws Exception {
     String input = "goog.module('Foo');\nclass Foo {}";
+    URI uri = new URI("foo.js");
 
     Transpiler transpiler = Mockito.mock(Transpiler.class, RETURNS_SMART_NULLS);
     when(transpiler.runtime()).thenReturn("RUNTIME;");
-    when(transpiler.transpile(Paths.get("foo.js"), input))
-        .thenReturn(new TranspileResult(Paths.get("foo.js"), input, "TRANSPILED;", ""));
+    when(transpiler.transpile(uri, input))
+        .thenReturn(new TranspileResult(uri, input, "TRANSPILED;", ""));
 
     ClosureBundler bundler = new ClosureBundler(transpiler).withPath("foo.js");
     StringBuilder sb = new StringBuilder();

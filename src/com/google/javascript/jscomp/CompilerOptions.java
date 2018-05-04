@@ -1089,7 +1089,7 @@ public class CompilerOptions implements Serializable {
    */
   boolean resolveSourceMapAnnotations = true;
 
-  public List<SourceMap.LocationMapping> sourceMapLocationMappings =
+  public List<? extends SourceMap.LocationMapping> sourceMapLocationMappings =
       Collections.emptyList();
 
   /**
@@ -2665,7 +2665,7 @@ public class CompilerOptions implements Serializable {
   }
 
   public void setSourceMapLocationMappings(
-      List<SourceMap.LocationMapping> sourceMapLocationMappings) {
+      List<? extends SourceMap.LocationMapping> sourceMapLocationMappings) {
     this.sourceMapLocationMappings = sourceMapLocationMappings;
   }
 
