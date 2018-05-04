@@ -767,6 +767,41 @@ public final class TypeCheckNoTranspileTest extends CompilerTypeTestCase {
             "required: number"));
   }
 
+  public void testMemberFunctionDef1() {
+    testTypes(
+        lines(
+            "var obj = {", // line break
+            "  method (/** number */ n) {}",
+            "};",
+            "obj.method(1);"));
+  }
+
+  public void testMemberFunctionDef2() {
+    testTypes(
+        lines(
+            "var obj = {", // line break
+            "  method (/** string */ n) {}",
+            "};",
+            "obj.method(1);"),
+        lines(
+            "actual parameter 1 of obj.method does not match formal parameter",
+            "found   : number",
+            "required: string"));
+  }
+
+  public void testMemberFunctionDef3() {
+    testTypes("var obj = { method() {} }; new obj.method();", "cannot instantiate non-constructor");
+  }
+
+  public void testMemberFunction_enum() {
+    testTypes(
+        "/** @enum */ var obj = {a() {}};",
+        lines(
+            "assignment to property a of enum{obj}",
+            "found   : function(): undefined",
+            "required: number"));
+  }
+
   public void testTemplateLiteral1() {
     testTypes(
         lines(
