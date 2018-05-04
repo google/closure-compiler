@@ -1678,7 +1678,7 @@ public final class SymbolTable {
           // instead of "foo.bar.MyType". To do that we clone the type node and change the source
           // info of the clone to include only the last part of the type ("MyType").
           if (typeString.contains(".")) {
-            String lastPart = typeString.substring(typeString.lastIndexOf(".") + 1);
+            String lastPart = typeString.substring(typeString.lastIndexOf('.') + 1);
             Node copy = n.cloneNode();
             copy.setCharno(copy.getCharno() + copy.getLength() - lastPart.length());
             copy.setLength(lastPart.length());

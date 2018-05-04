@@ -884,11 +884,11 @@ public class JSTypeRegistry implements TypeIRegistry {
   }
 
   private static boolean isCompoundName(String name) {
-    return name.indexOf(".") != -1;
+    return name.indexOf('.') != -1;
   }
 
   private static String getRootElementOfName(String name) {
-    int index = name.indexOf(".");
+    int index = name.indexOf('.');
     if (index != -1) {
       return name.substring(0, index);
     }
