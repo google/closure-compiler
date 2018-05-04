@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 import static com.google.javascript.jscomp.CompilerOptions.LanguageMode.ECMASCRIPT_NEXT;
 import static com.google.javascript.jscomp.testing.NodeSubject.assertNode;
 
@@ -25,6 +26,7 @@ import com.google.common.collect.Iterables;
 import com.google.javascript.jscomp.ReferenceCollectingCallback.Behavior;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
+import java.util.List;
 
 public final class ReferenceCollectingCallbackTest extends CompilerTestCase {
   private Behavior behavior;
@@ -62,6 +64,22 @@ public final class ReferenceCollectingCallbackTest extends CompilerTestCase {
   private void testBehavior(String js, Behavior behavior) {
     this.behavior = behavior;
     testSame(js);
+  }
+
+  public void testRestDeclaration() {
+    testBehavior(
+        "let [x, ...arr] = [1, 2, 3]; [x, ...arr] = [4, 5, 6];",
+        (NodeTraversal t, ReferenceMap rm) -> {
+          ReferenceCollection arrReferenceCollection = rm.getReferences(t.getScope().getVar("arr"));
+          List<Reference> references = arrReferenceCollection.references;
+          assertThat(references).hasSize(2);
+          assertWithMessage("First reference is a declaration")
+              .that(references.get(0).isDeclaration())
+              .isTrue();
+          assertWithMessage("Second reference is a declaration")
+              .that(references.get(1).isDeclaration())
+              .isFalse();
+        });
   }
 
   public void testImport1() {

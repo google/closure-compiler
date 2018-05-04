@@ -38,8 +38,7 @@ public final class Reference implements StaticRef, Serializable {
           Token.PARAM_LIST,
           Token.FUNCTION,
           Token.CLASS,
-          Token.CATCH,
-          Token.REST);
+          Token.CATCH);
 
   private final Node nameNode;
   private final BasicBlock basicBlock;
@@ -121,6 +120,7 @@ public final class Reference implements StaticRef, Serializable {
     // Special cases for destructuring patterns.
     if (parent.isDestructuringLhs()
         || parent.isDestructuringPattern()
+        || parent.isRest()
         || (parent.isStringKey() && parent.getParent().isObjectPattern())
         || (parent.isComputedProp()
             && parent.getParent().isObjectPattern()
