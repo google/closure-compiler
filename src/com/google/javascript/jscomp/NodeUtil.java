@@ -1688,6 +1688,7 @@ public final class NodeUtil {
       case MEMBER_VARIABLE_DEF:
       case INDEX_SIGNATURE:
       case CALL_SIGNATURE:
+      case OPTIONAL_PARAMETER:
       case THIS:
       case SUPER:
       case TRUE:
