@@ -35,8 +35,7 @@ import com.google.javascript.jscomp.VariableRenamingPolicy;
 import com.google.javascript.jscomp.bundle.TranspilationException;
 import com.google.javascript.rhino.Node;
 import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
+import java.nio.file.Path;
 
 /**
  * Basic Transpiler implementation for outputting ES5 code.
@@ -52,7 +51,7 @@ public final class BaseTranspiler implements Transpiler {
   }
 
   @Override
-  public TranspileResult transpile(URI path, String code) {
+  public TranspileResult transpile(Path path, String code) {
     CompileResult result = compilerSupplier.compile(path, code);
     if (!result.transpiled) {
       return new TranspileResult(path, code, code, "");
@@ -85,7 +84,7 @@ public final class BaseTranspiler implements Transpiler {
    * time when we're in single-file mode.
    */
   public static class CompilerSupplier {
-    public CompileResult compile(URI path, String code) {
+    public CompileResult compile(Path path, String code) {
       Compiler compiler = compiler();
       Result result =
           compiler.compile(EXTERNS, SourceFile.fromCode(path.toString(), code), options());
@@ -150,19 +149,9 @@ public final class BaseTranspiler implements Transpiler {
       options.setSourceMapOutputPath("/dev/null");
       options.setSourceMapIncludeSourcesContent(true);
       // Make sourcemaps use absolute paths, so that the path is not duplicated if a build tool adds
-      // a sourceurl. Exception: if the location has a scheme (like http:) then leave the path
-      // intact. This makes this usable from web servers.
+      // a sourceurl.
       options.setSourceMapLocationMappings(
-          ImmutableList.of((location) -> {
-            try {
-              if (new URI(location).getScheme() != null) {
-                return location;
-              }
-            } catch (URISyntaxException e) {
-              // Swallow, return the absolute version below.
-            }
-            return new SourceMap.PrefixLocationMapping("", "/").map(location);
-          }));
+          ImmutableList.of(new SourceMap.LocationMapping("", "/")));
     }
 
     protected static final SourceFile EXTERNS =
@@ -178,7 +167,7 @@ public final class BaseTranspiler implements Transpiler {
    */
   public static class EsmToCjsCompilerSupplier extends CompilerSupplier {
     @Override
-    public CompileResult compile(URI path, String code) {
+    public CompileResult compile(Path path, String code) {
       CompilerOptions options = new CompilerOptions();
       options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT);
       options.setEmitUseStrict(false);

@@ -1033,9 +1033,9 @@ public final class CommandLineRunnerTest extends TestCase {
     args.add("--source_map_location_mapping=foo/|http://bar");
     testSame("var x = 3;");
 
-    List<? extends LocationMapping> mappings = lastCompiler.getOptions().sourceMapLocationMappings;
+    List<LocationMapping> mappings = lastCompiler.getOptions().sourceMapLocationMappings;
     assertThat(ImmutableSet.copyOf(mappings))
-        .containsExactly(new SourceMap.PrefixLocationMapping("foo/", "http://bar"));
+        .containsExactly(new LocationMapping("foo/", "http://bar"));
   }
 
   public void testSourceMapLocationsTranslations2() {
@@ -1046,12 +1046,11 @@ public final class CommandLineRunnerTest extends TestCase {
     args.add("--source_map_location_mapping=xxx/|http://yyy");
     testSame("var x = 3;");
 
-    List<? extends LocationMapping> mappings = lastCompiler.getOptions()
+    List<LocationMapping> mappings = lastCompiler.getOptions()
         .sourceMapLocationMappings;
     assertThat(ImmutableSet.copyOf(mappings))
         .containsExactly(
-            new SourceMap.PrefixLocationMapping("foo/", "http://bar"),
-            new SourceMap.PrefixLocationMapping("xxx/", "http://yyy"));
+            new LocationMapping("foo/", "http://bar"), new LocationMapping("xxx/", "http://yyy"));
   }
 
   public void testSourceMapLocationsTranslations3() {

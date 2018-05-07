@@ -21,8 +21,8 @@ import static org.mockito.Answers.RETURNS_SMART_NULLS;
 import static org.mockito.Mockito.when;
 
 import com.google.javascript.jscomp.bundle.TranspilationException;
-import java.net.URI;
-import java.net.URISyntaxException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import junit.framework.TestCase;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -35,17 +35,8 @@ public final class BaseTranspilerTest extends TestCase {
   private BaseTranspiler.CompilerSupplier compiler;
   @Mock(answer = RETURNS_SMART_NULLS) BaseTranspiler.CompilerSupplier mockCompiler;
 
-  private static final URI FOO_JS;
-  private static final URI SOURCE_JS;
-
-  static {
-    try {
-      FOO_JS = new URI("foo.js");
-      SOURCE_JS = new URI("source.js");
-    } catch (URISyntaxException e) {
-      throw new RuntimeException(e);
-    }
-  }
+  private static final Path FOO_JS = Paths.get("foo.js");
+  private static final Path SOURCE_JS = Paths.get("source.js");
 
   @Override
   public void setUp() {

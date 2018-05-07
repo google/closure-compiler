@@ -1071,7 +1071,7 @@ public class CommandLineRunner extends
       ImmutableMap<String, String> split = splitPipeParts(
           sourceMapLocationMapping, "--source_map_location_mapping");
       for (Map.Entry<String, String> mapping : split.entrySet()) {
-        locationMappings.add(new SourceMap.PrefixLocationMapping(mapping.getKey(),
+        locationMappings.add(new SourceMap.LocationMapping(mapping.getKey(),
             mapping.getValue()));
       }
 

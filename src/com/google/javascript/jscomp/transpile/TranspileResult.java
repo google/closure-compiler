@@ -20,7 +20,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.common.escape.Escaper;
 import com.google.common.net.PercentEscaper;
-import java.net.URI;
+import java.nio.file.Path;
 import java.util.Objects;
 
 /**
@@ -29,19 +29,19 @@ import java.util.Objects;
  */
 public final class TranspileResult {
 
-  private final URI path;
+  private final Path path;
   private final String original;
   private final String transpiled;
   private final String sourceMap;
 
-  public TranspileResult(URI path, String original, String transpiled, String sourceMap) {
+  public TranspileResult(Path path, String original, String transpiled, String sourceMap) {
     this.path = checkNotNull(path);
     this.original = checkNotNull(original);
     this.transpiled = checkNotNull(transpiled);
     this.sourceMap = checkNotNull(sourceMap);
   }
 
-  public URI path() {
+  public Path path() {
     return path;
   }
 

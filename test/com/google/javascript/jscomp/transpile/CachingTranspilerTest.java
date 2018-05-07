@@ -23,8 +23,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.google.common.cache.CacheBuilder;
-import java.net.URI;
-import java.net.URISyntaxException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import junit.framework.TestCase;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -35,26 +35,13 @@ public final class CachingTranspilerTest extends TestCase {
   private Transpiler transpiler;
   @Mock(answer = RETURNS_SMART_NULLS) Transpiler delegate;
 
-  private static final URI FOO_JS;
-  private static final URI BAR_JS;
-  private static final URI QUX_JS;
+  private static final Path FOO_JS = Paths.get("foo.js");
+  private static final Path BAR_JS = Paths.get("bar.js");
+  private static final Path QUX_JS = Paths.get("qux.js");
 
-  private static final TranspileResult RESULT1;
-  private static final TranspileResult RESULT2;
-  private static final TranspileResult RESULT3;
-
-  static {
-    try {
-      FOO_JS = new URI("foo.js");
-      BAR_JS = new URI("bar.js");
-      QUX_JS = new URI("qux.js");
-    } catch (URISyntaxException e) {
-      throw new RuntimeException(e);
-    }
-    RESULT1 = new TranspileResult(FOO_JS, "bar", "baz", "");
-    RESULT2 = new TranspileResult(QUX_JS, "qux", "corge", "");
-    RESULT3 = new TranspileResult(BAR_JS, "baz", "xyzzy", "");
-  }
+  private static final TranspileResult RESULT1 = new TranspileResult(FOO_JS, "bar", "baz", "");
+  private static final TranspileResult RESULT2 = new TranspileResult(QUX_JS, "qux", "corge", "");
+  private static final TranspileResult RESULT3 = new TranspileResult(BAR_JS, "baz", "xyzzy", "");
 
   @Override
   public void setUp() {

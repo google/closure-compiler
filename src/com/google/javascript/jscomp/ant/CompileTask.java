@@ -32,7 +32,7 @@ import com.google.javascript.jscomp.Result;
 import com.google.javascript.jscomp.SourceFile;
 import com.google.javascript.jscomp.SourceMap;
 import com.google.javascript.jscomp.SourceMap.Format;
-import com.google.javascript.jscomp.SourceMap.PrefixLocationMapping;
+import com.google.javascript.jscomp.SourceMap.LocationMapping;
 import com.google.javascript.jscomp.WarningLevel;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -476,7 +476,7 @@ public final class CompileTask
 
     if (!Strings.isNullOrEmpty(sourceMapLocationMapping)) {
       String[] tokens = sourceMapLocationMapping.split("\\|", -1);
-      PrefixLocationMapping lm = new PrefixLocationMapping(tokens[0], tokens[1]);
+      LocationMapping lm = new LocationMapping(tokens[0], tokens[1]);
       options.setSourceMapLocationMappings(Arrays.asList(lm));
     }
 

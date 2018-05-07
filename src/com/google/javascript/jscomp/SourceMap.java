@@ -95,47 +95,27 @@ public final class SourceMap {
   }
 
   /**
-   * Function that mape a "destination" location to use within the source map. Should return null
-   * if the value is not mapped.
+   * A simple pair of path prefixes to the desired "destination" location to use within the source
+   * map.
    */
-  @FunctionalInterface
-  public interface LocationMapping {
-    /**
-     * @param location the location to transform
-     * @return the transformed location or null if not transformed
-     */
-    @Nullable
-    String map(String location);
-  }
-
-  /**
-   * Simple {@link LocationMapping} that strips a prefix from a location.
-   */
-  public static final class PrefixLocationMapping implements LocationMapping {
+  public static final class LocationMapping {
     final String prefix;
     final String replacement;
-    public PrefixLocationMapping(String prefix, String replacement) {
+    public LocationMapping(String prefix, String replacement) {
       this.prefix = prefix;
       this.replacement = replacement;
     }
 
     @Override
-    public String map(String location) {
-      if (location.startsWith(prefix)) {
-        return replacement + location.substring(prefix.length());
-      }
-      return null;
-    }
-
     public String toString() {
       return "(" + prefix + "|" + replacement + ")";
     }
 
     @Override
     public boolean equals(Object other) {
-      if (other instanceof PrefixLocationMapping) {
-        return ((PrefixLocationMapping) other).prefix.equals(prefix)
-            && ((PrefixLocationMapping) other).replacement.equals(replacement);
+      if (other instanceof LocationMapping) {
+        return ((LocationMapping) other).prefix.equals(prefix)
+            && ((LocationMapping) other).replacement.equals(replacement);
       } else {
         return false;
       }
@@ -148,7 +128,7 @@ public final class SourceMap {
   }
 
   private final SourceMapGenerator generator;
-  private List<? extends LocationMapping> prefixMappings = Collections.emptyList();
+  private List<LocationMapping> prefixMappings = Collections.emptyList();
   private final Map<String, String> sourceLocationFixupCache =
        new HashMap<>();
   /**
@@ -226,8 +206,9 @@ public final class SourceMap {
 
     // Replace the first prefix found with its replacement
     for (LocationMapping mapping : prefixMappings) {
-      fixed = mapping.map(sourceFile);
-      if (fixed != null) {
+      if (sourceFile.startsWith(mapping.prefix)) {
+        fixed = mapping.replacement + sourceFile.substring(
+          mapping.prefix.length());
         break;
       }
     }
@@ -265,7 +246,7 @@ public final class SourceMap {
   /**
    * @param sourceMapLocationMappings
    */
-  public void setPrefixMappings(List<? extends LocationMapping> sourceMapLocationMappings) {
+  public void setPrefixMappings(List<LocationMapping> sourceMapLocationMappings) {
      this.prefixMappings = sourceMapLocationMappings;
   }
 

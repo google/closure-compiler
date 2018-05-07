@@ -16,13 +16,11 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.debugging.sourcemap.SourceMapConsumer;
 import com.google.debugging.sourcemap.SourceMapConsumerV3;
 import com.google.debugging.sourcemap.SourceMapTestCase;
 import com.google.javascript.jscomp.SourceMap.Format;
-
 import java.io.IOException;
 import java.util.List;
 
@@ -36,107 +34,80 @@ public final class SourceMapTest extends SourceMapTestCase {
 
   public void testPrefixReplacement1() throws IOException {
     // mapping can be used to remove a prefix
-    mappings = ImmutableList.of(new SourceMap.PrefixLocationMapping("pre/", ""));
+    mappings = ImmutableList.of(new SourceMap.LocationMapping("pre/", ""));
     checkSourceMap2(
         "alert(1);",
         Compiler.joinPathParts("pre", "file1"),
         "alert(2);",
         Compiler.joinPathParts("pre", "file2"),
-        Joiner.on('\n')
-            .join(
-                "{",
-                "\"version\":3,",
-                "\"file\":\"testcode\",",
-                "\"lineCount\":1,",
-                "\"mappings\":\"AAAAA,KAAA,CAAM,CAAN,C,CCAAA,KAAA,CAAM,CAAN;\",",
-                "\"sources\":[\"file1\",\"file2\"],",
-                "\"names\":[\"alert\"]",
-                "}\n"));
+        "{\n"
+            + "\"version\":3,\n"
+            + "\"file\":\"testcode\",\n"
+            + "\"lineCount\":1,\n"
+            + "\"mappings\":\"AAAAA,KAAA,CAAM,CAAN,C,CCAAA,KAAA,CAAM,CAAN;\",\n"
+            + "\"sources\":[\"file1\",\"file2\"],\n"
+            + "\"names\":[\"alert\"]\n"
+            + "}\n");
   }
 
   public void testPrefixReplacement2() throws IOException {
     // mapping can be used to replace a prefix
-    mappings = ImmutableList.of(new SourceMap.PrefixLocationMapping("pre/file", "src"));
+    mappings = ImmutableList.of(new SourceMap.LocationMapping("pre/file", "src"));
     checkSourceMap2(
         "alert(1);",
         Compiler.joinPathParts("pre", "file1"),
         "alert(2);",
         "pre/file2",
-        Joiner.on('\n')
-            .join(
-                "{",
-                "\"version\":3,",
-                "\"file\":\"testcode\",",
-                "\"lineCount\":1,",
-                "\"mappings\":\"AAAAA,KAAA,CAAM,CAAN,C,CCAAA,KAAA,CAAM,CAAN;\",",
-                "\"sources\":[\"src1\",\"src2\"],",
-                "\"names\":[\"alert\"]",
-                "}\n"));
+        "{\n"
+            + "\"version\":3,\n"
+            + "\"file\":\"testcode\",\n"
+            + "\"lineCount\":1,\n"
+            + "\"mappings\":\"AAAAA,KAAA,CAAM,CAAN,C,CCAAA,KAAA,CAAM,CAAN;\",\n"
+            + "\"sources\":[\"src1\",\"src2\"],\n"
+            + "\"names\":[\"alert\"]\n"
+            + "}\n");
   }
 
   public void testPrefixReplacement3() throws IOException {
     // multiple mappings can be applied
     mappings =
         ImmutableList.of(
-            new SourceMap.PrefixLocationMapping("file1", "x"),
-            new SourceMap.PrefixLocationMapping("file2", "y"));
+            new SourceMap.LocationMapping("file1", "x"),
+            new SourceMap.LocationMapping("file2", "y"));
     checkSourceMap2(
         "alert(1);",
         "file1",
         "alert(2);",
         "file2",
-        Joiner.on('\n')
-            .join(
-                "{",
-                "\"version\":3,",
-                "\"file\":\"testcode\",",
-                "\"lineCount\":1,",
-                "\"mappings\":\"AAAAA,KAAA,CAAM,CAAN,C,CCAAA,KAAA,CAAM,CAAN;\",",
-                "\"sources\":[\"x\",\"y\"],",
-                "\"names\":[\"alert\"]",
-                "}\n"));
+        "{\n"
+            + "\"version\":3,\n"
+            + "\"file\":\"testcode\",\n"
+            + "\"lineCount\":1,\n"
+            + "\"mappings\":\"AAAAA,KAAA,CAAM,CAAN,C,CCAAA,KAAA,CAAM,CAAN;\",\n"
+            + "\"sources\":[\"x\",\"y\"],\n"
+            + "\"names\":[\"alert\"]\n"
+            + "}\n");
   }
 
   public void testPrefixReplacement4() throws IOException {
     // first match wins
     mappings =
         ImmutableList.of(
-            new SourceMap.PrefixLocationMapping("file1", "x"),
-            new SourceMap.PrefixLocationMapping("file", "y"));
+            new SourceMap.LocationMapping("file1", "x"),
+            new SourceMap.LocationMapping("file", "y"));
     checkSourceMap2(
         "alert(1);",
         "file1",
         "alert(2);",
         "file2",
-        Joiner.on('\n')
-            .join(
-                "{",
-                "\"version\":3,",
-                "\"file\":\"testcode\",",
-                "\"lineCount\":1,",
-                "\"mappings\":\"AAAAA,KAAA,CAAM,CAAN,C,CCAAA,KAAA,CAAM,CAAN;\",",
-                "\"sources\":[\"x\",\"y2\"],",
-                "\"names\":[\"alert\"]",
-                "}\n"));
-  }
-
-  public void testLambdaReplacement() throws IOException {
-    mappings = ImmutableList.of((location) -> "mapped/" + location);
-    checkSourceMap2(
-        "alert(1);",
-        "file1",
-        "alert(2);",
-        "file2",
-        Joiner.on('\n')
-            .join(
-                "{",
-                "\"version\":3,",
-                "\"file\":\"mapped/testcode\",",
-                "\"lineCount\":1,",
-                "\"mappings\":\"AAAAA,KAAA,CAAM,CAAN,C,CCAAA,KAAA,CAAM,CAAN;\",",
-                "\"sources\":[\"mapped/file1\",\"mapped/file2\"],",
-                "\"names\":[\"alert\"]",
-                "}\n"));
+        "{\n"
+            + "\"version\":3,\n"
+            + "\"file\":\"testcode\",\n"
+            + "\"lineCount\":1,\n"
+            + "\"mappings\":\"AAAAA,KAAA,CAAM,CAAN,C,CCAAA,KAAA,CAAM,CAAN;\",\n"
+            + "\"sources\":[\"x\",\"y2\"],\n"
+            + "\"names\":[\"alert\"]\n"
+            + "}\n");
   }
 
   @Override
