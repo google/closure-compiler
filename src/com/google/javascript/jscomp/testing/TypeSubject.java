@@ -23,12 +23,12 @@ import static org.junit.Assert.assertTrue;
 
 import com.google.common.truth.FailureMetadata;
 import com.google.common.truth.Subject;
-import com.google.javascript.rhino.ObjectTypeI;
-import com.google.javascript.rhino.TypeI;
+import com.google.javascript.rhino.jstype.JSType;
+import com.google.javascript.rhino.jstype.ObjectType;
 import javax.annotation.CheckReturnValue;
 
 /**
- * A Truth Subject for the TypeI interface. Usage:
+ * A Truth Subject for the JSType interface. Usage:
  * <pre>
  *   import static com.google.javascript.jscomp.testing.TypeSubject.assertType;
  *   ...
@@ -36,17 +36,17 @@ import javax.annotation.CheckReturnValue;
  *   assertType(type2).isObjectTypeWithProperty("propName").withTypeOfProp("propName").isNumber();
  * </pre>
  */
-public final class TypeSubject extends Subject<TypeSubject, TypeI> {
+public final class TypeSubject extends Subject<TypeSubject, JSType> {
   @CheckReturnValue
-  public static TypeSubject assertType(TypeI type) {
+  public static TypeSubject assertType(JSType type) {
     return assertAbout(types()).that(type);
   }
 
-  public static Subject.Factory<TypeSubject, TypeI> types() {
+  public static Subject.Factory<TypeSubject, JSType> types() {
     return TypeSubject::new;
   }
 
-  public TypeSubject(FailureMetadata failureMetadata, TypeI type) {
+  public TypeSubject(FailureMetadata failureMetadata, JSType type) {
     super(failureMetadata, type);
   }
 
@@ -77,8 +77,8 @@ public final class TypeSubject extends Subject<TypeSubject, TypeI> {
 
   public TypeSubject isObjectTypeWithProperty(String propName) {
     isLiteralObject();
-    ObjectTypeI objType = actual().toMaybeObjectType();
-    TypeI actualPropType = objType.getPropertyType(propName);
+    ObjectType objType = actual().toMaybeObjectType();
+    JSType actualPropType = objType.getPropertyType(propName);
     assertNotNull(
         "Type " + actualAsString() + " does not have property " + propName, actualPropType);
     return this;
@@ -91,14 +91,14 @@ public final class TypeSubject extends Subject<TypeSubject, TypeI> {
    * so it should be run after {@link #isObjectTypeWithProperty}.
    */
   public TypeSubject withTypeOfProp(String propName) {
-    TypeI actualPropType = actual().toMaybeObjectType().getPropertyType(propName);
+    JSType actualPropType = actual().toMaybeObjectType().getPropertyType(propName);
     return check().about(types()).that(actualPropType);
   }
 
   public void isObjectTypeWithoutProperty(String propName) {
     isLiteralObject();
-    ObjectTypeI objType = actual().toMaybeObjectType();
-    TypeI actualPropType = objType.getPropertyType(propName);
+    ObjectType objType = actual().toMaybeObjectType();
+    JSType actualPropType = objType.getPropertyType(propName);
     assertNull(
         "Type " + actualAsString() + " should not have property " + propName, actualPropType);
   }

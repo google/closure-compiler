@@ -25,9 +25,9 @@ import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.TypeI;
-import com.google.javascript.rhino.TypeIRegistry;
+import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
+import com.google.javascript.rhino.jstype.JSTypeRegistry;
 
 /**
  * Helper class for transpiling ES6 template literals.
@@ -43,8 +43,8 @@ class Es6TemplateLiterals {
    * @param n A TEMPLATELIT node that is not prefixed with a tag
    */
   static void visitTemplateLiteral(NodeTraversal t, Node n, boolean addTypes) {
-    TypeIRegistry registry = t.getCompiler().getTypeIRegistry();
-    TypeI stringType = createType(addTypes, registry, JSTypeNative.STRING_TYPE);
+    JSTypeRegistry registry = t.getCompiler().getTypeRegistry();
+    JSType stringType = createType(addTypes, registry, JSTypeNative.STRING_TYPE);
     int length = n.getChildCount();
     if (length == 0) {
       n.replaceWith(withType(IR.string("\"\""), stringType));
@@ -55,7 +55,7 @@ class Es6TemplateLiterals {
         n.replaceWith(first);
       } else {
         // Add the first string with the first substitution expression
-        Node add = withType(IR.add(first, n.removeFirstChild().removeFirstChild()), n.getTypeI());
+        Node add = withType(IR.add(first, n.removeFirstChild().removeFirstChild()), n.getJSType());
         // Process the rest of the template literal
         for (int i = 2; i < length; i++) {
           Node child = n.removeFirstChild();
@@ -70,7 +70,7 @@ class Es6TemplateLiterals {
           }
           add =
               withType(
-                  IR.add(add, child.isString() ? child : child.removeFirstChild()), n.getTypeI());
+                  IR.add(add, child.isString() ? child : child.removeFirstChild()), n.getJSType());
         }
         n.replaceWith(add.useSourceInfoIfMissingFromForTree(n));
       }
@@ -92,10 +92,10 @@ class Es6TemplateLiterals {
    * @param n A TAGGED_TEMPLATELIT node
    */
   static void visitTaggedTemplateLiteral(NodeTraversal t, Node n, boolean addTypes) {
-    TypeIRegistry registry = t.getCompiler().getTypeIRegistry();
-    TypeI stringType = createType(addTypes, registry, JSTypeNative.STRING_TYPE);
-    TypeI arrayType = createGenericType(addTypes, registry, JSTypeNative.ARRAY_TYPE, stringType);
-    TypeI templateArrayType =
+    JSTypeRegistry registry = t.getCompiler().getTypeRegistry();
+    JSType stringType = createType(addTypes, registry, JSTypeNative.STRING_TYPE);
+    JSType arrayType = createGenericType(addTypes, registry, JSTypeNative.ARRAY_TYPE, stringType);
+    JSType templateArrayType =
         createType(addTypes, registry, JSTypeNative.I_TEMPLATE_ARRAY_TYPE);
 
     Node templateLit = n.getLastChild();
@@ -135,7 +135,7 @@ class Es6TemplateLiterals {
     script.addChildAfter(defineRaw, var);
 
     // Generate the call expression.
-    Node call = withType(IR.call(n.removeFirstChild(), callsiteId.cloneNode()), n.getTypeI());
+    Node call = withType(IR.call(n.removeFirstChild(), callsiteId.cloneNode()), n.getJSType());
     for (Node child = templateLit.getFirstChild(); child != null; child = child.getNext()) {
       if (!child.isString()) {
         call.addChildToBack(child.removeFirstChild());
@@ -147,7 +147,7 @@ class Es6TemplateLiterals {
     t.reportCodeChange();
   }
 
-  private static Node createRawStringArray(Node n, TypeI arrayType, TypeI stringType) {
+  private static Node createRawStringArray(Node n, JSType arrayType, JSType stringType) {
     Node array = withType(IR.arraylit(), arrayType);
     for (Node child = n.getFirstChild(); child != null; child = child.getNext()) {
       if (child.isString()) {
@@ -158,7 +158,7 @@ class Es6TemplateLiterals {
     return array;
   }
 
-  private static Node createCookedStringArray(Node n, TypeI templateArrayType, TypeI stringType) {
+  private static Node createCookedStringArray(Node n, JSType templateArrayType, JSType stringType) {
     Node array = withType(IR.arraylit(), templateArrayType);
     for (Node child = n.getFirstChild(); child != null; child = child.getNext()) {
       if (child.isString()) {

@@ -68,7 +68,7 @@ final class TypeInfoCheck implements Callback, CompilerPass {
         // function names does not need to have type information.
         return;
       }
-      if (n.getTypeI() == null) {
+      if (n.getJSType() == null) {
         throw new IllegalStateException(
             "No type information associated with "
                 + n

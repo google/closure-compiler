@@ -25,7 +25,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.SetMultimap;
 import com.google.errorprone.annotations.Immutable;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.TypeI;
+import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -151,7 +151,7 @@ class RemoveUnusedPolyfills implements CompilerPass {
 
       // Check all the methods to see if the types could possibly be compatible.
       // If so, remove from the unused methods map.
-      TypeI receiverType = determineReceiverType(n);
+      JSType receiverType = determineReceiverType(n);
       for (PrototypeMethod method : ImmutableSet.copyOf(methods)) {
         if (isTypeCompatible(receiverType, method.type())) {
           unusedMethodPolyfills.remove(method);
@@ -163,10 +163,10 @@ class RemoveUnusedPolyfills implements CompilerPass {
     // enough to be useful for polyfill removal.  Unknown types, top, bottom,
     // and equivalent-to-object all return null, since they don't allow backing
     // off at all.
-    TypeI determineReceiverType(Node n) {
-      TypeI receiverType = n.getFirstChild().getTypeI();
+    JSType determineReceiverType(Node n) {
+      JSType receiverType = n.getFirstChild().getJSType();
       if (NodeUtil.isPrototypeProperty(n)) {
-        TypeI maybeCtor = n.getFirstFirstChild().getTypeI();
+        JSType maybeCtor = n.getFirstFirstChild().getJSType();
         if (maybeCtor != null && maybeCtor.isConstructor()) {
           receiverType = maybeCtor.toMaybeFunctionType().getInstanceType();
         }
@@ -183,7 +183,7 @@ class RemoveUnusedPolyfills implements CompilerPass {
           || receiverType.isBottom()
           || receiverType.isTop()
           || receiverType.isEquivalentTo(
-              compiler.getTypeIRegistry().getNativeType(JSTypeNative.OBJECT_TYPE))) {
+              compiler.getTypeRegistry().getNativeType(JSTypeNative.OBJECT_TYPE))) {
         return null;
       }
 
@@ -192,7 +192,7 @@ class RemoveUnusedPolyfills implements CompilerPass {
 
     // Checks whether a receiver type determined by the type checker could
     // possibly be a match for the given typename,
-    boolean isTypeCompatible(TypeI receiverType, String typeName) {
+    boolean isTypeCompatible(JSType receiverType, String typeName) {
       // Unknown/general types are compatible with everything.
       if (receiverType == null) {
         return true;
@@ -201,7 +201,7 @@ class RemoveUnusedPolyfills implements CompilerPass {
       // Look up the typename in the registry.  All the polyfilled method
       // receiver types are built-in JS types, so they had better not be
       // missing from the registry.
-      TypeI type = compiler.getTypeIRegistry().getGlobalType(typeName);
+      JSType type = compiler.getTypeRegistry().getGlobalType(typeName);
       if (type == null) {
         throw new RuntimeException("Missing built-in type: " + typeName);
       }

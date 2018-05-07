@@ -21,8 +21,7 @@ import com.google.javascript.jscomp.DiagnosticType;
 import com.google.javascript.jscomp.HotSwapCompilerPass;
 import com.google.javascript.jscomp.NodeTraversal;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.TypeI;
-
+import com.google.javascript.rhino.jstype.JSType;
 
 /**
  * Lints against passing arrays to goog.object methods with the intention of
@@ -82,7 +81,7 @@ public final class CheckArrayWithGoogObject extends NodeTraversal.AbstractPostOr
     if (firstArg == null) {
       return false;
     }
-    TypeI type = firstArg.getTypeI();
+    JSType type = firstArg.getJSType();
     return type != null && type.containsArray();
   }
 

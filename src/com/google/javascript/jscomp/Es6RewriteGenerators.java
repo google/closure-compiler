@@ -401,7 +401,7 @@ final class Es6RewriteGenerators implements HotSwapCompilerPass {
                                 createGenerator,
                                 // function name passed as parameter must have the type of the
                                 // generator function itself
-                                withType(genFuncName.cloneNode(), generatorFunction.getTypeI()),
+                                withType(genFuncName.cloneNode(), generatorFunction.getJSType()),
                                 program),
                             originalGenReturnType))
                     .useSourceInfoFromForTree(originalGeneratorBody));
@@ -2089,7 +2089,7 @@ final class Es6RewriteGenerators implements HotSwapCompilerPass {
 
         /** Replaces reference to <code>this</code> with <code>$jscomp$generator$this</code>. */
         void visitThis(Node n) {
-          Node newThis = withType(context.getScopedName(GENERATOR_THIS), n.getTypeI());
+          Node newThis = withType(context.getScopedName(GENERATOR_THIS), n.getJSType());
           n.replaceWith(newThis);
           if (!thisReferenceFound) {
             Node var = IR.var(newThis.cloneNode().useSourceInfoFrom(n), n)
@@ -2137,7 +2137,8 @@ final class Es6RewriteGenerators implements HotSwapCompilerPass {
             if (varName.hasChildren()) {
               Node copiedVarName = varName.cloneNode().setJSDocInfo(null);
               Node assign =
-                  withType(IR.assign(copiedVarName, varName.removeFirstChild()), varName.getTypeI())
+                  withType(
+                          IR.assign(copiedVarName, varName.removeFirstChild()), varName.getJSType())
                       .useSourceInfoFrom(varName);
               assignments.add(assign);
             }

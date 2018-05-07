@@ -30,7 +30,7 @@ import com.google.javascript.jscomp.type.SemanticReverseAbstractInterpreter;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-import com.google.javascript.rhino.TypeI;
+import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import java.util.HashSet;
 import java.util.Set;
@@ -999,8 +999,8 @@ public final class ExpressionDecomposerTest extends TestCase {
   }
 
   private void checkTypeStringsEqualAsTree(Node rootExpected, Node rootActual) {
-    TypeI expectedType = rootExpected.getTypeI();
-    TypeI actualType = rootActual.getTypeI();
+    JSType expectedType = rootExpected.getJSType();
+    JSType actualType = rootActual.getJSType();
 
     if (expectedType == null || actualType == null) {
       assertEquals("Expected " + rootExpected + " but got " + rootActual, expectedType, actualType);
@@ -1011,8 +1011,8 @@ public final class ExpressionDecomposerTest extends TestCase {
       // type inference, so we just compare the strings.
       assertEquals(
           "Expected " + rootExpected + " but got " + rootActual,
-          expectedType.toAnnotationString(TypeI.Nullability.EXPLICIT),
-          actualType.toAnnotationString(TypeI.Nullability.EXPLICIT));
+          expectedType.toAnnotationString(JSType.Nullability.EXPLICIT),
+          actualType.toAnnotationString(JSType.Nullability.EXPLICIT));
     }
 
     Node child1 = rootExpected.getFirstChild();

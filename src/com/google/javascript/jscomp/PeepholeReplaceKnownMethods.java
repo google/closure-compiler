@@ -245,8 +245,8 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
     if (useTypes
         && firstArg != null
         && (isStringLiteral
-            || (stringNode.getTypeI() != null
-                && stringNode.getTypeI().isStringValueType()))) {
+            || (stringNode.getJSType() != null
+                && stringNode.getJSType().isStringValueType()))) {
       if (subtree.hasXChildren(3)) {
         Double maybeStart = NodeUtil.getNumberValue(firstArg);
         if (maybeStart != null) {

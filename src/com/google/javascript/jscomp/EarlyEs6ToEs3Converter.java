@@ -95,7 +95,7 @@ public final class EarlyEs6ToEs3Converter implements Callback, HotSwapCompilerPa
         break;
       case FOR_OF:
         // We will need this when we transpile for/of in LateEs6ToEs3Converter,
-        // but we want the runtime functions to be have TypeI applied to it by the type checker.
+        // but we want the runtime functions to be have JSType applied to it by the type checker.
         Es6ToEs3Util.preloadEs6RuntimeFunction(compiler, "makeIterator");
         break;
       case GETTER_DEF:

@@ -30,7 +30,6 @@ import com.google.javascript.jscomp.type.ReverseAbstractInterpreter;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.TypeIRegistry;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import java.io.Serializable;
 import java.util.HashMap;
@@ -157,9 +156,7 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
    */
   public abstract JSTypeRegistry getTypeRegistry();
 
-  public abstract TypeIRegistry getTypeIRegistry();
-
-  public abstract void clearTypeIRegistry();
+  public abstract void clearJSTypeRegistry();
 
   abstract void forwardDeclareType(String typeName);
 

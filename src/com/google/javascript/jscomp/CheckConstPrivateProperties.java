@@ -19,7 +19,7 @@ package com.google.javascript.jscomp;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfo.Visibility;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.TypeI;
+import com.google.javascript.rhino.jstype.JSType;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -149,7 +149,7 @@ class CheckConstPrivateProperties extends NodeTraversal.AbstractPostOrderCallbac
   private boolean isConstructor(Node n) {
     // If type checking is enabled (not just a per-file lint check),
     // we can check constructor properties too. But it isn't required.
-    TypeI type = n.getTypeI();
+    JSType type = n.getJSType();
     return type != null && (type.isConstructor() || type.isInterface());
   }
 }

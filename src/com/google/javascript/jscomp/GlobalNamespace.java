@@ -28,7 +28,7 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.StaticSourceFile;
 import com.google.javascript.rhino.StaticSymbolTable;
 import com.google.javascript.rhino.TokenStream;
-import com.google.javascript.rhino.TypeI;
+import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.StaticTypedRef;
 import com.google.javascript.rhino.jstype.StaticTypedScope;
 import com.google.javascript.rhino.jstype.StaticTypedSlot;
@@ -48,7 +48,7 @@ import javax.annotation.Nullable;
  * @author nicksantos@google.com (Nick Santos)
  */
 class GlobalNamespace
-    implements StaticTypedScope<TypeI>,
+    implements StaticTypedScope<JSType>,
     StaticSymbolTable<GlobalNamespace.Name, GlobalNamespace.Ref> {
 
   private final AbstractCompiler compiler;
@@ -108,7 +108,7 @@ class GlobalNamespace
   }
 
   @Override
-  public StaticTypedScope<TypeI> getParentScope() {
+  public StaticTypedScope<JSType> getParentScope() {
     return null;
   }
 
@@ -124,8 +124,8 @@ class GlobalNamespace
   }
 
   @Override
-  public TypeI getTypeOfThis() {
-    return compiler.getTypeIRegistry().getNativeObjectType(GLOBAL_THIS);
+  public JSType getTypeOfThis() {
+    return compiler.getTypeRegistry().getNativeObjectType(GLOBAL_THIS);
   }
 
   @Override
@@ -135,7 +135,7 @@ class GlobalNamespace
   }
 
   @Override
-  public StaticTypedScope<TypeI> getScope(Name slot) {
+  public StaticTypedScope<JSType> getScope(Name slot) {
     return this;
   }
 
@@ -1013,7 +1013,7 @@ class GlobalNamespace
    * correspond to JavaScript objects whose properties we should consider
    * collapsing.
    */
-  static class Name implements StaticTypedSlot<TypeI> {
+  static class Name implements StaticTypedSlot<JSType> {
     enum Type {
       CLASS,
       OBJECTLIT,
@@ -1106,12 +1106,12 @@ class GlobalNamespace
     }
 
     @Override
-    public TypeI getType() {
+    public JSType getType() {
       return null;
     }
 
     @Override
-    public StaticTypedScope<TypeI> getScope() {
+    public StaticTypedScope<JSType> getScope() {
       throw new UnsupportedOperationException();
     }
 
@@ -1458,7 +1458,7 @@ class GlobalNamespace
    * A global name reference. Contains references to the relevant parse tree
    * node and its ancestors that may be affected.
    */
-  static class Ref implements StaticTypedRef<TypeI> {
+  static class Ref implements StaticTypedRef<JSType> {
 
     // Note: we are more aggressive about collapsing @enum and @constructor
     // declarations than implied here, see Name#canCollapse
@@ -1563,7 +1563,7 @@ class GlobalNamespace
     }
 
     @Override
-    public StaticTypedSlot<TypeI> getSymbol() {
+    public StaticTypedSlot<JSType> getSymbol() {
       return name;
     }
 

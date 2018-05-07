@@ -53,7 +53,6 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-import com.google.javascript.rhino.TypeIRegistry;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import java.io.File;
 import java.io.IOException;
@@ -1487,33 +1486,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   @Override
-  public TypeIRegistry getTypeIRegistry() {
-    switch (mostRecentTypechecker) {
-      case NONE:
-        // Even in compiles where typechecking is not enabled, some passes ask for the
-        // type registry, eg, GatherExternProperties does. Also, in CheckAccessControls,
-        // the constructor asks for a type registry, and this may happen before type checking
-        // runs. So, in the NONE case, if NTI is enabled, return a new registry, since NTI is
-        // the relevant type checker. If NTI is not enabled, return an old registry.
-        return getTypeRegistry();
-      case OTI:
-        return getTypeRegistry();
-      default:
-        throw new RuntimeException("Unhandled typechecker " + mostRecentTypechecker);
-    }
-  }
-
-  @Override
-  public void clearTypeIRegistry() {
-    switch (mostRecentTypechecker) {
-      case OTI:
-        typeRegistry = null;
-        return;
-      case NONE:
-        return;
-      default:
-        throw new RuntimeException("Unhandled typechecker " + mostRecentTypechecker);
-    }
+  public void clearJSTypeRegistry() {
+    typeRegistry = null;
   }
 
   @Override
@@ -2335,7 +2309,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
    */
   private String toSource(Node n, SourceMap sourceMap, boolean firstOutput) {
     CodePrinter.Builder builder = new CodePrinter.Builder(n);
-    builder.setTypeRegistry(getTypeIRegistry());
+    builder.setTypeRegistry(getTypeRegistry());
     builder.setCompilerOptions(options);
     builder.setSourceMap(sourceMap);
     builder.setTagAsExterns(n.isFromExterns());

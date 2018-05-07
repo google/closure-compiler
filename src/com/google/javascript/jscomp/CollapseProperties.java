@@ -31,7 +31,7 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.TokenStream;
-import com.google.javascript.rhino.TypeI;
+import com.google.javascript.rhino.jstype.JSType;
 import java.util.List;
 import java.util.Map;
 
@@ -411,9 +411,9 @@ class CollapseProperties implements CompilerPass {
       parent.putBooleanProp(Node.FREE_CALL, true);
     }
 
-    TypeI type = n.getTypeI();
+    JSType type = n.getJSType();
     if (type != null) {
-      ref.setTypeI(type);
+      ref.setJSType(type);
     }
 
     parent.replaceChild(n, ref);

@@ -41,8 +41,8 @@ import com.google.javascript.rhino.StaticSourceFile;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.TokenStream;
 import com.google.javascript.rhino.TokenUtil;
-import com.google.javascript.rhino.TypeI;
 import com.google.javascript.rhino.dtoa.DToA;
+import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.TernaryValue;
 import java.util.ArrayList;
@@ -1465,9 +1465,9 @@ public final class NodeUtil {
     }
 
     if (compiler.getOptions().useTypesForLocalOptimization) {
-      TypeI type = n.getTypeI();
+      JSType type = n.getJSType();
       if (type != null) {
-        TypeI nativeStringType = compiler.getTypeIRegistry()
+        JSType nativeStringType = compiler.getTypeRegistry()
             .getNativeType(JSTypeNative.STRING_TYPE);
         if (type.isEquivalentTo(nativeStringType)) {
           return true;
@@ -1965,7 +1965,7 @@ public final class NodeUtil {
    */
   static boolean mayBeString(Node n, boolean useType) {
     if (useType) {
-      TypeI type = n.getTypeI();
+      JSType type = n.getJSType();
       if (type != null) {
         if (type.isStringValueType()) {
           return true;
@@ -5477,7 +5477,7 @@ public final class NodeUtil {
       return false;
     }
 
-    TypeI type = fnNode.getTypeI();
+    JSType type = fnNode.getJSType();
     JSDocInfo jsDocInfo = getBestJSDocInfo(fnNode);
 
     return (type != null && type.isConstructor())

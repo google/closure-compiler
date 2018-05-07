@@ -66,7 +66,7 @@ public class CheckMissingAndExtraRequires implements HotSwapCompilerPass, NodeTr
     SINGLE_FILE,
     // Used during a normal compilation. The entire program + externs are available.
     FULL_COMPILE
-  };
+  }
 
   private Mode mode;
 

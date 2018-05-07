@@ -32,7 +32,7 @@ import com.google.javascript.jscomp.Var;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.TypeI.Nullability;
+import com.google.javascript.rhino.jstype.JSType.Nullability;
 import java.util.Comparator;
 import java.util.List;
 import javax.annotation.Nullable;

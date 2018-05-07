@@ -845,7 +845,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
 
   private boolean isNumeric(Node n) {
     return NodeUtil.isNumericResult(n)
-        || (shouldUseTypes && n.getTypeI() != null && n.getTypeI().isNumberValueType());
+        || (shouldUseTypes && n.getJSType() != null && n.getJSType().isNumberValueType());
   }
 
   private Node maybeReplaceBinaryOpWithNumericResult(double result, double lval, double rval) {
@@ -948,7 +948,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
   private boolean isStringTyped(Node n) {
     // We could also accept !String, but it is unlikely to be very common.
     return NodeUtil.isStringResult(n)
-        || (shouldUseTypes && n.getTypeI() != null && n.getTypeI().isStringValueType());
+        || (shouldUseTypes && n.getJSType() != null && n.getJSType().isStringValueType());
   }
 
   /**

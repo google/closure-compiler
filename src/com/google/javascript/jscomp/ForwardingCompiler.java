@@ -28,7 +28,6 @@ import com.google.javascript.jscomp.type.ReverseAbstractInterpreter;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.TypeIRegistry;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import java.util.List;
 import java.util.Map;
@@ -166,13 +165,8 @@ class ForwardingCompiler extends AbstractCompiler {
   }
 
   @Override
-  public TypeIRegistry getTypeIRegistry() {
-    return abstractCompiler.getTypeIRegistry();
-  }
-
-  @Override
-  public void clearTypeIRegistry() {
-    abstractCompiler.clearTypeIRegistry();
+  public void clearJSTypeRegistry() {
+    abstractCompiler.clearJSTypeRegistry();
   }
 
   @Override

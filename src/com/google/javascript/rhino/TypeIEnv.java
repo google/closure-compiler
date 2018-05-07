@@ -38,17 +38,19 @@
 
 package com.google.javascript.rhino;
 
+import com.google.javascript.rhino.jstype.JSType;
+
 /**
  * A map from type names to types.
  * In OTI, it is implemented by jscomp#TypedScope.
  * In NTI, it will probably be implemented by NTIScope.
  * TODO(dimvar): Remove the generic when OTI is gone.
  */
-public interface TypeIEnv<T extends TypeI> {
+public interface TypeIEnv<T extends JSType> {
   /**
    * Given the name of a namespace, returns its type.
    * For example, if you pass Foo to this method, you get the Foo constructor.
-   * This is in contrast to TypeIRegistry#getType, where you would get the Foo instance.
+   * This is in contrast to JSTypeRegistry#getType, where you would get the Foo instance.
    */
   T getNamespaceOrTypedefType(String typeName);
 

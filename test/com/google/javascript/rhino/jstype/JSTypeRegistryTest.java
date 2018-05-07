@@ -161,7 +161,7 @@ public class JSTypeRegistryTest extends TestCase {
 
   private String getReadableTypeNameHelper(JSTypeRegistry registry, JSType type, boolean deref) {
     Node n = new Node(Token.ADD);
-    n.setTypeI(type);
+    n.setJSType(type);
     return registry.getReadableJSTypeName(n, deref);
   }
 

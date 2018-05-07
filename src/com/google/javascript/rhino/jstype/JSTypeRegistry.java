@@ -59,22 +59,19 @@ import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Table;
 import com.google.javascript.rhino.ErrorReporter;
-import com.google.javascript.rhino.FunctionTypeI;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.ObjectTypeI;
 import com.google.javascript.rhino.SimpleErrorReporter;
 import com.google.javascript.rhino.StaticScope;
 import com.google.javascript.rhino.StaticSlot;
 import com.google.javascript.rhino.Token;
-import com.google.javascript.rhino.TypeI;
 import com.google.javascript.rhino.TypeIEnv;
-import com.google.javascript.rhino.TypeIRegistry;
 import com.google.javascript.rhino.jstype.FunctionType.Kind;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -93,9 +90,7 @@ import javax.annotation.Nullable;
  * <p>This class is not thread-safe.
  *
  */
-public class JSTypeRegistry implements TypeIRegistry {
-  private static final long serialVersionUID = 1L;
-
+public class JSTypeRegistry implements Serializable {
   /**
    * The template variable corresponding to the KEY type in {@code IObject<KEY, VALUE>}
    * (plus the builtin Javascript Object).
@@ -207,7 +202,7 @@ public class JSTypeRegistry implements TypeIRegistry {
   private final Map<String, JSType> greatestSubtypeByProperty = new HashMap<>();
 
   // A map from interface name to types that implement it.
-  private transient Multimap<String, FunctionTypeI> interfaceToImplementors =
+  private transient Multimap<String, FunctionType> interfaceToImplementors =
       LinkedHashMultimap.create();
 
   // All the unresolved named types.
@@ -1239,7 +1234,7 @@ public class JSTypeRegistry implements TypeIRegistry {
    * be returned.  {@code interfaceInstance} must be an ObjectType for the
    * instance of the interface.
    */
-  public Collection<FunctionTypeI> getDirectImplementors(ObjectType interfaceInstance) {
+  public Collection<FunctionType> getDirectImplementors(ObjectType interfaceInstance) {
     return interfaceToImplementors.get(interfaceInstance.getReferenceName());
   }
 
@@ -1310,7 +1305,6 @@ public class JSTypeRegistry implements TypeIRegistry {
    * fine because we are stricter about null/undefined checking.
    * (So, null and undefined wouldn't be in the type in the first place.)
    */
-  @Override
   public String getReadableTypeName(Node n) {
     return getReadableJSTypeName(n, true);
   }
@@ -1319,12 +1313,10 @@ public class JSTypeRegistry implements TypeIRegistry {
     return getReadableJSTypeName(n, false);
   }
 
-  @Override
   public String createGetterPropName(String originalPropName) {
     return originalPropName;
   }
 
-  @Override
   public String createSetterPropName(String originalPropName) {
     return originalPropName;
   }
@@ -1456,7 +1448,6 @@ public class JSTypeRegistry implements TypeIRegistry {
     return getTypeForScopeInternal(scope, jsTypeName);
   }
 
-  @Override
   public JSType getGlobalType(String jsTypeName) {
     return getType(null, jsTypeName);
   }
@@ -1467,7 +1458,6 @@ public class JSTypeRegistry implements TypeIRegistry {
    * @param jsTypeName The name string.
    * @return the corresponding JSType object or {@code null} it cannot be found
    */
-  @Override
   public JSType getType(StaticScope scope, String jsTypeName) {
     TemplateType templateType = templateTypes.get(jsTypeName);
     if (templateType != null) {
@@ -1555,17 +1545,14 @@ public class JSTypeRegistry implements TypeIRegistry {
     return type;
   }
 
-  @Override
   public JSType getNativeType(JSTypeNative typeId) {
     return nativeTypes[typeId.ordinal()];
   }
 
-  @Override
   public ObjectType getNativeObjectType(JSTypeNative typeId) {
     return (ObjectType) getNativeType(typeId);
   }
 
-  @Override
   public FunctionType getNativeFunctionType(JSTypeNative typeId) {
     return (FunctionType) getNativeType(typeId);
   }
@@ -1608,7 +1595,6 @@ public class JSTypeRegistry implements TypeIRegistry {
     }
   }
 
-  @Override
   public JSType evaluateTypeExpressionInGlobalScope(JSTypeExpression expr) {
     return expr.evaluate(null, this);
   }
@@ -1667,8 +1653,7 @@ public class JSTypeRegistry implements TypeIRegistry {
     return builder.build();
   }
 
-  @Override
-  public JSType createUnionType(List<? extends TypeI> variants) {
+  public JSType createUnionType(List<? extends JSType> variants) {
     return createUnionType(variants.toArray(new JSType[0]));
   }
 
@@ -1859,8 +1844,7 @@ public class JSTypeRegistry implements TypeIRegistry {
         .build();
   }
 
-  @Override
-  public JSType buildRecordTypeFromObject(ObjectTypeI obj) {
+  public JSType buildRecordTypeFromObject(ObjectType obj) {
     ObjectType objType = (ObjectType) obj;
     RecordType recType = objType.toMaybeRecordType();
     // If it can be casted to a record type then return
@@ -1881,8 +1865,7 @@ public class JSTypeRegistry implements TypeIRegistry {
     return createRecordType(props.build());
   }
 
-  @Override
-  public JSType createRecordType(Map<String, ? extends TypeI> props) {
+  public JSType createRecordType(Map<String, ? extends JSType> props) {
     @SuppressWarnings("unchecked")
     Map<String, JSType> propMap = (Map<String, JSType>) props;
     RecordTypeBuilder builder = new RecordTypeBuilder(this);
@@ -2003,7 +1986,7 @@ public class JSTypeRegistry implements TypeIRegistry {
             : new TemplateTypeMap(this, templateKeys, templateValues);
   }
 
-  public ObjectTypeI instantiateGenericsWithUnknown(ObjectType obj) {
+  public ObjectType instantiateGenericsWithUnknown(ObjectType obj) {
     if (obj.isTemplatizedType()) {
       ImmutableList.Builder<JSType> unknowns = ImmutableList.builder();
       for (TemplateType unused : obj.getTemplateTypeMap().getTemplateKeys()) {
@@ -2015,9 +1998,8 @@ public class JSTypeRegistry implements TypeIRegistry {
   }
 
   @SuppressWarnings("unchecked")
-  @Override
-  public TypeI instantiateGenericType(
-      ObjectTypeI genericType, ImmutableList<? extends TypeI> typeArgs) {
+  public JSType instantiateGenericType(
+      ObjectType genericType, ImmutableList<? extends JSType> typeArgs) {
     return createTemplatizedType((ObjectType) genericType, (ImmutableList<JSType>) typeArgs);
   }
 
@@ -2089,13 +2071,11 @@ public class JSTypeRegistry implements TypeIRegistry {
   }
 
   @SuppressWarnings("unchecked")
-  @Override
-  public JSType evaluateTypeExpression(JSTypeExpression expr, TypeIEnv<TypeI> scope) {
+  public JSType evaluateTypeExpression(JSTypeExpression expr, TypeIEnv<JSType> scope) {
     return createTypeFromCommentNode(
         expr.getRoot(), expr.getSourceName(), (StaticTypedScope<JSType>) scope);
   }
 
-  @Override
   public JSType createTypeFromCommentNode(Node n) {
     return createTypeFromCommentNode(n, "[internal]", null);
   }
@@ -2108,7 +2088,7 @@ public class JSTypeRegistry implements TypeIRegistry {
    */
   @SuppressWarnings("unchecked")
   public JSType createTypeFromCommentNode(
-      Node n, String sourceName, StaticTypedScope<? extends TypeI> scope) {
+      Node n, String sourceName, StaticTypedScope<? extends JSType> scope) {
     return createFromTypeNodesInternal(n, sourceName, (StaticTypedScope<JSType>) scope, true);
   }
 
@@ -2411,6 +2391,6 @@ public class JSTypeRegistry implements TypeIRegistry {
   @GwtIncompatible("ObjectInputStream")
   public void restoreContents(ObjectInputStream in) throws IOException, ClassNotFoundException {
     eachRefTypeIndexedByProperty = (Map<String, Map<String, ObjectType>>) in.readObject();
-    interfaceToImplementors = (Multimap<String, FunctionTypeI>) in.readObject();
+    interfaceToImplementors = (Multimap<String, FunctionType>) in.readObject();
   }
 }

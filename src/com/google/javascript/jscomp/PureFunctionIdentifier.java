@@ -37,11 +37,11 @@ import com.google.javascript.jscomp.graph.DiGraph.DiGraphNode;
 import com.google.javascript.jscomp.graph.FixedPointGraphTraversal;
 import com.google.javascript.jscomp.graph.FixedPointGraphTraversal.EdgeCallback;
 import com.google.javascript.jscomp.graph.LinkedDirectedGraph;
-import com.google.javascript.rhino.FunctionTypeI;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-import com.google.javascript.rhino.TypeI;
+import com.google.javascript.rhino.jstype.FunctionType;
+import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import java.io.File;
 import java.io.IOException;
@@ -920,13 +920,13 @@ class PureFunctionIdentifier implements CompilerPass {
 
       JSDocInfo info = NodeUtil.getBestJSDocInfo(externFunction);
       // Handle externs.
-      TypeI typei = externFunction.getTypeI();
-      FunctionTypeI functionType = typei == null ? null : typei.toMaybeFunctionType();
+      JSType typei = externFunction.getJSType();
+      FunctionType functionType = typei == null ? null : typei.toMaybeFunctionType();
       if (functionType == null) {
         // Assume extern functions return tainted values when we have no type info to say otherwise.
         setTaintsReturn();
       } else {
-        TypeI retType = functionType.getReturnType();
+        JSType retType = functionType.getReturnType();
         if (!PureFunctionIdentifier.isLocalValueType(retType, compiler)) {
           setTaintsReturn();
         }
@@ -957,10 +957,10 @@ class PureFunctionIdentifier implements CompilerPass {
    *
    * @return Whether the jstype is something known to be a local value.
    */
-  private static boolean isLocalValueType(TypeI typei, AbstractCompiler compiler) {
+  private static boolean isLocalValueType(JSType typei, AbstractCompiler compiler) {
     checkNotNull(typei);
-    TypeI nativeObj = compiler.getTypeIRegistry().getNativeType(JSTypeNative.OBJECT_TYPE);
-    TypeI subtype = typei.meetWith(nativeObj);
+    JSType nativeObj = compiler.getTypeRegistry().getNativeType(JSTypeNative.OBJECT_TYPE);
+    JSType subtype = typei.meetWith(nativeObj);
     // If the type includes anything related to a object type, don't assume
     // anything about the locality of the value.
     return subtype.isBottom();

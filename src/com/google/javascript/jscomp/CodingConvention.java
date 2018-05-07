@@ -17,15 +17,14 @@ package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
 import com.google.errorprone.annotations.Immutable;
-import com.google.javascript.rhino.FunctionTypeI;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.NominalTypeBuilder;
-import com.google.javascript.rhino.ObjectTypeI;
 import com.google.javascript.rhino.StaticSourceFile;
-import com.google.javascript.rhino.TypeIRegistry;
+import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
+import com.google.javascript.rhino.jstype.ObjectType;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.List;
@@ -241,7 +240,7 @@ public interface CodingConvention extends Serializable {
    * adds properties to the class.
    */
   public void applySingletonGetter(
-      NominalTypeBuilder classType, FunctionTypeI getterType);
+      NominalTypeBuilder classType, FunctionType getterType);
 
   /**
    * @return Whether the function is inlinable by convention.
@@ -261,8 +260,8 @@ public interface CodingConvention extends Serializable {
       NominalTypeBuilder delegateSuperclass,
       NominalTypeBuilder delegateBase,
       NominalTypeBuilder delegator,
-      ObjectTypeI delegateProxy,
-      FunctionTypeI findDelegate);
+      ObjectType delegateProxy,
+      FunctionType findDelegate);
 
   /**
    * @return the name of the delegate superclass.
@@ -282,7 +281,7 @@ public interface CodingConvention extends Serializable {
    * @param delegateProxies List of delegate proxy types.
    */
   public void defineDelegateProxyPrototypeProperties(
-      TypeIRegistry registry,
+      JSTypeRegistry registry,
       List<NominalTypeBuilder> delegateProxies,
       Map<String, String> delegateCallingConventions);
 

@@ -40,7 +40,6 @@
 package com.google.javascript.rhino.jstype;
 
 import com.google.javascript.rhino.StaticScope;
-import com.google.javascript.rhino.TypeI;
 
 /**
  * The {@code StaticTypedScope} interface must be implemented by any object that
@@ -50,7 +49,7 @@ import com.google.javascript.rhino.TypeI;
  *
  * @param <T> The type of information stored about the slot
  */
-public interface StaticTypedScope<T extends TypeI> extends StaticScope {
+public interface StaticTypedScope<T extends JSType> extends StaticScope {
   /** Returns the scope enclosing this one or null if none. */
   @Override
   StaticTypedScope<T> getParentScope();

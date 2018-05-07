@@ -39,11 +39,8 @@
 
 package com.google.javascript.rhino.jstype;
 
-import static com.google.common.base.Preconditions.checkArgument;
-
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.NominalTypeBuilder;
-import com.google.javascript.rhino.TypeI;
 
 /**
  * OTI implementation of NominalTypeBuilder
@@ -61,21 +58,18 @@ public final class NominalTypeBuilderOti implements NominalTypeBuilder {
   }
 
   @Override
-  public void declarePrototypeProperty(String name, TypeI type, Node defSite) {
-    checkArgument(type instanceof JSType);
-    prototype.defineDeclaredProperty(name, (JSType) type, defSite);
+  public void declarePrototypeProperty(String name, JSType type, Node defSite) {
+    prototype.defineDeclaredProperty(name, type, defSite);
   }
 
   @Override
-  public void declareInstanceProperty(String name, TypeI type, Node defSite) {
-    checkArgument(type instanceof JSType);
-    instance.defineDeclaredProperty(name, (JSType) type, defSite);
+  public void declareInstanceProperty(String name, JSType type, Node defSite) {
+    instance.defineDeclaredProperty(name, type, defSite);
   }
 
   @Override
-  public void declareConstructorProperty(String name, TypeI type, Node defSite) {
-    checkArgument(type instanceof JSType);
-    constructor.defineDeclaredProperty(name, (JSType) type, defSite);
+  public void declareConstructorProperty(String name, JSType type, Node defSite) {
+    constructor.defineDeclaredProperty(name, type, defSite);
   }
 
   @Override

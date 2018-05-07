@@ -38,7 +38,7 @@
 
 package com.google.javascript.rhino.jstype;
 
-import com.google.javascript.rhino.TypeI.Nullability;
+import com.google.javascript.rhino.jstype.JSType.Nullability;
 import com.google.javascript.rhino.testing.Asserts;
 import com.google.javascript.rhino.testing.BaseJSTypeTestCase;
 

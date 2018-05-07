@@ -39,7 +39,6 @@
 package com.google.javascript.rhino.jstype;
 
 import com.google.javascript.rhino.StaticRef;
-import com.google.javascript.rhino.TypeI;
 
 /**
  * The {@code StaticTypedRef} tells us all the ways that a {@code StaticTypedSlot}
@@ -47,9 +46,10 @@ import com.google.javascript.rhino.TypeI;
  *
  * @author nicksantos@google.com (Nick Santos)
  */
-public interface StaticTypedRef<T extends TypeI> extends StaticRef {
+public interface StaticTypedRef<T extends JSType> extends StaticRef {
   /**
    * The variable that this reference points to.
    */
+  @Override
   StaticTypedSlot<T> getSymbol();
 }

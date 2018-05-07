@@ -28,7 +28,7 @@ import com.google.javascript.jscomp.MakeDeclaredNamesUnique.ContextualRenamer;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-import com.google.javascript.rhino.TypeI;
+import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import java.util.Set;
 import javax.annotation.Nullable;
@@ -63,9 +63,9 @@ class ExpressionDecomposer {
   private final Supplier<String> safeNameIdSupplier;
   private final Set<String> knownConstants;
   private final Scope scope;
-  private final TypeI unknownType;
-  private final TypeI voidType;
-  private final TypeI stringType;
+  private final JSType unknownType;
+  private final JSType voidType;
+  private final JSType stringType;
 
   /**
    * Whether to allow decomposing foo.bar to "var fn = foo.bar; fn.call(foo);" Should be false if
@@ -87,9 +87,9 @@ class ExpressionDecomposer {
     this.knownConstants = constNames;
     this.scope = scope;
     this.allowMethodCallDecomposing = allowMethodCallDecomposing;
-    this.unknownType = compiler.getTypeIRegistry().getNativeType(JSTypeNative.UNKNOWN_TYPE);
-    this.voidType = compiler.getTypeIRegistry().getNativeType(JSTypeNative.VOID_TYPE);
-    this.stringType = compiler.getTypeIRegistry().getNativeType(JSTypeNative.STRING_TYPE);
+    this.unknownType = compiler.getTypeRegistry().getNativeType(JSTypeNative.UNKNOWN_TYPE);
+    this.voidType = compiler.getTypeRegistry().getNativeType(JSTypeNative.VOID_TYPE);
+    this.stringType = compiler.getTypeRegistry().getNativeType(JSTypeNative.STRING_TYPE);
   }
 
   // An arbitrary limit to prevent catch infinite recursion.
@@ -234,11 +234,12 @@ class ExpressionDecomposer {
 
     // Replace the expression with a reference to the new name.
     Node expressionParent = expression.getParent();
-    expressionParent.replaceChild(expression, withType(IR.name(resultName), expression.getTypeI()));
+    expressionParent.replaceChild(
+        expression, withType(IR.name(resultName), expression.getJSType()));
 
     // Re-add the expression at the appropriate place.
     Node newExpressionRoot = NodeUtil.newVarNode(resultName, expression);
-    newExpressionRoot.getFirstChild().setTypeI(expression.getTypeI());
+    newExpressionRoot.getFirstChild().setJSType(expression.getJSType());
     injectionPointParent.addChildBefore(newExpressionRoot, injectionPoint);
 
     compiler.reportChangeToEnclosingScope(injectionPointParent);
@@ -395,13 +396,13 @@ class ExpressionDecomposer {
     if (needResult) {
       Node tempVarNode = NodeUtil.newVarNode(tempName, null)
           .useSourceInfoIfMissingFromForTree(expr);
-      tempVarNode.getFirstChild().setTypeI(voidType);
+      tempVarNode.getFirstChild().setJSType(voidType);
       Node injectionPointParent = injectionPoint.getParent();
       injectionPointParent.addChildBefore(tempVarNode, injectionPoint);
       injectionPointParent.addChildAfter(ifNode, tempVarNode);
 
       // Replace the expression with the temporary name.
-      Node replacementValueNode = withType(IR.name(tempName), expr.getTypeI());
+      Node replacementValueNode = withType(IR.name(tempName), expr.getJSType());
       parent.replaceChild(expr, replacementValueNode);
     } else {
       // Only conditionals that are the direct child of an expression statement
@@ -425,7 +426,7 @@ class ExpressionDecomposer {
    */
   private static Node buildResultExpression(Node expr, boolean needResult, String tempName) {
     if (needResult) {
-      TypeI type = expr.getTypeI();
+      JSType type = expr.getJSType();
       return withType(IR.assign(withType(IR.name(tempName), type), expr), type).srcrefTree(expr);
     } else {
       return expr;
@@ -472,7 +473,7 @@ class ExpressionDecomposer {
     // The temp is known to be constant.
     String tempName = getTempConstantValueName();
     Node replacementValueNode = IR.name(tempName).srcref(expr);
-    replacementValueNode.setTypeI(expr.getTypeI());
+    replacementValueNode.setJSType(expr.getJSType());
 
     Node tempNameValue;
 
@@ -482,7 +483,7 @@ class ExpressionDecomposer {
       checkState(expr.isName() || NodeUtil.isGet(expr), expr);
       // Transform "x += 2" into "x = temp + 2"
       Node opNode =
-          withType(new Node(NodeUtil.getOpFromAssignmentOp(parent)), parent.getTypeI())
+          withType(new Node(NodeUtil.getOpFromAssignmentOp(parent)), parent.getJSType())
               .useSourceInfoIfMissingFrom(parent);
 
       Node rightOperand = parent.getLastChild();
@@ -505,7 +506,7 @@ class ExpressionDecomposer {
 
     // Re-add the expression in the declaration of the temporary name.
     Node tempVarNode = NodeUtil.newVarNode(tempName, tempNameValue);
-    tempVarNode.getFirstChild().setTypeI(tempNameValue.getTypeI());
+    tempVarNode.getFirstChild().setJSType(tempNameValue.getJSType());
 
     Node injectionPointParent = injectionPoint.getParent();
     injectionPointParent.addChildBefore(tempVarNode, injectionPoint);
@@ -534,8 +535,8 @@ class ExpressionDecomposer {
     checkArgument(NodeUtil.isGet(first), first);
 
     // Find the type of (fn expression).call
-    TypeI fnType = first.getTypeI();
-    TypeI fnCallType = null;
+    JSType fnType = first.getJSType();
+    JSType fnCallType = null;
     if (fnType != null) {
       fnCallType =
           fnType.isFunctionType()
@@ -577,7 +578,7 @@ class ExpressionDecomposer {
                     fnCallType),
                 thisNameNode.cloneNode())
             .useSourceInfoIfMissingFromForTree(call);
-    newCall.setTypeI(call.getTypeI());
+    newCall.setJSType(call.getJSType());
 
     // Throw away the call name
     call.removeFirstChild();

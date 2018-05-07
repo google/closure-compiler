@@ -47,7 +47,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.JSDocInfo;
-import com.google.javascript.rhino.TypeI;
+import java.io.Serializable;
 import java.util.Comparator;
 import java.util.IdentityHashMap;
 import java.util.Objects;
@@ -69,7 +69,7 @@ import javax.annotation.Nullable;
  * <p>
  *
  */
-public abstract class JSType implements TypeI {
+public abstract class JSType implements Serializable {
   private static final long serialVersionUID = 1L;
 
   private boolean resolved = false;
@@ -120,7 +120,6 @@ public abstract class JSType implements TypeI {
    * attached to arbitrary types. This must be overridden for
    * programmer-defined types.
    */
-  @Override
   public JSDocInfo getJSDocInfo() {
     return null;
   }
@@ -134,7 +133,6 @@ public abstract class JSType implements TypeI {
    *
    * @return the display name of the type, or null if one is not available
    */
-  @Override
   public String getDisplayName() {
     return null;
   }
@@ -191,12 +189,10 @@ public abstract class JSType implements TypeI {
     return false;
   }
 
-  @Override
   public final boolean isUnresolved() {
     return isNoResolvedType();
   }
 
-  @Override
   public final boolean isUnresolvedOrResolvedUnknown() {
     return isNoResolvedType() || isNamedType() && isUnknownType();
   }
@@ -215,7 +211,6 @@ public abstract class JSType implements TypeI {
     return false;
   }
 
-  @Override
   public boolean isNumberValueType() {
     return false;
   }
@@ -225,7 +220,6 @@ public abstract class JSType implements TypeI {
     return false;
   }
 
-  @Override
   public boolean isPrototypeObject() {
     return isFunctionPrototypeType();
   }
@@ -242,7 +236,6 @@ public abstract class JSType implements TypeI {
     return false;
   }
 
-  @Override
   public boolean isStringValueType() {
     return false;
   }
@@ -282,7 +275,6 @@ public abstract class JSType implements TypeI {
     return false;
   }
 
-  @Override
   public boolean isBooleanValueType() {
     return false;
   }
@@ -295,12 +287,10 @@ public abstract class JSType implements TypeI {
     return false;
   }
 
-  @Override
   public boolean isNullType() {
     return false;
   }
 
-  @Override
   public boolean isVoidType() {
     return false;
   }
@@ -309,17 +299,14 @@ public abstract class JSType implements TypeI {
     return false;
   }
 
-  @Override
   public final boolean isTop() {
     return isAllType();
   }
 
-  @Override
   public boolean isUnknownType() {
     return false;
   }
 
-  @Override
   public final boolean isSomeUnknownType() {
     // OTI's notion of isUnknownType already accounts for looseness (see override in ObjectType).
     return isUnknownType();
@@ -329,22 +316,18 @@ public abstract class JSType implements TypeI {
     return false;
   }
 
-  @Override
   public final boolean isUnionType() {
     return toMaybeUnionType() != null;
   }
 
-  @Override
   public boolean isFullyInstantiated() {
     return getTemplateTypeMap().isFull();
   }
 
-  @Override
   public boolean isPartiallyInstantiated() {
     return getTemplateTypeMap().isPartiallyFull();
   }
 
-  @Override
   public boolean containsArray() {
     // Check if this is itself an array
     if (this.isArrayType()) {
@@ -420,7 +403,6 @@ public abstract class JSType implements TypeI {
     return false;
   }
 
-  @Override
   public final boolean isLiteralObject() {
     if (this instanceof PrototypeObjectType) {
       return ((PrototypeObjectType) this).isAnonymous();
@@ -428,7 +410,6 @@ public abstract class JSType implements TypeI {
     return false;
   }
 
-  @Override
   public JSType getGreatestSubtypeWithProperty(String propName) {
     return this.registry.getGreatestSubtypeWithProperty(this, propName);
   }
@@ -448,7 +429,6 @@ public abstract class JSType implements TypeI {
   }
 
   /** Returns true if toMaybeFunctionType returns a non-null FunctionType. */
-  @Override
   public final boolean isFunctionType() {
     return toMaybeFunctionType() != null;
   }
@@ -465,7 +445,6 @@ public abstract class JSType implements TypeI {
    * This definition is somewhat arbitrary and axiomatic, but this is the
    * definition that makes the most sense for the most callers.
    */
-  @Override
   public FunctionType toMaybeFunctionType() {
     return null;
   }
@@ -481,12 +460,10 @@ public abstract class JSType implements TypeI {
     return toMaybeEnumElementType() != null;
   }
 
-  @Override
   public final boolean isEnumElement() {
     return isEnumElementType();
   }
 
-  @Override
   public final JSType getEnumeratedTypeOfEnumElement() {
     EnumElementType e = toMaybeEnumElementType();
     return e == null ? null : e.getPrimitiveType();
@@ -503,7 +480,6 @@ public abstract class JSType implements TypeI {
     return toMaybeEnumType() != null;
   }
 
-  @Override
   public final boolean isEnumObject() {
     return isEnumType();
   }
@@ -527,12 +503,10 @@ public abstract class JSType implements TypeI {
     return null;
   }
 
-  @Override
   public boolean isRecordType() {
     return toMaybeRecordType() != null;
   }
 
-  @Override
   public boolean isStructuralInterface() {
     return false;
   }
@@ -553,7 +527,6 @@ public abstract class JSType implements TypeI {
     return toMaybeTemplatizedType() != null;
   }
 
-  @Override
   public final boolean isGenericObjectType() {
     return isTemplatizedType();
   }
@@ -570,7 +543,6 @@ public abstract class JSType implements TypeI {
     return toMaybeTemplateType() != null;
   }
 
-  @Override
   public final boolean isTypeVariable() {
     return isTemplateType();
   }
@@ -606,9 +578,8 @@ public abstract class JSType implements TypeI {
     return templateTypeMap;
   }
 
-  @Override
-  public final ImmutableSet<TypeI> getTypeParameters() {
-    ImmutableSet.Builder<TypeI> params = ImmutableSet.builder();
+  public final ImmutableSet<JSType> getTypeParameters() {
+    ImmutableSet.Builder<JSType> params = ImmutableSet.builder();
     for (TemplateType type : getTemplateTypeMap().getTemplateKeys()) {
       params.add(type);
     }
@@ -631,12 +602,10 @@ public abstract class JSType implements TypeI {
     return false;
   }
 
-  @Override
   public final boolean isObjectType() {
     return isObject();
   }
 
-  @Override
   public final boolean isInstanceofObject() {
     // Some type whose class is Object
     if (this instanceof InstanceObjectType) {
@@ -650,7 +619,6 @@ public abstract class JSType implements TypeI {
    * Whether this type is a {@link FunctionType} that is a constructor or a
    * named type that points to such a type.
    */
-  @Override
   public boolean isConstructor() {
     return false;
   }
@@ -699,7 +667,6 @@ public abstract class JSType implements TypeI {
    * Whether this type is a {@link FunctionType} that is an interface or a named
    * type that points to such a type.
    */
-  @Override
   public boolean isInterface() {
     return false;
   }
@@ -715,16 +682,14 @@ public abstract class JSType implements TypeI {
   /**
    * Checks if two types are equivalent.
    */
-  @Override
-  public final boolean isEquivalentTo(TypeI that) {
+  public final boolean isEquivalentTo(JSType that) {
     return isEquivalentTo(that, false);
   }
 
-  public final boolean isEquivalentTo(TypeI that, boolean isStructural) {
+  public final boolean isEquivalentTo(JSType that, boolean isStructural) {
     EqCache eqCache = isStructural ? EqCache.create()
         : EqCache.createWithoutStructuralTyping();
-    return checkEquivalenceHelper((JSType) that,
-        EquivalenceMethod.IDENTITY, eqCache);
+    return checkEquivalenceHelper(that, EquivalenceMethod.IDENTITY, eqCache);
   }
 
   /**
@@ -950,7 +915,6 @@ public abstract class JSType implements TypeI {
     return null;
   }
 
-  @Override
   public boolean isBoxableScalar() {
     return autoboxesTo() != null;
   }
@@ -981,7 +945,6 @@ public abstract class JSType implements TypeI {
    * Filters null/undefined and autoboxes the resulting type.
    * Never returns null.
    */
-  @Override
   public JSType autobox() {
     JSType restricted = restrictByNotNullOrUndefined();
     JSType autobox = restricted.autoboxesTo();
@@ -999,7 +962,6 @@ public abstract class JSType implements TypeI {
     return autobox().toObjectType();
   }
 
-  @Override
   public final ObjectType autoboxAndGetObject() {
     return dereference();
   }
@@ -1116,7 +1078,6 @@ public abstract class JSType implements TypeI {
   /**
    * Tests whether this type is nullable.
    */
-  @Override
   public boolean isNullable() {
     return false;
   }
@@ -1124,7 +1085,6 @@ public abstract class JSType implements TypeI {
   /**
    * Tests whether this type is voidable.
    */
-  @Override
   public boolean isVoidable() {
     return false;
   }
@@ -1180,9 +1140,8 @@ public abstract class JSType implements TypeI {
             thisType.registry.createUnionType(thisType, thatType));
   }
 
-  @Override
-  public TypeI meetWith(TypeI that) {
-    return getGreatestSubtype(this, (JSType) that);
+  public JSType meetWith(JSType that) {
+    return getGreatestSubtype(this, that);
   }
 
   /**
@@ -1452,7 +1411,6 @@ public abstract class JSType implements TypeI {
     }
   }
 
-  @Override
   public Iterable<JSType> getUnionMembers() {
     return isUnionType()
         ? this.toMaybeUnionType().getAlternatesWithoutStructuralTyping()
@@ -1463,7 +1421,6 @@ public abstract class JSType implements TypeI {
    * If this is a union type, returns a union type that does not include
    * the null or undefined type.
    */
-  @Override
   public JSType restrictByNotNullOrUndefined() {
     return this;
   }
@@ -1475,8 +1432,7 @@ public abstract class JSType implements TypeI {
    * This function is added for disambiguate properties,
    * and is deprecated for the other use cases.
    */
-  @Override
-  public boolean isSubtypeWithoutStructuralTyping(TypeI that) {
+  public boolean isSubtypeWithoutStructuralTyping(JSType that) {
     return isSubtype(
         (JSType) that, ImplCache.createWithoutStructuralTyping(), SubtypingMode.NORMAL);
   }
@@ -1764,7 +1720,6 @@ public abstract class JSType implements TypeI {
   }
 
   // Don't call from this package; use appendAsNonNull instead.
-  @Override
   public final String toAnnotationString(Nullability nullability) {
     return nullability == Nullability.EXPLICIT
         ? appendAsNonNull(new StringBuilder(), true).toString()
@@ -1797,17 +1752,14 @@ public abstract class JSType implements TypeI {
    */
   public void matchConstraint(JSType constraint) {}
 
-  @Override
-  public boolean isSubtypeOf(TypeI other) {
-    return isSubtype((JSType) other);
+  public boolean isSubtypeOf(JSType other) {
+    return isSubtype(other);
   }
 
-  @Override
   public final boolean isBottom() {
     return isEmptyType();
   }
 
-  @Override
   public ObjectType toMaybeObjectType() {
     return toObjectType();
   }
@@ -1958,8 +1910,21 @@ public abstract class JSType implements TypeI {
     }
   }
 
-  @Override
-  public TypeInference typeInference() {
-    return TypeInference.OTI;
+  /**
+   * Specifies how to express nullability of reference types in annotation strings and error
+   * messages. Note that this only applies to the outer-most type. Nullability of generic type
+   * arguments is always explicit.
+   */
+  public enum Nullability {
+    /**
+     * Include an explicit '!' for non-nullable reference types. This is suitable for use
+     * in most type contexts (particularly 'type', 'param', and 'return' annotations).
+     */
+    EXPLICIT,
+    /**
+     * Omit the explicit '!' from the outermost non-nullable reference type. This is suitable for
+     * use in cases where a single reference type is expected (e.g. 'extends' and 'implements').
+     */
+    IMPLICIT,
   }
 }

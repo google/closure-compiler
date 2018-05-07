@@ -27,9 +27,9 @@ import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-import com.google.javascript.rhino.TypeI;
-import com.google.javascript.rhino.TypeIRegistry;
+import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
+import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -56,8 +56,8 @@ public final class LateEs6ToEs3Converter implements NodeTraversal.Callback, HotS
           Feature.TEMPLATE_LITERALS);
   // addTypes indicates whether we should add type information when transpiling.
   private final boolean addTypes;
-  private final TypeIRegistry registry;
-  private final TypeI unknownType;
+  private final JSTypeRegistry registry;
+  private final JSType unknownType;
 
   private static final String FRESH_COMP_PROP_VAR = "$jscomp$compprop";
 
@@ -65,7 +65,7 @@ public final class LateEs6ToEs3Converter implements NodeTraversal.Callback, HotS
     this.compiler = compiler;
     // Only add type information if NTI has been run.
     this.addTypes = MostRecentTypechecker.OTI.equals(compiler.getMostRecentTypechecker());
-    this.registry = compiler.getTypeIRegistry();
+    this.registry = compiler.getTypeRegistry();
     this.unknownType = createType(addTypes, registry, JSTypeNative.UNKNOWN_TYPE);
   }
 
@@ -135,7 +135,7 @@ public final class LateEs6ToEs3Converter implements NodeTraversal.Callback, HotS
   private void visitMemberFunctionDefInObjectLit(Node n, Node parent) {
     String name = n.getString();
     Node nameNode = n.getFirstFirstChild();
-    Node stringKey = withType(IR.stringKey(name, n.getFirstChild().detach()), n.getTypeI());
+    Node stringKey = withType(IR.stringKey(name, n.getFirstChild().detach()), n.getJSType());
     stringKey.setJSDocInfo(n.getJSDocInfo());
     parent.replaceChild(n, stringKey);
     stringKey.useSourceInfoFrom(nameNode);
@@ -169,7 +169,7 @@ public final class LateEs6ToEs3Converter implements NodeTraversal.Callback, HotS
     checkArgument(obj.isObjectLit());
     List<Node> props = new ArrayList<>();
     Node currElement = obj.getFirstChild();
-    TypeI objectType = obj.getTypeI();
+    JSType objectType = obj.getJSType();
 
     while (currElement != null) {
       if (currElement.getBooleanProp(Node.COMPUTED_PROP_GETTER)
@@ -195,7 +195,7 @@ public final class LateEs6ToEs3Converter implements NodeTraversal.Callback, HotS
       if (propdef.isComputedProp()) {
         Node propertyExpression = propdef.removeFirstChild();
         Node value = propdef.removeFirstChild();
-        TypeI valueType = value.getTypeI();
+        JSType valueType = value.getJSType();
         result =
             withType(
                 IR.comma(
@@ -210,9 +210,9 @@ public final class LateEs6ToEs3Converter implements NodeTraversal.Callback, HotS
                 objectType);
       } else {
         Node val = propdef.removeFirstChild();
-        TypeI valueType = val.getTypeI();
+        JSType valueType = val.getJSType();
         propdef.setToken(Token.STRING);
-        propdef.setTypeI(null);
+        propdef.setJSType(null);
         Token token = propdef.isQuotedString() ? Token.GETELEM : Token.GETPROP;
         Node access =
             withType(new Node(token, withType(IR.name(objName), objectType), propdef), valueType);
@@ -229,7 +229,8 @@ public final class LateEs6ToEs3Converter implements NodeTraversal.Callback, HotS
     result.useSourceInfoIfMissingFromForTree(obj);
     obj.replaceWith(result);
 
-    TypeI simpleObjectType = createType(addTypes, registry, JSTypeNative.EMPTY_OBJECT_LITERAL_TYPE);
+    JSType simpleObjectType = createType(
+        addTypes, registry, JSTypeNative.EMPTY_OBJECT_LITERAL_TYPE);
     Node var = IR.var(withType(IR.name(objName), objectType), withType(obj, simpleObjectType));
     var.useSourceInfoIfMissingFromForTree(statement);
     statement.getParent().addChildBefore(var, statement);

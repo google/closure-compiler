@@ -50,11 +50,9 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.javascript.rhino.ErrorReporter;
-import com.google.javascript.rhino.FunctionTypeI;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.ObjectTypeI;
 import com.google.javascript.rhino.Token;
-import com.google.javascript.rhino.TypeI;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -75,7 +73,7 @@ import java.util.Set;
  * of each argument.
  *
  */
-public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
+public class FunctionType extends PrototypeObjectType implements Serializable {
   private static final long serialVersionUID = 1L;
 
   enum Kind {
@@ -141,7 +139,7 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
    * The types which are subtypes of this function. It is only relevant for constructors and may be
    * {@code null}.
    */
-  private List<FunctionTypeI> subTypes;
+  private List<FunctionType> subTypes;
 
   /** Creates an instance for a function that might be a constructor. */
   FunctionType(
@@ -294,9 +292,8 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
     }
   }
 
-  @Override
-  public Iterable<TypeI> getParameterTypes() {
-    List<TypeI> types = new ArrayList<>();
+  public Iterable<JSType> getParameterTypes() {
+    List<JSType> types = new ArrayList<>();
     for (Node n : getParameters()) {
       types.add(n.getJSType());
     }
@@ -309,7 +306,6 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
   }
 
   /** Gets the minimum number of arguments that this function requires. */
-  @Override
   public int getMinArity() {
     // NOTE(nicksantos): There are some native functions that have optional
     // parameters before required parameters. This algorithm finds the position
@@ -329,7 +325,6 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
    * Gets the maximum number of arguments that this function requires, or Integer.MAX_VALUE if this
    * is a variable argument function.
    */
-  @Override
   public int getMaxArity() {
     Node params = getParametersNode();
     if (params != null) {
@@ -342,7 +337,6 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
     return Integer.MAX_VALUE;
   }
 
-  @Override
   public JSType getReturnType() {
     return call.returnType;
   }
@@ -383,7 +377,6 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
     }
   }
 
-  @Override
   public ObjectType getPrototypeProperty() {
     return getPrototype();
   }
@@ -573,13 +566,12 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
     }
   }
 
-  @Override
-  public Collection<ObjectTypeI> getAncestorInterfaces() {
-    Set<ObjectTypeI> result = new HashSet<>();
+  public Collection<ObjectType> getAncestorInterfaces() {
+    Set<ObjectType> result = new HashSet<>();
     if (isConstructor()) {
-      result.addAll((Collection<? extends ObjectTypeI>) getImplementedInterfaces());
+      result.addAll((Collection<? extends ObjectType>) getImplementedInterfaces());
     } else {
-      result.addAll((Collection<? extends ObjectTypeI>) getExtendedInterfaces());
+      result.addAll((Collection<? extends ObjectType>) getExtendedInterfaces());
     }
     return result;
   }
@@ -1124,7 +1116,6 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
    * @throws IllegalStateException if this function is not a constructor (see {@link
    *     #isConstructor()}).
    */
-  @Override
   public ObjectType getInstanceType() {
     Preconditions.checkState(hasInstanceType(), "Expected a constructor; got %s", this);
     return typeOfThis.toObjectType();
@@ -1136,7 +1127,6 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
   }
 
   /** Returns whether this function type has an instance type. */
-  @Override
   public boolean hasInstanceType() {
     return isConstructor() || isInterface();
   }
@@ -1150,13 +1140,11 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
   }
 
   /** Gets the source node or null if this is an unknown function. */
-  @Override
   public Node getSource() {
     return source;
   }
 
   /** Sets the source node. */
-  @Override
   public void setSource(Node source) {
     if (prototypeSlot != null) {
       // NOTE(bashir): On one hand when source is null we want to drop any
@@ -1195,8 +1183,8 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
     super.clearCachedValues();
 
     if (subTypes != null) {
-      for (FunctionTypeI subType : subTypes) {
-        ((FunctionType) subType).clearCachedValues();
+      for (FunctionType subType : subTypes) {
+        subType.clearCachedValues();
       }
     }
 
@@ -1211,10 +1199,9 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
     }
   }
 
-  @Override
-  public Iterable<FunctionTypeI> getDirectSubTypes() {
+  public Iterable<FunctionType> getDirectSubTypes() {
     return Iterables.concat(
-        subTypes != null ? subTypes : ImmutableList.<FunctionTypeI>of(),
+        subTypes != null ? subTypes : ImmutableList.<FunctionType>of(),
         this.registry.getDirectImplementors(this));
   }
 
@@ -1334,8 +1321,7 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
         || call.hasAnyTemplateTypes();
   }
 
-  @Override
-  public TypeI convertMethodToFunction() {
+  public JSType convertMethodToFunction() {
     List<JSType> paramTypes = new ArrayList<>();
     paramTypes.add(getTypeOfThis());
     for (Node param : getParameters()) {
@@ -1345,7 +1331,6 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
         registry.getNativeObjectType(JSTypeNative.UNKNOWN_TYPE), getReturnType(), paramTypes);
   }
 
-  @Override
   public boolean hasProperties() {
     return !super.getOwnPropertyNames().isEmpty();
   }
@@ -1454,14 +1439,13 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
     return null;
   }
 
-  @Override
-  public boolean acceptsArguments(List<? extends TypeI> argumentTypes) {
+  public boolean acceptsArguments(List<? extends JSType> argumentTypes) {
     // NOTE(aravindpg): This code is essentially lifted from TypeCheck::visitParameterList,
     // but what small differences there are make it very painful to refactor out the shared code.
-    Iterator<? extends TypeI> arguments = argumentTypes.iterator();
+    Iterator<? extends JSType> arguments = argumentTypes.iterator();
     Iterator<Node> parameters = this.getParameters().iterator();
     Node parameter = null;
-    TypeI argument = null;
+    JSType argument = null;
     while (arguments.hasNext()
         && (parameters.hasNext() || parameter != null && parameter.isVarArgs())) {
       // If there are no parameters left in the list, then the while loop
@@ -1471,7 +1455,7 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
       }
       argument = arguments.next();
 
-      if (!argument.isSubtypeOf(parameter.getTypeI())) {
+      if (!argument.isSubtypeOf(parameter.getJSType())) {
         return false;
       }
     }
@@ -1480,7 +1464,21 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
     return this.getMinArity() <= numArgs && numArgs <= this.getMaxArity();
   }
 
-  @Override
+  /** Interface for building FunctionType instances. */
+  public interface Builder {
+    /** Returns a builder with unknown return type. */
+    Builder withUnknownReturnType();
+
+    /** Returns a builder with the given return type. */
+    Builder withReturnType(JSType returnType);
+
+    /** Returns a builder with an empty parameter list. */
+    Builder withNoParameters();
+
+    /** Builds a new FunctionType. */
+    FunctionType build();
+  }
+
   public Builder toBuilder() {
     return new FunctionBuilderImpl();
   }
@@ -1499,7 +1497,7 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
     }
 
     @Override
-    public Builder withReturnType(TypeI type) {
+    public Builder withReturnType(JSType type) {
       checkArgument(type instanceof JSType);
       arrow = new ArrowType(registry, arrow.parameters, (JSType) type);
       return this;
@@ -1512,7 +1510,7 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
     }
 
     @Override
-    public FunctionTypeI build() {
+    public FunctionType build() {
       FunctionType result =
           new FunctionType(
               registry,

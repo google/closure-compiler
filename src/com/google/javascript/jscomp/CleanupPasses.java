@@ -22,9 +22,9 @@ import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.GlobalVarReferenceMap.GlobalVarRefCleanupPass;
 import com.google.javascript.jscomp.PassFactory.HotSwapPassFactory;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
-import com.google.javascript.rhino.FunctionTypeI;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.TypeI;
+import com.google.javascript.rhino.jstype.FunctionType;
+import com.google.javascript.rhino.jstype.JSType;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -117,9 +117,9 @@ class CleanupPasses extends PassConfig {
         TypedScopeCreator scopeCreator = (TypedScopeCreator) creator;
         String newSrc = scriptRoot.getSourceFileName();
         for (TypedVar var : scopeCreator.getAllSymbols()) {
-          TypeI type = var.getType();
+          JSType type = var.getType();
           if (type != null) {
-            FunctionTypeI fnType = type.toMaybeFunctionType();
+            FunctionType fnType = type.toMaybeFunctionType();
             if (fnType != null
                 && newSrc.equals(NodeUtil.getSourceName(fnType.getSource()))) {
               fnType.setSource(null);

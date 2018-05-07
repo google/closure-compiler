@@ -50,8 +50,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.ObjectTypeI;
-import com.google.javascript.rhino.TypeI;
+import java.io.Serializable;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
@@ -87,7 +86,7 @@ import javax.annotation.Nullable;
  */
 public abstract class ObjectType
     extends JSType
-    implements ObjectTypeI {
+    implements Serializable {
   private boolean visited;
   private JSDocInfo docInfo = null;
   private boolean unknown = true;
@@ -132,7 +131,6 @@ public abstract class ObjectType
    *
    * @see TemplatizedType
    */
-  @Override
   public ImmutableList<JSType> getTemplateTypes() {
     return null;
   }
@@ -253,19 +251,16 @@ public abstract class ObjectType
     return false;
   }
 
-  @Override
   public final boolean isAmbiguousObject() {
     return !hasReferenceName();
   }
 
-  @Override
   public ObjectType getRawType() {
     TemplatizedType t = toMaybeTemplatizedType();
     return t == null ? this : t.getReferencedType();
   }
 
-  @Override
-  public ObjectTypeI instantiateGenericsWithUnknown() {
+  public ObjectType instantiateGenericsWithUnknown() {
     return this.registry.instantiateGenericsWithUnknown(this);
   }
 
@@ -293,10 +288,8 @@ public abstract class ObjectType
    * @return this object's constructor or {@code null} if it is a native
    * object (constructed natively v.s. by instantiation of a function)
    */
-  @Override
   public abstract FunctionType getConstructor();
 
-  @Override
   public FunctionType getSuperClassConstructor() {
     ObjectType iproto = getPrototypeObject();
     if (iproto == null) {
@@ -306,7 +299,6 @@ public abstract class ObjectType
     return iproto == null ? null : iproto.getConstructor();
   }
 
-  @Override
   public ObjectType getTopDefiningInterface(String propertyName) {
     ObjectType foundType = null;
     if (hasProperty(propertyName)) {
@@ -325,7 +317,6 @@ public abstract class ObjectType
    */
   public abstract ObjectType getImplicitPrototype();
 
-  @Override
   public final ObjectType getPrototypeObject() {
     return getImplicitPrototype();
   }
@@ -436,12 +427,10 @@ public abstract class ObjectType
     return p == null ? null : p.getNode();
   }
 
-  @Override
   public Node getPropertyDefSite(String propertyName) {
     return getPropertyNode(propertyName);
   }
 
-  @Override
   public JSDocInfo getPropertyJSDocInfo(String propertyName) {
     Property p = getSlot(propertyName);
     return p == null ? null : p.getJSDocInfo();
@@ -452,13 +441,11 @@ public abstract class ObjectType
    * be implemented recursively, as you generally need to know exactly on
    * which type in the prototype chain the JSDocInfo exists.
    */
-  @Override
   public JSDocInfo getOwnPropertyJSDocInfo(String propertyName) {
     Property p = getOwnSlot(propertyName);
     return p == null ? null : p.getJSDocInfo();
   }
 
-  @Override
   public Node getOwnPropertyDefSite(String propertyName) {
     Property p = getOwnSlot(propertyName);
     return p == null ? null : p.getNode();
@@ -496,7 +483,6 @@ public abstract class ObjectType
    * @return the property's type or {@link UnknownType}. This method never
    *         returns {@code null}.
    */
-  @Override
   public JSType getPropertyType(String propertyName) {
     StaticTypedSlot<JSType> slot = getSlot(propertyName);
     if (slot == null) {
@@ -530,7 +516,6 @@ public abstract class ObjectType
    * Checks whether the property whose name is given is present directly on
    * the object.  Returns false even if it is declared on a supertype.
    */
-  @Override
   public boolean hasOwnProperty(String propertyName) {
     return !getOwnPropertyKind(propertyName).equals(HasPropertyKind.ABSENT);
   }
@@ -540,9 +525,8 @@ public abstract class ObjectType
    *
    * Overridden by FunctionType to add "prototype".
    */
-  @Override
   public Set<String> getOwnPropertyNames() {
-    // TODO(sdh): ObjectTypeI specifies that this should include prototype properties,
+    // TODO(sdh): ObjectType specifies that this should include prototype properties,
     // but currently it does not.  Check if this is a constructor and add them, but
     // this could possibly break things so it should be done separately.
     return getPropertyMap().getOwnPropertyNames();
@@ -674,7 +658,6 @@ public abstract class ObjectType
    * Returns a list of properties defined or inferred on this type and any of
    * its supertypes.
    */
-  @Override
   public Set<String> getPropertyNames() {
     Set<String> props = new TreeSet<>();
     collectPropertyNames(props);
@@ -779,7 +762,6 @@ public abstract class ObjectType
     return false;
   }
 
-  @Override
   public JSType getLegacyResolvedType() {
     return toMaybeNamedType().getReferencedType();
   }
@@ -796,7 +778,6 @@ public abstract class ObjectType
     return getOwnerFunction() != null;
   }
 
-  @Override
   public FunctionType getOwnerFunction() {
     return null;
   }
@@ -804,7 +785,6 @@ public abstract class ObjectType
   /** Sets the owner function. By default, does nothing. */
   void setOwnerFunction(FunctionType type) {}
 
-  @Override
   public ObjectType normalizeObjectForCheckAccessControls() {
     if (this.isFunctionPrototypeType()) {
       FunctionType owner = this.getOwnerFunction();
@@ -842,20 +822,17 @@ public abstract class ObjectType
     return propTypeMap.build();
   }
 
-  @Override
-  public TypeI getEnumeratedTypeOfEnumObject() {
+  public JSType getEnumeratedTypeOfEnumObject() {
     return null;
   }
 
-  @Override
-  public ObjectTypeI withoutStrayProperties() {
+  public ObjectType withoutStrayProperties() {
     // OTI represents object types in a way that already exhibits the behavior of this method,
     // so we don't need to change anything.
     return this;
   }
 
-  @Override
-  public TypeI getInstantiatedTypeArgument(TypeI supertype) {
+  public JSType getInstantiatedTypeArgument(JSType supertype) {
     throw new UnsupportedOperationException();
   }
 }

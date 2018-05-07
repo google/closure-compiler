@@ -33,7 +33,7 @@ import com.google.javascript.rhino.jstype.TernaryValue;
  *
  *
  * NOTE(dimvar):
- * Do not convert this pass to use TypeI. The pass is only used with the old type checker.
+ * Do not convert this pass to use JSType. The pass is only used with the old type checker.
  * The new type inference checks missing returns on its own.
  */
 class CheckMissingReturn implements ScopedCallback {

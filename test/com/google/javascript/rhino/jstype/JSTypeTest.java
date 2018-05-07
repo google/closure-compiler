@@ -52,7 +52,6 @@ import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.SimpleErrorReporter;
 import com.google.javascript.rhino.Token;
-import com.google.javascript.rhino.TypeI;
 import com.google.javascript.rhino.jstype.JSType.TypePair;
 import com.google.javascript.rhino.testing.Asserts;
 import com.google.javascript.rhino.testing.BaseJSTypeTestCase;
@@ -6715,8 +6714,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
   }
 
   private static boolean containsType(
-      Iterable<? extends TypeI> types, JSType type) {
-    for (TypeI alt : types) {
+      Iterable<? extends JSType> types, JSType type) {
+    for (JSType alt : types) {
       if (alt.equals(type)) {
         return true;
       }

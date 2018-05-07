@@ -25,7 +25,7 @@ import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.TypeI;
+import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 
 /**
@@ -81,7 +81,7 @@ public final class Es7ToEs6Converter implements NodeTraversal.Callback, HotSwapC
     Node left = n.removeFirstChild();
     Node right = n.removeFirstChild();
     Node mathDotPowCall =
-        withType(IR.call(mathPow.get().cloneTree(), left, right), n.getTypeI())
+        withType(IR.call(mathPow.get().cloneTree(), left, right), n.getJSType())
             .useSourceInfoIfMissingFromForTree(n);
     parent.replaceChild(n, mathDotPowCall);
     compiler.reportChangeToEnclosingScope(mathDotPowCall);
@@ -91,9 +91,9 @@ public final class Es7ToEs6Converter implements NodeTraversal.Callback, HotSwapC
     Node left = n.removeFirstChild();
     Node right = n.removeFirstChild();
     Node mathDotPowCall =
-        withType(IR.call(mathPow.get().cloneTree(), left.cloneTree(), right), n.getTypeI());
+        withType(IR.call(mathPow.get().cloneTree(), left.cloneTree(), right), n.getJSType());
     Node assign =
-        withType(IR.assign(left, mathDotPowCall), n.getTypeI())
+        withType(IR.assign(left, mathDotPowCall), n.getJSType())
             .useSourceInfoIfMissingFromForTree(n);
     parent.replaceChild(n, assign);
     compiler.reportChangeToEnclosingScope(assign);
@@ -103,13 +103,13 @@ public final class Es7ToEs6Converter implements NodeTraversal.Callback, HotSwapC
     @Override public Node get() {
       Node n = NodeUtil.newQName(compiler, "Math.pow");
       if (addTypes) {
-        TypeI mathType = compiler.getTypeIRegistry().getGlobalType("Math");
-        TypeI mathPowType = mathType.toMaybeObjectType().getPropertyType("pow");
-        TypeI stringType =
-            createType(addTypes, compiler.getTypeIRegistry(), JSTypeNative.STRING_TYPE);
-        n.setTypeI(mathPowType);
-        n.getFirstChild().setTypeI(mathType);
-        n.getSecondChild().setTypeI(stringType);
+        JSType mathType = compiler.getTypeRegistry().getGlobalType("Math");
+        JSType mathPowType = mathType.toMaybeObjectType().getPropertyType("pow");
+        JSType stringType =
+            createType(addTypes, compiler.getTypeRegistry(), JSTypeNative.STRING_TYPE);
+        n.setJSType(mathPowType);
+        n.getFirstChild().setJSType(mathType);
+        n.getSecondChild().setJSType(stringType);
       }
       return n;
     }

@@ -25,7 +25,7 @@ import com.google.javascript.jscomp.CodingConvention.SubclassRelationship;
 import com.google.javascript.jscomp.ReferenceCollectingCallback.Behavior;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.TypeI;
+import com.google.javascript.rhino.jstype.JSType;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -450,10 +450,10 @@ class InlineVariables implements CompilerPass {
     }
 
     private void replaceChildPreserveCast(Node parent, Node child, Node replacement) {
-      TypeI typeBeforeCast = child.getTypeIBeforeCast();
+      JSType typeBeforeCast = child.getJSTypeBeforeCast();
       if (typeBeforeCast != null) {
         replacement.putProp(Node.TYPE_BEFORE_CAST, typeBeforeCast);
-        replacement.setTypeI(child.getTypeI());
+        replacement.setJSType(child.getJSType());
       }
       parent.replaceChild(child, replacement);
       NodeUtil.markFunctionsDeleted(child, compiler);

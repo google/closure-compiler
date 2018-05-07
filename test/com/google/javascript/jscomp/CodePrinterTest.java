@@ -1552,7 +1552,7 @@ public final class CodePrinterTest extends CodePrinterTestBase {
               }
             }))
             .setOutputTypes(true)
-            .setTypeRegistry(lastCompiler.getTypeIRegistry())
+            .setTypeRegistry(lastCompiler.getTypeRegistry())
             .build());
   }
 
@@ -1988,7 +1988,7 @@ public final class CodePrinterTest extends CodePrinterTestBase {
           }
         }))
         .setOutputTypes(false)
-        .setTypeRegistry(lastCompiler.getTypeIRegistry());
+        .setTypeRegistry(lastCompiler.getTypeRegistry());
   }
 
   public void testStrict() {

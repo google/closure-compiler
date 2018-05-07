@@ -529,7 +529,7 @@ public final class TemplateAstMatcherTest extends TestCase {
       TypeMatchingStrategy typeMatchingStrategy) {
     TemplateAstMatcher matcher =
         new TemplateAstMatcher(
-            lastCompiler.getTypeIRegistry(), templateRoot.getFirstChild(), typeMatchingStrategy);
+            lastCompiler.getTypeRegistry(), templateRoot.getFirstChild(), typeMatchingStrategy);
     StringBuilder sb = new StringBuilder();
     sb.append("The nodes should").append(shouldMatch ? "" : " not").append(" have matched.\n");
     sb.append("Template node:\n").append(templateRoot.toStringTree()).append("\n");

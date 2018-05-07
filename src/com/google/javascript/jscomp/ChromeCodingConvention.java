@@ -20,9 +20,9 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.errorprone.annotations.Immutable;
 import com.google.javascript.jscomp.ClosureCodingConvention.AssertInstanceofSpec;
-import com.google.javascript.rhino.FunctionTypeI;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.NominalTypeBuilder;
+import com.google.javascript.rhino.jstype.FunctionType;
 
 /**
  * Coding convention used by the Chrome team to compile Chrome's JS.
@@ -53,7 +53,7 @@ public final class ChromeCodingConvention extends CodingConventions.Proxy {
   }
 
   @Override
-  public void applySingletonGetter(NominalTypeBuilder classType, FunctionTypeI getterType) {
+  public void applySingletonGetter(NominalTypeBuilder classType, FunctionType getterType) {
     Node defSite = classType.constructor().getSource();
     classType.declareConstructorProperty("getInstance", getterType, defSite);
     classType.declareConstructorProperty("instance_", classType.instance(), defSite);

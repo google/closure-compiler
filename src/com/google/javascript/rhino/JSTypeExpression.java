@@ -96,7 +96,7 @@ public final class JSTypeExpression implements Serializable {
   /**
    * Evaluates the type expression into a {@code JSType} object.
    */
-  public JSType evaluate(StaticTypedScope<JSType> scope, TypeIRegistry registry) {
+  public JSType evaluate(StaticTypedScope<JSType> scope, JSTypeRegistry registry) {
     if (registry instanceof JSTypeRegistry) {
       JSType type = ((JSTypeRegistry) registry).createTypeFromCommentNode(root, sourceName, scope);
       root.setJSType(type);

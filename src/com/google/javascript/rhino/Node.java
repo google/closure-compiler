@@ -1079,12 +1079,7 @@ public class Node implements Serializable {
    */
   @Nullable
   public final JSType getJSTypeBeforeCast() {
-    return (JSType) getTypeIBeforeCast();
-  }
-
-  @Nullable
-  public final TypeI getTypeIBeforeCast() {
-    return (TypeI) getProp(TYPE_BEFORE_CAST);
+    return (JSType) getProp(TYPE_BEFORE_CAST);
   }
 
   // Gets all the property types, in sorted order.
@@ -1215,8 +1210,8 @@ public class Node implements Serializable {
       }
     }
 
-    if (printType && typei != null) {
-      String typeString = typei.toString();
+    if (printType && jstype != null) {
+      String typeString = jstype.toString();
       if (typeString != null) {
         sb.append(" : ");
         sb.append(typeString);
@@ -1303,7 +1298,7 @@ public class Node implements Serializable {
   /** The length of the code represented by the node. */
   private transient int length;
 
-  @Nullable private transient TypeI typei;
+  @Nullable private transient JSType jstype;
 
   @Nullable protected transient Node parent;
 
@@ -2253,7 +2248,7 @@ public class Node implements Serializable {
   final <T extends Node> T copyNodeFields(T dst, boolean cloneTypeExprs) {
     dst.setSourceEncodedPosition(this.sourcePosition);
     dst.setLength(this.getLength());
-    dst.setTypeI(this.typei);
+    dst.setJSType(this.jstype);
     dst.setPropListHead(this.propListHead);
 
     // TODO(johnlenz): Remove this once JSTypeExpression are immutable
@@ -2372,34 +2367,11 @@ public class Node implements Serializable {
    */
   @Nullable
   public final JSType getJSType() {
-    return typei instanceof JSType ? (JSType) typei : null;
+    return jstype;
   }
 
   public final void setJSType(@Nullable JSType jsType) {
-    this.typei = jsType;
-  }
-
-  @Nullable
-  public final TypeI getTypeI() {
-    return typei;
-  }
-
-  public final void setTypeI(@Nullable TypeI type) {
-    this.typei = type;
-  }
-
-  /**
-   * Gets the OTI {@link JSType} associated with this node if any, and null otherwise.
-   *
-   * <p>NTI and OTI don't annotate the exact same AST nodes with types. (For example, OTI doesn't
-   * annotate dead code.) When OTI runs after NTI, the checks that use type information must only
-   * see the old types. They can call this method to avoid getting a new type for an AST node where
-   * OTI did not add a type. Calls to this method are intended to be temporary. As we migrate passes
-   * to support NTI natively, we will be replacing calls to this method with calls to getTypeI.
-   */
-  @Nullable
-  public final TypeI getTypeIIfOld() {
-    return typei instanceof JSType ? typei : null;
+    this.jstype = jsType;
   }
 
   /**
@@ -3331,7 +3303,7 @@ public class Node implements Serializable {
       List<Node> nodeList = Node.incompleteNodes;
       Node.incompleteNodes = null;
       for (Node n : nodeList) {
-        out.writeObject(n.typei);
+        out.writeObject(n.jstype);
       }
     }
   }
@@ -3385,7 +3357,7 @@ public class Node implements Serializable {
       List<Node> nodeList = Node.incompleteNodes;
       Node.incompleteNodes = null;
       for (Node n : nodeList) {
-        n.typei = (TypeI) in.readObject();
+        n.jstype = (JSType) in.readObject();
       }
     }
   }

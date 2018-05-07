@@ -23,7 +23,7 @@ import com.google.javascript.jscomp.graph.GraphvizGraph;
 import com.google.javascript.jscomp.graph.GraphvizGraph.GraphvizEdge;
 import com.google.javascript.jscomp.graph.GraphvizGraph.GraphvizNode;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.TypeI;
+import com.google.javascript.rhino.jstype.JSType;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -237,7 +237,7 @@ public final class DotFormatter {
       builder.append(formatNodeName(key));
       builder.append(" [label=\"");
       builder.append(n.getToken().toString());
-      TypeI type = n.getTypeI();
+      JSType type = n.getJSType();
       if (type != null) {
         builder.append(" : ");
         builder.append(type.toString());
