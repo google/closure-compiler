@@ -144,6 +144,7 @@ IArrayLike.prototype.length;
 /**
  * @constructor
  * @implements {IArrayLike<T>}
+ * @implements {Iterable<?>}
  * @template T
  * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions_and_function_scope/arguments
  */
