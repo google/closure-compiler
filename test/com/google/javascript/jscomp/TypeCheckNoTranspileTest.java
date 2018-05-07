@@ -49,6 +49,16 @@ public final class TypeCheckNoTranspileTest extends CompilerTypeTestCase {
     return options;
   }
 
+  public void testDuplicateCatchVarName() {
+    // Make sure that catch variables with the same name are considered to be distinct variables
+    // rather than causing a redeclaration error.
+    testTypes(
+        lines(
+            "try { throw 1; } catch (/** @type {number} */ err) {}",
+            "try { throw 'error'; } catch (/** @type {string} */ err) {}",
+            ""));
+  }
+
   public void testTypedefFieldInLoopLocal() {
     testTypes(
         lines(

@@ -16,7 +16,10 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 import static com.google.javascript.jscomp.ScopeSubject.assertScope;
 import static com.google.javascript.jscomp.TypedScopeCreator.CTOR_INITIALIZER;
 import static com.google.javascript.jscomp.TypedScopeCreator.IFACE_INITIALIZER;
@@ -42,7 +45,9 @@ import com.google.javascript.rhino.testing.Asserts;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Tests for {@link TypedScopeCreator} and {@link TypeInference}. Admittedly,
@@ -55,6 +60,26 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
   private TypedScope globalScope;
   private TypedScope lastLocalScope;
   private TypedScope lastFunctionScope;
+
+  /**
+   * Maps a label name to information about the labeled statement.
+   *
+   * <p>This map is recreated each time parseAndRunTypeInference() is executed.
+   * TODO(bradfordcsmith): This map and LabeledStatement are also in TypeInferenceTest.
+   *     It would be good to unify them.
+   */
+  private Map<String, LabeledStatement> labeledStatementMap;
+
+  /** Stores information about a labeled statement and allows making assertions on it. */
+  static class LabeledStatement {
+    final Node statementNode;
+    final TypedScope enclosingScope;
+
+    LabeledStatement(Node statementNode, TypedScope enclosingScope) {
+      this.statementNode = checkNotNull(statementNode);
+      this.enclosingScope = checkNotNull(enclosingScope);
+    }
+  }
 
   @Override
   protected void setUp() throws Exception {
@@ -70,20 +95,40 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
   private class ScopeFinder extends AbstractPostOrderCallback {
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
-      TypedScope s = t.getTypedScope();
-      if (s.isGlobal()) {
-        globalScope = s;
-      } else if (s.isBlockScope()) {
-        lastLocalScope = s;
-      } else if (s.isFunctionScope()) {
-        lastFunctionScope = s;
+      TypedScope scope = t.getTypedScope();
+      if (scope.isGlobal()) {
+        globalScope = scope;
+      } else if (scope.isBlockScope()) {
+        // TODO(bradfordcsmith): use labels to find scopes instead of lastLocalScope
+        lastLocalScope = scope;
+      } else if (scope.isFunctionScope()) {
+        lastFunctionScope = scope;
+      }
+      if (parent != null && parent.isLabel() && !n.isLabelName()) {
+        // First child of a LABEL is a LABEL_NAME, n is the second child.
+        Node labelNameNode = checkNotNull(n.getPrevious(), n);
+        checkState(labelNameNode.isLabelName(), labelNameNode);
+        String labelName = labelNameNode.getString();
+        assertWithMessage("Duplicate label name: %s", labelName)
+            .that(labeledStatementMap)
+            .doesNotContainKey(labelName);
+        labeledStatementMap.put(labelName, new LabeledStatement(n, scope));
       }
     }
+  }
+
+  private LabeledStatement getLabeledStatement(String label) {
+    assertWithMessage("No statement found for label: %s", label)
+        .that(labeledStatementMap)
+        .containsKey(label);
+    return labeledStatementMap.get(label);
   }
 
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
     registry = compiler.getTypeRegistry();
+    // Create a fresh statement map for each test case.
+    labeledStatementMap = new HashMap<>();
     return new CompilerPass() {
       @Override
       public void process(Node externs, Node root) {
@@ -2292,6 +2337,30 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     testSame(
         "try {} catch (/** @type {string} */ e) {}");
     assertEquals("string", lastLocalScope.getVar("e").getType().toString());
+  }
+
+  public void testDuplicateCatchVariableNames() {
+    testSame(
+        lines(
+            "try {}", // preserve newlines
+            "catch (err) {",
+            "  FIRST_CATCH: err;",
+            "}",
+            "try {}",
+            "catch (err) {",
+            "  SECOND_CATCH: err;",
+            "}",
+            ""));
+    TypedScope firstCatchScope = getLabeledStatement("FIRST_CATCH").enclosingScope;
+    assertScope(firstCatchScope).declares("err").directly();
+    TypedVar firstErrVar = firstCatchScope.getVar("err");
+
+    TypedScope secondCatchScope = getLabeledStatement("SECOND_CATCH").enclosingScope;
+    assertScope(firstCatchScope).declares("err").directly();
+    assertThat(firstCatchScope).isNotSameAs(secondCatchScope);
+
+    TypedVar secondErrVar = secondCatchScope.getVar("err");
+    assertThat(firstErrVar).isNotSameAs(secondErrVar);
   }
 
   public void testGenerator1() {

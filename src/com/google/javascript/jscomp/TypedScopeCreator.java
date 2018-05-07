@@ -1462,6 +1462,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
             case CLASS:
             case FUNCTION:
             case PARAM_LIST:
+            case CATCH:
               return currentScope;
             default:
               TypedVar var = currentScope.getVar(root.getString());
