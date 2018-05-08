@@ -41,6 +41,7 @@ import java.util.BitSet;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -84,7 +85,7 @@ class AmbiguateProperties implements CompilerPass {
   private final char[] reservedNonFirstCharacters;
 
   /** Map from property name to Property object */
-  private final Map<String, Property> propertyMap = new HashMap<>();
+  private final Map<String, Property> propertyMap = new LinkedHashMap<>();
 
   /** Property names that don't get renamed */
   private final ImmutableSet<String> externedNames;

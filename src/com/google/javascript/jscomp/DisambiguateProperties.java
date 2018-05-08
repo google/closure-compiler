@@ -183,7 +183,7 @@ class DisambiguateProperties implements CompilerPass {
      * chain containing the field for each node. In the case of a union, the
      * type is the highest type of one of the types in the union.
      */
-    Map<Node, JSType> rootTypesByNode = new HashMap<>();
+    Map<Node, JSType> rootTypesByNode = new LinkedHashMap<>();
 
     /**
      * For every property p and type t, we only need to run recordInterfaces
