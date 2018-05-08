@@ -934,7 +934,7 @@ public final class ExternExportsPassTest extends CompilerTestCase {
         generatedExterns -> {
           String fileoverview =
               lines("/**", " * @fileoverview Generated externs.", " * @externs", " */", "");
-          // NOTE(sdh): NTI produces {?=} for many params, while OTI just produces {?}.
+          // NOTE(sdh): The type checker just produces {?}.
           // For now we will not worry about this distinction and just normalize it.
           generatedExterns = generatedExterns.replace("?=", "?");
 

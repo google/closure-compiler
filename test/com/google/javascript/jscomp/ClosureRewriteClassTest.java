@@ -216,7 +216,7 @@ public final class ClosureRewriteClassTest extends CompilerTestCase {
   }
 
   public void testAnnotations3b() {
-    // verify goog.defineClass is a @struct by default, but can be overridden (only in OTI)
+    // verify goog.defineClass is a @struct by default, but can be overridden
     enableTypeCheck();
     testRewrite(
         lines(

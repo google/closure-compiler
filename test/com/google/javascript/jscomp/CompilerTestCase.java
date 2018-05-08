@@ -27,7 +27,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.errorprone.annotations.ForOverride;
-import com.google.javascript.jscomp.AbstractCompiler.MostRecentTypechecker;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.jscomp.type.ReverseAbstractInterpreter;
@@ -671,7 +670,7 @@ public abstract class CompilerTestCase extends TestCase {
     this.compareJsDoc = false;
   }
 
-  /** Moves OTI type checking to occur after the processor, instead of before. */
+  /** Moves type checking to occur after the processor, instead of before. */
   protected final void enableRunTypeCheckAfterProcessing() {
     checkState(this.setUpRan, "Attempted to configure before running setUp().");
     this.runTypeCheckAfterProcessing = true;
@@ -972,7 +971,7 @@ public abstract class CompilerTestCase extends TestCase {
   private static TypeCheck createTypeCheck(Compiler compiler) {
     ReverseAbstractInterpreter rai =
         new SemanticReverseAbstractInterpreter(compiler.getTypeRegistry());
-    compiler.setMostRecentTypechecker(MostRecentTypechecker.OTI);
+    compiler.setTypeCheckingHasRun(true);
     return new TypeCheck(compiler, rai, compiler.getTypeRegistry());
   }
 

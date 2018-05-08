@@ -23,7 +23,6 @@ import static com.google.common.truth.Truth.assertWithMessage;
 import static com.google.javascript.jscomp.CompilerTestCase.lines;
 import static com.google.javascript.jscomp.testing.NodeSubject.assertNode;
 
-import com.google.javascript.jscomp.AbstractCompiler.MostRecentTypechecker;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.ExpressionDecomposer.DecompositionType;
 import com.google.javascript.jscomp.type.SemanticReverseAbstractInterpreter;
@@ -1036,7 +1035,7 @@ public final class ExpressionDecomposerTest extends TestCase {
 
   private void processForTypecheck(AbstractCompiler compiler, Node jsRoot) {
     Node scriptRoot = IR.root(jsRoot);
-    compiler.setMostRecentTypechecker(MostRecentTypechecker.OTI);
+    compiler.setTypeCheckingHasRun(true);
     JSTypeRegistry registry = compiler.getTypeRegistry();
     (new TypeCheck(compiler, new SemanticReverseAbstractInterpreter(registry), registry))
         .processForTesting(null, scriptRoot.getFirstChild());

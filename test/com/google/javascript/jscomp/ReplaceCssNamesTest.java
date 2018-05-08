@@ -111,13 +111,7 @@ public final class ReplaceCssNamesTest extends CompilerTestCase {
     return 1;
   }
 
-  // NOTE(aravindpg): The ccsNames field is populated by each test method, and then compared
-  // to expected. So, our usual strategy of running both NTI and OTI for each test doesn't work
-  // here. We need to run all three methods in doNotUseReplacementMap with OTI before we can
-  // run them with NTI. That's why we refactored this code to call doNotUseReplacementMap from
-  // two places.
-
-  private void doNotUseReplacementMap() {
+  public void testDoNotUseReplacementMap() {
     useReplacementMap = false;
     test("var x = goog.getCssName('goog-footer-active')",
          "var x = 'goog-footer-active'");
@@ -135,10 +129,6 @@ public final class ReplaceCssNamesTest extends CompilerTestCase {
         .put("buttonbar", 1)
         .build();
     assertThat(cssNames).isEqualTo(expected);
-  }
-
-  public void testDoNotUseReplacementMap() {
-    doNotUseReplacementMap();
   }
 
   public void testOneArgWithUnknownStringLiterals() {

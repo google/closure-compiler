@@ -20,7 +20,6 @@ import static com.google.javascript.jscomp.Es6ToEs3Util.withType;
 
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
-import com.google.javascript.jscomp.AbstractCompiler.MostRecentTypechecker;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.IR;
@@ -42,7 +41,7 @@ public final class Es7ToEs6Converter implements NodeTraversal.Callback, HotSwapC
 
   public Es7ToEs6Converter(AbstractCompiler compiler) {
     this.compiler = compiler;
-    this.addTypes = MostRecentTypechecker.OTI.equals(compiler.getMostRecentTypechecker());
+    this.addTypes = compiler.hasTypeCheckingRun();
   }
 
   @Override

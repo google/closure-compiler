@@ -21,7 +21,6 @@ import static com.google.common.base.Preconditions.checkState;
 import com.google.common.collect.Iterables;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.TypeIEnv;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.StaticTypedScope;
@@ -45,7 +44,7 @@ import com.google.javascript.rhino.jstype.StaticTypedSlot;
  * them accidentally.
  */
 public class TypedScope extends AbstractScope<TypedScope, TypedVar>
-    implements StaticTypedScope<JSType>, TypeIEnv<JSType> {
+    implements StaticTypedScope<JSType> {
 
   private final TypedScope parent;
   private final int depth;
@@ -202,13 +201,11 @@ public class TypedScope extends AbstractScope<TypedScope, TypedVar>
     this.typeResolver = resolver;
   }
 
-  @Override
   public JSType getNamespaceOrTypedefType(String typeName) {
     StaticTypedSlot<JSType> slot = getSlot(typeName);
     return slot == null ? null : slot.getType();
   }
 
-  @Override
   public JSDocInfo getJsdocOfTypeDeclaration(String typeName) {
     StaticTypedSlot<JSType> slot = getSlot(typeName);
     return slot == null ? null : slot.getJSDocInfo();

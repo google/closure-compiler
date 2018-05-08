@@ -19,7 +19,6 @@ import static com.google.javascript.jscomp.Es6ToEs3Util.createType;
 import static com.google.javascript.jscomp.Es6ToEs3Util.withType;
 
 import com.google.common.base.Preconditions;
-import com.google.javascript.jscomp.AbstractCompiler.MostRecentTypechecker;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.IR;
@@ -55,7 +54,7 @@ public final class Es6ForOfConverter implements NodeTraversal.Callback, HotSwapC
   public Es6ForOfConverter(AbstractCompiler compiler) {
     this.compiler = compiler;
     // Only add type information if type checking has been run.
-    this.addTypes = MostRecentTypechecker.OTI.equals(compiler.getMostRecentTypechecker());
+    this.addTypes = compiler.hasTypeCheckingRun();
     this.registry = compiler.getTypeRegistry();
     this.unknownType = createType(addTypes, registry, JSTypeNative.UNKNOWN_TYPE);
     this.stringType = createType(addTypes, registry, JSTypeNative.STRING_TYPE);

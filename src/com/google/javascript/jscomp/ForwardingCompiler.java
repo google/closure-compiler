@@ -150,13 +150,13 @@ class ForwardingCompiler extends AbstractCompiler {
   }
 
   @Override
-  public MostRecentTypechecker getMostRecentTypechecker() {
-    return abstractCompiler.getMostRecentTypechecker();
+  public boolean hasTypeCheckingRun() {
+    return abstractCompiler.hasTypeCheckingRun();
   }
 
   @Override
-  public void setMostRecentTypechecker(MostRecentTypechecker mostRecent) {
-    abstractCompiler.setMostRecentTypechecker(mostRecent);
+  public void setTypeCheckingHasRun(boolean hasRun) {
+    abstractCompiler.setTypeCheckingHasRun(hasRun);
   }
 
   @Override

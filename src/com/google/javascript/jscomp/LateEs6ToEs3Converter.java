@@ -20,7 +20,6 @@ import static com.google.javascript.jscomp.Es6ToEs3Util.createType;
 import static com.google.javascript.jscomp.Es6ToEs3Util.withType;
 
 import com.google.common.collect.Lists;
-import com.google.javascript.jscomp.AbstractCompiler.MostRecentTypechecker;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
@@ -64,7 +63,7 @@ public final class LateEs6ToEs3Converter implements NodeTraversal.Callback, HotS
   public LateEs6ToEs3Converter(AbstractCompiler compiler) {
     this.compiler = compiler;
     // Only add type information if NTI has been run.
-    this.addTypes = MostRecentTypechecker.OTI.equals(compiler.getMostRecentTypechecker());
+    this.addTypes = compiler.hasTypeCheckingRun();
     this.registry = compiler.getTypeRegistry();
     this.unknownType = createType(addTypes, registry, JSTypeNative.UNKNOWN_TYPE);
   }

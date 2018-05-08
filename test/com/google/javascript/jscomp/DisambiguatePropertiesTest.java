@@ -2161,7 +2161,7 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
   // But when overriding a method, it's covariant, and on top of that, we allow methods redefining
   // it with @this.
   // So we check THIS loosely for functions, and as a result, we get wrong disambiguation.
-  // On top of that, this can happen in OTI when types are joined during generics instantiation.
+  // On top of that, this can happen when types are joined during generics instantiation.
   // Just documenting the behavior here.
   public void testUnsafeTypingOfThis() {
     String js = lines(

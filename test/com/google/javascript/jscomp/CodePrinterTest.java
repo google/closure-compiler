@@ -1172,8 +1172,7 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     // TODO(johnlenz): It would be nice if there were some way to preserve
     // typedefs but currently they are resolved into the basic types in the
     // type registry.
-    // NOTE(sdh): OTI and NTI have slightly different behaviors here:
-    // OTI does not correctly remove null, while NTI handles this correctly.
+    // NOTE(sdh): The type inferrence does not correctly remove null
     assertTypeAnnotations(
         LINE_JOINER.join(
             "/** @const */ var goog = {};",

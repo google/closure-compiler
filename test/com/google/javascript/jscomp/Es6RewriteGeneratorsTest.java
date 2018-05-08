@@ -1221,7 +1221,7 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
     checkState(returnNode.isReturn(), returnNode);
     Node callNode = returnNode.getFirstChild();
     checkState(callNode.isCall(), callNode);
-    // TODO(lharker): this should really be {value: number} and may indicate a bug in OTI
+    // TODO(lharker): this should really be {value: number} and may indicate a bug
     // Possibly the same as https://github.com/google/closure-compiler/issues/2867.
     assertEquals("{value: VALUE}", callNode.getJSType().toString());
 

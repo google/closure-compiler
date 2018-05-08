@@ -21,7 +21,6 @@ import static com.google.javascript.jscomp.Es6ToEs3Util.createType;
 import static com.google.javascript.jscomp.Es6ToEs3Util.withType;
 
 import com.google.auto.value.AutoValue;
-import com.google.javascript.jscomp.AbstractCompiler.MostRecentTypechecker;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.IR;
@@ -52,7 +51,7 @@ public final class EsNextToEs8Converter implements NodeTraversal.Callback, HotSw
 
   public EsNextToEs8Converter(AbstractCompiler compiler) {
     this.compiler = compiler;
-    this.addTypes = MostRecentTypechecker.OTI.equals(compiler.getMostRecentTypechecker());
+    this.addTypes = compiler.hasTypeCheckingRun();
   }
 
   @Override

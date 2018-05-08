@@ -29,7 +29,6 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Table;
-import com.google.javascript.jscomp.AbstractCompiler.MostRecentTypechecker;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
@@ -155,9 +154,7 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
   }
 
   private boolean getShouldAddTypesOnNewAstNodes() {
-    // TODO(bradfordcsmith): Once NTI is gone, we'll need a better way to determine whether the
-    // type checker has already run.
-    return compiler.getMostRecentTypechecker() == MostRecentTypechecker.OTI;
+    return compiler.hasTypeCheckingRun();
   }
 
   /**

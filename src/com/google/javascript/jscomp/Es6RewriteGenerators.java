@@ -20,7 +20,6 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.javascript.jscomp.Es6ToEs3Util.withType;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.javascript.jscomp.AbstractCompiler.MostRecentTypechecker;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.IR;
@@ -95,7 +94,7 @@ final class Es6RewriteGenerators implements HotSwapCompilerPass {
     this.compiler = compiler;
     registry = compiler.getTypeRegistry();
 
-    if (compiler.getMostRecentTypechecker() == MostRecentTypechecker.OTI) {
+    if (compiler.hasTypeCheckingRun()) {
       // typechecking has run, so we must preserve and propagate type information
       shouldAddTypes = true;
       unknownType = registry.getNativeType(JSTypeNative.UNKNOWN_TYPE);

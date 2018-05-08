@@ -609,7 +609,6 @@ class CheckAccessControls extends AbstractPostOrderCallback
    */
   static ObjectType getCanonicalInstance(ObjectType obj) {
     FunctionType ctor = obj.getConstructor();
-    // In NTI ctor is never null, but it might be in OTI.
     return ctor == null ? obj : ctor.getInstanceType();
   }
 

@@ -232,7 +232,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   // Types that have been forward declared
   private Set<String> forwardDeclaredTypes = new HashSet<>();
 
-  private MostRecentTypechecker mostRecentTypechecker = MostRecentTypechecker.NONE;
+  private boolean typeCheckingHasRun = false;
 
   // This error reporter gets the messages from the current Rhino parser or TypeRegistry.
   private final ErrorReporter oldErrorReporter =
@@ -1504,13 +1504,13 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   @Override
-  void setMostRecentTypechecker(MostRecentTypechecker lastRun) {
-    this.mostRecentTypechecker = lastRun;
+  void setTypeCheckingHasRun(boolean hasRun) {
+    this.typeCheckingHasRun = hasRun;
   }
 
   @Override
-  MostRecentTypechecker getMostRecentTypechecker() {
-    return this.mostRecentTypechecker;
+  boolean hasTypeCheckingRun() {
+    return this.typeCheckingHasRun;
   }
 
   @Override
@@ -1610,22 +1610,18 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
   @Override
   Iterable<TypeMismatch> getTypeMismatches() {
-    switch (this.mostRecentTypechecker) {
-      case OTI:
-        return getTypeValidator().getMismatches();
-      default:
-        throw new RuntimeException("Can't ask for type mismatches before type checking.");
+    if (this.typeCheckingHasRun) {
+      return getTypeValidator().getMismatches();
     }
+    throw new RuntimeException("Can't ask for type mismatches before type checking.");
   }
 
   @Override
   Iterable<TypeMismatch> getImplicitInterfaceUses() {
-    switch (this.mostRecentTypechecker) {
-      case OTI:
-        return getTypeValidator().getImplicitInterfaceUses();
-      default:
-        throw new RuntimeException("Can't ask for type mismatches before type checking.");
+    if (this.typeCheckingHasRun) {
+      return getTypeValidator().getImplicitInterfaceUses();
     }
+    throw new RuntimeException("Can't ask for type mismatches before type checking.");
   }
 
   public void maybeSetTracker() {
@@ -3481,7 +3477,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     private final Map<InputId, CompilerInput> inputsById;
     private final JSTypeRegistry typeRegistry;
     private final TypeValidator typeValidator;
-    private final MostRecentTypechecker mostRecentTypeChecker;
+    private final boolean typeCheckingHasRun;
     private final CompilerInput synthesizedExternsInput;
     private final CompilerInput synthesizedExternsInputAtEnd;
     private final Map<String, Node> injectedLibraries;
@@ -3517,7 +3513,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       this.externs = compiler.externs;
       this.inputs = checkNotNull(compiler.inputs);
       this.inputsById = checkNotNull(compiler.inputsById);
-      this.mostRecentTypeChecker = compiler.mostRecentTypechecker;
+      this.typeCheckingHasRun = compiler.typeCheckingHasRun;
       this.synthesizedExternsInput = compiler.synthesizedExternsInput;
       this.synthesizedExternsInputAtEnd = compiler.synthesizedExternsInputAtEnd;
       this.injectedLibraries = compiler.injectedLibraries;
@@ -3613,7 +3609,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     externAndJsRoot = compilerState.externAndJsRoot;
     externsRoot = compilerState.externsRoot;
     jsRoot = compilerState.jsRoot;
-    mostRecentTypechecker = compilerState.mostRecentTypeChecker;
+    typeCheckingHasRun = compilerState.typeCheckingHasRun;
     synthesizedExternsInput = compilerState.synthesizedExternsInput;
     synthesizedExternsInputAtEnd = compilerState.synthesizedExternsInputAtEnd;
     injectedLibraries.clear();

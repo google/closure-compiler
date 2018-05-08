@@ -106,7 +106,7 @@ public final class DevirtualizePrototypeMethodsTest extends CompilerTestCase {
     JSType number = fooResultType;
     JSType receiver = fooType.getTypeOfThis();
     assertTrue("Expected number: " + number, number.isNumberValueType());
-    // NOTE: OTI has the receiver as unknown, NTI has it as null.
+    // NOTE: The type checker has the receiver as unknown
     assertTrue(
         "Expected null or unknown: " + receiver, receiver == null || receiver.isUnknownType());
     assertThat(barResultType).isEqualTo(number);
@@ -121,7 +121,7 @@ public final class DevirtualizePrototypeMethodsTest extends CompilerTestCase {
     assertThat(barType.getReturnType()).isEqualTo(number);
     assertThat(barType.getTypeOfThis()).isEqualTo(receiver);
 
-    // Check that baz's type is {function(A): undefined} in OTI and {function(A): ?} in NTI
+    // Check that baz's type is {function(A): undefined}
     assertThat(bazType.getParameterTypes()).containsExactly(thisType);
     assertThat(bazType.getTypeOfThis()).isEqualTo(receiver);
 
