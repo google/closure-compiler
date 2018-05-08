@@ -26,7 +26,8 @@
 /**
  * Suppresses the compiler warning when multiple externs files declare the
  * ui namespace.
- * @suppress {duplicate}
+ * @suppress {duplicate, const}
+ * @const
  */
 var ui = {};
 
