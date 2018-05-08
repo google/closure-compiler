@@ -89,9 +89,8 @@ public final class SymbolTableTest extends TestCase {
   }
 
   public void testGlobalThisReferences() throws Exception {
-    SymbolTable table = createSymbolTable(
-        "var x = this; function f() { return this + this + this; }",
-        /* externsCode= */ "");
+    SymbolTable table =
+        createSymbolTable("var x = this; function f() { return this + this + this; }");
 
     Symbol global = getGlobalVar(table, "*global*");
     assertNotNull(global);
@@ -102,7 +101,7 @@ public final class SymbolTableTest extends TestCase {
 
   public void testGlobalThisReferences2() throws Exception {
     // Make sure the global this is declared, even if it isn't referenced.
-    SymbolTable table = createSymbolTable("", /* externsCode= */ "");
+    SymbolTable table = createSymbolTable("");
 
     Symbol global = getGlobalVar(table, "*global*");
     assertNotNull(global);
@@ -112,8 +111,7 @@ public final class SymbolTableTest extends TestCase {
   }
 
   public void testGlobalThisReferences3() throws Exception {
-    SymbolTable table =
-        createSymbolTable("this.foo = {}; this.foo.bar = {};", /* externsCode= */ "");
+    SymbolTable table = createSymbolTable("this.foo = {}; this.foo.bar = {};");
 
     Symbol global = getGlobalVar(table, "*global*");
     assertNotNull(global);
@@ -345,7 +343,7 @@ public final class SymbolTableTest extends TestCase {
     SymbolTable table = createSymbolTable("customExternFn(1);");
     Symbol fn = getGlobalVar(table, "customExternFn");
     List<Reference> refs = table.getReferenceList(fn);
-    assertThat(refs).hasSize(3);
+    assertThat(refs).hasSize(2);
 
     SymbolScope scope = table.getEnclosingScope(refs.get(0).getNode());
     assertTrue(scope.isGlobalScope());
@@ -1180,15 +1178,6 @@ public final class SymbolTableTest extends TestCase {
   private SymbolTable createSymbolTable(String input) {
     List<SourceFile> inputs = ImmutableList.of(SourceFile.fromCode("in1", input));
     List<SourceFile> externs = ImmutableList.of(SourceFile.fromCode("externs1", EXTERNS));
-
-    Compiler compiler = new Compiler(new BlackHoleErrorManager());
-    compiler.compile(externs, inputs, options);
-    return assertSymbolTableValid(compiler.buildKnownSymbolTable());
-  }
-
-  private SymbolTable createSymbolTable(String input, String externsCode) {
-    List<SourceFile> inputs = ImmutableList.of(SourceFile.fromCode("in1", input));
-    List<SourceFile> externs = ImmutableList.of(SourceFile.fromCode("externs1", externsCode));
 
     Compiler compiler = new Compiler(new BlackHoleErrorManager());
     compiler.compile(externs, inputs, options);

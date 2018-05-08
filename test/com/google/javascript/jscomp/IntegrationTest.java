@@ -2013,11 +2013,11 @@ public final class IntegrationTest extends IntegrationTestCase {
     // Investigate why are they kept when ran together with other passes.
     String expected =
         LINE_JOINER.join(
-            "('undefined'!=typeof window&&window===this?this:'undefined'!=typeof ",
-            "global&&null!=global?global:this).",
-            "Object.defineProperties(function() {},",
-            "{d:{a:!0,b:!0,c:function(){}},", // renamed from init
-            "e:{a:!0,b:!0,f:function(){}}})"); // renamed from prop
+        "('undefined'!=typeof window&&window===this?this:'undefined'!=typeof ",
+        "global&&null!=global?global:this).",
+        "c.defineProperties(function() {},",
+        "{e:{a:!0,b:!0,d:function(){}},",  // renamed from init
+        "f:{a:!0,b:!0,g:function(){}}})");  // renamed from prop
 
     options.setLanguageIn(LanguageMode.ECMASCRIPT_2015);
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
@@ -5141,6 +5141,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setDevMode(DevMode.EVERY_PASS);
     options.setCodingConvention(new GoogleCodingConvention());
     options.setRenamePrefixNamespaceAssumeCrossModuleNames(true);
+    options.declaredGlobalExternsOnWindow = false;
     return options;
   }
 }

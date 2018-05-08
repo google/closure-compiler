@@ -43,9 +43,9 @@ public final class DeclaredGlobalExternsOnWindowTest extends CompilerTestCase {
     testExternChanges("var window; var a;", "", "var window;var a;window.a");
   }
 
-  // No "var window;" so use "this" instead.
+  // No "var window;" so this is a no-op.
   public void testWindowProperty1b() {
-    testExternChanges("var a;", "", "var a;this.a");
+    testExternChanges("var a", "", "var a");
   }
 
   public void testWindowProperty2() {
@@ -57,9 +57,9 @@ public final class DeclaredGlobalExternsOnWindowTest extends CompilerTestCase {
         "var window;function f(){}window.f;");
   }
 
-  // No "var window;" so use "this" instead.
+  // No "var window;" so this is a no-op.
   public void testWindowProperty3b() {
-    testExternChanges("function f() {}", "var b", "function f(){}this.f");
+    testExternChanges("function f() {}", "var b", "function f(){}");
   }
 
   public void testWindowProperty4() {
@@ -73,9 +73,9 @@ public final class DeclaredGlobalExternsOnWindowTest extends CompilerTestCase {
         "var window;var x=function(){};window.x;");
   }
 
-  // No "var window;" so use "this" instead.
+  // No "var window;" so this is a no-op.
   public void testWindowProperty5b() {
-    testExternChanges("var x = function f() {};", "var b", "var x=function f(){};this.x");
+    testExternChanges("var x = function f() {}", "var b", "var x=function f(){}");
   }
 
   public void testWindowProperty5c() {
