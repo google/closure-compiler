@@ -20,13 +20,27 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.google.common.testing.EqualsTester;
 import java.nio.file.Paths;
-import junit.framework.TestCase;
+import org.junit.Assume;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /** Tests for {@link TranspileResult}. */
+@RunWith(JUnit4.class)
+public final class TranspileResultTest {
 
-public final class TranspileResultTest extends TestCase {
+  /*
+   * Java currently lacks a built in method for checking if a the file system is
+   * case sensitive or not, so check if two different cased paths are equivalent
+   * or not, to determine which of the two testEquals tests to run.
+   */
 
-  public void testEquals() {
+  private static final boolean CASE_SENSITIVE_FILE_SYSTEM =
+      !(Paths.get("a").equals(Paths.get("A")));
+
+  @Test
+  public void testEquals_CaseSensitiveFS() {
+    Assume.assumeTrue(CASE_SENSITIVE_FILE_SYSTEM);
     new EqualsTester()
         .addEqualityGroup(
             new TranspileResult(Paths.get("a"), "b", "c", "d"),
@@ -38,12 +52,28 @@ public final class TranspileResultTest extends TestCase {
         .testEquals();
   }
 
+  @Test
+  public void testEquals_CaseInsensitiveFS() {
+    Assume.assumeFalse(CASE_SENSITIVE_FILE_SYSTEM);
+    new EqualsTester()
+        .addEqualityGroup(
+            new TranspileResult(Paths.get("a"), "b", "c", "d"),
+            new TranspileResult(Paths.get("a"), "b", "c", "d"),
+            new TranspileResult(Paths.get("A"), "b", "c", "d"))
+        .addEqualityGroup(new TranspileResult(Paths.get("a"), "B", "c", "d"))
+        .addEqualityGroup(new TranspileResult(Paths.get("a"), "b", "C", "d"))
+        .addEqualityGroup(new TranspileResult(Paths.get("a"), "b", "c", "D"))
+        .testEquals();
+  }
+
+  @Test
   public void testEmbedSourceMap_noSourceMap() {
     TranspileResult result = new TranspileResult(Paths.get("a"), "b", "c", "");
     assertThat(result.embedSourcemap()).isSameAs(result);
     assertThat(result.embedSourcemapUrl("foo")).isSameAs(result);
   }
 
+  @Test
   public void testEmbedSourceMap() {
     TranspileResult result = new TranspileResult(Paths.get("a"), "b", "c", "{\"version\": 3}");
     assertThat(result.embedSourcemap())
