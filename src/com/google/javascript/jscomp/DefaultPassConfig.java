@@ -27,8 +27,8 @@ import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES7;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES8;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES8_MODULES;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES_NEXT;
-import static com.google.javascript.jscomp.parsing.parser.FeatureSet.OTI_SUPPORTED;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.TYPESCRIPT;
+import static com.google.javascript.jscomp.parsing.parser.FeatureSet.TYPE_CHECK_SUPPORTED;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
@@ -1456,7 +1456,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return OTI_SUPPORTED;
+          return TYPE_CHECK_SUPPORTED;
         }
       };
 
@@ -1853,7 +1853,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return OTI_SUPPORTED;
+          return TYPE_CHECK_SUPPORTED;
         }
       };
 
@@ -1894,7 +1894,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return OTI_SUPPORTED;
+          return TYPE_CHECK_SUPPORTED;
         }
       };
 
@@ -1920,7 +1920,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return OTI_SUPPORTED;
+          return TYPE_CHECK_SUPPORTED;
         }
       };
 
@@ -1949,7 +1949,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return OTI_SUPPORTED;
+          return TYPE_CHECK_SUPPORTED;
         }
       };
 
@@ -1988,7 +1988,7 @@ public final class DefaultPassConfig extends PassConfig {
 
     @Override
     protected FeatureSet featureSet() {
-      return OTI_SUPPORTED;
+      return TYPE_CHECK_SUPPORTED;
     }
   };
 
@@ -2040,7 +2040,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return OTI_SUPPORTED;
+          return TYPE_CHECK_SUPPORTED;
         }
       };
 
@@ -2115,7 +2115,7 @@ public final class DefaultPassConfig extends PassConfig {
 
     @Override
     protected FeatureSet featureSet() {
-      return OTI_SUPPORTED;
+      return TYPE_CHECK_SUPPORTED;
     }
   };
 
@@ -2149,7 +2149,7 @@ public final class DefaultPassConfig extends PassConfig {
 
     @Override
     protected FeatureSet featureSet() {
-      return OTI_SUPPORTED;
+      return TYPE_CHECK_SUPPORTED;
     }
   };
 
@@ -3416,7 +3416,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return OTI_SUPPORTED;
+          return TYPE_CHECK_SUPPORTED;
         }
       };
 
