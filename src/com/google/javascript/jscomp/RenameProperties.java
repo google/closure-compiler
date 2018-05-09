@@ -194,15 +194,16 @@ class RenameProperties implements CompilerPass {
     reservedNames.addAll(externedNames);
     reservedNames.addAll(quotedNames);
 
-    // First, try and reuse as many property names from the previous compilation
-    // as possible.
-    if (prevUsedPropertyMap != null) {
-      reusePropertyNames(reservedNames, propertyMap.values());
-    }
-
     // Assign names, sorted by descending frequency to minimize code size.
     Set<Property> propsByFreq = new TreeSet<>(FREQUENCY_COMPARATOR);
     propsByFreq.addAll(propertyMap.values());
+
+    // First, try and reuse as many property names from the previous compilation
+    // as possible.
+    if (prevUsedPropertyMap != null) {
+      reusePropertyNames(reservedNames, propsByFreq);
+    }
+
     generateNames(propsByFreq, reservedNames);
 
     // Update the string nodes.
