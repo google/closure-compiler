@@ -361,7 +361,9 @@ public final class ConformanceRules {
     }
 
     protected boolean isTypeImmediatelyTightened(Node n) {
-      return isAssertionCall(n.getParent()) || /* casted node */ n.getJSTypeBeforeCast() != null;
+      return isAssertionCall(n.getParent())
+          || n.getParent().isTypeOf()
+          || /* casted node */ n.getJSTypeBeforeCast() != null;
     }
 
     protected boolean isUsed(Node n) {
