@@ -405,8 +405,12 @@ public final class EarlyEs6ToEs3Converter implements Callback, HotSwapCompilerPa
    */
   private void visitCallWithSpread(Node node, Node parent) {
     checkArgument(node.isCall());
+    Node callee = node.getFirstChild();
+    // Check if the callee has side effects before removing it from the AST (since some NodeUtil
+    // methods assume the node they are passed has a non-null parent).
+    boolean calleeMayHaveSideEffects = NodeUtil.mayHaveSideEffects(callee);
     // must remove callee before extracting argument groups
-    Node callee = node.removeFirstChild();
+    node.removeChild(callee);
     Node joinedGroups;
     if (node.hasOneChild() && isSpreadOfArguments(node.getOnlyChild())) {
       // Check for special case of
@@ -436,7 +440,7 @@ public final class EarlyEs6ToEs3Converter implements Callback, HotSwapCompilerPa
     }
 
     Node result = null;
-    if (NodeUtil.mayHaveSideEffects(callee) && callee.isGetProp()) {
+    if (calleeMayHaveSideEffects && callee.isGetProp()) {
       // foo().method(...[a, b, c])
       //   must convert to
       // var freshVar;

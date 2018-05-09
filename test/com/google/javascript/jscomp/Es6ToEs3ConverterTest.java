@@ -2395,6 +2395,7 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
     test("f(0, ...g());", "f.apply(null, [0].concat($jscomp.arrayFromIterable(g())));");
     test("f(...arr, 1);", "f.apply(null, [].concat($jscomp.arrayFromIterable(arr), [1]));");
     test("f(0, ...g(), 2);", "f.apply(null, [0].concat($jscomp.arrayFromIterable(g()), [2]));");
+    test("(function() {})(...arr);", "(function() {}).apply(null, $jscomp.arrayFromIterable(arr))");
     test("obj.m(...arr);", "obj.m.apply(obj, $jscomp.arrayFromIterable(arr));");
     test("x.y.z.m(...arr);", "x.y.z.m.apply(x.y.z, $jscomp.arrayFromIterable(arr));");
     test(
