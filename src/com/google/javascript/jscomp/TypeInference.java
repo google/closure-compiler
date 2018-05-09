@@ -400,10 +400,7 @@ class TypeInference
 
       case ASSIGN_LSH:
       case ASSIGN_RSH:
-      case LSH:
-      case RSH:
       case ASSIGN_URSH:
-      case URSH:
       case ASSIGN_DIV:
       case ASSIGN_MOD:
       case ASSIGN_BITAND:
@@ -411,6 +408,15 @@ class TypeInference
       case ASSIGN_BITOR:
       case ASSIGN_MUL:
       case ASSIGN_SUB:
+      case ASSIGN_EXPONENT:
+        // TODO(b/79437694): update the scope for the lhs
+        scope = traverseChildren(n, scope);
+        n.setJSType(getNativeType(NUMBER_TYPE));
+        break;
+
+      case LSH:
+      case RSH:
+      case URSH:
       case DIV:
       case MOD:
       case BITAND:
@@ -421,6 +427,7 @@ class TypeInference
       case DEC:
       case INC:
       case BITNOT:
+      case EXPONENT:
         scope = traverseChildren(n, scope);
         n.setJSType(getNativeType(NUMBER_TYPE));
         break;

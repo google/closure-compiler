@@ -794,6 +794,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       case ASSIGN_SUB:
       case ASSIGN_ADD:
       case ASSIGN_MUL:
+      case ASSIGN_EXPONENT:
         checkPropCreation(t, n.getFirstChild());
         // fall through
 
@@ -808,6 +809,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       case SUB:
       case ADD:
       case MUL:
+      case EXPONENT:
         visitBinaryOperator(n.getToken(), t, n);
         break;
 
@@ -2265,10 +2267,12 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       case ASSIGN_MOD:
       case ASSIGN_MUL:
       case ASSIGN_SUB:
+      case ASSIGN_EXPONENT:
       case DIV:
       case MOD:
       case MUL:
       case SUB:
+      case EXPONENT:
         validator.expectNumber(t, left, leftType, "left operand");
         validator.expectNumber(t, right, rightType, "right operand");
         break;

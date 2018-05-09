@@ -38,7 +38,7 @@ public final class TypeCheckNoTranspileTest extends CompilerTypeTestCase {
     super.setUp();
     // Enable missing override checks that are disabled by default.
     compiler.getOptions().setWarningLevel(DiagnosticGroups.MISSING_OVERRIDE, CheckLevel.WARNING);
-    compiler.getOptions().setWarningLevel(DiagnosticGroups.STRICT_MISSING_PROPERTIES, CheckLevel.WARNING);
+    compiler.getOptions().setWarningLevel(DiagnosticGroups.STRICT_CHECK_TYPES, CheckLevel.WARNING);
   }
 
   @Override
@@ -47,6 +47,55 @@ public final class TypeCheckNoTranspileTest extends CompilerTypeTestCase {
     options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT);
     options.setLanguageOut(LanguageMode.ECMASCRIPT_NEXT);
     return options;
+  }
+
+  public void testExponent1() {
+    testTypes(
+        lines(
+            "function fn(someUnknown) {",
+            "  var x = someUnknown ** 2;", // infer the result
+            "  var /** null */ y = x;",
+            "}"),
+        lines(
+            "initializing variable",
+            "found   : number",
+            "required: null"));
+  }
+
+  public void testExponent2() {
+    // TODO(b/79437694): this should produce a type error but assign ops are not properly
+    // tightened.
+    testTypes(
+        lines(
+            "function fn(someUnknown) {",
+            "  var x = someUnknown;",
+            "  x **= 2;", // infer the result
+            "  var /** null */ y = x;",
+            "}"));
+  }
+
+  public void testExponent3() {
+    testTypes(
+        lines(
+            "function fn(someUnknown) {",
+            "  var y = true ** 3;",
+            "}"),
+        lines(
+            "left operand",
+            "found   : boolean",
+            "required: number"));
+  }
+
+  public void testExponent4() {
+    testTypes(
+        lines(
+            "function fn(someUnknown) {",
+            "  var y = 1; y **= true;",
+            "}"),
+        lines(
+            "right operand",
+            "found   : boolean",
+            "required: number"));
   }
 
   public void testDuplicateCatchVarName() {
