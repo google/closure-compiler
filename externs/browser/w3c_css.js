@@ -2668,3 +2668,60 @@ FontFaceSet.prototype.ready;
  * @see http://dev.w3.org/csswg/css-font-loading/#dom-fontfaceset-status
  */
 FontFaceSet.prototype.status;
+
+
+/**
+ * @record
+ * @see http://dev.w3.org/csswg/css-animations/#csskeyframerule
+ */
+function CSSKeyframeRule() {}
+
+/**
+ * @type {string}
+ * @see https://drafts.csswg.org/css-animations/#dom-csskeyframerule-keytext
+ */
+CSSKeyframeRule.prototype.keyText;
+
+/**
+ * @type {!CSSStyleDeclaration}
+ * @see https://drafts.csswg.org/css-animations/#dom-csskeyframerule-style
+ */
+CSSKeyframeRule.prototype.style;
+
+
+/**
+ * @record
+ * @see http://dev.w3.org/csswg/css-animations/#csskeyframesrule
+ */
+function CSSKeyframesRule() {}
+
+/**
+ * @see https://drafts.csswg.org/css-animations/#dom-csskeyframesrule-name
+ * @type {string}
+ */
+CSSKeyframesRule.prototype.name;
+
+/**
+ * @see https://drafts.csswg.org/css-animations/#dom-csskeyframesrule-cssrules
+ * @type {!CSSRuleList}
+ */
+CSSKeyframesRule.prototype.cssRules;
+
+/**
+ * @see https://drafts.csswg.org/css-animations/#dom-csskeyframesrule-findrule
+ * @param {string} key The key text for the rule to find.
+ * @return {?CSSKeyframeRule}
+ */
+CSSKeyframesRule.prototype.findRule = function(key) {};
+
+/**
+ * @see https://drafts.csswg.org/css-animations/#dom-csskeyframesrule-appendrule
+ * @param {string} rule The text for the rule to append.
+ */
+CSSKeyframesRule.prototype.appendRule = function(rule) {};
+
+/**
+ * @see https://drafts.csswg.org/css-animations/#dom-csskeyframesrule-deleterule
+ * @param {string} key The key text for the rule to delete.
+ */
+CSSKeyframesRule.prototype.deleteRule = function(key) {};
