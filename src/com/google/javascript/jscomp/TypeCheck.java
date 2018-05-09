@@ -31,7 +31,6 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.STRING_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.SYMBOL_OBJECT_FUNCTION_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.UNKNOWN_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.VOID_TYPE;
-import static java.lang.Integer.MAX_VALUE;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
@@ -1660,9 +1659,8 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       JSType objectType, String propName, PropDefinitionKind kind, NodeTraversal t, Node n,
       boolean strictReport) {
     checkState(n.isGetProp());
-    boolean isUnknownType = objectType.isUnknownType();
     boolean isObjectType = objectType.isEquivalentTo(getNativeType(OBJECT_TYPE));
-    boolean lowConfidence = isUnknownType || isObjectType;
+    boolean lowConfidence = objectType.isUnknownType() || objectType.isAllType() || isObjectType;
 
     boolean isKnownToUnionMember = kind.equals(PropDefinitionKind.LOOSE_UNION);
 
@@ -1671,9 +1669,9 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     // able to be more strict, so introduce an optional warning.
     SuggestionPair pair = null;
     if (!lowConfidence && !isKnownToUnionMember) {
-      pair = getClosestPropertySuggestion(objectType, propName);
+      pair = getClosestPropertySuggestion(objectType, propName, (propName.length() - 1) / 4);
     }
-    if (pair != null && pair.distance * 4 < propName.length()) {
+    if (pair != null) {
       DiagnosticType reportType;
       if (strictReport) {
         reportType = STRICT_INEXISTENT_PROPERTY_WITH_SUGGESTION;
@@ -1726,7 +1724,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
   }
 
   private static SuggestionPair getClosestPropertySuggestion(
-      JSType objectType, String propName) {
+      JSType objectType, String propName, int maxDistance) {
     return null;
   }
 
