@@ -437,10 +437,10 @@ public final class TypeCheckNoTranspileTest extends CompilerTypeTestCase {
     // If the thing we're trying to iterate over is not actually an Iterable, we treat the inferred
     // type of the for-of loop variable as unknown and only warn for the non-Iterable item.
     testTypes(
-            "for (var /** number */ x of 3) {}",
+        "for (var /** number */ x of 3) {}",
         lines(
             "Can only iterate over a (non-null) Iterable type",
-            "found   : Number",
+            "found   : number",
             "required: Iterable"));
   }
 
@@ -571,12 +571,34 @@ public final class TypeCheckNoTranspileTest extends CompilerTypeTestCase {
             "required: Iterable"));
   }
 
+  public void testForOf_unionType3() {
+    testTypes(
+        lines(
+            "function takesNull(/** null */ n) {}",
+            "",
+            "/** @param {string|!Array<number>} param */",
+            "function f(param) {",
+            "  for (let x of param) {",
+            "    takesNull(x);", // TODO(lharker): this should cause a type error
+            "  }",
+            "}"));
+  }
+
   public void testForOf_nullable() {
     testTypes(
         "/** @type {?Iterable} */ var it; for (var elem of it) {}",
         lines(
             "Can only iterate over a (non-null) Iterable type",
             "found   : (Iterable|null)",
+            "required: Iterable"));
+  }
+
+  public void testForOf_null() {
+    testTypes(
+        "/** @type {null} */ var it = null; for (var elem of it) {}",
+        lines(
+            "Can only iterate over a (non-null) Iterable type",
+            "found   : null",
             "required: Iterable"));
   }
 
@@ -824,6 +846,29 @@ public final class TypeCheckNoTranspileTest extends CompilerTypeTestCase {
             "Yielded type does not match declared return type.",
             "found   : string",
             "required: number"));
+  }
+
+  public void testGenerator_yieldAll_string() {
+    // Test that we autobox a string to a String
+    testTypes(
+        lines(
+            "/** @return {!Generator<string>} */", // preserve newlines
+            "function *gen() {",
+            "  yield* 'some string';",
+            "}"));
+  }
+
+  public void testGenerator_yieldAll_null() {
+    testTypes(
+        lines(
+            "/** @return {!Generator<string>} */", // preserve newlines
+            "function *gen() {",
+            "  yield* null;",
+            "}"),
+        lines(
+            "Expression yield* expects an iterable", // preserve newlines
+            "found   : null",
+            "required: Iterable"));
   }
 
   public void testMemberFunctionDef1() {

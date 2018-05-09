@@ -881,11 +881,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       case FOR_OF:
         ensureTyped(t, n.getSecondChild());
         JSType iterable = getJSType(n.getSecondChild());
-        // If iterable is a primitive type, autobox it to the corresponding object type. Otherwise,
-        // the type validator will warn that a string is not a subtype of Iterable.
-        JSType autoboxedIterable = iterable.autoboxesTo();
-        iterable = autoboxedIterable != null ? autoboxedIterable : iterable;
-        validator.expectIterable(
+        validator.expectAutoboxesToIterable(
             t, n.getSecondChild(), iterable, "Can only iterate over a (non-null) Iterable type");
         typeable = false;
 
@@ -901,6 +897,9 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
                 : n.getFirstChild();
         JSType declaredType = loopVarNode.getJSType();
         if (declaredType != null) {
+          // Convert primitives to their wrapper type and remove null/undefined
+          // If iterable is a union type, autoboxes each member of the union.
+          iterable = iterable.autobox();
           JSType actualType =
               iterable
                   .getTemplateTypeMap()
@@ -2181,7 +2180,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     }
 
     if (n.isYieldAll()) {
-      if (!validator.expectIterable(
+      if (!validator.expectAutoboxesToIterable(
           t, n, actualYieldType, "Expression yield* expects an iterable")) {
         // don't do any further typechecking of the yield* type.
         return;

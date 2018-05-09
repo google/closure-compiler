@@ -271,14 +271,28 @@ class TypeValidator implements Serializable {
   }
 
   /**
-   * Expect the type to be an Iterable.
+   * Expect the type to autobox to be an Iterable.
    *
    * @return True if there was no warning, false if there was a mismatch.
    */
-  boolean expectIterable(NodeTraversal t, Node n, JSType type, String msg) {
-    if (!type.isSubtypeOf(getNativeType(ITERABLE_TYPE))) {
-      mismatch(t, n, msg, type, ITERABLE_TYPE);
-      return false;
+  boolean expectAutoboxesToIterable(NodeTraversal t, Node n, JSType type, String msg) {
+    // Note: we don't just use JSType.autobox() here because that removes null and undefined.
+    // We want to keep null and undefined around.
+    if (type.isUnionType()) {
+      for (JSType alt : type.toMaybeUnionType().getAlternatesWithoutStructuralTyping()) {
+        alt = alt.isBoxableScalar() ? alt.autoboxesTo() : alt;
+        if (!alt.isSubtypeOf(getNativeType(ITERABLE_TYPE))) {
+          mismatch(t, n, msg, type, ITERABLE_TYPE);
+          return false;
+        }
+      }
+
+    } else {
+      JSType autoboxedType = type.isBoxableScalar() ? type.autoboxesTo() : type;
+      if (!autoboxedType.isSubtypeOf(getNativeType(ITERABLE_TYPE))) {
+        mismatch(t, n, msg, type, ITERABLE_TYPE);
+        return false;
+      }
     }
     return true;
   }
