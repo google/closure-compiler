@@ -24,6 +24,7 @@
  */
 
 /**
+ * @implements {EventTarget}
  * @constructor
  */
 function BaseAudioContext() {}
