@@ -674,7 +674,7 @@ public class CommandLineRunner extends
 
     @Option(name = "--new_type_inf",
         handler = BooleanOptionHandler.class,
-        usage = "Checks for type errors using the new type inference algorithm.")
+        usage = "Deprecated.  Does nothing. Use jscomp_error=strictCheckTypes instead.")
     private boolean useNewTypeInference = false;
 
     @Option(name = "--rename_variable_prefix",
@@ -844,7 +844,6 @@ public class CommandLineRunner extends
                     "jscomp_error",
                     "jscomp_off",
                     "jscomp_warning",
-                    "new_type_inf",
                     "strict_mode_input",
                     "warnings_whitelist_file"))
             .putAll(
