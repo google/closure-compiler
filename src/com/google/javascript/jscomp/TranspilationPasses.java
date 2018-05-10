@@ -101,8 +101,6 @@ public class TranspilationPasses {
       // Don't run these passes in checksOnly mode since all the typechecking & checks passes
       // support the transpiled features.
       passes.add(es6ForOf);
-      passes.add(rewriteBlockScopedFunctionDeclaration);
-      passes.add(rewriteBlockScopedDeclaration);
     }
   }
 
@@ -488,6 +486,8 @@ public class TranspilationPasses {
     // TODO(b/73387406): Move passes here as typecheck passes are updated to cope with the features
     // they transpile and as the passes themselves are updated to propagate type information to the
     // transpiled code.
+    passes.add(rewriteBlockScopedFunctionDeclaration);
+    passes.add(rewriteBlockScopedDeclaration);
     passes.add(rewriteGenerators);
   }
 
