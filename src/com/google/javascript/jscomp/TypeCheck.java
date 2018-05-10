@@ -883,33 +883,6 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         validator.expectAutoboxesToIterable(
             t, n.getSecondChild(), iterable, "Can only iterate over a (non-null) Iterable type");
         typeable = false;
-
-        // Check the declared type of the loop variable. Note that TypeInference does not set the
-        // loop variable name node's JSType. The node will only have a non-null JSType if one was
-        // actually declared and set in TypedScopeCreator.
-
-        // Get the name node for the loop variable, e.g. "loopVar" in
-        //   for (let /** string */ loopVar in obj) {
-        Node loopVarNode =
-            NodeUtil.isNameDeclaration(n.getFirstChild())
-                ? n.getFirstFirstChild()
-                : n.getFirstChild();
-        JSType declaredType = loopVarNode.getJSType();
-        if (declaredType != null) {
-          // Convert primitives to their wrapper type and remove null/undefined
-          // If iterable is a union type, autoboxes each member of the union.
-          iterable = iterable.autobox();
-          JSType actualType =
-              iterable
-                  .getTemplateTypeMap()
-                  .getResolvedTemplateType(typeRegistry.getIterableTemplate());
-          validator.expectCanAssignTo(
-              t,
-              loopVarNode,
-              actualType,
-              declaredType,
-              "declared type of for-of loop variable does not match inferred type");
-        }
         break;
 
       // These nodes are typed during the type inference.
@@ -1057,6 +1030,23 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
           t, assign, object, pname, info, getNativeType(UNKNOWN_TYPE));
     }
 
+    checkCanAssignToWithScope(t, assign, lvalue, getJSType(rvalue), "assignment");
+  }
+
+  /**
+   * Checks that we can assign the given right type to the given lvalue.
+   *
+   * <p>If the lvalue is a qualified name, and has a declared type in the given scope, uses the
+   * declared type of the qualified name instead of the type on the node.
+   *
+   * @param assign A node to report warnings on for this assignment
+   * @param lvalue The lvalue to which we're assigning
+   * @param rightType The type we're assigning to the lvalue
+   * @param msg A message to report along with any type mismatch warnings
+   */
+  private void checkCanAssignToWithScope(
+      NodeTraversal t, Node assign, Node lvalue, JSType rightType, String msg) {
+
     // Check qualified name sets to 'object' and 'object.property'.
     // This can sometimes handle cases when the type of 'object' is not known.
     // e.g.,
@@ -1084,10 +1074,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     }
 
     // Fall through case for arbitrary LHS and arbitrary RHS.
-    Node rightChild = assign.getLastChild();
-    JSType rightType = getJSType(rightChild);
-    if (validator.expectCanAssignTo(
-            t, assign, rightType, leftType, "assignment")) {
+    if (validator.expectCanAssignTo(t, assign, rightType, leftType, msg)) {
       ensureTyped(t, assign, rightType);
     } else {
       ensureTyped(t, assign);
@@ -1537,6 +1524,15 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       return false;
     }
 
+    // Check that the declared type of the for-of key matches the inferred type.
+    // Do this check here instead of when visiting a FOR_OF node in order to get the correct
+    // syntactic scope.
+    if (parent.isForOf() && parent.getFirstChild() == n) {
+      // e.g. for (x of arr) {
+      checkForOfTypes(t, parent, n);
+      return false;
+    }
+
     JSType type = n.getJSType();
     if (type == null) {
       type = getNativeType(UNKNOWN_TYPE);
@@ -1550,6 +1546,26 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     }
     ensureTyped(t, n, type);
     return true;
+  }
+
+  /** Visits the loop variable of a FOR_OF and verifies the type being assigned to it */
+  private void checkForOfTypes(NodeTraversal t, Node forOf, Node lhs) {
+    JSType iterable = getJSType(forOf.getSecondChild());
+    // Convert primitives to their wrapper type and remove null/undefined
+    // If iterable is a union type, autoboxes each member of the union.
+    iterable = iterable.autobox();
+    JSType actualType =
+        iterable.getTemplateTypeMap().getResolvedTemplateType(typeRegistry.getIterableTemplate());
+
+    // TODO(b/79532975): "checkCanAssignToWithScope" skips some GETPROP specific checks that we do
+    // for
+    // ASSIGNs, that apply to "for (obj.a of arr) {" as well.
+    checkCanAssignToWithScope(
+        t,
+        forOf,
+        lhs,
+        actualType,
+        "declared type of for-of loop variable does not match inferred type");
   }
 
   /**
@@ -1749,6 +1765,12 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
    * @param n The node being visited.
    */
   private void visitVar(NodeTraversal t, Node n) {
+    // Handle var declarations in for-of loops separately from regular var declarations.
+    if (n.getParent().isForOf()) {
+      checkForOfTypes(t, n.getParent(), n.getFirstChild());
+      return;
+    }
+
     // TODO(nicksantos): Fix this so that the doc info always shows up
     // on the NAME node. We probably want to wait for the parser
     // merge to fix this.
@@ -2293,7 +2315,6 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     }
     ensureTyped(t, n);
   }
-
 
   /**
    * <p>Checks enum aliases.

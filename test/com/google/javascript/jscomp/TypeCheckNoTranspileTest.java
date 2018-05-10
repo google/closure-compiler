@@ -405,6 +405,11 @@ public final class TypeCheckNoTranspileTest extends CompilerTypeTestCase {
             "required: string"));
   }
 
+  public void disabled_testForOf4() {
+    // TODO(b/79532975): this currently crashes in TypeInference
+    testTypes("/** @type {!Iterable} */ var it; var obj = {}; for (obj.elem of it) {}");
+  }
+
   public void testForOf_wrongLoopVarType1() {
     testTypes(
         lines(
@@ -464,6 +469,44 @@ public final class TypeCheckNoTranspileTest extends CompilerTypeTestCase {
             "declared type of for-of loop variable does not match inferred type",
             "found   : (Object|null)",
             "required: Object"));
+  }
+
+  public void testForOf_wrongLoopVarType5() {
+    // Test that we don't check the inferred type of n against the Iterable type
+    testTypes(
+        lines(
+            "/** @type {!Array<number>} */",
+            "var arr = [1, 2];",
+            "let n = null;",
+            "for (n of arr) {}"));
+  }
+
+  public void testForOf_wrongLoopVarType6a() {
+    // Test that we typecheck the correct variable, given various shadowing variable declarations
+    testTypes(
+        lines(
+            "/** @type {!Array<number>} */",
+            "var arr = [1, 2, 3];",
+            "let /** string */ n = 'foo';", // n in global scope
+            "for (let /** number */ n of arr) {", // n in for of scope
+            "  let /** null */ n = null;", // n in inner block scope
+            "}"));
+  }
+
+  public void testForOf_wrongLoopVarType6b() {
+    // Test that we typecheck the correct variable, given various shadowing variable declarations
+    testTypes(
+        lines(
+            "/** @type {!Array<string>} */",
+            "var arr = ['foo', 'bar'];",
+            "let /** string */ n = 'foo';", // n in global scope
+            "for (let /** number */ n of arr) {", // n in for of scope
+            "  let /** null */ n = null;", // n in inner block scope
+            "}"),
+        lines(
+            "declared type of for-of loop variable does not match inferred type",
+            "found   : string",
+            "required: number"));
   }
 
   public void testForOf_array1() {
