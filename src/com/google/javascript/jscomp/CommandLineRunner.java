@@ -784,6 +784,14 @@ public class CommandLineRunner extends
     private ModuleLoader.ResolutionMode moduleResolutionMode = ModuleLoader.ResolutionMode.BROWSER;
 
     @Option(
+        name = "--browser_resolver_prefix_replacements",
+        hidden = false,
+        usage =
+            "Prefixes to replace in ES6 import paths before resolving. "
+                + "module_resolution must be BROWSER_WITH_TRANSFORMED_PREFIXES to take effect.")
+    private Map<String, String> browserResolverPrefixReplacements = ImmutableMap.of();
+
+    @Option(
       name = "--package_json_entry_names",
       usage =
           "Ordered list of entries to look for in package.json files when processing "
@@ -1808,6 +1816,8 @@ public class CommandLineRunner extends
     }
     options.setSourceMapIncludeSourcesContent(flags.sourceMapIncludeSourcesContent);
     options.setModuleResolutionMode(flags.moduleResolutionMode);
+    options.setBrowserResolverPrefixReplacements(
+        ImmutableMap.copyOf(flags.browserResolverPrefixReplacements));
 
     if (flags.packageJsonEntryNames != null) {
       try {

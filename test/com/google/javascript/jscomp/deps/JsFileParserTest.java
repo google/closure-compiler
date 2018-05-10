@@ -25,6 +25,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.ErrorManager;
 import com.google.javascript.jscomp.PrintStreamErrorManager;
+import com.google.javascript.jscomp.deps.DependencyInfo.Require;
 import junit.framework.TestCase;
 
 /**
@@ -281,8 +282,8 @@ public final class JsFileParserTest extends TestCase {
         new ModuleLoader(
             null,
             ImmutableList.of("/foo"),
-            ImmutableList.<DependencyInfo>of(),
-            ModuleLoader.ResolutionMode.BROWSER);
+            ImmutableList.of(),
+            BrowserModuleResolver.FACTORY);
 
     String contents = ""
         + "import './a';\n"
@@ -321,7 +322,7 @@ public final class JsFileParserTest extends TestCase {
             null,
             ImmutableList.of("/foo"),
             ImmutableList.of(),
-            ModuleLoader.ResolutionMode.BROWSER);
+            BrowserModuleResolver.FACTORY);
 
     String contents = "goog.provide('my.namespace');\nexport {};";
 
@@ -348,13 +349,37 @@ public final class JsFileParserTest extends TestCase {
             null,
             ImmutableList.of("/foo"),
             ImmutableList.of(),
-            ModuleLoader.ResolutionMode.BROWSER);
+            BrowserModuleResolver.FACTORY);
 
     String contents = "goog.module.declareNamespace('my.namespace');\nexport {};";
 
     DependencyInfo expected =
         SimpleDependencyInfo.builder("../bar/baz.js", "/foo/js/bar/baz.js")
             .setProvides(ImmutableList.of("my.namespace", "module$js$bar$baz"))
+            .setLoadFlags(ImmutableMap.of("module", "es6"))
+            .build();
+
+    DependencyInfo result =
+        parser.setModuleLoader(loader).parseFile("/foo/js/bar/baz.js", "../bar/baz.js", contents);
+
+    assertDeps(expected, result);
+  }
+
+  public void testEs6ModuleWithBrowserTransformedPrefixResolver() {
+    ModuleLoader loader =
+        new ModuleLoader(
+            null,
+            ImmutableList.of(),
+            ImmutableList.of(),
+            new BrowserWithTransformedPrefixesModuleResolver.Factory(
+                ImmutableMap.of("@root/", "/path/to/project/")));
+
+    String contents = "import '@root/my/file.js';";
+
+    DependencyInfo expected =
+        SimpleDependencyInfo.builder("../bar/baz.js", "/foo/js/bar/baz.js")
+            .setProvides(ImmutableList.of("module$foo$js$bar$baz"))
+            .setRequires(Require.es6Import("module$path$to$project$my$file", "@root/my/file.js"))
             .setLoadFlags(ImmutableMap.of("module", "es6"))
             .build();
 

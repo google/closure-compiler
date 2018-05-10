@@ -31,6 +31,7 @@ import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.primitives.Chars;
 import com.google.javascript.jscomp.deps.ModuleLoader;
+import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
 import com.google.javascript.jscomp.parsing.Config;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.resources.ResourceLoader;
@@ -1168,7 +1169,13 @@ public class CompilerOptions implements Serializable {
   private Optional<Boolean> isStrictModeInput = Optional.absent();
 
   /** Which algorithm to use for locating ES6 and CommonJS modules */
-  ModuleLoader.ResolutionMode moduleResolutionMode;
+  ResolutionMode moduleResolutionMode;
+
+  /**
+   * Map of prefix replacements for use when moduleResolutionMode is {@link
+   * ResolutionMode#BROWSER_WITH_TRANSFORMED_PREFIXES}.
+   */
+  private ImmutableMap<String, String> browserResolverPrefixReplacements;
 
   /** Which entries to look for in package.json files when processing modules */
   List<String> packageJsonEntryNames;
@@ -1195,6 +1202,7 @@ public class CompilerOptions implements Serializable {
 
     // Which environment to use
     environment = Environment.BROWSER;
+    browserResolverPrefixReplacements = ImmutableMap.of();
 
     // Modules
     moduleResolutionMode = ModuleLoader.ResolutionMode.BROWSER;
@@ -2763,12 +2771,21 @@ public class CompilerOptions implements Serializable {
     return this;
   }
 
-  public ModuleLoader.ResolutionMode getModuleResolutionMode() {
+  public ResolutionMode getModuleResolutionMode() {
     return this.moduleResolutionMode;
   }
 
-  public void setModuleResolutionMode(ModuleLoader.ResolutionMode mode) {
-    this.moduleResolutionMode = mode;
+  public void setModuleResolutionMode(ResolutionMode moduleResolutionMode) {
+    this.moduleResolutionMode = moduleResolutionMode;
+  }
+
+  public ImmutableMap<String, String> getBrowserResolverPrefixReplacements() {
+    return this.browserResolverPrefixReplacements;
+  }
+
+  public void setBrowserResolverPrefixReplacements(
+      ImmutableMap<String, String> browserResolverPrefixReplacements) {
+    this.browserResolverPrefixReplacements = browserResolverPrefixReplacements;
   }
 
   public List<String> getPackageJsonEntryNames() {

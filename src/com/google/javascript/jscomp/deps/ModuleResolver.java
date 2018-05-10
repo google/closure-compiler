@@ -50,6 +50,21 @@ public abstract class ModuleResolver {
   public abstract String resolveJsModule(
       String scriptAddress, String moduleAddress, String sourcename, int lineno, int colno);
 
+  public String resolveModuleAsPath(String scriptAddress, String moduleAddress) {
+    if (!moduleAddress.endsWith(".js")) {
+      moduleAddress += ".js";
+    }
+    String path = ModuleNames.escapePath(moduleAddress);
+    if (ModuleLoader.isRelativeIdentifier(moduleAddress)) {
+      String ourPath = scriptAddress;
+      int lastIndex = ourPath.lastIndexOf(ModuleLoader.MODULE_SLASH);
+      path =
+          ModuleNames.canonicalizePath(
+              ourPath.substring(0, lastIndex + ModuleLoader.MODULE_SLASH.length()) + path);
+    }
+    return ModuleLoader.normalize(path, moduleRootPaths);
+  }
+
   /**
    * Locates the module with the given name, but returns null if there is no JS file in the expected
    * location.

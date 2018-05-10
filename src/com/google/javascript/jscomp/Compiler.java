@@ -32,9 +32,14 @@ import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping;
 import com.google.javascript.jscomp.CompilerOptions.DevMode;
 import com.google.javascript.jscomp.CoverageInstrumentationPass.CoverageReach;
 import com.google.javascript.jscomp.CoverageInstrumentationPass.InstrumentOption;
+import com.google.javascript.jscomp.deps.BrowserModuleResolver;
+import com.google.javascript.jscomp.deps.BrowserWithTransformedPrefixesModuleResolver;
 import com.google.javascript.jscomp.deps.JsFileParser;
 import com.google.javascript.jscomp.deps.ModuleLoader;
+import com.google.javascript.jscomp.deps.ModuleLoader.ModuleResolverFactory;
+import com.google.javascript.jscomp.deps.NodeModuleResolver;
 import com.google.javascript.jscomp.deps.SortedDependencies.MissingProvideException;
+import com.google.javascript.jscomp.deps.WebpackModuleResolver;
 import com.google.javascript.jscomp.ijs.CheckTypeSummaryWarningsGuard;
 import com.google.javascript.jscomp.parsing.Config;
 import com.google.javascript.jscomp.parsing.ParserRunner;
@@ -1674,27 +1679,34 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       if (options.getLanguageIn().toFeatureSet().has(FeatureSet.Feature.MODULES)
           || options.processCommonJSModules) {
 
+        ModuleResolverFactory moduleResolverFactory = null;
+
+        switch (options.getModuleResolutionMode()) {
+          case BROWSER:
+            moduleResolverFactory = BrowserModuleResolver.FACTORY;
+            break;
+          case NODE:
+            // processJsonInputs requires a module loader to already be defined
+            // so we redefine it afterwards with the package.json inputs
+            moduleResolverFactory = new NodeModuleResolver.Factory(processJsonInputs(inputs));
+            break;
+          case WEBPACK:
+            moduleResolverFactory = new WebpackModuleResolver.Factory(inputPathByWebpackId);
+            break;
+          case BROWSER_WITH_TRANSFORMED_PREFIXES:
+            moduleResolverFactory =
+                new BrowserWithTransformedPrefixesModuleResolver.Factory(
+                    options.getBrowserResolverPrefixReplacements());
+            break;
+        }
+
         this.moduleLoader =
             new ModuleLoader(
                 null,
                 options.moduleRoots,
                 inputs,
-                ModuleLoader.PathResolver.RELATIVE,
-                options.moduleResolutionMode,
-                inputPathByWebpackId);
-
-        if (options.moduleResolutionMode == ModuleLoader.ResolutionMode.NODE) {
-          // processJsonInputs requires a module loader to already be defined
-          // so we redefine it afterwards with the package.json inputs
-          this.moduleLoader =
-              new ModuleLoader(
-                  null,
-                  options.moduleRoots,
-                  inputs,
-                  ModuleLoader.PathResolver.RELATIVE,
-                  options.moduleResolutionMode,
-                  processJsonInputs(inputs));
-        }
+                moduleResolverFactory,
+                ModuleLoader.PathResolver.RELATIVE);
       } else {
         // Use an empty module loader if we're not actually dealing with modules.
         this.moduleLoader = ModuleLoader.EMPTY;

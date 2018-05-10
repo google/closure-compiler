@@ -29,10 +29,8 @@ import com.google.javascript.jscomp.DiagnosticType;
 import com.google.javascript.jscomp.ErrorHandler;
 import com.google.javascript.jscomp.JSError;
 import java.nio.file.Paths;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 import javax.annotation.Nullable;
 
@@ -85,9 +83,8 @@ public final class ModuleLoader {
       @Nullable ErrorHandler errorHandler,
       Iterable<String> moduleRoots,
       Iterable<? extends DependencyInfo> inputs,
-      PathResolver pathResolver,
-      ResolutionMode resolutionMode,
-      Map<String, String> lookupMap) {
+      ModuleResolverFactory factory,
+      PathResolver pathResolver) {
     checkNotNull(moduleRoots);
     checkNotNull(inputs);
     checkNotNull(pathResolver);
@@ -98,51 +95,16 @@ public final class ModuleLoader {
         resolvePaths(
             Iterables.transform(Iterables.transform(inputs, DependencyInfo::getName), pathResolver),
             moduleRootPaths);
-
-    switch (resolutionMode) {
-      case BROWSER:
-        this.moduleResolver =
-            new BrowserModuleResolver(this.modulePaths, this.moduleRootPaths, this.errorHandler);
-        break;
-      case NODE:
-        this.moduleResolver =
-            new NodeModuleResolver(
-                this.modulePaths, this.moduleRootPaths, lookupMap, this.errorHandler);
-        break;
-      case WEBPACK:
-        Map<String, String> normalizedPathsById = new HashMap<>();
-        for (Entry<String, String> moduleEntry : lookupMap.entrySet()) {
-          String canonicalizedPath =
-              normalize(ModuleNames.escapePath(moduleEntry.getValue()), moduleRootPaths);
-          if (isAmbiguousIdentifier(canonicalizedPath)) {
-            canonicalizedPath = MODULE_SLASH + canonicalizedPath;
-          }
-          normalizedPathsById.put(moduleEntry.getKey(), canonicalizedPath);
-        }
-        this.moduleResolver =
-            new WebpackModuleResolver(
-                this.modulePaths, this.moduleRootPaths, normalizedPathsById, this.errorHandler);
-        break;
-      default:
-        throw new RuntimeException("Unexpected resolution mode " + resolutionMode);
-    }
+    this.moduleResolver =
+        factory.create(this.modulePaths, this.moduleRootPaths, this.errorHandler);
   }
 
   public ModuleLoader(
       @Nullable ErrorHandler errorHandler,
       Iterable<String> moduleRoots,
       Iterable<? extends DependencyInfo> inputs,
-      ResolutionMode resolutionMode) {
-    this(errorHandler, moduleRoots, inputs, PathResolver.RELATIVE, resolutionMode);
-  }
-
-  public ModuleLoader(
-      @Nullable ErrorHandler errorHandler,
-      Iterable<String> moduleRoots,
-      Iterable<? extends DependencyInfo> inputs,
-      PathResolver pathResolver,
-      ResolutionMode resolutionMode) {
-    this(errorHandler, moduleRoots, inputs, pathResolver, resolutionMode, null);
+      ModuleResolverFactory factory) {
+    this(errorHandler, moduleRoots, inputs, factory, PathResolver.RELATIVE);
   }
 
   @VisibleForTesting
@@ -229,18 +191,7 @@ public final class ModuleLoader {
      * <p>Primarily used for per-file ES6 module transpilation
      */
     public ModulePath resolveModuleAsPath(String moduleAddress) {
-      if (!moduleAddress.endsWith(".js")) {
-        moduleAddress += ".js";
-      }
-      String path = ModuleNames.escapePath(moduleAddress);
-      if (isRelativeIdentifier(moduleAddress)) {
-        String ourPath = this.path;
-        int lastIndex = ourPath.lastIndexOf(MODULE_SLASH);
-        path =
-            ModuleNames.canonicalizePath(
-                ourPath.substring(0, lastIndex + MODULE_SLASH.length()) + path);
-      }
-      return new ModulePath(normalize(path, moduleRootPaths));
+      return new ModulePath(moduleResolver.resolveModuleAsPath(this.path, moduleAddress));
     }
   }
 
@@ -248,6 +199,12 @@ public final class ModuleLoader {
   public ModulePath resolve(String path) {
     return new ModulePath(
         normalize(ModuleNames.escapePath(pathResolver.apply(path)), moduleRootPaths));
+  }
+
+  /** Resolves a path into a {@link ModulePath}. */
+  public ModulePath resolveWithoutEscapingPath(String path) {
+    return new ModulePath(
+        normalize(pathResolver.apply(path), moduleRootPaths));
   }
 
   /** Whether this is relative to the current file, or a top-level identifier. */
@@ -313,7 +270,7 @@ public final class ModuleLoader {
   }
 
   /** Normalizes the name and resolves it against the module roots. */
-  private static String normalize(String path, Iterable<String> moduleRootPaths) {
+  static String normalize(String path, Iterable<String> moduleRootPaths) {
     String normalizedPath = path;
     if (isAmbiguousIdentifier(normalizedPath)) {
       normalizedPath = MODULE_SLASH + normalizedPath;
@@ -364,15 +321,25 @@ public final class ModuleLoader {
       }
     };
   }
+
+  /** An enum used to specify what algorithm to use to locate non path-based modules */
+  @FunctionalInterface
+  public interface ModuleResolverFactory {
+    ModuleResolver create(
+        ImmutableSet<String> modulePaths,
+        ImmutableList<String> moduleRootPaths,
+        ErrorHandler errorHandler);
+  }
+
   /** A trivial module loader with no roots. */
   public static final ModuleLoader EMPTY =
       new ModuleLoader(
-          null,
+          /** errorReporter= */ null,
           ImmutableList.of(),
           ImmutableList.of(),
-          ResolutionMode.BROWSER);
+          BrowserModuleResolver.FACTORY);
 
-  /** An enum used to specify what algorithm to use to locate non path-based modules */
+  /** Standard path base resolution algorithms that are accepted as a command line flag. */
   public enum ResolutionMode {
     /**
      * Mimics the behavior of MS Edge.
@@ -383,6 +350,14 @@ public final class ModuleLoader {
      * writing.
      */
     BROWSER,
+
+    /**
+     * A limited superset of BROWSER that transforms some path prefixes.
+     *
+     * <p>For example one could configure this so that "@root/" is replaced with
+     * "/my/path/to/project/" within import paths.</p>
+     */
+    BROWSER_WITH_TRANSFORMED_PREFIXES,
 
     /**
      * Uses the node module resolution algorithm.
@@ -396,7 +371,7 @@ public final class ModuleLoader {
     /**
      * Uses a lookup map provided by webpack to locate modules from a numeric id used during import
      */
-    WEBPACK
+    WEBPACK,
   }
 
   private static final class NoopErrorHandler implements ErrorHandler {
