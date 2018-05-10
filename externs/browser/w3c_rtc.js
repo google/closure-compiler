@@ -1660,7 +1660,7 @@ RTCStatsReport.prototype.forEach = function(callback, opt_thisObj) {};
 RTCStatsReport.prototype.get = function(key) {};
 
 /**
- * @return {!Iterator<string>}
+ * @return {!IteratorIterable<string>}
  * @readonly
  */
 RTCStatsReport.prototype.keys = function() {};
