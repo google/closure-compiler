@@ -2049,9 +2049,13 @@ final class Es6RewriteGenerators implements HotSwapCompilerPass {
           } else if (n.isName() && n.getString().equals("arguments")) {
             visitArguments(n);
           } else if (n.isVar()) {
-            // don't transpile var in "for (var i = 0; ; )"
-            if (!(parent.isVanillaFor() || parent.isForIn()) || parent.getFirstChild() != n) {
-              visitVar(n);
+            if (parent.isVanillaFor()) {
+              visitVanillaForLoopVar(n);
+            } else if (parent.isForIn()) {
+              visitForInLoopVar(n);
+            } else {
+              // NOTE: for-of loops are transpiled away before this pass
+              visitVarStatement(n);
             }
           } // else no changes need to be made
         }
@@ -2130,9 +2134,86 @@ final class Es6RewriteGenerators implements HotSwapCompilerPass {
          * a = "test", b = i + 5;
          * </pre>
          */
-        void visitVar(Node varStatement) {
+        void visitVarStatement(Node varStatement) {
+          Node commaExpression = extractAssignmentsToCommaExpression(varStatement);
+          if (commaExpression == null) {
+            varStatement.detach();
+          } else {
+            varStatement.replaceWith(IR.exprResult(commaExpression));
+          }
+          // Move declaration without initial values to just before the program method definition.
+          hoistNode(varStatement);
+        }
+
+        /**
+         * Hoists {@code var} declarations in vanilla for loops into the closure containing the
+         * generator to preserve their state across multiple invocation of state machine program.
+         *
+         * <p>
+         *
+         * <pre>
+         * for (var a = "test", b = i + 5; ... ; )
+         * </pre>
+         *
+         * is transpiled to:
+         *
+         * <pre>
+         * var a, b;
+         * for (a = "test", b = i + 5; ...; )
+         * </pre>
+         */
+        private void visitVanillaForLoopVar(Node varDeclaration) {
+          Node commaExpression = extractAssignmentsToCommaExpression(varDeclaration);
+          if (commaExpression == null) {
+            // `for (var x; ` becomes `for (; `
+            varDeclaration.replaceWith(IR.empty());
+          } else {
+            // `for (var i = 0, j = 0; `... becomes `for (i = 0, j = 0; `...
+            varDeclaration.replaceWith(commaExpression);
+          }
+          // Move declaration without initial values to just before the program method definition.
+          hoistNode(varDeclaration);
+        }
+
+        /**
+         * Hoists {@code var} declarations in for-in loops into the closure containing the
+         * generator to preserve their state across multiple invocation of state machine program.
+         *
+         * <p>
+         *
+         * <pre>
+         * for (var a in obj)
+         * </pre>
+         *
+         * is transpiled to:
+         *
+         * <pre>
+         * var a;
+         * for (a in obj))
+         * </pre>
+         */
+        private void visitForInLoopVar(Node varDeclaration) {
+          // `for (var varName in ` ...
+          Node varName = varDeclaration.getOnlyChild();
+          checkState(!varName.hasChildren(), varName);
+          Node clonedVarName = varName.cloneNode().setJSDocInfo(null);
+          // becomes `for (varName in ` ...
+          varDeclaration.replaceWith(clonedVarName);
+          // Move declaration without initial values to just before the program method definition.
+          hoistNode(varDeclaration);
+        }
+
+        /**
+         * Removes all initializers from a var declaration and returns them as a single expression
+         * of comma-separated assignments or null if there aren't any initializers.
+         *
+         * @param varDeclaration VAR node
+         * @return null or expression node (e.g. `varName1 = 1, varName2 = y`)
+         */
+        @Nullable
+        private Node extractAssignmentsToCommaExpression(Node varDeclaration) {
           ArrayList<Node> assignments = new ArrayList<>();
-          for (Node varName : varStatement.children()) {
+          for (Node varName : varDeclaration.children()) {
             if (varName.hasChildren()) {
               Node copiedVarName = varName.cloneNode().setJSDocInfo(null);
               Node assign =
@@ -2142,22 +2223,15 @@ final class Es6RewriteGenerators implements HotSwapCompilerPass {
               assignments.add(assign);
             }
           }
-          if (assignments.isEmpty()) {
-            varStatement.detach();
-          } else {
-            Node commaExpression = null;
-            for (Node assignment : assignments) {
-              commaExpression =
-                  commaExpression == null
-                      ? assignment
-                      : withType(IR.comma(commaExpression, assignment), assignment.getJSType())
-                          .useSourceInfoFrom(assignment);
-            }
-            varStatement.replaceWith(IR.exprResult(commaExpression));
+          Node commaExpression = null;
+          for (Node assignment : assignments) {
+            commaExpression =
+                commaExpression == null
+                    ? assignment
+                    : withType(IR.comma(commaExpression, assignment), assignment.getJSType())
+                        .useSourceInfoFrom(assignment);
           }
-          // Place original var statement with initial values removed to just before
-          // the program method definition.
-          hoistNode(varStatement);
+          return commaExpression;
         }
       }
 

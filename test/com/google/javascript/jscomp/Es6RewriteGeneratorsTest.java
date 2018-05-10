@@ -226,6 +226,37 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
             "return $jscomp$generator$context.yield(i, 0);"));
   }
 
+  public void testForLoopWithExtraVarDeclaration() {
+    test(
+        lines(
+            "function *gen() {",
+            "  var i = 2;",
+            "  yield i;",
+            "  use(i);",
+            "  for (var i = 0; i < 3; i++) {",
+            "    use(i);",
+            "  }",
+            "}"),
+        lines(
+            "function gen(){",
+            "  var i;",
+            // TODO(bradfordcsmith): avoid duplicate var declarations
+            // It does no real harm at the moment since the normalize pass will clean this up later.
+            "  var i;",
+            "  return $jscomp.generator.createGenerator(",
+            "      gen,",
+            "      function($jscomp$generator$context) {",
+            "        if ($jscomp$generator$context.nextAddress==1) {",
+            "          i=2;",
+            "          return $jscomp$generator$context.yield(i,2);",
+            "        }",
+            "        use(i);",
+            "        for (i = 0; i < 3 ; i++) use(i);",
+            "        $jscomp$generator$context.jumpToEnd();",
+            "      })",
+            "}"));
+  }
+
   public void testUnreachableCodeGeneration() {
     rewriteGeneratorBody(
         "if (i) return 1; else return 2;",
@@ -278,27 +309,38 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
   public void testForLoops() {
     rewriteGeneratorBodyWithVars(
         "var i = 0; for (var j = 0; j < 10; j++) { i += j; }",
-        "var i;",
+        "var i; var j;",
         lines(
             "i = 0;",
-            "for (var j = 0; j < 10; j++) { i += j; }",
+            "for (j = 0; j < 10; j++) { i += j; }",
             "$jscomp$generator$context.jumpToEnd();"));
 
     rewriteGeneratorBodyWithVars(
         "var i = 0; for (var j = yield; j < 10; j++) { i += j; }",
-        "var i;",
+        "var i; var j;",
         lines(
             "if ($jscomp$generator$context.nextAddress == 1) {",
             "  i = 0;",
             "  return $jscomp$generator$context.yield(undefined, 2);",
             "}",
-            "for (var j = $jscomp$generator$context.yieldResult; j < 10; j++) { i += j; }",
+            "for (j = $jscomp$generator$context.yieldResult; j < 10; j++) { i += j; }",
             "$jscomp$generator$context.jumpToEnd();"));
 
     rewriteGeneratorBody(
         "for (;;) { yield 1; }",
         lines(
             "  return $jscomp$generator$context.yield(1, 1);"));
+
+    rewriteGeneratorBodyWithVars(
+        "for (var yieldResult; yieldResult === undefined; yieldResult = yield 1) {}",
+        "var yieldResult;",
+        lines(
+            "  if ($jscomp$generator$context.nextAddress == 1) {",
+            "    if (!(yieldResult === undefined)) return $jscomp$generator$context.jumpTo(0);",
+            "    return $jscomp$generator$context.yield(1,5);",
+            "  }",
+            "  yieldResult = $jscomp$generator$context.yieldResult;",
+            "  return $jscomp$generator$context.jumpTo(1);"));
 
     rewriteGeneratorBodyWithVars(
         "for (var j = 0; j < 10; j++) { yield j; }",
@@ -1043,13 +1085,14 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
   }
 
   public void testForIn() {
-    rewriteGeneratorBody(
+    rewriteGeneratorBodyWithVars(
         "for (var i in yield) { }",
+        "var i;",
         lines(
             "if ($jscomp$generator$context.nextAddress == 1) {",
             "  return $jscomp$generator$context.yield(undefined, 2);",
             "}",
-            "for (var i in $jscomp$generator$context.yieldResult) { }",
+            "for (i in $jscomp$generator$context.yieldResult) { }",
             "$jscomp$generator$context.jumpToEnd();"));
 
 
