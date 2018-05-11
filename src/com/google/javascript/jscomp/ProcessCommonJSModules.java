@@ -1199,7 +1199,9 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
           {
             // If this is a name declaration with multiple names, it will be split apart when
             // the parent is visited and then revisit the children.
-            if (NodeUtil.isNameDeclaration(n.getParent()) && n.getParent().hasMoreThanOneChild()) {
+            if (NodeUtil.isNameDeclaration(n.getParent())
+                && n.getParent().hasMoreThanOneChild()
+                && !NodeUtil.isAnyFor(n.getGrandparent())) {
               break;
             }
 
@@ -1694,7 +1696,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
         case LET:
         case CONST:
           // Multiple declaration - needs split apart.
-          if (parent.getChildCount() > 1) {
+          if (parent.hasMoreThanOneChild() && !NodeUtil.isAnyFor(parent.getParent())) {
             splitMultipleDeclarations(parent);
             parent = nameRef.getParent();
             newNameDeclaration = t.getScope().getVar(newName);
