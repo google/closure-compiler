@@ -25,6 +25,7 @@
  *
  * @see http://api.jquery.com/
  * @externs
+ * @suppress {strictMissingProperties}
  */
 
 /**

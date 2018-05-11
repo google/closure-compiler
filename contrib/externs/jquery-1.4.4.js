@@ -23,6 +23,7 @@
 *    <code>var elt = /** @type {Element} * / (foo.get(0));</code>
 * @see http://api.jquery.com/
 * @externs
+* @suppress {strictMissingProperties}
 */
 
 /** @typedef {(Window|Document|Element|Array.<Element>|string|jQueryObject)} */
