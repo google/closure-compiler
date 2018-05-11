@@ -2914,6 +2914,10 @@ public class Node implements Serializable {
   }
 
   public final boolean isNormalBlock() {
+    return isBlock();
+  }
+
+  public final boolean isBlock() {
     return this.token == Token.BLOCK;
   }
 
