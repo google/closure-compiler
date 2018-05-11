@@ -59,16 +59,10 @@
 package com.google.javascript.rhino.dtoa;
 
 import com.google.common.annotations.GwtIncompatible;
-import com.google.common.base.Preconditions;
-
 import java.math.BigInteger;
 
 @GwtIncompatible("unnecessarily complex")
 public class DToA {
-
-  private static char BASEDIGIT(int digit) {
-    return (char) ((digit >= 10) ? 'a' - 10 + digit : '0' + digit);
-  }
 
   private static final int
       DTOSTR_STANDARD = 0, /* Either fixed or exponential format; round-trip */
@@ -82,16 +76,11 @@ public class DToA {
   private static final int Exp_shift = 20;
   private static final int Exp_msk1 = 0x100000;
 
-  private static final long Frac_maskL = 0xfffffffffffffL;
-  private static final int Exp_shiftL = 52;
-  private static final long Exp_msk1L = 0x10000000000000L;
-
   private static final int Bias = 1023;
   private static final int P = 53;
 
   private static final int Exp_shift1 = 20;
   private static final int Exp_mask = 0x7ff00000;
-  private static final int Exp_mask_shifted = 0x7ff;
   private static final int Bndry_mask = 0xfffff;
   private static final int Log2P = 1;
 
@@ -225,153 +214,7 @@ public class DToA {
     return new BigInteger(dbl_bits);
   }
 
-  private static String JS_dtobasestr(int base, double d) {
-    if (!(2 <= base && base <= 36)) throw new IllegalArgumentException("Bad base: " + base);
 
-    /* Check for Infinity and NaN */
-    if (Double.isNaN(d)) {
-      return "NaN";
-    } else if (Double.isInfinite(d)) {
-      return (d > 0.0) ? "Infinity" : "-Infinity";
-    } else if (d == 0) {
-      // ALERT: should it distinguish -0.0 from +0.0 ?
-      return "0";
-    }
-
-    boolean negative;
-    if (d >= 0.0) {
-      negative = false;
-    } else {
-      negative = true;
-      d = -d;
-    }
-
-    /* Get the integer part of d including '-' sign. */
-    String intDigits;
-
-    double dfloor = Math.floor(d);
-    long lfloor = (long) dfloor;
-    if (lfloor == dfloor) {
-      // int part fits long
-      intDigits = Long.toString((negative) ? -lfloor : lfloor, base);
-    } else {
-      // BigInteger should be used
-      long floorBits = Double.doubleToLongBits(dfloor);
-      int exp = (int) (floorBits >> Exp_shiftL) & Exp_mask_shifted;
-      long mantissa;
-      if (exp == 0) {
-        mantissa = (floorBits & Frac_maskL) << 1;
-      } else {
-        mantissa = (floorBits & Frac_maskL) | Exp_msk1L;
-      }
-      if (negative) {
-        mantissa = -mantissa;
-      }
-      exp -= 1075;
-      BigInteger x = BigInteger.valueOf(mantissa);
-      if (exp > 0) {
-        x = x.shiftLeft(exp);
-      } else if (exp < 0) {
-        x = x.shiftRight(-exp);
-      }
-      intDigits = x.toString(base);
-    }
-
-    if (d == dfloor) {
-      // No fraction part
-      return intDigits;
-    } else {
-      /* We have a fraction. */
-
-      StringBuilder buffer; /* The output string */
-      int digit;
-      double df; /* The fractional part of d */
-      BigInteger b;
-
-      buffer = new StringBuilder();
-      buffer.append(intDigits).append('.');
-      df = d - dfloor;
-
-      long dBits = Double.doubleToLongBits(d);
-      int word0 = (int) (dBits >> 32);
-      int word1 = (int) (dBits);
-
-      int[] e = new int[1];
-      int[] bbits = new int[1];
-
-      b = d2b(df, e, bbits);
-      //            JS_ASSERT(e < 0);
-      /* At this point df = b * 2^e.  e must be less than zero because 0 < df < 1. */
-
-      int s2 = -(word0 >>> Exp_shift1 & Exp_mask >> Exp_shift1);
-      if (s2 == 0) s2 = -1;
-      s2 += Bias + P;
-      /* 1/2^s2 = (nextDouble(d) - d)/2 */
-      //            JS_ASSERT(-s2 < e);
-      BigInteger mlo = BigInteger.valueOf(1);
-      BigInteger mhi = mlo;
-      if ((word1 == 0)
-          && ((word0 & Bndry_mask) == 0)
-          && ((word0 & (Exp_mask & Exp_mask << 1)) != 0)) {
-        /* The special case.  Here we want to be within a quarter of the last input
-        significant digit instead of one half of it when the output string's value is less than d.  */
-        s2 += Log2P;
-        mhi = BigInteger.valueOf(1 << Log2P);
-      }
-
-      b = b.shiftLeft(e[0] + s2);
-      BigInteger s = BigInteger.valueOf(1);
-      s = s.shiftLeft(s2);
-      /* At this point we have the following:
-       *   s = 2^s2;
-       *   1 > df = b/2^s2 > 0;
-       *   (d - prevDouble(d))/2 = mlo/2^s2;
-       *   (nextDouble(d) - d)/2 = mhi/2^s2. */
-      BigInteger bigBase = BigInteger.valueOf(base);
-
-      boolean done = false;
-      do {
-        b = b.multiply(bigBase);
-        BigInteger[] divResult = b.divideAndRemainder(s);
-        b = divResult[1];
-        digit = (char) (divResult[0].intValue());
-        if (mlo == mhi) mlo = mhi = mlo.multiply(bigBase);
-        else {
-          mlo = mlo.multiply(bigBase);
-          mhi = mhi.multiply(bigBase);
-        }
-
-        /* Do we yet have the shortest string that will round to d? */
-        int j = b.compareTo(mlo);
-        /* j is b/2^s2 compared with mlo/2^s2. */
-        BigInteger delta = s.subtract(mhi);
-        int j1 = (delta.signum() <= 0) ? 1 : b.compareTo(delta);
-        /* j1 is b/2^s2 compared with 1 - mhi/2^s2. */
-        if (j1 == 0 && ((word1 & 1) == 0)) {
-          if (j > 0) digit++;
-          done = true;
-        } else if (j < 0 || (j == 0 && ((word1 & 1) == 0))) {
-          if (j1 > 0) {
-            /* Either dig or dig+1 would work here as the least significant digit.
-            Use whichever would produce an output value closer to d. */
-            b = b.shiftLeft(1);
-            j1 = b.compareTo(s);
-            if (j1
-                > 0) /* The even test (|| (j1 == 0 && (digit & 1))) is not here because it messes up odd base output
-                      * such as 3.5 in base 3.  */ digit++;
-          }
-          done = true;
-        } else if (j1 > 0) {
-          digit++;
-          done = true;
-        }
-        //                JS_ASSERT(digit < (uint32)base);
-        buffer.append(BASEDIGIT(digit));
-      } while (!done);
-
-      return buffer.toString();
-    }
-  }
 
   /* dtoa for IEEE arithmetic (dmg): convert double to ASCII string.
    *

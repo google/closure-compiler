@@ -876,7 +876,7 @@ class ExpressionDecomposer {
   }
 
 
-  private enum EvaluationDirection {FORWARD, REVERSE};
+  private enum EvaluationDirection {FORWARD, REVERSE}
 
   /**
    * Returns the order in which the given node's children should be evaluated.

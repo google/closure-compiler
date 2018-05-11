@@ -130,7 +130,7 @@ class FlowSensitiveInlineVariables implements CompilerPass, ScopedCallback {
       }
       return false;
     }
-  };
+  }
 
   // predicate that does not check for any ASSIGNs, only function calls and delete props
   private static final Predicate<Node> SIDE_EFFECT_PREDICATE = new SideEffectPredicate();
@@ -313,7 +313,7 @@ class FlowSensitiveInlineVariables implements CompilerPass, ScopedCallback {
         }
       }
     }
-  };
+  }
 
   /**
    * Gathers a list of possible candidates for inlining based only on

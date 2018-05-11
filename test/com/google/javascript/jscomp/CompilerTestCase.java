@@ -2086,6 +2086,7 @@ public abstract class CompilerTestCase extends TestCase {
       out.writeObject(injected);
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     @GwtIncompatible
     public void restoreState(InputStream inputStream) throws IOException, ClassNotFoundException {

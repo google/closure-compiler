@@ -1435,7 +1435,7 @@ public abstract class JSType implements Serializable {
    */
   public boolean isSubtypeWithoutStructuralTyping(JSType that) {
     return isSubtype(
-        (JSType) that, ImplCache.createWithoutStructuralTyping(), SubtypingMode.NORMAL);
+        that, ImplCache.createWithoutStructuralTyping(), SubtypingMode.NORMAL);
   }
 
   /**

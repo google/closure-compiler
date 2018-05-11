@@ -2499,6 +2499,7 @@ public class Node implements Serializable {
   }
 
   /** Returns the set of ES5 directives for this node. */
+  @SuppressWarnings("unchecked")
   @Nullable
   public final Set<String> getDirectives() {
     return (Set<String>) getProp(DIRECTIVES);

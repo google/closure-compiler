@@ -1014,8 +1014,7 @@ public final class TypeTransformationTest extends CompilerTypeTestCase {
       // Evaluate the type transformation
       TypeTransformation typeTransformation =
           new TypeTransformation(compiler, scope);
-      @SuppressWarnings({"rawtypes", "unchecked"})
-      JSType resultType = (JSType) typeTransformation.eval(ast, (ImmutableMap) typeVars, nameVars);
+      JSType resultType = typeTransformation.eval(ast, typeVars, nameVars);
       checkReportedWarningsHelper(expectedWarnings);
       assertTypeEquals(expectedType, resultType);
     }

@@ -1471,16 +1471,15 @@ class TypeInference
       if (type.isTypeTransformation()) {
         // Lazy initialization when the first type transformation is found
         if (ttlObj == null) {
-          ttlObj = new TypeTransformation(compiler, (TypedScope) scope.getDeclarationScope());
+          ttlObj = new TypeTransformation(compiler, scope.getDeclarationScope());
           typeVars = buildTypeVariables(inferredTypes);
           result = new LinkedHashMap<>();
         }
         // Evaluate the type transformation expression using the current
         // known types for the template type variables
-        @SuppressWarnings({"unchecked", "rawtypes"})
-        JSType transformedType = (JSType) ttlObj.eval(
+        JSType transformedType = ttlObj.eval(
             type.getTypeTransformation(),
-            (ImmutableMap) ImmutableMap.copyOf(typeVars));
+            ImmutableMap.copyOf(typeVars));
         result.put(type, transformedType);
         // Add the transformed type to the type variables
         typeVars.put(type.getReferenceName(), transformedType);

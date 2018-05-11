@@ -609,19 +609,6 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
     }
   }
 
-  private void addRelatedExtendedInterfaces(ObjectType instance, Set<ObjectType> set) {
-    FunctionType constructor = instance.getConstructor();
-    if (constructor != null) {
-      if (!set.add(instance)) {
-        return;
-      }
-
-      for (ObjectType interfaceType : constructor.getExtendedInterfaces()) {
-        addRelatedExtendedInterfaces(interfaceType, set);
-      }
-    }
-  }
-
   /** Returns interfaces directly extended by an interface */
   public Iterable<ObjectType> getExtendedInterfaces() {
     return extendedInterfaces;
@@ -1249,7 +1236,7 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
 
     if (subTypes != null) {
       for (int i = 0; i < subTypes.size(); i++) {
-        FunctionType subType = (FunctionType) subTypes.get(i);
+        FunctionType subType = subTypes.get(i);
         subTypes.set(i, JSType.toMaybeFunctionType(subType.resolve(reporter)));
       }
     }

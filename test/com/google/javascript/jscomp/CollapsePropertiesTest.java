@@ -1680,7 +1680,6 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
     test(
         "function a() {} () => { a.c = 5; return a.c; }",
         "function a() {} var a$c; () => { a$c = 5; return a$c; }");
-    ;
 
     // Reassign function property
     test(

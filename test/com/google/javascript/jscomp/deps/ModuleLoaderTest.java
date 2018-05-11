@@ -471,7 +471,7 @@ public final class ModuleLoaderTest extends TestCase {
                   }
                 });
 
-    assertUri("A/index.js", loader.resolve("A/index.js"));;
+    assertUri("A/index.js", loader.resolve("A/index.js"));
     assertUri("A/index.js", loader.resolve("B/index.js").resolveJsModule("../A/index.js"));
     assertUri("A/index.js", loader.resolve("app.js").resolveJsModule("./A/index.js"));
     assertUri("A/index.js", loader.resolve("folder/app.js").resolveJsModule("../A/index.js"));

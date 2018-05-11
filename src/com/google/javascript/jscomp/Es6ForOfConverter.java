@@ -156,7 +156,7 @@ public final class Es6ForOfConverter implements NodeTraversal.Callback, HotSwapC
         paramBuilder.addAlternate(argumentsType);
       }
       FunctionType makeIteratorType =
-          registry.createFunctionType((JSType) iteratorType, paramBuilder.build());
+          registry.createFunctionType(iteratorType, paramBuilder.build());
 
       // Put types on the $jscomp.makeIterator getprop
       Node getProp = call.getFirstChild();
