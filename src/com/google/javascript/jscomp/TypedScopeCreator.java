@@ -803,7 +803,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
         String qualifiedName = NodeUtil.getBestLValueName(keyNode);
         if (qualifiedName != null) {
           boolean inferred = keyType == null;
-          defineSlot(keyNode, objLit, qualifiedName, keyType, inferred);
+          defineSlot(keyNode, qualifiedName, keyType, inferred);
         } else if (keyType != null) {
           setDeferredType(keyNode, keyType);
         }
@@ -874,7 +874,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
     void defineCatch(Node n) {
       assertDefinitionNode(n, Token.CATCH);
       Node catchName = n.getFirstChild();
-      defineSlot(catchName, n, getDeclaredType(catchName.getJSDocInfo(), catchName, null));
+      defineSlot(catchName, getDeclaredType(catchName.getJSDocInfo(), catchName, null));
     }
 
     /**
@@ -890,11 +890,11 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
           report(JSError.make(n, MULTIPLE_VAR_DEF));
         }
         for (Node name : n.children()) {
-          defineName(name, n, name.getJSDocInfo());
+          defineName(name, name.getJSDocInfo());
         }
       } else {
         Node name = n.getFirstChild();
-        defineName(name, n, (info != null) ? info : name.getJSDocInfo());
+        defineName(name, (info != null) ? info : name.getJSDocInfo());
       }
     }
 
@@ -918,19 +918,17 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       // declaration. Otherwise, the declaration will happen in other
       // code paths.
       if (NodeUtil.isFunctionDeclaration(n)) {
-        defineSlot(n.getFirstChild(), n, functionType);
+        defineSlot(n.getFirstChild(), functionType);
       }
     }
 
     /**
      * Defines a variable based on the {@link Token#NAME} node passed.
      * @param name The {@link Token#NAME} node.
-     * @param var The parent of the {@code name} node, which must be a
-     *     {@link Token#VAR} node.
      * @param info the {@link JSDocInfo} information relating to this
      *     {@code name} node.
      */
-    private void defineName(Node name, Node var, JSDocInfo info) {
+    private void defineName(Node name, JSDocInfo info) {
       Node value = name.getFirstChild();
 
       // variable's type
@@ -939,7 +937,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
         // The variable's type will be inferred.
         type = name.isFromExterns() ? unknownType : null;
       }
-      defineSlot(name, var, type);
+      defineSlot(name, type);
     }
 
     /**
@@ -1214,30 +1212,27 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
     }
 
     /**
-     * Defines a typed variable. The defining node will be annotated with the
-     * variable's type or {@code null} if its type is inferred.
+     * Defines a typed variable. The defining node will be annotated with the variable's type or
+     * {@code null} if its type is inferred.
+     *
      * @param name the defining node. It must be a {@link Token#NAME}.
-     * @param parent the {@code name}'s parent.
      * @param type the variable's type. It may be {@code null}, in which case
-     *     the variable's type will be inferred.
      */
-    private void defineSlot(Node name, Node parent, JSType type) {
-      defineSlot(name, parent, type, type == null);
+    private void defineSlot(Node name, JSType type) {
+      defineSlot(name, type, type == null);
     }
 
     /**
-     * Defines a typed variable. The defining node will be annotated with the
-     * variable's type of {@link JSTypeNative#UNKNOWN_TYPE} if its type is
-     * inferred.
+     * Defines a typed variable. The defining node will be annotated with the variable's type of
+     * {@link JSTypeNative#UNKNOWN_TYPE} if its type is inferred.
      *
-     * Slots may be any variable or any qualified name in the global scope.
+     * <p>Slots may be any variable or any qualified name in the global scope.
      *
      * @param n the defining NAME or GETPROP node.
-     * @param parent the {@code n}'s parent.
-     * @param type the variable's type. It may be {@code null} if
-     *     {@code inferred} is {@code true}.
+     * @param type the variable's type. It may be {@code null} if {@code inferred} is {@code true}.
      */
-    void defineSlot(Node n, Node parent, JSType type, boolean inferred) {
+    void defineSlot(Node n, JSType type, boolean inferred) {
+      Node parent = n.getParent();
       checkArgument(inferred || type != null);
 
       // Only allow declarations of NAMEs and qualified names.
@@ -1251,22 +1246,19 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       } else {
         checkArgument(n.isGetProp() && (parent.isAssign() || parent.isExprResult()));
       }
-      defineSlot(n, parent, n.getQualifiedName(), type, inferred);
+      defineSlot(n, n.getQualifiedName(), type, inferred);
     }
-
 
     /**
      * Defines a symbol in the current scope.
      *
      * @param n the defining NAME or GETPROP or object literal key node.
-     * @param parent the {@code n}'s parent.
      * @param variableName The name that this should be known by.
-     * @param type the variable's type. It may be {@code null} if
-     *     {@code inferred} is {@code true}.
+     * @param type the variable's type. It may be {@code null} if {@code inferred} is {@code true}.
      * @param inferred Whether the type is inferred or declared.
      */
-    void defineSlot(Node n, Node parent, String variableName,
-        JSType type, boolean inferred) {
+    void defineSlot(Node n, String variableName, JSType type, boolean inferred) {
+      Node parent = n.getParent();
       checkArgument(!variableName.isEmpty());
 
       TypedScope scopeToDeclareIn = getLValueRootScope(n);
@@ -1843,7 +1835,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
 
         // If the property is already declared, the error will be
         // caught when we try to declare it in the current scope.
-        defineSlot(n, parent, valueType, inferred);
+        defineSlot(n, valueType, inferred);
       }
     }
 
@@ -1995,7 +1987,6 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
     void resolveStubDeclarations() {
       for (StubDeclaration stub : stubDeclarations) {
         Node n = stub.node;
-        Node parent = n.getParent();
         String qName = n.getQualifiedName();
         String propName = n.getLastChild().getString();
         String ownerName = stub.ownerName;
@@ -2010,7 +2001,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
         ObjectType ownerType = getObjectSlot(ownerName);
         JSType inheritedType = getInheritedInterfacePropertyType(ownerType, propName);
         JSType stubType = inheritedType == null ? unknownType : inheritedType;
-        defineSlot(n, parent, stubType, true);
+        defineSlot(n, stubType, true);
 
         if (ownerType != null && (isExtern || ownerType.isFunctionPrototypeType())) {
           // If this is a stub for a prototype, just declare it
@@ -2051,7 +2042,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
 
       typeRegistry.overwriteDeclaredType(currentScope, typedef, realType);
       if (candidate.isGetProp()) {
-        defineSlot(candidate, candidate.getParent(), getNativeType(NO_TYPE), false);
+        defineSlot(candidate, getNativeType(NO_TYPE), false);
       }
     }
   }
@@ -2177,7 +2168,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
                 // Make sure that the function is actually bleeding by checking
                 // if has already been declared.
                 && fnVar.getInitialValue() != fnNode)) {
-          defineSlot(fnNameNode, fnNode, fnNode.getJSType(), false);
+          defineSlot(fnNameNode, fnNode.getJSType(), false);
         }
       }
 
@@ -2220,7 +2211,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
               paramType = unknownType;
             }
 
-            defineSlot(astParameter, functionNode, paramType, inferred);
+            defineSlot(astParameter, paramType, inferred);
 
             if (jsDocParameter != null) {
               jsDocParameter = jsDocParameter.getNext();
