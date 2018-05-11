@@ -105,46 +105,6 @@ public class TranspilationPasses {
   }
 
   /**
-   * Adds all the ES6 transpilation passes which must run before NTI, because it doesn't
-   * understand the features that they transpile.
-   *
-   * TODO(b/72551201): Remove this method when NTI is removed.
-   */
-  public static void addEs6PassesBeforeNTI(List<PassFactory> passes) {
-    // Binary and octal literals are effectively transpiled by the parser.
-    // There's no transpilation we can do for the new regexp flags.
-    passes.add(
-        createFeatureRemovalPass(
-            "markEs6FeaturesNotRequiringTranspilationAsRemoved",
-            Feature.BINARY_LITERALS,
-            Feature.OCTAL_LITERALS,
-            Feature.REGEXP_FLAG_U,
-            Feature.REGEXP_FLAG_Y));
-    passes.add(es6NormalizeShorthandProperties);
-    passes.add(es6ConvertSuper);
-    passes.add(es6RenameVariablesInParamLists);
-    passes.add(es6SplitVariableDeclarations);
-    passes.add(es6RewriteDestructuring);
-    passes.add(es6RewriteArrowFunction);
-    passes.add(es6ExtractClasses);
-    passes.add(es6RewriteClass);
-    passes.add(earlyConvertEs6ToEs3);
-    passes.add(rewriteBlockScopedFunctionDeclaration);
-    passes.add(rewriteBlockScopedDeclaration);
-  }
-
-  /**
-   * Adds all transpilation passes that can run after NTI.
-   *
-   * TODO(b/72551201): Remove this method when NTI is removed.
-   */
-  public static void addEs6PassesAfterNTI(List<PassFactory> passes) {
-    passes.add(lateConvertEs6ToEs3);
-    passes.add(es6ForOf);
-    passes.add(rewriteGenerators);
-  }
-
-  /**
    * Adds the pass to inject ES6 polyfills, which goes after the late ES6 passes.
    */
   public static void addRewritePolyfillPass(List<PassFactory> passes) {
