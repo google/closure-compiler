@@ -847,6 +847,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         // These nodes require data flow analysis.
       case PARAM_LIST:
       case STRING_KEY:
+      case COMPUTED_PROP:
       case LABEL:
       case LABEL_NAME:
       case SWITCH:
@@ -1181,10 +1182,17 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     }
 
     // Structs must have unquoted keys and dicts must have quoted keys
+    // (we check computed properties in structs below)
     if (litType.isStruct() && key.isQuotedString()) {
       report(t, key, ILLEGAL_OBJLIT_KEY, "struct");
-    } else if (litType.isDict() && !key.isQuotedString()) {
+    } else if (litType.isDict() && !(key.isQuotedString() || key.isComputedProp())) {
       report(t, key, ILLEGAL_OBJLIT_KEY, "dict");
+    }
+
+    // Validate computed properties similarly to how we validate GETELEMs.
+    if (key.isComputedProp()) {
+      validator.expectIndexMatch(t, key, litType, getJSType(key.getFirstChild()));
+      return;
     }
 
     // TODO(johnlenz): Validate get and set function declarations are valid

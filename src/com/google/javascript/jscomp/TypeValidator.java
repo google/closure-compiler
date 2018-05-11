@@ -410,7 +410,7 @@ class TypeValidator implements Serializable {
   void expectStringOrNumberOrSymbol(NodeTraversal t, Node n, JSType type, String msg) {
     if (!type.matchesNumberContext()
         && !type.matchesStringContext()
-        && !type.matchesStringContext()) {
+        && !type.matchesSymbolContext()) {
       mismatch(t, n, msg, type, NUMBER_STRING_SYMBOL);
     } else if (this.strictOperatorChecks) {
       expectStringOrNumberOrSymbolStrict(n, type, msg);
@@ -493,19 +493,17 @@ class TypeValidator implements Serializable {
   }
 
   /**
-   * Expect that the first type can be addressed with GETELEM syntax,
-   * and that the second type is the right type for an index into the
-   * first type.
+   * Expect that the first type can be addressed with GETELEM syntax and that the second type is the
+   * right type for an index into the first type.
    *
    * @param t The node traversal.
-   * @param n The GETELEM node to issue warnings on.
-   * @param objType The type of the left side of the GETELEM.
-   * @param indexType The type inside the brackets of the GETELEM.
+   * @param n The GETELEM or COMPUTED_PROP node to issue warnings on.
+   * @param objType The type we're indexing into (the left side of the GETELEM).
+   * @param indexType The type inside the brackets of the GETELEM/COMPUTED_PROP.
    */
-  void expectIndexMatch(NodeTraversal t, Node n, JSType objType,
-                        JSType indexType) {
-    checkState(n.isGetElem(), n);
-    Node indexNode = n.getLastChild();
+  void expectIndexMatch(NodeTraversal t, Node n, JSType objType, JSType indexType) {
+    checkState(n.isGetElem() || n.isComputedProp(), n);
+    Node indexNode = n.isGetElem() ? n.getLastChild() : n.getFirstChild();
     if (objType.isStruct() && !isWellKnownSymbol(indexNode)) {
       report(JSError.make(indexNode,
                           ILLEGAL_PROPERTY_ACCESS, "'[]'", "struct"));

@@ -125,6 +125,10 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
           "JSC_ENUM_INITIALIZER_NOT_ENUM",
           "enum initializer must be an object literal or an enum");
 
+  static final DiagnosticType INVALID_ENUM_KEY =
+      DiagnosticType.warning(
+          "JSC_INVALID_ENUM_KEY", "enum key must be a string or numeric literal");
+
   static final DiagnosticType CTOR_INITIALIZER =
       DiagnosticType.warning(
           "JSC_CTOR_INITIALIZER_NOT_CTOR",
@@ -789,6 +793,10 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
         boolean declareOnOwner) {
       for (Node keyNode = objLit.getFirstChild(); keyNode != null;
            keyNode = keyNode.getNext()) {
+        if (keyNode.isComputedProp()) {
+          // Don't try defining computed properties on an object.
+          continue;
+        }
         Node value = keyNode.getFirstChild();
         String memberName = NodeUtil.getObjectLitKeyName(keyNode);
         JSDocInfo info = keyNode.getJSDocInfo();
@@ -1196,6 +1204,11 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
           // collect enum elements
           Node key = rValue.getFirstChild();
           while (key != null) {
+            if (key.isComputedProp()) {
+              report(JSError.make(key, INVALID_ENUM_KEY));
+              key = key.getNext();
+              continue;
+            }
             String keyName = key.getString();
             Preconditions.checkNotNull(keyName, "Invalid enum key: %s", key);
             enumType.defineElement(keyName, key);

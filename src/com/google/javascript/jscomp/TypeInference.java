@@ -931,6 +931,10 @@ class TypeInference
         NodeUtil.getBestLValue(n));
     for (Node name = n.getFirstChild(); name != null;
          name = name.getNext()) {
+      if (name.isComputedProp()) {
+        // Don't define computed properties as inferred properties on the object
+        continue;
+      }
       String memberName = NodeUtil.getObjectLitKeyName(name);
       if (memberName != null) {
         JSType rawValueType =  name.getFirstChild().getJSType();

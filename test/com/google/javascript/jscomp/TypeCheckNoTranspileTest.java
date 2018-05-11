@@ -949,6 +949,98 @@ public final class TypeCheckNoTranspileTest extends CompilerTypeTestCase {
             "required: number"));
   }
 
+  public void testComputedProp1() {
+    testTypes("var i = 1; var obj = { ['var' + i]: i, };");
+  }
+
+  public void testComputedProp2a() {
+    // Computed properties do type inference within
+    testTypes(
+        lines("var n; var obj = {[n = 'foo']: i}; var /** number */ m = n;"),
+        lines(
+            "initializing variable", // preserve new line
+            "found   : string",
+            "required: number"));
+  }
+
+  public void testComputedProp2b() {
+    // Computed prop type checks within
+    testTypes(
+        lines(
+            "var /** number */ n = 1;", // preserve new line
+            "var obj = {",
+            "  [n = 'foo']: i",
+            "};"),
+        lines(
+            "assignment", // preserve new line
+            "found   : string",
+            "required: number"));
+  }
+
+  public void testComputedProp3() {
+    // Computed prop does not exist as obj prop
+    testTypes(
+        lines("var i = 1; var obj = { ['var' + i]: i }; var x = obj.var1"),
+        "Property var1 never defined on obj");
+  }
+
+  public void testComputedProp3b() {
+    // Computed prop does not exist as obj prop even when a simple string literal
+    testTypes(
+        lines("var obj = { ['static']: 1 }; var /** number */ x = obj.static"),
+        "Property static never defined on obj");
+  }
+
+  public void testComputedProp_symbol() {
+    testTypes("var sym1 = Symbol('a'); var obj = {[sym1]: 1};");
+  }
+
+  public void testComputedProp_number() {
+    testTypes("var obj = {[0]: 1};");
+  }
+
+  public void testComputedProp_badKeyType() {
+    testTypes(
+        "var foo = {}; var bar = {[foo]: 3};",
+        lines(
+            "property access", // preserve newline
+            "found   : {}",
+            "required: (string|symbol)"));
+  }
+
+  // TODO(b/78013196): Emit a warning for a restricted index type
+  public void testComputedProp_restrictedIndexType() {
+    testTypes("var /** !Object<string, *> */ obj = {[1]: 1};");
+  }
+
+  // TODO(b/78013196): Emit a warning here for a type mismatch
+  // (Note - this also doesn't warn given non-computed properties.)
+  public void testComputedProp_incorrectValueType1() {
+    testTypes("var /** !Object<string, number> */ obj = {['x']: 'not numeric'};");
+  }
+
+  public void testComputedProp_incorrectValueType2() {
+    // TODO(lharker): should we be emitting a type mismatch warning here?
+    testTypes("var x = { /** @type {string} */ [1]: 12 };");
+  }
+
+  public void testComputedProp_struct1() {
+    testTypes("/** @struct */ var obj = {[1 + 2]: 3};", "Cannot do '[]' access on a struct");
+  }
+
+  public void testComputedProp_struct2() {
+    // Allow Symbol properties in a struct
+    testTypes("/** @struct */ var obj = {[Symbol.iterator]: function() {}};");
+  }
+
+  public void testComputedProp_dict() {
+    testTypes("/** @dict */ var obj = {[1]: 2};");
+  }
+
+  public void testComputedProp_enum() {
+    testTypes("/** @enum */ var obj = {[1]: 2};", "enum key must be a string or numeric literal");
+  }
+
   public void testTemplateLiteral1() {
     testTypes(
         lines(
