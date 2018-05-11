@@ -21,6 +21,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.javascript.rhino.jstype.JSTypeNative.ARRAY_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.BOOLEAN_TYPE;
+import static com.google.javascript.rhino.jstype.JSTypeNative.ITERABLE_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NULL_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NULL_VOID;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NUMBER_TYPE;
@@ -2206,10 +2207,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         return;
       }
       actualYieldType =
-          actualYieldType
-              .autobox()
-              .getTemplateTypeMap()
-              .getResolvedTemplateType(typeRegistry.getIterableTemplate());
+          actualYieldType.autobox().getInstantiatedTypeArgument(getNativeType(ITERABLE_TYPE));
     }
 
     // verifying

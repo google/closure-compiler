@@ -102,13 +102,10 @@ public final class Es6ForOfConverter implements NodeTraversal.Callback, HotSwapC
       // to consider some way of unifying rather than simply looking at the nominal type.
       ObjectType iterableType = iterable.getJSType().autobox().toMaybeObjectType();
       if (iterableType != null) {
-        // TODO(lharker): create a simpler way to get the resolved template type (something like
-        // TypeI.getInstantiatedTypeArgument)
         // This will be the unknown type if iterableType is not actually a subtype of Iterable
         typeParam =
-            iterableType
-                .getTemplateTypeMap()
-                .getResolvedTemplateType(registry.getIterableTemplate());
+            iterableType.getInstantiatedTypeArgument(
+                registry.getNativeType(JSTypeNative.ITERABLE_TYPE));
       }
     }
     JSType iteratorType = createGenericType(JSTypeNative.ITERATOR_TYPE, typeParam);

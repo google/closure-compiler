@@ -831,8 +831,4 @@ public abstract class ObjectType
     // so we don't need to change anything.
     return this;
   }
-
-  public JSType getInstantiatedTypeArgument(JSType supertype) {
-    throw new UnsupportedOperationException();
-  }
 }

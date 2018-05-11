@@ -45,6 +45,7 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.JSDocInfo;
 import java.io.Serializable;
@@ -1926,5 +1927,18 @@ public abstract class JSType implements Serializable {
      * use in cases where a single reference type is expected (e.g. 'extends' and 'implements').
      */
     IMPLICIT,
+  }
+
+  /**
+   * Returns the template type argument in this type's map corresponding to the supertype's template
+   * parameter, or the UNKNOWN_TYPE if the supertype template key is not present.
+   *
+   * <p>Note: this only supports arguments that have a singleton list of template keys, and will
+   * throw an exception for arguments with zero or multiple or template keys.
+   */
+  public JSType getInstantiatedTypeArgument(JSType supertype) {
+    TemplateType templateType =
+        Iterables.getOnlyElement(supertype.getTemplateTypeMap().getTemplateKeys());
+    return getTemplateTypeMap().getResolvedTemplateType(templateType);
   }
 }

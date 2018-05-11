@@ -22,6 +22,7 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.ARRAY_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.BOOLEAN_OBJECT_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.BOOLEAN_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.CHECKED_UNKNOWN_TYPE;
+import static com.google.javascript.rhino.jstype.JSTypeNative.ITERABLE_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NULL_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NUMBER_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NUMBER_VALUE_OR_OBJECT_TYPE;
@@ -257,11 +258,8 @@ class TypeInference
             } else {
               // for/of. The type of `item` is the type parameter of the Iterable type.
               JSType objType = getJSType(obj).autobox();
-              JSType newType =
-                  objType
-                      .getTemplateTypeMap()
-                      // returns the UNKNOWN_TYPE if it can't find the Iterable template
-                      .getResolvedTemplateType(registry.getIterableTemplate());
+              // NOTE: this returns the UNKNOWN_TYPE if objType does not implement Iterable
+              JSType newType = objType.getInstantiatedTypeArgument(getNativeType(ITERABLE_TYPE));
 
               // Redeclare the loop var. Note that if we can't determine the type of the "object"
               // we declare the var as the unknown type and let TypeCheck warn for using a non-
