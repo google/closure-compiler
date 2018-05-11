@@ -612,6 +612,13 @@ class CheckAccessControls extends AbstractPostOrderCallback
     return ctor == null ? obj : ctor.getInstanceType();
   }
 
+  private JSType typeOrUnknown(JSType type) {
+    if (type == null) {
+      return typeRegistry.getNativeType(JSTypeNative.UNKNOWN_TYPE);
+    }
+    return type;
+  }
+
   /**
    * Reports an error if the given property is not visible in the current
    * context.
@@ -625,7 +632,8 @@ class CheckAccessControls extends AbstractPostOrderCallback
       return;
     }
 
-    ObjectType referenceType = castToObject(dereference(getprop.getFirstChild().getJSType()));
+    JSType rawReferenceType = typeOrUnknown(getprop.getFirstChild().getJSType()).autobox();
+    ObjectType referenceType = castToObject(rawReferenceType);
 
     String propertyName = getprop.getLastChild().getString();
     boolean isPrivateByConvention = isPrivateByConvention(propertyName);
@@ -667,19 +675,19 @@ class CheckAccessControls extends AbstractPostOrderCallback
       }
     }
 
+    JSType reportType = rawReferenceType;
     if (objectType != null) {
       Node node = objectType.getOwnPropertyDefSite(propertyName);
       if (node == null) {
         // Assume the property is public.
         return;
       }
+      reportType = objectType;
       definingSource = node.getStaticSourceFile();
       isClassType = objectType.getOwnPropertyJSDocInfo(propertyName).isConstructor();
-    } else if (isPrivateByConvention) {
+    } else if (!isPrivateByConvention && fileOverviewVisibility == null) {
       // We can only check visibility references if we know what file
       // it was defined in.
-      objectType = referenceType;
-    } else if (fileOverviewVisibility == null) {
       // Otherwise just assume the property is public.
       return;
     }
@@ -695,7 +703,7 @@ class CheckAccessControls extends AbstractPostOrderCallback
           parent,
           visibility,
           fileOverviewVisibility,
-          objectType,
+          reportType,
           sameInput);
     } else {
       checkNonOverriddenPropertyVisibility(
@@ -704,7 +712,7 @@ class CheckAccessControls extends AbstractPostOrderCallback
           parent,
           visibility,
           isClassType,
-          objectType,
+          reportType,
           referenceSource,
           definingSource);
     }
@@ -731,7 +739,7 @@ class CheckAccessControls extends AbstractPostOrderCallback
       Node parent,
       Visibility visibility,
       Visibility fileOverviewVisibility,
-      ObjectType objectType,
+      JSType objectType,
       boolean sameInput) {
     // Check an ASSIGN statement that's trying to override a property
     // on a superclass.
@@ -766,7 +774,7 @@ class CheckAccessControls extends AbstractPostOrderCallback
       Node parent,
       Visibility visibility,
       boolean isClassType,
-      ObjectType objectType,
+      JSType objectType,
       StaticSourceFile referenceSource,
       StaticSourceFile definingSource) {
     // private access is always allowed in the same file.
