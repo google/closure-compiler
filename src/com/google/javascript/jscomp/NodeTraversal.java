@@ -1050,6 +1050,7 @@ public class NodeTraversal {
   }
 
   /** Gets the control flow graph for the current JS scope. */
+  @SuppressWarnings("unchecked")  // The type is always ControlFlowGraph<Node>
   public ControlFlowGraph<Node> getControlFlowGraph() {
     ControlFlowGraph<Node> result;
     Object o = cfgs.peek();
@@ -1077,6 +1078,7 @@ public class NodeTraversal {
     }
   }
 
+  @SuppressWarnings("unchecked") // The type is always ControlFlowGraph<Node>
   private Node getCfgRoot() {
     Node result;
     Object o = cfgs.peek();
