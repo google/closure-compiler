@@ -17,6 +17,7 @@
 /**
  * @fileoverview Externs file for the Iframes library.
  * @externs
+ * @suppress {strictMissingProperties}
  */
 
 
