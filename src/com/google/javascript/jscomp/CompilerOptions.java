@@ -2647,6 +2647,10 @@ public class CompilerOptions implements Serializable {
     this.sourceMapIncludeSourcesContent = sourceMapIncludeSourcesContent;
   }
 
+  public void setParseInlineSourceMaps(boolean parseInlineSourceMaps) {
+    this.parseInlineSourceMaps = parseInlineSourceMaps;
+  }
+
   public void setSourceMapDetailLevel(SourceMap.DetailLevel sourceMapDetailLevel) {
     this.sourceMapDetailLevel = sourceMapDetailLevel;
   }
