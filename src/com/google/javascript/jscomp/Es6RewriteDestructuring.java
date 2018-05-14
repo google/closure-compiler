@@ -67,9 +67,6 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
       case PARAM_LIST:
         visitParamList(n, parent);
         break;
-      case FOR_OF:
-        visitForOf(n);
-        break;
       default:
         break;
     }
@@ -213,13 +210,6 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
     }
     checkState(TokenStream.isJSIdentifier(tempVarName));
     return tempVarName;
-  }
-
-  private void visitForOf(Node node) {
-    Node lhs = node.getFirstChild();
-    if (lhs.isDestructuringLhs()) {
-      visitDestructuringPatternInEnhancedFor(lhs.getFirstChild());
-    }
   }
 
   private void visitPattern(NodeTraversal t, Node pattern, Node parent) {
