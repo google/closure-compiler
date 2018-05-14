@@ -15,16 +15,27 @@
  */
 package com.google.javascript.jscomp;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import com.google.javascript.jscomp.deps.ModuleLoader;
+import java.util.List;
 
 
 public final class Es6RewriteModulesToCommonJsModulesTest extends CompilerTestCase {
+  private List<String> moduleRoots;
+  private ModuleLoader.ResolutionMode resolutionMode;
+  private ImmutableMap<String, String> prefixReplacements;
+
   @Override
   protected void setUp() throws Exception {
     super.setUp();
     // ECMASCRIPT5 to trigger module processing after parsing.
     setLanguage(LanguageMode.ECMASCRIPT_2015, LanguageMode.ECMASCRIPT5);
     enableRunTypeCheckAfterProcessing();
+    moduleRoots = ImmutableList.of();
+    resolutionMode = ModuleLoader.ResolutionMode.BROWSER;
+    prefixReplacements = ImmutableMap.of();
   }
 
   @Override
@@ -33,6 +44,9 @@ public final class Es6RewriteModulesToCommonJsModulesTest extends CompilerTestCa
     // ECMASCRIPT5 to Trigger module processing after parsing.
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
     options.setWarningLevel(DiagnosticGroups.LINT_CHECKS, CheckLevel.ERROR);
+    options.setModuleRoots(moduleRoots);
+    options.setModuleResolutionMode(resolutionMode);
+    options.setBrowserResolverPrefixReplacements(prefixReplacements);
     return options;
   }
 
@@ -309,46 +323,46 @@ public final class Es6RewriteModulesToCommonJsModulesTest extends CompilerTestCa
 
   public void testImport() {
     test(
-        "import * as x from 'other'; use(x, x.y);",
+        "import * as x from 'other.js'; use(x, x.y);",
         lines(
             "$jscomp.registerAndLoadModule(function($$require, $$exports, $$module) {",
             "  'test pragma';",
-            "  var module$other = $$require('other');",
+            "  var module$other = $$require('other.js');",
             "  use(module$other, module$other.y);",
-            "}, 'testcode', ['other']);"));
+            "}, 'testcode', ['other.js']);"));
 
     test(
-        "import Default, {x, y as z} from './././bogus'; use(x, z, Default);",
+        "import Default, {x, y as z} from 'bogus.js'; use(x, z, Default);",
         lines(
             "$jscomp.registerAndLoadModule(function($$require, $$exports, $$module) {",
             "  'test pragma';",
-            "  var module$bogus = $$require('./././bogus');",
+            "  var module$bogus = $$require('bogus.js');",
             "  use(module$bogus.x, module$bogus.y, module$bogus.default);",
-            "}, 'testcode', ['./././bogus']);"));
+            "}, 'testcode', ['bogus.js']);"));
 
     test(
-        "import First from 'other'; import {Second} from 'other'; use(First, Second);",
+        "import First from 'other.js'; import {Second} from 'other.js'; use(First, Second);",
         lines(
             "$jscomp.registerAndLoadModule(function($$require, $$exports, $$module) {",
             "  'test pragma';",
-            "  var module$other = $$require('other');",
+            "  var module$other = $$require('other.js');",
             "  use(module$other.default, module$other.Second);",
-            "}, 'testcode', ['other']);"));
+            "}, 'testcode', ['other.js']);"));
 
     test(
-        "import First from 'first'; import {Second} from 'second'; use(First, Second);",
+        "import First from 'first.js'; import {Second} from 'second.js'; use(First, Second);",
         lines(
             "$jscomp.registerAndLoadModule(function($$require, $$exports, $$module) {",
             "  'test pragma';",
-            "  var module$first = $$require('first');",
-            "  var module$second = $$require('second');",
+            "  var module$first = $$require('first.js');",
+            "  var module$second = $$require('second.js');",
             "  use(module$first.default, module$second.Second);",
-            "}, 'testcode', ['first', 'second']);"));
+            "}, 'testcode', ['first.js', 'second.js']);"));
   }
 
   public void testImportAndExport() {
     test(
-        "export var x; import {y} from 'other';",
+        "export var x; import {y} from 'other.js';",
         lines(
             "$jscomp.registerAndLoadModule(function($$require, $$exports, $$module) {",
             "  'test pragma';",
@@ -360,12 +374,12 @@ public final class Es6RewriteModulesToCommonJsModulesTest extends CompilerTestCa
             "      },",
             "    },",
             "  });",
-            "  var module$other = $$require('other');",
+            "  var module$other = $$require('other.js');",
             "  var x;",
-            "}, 'testcode', ['other']);"));
+            "}, 'testcode', ['other.js']);"));
 
     test(
-        "import {y} from 'other'; export var x;",
+        "import {y} from 'other.js'; export var x;",
         lines(
             "$jscomp.registerAndLoadModule(function($$require, $$exports, $$module) {",
             "  'test pragma';",
@@ -377,12 +391,12 @@ public final class Es6RewriteModulesToCommonJsModulesTest extends CompilerTestCa
             "      },",
             "    },",
             "  });",
-            "  var module$other = $$require('other');",
+            "  var module$other = $$require('other.js');",
             "  var x;",
-            "}, 'testcode', ['other']);"));
+            "}, 'testcode', ['other.js']);"));
 
     test(
-        "import {y as Y} from 'other'; export {Y as X};",
+        "import {y as Y} from 'other.js'; export {Y as X};",
         lines(
             "$jscomp.registerAndLoadModule(function($$require, $$exports, $$module) {",
             "  'test pragma';",
@@ -394,13 +408,13 @@ public final class Es6RewriteModulesToCommonJsModulesTest extends CompilerTestCa
             "      },",
             "    },",
             "  });",
-            "  var module$other = $$require('other');",
-            "}, 'testcode', ['other']);"));
+            "  var module$other = $$require('other.js');",
+            "}, 'testcode', ['other.js']);"));
   }
 
   public void testExportFrom() {
     test(
-        "export {x, y as z} from 'other';",
+        "export {x, y as z} from 'other.js';",
         lines(
             "$jscomp.registerAndLoadModule(function($$require, $$exports, $$module) {",
             "  'test pragma';",
@@ -418,8 +432,8 @@ public final class Es6RewriteModulesToCommonJsModulesTest extends CompilerTestCa
             "      },",
             "    },",
             "  });",
-            "  var module$other = $$require('other');",
-            "}, 'testcode', ['other']);"));
+            "  var module$other = $$require('other.js');",
+            "}, 'testcode', ['other.js']);"));
   }
 
   public void testExportWithArguments() {
@@ -459,5 +473,50 @@ public final class Es6RewriteModulesToCommonJsModulesTest extends CompilerTestCa
                     "  });",
                     "  var x;",
                     "}, 'https://example.domain.google.com/test.js', []);"))));
+  }
+
+  public void testRegisteredPathDoesNotIncludeModuleRoot() {
+    moduleRoots = ImmutableList.of("module/root/");
+
+    test(
+        srcs(SourceFile.fromCode("module/root/test.js", "export {};")),
+        expected(
+            SourceFile.fromCode(
+                "module/root/test.js",
+                lines(
+                    "$jscomp.registerAndLoadModule(function($$require, $$exports, $$module) {",
+                    "  'test pragma';",
+                    "}, 'test.js', []);"))));
+  }
+
+  public void testImportPathDoesNotIncludeModuleRoot() {
+    moduleRoots = ImmutableList.of("module/root/");
+
+    test(
+        srcs(SourceFile.fromCode("not/root/test.js", "import * as foo from 'module/root/foo.js';")),
+        expected(
+            SourceFile.fromCode(
+                "not/root/test.js",
+                lines(
+                    "$jscomp.registerAndLoadModule(function($$require, $$exports, $$module) {",
+                    "  'test pragma';",
+                    "  var module$foo = $$require('foo.js');",
+                    "}, 'not/root/test.js', ['foo.js']);"))));
+  }
+
+  public void testImportPathWithBrowserPrefixReplacementResolution() {
+    resolutionMode = ModuleLoader.ResolutionMode.BROWSER_WITH_TRANSFORMED_PREFIXES;
+    prefixReplacements = ImmutableMap.of("@root/", "");
+
+    test(
+        srcs(SourceFile.fromCode("not/root/test.js", "import * as foo from '@root/foo.js';")),
+        expected(
+            SourceFile.fromCode(
+                "not/root/test.js",
+                lines(
+                    "$jscomp.registerAndLoadModule(function($$require, $$exports, $$module) {",
+                    "  'test pragma';",
+                    "  var module$foo = $$require('foo.js');",
+                    "}, 'not/root/test.js', ['foo.js']);"))));
   }
 }

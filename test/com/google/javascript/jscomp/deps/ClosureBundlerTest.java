@@ -142,7 +142,7 @@ public final class ClosureBundlerTest extends TestCase {
             + "export {x as y};"
             + "var local;\n"
             + "export function foo() { return local; }\n";
-    ClosureBundler bundler = new ClosureBundler().withPath("foo.js");
+    ClosureBundler bundler = new ClosureBundler().withPath("nested/path/foo.js");
     StringBuilder sb = new StringBuilder();
     bundler.appendRuntimeTo(sb);
     bundler.appendTo(
@@ -160,13 +160,13 @@ public final class ClosureBundlerTest extends TestCase {
                 + "  Object.defineProperties($$exports, {foo:{enumerable:true, get:function() {\n"
                 + "    return foo;\n"
                 + "  }}, y:{enumerable:true, get:function() {\n"
-                + "    return module$other.x;\n"
+                + "    return module$nested$path$other.x;\n"
                 + "  }}});\n"
-                + "  var module$other = $$require(\"./other.js\");\n"
+                + "  var module$nested$path$other = $$require(\"nested/path/other.js\");\n"
                 + "  var local;\n"
                 + "  function foo() {\n"
                 + "    return local;\n"
                 + "  }\n"
-                + "}, \"foo.js\", [\"./other.js\"]);\n");
+                + "}, \"nested/path/foo.js\", [\"nested/path/other.js\"]);\n");
   }
 }

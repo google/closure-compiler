@@ -20,6 +20,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.CheckLevel;
 import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerOptions;
@@ -33,6 +34,8 @@ import com.google.javascript.jscomp.SourceFile;
 import com.google.javascript.jscomp.SourceMap;
 import com.google.javascript.jscomp.VariableRenamingPolicy;
 import com.google.javascript.jscomp.bundle.TranspilationException;
+import com.google.javascript.jscomp.deps.ModuleLoader;
+import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
 import com.google.javascript.rhino.Node;
 import java.io.IOException;
 import java.net.URI;
@@ -46,7 +49,7 @@ public final class BaseTranspiler implements Transpiler {
   private final CompilerSupplier compilerSupplier;
   private final String runtimeLibraryName;
 
-  BaseTranspiler(CompilerSupplier compilerSupplier, String runtimeLibraryName) {
+  public BaseTranspiler(CompilerSupplier compilerSupplier, String runtimeLibraryName) {
     this.compilerSupplier = checkNotNull(compilerSupplier);
     this.runtimeLibraryName = checkNotNull(runtimeLibraryName);
   }
@@ -173,10 +176,36 @@ public final class BaseTranspiler implements Transpiler {
   }
 
   /**
-   * CompilerSupplier that only transforms EcmaScript Modules into a form that can be saftely
+   * CompilerSupplier that only transforms EcmaScript Modules into a form that can be safely
    * transformed on a file by file basis and concatenated.
    */
   public static class EsmToCjsCompilerSupplier extends CompilerSupplier {
+
+    private final ResolutionMode moduleResolution;
+    private final ImmutableList<String> moduleRoots;
+    private final ImmutableMap<String, String> prefixReplacements;
+
+    public EsmToCjsCompilerSupplier() {
+      // Use the default resolution mode
+      this(new CompilerOptions().getModuleResolutionMode(), ImmutableList.of(), ImmutableMap.of());
+    }
+
+    /**
+     * Accepts commonly overridden options for ES6 modules to avoid needed to subclass.
+     *
+     * @param moduleResolution module resolution for resolving import paths
+     * @param prefixReplacements prefix replacements for when moduleResolution is {@link
+     *     ModuleLoader.ResolutionMode#BROWSER_WITH_TRANSFORMED_PREFIXES}
+     */
+    public EsmToCjsCompilerSupplier(
+        ModuleLoader.ResolutionMode moduleResolution,
+        ImmutableList<String> moduleRoots,
+        ImmutableMap<String, String> prefixReplacements) {
+      this.moduleResolution = moduleResolution;
+      this.moduleRoots = moduleRoots;
+      this.prefixReplacements = prefixReplacements;
+    }
+
     @Override
     public CompileResult compile(URI path, String code) {
       CompilerOptions options = new CompilerOptions();
@@ -185,6 +214,9 @@ public final class BaseTranspiler implements Transpiler {
       options.setSourceMapOutputPath("/dev/null");
       options.setSourceMapIncludeSourcesContent(true);
       options.setPrettyPrint(true);
+      options.setModuleResolutionMode(moduleResolution);
+      options.setModuleRoots(moduleRoots);
+      options.setBrowserResolverPrefixReplacements(prefixReplacements);
 
       // Create a compiler and run specifically this one pass on it.
       Compiler compiler = compiler();

@@ -20,6 +20,7 @@ import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
+import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.jscomp.deps.ModuleLoader.ModulePath;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
@@ -83,6 +84,21 @@ public class Es6RewriteModulesToCommonJsModules implements CompilerPass {
   }
 
   /**
+   * Normalizes a registered or import path.
+   *
+   * <p>Absolute import paths need to match the registered path exactly. Some {@link
+   * ModuleLoader.ModulePath#resolveModuleAsPath(String)} will have a leading slash and some won't.
+   * Ditto with registered paths (depends on your --js arguments). So in order to have everything
+   * line up AND preserve schemes (if they exist) then just strip leading /.
+   */
+  private static String normalizePath(String path) {
+    if (path.startsWith("/")) {
+      return path.substring(1);
+    }
+    return path;
+  }
+
+  /**
    * Rewrites a single ES6 module into a CommonJS like module designed to be loaded in the
    * compiler's module runtime.
    */
@@ -110,7 +126,7 @@ public class Es6RewriteModulesToCommonJsModules implements CompilerPass {
     public void visit(NodeTraversal t, Node n, Node parent) {
       switch (n.getToken()) {
         case IMPORT:
-          visitImport(n);
+          visitImport(t.getInput().getPath(), n);
           break;
         case EXPORT:
           visitExport(t, n, parent);
@@ -293,11 +309,16 @@ public class Es6RewriteModulesToCommonJsModules implements CompilerPass {
               IR.call(
                   IR.getprop(IR.name("$jscomp"), IR.string("registerAndLoadModule")),
                   moduleFunction,
-                  // Specifically use the input's name rather than modulePath.toString(). The former
-                  // is the raw path and the latter is encoded (special characters are replaced).
-                  // This is designed to run in a web browser and we want to preserve the URL given
-                  // to us. But the encodings will replace : with - due to windows.
-                  IR.string(t.getInput().getName()),
+                  // By default the input's path is escaped, so make a new path that isn't escaped
+                  // in order to preserve characters that may be invalid on certain file systems but
+                  // valid in a browser URL. Resolving this path also enables removing module roots
+                  // from this path.
+                  IR.string(
+                      normalizePath(
+                          compiler
+                              .getModuleLoader()
+                              .resolveWithoutEscapingPath(t.getInput().getName())
+                              .toString())),
                   shallowDeps));
 
       script.addChildToBack(exprResult.useSourceInfoIfMissingFromForTree(script));
@@ -341,8 +362,12 @@ public class Es6RewriteModulesToCommonJsModules implements CompilerPass {
       compiler.reportChangeToChangeScope(getterFunction);
     }
 
-    private void visitImport(Node importDecl) {
-      importRequests.add(importDecl.getLastChild().getString());
+    private void visitImport(ModuleLoader.ModulePath path, Node importDecl) {
+      // Normalize the import path according to the module resolution scheme so that bundles are
+      // compatible with the compiler's module loader options.
+      importRequests.add(
+          normalizePath(
+              path.resolveModuleAsPath(importDecl.getLastChild().getString()).toString()));
       imports.add(importDecl);
     }
 
