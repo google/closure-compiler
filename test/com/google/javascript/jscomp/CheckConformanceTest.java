@@ -76,7 +76,6 @@ public final class CheckConformanceTest extends CompilerTestCase {
   protected void setUp() throws Exception {
     super.setUp();
     enableTypeCheck();
-    enableTranspile();
     enableClosurePass();
     enableClosurePassForExpected();
     enableRewriteClosureCode();
@@ -645,6 +644,8 @@ public final class CheckConformanceTest extends CompilerTestCase {
   }
 
   public void testBannedProperty_recordType() {
+    // TODO(b/76025401): remove the enableTranspile() call once we natively typecheck classes
+    enableTranspile();
     configuration = lines(
         "requirement: {",
         "  type: BANNED_PROPERTY",
@@ -1706,6 +1707,8 @@ public final class CheckConformanceTest extends CompilerTestCase {
   }
 
   public void testRequireUseStrictEs6Module() {
+    // TODO(b/76025401): remove the enableTranspile() call once we natively typecheck classes
+    enableTranspile();
     configuration = config(rule("RequireUseStrict"), "My rule message");
 
     testNoWarning(
@@ -1832,6 +1835,12 @@ public final class CheckConformanceTest extends CompilerTestCase {
 
     testWarning(
         "goog.dom.createDom('iframe', x ? {'src': src} : 'class');",
+        CheckConformance.CONFORMANCE_POSSIBLE_VIOLATION,
+        "Possible violation: BanCreateDom Message");
+
+    // Give a possible violation message if there are computed properties.
+    testWarning(
+        "goog.dom.createDom('iframe', {['not_src']: src});",
         CheckConformance.CONFORMANCE_POSSIBLE_VIOLATION,
         "Possible violation: BanCreateDom Message");
 

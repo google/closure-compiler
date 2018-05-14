@@ -135,6 +135,26 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
     testSame("/** @deprecated */ function f() {} /** @deprecated */ function g() { f(); }");
   }
 
+  public void testNoWarningInDeprecatedMethod() {
+    testSame("/** @deprecated */ function f() {} var obj = {/** @deprecated */ g() { f(); }};");
+  }
+
+  public void testWarningInNormalMethod() {
+    testDepName(
+        "/** @deprecated Msg */ function f() {} var obj = {g() { f(); }};",
+        "Variable f has been deprecated: Msg");
+  }
+
+  public void testNoWarningInDeprecatedComputedMethod() {
+    testSame("/** @deprecated */ function f() {} var obj = {/** @deprecated */ ['g']() { f(); }};");
+  }
+
+  public void testWarningInNormalComputedMethod() {
+    testDepName(
+        "/** @deprecated Msg */ function f() {} var obj = {['g']() { f(); }};",
+        "Variable f has been deprecated: Msg");
+  }
+
   public void testWarningInNormalClass() {
     testDepName(
         "/** @deprecated FooBar */ function f() {}"
@@ -783,6 +803,34 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
                     "};"))));
   }
 
+  public void testProtectedAccessForProperties14() {
+    // access in member function
+    testNoWarning(
+        new String[] {
+          lines(
+              "/** @constructor */ var Foo = function() {};",
+              "Foo.prototype = { /** @protected */ bar: function() {} }"),
+          lines(
+              "/** @constructor @extends {Foo} */",
+              "var OtherFoo = function() { this.bar(); };",
+              "OtherFoo.prototype = { moo() { new Foo().bar(); }};")
+        });
+  }
+
+  public void testProtectedAccessForProperties15() {
+    // access in computed member function
+    testNoWarning(
+        new String[] {
+          lines(
+              "/** @constructor */ var Foo = function() {};",
+              "Foo.prototype = { /** @protected */ bar: function() {} }"),
+          lines(
+              "/** @constructor @extends {Foo} */",
+              "var OtherFoo = function() { this['bar'](); };",
+              "OtherFoo.prototype = { ['bar']() { new Foo().bar(); }};")
+        });
+  }
+
   public void testNoProtectedAccessForProperties1() {
     testError(new String[] {
         "/** @constructor */ function Foo() {} "
@@ -847,6 +895,34 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
         + "/** @protected */ bar: function() {}"
         + "}",
         "new Foo().bar();"},
+        BAD_PROTECTED_PROPERTY_ACCESS);
+  }
+
+  public void testNoProtectedAccessForProperties8() {
+    testError(
+        new String[] {
+          lines(
+              "/** @constructor */ var Foo = function() {};",
+              "Foo.prototype = { /** @protected */ bar: function() {} }"),
+          lines(
+              "/** @constructor */",
+              "var OtherFoo = function() { this.bar(); };",
+              "OtherFoo.prototype = { moo() { new Foo().bar(); }};")
+        },
+        BAD_PROTECTED_PROPERTY_ACCESS);
+  }
+
+  public void testNoProtectedAccessForProperties9() {
+    testError(
+        new String[] {
+          lines(
+              "/** @constructor */ var Foo = function() {};",
+              "Foo.prototype = { /** @protected */ bar: function() {} }"),
+          lines(
+              "/** @constructor */",
+              "var OtherFoo = function() { this['bar'](); };",
+              "OtherFoo.prototype = { ['bar']() { new Foo().bar(); }};")
+        },
         BAD_PROTECTED_PROPERTY_ACCESS);
   }
 
@@ -1613,6 +1689,14 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
 
   public void testDeclarationAndConventionConflict9() {
     testError("/** @protected */ var Foo_;", CONVENTION_MISMATCH);
+  }
+
+  public void testDeclarationAndConventionConflict10() {
+    testError(
+        lines(
+            "/** @constructor */ function Foo() {}",
+            "Foo.prototype = { /** @protected */ length_() { return 1; } }"),
+        CONVENTION_MISMATCH);
   }
 
   public void testConstantProperty1a() {

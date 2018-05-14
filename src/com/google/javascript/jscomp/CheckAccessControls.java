@@ -231,7 +231,10 @@ class CheckAccessControls extends AbstractPostOrderCallback
     } else if (NodeUtil.isFunctionDeclaration(n) || parent.isName()) {
       return normalizeClassType(n.getJSType());
     } else if (parent.isStringKey()
-        || parent.isGetterDef() || parent.isSetterDef()) {
+        || parent.isGetterDef()
+        || parent.isSetterDef()
+        || parent.isMemberFunctionDef()
+        || parent.isComputedProp()) {
       Node objectLitParent = parent.getGrandparent();
       if (!objectLitParent.isAssign()) {
         return null;
@@ -275,6 +278,7 @@ class CheckAccessControls extends AbstractPostOrderCallback
       case STRING_KEY:
       case GETTER_DEF:
       case SETTER_DEF:
+      case MEMBER_FUNCTION_DEF:
         checkKeyVisibilityConvention(t, n, parent);
         break;
       case NEW:
@@ -375,13 +379,12 @@ class CheckAccessControls extends AbstractPostOrderCallback
   }
 
   /**
-   * Determines whether the given OBJECTLIT property visibility
-   * violates the coding convention.
+   * Determines whether the given OBJECTLIT property visibility violates the coding convention.
+   *
    * @param t The current traversal.
-   * @param key The objectlit key node (STRING_KEY, GETTER_DEF, SETTER_DEF).
+   * @param key The objectlit key node (STRING_KEY, GETTER_DEF, SETTER_DEF, MEMBER_FUNCTION_DEF).
    */
-  private void checkKeyVisibilityConvention(NodeTraversal t,
-      Node key, Node parent) {
+  private void checkKeyVisibilityConvention(NodeTraversal t, Node key, Node parent) {
     JSDocInfo info = key.getJSDocInfo();
     if (info == null) {
       return;
