@@ -23,8 +23,9 @@ import com.google.javascript.jscomp.transpile.TranspileResult;
 import com.google.javascript.jscomp.transpile.Transpiler;
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.charset.Charset;
-import java.nio.file.Paths;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -135,7 +136,12 @@ public final class ClosureBundler {
   }
 
   private String transpile(String s, Transpiler t) {
-    TranspileResult result = t.transpile(Paths.get(path), s);
+    TranspileResult result;
+    try {
+      result = t.transpile(new URI(path), s);
+    } catch (URISyntaxException e) {
+      throw new RuntimeException(e);
+    }
     sourceMapCache.put(path, result.sourceMap());
     return result.transpiled();
   }

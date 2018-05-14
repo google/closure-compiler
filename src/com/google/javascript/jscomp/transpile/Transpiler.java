@@ -16,7 +16,7 @@
 
 package com.google.javascript.jscomp.transpile;
 
-import java.nio.file.Path;
+import java.net.URI;
 
 /**
  * Common interface for a transpiler.
@@ -39,11 +39,8 @@ import java.nio.file.Path;
  * </ol>
  */
 public interface Transpiler {
-  /**
-   * Transforms the given chunk of code.  The input should be an entire file
-   * worth of code.
-   */
-  TranspileResult transpile(Path path, String code);
+  /** Transforms the given chunk of code. The input should be an entire file worth of code. */
+  TranspileResult transpile(URI path, String code);
 
   /**
    * Returns any necessary runtime code as a string.  This should include
@@ -52,18 +49,17 @@ public interface Transpiler {
    */
   String runtime();
 
-  /**
-   * Null implementation that does no transpilation at all.
-   */
-  Transpiler NULL = new Transpiler() {
-    @Override
-    public TranspileResult transpile(Path path, String code) {
-      return new TranspileResult(path, code, code, "");
-    }
+  /** Null implementation that does no transpilation at all. */
+  Transpiler NULL =
+      new Transpiler() {
+        @Override
+        public TranspileResult transpile(URI path, String code) {
+          return new TranspileResult(path, code, code, "");
+        }
 
-    @Override
-    public String runtime() {
-      return "";
-    }
-  };
+        @Override
+        public String runtime() {
+          return "";
+        }
+      };
 }
