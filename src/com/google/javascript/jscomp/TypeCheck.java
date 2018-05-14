@@ -910,6 +910,11 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         }
         break;
 
+      case SPREAD:
+        checkSpread(t, n);
+        typeable = false;
+        break;
+
       default:
         report(t, n, UNEXPECTED_TOKEN, n.getToken().toString());
         ensureTyped(t, n);
@@ -924,6 +929,14 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     }
 
     checkJsdocInfoContainsObjectWithBadKey(t, n);
+  }
+
+  private void checkSpread(NodeTraversal t, Node spreadNode) {
+    Node iterableNode = spreadNode.getOnlyChild();
+    ensureTyped(t, iterableNode);
+    JSType iterableType = getJSType(iterableNode);
+    validator.expectAutoboxesToIterable(
+        t, iterableNode, iterableType, "Spread operator only applies to Iterable types");
   }
 
   private void checkTypeofString(NodeTraversal t, Node n, String s) {
@@ -2109,32 +2122,73 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     arguments.next(); // skip the function name
 
     Iterator<Node> parameters = functionType.getParameters().iterator();
-    int ordinal = 0;
+    int spreadArgumentCount = 0;
+    int normalArgumentCount = 0;
+    boolean checkArgumentTypeAgainstParameter = true;
     Node parameter = null;
     Node argument = null;
-    while (arguments.hasNext()
-        && (parameters.hasNext() || (parameter != null && parameter.isVarArgs()))) {
-      // If there are no parameters left in the list, then the while loop
-      // above implies that this must be a var_args function.
-      if (parameters.hasNext()) {
-        parameter = parameters.next();
-      }
+    while (arguments.hasNext()) {
+      // get the next argument
       argument = arguments.next();
-      ordinal++;
 
-      validator.expectArgumentMatchesParameter(t, argument,
-          getJSType(argument), getJSType(parameter), call, ordinal);
+      // Count normal & spread arguments.
+      if (argument.isSpread()) {
+        // we have some form of this case
+        // someCall(arg1, arg2, ...firstSpreadExpression, argN, ...secondSpreadExpression)
+        spreadArgumentCount++;
+        // Once we see a spread parameter, we can no longer match up arguments with parameters.
+        checkArgumentTypeAgainstParameter = false;
+      } else {
+        normalArgumentCount++;
+      }
+
+      // Get the next parameter, if we're still matching parameters and arguments.
+      if (checkArgumentTypeAgainstParameter) {
+        if (parameters.hasNext()) {
+          parameter = parameters.next();
+        } else if (parameter != null && parameter.isVarArgs()) {
+          // use varargs for all remaining parameters
+        } else {
+          // else we ran out of parameters and will report that after this loop
+          parameter = null;
+          checkArgumentTypeAgainstParameter = false;
+        }
+      }
+
+      if (checkArgumentTypeAgainstParameter) {
+        validator.expectArgumentMatchesParameter(
+            t, argument, getJSType(argument), getJSType(parameter), call, normalArgumentCount);
+      }
     }
 
-    int numArgs = call.getChildCount() - 1;
     int minArity = functionType.getMinArity();
     int maxArity = functionType.getMaxArity();
-    if (minArity > numArgs || maxArity < numArgs) {
-      report(t, call, WRONG_ARGUMENT_COUNT,
-              typeRegistry.getReadableTypeNameNoDeref(call.getFirstChild()),
-              String.valueOf(numArgs), String.valueOf(minArity),
-              maxArity == Integer.MAX_VALUE ? ""
-                  : " and no more than " + maxArity + " argument(s)");
+
+    if (spreadArgumentCount > 0) {
+      if (normalArgumentCount > maxArity) {
+        // We cannot reliably check whether the total argument count is wrong, but we can at
+        // least tell if there are more arguments than the function can handle even ignoring the
+        // spreads.
+        report(
+            t,
+            call,
+            WRONG_ARGUMENT_COUNT,
+            typeRegistry.getReadableTypeNameNoDeref(call.getFirstChild()),
+            "at least " + String.valueOf(normalArgumentCount),
+            String.valueOf(minArity),
+            maxArity == Integer.MAX_VALUE ? "" : " and no more than " + maxArity + " argument(s)");
+      }
+    } else {
+      if (minArity > normalArgumentCount || maxArity < normalArgumentCount) {
+        report(
+            t,
+            call,
+            WRONG_ARGUMENT_COUNT,
+            typeRegistry.getReadableTypeNameNoDeref(call.getFirstChild()),
+            String.valueOf(normalArgumentCount),
+            String.valueOf(minArity),
+            maxArity == Integer.MAX_VALUE ? "" : " and no more than " + maxArity + " argument(s)");
+      }
     }
   }
 

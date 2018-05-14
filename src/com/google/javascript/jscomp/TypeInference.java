@@ -514,6 +514,12 @@ class TypeInference
         traverseSuper(n);
         break;
 
+      case SPREAD:
+        // The spread itself has no type, but the expression it contains does and may affect
+        // type inference.
+        scope = traverseChildren(n, scope);
+        break;
+
       default:
         break;
     }

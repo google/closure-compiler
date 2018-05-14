@@ -49,6 +49,187 @@ public final class TypeCheckNoTranspileTest extends CompilerTypeTestCase {
     return options;
   }
 
+  public void testArrayLitSpread() {
+    // TODO(bradfordcsmith): check spread in array literal
+    // Note that there's not much point in doing such a check until we check array literal
+    // elements in general.
+    // See https://github.com/google/closure-compiler/issues/312
+    testTypes(
+        lines(
+            "/** @type {!Array<string>} */", // preserve newlines
+            "const strings = [];",
+            "/** @type {!Array<number>} */",
+            "const numbers = [...strings];", // This should generate an error
+            ""));
+  }
+
+  public void testArrayLitSpreadNonIterable() {
+    testTypes(
+        lines(
+            "/** @type {!Array<number>} */", // preserve newlines
+            "const numbers = [...1];",
+            ""),
+        lines(
+            "Spread operator only applies to Iterable types",
+            "found   : number",
+            "required: Iterable"));
+  }
+
+  public void testTypecheckExpressionInArrayLitSpread() {
+    testTypes(
+        lines(
+            "/** @type {!Array<string>} */", // preserve newlines
+            "const strings = [];",
+            "/** @type {!Array<number>} */",
+            "let numbers = [];",
+            "const a = [...(numbers = strings)];",
+            ""),
+        lines(
+            "assignment", // preserve newlines
+            "found   : Array<string>",
+            "required: Array<number>"));
+  }
+
+  public void testInferTypesFromExpressionInArrayLitSpread() {
+    testTypes(
+        lines(
+            "/** @type {!Array<string>} */", // preserve newlines
+            "const strings = [];",
+            "let inferred = 1;",
+            "const a = [...(inferred = strings)];",
+            "/** @type {null} */",
+            "const n = inferred;",
+            ""),
+        lines(
+            "initializing variable", // preserve newlines
+            "found   : Array<string>",
+            "required: null"));
+  }
+
+  public void testSpreadAndFollowingParametersNotTypeChecked() {
+    testTypesWithExtraExterns(
+        lines(
+            "/**", // extra externs
+            " * @param {number} num",
+            " * @param {string} str",
+            " * @param {boolean} bool",
+            " */",
+            "function use(num, str, bool) {}",
+            ""),
+        lines(
+            "/** @type {!Array<null>} */ const nulls = [];", // input lines
+            "use(1, ...nulls, null, null);"));
+    // TODO(bradfordcsmith): Should get an error since there's no way for `str` and `bool` params
+    // to get the right types here.
+  }
+
+  public void testSpreadArgumentTypeCheckedForVarArgs() {
+    testTypesWithExtraExterns(
+        lines(
+            "/**", // extra externs
+            " * @param {number} num",
+            " * @param {...string} var_args",
+            " */",
+            "function use(num, var_args) {}",
+            ""),
+        lines(
+            "/** @type {!Array<null>} */ const nulls = [];", // input lines
+            "use(1, ...nulls);"));
+    // TODO(bradfordcsmith): Should get an error since `nulls` doesn't contain strings.
+  }
+
+  public void testSpreadArgumentBackInference() {
+    testTypesWithExtraExterns(
+        lines(
+            "/**", // extra externs
+            " * @param {number} num",
+            " * @param {...{prop: number}} var_args",
+            " */",
+            "function use(num, var_args) {}",
+            ""),
+        lines(
+            "use(1, ...[{}]);"));
+    // TODO(bradfordcsmith): Should generate error indicating inferred type of `[{}]`
+    // as `{Iterable<{prop: (number|undefined)}>}
+  }
+
+  public void testTooManyNonSpreadParameters() {
+    testTypesWithExtraExterns(
+        lines(
+            "/**", // extra externs
+            " * @param {number} num",
+            " * @param {string} str",
+            " * @param {boolean} bool",
+            " */",
+            "function use(num, str, bool) {}",
+            ""),
+        lines(
+            "/** @type {!Array<*>} */ const unusables = [];", // input lines
+            "use(1, 'hi', ...unusables, null, null);"), // more than 3 non-spread parameters
+        "Function use: called with at least 4 argument(s)."
+            + " Function requires at least 3 argument(s) and no more than 3 argument(s).");
+  }
+
+  public void testArgumentSpreadDoesNotBlockTypeCheckOfInitialParameters() {
+    testTypesWithExtraExterns(
+        lines(
+            "/**", // extra externs
+            " * @param {number} num",
+            " * @param {string} str",
+            " * @param {boolean} bool",
+            " */",
+            "function use(num, str, bool) {}",
+            ""),
+        "use('should be number', ...[]);",
+        lines(
+            "actual parameter 1 of use does not match formal parameter",
+            "found   : string",
+            "required: number"));
+  }
+
+  public void testArgumentSpreadNonIterable() {
+    testTypesWithExtraExterns(
+        "function use(x) {}",
+        "use(...1);",
+        lines(
+            "Spread operator only applies to Iterable types",
+            "found   : number",
+            "required: Iterable"));
+  }
+
+  public void testTypecheckExpressionInArgumentSpread() {
+    testTypesWithExtraExterns(
+        "function use(x) {}",
+        lines(
+            "/** @type {!Array<string>} */", // preserve newlines
+            "const strings = [];",
+            "/** @type {!Array<number>} */",
+            "let numbers = [];",
+            "use(...(numbers = strings));",
+            ""),
+        lines(
+            "assignment", // preserve newlines
+            "found   : Array<string>",
+            "required: Array<number>"));
+  }
+
+  public void testInferTypesFromExpressionInArgumentSpread() {
+    testTypesWithExtraExterns(
+        "function use(x) {}",
+        lines(
+            "/** @type {!Array<string>} */", // preserve newlines
+            "const strings = [];",
+            "let inferred = 1;",
+            "use(...(inferred = strings));",
+            "/** @type {null} */",
+            "const n = inferred;",
+            ""),
+        lines(
+            "initializing variable", // preserve newlines
+            "found   : Array<string>",
+            "required: null"));
+  }
+
   public void testExponent1() {
     testTypes(
         lines(

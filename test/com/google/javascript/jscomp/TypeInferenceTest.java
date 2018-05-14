@@ -1726,6 +1726,15 @@ public final class TypeInferenceTest extends TestCase {
     assertTypeOfExpression("X").isString();
   }
 
+  public void testSpreadExpression() {
+    inFunction(
+        lines(
+            "let x = 1;", // x is initially a number
+            "let y = [...[x = 'hi', 'there']];", // reassign x a string in the spread
+            "X: x;"));
+    assertTypeOfExpression("X").toStringIsEqualTo("string");
+  }
+
   private ObjectType getNativeObjectType(JSTypeNative t) {
     return registry.getNativeObjectType(t);
   }
