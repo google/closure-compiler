@@ -49,6 +49,165 @@ public final class TypeCheckNoTranspileTest extends CompilerTypeTestCase {
     return options;
   }
 
+    public void testArrowInferredReturn() {
+    // TODO(johnlenz): infer simple functions return results.
+
+    // Verify arrows have do not have an incorrect inferred return.
+    testTypes(
+        lines(
+            "let fn = () => {",
+            "  return 1;",
+            "};",
+            "var /** null */ x = fn();"));
+  }
+
+  public void testArrowBlocklessInferredReturn() {
+    // TODO(johnlenz): infer simple functions return results.
+
+    // Verify arrows have do not have an incorrect inferred return.
+    testTypes(
+        lines(
+            "let fn = () => 1;",
+            "var /** null */ x = fn();"));
+  }
+
+  public void testArrowRightScopeForBody() {
+    testTypes(
+        lines(
+            "/** @type {string} */ let a = 's';",
+            "/** ",
+            "  @param {number} a",
+            "  @return {null}",
+            "*/",
+            "let fn = (a) => {",
+            "  return a;",
+            "}"),
+        lines(
+            "inconsistent return type",
+            "found   : number",
+            "required: null"));
+  }
+
+  public void testArrowRightBodyScopeForBlocklessBody() {
+    testTypes(
+        "",
+        lines(
+            "/** @type {string} */ let a = 's';",
+            "/** ",
+            "  @param {number} a",
+            "  @return {null}",
+            "*/",
+            "let fn = (a) => a",
+            ""),
+        lines(
+            "inconsistent return type",
+            "found   : number",
+            "required: null"),
+        false);
+  }
+
+  public void testArrowCorrectThis() {
+    testTypes(
+        lines(
+            "/** @this {String} */ function fn() {",
+            "  /** ",
+            "    @return {null}",
+            "  */",
+            "  let fn = () => {",
+            "    return this;",
+            "  }",
+            "}"),
+        lines(
+            "inconsistent return type",
+            "found   : String",
+            "required: null"));
+  }
+
+  public void testArrowBlocklessCorrectThis() {
+    testTypes(
+        lines(
+            "/** @this {String} */ function fn() {",
+            "  /** ",
+            "    @return {null}",
+            "  */",
+            "  let fn = () => this;",
+            "}"),
+        lines(
+            "inconsistent return type",
+            "found   : String",
+            "required: null"));
+  }
+
+  public void testArrowCorrectArguments() {
+    testTypes(
+        lines(
+            "/** @this {String} */ function fn() {",
+            "  {",
+            "    /** @type {number} */ let arguments = 1;",
+            "    /** @return {null} */",
+            "    let fn = () => {",
+            "      return arguments;",
+            "    }",
+            "  }",
+            "}"),
+        lines(
+            "inconsistent return type",
+            "found   : number",
+            "required: null"));
+  }
+
+  public void testArrowBlocklessCorrectArguments() {
+    testTypes(
+        lines(
+            "/** @this {String} */ function fn() {",
+            "  {",
+            "    /** @type {number} */ let arguments = 1;",
+            "    /** @return {null} */",
+            "    let fn = () => arguments;",
+            "  }",
+            "}"),
+        lines(
+            "inconsistent return type",
+            "found   : number",
+            "required: null"));
+  }
+
+  public void testArrowCorrectInheritsArguments() {
+    testTypesWithExtraExterns(
+        lines(
+            "/** @type {!Arguments} */ var arguments;"),
+        lines(
+            "/** @this {String} */ function fn() {",
+            "  {",
+            "    /** @return {null} */",
+            "    let fn = () => {",
+            "      return arguments;",
+            "    }",
+            "  }",
+            "}"),
+        lines(
+            "inconsistent return type",
+            "found   : Arguments",
+            "required: null"));
+  }
+
+  public void testArrowBlocklessCorrectInheritsArguments() {
+    testTypesWithExtraExterns(
+        lines(
+            "/** @type {!Arguments} */ var arguments;"),
+        lines(
+            "/** @this {String} */ function fn() {",
+            "  {",
+            "    /** @return {null} */",
+            "    let fn = () => arguments;",
+            "  }",
+            "}"),
+        lines(
+            "inconsistent return type",
+            "found   : Arguments",
+            "required: null"));
+  }
+
   public void testArrayLitSpread() {
     // TODO(bradfordcsmith): check spread in array literal
     // Note that there's not much point in doing such a check until we check array literal
@@ -1426,6 +1585,10 @@ public final class TypeCheckNoTranspileTest extends CompilerTypeTestCase {
 
   void testTypesWithExterns(String externs, String js) {
     testTypes(externs, js, (String) null, false);
+  }
+
+  void testTypesWithExterns(String externs, String js, String description) {
+    testTypes(DEFAULT_EXTERNS + "\n" + externs, js, description, false);
   }
 
   void testTypesWithExtraExterns(String externs, String js) {

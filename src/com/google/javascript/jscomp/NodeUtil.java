@@ -5684,4 +5684,10 @@ public final class NodeUtil {
         || node.isMemberFunctionDef()
         || node.isComputedProp();
   }
+
+  /** @return Whether the node represents the return value of a blockless Arrow function */
+  public static boolean isBlocklessArrowFunctionResult(Node n) {
+    Node parent = n.getParent();
+    return parent != null && parent.isFunction() && n == parent.getLastChild() && !n.isBlock();
+  }
 }

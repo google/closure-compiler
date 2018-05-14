@@ -921,6 +921,11 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         break;
     }
 
+    // Visit the body of blockless arrow functions
+    if (NodeUtil.isBlocklessArrowFunctionResult(n)) {
+      visitImplicitReturnExpression(t, n);
+    }
+
     // Don't count externs since the user's code may not even use that part.
     typeable = typeable && !inExterns;
 
@@ -2189,6 +2194,26 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
             String.valueOf(minArity),
             maxArity == Integer.MAX_VALUE ? "" : " and no more than " + maxArity + " argument(s)");
       }
+    }
+  }
+
+  private void visitImplicitReturnExpression(NodeTraversal t, Node exprNode) {
+    JSType jsType = getJSType(t.getEnclosingFunction());
+    if (jsType.isFunctionType()) {
+      FunctionType functionType = jsType.toMaybeFunctionType();
+
+      JSType expectedReturnType = functionType.getReturnType();
+      // if no return type is specified, undefined must be returned
+      // (it's a void function)
+      if (expectedReturnType == null) {
+        expectedReturnType = getNativeType(VOID_TYPE);
+      }
+
+      // Fetch the returned value's type
+      JSType actualReturnType = getJSType(exprNode);
+
+      validator.expectCanAssignTo(t, exprNode, actualReturnType, expectedReturnType,
+          "inconsistent return type");
     }
   }
 

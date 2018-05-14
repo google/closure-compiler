@@ -110,19 +110,19 @@ public class TypedScope extends AbstractScope<TypedScope, TypedVar>
    */
   @Override
   public JSType getTypeOfThis() {
+    Node root = getRootNode();
     if (isGlobal()) {
-      return ObjectType.cast(getRootNode().getJSType());
-    } else if (!getRootNode().isFunction()) {
-      return getClosestContainerScope().getTypeOfThis();
-    }
-
-    checkState(getRootNode().isFunction());
-    JSType nodeType = getRootNode().getJSType();
-    if (nodeType != null && nodeType.isFunctionType()) {
-      return nodeType.toMaybeFunctionType().getTypeOfThis();
+      return ObjectType.cast(root.getJSType());
+    } else if (NodeUtil.isVanillaFunction(root)) {
+      JSType nodeType = root.getJSType();
+      if (nodeType != null && nodeType.isFunctionType()) {
+        return nodeType.toMaybeFunctionType().getTypeOfThis();
+      } else {
+        // Executed when the current scope has not been typechecked.
+        return null;
+      }
     } else {
-      // Executed when the current scope has not been typechecked.
-      return null;
+      return getParent().getTypeOfThis();
     }
   }
 

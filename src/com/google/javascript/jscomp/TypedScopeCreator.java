@@ -2267,7 +2267,9 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
 
       Scope containerScope = (Scope) t.getClosestContainerScope();
 
-      if (n.isReturn() && n.getFirstChild() != null) {
+      // Record function with returns or arrow functions without bodies
+      if ((n.isReturn() && n.hasChildren())
+          || (NodeUtil.isBlocklessArrowFunctionResult(n))) {
         functionsWithNonEmptyReturns.add(containerScope.getRootNode());
       }
 
