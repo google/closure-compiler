@@ -668,30 +668,6 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         "required: boolean");
   }
 
-  public void testWellKnownSymbolAccess1() {
-    testTypesWithCommonExterns(
-        lines(
-            "/**",
-            " * @param {Array<string>} x",
-            " */",
-            "function f(x) {",
-            "  const iter = x[Symbol.iterator]();",
-            "}"
-        ));
-  }
-
-  public void testWellKnownSymbolAccess2() {
-    testTypesWithCommonExterns(
-        lines(
-            "/**",
-            " * @param {IObject<string, number>} x",
-            " */",
-            "function f(x) {",
-            "  const iter = x[Symbol.iterator]();",
-            "}"
-        ));
-  }
-
   public void testSymbolComparison1() {
     testTypes(
         lines(

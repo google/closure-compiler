@@ -1587,22 +1587,12 @@ class TypeInference
 
   private FlowScope traverseGetElem(Node n, FlowScope scope) {
     scope = traverseChildren(n, scope);
-    Node indexKey = n.getLastChild();
-    JSType indexType = getJSType(indexKey);
-    if (indexType.isSymbolValueType()) {
-      // For now, allow symbols definitions/access on any type. In the future only allow them
-      // on the subtypes for which they are defined.
-
-      // TODO(b/77474174): Type well known symbol accesses.
-      n.setJSType(unknownType);
-    } else {
-      JSType type = getJSType(n.getFirstChild()).restrictByNotNullOrUndefined();
-      TemplateTypeMap typeMap = type.getTemplateTypeMap();
-      if (typeMap.hasTemplateType(registry.getObjectElementKey())) {
-        n.setJSType(typeMap.getResolvedTemplateType(registry.getObjectElementKey()));
-      }
+    JSType type = getJSType(n.getFirstChild()).restrictByNotNullOrUndefined();
+    TemplateTypeMap typeMap = type.getTemplateTypeMap();
+    if (typeMap.hasTemplateType(registry.getObjectElementKey())) {
+      n.setJSType(typeMap.getResolvedTemplateType(registry.getObjectElementKey()));
     }
-    return tightenTypeAfterDereference(n.getFirstChild(), scope);
+    return dereferencePointer(n.getFirstChild(), scope);
   }
 
   private FlowScope traverseGetProp(Node n, FlowScope scope) {
@@ -1613,7 +1603,7 @@ class TypeInference
     n.setJSType(
         getPropertyType(
             objNode.getJSType(), property.getString(), n, scope));
-    return tightenTypeAfterDereference(n.getFirstChild(), scope);
+    return dereferencePointer(n.getFirstChild(), scope);
   }
 
   /**
@@ -1643,7 +1633,7 @@ class TypeInference
    * If we access a property of a symbol, then that symbol is not
    * null or undefined.
    */
-  private FlowScope tightenTypeAfterDereference(Node n, FlowScope scope) {
+  private FlowScope dereferencePointer(Node n, FlowScope scope) {
     if (n.isQualifiedName()) {
       JSType type = getJSType(n);
       JSType narrowed = type.restrictByNotNullOrUndefined();
