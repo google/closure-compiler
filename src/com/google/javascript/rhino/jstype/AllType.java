@@ -71,11 +71,6 @@ public final class AllType extends JSType {
   }
 
   @Override
-  public boolean canBeCalled() {
-    return false;
-  }
-
-  @Override
   public TernaryValue testForEquality(JSType that) {
     return UNKNOWN;
   }
