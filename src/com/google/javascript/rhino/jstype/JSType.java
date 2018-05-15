@@ -903,7 +903,7 @@ public abstract class JSType implements Serializable {
    * The default implementation verifies that {@code this} is a subtype
    * of {@code that}.<p>
    */
-  public boolean canCastTo(JSType that) {
+  public final boolean canCastTo(JSType that) {
     return this.visit(CAN_CAST_TO_VISITOR, that);
   }
 
