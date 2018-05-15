@@ -17,32 +17,15 @@
 /** @fileoverview Test cases for set_location_href RefasterJs template. */
 
 goog.provide('refactoring_testcase');
-
+goog.require('goog.dom.safe');
 
 /**
- * @param {!Location} target The target.
+ * @param {!Window} target The target.
  * @param {string} val The value.
  */
-refactoring_testcase.test_location_href = function(target, val) {
+refactoring_testcase.test_window_location = function(target, val) {
   // Should match.
-  target.href = val;
-};
-
-/**
- * @param {!Location} target The Target.
- */
-refactoring_testcase.location_href_string_literal = function(target) {
-  // Shouldn't match.
-  target.href = 'foo';
-};
-
-/**
- * @param {Location|Element} target The target.
- * @param {string} val The value.
- */
-refactoring_testcase.union_type_href = function(target, val) {
-  // Shouldn't match.
-  target.href = val;
+  goog.dom.safe.setLocationHref(target.location, val);
 };
 
 /**
