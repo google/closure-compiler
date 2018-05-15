@@ -125,8 +125,8 @@ public class CommandLineRunner extends
   // UTF-8 BOM is 0xEF, 0xBB, 0xBF, of which character code is 65279.
   public static final int UTF8_BOM_CODE = 65279;
 
-  // Allowable module name characters that aren't valid in a JS identifier
-  private static final Pattern extraModuleNameChars = Pattern.compile("[-.]+");
+  // Allowable chunk name characters that aren't valid in a JS identifier
+  private static final Pattern extraChunkNameChars = Pattern.compile("[-.]+");
 
   // I don't really care about unchecked warnings in this class.
   @SuppressWarnings("unchecked")
@@ -220,18 +220,19 @@ public class CommandLineRunner extends
         + "written to stdout")
     private String jsOutputFile = "";
 
-    @Option(name = "--module",
-        usage = "A JavaScript module specification. The format is "
-        + "<name>:<num-js-files>[:[<dep>,...][:]]]. Module names must be "
-        + "unique. Each dep is the name of a module that this module "
-        + "depends on. Modules must be listed in dependency order, and JS "
+    @Option(name = "--chunk",
+        usage = "A JavaScript chunk specification. The format is "
+        + "<name>:<num-js-files>[:[<dep>,...][:]]]. Chunk names must be "
+        + "unique. Each dep is the name of a chunk that this chunk "
+        + "depends on. Chunks must be listed in dependency order, and JS "
         + "source files must be listed in the corresponding order. Where "
-        + "--module flags occur in relation to --js flags is unimportant. "
-        + "<num-js-files> may be set to 'auto' for the first module if it "
+        + "--chunk flags occur in relation to --js flags is unimportant. "
+        + "<num-js-files> may be set to 'auto' for the first chunk if it "
         + "has no dependencies. "
-        + "Provide the value 'auto' to trigger module creation from CommonJS"
-        + "modules.")
-    private List<String> module = new ArrayList<>();
+        + "Provide the value 'auto' to trigger chunk creation from CommonJS"
+        + "modules.",
+        aliases = "--module")
+    private List<String> chunk = new ArrayList<>();
 
     @Option(name = "--continue-saved-compilation",
         usage = "Filename where the intermediate compilation state was previously saved.",
@@ -308,7 +309,7 @@ public class CommandLineRunner extends
         + " like newline in the wrapper.")
     private String outputWrapperFile = "";
 
-    @Option(name = "--module_wrapper",
+    @Option(name = "--chunk_wrapper",
         usage = "An output wrapper for a JavaScript module (optional). "
         + "The format is <name>:<wrapper>. The module name must correspond "
         + "with a module specified using --module. The wrapper must "
@@ -316,14 +317,16 @@ public class CommandLineRunner extends
         + "Alternately, %output% can be used in place of %s. "
         + "%n% can be used to represent a newline. "
         + "The %basename% placeholder can "
-        + "also be used to substitute the base name of the module output file.")
-    private List<String> moduleWrapper = new ArrayList<>();
+        + "also be used to substitute the base name of the chunk output file.",
+        aliases = "--module_wrapper")
+    private List<String> chunkWrapper = new ArrayList<>();
 
-    @Option(name = "--module_output_path_prefix",
-        usage = "Prefix for filenames of compiled JS modules. "
-        + "<module-name>.js will be appended to this prefix. Directories "
-        + "will be created as needed. Use with --module")
-    private String moduleOutputPathPrefix = "./";
+    @Option(name = "--chunk_output_path_prefix",
+        usage = "Prefix for filenames of compiled JS chunks. "
+        + "<chunk-name>.js will be appended to this prefix. Directories "
+        + "will be created as needed. Use with --chunk",
+        aliases = "--module_output_path_prefix")
+    private String chunkOutputPathPrefix = "./";
 
     @Option(name = "--create_source_map",
         usage = "If specified, a source map file mapping the generated "
@@ -603,9 +606,10 @@ public class CommandLineRunner extends
     )
     private String outputManifest = "";
 
-    @Option(name = "--output_module_dependencies",
-        usage = "Prints out a JSON file of dependencies between modules.")
-    private String outputModuleDependencies = "";
+    @Option(name = "--output_chunk_dependencies",
+        usage = "Prints out a JSON file of dependencies between modules.",
+        aliases = "--output_module_dependencies")
+    private String outputChunkDependencies = "";
 
     @Option(
       name = "--language_in",
@@ -887,13 +891,13 @@ public class CommandLineRunner extends
                     "rewrite_polyfills"))
             .putAll(
                 "Code Splitting",
-                ImmutableList.of("module", "module_output_path_prefix", "module_wrapper"))
+                ImmutableList.of("chunk", "chunk_output_path_prefix", "chunk_wrapper"))
             .putAll(
                 "Reports",
                 ImmutableList.of(
                     "create_source_map",
                     "output_manifest",
-                    "output_module_dependencies",
+                    "output_chunk_dependencies",
                     "property_renaming_report",
                     "source_map_input",
                     "source_map_include_content",
@@ -1598,15 +1602,15 @@ public class CommandLineRunner extends
           .setJsOutputFile(flags.jsOutputFile)
           .setSaveAfterChecksFileName(flags.saveAfterChecksFile)
           .setContinueSavedCompilationFileName(flags.continueSavedCompilationFile)
-          .setModule(flags.module)
+          .setModule(flags.chunk)
           .setVariableMapOutputFile(flags.variableMapOutputFile)
           .setCreateNameMapFiles(flags.createNameMapFiles)
           .setPropertyMapOutputFile(flags.propertyMapOutputFile)
           .setCodingConvention(conv)
           .setSummaryDetailLevel(flags.summaryDetailLevel)
           .setOutputWrapper(flags.outputWrapper)
-          .setModuleWrapper(flags.moduleWrapper)
-          .setModuleOutputPathPrefix(flags.moduleOutputPathPrefix)
+          .setModuleWrapper(flags.chunkWrapper)
+          .setModuleOutputPathPrefix(flags.chunkOutputPathPrefix)
           .setCreateSourceMap(flags.createSourceMap)
           .setSourceMapFormat(flags.sourceMapFormat)
           .setSourceMapLocationMappings(mappings)
@@ -1621,7 +1625,7 @@ public class CommandLineRunner extends
           .setOutputManifest(ImmutableList.of(flags.outputManifest))
           .setOutputBundle(bundleFiles)
           .setSkipNormalOutputs(skipNormalOutputs)
-          .setOutputModuleDependencies(flags.outputModuleDependencies)
+          .setOutputModuleDependencies(flags.outputChunkDependencies)
           .setProcessCommonJSModules(flags.processCommonJsModules)
           .setModuleRoots(moduleRoots)
           .setTransformAMDToCJSModules(flags.transformAmdModules)
@@ -1644,8 +1648,8 @@ public class CommandLineRunner extends
   @Override
   protected void checkModuleName(String name) {
     if (!TokenStream.isJSIdentifier(
-        extraModuleNameChars.matcher(name).replaceAll("_"))) {
-      throw new FlagUsageException("Invalid module name: '" + name + "'");
+        extraChunkNameChars.matcher(name).replaceAll("_"))) {
+      throw new FlagUsageException("Invalid chunk name: '" + name + "'");
     }
   }
 
