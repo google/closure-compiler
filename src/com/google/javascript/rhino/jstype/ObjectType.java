@@ -84,9 +84,7 @@ import javax.annotation.Nullable;
  * declared or inferred.
  *
  */
-public abstract class ObjectType
-    extends JSType
-    implements Serializable {
+public abstract class ObjectType extends JSType implements Serializable {
   private boolean visited;
   private JSDocInfo docInfo = null;
   private boolean unknown = true;
