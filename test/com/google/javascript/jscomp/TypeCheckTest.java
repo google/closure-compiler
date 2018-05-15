@@ -26,8 +26,6 @@ import static com.google.javascript.jscomp.parsing.JsDocInfoParser.BAD_TYPE_WIKI
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
-import com.google.javascript.jscomp.parsing.parser.FeatureSet;
-import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.jscomp.type.ClosureReverseAbstractInterpreter;
 import com.google.javascript.jscomp.type.SemanticReverseAbstractInterpreter;
 import com.google.javascript.rhino.IR;
@@ -38,8 +36,6 @@ import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.ObjectType;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -49,7 +45,7 @@ import java.util.Set;
  *
  */
 
-public final class TypeCheckTest extends CompilerTypeTestCase {
+public final class TypeCheckTest extends TypeCheckTestCase {
 
   private static final String SUGGESTION_CLASS =
       "/** @constructor\n */\n"
@@ -61,17 +57,6 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   private static final String ILLEGAL_PROPERTY_CREATION_MESSAGE = "Cannot add a property"
       + " to a struct instance after it is constructed. (If you already declared the property,"
       + " make sure to give it a type.)";
-
-  @Override
-  public void setUp() throws Exception {
-    super.setUp();
-    // Enable missing override checks that are disabled by default.
-    compiler.getOptions().setWarningLevel(DiagnosticGroups.MISSING_OVERRIDE, CheckLevel.WARNING);
-    compiler.getOptions().setWarningLevel(
-        DiagnosticGroups.STRICT_MISSING_PROPERTIES, CheckLevel.WARNING);
-    compiler.getOptions().setWarningLevel(
-        DiagnosticGroups.STRICT_PRIMITIVE_OPERATORS, CheckLevel.WARNING);
-  }
 
   @Override
   protected CompilerOptions getDefaultOptions() {
@@ -101,12 +86,6 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
     assertTypeEquals(getNativeSyntaxErrorConstructorType(), s.getVar("SyntaxError").getType());
     assertTypeEquals(getNativeTypeErrorConstructorType(), s.getVar("TypeError").getType());
     assertTypeEquals(getNativeUriErrorConstructorType(), s.getVar("URIError").getType());
-  }
-
-  private void disableStrictMissingPropertyChecks() {
-    compiler
-        .getOptions()
-        .setWarningLevel(DiagnosticGroups.STRICT_MISSING_PROPERTIES, CheckLevel.OFF);
   }
 
   public void testPrivateType() {
@@ -12502,30 +12481,6 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
     assertEquals(100.0, getTypedPercent(js), 0.1);
   }
 
-  private double getTypedPercent(String js) {
-    return getTypedPercentWithExterns("", js);
-  }
-
-  private double getTypedPercentWithExterns(String externs, String js) {
-    Node n = compiler.parseTestCode(js);
-
-    Node externsRoot = compiler.parseTestCode(externs);
-    IR.root(externsRoot, n);
-
-    TypeCheck t = makeTypeCheck();
-    t.processForTesting(null, n);
-    return t.getTypedPercent();
-  }
-
-  private static ObjectType getInstanceType(Node js1Node) {
-    JSType type = js1Node.getFirstChild().getJSType();
-    assertNotNull(type);
-    assertThat(type).isInstanceOf(FunctionType.class);
-    FunctionType functionType = (FunctionType) type;
-    assertTrue(functionType.isConstructor());
-    return functionType.getInstanceType();
-  }
-
   public void testPrototypePropertyReference() {
     TypeCheckResult p = parseAndTypeCheckWithScope(
         DEFAULT_EXTERNS,
@@ -14524,17 +14479,6 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
             "I.prototype.bar = function() {};",
             "/** @type {Object} */ var foo;",
             "foo.bar();"));
-  }
-
-  private void checkObjectType(ObjectType objectType, String propertyName,
-        JSType expectedType) {
-    assertTrue("Expected " + objectType.getReferenceName() +
-        " to have property " +
-        propertyName, objectType.hasProperty(propertyName));
-    assertTypeEquals("Expected " + objectType.getReferenceName() +
-        "'s property " +
-        propertyName + " to have type " + expectedType,
-        expectedType, objectType.getPropertyType(propertyName));
   }
 
   public void testExtendedInterfacePropertiesCompatibility1() {
@@ -19826,143 +19770,6 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
             "required: null"));
   }
 
-  private void testTypes(String js) {
-    testTypes(js, (String) null);
-  }
-
-  private void testTypes(String js, String description) {
-    testTypes(js, description, false);
-  }
-
-  private void testTypes(String js, DiagnosticType type) {
-    testTypes(js, type, false);
-  }
-
-  void testTypes(String js, String description, boolean isError) {
-    testTypesWithExterns("", js, description, isError);
-  }
-
-  void testTypes(String js, List<String> descriptions) {
-    testTypesWithExterns("", js, descriptions, false);
-  }
-
-  void testTypes(String js, List<String> descriptions, boolean isError) {
-    testTypesWithExterns("", js, descriptions, isError);
-  }
-
-  void testTypes(String js, DiagnosticType diagnosticType, boolean isError) {
-    testTypesWithExterns("", js, diagnosticType, isError);
-  }
-
-  void testTypes(String js, String[] warnings) {
-    Node n = compiler.parseTestCode(js);
-    assertEquals(0, compiler.getErrorCount());
-    Node externsNode = IR.root();
-    // create a parent node for the extern and source blocks
-    IR.root(externsNode, n);
-
-    makeTypeCheck().processForTesting(null, n);
-    assertEquals(0, compiler.getErrorCount());
-    if (warnings != null) {
-      assertEquals(warnings.length, compiler.getWarningCount());
-      JSError[] messages = compiler.getWarnings();
-      for (int i = 0; i < warnings.length && i < compiler.getWarningCount();
-           i++) {
-        assertEquals(warnings[i], messages[i].description);
-      }
-    } else {
-      assertEquals(0, compiler.getWarningCount());
-    }
-  }
-
-  private void testTypesWithCommonExterns(String js, String description) {
-    testTypesWithExterns(DEFAULT_EXTERNS, js, description, false);
-  }
-
-  private void testTypesWithCommonExterns(String js) {
-    testTypesWithExterns(DEFAULT_EXTERNS, js, (DiagnosticType) null, false);
-  }
-
-  void testTypesWithExterns(
-      String externs, String js, String description, boolean isError) {
-    testTypesWithExterns(
-        externs,
-        js,
-        description != null ? ImmutableList.of(description) : ImmutableList.of(),
-        isError);
-  }
-
-  void testTypesWithExterns(String externs, String js, List<String> descriptions, boolean isError) {
-    parseAndTypeCheck(externs, js);
-
-    JSError[] errors = compiler.getErrors();
-    if (!descriptions.isEmpty() && isError) {
-      assertTrue(
-          "expected " + descriptions.size() + " error(s) but got " + errors.length,
-          errors.length >= descriptions.size());
-      for (int i = 0; i < descriptions.size(); i++) {
-        assertEquals(descriptions.get(i), errors[i].description);
-      }
-      errors =
-          Arrays.asList(errors).subList(descriptions.size(), errors.length).toArray(new JSError[0]);
-    }
-    if (errors.length > 0) {
-      fail("unexpected error(s):\n" + LINE_JOINER.join(errors));
-    }
-
-    JSError[] warnings = compiler.getWarnings();
-    if (!descriptions.isEmpty() && !isError) {
-      assertTrue(
-          "expected " + descriptions.size() + " warning(s) but got " + warnings.length,
-          warnings.length >= descriptions.size());
-      for (int i = 0; i < descriptions.size(); i++) {
-        assertEquals(descriptions.get(i), warnings[i].description);
-      }
-      warnings =
-          Arrays.asList(warnings)
-              .subList(descriptions.size(), warnings.length)
-              .toArray(new JSError[0]);
-    }
-    if (warnings.length > 0) {
-      fail("unexpected warnings(s):\n" + LINE_JOINER.join(warnings));
-    }
-  }
-
-  void testTypesWithExterns(String externs, String js, DiagnosticType diagnosticType,
-      boolean isError) {
-    parseAndTypeCheck(externs, js);
-
-    JSError[] errors = compiler.getErrors();
-    if (diagnosticType != null && isError) {
-      assertTrue("expected an error", errors.length > 0);
-      assertEquals(diagnosticType, errors[0].getType());
-      errors = Arrays.asList(errors).subList(1, errors.length).toArray(
-          new JSError[errors.length - 1]);
-    }
-    if (errors.length > 0) {
-      fail("unexpected error(s):\n" + LINE_JOINER.join(errors));
-    }
-
-    JSError[] warnings = compiler.getWarnings();
-    if (diagnosticType != null && !isError) {
-      assertTrue("expected a warning", warnings.length > 0);
-      assertEquals(diagnosticType, warnings[0].getType());
-      warnings = Arrays.asList(warnings).subList(1, warnings.length).toArray(
-          new JSError[warnings.length - 1]);
-    }
-    if (warnings.length > 0) {
-      fail("unexpected warnings(s):\n" + LINE_JOINER.join(warnings));
-    }
-  }
-
-  void testTypesWithExterns(String externs, String js, String description) {
-    testTypesWithExterns(externs, js, description, false);
-  }
-
-  void testTypesWithExterns(String externs, String js) {
-    testTypesWithExterns(externs, js, (String) null, false);
-  }
-
   private void testClosureTypes(String js, String description) {
     testClosureTypesMultipleWarnings(js,
         description == null ? null : ImmutableList.of(description));
@@ -19975,8 +19782,8 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
     Node externs = compiler.parseTestCode(new TestExternsBuilder().addString().build());
     IR.root(externs, n);
 
-    assertEquals("parsing error: " +
-        Joiner.on(", ").join(compiler.getErrors()),
+    assertEquals("parsing error: "
+        + Joiner.on(", ").join(compiler.getErrors()),
         0, compiler.getErrorCount());
 
     // For processing goog.addDependency for forward typedefs.
@@ -19990,19 +19797,19 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         .processForTesting(null, n);
 
     assertEquals(
-        "unexpected error(s) : " +
-        Joiner.on(", ").join(compiler.getErrors()),
+        "unexpected error(s) : "
+        + Joiner.on(", ").join(compiler.getErrors()),
         0, compiler.getErrorCount());
 
     if (descriptions == null) {
       assertEquals(
-          "unexpected warning(s) : " +
-          Joiner.on(", ").join(compiler.getWarnings()),
+          "unexpected warning(s) : "
+          + Joiner.on(", ").join(compiler.getWarnings()),
           0, compiler.getWarningCount());
     } else {
       assertEquals(
-          "unexpected warning(s) : " +
-          Joiner.on(", ").join(compiler.getWarnings()),
+          "unexpected warning(s) : "
+          + Joiner.on(", ").join(compiler.getWarnings()),
           descriptions.size(), compiler.getWarningCount());
       Set<String> actualWarningDescriptions = new HashSet<>();
       for (int i = 0; i < descriptions.size(); i++) {
@@ -20011,121 +19818,5 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
       assertEquals(
           new HashSet<>(descriptions), actualWarningDescriptions);
     }
-  }
-
-  void testTypesWithExtraExterns(String externs, String js) {
-    testTypesWithExterns(DEFAULT_EXTERNS + "\n" + externs, js, (String) null, false);
-  }
-
-  void testTypesWithExtraExterns(
-      String externs, String js, String description) {
-    testTypesWithExterns(DEFAULT_EXTERNS + "\n" + externs, js, description, false);
-  }
-
-  void testTypesWithExtraExterns(String externs, String js, DiagnosticType diag) {
-    testTypesWithExterns(DEFAULT_EXTERNS + "\n" + externs, js, diag, false);
-  }
-
-  /**
-   * Parses and type checks the JavaScript code.
-   */
-  private Node parseAndTypeCheck(String js) {
-    return parseAndTypeCheck("", js);
-  }
-
-  private Node parseAndTypeCheck(String externs, String js) {
-    return parseAndTypeCheckWithScope(externs, js).root;
-  }
-
-  /**
-   * Parses and type checks the JavaScript code and returns the TypedScope used
-   * whilst type checking.
-   */
-  private TypeCheckResult parseAndTypeCheckWithScope(String js) {
-    return parseAndTypeCheckWithScope("", js);
-  }
-
-  private TypeCheckResult parseAndTypeCheckWithScope(String externs, String js) {
-    registry.clearNamedTypes();
-    registry.clearTemplateTypeNames();
-    compiler.init(
-        ImmutableList.of(SourceFile.fromCode("[externs]", externs)),
-        ImmutableList.of(SourceFile.fromCode("[testcode]", js)),
-        compiler.getOptions());
-    compiler.setFeatureSet(compiler.getFeatureSet().without(Feature.MODULES));
-
-    Node jsNode = IR.root(compiler.getInput(new InputId("[testcode]")).getAstRoot(compiler));
-    Node externsNode = IR.root(compiler.getInput(new InputId("[externs]"))
-        .getAstRoot(compiler));
-    Node externAndJsRoot = IR.root(externsNode, jsNode);
-    compiler.jsRoot = jsNode;
-    compiler.externsRoot = externsNode;
-    compiler.externAndJsRoot = externAndJsRoot;
-
-    assertEquals("parsing error: " +
-        Joiner.on(", ").join(compiler.getErrors()),
-        0, compiler.getErrorCount());
-
-    if (compiler.getOptions().needsTranspilationFrom(FeatureSet.ES6)) {
-      List<PassFactory> passes = new ArrayList<>();
-      TranspilationPasses.addEs2017Passes(passes);
-      TranspilationPasses.addEs2016Passes(passes);
-      TranspilationPasses.addEs6PreTypecheckPasses(passes, compiler.getOptions());
-      PhaseOptimizer phaseopt = new PhaseOptimizer(compiler, null);
-      phaseopt.consume(passes);
-      phaseopt.process(externsNode, jsNode);
-    }
-
-    TypedScope s = makeTypeCheck().processForTesting(externsNode, jsNode);
-    return new TypeCheckResult(jsNode.getFirstChild(), s);
-  }
-
-  private Node typeCheck(Node n) {
-    Node externsNode = IR.root();
-    Node externAndJsRoot = IR.root(externsNode);
-    externAndJsRoot.addChildToBack(n);
-
-    makeTypeCheck().processForTesting(null, n);
-    return n;
-  }
-
-  private TypeCheck makeTypeCheck() {
-    return new TypeCheck(compiler, new SemanticReverseAbstractInterpreter(registry), registry);
-  }
-
-  String suppressMissingProperty(String ... props) {
-    String result = "function dummy(x) { ";
-    for (String prop : props) {
-      result += "x." + prop + " = 3;";
-    }
-    return result + "}";
-  }
-
-  String suppressMissingPropertyFor(String type, String ... props) {
-    String result = "function dummy(x) { ";
-    for (String prop : props) {
-      result += type + ".prototype." + prop + " = 3;";
-    }
-    return result + "}";
-  }
-
-  private static class TypeCheckResult {
-    private final Node root;
-    private final TypedScope scope;
-
-    private TypeCheckResult(Node root, TypedScope scope) {
-      this.root = root;
-      this.scope = scope;
-    }
-  }
-
-  private void assertHasXMorePropertiesThanNativeObject(
-      ObjectType instanceType, int numExtraProperties) {
-    assertEquals(
-        getNativeObjectPropertiesCount() + numExtraProperties, instanceType.getPropertiesCount());
-  }
-
-  private int getNativeObjectPropertiesCount() {
-    return getNativeObjectType().getPropertiesCount();
   }
 }
