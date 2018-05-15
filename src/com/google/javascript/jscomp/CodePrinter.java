@@ -705,7 +705,6 @@ public final class CodePrinter {
     private boolean prettyPrint;
     private boolean outputTypes = false;
     private SourceMap sourceMap = null;
-    private boolean tagAsExterns;
     private boolean tagAsTypeSummary;
     private boolean tagAsStrict;
     private JSTypeRegistry registry;
@@ -786,14 +785,6 @@ public final class CodePrinter {
     }
 
     /**
-     * Set whether the output should be tagged as @externs code.
-     */
-    public Builder setTagAsExterns(boolean tagAsExterns) {
-      this.tagAsExterns = tagAsExterns;
-      return this;
-    }
-
-    /**
      * Set whether the output should be tags as ECMASCRIPT 5 Strict.
      */
     public Builder setTagAsStrict(boolean tagAsStrict) {
@@ -828,7 +819,6 @@ public final class CodePrinter {
           options,
           sourceMap,
           tagAsTypeSummary,
-          tagAsExterns,
           tagAsStrict,
           lineBreak,
           codeGeneratorFactory);
@@ -861,7 +851,6 @@ public final class CodePrinter {
       CompilerOptions options,
       SourceMap sourceMap,
       boolean tagAsTypeSummary,
-      boolean tagAsExterns,
       boolean tagAsStrict,
       boolean lineBreak,
       CodeGeneratorFactory codeGeneratorFactory) {
@@ -882,9 +871,6 @@ public final class CodePrinter {
             options.sourceMapDetailLevel);
     CodeGenerator cg = codeGeneratorFactory.getCodeGenerator(outputFormat, mcp);
 
-    if (tagAsExterns) {
-      cg.tagAsExterns();
-    }
     if (tagAsTypeSummary) {
       cg.tagAsTypeSummary();
     }

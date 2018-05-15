@@ -49,6 +49,7 @@ public final class JSDocInfoPrinter {
     List<String> parts = new ArrayList<>();
 
     // order:
+    //   externs|typeSummary
     //   export|public|private|package|protected
     //   abstract
     //   lends
@@ -74,6 +75,12 @@ public final class JSDocInfoPrinter {
     //   polymerBehavior
     //   mixinFunction
     parts.add("/**");
+
+    if (info.isExterns()) {
+      parts.add("@externs");
+    } else if (info.isTypeSummary()) {
+      parts.add("@typeSummary");
+    }
 
     if (info.isExport()) {
       parts.add("@export");

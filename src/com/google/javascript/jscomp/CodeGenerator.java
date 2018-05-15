@@ -83,11 +83,6 @@ public class CodeGenerator {
     add("/** @fileoverview @typeSummary */\n");
   }
 
-  /** Insert a top-level @externs comment. */
-  public void tagAsExterns() {
-    add("/** @externs */\n");
-  }
-
   /**
    * Insert a ECMASCRIPT 5 strict annotation.
    */

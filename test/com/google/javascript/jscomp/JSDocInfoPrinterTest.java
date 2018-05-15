@@ -27,6 +27,7 @@ import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
+import java.util.function.Function;
 import junit.framework.TestCase;
 
 /**
@@ -340,6 +341,14 @@ public final class JSDocInfoPrinterTest extends TestCase {
         jsDocInfoPrinter.print(info));
   }
 
+  public void testExterns() {
+    testSameFileoverview("/** @externs */ ");
+  }
+
+  public void testTypeSummary() {
+    testSameFileoverview("/** @typeSummary */ ");
+  }
+
   public void testExport() {
     testSame("/** @export */ ");
   }
@@ -360,10 +369,18 @@ public final class JSDocInfoPrinterTest extends TestCase {
     test(jsdoc, jsdoc);
   }
 
+  private void testSameFileoverview(String jsdoc) {
+    test(jsdoc, jsdoc, JsDocInfoParser::parseFileOverviewJsdoc);
+  }
+
   private void test(String input, String output) {
+    test(input, output, JsDocInfoParser::parseJsdoc);
+  }
+
+  private void test(String input, String output, Function<String, JSDocInfo> parser) {
     assertThat(input).startsWith("/**");
     String contents = input.substring("/**".length());
-    JSDocInfo info = JsDocInfoParser.parseJsdoc(contents);
+    JSDocInfo info = parser.apply(contents);
     assertNotNull("Parse error on parsing JSDoc: " + input, info);
     assertThat(jsDocInfoPrinter.print(info)).isEqualTo(output);
   }

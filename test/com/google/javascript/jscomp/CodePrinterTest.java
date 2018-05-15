@@ -2005,12 +2005,6 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     assertThat(result).isEqualTo("'use strict';\nvar x;\n");
   }
 
-  public void testExterns() {
-    String result =
-        defaultBuilder(parse("var x", /* typeChecked= */ true)).setTagAsExterns(true).build();
-    assertEquals("/** @externs */\nvar x", result);
-  }
-
   public void testIjs() {
     String result =
         defaultBuilder(parse("var x", /* typeChecked= */ true))

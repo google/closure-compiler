@@ -237,6 +237,13 @@ public final class JsDocInfoParser {
     return parser.retrieveAndResetParsedJSDocInfo();
   }
 
+  @VisibleForTesting
+  public static JSDocInfo parseFileOverviewJsdoc(String toParse) {
+    JsDocInfoParser parser = getParser(toParse);
+    parser.parse();
+    return parser.getFileOverviewJSDocInfo();
+  }
+
   private static JsDocInfoParser getParser(String toParse) {
     Config config =
         Config.builder()

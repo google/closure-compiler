@@ -2320,7 +2320,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     builder.setTypeRegistry(getTypeRegistry());
     builder.setCompilerOptions(options);
     builder.setSourceMap(sourceMap);
-    builder.setTagAsExterns(n.isFromExterns());
     builder.setTagAsTypeSummary(!n.isFromExterns() && options.shouldGenerateTypedExterns());
     builder.setTagAsStrict(firstOutput && options.shouldEmitUseStrict());
     return builder.build();

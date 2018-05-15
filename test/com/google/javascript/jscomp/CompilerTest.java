@@ -112,14 +112,15 @@ public final class CompilerTest extends TestCase {
 
   public void testPrintExterns() {
     List<SourceFile> externs =
-        ImmutableList.of(SourceFile.fromCode("extern", "function alert(x) {}"));
+        ImmutableList.of(SourceFile.fromCode("extern", "/** @externs */ function alert(x) {}"));
     CompilerOptions options = new CompilerOptions();
+    options.setPreserveTypeAnnotations(true);
     options.setLanguageIn(LanguageMode.ECMASCRIPT3);
     options.setPrintExterns(true);
     Compiler compiler = new Compiler();
     compiler.init(externs, ImmutableList.<SourceFile>of(), options);
     compiler.parseInputs();
-    assertThat(compiler.toSource()).isEqualTo("/** @externs */\nfunction alert(x){};");
+    assertThat(compiler.toSource()).isEqualTo("/** @externs */ function alert(x){};");
   }
 
   public void testLocalUndefined() throws Exception {
