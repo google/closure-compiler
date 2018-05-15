@@ -331,6 +331,10 @@ public final class FeatureSet implements Serializable {
     return features.contains(feature);
   }
 
+  public ImmutableSet<Feature> getFeatures() {
+    return features;
+  }
+
   @Override
   public boolean equals(Object other) {
     return other instanceof FeatureSet && ((FeatureSet) other).features.equals(features);
