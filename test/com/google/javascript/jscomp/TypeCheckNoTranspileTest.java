@@ -213,7 +213,7 @@ public final class TypeCheckNoTranspileTest extends CompilerTypeTestCase {
     // Note that there's not much point in doing such a check until we check array literal
     // elements in general.
     // See https://github.com/google/closure-compiler/issues/312
-    testTypes(
+    testTypesWithCommonExterns(
         lines(
             "/** @type {!Array<string>} */", // preserve newlines
             "const strings = [];",
@@ -235,7 +235,7 @@ public final class TypeCheckNoTranspileTest extends CompilerTypeTestCase {
   }
 
   public void testTypecheckExpressionInArrayLitSpread() {
-    testTypes(
+    testTypesWithCommonExterns(
         lines(
             "/** @type {!Array<string>} */", // preserve newlines
             "const strings = [];",
@@ -250,7 +250,7 @@ public final class TypeCheckNoTranspileTest extends CompilerTypeTestCase {
   }
 
   public void testInferTypesFromExpressionInArrayLitSpread() {
-    testTypes(
+    testTypesWithCommonExterns(
         lines(
             "/** @type {!Array<string>} */", // preserve newlines
             "const strings = [];",
@@ -449,7 +449,7 @@ public final class TypeCheckNoTranspileTest extends CompilerTypeTestCase {
   }
 
   public void testTypedefFieldInLoopLocal() {
-    testTypes(
+    testTypesWithCommonExterns(
         lines(
             "/** @typedef {{num: number, maybeNum: ?number}} */",
             "let XType;",
@@ -469,7 +469,7 @@ public final class TypeCheckNoTranspileTest extends CompilerTypeTestCase {
   }
 
   public void testTypedefFieldInLoopGlobal() {
-    testTypes(
+    testTypesWithCommonExterns(
         lines(
             "/** @typedef {{num: number, maybeNum: ?number}} */",
             "let XType;",
@@ -532,7 +532,7 @@ public final class TypeCheckNoTranspileTest extends CompilerTypeTestCase {
 
   public void testBlockScopedVarInLoop1() {
     disableStrictMissingPropertyChecks();
-    testTypes(
+    testTypesWithCommonExterns(
         lines(
             "/** @constructor */ function Node() {};",
             "function g(/** Node */ n){",
@@ -751,7 +751,7 @@ public final class TypeCheckNoTranspileTest extends CompilerTypeTestCase {
   }
 
   public void testForOf_wrongLoopVarType1() {
-    testTypes(
+    testTypesWithCommonExterns(
         lines(
             "/** @type {!Array<number>} */",
             "var numArray = [1, 2];",
@@ -766,7 +766,7 @@ public final class TypeCheckNoTranspileTest extends CompilerTypeTestCase {
   }
 
   public void testForOf_wrongLoopVarType2() {
-    testTypes(
+    testTypesWithCommonExterns(
         lines(
             "/** @type {!Array<number>} */",
             "var numArray = [1, 2];",
@@ -790,7 +790,7 @@ public final class TypeCheckNoTranspileTest extends CompilerTypeTestCase {
   }
 
   public void testForOf_wrongLoopVarType4a() {
-    testTypes(
+    testTypesWithCommonExterns(
         lines(
             "/** @type {!Array<!Object>} */",
             "var arr = [1, 2];",
@@ -799,7 +799,7 @@ public final class TypeCheckNoTranspileTest extends CompilerTypeTestCase {
   }
 
   public void testForOf_wrongLoopVarType4b() {
-    testTypes(
+    testTypesWithCommonExterns(
         lines(
             "/** @type {!Array<?Object>} */",
             "var arr = [1, 2];",
@@ -813,7 +813,7 @@ public final class TypeCheckNoTranspileTest extends CompilerTypeTestCase {
 
   public void testForOf_wrongLoopVarType5() {
     // Test that we don't check the inferred type of n against the Iterable type
-    testTypes(
+    testTypesWithCommonExterns(
         lines(
             "/** @type {!Array<number>} */",
             "var arr = [1, 2];",
@@ -823,7 +823,7 @@ public final class TypeCheckNoTranspileTest extends CompilerTypeTestCase {
 
   public void testForOf_wrongLoopVarType6a() {
     // Test that we typecheck the correct variable, given various shadowing variable declarations
-    testTypes(
+    testTypesWithCommonExterns(
         lines(
             "/** @type {!Array<number>} */",
             "var arr = [1, 2, 3];",
@@ -835,7 +835,7 @@ public final class TypeCheckNoTranspileTest extends CompilerTypeTestCase {
 
   public void testForOf_wrongLoopVarType6b() {
     // Test that we typecheck the correct variable, given various shadowing variable declarations
-    testTypes(
+    testTypesWithCommonExterns(
         lines(
             "/** @type {!Array<string>} */",
             "var arr = ['foo', 'bar'];",
@@ -850,11 +850,11 @@ public final class TypeCheckNoTranspileTest extends CompilerTypeTestCase {
   }
 
   public void testForOf_array1() {
-    testTypes("for (var elem of [1, 2]) {}");
+    testTypesWithCommonExterns("for (var elem of [1, 2]) {}");
   }
 
   public void testForOf_array2() {
-    testTypes(
+    testTypesWithCommonExterns(
         lines(
             "/** @type {!Array<number>} */ var arr = [1, 2];",
             "function takesString(/** string */ s) {}",
@@ -866,7 +866,7 @@ public final class TypeCheckNoTranspileTest extends CompilerTypeTestCase {
   }
 
   public void testForOf_array3() {
-    testTypes(
+    testTypesWithCommonExterns(
         lines(
             "/** @type {!Array<number>} */ var arr = [1, 2];",
             "function takesNumber(/** number */ n) {}",
@@ -874,14 +874,14 @@ public final class TypeCheckNoTranspileTest extends CompilerTypeTestCase {
   }
 
   public void testForOf_string1() {
-    testTypes(
+    testTypesWithCommonExterns(
         lines(
             "function takesString(/** string */ s) {}",
             "for (var ch of 'a string') { takesString(ch); }"));
   }
 
   public void testForOf_string2() {
-    testTypes(
+    testTypesWithCommonExterns(
         lines(
             "function takesNumber(/** number */ n) {}",
             "for (var ch of 'a string') { takesNumber(ch); }"),
@@ -892,14 +892,14 @@ public final class TypeCheckNoTranspileTest extends CompilerTypeTestCase {
   }
 
   public void testForOf_StringObject1() {
-    testTypes(
+    testTypesWithCommonExterns(
         lines(
             "function takesString(/** string */ s) {}",
             "for (var ch of new String('boxed')) { takesString(elem); }"));
   }
 
   public void testForOf_StringObject2() {
-    testTypes(
+    testTypesWithCommonExterns(
         lines(
             "function takesNumber(/** number */ n) {}",
             "for (var ch of new String('boxed')) { takesNumber(elem); }"));
@@ -930,7 +930,7 @@ public final class TypeCheckNoTranspileTest extends CompilerTypeTestCase {
 
   public void testForOf_unionType1() {
     // TODO(b/77904110): Should be a type mismatch warning for passing a string to takesNumber
-    testTypes(
+    testTypesWithCommonExterns(
         lines(
             "function takesNumber(/** number */ n) {}",
             "/** @param {(!Array<string>|undefined)} arr */",
@@ -955,7 +955,7 @@ public final class TypeCheckNoTranspileTest extends CompilerTypeTestCase {
   }
 
   public void testForOf_unionType3() {
-    testTypes(
+    testTypesWithCommonExterns(
         lines(
             "function takesNull(/** null */ n) {}",
             "",
@@ -1001,7 +1001,7 @@ public final class TypeCheckNoTranspileTest extends CompilerTypeTestCase {
 
   public void testForOf_const() {
     // TypeCheck can now handle const
-    testTypes("/** @type {!Iterable} */ const it = []; for (const elem of it) {}");
+    testTypesWithCommonExterns("/** @type {!Iterable} */ const it = []; for (const elem of it) {}");
   }
 
   public void testGenerator1() {
@@ -1013,7 +1013,7 @@ public final class TypeCheckNoTranspileTest extends CompilerTypeTestCase {
   }
 
   public void testGenerator3() {
-    testTypes(
+    testTypesWithCommonExterns(
         "/** @return {!Generator<string>} */ function* gen() {  yield 1; }",
         lines(
             "Yielded type does not match declared return type.",
@@ -1042,7 +1042,7 @@ public final class TypeCheckNoTranspileTest extends CompilerTypeTestCase {
   }
 
   public void testGenerator6() {
-    testTypes(
+    testTypesWithCommonExterns(
         lines(
             "/** @return {!Generator<string>} */",
             "function* gen() {",
@@ -1058,7 +1058,7 @@ public final class TypeCheckNoTranspileTest extends CompilerTypeTestCase {
   public void testGenerator_nextWithParameter() {
     // Note: we infer "var x = yield 1" to have a unknown type. Thus we don't warn "yield x + 2"
     // actually yielding a string, or "k" not being number type.
-    testTypes(
+    testTypesWithCommonExterns(
         lines(
             "/** @return {!Generator<number>} */",
             "function* gen() {",
@@ -1081,7 +1081,7 @@ public final class TypeCheckNoTranspileTest extends CompilerTypeTestCase {
   }
 
   public void testGenerator_yieldUndefined2() {
-    testTypes(
+    testTypesWithCommonExterns(
         lines(
             "/** @return {!Generator<number>} */",
             "function* gen() {",
@@ -1094,11 +1094,11 @@ public final class TypeCheckNoTranspileTest extends CompilerTypeTestCase {
   }
 
   public void testGenerator_returnsIterable1() {
-    testTypes("/** @return {!Iterable<?>} */ function *gen() {}");
+    testTypesWithCommonExterns("/** @return {!Iterable<?>} */ function *gen() {}");
   }
 
   public void testGenerator_returnsIterable2() {
-    testTypes(
+    testTypesWithCommonExterns(
         "/** @return {!Iterable<string>} */ function* gen() {  yield 1; }",
         lines(
             "Yielded type does not match declared return type.",
@@ -1107,11 +1107,11 @@ public final class TypeCheckNoTranspileTest extends CompilerTypeTestCase {
   }
 
   public void testGenerator_returnsIterator1() {
-    testTypes("/** @return {!Iterator<?>} */ function *gen() {}");
+    testTypesWithCommonExterns("/** @return {!Iterator<?>} */ function *gen() {}");
   }
 
   public void testGenerator_returnsIterator2() {
-    testTypes(
+    testTypesWithCommonExterns(
         "/** @return {!Iterator<string>} */ function* gen() {  yield 1; }",
         lines(
             "Yielded type does not match declared return type.",
@@ -1120,7 +1120,7 @@ public final class TypeCheckNoTranspileTest extends CompilerTypeTestCase {
   }
 
   public void testGenerator_returnsIteratorIterable() {
-    testTypes("/** @return {!IteratorIterable<?>} */ function *gen() {}");
+    testTypesWithCommonExterns("/** @return {!IteratorIterable<?>} */ function *gen() {}");
   }
 
   public void testGenerator_cantReturnArray() {
@@ -1153,7 +1153,7 @@ public final class TypeCheckNoTranspileTest extends CompilerTypeTestCase {
 
   public void testGenerator_noDeclaredReturnType3() {
     // We infer gen() to return !Generator<?>, so don't warn for a type mismatch with string
-    testTypes(
+    testTypesWithCommonExterns(
         lines(
             "function *gen() {",
             "  yield 1;",
@@ -1167,7 +1167,7 @@ public final class TypeCheckNoTranspileTest extends CompilerTypeTestCase {
   }
 
   public void testGenerator_return2() {
-    testTypes("/** @return {!Generator<string>} */ function *gen() {  return 1; }",
+    testTypesWithCommonExterns("/** @return {!Generator<string>} */ function *gen() {  return 1; }",
         lines(
             "inconsistent return type",
             "found   : number",
@@ -1182,7 +1182,7 @@ public final class TypeCheckNoTranspileTest extends CompilerTypeTestCase {
 
   // test yield*
   public void testGenerator_yieldAll1() {
-    testTypes(
+    testTypesWithCommonExterns(
         lines(
             "/** @return {!Generator<number>} */",
             "function *gen() {",
@@ -1200,7 +1200,7 @@ public final class TypeCheckNoTranspileTest extends CompilerTypeTestCase {
   }
 
   public void testGenerator_yieldAll3() {
-    testTypes(
+    testTypesWithCommonExterns(
         lines(
             "/** @return {!Generator<number>} */",
             "function *gen1() {",
@@ -1214,7 +1214,7 @@ public final class TypeCheckNoTranspileTest extends CompilerTypeTestCase {
   }
 
   public void testGenerator_yieldAll4() {
-    testTypes(
+    testTypesWithCommonExterns(
         lines(
             "/** @return {!Generator<string>} */",
             "function *gen1() {",
@@ -1233,7 +1233,7 @@ public final class TypeCheckNoTranspileTest extends CompilerTypeTestCase {
 
   public void testGenerator_yieldAll_string() {
     // Test that we autobox a string to a String
-    testTypes(
+    testTypesWithCommonExterns(
         lines(
             "/** @return {!Generator<string>} */", // preserve newlines
             "function *gen() {",
@@ -1370,7 +1370,7 @@ public final class TypeCheckNoTranspileTest extends CompilerTypeTestCase {
 
   public void testComputedProp_struct2() {
     // Allow Symbol properties in a struct
-    testTypes("/** @struct */ var obj = {[Symbol.iterator]: function() {}};");
+    testTypesWithCommonExterns("/** @struct */ var obj = {[Symbol.iterator]: function() {}};");
   }
 
   public void testComputedProp_dict() {
@@ -1451,7 +1451,7 @@ public final class TypeCheckNoTranspileTest extends CompilerTypeTestCase {
   }
 
   void testTypes(String js, String description, boolean isError) {
-    testTypes(DEFAULT_EXTERNS, js, description, isError);
+    testTypes("", js, description, isError);
   }
 
   void testTypes(
@@ -1482,7 +1482,7 @@ public final class TypeCheckNoTranspileTest extends CompilerTypeTestCase {
   }
 
   void testTypes(String js, DiagnosticType diagnosticType, boolean isError) {
-    testTypes(DEFAULT_EXTERNS, js, diagnosticType, isError);
+    testTypes("", js, diagnosticType, isError);
   }
 
   void testTypes(String externs, String js, DiagnosticType diagnosticType,
@@ -1588,7 +1588,7 @@ public final class TypeCheckNoTranspileTest extends CompilerTypeTestCase {
   }
 
   void testTypesWithExterns(String externs, String js, String description) {
-    testTypes(DEFAULT_EXTERNS + "\n" + externs, js, description, false);
+    testTypes(externs, js, description, false);
   }
 
   void testTypesWithExtraExterns(String externs, String js) {
@@ -1604,24 +1604,19 @@ public final class TypeCheckNoTranspileTest extends CompilerTypeTestCase {
     testTypes(DEFAULT_EXTERNS + "\n" + externs, js, diag, false);
   }
 
-  /**
-   * Parses and type checks the JavaScript code.
-   */
-  private Node parseAndTypeCheck(String js) {
-    return parseAndTypeCheck(DEFAULT_EXTERNS, js);
+  private void testTypesWithCommonExterns(String js, String description) {
+    testTypesWithExterns(DEFAULT_EXTERNS, js, description);
   }
+
+  private void testTypesWithCommonExterns(String js) {
+    testTypesWithExterns(DEFAULT_EXTERNS, js, null);
+  }
+
 
   private Node parseAndTypeCheck(String externs, String js) {
     return parseAndTypeCheckWithScope(externs, js).root;
   }
 
-  /**
-   * Parses and type checks the JavaScript code and returns the TypedScope used
-   * whilst type checking.
-   */
-  private TypeCheckResult parseAndTypeCheckWithScope(String js) {
-    return parseAndTypeCheckWithScope(DEFAULT_EXTERNS, js);
-  }
 
   private TypeCheckResult parseAndTypeCheckWithScope(String externs, String js) {
     registry.clearNamedTypes();
@@ -1646,14 +1641,6 @@ public final class TypeCheckNoTranspileTest extends CompilerTypeTestCase {
     return new TypeCheckResult(n, s);
   }
 
-  private Node typeCheck(Node n) {
-    Node externsNode = IR.root();
-    Node externAndJsRoot = IR.root(externsNode);
-    externAndJsRoot.addChildToBack(n);
-
-    makeTypeCheck().processForTesting(null, n);
-    return n;
-  }
 
   private TypeCheck makeTypeCheck() {
     return new TypeCheck(compiler, new SemanticReverseAbstractInterpreter(registry), registry);
