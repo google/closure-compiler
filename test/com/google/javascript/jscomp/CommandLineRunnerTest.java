@@ -2096,7 +2096,7 @@ public final class CommandLineRunnerTest extends TestCase {
   public void testOutputModuleNaming() {
     String inputString = "[{\"src\": \"alert('foo');\", \"path\":\"foo.js\"}]";
     args.add("--json_streams=BOTH");
-    args.add("--module=foo--bar.baz:1");
+    args.add("--chunk=foo--bar.baz:1");
 
     CommandLineRunner runner =
         new CommandLineRunner(
@@ -2272,10 +2272,10 @@ public final class CommandLineRunnerTest extends TestCase {
       args.add("--js");
       args.add("/path/to/input" + i + ".js");
       if (useModules == ModulePattern.CHAIN) {
-        args.add("--module");
+        args.add("--chunk");
         args.add("m" + i + ":1" + (i > 0 ? (":m" + (i - 1)) : ""));
       } else if (useModules == ModulePattern.STAR) {
-        args.add("--module");
+        args.add("--chunk");
         args.add("m" + i + ":1" + (i > 0 ? ":m0" : ""));
       }
     }
