@@ -88,6 +88,31 @@ public final class BaseTranspiler implements Transpiler {
    * time when we're in single-file mode.
    */
   public static class CompilerSupplier {
+    protected final ResolutionMode moduleResolution;
+    protected final ImmutableList<String> moduleRoots;
+    protected final ImmutableMap<String, String> prefixReplacements;
+
+    public CompilerSupplier() {
+      // Use the default resolution mode
+      this(new CompilerOptions().getModuleResolutionMode(), ImmutableList.of(), ImmutableMap.of());
+    }
+
+    /**
+     * Accepts commonly overridden options for ES6 modules to avoid needed to subclass.
+     *
+     * @param moduleResolution module resolution for resolving import paths
+     * @param prefixReplacements prefix replacements for when moduleResolution is {@link
+     *     ModuleLoader.ResolutionMode#BROWSER_WITH_TRANSFORMED_PREFIXES}
+     */
+    public CompilerSupplier(
+        ModuleLoader.ResolutionMode moduleResolution,
+        ImmutableList<String> moduleRoots,
+        ImmutableMap<String, String> prefixReplacements) {
+      this.moduleResolution = moduleResolution;
+      this.moduleRoots = moduleRoots;
+      this.prefixReplacements = prefixReplacements;
+    }
+
     public CompileResult compile(URI path, String code) {
       Compiler compiler = compiler();
       Result result =
@@ -149,6 +174,9 @@ public final class BaseTranspiler implements Transpiler {
       options.setPrettyPrint(true);
       options.setWarningLevel(ES5_WARNINGS, CheckLevel.OFF);
       options.setTranspileEs6ModulesToCjsModules(true);
+      options.setModuleResolutionMode(moduleResolution);
+      options.setModuleRoots(moduleRoots);
+      options.setBrowserResolverPrefixReplacements(prefixReplacements);
 
       options.setSourceMapOutputPath("/dev/null");
       options.setSourceMapIncludeSourcesContent(true);
@@ -181,30 +209,17 @@ public final class BaseTranspiler implements Transpiler {
    */
   public static class EsmToCjsCompilerSupplier extends CompilerSupplier {
 
-    private final ResolutionMode moduleResolution;
-    private final ImmutableList<String> moduleRoots;
-    private final ImmutableMap<String, String> prefixReplacements;
-
     public EsmToCjsCompilerSupplier() {
-      // Use the default resolution mode
-      this(new CompilerOptions().getModuleResolutionMode(), ImmutableList.of(), ImmutableMap.of());
+      super();
     }
 
-    /**
-     * Accepts commonly overridden options for ES6 modules to avoid needed to subclass.
-     *
-     * @param moduleResolution module resolution for resolving import paths
-     * @param prefixReplacements prefix replacements for when moduleResolution is {@link
-     *     ModuleLoader.ResolutionMode#BROWSER_WITH_TRANSFORMED_PREFIXES}
-     */
     public EsmToCjsCompilerSupplier(
         ModuleLoader.ResolutionMode moduleResolution,
         ImmutableList<String> moduleRoots,
         ImmutableMap<String, String> prefixReplacements) {
-      this.moduleResolution = moduleResolution;
-      this.moduleRoots = moduleRoots;
-      this.prefixReplacements = prefixReplacements;
+      super(moduleResolution, moduleRoots, prefixReplacements);
     }
+
 
     @Override
     public CompileResult compile(URI path, String code) {
