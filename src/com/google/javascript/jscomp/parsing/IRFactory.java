@@ -1081,6 +1081,8 @@ class IRFactory {
         scriptNode.addChildToBack(moduleNode);
         if (isGoogModule) {
           scriptNode.putBooleanProp(Node.GOOG_MODULE, true);
+        } else {
+          scriptNode.putBooleanProp(Node.ES6_MODULE, true);
         }
       }
       return scriptNode;

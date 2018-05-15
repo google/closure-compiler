@@ -164,7 +164,9 @@ public class Node implements Serializable {
       // RemovedUnusedVars to OptimizeParameters.
       MODULE_EXPORT = 97, // Mark a property as a module export so that collase properties
       // can act on it.
-      IS_SHORTHAND_PROPERTY = 98; // Indicates that a property {x:x} was originally parsed as {x}.
+      IS_SHORTHAND_PROPERTY = 98, // Indicates that a property {x:x} was originally parsed as {x}.
+      ES6_MODULE = 99; // Indicates that a SCRIPT node is or was an ES6 module. Remains set
+      // after the module is rewritten.
 
   private static final String propToString(byte propType) {
       switch (propType) {
@@ -230,8 +232,10 @@ public class Node implements Serializable {
         case MODULE_EXPORT:
           return "module_export";
         case IS_SHORTHAND_PROPERTY:
-          return "is_shorthand_property";
-        default:
+        return "is_shorthand_property";
+      case ES6_MODULE:
+        return "es6_module";
+      default:
           throw new IllegalStateException("unexpected prop id " + propType);
       }
   }

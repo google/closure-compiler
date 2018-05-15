@@ -1444,7 +1444,9 @@ public final class ConformanceRules {
           && !n.getBooleanProp(Node.IS_NAMESPACE)
           && !isWhitelisted(n)) {
         Node enclosingScript = NodeUtil.getEnclosingScript(n);
-        if (enclosingScript != null && enclosingScript.getBooleanProp(Node.GOOG_MODULE)) {
+        if (enclosingScript != null
+            && (enclosingScript.getBooleanProp(Node.GOOG_MODULE)
+                || enclosingScript.getBooleanProp(Node.ES6_MODULE))) {
           return ConformanceResult.CONFORMANCE;
         }
         return ConformanceResult.VIOLATION;

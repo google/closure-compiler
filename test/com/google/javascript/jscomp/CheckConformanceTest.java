@@ -80,7 +80,6 @@ public final class CheckConformanceTest extends CompilerTestCase {
     enableClosurePassForExpected();
     enableRewriteClosureCode();
     setLanguage(LanguageMode.ECMASCRIPT_2015, LanguageMode.ECMASCRIPT5_STRICT);
-    enableClosurePass();
     configuration = DEFAULT_CONFORMANCE;
     ignoreWarnings(DiagnosticGroups.MISSING_PROPERTIES);
   }
@@ -1510,6 +1509,22 @@ public final class CheckConformanceTest extends CompilerTestCase {
         "  * @package\n" +
         "  */\n" +
         "var foo = function() {};");
+  }
+
+  public void testBanGlobalVarsInEs6Module() {
+    // ES6 modules cannot be type checked yet
+    disableTypeCheck();
+    configuration =
+        lines(
+            "requirement: {",
+            "  type: CUSTOM",
+            "  java_class: 'com.google.javascript.jscomp.ConformanceRules$BanGlobalVars'",
+            "  error_message: 'BanGlobalVars Message'",
+            "}");
+
+    testNoWarning("export function foo() {}");
+    testNoWarning("var s; export {x}");
+    testNoWarning("export var s;");
   }
 
   public void testCustomBanUnresolvedType() {
