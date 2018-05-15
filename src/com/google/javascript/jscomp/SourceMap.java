@@ -184,10 +184,14 @@ public final class SourceMap {
 
   public void addSourceFile(SourceFile sourceFile) {
     try {
-      generator.addSourcesContent(fixupSourceLocation(sourceFile.getName()), sourceFile.getCode());
+      addSourceFileContents(sourceFile.getName(), sourceFile.getCode());
     } catch (IOException e) {
       logger.log(Level.WARNING, "Exception while adding source content to source map.", e);
     }
+  }
+
+  public void addSourceFileContents(String sourceFileName, String content) {
+    generator.addSourcesContent(fixupSourceLocation(sourceFileName), content);
   }
 
   /**

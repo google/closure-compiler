@@ -3443,8 +3443,21 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   private void addFilesToSourceMap(Iterable<? extends SourceFile> files) {
     if (getOptions().sourceMapIncludeSourcesContent && getSourceMap() != null) {
       for (SourceFile file : files) {
-        getSourceMap().addSourceFile(file);
+        if (getOptions().applyInputSourceMaps) {
+            addOriginalFilesToSourceMap(file);
+        }
+        else {
+          getSourceMap().addSourceFile(file);
+        }
       }
+    }
+  }
+
+  private void addOriginalFilesToSourceMap(SourceFile file) {
+    List<String> originalSources = inputSourceMaps.get(file.getName()).getSourceMap(errorManager).getOriginalSources();
+    List<String> originalSourcesContent = inputSourceMaps.get(file.getName()).getSourceMap(errorManager).getOriginalSourcesContent();
+    for (int i = 0; i < originalSources.size() && i < originalSourcesContent.size(); i++) {
+      getSourceMap().addSourceFileContents(originalSources.get(i), originalSourcesContent.get(i));
     }
   }
 

@@ -19,6 +19,7 @@ package com.google.debugging.sourcemap;
 import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping;
 
 import java.util.Collection;
+import java.util.List;
 
 /**
  * A SourceMappingReversable is a SourceMapping that can provide the reverse
@@ -29,7 +30,12 @@ public interface SourceMappingReversable extends SourceMapping {
   /**
    * @return the collection of original sources in this source mapping
    */
-  public Collection<String> getOriginalSources();
+  public List<String> getOriginalSources();
+
+  /**
+   * @return the collection of original sources content in this source mapping
+   */
+  public List<String> getOriginalSourcesContent();
 
   /**
    * Given a source file, line, and column, return the reverse mapping (source → target).

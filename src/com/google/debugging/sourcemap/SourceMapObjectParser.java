@@ -52,6 +52,9 @@ public class SourceMapObjectParser {
       }
 
       builder.setSources(getJavaStringArray(sourceMapRoot.get("sources")));
+      if (sourceMapRoot.has("sourcesContent")) {
+        builder.setSourcesContent(getJavaStringArray(sourceMapRoot.get("sourcesContent")));
+      }
       builder.setNames(getJavaStringArray(sourceMapRoot.get("names")));
 
       Map<String, Object> extensions = new LinkedHashMap<>();
@@ -99,7 +102,9 @@ public class SourceMapObjectParser {
     int len = array.size();
     String[] result = new String[len];
     for (int i = 0; i < len; i++) {
-      result[i] = array.get(i).getAsString();
+      JsonElement arrayElement = array.get(i);
+      boolean elementIsNull = arrayElement == null || arrayElement.isJsonNull();
+      result[i] = elementIsNull ? null : arrayElement.getAsString();
     }
     return result;
   }
