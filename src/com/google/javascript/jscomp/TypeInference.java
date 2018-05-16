@@ -866,7 +866,7 @@ class TypeInference
       updateScopeForTypeChange(scope, n, type, resultType);
       type = resultType;
     } else {
-      StaticTypedSlot<JSType> var = scope.getSlot(varName);
+      StaticTypedSlot var = scope.getSlot(varName);
       if (var != null) {
         // There are two situations where we don't want to use type information
         // from the scope, even if we have it.
@@ -1657,7 +1657,7 @@ class TypeInference
 
     // Scopes sometimes contain inferred type info about qualified names.
     String qualifiedName = n.getQualifiedName();
-    StaticTypedSlot<JSType> var = qualifiedName != null ? scope.getSlot(qualifiedName) : null;
+    StaticTypedSlot var = qualifiedName != null ? scope.getSlot(qualifiedName) : null;
     if (var != null) {
       JSType varType = var.getType();
       if (varType != null) {

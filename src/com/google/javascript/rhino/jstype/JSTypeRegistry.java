@@ -205,7 +205,7 @@ public class JSTypeRegistry implements Serializable {
       LinkedHashMultimap.create();
 
   // All the unresolved named types.
-  private final Multimap<StaticTypedScope<JSType>, NamedType> unresolvedNamedTypes =
+  private final Multimap<StaticTypedScope, NamedType> unresolvedNamedTypes =
       ArrayListMultimap.create();
 
   // The template type name.
@@ -1478,11 +1478,7 @@ public class JSTypeRegistry implements Serializable {
    *     corresponding JSType object.
    */
   public JSType getType(
-      StaticTypedScope<JSType> scope,
-      String jsTypeName,
-      String sourceName,
-      int lineno,
-      int charno) {
+      StaticTypedScope scope, String jsTypeName, String sourceName, int lineno, int charno) {
     return getType(scope, jsTypeName, sourceName, lineno, charno, true);
   }
 
@@ -1492,7 +1488,7 @@ public class JSTypeRegistry implements Serializable {
    *     type args).
    */
   private JSType getType(
-      StaticTypedScope<JSType> scope,
+      StaticTypedScope scope,
       String jsTypeName,
       String sourceName,
       int lineno,
@@ -1565,10 +1561,8 @@ public class JSTypeRegistry implements Serializable {
     unresolvedNamedTypes.clear();
   }
 
-  /**
-   * Resolve all the unresolved types in the given scope.
-   */
-  public void resolveTypesInScope(StaticTypedScope<JSType> scope) {
+  /** Resolve all the unresolved types in the given scope. */
+  public void resolveTypesInScope(StaticTypedScope scope) {
     for (NamedType type : unresolvedNamedTypes.get(scope)) {
       type.resolve(reporter);
     }
@@ -2050,8 +2044,8 @@ public class JSTypeRegistry implements Serializable {
 
   /** Creates a named type. */
   @VisibleForTesting
-  public NamedType createNamedType(StaticTypedScope<JSType> scope, String reference,
-      String sourceName, int lineno, int charno) {
+  public NamedType createNamedType(
+      StaticTypedScope scope, String reference, String sourceName, int lineno, int charno) {
     if (reference.endsWith(".")) {
       return new NamespaceType(this, reference, sourceName, lineno, charno);
     } else {
@@ -2067,7 +2061,7 @@ public class JSTypeRegistry implements Serializable {
     nonNullableTypeNames.add(name);
   }
 
-  public JSType evaluateTypeExpression(JSTypeExpression expr, StaticTypedScope<JSType> scope) {
+  public JSType evaluateTypeExpression(JSTypeExpression expr, StaticTypedScope scope) {
     return createTypeFromCommentNode(expr.getRoot(), expr.getSourceName(), scope);
   }
 
@@ -2077,18 +2071,18 @@ public class JSTypeRegistry implements Serializable {
 
   /**
    * Creates a JSType from the nodes representing a type.
+   *
    * @param n The node with type info.
    * @param sourceName The source file name.
    * @param scope A scope for doing type name lookups.
    */
   @SuppressWarnings("unchecked")
-  public JSType createTypeFromCommentNode(
-      Node n, String sourceName, StaticTypedScope<JSType> scope) {
+  public JSType createTypeFromCommentNode(Node n, String sourceName, StaticTypedScope scope) {
     return createFromTypeNodesInternal(n, sourceName, scope, true);
   }
 
-  private JSType createFromTypeNodesInternal(Node n, String sourceName,
-      StaticTypedScope<JSType> scope, boolean recordUnresolvedTypes) {
+  private JSType createFromTypeNodesInternal(
+      Node n, String sourceName, StaticTypedScope scope, boolean recordUnresolvedTypes) {
     switch (n.getToken()) {
       case LC: // Record type.
         return createRecordTypeFromNodes(
@@ -2296,12 +2290,12 @@ public class JSTypeRegistry implements Serializable {
 
   /**
    * Creates a RecordType from the nodes representing said record type.
+   *
    * @param n The node with type info.
    * @param sourceName The source file name.
    * @param scope A scope for doing type name lookups.
    */
-  private JSType createRecordTypeFromNodes(Node n, String sourceName,
-      StaticTypedScope<JSType> scope) {
+  private JSType createRecordTypeFromNodes(Node n, String sourceName, StaticTypedScope scope) {
 
     RecordTypeBuilder builder = new RecordTypeBuilder(this);
 

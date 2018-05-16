@@ -93,10 +93,8 @@ public final class JSTypeExpression implements Serializable {
     return root.getToken() == Token.ELLIPSIS;
   }
 
-  /**
-   * Evaluates the type expression into a {@code JSType} object.
-   */
-  public JSType evaluate(StaticTypedScope<JSType> scope, JSTypeRegistry registry) {
+  /** Evaluates the type expression into a {@code JSType} object. */
+  public JSType evaluate(StaticTypedScope scope, JSTypeRegistry registry) {
     JSType type = registry.createTypeFromCommentNode(root, sourceName, scope);
     root.setJSType(type);
     return type;

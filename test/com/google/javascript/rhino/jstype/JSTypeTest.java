@@ -83,8 +83,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
   private EnumElementType elementsType;
   private NamedType forwardDeclaredNamedType;
 
-  private static final StaticTypedScope<JSType> EMPTY_SCOPE =
-      MapBasedScope.emptyScope();
+  private static final StaticTypedScope EMPTY_SCOPE = MapBasedScope.emptyScope();
 
   /**
    * A non exhaustive list of representative types used to test simple

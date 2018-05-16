@@ -224,7 +224,7 @@ public final class TypeInferenceTest extends TestCase {
 
   private JSType getType(String name) {
     assertNotNull("The return scope should not be null.", returnScope);
-    StaticTypedSlot<JSType> var = returnScope.getSlot(name);
+    StaticTypedSlot var = returnScope.getSlot(name);
     assertNotNull("The variable " + name + " is missing from the scope.", var);
     return var.getType();
   }

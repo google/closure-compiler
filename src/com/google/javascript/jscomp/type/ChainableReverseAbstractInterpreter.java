@@ -118,7 +118,7 @@ public abstract class ChainableReverseAbstractInterpreter
   protected JSType getTypeIfRefinable(Node node, FlowScope scope) {
     switch (node.getToken()) {
       case NAME:
-        StaticTypedSlot<JSType> nameVar = scope.getSlot(node.getString());
+        StaticTypedSlot nameVar = scope.getSlot(node.getString());
         if (nameVar != null) {
           JSType nameVarType = nameVar.getType();
           if (nameVarType == null) {
@@ -133,7 +133,7 @@ public abstract class ChainableReverseAbstractInterpreter
         if (qualifiedName == null) {
           return null;
         }
-        StaticTypedSlot<JSType> propVar = scope.getSlot(qualifiedName);
+        StaticTypedSlot propVar = scope.getSlot(qualifiedName);
         JSType propVarType = null;
         if (propVar != null) {
           propVarType = propVar.getType();

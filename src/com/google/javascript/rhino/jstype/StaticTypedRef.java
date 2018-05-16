@@ -41,15 +41,13 @@ package com.google.javascript.rhino.jstype;
 import com.google.javascript.rhino.StaticRef;
 
 /**
- * The {@code StaticTypedRef} tells us all the ways that a {@code StaticTypedSlot}
- * is used in a program.
+ * The {@code StaticTypedRef} tells us all the ways that a {@code StaticTypedSlot} is used in a
+ * program.
  *
  * @author nicksantos@google.com (Nick Santos)
  */
-public interface StaticTypedRef<T extends JSType> extends StaticRef {
-  /**
-   * The variable that this reference points to.
-   */
+public interface StaticTypedRef extends StaticRef {
+  /** The variable that this reference points to. */
   @Override
-  StaticTypedSlot<T> getSymbol();
+  StaticTypedSlot getSymbol();
 }

@@ -164,19 +164,17 @@ class LinkedFlowScope implements FlowScope {
   }
 
   @Override
-  public StaticTypedScope<JSType> getParentScope() {
+  public StaticTypedScope getParentScope() {
     throw new UnsupportedOperationException();
   }
 
-  /**
-   * Get the slot for the given symbol.
-   */
+  /** Get the slot for the given symbol. */
   @Override
-  public StaticTypedSlot<JSType> getSlot(String name) {
+  public StaticTypedSlot getSlot(String name) {
     return getSlot(getVarFromSyntacticScope(name));
   }
 
-  private StaticTypedSlot<JSType> getSlot(ScopedName var) {
+  private StaticTypedSlot getSlot(ScopedName var) {
     if (cache.dirtySymbols.contains(var)) {
       for (LinkedFlowSlot slot = lastSlot; slot != null; slot = slot.parent) {
         if (slot.var.equals(var)) {
@@ -210,7 +208,7 @@ class LinkedFlowScope implements FlowScope {
   }
 
   @Override
-  public StaticTypedSlot<JSType> getOwnSlot(String name) {
+  public StaticTypedSlot getOwnSlot(String name) {
     throw new UnsupportedOperationException();
   }
 
@@ -220,7 +218,7 @@ class LinkedFlowScope implements FlowScope {
   }
 
   @Override
-  public FlowScope createChildFlowScope(StaticTypedScope<JSType> scope) {
+  public FlowScope createChildFlowScope(StaticTypedScope scope) {
     frozen = true;
 
     TypedScope typedScope = (TypedScope) scope;
@@ -381,10 +379,9 @@ class LinkedFlowScope implements FlowScope {
   }
 
   /**
-   * Determines whether two slots are meaningfully different for the
-   * purposes of data flow analysis.
+   * Determines whether two slots are meaningfully different for the purposes of data flow analysis.
    */
-  private static boolean diffSlots(StaticTypedSlot<JSType> slotA, StaticTypedSlot<JSType> slotB) {
+  private static boolean diffSlots(StaticTypedSlot slotA, StaticTypedSlot slotB) {
     boolean aIsNull = slotA == null || slotA.getType() == null;
     boolean bIsNull = slotB == null || slotB.getType() == null;
     if (aIsNull || bIsNull) {
@@ -432,7 +429,7 @@ class LinkedFlowScope implements FlowScope {
   }
 
   /** A static slot with a linked list built in. */
-  private static class LinkedFlowSlot implements StaticTypedSlot<JSType> {
+  private static class LinkedFlowSlot implements StaticTypedSlot {
     final ScopedName var;
     final JSType type;
     final LinkedFlowSlot parent;
@@ -459,7 +456,7 @@ class LinkedFlowScope implements FlowScope {
     }
 
     @Override
-    public StaticTypedRef<JSType> getDeclaration() {
+    public StaticTypedRef getDeclaration() {
       return null;
     }
 
@@ -469,7 +466,7 @@ class LinkedFlowScope implements FlowScope {
     }
 
     @Override
-    public StaticTypedScope<JSType> getScope() {
+    public StaticTypedScope getScope() {
       throw new UnsupportedOperationException();
     }
   }

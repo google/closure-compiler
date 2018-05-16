@@ -482,7 +482,7 @@ public abstract class ObjectType extends JSType implements Serializable {
    *         returns {@code null}.
    */
   public JSType getPropertyType(String propertyName) {
-    StaticTypedSlot<JSType> slot = getSlot(propertyName);
+    StaticTypedSlot slot = getSlot(propertyName);
     if (slot == null) {
       if (isNoResolvedType() || isCheckedUnknownType()) {
         return getNativeType(JSTypeNative.CHECKED_UNKNOWN_TYPE);
@@ -534,7 +534,7 @@ public abstract class ObjectType extends JSType implements Serializable {
    * Checks whether the property's type is inferred.
    */
   public boolean isPropertyTypeInferred(String propertyName) {
-    StaticTypedSlot<JSType> slot = getSlot(propertyName);
+    StaticTypedSlot slot = getSlot(propertyName);
     return slot == null ? false : slot.isTypeInferred();
   }
 
@@ -542,7 +542,7 @@ public abstract class ObjectType extends JSType implements Serializable {
    * Checks whether the property's type is declared.
    */
   public boolean isPropertyTypeDeclared(String propertyName) {
-    StaticTypedSlot<JSType> slot = getSlot(propertyName);
+    StaticTypedSlot slot = getSlot(propertyName);
     return slot == null ? false : !slot.isTypeInferred();
   }
 

@@ -787,7 +787,7 @@ class TypeValidator implements Serializable {
    */
   private void expectInterfaceProperty(NodeTraversal t, Node n,
       ObjectType instance, ObjectType implementedInterface, String prop) {
-    StaticTypedSlot<JSType> propSlot = instance.getSlot(prop);
+    StaticTypedSlot propSlot = instance.getSlot(prop);
     if (propSlot == null) {
       // Not implemented
       String sourceName = n.getSourceFileName();

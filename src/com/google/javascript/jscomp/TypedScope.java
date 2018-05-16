@@ -27,24 +27,21 @@ import com.google.javascript.rhino.jstype.StaticTypedScope;
 import com.google.javascript.rhino.jstype.StaticTypedSlot;
 
 /**
- * TypedScope contains information about variables and their types.
- * Scopes can be nested, a scope points back to its parent scope.
- * <p>
- * TypedScope is also used as a lattice element for flow-sensitive type inference.
- * As a lattice element, a scope is viewed as a map from names to types. A name
- * not in the map is considered to have the bottom type. The join of two maps m1
- * and m2 is the map of the union of names with {@link JSType#getLeastSupertype}
- * to meet the m1 type and m2 type.
+ * TypedScope contains information about variables and their types. Scopes can be nested, a scope
+ * points back to its parent scope.
+ *
+ * <p>TypedScope is also used as a lattice element for flow-sensitive type inference. As a lattice
+ * element, a scope is viewed as a map from names to types. A name not in the map is considered to
+ * have the bottom type. The join of two maps m1 and m2 is the map of the union of names with {@link
+ * JSType#getLeastSupertype} to meet the m1 type and m2 type.
  *
  * @see NodeTraversal
  * @see DataFlowAnalysis
- *
- * Several methods in this class, such as {@code isBlockScope} throw an exception when called.
- * The reason for this is that we want to shadow methods from the parent class, to avoid calling
- * them accidentally.
+ *     <p>Several methods in this class, such as {@code isBlockScope} throw an exception when
+ *     called. The reason for this is that we want to shadow methods from the parent class, to avoid
+ *     calling them accidentally.
  */
-public class TypedScope extends AbstractScope<TypedScope, TypedVar>
-    implements StaticTypedScope<JSType> {
+public class TypedScope extends AbstractScope<TypedScope, TypedVar> implements StaticTypedScope {
 
   private final TypedScope parent;
   private final int depth;
@@ -202,12 +199,12 @@ public class TypedScope extends AbstractScope<TypedScope, TypedVar>
   }
 
   public JSType getNamespaceOrTypedefType(String typeName) {
-    StaticTypedSlot<JSType> slot = getSlot(typeName);
+    StaticTypedSlot slot = getSlot(typeName);
     return slot == null ? null : slot.getType();
   }
 
   public JSDocInfo getJsdocOfTypeDeclaration(String typeName) {
-    StaticTypedSlot<JSType> slot = getSlot(typeName);
+    StaticTypedSlot slot = getSlot(typeName);
     return slot == null ? null : slot.getJSDocInfo();
   }
 }

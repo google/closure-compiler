@@ -24,12 +24,12 @@ import com.google.javascript.rhino.jstype.StaticTypedScope;
 /**
  * A symbol table for inferring types during data flow analysis.
  *
- * Each flow scope represents the types of all variables in the scope at
- * a particular point in the flow analysis.
+ * <p>Each flow scope represents the types of all variables in the scope at a particular point in
+ * the flow analysis.
  *
  * @author nicksantos@google.com (Nick Santos)
  */
-public interface FlowScope extends StaticTypedScope<JSType>, LatticeElement {
+public interface FlowScope extends StaticTypedScope, LatticeElement {
 
   /**
    * Creates a child of this flow scope, to represent an instruction
@@ -41,7 +41,7 @@ public interface FlowScope extends StaticTypedScope<JSType>, LatticeElement {
    * Creates a child flow scope with the given syntactic scope, which may be required to be a
    * specific subclass, such as TypedScope.
    */
-  FlowScope createChildFlowScope(StaticTypedScope<JSType> scope);
+  FlowScope createChildFlowScope(StaticTypedScope scope);
 
   /**
    * Defines the type of a symbol at this point in the flow.
@@ -70,5 +70,5 @@ public interface FlowScope extends StaticTypedScope<JSType>, LatticeElement {
   FlowScope optimize();
 
   /** Returns the underlying TypedScope. */
-  StaticTypedScope<JSType> getDeclarationScope();
+  StaticTypedScope getDeclarationScope();
 }

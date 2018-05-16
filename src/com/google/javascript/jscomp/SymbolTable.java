@@ -1880,21 +1880,21 @@ public final class SymbolTable {
 
   private JSType getType(StaticSlot sym) {
     if (sym instanceof StaticTypedSlot) {
-      return ((StaticTypedSlot<JSType>) sym).getType();
+      return ((StaticTypedSlot) sym).getType();
     }
     return null;
   }
 
   private JSType getTypeOfThis(StaticScope s) {
     if (s instanceof StaticTypedScope) {
-      return ((StaticTypedScope<JSType>) s).getTypeOfThis();
+      return ((StaticTypedScope) s).getTypeOfThis();
     }
     return null;
   }
 
   private boolean isTypeInferred(StaticSlot sym) {
     if (sym instanceof StaticTypedSlot) {
-      return ((StaticTypedSlot<JSType>) sym).isTypeInferred();
+      return ((StaticTypedSlot) sym).isTypeInferred();
     }
     return true;
   }

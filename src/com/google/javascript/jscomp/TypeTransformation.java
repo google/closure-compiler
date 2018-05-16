@@ -94,7 +94,7 @@ class TypeTransformation {
 
   private final AbstractCompiler compiler;
   private final JSTypeRegistry registry;
-  private final StaticTypedScope<JSType> typeEnv;
+  private final StaticTypedScope typeEnv;
 
   /**
    * A helper class for holding the information about the type variables
@@ -111,7 +111,7 @@ class TypeTransformation {
   }
 
   @SuppressWarnings("unchecked")
-  TypeTransformation(AbstractCompiler compiler, StaticTypedScope<JSType> typeEnv) {
+  TypeTransformation(AbstractCompiler compiler, StaticTypedScope typeEnv) {
     this.compiler = compiler;
     this.registry = compiler.getTypeRegistry();
     this.typeEnv = typeEnv;
@@ -138,7 +138,7 @@ class TypeTransformation {
     if (type != null) {
       return type;
     }
-    StaticTypedSlot<JSType> slot = typeEnv.getSlot(typeName);
+    StaticTypedSlot slot = typeEnv.getSlot(typeName);
     type = slot != null ? slot.getType() : null;
     if (type != null) {
       if (type.isConstructor() || type.isInterface()) {
@@ -761,7 +761,7 @@ class TypeTransformation {
 
   private JSType evalTypeOfVar(Node ttlAst) {
     String name = getCallArgument(ttlAst, 0).getString();
-    StaticTypedSlot<JSType> slot = typeEnv.getSlot(name);
+    StaticTypedSlot slot = typeEnv.getSlot(name);
     JSType type = slot != null ? slot.getType() : null;
     if (type == null) {
       reportWarning(ttlAst, VAR_UNDEFINED, name);

@@ -106,19 +106,21 @@ public class NamedType extends ProxyObjectType {
    */
   @Nullable private final ImmutableList<JSType> templateTypes;
 
+  @Nullable private StaticTypedScope resolutionScope;
 
-  @Nullable private StaticTypedScope<JSType> resolutionScope;
-
-  /**
-   * Create a named type based on the reference.
-   */
-  NamedType(StaticTypedScope<JSType> scope, JSTypeRegistry registry, String reference,
-      String sourceName, int lineno, int charno) {
+  /** Create a named type based on the reference. */
+  NamedType(
+      StaticTypedScope scope,
+      JSTypeRegistry registry,
+      String reference,
+      String sourceName,
+      int lineno,
+      int charno) {
     this(scope, registry, reference, sourceName, lineno, charno, null);
   }
 
   NamedType(
-      StaticTypedScope<JSType> scope,
+      StaticTypedScope scope,
       JSTypeRegistry registry,
       String reference,
       String sourceName,
@@ -295,7 +297,7 @@ public class NamedType extends ProxyObjectType {
     if (componentNames[0].length() == 0) {
       return null;
     }
-    StaticTypedSlot<JSType> slot = resolutionScope.getSlot(componentNames[0]);
+    StaticTypedSlot slot = resolutionScope.getSlot(componentNames[0]);
     if (slot == null) {
       return null;
     }
@@ -377,7 +379,7 @@ public class NamedType extends ProxyObjectType {
     setResolvedTypeInternal(getReferencedType());
   }
 
-  private JSType getTypedefType(ErrorReporter reporter, StaticTypedSlot<JSType> slot) {
+  private JSType getTypedefType(ErrorReporter reporter, StaticTypedSlot slot) {
     JSType type = slot.getType();
     if (type != null) {
       return type;

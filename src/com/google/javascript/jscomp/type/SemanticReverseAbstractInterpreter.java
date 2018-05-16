@@ -355,7 +355,7 @@ public final class SemanticReverseAbstractInterpreter
     Set<String> refinements = new HashSet<>();
     blindScope = new RefinementTrackingFlowScope(blindScope, refinements);
     FlowScope leftScope = firstPreciserScopeKnowingConditionOutcome(left, blindScope, !outcome);
-    StaticTypedSlot<JSType> leftVar =
+    StaticTypedSlot leftVar =
         refinements.size() == 1 ? leftScope.getSlot(refinements.iterator().next()) : null;
     if (leftVar == null) {
       // If we did create a more precise scope, blindScope has a child and
@@ -369,7 +369,7 @@ public final class SemanticReverseAbstractInterpreter
         new RefinementTrackingFlowScope(
             firstPreciserScopeKnowingConditionOutcome(left, blindScope, outcome), refinements);
     rightScope = firstPreciserScopeKnowingConditionOutcome(right, rightScope, !outcome);
-    StaticTypedSlot<JSType> rightVar =
+    StaticTypedSlot rightVar =
         refinements.size() == 1 ? rightScope.getSlot(refinements.iterator().next()) : null;
     if (rightVar == null || !leftVar.getName().equals(rightVar.getName())) {
       return unwrap(blindScope == rightScope ? blindScope : blindScope.createChildFlowScope());
@@ -631,7 +631,7 @@ public final class SemanticReverseAbstractInterpreter
     }
 
     @Override
-    public FlowScope createChildFlowScope(StaticTypedScope<JSType> scope) {
+    public FlowScope createChildFlowScope(StaticTypedScope scope) {
       return new RefinementTrackingFlowScope(delegate.createChildFlowScope(scope), refinements);
     }
 
@@ -655,7 +655,7 @@ public final class SemanticReverseAbstractInterpreter
     }
 
     @Override
-    public StaticTypedScope<JSType> getDeclarationScope() {
+    public StaticTypedScope getDeclarationScope() {
       return delegate.getDeclarationScope();
     }
 
@@ -665,17 +665,17 @@ public final class SemanticReverseAbstractInterpreter
     }
 
     @Override
-    public StaticTypedScope<JSType> getParentScope() {
+    public StaticTypedScope getParentScope() {
       throw new UnsupportedOperationException();
     }
 
     @Override
-    public StaticTypedSlot<JSType> getSlot(String name) {
+    public StaticTypedSlot getSlot(String name) {
       return delegate.getSlot(name);
     }
 
     @Override
-    public StaticTypedSlot<JSType> getOwnSlot(String name) {
+    public StaticTypedSlot getOwnSlot(String name) {
       return delegate.getOwnSlot(name);
     }
 
