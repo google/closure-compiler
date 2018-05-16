@@ -424,6 +424,10 @@ public class DiagnosticGroups {
           CheckProvides.MISSING_PROVIDE_WARNING,
           ClosureRewriteModule.MISSING_MODULE_OR_PROVIDE);
 
+  public static final DiagnosticGroup UNRECOGNIZED_TYPE_ERROR =
+      DiagnosticGroups.registerGroup("unrecognizedTypeError", // undocumented
+          RhinoErrorReporter.UNRECOGNIZED_TYPE_ERROR);
+
   public static final DiagnosticGroup MISSING_REQUIRE =
       DiagnosticGroups.registerGroup(
           "missingRequire", CheckMissingAndExtraRequires.MISSING_REQUIRE_WARNING);
