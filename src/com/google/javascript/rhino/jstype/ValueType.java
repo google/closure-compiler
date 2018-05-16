@@ -54,6 +54,10 @@ abstract class ValueType extends JSType {
     return this;
   }
 
+  // Subclasses must override and return non-null.
+  @Override
+  public abstract String getDisplayName();
+
   @Override
   public boolean hasDisplayName() {
     return true;
