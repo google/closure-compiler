@@ -2796,6 +2796,14 @@ public class CompilerOptions implements Serializable {
     this.packageJsonEntryNames = names;
   }
 
+  public void setUseSizeHeuristicToStopOptimizationLoop(boolean mayStopEarly) {
+    this.useSizeHeuristicToStopOptimizationLoop = mayStopEarly;
+  }
+
+  public void setMaxOptimizationLoopIterations(int maxIterations) {
+    this.optimizationLoopMaxIterations = maxIterations;
+  }
+
   /** Serializes compiler options to a stream. */
   @GwtIncompatible("ObjectOutputStream")
   public void serialize(OutputStream objectOutputStream) throws IOException {
