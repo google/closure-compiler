@@ -1398,13 +1398,197 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "required: number"));
   }
 
-  public void disabled_testTaggedTemplateLiteral1() {
-    // TODO(b/78891530): Make the typechecker handle tagged template lits. Currently this crashes.
+  // The first "argument" to a template literal tag function has type !ITemplateArray.
+  public void testTaggedTemplateLiteral_tagParameters1() {
+    // ITemplateArray works as the first parameter
+    testTypesWithExtraExterns(
+        lines(
+            "/**",
+            " * @param {!ITemplateArray} template",
+            " * @param {...*} var_args Substitution values.",
+            " * @return {string}",
+            " */",
+            "String.raw = function(template, var_args) {};"),
+        "String.raw`one ${1} two`");
+  }
+
+  public void testTaggedTemplateLiteral_tagParameters2() {
+    // !Array<string> works as the first parameter
+    testTypesWithCommonExterns(
+        lines(
+            "function tag(/** !Array<string> */ strings){}", // preserve newline
+            "tag`template string`;"));
+  }
+
+  public void testTaggedTemplateLiteral_tagParameters3() {
+    // ?Array<string> works as the first parameter
+    testTypesWithCommonExterns(
+        lines(
+            "function tag(/** ?Array<string> */ strings){}", // preserve newline
+            "tag`template string`;"));
+  }
+
+  public void testTaggedTemplateLiteral_tagParameters4() {
+    // Object works as the first parameter
     testTypes(
         lines(
-            "function tag(/** !Array<string> */ strings, /** number */ num) {",
-            "  return num;",
+            "function tag(/** Object */ strings){}", // preserve newline
+            "tag `template string`;"));
+  }
+
+  public void testTaggedTemplateLiteral_tagParameters5() {
+    // unknown type works as the first parameter.
+    testTypes(
+        lines(
+            "function tag(/** ? */ strings){}", // preserve newline
+            "tag `template string`;"));
+  }
+
+  public void testTaggedTemplateLiteral_invalidTagParameters1() {
+    // Random object does not work as first parameter
+    testTypes(
+        lines(
+            "function tag(/** {a: number} */ strings){}", // preserve newline
+            "tag `template string`;"),
+        lines(
+            "Invalid type for the first parameter of tag function",
+            "found   : {a: number}",
+            "required: ITemplateArray"));
+  }
+
+  public void testTaggedTemplateLiteral_invalidTagParameters2() {
+    // !Array<number> does not work as first parameter
+    testTypes(
+        lines(
+            "function tag(/** !Array<number> */ strings) {}", // preserve newline
+            "tag`template string`;"),
+        lines(
+            "Invalid type for the first parameter of tag function",
+            "found   : Array<number>",
+            "required: ITemplateArray"));
+  }
+
+  public void testTaggedTemplateLiteral_invalidTagParameters3() {
+    // Tag function must have at least one parameter
+    testTypes(
+        "function tag(){} tag``;",
+        "Function tag: called with 1 argument(s). "
+            + "Function requires at least 0 argument(s) and no more than 0 argument(s).");
+  }
+
+  public void testTaggedTemplateLiteral_tagNotAFunction() {
+    testTypes("const tag = 42; tag `template string`;", "number expressions are not callable");
+  }
+
+  public void testTaggedTemplateLiteral_nullableTagFunction() {
+    testTypes(
+        lines(
+            "function f(/** ?function(!ITemplateArray) */ tag) {", // preserve newline
+            "  tag `template string`;",
+            "}"));
+  }
+
+  public void testTaggedTemplateLiteral_unknownTagFunction() {
+    testTypes(
+        lines(
+            "function f(/** ? */ tag) {", // preserve newline
+            "  tag `template string`;",
+            "}"));
+  }
+
+  public void testTaggedTemplateLiteral_tooFewArguments() {
+    testTypes(
+        "function tag(strings, x, y) {} tag`${1}`;",
+        "Function tag: called with 2 argument(s). "
+            + "Function requires at least 3 argument(s) and no more than 3 argument(s).");
+  }
+
+  public void testTaggedTemplateLiteral_tooManyArguments() {
+    testTypes(
+        "function tag(strings, x) {} tag`${0} ${1}`;",
+        "Function tag: called with 3 argument(s). "
+            + "Function requires at least 2 argument(s) and no more than 2 argument(s).");
+  }
+
+  public void testTaggedTemplateLiteral_argumentTypeMismatch() {
+    testTypes(
+        lines(
+            "function tag(strings, /** string */ s) {}", // preserve newline
+            "tag`${123}`;"),
+        lines(
+            "actual parameter 2 of tag does not match formal parameter",
+            "found   : number",
+            "required: string"));
+  }
+
+  public void testTaggedTemplateLiteral_optionalArguments() {
+    testTypes(
+        lines(
+            "/** @param {number=} y */ function tag(strings, y){}", // preserve newline
+            "tag``;"));
+  }
+
+  public void testTaggedTemplateLiteral_varArgs() {
+    testTypes(
+        lines(
+            "function tag(strings, /** number */ var_args){}", // preserve newline
+            "tag`${1} ${'str'}`;"),
+        lines(
+            "actual parameter 3 of tag does not match formal parameter",
+            "found   : string",
+            "required: (number|undefined)"));
+  }
+
+  public void testTaggedTemplateLiteral_returnType1() {
+    // Infer the TAGGED_TEMPLATELIT to have the return type of the tag function
+    testTypes(
+        lines(
+            "function takesString(/** string */ s) {}",
+            "",
+            "/** @return {number} */",
+            "function returnsNumber(strings){",
+            "  return 1;",
             "}",
-            "tag`foo ${3} bar`"));
+            "takesString(returnsNumber`str`);"),
+        lines(
+            "actual parameter 1 of takesString does not match formal parameter",
+            "found   : number",
+            "required: string"));
+  }
+
+  public void testTaggedTemplateLiteral_returnType2() {
+    // TODO(b/78891530): this should throw a type mismatch error
+    // We need to infer the template type for tag functions in TypeInference.
+    // See comment in TypeInference#traverseCallOrTag about back inference
+    // Note: this does warn if we transpile the template literal before typechecking.
+    testTypes(
+        lines(
+            "function takesString(/** string */ s) {}",
+            "/**",
+            " * @param {!ITemplateArray} strings",
+            " * @param {T} subExpr",
+            " * @param {*} var_args",
+            " * @return {T}",
+            " * @template T",
+            " */",
+            "function getFirstTemplateLitSub(strings, subExpr, var_args) { return subExpr; }",
+            "",
+            "takesString(getFirstTemplateLitSub`${1}`);"));
+  }
+
+  public void testITemplateArray1() {
+    // Test that ITemplateArray is Iterable and iterating over it produces a string
+    testTypesWithCommonExterns(
+        lines(
+            "function takesNumber(/** number */ n) {}",
+            "function f(/** !ITemplateArray */ arr) {",
+            "  for (let str of arr) {",
+            "    takesNumber(str);",
+            "  }",
+            "}"),
+        lines(
+            "actual parameter 1 of takesNumber does not match formal parameter",
+            "found   : string",
+            "required: number"));
   }
 }

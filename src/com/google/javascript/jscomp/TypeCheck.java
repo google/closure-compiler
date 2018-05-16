@@ -640,8 +640,13 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         ensureTyped(t, n, STRING_TYPE);
         break;
 
-       case TEMPLATELIT:
+      case TEMPLATELIT:
         ensureTyped(t, n, STRING_TYPE);
+        break;
+
+      case TAGGED_TEMPLATELIT:
+        visitTaggedTemplateLit(t, n);
+        ensureTyped(t, n);
         break;
 
       case BITNOT:
@@ -1846,7 +1851,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       if (ctorType != null && ctorType.isAbstract()) {
         report(t, n, INSTANTIATE_ABSTRACT_CLASS);
       }
-      visitParameterList(t, n, fnType);
+      visitArgumentList(t, n, fnType);
       ensureTyped(t, n, fnType.getInstanceType());
     } else {
       ensureTyped(t, n);
@@ -2073,7 +2078,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       }
 
       checkAbstractMethodCall(t, n);
-      visitParameterList(t, n, functionType);
+      visitArgumentList(t, n, functionType);
       ensureTyped(t, n, functionType.getReturnType());
     } else {
       ensureTyped(t, n);
@@ -2118,17 +2123,32 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     }
   }
 
-  /**
-   * Visits the parameters of a CALL or a NEW node.
-   */
-  private void visitParameterList(NodeTraversal t, Node call,
-      FunctionType functionType) {
-    Iterator<Node> arguments = call.children().iterator();
-    arguments.next(); // skip the function name
-
+  /** Visits the parameters of a CALL or a NEW node. */
+  private void visitArgumentList(NodeTraversal t, Node call, FunctionType functionType) {
     Iterator<Node> parameters = functionType.getParameters().iterator();
+    Iterator<Node> arguments = NodeUtil.getInvocationArgsAsIterable(call).iterator();
+    checkArgumentsMatchParameters(t, call, functionType, arguments, parameters, 0);
+  }
+
+  /**
+   * Checks that a list of arguments match a list of formal parameters
+   *
+   * <p>If given a TAGGED_TEMPLATE_LIT, the given Iterator should only contain the parameters
+   * corresponding to the actual template lit sub arguments, skipping over the first parameter.
+   *
+   * @param firstParameterIndex The index of the first parameter in the given Iterator in the
+   *     function type's parameter list.
+   */
+  private void checkArgumentsMatchParameters(
+      NodeTraversal t,
+      Node call,
+      FunctionType functionType,
+      Iterator<Node> arguments,
+      Iterator<Node> parameters,
+      int firstParameterIndex) {
+
     int spreadArgumentCount = 0;
-    int normalArgumentCount = 0;
+    int normalArgumentCount = firstParameterIndex;
     boolean checkArgumentTypeAgainstParameter = true;
     Node parameter = null;
     Node argument = null;
@@ -2330,6 +2350,52 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       return templateTypeMap.getResolvedTemplateType(typeRegistry.getIteratorTemplate());
     }
     return typeRegistry.getNativeType(UNKNOWN_TYPE);
+  }
+
+  private void visitTaggedTemplateLit(NodeTraversal t, Node n) {
+    Node tag = n.getFirstChild();
+    JSType tagType = tag.getJSType().restrictByNotNullOrUndefined();
+
+    if (!tagType.canBeCalled()) {
+      report(t, n, NOT_CALLABLE, tagType.toString());
+      return;
+    } else if (!tagType.isFunctionType()) {
+      // A few types, like the unknown, regexp, and bottom types, can be called as if they are
+      // functions. Return if we have one of those types that is not actually a known function.
+      return;
+    }
+
+    FunctionType tagFnType = tagType.toMaybeFunctionType();
+    Iterator<Node> parameters = tagFnType.getParameters().iterator();
+
+    // The tag function gets an array of all the template lit substitutions as its first argument,
+    // but there's no actual AST node representing that array so we typecheck it separately from
+    // the other tag arguments.
+
+    // Validate that the tag function takes at least one parameter
+    if (!parameters.hasNext()) {
+      report(
+          t,
+          n,
+          WRONG_ARGUMENT_COUNT,
+          typeRegistry.getReadableTypeNameNoDeref(tag),
+          String.valueOf(NodeUtil.getInvocationArgsCount(n)),
+          "0",
+          " and no more than 0 argument(s)");
+      return;
+    }
+
+    // Validate that the first parameter is a supertype of ITemplateArray
+    Node firstParameter = parameters.next();
+    JSType parameterType = firstParameter.getJSType().restrictByNotNullOrUndefined();
+    if (parameterType != null) {
+      validator.expectITemplateArraySupertype(
+          t, firstParameter, parameterType, "Invalid type for the first parameter of tag function");
+    }
+
+    // Validate the remaining parameters (the template literal substitutions)
+    checkArgumentsMatchParameters(
+        t, n, tagFnType, NodeUtil.getInvocationArgsAsIterable(n).iterator(), parameters, 1);
   }
 
   /**

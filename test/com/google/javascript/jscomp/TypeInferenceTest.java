@@ -1735,6 +1735,13 @@ public final class TypeInferenceTest extends TestCase {
     assertTypeOfExpression("X").toStringIsEqualTo("string");
   }
 
+  public void testTaggedTemplateLiteral1() {
+    assuming("getNumber", registry.createFunctionType(registry.getNativeType(NUMBER_TYPE)));
+    inFunction("var num = getNumber``; NUM: num;");
+
+    assertTypeOfExpression("NUM").isNumber();
+  }
+
   private ObjectType getNativeObjectType(JSTypeNative t) {
     return registry.getNativeObjectType(t);
   }

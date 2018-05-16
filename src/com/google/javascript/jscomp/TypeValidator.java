@@ -24,6 +24,7 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.ARRAY_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.BOOLEAN_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.GENERATOR_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.ITERABLE_TYPE;
+import static com.google.javascript.rhino.jstype.JSTypeNative.I_TEMPLATE_ARRAY_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NO_OBJECT_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NULL_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NUMBER_STRING;
@@ -301,6 +302,13 @@ class TypeValidator implements Serializable {
   void expectGeneratorSupertype(NodeTraversal t, Node n, JSType type, String msg) {
     if (!getNativeType(GENERATOR_TYPE).isSubtypeOf(type)) {
       mismatch(t, n, msg, type, GENERATOR_TYPE);
+    }
+  }
+
+  /** Expect the type to be an ITemplateArray or supertype of ITemplateArray. */
+  void expectITemplateArraySupertype(NodeTraversal t, Node n, JSType type, String msg) {
+    if (!getNativeType(I_TEMPLATE_ARRAY_TYPE).isSubtypeOf(type)) {
+      mismatch(t, n, msg, type, I_TEMPLATE_ARRAY_TYPE);
     }
   }
 

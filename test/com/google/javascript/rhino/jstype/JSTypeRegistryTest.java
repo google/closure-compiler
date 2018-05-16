@@ -45,6 +45,7 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.BOOLEAN_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.GENERATOR_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.ITERABLE_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.ITERATOR_TYPE;
+import static com.google.javascript.rhino.jstype.JSTypeNative.I_TEMPLATE_ARRAY_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NULL_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NULL_VOID;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NUMBER_TYPE;
@@ -86,6 +87,13 @@ public class JSTypeRegistryTest extends TestCase {
     JSTypeRegistry typeRegistry = new JSTypeRegistry(null);
     assertTypeEquals(
         typeRegistry.getNativeType(GENERATOR_TYPE), typeRegistry.getGlobalType("Generator"));
+  }
+
+  public void testGetBuildInType_iTemplateArray() {
+    JSTypeRegistry typeRegistry = new JSTypeRegistry(null);
+    assertTypeEquals(
+        typeRegistry.getNativeType(I_TEMPLATE_ARRAY_TYPE),
+        typeRegistry.getGlobalType("ITemplateArray"));
   }
 
   public void testGetDeclaredType() {

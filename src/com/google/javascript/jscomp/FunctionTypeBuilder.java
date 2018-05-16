@@ -799,15 +799,21 @@ final class FunctionTypeBuilder {
             returnType,
             classTemplateTypeNames,
             isAbstract);
-    // We use "getTypeForScope" to specifically check if this was defined for getScopeDeclaredIn()
-    // so we don't pick up types that are going to be shadowed.
-    JSType existingType = typeRegistry.getTypeForScope(getScopeDeclaredIn(), fnName);
 
     if (makesStructs) {
       fnType.setStruct();
     } else if (makesDicts) {
       fnType.setDict();
     }
+
+    // There are two cases where this type already exists in the current scope:
+    //   1. The type is a built-in that we initalized in JSTypeRegistry and is also defined in
+    //  externs.
+    //   2. Cases like "class C {} C = class {}"
+    // See https://github.com/google/closure-compiler/issues/2928 for some related bugs.
+    // We use "getTypeForScope" to specifically check if this was defined for getScopeDeclaredIn()
+    // so we don't pick up types that are going to be shadowed.
+    JSType existingType = typeRegistry.getTypeForScope(getScopeDeclaredIn(), fnName);
     if (existingType != null) {
       boolean isInstanceObject = existingType.isInstanceType();
       if (isInstanceObject || fnName.equals("Function")) {
@@ -823,6 +829,12 @@ final class FunctionTypeBuilder {
         if (!existingFn.hasEqualCallType(fnType)) {
           reportWarning(TYPE_REDEFINITION, formatFnName(),
               fnType.toString(), existingFn.toString());
+        }
+
+        // If the existing function is a built-in type, set its base type in case it @extends
+        // another function (since we don't set its prototype in JSTypeRegistry)
+        if (existingFn.isNativeObjectType()) {
+          maybeSetBaseType(existingFn);
         }
 
         return existingFn;

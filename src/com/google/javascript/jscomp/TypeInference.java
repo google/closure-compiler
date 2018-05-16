@@ -445,6 +445,10 @@ class TypeInference
         scope = traverseChildren(n, scope);
         break;
 
+      case TAGGED_TEMPLATELIT:
+        scope = traverseTaggedTemplateLiteral(n, scope);
+        break;
+
       case DELPROP:
       case LT:
       case LE:
@@ -1081,6 +1085,24 @@ class TypeInference
     }
 
     scope = tightenTypesAfterAssertions(scope, n);
+    return scope;
+  }
+
+  private FlowScope traverseTaggedTemplateLiteral(Node n, FlowScope scope) {
+    scope = traverseChildren(n, scope);
+
+    Node left = n.getFirstChild();
+    JSType functionType = getJSType(left).restrictByNotNullOrUndefined();
+    if (functionType.isFunctionType()) {
+      FunctionType fnType = functionType.toMaybeFunctionType();
+      n.setJSType(fnType.getReturnType());
+      // TODO(b/78891530): make "backwardsInferenceFromCallSite" work for tagged template literals
+    } else if (functionType.isEquivalentTo(getNativeType(CHECKED_UNKNOWN_TYPE))) {
+      n.setJSType(getNativeType(CHECKED_UNKNOWN_TYPE));
+    } else {
+      n.setJSType(getNativeType(UNKNOWN_TYPE));
+    }
+
     return scope;
   }
 

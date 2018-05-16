@@ -541,6 +541,11 @@ public abstract class CompilerTestCase extends TestCase {
           " * @template RESULT",
           " */",
           "Promise.prototype.catch = function(onRejected) {};",
+          "/**",
+          " * @constructor",
+          " * @extends {Array<string>}",
+          " */",
+          "function ITemplateArray() {}",
           ACTIVE_X_OBJECT_DEF);
 
   /**

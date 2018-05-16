@@ -442,6 +442,21 @@ public class JSTypeRegistry implements Serializable {
     ObjectType ARRAY_TYPE = ARRAY_FUNCTION_TYPE.getInstanceType();
     registerNativeType(JSTypeNative.ARRAY_TYPE, ARRAY_TYPE);
 
+    // ITemplateArray extends !Array<string>
+    FunctionType iTemplateArrayFunctionType =
+        new FunctionType(
+            this,
+            "ITemplateArray",
+            /* source= */ null,
+            createArrowType(),
+            /* typeOfThis= */ null,
+            /* templateTypeMap= */ null,
+            Kind.CONSTRUCTOR,
+            /* nativeType= */ true,
+            /* isAbstract= */ false);
+    registerNativeType(
+        JSTypeNative.I_TEMPLATE_ARRAY_TYPE, iTemplateArrayFunctionType.getInstanceType());
+
     FunctionType iterableFunctionType =
         new FunctionType(
             this,
@@ -852,6 +867,7 @@ public class JSTypeRegistry implements Serializable {
     registerGlobalType(getNativeType(JSTypeNative.GENERATOR_TYPE));
     registerGlobalType(getNativeType(JSTypeNative.DATE_TYPE));
     registerGlobalType(getNativeType(JSTypeNative.I_OBJECT_TYPE));
+    registerGlobalType(getNativeType(JSTypeNative.I_TEMPLATE_ARRAY_TYPE));
     registerGlobalType(getNativeType(JSTypeNative.I_THENABLE_TYPE));
     registerGlobalType(getNativeType(JSTypeNative.NULL_TYPE));
     registerGlobalType(getNativeType(JSTypeNative.NULL_TYPE), "Null");
