@@ -382,15 +382,17 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   }
 
   public void testExponent2() {
-    // TODO(b/79437694): this should produce a type error but assign ops are not properly
-    // tightened.
     testTypes(
         lines(
             "function fn(someUnknown) {",
             "  var x = someUnknown;",
             "  x **= 2;", // infer the result
             "  var /** null */ y = x;",
-            "}"));
+            "}"),
+        lines(
+            "initializing variable",
+            "found   : number",
+            "required: null"));
   }
 
   public void testExponent3() {

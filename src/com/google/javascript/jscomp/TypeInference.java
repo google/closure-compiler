@@ -407,9 +407,8 @@ class TypeInference
       case ASSIGN_MUL:
       case ASSIGN_SUB:
       case ASSIGN_EXPONENT:
-        // TODO(b/79437694): update the scope for the lhs
-        scope = traverseChildren(n, scope);
-        n.setJSType(getNativeType(NUMBER_TYPE));
+        scope = traverseAssignOp(n, scope, getNativeType(NUMBER_TYPE));
+
         break;
 
       case LSH:
@@ -592,15 +591,27 @@ class TypeInference
   }
 
   private FlowScope traverseAssign(Node n, FlowScope scope) {
+    Node target = n.getFirstChild();
+    Node value = n.getLastChild();
+    scope = traverseChildren(n, scope);
+
+    JSType targetType = target.getJSType();
+    JSType valueType = getJSType(value);
+    n.setJSType(valueType);
+
+    updateScopeForAssignment(scope, target, targetType, valueType);
+    return scope;
+  }
+
+  private FlowScope traverseAssignOp(Node n, FlowScope scope, JSType resultType) {
     Node left = n.getFirstChild();
-    Node right = n.getLastChild();
     scope = traverseChildren(n, scope);
 
     JSType leftType = left.getJSType();
-    JSType rightType = getJSType(right);
-    n.setJSType(rightType);
+    n.setJSType(resultType);
 
-    updateScopeForTypeChange(scope, left, leftType, rightType);
+    // The lhs is both an input and an output, so don't update the input type here.
+    updateScopeForAssignment(scope, left, leftType, resultType, null);
     return scope;
   }
 
@@ -640,26 +651,29 @@ class TypeInference
     }
   }
 
-  /**
-   * Updates the scope according to the result of a type change, like
-   * an assignment or a type cast.
-   */
-  private void updateScopeForTypeChange(
-      FlowScope scope, Node left, JSType leftType, JSType resultType) {
-    checkNotNull(resultType);
+  private void updateScopeForAssignment(
+      FlowScope scope, Node target, JSType targetType, JSType resultType) {
+    updateScopeForAssignment(scope, target, targetType, resultType, target);
+  }
 
-    Node right = NodeUtil.getRValueOfLValue(left);
-    if (isPossibleMixinApplication(left, right)) {
-      addMissingInterfaceProperties(leftType);
+  /** Updates the scope according to the result of an assignment. */
+  private void updateScopeForAssignment(
+      FlowScope scope, Node target, JSType targetType, JSType resultType, Node updateNode) {
+    checkNotNull(resultType);
+    checkState(updateNode == null || updateNode == target);
+
+    Node right = NodeUtil.getRValueOfLValue(target);
+    if (isPossibleMixinApplication(target, right)) {
+      addMissingInterfaceProperties(targetType);
     }
 
-    switch (left.getToken()) {
+    switch (target.getToken()) {
       case NAME:
-        String varName = left.getString();
+        String varName = target.getString();
         TypedVar var = getDeclaredVar(scope, varName);
         JSType varType = var == null ? null : var.getType();
         boolean isVarDeclaration =
-            left.hasChildren()
+            target.hasChildren()
                 && varType != null
                 && !var.isTypeInferred()
                 && var.getNameNode() != null;
@@ -704,18 +718,21 @@ class TypeInference
         //     || !resultType.isSubtype(varType));
 
         if (isVarTypeBetter) {
-          redeclareSimpleVar(scope, left, varType);
+          redeclareSimpleVar(scope, target, varType);
         } else {
-          redeclareSimpleVar(scope, left, resultType);
+          redeclareSimpleVar(scope, target, resultType);
         }
-        left.setJSType(resultType);
+
+        if (updateNode != null) {
+          updateNode.setJSType(resultType);
+        }
 
         if (var != null
             && var.isTypeInferred()
             // Don't change the typed scope to include "undefined" upon seeing "let foo;", because
             // this is incompatible with how we currently handle VARs and breaks existing code.
             // TODO(sdh): remove this condition after cleaning up code depending on it.
-            && !(left.getParent().isLet() && !left.hasChildren())) {
+            && !(target.getParent().isLet() && !target.hasChildren())) {
           JSType oldType = var.getType();
           var.setType(oldType == null ? resultType : oldType.getLeastSupertype(resultType));
         } else if (isTypelessConstDecl) {
@@ -726,24 +743,27 @@ class TypeInference
         }
         break;
       case GETPROP:
-        if (left.isQualifiedName()) {
-          String qualifiedName = left.getQualifiedName();
+        if (target.isQualifiedName()) {
+          String qualifiedName = target.getQualifiedName();
           boolean declaredSlotType = false;
-          JSType rawObjType = left.getFirstChild().getJSType();
+          JSType rawObjType = target.getFirstChild().getJSType();
           if (rawObjType != null) {
             ObjectType objType = ObjectType.cast(
                 rawObjType.restrictByNotNullOrUndefined());
             if (objType != null) {
-              String propName = left.getLastChild().getString();
+              String propName = target.getLastChild().getString();
               declaredSlotType = objType.isPropertyTypeDeclared(propName);
             }
           }
-          JSType safeLeftType = leftType == null ? unknownType : leftType;
-          scope.inferQualifiedSlot(left, qualifiedName, safeLeftType, resultType, declaredSlotType);
+          JSType safeLeftType = targetType == null ? unknownType : targetType;
+          scope.inferQualifiedSlot(
+              target, qualifiedName, safeLeftType, resultType, declaredSlotType);
         }
 
-        left.setJSType(resultType);
-        ensurePropertyDefined(left, resultType, scope);
+        if (updateNode != null) {
+          updateNode.setJSType(resultType);
+        }
+        ensurePropertyDefined(target, resultType, scope);
         break;
       default:
         break;
@@ -852,8 +872,7 @@ class TypeInference
     JSType type = n.getJSType();
     if (value != null) {
       scope = traverse(value, scope);
-      updateScopeForTypeChange(
-          scope, n, n.getJSType() /* could be null */, getJSType(value));
+      updateScopeForAssignment(scope, n, n.getJSType() /* could be null */, getJSType(value));
       return scope;
     } else if (n.getParent().isLet()) {
       // Whenever we see a LET, we're guaranteed it's not yet in the scope, and we don't need to
@@ -863,7 +882,7 @@ class TypeInference
       // TODO(sdh): I would have thought that #updateScopeForTypeChange would handle using the
       // declared type correctly, but for some reason it doesn't so we handle it here.
       JSType resultType = type != null ? type : getNativeType(VOID_TYPE);
-      updateScopeForTypeChange(scope, n, type, resultType);
+      updateScopeForAssignment(scope, n, type, resultType);
       type = resultType;
     } else {
       StaticTypedSlot var = scope.getSlot(varName);
@@ -999,7 +1018,10 @@ class TypeInference
     n.setJSType(type);
 
     if (n.isAssignAdd()) {
-      updateScopeForTypeChange(scope, left, leftType, type);
+      // TODO(johnlenz): this should not update the type of the lhs as that is use as a
+      // input and need to be preserved for type checking.
+      // Instead call this overload `updateScopeForAssignment(scope, left, leftType, type, null);`
+      updateScopeForAssignment(scope, left, leftType, type);
     }
 
     return scope;

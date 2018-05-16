@@ -19770,6 +19770,20 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "required: null"));
   }
 
+  public void testAssignOp() {
+    testTypes(
+        lines(
+            "function fn(someUnknown) {",
+            "  var x = someUnknown;",
+            "  x *= 2;", // infer 'x' to now be 'number'
+            "  var /** null */ y = x;",
+            "}"),
+        lines(
+            "initializing variable",
+            "found   : number",
+            "required: null"));
+  }
+
   private void testClosureTypes(String js, String description) {
     testClosureTypesMultipleWarnings(js,
         description == null ? null : ImmutableList.of(description));
