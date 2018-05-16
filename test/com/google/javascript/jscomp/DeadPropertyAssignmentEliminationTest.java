@@ -254,6 +254,28 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
             "}"));
   }
 
+  public void testNew() {
+    // Assume that properties may be read during a constructor call
+    testSame(
+        lines(
+            "var foo = function() {",
+            "  a.b.c = 20;",
+            "  new C;",
+            "  a.b.c = 30;",
+            "}"));
+  }
+
+  public void testTaggedTemplateLit() {
+    // Assume that properties may be read during a tagged template lit invocation
+    testSame(
+        lines(
+            "var foo = function() {",
+            "  a.b.c = 20;",
+            "  doSomething`foo`;",
+            "  a.b.c = 30;",
+            "}"));
+  }
+
   public void testUnknownLookup() {
     testSame(
         lines(

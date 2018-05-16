@@ -4986,6 +4986,13 @@ public final class NodeUtil {
         && parent.getFirstChild() == n;
   }
 
+  /**
+   * Returns whether this is a call (including tagged template lits) or new.
+   */
+  static boolean isInvocation(Node n) {
+    return isCallOrNew(n) || n.isTaggedTemplateLit();
+  }
+
   static boolean isCallOrNewArgument(Node n) {
     Node parent = n.getParent();
     return parent != null && isCallOrNew(parent) && parent.getFirstChild() != n;
