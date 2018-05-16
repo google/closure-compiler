@@ -2062,11 +2062,7 @@ public class JSTypeRegistry implements Serializable {
   @VisibleForTesting
   public NamedType createNamedType(
       StaticTypedScope scope, String reference, String sourceName, int lineno, int charno) {
-    if (reference.endsWith(".")) {
-      return new NamespaceType(this, reference, sourceName, lineno, charno);
-    } else {
-      return new NamedType(scope, this, reference, sourceName, lineno, charno);
-    }
+    return new NamedType(scope, this, reference, sourceName, lineno, charno);
   }
 
   /**
@@ -2158,9 +2154,7 @@ public class JSTypeRegistry implements Serializable {
                 n.getLineno(),
                 n.getCharno(),
                 recordUnresolvedTypes);
-        if ((namedType instanceof ObjectType)
-            && !(namedType instanceof NamespaceType)
-            && !(nonNullableTypeNames.contains(n.getString()))) {
+        if (namedType instanceof ObjectType && !nonNullableTypeNames.contains(n.getString())) {
           Node typeList = n.getFirstChild();
           boolean isUnknownForwardDeclared =
               namedType.isUnknownType() && isForwardDeclaredType(n.getString());
