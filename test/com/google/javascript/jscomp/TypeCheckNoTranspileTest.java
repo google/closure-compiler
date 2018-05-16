@@ -368,6 +368,126 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "required: null"));
   }
 
+  public void testOnlyRestParameterWithoutJSDocCalledWithNoArgs() {
+    testTypes(
+        lines(
+            "", // input lines
+            "function use(...numbers) {}",
+            "use();", // no args provided in call - should be OK
+            ""));
+  }
+
+  public void testOnlyRestParameterWithoutJSDocCalledWithArgs() {
+    testTypes(
+        lines(
+            "", // input lines
+            "function use(...numbers) {}",
+            "use(1, 'hi', {});",
+            ""));
+  }
+
+  public void testOnlyRestParameterWithJSDocCalledWithNoArgs() {
+    testTypes(
+        lines(
+            "/**", // input lines
+            " * @param {...number} numbers",
+            " */",
+            "function use(...numbers) {}",
+            "use();", // no args provided in call - should be OK
+            ""));
+  }
+
+  public void testOnlyRestParameterWithJSDocCalledWithGoodArgs() {
+    testTypes(
+        lines(
+            "/**", // input lines
+            " * @param {...number} numbers",
+            " */",
+            "function use(...numbers) {}",
+            "use(1, 2, 3);",
+            ""));
+  }
+
+  public void testOnlyRestParameterWithJSDocCalledWithBadArg() {
+    testTypes(
+        lines(
+            "/**", // input lines
+            " * @param {...number} numbers",
+            " */",
+            "function use(...numbers) {}",
+            "use(1, 'hi', 3);",
+            ""),
+        lines(
+            "actual parameter 2 of use does not match formal parameter",
+            "found   : string",
+            // TODO(bradfordcsmith): should not allow undefined
+            // This is consistent with pre-ES6 var_args behavior.
+            // See https://github.com/google/closure-compiler/issues/2561
+            "required: (number|undefined)"
+        ));
+  }
+
+  public void testNormalAndRestParameterWithJSDocCalledWithOneArg() {
+    testTypes(
+        lines(
+            "/**", // input lines
+            " * @param {string} str",
+            " * @param {...number} numbers",
+            " */",
+            "function use(str, ...numbers) {}",
+            "use('hi');", // no rest args provided in call - should be OK
+            ""));
+  }
+
+  public void testNormalAndRestParameterWithJSDocCalledWithGoodArgs() {
+    testTypes(
+        lines(
+            "/**", // input lines
+            " * @param {string} str",
+            " * @param {...number} numbers",
+            " */",
+            "function use(str, ...numbers) {}",
+            "use('hi', 2, 3);",
+            ""));
+  }
+
+  public void testOnlyRestParameterWithJSDocCalledWithBadNormalArg() {
+    testTypes(
+        lines(
+            "/**", // input lines
+            " * @param {string} str",
+            " * @param {...number} numbers",
+            " */",
+            "function use(str, ...numbers) {}",
+            "use(1, 2, 3);",
+            ""),
+        lines(
+            "actual parameter 1 of use does not match formal parameter",
+            "found   : number",
+            "required: string"
+        ));
+  }
+
+  public void testOnlyRestParameterWithJSDocCalledWithBadRestArg() {
+    testTypes(
+        lines(
+            "/**", // input lines
+            " * @param {string} str",
+            " * @param {...number} numbers",
+            " */",
+            "function use(str, ...numbers) {}",
+            "use('hi', 'there', 3);",
+            ""),
+        lines(
+            "actual parameter 2 of use does not match formal parameter",
+            "found   : string",
+            // TODO(bradfordcsmith): should not allow undefined
+            // This is consistent with pre-ES6 var_args behavior.
+            // See https://github.com/google/closure-compiler/issues/2561
+            "required: (number|undefined)"
+        ));
+  }
+
   public void testExponent1() {
     testTypes(
         lines(

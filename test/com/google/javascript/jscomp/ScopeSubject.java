@@ -24,6 +24,7 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.truth.FailureMetadata;
 import com.google.common.truth.Subject;
+import com.google.javascript.jscomp.testing.TypeSubject;
 import com.google.javascript.rhino.Node;
 import javax.annotation.CheckReturnValue;
 import javax.annotation.Nullable;
@@ -103,43 +104,49 @@ public final class ScopeSubject extends Subject<ScopeSubject, AbstractScope<?, ?
     }
 
     /** Expects the declared variable to be declared on the subject scope. */
-    public void directly() {
+    public DeclarationSubject directly() {
       expectScope("", "directly", actual());
+      return this;
     }
 
     /** Expects the declared variable to be declared on the given scope. */
-    public void on(AbstractScope<?, ?> scope) {
+    public DeclarationSubject on(AbstractScope<?, ?> scope) {
       checkState(
           scope != actual(),
           "It doesn't make sense to pass the scope already being asserted about. Use .directly()");
       expectScope("on", scope, scope);
+      return this;
     }
 
     /** Expects the declared variable to be declared on the closest container scope. */
-    public void onClosestContainerScope() {
+    public DeclarationSubject onClosestContainerScope() {
       expectScope("on", "the closest container scope", actual().getClosestContainerScope());
+      return this;
     }
 
     /** Expects the declared variable to be declared on the closest hoist scope. */
-    public void onClosestHoistScope() {
+    public DeclarationSubject onClosestHoistScope() {
       expectScope("on", "the closest hoist scope", actual().getClosestHoistScope());
+      return this;
     }
 
     /** Expects the declared variable to be declared on the global scope. */
-    public void globally() {
+    public DeclarationSubject globally() {
       expectScope("", "globally", actual().getGlobalScope());
+      return this;
     }
 
     /** Expects the declared variable to be declared on any scope other than the subject. */
-    public void onSomeParent() {
+    public DeclarationSubject onSomeParent() {
       if (var != null && var.getScope() == actual()) {
         failWithBadResults(
             "declares " + var.getName(), "on a parent scope", "declares it", "directly");
       }
+      return this;
     }
 
     /** Expects the declared variable to be declared on some scope with the given label. */
-    public void onScopeLabeled(String expectedLabel) {
+    public DeclarationSubject onScopeLabeled(String expectedLabel) {
       checkNotNull(expectedLabel);
       String actualLabel = getLabel(var.getScopeRoot());
       if (actualLabel == null) {
@@ -155,6 +162,12 @@ public final class ScopeSubject extends Subject<ScopeSubject, AbstractScope<?, ?
             "declares it",
             "on a scope labeled \"" + actualLabel + "\"");
       }
+      return this;
+    }
+
+    public TypeSubject withTypeThat() {
+      TypedVar typedVar = (TypedVar) var.getSymbol();
+      return TypeSubject.assertType(typedVar.getType());
     }
   }
 

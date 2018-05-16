@@ -183,6 +183,32 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
         .containsExactlyElementsIn(expectedVars);
   }
 
+  public void testParameters() {
+    testSame(
+        lines(
+            "/**", // preserve newlines
+            " * @param {string} str",
+            " * @param {...number} nums",
+            " */",
+            "function doSomething(str, ...nums) {",
+            "  FUNCTION_BODY: 0;",
+            "}",
+            ""));
+    TypedScope functionBodyScope = getLabeledStatement("FUNCTION_BODY").enclosingScope;
+    assertScope(functionBodyScope)
+        .declares("str")
+        .onClosestContainerScope()
+        .withTypeThat()
+        .toStringIsEqualTo("string");
+    assertScope(functionBodyScope)
+        .declares("nums")
+        .onClosestContainerScope()
+        .withTypeThat()
+        // TODO(bradfordcsmith): Should be 'Array<number>'
+        // See https://github.com/google/closure-compiler/issues/2561
+        .toStringIsEqualTo("Array<(number|undefined)>");
+  }
+
   public void testStubProperty() {
     testSame("function Foo() {}; Foo.bar;");
     ObjectType foo = (ObjectType) globalScope.getVar("Foo").getType();

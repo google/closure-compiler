@@ -873,6 +873,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       case WHILE:
       case FOR:
       case TEMPLATELIT_SUB:
+      case REST:
         typeable = false;
         break;
 

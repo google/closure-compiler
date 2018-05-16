@@ -918,6 +918,25 @@ public final class TypeInferenceTest extends TestCase {
     assertEquals("F<(number|string),boolean>", getType("result").toString());
   }
 
+  public void testNewRest() {
+    inFunction(
+        lines(
+            "/**",
+            " * @constructor",
+            " * @param {Array<T>} x",
+            " * @param {T} y",
+            " * @param {...S} rest",
+            " * @template T,S",
+            " */",
+            "function F(x, y, ...rest) {}",
+            "var x = /** @type {!Array<number>} */ ([]);",
+            "var y = /** @type {string} */ ('foo');",
+            "var z = /** @type {boolean} */ (true);",
+            "var result = new F(x,y,z);"));
+
+    assertEquals("F<(number|string),boolean>", getType("result").toString());
+  }
+
   public void testInnerFunction1() {
     inFunction("var x = 1; function f() { x = null; };");
     verify("x", NUMBER_TYPE);
@@ -1273,6 +1292,17 @@ public final class TypeInferenceTest extends TestCase {
         "function f(x) {}" +
         "var y = {};" +
         "f(y);");
+
+    assertEquals("{foo: (number|undefined)}", getType("y").toString());
+  }
+
+  public void testBackwardsInferenceCallRestParameter() {
+    inFunction(
+        lines(
+            "/** @param {...{foo: (number|undefined)}} rest */",
+            "function f(...rest) {}",
+            "var y = {};",
+            "f(y);"));
 
     assertEquals("{foo: (number|undefined)}", getType("y").toString());
   }
@@ -1740,6 +1770,34 @@ public final class TypeInferenceTest extends TestCase {
     inFunction("var num = getNumber``; NUM: num;");
 
     assertTypeOfExpression("NUM").isNumber();
+  }
+
+  public void testRestParamType() {
+    parseAndRunTypeInference(
+        lines(
+            "(",
+            "/**", // preserve newlines
+            " * @param {...number} nums",
+            " */",
+            "function(str, ...nums) {",
+            "  NUMS: nums;",
+            "  let n = null;",
+            "  N_START: n;",
+            "  if (nums.length > 0) {",
+            "    n = nums[0];",
+            "    N_IF_TRUE: n;",
+            "  } else {",
+            "    N_IF_FALSE: n;",
+            "  }",
+            "  N_FINAL: n;",
+            "}",
+            ");"));
+    assertTypeOfExpression("N_START").toStringIsEqualTo("null");
+    // TODO(bradfordcsmith): Should be 'number'
+    // See https://github.com/google/closure-compiler/issues/2561
+    assertTypeOfExpression("N_IF_TRUE").toStringIsEqualTo("(number|undefined)");
+    assertTypeOfExpression("N_IF_FALSE").toStringIsEqualTo("null");
+    assertTypeOfExpression("N_FINAL").toStringIsEqualTo("(null|number|undefined)");
   }
 
   private ObjectType getNativeObjectType(JSTypeNative t) {

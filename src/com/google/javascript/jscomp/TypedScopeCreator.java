@@ -1255,6 +1255,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
             parent.isFunction()
                 || NodeUtil.isNameDeclaration(parent)
                 || parent.isParamList()
+                || (parent.isRest() && parent.getParent().isParamList())
                 || parent.isCatch());
       } else {
         checkArgument(n.isGetProp() && (parent.isAssign() || parent.isExprResult()));
@@ -1459,7 +1460,8 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       Node root = NodeUtil.getBestLValueRoot(n);
       if (root != null) {
         if (root.isName()) {
-          switch (root.getParent().getToken()) {
+          Node nameParent = root.getParent();
+          switch (nameParent.getToken()) {
             case VAR:
               return currentHoistScope;
             case LET:
@@ -1469,6 +1471,12 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
             case PARAM_LIST:
             case CATCH:
               return currentScope;
+
+            case REST:
+              // TODO(bradfordcsmith): Handle array destructuring REST
+              checkState(nameParent.getParent().isParamList(), nameParent);
+              return currentScope;
+
             default:
               TypedVar var = currentScope.getVar(root.getString());
               if (var != null) {
@@ -2206,8 +2214,21 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
         if (jsDocParameters != null) {
           Node jsDocParameter = jsDocParameters.getFirstChild();
           for (Node astParameter : astParameters.children()) {
+            boolean isRestParameter = false;
+            if (astParameter.isRest()) {
+              // e.g. `function f(p1, ...restParamName) {}`
+              // set astParameter = restParamName
+              astParameter = astParameter.getOnlyChild();
+              isRestParameter = true;
+            }
+            checkState(astParameter.isName(), astParameter);
             JSType paramType = jsDocParameter == null ? unknownType : jsDocParameter.getJSType();
             boolean inferred = paramType == null || paramType.equals(unknownType);
+            if (isRestParameter) {
+              // rest parameter is actually an array of the type specified in the JSDoc
+              ObjectType arrayType = typeRegistry.getNativeObjectType(ARRAY_TYPE);
+              paramType = typeRegistry.createTemplatizedType(arrayType, paramType);
+            }
 
             if (iifeArgumentNode != null && inferred) {
               String argumentName = iifeArgumentNode.getQualifiedName();

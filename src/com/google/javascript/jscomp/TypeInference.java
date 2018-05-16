@@ -155,6 +155,12 @@ class TypeInference
       if (parameterTypes != null) {
         Node parameterTypeNode = parameterTypes.getFirstChild();
         for (Node astParameter : astParameters.children()) {
+          if (astParameter.isRest()) {
+            // e.g. `function f(p1, ...restParamName) {}`
+            // set astParameter = restParamName
+            astParameter = astParameter.getOnlyChild();
+          }
+          checkState(astParameter.isName(), astParameter);
           TypedVar var = functionScope.getVar(astParameter.getString());
           checkNotNull(var);
           if (var.isTypeInferred() && var.getType() == unknownType) {

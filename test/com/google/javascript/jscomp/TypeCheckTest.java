@@ -2382,12 +2382,29 @@ public final class TypeCheckTest extends TypeCheckTestCase {
         "parameter y does not appear in <anonymous>'s parameter list");
   }
 
-  public void testRestParameters() {
+  public void testVarArgParameterWithTemplateType() {
     testTypesWithExterns(
         new TestExternsBuilder().addArray().build(),
         lines(
             "/**",
             " * @template T",
+            " * @param {...T} var_args",
+            " * @return {T}",
+            " */",
+            "function firstOf(var_args) { return arguments[0]; }",
+            "/** @type {null} */ var a = firstOf('hi', 1);",
+            ""),
+        lines(
+            "initializing variable", // preserve newlinues
+            "found   : (number|string)",
+            "required: null"));
+  }
+
+  public void testRestParameters() {
+    testTypesWithExterns(
+        new TestExternsBuilder().addArray().build(),
+        lines(
+            "/**",
             " * @param {...number} x",
             " */",
             "function f(...x) {",
@@ -2397,6 +2414,31 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "initializing variable", // preserve newlines
             "found   : number",
             "required: string"));
+  }
+
+  public void testRestParameterWithTemplateType() {
+    testTypesWithExterns(
+        new TestExternsBuilder().addArray().build(),
+        lines(
+            "/**",
+            " * @template T",
+            " * @param {...T} rest",
+            " * @return {T}",
+            " */",
+            "function firstOf(...rest) {",
+            "  return rest[0];",
+            "}",
+            "/** @type {null} */ var a = firstOf('hi', 1);",
+            ""),
+        ImmutableList.of(
+            // TODO(b/79707793): This will be fixed when transpilation of REST parameters moves
+            // after type checking.
+            "Bad type annotation. Unknown type T",
+            lines(
+                "initializing variable", // preserve newlinues
+                "found   : (number|string)",
+                "required: null")),
+        /* isError= */ false);
   }
 
   // Test that when transpiling we don't use T in the body of f; it would cause a spurious

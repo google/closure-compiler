@@ -533,14 +533,20 @@ final class FunctionTypeBuilder {
         (info == null) ? new HashSet<>() : new HashSet<>(info.getParameterNames());
     boolean isVarArgs = false;
     for (Node arg : argsParent.children()) {
+      boolean isOptionalParam = false;
+      if (arg.isRest()) {
+        isVarArgs = true;
+        arg = arg.getOnlyChild();
+      } else {
+        isVarArgs = isVarArgsParameter(arg, info);
+        isOptionalParam = isOptionalParameter(arg, info);
+      }
+
       String argumentName = arg.getString();
       allJsDocParams.remove(argumentName);
 
       // type from JSDocInfo
       JSType parameterType = null;
-      boolean isOptionalParam = isOptionalParameter(arg, info);
-      isVarArgs = isVarArgsParameter(arg, info);
-
       if (info != null && info.hasParameterType(argumentName)) {
         parameterType =
             info.getParameterType(argumentName).evaluate(scope, typeRegistry);
