@@ -16,21 +16,18 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.type.FlowScope;
+import com.google.javascript.rhino.HamtPMap;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.PMap;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.StaticTypedRef;
 import com.google.javascript.rhino.jstype.StaticTypedScope;
 import com.google.javascript.rhino.jstype.StaticTypedSlot;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
 
 /**
  * A flow scope that tries to store as little symbol information as possible,
@@ -40,78 +37,92 @@ import java.util.Set;
  */
 class LinkedFlowScope implements FlowScope {
 
-  // The closest flow scope cache.
-  private final FlatFlowScopeCache cache;
-
   // The parent flow scope.
   private final LinkedFlowScope parent;
+
+  // Map from TypedScope to OverlayScope.
+  private PMap<TypedScope, OverlayScope> scopes;
+
+  private final TypedScope functionScope;
 
   // The TypedScope for the block that this flow scope is defined for.
   private final TypedScope syntacticScope;
 
-  // The distance between this flow scope and the closest flat flow scope.
-  private int depth;
-
-  static final int MAX_DEPTH = 250;
-
-  // A FlatFlowScopeCache equivalent to this scope.
-  private FlatFlowScopeCache flattened;
-
   // Flow scopes assume that all their ancestors are immutable.
   // So once a child scope is created, this flow scope may not be modified.
   private boolean frozen = false;
-
-  // The last slot defined in this flow instruction, and the head of the
-  // linked list of slots.
-  private LinkedFlowSlot lastSlot;
 
   /**
    * Creates a flow scope without a direct parent. This can happen in three cases: (1) the "bottom"
    * scope for a CFG root, (2) a direct child of a parent at the maximum depth, or (3) a joined
    * scope with more than one direct parent. The parent is non-null only in the second case.
    */
-  private LinkedFlowScope(FlatFlowScopeCache cache, TypedScope syntacticScope) {
-    this.cache = cache;
-    this.lastSlot = null;
-    this.depth = 0;
-    this.parent = cache.linkedEquivalent;
+  private LinkedFlowScope(
+      LinkedFlowScope parent,
+      PMap<TypedScope, OverlayScope> scopes,
+      TypedScope syntacticScope,
+      TypedScope functionScope) {
+    this.parent = parent;
+    this.scopes = scopes;
     this.syntacticScope = syntacticScope;
+    this.functionScope = functionScope;
   }
 
-  /** Creates a child flow scope with a single parent. */
-  private LinkedFlowScope(LinkedFlowScope directParent, TypedScope syntacticScope) {
-    this.cache = directParent.cache;
-    this.lastSlot = directParent.lastSlot;
-    this.depth = directParent.depth + 1;
-    this.parent = directParent;
-    this.syntacticScope = syntacticScope;
+  /**
+   * Returns the scope map, trimmed to the common ancestor between this FlowScope's syntacticScope
+   * and the given scope. Any inferred types on variables in deeper scopes cannot be propagated past
+   * this point (since they're no longer in scope), and trimming them eagerly allows us to ignore
+   * these irrelevant types when checking equality and joining.
+   */
+  private PMap<TypedScope, OverlayScope> trimScopes(TypedScope scope) {
+    TypedScope thisScope = syntacticScope;
+    TypedScope thatScope = scope;
+    int thisDepth = thisScope.getDepth();
+    int thatDepth = thatScope.getDepth();
+    PMap<TypedScope, OverlayScope> result = scopes;
+    while (thatDepth > thisDepth) {
+      thatScope = thatScope.getParent();
+      thatDepth--;
+    }
+    while (thisDepth > thatDepth) {
+      result = result.minus(thisScope);
+      thisScope = thisScope.getParent();
+      thisDepth--;
+    }
+    while (thisScope != thatScope && thisScope != null && thatScope != null) {
+      result = result.minus(thisScope);
+      thisScope = thisScope.getParent();
+      thatScope = thatScope.getParent();
+    }
+    return result;
   }
 
   /** Whether this flows from a bottom scope. */
   private boolean flowsFromBottom() {
-    return cache.functionScope.isBottom();
+    return functionScope.isBottom();
   }
 
   /**
    * Creates an entry lattice for the flow.
    */
   public static LinkedFlowScope createEntryLattice(TypedScope scope) {
-    return new LinkedFlowScope(new FlatFlowScopeCache(scope), scope);
+    return new LinkedFlowScope(null, HamtPMap.<TypedScope, OverlayScope>empty(), scope, scope);
   }
 
   @Override
   public void inferSlotType(String symbol, JSType type) {
     checkState(!frozen);
-    ScopedName var = getVarFromSyntacticScope(symbol);
-    lastSlot = new LinkedFlowSlot(var, type, lastSlot);
-    depth++;
-    cache.dirtySymbols.add(var);
+    OverlayScope scope = getOverlayScopeForVar(symbol, true);
+    OverlayScope newScope = scope.infer(symbol, type);
+    // Aggressively remove empty scopes to maintain a reasonable equivalence.
+    scopes =
+        !newScope.slots.isEmpty() ? scopes.plus(scope.scope, newScope) : scopes.minus(scope.scope);
   }
 
   @Override
   public void inferQualifiedSlot(Node node, String symbol, JSType bottomType,
       JSType inferredType, boolean declared) {
-    if (cache.functionScope.isGlobal()) {
+    if (functionScope.isGlobal()) {
       // Do not infer qualified names on the global scope.  Ideally these would be
       // added to the scope by TypedScopeCreator, but if they are not, adding them
       // here causes scaling problems (large projects can have tens of thousands of
@@ -119,7 +130,7 @@ class LinkedFlowScope implements FlowScope {
       return;
     }
     TypedVar v = syntacticScope.getVar(symbol);
-    if (v == null && !cache.functionScope.isBottom()) {
+    if (v == null && !functionScope.isBottom()) {
       // NOTE(sdh): Qualified names are declared on scopes lazily via this method.
       // The difficulty is that it's not always clear which scope they need to be
       // defined on.  In particular, syntacticScope is wrong because it is often a
@@ -155,7 +166,7 @@ class LinkedFlowScope implements FlowScope {
 
   @Override
   public JSType getTypeOfThis() {
-    return cache.functionScope.getTypeOfThis();
+    return functionScope.getTypeOfThis();
   }
 
   @Override
@@ -171,19 +182,8 @@ class LinkedFlowScope implements FlowScope {
   /** Get the slot for the given symbol. */
   @Override
   public StaticTypedSlot getSlot(String name) {
-    return getSlot(getVarFromSyntacticScope(name));
-  }
-
-  private StaticTypedSlot getSlot(ScopedName var) {
-    if (cache.dirtySymbols.contains(var)) {
-      for (LinkedFlowSlot slot = lastSlot; slot != null; slot = slot.parent) {
-        if (slot.var.equals(var)) {
-          return slot;
-        }
-      }
-    }
-    LinkedFlowSlot slot = cache.symbols.get(var);
-    return slot != null ? slot : syntacticScope.getSlot(var.getName());
+    OverlayScope scope = getOverlayScopeForVar(name, false);
+    return scope != null ? scope.getSlot(name) : syntacticScope.getSlot(name);
   }
 
   private static String getRootOfQualifiedName(String name) {
@@ -191,20 +191,19 @@ class LinkedFlowScope implements FlowScope {
     return index < 0 ? name : name.substring(0, index);
   }
 
-  // Returns a ScopedName that uniquely identifies the given name in this scope.
-  // If the scope does not have a var for the name (this should only be the case
-  // for qualified names, though some unit tests fail to declare simple names as
-  // well), a simple ScopedName will be created, using the scope of the qualified
-  // name's root, but not registered on the scope.
-  private ScopedName getVarFromSyntacticScope(String name) {
+  private OverlayScope getOverlayScopeForVar(String name, boolean create) {
     TypedVar v = syntacticScope.getVar(name);
-    if (v != null) {
-      return v;
+    TypedScope scope = v != null ? v.getScope() : null;
+    if (scope == null) {
+      TypedVar rootVar = syntacticScope.getVar(getRootOfQualifiedName(name));
+      scope = rootVar != null ? rootVar.getScope() : null;
+      scope = scope != null ? scope : functionScope;
     }
-    TypedVar rootVar = syntacticScope.getVar(getRootOfQualifiedName(name));
-    TypedScope rootScope = rootVar != null ? rootVar.getScope() : null;
-    rootScope = rootScope != null ? rootScope : cache.functionScope;
-    return ScopedName.of(name, rootScope.getRootNode());
+    OverlayScope overlay = scopes.get(scope);
+    if (overlay == null && create) {
+      overlay = new OverlayScope(scope);
+    }
+    return overlay;
   }
 
   @Override
@@ -220,16 +219,8 @@ class LinkedFlowScope implements FlowScope {
   @Override
   public FlowScope createChildFlowScope(StaticTypedScope scope) {
     frozen = true;
-
     TypedScope typedScope = (TypedScope) scope;
-    if (depth > MAX_DEPTH) {
-      if (flattened == null) {
-        flattened = new FlatFlowScopeCache(this);
-      }
-      return new LinkedFlowScope(flattened, typedScope);
-    }
-
-    return new LinkedFlowScope(this, typedScope);
+    return new LinkedFlowScope(this, trimScopes(typedScope), typedScope, functionScope);
   }
 
   /**
@@ -249,7 +240,7 @@ class LinkedFlowScope implements FlowScope {
     // will always have a block scope reassigned before flowing into another
     // node.  In all cases, it's therefore safe to ignore block scope changes
     // when optimizing.
-    while (current.parent != null && current.lastSlot == current.parent.lastSlot) {
+    while (current.parent != null && current.scopes == current.parent.scopes) {
       current = current.parent;
     }
     return current;
@@ -257,17 +248,10 @@ class LinkedFlowScope implements FlowScope {
 
   /** Returns whether this.optimize() == that.optimize(), but without walking up the chain. */
   private boolean optimizesToSameScope(LinkedFlowScope that) {
-    // If lastSlot is null then there are no changes overlayed on top of the cache.  In this
-    // case, the flow scopes are the same only if 'that' also has a null lastSlot and has the
-    // same cache.
-    if (this.lastSlot == null) {
-      return that.lastSlot == null && this.cache == that.cache;
-    }
-    // If lastSlot is non-null, then the scopes optimize to the same thing if and only if their
-    // lastSlots are the same object.  In that case, the caches *must* be the same as well, since
-    // there's no way to change the cache without also changing lastSlot (which we verify).
-    checkState((this.cache == that.cache) || (this.lastSlot != that.lastSlot));
-    return this.lastSlot == that.lastSlot;
+    // NOTE: The function scope should generally be the same, but it's possible that one is
+    // bottom, in which case the scopes are definitely not the same, even if both scope maps
+    // are empty.
+    return this.scopes == that.scopes && this.functionScope.equals(that.functionScope);
   }
 
   @Override
@@ -288,7 +272,6 @@ class LinkedFlowScope implements FlowScope {
     // the next node.  In the case of (2), both inputs will always have the
     // same syntactic scope.  So simply propagating either input's scope is
     // perfectly fine.
-    @SuppressWarnings("ReferenceEquality")
     @Override
     public FlowScope apply(FlowScope a, FlowScope b) {
       // To join the two scopes, we have to
@@ -299,6 +282,7 @@ class LinkedFlowScope implements FlowScope {
       if (linkedA.optimizesToSameScope(linkedB)) {
         return linkedA.createChildFlowScope();
       }
+
       // NOTE: it would be nice to put 'null' as the syntactic scope if they're not
       // equal, but this is not currently feasible.  For joins that occur within a
       // single CFG node's flow, it's irrelevant, but for joins between separate
@@ -314,11 +298,11 @@ class LinkedFlowScope implements FlowScope {
       // interesting consequence of the current approach is that we may end up
       // adding irrelevant block-local variables to the joined scope unnecessarily.
       TypedScope common = getCommonParentDeclarationScope(linkedA, linkedB);
-
-      // TODO(sdh): Consider reusing the input cache if both inputs are identical.
-      // We can evaluate how often this happens to see whather this would be a win.
-      FlatFlowScopeCache cache = new FlatFlowScopeCache(linkedA, linkedB, common.getRootNode());
-      return new LinkedFlowScope(cache, common);
+      return new LinkedFlowScope(
+          null,
+          join(linkedA, linkedB, common),
+          common,
+          linkedA.flowsFromBottom() ? linkedB.functionScope : linkedA.functionScope);
     }
   }
 
@@ -333,6 +317,7 @@ class LinkedFlowScope implements FlowScope {
 
   @Override
   public boolean equals(Object other) {
+
     if (!(other instanceof LinkedFlowScope)) {
       return false;
     }
@@ -350,77 +335,25 @@ class LinkedFlowScope implements FlowScope {
     // they're equal--this just means that data flow analysis will have
     // to propagate the entry lattice a little bit further than it
     // really needs to. Everything will still come out ok.
-    if (this.cache.functionScope != that.cache.functionScope) {
+    if (this.functionScope != that.functionScope) {
       return false;
     }
 
-    if (cache == that.cache) {
-      // If the two flow scopes have the same cache, then we can check
-      // equality a lot faster: by just looking at the "dirty" elements
-      // in the cache, and comparing them in both scopes.
-      for (ScopedName var : cache.dirtySymbols) {
-        if (diffSlots(getSlot(var), that.getSlot(var))) {
-          return false;
-        }
-      }
+    return this.scopes.equivalent(that.scopes, LinkedFlowScope::equalScopes);
+  }
 
+  private static boolean equalScopes(OverlayScope left, OverlayScope right) {
+    if (left == right) {
       return true;
     }
-
-    Map<ScopedName, LinkedFlowSlot> myFlowSlots = allFlowSlots();
-    Map<ScopedName, LinkedFlowSlot> otherFlowSlots = that.allFlowSlots();
-
-    for (ScopedName name : Sets.union(myFlowSlots.keySet(), otherFlowSlots.keySet())) {
-      if (diffSlots(myFlowSlots.get(name), otherFlowSlots.get(name))) {
-        return false;
-      }
-    }
-    return true;
+    return left.slots.equivalent(right.slots, LinkedFlowScope::equalSlots);
   }
 
   /**
    * Determines whether two slots are meaningfully different for the purposes of data flow analysis.
    */
-  private static boolean diffSlots(StaticTypedSlot slotA, StaticTypedSlot slotB) {
-    boolean aIsNull = slotA == null || slotA.getType() == null;
-    boolean bIsNull = slotB == null || slotB.getType() == null;
-    if (aIsNull || bIsNull) {
-      return aIsNull != bIsNull;
-    }
-
-    // Both slots and types must be non-null.
-    return slotA.getType().differsFrom(slotB.getType());
-  }
-
-  /**
-   * Gets all the symbols that have been defined before this point
-   * in the current flow. Does not return slots that have not changed during
-   * the flow.
-   *
-   * For example, consider the code:
-   * <code>
-   * var x = 3;
-   * function f() {
-   *   var y = 5;
-   *   y = 6; // FLOW POINT
-   *   var z = y;
-   *   return z;
-   * }
-   * </code>
-   * A FlowScope at FLOW POINT will return a slot for y, but not
-   * a slot for x or z.
-   */
-  private Map<ScopedName, LinkedFlowSlot> allFlowSlots() {
-    Map<ScopedName, LinkedFlowSlot> slots = new HashMap<>();
-    for (LinkedFlowSlot slot = lastSlot; slot != null; slot = slot.parent) {
-      slots.putIfAbsent(slot.var, slot);
-    }
-
-    for (Map.Entry<ScopedName, LinkedFlowSlot> symbolEntry : cache.symbols.entrySet()) {
-      slots.putIfAbsent(symbolEntry.getKey(), symbolEntry.getValue());
-    }
-
-    return slots;
+  private static boolean equalSlots(StaticTypedSlot slotA, StaticTypedSlot slotB) {
+    return !slotA.getType().differsFrom(slotB.getType());
   }
 
   @Override
@@ -428,21 +361,125 @@ class LinkedFlowScope implements FlowScope {
     throw new UnsupportedOperationException();
   }
 
-  /** A static slot with a linked list built in. */
-  private static class LinkedFlowSlot implements StaticTypedSlot {
-    final ScopedName var;
-    final JSType type;
-    final LinkedFlowSlot parent;
+  @SuppressWarnings("ReferenceEquality") // JSType comparisons are expensive, so just use identity.
+  private static PMap<TypedScope, OverlayScope> join(
+      LinkedFlowScope linkedA, LinkedFlowScope linkedB, TypedScope commonParent) {
+    return linkedA
+        .trimScopes(commonParent)
+        .reconcile(
+            linkedB.trimScopes(commonParent),
+            (scopeA, scopeB) -> {
+              PMap<String, OverlaySlot> slotsA = scopeA != null ? scopeA.slots : EMPTY_SLOTS;
+              PMap<String, OverlaySlot> slotsB = scopeB != null ? scopeB.slots : EMPTY_SLOTS;
+              // TODO(sdh): Simplify this logic: we want the best non-bottom scope we can get,
+              // for the purpose of (a) passing to the joined OverlayScope constructor, and
+              // (b) joining types only present in one scope.
+              TypedScope typedScopeA =
+                  linkedA.flowsFromBottom() ? null : scopeA != null ? scopeA.scope : scopeB.scope;
+              TypedScope typedScopeB =
+                  linkedB.flowsFromBottom() ? null : scopeB != null ? scopeB.scope : scopeA.scope;
+              TypedScope bestScope = typedScopeA != null ? typedScopeA : typedScopeB;
+              bestScope =
+                  bestScope != null ? bestScope : scopeA != null ? scopeA.scope : scopeB.scope;
+              return new OverlayScope(
+                  bestScope,
+                  slotsA.reconcile(
+                      slotsB,
+                      (slotA, slotB) -> {
+                        // There are 5 different join cases:
+                        // 1) The type is present in joinedScopeA, not in joinedScopeB,
+                        //    and not in functionScope. Just use the one in A.
+                        // 2) The type is present in joinedScopeB, not in joinedScopeA,
+                        //    and not in functionScope. Just use the one in B.
+                        // 3) The type is present in functionScope and joinedScopeA, but
+                        //    not in joinedScopeB. Join the two types.
+                        // 4) The type is present in functionScope and joinedScopeB, but
+                        //    not in joinedScopeA. Join the two types.
+                        // 5) The type is present in joinedScopeA and joinedScopeB. Join
+                        //    the two types.
+                        String name = slotA != null ? slotA.getName() : slotB.getName();
+                        if (slotB == null || slotB.getType() == null) {
+                          TypedVar fnSlot = typedScopeB != null ? typedScopeB.getSlot(name) : null;
+                          JSType fnSlotType = fnSlot != null ? fnSlot.getType() : null;
+                          if (fnSlotType != null && fnSlotType != slotA.getType()) {
+                            // Case #3
+                            JSType joinedType = slotA.getType().getLeastSupertype(fnSlotType);
+                            return joinedType != slotA.getType()
+                                ? new OverlaySlot(name, joinedType)
+                                : slotA;
+                          } else {
+                            // Case #1
+                            return slotA;
+                          }
+                        } else if (slotA == null || slotA.getType() == null) {
+                          TypedVar fnSlot = typedScopeA != null ? typedScopeA.getSlot(name) : null;
+                          JSType fnSlotType = fnSlot != null ? fnSlot.getType() : null;
+                          if (fnSlotType != null && fnSlotType != slotB.getType()) {
+                            // Case #4
+                            JSType joinedType = slotB.getType().getLeastSupertype(fnSlotType);
+                            return joinedType != slotB.getType()
+                                ? new OverlaySlot(name, joinedType)
+                                : slotB;
+                          } else {
+                            // Case #2
+                            return slotB;
+                          }
+                        }
+                        // Case #5
+                        if (slotA.getType() == slotB.getType()) {
+                          return slotA;
+                        }
+                        JSType joinedType = slotA.getType().getLeastSupertype(slotB.getType());
+                        return joinedType != slotA.getType()
+                            ? new OverlaySlot(name, joinedType)
+                            : slotA;
+                      }));
+            });
+  }
 
-    LinkedFlowSlot(ScopedName var, JSType type, LinkedFlowSlot parent) {
-      this.var = var;
+  private static class OverlayScope {
+    final TypedScope scope;
+    final PMap<String, OverlaySlot> slots;
+
+    OverlayScope(TypedScope scope) {
+      this.scope = checkNotNull(scope);
+      this.slots = EMPTY_SLOTS;
+    }
+
+    OverlayScope(TypedScope scope, PMap<String, OverlaySlot> slots) {
+      this.scope = checkNotNull(scope);
+      this.slots = slots;
+    }
+
+    @SuppressWarnings("ReferenceEquality") // JSType#equals is expensive, so use identity.
+    OverlayScope infer(String name, JSType type) {
+      // TODO(sdh): variants that do or don't clobber properties (i.e. look up and modify instead)
+      OverlaySlot slot = slots.get(name);
+      if (slot != null && type == slot.type) {
+        return this;
+      }
+      return new OverlayScope(scope, slots.plus(name, new OverlaySlot(name, type)));
+    }
+
+    StaticTypedSlot getSlot(String name) {
+      OverlaySlot slot = slots.get(name);
+      return slot != null ? slot : scope.getSlot(name);
+    }
+  }
+
+  private static class OverlaySlot implements StaticTypedSlot {
+    // TODO(sdh): add a final PMap<String, OverlaySlot> for properties
+    final String name;
+    final JSType type;
+
+    OverlaySlot(String name, JSType type) {
+      this.name = name;
       this.type = type;
-      this.parent = parent;
     }
 
     @Override
     public String getName() {
-      return var.getName();
+      return name;
     }
 
     @Override
@@ -471,131 +508,5 @@ class LinkedFlowScope implements FlowScope {
     }
   }
 
-  /**
-   * A map that tries to cache as much symbol table information
-   * as possible in a map. Optimized for fast lookup.
-   */
-  private static class FlatFlowScopeCache {
-    // The TypedScope for the entire function or for the global scope.
-    final TypedScope functionScope;
-
-    // The linked flow scope that this cache represents.
-    final LinkedFlowScope linkedEquivalent;
-
-    // All the symbols defined before this point in the local flow.
-    // May not include lazily declared qualified names.
-    final Map<ScopedName, LinkedFlowSlot> symbols;
-
-    // Used to help make lookup faster for LinkedFlowScopes by recording
-    // symbols that may be redefined "soon", for an arbitrary definition
-    // of "soon". ;)
-    //
-    // More rigorously, if a symbol is redefined in a LinkedFlowScope,
-    // and this is the closest FlatFlowScopeCache, then that symbol is marked
-    // "dirty". In this way, we don't waste time looking in the LinkedFlowScope
-    // list for symbols that aren't defined anywhere nearby.
-    final Set<ScopedName> dirtySymbols = new HashSet<>();
-
-    // The cache at the bottom of the lattice.
-    FlatFlowScopeCache(TypedScope functionScope) {
-      this.functionScope = functionScope;
-      this.symbols = ImmutableMap.of();
-      this.linkedEquivalent = null;
-    }
-
-    // A cache in the middle of a long scope chain.
-    FlatFlowScopeCache(LinkedFlowScope directParent) {
-      FlatFlowScopeCache cache = directParent.cache;
-
-      this.functionScope = cache.functionScope;
-      this.symbols = directParent.allFlowSlots();
-      this.linkedEquivalent = directParent;
-    }
-
-    // A cache at the join of two scope chains.  The 'common' node is the root of the closest shared
-    // ancestor scope between the two joined scopes.  Any symbols in more deeply nested scopes than
-    // this are excluded from the join operations.
-    @SuppressWarnings("ReferenceEquality")
-    FlatFlowScopeCache(LinkedFlowScope joinedScopeA, LinkedFlowScope joinedScopeB, Node common) {
-      this.linkedEquivalent = null;
-
-      // Always prefer the "real" function scope to the faked-out
-      // bottom scope.
-      this.functionScope =
-          joinedScopeA.flowsFromBottom()
-              ? joinedScopeB.cache.functionScope
-              : joinedScopeA.cache.functionScope;
-
-      Map<ScopedName, LinkedFlowSlot> slotsA = joinedScopeA.allFlowSlots();
-      Map<ScopedName, LinkedFlowSlot> slotsB = joinedScopeB.allFlowSlots();
-      Set<Node> commonAncestorScopeRootNodes = new HashSet<>();
-      commonAncestorScopeRootNodes.add(common);
-      if (common.getParent() != null) {
-        for (Node n : common.getAncestors()) {
-          if (NodeUtil.createsScope(n)) {
-            commonAncestorScopeRootNodes.add(n);
-          }
-        }
-      }
-
-      this.symbols = slotsA;
-
-      // There are 5 different join cases:
-      // 1) The type is declared in joinedScopeA, not in joinedScopeB,
-      //    and not in functionScope. Just use the one in A.
-      // 2) The type is declared in joinedScopeB, not in joinedScopeA,
-      //    and not in functionScope. Just use the one in B.
-      // 3) The type is declared in functionScope and joinedScopeA, but
-      //    not in joinedScopeB. Join the two types.
-      // 4) The type is declared in functionScope and joinedScopeB, but
-      //    not in joinedScopeA. Join the two types.
-      // 5) The type is declared in joinedScopeA and joinedScopeB. Join
-      //    the two types.
-
-      // Stores names that are not in a common ancestor of slotsA and slotsB for later removal
-      Set<ScopedName> obsoleteNames = new HashSet<>();
-      for (ScopedName var : Sets.union(slotsA.keySet(), slotsB.keySet())) {
-        if (!commonAncestorScopeRootNodes.contains(var.getScopeRoot())) {
-          // Variables not defined in a common ancestor no longer exist after the join.
-          // Since this.symbols is initialized to slotsA, this.symbols may already contain var.
-          // Remove obsolete names after this for loop (to avoid a ConcurrentModificationException)
-          obsoleteNames.add(var);
-          continue;
-        }
-        LinkedFlowSlot slotA = slotsA.get(var);
-        LinkedFlowSlot slotB = slotsB.get(var);
-        JSType joinedType = null;
-        if (slotB == null || slotB.getType() == null) {
-          TypedVar fnSlot = joinedScopeB.syntacticScope.getSlot(var.getName());
-          JSType fnSlotType = fnSlot == null ? null : fnSlot.getType();
-          if (fnSlotType == null) {
-            // Case #1 -- already inserted.
-          } else if (fnSlotType != slotA.getType()) {
-            // Case #3
-            joinedType = slotA.getType().getLeastSupertype(fnSlotType);
-          }
-        } else if (slotA == null || slotA.getType() == null) {
-          TypedVar fnSlot = joinedScopeA.syntacticScope.getSlot(var.getName());
-          JSType fnSlotType = fnSlot == null ? null : fnSlot.getType();
-          if (fnSlotType == null || fnSlotType == slotB.getType()) {
-            // Case #2
-            symbols.put(var, slotB);
-          } else {
-            // Case #4
-            joinedType = slotB.getType().getLeastSupertype(fnSlotType);
-          }
-        } else if (slotA.getType() != slotB.getType()) {
-          // Case #5
-          joinedType = slotA.getType().getLeastSupertype(slotB.getType());
-        }
-
-        if (joinedType != null && (slotA == null || joinedType != slotA.getType())) {
-          symbols.put(var, new LinkedFlowSlot(var, joinedType, null));
-        }
-      }
-      for (ScopedName var : obsoleteNames) {
-        this.symbols.remove(var);
-      }
-    }
-  }
+  private static final PMap<String, OverlaySlot> EMPTY_SLOTS = HamtPMap.empty();
 }

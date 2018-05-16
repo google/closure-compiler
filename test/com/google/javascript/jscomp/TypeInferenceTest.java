@@ -1162,33 +1162,6 @@ public final class TypeInferenceTest extends TestCase {
     verify("out2", STRING_OBJECT_TYPE);
   }
 
-  public void testFlattening() {
-    for (int i = 0; i < LinkedFlowScope.MAX_DEPTH + 1; i++) {
-      assuming("s" + i, ALL_TYPE);
-    }
-    assuming("b", JSTypeNative.BOOLEAN_TYPE);
-    StringBuilder body = new StringBuilder();
-    body.append("if (b) {");
-    for (int i = 0; i < LinkedFlowScope.MAX_DEPTH + 1; i++) {
-      body.append("s");
-      body.append(i);
-      body.append(" = 1;\n");
-    }
-    body.append(" } else { ");
-    for (int i = 0; i < LinkedFlowScope.MAX_DEPTH + 1; i++) {
-      body.append("s");
-      body.append(i);
-      body.append(" = 'ONE';\n");
-    }
-    body.append("}");
-    JSType numberORString = createUnionType(NUMBER_TYPE, STRING_TYPE);
-    inFunction(body.toString());
-
-    for (int i = 0; i < LinkedFlowScope.MAX_DEPTH + 1; i++) {
-      verify("s" + i, numberORString);
-    }
-  }
-
   public void testUnary() {
     assuming("x", NUMBER_TYPE);
     inFunction("var y = +x;");
