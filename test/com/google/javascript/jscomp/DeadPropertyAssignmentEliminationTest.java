@@ -276,6 +276,17 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
             "}"));
   }
 
+  public void testAwait() {
+    // Assume that properties may be read while waiting for "await"
+    testSame(
+        lines(
+            "async function foo() {",
+            "  a.b.c = 20;",
+            "  await bar;",
+            "  a.b.c = 30;",
+            "}"));
+  }
+
   public void testUnknownLookup() {
     testSame(
         lines(

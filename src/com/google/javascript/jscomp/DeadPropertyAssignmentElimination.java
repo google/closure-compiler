@@ -293,7 +293,7 @@ public class DeadPropertyAssignmentElimination implements CompilerPass {
       }
 
       // Assume that all properties may be read when control flow leaves the function
-      if (NodeUtil.isInvocation(n) || n.isYield()) {
+      if (NodeUtil.isInvocation(n) || n.isYield() || n.isAwait()) {
         if (ASSUME_CONSTRUCTORS_HAVENT_ESCAPED
             && isConstructor
             && !NodeUtil.referencesThis(n)
