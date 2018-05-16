@@ -35,7 +35,8 @@ import com.google.javascript.rhino.TokenStream;
 public final class Es6RewriteDestructuring implements NodeTraversal.Callback, HotSwapCompilerPass {
   private final AbstractCompiler compiler;
   private static final FeatureSet transpiledFeatures =
-      FeatureSet.BARE_MINIMUM.with(Feature.DEFAULT_PARAMETERS, Feature.DESTRUCTURING);
+      FeatureSet.BARE_MINIMUM.with(
+          Feature.DEFAULT_PARAMETERS, Feature.DESTRUCTURING, Feature.ARRAY_PATTERN_REST);
 
   static final String DESTRUCTURING_TEMP_VAR = "$jscomp$destructuring$var";
 

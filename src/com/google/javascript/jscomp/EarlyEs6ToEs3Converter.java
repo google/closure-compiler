@@ -61,7 +61,6 @@ public final class EarlyEs6ToEs3Converter implements Callback, HotSwapCompilerPa
   private static final FeatureSet requiredForFeatures = FeatureSet.ES6.without(FeatureSet.ES5);
   private static final FeatureSet featuresTranspiledAway =
       FeatureSet.BARE_MINIMUM.with(
-          Feature.ARRAY_PATTERN_REST,
           Feature.REST_PARAMETERS,
           Feature.SPREAD_EXPRESSIONS);
 
