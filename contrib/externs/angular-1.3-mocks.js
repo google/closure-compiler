@@ -17,6 +17,7 @@
 /**
  * @fileoverview Externs for v1_3 ngMock angular-mocks.js.
  * @externs
+ * @suppress {strictMissingProperties}
  *
  * TODO: Remaining Mocks:
  *     $browser

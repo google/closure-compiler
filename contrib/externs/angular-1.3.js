@@ -39,6 +39,7 @@
  *
  * @see http://angularjs.org/
  * @externs
+ * @suppress {strictMissingProperties}
  */
 
 /**
