@@ -2993,10 +2993,11 @@ class IRFactory {
 
   String normalizeString(LiteralToken token, boolean templateLiteral) {
     String value = token.value;
-    if (templateLiteral) {
-      // <CR><LF> and <CR> are normalized as <LF> for raw string value
-      value = value.replaceAll("\r\n?", "\n");
-    }
+    // <CR><LF> and <CR> are normalized as <LF>. For raw template literal string values: this is the
+    // spec behaviour. For regular string literals: they can only be part of a line continuation,
+    // which we want to scrub.
+    value = value.replaceAll("\r\n?", "\n");
+
     int start = templateLiteral ? 0 : 1; // skip the leading quote
     int cur = value.indexOf('\\');
     if (cur == -1) {

@@ -2205,26 +2205,50 @@ public final class ParserTest extends BaseJSTypeTestCase {
     parseError("function * f() { yield , yield; }");
   }
 
-  public void testStringLineContinuation() {
+  public void testStringLineContinuationWarningsByMode() {
+    String unrecommendedWarning =
+        "String continuations are not recommended. See"
+            + " https://google.github.io/styleguide/jsguide.html#features-strings-no-line-continuations";
+
     expectFeatures(Feature.STRING_CONTINUATION);
-    mode = LanguageMode.ECMASCRIPT3;
     strictMode = SLOPPY;
-    Node n = parseWarning(
+
+    mode = LanguageMode.ECMASCRIPT3;
+    parseWarning(
         "'one\\\ntwo';",
         requiresLanguageModeMessage(LanguageMode.ECMASCRIPT5, Feature.STRING_CONTINUATION),
-        "String continuations are not recommended. See"
-                + " https://google.github.io/styleguide/jsguide.html#features-strings-no-line-continuations");
-    assertThat(n.getFirstFirstChild().getString()).isEqualTo("onetwo");
+        unrecommendedWarning);
 
     mode = LanguageMode.ECMASCRIPT5;
-    parseWarning("'one\\\ntwo';", "String continuations are not recommended. See"
-        + " https://google.github.io/styleguide/jsguide.html#features-strings-no-line-continuations");
-    assertThat(n.getFirstFirstChild().getString()).isEqualTo("onetwo");
+    parseWarning("'one\\\ntwo';", unrecommendedWarning);
 
     mode = LanguageMode.ECMASCRIPT6;
-    parseWarning("'one\\\ntwo';", "String continuations are not recommended. See"
-        + " https://google.github.io/styleguide/jsguide.html#features-strings-no-line-continuations");
+    parseWarning("'one\\\ntwo';", unrecommendedWarning);
+  }
+
+  public void testStringLineContinuationNormalization() {
+    String unrecommendedWarning =
+        "String continuations are not recommended. See"
+            + " https://google.github.io/styleguide/jsguide.html#features-strings-no-line-continuations";
+
+    expectFeatures(Feature.STRING_CONTINUATION);
+    mode = LanguageMode.ECMASCRIPT6;
+    strictMode = SLOPPY;
+
+    Node n = parseWarning("'one\\\ntwo';", unrecommendedWarning);
     assertThat(n.getFirstFirstChild().getString()).isEqualTo("onetwo");
+
+    n = parseWarning("'one\\\rtwo';", unrecommendedWarning);
+    assertThat(n.getFirstFirstChild().getString()).isEqualTo("onetwo");
+
+    n = parseWarning("'one\\\r\ntwo';", unrecommendedWarning);
+    assertThat(n.getFirstFirstChild().getString()).isEqualTo("onetwo");
+
+    n = parseWarning("'one \\\ntwo';", unrecommendedWarning);
+    assertThat(n.getFirstFirstChild().getString()).isEqualTo("one two");
+
+    n = parseWarning("'one\\\n two';", unrecommendedWarning);
+    assertThat(n.getFirstFirstChild().getString()).isEqualTo("one two");
   }
 
   public void testStringLiteral() {
