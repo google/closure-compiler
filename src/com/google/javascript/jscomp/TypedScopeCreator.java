@@ -2051,6 +2051,11 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
         return;
       }
 
+      // TODO(b/73386087): Remove this check after the extern definitions are cleaned up.
+      if (currentScope.isGlobal() && typedef.equals("symbol")) {
+        return;
+      }
+
       // TODO(nicksantos|user): This is a terrible, terrible hack
       // to bail out on recursive typedefs. We'll eventually need
       // to handle these properly.

@@ -647,6 +647,45 @@ public final class TypeCheckTest extends TypeCheckTestCase {
         "required: boolean");
   }
 
+  public void testWellKnownSymbolAccessTransitional1() {
+    testTypesWithExtraExterns(
+        lines(
+            "/** @typedef {?} */ var symbol;",
+            "/** @type {symbol} */ Symbol.somethingNew;"),
+        lines(
+            "/**",
+            " * @param {Array<string>} x",
+            " */",
+            "function f(x) {",
+            "  const iter = x[Symbol.somethingNew]();",
+            "}"
+        ));
+  }
+
+  public void testWellKnownSymbolAccess1() {
+    testTypesWithCommonExterns(
+        lines(
+            "/**",
+            " * @param {Array<string>} x",
+            " */",
+            "function f(x) {",
+            "  const iter = x[Symbol.iterator]();",
+            "}"
+        ));
+  }
+
+  public void testWellKnownSymbolAccess2() {
+    testTypesWithCommonExterns(
+        lines(
+            "/**",
+            " * @param {IObject<string, number>} x",
+            " */",
+            "function f(x) {",
+            "  const iter = x[Symbol.iterator]();",
+            "}"
+        ));
+  }
+
   public void testSymbolComparison1() {
     testTypes(
         lines(

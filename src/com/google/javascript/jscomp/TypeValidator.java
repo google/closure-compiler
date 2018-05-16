@@ -512,7 +512,12 @@ class TypeValidator implements Serializable {
   void expectIndexMatch(NodeTraversal t, Node n, JSType objType, JSType indexType) {
     checkState(n.isGetElem() || n.isComputedProp(), n);
     Node indexNode = n.isGetElem() ? n.getLastChild() : n.getFirstChild();
-    if (objType.isStruct() && !isWellKnownSymbol(indexNode)) {
+    if (indexType.isSymbolValueType()) {
+      // For now, allow symbols definitions/access on any type. In the future only allow them
+      // on the subtypes for which they are defined.
+      return;
+    }
+    if (objType.isStruct()) {
       report(JSError.make(indexNode,
                           ILLEGAL_PROPERTY_ACCESS, "'[]'", "struct"));
     }
@@ -536,14 +541,6 @@ class TypeValidator implements Serializable {
             typeRegistry.createUnionType(ARRAY_TYPE, OBJECT_TYPE));
       }
     }
-  }
-
-  // TODO(sdh): Replace isWellKnownSymbol with a real type-based
-  // check once the type system understands the symbol primitive.
-  // Any @const symbol reference should be allowed for a @struct.
-  private static boolean isWellKnownSymbol(Node n) {
-    return n.isGetProp() && n.getFirstChild().isName()
-        && n.getFirstChild().getString().equals("Symbol");
   }
 
   /**
