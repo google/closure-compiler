@@ -44,7 +44,6 @@ public final class CheckUnusedPrivatePropertiesTest extends CompilerTestCase {
   protected void setUp() throws Exception {
     super.setUp();
     enableGatherExternProperties();
-    enableTranspile();
     enableTypeCheck();
   }
 
@@ -228,6 +227,18 @@ public final class CheckUnusedPrivatePropertiesTest extends CompilerTestCase {
     used(lines(
         "/** @constructor */ function A() {/** @private */  this.foo = 1;}",
         "use({foo: 'foo'});"));
+
+    // member functions prevent renaming (since we allow them in goog.reflect.object)
+    used(
+        lines(
+            "/** @constructor */ function A() {/** @private */  this.foo = 1;}",
+            "use({foo() {}});"));
+
+    // computed property doesn't prevent warning
+    unused(
+        lines(
+            "/** @constructor */ function A() {/** @private */  this.foo = 1;}",
+            "use({['foo']: 'foo'});"));
   }
 
   public void testPrototypeProps1() {

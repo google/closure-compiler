@@ -129,7 +129,9 @@ class CheckUnusedPrivateProperties
          // Assume any object literal definition might be a reflection on the
          // class property.
          for (Node c : n.children()) {
-           used.add(c.getString());
+            if (c.isStringKey() || c.isGetterDef() || c.isSetterDef() || c.isMemberFunctionDef()) {
+              used.add(c.getString());
+            }
          }
          break;
        }
