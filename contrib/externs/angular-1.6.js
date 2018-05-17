@@ -2003,6 +2003,11 @@ angular.NgModelController.prototype.$formatters;
 angular.NgModelController.prototype.$invalid;
 
 /**
+ * @param {!Object} options
+ */
+angular.NgModelController.prototype.$overrideModelOptions = function(options) {};
+
+/**
  * @type {!Array<function(?):*>}
  */
 angular.NgModelController.prototype.$parsers;
