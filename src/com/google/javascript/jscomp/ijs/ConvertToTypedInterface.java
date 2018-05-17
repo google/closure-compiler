@@ -420,7 +420,7 @@ public class ConvertToTypedInterface implements CompilerPass {
         decl.remove(compiler);
         return;
       }
-      if (isAliasDefinition(decl)) {
+      if (decl.isAliasDefinition()) {
         return;
       }
       if (decl.getRhs() != null && decl.getRhs().isFunction()) {
@@ -506,16 +506,6 @@ public class ConvertToTypedInterface implements CompilerPass {
       jsdocNode.setJSDocInfo(JsdocUtil.getUnusableTypeJSDoc(jsdoc));
     }
 
-    private boolean isAliasDefinition(PotentialDeclaration decl) {
-      Node rhs = decl.getRhs();
-      if (decl.isConstToBeInferred() && rhs != null && rhs.isQualifiedName()) {
-        String aliasedName = rhs.getQualifiedName();
-        return rhs.isThis()
-            || currentFile.isPrefixRequired(aliasedName)
-            || currentFile.isNameDeclared(aliasedName);
-      }
-      return false;
-    }
   }
 
 }

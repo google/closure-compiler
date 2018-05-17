@@ -172,9 +172,6 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
     test(
         "/** @type {Object} */ var o = {}; /** @type {number} */ o.p = 5; /** @const */ var y = o;",
         "/** @type {Object} */ var o; /** @type {number} */ o.p; /** @const */ var y = o;");
-
-    testWarning(
-        "/** @const */ var x = Foo;", ConvertToTypedInterface.CONSTANT_WITHOUT_EXPLICIT_TYPE);
   }
 
   public void testConstJsdocPropagationForConstructorNames() {
@@ -307,6 +304,11 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
             "goog.module.declareLegacyNamespace();",
             "",
             "exports = class {};"));
+  }
+
+  public void testExternsAlias() {
+    testSame("const winAlias = window;");
+    testSame("const winAlias = window; const locationAlias = winAlias.location;");
   }
 
   public void testConstructorAlias1() {
@@ -1281,13 +1283,12 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
   }
 
   public void testAliasOfNonRequiredName() {
-    testWarning(
+    testSame(
         lines(
             "goog.provide('a.b.c');",
             "",
             "/** @const */",
-            "a.b.c.FooAlias = ns.Foo;"),
-        ConvertToTypedInterface.CONSTANT_WITHOUT_EXPLICIT_TYPE);
+            "a.b.c.FooAlias = ns.Foo;"));
 
     testWarning(
         lines(
