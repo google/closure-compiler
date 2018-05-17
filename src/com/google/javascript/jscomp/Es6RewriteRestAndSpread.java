@@ -19,7 +19,6 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
-import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.jscomp.NodeUtil.Visitor;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
@@ -32,23 +31,15 @@ import com.google.javascript.rhino.Token;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Converts ES6 code to valid ES5 code. This class does transpilation for Rest, Spread, and Symbols,
- * which should be transpiled before NTI.
- * Other classes that start with "Es6" do other parts of the transpilation.
- *
- * <p>In most cases, the output is valid as ES3 (hence the class name) but in some cases, if
- * the output language is set to ES5, we rely on ES5 features such as getters, setters,
- * and Object.defineProperties.
- *
- * @author tbreisacher@google.com (Tyler Breisacher)
- */
-public final class EarlyEs6ToEs3Converter implements Callback, HotSwapCompilerPass {
+/** Converts REST parameters and SPREAD expressions. */
+public final class Es6RewriteRestAndSpread extends NodeTraversal.AbstractPostOrderCallback
+    implements HotSwapCompilerPass {
   private final AbstractCompiler compiler;
 
-  static final DiagnosticType BAD_REST_PARAMETER_ANNOTATION = DiagnosticType.warning(
-      "BAD_REST_PARAMETER_ANNOTATION",
-      "Missing \"...\" in type annotation for rest parameter.");
+  static final DiagnosticType BAD_REST_PARAMETER_ANNOTATION =
+      DiagnosticType.warning(
+          "BAD_REST_PARAMETER_ANNOTATION",
+          "Missing \"...\" in type annotation for rest parameter.");
 
   // The name of the index variable for populating the rest parameter array.
   private static final String REST_INDEX = "$jscomp$restIndex";
@@ -57,80 +48,31 @@ public final class EarlyEs6ToEs3Converter implements Callback, HotSwapCompilerPa
   private static final String REST_PARAMS = "$jscomp$restParams";
 
   private static final String FRESH_SPREAD_VAR = "$jscomp$spread$args";
-  // Since there's currently no Feature for Symbol, run this pass if the code has any ES6 features.
-  private static final FeatureSet requiredForFeatures = FeatureSet.ES6.without(FeatureSet.ES5);
-  private static final FeatureSet featuresTranspiledAway =
-      FeatureSet.BARE_MINIMUM.with(
-          Feature.REST_PARAMETERS,
-          Feature.SPREAD_EXPRESSIONS);
+  private static final FeatureSet transpiledFeatures =
+      FeatureSet.BARE_MINIMUM.with(Feature.REST_PARAMETERS, Feature.SPREAD_EXPRESSIONS);
 
-  public EarlyEs6ToEs3Converter(AbstractCompiler compiler) {
+  public Es6RewriteRestAndSpread(AbstractCompiler compiler) {
     this.compiler = compiler;
   }
 
   @Override
   public void process(Node externs, Node root) {
-    TranspilationPasses.processTranspile(compiler, externs, requiredForFeatures, this);
-    TranspilationPasses.processTranspile(compiler, root, requiredForFeatures, this);
-    TranspilationPasses.markFeaturesAsTranspiledAway(compiler, featuresTranspiledAway);
+    TranspilationPasses.processTranspile(compiler, externs, transpiledFeatures, this);
+    TranspilationPasses.processTranspile(compiler, root, transpiledFeatures, this);
+    TranspilationPasses.markFeaturesAsTranspiledAway(compiler, transpiledFeatures);
   }
 
   @Override
   public void hotSwapScript(Node scriptRoot, Node originalRoot) {
-    TranspilationPasses.hotSwapTranspile(compiler, scriptRoot, requiredForFeatures, this);
-    TranspilationPasses.markFeaturesAsTranspiledAway(compiler, featuresTranspiledAway);
-  }
-
-  /**
-   * Some nodes must be visited pre-order in order to rewrite the
-   * references to {@code this} correctly.
-   * Everything else is translated post-order in {@link #visit}.
-   */
-  @Override
-  public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
-    switch (n.getToken()) {
-      case REST:
-        visitRestParam(t, n, parent);
-        break;
-      case FOR_OF:
-        // We will need this when we transpile for/of in LateEs6ToEs3Converter,
-        // but we want the runtime functions to be have JSType applied to it by the type checker.
-        Es6ToEs3Util.preloadEs6RuntimeFunction(compiler, "makeIterator");
-        break;
-      case GETTER_DEF:
-      case SETTER_DEF:
-        if (compiler.getOptions().getLanguageOut() == LanguageMode.ECMASCRIPT3) {
-          Es6ToEs3Util.cannotConvert(
-              compiler, n, "ES5 getters/setters (consider using --language_out=ES5)");
-          return false;
-        }
-        break;
-      case FUNCTION:
-        if (n.isAsyncFunction()) {
-          throw new IllegalStateException("async functions should have already been converted");
-        }
-        if (n.isGeneratorFunction()) {
-          compiler.ensureLibraryInjected("es6/generator_engine", /* force= */ false);
-        }
-        break;
-      default:
-        break;
-    }
-    return true;
+    TranspilationPasses.hotSwapTranspile(compiler, scriptRoot, transpiledFeatures, this);
+    TranspilationPasses.markFeaturesAsTranspiledAway(compiler, transpiledFeatures);
   }
 
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
     switch (n.getToken()) {
-      case NAME:
-        if (!n.isFromExterns() && isGlobalSymbol(t, n)) {
-          initSymbolBefore(n);
-        }
-        break;
-      case GETPROP:
-        if (!n.isFromExterns()) {
-          visitGetprop(t, n);
-        }
+      case REST:
+        visitRestParam(t, n, parent);
         break;
       case ARRAYLIT:
       case NEW:
@@ -147,45 +89,7 @@ public final class EarlyEs6ToEs3Converter implements Callback, HotSwapCompilerPa
     }
   }
 
-  /**
-   * @return Whether {@code n} is a reference to the global "Symbol" function.
-   */
-  private boolean isGlobalSymbol(NodeTraversal t, Node n) {
-    if (!n.matchesQualifiedName("Symbol")) {
-      return false;
-    }
-    Var var = t.getScope().getVar("Symbol");
-    return var == null || var.isGlobal();
-  }
-
-  /**
-   * Inserts a call to $jscomp.initSymbol() before {@code n}.
-   */
-  private void initSymbolBefore(Node n) {
-    compiler.ensureLibraryInjected("es6/symbol", false);
-    Node statement = NodeUtil.getEnclosingStatement(n);
-    Node initSymbol = IR.exprResult(IR.call(NodeUtil.newQName(compiler, "$jscomp.initSymbol")));
-    statement.getParent().addChildBefore(initSymbol.useSourceInfoFromForTree(statement), statement);
-    compiler.reportChangeToEnclosingScope(initSymbol);
-  }
-
-  // TODO(tbreisacher): Do this for all well-known symbols.
-  private void visitGetprop(NodeTraversal t, Node n) {
-    if (!n.matchesQualifiedName("Symbol.iterator")) {
-      return;
-    }
-    if (isGlobalSymbol(t, n.getFirstChild())) {
-      compiler.ensureLibraryInjected("es6/symbol", false);
-      Node statement = NodeUtil.getEnclosingStatement(n);
-      Node init = IR.exprResult(IR.call(NodeUtil.newQName(compiler, "$jscomp.initSymbolIterator")));
-      statement.getParent().addChildBefore(init.useSourceInfoFromForTree(statement), statement);
-      compiler.reportChangeToEnclosingScope(init);
-    }
-  }
-
-  /**
-   * Processes a rest parameter
-   */
+  /** Processes a rest parameter */
   private void visitRestParam(NodeTraversal t, Node restParam, Node paramList) {
     Node functionBody = paramList.getNext();
     int restIndex = paramList.getIndexOfChild(restParam);
@@ -219,8 +123,7 @@ public final class EarlyEs6ToEs3Converter implements Callback, HotSwapCompilerPa
 
     Node newBlock = IR.block().useSourceInfoFrom(functionBody);
     Node name = IR.name(paramName);
-    Node let = IR.let(name, IR.name(REST_PARAMS))
-        .useSourceInfoIfMissingFromForTree(functionBody);
+    Node let = IR.let(name, IR.name(REST_PARAMS)).useSourceInfoIfMissingFromForTree(functionBody);
     newBlock.addChildToFront(let);
 
     for (Node child : functionBody.children()) {
@@ -251,11 +154,15 @@ public final class EarlyEs6ToEs3Converter implements Callback, HotSwapCompilerPa
     Node init = IR.var(IR.name(REST_INDEX), IR.number(restIndex));
     Node cond = IR.lt(IR.name(REST_INDEX), IR.getprop(IR.name("arguments"), IR.string("length")));
     Node incr = IR.inc(IR.name(REST_INDEX), false);
-    Node body = IR.block(IR.exprResult(IR.assign(
-        IR.getelem(IR.name(REST_PARAMS), IR.sub(IR.name(REST_INDEX), IR.number(restIndex))),
-        IR.getelem(IR.name("arguments"), IR.name(REST_INDEX)))));
-    functionBody.addChildAfter(IR.forNode(init, cond, incr, body)
-        .useSourceInfoIfMissingFromForTree(restParam), newArr);
+    Node body =
+        IR.block(
+            IR.exprResult(
+                IR.assign(
+                    IR.getelem(
+                        IR.name(REST_PARAMS), IR.sub(IR.name(REST_INDEX), IR.number(restIndex))),
+                    IR.getelem(IR.name("arguments"), IR.name(REST_INDEX)))));
+    functionBody.addChildAfter(
+        IR.forNode(init, cond, incr, body).useSourceInfoIfMissingFromForTree(restParam), newArr);
     functionBody.addChildToBack(newBlock);
     compiler.reportChangeToEnclosingScope(newBlock);
 
@@ -270,25 +177,27 @@ public final class EarlyEs6ToEs3Converter implements Callback, HotSwapCompilerPa
     if (typeVars.isEmpty()) {
       return typeAst;
     }
-    NodeUtil.visitPreOrder(typeAst, new Visitor(){
-      @Override
-      public void visit(Node n) {
-        if (n.isString() && n.getParent() != null && typeVars.contains(n.getString())) {
-          n.replaceWith(new Node(Token.QMARK));
-        }
-      }
-    });
+    NodeUtil.visitPreOrder(
+        typeAst,
+        new Visitor() {
+          @Override
+          public void visit(Node n) {
+            if (n.isString() && n.getParent() != null && typeVars.contains(n.getString())) {
+              n.replaceWith(new Node(Token.QMARK));
+            }
+          }
+        });
     return typeAst;
   }
 
   /**
-   * Processes array literals or calls containing spreads. Examples:
-   * [1, 2, ...x, 4, 5] => [].concat([1, 2], $jscomp.arrayFromIterable(x), [4, 5])
+   * Processes array literals or calls containing spreads. Examples: [1, 2, ...x, 4, 5] =>
+   * [].concat([1, 2], $jscomp.arrayFromIterable(x), [4, 5])
    *
-   * f(...arr) => f.apply(null, [].concat($jscomp.arrayFromIterable(arr)))
+   * <p>f(...arr) => f.apply(null, [].concat($jscomp.arrayFromIterable(arr)))
    *
-   * new F(...args) =>
-   *     new Function.prototype.bind.apply(F, [].concat($jscomp.arrayFromIterable(args)))
+   * <p>new F(...args) => new Function.prototype.bind.apply(F,
+   * [].concat($jscomp.arrayFromIterable(args)))
    */
   private void visitArrayLitOrCallWithSpread(Node node, Node parent) {
     if (node.isArrayLit()) {

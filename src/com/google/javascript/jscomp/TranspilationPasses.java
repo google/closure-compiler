@@ -95,7 +95,8 @@ public class TranspilationPasses {
     passes.add(es6RewriteArrowFunction);
     passes.add(es6ExtractClasses);
     passes.add(es6RewriteClass);
-    passes.add(earlyConvertEs6ToEs3);
+    passes.add(es6InjectRuntimeLibraries);
+    passes.add(es6RewriteRestAndSpread);
     passes.add(lateConvertEs6ToEs3);
     if (!options.checksOnly) {
       // Don't run these passes in checksOnly mode since all the typechecking & checks passes
@@ -294,23 +295,33 @@ public class TranspilationPasses {
         }
   };
 
-  /**
-   * Does ES6 to ES3 conversion of Rest, Spread and Symbol.
-   * There are a few other passes which run before or after this one,
-   * to convert constructs which are not converted by this pass.
-   */
-  static final HotSwapPassFactory earlyConvertEs6ToEs3 =
-      new HotSwapPassFactory("earlyConvertEs6") {
-    @Override
-    protected HotSwapCompilerPass create(final AbstractCompiler compiler) {
-      return new EarlyEs6ToEs3Converter(compiler);
-    }
+  /** Injects runtime library code needed for transpiled ES6 code. */
+  static final HotSwapPassFactory es6InjectRuntimeLibraries =
+      new HotSwapPassFactory("es6InjectRuntimeLibraries") {
+        @Override
+        protected HotSwapCompilerPass create(final AbstractCompiler compiler) {
+          return new Es6InjectRuntimeLibraries(compiler);
+        }
 
-    @Override
-    protected FeatureSet featureSet() {
-      return ES8;
-    }
-  };
+        @Override
+        protected FeatureSet featureSet() {
+          return ES8;
+        }
+      };
+
+  /** Transpiles REST parameters and SPREAD in both array literals and function calls. */
+  static final HotSwapPassFactory es6RewriteRestAndSpread =
+      new HotSwapPassFactory("es6RewriteRestAndSpread") {
+        @Override
+        protected HotSwapCompilerPass create(final AbstractCompiler compiler) {
+          return new Es6RewriteRestAndSpread(compiler);
+        }
+
+        @Override
+        protected FeatureSet featureSet() {
+          return ES8;
+        }
+      };
 
   /**
    * Does the main ES6 to ES3 conversion. There are a few other passes which run before this one, to

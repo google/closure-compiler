@@ -28,11 +28,10 @@ import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 
 /**
- * Test cases for ES6 transpilation. Despite the name, this isn't just testing {@link
- * EarlyEs6ToEs3Converter} and {@link LateEs6ToEs3Converter},
- * but also some other ES6 transpilation passes. See {@link #getProcessor}.
+ * Test cases for ES6 transpilation.
  *
- * @author tbreisacher@google.com (Tyler Breisacher)
+ * This class actually tests several transpilation passes together.
+ * See {@link #getProcessor}.
  */
 // TODO(tbreisacher): Rename this to Es6TranspilationIntegrationTest since it's really testing
 // a lot of different passes. Also create a unit test for Es6ToEs3Converter.
@@ -131,7 +130,9 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
     optimizer.addOneTimePass(makePassFactory("es6ExtractClasses", new Es6ExtractClasses(compiler)));
     optimizer.addOneTimePass(makePassFactory("es6RewriteClass", new Es6RewriteClass(compiler)));
     optimizer.addOneTimePass(
-        makePassFactory("convertEs6Early", new EarlyEs6ToEs3Converter(compiler)));
+        makePassFactory("es6InjectRuntimeLibraries", new Es6InjectRuntimeLibraries(compiler)));
+    optimizer.addOneTimePass(
+        makePassFactory("es6RewriteRestAndSpread", new Es6RewriteRestAndSpread(compiler)));
     optimizer.addOneTimePass(
         makePassFactory("convertEs6Late", new LateEs6ToEs3Converter(compiler)));
     optimizer.addOneTimePass(makePassFactory("es6ForOf", new Es6ForOfConverter(compiler)));
@@ -2286,9 +2287,9 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
 
     // Warn on /** number */
     testWarning("function f(/** number */ ...zero) {}",
-                EarlyEs6ToEs3Converter.BAD_REST_PARAMETER_ANNOTATION);
+                Es6RewriteRestAndSpread.BAD_REST_PARAMETER_ANNOTATION);
     testWarning("/** @param {number} zero */ function f(...zero) {}",
-                EarlyEs6ToEs3Converter.BAD_REST_PARAMETER_ANNOTATION);
+                Es6RewriteRestAndSpread.BAD_REST_PARAMETER_ANNOTATION);
   }
 
   public void testDefaultAndRestParameters() {

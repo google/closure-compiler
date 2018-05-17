@@ -62,7 +62,7 @@ import javax.annotation.Nullable;
  *       </ul>
  * </ul>
  *
- * <p>{@code Es6RewriteGenerators} depends on {@link EarlyEs6ToEs3Converter} to inject
+ * <p>{@code Es6RewriteGenerators} depends on {@link Es6InjectRuntimeLibraries} to inject
  * <code>generator_engine.js</code> template.
  */
 final class Es6RewriteGenerators implements HotSwapCompilerPass {
