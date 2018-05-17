@@ -477,30 +477,6 @@ public final class ParserTest extends BaseJSTypeTestCase {
     assertNode(value).hasCharno(4);
   }
 
-  public void testLinenoCharnoObjectLiteralMemberFunction() throws Exception {
-    mode = LanguageMode.ECMASCRIPT6;
-    Node n = parse("var a = {\n fn() {} };").getFirstFirstChild().getFirstChild();
-
-    assertNode(n).hasType(Token.OBJECTLIT);
-    assertNode(n).hasLineno(1);
-    assertNode(n).hasCharno(8);
-
-    // fn() {}
-    Node key = n.getFirstChild();
-
-    assertNode(key).hasType(Token.MEMBER_FUNCTION_DEF);
-    assertNode(key).hasLineno(2);
-    assertNode(key).hasCharno(1);
-    assertNode(key).hasLength(2); // "fn"
-
-    Node value = key.getFirstChild();
-
-    assertNode(value).hasType(Token.FUNCTION);
-    assertNode(value).hasLineno(2);
-    assertNode(value).hasCharno(1);
-    assertNode(value).hasLength(7); // "fn() {}"
-  }
-
   public void testLinenoCharnoAdd() throws Exception {
     testLinenoCharnoBinop("+");
   }
