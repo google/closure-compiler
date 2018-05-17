@@ -23,6 +23,7 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.BOOLEAN_OBJECT_TYP
 import static com.google.javascript.rhino.jstype.JSTypeNative.BOOLEAN_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.CHECKED_UNKNOWN_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.ITERABLE_TYPE;
+import static com.google.javascript.rhino.jstype.JSTypeNative.I_TEMPLATE_ARRAY_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NULL_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NUMBER_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NUMBER_VALUE_OR_OBJECT_TYPE;
@@ -32,6 +33,7 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.VOID_TYPE;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.CodingConvention.AssertionFunctionSpec;
@@ -376,7 +378,8 @@ class TypeInference
         break;
 
       case CALL:
-        scope = traverseCall(n, scope);
+        scope = traverseFunctionInvocation(n, scope);
+        scope = tightenTypesAfterAssertions(scope, n);
         break;
 
       case NEW:
@@ -452,7 +455,7 @@ class TypeInference
         break;
 
       case TAGGED_TEMPLATELIT:
-        scope = traverseTaggedTemplateLiteral(n, scope);
+        scope = traverseFunctionInvocation(n, scope);
         break;
 
       case DELPROP:
@@ -1076,7 +1079,9 @@ class TypeInference
     return scope.createChildFlowScope();
   }
 
-  private FlowScope traverseCall(Node n, FlowScope scope) {
+  /** @param n A non-constructor function invocation, i.e. CALL or TAGGED_TEMPLATELIT */
+  private FlowScope traverseFunctionInvocation(Node n, FlowScope scope) {
+    checkArgument(n.isCall() || n.isTaggedTemplateLit(), n);
     scope = traverseChildren(n, scope);
 
     Node left = n.getFirstChild();
@@ -1088,25 +1093,6 @@ class TypeInference
     } else if (functionType.isEquivalentTo(
         getNativeType(CHECKED_UNKNOWN_TYPE))) {
       n.setJSType(getNativeType(CHECKED_UNKNOWN_TYPE));
-    }
-
-    scope = tightenTypesAfterAssertions(scope, n);
-    return scope;
-  }
-
-  private FlowScope traverseTaggedTemplateLiteral(Node n, FlowScope scope) {
-    scope = traverseChildren(n, scope);
-
-    Node left = n.getFirstChild();
-    JSType functionType = getJSType(left).restrictByNotNullOrUndefined();
-    if (functionType.isFunctionType()) {
-      FunctionType fnType = functionType.toMaybeFunctionType();
-      n.setJSType(fnType.getReturnType());
-      // TODO(b/78891530): make "backwardsInferenceFromCallSite" work for tagged template literals
-    } else if (functionType.isEquivalentTo(getNativeType(CHECKED_UNKNOWN_TYPE))) {
-      n.setJSType(getNativeType(CHECKED_UNKNOWN_TYPE));
-    } else {
-      n.setJSType(getNativeType(UNKNOWN_TYPE));
     }
 
     return scope;
@@ -1198,7 +1184,7 @@ class TypeInference
     if (updatedFnType) {
       fnType = n.getFirstChild().getJSType().toMaybeFunctionType();
     }
-    updateTypeOfParameters(n, fnType);
+    updateTypeOfArguments(n, fnType);
     updateBind(n);
   }
 
@@ -1240,26 +1226,34 @@ class TypeInference
   }
 
   /**
-   * For functions with function parameters, type inference will set the type of
-   * a function literal argument from the function parameter type.
+   * For functions with function parameters, type inference will set the type of a function literal
+   * argument from the function parameter type.
    */
-  private void updateTypeOfParameters(Node n, FunctionType fnType) {
-    checkState(n.isCall() || n.isNew(), n);
-    int i = 0;
-    int childCount = n.getChildCount();
-    Node iArgument = n.getFirstChild();
-    for (Node iParameter : fnType.getParameters()) {
-      if (i + 1 >= childCount) {
-        // TypeCheck#visitParametersList will warn so we bail.
+  private void updateTypeOfArguments(Node n, FunctionType fnType) {
+    checkState(NodeUtil.isInvocation(n), n);
+    Iterator<Node> parameters = fnType.getParameters().iterator();
+    if (n.isTaggedTemplateLit()) {
+      // Skip the first parameter because it corresponds to a constructed array of the template lit
+      // subs, not an actual AST node, so there's nothing to update.
+      if (!parameters.hasNext()) {
+        // TypeCheck will warn if there is no first parameter. Just bail out here.
         return;
       }
+      parameters.next();
+    }
+    Iterator<Node> arguments = NodeUtil.getInvocationArgsAsIterable(n).iterator();
 
-      // NOTE: the first child of the call node is the call target, which we want to skip, so
-      // it is correct to call getNext on the first iteration.
-      iArgument = iArgument.getNext();
+    Node iParameter;
+    Node iArgument;
+
+    // Note: if there are too many or too few arguments, TypeCheck will warn.
+    while (parameters.hasNext() && arguments.hasNext()) {
+      iArgument = arguments.next();
       JSType iArgumentType = getJSType(iArgument);
 
+      iParameter = parameters.next();
       JSType iParameterType = getJSType(iParameter);
+
       inferPropertyTypesToMatchConstraint(iArgumentType, iParameterType);
 
       // If the parameter to the call is a function expression, propagate the
@@ -1289,7 +1283,6 @@ class TypeInference
         boolean declared = argJsdoc != null && argJsdoc.containsDeclaration();
         iArgument.setJSType(matchFunction(restrictedParameter, argFnType, declared));
       }
-      i++;
     }
   }
 
@@ -1322,6 +1315,7 @@ class TypeInference
     return currentType;
   }
 
+  /** @param call A CALL, NEW, or TAGGED_TEMPLATELIT node */
   private Map<TemplateType, JSType> inferTemplateTypesFromParameters(
       FunctionType fnType, Node call) {
     if (fnType.getTemplateTypeMap().getTemplateKeys().isEmpty()) {
@@ -1341,10 +1335,30 @@ class TypeInference
           seenTypes);
     }
 
-    if (call.hasMoreThanOneChild()) {
+    if (call.isTaggedTemplateLit()) {
+      Iterator<Node> fnParameters = fnType.getParameters().iterator();
+      if (!fnParameters.hasNext()) {
+        // TypeCheck will warn if there are too few function parameters
+        return resolvedTypes;
+      }
+      // The first argument to the tag function is an array of strings (typed as ITemplateArray)
+      // but not an actual AST node
+      maybeResolveTemplatedType(
+          fnParameters.next().getJSType(),
+          getNativeType(I_TEMPLATE_ARRAY_TYPE),
+          resolvedTypes,
+          seenTypes);
+
+      // Resolve the remaining template types from the template literal substitutions.
+      maybeResolveTemplateTypeFromNodes(
+          Iterables.skip(fnType.getParameters(), 1),
+          NodeUtil.getInvocationArgsAsIterable(call),
+          resolvedTypes,
+          seenTypes);
+    } else if (call.hasMoreThanOneChild()) {
       maybeResolveTemplateTypeFromNodes(
           fnType.getParameters(),
-          call.getSecondChild().siblings(),
+          NodeUtil.getInvocationArgsAsIterable(call),
           resolvedTypes,
           seenTypes);
     }
