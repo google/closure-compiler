@@ -24,6 +24,7 @@ import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.rhino.JSDocInfo;
+import com.google.javascript.rhino.JSDocInfo.Visibility;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
@@ -214,6 +215,30 @@ public final class InferJSDocInfoTest extends CompilerTestCase {
     assertEquals(
         "Block description.",
         proto.getOwnPropertyJSDocInfo("bar").getBlockDescription());
+  }
+
+  public void testPrototypeObjectLiteral() {
+    testSame(
+        lines(
+            "/** @constructor */ function Foo() {}",
+            "Foo.prototype = {",
+            "  /** @protected */ a: function() {},",
+            "  /** @protected */ get b() {},",
+            "  /** @protected */ set c(x) {},",
+            "  /** @protected */ d() {}",
+            "};"));
+
+    FunctionType ctor = findGlobalNameType("Foo").toMaybeFunctionType();
+    ObjectType prototype = ctor.getInstanceType().getImplicitPrototype();
+
+    assertThat(prototype.getOwnPropertyJSDocInfo("a").getVisibility())
+        .isEqualTo(Visibility.PROTECTED);
+    assertThat(prototype.getOwnPropertyJSDocInfo("b").getVisibility())
+        .isEqualTo(Visibility.PROTECTED);
+    assertThat(prototype.getOwnPropertyJSDocInfo("c").getVisibility())
+        .isEqualTo(Visibility.PROTECTED);
+    assertThat(prototype.getOwnPropertyJSDocInfo("d").getVisibility())
+        .isEqualTo(Visibility.PROTECTED);
   }
 
   private JSType findGlobalNameType(String name) {

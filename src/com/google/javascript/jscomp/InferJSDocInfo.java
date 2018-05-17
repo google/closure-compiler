@@ -140,6 +140,7 @@ class InferJSDocInfo extends AbstractPostOrderCallback
       case STRING_KEY:
       case GETTER_DEF:
       case SETTER_DEF:
+      case MEMBER_FUNCTION_DEF:
         docInfo = n.getJSDocInfo();
         if (docInfo == null) {
           return;
