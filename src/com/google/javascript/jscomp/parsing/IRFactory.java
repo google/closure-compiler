@@ -1356,6 +1356,8 @@ class IRFactory {
         member.setStaticMember(functionTree.isStatic);
         maybeProcessAccessibilityModifier(functionTree, member, functionTree.access);
         node.setDeclaredTypeExpression(node.getDeclaredTypeExpression());
+        // The source info should only include the identifier, not the entire function expression
+        setSourceInfo(member, name);
         result = member;
       } else {
         result = node;
