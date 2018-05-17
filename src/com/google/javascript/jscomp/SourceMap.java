@@ -29,8 +29,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.annotation.Nullable;
 
 /**
@@ -44,10 +42,6 @@ import javax.annotation.Nullable;
  * @author johnlenz@google.com (John Lenz)
  */
 public final class SourceMap {
-
-  private static final Logger logger =
-      Logger.getLogger("com.google.javascript.jscomp");
-
   /**
    * An enumeration of available source map formats
    */
@@ -202,12 +196,8 @@ public final class SourceMap {
         outputStartPosition, outputEndPosition);
   }
 
-  public void addSourceFile(SourceFile sourceFile) {
-    try {
-      generator.addSourcesContent(fixupSourceLocation(sourceFile.getName()), sourceFile.getCode());
-    } catch (IOException e) {
-      logger.log(Level.WARNING, "Exception while adding source content to source map.", e);
-    }
+  public void addSourceFile(String name, String code) {
+    generator.addSourcesContent(fixupSourceLocation(name), code);
   }
 
   /**

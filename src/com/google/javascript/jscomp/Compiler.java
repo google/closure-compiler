@@ -69,6 +69,7 @@ import java.io.PrintStream;
 import java.io.Serializable;
 import java.util.AbstractSet;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -527,6 +528,11 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       sourceMap.setPrefixMappings(options.sourceMapLocationMappings);
       if (options.applyInputSourceMaps) {
         sourceMap.setSourceFileMapping(this);
+        if (options.sourceMapIncludeSourcesContent) {
+          for (SourceMapInput inputSourceMap : inputSourceMaps.values()) {
+            addSourceMapSourceFiles(inputSourceMap);
+          }
+        }
       }
     }
   }
@@ -2870,6 +2876,34 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   @Override
   public void addInputSourceMap(String sourceFileName, SourceMapInput inputSourceMap) {
     inputSourceMaps.put(sourceFileName, inputSourceMap);
+    if (options.sourceMapIncludeSourcesContent) {
+      addSourceMapSourceFiles(inputSourceMap);
+    }
+  }
+
+  /**
+   * Adds file name to content mappings for all sources found in a source map.
+   * This is used to populate sourcesContent array in the output source map
+   * even for sources embedded in the input source map.
+   */
+  private void addSourceMapSourceFiles(SourceMapInput inputSourceMap) {
+    SourceMapConsumerV3 consumer = inputSourceMap.getSourceMap(errorManager);
+    if (consumer == null) {
+      return;
+    }
+    Collection<String> sourcesContent = consumer.getOriginalSourcesContent();
+    if (sourcesContent == null) {
+      return;
+    }
+    Iterator<String> content = sourcesContent.iterator();
+    Iterator<String> sources = consumer.getOriginalSources().iterator();
+    while (sources.hasNext() && content.hasNext()) {
+      sourceMap.addSourceFile(sources.next(), content.next());
+    }
+    if (sources.hasNext() || content.hasNext()) {
+      throw new RuntimeException(
+          "Source map's \"sources\" and \"sourcesContent\" lengths do not match.");
+    }
   }
 
   @Override
@@ -3442,7 +3476,11 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   private void addFilesToSourceMap(Iterable<? extends SourceFile> files) {
     if (getOptions().sourceMapIncludeSourcesContent && getSourceMap() != null) {
       for (SourceFile file : files) {
-        getSourceMap().addSourceFile(file);
+        try {
+          getSourceMap().addSourceFile(file.getName(), file.getCode());
+        } catch (IOException e) {
+          throw new RuntimeException("Cannot read code of a source map's source file.", e);
+        }
       }
     }
   }
