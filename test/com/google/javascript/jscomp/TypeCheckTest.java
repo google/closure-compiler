@@ -3671,18 +3671,21 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "/** @type {?Iterable<number>} */ var it = [1, 2, 3];",
             "for (let x of it) {}"),
         lines(
-            "actual parameter 1 of $jscomp.makeIterator does not match formal parameter",
+            "Can only iterate over a (non-null) Iterable type",
             "found   : (Iterable<number>|null)",
-            "required: (Arguments<number>|Iterable<number>|Iterator<number>|string)"));
+            "required: Iterable"));
   }
 
-  // TODO(tbreisacher): This should report a warning. for/of requires an Iterable, not an Iterator.
   public void testForOf4() {
     testTypesWithCommonExterns(
         lines(
             "function f(/** !Iterator<number> */ it) {",
             "  for (let x of it) {}",
-            "}"));
+            "}"),
+        lines(
+            "Can only iterate over a (non-null) Iterable type",
+            "found   : Iterator<number>",
+            "required: Iterable"));
   }
 
   public void testForOf5() {
