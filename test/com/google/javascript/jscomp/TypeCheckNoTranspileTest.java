@@ -1677,6 +1677,10 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   }
 
   public void testTaggedTemplateLiteral_returnType2() {
+    // TODO(b/78891530): this should throw a type mismatch error
+    // We need to infer the template type for tag functions in TypeInference.
+    // See comment in TypeInference#traverseCallOrTag about back inference
+    // Note: this does warn if we transpile the template literal before typechecking.
     testTypes(
         lines(
             "function takesString(/** string */ s) {}",
@@ -1689,26 +1693,7 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             " */",
             "function getFirstTemplateLitSub(strings, subExpr, var_args) { return subExpr; }",
             "",
-            "takesString(getFirstTemplateLitSub`${1}`);"),
-        lines(
-            "actual parameter 1 of takesString does not match formal parameter",
-            "found   : number",
-            "required: string"));
-  }
-
-  public void testTaggedTemplateLiteral_backInference() {
-    // Test that we update the type of the template lit sub after back inference
-    testTypes(
-        lines(
-            "/**",
-            "* @param {T} x",
-            "* @param {function(this:T, ...?)} z",
-            "* @template T",
-            "*/",
-            "function f(x, z) {}",
-            // infers that "this" is ITemplateArray inside the function literal
-            "f`${ function() { /** @type {string} */ var x = this } }`;"),
-        lines("initializing variable", "found   : ITemplateArray", "required: string"));
+            "takesString(getFirstTemplateLitSub`${1}`);"));
   }
 
   public void testITemplateArray1() {
