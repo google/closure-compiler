@@ -33,16 +33,10 @@ import javax.annotation.CheckReturnValue;
 public interface FlowScope extends StaticTypedScope, LatticeElement {
 
   /**
-   * Creates a child of this flow scope, to represent an instruction
-   * directly following this one.
+   * Returns a flow scope with the given syntactic scope, which may be required to be a specific
+   * subclass, such as TypedScope.
    */
-  FlowScope createChildFlowScope();
-
-  /**
-   * Creates a child flow scope with the given syntactic scope, which may be required to be a
-   * specific subclass, such as TypedScope.
-   */
-  FlowScope createChildFlowScope(StaticTypedScope scope);
+  FlowScope withSyntacticScope(StaticTypedScope scope);
 
   /**
    * Returns a flow scope with the type of the given {@code symbol} updated to {@code type}.
@@ -66,11 +60,6 @@ public interface FlowScope extends StaticTypedScope, LatticeElement {
   @CheckReturnValue
   FlowScope inferQualifiedSlot(
       Node node, String symbol, JSType bottomType, JSType inferredType, boolean declare);
-
-  /**
-   * Optimize this scope and return a new FlowScope with faster lookup.
-   */
-  FlowScope optimize();
 
   /** Returns the underlying TypedScope. */
   StaticTypedScope getDeclarationScope();

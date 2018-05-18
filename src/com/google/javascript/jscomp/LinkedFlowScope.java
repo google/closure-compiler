@@ -204,24 +204,11 @@ class LinkedFlowScope implements FlowScope {
   }
 
   @Override
-  public FlowScope createChildFlowScope() {
-    return this;
-  }
-
-  @Override
-  public FlowScope createChildFlowScope(StaticTypedScope scope) {
+  public FlowScope withSyntacticScope(StaticTypedScope scope) {
     TypedScope typedScope = (TypedScope) scope;
     return scope != syntacticScope
         ? new LinkedFlowScope(trimScopes(typedScope), typedScope, functionScope)
         : this;
-  }
-
-  /**
-   * Remove flow scopes that add nothing to the flow.
-   */
-  @Override
-  public LinkedFlowScope optimize() {
-    return this;
   }
 
   @Override
@@ -247,7 +234,7 @@ class LinkedFlowScope implements FlowScope {
       // To join the two scopes, we have to
       LinkedFlowScope linkedA = (LinkedFlowScope) a;
       LinkedFlowScope linkedB = (LinkedFlowScope) b;
-      if (linkedA == linkedB) {
+      if (linkedA.scopes == linkedB.scopes && linkedA.functionScope == linkedB.functionScope) {
         return linkedA;
       }
 
@@ -288,11 +275,7 @@ class LinkedFlowScope implements FlowScope {
     if (!(other instanceof LinkedFlowScope)) {
       return false;
     }
-
     LinkedFlowScope that = (LinkedFlowScope) other;
-    if (this == that) {
-      return true;
-    }
 
     // If two flow scopes are in the same function, then they could have
     // two possible function scopes: the real one and the BOTTOM scope.
@@ -302,11 +285,8 @@ class LinkedFlowScope implements FlowScope {
     // they're equal--this just means that data flow analysis will have
     // to propagate the entry lattice a little bit further than it
     // really needs to. Everything will still come out ok.
-    if (this.functionScope != that.functionScope) {
-      return false;
-    }
-
-    return this.scopes.equivalent(that.scopes, LinkedFlowScope::equalScopes);
+    return this.functionScope == that.functionScope
+        && this.scopes.equivalent(that.scopes, LinkedFlowScope::equalScopes);
   }
 
   private static boolean equalScopes(OverlayScope left, OverlayScope right) {
@@ -320,7 +300,7 @@ class LinkedFlowScope implements FlowScope {
    * Determines whether two slots are meaningfully different for the purposes of data flow analysis.
    */
   private static boolean equalSlots(StaticTypedSlot slotA, StaticTypedSlot slotB) {
-    return !slotA.getType().differsFrom(slotB.getType());
+    return slotA == slotB || !slotA.getType().differsFrom(slotB.getType());
   }
 
   @Override

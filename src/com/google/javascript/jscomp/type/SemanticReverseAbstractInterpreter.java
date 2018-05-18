@@ -368,7 +368,7 @@ public final class SemanticReverseAbstractInterpreter
       // If we did create a more precise scope, blindScope has a child and
       // it is frozen. We can't just throw it away to return it. So we
       // must create a child instead.
-      return unwrap(blindScope == leftScope ? blindScope : blindScope.createChildFlowScope());
+      return unwrap(blindScope);
     }
     refinements.clear();
     // Note: re-wrap the scope, in case it was unwrapped by a nested call to this method.
@@ -379,11 +379,10 @@ public final class SemanticReverseAbstractInterpreter
     StaticTypedSlot rightVar =
         refinements.size() == 1 ? rightScope.getSlot(refinements.iterator().next()) : null;
     if (rightVar == null || !leftVar.getName().equals(rightVar.getName())) {
-      return unwrap(blindScope == rightScope ? blindScope : blindScope.createChildFlowScope());
+      return unwrap(blindScope);
     }
     JSType type = leftVar.getType().getLeastSupertype(rightVar.getType());
-    FlowScope informed = unwrap(blindScope).createChildFlowScope();
-    return informed.inferSlotType(leftVar.getName(), type);
+    return unwrap(blindScope).inferSlotType(leftVar.getName(), type);
   }
 
   /**
@@ -403,8 +402,7 @@ public final class SemanticReverseAbstractInterpreter
   private FlowScope maybeRestrictName(
       FlowScope blindScope, Node node, JSType originalType, JSType restrictedType) {
     if (restrictedType != null && restrictedType != originalType) {
-      FlowScope informed = blindScope.createChildFlowScope();
-      return declareNameInScope(informed, node, restrictedType);
+      return declareNameInScope(blindScope, node, restrictedType);
     }
     return blindScope;
   }
@@ -424,7 +422,7 @@ public final class SemanticReverseAbstractInterpreter
     boolean shouldRefineRight =
         restrictedRightType != null && restrictedRightType != originalRightType;
     if (shouldRefineLeft || shouldRefineRight) {
-      FlowScope informed = blindScope.createChildFlowScope();
+      FlowScope informed = blindScope;
       if (shouldRefineLeft) {
         informed = declareNameInScope(informed, left, restrictedLeftType);
       }
@@ -501,9 +499,8 @@ public final class SemanticReverseAbstractInterpreter
       if (qualifiedName != null) {
         String propertyQualifiedName = qualifiedName + "." + propertyName;
         if (blindScope.getSlot(propertyQualifiedName) == null) {
-          FlowScope informed = blindScope.createChildFlowScope();
           JSType unknownType = typeRegistry.getNativeType(JSTypeNative.UNKNOWN_TYPE);
-          return informed.inferQualifiedSlot(
+          return blindScope.inferQualifiedSlot(
               object, propertyQualifiedName, unknownType, unknownType, false);
         }
       }
@@ -630,13 +627,8 @@ public final class SemanticReverseAbstractInterpreter
     }
 
     @Override
-    public FlowScope createChildFlowScope() {
-      return new RefinementTrackingFlowScope(delegate.createChildFlowScope(), refinements);
-    }
-
-    @Override
-    public FlowScope createChildFlowScope(StaticTypedScope scope) {
-      return new RefinementTrackingFlowScope(delegate.createChildFlowScope(scope), refinements);
+    public FlowScope withSyntacticScope(StaticTypedScope scope) {
+      throw new UnsupportedOperationException();
     }
 
     @Override
@@ -654,11 +646,6 @@ public final class SemanticReverseAbstractInterpreter
 
     private FlowScope wrap(FlowScope scope) {
       return scope != delegate ? new RefinementTrackingFlowScope(scope, refinements) : this;
-    }
-
-    @Override
-    public FlowScope optimize() {
-      return wrap(delegate.optimize());
     }
 
     @Override

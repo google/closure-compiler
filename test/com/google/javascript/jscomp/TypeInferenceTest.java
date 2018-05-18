@@ -186,8 +186,7 @@ public final class TypeInferenceTest extends TestCase {
         cfg.getImplicitReturn().getAnnotation();
     // Reset the flow scope's syntactic scope to the function block, rather than the function node
     // itself.  This allows pulling out local vars from the function by name to verify their types.
-    returnScope =
-        rtnState.getIn().createChildFlowScope(scopeCreator.createScope(n.getLastChild()));
+    returnScope = rtnState.getIn().withSyntacticScope(scopeCreator.createScope(n.getLastChild()));
   }
 
   private LabeledStatement getLabeledStatement(String label) {

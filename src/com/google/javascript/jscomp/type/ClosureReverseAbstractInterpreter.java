@@ -194,8 +194,7 @@ public final class ClosureReverseAbstractInterpreter
 
     // changing the scope
     if (type != null) {
-      FlowScope informed = blindScope.createChildFlowScope();
-      return declareNameInScope(informed, parameter, type);
+      return declareNameInScope(blindScope, parameter, type);
     } else {
       return blindScope;
     }

@@ -215,7 +215,7 @@ class TypeInference
     }
 
     Node root = NodeUtil.getEnclosingScopeRoot(n);
-    FlowScope output = input.createChildFlowScope(scopeCreator.createScope(root));
+    FlowScope output = input.withSyntacticScope(scopeCreator.createScope(root));
     output = inferDeclarativelyUnboundVarsWithoutTypes(output);
     output = traverse(n, output);
     return output;
@@ -246,7 +246,7 @@ class TypeInference
             Node item = source.getFirstChild();
             Node obj = item.getNext();
 
-            FlowScope informed = traverse(obj, output.createChildFlowScope());
+            FlowScope informed = traverse(obj, output);
 
             if (NodeUtil.isNameDeclaration(item)) {
               item = item.getFirstChild();
@@ -294,8 +294,7 @@ class TypeInference
               // conditionFlowScope is cached from previous iterations
               // of the loop.
               if (conditionFlowScope == null) {
-                conditionFlowScope = traverse(
-                    condition.getFirstChild(), output.createChildFlowScope());
+                conditionFlowScope = traverse(condition.getFirstChild(), output);
               }
             }
           }
@@ -319,8 +318,8 @@ class TypeInference
               if (conditionOutcomes == null) {
                 conditionOutcomes =
                     condition.isAnd()
-                        ? traverseAnd(condition, output.createChildFlowScope())
-                        : traverseOr(condition, output.createChildFlowScope());
+                        ? traverseAnd(condition, output)
+                        : traverseOr(condition, output);
               }
               newScope =
                   reverseInterpreter.getPreciserScopeKnowingConditionOutcome(
@@ -332,8 +331,7 @@ class TypeInference
               // conditionFlowScope is cached from previous iterations
               // of the loop.
               if (conditionFlowScope == null) {
-                conditionFlowScope =
-                    traverse(condition, output.createChildFlowScope());
+                conditionFlowScope = traverse(condition, output);
               }
               newScope =
                   reverseInterpreter.getPreciserScopeKnowingConditionOutcome(
@@ -345,7 +343,7 @@ class TypeInference
           break;
       }
 
-      result.add(newScope.optimize());
+      result.add(newScope);
     }
     return result;
   }
@@ -365,13 +363,11 @@ class TypeInference
         break;
 
       case AND:
-        scope = traverseAnd(n, scope).getJoinedFlowScope()
-            .createChildFlowScope();
+        scope = traverseAnd(n, scope).getJoinedFlowScope();
         break;
 
       case OR:
-        scope = traverseOr(n, scope).getJoinedFlowScope()
-            .createChildFlowScope();
+        scope = traverseOr(n, scope).getJoinedFlowScope();
         break;
 
       case HOOK:
@@ -1070,10 +1066,10 @@ class TypeInference
             condition, scope, false);
 
     // traverse the true node with the trueScope
-    traverse(trueNode, trueScope.createChildFlowScope());
+    traverse(trueNode, trueScope);
 
     // traverse the false node with the falseScope
-    traverse(falseNode, falseScope.createChildFlowScope());
+    traverse(falseNode, falseScope);
 
     // meet true and false nodes' types and assign
     JSType trueType = trueNode.getJSType();
@@ -1084,7 +1080,7 @@ class TypeInference
       n.setJSType(null);
     }
 
-    return scope.createChildFlowScope();
+    return scope;
   }
 
   /** @param n A non-constructor function invocation, i.e. CALL or TAGGED_TEMPLATELIT */
@@ -1153,7 +1149,6 @@ class TypeInference
       return scope;
     }
 
-    scope = scope.createChildFlowScope();
     if (node.isGetProp()) {
       return scope.inferQualifiedSlot(
           node, node.getQualifiedName(), getJSType(node), narrowed, false);
@@ -1800,8 +1795,7 @@ class TypeInference
     Node right = n.getLastChild();
 
     // type the left node
-    BooleanOutcomePair leftOutcome = traverseWithinShortCircuitingBinOp(
-        left, scope.createChildFlowScope());
+    BooleanOutcomePair leftOutcome = traverseWithinShortCircuitingBinOp(left, scope);
     JSType leftType = left.getJSType();
 
     // reverse abstract interpret the left node to produce the correct
@@ -1811,8 +1805,7 @@ class TypeInference
             left, leftOutcome.getOutcomeFlowScope(left.getToken(), nIsAnd), nIsAnd);
 
     // type the right node
-    BooleanOutcomePair rightOutcome = traverseWithinShortCircuitingBinOp(
-        right, rightScope.createChildFlowScope());
+    BooleanOutcomePair rightOutcome = traverseWithinShortCircuitingBinOp(right, rightScope);
     JSType rightType = right.getJSType();
 
     JSType type;
