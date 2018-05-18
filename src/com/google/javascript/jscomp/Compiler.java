@@ -1161,7 +1161,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     }
 
     List<String> fileNameRegexList = options.filesToPrintAfterEachPassRegexList;
-    List<String> moduleNameRegexList = options.modulesToPrintAfterEachPassRegexList;
+    List<String> moduleNameRegexList = options.chunksToPrintAfterEachPassRegexList;
     StringBuilder builder = new StringBuilder();
 
     if (fileNameRegexList.isEmpty() && moduleNameRegexList.isEmpty()) {

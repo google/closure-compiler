@@ -2395,7 +2395,7 @@ public final class DefaultPassConfig extends PassConfig {
       return new RescopeGlobalSymbols(
           compiler,
           options.renamePrefixNamespace,
-          options.renamePrefixNamespaceAssumeCrossModuleNames);
+          options.renamePrefixNamespaceAssumeCrossChunkNames);
     }
 
     @Override
@@ -2708,7 +2708,7 @@ public final class DefaultPassConfig extends PassConfig {
           return new CrossModuleCodeMotion(
               compiler,
               compiler.getModuleGraph(),
-              options.parentModuleCanSeeSymbolsDeclaredInChildren);
+              options.parentChunkCanSeeSymbolsDeclaredInChildren);
         }
 
         @Override
@@ -2728,7 +2728,7 @@ public final class DefaultPassConfig extends PassConfig {
               // Only move properties in externs if we're not treating
               // them as exports.
               options.removeUnusedPrototypePropertiesInExterns,
-              options.crossModuleCodeMotionNoStubMethods);
+              options.crossChunkCodeMotionNoStubMethods);
         }
 
         @Override

@@ -411,7 +411,9 @@ public class CompilerOptions implements Serializable {
   /** Inlines properties */
   private boolean inlineProperties;
 
-  /** Move code to a deeper module */
+  /** Move code to a deeper chunk */
+  // Deprecated: Migrate to crossChunkCodeMotion
+  @Deprecated
   public boolean crossModuleCodeMotion;
 
   /**
@@ -420,21 +422,23 @@ public class CompilerOptions implements Serializable {
    * Note, switching on this option may break existing code that depends on
    * enumerating prototype methods for mixin behavior, such as goog.mixin or
    * goog.object.extend, since the prototype assignments will be removed from
-   * the parent module and moved to a later module.
+   * the parent chunk and moved to a later chunk.
    **/
-  boolean crossModuleCodeMotionNoStubMethods;
+  boolean crossChunkCodeMotionNoStubMethods;
 
   /**
-   * Whether when module B depends on module A and module B declares a symbol,
+   * Whether when chunk B depends on chunk A and chunk B declares a symbol,
    * this symbol can be seen in A after B has been loaded. This is often true,
    * but may not be true when loading code using nested eval.
    */
-  boolean parentModuleCanSeeSymbolsDeclaredInChildren;
+  boolean parentChunkCanSeeSymbolsDeclaredInChildren;
 
   /** Merge two variables together as one. */
   public boolean coalesceVariableNames;
 
-  /** Move methods to a deeper module */
+  /** Move methods to a deeper chunk */
+  // Deprecated: Migrate to crossChunkMethodMotion
+  @Deprecated
   public boolean crossModuleMethodMotion;
 
   /** Inlines trivial getters */
@@ -590,12 +594,17 @@ public class CompilerOptions implements Serializable {
 
   /**
    * Used by tests of the RescopeGlobalSymbols pass to avoid having declare 2
-   * modules in simple cases.
+   * chunks in simple cases.
    */
-  boolean renamePrefixNamespaceAssumeCrossModuleNames = false;
+  boolean renamePrefixNamespaceAssumeCrossChunkNames = false;
 
+  void setRenamePrefixNamespaceAssumeCrossChunkNames(boolean assume) {
+    renamePrefixNamespaceAssumeCrossChunkNames = assume;
+  }
+
+  @Deprecated
   void setRenamePrefixNamespaceAssumeCrossModuleNames(boolean assume) {
-    renamePrefixNamespaceAssumeCrossModuleNames = assume;
+    setRenamePrefixNamespaceAssumeCrossChunkNames(assume);
   }
 
   private PropertyCollapseLevel collapsePropertiesLevel;
@@ -985,7 +994,7 @@ public class CompilerOptions implements Serializable {
   // Used to narrow down the printed source when overall input size is large. If these are both
   // empty the entire source is printed.
   List<String> filesToPrintAfterEachPassRegexList = ImmutableList.of();
-  List<String> modulesToPrintAfterEachPassRegexList = ImmutableList.of();
+  List<String> chunksToPrintAfterEachPassRegexList = ImmutableList.of();
 
   public void setPrintSourceAfterEachPass(boolean printSource) {
     this.printSourceAfterEachPass = printSource;
@@ -995,8 +1004,13 @@ public class CompilerOptions implements Serializable {
     this.filesToPrintAfterEachPassRegexList = filePathRegexList;
   }
 
-  public void setModulesToPrintAfterEachPassRegexList(List<String> modulePathRegexList) {
-    this.modulesToPrintAfterEachPassRegexList = modulePathRegexList;
+  public void setChunksToPrintAfterEachPassRegexList(List<String> chunkPathRegexList) {
+    this.chunksToPrintAfterEachPassRegexList = chunkPathRegexList;
+  }
+
+  @Deprecated
+  public void setModulesToPrintAfterEachPassRegexList(List<String> chunkPathRegexList) {
+    this.chunksToPrintAfterEachPassRegexList = chunkPathRegexList;
   }
 
   private TracerMode tracer;
@@ -1234,7 +1248,7 @@ public class CompilerOptions implements Serializable {
     assumeClosuresOnlyCaptureReferences = false;
     inlineProperties = false;
     crossModuleCodeMotion = false;
-    parentModuleCanSeeSymbolsDeclaredInChildren = false;
+    parentChunkCanSeeSymbolsDeclaredInChildren = false;
     crossModuleMethodMotion = false;
     inlineGetters = false;
     inlineVariables = false;
@@ -2165,27 +2179,49 @@ public class CompilerOptions implements Serializable {
     this.inlineConstantVars = inlineConstantVars;
   }
 
-  public void setCrossModuleCodeMotion(boolean crossModuleCodeMotion) {
-    this.crossModuleCodeMotion = crossModuleCodeMotion;
+  public void setCrossChunkCodeMotion(boolean crossChunkCodeMotion) {
+    this.crossModuleCodeMotion = crossChunkCodeMotion;
   }
 
+  @Deprecated
+  public void setCrossModuleCodeMotion(boolean crossChunkCodeMotion) {
+    setCrossChunkCodeMotion(crossChunkCodeMotion);
+  }
+
+  public void setCrossChunkCodeMotionNoStubMethods(boolean
+      crossChunkCodeMotionNoStubMethods) {
+    this.crossChunkCodeMotionNoStubMethods = crossChunkCodeMotionNoStubMethods;
+  }
+
+  @Deprecated
   public void setCrossModuleCodeMotionNoStubMethods(boolean
-      crossModuleCodeMotionNoStubMethods) {
-    this.crossModuleCodeMotionNoStubMethods = crossModuleCodeMotionNoStubMethods;
+      crossChunkCodeMotionNoStubMethods) {
+    setCrossChunkCodeMotionNoStubMethods(crossChunkCodeMotionNoStubMethods);
   }
 
+  public void setParentChunkCanSeeSymbolsDeclaredInChildren(
+      boolean parentChunkCanSeeSymbolsDeclaredInChildren) {
+    this.parentChunkCanSeeSymbolsDeclaredInChildren =
+        parentChunkCanSeeSymbolsDeclaredInChildren;
+  }
+
+  @Deprecated
   public void setParentModuleCanSeeSymbolsDeclaredInChildren(
-      boolean parentModuleCanSeeSymbolsDeclaredInChildren) {
-    this.parentModuleCanSeeSymbolsDeclaredInChildren =
-        parentModuleCanSeeSymbolsDeclaredInChildren;
+      boolean parentChunkCanSeeSymbolsDeclaredInChildren) {
+    setParentChunkCanSeeSymbolsDeclaredInChildren(parentChunkCanSeeSymbolsDeclaredInChildren);
+  }
+
+  public void setCrossChunkMethodMotion(boolean crossChunkMethodMotion) {
+    this.crossModuleMethodMotion = crossChunkMethodMotion;
+  }
+
+  @Deprecated
+  public void setCrossModuleMethodMotion(boolean crossChunkMethodMotion) {
+    setCrossChunkMethodMotion(crossChunkMethodMotion);
   }
 
   public void setCoalesceVariableNames(boolean coalesceVariableNames) {
     this.coalesceVariableNames = coalesceVariableNames;
-  }
-
-  public void setCrossModuleMethodMotion(boolean crossModuleMethodMotion) {
-    this.crossModuleMethodMotion = crossModuleMethodMotion;
   }
 
   public void setInlineLocalVariables(boolean inlineLocalVariables) {
@@ -2857,7 +2893,7 @@ public class CompilerOptions implements Serializable {
             .add("continueAfterErrors", canContinueAfterErrors())
             .add("convertToDottedProperties", convertToDottedProperties)
             .add("crossModuleCodeMotion", crossModuleCodeMotion)
-            .add("crossModuleCodeMotionNoStubMethods", crossModuleCodeMotionNoStubMethods)
+            .add("crossChunkCodeMotionNoStubMethods", crossChunkCodeMotionNoStubMethods)
             .add("crossModuleMethodMotion", crossModuleMethodMotion)
             .add("cssRenamingMap", cssRenamingMap)
             .add("cssRenamingWhitelist", cssRenamingWhitelist)
@@ -2926,7 +2962,7 @@ public class CompilerOptions implements Serializable {
             .add("maxFunctionSizeAfterInlining", maxFunctionSizeAfterInlining)
             .add("messageBundle", messageBundle)
             .add("moduleRoots", moduleRoots)
-            .add("modulesToPrintAfterEachPassRegexList", modulesToPrintAfterEachPassRegexList)
+            .add("chunksToPrintAfterEachPassRegexList", chunksToPrintAfterEachPassRegexList)
             .add("moveFunctionDeclarations", moveFunctionDeclarations)
             .add("nameGenerator", nameGenerator)
             .add("optimizeArgumentsArray", optimizeArgumentsArray)
@@ -2935,8 +2971,8 @@ public class CompilerOptions implements Serializable {
             .add("outputJs", outputJs)
             .add("outputJsStringUsage", outputJsStringUsage)
             .add(
-                "parentModuleCanSeeSymbolsDeclaredInChildren",
-                parentModuleCanSeeSymbolsDeclaredInChildren)
+                "parentChunkCanSeeSymbolsDeclaredInChildren",
+                parentChunkCanSeeSymbolsDeclaredInChildren)
             .add("parseJsDocDocumentation", isParseJsDocDocumentation())
             .add("polymerVersion", polymerVersion)
             .add("preferLineBreakAtEndOfFile", preferLineBreakAtEndOfFile)
@@ -2972,8 +3008,8 @@ public class CompilerOptions implements Serializable {
             .add("removeUnusedPrototypeProperties", removeUnusedPrototypeProperties)
             .add("removeUnusedVars", removeUnusedVars)
             .add(
-                "renamePrefixNamespaceAssumeCrossModuleNames",
-                renamePrefixNamespaceAssumeCrossModuleNames)
+                "renamePrefixNamespaceAssumeCrossChunkNames",
+                renamePrefixNamespaceAssumeCrossChunkNames)
             .add("renamePrefixNamespace", renamePrefixNamespace)
             .add("renamePrefix", renamePrefix)
             .add("replaceIdGenerators", replaceIdGenerators)
