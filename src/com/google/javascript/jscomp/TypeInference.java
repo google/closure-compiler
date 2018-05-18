@@ -956,7 +956,7 @@ class TypeInference
     checkNotNull(type);
 
     for (Node name = n.getFirstChild(); name != null; name = name.getNext()) {
-      scope = traverse(name.getFirstChild(), scope);
+      scope = traverseChildren(name, scope);
     }
 
     // Object literals can be reflected on other types.

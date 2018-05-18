@@ -1407,6 +1407,16 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "required: number"));
   }
 
+  public void testComputedProp2c() {
+    // Computed properties do type inference within
+    testTypes(
+        lines("var n; var obj = {[foo]: n = 'bar'}; var /** number */ m = n;"),
+        lines(
+            "initializing variable", // preserve new line
+            "found   : string",
+            "required: number"));
+  }
+
   public void testComputedProp3() {
     // Computed prop does not exist as obj prop
     testTypes(
