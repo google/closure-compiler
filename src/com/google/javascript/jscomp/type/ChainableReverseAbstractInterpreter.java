@@ -47,6 +47,7 @@ import com.google.javascript.rhino.jstype.TemplateType;
 import com.google.javascript.rhino.jstype.TemplatizedType;
 import com.google.javascript.rhino.jstype.UnionType;
 import com.google.javascript.rhino.jstype.Visitor;
+import javax.annotation.CheckReturnValue;
 
 /**
  * Chainable reverse abstract interpreter providing basic functionality.
@@ -152,15 +153,16 @@ public abstract class ChainableReverseAbstractInterpreter
   }
 
   /**
-   * Declares a refined type in {@code scope} for the name represented by
-   * {@code node}. It must be possible to refine the type of the given node in
-   * the given scope, as determined by {@link #getTypeIfRefinable}.
+   * Declares a refined type in {@code scope} for the name represented by {@code node}. It must be
+   * possible to refine the type of the given node in the given scope, as determined by {@link
+   * #getTypeIfRefinable}. Returns an updated flow scope, which may be different from the passed-in
+   * scope if any changes occur.
    */
-  protected void declareNameInScope(FlowScope scope, Node node, JSType type) {
+  @CheckReturnValue
+  protected FlowScope declareNameInScope(FlowScope scope, Node node, JSType type) {
     switch (node.getToken()) {
       case NAME:
-        scope.inferSlotType(node.getString(), type);
-        break;
+        return scope.inferSlotType(node.getString(), type);
 
       case GETPROP:
         String qualifiedName = node.getQualifiedName();
@@ -168,12 +170,11 @@ public abstract class ChainableReverseAbstractInterpreter
 
         JSType origType = node.getJSType();
         origType = origType == null ? getNativeType(UNKNOWN_TYPE) : origType;
-        scope.inferQualifiedSlot(node, qualifiedName, origType, type, false);
-        break;
+        return scope.inferQualifiedSlot(node, qualifiedName, origType, type, false);
 
       case THIS:
         // "this" references aren't currently modeled in the CFG.
-        break;
+        return scope;
 
       default:
         throw new IllegalArgumentException("Node cannot be refined. \n" +

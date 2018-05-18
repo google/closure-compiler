@@ -38,27 +38,27 @@ public final class SemanticReverseAbstractInterpreterTest
     interpreter = new SemanticReverseAbstractInterpreter(registry);
   }
 
-  public FlowScope newScope() {
+  private FlowScope[] newScope() {
     TypedScope globalScope = TypedScope.createGlobalScope(new Node(Token.ROOT));
     functionScope = new TypedScope(globalScope, new Node(Token.FUNCTION));
-    return LinkedFlowScope.createEntryLattice(functionScope);
+    return new FlowScope[] {LinkedFlowScope.createEntryLattice(functionScope)};
   }
 
   /**
    * Tests reverse interpretation of a NAME expression.
    */
   public void testNameCondition() throws Exception {
-    FlowScope blind = newScope();
+    FlowScope[] blind = newScope();
     Node condition = createVar(blind, "a", createNullableType(getNativeStringType()));
 
     // true outcome.
-    FlowScope informedTrue = interpreter.
-        getPreciserScopeKnowingConditionOutcome(condition, blind, true);
+    FlowScope informedTrue =
+        interpreter.getPreciserScopeKnowingConditionOutcome(condition, blind[0], true);
     assertTypeEquals(getNativeStringType(), getVarType(informedTrue, "a"));
 
     // false outcome.
-    FlowScope informedFalse = interpreter.
-        getPreciserScopeKnowingConditionOutcome(condition, blind, false);
+    FlowScope informedFalse =
+        interpreter.getPreciserScopeKnowingConditionOutcome(condition, blind[0], false);
     assertTypeEquals(createNullableType(getNativeStringType()), getVarType(informedFalse, "a"));
   }
 
@@ -66,19 +66,19 @@ public final class SemanticReverseAbstractInterpreterTest
    * Tests reverse interpretation of a NOT(NAME) expression.
    */
   public void testNegatedNameCondition() throws Exception {
-    FlowScope blind = newScope();
+    FlowScope[] blind = newScope();
     Node a = createVar(blind, "a", createNullableType(getNativeStringType()));
     Node condition = new Node(Token.NOT);
     condition.addChildToBack(a);
 
     // true outcome.
-    FlowScope informedTrue = interpreter.
-        getPreciserScopeKnowingConditionOutcome(condition, blind, true);
+    FlowScope informedTrue =
+        interpreter.getPreciserScopeKnowingConditionOutcome(condition, blind[0], true);
     assertTypeEquals(createNullableType(getNativeStringType()), getVarType(informedTrue, "a"));
 
     // false outcome.
-    FlowScope informedFalse = interpreter.
-        getPreciserScopeKnowingConditionOutcome(condition, blind, false);
+    FlowScope informedFalse =
+        interpreter.getPreciserScopeKnowingConditionOutcome(condition, blind[0], false);
     assertTypeEquals(getNativeStringType(), getVarType(informedFalse, "a"));
   }
 
@@ -87,7 +87,7 @@ public final class SemanticReverseAbstractInterpreterTest
    */
   @SuppressWarnings("unchecked")
   public void testAssignCondition1() throws Exception {
-    FlowScope blind = newScope();
+    FlowScope[] blind = newScope();
     testBinop(
         blind,
         Token.ASSIGN,
@@ -104,7 +104,7 @@ public final class SemanticReverseAbstractInterpreterTest
    */
   @SuppressWarnings("unchecked")
   public void testSheqCondition1() throws Exception {
-    FlowScope blind = newScope();
+    FlowScope[] blind = newScope();
     testBinop(
         blind,
         Token.SHEQ,
@@ -120,7 +120,7 @@ public final class SemanticReverseAbstractInterpreterTest
    */
   @SuppressWarnings("unchecked")
   public void testSheqCondition2() throws Exception {
-    FlowScope blind = newScope();
+    FlowScope[] blind = newScope();
     testBinop(
         blind,
         Token.SHEQ,
@@ -136,7 +136,7 @@ public final class SemanticReverseAbstractInterpreterTest
    */
   @SuppressWarnings("unchecked")
   public void testSheqCondition3() throws Exception {
-    FlowScope blind = newScope();
+    FlowScope[] blind = newScope();
     testBinop(
         blind,
         Token.SHEQ,
@@ -151,7 +151,7 @@ public final class SemanticReverseAbstractInterpreterTest
 
   @SuppressWarnings("unchecked")
   public void testSheqCondition4() throws Exception {
-    FlowScope blind = newScope();
+    FlowScope[] blind = newScope();
     testBinop(
         blind,
         Token.SHEQ,
@@ -165,7 +165,7 @@ public final class SemanticReverseAbstractInterpreterTest
 
   @SuppressWarnings("unchecked")
   public void testSheqCondition5() throws Exception {
-    FlowScope blind = newScope();
+    FlowScope[] blind = newScope();
     testBinop(
         blind,
         Token.SHEQ,
@@ -179,7 +179,7 @@ public final class SemanticReverseAbstractInterpreterTest
 
   @SuppressWarnings("unchecked")
   public void testSheqCondition6() throws Exception {
-    FlowScope blind = newScope();
+    FlowScope[] blind = newScope();
     testBinop(
         blind,
         Token.SHEQ,
@@ -197,7 +197,7 @@ public final class SemanticReverseAbstractInterpreterTest
    */
   @SuppressWarnings("unchecked")
   public void testShneCondition1() throws Exception {
-    FlowScope blind = newScope();
+    FlowScope[] blind = newScope();
     testBinop(
         blind,
         Token.SHNE,
@@ -213,7 +213,7 @@ public final class SemanticReverseAbstractInterpreterTest
    */
   @SuppressWarnings("unchecked")
   public void testShneCondition2() throws Exception {
-    FlowScope blind = newScope();
+    FlowScope[] blind = newScope();
     testBinop(
         blind,
         Token.SHNE,
@@ -229,7 +229,7 @@ public final class SemanticReverseAbstractInterpreterTest
    */
   @SuppressWarnings("unchecked")
   public void testShneCondition3() throws Exception {
-    FlowScope blind = newScope();
+    FlowScope[] blind = newScope();
     testBinop(
         blind,
         Token.SHNE,
@@ -244,7 +244,7 @@ public final class SemanticReverseAbstractInterpreterTest
 
   @SuppressWarnings("unchecked")
   public void testShneCondition4() throws Exception {
-    FlowScope blind = newScope();
+    FlowScope[] blind = newScope();
     testBinop(
         blind,
         Token.SHNE,
@@ -258,7 +258,7 @@ public final class SemanticReverseAbstractInterpreterTest
 
   @SuppressWarnings("unchecked")
   public void testShneCondition5() throws Exception {
-    FlowScope blind = newScope();
+    FlowScope[] blind = newScope();
     testBinop(
         blind,
         Token.SHNE,
@@ -272,7 +272,7 @@ public final class SemanticReverseAbstractInterpreterTest
 
   @SuppressWarnings("unchecked")
   public void testShneCondition6() throws Exception {
-    FlowScope blind = newScope();
+    FlowScope[] blind = newScope();
     testBinop(
         blind,
         Token.SHNE,
@@ -290,7 +290,7 @@ public final class SemanticReverseAbstractInterpreterTest
    */
   @SuppressWarnings("unchecked")
   public void testEqCondition1() throws Exception {
-    FlowScope blind = newScope();
+    FlowScope[] blind = newScope();
     testBinop(
         blind,
         Token.EQ,
@@ -305,7 +305,7 @@ public final class SemanticReverseAbstractInterpreterTest
    */
   @SuppressWarnings("unchecked")
   public void testEqCondition2() throws Exception {
-    FlowScope blind = newScope();
+    FlowScope[] blind = newScope();
     testBinop(
         blind,
         Token.NE,
@@ -320,7 +320,7 @@ public final class SemanticReverseAbstractInterpreterTest
    */
   @SuppressWarnings("unchecked")
   public void testEqCondition3() throws Exception {
-    FlowScope blind = newScope();
+    FlowScope[] blind = newScope();
     // (number,undefined,null)
     JSType nullableOptionalNumber =
         createUnionType(getNativeNullType(), getNativeVoidType(), getNativeNumberType());
@@ -340,7 +340,7 @@ public final class SemanticReverseAbstractInterpreterTest
    */
   @SuppressWarnings("unchecked")
   public void testEqCondition4() throws Exception {
-    FlowScope blind = newScope();
+    FlowScope[] blind = newScope();
     testBinop(
         blind,
         Token.EQ,
@@ -359,7 +359,7 @@ public final class SemanticReverseAbstractInterpreterTest
   @SuppressWarnings("unchecked")
   public void testInequalitiesCondition1() {
     for (Token op : Arrays.asList(Token.LT, Token.GT, Token.LE, Token.GE)) {
-      FlowScope blind = newScope();
+      FlowScope[] blind = newScope();
       testBinop(
           blind,
           op,
@@ -378,7 +378,7 @@ public final class SemanticReverseAbstractInterpreterTest
   @SuppressWarnings("unchecked")
   public void testInequalitiesCondition2() {
     for (Token op : Arrays.asList(Token.LT, Token.GT, Token.LE, Token.GE)) {
-      FlowScope blind = newScope();
+      FlowScope[] blind = newScope();
       testBinop(
           blind,
           op,
@@ -406,7 +406,7 @@ public final class SemanticReverseAbstractInterpreterTest
   @SuppressWarnings("unchecked")
   public void testInequalitiesCondition3() {
     for (Token op : Arrays.asList(Token.LT, Token.GT, Token.LE, Token.GE)) {
-      FlowScope blind = newScope();
+      FlowScope[] blind = newScope();
       testBinop(
           blind,
           op,
@@ -420,7 +420,7 @@ public final class SemanticReverseAbstractInterpreterTest
 
   @SuppressWarnings("unchecked")
   public void testAnd() {
-    FlowScope blind = newScope();
+    FlowScope[] blind = newScope();
     testBinop(
         blind,
         Token.AND,
@@ -435,7 +435,7 @@ public final class SemanticReverseAbstractInterpreterTest
 
   @SuppressWarnings("unchecked")
   public void testTypeof1() {
-    FlowScope blind = newScope();
+    FlowScope[] blind = newScope();
     testBinop(
         blind,
         Token.EQ,
@@ -447,7 +447,7 @@ public final class SemanticReverseAbstractInterpreterTest
 
   @SuppressWarnings("unchecked")
   public void testTypeof2() {
-    FlowScope blind = newScope();
+    FlowScope[] blind = newScope();
     testBinop(
         blind,
         Token.EQ,
@@ -459,7 +459,7 @@ public final class SemanticReverseAbstractInterpreterTest
 
   @SuppressWarnings("unchecked")
   public void testTypeof3() {
-    FlowScope blind = newScope();
+    FlowScope[] blind = newScope();
     testBinop(
         blind,
         Token.EQ,
@@ -471,7 +471,7 @@ public final class SemanticReverseAbstractInterpreterTest
 
   @SuppressWarnings("unchecked")
   public void testTypeof4() {
-    FlowScope blind = newScope();
+    FlowScope[] blind = newScope();
     testBinop(
         blind,
         Token.EQ,
@@ -489,7 +489,7 @@ public final class SemanticReverseAbstractInterpreterTest
 
   @SuppressWarnings("unchecked")
   public void testInstanceOf() {
-    FlowScope blind = newScope();
+    FlowScope[] blind = newScope();
     testBinop(
         blind,
         Token.INSTANCEOF,
@@ -503,7 +503,7 @@ public final class SemanticReverseAbstractInterpreterTest
 
   @SuppressWarnings("unchecked")
   public void testInstanceOf2() {
-    FlowScope blind = newScope();
+    FlowScope[] blind = newScope();
     testBinop(
         blind,
         Token.INSTANCEOF,
@@ -520,7 +520,7 @@ public final class SemanticReverseAbstractInterpreterTest
 
   @SuppressWarnings("unchecked")
   public void testInstanceOf3() {
-    FlowScope blind = newScope();
+    FlowScope[] blind = newScope();
     testBinop(
         blind,
         Token.INSTANCEOF,
@@ -536,7 +536,7 @@ public final class SemanticReverseAbstractInterpreterTest
 
   @SuppressWarnings("unchecked")
   public void testInstanceOf4() {
-    FlowScope blind = newScope();
+    FlowScope[] blind = newScope();
     testBinop(
         blind,
         Token.INSTANCEOF,
@@ -548,7 +548,11 @@ public final class SemanticReverseAbstractInterpreterTest
         ImmutableSet.of(new TypedName("s", getNativeStringObjectConstructorType())));
   }
 
-  private void testBinop(FlowScope blind, Token binop, Node left, Node right,
+  private void testBinop(
+      FlowScope[] blind,
+      Token binop,
+      Node left,
+      Node right,
       Collection<TypedName> trueOutcome,
       Collection<TypedName> falseOutcome) {
     Node condition = new Node(binop);
@@ -556,15 +560,15 @@ public final class SemanticReverseAbstractInterpreterTest
     condition.addChildToBack(right);
 
     // true outcome.
-    FlowScope informedTrue = interpreter.
-        getPreciserScopeKnowingConditionOutcome(condition, blind, true);
+    FlowScope informedTrue =
+        interpreter.getPreciserScopeKnowingConditionOutcome(condition, blind[0], true);
     for (TypedName p : trueOutcome) {
       assertTypeEquals(p.name, p.type, getVarType(informedTrue, p.name));
     }
 
     // false outcome.
-    FlowScope informedFalse = interpreter.
-        getPreciserScopeKnowingConditionOutcome(condition, blind, false);
+    FlowScope informedFalse =
+        interpreter.getPreciserScopeKnowingConditionOutcome(condition, blind[0], false);
     for (TypedName p : falseOutcome) {
       assertTypeEquals(p.type, getVarType(informedFalse, p.name));
     }
@@ -590,10 +594,10 @@ public final class SemanticReverseAbstractInterpreterTest
     return scope.getSlot(name).getType();
   }
 
-  private Node createVar(FlowScope scope, String name, JSType type) {
+  private Node createVar(FlowScope[] scope, String name, JSType type) {
     Node n = Node.newString(Token.NAME, name);
     functionScope.declare(name, n, null, null);
-    scope.inferSlotType(name, type);
+    scope[0] = scope[0].inferSlotType(name, type);
     n.setJSType(type);
     return n;
   }

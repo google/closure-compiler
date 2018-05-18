@@ -331,7 +331,7 @@ public final class ClosureReverseAbstractInterpreterTest extends
     assertEquals(Token.CALL, call.getToken());
     assertEquals(Token.NAME, name.getToken());
 
-    flowScope.inferSlotType("a", type);
+    flowScope = flowScope.inferSlotType("a", type);
     ClosureReverseAbstractInterpreter rai = new ClosureReverseAbstractInterpreter(registry);
 
     // trueScope

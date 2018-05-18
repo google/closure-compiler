@@ -61,19 +61,19 @@ public final class LinkedFlowScopeTest extends CompilerTypeTestCase {
     FlowScope child = localEntry.createChildFlowScope();
     assertEquals(localEntry, child.optimize());
 
-    child.inferSlotType("localB", getNativeNumberType());
+    child = child.inferSlotType("localB", getNativeNumberType());
     assertEquals(child, child.optimize());
   }
 
   public void testJoin1() {
     FlowScope childA = localEntry.createChildFlowScope();
-    childA.inferSlotType("localB", getNativeNumberType());
+    childA = childA.inferSlotType("localB", getNativeNumberType());
 
     FlowScope childAB = childA.createChildFlowScope();
-    childAB.inferSlotType("localB", getNativeStringType());
+    childAB = childAB.inferSlotType("localB", getNativeStringType());
 
     FlowScope childB = localEntry.createChildFlowScope();
-    childB.inferSlotType("localB", getNativeBooleanType());
+    childB = childB.inferSlotType("localB", getNativeBooleanType());
 
     assertTypeEquals(getNativeStringType(), childAB.getSlot("localB").getType());
     assertTypeEquals(getNativeBooleanType(), childB.getSlot("localB").getType());
@@ -97,10 +97,10 @@ public final class LinkedFlowScopeTest extends CompilerTypeTestCase {
 
   public void testJoin2() {
     FlowScope childA = localEntry.createChildFlowScope();
-    childA.inferSlotType("localA", getNativeStringType());
+    childA = childA.inferSlotType("localA", getNativeStringType());
 
     FlowScope childB = localEntry.createChildFlowScope();
-    childB.inferSlotType("globalB", getNativeBooleanType());
+    childB = childB.inferSlotType("globalB", getNativeBooleanType());
 
     assertTypeEquals(getNativeStringType(), childA.getSlot("localA").getType());
     assertTypeEquals(getNativeBooleanType(), childB.getSlot("globalB").getType());
@@ -123,10 +123,10 @@ public final class LinkedFlowScopeTest extends CompilerTypeTestCase {
     localScope.declare("localD", null, getNativeStringType(), null);
 
     FlowScope childA = localEntry.createChildFlowScope();
-    childA.inferSlotType("localC", getNativeNumberType());
+    childA = childA.inferSlotType("localC", getNativeNumberType());
 
     FlowScope childB = localEntry.createChildFlowScope();
-    childA.inferSlotType("localD", getNativeBooleanType());
+    childA = childA.inferSlotType("localD", getNativeBooleanType());
 
     FlowScope joined = join(childB, childA);
     assertTypeEquals(
@@ -157,10 +157,12 @@ public final class LinkedFlowScopeTest extends CompilerTypeTestCase {
     FlowScope chainB = localEntry.createChildFlowScope();
     for (int i = 0; i < LONG_CHAIN_LENGTH; i++) {
       localScope.declare("local" + i, null, null, null);
-      chainA.inferSlotType(
-          "local" + i, i % 2 == 0 ? getNativeNumberType() : getNativeBooleanType());
-      chainB.inferSlotType(
-          "local" + i, i % 3 == 0 ? getNativeStringType() : getNativeBooleanType());
+      chainA =
+          chainA.inferSlotType(
+              "local" + i, i % 2 == 0 ? getNativeNumberType() : getNativeBooleanType());
+      chainB =
+          chainB.inferSlotType(
+              "local" + i, i % 3 == 0 ? getNativeStringType() : getNativeBooleanType());
 
       chainA = chainA.createChildFlowScope();
       chainB = chainB.createChildFlowScope();
@@ -178,10 +180,12 @@ public final class LinkedFlowScopeTest extends CompilerTypeTestCase {
     FlowScope chainB = localEntry.createChildFlowScope();
     for (int i = 0; i < LONG_CHAIN_LENGTH * 7; i++) {
       localScope.declare("local" + i, null, null, null);
-      chainA.inferSlotType(
-          "local" + i, i % 2 == 0 ? getNativeNumberType() : getNativeBooleanType());
-      chainB.inferSlotType(
-          "local" + i, i % 3 == 0 ? getNativeStringType() : getNativeBooleanType());
+      chainA =
+          chainA.inferSlotType(
+              "local" + i, i % 2 == 0 ? getNativeNumberType() : getNativeBooleanType());
+      chainB =
+          chainB.inferSlotType(
+              "local" + i, i % 3 == 0 ? getNativeStringType() : getNativeBooleanType());
 
       if (i % 7 == 0) {
         chainA = chainA.createChildFlowScope();
@@ -203,10 +207,12 @@ public final class LinkedFlowScopeTest extends CompilerTypeTestCase {
       if (i % 7 == 0) {
         int j = i / 7;
         localScope.declare("local" + j, null, null, null);
-        chainA.inferSlotType(
-            "local" + j, j % 2 == 0 ? getNativeNumberType() : getNativeBooleanType());
-        chainB.inferSlotType(
-            "local" + j, j % 3 == 0 ? getNativeStringType() : getNativeBooleanType());
+        chainA =
+            chainA.inferSlotType(
+                "local" + j, j % 2 == 0 ? getNativeNumberType() : getNativeBooleanType());
+        chainB =
+            chainB.inferSlotType(
+                "local" + j, j % 3 == 0 ? getNativeStringType() : getNativeBooleanType());
       }
 
       chainA = chainA.createChildFlowScope();
@@ -249,19 +255,19 @@ public final class LinkedFlowScopeTest extends CompilerTypeTestCase {
 
   public void testDiffer1() {
     FlowScope childA = localEntry.createChildFlowScope();
-    childA.inferSlotType("localB", getNativeNumberType());
+    childA = childA.inferSlotType("localB", getNativeNumberType());
 
     FlowScope childAB = childA.createChildFlowScope();
-    childAB.inferSlotType("localB", getNativeStringType());
+    childAB = childAB.inferSlotType("localB", getNativeStringType());
 
     FlowScope childABC = childAB.createChildFlowScope();
-    childABC.inferSlotType("localA", getNativeBooleanType());
+    childABC = childABC.inferSlotType("localA", getNativeBooleanType());
 
     FlowScope childB = childAB.createChildFlowScope();
-    childB.inferSlotType("localB", getNativeStringType());
+    childB = childB.inferSlotType("localB", getNativeStringType());
 
     FlowScope childBC = childB.createChildFlowScope();
-    childBC.inferSlotType("localA", getNativeNoType());
+    childBC = childBC.inferSlotType("localA", getNativeNoType());
 
     assertScopesSame(childAB, childB);
     assertScopesDiffer(childABC, childBC);
@@ -277,10 +283,10 @@ public final class LinkedFlowScopeTest extends CompilerTypeTestCase {
 
   public void testDiffer2() {
     FlowScope childA = localEntry.createChildFlowScope();
-    childA.inferSlotType("localA", getNativeNumberType());
+    childA = childA.inferSlotType("localA", getNativeNumberType());
 
     FlowScope childB = localEntry.createChildFlowScope();
-    childB.inferSlotType("localA", getNativeNoType());
+    childB = childB.inferSlotType("localA", getNativeNoType());
 
     assertScopesDiffer(childA, childB);
   }

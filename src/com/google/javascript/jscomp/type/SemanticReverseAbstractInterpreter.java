@@ -33,6 +33,7 @@ import com.google.javascript.rhino.jstype.UnionType;
 import com.google.javascript.rhino.jstype.Visitor;
 import java.util.HashSet;
 import java.util.Set;
+import javax.annotation.CheckReturnValue;
 
 /**
  * A reverse abstract interpreter using the semantics of the JavaScript
@@ -92,8 +93,9 @@ public final class SemanticReverseAbstractInterpreter
   }
 
   @Override
-  public FlowScope getPreciserScopeKnowingConditionOutcome(Node condition,
-      FlowScope blindScope, boolean outcome) {
+  @CheckReturnValue
+  public FlowScope getPreciserScopeKnowingConditionOutcome(
+      Node condition, FlowScope blindScope, boolean outcome) {
     // Check for the typeof operator.
     Token operatorToken = condition.getToken();
     switch (operatorToken) {
@@ -249,6 +251,7 @@ public final class SemanticReverseAbstractInterpreter
         condition, blindScope, outcome);
   }
 
+  @CheckReturnValue
   private FlowScope caseIsArray(Node value, FlowScope blindScope, boolean outcome) {
       JSType type = getTypeIfRefinable(value, blindScope);
     if (type != null) {
@@ -258,14 +261,16 @@ public final class SemanticReverseAbstractInterpreter
     return blindScope;
   }
 
-  private FlowScope caseEquality(Node condition, FlowScope blindScope,
-      Function<TypePair, TypePair> merging) {
+  @CheckReturnValue
+  private FlowScope caseEquality(
+      Node condition, FlowScope blindScope, Function<TypePair, TypePair> merging) {
     return caseEquality(condition.getFirstChild(), condition.getLastChild(),
                         blindScope, merging);
   }
 
-  private FlowScope caseEquality(Node left, Node right, FlowScope blindScope,
-      Function<TypePair, TypePair> merging) {
+  @CheckReturnValue
+  private FlowScope caseEquality(
+      Node left, Node right, FlowScope blindScope, Function<TypePair, TypePair> merging) {
     // left type
     JSType leftType = getTypeIfRefinable(left, blindScope);
     boolean leftIsRefineable;
@@ -299,8 +304,9 @@ public final class SemanticReverseAbstractInterpreter
     return blindScope;
   }
 
-  private FlowScope caseAndOrNotShortCircuiting(Node left, Node right,
-      FlowScope blindScope, boolean outcome) {
+  @CheckReturnValue
+  private FlowScope caseAndOrNotShortCircuiting(
+      Node left, Node right, FlowScope blindScope, boolean outcome) {
     // left type
     JSType leftType = getTypeIfRefinable(left, blindScope);
     boolean leftIsRefineable;
@@ -345,8 +351,9 @@ public final class SemanticReverseAbstractInterpreter
     return blindScope;
   }
 
-  private FlowScope caseAndOrMaybeShortCircuiting(Node left, Node right,
-      FlowScope blindScope, boolean outcome) {
+  @CheckReturnValue
+  private FlowScope caseAndOrMaybeShortCircuiting(
+      Node left, Node right, FlowScope blindScope, boolean outcome) {
     // Perform two separate refinements, one for if short-circuiting occurred, and one for if it did
     // not.  Because it's not clear whether short-circuiting occurred, we actually have to ignore
     // both separate result flow scopes individually, but if they both refined the same slot, we
@@ -376,43 +383,42 @@ public final class SemanticReverseAbstractInterpreter
     }
     JSType type = leftVar.getType().getLeastSupertype(rightVar.getType());
     FlowScope informed = unwrap(blindScope).createChildFlowScope();
-    informed.inferSlotType(leftVar.getName(), type);
-    return informed;
+    return informed.inferSlotType(leftVar.getName(), type);
   }
 
   /**
-   * If the restrictedType differs from the originalType, then we should
-   * branch the current flow scope and create a new flow scope with the name
-   * declared with the new type.
+   * If the restrictedType differs from the originalType, then we should branch the current flow
+   * scope and create a new flow scope with the name declared with the new type.
    *
-   * We try not to create spurious child flow scopes as this makes type
-   * inference slower.
+   * <p>We try not to create spurious child flow scopes as this makes type inference slower.
    *
-   * We also do not want spurious slots around in type inference, because
-   * we use these as a signal for "checked unknown" types. A "checked unknown"
-   * type is a symbol that the programmer has already checked and verified that
-   * it's defined, even if we don't know what it is.
+   * <p>We also do not want spurious slots around in type inference, because we use these as a
+   * signal for "checked unknown" types. A "checked unknown" type is a symbol that the programmer
+   * has already checked and verified that it's defined, even if we don't know what it is.
    *
-   * It is OK to pass non-name nodes into this method, as long as you pass
-   * in {@code null} for a restricted type.
+   * <p>It is OK to pass non-name nodes into this method, as long as you pass in {@code null} for a
+   * restricted type.
    */
-  private FlowScope maybeRestrictName(FlowScope blindScope, Node node,
-      JSType originalType, JSType restrictedType) {
+  @CheckReturnValue
+  private FlowScope maybeRestrictName(
+      FlowScope blindScope, Node node, JSType originalType, JSType restrictedType) {
     if (restrictedType != null && restrictedType != originalType) {
       FlowScope informed = blindScope.createChildFlowScope();
-      declareNameInScope(informed, node, restrictedType);
-      return informed;
+      return declareNameInScope(informed, node, restrictedType);
     }
     return blindScope;
   }
 
-  /**
-   * @see #maybeRestrictName
-   */
+  /** @see #maybeRestrictName */
+  @CheckReturnValue
   private FlowScope maybeRestrictTwoNames(
       FlowScope blindScope,
-      Node left, JSType originalLeftType, JSType restrictedLeftType,
-      Node right, JSType originalRightType, JSType restrictedRightType) {
+      Node left,
+      JSType originalLeftType,
+      JSType restrictedLeftType,
+      Node right,
+      JSType originalRightType,
+      JSType restrictedRightType) {
     boolean shouldRefineLeft =
         restrictedLeftType != null && restrictedLeftType != originalLeftType;
     boolean shouldRefineRight =
@@ -420,18 +426,18 @@ public final class SemanticReverseAbstractInterpreter
     if (shouldRefineLeft || shouldRefineRight) {
       FlowScope informed = blindScope.createChildFlowScope();
       if (shouldRefineLeft) {
-        declareNameInScope(informed, left, restrictedLeftType);
+        informed = declareNameInScope(informed, left, restrictedLeftType);
       }
       if (shouldRefineRight) {
-        declareNameInScope(informed, right, restrictedRightType);
+        informed = declareNameInScope(informed, right, restrictedRightType);
       }
       return informed;
     }
     return blindScope;
   }
 
-  private FlowScope caseNameOrGetProp(Node name, FlowScope blindScope,
-      boolean outcome) {
+  @CheckReturnValue
+  private FlowScope caseNameOrGetProp(Node name, FlowScope blindScope, boolean outcome) {
     JSType type = getTypeIfRefinable(name, blindScope);
     if (type != null) {
       return maybeRestrictName(
@@ -441,15 +447,16 @@ public final class SemanticReverseAbstractInterpreter
     return blindScope;
   }
 
-  private FlowScope caseTypeOf(Node node, JSType type, String value,
-        boolean resultEqualsValue, FlowScope blindScope) {
+  @CheckReturnValue
+  private FlowScope caseTypeOf(
+      Node node, JSType type, String value, boolean resultEqualsValue, FlowScope blindScope) {
     return maybeRestrictName(
         blindScope, node, type,
         getRestrictedByTypeOfResult(type, value, resultEqualsValue));
   }
 
-  private FlowScope caseInstanceOf(Node left, Node right, FlowScope blindScope,
-      boolean outcome) {
+  @CheckReturnValue
+  private FlowScope caseInstanceOf(Node left, Node right, FlowScope blindScope, boolean outcome) {
     JSType leftType = getTypeIfRefinable(left, blindScope);
     if (leftType == null) {
       return blindScope;
@@ -471,12 +478,14 @@ public final class SemanticReverseAbstractInterpreter
   }
 
   /**
-   * Given 'property in object', ensures that the object has the property in the
-   * informed scope by defining it as a qualified name if the object type lacks
-   * the property and it's not in the blind scope.
+   * Given 'property in object', ensures that the object has the property in the informed scope by
+   * defining it as a qualified name if the object type lacks the property and it's not in the blind
+   * scope.
+   *
    * @param object The node of the right-side of the in.
    * @param propertyName The string of the left-side of the in.
    */
+  @CheckReturnValue
   private FlowScope caseIn(Node object, String propertyName, FlowScope blindScope) {
     JSType jsType = object.getJSType();
     jsType = this.getRestrictedWithoutNull(jsType);
@@ -493,22 +502,17 @@ public final class SemanticReverseAbstractInterpreter
         String propertyQualifiedName = qualifiedName + "." + propertyName;
         if (blindScope.getSlot(propertyQualifiedName) == null) {
           FlowScope informed = blindScope.createChildFlowScope();
-          JSType unknownType = typeRegistry.getNativeType(
-              JSTypeNative.UNKNOWN_TYPE);
-          informed.inferQualifiedSlot(
+          JSType unknownType = typeRegistry.getNativeType(JSTypeNative.UNKNOWN_TYPE);
+          return informed.inferQualifiedSlot(
               object, propertyQualifiedName, unknownType, unknownType, false);
-          return informed;
         }
       }
     }
     return blindScope;
   }
 
-  /**
-   * @see SemanticReverseAbstractInterpreter#caseInstanceOf
-   */
-  private class RestrictByTrueInstanceOfResultVisitor
-      extends RestrictByTrueTypeOfResultVisitor {
+  /** @see SemanticReverseAbstractInterpreter#caseInstanceOf */
+  private class RestrictByTrueInstanceOfResultVisitor extends RestrictByTrueTypeOfResultVisitor {
     private final ObjectType target;
 
     RestrictByTrueInstanceOfResultVisitor(ObjectType target) {
@@ -636,22 +640,25 @@ public final class SemanticReverseAbstractInterpreter
     }
 
     @Override
-    public void inferSlotType(String symbol, JSType type) {
+    public FlowScope inferSlotType(String symbol, JSType type) {
       refinements.add(symbol);
-      delegate.inferSlotType(symbol, type);
+      return wrap(delegate.inferSlotType(symbol, type));
     }
 
     @Override
-    public void inferQualifiedSlot(Node node, String symbol, JSType bottomType,
-        JSType inferredType, boolean declare) {
+    public FlowScope inferQualifiedSlot(
+        Node node, String symbol, JSType bottomType, JSType inferredType, boolean declare) {
       refinements.add(symbol);
-      delegate.inferQualifiedSlot(node, symbol, bottomType, inferredType, declare);
+      return wrap(delegate.inferQualifiedSlot(node, symbol, bottomType, inferredType, declare));
+    }
+
+    private FlowScope wrap(FlowScope scope) {
+      return scope != delegate ? new RefinementTrackingFlowScope(scope, refinements) : this;
     }
 
     @Override
     public FlowScope optimize() {
-      FlowScope optimized = delegate.optimize();
-      return optimized != delegate ? new RefinementTrackingFlowScope(optimized, refinements) : this;
+      return wrap(delegate.optimize());
     }
 
     @Override

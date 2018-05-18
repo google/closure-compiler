@@ -110,24 +110,25 @@ class LinkedFlowScope implements FlowScope {
   }
 
   @Override
-  public void inferSlotType(String symbol, JSType type) {
+  public LinkedFlowScope inferSlotType(String symbol, JSType type) {
     checkState(!frozen);
     OverlayScope scope = getOverlayScopeForVar(symbol, true);
     OverlayScope newScope = scope.infer(symbol, type);
     // Aggressively remove empty scopes to maintain a reasonable equivalence.
     scopes =
         !newScope.slots.isEmpty() ? scopes.plus(scope.scope, newScope) : scopes.minus(scope.scope);
+    return this;
   }
 
   @Override
-  public void inferQualifiedSlot(Node node, String symbol, JSType bottomType,
-      JSType inferredType, boolean declared) {
+  public LinkedFlowScope inferQualifiedSlot(
+      Node node, String symbol, JSType bottomType, JSType inferredType, boolean declared) {
     if (functionScope.isGlobal()) {
       // Do not infer qualified names on the global scope.  Ideally these would be
       // added to the scope by TypedScopeCreator, but if they are not, adding them
       // here causes scaling problems (large projects can have tens of thousands of
       // undeclared qualified names in the global scope) with no real benefit.
-      return;
+      return this;
     }
     TypedVar v = syntacticScope.getVar(symbol);
     if (v == null && !functionScope.isBottom()) {
@@ -153,7 +154,7 @@ class LinkedFlowScope implements FlowScope {
             || !inferredType.isSubtypeOf(declaredType)
             || declaredType.isSubtypeOf(inferredType)
             || inferredType.isEquivalentTo(declaredType)) {
-          return;
+          return this;
         }
       } else if (declaredType != null && !inferredType.isSubtypeOf(declaredType)) {
         // If this inferred type is incompatible with another type previously
@@ -162,6 +163,7 @@ class LinkedFlowScope implements FlowScope {
       }
     }
     inferSlotType(symbol, inferredType);
+    return this;
   }
 
   @Override

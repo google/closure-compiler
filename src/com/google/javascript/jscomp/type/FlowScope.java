@@ -20,6 +20,7 @@ import com.google.javascript.jscomp.graph.LatticeElement;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.StaticTypedScope;
+import javax.annotation.CheckReturnValue;
 
 /**
  * A symbol table for inferring types during data flow analysis.
@@ -44,25 +45,27 @@ public interface FlowScope extends StaticTypedScope, LatticeElement {
   FlowScope createChildFlowScope(StaticTypedScope scope);
 
   /**
-   * Defines the type of a symbol at this point in the flow.
+   * Returns a flow scope with the type of the given {@code symbol} updated to {@code type}.
+   *
    * @throws IllegalArgumentException If no slot for this symbol exists.
    */
-  void inferSlotType(String symbol, JSType type);
+  @CheckReturnValue
+  FlowScope inferSlotType(String symbol, JSType type);
 
   /**
-   * Infer the type of a qualified name.
+   * Returns a flow scope with the type of the given {@code symbol} updated to {@code inferredType}.
+   * Updates are not performed in-place.
    *
-   * When traversing the control flow of a function, simple names are
-   * declared at the bottom of the flow lattice. But there are far too many
-   * qualified names to be able to do this and be performant. So the bottoms
-   * of qualified names are declared lazily.
+   * <p>When traversing the control flow of a function, simple names are declared at the bottom of
+   * the flow lattice. But there are far too many qualified names to be able to do this and be
+   * performant. So the bottoms of qualified names are declared lazily.
    *
-   * Therefore, when inferring a qualified slot, we need both the "bottom"
-   * type of the slot when we enter the scope, and the current type being
-   * inferred.
+   * <p>Therefore, when inferring a qualified slot, we need both the "bottom" type of the slot when
+   * we enter the scope, and the current type being inferred.
    */
-  void inferQualifiedSlot(Node node, String symbol, JSType bottomType,
-      JSType inferredType, boolean declare);
+  @CheckReturnValue
+  FlowScope inferQualifiedSlot(
+      Node node, String symbol, JSType bottomType, JSType inferredType, boolean declare);
 
   /**
    * Optimize this scope and return a new FlowScope with faster lookup.
