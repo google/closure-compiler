@@ -466,7 +466,9 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, HotSwapCom
     Node method = member.getLastChild().detach();
 
     Node assign = IR.assign(qualifiedMemberAccess, method);
-    assign.useSourceInfoIfMissingFromForTree(member);
+    // Use the source info from the method (a FUNCTION) not the MEMBER_FUNCTION_DEF
+    // because the MEMBER_FUNCTION_DEf source info only corresponds to the identifier
+    assign.useSourceInfoIfMissingFromForTree(method);
 
     JSDocInfo info = member.getJSDocInfo();
     if (member.isStaticMember() && NodeUtil.referencesThis(assign.getLastChild())) {
