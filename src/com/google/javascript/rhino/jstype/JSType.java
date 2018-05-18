@@ -673,8 +673,9 @@ public abstract class JSType implements Serializable {
   }
 
   /**
-   * Whether this type is a {@link FunctionType} that is an ordinary function or
-   * a named type that points to such a type.
+   * Whether this type is a {@link FunctionType} that is an ordinary function (i.e. not a
+   * constructor, nominal interface, or record interface), or a named type that points to such a
+   * type.
    */
   public boolean isOrdinaryFunction() {
     return false;
