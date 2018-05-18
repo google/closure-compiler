@@ -207,15 +207,10 @@ public final class SymbolTableTest extends TestCase {
   public void testObjectLiteralQuoted() throws Exception {
     SymbolTable table = createSymbolTable("var obj = {'foo': 0};");
 
-    Symbol foo = getGlobalVar(table, "obj.foo");
-    assertThat(foo.getName()).isEqualTo("foo");
-  }
-
-  public void testObjectLiteralWithNewlineInKey() throws Exception {
-    SymbolTable table = createSymbolTable("var obj = {'foo\\nbar': 0};");
-
-    Symbol foo = getGlobalVar(table, "obj.foo\\nbar");
-    assertThat(foo.getName()).isEqualTo("obj.foo\\nbar");
+    // Quoted keys are not symbols.
+    assertThat(getGlobalVar(table, "obj.foo")).isNull();
+    // Only obj and *global* are symbols.
+    assertThat(getVars(table)).hasSize(2);
   }
 
   public void testObjectLiteralWithMemberFunction() {

@@ -1047,7 +1047,19 @@ public final class SymbolTable {
     // let b = destructuring$var0.b;
     //
     // destructuring$var0 should not get into index as it's invisible to a user.
+    // TODO(b/77597706): remove this once destructuring transpilation is done after type checks.
     return symbol.getName().contains(Es6RewriteDestructuring.DESTRUCTURING_TEMP_VAR);
+  }
+  /*
+   * Checks whether symbol is a quoted object literal key. In the following object:
+   *
+   * var foo = {'one': 1, two: 2};
+   *
+   * 'one' is quoted key. while two is not.
+   */
+  private boolean isSymbolAQuotedObjectKey(Symbol symbol) {
+    Node node = symbol.getDeclarationNode();
+    return node != null && node.isStringKey() && node.isQuotedString();
   }
 
   /**
@@ -1077,6 +1089,10 @@ public final class SymbolTable {
         }
 
         inlineEs6ExportProperty(symbol, nodeToSymbol);
+      } else if (isSymbolAQuotedObjectKey(symbol)) {
+        // Quoted object keys are not considered symbols. Only unquoted keys and dot-access
+        // properties are considered symbols.
+        removeSymbol(symbol);
       }
     }
   }
