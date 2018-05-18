@@ -55,3 +55,13 @@ var fixture = function(name, opt_model) {};
  * ensure proper setup
  */
 var a11ySuite = function(fixtureId, ignoredRules, beforeEach) {};
+
+/**
+ * @param {!Function} fn
+ * @param {!Function} next
+ * @param {(number|Element)=} intervalOrMutationEl
+ * @param {number=} timeout
+ * @param {Date=} timeoutTime
+ */
+var waitFor = function waitFor(
+    fn, next, intervalOrMutationEl, timeout, timeoutTime) {}
