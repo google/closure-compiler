@@ -49,7 +49,6 @@ import com.google.common.collect.Iterables;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.JSDocInfo;
 import java.io.Serializable;
-import java.util.Comparator;
 import java.util.IdentityHashMap;
 import java.util.Objects;
 import javax.annotation.Nullable;
@@ -83,18 +82,6 @@ public abstract class JSType implements Serializable {
 
   private static final ImmutableSet<String> BIVARIANT_TYPES =
       ImmutableSet.of("Object", "IArrayLike", "Array");
-
-  /**
-   * Total ordering on types based on their textual representation.
-   * This is used to have a deterministic output of the toString
-   * method of the union type since this output is used in tests.
-   */
-  static final Comparator<JSType> ALPHA = new Comparator<JSType>() {
-    @Override
-    public int compare(JSType t1, JSType t2) {
-      return t1.toString().compareTo(t2.toString());
-    }
-  };
 
   final JSTypeRegistry registry;
 
