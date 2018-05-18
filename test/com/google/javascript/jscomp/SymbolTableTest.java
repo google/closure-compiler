@@ -28,6 +28,7 @@ import com.google.javascript.jscomp.SymbolTable.Symbol;
 import com.google.javascript.jscomp.SymbolTable.SymbolScope;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfo.Visibility;
+import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -215,6 +216,21 @@ public final class SymbolTableTest extends TestCase {
 
     Symbol foo = getGlobalVar(table, "obj.foo\\nbar");
     assertThat(foo.getName()).isEqualTo("obj.foo\\nbar");
+  }
+
+  public void testObjectLiteralWithMemberFunction() {
+    String input = lines("var obj = { fn() {} }; obj.fn();");
+    SymbolTable table = createSymbolTable(input);
+
+    Symbol objFn = getGlobalVar(table, "obj.fn");
+    assertNotNull(objFn);
+    List<Reference> references = table.getReferenceList(objFn);
+    assertThat(references).hasSize(2);
+
+    // The declaration node corresponds to "fn", not "fn() {}", in the source info.
+    Node declaration = objFn.getDeclarationNode();
+    assertThat(declaration.getCharno()).isEqualTo(12);
+    assertThat(declaration.getLength()).isEqualTo(2);
   }
 
   public void testNamespacedReferences() throws Exception {
