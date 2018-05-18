@@ -2876,7 +2876,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   @Override
   public void addInputSourceMap(String sourceFileName, SourceMapInput inputSourceMap) {
     inputSourceMaps.put(sourceFileName, inputSourceMap);
-    if (options.sourceMapIncludeSourcesContent) {
+    if (options.sourceMapIncludeSourcesContent && sourceMap != null) {
       addSourceMapSourceFiles(inputSourceMap);
     }
   }

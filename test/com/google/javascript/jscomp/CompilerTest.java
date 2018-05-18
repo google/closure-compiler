@@ -383,6 +383,19 @@ public final class CompilerTest extends TestCase {
     assertThat(consumer.getOriginalSourcesContent()).containsExactly(SOURCE_MAP_TEST_CONTENT);
   }
 
+  public void testNoSourceMapIsGeneratedWithoutPath() throws Exception {
+    CompilerOptions options = new CompilerOptions();
+    options.setLanguageIn(LanguageMode.ECMASCRIPT3);
+    options.applyInputSourceMaps = true;
+    options.sourceMapIncludeSourcesContent = true;
+    String code = SOURCE_MAP_TEST_CODE + "\n//# sourceMappingURL="
+        + BASE64_ENCODED_SOURCE_MAP_WITH_CONTENT;
+    Compiler compiler = new Compiler();
+    SourceFile sourceFile = SourceFile.fromCode("input.js", code);
+    compiler.compile(EMPTY_EXTERNS.get(0), sourceFile, options);
+    assertNull(compiler.getSourceMap());
+  }
+
   private static final ImmutableList<SourceFile> EMPTY_EXTERNS =
       ImmutableList.of(SourceFile.fromCode("externs", ""));
 
