@@ -33,6 +33,11 @@
 Node.prototype.assignedSlot;
 
 /**
+ * @type {string}
+ */
+Element.prototype.slot;
+
+/**
  * Note: In IE, the contains() method only exists on Elements, not Nodes.
  * Therefore, it is recommended that you use the Conformance framework to
  * prevent calling this on Nodes which are not Elements.
