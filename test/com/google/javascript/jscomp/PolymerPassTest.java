@@ -3086,6 +3086,61 @@ public class PolymerPassTest extends CompilerTestCase {
             "a.B.prototype.thingToDo;"));
   }
 
+  public void testPolymerElementAnnotation3() {
+    // Type checker doesn't currently understand ES6 code. Remove when it does.
+    disableTypeCheck();
+    test(
+        lines(
+            "/** @interface */",
+            "function User() {};",
+            "/** @type {boolean} */ User.prototype.id;",
+            "var a = {};",
+            "/**",
+            " * @polymer",
+            " * @implements {User}",
+            " */",
+            "a.B = class extends Foo {",
+            "  static get is() { return 'x-element'; }",
+            "  static get properties() {",
+            "    return {",
+            "      id: Boolean,",
+            "      other: {",
+            "        type: String,",
+            "        reflectToAttribute: true",
+            "      }",
+            "    };",
+            "  }",
+            "};"),
+        lines(
+            "/** @interface */",
+            "function User() {};",
+            "/** @type {boolean} */ User.prototype.id;",
+            "var a = {};",
+            "/**",
+            " * @polymer",
+            " * @implements {User}",
+            " * @implements {Polymera_BInterface}",
+            " */",
+            "a.B = class extends Foo {",
+            "  /** @return {string} */",
+            "  static get is() { return 'x-element'; }",
+            "  /** @return {" + POLYMER_ELEMENT_PROP_CONFIG + "} */",
+            "  static get properties() {",
+            "    return {",
+            "      id: Boolean,",
+            "      other: {",
+            "        type: String,",
+            "        reflectToAttribute: true",
+            "      }",
+            "    };",
+            "  }",
+            "};",
+            "/** @type {boolean} */",
+            "a.B.prototype.id;",
+            "/** @type {string} */",
+            "a.B.prototype.other;"));
+  }
+
   public void testObjectReflectionAddedToConfigProperties1() {
     propertyRenamingEnabled = true;
     test(
