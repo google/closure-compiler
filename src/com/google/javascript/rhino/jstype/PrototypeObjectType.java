@@ -279,11 +279,6 @@ public class PrototypeObjectType extends ObjectType {
   }
 
   @Override
-  public boolean canBeCalled() {
-    return isRegexpType();
-  }
-
-  @Override
   StringBuilder appendTo(StringBuilder sb, boolean forAnnotations) {
     if (hasReferenceName()) {
       return sb.append(forAnnotations ? getNormalizedReferenceName() : getReferenceName());

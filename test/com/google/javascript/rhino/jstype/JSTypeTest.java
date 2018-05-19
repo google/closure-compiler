@@ -2199,7 +2199,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertFalse(REGEXP_TYPE.isSubtypeOf(VOID_TYPE));
 
     // canBeCalled
-    assertTrue(REGEXP_TYPE.canBeCalled());
+    assertFalse(REGEXP_TYPE.canBeCalled());
 
     // canTestForEqualityWith
     assertCanTestForEqualityWith(REGEXP_TYPE, ALL_TYPE);
