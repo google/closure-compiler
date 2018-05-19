@@ -286,6 +286,7 @@ public class DiagnosticGroups {
       DiagnosticGroups.registerGroup("oldCheckTypes",  // undocumented
           TypeValidator.ALL_DIAGNOSTICS,
           TypeCheck.ALL_DIAGNOSTICS,
+          FunctionTypeBuilder.ALL_DIAGNOSTICS,
           DiagnosticGroups.GLOBAL_THIS);
 
   // Run the new type inference, but omit many warnings that are not
