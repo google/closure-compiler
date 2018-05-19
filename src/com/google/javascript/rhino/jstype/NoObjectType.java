@@ -94,7 +94,7 @@ public class NoObjectType extends FunctionType {
   }
 
   @Override
-  public FunctionType toMaybeFunctionType() {
+  public final FunctionType toMaybeFunctionType() {
     return null;
   }
 
@@ -104,12 +104,12 @@ public class NoObjectType extends FunctionType {
   }
 
   @Override
-  public boolean isConstructor() {
+  public final boolean isConstructor() {
     return false;
   }
 
   @Override
-  public ObjectType getImplicitPrototype() {
+  public final ObjectType getImplicitPrototype() {
     return null;
   }
 
@@ -124,44 +124,44 @@ public class NoObjectType extends FunctionType {
   }
 
   @Override
-  public boolean matchesNumberContext() {
+  public final boolean matchesNumberContext() {
     return true;
   }
 
   @Override
-  public boolean matchesObjectContext() {
+  public final boolean matchesObjectContext() {
     return true;
   }
 
   @Override
-  public boolean matchesStringContext() {
+  public final boolean matchesStringContext() {
     return true;
   }
 
   @Override
-  public boolean matchesSymbolContext() {
+  public final boolean matchesSymbolContext() {
     return true;
   }
 
   @Override
-  public int hashCode() {
+  public final int hashCode() {
     return System.identityHashCode(this);
   }
 
   @Override
-  boolean defineProperty(String propertyName, JSType type,
+  final boolean defineProperty(String propertyName, JSType type,
       boolean inferred, Node propertyNode) {
     // nothing, all properties are defined
     return true;
   }
 
   @Override
-  public boolean removeProperty(String name) {
+  public final boolean removeProperty(String name) {
     return false;
   }
 
   @Override
-  public void setPropertyJSDocInfo(String propertyName, JSDocInfo info) {
+  public final void setPropertyJSDocInfo(String propertyName, JSDocInfo info) {
     // Do nothing, specific properties do not have JSDocInfo.
   }
 
@@ -180,12 +180,12 @@ public class NoObjectType extends FunctionType {
   }
 
   @Override
-  public FunctionType getConstructor() {
+  public final FunctionType getConstructor() {
     return null;
   }
 
   @Override
-  JSType resolveInternal(ErrorReporter reporter) {
+  final JSType resolveInternal(ErrorReporter reporter) {
     return this;
   }
 }

@@ -81,7 +81,7 @@ import javax.annotation.Nullable;
  * much that has to be changed.<p>
  *
  */
-public class NamedType extends ProxyObjectType {
+public final class NamedType extends ProxyObjectType {
   private static final long serialVersionUID = 1L;
 
   private final String reference;

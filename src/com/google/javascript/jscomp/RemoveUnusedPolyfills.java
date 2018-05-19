@@ -180,8 +180,8 @@ class RemoveUnusedPolyfills implements CompilerPass {
       // If the known type is too generic to be useful, also return null.
       receiverType = receiverType.restrictByNotNullOrUndefined();
       if (receiverType.isUnknownType()
-          || receiverType.isBottom()
-          || receiverType.isTop()
+          || receiverType.isEmptyType()
+          || receiverType.isAllType()
           || receiverType.isEquivalentTo(
               compiler.getTypeRegistry().getNativeType(JSTypeNative.OBJECT_TYPE))) {
         return null;
@@ -207,7 +207,7 @@ class RemoveUnusedPolyfills implements CompilerPass {
       }
 
       // If there is any non-bottom type in common, then the types are compatible.
-      if (!receiverType.meetWith(type).isBottom()) {
+      if (!receiverType.meetWith(type).isEmptyType()) {
         return true;
       }
 

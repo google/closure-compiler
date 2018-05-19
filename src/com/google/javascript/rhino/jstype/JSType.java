@@ -204,12 +204,9 @@ public abstract class JSType implements Serializable {
   }
 
   /** Whether this is the prototype of a function. */
+  // TODO(sdh): consider renaming this to isPrototypeObject.
   public boolean isFunctionPrototypeType() {
     return false;
-  }
-
-  public boolean isPrototypeObject() {
-    return isFunctionPrototypeType();
   }
 
   public boolean isStringObjectType() {
@@ -287,10 +284,6 @@ public abstract class JSType implements Serializable {
     return false;
   }
 
-  public final boolean isTop() {
-    return isAllType();
-  }
-
   public boolean isUnknownType() {
     return false;
   }
@@ -314,31 +307,6 @@ public abstract class JSType implements Serializable {
 
   public boolean isPartiallyInstantiated() {
     return getTemplateTypeMap().isPartiallyFull();
-  }
-
-  public boolean containsArray() {
-    // Check if this is itself an array
-    if (this.isArrayType()) {
-      return true;
-    }
-    TemplatizedType templatizedType = this.toMaybeTemplatizedType();
-    if (templatizedType != null && templatizedType.getReferencedType().isArrayType()) {
-      return true;
-    }
-
-    // Check if this is a union that contains an array
-    if (this.isUnionType()) {
-      JSType arrayType = registry.getNativeType(JSTypeNative.ARRAY_TYPE);
-      // use an indexed loop to avoid allocations
-      ImmutableList<JSType> alternatesList = this.toMaybeUnionType().getAlternatesList();
-      for (int i = 0; i < alternatesList.size(); i++) {
-        JSType alternate = alternatesList.get(i);
-        if (alternate.isSubtypeOf(arrayType)) {
-          return true;
-        }
-      }
-    }
-    return false;
   }
 
   /**
@@ -448,10 +416,6 @@ public abstract class JSType implements Serializable {
     return toMaybeEnumElementType() != null;
   }
 
-  public final boolean isEnumElement() {
-    return isEnumElementType();
-  }
-
   public final JSType getEnumeratedTypeOfEnumElement() {
     EnumElementType e = toMaybeEnumElementType();
     return e == null ? null : e.getPrimitiveType();
@@ -464,12 +428,10 @@ public abstract class JSType implements Serializable {
     return null;
   }
 
+  // TODO(sdh): Consider changing this to isEnumObjectType(), though this would be inconsistent with
+  // the EnumType class and toMaybeEnumType(), so we would need to consider changing them, too.
   public boolean isEnumType() {
     return toMaybeEnumType() != null;
-  }
-
-  public final boolean isEnumObject() {
-    return isEnumType();
   }
 
   /**
@@ -592,15 +554,6 @@ public abstract class JSType implements Serializable {
 
   public final boolean isObjectType() {
     return isObject();
-  }
-
-  public final boolean isInstanceofObject() {
-    // Some type whose class is Object
-    if (this instanceof InstanceObjectType) {
-      InstanceObjectType iObj = (InstanceObjectType) this;
-      return iObj.isNativeObjectType() && "Object".equals(iObj.getReferenceName());
-    }
-    return isRecordType() || isLiteralObject();
   }
 
   /**
@@ -949,10 +902,6 @@ public abstract class JSType implements Serializable {
   @Nullable
   public final ObjectType dereference() {
     return autobox().toObjectType();
-  }
-
-  public final ObjectType autoboxAndGetObject() {
-    return dereference();
   }
 
   /**
@@ -1743,10 +1692,6 @@ public abstract class JSType implements Serializable {
 
   public boolean isSubtypeOf(JSType other) {
     return isSubtype(other);
-  }
-
-  public final boolean isBottom() {
-    return isEmptyType();
   }
 
   public ObjectType toMaybeObjectType() {

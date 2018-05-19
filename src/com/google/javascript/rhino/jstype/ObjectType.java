@@ -116,7 +116,7 @@ public abstract class ObjectType extends JSType implements Serializable {
     return getPropertyMap().getSlot(name);
   }
 
-  public Property getOwnSlot(String name) {
+  public final Property getOwnSlot(String name) {
     return getPropertyMap().getOwnProperty(name);
   }
 
@@ -253,12 +253,12 @@ public abstract class ObjectType extends JSType implements Serializable {
     return !hasReferenceName();
   }
 
-  public ObjectType getRawType() {
+  public final ObjectType getRawType() {
     TemplatizedType t = toMaybeTemplatizedType();
     return t == null ? this : t.getReferencedType();
   }
 
-  public ObjectType instantiateGenericsWithUnknown() {
+  public final ObjectType instantiateGenericsWithUnknown() {
     return this.registry.instantiateGenericsWithUnknown(this);
   }
 
@@ -297,7 +297,7 @@ public abstract class ObjectType extends JSType implements Serializable {
     return iproto == null ? null : iproto.getConstructor();
   }
 
-  public ObjectType getTopDefiningInterface(String propertyName) {
+  public final ObjectType getTopDefiningInterface(String propertyName) {
     ObjectType foundType = null;
     if (hasProperty(propertyName)) {
       foundType = this;
@@ -362,8 +362,7 @@ public abstract class ObjectType extends JSType implements Serializable {
         return true;
       }
       JSType originalType = getPropertyType(propertyName);
-      type = originalType == null ? type :
-          originalType.getLeastSupertype(type);
+      type = originalType == null ? type : originalType.getLeastSupertype(type);
     }
 
     boolean result = defineProperty(propertyName, type, true,
@@ -420,16 +419,16 @@ public abstract class ObjectType extends JSType implements Serializable {
    * @param propertyName the name of the property
    * @return the {@code Node} corresponding to the property or null.
    */
-  public Node getPropertyNode(String propertyName) {
+  public final Node getPropertyNode(String propertyName) {
     Property p = getSlot(propertyName);
     return p == null ? null : p.getNode();
   }
 
-  public Node getPropertyDefSite(String propertyName) {
+  public final Node getPropertyDefSite(String propertyName) {
     return getPropertyNode(propertyName);
   }
 
-  public JSDocInfo getPropertyJSDocInfo(String propertyName) {
+  public final JSDocInfo getPropertyJSDocInfo(String propertyName) {
     Property p = getSlot(propertyName);
     return p == null ? null : p.getJSDocInfo();
   }
@@ -439,12 +438,12 @@ public abstract class ObjectType extends JSType implements Serializable {
    * be implemented recursively, as you generally need to know exactly on
    * which type in the prototype chain the JSDocInfo exists.
    */
-  public JSDocInfo getOwnPropertyJSDocInfo(String propertyName) {
+  public final JSDocInfo getOwnPropertyJSDocInfo(String propertyName) {
     Property p = getOwnSlot(propertyName);
     return p == null ? null : p.getJSDocInfo();
   }
 
-  public Node getOwnPropertyDefSite(String propertyName) {
+  public final Node getOwnPropertyDefSite(String propertyName) {
     Property p = getOwnSlot(propertyName);
     return p == null ? null : p.getNode();
   }
@@ -466,8 +465,7 @@ public abstract class ObjectType extends JSType implements Serializable {
 
   @Override
   public JSType findPropertyType(String propertyName) {
-    return hasProperty(propertyName) ?
-        getPropertyType(propertyName) : null;
+    return hasProperty(propertyName) ? getPropertyType(propertyName) : null;
   }
 
   /**
@@ -504,7 +502,7 @@ public abstract class ObjectType extends JSType implements Serializable {
    * Checks whether the property whose name is given is present directly on
    * the object.  Returns false even if it is declared on a supertype.
    */
-  public HasPropertyKind getOwnPropertyKind(String propertyName) {
+  public final HasPropertyKind getOwnPropertyKind(String propertyName) {
     return getOwnSlot(propertyName) != null
         ? HasPropertyKind.KNOWN_PRESENT
         : HasPropertyKind.ABSENT;
@@ -514,7 +512,7 @@ public abstract class ObjectType extends JSType implements Serializable {
    * Checks whether the property whose name is given is present directly on
    * the object.  Returns false even if it is declared on a supertype.
    */
-  public boolean hasOwnProperty(String propertyName) {
+  public final boolean hasOwnProperty(String propertyName) {
     return !getOwnPropertyKind(propertyName).equals(HasPropertyKind.ABSENT);
   }
 
@@ -533,7 +531,7 @@ public abstract class ObjectType extends JSType implements Serializable {
   /**
    * Checks whether the property's type is inferred.
    */
-  public boolean isPropertyTypeInferred(String propertyName) {
+  public final boolean isPropertyTypeInferred(String propertyName) {
     StaticTypedSlot slot = getSlot(propertyName);
     return slot == null ? false : slot.isTypeInferred();
   }
@@ -541,7 +539,7 @@ public abstract class ObjectType extends JSType implements Serializable {
   /**
    * Checks whether the property's type is declared.
    */
-  public boolean isPropertyTypeDeclared(String propertyName) {
+  public final boolean isPropertyTypeDeclared(String propertyName) {
     StaticTypedSlot slot = getSlot(propertyName);
     return slot == null ? false : !slot.isTypeInferred();
   }
@@ -560,7 +558,7 @@ public abstract class ObjectType extends JSType implements Serializable {
   }
 
   /** Checks whether the property was defined in the externs. */
-  public boolean isPropertyInExterns(String propertyName) {
+  public final boolean isPropertyInExterns(String propertyName) {
     Property p = getSlot(propertyName);
     return p == null ? false : p.isFromExterns();
   }
@@ -568,7 +566,7 @@ public abstract class ObjectType extends JSType implements Serializable {
   /**
    * Gets the number of properties of this object.
    */
-  public int getPropertiesCount() {
+  public final int getPropertiesCount() {
     return getPropertyMap().getPropertiesCount();
   }
 
@@ -576,7 +574,7 @@ public abstract class ObjectType extends JSType implements Serializable {
    * Check for structural equivalence with {@code that}.
    * (e.g. two @record types with the same prototype properties)
    */
-  boolean checkStructuralEquivalenceHelper(
+  final boolean checkStructuralEquivalenceHelper(
       ObjectType otherObject, EquivalenceMethod eqMethod, EqCache eqCache) {
     if (this.isTemplatizedType() && this.toMaybeTemplatizedType().wrapsSameRawType(otherObject)) {
       return this.getTemplateTypeMap().checkEquivalenceHelper(
@@ -632,7 +630,7 @@ public abstract class ObjectType extends JSType implements Serializable {
   /**
    * Determine if {@code this} is a an implicit subtype of {@code superType}.
    */
-  boolean isStructuralSubtype(ObjectType superType,
+  final boolean isStructuralSubtype(ObjectType superType,
       ImplCache implicitImplCache, SubtypingMode subtypingMode) {
     // Union types should be handled by isSubtype already
     checkArgument(!this.isUnionType());
@@ -656,7 +654,7 @@ public abstract class ObjectType extends JSType implements Serializable {
    * Returns a list of properties defined or inferred on this type and any of
    * its supertypes.
    */
-  public Set<String> getPropertyNames() {
+  public final Set<String> getPropertyNames() {
     Set<String> props = new TreeSet<>();
     collectPropertyNames(props);
     return props;
@@ -717,8 +715,7 @@ public abstract class ObjectType extends JSType implements Serializable {
     // because it might have been resolved since the last check.
     if (unknown) {
       ObjectType implicitProto = getImplicitPrototype();
-      if (implicitProto == null ||
-          implicitProto.isNativeObjectType()) {
+      if (implicitProto == null || implicitProto.isNativeObjectType()) {
         unknown = false;
         for (ObjectType interfaceType : getCtorExtendedInterfaces()) {
           if (interfaceType.isUnknownType()) {
@@ -760,7 +757,7 @@ public abstract class ObjectType extends JSType implements Serializable {
     return false;
   }
 
-  public JSType getLegacyResolvedType() {
+  public final JSType getLegacyResolvedType() {
     return toMaybeNamedType().getReferencedType();
   }
 
@@ -782,16 +779,6 @@ public abstract class ObjectType extends JSType implements Serializable {
 
   /** Sets the owner function. By default, does nothing. */
   void setOwnerFunction(FunctionType type) {}
-
-  public ObjectType normalizeObjectForCheckAccessControls() {
-    if (this.isFunctionPrototypeType()) {
-      FunctionType owner = this.getOwnerFunction();
-      if (owner.hasInstanceType()) {
-        return owner.getInstanceType();
-      }
-    }
-    return this;
-  }
 
   /**
    * Gets the interfaces implemented by the ctor associated with this type.
@@ -822,11 +809,5 @@ public abstract class ObjectType extends JSType implements Serializable {
 
   public JSType getEnumeratedTypeOfEnumObject() {
     return null;
-  }
-
-  public ObjectType withoutStrayProperties() {
-    // OTI represents object types in a way that already exhibits the behavior of this method,
-    // so we don't need to change anything.
-    return this;
   }
 }

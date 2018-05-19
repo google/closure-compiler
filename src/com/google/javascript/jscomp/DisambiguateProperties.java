@@ -426,7 +426,7 @@ class DisambiguateProperties implements CompilerPass {
       if (!prop.scheduleRenaming(n.getLastChild(), processProperty(t, prop, type, null))
           && propertiesToErrorFor.containsKey(name)) {
         String suggestion = "";
-        if (type.isTop() || type.isUnknownType()) {
+        if (type.isAllType() || type.isUnknownType()) {
           if (n.getFirstChild().isThis()) {
             suggestion = "The \"this\" object is unknown in the function, consider using @this";
           } else {
@@ -532,7 +532,7 @@ class DisambiguateProperties implements CompilerPass {
       if (!prop.scheduleRenaming(call.getSecondChild(), processProperty(t, prop, type, null))
           && propertiesToErrorFor.containsKey(propName)) {
         String suggestion = "";
-        if (type.isTop() || type.isUnknownType()) {
+        if (type.isAllType() || type.isUnknownType()) {
           if (obj.isThis()) {
             suggestion = "The \"this\" object is unknown in the function, consider using @this";
           } else {
@@ -580,7 +580,7 @@ class DisambiguateProperties implements CompilerPass {
     }
 
     private void printErrorLocations(List<String> errors, JSType t) {
-      if (!t.isObjectType() || t.isTop()) {
+      if (!t.isObjectType() || t.isAllType()) {
         return;
       }
 
@@ -612,10 +612,6 @@ class DisambiguateProperties implements CompilerPass {
       type = type.restrictByNotNullOrUndefined();
       if (prop.skipRenaming || invalidatingTypes.isInvalidating(type)) {
         return null;
-      }
-      ObjectType maybeObj = type.toMaybeObjectType();
-      if (maybeObj != null) {
-        type = maybeObj.withoutStrayProperties();
       }
       Iterable<? extends JSType> alternatives = getTypeAlternatives(type);
       if (alternatives != null) {
@@ -765,7 +761,7 @@ class DisambiguateProperties implements CompilerPass {
         types.addAll(getTypesToSkipForTypeNonUnion(alt));
       }
       return types.build();
-    } else if (type.isEnumElement()) {
+    } else if (type.isEnumElementType()) {
       return getTypesToSkipForType(type.getEnumeratedTypeOfEnumElement());
     }
     return ImmutableSet.copyOf(getTypesToSkipForTypeNonUnion(type));
@@ -791,7 +787,7 @@ class DisambiguateProperties implements CompilerPass {
    * considered for renaming.
    */
   private boolean isTypeToSkip(JSType type) {
-    return type.isEnumObject() || type.isBoxableScalar();
+    return type.isEnumType() || type.isBoxableScalar();
   }
 
   /**
@@ -832,7 +828,7 @@ class DisambiguateProperties implements CompilerPass {
       return foundType.equals(bottomObjectType) ? null : foundType;
     }
 
-    if (type.isEnumElement()) {
+    if (type.isEnumElementType()) {
       foundType = getTypeWithProperty(field, type.getEnumeratedTypeOfEnumElement());
       gtwpCachePut(field, type, foundType == null ? bottomObjectType : foundType);
       return foundType;
@@ -949,7 +945,7 @@ class DisambiguateProperties implements CompilerPass {
     FunctionType constructor = null;
     if (objType.isFunctionType()) {
       constructor = objType.toMaybeFunctionType();
-    } else if (objType.isPrototypeObject()) {
+    } else if (objType.isFunctionPrototypeType()) {
       constructor = objType.getOwnerFunction();
     } else {
       constructor = objType.getConstructor();

@@ -35,7 +35,6 @@ import javax.annotation.Nullable;
  * other two, as pointed out in implementation comments.
  */
 final class InvalidatingTypes {
-
   private final ImmutableSet<JSType> types;
   private final boolean allowEnums;
   private final boolean allowScalars;
@@ -47,7 +46,7 @@ final class InvalidatingTypes {
   }
 
   boolean isInvalidating(JSType type) {
-    if (type == null || type.isUnknownType() || type.isBottom()) {
+    if (type == null || type.isUnknownType() || type.isEmptyType()) {
       return true;
     }
     if (type.isUnionType()) {
@@ -69,7 +68,7 @@ final class InvalidatingTypes {
     }
     return types.contains(objType)
         || objType.isAmbiguousObject()
-        || (!allowEnums && objType.isEnumObject())
+        || (!allowEnums && objType.isEnumType())
         || (!allowScalars && objType.isBoxableScalar());
   }
 
@@ -138,7 +137,7 @@ final class InvalidatingTypes {
         for (JSType alt : type.getUnionMembers()) {
           addType(alt, mismatch);
         }
-      } else if (type.isEnumElement()) { // only in disamb
+      } else if (type.isEnumElementType()) { // only in disamb
         addType(type.getEnumeratedTypeOfEnumElement(), mismatch);
       } else { // amb and inl both do this without the else
         checkState(!type.isUnionType());

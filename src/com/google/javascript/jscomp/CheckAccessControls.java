@@ -257,8 +257,16 @@ class CheckAccessControls extends AbstractPostOrderCallback
       return type;
     } else if (type.isConstructor() || type.isInterface()) {
       return type.toMaybeFunctionType().getInstanceType();
-    } else if (type.isPrototypeObject()) {
-      return type.toMaybeObjectType().normalizeObjectForCheckAccessControls();
+    } else if (type.isFunctionPrototypeType()) {
+      return normalizePrototypeObject(type.toMaybeObjectType());
+    }
+    return type;
+  }
+
+  private static ObjectType normalizePrototypeObject(ObjectType type) {
+    FunctionType owner = type.getOwnerFunction();
+    if (owner.hasInstanceType()) {
+      return owner.getInstanceType();
     }
     return type;
   }
@@ -1040,7 +1048,7 @@ class CheckAccessControls extends AbstractPostOrderCallback
    */
   @Nullable
   private static ObjectType dereference(JSType type) {
-    return type == null ? null : type.autoboxAndGetObject();
+    return type == null ? null : type.dereference();
   }
 
   /**

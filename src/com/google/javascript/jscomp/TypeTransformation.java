@@ -144,7 +144,7 @@ class TypeTransformation {
       if (type.isConstructor() || type.isInterface()) {
         return type.toMaybeFunctionType().getInstanceType().getRawType();
       }
-      if (type.isEnumElement()) {
+      if (type.isEnumElementType()) {
         return type.getEnumeratedTypeOfEnumElement();
       }
       return type;
@@ -261,7 +261,7 @@ class TypeTransformation {
   JSType eval(Node ttlAst, ImmutableMap<String, JSType> typeVars,
       ImmutableMap<String, String> nameVars) {
     JSType result = evalInternal(ttlAst, new NameResolver(typeVars, nameVars));
-    return result.isBottom() ? getUnknownType() : result;
+    return result.isEmptyType() ? getUnknownType() : result;
   }
 
   private JSType evalInternal(Node ttlAst, NameResolver nameResolver) {
@@ -738,7 +738,7 @@ class TypeTransformation {
 
       // Skip the property when the body evaluates to NO_TYPE
       // or the empty record (Object)
-      if (body.isBottom() || body.isEquivalentTo(getObjectType())) {
+      if (body.isEmptyType() || body.isEquivalentTo(getObjectType())) {
         continue;
       }
 

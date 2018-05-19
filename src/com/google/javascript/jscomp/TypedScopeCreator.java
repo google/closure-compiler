@@ -1990,7 +1990,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
      * use that type.
      */
     private JSType getInheritedInterfacePropertyType(ObjectType obj, String propName) {
-      if (obj != null && obj.isPrototypeObject()) {
+      if (obj != null && obj.isFunctionPrototypeType()) {
         FunctionType f = obj.getOwnerFunction();
         for (ObjectType i : f.getImplementedInterfaces()) {
           if (i.hasProperty(propName)) {

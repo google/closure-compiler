@@ -259,7 +259,7 @@ public class PrototypeObjectType extends ObjectType {
   }
 
   @Override
-  public JSType unboxesTo() {
+  public final JSType unboxesTo() {
     if (isStringObjectType()) {
       return getNativeType(JSTypeNative.STRING_TYPE);
     } else if (isBooleanObjectType()) {

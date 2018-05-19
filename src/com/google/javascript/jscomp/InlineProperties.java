@@ -188,9 +188,6 @@ final class InlineProperties implements CompilerPass {
      */
     private boolean maybeStoreCandidateValue(JSType type, String propName, Node value) {
       checkNotNull(value);
-      if (type.toMaybeObjectType() != null) {
-        type = type.toMaybeObjectType().withoutStrayProperties();
-      }
       if (!props.containsKey(propName)
           && !invalidatingTypes.isInvalidating(type)
           && NodeUtil.isImmutableValue(value)

@@ -297,7 +297,7 @@ class AmbiguateProperties implements CompilerPass {
     related.set(getIntForType(type));
 
     // A prototype is related to its instance.
-    if (type.isPrototypeObject()) {
+    if (type.isFunctionPrototypeType()) {
       FunctionType maybeCtor = type.toMaybeObjectType().getOwnerFunction();
       if (maybeCtor.isConstructor() || maybeCtor.isInterface()) {
         addRelatedInstance(maybeCtor, related);
@@ -613,10 +613,6 @@ class AmbiguateProperties implements CompilerPass {
       if (skipAmbiguating || invalidatingTypes.isInvalidating(newType)) {
         skipAmbiguating = true;
         return;
-      }
-      ObjectType maybeObj = newType.toMaybeObjectType();
-      if (maybeObj != null) {
-        newType = maybeObj.withoutStrayProperties();
       }
       if (!relatedTypes.get(getIntForType(newType))) {
         computeRelatedTypes(newType);

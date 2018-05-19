@@ -23,7 +23,11 @@ import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
+import com.google.javascript.rhino.jstype.JSTypeNative;
+import com.google.javascript.rhino.jstype.ObjectType;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 /**
  * Rewrites prototyped methods calls as static calls that take "this"
@@ -419,8 +423,19 @@ class DevirtualizePrototypeMethods implements CompilerPass {
     }
     FunctionType ft = t.toMaybeFunctionType();
     if (ft != null) {
-      functionNode.setJSType(ft.convertMethodToFunction());
+      functionNode.setJSType(convertMethodToFunction(ft));
     }
+  }
+
+  private JSType convertMethodToFunction(FunctionType method) {
+    List<JSType> paramTypes = new ArrayList<>();
+    paramTypes.add(method.getTypeOfThis());
+    for (Node param : method.getParameters()) {
+      paramTypes.add(param.getJSType());
+    }
+    ObjectType unknown = compiler.getTypeRegistry().getNativeObjectType(JSTypeNative.UNKNOWN_TYPE);
+    return compiler.getTypeRegistry().createFunctionTypeWithInstanceType(
+        unknown, method.getReturnType(), paramTypes);
   }
 
   /**

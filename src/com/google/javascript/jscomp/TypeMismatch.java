@@ -115,8 +115,8 @@ class TypeMismatch implements Serializable {
       List<TypeMismatch> mismatches, Node node, JSType sourceType, JSType targetType) {
     sourceType = sourceType.restrictByNotNullOrUndefined();
     targetType = targetType.restrictByNotNullOrUndefined();
-    if (sourceType.isInstanceofObject()
-        && !targetType.isInstanceofObject()
+    if (isInstanceOfObject(sourceType)
+        && !isInstanceOfObject(targetType)
         && !targetType.isUnknownType()
         && bothAreNotTypeVariables(sourceType, targetType)) {
       // We don't report a type error, but we still need to construct a JSError,
@@ -145,6 +145,15 @@ class TypeMismatch implements Serializable {
       LazyError err = LazyError.of("Implicit use of type %s as %s", node, sourceType, targetType);
       implicitInterfaceUses.add(new TypeMismatch(sourceType, targetType, err));
     }
+  }
+
+  private static boolean isInstanceOfObject(JSType type) {
+    // Some type whose class is Object
+    ObjectType obj = type.toMaybeObjectType();
+    if (obj != null && obj.isNativeObjectType() && "Object".equals(obj.getReferenceName())) {
+      return true;
+    }
+    return type.isRecordType() || type.isLiteralObject();
   }
 
   private static JSType removeNullUndefinedAndTemplates(JSType t) {

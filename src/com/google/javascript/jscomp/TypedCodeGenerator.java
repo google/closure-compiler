@@ -92,16 +92,16 @@ class TypedCodeGenerator extends CodeGenerator {
       return "";
     } else if (type.isFunctionType()) {
       return getFunctionAnnotation(node);
-    } else if (type.isEnumObject()) {
+    } else if (type.isEnumType()) {
       return "/** @enum {"
           + type.toMaybeObjectType()
               .getEnumeratedTypeOfEnumObject()
               .toAnnotationString(Nullability.EXPLICIT)
           + "} */\n";
     } else if (!type.isUnknownType()
-        && !type.isBottom()
+        && !type.isEmptyType()
         && !type.isVoidType()
-        && !type.isPrototypeObject()) {
+        && !type.isFunctionPrototypeType()) {
       return "/** @type {" + node.getJSType().toAnnotationString(Nullability.EXPLICIT) + "} */\n";
     } else {
       return "";
@@ -154,7 +154,7 @@ class TypedCodeGenerator extends CodeGenerator {
     // Return type
     JSType retType = funType.getReturnType();
     if (retType != null
-        && !retType.isBottom() // There is no annotation for the empty type.
+        && !retType.isEmptyType() // There is no annotation for the empty type.
         && !funType.isInterface() // Interfaces never return a value.
         && !(funType.isConstructor() && retType.isVoidType())) {
       sb.append(" * ");
@@ -295,6 +295,6 @@ class TypedCodeGenerator extends CodeGenerator {
       return registry.createUnionType(ImmutableList.of(restricted, nullType));
     }
     // The bottom type cannot appear in a jsdoc
-    return restricted.isBottom() ? type : restricted;
+    return restricted.isEmptyType() ? type : restricted;
   }
 }

@@ -308,7 +308,7 @@ public final class ConformanceRules {
 
     protected boolean isTop(Node n) {
       JSType type = n.getJSType();
-      return type != null && type.isTop();
+      return type != null && type.isAllType();
     }
 
     protected boolean isUnknown(Node n) {
@@ -328,7 +328,7 @@ public final class ConformanceRules {
 
     private boolean isBottom(Node n) {
       JSType type = n.getJSType().restrictByNotNullOrUndefined();
-      return type.isBottom();
+      return type.isEmptyType();
     }
 
     protected JSType union(List<String> typeNames) {
@@ -564,7 +564,7 @@ public final class ConformanceRules {
           JSType foundType = receiver.getJSType().restrictByNotNullOrUndefined();
           ObjectType foundObj = foundType.toMaybeObjectType();
           if (foundObj != null) {
-            if (foundObj.isPrototypeObject()) {
+            if (foundObj.isFunctionPrototypeType()) {
               FunctionType ownerFun = foundObj.getOwnerFunction();
               if (ownerFun.isConstructor()) {
                 foundType = ownerFun.getInstanceType();
@@ -575,8 +575,8 @@ public final class ConformanceRules {
           }
           if (foundType.isSomeUnknownType()
              || foundType.isTypeVariable()
-             || foundType.isBottom()
-             || foundType.isTop()
+             || foundType.isEmptyType()
+             || foundType.isAllType()
              || foundType.isEquivalentTo(registry.getNativeType(JSTypeNative.OBJECT_TYPE))) {
             if (reportLooseTypeViolations) {
               return ConformanceResult.POSSIBLE_VIOLATION_DUE_TO_LOOSE_TYPES;
@@ -909,7 +909,7 @@ public final class ConformanceRules {
         JSType targetType = lhs.getJSType().restrictByNotNullOrUndefined();
         if (targetType.isUnknownType()
             || targetType.isUnresolved()
-            || targetType.isTop()
+            || targetType.isAllType()
             || targetType.isEquivalentTo(registry.getNativeType(JSTypeNative.OBJECT_TYPE))) {
           if (reportLooseTypeViolations
               && !ConformanceUtil.validateCall(
@@ -1171,8 +1171,8 @@ public final class ConformanceRules {
         if (thrown != null) {
           // Allow vague types, as is typical of re-throws of exceptions
           if (!thrown.isUnknownType()
-              && !thrown.isTop()
-              && !thrown.isBottom()
+              && !thrown.isAllType()
+              && !thrown.isEmptyType()
               && !thrown.isSubtypeOf(errorObjType)) {
             return ConformanceResult.VIOLATION;
           }
@@ -1225,7 +1225,7 @@ public final class ConformanceRules {
     private boolean invalidDeref(Node n) {
       JSType type = n.getJSType();
       // TODO(johnlenz): top type should not be allowed here
-      return !type.isTop() && (type.isNullable() || type.isVoidable());
+      return !type.isAllType() && (type.isNullable() || type.isVoidable());
     }
   }
 
@@ -1548,7 +1548,7 @@ public final class ConformanceRules {
         return ConformanceResult.VIOLATION;
       }
       JSType type = srcObj.getJSType();
-      if (type == null || type.isUnknownType() || type.isUnresolved() || type.isTop()) {
+      if (type == null || type.isUnknownType() || type.isUnresolved() || type.isAllType()) {
         return reportLooseTypeViolations
             ? ConformanceResult.POSSIBLE_VIOLATION_DUE_TO_LOOSE_TYPES
             : ConformanceResult.CONFORMANCE;

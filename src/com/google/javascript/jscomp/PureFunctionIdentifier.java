@@ -963,7 +963,7 @@ class PureFunctionIdentifier implements CompilerPass {
     JSType subtype = typei.meetWith(nativeObj);
     // If the type includes anything related to a object type, don't assume
     // anything about the locality of the value.
-    return subtype.isBottom();
+    return subtype.isEmptyType();
   }
 
 
