@@ -109,8 +109,9 @@ public class PolymerPassTest extends CompilerTestCase {
           "/** @const */ $jscomp.scope = {};",
           "/**",
           " * @param {!Function} type",
-          " * @param {Object} object",
-          " * @return {Object}",
+          " * @param {T} object",
+          " * @return {T}",
+          " * @template T",
           " */",
           "$jscomp.reflectObject = function (type, object) { return object; };");
 
