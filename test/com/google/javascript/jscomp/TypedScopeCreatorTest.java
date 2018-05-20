@@ -146,13 +146,13 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     testSame(
         lines(
             "var uninitializedVar;",
-            "var uninitializedLet;",
+            "let uninitializedLet;",
             "",
             "/** @type {?} */ var uninitializedVarWithType;",
             "/** @type {?} */ let uninitializedLetWithType;",
             "",
             "/** @typedef {number} */ var typedefVar;",
-            "/** @typedef {number} */ var typedefLet;",
+            "/** @typedef {number} */ let typedefLet;",
             "",
             "var initializedVar = 1;",
             "let initializedLet = 1;",
@@ -171,9 +171,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     String[] expectedVarNames =
         new String[] {
           "uninitializedVar",
-          "uninitializedLet",
           "typedefVar",
-          "typedefLet",
         };
     List<TypedVar> expectedVars = new ArrayList<>();
     for (String varName : expectedVarNames) {
