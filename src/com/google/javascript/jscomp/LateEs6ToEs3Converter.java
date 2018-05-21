@@ -57,6 +57,7 @@ public final class LateEs6ToEs3Converter implements NodeTraversal.Callback, HotS
   private final boolean addTypes;
   private final JSTypeRegistry registry;
   private final JSType unknownType;
+  private final JSType stringType;
 
   private static final String FRESH_COMP_PROP_VAR = "$jscomp$compprop";
 
@@ -66,6 +67,7 @@ public final class LateEs6ToEs3Converter implements NodeTraversal.Callback, HotS
     this.addTypes = compiler.hasTypeCheckingRun();
     this.registry = compiler.getTypeRegistry();
     this.unknownType = createType(addTypes, registry, JSTypeNative.UNKNOWN_TYPE);
+    this.stringType = createType(addTypes, registry, JSTypeNative.STRING_TYPE);
   }
 
   @Override
@@ -211,7 +213,7 @@ public final class LateEs6ToEs3Converter implements NodeTraversal.Callback, HotS
         Node val = propdef.removeFirstChild();
         JSType valueType = val.getJSType();
         propdef.setToken(Token.STRING);
-        propdef.setJSType(null);
+        propdef.setJSType(stringType);
         Token token = propdef.isQuotedString() ? Token.GETELEM : Token.GETPROP;
         Node access =
             withType(new Node(token, withType(IR.name(objName), objectType), propdef), valueType);

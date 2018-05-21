@@ -32,7 +32,8 @@ public final class LateEs6ToEs3ConverterTest extends CompilerTestCase {
     super.setUp();
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     setLanguageOut(LanguageMode.ECMASCRIPT3);
-    // TODO(b/78891530): enable type check and type info validation
+    enableTypeCheck();
+    enableTypeInfoValidation();
   }
 
   @Override
@@ -55,11 +56,12 @@ public final class LateEs6ToEs3ConverterTest extends CompilerTestCase {
 
   public void testInitSymbolIterator() {
     test(
-        "var x = {[Symbol.iterator]: function() { return this; }};",
-        lines(
+        externs("/** @type {symbol} */ Symbol.iterator;"),
+        srcs("var x = {[Symbol.iterator]: function() { return this; }};"),
+        expected(lines(
             "var $jscomp$compprop0 = {};",
             "var x = ($jscomp$compprop0[Symbol.iterator] = function() {return this;},",
-            "         $jscomp$compprop0)"));
+            "         $jscomp$compprop0)")));
   }
 
   public void testMethodInObject() {
@@ -267,11 +269,13 @@ public final class LateEs6ToEs3ConverterTest extends CompilerTestCase {
             "tag()($jscomp$templatelit$0, hello);"));
 
     test(
-        "a.b`${hello} world`",
-        lines(
-            "var $jscomp$templatelit$0 = /** @type {!ITemplateArray} */ (['', ' world']);",
-            "$jscomp$templatelit$0.raw = ['', ' world'];",
-            "a.b($jscomp$templatelit$0, hello);"));
+        externs("var a = {}; a.b;"),
+        srcs("a.b`${hello} world`"),
+        expected(
+            lines(
+                "var $jscomp$templatelit$0 = /** @type {!ITemplateArray} */ (['', ' world']);",
+                "$jscomp$templatelit$0.raw = ['', ' world'];",
+                "a.b($jscomp$templatelit$0, hello);")));
 
     // https://github.com/google/closure-compiler/issues/1299
     test(
