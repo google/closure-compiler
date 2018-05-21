@@ -31,6 +31,7 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.STRING_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.UNKNOWN_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.VOID_TYPE;
 
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
@@ -547,21 +548,7 @@ class TypeInference
     FunctionType constructorType = (jsType == null) ? null : jsType.toMaybeFunctionType();
     FunctionType superConstructorType =
         (constructorType == null) ? null : constructorType.getSuperClassConstructor();
-    if (superConstructorType != null) {
-      // Treat super() like a function with the same signature as the
-      // superclass constructor, but don't require 'new' or 'this'.
-      superNode.setJSType(
-          new FunctionBuilder(registry)
-              .copyFromOtherFunction(superConstructorType)
-              // Invocations of super() don't use new
-              .setIsConstructor(false)
-              // Even if the super class is abstract, we still need to call its constructor.
-              .withIsAbstract(false) //
-              .withTypeOfThis(null)
-              .build());
-    } else {
-      superNode.setJSType(unknownType);
-    }
+    superNode.setJSType(MoreObjects.firstNonNull(superConstructorType, unknownType));
   }
 
   /** Traverse a return value. */
