@@ -475,7 +475,8 @@ public final class Es6RewriteModulesToCommonJsModulesTest extends CompilerTestCa
                     "}, 'https://example.domain.google.com/test.js', []);"))));
   }
 
-  public void testRegisteredPathDoesNotIncludeModuleRoot() {
+  // TODO(johnplaisted): This should strip module roots
+  public void testRegisteredPathDoesIncludeModuleRoot() {
     moduleRoots = ImmutableList.of("module/root/");
 
     test(
@@ -486,10 +487,11 @@ public final class Es6RewriteModulesToCommonJsModulesTest extends CompilerTestCa
                 lines(
                     "$jscomp.registerAndLoadModule(function($$require, $$exports, $$module) {",
                     "  'test pragma';",
-                    "}, 'test.js', []);"))));
+                    "}, 'module/root/test.js', []);"))));
   }
 
-  public void testImportPathDoesNotIncludeModuleRoot() {
+  // TODO(johnplaisted): This should strip module roots
+  public void testImportPathDoesIncludeModuleRoot() {
     moduleRoots = ImmutableList.of("module/root/");
 
     test(
@@ -500,10 +502,11 @@ public final class Es6RewriteModulesToCommonJsModulesTest extends CompilerTestCa
                 lines(
                     "$jscomp.registerAndLoadModule(function($$require, $$exports, $$module) {",
                     "  'test pragma';",
-                    "  var module$foo = $$require('foo.js');",
-                    "}, 'not/root/test.js', ['foo.js']);"))));
+                    "  var module$foo = $$require('module/root/foo.js');",
+                    "}, 'not/root/test.js', ['module/root/foo.js']);"))));
   }
 
+  // TODO(johnplaisted): This should respect different browser resolutions.
   public void testImportPathWithBrowserPrefixReplacementResolution() {
     resolutionMode = ModuleLoader.ResolutionMode.BROWSER_WITH_TRANSFORMED_PREFIXES;
     prefixReplacements = ImmutableMap.of("@root/", "");
@@ -516,7 +519,7 @@ public final class Es6RewriteModulesToCommonJsModulesTest extends CompilerTestCa
                 lines(
                     "$jscomp.registerAndLoadModule(function($$require, $$exports, $$module) {",
                     "  'test pragma';",
-                    "  var module$foo = $$require('foo.js');",
-                    "}, 'not/root/test.js', ['foo.js']);"))));
+                    "  var module$foo = $$require('@root/foo.js');",
+                    "}, 'not/root/test.js', ['@root/foo.js']);"))));
   }
 }
