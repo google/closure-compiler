@@ -132,8 +132,6 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
     optimizer.addOneTimePass(
         makePassFactory("es6InjectRuntimeLibraries", new Es6InjectRuntimeLibraries(compiler)));
     optimizer.addOneTimePass(
-        makePassFactory("es6RewriteRestAndSpread", new Es6RewriteRestAndSpread(compiler)));
-    optimizer.addOneTimePass(
         makePassFactory("convertEs6Late", new LateEs6ToEs3Converter(compiler)));
     optimizer.addOneTimePass(makePassFactory("es6ForOf", new Es6ForOfConverter(compiler)));
     optimizer.addOneTimePass(
@@ -148,46 +146,6 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
   @Override
   protected int getNumRepetitions() {
     return 1;
-  }
-
-  public void testSpreadOfArrayLiteral() {
-    test("[...[1, 2], 3, ...[4, 5], 6, ...[7, 8]]", "[1, 2, 3, 4, 5, 6, 7, 8]");
-    test(
-        "function use() {} use(...[1, 2], 3, ...[4, 5], 6, ...[7, 8]);",
-        "function use() {} use.apply(null, [1, 2, 3, 4, 5, 6, 7, 8])");
-  }
-
-  public void testExplicitSuperSpread() {
-    test(
-        lines(
-            "class A {",
-            "  constructor(a) {",
-            "      this.p = a;",
-            "  }",
-            "}",
-            "",
-            "class B extends A {",
-            "   constructor(a) {",
-            "     super(...arguments);",
-            "   }",
-            "}",
-            ""),
-        lines(
-            "/** @struct @constructor */",
-            "var A = function(a) {",
-            "  this.p=a",
-            "};",
-            "",
-            "/**",
-            " * @struct",
-            " * @constructor",
-            " * @extends {A}",
-            " */",
-            "var B = function(a){",
-            "  A.apply(this, arguments)",
-            "};",
-            "$jscomp.inherits(B,A)",
-            ""));
   }
 
   public void testObjectLiteralStringKeysWithNoValue() {
@@ -1498,27 +1456,6 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
         CANNOT_CONVERT_YET);
   }
 
-  public void testSuperSpread() {
-    test(
-        lines(
-            "class D {}",
-            "class C extends D {",
-            "  constructor(args) {",
-            "    super(...args)",
-            "  }",
-            "}"),
-        lines(
-            "/** @constructor @struct */",
-            "var D = function(){};",
-            "/** @constructor @struct @extends {D} */",
-            "var C=function(args) {",
-            "  D.apply(this, $jscomp.arrayFromIterable(args));",
-            "};",
-            "$jscomp.inherits(C,D);"));
-    assertThat(getLastCompiler().injected)
-        .containsExactly("es6/util/arrayfromiterable", "es6/util/inherits");
-  }
-
   public void testStaticThis() {
     test(
         "class F { static f() { return this; } }",
@@ -2215,100 +2152,6 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
     testSame("var x = { set y(value) {} };");
   }
 
-  public void testRestParameter() {
-    test("function f(...zero) { return zero; }",
-        lines(
-        "function f(zero) {",
-        "  var $jscomp$restParams = [];",
-        "  for (var $jscomp$restIndex = 0; $jscomp$restIndex < arguments.length;",
-        "      ++$jscomp$restIndex) {",
-        "    $jscomp$restParams[$jscomp$restIndex - 0] = arguments[$jscomp$restIndex];",
-        "  }",
-        "  {",
-        "    var zero$0 = $jscomp$restParams;",
-        "    return zero$0;",
-        "  }",
-        "}"));
-
-    test("function f(zero, ...one) {}", "function f(zero, one) {}");
-    test("function f(zero, one, ...two) {}", "function f(zero, one, two) {}");
-
-    // Function-level and inline type
-    test("/** @param {...number} zero */ function f(...zero) {}",
-         "/** @param {...number} zero */ function f(zero) {}");
-    test("function f(/** ...number */ ...zero) {}",
-         "function f(/** ...number */ zero) {}");
-
-    // Make sure we get type checking inside the function for the rest parameters.
-    test(
-        "/** @param {...number} two */ function f(zero, one, ...two) { return two; }",
-        lines(
-            "/** @param {...number} two */ function f(zero, one, two) {",
-            "  var $jscomp$restParams = [];",
-            "  for (var $jscomp$restIndex = 2; $jscomp$restIndex < arguments.length;",
-            "      ++$jscomp$restIndex) {",
-            "    $jscomp$restParams[$jscomp$restIndex - 2] = arguments[$jscomp$restIndex];",
-            "  }",
-            "  {",
-            "    var /** !Array<number> */ two$0 = $jscomp$restParams;",
-            "    return two$0;",
-            "  }",
-            "}"));
-
-    test(
-        "/** @param {...number} two */ var f = function(zero, one, ...two) { return two; }",
-        lines(
-            "/** @param {...number} two */ var f = function(zero, one, two) {",
-            "  var $jscomp$restParams = [];",
-            "  for (var $jscomp$restIndex = 2; $jscomp$restIndex < arguments.length;",
-            "      ++$jscomp$restIndex) {",
-            "    $jscomp$restParams[$jscomp$restIndex - 2] = arguments[$jscomp$restIndex];",
-            "  }",
-            "  {",
-            "    var /** !Array<number> */ two$0 = $jscomp$restParams;",
-            "    return two$0;",
-            "  }",
-            "}"));
-
-    test(
-        "/** @param {...number} two */ ns.f = function(zero, one, ...two) { return two; }",
-        lines(
-            "/** @param {...number} two */ ns.f = function(zero, one, two) {",
-            "  var $jscomp$restParams = [];",
-            "  for (var $jscomp$restIndex = 2; $jscomp$restIndex < arguments.length;",
-            "      ++$jscomp$restIndex) {",
-            "    $jscomp$restParams[$jscomp$restIndex - 2] = arguments[$jscomp$restIndex];",
-            "  }",
-            "  {",
-            "    var /** !Array<number> */ two$0 = $jscomp$restParams;",
-            "    return two$0;",
-            "  }",
-            "}"));
-
-    // Warn on /** number */
-    testWarning("function f(/** number */ ...zero) {}",
-                Es6RewriteRestAndSpread.BAD_REST_PARAMETER_ANNOTATION);
-    testWarning("/** @param {number} zero */ function f(...zero) {}",
-                Es6RewriteRestAndSpread.BAD_REST_PARAMETER_ANNOTATION);
-  }
-
-  public void testDefaultAndRestParameters() {
-    test(
-        "function f(zero, one, ...two) {one = (one === undefined) ? 1 : one;}",
-        lines(
-            "function f(zero, one, two) {",
-            "  var $jscomp$restParams = [];",
-            "  for (var $jscomp$restIndex = 2; $jscomp$restIndex < arguments.length;",
-            "      ++$jscomp$restIndex) {",
-            "    $jscomp$restParams[$jscomp$restIndex - 2] = arguments[$jscomp$restIndex];",
-            "  }",
-            "  {",
-            "    var two$0 = $jscomp$restParams;",
-            "    one = (one === undefined) ? 1 : one;",
-            "  }",
-            "}"));
-  }
-
   public void testForOf() {
     // Iteration var shadows an outer var ()
     test(
@@ -2343,140 +2186,16 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             "}"));
   }
 
-  public void testSpreadArray() {
-    test(
-        "var arr = [1, 2, ...mid, 4, 5];",
-        "var arr = [1, 2].concat($jscomp.arrayFromIterable(mid), [4, 5]);");
-    assertThat(getLastCompiler().injected).containsExactly("es6/util/arrayfromiterable");
-
-    test(
-        "var arr = [1, 2, ...mid(), 4, 5];",
-        "var arr = [1, 2].concat($jscomp.arrayFromIterable(mid()), [4, 5]);");
-    test(
-        "var arr = [1, 2, ...mid, ...mid2(), 4, 5];",
-        lines(
-            "var arr = [1,2].concat(",
-            "    $jscomp.arrayFromIterable(mid), $jscomp.arrayFromIterable(mid2()), [4, 5]);"));
-    test("var arr = [...mid()];", "var arr = [].concat($jscomp.arrayFromIterable(mid()));");
-    test("f(1, [2, ...mid, 4], 5);", "f(1, [2].concat($jscomp.arrayFromIterable(mid), [4]), 5);");
-    test(
-        "function f() { return [...arguments]; };",
-        lines(
-            "function f() {",
-            "  return [].concat($jscomp.arrayFromIterable(arguments));",
-            "};"));
-    test(
-        "function f() { return [...arguments, 2]; };",
-        lines(
-            "function f() {",
-            "  return [].concat($jscomp.arrayFromIterable(arguments), [2]);",
-            "};"));
-  }
-
   public void testArgumentsEscaped() {
     test(
         lines(
-            "function g(x) {",
-            "  return [...x];",
-            "}",
             "function f() {",
             "  return g(arguments);",
             "}"),
         lines(
-            "function g(x) {",
-            "  return [].concat($jscomp.arrayFromIterable(x));",
-            "}",
             "function f() {",
             "  return g(arguments);",
             "}"));
-  }
-
-  public void testSpreadCall() {
-    test("f(...arr);", "f.apply(null, $jscomp.arrayFromIterable(arr));");
-    test("f(0, ...g());", "f.apply(null, [0].concat($jscomp.arrayFromIterable(g())));");
-    test("f(...arr, 1);", "f.apply(null, [].concat($jscomp.arrayFromIterable(arr), [1]));");
-    test("f(0, ...g(), 2);", "f.apply(null, [0].concat($jscomp.arrayFromIterable(g()), [2]));");
-    test("(function() {})(...arr);", "(function() {}).apply(null, $jscomp.arrayFromIterable(arr))");
-    test("obj.m(...arr);", "obj.m.apply(obj, $jscomp.arrayFromIterable(arr));");
-    test("x.y.z.m(...arr);", "x.y.z.m.apply(x.y.z, $jscomp.arrayFromIterable(arr));");
-    test(
-        "f(a, ...b, c, ...d, e);",
-        lines(
-            "f.apply(",
-            "    null,",
-            "    [a].concat(",
-            "        $jscomp.arrayFromIterable(b),",
-            "        [c],",
-            "        $jscomp.arrayFromIterable(d),",
-            "        [e]));"));
-
-    test(
-        "Factory.create().m(...arr);",
-        lines(
-            "var $jscomp$spread$args0;",
-            "($jscomp$spread$args0 = Factory.create()).m.apply(",
-            "    $jscomp$spread$args0, $jscomp.arrayFromIterable(arr));"));
-
-    test(
-        "var x = b ? Factory.create().m(...arr) : null;",
-        lines(
-            "var $jscomp$spread$args0;",
-            "var x = b ? ($jscomp$spread$args0 = Factory.create()).m.apply($jscomp$spread$args0, ",
-            "    $jscomp.arrayFromIterable(arr)) : null;"));
-
-    test("getF()(...args);", "getF().apply(null, $jscomp.arrayFromIterable(args));");
-    test(
-        "F.c().m(...a); G.d().n(...b);",
-        lines(
-            "var $jscomp$spread$args0;",
-            "($jscomp$spread$args0 = F.c()).m.apply($jscomp$spread$args0,",
-            "    $jscomp.arrayFromIterable(a));",
-            "var $jscomp$spread$args1;",
-            "($jscomp$spread$args1 = G.d()).n.apply($jscomp$spread$args1,",
-            "    $jscomp.arrayFromIterable(b));"));
-
-    enableTypeCheck();
-
-    test(
-        srcs(
-            lines(
-                "class C {}",
-                "class Factory {",
-                "  /** @return {C} */",
-                "  static create() {return new C()}",
-                "}",
-                "var arr = [1,2]",
-                "Factory.create().m(...arr);")),
-        warning(TypeCheck.INEXISTENT_PROPERTY));
-
-    test(
-        lines(
-            "class C { m(a) {} }",
-            "class Factory {",
-            "  /** @return {!C} */",
-            "  static create() {return new C()}",
-            "}",
-            "var arr = [1,2]",
-            "Factory.create().m(...arr);"),
-        lines(
-            "/** @constructor @struct */",
-            "var C = function() {};",
-            "C.prototype.m = function(a) {};",
-            "/** @constructor @struct */",
-            "var Factory = function() {};",
-            "/** @return {!C} */",
-            "Factory.create = function() {return new C()};",
-            "var arr = [1,2]",
-            "var $jscomp$spread$args0;",
-            "($jscomp$spread$args0 = Factory.create()).m.apply(",
-            "    $jscomp$spread$args0, $jscomp.arrayFromIterable(arr));"));
-  }
-
-  public void testSpreadNew() {
-    setLanguageOut(LanguageMode.ECMASCRIPT5);
-
-    test("new F(...args);",
-        "new (Function.prototype.bind.apply(F, [null].concat($jscomp.arrayFromIterable(args))));");
   }
 
   public void testMethodInObject() {
