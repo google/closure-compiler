@@ -271,7 +271,7 @@ HTMLDocument.prototype.getElementsByName = function(elementName) {};
 var TraversalDocument;
 
 /**
- * @interface
+ * @record
  * @see http://www.w3.org/TR/DOM-Level-2-Traversal-Range/traversal.html#Traversal-NodeFilter
 */
 function NodeFilter() {}
