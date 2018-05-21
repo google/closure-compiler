@@ -80,7 +80,11 @@ public final class FeatureSet implements Serializable {
           Feature.CONST_DECLARATIONS,
           Feature.FOR_OF,
           Feature.GENERATORS,
-          Feature.LET_DECLARATIONS);
+          Feature.LET_DECLARATIONS,
+          Feature.COMPUTED_PROPERTIES,
+          Feature.MEMBER_DECLARATIONS,
+          Feature.TEMPLATE_LITERALS,
+          Feature.EXTENDED_OBJECT_LITERALS);
 
   private enum LangVersion {
     ES3,

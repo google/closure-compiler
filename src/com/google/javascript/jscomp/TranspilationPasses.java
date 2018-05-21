@@ -97,12 +97,12 @@ public class TranspilationPasses {
     passes.add(es6RewriteClass);
     passes.add(es6InjectRuntimeLibraries);
     passes.add(es6RewriteRestAndSpread);
-    passes.add(lateConvertEs6ToEs3);
     if (!options.checksOnly) {
       // Don't run these passes in checksOnly mode since all the typechecking & checks passes
       // support the transpiled features.
       // TODO(b/73387406): Move each pass above here temporarily, then into
       // addEs6PostTypecheckPasses once the pass supports propagating type information
+      passes.add(lateConvertEs6ToEs3);
     }
   }
 
