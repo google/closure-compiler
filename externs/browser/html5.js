@@ -824,6 +824,18 @@ ImageBitmap.prototype.width;
 ImageBitmap.prototype.height;
 
 /**
+ * @param {(!HTMLCanvasElement|!Blob|!HTMLVideoElement|!HTMLImageElement|!ImageBitmap|!CanvasRenderingContext2D|!ImageData)} image
+ * @param {number=} opt_sx
+ * @param {number=} opt_sy
+ * @param {number=} opt_sw
+ * @param {number=} opt_sh
+ * @return {!Promise<!ImageBitmap>}
+ * @see https://www.w3.org/TR/html51/webappapis.html#webappapis-images
+ */
+function createImageBitmap(image, opt_sx, opt_sy, opt_sw, opt_sh) {}
+
+
+/**
  * @constructor
  */
 function ClientInformation() {}
