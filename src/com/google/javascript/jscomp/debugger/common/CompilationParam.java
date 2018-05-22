@@ -463,7 +463,7 @@ public enum CompilationParam {
 
     @Override
     public boolean isApplied(CompilerOptions options) {
-      return options.crossModuleCodeMotion;
+      return options.shouldRunCrossChunkCodeMotion();
     }
   },
 
@@ -475,7 +475,7 @@ public enum CompilationParam {
 
     @Override
     public boolean isApplied(CompilerOptions options) {
-      return options.crossModuleMethodMotion;
+      return options.shouldRunCrossChunkMethodMotion();
     }
   },
 

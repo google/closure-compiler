@@ -692,15 +692,15 @@ public final class DefaultPassConfig extends PassConfig {
       passes.add(replaceStrings);
     }
 
-    // TODO(user): This forces a first crack at crossModuleCodeMotion
+    // TODO(user): This forces a first crack at crossChunkCodeMotion
     // before devirtualization. Once certain functions are devirtualized,
-    // it confuses crossModuleCodeMotion ability to recognized that
+    // it confuses crossChunkCodeMotion ability to recognized that
     // it is recursive.
 
     // TODO(user): This is meant for a temporary quick win.
     // In the future, we might want to improve our analysis in
     // CrossModuleCodeMotion so we don't need to do this.
-    if (options.crossModuleCodeMotion) {
+    if (options.shouldRunCrossChunkCodeMotion()) {
       passes.add(crossModuleCodeMotion);
     }
 
@@ -738,11 +738,11 @@ public final class DefaultPassConfig extends PassConfig {
 
     passes.add(createEmptyPass("beforeModuleMotion"));
 
-    if (options.crossModuleCodeMotion) {
+    if (options.shouldRunCrossChunkCodeMotion()) {
       passes.add(crossModuleCodeMotion);
     }
 
-    if (options.crossModuleMethodMotion) {
+    if (options.shouldRunCrossChunkMethodMotion()) {
       passes.add(crossModuleMethodMotion);
     }
 

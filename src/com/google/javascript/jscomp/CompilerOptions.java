@@ -68,6 +68,14 @@ public class CompilerOptions implements Serializable {
   static final char[] POLYMER_PROPERTY_RESERVED_NON_FIRST_CHARS = "_$".toCharArray();
   static final char[] ANGULAR_PROPERTY_RESERVED_FIRST_CHARS = {'$'};
 
+  public boolean shouldRunCrossChunkCodeMotion() {
+    return crossChunkCodeMotion;
+  }
+
+  public boolean shouldRunCrossChunkMethodMotion() {
+    return crossChunkMethodMotion;
+  }
+
   /**
    * A common enum for compiler passes that can run either globally or locally.
    */
@@ -412,9 +420,7 @@ public class CompilerOptions implements Serializable {
   private boolean inlineProperties;
 
   /** Move code to a deeper chunk */
-  // Deprecated: Migrate to crossChunkCodeMotion
-  @Deprecated
-  public boolean crossModuleCodeMotion;
+  private boolean crossChunkCodeMotion;
 
   /**
    * Don't generate stub functions when moving methods deeper.
@@ -437,9 +443,7 @@ public class CompilerOptions implements Serializable {
   public boolean coalesceVariableNames;
 
   /** Move methods to a deeper chunk */
-  // Deprecated: Migrate to crossChunkMethodMotion
-  @Deprecated
-  public boolean crossModuleMethodMotion;
+  private boolean crossChunkMethodMotion;
 
   /** Inlines trivial getters */
   boolean inlineGetters;
@@ -1247,9 +1251,9 @@ public class CompilerOptions implements Serializable {
     assumeStrictThis = false;
     assumeClosuresOnlyCaptureReferences = false;
     inlineProperties = false;
-    crossModuleCodeMotion = false;
+    crossChunkCodeMotion = false;
     parentChunkCanSeeSymbolsDeclaredInChildren = false;
-    crossModuleMethodMotion = false;
+    crossChunkMethodMotion = false;
     inlineGetters = false;
     inlineVariables = false;
     inlineLocalVariables = false;
@@ -2180,7 +2184,7 @@ public class CompilerOptions implements Serializable {
   }
 
   public void setCrossChunkCodeMotion(boolean crossChunkCodeMotion) {
-    this.crossModuleCodeMotion = crossChunkCodeMotion;
+    this.crossChunkCodeMotion = crossChunkCodeMotion;
   }
 
   @Deprecated
@@ -2212,7 +2216,7 @@ public class CompilerOptions implements Serializable {
   }
 
   public void setCrossChunkMethodMotion(boolean crossChunkMethodMotion) {
-    this.crossModuleMethodMotion = crossChunkMethodMotion;
+    this.crossChunkMethodMotion = crossChunkMethodMotion;
   }
 
   @Deprecated
@@ -2892,9 +2896,9 @@ public class CompilerOptions implements Serializable {
             .add("conformanceConfigs", getConformanceConfigs())
             .add("continueAfterErrors", canContinueAfterErrors())
             .add("convertToDottedProperties", convertToDottedProperties)
-            .add("crossModuleCodeMotion", crossModuleCodeMotion)
+            .add("crossChunkCodeMotion", crossChunkCodeMotion)
             .add("crossChunkCodeMotionNoStubMethods", crossChunkCodeMotionNoStubMethods)
-            .add("crossModuleMethodMotion", crossModuleMethodMotion)
+            .add("crossChunkMethodMotion", crossChunkMethodMotion)
             .add("cssRenamingMap", cssRenamingMap)
             .add("cssRenamingWhitelist", cssRenamingWhitelist)
             .add("customPasses", customPasses)
