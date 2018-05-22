@@ -1525,21 +1525,38 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
               compiler.getCodingConvention(), info, lValue)) {
         if (rValue != null) {
           JSType rValueType = getDeclaredRValueType(lValue, rValue);
+          maybeDeclareAliasType(lValue, rValue, rValueType);
           if (rValueType != null) {
-            // Treat @const-annotated aliases like @constructor/@interface if RHS has instance type
-            if (lValue.isQualifiedName()
-                && rValueType.isFunctionType()
-                && rValueType.toMaybeFunctionType().hasInstanceType()) {
-              FunctionType functionType = rValueType.toMaybeFunctionType();
-              typeRegistry.declareType(
-                  currentScope, lValue.getQualifiedName(), functionType.getInstanceType());
-            }
             return rValueType;
           }
         }
       }
 
       return getDeclaredTypeInAnnotation(lValue, info);
+    }
+
+    /**
+     * For a const alias, like `const alias = other.name`, this may declare `alias`
+     * as a type name, depending on what other.name is defined to be.
+     */
+    private void maybeDeclareAliasType(Node lValue, Node rValue, JSType rValueType) {
+      if (!lValue.isQualifiedName() || !rValue.isQualifiedName()) {
+        return;
+      }
+      // Treat @const-annotated aliases like @constructor/@interface if RHS has instance type
+      if (rValueType != null
+          && rValueType.isFunctionType()
+          && rValueType.toMaybeFunctionType().hasInstanceType()) {
+        FunctionType functionType = rValueType.toMaybeFunctionType();
+        typeRegistry.declareType(
+            currentScope, lValue.getQualifiedName(), functionType.getInstanceType());
+      } else {
+        // Also infer a type name for aliased @typedef
+        JSType rhsNamedType = typeRegistry.getType(currentScope, rValue.getQualifiedName());
+        if (rhsNamedType != null) {
+          typeRegistry.declareType(currentScope, lValue.getQualifiedName(), rhsNamedType);
+        }
+      }
     }
 
     /**

@@ -4253,6 +4253,14 @@ public final class TypeCheckTest extends TypeCheckTestCase {
         "required: string");
   }
 
+  public void testConstAliasedEnum() {
+    testTypes(
+        lines(
+            "/** @enum */ var YourEnum = {FOO: 3};",
+            "/** @const */ var MyEnum = YourEnum;",
+            "/** @param {MyEnum} x */ function f(x) {} f(MyEnum.FOO);"));
+  }
+
   public void testBackwardsEnumUse1() {
     testTypes(
         "/** @return {string} */ function f() { return MyEnum.FOO; }" +
@@ -6506,6 +6514,55 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "found   : number",
             "required: null"),
         /* isError= */ false);
+  }
+
+  public void testAliasedTypedef1() {
+    testTypes(
+        lines(
+            "/** @typedef {string} */ var original;",
+            "/** @const */ var alias = original;",
+            "/** @type {alias} */ var x;"));
+  }
+
+  public void testAliasedTypedef2() {
+    testTypes(
+        lines(
+            "/** @const */ var ns = {};",
+            "/** @typedef {string} */ var original;",
+            "/** @const */ ns.alias = original;",
+            "/** @type {ns.alias} */ var x;"));
+  }
+
+  public void testAliasedTypedef3() {
+    testTypes(
+        lines(
+            "/** @typedef {string} */ var original;",
+            "/** @const */ var alias = original;",
+            "/** @return {number} */ var f = function(/** alias */ x) { return x; }"),
+        "inconsistent return type\n"
+        + "found   : string\n"
+        + "required: number");
+  }
+
+  public void testAliasedTypedef4() {
+    testTypes(
+        lines(
+            "/** @const */ var ns = {};",
+            "/** @typedef {string} */ var original;",
+            "/** @const */ ns.alias = original;",
+            "/** @return {number} */ var f = function(/** ns.alias */ x) { return x; }"),
+        "inconsistent return type\n"
+        + "found   : string\n"
+        + "required: number");
+  }
+
+  public void testAliasedNonTypedef() {
+    testTypes(
+        lines(
+            "/** @type {string} */ var notTypeName;",
+            "/** @const */ var alias = notTypeName;",
+            "/** @type {alias} */ var x;"),
+        "Bad type annotation. Unknown type alias");
   }
 
   public void testConstStringKeyDoesntCrash() {
