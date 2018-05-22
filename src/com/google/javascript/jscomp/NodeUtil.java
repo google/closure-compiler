@@ -55,7 +55,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import javax.annotation.CheckReturnValue;
 import javax.annotation.Nullable;
 
 /**
@@ -2173,10 +2172,7 @@ public final class NodeUtil {
     return containsType(n, Token.FUNCTION);
   }
 
-  /**
-   * Gets the closest ancestor to the given node of the provided type.
-   */
-  @CheckReturnValue
+  /** Gets the closest ancestor to the given node of the provided type. */
   public static Node getEnclosingType(Node n, final Token type) {
     return getEnclosingNode(
         n,
@@ -2188,52 +2184,35 @@ public final class NodeUtil {
         });
   }
 
-  /**
-   * Finds the class member function containing the given node.
-   */
-  @CheckReturnValue
+  /** Finds the class member function containing the given node. */
   static Node getEnclosingClassMemberFunction(Node n) {
     return getEnclosingType(n, Token.MEMBER_FUNCTION_DEF);
   }
 
-  /**
-   * Finds the class containing the given node.
-   */
-  @CheckReturnValue
+  /** Finds the class containing the given node. */
   public static Node getEnclosingClass(Node n) {
     return getEnclosingType(n, Token.CLASS);
   }
 
-  /**
-   * Finds the function containing the given node.
-   */
-  @CheckReturnValue
+  /** Finds the function containing the given node. */
   public static Node getEnclosingFunction(Node n) {
     return getEnclosingType(n, Token.FUNCTION);
   }
 
-  /**
-   * Finds the script containing the given node.
-   */
-  @CheckReturnValue
+  /** Finds the script containing the given node. */
   public static Node getEnclosingScript(Node n) {
     return getEnclosingType(n, Token.SCRIPT);
   }
 
-  /**
-   * Finds the block containing the given node.
-   */
-  @CheckReturnValue
+  /** Finds the block containing the given node. */
   public static Node getEnclosingBlock(Node n) {
     return getEnclosingType(n, Token.BLOCK);
   }
 
-  @CheckReturnValue
   public static Node getEnclosingBlockScopeRoot(Node n) {
     return getEnclosingNode(n, NodeUtil::createsBlockScope);
   }
 
-  @CheckReturnValue
   public static Node getEnclosingScopeRoot(Node n) {
     return getEnclosingNode(n, NodeUtil::createsScope);
   }
@@ -2242,12 +2221,10 @@ public final class NodeUtil {
     return getEnclosingFunction(n) != null;
   }
 
-  @CheckReturnValue
   public static Node getEnclosingStatement(Node n) {
     return getEnclosingNode(n, NodeUtil::isStatement);
   }
 
-  @CheckReturnValue
   public static Node getEnclosingNode(Node n, Predicate<Node> pred) {
     Node curr = n;
     while (curr != null && !pred.apply(curr)) {
@@ -5331,7 +5308,6 @@ public final class NodeUtil {
   /**
    * @return the change scope root
    */
-  @CheckReturnValue
   static Node getEnclosingChangeScopeRoot(Node n) {
     while (n != null && !isChangeScopeRoot(n)) {
       n = n.getParent();
