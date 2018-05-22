@@ -7708,17 +7708,20 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   }
 
   public void testImplicitCastNotInExterns() {
-    testTypes("/** @constructor */ function Element() {};\n" +
-             "/** @type {string}\n" +
-             "  * @implicitCast */" +
-             "Element.prototype.innerHTML;" +
-             "(new Element).innerHTML = new Array();",
-             new String[] {
-               "Illegal annotation on innerHTML. @implicitCast may only be " +
-               "used in externs.",
-               "assignment to property innerHTML of Element\n" +
-               "found   : Array\n" +
-               "required: string"});
+    // We issue a warning in CheckJSDoc for @implicitCast not in externs
+    testTypes(
+        lines(
+            "/** @constructor */ function Element() {};",
+            "/**",
+            " * @type {string}",
+            " * @implicitCast ",
+            " */",
+            "Element.prototype.innerHTML;",
+            "(new Element).innerHTML = new Array();"),
+        lines(
+            "assignment to property innerHTML of Element", // preserve new line
+            "found   : Array",
+            "required: string"));
   }
 
   public void testNumberNode() {

@@ -763,4 +763,27 @@ public final class CheckJsDocTest extends CompilerTestCase {
     testWarning("const {/** @suppress {duplicate} */ Foo} = foo();", MISPLACED_SUPPRESS);
     testWarning("foo(/** @suppress {duplicate} */ ns.x = 7);", MISPLACED_SUPPRESS);
   }
+
+  public void testImplicitCastOnlyAllowedInExterns() {
+    testSame(
+        externs(
+            lines(
+                "/** @constructor */ function Element() {};",
+                "/**",
+                " * @type {string}",
+                " * @implicitCast ",
+                " */",
+                "Element.prototype.innerHTML;")),
+        srcs(""));
+
+    testWarning(
+        lines(
+            "/** @constructor */ function Element() {};",
+            "/**",
+            " * @type {string}",
+            " * @implicitCast ",
+            " */",
+            "Element.prototype.innerHTML;"),
+        TypeCheck.ILLEGAL_IMPLICIT_CAST);
+  }
 }

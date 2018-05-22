@@ -78,6 +78,7 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements HotSwapCompi
               + " https://github.com/google/closure-compiler/wiki/@suppress-annotations");
 
   private final AbstractCompiler compiler;
+  private boolean inExterns;
 
   CheckJSDoc(AbstractCompiler compiler) {
     this.compiler = compiler;
@@ -85,7 +86,9 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements HotSwapCompi
 
   @Override
   public void process(Node externs, Node root) {
+    inExterns = true;
     NodeTraversal.traverse(compiler, externs, this);
+    inExterns = false;
     NodeTraversal.traverse(compiler, root, this);
   }
 
@@ -111,6 +114,7 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements HotSwapCompi
     validateAbstractJsDoc(n, info);
     validateDefinesDeclaration(n, info);
     validateSuppress(n, info);
+    validateImplicitCast(n, info);
   }
 
   private void validateSuppress(Node n, JSDocInfo info) {
@@ -586,6 +590,13 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements HotSwapCompi
   private void validateDefinesDeclaration(Node n, JSDocInfo info) {
     if (info != null && info.isDefine() && n.isLet()) {
       report(n, INVALID_DEFINE_ON_LET);
+    }
+  }
+
+  /** Checks that an @implicitCast annotation is in the externs */
+  private void validateImplicitCast(Node n, JSDocInfo info) {
+    if (!inExterns && info != null && info.isImplicitCast()) {
+      report(n, TypeCheck.ILLEGAL_IMPLICIT_CAST);
     }
   }
 }
