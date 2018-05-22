@@ -431,14 +431,17 @@ final class ModuleMetadata {
         switch (existing.moduleType) {
           case ES6_MODULE:
           case GOOG_MODULE:
-            t.report(n, ClosureRewriteModule.DUPLICATE_MODULE);
+          case LEGACY_GOOG_MODULE:
+            t.report(n, ClosureRewriteModule.DUPLICATE_MODULE, namespace);
             break;
           case GOOG_PROVIDE:
-            t.report(n, ClosureRewriteModule.DUPLICATE_NAMESPACE);
+            t.report(n, ClosureRewriteModule.DUPLICATE_NAMESPACE, namespace);
             break;
-          default:
-            throw new IllegalStateException("Unexpected module type: " + existing.moduleType);
+          case COMMON_JS:
+          case SCRIPT:
+            // Fall through, error
         }
+        throw new IllegalStateException("Unexpected module type: " + existing.moduleType);
       }
     }
   }
