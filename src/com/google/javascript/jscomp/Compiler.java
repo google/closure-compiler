@@ -69,6 +69,7 @@ import java.io.PrintStream;
 import java.io.Serializable;
 import java.util.AbstractSet;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -2928,18 +2929,23 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       return null;
     }
 
-    // The sourcemap will return a path relative to the sourcemap's file.
-    // Translate it to one relative to our base directory.
-    SourceFile source =
-        SourceMapResolver.getRelativePath(sourceMap.getOriginalPath(), result.getOriginalFile());
+    // First check to see if the original file was loaded from an input source map.
+    String sourceMapOriginalPath = sourceMap.getOriginalPath();
+    String resultOriginalPath = result.getOriginalFile();
+    String relativePath = resolveSibling(sourceMapOriginalPath, resultOriginalPath);
+
+    SourceFile source = getSourceFileByName(relativePath);
     if (source == null) {
-      return null;
+      source =
+          SourceMapResolver.getRelativePath(sourceMap.getOriginalPath(), result.getOriginalFile());
+      if (source != null) {
+        sourceMapOriginalSources.putIfAbsent(relativePath, source);
+      }
     }
-    String originalPath = source.getOriginalPath();
-    sourceMapOriginalSources.putIfAbsent(originalPath, source);
+
     return result
         .toBuilder()
-        .setOriginalFile(originalPath)
+        .setOriginalFile(relativePath)
         .setColumnPosition(result.getColumnPosition() - 1)
         .build();
   }
@@ -3710,5 +3716,34 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   @Nullable
   CompilerInput.ModuleType getModuleTypeByName(String moduleName) {
     return moduleTypesByName.get(moduleName);
+  }
+
+  /**
+   * Simplistic implementation of the java.nio.file.Path resolveSibling method that works
+   * with GWT.
+   *
+   * @param path1 from path - must be a file (not directory)
+   * @param path2 to path - must be a file (not directory)
+   */
+  private static String resolveSibling(String path1, String path2) {
+    List<String> path1Parts = new ArrayList<>(Arrays.asList(path1.split("/")));
+    List<String> path2Parts = new ArrayList<>(Arrays.asList(path2.split("/")));
+    if (path1Parts.size() > 0) {
+      path1Parts.remove(path1Parts.size() - 1);
+    }
+
+    while (path1Parts.size() > 0 && path2Parts.size() > 0) {
+      if (path2Parts.get(0).equals(".")) {
+        path2Parts.remove(0);
+      } else if (path2Parts.get(0).equals("..")) {
+        path2Parts.remove(0);
+        path1Parts.remove(path1Parts.size() - 1);
+      } else {
+        break;
+      }
+    }
+
+    path1Parts.addAll(path2Parts);
+    return String.join("/", path1Parts);
   }
 }
