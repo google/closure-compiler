@@ -2823,15 +2823,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
   @Override
   boolean hasHaltingErrors() {
-    if (getOptions().canContinueAfterErrors() || getErrorCount() == 0) {
-      return false;
-    }
-    for (JSError error : getErrors()) {
-       if (error.getType().level == CheckLevel.ERROR) {
-         return true;
-       }
-    }
-    return false;
+    return !getOptions().canContinueAfterErrors() && errorManager.hasHaltingErrors();
   }
 
   /**

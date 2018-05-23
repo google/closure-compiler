@@ -38,6 +38,11 @@ public class ThreadSafeDelegatingErrorManager implements ErrorManager {
   }
 
   @Override
+  public boolean hasHaltingErrors() {
+    return delegated.hasHaltingErrors();
+  }
+
+  @Override
   public synchronized int getErrorCount() {
     return delegated.getErrorCount();
   }

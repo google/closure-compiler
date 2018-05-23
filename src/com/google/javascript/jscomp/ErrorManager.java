@@ -67,4 +67,20 @@ public interface ErrorManager extends ErrorHandler {
    * Gets the percentage of typed expressions.
    */
   double getTypedPercent();
+
+  /**
+   * Returns if the error manager has errors that should make compilation halt.
+   * This, for example, omits errors that were promoted from warnings by using the --strict flag.
+   */
+  default boolean hasHaltingErrors() {
+    if (getErrorCount() == 0) {
+      return false;
+    }
+    for (JSError error : getErrors()) {
+       if (error.getType().level == CheckLevel.ERROR) {
+         return true;
+       }
+    }
+    return false;
+  }
 }

@@ -38,7 +38,8 @@ public abstract class BasicErrorManager implements ErrorManager {
   final PriorityQueue<ErrorWithLevel> messages =
       new PriorityQueue<>(1, new LeveledJSErrorComparator());
   private final Set<ErrorWithLevel> alreadyAdded = new HashSet<>();
-  private int errorCount = 0;
+  private int originalErrorCount = 0;
+  private int promotedErrorCount = 0;
   private int warningCount = 0;
   private double typedPercent = 0.0;
 
@@ -48,7 +49,11 @@ public abstract class BasicErrorManager implements ErrorManager {
     if (alreadyAdded.add(e)) {
       messages.add(e);
       if (level == CheckLevel.ERROR) {
-        errorCount++;
+        if (error.getType().level == CheckLevel.ERROR) {
+          originalErrorCount++;
+        } else {
+          promotedErrorCount++;
+        }
       } else if (level == CheckLevel.WARNING) {
         warningCount++;
       }
@@ -79,8 +84,13 @@ public abstract class BasicErrorManager implements ErrorManager {
   protected abstract void printSummary();
 
   @Override
+  public boolean hasHaltingErrors() {
+    return originalErrorCount != 0;
+  }
+
+  @Override
   public int getErrorCount() {
-    return errorCount;
+    return originalErrorCount + promotedErrorCount;
   }
 
   @Override
