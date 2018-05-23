@@ -186,14 +186,6 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
     this.isAbstract = isAbstract;
   }
 
-  /** Creates an instance for a function that is an interface. */
-  static FunctionType forInterface(
-      JSTypeRegistry registry, String name, Node source, TemplateTypeMap typeParameters) {
-    ArrowType arrowType = new ArrowType(registry, new Node(Token.PARAM_LIST), null);
-    return new FunctionType(
-        registry, name, source, arrowType, null, typeParameters, Kind.INTERFACE, false, false);
-  }
-
   @Override
   public final boolean isInstanceType() {
     // The universal constructor is its own instance, bizarrely. It overrides
@@ -214,6 +206,10 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
   @Override
   public final boolean isOrdinaryFunction() {
     return kind == Kind.ORDINARY;
+  }
+
+  final Kind getKind() {
+    return kind;
   }
 
   /**
@@ -854,16 +850,11 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
 
     boolean newReturnTypeInferred = call.returnTypeInferred || other.call.returnTypeInferred;
 
-    return new FunctionType(
-        registry,
-        null,
-        null,
-        new ArrowType(registry, newParamsNode, newReturnType, newReturnTypeInferred),
-        newTypeOfThis,
-        null,
-        Kind.ORDINARY,
-        false,
-        false);
+    return new FunctionBuilder(registry)
+        .withParamsNode(newParamsNode)
+        .withReturnType(newReturnType, newReturnTypeInferred)
+        .withTypeOfThis(newTypeOfThis)
+        .build();
   }
 
   /**
@@ -1444,16 +1435,12 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
   /** Create a new constructor with the parameters and return type stripped. */
   public final FunctionType forgetParameterAndReturnTypes() {
     FunctionType result =
-        new FunctionType(
-            registry,
-            getReferenceName(),
-            source,
-            registry.createArrowType(null, null),
-            getInstanceType(),
-            null,
-            kind,
-            false,
-            false);
+        new FunctionBuilder(registry)
+            .withName(getReferenceName())
+            .withSourceNode(source)
+            .withTypeOfThis(getInstanceType())
+            .withKind(kind)
+            .build();
     result.setPrototypeBasedOn(getInstanceType());
     return result;
   }

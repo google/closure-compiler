@@ -16382,6 +16382,28 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "required: number"));
   }
 
+  public void testIObject15() {
+    testTypesWithExtraExterns(
+        EXTERNS_WITH_IOBJECT_DECLS,
+        lines(
+            "function f(/** !Object<string, string> */ x) {}",
+            "var /** !IObject<string, string> */ y;",
+            "f(y);"));
+  }
+
+  public void testIObject16() {
+    testTypesWithExtraExterns(
+        EXTERNS_WITH_IOBJECT_DECLS,
+        lines(
+            "function f(/** !Object<string, string> */ x) {}",
+            "var /** !IObject<string, number> */ y;",
+            "f(y);"),
+        lines(
+            "actual parameter 1 of f does not match formal parameter",
+            "found   : IObject<string,number>",
+            "required: Object<string,string>"));
+  }
+
   /**
    * although C1 does not declare to extend Interface1,
    * obj2 : C1 still structurally matches obj1 : Interface1

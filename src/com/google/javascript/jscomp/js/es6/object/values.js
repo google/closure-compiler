@@ -25,7 +25,7 @@ $jscomp.polyfill('Object.values', function(orig) {
    *
    * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/values
    *
-   * @param {!IObject<KEY, VALUE>} obj
+   * @param {!Object<KEY, VALUE>} obj
    * @return {!Array<VALUE>}
    * @template KEY, VALUE
    */

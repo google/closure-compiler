@@ -117,35 +117,20 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     unresolvedNamedType = new NamedType(scope, registry, "not.resolved.named.type", null, -1, -1);
     namedGoogBar = new NamedType(scope, registry, "goog.Bar", null, -1, -1);
 
-    subclassCtor =
-        new FunctionType(
-            registry,
-            null,
-            null,
-            createArrowType(null),
-            null,
-            null,
-            FunctionType.Kind.CONSTRUCTOR,
-            false,
-            false);
+    subclassCtor = new FunctionBuilder(registry).forConstructor().build();
     subclassCtor.setPrototypeBasedOn(unresolvedNamedType);
     subclassOfUnresolvedNamedType = subclassCtor.getInstanceType();
 
-    interfaceType = FunctionType.forInterface(registry, "Interface", null,
-        registry.createTemplateTypeMap(null, null));
+    interfaceType = registry.createInterfaceType("Interface", null, null, false);
     interfaceInstType = interfaceType.getInstanceType();
 
-    subInterfaceType = FunctionType.forInterface(
-        registry, "SubInterface", null,
-        registry.createTemplateTypeMap(null, null));
-    subInterfaceType.setExtendedInterfaces(
-        Lists.<ObjectType>newArrayList(interfaceInstType));
+    subInterfaceType = registry.createInterfaceType("SubInterface", null, null, false);
+    subInterfaceType.setExtendedInterfaces(Lists.<ObjectType>newArrayList(interfaceInstType));
     subInterfaceInstType = subInterfaceType.getInstanceType();
 
     googBar = registry.createConstructorType("goog.Bar", null, null, null, null, false);
     googBar.getPrototype().defineDeclaredProperty("date", DATE_TYPE, null);
-    googBar.setImplementedInterfaces(
-        Lists.<ObjectType>newArrayList(interfaceInstType));
+    googBar.setImplementedInterfaces(Lists.<ObjectType>newArrayList(interfaceInstType));
     googBarInst = googBar.getInstanceType();
 
     googSubBar = registry.createConstructorType("googSubBar", null, null, null, null, false);
@@ -6720,10 +6705,5 @@ public class JSTypeTest extends BaseJSTypeTestCase {
       }
     }
     return false;
-  }
-
-
-  private ArrowType createArrowType(Node params) {
-    return registry.createArrowType(params);
   }
 }

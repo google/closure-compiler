@@ -52,17 +52,24 @@ import com.google.javascript.rhino.jstype.FunctionType.Kind;
  * @author nicksantos@google.com (Nick Santos)
  */
 public final class FunctionBuilder {
+
+  // Bit masks for various boolean properties
+  private static final int IS_ABSTRACT = 0x1;
+  private static final int IS_NATIVE = 0x2;
+  private static final int INFERRED_RETURN_TYPE = 0x4;
+  private static final int RETURNS_OWN_INSTANCE_TYPE = 0x8;
+
   private final JSTypeRegistry registry;
   private String name = null;
   private Node sourceNode = null;
   private Node parametersNode = null;
   private JSType returnType = null;
   private JSType typeOfThis = null;
+  private ObjectType implicitPrototype = null;
+  private ObjectType setPrototypeBasedOn = null;
   private TemplateTypeMap templateTypeMap = null;
-  private boolean inferredReturnType = false;
-  private boolean isConstructor = false;
-  private boolean isNativeType = false;
-  private boolean isAbstract = false;
+  private Kind kind = Kind.ORDINARY;
+  private int properties = 0;
 
   public FunctionBuilder(JSTypeRegistry registry) {
     this.registry = registry;
@@ -88,6 +95,14 @@ public final class FunctionBuilder {
     return this;
   }
 
+  /**
+   * Set the parameters of the function type with a specially-formatted node.
+   */
+  FunctionBuilder withEmptyParams() {
+    this.parametersNode = registry.createEmptyParams();
+    return this;
+  }
+
   /** Set the return type. */
   public FunctionBuilder withReturnType(JSType returnType) {
     this.returnType = returnType;
@@ -97,14 +112,21 @@ public final class FunctionBuilder {
   /** Set the return type and whether it's inferred. */
   public FunctionBuilder withReturnType(JSType returnType, boolean inferred) {
     this.returnType = returnType;
-    this.inferredReturnType = inferred;
+    this.properties =
+        inferred ? this.properties | INFERRED_RETURN_TYPE : this.properties & ~INFERRED_RETURN_TYPE;
+    return this;
+  }
+
+  /** Set the return type to be a constructor's own instance type. */
+  FunctionBuilder withReturnsOwnInstanceType() {
+    this.properties = this.properties | RETURNS_OWN_INSTANCE_TYPE;
     return this;
   }
 
   /** Sets an inferred return type. */
   public FunctionBuilder withInferredReturnType(JSType returnType) {
     this.returnType = returnType;
-    this.inferredReturnType = true;
+    this.properties = this.properties | INFERRED_RETURN_TYPE;
     return this;
   }
 
@@ -121,49 +143,110 @@ public final class FunctionBuilder {
     return this;
   }
 
-  /** Set whether this is a constructor. */
-  public FunctionBuilder setIsConstructor(boolean isConstructor) {
-    this.isConstructor = isConstructor;
+  /** Set the template name. */
+  public FunctionBuilder withTemplateKeys(TemplateType... templateKeys) {
+    this.templateTypeMap = registry.createTemplateTypeMap(ImmutableList.copyOf(templateKeys), null);
+    return this;
+  }
+
+  FunctionBuilder withExtendedTemplate(TemplateType key, JSType value) {
+    this.templateTypeMap =
+        templateTypeMap.extend(
+            registry.createTemplateTypeMap(ImmutableList.of(key), ImmutableList.of(value)));
+    return this;
+  }
+
+  FunctionBuilder withTemplateTypeMap(TemplateTypeMap templateTypeMap) {
+    this.templateTypeMap = templateTypeMap;
+    return this;
+  }
+
+  /** Set the function kind. */
+  FunctionBuilder withKind(FunctionType.Kind kind) {
+    this.kind = kind;
+    return this;
+  }
+
+  /** Make this a constructor. */
+  public FunctionBuilder forConstructor() {
+    this.kind = FunctionType.Kind.CONSTRUCTOR;
+    return this;
+  }
+
+  /** Make this an interface. */
+  public FunctionBuilder forInterface() {
+    this.kind = FunctionType.Kind.INTERFACE;
+    this.parametersNode = registry.createEmptyParams();
     return this;
   }
 
   /** Make this a native type. */
   FunctionBuilder forNativeType() {
-    this.isNativeType = true;
+    this.properties = this.properties | IS_NATIVE;
     return this;
   }
 
   /** Mark abstract method. */
   public FunctionBuilder withIsAbstract(boolean isAbstract) {
-    this.isAbstract = isAbstract;
+    this.properties = isAbstract ? this.properties | IS_ABSTRACT : this.properties & ~IS_ABSTRACT;
+    return this;
+  }
+
+  /** Set the implicit prototype of the function. */
+  public FunctionBuilder withImplicitPrototype(ObjectType implicitPrototype) {
+    this.implicitPrototype = implicitPrototype;
+    return this;
+  }
+
+  /** Set the prototype property of a constructor. */
+  public FunctionBuilder withPrototypeBasedOn(ObjectType setPrototypeBasedOn) {
+    this.setPrototypeBasedOn = setPrototypeBasedOn;
     return this;
   }
 
   /** Copies all the information from another function type. */
   public FunctionBuilder copyFromOtherFunction(FunctionType otherType) {
+    int isNative = otherType.isNativeObjectType() ? IS_NATIVE : 0;
+    int isAbstract = otherType.isAbstract() ? IS_ABSTRACT : 0;
+    int inferredReturnType = otherType.isReturnTypeInferred() ? INFERRED_RETURN_TYPE : 0;
     this.name = otherType.getReferenceName();
     this.sourceNode = otherType.getSource();
     this.parametersNode = otherType.getParametersNode();
     this.returnType = otherType.getReturnType();
     this.typeOfThis = otherType.getTypeOfThis();
     this.templateTypeMap = otherType.getTemplateTypeMap();
-    this.isConstructor = otherType.isConstructor();
-    this.isNativeType = otherType.isNativeObjectType();
-    this.isAbstract = otherType.isAbstract();
+    this.kind = otherType.getKind();
+    this.properties = isNative | isAbstract | inferredReturnType;
+    this.implicitPrototype = otherType.getImplicitPrototype();
     return this;
   }
 
   /** Construct a new function type. */
   public FunctionType build() {
-    return new FunctionType(
+    // TODO(sdh): Should we do any validation here?
+    boolean inferredReturnType = (properties & INFERRED_RETURN_TYPE) != 0;
+    boolean isNative = (properties & IS_NATIVE) != 0;
+    boolean isAbstract = (properties & IS_ABSTRACT) != 0;
+    boolean returnsOwnInstanceType = (properties & RETURNS_OWN_INSTANCE_TYPE) != 0;
+    FunctionType ft = new FunctionType(
         registry,
         name,
         sourceNode,
         new ArrowType(registry, parametersNode, returnType, inferredReturnType),
         typeOfThis,
         templateTypeMap,
-        isConstructor ? Kind.CONSTRUCTOR : Kind.ORDINARY,
-        isNativeType,
+        kind,
+        isNative,
         isAbstract);
+    if (implicitPrototype != null) {
+      ft.setImplicitPrototype(implicitPrototype);
+    }
+    if (setPrototypeBasedOn != null) {
+      ft.setPrototypeBasedOn(setPrototypeBasedOn);
+    }
+    if (returnsOwnInstanceType) {
+      ft.getInternalArrowType().returnType = ft.getInstanceType();
+    }
+    return ft;
   }
 }

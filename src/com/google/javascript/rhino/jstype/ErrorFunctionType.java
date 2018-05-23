@@ -51,18 +51,18 @@ class ErrorFunctionType extends FunctionType {
     super(
         registry,
         name,
-        null,
+        /* source= */ null,
         registry.createArrowType(
             registry.createOptionalParameters(
                 registry.getNativeType(ALL_TYPE),
                 registry.getNativeType(ALL_TYPE),
                 registry.getNativeType(ALL_TYPE)),
             null),
-        null,
-        null,
+        /* typeOfThis= */ null,
+        /* templateTypeMap= */ null,
         FunctionType.Kind.CONSTRUCTOR,
-        true,
-        false);
+        /* nativeType= */ true,
+        /* isAbstract= */ false);
 
     // NOTE(nicksantos): Errors have the weird behavior in that they can
     // be called as functions, and they will return instances of themselves.

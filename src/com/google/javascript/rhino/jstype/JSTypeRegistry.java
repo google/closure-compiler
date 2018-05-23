@@ -303,32 +303,31 @@ public class JSTypeRegistry implements Serializable {
 
   private void initializeBuiltInTypes() {
     // These locals shouldn't be all caps.
-    BooleanType BOOLEAN_TYPE = new BooleanType(this);
-    registerNativeType(JSTypeNative.BOOLEAN_TYPE, BOOLEAN_TYPE);
+    BooleanType booleanType = new BooleanType(this);
+    registerNativeType(JSTypeNative.BOOLEAN_TYPE, booleanType);
 
-    NullType NULL_TYPE = new NullType(this);
-    registerNativeType(JSTypeNative.NULL_TYPE, NULL_TYPE);
+    NullType nullType = new NullType(this);
+    registerNativeType(JSTypeNative.NULL_TYPE, nullType);
 
-    NumberType NUMBER_TYPE = new NumberType(this);
-    registerNativeType(JSTypeNative.NUMBER_TYPE, NUMBER_TYPE);
+    NumberType numberType = new NumberType(this);
+    registerNativeType(JSTypeNative.NUMBER_TYPE, numberType);
 
-    StringType STRING_TYPE = new StringType(this);
-    registerNativeType(JSTypeNative.STRING_TYPE, STRING_TYPE);
+    StringType stringType = new StringType(this);
+    registerNativeType(JSTypeNative.STRING_TYPE, stringType);
 
-    SymbolType SYMBOL_TYPE = new SymbolType(this);
-    registerNativeType(JSTypeNative.SYMBOL_TYPE, SYMBOL_TYPE);
+    SymbolType symbolType = new SymbolType(this);
+    registerNativeType(JSTypeNative.SYMBOL_TYPE, symbolType);
 
-    UnknownType UNKNOWN_TYPE = new UnknownType(this, false);
-    registerNativeType(JSTypeNative.UNKNOWN_TYPE, UNKNOWN_TYPE);
+    UnknownType unknownType = new UnknownType(this, false);
+    registerNativeType(JSTypeNative.UNKNOWN_TYPE, unknownType);
     UnknownType checkedUnknownType = new UnknownType(this, true);
-    registerNativeType(
-        JSTypeNative.CHECKED_UNKNOWN_TYPE, checkedUnknownType);
+    registerNativeType(JSTypeNative.CHECKED_UNKNOWN_TYPE, checkedUnknownType);
 
-    VoidType VOID_TYPE = new VoidType(this);
-    registerNativeType(JSTypeNative.VOID_TYPE, VOID_TYPE);
+    VoidType voidType = new VoidType(this);
+    registerNativeType(JSTypeNative.VOID_TYPE, voidType);
 
-    AllType ALL_TYPE = new AllType(this);
-    registerNativeType(JSTypeNative.ALL_TYPE, ALL_TYPE);
+    AllType allType = new AllType(this);
+    registerNativeType(JSTypeNative.ALL_TYPE, allType);
 
     // Template Types
     iObjectIndexTemplateKey = new TemplateType(this, "IObject#KEY1");
@@ -344,473 +343,314 @@ public class JSTypeRegistry implements Serializable {
     // The initializations of TOP_LEVEL_PROTOTYPE and OBJECT_FUNCTION_TYPE
     // use each other's results, so at least one of them will get null
     // instead of an actual type; however, this seems to be benign.
-    PrototypeObjectType TOP_LEVEL_PROTOTYPE =
+    PrototypeObjectType topLevelPrototype =
         new PrototypeObjectType(this, null, null, true, null);
-    registerNativeType(JSTypeNative.TOP_LEVEL_PROTOTYPE, TOP_LEVEL_PROTOTYPE);
+    registerNativeType(JSTypeNative.TOP_LEVEL_PROTOTYPE, topLevelPrototype);
 
     // IObject
     FunctionType iObjectFunctionType =
-        new FunctionType(
-            this,
-            "IObject",
-            null,
-            createArrowType(),
-            null,
-            createTemplateTypeMap(
-                ImmutableList.of(iObjectIndexTemplateKey, iObjectElementTemplateKey), null),
-            Kind.INTERFACE,
-            true,
-            false);
+        nativeInterface("IObject", iObjectIndexTemplateKey, iObjectElementTemplateKey);
     registerNativeType(JSTypeNative.I_OBJECT_FUNCTION_TYPE, iObjectFunctionType);
     registerNativeType(JSTypeNative.I_OBJECT_TYPE, iObjectFunctionType.getInstanceType());
 
     // Object
-    FunctionType OBJECT_FUNCTION_TYPE =
-        new FunctionType(
-            this,
-            "Object",
-            null,
-            createArrowType(createOptionalParameters(ALL_TYPE), null),
-            null,
-            createTemplateTypeMap(
-                ImmutableList.of(iObjectIndexTemplateKey, iObjectElementTemplateKey), null),
-            Kind.CONSTRUCTOR,
-            true,
-            false);
-    OBJECT_FUNCTION_TYPE.getInternalArrowType().returnType =
-        OBJECT_FUNCTION_TYPE.getInstanceType();
+    FunctionType objectFunctionType =
+        nativeConstructorBuilder("Object")
+            .withParamsNode(createOptionalParameters(allType))
+            .withReturnsOwnInstanceType()
+            .withTemplateKeys(iObjectIndexTemplateKey, iObjectElementTemplateKey)
+            .build();
+    objectFunctionType.setPrototype(topLevelPrototype, null);
+    registerNativeType(JSTypeNative.OBJECT_FUNCTION_TYPE, objectFunctionType);
+    registerNativeType(JSTypeNative.OBJECT_PROTOTYPE, objectFunctionType.getPrototype());
 
-    OBJECT_FUNCTION_TYPE.setPrototype(TOP_LEVEL_PROTOTYPE, null);
-    registerNativeType(JSTypeNative.OBJECT_FUNCTION_TYPE, OBJECT_FUNCTION_TYPE);
-
-    ObjectType OBJECT_TYPE = OBJECT_FUNCTION_TYPE.getInstanceType();
-    registerNativeType(JSTypeNative.OBJECT_TYPE, OBJECT_TYPE);
-
-    ObjectType OBJECT_PROTOTYPE = OBJECT_FUNCTION_TYPE.getPrototype();
-    registerNativeType(JSTypeNative.OBJECT_PROTOTYPE, OBJECT_PROTOTYPE);
+    ObjectType objectType = objectFunctionType.getInstanceType();
+    registerNativeType(JSTypeNative.OBJECT_TYPE, objectType);
 
     // Function
-    FunctionType FUNCTION_FUNCTION_TYPE =
-        new FunctionType(
-            this,
-            "Function",
-            null,
-            createArrowType(createParametersWithVarArgs(ALL_TYPE), UNKNOWN_TYPE),
-            null,
-            null,
-            Kind.CONSTRUCTOR,
-            true,
-            false);
-    FUNCTION_FUNCTION_TYPE.setPrototypeBasedOn(OBJECT_TYPE);
-    registerNativeType(
-        JSTypeNative.FUNCTION_FUNCTION_TYPE, FUNCTION_FUNCTION_TYPE);
+    FunctionType functionFunctionType =
+        nativeConstructorBuilder("Function")
+            .withParamsNode(createParametersWithVarArgs(allType))
+            .withReturnType(unknownType)
+            .withPrototypeBasedOn(objectType)
+            .build();
+    functionFunctionType.setPrototypeBasedOn(objectType);
+    registerNativeType(JSTypeNative.FUNCTION_FUNCTION_TYPE, functionFunctionType);
 
-    ObjectType FUNCTION_PROTOTYPE = FUNCTION_FUNCTION_TYPE.getPrototype();
-    registerNativeType(JSTypeNative.FUNCTION_PROTOTYPE, FUNCTION_PROTOTYPE);
+    ObjectType functionPrototype = functionFunctionType.getPrototype();
+    registerNativeType(JSTypeNative.FUNCTION_PROTOTYPE, functionPrototype);
 
-    NoType NO_TYPE = new NoType(this);
-    registerNativeType(JSTypeNative.NO_TYPE, NO_TYPE);
+    // Bottom Types
+    NoType noType = new NoType(this);
+    registerNativeType(JSTypeNative.NO_TYPE, noType);
 
-    NoObjectType NO_OBJECT_TYPE = new NoObjectType(this);
-    registerNativeType(JSTypeNative.NO_OBJECT_TYPE, NO_OBJECT_TYPE);
+    NoObjectType noObjectType = new NoObjectType(this);
+    registerNativeType(JSTypeNative.NO_OBJECT_TYPE, noObjectType);
 
-    NoObjectType NO_RESOLVED_TYPE = new NoResolvedType(this);
-    registerNativeType(JSTypeNative.NO_RESOLVED_TYPE, NO_RESOLVED_TYPE);
+    NoObjectType noResolvedType = new NoResolvedType(this);
+    registerNativeType(JSTypeNative.NO_RESOLVED_TYPE, noResolvedType);
 
     // Array
-    FunctionType ARRAY_FUNCTION_TYPE =
-        new FunctionType(
-            this,
-            "Array",
-            null,
-            createArrowType(createParametersWithVarArgs(ALL_TYPE), null),
-            null,
-            createTemplateTypeMap(ImmutableList.of(arrayElementTemplateKey), null)
-                .extend(
-                    createTemplateTypeMap(
-                        ImmutableList.of(iObjectElementTemplateKey),
-                        ImmutableList.<JSType>of(arrayElementTemplateKey))),
-            Kind.CONSTRUCTOR,
-            true,
-            false);
-    ARRAY_FUNCTION_TYPE.getInternalArrowType().returnType =
-        ARRAY_FUNCTION_TYPE.getInstanceType();
+    FunctionType arrayFunctionType =
+        nativeConstructorBuilder("Array")
+            .withParamsNode(createParametersWithVarArgs(allType))
+            .withReturnsOwnInstanceType()
+            .withTemplateTypeMap(
+                new TemplateTypeMap(
+                    this,
+                    ImmutableList.of(iObjectElementTemplateKey, arrayElementTemplateKey),
+                    ImmutableList.<JSType>of(arrayElementTemplateKey)))
+            .build();
+    arrayFunctionType.getPrototype(); // Force initialization
+    registerNativeType(JSTypeNative.ARRAY_FUNCTION_TYPE, arrayFunctionType);
 
-    ARRAY_FUNCTION_TYPE.getPrototype(); // Force initialization
-    registerNativeType(JSTypeNative.ARRAY_FUNCTION_TYPE, ARRAY_FUNCTION_TYPE);
-
-    ObjectType ARRAY_TYPE = ARRAY_FUNCTION_TYPE.getInstanceType();
-    registerNativeType(JSTypeNative.ARRAY_TYPE, ARRAY_TYPE);
+    ObjectType arrayType = arrayFunctionType.getInstanceType();
+    registerNativeType(JSTypeNative.ARRAY_TYPE, arrayType);
 
     // ITemplateArray extends !Array<string>
     FunctionType iTemplateArrayFunctionType =
-        new FunctionType(
-            this,
-            "ITemplateArray",
-            /* source= */ null,
-            createArrowType(),
-            /* typeOfThis= */ null,
-            /* templateTypeMap= */ null,
-            Kind.CONSTRUCTOR,
-            /* nativeType= */ true,
-            /* isAbstract= */ false);
+        nativeConstructorBuilder("ITemplateArray")
+            .withParamsNode(createEmptyParams())
+            .build();
     registerNativeType(
         JSTypeNative.I_TEMPLATE_ARRAY_TYPE, iTemplateArrayFunctionType.getInstanceType());
 
-    FunctionType iterableFunctionType =
-        new FunctionType(
-            this,
-            "Iterable",
-            null,
-            createArrowType(),
-            null,
-            createTemplateTypeMap(ImmutableList.of(iterableTemplate), null),
-            Kind.INTERFACE,
-            true,
-            false);
+    FunctionType iterableFunctionType = nativeInterface("Iterable", iterableTemplate);
     registerNativeType(JSTypeNative.ITERABLE_FUNCTION_TYPE, iterableFunctionType);
     registerNativeType(JSTypeNative.ITERABLE_TYPE, iterableFunctionType.getInstanceType());
 
-    FunctionType iteratorFunctionType =
-        new FunctionType(
-            this,
-            "Iterator",
-            null,
-            createArrowType(),
-            null,
-            createTemplateTypeMap(ImmutableList.of(iteratorTemplate), null),
-            Kind.INTERFACE,
-            true,
-            false);
+    FunctionType iteratorFunctionType = nativeInterface("Iterator", iteratorTemplate);
     registerNativeType(JSTypeNative.ITERATOR_FUNCTION_TYPE, iteratorFunctionType);
     registerNativeType(JSTypeNative.ITERATOR_TYPE, iteratorFunctionType.getInstanceType());
 
-    FunctionType generatorFunctionType =
-        new FunctionType(
-            this,
-            "Generator",
-            null,
-            createArrowType(),
-            null,
-            createTemplateTypeMap(ImmutableList.of(generatorTemplate), null),
-            Kind.INTERFACE,
-            true,
-            false);
+    FunctionType generatorFunctionType = nativeInterface("Generator", generatorTemplate);
     registerNativeType(JSTypeNative.GENERATOR_FUNCTION_TYPE, generatorFunctionType);
     registerNativeType(JSTypeNative.GENERATOR_TYPE, generatorFunctionType.getInstanceType());
 
-    FunctionType ithenableFunctionType =
-        new FunctionType(
-            this,
-            "IThenable",
-            null,
-            createArrowType(),
-            null,
-            createTemplateTypeMap(ImmutableList.of(iThenableTemplateKey), null),
-            Kind.INTERFACE,
-            true,
-            false);
+    FunctionType ithenableFunctionType = nativeInterface("IThenable", iThenableTemplateKey);
     registerNativeType(JSTypeNative.I_THENABLE_FUNCTION_TYPE, ithenableFunctionType);
     registerNativeType(JSTypeNative.I_THENABLE_TYPE, ithenableFunctionType.getInstanceType());
 
     // Boolean
-    FunctionType BOOLEAN_OBJECT_FUNCTION_TYPE =
-        new FunctionType(
-            this,
-            "Boolean",
-            null,
-            createArrowType(createOptionalParameters(ALL_TYPE), BOOLEAN_TYPE),
-            null,
-            null,
-            Kind.CONSTRUCTOR,
-            true,
-            false);
-    BOOLEAN_OBJECT_FUNCTION_TYPE.getPrototype(); // Force initialization
-    registerNativeType(
-        JSTypeNative.BOOLEAN_OBJECT_FUNCTION_TYPE,
-        BOOLEAN_OBJECT_FUNCTION_TYPE);
+    FunctionType booleanObjectFunctionType =
+        nativeConstructorBuilder("Boolean")
+            .withParamsNode(createOptionalParameters(allType))
+            .withReturnType(booleanType)
+            .build();
+    booleanObjectFunctionType.getPrototype(); // Force initialization
+    registerNativeType(JSTypeNative.BOOLEAN_OBJECT_FUNCTION_TYPE, booleanObjectFunctionType);
 
-    ObjectType BOOLEAN_OBJECT_TYPE =
-        BOOLEAN_OBJECT_FUNCTION_TYPE.getInstanceType();
-    registerNativeType(JSTypeNative.BOOLEAN_OBJECT_TYPE, BOOLEAN_OBJECT_TYPE);
+    ObjectType booleanObjectType = booleanObjectFunctionType.getInstanceType();
+    registerNativeType(JSTypeNative.BOOLEAN_OBJECT_TYPE, booleanObjectType);
 
     // Date
-    FunctionType DATE_FUNCTION_TYPE =
-        new FunctionType(
-            this,
-            "Date",
-            null,
-            createArrowType(
-                createOptionalParameters(
-                    UNKNOWN_TYPE,
-                    UNKNOWN_TYPE,
-                    UNKNOWN_TYPE,
-                    UNKNOWN_TYPE,
-                    UNKNOWN_TYPE,
-                    UNKNOWN_TYPE,
-                    UNKNOWN_TYPE),
-                STRING_TYPE),
-            null,
-            null,
-            Kind.CONSTRUCTOR,
-            true,
-            false);
-    DATE_FUNCTION_TYPE.getPrototype(); // Force initialization
-    registerNativeType(JSTypeNative.DATE_FUNCTION_TYPE, DATE_FUNCTION_TYPE);
+    FunctionType dateFunctionType =
+        nativeConstructorBuilder("Date")
+            .withParamsNode(createOptionalParameters(
+                unknownType,
+                unknownType,
+                unknownType,
+                unknownType,
+                unknownType,
+                unknownType,
+                unknownType))
+            .withReturnType(stringType)
+            .build();
+    dateFunctionType.getPrototype(); // Force initialization
+    registerNativeType(JSTypeNative.DATE_FUNCTION_TYPE, dateFunctionType);
 
-    ObjectType DATE_TYPE = DATE_FUNCTION_TYPE.getInstanceType();
-    registerNativeType(JSTypeNative.DATE_TYPE, DATE_TYPE);
+    ObjectType dateType = dateFunctionType.getInstanceType();
+    registerNativeType(JSTypeNative.DATE_TYPE, dateType);
 
     // Error
-    FunctionType ERROR_FUNCTION_TYPE = new ErrorFunctionType(this, "Error");
-    registerNativeType(JSTypeNative.ERROR_FUNCTION_TYPE, ERROR_FUNCTION_TYPE);
+    FunctionType errorFunctionType = new ErrorFunctionType(this, "Error");
+    registerNativeType(JSTypeNative.ERROR_FUNCTION_TYPE, errorFunctionType);
 
-    ObjectType ERROR_TYPE = ERROR_FUNCTION_TYPE.getInstanceType();
-    registerNativeType(JSTypeNative.ERROR_TYPE, ERROR_TYPE);
+    ObjectType errorType = errorFunctionType.getInstanceType();
+    registerNativeType(JSTypeNative.ERROR_TYPE, errorType);
 
     // EvalError
-    FunctionType EVAL_ERROR_FUNCTION_TYPE =
-        new ErrorFunctionType(this, "EvalError");
-    EVAL_ERROR_FUNCTION_TYPE.setPrototypeBasedOn(ERROR_TYPE);
-    registerNativeType(
-        JSTypeNative.EVAL_ERROR_FUNCTION_TYPE, EVAL_ERROR_FUNCTION_TYPE);
+    FunctionType evalErrorFunctionType = new ErrorFunctionType(this, "EvalError");
+    evalErrorFunctionType.setPrototypeBasedOn(errorType);
+    registerNativeType(JSTypeNative.EVAL_ERROR_FUNCTION_TYPE, evalErrorFunctionType);
 
-    ObjectType EVAL_ERROR_TYPE = EVAL_ERROR_FUNCTION_TYPE.getInstanceType();
-    registerNativeType(JSTypeNative.EVAL_ERROR_TYPE, EVAL_ERROR_TYPE);
+    ObjectType evalErrorType = evalErrorFunctionType.getInstanceType();
+    registerNativeType(JSTypeNative.EVAL_ERROR_TYPE, evalErrorType);
 
     // RangeError
-    FunctionType RANGE_ERROR_FUNCTION_TYPE =
-        new ErrorFunctionType(this, "RangeError");
-    RANGE_ERROR_FUNCTION_TYPE.setPrototypeBasedOn(ERROR_TYPE);
-    registerNativeType(
-        JSTypeNative.RANGE_ERROR_FUNCTION_TYPE, RANGE_ERROR_FUNCTION_TYPE);
+    FunctionType rangeErrorFunctionType = new ErrorFunctionType(this, "RangeError");
+    rangeErrorFunctionType.setPrototypeBasedOn(errorType);
+    registerNativeType(JSTypeNative.RANGE_ERROR_FUNCTION_TYPE, rangeErrorFunctionType);
 
-    ObjectType RANGE_ERROR_TYPE = RANGE_ERROR_FUNCTION_TYPE.getInstanceType();
-    registerNativeType(JSTypeNative.RANGE_ERROR_TYPE, RANGE_ERROR_TYPE);
+    ObjectType rangeErrorType = rangeErrorFunctionType.getInstanceType();
+    registerNativeType(JSTypeNative.RANGE_ERROR_TYPE, rangeErrorType);
 
     // ReferenceError
-    FunctionType REFERENCE_ERROR_FUNCTION_TYPE =
-        new ErrorFunctionType(this, "ReferenceError");
-    REFERENCE_ERROR_FUNCTION_TYPE.setPrototypeBasedOn(ERROR_TYPE);
-    registerNativeType(
-        JSTypeNative.REFERENCE_ERROR_FUNCTION_TYPE,
-        REFERENCE_ERROR_FUNCTION_TYPE);
+    FunctionType referenceErrorFunctionType = new ErrorFunctionType(this, "ReferenceError");
+    referenceErrorFunctionType.setPrototypeBasedOn(errorType);
+    registerNativeType(JSTypeNative.REFERENCE_ERROR_FUNCTION_TYPE, referenceErrorFunctionType);
 
-    ObjectType REFERENCE_ERROR_TYPE =
-        REFERENCE_ERROR_FUNCTION_TYPE.getInstanceType();
-    registerNativeType(JSTypeNative.REFERENCE_ERROR_TYPE, REFERENCE_ERROR_TYPE);
+    ObjectType referenceErrorType = referenceErrorFunctionType.getInstanceType();
+    registerNativeType(JSTypeNative.REFERENCE_ERROR_TYPE, referenceErrorType);
 
     // SyntaxError
-    FunctionType SYNTAX_ERROR_FUNCTION_TYPE =
-        new ErrorFunctionType(this, "SyntaxError");
-    SYNTAX_ERROR_FUNCTION_TYPE.setPrototypeBasedOn(ERROR_TYPE);
-    registerNativeType(
-        JSTypeNative.SYNTAX_ERROR_FUNCTION_TYPE, SYNTAX_ERROR_FUNCTION_TYPE);
+    FunctionType syntaxErrorFunctionType = new ErrorFunctionType(this, "SyntaxError");
+    syntaxErrorFunctionType.setPrototypeBasedOn(errorType);
+    registerNativeType(JSTypeNative.SYNTAX_ERROR_FUNCTION_TYPE, syntaxErrorFunctionType);
 
-    ObjectType SYNTAX_ERROR_TYPE = SYNTAX_ERROR_FUNCTION_TYPE.getInstanceType();
-    registerNativeType(JSTypeNative.SYNTAX_ERROR_TYPE, SYNTAX_ERROR_TYPE);
+    ObjectType syntaxErrorType = syntaxErrorFunctionType.getInstanceType();
+    registerNativeType(JSTypeNative.SYNTAX_ERROR_TYPE, syntaxErrorType);
 
     // TypeError
-    FunctionType TYPE_ERROR_FUNCTION_TYPE =
-        new ErrorFunctionType(this, "TypeError");
-    TYPE_ERROR_FUNCTION_TYPE.setPrototypeBasedOn(ERROR_TYPE);
-    registerNativeType(
-        JSTypeNative.TYPE_ERROR_FUNCTION_TYPE, TYPE_ERROR_FUNCTION_TYPE);
+    FunctionType typeErrorFunctionType = new ErrorFunctionType(this, "TypeError");
+    typeErrorFunctionType.setPrototypeBasedOn(errorType);
+    registerNativeType(JSTypeNative.TYPE_ERROR_FUNCTION_TYPE, typeErrorFunctionType);
 
-    ObjectType TYPE_ERROR_TYPE = TYPE_ERROR_FUNCTION_TYPE.getInstanceType();
-    registerNativeType(JSTypeNative.TYPE_ERROR_TYPE, TYPE_ERROR_TYPE);
+    ObjectType typeErrorType = typeErrorFunctionType.getInstanceType();
+    registerNativeType(JSTypeNative.TYPE_ERROR_TYPE, typeErrorType);
 
     // URIError
-    FunctionType URI_ERROR_FUNCTION_TYPE =
-        new ErrorFunctionType(this, "URIError");
-    URI_ERROR_FUNCTION_TYPE.setPrototypeBasedOn(ERROR_TYPE);
-    registerNativeType(
-        JSTypeNative.URI_ERROR_FUNCTION_TYPE, URI_ERROR_FUNCTION_TYPE);
+    FunctionType uriErrorFunctionType = new ErrorFunctionType(this, "URIError");
+    uriErrorFunctionType.setPrototypeBasedOn(errorType);
+    registerNativeType(JSTypeNative.URI_ERROR_FUNCTION_TYPE, uriErrorFunctionType);
 
-    ObjectType URI_ERROR_TYPE = URI_ERROR_FUNCTION_TYPE.getInstanceType();
-    registerNativeType(JSTypeNative.URI_ERROR_TYPE, URI_ERROR_TYPE);
+    ObjectType uriErrorType = uriErrorFunctionType.getInstanceType();
+    registerNativeType(JSTypeNative.URI_ERROR_TYPE, uriErrorType);
 
     // Number
-    FunctionType NUMBER_OBJECT_FUNCTION_TYPE =
-        new FunctionType(
-            this,
-            "Number",
-            null,
-            createArrowType(createOptionalParameters(ALL_TYPE), NUMBER_TYPE),
-            null,
-            null,
-            Kind.CONSTRUCTOR,
-            true,
-            false);
-    NUMBER_OBJECT_FUNCTION_TYPE.getPrototype(); // Force initialization
-    registerNativeType(
-        JSTypeNative.NUMBER_OBJECT_FUNCTION_TYPE, NUMBER_OBJECT_FUNCTION_TYPE);
+    FunctionType numberObjectFunctionType =
+        nativeConstructorBuilder("Number")
+            .withParamsNode(createOptionalParameters(allType))
+            .withReturnType(numberType)
+            .build();
+    numberObjectFunctionType.getPrototype(); // Force initialization
+    registerNativeType(JSTypeNative.NUMBER_OBJECT_FUNCTION_TYPE, numberObjectFunctionType);
 
-    ObjectType NUMBER_OBJECT_TYPE =
-        NUMBER_OBJECT_FUNCTION_TYPE.getInstanceType();
-    registerNativeType(JSTypeNative.NUMBER_OBJECT_TYPE, NUMBER_OBJECT_TYPE);
+    ObjectType numberObjectType = numberObjectFunctionType.getInstanceType();
+    registerNativeType(JSTypeNative.NUMBER_OBJECT_TYPE, numberObjectType);
 
     // RegExp
-    FunctionType REGEXP_FUNCTION_TYPE =
-        new FunctionType(
-            this,
-            "RegExp",
-            null,
-            createArrowType(createOptionalParameters(ALL_TYPE, ALL_TYPE)),
-            null,
-            null,
-            Kind.CONSTRUCTOR,
-            true,
-            false);
-    REGEXP_FUNCTION_TYPE.getInternalArrowType().returnType =
-        REGEXP_FUNCTION_TYPE.getInstanceType();
+    FunctionType regexpFunctionType =
+        nativeConstructorBuilder("RegExp")
+            .withParamsNode(createOptionalParameters(allType, allType))
+            .withReturnsOwnInstanceType()
+            .build();
+    regexpFunctionType.getPrototype(); // Force initialization
+    registerNativeType(JSTypeNative.REGEXP_FUNCTION_TYPE, regexpFunctionType);
 
-    REGEXP_FUNCTION_TYPE.getPrototype(); // Force initialization
-    registerNativeType(JSTypeNative.REGEXP_FUNCTION_TYPE, REGEXP_FUNCTION_TYPE);
-
-    ObjectType REGEXP_TYPE = REGEXP_FUNCTION_TYPE.getInstanceType();
-    registerNativeType(JSTypeNative.REGEXP_TYPE, REGEXP_TYPE);
+    ObjectType regexpType = regexpFunctionType.getInstanceType();
+    registerNativeType(JSTypeNative.REGEXP_TYPE, regexpType);
 
     // String
-    FunctionType STRING_OBJECT_FUNCTION_TYPE =
-        new FunctionType(
-            this,
-            "String",
-            null,
-            createArrowType(createOptionalParameters(ALL_TYPE), STRING_TYPE),
-            null,
-            null,
-            Kind.CONSTRUCTOR,
-            true,
-            false);
-    STRING_OBJECT_FUNCTION_TYPE.getPrototype(); // Force initialization
-    registerNativeType(
-        JSTypeNative.STRING_OBJECT_FUNCTION_TYPE, STRING_OBJECT_FUNCTION_TYPE);
+    FunctionType stringObjectFunctionType =
+        nativeConstructorBuilder("String")
+            .withParamsNode(createOptionalParameters(allType))
+            .withReturnType(stringType)
+            .build();
+    stringObjectFunctionType.getPrototype(); // Force initialization
+    registerNativeType(JSTypeNative.STRING_OBJECT_FUNCTION_TYPE, stringObjectFunctionType);
 
-    ObjectType STRING_OBJECT_TYPE =
-        STRING_OBJECT_FUNCTION_TYPE.getInstanceType();
-    registerNativeType(
-        JSTypeNative.STRING_OBJECT_TYPE, STRING_OBJECT_TYPE);
+    ObjectType stringObjectType = stringObjectFunctionType.getInstanceType();
+    registerNativeType(JSTypeNative.STRING_OBJECT_TYPE, stringObjectType);
 
     // Symbol
     // NOTE: While "Symbol" is a class, with an instance type and prototype
     // it is illegal to call "new Symbol".  This is checked in the type checker.
-    FunctionType SYMBOL_OBJECT_FUNCTION_TYPE =
-        new FunctionType(
-            this,
-            "Symbol",
-            null,
-            createArrowType(createOptionalParameters(ALL_TYPE), SYMBOL_TYPE),
-            null,
-            null,
-            Kind.CONSTRUCTOR,
-            true,
-            false);
-    SYMBOL_OBJECT_FUNCTION_TYPE.getPrototype(); // Force initialization
+    FunctionType symbolObjectFunctionType =
+        nativeConstructorBuilder("Symbol")
+            .withParamsNode(createOptionalParameters(allType))
+            .withReturnType(symbolType)
+            .build();
+    symbolObjectFunctionType.getPrototype(); // Force initialization
     registerNativeType(
-        JSTypeNative.SYMBOL_OBJECT_FUNCTION_TYPE, SYMBOL_OBJECT_FUNCTION_TYPE);
+        JSTypeNative.SYMBOL_OBJECT_FUNCTION_TYPE, symbolObjectFunctionType);
 
-    ObjectType SYMBOL_OBJECT_TYPE =
-        SYMBOL_OBJECT_FUNCTION_TYPE.getInstanceType();
-    registerNativeType(
-        JSTypeNative.SYMBOL_OBJECT_TYPE, SYMBOL_OBJECT_TYPE);
+    ObjectType symbolObjectType = symbolObjectFunctionType.getInstanceType();
+    registerNativeType(JSTypeNative.SYMBOL_OBJECT_TYPE, symbolObjectType);
 
-    // (null,void)
-    JSType NULL_VOID =
-        createUnionType(NULL_TYPE, VOID_TYPE);
-    registerNativeType(JSTypeNative.NULL_VOID, NULL_VOID);
+    // (null|void)
+    JSType nullVoid = createUnionType(nullType, voidType);
+    registerNativeType(JSTypeNative.NULL_VOID, nullVoid);
 
-    // (Object,symbol)
-    JSType OBJECT_SYMBOL = createUnionType(OBJECT_TYPE, SYMBOL_TYPE);
-    registerNativeType(JSTypeNative.OBJECT_SYMBOL, OBJECT_SYMBOL);
+    // (Object|symbol)
+    JSType objectSymbol = createUnionType(objectType, symbolType);
+    registerNativeType(JSTypeNative.OBJECT_SYMBOL, objectSymbol);
 
-    // (Object,string,number)
-    JSType OBJECT_NUMBER_STRING =
-        createUnionType(OBJECT_TYPE, NUMBER_TYPE, STRING_TYPE);
-    registerNativeType(JSTypeNative.OBJECT_NUMBER_STRING, OBJECT_NUMBER_STRING);
+    // (Object|string|number)
+    JSType objectNumberString = createUnionType(objectType, numberType, stringType);
+    registerNativeType(JSTypeNative.OBJECT_NUMBER_STRING, objectNumberString);
 
-    // (Object,string,number,boolean)
-    JSType OBJECT_NUMBER_STRING_BOOLEAN =
-        createUnionType(OBJECT_TYPE, NUMBER_TYPE, STRING_TYPE, BOOLEAN_TYPE);
-    registerNativeType(JSTypeNative.OBJECT_NUMBER_STRING_BOOLEAN,
-        OBJECT_NUMBER_STRING_BOOLEAN);
+    // (Object|string|number|boolean)
+    JSType objectNumberStringBoolean =
+        createUnionType(objectType, numberType, stringType, booleanType);
+    registerNativeType(JSTypeNative.OBJECT_NUMBER_STRING_BOOLEAN, objectNumberStringBoolean);
 
-    // (Object,string,number,boolean,symbol)
-    JSType OBJECT_NUMBER_STRING_BOOLEAN_SYMBOL =
-        createUnionType(OBJECT_TYPE, NUMBER_TYPE, STRING_TYPE, BOOLEAN_TYPE, SYMBOL_TYPE);
+    // (Object|string|number|boolean|symbol)
+    JSType objectNumberStringBooleanSymbol =
+        createUnionType(objectType, numberType, stringType, booleanType, symbolType);
     registerNativeType(JSTypeNative.OBJECT_NUMBER_STRING_BOOLEAN_SYMBOL,
-        OBJECT_NUMBER_STRING_BOOLEAN_SYMBOL);
+        objectNumberStringBooleanSymbol);
 
-    // (string,number,boolean)
-    JSType NUMBER_STRING_BOOLEAN =
-        createUnionType(NUMBER_TYPE, STRING_TYPE, BOOLEAN_TYPE);
-    registerNativeType(JSTypeNative.NUMBER_STRING_BOOLEAN,
-        NUMBER_STRING_BOOLEAN);
+    // (string|number|boolean)
+    JSType numberStringBoolean = createUnionType(numberType, stringType, booleanType);
+    registerNativeType(JSTypeNative.NUMBER_STRING_BOOLEAN, numberStringBoolean);
 
-    // (string,number,boolean,symbol)
-    JSType NUMBER_STRING_BOOLEAN_SYMBOL =
-        createUnionType(NUMBER_TYPE, STRING_TYPE, BOOLEAN_TYPE, SYMBOL_TYPE);
-    registerNativeType(JSTypeNative.NUMBER_STRING_BOOLEAN_SYMBOL,
-        NUMBER_STRING_BOOLEAN_SYMBOL);
+    // (string|number|boolean|symbol)
+    JSType numberStringBooleanSymbol =
+        createUnionType(numberType, stringType, booleanType, symbolType);
+    registerNativeType(JSTypeNative.NUMBER_STRING_BOOLEAN_SYMBOL, numberStringBooleanSymbol);
 
-    // (number,symbol)
-    JSType NUMBER_SYMBOL = createUnionType(NUMBER_TYPE, SYMBOL_TYPE);
-    registerNativeType(JSTypeNative.NUMBER_SYMBOL, NUMBER_SYMBOL);
+    // (number|symbol)
+    JSType numberSymbol = createUnionType(numberType, symbolType);
+    registerNativeType(JSTypeNative.NUMBER_SYMBOL, numberSymbol);
 
-    // (string,symbol)
-    JSType STRING_SYMBOL = createUnionType(STRING_TYPE, SYMBOL_TYPE);
-    registerNativeType(JSTypeNative.STRING_SYMBOL, STRING_SYMBOL);
+    // (string|symbol)
+    JSType stringSymbol = createUnionType(stringType, symbolType);
+    registerNativeType(JSTypeNative.STRING_SYMBOL, stringSymbol);
 
     // (string,number)
-    JSType NUMBER_STRING = createUnionType(NUMBER_TYPE, STRING_TYPE);
-    registerNativeType(JSTypeNative.NUMBER_STRING, NUMBER_STRING);
+    JSType numberString = createUnionType(numberType, stringType);
+    registerNativeType(JSTypeNative.NUMBER_STRING, numberString);
 
     // (string,number,symbol)
-    JSType NUMBER_STRING_SYMBOL = createUnionType(NUMBER_TYPE, STRING_TYPE, SYMBOL_TYPE);
-    registerNativeType(JSTypeNative.NUMBER_STRING_SYMBOL, NUMBER_STRING_SYMBOL);
+    JSType numberStringSymbol = createUnionType(numberType, stringType, symbolType);
+    registerNativeType(JSTypeNative.NUMBER_STRING_SYMBOL, numberStringSymbol);
 
     // Native object properties are filled in by externs...
 
-    // (String, string)
-    JSType STRING_VALUE_OR_OBJECT_TYPE =
-        createUnionType(STRING_OBJECT_TYPE, STRING_TYPE);
-    registerNativeType(
-        JSTypeNative.STRING_VALUE_OR_OBJECT_TYPE, STRING_VALUE_OR_OBJECT_TYPE);
+    // (String|string)
+    JSType stringValueOrObjectType = createUnionType(stringObjectType, stringType);
+    registerNativeType(JSTypeNative.STRING_VALUE_OR_OBJECT_TYPE, stringValueOrObjectType);
 
-    // (Number, number)
-    JSType NUMBER_VALUE_OR_OBJECT_TYPE =
-        createUnionType(NUMBER_OBJECT_TYPE, NUMBER_TYPE);
-    registerNativeType(
-        JSTypeNative.NUMBER_VALUE_OR_OBJECT_TYPE, NUMBER_VALUE_OR_OBJECT_TYPE);
+    // (Number|number)
+    JSType numberValueOrObjectType = createUnionType(numberObjectType, numberType);
+    registerNativeType(JSTypeNative.NUMBER_VALUE_OR_OBJECT_TYPE, numberValueOrObjectType);
 
     // (Symbol, symbol)
-    JSType SYMBOL_VALUE_OR_OBJECT_TYPE =
-        createUnionType(SYMBOL_OBJECT_TYPE, SYMBOL_TYPE);
-    registerNativeType(
-        JSTypeNative.SYMBOL_VALUE_OR_OBJECT_TYPE, SYMBOL_VALUE_OR_OBJECT_TYPE);
+    JSType symbolValueOrObjectType = createUnionType(symbolObjectType, symbolType);
+    registerNativeType(JSTypeNative.SYMBOL_VALUE_OR_OBJECT_TYPE, symbolValueOrObjectType);
 
     // unknown function type, i.e. (?...) -> ?
-    FunctionType U2U_FUNCTION_TYPE =
-        createFunctionTypeWithVarArgs(UNKNOWN_TYPE, UNKNOWN_TYPE);
-    registerNativeType(JSTypeNative.U2U_FUNCTION_TYPE, U2U_FUNCTION_TYPE);
+    FunctionType u2uFunctionType = createFunctionTypeWithVarArgs(unknownType, unknownType);
+    registerNativeType(JSTypeNative.U2U_FUNCTION_TYPE, u2uFunctionType);
 
     // unknown constructor type, i.e. (?...) -> ? with the Unknown type
     // as instance type
-    FunctionType U2U_CONSTRUCTOR_TYPE =
+    FunctionType u2uConstructorType =
         // This is equivalent to
-        // createConstructorType(UNKNOWN_TYPE, true, UNKNOWN_TYPE), but,
+        // createConstructorType(unknownType, true, unknownType), but,
         // in addition, overrides getInstanceType() to return the NoObject type
         // instead of a new anonymous object.
         new FunctionType(
             this,
             "Function",
-            null,
-            createArrowType(createParametersWithVarArgs(UNKNOWN_TYPE), UNKNOWN_TYPE),
-            UNKNOWN_TYPE,
-            null,
+            /* source= */ null,
+            createArrowType(createParametersWithVarArgs(unknownType), unknownType),
+            /* typeOfThis= */ unknownType,
+            /* templateTypeMap= */ null,
             Kind.CONSTRUCTOR,
-            true,
-            false) {
+            /* nativeType= */ true,
+            /* isAbstract= */ false) {
           private static final long serialVersionUID = 1L;
 
           @Override
@@ -819,43 +659,32 @@ public class JSTypeRegistry implements Serializable {
           }
         };
 
-    // The U2U_CONSTRUCTOR is weird, because it's the supertype of its
-    // own constructor.
-    registerNativeType(JSTypeNative.U2U_CONSTRUCTOR_TYPE, U2U_CONSTRUCTOR_TYPE);
-    registerNativeType(
-        JSTypeNative.FUNCTION_INSTANCE_TYPE, U2U_CONSTRUCTOR_TYPE);
-
-    FUNCTION_FUNCTION_TYPE.setInstanceType(U2U_CONSTRUCTOR_TYPE);
-    U2U_CONSTRUCTOR_TYPE.setImplicitPrototype(FUNCTION_PROTOTYPE);
+    // The u2uConstructor is weird, because it's the supertype of its own constructor.
+    functionFunctionType.setInstanceType(u2uConstructorType);
+    u2uConstructorType.setImplicitPrototype(functionPrototype);
+    registerNativeType(JSTypeNative.U2U_CONSTRUCTOR_TYPE, u2uConstructorType);
+    registerNativeType(JSTypeNative.FUNCTION_INSTANCE_TYPE, u2uConstructorType);
 
     // least function type, i.e. (All...) -> NoType
-    FunctionType leastFunctionType = createNativeFunctionTypeWithVarArgs(NO_TYPE, ALL_TYPE);
+    FunctionType leastFunctionType = createNativeFunctionTypeWithVarArgs(noType, allType);
     registerNativeType(JSTypeNative.LEAST_FUNCTION_TYPE, leastFunctionType);
 
     // the 'this' object in the global scope
-    FunctionType GLOBAL_THIS_CTOR =
-        new FunctionType(
-            this,
-            "global this",
-            null,
-            createArrowType(createParameters(false, ALL_TYPE), NUMBER_TYPE),
-            null,
-            null,
-            Kind.CONSTRUCTOR,
-            true,
-            false);
-    ObjectType GLOBAL_THIS = GLOBAL_THIS_CTOR.getInstanceType();
-    registerNativeType(JSTypeNative.GLOBAL_THIS, GLOBAL_THIS);
+    FunctionType globalThisCtor =
+        nativeConstructorBuilder("global this")
+            .withParamsNode(createParameters(allType))
+            .withReturnType(numberType)
+            .build();
+    ObjectType globalThis = globalThisCtor.getInstanceType();
+    registerNativeType(JSTypeNative.GLOBAL_THIS, globalThis);
 
     // greatest function type, i.e. (NoType...) -> All
-    FunctionType GREATEST_FUNCTION_TYPE =
-        createNativeFunctionTypeWithVarArgs(ALL_TYPE, NO_TYPE);
-    registerNativeType(JSTypeNative.GREATEST_FUNCTION_TYPE,
-        GREATEST_FUNCTION_TYPE);
+    FunctionType greatestFunctionType = createNativeFunctionTypeWithVarArgs(allType, noType);
+    registerNativeType(JSTypeNative.GREATEST_FUNCTION_TYPE, greatestFunctionType);
 
     // Register the prototype property. See the comments below in
     // registerPropertyOnType about the bootstrapping process.
-    registerPropertyOnType("prototype", OBJECT_FUNCTION_TYPE);
+    registerPropertyOnType("prototype", objectFunctionType);
   }
 
   private void initializeRegistry() {
@@ -1710,7 +1539,12 @@ public class JSTypeRegistry implements Serializable {
 
   /** Creates an arrow type with no parameters and an unknown return type. */
   ArrowType createArrowType() {
-    return new ArrowType(this, new Node(Token.PARAM_LIST), null);
+    return new ArrowType(this, createEmptyParams(), null);
+  }
+
+  /** Creates an empty parameter list node. */
+  Node createEmptyParams() {
+    return new Node(Token.PARAM_LIST);
   }
 
   /**
@@ -1937,16 +1771,15 @@ public class JSTypeRegistry implements Serializable {
       ImmutableList<TemplateType> templateKeys,
       boolean isAbstract) {
     checkArgument(source == null || source.isFunction());
-    return new FunctionType(
-        this,
-        name,
-        source,
-        createArrowType(parameters, returnType),
-        null,
-        createTemplateTypeMap(templateKeys, null),
-        Kind.CONSTRUCTOR,
-        false,
-        isAbstract);
+    return new FunctionBuilder(this)
+        .forConstructor()
+        .withName(name)
+        .withSourceNode(source)
+        .withParamsNode(parameters)
+        .withReturnType(returnType)
+        .withTemplateKeys(templateKeys)
+        .withIsAbstract(isAbstract)
+        .build();
   }
 
   /**
@@ -1959,8 +1792,13 @@ public class JSTypeRegistry implements Serializable {
    */
   public FunctionType createInterfaceType(
       String name, Node source, ImmutableList<TemplateType> templateKeys, boolean struct) {
-    FunctionType fn = FunctionType.forInterface(this, name, source,
-        createTemplateTypeMap(templateKeys, null));
+    FunctionType fn = new FunctionBuilder(this)
+        .forInterface()
+        .withName(name)
+        .withSourceNode(source)
+        .withEmptyParams()
+        .withTemplateKeys(templateKeys)
+        .build();
     if (struct) {
       fn.setStruct();
     }
@@ -2289,7 +2127,7 @@ public class JSTypeRegistry implements Serializable {
             .withParamsNode(paramBuilder.build())
             .withReturnType(returnType)
             .withTypeOfThis(thisType)
-            .setIsConstructor(isConstructor)
+            .withKind(isConstructor ? FunctionType.Kind.CONSTRUCTOR : FunctionType.Kind.ORDINARY)
             .build();
       default:
         break;
@@ -2391,5 +2229,23 @@ public class JSTypeRegistry implements Serializable {
   public void restoreContents(ObjectInputStream in) throws IOException, ClassNotFoundException {
     eachRefTypeIndexedByProperty = (Map<String, Map<String, ObjectType>>) in.readObject();
     interfaceToImplementors = (Multimap<String, FunctionType>) in.readObject();
+  }
+
+  private FunctionBuilder nativeConstructorBuilder(String name) {
+    return new FunctionBuilder(this)
+        .forNativeType()
+        .forConstructor()
+        .withName(name);
+  }
+
+  private FunctionType nativeInterface(String name, TemplateType... templateKeys) {
+    FunctionBuilder builder = new FunctionBuilder(this)
+        .forNativeType()
+        .forInterface()
+        .withName(name);
+    if (templateKeys.length > 0) {
+      builder.withTemplateKeys(templateKeys);
+    }
+    return builder.build();
   }
 }

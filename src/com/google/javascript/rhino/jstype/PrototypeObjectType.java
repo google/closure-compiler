@@ -167,8 +167,7 @@ public class PrototypeObjectType extends ObjectType {
     if (nativeType || implicitPrototype != null) {
       setImplicitPrototype(implicitPrototype);
     } else {
-      setImplicitPrototype(
-          registry.getNativeObjectType(JSTypeNative.OBJECT_TYPE));
+      setImplicitPrototype(registry.getNativeObjectType(JSTypeNative.OBJECT_TYPE));
     }
   }
 

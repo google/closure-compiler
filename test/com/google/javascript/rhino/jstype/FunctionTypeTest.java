@@ -190,6 +190,30 @@ public class FunctionTypeTest extends BaseJSTypeTestCase {
     assertEquals(node, ctor.getPropertyNode("prototype"));
   }
 
+  public void testCtorWithInstanceInheritance() {
+    FunctionType fooCtor = new FunctionBuilder(registry).forConstructor().withName("Foo").build();
+    FunctionType barCtor = new FunctionBuilder(registry).forConstructor().withName("Bar").build();
+    barCtor.setPrototypeBasedOn(fooCtor.getInstanceType());
+    fooCtor.getPrototype().defineDeclaredProperty("bar", STRING_TYPE, null);
+
+    assertEquals(fooCtor.getInstanceType(), barCtor.getPrototype().getImplicitPrototype());
+    assertEquals(STRING_TYPE, fooCtor.getInstanceType().getSlot("bar").getType());
+  }
+
+  public void testCtorWithClassSideInheritance() {
+    FunctionType fooCtor = new FunctionBuilder(registry).forConstructor().withName("Foo").build();
+    FunctionType barCtor =
+        new FunctionBuilder(registry)
+            .forConstructor()
+            .withName("Bar")
+            .withImplicitPrototype(fooCtor)
+            .build();
+    fooCtor.defineDeclaredProperty("foo", NUMBER_TYPE, null);
+
+    assertEquals(fooCtor, barCtor.getImplicitPrototype());
+    assertEquals(NUMBER_TYPE, barCtor.getSlot("foo").getType());
+  }
+
   public void testEmptyFunctionTypes() {
     assertTrue(LEAST_FUNCTION_TYPE.isEmptyType());
     assertFalse(GREATEST_FUNCTION_TYPE.isEmptyType());
