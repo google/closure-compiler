@@ -577,7 +577,7 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
   }
 
   /** Returns interfaces implemented directly by a class or its superclass. */
-  public final Iterable<ObjectType> getImplementedInterfaces() {
+  public final ImmutableList<ObjectType> getImplementedInterfaces() {
     FunctionType superCtor = isConstructor() ? getSuperClassConstructor() : null;
     if (superCtor == null) {
       return implementedInterfaces;
@@ -592,7 +592,7 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
   }
 
   /** Returns interfaces directly implemented by the class. */
-  public final Iterable<ObjectType> getOwnImplementedInterfaces() {
+  public final ImmutableList<ObjectType> getOwnImplementedInterfaces() {
     return implementedInterfaces;
   }
 
@@ -610,7 +610,7 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
   }
 
   /** Returns interfaces directly extended by an interface */
-  public final Iterable<ObjectType> getExtendedInterfaces() {
+  public final ImmutableList<ObjectType> getExtendedInterfaces() {
     return extendedInterfaces;
   }
 
