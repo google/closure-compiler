@@ -126,7 +126,7 @@ function after_setElementDefiniteHrefOptional(anchor, url) {
  * +require {goog.dom.asserts}
  * +require {goog.dom.safe}
  * @param {!Element|null|undefined} anchor
- * @param {!string|null|undefined} url
+ * @param {?} url
  */
 function before_setElementHrefBothOptional(anchor, url) {
   anchor.href = url;
@@ -135,7 +135,7 @@ function before_setElementHrefBothOptional(anchor, url) {
 
 /**
  * @param {!Element|null|undefined} anchor
- * @param {!string|null|undefined} url
+ * @param {?} url
  */
 function after_setElementHrefBothOptional(anchor, url) {
   goog.dom.safe.setAnchorHref(

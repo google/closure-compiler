@@ -27,6 +27,7 @@
  * otherwise be present if the URL is derived from untrusted input.
  */
 
+goog.require('goog.asserts');
 goog.require('goog.dom.safe');
 
 /**
@@ -42,7 +43,7 @@ function do_not_change_setLocationStringLiteral(thing1, string_literal_thing2) {
  * Replaces writes to Window.property.location with a call to the corresponding
  * goog.dom.safe.setLocationHref wrapper.
  * +require {goog.dom.safe}
- * @param {!Window} win The window object.
+ * @param {?Window} win The window object.
  * @param {string} url The url.
  */
 function before_setWindowLocation(win, url) {
@@ -50,9 +51,28 @@ function before_setWindowLocation(win, url) {
 }
 
 /**
- * @param {!Window} win The window object.
+ * @param {?Window} win The window object.
  * @param {string} url The url.
  */
 function after_setWindowLocation(win, url) {
   goog.dom.safe.setLocationHref(win.location, url);
+}
+
+/**
+ * Replaces writes to Window.property.location with a call to the corresponding
+ * goog.dom.safe.setLocationHref wrapper.
+ * +require {goog.dom.safe}
+ * @param {?Window} win The window object.
+ * @param {?} url The url.
+ */
+function before_setWindowLocationUntyped(win, url) {
+  win.location = url;
+}
+
+/**
+ * @param {?Window} win The window object.
+ * @param {?} url The url.
+ */
+function after_setWindowLocationUntyped(win, url) {
+  goog.dom.safe.setLocationHref(win.location, goog.asserts.assertString(url));
 }

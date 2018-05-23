@@ -27,6 +27,7 @@
  * otherwise be present if the URL is derived from untrusted input.
  */
 
+goog.require('goog.asserts');
 goog.require('goog.dom.safe');
 
 /**
@@ -55,4 +56,26 @@ function before_setLocationHref(loc, url) {
  */
 function after_setLocationHref(loc, url) {
   goog.dom.safe.setLocationHref(loc, url);
+}
+/**
+ * Replaces writes to Location.property.href with a call to the corresponding
+ * goog.dom.safe.setLocationHref wrapper.
+ * +require {goog.asserts}
+ * +require {goog.dom.safe}
+ * @param {!Location} loc The location object.
+ * @param {?} url The url.
+ */
+function before_setLocationUntypedHref(loc, url) {
+  loc.href = url;
+}
+
+/**
+ * @param {!Location} loc The location object.
+ * @param {?} url The url.
+ */
+function after_setLocationUntypedHref(loc, url) {
+  // TODO(bangert): add test once we have go/api-prohibition-design
+  // (which will re-do the test infrastructure for this).
+  // TODO(bangert): add tests for nullable locations
+  goog.dom.safe.setLocationHref(loc, goog.asserts.assertString(url));
 }
