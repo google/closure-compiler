@@ -1370,6 +1370,25 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
     testTypes("var obj = { method() {} }; new obj.method();", "cannot instantiate non-constructor");
   }
 
+  public void testMemberFunctionDef_lends() {
+    testTypesWithExterns(
+        lines(
+            "/** @constructor */",
+            "function PolymerElement() {}",
+            "/** @param {...*} var_args */",
+            "PolymerElement.prototype.factoryImpl = function(var_args) {}",
+            "var Polymer = function(a) {};"),
+        lines(
+            "/** @constructor @extends {PolymerElement} */",
+            "var X = function() {};",
+            "X = Polymer(/** @lends {X.prototype} */ {",
+            "", // Test that we can override PolymerElement.prototype.factoryImpl with a one-arg fn
+            "  factoryImpl(e) {",
+            "    alert('Thank you for clicking');",
+            "  },",
+            "});"));
+  }
+
   public void testMemberFunction_enum() {
     testTypes(
         "/** @enum */ var obj = {a() {}};",

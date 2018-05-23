@@ -840,10 +840,6 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         break;
       }
 
-      case MEMBER_FUNCTION_DEF:
-        ensureTyped(n, getJSType(n.getFirstChild()));
-        break;
-
       case FUNCTION:
         visitFunction(t, n);
         break;
@@ -852,6 +848,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         // These nodes require data flow analysis.
       case PARAM_LIST:
       case STRING_KEY:
+      case MEMBER_FUNCTION_DEF:
       case COMPUTED_PROP:
       case LABEL:
       case LABEL_NAME:
@@ -1263,6 +1260,9 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     if (type != null) {
       String property = NodeUtil.getObjectLitKeyName(key);
       checkPropertyInheritanceOnPrototypeLitKey(t, key, property, type);
+      // TODO(lharker): add a unit test for the following if case or remove it.
+      // Removing the check doesn't break any unit tests, but it does have coverage in
+      // our coverage report.
       if (type.hasProperty(property)
           && !type.isPropertyTypeInferred(property)
           && !propertyIsImplicitCast(type, property)) {
