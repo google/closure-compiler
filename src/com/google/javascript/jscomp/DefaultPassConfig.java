@@ -181,11 +181,7 @@ public final class DefaultPassConfig extends PassConfig {
       TranspilationPasses.addEs2016Passes(passes);
     }
 
-    // If the user has specified an input language of ES7 and an output language of ES6 or lower,
-    // we still need to run these "ES6" passes, because they do the transpilation of the ES7 **
-    // operator. If we split that into its own pass then the needsTranspilationFrom(ES7) call here
-    // can be removed.
-    if (options.needsTranspilationFrom(ES6) || options.needsTranspilationFrom(ES7)) {
+    if (options.needsTranspilationFrom(ES6)) {
       TranspilationPasses.addEs6PreTypecheckPasses(passes, options);
       TranspilationPasses.addEs6PostTypecheckPasses(passes);
       TranspilationPasses.addEs6PostCheckPasses(passes);

@@ -5673,4 +5673,17 @@ public final class NodeUtil {
     Node parent = n.getParent();
     return parent != null && parent.isFunction() && n == parent.getLastChild() && !n.isBlock();
   }
+
+  /**
+   * Returns a script node's FeatureSet, which is set at parse-time. This may not be up-to-date
+   * as passes can add/remove features from a script node's descendants.
+   *
+   * <p>The feature set will be null if the script node was created artificially or if the parser
+   * didn't detect any interesting features.
+   */
+  @Nullable
+  static FeatureSet getFeatureSetOfScript(Node scriptNode) {
+    checkState(scriptNode.isScript(), scriptNode);
+    return (FeatureSet) scriptNode.getProp(Node.FEATURE_SET);
+  }
 }

@@ -397,13 +397,22 @@ public class TranspilationPasses {
    * @return If the file has any features which are part of ES6 or higher but not part of ES5.
    */
   static boolean isScriptEs6OrHigher(Node script) {
-    FeatureSet features = (FeatureSet) script.getProp(Node.FEATURE_SET);
+    FeatureSet features = NodeUtil.getFeatureSetOfScript(script);
     return features != null && !FeatureSet.ES5.contains(features);
   }
 
   /**
+   * @param script The SCRIPT node representing a JS file
+   * @return If the file has any features not in {@code supportedFeatures}
+   */
+  static boolean doesScriptHaveUnsupportedFeatures(Node script, FeatureSet supportedFeatures) {
+    FeatureSet features = NodeUtil.getFeatureSetOfScript(script);
+    return features != null && !supportedFeatures.contains(features);
+  }
+
+  /**
    * Process transpilations if the input language needs transpilation from certain features, on any
-   * JS file that has ES6 features.
+   * JS file that has features not present in the compiler's output language mode.
    *
    * @param compiler An AbstractCompiler
    * @param combinedRoot The combined root for all JS files.
@@ -413,12 +422,17 @@ public class TranspilationPasses {
   static void processTranspile(
       AbstractCompiler compiler, Node combinedRoot, FeatureSet featureSet, Callback... callbacks) {
     if (compiler.getOptions().needsTranspilationFrom(featureSet)) {
+      FeatureSet languageOutFeatures = compiler.getOptions().getLanguageOut().toFeatureSet();
       for (Node singleRoot : combinedRoot.children()) {
-        // TODO(lharker): Only run callbacks if the script has features from the given featureSet,
-        // instead of whenever the script has any ES6+ features. We can't do this until ensuring
-        // that all passes correctly update the script's associated FeatureSet.
-        // The same applies in hotSwapTranspile, hotSwapCheck, and processCheck.
-        if (isScriptEs6OrHigher(singleRoot)) {
+
+        // Only run the transpilation if this file has features not in the compiler's target output
+        // language. For example, if this file is purely ES6 and the output language is ES6, don't
+        // run any transpilation passes on it.
+        // TODO(lharker): We could save time by being more selective about what files we transpile.
+        // e.g. if a file has async functions but not `**`, don't run `**` transpilation on it.
+        // Right now we know what features were in a file at parse time, but not what features were
+        // added to that file by other transpilation passes.
+        if (doesScriptHaveUnsupportedFeatures(singleRoot, languageOutFeatures)) {
           for (Callback callback : callbacks) {
             singleRoot.putBooleanProp(Node.TRANSPILED, true);
             NodeTraversal.traverse(compiler, singleRoot, callback);
@@ -430,7 +444,7 @@ public class TranspilationPasses {
 
   /**
    * Hot-swap ES6+ transpilations if the input language needs transpilation from certain features,
-   * on any JS file that has ES6 features.
+   * on any JS file that has features not present in the compiler's output language mode.
    *
    * @param compiler An AbstractCompiler
    * @param scriptRoot The SCRIPT root for the JS file.
@@ -440,7 +454,8 @@ public class TranspilationPasses {
   static void hotSwapTranspile(
       AbstractCompiler compiler, Node scriptRoot, FeatureSet featureSet, Callback... callbacks) {
     if (compiler.getOptions().needsTranspilationFrom(featureSet)) {
-      if (isScriptEs6OrHigher(scriptRoot)) {
+      FeatureSet languageOutFeatures = compiler.getOptions().getLanguageOut().toFeatureSet();
+      if (doesScriptHaveUnsupportedFeatures(scriptRoot, languageOutFeatures)) {
         for (Callback callback : callbacks) {
           scriptRoot.putBooleanProp(Node.TRANSPILED, true);
           NodeTraversal.traverse(compiler, scriptRoot, callback);

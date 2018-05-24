@@ -841,7 +841,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     if (options.skipNonTranspilationPasses) {
       // i.e. whitespace-only mode, which will not work with goog.module without:
       whitespaceOnlyPasses();
-      if (options.needsTranspilationFrom(FeatureSet.ES6)) {
+      if (options.needsTranspilationFrom(options.getLanguageIn().toFeatureSet())) {
         transpileAndDontCheck();
       }
     } else {

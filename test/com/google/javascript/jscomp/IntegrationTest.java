@@ -5035,8 +5035,13 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
     options.setLanguageOut(LanguageMode.ECMASCRIPT_2015);
 
-    test(options, "alert(2 ** 5);", "alert(Math.pow(2, 5));");
+    // Only transpile away the ES2016 ** operator, not the ES2015 const declaration.
     test(options, "const n = 2 ** 5;", "const n = Math.pow(2, 5);");
+
+    // Test skipNonTranspilationPasses separately because it has a different code path
+    options.setSkipNonTranspilationPasses(true);
+    test(options, "const n = 2 ** 5;", "const n = Math.pow(2, 5);");
+    test(options, "class C {}", "class C {}");
   }
 
   public void testMethodDestructuringInTranspiledAsyncFunction() {
