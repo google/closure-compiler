@@ -34,6 +34,7 @@ Node.prototype.assignedSlot;
 
 /**
  * @type {string}
+ * @see https://dom.spec.whatwg.org/#dom-element-slot
  */
 Element.prototype.slot;
 
