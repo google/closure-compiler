@@ -154,20 +154,7 @@ public final class HamtPMap<K, V> implements PMap<K, V> {
     if (isEmpty()) {
       return Collections.<V>emptyList();
     }
-    // TODO(sdh): Java8: return () -> new Iter<>(this, map -> map.value);
-    return new Iterable<V>() {
-      @Override
-      public Iterator<V> iterator() {
-        return new Iter<K, V, V>(
-            HamtPMap.this,
-            new Function<HamtPMap<K, V>, V>() {
-              @Override
-              public V apply(HamtPMap<K, V> map) {
-                return map.value;
-              }
-            });
-      }
-    };
+    return () -> new Iter<>(this, map -> map.value);
   }
 
   /**

@@ -861,11 +861,9 @@ public class JSTypeRegistry implements Serializable {
    * show up in the type registry").
    */
   public void registerPropertyOnType(String propertyName, JSType type) {
-    UnionTypeBuilder typeSet = typesIndexedByProperty.get(propertyName);
-    if (typeSet == null) {
-      typeSet = new UnionTypeBuilder(this, PROPERTY_CHECKING_UNION_SIZE);
-      typesIndexedByProperty.put(propertyName, typeSet);
-    }
+    UnionTypeBuilder typeSet =
+        typesIndexedByProperty.computeIfAbsent(
+            propertyName, k -> new UnionTypeBuilder(this, PROPERTY_CHECKING_UNION_SIZE));
 
     if (isObjectLiteralThatCanBeSkipped(type)) {
       type = getSentinelObjectLiteral();
@@ -882,11 +880,7 @@ public class JSTypeRegistry implements Serializable {
       String propertyName, JSType type) {
     if (type instanceof ObjectType && ((ObjectType) type).hasReferenceName()) {
       Map<String, ObjectType> typeSet =
-          eachRefTypeIndexedByProperty.get(propertyName);
-      if (typeSet == null) {
-        typeSet = new LinkedHashMap<>();
-        eachRefTypeIndexedByProperty.put(propertyName, typeSet);
-      }
+          eachRefTypeIndexedByProperty.computeIfAbsent(propertyName, k -> new LinkedHashMap<>());
       ObjectType objType = (ObjectType) type;
       typeSet.put(objType.getReferenceName(), objType);
     } else if (type instanceof NamedType) {
