@@ -2891,7 +2891,12 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     Iterator<String> content = sourcesContent.iterator();
     Iterator<String> sources = consumer.getOriginalSources().iterator();
     while (sources.hasNext() && content.hasNext()) {
-      sourceMap.addSourceFile(sources.next(), content.next());
+      String code = content.next();
+      SourceFile source = SourceMapResolver.getRelativePath(
+          inputSourceMap.getOriginalPath(), sources.next());
+      if (source != null) {
+        sourceMap.addSourceFile(source.getOriginalPath(), code);
+      }
     }
     if (sources.hasNext() || content.hasNext()) {
       throw new RuntimeException(

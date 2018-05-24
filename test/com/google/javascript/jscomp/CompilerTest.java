@@ -225,9 +225,9 @@ public final class CompilerTest extends TestCase {
 
   // Similar to BASE64_ENCODED_SOURCE_MAP; contains encoded SOURCE_MAP but with
   // SOURCE_MAP_TEST_CONTENT as the only item of sourcesContent corresponding
-  // to "foo.ts" sources item.
+  // to "../test/foo.ts" sources item.
   private static final String BASE64_ENCODED_SOURCE_MAP_WITH_CONTENT =
-      "data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiZm9vLmpzIiwic291cmNlUm9vdCI6IiIsInNvdXJjZXMiOlsiZm9vLnRzIl0sInNvdXJjZXNDb250ZW50IjpbInZhciBBID0gKGZ1bmN0aW9uICgpIHtcbiAgICBmdW5jdGlvbiBBKGlucHV0KSB7XG4gICAgICAgIHRoaXMuYSA9IGlucHV0O1xuICAgIH1cbiAgICByZXR1cm4gQTtcbn0oKSk7XG5jb25zb2xlLmxvZyhuZXcgQSgxKSk7Il0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiJBQUFBO0lBR0UsV0FBWSxLQUFhO1FBQ3ZCLElBQUksQ0FBQyxDQUFDLEdBQUcsS0FBSyxDQUFDO0lBQ2pCLENBQUM7SUFDSCxRQUFDO0FBQUQsQ0FBQyxBQU5ELElBTUM7QUFFRCxPQUFPLENBQUMsR0FBRyxDQUFDLElBQUksQ0FBQyxDQUFDLENBQUMsQ0FBQyxDQUFDLENBQUMifQ==";
+      "data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiZm9vLmpzIiwic291cmNlUm9vdCI6IiIsInNvdXJjZXMiOlsiLi4vdGVzdC9mb28udHMiXSwic291cmNlc0NvbnRlbnQiOlsidmFyIEEgPSAoZnVuY3Rpb24gKCkge1xuICAgIGZ1bmN0aW9uIEEoaW5wdXQpIHtcbiAgICAgICAgdGhpcy5hID0gaW5wdXQ7XG4gICAgfVxuICAgIHJldHVybiBBO1xufSgpKTtcbmNvbnNvbGUubG9nKG5ldyBBKDEpKTsiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6IkFBQUE7SUFHRSxXQUFZLEtBQWE7UUFDdkIsSUFBSSxDQUFDLENBQUMsR0FBRyxLQUFLLENBQUM7SUFDakIsQ0FBQztJQUNILFFBQUM7QUFBRCxDQUFDLEFBTkQsSUFNQztBQUVELE9BQU8sQ0FBQyxHQUFHLENBQUMsSUFBSSxDQUFDLENBQUMsQ0FBQyxDQUFDLENBQUMsQ0FBQyJ9";
 
   public void testInputSourceMapInlineContent() throws Exception {
     Compiler compiler = new Compiler();
@@ -238,7 +238,7 @@ public final class CompilerTest extends TestCase {
     input.getAstRoot(compiler);
     SourceMapInput inputSourceMap = compiler.inputSourceMaps.get("tmp");
     SourceMapConsumerV3 sourceMap = inputSourceMap.getSourceMap(null);
-    assertThat(sourceMap.getOriginalSources()).containsExactly("foo.ts");
+    assertThat(sourceMap.getOriginalSources()).containsExactly("../test/foo.ts");
     assertThat(sourceMap.getOriginalSourcesContent()).containsExactly(SOURCE_MAP_TEST_CONTENT);
   }
 
@@ -370,7 +370,7 @@ public final class CompilerTest extends TestCase {
     String code = SOURCE_MAP_TEST_CODE + "\n//# sourceMappingURL="
         + BASE64_ENCODED_SOURCE_MAP_WITH_CONTENT;
     Compiler compiler = new Compiler();
-    SourceFile sourceFile = SourceFile.fromCode("input.js", code);
+    SourceFile sourceFile = SourceFile.fromCode("temp/path/input.js", code);
     compiler.compile(EMPTY_EXTERNS.get(0), sourceFile, options);
     assertThat(compiler.toSource()).isEqualTo(
         "var X=function(){function X(input){this.y=input}return X}();console.log(new X(1));");
@@ -379,7 +379,7 @@ public final class CompilerTest extends TestCase {
     sourceMap.appendTo(out, "source.js.map");
     SourceMapConsumerV3 consumer = new SourceMapConsumerV3();
     consumer.parse(out.toString());
-    assertThat(consumer.getOriginalSources()).containsExactly("foo.ts");
+    assertThat(consumer.getOriginalSources()).containsExactly("temp/test/foo.ts");
     assertThat(consumer.getOriginalSourcesContent()).containsExactly(SOURCE_MAP_TEST_CONTENT);
   }
 
