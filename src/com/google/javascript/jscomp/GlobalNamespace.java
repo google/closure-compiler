@@ -646,12 +646,15 @@ class GlobalNamespace
       Node superclass = null;
       if (parent.isClass()) {
         superclass = parent.getSecondChild();
-      } else {
+      } else if (n.isName() || n.isGetProp()){
         Node classNode = NodeUtil.getAssignedValue(n);
         if (classNode != null && classNode.isClass()) {
           superclass = classNode.getSecondChild();
         }
       }
+      // TODO(lharker): figure out what should we do when n is an object literal key.
+      // e.g. var obj = {foo: class extends Parent {}};
+
       // If there's no superclass, or the superclass expression is more complicated than a simple
       // or qualified name, return.
       if (superclass == null

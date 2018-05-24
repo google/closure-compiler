@@ -1390,4 +1390,13 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
             "var ModuleManager = null;",
             "alert(goog$module$ModuleManager$getInstance());"));
   }
+
+  public void testClassInObjectLiteral() {
+    test("var obj = {foo: class {}};", "var obj$foo = class {};");
+
+    // TODO(lharker): this is unsafe, obj$foo.foo is undefined now that A$foo is collapsed
+    test(
+        "class A {}     A.foo = 3; var obj = {foo: class extends A {}}; use(obj.foo.foo);",
+        "class A {} var A$foo = 3; var obj$foo =   class extends A{};   use(obj$foo.foo)");
+  }
 }
