@@ -56,7 +56,24 @@
 
 //Methods
 Event.prototype.initKeyEvent;
-Event.prototype.initMouseEvent;
+/**
+ * @param {string} typeArg
+ * @param {boolean=} canBubbleArg
+ * @param {boolean=} cancelableArg
+ * @param {?Window=} viewArg
+ * @param {?number=} detailArg
+ * @param {number=} screenXArg
+ * @param {number=} screenYArg
+ * @param {number=} clientXArg
+ * @param {number=} clientYArg
+ * @param {boolean=} ctrlKeyArg
+ * @param {boolean=} altKeyArg
+ * @param {boolean=} shiftKeyArg
+ * @param {boolean=} metaKeyArg
+ * @param {?number=} buttonArg
+ * @param {?EventTarget=} relatedTargetArg
+ */
+Event.prototype.initMouseEvent = function(typeArg, canBubbleArg, cancelableArg, viewArg, detailArg, screenXArg, screenYArg, clientXArg, clientYArg, ctrlKeyArg, altKeyArg, shiftKeyArg, metaKeyArg, buttonArg, relatedTargetArg) {};
 Event.prototype.initUIEvent;
 Event.prototype.initMessageEvent;
 Event.prototype.preventBubble;
