@@ -1450,6 +1450,23 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
         "Property static never defined on obj");
   }
 
+  public void testComputedProp4() {
+    testTypes(
+        lines(
+            "function takesString(/** string */ str) {}",
+            "",
+            "var obj = {",
+            "  /** @param {number} x */",
+            "  ['static']: (x) => {",
+            "    takesString(x);",
+            "  }",
+            "};"),
+        lines(
+            "actual parameter 1 of takesString does not match formal parameter",
+            "found   : number",
+            "required: string"));
+  }
+
   public void testComputedProp_symbol() {
     testTypes("var sym1 = Symbol('a'); var obj = {[sym1]: 1};");
   }
