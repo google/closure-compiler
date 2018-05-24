@@ -80,7 +80,7 @@ Window.prototype.frameElement;
 
 /**
  * Allows lookup of frames by index or by name.
- * @type {?Object}
+ * @type {!Window}
  * @see https://developer.mozilla.org/en/DOM/window.frames
  */
 Window.prototype.frames;
