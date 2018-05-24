@@ -174,7 +174,13 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
     if (isEs6ModuleRoot(scriptNode)) {
       processFile(scriptNode);
     } else {
-      NodeTraversal.traverse(compiler, scriptNode, new RewriteRequiresForEs6Modules());
+      RewriteRequiresForEs6Modules rewriter = new RewriteRequiresForEs6Modules();
+
+      NodeTraversal.traverse(compiler, scriptNode, rewriter);
+
+      if (rewriter.transpiled) {
+        scriptNode.putBooleanProp(Node.TRANSPILED, true);
+      }
     }
   }
 
@@ -184,6 +190,7 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
   private void processFile(Node root) {
     checkArgument(isEs6ModuleRoot(root), root);
     clearState();
+    root.putBooleanProp(Node.TRANSPILED, true);
     NodeTraversal.traverse(compiler, root, this);
   }
 
@@ -201,6 +208,8 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
    * modules and rewrites them.
    */
   private class RewriteRequiresForEs6Modules extends AbstractPostOrderCallback {
+    boolean transpiled = false;
+
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       if (n.isCall()) {
@@ -251,6 +260,8 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
             n.detach();
             t.reportCodeChange();
           }
+
+          transpiled = true;
         }
       }
     }

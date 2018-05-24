@@ -21,6 +21,7 @@ import static com.google.common.base.Preconditions.checkState;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.deps.ModuleLoader.ModulePath;
+import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -60,8 +61,10 @@ public class Es6RewriteModulesToCommonJsModules implements CompilerPass {
     for (Node script : root.children()) {
       if (Es6RewriteModules.isEs6ModuleRoot(script)) {
         NodeTraversal.traverse(compiler, script, new Rewriter(compiler, script));
+        script.putBooleanProp(Node.TRANSPILED, true);
       }
     }
+    compiler.setFeatureSet(compiler.getFeatureSet().without(Feature.MODULES));
   }
 
   private static class LocalQName {
