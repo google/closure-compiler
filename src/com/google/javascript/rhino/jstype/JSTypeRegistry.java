@@ -50,7 +50,6 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.VOID_TYPE;
 import com.google.common.annotations.GwtIncompatible;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -205,8 +204,7 @@ public class JSTypeRegistry implements Serializable {
       LinkedHashMultimap.create();
 
   // All the unresolved named types.
-  private final Multimap<StaticTypedScope, NamedType> unresolvedNamedTypes =
-      ArrayListMultimap.create();
+  private final List<NamedType> unresolvedNamedTypes = new ArrayList<>();
 
   // The template type name.
   private final Map<String, TemplateType> templateTypes = new HashMap<>();
@@ -1376,9 +1374,7 @@ public class JSTypeRegistry implements Serializable {
       // interning.
       NamedType namedType = createNamedType(scope, jsTypeName, sourceName, lineno, charno);
       if (recordUnresolvedTypes) {
-
-
-        unresolvedNamedTypes.put(scope, namedType);
+        unresolvedNamedTypes.add(namedType);
       }
       type = namedType;
     }
@@ -1407,28 +1403,26 @@ public class JSTypeRegistry implements Serializable {
   }
 
   /** Resolve all the unresolved types in the given scope. */
-  public void resolveTypesInScope(StaticTypedScope scope) {
-    for (NamedType type : unresolvedNamedTypes.get(scope)) {
+  public void resolveTypes() {
+    for (NamedType type : unresolvedNamedTypes) {
       type.resolve(reporter);
     }
 
-    unresolvedNamedTypes.removeAll(scope);
+    unresolvedNamedTypes.clear();
 
-    if (scope != null && scope.getParentScope() == null) {
-      // By default, the global "this" type is just an anonymous object.
-      // If the user has defined a Window type, make the Window the
-      // implicit prototype of "this".
-      PrototypeObjectType globalThis = (PrototypeObjectType) getNativeType(
-          JSTypeNative.GLOBAL_THIS);
-      JSType windowType = getTypeInternal(null, "Window");
-      if (globalThis.isUnknownType()) {
-        ObjectType windowObjType = ObjectType.cast(windowType);
-        if (windowObjType != null) {
-          globalThis.setImplicitPrototype(windowObjType);
-        } else {
-          globalThis.setImplicitPrototype(
-              getNativeObjectType(JSTypeNative.OBJECT_TYPE));
-        }
+    // By default, the global "this" type is just an anonymous object.
+    // If the user has defined a Window type, make the Window the
+    // implicit prototype of "this".
+    PrototypeObjectType globalThis = (PrototypeObjectType) getNativeType(
+        JSTypeNative.GLOBAL_THIS);
+    JSType windowType = getTypeInternal(null, "Window");
+    if (globalThis.isUnknownType()) {
+      ObjectType windowObjType = ObjectType.cast(windowType);
+      if (windowObjType != null) {
+        globalThis.setImplicitPrototype(windowObjType);
+      } else {
+        globalThis.setImplicitPrototype(
+            getNativeObjectType(JSTypeNative.OBJECT_TYPE));
       }
     }
   }

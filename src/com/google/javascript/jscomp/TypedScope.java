@@ -180,24 +180,6 @@ public class TypedScope extends AbstractScope<TypedScope, TypedVar> implements S
         && !var.isExtern();
   }
 
-  static interface TypeResolver {
-    void resolveTypes();
-  }
-
-  private TypeResolver typeResolver;
-
-  /** Resolve all type references. Only used on typed scopes. */
-  void resolveTypes() {
-    if (typeResolver != null) {
-      typeResolver.resolveTypes();
-      typeResolver = null;
-    }
-  }
-
-  void setTypeResolver(TypeResolver resolver) {
-    this.typeResolver = resolver;
-  }
-
   public JSType getNamespaceOrTypedefType(String typeName) {
     StaticTypedSlot slot = getSlot(typeName);
     return slot == null ? null : slot.getType();

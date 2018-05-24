@@ -183,6 +183,8 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
   // For convenience
   private final ObjectType unknownType;
 
+  private final List<DeferredSetType> deferredSetTypes = new ArrayList<>();
+
   /**
    * Defer attachment of types to nodes until all type names
    * have been resolved. Then, we can resolve the type and attach it.
@@ -322,7 +324,6 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
           typeRegistry, delegateProxies, delegateCallingConventions);
     }
 
-    newScope.setTypeResolver(scopeBuilder);
     return newScope;
   }
 
@@ -430,6 +431,31 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
     scope.declare(name, null, t, null, false);
   }
 
+  /** Set the type for a node now, and enqueue it to be updated with a resolved type later. */
+  void setDeferredType(Node node, JSType type) {
+    // Other parts of this pass may read the not-yet-resolved type off the node.
+    // (like when we set the LHS of an assign with a typed RHS function.)
+    node.setJSType(type);
+    deferredSetTypes.add(new DeferredSetType(node, type));
+  }
+
+  void resolveTypes() {
+    // Resolve types and attach them to nodes.
+    for (DeferredSetType deferred : deferredSetTypes) {
+      deferred.resolve();
+    }
+
+    // Resolve types and attach them to scope slots.
+    for (TypedScope scope : getAllMemoizedScopes()) {
+      for (TypedVar var : scope.getVarIterable()) {
+        var.resolveType(typeParsingErrorReporter);
+      }
+    }
+
+    // Tell the type registry that any remaining types are unknown.
+    typeRegistry.resolveTypes();
+  }
+
   /**
    * Adds all globally-defined enums and typedefs to the registry's list of non-nullable types.
    *
@@ -491,17 +517,13 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
     return typeRegistry.getNativeType(nativeType);
   }
 
-  private abstract class AbstractScopeBuilder
-      implements NodeTraversal.Callback, TypedScope.TypeResolver {
+  private abstract class AbstractScopeBuilder implements NodeTraversal.Callback {
 
     /** The scope that we're building. */
     final TypedScope currentScope;
 
     /** The current hoist scope. */
     final TypedScope currentHoistScope;
-
-    private final List<DeferredSetType> deferredSetTypes =
-         new ArrayList<>();
 
     /**
      * Object literals with a @lends annotation aren't analyzed until we
@@ -542,31 +564,6 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
     /** Traverse the scope root and build it. */
     void build() {
       NodeTraversal.traverseTyped(compiler, currentScope.getRootNode(), this);
-    }
-
-    /** Set the type for a node now, and enqueue it to be updated with a resolved type later. */
-    void setDeferredType(Node node, JSType type) {
-      // Other parts of this pass may read the not-yet-resolved type off the node.
-      // (like when we set the LHS of an assign with a typed RHS function.)
-      node.setJSType(type);
-      deferredSetTypes.add(new DeferredSetType(node, type));
-    }
-
-    @Override
-    public void resolveTypes() {
-      // Resolve types and attach them to nodes.
-      for (DeferredSetType deferred : deferredSetTypes) {
-        deferred.resolve();
-      }
-
-      // Resolve types and attach them to scope slots.
-      for (TypedVar var : currentScope.getVarIterable()) {
-        var.resolveType(typeParsingErrorReporter);
-      }
-
-      // Tell the type registry that any remaining types
-      // are unknown.
-      typeRegistry.resolveTypesInScope(currentScope);
     }
 
     @Override

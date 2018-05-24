@@ -2077,7 +2077,7 @@ public final class DefaultPassConfig extends PassConfig {
       if (topScope == null) {
         regenerateGlobalTypedScope(compiler, root.getParent());
       } else {
-        compiler.getTypeRegistry().resolveTypesInScope(topScope);
+        compiler.getTypeRegistry().resolveTypes();
       }
     }
     @Override

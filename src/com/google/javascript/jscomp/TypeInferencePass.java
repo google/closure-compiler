@@ -101,13 +101,15 @@ class TypeInferencePass implements CompilerPass {
         compiler, new FirstScopeBuildingCallback(), scopeCreator))
         .traverseWithScope(node, topScope);
 
-    for (TypedScope s : scopeCreator.getAllMemoizedScopes()) {
-      s.resolveTypes();
-    }
+    scopeCreator.resolveTypes();
 
     (new NodeTraversal(
         compiler, new SecondScopeBuildingCallback(), scopeCreator))
         .traverseWithScope(node, topScope);
+
+    // Resolve any new type names found during the inference.
+    // This runs for nested block scopes after infer runs on the CFG root.
+    compiler.getTypeRegistry().resolveTypes();
   }
 
   void inferScope(Node n, TypedScope scope) {
@@ -144,9 +146,6 @@ class TypeInferencePass implements CompilerPass {
       if (!scope.isBlockScope()) { // ignore scopes that don't have their own CFGs.
         inferScope(t.getCurrentNode(), scope);
       }
-      // Resolve any new type names found during the inference.
-      // This runs for nested block scopes after infer runs on the CFG root.
-      compiler.getTypeRegistry().resolveTypesInScope(scope);
     }
 
     @Override
