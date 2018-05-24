@@ -30,7 +30,6 @@ import com.google.javascript.jscomp.type.ReverseAbstractInterpreter;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.TypeIRegistry;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import java.io.Serializable;
 import java.util.HashMap;
@@ -139,28 +138,20 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
   // End of intermediate state needed by passes.
   //
 
-  static enum MostRecentTypechecker {
-    NONE,
-    OTI,
-    NTI
-  }
-
   /**
    * Sets the type-checking pass that ran most recently.
    */
-  abstract void setMostRecentTypechecker(MostRecentTypechecker mostRecent);
+  abstract void setTypeCheckingHasRun(boolean hasRun);
 
   /** Gets the type-checking pass that ran most recently. */
-  abstract MostRecentTypechecker getMostRecentTypechecker();
+  abstract boolean hasTypeCheckingRun();
 
   /**
    * Gets a central registry of type information from the compiled JS.
    */
   public abstract JSTypeRegistry getTypeRegistry();
 
-  public abstract TypeIRegistry getTypeIRegistry();
-
-  public abstract void clearTypeIRegistry();
+  public abstract void clearJSTypeRegistry();
 
   abstract void forwardDeclareType(String typeName);
 
@@ -258,11 +249,6 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
    * recorded as TypeMismatchs only for convenience
    */
   abstract Iterable<TypeMismatch> getImplicitInterfaceUses();
-
-  /**
-   * Global type registry used by NTI.
-   */
-  abstract <T extends TypeIRegistry> T getGlobalTypeInfo();
 
   abstract void setExternExports(String externExports);
 
@@ -680,16 +666,5 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
   @Nullable
   Object getAnnotation(String key) {
     return annotationMap.get(key);
-  }
-
-  private @Nullable PersistentInputStore persistentInputStore;
-
-  void setPersistentInputStore(PersistentInputStore persistentInputStore) {
-    this.persistentInputStore = persistentInputStore;
-  }
-
-  @Nullable
-  PersistentInputStore getPersistentInputStore() {
-    return persistentInputStore;
   }
 }

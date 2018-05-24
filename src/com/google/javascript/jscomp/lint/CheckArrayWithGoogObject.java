@@ -21,8 +21,9 @@ import com.google.javascript.jscomp.DiagnosticType;
 import com.google.javascript.jscomp.HotSwapCompilerPass;
 import com.google.javascript.jscomp.NodeTraversal;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.TypeI;
-
+import com.google.javascript.rhino.jstype.JSType;
+import com.google.javascript.rhino.jstype.JSTypeNative;
+import com.google.javascript.rhino.jstype.TemplatizedType;
 
 /**
  * Lints against passing arrays to goog.object methods with the intention of
@@ -82,8 +83,30 @@ public final class CheckArrayWithGoogObject extends NodeTraversal.AbstractPostOr
     if (firstArg == null) {
       return false;
     }
-    TypeI type = firstArg.getTypeI();
-    return type != null && type.containsArray();
+    JSType type = firstArg.getJSType();
+    return type != null && containsArray(type);
+  }
+
+  private boolean containsArray(JSType type) {
+    // Check if type is itself an array
+    if (type.isArrayType()) {
+      return true;
+    }
+    TemplatizedType templatizedType = type.toMaybeTemplatizedType();
+    if (templatizedType != null && templatizedType.getReferencedType().isArrayType()) {
+      return true;
+    }
+
+    // Check if this is a union that contains an array
+    if (type.isUnionType()) {
+      JSType arrayType = compiler.getTypeRegistry().getNativeType(JSTypeNative.ARRAY_TYPE);
+      for (JSType alternate : type.toMaybeUnionType().getAlternates()) {
+        if (alternate.isSubtypeOf(arrayType)) {
+          return true;
+        }
+      }
+    }
+    return false;
   }
 
   @Override
@@ -96,11 +119,11 @@ public final class CheckArrayWithGoogObject extends NodeTraversal.AbstractPostOr
 
   @Override
   public void process(Node externs, Node root) {
-    NodeTraversal.traverseEs6(compiler, root, this);
+    NodeTraversal.traverse(compiler, root, this);
   }
 
   @Override
   public void hotSwapScript(Node scriptRoot, Node originalRoot) {
-    NodeTraversal.traverseEs6(compiler, scriptRoot, this);
+    NodeTraversal.traverse(compiler, scriptRoot, this);
   }
 }

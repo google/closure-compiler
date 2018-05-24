@@ -84,7 +84,7 @@ public final class DefinitionsRemoverTest extends CompilerTestCase {
     // Create a pass that removes all the definitions.
     return (Node externs, Node root) -> {
       DefinitionsGatherer definitionsGatherer = new DefinitionsGatherer();
-      NodeTraversal.traverseEs6(compiler, root, definitionsGatherer);
+      NodeTraversal.traverse(compiler, root, definitionsGatherer);
       for (Definition def : definitionsGatherer.definitions) {
         def.remove(compiler);
       }

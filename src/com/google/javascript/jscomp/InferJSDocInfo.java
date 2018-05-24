@@ -69,10 +69,10 @@ class InferJSDocInfo extends AbstractPostOrderCallback
   @Override
   public void process(Node externs, Node root) {
     if (externs != null) {
-      NodeTraversal.traverseEs6(compiler, externs, this);
+      NodeTraversal.traverse(compiler, externs, this);
     }
     if (root != null) {
-      NodeTraversal.traverseEs6(compiler, root, this);
+      NodeTraversal.traverse(compiler, root, this);
     }
   }
 
@@ -80,7 +80,7 @@ class InferJSDocInfo extends AbstractPostOrderCallback
   public void hotSwapScript(Node root, Node originalRoot) {
     checkNotNull(root);
     checkState(root.isScript());
-    NodeTraversal.traverseEs6(compiler, root, this);
+    NodeTraversal.traverse(compiler, root, this);
   }
 
   @Override
@@ -94,11 +94,10 @@ class InferJSDocInfo extends AbstractPostOrderCallback
           return;
         }
 
-        // Only allow JSDoc on VARs, function declarations, and assigns.
-        if (!parent.isVar() &&
-            !NodeUtil.isFunctionDeclaration(parent) &&
-            !(parent.isAssign() &&
-              n == parent.getFirstChild())) {
+        // Only allow JSDoc on variable declarations, function declarations, and assigns.
+        if (!NodeUtil.isNameDeclaration(parent)
+            && !NodeUtil.isFunctionDeclaration(parent)
+            && !(parent.isAssign() && n == parent.getFirstChild())) {
           return;
         }
 
@@ -109,12 +108,10 @@ class InferJSDocInfo extends AbstractPostOrderCallback
         // /** ... */ x = function () { ... }
         // 3) A NAME parent.
         // var x, /** ... */ y = function() { ... }
-        // 4) A VAR grandparent.
+        // 4) A VAR, CONST, or LET grandparent.
         // /** ... */ var x = function() { ... }
         docInfo = n.getJSDocInfo();
-        if (docInfo == null &&
-            !(parent.isVar() &&
-                !parent.hasOneChild())) {
+        if (docInfo == null && !(NodeUtil.isNameDeclaration(parent) && !parent.hasOneChild())) {
           docInfo = parent.getJSDocInfo();
         }
 
@@ -143,6 +140,7 @@ class InferJSDocInfo extends AbstractPostOrderCallback
       case STRING_KEY:
       case GETTER_DEF:
       case SETTER_DEF:
+      case MEMBER_FUNCTION_DEF:
         docInfo = n.getJSDocInfo();
         if (docInfo == null) {
           return;

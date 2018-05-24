@@ -70,7 +70,7 @@ public class DefinitionUseSiteFinder extends NameBasedDefinitionProvider {
   @Override
   public void process(Node externs, Node source) {
     super.process(externs, source);
-    NodeTraversal.traverseEs6(compiler, source, new UseSiteGatheringCallback());
+    NodeTraversal.traverse(compiler, source, new UseSiteGatheringCallback());
   }
 
   /**
@@ -191,7 +191,7 @@ public class DefinitionUseSiteFinder extends NameBasedDefinitionProvider {
       }
     }
 
-    NodeTraversal.traverseEs6ScopeRoots(
+    NodeTraversal.traverseScopeRoots(
         compiler, null, changedScopeRoots, new UseSiteGatheringCallback(), false);
   }
 

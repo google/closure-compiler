@@ -18,6 +18,7 @@
  * Originally part of the Polymer Project. Original license below.
  *
  * @externs
+ * @suppress {strictMissingProperties}
  * @license
  * Copyright (c) 2015 The Polymer Project Authors. All rights reserved.
  * This code may only be used under the BSD style license found at

@@ -21,6 +21,7 @@
  * functions.
  * @see https://docs.angularjs.org/api/ng/service/$q
  * @externs
+ * @suppress {strictMissingProperties}
  */
 
 /******************************************************************************

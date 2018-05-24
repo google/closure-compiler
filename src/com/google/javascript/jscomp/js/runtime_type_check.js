@@ -18,6 +18,8 @@
 /**
  * @fileoverview Provides the boilerplate code for run-time type checking.
  *
+ *
+ * @suppress {uselessCode} The require statements below are not useless.
  */
 'require base';
 
@@ -47,7 +49,7 @@ $jscomp.typecheck.log = function(warning, expr) {};
  * logging if not, and returning the expression regardless.
  *
  * @param {*} expr the expression to check.
- * @param {!Array.<!$jscomp.typecheck.Checker>} checkers the checkers to
+ * @param {!Array<!$jscomp.typecheck.Checker>} checkers the checkers to
  *     use in checking, one of these has to match for checking to succeed.
  * @return {*} the given expression back.
  */
@@ -102,6 +104,7 @@ $jscomp.typecheck.prettify_ = function(expr) {
  * @return {string|undefined} the class name or undefined if the
  *     expression is not an object.
  * @private
+ * @suppress {strictMissingProperties}
  */
 $jscomp.typecheck.getClassName_ = function(expr) {
   var className = void 0;
@@ -220,7 +223,7 @@ $jscomp.typecheck.ExternClassChecker_ = function(className) {
 /**
  * A list of (hopefully all) open windows.
  *
- * @type {!Array.<!Window>}
+ * @type {!Array<!Window>}
  */
 $jscomp.typecheck.ExternClassChecker_.windows = [];
 
@@ -228,7 +231,7 @@ $jscomp.typecheck.ExternClassChecker_.windows = [];
 /**
  * A list of the original open methods that have been redefined.
  *
- * @type {!Array.<!Function>}
+ * @type {!Array<!Function>}
  */
 $jscomp.typecheck.ExternClassChecker_.oldOpenFuns = [];
 
@@ -239,9 +242,19 @@ $jscomp.typecheck.ExternClassChecker_.oldOpenFuns = [];
  * @param {!Window} win the window to track.
  */
 $jscomp.typecheck.ExternClassChecker_.trackOpenOnWindow = function(win) {
+  // Declare the property we add to the window object.
+  // NOTE: we add a declaration in a "if (false) ..." to ensure we
+  // don't reference "Window" on platforms that don't have a global
+  // Window object (node, service workers, etc).
+  if (false) {
+    /** @type {boolean} */
+    Window.prototype.tracked;
+  }
+
   if (win.tracked) {
     return;
   }
+
   win.tracked = true;
 
   var key = $jscomp.typecheck.ExternClassChecker_.oldOpenFuns.length;
@@ -310,7 +323,7 @@ $jscomp.typecheck.ExternClassChecker_.prototype.toString = function() {
  *
  * @param {!Window} w the window to start checking from.
  * @param {*} expr the expression to check.
- * @param {!Array.<boolean>} classTypeDefined a wrapped boolean
+ * @param {!Array<boolean>} classTypeDefined a wrapped boolean
  *     updated to indicate whether the class type was seen in any frame.
  * @return {boolean} true if the given expression is an instance of this class.
  * @private

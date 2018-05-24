@@ -38,7 +38,7 @@ import java.util.Map;
  *
  * @author robbyw@google.com (Robby Walker)
  */
-public final class ScopedAliasesTest extends TypeICompilerTestCase {
+public final class ScopedAliasesTest extends CompilerTestCase {
 
   private static final String GOOG_SCOPE_START_BLOCK =
       "goog.scope(function() {";
@@ -61,7 +61,7 @@ public final class ScopedAliasesTest extends TypeICompilerTestCase {
   @Override
   protected void setUp() throws Exception {
     super.setUp();
-    this.mode = TypeInferenceMode.NEITHER;
+    disableTypeCheck();
     enableRunTypeCheckAfterProcessing();
   }
 
@@ -407,7 +407,7 @@ public final class ScopedAliasesTest extends TypeICompilerTestCase {
   }
 
   public void testJsDocNotIgnored() {
-    this.mode = TypeInferenceMode.BOTH;
+    enableTypeCheck();
 
     String externs =
         lines(
@@ -432,8 +432,7 @@ public final class ScopedAliasesTest extends TypeICompilerTestCase {
     test(
         externs(externs),
         srcs(js),
-        warningOtiNti(
-            TypeValidator.TYPE_MISMATCH_WARNING, NewTypeInference.INVALID_ARGUMENT_TYPE));
+        warning(TypeValidator.TYPE_MISMATCH_WARNING));
 
     js =
         lines(
@@ -447,8 +446,7 @@ public final class ScopedAliasesTest extends TypeICompilerTestCase {
     test(
         externs(externs),
         srcs(js),
-        warningOtiNti(
-            TypeValidator.TYPE_MISMATCH_WARNING, NewTypeInference.INVALID_ARGUMENT_TYPE));
+        warning(TypeValidator.TYPE_MISMATCH_WARNING));
   }
 
   public void testUsingObjectLiteralToEscapeScoping() {
@@ -578,7 +576,7 @@ public final class ScopedAliasesTest extends TypeICompilerTestCase {
   }
 
   public void testJsDocRecord() {
-    this.mode = TypeInferenceMode.BOTH;
+    enableTypeCheck();
     test(
         lines(
             "/** @const */ var ns = {};",
@@ -589,7 +587,7 @@ public final class ScopedAliasesTest extends TypeICompilerTestCase {
         lines(
             "/** @const */ var ns = {};",
             "/** @type {{x: string}} */ ns.y = {'goog.Timer': 'x'};"),
-        warningOtiNti(TypeValidator.TYPE_MISMATCH_WARNING, NewTypeInference.MISTYPED_ASSIGN_RHS));
+        warning(TypeValidator.TYPE_MISMATCH_WARNING));
   }
 
   public void testArrayJsDoc() {
@@ -704,7 +702,7 @@ public final class ScopedAliasesTest extends TypeICompilerTestCase {
   }
 
   public void testInlineJsDoc() {
-    this.mode = TypeInferenceMode.BOTH;
+    enableTypeCheck();
     test(
         srcs(lines(
             "/** @const */ var ns = {};",
@@ -723,7 +721,7 @@ public final class ScopedAliasesTest extends TypeICompilerTestCase {
   }
 
   public void testInlineReturn() {
-    this.mode = TypeInferenceMode.BOTH;
+    enableTypeCheck();
     test(
         srcs(lines(
             "/** @const */ var ns = {};",
@@ -744,7 +742,7 @@ public final class ScopedAliasesTest extends TypeICompilerTestCase {
   }
 
   public void testInlineParam() {
-    this.mode = TypeInferenceMode.BOTH;
+    enableTypeCheck();
     test(
         srcs(lines(
             "/** @const */ var ns = {};",
@@ -1069,7 +1067,7 @@ public final class ScopedAliasesTest extends TypeICompilerTestCase {
   }
 
   public void testTypeCheck() {
-    this.mode = TypeInferenceMode.BOTH;
+    enableTypeCheck();
 
     test(
         lines(
@@ -1082,8 +1080,7 @@ public final class ScopedAliasesTest extends TypeICompilerTestCase {
             "/** @return {$jscomp.scope.F} */",
             "$jscomp.scope.createFoo = /** @return {$jscomp.scope.F} */ function() { return 1; };",
             "/** @constructor */ $jscomp.scope.F = /** @constructor */ function() { };"),
-        warningOtiNti(
-            TypeValidator.TYPE_MISMATCH_WARNING, NewTypeInference.RETURN_NONDECLARED_TYPE));
+        warning(TypeValidator.TYPE_MISMATCH_WARNING));
   }
 
   // Alias Recording Tests
@@ -1254,7 +1251,7 @@ public final class ScopedAliasesTest extends TypeICompilerTestCase {
 
     @Override
     public void process(Node externs, Node root) {
-      NodeTraversal.traverseEs6(compiler, root, this);
+      NodeTraversal.traverse(compiler, root, this);
     }
 
     @Override

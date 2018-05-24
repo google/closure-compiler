@@ -178,7 +178,7 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
 
     private void checkDefaultParam(
         Var param, final Scope scope, final Set<String> varsInFunctionBody) {
-      NodeTraversal.traverseEs6(
+      NodeTraversal.traverse(
           compiler,
           param.getParentNode().getSecondChild(),
           /**

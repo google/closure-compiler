@@ -74,19 +74,17 @@ public final class FeatureSet implements Serializable {
 
   public static final FeatureSet TYPESCRIPT =  ES_NEXT.with(LangVersion.TYPESCRIPT.features());
 
-  // TODO(b/64536685): Remove this FeatureSet once NTI supports all of ES6.
-  public static final FeatureSet NTI_SUPPORTED =
+  public static final FeatureSet TYPE_CHECK_SUPPORTED =
       ES5.with(
-          ImmutableSet.<Feature>of(
-              Feature.COMPUTED_PROPERTIES,
-              Feature.EXPONENT_OP,
-              Feature.EXTENDED_OBJECT_LITERALS,
-              Feature.FOR_OF,
-              Feature.GENERATORS,
-              Feature.MEMBER_DECLARATIONS,
-              Feature.TEMPLATE_LITERALS));
-
-  public static final FeatureSet OTI_SUPPORTED = ES5.with(Feature.GENERATORS);
+          Feature.BLOCK_SCOPED_FUNCTION_DECLARATION,
+          Feature.CONST_DECLARATIONS,
+          Feature.FOR_OF,
+          Feature.GENERATORS,
+          Feature.LET_DECLARATIONS,
+          Feature.COMPUTED_PROPERTIES,
+          Feature.MEMBER_DECLARATIONS,
+          Feature.TEMPLATE_LITERALS,
+          Feature.EXTENDED_OBJECT_LITERALS);
 
   private enum LangVersion {
     ES3,
@@ -200,20 +198,54 @@ public final class FeatureSet implements Serializable {
     if (ES5.contains(this)) {
       return "es5";
     }
-    if (OTI_SUPPORTED.contains(this)) {
-      return "otiSupported";
-    }
     if (ES6_MODULES.contains(this)) {
       return "es6";
-    }
-    if (NTI_SUPPORTED.contains(this)) {
-      return "ntiSupported";
     }
     if (ES7_MODULES.contains(this)) {
       return "es7";
     }
     if (ES8_MODULES.contains(this)) {
       return "es8";
+    }
+    if (ES2018_MODULES.contains(this)) {
+      return "es9";
+    }
+    if (ES_NEXT.contains(this)) {
+      return "es_next";
+    }
+    if (TYPESCRIPT.contains(this)) {
+      return "ts";
+    }
+    throw new IllegalStateException(this.toString());
+  }
+
+  /**
+   * Returns a string representation useful for debugging.
+   *
+   * <p>This is not suitable for encoding in deps.js or depgraph files, because it may return
+   * strings like 'otiSupported' and 'ntiSupported' which are not real language modes.
+   */
+  public String versionForDebugging() {
+    if (ES3.contains(this)) {
+      return "es3";
+    }
+    if (ES5.contains(this)) {
+      return "es5";
+    }
+    if (TYPE_CHECK_SUPPORTED.contains(this)) {
+      return "typeCheckSupported";
+    }
+    if (ES6_MODULES.contains(this)) {
+      return "es6";
+    }
+    if (ES7_MODULES.contains(this)) {
+      return "es7";
+    }
+    if (ES8_MODULES.contains(this)) {
+      return "es8";
+    }
+    if (ES2018_MODULES.contains(this)) {
+      return "es9";
     }
     if (ES_NEXT.contains(this)) {
       return "es_next";
@@ -303,6 +335,10 @@ public final class FeatureSet implements Serializable {
     return features.contains(feature);
   }
 
+  public ImmutableSet<Feature> getFeatures() {
+    return features;
+  }
+
   @Override
   public boolean equals(Object other) {
     return other instanceof FeatureSet && ((FeatureSet) other).features.equals(features);
@@ -328,10 +364,8 @@ public final class FeatureSet implements Serializable {
       case "es6-impl":
       case "es6":
         return ES6;
-      case "ntiSupported":
-        return NTI_SUPPORTED;
-      case "otiSupported":
-        return OTI_SUPPORTED;
+      case "typeCheckSupported":
+        return TYPE_CHECK_SUPPORTED;
       case "es7":
         return ES7;
       case "es8":

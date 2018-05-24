@@ -44,12 +44,12 @@ final class CheckSuper implements HotSwapCompilerPass, Callback {
 
   @Override
   public void process(Node externs, Node root) {
-    NodeTraversal.traverseEs6(compiler, root, this);
+    NodeTraversal.traverse(compiler, root, this);
   }
 
   @Override
   public void hotSwapScript(Node scriptRoot, Node originalRoot) {
-    NodeTraversal.traverseEs6(compiler, scriptRoot, this);
+    NodeTraversal.traverse(compiler, scriptRoot, this);
   }
 
   @Override
@@ -83,7 +83,7 @@ final class CheckSuper implements HotSwapCompilerPass, Callback {
     }
 
     FindSuper finder = new FindSuper();
-    NodeTraversal.traverseEs6(compiler, NodeUtil.getFunctionBody(constructor), finder);
+    NodeTraversal.traverse(compiler, NodeUtil.getFunctionBody(constructor), finder);
 
     if (!finder.found) {
       t.report(constructor, MISSING_CALL_TO_SUPER);

@@ -96,7 +96,7 @@ abstract class PotentialDeclaration {
     return NodeUtil.getBestJSDocInfo(lhs);
   }
 
-  private boolean isDetached() {
+  boolean isDetached() {
     for (Node current = lhs; current != null; current = current.getParent()) {
       if (current.isScript()) {
         return false;
@@ -127,6 +127,11 @@ abstract class PotentialDeclaration {
    * Usually, this means removing the RHS and leaving a type annotation.
    */
   abstract void simplify(AbstractCompiler compiler);
+
+  boolean isAliasDefinition() {
+    Node rhs = getRhs();
+    return isConstToBeInferred() && rhs != null && rhs.isQualifiedName();
+  }
 
   /**
    * A potential declaration that has a fully qualified name to describe it.
@@ -166,13 +171,7 @@ abstract class PotentialDeclaration {
       Node nameNode = getLhs();
       JSDocInfo jsdoc = getJsDoc();
       if (jsdoc != null && jsdoc.hasEnumParameterType()) {
-        // Remove values from enums
-        if (getRhs().isObjectLit() && getRhs().hasChildren()) {
-          for (Node key : getRhs().children()) {
-            removeStringKeyValue(key);
-          }
-          compiler.reportChangeToEnclosingScope(getRhs());
-        }
+        super.simplifyEnumValues(compiler);
         return;
       }
       if (NodeUtil.isNamespaceDecl(nameNode)) {
@@ -240,6 +239,13 @@ abstract class PotentialDeclaration {
     }
 
     @Override
+    boolean isAliasDefinition() {
+      // Constructor 'this' property declarations are executed in each constructor invocation
+      // and are not aliases in the traditional sense
+      return false;
+    }
+
+    @Override
     void simplify(AbstractCompiler compiler) {
       if (shouldPreserve()) {
         return;
@@ -298,16 +304,18 @@ abstract class PotentialDeclaration {
       if (shouldPreserve()) {
         return;
       }
-      if (!isTypedRhs(getRhs())) {
-        Node key = getLhs();
-        removeStringKeyValue(key);
-        JSDocInfo jsdoc = getJsDoc();
-        if (jsdoc == null
-            || !jsdoc.containsDeclaration()
-            || isConstToBeInferred()) {
-          key.setJSDocInfo(JsdocUtil.getUnusableTypeJSDoc(jsdoc));
-        }
-        compiler.reportChangeToEnclosingScope(key);
+      JSDocInfo jsdoc = getJsDoc();
+      if (jsdoc != null && jsdoc.hasEnumParameterType()) {
+        super.simplifyEnumValues(compiler);
+        return;
+      }
+      Node key = getLhs();
+      removeStringKeyValue(key);
+      compiler.reportChangeToEnclosingScope(key);
+      if (jsdoc == null
+          || !jsdoc.containsDeclaration()
+          || isConstToBeInferred()) {
+        key.setJSDocInfo(JsdocUtil.getUnusableTypeJSDoc(jsdoc));
       }
     }
 
@@ -334,6 +342,16 @@ abstract class PotentialDeclaration {
       return getLhs();
     }
 
+  }
+
+  /** Remove values from enums */
+  private void simplifyEnumValues(AbstractCompiler compiler) {
+    if (getRhs().isObjectLit() && getRhs().hasChildren()) {
+      for (Node key : getRhs().children()) {
+        removeStringKeyValue(key);
+      }
+      compiler.reportChangeToEnclosingScope(getRhs());
+    }
   }
 
   boolean isDefiniteDeclaration() {

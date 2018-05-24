@@ -37,15 +37,6 @@ refactoring_testcase.location_href_string_literal = function(target) {
 };
 
 /**
- * @param {!Window} target The target.
- * @param {string} val The value.
- */
-refactoring_testcase.test_window_location = function(target, val) {
-  // Should match.
-  target.location = val;
-};
-
-/**
  * @param {Location|Element} target The target.
  * @param {string} val The value.
  */

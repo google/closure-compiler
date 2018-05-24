@@ -701,7 +701,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     if (scriptParent == null) {
       return;
     }
-    NodeTraversal.traverseEs6(compiler, scriptParent, new UnwrapGoogLoadModule());
+    NodeTraversal.traverse(compiler, scriptParent, new UnwrapGoogLoadModule());
 
     // Record all the scripts first so that the googModuleNamespaces global state can be complete
     // before doing any updating also queue up scriptDescriptions for later use in ScriptUpdater
@@ -711,8 +711,8 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
       pushScript(new ScriptDescription());
       currentScript.rootNode = c;
       scriptDescriptions.addLast(currentScript);
-      NodeTraversal.traverseEs6(compiler, c, new ScriptPreprocessor());
-      NodeTraversal.traverseEs6(compiler, c, new ScriptRecorder());
+      NodeTraversal.traverse(compiler, c, new ScriptPreprocessor());
+      NodeTraversal.traverse(compiler, c, new ScriptRecorder());
       popScript();
     }
 
@@ -725,7 +725,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     // scriptDescriptions that were queued up by all the recording.
     for (Node c = scriptParent.getFirstChild(); c != null; c = c.getNext()) {
       pushScript(scriptDescriptions.removeFirst());
-      NodeTraversal.traverseEs6(compiler, c, new ScriptUpdater());
+      NodeTraversal.traverse(compiler, c, new ScriptUpdater());
       popScript();
     }
   }
@@ -733,20 +733,20 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
   @Override
   public void hotSwapScript(Node scriptRoot, Node originalRoot) {
     checkState(scriptRoot.isScript(), scriptRoot);
-    NodeTraversal.traverseEs6(compiler, scriptRoot, new UnwrapGoogLoadModule());
+    NodeTraversal.traverse(compiler, scriptRoot, new UnwrapGoogLoadModule());
 
     rewriteState.removeRoot(originalRoot);
 
     pushScript(new ScriptDescription());
     currentScript.rootNode = scriptRoot;
-    NodeTraversal.traverseEs6(compiler, scriptRoot, new ScriptPreprocessor());
-    NodeTraversal.traverseEs6(compiler, scriptRoot, new ScriptRecorder());
+    NodeTraversal.traverse(compiler, scriptRoot, new ScriptPreprocessor());
+    NodeTraversal.traverse(compiler, scriptRoot, new ScriptRecorder());
 
     if (compiler.hasHaltingErrors()) {
       return;
     }
 
-    NodeTraversal.traverseEs6(compiler, scriptRoot, new ScriptUpdater());
+    NodeTraversal.traverse(compiler, scriptRoot, new ScriptUpdater());
     popScript();
 
     reportUnrecognizedRequires();

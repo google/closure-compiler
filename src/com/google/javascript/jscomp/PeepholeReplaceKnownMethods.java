@@ -218,6 +218,8 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
             return tryFoldStringToLowerCase(subtree, stringNode);
           case "toUpperCase":
             return tryFoldStringToUpperCase(subtree, stringNode);
+          case "trim":
+            return tryFoldStringTrim(subtree, stringNode);
           default: // fall out
         }
       } else {
@@ -243,8 +245,8 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
     if (useTypes
         && firstArg != null
         && (isStringLiteral
-            || (stringNode.getTypeI() != null
-                && stringNode.getTypeI().isStringValueType()))) {
+            || (stringNode.getJSType() != null
+                && stringNode.getJSType().isStringValueType()))) {
       if (subtree.hasXChildren(3)) {
         Double maybeStart = NodeUtil.getNumberValue(firstArg);
         if (maybeStart != null) {
@@ -314,6 +316,20 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
     // From Rhino, NativeString.java. See ECMA 15.5.4.12
     String upped = stringNode.getString().toUpperCase(Locale.ROOT);
     Node replacement = IR.string(upped);
+    subtree.replaceWith(replacement);
+    compiler.reportChangeToEnclosingScope(replacement);
+    return replacement;
+  }
+
+  /** @return The trimmed string Node. */
+  private Node tryFoldStringTrim(Node subtree, Node stringNode) {
+    // See ECMA 15.5.4.20, 7.2, and 7.3
+    // All Unicode 10.0 whitespace + BOM
+    String whitespace =
+        "[ \t\n-\r\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF]+";
+    String trimmed =
+        stringNode.getString().replaceAll("^" + whitespace + "|" + whitespace + "$", "");
+    Node replacement = IR.string(trimmed);
     subtree.replaceWith(replacement);
     compiler.reportChangeToEnclosingScope(replacement);
     return replacement;

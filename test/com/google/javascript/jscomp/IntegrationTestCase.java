@@ -198,9 +198,6 @@ abstract class IntegrationTestCase extends TestCase {
                   "/** @type {function(!Object, ?Object)} */",
                   "Object.setPrototypeOf;",
                   "",
-                  "/** @typedef {?} */",
-                  "var symbol;",
-                  "",
                   "/**",
                   " * @param {string} s",
                   " * @return {symbol}",
@@ -328,13 +325,15 @@ abstract class IntegrationTestCase extends TestCase {
         0, compiler.getErrors().length + compiler.getWarnings().length);
 
     Node root = compiler.getJsRoot();
-    Node expectedRoot = parseExpectedCode(compiled, options, normalizeResults);
-    String explanation = expectedRoot.checkTreeEquals(root);
-    assertNull("\n"
-        + "Expected: " + compiler.toSource(expectedRoot) + "\n"
-        + "Result:   " + compiler.toSource(root) + "\n"
-        + explanation,
-        explanation);
+    if (compiled != null) {
+      Node expectedRoot = parseExpectedCode(compiled, options, normalizeResults);
+      String explanation = expectedRoot.checkTreeEquals(root);
+      assertNull("\n"
+          + "Expected: " + compiler.toSource(expectedRoot) + "\n"
+          + "Result:   " + compiler.toSource(root) + "\n"
+          + explanation,
+          explanation);
+    }
   }
 
   /**

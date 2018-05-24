@@ -152,9 +152,9 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
       "JSC_USE_OF_GOOG_BASE",
       "goog.base is not compatible with ES5 strict mode.\n"
       + "Please use an alternative.\n"
-      + "For EcmaScript classes use the super keyword, for traditional Closure classes\n"
+      + "For EcmaScript classes use the super keyword. For traditional Closure classes,\n"
       + "use the class specific base method instead. For example, for the constructor MyClass:\n"
-      + "   MyClass.base(this, 'constructor')");
+      + "   MyClass.base(this, ''constructor'')");
 
   /** The root Closure namespace */
   static final String GOOG = "goog";
@@ -197,7 +197,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
 
   @Override
   public void process(Node externs, Node root) {
-    NodeTraversal.traverseRootsEs6(compiler, this, externs, root);
+    NodeTraversal.traverseRoots(compiler, this, externs, root);
 
     for (Node n : defineCalls) {
       replaceGoogDefines(n);
@@ -386,7 +386,8 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
         if (n.getFirstChild().isName()
             && !parent.isCall()
             && !parent.isAssign()
-            && n.matchesQualifiedName("goog.base")) {
+            && n.matchesQualifiedName("goog.base")
+            && !n.getSourceFileName().endsWith("goog.js")) {
           reportBadGoogBaseUse(t, n, "May only be called directly.");
         }
         break;

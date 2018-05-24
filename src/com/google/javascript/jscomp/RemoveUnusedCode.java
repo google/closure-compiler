@@ -27,7 +27,7 @@ import com.google.javascript.jscomp.CodingConvention.SubclassRelationship;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-import com.google.javascript.rhino.TypeI;
+import com.google.javascript.rhino.jstype.JSType;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
@@ -2251,7 +2251,7 @@ class RemoveUnusedCode implements CompilerPass {
       if (lhs.isGetProp()) {
         // something.propName = someValue
         Node getPropLhs = lhs.getFirstChild();
-        TypeI typeI = getPropLhs.getTypeI();
+        JSType typeI = getPropLhs.getJSType();
         return typeI != null && (typeI.isConstructor() || typeI.isInterface());
       } else {
         return false;

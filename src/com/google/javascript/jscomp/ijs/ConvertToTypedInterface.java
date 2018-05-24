@@ -32,7 +32,7 @@ import com.google.javascript.jscomp.Var;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.TypeI.Nullability;
+import com.google.javascript.rhino.jstype.JSType.Nullability;
 import java.util.Comparator;
 import java.util.List;
 import javax.annotation.Nullable;
@@ -123,8 +123,8 @@ public class ConvertToTypedInterface implements CompilerPass {
   private void processFile(Node scriptNode) {
     checkArgument(scriptNode.isScript());
     FileInfo currentFile = new FileInfo();
-    NodeTraversal.traverseEs6(compiler, scriptNode, new RemoveNonDeclarations());
-    NodeTraversal.traverseEs6(compiler, scriptNode, new PropagateConstJsdoc(currentFile));
+    NodeTraversal.traverse(compiler, scriptNode, new RemoveNonDeclarations());
+    NodeTraversal.traverse(compiler, scriptNode, new PropagateConstJsdoc(currentFile));
     new SimplifyDeclarations(compiler, currentFile).simplifyAll();
   }
 
@@ -420,7 +420,7 @@ public class ConvertToTypedInterface implements CompilerPass {
         decl.remove(compiler);
         return;
       }
-      if (isAliasDefinition(decl)) {
+      if (decl.isAliasDefinition()) {
         return;
       }
       if (decl.getRhs() != null && decl.getRhs().isFunction()) {
@@ -474,6 +474,9 @@ public class ConvertToTypedInterface implements CompilerPass {
 
     private boolean shouldRemove(String name, PotentialDeclaration decl) {
       if ("$jscomp".equals(rootName(name))) {
+        if (decl.isDetached()) {
+          return true;
+        }
         // These are created by goog.scope processing, but clash with each other
         // and should not be depended on.
         if (decl.getRhs() != null && decl.getRhs().isClass()
@@ -503,16 +506,6 @@ public class ConvertToTypedInterface implements CompilerPass {
       jsdocNode.setJSDocInfo(JsdocUtil.getUnusableTypeJSDoc(jsdoc));
     }
 
-    private boolean isAliasDefinition(PotentialDeclaration decl) {
-      Node rhs = decl.getRhs();
-      if (decl.isConstToBeInferred() && rhs != null && rhs.isQualifiedName()) {
-        String aliasedName = rhs.getQualifiedName();
-        return rhs.isThis()
-            || currentFile.isPrefixRequired(aliasedName)
-            || currentFile.isNameDeclared(aliasedName);
-      }
-      return false;
-    }
   }
 
 }

@@ -153,7 +153,6 @@ import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.TokenStream;
 import com.google.javascript.rhino.dtoa.DToA;
 import java.util.ArrayDeque;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -220,7 +219,6 @@ class IRFactory {
   static final String UNDEFINED_LABEL = "undefined label \"%s\"";
 
   private final String sourceString;
-  private final List<Integer> newlines;
   private final StaticSourceFile sourceFile;
   private final String sourceName;
   private final Config config;
@@ -280,22 +278,12 @@ class IRFactory {
     this.sourceString = sourceString;
     this.nextCommentIter = comments.iterator();
     this.currentComment = skipNonJsDoc(nextCommentIter);
-    this.newlines = new ArrayList<>();
     this.sourceFile = sourceFile;
     // The template node properties are applied to all nodes in this transform.
     this.templateNode = createTemplateNode();
 
     this.fileLevelJsDocBuilder =
         new JSDocInfoBuilder(config.jsDocParsingMode().shouldParseDescriptions());
-
-    // Pre-generate all the newlines in the file.
-    for (int charNo = 0; true; charNo++) {
-      charNo = sourceString.indexOf('\n', charNo);
-      if (charNo == -1) {
-        break;
-      }
-      newlines.add(charNo);
-    }
 
     // Sometimes this will be null in tests.
     this.sourceName = sourceFile == null ? null : sourceFile.getName();
@@ -362,16 +350,6 @@ class IRFactory {
     irFactory.resultNode = n;
 
     return irFactory;
-  }
-
-  static FeatureSet detectFeatures(
-      ProgramTree tree, StaticSourceFile sourceFile, String sourceString) {
-    IRFactory irFactory =
-        new IRFactory(sourceString, sourceFile, NULL_CONFIG, NULL_REPORTER, tree.sourceComments);
-    Node n = irFactory.transformDispatcher.process(tree);
-    irFactory.validateAll(n);
-
-    return irFactory.features;
   }
 
   static final Config NULL_CONFIG = Config.builder().build();
@@ -1103,6 +1081,8 @@ class IRFactory {
         scriptNode.addChildToBack(moduleNode);
         if (isGoogModule) {
           scriptNode.putBooleanProp(Node.GOOG_MODULE, true);
+        } else {
+          scriptNode.putBooleanProp(Node.ES6_MODULE, true);
         }
       }
       return scriptNode;
@@ -1376,6 +1356,8 @@ class IRFactory {
         member.setStaticMember(functionTree.isStatic);
         maybeProcessAccessibilityModifier(functionTree, member, functionTree.access);
         node.setDeclaredTypeExpression(node.getDeclaredTypeExpression());
+        // The source info should only include the identifier, not the entire function expression
+        setSourceInfo(member, name);
         result = member;
       } else {
         result = node;
@@ -3013,10 +2995,11 @@ class IRFactory {
 
   String normalizeString(LiteralToken token, boolean templateLiteral) {
     String value = token.value;
-    if (templateLiteral) {
-      // <CR><LF> and <CR> are normalized as <LF> for raw string value
-      value = value.replaceAll("\r\n?", "\n");
-    }
+    // <CR><LF> and <CR> are normalized as <LF>. For raw template literal string values: this is the
+    // spec behaviour. For regular string literals: they can only be part of a line continuation,
+    // which we want to scrub.
+    value = value.replaceAll("\r\n?", "\n");
+
     int start = templateLiteral ? 0 : 1; // skip the leading quote
     int cur = value.indexOf('\\');
     if (cur == -1) {

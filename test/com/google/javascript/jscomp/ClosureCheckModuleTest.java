@@ -15,6 +15,7 @@
  */
 package com.google.javascript.jscomp;
 
+import static com.google.javascript.jscomp.ClosureCheckModule.DECLARE_LEGACY_NAMESPACE_IN_NON_MODULE;
 import static com.google.javascript.jscomp.ClosureCheckModule.DUPLICATE_NAME_SHORT_REQUIRE;
 import static com.google.javascript.jscomp.ClosureCheckModule.EXPORT_NOT_A_MODULE_LEVEL_STATEMENT;
 import static com.google.javascript.jscomp.ClosureCheckModule.EXPORT_REPEATED_ERROR;
@@ -326,6 +327,14 @@ public final class ClosureCheckModuleTest extends CompilerTestCase {
             "",
             "/** @export */",
             "exports.prototype.fly = function() {};"));
+  }
+
+  public void testIllegalDeclareLegacyNamespace() {
+    testError(
+        lines(
+            "goog.provide('a.provided.namespace');",
+            "goog.module.declareLegacyNamespace();"),
+        DECLARE_LEGACY_NAMESPACE_IN_NON_MODULE);
   }
 
   public void testIllegalGoogRequires() {

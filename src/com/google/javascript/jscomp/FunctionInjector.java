@@ -28,7 +28,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.ExpressionDecomposer.DecompositionType;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-import com.google.javascript.rhino.TypeI;
+import com.google.javascript.rhino.jstype.JSType;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
@@ -305,7 +305,7 @@ class FunctionInjector {
       newExpression = NodeUtil.newUndefinedNode(srcLocation);
     } else {
       Node returnNode = block.getFirstChild();
-      checkArgument(returnNode.isReturn());
+      checkArgument(returnNode.isReturn(), returnNode);
 
       // Clone the return node first.
       Node safeReturnNode = returnNode.cloneTree();
@@ -317,10 +317,10 @@ class FunctionInjector {
     }
 
     // If the call site had a cast ensure it's persisted to the new expression that replaces it.
-    TypeI typeBeforeCast = callNode.getTypeIBeforeCast();
+    JSType typeBeforeCast = callNode.getJSTypeBeforeCast();
     if (typeBeforeCast != null) {
       newExpression.putProp(Node.TYPE_BEFORE_CAST, typeBeforeCast);
-      newExpression.setTypeI(callNode.getTypeI());
+      newExpression.setJSType(callNode.getJSType());
     }
     callParentNode.replaceChild(callNode, newExpression);
     NodeUtil.markFunctionsDeleted(callNode, compiler);

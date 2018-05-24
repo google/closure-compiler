@@ -342,10 +342,11 @@ public final class SourceMapGeneratorV3 implements SourceMapGenerator {
    * 4.    lineCount: 2,
    * 5.    sourceRoot: "",
    * 6.    sources: ["foo.js", "bar.js"],
-   * 7.    names: ["src", "maps", "are", "fun"],
-   * 8.    mappings: "a;;abcde,abcd,a;"
-   * 9.    x_org_extension: value
-   * 10. }
+   * 7.    sourcesContent: ["var foo", "var bar"],
+   * 8.    names: ["src", "maps", "are", "fun"],
+   * 9.    mappings: "a;;abcde,abcd,a;"
+   * 10.   x_org_extension: value
+   * 11. }
    *
    * Line 1: The entire file is a single JSON object
    * Line 2: File revision (always the first entry in the object)
@@ -355,10 +356,11 @@ public final class SourceMapGeneratorV3 implements SourceMapGenerator {
    *     server or removing repeated prefix values in the "sources" entry.
    * Line 6: A list of sources used by the "mappings" entry relative to the
    *     sourceRoot.
-   * Line 7: A list of symbol names used by the "mapping" entry.  This list
+   * Line 7: An optional list of the full content of the source files.
+   * Line 8: A list of symbol names used by the "mapping" entry.  This list
    *     may be incomplete.
-   * Line 8: The mappings field.
-   * Line 9: Any custom field (extension).
+   * Line 9: The mappings field.
+   * Line 10: Any custom field (extension).
    */
   @Override
   public void appendTo(Appendable out, String name) throws IOException {

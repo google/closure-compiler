@@ -21,10 +21,10 @@ import com.google.auto.value.AutoValue;
 import com.google.common.base.Splitter;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
-import com.google.javascript.rhino.FunctionTypeI;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.ObjectTypeI;
-import com.google.javascript.rhino.TypeI;
+import com.google.javascript.rhino.jstype.FunctionType;
+import com.google.javascript.rhino.jstype.JSType;
+import com.google.javascript.rhino.jstype.ObjectType;
 import java.io.Serializable;
 import java.util.Iterator;
 import java.util.List;
@@ -38,8 +38,8 @@ import java.util.Objects;
  * so that they don't wreck code with type warnings.
  */
 class TypeMismatch implements Serializable {
-  final TypeI typeA;
-  final TypeI typeB;
+  final JSType typeA;
+  final JSType typeB;
   final Supplier<JSError> error;
 
   /**
@@ -47,7 +47,7 @@ class TypeMismatch implements Serializable {
    * {@code TypeMismatch} to ensure that {@code a} and {@code b} are
    * non-matching types.
    */
-  TypeMismatch(TypeI a, TypeI b, Supplier<JSError> error) {
+  TypeMismatch(JSType a, JSType b, Supplier<JSError> error) {
     this.typeA = a;
     this.typeB = b;
     this.error = error;
@@ -55,7 +55,7 @@ class TypeMismatch implements Serializable {
 
   static void registerIfMismatch(
       List<TypeMismatch> mismatches, List<TypeMismatch> implicitInterfaceUses,
-      TypeI found, TypeI required, JSError error) {
+      JSType found, JSType required, JSError error) {
     if (found != null && required != null && !found.isSubtypeWithoutStructuralTyping(required)) {
       registerMismatch(mismatches, implicitInterfaceUses, found, required, error);
     }
@@ -71,13 +71,13 @@ class TypeMismatch implements Serializable {
    * *and* we have switched all the unsafe uses of type variables in the code base to use
    * bounded generics.
    */
-  private static boolean bothAreNotTypeVariables(TypeI found, TypeI required) {
+  private static boolean bothAreNotTypeVariables(JSType found, JSType required) {
     return !found.isTypeVariable() && !required.isTypeVariable();
   }
 
   static void registerMismatch(
       List<TypeMismatch> mismatches, List<TypeMismatch> implicitInterfaceUses,
-      TypeI found, TypeI required, JSError error) {
+      JSType found, JSType required, JSError error) {
     // Don't register a mismatch for differences in null or undefined or if the
     // code didn't downcast.
     found = removeNullUndefinedAndTemplates(found);
@@ -97,10 +97,10 @@ class TypeMismatch implements Serializable {
     }
 
     if (found.isFunctionType() && required.isFunctionType()) {
-      FunctionTypeI fnTypeA = found.toMaybeFunctionType();
-      FunctionTypeI fnTypeB = required.toMaybeFunctionType();
-      Iterator<TypeI> paramItA = fnTypeA.getParameterTypes().iterator();
-      Iterator<TypeI> paramItB = fnTypeB.getParameterTypes().iterator();
+      FunctionType fnTypeA = found.toMaybeFunctionType();
+      FunctionType fnTypeB = required.toMaybeFunctionType();
+      Iterator<JSType> paramItA = fnTypeA.getParameterTypes().iterator();
+      Iterator<JSType> paramItB = fnTypeB.getParameterTypes().iterator();
       while (paramItA.hasNext() && paramItB.hasNext()) {
         TypeMismatch.registerIfMismatch(
             mismatches, implicitInterfaceUses, paramItA.next(), paramItB.next(), error);
@@ -112,11 +112,11 @@ class TypeMismatch implements Serializable {
   }
 
   static void recordImplicitUseOfNativeObject(
-      List<TypeMismatch> mismatches, Node node, TypeI sourceType, TypeI targetType) {
+      List<TypeMismatch> mismatches, Node node, JSType sourceType, JSType targetType) {
     sourceType = sourceType.restrictByNotNullOrUndefined();
     targetType = targetType.restrictByNotNullOrUndefined();
-    if (sourceType.isInstanceofObject()
-        && !targetType.isInstanceofObject()
+    if (isInstanceOfObject(sourceType)
+        && !isInstanceOfObject(targetType)
         && !targetType.isUnknownType()
         && bothAreNotTypeVariables(sourceType, targetType)) {
       // We don't report a type error, but we still need to construct a JSError,
@@ -129,7 +129,7 @@ class TypeMismatch implements Serializable {
   }
 
   static void recordImplicitInterfaceUses(
-      List<TypeMismatch> implicitInterfaceUses, Node node, TypeI sourceType, TypeI targetType) {
+      List<TypeMismatch> implicitInterfaceUses, Node node, JSType sourceType, JSType targetType) {
     sourceType = removeNullUndefinedAndTemplates(sourceType);
     targetType = removeNullUndefinedAndTemplates(targetType);
     if (targetType.isUnknownType()) {
@@ -147,9 +147,18 @@ class TypeMismatch implements Serializable {
     }
   }
 
-  private static TypeI removeNullUndefinedAndTemplates(TypeI t) {
-    TypeI result = t.restrictByNotNullOrUndefined();
-    ObjectTypeI obj = result.toMaybeObjectType();
+  private static boolean isInstanceOfObject(JSType type) {
+    // Some type whose class is Object
+    ObjectType obj = type.toMaybeObjectType();
+    if (obj != null && obj.isNativeObjectType() && "Object".equals(obj.getReferenceName())) {
+      return true;
+    }
+    return type.isRecordType() || type.isLiteralObject();
+  }
+
+  private static JSType removeNullUndefinedAndTemplates(JSType t) {
+    JSType result = t.restrictByNotNullOrUndefined();
+    ObjectType obj = result.toMaybeObjectType();
     if (obj != null && obj.isGenericObjectType()) {
       return obj.instantiateGenericsWithUnknown();
     }
@@ -177,10 +186,10 @@ class TypeMismatch implements Serializable {
   abstract static class LazyError implements Supplier<JSError>, Serializable {
     abstract String message();
     abstract Node node();
-    abstract TypeI sourceType();
-    abstract TypeI targetType();
+    abstract JSType sourceType();
+    abstract JSType targetType();
 
-    private static LazyError of(String message, Node node, TypeI sourceType, TypeI targetType) {
+    private static LazyError of(String message, Node node, JSType sourceType, JSType targetType) {
       return new AutoValue_TypeMismatch_LazyError(message, node, sourceType, targetType);
     }
 

@@ -167,8 +167,7 @@ public class PrototypeObjectType extends ObjectType {
     if (nativeType || implicitPrototype != null) {
       setImplicitPrototype(implicitPrototype);
     } else {
-      setImplicitPrototype(
-          registry.getNativeObjectType(JSTypeNative.OBJECT_TYPE));
+      setImplicitPrototype(registry.getNativeObjectType(JSTypeNative.OBJECT_TYPE));
     }
   }
 
@@ -259,7 +258,7 @@ public class PrototypeObjectType extends ObjectType {
   }
 
   @Override
-  public JSType unboxesTo() {
+  public final JSType unboxesTo() {
     if (isStringObjectType()) {
       return getNativeType(JSTypeNative.STRING_TYPE);
     } else if (isBooleanObjectType()) {
@@ -276,11 +275,6 @@ public class PrototypeObjectType extends ObjectType {
   @Override
   public boolean matchesObjectContext() {
     return true;
-  }
-
-  @Override
-  public boolean canBeCalled() {
-    return isRegexpType();
   }
 
   @Override
@@ -496,13 +490,13 @@ public class PrototypeObjectType extends ObjectType {
   }
 
   @Override
-  JSType resolveInternal(ErrorReporter reporter, StaticTypedScope<JSType> scope) {
+  JSType resolveInternal(ErrorReporter reporter) {
     setResolvedTypeInternal(this);
 
     ObjectType implicitPrototype = getImplicitPrototype();
     if (implicitPrototype != null) {
       implicitPrototypeFallback =
-          (ObjectType) implicitPrototype.resolve(reporter, scope);
+          (ObjectType) implicitPrototype.resolve(reporter);
       FunctionType ctor = getConstructor();
       if (ctor != null) {
         FunctionType superCtor = ctor.getSuperClassConstructor();
@@ -514,7 +508,7 @@ public class PrototypeObjectType extends ObjectType {
       }
     }
     for (Property prop : properties.values()) {
-      prop.setType(safeResolve(prop.getType(), reporter, scope));
+      prop.setType(safeResolve(prop.getType(), reporter));
     }
     return this;
   }

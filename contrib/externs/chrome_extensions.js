@@ -2105,14 +2105,8 @@ chrome.extension.ViewType = {
 };
 
 
-/** @type {!Object|undefined} */
+/** @type {{message:(string|undefined)}|undefined} */
 chrome.extension.lastError = {};
-
-
-/**
- * @type {string|undefined}
- */
-chrome.extension.lastError.message;
 
 
 /** @type {boolean|undefined} */
@@ -5584,6 +5578,190 @@ chrome.sockets.tcp.ReceiveErrorEvent = function() {};
 
 /** @type {!chrome.sockets.tcp.ReceiveErrorEvent} */
 chrome.sockets.tcp.onReceiveError;
+
+
+/**
+ * @const
+ * @see https://developer.chrome.com/apps/sockets_tcpServer
+ */
+chrome.sockets.tcpServer = {};
+
+
+/**
+ * @typedef {?{
+ *   persistent: (boolean|undefined),
+ *   name: (string|undefined),
+ * }}
+ * @see https://developer.chrome.com/apps/sockets_tcpServer#type-SocketProperties
+ */
+chrome.sockets.tcpServer.SocketProperties;
+
+
+/**
+ * @constructor
+ * @see https://developer.chrome.com/apps/sockets_tcpServer#type-SocketInfo
+ */
+chrome.sockets.tcpServer.SocketInfo = function() {};
+
+
+/** @type {number} */
+chrome.sockets.tcpServer.SocketInfo.prototype.socketId;
+
+
+/** @type {boolean} */
+chrome.sockets.tcpServer.SocketInfo.prototype.persistent;
+
+
+/** @type {string|undefined} */
+chrome.sockets.tcpServer.SocketInfo.prototype.name;
+
+
+/** @type {boolean} */
+chrome.sockets.tcpServer.SocketInfo.prototype.paused;
+
+
+/** @type {string|undefined} */
+chrome.sockets.tcpServer.SocketInfo.prototype.localAddress;
+
+
+/** @type {number|undefined} */
+chrome.sockets.tcpServer.SocketInfo.prototype.localPort;
+
+
+/**
+ * @param {
+ *   (!chrome.sockets.tcpServer.SocketProperties|function(!Object))
+ * } propertiesOrCallback
+ * @param {function(!Object)=} opt_callback
+ * @return {undefined}
+ * @see https://developer.chrome.com/apps/sockets_tcpServer#method-create
+ */
+chrome.sockets.tcpServer.create = function(
+    propertiesOrCallback, opt_callback) {};
+
+
+/**
+ * @param {number} socketId
+ * @param {!chrome.sockets.tcpServer.SocketProperties} properties
+ * @param {function(): void=} opt_callback
+ * @return {undefined}
+ * @see https://developer.chrome.com/apps/sockets_tcpServer#method-update
+ */
+chrome.sockets.tcpServer.update = function(
+    socketId, properties, opt_callback) {};
+
+
+/**
+ * @param {number} socketId
+ * @param {boolean} paused
+ * @param {function(): void=} opt_callback
+ * @return {undefined}
+ * @see https://developer.chrome.com/apps/sockets_tcpServer#method-setPaused
+ */
+chrome.sockets.tcpServer.setPaused = function(
+    socketId, paused, opt_callback) {};
+
+
+/**
+ * @param {number} socketId
+ * @param {string} address
+ * @param {number} port
+ * @param {number|function(number)} backlogOrCallback
+ * @param {function(number)=} opt_callback
+ * @return {undefined}
+ * @see https://developer.chrome.com/apps/sockets_tcpServer#method-listen
+ */
+chrome.sockets.tcpServer.listen = function(
+    socketId, address, port, backlogOrCallback, opt_callback) {};
+
+
+/**
+ * @param {number} socketId The id of the socket to disconnect.
+ * @param {function()=} opt_callback
+ * @see https://developer.chrome.com/apps/sockets_tcpServer#method-disconnect
+ * @return {undefined}
+ */
+chrome.sockets.tcpServer.disconnect = function(socketId, opt_callback) {};
+
+
+/**
+ * @param {number} socketId
+ * @param {function()=} opt_callback
+ * @see https://developer.chrome.com/apps/sockets_tcpServer#method-close
+ * @return {undefined}
+ */
+chrome.sockets.tcpServer.close = function(socketId, opt_callback) {};
+
+
+/**
+ * @param {number} socketId
+ * @param {function(!chrome.sockets.tcpServer.SocketInfo)} callback
+ * @see https://developer.chrome.com/apps/sockets_tcpServer#method-getInfo
+ * @return {undefined}
+ */
+chrome.sockets.tcpServer.getInfo = function(socketId, callback) {};
+
+
+/**
+ * @param {function(!Array<!chrome.sockets.tcpServer.SocketInfo>)} callback
+ * @see https://developer.chrome.com/apps/sockets_tcpServerp#method-getSockets
+ * @return {undefined}
+ */
+chrome.sockets.tcpServer.getSockets = function(callback) {};
+
+
+/**
+ * @constructor
+ * @see https://developer.chrome.com/apps/sockets_tcpServer#event-onAccept
+ */
+chrome.sockets.tcpServer.AcceptEventData = function() {};
+
+
+/** @type {number} */
+chrome.sockets.tcpServer.AcceptEventData.prototype.socketId;
+
+
+/** @type {number} */
+chrome.sockets.tcpServer.AcceptEventData.prototype.clientSocketId;
+
+
+/**
+ * Event whose listeners take a AcceptEventData parameter.
+ * @interface
+ * @extends {ChromeBaseEvent<function(!chrome.sockets.tcpServer.AcceptEventData)>}
+ */
+chrome.sockets.tcpServer.AcceptEvent = function() {};
+
+
+/** @type {!chrome.sockets.tcpServer.AcceptEvent} */
+chrome.sockets.tcpServer.onAccept;
+
+
+/**
+ * @constructor
+ * @see https://developer.chrome.com/apps/sockets_tcpServer#event-onAcceptError
+ */
+chrome.sockets.tcpServer.AcceptErrorEventData = function() {};
+
+
+/** @type {number} */
+chrome.sockets.tcpServer.AcceptErrorEventData.prototype.socketId;
+
+
+/** @type {number} */
+chrome.sockets.tcpServer.AcceptErrorEventData.prototype.resultCode;
+
+
+/**
+ * Event whose listeners take a AcceptErrorEventData parameter.
+ * @interface
+ * @extends {ChromeBaseEvent<function(!chrome.sockets.tcpServer.AcceptErrorEventData)>}
+ */
+chrome.sockets.tcpServer.AcceptErrorEvent = function() {};
+
+
+/** @type {!chrome.sockets.tcpServer.AcceptErrorEvent} */
+chrome.sockets.tcpServer.onAcceptError;
 
 
 /**

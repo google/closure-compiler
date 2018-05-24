@@ -20,12 +20,12 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Strings.isNullOrEmpty;
 
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
-import com.google.javascript.rhino.FunctionTypeI;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-import com.google.javascript.rhino.TypeI;
-import com.google.javascript.rhino.TypeI.Nullability;
+import com.google.javascript.rhino.jstype.FunctionType;
+import com.google.javascript.rhino.jstype.JSType;
+import com.google.javascript.rhino.jstype.JSType.Nullability;
 import java.util.Objects;
 import javax.annotation.Nullable;
 
@@ -409,39 +409,44 @@ public final class AstValidator implements CompilerPass {
   }
 
   private void validateNameType(Node nameNode) {
-    // TODO(b/74537281): Determine when NAME nodes should and shouldn't have type information.
-    // Shouldn't they always? They don't now.
+    // TODO(bradfordcsmith): Looking at ancestors of nameNode is a hack that will prevent validation
+    // from working on detached nodes.
+    // Calling code should correctly determine the context and call different methods as
+    // appropriate.
+    if (NodeUtil.isExpressionResultUsed(nameNode) && !NodeUtil.isGet(nameNode.getParent())) {
+      // If the expression result is used, it must have a type.
+      // However, we don't always add a type when the name is just part of a getProp or getElem.
+      // That's OK, because we'll do type checking on the getProp/Elm itself, which has a type.
+      // TODO(b/74537281): Why do we sometimes have type information for names used in getprop
+      // or getelem expressions and sometimes not?
+      expectSomeTypeInformation(nameNode);
+    }
   }
 
   private void validateCallType(Node callNode) {
     // TODO(b/74537281): Shouldn't CALL nodes always have a type, even if it is unknown?
     Node callee = callNode.getFirstChild();
-    TypeI calleeTypeI = checkNotNull(callee.getTypeI(), callNode);
+    JSType calleeTypeI = checkNotNull(callee.getJSType(), callNode);
 
     if (calleeTypeI.isFunctionType()) {
-      FunctionTypeI calleeFunctionTypeI = calleeTypeI.toMaybeFunctionType();
-      TypeI returnTypeI = calleeFunctionTypeI.getReturnType();
+      FunctionType calleeFunctionTypeI = calleeTypeI.toMaybeFunctionType();
+      JSType returnTypeI = calleeFunctionTypeI.getReturnType();
       // TODO(b/74537281): This will fail after CAST nodes have been removed from the AST.
       // Must be fixed before this check can be done after optimizations.
       expectMatchingTypeInformation(callNode, returnTypeI);
     } // TODO(b/74537281): What other cases should be covered?
   }
 
-  private void expectNoTypeInformation(Node n) {
-    TypeI typeI = n.getTypeI();
-    if (typeI != null) {
-      violation("Unexpected type information: " + getTypeAnnotationString(typeI), n);
-    }
-  }
-
   private void expectSomeTypeInformation(Node n) {
-    if (n.getTypeI() == null) {
-      violation("Type information missing", n);
+    if (n.getJSType() == null) {
+      violation(
+          "Type information missing" + "\n" + compiler.toSource(NodeUtil.getEnclosingStatement(n)),
+          n);
     }
   }
 
-  private void expectMatchingTypeInformation(Node n, TypeI expectedTypeI) {
-    TypeI typeI = n.getTypeI();
+  private void expectMatchingTypeInformation(Node n, JSType expectedTypeI) {
+    JSType typeI = n.getJSType();
     if (!Objects.equals(expectedTypeI, typeI)) {
       violation(
           "Expected type: "
@@ -452,7 +457,7 @@ public final class AstValidator implements CompilerPass {
     }
   }
 
-  private String getTypeAnnotationString(@Nullable TypeI typeI) {
+  private String getTypeAnnotationString(@Nullable JSType typeI) {
     if (typeI == null) {
       return "NO TYPE INFORMATION";
     } else {

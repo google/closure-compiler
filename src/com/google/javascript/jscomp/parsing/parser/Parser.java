@@ -122,7 +122,6 @@ import com.google.javascript.jscomp.parsing.parser.util.LookaheadErrorReporter;
 import com.google.javascript.jscomp.parsing.parser.util.LookaheadErrorReporter.ParseException;
 import com.google.javascript.jscomp.parsing.parser.util.SourcePosition;
 import com.google.javascript.jscomp.parsing.parser.util.SourceRange;
-import com.google.javascript.jscomp.parsing.parser.util.Timer;
 import java.util.ArrayDeque;
 import java.util.EnumSet;
 import java.util.LinkedHashMap;
@@ -281,8 +280,7 @@ public class Parser {
 
   /** Returns true if the string value should be treated as a keyword in the current context. */
   private boolean isKeyword(String value) {
-    return Keywords.isKeyword(value)
-        && (!Keywords.isTypeScriptSpecificKeyword(value) || config.parseTypeSyntax);
+    return Keywords.isKeyword(value, config.parseTypeSyntax);
   }
 
   /**
@@ -294,12 +292,10 @@ public class Parser {
 
   // 14 Program
   public ProgramTree parseProgram() {
-    Timer t = new Timer("Parse Program");
     try {
       SourcePosition start = getTreeStartLocation();
       ImmutableList<ParseTree> sourceElements = parseGlobalSourceElements();
       eat(TokenType.END_OF_FILE);
-      t.end();
       return new ProgramTree(
           getTreeLocation(start), sourceElements, commentRecorder.getComments());
     } catch (StackOverflowError e) {
@@ -525,8 +521,10 @@ public class Parser {
         isExportAll = true;
         nextToken();
         break;
+      case IDENTIFIER:
+        export = parseAsyncFunctionDeclaration();
+        break;
       case FUNCTION:
-        // TODO(bradfordcsmith): handle async functions here
         export = isAmbient ? parseAmbientFunctionDeclaration() : parseFunctionDeclaration();
         needsSemiColon = isAmbient;
         break;
@@ -893,7 +891,7 @@ public class Parser {
       if (peekIdOrKeyword()) {
         nameExpr = null;
         name = eatIdOrKeywordAsId();
-        if (Keywords.isKeyword(name.value)) {
+        if (Keywords.isKeyword(name.value, /* includeTypeScriptKeywords= */ false)) {
           features = features.with(Feature.KEYWORDS_AS_PROPERTIES);
         }
       } else {
@@ -2654,8 +2652,8 @@ public class Parser {
     if (colon == null) {
       if (name.type != TokenType.IDENTIFIER) {
         reportExpectedError(peekToken(), TokenType.COLON);
-      } else if (Keywords.isKeyword(name.asIdentifier().value)
-          && !Keywords.isTypeScriptSpecificKeyword(name.asIdentifier().value)) {
+      } else if (Keywords.isKeyword(
+          name.asIdentifier().value, /* includeTypeScriptKeywords= */ false)) {
         reportError(name, "Cannot use keyword in short object literal");
       } else if (peek(TokenType.EQUAL)) {
         IdentifierExpressionTree idTree = new IdentifierExpressionTree(
@@ -3682,8 +3680,7 @@ public class Parser {
       name = eatIdOrKeywordAsId();
       if (!peek(TokenType.COLON)) {
         IdentifierToken idToken = (IdentifierToken) name;
-        if (Keywords.isKeyword(idToken.value)
-            && !Keywords.isTypeScriptSpecificKeyword(idToken.value)) {
+        if (Keywords.isKeyword(idToken.value, /* includeTypeScriptKeywords = */ false)) {
           reportError("cannot use keyword '%s' here.", name);
         }
         if (peek(TokenType.EQUAL)) {
@@ -3882,16 +3879,16 @@ public class Parser {
     return peekId(0);
   }
 
+  /** @return whether the next token is an identifier. */
   private boolean peekId(int index) {
     TokenType type = peekType(index);
-    return EnumSet.of(
-        TokenType.IDENTIFIER,
-        TokenType.TYPE,
-        TokenType.DECLARE,
-        TokenType.MODULE,
-        TokenType.NAMESPACE)
-            .contains(type)
-        || (peekReservedWordAsId());
+    // There are two special cases to handle here:
+    //   * outside of strict-mode code strict-mode keywords can be used as identifiers
+    //   * when configured to parse TypeScript code the scanner will return TypeScript
+    //       keyword token but these contextual keywords can always be used as idenifiers.
+    return TokenType.IDENTIFIER == type
+        || (config.parseTypeSyntax && Keywords.isTypeScriptSpecificKeyword(type))
+        || peekReservedWordAsId();
   }
 
   private boolean peekIdOrKeyword() {

@@ -27,7 +27,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.errorprone.annotations.ForOverride;
-import com.google.javascript.jscomp.AbstractCompiler.MostRecentTypechecker;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.jscomp.type.ReverseAbstractInterpreter;
@@ -101,12 +100,6 @@ public abstract class CompilerTestCase extends TestCase {
    * flag controls whether type checking runs before or after the pass.
    */
   private boolean typeCheckEnabled;
-
-  /**
-   * If true, run NTI together with the pass being tested. A separate
-   * flag controls whether NTI runs before or after the pass.
-   */
-  private boolean newTypeInferenceEnabled;
 
   /**
    * If true performs the test using multistage compilation.
@@ -548,6 +541,11 @@ public abstract class CompilerTestCase extends TestCase {
           " * @template RESULT",
           " */",
           "Promise.prototype.catch = function(onRejected) {};",
+          "/**",
+          " * @constructor",
+          " * @extends {Array<string>}",
+          " */",
+          "function ITemplateArray() {}",
           ACTIVE_X_OBJECT_DEF);
 
   /**
@@ -596,7 +594,6 @@ public abstract class CompilerTestCase extends TestCase {
     this.languageOut = LanguageMode.ECMASCRIPT5;
     this.markNoSideEffects = false;
     this.multistageCompilation = true;
-    this.newTypeInferenceEnabled = false;
     this.normalizeEnabled = false;
     this.parseTypeInfo = false;
     this.polymerPass = false;
@@ -678,7 +675,7 @@ public abstract class CompilerTestCase extends TestCase {
     this.compareJsDoc = false;
   }
 
-  /** Moves OTI type checking to occur after the processor, instead of before. */
+  /** Moves type checking to occur after the processor, instead of before. */
   protected final void enableRunTypeCheckAfterProcessing() {
     checkState(this.setUpRan, "Attempted to configure before running setUp().");
     this.runTypeCheckAfterProcessing = true;
@@ -786,11 +783,18 @@ public abstract class CompilerTestCase extends TestCase {
     typeCheckEnabled = true;
   }
 
-  // Run the new type inference after the test pass. Useful for testing passes
-  // that rewrite the AST prior to typechecking, eg, AngularPass or PolymerPass.
-  protected void enableNewTypeInference() {
+  protected final boolean isTypeCheckEnabled() {
+    return typeCheckEnabled;
+  }
+
+  /**
+   * Do not run type checking before running the test pass.
+   *
+   * @see TypeCheck
+   */
+  protected final void disableTypeCheck() {
     checkState(this.setUpRan, "Attempted to configure before running setUp().");
-    this.newTypeInferenceEnabled = true;
+    typeCheckEnabled = false;
   }
 
   /**
@@ -832,21 +836,6 @@ public abstract class CompilerTestCase extends TestCase {
   protected final void disableValidateAstChangeMarking() {
     checkState(this.setUpRan, "Attempted to configure before running setUp().");
     checkAstChangeMarking = false;
-  }
-
-  /**
-   * Do not run type checking before running the test pass.
-   *
-   * @see TypeCheck
-   */
-  protected final void disableTypeCheck() {
-    checkState(this.setUpRan, "Attempted to configure before running setUp().");
-    typeCheckEnabled = false;
-  }
-
-  protected final void disableNewTypeInference() {
-    checkState(this.setUpRan, "Attempted to configure before running setUp().");
-    this.newTypeInferenceEnabled = false;
   }
 
   /**
@@ -987,14 +976,8 @@ public abstract class CompilerTestCase extends TestCase {
   private static TypeCheck createTypeCheck(Compiler compiler) {
     ReverseAbstractInterpreter rai =
         new SemanticReverseAbstractInterpreter(compiler.getTypeRegistry());
-    compiler.setMostRecentTypechecker(MostRecentTypechecker.OTI);
+    compiler.setTypeCheckingHasRun(true);
     return new TypeCheck(compiler, rai, compiler.getTypeRegistry());
-  }
-
-  protected static void runNewTypeInference(Compiler compiler, Node externs, Node js) {
-    new GlobalTypeInfoCollector(compiler).process(externs, js);
-    NewTypeInference nti = new NewTypeInference(compiler);
-    nti.process(externs, js);
   }
 
   /** Ensures the given library is injected before typechecking */
@@ -1406,12 +1389,9 @@ public abstract class CompilerTestCase extends TestCase {
             ? ((FlatSources) inputsObj).sources
             : null;
     List<SourceFile> expected = expectedObj != null ? expectedObj.expected : null;
-    checkState(!this.typeCheckEnabled || !this.newTypeInferenceEnabled);
     checkState(this.setUpRan, "CompilerTestCase.setUp not run: call super.setUp() from overrides.");
     RecentChange recentChange = new RecentChange();
     compiler.addChangeHandler(recentChange);
-
-    compiler.getOptions().setNewTypeInference(this.newTypeInferenceEnabled);
 
     Node root = compiler.parseInputs();
 
@@ -1512,8 +1492,6 @@ public abstract class CompilerTestCase extends TestCase {
         if (!runTypeCheckAfterProcessing && typeCheckEnabled && i == 0) {
           TypeCheck check = createTypeCheck(compiler);
           check.processForTesting(externsRoot, mainRoot);
-        } else if (!this.runTypeCheckAfterProcessing && this.newTypeInferenceEnabled && i == 0) {
-          runNewTypeInference(compiler, externsRoot, mainRoot);
         }
 
         boolean runNormalization = normalizeEnabled && i == 0;
@@ -1588,8 +1566,6 @@ public abstract class CompilerTestCase extends TestCase {
         if (runTypeCheckAfterProcessing && typeCheckEnabled && i == 0) {
           TypeCheck check = createTypeCheck(compiler);
           check.processForTesting(externsRoot, mainRoot);
-        } else if (this.runTypeCheckAfterProcessing && this.newTypeInferenceEnabled && i == 0) {
-          runNewTypeInference(compiler, externsRoot, mainRoot);
         }
 
         if (checkAccessControls) {
@@ -1802,7 +1778,7 @@ public abstract class CompilerTestCase extends TestCase {
         factories, new PreprocessorSymbolTable.CachedInstanceFactory());
     TranspilationPasses.addEs2017Passes(factories);
     TranspilationPasses.addEs2016Passes(factories);
-    TranspilationPasses.addEs6PreTypecheckPasses(factories);
+    TranspilationPasses.addEs6PreTypecheckPasses(factories, compiler.getOptions());
     TranspilationPasses.addEs6PostTypecheckPasses(factories);
     TranspilationPasses.addEs6PostCheckPasses(factories);
     TranspilationPasses.addRewritePolyfillPass(factories);
@@ -2115,6 +2091,7 @@ public abstract class CompilerTestCase extends TestCase {
       out.writeObject(injected);
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     @GwtIncompatible
     public void restoreState(InputStream inputStream) throws IOException, ClassNotFoundException {

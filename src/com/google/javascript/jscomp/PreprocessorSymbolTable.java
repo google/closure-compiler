@@ -32,15 +32,13 @@ import java.util.Map;
 import javax.annotation.Nullable;
 
 /**
- * A symbol table for references that are removed by preprocessor passes
- * (like {@code ProcessClosurePrimitives}).
+ * A symbol table for references that are removed by preprocessor passes (like {@code
+ * ProcessClosurePrimitives}).
  *
  * @author nicksantos@google.com (Nick Santos)
  */
 final class PreprocessorSymbolTable
-    implements StaticTypedScope<JSType>,
-               StaticSymbolTable<SimpleSlot,
-                                 PreprocessorSymbolTable.Reference> {
+    implements StaticTypedScope, StaticSymbolTable<SimpleSlot, PreprocessorSymbolTable.Reference> {
 
   /**
    * All preprocessor symbols are globals.
@@ -67,7 +65,7 @@ final class PreprocessorSymbolTable
   }
 
   @Override
-  public StaticTypedScope<JSType> getParentScope() {
+  public StaticTypedScope getParentScope() {
     return null;
   }
 
@@ -92,7 +90,7 @@ final class PreprocessorSymbolTable
   }
 
   @Override
-  public StaticTypedScope<JSType> getScope(SimpleSlot slot) {
+  public StaticTypedScope getScope(SimpleSlot slot) {
     return this;
   }
 

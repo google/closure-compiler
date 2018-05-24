@@ -28,7 +28,7 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.StaticSourceFile;
 import com.google.javascript.rhino.StaticSymbolTable;
 import com.google.javascript.rhino.TokenStream;
-import com.google.javascript.rhino.TypeI;
+import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.StaticTypedRef;
 import com.google.javascript.rhino.jstype.StaticTypedScope;
 import com.google.javascript.rhino.jstype.StaticTypedSlot;
@@ -42,14 +42,13 @@ import java.util.Set;
 import javax.annotation.Nullable;
 
 /**
- * Builds a global namespace of all the objects and their properties in
- * the global scope. Also builds an index of all the references to those names.
+ * Builds a global namespace of all the objects and their properties in the global scope. Also
+ * builds an index of all the references to those names.
  *
  * @author nicksantos@google.com (Nick Santos)
  */
 class GlobalNamespace
-    implements StaticTypedScope<TypeI>,
-    StaticSymbolTable<GlobalNamespace.Name, GlobalNamespace.Ref> {
+    implements StaticTypedScope, StaticSymbolTable<GlobalNamespace.Name, GlobalNamespace.Ref> {
 
   private final AbstractCompiler compiler;
   private final Node root;
@@ -108,7 +107,7 @@ class GlobalNamespace
   }
 
   @Override
-  public StaticTypedScope<TypeI> getParentScope() {
+  public StaticTypedScope getParentScope() {
     return null;
   }
 
@@ -124,8 +123,8 @@ class GlobalNamespace
   }
 
   @Override
-  public TypeI getTypeOfThis() {
-    return compiler.getTypeIRegistry().getNativeObjectType(GLOBAL_THIS);
+  public JSType getTypeOfThis() {
+    return compiler.getTypeRegistry().getNativeObjectType(GLOBAL_THIS);
   }
 
   @Override
@@ -135,7 +134,7 @@ class GlobalNamespace
   }
 
   @Override
-  public StaticTypedScope<TypeI> getScope(Name slot) {
+  public StaticTypedScope getScope(Name slot) {
     return this;
   }
 
@@ -230,11 +229,11 @@ class GlobalNamespace
   private void process() {
     if (hasExternsRoot()) {
       inExterns = true;
-      NodeTraversal.traverseEs6(compiler, externsRoot, new BuildGlobalNamespace());
+      NodeTraversal.traverse(compiler, externsRoot, new BuildGlobalNamespace());
     }
     inExterns = false;
 
-    NodeTraversal.traverseEs6(compiler, root, new BuildGlobalNamespace());
+    NodeTraversal.traverse(compiler, root, new BuildGlobalNamespace());
     generated = true;
     externsScope = null;
   }
@@ -1008,12 +1007,11 @@ class GlobalNamespace
   // -------------------------------------------------------------------------
 
   /**
-   * A name defined in global scope (e.g. "a" or "a.b.c.d"). These form a tree.
-   * As the parse tree traversal proceeds, we'll discover that some names
-   * correspond to JavaScript objects whose properties we should consider
-   * collapsing.
+   * A name defined in global scope (e.g. "a" or "a.b.c.d"). These form a tree. As the parse tree
+   * traversal proceeds, we'll discover that some names correspond to JavaScript objects whose
+   * properties we should consider collapsing.
    */
-  static class Name implements StaticTypedSlot<TypeI> {
+  static class Name implements StaticTypedSlot {
     enum Type {
       CLASS,
       OBJECTLIT,
@@ -1106,12 +1104,12 @@ class GlobalNamespace
     }
 
     @Override
-    public TypeI getType() {
+    public JSType getType() {
       return null;
     }
 
     @Override
-    public StaticTypedScope<TypeI> getScope() {
+    public StaticTypedScope getScope() {
       throw new UnsupportedOperationException();
     }
 
@@ -1455,10 +1453,10 @@ class GlobalNamespace
   // -------------------------------------------------------------------------
 
   /**
-   * A global name reference. Contains references to the relevant parse tree
-   * node and its ancestors that may be affected.
+   * A global name reference. Contains references to the relevant parse tree node and its ancestors
+   * that may be affected.
    */
-  static class Ref implements StaticTypedRef<TypeI> {
+  static class Ref implements StaticTypedRef {
 
     // Note: we are more aggressive about collapsing @enum and @constructor
     // declarations than implied here, see Name#canCollapse
@@ -1563,7 +1561,7 @@ class GlobalNamespace
     }
 
     @Override
-    public StaticTypedSlot<TypeI> getSymbol() {
+    public StaticTypedSlot getSymbol() {
       return name;
     }
 

@@ -134,8 +134,8 @@ final class PolymerClassRewriter {
     // declaration into the global scope at the start of the current script.
     //
     // This avoids unknown type warnings which are a result of the compiler's poor understanding of
-    // types declared inside IIFEs or any non-global scope. We should revisit this decision after
-    // moving to the new type inference system which should be able to infer these types better.
+    // types declared inside IIFEs or any non-global scope. We should revisit this decision as
+    // the typechecker's support for non-global types improves.
     if (!isInGlobalScope && !cls.target.isGetProp()) {
       Node scriptNode = NodeUtil.getEnclosingScript(parent);
       scriptNode.addChildrenToFront(statements);

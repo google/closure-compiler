@@ -496,6 +496,28 @@ public class Es6ToEs3ClassSideInheritanceTest extends CompilerTestCase {
             "let x = 1;",
             "/** @constructor */",
             "function Foo() {}",
+            "Foo.prop = 123;",
+            "const aliasFoo = Foo;", // make sure a const alias works
+            "/** @constructor @extends {aliasFoo} */",
+            "function Bar() {}",
+            "$jscomp.inherits(Bar, aliasFoo);"),
+        lines(
+            "let x = 1;",
+            "/** @constructor */",
+            "function Foo() {}",
+            "Foo.prop = 123;",
+            "const aliasFoo = Foo;", // make sure a const alias works
+            "/** @constructor @extends {aliasFoo} */",
+            "function Bar() {}",
+            "$jscomp.inherits(Bar, aliasFoo);",
+            "/** @suppress {visibility} */",
+            "Bar.prop = aliasFoo.prop;"));
+
+    test(
+        lines(
+            "let x = 1;",
+            "/** @constructor */",
+            "function Foo() {}",
             "var aliasFoo = Foo;",
             "aliasFoo.prop = 123;",
             "/** @constructor @extends {Foo} */",
@@ -519,6 +541,19 @@ public class Es6ToEs3ClassSideInheritanceTest extends CompilerTestCase {
         lines(
             "/** @constructor */",
             "function Foo() {}",
+            "",
+            "function f() {",
+            "  let Foo = {};",
+            "  Foo.prop = 123;", // Not a reference to the Foo class, so no change.
+            "}",
+            "/** @constructor @extends {Foo} */",
+            "function Bar() {}",
+            "$jscomp.inherits(Bar, Foo);"));
+
+    testSame(
+        lines(
+            "/** @constructor */",
+            "let Foo = function() {}", // make sure let works
             "",
             "function f() {",
             "  let Foo = {};",

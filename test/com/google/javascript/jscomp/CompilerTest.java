@@ -112,14 +112,15 @@ public final class CompilerTest extends TestCase {
 
   public void testPrintExterns() {
     List<SourceFile> externs =
-        ImmutableList.of(SourceFile.fromCode("extern", "function alert(x) {}"));
+        ImmutableList.of(SourceFile.fromCode("extern", "/** @externs */ function alert(x) {}"));
     CompilerOptions options = new CompilerOptions();
+    options.setPreserveTypeAnnotations(true);
     options.setLanguageIn(LanguageMode.ECMASCRIPT3);
     options.setPrintExterns(true);
     Compiler compiler = new Compiler();
     compiler.init(externs, ImmutableList.<SourceFile>of(), options);
     compiler.parseInputs();
-    assertThat(compiler.toSource()).isEqualTo("/** @externs */\nfunction alert(x){};");
+    assertThat(compiler.toSource()).isEqualTo("/** @externs */ function alert(x){};");
   }
 
   public void testLocalUndefined() throws Exception {
@@ -208,6 +209,37 @@ public final class CompilerTest extends TestCase {
     SourceMapInput inputSourceMap = compiler.inputSourceMaps.get("tmp");
     SourceMapConsumerV3 sourceMap = inputSourceMap.getSourceMap(null);
     assertThat(sourceMap.getOriginalSources()).containsExactly("foo.ts");
+    assertNull(sourceMap.getOriginalSourcesContent());
+  }
+
+  private static final String SOURCE_MAP_TEST_CONTENT =
+      Joiner.on("\n")
+          .join(
+              "var A = (function () {",
+              "    function A(input) {",
+              "        this.a = input;",
+              "    }",
+              "    return A;",
+              "}());",
+              "console.log(new A(1));");
+
+  // Similar to BASE64_ENCODED_SOURCE_MAP; contains encoded SOURCE_MAP but with
+  // SOURCE_MAP_TEST_CONTENT as the only item of sourcesContent corresponding
+  // to "foo.ts" sources item.
+  private static final String BASE64_ENCODED_SOURCE_MAP_WITH_CONTENT =
+      "data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiZm9vLmpzIiwic291cmNlUm9vdCI6IiIsInNvdXJjZXMiOlsiZm9vLnRzIl0sInNvdXJjZXNDb250ZW50IjpbInZhciBBID0gKGZ1bmN0aW9uICgpIHtcbiAgICBmdW5jdGlvbiBBKGlucHV0KSB7XG4gICAgICAgIHRoaXMuYSA9IGlucHV0O1xuICAgIH1cbiAgICByZXR1cm4gQTtcbn0oKSk7XG5jb25zb2xlLmxvZyhuZXcgQSgxKSk7Il0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiJBQUFBO0lBR0UsV0FBWSxLQUFhO1FBQ3ZCLElBQUksQ0FBQyxDQUFDLEdBQUcsS0FBSyxDQUFDO0lBQ2pCLENBQUM7SUFDSCxRQUFDO0FBQUQsQ0FBQyxBQU5ELElBTUM7QUFFRCxPQUFPLENBQUMsR0FBRyxDQUFDLElBQUksQ0FBQyxDQUFDLENBQUMsQ0FBQyxDQUFDLENBQUMifQ==";
+
+  public void testInputSourceMapInlineContent() throws Exception {
+    Compiler compiler = new Compiler();
+    compiler.initCompilerOptionsIfTesting();
+    String code =
+        SOURCE_MAP_TEST_CODE + "\n//# sourceMappingURL=" + BASE64_ENCODED_SOURCE_MAP_WITH_CONTENT;
+    CompilerInput input = new CompilerInput(SourceFile.fromCode("tmp", code));
+    input.getAstRoot(compiler);
+    SourceMapInput inputSourceMap = compiler.inputSourceMaps.get("tmp");
+    SourceMapConsumerV3 sourceMap = inputSourceMap.getSourceMap(null);
+    assertThat(sourceMap.getOriginalSources()).containsExactly("foo.ts");
+    assertThat(sourceMap.getOriginalSourcesContent()).containsExactly(SOURCE_MAP_TEST_CONTENT);
   }
 
   public void testResolveRelativeSourceMap() throws Exception {
@@ -325,8 +357,44 @@ public final class CompilerTest extends TestCase {
     assertThat(mapping.getLineNumber()).isEqualTo(18);
     assertThat(mapping.getColumnPosition()).isEqualTo(26);
     assertThat(mapping.getIdentifier()).isEqualTo("testSymbolName");
+    assertThat(consumer.getOriginalSources()).containsExactly("input.js", "input.ts");
+    assertNull(consumer.getOriginalSourcesContent());
   }
 
+  public void testKeepInputSourceMapsSourcesContent() throws Exception {
+    CompilerOptions options = new CompilerOptions();
+    options.setLanguageIn(LanguageMode.ECMASCRIPT3);
+    options.sourceMapOutputPath = "fake/source_map_path.js.map";
+    options.applyInputSourceMaps = true;
+    options.sourceMapIncludeSourcesContent = true;
+    String code = SOURCE_MAP_TEST_CODE + "\n//# sourceMappingURL="
+        + BASE64_ENCODED_SOURCE_MAP_WITH_CONTENT;
+    Compiler compiler = new Compiler();
+    SourceFile sourceFile = SourceFile.fromCode("input.js", code);
+    compiler.compile(EMPTY_EXTERNS.get(0), sourceFile, options);
+    assertThat(compiler.toSource()).isEqualTo(
+        "var X=function(){function X(input){this.y=input}return X}();console.log(new X(1));");
+    SourceMap sourceMap = compiler.getSourceMap();
+    StringWriter out = new StringWriter();
+    sourceMap.appendTo(out, "source.js.map");
+    SourceMapConsumerV3 consumer = new SourceMapConsumerV3();
+    consumer.parse(out.toString());
+    assertThat(consumer.getOriginalSources()).containsExactly("foo.ts");
+    assertThat(consumer.getOriginalSourcesContent()).containsExactly(SOURCE_MAP_TEST_CONTENT);
+  }
+
+  public void testNoSourceMapIsGeneratedWithoutPath() throws Exception {
+    CompilerOptions options = new CompilerOptions();
+    options.setLanguageIn(LanguageMode.ECMASCRIPT3);
+    options.applyInputSourceMaps = true;
+    options.sourceMapIncludeSourcesContent = true;
+    String code = SOURCE_MAP_TEST_CODE + "\n//# sourceMappingURL="
+        + BASE64_ENCODED_SOURCE_MAP_WITH_CONTENT;
+    Compiler compiler = new Compiler();
+    SourceFile sourceFile = SourceFile.fromCode("input.js", code);
+    compiler.compile(EMPTY_EXTERNS.get(0), sourceFile, options);
+    assertNull(compiler.getSourceMap());
+  }
 
   private static final ImmutableList<SourceFile> EMPTY_EXTERNS =
       ImmutableList.of(SourceFile.fromCode("externs", ""));
@@ -1472,25 +1540,6 @@ public final class CompilerTest extends TestCase {
     Object obj = in.readObject();
     in.close();
     return obj;
-  }
-
-  public void testCompilerInputFromPersistentStore() {
-    List<SourceFile> sources =
-        ImmutableList.of(
-            SourceFile.fromFile("path/to/file.js"), SourceFile.fromFile("path/to/file2.js"));
-    final CompilerInput input = new CompilerInput(sources.get(0));
-    PersistentInputStore store =
-        new PersistentInputStore() {
-          @Override
-          public CompilerInput getCachedCompilerInput(SourceFile source) {
-            return input;
-          }
-        };
-    CompilerOptions options = new CompilerOptions();
-    Compiler compiler = new Compiler();
-    compiler.setPersistentInputStore(store);
-    compiler.init(ImmutableList.<SourceFile>of(), sources, options);
-    assertThat(compiler.getModules().get(0).getInputs()).contains(input);
   }
 
   public void testProperEs6ModuleOrdering() throws Exception {

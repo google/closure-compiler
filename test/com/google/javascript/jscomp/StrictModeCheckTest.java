@@ -18,7 +18,7 @@ package com.google.javascript.jscomp;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 
-public final class StrictModeCheckTest extends TypeICompilerTestCase {
+public final class StrictModeCheckTest extends CompilerTestCase {
   private static final String EXTERNS = DEFAULT_EXTERNS + "var arguments; function eval(str) {}";
 
   public StrictModeCheckTest() {
@@ -28,8 +28,8 @@ public final class StrictModeCheckTest extends TypeICompilerTestCase {
   @Override
   protected void setUp() throws Exception {
     super.setUp();
+    enableTypeCheck();
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2017);
-    this.mode = TypeInferenceMode.NTI_ONLY;
   }
 
   @Override
@@ -104,7 +104,7 @@ public final class StrictModeCheckTest extends TypeICompilerTestCase {
   }
 
   public void testUnknownVariable4() {
-    this.mode = TypeInferenceMode.NEITHER;
+    disableTypeCheck();
     testSameEs6Strict("function foo(a) { let b; a = b; }");
     testSameEs6Strict("function foo(a) { const b = 42; a = b; }");
   }
@@ -132,7 +132,7 @@ public final class StrictModeCheckTest extends TypeICompilerTestCase {
   }
 
   public void testArguments6() {
-    this.mode = TypeInferenceMode.NEITHER;
+    disableTypeCheck();
     testSame("(() => arguments)();");
   }
 
@@ -179,7 +179,7 @@ public final class StrictModeCheckTest extends TypeICompilerTestCase {
   public void testValidDelete() {
     testSame("var obj = { a: 0 }; delete obj.a;");
     testSame("var obj = { a: function() {} }; delete obj.a;");
-    this.mode = TypeInferenceMode.NEITHER;
+    disableTypeCheck();
     testSameEs6Strict("var obj = { a(){} }; delete obj.a;");
     testSameEs6Strict("var obj = { a }; delete obj.a;");
   }
@@ -214,7 +214,8 @@ public final class StrictModeCheckTest extends TypeICompilerTestCase {
             "  set appData(data) { this.appData_ = data; }",
             "};"));
 
-    this.mode = TypeInferenceMode.NEITHER;
+    disableTypeCheck();
+
     testError("var x = {a: 2, a(){}}", StrictModeCheck.DUPLICATE_OBJECT_KEY);
     testError("var x = {a, a(){}}", StrictModeCheck.DUPLICATE_OBJECT_KEY);
     testError("var x = {a(){}, a(){}}", StrictModeCheck.DUPLICATE_OBJECT_KEY);
@@ -238,7 +239,8 @@ public final class StrictModeCheckTest extends TypeICompilerTestCase {
   }
 
   public void testClass() {
-    this.mode = TypeInferenceMode.NEITHER;
+    disableTypeCheck();
+
     testSame(
         lines(
             "class A {",
@@ -334,7 +336,8 @@ public final class StrictModeCheckTest extends TypeICompilerTestCase {
   }
 
   public void testComputedPropInClass() {
-    this.mode = TypeInferenceMode.NEITHER;
+    disableTypeCheck();
+
     testSame(
         lines(
             "class Example {",
@@ -344,7 +347,8 @@ public final class StrictModeCheckTest extends TypeICompilerTestCase {
   }
 
   public void testStaticAndNonstaticMethodWithSameName() {
-    this.mode = TypeInferenceMode.NEITHER;
+    disableTypeCheck();
+
     testSame(
         lines(
             "class Example {",
@@ -354,7 +358,8 @@ public final class StrictModeCheckTest extends TypeICompilerTestCase {
   }
 
   public void testStaticAndNonstaticGetterWithSameName() {
-    this.mode = TypeInferenceMode.NEITHER;
+    disableTypeCheck();
+
     testSame(
         lines(
             "class Example {",
@@ -364,7 +369,8 @@ public final class StrictModeCheckTest extends TypeICompilerTestCase {
   }
 
   public void testStaticAndNonstaticSetterWithSameName() {
-    this.mode = TypeInferenceMode.NEITHER;
+    disableTypeCheck();
+
     testSame(
         lines(
             "class Example {",
@@ -374,7 +380,8 @@ public final class StrictModeCheckTest extends TypeICompilerTestCase {
   }
 
   public void testClassWithEmptyMembers() {
-    this.mode = TypeInferenceMode.NEITHER;
+    disableTypeCheck();
+
     testError("class Foo { dup() {}; dup() {}; }", StrictModeCheck.DUPLICATE_CLASS_METHODS);
   }
 

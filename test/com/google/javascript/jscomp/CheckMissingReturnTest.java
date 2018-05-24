@@ -27,7 +27,7 @@ public final class CheckMissingReturnTest extends CompilerTestCase {
   @Override
   protected void setUp() throws Exception {
     super.setUp();
-    enableTypeCheck(); // NOTE: CheckMissingReturn is an OTI-only pass.
+    enableTypeCheck();
   }
 
   @Override
@@ -299,5 +299,27 @@ public final class CheckMissingReturnTest extends CompilerTestCase {
 
     // arrow function return is object literal
     testSame("(a) => ({foo: 1});");
+  }
+
+  public void testGeneratorFunctionDoesntWarn() {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
+    testNoWarning("function *gen() {}");
+
+    testNoWarning(
+        lines(
+            "/** @return {!Generator<number>} */", // no yields is OK
+            "function *gen() {}"));
+
+    testNoWarning(
+        lines(
+            "/** @return {!Generator<number>} */", // one yield is OK
+            "function *gen() {",
+            " yield 1;",
+            "}"));
+
+    testNoWarning(
+        lines(
+            "/** @return {!Object} */", // Return type more vague than Generator is also OK
+            "function *gen() {}"));
   }
 }

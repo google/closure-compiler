@@ -18,7 +18,6 @@ package com.google.javascript.jscomp.parsing.parser;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
-
 import java.util.EnumMap;
 import java.util.Map;
 
@@ -102,10 +101,12 @@ public enum Keywords {
 
   public final String value;
   public final TokenType type;
+  private final boolean isTypeScriptSpecificKeyword;
 
   Keywords(String value, TokenType type) {
     this.value = value;
     this.type = type;
+    this.isTypeScriptSpecificKeyword = isTypeScriptSpecificKeyword(type);
   }
 
   @Override
@@ -113,20 +114,20 @@ public enum Keywords {
     return value;
   }
 
-  public static boolean isKeyword(String value) {
-    return get(value) != null;
+  public static boolean isKeyword(String value, boolean includeTypeScriptKeywords) {
+    return get(value, includeTypeScriptKeywords) != null;
   }
 
   public static boolean isKeyword(TokenType token) {
     return get(token) != null;
   }
 
-  public static boolean isTypeScriptSpecificKeyword(String value) {
-    switch (value) {
-      case "declare":
-      case "type":
-      case "module":
-      case "namespace":
+  public static boolean isTypeScriptSpecificKeyword(TokenType type) {
+    switch (type) {
+      case DECLARE:
+      case TYPE:
+      case MODULE:
+      case NAMESPACE:
         return true;
       default:
         return false;
@@ -158,8 +159,9 @@ public enum Keywords {
     return KEYWORDS_BY_NAME.get(value).type;
   }
 
-  public static Keywords get(String value) {
-    return KEYWORDS_BY_NAME.get(value);
+  public static Keywords get(String value, boolean includeTypeScriptKeywords) {
+    Keywords k = KEYWORDS_BY_NAME.get(value);
+    return (k != null && (includeTypeScriptKeywords || !k.isTypeScriptSpecificKeyword)) ? k : null;
   }
 
   public static Keywords get(TokenType token) {

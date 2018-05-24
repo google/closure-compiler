@@ -23,7 +23,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.transpile.TranspileResult;
 import com.google.javascript.jscomp.transpile.Transpiler;
 import java.io.IOException;
-import java.nio.file.Paths;
+import java.net.URI;
 import junit.framework.TestCase;
 import org.mockito.Mockito;
 
@@ -109,13 +109,14 @@ public final class ClosureBundlerTest extends TestCase {
         .isEqualTo("eval(\"\\x22a string\\x22\\n//# sourceURL\\x3dURL\\n\");\n");
   }
 
-  public void testTranspilation() throws IOException {
+  public void testTranspilation() throws Exception {
     String input = "goog.module('Foo');\nclass Foo {}";
+    URI uri = new URI("foo.js");
 
     Transpiler transpiler = Mockito.mock(Transpiler.class, RETURNS_SMART_NULLS);
     when(transpiler.runtime()).thenReturn("RUNTIME;");
-    when(transpiler.transpile(Paths.get("foo.js"), input))
-        .thenReturn(new TranspileResult(Paths.get("foo.js"), input, "TRANSPILED;", ""));
+    when(transpiler.transpile(uri, input))
+        .thenReturn(new TranspileResult(uri, input, "TRANSPILED;", ""));
 
     ClosureBundler bundler = new ClosureBundler(transpiler).withPath("foo.js");
     StringBuilder sb = new StringBuilder();
@@ -141,7 +142,7 @@ public final class ClosureBundlerTest extends TestCase {
             + "export {x as y};"
             + "var local;\n"
             + "export function foo() { return local; }\n";
-    ClosureBundler bundler = new ClosureBundler().withPath("foo.js");
+    ClosureBundler bundler = new ClosureBundler().withPath("nested/path/foo.js");
     StringBuilder sb = new StringBuilder();
     bundler.appendRuntimeTo(sb);
     bundler.appendTo(
@@ -159,13 +160,13 @@ public final class ClosureBundlerTest extends TestCase {
                 + "  Object.defineProperties($$exports, {foo:{enumerable:true, get:function() {\n"
                 + "    return foo;\n"
                 + "  }}, y:{enumerable:true, get:function() {\n"
-                + "    return module$other.x;\n"
+                + "    return module$nested$path$other.x;\n"
                 + "  }}});\n"
-                + "  var module$other = $$require(\"./other.js\");\n"
+                + "  var module$nested$path$other = $$require(\"./other.js\");\n"
                 + "  var local;\n"
                 + "  function foo() {\n"
                 + "    return local;\n"
                 + "  }\n"
-                + "}, \"foo.js\", [\"./other.js\"]);\n");
+                + "}, \"nested/path/foo.js\", [\"./other.js\"]);\n");
   }
 }

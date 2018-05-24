@@ -63,10 +63,23 @@ testSuite({
       checkSetGet(map, keys[i], {});
     }
     assertEquals(37, map.size);
+  },
 
-    // Note: +0 and -0 are the same key
+  testKeysNormalizeZero() {
+    const map = new Map().set(-0, 'foo');
     assertTrue(map.has(-0));
-    assertEquals(map.get(0), map.get(-0));
+    assertEquals('foo', map.get(0));
+    assertEquals('foo', map.get(-0));
+    // stored value should be +0
+    assertEquals(Infinity, 1 / map.keys().next().value);
+    assertEquals(Infinity, 1 / map.entries().next().value[0]);
+    map.forEach(
+        (value, key) => {
+          assertEquals(Infinity, 1 / key);
+        });
+    assertTrue(map.delete(-0));
+    assertFalse(map.has(0));
+    assertFalse(map.has(-0));
   },
 
   testNanKeys() {
@@ -157,6 +170,18 @@ testSuite({
     assertEquals(2, map.size);
     assertTrue(map.has('b'));
     assertEquals(3, map.get('a'));
+  },
+
+  testConstructor_normalizeZero() {
+    const map = new Map([[-0, 'foo']]);
+    assertEquals(Infinity, 1 / map.keys().next().value);
+    assertEquals(Infinity, 1 / map.entries().next().value[0]);
+    map.forEach(
+        (value, key) => {
+          assertEquals(Infinity, 1 / key);
+        });
+    assertEquals('foo', map.get(0));
+    assertEquals('foo', map.get(-0));
   },
 
   testForEach() {

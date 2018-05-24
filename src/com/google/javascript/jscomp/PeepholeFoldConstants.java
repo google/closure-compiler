@@ -845,7 +845,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
 
   private boolean isNumeric(Node n) {
     return NodeUtil.isNumericResult(n)
-        || (shouldUseTypes && n.getTypeI() != null && n.getTypeI().isNumberValueType());
+        || (shouldUseTypes && n.getJSType() != null && n.getJSType().isNumberValueType());
   }
 
   private Node maybeReplaceBinaryOpWithNumericResult(double result, double lval, double rval) {
@@ -948,7 +948,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
   private boolean isStringTyped(Node n) {
     // We could also accept !String, but it is unlikely to be very common.
     return NodeUtil.isStringResult(n)
-        || (shouldUseTypes && n.getTypeI() != null && n.getTypeI().isStringValueType());
+        || (shouldUseTypes && n.getJSType() != null && n.getJSType().isStringValueType());
   }
 
   /**
@@ -1530,9 +1530,21 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       return n;
     }
 
-    if (value.isFunction() && NodeUtil.referencesThis(value)) {
-      // 'this' may refer to the object we are trying to remove
-      return n;
+    if (n.getParent().isCall() || key.isGetterDef()) {
+      // When the code looks like:
+      //   {x: f}.x();
+      // or
+      //   {get x() {...}}.x;
+      // it's not safe, in general, to convert that to just a function call, because the 'this'
+      // value will be wrong. Except, if the function is a function literal and does not reference
+      // 'this' then it is safe:
+      if (value.isFunction() && !NodeUtil.referencesThis(value)) {
+        if (n.getParent().isCall()) {
+          n.getParent().putBooleanProp(Node.FREE_CALL, true);
+        }
+      } else {
+        return n;
+      }
     }
 
     Node replacement = value.detach();

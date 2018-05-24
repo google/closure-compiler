@@ -18,13 +18,11 @@ package com.google.javascript.jscomp.graph;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-
-import junit.framework.TestCase;
-
-import java.util.Collection;
 import java.util.Iterator;
 import java.util.Set;
+import junit.framework.TestCase;
 
 /**
  * Unit test for the {@link StandardUnionFind} data structure.
@@ -93,7 +91,7 @@ public final class StandardUnionFindTest extends TestCase {
     union.union("D", "E");
     union.union("F", "F");
 
-    Collection<Set<String>> classes = union.allEquivalenceClasses();
+    ImmutableList<ImmutableSet<String>> classes = union.allEquivalenceClasses();
     assertThat(classes).containsExactly(
         ImmutableSet.of("A", "B", "C"), ImmutableSet.of("D", "E"), ImmutableSet.of("F"));
   }

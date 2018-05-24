@@ -25,7 +25,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.MultimapBuilder;
 import com.google.common.collect.Multiset;
-import com.google.javascript.jscomp.MakeDeclaredNamesUnique.ContextualRenameInverter;
 import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
@@ -239,7 +238,7 @@ class MakeDeclaredNamesUnique extends NodeTraversal.AbstractScopedCallback {
 
     @Override
     public void process(Node externs, Node js) {
-      NodeTraversal.traverseEs6(compiler, js, this);
+      NodeTraversal.traverse(compiler, js, this);
     }
 
     public static String getOriginalName(String name) {

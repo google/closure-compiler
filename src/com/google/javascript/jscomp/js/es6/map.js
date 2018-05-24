@@ -142,6 +142,8 @@ $jscomp.polyfill('Map',
 
   /** @override */
   PolyfillMap.prototype.set = function(key, value) {
+    // normalize -0/+0 to +0
+    key = key === 0 ? 0 : key;
     var r = maybeGetEntry(this, key);
     if (!r.list) {
       r.list = (this.data_[r.id] = []);

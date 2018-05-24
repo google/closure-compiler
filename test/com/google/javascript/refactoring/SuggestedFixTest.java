@@ -891,6 +891,30 @@ public class SuggestedFixTest {
   }
 
   @Test
+  public void testAddRequireVar() {
+    String input =
+        Joiner.on('\n').join(
+            "var bar = goog.require('goog.bar');",
+            "",
+            "/** @private */",
+            "function foo_() {};");
+    String expected =
+        Joiner.on('\n').join(
+            "var bar = goog.require('goog.bar');",
+            // We add new imports as const per the Google Style Guide;
+            // TODO(bangert): we could add complexity to add new imports as var if we want to.
+            "const safe = goog.require('goog.safe');",
+            "",
+            "/** @private */",
+            "function foo_() {};");
+    Compiler compiler = getCompiler(input);
+    Node root = compileToScriptRoot(compiler);
+    Match match = new Match(root.getFirstChild(), new NodeMetadata(compiler));
+    SuggestedFix fix = new SuggestedFix.Builder().addGoogRequire(match, "goog.safe").build();
+    assertChanges(fix, "", input, expected);
+  }
+
+  @Test
   public void testAddRequireModuleUnchanged() {
     String input =
         Joiner.on('\n').join(

@@ -114,6 +114,9 @@ final class JsdocUtil {
         }
         break;
     }
+    if (rhs.isCast()) {
+      return getConstJSDoc(oldJSDoc, rhs.getJSDocInfo().getType().getRoot());
+    }
     return null;
   }
 

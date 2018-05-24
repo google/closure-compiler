@@ -16,9 +16,9 @@
 package com.google.javascript.jscomp;
 
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
-import com.google.javascript.rhino.FunctionTypeI;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.TypeI;
+import com.google.javascript.rhino.jstype.FunctionType;
+import com.google.javascript.rhino.jstype.JSType;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -46,8 +46,8 @@ public final class RemoveSuperMethodsPass implements CompilerPass {
 
   @Override
   public void process(Node externs, Node root) {
-    NodeTraversal.traverseEs6(compiler, root, new RemoveSuperMethodsCallback());
-    NodeTraversal.traverseEs6(compiler, root, new FilterDuplicateMethods());
+    NodeTraversal.traverse(compiler, root, new RemoveSuperMethodsCallback());
+    NodeTraversal.traverse(compiler, root, new FilterDuplicateMethods());
     for (Map.Entry<String, Node> entry : removeCandidates.entrySet()) {
       Node removalTarget = entry.getValue().getGrandparent();
       Node removalParent = removalTarget.getParent();
@@ -129,8 +129,8 @@ public final class RemoveSuperMethodsPass implements CompilerPass {
       // Check that call references the superclass
       String calledClass = callNameSplittedByPrototypeMarker[0];
       // TODO(moz): fix this to handle shadowing local type names
-      TypeI subclassType = compiler.getTypeIRegistry().getGlobalType(enclosingClassName);
-      TypeI calledClassType = compiler.getTypeIRegistry().getGlobalType(calledClass);
+      JSType subclassType = compiler.getTypeRegistry().getGlobalType(enclosingClassName);
+      JSType calledClassType = compiler.getTypeRegistry().getGlobalType(calledClass);
       if (subclassType == null || calledClassType == null) {
         return false;
       }
@@ -138,7 +138,7 @@ public final class RemoveSuperMethodsPass implements CompilerPass {
           || subclassType.toMaybeObjectType().getConstructor() == null) {
         return false;
       }
-      FunctionTypeI superClassConstructor =
+      FunctionType superClassConstructor =
           subclassType.toMaybeObjectType().getSuperClassConstructor();
       // TODO(moz): Investigate why this could be null
       if (superClassConstructor == null) {
@@ -149,13 +149,13 @@ public final class RemoveSuperMethodsPass implements CompilerPass {
 
     private boolean returnMatches(Node call) {
       // no match if function being called does not have function type
-      TypeI childType = call.getFirstChild().getTypeI();
+      JSType childType = call.getFirstChild().getJSType();
       if (childType == null || !childType.isFunctionType()) {
         return false;
       }
       // no match if function being called has a return value, but result of the call is not part
       // of return statement
-      TypeI returnType = childType.toMaybeFunctionType().getReturnType();
+      JSType returnType = childType.toMaybeFunctionType().getReturnType();
       if (returnType != null && !returnType.isVoidType() && !returnType.isUnknownType()) {
         return call.getParent().isReturn();
       }

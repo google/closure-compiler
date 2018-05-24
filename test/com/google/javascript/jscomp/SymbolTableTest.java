@@ -28,6 +28,7 @@ import com.google.javascript.jscomp.SymbolTable.Symbol;
 import com.google.javascript.jscomp.SymbolTable.SymbolScope;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfo.Visibility;
+import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -35,15 +36,14 @@ import java.util.List;
 import java.util.Set;
 import junit.framework.TestCase;
 
-/**
- * @author nicksantos@google.com (Nick Santos)
- */
+/** @author nicksantos@google.com (Nick Santos) */
 
 public final class SymbolTableTest extends TestCase {
 
-  private static final String EXTERNS = CompilerTypeTestCase.DEFAULT_EXTERNS
-      + "var Number;"
-      + "\nfunction customExternFn(customExternArg) {}";
+  private static final String EXTERNS =
+      CompilerTypeTestCase.DEFAULT_EXTERNS
+          + "var Number;"
+          + "\nfunction customExternFn(customExternArg) {}";
 
   private CompilerOptions options;
 
@@ -65,8 +65,8 @@ public final class SymbolTableTest extends TestCase {
   }
 
   /**
-   * Make sure rewrite of super() call containing a function literal doesn't cause
-   * the SymbolTable to crash.
+   * Make sure rewrite of super() call containing a function literal doesn't cause the SymbolTable
+   * to crash.
    */
   public void testFunctionInCall() {
     createSymbolTable(
@@ -80,8 +80,7 @@ public final class SymbolTableTest extends TestCase {
   }
 
   public void testGlobalVar() throws Exception {
-    SymbolTable table = createSymbolTable(
-        "/** @type {number} */ var x = 5;");
+    SymbolTable table = createSymbolTable("/** @type {number} */ var x = 5;");
     assertNull(getGlobalVar(table, "y"));
     assertNotNull(getGlobalVar(table, "x"));
     assertEquals("number", getGlobalVar(table, "x").getType().toString());
@@ -92,7 +91,8 @@ public final class SymbolTableTest extends TestCase {
 
   public void testGlobalThisReferences() throws Exception {
     SymbolTable table = createSymbolTable(
-        "var x = this; function f() { return this + this + this; }");
+        "var x = this; function f() { return this + this + this; }",
+        /* externsCode= */ "");
 
     Symbol global = getGlobalVar(table, "*global*");
     assertNotNull(global);
@@ -103,7 +103,7 @@ public final class SymbolTableTest extends TestCase {
 
   public void testGlobalThisReferences2() throws Exception {
     // Make sure the global this is declared, even if it isn't referenced.
-    SymbolTable table = createSymbolTable("");
+    SymbolTable table = createSymbolTable("", /* externsCode= */ "");
 
     Symbol global = getGlobalVar(table, "*global*");
     assertNotNull(global);
@@ -113,7 +113,8 @@ public final class SymbolTableTest extends TestCase {
   }
 
   public void testGlobalThisReferences3() throws Exception {
-    SymbolTable table = createSymbolTable("this.foo = {}; this.foo.bar = {};");
+    SymbolTable table =
+        createSymbolTable("this.foo = {}; this.foo.bar = {};", /* externsCode= */ "");
 
     Symbol global = getGlobalVar(table, "*global*");
     assertNotNull(global);
@@ -123,8 +124,7 @@ public final class SymbolTableTest extends TestCase {
   }
 
   public void testGlobalThisPropertyReferences() throws Exception {
-    SymbolTable table = createSymbolTable(
-        "/** @constructor */ function Foo() {} this.Foo;");
+    SymbolTable table = createSymbolTable("/** @constructor */ function Foo() {} this.Foo;");
 
     Symbol foo = getGlobalVar(table, "Foo");
     assertNotNull(foo);
@@ -134,8 +134,7 @@ public final class SymbolTableTest extends TestCase {
   }
 
   public void testGlobalVarReferences() throws Exception {
-    SymbolTable table = createSymbolTable(
-        "/** @type {number} */ var x = 5; x = 6;");
+    SymbolTable table = createSymbolTable("/** @type {number} */ var x = 5; x = 6;");
     Symbol x = getGlobalVar(table, "x");
     List<Reference> refs = table.getReferenceList(x);
 
@@ -146,8 +145,7 @@ public final class SymbolTableTest extends TestCase {
   }
 
   public void testLocalVarReferences() throws Exception {
-    SymbolTable table = createSymbolTable(
-        "function f(x) { return x; }");
+    SymbolTable table = createSymbolTable("function f(x) { return x; }");
     Symbol x = getLocalVar(table, "x");
     List<Reference> refs = table.getReferenceList(x);
 
@@ -158,8 +156,8 @@ public final class SymbolTableTest extends TestCase {
   }
 
   public void testLocalThisReferences() throws Exception {
-    SymbolTable table = createSymbolTable(
-        "/** @constructor */ function F() { this.foo = 3; this.bar = 5; }");
+    SymbolTable table =
+        createSymbolTable("/** @constructor */ function F() { this.foo = 3; this.bar = 5; }");
 
     Symbol f = getGlobalVar(table, "F");
     assertNotNull(f);
@@ -172,9 +170,11 @@ public final class SymbolTableTest extends TestCase {
   }
 
   public void testLocalThisReferences2() throws Exception {
-    SymbolTable table = createSymbolTable(
-        "/** @constructor */ function F() {}\n"
-            + "F.prototype.baz = function() { this.foo = 3; this.bar = 5; };");
+    SymbolTable table =
+        createSymbolTable(
+            lines(
+                "/** @constructor */ function F() {}",
+                "F.prototype.baz = function() { this.foo = 3; this.bar = 5; };"));
 
     Symbol baz = getGlobalVar(table, "F.prototype.baz");
     assertNotNull(baz);
@@ -188,8 +188,7 @@ public final class SymbolTableTest extends TestCase {
 
   // No 'this' reference is created for empty functions.
   public void testLocalThisReferences3() throws Exception {
-    SymbolTable table = createSymbolTable(
-        "/** @constructor */ function F() {}");
+    SymbolTable table = createSymbolTable("/** @constructor */ function F() {}");
 
     Symbol baz = getGlobalVar(table, "F");
     assertNotNull(baz);
@@ -208,24 +207,34 @@ public final class SymbolTableTest extends TestCase {
   public void testObjectLiteralQuoted() throws Exception {
     SymbolTable table = createSymbolTable("var obj = {'foo': 0};");
 
-    Symbol foo = getGlobalVar(table, "obj.foo");
-    assertThat(foo.getName()).isEqualTo("foo");
+    // Quoted keys are not symbols.
+    assertThat(getGlobalVar(table, "obj.foo")).isNull();
+    // Only obj and *global* are symbols.
+    assertThat(getVars(table)).hasSize(2);
   }
 
-  public void testObjectLiteralWithNewlineInKey() throws Exception {
-    SymbolTable table = createSymbolTable("var obj = {'foo\\nbar': 0};");
+  public void testObjectLiteralWithMemberFunction() {
+    String input = lines("var obj = { fn() {} }; obj.fn();");
+    SymbolTable table = createSymbolTable(input);
 
-    Symbol foo = getGlobalVar(table, "obj.foo\\nbar");
-    assertThat(foo.getName()).isEqualTo("obj.foo\\nbar");
+    Symbol objFn = getGlobalVar(table, "obj.fn");
+    assertNotNull(objFn);
+    List<Reference> references = table.getReferenceList(objFn);
+    assertThat(references).hasSize(2);
+
+    // The declaration node corresponds to "fn", not "fn() {}", in the source info.
+    Node declaration = objFn.getDeclarationNode();
+    assertThat(declaration.getCharno()).isEqualTo(12);
+    assertThat(declaration.getLength()).isEqualTo(2);
   }
 
   public void testNamespacedReferences() throws Exception {
     // Because the type of goog is anonymous, we build its properties into
     // the global scope.
-    SymbolTable table = createSymbolTable(
-        "var goog = {};" +
-        "goog.dom = {};" +
-        "goog.dom.DomHelper = function(){};");
+    SymbolTable table =
+        createSymbolTable(
+            lines("var goog = {};", "goog.dom = {};", "goog.dom.DomHelper = function(){};"));
+
     Symbol goog = getGlobalVar(table, "goog");
     assertNotNull(goog);
     assertThat(table.getReferences(goog)).hasSize(3);
@@ -240,10 +249,12 @@ public final class SymbolTableTest extends TestCase {
   }
 
   public void testIncompleteNamespacedReferences() throws Exception {
-    SymbolTable table = createSymbolTable(
-        "/** @constructor */\n" +
-        "goog.dom.DomHelper = function(){};\n" +
-        "var y = goog.dom.DomHelper;\n");
+    SymbolTable table =
+        createSymbolTable(
+            lines(
+                "/** @constructor */",
+                "goog.dom.DomHelper = function(){};",
+                "var y = goog.dom.DomHelper;"));
     Symbol goog = getGlobalVar(table, "goog");
     assertNotNull(goog);
     assertThat(table.getReferenceList(goog)).hasSize(2);
@@ -258,18 +269,20 @@ public final class SymbolTableTest extends TestCase {
   }
 
   public void testGlobalRichObjectReference() throws Exception {
-    SymbolTable table = createSymbolTable(
-        "/** @constructor */\n" +
-        "function A(){};\n" +
-        "/** @type {?A} */ A.prototype.b;\n" +
-        "/** @type {A} */ var a = new A();\n" +
-        "function g() {\n" +
-        "  return a.b ? 'x' : 'y';\n" +
-        "}\n" +
-        "(function() {\n" +
-        "  var x; if (x) { x = a.b.b; } else { x = a.b.c; }\n" +
-        "  return x;\n" +
-        "})();\n");
+    SymbolTable table =
+        createSymbolTable(
+            lines(
+                "/** @constructor */",
+                "function A(){};",
+                "/** @type {?A} */ A.prototype.b;",
+                "/** @type {A} */ var a = new A();",
+                "function g() {",
+                "  return a.b ? 'x' : 'y';",
+                "}",
+                "(function() {",
+                "  var x; if (x) { x = a.b.b; } else { x = a.b.c; }",
+                "  return x;",
+                "})();"));
 
     Symbol ab = getGlobalVar(table, "a.b");
     assertNull(ab);
@@ -279,11 +292,12 @@ public final class SymbolTableTest extends TestCase {
     assertThat(table.getReferenceList(propB)).hasSize(5);
   }
 
-  public void testRemovalOfNamespacedReferencesOfProperties()
-      throws Exception {
-    SymbolTable table = createSymbolTable(
-        "/** @constructor */ var DomHelper = function(){};" +
-        "/** method */ DomHelper.method = function() {};");
+  public void testRemovalOfNamespacedReferencesOfProperties() throws Exception {
+    SymbolTable table =
+        createSymbolTable(
+            lines(
+                "/** @constructor */ var DomHelper = function(){};",
+                "/** method */ DomHelper.method = function() {};"));
 
     Symbol domHelper = getGlobalVar(table, "DomHelper");
     assertNotNull(domHelper);
@@ -296,22 +310,24 @@ public final class SymbolTableTest extends TestCase {
   }
 
   public void testGoogScopeReferences() throws Exception {
-    SymbolTable table = createSymbolTable(
-        "var goog = {};" +
-        "goog.scope = function() {};" +
-        "goog.scope(function() {});");
+    SymbolTable table =
+        createSymbolTable(
+            lines("var goog = {};", "goog.scope = function() {};", "goog.scope(function() {});"));
+
     Symbol googScope = getGlobalVar(table, "goog.scope");
     assertNotNull(googScope);
     assertThat(table.getReferences(googScope)).hasSize(2);
   }
 
   public void testGoogRequireReferences() throws Exception {
-    SymbolTable table = createSymbolTable(
-        "var goog = {};" +
-        "goog.provide = function() {};" +
-        "goog.require = function() {};" +
-        "goog.provide('goog.dom');" +
-        "goog.require('goog.dom');");
+    SymbolTable table =
+        createSymbolTable(
+            lines(
+                "var goog = {};",
+                "goog.provide = function() {};",
+                "goog.require = function() {};",
+                "goog.provide('goog.dom');",
+                "goog.require('goog.dom');"));
     Symbol goog = getGlobalVar(table, "goog");
     assertNotNull(goog);
 
@@ -328,8 +344,9 @@ public final class SymbolTableTest extends TestCase {
 
   public void testGoogRequireReferences2() throws Exception {
     options.setBrokenClosureRequiresLevel(CheckLevel.OFF);
-    SymbolTable table = createSymbolTable("foo.bar = function(){};  // definition\n"
-        + "goog.require('foo.bar')\n");
+    SymbolTable table =
+        createSymbolTable(
+            lines("foo.bar = function(){};  // definition", "goog.require('foo.bar')"));
     Symbol fooBar = getGlobalVar(table, "foo.bar");
     assertNotNull(fooBar);
     assertThat(table.getReferences(fooBar)).hasSize(2);
@@ -339,12 +356,11 @@ public final class SymbolTableTest extends TestCase {
     SymbolTable table = createSymbolTable("customExternFn(1);");
     Symbol fn = getGlobalVar(table, "customExternFn");
     List<Reference> refs = table.getReferenceList(fn);
-    assertThat(refs).hasSize(2);
+    assertThat(refs).hasSize(3);
 
     SymbolScope scope = table.getEnclosingScope(refs.get(0).getNode());
     assertTrue(scope.isGlobalScope());
-    assertEquals(SymbolTable.GLOBAL_THIS,
-        table.getSymbolForScope(scope).getName());
+    assertEquals(SymbolTable.GLOBAL_THIS, table.getSymbolForScope(scope).getName());
   }
 
   public void testLocalVarInExterns() throws Exception {
@@ -360,116 +376,119 @@ public final class SymbolTableTest extends TestCase {
   }
 
   public void testSymbolsForType() throws Exception {
-    SymbolTable table = createSymbolTable(
-        "function random() { return 1; }" +
-        "/** @constructor */ function Foo() {}" +
-        "/** @constructor */ function Bar() {}" +
-        "var x = random() ? new Foo() : new Bar();");
+    SymbolTable table =
+        createSymbolTable(
+            lines(
+                "function random() { return 1; }",
+                "/** @constructor */ function Foo() {}",
+                "/** @constructor */ function Bar() {}",
+                "var x = random() ? new Foo() : new Bar();"));
 
     Symbol x = getGlobalVar(table, "x");
     Symbol foo = getGlobalVar(table, "Foo");
     Symbol bar = getGlobalVar(table, "Bar");
     Symbol fooPrototype = getGlobalVar(table, "Foo.prototype");
     Symbol fn = getGlobalVar(table, "Function");
-    assertEquals(
-        ImmutableList.of(foo, bar), table.getAllSymbolsForTypeOf(x));
-    assertEquals(
-        ImmutableList.of(fn), table.getAllSymbolsForTypeOf(foo));
-    assertEquals(
-        ImmutableList.of(foo), table.getAllSymbolsForTypeOf(fooPrototype));
-    assertEquals(
-        foo,
-        table.getSymbolDeclaredBy(
-            foo.getType().toMaybeFunctionType()));
+    assertEquals(ImmutableList.of(foo, bar), table.getAllSymbolsForTypeOf(x));
+    assertEquals(ImmutableList.of(fn), table.getAllSymbolsForTypeOf(foo));
+    assertEquals(ImmutableList.of(foo), table.getAllSymbolsForTypeOf(fooPrototype));
+    assertEquals(foo, table.getSymbolDeclaredBy(foo.getType().toMaybeFunctionType()));
   }
 
   public void testStaticMethodReferences() throws Exception {
-    SymbolTable table = createSymbolTable(
-        "/** @constructor */ var DomHelper = function(){};" +
-        "/** method */ DomHelper.method = function() {};" +
-        "function f() { var x = DomHelper; x.method() + x.method(); }");
+    SymbolTable table =
+        createSymbolTable(
+            lines(
+                "/** @constructor */ var DomHelper = function(){};",
+                "/** method */ DomHelper.method = function() {};",
+                "function f() { var x = DomHelper; x.method() + x.method(); }"));
 
-    Symbol method =
-        getGlobalVar(table, "DomHelper").getPropertyScope().getSlot("method");
+    Symbol method = getGlobalVar(table, "DomHelper").getPropertyScope().getSlot("method");
     assertThat(table.getReferences(method)).hasSize(3);
   }
 
   public void testMethodReferences() throws Exception {
-    SymbolTable table = createSymbolTable(
-        "/** @constructor */ var DomHelper = function(){};" +
-        "/** method */ DomHelper.prototype.method = function() {};" +
-        "function f() { " +
-        "  (new DomHelper()).method(); (new DomHelper()).method(); };");
+    SymbolTable table =
+        createSymbolTable(
+            lines(
+                "/** @constructor */ var DomHelper = function(){};",
+                "/** method */ DomHelper.prototype.method = function() {};",
+                "function f() { ",
+                "  (new DomHelper()).method(); (new DomHelper()).method(); };"));
 
-    Symbol method =
-        getGlobalVar(table, "DomHelper.prototype.method");
+    Symbol method = getGlobalVar(table, "DomHelper.prototype.method");
     assertThat(table.getReferences(method)).hasSize(3);
   }
 
   public void testSuperClassMethodReferences() throws Exception {
-    SymbolTable table = createSymbolTable(
-        "var goog = {};" +
-        "goog.inherits = function(a, b) {};" +
-        "/** @constructor */ var A = function(){};" +
-        "/** method */ A.prototype.method = function() {};" +
-        "/**\n" +
-        " * @constructor\n" +
-        " * @extends {A}\n" +
-        " */\n" +
-        "var B = function(){};\n" +
-        "goog.inherits(B, A);" +
-        "/** method */ B.prototype.method = function() {" +
-        "  B.superClass_.method();" +
-        "};");
+    SymbolTable table =
+        createSymbolTable(
+            lines(
+                "var goog = {};",
+                "goog.inherits = function(a, b) {};",
+                "/** @constructor */ var A = function(){};",
+                "/** method */ A.prototype.method = function() {};",
+                "/**",
+                " * @constructor",
+                " * @extends {A}",
+                " */",
+                "var B = function(){};",
+                "goog.inherits(B, A);",
+                "/** method */ B.prototype.method = function() {",
+                "  B.superClass_.method();",
+                "};"));
 
-    Symbol methodA =
-        getGlobalVar(table, "A.prototype.method");
+    Symbol methodA = getGlobalVar(table, "A.prototype.method");
     assertThat(table.getReferences(methodA)).hasSize(2);
   }
 
   public void testMethodReferencesMissingTypeInfo() throws Exception {
-    SymbolTable table = createSymbolTable(
-        "/**\n" +
-        " * @constructor\n" +
-        " * @extends {Missing}\n" +
-        " */ var DomHelper = function(){};\n" +
-        "/** method */ DomHelper.prototype.method = function() {\n" +
-        "  this.method();\n" +
-        "};\n" +
-        "function f() { " +
-        "  (new DomHelper()).method();\n" +
-        "};");
+    SymbolTable table =
+        createSymbolTable(
+            lines(
+                "/**",
+                " * @constructor",
+                " * @extends {Missing}",
+                " */ var DomHelper = function(){};",
+                "/** method */ DomHelper.prototype.method = function() {",
+                "  this.method();",
+                "};",
+                "function f() { ",
+                "  (new DomHelper()).method();",
+                "};"));
 
-    Symbol method =
-        getGlobalVar(table, "DomHelper.prototype.method");
+    Symbol method = getGlobalVar(table, "DomHelper.prototype.method");
     assertThat(table.getReferences(method)).hasSize(3);
   }
 
   public void testFieldReferencesMissingTypeInfo() throws Exception {
-    SymbolTable table = createSymbolTable(
-        "/**\n" +
-        " * @constructor\n" +
-        " * @extends {Missing}\n" +
-        " */ var DomHelper = function(){ this.prop = 1; };\n" +
-        "/** @type {number} */ DomHelper.prototype.prop = 2;\n" +
-        "function f() {\n" +
-        "  return (new DomHelper()).prop;\n" +
-        "};");
+    SymbolTable table =
+        createSymbolTable(
+            lines(
+                "/**",
+                " * @constructor",
+                " * @extends {Missing}",
+                " */ var DomHelper = function(){ this.prop = 1; };",
+                "/** @type {number} */ DomHelper.prototype.prop = 2;",
+                "function f() {",
+                "  return (new DomHelper()).prop;",
+                "};"));
 
-    Symbol prop =
-        getGlobalVar(table, "DomHelper.prototype.prop");
+    Symbol prop = getGlobalVar(table, "DomHelper.prototype.prop");
     assertThat(table.getReferenceList(prop)).hasSize(3);
 
     assertNull(getLocalVar(table, "this.prop"));
   }
 
   public void testFieldReferences() throws Exception {
-    SymbolTable table = createSymbolTable(
-        "/** @constructor */ var DomHelper = function(){" +
-        "  /** @type {number} */ this.field = 3;" +
-        "};" +
-        "function f() { " +
-        "  return (new DomHelper()).field + (new DomHelper()).field; };");
+    SymbolTable table =
+        createSymbolTable(
+            lines(
+                "/** @constructor */ var DomHelper = function(){",
+                "  /** @type {number} */ this.field = 3;",
+                "};",
+                "function f() { ",
+                "  return (new DomHelper()).field + (new DomHelper()).field; };"));
 
     Symbol field = getGlobalVar(table, "DomHelper.prototype.field");
     assertThat(table.getReferences(field)).hasSize(3);
@@ -478,23 +497,26 @@ public final class SymbolTableTest extends TestCase {
   public void testUndeclaredFieldReferences() throws Exception {
     // We do not currently create symbol table entries for undeclared fields,
     // but this may change in the future.
-    SymbolTable table = createSymbolTable(
-        "/** @constructor */ var DomHelper = function(){};" +
-        "DomHelper.prototype.method = function() { " +
-        "  this.field = 3;" +
-        "  return x.field;" +
-        "}");
+    SymbolTable table =
+        createSymbolTable(
+            lines(
+                "/** @constructor */ var DomHelper = function(){};",
+                "DomHelper.prototype.method = function() { ",
+                "  this.field = 3;",
+                "  return x.field;",
+                "}"));
 
     Symbol field = getGlobalVar(table, "DomHelper.prototype.field");
     assertNull(field);
   }
 
   public void testPrototypeReferences() throws Exception {
-    SymbolTable table = createSymbolTable(
-        "/** @constructor */ function DomHelper() {}" +
-        "DomHelper.prototype.method = function() {};");
-    Symbol prototype =
-        getGlobalVar(table, "DomHelper.prototype");
+    SymbolTable table =
+        createSymbolTable(
+            lines(
+                "/** @constructor */ function DomHelper() {}",
+                "DomHelper.prototype.method = function() {};"));
+    Symbol prototype = getGlobalVar(table, "DomHelper.prototype");
     assertNotNull(prototype);
 
     List<Reference> refs = table.getReferenceList(prototype);
@@ -504,12 +526,10 @@ public final class SymbolTableTest extends TestCase {
   }
 
   public void testPrototypeReferences2() throws Exception {
-    SymbolTable table = createSymbolTable(
-        "/** @constructor */\n"
-        + "function Snork() {}\n"
-        + "Snork.prototype.baz = 3;\n");
-    Symbol prototype =
-        getGlobalVar(table, "Snork.prototype");
+    SymbolTable table =
+        createSymbolTable(
+            "/** @constructor */" + "function Snork() {}" + "Snork.prototype.baz = 3;");
+    Symbol prototype = getGlobalVar(table, "Snork.prototype");
     assertNotNull(prototype);
 
     List<Reference> refs = table.getReferenceList(prototype);
@@ -517,8 +537,7 @@ public final class SymbolTableTest extends TestCase {
   }
 
   public void testPrototypeReferences3() throws Exception {
-    SymbolTable table = createSymbolTable(
-        "/** @constructor */ function Foo() {}");
+    SymbolTable table = createSymbolTable("/** @constructor */ function Foo() {}");
     Symbol fooPrototype = getGlobalVar(table, "Foo.prototype");
     assertNotNull(fooPrototype);
 
@@ -529,27 +548,25 @@ public final class SymbolTableTest extends TestCase {
     // Make sure that the ctor and its prototype are declared at the
     // same node.
     assertEquals(
-        refs.get(0).getNode(),
-        table.getReferenceList(getGlobalVar(table, "Foo")).get(0).getNode());
+        refs.get(0).getNode(), table.getReferenceList(getGlobalVar(table, "Foo")).get(0).getNode());
   }
 
   public void testPrototypeReferences4() throws Exception {
-    SymbolTable table = createSymbolTable(
-        "/** @constructor */ function Foo() {}" +
-        "Foo.prototype = {bar: 3}");
+    SymbolTable table =
+        createSymbolTable(
+            lines("/** @constructor */ function Foo() {}", "Foo.prototype = {bar: 3}"));
     Symbol fooPrototype = getGlobalVar(table, "Foo.prototype");
     assertNotNull(fooPrototype);
 
-    List<Reference> refs = ImmutableList.copyOf(
-        table.getReferences(fooPrototype));
+    List<Reference> refs = ImmutableList.copyOf(table.getReferences(fooPrototype));
     assertThat(refs).hasSize(1);
     assertEquals(Token.GETPROP, refs.get(0).getNode().getToken());
     assertEquals("Foo.prototype", refs.get(0).getNode().getQualifiedName());
   }
 
   public void testPrototypeReferences5() throws Exception {
-    SymbolTable table = createSymbolTable(
-        "var goog = {}; /** @constructor */ goog.Foo = function() {};");
+    SymbolTable table =
+        createSymbolTable("var goog = {}; /** @constructor */ goog.Foo = function() {};");
     Symbol fooPrototype = getGlobalVar(table, "goog.Foo.prototype");
     assertNotNull(fooPrototype);
 
@@ -561,20 +578,21 @@ public final class SymbolTableTest extends TestCase {
     // same node.
     assertEquals(
         refs.get(0).getNode(),
-        table.getReferenceList(
-            getGlobalVar(table, "goog.Foo")).get(0).getNode());
+        table.getReferenceList(getGlobalVar(table, "goog.Foo")).get(0).getNode());
   }
 
   public void testReferencesInJSDocType() {
-    SymbolTable table = createSymbolTable(
-        "/** @constructor */ function Foo() {}\n" +
-        "/** @type {Foo} */ var x;\n" +
-        "/** @param {Foo} x */ function f(x) {}\n" +
-        "/** @return {function(): Foo} */ function g() {}\n" +
-        "/**\n" +
-        " * @constructor\n" +
-        " * @extends {Foo}\n" +
-        " */ function Sub() {}");
+    SymbolTable table =
+        createSymbolTable(
+            lines(
+                "/** @constructor */ function Foo() {}",
+                "/** @type {Foo} */ var x;",
+                "/** @param {Foo} x */ function f(x) {}",
+                "/** @return {function(): Foo} */ function g() {}",
+                "/**",
+                " * @constructor",
+                " * @extends {Foo}",
+                " */ function Sub() {}"));
     Symbol foo = getGlobalVar(table, "Foo");
     assertNotNull(foo);
 
@@ -599,8 +617,7 @@ public final class SymbolTableTest extends TestCase {
   }
 
   public void testReferencesInJSDocType2() {
-    SymbolTable table = createSymbolTable(
-        "/** @param {string} x */ function f(x) {}\n");
+    SymbolTable table = createSymbolTable("/** @param {string} x */ function f(x) {}");
     Symbol str = getGlobalVar(table, "String");
     assertNotNull(str);
 
@@ -623,16 +640,18 @@ public final class SymbolTableTest extends TestCase {
   }
 
   public void testDottedReferencesInJSDocType() {
-    SymbolTable table = createSymbolTable(
-        "var goog = {};\n" +
-        "/** @constructor */ goog.Foo = function() {}\n" +
-        "/** @type {goog.Foo} */ var x;\n" +
-        "/** @param {goog.Foo} x */ function f(x) {}\n" +
-        "/** @return {function(): goog.Foo} */ function g() {}\n" +
-        "/**\n" +
-        " * @constructor\n" +
-        " * @extends {goog.Foo}\n" +
-        " */ function Sub() {}");
+    SymbolTable table =
+        createSymbolTable(
+            lines(
+                "var goog = {};",
+                "/** @constructor */ goog.Foo = function() {}",
+                "/** @type {goog.Foo} */ var x;",
+                "/** @param {goog.Foo} x */ function f(x) {}",
+                "/** @return {function(): goog.Foo} */ function g() {}",
+                "/**",
+                " * @constructor",
+                " * @extends {goog.Foo}",
+                " */ function Sub() {}"));
     Symbol foo = getGlobalVar(table, "goog.Foo");
     assertNotNull(foo);
 
@@ -644,20 +663,20 @@ public final class SymbolTableTest extends TestCase {
     assertEquals(8, refs.get(0).getNode().getLength());
 
     assertEquals(3, refs.get(1).getNode().getLineno());
-    assertEquals(11, refs.get(1).getNode().getCharno());
+    assertEquals(16, refs.get(1).getNode().getCharno());
 
     assertEquals(4, refs.get(2).getNode().getLineno());
-    assertEquals(12, refs.get(2).getNode().getCharno());
+    assertEquals(17, refs.get(2).getNode().getCharno());
 
     assertEquals(5, refs.get(3).getNode().getLineno());
-    assertEquals(25, refs.get(3).getNode().getCharno());
+    assertEquals(30, refs.get(3).getNode().getCharno());
 
     assertEquals(8, refs.get(4).getNode().getLineno());
-    assertEquals(13, refs.get(4).getNode().getCharno());
+    assertEquals(18, refs.get(4).getNode().getCharno());
   }
 
   public void testReferencesInJSDocName() {
-    String code = "/** @param {Object} x */ function f(x) {}\n";
+    String code = "/** @param {Object} x */ function f(x) {}";
     SymbolTable table = createSymbolTable(code);
     Symbol x = getLocalVar(table, "x");
     assertNotNull(x);
@@ -667,13 +686,11 @@ public final class SymbolTableTest extends TestCase {
 
     assertEquals(code.indexOf("x) {"), refs.get(0).getNode().getCharno());
     assertEquals(code.indexOf("x */"), refs.get(1).getNode().getCharno());
-    assertEquals("in1",
-        refs.get(0).getNode().getSourceFileName());
+    assertEquals("in1", refs.get(0).getNode().getSourceFileName());
   }
 
   public void testLocalQualifiedNamesInLocalScopes() {
-    SymbolTable table = createSymbolTable(
-        "function f() { var x = {}; x.number = 3; }");
+    SymbolTable table = createSymbolTable("function f() { var x = {}; x.number = 3; }");
     Symbol xNumber = getLocalVar(table, "x.number");
     assertNotNull(xNumber);
     assertFalse(table.getScope(xNumber).isGlobalScope());
@@ -682,10 +699,12 @@ public final class SymbolTableTest extends TestCase {
   }
 
   public void testNaturalSymbolOrdering() {
-    SymbolTable table = createSymbolTable(
-        "/** @const */ var a = {};" +
-        "/** @const */ a.b = {};" +
-        "/** @param {number} x */ function f(x) {}");
+    SymbolTable table =
+        createSymbolTable(
+            lines(
+                "/** @const */ var a = {};",
+                "/** @const */ a.b = {};",
+                "/** @param {number} x */ function f(x) {}"));
     Symbol a = getGlobalVar(table, "a");
     Symbol ab = getGlobalVar(table, "a.b");
     Symbol f = getGlobalVar(table, "f");
@@ -698,14 +717,16 @@ public final class SymbolTableTest extends TestCase {
   }
 
   public void testDeclarationDisagreement() {
-    SymbolTable table = createSymbolTable(
-        "/** @const */ var goog = goog || {};\n" +
-        "/** @param {!Function} x */\n" +
-        "goog.addSingletonGetter2 = function(x) {};\n" +
-        "/** Wakka wakka wakka */\n" +
-        "goog.addSingletonGetter = goog.addSingletonGetter2;\n" +
-        "/** @param {!Function} x */\n" +
-        "goog.addSingletonGetter = function(x) {};\n");
+    SymbolTable table =
+        createSymbolTable(
+            lines(
+                "/** @const */ var goog = goog || {};",
+                "/** @param {!Function} x */",
+                "goog.addSingletonGetter2 = function(x) {};",
+                "/** Wakka wakka wakka */",
+                "goog.addSingletonGetter = goog.addSingletonGetter2;",
+                "/** @param {!Function} x */",
+                "goog.addSingletonGetter = function(x) {};"));
 
     Symbol method = getGlobalVar(table, "goog.addSingletonGetter");
     List<Reference> refs = table.getReferenceList(method);
@@ -717,36 +738,38 @@ public final class SymbolTableTest extends TestCase {
   }
 
   public void testMultipleExtends() {
-    SymbolTable table = createSymbolTable(
-        "/** @const */ var goog = goog || {};\n" +
-        "goog.inherits = function(x, y) {};\n" +
-        "/** @constructor */\n" +
-        "goog.A = function() { this.fieldA = this.constructor; };\n" +
-        "/** @constructor */ goog.A.FooA = function() {};\n" +
-        "/** @return {void} */ goog.A.prototype.methodA = function() {};\n" +
-        "/**\n" +
-        " * @constructor\n" +
-        " * @extends {goog.A}\n" +
-        " */\n" +
-        "goog.B = function() { this.fieldB = this.constructor; };\n" +
-        "goog.inherits(goog.B, goog.A);\n" +
-        "/** @return {void} */ goog.B.prototype.methodB = function() {};\n" +
-        "/**\n" +
-        " * @constructor\n" +
-        " * @extends {goog.A}\n" +
-        " */\n" +
-        "goog.B2 = function() { this.fieldB = this.constructor; };\n" +
-        "goog.inherits(goog.B2, goog.A);\n" +
-        "/** @constructor */ goog.B2.FooB = function() {};\n" +
-        "/** @return {void} */ goog.B2.prototype.methodB = function() {};\n" +
-        "/**\n" +
-        " * @constructor\n" +
-        " * @extends {goog.B}\n" +
-        " */\n" +
-        "goog.C = function() { this.fieldC = this.constructor; };\n" +
-        "goog.inherits(goog.C, goog.B);\n" +
-        "/** @constructor */ goog.C.FooC = function() {};\n" +
-        "/** @return {void} */ goog.C.prototype.methodC = function() {};\n");
+    SymbolTable table =
+        createSymbolTable(
+            lines(
+                "/** @const */ var goog = goog || {};",
+                "goog.inherits = function(x, y) {};",
+                "/** @constructor */",
+                "goog.A = function() { this.fieldA = this.constructor; };",
+                "/** @constructor */ goog.A.FooA = function() {};",
+                "/** @return {void} */ goog.A.prototype.methodA = function() {};",
+                "/**",
+                " * @constructor",
+                " * @extends {goog.A}",
+                " */",
+                "goog.B = function() { this.fieldB = this.constructor; };",
+                "goog.inherits(goog.B, goog.A);",
+                "/** @return {void} */ goog.B.prototype.methodB = function() {};",
+                "/**",
+                " * @constructor",
+                " * @extends {goog.A}",
+                " */",
+                "goog.B2 = function() { this.fieldB = this.constructor; };",
+                "goog.inherits(goog.B2, goog.A);",
+                "/** @constructor */ goog.B2.FooB = function() {};",
+                "/** @return {void} */ goog.B2.prototype.methodB = function() {};",
+                "/**",
+                " * @constructor",
+                " * @extends {goog.B}",
+                " */",
+                "goog.C = function() { this.fieldC = this.constructor; };",
+                "goog.inherits(goog.C, goog.B);",
+                "/** @constructor */ goog.C.FooC = function() {};",
+                "/** @return {void} */ goog.C.prototype.methodC = function() {};"));
 
     Symbol bCtor = getGlobalVar(table, "goog.B.prototype.constructor");
     assertNotNull(bCtor);
@@ -764,11 +787,12 @@ public final class SymbolTableTest extends TestCase {
   }
 
   public void testJSDocAssociationWithBadNamespace() {
-    SymbolTable table = createSymbolTable(
-        // Notice that the declaration for "goog" is missing.
-        // We want to recover anyway and print out what we know
-        // about goog.Foo.
-        "/** @constructor */ goog.Foo = function(){};");
+    SymbolTable table =
+        createSymbolTable(
+            // Notice that the declaration for "goog" is missing.
+            // We want to recover anyway and print out what we know
+            // about goog.Foo.
+            "/** @constructor */ goog.Foo = function(){};");
 
     Symbol foo = getGlobalVar(table, "goog.Foo");
     assertNotNull(foo);
@@ -779,14 +803,16 @@ public final class SymbolTableTest extends TestCase {
   }
 
   public void testMissingConstructorTag() {
-    SymbolTable table = createSymbolTable(
-        "function F() {" +
-        "  this.field1 = 3;" +
-        "}" +
-        "F.prototype.method1 = function() {" +
-        "  this.field1 = 5;" +
-        "};" +
-        "(new F()).method1();");
+    SymbolTable table =
+        createSymbolTable(
+            lines(
+                "function F() {",
+                "  this.field1 = 3;",
+                "}",
+                "F.prototype.method1 = function() {",
+                "  this.field1 = 5;",
+                "};",
+                "(new F()).method1();"));
 
     // Because the constructor tag is missing, this is going
     // to be missing a lot of inference.
@@ -800,15 +826,17 @@ public final class SymbolTableTest extends TestCase {
     options = new CompilerOptions();
 
     // Turning type-checking off is even worse than not annotating anything.
-    SymbolTable table = createSymbolTable(
-        "/** @contstructor */" +
-        "function F() {" +
-        "  this.field1 = 3;" +
-        "}" +
-        "F.prototype.method1 = function() {" +
-        "  this.field1 = 5;" +
-        "};" +
-        "(new F()).method1();");
+    SymbolTable table =
+        createSymbolTable(
+            lines(
+                "/** @contstructor */",
+                "function F() {",
+                "  this.field1 = 3;",
+                "}",
+                "F.prototype.method1 = function() {",
+                "  this.field1 = 5;",
+                "};",
+                "(new F()).method1();"));
     assertNull(getGlobalVar(table, "F.prototype.field1"));
     assertNull(getGlobalVar(table, "F.prototype.method1"));
 
@@ -817,30 +845,29 @@ public final class SymbolTableTest extends TestCase {
   }
 
   public void testSuperClassReference() throws Exception {
-    SymbolTable table = createSymbolTable(
-        "  var a = {b: {}};\n"
-        + "/** @constructor */\n"
-        + "a.b.BaseClass = function() {};\n"
-        + "a.b.BaseClass.prototype.doSomething = function() {\n"
-        + "  alert('hi');\n"
-        + "};\n"
-        + "/**\n"
-        + " * @constructor\n"
-        + " * @extends {a.b.BaseClass}\n"
-        + " */\n"
-        + "a.b.DerivedClass = function() {};\n"
-        + "goog.inherits(a.b.DerivedClass, a.b.BaseClass);\n"
-        + "/** @override */\n"
-        + "a.b.DerivedClass.prototype.doSomething = function() {\n"
-        + "  a.b.DerivedClass.superClass_.doSomething();\n"
-        + "};\n");
+    SymbolTable table =
+        createSymbolTable(
+            "  var a = {b: {}};"
+                + "/** @constructor */"
+                + "a.b.BaseClass = function() {};"
+                + "a.b.BaseClass.prototype.doSomething = function() {"
+                + "  alert('hi');"
+                + "};"
+                + "/**"
+                + " * @constructor"
+                + " * @extends {a.b.BaseClass}"
+                + " */"
+                + "a.b.DerivedClass = function() {};"
+                + "goog.inherits(a.b.DerivedClass, a.b.BaseClass);"
+                + "/** @override */"
+                + "a.b.DerivedClass.prototype.doSomething = function() {"
+                + "  a.b.DerivedClass.superClass_.doSomething();"
+                + "};");
 
-    Symbol bad = getGlobalVar(
-        table, "a.b.DerivedClass.superClass_.doSomething");
+    Symbol bad = getGlobalVar(table, "a.b.DerivedClass.superClass_.doSomething");
     assertNull(bad);
 
-    Symbol good = getGlobalVar(
-        table, "a.b.BaseClass.prototype.doSomething");
+    Symbol good = getGlobalVar(table, "a.b.BaseClass.prototype.doSomething");
     assertNotNull(good);
 
     List<Reference> refs = table.getReferenceList(good);
@@ -850,12 +877,13 @@ public final class SymbolTableTest extends TestCase {
   }
 
   public void testInnerEnum() throws Exception {
-    SymbolTable table = createSymbolTable(
-        "var goog = {}; goog.ui = {};"
-        + "  /** @constructor */\n"
-        + "goog.ui.Zippy = function() {};\n"
-        + "/** @enum {string} */\n"
-        + "goog.ui.Zippy.EventType = { TOGGLE: 'toggle' };\n");
+    SymbolTable table =
+        createSymbolTable(
+            "var goog = {}; goog.ui = {};"
+                + "  /** @constructor */"
+                + "goog.ui.Zippy = function() {};"
+                + "/** @enum {string} */"
+                + "goog.ui.Zippy.EventType = { TOGGLE: 'toggle' };");
 
     Symbol eventType = getGlobalVar(table, "goog.ui.Zippy.EventType");
     assertNotNull(eventType);
@@ -866,8 +894,7 @@ public final class SymbolTableTest extends TestCase {
   }
 
   public void testMethodInAnonObject1() throws Exception {
-    SymbolTable table = createSymbolTable(
-        "var a = {}; a.b = {}; a.b.c = function() {};");
+    SymbolTable table = createSymbolTable("var a = {}; a.b = {}; a.b.c = function() {};");
     Symbol a = getGlobalVar(table, "a");
     Symbol ab = getGlobalVar(table, "a.b");
     Symbol abc = getGlobalVar(table, "a.b.c");
@@ -881,8 +908,7 @@ public final class SymbolTableTest extends TestCase {
   }
 
   public void testMethodInAnonObject2() throws Exception {
-    SymbolTable table = createSymbolTable(
-        "var a = {b: {c: function() {}}};");
+    SymbolTable table = createSymbolTable("var a = {b: {c: function() {}}};");
     Symbol a = getGlobalVar(table, "a");
     Symbol ab = getGlobalVar(table, "a.b");
     Symbol abc = getGlobalVar(table, "a.b.c");
@@ -896,12 +922,8 @@ public final class SymbolTableTest extends TestCase {
   }
 
   public void testJSDocOnlySymbol() throws Exception {
-    SymbolTable table = createSymbolTable(
-        "/**\n"
-        + " * @param {number} x\n"
-        + " * @param y\n"
-        + " */\n"
-        + "var a;");
+    SymbolTable table =
+        createSymbolTable(lines("/**", " * @param {number} x", " * @param y", " */", "var a;"));
     Symbol x = getDocVar(table, "x");
     assertNotNull(x);
     assertEquals("number", x.getType().toString());
@@ -916,10 +938,12 @@ public final class SymbolTableTest extends TestCase {
   public void testNamespaceDefinitionOrder() throws Exception {
     // Sometimes, weird things can happen where the files appear in
     // a strange order. We need to make sure we're robust against this.
-    SymbolTable table = createSymbolTable(
-        "/** @const */ var goog = {};\n"
-        + "/** @constructor */ goog.dom.Foo = function() {};\n"
-        + "/** @const */ goog.dom = {};\n");
+    SymbolTable table =
+        createSymbolTable(
+            lines(
+                "/** @const */ var goog = {};",
+                "/** @constructor */ goog.dom.Foo = function() {};",
+                "/** @const */ goog.dom = {};"));
 
     Symbol goog = getGlobalVar(table, "goog");
     Symbol dom = getGlobalVar(table, "goog.dom");
@@ -934,11 +958,13 @@ public final class SymbolTableTest extends TestCase {
   }
 
   public void testConstructorAlias() throws Exception {
-    SymbolTable table = createSymbolTable(
-        "/** @constructor */ var Foo = function() {};\n" +
-        "/** desc */ Foo.prototype.bar = function() {};\n" +
-        "/** @constructor */ var FooAlias = Foo;\n" +
-        "/** desc */ FooAlias.prototype.baz = function() {};\n");
+    SymbolTable table =
+        createSymbolTable(
+            lines(
+                "/** @constructor */ var Foo = function() {};",
+                "/** desc */ Foo.prototype.bar = function() {};",
+                "/** @constructor */ var FooAlias = Foo;",
+                "/** desc */ FooAlias.prototype.baz = function() {};"));
 
     Symbol foo = getGlobalVar(table, "Foo");
     Symbol fooAlias = getGlobalVar(table, "FooAlias");
@@ -977,155 +1003,134 @@ public final class SymbolTableTest extends TestCase {
     assertEquals(scope, getGlobalVar(table, "String.prototype.slice"));
 
     Symbol proto = getGlobalVar(table, "String.prototype");
-    assertEquals(
-        "externs1", proto.getDeclaration().getNode().getSourceFileName());
+    assertEquals("externs1", proto.getDeclaration().getNode().getSourceFileName());
   }
 
   public void testJSDocNameVisibility() {
-    SymbolTable table = createSymbolTable(
-        "/** @public */ var foo;\n" +
-        "/** @protected */ var bar;\n" +
-        "/** @package */ var baz;\n" +
-        "/** @private */ var quux;\n" +
-        "var xyzzy;");
+    SymbolTable table =
+        createSymbolTable(
+            lines(
+                "/** @public */ var foo;",
+                "/** @protected */ var bar;",
+                "/** @package */ var baz;",
+                "/** @private */ var quux;",
+                "var xyzzy;"));
 
-    assertEquals(Visibility.PUBLIC,
-        getGlobalVar(table, "foo").getVisibility());
-    assertEquals(Visibility.PROTECTED,
-        getGlobalVar(table, "bar").getVisibility());
-    assertEquals(Visibility.PACKAGE,
-        getGlobalVar(table, "baz").getVisibility());
-    assertEquals(Visibility.PRIVATE,
-        getGlobalVar(table, "quux").getVisibility());
-    assertEquals(Visibility.INHERITED,
-        getGlobalVar(table, "xyzzy").getVisibility());
+    assertEquals(Visibility.PUBLIC, getGlobalVar(table, "foo").getVisibility());
+    assertEquals(Visibility.PROTECTED, getGlobalVar(table, "bar").getVisibility());
+    assertEquals(Visibility.PACKAGE, getGlobalVar(table, "baz").getVisibility());
+    assertEquals(Visibility.PRIVATE, getGlobalVar(table, "quux").getVisibility());
+    assertEquals(Visibility.INHERITED, getGlobalVar(table, "xyzzy").getVisibility());
     assertNull(getGlobalVar(table, "xyzzy").getJSDocInfo());
   }
 
   public void testJSDocNameVisibilityWithFileOverviewVisibility() {
-    SymbolTable table = createSymbolTable(
-        "/** @fileoverview\n @package */\n" +
-        "/** @public */ var foo;\n" +
-        "/** @protected */ var bar;\n" +
-        "/** @package */ var baz;\n" +
-        "/** @private */ var quux;\n" +
-        "var xyzzy;");
-    assertEquals(Visibility.PUBLIC,
-        getGlobalVar(table, "foo").getVisibility());
-    assertEquals(Visibility.PROTECTED,
-        getGlobalVar(table, "bar").getVisibility());
-    assertEquals(Visibility.PACKAGE,
-        getGlobalVar(table, "baz").getVisibility());
-    assertEquals(Visibility.PRIVATE,
-        getGlobalVar(table, "quux").getVisibility());
-    assertEquals(Visibility.PACKAGE,
-        getGlobalVar(table, "xyzzy").getVisibility());
+    SymbolTable table =
+        createSymbolTable(
+            lines(
+                "/** @fileoverview\n @package */",
+                "/** @public */ var foo;",
+                "/** @protected */ var bar;",
+                "/** @package */ var baz;",
+                "/** @private */ var quux;",
+                "var xyzzy;"));
+    assertEquals(Visibility.PUBLIC, getGlobalVar(table, "foo").getVisibility());
+    assertEquals(Visibility.PROTECTED, getGlobalVar(table, "bar").getVisibility());
+    assertEquals(Visibility.PACKAGE, getGlobalVar(table, "baz").getVisibility());
+    assertEquals(Visibility.PRIVATE, getGlobalVar(table, "quux").getVisibility());
+    assertEquals(Visibility.PACKAGE, getGlobalVar(table, "xyzzy").getVisibility());
     assertNull(getGlobalVar(table, "xyzzy").getJSDocInfo());
   }
 
   public void testJSDocPropertyVisibility() {
-    SymbolTable table = createSymbolTable(
-        "/** @constructor */ var Foo = function() {};\n" +
-        "/** @public */ Foo.prototype.bar;\n" +
-        "/** @protected */ Foo.prototype.baz;\n" +
-        "/** @package */ Foo.prototype.quux;\n" +
-        "/** @private */ Foo.prototype.xyzzy;\n" +
-        "Foo.prototype.plugh;\n" +
+    SymbolTable table =
+        createSymbolTable(
+            lines(
+                "/** @constructor */ var Foo = function() {};",
+                "/** @public */ Foo.prototype.bar;",
+                "/** @protected */ Foo.prototype.baz;",
+                "/** @package */ Foo.prototype.quux;",
+                "/** @private */ Foo.prototype.xyzzy;",
+                "Foo.prototype.plugh;",
+                "/** @constructor @extends {Foo} */ var SubFoo = function() {};",
+                "/** @override */ SubFoo.prototype.bar = function() {};",
+                "/** @override */ SubFoo.prototype.baz = function() {};",
+                "/** @override */ SubFoo.prototype.quux = function() {};",
+                "/** @override */ SubFoo.prototype.xyzzy = function() {};",
+                "/** @override */ SubFoo.prototype.plugh = function() {};"));
 
-        "/** @constructor @extends {Foo} */ var SubFoo = function() {};\n" +
-        "/** @override */ SubFoo.prototype.bar = function() {};\n" +
-        "/** @override */ SubFoo.prototype.baz = function() {};\n" +
-        "/** @override */ SubFoo.prototype.quux = function() {};\n" +
-        "/** @override */ SubFoo.prototype.xyzzy = function() {};\n" +
-        "/** @override */ SubFoo.prototype.plugh = function() {};");
-
-    assertEquals(Visibility.PUBLIC,
-        getGlobalVar(table, "Foo.prototype.bar").getVisibility());
-    assertEquals(Visibility.PROTECTED,
-        getGlobalVar(table, "Foo.prototype.baz").getVisibility());
-    assertEquals(Visibility.PACKAGE,
-        getGlobalVar(table, "Foo.prototype.quux").getVisibility());
-    assertEquals(Visibility.PRIVATE,
-        getGlobalVar(table, "Foo.prototype.xyzzy").getVisibility());
-    assertEquals(Visibility.INHERITED,
-        getGlobalVar(table, "Foo.prototype.plugh").getVisibility());
+    assertEquals(Visibility.PUBLIC, getGlobalVar(table, "Foo.prototype.bar").getVisibility());
+    assertEquals(Visibility.PROTECTED, getGlobalVar(table, "Foo.prototype.baz").getVisibility());
+    assertEquals(Visibility.PACKAGE, getGlobalVar(table, "Foo.prototype.quux").getVisibility());
+    assertEquals(Visibility.PRIVATE, getGlobalVar(table, "Foo.prototype.xyzzy").getVisibility());
+    assertEquals(Visibility.INHERITED, getGlobalVar(table, "Foo.prototype.plugh").getVisibility());
     assertNull(getGlobalVar(table, "Foo.prototype.plugh").getJSDocInfo());
 
-
-    assertEquals(Visibility.INHERITED,
-        getGlobalVar(table, "SubFoo.prototype.bar").getVisibility());
-    assertEquals(Visibility.INHERITED,
-        getGlobalVar(table, "SubFoo.prototype.baz").getVisibility());
-    assertEquals(Visibility.INHERITED,
-        getGlobalVar(table, "SubFoo.prototype.quux").getVisibility());
-    assertEquals(Visibility.INHERITED,
-        getGlobalVar(table, "SubFoo.prototype.xyzzy").getVisibility());
-    assertEquals(Visibility.INHERITED,
-        getGlobalVar(table, "SubFoo.prototype.plugh").getVisibility());
+    assertEquals(Visibility.INHERITED, getGlobalVar(table, "SubFoo.prototype.bar").getVisibility());
+    assertEquals(Visibility.INHERITED, getGlobalVar(table, "SubFoo.prototype.baz").getVisibility());
+    assertEquals(
+        Visibility.INHERITED, getGlobalVar(table, "SubFoo.prototype.quux").getVisibility());
+    assertEquals(
+        Visibility.INHERITED, getGlobalVar(table, "SubFoo.prototype.xyzzy").getVisibility());
+    assertEquals(
+        Visibility.INHERITED, getGlobalVar(table, "SubFoo.prototype.plugh").getVisibility());
   }
 
   public void testJSDocPropertyVisibilityWithFileOverviewVisibility() {
-    SymbolTable table = createSymbolTable(
-        "/** @fileoverview\n @package */\n" +
-        "/** @constructor */ var Foo = function() {};\n" +
-        "/** @public */ Foo.prototype.bar;\n" +
-        "/** @protected */ Foo.prototype.baz;\n" +
-        "/** @package */ Foo.prototype.quux;\n" +
-        "/** @private */ Foo.prototype.xyzzy;\n" +
-        "Foo.prototype.plugh;\n" +
+    SymbolTable table =
+        createSymbolTable(
+            lines(
+                "/** @fileoverview\n @package */",
+                "/** @constructor */ var Foo = function() {};",
+                "/** @public */ Foo.prototype.bar;",
+                "/** @protected */ Foo.prototype.baz;",
+                "/** @package */ Foo.prototype.quux;",
+                "/** @private */ Foo.prototype.xyzzy;",
+                "Foo.prototype.plugh;",
+                "/** @constructor @extends {Foo} */ var SubFoo = function() {};",
+                "/** @override @public */ SubFoo.prototype.bar = function() {};",
+                "/** @override @protected */ SubFoo.prototype.baz = function() {};",
+                "/** @override @package */ SubFoo.prototype.quux = function() {};",
+                "/** @override @private */ SubFoo.prototype.xyzzy = function() {};",
+                "/** @override */ SubFoo.prototype.plugh = function() {};"));
 
-        "/** @constructor @extends {Foo} */ var SubFoo = function() {};\n" +
-        "/** @override @public */ SubFoo.prototype.bar = function() {};\n" +
-        "/** @override @protected */ SubFoo.prototype.baz = function() {};\n" +
-        "/** @override @package */ SubFoo.prototype.quux = function() {};\n" +
-        "/** @override @private */ SubFoo.prototype.xyzzy = function() {};\n" +
-        "/** @override */ SubFoo.prototype.plugh = function() {};");
-
-    assertEquals(Visibility.PUBLIC,
-        getGlobalVar(table, "Foo.prototype.bar").getVisibility());
-    assertEquals(Visibility.PROTECTED,
-        getGlobalVar(table, "Foo.prototype.baz").getVisibility());
-    assertEquals(Visibility.PACKAGE,
-        getGlobalVar(table, "Foo.prototype.quux").getVisibility());
-    assertEquals(Visibility.PRIVATE,
-        getGlobalVar(table, "Foo.prototype.xyzzy").getVisibility());
-    assertEquals(Visibility.PACKAGE,
-        getGlobalVar(table, "Foo.prototype.plugh").getVisibility());
+    assertEquals(Visibility.PUBLIC, getGlobalVar(table, "Foo.prototype.bar").getVisibility());
+    assertEquals(Visibility.PROTECTED, getGlobalVar(table, "Foo.prototype.baz").getVisibility());
+    assertEquals(Visibility.PACKAGE, getGlobalVar(table, "Foo.prototype.quux").getVisibility());
+    assertEquals(Visibility.PRIVATE, getGlobalVar(table, "Foo.prototype.xyzzy").getVisibility());
+    assertEquals(Visibility.PACKAGE, getGlobalVar(table, "Foo.prototype.plugh").getVisibility());
     assertNull(getGlobalVar(table, "Foo.prototype.plugh").getJSDocInfo());
 
-
-    assertEquals(Visibility.INHERITED,
-        getGlobalVar(table, "SubFoo.prototype.bar").getVisibility());
-    assertEquals(Visibility.INHERITED,
-        getGlobalVar(table, "SubFoo.prototype.baz").getVisibility());
-    assertEquals(Visibility.INHERITED,
-        getGlobalVar(table, "SubFoo.prototype.quux").getVisibility());
-    assertEquals(Visibility.INHERITED,
-        getGlobalVar(table, "SubFoo.prototype.xyzzy").getVisibility());
-    assertEquals(Visibility.INHERITED,
-        getGlobalVar(table, "SubFoo.prototype.plugh").getVisibility());
+    assertEquals(Visibility.INHERITED, getGlobalVar(table, "SubFoo.prototype.bar").getVisibility());
+    assertEquals(Visibility.INHERITED, getGlobalVar(table, "SubFoo.prototype.baz").getVisibility());
+    assertEquals(
+        Visibility.INHERITED, getGlobalVar(table, "SubFoo.prototype.quux").getVisibility());
+    assertEquals(
+        Visibility.INHERITED, getGlobalVar(table, "SubFoo.prototype.xyzzy").getVisibility());
+    assertEquals(
+        Visibility.INHERITED, getGlobalVar(table, "SubFoo.prototype.plugh").getVisibility());
   }
 
   public void testPrototypeSymbolEqualityForTwoPathsToSamePrototype() {
     String input =
         lines(
-            "/**\n",
-            "* An employer.\n",
-            "*\n",
-            "* @param {String} name name of employer.\n",
-            "* @param {String} address address of employer.\n",
-            "* @constructor\n",
-            "*/\n",
-            "function Employer(name, address) {\n",
-            "this.name = name;\n",
-            "this.address = address;\n",
-            "}\n",
-            "\n",
-            "/**\n",
-            "* @return {String} information about an employer.\n",
-            "*/\n",
-            "Employer.prototype.getInfo = function() {\n",
-            "return this.name + '.' + this.address;\n",
+            "/**",
+            "* An employer.",
+            "*",
+            "* @param {String} name name of employer.",
+            "* @param {String} address address of employer.",
+            "* @constructor",
+            "*/",
+            "function Employer(name, address) {",
+            "this.name = name;",
+            "this.address = address;",
+            "}",
+            "",
+            "/**",
+            "* @return {String} information about an employer.",
+            "*/",
+            "Employer.prototype.getInfo = function() {",
+            "return this.name + '.' + this.address;",
             "};");
     SymbolTable table = createSymbolTable(input);
     Symbol employer = getGlobalVar(table, "Employer");
@@ -1141,8 +1146,7 @@ public final class SymbolTableTest extends TestCase {
     new EqualsTester().addEqualityGroup(employerPrototype, prototypeOfEmployer).testEquals();
   }
 
-  private void assertSymmetricOrdering(
-      Ordering<Symbol> ordering, Symbol first, Symbol second) {
+  private void assertSymmetricOrdering(Ordering<Symbol> ordering, Symbol first, Symbol second) {
     assertEquals(0, ordering.compare(first, first));
     assertEquals(0, ordering.compare(second, second));
     assertThat(ordering.compare(first, second)).isLessThan(0);
@@ -1164,8 +1168,9 @@ public final class SymbolTableTest extends TestCase {
 
   private Symbol getLocalVar(SymbolTable table, String name) {
     for (SymbolScope scope : table.getAllScopes()) {
-      if (!scope.isGlobalScope() && scope.isLexicalScope() &&
-          scope.getQualifiedSlot(name) != null) {
+      if (!scope.isGlobalScope()
+          && scope.isLexicalScope()
+          && scope.getQualifiedSlot(name) != null) {
         return scope.getQualifiedSlot(name);
       }
     }
@@ -1184,10 +1189,17 @@ public final class SymbolTableTest extends TestCase {
   }
 
   private SymbolTable createSymbolTable(String input) {
-    List<SourceFile> inputs = ImmutableList.of(
-        SourceFile.fromCode("in1", input));
-    List<SourceFile> externs = ImmutableList.of(
-        SourceFile.fromCode("externs1", EXTERNS));
+    List<SourceFile> inputs = ImmutableList.of(SourceFile.fromCode("in1", input));
+    List<SourceFile> externs = ImmutableList.of(SourceFile.fromCode("externs1", EXTERNS));
+
+    Compiler compiler = new Compiler(new BlackHoleErrorManager());
+    compiler.compile(externs, inputs, options);
+    return assertSymbolTableValid(compiler.buildKnownSymbolTable());
+  }
+
+  private SymbolTable createSymbolTable(String input, String externsCode) {
+    List<SourceFile> inputs = ImmutableList.of(SourceFile.fromCode("in1", input));
+    List<SourceFile> externs = ImmutableList.of(SourceFile.fromCode("externs1", externsCode));
 
     Compiler compiler = new Compiler(new BlackHoleErrorManager());
     compiler.compile(externs, inputs, options);
@@ -1195,8 +1207,7 @@ public final class SymbolTableTest extends TestCase {
   }
 
   /**
-   * Asserts that the symbol table meets some invariants.
-   * Returns the same table for easy chaining.
+   * Asserts that the symbol table meets some invariants. Returns the same table for easy chaining.
    */
   private SymbolTable assertSymbolTableValid(SymbolTable table) {
     Set<Symbol> allSymbols = new HashSet<>();

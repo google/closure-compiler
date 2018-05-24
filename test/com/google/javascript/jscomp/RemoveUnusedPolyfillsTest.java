@@ -17,7 +17,7 @@
 package com.google.javascript.jscomp;
 
 /** Unit tests for the RemoveUnusedPolyfills compiler pass. */
-public final class RemoveUnusedPolyfillsTest extends TypeICompilerTestCase {
+public final class RemoveUnusedPolyfillsTest extends CompilerTestCase {
 
   private static final String EXTERNS = lines(
       DEFAULT_EXTERNS,
@@ -66,8 +66,7 @@ public final class RemoveUnusedPolyfillsTest extends TypeICompilerTestCase {
   @Override
   protected void setUp() throws Exception {
     super.setUp();
-    // NTI warns about property accesses on *
-    ignoreWarnings(DiagnosticGroups.NEW_CHECK_TYPES_EXTRA_CHECKS);
+    enableTypeCheck();
   }
 
   @Override

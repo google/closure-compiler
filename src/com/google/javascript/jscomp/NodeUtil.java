@@ -41,8 +41,8 @@ import com.google.javascript.rhino.StaticSourceFile;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.TokenStream;
 import com.google.javascript.rhino.TokenUtil;
-import com.google.javascript.rhino.TypeI;
 import com.google.javascript.rhino.dtoa.DToA;
+import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.TernaryValue;
 import java.util.ArrayList;
@@ -55,7 +55,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import javax.annotation.CheckReturnValue;
 import javax.annotation.Nullable;
 
 /**
@@ -740,17 +739,23 @@ public final class NodeUtil {
   }
 
   /**
-   * Returns true iff the value associated with the node is a JS string literal,
-   * or a concatenation thereof.
+   * Returns true iff the value associated with the node is a JS string literal, a concatenation
+   * thereof or a ternary operator choosing between string literals.
    */
-  static boolean isStringLiteralValue(Node node) {
-    if (node.isString()) {
+  static boolean isSomeCompileTimeConstStringValue(Node node) {
+    // TODO(bangert): Support constants, using a Scope argument. See ConstParamCheck
+    if (node.isString() || (node.isTemplateLit() && node.hasOneChild())) {
       return true;
     } else if (node.isAdd()) {
       checkState(node.hasTwoChildren(), node);
       Node left = node.getFirstChild();
       Node right = node.getLastChild();
-      return isStringLiteralValue(left) && isStringLiteralValue(right);
+      return isSomeCompileTimeConstStringValue(left) && isSomeCompileTimeConstStringValue(right);
+    } else if (node.isHook()) {
+      // Ternary operator a ? b : c
+      Node left = node.getSecondChild();
+      Node right = node.getLastChild();
+      return isSomeCompileTimeConstStringValue(left) && isSomeCompileTimeConstStringValue(right);
     }
     return false;
   }
@@ -1459,9 +1464,9 @@ public final class NodeUtil {
     }
 
     if (compiler.getOptions().useTypesForLocalOptimization) {
-      TypeI type = n.getTypeI();
+      JSType type = n.getJSType();
       if (type != null) {
-        TypeI nativeStringType = compiler.getTypeIRegistry()
+        JSType nativeStringType = compiler.getTypeRegistry()
             .getNativeType(JSTypeNative.STRING_TYPE);
         if (type.isEquivalentTo(nativeStringType)) {
           return true;
@@ -1892,6 +1897,7 @@ public final class NodeUtil {
 
       case TYPEOF:
       case STRING:
+      case TEMPLATELIT:
         return ValueType.STRING;
 
       case NULL:
@@ -1958,7 +1964,7 @@ public final class NodeUtil {
    */
   static boolean mayBeString(Node n, boolean useType) {
     if (useType) {
-      TypeI type = n.getTypeI();
+      JSType type = n.getJSType();
       if (type != null) {
         if (type.isStringValueType()) {
           return true;
@@ -2166,10 +2172,7 @@ public final class NodeUtil {
     return containsType(n, Token.FUNCTION);
   }
 
-  /**
-   * Gets the closest ancestor to the given node of the provided type.
-   */
-  @CheckReturnValue
+  /** Gets the closest ancestor to the given node of the provided type. */
   public static Node getEnclosingType(Node n, final Token type) {
     return getEnclosingNode(
         n,
@@ -2181,52 +2184,35 @@ public final class NodeUtil {
         });
   }
 
-  /**
-   * Finds the class member function containing the given node.
-   */
-  @CheckReturnValue
+  /** Finds the class member function containing the given node. */
   static Node getEnclosingClassMemberFunction(Node n) {
     return getEnclosingType(n, Token.MEMBER_FUNCTION_DEF);
   }
 
-  /**
-   * Finds the class containing the given node.
-   */
-  @CheckReturnValue
+  /** Finds the class containing the given node. */
   public static Node getEnclosingClass(Node n) {
     return getEnclosingType(n, Token.CLASS);
   }
 
-  /**
-   * Finds the function containing the given node.
-   */
-  @CheckReturnValue
+  /** Finds the function containing the given node. */
   public static Node getEnclosingFunction(Node n) {
     return getEnclosingType(n, Token.FUNCTION);
   }
 
-  /**
-   * Finds the script containing the given node.
-   */
-  @CheckReturnValue
+  /** Finds the script containing the given node. */
   public static Node getEnclosingScript(Node n) {
     return getEnclosingType(n, Token.SCRIPT);
   }
 
-  /**
-   * Finds the block containing the given node.
-   */
-  @CheckReturnValue
+  /** Finds the block containing the given node. */
   public static Node getEnclosingBlock(Node n) {
     return getEnclosingType(n, Token.BLOCK);
   }
 
-  @CheckReturnValue
   public static Node getEnclosingBlockScopeRoot(Node n) {
     return getEnclosingNode(n, NodeUtil::createsBlockScope);
   }
 
-  @CheckReturnValue
   public static Node getEnclosingScopeRoot(Node n) {
     return getEnclosingNode(n, NodeUtil::createsScope);
   }
@@ -2235,12 +2221,10 @@ public final class NodeUtil {
     return getEnclosingFunction(n) != null;
   }
 
-  @CheckReturnValue
   public static Node getEnclosingStatement(Node n) {
     return getEnclosingNode(n, NodeUtil::isStatement);
   }
 
-  @CheckReturnValue
   public static Node getEnclosingNode(Node n, Predicate<Node> pred) {
     Node curr = n;
     while (curr != null && !pred.apply(curr)) {
@@ -2554,8 +2538,8 @@ public final class NodeUtil {
       case DO:
         return n.getLastChild();
       case FOR:
+        return n.getSecondChild();
       case FOR_IN:
-        return n.isForIn() ? null : n.getSecondChild();
       case FOR_OF:
       case CASE:
         return null;
@@ -3825,10 +3809,24 @@ public final class NodeUtil {
    */
   public static Node newQNameDeclaration(
       AbstractCompiler compiler, String name, Node value, JSDocInfo info) {
+    return newQNameDeclaration(compiler, name, value, info, Token.VAR);
+  }
+
+  /**
+   * Creates a node representing a qualified name.
+   *
+   * @param name A qualified name (e.g. "foo" or "foo.bar.baz")
+   * @param type Must be VAR, CONST, or LET. Ignored if {@code name} is dotted.
+   * @return A VAR/CONST/LET node, or an EXPR_RESULT node containing an ASSIGN or NAME node.
+   */
+  public static Node newQNameDeclaration(
+      AbstractCompiler compiler, String name, Node value, JSDocInfo info, Token type) {
+    checkState(type == Token.VAR || type == Token.LET || type == Token.CONST, type);
     Node result;
     Node nameNode = newQName(compiler, name);
     if (nameNode.isName()) {
-      result = value == null ? IR.var(nameNode) : IR.var(nameNode, value);
+      result =
+          value == null ? IR.declaration(nameNode, type) : IR.declaration(nameNode, value, type);
       result.setJSDocInfo(info);
     } else if (value != null) {
       result = IR.exprResult(IR.assign(nameNode, value));
@@ -4605,6 +4603,11 @@ public final class NodeUtil {
    */
   static boolean isConstantDeclaration(
       CodingConvention convention, JSDocInfo info, Node node) {
+    // TODO(b/77597706): Update this method to handle destructured declarations.
+    if (node.isName() && node.getParent().isConst()) {
+      return true;
+    }
+
     if (info != null && info.isConstant()) {
       return true;
     }
@@ -4960,6 +4963,13 @@ public final class NodeUtil {
         && parent.getFirstChild() == n;
   }
 
+  /**
+   * Returns whether this is a call (including tagged template lits) or new.
+   */
+  static boolean isInvocation(Node n) {
+    return isCallOrNew(n) || n.isTaggedTemplateLit();
+  }
+
   static boolean isCallOrNewArgument(Node n) {
     Node parent = n.getParent();
     return parent != null && isCallOrNew(parent) && parent.getFirstChild() != n;
@@ -5133,6 +5143,27 @@ public final class NodeUtil {
     return lValue.getQualifiedName();
   }
 
+  /** Gets the root of a qualified name l-value. */
+  static Node getBestLValueRoot(@Nullable Node lValue) {
+    if (lValue == null) {
+      return null;
+    }
+    switch (lValue.getToken()) {
+      case STRING_KEY:
+        // NOTE: beware of getBestLValue returning null (or be null-permissive?)
+        return getBestLValueRoot(NodeUtil.getBestLValue(lValue.getParent()));
+      case GETPROP:
+      case GETELEM:
+        return getBestLValueRoot(lValue.getFirstChild());
+      case THIS:
+      case SUPER:
+      case NAME:
+        return lValue;
+      default:
+        return null;
+    }
+  }
+
   /**
    * @return true iff the result of the expression is consumed.
    */
@@ -5277,7 +5308,6 @@ public final class NodeUtil {
   /**
    * @return the change scope root
    */
-  @CheckReturnValue
   static Node getEnclosingChangeScopeRoot(Node n) {
     while (n != null && !isChangeScopeRoot(n)) {
       n = n.getParent();
@@ -5396,7 +5426,7 @@ public final class NodeUtil {
     return call.getParent().isExprResult() && call.getGrandparent().isScript();
   }
 
-  private static boolean isGoogModuleDeclareLegacyNamespaceCall(Node n) {
+  static boolean isGoogModuleDeclareLegacyNamespaceCall(Node n) {
     if (isExprCall(n)) {
       Node target = n.getFirstFirstChild();
       return (target.matchesQualifiedName("goog.module.declareLegacyNamespace"));
@@ -5430,7 +5460,7 @@ public final class NodeUtil {
       return false;
     }
 
-    TypeI type = fnNode.getTypeI();
+    JSType type = fnNode.getJSType();
     JSDocInfo jsDocInfo = getBestJSDocInfo(fnNode);
 
     return (type != null && type.isConstructor())
@@ -5636,5 +5666,11 @@ public final class NodeUtil {
         || node.isSetterDef()
         || node.isMemberFunctionDef()
         || node.isComputedProp();
+  }
+
+  /** @return Whether the node represents the return value of a blockless Arrow function */
+  public static boolean isBlocklessArrowFunctionResult(Node n) {
+    Node parent = n.getParent();
+    return parent != null && parent.isFunction() && n == parent.getLastChild() && !n.isBlock();
   }
 }

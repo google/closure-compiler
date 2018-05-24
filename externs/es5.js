@@ -102,7 +102,7 @@ Object.create = function(proto, opt_properties) {};
 
 /**
  * @param {!Object} obj
- * @param {string} prop
+ * @param {string|symbol} prop
  * @param {!Object} descriptor A ObjectPropertyDescriptor.
  * @return {!Object}
  * @see https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Object/defineProperty
@@ -121,7 +121,7 @@ Object.defineProperties = function(obj, props) {};
 
 /**
  * @param {T} obj
- * @param {string} prop
+ * @param {string|symbol} prop
  * @return {!ObjectPropertyDescriptor<T>|undefined}
  * @nosideeffects
  * @template T

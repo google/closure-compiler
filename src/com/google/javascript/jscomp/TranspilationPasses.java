@@ -77,7 +77,7 @@ public class TranspilationPasses {
     passes.add(convertEs7ToEs6);
   }
 
-  public static void addEs6PreTypecheckPasses(List<PassFactory> passes) {
+  public static void addEs6PreTypecheckPasses(List<PassFactory> passes, CompilerOptions options) {
     // Binary and octal literals are effectively transpiled by the parser.
     // There's no transpilation we can do for the new regexp flags.
     passes.add(
@@ -95,52 +95,15 @@ public class TranspilationPasses {
     passes.add(es6RewriteArrowFunction);
     passes.add(es6ExtractClasses);
     passes.add(es6RewriteClass);
-    passes.add(earlyConvertEs6ToEs3);
-    passes.add(lateConvertEs6ToEs3);
-    passes.add(es6ForOf);
-    passes.add(rewriteBlockScopedFunctionDeclaration);
-    passes.add(rewriteBlockScopedDeclaration);
-    passes.add(rewriteGenerators);
-  }
-
-  /**
-   * Adds all the ES6 transpilation passes which must run before NTI, because it doesn't
-   * understand the features that they transpile.
-   *
-   * TODO(b/72551201): Remove this method when NTI is removed.
-   */
-  public static void addEs6PassesBeforeNTI(List<PassFactory> passes) {
-    // Binary and octal literals are effectively transpiled by the parser.
-    // There's no transpilation we can do for the new regexp flags.
-    passes.add(
-        createFeatureRemovalPass(
-            "markEs6FeaturesNotRequiringTranspilationAsRemoved",
-            Feature.BINARY_LITERALS,
-            Feature.OCTAL_LITERALS,
-            Feature.REGEXP_FLAG_U,
-            Feature.REGEXP_FLAG_Y));
-    passes.add(es6NormalizeShorthandProperties);
-    passes.add(es6ConvertSuper);
-    passes.add(es6RenameVariablesInParamLists);
-    passes.add(es6SplitVariableDeclarations);
-    passes.add(es6RewriteDestructuring);
-    passes.add(es6RewriteArrowFunction);
-    passes.add(es6ExtractClasses);
-    passes.add(es6RewriteClass);
-    passes.add(earlyConvertEs6ToEs3);
-    passes.add(rewriteBlockScopedFunctionDeclaration);
-    passes.add(rewriteBlockScopedDeclaration);
-  }
-
-  /**
-   * Adds all transpilation passes that can run after NTI.
-   *
-   * TODO(b/72551201): Remove this method when NTI is removed.
-   */
-  public static void addEs6PassesAfterNTI(List<PassFactory> passes) {
-    passes.add(lateConvertEs6ToEs3);
-    passes.add(es6ForOf);
-    passes.add(rewriteGenerators);
+    passes.add(es6InjectRuntimeLibraries);
+    passes.add(es6RewriteRestAndSpread);
+    if (!options.checksOnly) {
+      // Don't run these passes in checksOnly mode since all the typechecking & checks passes
+      // support the transpiled features.
+      // TODO(b/73387406): Move each pass above here temporarily, then into
+      // addEs6PostTypecheckPasses once the pass supports propagating type information
+      passes.add(lateConvertEs6ToEs3);
+    }
   }
 
   /**
@@ -333,23 +296,33 @@ public class TranspilationPasses {
         }
   };
 
-  /**
-   * Does ES6 to ES3 conversion of Rest, Spread and Symbol.
-   * There are a few other passes which run before or after this one,
-   * to convert constructs which are not converted by this pass.
-   */
-  static final HotSwapPassFactory earlyConvertEs6ToEs3 =
-      new HotSwapPassFactory("earlyConvertEs6") {
-    @Override
-    protected HotSwapCompilerPass create(final AbstractCompiler compiler) {
-      return new EarlyEs6ToEs3Converter(compiler);
-    }
+  /** Injects runtime library code needed for transpiled ES6 code. */
+  static final HotSwapPassFactory es6InjectRuntimeLibraries =
+      new HotSwapPassFactory("es6InjectRuntimeLibraries") {
+        @Override
+        protected HotSwapCompilerPass create(final AbstractCompiler compiler) {
+          return new Es6InjectRuntimeLibraries(compiler);
+        }
 
-    @Override
-    protected FeatureSet featureSet() {
-      return ES8;
-    }
-  };
+        @Override
+        protected FeatureSet featureSet() {
+          return ES8;
+        }
+      };
+
+  /** Transpiles REST parameters and SPREAD in both array literals and function calls. */
+  static final HotSwapPassFactory es6RewriteRestAndSpread =
+      new HotSwapPassFactory("es6RewriteRestAndSpread") {
+        @Override
+        protected HotSwapCompilerPass create(final AbstractCompiler compiler) {
+          return new Es6RewriteRestAndSpread(compiler);
+        }
+
+        @Override
+        protected FeatureSet featureSet() {
+          return ES8;
+        }
+      };
 
   /**
    * Does the main ES6 to ES3 conversion. There are a few other passes which run before this one, to
@@ -449,7 +422,7 @@ public class TranspilationPasses {
         if (isScriptEs6OrHigher(singleRoot)) {
           for (Callback callback : callbacks) {
             singleRoot.putBooleanProp(Node.TRANSPILED, true);
-            NodeTraversal.traverseEs6(compiler, singleRoot, callback);
+            NodeTraversal.traverse(compiler, singleRoot, callback);
           }
         }
       }
@@ -471,7 +444,7 @@ public class TranspilationPasses {
       if (isScriptEs6OrHigher(scriptRoot)) {
         for (Callback callback : callbacks) {
           scriptRoot.putBooleanProp(Node.TRANSPILED, true);
-          NodeTraversal.traverseEs6(compiler, scriptRoot, callback);
+          NodeTraversal.traverse(compiler, scriptRoot, callback);
         }
       }
     }
@@ -485,6 +458,10 @@ public class TranspilationPasses {
     // TODO(b/73387406): Move passes here as typecheck passes are updated to cope with the features
     // they transpile and as the passes themselves are updated to propagate type information to the
     // transpiled code.
+    passes.add(es6ForOf);
+    passes.add(rewriteBlockScopedFunctionDeclaration);
+    passes.add(rewriteBlockScopedDeclaration);
+    passes.add(rewriteGenerators);
   }
 
   /** Adds transpilation passes that should run after all checks are done. */

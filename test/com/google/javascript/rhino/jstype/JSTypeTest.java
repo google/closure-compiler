@@ -52,7 +52,6 @@ import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.SimpleErrorReporter;
 import com.google.javascript.rhino.Token;
-import com.google.javascript.rhino.TypeI;
 import com.google.javascript.rhino.jstype.JSType.TypePair;
 import com.google.javascript.rhino.testing.Asserts;
 import com.google.javascript.rhino.testing.BaseJSTypeTestCase;
@@ -84,8 +83,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
   private EnumElementType elementsType;
   private NamedType forwardDeclaredNamedType;
 
-  private static final StaticTypedScope<JSType> EMPTY_SCOPE =
-      MapBasedScope.emptyScope();
+  private static final StaticTypedScope EMPTY_SCOPE = MapBasedScope.emptyScope();
 
   /**
    * A non exhaustive list of representative types used to test simple
@@ -119,36 +117,20 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     unresolvedNamedType = new NamedType(scope, registry, "not.resolved.named.type", null, -1, -1);
     namedGoogBar = new NamedType(scope, registry, "goog.Bar", null, -1, -1);
 
-    subclassCtor =
-        new FunctionType(
-            registry,
-            null,
-            null,
-            createArrowType(null),
-            null,
-            null,
-            FunctionType.Kind.CONSTRUCTOR,
-            false,
-            false);
+    subclassCtor = new FunctionBuilder(registry).forConstructor().build();
     subclassCtor.setPrototypeBasedOn(unresolvedNamedType);
     subclassOfUnresolvedNamedType = subclassCtor.getInstanceType();
 
-    interfaceType = FunctionType.forInterface(registry, "Interface", null,
-        registry.createTemplateTypeMap(null, null));
+    interfaceType = registry.createInterfaceType("Interface", null, null, false);
     interfaceInstType = interfaceType.getInstanceType();
 
-    subInterfaceType = FunctionType.forInterface(
-        registry, "SubInterface", null,
-        registry.createTemplateTypeMap(null, null));
-    subInterfaceType.setExtendedInterfaces(
-        Lists.<ObjectType>newArrayList(interfaceInstType));
+    subInterfaceType = registry.createInterfaceType("SubInterface", null, null, false);
+    subInterfaceType.setExtendedInterfaces(Lists.<ObjectType>newArrayList(interfaceInstType));
     subInterfaceInstType = subInterfaceType.getInstanceType();
 
     googBar = registry.createConstructorType("goog.Bar", null, null, null, null, false);
-    googBar.getPrototype().defineDeclaredProperty("date", DATE_TYPE,
-        null);
-    googBar.setImplementedInterfaces(
-        Lists.<ObjectType>newArrayList(interfaceInstType));
+    googBar.getPrototype().defineDeclaredProperty("date", DATE_TYPE, null);
+    googBar.setImplementedInterfaces(Lists.<ObjectType>newArrayList(interfaceInstType));
     googBarInst = googBar.getInstanceType();
 
     googSubBar = registry.createConstructorType("googSubBar", null, null, null, null, false);
@@ -161,12 +143,11 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
     googObject.defineDeclaredProperty("Bar", googBar, null);
 
-    namedGoogBar.resolve(null, scope);
+    namedGoogBar.resolve(null);
     assertNotNull(namedGoogBar.getImplicitPrototype());
 
     forwardDeclaredNamedType = new NamedType(scope, registry, "forwardDeclared", "source", 1, 0);
-    forwardDeclaredNamedType.resolve(
-        new SimpleErrorReporter(), EMPTY_SCOPE);
+    forwardDeclaredNamedType.resolve(new SimpleErrorReporter());
 
     types =
         ImmutableList.of(
@@ -2203,7 +2184,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertFalse(REGEXP_TYPE.isSubtypeOf(VOID_TYPE));
 
     // canBeCalled
-    assertTrue(REGEXP_TYPE.canBeCalled());
+    assertFalse(REGEXP_TYPE.canBeCalled());
 
     // canTestForEqualityWith
     assertCanTestForEqualityWith(REGEXP_TYPE, ALL_TYPE);
@@ -5303,8 +5284,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertTypeEquals(a, realA);
     assertTypeEquals(b, realB);
 
-    a.resolve(null, null);
-    b.resolve(null, null);
+    a.resolve(null);
+    b.resolve(null);
 
     assertTrue(a.isResolved());
     assertTrue(b.isResolved());
@@ -5331,7 +5312,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
     assertTypeEquals(a, b);
 
-    a.resolve(null, EMPTY_SCOPE);
+    a.resolve(null);
 
     assertTrue(a.isResolved());
     assertFalse(b.isResolved());
@@ -6717,17 +6698,12 @@ public class JSTypeTest extends BaseJSTypeTestCase {
   }
 
   private static boolean containsType(
-      Iterable<? extends TypeI> types, JSType type) {
-    for (TypeI alt : types) {
+      Iterable<? extends JSType> types, JSType type) {
+    for (JSType alt : types) {
       if (alt.equals(type)) {
         return true;
       }
     }
     return false;
-  }
-
-
-  private ArrowType createArrowType(Node params) {
-    return registry.createArrowType(params);
   }
 }

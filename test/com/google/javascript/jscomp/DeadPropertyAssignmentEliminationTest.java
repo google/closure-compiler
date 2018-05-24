@@ -194,6 +194,97 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
             "  doSomething(this.c);",
             "  this.c = 30;",
             "}"));
+
+    test(
+        lines(
+            "var foo = function() {",
+            "  a.b.c = 20;",
+            "  doSomething(a.b.c = 25);",
+            "  a.b.c = 30;",
+            "}"),
+        lines(
+            "var foo = function() {",
+            "  20;",
+            "  doSomething(a.b.c = 25);",
+            "  a.b.c = 30;",
+            "}"));
+  }
+
+  public void testYield() {
+    // Assume that properties may be read during a yield
+    testSame(
+        lines(
+            "var foo = function*() {",
+            "  a.b.c = 20;",
+            "  yield;",
+            "  a.b.c = 30;",
+            "}"));
+
+    testSame(
+        lines(
+            "/** @constructor */",
+            "var foo = function*() {",
+            "  this.c = 20;",
+            "  yield;",
+            "  this.c = 30;",
+            "}"));
+
+    testSame(
+        lines(
+            "var obj = {",
+            "  *gen() {",
+            "    this.c = 20;",
+            "    yield;",
+            "    this.c = 30;",
+            "  }",
+            "}"));
+
+    test(
+        lines(
+            "var foo = function*() {",
+            "  a.b.c = 20;",
+            "  yield a.b.c = 25;",
+            "  a.b.c = 30;",
+            "}"),
+        lines(
+            "var foo = function*() {",
+            "  20;",
+            "  yield a.b.c = 25;",
+            "  a.b.c = 30;",
+            "}"));
+  }
+
+  public void testNew() {
+    // Assume that properties may be read during a constructor call
+    testSame(
+        lines(
+            "var foo = function() {",
+            "  a.b.c = 20;",
+            "  new C;",
+            "  a.b.c = 30;",
+            "}"));
+  }
+
+  public void testTaggedTemplateLit() {
+    // Assume that properties may be read during a tagged template lit invocation
+    testSame(
+        lines(
+            "var foo = function() {",
+            "  a.b.c = 20;",
+            "  doSomething`foo`;",
+            "  a.b.c = 30;",
+            "}"));
+  }
+
+  public void testAwait() {
+    // Assume that properties may be read while waiting for "await"
+    testSame(
+        lines(
+            "async function foo() {",
+            "  a.b.c = 20;",
+            "  await bar;",
+            "  a.b.c = 30;",
+            "}"));
   }
 
   public void testUnknownLookup() {
@@ -1145,6 +1236,21 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
             "  10;",
             "  foo.bar = 20;",
             "}"));
+  }
+
+  public void testGithubIssue2874() {
+    testSame(
+        lines(
+            "var globalObj = {i0:0};\n",
+            "function func(b) {",
+            "  var g = globalObj;",
+            "  var f = b;",
+            "  g.i0 = f.i0;",
+            "  g = b;",
+            "  g.i0 = 0;",
+            "}",
+            "func({i0:2});",
+            "alert(globalObj);"));
   }
 
   @Override

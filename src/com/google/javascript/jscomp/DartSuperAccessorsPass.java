@@ -144,7 +144,7 @@ public final class DartSuperAccessorsPass implements NodeTraversal.Callback,
     checkArgument(superSet.isAssign());
 
     // First, recurse on the assignment's right-hand-side.
-    NodeTraversal.traverseEs6(compiler, superSet.getLastChild(), this);
+    NodeTraversal.traverse(compiler, superSet.getLastChild(), this);
     Node rhs = superSet.getLastChild();
 
     Node superGet = superSet.getFirstChild();
@@ -187,12 +187,12 @@ public final class DartSuperAccessorsPass implements NodeTraversal.Callback,
 
   @Override
   public void process(Node externs, Node root) {
-    NodeTraversal.traverseEs6(compiler, externs, this);
-    NodeTraversal.traverseEs6(compiler, root, this);
+    NodeTraversal.traverse(compiler, externs, this);
+    NodeTraversal.traverse(compiler, root, this);
   }
 
   @Override
   public void hotSwapScript(Node scriptRoot, Node originalRoot) {
-    NodeTraversal.traverseEs6(compiler, scriptRoot, this);
+    NodeTraversal.traverse(compiler, scriptRoot, this);
   }
 }

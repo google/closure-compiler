@@ -427,6 +427,13 @@ public final class CheckJsDocTest extends CompilerTestCase {
         MISPLACED_MSG_ANNOTATION);
     testWarning("/** @desc Foo. */ bar = goog.getMsg('x');",
         MISPLACED_MSG_ANNOTATION);
+
+    testWarning("/** @desc Foo. */ var {bar} = goog.getMsg('x');", MISPLACED_MSG_ANNOTATION);
+    testWarning("/** @desc Foo. */ let {bar} = goog.getMsg('x');", MISPLACED_MSG_ANNOTATION);
+    testWarning("/** @desc Foo. */ const {bar} = goog.getMsg('x');", MISPLACED_MSG_ANNOTATION);
+    testWarning(
+        "var bar;\n/** @desc Foo. */ ({bar} = goog.getMsg('x'));",
+        MISPLACED_MSG_ANNOTATION);
   }
 
   public void testJSDocDescInExterns() {
@@ -755,5 +762,28 @@ public final class CheckJsDocTest extends CompilerTestCase {
     testWarning("/** @suppress {uselessCode} */ goog.require('unused.Class');", MISPLACED_SUPPRESS);
     testWarning("const {/** @suppress {duplicate} */ Foo} = foo();", MISPLACED_SUPPRESS);
     testWarning("foo(/** @suppress {duplicate} */ ns.x = 7);", MISPLACED_SUPPRESS);
+  }
+
+  public void testImplicitCastOnlyAllowedInExterns() {
+    testSame(
+        externs(
+            lines(
+                "/** @constructor */ function Element() {};",
+                "/**",
+                " * @type {string}",
+                " * @implicitCast ",
+                " */",
+                "Element.prototype.innerHTML;")),
+        srcs(""));
+
+    testWarning(
+        lines(
+            "/** @constructor */ function Element() {};",
+            "/**",
+            " * @type {string}",
+            " * @implicitCast ",
+            " */",
+            "Element.prototype.innerHTML;"),
+        TypeCheck.ILLEGAL_IMPLICIT_CAST);
   }
 }

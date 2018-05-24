@@ -23,6 +23,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.javascript.jscomp.CheckLevel;
 import com.google.javascript.jscomp.ErrorHandler;
 import com.google.javascript.jscomp.JSError;
+import com.google.javascript.jscomp.deps.ModuleLoader.ModuleResolverFactory;
 import java.util.Map;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -98,6 +99,26 @@ public class NodeModuleResolver extends ModuleResolver {
     }
 
     return ImmutableSortedSet.copyOfSorted(registry);
+  }
+
+  /** Factory for {@link NodeModuleResolver}. */
+  public static final class Factory implements ModuleResolverFactory {
+    private final Map<String, String> packageJsonMainEntries;
+
+    public Factory() {
+      this(/* packageJsonMainEntries= */ null);
+    }
+
+    public Factory(@Nullable Map<String, String> packageJsonMainEntries) {
+      this.packageJsonMainEntries = packageJsonMainEntries;
+    }
+
+    @Override
+    public ModuleResolver create(ImmutableSet<String> modulePaths,
+        ImmutableList<String> moduleRootPaths, ErrorHandler errorHandler) {
+      return new NodeModuleResolver(
+          modulePaths, moduleRootPaths, packageJsonMainEntries, errorHandler);
+    }
   }
 
   public NodeModuleResolver(

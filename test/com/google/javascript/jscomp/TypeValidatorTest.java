@@ -451,6 +451,13 @@ public final class TypeValidatorTest extends CompilerTestCase {
             "ns2.x = 'a';"),
         TypeValidator.DUP_VAR_DECLARATION_TYPE_MISMATCH);
 
+    // catch variables in different catch blocks are not duplicate declarations
+    testSame(
+        lines(
+            "try { throw 1; } catch (/** @type {number} */ err) {}",
+            "try { throw 1; } catch (/** @type {number} */ err) {}"
+            ));
+
     // duplicates suppressed on 1st declaration.
     testSame(
         lines(

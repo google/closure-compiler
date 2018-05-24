@@ -76,7 +76,7 @@ public class DeadPropertyAssignmentElimination implements CompilerPass {
     }
 
     GetterSetterCollector getterSetterCollector = new GetterSetterCollector();
-    NodeTraversal.traverseEs6(compiler, root, getterSetterCollector);
+    NodeTraversal.traverse(compiler, root, getterSetterCollector);
 
     // If there's any potentially unknown getter/setter property, back off of the optimization.
     if (getterSetterCollector.unknownGetterSetterPresent) {
@@ -113,7 +113,7 @@ public class DeadPropertyAssignmentElimination implements CompilerPass {
 
       FindCandidateAssignmentTraversal traversal =
           new FindCandidateAssignmentTraversal(blacklistedPropNames, NodeUtil.isConstructor(root));
-      NodeTraversal.traverseEs6(compiler, body, traversal);
+      NodeTraversal.traverse(compiler, body, traversal);
 
       // Any candidate property assignment can have a write removed if that write is never read
       // and it's written to at least one more time.
@@ -256,12 +256,8 @@ public class DeadPropertyAssignmentElimination implements CompilerPass {
 
       String propName =
           propNode.isGetProp() ? propNode.getLastChild().getString() : propNode.getQualifiedName();
-      if (propertyMap.containsKey(propName)) {
-        return propertyMap.get(propName);
-      }
 
-      Property property = new Property(propName);
-      propertyMap.put(propName, property);
+      Property property = propertyMap.computeIfAbsent(propName, name -> new Property(name));
 
       /* Using the GETPROP chain, build out the tree of children properties.
 
@@ -294,6 +290,19 @@ public class DeadPropertyAssignmentElimination implements CompilerPass {
       // Visit the LHS of an assignment in post-order
       if (NodeUtil.isAssignmentOp(n)) {
         visitAssignmentLhs(n.getFirstChild());
+      }
+
+      // Assume that all properties may be read when control flow leaves the function
+      if (NodeUtil.isInvocation(n) || n.isYield() || n.isAwait()) {
+        if (ASSUME_CONSTRUCTORS_HAVENT_ESCAPED
+            && isConstructor
+            && !NodeUtil.referencesThis(n)
+            && NodeUtil.getEnclosingType(n, Token.TRY) == null) {
+          // this.x properties are okay.
+          markAllPropsReadExceptThisProps();
+        } else {
+          markAllPropsRead();
+        }
       }
 
       // Mark all properties as read when leaving a block since we haven't proven that the block
@@ -390,15 +399,6 @@ public class DeadPropertyAssignmentElimination implements CompilerPass {
             }
           }
           return true;
-        case CALL:
-          if (ASSUME_CONSTRUCTORS_HAVENT_ESCAPED && isConstructor && !NodeUtil.referencesThis(n)
-              && NodeUtil.getEnclosingType(n, Token.TRY) == null) {
-            // this.x properties are okay.
-            markAllPropsReadExceptThisProps();
-          } else {
-            markAllPropsRead();
-          }
-          return false;
 
         case THIS:
         case NAME:

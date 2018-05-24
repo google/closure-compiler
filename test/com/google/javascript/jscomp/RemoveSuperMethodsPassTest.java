@@ -18,7 +18,7 @@ package com.google.javascript.jscomp;
 import com.google.common.collect.ImmutableList;
 
 /** Tests for {@link RemoveSuperMethodsPass} */
-public final class RemoveSuperMethodsPassTest extends TypeICompilerTestCase {
+public final class RemoveSuperMethodsPassTest extends CompilerTestCase {
 
   private static final String BOILERPLATE =
       lines(
@@ -45,6 +45,12 @@ public final class RemoveSuperMethodsPassTest extends TypeICompilerTestCase {
 
   public RemoveSuperMethodsPassTest() {
     super(DEFAULT_EXTERNS);
+  }
+
+  @Override
+  protected void setUp() throws Exception {
+    super.setUp();
+    enableTypeCheck();
   }
 
   @Override
@@ -166,8 +172,6 @@ public final class RemoveSuperMethodsPassTest extends TypeICompilerTestCase {
             "  return Foo.prototype.baw.superClass_.baz.call(this, time, loc);",
             "};"));
 
-    ignoreWarnings(
-        NewTypeInference.INEXISTENT_PROPERTY, NewTypeInference.UNKNOWN_NAMESPACE_PROPERTY);
     testNoOptimize(
         lines(
             "Foo.prototype.baw = {};",
@@ -202,7 +206,6 @@ public final class RemoveSuperMethodsPassTest extends TypeICompilerTestCase {
   }
 
   public void testNoOptimize_missingReturn() {
-    ignoreWarnings(NewTypeInference.MISSING_RETURN_STATEMENT);
     testNoOptimize(
         lines(
             "/** @override */",

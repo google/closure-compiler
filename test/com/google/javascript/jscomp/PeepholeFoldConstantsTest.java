@@ -31,7 +31,7 @@ import java.util.Set;
  * {@link PeepholeIntegrationTest}.
  */
 
-public final class PeepholeFoldConstantsTest extends TypeICompilerTestCase {
+public final class PeepholeFoldConstantsTest extends CompilerTestCase {
 
   public PeepholeFoldConstantsTest() {
     super(DEFAULT_EXTERNS);
@@ -44,11 +44,11 @@ public final class PeepholeFoldConstantsTest extends TypeICompilerTestCase {
   @Override
   protected void setUp() throws Exception {
     super.setUp();
+    disableTypeCheck();
     late = false;
     useTypes = true;
     // Reduce this to 1 if we get better expression evaluators.
     numRepetitions = 2;
-    mode = TypeInferenceMode.NEITHER;
   }
 
   @Override
@@ -67,10 +67,6 @@ public final class PeepholeFoldConstantsTest extends TypeICompilerTestCase {
   @Override
   protected CompilerOptions getOptions() {
     CompilerOptions options = super.getOptions();
-    // NTI is stricter than OTI w.r.t. implicitly casting boolean/null/undefined to numbers,
-    // but that's irrelevant to this test.
-    options.setWarningLevel(
-        new DiagnosticGroup(NewTypeInference.INVALID_OPERAND_TYPE), CheckLevel.OFF);
     return options;
   }
 
@@ -763,7 +759,7 @@ public final class PeepholeFoldConstantsTest extends TypeICompilerTestCase {
   }
 
   public void testStringAdd_identity() {
-    this.mode = TypeInferenceMode.BOTH;
+    enableTypeCheck();
     foldStringTypes("x + ''", "x");
     foldStringTypes("'' + x", "x");
   }
@@ -1345,10 +1341,23 @@ public final class PeepholeFoldConstantsTest extends TypeICompilerTestCase {
     testSame("({a:x}).a ++");
     testSame("({a:x}).a --");
 
-    // functions can't reference the object through 'this'.
-    testSame("({a:function(){return this}}).a");
+    // Getters should not be inlined.
     testSame("({get a() {return this}}).a");
+
+    // Except, if we can see that the getter function never references 'this'.
+    test("({get a() {return 0}}).a", "(function() {return 0})()");
+
+    // It's okay to inline functions, as long as they're not immediately called.
+    // (For tests where they are immediately called, see testFoldObjectLiteralRefCall)
+    test("({a:function(){return this}}).a", "(function(){return this})");
+
+    // It's also okay to inline functions that are immediately called, so long as we know for
+    // sure the function doesn't reference 'this'.
+    test("({a:function(){return 0}}).a()", "(function(){return 0})()");
+
+    // Don't inline setters.
     testSame("({set a(b) {return this}}).a");
+    testSame("({set a(b) {this._a = b}}).a");
 
     // Leave unknown props alone, the might be on the prototype
     testSame("({}).a");
@@ -1402,6 +1411,13 @@ public final class PeepholeFoldConstantsTest extends TypeICompilerTestCase {
     testSame("({a:x}).a += 1");
   }
 
+  // Regression test for https://github.com/google/closure-compiler/issues/2873
+  // It would be incorrect to fold this to "x();" because the 'this' value inside the function
+  // will be the global object, instead of the object {a:x} as it should be.
+  public void testFoldObjectLiteralRefCall() {
+    testSame("({a:x}).a()");
+  }
+
   public void testIEString() {
     testSame("!+'\\v1'");
   }
@@ -1411,7 +1427,7 @@ public final class PeepholeFoldConstantsTest extends TypeICompilerTestCase {
   }
 
   public void testTypeBasedFoldConstant() {
-    this.mode = TypeInferenceMode.BOTH;
+    enableTypeCheck();
     test("function f(/** number */ x) { x + 1 + 1 + x; }",
          "function f(/** number */ x) { x + 2 + x; }");
 
@@ -1565,7 +1581,7 @@ public final class PeepholeFoldConstantsTest extends TypeICompilerTestCase {
   }
 
   public void testAlgebraicIdentities() {
-    this.mode = TypeInferenceMode.BOTH;
+    enableTypeCheck();
 
     foldNumericTypes("x+0", "x");
     foldNumericTypes("0+x", "x");

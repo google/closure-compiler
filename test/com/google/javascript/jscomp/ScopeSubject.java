@@ -24,7 +24,10 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.truth.FailureMetadata;
 import com.google.common.truth.Subject;
+import com.google.javascript.jscomp.testing.TypeSubject;
+import com.google.javascript.rhino.Node;
 import javax.annotation.CheckReturnValue;
+import javax.annotation.Nullable;
 
 /**
  * A Truth Subject for the AbstractScope class. Usage:
@@ -58,7 +61,7 @@ public final class ScopeSubject extends Subject<ScopeSubject, AbstractScope<?, ?
     AbstractVar<?, ?> var = getVar(name);
     if (var == null) {
       ImmutableList<AbstractVar<?, ?>> declared =
-          ImmutableList.copyOf(getSubject().getAllAccessibleVariables());
+          ImmutableList.copyOf(actual().getAllAccessibleVariables());
       ImmutableList<String> names =
           declared.stream().map(AbstractVar::getName).collect(toImmutableList());
       if (names.size() > 10) {
@@ -74,24 +77,24 @@ public final class ScopeSubject extends Subject<ScopeSubject, AbstractScope<?, ?
   }
 
   private AbstractVar<?, ?> getVar(String name) {
-    return getSubject().hasSlot(name) ? checkNotNull(getSubject().getVar(name)) : null;
+    return actual().hasSlot(name) ? checkNotNull(actual().getVar(name)) : null;
   }
 
   public final class DeclarationSubject {
     private final AbstractVar<?, ?> var;
 
     private DeclarationSubject(AbstractVar<?, ?> var) {
-      this.var = var;
+      this.var = checkNotNull(var);
     }
 
     /**
-     * Expects the variable to be defined on the given {@code scope}.  The {@code preposition}
-     * is either "on" or "", depending on whether it is needed for grammatical correctness.
-     * The {@code expected} object is displayed in brackets, in parallel to the actual scope
-     * that the variable is defined on.
+     * Expects the variable to be defined on the given {@code scope}. The {@code preposition} is
+     * either "on" or "", depending on whether it is needed for grammatical correctness. The {@code
+     * expected} object is displayed in brackets, in parallel to the actual scope that the variable
+     * is defined on.
      */
     private void expectScope(String preposition, Object expected, AbstractScope<?, ?> scope) {
-      if (var != null && var.getScope() != scope) {
+      if (var.getScope() != scope) {
         failWithBadResults(
             "declares " + var.getName() + (!preposition.isEmpty() ? " " : "") + preposition,
             expected,
@@ -101,39 +104,86 @@ public final class ScopeSubject extends Subject<ScopeSubject, AbstractScope<?, ?
     }
 
     /** Expects the declared variable to be declared on the subject scope. */
-    public void directly() {
-      expectScope("", "directly", getSubject());
+    public DeclarationSubject directly() {
+      expectScope("", "directly", actual());
+      return this;
     }
 
     /** Expects the declared variable to be declared on the given scope. */
-    public void on(AbstractScope<?, ?> scope) {
+    public DeclarationSubject on(AbstractScope<?, ?> scope) {
       checkState(
-          scope != getSubject(),
+          scope != actual(),
           "It doesn't make sense to pass the scope already being asserted about. Use .directly()");
       expectScope("on", scope, scope);
+      return this;
     }
 
     /** Expects the declared variable to be declared on the closest container scope. */
-    public void onClosestContainerScope() {
-      expectScope("on", "the closest container scope", getSubject().getClosestContainerScope());
+    public DeclarationSubject onClosestContainerScope() {
+      expectScope("on", "the closest container scope", actual().getClosestContainerScope());
+      return this;
     }
 
     /** Expects the declared variable to be declared on the closest hoist scope. */
-    public void onClosestHoistScope() {
-      expectScope("on", "the closest hoist scope", getSubject().getClosestHoistScope());
+    public DeclarationSubject onClosestHoistScope() {
+      expectScope("on", "the closest hoist scope", actual().getClosestHoistScope());
+      return this;
     }
 
     /** Expects the declared variable to be declared on the global scope. */
-    public void globally() {
-      expectScope("", "globally", getSubject().getGlobalScope());
+    public DeclarationSubject globally() {
+      expectScope("", "globally", actual().getGlobalScope());
+      return this;
     }
 
     /** Expects the declared variable to be declared on any scope other than the subject. */
-    public void onSomeParent() {
-      if (var != null && var.getScope() == getSubject()) {
+    public DeclarationSubject onSomeParent() {
+      if (var != null && var.getScope() == actual()) {
         failWithBadResults(
             "declares " + var.getName(), "on a parent scope", "declares it", "directly");
       }
+      return this;
+    }
+
+    /** Expects the declared variable to be declared on some scope with the given label. */
+    public DeclarationSubject onScopeLabeled(String expectedLabel) {
+      checkNotNull(expectedLabel);
+      String actualLabel = getLabel(var.getScopeRoot());
+      if (actualLabel == null) {
+        failWithBadResults(
+            "declares " + var.getName(),
+            "on a scope labeled \"" + expectedLabel + "\"",
+            "declares it",
+            "on an unlabeled scope");
+      } else if (!actualLabel.equals(expectedLabel)) {
+        failWithBadResults(
+            "declares " + var.getName(),
+            "on a scope labeled \"" + expectedLabel + "\"",
+            "declares it",
+            "on a scope labeled \"" + actualLabel + "\"");
+      }
+      return this;
+    }
+
+    public TypeSubject withTypeThat() {
+      TypedVar typedVar = (TypedVar) var.getSymbol();
+      return TypeSubject.assertType(typedVar.getType());
+    }
+  }
+
+  /** Returns the name of the label applied to n, or null if none exists. */
+  @Nullable
+  private String getLabel(Node n) {
+    // If the node is labeled it will be the second child of a LABEL and the first child
+    // will be a LABEL_NAME.
+    Node parent = n.getParent();
+    if (parent != null && parent.isLabel()) {
+      Node labelNameNode = parent.getFirstChild();
+      checkState(labelNameNode.isLabelName(), labelNameNode);
+      checkState(labelNameNode.getNext() == n, n);
+      return labelNameNode.getString();
+    } else {
+      return null;
     }
   }
 }

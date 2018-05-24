@@ -21,7 +21,7 @@ import static com.google.common.base.Preconditions.checkState;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfo.Visibility;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.TypeI;
+import com.google.javascript.rhino.jstype.JSType;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -55,12 +55,12 @@ class CheckUnusedPrivateProperties
 
   @Override
   public void process(Node externs, Node root) {
-    NodeTraversal.traverseEs6(compiler, root, this);
+    NodeTraversal.traverse(compiler, root, this);
   }
 
   @Override
   public void hotSwapScript(Node scriptRoot, Node originalRoot) {
-    NodeTraversal.traverseEs6(compiler, scriptRoot, this);
+    NodeTraversal.traverse(compiler, scriptRoot, this);
   }
 
   private void reportUnused(NodeTraversal t) {
@@ -129,7 +129,9 @@ class CheckUnusedPrivateProperties
          // Assume any object literal definition might be a reflection on the
          // class property.
          for (Node c : n.children()) {
-           used.add(c.getString());
+            if (c.isStringKey() || c.isGetterDef() || c.isSetterDef() || c.isMemberFunctionDef()) {
+              used.add(c.getString());
+            }
          }
          break;
        }
@@ -180,7 +182,7 @@ class CheckUnusedPrivateProperties
   private boolean isConstructor(Node n) {
     // If type checking is enabled (not just a per-file lint check),
     // we can check constructor properties too. But it isn't required.
-    TypeI type = n.getTypeI();
+    JSType type = n.getJSType();
     return type != null && (type.isConstructor() || type.isInterface());
   }
 

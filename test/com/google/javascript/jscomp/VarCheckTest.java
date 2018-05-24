@@ -772,7 +772,7 @@ public final class VarCheckTest extends CompilerTestCase {
 
     @Override
     public void process(Node externs, Node root) {
-      NodeTraversal.traverseRootsEs6(
+      NodeTraversal.traverseRoots(
           compiler,
           new AbstractPostOrderCallback() {
             @Override

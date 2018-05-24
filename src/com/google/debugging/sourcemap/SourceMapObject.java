@@ -27,6 +27,7 @@ public class SourceMapObject {
   private final String file;
   private final String mappings;
   private final String[] sources;
+  private final String[] sourcesContent;
   private final String[] names;
   private final List<SourceMapSection> sections;
   private final Map<String, Object> extensions;
@@ -38,6 +39,7 @@ public class SourceMapObject {
       String file,
       String mappings,
       String[] sources,
+      String[] sourcesContent,
       String[] names,
       List<SourceMapSection> sections,
       Map<String, Object> extensions) {
@@ -47,6 +49,7 @@ public class SourceMapObject {
     this.file = file;
     this.mappings = mappings;
     this.sources = sources;
+    this.sourcesContent = sourcesContent;
     this.names = names;
     this.sections = sections;
     this.extensions = extensions;
@@ -76,6 +79,10 @@ public class SourceMapObject {
     return sources;
   }
 
+  public String[] getSourcesContent() {
+    return sourcesContent;
+  }
+
   public String[] getNames() {
     return names;
   }
@@ -99,6 +106,7 @@ public class SourceMapObject {
     private String file;
     private String mappings;
     private String[] sources;
+    private String[] sourcesContent;
     private String[] names;
     private List<SourceMapSection> sections;
     private Map<String, Object> extensions;
@@ -133,6 +141,11 @@ public class SourceMapObject {
       return this;
     }
 
+    public Builder setSourcesContent(String[] sourcesContent) {
+      this.sourcesContent = sourcesContent;
+      return this;
+    }
+
     public Builder setNames(String[] names) {
       this.names = names;
       return this;
@@ -150,7 +163,16 @@ public class SourceMapObject {
 
     public SourceMapObject build() {
       return new SourceMapObject(
-          version, lineCount, sourceRoot, file, mappings, sources, names, sections, extensions);
+          version,
+          lineCount,
+          sourceRoot,
+          file,
+          mappings,
+          sources,
+          sourcesContent,
+          names,
+          sections,
+          extensions);
     }
   }
 }

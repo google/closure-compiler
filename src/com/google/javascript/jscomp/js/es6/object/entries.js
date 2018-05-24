@@ -26,7 +26,7 @@ $jscomp.polyfill('Object.entries', function(orig) {
    *
    * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/entries
    *
-   * @param {!IObject<KEY, VALUE>} obj
+   * @param {!Object<KEY, VALUE>} obj
    * @return {!Array<!Array<KEY|VALUE>>}
    * @template KEY, VALUE
    */

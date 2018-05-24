@@ -23,13 +23,13 @@ import java.util.function.Consumer;
  * Tests for {@link ExternExportsPass}.
  *
  */
-public final class ExternExportsPassTest extends TypeICompilerTestCase {
+public final class ExternExportsPassTest extends CompilerTestCase {
 
   @Override
   protected void setUp() throws Exception {
     super.setUp();
     enableNormalize();
-    this.mode = TypeInferenceMode.BOTH;
+    enableTypeCheck();
   }
 
   @Override
@@ -158,8 +158,6 @@ public final class ExternExportsPassTest extends TypeICompilerTestCase {
   }
 
   public void testExportMultiple2() throws Exception {
-    // TODO(sdh): NTI leaves out the annotation for hello for some reason.
-    this.mode = TypeInferenceMode.OTI_ONLY;
     compileAndCheck(
         lines(
             "/** @const */ var a = {};",
@@ -334,7 +332,7 @@ public final class ExternExportsPassTest extends TypeICompilerTestCase {
   public void testExportSymbolWithoutTypeCheck() {
     // ExternExportsPass should not emit annotations
     // if there is no type information available.
-    this.mode = TypeInferenceMode.NEITHER;
+    disableTypeCheck();
 
     compileAndCheck(
         lines(
@@ -411,7 +409,7 @@ public final class ExternExportsPassTest extends TypeICompilerTestCase {
     // to JSTypes and not Nodes (and no JSTypes are created when checkTypes
     // is false), we don't really have a choice.
 
-    this.mode = TypeInferenceMode.NEITHER;
+    disableTypeCheck();
 
     compileAndCheck(
         lines(
@@ -581,11 +579,8 @@ public final class ExternExportsPassTest extends TypeICompilerTestCase {
         "};",
         "");
 
-    this.mode = TypeInferenceMode.OTI_ONLY;
-    // NOTE: OTI should print {E} for the @param, but does not.
+    // NOTE: The type should print {E} for the @param, but is not.
     compileAndCheck(js, expected.replace("{E}", "{number}"));
-    this.mode = TypeInferenceMode.NTI_ONLY;
-    compileAndCheck(js, expected);
   }
 
   /** If we export a property with "prototype" as a path component, there
@@ -738,7 +733,6 @@ public final class ExternExportsPassTest extends TypeICompilerTestCase {
   }
 
   public void testExportLocalPropertyInConstructor2() throws Exception {
-    ignoreWarnings(NewTypeInference.INEXISTENT_PROPERTY);
     compileAndCheck(
         lines(
             "/** @constructor */function F() { /** @export */ this.x = 5;}",
@@ -940,7 +934,7 @@ public final class ExternExportsPassTest extends TypeICompilerTestCase {
         generatedExterns -> {
           String fileoverview =
               lines("/**", " * @fileoverview Generated externs.", " * @externs", " */", "");
-          // NOTE(sdh): NTI produces {?=} for many params, while OTI just produces {?}.
+          // NOTE(sdh): The type checker just produces {?}.
           // For now we will not worry about this distinction and just normalize it.
           generatedExterns = generatedExterns.replace("?=", "?");
 

@@ -113,7 +113,7 @@ public class ChromePass extends AbstractPostOrderCallback implements CompilerPas
 
   @Override
   public void process(Node externs, Node root) {
-    NodeTraversal.traverseEs6(compiler, root, this);
+    NodeTraversal.traverse(compiler, root, this);
   }
 
   @Override
@@ -352,7 +352,7 @@ public class ChromePass extends AbstractPostOrderCallback implements CompilerPas
 
     Map<String, String> exports = objectLitToMap(objectLit);
 
-    NodeTraversal.traverseEs6(
+    NodeTraversal.traverse(
         compiler,
         functionBlock,
         new RenameInternalsToExternalsCallback(namespace, exports, functionBlock));

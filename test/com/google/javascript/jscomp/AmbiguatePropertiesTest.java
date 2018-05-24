@@ -25,7 +25,7 @@ import java.util.Map;
  *
  */
 
-public final class AmbiguatePropertiesTest extends TypeICompilerTestCase {
+public final class AmbiguatePropertiesTest extends CompilerTestCase {
   private AmbiguateProperties lastPass;
 
   private static final String EXTERNS = lines(
@@ -46,13 +46,10 @@ public final class AmbiguatePropertiesTest extends TypeICompilerTestCase {
   @Override
   protected void setUp() throws Exception {
     super.setUp();
+    enableTypeCheck();
     enableNormalize();
     enableClosurePass();
     enableGatherExternProperties();
-    this.mode = TypeInferenceMode.BOTH;
-    ignoreWarnings(
-        NewTypeInference.GLOBAL_THIS,
-        NewTypeInference.PROPERTY_ACCESS_ON_NONOBJECT);
   }
 
   @Override
@@ -556,7 +553,6 @@ public final class AmbiguatePropertiesTest extends TypeICompilerTestCase {
 
   public void testTypeMismatch() {
     ignoreWarnings(
-        NewTypeInference.MISTYPED_ASSIGN_RHS,
         TypeValidator.TYPE_MISMATCH_WARNING);
     testSame(lines(
         "/** @constructor */var Foo = function(){};",
@@ -696,7 +692,6 @@ public final class AmbiguatePropertiesTest extends TypeICompilerTestCase {
 
   public void testInterfaceWithSubInterfaceAndDirectImplementors() {
     ignoreWarnings(
-        GlobalTypeInfoCollector.INTERFACE_METHOD_NOT_IMPLEMENTED,
         TypeValidator.INTERFACE_METHOD_NOT_IMPLEMENTED);
     test(
         lines(
@@ -1110,38 +1105,19 @@ public final class AmbiguatePropertiesTest extends TypeICompilerTestCase {
     test(js, output);
   }
 
-  public void testDontInvalidateParameterizedObjectTypes() {
+  public void testDontRenamePrototypeWithoutExterns() {
     String js = lines(
-        "/** @constructor */",
-        "function Foo() {",
-        "  this.prop = 1;",
-        "}",
-        "Foo.prototype.toString = function() { return ''; };",
-        "/** @constructor */",
-        "function Bar() {",
-        "  this.prop = 2;",
-        "}",
-        "Bar.prototype.prop2 = function() {};",
-        "/** @type {!Object<string, !Bar>} */",
-        "var x = {};",
-        "x.prop = 3;");
+      "/** @interface */",
+      "function Foo() {}",
+      "/** @return {!Foo} */",
+      "Foo.prototype.foo = function() {};");
 
     String output = lines(
-        "/** @constructor */",
-        "function Foo() {",
-        "  this.a = 1;",
-        "}",
-        "Foo.prototype.toString = function() { return ''; };",
-        "/** @constructor */",
-        "function Bar() {",
-        "  this.a = 2;",
-        "}",
-        "Bar.prototype.b = function() {};",
-        "/** @type {!Object<string, !Bar>} */",
-        "var x = {};",
-        "x.a = 3;");
+      "/** @interface */",
+      "function Foo() {}",
+      "/** @return {!Foo} */",
+      "Foo.prototype.a = function() {};");
 
-    this.mode = TypeInferenceMode.NTI_ONLY;
-    test(js, output);
+    test(externs(""), srcs(js), expected(output));
   }
 }

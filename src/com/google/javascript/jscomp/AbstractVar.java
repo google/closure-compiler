@@ -79,7 +79,7 @@ public class AbstractVar<S extends AbstractScope<S, V>, V extends AbstractVar<S,
   }
 
   @Override
-  public StaticSourceFile getSourceFile() {
+  public final StaticSourceFile getSourceFile() {
     return (nameNode != null ? nameNode : scope.getRootNode()).getStaticSourceFile();
   }
 

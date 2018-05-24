@@ -413,7 +413,6 @@ public final class GwtRunner implements EntryPoint {
     options.setDartPass(flags.dartPass);
     options.setExportLocalPropertyDefinitions(flags.exportLocalPropertyDefinitions);
     options.setGenerateExports(flags.generateExports);
-    options.setNewTypeInference(flags.newTypeInf);
     if (flags.polymerPass) {
       options.setPolymerVersion(1);
     } else if (flags.polymerVersion != null) {

@@ -259,7 +259,7 @@ implements NodeTraversal.Callback, HotSwapCompilerPass {
               }
             }
           };
-      NodeTraversal.traverseEs6(compiler, functionBody, checkForDefinedReturnValue);
+      NodeTraversal.traverse(compiler, functionBody, checkForDefinedReturnValue);
       return foundNonEmptyReturn;
     }
   }
@@ -446,7 +446,7 @@ implements NodeTraversal.Callback, HotSwapCompilerPass {
             }
           }
         };
-    NodeTraversal.traverseEs6(compiler, constructorBody, replaceThisWithSuperThis);
+    NodeTraversal.traverse(compiler, constructorBody, replaceThisWithSuperThis);
   }
 
   private String getSuperClassQName(Node constructor) {

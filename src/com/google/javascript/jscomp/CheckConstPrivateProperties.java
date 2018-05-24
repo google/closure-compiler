@@ -19,7 +19,7 @@ package com.google.javascript.jscomp;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfo.Visibility;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.TypeI;
+import com.google.javascript.rhino.jstype.JSType;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -47,12 +47,12 @@ class CheckConstPrivateProperties extends NodeTraversal.AbstractPostOrderCallbac
 
   @Override
   public void process(Node externs, Node root) {
-    NodeTraversal.traverseEs6(compiler, root, this);
+    NodeTraversal.traverse(compiler, root, this);
   }
 
   @Override
   public void hotSwapScript(Node scriptRoot, Node originalRoot) {
-    NodeTraversal.traverseEs6(compiler, scriptRoot, this);
+    NodeTraversal.traverse(compiler, scriptRoot, this);
   }
 
   /** Reports the property definitions that should use the @const annotation. */
@@ -149,7 +149,7 @@ class CheckConstPrivateProperties extends NodeTraversal.AbstractPostOrderCallbac
   private boolean isConstructor(Node n) {
     // If type checking is enabled (not just a per-file lint check),
     // we can check constructor properties too. But it isn't required.
-    TypeI type = n.getTypeI();
+    JSType type = n.getJSType();
     return type != null && (type.isConstructor() || type.isInterface());
   }
 }

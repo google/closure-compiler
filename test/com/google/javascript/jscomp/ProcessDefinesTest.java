@@ -147,8 +147,9 @@ public final class ProcessDefinesTest extends CompilerTestCase {
 
 
   public void testDefineWithInvalidDependentValue() {
-    testError("var BASE = false;\n" +
-        "/** @define {boolean} */ var DEF = !BASE;",
+    testError(
+        "var BASE = false;\n"
+            + "/** @define {boolean} */ var DEF = !BASE;",
         ProcessDefines.INVALID_DEFINE_INIT_ERROR);
   }
 
@@ -205,7 +206,7 @@ public final class ProcessDefinesTest extends CompilerTestCase {
   }
 
   public void testMisspelledOverride() {
-    overrides.put("DEF_BAD_OVERIDE", new Node(Token.TRUE));
+    overrides.put("DEF_BAD_OVERIDE", new Node(Token.TRUE));  // NOTYPO: Intentional misspelling.
     test(
         "/** @define {boolean} */ var DEF_BAD_OVERRIDE = true",
         "/** @define {boolean} */ var DEF_BAD_OVERRIDE = true",
@@ -218,15 +219,11 @@ public final class ProcessDefinesTest extends CompilerTestCase {
   }
 
   public void testSimpleReassign1() {
-    // Here and in other tests where we reassign to @defined values, we @suppress newCheckTypes
-    // to suppress NTI_CONST_REASSIGNED warnings.
     test(
         lines(
-            "/** @fileoverview @suppress {newCheckTypes} */",
             "/** @define {boolean} */ var DEF = false;",
             "DEF = true;"),
         lines(
-            "/** @fileoverview @suppress {newCheckTypes} */",
             "/** @define {boolean} */ var DEF=true;",
             "true"));
   }
@@ -234,12 +231,10 @@ public final class ProcessDefinesTest extends CompilerTestCase {
   public void testSimpleReassign2() {
     test(
         lines(
-            "/** @fileoverview @suppress {newCheckTypes} */",
             "/** @define {number|boolean} */ var DEF=false;",
             "DEF=true;",
             "DEF=3"),
         lines(
-            "/** @fileoverview @suppress {newCheckTypes} */",
             "/** @define {number|boolean} */ var DEF=3;",
             "true;3"));
 
@@ -252,12 +247,10 @@ public final class ProcessDefinesTest extends CompilerTestCase {
   public void testSimpleReassign3() {
     test(
         lines(
-            "/** @fileoverview @suppress {newCheckTypes} */",
             "/** @define {boolean} */ var DEF = false;",
             "var x;",
             "x = DEF = true;"),
         lines(
-            "/** @fileoverview @suppress {newCheckTypes} */",
             "/** @define {boolean} */ var DEF = true;",
             "var x;",
             "x = true"));
@@ -271,8 +264,8 @@ public final class ProcessDefinesTest extends CompilerTestCase {
   public void testAssignBeforeDeclaration2() {
     overrides.put("DEF_OVERRIDE_TO_TRUE", new Node(Token.TRUE));
     testError(
-        "DEF_OVERRIDE_TO_TRUE = 3;" +
-        "/** @define {boolean|number} */ var DEF_OVERRIDE_TO_TRUE = false;",
+        "DEF_OVERRIDE_TO_TRUE = 3;"
+            + "/** @define {boolean|number} */ var DEF_OVERRIDE_TO_TRUE = false;",
         ProcessDefines.INVALID_DEFINE_INIT_ERROR);
   }
 
@@ -298,12 +291,10 @@ public final class ProcessDefinesTest extends CompilerTestCase {
   public void testReassignAfterNonGlobalRef() {
     test(
         lines(
-            "/** @fileoverview @suppress {newCheckTypes} */",
             "/** @define {boolean} */ var DEF=true;",
             "var x=function(){var y=DEF};",
             "DEF=false"),
         lines(
-            "/** @fileoverview @suppress {newCheckTypes} */",
             "/** @define {boolean} */ var DEF = false;",
             "var x = function(){var y = DEF; };",
             "false"));
@@ -316,8 +307,7 @@ public final class ProcessDefinesTest extends CompilerTestCase {
 
   public void testReassignAfterRefInConditional() {
     testError(
-        "/** @define {boolean} */var DEF=true;" +
-        "if (false) {var x=DEF} DEF=false;",
+        "/** @define {boolean} */var DEF=true; if (false) {var x=DEF} DEF=false;",
         ProcessDefines.DEFINE_NOT_ASSIGNABLE_ERROR);
   }
 
@@ -420,11 +410,9 @@ public final class ProcessDefinesTest extends CompilerTestCase {
   public void testSimpleConstReassign() {
     test(
         lines(
-            "/** @fileoverview @suppress {newCheckTypes} */",
             "/** @define {boolean} */ const DEF = false;",
             "DEF = true;"),
         lines(
-            "/** @fileoverview @suppress {newCheckTypes} */",
             "/** @define {boolean} */ const DEF=true;",
             "true"));
   }

@@ -20,6 +20,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
+import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallbackInterface;
 import com.google.javascript.jscomp.VariableVisibilityAnalysis.VariableVisibility;
 import com.google.javascript.rhino.Node;
 
@@ -162,19 +163,14 @@ public final class VariableVisibilityAnalysisTest extends CompilerTestCase {
 
     final Node[] foundNode = new Node[1];
 
-    AbstractPostOrderCallback findParameter = new AbstractPostOrderCallback() {
+    AbstractPostOrderCallbackInterface findParameter =
+        (NodeTraversal t, Node n, Node parent) -> {
+          if (n.getParent().isParamList() && parameterName.equals(n.getString())) {
+            foundNode[0] = n;
+          }
+        };
 
-      @Override
-      public void visit(NodeTraversal t, Node n, Node parent) {
-        if (n.getParent().isParamList()
-            && parameterName.equals(n.getString())) {
-
-          foundNode[0] = n;
-        }
-      }
-    };
-
-    NodeTraversal.traverseEs6(getLastCompiler(), getLastCompiler().jsRoot, findParameter);
+    NodeTraversal.traversePostOrder(getLastCompiler(), getLastCompiler().jsRoot, findParameter);
 
     return foundNode[0];
   }
@@ -190,18 +186,14 @@ public final class VariableVisibilityAnalysisTest extends CompilerTestCase {
 
     final Node[] foundNode = new Node[1];
 
-    AbstractPostOrderCallback findFunction =
-        new AbstractPostOrderCallback() {
-
-          @Override
-          public void visit(NodeTraversal t, Node n, Node parent) {
-            if (n.isFunction() && functionName.equals(NodeUtil.getName(n))) {
-              foundNode[0] = n;
-            }
+    AbstractPostOrderCallbackInterface findFunction =
+        (NodeTraversal t, Node n, Node parent) -> {
+          if (n.isFunction() && functionName.equals(NodeUtil.getName(n))) {
+            foundNode[0] = n;
           }
         };
 
-    NodeTraversal.traverseEs6(getLastCompiler(), getLastCompiler().jsRoot, findFunction);
+    NodeTraversal.traversePostOrder(getLastCompiler(), getLastCompiler().jsRoot, findFunction);
 
     return foundNode[0];
   }
@@ -210,7 +202,7 @@ public final class VariableVisibilityAnalysisTest extends CompilerTestCase {
   private Node searchLabel(String label) {
     LabeledVariableSearcher s = new LabeledVariableSearcher(label);
 
-    NodeTraversal.traverseEs6(getLastCompiler(), getLastCompiler().jsRoot, s);
+    NodeTraversal.traverse(getLastCompiler(), getLastCompiler().jsRoot, s);
     assertNotNull("Label " + label + " should be in the source code", s.found);
 
     return s.found;

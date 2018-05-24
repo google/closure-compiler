@@ -57,7 +57,7 @@ class ConstParamCheck extends AbstractPostOrderCallback implements CompilerPass 
   @Override
   public void process(Node externs, Node root) {
     checkState(compiler.getLifeCycleStage().isNormalized());
-    NodeTraversal.traverseEs6(compiler, root, this);
+    NodeTraversal.traverse(compiler, root, this);
   }
 
   /**
@@ -93,7 +93,7 @@ class ConstParamCheck extends AbstractPostOrderCallback implements CompilerPass 
 
       if (name.matchesQualifiedName(CONST_FUNCTION_NAME)
           || name.matchesQualifiedName(CONST_FUNCTION_NAME_COLLAPSED)) {
-        if (!isCompileTimeConstant(traversal.getScope(), argument)) {
+        if (!isSafeValue(traversal.getScope(), argument)) {
           compiler.report(traversal.makeError(argument, CONST_NOT_STRING_LITERAL_ERROR));
         }
       }
@@ -108,19 +108,20 @@ class ConstParamCheck extends AbstractPostOrderCallback implements CompilerPass 
    * <ol>
    *   <li>The argument is a constant variable assigned from a string literal, or
    *   <li>The argument is an expression that is a string literal, or
+   *   <li>The argument is a ternary expression choosing between string literals, or
    *   <li>The argument is a concatenation of the above.
    * </ol>
    *
    * @param scope The scope chain to use in name lookups.
    * @param argument The node of function argument to check.
    */
-  private boolean isCompileTimeConstant(Scope scope, Node argument) {
-    if (argument.isString() || (argument.isTemplateLit() && argument.hasOneChild())) {
+  private boolean isSafeValue(Scope scope, Node argument) {
+    if (NodeUtil.isSomeCompileTimeConstStringValue(argument)) {
       return true;
     } else if (argument.isAdd()) {
       Node left = argument.getFirstChild();
       Node right = argument.getLastChild();
-      return isCompileTimeConstant(scope, left) && isCompileTimeConstant(scope, right);
+      return isSafeValue(scope, left) && isSafeValue(scope, right);
     } else if (argument.isName()) {
       String name = argument.getString();
       Var var = scope.getVar(name);
@@ -131,7 +132,7 @@ class ConstParamCheck extends AbstractPostOrderCallback implements CompilerPass 
       if (initialValue == null) {
         return false;
       }
-      return isCompileTimeConstant(var.getScope(), initialValue);
+      return isSafeValue(var.getScope(), initialValue);
     }
     return false;
   }

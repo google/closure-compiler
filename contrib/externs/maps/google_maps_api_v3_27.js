@@ -22,7 +22,7 @@
 
 /**
  * @const
- * @suppress {const|duplicate}
+ * @suppress {const,duplicate,strictMissingProperties}
  */
 var google = {};
 

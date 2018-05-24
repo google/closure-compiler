@@ -50,9 +50,13 @@ abstract class ValueType extends JSType {
   }
 
   @Override
-  final JSType resolveInternal(ErrorReporter reporter, StaticTypedScope<JSType> scope) {
+  final JSType resolveInternal(ErrorReporter reporter) {
     return this;
   }
+
+  // Subclasses must override and return non-null.
+  @Override
+  public abstract String getDisplayName();
 
   @Override
   public boolean hasDisplayName() {

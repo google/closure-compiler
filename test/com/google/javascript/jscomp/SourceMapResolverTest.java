@@ -15,9 +15,6 @@
  */
 package com.google.javascript.jscomp;
 
-import static junit.framework.TestCase.assertEquals;
-import static junit.framework.TestCase.assertNull;
-
 import com.google.common.io.BaseEncoding;
 import junit.framework.TestCase;
 

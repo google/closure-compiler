@@ -70,9 +70,9 @@ public class J2clPropertyInlinerPass implements CompilerPass {
 
     private void run() {
       GatherJ2CLClassGetterSetters gatherer = new GatherJ2CLClassGetterSetters();
-      NodeTraversal.traverseEs6(compiler, root, gatherer);
+      NodeTraversal.traverse(compiler, root, gatherer);
       Map<String, J2clProperty> result = gatherer.getResults();
-      NodeTraversal.traverseEs6(compiler, root, new DetermineInlinableProperties(result));
+      NodeTraversal.traverse(compiler, root, new DetermineInlinableProperties(result));
       new InlinePropertiesPass(result).run();
     }
 
@@ -355,7 +355,7 @@ public class J2clPropertyInlinerPass implements CompilerPass {
       }
 
       private void run() {
-        NodeTraversal.traverseEs6(compiler, root, this);
+        NodeTraversal.traverse(compiler, root, this);
 
         for (J2clProperty prop : propertiesByName.values()) {
           if (prop.isSafeToInline) {

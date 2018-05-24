@@ -67,7 +67,7 @@ public class NoType extends NoObjectType {
   }
 
   @Override
-  public boolean isNoObjectType() {
+  public final boolean isNoObjectType() {
     return false;
   }
 
@@ -77,12 +77,12 @@ public class NoType extends NoObjectType {
   }
 
   @Override
-  public boolean isNullable() {
+  public final boolean isNullable() {
     return true;
   }
 
   @Override
-  public boolean isVoidable() {
+  public final boolean isVoidable() {
     return true;
   }
 
@@ -98,36 +98,16 @@ public class NoType extends NoObjectType {
   }
 
   @Override
-  public BooleanLiteralSet getPossibleToBooleanOutcomes() {
+  public final BooleanLiteralSet getPossibleToBooleanOutcomes() {
     return BooleanLiteralSet.EMPTY;
   }
 
   @Override
-  public boolean matchesNumberContext() {
-    return true;
-  }
-
-  @Override
-  public boolean matchesObjectContext() {
-    return true;
-  }
-
-  @Override
-  public boolean matchesStringContext() {
-    return true;
-  }
-
-  @Override
-  public boolean matchesSymbolContext() {
-    return true;
-  }
-
-  @Override
-  public <T> T visit(Visitor<T> visitor) {
+  public final <T> T visit(Visitor<T> visitor) {
     return visitor.caseNoType(this);
   }
 
-  @Override <T> T visit(RelationshipVisitor<T> visitor, JSType that) {
+  @Override final <T> T visit(RelationshipVisitor<T> visitor, JSType that) {
     return visitor.caseNoType(that);
   }
 

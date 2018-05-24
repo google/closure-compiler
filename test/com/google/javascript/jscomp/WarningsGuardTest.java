@@ -21,7 +21,6 @@ import static com.google.javascript.jscomp.CheckAccessControls.VISIBILITY_MISMAT
 import static com.google.javascript.jscomp.CheckLevel.ERROR;
 import static com.google.javascript.jscomp.CheckLevel.OFF;
 import static com.google.javascript.jscomp.CheckLevel.WARNING;
-import static com.google.javascript.jscomp.NewTypeInference.MISTYPED_ASSIGN_RHS;
 import static com.google.javascript.jscomp.TypeCheck.DETERMINISTIC_TEST;
 
 import com.google.common.collect.ImmutableList;
@@ -304,15 +303,12 @@ public final class WarningsGuardTest extends TestCase {
     WarningsGuard guard = new DiagnosticGroupWarningsGuard(
         DiagnosticGroups.CHECK_TYPES, ERROR);
 
-    assertEquals(ERROR, guard.level(makeError("foo", MISTYPED_ASSIGN_RHS)));
     assertEquals(ERROR, guard.level(makeError("foo", DETERMINISTIC_TEST)));
 
     assertFalse(guard.disables(DiagnosticGroups.OLD_CHECK_TYPES));
-    assertFalse(guard.disables(DiagnosticGroups.NEW_CHECK_TYPES));
     assertFalse(guard.disables(DiagnosticGroups.CHECK_TYPES));
 
     assertEnables(guard, DiagnosticGroups.OLD_CHECK_TYPES);
-    assertEnables(guard, DiagnosticGroups.NEW_CHECK_TYPES);
     assertEnables(guard, DiagnosticGroups.CHECK_TYPES);
     assertNotEnables(guard, DiagnosticGroups.MESSAGE_DESCRIPTIONS);
   }
@@ -321,15 +317,12 @@ public final class WarningsGuardTest extends TestCase {
     WarningsGuard guard = new DiagnosticGroupWarningsGuard(
         DiagnosticGroups.OLD_CHECK_TYPES, ERROR);
 
-    assertNull(guard.level(makeError("foo", MISTYPED_ASSIGN_RHS)));
     assertEquals(ERROR, guard.level(makeError("foo", DETERMINISTIC_TEST)));
 
     assertFalse(guard.disables(DiagnosticGroups.OLD_CHECK_TYPES));
-    assertFalse(guard.disables(DiagnosticGroups.NEW_CHECK_TYPES));
     assertFalse(guard.disables(DiagnosticGroups.CHECK_TYPES));
 
     assertEnables(guard, DiagnosticGroups.OLD_CHECK_TYPES);
-    assertNotEnables(guard, DiagnosticGroups.NEW_CHECK_TYPES);
     assertEnables(guard, DiagnosticGroups.CHECK_TYPES);
     assertNotEnables(guard, DiagnosticGroups.MESSAGE_DESCRIPTIONS);
   }
@@ -339,11 +332,9 @@ public final class WarningsGuardTest extends TestCase {
         DiagnosticGroups.CHECK_TYPES, OFF);
 
     assertTrue(guard.disables(DiagnosticGroups.OLD_CHECK_TYPES));
-    assertTrue(guard.disables(DiagnosticGroups.NEW_CHECK_TYPES));
     assertTrue(guard.disables(DiagnosticGroups.CHECK_TYPES));
 
     assertNotEnables(guard, DiagnosticGroups.OLD_CHECK_TYPES);
-    assertNotEnables(guard, DiagnosticGroups.NEW_CHECK_TYPES);
     assertNotEnables(guard, DiagnosticGroups.CHECK_TYPES);
     assertNotEnables(guard, DiagnosticGroups.MESSAGE_DESCRIPTIONS);
   }

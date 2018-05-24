@@ -57,7 +57,7 @@ public final class Es6RewriteScriptsToModules extends AbstractPreOrderCallback
   @Override
   public void hotSwapScript(Node scriptNode, Node originalRoot) {
     checkArgument(scriptNode.isScript());
-    NodeTraversal.traverseEs6(compiler, scriptNode, this);
+    NodeTraversal.traverse(compiler, scriptNode, this);
   }
 
   @Override

@@ -33,7 +33,7 @@ public class J2clAssertRemovalPass extends AbstractPostOrderCallback implements 
       return;
     }
 
-    NodeTraversal.traverseEs6(compiler, root, this);
+    NodeTraversal.traverse(compiler, root, this);
   }
 
   @Override

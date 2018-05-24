@@ -20,7 +20,6 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.CompilerOptions.PropertyCollapseLevel;
-import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -871,15 +870,12 @@ public final class NormalizeTest extends CompilerTestCase {
   private Set<Node> findNodesWithProperty(Node root, final byte prop) {
     final Set<Node> set = new HashSet<>();
 
-    NodeTraversal.traverseEs6(
+    NodeTraversal.traversePostOrder(
         getLastCompiler(),
         root,
-        new AbstractPostOrderCallback() {
-          @Override
-          public void visit(NodeTraversal t, Node node, Node parent) {
-            if (node.getBooleanProp(prop)) {
-              set.add(node);
-            }
+        (NodeTraversal t, Node node, Node parent) -> {
+          if (node.getBooleanProp(prop)) {
+            set.add(node);
           }
         });
     return set;

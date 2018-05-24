@@ -18,7 +18,7 @@ package com.google.javascript.jscomp;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 
-public final class DeclaredGlobalExternsOnWindowTest extends TypeICompilerTestCase {
+public final class DeclaredGlobalExternsOnWindowTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
@@ -28,9 +28,9 @@ public final class DeclaredGlobalExternsOnWindowTest extends TypeICompilerTestCa
   @Override
   protected void setUp() throws Exception {
     super.setUp();
+    enableTypeCheck();
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2017);
     allowExternsChanges();
-    this.mode = TypeInferenceMode.BOTH;
     enableRunTypeCheckAfterProcessing();
   }
 
@@ -43,9 +43,9 @@ public final class DeclaredGlobalExternsOnWindowTest extends TypeICompilerTestCa
     testExternChanges("var window; var a;", "", "var window;var a;window.a");
   }
 
-  // No "var window;" so this is a no-op.
+  // No "var window;" so use "this" instead.
   public void testWindowProperty1b() {
-    testExternChanges("var a", "", "var a");
+    testExternChanges("var a;", "", "var a;this.a");
   }
 
   public void testWindowProperty2() {
@@ -57,9 +57,9 @@ public final class DeclaredGlobalExternsOnWindowTest extends TypeICompilerTestCa
         "var window;function f(){}window.f;");
   }
 
-  // No "var window;" so this is a no-op.
+  // No "var window;" so use "this" instead.
   public void testWindowProperty3b() {
-    testExternChanges("function f() {}", "var b", "function f(){}");
+    testExternChanges("function f() {}", "var b", "function f(){}this.f");
   }
 
   public void testWindowProperty4() {
@@ -73,9 +73,9 @@ public final class DeclaredGlobalExternsOnWindowTest extends TypeICompilerTestCa
         "var window;var x=function(){};window.x;");
   }
 
-  // No "var window;" so this is a no-op.
+  // No "var window;" so use "this" instead.
   public void testWindowProperty5b() {
-    testExternChanges("var x = function f() {}", "var b", "var x=function f(){}");
+    testExternChanges("var x = function f() {};", "var b", "var x=function f(){};this.x");
   }
 
   public void testWindowProperty5c() {
@@ -177,12 +177,10 @@ public final class DeclaredGlobalExternsOnWindowTest extends TypeICompilerTestCa
             "/** @param {number} n*/",
             "function f(n) {}",
             "f(window.x);")),
-        warningOtiNti(TypeValidator.TYPE_MISMATCH_WARNING, NewTypeInference.INVALID_ARGUMENT_TYPE));
+        warning(TypeValidator.TYPE_MISMATCH_WARNING));
   }
 
   public void testEnum() {
-    // TODO(sdh): figure out why NTI doesn't recognize props if 'window' not explicitly declared
-    this.mode = TypeInferenceMode.OTI_ONLY;
     testSame(
         externs(lines(
             MINIMAL_EXTERNS,
@@ -208,8 +206,6 @@ public final class DeclaredGlobalExternsOnWindowTest extends TypeICompilerTestCa
             "function bar(f) {}",
             "bar(new Foo());")));
 
-    // TODO(sdh): figure out why NTI doesn't recognize props if 'window' not explicitly declared
-    this.mode = TypeInferenceMode.OTI_ONLY;
     testSame(
         externs(lines(
             MINIMAL_EXTERNS,

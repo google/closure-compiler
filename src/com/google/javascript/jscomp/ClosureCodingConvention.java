@@ -23,10 +23,6 @@ import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.errorprone.annotations.Immutable;
-import com.google.javascript.jscomp.newtypes.DeclaredTypeRegistry;
-import com.google.javascript.jscomp.newtypes.JSType;
-import com.google.javascript.jscomp.newtypes.QualifiedName;
-import com.google.javascript.rhino.FunctionTypeI;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.NominalTypeBuilder;
@@ -76,7 +72,7 @@ public final class ClosureCodingConvention extends CodingConventions.Proxy {
       final NominalTypeBuilder parent, final NominalTypeBuilder child, SubclassType type) {
     super.applySubclassRelationship(parent, child, type);
     if (type == SubclassType.INHERITS) {
-      final FunctionTypeI childCtor = child.constructor();
+      final FunctionType childCtor = child.constructor();
       child.declareConstructorProperty(
           "superClass_", parent.prototypeOrInstance(), childCtor.getSource());
       // Notice that constructor functions do not need to be covariant on the superclass.
@@ -84,8 +80,7 @@ public final class ClosureCodingConvention extends CodingConventions.Proxy {
       // types, but G.prototype.constructor needs to be covariant on F.prototype.constructor.
       // To get around this, we just turn off type-checking on arguments and return types
       // of G.prototype.constructor.
-      FunctionTypeI qmarkCtor =
-          childCtor.toBuilder().withUnknownReturnType().withNoParameters().build();
+      FunctionType qmarkCtor = childCtor.forgetParameterAndReturnTypes();
       child.declarePrototypeProperty("constructor", qmarkCtor, childCtor.getSource());
     }
   }
@@ -314,7 +309,7 @@ public final class ClosureCodingConvention extends CodingConventions.Proxy {
   }
 
   @Override
-  public void applySingletonGetter(NominalTypeBuilder classType, FunctionTypeI getterType) {
+  public void applySingletonGetter(NominalTypeBuilder classType, FunctionType getterType) {
     Node defSite = classType.constructor().getSource();
     classType.declareConstructorProperty("getInstance", getterType, defSite);
     classType.declareConstructorProperty("instance_", classType.instance(), defSite);
@@ -513,28 +508,6 @@ public final class ClosureCodingConvention extends CodingConventions.Proxy {
       }
       return registry.getNativeType(JSTypeNative.UNKNOWN_TYPE);
     }
-
-    @Override
-    public JSType getAssertedNewType(Node call, DeclaredTypeRegistry scope) {
-      if (call.getChildCount() > 2) {
-        Node constructor = call.getSecondChild().getNext();
-        if (constructor != null && constructor.isQualifiedName()) {
-          QualifiedName qname = QualifiedName.fromNode(constructor);
-          JSType functionType = scope.getDeclaredTypeOf(qname.getLeftmostName());
-          if (functionType != null) {
-            if (!qname.isIdentifier()) {
-              functionType = functionType.getProp(qname.getAllButLeftmost());
-            }
-            com.google.javascript.jscomp.newtypes.FunctionType ctorType =
-                functionType == null ? null : functionType.getFunTypeIfSingletonObj();
-            if (ctorType != null && ctorType.isUniqueConstructor()) {
-              return ctorType.getInstanceTypeOfCtor();
-            }
-          }
-        }
-      }
-      return scope.getCommonTypes().UNKNOWN;
-    }
   }
 
   /**
@@ -553,13 +526,6 @@ public final class ClosureCodingConvention extends CodingConventions.Proxy {
     public com.google.javascript.rhino.jstype.JSType
         getAssertedOldType(Node call, JSTypeRegistry registry) {
       return registry.getGlobalType(typeName);
-    }
-
-    @Override
-    public JSType getAssertedNewType(Node call, DeclaredTypeRegistry scope) {
-      JSType result = scope.getDeclaredTypeOf(typeName)
-          .getFunTypeIfSingletonObj().getInstanceTypeOfCtor();
-      return result;
     }
   }
 }

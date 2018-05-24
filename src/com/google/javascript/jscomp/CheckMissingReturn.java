@@ -33,7 +33,7 @@ import com.google.javascript.rhino.jstype.TernaryValue;
  *
  *
  * NOTE(dimvar):
- * Do not convert this pass to use TypeI. The pass is only used with the old type checker.
+ * Do not convert this pass to use JSType. The pass is only used with the old type checker.
  * The new type inference checks missing returns on its own.
  */
 class CheckMissingReturn implements ScopedCallback {
@@ -95,6 +95,12 @@ class CheckMissingReturn implements ScopedCallback {
 
     if (returnType == null) {
       // No return value is expected, so nothing to check.
+      return;
+    }
+
+    if (n.isGeneratorFunction()) {
+      // Generator functions always return a Generator. No need to check return statements.
+      // TODO(b/73387406): Investigate adding a warning for generators with no yields.
       return;
     }
 

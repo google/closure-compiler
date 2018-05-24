@@ -76,7 +76,7 @@ public class J2clClinitPrunerPass implements CompilerPass {
 
   private void removeRedundantClinits(Node root, List<Node> changedScopeNodes) {
     RedundantClinitPruner redundantClinitPruner = new RedundantClinitPruner();
-    NodeTraversal.traverseEs6ScopeRoots(
+    NodeTraversal.traverseScopeRoots(
         compiler,
         root,
         getNonNestedParentScopeNodes(changedScopeNodes),
@@ -84,14 +84,14 @@ public class J2clClinitPrunerPass implements CompilerPass {
         redundantClinitPruner, // FunctionCallback
         true);
 
-    NodeTraversal.traverseEs6ScopeRoots(
+    NodeTraversal.traverseScopeRoots(
         compiler, root, changedScopeNodes, new LookAheadRedundantClinitPruner(), false);
   }
 
   private void pruneEmptyClinits(Node root, List<Node> changedScopes) {
     // Clear emptiedClinitMethods before EmptyClinitPruner to populate only with new ones.
     emptiedClinitMethods.clear();
-    NodeTraversal.traverseEs6ScopeRoots(
+    NodeTraversal.traverseScopeRoots(
         compiler, root, changedScopes, new EmptyClinitPruner(), false);
 
     // Make sure replacements are to final destination instead of pointing intermediate ones.
@@ -112,7 +112,7 @@ public class J2clClinitPrunerPass implements CompilerPass {
 
   private Multimap<String, Node> collectClinitReferences(Node root) {
     final Multimap<String, Node> clinitReferences = HashMultimap.create();
-    NodeTraversal.traverseEs6(
+    NodeTraversal.traverse(
         compiler,
         root,
         new AbstractPostOrderCallback() {

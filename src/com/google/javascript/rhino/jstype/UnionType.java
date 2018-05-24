@@ -574,17 +574,14 @@ public class UnionType extends JSType {
 
   @Override
   StringBuilder appendTo(StringBuilder sb, boolean forAnnotations) {
-    boolean firstAlternate = true;
     sb.append("(");
-    SortedSet<JSType> sorted = new TreeSet<>(ALPHA);
-    sorted.addAll(alternatesWithoutStucturalTyping);
-    for (JSType t : sorted) {
-      if (!firstAlternate) {
-        sb.append("|");
-      }
-      t.appendTo(sb, forAnnotations);
-      firstAlternate = false;
+    // Sort types in character value order in order to get consistent results.
+    // This is important for deterministic behavior for testing.
+    SortedSet<String> sortedTypeNames = new TreeSet<>();
+    for (JSType jsType : alternatesWithoutStucturalTyping) {
+      sortedTypeNames.add(jsType.appendTo(new StringBuilder(), forAnnotations).toString());
     }
+    Joiner.on('|').appendTo(sb, sortedTypeNames);
     return sb.append(")");
   }
 
@@ -709,12 +706,12 @@ public class UnionType extends JSType {
   }
 
   @Override
-  JSType resolveInternal(ErrorReporter reporter, StaticTypedScope<JSType> scope) {
+  JSType resolveInternal(ErrorReporter reporter) {
     setResolvedTypeInternal(this); // for circularly defined types.
 
     for (int i = 0; i < alternatesWithoutStucturalTyping.size(); i++) {
       JSType alternate = alternatesWithoutStucturalTyping.get(i);
-      alternate.resolve(reporter, scope);
+      alternate.resolve(reporter);
     }
     // Ensure the union is in a normalized state.
     rebuildAlternates();

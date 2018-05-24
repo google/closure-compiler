@@ -35,7 +35,7 @@ import java.util.Set;
  * Tests for {@link ReplaceStrings}.
  *
  */
-public final class ReplaceStringsTest extends TypeICompilerTestCase {
+public final class ReplaceStringsTest extends CompilerTestCase {
   private ReplaceStrings pass;
   private Set<String> reserved;
   private VariableMap previous;
@@ -91,7 +91,7 @@ public final class ReplaceStringsTest extends TypeICompilerTestCase {
   @Override
   protected void setUp() throws Exception {
     super.setUp();
-    this.mode = TypeInferenceMode.BOTH;
+    enableTypeCheck();
     enableNormalize();
     enableParseTypeInfo();
     functionsToInspect = defaultFunctionsToInspect;
@@ -130,13 +130,13 @@ public final class ReplaceStringsTest extends TypeICompilerTestCase {
         propertiesToErrorFor.put("foobar", CheckLevel.ERROR);
 
         if (rename) {
-          NodeTraversal.traverseEs6(compiler, js, new Renamer());
+          NodeTraversal.traverse(compiler, js, new Renamer());
         }
         new CollapseProperties(compiler, PropertyCollapseLevel.ALL).process(externs, js);
         if (runDisambiguateProperties) {
           SourceInformationAnnotator sia =
               new SourceInformationAnnotator("test", false /* checkAnnotated */);
-          NodeTraversal.traverseEs6(compiler, js, sia);
+          NodeTraversal.traverse(compiler, js, sia);
 
           new DisambiguateProperties(compiler, propertiesToErrorFor).process(externs, js);
         }
@@ -352,7 +352,6 @@ public final class ReplaceStringsTest extends TypeICompilerTestCase {
 
   // Non-matching "info" prototype property.
   public void testLoggerOnObject3b() {
-    ignoreWarnings(NewTypeInference.GLOBAL_THIS);
     testSame(
       "/** @constructor */\n" +
       "var x = function() {};\n" +
@@ -382,9 +381,6 @@ public final class ReplaceStringsTest extends TypeICompilerTestCase {
   }
 
   public void testLoggerOnThis() {
-    // This fails in NTI because NTI doesn't specialize the type of THIS after the assignment;
-    // THIS remains unknown. Working as intended.
-    this.mode = TypeInferenceMode.OTI_ONLY;
     testDebugStrings(
         "function f() {" +
         "  this.logger_ = goog.debug.Logger.getLogger('foo');" +

@@ -72,25 +72,25 @@ public class ProxyObjectType extends ObjectType {
   }
 
   @Override
-  public HasPropertyKind getPropertyKind(String propertyName, boolean autobox) {
+  public final HasPropertyKind getPropertyKind(String propertyName, boolean autobox) {
     return referencedType.getPropertyKind(propertyName, autobox);
   }
 
   @Override
-  PropertyMap getPropertyMap() {
+  final PropertyMap getPropertyMap() {
     return referencedObjType == null
         ? PropertyMap.immutableEmptyMap() : referencedObjType.getPropertyMap();
   }
 
-  JSType getReferencedTypeInternal() {
+  final JSType getReferencedTypeInternal() {
     return referencedType;
   }
 
-  ObjectType getReferencedObjTypeInternal() {
+  final ObjectType getReferencedObjTypeInternal() {
     return referencedObjType;
   }
 
-  void setReferencedType(JSType referencedType) {
+  final void setReferencedType(JSType referencedType) {
     this.referencedType = referencedType;
     if (referencedType instanceof ObjectType) {
       this.referencedObjType = (ObjectType) referencedType;
@@ -119,77 +119,77 @@ public class ProxyObjectType extends ObjectType {
   }
 
   @Override
-  public boolean matchesNumberContext() {
+  public final boolean matchesNumberContext() {
     return referencedType.matchesNumberContext();
   }
 
   @Override
-  public boolean matchesStringContext() {
+  public final boolean matchesStringContext() {
     return referencedType.matchesStringContext();
   }
 
   @Override
-  public boolean matchesSymbolContext() {
+  public final boolean matchesSymbolContext() {
     return referencedType.matchesSymbolContext();
   }
 
   @Override
-  public boolean matchesObjectContext() {
+  public final boolean matchesObjectContext() {
     return referencedType.matchesObjectContext();
   }
 
   @Override
-  public boolean canBeCalled() {
+  public final boolean canBeCalled() {
     return referencedType.canBeCalled();
   }
 
   @Override
-  public boolean isStructuralType() {
+  public final boolean isStructuralType() {
     return referencedType.isStructuralType();
   }
 
   @Override
-  public boolean isNoType() {
+  public final boolean isNoType() {
     return referencedType.isNoType();
   }
 
   @Override
-  public boolean isNoObjectType() {
+  public final boolean isNoObjectType() {
     return referencedType.isNoObjectType();
   }
 
   @Override
-  public boolean isNoResolvedType() {
+  public final boolean isNoResolvedType() {
     return referencedType.isNoResolvedType();
   }
 
   @Override
-  public boolean isUnknownType() {
+  public final boolean isUnknownType() {
     return referencedType.isUnknownType();
   }
 
   @Override
-  public boolean isCheckedUnknownType() {
+  public final boolean isCheckedUnknownType() {
     return referencedType.isCheckedUnknownType();
   }
 
   @Override
-  public boolean isNullable() {
+  public final boolean isNullable() {
     return referencedType.isNullable();
   }
 
   @Override
-  public boolean isVoidable() {
+  public final boolean isVoidable() {
     return referencedType.isVoidable();
   }
 
   @Override
-  public EnumType toMaybeEnumType() {
+  public final EnumType toMaybeEnumType() {
     return referencedType.toMaybeEnumType();
   }
 
   @Override
-  public boolean isConstructor() {
+  public final boolean isConstructor() {
     return referencedType.isConstructor();
   }
 
@@ -199,63 +199,63 @@ public class ProxyObjectType extends ObjectType {
   }
 
   @Override
-  public boolean isInstanceType() {
+  public final boolean isInstanceType() {
     return referencedType.isInstanceType();
   }
 
   @Override
-  public boolean isInterface() {
+  public final boolean isInterface() {
     return referencedType.isInterface();
   }
 
   @Override
-  public boolean isOrdinaryFunction() {
+  public final boolean isOrdinaryFunction() {
     return referencedType.isOrdinaryFunction();
   }
 
   @Override
-  public boolean isAllType() {
+  public final boolean isAllType() {
     return referencedType.isAllType();
   }
 
   @Override
-  public boolean isStruct() {
+  public final boolean isStruct() {
     return referencedType.isStruct();
   }
 
   @Override
-  public boolean isDict() {
+  public final boolean isDict() {
     return referencedType.isDict();
   }
 
   @Override
-  public boolean isNativeObjectType() {
+  public final boolean isNativeObjectType() {
     return referencedObjType == null
         ? false : referencedObjType.isNativeObjectType();
   }
 
   @Override
-  public RecordType toMaybeRecordType() {
+  public final RecordType toMaybeRecordType() {
     return referencedType.toMaybeRecordType();
   }
 
   @Override
-  public UnionType toMaybeUnionType() {
+  public final UnionType toMaybeUnionType() {
     return referencedType.toMaybeUnionType();
   }
 
   @Override
-  public FunctionType toMaybeFunctionType() {
+  public final FunctionType toMaybeFunctionType() {
     return referencedType.toMaybeFunctionType();
   }
 
   @Override
-  public EnumElementType toMaybeEnumElementType() {
+  public final EnumElementType toMaybeEnumElementType() {
     return referencedType.toMaybeEnumElementType();
   }
 
   @Override
-  public TernaryValue testForEquality(JSType that) {
+  public final TernaryValue testForEquality(JSType that) {
     return referencedType.testForEquality(that);
   }
 
@@ -271,7 +271,7 @@ public class ProxyObjectType extends ObjectType {
   }
 
   @Override
-  public FunctionType getOwnerFunction() {
+  public final FunctionType getOwnerFunction() {
     return referencedObjType == null
         ? null : referencedObjType.getOwnerFunction();
   }
@@ -300,7 +300,7 @@ public class ProxyObjectType extends ObjectType {
   }
 
   @Override
-  public ObjectType getImplicitPrototype() {
+  public final ObjectType getImplicitPrototype() {
     return referencedObjType == null ? null :
         referencedObjType.getImplicitPrototype();
   }
@@ -312,7 +312,7 @@ public class ProxyObjectType extends ObjectType {
   }
 
   @Override
-  public boolean removeProperty(String name) {
+  public final boolean removeProperty(String name) {
     return referencedObjType == null ? false :
         referencedObjType.removeProperty(name);
   }
@@ -323,26 +323,26 @@ public class ProxyObjectType extends ObjectType {
   }
 
   @Override
-  public JSDocInfo getJSDocInfo() {
+  public final JSDocInfo getJSDocInfo() {
     return referencedType.getJSDocInfo();
   }
 
   @Override
-  public void setJSDocInfo(JSDocInfo info) {
+  public final void setJSDocInfo(JSDocInfo info) {
     if (referencedObjType != null) {
       referencedObjType.setJSDocInfo(info);
     }
   }
 
   @Override
-  public void setPropertyJSDocInfo(String propertyName, JSDocInfo info) {
+  public final void setPropertyJSDocInfo(String propertyName, JSDocInfo info) {
     if (referencedObjType != null) {
       referencedObjType.setPropertyJSDocInfo(propertyName, info);
     }
   }
 
   @Override
-  public FunctionType getConstructor() {
+  public final FunctionType getConstructor() {
     return referencedObjType == null ? null :
         referencedObjType.getConstructor();
   }
@@ -353,7 +353,7 @@ public class ProxyObjectType extends ObjectType {
         referencedObjType.getTemplateTypes();
   }
 
-  public <T> T visitReferenceType(Visitor<T> visitor) {
+  public final <T> T visitReferenceType(Visitor<T> visitor) {
     return referencedType.visit(visitor);
   }
 
@@ -367,18 +367,18 @@ public class ProxyObjectType extends ObjectType {
   }
 
   @Override
-  JSType resolveInternal(ErrorReporter reporter, StaticTypedScope<JSType> scope) {
-    setReferencedType(referencedType.resolve(reporter, scope));
+  JSType resolveInternal(ErrorReporter reporter) {
+    setReferencedType(referencedType.resolve(reporter));
     return this;
   }
 
   @Override
-  public String toDebugHashCodeString() {
+  public final String toDebugHashCodeString() {
     return "{proxy:" + referencedType.toDebugHashCodeString() + "}";
   }
 
   @Override
-  public JSType getTypeOfThis() {
+  public final JSType getTypeOfThis() {
     if (referencedObjType != null) {
       return referencedObjType.getTypeOfThis();
     }
@@ -386,7 +386,7 @@ public class ProxyObjectType extends ObjectType {
   }
 
   @Override
-  public JSType collapseUnion() {
+  public final JSType collapseUnion() {
     if (referencedType.isUnionType()) {
       return referencedType.collapseUnion();
     }
@@ -394,7 +394,7 @@ public class ProxyObjectType extends ObjectType {
   }
 
   @Override
-  public void matchConstraint(JSType constraint) {
+  public final void matchConstraint(JSType constraint) {
     referencedType.matchConstraint(constraint);
   }
 

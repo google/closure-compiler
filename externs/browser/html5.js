@@ -824,6 +824,18 @@ ImageBitmap.prototype.width;
 ImageBitmap.prototype.height;
 
 /**
+ * @param {(!HTMLCanvasElement|!Blob|!HTMLVideoElement|!HTMLImageElement|!ImageBitmap|!CanvasRenderingContext2D|!ImageData)} image
+ * @param {number=} opt_sx
+ * @param {number=} opt_sy
+ * @param {number=} opt_sw
+ * @param {number=} opt_sh
+ * @return {!Promise<!ImageBitmap>}
+ * @see https://www.w3.org/TR/html51/webappapis.html#webappapis-images
+ */
+function createImageBitmap(image, opt_sx, opt_sy, opt_sw, opt_sh) {}
+
+
+/**
  * @constructor
  */
 function ClientInformation() {}
@@ -1237,14 +1249,13 @@ WebWorker.prototype.postMessage = function(message) {};
 
 /**
  * Sent when the worker thread posts a message to its creator.
- * @type {?function(!MessageEvent<*>)}
+ * @type {?function(!MessageEvent<*>): void}
  */
 WebWorker.prototype.onmessage;
 
 /**
  * Sent when the worker thread encounters an error.
- * TODO(tbreisacher): Should this change to function(!ErrorEvent)?
- * @type {?function(!Event)}
+ * @type {?function(!ErrorEvent): void}
  */
 WebWorker.prototype.onerror;
 
@@ -1288,14 +1299,13 @@ Worker.prototype.webkitPostMessage = function(message, opt_transfer) {};
 
 /**
  * Sent when the worker thread posts a message to its creator.
- * @type {?function(!MessageEvent<*>)}
+ * @type {?function(!MessageEvent<*>): void}
  */
 Worker.prototype.onmessage;
 
 /**
  * Sent when the worker thread encounters an error.
- * TODO(tbreisacher): Should this change to function(!ErrorEvent)?
- * @type {?function(!Event)}
+ * @type {?function(!ErrorEvent): void}
  */
 Worker.prototype.onerror;
 
@@ -1327,8 +1337,7 @@ SharedWorker.prototype.port;
 
 /**
  * Called on network errors for loading the initial script.
- * TODO(tbreisacher): Should this change to function(!ErrorEvent)?
- * @type {?function(!Event)}
+ * @type {?function(!ErrorEvent): void}
  */
 SharedWorker.prototype.onerror;
 
@@ -1387,19 +1396,19 @@ WorkerGlobalScope.prototype.close = function() {};
 
 /**
  * Sent when the worker encounters an error.
- * @type {?function(!Event)}
+ * @type {?function(!ErrorEvent): void}
  */
 WorkerGlobalScope.prototype.onerror;
 
 /**
  * Sent when the worker goes offline.
- * @type {?function(!Event)}
+ * @type {?function(!Event): void}
  */
 WorkerGlobalScope.prototype.onoffline;
 
 /**
  * Sent when the worker goes online.
- * @type {?function(!Event)}
+ * @type {?function(!Event): void}
  */
 WorkerGlobalScope.prototype.ononline;
 
@@ -1433,7 +1442,7 @@ DedicatedWorkerGlobalScope.prototype.webkitPostMessage =
 
 /**
  * Sent when the creator posts a message to this worker.
- * @type {?function(!MessageEvent<*>)}
+ * @type {?function(!MessageEvent<*>): void}
  */
 DedicatedWorkerGlobalScope.prototype.onmessage;
 
@@ -1842,6 +1851,9 @@ HTMLImageElement.prototype.onload;
 
 /** @type {?function(Event)} */
 HTMLImageElement.prototype.onerror;
+
+/** @type {string} */
+HTMLMediaElement.prototype.preload;
 
 /** @type {number} */
 HTMLMediaElement.prototype.readyState;
@@ -4267,6 +4279,37 @@ function HTMLDataListElement() {}
 HTMLDataListElement.prototype.options;
 
 
+/**
+ * @return {boolean}
+ * @see https://html.spec.whatwg.org/multipage/iframe-embed-object.html#the-object-element
+ */
+HTMLObjectElement.prototype.checkValidity;
+
+/**
+ * @param {string} message
+ * @see https://html.spec.whatwg.org/multipage/iframe-embed-object.html#the-object-element
+ * @return {undefined}
+ */
+HTMLObjectElement.prototype.setCustomValidity;
+
+/**
+ * @type {string}
+ * @see https://html.spec.whatwg.org/multipage/iframe-embed-object.html#the-object-element
+ */
+HTMLObjectElement.prototype.validationMessage;
+
+/**
+ * @type {!ValidityState}
+ * @see https://html.spec.whatwg.org/multipage/iframe-embed-object.html#the-object-element
+ */
+HTMLObjectElement.prototype.validity;
+
+/**
+ * @type {boolean}
+ * @see https://html.spec.whatwg.org/multipage/iframe-embed-object.html#the-object-element
+ */
+HTMLObjectElement.prototype.willValidate;
+
 
 /**
  * @see https://html.spec.whatwg.org/multipage/forms.html#the-output-element
@@ -4556,6 +4599,28 @@ Navigator.prototype.deviceMemory;
  * @see https://storage.spec.whatwg.org
  */
 Navigator.prototype.storage;
+
+/**
+ * @param {!ShareData=} data
+ * @return {!Promise<undefined>}
+ * @see https://wicg.github.io/web-share/#share-method
+ */
+Navigator.prototype.share = function(data) {};
+
+/**
+ * @record
+ * @see https://wicg.github.io/web-share/#sharedata-dictionary
+ */
+function ShareData() {}
+
+/** @type {string|undefined} */
+ShareData.prototype.title;
+
+/** @type {string|undefined} */
+ShareData.prototype.text;
+
+/** @type {string|undefined} */
+ShareData.prototype.url;
 
 /**
  * @constructor

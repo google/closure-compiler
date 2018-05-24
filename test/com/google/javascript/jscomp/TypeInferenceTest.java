@@ -16,7 +16,12 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.truth.Truth.assertWithMessage;
 import static com.google.javascript.jscomp.CompilerTypeTestCase.lines;
+import static com.google.javascript.jscomp.ScopeSubject.assertScope;
+import static com.google.javascript.jscomp.testing.TypeSubject.assertType;
 import static com.google.javascript.rhino.jstype.JSTypeNative.ALL_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.ARRAY_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.BOOLEAN_TYPE;
@@ -36,6 +41,8 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CodingConvention.AssertionFunctionSpec;
 import com.google.javascript.jscomp.DataFlowAnalysis.BranchedFlowState;
+import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
+import com.google.javascript.jscomp.testing.TypeSubject;
 import com.google.javascript.jscomp.type.FlowScope;
 import com.google.javascript.jscomp.type.ReverseAbstractInterpreter;
 import com.google.javascript.rhino.Node;
@@ -61,12 +68,31 @@ public final class TypeInferenceTest extends TestCase {
   private Map<String, JSType> assumptions;
   private JSType assumedThisType;
   private FlowScope returnScope;
-  private static final Map<String, AssertionFunctionSpec>
-      ASSERTION_FUNCTION_MAP = new HashMap<>();
+  // TODO(bradfordcsmith): This should be an ImmutableMap.
+  private static final Map<String, AssertionFunctionSpec> ASSERTION_FUNCTION_MAP = new HashMap<>();
+
   static {
     for (AssertionFunctionSpec func :
         new ClosureCodingConvention().getAssertionFunctions()) {
       ASSERTION_FUNCTION_MAP.put(func.getFunctionName(), func);
+    }
+  }
+
+  /**
+   * Maps a label name to information about the labeled statement.
+   *
+   * <p>This map is recreated each time parseAndRunTypeInference() is executed.
+   */
+  private Map<String, LabeledStatement> labeledStatementMap;
+
+  /** Stores information about a labeled statement and allows making assertions on it. */
+  static class LabeledStatement {
+    final Node statementNode;
+    final TypedScope enclosingScope;
+
+    LabeledStatement(Node statementNode, TypedScope enclosingScope) {
+      this.statementNode = checkNotNull(statementNode);
+      this.enclosingScope = checkNotNull(enclosingScope);
     }
   }
 
@@ -89,6 +115,7 @@ public final class TypeInferenceTest extends TestCase {
     assumptions.put(name, type);
   }
 
+  /** Declares a name with a given type in the parent scope of the test case code. */
   private void assuming(String name, JSTypeNative type) {
     assuming(name, registry.getNativeType(type));
   }
@@ -102,6 +129,7 @@ public final class TypeInferenceTest extends TestCase {
   }
 
   private void inGenerator(String js) {
+    checkState(assumedThisType == null);
     parseAndRunTypeInference("(function *() {" + js + "});");
   }
 
@@ -111,11 +139,35 @@ public final class TypeInferenceTest extends TestCase {
         Joiner.on(", ").join(compiler.getErrors()),
         0, compiler.getErrorCount());
 
+    // SCRIPT -> EXPR_RESULT -> FUNCTION
+    // `(function() { TEST CODE HERE });`
     Node n = root.getFirstFirstChild();
+
     // Create the scope with the assumptions.
     TypedScopeCreator scopeCreator = new TypedScopeCreator(compiler);
-    TypedScope assumedScope = scopeCreator.createScope(
-        n, scopeCreator.createScope(root, null));
+    // Also populate a map allowing us to look up labeled statements later.
+    labeledStatementMap = new HashMap<>();
+    new NodeTraversal(
+            compiler,
+            new AbstractPostOrderCallback() {
+              @Override
+              public void visit(NodeTraversal t, Node n, Node parent) {
+                TypedScope scope = t.getTypedScope();
+                if (parent != null && parent.isLabel() && !n.isLabelName()) {
+                  // First child of a LABEL is a LABEL_NAME, n is the second child.
+                  Node labelNameNode = checkNotNull(n.getPrevious(), n);
+                  checkState(labelNameNode.isLabelName(), labelNameNode);
+                  String labelName = labelNameNode.getString();
+                  assertWithMessage("Duplicate label name: %s", labelName)
+                      .that(labeledStatementMap)
+                      .doesNotContainKey(labelName);
+                  labeledStatementMap.put(labelName, new LabeledStatement(n, scope));
+                }
+              }
+            },
+            scopeCreator)
+        .traverse(root);
+    TypedScope assumedScope = scopeCreator.createScope(n);
     for (Map.Entry<String,JSType> entry : assumptions.entrySet()) {
       assumedScope.declare(entry.getKey(), null, entry.getValue(), null, false);
     }
@@ -132,12 +184,46 @@ public final class TypeInferenceTest extends TestCase {
     // Get the scope of the implicit return.
     BranchedFlowState<FlowScope> rtnState =
         cfg.getImplicitReturn().getAnnotation();
-    returnScope = rtnState.getIn();
+    // Reset the flow scope's syntactic scope to the function block, rather than the function node
+    // itself.  This allows pulling out local vars from the function by name to verify their types.
+    returnScope = rtnState.getIn().withSyntacticScope(scopeCreator.createScope(n.getLastChild()));
+  }
+
+  private LabeledStatement getLabeledStatement(String label) {
+    assertWithMessage("No statement found for label: %s", label)
+        .that(labeledStatementMap)
+        .containsKey(label);
+    return labeledStatementMap.get(label);
+  }
+
+  /**
+   * Returns a ScopeSubject for the scope containing the labeled statement.
+   *
+   * <p>Asserts that a statement with the given label existed in the code last passed to
+   * parseAndRunTypeInference().
+   */
+  private ScopeSubject assertScopeEnclosing(String label) {
+    return assertScope(getLabeledStatement(label).enclosingScope);
+  }
+
+  /**
+   * Returns a TypeSubject for the JSType of the expression with the given label.
+   *
+   * <p>Asserts that a statement with the given label existed in the code last passed to
+   * parseAndRunTypeInference(). Also asserts that the statement is an EXPR_RESULT whose expression
+   * has a non-null JSType.
+   */
+  private TypeSubject assertTypeOfExpression(String label) {
+    Node statementNode = getLabeledStatement(label).statementNode;
+    assertTrue("Not an expression statement.", statementNode.isExprResult());
+    JSType jsType = statementNode.getOnlyChild().getJSType();
+    assertNotNull("Expression type is null", jsType);
+    return assertType(jsType);
   }
 
   private JSType getType(String name) {
     assertNotNull("The return scope should not be null.", returnScope);
-    StaticTypedSlot<JSType> var = returnScope.getSlot(name);
+    StaticTypedSlot var = returnScope.getSlot(name);
     assertNotNull("The variable " + name + " is missing from the scope.", var);
     return var.getType();
   }
@@ -632,18 +718,75 @@ public final class TypeInferenceTest extends TestCase {
     verify("i", NUMBER_TYPE);
   }
 
-  public void testFor2() {
+  public void testForInWithExistingVar() {
     assuming("y", OBJECT_TYPE);
-    inFunction("var x = null; var i = null; for (i in y) { x = 1; }");
-    verify("x", createNullableType(NUMBER_TYPE));
-    verify("i", createNullableType(STRING_TYPE));
+    inFunction(
+        lines(
+            "var x = null;",
+            "var i = null;",
+            "for (i in y) {",
+            "  I_INSIDE_LOOP: i;",
+            "  X_AT_LOOP_START: x;",
+            "  x = 1;",
+            "  X_AT_LOOP_END: x;",
+            "}",
+            "X_AFTER_LOOP: x;",
+            "I_AFTER_LOOP: i;"));
+    assertScopeEnclosing("I_INSIDE_LOOP").declares("i").onClosestHoistScope();
+    assertScopeEnclosing("I_INSIDE_LOOP").declares("x").onClosestHoistScope();
+
+    assertTypeOfExpression("I_INSIDE_LOOP").toStringIsEqualTo("string");
+    assertTypeOfExpression("I_AFTER_LOOP").toStringIsEqualTo("(null|string)");
+
+    assertTypeOfExpression("X_AT_LOOP_START").toStringIsEqualTo("(null|number)");
+    assertTypeOfExpression("X_AT_LOOP_END").toStringIsEqualTo("number");
+    assertTypeOfExpression("X_AFTER_LOOP").toStringIsEqualTo("(null|number)");
   }
 
-  public void testFor3() {
+  public void testForInWithRedeclaredVar() {
     assuming("y", OBJECT_TYPE);
-    inFunction("var x = null; var i = null; for (var i in y) { x = 1; }");
-    verify("x", createNullableType(NUMBER_TYPE));
-    verify("i", createNullableType(STRING_TYPE));
+    inFunction(
+        lines(
+            "var i = null;",
+            "for (var i in y) {", // i redeclared here, but really the same variable
+            "  I_INSIDE_LOOP: i;",
+            "}",
+            "I_AFTER_LOOP: i;"));
+    assertScopeEnclosing("I_INSIDE_LOOP").declares("i").onClosestHoistScope();
+    assertTypeOfExpression("I_INSIDE_LOOP").toStringIsEqualTo("string");
+
+    assertScopeEnclosing("I_AFTER_LOOP").declares("i").directly();
+    assertTypeOfExpression("I_AFTER_LOOP").toStringIsEqualTo("(null|string)");
+  }
+
+  public void testForInWithLet() {
+    assuming("y", OBJECT_TYPE);
+    inFunction(
+        lines(
+            "FOR_IN_LOOP: for (let i in y) {", // preserve newlines
+            "  I_INSIDE_LOOP: i;",
+            "}",
+            "AFTER_LOOP: 1;",
+            ""));
+    assertScopeEnclosing("I_INSIDE_LOOP").declares("i").onScopeLabeled("FOR_IN_LOOP");
+    assertTypeOfExpression("I_INSIDE_LOOP").toStringIsEqualTo("string");
+
+    assertScopeEnclosing("AFTER_LOOP").doesNotDeclare("i");
+  }
+
+  public void testForInWithConst() {
+    assuming("y", OBJECT_TYPE);
+    inFunction(
+        lines(
+            "FOR_IN_LOOP: for (const i in y) {", // preserve newlines
+            "  I_INSIDE_LOOP: i;",
+            "}",
+            "AFTER_LOOP: 1;",
+            ""));
+    assertScopeEnclosing("I_INSIDE_LOOP").declares("i").onScopeLabeled("FOR_IN_LOOP");
+    assertTypeOfExpression("I_INSIDE_LOOP").toStringIsEqualTo("string");
+
+    assertScopeEnclosing("AFTER_LOOP").doesNotDeclare("i");
   }
 
   public void testFor4() {
@@ -774,6 +917,25 @@ public final class TypeInferenceTest extends TestCase {
     assertEquals("F<(number|string),boolean>", getType("result").toString());
   }
 
+  public void testNewRest() {
+    inFunction(
+        lines(
+            "/**",
+            " * @constructor",
+            " * @param {Array<T>} x",
+            " * @param {T} y",
+            " * @param {...S} rest",
+            " * @template T,S",
+            " */",
+            "function F(x, y, ...rest) {}",
+            "var x = /** @type {!Array<number>} */ ([]);",
+            "var y = /** @type {string} */ ('foo');",
+            "var z = /** @type {boolean} */ (true);",
+            "var result = new F(x,y,z);"));
+
+    assertEquals("F<(number|string),boolean>", getType("result").toString());
+  }
+
   public void testInnerFunction1() {
     inFunction("var x = 1; function f() { x = null; };");
     verify("x", NUMBER_TYPE);
@@ -782,6 +944,23 @@ public final class TypeInferenceTest extends TestCase {
   public void testInnerFunction2() {
     inFunction("var x = 1; var f = function() { x = null; };");
     verify("x", NUMBER_TYPE);
+  }
+
+  public void testFunctionDeclarationHasBlockScope() {
+    inFunction(
+        lines(
+            "BLOCK_SCOPE: {",
+            "  BEFORE_DEFINITION: f;",
+            "  function f() {}",
+            "  AFTER_DEFINITION: f;",
+            "}",
+            "AFTER_BLOCK: f;"));
+    // A block-scoped function declaration is hoisted to the beginning of its block, so it is always
+    // defined within the block.
+    assertScopeEnclosing("BEFORE_DEFINITION").declares("f").onScopeLabeled("BLOCK_SCOPE");
+    assertTypeOfExpression("BEFORE_DEFINITION").toStringIsEqualTo("function(): undefined");
+    assertTypeOfExpression("AFTER_DEFINITION").toStringIsEqualTo("function(): undefined");
+    assertScopeEnclosing("AFTER_BLOCK").doesNotDeclare("f");
   }
 
   public void testHook() {
@@ -982,33 +1161,6 @@ public final class TypeInferenceTest extends TestCase {
     verify("out2", STRING_OBJECT_TYPE);
   }
 
-  public void testFlattening() {
-    for (int i = 0; i < LinkedFlowScope.MAX_DEPTH + 1; i++) {
-      assuming("s" + i, ALL_TYPE);
-    }
-    assuming("b", JSTypeNative.BOOLEAN_TYPE);
-    StringBuilder body = new StringBuilder();
-    body.append("if (b) {");
-    for (int i = 0; i < LinkedFlowScope.MAX_DEPTH + 1; i++) {
-      body.append("s");
-      body.append(i);
-      body.append(" = 1;\n");
-    }
-    body.append(" } else { ");
-    for (int i = 0; i < LinkedFlowScope.MAX_DEPTH + 1; i++) {
-      body.append("s");
-      body.append(i);
-      body.append(" = 'ONE';\n");
-    }
-    body.append("}");
-    JSType numberORString = createUnionType(NUMBER_TYPE, STRING_TYPE);
-    inFunction(body.toString());
-
-    for (int i = 0; i < LinkedFlowScope.MAX_DEPTH + 1; i++) {
-      verify("s" + i, numberORString);
-    }
-  }
-
   public void testUnary() {
     assuming("x", NUMBER_TYPE);
     inFunction("var y = +x;");
@@ -1112,6 +1264,17 @@ public final class TypeInferenceTest extends TestCase {
         "function f(x) {}" +
         "var y = {};" +
         "f(y);");
+
+    assertEquals("{foo: (number|undefined)}", getType("y").toString());
+  }
+
+  public void testBackwardsInferenceCallRestParameter() {
+    inFunction(
+        lines(
+            "/** @param {...{foo: (number|undefined)}} rest */",
+            "function f(...rest) {}",
+            "var y = {};",
+            "f(y);"));
 
     assertEquals("{foo: (number|undefined)}", getType("y").toString());
   }
@@ -1558,6 +1721,55 @@ public final class TypeInferenceTest extends TestCase {
 
     verify("a", registry.getNativeType(NUMBER_TYPE));
     verify("b", registry.getNativeType(STRING_TYPE));
+  }
+
+  public void testTemplateLiteral1() {
+    inFunction("var x = `foobar`; X: x;");
+    assertTypeOfExpression("X").isString();
+  }
+
+  public void testSpreadExpression() {
+    inFunction(
+        lines(
+            "let x = 1;", // x is initially a number
+            "let y = [...[x = 'hi', 'there']];", // reassign x a string in the spread
+            "X: x;"));
+    assertTypeOfExpression("X").toStringIsEqualTo("string");
+  }
+
+  public void testTaggedTemplateLiteral1() {
+    assuming("getNumber", registry.createFunctionType(registry.getNativeType(NUMBER_TYPE)));
+    inFunction("var num = getNumber``; NUM: num;");
+
+    assertTypeOfExpression("NUM").isNumber();
+  }
+
+  public void testRestParamType() {
+    parseAndRunTypeInference(
+        lines(
+            "(",
+            "/**", // preserve newlines
+            " * @param {...number} nums",
+            " */",
+            "function(str, ...nums) {",
+            "  NUMS: nums;",
+            "  let n = null;",
+            "  N_START: n;",
+            "  if (nums.length > 0) {",
+            "    n = nums[0];",
+            "    N_IF_TRUE: n;",
+            "  } else {",
+            "    N_IF_FALSE: n;",
+            "  }",
+            "  N_FINAL: n;",
+            "}",
+            ");"));
+    assertTypeOfExpression("N_START").toStringIsEqualTo("null");
+    // TODO(bradfordcsmith): Should be 'number'
+    // See https://github.com/google/closure-compiler/issues/2561
+    assertTypeOfExpression("N_IF_TRUE").toStringIsEqualTo("(number|undefined)");
+    assertTypeOfExpression("N_IF_FALSE").toStringIsEqualTo("null");
+    assertTypeOfExpression("N_FINAL").toStringIsEqualTo("(null|number|undefined)");
   }
 
   private ObjectType getNativeObjectType(JSTypeNative t) {

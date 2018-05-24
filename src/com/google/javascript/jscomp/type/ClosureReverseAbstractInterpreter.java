@@ -33,6 +33,7 @@ import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.Visitor;
 import java.util.Map;
+import javax.annotation.CheckReturnValue;
 
 /**
  * A reverse abstract interpreter (RAI) for specific closure patterns such as
@@ -181,17 +182,19 @@ public final class ClosureReverseAbstractInterpreter
         condition, blindScope, outcome);
   }
 
-  private FlowScope restrictParameter(Node parameter, JSType type,
-      FlowScope blindScope, Function<TypeRestriction, JSType> restriction,
+  @CheckReturnValue
+  private FlowScope restrictParameter(
+      Node parameter,
+      JSType type,
+      FlowScope blindScope,
+      Function<TypeRestriction, JSType> restriction,
       boolean outcome) {
     // restricting
     type = restriction.apply(new TypeRestriction(type, outcome));
 
     // changing the scope
     if (type != null) {
-      FlowScope informed = blindScope.createChildFlowScope();
-      declareNameInScope(informed, parameter, type);
-      return informed;
+      return declareNameInScope(blindScope, parameter, type);
     } else {
       return blindScope;
     }

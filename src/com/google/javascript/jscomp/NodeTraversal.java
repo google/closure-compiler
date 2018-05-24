@@ -129,13 +129,36 @@ public class NodeTraversal {
   }
 
   /**
-   * Abstract callback to visit all nodes in postorder.
+   * Abstract callback to visit all nodes in postorder. Note: Do not create anonymous subclasses of
+   * this. Instead, write a lambda expression which will be interpreted as an
+   * AbstractPostOrderCallbackInterface.
+   *
    */
   public abstract static class AbstractPostOrderCallback implements Callback {
     @Override
     public final boolean shouldTraverse(NodeTraversal nodeTraversal, Node n, Node parent) {
       return true;
     }
+  }
+
+  /** Abstract callback to visit all nodes in postorder. */
+  @FunctionalInterface
+  public static interface AbstractPostOrderCallbackInterface {
+    void visit(NodeTraversal t, Node n, Node parent);
+  }
+
+  private static Callback makePostOrderCallback(AbstractPostOrderCallbackInterface lambda) {
+    return new Callback() {
+      @Override
+      public final boolean shouldTraverse(NodeTraversal nodeTraversal, Node n, Node parent) {
+        return true;
+      }
+
+      @Override
+      public final void visit(NodeTraversal t, Node n, Node parent) {
+        lambda.visit(t, n, parent);
+      }
+    };
   }
 
   /** Abstract callback to visit all nodes in preorder. */
@@ -309,6 +332,18 @@ public class NodeTraversal {
     }
   }
 
+  /** Traverses using the ES6SyntacticScopeCreator */
+  public static void traverse(AbstractCompiler compiler, Node root, Callback cb) {
+    NodeTraversal t = new NodeTraversal(compiler, cb, new Es6SyntacticScopeCreator(compiler));
+    t.traverse(root);
+  }
+
+  /** Traverses in post order. */
+  public static void traversePostOrder(
+      AbstractCompiler compiler, Node root, AbstractPostOrderCallbackInterface cb) {
+    traverse(compiler, root, makePostOrderCallback(cb));
+  }
+
   void traverseRoots(Node externs, Node root) {
     try {
       Node scopeRoot = externs.getParent();
@@ -326,6 +361,12 @@ public class NodeTraversal {
     } catch (Error | Exception unexpectedException) {
       throwUnexpectedException(unexpectedException);
     }
+  }
+
+  public static void traverseRoots(
+      AbstractCompiler compiler, Callback cb, Node externs, Node root) {
+    NodeTraversal t = new NodeTraversal(compiler, cb, new Es6SyntacticScopeCreator(compiler));
+    t.traverseRoots(externs, root);
   }
 
   private static final String MISSING_SOURCE = "[source unknown]";
@@ -445,13 +486,13 @@ public class NodeTraversal {
    * @param root If scopeNodes is null, this method will just traverse 'root' instead. If scopeNodes
    *     is not null, this parameter is ignored.
    */
-  public static void traverseEs6ScopeRoots(
+  public static void traverseScopeRoots(
       AbstractCompiler compiler,
       @Nullable Node root,
       @Nullable List<Node> scopeNodes,
       final Callback cb,
       final boolean traverseNested) {
-    traverseEs6ScopeRoots(compiler, root, scopeNodes, cb, null, traverseNested);
+    traverseScopeRoots(compiler, root, scopeNodes, cb, null, traverseNested);
   }
 
   /**
@@ -462,7 +503,7 @@ public class NodeTraversal {
    * @param root If scopeNodes is null, this method will just traverse 'root' instead. If scopeNodes
    *     is not null, this parameter is ignored.
    */
-  public static void traverseEs6ScopeRoots(
+  public static void traverseScopeRoots(
       AbstractCompiler compiler,
       @Nullable Node root,
       @Nullable List<Node> scopeNodes,
@@ -470,19 +511,19 @@ public class NodeTraversal {
       @Nullable final ChangeScopeRootCallback changeCallback,
       final boolean traverseNested) {
     if (scopeNodes == null) {
-      NodeTraversal.traverseEs6(compiler, root, cb);
+      NodeTraversal.traverse(compiler, root, cb);
     } else {
       MemoizedScopeCreator scopeCreator =
           new MemoizedScopeCreator(new Es6SyntacticScopeCreator(compiler));
 
       for (final Node scopeNode : scopeNodes) {
-        traverseSingleEs6ScopeRoot(
+        traverseSingleScopeRoot(
             compiler, cb, changeCallback, traverseNested, scopeCreator, scopeNode);
       }
     }
   }
 
-  private static void traverseSingleEs6ScopeRoot(
+  private static void traverseSingleScopeRoot(
       AbstractCompiler compiler,
       final Callback cb,
       @Nullable ChangeScopeRootCallback changeCallback,
@@ -659,7 +700,7 @@ public class NodeTraversal {
   public static void traverseChangedFunctions(
       final AbstractCompiler compiler, final ChangeScopeRootCallback callback) {
     final Node jsRoot = compiler.getJsRoot();
-    NodeTraversal.traverseEs6(compiler, jsRoot,
+    NodeTraversal.traverse(compiler, jsRoot,
         new AbstractPreOrderCallback() {
           @Override
           public final boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
@@ -672,12 +713,11 @@ public class NodeTraversal {
   }
 
   /**
-   * Traverses using the ES6SyntacticScopeCreator
+   * Use #traverse(AbstractCompiler, Node, Callback)
    */
-  // TODO (stephshi): rename to "traverse" when the old traverse method is no longer used
-  public static void traverseEs6(AbstractCompiler compiler, Node root, Callback cb) {
-    NodeTraversal t = new NodeTraversal(compiler, cb, new Es6SyntacticScopeCreator(compiler));
-    t.traverse(root);
+  @Deprecated
+  public static final void traverseEs6(AbstractCompiler compiler, Node root, Callback cb) {
+    traverse(compiler, root, cb);
   }
 
   /** Traverses from a particular scope node using the ES6SyntacticScopeCreator */
@@ -694,12 +734,6 @@ public class NodeTraversal {
   public static void traverseTyped(AbstractCompiler compiler, Node root, Callback cb) {
     NodeTraversal t = new NodeTraversal(compiler, cb, SyntacticScopeCreator.makeTyped(compiler));
     t.traverse(root);
-  }
-
-  public static void traverseRootsEs6(
-      AbstractCompiler compiler, Callback cb, Node externs, Node root) {
-    NodeTraversal t = new NodeTraversal(compiler, cb, new Es6SyntacticScopeCreator(compiler));
-    t.traverseRoots(externs, root);
   }
 
   /**
@@ -939,6 +973,16 @@ public class NodeTraversal {
     return scope;
   }
 
+  /**
+   * Instantiate some, but not necessarily all, scopes from stored roots.
+   *
+   * <p>NodeTraversal instantiates scopes lazily when getScope() or similar is called, by iterating
+   * over a stored list of not-yet-instantiated scopeRoots.  When a not-yet-instantiated parent
+   * scope is requested, it doesn't make sense to instantiate <i>all</i> pending scopes.  Instead,
+   * we count the number that are needed to ensure the requested parent is instantiated and call
+   * this function to instantiate only as many scopes as are needed, shifting their roots off the
+   * queue, and returning the deepest scope actually created.
+   */
   private AbstractScope<?, ?> instantiateScopes(int count) {
     checkArgument(count <= scopeRoots.size());
     AbstractScope<?, ?> scope = scopes.peek();
@@ -967,16 +1011,13 @@ public class NodeTraversal {
     return scopes.peek().getClosestHoistScope().getRootNode();
   }
 
-  public Node getClosestContainerScopeRoot() {
-    int roots = scopeRoots.size();
-    for (int i = roots; i > 0; i--) {
-      Node rootNode = scopeRoots.get(i - 1);
-      if (!NodeUtil.createsBlockScope(rootNode)) {
-        return rootNode;
+  public AbstractScope<?, ?> getClosestContainerScope() {
+    for (int i = scopeRoots.size(); i > 0; i--) {
+      if (!NodeUtil.createsBlockScope(scopeRoots.get(i - 1))) {
+        return instantiateScopes(i);
       }
     }
-
-    return scopes.peek().getClosestContainerScope().getRootNode();
+    return scopes.peek().getClosestContainerScope();
   }
 
   public AbstractScope<?, ?> getClosestHoistScope() {
@@ -1009,6 +1050,7 @@ public class NodeTraversal {
   }
 
   /** Gets the control flow graph for the current JS scope. */
+  @SuppressWarnings("unchecked")  // The type is always ControlFlowGraph<Node>
   public ControlFlowGraph<Node> getControlFlowGraph() {
     ControlFlowGraph<Node> result;
     Object o = cfgs.peek();
@@ -1036,6 +1078,7 @@ public class NodeTraversal {
     }
   }
 
+  @SuppressWarnings("unchecked") // The type is always ControlFlowGraph<Node>
   private Node getCfgRoot() {
     Node result;
     Object o = cfgs.peek();

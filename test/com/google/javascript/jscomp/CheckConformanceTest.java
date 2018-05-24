@@ -32,7 +32,7 @@ import java.util.List;
  * Tests for {@link CheckConformance}.
  *
  */
-public final class CheckConformanceTest extends TypeICompilerTestCase {
+public final class CheckConformanceTest extends CompilerTestCase {
   private String configuration;
 
   private static final String EXTERNS =
@@ -75,12 +75,11 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
   @Override
   protected void setUp() throws Exception {
     super.setUp();
-    enableTranspile();
+    enableTypeCheck();
     enableClosurePass();
     enableClosurePassForExpected();
     enableRewriteClosureCode();
     setLanguage(LanguageMode.ECMASCRIPT_2015, LanguageMode.ECMASCRIPT5_STRICT);
-    enableClosurePass();
     configuration = DEFAULT_CONFORMANCE;
     ignoreWarnings(DiagnosticGroups.MISSING_PROPERTIES);
   }
@@ -162,9 +161,8 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
     testWarning(
         "function f() { new Object().callee }", CheckConformance.CONFORMANCE_POSSIBLE_VIOLATION);
 
-    // NTI warns since "callee" doesn't exist on *
     testWarning(
-        "/** @suppress {newCheckTypes} */ function f() { /** @type {*} */ var x; x.callee }",
+        "function f() { /** @type {*} */ var x; x.callee }",
         CheckConformance.CONFORMANCE_POSSIBLE_VIOLATION);
 
     testNoWarning("function f() {/** @const */ var x = {}; x.callee = 1; x.callee}");
@@ -289,12 +287,12 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
             "}");
 
     testNoWarning("/** @const */ var x = 0;");
-
-    // We @suppress {newCheckTypes} to suppress NTI uninferred const and global this warnings.
+    testNoWarning("/** @const */ var x = unknown;");
+    testNoWarning("const x = unknown;");
 
     testWarning(
         lines(
-            "/** @constructor @suppress {newCheckTypes} */",
+            "/** @constructor */",
             "function f() {",
             "  /** @const */ this.foo = unknown;",
             "}",
@@ -305,7 +303,7 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
         lines(
             "/** @constructor */",
             "function f() {}",
-            "/** @this {f} @suppress {newCheckTypes} */",
+            "/** @this {f} */",
             "var init_f = function() {",
             "  /** @const */ this.foo = unknown;",
             "};",
@@ -316,7 +314,6 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
         lines(
             "/** @constructor */",
             "function f() {}",
-            "/** @suppress {newCheckTypes} */",
             "var init_f = function() {",
             "  /** @const */ this.FOO = unknown;",
             "};",
@@ -327,7 +324,6 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
         lines(
             "/** @constructor */",
             "function f() {}",
-            "/** @suppress {newCheckTypes} */",
             "f.prototype.init_f = function() {",
             "  /** @const */ this.FOO = unknown;",
             "};",
@@ -353,7 +349,7 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
     // We only check @const nodes, not @final nodes.
     testNoWarning(
         lines(
-            "/** @constructor @suppress {newCheckTypes} */",
+            "/** @constructor */",
             "function f() {",
             "  /** @final */ this.foo = unknown;",
             "}",
@@ -583,7 +579,7 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
         "C.prototype.p;");
     String ddecl = lines(
         "/** @constructor @template T */ function D() {}",
-        "/** @suppress {newCheckTypes} @param {T} a */",
+        "/** @param {T} a */",
         "D.prototype.method = function(a) {",
         "  use(a.p);",
         "};");
@@ -647,6 +643,8 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
   }
 
   public void testBannedProperty_recordType() {
+    // TODO(b/76025401): remove the enableTranspile() call once we natively typecheck classes
+    enableTranspile();
     configuration = lines(
         "requirement: {",
         "  type: BANNED_PROPERTY",
@@ -1398,17 +1396,10 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
             "  a.gak();",
             "}");
 
-    this.mode = TypeInferenceMode.OTI_ONLY;
     testWarning(
         js,
         CheckConformance.CONFORMANCE_VIOLATION,
         "Violation: My rule message\nThe property \"gak\" on type \"I\"");
-
-    this.mode = TypeInferenceMode.NTI_ONLY;
-    testWarning(
-        js,
-        CheckConformance.CONFORMANCE_VIOLATION,
-        "Violation: My rule message\nThe property \"gak\" on type \"I{gak: TOP_FUNCTION}\"");
   }
 
   public void testCustomBanUnknownInterfaceProp2() {
@@ -1467,6 +1458,25 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
             + "     [x.y]: 2\n"
             + "  }\n"
             + "});");
+
+    // Test with let and const
+    testNoWarning(
+        lines(
+            "goog.scope(function() {",
+            "  let x = {y: 'y'}",
+            "  let z = {",
+            "     [x.y]: 2",
+            "  }",
+            "});"));
+
+    testNoWarning(
+        lines(
+            "goog.scope(function() {",
+            "  const x = {y: 'y'}",
+            "  const z = {",
+            "     [x.y]: 2",
+            "  }",
+            "});"));
   }
 
   public void testRequireFileoverviewVisibility() {
@@ -1501,6 +1511,22 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
         "var foo = function() {};");
   }
 
+  public void testBanGlobalVarsInEs6Module() {
+    // ES6 modules cannot be type checked yet
+    disableTypeCheck();
+    configuration =
+        lines(
+            "requirement: {",
+            "  type: CUSTOM",
+            "  java_class: 'com.google.javascript.jscomp.ConformanceRules$BanGlobalVars'",
+            "  error_message: 'BanGlobalVars Message'",
+            "}");
+
+    testNoWarning("export function foo() {}");
+    testNoWarning("var s; export {x}");
+    testNoWarning("export var s;");
+  }
+
   public void testCustomBanUnresolvedType() {
     configuration =
         "requirement: {\n"
@@ -1509,19 +1535,13 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
         + "  error_message: 'BanUnresolvedType Message'\n"
         + "}";
 
-    // NOTE(aravindpg): In NTI we annotate the node `a` with its inferred type instead of Unknown,
-    // and so this test doesn't recognize `a` as unresolved. Fixing this is undesirable.
-    // However, we do intend to add warnings for unfulfilled forward declares, which essentially
-    // addresses this use case.
-    this.mode = TypeInferenceMode.OTI_ONLY;
     testWarning(
         "goog.forwardDeclare('Foo'); /** @param {Foo} a */ function f(a) {a.foo()};",
         CheckConformance.CONFORMANCE_VIOLATION,
         "Violation: BanUnresolvedType Message\nReference to type 'Foo' never resolved.");
 
-    this.mode = TypeInferenceMode.BOTH;
     testNoWarning(lines(
-        "/** @suppress {newCheckTypes}",
+        "/**",
         " *  @param {!Object<string, ?>} data",
         " */",
         "function foo(data) {",
@@ -1537,9 +1557,6 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
         + "  error_message: 'StrictBanUnresolvedType Message'\n"
         + "}";
 
-    // NTI doesn't model unresolved types separately from unknown, so this check always results
-    // in conformance.
-    this.mode = TypeInferenceMode.OTI_ONLY;
     testWarning(
         "goog.forwardDeclare('Foo'); /** @param {Foo} a */ var f = function(a) {}",
         CheckConformance.CONFORMANCE_VIOLATION,
@@ -1604,7 +1621,7 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
 
     testWarning(
         externs,
-        "/** @param {string|null} n  @suppress {newCheckTypes} */"
+        "/** @param {string|null} n */"
         + "function f(n) { alert('prop' in n); }",
         CheckConformance.CONFORMANCE_VIOLATION,
         "Violation: My rule message");
@@ -1660,17 +1677,16 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
     configuration =
         config(rule("BanNullDeref"), "My rule message");
 
-    // Test doesn't run without warnings in NTI because of the way it handles typedefs.
     final String typedefExterns = lines(
         EXTERNS,
-        "/** @fileoverview @suppress {newCheckTypes} */",
+        "/** @fileoverview */",
         "/** @const */ var ns = {};",
         "/** @enum {number} */ ns.Type.State = {OPEN: 0};",
         "/** @typedef {{a:string}} */ ns.Type;",
         "");
 
     final String code = lines(
-        "/** @suppress {newCheckTypes} @return {void} n */",
+        "/** @return {void} n */",
         "function f() { alert(ns.Type.State.OPEN); }");
     testNoWarning(typedefExterns, code);
   }
@@ -1681,7 +1697,7 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
 
     testNoWarning(
         lines(
-            "/** @suppress {newCheckTypes} @param {*} x */",
+            "/** @param {*} x */",
             "function f(x) {",
             "  return x.toString();",
             "}"));
@@ -1706,6 +1722,8 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
   }
 
   public void testRequireUseStrictEs6Module() {
+    // TODO(b/76025401): remove the enableTranspile() call once we natively typecheck classes
+    enableTranspile();
     configuration = config(rule("RequireUseStrict"), "My rule message");
 
     testNoWarning(
@@ -1832,6 +1850,12 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
 
     testWarning(
         "goog.dom.createDom('iframe', x ? {'src': src} : 'class');",
+        CheckConformance.CONFORMANCE_POSSIBLE_VIOLATION,
+        "Possible violation: BanCreateDom Message");
+
+    // Give a possible violation message if there are computed properties.
+    testWarning(
+        "goog.dom.createDom('iframe', {['not_src']: src});",
         CheckConformance.CONFORMANCE_POSSIBLE_VIOLATION,
         "Possible violation: BanCreateDom Message");
 

@@ -22,7 +22,7 @@ import com.google.javascript.rhino.Node;
  * Checks that references to properties in strings, in Polymer elements, are counted as usages of
  * those properties.
  */
-public final class CheckUnusedPrivatePropertiesInPolymerElementTest extends TypeICompilerTestCase {
+public final class CheckUnusedPrivatePropertiesInPolymerElementTest extends CompilerTestCase {
 
   private static final String EXTERNS = lines(
       DEFAULT_EXTERNS,
@@ -37,6 +37,7 @@ public final class CheckUnusedPrivatePropertiesInPolymerElementTest extends Type
   @Override
   protected void setUp() throws Exception {
     super.setUp();
+    enableTypeCheck();
     enableGatherExternProperties();
     enableTranspile();
   }
@@ -58,7 +59,6 @@ public final class CheckUnusedPrivatePropertiesInPolymerElementTest extends Type
     options.setWarningLevel(DiagnosticGroups.ANALYZER_CHECKS, CheckLevel.WARNING);
     options.setWarningLevel(DiagnosticGroups.MISSING_PROPERTIES, CheckLevel.OFF);
     // Global this is used deliberately to refer to Window in these tests
-    options.setWarningLevel(new DiagnosticGroup(NewTypeInference.GLOBAL_THIS), CheckLevel.OFF);
     options.setPolymerVersion(1);
     return options;
   }

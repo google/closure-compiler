@@ -59,7 +59,7 @@ public class Es6RewriteModulesToCommonJsModules implements CompilerPass {
   public void process(Node externs, Node root) {
     for (Node script : root.children()) {
       if (Es6RewriteModules.isEs6ModuleRoot(script)) {
-        NodeTraversal.traverseEs6(compiler, script, new Rewriter(compiler, script));
+        NodeTraversal.traverse(compiler, script, new Rewriter(compiler, script));
       }
     }
   }

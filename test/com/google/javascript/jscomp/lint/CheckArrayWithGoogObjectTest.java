@@ -22,14 +22,14 @@ import com.google.javascript.jscomp.CheckLevel;
 import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerOptions;
 import com.google.javascript.jscomp.CompilerPass;
+import com.google.javascript.jscomp.CompilerTestCase;
 import com.google.javascript.jscomp.DiagnosticGroups;
-import com.google.javascript.jscomp.TypeICompilerTestCase;
 
 /**
  * Test case for {@link CheckArrayWithGoogObject}.
  *
  */
-public final class CheckArrayWithGoogObjectTest extends TypeICompilerTestCase {
+public final class CheckArrayWithGoogObjectTest extends CompilerTestCase {
 
   private static final String GOOG_OBJECT = lines(
       "var goog = {};",
@@ -52,6 +52,7 @@ public final class CheckArrayWithGoogObjectTest extends TypeICompilerTestCase {
   protected void setUp() throws Exception {
     super.setUp();
     enableTranspile();
+    enableTypeCheck();
   }
 
   public void testGoogObjectForEach1() {

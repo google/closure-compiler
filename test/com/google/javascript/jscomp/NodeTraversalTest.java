@@ -25,6 +25,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.NodeTraversal.AbstractNodeTypePruningCallback;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
+import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallbackInterface;
 import com.google.javascript.jscomp.NodeTraversal.ChangeScopeRootCallback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
@@ -106,19 +107,17 @@ public final class NodeTraversalTest extends TestCase {
 
   public void testUnexpectedException() {
 
-    NodeTraversal.Callback cb = new NodeTraversal.AbstractPostOrderCallback() {
-      @Override
-      public void visit(NodeTraversal t, Node n, Node parent) {
-        throw new RuntimeException(TEST_EXCEPTION);
-      }
-    };
+    AbstractPostOrderCallbackInterface cb =
+        (NodeTraversal t, Node n, Node parent) -> {
+          throw new RuntimeException(TEST_EXCEPTION);
+        };
 
     Compiler compiler = new Compiler();
 
     try {
       String code = "function foo() {}";
       Node tree = parse(compiler, code);
-      NodeTraversal.traverseEs6(compiler, tree, cb);
+      NodeTraversal.traversePostOrder(compiler, tree, cb);
       fail("Expected RuntimeException");
     } catch (RuntimeException e) {
       assertThat(e)
@@ -136,7 +135,7 @@ public final class NodeTraversalTest extends TestCase {
         "  var b",
         "}");
     Node tree = parse(compiler, code);
-    NodeTraversal.traverseEs6(
+    NodeTraversal.traverse(
         compiler,
         tree,
         new NodeTraversal.ScopedCallback() {
@@ -169,7 +168,7 @@ public final class NodeTraversalTest extends TestCase {
         "  if (true) { var XXX; }",
         "}");
     Node tree = parse(compiler, code);
-    NodeTraversal.traverseEs6(compiler, tree,
+    NodeTraversal.traverse(compiler, tree,
         new NodeTraversal.Callback() {
 
           @Override
@@ -252,7 +251,7 @@ public final class NodeTraversalTest extends TestCase {
     Node tree = parseRoots(compiler, externs, code);
 
     ChangeVerifier changeVerifier = new ChangeVerifier(compiler).snapshot(tree);
-    NodeTraversal.traverseRootsEs6(
+    NodeTraversal.traverseRoots(
         compiler, callback,  tree.getFirstChild(), tree.getSecondChild());
     changeVerifier.checkRecordedChanges(tree);
   }
@@ -268,7 +267,7 @@ public final class NodeTraversalTest extends TestCase {
         + "}";
     Node tree = parse(compiler, code);
     final StringBuilder builder = new StringBuilder();
-    NodeTraversal.traverseEs6(compiler, tree,
+    NodeTraversal.traverse(compiler, tree,
         new NodeTraversal.ScopedCallback() {
 
           @Override
@@ -580,14 +579,14 @@ public final class NodeTraversalTest extends TestCase {
     Node fooFunction = tree.getFirstChild();
 
     // Traverse without entering nested scopes.
-    NodeTraversal.traverseEs6ScopeRoots(
+    NodeTraversal.traverseScopeRoots(
         compiler, null, ImmutableList.of(fooFunction), callback, false);
     assertThat(callback.strings).containsExactly("string in foo");
 
     callback.strings.clear();
 
     // Traverse *with* entering nested scopes, now also sees "string nested in baz".
-    NodeTraversal.traverseEs6ScopeRoots(
+    NodeTraversal.traverseScopeRoots(
         compiler, null, ImmutableList.of(fooFunction), callback, true);
     assertThat(callback.strings).containsExactly("string in foo", "string nested in baz");
   }
@@ -613,7 +612,7 @@ public final class NodeTraversalTest extends TestCase {
     Node fooFunction = tree.getSecondChild().getFirstFirstChild();
 
     // Traverse without entering nested scopes.
-    NodeTraversal.traverseEs6ScopeRoots(
+    NodeTraversal.traverseScopeRoots(
         compiler, null, ImmutableList.of(fooFunction), callback, false);
     assertThat(callback.varNames)
         .containsExactly("varDefinedInScript", "foo", "bar", "varDefinedInFoo", "baz");
@@ -621,7 +620,7 @@ public final class NodeTraversalTest extends TestCase {
     callback.varNames.clear();
 
     // Traverse *with* entering nested scopes, now also sees "varDefinedInBaz".
-    NodeTraversal.traverseEs6ScopeRoots(
+    NodeTraversal.traverseScopeRoots(
         compiler, null, ImmutableList.of(fooFunction), callback, true);
     assertThat(callback.varNames)
         .containsExactly(
@@ -642,7 +641,7 @@ public final class NodeTraversalTest extends TestCase {
     Node barFunction = fooFunction.getNext();
     Node bazFunction = barFunction.getNext();
 
-    NodeTraversal.traverseEs6ScopeRoots(
+    NodeTraversal.traverseScopeRoots(
         compiler,
         null,
         ImmutableList.of(fooFunction, barFunction, bazFunction),
@@ -681,7 +680,7 @@ public final class NodeTraversalTest extends TestCase {
     Node tree = parse(compiler, code);
     Node fooFunction = tree.getFirstChild();
 
-    NodeTraversal.traverseEs6ScopeRoots(
+    NodeTraversal.traverseScopeRoots(
         compiler,
         null,
         ImmutableList.of(fooFunction),
@@ -696,22 +695,19 @@ public final class NodeTraversalTest extends TestCase {
     Node tree = parse(compiler, code);
 
     final AtomicInteger counter = new AtomicInteger(0);
-    NodeTraversal.Callback countingCallback =
-        new NodeTraversal.AbstractPostOrderCallback() {
-          @Override
-          public void visit(NodeTraversal t, Node n, Node parent) {
-            counter.incrementAndGet();
-          }
+    AbstractPostOrderCallbackInterface countingCallback =
+        (NodeTraversal t, Node n, Node parent) -> {
+          counter.incrementAndGet();
         };
 
-    NodeTraversal.traverseEs6(compiler, tree, countingCallback);
+    NodeTraversal.traversePostOrder(compiler, tree, countingCallback);
     assertThat(counter.get()).isEqualTo(3);
 
     counter.set(0);
     Thread.currentThread().interrupt();
 
     try {
-      NodeTraversal.traverseEs6(compiler, tree, countingCallback);
+      NodeTraversal.traversePostOrder(compiler, tree, countingCallback);
       fail("Expected a RuntimeException;");
     } catch (RuntimeException e) {
       assertThat(e).hasCauseThat().hasCauseThat().isInstanceOf(InterruptedException.class);

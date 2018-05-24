@@ -17,16 +17,18 @@ package com.google.javascript.jscomp.graph;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.collect.Iterators.filter;
+import static com.google.common.collect.Multimaps.asMap;
 
 import com.google.common.annotations.GwtCompatible;
 import com.google.common.base.Objects;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.MultimapBuilder;
+import com.google.common.collect.SetMultimap;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import java.io.Serializable;
 import java.util.AbstractSet;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -119,17 +121,15 @@ public class StandardUnionFind<E> implements Serializable, UnionFind<E> {
   }
 
   @Override
-  public Collection<Set<E>> allEquivalenceClasses() {
-    Map<Node<E>, ImmutableSet.Builder<E>> groupsTmp = new LinkedHashMap<>();
+  public ImmutableList<ImmutableSet<E>> allEquivalenceClasses() {
+    SetMultimap<Node<E>, E> groupsTmp =
+        MultimapBuilder.linkedHashKeys().linkedHashSetValues().build();
     for (Node<E> elem : elmap.values()) {
-      Node<E> root = findRoot(elem);
-      ImmutableSet.Builder<E> builder =
-          groupsTmp.computeIfAbsent(root, (Node<E> k) -> ImmutableSet.builder());
-      builder.add(elem.element);
+      groupsTmp.put(findRoot(elem), elem.element);
     }
-    ImmutableList.Builder<Set<E>> result = ImmutableList.builder();
-    for (ImmutableSet.Builder<E> group : groupsTmp.values()) {
-      result.add(group.build());
+    ImmutableList.Builder<ImmutableSet<E>> result = ImmutableList.builder();
+    for (Set<E> group : asMap(groupsTmp).values()) {
+      result.add(ImmutableSet.copyOf(group));
     }
     return result.build();
   }

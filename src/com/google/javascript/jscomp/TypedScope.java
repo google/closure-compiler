@@ -21,31 +21,27 @@ import static com.google.common.base.Preconditions.checkState;
 import com.google.common.collect.Iterables;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.TypeIEnv;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.StaticTypedScope;
 import com.google.javascript.rhino.jstype.StaticTypedSlot;
 
 /**
- * TypedScope contains information about variables and their types.
- * Scopes can be nested, a scope points back to its parent scope.
- * <p>
- * TypedScope is also used as a lattice element for flow-sensitive type inference.
- * As a lattice element, a scope is viewed as a map from names to types. A name
- * not in the map is considered to have the bottom type. The join of two maps m1
- * and m2 is the map of the union of names with {@link JSType#getLeastSupertype}
- * to meet the m1 type and m2 type.
+ * TypedScope contains information about variables and their types. Scopes can be nested, a scope
+ * points back to its parent scope.
+ *
+ * <p>TypedScope is also used as a lattice element for flow-sensitive type inference. As a lattice
+ * element, a scope is viewed as a map from names to types. A name not in the map is considered to
+ * have the bottom type. The join of two maps m1 and m2 is the map of the union of names with {@link
+ * JSType#getLeastSupertype} to meet the m1 type and m2 type.
  *
  * @see NodeTraversal
  * @see DataFlowAnalysis
- *
- * Several methods in this class, such as {@code isBlockScope} throw an exception when called.
- * The reason for this is that we want to shadow methods from the parent class, to avoid calling
- * them accidentally.
+ *     <p>Several methods in this class, such as {@code isBlockScope} throw an exception when
+ *     called. The reason for this is that we want to shadow methods from the parent class, to avoid
+ *     calling them accidentally.
  */
-public class TypedScope extends AbstractScope<TypedScope, TypedVar>
-    implements StaticTypedScope<JSType>, TypeIEnv<JSType> {
+public class TypedScope extends AbstractScope<TypedScope, TypedVar> implements StaticTypedScope {
 
   private final TypedScope parent;
   private final int depth;
@@ -111,19 +107,19 @@ public class TypedScope extends AbstractScope<TypedScope, TypedVar>
    */
   @Override
   public JSType getTypeOfThis() {
+    Node root = getRootNode();
     if (isGlobal()) {
-      return ObjectType.cast(getRootNode().getJSType());
-    } else if (!getRootNode().isFunction()) {
-      return getClosestContainerScope().getTypeOfThis();
-    }
-
-    checkState(getRootNode().isFunction());
-    JSType nodeType = getRootNode().getJSType();
-    if (nodeType != null && nodeType.isFunctionType()) {
-      return nodeType.toMaybeFunctionType().getTypeOfThis();
+      return ObjectType.cast(root.getJSType());
+    } else if (NodeUtil.isVanillaFunction(root)) {
+      JSType nodeType = root.getJSType();
+      if (nodeType != null && nodeType.isFunctionType()) {
+        return nodeType.toMaybeFunctionType().getTypeOfThis();
+      } else {
+        // Executed when the current scope has not been typechecked.
+        return null;
+      }
     } else {
-      // Executed when the current scope has not been typechecked.
-      return null;
+      return getParent().getTypeOfThis();
     }
   }
 
@@ -163,15 +159,25 @@ public class TypedScope extends AbstractScope<TypedScope, TypedVar>
     return getTypeOfThis();
   }
 
+  /**
+   * Returns the variables in this scope that have been declared with 'var' and not declared with a
+   * known type. These variables can safely be set to undefined (rather than unknown) at the start
+   * of type inference, and will be reset to the correct type when analyzing the first assignment to
+   * them. Parameters and externs are excluded because they are not initialized in the function
+   * body, and lexically-bound variables (let and const) are excluded because they are initialized
+   * when inferring the LET/CONST node, which is guaranteed to occur before any use, since they are
+   * not hoisted.
+   */
   public Iterable<TypedVar> getDeclarativelyUnboundVarsWithoutTypes() {
-    return Iterables.filter(
-        getVarIterable(),
-        var ->
-            // declaratively unbound vars without types
-            var.getParentNode() != null
-                && var.getType() == null
-                && var.getParentNode().isVar()
-                && !var.isExtern());
+    return Iterables.filter(getVarIterable(), this::isDeclarativelyUnboundVarWithoutType);
+  }
+
+  private boolean isDeclarativelyUnboundVarWithoutType(TypedVar var) {
+    return var.getParentNode() != null
+        && var.getType() == null
+        // TODO(bradfordcsmith): update this for destructuring
+        && var.getParentNode().isVar()  // NOTE: explicitly excludes let/const
+        && !var.isExtern();
   }
 
   static interface TypeResolver {
@@ -192,15 +198,13 @@ public class TypedScope extends AbstractScope<TypedScope, TypedVar>
     this.typeResolver = resolver;
   }
 
-  @Override
   public JSType getNamespaceOrTypedefType(String typeName) {
-    StaticTypedSlot<JSType> slot = getSlot(typeName);
+    StaticTypedSlot slot = getSlot(typeName);
     return slot == null ? null : slot.getType();
   }
 
-  @Override
   public JSDocInfo getJsdocOfTypeDeclaration(String typeName) {
-    StaticTypedSlot<JSType> slot = getSlot(typeName);
+    StaticTypedSlot slot = getSlot(typeName);
     return slot == null ? null : slot.getJSDocInfo();
   }
 }

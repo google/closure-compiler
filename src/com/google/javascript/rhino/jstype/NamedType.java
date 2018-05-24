@@ -81,7 +81,7 @@ import javax.annotation.Nullable;
  * much that has to be changed.<p>
  *
  */
-public class NamedType extends ProxyObjectType {
+public final class NamedType extends ProxyObjectType {
   private static final long serialVersionUID = 1L;
 
   private final String reference;
@@ -106,24 +106,11 @@ public class NamedType extends ProxyObjectType {
    */
   @Nullable private final ImmutableList<JSType> templateTypes;
 
-  // TODO(b/74253232): remove this overload
-  NamedType(JSTypeRegistry registry, String reference, String sourceName, int lineno, int charno) {
-    this(null, registry, reference, sourceName, lineno, charno, null);
-  }
+  @Nullable private StaticTypedScope resolutionScope;
 
-  // TODO(b/74253232): remove this overload
+  /** Create a named type based on the reference. */
   NamedType(
-      JSTypeRegistry registry,
-      String reference,
-      String sourceName,
-      int lineno,
-      int charno,
-      ImmutableList<JSType> templateTypes) {
-    this(null, registry, reference, sourceName, lineno, charno, templateTypes);
-  }
-
-  NamedType(
-      StaticTypedScope<JSType> scope,
+      StaticTypedScope scope,
       JSTypeRegistry registry,
       String reference,
       String sourceName,
@@ -133,7 +120,7 @@ public class NamedType extends ProxyObjectType {
   }
 
   NamedType(
-      StaticTypedScope<JSType> scope,
+      StaticTypedScope scope,
       JSTypeRegistry registry,
       String reference,
       String sourceName,
@@ -141,10 +128,8 @@ public class NamedType extends ProxyObjectType {
       int charno,
       ImmutableList<JSType> templateTypes) {
     super(registry, registry.getNativeObjectType(JSTypeNative.UNKNOWN_TYPE));
-
     checkNotNull(reference);
-    // TODO(b/74253232): enable this
-    // this.resolutionScope = scope;
+    this.resolutionScope = scope;
     this.reference = reference;
     this.sourceName = sourceName;
     this.lineno = lineno;
@@ -227,7 +212,8 @@ public class NamedType extends ProxyObjectType {
    * Resolve the referenced type within the enclosing scope.
    */
   @Override
-  JSType resolveInternal(ErrorReporter reporter, StaticTypedScope<JSType> enclosing) {
+  JSType resolveInternal(ErrorReporter reporter) {
+
     // TODO(user): Investigate whether it is really necessary to keep two
     // different mechanisms for resolving named types, and if so, which order
     // makes more sense. Now, resolution via registry is first in order to
@@ -238,22 +224,24 @@ public class NamedType extends ProxyObjectType {
     }
 
     if (resolved) {
-      super.resolveInternal(reporter, enclosing);
+      super.resolveInternal(reporter);
       finishPropertyContinuations();
-      return getReferencedType();
+    } else {
+
+      resolveViaProperties(reporter);
+      if (detectInheritanceCycle()) {
+        handleTypeCycle(reporter);
+      }
+
+      super.resolveInternal(reporter);
+      if (isResolved()) {
+        finishPropertyContinuations();
+      }
     }
 
-    resolveViaProperties(reporter, enclosing);
-    if (detectInheritanceCycle()) {
-      handleTypeCycle(reporter);
-    }
-
-    super.resolveInternal(reporter, enclosing);
-    if (isResolved()) {
-      finishPropertyContinuations();
-    }
-
-    return getReferencedType();
+    JSType result = getReferencedType();
+    resolutionScope = null;
+    return result;
   }
 
   /**
@@ -261,7 +249,7 @@ public class NamedType extends ProxyObjectType {
    * @return True if we resolved successfully.
    */
   private boolean resolveViaRegistry(ErrorReporter reporter) {
-    JSType type = registry.getType(reference);
+    JSType type = registry.getType(resolutionScope, reference);
     if (type != null) {
       setReferencedAndResolvedType(type, reporter);
       return true;
@@ -273,8 +261,8 @@ public class NamedType extends ProxyObjectType {
    * Resolves a named type by looking up its first component in the scope, and subsequent components
    * as properties. The scope must have been fully parsed and a symbol table constructed.
    */
-  private void resolveViaProperties(ErrorReporter reporter, StaticTypedScope<JSType> enclosing) {
-    JSType value = lookupViaProperties(reporter, enclosing);
+  private void resolveViaProperties(ErrorReporter reporter) {
+    JSType value = lookupViaProperties(reporter);
     // last component of the chain
     if (value != null && value.isFunctionType() &&
         (value.isConstructor() || value.isInterface())) {
@@ -304,13 +292,12 @@ public class NamedType extends ProxyObjectType {
    * parsed and a symbol table constructed.
    * @return The type of the symbol, or null if the type could not be found.
    */
-  private JSType lookupViaProperties(ErrorReporter reporter,
-      StaticTypedScope<JSType> enclosing) {
+  private JSType lookupViaProperties(ErrorReporter reporter) {
     String[] componentNames = reference.split("\\.", -1);
     if (componentNames[0].length() == 0) {
       return null;
     }
-    StaticTypedSlot<JSType> slot = enclosing.getSlot(componentNames[0]);
+    StaticTypedSlot slot = resolutionScope.getSlot(componentNames[0]);
     if (slot == null) {
       return null;
     }
@@ -392,7 +379,7 @@ public class NamedType extends ProxyObjectType {
     setResolvedTypeInternal(getReferencedType());
   }
 
-  private JSType getTypedefType(ErrorReporter reporter, StaticTypedSlot<JSType> slot) {
+  private JSType getTypedefType(ErrorReporter reporter, StaticTypedSlot slot) {
     JSType type = slot.getType();
     if (type != null) {
       return type;

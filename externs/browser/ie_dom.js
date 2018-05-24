@@ -800,6 +800,7 @@ Document.prototype.loadXML;
 // http://msdn.microsoft.com/en-us/library/ms531073(VS.85).aspx
 
 /**
+ * @type {!Element}
  * @see http://msdn.microsoft.com/en-us/library/ms533065(VS.85).aspx
  */
 Document.prototype.activeElement;

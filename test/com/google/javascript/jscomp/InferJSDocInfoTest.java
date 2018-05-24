@@ -16,10 +16,15 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 import static com.google.javascript.jscomp.parsing.Config.JsDocParsing.INCLUDE_DESCRIPTIONS_NO_WHITESPACE;
 
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
+import com.google.javascript.rhino.JSDocInfo;
+import com.google.javascript.rhino.JSDocInfo.Visibility;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
@@ -51,6 +56,8 @@ public final class InferJSDocInfoTest extends CompilerTestCase {
   protected CompilerOptions getOptions() {
     CompilerOptions options = super.getOptions();
     options.setParseJsDocDocumentation(INCLUDE_DESCRIPTIONS_NO_WHITESPACE);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_NEXT);
     return options;
   }
 
@@ -132,14 +139,31 @@ public final class InferJSDocInfoTest extends CompilerTestCase {
   }
 
   public void testInterface() {
+    testInterface("var");
+    testInterface("let");
+    testInterface("const");
+  }
+
+  private void testInterface(String varOrLetOrConst) {
     testSame(
-        "/** An interface. \n * @interface */ function Foo() {}" +
-        "var f = new Foo();" +
-        "/** @type {number} */ f.bar = 4;");
-    ObjectType type = (ObjectType) globalScope.getVar("Foo").getType();
-    assertEquals(
-        "An interface.",
-        type.getJSDocInfo().getBlockDescription());
+        lines(
+            "/**", // preserve newlines
+            " * An interface.",
+            " * @interface",
+            " */",
+            varOrLetOrConst + " Foo = function Foo() {}",
+            ""));
+    assertThat(getGlobalVarTypeJSDocInfoBlockDescription("Foo")).isEqualTo("An interface.");
+  }
+
+  private String getGlobalVarTypeJSDocInfoBlockDescription(String varName) {
+    TypedVar var = globalScope.getVar(varName);
+    assertWithMessage("%s is not defined", varName).that(var).isNotNull();
+    ObjectType type = (ObjectType) var.getType();
+    assertWithMessage("%s has no type", varName).that(type).isNotNull();
+    JSDocInfo jsDocInfo = type.getJSDocInfo();
+    assertWithMessage("%s type has no JSDocInfo", varName).that(jsDocInfo).isNotNull();
+    return jsDocInfo.getBlockDescription();
   }
 
   public void testNamespacedCtor() {
@@ -191,6 +215,30 @@ public final class InferJSDocInfoTest extends CompilerTestCase {
     assertEquals(
         "Block description.",
         proto.getOwnPropertyJSDocInfo("bar").getBlockDescription());
+  }
+
+  public void testPrototypeObjectLiteral() {
+    testSame(
+        lines(
+            "/** @constructor */ function Foo() {}",
+            "Foo.prototype = {",
+            "  /** @protected */ a: function() {},",
+            "  /** @protected */ get b() {},",
+            "  /** @protected */ set c(x) {},",
+            "  /** @protected */ d() {}",
+            "};"));
+
+    FunctionType ctor = findGlobalNameType("Foo").toMaybeFunctionType();
+    ObjectType prototype = ctor.getInstanceType().getImplicitPrototype();
+
+    assertThat(prototype.getOwnPropertyJSDocInfo("a").getVisibility())
+        .isEqualTo(Visibility.PROTECTED);
+    assertThat(prototype.getOwnPropertyJSDocInfo("b").getVisibility())
+        .isEqualTo(Visibility.PROTECTED);
+    assertThat(prototype.getOwnPropertyJSDocInfo("c").getVisibility())
+        .isEqualTo(Visibility.PROTECTED);
+    assertThat(prototype.getOwnPropertyJSDocInfo("d").getVisibility())
+        .isEqualTo(Visibility.PROTECTED);
   }
 
   private JSType findGlobalNameType(String name) {

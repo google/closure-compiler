@@ -111,8 +111,7 @@ public final class JSError implements Serializable {
    * @param arguments Arguments to be incorporated into the message
    */
   public static JSError make(Node n, DiagnosticType type, String... arguments) {
-    // TODO(tbreisacher): Get rid of this null check once all tests pass without it.
-    return new JSError(n == null ? null : n.getSourceFileName(), n, type, arguments);
+    return new JSError(n.getSourceFileName(), n, type, arguments);
   }
 
   public static JSError make(Node n, CheckLevel level, DiagnosticType type, String... arguments) {

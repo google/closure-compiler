@@ -54,7 +54,7 @@ import javax.annotation.Nullable;
  *
  * @author nicksantos@google.com (Nick Santos)
  */
-public class NoResolvedType extends NoType {
+public final class NoResolvedType extends NoType {
   private static final long serialVersionUID = 1L;
   /** The name originally used to reference this type, or {@code null} if none. */
   @Nullable private String referenceName;
@@ -94,11 +94,6 @@ public class NoResolvedType extends NoType {
 
   @Override
   public boolean isNoType() {
-    return false;
-  }
-
-  @Override
-  public boolean isConstructor() {
     return false;
   }
 

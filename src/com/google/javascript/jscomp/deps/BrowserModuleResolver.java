@@ -21,6 +21,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.CheckLevel;
 import com.google.javascript.jscomp.ErrorHandler;
 import com.google.javascript.jscomp.JSError;
+import com.google.javascript.jscomp.deps.ModuleLoader.ModuleResolverFactory;
 import javax.annotation.Nullable;
 
 /**
@@ -29,6 +30,8 @@ import javax.annotation.Nullable;
  * <p>Only unambiguous paths are supported. Paths must specify a file extension.
  */
 public class BrowserModuleResolver extends ModuleResolver {
+
+  public static final ModuleResolverFactory FACTORY = BrowserModuleResolver::new;
 
   public BrowserModuleResolver(
       ImmutableSet<String> modulePaths,
@@ -51,7 +54,7 @@ public class BrowserModuleResolver extends ModuleResolver {
               colno,
               ModuleLoader.INVALID_MODULE_PATH,
               moduleAddress,
-              "BROWSER"));
+              ModuleLoader.ResolutionMode.BROWSER.toString()));
       return null;
     }
 

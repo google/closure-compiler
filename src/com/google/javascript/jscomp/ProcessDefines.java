@@ -27,8 +27,8 @@ import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.TypeI;
-import com.google.javascript.rhino.TypeIRegistry;
+import com.google.javascript.rhino.jstype.JSType;
+import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import java.text.MessageFormat;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -166,8 +166,8 @@ class ProcessDefines implements CompilerPass {
    * Only defines of literal number, string, or boolean are supported.
    */
   private boolean isValidDefineType(JSTypeExpression expression) {
-    TypeIRegistry registry = compiler.getTypeIRegistry();
-    TypeI type = registry.evaluateTypeExpressionInGlobalScope(expression);
+    JSTypeRegistry registry = compiler.getTypeRegistry();
+    JSType type = registry.evaluateTypeExpressionInGlobalScope(expression);
     return !type.isUnknownType()
         && type.isSubtypeOf(registry.getNativeType(NUMBER_STRING_BOOLEAN));
   }
@@ -206,8 +206,7 @@ class ProcessDefines implements CompilerPass {
           Node n = ref.node;
           Node parent = ref.node.getParent();
           JSDocInfo info = n.getJSDocInfo();
-          if (info == null &&
-              parent.isVar() && parent.hasOneChild()) {
+          if (info == null && parent.isVar() && parent.hasOneChild()) {
             info = parent.getJSDocInfo();
           }
 
@@ -220,7 +219,7 @@ class ProcessDefines implements CompilerPass {
     }
 
     CollectDefines pass = new CollectDefines(compiler, allDefines);
-    NodeTraversal.traverseRootsEs6(compiler, pass, externs, root);
+    NodeTraversal.traverseRoots(compiler, pass, externs, root);
     return pass.getAllDefines();
   }
 
@@ -305,12 +304,11 @@ class ProcessDefines implements CompilerPass {
           case SET_FROM_LOCAL:
             Node valParent = getValueParent(ref);
             Node val = valParent.getLastChild();
-            if (valParent.isAssign() && name.isSimpleName() &&
-                name.getDeclaration() == ref) {
+            if (valParent.isAssign() && name.isSimpleName() && name.getDeclaration() == ref) {
               // For defines, it's an error if a simple name is assigned
               // before it's declared
-              compiler.report(
-                  t.makeError(val, INVALID_DEFINE_INIT_ERROR, fullName));
+              Node errNode = val == null ? valParent : val;
+              compiler.report(t.makeError(errNode, INVALID_DEFINE_INIT_ERROR, fullName));
             } else if (processDefineAssignment(t, fullName, val, valParent)) {
               // remove the assignment so that the variable is still declared,
               // but no longer assigned to a value, e.g.,
@@ -337,8 +335,7 @@ class ProcessDefines implements CompilerPass {
         }
       }
 
-      if (!t.inGlobalScope() &&
-          n.getJSDocInfo() != null && n.getJSDocInfo().isDefine()) {
+      if (!t.inGlobalScope() && n.getJSDocInfo() != null && n.getJSDocInfo().isDefine()) {
         // warn about @define annotations in local scopes
         compiler.report(
             t.makeError(n, NON_GLOBAL_DEFINE_INIT_ERROR, ""));
@@ -430,8 +427,8 @@ class ProcessDefines implements CompilerPass {
       boolean fromExterns = valueParent.isFromExterns();
       if (!fromExterns
           && (value == null || !NodeUtil.isValidDefineValue(value, allDefines.keySet()))) {
-        compiler.report(
-            t.makeError(value, INVALID_DEFINE_INIT_ERROR, name));
+        Node errNode = value == null ? valueParent : value;
+        compiler.report(t.makeError(errNode, INVALID_DEFINE_INIT_ERROR, name));
       } else if (!isAssignAllowed()) {
         compiler.report(
             t.makeError(valueParent, NON_GLOBAL_DEFINE_INIT_ERROR, name));
@@ -466,9 +463,10 @@ class ProcessDefines implements CompilerPass {
      */
     private static Node getValueParent(Ref ref) {
       // there are two types of declarations: VARs, ASSIGNs, and CONSTs
-      return ref.node.getParent() != null &&
-          (ref.node.getParent().isVar() || ref.node.getParent().isConst())
-          ? ref.node : ref.node.getParent();
+      return ref.node.getParent() != null
+              && (ref.node.getParent().isVar() || ref.node.getParent().isConst())
+          ? ref.node
+          : ref.node.getParent();
     }
 
     /**

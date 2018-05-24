@@ -82,7 +82,7 @@ public final class DiagnosticGroup implements Serializable {
 
   /** Create a diagnostic group that matches only the given type. */
   public static synchronized DiagnosticGroup forType(DiagnosticType type) {
-    singletons.computeIfAbsent(type, (DiagnosticType k) -> new DiagnosticGroup(k));
+    singletons.computeIfAbsent(type, DiagnosticGroup::new);
     return singletons.get(type);
   }
 

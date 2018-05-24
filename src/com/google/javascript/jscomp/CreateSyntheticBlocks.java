@@ -75,7 +75,7 @@ class CreateSyntheticBlocks extends AbstractPostOrderCallback implements Compile
   @Override
   public void process(Node externs, Node root) {
     // Find and validate the markers.
-    NodeTraversal.traverseEs6(compiler, root, this);
+    NodeTraversal.traverse(compiler, root, this);
 
     // Complain about any unmatched markers.
     for (Node node : markerStack) {

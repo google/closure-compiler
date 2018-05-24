@@ -23,14 +23,13 @@ import static com.google.common.truth.Truth.assertWithMessage;
 import static com.google.javascript.jscomp.CompilerTestCase.lines;
 import static com.google.javascript.jscomp.testing.NodeSubject.assertNode;
 
-import com.google.javascript.jscomp.AbstractCompiler.MostRecentTypechecker;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.ExpressionDecomposer.DecompositionType;
 import com.google.javascript.jscomp.type.SemanticReverseAbstractInterpreter;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-import com.google.javascript.rhino.TypeI;
+import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import java.util.HashSet;
 import java.util.Set;
@@ -281,6 +280,22 @@ public final class ExpressionDecomposerTest extends TestCase {
         DecompositionType.UNDECOMPOSABLE, "(function ({[foo()]: x}) {})()", "foo");
   }
 
+  public void testCanExposeExpression12() {
+    // Test destructuring rhs is evaluated before the lhs
+    shouldTestTypes = false;
+    helperCanExposeExpression(DecompositionType.MOVABLE, "const {a, b = goo()} = foo();", "foo");
+
+    helperCanExposeExpression(DecompositionType.MOVABLE, "const [a, b = goo()] = foo();", "foo");
+
+    helperCanExposeExpression(DecompositionType.MOVABLE, "({a, b = goo()} = foo());", "foo");
+
+    // TODO(b/73902507): We probably want to treat this as UNDECOMPOSABLE, since it's a lot of work
+    // to handle default values correctly. See also testMoveExpression15.
+    helperCanExposeExpression(DecompositionType.DECOMPOSABLE,
+        "[{ [foo()]: a } = goo()] = arr;",
+        "foo");
+  }
+
   public void testMoveExpression1() {
     // There isn't a reason to do this, but it works.
     helperMoveExpression("foo()", "foo", "var result$jscomp$0 = foo(); result$jscomp$0;");
@@ -363,6 +378,35 @@ public final class ExpressionDecomposerTest extends TestCase {
         "x = foo() ? 0 : 1",
         "foo",
         "var result$jscomp$0 = foo(); x = result$jscomp$0 ? 0 : 1");
+  }
+
+  public void testMoveExpression13() {
+    shouldTestTypes = false;
+    helperMoveExpression(
+        "const {a, b} = foo();",
+        "foo",
+        "var result$jscomp$0 = foo(); const {a, b} = result$jscomp$0;");
+  }
+
+  public void testMoveExpression14() {
+    shouldTestTypes = false;
+    helperMoveExpression(
+        "({a, b} = foo());",
+        "foo",
+        "var result$jscomp$0 = foo(); ({a, b} = result$jscomp$0);");
+  }
+
+  public void testMoveExpression15() {
+    // TODO(b/73902507): fix this test. we can't just unilaterally call foo() before the
+    // the destructuring, since foo() is conditionally evaluated.
+    // We could do something like what happens in transpilation to correctly decompose this
+    // expression. However, that would be a lot of work for probably little gain, and we
+    // should just treat foo() as undecomposable for now.
+    shouldTestTypes = false;
+    helperMoveExpression(
+        "const [a = foo()] = arr;",
+        "foo",
+        "var result$jscomp$0 = foo(); const [a = result$jscomp$0] = arr;");
   }
 
   /* Decomposition tests. */
@@ -535,7 +579,6 @@ public final class ExpressionDecomposerTest extends TestCase {
             "}",
             "const {a, b, c} = temp$jscomp$0;"));
   }
-
   public void testMoveClass1() {
     shouldTestTypes = false;
     helperMoveExpression(
@@ -955,8 +998,8 @@ public final class ExpressionDecomposerTest extends TestCase {
   }
 
   private void checkTypeStringsEqualAsTree(Node rootExpected, Node rootActual) {
-    TypeI expectedType = rootExpected.getTypeI();
-    TypeI actualType = rootActual.getTypeI();
+    JSType expectedType = rootExpected.getJSType();
+    JSType actualType = rootActual.getJSType();
 
     if (expectedType == null || actualType == null) {
       assertEquals("Expected " + rootExpected + " but got " + rootActual, expectedType, actualType);
@@ -967,8 +1010,8 @@ public final class ExpressionDecomposerTest extends TestCase {
       // type inference, so we just compare the strings.
       assertEquals(
           "Expected " + rootExpected + " but got " + rootActual,
-          expectedType.toAnnotationString(TypeI.Nullability.EXPLICIT),
-          actualType.toAnnotationString(TypeI.Nullability.EXPLICIT));
+          expectedType.toAnnotationString(JSType.Nullability.EXPLICIT),
+          actualType.toAnnotationString(JSType.Nullability.EXPLICIT));
     }
 
     Node child1 = rootExpected.getFirstChild();
@@ -992,7 +1035,7 @@ public final class ExpressionDecomposerTest extends TestCase {
 
   private void processForTypecheck(AbstractCompiler compiler, Node jsRoot) {
     Node scriptRoot = IR.root(jsRoot);
-    compiler.setMostRecentTypechecker(MostRecentTypechecker.OTI);
+    compiler.setTypeCheckingHasRun(true);
     JSTypeRegistry registry = compiler.getTypeRegistry();
     (new TypeCheck(compiler, new SemanticReverseAbstractInterpreter(registry), registry))
         .processForTesting(null, scriptRoot.getFirstChild());

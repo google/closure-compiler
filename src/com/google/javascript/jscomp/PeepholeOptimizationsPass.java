@@ -64,7 +64,7 @@ class PeepholeOptimizationsPass implements CompilerPass {
     for (List<Node> changedScopeNodes = compiler.getChangedScopeNodesForPass(passName);
         changedScopeNodes == null || !changedScopeNodes.isEmpty();
         changedScopeNodes = compiler.getChangedScopeNodesForPass(passName)) {
-      NodeTraversal.traverseEs6ScopeRoots(
+      NodeTraversal.traverseScopeRoots(
           compiler, root, changedScopeNodes, new PeepCallback(), false);
 
       // Cancel the fixed point if requested.

@@ -148,7 +148,7 @@ class ScopedAliases implements HotSwapCompilerPass {
   @Override
   public void hotSwapScript(Node root, Node originalRoot) {
     Traversal traversal = new Traversal();
-    NodeTraversal.traverseEs6(compiler, root, traversal);
+    NodeTraversal.traverse(compiler, root, traversal);
 
     if (!traversal.hasErrors()) {
       // Apply the aliases.
@@ -635,7 +635,7 @@ class ScopedAliases implements HotSwapCompilerPass {
           renamer.addDeclaredName(s, false);
         }
         MakeDeclaredNamesUnique uniquifier = new MakeDeclaredNamesUnique(renamer);
-        NodeTraversal.traverseEs6ScopeRoots(
+        NodeTraversal.traverseScopeRoots(
             compiler, null, ImmutableList.of(t.getScopeRoot()), uniquifier, true);
       }
     }

@@ -25,8 +25,8 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-import com.google.javascript.rhino.TypeI;
-import com.google.javascript.rhino.TypeIRegistry;
+import com.google.javascript.rhino.jstype.JSType;
+import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import java.util.List;
 
 /**
@@ -50,7 +50,7 @@ public final class ImplicitNullabilityCheck extends AbstractPostOrderCallback
 
   @Override
   public void process(Node externs, Node root) {
-    NodeTraversal.traverseRootsEs6(compiler, this, externs, root);
+    NodeTraversal.traverseRoots(compiler, this, externs, root);
   }
 
   /**
@@ -63,7 +63,7 @@ public final class ImplicitNullabilityCheck extends AbstractPostOrderCallback
     if (info == null) {
       return;
     }
-    final TypeIRegistry registry = compiler.getTypeIRegistry();
+    final JSTypeRegistry registry = compiler.getTypeRegistry();
 
     final List<Node> thrownTypes =
         transform(
@@ -118,7 +118,7 @@ public final class ImplicitNullabilityCheck extends AbstractPostOrderCallback
               if (typeName.equals("null") || registry.getType(scope, typeName) == null) {
                 return;
               }
-              TypeI type = registry.createTypeFromCommentNode(node);
+              JSType type = registry.createTypeFromCommentNode(node);
               if (type.isNullable()) {
                 reportWarning(t, node, typeName);
               }

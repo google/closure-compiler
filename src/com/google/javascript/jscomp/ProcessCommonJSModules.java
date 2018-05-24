@@ -71,7 +71,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
 
   @Override
   public void process(Node externs, Node root) {
-    NodeTraversal.traverseEs6(compiler, root, this);
+    NodeTraversal.traverse(compiler, root, this);
   }
 
   @Override
@@ -84,7 +84,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
       }
 
       FindImportsAndExports finder = new FindImportsAndExports();
-      NodeTraversal.traverseEs6(compiler, n, finder);
+      NodeTraversal.traverse(compiler, n, finder);
 
       CompilerInput.ModuleType moduleType = compiler.getInput(n.getInputId()).getJsModuleType();
 
@@ -109,7 +109,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
 
           if (needsRetraverse) {
             finder = new FindImportsAndExports();
-            NodeTraversal.traverseEs6(compiler, n, finder);
+            NodeTraversal.traverse(compiler, n, finder);
           }
         }
 
@@ -128,10 +128,10 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
         }
       } else if (needsRetraverse) {
         finder = new FindImportsAndExports();
-        NodeTraversal.traverseEs6(compiler, n, finder);
+        NodeTraversal.traverse(compiler, n, finder);
       }
 
-      NodeTraversal.traverseEs6(
+      NodeTraversal.traverse(
           compiler,
           n,
           new RewriteModule(
@@ -1199,7 +1199,9 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
           {
             // If this is a name declaration with multiple names, it will be split apart when
             // the parent is visited and then revisit the children.
-            if (NodeUtil.isNameDeclaration(n.getParent()) && n.getParent().hasMoreThanOneChild()) {
+            if (NodeUtil.isNameDeclaration(n.getParent())
+                && n.getParent().hasMoreThanOneChild()
+                && !NodeUtil.isAnyFor(n.getGrandparent())) {
               break;
             }
 
@@ -1694,7 +1696,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
         case LET:
         case CONST:
           // Multiple declaration - needs split apart.
-          if (parent.getChildCount() > 1) {
+          if (parent.hasMoreThanOneChild() && !NodeUtil.isAnyFor(parent.getParent())) {
             splitMultipleDeclarations(parent);
             parent = nameRef.getParent();
             newNameDeclaration = t.getScope().getVar(newName);

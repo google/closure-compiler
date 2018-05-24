@@ -32,10 +32,14 @@ import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping;
 import com.google.javascript.jscomp.CompilerOptions.DevMode;
 import com.google.javascript.jscomp.CoverageInstrumentationPass.CoverageReach;
 import com.google.javascript.jscomp.CoverageInstrumentationPass.InstrumentOption;
-import com.google.javascript.jscomp.WarningsGuard.DiagnosticGroupState;
+import com.google.javascript.jscomp.deps.BrowserModuleResolver;
+import com.google.javascript.jscomp.deps.BrowserWithTransformedPrefixesModuleResolver;
 import com.google.javascript.jscomp.deps.JsFileParser;
 import com.google.javascript.jscomp.deps.ModuleLoader;
+import com.google.javascript.jscomp.deps.ModuleLoader.ModuleResolverFactory;
+import com.google.javascript.jscomp.deps.NodeModuleResolver;
 import com.google.javascript.jscomp.deps.SortedDependencies.MissingProvideException;
+import com.google.javascript.jscomp.deps.WebpackModuleResolver;
 import com.google.javascript.jscomp.ijs.CheckTypeSummaryWarningsGuard;
 import com.google.javascript.jscomp.parsing.Config;
 import com.google.javascript.jscomp.parsing.ParserRunner;
@@ -54,7 +58,6 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-import com.google.javascript.rhino.TypeIRegistry;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import java.io.File;
 import java.io.IOException;
@@ -66,6 +69,8 @@ import java.io.PrintStream;
 import java.io.Serializable;
 import java.util.AbstractSet;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -234,10 +239,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   // Types that have been forward declared
   private Set<String> forwardDeclaredTypes = new HashSet<>();
 
-  // Type registry used by new type inference.
-  private GlobalTypeInfo globalTypeInfo;
-
-  private MostRecentTypechecker mostRecentTypechecker = MostRecentTypechecker.NONE;
+  private boolean typeCheckingHasRun = false;
 
   // This error reporter gets the messages from the current Rhino parser or TypeRegistry.
   private final ErrorReporter oldErrorReporter =
@@ -420,41 +422,12 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       options.checkTypes = false;
     } else if (!options.checkTypes) {
       // If DiagnosticGroups did not override the plain checkTypes
-      // option, and checkTypes is enabled, then turn off the
+      // option, and checkTypes is disabled, then turn off the
       // parser type warnings.
       options.setWarningLevel(
           DiagnosticGroup.forType(
               RhinoErrorReporter.TYPE_PARSE_ERROR),
           CheckLevel.OFF);
-    }
-    DiagnosticGroupState ntiState =
-        options.getWarningsGuard().enablesExplicitly(DiagnosticGroups.NEW_CHECK_TYPES);
-    if (ntiState == DiagnosticGroupState.ON) {
-      options.setNewTypeInference(true);
-    } else if (ntiState == DiagnosticGroupState.OFF) {
-      options.setNewTypeInference(false);
-    }
-    if (options.getNewTypeInference()) {
-      // Suppress the const checks of CheckAccessControls; NTI performs these checks better.
-      options.setWarningLevel(DiagnosticGroups.ACCESS_CONTROLS_CONST, CheckLevel.OFF);
-    }
-    // When running OTI after NTI, turn off the warnings from OTI.
-    if (options.getNewTypeInference()) {
-      options.checkTypes = true;
-      if (!options.reportOTIErrorsUnderNTI) {
-        options.setWarningLevel(
-            DiagnosticGroups.OLD_CHECK_TYPES,
-            CheckLevel.OFF);
-        options.setWarningLevel(
-            DiagnosticGroups.OLD_REPORT_UNKNOWN_TYPES,
-            CheckLevel.OFF);
-        options.setWarningLevel(
-            FunctionTypeBuilder.ALL_DIAGNOSTICS,
-            CheckLevel.OFF);
-      }
-      options.setWarningLevel(
-          DiagnosticGroup.forType(RhinoErrorReporter.TYPE_PARSE_ERROR),
-          CheckLevel.WARNING);
     }
 
     if (options.checkGlobalThisLevel.isOn() && !options.disables(DiagnosticGroups.GLOBAL_THIS)) {
@@ -491,11 +464,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       List<T1> externs, List<T2> sources, CompilerOptions options) {
     JSModule module = new JSModule(SINGLETON_MODULE_NAME);
     for (SourceFile source : sources) {
-      if (this.getPersistentInputStore() != null) {
-        module.add(this.getPersistentInputStore().getCachedCompilerInput(source));
-      } else {
-        module.add(new CompilerInput(source));
-      }
+      module.add(new CompilerInput(source));
     }
 
     List<JSModule> modules = new ArrayList<>(1);
@@ -560,6 +529,11 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       sourceMap.setPrefixMappings(options.sourceMapLocationMappings);
       if (options.applyInputSourceMaps) {
         sourceMap.setSourceFileMapping(this);
+        if (options.sourceMapIncludeSourcesContent) {
+          for (SourceMapInput inputSourceMap : inputSourceMaps.values()) {
+            addSourceMapSourceFiles(inputSourceMap);
+          }
+        }
       }
     }
   }
@@ -1188,7 +1162,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     }
 
     List<String> fileNameRegexList = options.filesToPrintAfterEachPassRegexList;
-    List<String> moduleNameRegexList = options.modulesToPrintAfterEachPassRegexList;
+    List<String> moduleNameRegexList = options.chunksToPrintAfterEachPassRegexList;
     StringBuilder builder = new StringBuilder();
 
     if (fileNameRegexList.isEmpty() && moduleNameRegexList.isEmpty()) {
@@ -1524,38 +1498,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   @Override
-  public TypeIRegistry getTypeIRegistry() {
-    switch (mostRecentTypechecker) {
-      case NONE:
-        // Even in compiles where typechecking is not enabled, some passes ask for the
-        // type registry, eg, GatherExternProperties does. Also, in CheckAccessControls,
-        // the constructor asks for a type registry, and this may happen before type checking
-        // runs. So, in the NONE case, if NTI is enabled, return a new registry, since NTI is
-        // the relevant type checker. If NTI is not enabled, return an old registry.
-        return options.getNewTypeInference() ? getGlobalTypeInfo() : getTypeRegistry();
-      case OTI:
-        return getTypeRegistry();
-      case NTI:
-        return getGlobalTypeInfo();
-      default:
-        throw new RuntimeException("Unhandled typechecker " + mostRecentTypechecker);
-    }
-  }
-
-  @Override
-  public void clearTypeIRegistry() {
-    switch (mostRecentTypechecker) {
-      case OTI:
-        typeRegistry = null;
-        return;
-      case NTI:
-        globalTypeInfo = null;
-        return;
-      case NONE:
-        return;
-      default:
-        throw new RuntimeException("Unhandled typechecker " + mostRecentTypechecker);
-    }
+  public void clearJSTypeRegistry() {
+    typeRegistry = null;
   }
 
   @Override
@@ -1572,13 +1516,13 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   @Override
-  void setMostRecentTypechecker(MostRecentTypechecker lastRun) {
-    this.mostRecentTypechecker = lastRun;
+  void setTypeCheckingHasRun(boolean hasRun) {
+    this.typeCheckingHasRun = hasRun;
   }
 
   @Override
-  MostRecentTypechecker getMostRecentTypechecker() {
-    return this.mostRecentTypechecker;
+  boolean hasTypeCheckingRun() {
+    return this.typeCheckingHasRun;
   }
 
   @Override
@@ -1627,7 +1571,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
         new ReferenceCollectingCallback(
             this,
             ReferenceCollectingCallback.DO_NOTHING_BEHAVIOR,
-            SyntacticScopeCreator.makeUntyped(this));
+            new Es6SyntacticScopeCreator(this));
     refCollector.process(getRoot());
     symbolTable.addSymbolsFrom(refCollector);
 
@@ -1678,34 +1622,18 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
   @Override
   Iterable<TypeMismatch> getTypeMismatches() {
-    switch (this.mostRecentTypechecker) {
-      case OTI:
-        return getTypeValidator().getMismatches();
-      case NTI:
-        return getGlobalTypeInfo().getMismatches();
-      default:
-        throw new RuntimeException("Can't ask for type mismatches before type checking.");
+    if (this.typeCheckingHasRun) {
+      return getTypeValidator().getMismatches();
     }
+    throw new RuntimeException("Can't ask for type mismatches before type checking.");
   }
 
   @Override
   Iterable<TypeMismatch> getImplicitInterfaceUses() {
-    switch (this.mostRecentTypechecker) {
-      case OTI:
-        return getTypeValidator().getImplicitInterfaceUses();
-      case NTI:
-        return getGlobalTypeInfo().getImplicitInterfaceUses();
-      default:
-        throw new RuntimeException("Can't ask for type mismatches before type checking.");
+    if (this.typeCheckingHasRun) {
+      return getTypeValidator().getImplicitInterfaceUses();
     }
-  }
-
-  @Override
-  GlobalTypeInfo getGlobalTypeInfo() {
-    if (this.globalTypeInfo == null) {
-      this.globalTypeInfo = new GlobalTypeInfo(this, forwardDeclaredTypes);
-    }
-    return this.globalTypeInfo;
+    throw new RuntimeException("Can't ask for type mismatches before type checking.");
   }
 
   public void maybeSetTracker() {
@@ -1758,27 +1686,34 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       if (options.getLanguageIn().toFeatureSet().has(FeatureSet.Feature.MODULES)
           || options.processCommonJSModules) {
 
+        ModuleResolverFactory moduleResolverFactory = null;
+
+        switch (options.getModuleResolutionMode()) {
+          case BROWSER:
+            moduleResolverFactory = BrowserModuleResolver.FACTORY;
+            break;
+          case NODE:
+            // processJsonInputs requires a module loader to already be defined
+            // so we redefine it afterwards with the package.json inputs
+            moduleResolverFactory = new NodeModuleResolver.Factory(processJsonInputs(inputs));
+            break;
+          case WEBPACK:
+            moduleResolverFactory = new WebpackModuleResolver.Factory(inputPathByWebpackId);
+            break;
+          case BROWSER_WITH_TRANSFORMED_PREFIXES:
+            moduleResolverFactory =
+                new BrowserWithTransformedPrefixesModuleResolver.Factory(
+                    options.getBrowserResolverPrefixReplacements());
+            break;
+        }
+
         this.moduleLoader =
             new ModuleLoader(
                 null,
                 options.moduleRoots,
                 inputs,
-                ModuleLoader.PathResolver.RELATIVE,
-                options.moduleResolutionMode,
-                inputPathByWebpackId);
-
-        if (options.moduleResolutionMode == ModuleLoader.ResolutionMode.NODE) {
-          // processJsonInputs requires a module loader to already be defined
-          // so we redefine it afterwards with the package.json inputs
-          this.moduleLoader =
-              new ModuleLoader(
-                  null,
-                  options.moduleRoots,
-                  inputs,
-                  ModuleLoader.PathResolver.RELATIVE,
-                  options.moduleResolutionMode,
-                  processJsonInputs(inputs));
-        }
+                moduleResolverFactory,
+                ModuleLoader.PathResolver.RELATIVE);
       } else {
         // Use an empty module loader if we're not actually dealing with modules.
         this.moduleLoader = ModuleLoader.EMPTY;
@@ -1863,7 +1798,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
           SourceInformationAnnotator sia =
               new SourceInformationAnnotator(
                   input.getName(), options.devMode != DevMode.OFF);
-          NodeTraversal.traverseEs6(this, n, sia);
+          NodeTraversal.traverse(this, n, sia);
         }
 
         if (NodeUtil.isFromTypeSummary(n)) {
@@ -2389,10 +2324,9 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
    */
   private String toSource(Node n, SourceMap sourceMap, boolean firstOutput) {
     CodePrinter.Builder builder = new CodePrinter.Builder(n);
-    builder.setTypeRegistry(getTypeIRegistry());
+    builder.setTypeRegistry(getTypeRegistry());
     builder.setCompilerOptions(options);
     builder.setSourceMap(sourceMap);
-    builder.setTagAsExterns(n.isFromExterns());
     builder.setTagAsTypeSummary(!n.isFromExterns() && options.shouldGenerateTypedExterns());
     builder.setTagAsStrict(firstOutput && options.shouldEmitUseStrict());
     return builder.build();
@@ -2943,6 +2877,34 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   @Override
   public void addInputSourceMap(String sourceFileName, SourceMapInput inputSourceMap) {
     inputSourceMaps.put(sourceFileName, inputSourceMap);
+    if (options.sourceMapIncludeSourcesContent && sourceMap != null) {
+      addSourceMapSourceFiles(inputSourceMap);
+    }
+  }
+
+  /**
+   * Adds file name to content mappings for all sources found in a source map.
+   * This is used to populate sourcesContent array in the output source map
+   * even for sources embedded in the input source map.
+   */
+  private void addSourceMapSourceFiles(SourceMapInput inputSourceMap) {
+    SourceMapConsumerV3 consumer = inputSourceMap.getSourceMap(errorManager);
+    if (consumer == null) {
+      return;
+    }
+    Collection<String> sourcesContent = consumer.getOriginalSourcesContent();
+    if (sourcesContent == null) {
+      return;
+    }
+    Iterator<String> content = sourcesContent.iterator();
+    Iterator<String> sources = consumer.getOriginalSources().iterator();
+    while (sources.hasNext() && content.hasNext()) {
+      sourceMap.addSourceFile(sources.next(), content.next());
+    }
+    if (sources.hasNext() || content.hasNext()) {
+      throw new RuntimeException(
+          "Source map's \"sources\" and \"sourcesContent\" lengths do not match.");
+    }
   }
 
   @Override
@@ -2967,18 +2929,23 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       return null;
     }
 
-    // The sourcemap will return a path relative to the sourcemap's file.
-    // Translate it to one relative to our base directory.
-    SourceFile source =
-        SourceMapResolver.getRelativePath(sourceMap.getOriginalPath(), result.getOriginalFile());
+    // First check to see if the original file was loaded from an input source map.
+    String sourceMapOriginalPath = sourceMap.getOriginalPath();
+    String resultOriginalPath = result.getOriginalFile();
+    String relativePath = resolveSibling(sourceMapOriginalPath, resultOriginalPath);
+
+    SourceFile source = getSourceFileByName(relativePath);
     if (source == null) {
-      return null;
+      source =
+          SourceMapResolver.getRelativePath(sourceMap.getOriginalPath(), result.getOriginalFile());
+      if (source != null) {
+        sourceMapOriginalSources.putIfAbsent(relativePath, source);
+      }
     }
-    String originalPath = source.getOriginalPath();
-    sourceMapOriginalSources.putIfAbsent(originalPath, source);
+
     return result
         .toBuilder()
-        .setOriginalFile(originalPath)
+        .setOriginalFile(relativePath)
         .setColumnPosition(result.getColumnPosition() - 1)
         .build();
   }
@@ -3515,7 +3482,11 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   private void addFilesToSourceMap(Iterable<? extends SourceFile> files) {
     if (getOptions().sourceMapIncludeSourcesContent && getSourceMap() != null) {
       for (SourceFile file : files) {
-        getSourceMap().addSourceFile(file);
+        try {
+          getSourceMap().addSourceFile(file.getName(), file.getCode());
+        } catch (IOException e) {
+          throw new RuntimeException("Cannot read code of a source map's source file.", e);
+        }
       }
     }
   }
@@ -3561,12 +3532,11 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     private final Map<InputId, CompilerInput> inputsById;
     private final JSTypeRegistry typeRegistry;
     private final TypeValidator typeValidator;
-    private final MostRecentTypechecker mostRecentTypeChecker;
+    private final boolean typeCheckingHasRun;
     private final CompilerInput synthesizedExternsInput;
     private final CompilerInput synthesizedExternsInputAtEnd;
     private final Map<String, Node> injectedLibraries;
     private final Node lastInjectedLibrary;
-    private final GlobalTypeInfo globalTypeInfo;
     private final boolean hasRegExpGlobalReferences;
     private final LifeCycleStage lifeCycleStage;
     private final Set<String> externProperties;
@@ -3598,12 +3568,11 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       this.externs = compiler.externs;
       this.inputs = checkNotNull(compiler.inputs);
       this.inputsById = checkNotNull(compiler.inputsById);
-      this.mostRecentTypeChecker = compiler.mostRecentTypechecker;
+      this.typeCheckingHasRun = compiler.typeCheckingHasRun;
       this.synthesizedExternsInput = compiler.synthesizedExternsInput;
       this.synthesizedExternsInputAtEnd = compiler.synthesizedExternsInputAtEnd;
       this.injectedLibraries = compiler.injectedLibraries;
       this.lastInjectedLibrary = compiler.lastInjectedLibrary;
-      this.globalTypeInfo = compiler.globalTypeInfo;
       this.hasRegExpGlobalReferences = compiler.hasRegExpGlobalReferences;
       this.typeValidator = compiler.typeValidator;
       this.lifeCycleStage = compiler.getLifeCycleStage();
@@ -3695,13 +3664,12 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     externAndJsRoot = compilerState.externAndJsRoot;
     externsRoot = compilerState.externsRoot;
     jsRoot = compilerState.jsRoot;
-    mostRecentTypechecker = compilerState.mostRecentTypeChecker;
+    typeCheckingHasRun = compilerState.typeCheckingHasRun;
     synthesizedExternsInput = compilerState.synthesizedExternsInput;
     synthesizedExternsInputAtEnd = compilerState.synthesizedExternsInputAtEnd;
     injectedLibraries.clear();
     injectedLibraries.putAll(compilerState.injectedLibraries);
     lastInjectedLibrary = compilerState.lastInjectedLibrary;
-    globalTypeInfo = compilerState.globalTypeInfo;
     hasRegExpGlobalReferences = compilerState.hasRegExpGlobalReferences;
     typeValidator = compilerState.typeValidator;
     setLifeCycleStage(compilerState.lifeCycleStage);
@@ -3743,21 +3711,39 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     }
   }
 
-  public void resetCompilerInput() {
-    for (JSModule module : this.modules) {
-      for (CompilerInput input : module.getInputs()) {
-        input.reset();
-      }
-    }
-    for (CompilerInput input : this.externs) {
-      input.reset();
-    }
-  }
-
   /** Returns the module type for the provided namespace. */
   @Override
   @Nullable
   CompilerInput.ModuleType getModuleTypeByName(String moduleName) {
     return moduleTypesByName.get(moduleName);
+  }
+
+  /**
+   * Simplistic implementation of the java.nio.file.Path resolveSibling method that works
+   * with GWT.
+   *
+   * @param path1 from path - must be a file (not directory)
+   * @param path2 to path - must be a file (not directory)
+   */
+  private static String resolveSibling(String path1, String path2) {
+    List<String> path1Parts = new ArrayList<>(Arrays.asList(path1.split("/")));
+    List<String> path2Parts = new ArrayList<>(Arrays.asList(path2.split("/")));
+    if (path1Parts.size() > 0) {
+      path1Parts.remove(path1Parts.size() - 1);
+    }
+
+    while (path1Parts.size() > 0 && path2Parts.size() > 0) {
+      if (path2Parts.get(0).equals(".")) {
+        path2Parts.remove(0);
+      } else if (path2Parts.get(0).equals("..")) {
+        path2Parts.remove(0);
+        path1Parts.remove(path1Parts.size() - 1);
+      } else {
+        break;
+      }
+    }
+
+    path1Parts.addAll(path2Parts);
+    return String.join("/", path1Parts);
   }
 }

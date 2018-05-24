@@ -18,7 +18,7 @@ package com.google.javascript.jscomp;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 
 /** Test cases for ESNext transpilation. */
-public final class EsNextToEs8ConverterTest extends TypeICompilerTestCase {
+public final class EsNextToEs8ConverterTest extends CompilerTestCase {
 
   public EsNextToEs8ConverterTest() {
     super(MINIMAL_EXTERNS);
@@ -30,7 +30,6 @@ public final class EsNextToEs8ConverterTest extends TypeICompilerTestCase {
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_NEXT);
     setLanguageOut(LanguageMode.ECMASCRIPT_2017);
     enableRunTypeCheckAfterProcessing();
-    this.mode = TypeInferenceMode.NEITHER;
   }
 
   @Override

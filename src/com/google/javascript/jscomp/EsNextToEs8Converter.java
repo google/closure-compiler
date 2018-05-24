@@ -21,13 +21,12 @@ import static com.google.javascript.jscomp.Es6ToEs3Util.createType;
 import static com.google.javascript.jscomp.Es6ToEs3Util.withType;
 
 import com.google.auto.value.AutoValue;
-import com.google.javascript.jscomp.AbstractCompiler.MostRecentTypechecker;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-import com.google.javascript.rhino.TypeI;
+import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import java.util.ArrayList;
 import java.util.List;
@@ -52,7 +51,7 @@ public final class EsNextToEs8Converter implements NodeTraversal.Callback, HotSw
 
   public EsNextToEs8Converter(AbstractCompiler compiler) {
     this.compiler = compiler;
-    this.addTypes = MostRecentTypechecker.NTI.equals(compiler.getMostRecentTypechecker());
+    this.addTypes = compiler.hasTypeCheckingRun();
   }
 
   @Override
@@ -484,10 +483,10 @@ public final class EsNextToEs8Converter implements NodeTraversal.Callback, HotSw
   private void visitObjectWithSpread(Node obj) {
     checkArgument(obj.isObjectLit());
 
-    TypeI simpleObjectType =
-        createType(addTypes, compiler.getTypeIRegistry(), JSTypeNative.EMPTY_OBJECT_LITERAL_TYPE);
+    JSType simpleObjectType =
+        createType(addTypes, compiler.getTypeRegistry(), JSTypeNative.EMPTY_OBJECT_LITERAL_TYPE);
 
-    TypeI resultType = simpleObjectType;
+    JSType resultType = simpleObjectType;
     Node result = withType(IR.call(NodeUtil.newQName(compiler, "Object.assign")), resultType);
 
     // Add an empty target object literal so changes made by Object.assign will not affect any other

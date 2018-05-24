@@ -90,6 +90,7 @@ final class FunctionTypeBuilder {
   // TODO(johnlenz): verify we want both template and class template lists instead of a unified
   // list.
   private ImmutableList<TemplateType> classTemplateTypeNames = ImmutableList.of();
+  private TypedScope declarationScope = null;
 
   static final DiagnosticType EXTENDS_WITHOUT_TYPEDEF = DiagnosticType.warning(
       "JSC_EXTENDS_WITHOUT_TYPEDEF",
@@ -243,6 +244,16 @@ final class FunctionTypeBuilder {
     if (contents != null) {
       this.contents = contents;
     }
+    return this;
+  }
+
+  /**
+   * Sets a declaration scope explicitly. This is important with block scopes because a function
+   * declared in an inner scope with 'var' needs to use the inner scope to resolve names, but needs
+   * to be declared in the outer scope.
+   */
+  FunctionTypeBuilder setDeclarationScope(TypedScope declarationScope) {
+    this.declarationScope = declarationScope;
     return this;
   }
 
@@ -522,14 +533,20 @@ final class FunctionTypeBuilder {
         (info == null) ? new HashSet<>() : new HashSet<>(info.getParameterNames());
     boolean isVarArgs = false;
     for (Node arg : argsParent.children()) {
+      boolean isOptionalParam = false;
+      if (arg.isRest()) {
+        isVarArgs = true;
+        arg = arg.getOnlyChild();
+      } else {
+        isVarArgs = isVarArgsParameter(arg, info);
+        isOptionalParam = isOptionalParameter(arg, info);
+      }
+
       String argumentName = arg.getString();
       allJsDocParams.remove(argumentName);
 
       // type from JSDocInfo
       JSType parameterType = null;
-      boolean isOptionalParam = isOptionalParameter(arg, info);
-      isVarArgs = isVarArgsParameter(arg, info);
-
       if (info != null && info.hasParameterType(argumentName)) {
         parameterType =
             info.getParameterType(argumentName).evaluate(scope, typeRegistry);
@@ -788,13 +805,21 @@ final class FunctionTypeBuilder {
             returnType,
             classTemplateTypeNames,
             isAbstract);
-    JSType existingType = typeRegistry.getType(fnName);
 
     if (makesStructs) {
       fnType.setStruct();
     } else if (makesDicts) {
       fnType.setDict();
     }
+
+    // There are two cases where this type already exists in the current scope:
+    //   1. The type is a built-in that we initalized in JSTypeRegistry and is also defined in
+    //  externs.
+    //   2. Cases like "class C {} C = class {}"
+    // See https://github.com/google/closure-compiler/issues/2928 for some related bugs.
+    // We use "getTypeForScope" to specifically check if this was defined for getScopeDeclaredIn()
+    // so we don't pick up types that are going to be shadowed.
+    JSType existingType = typeRegistry.getTypeForScope(getScopeDeclaredIn(), fnName);
     if (existingType != null) {
       boolean isInstanceObject = existingType.isInstanceType();
       if (isInstanceObject || fnName.equals("Function")) {
@@ -812,6 +837,12 @@ final class FunctionTypeBuilder {
               fnType.toString(), existingFn.toString());
         }
 
+        // If the existing function is a built-in type, set its base type in case it @extends
+        // another function (since we don't set its prototype in JSTypeRegistry)
+        if (existingFn.isNativeObjectType()) {
+          maybeSetBaseType(existingFn);
+        }
+
         return existingFn;
       } else {
         // We fall through and return the created type, even though it will fail
@@ -822,8 +853,12 @@ final class FunctionTypeBuilder {
 
     maybeSetBaseType(fnType);
 
-    if (getScopeDeclaredIn().isGlobal() && !fnName.isEmpty()) {
-      typeRegistry.declareType(fnName, fnType.getInstanceType());
+    // TODO(johnlenz): determine what we are supposed to do for:
+    //   @constructor
+    //   this.Foo = ...
+    //
+    if (!fnName.isEmpty() && !fnName.startsWith("this.")) {
+      typeRegistry.declareTypeForExactScope(getScopeDeclaredIn(), fnName, fnType.getInstanceType());
     }
     return fnType;
   }
@@ -831,7 +866,7 @@ final class FunctionTypeBuilder {
   private FunctionType getOrCreateInterface() {
     FunctionType fnType = null;
 
-    JSType type = typeRegistry.getType(fnName);
+    JSType type = typeRegistry.getType(getScopeDeclaredIn(), fnName);
     if (type != null && type.isInstanceType()) {
       FunctionType ctor = type.toMaybeObjectType().getConstructor();
       if (ctor.isInterface()) {
@@ -843,8 +878,9 @@ final class FunctionTypeBuilder {
     if (fnType == null) {
       fnType = typeRegistry.createInterfaceType(
           fnName, contents.getSourceNode(), classTemplateTypeNames, makesStructs);
-      if (getScopeDeclaredIn().isGlobal() && !fnName.isEmpty()) {
-        typeRegistry.declareType(fnName, fnType.getInstanceType());
+      if (!fnName.isEmpty()) {
+        typeRegistry.declareTypeForExactScope(
+            getScopeDeclaredIn(), fnName, fnType.getInstanceType());
       }
       maybeSetBaseType(fnType);
     }
@@ -876,6 +912,10 @@ final class FunctionTypeBuilder {
    * care of most scope-declaring.
    */
   private TypedScope getScopeDeclaredIn() {
+    if (declarationScope != null) {
+      return declarationScope;
+    }
+
     int dotIndex = fnName.indexOf('.');
     if (dotIndex != -1) {
       String rootVarName = fnName.substring(0, dotIndex);

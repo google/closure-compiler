@@ -226,7 +226,7 @@ public final class MustBeReachingVariableDefTest extends TestCase {
     defUse.analyze();
     def = null;
     use = null;
-    NodeTraversal.traverseEs6(compiler, root, new LabelFinder());
+    NodeTraversal.traverse(compiler, root, new LabelFinder());
     assertNotNull("Code should have an instruction labeled D", def);
     assertNotNull("Code should have an instruction labeled U", use);
   }

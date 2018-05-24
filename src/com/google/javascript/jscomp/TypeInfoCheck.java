@@ -30,13 +30,13 @@ final class TypeInfoCheck implements Callback, CompilerPass {
 
   public void setCheckSubTree(Node root) {
     requiresTypes = true;
-    NodeTraversal.traverseEs6(compiler, root, this);
+    NodeTraversal.traverse(compiler, root, this);
   }
 
   @Override
   public void process(Node externs, Node root) {
     requiresTypes = false;
-    NodeTraversal.traverseEs6(compiler, root, this);
+    NodeTraversal.traverse(compiler, root, this);
   }
 
   @Override
@@ -68,7 +68,7 @@ final class TypeInfoCheck implements Callback, CompilerPass {
         // function names does not need to have type information.
         return;
       }
-      if (n.getTypeI() == null) {
+      if (n.getJSType() == null) {
         throw new IllegalStateException(
             "No type information associated with "
                 + n

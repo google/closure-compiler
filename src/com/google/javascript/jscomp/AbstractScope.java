@@ -34,15 +34,16 @@ import java.util.Map;
  * scope.
  *
  * <p>ES 2015 introduces new scoping rules, which adds some complexity to this class. In particular,
- * scopes fall into two mutually exclusive categories: <i>block</i> and <i>container</i>.  Block
+ * scopes fall into two mutually exclusive categories: <i>block</i> and <i>container</i>. Block
  * scopes are all scopes whose roots are blocks, as well as any control structures whose optional
- * blocks are omitted.  These scopes did not exist at all prior to ES 2015.  Container scopes
- * comprise function scopes, global scopes, and module scopes, and (aside from modules, which
- * didn't exist in ES5) corresponds to the ES5 scope rules.  This corresponds roughly to one
- * container scope per CFG root (but not exactly, due to SCRIPT-level CFGs).
+ * blocks are omitted. These scopes did not exist at all prior to ES 2015. Container scopes comprise
+ * function scopes, global scopes, and module scopes, and (aside from modules, which didn't exist in
+ * ES5) corresponds to the ES5 scope rules. This corresponds roughly to one container scope per CFG
+ * root (but not exactly, due to SCRIPT-level CFGs).
  *
  * <p>All container scopes, plus the outermost block scope within a function (i.e. the <i>function
- * block scope</i>) are considered <i>hoist scopes</i>.  Hoist scopes are relevant because "var"
+ * block scope</i>) are considered <i>hoist scopes</i>. All functions thus have two hoist scopes:
+ * the function scope and the function block scope. Hoist scopes are relevant because "var"
  * declarations are hoisted to the closest hoist scope, as opposed to "let" and "const" which always
  * apply to the specific scope in which they occur.
  *
@@ -64,7 +65,7 @@ abstract class AbstractScope<S extends AbstractScope<S, V>, V extends AbstractVa
   private final Node rootNode;
 
   AbstractScope(Node rootNode) {
-    this.rootNode = rootNode;
+    this.rootNode = checkNotNull(rootNode);
   }
 
   /** The depth of the scope. The global scope has depth 0. */
@@ -142,6 +143,7 @@ abstract class AbstractScope<S extends AbstractScope<S, V>, V extends AbstractVa
   }
 
   final void declareInternal(String name, V var) {
+    checkState(hasOwnSlot(name) || canDeclare(name), "Illegal shadow: %s", var.getNode());
     vars.put(name, var);
   }
 
@@ -226,6 +228,28 @@ abstract class AbstractScope<S extends AbstractScope<S, V>, V extends AbstractVa
       scope = scope.getParent();
     }
     return false;
+  }
+
+  /**
+   * Returns true if the name can be declared on this scope without causing illegal shadowing.
+   * Specifically, this is aware of the connection between function container scopes and function
+   * block scopes and returns false for redeclaring parameters on the block scope.
+   */
+  final boolean canDeclare(String name) {
+    return !hasOwnSlot(name)
+        && (!isFunctionBlockScope()
+            || !getParent().hasOwnSlot(name)
+            || isBleedingFunctionName(name));
+  }
+
+  /**
+   * Returns true if the given name is a bleeding function name in this scope. Local variables in
+   * the function block are not allowed to shadow parameters, but they are allowed to shadow a
+   * bleeding function name.
+   */
+  private boolean isBleedingFunctionName(String name) {
+    V var = getVar(name);
+    return var != null && var.getNode().getParent().isFunction();
   }
 
   /**
@@ -380,10 +404,29 @@ abstract class AbstractScope<S extends AbstractScope<S, V>, V extends AbstractVa
         NodeUtil.createsScope(rootNode) || rootNode.isScript() || rootNode.isRoot(), rootNode);
   }
 
+  /** Returns the nearest common parent between two scopes. */
+  S getCommonParent(S other) {
+    S left = thisScope();
+    S right = other;
+    while (left != null && right != null && left != right) {
+      int leftDepth = left.getDepth();
+      int rightDepth = right.getDepth();
+      if (leftDepth >= rightDepth) {
+        left = left.getParent();
+      }
+      if (leftDepth <= rightDepth) {
+        right = right.getParent();
+      }
+    }
+
+    checkState(left != null && left == right);
+    return left;
+  }
+
   /**
-   * Whether {@code this} and the {@code other} scope have the same container scope (i.e. are in
-   * the same function, or else both in the global hoist scope). This is equivalent to asking
-   * whether the two scopes would be equivalent in a pre-ES2015-block-scopes view of the world.
+   * Whether {@code this} and the {@code other} scope have the same container scope (i.e. are in the
+   * same function, or else both in the global hoist scope). This is equivalent to asking whether
+   * the two scopes would be equivalent in a pre-ES2015-block-scopes view of the world.
    */
   boolean hasSameContainerScope(S other) {
     return getClosestContainerScope() == other.getClosestContainerScope();

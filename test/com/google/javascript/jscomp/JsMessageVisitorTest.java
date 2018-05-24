@@ -820,7 +820,7 @@ public final class JsMessageVisitorTest extends TestCase {
     JsMessageVisitor visitor = new CollectMessages(compiler);
     if (renameMessages) {
       RenameMessagesVisitor renameMessagesVisitor = new RenameMessagesVisitor();
-      NodeTraversal.traverseEs6(compiler, root, renameMessagesVisitor);
+      NodeTraversal.traverse(compiler, root, renameMessagesVisitor);
     }
     visitor.process(null, root);
   }

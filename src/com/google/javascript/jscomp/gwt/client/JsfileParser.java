@@ -235,7 +235,7 @@ public class JsfileParser implements EntryPoint {
         parseComment(comment, info);
       }
     }
-    NodeTraversal.traverseEs6(compiler, parsed.ast, new Traverser(info));
+    NodeTraversal.traverse(compiler, parsed.ast, new Traverser(info));
     return info;
   }
 

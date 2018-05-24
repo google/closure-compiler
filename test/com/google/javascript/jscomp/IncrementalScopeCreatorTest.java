@@ -37,7 +37,7 @@ public final class IncrementalScopeCreatorTest extends TestCase {
   public void testMemoization() throws Exception {
 
     List<SourceFile> externs = ImmutableList.of(
-        SourceFile.fromCode("externs.js", "var symbol;var ext"));
+        SourceFile.fromCode("externs.js", "var ext"));
     List<SourceFile> srcs = ImmutableList.of(
         SourceFile.fromCode("testcode1.js", "var a; var b; function foo() { var inside = 1; }"),
         SourceFile.fromCode("testcode2.js", "var x;"));
@@ -67,7 +67,7 @@ public final class IncrementalScopeCreatorTest extends TestCase {
 
   public void testParialGlobalScopeRefresh() throws Exception {
     List<SourceFile> externs = ImmutableList.of(
-        SourceFile.fromCode("externs.js", "var symbol;var ext"));
+        SourceFile.fromCode("externs.js", "var ext"));
     List<SourceFile> srcs = ImmutableList.of(
         SourceFile.fromCode("testcode1.js", "var a; var b; function foo() { var inside = 1; }"),
         SourceFile.fromCode("testcode2.js", "var x;"));
@@ -134,7 +134,7 @@ public final class IncrementalScopeCreatorTest extends TestCase {
     // readd it.
 
     List<SourceFile> externs = ImmutableList.of(
-        SourceFile.fromCode("externs.js", "var symbol;"));
+        SourceFile.fromCode("externs.js", ""));
     List<SourceFile> srcs = ImmutableList.of(
         SourceFile.fromCode("testcode1.js", "var a; var b;"),
         SourceFile.fromCode("testcode2.js", "var x; var y;"));
@@ -233,7 +233,7 @@ public final class IncrementalScopeCreatorTest extends TestCase {
 
   public void testValidScopeReparenting() throws Exception {
     List<SourceFile> externs = ImmutableList.of(
-        SourceFile.fromCode("externs.js", "var symbol;var ext"));
+        SourceFile.fromCode("externs.js", "var ext"));
     List<SourceFile> srcs = ImmutableList.of(
         SourceFile.fromCode("testcode1.js", "var a; var b; "
             + " { function foo() { var inside = 1; } }"),

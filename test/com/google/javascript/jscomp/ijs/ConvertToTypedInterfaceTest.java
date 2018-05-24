@@ -60,6 +60,7 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
     test("/** @const */ var x = 5;", "/** @const {number} */ var x;");
     test("/** @const */ var x = true;", "/** @const {boolean} */ var x;");
     test("/** @const */ var x = 'str';", "/** @const {string} */ var x;");
+    test("/** @const */ var x = `str`;", "/** @const {string} */ var x;");
     test("/** @const */ var x = null;", "/** @const {null} */ var x;");
     test("/** @const */ var x = void 0;", "/** @const {void} */ var x;");
     test("/** @const */ var x = /a/;", "/** @const {!RegExp} */ var x;");
@@ -93,6 +94,14 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
         "const x = cond ? true : 5;",
         "/** @const {*} */ var x;",
         warning(ConvertToTypedInterface.CONSTANT_WITHOUT_EXPLICIT_TYPE));
+  }
+
+  public void testPropagateConstCast() {
+    test("const x = /** @type {!Array<number>} */ ([]);", "/** @const {!Array<number>} */ var x;");
+
+    test(
+        "let /** (string|number) */ x = /** @type {number} */ (5);",
+        "/** @type {(string|number)} */ var x;");
   }
 
   public void testSplitMultiDeclarations() {
@@ -163,9 +172,6 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
     test(
         "/** @type {Object} */ var o = {}; /** @type {number} */ o.p = 5; /** @const */ var y = o;",
         "/** @type {Object} */ var o; /** @type {number} */ o.p; /** @const */ var y = o;");
-
-    testWarning(
-        "/** @const */ var x = Foo;", ConvertToTypedInterface.CONSTANT_WITHOUT_EXPLICIT_TYPE);
   }
 
   public void testConstJsdocPropagationForConstructorNames() {
@@ -298,6 +304,11 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
             "goog.module.declareLegacyNamespace();",
             "",
             "exports = class {};"));
+  }
+
+  public void testExternsAlias() {
+    testSame("const winAlias = window;");
+    testSame("const winAlias = window; const locationAlias = winAlias.location;");
   }
 
   public void testConstructorAlias1() {
@@ -887,6 +898,12 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
         "/** @const {*} */ var x; /** @enum {number} */ var E = { A: 0 };");
   }
 
+  public void testEnumInsideNamespace() {
+    test(
+        "const ns = { /** @enum {number} */ ENUM: { A: 1, B: 2, C: 3} };",
+        "const ns = { /** @enum {number} */ ENUM: { A: 0, B: 0, C: 0} };");
+  }
+
   public void testTryCatch() {
     test(
         "try { /** @type {number} */ var n = foo(); } catch (e) { console.log(e); }",
@@ -1266,13 +1283,12 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
   }
 
   public void testAliasOfNonRequiredName() {
-    testWarning(
+    testSame(
         lines(
             "goog.provide('a.b.c');",
             "",
             "/** @const */",
-            "a.b.c.FooAlias = ns.Foo;"),
-        ConvertToTypedInterface.CONSTANT_WITHOUT_EXPLICIT_TYPE);
+            "a.b.c.FooAlias = ns.Foo;"));
 
     testWarning(
         lines(
@@ -1363,6 +1379,20 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
             "goog.provide('a.b.c.d.e.f.g');",
             "",
             "a.b.c.d.e.f.g.Foo = class {};"),
+    warning(ConvertToTypedInterface.GOOG_SCOPE_HIDDEN_TYPE));
+
+    test(
+        lines(
+            "/** @const */ var $jscomp = $jscomp || {};",
+            "/** @const */ $jscomp.scope = {};",
+            "",
+            "$jscomp.scope.strayClass = class {",
+            "  constructor() {",
+            "    this.Foo = class {};",
+            "  };",
+            "};",
+            ""),
+        "",
     warning(ConvertToTypedInterface.GOOG_SCOPE_HIDDEN_TYPE));
   }
 

@@ -39,15 +39,16 @@
 package com.google.javascript.rhino.testing;
 
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.TypeI;
+import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.StaticTypedScope;
 import com.google.javascript.rhino.jstype.StaticTypedSlot;
 
 /**
  * A scope that just returns null for everything.
+ *
  * @author nicksantos@google.com (Nick Santos)
  */
-public abstract class AbstractStaticScope<T extends TypeI> implements StaticTypedScope<T> {
+public abstract class AbstractStaticScope implements StaticTypedScope {
 
   @Override
   public Node getRootNode() {
@@ -55,20 +56,20 @@ public abstract class AbstractStaticScope<T extends TypeI> implements StaticType
   }
 
   @Override
-  public StaticTypedScope<T> getParentScope() {
+  public StaticTypedScope getParentScope() {
     return null;
   }
 
   @Override
-  public abstract StaticTypedSlot<T> getSlot(String name);
+  public abstract StaticTypedSlot getSlot(String name);
 
   @Override
-  public StaticTypedSlot<T> getOwnSlot(String name) {
+  public StaticTypedSlot getOwnSlot(String name) {
     return getSlot(name);
   }
 
   @Override
-  public T getTypeOfThis() {
+  public JSType getTypeOfThis() {
     return null;
   }
 }

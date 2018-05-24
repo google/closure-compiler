@@ -107,9 +107,9 @@ class InstrumentFunctions implements CompilerPass {
       }
     }
 
-    NodeTraversal.traverseEs6(compiler, root,
+    NodeTraversal.traverse(compiler, root,
                            new RemoveCallback(declarationsToRemove));
-    NodeTraversal.traverseEs6(compiler, root, new InstrumentCallback());
+    NodeTraversal.traverse(compiler, root, new InstrumentCallback());
 
     if (!appNameSetter.isEmpty()) {
       Node call = IR.call(
@@ -202,7 +202,7 @@ class InstrumentFunctions implements CompilerPass {
      */
     void process(Node function) {
       Node body = function.getLastChild();
-      NodeTraversal.traverseEs6(compiler, body, this);
+      NodeTraversal.traverse(compiler, body, this);
 
       if (!allPathsReturn(function)) {
         Node call = newReportFunctionExitNode(function, null);

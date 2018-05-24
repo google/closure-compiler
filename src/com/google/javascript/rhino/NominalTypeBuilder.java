@@ -39,6 +39,10 @@
 
 package com.google.javascript.rhino;
 
+import com.google.javascript.rhino.jstype.FunctionType;
+import com.google.javascript.rhino.jstype.JSType;
+import com.google.javascript.rhino.jstype.ObjectType;
+
 /**
  * Builder interface for declaring properties on class-like (nominal) types. Nominal types consist
  * primarily of three separate object types, which may each have their own properties declared on
@@ -55,21 +59,21 @@ package com.google.javascript.rhino;
 public interface NominalTypeBuilder {
 
   /** Declares a static property on the nominal type's constructor. */
-  void declareConstructorProperty(String name, TypeI type, Node defSite);
+  void declareConstructorProperty(String name, JSType type, Node defSite);
   /** Declares an instance property on the nominal type. */
-  void declareInstanceProperty(String name, TypeI type, Node defSite);
+  void declareInstanceProperty(String name, JSType type, Node defSite);
   /** Declares a property on the nominal type's prototype. */
-  void declarePrototypeProperty(String name, TypeI type, Node defSite);
+  void declarePrototypeProperty(String name, JSType type, Node defSite);
 
   /** Returns a NominalTypeBuilder for this type's superclass. */
   NominalTypeBuilder superClass();
 
-  /** Returns the constructor as a TypeI. */
-  FunctionTypeI constructor();
-  /** Returns the instance type as a TypeI. */
-  ObjectTypeI instance();
+  /** Returns the constructor as a JSType. */
+  FunctionType constructor();
+  /** Returns the instance type as a JSType. */
+  ObjectType instance();
 
   // TODO(sdh): See if we can just delete this entirely and use instance() instead?
   /** Returns the type of the prototype object (OTI) or instance (NTI). */
-  ObjectTypeI prototypeOrInstance();
+  ObjectType prototypeOrInstance();
 }

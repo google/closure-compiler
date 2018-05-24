@@ -23,7 +23,7 @@ public class ComprehensionTree extends ParseTree {
   public static enum ComprehensionType {
     ARRAY,
     GENERATOR
-  };
+  }
 
   public final ComprehensionType type;
 

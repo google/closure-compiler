@@ -272,8 +272,17 @@ function createRequire(opt_module) {
 }
 
 
-/** @const {!function(string): ?} */
+/** @const {function(string): ?} */
 $jscomp.require = createRequire();
+
+
+/**
+ * @param {string} id
+ * @return {boolean}
+ */
+$jscomp.hasModule = function(id) {
+  return moduleCache.has(id);
+};
 
 
 /**
@@ -435,6 +444,7 @@ function removeAsBlocking(cacheEntry) {
  * @param {function(function(string), ?, !Module)} moduleDef
  * @param {string} absModulePath
  * @param {!Array<string>} shallowDeps
+ * @suppress {strictMissingProperties} "ensure" is not declared.
  */
 $jscomp.registerAndLoadModule = function(
     moduleDef, absModulePath, shallowDeps) {

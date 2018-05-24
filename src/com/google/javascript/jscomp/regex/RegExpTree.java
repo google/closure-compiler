@@ -91,19 +91,6 @@ public abstract class RegExpTree {
     return sb.toString();
   }
 
-  private void appendDebugString(StringBuilder sb) {
-    sb.append('(').append(getClass().getSimpleName());
-    int len = sb.length();
-    sb.append(' ');
-    appendDebugInfo(sb);
-    if (sb.length() == len + 1) { sb.setLength(len); }
-    for (RegExpTree child : children()) {
-      sb.append(' ');
-      child.appendDebugString(sb);
-    }
-    sb.append(')');
-  }
-
   @Override
   public abstract boolean equals(Object o);
 

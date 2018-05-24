@@ -53,15 +53,14 @@ class ConstCheck extends AbstractPostOrderCallback
 
   @Override
   public void process(Node externs, Node root) {
-    NodeTraversal.traverseRootsEs6(compiler, this, externs, root);
+    NodeTraversal.traverseRoots(compiler, this, externs, root);
   }
 
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
     switch (n.getToken()) {
       case NAME:
-        if (parent != null &&
-            parent.isVar()) {
+        if (parent != null && NodeUtil.isNameDeclaration(parent)) {
           String name = n.getString();
           Var var = t.getScope().getVar(name);
           if (isConstant(var)) {

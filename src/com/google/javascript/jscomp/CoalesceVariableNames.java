@@ -99,7 +99,7 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
   public void process(Node externs, Node root) {
     checkNotNull(externs);
     checkNotNull(root);
-    NodeTraversal.traverseEs6(compiler, root, this);
+    NodeTraversal.traverse(compiler, root, this);
     compiler.setLifeCycleStage(LifeCycleStage.RAW);
   }
 

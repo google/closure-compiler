@@ -19,7 +19,7 @@ package com.google.javascript.jscomp;
 /**
  * @author johnlenz@google.com (John Lenz)
  */
-public final class CheckUnusedPrivatePropertiesTest extends TypeICompilerTestCase {
+public final class CheckUnusedPrivatePropertiesTest extends CompilerTestCase {
 
   private static final String EXTERNS = lines(
       DEFAULT_EXTERNS,
@@ -44,7 +44,7 @@ public final class CheckUnusedPrivatePropertiesTest extends TypeICompilerTestCas
   protected void setUp() throws Exception {
     super.setUp();
     enableGatherExternProperties();
-    enableTranspile();
+    enableTypeCheck();
   }
 
   @Override
@@ -57,8 +57,6 @@ public final class CheckUnusedPrivatePropertiesTest extends TypeICompilerTestCas
     CompilerOptions options = super.getOptions();
     options.setWarningLevel(DiagnosticGroups.ANALYZER_CHECKS, CheckLevel.WARNING);
     options.setWarningLevel(DiagnosticGroups.MISSING_PROPERTIES, CheckLevel.OFF);
-    // Global this is used deliberately to refer to Window in these tests
-    options.setWarningLevel(new DiagnosticGroup(NewTypeInference.GLOBAL_THIS), CheckLevel.OFF);
     return options;
   }
 
@@ -82,7 +80,7 @@ public final class CheckUnusedPrivatePropertiesTest extends TypeICompilerTestCas
   }
 
   public void testClassPropUnused1() {
-    this.mode = TypeInferenceMode.NEITHER;
+    disableTypeCheck();
 
     // A property defined on "this" can be removed
     unused("class C { constructor() { /** @private */ this.a = 2 } }");
@@ -94,7 +92,7 @@ public final class CheckUnusedPrivatePropertiesTest extends TypeICompilerTestCas
   }
 
   public void testClassMethodUnused1() {
-    this.mode = TypeInferenceMode.NEITHER;
+    disableTypeCheck();
 
     unused("class C { constructor() {}  /** @private */ method() {} }");
     used("class C { constructor() {}  /** @private */ method() {} }\n new C().method();");
@@ -102,7 +100,7 @@ public final class CheckUnusedPrivatePropertiesTest extends TypeICompilerTestCas
 
   // The JSDoc seems to be missing here, reenable this test when it is fixed.
   public void disable_testClassMethodUnused2() {
-    this.mode = TypeInferenceMode.NEITHER;
+    disableTypeCheck();
 
     unused("class C { constructor() {}\n  /** @private */ ['method']() {} }");
     used("class C { constructor() {}\n  /** @private */ ['method']() {} }\n new C()['method']();");
@@ -229,6 +227,18 @@ public final class CheckUnusedPrivatePropertiesTest extends TypeICompilerTestCas
     used(lines(
         "/** @constructor */ function A() {/** @private */  this.foo = 1;}",
         "use({foo: 'foo'});"));
+
+    // member functions prevent renaming (since we allow them in goog.reflect.object)
+    used(
+        lines(
+            "/** @constructor */ function A() {/** @private */  this.foo = 1;}",
+            "use({foo() {}});"));
+
+    // computed property doesn't prevent warning
+    unused(
+        lines(
+            "/** @constructor */ function A() {/** @private */  this.foo = 1;}",
+            "use({['foo']: 'foo'});"));
   }
 
   public void testPrototypeProps1() {

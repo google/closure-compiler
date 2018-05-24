@@ -106,7 +106,7 @@ public class RewriteGoogJsImports implements HotSwapCompilerPass {
     public FindExports(Node googRoot) {
       checkState(Es6RewriteModules.isEs6ModuleRoot(googRoot));
       exportedNames = new HashSet<>();
-      NodeTraversal.traverseEs6(compiler, googRoot, this);
+      NodeTraversal.traverse(compiler, googRoot, this);
     }
 
     private void visitExport(Node export) {
@@ -158,7 +158,7 @@ public class RewriteGoogJsImports implements HotSwapCompilerPass {
 
     public ReferenceReplacer(Node script, Node googImportNode) {
       this.googImportNode = googImportNode;
-      NodeTraversal.traverseEs6(compiler, script, this);
+      NodeTraversal.traverse(compiler, script, this);
 
       if (googImportNode.getSecondChild().isImportStar()) {
         if (hasBadExport) {
@@ -309,7 +309,7 @@ public class RewriteGoogJsImports implements HotSwapCompilerPass {
   public void hotSwapScript(Node scriptRoot, Node originalRoot) {
     if (Es6RewriteModules.isEs6ModuleRoot(scriptRoot)) {
       Node googImportNode = findGoogImportNode(scriptRoot);
-      NodeTraversal.traverseEs6(compiler, scriptRoot, new FindReexports(googImportNode != null));
+      NodeTraversal.traverse(compiler, scriptRoot, new FindReexports(googImportNode != null));
 
       // exportsFinder can be null in LINT_AND_REWRITE which indicates that goog.js is not part of
       // the input. Meaning we should just lint and do not do any rewriting.

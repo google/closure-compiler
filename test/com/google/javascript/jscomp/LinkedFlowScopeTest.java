@@ -29,8 +29,8 @@ import com.google.javascript.rhino.jstype.JSType;
 
 public final class LinkedFlowScopeTest extends CompilerTypeTestCase {
 
-  private final Node rootNode = new Node(Token.ROOT);
   private final Node functionNode = new Node(Token.FUNCTION);
+  private final Node rootNode = new Node(Token.ROOT, functionNode);
   private static final int LONG_CHAIN_LENGTH = 1050;
 
   private TypedScope globalScope;
@@ -55,37 +55,24 @@ public final class LinkedFlowScopeTest extends CompilerTypeTestCase {
     localEntry = LinkedFlowScope.createEntryLattice(localScope);
   }
 
-  public void testOptimize() {
-    assertEquals(localEntry, localEntry.optimize());
-
-    FlowScope child = localEntry.createChildFlowScope();
-    assertEquals(localEntry, child.optimize());
-
-    child.inferSlotType("localB", NUMBER_TYPE);
-    assertEquals(child, child.optimize());
-  }
-
   public void testJoin1() {
-    FlowScope childA = localEntry.createChildFlowScope();
-    childA.inferSlotType("localB", NUMBER_TYPE);
+    FlowScope childA = localEntry.inferSlotType("localB", getNativeNumberType());
+    FlowScope childAB = childA.inferSlotType("localB", getNativeStringType());
+    FlowScope childB = localEntry.inferSlotType("localB", getNativeBooleanType());
 
-    FlowScope childAB = childA.createChildFlowScope();
-    childAB.inferSlotType("localB", STRING_TYPE);
-
-    FlowScope childB = localEntry.createChildFlowScope();
-    childB.inferSlotType("localB", BOOLEAN_TYPE);
-
-    assertTypeEquals(STRING_TYPE, childAB.getSlot("localB").getType());
-    assertTypeEquals(BOOLEAN_TYPE, childB.getSlot("localB").getType());
+    assertTypeEquals(getNativeStringType(), childAB.getSlot("localB").getType());
+    assertTypeEquals(getNativeBooleanType(), childB.getSlot("localB").getType());
     assertNull(childB.getSlot("localA").getType());
 
     FlowScope joined = join(childB, childAB);
-    assertTypeEquals(createUnionType(STRING_TYPE, BOOLEAN_TYPE),
+    assertTypeEquals(
+        createUnionType(getNativeStringType(), getNativeBooleanType()),
         joined.getSlot("localB").getType());
     assertNull(joined.getSlot("localA").getType());
 
     joined = join(childAB, childB);
-    assertTypeEquals(createUnionType(STRING_TYPE, BOOLEAN_TYPE),
+    assertTypeEquals(
+        createUnionType(getNativeStringType(), getNativeBooleanType()),
         joined.getSlot("localB").getType());
     assertNull(joined.getSlot("localA").getType());
 
@@ -94,144 +81,87 @@ public final class LinkedFlowScopeTest extends CompilerTypeTestCase {
   }
 
   public void testJoin2() {
-    FlowScope childA = localEntry.createChildFlowScope();
-    childA.inferSlotType("localA", STRING_TYPE);
+    FlowScope childA = localEntry.inferSlotType("localA", getNativeStringType());
+    FlowScope childB = localEntry.inferSlotType("globalB", getNativeBooleanType());
 
-    FlowScope childB = localEntry.createChildFlowScope();
-    childB.inferSlotType("globalB", BOOLEAN_TYPE);
-
-    assertTypeEquals(STRING_TYPE, childA.getSlot("localA").getType());
-    assertTypeEquals(BOOLEAN_TYPE, childB.getSlot("globalB").getType());
+    assertTypeEquals(getNativeStringType(), childA.getSlot("localA").getType());
+    assertTypeEquals(getNativeBooleanType(), childB.getSlot("globalB").getType());
     assertNull(childB.getSlot("localB").getType());
 
     FlowScope joined = join(childB, childA);
-    assertTypeEquals(STRING_TYPE, joined.getSlot("localA").getType());
-    assertTypeEquals(BOOLEAN_TYPE, joined.getSlot("globalB").getType());
+    assertTypeEquals(getNativeStringType(), joined.getSlot("localA").getType());
+    assertTypeEquals(getNativeBooleanType(), joined.getSlot("globalB").getType());
 
     joined = join(childA, childB);
-    assertTypeEquals(STRING_TYPE, joined.getSlot("localA").getType());
-    assertTypeEquals(BOOLEAN_TYPE, joined.getSlot("globalB").getType());
+    assertTypeEquals(getNativeStringType(), joined.getSlot("localA").getType());
+    assertTypeEquals(getNativeBooleanType(), joined.getSlot("globalB").getType());
 
     assertEquals("Join should be symmetric",
         join(childB, childA), join(childA, childB));
   }
 
   public void testJoin3() {
-    localScope.declare("localC", null, STRING_TYPE, null);
-    localScope.declare("localD", null, STRING_TYPE, null);
+    localScope.declare("localC", null, getNativeStringType(), null);
+    localScope.declare("localD", null, getNativeStringType(), null);
 
-    FlowScope childA = localEntry.createChildFlowScope();
-    childA.inferSlotType("localC", NUMBER_TYPE);
-
-    FlowScope childB = localEntry.createChildFlowScope();
-    childA.inferSlotType("localD", BOOLEAN_TYPE);
+    FlowScope childA = localEntry.inferSlotType("localC", getNativeNumberType());
+    FlowScope childB = localEntry.inferSlotType("localD", getNativeBooleanType());
 
     FlowScope joined = join(childB, childA);
-    assertTypeEquals(createUnionType(STRING_TYPE, NUMBER_TYPE),
+    assertTypeEquals(
+        createUnionType(getNativeStringType(), getNativeNumberType()),
         joined.getSlot("localC").getType());
-    assertTypeEquals(createUnionType(STRING_TYPE, BOOLEAN_TYPE),
+    assertTypeEquals(
+        createUnionType(getNativeStringType(), getNativeBooleanType()),
         joined.getSlot("localD").getType());
 
     joined = join(childA, childB);
-    assertTypeEquals(createUnionType(STRING_TYPE, NUMBER_TYPE),
+    assertTypeEquals(
+        createUnionType(getNativeStringType(), getNativeNumberType()),
         joined.getSlot("localC").getType());
-    assertTypeEquals(createUnionType(STRING_TYPE, BOOLEAN_TYPE),
+    assertTypeEquals(
+        createUnionType(getNativeStringType(), getNativeBooleanType()),
         joined.getSlot("localD").getType());
 
     assertEquals("Join should be symmetric",
         join(childB, childA), join(childA, childB));
   }
 
-  /**
-   * Create a long chain of flow scopes where each link in the chain
-   * contains one slot.
-   */
-  public void testLongChain1() {
-    FlowScope chainA = localEntry.createChildFlowScope();
-    FlowScope chainB = localEntry.createChildFlowScope();
+  /** Create a long chain of flow scopes. */
+  public void testLongChain() {
+    FlowScope chainA = localEntry;
+    FlowScope chainB = localEntry;
     for (int i = 0; i < LONG_CHAIN_LENGTH; i++) {
       localScope.declare("local" + i, null, null, null);
-      chainA.inferSlotType("local" + i,
-          i % 2 == 0 ? NUMBER_TYPE : BOOLEAN_TYPE);
-      chainB.inferSlotType("local" + i,
-          i % 3 == 0 ? STRING_TYPE : BOOLEAN_TYPE);
-
-      chainA = chainA.createChildFlowScope();
-      chainB = chainB.createChildFlowScope();
+      chainA =
+          chainA.inferSlotType(
+              "local" + i, i % 2 == 0 ? getNativeNumberType() : getNativeBooleanType());
+      chainB =
+          chainB.inferSlotType(
+              "local" + i, i % 3 == 0 ? getNativeStringType() : getNativeBooleanType());
     }
 
-    verifyLongChains(chainA, chainB);
-  }
-
-  /**
-   * Create a long chain of flow scopes where each link in the chain
-   * contains 7 slots.
-   */
-  public void testLongChain2() {
-    FlowScope chainA = localEntry.createChildFlowScope();
-    FlowScope chainB = localEntry.createChildFlowScope();
-    for (int i = 0; i < LONG_CHAIN_LENGTH * 7; i++) {
-      localScope.declare("local" + i, null, null, null);
-      chainA.inferSlotType("local" + i,
-          i % 2 == 0 ? NUMBER_TYPE : BOOLEAN_TYPE);
-      chainB.inferSlotType("local" + i,
-          i % 3 == 0 ? STRING_TYPE : BOOLEAN_TYPE);
-
-      if (i % 7 == 0) {
-        chainA = chainA.createChildFlowScope();
-        chainB = chainB.createChildFlowScope();
-      }
-    }
-
-    verifyLongChains(chainA, chainB);
-  }
-
-  /**
-   * Create a long chain of flow scopes where every 4 links in the chain
-   * contain a slot.
-   */
-  public void testLongChain3() {
-    FlowScope chainA = localEntry.createChildFlowScope();
-    FlowScope chainB = localEntry.createChildFlowScope();
-    for (int i = 0; i < LONG_CHAIN_LENGTH * 7; i++) {
-      if (i % 7 == 0) {
-        int j = i / 7;
-        localScope.declare("local" + j, null, null, null);
-        chainA.inferSlotType("local" + j,
-            j % 2 == 0 ? NUMBER_TYPE : BOOLEAN_TYPE);
-        chainB.inferSlotType("local" + j,
-            j % 3 == 0 ? STRING_TYPE : BOOLEAN_TYPE);
-      }
-
-      chainA = chainA.createChildFlowScope();
-      chainB = chainB.createChildFlowScope();
-    }
-
-    verifyLongChains(chainA, chainB);
-  }
-
-  // Common chain verification for testLongChainN for all N.
-  private void verifyLongChains(FlowScope chainA, FlowScope chainB) {
     FlowScope joined = join(chainA, chainB);
     for (int i = 0; i < LONG_CHAIN_LENGTH; i++) {
       assertTypeEquals(
-          i % 2 == 0 ? NUMBER_TYPE : BOOLEAN_TYPE,
+          i % 2 == 0 ? getNativeNumberType() : getNativeBooleanType(),
           chainA.getSlot("local" + i).getType());
       assertTypeEquals(
-          i % 3 == 0 ? STRING_TYPE : BOOLEAN_TYPE,
+          i % 3 == 0 ? getNativeStringType() : getNativeBooleanType(),
           chainB.getSlot("local" + i).getType());
 
       JSType joinedSlotType = joined.getSlot("local" + i).getType();
       if (i % 6 == 0) {
-        assertTypeEquals(createUnionType(STRING_TYPE, NUMBER_TYPE), joinedSlotType);
+        assertTypeEquals(
+            createUnionType(getNativeStringType(), getNativeNumberType()), joinedSlotType);
       } else if (i % 2 == 0) {
-        assertTypeEquals(createUnionType(NUMBER_TYPE, BOOLEAN_TYPE),
-            joinedSlotType);
+        assertTypeEquals(
+            createUnionType(getNativeNumberType(), getNativeBooleanType()), joinedSlotType);
       } else if (i % 3 == 0) {
-        assertTypeEquals(createUnionType(STRING_TYPE, BOOLEAN_TYPE),
-            joinedSlotType);
+        assertTypeEquals(
+            createUnionType(getNativeStringType(), getNativeBooleanType()), joinedSlotType);
       } else {
-        assertTypeEquals(BOOLEAN_TYPE, joinedSlotType);
+        assertTypeEquals(getNativeBooleanType(), joinedSlotType);
       }
     }
 
@@ -240,46 +170,12 @@ public final class LinkedFlowScopeTest extends CompilerTypeTestCase {
     assertScopesDiffer(chainB, joined);
   }
 
-  public void testFindUniqueSlot() {
-    FlowScope childA = localEntry.createChildFlowScope();
-    childA.inferSlotType("localB", NUMBER_TYPE);
-
-    FlowScope childAB = childA.createChildFlowScope();
-    childAB.inferSlotType("localB", STRING_TYPE);
-
-    FlowScope childABC = childAB.createChildFlowScope();
-    childABC.inferSlotType("localA", BOOLEAN_TYPE);
-
-    assertNull(childABC.findUniqueRefinedSlot(childABC));
-    assertTypeEquals(BOOLEAN_TYPE,
-        childABC.findUniqueRefinedSlot(childAB).getType());
-    assertNull(childABC.findUniqueRefinedSlot(childA));
-    assertNull(childABC.findUniqueRefinedSlot(localEntry));
-
-    assertTypeEquals(STRING_TYPE,
-        childAB.findUniqueRefinedSlot(childA).getType());
-    assertTypeEquals(STRING_TYPE,
-        childAB.findUniqueRefinedSlot(localEntry).getType());
-
-    assertTypeEquals(NUMBER_TYPE,
-        childA.findUniqueRefinedSlot(localEntry).getType());
-  }
-
   public void testDiffer1() {
-    FlowScope childA = localEntry.createChildFlowScope();
-    childA.inferSlotType("localB", NUMBER_TYPE);
-
-    FlowScope childAB = childA.createChildFlowScope();
-    childAB.inferSlotType("localB", STRING_TYPE);
-
-    FlowScope childABC = childAB.createChildFlowScope();
-    childABC.inferSlotType("localA", BOOLEAN_TYPE);
-
-    FlowScope childB = childAB.createChildFlowScope();
-    childB.inferSlotType("localB", STRING_TYPE);
-
-    FlowScope childBC = childB.createChildFlowScope();
-    childBC.inferSlotType("localA", NO_TYPE);
+    FlowScope childA = localEntry.inferSlotType("localB", getNativeNumberType());
+    FlowScope childAB = childA.inferSlotType("localB", getNativeStringType());
+    FlowScope childABC = childAB.inferSlotType("localA", getNativeBooleanType());
+    FlowScope childB = childAB.inferSlotType("localB", getNativeStringType());
+    FlowScope childBC = childB.inferSlotType("localA", getNativeNoType());
 
     assertScopesSame(childAB, childB);
     assertScopesDiffer(childABC, childBC);
@@ -294,11 +190,8 @@ public final class LinkedFlowScopeTest extends CompilerTypeTestCase {
   }
 
   public void testDiffer2() {
-    FlowScope childA = localEntry.createChildFlowScope();
-    childA.inferSlotType("localA", NUMBER_TYPE);
-
-    FlowScope childB = localEntry.createChildFlowScope();
-    childB.inferSlotType("localA", NO_TYPE);
+    FlowScope childA = localEntry.inferSlotType("localA", getNativeNumberType());
+    FlowScope childB = localEntry.inferSlotType("localA", getNativeNoType());
 
     assertScopesDiffer(childA, childB);
   }

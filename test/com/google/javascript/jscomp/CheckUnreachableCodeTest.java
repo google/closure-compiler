@@ -368,6 +368,26 @@ public final class CheckUnreachableCodeTest extends CompilerTestCase {
             "    i++;",
             "  }",
             "}"));
+
+    testSame(
+        lines(
+            "function *f() {",
+            "  try {",
+            "    yield;",
+            "  } catch (e) {",
+            "    alert(e);",
+            "  }",
+            "}"));
+
+    testSame(
+        lines(
+            "function *f() {",
+            "  try {",
+            "    yield 1;",
+            "  } catch (e) {",
+            "    alert(e);",
+            "  }",
+            "}"));
   }
 
   private void assertUnreachable(String js) {

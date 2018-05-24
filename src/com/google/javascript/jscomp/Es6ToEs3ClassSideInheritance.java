@@ -311,8 +311,10 @@ public final class Es6ToEs3ClassSideInheritance implements HotSwapCompilerPass {
             visitDefinedPropertiesCall(t, n);
           }
           break;
+        case CONST:
+        case LET:
         case VAR:
-          visitVar(n);
+          visitVariableDeclaration(n);
           break;
         case ASSIGN:
           visitAssign(t, n);
@@ -383,7 +385,7 @@ public final class Es6ToEs3ClassSideInheritance implements HotSwapCompilerPass {
       }
     }
 
-    private void visitVar(Node n) {
+    private void visitVariableDeclaration(Node n) {
       Node child = n.getFirstChild();
       if (!child.hasChildren()) {
         return;

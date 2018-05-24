@@ -28,7 +28,6 @@ import com.google.javascript.jscomp.type.ReverseAbstractInterpreter;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.TypeIRegistry;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import java.util.List;
 import java.util.Map;
@@ -151,13 +150,13 @@ class ForwardingCompiler extends AbstractCompiler {
   }
 
   @Override
-  public MostRecentTypechecker getMostRecentTypechecker() {
-    return abstractCompiler.getMostRecentTypechecker();
+  public boolean hasTypeCheckingRun() {
+    return abstractCompiler.hasTypeCheckingRun();
   }
 
   @Override
-  public void setMostRecentTypechecker(MostRecentTypechecker mostRecent) {
-    abstractCompiler.setMostRecentTypechecker(mostRecent);
+  public void setTypeCheckingHasRun(boolean hasRun) {
+    abstractCompiler.setTypeCheckingHasRun(hasRun);
   }
 
   @Override
@@ -166,13 +165,8 @@ class ForwardingCompiler extends AbstractCompiler {
   }
 
   @Override
-  public TypeIRegistry getTypeIRegistry() {
-    return abstractCompiler.getTypeIRegistry();
-  }
-
-  @Override
-  public void clearTypeIRegistry() {
-    abstractCompiler.clearTypeIRegistry();
+  public void clearJSTypeRegistry() {
+    abstractCompiler.clearJSTypeRegistry();
   }
 
   @Override
@@ -253,11 +247,6 @@ class ForwardingCompiler extends AbstractCompiler {
   @Override
   public Iterable<TypeMismatch> getImplicitInterfaceUses() {
     return abstractCompiler.getImplicitInterfaceUses();
-  }
-
-  @Override
-  public <T extends TypeIRegistry> T getGlobalTypeInfo() {
-    return abstractCompiler.getGlobalTypeInfo();
   }
 
   @Override
@@ -548,17 +537,6 @@ class ForwardingCompiler extends AbstractCompiler {
   @Override
   public Object getAnnotation(String key) {
     return abstractCompiler.getAnnotation(key);
-  }
-
-  @Nullable
-  @Override
-  public PersistentInputStore getPersistentInputStore() {
-    return abstractCompiler.getPersistentInputStore();
-  }
-
-  @Override
-  public void setPersistentInputStore(PersistentInputStore persistentInputStore) {
-    abstractCompiler.setPersistentInputStore(persistentInputStore);
   }
 
   @Override

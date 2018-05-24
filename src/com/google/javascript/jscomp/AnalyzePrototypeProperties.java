@@ -151,11 +151,11 @@ class AnalyzePrototypeProperties implements CompilerPass {
   public void process(Node externRoot, Node root) {
     checkState(compiler.getLifeCycleStage().isNormalized());
     if (!canModifyExterns) {
-      NodeTraversal.traverseEs6(compiler, externRoot,
+      NodeTraversal.traverse(compiler, externRoot,
           new ProcessExternProperties());
     }
 
-    NodeTraversal.traverseEs6(compiler, root, new ProcessProperties());
+    NodeTraversal.traverse(compiler, root, new ProcessProperties());
 
     FixedPointGraphTraversal<NameInfo, JSModule> t =
         FixedPointGraphTraversal.newTraversal(new PropagateReferences());

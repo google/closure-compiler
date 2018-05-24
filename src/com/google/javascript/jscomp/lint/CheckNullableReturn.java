@@ -24,10 +24,10 @@ import com.google.javascript.jscomp.DiagnosticType;
 import com.google.javascript.jscomp.HotSwapCompilerPass;
 import com.google.javascript.jscomp.NodeTraversal;
 import com.google.javascript.jscomp.NodeUtil;
-import com.google.javascript.rhino.FunctionTypeI;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.TypeI;
+import com.google.javascript.rhino.jstype.FunctionType;
+import com.google.javascript.rhino.jstype.JSType;
 
 /**
  * Checks when a function is annotated as returning {SomeType} (nullable)
@@ -109,12 +109,12 @@ public final class CheckNullableReturn implements HotSwapCompilerPass, NodeTrave
     if (n == null || !n.isFunction()) {
       return false;
     }
-    FunctionTypeI functionType = n.getTypeI().toMaybeFunctionType();
+    FunctionType functionType = n.getJSType().toMaybeFunctionType();
     if (functionType == null) {
       // If the JSDoc declares a non-function type on a function node, we still shouldn't crash.
       return false;
     }
-    TypeI returnType = functionType.getReturnType();
+    JSType returnType = functionType.getReturnType();
     if (returnType == null
         || returnType.isUnknownType() || !returnType.isNullable()) {
       return false;
@@ -140,14 +140,14 @@ public final class CheckNullableReturn implements HotSwapCompilerPass, NodeTrave
 
   /**
    * @return True if the node represents a nullable value. Essentially, this
-   *     is just n.getTypeI().isNullable(), but for purposes of this pass,
+   *     is just n.getJSType().isNullable(), but for purposes of this pass,
    *     the expression {@code x || null} is considered nullable even if
    *     x is always truthy. This often happens with expressions like
    *     {@code arr[i] || null}: The compiler doesn't know that arr[i] can
    *     be undefined.
    */
   private static boolean isNullable(Node n) {
-    return n.getTypeI().isNullable()
+    return n.getJSType().isNullable()
         || (n.isOr() && n.getLastChild().isNull());
   }
 
@@ -158,11 +158,11 @@ public final class CheckNullableReturn implements HotSwapCompilerPass, NodeTrave
 
   @Override
   public void process(Node externs, Node root) {
-    NodeTraversal.traverseEs6(compiler, root, this);
+    NodeTraversal.traverse(compiler, root, this);
   }
 
   @Override
   public void hotSwapScript(Node scriptRoot, Node originalRoot) {
-    NodeTraversal.traverseEs6(compiler, originalRoot, this);
+    NodeTraversal.traverse(compiler, originalRoot, this);
   }
 }

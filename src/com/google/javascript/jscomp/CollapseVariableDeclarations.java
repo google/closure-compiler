@@ -103,7 +103,7 @@ class CollapseVariableDeclarations implements CompilerPass {
     collapses.clear();
     nodesToCollapse.clear();
 
-    NodeTraversal.traverseEs6(compiler, root, new GatherCollapses());
+    NodeTraversal.traverse(compiler, root, new GatherCollapses());
 
     if (!collapses.isEmpty()) {
       applyCollapses();

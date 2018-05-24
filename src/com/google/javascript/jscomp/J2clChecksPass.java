@@ -17,10 +17,10 @@ package com.google.javascript.jscomp;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
-import com.google.javascript.rhino.FunctionTypeI;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-import com.google.javascript.rhino.TypeI;
+import com.google.javascript.rhino.jstype.FunctionType;
+import com.google.javascript.rhino.jstype.JSType;
 
 /**
  * Performs correctness checks which are specific to J2CL-generated patterns.
@@ -61,8 +61,8 @@ public class J2clChecksPass extends AbstractPostOrderCallback implements Compile
         || n.getToken() == Token.EQ
         || n.getToken() == Token.SHNE
         || n.getToken() == Token.NE) {
-      TypeI firstJsType = n.getFirstChild().getTypeI();
-      TypeI lastJsType = n.getLastChild().getTypeI();
+      JSType firstJsType = n.getFirstChild().getJSType();
+      JSType lastJsType = n.getLastChild().getJSType();
       boolean hasType = isType(firstJsType, fileName) || isType(lastJsType, fileName);
       boolean hasNullType = isNullType(firstJsType) || isNullType(lastJsType);
       if (hasType && !hasNullType) {
@@ -71,14 +71,14 @@ public class J2clChecksPass extends AbstractPostOrderCallback implements Compile
     }
   }
 
-  private boolean isNullType(TypeI jsType) {
+  private boolean isNullType(JSType jsType) {
     if (jsType == null) {
       return false;
     }
     return jsType.isNullType() || jsType.isVoidType();
   }
 
-  private boolean isType(TypeI jsType, String fileName) {
+  private boolean isType(JSType jsType, String fileName) {
     if (jsType == null) {
       return false;
     }
@@ -90,8 +90,8 @@ public class J2clChecksPass extends AbstractPostOrderCallback implements Compile
     return sourceName != null && sourceName.endsWith(fileName);
   }
 
-  private String getSourceName(TypeI jsType) {
-    FunctionTypeI constructor = jsType.toMaybeObjectType().getConstructor();
+  private String getSourceName(JSType jsType) {
+    FunctionType constructor = jsType.toMaybeObjectType().getConstructor();
     if (constructor == null) {
       return "";
     }
@@ -100,6 +100,6 @@ public class J2clChecksPass extends AbstractPostOrderCallback implements Compile
 
   @Override
   public void process(Node externs, Node root) {
-    NodeTraversal.traverseEs6(compiler, root, this);
+    NodeTraversal.traverse(compiler, root, this);
   }
 }

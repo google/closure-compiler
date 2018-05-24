@@ -19,17 +19,30 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
-import com.google.javascript.rhino.testing.BaseJSTypeTestCase;
+import com.google.javascript.rhino.JSTypeExpression;
+import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.jstype.FunctionType;
+import com.google.javascript.rhino.jstype.JSType;
+import com.google.javascript.rhino.jstype.JSTypeNative;
+import com.google.javascript.rhino.jstype.JSTypeRegistry;
+import com.google.javascript.rhino.jstype.ObjectType;
+import com.google.javascript.rhino.jstype.RecordTypeBuilder;
+import com.google.javascript.rhino.jstype.TemplatizedType;
+import com.google.javascript.rhino.testing.Asserts;
+import com.google.javascript.rhino.testing.TestErrorReporter;
 import java.util.Arrays;
+import junit.framework.TestCase;
 
 /**
- * This class is mostly used by passes testing the old type checker.
- * Passes that run after type checking and need type information use
- * the class TypeICompilerTestCase.
+ * This class is mostly used by passes testing the old type checker. Passes that run after type
+ * checking and need type information use the class TypeICompilerTestCase.
  */
-abstract class CompilerTypeTestCase extends BaseJSTypeTestCase {
+abstract class CompilerTypeTestCase extends TestCase {
+  protected static final Joiner LINE_JOINER = Joiner.on('\n');
 
   static final String CLOSURE_DEFS = LINE_JOINER.join(
       "/** @const */ var goog = {};",
@@ -60,10 +73,16 @@ abstract class CompilerTypeTestCase extends BaseJSTypeTestCase {
       "goog.asserts = {};",
       "/** @return {*} */ goog.asserts.assert = function(x) { return x; };");
 
-  /** A default set of externs for testing. */
+  /**
+   * A default set of externs for testing.
+   *
+   * TODO(bradfordcsmith): Replace this with externs built by TestExternsBuilder.
+   */
   static final String DEFAULT_EXTERNS = CompilerTestCase.DEFAULT_EXTERNS;
 
   protected Compiler compiler;
+  protected JSTypeRegistry registry;
+  protected TestErrorReporter errorReporter;
 
   protected CompilerOptions getDefaultOptions() {
     CompilerOptions options = new CompilerOptions();
@@ -104,6 +123,7 @@ abstract class CompilerTypeTestCase extends BaseJSTypeTestCase {
   @Override
   protected void setUp() throws Exception {
     super.setUp();
+    errorReporter = new TestErrorReporter(null, null);
     initializeNewCompiler(getDefaultOptions());
   }
 
@@ -120,6 +140,214 @@ abstract class CompilerTypeTestCase extends BaseJSTypeTestCase {
     compiler.initOptions(options);
     compiler.setFeatureSet(compiler.getFeatureSet().without(Feature.MODULES));
     registry = compiler.getTypeRegistry();
-    initTypes();
+  }
+
+  protected JSType createUnionType(JSType... variants) {
+    return registry.createUnionType(variants);
+  }
+
+  protected RecordTypeBuilder createRecordTypeBuilder() {
+    return new RecordTypeBuilder(registry);
+  }
+
+  protected JSType createNullableType(JSType type) {
+    return registry.createNullableType(type);
+  }
+
+  protected JSType createOptionalType(JSType type) {
+    return registry.createOptionalType(type);
+  }
+
+  protected TemplatizedType createTemplatizedType(
+      ObjectType baseType, ImmutableList<JSType> templatizedTypes) {
+    return registry.createTemplatizedType(baseType, templatizedTypes);
+  }
+
+  protected TemplatizedType createTemplatizedType(ObjectType baseType, JSType... templatizedType) {
+    return createTemplatizedType(baseType, ImmutableList.copyOf(templatizedType));
+  }
+
+  /** Asserts that a Node representing a type expression resolves to the correct {@code JSType}. */
+  protected void assertTypeEquals(JSType expected, Node actual) {
+    assertTypeEquals(expected, new JSTypeExpression(actual, "<BaseJSTypeTestCase.java>"));
+  }
+
+  /** Asserts that a a type expression resolves to the correct {@code JSType}. */
+  protected void assertTypeEquals(JSType expected, JSTypeExpression actual) {
+    assertTypeEquals(expected, resolve(actual));
+  }
+
+  protected final void assertTypeEquals(JSType a, JSType b) {
+    Asserts.assertTypeEquals(a, b);
+  }
+
+  protected final void assertTypeEquals(String msg, JSType a, JSType b) {
+    Asserts.assertTypeEquals(msg, a, b);
+  }
+
+  /** Resolves a type expression, expecting the given warnings. */
+  protected JSType resolve(JSTypeExpression n, String... warnings) {
+    errorReporter.setWarnings(warnings);
+    return n.evaluate(null, registry);
+  }
+
+  protected ObjectType getNativeNoObjectType() {
+    return getNativeObjectType(JSTypeNative.NO_OBJECT_TYPE);
+  }
+
+  protected ObjectType getNativeArrayType() {
+    return getNativeObjectType(JSTypeNative.ARRAY_TYPE);
+  }
+
+  protected ObjectType getNativeStringObjectType() {
+    return getNativeObjectType(JSTypeNative.STRING_OBJECT_TYPE);
+  }
+
+  protected ObjectType getNativeNumberObjectType() {
+    return getNativeObjectType(JSTypeNative.NUMBER_OBJECT_TYPE);
+  }
+
+  protected ObjectType getNativeBooleanObjectType() {
+    return getNativeObjectType(JSTypeNative.BOOLEAN_OBJECT_TYPE);
+  }
+
+  protected ObjectType getNativeNoType() {
+    return getNativeObjectType(JSTypeNative.NO_TYPE);
+  }
+
+  protected ObjectType getNativeUnknownType() {
+    return getNativeObjectType(JSTypeNative.UNKNOWN_TYPE);
+  }
+
+  protected ObjectType getNativeCheckedUnknownType() {
+    return getNativeObjectType(JSTypeNative.CHECKED_UNKNOWN_TYPE);
+  }
+
+  protected ObjectType getNativeErrorType() {
+    return getNativeObjectType(JSTypeNative.ERROR_TYPE);
+  }
+
+  protected ObjectType getNativeObjectType() {
+    return getNativeObjectType(JSTypeNative.OBJECT_TYPE);
+  }
+
+  ObjectType getNativeObjectType(JSTypeNative jsTypeNative) {
+    return registry.getNativeObjectType(jsTypeNative);
+  }
+
+  protected FunctionType getNativeObjectConstructorType() {
+    return getNativeFunctionType(JSTypeNative.OBJECT_FUNCTION_TYPE);
+  }
+
+  protected FunctionType getNativeArrayConstructorType() {
+    return getNativeFunctionType(JSTypeNative.ARRAY_FUNCTION_TYPE);
+  }
+
+  protected FunctionType getNativeBooleanObjectConstructorType() {
+    return getNativeFunctionType(JSTypeNative.BOOLEAN_OBJECT_FUNCTION_TYPE);
+  }
+
+  protected FunctionType getNativeNumberObjectConstructorType() {
+    return getNativeFunctionType(JSTypeNative.NUMBER_OBJECT_FUNCTION_TYPE);
+  }
+
+  protected FunctionType getNativeStringObjectConstructorType() {
+    return getNativeFunctionType(JSTypeNative.STRING_OBJECT_FUNCTION_TYPE);
+  }
+
+  protected FunctionType getNativeErrorConstructorType() {
+    return getNativeFunctionType(JSTypeNative.ERROR_FUNCTION_TYPE);
+  }
+
+  protected FunctionType getNativeEvalErrorConstructorType() {
+    return getNativeFunctionType(JSTypeNative.EVAL_ERROR_FUNCTION_TYPE);
+  }
+
+  protected FunctionType getNativeRangeErrorConstructorType() {
+    return getNativeFunctionType(JSTypeNative.RANGE_ERROR_FUNCTION_TYPE);
+  }
+
+  protected FunctionType getNativeReferenceErrorConstructorType() {
+    return getNativeFunctionType(JSTypeNative.REFERENCE_ERROR_FUNCTION_TYPE);
+  }
+
+  protected FunctionType getNativeSyntaxErrorConstructorType() {
+    return getNativeFunctionType(JSTypeNative.SYNTAX_ERROR_FUNCTION_TYPE);
+  }
+
+  protected FunctionType getNativeTypeErrorConstructorType() {
+    return getNativeFunctionType(JSTypeNative.TYPE_ERROR_FUNCTION_TYPE);
+  }
+
+  protected FunctionType getNativeUriErrorConstructorType() {
+    return getNativeFunctionType(JSTypeNative.URI_ERROR_FUNCTION_TYPE);
+  }
+
+  protected FunctionType getNativeDateConstructorType() {
+    return getNativeFunctionType(JSTypeNative.DATE_FUNCTION_TYPE);
+  }
+
+  protected FunctionType getNativeRegexpConstructorType() {
+    return getNativeFunctionType(JSTypeNative.REGEXP_FUNCTION_TYPE);
+  }
+
+  protected FunctionType getNativeU2UConstructorType() {
+    return getNativeFunctionType(JSTypeNative.U2U_CONSTRUCTOR_TYPE);
+  }
+
+  protected FunctionType getNativeU2UFunctionType() {
+    return getNativeFunctionType(JSTypeNative.U2U_FUNCTION_TYPE);
+  }
+
+  FunctionType getNativeFunctionType(JSTypeNative jsTypeNative) {
+    return registry.getNativeFunctionType(jsTypeNative);
+  }
+
+  protected JSType getNativeVoidType() {
+    return getNativeType(JSTypeNative.VOID_TYPE);
+  }
+
+  protected JSType getNativeNullType() {
+    return getNativeType(JSTypeNative.NULL_TYPE);
+  }
+
+  protected JSType getNativeNullVoidType() {
+    return getNativeType(JSTypeNative.NULL_VOID);
+  }
+
+  protected JSType getNativeNumberType() {
+    return getNativeType(JSTypeNative.NUMBER_TYPE);
+  }
+
+  protected JSType getNativeBooleanType() {
+    return getNativeType(JSTypeNative.BOOLEAN_TYPE);
+  }
+
+  protected JSType getNativeStringType() {
+    return getNativeType(JSTypeNative.STRING_TYPE);
+  }
+
+  protected JSType getNativeObjectNumberStringBooleanType() {
+    return getNativeType(JSTypeNative.OBJECT_NUMBER_STRING_BOOLEAN);
+  }
+
+  protected JSType getNativeNumberStringBooleanType() {
+    return getNativeType(JSTypeNative.NUMBER_STRING_BOOLEAN);
+  }
+
+  protected JSType getNativeObjectNumberStringBooleanSymbolType() {
+    return getNativeType(JSTypeNative.OBJECT_NUMBER_STRING_BOOLEAN_SYMBOL);
+  }
+
+  protected JSType getNativeNumberStringBooleanSymbolType() {
+    return getNativeType(JSTypeNative.NUMBER_STRING_BOOLEAN_SYMBOL);
+  }
+
+  JSType getNativeAllType() {
+    return getNativeType(JSTypeNative.ALL_TYPE);
+  }
+
+  JSType getNativeType(JSTypeNative jsTypeNative) {
+    return registry.getNativeType(jsTypeNative);
   }
 }

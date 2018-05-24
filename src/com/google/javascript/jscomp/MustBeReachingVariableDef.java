@@ -439,7 +439,7 @@ final class MustBeReachingVariableDef extends
    * in the def's depends set.
    */
   private void computeDependence(final Definition def, Node rValue) {
-    NodeTraversal.traverseEs6(
+    NodeTraversal.traverse(
         compiler,
         rValue,
         new AbstractCfgNodeTraversalCallback() {

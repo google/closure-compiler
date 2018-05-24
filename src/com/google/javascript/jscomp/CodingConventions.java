@@ -20,13 +20,12 @@ import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.collect.ImmutableList;
 import com.google.errorprone.annotations.Immutable;
-import com.google.javascript.rhino.FunctionTypeI;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.NominalTypeBuilder;
-import com.google.javascript.rhino.ObjectTypeI;
 import com.google.javascript.rhino.StaticSourceFile;
-import com.google.javascript.rhino.TypeIRegistry;
 import com.google.javascript.rhino.jstype.FunctionType;
+import com.google.javascript.rhino.jstype.JSTypeRegistry;
+import com.google.javascript.rhino.jstype.ObjectType;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -215,7 +214,7 @@ public final class CodingConventions {
 
     @Override
     public void applySingletonGetter(
-        NominalTypeBuilder classType, FunctionTypeI getterType) {
+        NominalTypeBuilder classType, FunctionType getterType) {
       nextConvention.applySingletonGetter(classType, getterType);
     }
 
@@ -234,8 +233,8 @@ public final class CodingConventions {
         NominalTypeBuilder delegateSuperclass,
         NominalTypeBuilder delegateBase,
         NominalTypeBuilder delegator,
-        ObjectTypeI delegateProxy,
-        FunctionTypeI findDelegate) {
+        ObjectType delegateProxy,
+        FunctionType findDelegate) {
       nextConvention.applyDelegateRelationship(
           delegateSuperclass, delegateBase, delegator, delegateProxy, findDelegate);
     }
@@ -254,7 +253,7 @@ public final class CodingConventions {
 
     @Override
     public void defineDelegateProxyPrototypeProperties(
-        TypeIRegistry registry,
+        JSTypeRegistry registry,
         List<NominalTypeBuilder> delegateProxies,
         Map<String, String> delegateCallingConventions) {
       nextConvention.defineDelegateProxyPrototypeProperties(
@@ -472,7 +471,7 @@ public final class CodingConventions {
 
     @Override
     public void applySingletonGetter(
-        NominalTypeBuilder classType, FunctionTypeI getterType) {
+        NominalTypeBuilder classType, FunctionType getterType) {
       // do nothing.
     }
 
@@ -492,8 +491,8 @@ public final class CodingConventions {
         NominalTypeBuilder delegateSuperclass,
         NominalTypeBuilder delegateBase,
         NominalTypeBuilder delegator,
-        ObjectTypeI delegateProxy,
-        FunctionTypeI findDelegate) {
+        ObjectType delegateProxy,
+        FunctionType findDelegate) {
       // do nothing.
     }
 
@@ -510,7 +509,7 @@ public final class CodingConventions {
 
     @Override
     public void defineDelegateProxyPrototypeProperties(
-        TypeIRegistry registry,
+        JSTypeRegistry registry,
         List<NominalTypeBuilder> delegateProxies,
         Map<String, String> delegateCallingConventions) {
       // do nothing.

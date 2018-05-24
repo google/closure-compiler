@@ -47,7 +47,8 @@ package com.google.javascript.rhino.jstype;
 
 import com.google.javascript.rhino.Node;
 
-public class TemplateType extends ProxyObjectType {
+/** A placeholder type, used as keys in {@link TemplateTypeMap}s. */
+public final class TemplateType extends ProxyObjectType {
   private static final long serialVersionUID = 1L;
 
   private final String name;

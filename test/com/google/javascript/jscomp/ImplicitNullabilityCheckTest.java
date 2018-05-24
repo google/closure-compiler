@@ -17,7 +17,7 @@
 package com.google.javascript.jscomp;
 
 /** Unit tests for {@link ImplicitNullabilityCheck}. */
-public final class ImplicitNullabilityCheckTest extends TypeICompilerTestCase {
+public final class ImplicitNullabilityCheckTest extends CompilerTestCase {
 
   @Override
   protected CompilerOptions getOptions(CompilerOptions options) {
@@ -38,7 +38,7 @@ public final class ImplicitNullabilityCheckTest extends TypeICompilerTestCase {
   @Override
   protected void setUp() throws Exception {
     super.setUp();
-    enableTranspile();
+    enableTypeCheck();
   }
 
   public void testExplicitJsdocDoesntWarn() {
@@ -50,6 +50,13 @@ public final class ImplicitNullabilityCheckTest extends TypeICompilerTestCase {
     noWarning("/** @type {function(new:Object)} */ function f(){}");
     noWarning("/** @type {function(this:Object)} */ function f(){}");
     noWarning("/** @typedef {!Object} */ var Obj; var /** Obj */ x;");
+
+    // Test let and const
+    noWarning("/** @type {boolean} */ let x;");
+    noWarning("/** @type {!Object} */ let x;");
+
+    noWarning("/** @type {!Object} */ const x = {};");
+    noWarning("/** @type {boolean} */ const x = true;");
   }
 
   public void testExplicitlyNullableUnion() {
@@ -58,6 +65,12 @@ public final class ImplicitNullabilityCheckTest extends TypeICompilerTestCase {
     noWarning("/** @type {?(Object|number)} */ var x;");
     noWarning("/** @type {(Object|?number)} */ var x;");
     warnImplicitlyNullable("/** @type {(Object|number)} */ var x;");
+
+    noWarning("/** @type {(Object|null)} */ let x;");
+    warnImplicitlyNullable("/** @type {(Object|number)} */ let x;");
+
+    noWarning("/** @type {(Object|null)} */ const x = null;");
+    warnImplicitlyNullable("/** @type {(Object|number)} */ const x = 3;;");
   }
 
   public void testJsdocPositions() {
@@ -66,6 +79,9 @@ public final class ImplicitNullabilityCheckTest extends TypeICompilerTestCase {
     warnImplicitlyNullable("/** @typedef {Object} */ var x;");
     warnImplicitlyNullable("/** @param {Object} x */ function f(x){}");
     warnImplicitlyNullable("/** @return {Object} */ function f(x){ return {}; }");
+
+    warnImplicitlyNullable("/** @type {Object} */ let x;");
+    warnImplicitlyNullable("/** @type {Object} */ const x = {};");
   }
 
   public void testParameterizedObject() {
@@ -75,25 +91,15 @@ public final class ImplicitNullabilityCheckTest extends TypeICompilerTestCase {
   }
 
   public void testNullableTypedef() {
-    // Arguable whether or not this deserves a warning, so leaving
-    // out of NTI for now.
-    this.mode = TypeInferenceMode.OTI_ONLY;
+    // Arguable whether or not this deserves a warning
     warnImplicitlyNullable("/** @typedef {?number} */ var Num; var /** Num */ x;");
   }
 
   public void testUnknownTypenameDoesntWarn() {
-    // Different warnings in OTI and NTI
-    this.mode = TypeInferenceMode.OTI_ONLY;
     test(
         externs(DEFAULT_EXTERNS),
         srcs("/** @type {gibberish} */ var x;"),
         warning(RhinoErrorReporter.UNRECOGNIZED_TYPE_ERROR));
-
-    this.mode = TypeInferenceMode.NTI_ONLY;
-    test(
-        externs(DEFAULT_EXTERNS),
-        srcs("/** @type {gibberish} */ var x;"),
-        warning(GlobalTypeInfoCollector.UNRECOGNIZED_TYPE_NAME));
   }
 
   public void testThrowsDoesntWarn() {
@@ -107,8 +113,7 @@ public final class ImplicitNullabilityCheckTest extends TypeICompilerTestCase {
         "function Foo() {}",
         "/** @type {Foo} */ var x;"));
 
-    // TODO(aravindpg): this ought to warn under both, or at any rate NTI.
-    noWarning(lines(
+    warnImplicitlyNullable(lines(
         "function f() {",
         "  /** @constructor */",
         "  function Foo() {}",

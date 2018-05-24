@@ -44,10 +44,10 @@ import com.google.javascript.rhino.StaticSourceFile;
 
 /**
  * A simple immutable reference.
+ *
  * @author nicksantos@google.com (Nick Santos)
  */
-public class SimpleReference<T extends StaticTypedSlot<JSType>>
-    implements StaticTypedRef<JSType> {
+public class SimpleReference<T extends StaticTypedSlot> implements StaticTypedRef {
   private final T symbol;
   private final Node node;
 

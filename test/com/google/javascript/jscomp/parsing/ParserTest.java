@@ -25,6 +25,7 @@ import static com.google.javascript.jscomp.testing.NodeSubject.assertNode;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
+import com.google.javascript.jscomp.NodeUtil;
 import com.google.javascript.jscomp.parsing.Config.LanguageMode;
 import com.google.javascript.jscomp.parsing.ParserRunner.ParseResult;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
@@ -475,6 +476,70 @@ public final class ParserTest extends BaseJSTypeTestCase {
     assertNode(value).hasType(Token.NUMBER);
     assertNode(value).hasLineno(4);
     assertNode(value).hasCharno(4);
+  }
+
+  public void testLinenoCharnoObjectLiteralMemberFunction() throws Exception {
+    mode = LanguageMode.ECMASCRIPT6;
+    Node n = parse("var a = {\n fn() {} };").getFirstFirstChild().getFirstChild();
+
+    assertNode(n).hasType(Token.OBJECTLIT);
+    assertNode(n).hasLineno(1);
+    assertNode(n).hasCharno(8);
+
+    // fn() {}
+    Node key = n.getFirstChild();
+
+    assertNode(key).hasType(Token.MEMBER_FUNCTION_DEF);
+    assertNode(key).hasLineno(2);
+    assertNode(key).hasCharno(1);
+    assertNode(key).hasLength(2); // "fn"
+
+    Node value = key.getFirstChild();
+
+    assertNode(value).hasType(Token.FUNCTION);
+    assertNode(value).hasLineno(2);
+    assertNode(value).hasCharno(1);
+    assertNode(value).hasLength(7); // "fn() {}"
+  }
+
+  public void testLinenoCharnoEs6Class() throws Exception {
+    mode = LanguageMode.ECMASCRIPT6;
+    Node n = parse("class C {\n  fn1() {}\n  static fn2() {}\n };").getFirstChild();
+
+    assertNode(n).hasType(Token.CLASS);
+    assertNode(n).hasLineno(1);
+    assertNode(n).hasCharno(0);
+
+    Node members = NodeUtil.getClassMembers(n);
+    assertNode(members).hasType(Token.CLASS_MEMBERS);
+
+    // fn1 () {}
+    Node memberFn = members.getFirstChild();
+
+    assertNode(memberFn).hasType(Token.MEMBER_FUNCTION_DEF);
+    assertNode(memberFn).hasLineno(2);
+    assertNode(memberFn).hasCharno(2);
+    assertNode(memberFn).hasLength(3); // "fn"
+
+    Node fn = memberFn.getFirstChild();
+    assertNode(fn).hasType((Token.FUNCTION));
+    assertNode(fn).hasLineno(2);
+    assertNode(fn).hasCharno(2);
+    assertNode(fn).hasLength(8); // "fn1() {}"
+
+    // static fn2() {}
+    memberFn = memberFn.getNext();
+
+    assertNode(memberFn).hasType(Token.MEMBER_FUNCTION_DEF);
+    assertNode(memberFn).hasLineno(3);
+    assertNode(memberFn).hasCharno(9);
+    assertNode(memberFn).hasLength(3); // "fn2"
+
+    fn = memberFn.getFirstChild();
+    assertNode(fn).hasType((Token.FUNCTION));
+    assertNode(fn).hasLineno(3);
+    assertNode(fn).hasCharno(2);
+    assertNode(fn).hasLength(15); // "static fn2() {}"
   }
 
   public void testLinenoCharnoAdd() throws Exception {
@@ -2205,26 +2270,50 @@ public final class ParserTest extends BaseJSTypeTestCase {
     parseError("function * f() { yield , yield; }");
   }
 
-  public void testStringLineContinuation() {
+  public void testStringLineContinuationWarningsByMode() {
+    String unrecommendedWarning =
+        "String continuations are not recommended. See"
+            + " https://google.github.io/styleguide/jsguide.html#features-strings-no-line-continuations";
+
     expectFeatures(Feature.STRING_CONTINUATION);
-    mode = LanguageMode.ECMASCRIPT3;
     strictMode = SLOPPY;
-    Node n = parseWarning(
+
+    mode = LanguageMode.ECMASCRIPT3;
+    parseWarning(
         "'one\\\ntwo';",
         requiresLanguageModeMessage(LanguageMode.ECMASCRIPT5, Feature.STRING_CONTINUATION),
-        "String continuations are not recommended. See"
-                + " https://google.github.io/styleguide/jsguide.html#features-strings-no-line-continuations");
-    assertThat(n.getFirstFirstChild().getString()).isEqualTo("onetwo");
+        unrecommendedWarning);
 
     mode = LanguageMode.ECMASCRIPT5;
-    parseWarning("'one\\\ntwo';", "String continuations are not recommended. See"
-        + " https://google.github.io/styleguide/jsguide.html#features-strings-no-line-continuations");
-    assertThat(n.getFirstFirstChild().getString()).isEqualTo("onetwo");
+    parseWarning("'one\\\ntwo';", unrecommendedWarning);
 
     mode = LanguageMode.ECMASCRIPT6;
-    parseWarning("'one\\\ntwo';", "String continuations are not recommended. See"
-        + " https://google.github.io/styleguide/jsguide.html#features-strings-no-line-continuations");
+    parseWarning("'one\\\ntwo';", unrecommendedWarning);
+  }
+
+  public void testStringLineContinuationNormalization() {
+    String unrecommendedWarning =
+        "String continuations are not recommended. See"
+            + " https://google.github.io/styleguide/jsguide.html#features-strings-no-line-continuations";
+
+    expectFeatures(Feature.STRING_CONTINUATION);
+    mode = LanguageMode.ECMASCRIPT6;
+    strictMode = SLOPPY;
+
+    Node n = parseWarning("'one\\\ntwo';", unrecommendedWarning);
     assertThat(n.getFirstFirstChild().getString()).isEqualTo("onetwo");
+
+    n = parseWarning("'one\\\rtwo';", unrecommendedWarning);
+    assertThat(n.getFirstFirstChild().getString()).isEqualTo("onetwo");
+
+    n = parseWarning("'one\\\r\ntwo';", unrecommendedWarning);
+    assertThat(n.getFirstFirstChild().getString()).isEqualTo("onetwo");
+
+    n = parseWarning("'one \\\ntwo';", unrecommendedWarning);
+    assertThat(n.getFirstFirstChild().getString()).isEqualTo("one two");
+
+    n = parseWarning("'one\\\n two';", unrecommendedWarning);
+    assertThat(n.getFirstFirstChild().getString()).isEqualTo("one two");
   }
 
   public void testStringLiteral() {
@@ -3702,6 +3791,14 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
     expectFeatures();
     parseError("export * as s from './someModule';", "'from' expected");
+  }
+
+  public void testExportAsync() {
+    mode = LanguageMode.ECMASCRIPT8;
+    strictMode = SLOPPY;
+
+    expectFeatures(Feature.MODULES, Feature.ASYNC_FUNCTIONS);
+    parse("export async function f() {}");
   }
 
   public void testImportExportTypescriptKeyword() {

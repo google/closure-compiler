@@ -16,10 +16,10 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.javascript.rhino.TypeI;
+import com.google.javascript.rhino.jstype.JSType;
 
 /**
- * The different strategies for matching the {@code TypeI} of nodes.
+ * The different strategies for matching the {@code JSType} of nodes.
  */
 public enum TypeMatchingStrategy {
 
@@ -58,14 +58,14 @@ public enum TypeMatchingStrategy {
     this.allowLooseMatches = allowLooseMatches;
   }
 
-  public MatchResult match(TypeI templateType, TypeI type) {
+  public MatchResult match(JSType templateType, JSType type) {
     if (templateType.isUnknownType()) {
       // If the template type is '?', then any type is a match and this is not considered a loose
       // match.
       return MatchResult.MATCH;
     }
 
-    if (type == null || type.isUnknownType() || type.isTop()) {
+    if (type == null || type.isUnknownType() || type.isAllType()) {
       return allowLooseMatches ? MatchResult.LOOSE_MATCH : MatchResult.NO_MATCH;
     }
 
@@ -88,7 +88,7 @@ public enum TypeMatchingStrategy {
   }
 
   /**
-   * The result of comparing two different {@code TypeI} instances.
+   * The result of comparing two different {@code JSType} instances.
    */
   public enum MatchResult {
     MATCH,

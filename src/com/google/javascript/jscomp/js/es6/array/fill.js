@@ -28,7 +28,7 @@ $jscomp.polyfill('Array.prototype.fill', function(orig) {
    * @param {number=} opt_end End index, or length if omitted.
    * @return {!IArrayLike<VALUE>} The array, with the fill performed in-place.
    * @template VALUE
-   * @suppress {reportUnknownTypes}
+   * @suppress {reportUnknownTypes, strictPrimitiveOperators}
    */
   var polyfill = function(value, opt_start, opt_end) {
     var length = this.length || 0;

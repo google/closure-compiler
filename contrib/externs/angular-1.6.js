@@ -926,7 +926,7 @@ angular.Scope.prototype.$eval = function(opt_exp, opt_locals) {};
  */
 angular.Scope.prototype.$evalAsync = function(opt_exp, opt_locals) {};
 
-/** @type {string} */
+/** @type {number} */
 angular.Scope.prototype.$id;
 
 /**
@@ -981,6 +981,7 @@ angular.Scope.Event.prototype.name;
 
 angular.Scope.Event.prototype.preventDefault = function() {};
 
+/** @type {!Function|undefined} */
 angular.Scope.Event.prototype.stopPropagation = function() {};
 
 /** @type {!angular.Scope} */
@@ -1786,7 +1787,7 @@ angular.$interpolate;
 
 /**
  * @typedef {
- *  function(function(), number=, number=, boolean=):!angular.$q.Promise
+ *  function(function(number=), number=, number=, boolean=):!angular.$q.Promise
  * }
  */
 angular.$interval;
@@ -2000,6 +2001,11 @@ angular.NgModelController.prototype.$formatters;
  * @type {boolean}
  */
 angular.NgModelController.prototype.$invalid;
+
+/**
+ * @param {!Object} options
+ */
+angular.NgModelController.prototype.$overrideModelOptions = function(options) {};
 
 /**
  * @type {!Array<function(?):*>}

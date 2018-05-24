@@ -31,6 +31,8 @@ import java.util.Set;
  */
 class DeclaredGlobalExternsOnWindow implements CompilerPass, NodeTraversal.Callback {
 
+  private static final String WINDOW_NAME = "window";
+
   private final AbstractCompiler compiler;
   private final Set<Node> nodes = new LinkedHashSet<>();
 
@@ -43,28 +45,26 @@ class DeclaredGlobalExternsOnWindow implements CompilerPass, NodeTraversal.Callb
 
   @Override
   public void process(Node externs, Node root) {
-    NodeTraversal.traverseEs6(compiler, externs, this);
+    NodeTraversal.traverse(compiler, externs, this);
     addWindowProperties();
   }
 
   private void addWindowProperties() {
-    if (!nodes.isEmpty() && windowInExterns) {
+    if (!nodes.isEmpty()) {
       for (Node node : nodes) {
-        addExtern(node);
+        addExtern(node, windowInExterns);
         compiler.reportChangeToEnclosingScope(node);
       }
     }
   }
 
-  private static void addExtern(Node node) {
+  private static void addExtern(Node node, boolean defineOnWindow) {
     String name = node.getString();
     JSDocInfo oldJSDocInfo = NodeUtil.getBestJSDocInfo(node);
 
-    // TODO(tbreisacher): Consider adding externs to 'this' instead of 'window',
-    // for environments where the global object is not called 'window.'
-    Node window = IR.name("window");
+    Node globalRef = defineOnWindow ? IR.name(WINDOW_NAME) : IR.thisNode();
     Node string = IR.string(name);
-    Node getprop = IR.getprop(window, string);
+    Node getprop = IR.getprop(globalRef, string);
     Node newNode = getprop;
 
     if (oldJSDocInfo != null) {
@@ -131,7 +131,7 @@ class DeclaredGlobalExternsOnWindow implements CompilerPass, NodeTraversal.Callb
       nodes.add(n.getFirstChild());
     } else if (n.isVar()) {
       for (Node c : n.children()) {
-        if (c.getString().equals("window")) {
+        if (c.getString().equals(WINDOW_NAME)) {
           windowInExterns = true;
           continue;
         }

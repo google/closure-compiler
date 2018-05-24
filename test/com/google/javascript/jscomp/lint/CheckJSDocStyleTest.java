@@ -76,8 +76,8 @@ public final class CheckJSDocStyleTest extends CompilerTestCase {
   }
 
   public void testValidSuppress_onDeclaration() {
-    testSame("/** @const @suppress {newCheckTypes} */ var global = this;");
-    testSame("/** @const @suppress {newCheckTypes} */ goog.global = this;");
+    testSame("/** @const */ var global = this;");
+    testSame("/** @const */ goog.global = this;");
   }
 
   public void testValidSuppress_withES6Modules01() {

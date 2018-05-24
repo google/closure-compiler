@@ -45,7 +45,6 @@ import static com.google.common.truth.Truth.assertThat;
 import com.google.common.collect.Iterables;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.jstype.JSType;
-import com.google.javascript.rhino.jstype.StaticTypedScope;
 import java.util.Iterator;
 import org.junit.Assert;
 
@@ -63,13 +62,8 @@ public class Asserts {
 
   /** @return The resolved type */
   public static JSType assertValidResolve(JSType type) {
-    return assertValidResolve(type, MapBasedScope.emptyScope());
-  }
-
-  /** @return The resolved type */
-  public static JSType assertValidResolve(JSType type, StaticTypedScope<JSType> scope) {
     ErrorReporter reporter = TestErrorReporter.forNoExpectedReports();
-    JSType resolvedType = type.resolve(reporter, scope);
+    JSType resolvedType = type.resolve(reporter);
     assertTypeEquals("JSType#resolve should not affect object equality", type, resolvedType);
     return resolvedType;
   }

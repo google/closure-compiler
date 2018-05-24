@@ -17,13 +17,14 @@ package com.google.javascript.jscomp;
 
 import static com.google.javascript.jscomp.CheckConstPrivateProperties.MISSING_CONST_PROPERTY;
 
-public final class CheckConstPrivatePropertiesTest extends TypeICompilerTestCase {
+public final class CheckConstPrivatePropertiesTest extends CompilerTestCase {
 
   @Override
-  public void setUp() throws Exception {
+  protected void setUp() throws Exception {
     super.setUp();
     // TODO(tbreisacher): After the typechecker is updated to understand ES6, add non-transpiling
     // versions of these tests.
+    enableTypeCheck();
     enableTranspile();
   }
 
@@ -37,8 +38,6 @@ public final class CheckConstPrivatePropertiesTest extends TypeICompilerTestCase
     CompilerOptions options = super.getOptions();
     options.setWarningLevel(DiagnosticGroups.MISSING_CONST_PROPERTY, CheckLevel.WARNING);
     options.setWarningLevel(DiagnosticGroups.MISSING_PROPERTIES, CheckLevel.OFF);
-    // Global this is used deliberately to refer to Window in these tests
-    options.setWarningLevel(new DiagnosticGroup(NewTypeInference.GLOBAL_THIS), CheckLevel.OFF);
     return options;
   }
 

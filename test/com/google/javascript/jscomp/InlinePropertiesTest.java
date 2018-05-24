@@ -19,7 +19,7 @@ package com.google.javascript.jscomp;
 import com.google.javascript.rhino.Node;
 
 /** @author johnlenz@google.com (John Lenz) */
-public final class InlinePropertiesTest extends TypeICompilerTestCase {
+public final class InlinePropertiesTest extends CompilerTestCase {
 
   private static final String EXTERNS =
       lines(
@@ -45,9 +45,6 @@ public final class InlinePropertiesTest extends TypeICompilerTestCase {
     DiagnosticGroup ignored =
         new DiagnosticGroup(
             TypeCheck.INEXISTENT_PROPERTY,
-            NewTypeInference.GLOBAL_THIS,
-            NewTypeInference.INEXISTENT_PROPERTY,
-            NewTypeInference.INVALID_ARGUMENT_TYPE,
             TypeValidator.TYPE_MISMATCH_WARNING);
     options.setWarningLevel(ignored, CheckLevel.OFF);
     return options;
@@ -88,10 +85,10 @@ public final class InlinePropertiesTest extends TypeICompilerTestCase {
   @Override
   protected void setUp() throws Exception {
     super.setUp();
+    enableTypeCheck();
     enableNormalize();
     enableClosurePass();
     enableGatherExternProperties();
-    this.mode = TypeInferenceMode.BOTH;
     this.runSmartNameRemoval = false;
   }
 

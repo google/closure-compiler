@@ -44,7 +44,7 @@ final class PeepholeCollectPropertyAssignments extends AbstractPeepholeOptimizat
     // and start processing there.
     for (Node child = subtree.getFirstChild();
          child != null; child = child.getNext()) {
-      if (!child.isVar() && !NodeUtil.isExprAssign(child)) {
+      if (!NodeUtil.isNameDeclaration(child) && !NodeUtil.isExprAssign(child)) {
         continue;
       }
       if (!isPropertyAssignmentToName(child.getNext())) {
@@ -82,7 +82,7 @@ final class PeepholeCollectPropertyAssignments extends AbstractPeepholeOptimizat
   }
 
   private static Node getName(Node n) {
-    if (n.isVar()) {
+    if (NodeUtil.isNameDeclaration(n)) {
       return n.getFirstChild();
     } else if (NodeUtil.isExprAssign(n)) {
       return n.getFirstFirstChild();
@@ -91,7 +91,7 @@ final class PeepholeCollectPropertyAssignments extends AbstractPeepholeOptimizat
   }
 
   private static Node getValue(Node n) {
-    if (n.isVar()) {
+    if (NodeUtil.isNameDeclaration(n)) {
       return n.getFirstFirstChild();
     } else if (NodeUtil.isExprAssign(n)) {
       return n.getFirstChild().getLastChild();

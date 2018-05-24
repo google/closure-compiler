@@ -18,7 +18,7 @@ package com.google.javascript.jscomp;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.TypeI;
+import com.google.javascript.rhino.jstype.JSType;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -98,8 +98,8 @@ class StrictModeCheck extends AbstractPostOrderCallback
   }
 
   @Override public void process(Node externs, Node root) {
-    NodeTraversal.traverseRootsEs6(compiler, this, externs, root);
-    NodeTraversal.traverseEs6(compiler, root, new NonExternChecks());
+    NodeTraversal.traverseRoots(compiler, this, externs, root);
+    NodeTraversal.traverse(compiler, root, new NonExternChecks());
   }
 
   @Override public void visit(NodeTraversal t, Node n, Node parent) {
@@ -253,7 +253,7 @@ class StrictModeCheck extends AbstractPostOrderCallback
   }
 
   private static boolean isFunctionType(Node n) {
-    TypeI type = n.getTypeI();
+    JSType type = n.getJSType();
     return (type != null && type.isFunctionType());
   }
 }

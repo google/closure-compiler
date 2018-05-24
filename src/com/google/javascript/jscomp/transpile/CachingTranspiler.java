@@ -25,7 +25,7 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import com.google.javascript.jscomp.bundle.TranspilationException;
-import java.nio.file.Path;
+import java.net.URI;
 import java.util.Objects;
 
 /**
@@ -51,7 +51,7 @@ public final class CachingTranspiler implements Transpiler {
   }
 
   @Override
-  public TranspileResult transpile(Path path, String code) {
+  public TranspileResult transpile(URI path, String code) {
     try {
       return cache.getUnchecked(new Key(path, code));
     } catch (UncheckedExecutionException e) {
@@ -72,9 +72,10 @@ public final class CachingTranspiler implements Transpiler {
   }
 
   private static final class Key {
-    private final Path path;
+    private final URI path;
     private final String code;
-    Key(Path path, String code) {
+
+    Key(URI path, String code) {
       this.path = checkNotNull(path);
       this.code = checkNotNull(code);
     }

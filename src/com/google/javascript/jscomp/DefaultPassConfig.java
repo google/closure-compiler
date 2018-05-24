@@ -27,14 +27,13 @@ import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES7;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES8;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES8_MODULES;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES_NEXT;
-import static com.google.javascript.jscomp.parsing.parser.FeatureSet.OTI_SUPPORTED;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.TYPESCRIPT;
+import static com.google.javascript.jscomp.parsing.parser.FeatureSet.TYPE_CHECK_SUPPORTED;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
-import com.google.javascript.jscomp.AbstractCompiler.MostRecentTypechecker;
 import com.google.javascript.jscomp.CompilerOptions.ExtractPrototypeMemberDeclarationsMode;
 import com.google.javascript.jscomp.CompilerOptions.Reach;
 import com.google.javascript.jscomp.CoverageInstrumentationPass.CoverageReach;
@@ -59,7 +58,6 @@ import com.google.javascript.jscomp.lint.CheckUnusedLabels;
 import com.google.javascript.jscomp.lint.CheckUselessBlocks;
 import com.google.javascript.jscomp.parsing.ParserRunner;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
-import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
@@ -188,7 +186,7 @@ public final class DefaultPassConfig extends PassConfig {
     // operator. If we split that into its own pass then the needsTranspilationFrom(ES7) call here
     // can be removed.
     if (options.needsTranspilationFrom(ES6) || options.needsTranspilationFrom(ES7)) {
-      TranspilationPasses.addEs6PreTypecheckPasses(passes);
+      TranspilationPasses.addEs6PreTypecheckPasses(passes, options);
       TranspilationPasses.addEs6PostTypecheckPasses(passes);
       TranspilationPasses.addEs6PostCheckPasses(passes);
       if (options.rewritePolyfills) {
@@ -221,7 +219,7 @@ public final class DefaultPassConfig extends PassConfig {
     return passes;
   }
 
-  private void addOldTypeCheckerPasses(List<PassFactory> checks, CompilerOptions options) {
+  private void addTypeCheckerPasses(List<PassFactory> checks, CompilerOptions options) {
     if (!options.allowsHotswapReplaceScript()) {
       checks.add(inlineTypeAliases);
     }
@@ -394,7 +392,7 @@ public final class DefaultPassConfig extends PassConfig {
 
     if (options.needsTranspilationFrom(ES6)) {
       checks.add(es6ExternsCheck);
-      TranspilationPasses.addEs6PreTypecheckPasses(checks);
+      TranspilationPasses.addEs6PreTypecheckPasses(checks, options);
     }
 
     if (options.rewritePolyfills && !options.checksOnly) {
@@ -416,28 +414,14 @@ public final class DefaultPassConfig extends PassConfig {
     } else {
       checks.add(createEmptyPass(PassNames.BEFORE_TYPE_CHECKING));
 
-      if (options.getNewTypeInference()) {
-        // We will not be updating NTI to understand any more new features,
-        // so transpile those features before running it.
-        if (options.needsTranspilationFrom(ES6)) {
-          TranspilationPasses.addEs6PostTypecheckPasses(checks);
-        }
-        checks.add(symbolTableForNewTypeInference);
-        checks.add(newTypeInference);
-      } else {
-        addOldTypeCheckerPasses(checks, options);
-        if (options.needsTranspilationFrom(ES6)) {
-          TranspilationPasses.addEs6PostTypecheckPasses(checks);
-        }
-      }
+      addTypeCheckerPasses(checks, options);
 
       if (options.j2clPassMode.shouldAddJ2clPasses()) {
         checks.add(j2clSourceFileChecker);
       }
 
       if (!options.disables(DiagnosticGroups.CHECK_USELESS_CODE)
-          || (!options.getNewTypeInference()
-              && !options.disables(DiagnosticGroups.MISSING_RETURN))) {
+          || !options.disables(DiagnosticGroups.MISSING_RETURN)) {
         checks.add(checkControlFlow);
       }
 
@@ -448,10 +432,7 @@ public final class DefaultPassConfig extends PassConfig {
         checks.add(checkAccessControls);
       }
 
-      if (!options.getNewTypeInference()) {
-        // NTI performs this check already
-        checks.add(checkConsts);
-      }
+      checks.add(checkConsts);
 
       // Analyzer checks must be run after typechecking.
       if (options.enables(DiagnosticGroups.ANALYZER_CHECKS) && options.isTypecheckingEnabled()) {
@@ -498,25 +479,8 @@ public final class DefaultPassConfig extends PassConfig {
       }
     }
 
-    if (options.needsTranspilationFrom(ES6) && !options.checksOnly) {
-      // At this point all checks have been done.
-      // There's no need to complete transpilation if we're only running checks.
-      TranspilationPasses.addEs6PostCheckPasses(checks);
-    }
 
 
-    // NOTE(dimvar): Tried to move this into the optimizations, but had to back off
-    // because the very first pass, normalization, rewrites the code in a way that
-    // causes loss of type information.
-    // So, I will convert the remaining optimizations to use TypeI and test that only
-    // in unit tests, not full builds. Once all passes are converted, then
-    // drop the OTI-after-NTI altogether.
-    // In addition, I will probably have a local edit of the repo that retains both
-    // types on Nodes, so I can test full builds on my machine. We can't check in such
-    // a change because it would greatly increase memory usage.
-    if (options.getNewTypeInference()) {
-      addOldTypeCheckerPasses(checks, options);
-    }
 
     // When options.generateExportsAfterTypeChecking is true, run GenerateExports after
     // both type checkers, not just after NTI.
@@ -525,6 +489,15 @@ public final class DefaultPassConfig extends PassConfig {
     }
 
     checks.add(createEmptyPass(PassNames.AFTER_STANDARD_CHECKS));
+
+    if (options.needsTranspilationFrom(ES6) && !options.checksOnly) {
+      // At this point all checks have been done.
+      // There's no need to complete transpilation if we're only running checks.
+
+      TranspilationPasses.addEs6PostTypecheckPasses(checks);
+      TranspilationPasses.addEs6PostCheckPasses(checks);
+    }
+
 
     assertAllOneTimePasses(checks);
     assertValidOrderForChecks(checks);
@@ -577,15 +550,14 @@ public final class DefaultPassConfig extends PassConfig {
       passes.add(instrumentForCodeCoverage);
     }
 
-    // TODO(dimvar): convert this pass to use NTI. Low priority since it's
-    // mostly unused. Converting it shouldn't block switching to NTI.
-    if (options.runtimeTypeCheck && !options.getNewTypeInference()) {
-      passes.add(runtimeTypeCheck);
-    }
-
+    // Should be run before runtimeTypeCheck.
     if (options.j2clPassMode.shouldAddJ2clPasses()) {
       passes.add(j2clPass);
       passes.add(j2clUtilGetDefineRewriterPass);
+    }
+
+    if (options.runtimeTypeCheck) {
+      passes.add(runtimeTypeCheck);
     }
 
     passes.add(createEmptyPass(PassNames.BEFORE_STANDARD_OPTIMIZATIONS));
@@ -720,15 +692,15 @@ public final class DefaultPassConfig extends PassConfig {
       passes.add(replaceStrings);
     }
 
-    // TODO(user): This forces a first crack at crossModuleCodeMotion
+    // TODO(user): This forces a first crack at crossChunkCodeMotion
     // before devirtualization. Once certain functions are devirtualized,
-    // it confuses crossModuleCodeMotion ability to recognized that
+    // it confuses crossChunkCodeMotion ability to recognized that
     // it is recursive.
 
     // TODO(user): This is meant for a temporary quick win.
     // In the future, we might want to improve our analysis in
     // CrossModuleCodeMotion so we don't need to do this.
-    if (options.crossModuleCodeMotion) {
+    if (options.shouldRunCrossChunkCodeMotion()) {
       passes.add(crossModuleCodeMotion);
     }
 
@@ -766,11 +738,11 @@ public final class DefaultPassConfig extends PassConfig {
 
     passes.add(createEmptyPass("beforeModuleMotion"));
 
-    if (options.crossModuleCodeMotion) {
+    if (options.shouldRunCrossChunkCodeMotion()) {
       passes.add(crossModuleCodeMotion);
     }
 
-    if (options.crossModuleMethodMotion) {
+    if (options.shouldRunCrossChunkMethodMotion()) {
       passes.add(crossModuleMethodMotion);
     }
 
@@ -1483,7 +1455,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES5.with(Feature.GENERATORS);
+          return TYPE_CHECK_SUPPORTED;
         }
       };
 
@@ -1880,7 +1852,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return OTI_SUPPORTED;
+          return TYPE_CHECK_SUPPORTED;
         }
       };
 
@@ -1921,33 +1893,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return OTI_SUPPORTED;
-        }
-      };
-
-  private final PassFactory symbolTableForNewTypeInference =
-      new PassFactory("GlobalTypeInfo", true) {
-        @Override
-        protected CompilerPass create(final AbstractCompiler compiler) {
-          return new GlobalTypeInfoCollector(compiler);
-        }
-
-        @Override
-        protected FeatureSet featureSet() {
-          return FeatureSet.NTI_SUPPORTED;
-        }
-      };
-
-  private final PassFactory newTypeInference =
-      new PassFactory("NewTypeInference", true) {
-        @Override
-        protected CompilerPass create(final AbstractCompiler compiler) {
-          return new NewTypeInference(compiler);
-        }
-
-        @Override
-        protected FeatureSet featureSet() {
-          return FeatureSet.NTI_SUPPORTED;
+          return TYPE_CHECK_SUPPORTED;
         }
       };
 
@@ -1973,7 +1919,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return OTI_SUPPORTED;
+          return TYPE_CHECK_SUPPORTED;
         }
       };
 
@@ -2002,33 +1948,33 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return OTI_SUPPORTED;
+          return TYPE_CHECK_SUPPORTED;
         }
       };
 
   /**
-   * Checks possible execution paths of the program for problems: missing return
-   * statements and dead code.
+   * Checks possible execution paths of the program for problems: missing return statements and dead
+   * code.
    */
   private final HotSwapPassFactory checkControlFlow =
       new HotSwapPassFactory("checkControlFlow") {
-    @Override
-    protected HotSwapCompilerPass create(AbstractCompiler compiler) {
-      List<Callback> callbacks = new ArrayList<>();
-      if (!options.disables(DiagnosticGroups.CHECK_USELESS_CODE)) {
-        callbacks.add(new CheckUnreachableCode(compiler));
-      }
-      if (!options.getNewTypeInference() && !options.disables(DiagnosticGroups.MISSING_RETURN)) {
-        callbacks.add(new CheckMissingReturn(compiler));
-      }
-      return combineChecks(compiler, callbacks);
-    }
+        @Override
+        protected HotSwapCompilerPass create(AbstractCompiler compiler) {
+          List<Callback> callbacks = new ArrayList<>();
+          if (!options.disables(DiagnosticGroups.CHECK_USELESS_CODE)) {
+            callbacks.add(new CheckUnreachableCode(compiler));
+          }
+          if (!options.disables(DiagnosticGroups.MISSING_RETURN)) {
+            callbacks.add(new CheckMissingReturn(compiler));
+          }
+          return combineChecks(compiler, callbacks);
+        }
 
-    @Override
-    public FeatureSet featureSet() {
-      return ES8_MODULES;
-    }
-  };
+        @Override
+        public FeatureSet featureSet() {
+          return ES8_MODULES;
+        }
+      };
 
   /** Checks access controls. Depends on type-inference. */
   private final HotSwapPassFactory checkAccessControls =
@@ -2041,7 +1987,7 @@ public final class DefaultPassConfig extends PassConfig {
 
     @Override
     protected FeatureSet featureSet() {
-      return ES5;
+      return TYPE_CHECK_SUPPORTED;
     }
   };
 
@@ -2093,7 +2039,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES5;
+          return TYPE_CHECK_SUPPORTED;
         }
       };
 
@@ -2127,20 +2073,7 @@ public final class DefaultPassConfig extends PassConfig {
 
     @Override
     public void process(Node externs, Node root) {
-      // If NTI is enabled, erase the NTI types from the AST before adding the old types.
-      if (this.compiler.getOptions().getNewTypeInference()) {
-        NodeTraversal.traverseEs6(
-            this.compiler, root,
-            new NodeTraversal.AbstractPostOrderCallback(){
-              @Override
-              public void visit(NodeTraversal t, Node n, Node parent) {
-                n.setTypeI(null);
-              }
-            });
-        this.compiler.clearTypeIRegistry();
-      }
-
-      this.compiler.setMostRecentTypechecker(MostRecentTypechecker.OTI);
+      this.compiler.setTypeCheckingHasRun(true);
       if (topScope == null) {
         regenerateGlobalTypedScope(compiler, root.getParent());
       } else {
@@ -2181,7 +2114,7 @@ public final class DefaultPassConfig extends PassConfig {
 
     @Override
     protected FeatureSet featureSet() {
-      return ES5;
+      return TYPE_CHECK_SUPPORTED;
     }
   };
 
@@ -2215,7 +2148,7 @@ public final class DefaultPassConfig extends PassConfig {
 
     @Override
     protected FeatureSet featureSet() {
-      return ES5;
+      return TYPE_CHECK_SUPPORTED;
     }
   };
 
@@ -2462,7 +2395,7 @@ public final class DefaultPassConfig extends PassConfig {
       return new RescopeGlobalSymbols(
           compiler,
           options.renamePrefixNamespace,
-          options.renamePrefixNamespaceAssumeCrossModuleNames);
+          options.renamePrefixNamespaceAssumeCrossChunkNames);
     }
 
     @Override
@@ -2775,7 +2708,7 @@ public final class DefaultPassConfig extends PassConfig {
           return new CrossModuleCodeMotion(
               compiler,
               compiler.getModuleGraph(),
-              options.parentModuleCanSeeSymbolsDeclaredInChildren);
+              options.parentChunkCanSeeSymbolsDeclaredInChildren);
         }
 
         @Override
@@ -2795,7 +2728,7 @@ public final class DefaultPassConfig extends PassConfig {
               // Only move properties in externs if we're not treating
               // them as exports.
               options.removeUnusedPrototypePropertiesInExterns,
-              options.crossModuleCodeMotionNoStubMethods);
+              options.crossChunkCodeMotionNoStubMethods);
         }
 
         @Override
@@ -3482,7 +3415,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES5;
+          return TYPE_CHECK_SUPPORTED;
         }
       };
 

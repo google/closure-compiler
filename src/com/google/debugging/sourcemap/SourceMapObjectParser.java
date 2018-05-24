@@ -52,6 +52,7 @@ public class SourceMapObjectParser {
       }
 
       builder.setSources(getJavaStringArray(sourceMapRoot.get("sources")));
+      builder.setSourcesContent(getJavaStringArray(sourceMapRoot.get("sourcesContent")));
       builder.setNames(getJavaStringArray(sourceMapRoot.get("names")));
 
       Map<String, Object> extensions = new LinkedHashMap<>();

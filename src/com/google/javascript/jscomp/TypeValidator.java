@@ -24,6 +24,7 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.ARRAY_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.BOOLEAN_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.GENERATOR_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.ITERABLE_TYPE;
+import static com.google.javascript.rhino.jstype.JSTypeNative.I_TEMPLATE_ARRAY_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NO_OBJECT_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NULL_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NUMBER_STRING;
@@ -39,9 +40,9 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.VOID_TYPE;
 import com.google.common.base.Joiner;
 import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.TypeI.Nullability;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
+import com.google.javascript.rhino.jstype.JSType.Nullability;
 import com.google.javascript.rhino.jstype.JSType.SubtypingMode;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
@@ -271,14 +272,28 @@ class TypeValidator implements Serializable {
   }
 
   /**
-   * Expect the type to be an Iterable.
+   * Expect the type to autobox to be an Iterable.
    *
    * @return True if there was no warning, false if there was a mismatch.
    */
-  boolean expectIterable(NodeTraversal t, Node n, JSType type, String msg) {
-    if (!type.isSubtypeOf(getNativeType(ITERABLE_TYPE))) {
-      mismatch(t, n, msg, type, ITERABLE_TYPE);
-      return false;
+  boolean expectAutoboxesToIterable(NodeTraversal t, Node n, JSType type, String msg) {
+    // Note: we don't just use JSType.autobox() here because that removes null and undefined.
+    // We want to keep null and undefined around.
+    if (type.isUnionType()) {
+      for (JSType alt : type.toMaybeUnionType().getAlternatesWithoutStructuralTyping()) {
+        alt = alt.isBoxableScalar() ? alt.autoboxesTo() : alt;
+        if (!alt.isSubtypeOf(getNativeType(ITERABLE_TYPE))) {
+          mismatch(t, n, msg, type, ITERABLE_TYPE);
+          return false;
+        }
+      }
+
+    } else {
+      JSType autoboxedType = type.isBoxableScalar() ? type.autoboxesTo() : type;
+      if (!autoboxedType.isSubtypeOf(getNativeType(ITERABLE_TYPE))) {
+        mismatch(t, n, msg, type, ITERABLE_TYPE);
+        return false;
+      }
     }
     return true;
   }
@@ -287,6 +302,13 @@ class TypeValidator implements Serializable {
   void expectGeneratorSupertype(NodeTraversal t, Node n, JSType type, String msg) {
     if (!getNativeType(GENERATOR_TYPE).isSubtypeOf(type)) {
       mismatch(t, n, msg, type, GENERATOR_TYPE);
+    }
+  }
+
+  /** Expect the type to be an ITemplateArray or supertype of ITemplateArray. */
+  void expectITemplateArraySupertype(NodeTraversal t, Node n, JSType type, String msg) {
+    if (!getNativeType(I_TEMPLATE_ARRAY_TYPE).isSubtypeOf(type)) {
+      mismatch(t, n, msg, type, I_TEMPLATE_ARRAY_TYPE);
     }
   }
 
@@ -396,7 +418,7 @@ class TypeValidator implements Serializable {
   void expectStringOrNumberOrSymbol(NodeTraversal t, Node n, JSType type, String msg) {
     if (!type.matchesNumberContext()
         && !type.matchesStringContext()
-        && !type.matchesStringContext()) {
+        && !type.matchesSymbolContext()) {
       mismatch(t, n, msg, type, NUMBER_STRING_SYMBOL);
     } else if (this.strictOperatorChecks) {
       expectStringOrNumberOrSymbolStrict(n, type, msg);
@@ -479,20 +501,23 @@ class TypeValidator implements Serializable {
   }
 
   /**
-   * Expect that the first type can be addressed with GETELEM syntax,
-   * and that the second type is the right type for an index into the
-   * first type.
+   * Expect that the first type can be addressed with GETELEM syntax and that the second type is the
+   * right type for an index into the first type.
    *
    * @param t The node traversal.
-   * @param n The GETELEM node to issue warnings on.
-   * @param objType The type of the left side of the GETELEM.
-   * @param indexType The type inside the brackets of the GETELEM.
+   * @param n The GETELEM or COMPUTED_PROP node to issue warnings on.
+   * @param objType The type we're indexing into (the left side of the GETELEM).
+   * @param indexType The type inside the brackets of the GETELEM/COMPUTED_PROP.
    */
-  void expectIndexMatch(NodeTraversal t, Node n, JSType objType,
-                        JSType indexType) {
-    checkState(n.isGetElem(), n);
-    Node indexNode = n.getLastChild();
-    if (objType.isStruct() && !isWellKnownSymbol(indexNode)) {
+  void expectIndexMatch(NodeTraversal t, Node n, JSType objType, JSType indexType) {
+    checkState(n.isGetElem() || n.isComputedProp(), n);
+    Node indexNode = n.isGetElem() ? n.getLastChild() : n.getFirstChild();
+    if (indexType.isSymbolValueType()) {
+      // For now, allow symbols definitions/access on any type. In the future only allow them
+      // on the subtypes for which they are defined.
+      return;
+    }
+    if (objType.isStruct()) {
       report(JSError.make(indexNode,
                           ILLEGAL_PROPERTY_ACCESS, "'[]'", "struct"));
     }
@@ -516,14 +541,6 @@ class TypeValidator implements Serializable {
             typeRegistry.createUnionType(ARRAY_TYPE, OBJECT_TYPE));
       }
     }
-  }
-
-  // TODO(sdh): Replace isWellKnownSymbol with a real type-based
-  // check once the type system understands the symbol primitive.
-  // Any @const symbol reference should be allowed for a @struct.
-  private static boolean isWellKnownSymbol(Node n) {
-    return n.isGetProp() && n.getFirstChild().isName()
-        && n.getFirstChild().getString().equals("Symbol");
   }
 
   /**
@@ -775,7 +792,7 @@ class TypeValidator implements Serializable {
    */
   private void expectInterfaceProperty(NodeTraversal t, Node n,
       ObjectType instance, ObjectType implementedInterface, String prop) {
-    StaticTypedSlot<JSType> propSlot = instance.getSlot(prop);
+    StaticTypedSlot propSlot = instance.getSlot(prop);
     if (propSlot == null) {
       // Not implemented
       String sourceName = n.getSourceFileName();

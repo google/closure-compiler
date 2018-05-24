@@ -34,6 +34,8 @@ import com.google.javascript.jscomp.SourceMap.LocationMapping;
 import com.google.javascript.jscomp.deps.ClosureBundler;
 import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
+import com.google.javascript.jscomp.transpile.BaseTranspiler;
+import com.google.javascript.jscomp.transpile.Transpiler;
 import com.google.javascript.rhino.TokenStream;
 import com.google.protobuf.TextFormat;
 import java.io.BufferedReader;
@@ -125,8 +127,8 @@ public class CommandLineRunner extends
   // UTF-8 BOM is 0xEF, 0xBB, 0xBF, of which character code is 65279.
   public static final int UTF8_BOM_CODE = 65279;
 
-  // Allowable module name characters that aren't valid in a JS identifier
-  private static final Pattern extraModuleNameChars = Pattern.compile("[-.]+");
+  // Allowable chunk name characters that aren't valid in a JS identifier
+  private static final Pattern extraChunkNameChars = Pattern.compile("[-.]+");
 
   // I don't really care about unchecked warnings in this class.
   @SuppressWarnings("unchecked")
@@ -220,18 +222,19 @@ public class CommandLineRunner extends
         + "written to stdout")
     private String jsOutputFile = "";
 
-    @Option(name = "--module",
-        usage = "A JavaScript module specification. The format is "
-        + "<name>:<num-js-files>[:[<dep>,...][:]]]. Module names must be "
-        + "unique. Each dep is the name of a module that this module "
-        + "depends on. Modules must be listed in dependency order, and JS "
+    @Option(name = "--chunk",
+        usage = "A JavaScript chunk specification. The format is "
+        + "<name>:<num-js-files>[:[<dep>,...][:]]]. Chunk names must be "
+        + "unique. Each dep is the name of a chunk that this chunk "
+        + "depends on. Chunks must be listed in dependency order, and JS "
         + "source files must be listed in the corresponding order. Where "
-        + "--module flags occur in relation to --js flags is unimportant. "
-        + "<num-js-files> may be set to 'auto' for the first module if it "
+        + "--chunk flags occur in relation to --js flags is unimportant. "
+        + "<num-js-files> may be set to 'auto' for the first chunk if it "
         + "has no dependencies. "
-        + "Provide the value 'auto' to trigger module creation from CommonJS"
-        + "modules.")
-    private List<String> module = new ArrayList<>();
+        + "Provide the value 'auto' to trigger chunk creation from CommonJS"
+        + "modules.",
+        aliases = "--module")
+    private List<String> chunk = new ArrayList<>();
 
     @Option(name = "--continue-saved-compilation",
         usage = "Filename where the intermediate compilation state was previously saved.",
@@ -308,22 +311,24 @@ public class CommandLineRunner extends
         + " like newline in the wrapper.")
     private String outputWrapperFile = "";
 
-    @Option(name = "--module_wrapper",
-        usage = "An output wrapper for a JavaScript module (optional). "
-        + "The format is <name>:<wrapper>. The module name must correspond "
-        + "with a module specified using --module. The wrapper must "
+    @Option(name = "--chunk_wrapper",
+        usage = "An output wrapper for a JavaScript chunk (optional). "
+        + "The format is <name>:<wrapper>. The chunk name must correspond "
+        + "with a chunk specified using --chunk. The wrapper must "
         + "contain %s as the code placeholder. "
         + "Alternately, %output% can be used in place of %s. "
         + "%n% can be used to represent a newline. "
         + "The %basename% placeholder can "
-        + "also be used to substitute the base name of the module output file.")
-    private List<String> moduleWrapper = new ArrayList<>();
+        + "also be used to substitute the base name of the chunk output file.",
+        aliases = "--module_wrapper")
+    private List<String> chunkWrapper = new ArrayList<>();
 
-    @Option(name = "--module_output_path_prefix",
-        usage = "Prefix for filenames of compiled JS modules. "
-        + "<module-name>.js will be appended to this prefix. Directories "
-        + "will be created as needed. Use with --module")
-    private String moduleOutputPathPrefix = "./";
+    @Option(name = "--chunk_output_path_prefix",
+        usage = "Prefix for filenames of compiled JS chunks. "
+        + "<chunk-name>.js will be appended to this prefix. Directories "
+        + "will be created as needed. Use with --chunk",
+        aliases = "--module_output_path_prefix")
+    private String chunkOutputPathPrefix = "./";
 
     @Option(name = "--create_source_map",
         usage = "If specified, a source map file mapping the generated "
@@ -603,9 +608,10 @@ public class CommandLineRunner extends
     )
     private String outputManifest = "";
 
-    @Option(name = "--output_module_dependencies",
-        usage = "Prints out a JSON file of dependencies between modules.")
-    private String outputModuleDependencies = "";
+    @Option(name = "--output_chunk_dependencies",
+        usage = "Prints out a JSON file of dependencies between chunks.",
+        aliases = "--output_module_dependencies")
+    private String outputChunkDependencies = "";
 
     @Option(
       name = "--language_in",
@@ -674,7 +680,7 @@ public class CommandLineRunner extends
 
     @Option(name = "--new_type_inf",
         handler = BooleanOptionHandler.class,
-        usage = "Checks for type errors using the new type inference algorithm.")
+        usage = "Deprecated.  Does nothing. Use jscomp_error=strictCheckTypes instead.")
     private boolean useNewTypeInference = false;
 
     @Option(name = "--rename_variable_prefix",
@@ -784,6 +790,14 @@ public class CommandLineRunner extends
     private ModuleLoader.ResolutionMode moduleResolutionMode = ModuleLoader.ResolutionMode.BROWSER;
 
     @Option(
+        name = "--browser_resolver_prefix_replacements",
+        hidden = false,
+        usage =
+            "Prefixes to replace in ES6 import paths before resolving. "
+                + "module_resolution must be BROWSER_WITH_TRANSFORMED_PREFIXES to take effect.")
+    private Map<String, String> browserResolverPrefixReplacements = ImmutableMap.of();
+
+    @Option(
       name = "--package_json_entry_names",
       usage =
           "Ordered list of entries to look for in package.json files when processing "
@@ -844,7 +858,6 @@ public class CommandLineRunner extends
                     "jscomp_error",
                     "jscomp_off",
                     "jscomp_warning",
-                    "new_type_inf",
                     "strict_mode_input",
                     "warnings_whitelist_file"))
             .putAll(
@@ -880,13 +893,13 @@ public class CommandLineRunner extends
                     "rewrite_polyfills"))
             .putAll(
                 "Code Splitting",
-                ImmutableList.of("module", "module_output_path_prefix", "module_wrapper"))
+                ImmutableList.of("chunk", "chunk_output_path_prefix", "chunk_wrapper"))
             .putAll(
                 "Reports",
                 ImmutableList.of(
                     "create_source_map",
                     "output_manifest",
-                    "output_module_dependencies",
+                    "output_chunk_dependencies",
                     "property_renaming_report",
                     "source_map_input",
                     "source_map_include_content",
@@ -1071,7 +1084,7 @@ public class CommandLineRunner extends
       ImmutableMap<String, String> split = splitPipeParts(
           sourceMapLocationMapping, "--source_map_location_mapping");
       for (Map.Entry<String, String> mapping : split.entrySet()) {
-        locationMappings.add(new SourceMap.LocationMapping(mapping.getKey(),
+        locationMappings.add(new SourceMap.PrefixLocationMapping(mapping.getKey(),
             mapping.getValue()));
       }
 
@@ -1591,15 +1604,15 @@ public class CommandLineRunner extends
           .setJsOutputFile(flags.jsOutputFile)
           .setSaveAfterChecksFileName(flags.saveAfterChecksFile)
           .setContinueSavedCompilationFileName(flags.continueSavedCompilationFile)
-          .setModule(flags.module)
+          .setModule(flags.chunk)
           .setVariableMapOutputFile(flags.variableMapOutputFile)
           .setCreateNameMapFiles(flags.createNameMapFiles)
           .setPropertyMapOutputFile(flags.propertyMapOutputFile)
           .setCodingConvention(conv)
           .setSummaryDetailLevel(flags.summaryDetailLevel)
           .setOutputWrapper(flags.outputWrapper)
-          .setModuleWrapper(flags.moduleWrapper)
-          .setModuleOutputPathPrefix(flags.moduleOutputPathPrefix)
+          .setModuleWrapper(flags.chunkWrapper)
+          .setModuleOutputPathPrefix(flags.chunkOutputPathPrefix)
           .setCreateSourceMap(flags.createSourceMap)
           .setSourceMapFormat(flags.sourceMapFormat)
           .setSourceMapLocationMappings(mappings)
@@ -1614,7 +1627,7 @@ public class CommandLineRunner extends
           .setOutputManifest(ImmutableList.of(flags.outputManifest))
           .setOutputBundle(bundleFiles)
           .setSkipNormalOutputs(skipNormalOutputs)
-          .setOutputModuleDependencies(flags.outputModuleDependencies)
+          .setOutputModuleDependencies(flags.outputChunkDependencies)
           .setProcessCommonJSModules(flags.processCommonJsModules)
           .setModuleRoots(moduleRoots)
           .setTransformAMDToCJSModules(flags.transformAmdModules)
@@ -1622,7 +1635,6 @@ public class CommandLineRunner extends
           .setHideWarningsFor(flags.hideWarningsFor)
           .setAngularPass(flags.angularPass)
           .setInstrumentationTemplateFile(flags.instrumentationFile)
-          .setNewTypeInference(flags.useNewTypeInference)
           .setJsonStreamMode(flags.jsonStreamMode)
           .setErrorFormat(flags.errorFormat);
     }
@@ -1638,8 +1650,8 @@ public class CommandLineRunner extends
   @Override
   protected void checkModuleName(String name) {
     if (!TokenStream.isJSIdentifier(
-        extraModuleNameChars.matcher(name).replaceAll("_"))) {
-      throw new FlagUsageException("Invalid module name: '" + name + "'");
+        extraChunkNameChars.matcher(name).replaceAll("_"))) {
+      throw new FlagUsageException("Invalid chunk name: '" + name + "'");
     }
   }
 
@@ -1810,6 +1822,8 @@ public class CommandLineRunner extends
     }
     options.setSourceMapIncludeSourcesContent(flags.sourceMapIncludeSourcesContent);
     options.setModuleResolutionMode(flags.moduleResolutionMode);
+    options.setBrowserResolverPrefixReplacements(
+        ImmutableMap.copyOf(flags.browserResolverPrefixReplacements));
 
     if (flags.packageJsonEntryNames != null) {
       try {
@@ -1833,16 +1847,40 @@ public class CommandLineRunner extends
     return new Compiler(getErrorPrintStream());
   }
 
-  @Override
-  protected void prepForBundleAndAppendTo(Appendable out, CompilerInput input, String content)
-      throws IOException {
-    new ClosureBundler().withPath(input.getName()).appendInput(out, input, content);
+  private ClosureBundler bundler;
+
+  private ClosureBundler getBundler() {
+    if (bundler != null) {
+      return bundler;
+    }
+
+    ImmutableList<String> moduleRoots;
+    if (!flags.moduleRoot.isEmpty()) {
+      moduleRoots = ImmutableList.copyOf(flags.moduleRoot);
+    } else {
+      moduleRoots = ImmutableList.of(ModuleLoader.DEFAULT_FILENAME_PREFIX);
+    }
+
+    CompilerOptions options = createOptions();
+    return bundler = new ClosureBundler(
+        Transpiler.NULL,
+        new BaseTranspiler(
+            new BaseTranspiler.EsmToCjsCompilerSupplier(
+                options.getModuleResolutionMode(),
+                moduleRoots,
+                options.getBrowserResolverPrefixReplacements()),
+            /* runtimeLibraryName= */ ""));
   }
 
   @Override
-  protected void appendRuntimeTo(Appendable out)
+  protected void prepForBundleAndAppendTo(Appendable out, CompilerInput input, String content)
       throws IOException {
-    new ClosureBundler().appendRuntimeTo(out);
+    getBundler().withPath(input.getName()).appendTo(out, input, content);
+  }
+
+  @Override
+  protected void appendRuntimeTo(Appendable out) throws IOException {
+    getBundler().appendRuntimeTo(out);
   }
 
   @Override

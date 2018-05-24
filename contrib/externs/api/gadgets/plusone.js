@@ -22,6 +22,7 @@
  *
  * @see https://code.google.com/apis/+1button/#jsapi
  * @externs
+ * @suppress {strictMissingProperties}
  */
 
 /**

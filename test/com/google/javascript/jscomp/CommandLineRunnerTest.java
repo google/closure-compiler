@@ -985,7 +985,7 @@ public final class CommandLineRunnerTest extends TestCase {
   public void testSourceMapExpansion2() {
     useModules = ModulePattern.CHAIN;
     args.add("--create_source_map=%outname%.map");
-    args.add("--module_output_path_prefix=foo");
+    args.add("--chunk_output_path_prefix=foo");
     testSame(new String[] {"var x = 3;", "var y = 5;"});
     assertThat(lastCommandLineRunner.expandSourceMapPath(lastCompiler.getOptions(), null))
         .isEqualTo("foo.map");
@@ -994,7 +994,7 @@ public final class CommandLineRunnerTest extends TestCase {
   public void testSourceMapExpansion3() {
     useModules = ModulePattern.CHAIN;
     args.add("--create_source_map=%outname%.map");
-    args.add("--module_output_path_prefix=foo_");
+    args.add("--chunk_output_path_prefix=foo_");
     testSame(new String[] {"var x = 3;", "var y = 5;"});
     assertThat(
         lastCommandLineRunner.expandSourceMapPath(
@@ -1005,7 +1005,7 @@ public final class CommandLineRunnerTest extends TestCase {
   public void testInvalidSourceMapPattern() {
     useModules = ModulePattern.CHAIN;
     args.add("--create_source_map=out.map");
-    args.add("--module_output_path_prefix=foo_");
+    args.add("--chunk_output_path_prefix=foo_");
     test(
         new String[] {"var x = 3;", "var y = 5;"},
         AbstractCommandLineRunner.INVALID_MODULE_SOURCEMAP_PATTERN);
@@ -1033,9 +1033,9 @@ public final class CommandLineRunnerTest extends TestCase {
     args.add("--source_map_location_mapping=foo/|http://bar");
     testSame("var x = 3;");
 
-    List<LocationMapping> mappings = lastCompiler.getOptions().sourceMapLocationMappings;
+    List<? extends LocationMapping> mappings = lastCompiler.getOptions().sourceMapLocationMappings;
     assertThat(ImmutableSet.copyOf(mappings))
-        .containsExactly(new LocationMapping("foo/", "http://bar"));
+        .containsExactly(new SourceMap.PrefixLocationMapping("foo/", "http://bar"));
   }
 
   public void testSourceMapLocationsTranslations2() {
@@ -1046,11 +1046,12 @@ public final class CommandLineRunnerTest extends TestCase {
     args.add("--source_map_location_mapping=xxx/|http://yyy");
     testSame("var x = 3;");
 
-    List<LocationMapping> mappings = lastCompiler.getOptions()
+    List<? extends LocationMapping> mappings = lastCompiler.getOptions()
         .sourceMapLocationMappings;
     assertThat(ImmutableSet.copyOf(mappings))
         .containsExactly(
-            new LocationMapping("foo/", "http://bar"), new LocationMapping("xxx/", "http://yyy"));
+            new SourceMap.PrefixLocationMapping("foo/", "http://bar"),
+            new SourceMap.PrefixLocationMapping("xxx/", "http://yyy"));
   }
 
   public void testSourceMapLocationsTranslations3() {
@@ -1283,7 +1284,7 @@ public final class CommandLineRunnerTest extends TestCase {
 
   public void testModuleWrapperBaseNameExpansion() throws Exception {
     useModules = ModulePattern.CHAIN;
-    args.add("--module_wrapper=m0:%s // %basename%");
+    args.add("--chunk_wrapper=m0:%s // %basename%");
     testSame(new String[] {
       "var x = 3;",
       "var y = 4;"
@@ -1298,7 +1299,7 @@ public final class CommandLineRunnerTest extends TestCase {
 
   public void testModuleWrapperExpansion() throws Exception {
     useModules = ModulePattern.CHAIN;
-    args.add("--module_wrapper=m0:%output%%n%//# SourceMappingUrl=%basename%.map");
+    args.add("--chunk_wrapper=m0:%output%%n%//# SourceMappingUrl=%basename%.map");
     testSame(new String[] {
       "var x = 3;",
       "var y = 4;"
@@ -1316,7 +1317,7 @@ public final class CommandLineRunnerTest extends TestCase {
 
     String inputString = "[{\"src\": \"alert('foo');\", \"path\":\"foo.js\"}]";
     args.add("--json_streams=BOTH");
-    args.add("--module=foo--bar.baz:1");
+    args.add("--chunk=foo--bar.baz:1");
 
     // Perform stage1
     List<String> stage1Args = new ArrayList<>(args);
@@ -1626,7 +1627,7 @@ public final class CommandLineRunnerTest extends TestCase {
   public void testProcessCJSWithModuleOutput() {
     args.add("--process_common_js_modules");
     args.add("--entry_point=foo/bar");
-    args.add("--module=auto");
+    args.add("--chunk=auto");
     setFilename(0, "foo/bar.js");
     test("exports.test = 1", "var module$foo$bar={default: {}}; module$foo$bar.default.test = 1;");
     // With modules=auto no direct output is created.
@@ -1940,7 +1941,7 @@ public final class CommandLineRunnerTest extends TestCase {
     args.add("--transform_amd_modules");
     args.add("--process_common_js_modules");
     args.add("--entry_point=foo/bar");
-    args.add("--output_module_dependencies=test.json");
+    args.add("--output_chunk_dependencies=test.json");
     setFilename(0, "foo/bar.js");
     test(
         "define({foo: 1})",
@@ -2095,7 +2096,7 @@ public final class CommandLineRunnerTest extends TestCase {
   public void testOutputModuleNaming() {
     String inputString = "[{\"src\": \"alert('foo');\", \"path\":\"foo.js\"}]";
     args.add("--json_streams=BOTH");
-    args.add("--module=foo--bar.baz:1");
+    args.add("--chunk=foo--bar.baz:1");
 
     CommandLineRunner runner =
         new CommandLineRunner(
@@ -2271,10 +2272,10 @@ public final class CommandLineRunnerTest extends TestCase {
       args.add("--js");
       args.add("/path/to/input" + i + ".js");
       if (useModules == ModulePattern.CHAIN) {
-        args.add("--module");
+        args.add("--chunk");
         args.add("m" + i + ":1" + (i > 0 ? (":m" + (i - 1)) : ""));
       } else if (useModules == ModulePattern.STAR) {
-        args.add("--module");
+        args.add("--chunk");
         args.add("m" + i + ":1" + (i > 0 ? ":m0" : ""));
       }
     }

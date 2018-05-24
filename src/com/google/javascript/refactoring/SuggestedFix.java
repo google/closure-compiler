@@ -698,8 +698,8 @@ public final class SuggestedFix {
           IR.string(namespace));
 
       String shortName = getShortNameForRequire(namespace);
-      boolean useConstRequire = usesConstGoogRequires(metadata, script);
-      if (useConstRequire) {
+      boolean useAliasedRequire = usesConstGoogRequires(metadata, script);
+      if (useAliasedRequire) {
         googRequireNode = IR.constNode(IR.name(shortName), googRequireNode);
       } else {
         googRequireNode = IR.exprResult(googRequireNode);
@@ -805,9 +805,9 @@ public final class SuggestedFix {
       if (script.isModuleBody()) {
         return true;
       }
-      HasConstRequireOrModuleCallback callback = new HasConstRequireOrModuleCallback(metadata);
-      NodeTraversal.traverseEs6(metadata.getCompiler(), script, callback);
-      return callback.getUsesConstRequires();
+      HasAliasedRequireOrModuleCallback callback = new HasAliasedRequireOrModuleCallback(metadata);
+      NodeTraversal.traverse(metadata.getCompiler(), script, callback);
+      return callback.getUsesAliasedRequires();
     }
 
     /**
@@ -969,30 +969,30 @@ public final class SuggestedFix {
   }
 
   /** Traverse an AST and find {@code goog.module} or {@code const X = goog.require('...');}. */
-  private static class HasConstRequireOrModuleCallback extends AbstractPreOrderCallback {
-    private boolean usesConstRequires;
+  private static class HasAliasedRequireOrModuleCallback extends AbstractPreOrderCallback {
+    private boolean usesAliasedRequires;
     final NodeMetadata metadata;
 
-    public HasConstRequireOrModuleCallback(NodeMetadata metadata) {
-      this.usesConstRequires = false;
+    public HasAliasedRequireOrModuleCallback(NodeMetadata metadata) {
+      this.usesAliasedRequires = false;
       this.metadata = metadata;
     }
 
-    boolean getUsesConstRequires() {
-      return usesConstRequires;
+    boolean getUsesAliasedRequires() {
+      return usesAliasedRequires;
     }
 
     @Override
     public boolean shouldTraverse(NodeTraversal nodeTraversal, Node n, Node parent) {
-      if (Matchers.googModule().matches(n, metadata) || isConstRequire(n, metadata)) {
-        usesConstRequires = true;
+      if (Matchers.googModule().matches(n, metadata) || isAliasedRequire(n, metadata)) {
+        usesAliasedRequires = true;
         return false;
       }
       return true;
     }
 
-    private static boolean isConstRequire(Node node, NodeMetadata metadata) {
-      return node.isConst()
+    private static boolean isAliasedRequire(Node node, NodeMetadata metadata) {
+      return NodeUtil.isNameDeclaration(node)
           && node.getFirstFirstChild() != null
           && Matchers.googRequire().matches(node.getFirstFirstChild(), metadata);
     }

@@ -21,7 +21,6 @@ import static com.google.common.truth.Truth.assertThat;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
-import com.google.javascript.jscomp.TypeICompilerTestCase.TypeInferenceMode;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -661,6 +660,13 @@ public final class CodePrinterTest extends CodePrinterTestBase {
 
     // And in operator inside a hook.
     assertPrintSame("for(a=c?0:(0 in d);;)foo()");
+
+    // And inside an arrow function body
+    languageMode = LanguageMode.ECMASCRIPT_2015;
+    assertPrint(
+        "var a={}; for(var i = () => (0 in a); i;) {}", "var a={};for(var i=()=>(0 in a);i;);");
+    assertPrint(
+        "var a={}; for(var i = () => ({} in a); i;) {}", "var a={};for(var i=()=>({}in a);i;);");
   }
 
   public void testForOf() {
@@ -1166,8 +1172,7 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     // TODO(johnlenz): It would be nice if there were some way to preserve
     // typedefs but currently they are resolved into the basic types in the
     // type registry.
-    // NOTE(sdh): OTI and NTI have slightly different behaviors here:
-    // OTI does not correctly remove null, while NTI handles this correctly.
+    // NOTE(sdh): The type inferrence does not correctly remove null
     assertTypeAnnotations(
         LINE_JOINER.join(
             "/** @const */ var goog = {};",
@@ -1181,15 +1186,6 @@ public final class CodePrinterTest extends CodePrinterTestBase {
             "goog.java.Long;",
             "/**",
             " * @param {(Array<number>|null)} a",
-            " * @return {undefined}",
-            " */",
-            "function f(a) {\n}\n"),
-        LINE_JOINER.join(
-            "/** @const */ var goog = {};",
-            "/** @const */ goog.java = {};",
-            "goog.java.Long;",
-            "/**",
-            " * @param {!Array<number>} a",
             " * @return {undefined}",
             " */",
             "function f(a) {\n}\n"));
@@ -1284,17 +1280,6 @@ public final class CodePrinterTest extends CodePrinterTestBase {
             " */",
             "a.Foo.prototype.foo = function(foo) {\n  return 3;\n};",
             "/** @type {!Array} */",
-            "a.Foo.prototype.bar = [];\n"),
-        LINE_JOINER.join(
-            "var a = {};",
-            "/**\n * @constructor\n */",
-            "a.Foo = function() {\n};",
-            "/**",
-            " * @param {string} foo",
-            " * @return {number}",
-            " */",
-            "a.Foo.prototype.foo = function(foo) {\n  return 3;\n};",
-            "/** @type {!Array<?>} */",
             "a.Foo.prototype.bar = [];\n"));
   }
 
@@ -1357,12 +1342,6 @@ public final class CodePrinterTest extends CodePrinterTestBase {
         LINE_JOINER.join(
             "/**",
             " * @param {?} x",
-            " * @return {undefined}",
-            " */",
-            "var a = function(x) {\n};\n"),
-        LINE_JOINER.join(
-            "/**",
-            " * @param {?=} x",
             " * @return {undefined}",
             " */",
             "var a = function(x) {\n};\n"));
@@ -1435,13 +1414,7 @@ public final class CodePrinterTest extends CodePrinterTestBase {
         LINE_JOINER.join(
             "/** @const */ var goog = goog || {};",
             "/** @enum {string} */\ngoog.Enum = {FOO:\"x\", BAR:\"y\"};",
-            "/** @type {(!Object|{})} */\ngoog.Enum2 = goog.x ? {} : goog.Enum;\n"),
-        LINE_JOINER.join(
-            "/** @const */ var goog = goog || {};",
-            "/** @enum {string} */\ngoog.Enum = {FOO:\"x\", BAR:\"y\"};",
-            "/** @type {{BAR: goog.Enum=, FOO: goog.Enum=}} */",
-            "goog.Enum2 = goog.x ? {} : goog.Enum;",
-            ""));
+            "/** @type {(!Object|{})} */\ngoog.Enum2 = goog.x ? {} : goog.Enum;\n"));
   }
 
   public void testEnumAnnotation3() {
@@ -1461,17 +1434,6 @@ public final class CodePrinterTest extends CodePrinterTestBase {
             "/**",
             " * @param {number} x",
             " * @return {?}",
-            " */",
-            "function f(x) {",
-            "  return x;",
-            "}",
-            ""),
-        LINE_JOINER.join(
-            "/** @enum {number} */",
-            "var E = {A:1, B:2};",
-            "/**",
-            " * @param {E} x",
-            " * @return {E}",
             " */",
             "function f(x) {",
             "  return x;",
@@ -1577,14 +1539,9 @@ public final class CodePrinterTest extends CodePrinterTestBase {
   }
 
   private void assertTypeAnnotations(String js, String expected) {
-    assertTypeAnnotations(js, expected, expected);
-  }
-
-  private void assertTypeAnnotations(String js, String expectedOti, String expectedNti) {
     assertEquals(
-        "OTI",
-        expectedOti,
-        new CodePrinter.Builder(parse(js, TypeInferenceMode.OTI_ONLY))
+        expected,
+        new CodePrinter.Builder(parse(js, /* typeChecked= */ true))
             .setCompilerOptions(newCompilerOptions(new CompilerOptionBuilder() {
               @Override
               void setOptions(CompilerOptions options) {
@@ -1594,23 +1551,7 @@ public final class CodePrinterTest extends CodePrinterTestBase {
               }
             }))
             .setOutputTypes(true)
-            .setTypeRegistry(lastCompiler.getTypeIRegistry())
-            .build());
-
-    assertEquals(
-        "NTI",
-        expectedNti,
-        new CodePrinter.Builder(parse(js, TypeInferenceMode.NTI_ONLY))
-            .setCompilerOptions(newCompilerOptions(new CompilerOptionBuilder() {
-              @Override
-              void setOptions(CompilerOptions options) {
-                options.setPrettyPrint(true);
-                options.setLineBreak(false);
-                options.setLineLengthThreshold(CompilerOptions.DEFAULT_LINE_LENGTH_THRESHOLD);
-              }
-            }))
-            .setOutputTypes(true)
-            .setTypeRegistry(lastCompiler.getTypeIRegistry())
+            .setTypeRegistry(lastCompiler.getTypeRegistry())
             .build());
   }
 
@@ -2046,54 +1987,27 @@ public final class CodePrinterTest extends CodePrinterTestBase {
           }
         }))
         .setOutputTypes(false)
-        .setTypeRegistry(lastCompiler.getTypeIRegistry());
+        .setTypeRegistry(lastCompiler.getTypeRegistry());
   }
 
   public void testStrict() {
     String result =
-        defaultBuilder(parse("var x", TypeInferenceMode.OTI_ONLY)).setTagAsStrict(true).build();
-    assertEquals("'use strict';var x", result);
-
-    result =
-        defaultBuilder(parse("var x", TypeInferenceMode.NTI_ONLY)).setTagAsStrict(true).build();
+        defaultBuilder(parse("var x", /* typeChecked= */ true)).setTagAsStrict(true).build();
     assertEquals("'use strict';var x", result);
   }
 
   public void testStrictPretty() {
     String result =
-        defaultBuilder(parse("var x", TypeInferenceMode.OTI_ONLY))
+        defaultBuilder(parse("var x", /* typeChecked= */ true))
             .setTagAsStrict(true)
             .setPrettyPrint(true)
             .build();
     assertThat(result).isEqualTo("'use strict';\nvar x;\n");
-
-    result =
-        defaultBuilder(parse("var x", TypeInferenceMode.NTI_ONLY))
-            .setTagAsStrict(true)
-            .setPrettyPrint(true)
-            .build();
-    assertThat(result).isEqualTo("'use strict';\nvar x;\n");
-  }
-
-  public void testExterns() {
-    String result =
-        defaultBuilder(parse("var x", TypeInferenceMode.OTI_ONLY)).setTagAsExterns(true).build();
-    assertEquals("/** @externs */\nvar x", result);
-
-    result =
-        defaultBuilder(parse("var x", TypeInferenceMode.NTI_ONLY)).setTagAsExterns(true).build();
-    assertEquals("/** @externs */\nvar x", result);
   }
 
   public void testIjs() {
     String result =
-        defaultBuilder(parse("var x", TypeInferenceMode.OTI_ONLY))
-            .setTagAsTypeSummary(true)
-            .build();
-    assertEquals("/** @fileoverview @typeSummary */\nvar x", result);
-
-    result =
-        defaultBuilder(parse("var x", TypeInferenceMode.NTI_ONLY))
+        defaultBuilder(parse("var x", /* typeChecked= */ true))
             .setTagAsTypeSummary(true)
             .build();
     assertEquals("/** @fileoverview @typeSummary */\nvar x", result);
@@ -2597,6 +2511,7 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     assertPrint("()=>/** @type {Object} */({a:1})", "()=>({a:1})");
     assertPrint("()=>/** @type {Object} */({a:1,b:2})", "()=>({a:1,b:2})");
     assertPrint("()=>/** @type {number} */(3)", "()=>3");
+    assertPrint("()=>/** @type {Object} */ ({}={})", "()=>({}={})");
 
     assertPrintSame("()=>(1,2)");
     assertPrintSame("()=>({},2)");
@@ -2604,6 +2519,16 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     assertPrint("()=>/** @type {?} */(1,2)", "()=>(1,2)");
     assertPrint("()=>/** @type {?} */({},2)", "()=>({},2)");
     assertPrint("()=>/** @type {?} */(1,{})", "()=>(1,{})");
+
+    // Test object literals more deeply nested
+    assertPrintSame("fn=()=>({})||3");
+    assertPrintSame("fn=()=>3||{}");
+    assertPrintSame("fn=()=>({}={})");
+    assertPrintSame("()=>function(){}"); // don't need parentheses around a function
+    assertPrintSame("for(var i=()=>({});;);");
+
+    preserveTypeAnnotations = true;
+    assertPrintSame("()=>/** @type {Object} */ ({})");
   }
 
   public void testPrettyArrowFunction() {
@@ -2736,6 +2661,11 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     assertPrintSame("export default 1");
     assertPrintSame("export default class Foo{}export function f(){}");
     assertPrintSame("export function f(){}export default class Foo{}");
+  }
+
+  public void testExportAsyncFunction() {
+    languageMode = LanguageMode.ECMASCRIPT_2017;
+    assertPrintSame("export async function f(){}");
   }
 
   public void testTemplateLiteral() {

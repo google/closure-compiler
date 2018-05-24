@@ -984,8 +984,12 @@ public class JSDocInfo implements Serializable {
   }
 
   /**
+   * @deprecated This method is quite heuristic, looking for @type annotations that start with
+   * "function". Other methods like containsDeclaration() and containsTypeDefinition are generally
+   * preferred.
    * @return Whether there is a declaration of a callable type.
    */
+  @Deprecated
   public boolean containsFunctionDeclaration() {
     boolean hasFunctionType = hasType() && getType().getRoot().isFunction();
     return hasFunctionType

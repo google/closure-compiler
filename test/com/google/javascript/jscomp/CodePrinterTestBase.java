@@ -15,11 +15,8 @@
  */
 package com.google.javascript.jscomp;
 
-import static com.google.common.base.Preconditions.checkArgument;
-
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
-import com.google.javascript.jscomp.TypeICompilerTestCase.TypeInferenceMode;
 import com.google.javascript.rhino.Node;
 import junit.framework.TestCase;
 
@@ -44,11 +41,10 @@ public abstract class CodePrinterTestBase extends TestCase {
   }
 
   Node parse(String js) {
-    return parse(js, TypeInferenceMode.NEITHER);
+    return parse(js, /* typeChecked= */ false);
   }
 
-  Node parse(String js, TypeInferenceMode mode) {
-    checkArgument(mode != TypeInferenceMode.BOTH);
+  Node parse(String js, boolean typeChecked) {
     Compiler compiler = new Compiler();
     lastCompiler = compiler;
     CompilerOptions options = new CompilerOptions();
@@ -56,8 +52,6 @@ public abstract class CodePrinterTestBase extends TestCase {
     options.preserveTypeAnnotations = preserveTypeAnnotations;
     // Allow getters and setters.
     options.setLanguageIn(languageMode);
-    options.setWarningLevel(DiagnosticGroups.NEW_CHECK_TYPES_EXTRA_CHECKS, CheckLevel.OFF);
-    options.setNewTypeInference(mode.runsNTI());
 
     compiler.init(
         ImmutableList.of(SourceFile.fromCode("externs", CompilerTestCase.MINIMAL_EXTERNS)),
@@ -68,11 +62,7 @@ public abstract class CodePrinterTestBase extends TestCase {
     Node root = externsAndJs.getLastChild();
     Node externs = externsAndJs.getFirstChild();
 
-    if (mode.runsNTI()) {
-      new GlobalTypeInfoCollector(compiler).process(externs, root);
-      NewTypeInference nti = new NewTypeInference(compiler);
-      nti.process(externs, root);
-    } else if (mode.runsOTI()) {
+    if (typeChecked) {
       DefaultPassConfig passConfig = new DefaultPassConfig(null);
       CompilerPass typeResolver = passConfig.resolveTypes.create(compiler);
       typeResolver.process(externs, root);

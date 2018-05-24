@@ -79,7 +79,7 @@ public final class CheckConformance implements Callback, CompilerPass {
   @Override
   public void process(Node externs, Node root) {
     if (!rules.isEmpty()) {
-      NodeTraversal.traverseRootsEs6(compiler, this, externs, root);
+      NodeTraversal.traverseRoots(compiler, this, externs, root);
     }
   }
 

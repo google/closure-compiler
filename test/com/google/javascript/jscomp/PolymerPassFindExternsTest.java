@@ -20,7 +20,7 @@ import static com.google.common.truth.Truth.assertThat;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.rhino.Node;
 
-public final class PolymerPassFindExternsTest extends TypeICompilerTestCase {
+public final class PolymerPassFindExternsTest extends CompilerTestCase {
 
   private static final String EXTERNS =
       lines(
@@ -67,7 +67,7 @@ public final class PolymerPassFindExternsTest extends TypeICompilerTestCase {
     return new CompilerPass() {
       @Override
       public void process(Node externs, Node root) {
-        NodeTraversal.traverseEs6(compiler, externs, findExternsCallback);
+        NodeTraversal.traverse(compiler, externs, findExternsCallback);
       }
     };
   }
@@ -75,8 +75,8 @@ public final class PolymerPassFindExternsTest extends TypeICompilerTestCase {
   @Override
   protected void setUp() throws Exception {
     super.setUp();
+    enableTypeCheck();
     allowExternsChanges();
-    this.mode = TypeInferenceMode.BOTH;
     enableRunTypeCheckAfterProcessing();
     enableParseTypeInfo();
   }

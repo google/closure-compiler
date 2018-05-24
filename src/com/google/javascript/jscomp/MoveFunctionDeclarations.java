@@ -63,7 +63,7 @@ class MoveFunctionDeclarations implements Callback, CompilerPass {
 
   @Override
   public void process(Node externs, Node root) {
-    NodeTraversal.traverseEs6(compiler, root, this);
+    NodeTraversal.traverse(compiler, root, this);
     for (Entry<JSModule, List<Node>> entry : Multimaps.asMap(functions).entrySet()) {
       Node addingRoot = compiler.getNodeForCodeInsertion(entry.getKey());
       List<Node> fnNodes = Lists.reverse(entry.getValue());

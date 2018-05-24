@@ -85,10 +85,10 @@ public class NameBasedDefinitionProvider implements CompilerPass {
 
     this.hasProcessBeenRun = true;
 
-    NodeTraversal.traverseEs6(compiler, externs, new DefinitionGatheringCallback(true));
+    NodeTraversal.traverse(compiler, externs, new DefinitionGatheringCallback(true));
     dropUntypedExterns();
 
-    NodeTraversal.traverseEs6(compiler, source, new DefinitionGatheringCallback(false));
+    NodeTraversal.traverse(compiler, source, new DefinitionGatheringCallback(false));
   }
 
   public void rebuildScopeRoots(List<Node> changedScopeRoots, List<Node> deletedScopeRoots) {
@@ -102,7 +102,7 @@ public class NameBasedDefinitionProvider implements CompilerPass {
     }
 
     DefinitionGatheringCallback cb = new DefinitionGatheringCallback();
-    NodeTraversal.traverseEs6ScopeRoots(compiler, null, changedScopeRoots, cb, cb, false);
+    NodeTraversal.traverseScopeRoots(compiler, null, changedScopeRoots, cb, cb, false);
   }
 
   /** @return Whether the node has a JSDoc that actually declares something. */

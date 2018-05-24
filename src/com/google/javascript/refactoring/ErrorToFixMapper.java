@@ -382,7 +382,7 @@ public final class ErrorToFixMapper {
     fix.attachMatchedNodeInfo(error.node, compiler);
     Node script = NodeUtil.getEnclosingScript(error.node);
     RequireProvideSorter cb = new RequireProvideSorter(closureFunctions);
-    NodeTraversal.traverseEs6(compiler, script, cb);
+    NodeTraversal.traverse(compiler, script, cb);
     Node first = cb.calls.get(0);
     Node last = Iterables.getLast(cb.calls);
 

@@ -66,7 +66,7 @@ public class CheckMissingAndExtraRequires implements HotSwapCompilerPass, NodeTr
     SINGLE_FILE,
     // Used during a normal compilation. The entire program + externs are available.
     FULL_COMPILE
-  };
+  }
 
   private Mode mode;
 
@@ -116,7 +116,7 @@ public class CheckMissingAndExtraRequires implements HotSwapCompilerPass, NodeTr
   @Override
   public void process(Node externs, Node root) {
     reset();
-    NodeTraversal.traverseRootsEs6(compiler, this, externs, root);
+    NodeTraversal.traverseRoots(compiler, this, externs, root);
   }
 
   @Override
@@ -125,7 +125,7 @@ public class CheckMissingAndExtraRequires implements HotSwapCompilerPass, NodeTr
     // b/28869281 for context.
     mode = Mode.SINGLE_FILE;
     reset();
-    NodeTraversal.traverseEs6(compiler, scriptRoot, this);
+    NodeTraversal.traverse(compiler, scriptRoot, this);
   }
 
   // Return true if the name is a class name (starts with an uppercase

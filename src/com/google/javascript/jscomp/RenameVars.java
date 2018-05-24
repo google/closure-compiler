@@ -347,14 +347,13 @@ final class RenameVars implements CompilerPass {
     originalNameByNode.clear();
 
     // Do variable reference counting.
-    NodeTraversal.traverseEs6(compiler, root, new ProcessVars());
+    NodeTraversal.traverse(compiler, root, new ProcessVars());
 
     // Make sure that new names don't overlap with extern names.
     reservedNames.addAll(externNames);
 
     // Rename vars, sorted by frequency of occurrence to minimize code size.
-    SortedSet<Assignment> varsByFrequency =
-        new TreeSet<>(FREQUENCY_COMPARATOR);
+    SortedSet<Assignment> varsByFrequency = new TreeSet<>(FREQUENCY_COMPARATOR);
     varsByFrequency.addAll(assignments.values());
 
     if (shouldShadow) {
@@ -365,7 +364,7 @@ final class RenameVars implements CompilerPass {
 
     // First try to reuse names from an earlier compilation.
     if (prevUsedRenameMap != null) {
-      reusePreviouslyUsedVariableMap();
+      reusePreviouslyUsedVariableMap(varsByFrequency);
     }
 
     // Assign names, sorted by descending frequency to minimize code size.
@@ -435,16 +434,15 @@ final class RenameVars implements CompilerPass {
   }
 
   /**
-   * Runs through the assignments and reuses as many names as possible from the
-   * previously used variable map. Updates reservedNames with the set of names
-   * that were reused.
+   * Runs through the assignments and reuses as many names as possible from the previously used
+   * variable map. Updates reservedNames with the set of names that were reused.
    */
-  private void reusePreviouslyUsedVariableMap() {
+  private void reusePreviouslyUsedVariableMap(SortedSet<Assignment> varsToRename) {
     // If prevUsedRenameMap had duplicate values then this pass would be
     // non-deterministic.
     // In such a case, the following will throw an IllegalArgumentException.
     checkNotNull(prevUsedRenameMap.getNewNameToOriginalNameMap());
-    for (Assignment a : assignments.values()) {
+    for (Assignment a : varsToRename) {
       String prevNewName = prevUsedRenameMap.lookupNewName(a.oldName);
       if (prevNewName == null || reservedNames.contains(prevNewName)) {
         continue;

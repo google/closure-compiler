@@ -744,7 +744,7 @@ public final class SimpleReplaceScriptTest extends BaseReplaceScriptTestCase {
         getOptions(), ImmutableList.of(CLOSURE_BASE, src), 0, 0, false);
     JSType type = compiler.getTypeRegistry().getGlobalType("ns.Foo");
     FunctionType fnType = type.toObjectType().getConstructor();
-    StaticTypedSlot<JSType> originalSlot = fnType.getSlot("prototype");
+    StaticTypedSlot originalSlot = fnType.getSlot("prototype");
 
     doReplaceScript(compiler, src, 1);
 
@@ -752,7 +752,7 @@ public final class SimpleReplaceScriptTest extends BaseReplaceScriptTestCase {
 
     type = compiler.getTypeRegistry().getGlobalType("ns.Foo");
     fnType = type.toObjectType().getConstructor();
-    StaticTypedSlot<JSType> newSlot = fnType.getSlot("prototype");
+    StaticTypedSlot newSlot = fnType.getSlot("prototype");
     assertNotSame(originalSlot, newSlot);
   }
 

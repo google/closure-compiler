@@ -22,15 +22,15 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Multimap;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
-import com.google.javascript.rhino.FunctionTypeI;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfo.Visibility;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.ObjectTypeI;
 import com.google.javascript.rhino.StaticSourceFile;
-import com.google.javascript.rhino.TypeI;
-import com.google.javascript.rhino.TypeIRegistry;
+import com.google.javascript.rhino.jstype.FunctionType;
+import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
+import com.google.javascript.rhino.jstype.JSTypeRegistry;
+import com.google.javascript.rhino.jstype.ObjectType;
 import java.util.ArrayDeque;
 import javax.annotation.Nullable;
 
@@ -129,22 +129,22 @@ class CheckAccessControls extends AbstractPostOrderCallback
           "Declared access conflicts with access convention.");
 
   private final AbstractCompiler compiler;
-  private final TypeIRegistry typeRegistry;
+  private final JSTypeRegistry typeRegistry;
   private final boolean enforceCodingConventions;
 
   // State about the current traversal.
   private int deprecatedDepth = 0;
-  private final ArrayDeque<TypeI> currentClassStack = new ArrayDeque<>();
-  private final TypeI noTypeSentinel;
+  private final ArrayDeque<JSType> currentClassStack = new ArrayDeque<>();
+  private final JSType noTypeSentinel;
 
   private ImmutableMap<StaticSourceFile, Visibility> defaultVisibilityForFiles;
-  private final Multimap<TypeI, String> initializedConstantProperties;
+  private final Multimap<JSType, String> initializedConstantProperties;
 
 
   CheckAccessControls(
       AbstractCompiler compiler, boolean enforceCodingConventions) {
     this.compiler = compiler;
-    this.typeRegistry = compiler.getTypeIRegistry();
+    this.typeRegistry = compiler.getTypeRegistry();
     this.initializedConstantProperties = HashMultimap.create();
     this.enforceCodingConventions = enforceCodingConventions;
     this.noTypeSentinel = typeRegistry.getNativeType(JSTypeNative.NO_TYPE);
@@ -157,8 +157,8 @@ class CheckAccessControls extends AbstractPostOrderCallback
     collectPass.process(externs, root);
     defaultVisibilityForFiles = collectPass.getFileOverviewVisibilityMap();
 
-    NodeTraversal.traverseEs6(compiler, externs, this);
-    NodeTraversal.traverseEs6(compiler, root, this);
+    NodeTraversal.traverse(compiler, externs, this);
+    NodeTraversal.traverse(compiler, root, this);
   }
 
   @Override
@@ -168,7 +168,7 @@ class CheckAccessControls extends AbstractPostOrderCallback
     collectPass.hotSwapScript(scriptRoot, originalRoot);
     defaultVisibilityForFiles = collectPass.getFileOverviewVisibilityMap();
 
-    NodeTraversal.traverseEs6(compiler, scriptRoot, this);
+    NodeTraversal.traverse(compiler, scriptRoot, this);
   }
 
   @Override
@@ -179,8 +179,8 @@ class CheckAccessControls extends AbstractPostOrderCallback
       if (isDeprecatedFunction(n)) {
         deprecatedDepth++;
       }
-      TypeI prevClass = getCurrentClass();
-      TypeI currentClass = prevClass == null
+      JSType prevClass = getCurrentClass();
+      JSType currentClass = prevClass == null
           ? getClassOfMethod(n, parent)
           : prevClass;
       // ArrayDeques can't handle nulls, so we reuse the bottom type
@@ -206,39 +206,42 @@ class CheckAccessControls extends AbstractPostOrderCallback
    * Gets the type of the class that "owns" a method, or null if
    * we know that its un-owned.
    */
-  private TypeI getClassOfMethod(Node n, Node parent) {
+  private JSType getClassOfMethod(Node n, Node parent) {
     checkState(n.isFunction(), n);
     if (parent.isAssign()) {
       Node lValue = parent.getFirstChild();
       if (NodeUtil.isGet(lValue)) {
         // We have an assignment of the form "a.b = ...".
-        TypeI lValueType = lValue.getTypeI();
+        JSType lValueType = lValue.getJSType();
         if (lValueType != null && (lValueType.isConstructor() || lValueType.isInterface())) {
           // If a.b is a constructor, then everything in this function
           // belongs to the "a.b" type.
           return (lValueType.toMaybeFunctionType()).getInstanceType();
         } else if (NodeUtil.isPrototypeProperty(lValue)) {
           return normalizeClassType(
-              NodeUtil.getPrototypeClassName(lValue).getTypeI());
+              NodeUtil.getPrototypeClassName(lValue).getJSType());
         } else {
-          return normalizeClassType(lValue.getFirstChild().getTypeI());
+          return normalizeClassType(lValue.getFirstChild().getJSType());
         }
       } else {
         // We have an assignment of the form "a = ...", so pull the
         // type off the "a".
-        return normalizeClassType(lValue.getTypeI());
+        return normalizeClassType(lValue.getJSType());
       }
     } else if (NodeUtil.isFunctionDeclaration(n) || parent.isName()) {
-      return normalizeClassType(n.getTypeI());
+      return normalizeClassType(n.getJSType());
     } else if (parent.isStringKey()
-        || parent.isGetterDef() || parent.isSetterDef()) {
+        || parent.isGetterDef()
+        || parent.isSetterDef()
+        || parent.isMemberFunctionDef()
+        || parent.isComputedProp()) {
       Node objectLitParent = parent.getGrandparent();
       if (!objectLitParent.isAssign()) {
         return null;
       }
       Node className = NodeUtil.getPrototypeClassName(objectLitParent.getFirstChild());
       if (className != null) {
-        return normalizeClassType(className.getTypeI());
+        return normalizeClassType(className.getJSType());
       }
     }
 
@@ -249,13 +252,21 @@ class CheckAccessControls extends AbstractPostOrderCallback
    * Normalize the type of a constructor, its instance, and its prototype
    * all down to the same type (the instance type).
    */
-  private static TypeI normalizeClassType(TypeI type) {
+  private static JSType normalizeClassType(JSType type) {
     if (type == null || type.isUnknownType()) {
       return type;
     } else if (type.isConstructor() || type.isInterface()) {
       return type.toMaybeFunctionType().getInstanceType();
-    } else if (type.isPrototypeObject()) {
-      return type.toMaybeObjectType().normalizeObjectForCheckAccessControls();
+    } else if (type.isFunctionPrototypeType()) {
+      return normalizePrototypeObject(type.toMaybeObjectType());
+    }
+    return type;
+  }
+
+  private static ObjectType normalizePrototypeObject(ObjectType type) {
+    FunctionType owner = type.getOwnerFunction();
+    if (owner.hasInstanceType()) {
+      return owner.getInstanceType();
     }
     return type;
   }
@@ -275,6 +286,7 @@ class CheckAccessControls extends AbstractPostOrderCallback
       case STRING_KEY:
       case GETTER_DEF:
       case SETTER_DEF:
+      case MEMBER_FUNCTION_DEF:
         checkKeyVisibilityConvention(t, n, parent);
         break;
       case NEW:
@@ -293,7 +305,7 @@ class CheckAccessControls extends AbstractPostOrderCallback
    */
   private void checkConstructorDeprecation(NodeTraversal t, Node n,
       Node parent) {
-    TypeI type = n.getTypeI();
+    JSType type = n.getJSType();
 
     if (type != null) {
       String deprecationInfo = getTypeDeprecationInfo(type);
@@ -317,7 +329,7 @@ class CheckAccessControls extends AbstractPostOrderCallback
    */
   private void checkNameDeprecation(NodeTraversal t, Node n, Node parent) {
     // Don't bother checking definitions or constructors.
-    if (parent.isFunction() || parent.isVar() || parent.isNew()) {
+    if (parent.isFunction() || NodeUtil.isNameDeclaration(parent) || parent.isNew()) {
       return;
     }
 
@@ -346,7 +358,7 @@ class CheckAccessControls extends AbstractPostOrderCallback
       return;
     }
 
-    ObjectTypeI objectType = castToObject(dereference(n.getFirstChild().getTypeI()));
+    ObjectType objectType = castToObject(dereference(n.getFirstChild().getJSType()));
     String propertyName = n.getLastChild().getString();
 
     if (objectType != null) {
@@ -375,13 +387,12 @@ class CheckAccessControls extends AbstractPostOrderCallback
   }
 
   /**
-   * Determines whether the given OBJECTLIT property visibility
-   * violates the coding convention.
+   * Determines whether the given OBJECTLIT property visibility violates the coding convention.
+   *
    * @param t The current traversal.
-   * @param key The objectlit key node (STRING_KEY, GETTER_DEF, SETTER_DEF).
+   * @param key The objectlit key node (STRING_KEY, GETTER_DEF, SETTER_DEF, MEMBER_FUNCTION_DEF).
    */
-  private void checkKeyVisibilityConvention(NodeTraversal t,
-      Node key, Node parent) {
+  private void checkKeyVisibilityConvention(NodeTraversal t, Node key, Node parent) {
     JSDocInfo info = key.getJSDocInfo();
     if (info == null) {
       return;
@@ -527,9 +538,9 @@ class CheckAccessControls extends AbstractPostOrderCallback
    */
   private void checkFinalClassOverrides(NodeTraversal t, Node fn, Node parent) {
     checkState(fn.isFunction(), fn);
-    TypeI type = fn.getTypeI().toMaybeFunctionType();
+    JSType type = fn.getJSType().toMaybeFunctionType();
     if (type != null && type.isConstructor()) {
-      TypeI finalParentClass = getSuperClassInstanceIfFinal(getClassOfMethod(fn, parent));
+      JSType finalParentClass = getSuperClassInstanceIfFinal(getClassOfMethod(fn, parent));
       if (finalParentClass != null) {
         compiler.report(
             t.makeError(fn, EXTEND_FINAL_CLASS,
@@ -553,7 +564,7 @@ class CheckAccessControls extends AbstractPostOrderCallback
       return;
     }
 
-    ObjectTypeI objectType = castToObject(dereference(getprop.getFirstChild().getTypeI()));
+    ObjectType objectType = castToObject(dereference(getprop.getFirstChild().getJSType()));
 
     String propertyName = getprop.getLastChild().getString();
 
@@ -580,7 +591,7 @@ class CheckAccessControls extends AbstractPostOrderCallback
         return;
       }
 
-      ObjectTypeI oType = objectType;
+      ObjectType oType = objectType;
       while (oType != null) {
         if (initializedConstantProperties.containsEntry(oType, propertyName)
             || initializedConstantProperties.containsEntry(
@@ -595,7 +606,7 @@ class CheckAccessControls extends AbstractPostOrderCallback
 
       // Add the prototype when we're looking at an instance object
       if (objectType.isInstanceType()) {
-        ObjectTypeI prototype = objectType.getPrototypeObject();
+        ObjectType prototype = objectType.getPrototypeObject();
         if (prototype != null && prototype.hasProperty(propertyName)) {
           initializedConstantProperties.put(prototype, propertyName);
         }
@@ -607,10 +618,16 @@ class CheckAccessControls extends AbstractPostOrderCallback
    * Return an object with the same nominal type as obj,
    * but without any possible extra properties that exist on obj.
    */
-  static ObjectTypeI getCanonicalInstance(ObjectTypeI obj) {
-    FunctionTypeI ctor = obj.getConstructor();
-    // In NTI ctor is never null, but it might be in OTI.
+  static ObjectType getCanonicalInstance(ObjectType obj) {
+    FunctionType ctor = obj.getConstructor();
     return ctor == null ? obj : ctor.getInstanceType();
+  }
+
+  private JSType typeOrUnknown(JSType type) {
+    if (type == null) {
+      return typeRegistry.getNativeType(JSTypeNative.UNKNOWN_TYPE);
+    }
+    return type;
   }
 
   /**
@@ -626,7 +643,8 @@ class CheckAccessControls extends AbstractPostOrderCallback
       return;
     }
 
-    ObjectTypeI referenceType = castToObject(dereference(getprop.getFirstChild().getTypeI()));
+    JSType rawReferenceType = typeOrUnknown(getprop.getFirstChild().getJSType()).autobox();
+    ObjectType referenceType = castToObject(rawReferenceType);
 
     String propertyName = getprop.getLastChild().getString();
     boolean isPrivateByConvention = isPrivateByConvention(propertyName);
@@ -648,7 +666,7 @@ class CheckAccessControls extends AbstractPostOrderCallback
         jsdoc != null
             && (parent.isExprResult() || (parent.isAssign() && parent.getFirstChild() == getprop));
 
-    ObjectTypeI objectType = AccessControlUtils.getObjectType(
+    ObjectType objectType = AccessControlUtils.getObjectType(
         referenceType, isOverride, propertyName);
 
     Visibility fileOverviewVisibility =
@@ -668,19 +686,19 @@ class CheckAccessControls extends AbstractPostOrderCallback
       }
     }
 
+    JSType reportType = rawReferenceType;
     if (objectType != null) {
       Node node = objectType.getOwnPropertyDefSite(propertyName);
       if (node == null) {
         // Assume the property is public.
         return;
       }
+      reportType = objectType;
       definingSource = node.getStaticSourceFile();
       isClassType = objectType.getOwnPropertyJSDocInfo(propertyName).isConstructor();
-    } else if (isPrivateByConvention) {
+    } else if (!isPrivateByConvention && fileOverviewVisibility == null) {
       // We can only check visibility references if we know what file
       // it was defined in.
-      objectType = referenceType;
-    } else if (fileOverviewVisibility == null) {
       // Otherwise just assume the property is public.
       return;
     }
@@ -696,7 +714,7 @@ class CheckAccessControls extends AbstractPostOrderCallback
           parent,
           visibility,
           fileOverviewVisibility,
-          objectType,
+          reportType,
           sameInput);
     } else {
       checkNonOverriddenPropertyVisibility(
@@ -705,7 +723,7 @@ class CheckAccessControls extends AbstractPostOrderCallback
           parent,
           visibility,
           isClassType,
-          objectType,
+          reportType,
           referenceSource,
           definingSource);
     }
@@ -732,7 +750,7 @@ class CheckAccessControls extends AbstractPostOrderCallback
       Node parent,
       Visibility visibility,
       Visibility fileOverviewVisibility,
-      ObjectTypeI objectType,
+      JSType objectType,
       boolean sameInput) {
     // Check an ASSIGN statement that's trying to override a property
     // on a superclass.
@@ -767,7 +785,7 @@ class CheckAccessControls extends AbstractPostOrderCallback
       Node parent,
       Visibility visibility,
       boolean isClassType,
-      ObjectTypeI objectType,
+      JSType objectType,
       StaticSourceFile referenceSource,
       StaticSourceFile definingSource) {
     // private access is always allowed in the same file.
@@ -777,7 +795,7 @@ class CheckAccessControls extends AbstractPostOrderCallback
       return;
     }
 
-    TypeI ownerType = normalizeClassType(objectType);
+    JSType ownerType = normalizeClassType(objectType);
 
     switch (visibility) {
       case PACKAGE:
@@ -813,8 +831,8 @@ class CheckAccessControls extends AbstractPostOrderCallback
       }
   }
 
-  @Nullable private TypeI getCurrentClass() {
-    TypeI cur = currentClassStack.peekFirst();
+  @Nullable private JSType getCurrentClass() {
+    JSType cur = currentClassStack.peekFirst();
     return cur == noTypeSentinel
         ? null
         : cur;
@@ -825,7 +843,7 @@ class CheckAccessControls extends AbstractPostOrderCallback
       Node getprop,
       Node parent,
       boolean isClassType,
-      TypeI ownerType) {
+      JSType ownerType) {
 
     if (isClassType && isValidPrivateConstructorAccess(parent)) {
       return;
@@ -833,7 +851,7 @@ class CheckAccessControls extends AbstractPostOrderCallback
 
     // private access is not allowed outside the file from a different
     // enclosing class.
-    TypeI accessedType = getprop.getFirstChild().getTypeI();
+    JSType accessedType = getprop.getFirstChild().getJSType();
     String propertyName = getprop.getLastChild().getString();
     String readableTypeName = ownerType.equals(accessedType)
         ? typeRegistry.getReadableTypeName(getprop.getFirstChild())
@@ -849,13 +867,13 @@ class CheckAccessControls extends AbstractPostOrderCallback
   private void checkProtectedPropertyVisibility(
       NodeTraversal t,
       Node getprop,
-      TypeI ownerType) {
+      JSType ownerType) {
     // There are 3 types of legal accesses of a protected property:
     // 1) Accesses in the same file
     // 2) Overriding the property in a subclass
     // 3) Accessing the property from inside a subclass
     // The first two have already been checked for.
-    TypeI currentClass = getCurrentClass();
+    JSType currentClass = getCurrentClass();
     if (currentClass == null || !currentClass.isSubtypeOf(ownerType)) {
       String propertyName = getprop.getLastChild().getString();
       compiler.report(
@@ -956,7 +974,7 @@ class CheckAccessControls extends AbstractPostOrderCallback
    * as being deprecated. Returns empty string if the type is deprecated
    * but no reason was given. Returns null if the type is not deprecated.
    */
-  private static String getTypeDeprecationInfo(TypeI type) {
+  private static String getTypeDeprecationInfo(JSType type) {
     if (type == null) {
       return null;
     }
@@ -966,9 +984,9 @@ class CheckAccessControls extends AbstractPostOrderCallback
       return depReason;
     }
 
-    ObjectTypeI objType = castToObject(type);
+    ObjectType objType = castToObject(type);
     if (objType != null) {
-      ObjectTypeI implicitProto = objType.getPrototypeObject();
+      ObjectType implicitProto = objType.getPrototypeObject();
       if (implicitProto != null) {
         return getTypeDeprecationInfo(implicitProto);
       }
@@ -990,7 +1008,7 @@ class CheckAccessControls extends AbstractPostOrderCallback
    * Returns if a property is declared constant.
    */
   private boolean isPropertyDeclaredConstant(
-      ObjectTypeI objectType, String prop) {
+      ObjectType objectType, String prop) {
     if (enforceCodingConventions
         && compiler.getCodingConvention().isConstant(prop)) {
       return true;
@@ -1012,13 +1030,13 @@ class CheckAccessControls extends AbstractPostOrderCallback
    * but no reason was given. Returns null if the property is not deprecated.
    */
   @Nullable
-  private static String getPropertyDeprecationInfo(ObjectTypeI type, String prop) {
+  private static String getPropertyDeprecationInfo(ObjectType type, String prop) {
     String depReason = getDeprecationReason(type.getOwnPropertyJSDocInfo(prop));
     if (depReason != null) {
       return depReason;
     }
 
-    ObjectTypeI implicitProto = type.getPrototypeObject();
+    ObjectType implicitProto = type.getPrototypeObject();
     if (implicitProto != null) {
       return getPropertyDeprecationInfo(implicitProto, prop);
     }
@@ -1029,18 +1047,18 @@ class CheckAccessControls extends AbstractPostOrderCallback
    * Dereference a type, autoboxing it and filtering out null.
    */
   @Nullable
-  private static ObjectTypeI dereference(TypeI type) {
-    return type == null ? null : type.autoboxAndGetObject();
+  private static ObjectType dereference(JSType type) {
+    return type == null ? null : type.dereference();
   }
 
   /**
    * If the superclass is final, this method returns an instance of the superclass.
    */
   @Nullable
-  private static ObjectTypeI getSuperClassInstanceIfFinal(@Nullable TypeI type) {
+  private static ObjectType getSuperClassInstanceIfFinal(@Nullable JSType type) {
     if (type != null) {
-      ObjectTypeI obj = castToObject(type);
-      FunctionTypeI ctor = obj == null ? null : obj.getSuperClassConstructor();
+      ObjectType obj = castToObject(type);
+      FunctionType ctor = obj == null ? null : obj.getSuperClassConstructor();
       JSDocInfo doc = ctor == null ? null : ctor.getJSDocInfo();
       if (doc != null && doc.isFinal()) {
         return ctor.getInstanceType();
@@ -1050,18 +1068,18 @@ class CheckAccessControls extends AbstractPostOrderCallback
   }
 
   @Nullable
-  private static ObjectTypeI castToObject(@Nullable TypeI type) {
+  private static ObjectType castToObject(@Nullable JSType type) {
     return type == null ? null : type.toMaybeObjectType();
   }
 
   @Nullable
-  private TypeI getTypeOfThis(Node scopeRoot) {
+  private JSType getTypeOfThis(Node scopeRoot) {
     if (scopeRoot.isRoot()) {
-      return castToObject(scopeRoot.getTypeI());
+      return castToObject(scopeRoot.getJSType());
     }
 
     checkState(scopeRoot.isFunction(), scopeRoot);
-    TypeI nodeType = scopeRoot.getTypeI();
+    JSType nodeType = scopeRoot.getJSType();
     if (nodeType != null && nodeType.isFunctionType()) {
       return nodeType.toMaybeFunctionType().getTypeOfThis();
     } else {

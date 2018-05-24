@@ -19,11 +19,15 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.javascript.jscomp.DefinitionsRemover.Definition;
-import com.google.javascript.rhino.FunctionTypeI;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.TypeI;
+import com.google.javascript.rhino.jstype.FunctionType;
+import com.google.javascript.rhino.jstype.JSType;
+import com.google.javascript.rhino.jstype.JSTypeNative;
+import com.google.javascript.rhino.jstype.ObjectType;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 /**
  * Rewrites prototyped methods calls as static calls that take "this"
@@ -413,14 +417,25 @@ class DevirtualizePrototypeMethods implements CompilerPass {
    * argument type list and replacing the this pointer type with bottom.
    */
   private void fixFunctionType(Node functionNode) {
-    TypeI t = functionNode.getTypeI();
+    JSType t = functionNode.getJSType();
     if (t == null) {
       return;
     }
-    FunctionTypeI ft = t.toMaybeFunctionType();
+    FunctionType ft = t.toMaybeFunctionType();
     if (ft != null) {
-      functionNode.setTypeI(ft.convertMethodToFunction());
+      functionNode.setJSType(convertMethodToFunction(ft));
     }
+  }
+
+  private JSType convertMethodToFunction(FunctionType method) {
+    List<JSType> paramTypes = new ArrayList<>();
+    paramTypes.add(method.getTypeOfThis());
+    for (Node param : method.getParameters()) {
+      paramTypes.add(param.getJSType());
+    }
+    ObjectType unknown = compiler.getTypeRegistry().getNativeObjectType(JSTypeNative.UNKNOWN_TYPE);
+    return compiler.getTypeRegistry().createFunctionTypeWithInstanceType(
+        unknown, method.getReturnType(), paramTypes);
   }
 
   /**
@@ -436,7 +451,7 @@ class DevirtualizePrototypeMethods implements CompilerPass {
     for (Node child : node.children()) {
       if (child.isThis()) {
         Node newName = IR.name(name);
-        newName.setTypeI(child.getTypeI());
+        newName.setJSType(child.getJSType());
         node.replaceChild(child, newName);
         changed = true;
       } else {

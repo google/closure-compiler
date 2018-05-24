@@ -31,6 +31,7 @@ import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.primitives.Chars;
 import com.google.javascript.jscomp.deps.ModuleLoader;
+import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
 import com.google.javascript.jscomp.parsing.Config;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.resources.ResourceLoader;
@@ -66,6 +67,14 @@ public class CompilerOptions implements Serializable {
       "ABCDEFGHIJKLMNOPQRSTUVWXYZ$".toCharArray();
   static final char[] POLYMER_PROPERTY_RESERVED_NON_FIRST_CHARS = "_$".toCharArray();
   static final char[] ANGULAR_PROPERTY_RESERVED_FIRST_CHARS = {'$'};
+
+  public boolean shouldRunCrossChunkCodeMotion() {
+    return crossChunkCodeMotion;
+  }
+
+  public boolean shouldRunCrossChunkMethodMotion() {
+    return crossChunkMethodMotion;
+  }
 
   /**
    * A common enum for compiler passes that can run either globally or locally.
@@ -221,26 +230,6 @@ public class CompilerOptions implements Serializable {
    * Even if checkTypes is disabled, clients such as IDEs might want to still infer types.
    */
   boolean inferTypes;
-
-  private boolean useNewTypeInference;
-
-  /**
-   * Relevant only when {@link #useNewTypeInference} is true, where we normally disable OTI errors.
-   * If you want both NTI and OTI errors in this case, set to true.
-   * E.g. if using using a warnings guard to filter NTI or OTI warnings in new or legacy code,
-   * respectively.
-   * This will be removed when NTI entirely replaces OTI.
-   */
-  boolean reportOTIErrorsUnderNTI = false;
-
-  /**
-   * Run type checking natively on the subset of ES6 features that we are able to typecheck
-   * natively, and then transpile them after NTI.
-   * Doing this currently causes reordering of {@link LateEs6ToEs3Converter} pass
-   * and {@link Es6RewriteBlockScopedDeclaration} pass, which has the potential to break builds.
-   * This option should eventually be turned on by default and removed.
-   */
-  private boolean typeCheckEs6Natively = false;
 
   /**
    * Configures the compiler to skip as many passes as possible.
@@ -430,8 +419,8 @@ public class CompilerOptions implements Serializable {
   /** Inlines properties */
   private boolean inlineProperties;
 
-  /** Move code to a deeper module */
-  public boolean crossModuleCodeMotion;
+  /** Move code to a deeper chunk */
+  private boolean crossChunkCodeMotion;
 
   /**
    * Don't generate stub functions when moving methods deeper.
@@ -439,22 +428,22 @@ public class CompilerOptions implements Serializable {
    * Note, switching on this option may break existing code that depends on
    * enumerating prototype methods for mixin behavior, such as goog.mixin or
    * goog.object.extend, since the prototype assignments will be removed from
-   * the parent module and moved to a later module.
+   * the parent chunk and moved to a later chunk.
    **/
-  boolean crossModuleCodeMotionNoStubMethods;
+  boolean crossChunkCodeMotionNoStubMethods;
 
   /**
-   * Whether when module B depends on module A and module B declares a symbol,
+   * Whether when chunk B depends on chunk A and chunk B declares a symbol,
    * this symbol can be seen in A after B has been loaded. This is often true,
    * but may not be true when loading code using nested eval.
    */
-  boolean parentModuleCanSeeSymbolsDeclaredInChildren;
+  boolean parentChunkCanSeeSymbolsDeclaredInChildren;
 
   /** Merge two variables together as one. */
   public boolean coalesceVariableNames;
 
-  /** Move methods to a deeper module */
-  public boolean crossModuleMethodMotion;
+  /** Move methods to a deeper chunk */
+  private boolean crossChunkMethodMotion;
 
   /** Inlines trivial getters */
   boolean inlineGetters;
@@ -609,12 +598,17 @@ public class CompilerOptions implements Serializable {
 
   /**
    * Used by tests of the RescopeGlobalSymbols pass to avoid having declare 2
-   * modules in simple cases.
+   * chunks in simple cases.
    */
-  boolean renamePrefixNamespaceAssumeCrossModuleNames = false;
+  boolean renamePrefixNamespaceAssumeCrossChunkNames = false;
 
+  void setRenamePrefixNamespaceAssumeCrossChunkNames(boolean assume) {
+    renamePrefixNamespaceAssumeCrossChunkNames = assume;
+  }
+
+  @Deprecated
   void setRenamePrefixNamespaceAssumeCrossModuleNames(boolean assume) {
-    renamePrefixNamespaceAssumeCrossModuleNames = assume;
+    setRenamePrefixNamespaceAssumeCrossChunkNames(assume);
   }
 
   private PropertyCollapseLevel collapsePropertiesLevel;
@@ -1004,7 +998,7 @@ public class CompilerOptions implements Serializable {
   // Used to narrow down the printed source when overall input size is large. If these are both
   // empty the entire source is printed.
   List<String> filesToPrintAfterEachPassRegexList = ImmutableList.of();
-  List<String> modulesToPrintAfterEachPassRegexList = ImmutableList.of();
+  List<String> chunksToPrintAfterEachPassRegexList = ImmutableList.of();
 
   public void setPrintSourceAfterEachPass(boolean printSource) {
     this.printSourceAfterEachPass = printSource;
@@ -1014,8 +1008,13 @@ public class CompilerOptions implements Serializable {
     this.filesToPrintAfterEachPassRegexList = filePathRegexList;
   }
 
-  public void setModulesToPrintAfterEachPassRegexList(List<String> modulePathRegexList) {
-    this.modulesToPrintAfterEachPassRegexList = modulePathRegexList;
+  public void setChunksToPrintAfterEachPassRegexList(List<String> chunkPathRegexList) {
+    this.chunksToPrintAfterEachPassRegexList = chunkPathRegexList;
+  }
+
+  @Deprecated
+  public void setModulesToPrintAfterEachPassRegexList(List<String> chunkPathRegexList) {
+    this.chunksToPrintAfterEachPassRegexList = chunkPathRegexList;
   }
 
   private TracerMode tracer;
@@ -1100,7 +1099,7 @@ public class CompilerOptions implements Serializable {
    */
   boolean resolveSourceMapAnnotations = true;
 
-  public List<SourceMap.LocationMapping> sourceMapLocationMappings =
+  public List<? extends SourceMap.LocationMapping> sourceMapLocationMappings =
       Collections.emptyList();
 
   /**
@@ -1158,13 +1157,15 @@ public class CompilerOptions implements Serializable {
 
   String instrumentationTemplateFile;
 
+  private static final ImmutableList<ConformanceConfig> GLOBAL_CONFORMANCE_CONFIGS =
+      ImmutableList.of(ResourceLoader.loadGlobalConformance(CompilerOptions.class));
+
   /**
    * List of conformance configs to use in CheckConformance.
    *
    * <p>The first entry of this list is always the Global ConformanceConfig
    */
-  private ImmutableList<ConformanceConfig> conformanceConfigs =
-      ImmutableList.of(ResourceLoader.loadGlobalConformance(CompilerOptions.class));
+  private ImmutableList<ConformanceConfig> conformanceConfigs = GLOBAL_CONFORMANCE_CONFIGS;
 
   /**
    * For use in {@link CompilationLevel#WHITESPACE_ONLY} mode, when using goog.module.
@@ -1186,7 +1187,13 @@ public class CompilerOptions implements Serializable {
   private Optional<Boolean> isStrictModeInput = Optional.absent();
 
   /** Which algorithm to use for locating ES6 and CommonJS modules */
-  ModuleLoader.ResolutionMode moduleResolutionMode;
+  ResolutionMode moduleResolutionMode;
+
+  /**
+   * Map of prefix replacements for use when moduleResolutionMode is {@link
+   * ResolutionMode#BROWSER_WITH_TRANSFORMED_PREFIXES}.
+   */
+  private ImmutableMap<String, String> browserResolverPrefixReplacements;
 
   /** Which entries to look for in package.json files when processing modules */
   List<String> packageJsonEntryNames;
@@ -1213,6 +1220,7 @@ public class CompilerOptions implements Serializable {
 
     // Which environment to use
     environment = Environment.BROWSER;
+    browserResolverPrefixReplacements = ImmutableMap.of();
 
     // Modules
     moduleResolutionMode = ModuleLoader.ResolutionMode.BROWSER;
@@ -1243,9 +1251,9 @@ public class CompilerOptions implements Serializable {
     assumeStrictThis = false;
     assumeClosuresOnlyCaptureReferences = false;
     inlineProperties = false;
-    crossModuleCodeMotion = false;
-    parentModuleCanSeeSymbolsDeclaredInChildren = false;
-    crossModuleMethodMotion = false;
+    crossChunkCodeMotion = false;
+    parentChunkCanSeeSymbolsDeclaredInChildren = false;
+    crossChunkMethodMotion = false;
     inlineGetters = false;
     inlineVariables = false;
     inlineLocalVariables = false;
@@ -1998,32 +2006,16 @@ public class CompilerOptions implements Serializable {
     return inferTypes;
   }
 
-  public boolean getNewTypeInference() {
-    return this.useNewTypeInference;
-  }
-
+  /** @deprecated This is a no-op. */
+  @Deprecated
   public void setNewTypeInference(boolean enable) {
-    this.useNewTypeInference = enable;
   }
 
   /**
    * @return true if either typechecker is ON.
    */
   public boolean isTypecheckingEnabled() {
-    return this.checkTypes || this.useNewTypeInference;
-  }
-
-  // Not dead code; used by the open-source users of the compiler.
-  public void setReportOTIErrorsUnderNTI(boolean enable) {
-    this.reportOTIErrorsUnderNTI = enable;
-  }
-
-  public boolean getTypeCheckEs6Natively() {
-    return this.typeCheckEs6Natively;
-  }
-
-  public void setTypeCheckEs6Natively(boolean enable) {
-    this.typeCheckEs6Natively = enable;
+    return this.checkTypes;
   }
 
   /**
@@ -2191,27 +2183,49 @@ public class CompilerOptions implements Serializable {
     this.inlineConstantVars = inlineConstantVars;
   }
 
-  public void setCrossModuleCodeMotion(boolean crossModuleCodeMotion) {
-    this.crossModuleCodeMotion = crossModuleCodeMotion;
+  public void setCrossChunkCodeMotion(boolean crossChunkCodeMotion) {
+    this.crossChunkCodeMotion = crossChunkCodeMotion;
   }
 
+  @Deprecated
+  public void setCrossModuleCodeMotion(boolean crossChunkCodeMotion) {
+    setCrossChunkCodeMotion(crossChunkCodeMotion);
+  }
+
+  public void setCrossChunkCodeMotionNoStubMethods(boolean
+      crossChunkCodeMotionNoStubMethods) {
+    this.crossChunkCodeMotionNoStubMethods = crossChunkCodeMotionNoStubMethods;
+  }
+
+  @Deprecated
   public void setCrossModuleCodeMotionNoStubMethods(boolean
-      crossModuleCodeMotionNoStubMethods) {
-    this.crossModuleCodeMotionNoStubMethods = crossModuleCodeMotionNoStubMethods;
+      crossChunkCodeMotionNoStubMethods) {
+    setCrossChunkCodeMotionNoStubMethods(crossChunkCodeMotionNoStubMethods);
   }
 
+  public void setParentChunkCanSeeSymbolsDeclaredInChildren(
+      boolean parentChunkCanSeeSymbolsDeclaredInChildren) {
+    this.parentChunkCanSeeSymbolsDeclaredInChildren =
+        parentChunkCanSeeSymbolsDeclaredInChildren;
+  }
+
+  @Deprecated
   public void setParentModuleCanSeeSymbolsDeclaredInChildren(
-      boolean parentModuleCanSeeSymbolsDeclaredInChildren) {
-    this.parentModuleCanSeeSymbolsDeclaredInChildren =
-        parentModuleCanSeeSymbolsDeclaredInChildren;
+      boolean parentChunkCanSeeSymbolsDeclaredInChildren) {
+    setParentChunkCanSeeSymbolsDeclaredInChildren(parentChunkCanSeeSymbolsDeclaredInChildren);
+  }
+
+  public void setCrossChunkMethodMotion(boolean crossChunkMethodMotion) {
+    this.crossChunkMethodMotion = crossChunkMethodMotion;
+  }
+
+  @Deprecated
+  public void setCrossModuleMethodMotion(boolean crossChunkMethodMotion) {
+    setCrossChunkMethodMotion(crossChunkMethodMotion);
   }
 
   public void setCoalesceVariableNames(boolean coalesceVariableNames) {
     this.coalesceVariableNames = coalesceVariableNames;
-  }
-
-  public void setCrossModuleMethodMotion(boolean crossModuleMethodMotion) {
-    this.crossModuleMethodMotion = crossModuleMethodMotion;
   }
 
   public void setInlineLocalVariables(boolean inlineLocalVariables) {
@@ -2682,7 +2696,7 @@ public class CompilerOptions implements Serializable {
   }
 
   public void setSourceMapLocationMappings(
-      List<SourceMap.LocationMapping> sourceMapLocationMappings) {
+      List<? extends SourceMap.LocationMapping> sourceMapLocationMappings) {
     this.sourceMapLocationMappings = sourceMapLocationMappings;
   }
 
@@ -2797,12 +2811,21 @@ public class CompilerOptions implements Serializable {
     return this;
   }
 
-  public ModuleLoader.ResolutionMode getModuleResolutionMode() {
+  public ResolutionMode getModuleResolutionMode() {
     return this.moduleResolutionMode;
   }
 
-  public void setModuleResolutionMode(ModuleLoader.ResolutionMode mode) {
-    this.moduleResolutionMode = mode;
+  public void setModuleResolutionMode(ResolutionMode moduleResolutionMode) {
+    this.moduleResolutionMode = moduleResolutionMode;
+  }
+
+  public ImmutableMap<String, String> getBrowserResolverPrefixReplacements() {
+    return this.browserResolverPrefixReplacements;
+  }
+
+  public void setBrowserResolverPrefixReplacements(
+      ImmutableMap<String, String> browserResolverPrefixReplacements) {
+    this.browserResolverPrefixReplacements = browserResolverPrefixReplacements;
   }
 
   public List<String> getPackageJsonEntryNames() {
@@ -2811,6 +2834,14 @@ public class CompilerOptions implements Serializable {
 
   public void setPackageJsonEntryNames(List<String> names) {
     this.packageJsonEntryNames = names;
+  }
+
+  public void setUseSizeHeuristicToStopOptimizationLoop(boolean mayStopEarly) {
+    this.useSizeHeuristicToStopOptimizationLoop = mayStopEarly;
+  }
+
+  public void setMaxOptimizationLoopIterations(int maxIterations) {
+    this.optimizationLoopMaxIterations = maxIterations;
   }
 
   /** Serializes compiler options to a stream. */
@@ -2865,9 +2896,9 @@ public class CompilerOptions implements Serializable {
             .add("conformanceConfigs", getConformanceConfigs())
             .add("continueAfterErrors", canContinueAfterErrors())
             .add("convertToDottedProperties", convertToDottedProperties)
-            .add("crossModuleCodeMotion", crossModuleCodeMotion)
-            .add("crossModuleCodeMotionNoStubMethods", crossModuleCodeMotionNoStubMethods)
-            .add("crossModuleMethodMotion", crossModuleMethodMotion)
+            .add("crossChunkCodeMotion", crossChunkCodeMotion)
+            .add("crossChunkCodeMotionNoStubMethods", crossChunkCodeMotionNoStubMethods)
+            .add("crossChunkMethodMotion", crossChunkMethodMotion)
             .add("cssRenamingMap", cssRenamingMap)
             .add("cssRenamingWhitelist", cssRenamingWhitelist)
             .add("customPasses", customPasses)
@@ -2935,7 +2966,7 @@ public class CompilerOptions implements Serializable {
             .add("maxFunctionSizeAfterInlining", maxFunctionSizeAfterInlining)
             .add("messageBundle", messageBundle)
             .add("moduleRoots", moduleRoots)
-            .add("modulesToPrintAfterEachPassRegexList", modulesToPrintAfterEachPassRegexList)
+            .add("chunksToPrintAfterEachPassRegexList", chunksToPrintAfterEachPassRegexList)
             .add("moveFunctionDeclarations", moveFunctionDeclarations)
             .add("nameGenerator", nameGenerator)
             .add("optimizeArgumentsArray", optimizeArgumentsArray)
@@ -2944,8 +2975,8 @@ public class CompilerOptions implements Serializable {
             .add("outputJs", outputJs)
             .add("outputJsStringUsage", outputJsStringUsage)
             .add(
-                "parentModuleCanSeeSymbolsDeclaredInChildren",
-                parentModuleCanSeeSymbolsDeclaredInChildren)
+                "parentChunkCanSeeSymbolsDeclaredInChildren",
+                parentChunkCanSeeSymbolsDeclaredInChildren)
             .add("parseJsDocDocumentation", isParseJsDocDocumentation())
             .add("polymerVersion", polymerVersion)
             .add("preferLineBreakAtEndOfFile", preferLineBreakAtEndOfFile)
@@ -2981,8 +3012,8 @@ public class CompilerOptions implements Serializable {
             .add("removeUnusedPrototypeProperties", removeUnusedPrototypeProperties)
             .add("removeUnusedVars", removeUnusedVars)
             .add(
-                "renamePrefixNamespaceAssumeCrossModuleNames",
-                renamePrefixNamespaceAssumeCrossModuleNames)
+                "renamePrefixNamespaceAssumeCrossChunkNames",
+                renamePrefixNamespaceAssumeCrossChunkNames)
             .add("renamePrefixNamespace", renamePrefixNamespace)
             .add("renamePrefix", renamePrefix)
             .add("replaceIdGenerators", replaceIdGenerators)
@@ -2991,7 +3022,6 @@ public class CompilerOptions implements Serializable {
             .add("replaceStringsInputMap", replaceStringsInputMap)
             .add("replaceStringsPlaceholderToken", replaceStringsPlaceholderToken)
             .add("replaceStringsReservedStrings", replaceStringsReservedStrings)
-            .add("reportOTIErrorsUnderNTI", reportOTIErrorsUnderNTI)
             .add("reserveRawExports", reserveRawExports)
             .add("rewriteFunctionExpressions", rewriteFunctionExpressions)
             .add("rewritePolyfills", rewritePolyfills)
@@ -3017,7 +3047,6 @@ public class CompilerOptions implements Serializable {
             .add("trustedStrings", trustedStrings)
             .add("tweakProcessing", getTweakProcessing())
             .add("tweakReplacements", getTweakReplacements())
-            .add("useNewTypeInference", getNewTypeInference())
             .add("emitUseStrict", emitUseStrict)
             .add("useTypesForLocalOptimization", useTypesForLocalOptimization)
             .add("variableRenaming", variableRenaming)

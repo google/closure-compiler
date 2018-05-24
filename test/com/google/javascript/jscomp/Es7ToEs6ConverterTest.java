@@ -21,7 +21,7 @@ import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
  * Test cases for ES6 transpilation. Despite the name, this isn't just testing {@link
  * Es6ToEs3Converter}, but also some other ES6 transpilation passes. See #getProcessor.
  */
-public final class Es7ToEs6ConverterTest extends TypeICompilerTestCase {
+public final class Es7ToEs6ConverterTest extends CompilerTestCase {
 
   public Es7ToEs6ConverterTest() {
     super(MINIMAL_EXTERNS);
@@ -33,7 +33,6 @@ public final class Es7ToEs6ConverterTest extends TypeICompilerTestCase {
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2016);
     setLanguageOut(LanguageMode.ECMASCRIPT5);
     enableRunTypeCheckAfterProcessing();
-    this.mode = TypeInferenceMode.NEITHER;
   }
 
   @Override

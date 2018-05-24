@@ -952,6 +952,17 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
         "for (var a, b, c; ;) {}");
   }
 
+  public void testIssue2918() {
+    testModules(
+        "test.js",
+        lines(
+            "for (var a, b; a < 4; a++) {};",
+            "module.exports = {}"),
+        lines(
+            "/** @const */ var module$test = {/** @const */ default:{}};",
+            "for(var a$$module$test,b$$module$test;a$$module$test<4;a$$module$test++) {};"));
+  }
+
   public void testExportsDirectAssignment() {
     testModules(
         "test.js",

@@ -69,7 +69,7 @@ class FunctionRewriter implements CompilerPass {
 
     // Accumulate possible reductions in the reduction multi-map.  They
     // will be applied in the loop below.
-    NodeTraversal.traverseEs6(compiler, root,
+    NodeTraversal.traverse(compiler, root,
                            new ReductionGatherer(reducers, reductionMap));
 
     // Apply reductions iff they will provide some savings.

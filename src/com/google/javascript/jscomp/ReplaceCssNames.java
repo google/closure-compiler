@@ -23,7 +23,7 @@ import com.google.common.base.Joiner;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.TypeI;
+import com.google.javascript.rhino.jstype.JSType;
 import java.util.Map;
 import java.util.Set;
 import javax.annotation.Nullable;
@@ -110,7 +110,7 @@ class ReplaceCssNames implements CompilerPass {
 
   private final Set<String> whitelist;
 
-  private TypeI nativeStringType;
+  private JSType nativeStringType;
 
   ReplaceCssNames(AbstractCompiler compiler,
       @Nullable Map<String, Integer> cssNames,
@@ -120,10 +120,10 @@ class ReplaceCssNames implements CompilerPass {
     this.whitelist = whitelist;
   }
 
-  private TypeI getNativeStringType() {
+  private JSType getNativeStringType() {
     if (nativeStringType == null) {
       nativeStringType =
-        compiler.getTypeIRegistry().getNativeType(STRING_TYPE);
+        compiler.getTypeRegistry().getNativeType(STRING_TYPE);
     }
     return nativeStringType;
   }
@@ -136,7 +136,7 @@ class ReplaceCssNames implements CompilerPass {
     // only be called before this pass is actually run.
     symbolMap = getCssRenamingMap();
 
-    NodeTraversal.traverseEs6(compiler, root, new Traversal());
+    NodeTraversal.traverse(compiler, root, new Traversal());
   }
 
   @VisibleForTesting
@@ -185,7 +185,7 @@ class ReplaceCssNames implements CompilerPass {
                   IR.string("-" + second.getString())
                       .useSourceInfoIfMissingFrom(second))
                   .useSourceInfoIfMissingFrom(n);
-              replacement.setTypeI(getNativeStringType());
+              replacement.setJSType(getNativeStringType());
               parent.replaceChild(n, replacement);
               t.reportCodeChange();
             }

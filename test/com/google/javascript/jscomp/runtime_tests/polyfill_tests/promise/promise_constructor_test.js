@@ -29,6 +29,7 @@ const asyncAssertPromiseFulfilled = promiseTesting.asyncAssertPromiseFulfilled;
 const asyncAssertPromiseRejected = promiseTesting.asyncAssertPromiseRejected;
 const asyncExecute = promiseTesting.asyncExecute;
 const userAgent = goog.require('goog.userAgent');
+const browser = goog.require('goog.labs.userAgent.browser');
 
 const testSuite = goog.require('goog.testing.testSuite');
 
@@ -217,10 +218,19 @@ testSuite({
   },
 
   testResolveToThenableThatThrows() {
+    if (browser.isChrome()
+        && browser.isVersionOrHigher('66')
+        && !browser.isVersionOrHigher('67')) {
+      // See https://bugs.chromium.org/p/v8/issues/detail?id=7711
+      return;
+    }
+
     let rejectedReason = new Error('rejected reason');
     let rejectedThenable = FakeThenable.immediatelyThrow(rejectedReason);
     let testPromise =
-        new Promise((resolve, reject) => { resolve(rejectedThenable); });
+        new Promise((resolve, reject) => {
+          resolve(rejectedThenable);
+        });
 
     return asyncAssertPromiseRejected(testPromise, rejectedReason);
   },

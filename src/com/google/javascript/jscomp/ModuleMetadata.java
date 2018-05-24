@@ -18,7 +18,7 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
-import static com.google.javascript.jscomp.ClosureCheckModule.DECLARE_LEGACY_NAMESPACE_OUTSIDE_GOOG_MODULE;
+import static com.google.javascript.jscomp.ClosureCheckModule.DECLARE_LEGACY_NAMESPACE_IN_NON_MODULE;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -255,7 +255,8 @@ final class ModuleMetadata {
             moduleType = ModuleType.LEGACY_GOOG_MODULE;
           } else {
             compiler.report(
-                JSError.make(declaresNamespace, DECLARE_LEGACY_NAMESPACE_OUTSIDE_GOOG_MODULE));
+                JSError.make(
+                    declaresLegacyNamespace, DECLARE_LEGACY_NAMESPACE_IN_NON_MODULE));
           }
         }
       }
@@ -430,22 +431,25 @@ final class ModuleMetadata {
         switch (existing.moduleType) {
           case ES6_MODULE:
           case GOOG_MODULE:
-            t.report(n, ClosureRewriteModule.DUPLICATE_MODULE);
+          case LEGACY_GOOG_MODULE:
+            t.report(n, ClosureRewriteModule.DUPLICATE_MODULE, namespace);
             break;
           case GOOG_PROVIDE:
-            t.report(n, ClosureRewriteModule.DUPLICATE_NAMESPACE);
+            t.report(n, ClosureRewriteModule.DUPLICATE_NAMESPACE, namespace);
             break;
-          default:
-            throw new IllegalStateException("Unexpected module type: " + existing.moduleType);
+          case COMMON_JS:
+          case SCRIPT:
+            // Fall through, error
         }
+        throw new IllegalStateException("Unexpected module type: " + existing.moduleType);
       }
     }
   }
 
   public void process(Node externs, Node root) {
     finder = new Finder();
-    NodeTraversal.traverseEs6(compiler, externs, finder);
-    NodeTraversal.traverseEs6(compiler, root, finder);
+    NodeTraversal.traverse(compiler, externs, finder);
+    NodeTraversal.traverse(compiler, root, finder);
   }
 
   private void remove(Module module) {
@@ -466,7 +470,7 @@ final class ModuleMetadata {
     Module existing =
         modulesByPath.get(compiler.getInput(scriptRoot.getInputId()).getPath().toString());
     remove(existing);
-    NodeTraversal.traverseEs6(compiler, scriptRoot, finder);
+    NodeTraversal.traverse(compiler, scriptRoot, finder);
   }
 
   /**

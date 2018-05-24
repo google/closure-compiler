@@ -20,6 +20,7 @@
  * API Reference: http://angular-ui.github.io/bootstrap/
  *
  * @externs
+ * @suppress {strictMissingProperties}
  */
 
 
