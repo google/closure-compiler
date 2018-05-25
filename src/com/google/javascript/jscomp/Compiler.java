@@ -2036,6 +2036,9 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
    */
   void hoistNoCompileFiles() {
     boolean staleInputs = false;
+    if (options.numParallelThreads > 1) {
+      new PrebuildAst(this, options.numParallelThreads).prebuild(inputs);
+    }
     for (CompilerInput input : inputs) {
       Node n = input.getAstRoot(this);
 
