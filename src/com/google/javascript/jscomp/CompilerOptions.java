@@ -113,9 +113,11 @@ public class CompilerOptions implements Serializable {
   private LanguageMode languageIn;
 
   /**
-   * The JavaScript language version that should be produced.
+   * The JavaScript features that are allowed to be in the output.
    */
-  private LanguageMode languageOut;
+  private FeatureSet outputFeatureSet;
+
+  private boolean languageOutIsDefaultStrict;
 
   /**
    * The builtin set of externs to be used
@@ -1216,7 +1218,8 @@ public class CompilerOptions implements Serializable {
   public CompilerOptions() {
     // Accepted language
     languageIn = LanguageMode.ECMASCRIPT_2017;
-    languageOut = LanguageMode.NO_TRANSPILE;
+    outputFeatureSet = LanguageMode.NO_TRANSPILE.toFeatureSet();
+    languageOutIsDefaultStrict = false;
 
     // Which environment to use
     environment = Environment.BROWSER;
@@ -1913,7 +1916,7 @@ public class CompilerOptions implements Serializable {
   public void setLanguage(LanguageMode language) {
     checkState(language != LanguageMode.NO_TRANSPILE);
     this.languageIn = language;
-    this.languageOut = language;
+    this.setLanguageOut(language);
   }
 
   /**
@@ -1930,28 +1933,43 @@ public class CompilerOptions implements Serializable {
   }
 
   /**
-   * Sets ECMAScript version to use for the output. If you are not
-   * transpiling from one version to another, use #setLanguage instead.
+   * Sets ECMAScript version to use for the output.
+   *
+   * <p>If you are not transpiling from one version to another, use #setLanguage instead.
+   *
+   * <p>If you you need something more fine grained (e.g. "ES2017 without modules") use
+   * #setOutputFeatureSet.
    */
   public void setLanguageOut(LanguageMode languageOut) {
-    this.languageOut = languageOut;
+    this.languageOutIsDefaultStrict = languageOut.isDefaultStrict();
+    this.outputFeatureSet = languageOut.toFeatureSet();
   }
 
-  public LanguageMode getLanguageOut() {
-    if (languageOut == LanguageMode.NO_TRANSPILE) {
-      return languageIn;
-    }
-    return languageOut;
+  /**
+   * Sets the features that allowed to appear in the output. Any feature in the input that is not
+   * in this output must be transpiled away.
+   */
+  public void setOutputFeatureSet(FeatureSet featureSet) {
+    this.outputFeatureSet = featureSet;
+  }
+
+  /**
+   * Gets the set of features that can appear in the output.
+   */
+  public FeatureSet getOutputFeatureSet() {
+    return outputFeatureSet;
   }
 
   public boolean needsTranspilationFrom(FeatureSet languageLevel) {
+    // TODO(johnplaisted): This isn't really accurate. This should instead be the *parsed* language,
+    // not the *input* language.
     return getLanguageIn().toFeatureSet().contains(languageLevel)
-        && !getLanguageOut().toFeatureSet().contains(languageLevel);
+        && !getOutputFeatureSet().contains(languageLevel);
   }
 
   public boolean needsTranspilationOf(FeatureSet.Feature feature) {
     return getLanguageIn().toFeatureSet().has(feature)
-        && !getLanguageOut().toFeatureSet().has(feature);
+        && !getOutputFeatureSet().has(feature);
   }
 
   /**
@@ -2632,7 +2650,7 @@ public class CompilerOptions implements Serializable {
     if (incrementalCheckMode == IncrementalCheckMode.GENERATE_IJS) {
       return false;
     }
-    return this.quoteKeywordProperties || languageOut == LanguageMode.ECMASCRIPT3;
+    return this.quoteKeywordProperties || FeatureSet.ES3.contains(getOutputFeatureSet());
   }
 
   public void setErrorFormat(ErrorFormat errorFormat) {
@@ -2802,8 +2820,11 @@ public class CompilerOptions implements Serializable {
             .build();
   }
 
+  /**
+   * Whether the output should contain a 'use strict' directive.
+   */
   public boolean shouldEmitUseStrict() {
-    return this.emitUseStrict.or(getLanguageOut().isDefaultStrict());
+    return this.emitUseStrict.or(languageOutIsDefaultStrict);
   }
 
   public CompilerOptions setEmitUseStrict(boolean emitUseStrict) {
@@ -2956,7 +2977,7 @@ public class CompilerOptions implements Serializable {
             .add("j2clPassMode", j2clPassMode)
             .add("labelRenaming", labelRenaming)
             .add("languageIn", getLanguageIn())
-            .add("languageOut", getLanguageOut())
+            .add("languageOutIsDefaultStrict", languageOutIsDefaultStrict)
             .add("legacyCodeCompile", legacyCodeCompile)
             .add("lineBreak", lineBreak)
             .add("lineLengthThreshold", lineLengthThreshold)
@@ -2972,6 +2993,7 @@ public class CompilerOptions implements Serializable {
             .add("optimizeArgumentsArray", optimizeArgumentsArray)
             .add("optimizeCalls", optimizeCalls)
             .add("outputCharset", outputCharset)
+            .add("outputFeatureSet", outputFeatureSet)
             .add("outputJs", outputJs)
             .add("outputJsStringUsage", outputJsStringUsage)
             .add(
@@ -3066,7 +3088,7 @@ public class CompilerOptions implements Serializable {
    * the same compilation job. Therefore, the 'use strict' directive is ignored
    * when the language mode is not strict.
    */
-  public static enum LanguageMode {
+  public enum LanguageMode {
     /**
      * 90's JavaScript
      */
@@ -3157,11 +3179,10 @@ public class CompilerOptions implements Serializable {
         case ECMASCRIPT_2018:
           return FeatureSet.ES2018_MODULES;
         case ECMASCRIPT_NEXT:
+        case NO_TRANSPILE:
           return FeatureSet.ES_NEXT;
         case ECMASCRIPT6_TYPED:
           return FeatureSet.TYPESCRIPT;
-        case NO_TRANSPILE:
-          throw new IllegalStateException();
       }
       throw new IllegalStateException();
     }

@@ -15,7 +15,6 @@
  */
 package com.google.javascript.jscomp;
 
-import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.rhino.IR;
@@ -65,7 +64,7 @@ public final class Es6InjectRuntimeLibraries implements Callback, HotSwapCompile
         break;
       case GETTER_DEF:
       case SETTER_DEF:
-        if (compiler.getOptions().getLanguageOut() == LanguageMode.ECMASCRIPT3) {
+        if (FeatureSet.ES3.contains(compiler.getOptions().getOutputFeatureSet())) {
           Es6ToEs3Util.cannotConvert(
               compiler, n, "ES5 getters/setters (consider using --language_out=ES5)");
         }

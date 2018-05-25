@@ -54,7 +54,7 @@ public final class DartSuperAccessorsPass implements NodeTraversal.Callback,
     this.renameProperties = options.propertyRenaming == PropertyRenamingPolicy.ALL_UNQUOTED;
 
     checkState(
-        options.getLanguageOut().toFeatureSet().contains(FeatureSet.ES5),
+        options.getOutputFeatureSet().contains(FeatureSet.ES5),
         "Dart super accessors pass requires ES5+ output");
 
     // We currently rely on JSCompiler_renameProperty, which is not type-aware.

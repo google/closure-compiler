@@ -247,7 +247,7 @@ public class RewritePolyfills implements HotSwapCompilerPass {
                 node,
                 INSUFFICIENT_OUTPUT_VERSION_ERROR,
                 name,
-                compiler.getOptions().getLanguageOut().toString());
+                compiler.getOptions().getOutputFeatureSet().version());
           }
           inject(polyfill);
 
@@ -292,7 +292,7 @@ public class RewritePolyfills implements HotSwapCompilerPass {
       ImmutableSet.of("goog.global.", "window.");
 
   private boolean languageOutIsAtLeast(LanguageMode mode) {
-    return compiler.getOptions().getLanguageOut().compareTo(mode) >= 0;
+    return compiler.getOptions().getOutputFeatureSet().contains(mode.toFeatureSet());
   }
 
   private boolean languageOutIsAtLeast(FeatureSet features) {

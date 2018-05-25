@@ -20,7 +20,6 @@ import static com.google.javascript.jscomp.Es6ToEs3Util.createType;
 import static com.google.javascript.jscomp.Es6ToEs3Util.withType;
 
 import com.google.common.collect.Lists;
-import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.IR;
@@ -88,7 +87,7 @@ public final class LateEs6ToEs3Converter implements NodeTraversal.Callback, HotS
     switch (n.getToken()) {
       case GETTER_DEF:
       case SETTER_DEF:
-        if (compiler.getOptions().getLanguageOut() == LanguageMode.ECMASCRIPT3) {
+        if (FeatureSet.ES3.contains(compiler.getOptions().getOutputFeatureSet())) {
           Es6ToEs3Util.cannotConvert(
               compiler, n, "ES5 getters/setters (consider using --language_out=ES5)");
           return false;

@@ -18,7 +18,6 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 
-import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.NodeUtil.Visitor;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
@@ -499,7 +498,7 @@ public final class Es6RewriteRestAndSpread extends NodeTraversal.AbstractPostOrd
                     groups.toArray(new Node[0]))
                 .setJSType(arrayType);
 
-    if (compiler.getOptions().getLanguageOut() == LanguageMode.ECMASCRIPT3) {
+    if (FeatureSet.ES3.contains(compiler.getOptions().getOutputFeatureSet())) {
       // TODO(tbreisacher): Support this in ES3 too by not relying on Function.bind.
       Es6ToEs3Util.cannotConvert(
           compiler,

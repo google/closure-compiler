@@ -122,7 +122,7 @@ public class TranspilationPasses {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES8_MODULES;
+          return FeatureSet.latest();
         }
       };
 
@@ -422,7 +422,7 @@ public class TranspilationPasses {
   static void processTranspile(
       AbstractCompiler compiler, Node combinedRoot, FeatureSet featureSet, Callback... callbacks) {
     if (compiler.getOptions().needsTranspilationFrom(featureSet)) {
-      FeatureSet languageOutFeatures = compiler.getOptions().getLanguageOut().toFeatureSet();
+      FeatureSet languageOutFeatures = compiler.getOptions().getOutputFeatureSet();
       for (Node singleRoot : combinedRoot.children()) {
 
         // Only run the transpilation if this file has features not in the compiler's target output
@@ -454,7 +454,7 @@ public class TranspilationPasses {
   static void hotSwapTranspile(
       AbstractCompiler compiler, Node scriptRoot, FeatureSet featureSet, Callback... callbacks) {
     if (compiler.getOptions().needsTranspilationFrom(featureSet)) {
-      FeatureSet languageOutFeatures = compiler.getOptions().getLanguageOut().toFeatureSet();
+      FeatureSet languageOutFeatures = compiler.getOptions().getOutputFeatureSet();
       if (doesScriptHaveUnsupportedFeatures(scriptRoot, languageOutFeatures)) {
         for (Callback callback : callbacks) {
           scriptRoot.putBooleanProp(Node.TRANSPILED, true);

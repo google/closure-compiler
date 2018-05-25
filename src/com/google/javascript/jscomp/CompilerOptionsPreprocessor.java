@@ -56,7 +56,7 @@ final class CompilerOptionsPreprocessor {
     }
 
     if (options.dartPass) {
-      if (!options.getLanguageOut().toFeatureSet().contains(FeatureSet.ES5)) {
+      if (!options.getOutputFeatureSet().contains(FeatureSet.ES5)) {
         throw new InvalidOptionsException("Dart requires --language_out=ES5 or higher.");
       }
       // --dart_pass does not support type-aware property renaming yet.

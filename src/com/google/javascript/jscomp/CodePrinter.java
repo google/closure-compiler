@@ -23,7 +23,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.debugging.sourcemap.FilePosition;
 import com.google.javascript.jscomp.CodePrinter.Builder.CodeGeneratorFactory;
-import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.StaticSourceFile;
 import com.google.javascript.rhino.Token;
@@ -837,7 +837,7 @@ public final class CodePrinter {
       if (outputTypes) {
         return Format.TYPED;
       }
-      if (prettyPrint || options.getLanguageOut() == LanguageMode.ECMASCRIPT6_TYPED) {
+      if (prettyPrint || options.getOutputFeatureSet().contains(FeatureSet.TYPESCRIPT)) {
         return Format.PRETTY;
       }
       return Format.COMPACT;
