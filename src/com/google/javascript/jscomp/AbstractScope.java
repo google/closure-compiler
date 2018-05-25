@@ -332,7 +332,7 @@ abstract class AbstractScope<S extends AbstractScope<S, V>, V extends AbstractVa
   }
 
   public final boolean isCatchScope() {
-    return getRootNode().isNormalBlock()
+    return getRootNode().isBlock()
         && getRootNode().hasOneChild()
         && getRootNode().getFirstChild().isCatch();
   }

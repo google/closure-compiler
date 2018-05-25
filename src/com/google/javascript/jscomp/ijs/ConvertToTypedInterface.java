@@ -144,7 +144,7 @@ public class ConvertToTypedInterface implements CompilerPass {
         case FUNCTION:
           if (!ClassUtil.isConstructor(n) || !ClassUtil.hasNamedClass(n)) {
             Node body = n.getLastChild();
-            if (!body.isNormalBlock() || body.hasChildren()) {
+            if (!body.isBlock() || body.hasChildren()) {
               t.reportCodeChange(body);
               body.replaceWith(IR.block().srcref(body));
               NodeUtil.markFunctionsDeleted(body, t.getCompiler());

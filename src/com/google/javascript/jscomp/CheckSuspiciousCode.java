@@ -92,7 +92,7 @@ final class CheckSuspiciousCode extends AbstractPostOrderCallback {
   }
 
   private static void reportIfWasEmpty(NodeTraversal t, Node block) {
-    checkState(block.isNormalBlock());
+    checkState(block.isBlock());
 
     // A semicolon is distinguished from a block without children by
     // annotating it with EMPTY_BLOCK.  Blocks without children are

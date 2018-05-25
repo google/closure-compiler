@@ -144,7 +144,7 @@ public class J2clPropertyInlinerPass implements CompilerPass {
         return false;
       }
       Node getFunction = getKey.getFirstChild();
-      if (!getFunction.hasChildren() || !getFunction.getLastChild().isNormalBlock()) {
+      if (!getFunction.hasChildren() || !getFunction.getLastChild().isBlock()) {
         return false;
       }
       Node getBlock = getFunction.getLastChild();
@@ -185,7 +185,7 @@ public class J2clPropertyInlinerPass implements CompilerPass {
       }
       Node setFunction = setKey.getFirstChild();
       if (!setFunction.hasChildren()
-          || !setFunction.getLastChild().isNormalBlock()
+          || !setFunction.getLastChild().isBlock()
           || !setFunction.getSecondChild().isParamList()) {
         return false;
       }

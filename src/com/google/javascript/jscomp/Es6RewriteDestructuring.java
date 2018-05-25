@@ -94,7 +94,7 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
    */
   private void visitFunction(NodeTraversal t, Node function) {
     Node body = function.getLastChild();
-    if (!body.isNormalBlock()) {
+    if (!body.isBlock()) {
       body.detach();
       Node replacement = IR.block(IR.returnNode(body)).useSourceInfoIfMissingFromForTree(body);
       function.addChildToBack(replacement);

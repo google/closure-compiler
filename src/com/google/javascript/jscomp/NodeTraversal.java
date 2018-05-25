@@ -431,7 +431,7 @@ public class NodeTraversal {
       traverseBranch(body, n);
 
       popScope();
-    } else if (n.isNormalBlock()) {
+    } else if (n.isBlock()) {
       pushScope(s);
 
       // traverseBranch is not called here to avoid re-creating the block scope.
@@ -1115,11 +1115,11 @@ public class NodeTraversal {
     checkState(
         cfgRoot.isScript()
             || cfgRoot.isRoot()
-            || cfgRoot.isNormalBlock()
+            || cfgRoot.isBlock()
             || cfgRoot.isFunction()
             || cfgRoot.isModuleBody(),
         cfgRoot);
-    return cfgRoot.isScript() || cfgRoot.isRoot() || cfgRoot.isNormalBlock();
+    return cfgRoot.isScript() || cfgRoot.isRoot() || cfgRoot.isBlock();
   }
 
   /**

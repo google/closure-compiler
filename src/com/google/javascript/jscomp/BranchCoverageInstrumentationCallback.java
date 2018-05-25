@@ -65,7 +65,7 @@ public class BranchCoverageInstrumentationCallback extends NodeTraversal.Abstrac
         if (outEdge.getValue() == ControlFlowGraph.Branch.ON_FALSE) {
           Node destination = outEdge.getDestination().getValue();
           if (destination != null
-              && destination.isNormalBlock()
+              && destination.isBlock()
               && destination.getParent() != null
               && destination.getParent().isIf()) {
             hasDefaultBlock = true;
@@ -87,7 +87,7 @@ public class BranchCoverageInstrumentationCallback extends NodeTraversal.Abstrac
       for (DiGraph.DiGraphEdge<Node, ControlFlowGraph.Branch> outEdge : cfg.getOutEdges(node)) {
         if (outEdge.getValue() == ControlFlowGraph.Branch.ON_FALSE) {
           Node destination = outEdge.getDestination().getValue();
-          if (destination.isNormalBlock()) {
+          if (destination.isBlock()) {
             blocks.add(destination);
           } else {
             Node exitBlock = IR.block();
@@ -107,7 +107,7 @@ public class BranchCoverageInstrumentationCallback extends NodeTraversal.Abstrac
   private List<Node> getChildrenBlocks(Node node) {
     List<Node> blocks = new ArrayList<>();
     for (Node child : node.children()) {
-      if (child.isNormalBlock()) {
+      if (child.isBlock()) {
         blocks.add(child);
       }
     }

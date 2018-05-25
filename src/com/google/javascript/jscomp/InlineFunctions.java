@@ -328,7 +328,7 @@ class InlineFunctions implements CompilerPass {
 
       if (fnNode.getGrandparent().isVar()) {
         Node block = functionState.getFn().getDeclaringBlock();
-        if (block.isNormalBlock()
+        if (block.isBlock()
             && !block.getParent().isFunction()
             && (NodeUtil.containsType(block, Token.LET)
                 || NodeUtil.containsType(block, Token.CONST))) {

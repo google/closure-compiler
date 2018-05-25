@@ -118,7 +118,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
   private Node tryFoldLabel(Node n) {
     String labelName = n.getFirstChild().getString();
     Node stmt = n.getLastChild();
-    if (stmt.isEmpty() || (stmt.isNormalBlock() && !stmt.hasChildren())) {
+    if (stmt.isEmpty() || (stmt.isBlock() && !stmt.hasChildren())) {
       compiler.reportChangeToEnclosingScope(n);
       n.detach();
       return null;
@@ -143,7 +143,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
    */
   @Nullable
   private static Node getOnlyInterestingChild(Node block) {
-    if (!block.isNormalBlock()) {
+    if (!block.isBlock()) {
       return null;
     }
     if (block.hasOneChild()) {
@@ -586,7 +586,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
       // been removed.
       checkState(caseNode == executingCase || !executingCase.isDefaultCase());
       Node block = executingCase.getLastChild();
-      checkState(block.isNormalBlock());
+      checkState(block.isBlock());
       if (block.hasChildren()) {
         for (Node blockChild : block.children()) {
           // If this is a block with a labelless break, it is useless.
@@ -685,7 +685,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
    * mayHaveSideEffects
    */
   private static boolean isUnremovableNode(Node n) {
-    return (n.isNormalBlock() && n.isSyntheticBlock()) || n.isScript();
+    return (n.isBlock() && n.isSyntheticBlock()) || n.isScript();
   }
 
   // TODO(johnlenz): Consider moving this to a separate peephole pass.
@@ -1067,7 +1067,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
     checkArgument(n.isDo());
 
     Node body = NodeUtil.getLoopCodeBlock(n);
-    if (body.isNormalBlock() && !body.hasChildren()) {
+    if (body.isBlock() && !body.hasChildren()) {
       Node cond = NodeUtil.getConditionExpression(n);
       Node forNode =
           IR.forNode(IR.empty().srcref(n),

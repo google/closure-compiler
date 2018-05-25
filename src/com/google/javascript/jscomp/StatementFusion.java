@@ -105,7 +105,7 @@ class StatementFusion extends AbstractPeepholeOptimization {
 
   private boolean canFuseIntoOneStatement(Node block) {
     // If we are favoring semi-colon, we shouldn't fuse script blocks.
-    if (!favorsCommaOverSemiColon && !block.isNormalBlock()) {
+    if (!favorsCommaOverSemiColon && !block.isBlock()) {
       return false;
     }
 

@@ -911,7 +911,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
         }
 
         // Remove redundant block node. Not strictly necessary, but makes tests more legible.
-        if (umdPattern.activeBranch.isNormalBlock()
+        if (umdPattern.activeBranch.isBlock()
             && umdPattern.activeBranch.getChildCount() == 1) {
           newNode = umdPattern.activeBranch.removeFirstChild();
         } else {
@@ -931,7 +931,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
         }
 
         // Detect UMD Factory Patterns and inline the functions
-        if (block.isNormalBlock() && block.getParent().isFunction()
+        if (block.isBlock() && block.getParent().isFunction()
             && block.getGrandparent().isCall()
             && parent.hasOneChild()) {
           Node enclosingFnCall = block.getGrandparent();
@@ -970,7 +970,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
           // }
           //
           // If so, inline again
-          if (newStatements.isNormalBlock()
+          if (newStatements.isBlock()
               && newStatements.hasTwoChildren()
               && newStatements.getFirstChild().isVar()
               && newStatements.getFirstFirstChild().hasOneChild()

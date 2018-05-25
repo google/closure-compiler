@@ -344,7 +344,7 @@ final class Es6RewriteGenerators implements HotSwapCompilerPass {
         // Use original async function as a hoist block for local generator variables:
         // generator function -> call -> return -> async function body
         newGeneratorHoistBlock = generatorFunction.getGrandparent().getParent();
-        checkState(newGeneratorHoistBlock.isNormalBlock(), newGeneratorHoistBlock);
+        checkState(newGeneratorHoistBlock.isBlock(), newGeneratorHoistBlock);
         changeScopeNode = NodeUtil.getEnclosingFunction(newGeneratorHoistBlock);
         checkState(changeScopeNode.isFunction(), changeScopeNode);
 
@@ -534,7 +534,7 @@ final class Es6RewriteGenerators implements HotSwapCompilerPass {
         hoistNode(n);
         return;
       }
-      context.transpileUnmarkedBlock(n.isNormalBlock() || n.isAddedBlock() ? n : IR.block(n));
+      context.transpileUnmarkedBlock(n.isBlock() || n.isAddedBlock() ? n : IR.block(n));
     }
 
     /** Transpiles a label with marked statement. */
@@ -1015,7 +1015,7 @@ final class Es6RewriteGenerators implements HotSwapCompilerPass {
         context.enterCatchBlock(finallyCase, exceptionName);
 
         Node catchBody = catchBlock.getFirstFirstChild().detach();
-        checkState(catchBody.isNormalBlock());
+        checkState(catchBody.isBlock());
         transpileStatement(catchBody);
         context.leaveCatchBlock(finallyCase, catchBody);
       }
@@ -1159,7 +1159,7 @@ final class Es6RewriteGenerators implements HotSwapCompilerPass {
      * <p>It's OK for this method to return false-negatives.
      */
     private boolean isEndOfBlockUnreachable(Node block) {
-      checkState(block.isNormalBlock());
+      checkState(block.isBlock());
       if (!block.hasChildren()) {
         return false;
       }
@@ -1944,7 +1944,7 @@ final class Es6RewriteGenerators implements HotSwapCompilerPass {
          * <p>{@link #addNode} cannot be invoked after this method is called.
          */
         void jumpTo(Case other, Node jumpBlock) {
-          checkState(jumpBlock.isNormalBlock());
+          checkState(jumpBlock.isBlock());
           checkState(jumpTo == null);
           willFollowBy(other);
           caseBlock.addChildrenToBack(jumpBlock.removeChildren());

@@ -95,7 +95,7 @@ public final class Es6SyntacticScopeCreatorTest extends TestCase {
         .getFirstChild()  // VAR
         .getNext()  // IF
         .getLastChild();  // BLOCK
-    checkState(block.isNormalBlock(), block);
+    checkState(block.isBlock(), block);
     scopeCreator.createScope(block, globalScope);
 
     assertThat(redeclarations).hasCount("x", 2);
@@ -111,7 +111,7 @@ public final class Es6SyntacticScopeCreatorTest extends TestCase {
         .getFirstChild()  // VAR
         .getNext()  // IF
         .getLastChild();  // BLOCK
-    checkState(block.isNormalBlock(), block);
+    checkState(block.isBlock(), block);
     scopeCreator.createScope(block, globalScope);
 
     assertThat(redeclarations).hasCount("x", 2);
@@ -126,7 +126,7 @@ public final class Es6SyntacticScopeCreatorTest extends TestCase {
     Node block = root
         .getFirstChild()  // IF
         .getLastChild();  // BLOCK
-    checkState(block.isNormalBlock(), block);
+    checkState(block.isBlock(), block);
     scopeCreator.createScope(block, globalScope);
 
     assertThat(redeclarations).hasCount("x", 1);
@@ -269,7 +269,7 @@ public final class Es6SyntacticScopeCreatorTest extends TestCase {
             .getFirstChild() // VAR
             .getNext() // IF
             .getLastChild(); // BLOCK
-    checkState(innerBlock.isNormalBlock(), innerBlock);
+    checkState(innerBlock.isBlock(), innerBlock);
     scopeCreator.createScope(innerBlock, functionBlockScope);
 
     assertThat(redeclarations).hasCount("x", 3);
@@ -295,7 +295,7 @@ public final class Es6SyntacticScopeCreatorTest extends TestCase {
         .getFirstChild()  // VAR
         .getNext()  // IF
         .getLastChild();  // BLOCK
-    checkState(block.isNormalBlock(), block);
+    checkState(block.isBlock(), block);
     scopeCreator.createScope(block, globalScope);
 
     assertThat(redeclarations).hasCount("x", 1);
@@ -338,7 +338,7 @@ public final class Es6SyntacticScopeCreatorTest extends TestCase {
         .getFirstChild()  // VAR
         .getNext()  // IF
         .getLastChild();  // BLOCK
-    checkState(block.isNormalBlock(), block);
+    checkState(block.isBlock(), block);
     scopeCreator.createScope(block, globalScope);
 
     assertThat(redeclarations).hasCount("x", 1);
@@ -353,7 +353,7 @@ public final class Es6SyntacticScopeCreatorTest extends TestCase {
     Node block = root
         .getFirstChild()  // IF
         .getLastChild();  // BLOCK
-    checkState(block.isNormalBlock(), block);
+    checkState(block.isBlock(), block);
     scopeCreator.createScope(block, globalScope);
 
     assertThat(redeclarations).hasCount("x", 1);
@@ -732,7 +732,7 @@ public final class Es6SyntacticScopeCreatorTest extends TestCase {
     assertScope(fBlockScope).doesNotDeclare("y");
 
     Node ifBlock = functionBlock.getLastChild().getLastChild();
-    checkState(ifBlock.isNormalBlock(), ifBlock);
+    checkState(ifBlock.isBlock(), ifBlock);
     Scope blockScope = scopeCreator.createScope(ifBlock, fBlockScope);
     assertScope(blockScope).declares("x").on(functionScope);
     assertScope(blockScope).declares("y").directly();

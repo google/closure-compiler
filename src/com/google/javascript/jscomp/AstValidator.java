@@ -840,7 +840,7 @@ public final class AstValidator implements CompilerPass {
     if (n.isArrowFunction()) {
       validateFeature(Feature.ARROW_FUNCTIONS, n);
       validateEmptyName(name);
-      if (body.isNormalBlock()) {
+      if (body.isBlock()) {
         validateBlock(body);
       } else {
         validateExpression(body);

@@ -218,13 +218,13 @@ abstract class GuardedCallback<T> implements Callback {
 
   private void promoteAbruptReturns(Node parent) {
     // If the parent is a BLOCK (e.g. `if (x) { return; }`) then go up one level.
-    if (parent.isNormalBlock()) {
+    if (parent.isBlock()) {
       parent = parent.getParent();
     }
     // If there were any guards registered the parent IF, then promote them up one level.
     if (parent.isIf() && installedGuards.containsKey(parent)) {
       Node grandparent = parent.getParent();
-      if (grandparent.isNormalBlock() || grandparent.isScript()) {
+      if (grandparent.isBlock() || grandparent.isScript()) {
         registeredGuards.putAll(grandparent, installedGuards.get(parent));
       }
     }

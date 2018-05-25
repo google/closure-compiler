@@ -499,7 +499,7 @@ class Normalize implements CompilerPass {
       if (NodeUtil.isFunctionDeclaration(n) && !NodeUtil.isHoistedFunctionDeclaration(n)) {
         rewriteFunctionDeclaration(n, compiler);
         return true;
-      } else if (n.isFunction() && !NodeUtil.getFunctionBody(n).isNormalBlock()) {
+      } else if (n.isFunction() && !NodeUtil.getFunctionBody(n).isBlock()) {
         Node returnValue = NodeUtil.getFunctionBody(n);
         Node body = IR.block(IR.returnNode(returnValue.detach()));
         body.useSourceInfoIfMissingFromForTree(returnValue);

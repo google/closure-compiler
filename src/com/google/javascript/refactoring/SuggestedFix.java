@@ -204,7 +204,7 @@ public final class SuggestedFix {
      */
     public Builder addChildToFront(Node parentNode, String content) {
       checkState(
-          parentNode.isNormalBlock(), "addChildToFront is only supported for BLOCK statements.");
+          parentNode.isBlock(), "addChildToFront is only supported for BLOCK statements.");
       int startPosition = parentNode.getSourceOffset() + 1;
       replacements.put(
           parentNode.getSourceFileName(), CodeReplacement.create(startPosition, 0, "\n" + content));
@@ -310,7 +310,7 @@ public final class SuggestedFix {
       Node parent = n.getParent();
       if (deleteWhitespaceBefore
           && parent != null
-          && (parent.isScript() || parent.isNormalBlock())) {
+          && (parent.isScript() || parent.isBlock())) {
         Node previousSibling = n.getPrevious();
         if (previousSibling != null) {
           int previousSiblingEndPosition =
@@ -429,7 +429,7 @@ public final class SuggestedFix {
       boolean needsSemicolon =
           parent != null
               && (parent.isExprResult()
-                  || parent.isNormalBlock()
+                  || parent.isBlock()
                   || parent.isScript()
                   || parent.isModuleBody());
       if (newCode.endsWith(";") && !needsSemicolon) {
@@ -439,7 +439,7 @@ public final class SuggestedFix {
       // If the replacement has lower precedence then we may need to add parentheses.
       if (parent != null && IR.mayBeExpression(parent)) {
         Node replacement = newNode;
-        while ((replacement.isNormalBlock() || replacement.isScript() || replacement.isModuleBody())
+        while ((replacement.isBlock() || replacement.isScript() || replacement.isModuleBody())
             && replacement.hasOneChild()) {
           replacement = replacement.getOnlyChild();
         }
@@ -889,7 +889,7 @@ public final class SuggestedFix {
     public String generateCode(AbstractCompiler compiler, Node node) {
       // TODO(mknichel): Fix all the formatting problems with this code.
       // How does this play with goog.scope?
-      if (node.isNormalBlock()) {
+      if (node.isBlock()) {
         // Avoid printing the {}'s
         node.setToken(Token.SCRIPT);
       }

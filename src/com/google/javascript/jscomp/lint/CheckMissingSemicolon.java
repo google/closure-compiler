@@ -55,7 +55,7 @@ public final class CheckMissingSemicolon extends AbstractPostOrderCallback imple
   private boolean shouldHaveSemicolon(Node statement) {
     if (statement.isFunction()
         || statement.isClass()
-        || statement.isNormalBlock()
+        || statement.isBlock()
         || statement.isLabelName()
         || statement.isModuleBody()
         || (NodeUtil.isControlStructure(statement) && !statement.isDo())) {

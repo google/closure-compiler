@@ -552,7 +552,7 @@ class IRFactory {
   }
 
   private void validateBlockScopedFunctions(Node n) {
-    if (n.isFunction() && n.getParent().isNormalBlock() && !n.getGrandparent().isFunction()) {
+    if (n.isFunction() && n.getParent().isBlock() && !n.getGrandparent().isFunction()) {
       maybeWarnForFeature(n, Feature.BLOCK_SCOPED_FUNCTION_DECLARATION);
     }
   }
@@ -597,7 +597,7 @@ class IRFactory {
 
   Node transformBlock(ParseTree node) {
     Node irNode = transform(node);
-    if (!irNode.isNormalBlock()) {
+    if (!irNode.isBlock()) {
       if (irNode.isEmpty()) {
         irNode.setToken(Token.BLOCK);
       } else {
@@ -1333,7 +1333,7 @@ class IRFactory {
       maybeProcessType(node, functionTree.returnType);
 
       Node bodyNode = transform(functionTree.functionBody);
-      if (!isArrow && !isSignature && !bodyNode.isNormalBlock()) {
+      if (!isArrow && !isSignature && !bodyNode.isBlock()) {
         // When in "keep going" mode the parser tries to parse some constructs the
         // compiler doesn't support, repair it here.
         checkState(config.runMode() == Config.RunMode.KEEP_GOING);

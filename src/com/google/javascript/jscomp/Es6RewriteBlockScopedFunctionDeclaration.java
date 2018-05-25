@@ -55,7 +55,7 @@ public final class Es6RewriteBlockScopedFunctionDeclaration extends AbstractPost
   public void visit(NodeTraversal t, Node n, Node parent) {
     if (n.isFunction()
         && parent != null
-        && parent.isNormalBlock()
+        && parent.isBlock()
         && !parent.getParent().isFunction()) {
       // Only consider declarations (all expressions have non-block parents) that are not directly
       // within a function or top-level.

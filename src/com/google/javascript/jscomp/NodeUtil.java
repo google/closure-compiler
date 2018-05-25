@@ -831,7 +831,7 @@ public final class NodeUtil {
    * @param block The node.
    */
   static boolean isEmptyBlock(Node block) {
-    if (!block.isNormalBlock()) {
+    if (!block.isBlock()) {
       return false;
     }
 
@@ -2553,7 +2553,7 @@ public final class NodeUtil {
    * @return Whether the node is of a type that contain other statements.
    */
   public static boolean isStatementBlock(Node n) {
-    return n.isRoot() || n.isScript() || n.isNormalBlock() || n.isModuleBody();
+    return n.isRoot() || n.isScript() || n.isBlock() || n.isModuleBody();
   }
 
   /**
@@ -2742,7 +2742,7 @@ public final class NodeUtil {
       Node tryNode = node.getParent();
       checkState(NodeUtil.hasFinally(tryNode));
       node.detachChildren();
-    } else if (node.isNormalBlock()) {
+    } else if (node.isBlock()) {
       // Simply empty the block.  This maintains source location and
       // "synthetic"-ness.
       node.detachChildren();
@@ -2854,7 +2854,7 @@ public final class NodeUtil {
    * @return Whether the block was removed.
    */
   public static boolean tryMergeBlock(Node block, boolean alwaysMerge) {
-    checkState(block.isNormalBlock());
+    checkState(block.isBlock());
     Node parent = block.getParent();
     boolean canMerge = alwaysMerge || canMergeBlock(block);
     // Try to remove the block if its parent is a block/script or if its
@@ -3028,7 +3028,7 @@ public final class NodeUtil {
   }
 
   static boolean isFunctionBlock(Node n) {
-    return n.isNormalBlock() && n.getParent() != null && n.getParent().isFunction();
+    return n.isBlock() && n.getParent() != null && n.getParent().isFunction();
   }
 
   /**
@@ -3712,7 +3712,7 @@ public final class NodeUtil {
     }
 
     // make sure that the adding root looks ok
-    checkState(addingRoot.isNormalBlock() || addingRoot.isModuleBody() || addingRoot.isScript());
+    checkState(addingRoot.isBlock() || addingRoot.isModuleBody() || addingRoot.isScript());
     checkState(!addingRoot.hasChildren() || !addingRoot.getFirstChild().isScript());
     return addingRoot;
   }
@@ -4373,7 +4373,7 @@ public final class NodeUtil {
     public boolean apply(Node n) {
       Node parent = n.getParent();
       return n.isRoot()
-          || n.isNormalBlock()
+          || n.isBlock()
           || (!n.isFunction()
               && (parent == null || isControlStructure(parent) || isStatementBlock(parent)));
     }
@@ -4518,7 +4518,7 @@ public final class NodeUtil {
    * @see NodeUtil#getCatchBlock
    */
   static boolean hasCatchHandler(Node n) {
-    checkArgument(n.isNormalBlock());
+    checkArgument(n.isBlock());
     return n.hasChildren() && n.getFirstChild().isCatch();
   }
 
@@ -5407,7 +5407,7 @@ public final class NodeUtil {
   }
 
   private static boolean isBundledGoogModuleScopeRoot(Node n) {
-    if (!n.isNormalBlock() || !n.hasChildren() || !isGoogModuleCall(n.getFirstChild())) {
+    if (!n.isBlock() || !n.hasChildren() || !isGoogModuleCall(n.getFirstChild())) {
       return false;
     }
     Node function = n.getParent();

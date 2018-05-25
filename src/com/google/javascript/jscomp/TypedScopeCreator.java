@@ -582,7 +582,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       // to inspect the first (NAME) child of a named function.
       boolean descend =
           currentScope.isFunctionScope()
-              ? !n.isNormalBlock()
+              ? !n.isBlock()
               : parent == null
                   || !NodeUtil.createsScope(parent)
                   || (parent.isFunction() && n == parent.getFirstChild())

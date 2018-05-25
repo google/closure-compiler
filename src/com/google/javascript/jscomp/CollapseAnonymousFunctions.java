@@ -65,7 +65,7 @@ class CollapseAnonymousFunctions extends AbstractPostOrderCallback implements Co
 
     Node grandparent = parent.getParent();
     if (!(parent.isScript()
-        || (grandparent != null && grandparent.isFunction() && parent.isNormalBlock()))) {
+        || (grandparent != null && grandparent.isFunction() && parent.isBlock()))) {
       return;
     }
 

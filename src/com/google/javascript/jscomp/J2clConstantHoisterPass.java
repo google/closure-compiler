@@ -154,7 +154,7 @@ public class J2clConstantHoisterPass implements CompilerPass {
 
   private static boolean isClinitFieldAssignment(Node node) {
     return node.getParent().isExprResult()
-        && node.getGrandparent().isNormalBlock()
+        && node.getGrandparent().isBlock()
         && isClinitMethod(node.getGrandparent().getParent());
   }
 

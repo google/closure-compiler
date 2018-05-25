@@ -165,7 +165,7 @@ class CoverageInstrumentationCallback extends
 
     // For arrow functions whose body is an expression instead of a block,
     // convert it to a block so that it can be instrumented.
-    if (node.isFunction() && !NodeUtil.getFunctionBody(node).isNormalBlock()) {
+    if (node.isFunction() && !NodeUtil.getFunctionBody(node).isBlock()) {
       Node returnValue = NodeUtil.getFunctionBody(node);
       Node body = IR.block(IR.returnNode(returnValue.detach()));
       body.useSourceInfoIfMissingFromForTree(returnValue);

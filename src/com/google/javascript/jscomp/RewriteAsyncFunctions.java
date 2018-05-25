@@ -252,7 +252,7 @@ public final class RewriteAsyncFunctions implements NodeTraversal.Callback, HotS
     }
 
     // Normalize arrow function short body to block body
-    if (!originalBody.isNormalBlock()) {
+    if (!originalBody.isBlock()) {
       originalBody = IR.block(IR.returnNode(originalBody).useSourceInfoFrom(originalBody))
           .useSourceInfoFrom(originalBody);
     }

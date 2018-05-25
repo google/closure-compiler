@@ -252,7 +252,7 @@ class ExtractPrototypeMemberDeclarations implements CompilerPass {
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
 
-      if (!n.isScript() && !n.isNormalBlock()) {
+      if (!n.isScript() && !n.isBlock()) {
         return;
       }
 

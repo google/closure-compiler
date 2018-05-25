@@ -298,7 +298,7 @@ public final class ControlFlowAnalysis implements Callback, CompilerPass {
       // Don't traverse further in an arrow function expression
       if (parent.getParent() != null
           && parent.getParent().isArrowFunction()
-          && !parent.isNormalBlock()) {
+          && !parent.isBlock()) {
         return false;
       }
     }
@@ -510,7 +510,7 @@ public final class ControlFlowAnalysis implements Callback, CompilerPass {
   private void handleStmtList(Node node) {
     Node parent = node.getParent();
     // Special case, don't add a block of empty CATCH block to the graph.
-    if (node.isNormalBlock()
+    if (node.isBlock()
         && parent.isTry()
         && NodeUtil.getCatchBlock(parent) == node
         && !NodeUtil.hasCatchHandler(node)) {
@@ -545,7 +545,7 @@ public final class ControlFlowAnalysis implements Callback, CompilerPass {
           }
           break;
         default:
-          if (node.isNormalBlock() && node.isSyntheticBlock()) {
+          if (node.isBlock() && node.isSyntheticBlock()) {
             createEdge(node, Branch.SYN_BLOCK, computeFollowNode(node, this));
           }
           break;
@@ -1025,7 +1025,7 @@ public final class ControlFlowAnalysis implements Callback, CompilerPass {
    * @return The CATCH node or null there is no catch handler.
    */
   static Node getCatchHandlerForBlock(Node block) {
-    if (block.isNormalBlock()
+    if (block.isBlock()
         && block.getParent().isTry()
         && block.getParent().getFirstChild() == block) {
       for (Node s = block.getNext(); s != null; s = s.getNext()) {

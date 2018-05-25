@@ -66,7 +66,7 @@ public final class CheckNullableReturn implements HotSwapCompilerPass, NodeTrave
   }
 
   public static boolean hasReturnDeclaredNullable(Node n) {
-    return n.isNormalBlock()
+    return n.isBlock()
         && n.hasChildren()
         && isReturnTypeNullable(n.getParent())
         && !hasSingleThrow(n);

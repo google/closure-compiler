@@ -106,7 +106,7 @@ class CheckMissingReturn implements ScopedCallback {
 
     if (n.isArrowFunction()) {
       Node functionBody = NodeUtil.getFunctionBody(n);
-      if (!functionBody.isNormalBlock()) {
+      if (!functionBody.isBlock()) {
         // Body is an expression, which is the implicit return value.
         return;
       }

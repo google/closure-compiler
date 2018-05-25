@@ -76,14 +76,14 @@ public class IR {
   public static Node function(Node name, Node params, Node body) {
     checkState(name.isName());
     checkState(params.isParamList());
-    checkState(body.isNormalBlock());
+    checkState(body.isBlock());
     return new Node(Token.FUNCTION, name, params, body);
   }
 
   public static Node arrowFunction(Node name, Node params, Node body) {
     checkState(name.isName());
     checkState(params.isParamList());
-    checkState(body.isNormalBlock() || mayBeExpression(body));
+    checkState(body.isBlock() || mayBeExpression(body));
     Node func = new Node(Token.FUNCTION, name, params, body);
     func.setIsArrowFunction(true);
     return func;
@@ -246,25 +246,25 @@ public class IR {
 
   public static Node ifNode(Node cond, Node then) {
     checkState(mayBeExpression(cond));
-    checkState(then.isNormalBlock());
+    checkState(then.isBlock());
     return new Node(Token.IF, cond, then);
   }
 
   public static Node ifNode(Node cond, Node then, Node elseNode) {
     checkState(mayBeExpression(cond));
-    checkState(then.isNormalBlock());
-    checkState(elseNode.isNormalBlock());
+    checkState(then.isBlock());
+    checkState(elseNode.isBlock());
     return new Node(Token.IF, cond, then, elseNode);
   }
 
   public static Node doNode(Node body, Node cond) {
-    checkState(body.isNormalBlock());
+    checkState(body.isBlock());
     checkState(mayBeExpression(cond));
     return new Node(Token.DO, body, cond);
   }
 
   public static Node whileNode(Node cond, Node body) {
-    checkState(body.isNormalBlock());
+    checkState(body.isBlock());
     checkState(mayBeExpression(cond));
     return new Node(Token.WHILE, cond, body);
   }
@@ -272,7 +272,7 @@ public class IR {
   public static Node forIn(Node target, Node cond, Node body) {
     checkState(target.isVar() || mayBeExpression(target));
     checkState(mayBeExpression(cond));
-    checkState(body.isNormalBlock());
+    checkState(body.isBlock());
     return new Node(Token.FOR_IN, target, cond, body);
   }
 
@@ -280,7 +280,7 @@ public class IR {
     checkState(init.isVar() || mayBeExpressionOrEmpty(init));
     checkState(mayBeExpressionOrEmpty(cond));
     checkState(mayBeExpressionOrEmpty(incr));
-    checkState(body.isNormalBlock());
+    checkState(body.isBlock());
     return new Node(Token.FOR, init, cond, incr, body);
   }
 
@@ -296,13 +296,13 @@ public class IR {
 
   public static Node caseNode(Node expr, Node body) {
     checkState(mayBeExpression(expr));
-    checkState(body.isNormalBlock());
+    checkState(body.isBlock());
     body.setIsAddedBlock(true);
     return new Node(Token.CASE, expr, body);
   }
 
   public static Node defaultCase(Node body) {
-    checkState(body.isNormalBlock());
+    checkState(body.isBlock());
     body.setIsAddedBlock(true);
     return new Node(Token.DEFAULT_CASE, body);
   }
@@ -321,14 +321,14 @@ public class IR {
   }
 
   public static Node tryFinally(Node tryBody, Node finallyBody) {
-    checkState(tryBody.isNormalBlock());
-    checkState(finallyBody.isNormalBlock());
+    checkState(tryBody.isBlock());
+    checkState(finallyBody.isBlock());
     Node catchBody = block().useSourceInfoIfMissingFrom(tryBody);
     return new Node(Token.TRY, tryBody, catchBody, finallyBody);
   }
 
   public static Node tryCatch(Node tryBody, Node catchNode) {
-    checkState(tryBody.isNormalBlock());
+    checkState(tryBody.isBlock());
     checkState(catchNode.isCatch());
     Node catchBody = blockUnchecked(catchNode).useSourceInfoIfMissingFrom(catchNode);
     return new Node(Token.TRY, tryBody, catchBody);
@@ -336,7 +336,7 @@ public class IR {
 
   public static Node tryCatchFinally(
       Node tryBody, Node catchNode, Node finallyBody) {
-    checkState(finallyBody.isNormalBlock());
+    checkState(finallyBody.isBlock());
     Node tryNode = tryCatch(tryBody, catchNode);
     tryNode.addChildToBack(finallyBody);
     return tryNode;
@@ -344,7 +344,7 @@ public class IR {
 
   public static Node catchNode(Node expr, Node body) {
     checkState(expr.isName());
-    checkState(body.isNormalBlock());
+    checkState(body.isBlock());
     return new Node(Token.CATCH, expr, body);
   }
 

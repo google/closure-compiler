@@ -1218,7 +1218,7 @@ class RemoveUnusedCode implements CompilerPass {
 
     final Node paramlist = NodeUtil.getFunctionParameters(function);
     final Node body = function.getLastChild();
-    checkState(body.getNext() == null && body.isNormalBlock(), body);
+    checkState(body.getNext() == null && body.isBlock(), body);
 
     // Checking the parameters
     Scope fparamScope = scopeCreator.createScope(function, parentScope);

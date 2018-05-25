@@ -246,7 +246,7 @@ public final class IncrementalScopeCreatorTest extends TestCase {
     checkState(fnFoo.isFunction());
 
     Node block = fnFoo.getParent();
-    checkState(block.isNormalBlock());
+    checkState(block.isBlock());
 
     Scope globalScope1 = creator.createScope(root, null);
     Scope blockScope1 = creator.createScope(block, globalScope1);

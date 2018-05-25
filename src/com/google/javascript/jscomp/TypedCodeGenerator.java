@@ -55,7 +55,7 @@ class TypedCodeGenerator extends CodeGenerator {
   @Override
   protected void add(Node n, Context context) {
     Node parent = n.getParent();
-    if (parent != null && (parent.isNormalBlock() || parent.isScript())) {
+    if (parent != null && (parent.isBlock() || parent.isScript())) {
       if (n.isFunction()) {
         add(getFunctionAnnotation(n));
       } else if (n.isExprResult()

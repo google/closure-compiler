@@ -478,7 +478,7 @@ public final class CodePrinter {
      */
     @Override
     boolean breakAfterBlockFor(Node n,  boolean isStatementContext) {
-      checkState(n.isNormalBlock(), n);
+      checkState(n.isBlock(), n);
       Node parent = n.getParent();
       Token type = parent.getToken();
       switch (type) {
