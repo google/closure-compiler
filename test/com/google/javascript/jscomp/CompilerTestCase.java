@@ -943,6 +943,12 @@ public abstract class CompilerTestCase extends TestCase {
     typeInfoValidationEnabled = true;
   }
 
+  /** Disable validating type information in the AST after each run of the pass. */
+  protected final void disableTypeInfoValidation() {
+    checkState(this.setUpRan, "Attempted to configure before running setUp().");
+    typeInfoValidationEnabled = false;
+  }
+
   /**
    * Disable comparing the expected output as a tree or string. 99% of the time you want to compare
    * as a tree. There are a few special cases where you don't, like if you want to test the code

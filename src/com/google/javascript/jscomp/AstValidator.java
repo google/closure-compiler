@@ -426,7 +426,8 @@ public final class AstValidator implements CompilerPass {
   private void validateCallType(Node callNode) {
     // TODO(b/74537281): Shouldn't CALL nodes always have a type, even if it is unknown?
     Node callee = callNode.getFirstChild();
-    JSType calleeTypeI = checkNotNull(callee.getJSType(), callNode);
+    JSType calleeTypeI =
+        checkNotNull(callee.getJSType(), "Callee of\n\n%s\nhas no type.", callNode.toStringTree());
 
     if (calleeTypeI.isFunctionType()) {
       FunctionType calleeFunctionTypeI = calleeTypeI.toMaybeFunctionType();

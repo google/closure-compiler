@@ -22,6 +22,10 @@ import com.google.javascript.jscomp.CompilerTestCase.NoninjectingCompiler;
 
 public final class Es6RewriteRestAndSpreadTest extends CompilerTestCase {
 
+  public Es6RewriteRestAndSpreadTest() {
+    super(MINIMAL_EXTERNS);
+  }
+
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
     return new Es6RewriteRestAndSpread(compiler);
@@ -48,8 +52,8 @@ public final class Es6RewriteRestAndSpreadTest extends CompilerTestCase {
 
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2016);
     setLanguageOut(LanguageMode.ECMASCRIPT3);
-    enableRunTypeCheckAfterProcessing();
-    disableTypeCheck();
+    enableTypeInfoValidation();
+    enableTypeCheck();
   }
 
   // Spreading into array literals.
@@ -159,65 +163,164 @@ public final class Es6RewriteRestAndSpreadTest extends CompilerTestCase {
   }
 
   public void testSpreadVariableIntoMethodParameterList() {
-    test("obj.m(...arr);", "obj.m.apply(obj, $jscomp.arrayFromIterable(arr));");
+    test(
+        externs(
+            lines(
+                "/**",
+                " * @constructor",
+                " * @struct",
+                " */",
+                "function TestClass() { }",
+                "",
+                "/** @param {...string} args */",
+                "TestClass.prototype.testMethod = function(args) { }",
+                "",
+                "/** @return {!TestClass} */",
+                "function testClassFactory() { }")),
+        srcs(lines("var obj = new TestClass();", "obj.testMethod(...arr);")),
+        expected(
+            lines(
+                "var obj = new TestClass();",
+                "obj.testMethod.apply(obj, $jscomp.arrayFromIterable(arr));")));
     assertThat(getLastCompiler().injected).containsExactly("es6/util/arrayfromiterable");
   }
 
   public void testSpreadVariableIntoDeepMethodParameterList() {
-    test("x.y.z.m(...arr);", "x.y.z.m.apply(x.y.z, $jscomp.arrayFromIterable(arr));");
+    test(
+        externs(
+            MINIMAL_EXTERNS
+                + lines(
+                    "/** @param {...number} args */ function numberVarargFn(args) { }",
+                    "",
+                    "/** @type {!Iterable<number>} */ var numberIterable;")),
+        srcs(lines("var x = {y: {z: {m: numberVarargFn}}};", "x.y.z.m(...numberIterable);")),
+        expected(
+            lines(
+                "var x = {y: {z: {m: numberVarargFn}}};",
+                "x.y.z.m.apply(x.y.z, $jscomp.arrayFromIterable(numberIterable));")));
     assertThat(getLastCompiler().injected).containsExactly("es6/util/arrayfromiterable");
   }
 
   public void testSpreadMultipleArrayLiteralsIntoParameterList() {
     test(
-        "function use() {}; use(...[1, 2], 3, ...[4, 5], 6, ...[7, 8]);",
-        "function use() {}; use.apply(null, [1, 2, 3, 4, 5, 6, 7, 8])");
+        externs(
+            MINIMAL_EXTERNS + "/** @param {...number} args */ function numberVarargFn(args) { }"),
+        srcs("numberVarargFn(...[1, 2], 3, ...[4, 5], 6, ...[7, 8])"),
+        expected("numberVarargFn.apply(null, [1, 2, 3, 4, 5, 6, 7, 8])"));
   }
 
   public void testSpreadMultipleVariablesIntoParameterList() {
     test(
-        "f(a, ...b, c, ...d, e);",
-        lines(
-            "f.apply(",
-            "    null,",
-            "    [a].concat(",
-            "        $jscomp.arrayFromIterable(b),",
-            "        [c],",
-            "        $jscomp.arrayFromIterable(d),",
-            "        [e]));"));
+        externs(
+            MINIMAL_EXTERNS
+                + lines(
+                    "/** @param {...number} args */ function numberVarargFn(args) { }",
+                    "/** @type {!Iterable<number>} */ var numberIterable;")),
+        srcs("numberVarargFn(0, ...numberIterable, 2, ...numberIterable, 4);"),
+        expected(
+            lines(
+                "numberVarargFn.apply(",
+                "    null,",
+                "    [0].concat(",
+                "        $jscomp.arrayFromIterable(numberIterable),",
+                "        [2],",
+                "        $jscomp.arrayFromIterable(numberIterable),",
+                "        [4]));")));
   }
 
-  public void testSpreadVariableIntoMethodParameterListOnAnonymousReciever() {
+  public void testSpreadVariableIntoMethodParameterListOnAnonymousRecieverWithSideEffects() {
     test(
-        "Factory.create().m(...arr);",
-        lines(
-            "var $jscomp$spread$args0;",
-            "($jscomp$spread$args0 = Factory.create()).m.apply(",
-            "    $jscomp$spread$args0, $jscomp.arrayFromIterable(arr));"));
+        externs(
+            MINIMAL_EXTERNS
+                + lines(
+                    "/**",
+                    " * @constructor",
+                    " * @struct",
+                    " */",
+                    "function TestClass() { }",
+                    "",
+                    "/** @param {...string} args */",
+                    "TestClass.prototype.testMethod = function(args) { }",
+                    "",
+                    "/** @return {!TestClass} */",
+                    "function testClassFactory() { }",
+                    "",
+                    "/** @type {!Iterable<string>} */ var stringIterable;")),
+        srcs("testClassFactory().testMethod(...stringIterable);"),
+        expected(
+            lines(
+                "var $jscomp$spread$args0;",
+                "($jscomp$spread$args0 = testClassFactory()).testMethod.apply(",
+                "    $jscomp$spread$args0, $jscomp.arrayFromIterable(stringIterable));")));
   }
 
-  public void testSpreadVariableIntoMethodParameterListOnConditionalAnonymousReciever() {
+  public void testSpreadVariableIntoMethodParameterListOnConditionalRecieverWithSideEffects() {
     test(
-        "var x = b ? Factory.create().m(...arr) : null;",
-        lines(
-            "var $jscomp$spread$args0;",
-            "var x = b ? ($jscomp$spread$args0 = Factory.create()).m.apply($jscomp$spread$args0, ",
-            "    $jscomp.arrayFromIterable(arr)) : null;"));
+        externs(
+            MINIMAL_EXTERNS
+                + lines(
+                    "/**",
+                    " * @constructor",
+                    " * @struct",
+                    " */",
+                    "function TestClass() { }",
+                    "",
+                    "/** @param {...string} args */",
+                    "TestClass.prototype.testMethod = function(args) { }",
+                    "",
+                    "/** @return {!TestClass} */",
+                    "function testClassFactory() { }",
+                    "",
+                    "/** @type {!Iterable<string>} */ var stringIterable;")),
+        srcs("var x = b ? testClassFactory().testMethod(...stringIterable) : null;"),
+        expected(
+            lines(
+                "var $jscomp$spread$args0;",
+                "var x = b ? ($jscomp$spread$args0 = testClassFactory()).testMethod.apply(",
+                "    $jscomp$spread$args0, $jscomp.arrayFromIterable(stringIterable))",
+                "        : null;")));
   }
 
-  public void testSpreadVariableIntoMethodParameterListOnMultipleAnonymousRecievers() {
+  public void
+      testSpreadVariableIntoMethodParameterListOnRecieversWithSideEffectsMultipleTimesInOneScope() {
     test(
-        "F.c().m(...a); G.d().n(...b);",
-        lines(
-            "var $jscomp$spread$args0;",
-            "($jscomp$spread$args0 = F.c()).m.apply($jscomp$spread$args0,",
-            "    $jscomp.arrayFromIterable(a));",
-            "var $jscomp$spread$args1;",
-            "($jscomp$spread$args1 = G.d()).n.apply($jscomp$spread$args1,",
-            "    $jscomp.arrayFromIterable(b));"));
+        externs(
+            MINIMAL_EXTERNS
+                + lines(
+                    "/**",
+                    " * @constructor",
+                    " * @struct",
+                    " */",
+                    "function TestClass() { }",
+                    "",
+                    "/** @param {...string} args */",
+                    "TestClass.prototype.testMethod = function(args) { }",
+                    "",
+                    "/** @return {!TestClass} */",
+                    "function testClassFactory() { }",
+                    "",
+                    "/** @type {!Iterable<string>} */ var stringIterable;")),
+        srcs(
+            lines(
+                "testClassFactory().testMethod(...stringIterable);",
+                "testClassFactory().testMethod(...stringIterable);")),
+        expected(
+            lines(
+                "var $jscomp$spread$args0;",
+                "($jscomp$spread$args0 = testClassFactory()).testMethod.apply(",
+                "    $jscomp$spread$args0, $jscomp.arrayFromIterable(stringIterable));",
+                "var $jscomp$spread$args1;",
+                "($jscomp$spread$args1 = testClassFactory()).testMethod.apply(",
+                "    $jscomp$spread$args1, $jscomp.arrayFromIterable(stringIterable));")));
   }
 
   public void testSpreadFunctionArgumentsIntoSuperParameterList() {
+    // TODO(b/76024335): Enable these validations and checks.
+    // We need to test super, but super only makes sense in the context of a class, but
+    // the type-checker doesn't understand class syntax and fails before the test even runs.
+    disableTypeInfoValidation();
+    disableTypeCheck();
+
     test(
         lines(
             "class A {",
@@ -248,9 +351,16 @@ public final class Es6RewriteRestAndSpreadTest extends CompilerTestCase {
   }
 
   public void testSpreadVariableIntoSuperParameterList() {
+    // TODO(b/76024335): Enable these validations and checks.
+    // We need to test super, but super only makes sense in the context of a class, but
+    // the type-checker doesn't understand class syntax and fails before the test even runs.
+    disableTypeInfoValidation();
+    disableTypeCheck();
+
     test(
         lines(
             "class D {}",
+            "",
             "class C extends D {",
             "  constructor(args) {",
             "    super(0, ...args, 2)",
@@ -259,6 +369,7 @@ public final class Es6RewriteRestAndSpreadTest extends CompilerTestCase {
         // The `super.apply` syntax below is invalid, but won't survive other transpilation passes.
         lines(
             "class D {}",
+            "",
             "class C extends D {",
             "  constructor(args) {",
             "    super.apply(null, [0].concat($jscomp.arrayFromIterable(args), [2]));",

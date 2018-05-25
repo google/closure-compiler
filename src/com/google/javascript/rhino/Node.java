@@ -2374,8 +2374,9 @@ public class Node implements Serializable {
     return jstype;
   }
 
-  public final void setJSType(@Nullable JSType jsType) {
-    this.jstype = jsType;
+  public final Node setJSType(@Nullable JSType jstype) {
+    this.jstype = jstype;
+    return this;
   }
 
   /**

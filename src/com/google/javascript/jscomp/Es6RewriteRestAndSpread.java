@@ -28,13 +28,16 @@ import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
+import com.google.javascript.rhino.jstype.FunctionType;
+import com.google.javascript.rhino.jstype.JSType;
+import com.google.javascript.rhino.jstype.JSTypeNative;
+import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import java.util.ArrayList;
 import java.util.List;
 
 /** Converts REST parameters and SPREAD expressions. */
 public final class Es6RewriteRestAndSpread extends NodeTraversal.AbstractPostOrderCallback
     implements HotSwapCompilerPass {
-  private final AbstractCompiler compiler;
 
   static final DiagnosticType BAD_REST_PARAMETER_ANNOTATION =
       DiagnosticType.warning(
@@ -51,8 +54,37 @@ public final class Es6RewriteRestAndSpread extends NodeTraversal.AbstractPostOrd
   private static final FeatureSet transpiledFeatures =
       FeatureSet.BARE_MINIMUM.with(Feature.REST_PARAMETERS, Feature.SPREAD_EXPRESSIONS);
 
+  private final AbstractCompiler compiler;
+
+  private final JSType arrayType;
+  private final JSType boolType;
+  private final JSType concatFnType;
+  private final JSType nullType;
+  private final JSType numberType;
+  private final JSType u2uFunctionType;
+  private final JSType functionFunctionType;
+
   public Es6RewriteRestAndSpread(AbstractCompiler compiler) {
     this.compiler = compiler;
+
+    if (compiler.hasTypeCheckingRun()) {
+      JSTypeRegistry registry = compiler.getTypeRegistry();
+      this.arrayType = registry.getNativeType(JSTypeNative.ARRAY_TYPE);
+      this.boolType = registry.getNativeType(JSTypeNative.BOOLEAN_TYPE);
+      this.concatFnType = arrayType.findPropertyType("concat");
+      this.nullType = registry.getNativeType(JSTypeNative.NULL_TYPE);
+      this.numberType = registry.getNativeType(JSTypeNative.NUMBER_TYPE);
+      this.u2uFunctionType = registry.getNativeType(JSTypeNative.U2U_FUNCTION_TYPE);
+      this.functionFunctionType = registry.getNativeType(JSTypeNative.FUNCTION_FUNCTION_TYPE);
+    } else {
+      this.arrayType = null;
+      this.boolType = null;
+      this.concatFnType = null;
+      this.nullType = null;
+      this.numberType = null;
+      this.u2uFunctionType = null;
+      this.functionFunctionType = null;
+    }
   }
 
   @Override
@@ -69,17 +101,17 @@ public final class Es6RewriteRestAndSpread extends NodeTraversal.AbstractPostOrd
   }
 
   @Override
-  public void visit(NodeTraversal t, Node n, Node parent) {
-    switch (n.getToken()) {
+  public void visit(NodeTraversal traversal, Node current, Node parent) {
+    switch (current.getToken()) {
       case REST:
-        visitRestParam(t, n, parent);
+        visitRestParam(traversal, current, parent);
         break;
       case ARRAYLIT:
       case NEW:
       case CALL:
-        for (Node child : n.children()) {
+        for (Node child : current.children()) {
           if (child.isSpread()) {
-            visitArrayLitOrCallWithSpread(n, parent);
+            visitArrayLitOrCallWithSpread(current);
             break;
           }
         }
@@ -95,23 +127,25 @@ public final class Es6RewriteRestAndSpread extends NodeTraversal.AbstractPostOrd
     int restIndex = paramList.getIndexOfChild(restParam);
     String paramName = restParam.getFirstChild().getString();
 
+    // Swap a vararg param into the parameter list.
     Node nameNode = IR.name(paramName);
     nameNode.setVarArgs(true);
     nameNode.setJSDocInfo(restParam.getJSDocInfo());
     paramList.replaceChild(restParam, nameNode);
 
-    // Make sure rest parameters are typechecked
-    JSTypeExpression type = null;
-    JSDocInfo info = restParam.getJSDocInfo();
+    // Make sure rest parameters are typechecked.
+    JSDocInfo inlineInfo = restParam.getJSDocInfo();
     JSDocInfo functionInfo = NodeUtil.getBestJSDocInfo(paramList.getParent());
-    if (info != null) {
-      type = info.getType();
+    final JSTypeExpression paramTypeAnnotation;
+    if (inlineInfo != null) {
+      paramTypeAnnotation = inlineInfo.getType();
+    } else if (functionInfo != null) {
+      paramTypeAnnotation = functionInfo.getParameterType(paramName);
     } else {
-      if (functionInfo != null) {
-        type = functionInfo.getParameterType(paramName);
-      }
+      paramTypeAnnotation = null;
     }
-    if (type != null && type.getRoot().getToken() != Token.ELLIPSIS) {
+
+    if (paramTypeAnnotation != null && paramTypeAnnotation.getRoot().getToken() != Token.ELLIPSIS) {
       compiler.report(JSError.make(restParam, BAD_REST_PARAMETER_ANNOTATION));
     }
 
@@ -121,48 +155,67 @@ public final class Es6RewriteRestAndSpread extends NodeTraversal.AbstractPostOrd
       return;
     }
 
+    // Don't insert these directly, just clone them.
+    Node newArrayName = IR.name(REST_PARAMS).setJSType(arrayType);
+    Node cursorName = IR.name(REST_INDEX).setJSType(numberType);
+
     Node newBlock = IR.block().useSourceInfoFrom(functionBody);
     Node name = IR.name(paramName);
-    Node let = IR.let(name, IR.name(REST_PARAMS)).useSourceInfoIfMissingFromForTree(functionBody);
+    Node let = IR.let(name, newArrayName).useSourceInfoIfMissingFromForTree(functionBody);
     newBlock.addChildToFront(let);
 
     for (Node child : functionBody.children()) {
       newBlock.addChildToBack(child.detach());
     }
 
-    if (type != null) {
-      Node arrayType = IR.string("Array");
-      Node typeNode = type.getRoot();
+    // `let $jscomp$restParams` => `let /** !Array<T> */ $jscomp$restParams`
+    if (paramTypeAnnotation != null) {
+      Node arrayTypeName = IR.string("Array");
+      Node typeNode = paramTypeAnnotation.getRoot();
       Node memberType =
           typeNode.getToken() == Token.ELLIPSIS
               ? typeNode.getFirstChild().cloneTree()
               : typeNode.cloneTree();
+
       if (functionInfo != null) {
         memberType = replaceTypeVariablesWithUnknown(functionInfo, memberType);
       }
-      arrayType.addChildToFront(
+      arrayTypeName.addChildToFront(
           new Node(Token.BLOCK, memberType).useSourceInfoIfMissingFrom(typeNode));
+
       JSDocInfoBuilder builder = new JSDocInfoBuilder(false);
       builder.recordType(
-          new JSTypeExpression(new Node(Token.BANG, arrayType), restParam.getSourceFileName()));
+          new JSTypeExpression(new Node(Token.BANG, arrayTypeName), restParam.getSourceFileName()));
       name.setJSDocInfo(builder.build());
     }
 
+    Node newArrayDeclaration = IR.var(newArrayName.cloneTree(), arrayLitWithJSType());
+    functionBody.addChildToFront(newArrayDeclaration.useSourceInfoIfMissingFromForTree(restParam));
+
     // TODO(b/74074478): Use a general utility method instead of an inlined loop.
-    Node newArr = IR.var(IR.name(REST_PARAMS), IR.arraylit());
-    functionBody.addChildToFront(newArr.useSourceInfoIfMissingFromForTree(restParam));
-    Node init = IR.var(IR.name(REST_INDEX), IR.number(restIndex));
-    Node cond = IR.lt(IR.name(REST_INDEX), IR.getprop(IR.name("arguments"), IR.string("length")));
-    Node incr = IR.inc(IR.name(REST_INDEX), false);
-    Node body =
-        IR.block(
-            IR.exprResult(
-                IR.assign(
-                    IR.getelem(
-                        IR.name(REST_PARAMS), IR.sub(IR.name(REST_INDEX), IR.number(restIndex))),
-                    IR.getelem(IR.name("arguments"), IR.name(REST_INDEX)))));
-    functionBody.addChildAfter(
-        IR.forNode(init, cond, incr, body).useSourceInfoIfMissingFromForTree(restParam), newArr);
+    Node copyLoop =
+        IR.forNode(
+                IR.var(cursorName.cloneTree(), IR.number(restIndex).setJSType(numberType)),
+                IR.lt(
+                        cursorName.cloneTree(),
+                        IR.getprop(IR.name("arguments"), IR.string("length")).setJSType(numberType))
+                    .setJSType(boolType),
+                IR.inc(cursorName.cloneTree(), false).setJSType(numberType),
+                IR.block(
+                    IR.exprResult(
+                        IR.assign(
+                                IR.getelem(
+                                    newArrayName.cloneTree(),
+                                    IR.sub(
+                                            cursorName.cloneTree(),
+                                            IR.number(restIndex).setJSType(numberType))
+                                        .setJSType(numberType)),
+                                IR.getelem(IR.name("arguments"), cursorName.cloneTree())
+                                    .setJSType(numberType))
+                            .setJSType(numberType))))
+            .useSourceInfoIfMissingFromForTree(restParam);
+    functionBody.addChildAfter(copyLoop, newArrayDeclaration);
+
     functionBody.addChildToBack(newBlock);
     compiler.reportChangeToEnclosingScope(newBlock);
 
@@ -191,33 +244,36 @@ public final class Es6RewriteRestAndSpread extends NodeTraversal.AbstractPostOrd
   }
 
   /**
-   * Processes array literals or calls containing spreads. Examples: [1, 2, ...x, 4, 5] =>
-   * [].concat([1, 2], $jscomp.arrayFromIterable(x), [4, 5])
+   * Processes array literals or calls to eliminate spreads.
    *
-   * <p>f(...arr) => f.apply(null, [].concat($jscomp.arrayFromIterable(arr)))
+   * <p>Examples:
    *
-   * <p>new F(...args) => new Function.prototype.bind.apply(F,
-   * [].concat($jscomp.arrayFromIterable(args)))
+   * <ul>
+   *   <li>[1, 2, ...x, 4, 5] => [].concat([1, 2], $jscomp.arrayFromIterable(x), [4, 5])
+   *   <li>f(1, ...arr) => f.apply(null, [1].concat($jscomp.arrayFromIterable(arr)))
+   *   <li>new F(...args) => new Function.prototype.bind.apply(F,
+   *       [null].concat($jscomp.arrayFromIterable(args)))
+   * </ul>
    */
-  private void visitArrayLitOrCallWithSpread(Node node, Node parent) {
-    if (node.isArrayLit()) {
-      visitArrayLitWithSpread(node, parent);
-    } else if (node.isCall()) {
-      visitCallWithSpread(node, parent);
+  private void visitArrayLitOrCallWithSpread(Node spreadParent) {
+    if (spreadParent.isArrayLit()) {
+      visitArrayLitContainingSpread(spreadParent);
+    } else if (spreadParent.isCall()) {
+      visitCallContainingSpread(spreadParent);
     } else {
-      checkArgument(node.isNew(), node);
-      visitNewWithSpread(node, parent);
+      checkArgument(spreadParent.isNew(), spreadParent);
+      visitNewWithSpread(spreadParent);
     }
   }
 
   /**
-   * Extracts child nodes from an array literal, call or new node that may contain spread operators
-   * into a list of nodes that may be concatenated with Array.concat() to get an array.
+   * Extracts child nodes from an ARRAYLIT, CALL or NEW node that may contain spread operators into
+   * a list of nodes that may be concatenated with Array.concat() to get an array.
    *
    * <p>Example: [a, b, ...x, c, ...arguments] returns a list containing [ [a, b],
    * $jscomp.arrayFromIterable(x), [c], $jscomp.arrayFromIterable(arguments) ]
    *
-   * <p>IMPORTANT: Call and New nodes must have the first, callee, child removed already.
+   * <p>IMPORTANT: CALL and NEW nodes must have the first, callee, child removed already.
    *
    * <p>Note that all elements of the returned list will be one of:
    *
@@ -228,13 +284,18 @@ public final class Es6RewriteRestAndSpread extends NodeTraversal.AbstractPostOrd
    *
    * TODO(bradfordcsmith): When this pass moves after type checking, we can use type information to
    * avoid unnecessary calls to $jscomp.arrayFromIterable().
+   *
+   * <p>TODO(nickreid): Stop mutating `spreadParent`.
    */
-  private List<Node> extractSpreadGroups(Node parentNode) {
-    checkArgument(parentNode.isCall() || parentNode.isArrayLit() || parentNode.isNew());
+  private List<Node> extractSpreadGroups(Node spreadParent) {
+    checkArgument(spreadParent.isCall() || spreadParent.isArrayLit() || spreadParent.isNew());
+
     List<Node> groups = new ArrayList<>();
     Node currGroup = null;
-    Node currElement = parentNode.removeFirstChild();
-    while (currElement != null) {
+
+    for (Node currElement = spreadParent.removeFirstChild();
+        currElement != null;
+        currElement = spreadParent.removeFirstChild()) {
       if (currElement.isSpread()) {
         Node spreadExpression = currElement.removeFirstChild();
         if (spreadExpression.isArrayLit()) {
@@ -260,12 +321,12 @@ public final class Es6RewriteRestAndSpread extends NodeTraversal.AbstractPostOrd
         }
       } else {
         if (currGroup == null) {
-          currGroup = IR.arraylit();
+          currGroup = arrayLitWithJSType();
         }
         currGroup.addChildToBack(currElement);
       }
-      currElement = parentNode.removeFirstChild();
     }
+
     if (currGroup != null) {
       groups.add(currGroup);
     }
@@ -281,22 +342,32 @@ public final class Es6RewriteRestAndSpread extends NodeTraversal.AbstractPostOrd
    * [1, 2, ...x, 4, 5] => [1, 2].concat($jscomp.arrayFromIterable(x), [4, 5])
    * </code></pre>
    */
-  private void visitArrayLitWithSpread(Node node, Node parent) {
-    checkArgument(node.isArrayLit());
-    List<Node> groups = extractSpreadGroups(node);
-    Node baseArrayLit;
+  private void visitArrayLitContainingSpread(Node spreadParent) {
+    checkArgument(spreadParent.isArrayLit());
+
+    List<Node> groups = extractSpreadGroups(spreadParent);
+
+    final Node baseArrayLit;
     if (groups.get(0).isArrayLit()) {
+      // g0.concat(g1, g2, ..., gn)
       baseArrayLit = groups.remove(0);
     } else {
-      baseArrayLit = IR.arraylit();
       // [].concat(g0, g1, g2, ..., gn)
+      baseArrayLit = arrayLitWithJSType();
     }
-    Node joinedGroups =
-        groups.isEmpty()
-            ? baseArrayLit
-            : IR.call(IR.getprop(baseArrayLit, IR.string("concat")), groups.toArray(new Node[0]));
-    joinedGroups.useSourceInfoIfMissingFromForTree(node);
-    parent.replaceChild(node, joinedGroups);
+
+    final Node joinedGroups;
+    if (groups.isEmpty()) {
+      joinedGroups = baseArrayLit;
+    } else {
+      Node concat = IR.getprop(baseArrayLit, IR.string("concat")).setJSType(concatFnType);
+      joinedGroups = IR.call(concat, groups.toArray(new Node[0]));
+    }
+
+    joinedGroups.useSourceInfoIfMissingFromForTree(spreadParent);
+    joinedGroups.setJSType(arrayType);
+
+    spreadParent.replaceWith(joinedGroups);
     compiler.reportChangeToEnclosingScope(joinedGroups);
   }
 
@@ -311,68 +382,82 @@ public final class Es6RewriteRestAndSpread extends NodeTraversal.AbstractPostOrd
    * f(...arr, b) => f.apply(null, [].concat($jscomp.arrayFromIterable(arr), [b]))
    * </code></pre>
    */
-  private void visitCallWithSpread(Node node, Node parent) {
-    checkArgument(node.isCall());
-    Node callee = node.getFirstChild();
+  private void visitCallContainingSpread(Node spreadParent) {
+    checkArgument(spreadParent.isCall());
+
+    Node callee = spreadParent.getFirstChild();
     // Check if the callee has side effects before removing it from the AST (since some NodeUtil
     // methods assume the node they are passed has a non-null parent).
     boolean calleeMayHaveSideEffects = NodeUtil.mayHaveSideEffects(callee);
-    // must remove callee before extracting argument groups
-    node.removeChild(callee);
-    Node joinedGroups;
-    if (node.hasOneChild() && isSpreadOfArguments(node.getOnlyChild())) {
-      // Check for special case of
-      // `foo(...arguments)` and pass `arguments` directly to `foo.apply(null, arguments)`.
-      // We want to avoid calling $jscomp.arrayFromIterable(arguments) for this case,
-      // because it can have side effects, which prevents code removal.
-      // TODO(b/74074478): generalize this to avoid ever calling $jscomp.arrayFromIterable() for
+    // Must remove callee before extracting argument groups.
+    spreadParent.removeChild(callee);
+
+    final Node joinedGroups;
+    if (spreadParent.hasOneChild() && isSpreadOfArguments(spreadParent.getOnlyChild())) {
+      // Check for special case of `foo(...arguments)` and pass `arguments` directly to
+      // `foo.apply(null, arguments)`. We want to avoid calling $jscomp.arrayFromIterable(arguments)
+      // for this case, because it can have side effects, which prevents code removal.
+      //
+      // TODO(b/74074478): Generalize this to avoid ever calling $jscomp.arrayFromIterable() for
       // `arguments`.
-      joinedGroups = node.removeFirstChild().removeFirstChild();
+      joinedGroups = spreadParent.removeFirstChild().removeFirstChild();
     } else {
-      List<Node> groups = extractSpreadGroups(node);
+      List<Node> groups = extractSpreadGroups(spreadParent);
       checkState(!groups.isEmpty());
+
       if (groups.size() == 1) {
-        // single group can just be passed to apply() as-is
+        // A single group can just be passed to `apply()` as-is
         // It could be `arguments`, an array literal, or $jscomp.arrayFromIterable(someExpression).
         joinedGroups = groups.remove(0);
       } else {
         // If the first group is an array literal, we can just use that for concatenation,
         // otherwise use an empty array literal.
-        Node baseArrayLit = groups.get(0).isArrayLit() ? groups.remove(0) : IR.arraylit();
-        joinedGroups =
-            groups.isEmpty()
-                ? baseArrayLit
-                : IR.call(
-                    IR.getprop(baseArrayLit, IR.string("concat")), groups.toArray(new Node[0]));
+        //
+        // TODO(nickreid): Stop distringuishing between array literals and variables when this pass
+        // is moved after type-checking.
+        Node baseArrayLit = groups.get(0).isArrayLit() ? groups.remove(0) : arrayLitWithJSType();
+        Node concat = IR.getprop(baseArrayLit, IR.string("concat")).setJSType(concatFnType);
+        joinedGroups = IR.call(concat, groups.toArray(new Node[0])).setJSType(arrayType);
       }
+      joinedGroups.setJSType(arrayType);
     }
 
-    Node result = null;
+    final Node callToApply;
     if (calleeMayHaveSideEffects && callee.isGetProp()) {
+      JSType receiverType = callee.getFirstChild().getJSType(); // Type of `foo()`.
+
       // foo().method(...[a, b, c])
       //   must convert to
       // var freshVar;
       // (freshVar = foo()).method.apply(freshVar, [a, b, c])
-      Node statement = node;
-      while (!NodeUtil.isStatement(statement)) {
-        statement = statement.getParent();
-      }
-      Node freshVar = IR.name(FRESH_SPREAD_VAR + compiler.getUniqueNameIdSupplier().get());
-      Node n = IR.var(freshVar.cloneTree());
-      n.useSourceInfoIfMissingFromForTree(statement);
-      statement.getParent().addChildBefore(n, statement);
-      callee.addChildToFront(IR.assign(freshVar.cloneTree(), callee.removeFirstChild()));
-      result = IR.call(IR.getprop(callee, IR.string("apply")), freshVar, joinedGroups);
+      Node freshVar =
+          IR.name(FRESH_SPREAD_VAR + compiler.getUniqueNameIdSupplier().get())
+              .setJSType(receiverType);
+      Node freshVarDeclaration = IR.var(freshVar.cloneTree());
+
+      Node statementContainingSpread = NodeUtil.getEnclosingStatement(spreadParent);
+      freshVarDeclaration.useSourceInfoIfMissingFromForTree(statementContainingSpread);
+
+      statementContainingSpread
+          .getParent()
+          .addChildBefore(freshVarDeclaration, statementContainingSpread);
+      callee.addChildToFront(
+          IR.assign(freshVar.cloneTree(), callee.removeFirstChild()).setJSType(receiverType));
+
+      callToApply =
+          IR.call(getpropInferringJSType(callee, "apply"), freshVar.cloneTree(), joinedGroups);
     } else {
       // foo.method(...[a, b, c]) -> foo.method.apply(foo, [a, b, c]
       // or
       // foo(...[a, b, c]) -> foo.apply(null, [a, b, c])
-      Node context = callee.isGetProp() ? callee.getFirstChild().cloneTree() : IR.nullNode();
-      result = IR.call(IR.getprop(callee, IR.string("apply")), context, joinedGroups);
+      Node context = callee.isGetProp() ? callee.getFirstChild().cloneTree() : nullWithJSType();
+      callToApply = IR.call(getpropInferringJSType(callee, "apply"), context, joinedGroups);
     }
-    result.useSourceInfoIfMissingFromForTree(node);
-    parent.replaceChild(node, result);
-    compiler.reportChangeToEnclosingScope(result);
+
+    callToApply.setJSType(spreadParent.getJSType());
+    callToApply.useSourceInfoIfMissingFromForTree(spreadParent);
+    spreadParent.replaceWith(callToApply);
+    compiler.reportChangeToEnclosingScope(callToApply);
   }
 
   private boolean isSpreadOfArguments(Node n) {
@@ -389,34 +474,95 @@ public final class Es6RewriteRestAndSpread extends NodeTraversal.AbstractPostOrd
    *     new Function.prototype.bind.apply(F, [].concat($jscomp.arrayFromIterable(args)))
    * </code></pre>
    */
-  private void visitNewWithSpread(Node node, Node parent) {
-    checkArgument(node.isNew());
-    // must remove callee before extracting argument groups
-    Node callee = node.removeFirstChild();
-    List<Node> groups = extractSpreadGroups(node);
+  private void visitNewWithSpread(Node spreadParent) {
+    checkArgument(spreadParent.isNew());
+
+    // Must remove callee before extracting argument groups.
+    Node callee = spreadParent.removeFirstChild();
+    List<Node> groups = extractSpreadGroups(spreadParent);
+
     // We need to generate
-    // new (Function.prototype.bind.apply(callee, [null].concat(other, args))();
-    // null stands in for the 'this' arg to bind
-    Node baseArrayLit;
+    // `new (Function.prototype.bind.apply(callee, [null].concat(other, args))();`.
+    // `null` stands in for the 'this' arg to the contructor.
+    final Node baseArrayLit;
     if (groups.get(0).isArrayLit()) {
       baseArrayLit = groups.remove(0);
     } else {
-      baseArrayLit = IR.arraylit();
+      baseArrayLit = arrayLitWithJSType();
     }
-    baseArrayLit.addChildToFront(IR.nullNode());
+    baseArrayLit.addChildToFront(nullWithJSType());
     Node joinedGroups =
         groups.isEmpty()
             ? baseArrayLit
-            : IR.call(IR.getprop(baseArrayLit, IR.string("concat")), groups.toArray(new Node[0]));
+            : IR.call(
+                    IR.getprop(baseArrayLit, IR.string("concat")).setJSType(concatFnType),
+                    groups.toArray(new Node[0]))
+                .setJSType(arrayType);
+
     if (compiler.getOptions().getLanguageOut() == LanguageMode.ECMASCRIPT3) {
       // TODO(tbreisacher): Support this in ES3 too by not relying on Function.bind.
       Es6ToEs3Util.cannotConvert(
-          compiler, node, "\"...\" passed to a constructor (consider using --language_out=ES5)");
+          compiler,
+          spreadParent,
+          "\"...\" passed to a constructor (consider using --language_out=ES5)");
     }
-    Node bindApply = NodeUtil.newQName(compiler, "Function.prototype.bind.apply");
-    Node result = IR.newNode(IR.call(bindApply, callee, joinedGroups));
-    result.useSourceInfoIfMissingFromForTree(node);
-    parent.replaceChild(node, result);
+
+    // Function.prototype.bind =>
+    //      function(this:function(new:[spreadParent], ...?), ...?):function(new:[spreadParent])
+    // Function.prototype.bind.apply =>
+    //      function(function(new:[spreadParent], ...?), !Array<?>):function(new:[spreadParent])
+    Node bindApply =
+        getpropInferringJSType(
+            IR.getprop(
+                    getpropInferringJSType(
+                        IR.name("Function").setJSType(functionFunctionType), "prototype"),
+                    "bind")
+                .setJSType(u2uFunctionType),
+            "apply");
+    Node result =
+        IR.newNode(
+                callInferringJSType(
+                    bindApply, callee, joinedGroups /* function(new:[spreadParent]) */))
+            .setJSType(spreadParent.getJSType());
+
+    result.useSourceInfoIfMissingFromForTree(spreadParent);
+    spreadParent.replaceWith(result);
     compiler.reportChangeToEnclosingScope(result);
+  }
+
+  private Node arrayLitWithJSType() {
+    return IR.arraylit().setJSType(arrayType);
+  }
+
+  private Node nullWithJSType() {
+    return IR.nullNode().setJSType(nullType);
+  }
+
+  private Node getpropInferringJSType(Node receiver, String propName) {
+    Node getprop = IR.getprop(receiver, propName);
+
+    JSType receiverType = receiver.getJSType();
+    if (receiverType == null) {
+      return getprop;
+    }
+
+    JSType getpropType = receiverType.findPropertyType(propName);
+    if (getpropType == null && receiverType instanceof FunctionType) {
+      getpropType = ((FunctionType) receiverType).getPropertyType(propName);
+    }
+
+    return getprop.setJSType(getpropType);
+  }
+
+  private Node callInferringJSType(Node callee, Node... args) {
+    Node call = IR.call(callee, args);
+
+    JSType calleeType = callee.getJSType();
+    if (calleeType == null || !(calleeType instanceof FunctionType)) {
+      return call;
+    }
+
+    JSType returnType = ((FunctionType) calleeType).getReturnType();
+    return call.setJSType(returnType);
   }
 }

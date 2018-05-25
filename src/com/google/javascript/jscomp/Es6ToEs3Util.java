@@ -72,7 +72,13 @@ public final class Es6ToEs3Util {
    * Returns a call to $jscomp.arrayFromIterable with {@code iterable} as its argument.
    */
   static Node arrayFromIterable(AbstractCompiler compiler, Node iterable) {
-    return callEs6RuntimeFunction(compiler, iterable, "arrayFromIterable");
+    JSTypeRegistry registry = compiler.getTypeRegistry();
+    JSType arrayType = registry.getNativeType(JSTypeNative.ARRAY_TYPE);
+
+    Node call =
+        callEs6RuntimeFunction(compiler, iterable, "arrayFromIterable").setJSType(arrayType);
+    call.getFirstChild().setJSType(registry.createFunctionTypeWithVarArgs(arrayType));
+    return call;
   }
 
   static void preloadEs6RuntimeFunction(AbstractCompiler compiler, String function) {
