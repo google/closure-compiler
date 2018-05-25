@@ -169,6 +169,12 @@ Performance.prototype.clearResourceTimings = function() {};
 Performance.prototype.webkitClearResourceTimings = function() {};
 
 /**
+ * A callback that is invoked when the resourcetimingbufferfull event is fired.
+ * @type {?function(Event)}
+ */
+Performance.prototype.onresourcetimingbufferfull = function() {};
+
+/**
  * Set the maximum number of PerformanceResourceTiming resources that may be
  * stored in the buffer.
  * @param {number} maxSize
