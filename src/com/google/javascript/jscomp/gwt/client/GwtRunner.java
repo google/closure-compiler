@@ -106,8 +106,13 @@ public final class GwtRunner implements EntryPoint {
     boolean useTypesForOptimization;
     String tracerMode;
     String moduleResolutionMode;
+    String jsOutputFile;
+    String[] formatting;
+    boolean sourceMapIncludeContent;
+    boolean parseInlineSourceMaps;
 
     // These flags do not match the Java compiler JAR.
+    @Deprecated
     File[] jsCode;
     File[] externs;
     boolean createSourceMap;
@@ -153,19 +158,26 @@ public final class GwtRunner implements EntryPoint {
     defaultFlags.createSourceMap = false;
     defaultFlags.tracerMode = "OFF";
     defaultFlags.moduleResolutionMode = "BROWSER";
+    defaultFlags.jsOutputFile = "compiled.js";
+    defaultFlags.formatting = null;
+    defaultFlags.sourceMapIncludeContent = false;
+    defaultFlags.parseInlineSourceMaps = true;
   }
 
+  /** Properties here should match the AbstractCommandLineRunner.JsonFileSpec */
   @JsType(namespace = JsPackage.GLOBAL, name = "Object", isNative = true)
   private static class File {
     @JsProperty String path;
     @JsProperty String src;
     @JsProperty String sourceMap;
+    @JsProperty String webpackId;
   }
 
   @JsType(namespace = JsPackage.GLOBAL, name = "Object", isNative = true)
   private static class ModuleOutput {
-    @JsProperty String compiledCode;
-    @JsProperty String sourceMap;
+    @JsProperty @Deprecated String compiledCode;
+    @JsProperty @Deprecated String sourceMap;
+    @JsProperty File[] compiledFiles;
     @JsProperty JavaScriptObject[] errors;
     @JsProperty JavaScriptObject[] warnings;
   }
@@ -242,32 +254,55 @@ public final class GwtRunner implements EntryPoint {
   /**
    * Generates the output code, taking into account the passed {@code outputWrapper}.
    */
-  private static String writeOutput(Compiler compiler, String outputWrapper) {
+  private static ModuleOutput writeOutput(Compiler compiler, Flags flags) {
+    ArrayList<File> outputFiles = new ArrayList<>();
+    ModuleOutput output = new ModuleOutput();
+
+    File file = new File();
+    file.path = flags.jsOutputFile;
+
     String code = compiler.toSource();
-    if (outputWrapper == null) {
-      return code;
-    }
-
-    String marker;
-    int pos = outputWrapper.indexOf(OUTPUT_MARKER_JS_STRING);
-    if (pos != -1) {
-      // With jsstring, run SourceCodeEscapers (as per AbstractCommandLineRunner).
-      code = SourceCodeEscapers.javascriptEscaper().escape(code);
-      marker = OUTPUT_MARKER_JS_STRING;
-    } else {
-      pos = outputWrapper.indexOf(OUTPUT_MARKER);
-      if (pos == -1) {
-        return code;  // neither marker could be found, just return code
+    String prefix = "";
+    String postfix = "";
+    if (flags.outputWrapper != null) {
+      String marker = null;
+      int pos = flags.outputWrapper.indexOf(OUTPUT_MARKER_JS_STRING);
+      if (pos != -1) {
+        // With jsstring, run SourceCodeEscapers (as per AbstractCommandLineRunner).
+        code = SourceCodeEscapers.javascriptEscaper().escape(code);
+        marker = OUTPUT_MARKER_JS_STRING;
+      } else {
+        pos = flags.outputWrapper.indexOf(OUTPUT_MARKER);
+        if (pos != -1) {
+          marker = OUTPUT_MARKER;
+        }
       }
-      marker = OUTPUT_MARKER;
+
+      if (marker != null) {
+        prefix = flags.outputWrapper.substring(0, pos);
+        SourceMap sourceMap = compiler.getSourceMap();
+        if (sourceMap != null) {
+          sourceMap.setWrapperPrefix(prefix);
+        }
+      }
+      postfix = flags.outputWrapper.substring(pos + marker.length());
+    }
+    if (flags.createSourceMap) {
+      StringBuilder b = new StringBuilder();
+      try {
+        compiler.getSourceMap().appendTo(b, flags.jsOutputFile);
+      } catch (IOException e) {
+        // ignore
+      }
+      file.sourceMap = b.toString();
     }
 
-    String prefix = outputWrapper.substring(0, pos);
-    SourceMap sourceMap = compiler.getSourceMap();
-    if (sourceMap != null) {
-      sourceMap.setWrapperPrefix(prefix);
-    }
-    return prefix + code + outputWrapper.substring(pos + marker.length());
+    file.src = prefix + code + postfix;
+    outputFiles.add(file);
+    output.compiledFiles = outputFiles.toArray(new File[outputFiles.size()]);
+    output.compiledCode = file.src;
+    output.sourceMap = file.sourceMap;
+    return output;
   }
 
   private static List<SourceFile> createExterns(CompilerOptions.Environment environment) {
@@ -380,7 +415,7 @@ public final class GwtRunner implements EntryPoint {
     }
 
     if (flags.createSourceMap) {
-      options.setSourceMapOutputPath("%output%");
+      options.setSourceMapOutputPath("%output%.map");
     }
 
     if (flags.defines != null) {
@@ -405,8 +440,30 @@ public final class GwtRunner implements EntryPoint {
     if (flags.isolationMode != null
         && IsolationMode.valueOf(flags.isolationMode) == IsolationMode.IIFE) {
       flags.outputWrapper = "(function(){%output%}).call(this);";
+      flags.assumeFunctionWrapper = true;
     }
 
+    if (flags.formatting != null) {
+      List<String> formattingOptions = Arrays.asList(getStringArray(flags, "formatting"));
+      for (String formattingOption : formattingOptions) {
+        switch (formattingOption) {
+          case "PRETTY_PRINT":
+            options.setPrettyPrint(true);
+            break;
+          case "PRINT_INPUT_DELIMITER":
+            options.printInputDelimiter = true;
+            break;
+          case "SINGLE_QUOTES":
+            options.setPreferSingleQuotes(true);
+            break;
+          default:
+            throw new RuntimeException("Unknown formatting option: " + formattingOption);
+        }
+      }
+    }
+
+    options.setSourceMapIncludeSourcesContent(flags.sourceMapIncludeContent);
+    options.setParseInlineSourceMaps(flags.parseInlineSourceMaps);
     options.setAngularPass(flags.angularPass);
     options.setApplyInputSourceMaps(flags.applyInputSourceMaps);
     options.setChecksOnly(flags.checksOnly);
@@ -461,8 +518,7 @@ public final class GwtRunner implements EntryPoint {
         if (path == null) {
           path = unknownPrefix + i;
         }
-        path += ".map";
-        SourceFile sf = SourceFile.fromCode(path, file.sourceMap);
+        SourceFile sf = SourceFile.fromCode(path + ".map", file.sourceMap);
         inputSourceMaps.put(path, new SourceMapInput(sf));
       }
     }
@@ -491,14 +547,36 @@ public final class GwtRunner implements EntryPoint {
   /**
    * Public compiler call. Exposed in {@link #exportCompile}.
    */
-  public static ModuleOutput compile(Flags flags) {
+  public static ModuleOutput compile(Flags flags, File[] inputs) {
     String[] unhandled = updateFlags(flags, defaultFlags);
     if (unhandled.length > 0) {
       throw new RuntimeException("Unhandled flag: " + unhandled[0]);
     }
 
-    List<SourceFile> jsCode = fromFileArray(flags.jsCode, "Input_");
-    ImmutableMap<String, SourceMapInput> sourceMaps = buildSourceMaps(flags.jsCode, "Input_");
+    List<SourceFile> jsCode = null;
+    ImmutableMap<String, SourceMapInput> sourceMaps = null;
+    if (flags.jsCode != null) {
+      jsCode = fromFileArray(flags.jsCode, "Input_");
+      sourceMaps = buildSourceMaps(flags.jsCode, "Input_");
+    }
+
+    if (inputs != null) {
+      List<SourceFile> sourceFiles = fromFileArray(inputs, "Input_");
+      ImmutableMap<String, SourceMapInput> inputSourceMaps = buildSourceMaps(inputs, "Input_");
+      if (jsCode == null) {
+        jsCode = sourceFiles;
+      } else {
+        jsCode.addAll(sourceFiles);
+      }
+
+      if (sourceMaps == null) {
+        sourceMaps = inputSourceMaps;
+      } else {
+        HashMap<String, SourceMapInput> tempMaps = new HashMap<>(sourceMaps);
+        tempMaps.putAll(inputSourceMaps);
+        sourceMaps = ImmutableMap.copyOf(tempMaps);
+      }
+    }
 
     CompilerOptions options = new CompilerOptions();
     applyDefaultOptions(options);
@@ -514,20 +592,9 @@ public final class GwtRunner implements EntryPoint {
     compiler.setErrorManager(errorManager);
     compiler.compile(externs, jsCode, options);
 
-    ModuleOutput output = new ModuleOutput();
-    output.compiledCode = writeOutput(compiler, flags.outputWrapper);
+    ModuleOutput output = writeOutput(compiler, flags);
     output.errors = toNativeErrorArray(errorManager.errors);
     output.warnings = toNativeErrorArray(errorManager.warnings);
-
-    if (flags.createSourceMap) {
-      StringBuilder b = new StringBuilder();
-      try {
-        compiler.getSourceMap().appendTo(b, "");
-      } catch (IOException e) {
-        // ignore
-      }
-      output.sourceMap = b.toString();
-    }
 
     return output;
   }
