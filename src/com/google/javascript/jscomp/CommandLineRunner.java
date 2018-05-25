@@ -1546,13 +1546,9 @@ public class CommandLineRunner extends
         moduleRoots.add(ModuleLoader.DEFAULT_FILENAME_PREFIX);
       }
 
-      for (String entryPoint : flags.entryPoints) {
-        if (entryPoint.startsWith("goog:")) {
-          entryPoints.add(ModuleIdentifier.forClosure(entryPoint));
-        } else {
-          entryPoints.add(ModuleIdentifier.forFile(entryPoint));
-        }
-      }
+      entryPoints.addAll(
+          AbstractCommandLineRunner.CommandLineConfig.moduleIdentifiersForEntryPoints(
+              flags.entryPoints));
 
       if (flags.dependencyMode == CompilerOptions.DependencyMode.STRICT && entryPoints.isEmpty()) {
         reportError(

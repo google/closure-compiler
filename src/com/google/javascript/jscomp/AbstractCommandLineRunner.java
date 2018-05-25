@@ -2559,16 +2559,20 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
     }
 
     /**
-     * Helper method to convert a list of closure entry points a list of the new
-     * ModuleIdentifier values
+     * Helper method to convert a list of entry points specifications to a list of the new
+     * ModuleIdentifier values. The specifications can be in form of "path/to/module" for ES6 or
+     * CommonJS modules, or "goog:some.Namespace" for Closure symbols.
      */
-    static List<ModuleIdentifier> entryPointsFromClosureEntryPoints(
-        List<String> closureEntryPoints) {
-      List<ModuleIdentifier> entryPoints = new ArrayList<>();
-      for (String closureEntryPoint : closureEntryPoints) {
-        entryPoints.add(ModuleIdentifier.forClosure(closureEntryPoint));
+    static List<ModuleIdentifier> moduleIdentifiersForEntryPoints(List<String> entryPoints) {
+      List<ModuleIdentifier> mids = new ArrayList<>();
+      for (String entryPoint : entryPoints) {
+        if (entryPoint.startsWith("goog:")) {
+          mids.add(ModuleIdentifier.forClosure(entryPoint));
+        } else {
+          mids.add(ModuleIdentifier.forFile(entryPoint));
+        }
       }
-      return entryPoints;
+      return mids;
     }
 
     private List<String> outputManifests = ImmutableList.of();
