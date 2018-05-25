@@ -2573,12 +2573,13 @@ public final class NodeUtilTest extends TestCase {
     assertFalse(NodeUtil.isNestedArrayPattern(arrayPattern));
   }
 
-  public void testLhsByDestructuring1() {
+  public void testDestructuring1() {
     Node root = parse("var [a, b] = obj;");
-    Node destructLhs = root.getFirstFirstChild();
-    checkArgument(destructLhs.isDestructuringLhs());
+    Node varNode = root.getFirstChild();
+    Node destructLhs = varNode.getFirstChild();
+    checkState(destructLhs.isDestructuringLhs(), destructLhs);
     Node destructPat = destructLhs.getFirstChild();
-    checkArgument(destructPat.isArrayPattern());
+    checkState(destructPat.isArrayPattern(), destructPat);
 
     Node nameNodeA = destructPat.getFirstChild();
     Node nameNodeB = nameNodeA.getNext();
@@ -2591,14 +2592,22 @@ public final class NodeUtilTest extends TestCase {
     assertLhsByDestructuring(nameNodeA);
     assertLhsByDestructuring(nameNodeB);
     assertNotLhsByDestructuring(nameNodeObj);
+
+    assertThat(NodeUtil.getRootTarget(destructPat)).isSameAs(destructPat);
+    assertThat(NodeUtil.getRootTarget(nameNodeA)).isSameAs(destructPat);
+    assertThat(NodeUtil.getRootTarget(nameNodeB)).isSameAs(destructPat);
+
+    assertThat(NodeUtil.getDeclaringParent(nameNodeA)).isSameAs(varNode);
+    assertThat(NodeUtil.getDeclaringParent(nameNodeB)).isSameAs(varNode);
   }
 
-  public void testLhsByDestructuring1b() {
+  public void testDestructuring1b() {
     Node root = parse("var {a: c, b: d} = obj;");
-    Node destructLhs = root.getFirstFirstChild();
-    checkArgument(destructLhs.isDestructuringLhs());
+    Node varNode = root.getFirstChild();
+    Node destructLhs = varNode.getFirstChild();
+    checkState(destructLhs.isDestructuringLhs(), destructLhs);
     Node destructPat = destructLhs.getFirstChild();
-    checkArgument(destructPat.isObjectPattern());
+    checkState(destructPat.isObjectPattern(), destructPat);
 
     Node strKeyNodeA = destructPat.getFirstChild();
     Node strKeyNodeB = strKeyNodeA.getNext();
@@ -2617,14 +2626,22 @@ public final class NodeUtilTest extends TestCase {
     assertLhsByDestructuring(nameNodeC);
     assertLhsByDestructuring(nameNodeD);
     assertNotLhsByDestructuring(nameNodeObj);
+
+    assertThat(NodeUtil.getRootTarget(destructPat)).isSameAs(destructPat);
+    assertThat(NodeUtil.getRootTarget(nameNodeC)).isSameAs(destructPat);
+    assertThat(NodeUtil.getRootTarget(nameNodeD)).isSameAs(destructPat);
+
+    assertThat(NodeUtil.getDeclaringParent(nameNodeC)).isSameAs(varNode);
+    assertThat(NodeUtil.getDeclaringParent(nameNodeD)).isSameAs(varNode);
   }
 
-  public void testLhsByDestructuring1c() {
+  public void testDestructuring1c() {
     Node root = parse("var {a, b} = obj;");
-    Node destructLhs = root.getFirstFirstChild();
-    checkArgument(destructLhs.isDestructuringLhs());
+    Node varNode = root.getFirstChild();
+    Node destructLhs = varNode.getFirstChild();
+    checkState(destructLhs.isDestructuringLhs(), destructLhs);
     Node destructPat = destructLhs.getFirstChild();
-    checkArgument(destructPat.isObjectPattern());
+    checkState(destructPat.isObjectPattern(), destructPat);
 
     Node strKeyNodeA = destructPat.getFirstChild();
     Node strKeyNodeB = strKeyNodeA.getNext();
@@ -2643,11 +2660,19 @@ public final class NodeUtilTest extends TestCase {
     assertLhsByDestructuring(nameNodeA);
     assertLhsByDestructuring(nameNodeB);
     assertNotLhsByDestructuring(nameNodeObj);
+
+    assertThat(NodeUtil.getRootTarget(destructPat)).isSameAs(destructPat);
+    assertThat(NodeUtil.getRootTarget(nameNodeA)).isSameAs(destructPat);
+    assertThat(NodeUtil.getRootTarget(nameNodeB)).isSameAs(destructPat);
+
+    assertThat(NodeUtil.getDeclaringParent(nameNodeA)).isSameAs(varNode);
+    assertThat(NodeUtil.getDeclaringParent(nameNodeB)).isSameAs(varNode);
   }
 
-  public void testLhsByDestructuring1d() {
+  public void testDestructuring1d() {
     Node root = parse("var {a = defaultValue} = obj;");
-    Node destructLhs = root.getFirstFirstChild();
+    Node varNode = root.getFirstChild();
+    Node destructLhs = varNode.getFirstChild();
     checkState(destructLhs.isDestructuringLhs(), destructLhs);
     Node destructPat = destructLhs.getFirstChild();
     checkState(destructPat.isObjectPattern(), destructPat);
@@ -2671,11 +2696,17 @@ public final class NodeUtilTest extends TestCase {
     assertLhsByDestructuring(nameNodeA);
     assertNotLhsByDestructuring(nameNodeDefault);
     assertNotLhsByDestructuring(nameNodeObj);
+
+    assertThat(NodeUtil.getRootTarget(destructPat)).isSameAs(destructPat);
+    assertThat(NodeUtil.getRootTarget(nameNodeA)).isSameAs(destructPat);
+
+    assertThat(NodeUtil.getDeclaringParent(nameNodeA)).isSameAs(varNode);
   }
 
-  public void testLhsByDestructuring1e() {
+  public void testDestructuring1e() {
     Node root = parse("var {a: b = defaultValue} = obj;");
-    Node destructLhs = root.getFirstFirstChild();
+    Node varNode = root.getFirstChild();
+    Node destructLhs = varNode.getFirstChild();
     checkState(destructLhs.isDestructuringLhs(), destructLhs);
     Node destructPat = destructLhs.getFirstChild();
     checkState(destructPat.isObjectPattern(), destructPat);
@@ -2698,11 +2729,17 @@ public final class NodeUtilTest extends TestCase {
     assertLhsByDestructuring(nameNodeB);
     assertNotLhsByDestructuring(nameNodeDefaultValue);
     assertNotLhsByDestructuring(nameNodeObj);
+
+    assertThat(NodeUtil.getRootTarget(destructPat)).isSameAs(destructPat);
+    assertThat(NodeUtil.getRootTarget(nameNodeB)).isSameAs(destructPat);
+
+    assertThat(NodeUtil.getDeclaringParent(nameNodeB)).isSameAs(varNode);
   }
 
-  public void testLhsByDestructuring1f() {
+  public void testDestructuring1f() {
     Node root = parse("var [a  = defaultValue] = arr;");
-    Node destructLhs = root.getFirstFirstChild();
+    Node varNode = root.getFirstChild();
+    Node destructLhs = varNode.getFirstChild();
     checkState(destructLhs.isDestructuringLhs(), destructLhs);
     Node destructPat = destructLhs.getFirstChild();
     checkState(destructPat.isArrayPattern(), destructPat);
@@ -2722,17 +2759,24 @@ public final class NodeUtilTest extends TestCase {
     assertLhsByDestructuring(nameNodeA);
     assertNotLhsByDestructuring(nameNodeDefault);
     assertNotLhsByDestructuring(nameNodeObj);
+
+    assertThat(NodeUtil.getRootTarget(destructPat)).isSameAs(destructPat);
+    assertThat(NodeUtil.getRootTarget(nameNodeA)).isSameAs(destructPat);
+
+    assertThat(NodeUtil.getDeclaringParent(nameNodeA)).isSameAs(varNode);
   }
 
-  public void testLhsByDestructuring2() {
+  public void testDestructuring2() {
     Node root = parse("var [a, [b, c]] = obj;");
-    Node destructLhs = root.getFirstFirstChild();
-    checkArgument(destructLhs.isDestructuringLhs());
+    Node varNode = root.getFirstChild();
+    Node destructLhs = varNode.getFirstChild();
+    checkState(destructLhs.isDestructuringLhs(), destructLhs);
     Node destructPat = destructLhs.getFirstChild();
-    checkArgument(destructPat.isArrayPattern());
+    checkState(destructPat.isArrayPattern(), destructPat);
 
     Node nameNodeA = destructPat.getFirstChild();
-    Node nameNodeB = nameNodeA.getNext().getFirstChild();
+    Node innerPat = nameNodeA.getNext();
+    Node nameNodeB = innerPat.getFirstChild();
     Node nameNodeC = nameNodeB.getNext();
     checkState(nameNodeA.getString().equals("a"), nameNodeA);
     checkState(nameNodeB.getString().equals("b"), nameNodeB);
@@ -2745,18 +2789,30 @@ public final class NodeUtilTest extends TestCase {
     assertLhsByDestructuring(nameNodeB);
     assertLhsByDestructuring(nameNodeC);
     assertNotLhsByDestructuring(nameNodeObj);
+
+    assertThat(NodeUtil.getRootTarget(destructPat)).isSameAs(destructPat);
+    assertThat(NodeUtil.getRootTarget(nameNodeA)).isSameAs(destructPat);
+    assertThat(NodeUtil.getRootTarget(innerPat)).isSameAs(destructPat);
+    assertThat(NodeUtil.getRootTarget(nameNodeB)).isSameAs(destructPat);
+    assertThat(NodeUtil.getRootTarget(nameNodeC)).isSameAs(destructPat);
+
+    assertThat(NodeUtil.getDeclaringParent(nameNodeA)).isSameAs(varNode);
+    assertThat(NodeUtil.getDeclaringParent(nameNodeB)).isSameAs(varNode);
+    assertThat(NodeUtil.getDeclaringParent(nameNodeC)).isSameAs(varNode);
   }
 
-  public void testLhsByDestructuring2b() {
+  public void testDestructuring2b() {
     Node root = parse("var {a: e, b: {c: f, d: g}} = obj;");
-    Node destructLhs = root.getFirstFirstChild();
-    checkArgument(destructLhs.isDestructuringLhs());
+    Node varNode = root.getFirstChild();
+    Node destructLhs = varNode.getFirstChild();
+    checkState(destructLhs.isDestructuringLhs(), destructLhs);
     Node destructPat = destructLhs.getFirstChild();
-    checkArgument(destructPat.isObjectPattern());
+    checkState(destructPat.isObjectPattern(), destructPat);
 
     Node strKeyNodeA = destructPat.getFirstChild();
     Node strKeyNodeB = strKeyNodeA.getNext();
-    Node strKeyNodeC = strKeyNodeB.getFirstFirstChild();
+    Node innerPat = strKeyNodeB.getOnlyChild();
+    Node strKeyNodeC = innerPat.getFirstChild();
     Node strKeyNodeD = strKeyNodeC.getNext();
     Node nameNodeE = strKeyNodeA.getFirstChild();
     Node nameNodeF = strKeyNodeC.getFirstChild();
@@ -2780,14 +2836,25 @@ public final class NodeUtilTest extends TestCase {
     assertLhsByDestructuring(nameNodeF);
     assertLhsByDestructuring(nameNodeG);
     assertNotLhsByDestructuring(nameNodeObj);
+
+    assertThat(NodeUtil.getRootTarget(destructPat)).isSameAs(destructPat);
+    assertThat(NodeUtil.getRootTarget(nameNodeE)).isSameAs(destructPat);
+    assertThat(NodeUtil.getRootTarget(innerPat)).isSameAs(destructPat);
+    assertThat(NodeUtil.getRootTarget(nameNodeF)).isSameAs(destructPat);
+    assertThat(NodeUtil.getRootTarget(nameNodeG)).isSameAs(destructPat);
+
+    assertThat(NodeUtil.getDeclaringParent(nameNodeE)).isSameAs(varNode);
+    assertThat(NodeUtil.getDeclaringParent(nameNodeF)).isSameAs(varNode);
+    assertThat(NodeUtil.getDeclaringParent(nameNodeG)).isSameAs(varNode);
   }
 
-  public void testLhsByDestructuring3() {
+  public void testDestructuring3() {
     Node root = parse("var [a, b] = [c, d];");
-    Node destructLhs = root.getFirstFirstChild();
-    checkArgument(destructLhs.isDestructuringLhs());
+    Node varNode = root.getFirstChild();
+    Node destructLhs = varNode.getFirstChild();
+    checkState(destructLhs.isDestructuringLhs(), destructLhs);
     Node destructPat = destructLhs.getFirstChild();
-    checkArgument(destructPat.isArrayPattern());
+    checkState(destructPat.isArrayPattern(), destructPat);
 
     Node nameNodeA = destructPat.getFirstChild();
     Node nameNodeB = nameNodeA.getNext();
@@ -2803,14 +2870,22 @@ public final class NodeUtilTest extends TestCase {
     assertLhsByDestructuring(nameNodeB);
     assertNotLhsByDestructuring(nameNodeC);
     assertNotLhsByDestructuring(nameNodeD);
+
+    assertThat(NodeUtil.getRootTarget(destructPat)).isSameAs(destructPat);
+    assertThat(NodeUtil.getRootTarget(nameNodeA)).isSameAs(destructPat);
+    assertThat(NodeUtil.getRootTarget(nameNodeB)).isSameAs(destructPat);
+
+    assertThat(NodeUtil.getDeclaringParent(nameNodeA)).isSameAs(varNode);
+    assertThat(NodeUtil.getDeclaringParent(nameNodeB)).isSameAs(varNode);
   }
 
-  public void testLhsByDestructuring3b() {
+  public void testDestructuring3b() {
     Node root = parse("var {a: c, b: d} = {a: 1, b: 2};");
-    Node destructLhs = root.getFirstFirstChild();
-    checkArgument(destructLhs.isDestructuringLhs());
+    Node varNode = root.getFirstChild();
+    Node destructLhs = varNode.getFirstChild();
+    checkState(destructLhs.isDestructuringLhs(), destructLhs);
     Node destructPat = destructLhs.getFirstChild();
-    checkArgument(destructPat.isObjectPattern());
+    checkState(destructPat.isObjectPattern(), destructPat);
 
     Node strKeyNodeA = destructPat.getFirstChild();
     Node strKeyNodeB = strKeyNodeA.getNext();
@@ -2825,12 +2900,19 @@ public final class NodeUtilTest extends TestCase {
     assertNotLhsByDestructuring(strKeyNodeB);
     assertLhsByDestructuring(nameNodeC);
     assertLhsByDestructuring(nameNodeD);
+
+    assertThat(NodeUtil.getRootTarget(destructPat)).isSameAs(destructPat);
+    assertThat(NodeUtil.getRootTarget(nameNodeC)).isSameAs(destructPat);
+    assertThat(NodeUtil.getRootTarget(nameNodeD)).isSameAs(destructPat);
+
+    assertThat(NodeUtil.getDeclaringParent(nameNodeC)).isSameAs(varNode);
+    assertThat(NodeUtil.getDeclaringParent(nameNodeD)).isSameAs(varNode);
   }
 
-  public void testLhsByDestructuring4() {
+  public void testDestructuring4() {
     Node root = parse("for ([a, b] of X){}");
     Node destructPat = root.getFirstFirstChild();
-    checkArgument(destructPat.isArrayPattern());
+    checkState(destructPat.isArrayPattern(), destructPat);
 
     Node nameNodeA = destructPat.getFirstChild();
     Node nameNodeB = destructPat.getLastChild();
@@ -2839,13 +2921,17 @@ public final class NodeUtilTest extends TestCase {
 
     assertLhsByDestructuring(nameNodeA);
     assertLhsByDestructuring(nameNodeB);
+
+    assertThat(NodeUtil.getRootTarget(destructPat)).isSameAs(destructPat);
+    assertThat(NodeUtil.getRootTarget(nameNodeA)).isSameAs(destructPat);
+    assertThat(NodeUtil.getRootTarget(nameNodeB)).isSameAs(destructPat);
   }
 
-  public void testLhsByDestructuring5() {
+  public void testDestructuring5() {
     Node root = parse("function fn([a, b] = [c, d]){}");
     Node destructPat = root.getFirstChild().getSecondChild()
         .getFirstFirstChild();
-    checkArgument(destructPat.isArrayPattern());
+    checkState(destructPat.isArrayPattern(), destructPat);
 
     Node nameNodeA = destructPat.getFirstChild();
     Node nameNodeB = destructPat.getLastChild();
@@ -2860,16 +2946,45 @@ public final class NodeUtilTest extends TestCase {
     assertLhsByDestructuring(nameNodeB);
     assertNotLhsByDestructuring(nameNodeC);
     assertNotLhsByDestructuring(nameNodeD);
+
+    assertThat(NodeUtil.getRootTarget(destructPat)).isSameAs(destructPat);
+    assertThat(NodeUtil.getRootTarget(nameNodeA)).isSameAs(destructPat);
+    assertThat(NodeUtil.getRootTarget(nameNodeB)).isSameAs(destructPat);
   }
 
-  public void testLhsByDestructuring6() {
+  public void testRestParameter() {
+    Node root = parse("function fn(a, b, ...rest){}");
+    Node parameterList = root.getFirstChild().getSecondChild();
+
+    Node nameNodeA = parameterList.getFirstChild();
+    Node nameNodeB = nameNodeA.getNext();
+    Node restNode = nameNodeB.getNext();
+    checkState(restNode.isRest(), restNode);
+
+    Node nameNodeRest = restNode.getFirstChild();
+
+    checkState(nameNodeA.getString().equals("a"), nameNodeA);
+
+    assertThat(NodeUtil.getRootTarget(nameNodeA)).isSameAs(nameNodeA);
+    assertThat(NodeUtil.getRootTarget(nameNodeB)).isSameAs(nameNodeB);
+    assertThat(NodeUtil.getRootTarget(nameNodeRest)).isSameAs(nameNodeRest);
+
+    assertThat(NodeUtil.getDeclaringParent(nameNodeA)).isSameAs(parameterList);
+    assertThat(NodeUtil.getDeclaringParent(nameNodeB)).isSameAs(parameterList);
+    assertThat(NodeUtil.getDeclaringParent(nameNodeRest)).isSameAs(parameterList);
+  }
+
+  public void testDestructuring6() {
     Node root = parse("for ([{a: b}] of c) {}");
-    Node destructPat = root.getFirstFirstChild().getFirstChild();
-    checkArgument(destructPat.isObjectPattern() && destructPat.getParent().isArrayPattern());
+    Node forOfNode = root.getFirstChild();
+    Node forOfTargetPat = forOfNode.getFirstChild();
+    Node innerPat = forOfTargetPat.getFirstChild();
+    checkState(innerPat.isObjectPattern(), innerPat);
+    checkState(forOfTargetPat.isArrayPattern(), forOfTargetPat);
 
-    Node strKeyNodeA = destructPat.getFirstChild();
+    Node strKeyNodeA = innerPat.getFirstChild();
     Node nameNodeB = strKeyNodeA.getFirstChild();
-    Node nameNodeC = destructPat.getParent().getNext();
+    Node nameNodeC = innerPat.getParent().getNext();
     checkState(strKeyNodeA.getString().equals("a"), strKeyNodeA);
     checkState(nameNodeB.getString().equals("b"), nameNodeB);
     checkState(nameNodeC.getString().equals("c"), nameNodeC);
@@ -2877,16 +2992,23 @@ public final class NodeUtilTest extends TestCase {
     assertNotLhsByDestructuring(strKeyNodeA);
     assertLhsByDestructuring(nameNodeB);
     assertNotLhsByDestructuring(nameNodeC);
+
+    assertThat(NodeUtil.getRootTarget(forOfTargetPat)).isSameAs(forOfTargetPat);
+    assertThat(NodeUtil.getRootTarget(innerPat)).isSameAs(forOfTargetPat);
+    assertThat(NodeUtil.getRootTarget(nameNodeB)).isSameAs(forOfTargetPat);
   }
 
-  public void testLhsByDestructuring6b() {
+  public void testDestructuring6b() {
     Node root = parse("for ([{a: b}] in c) {}");
-    Node destructPat = root.getFirstFirstChild().getFirstChild();
-    checkArgument(destructPat.isObjectPattern() && destructPat.getParent().isArrayPattern());
+    Node forInNode = root.getFirstChild();
+    Node forInTargetPat = forInNode.getFirstChild();
+    Node innerPat = forInTargetPat.getFirstChild();
+    checkState(innerPat.isObjectPattern(), innerPat);
+    checkState(forInTargetPat.isArrayPattern(), forInTargetPat);
 
-    Node strKeyNodeA = destructPat.getFirstChild();
+    Node strKeyNodeA = innerPat.getFirstChild();
     Node nameNodeB = strKeyNodeA.getFirstChild();
-    Node nameNodeC = destructPat.getParent().getNext();
+    Node nameNodeC = innerPat.getParent().getNext();
     checkState(strKeyNodeA.getString().equals("a"), strKeyNodeA);
     checkState(nameNodeB.getString().equals("b"), nameNodeB);
     checkState(nameNodeC.getString().equals("c"), nameNodeC);
@@ -2894,14 +3016,19 @@ public final class NodeUtilTest extends TestCase {
     assertNotLhsByDestructuring(strKeyNodeA);
     assertLhsByDestructuring(nameNodeB);
     assertNotLhsByDestructuring(nameNodeC);
+
+    assertThat(NodeUtil.getRootTarget(forInTargetPat)).isSameAs(forInTargetPat);
+    assertThat(NodeUtil.getRootTarget(innerPat)).isSameAs(forInTargetPat);
+    assertThat(NodeUtil.getRootTarget(nameNodeB)).isSameAs(forInTargetPat);
   }
 
-  public void testLhsByDestructuring6c() {
+  public void testDestructuring6c() {
     Node root = parse("for (var [{a: b}] = [{a: 1}];;) {}");
-    Node destructArr = root.getFirstFirstChild().getFirstFirstChild();
-    checkArgument(destructArr.isArrayPattern());
+    Node varNode = root.getFirstFirstChild();
+    Node destructArr = varNode.getFirstFirstChild();
+    checkState(destructArr.isArrayPattern(), destructArr);
     Node destructPat = destructArr.getFirstChild();
-    checkArgument(destructPat.isObjectPattern() && destructPat.getParent().isArrayPattern());
+    checkState(destructPat.isObjectPattern(), destructPat);
 
     Node strKeyNodeA = destructPat.getFirstChild();
     Node nameNodeB = strKeyNodeA.getFirstChild();
@@ -2910,12 +3037,18 @@ public final class NodeUtilTest extends TestCase {
 
     assertNotLhsByDestructuring(strKeyNodeA);
     assertLhsByDestructuring(nameNodeB);
+
+    assertThat(NodeUtil.getRootTarget(destructArr)).isSameAs(destructArr);
+    assertThat(NodeUtil.getRootTarget(destructPat)).isSameAs(destructArr);
+    assertThat(NodeUtil.getRootTarget(nameNodeB)).isSameAs(destructArr);
+
+    assertThat(NodeUtil.getDeclaringParent(nameNodeB)).isSameAs(varNode);
   }
 
-  public void testLhsByDestructuring7() {
+  public void testDestructuring7() {
     Node root = parse("for ([a] of c) {}");
     Node destructPat = root.getFirstFirstChild();
-    checkArgument(destructPat.isArrayPattern());
+    checkState(destructPat.isArrayPattern(), destructPat);
 
     Node nameNodeA = destructPat.getFirstChild();
     Node nameNodeC = destructPat.getNext();
@@ -2924,12 +3057,15 @@ public final class NodeUtilTest extends TestCase {
 
     assertLhsByDestructuring(nameNodeA);
     assertNotLhsByDestructuring(nameNodeC);
+
+    assertThat(NodeUtil.getRootTarget(destructPat)).isSameAs(destructPat);
+    assertThat(NodeUtil.getRootTarget(nameNodeA)).isSameAs(destructPat);
   }
 
-  public void testLhsByDestructuring7b() {
+  public void testDestructuring7b() {
     Node root = parse("for ([a] in c) {}");
     Node destructPat = root.getFirstFirstChild();
-    checkArgument(destructPat.isArrayPattern());
+    checkState(destructPat.isArrayPattern(), destructPat);
 
     Node nameNodeA = destructPat.getFirstChild();
     Node nameNodeC = destructPat.getNext();
@@ -2938,89 +3074,147 @@ public final class NodeUtilTest extends TestCase {
 
     assertLhsByDestructuring(nameNodeA);
     assertNotLhsByDestructuring(nameNodeC);
+
+    assertThat(NodeUtil.getRootTarget(destructPat)).isSameAs(destructPat);
+    assertThat(NodeUtil.getRootTarget(nameNodeA)).isSameAs(destructPat);
   }
 
-  public void testLhsByDestructuring7c() {
+  public void testDestructuring7c() {
     Node root = parse("for (var [a] = [1];;) {}");
-    Node destructLhs = root.getFirstFirstChild().getFirstChild();
-    checkArgument(destructLhs.isDestructuringLhs());
+    Node varNode = root.getFirstFirstChild();
+    Node destructLhs = varNode.getFirstChild();
+    checkState(destructLhs.isDestructuringLhs(), destructLhs);
     Node destructPat = destructLhs.getFirstChild();
-    checkArgument(destructPat.isArrayPattern());
+    checkState(destructPat.isArrayPattern(), destructPat);
 
     Node nameNodeA = destructPat.getFirstChild();
     checkState(nameNodeA.getString().equals("a"), nameNodeA);
 
     assertLhsByDestructuring(nameNodeA);
+
+    assertThat(NodeUtil.getRootTarget(destructPat)).isSameAs(destructPat);
+    assertThat(NodeUtil.getRootTarget(nameNodeA)).isSameAs(destructPat);
+
+    assertThat(NodeUtil.getDeclaringParent(nameNodeA)).isSameAs(varNode);
   }
 
-  public void testLhsByDestructuring7d() {
+  public void testDestructuring7d() {
     Node root = parse("for (let [a] = [1];;) {}");
-    Node destructLhs = root.getFirstFirstChild().getFirstChild();
-    checkArgument(destructLhs.isDestructuringLhs());
+    Node letNode = root.getFirstFirstChild();
+    Node destructLhs = letNode.getFirstChild();
+    checkState(destructLhs.isDestructuringLhs(), destructLhs);
     Node destructPat = destructLhs.getFirstChild();
-    checkArgument(destructPat.isArrayPattern());
+    checkState(destructPat.isArrayPattern(), destructPat);
 
     Node nameNodeA = destructPat.getFirstChild();
     checkState(nameNodeA.getString().equals("a"), nameNodeA);
 
     assertLhsByDestructuring(nameNodeA);
+
+    assertThat(NodeUtil.getRootTarget(destructPat)).isSameAs(destructPat);
+    assertThat(NodeUtil.getRootTarget(nameNodeA)).isSameAs(destructPat);
+
+    assertThat(NodeUtil.getDeclaringParent(nameNodeA)).isSameAs(letNode);
   }
 
-  public void testLhsByDestructuring7e() {
+  public void testDestructuring7e() {
     Node root = parse("for (const [a] = [1];;) {}");
-    Node destructLhs = root.getFirstFirstChild().getFirstChild();
-    checkArgument(destructLhs.isDestructuringLhs());
+    Node constNode = root.getFirstFirstChild();
+    Node destructLhs = constNode.getFirstChild();
+    checkState(destructLhs.isDestructuringLhs(), destructLhs);
     Node destructPat = destructLhs.getFirstChild();
-    checkArgument(destructPat.isArrayPattern());
+    checkState(destructPat.isArrayPattern(), destructPat);
 
     Node nameNodeA = destructPat.getFirstChild();
     checkState(nameNodeA.getString().equals("a"), nameNodeA);
 
     assertLhsByDestructuring(nameNodeA);
+
+    assertThat(NodeUtil.getRootTarget(destructPat)).isSameAs(destructPat);
+    assertThat(NodeUtil.getRootTarget(nameNodeA)).isSameAs(destructPat);
+
+    assertThat(NodeUtil.getDeclaringParent(nameNodeA)).isSameAs(constNode);
   }
 
-  public void testLhsByDestructuring8() {
-    Node root = parse("var [...x] = obj;");
-    Node destructLhs = root.getFirstFirstChild();
-    checkArgument(destructLhs.isDestructuringLhs());
+  public void testDestructuring8() {
+    Node root = parse("var [...a] = obj;");
+    Node varNode = root.getFirstChild();
+    Node destructLhs = varNode.getFirstChild();
+    checkState(destructLhs.isDestructuringLhs(), destructLhs);
     Node destructPat = destructLhs.getFirstChild();
-    checkArgument(destructPat.isArrayPattern());
+    checkState(destructPat.isArrayPattern(), destructPat);
     Node restNode = destructPat.getFirstChild();
-    checkArgument(restNode.isRest());
+    checkState(restNode.isRest(), restNode);
 
     Node nameNodeA = restNode.getFirstChild();
-    checkState(nameNodeA.getString().equals("x"), nameNodeA);
+    checkState(nameNodeA.getString().equals("a"), nameNodeA);
 
     assertLhsByDestructuring(nameNodeA);
+
+    assertThat(NodeUtil.getRootTarget(destructPat)).isSameAs(destructPat);
+    assertThat(NodeUtil.getRootTarget(nameNodeA)).isSameAs(destructPat);
+
+    assertThat(NodeUtil.getDeclaringParent(nameNodeA)).isSameAs(varNode);
   }
 
-  public void testLhsByDestructuring8b() {
+  public void testDestructuring8b() {
     Node root = parse("([...this.x] = obj);");
     Node assign = root.getFirstFirstChild();
-    checkArgument(assign.isAssign());
+    checkState(assign.isAssign(), assign);
     Node destructPat = assign.getFirstChild();
-    checkArgument(destructPat.isArrayPattern());
+    checkState(destructPat.isArrayPattern(), destructPat);
     Node restNode = destructPat.getFirstChild();
-    checkArgument(restNode.isRest());
+    checkState(restNode.isRest(), restNode);
     Node getProp = restNode.getFirstChild();
-    checkArgument(getProp.isGetProp());
+    checkState(getProp.isGetProp(), getProp);
 
     assertLhsByDestructuring(getProp);
+
+    assertThat(NodeUtil.getRootTarget(destructPat)).isSameAs(destructPat);
+    assertThat(NodeUtil.getRootTarget(getProp)).isSameAs(destructPat);
   }
 
-  public void testLhsByDestructuring9() {
-    Node root = parse("var {['a']:x} = obj;");
-    Node destructLhs = root.getFirstFirstChild();
-    checkArgument(destructLhs.isDestructuringLhs());
+  public void testDestructuring9() {
+    Node root = parse("var {['a']:a} = obj;");
+    Node varNode = root.getFirstChild();
+    Node destructLhs = varNode.getFirstChild();
+    checkState(destructLhs.isDestructuringLhs(), destructLhs);
     Node destructPat = destructLhs.getFirstChild();
-    checkArgument(destructPat.isObjectPattern());
+    checkState(destructPat.isObjectPattern(), destructPat);
     Node computedPropNode = destructPat.getFirstChild();
-    checkArgument(computedPropNode.isComputedProp());
+    checkState(computedPropNode.isComputedProp(), computedPropNode);
 
     Node nameNodeA = computedPropNode.getLastChild();
-    checkState(nameNodeA.getString().equals("x"), nameNodeA);
+    checkState(nameNodeA.getString().equals("a"), nameNodeA);
 
     assertLhsByDestructuring(nameNodeA);
+
+    assertThat(NodeUtil.getRootTarget(destructPat)).isSameAs(destructPat);
+    assertThat(NodeUtil.getRootTarget(nameNodeA)).isSameAs(destructPat);
+
+    assertThat(NodeUtil.getDeclaringParent(nameNodeA)).isSameAs(varNode);
+  }
+
+  public void testDestructuringComputedPropertyWithDefault() {
+    Node root = parse("var {['a']: a = 1} = obj;");
+    Node varNode = root.getFirstChild();
+    Node destructLhs = varNode.getFirstChild();
+    checkState(destructLhs.isDestructuringLhs(), destructLhs);
+    Node destructPat = destructLhs.getFirstChild();
+    checkState(destructPat.isObjectPattern(), destructPat);
+    Node computedPropNode = destructPat.getFirstChild();
+    checkState(computedPropNode.isComputedProp(), computedPropNode);
+
+    Node defaultValueNode = computedPropNode.getLastChild();
+    Node nameNodeA = defaultValueNode.getFirstChild();
+    checkState(nameNodeA.getString().equals("a"), nameNodeA);
+
+    assertLhsByDestructuring(nameNodeA);
+
+    assertThat(NodeUtil.getRootTarget(destructPat)).isSameAs(destructPat);
+    assertThat(NodeUtil.getRootTarget(nameNodeA)).isSameAs(destructPat);
+
+    assertThat(NodeUtil.getDeclaringParent(nameNodeA)).isSameAs(varNode);
   }
 
   private static void assertLhsByDestructuring(Node n) {

@@ -3365,6 +3365,179 @@ public final class NodeUtil {
   }
 
   /**
+   * Returns the node that is effectively declaring the given target.
+   *
+   * <p>Examples:
+   * <pre><code>
+   *   const a = 1; // getDeclaringParent(a) returns CONST
+   *   let {[expression]: [x = 3]} = obj; // getDeclaringParent(x) returns LET
+   *   function foo({a, b}) {}; // getDeclaringParent(a) returns PARAM_LIST
+   *   function foo(a = 1) {}; // getDeclaringParent(a) returns PARAM_LIST
+   *   function foo({a, b} = obj) {}; // getDeclaringParent(a) returns PARAM_LIST
+   *   function foo(...a) {}; // getDeclaringParent(a) returns PARAM_LIST
+   *   function foo() {}; // gotRootTarget(foo) returns FUNCTION
+   *   class foo {}; // gotRootTarget(foo) returns CLASS
+   *   import foo from './foo'; // getDeclaringParent(foo) returns IMPORT
+   *   import {foo} from './foo'; // getDeclaringParent(foo) returns IMPORT
+   *   import {foo as bar} from './foo'; // getDeclaringParent(bar) returns IMPORT
+   * </code></pre>
+   *
+   * @param targetNode a NAME, OBJECT_PATTERN, or ARRAY_PATTERN
+   * @return node of type LET, CONST, VAR, FUNCTION, CLASS, PARAM_LIST, or IMPORT
+   * @throws IllegalStateException if targetNode is not actually used as a declaration target
+   */
+  public static Node getDeclaringParent(Node targetNode) {
+    Node rootTarget = getRootTarget(targetNode);
+    Node parent = rootTarget.getParent();
+    if (parent.isRest() || parent.isDefaultValue()) {
+      // e.g. `function foo(targetNode1 = default, ...targetNode2) {}`
+      parent = parent.getParent();
+      checkState(parent.isParamList(), parent);
+    } else if (parent.isDestructuringLhs()) {
+      // e.g. `let [a, b] = something;` targetNode is `[a, b]`
+      parent = parent.getParent();
+      checkState(isNameDeclaration(parent), parent);
+    } else if (parent.isClass() || parent.isFunction()) {
+      // e.g. `function targetNode() {}`
+      // e.g. `class targetNode {}`
+      checkState(targetNode == parent.getFirstChild(), targetNode);
+    } else if (parent.isImportSpec()) {
+      // e.g. `import {foo as targetNode} from './foo';
+      checkState(targetNode == parent.getSecondChild(), targetNode);
+      // import -> import_specs -> import_spec
+      // we want import
+      parent = parent.getGrandparent();
+      checkState(parent.isImport(), parent);
+    } else {
+      // e.g. `function foo(targetNode) {};`
+      // e.g. `let targetNode = something;`
+      // e.g. `import targetNode from './foo';
+      checkState(parent.isParamList() || isNameDeclaration(parent) || parent.isImport(), parent);
+    }
+    return parent;
+  }
+
+  /**
+   * Returns the outermost target enclosing the given assignment target.
+   *
+   * <p>Returns targetNode itself if there is no enclosing target.
+   *
+   * <p>Examples:
+   * <pre><code>
+   *   const a = 1; // getRootTarget(a) returns a
+   *   let {[expression]: [x = 3]} = obj; // getRootTarget(x) returns {[expression]: [x = 3]}
+   *   {a = 1} = obj; // getRootTarget(a) returns {a = 1}
+   *   {[expression]: [x = 3]} = obj; // getRootTarget(x) returns {[expression]: [x = 3]}
+   *   function foo({a, b}) {}; // getRootTarget(a) returns {a, b}
+   *   function foo(a = 1) {}; // getRootTarget(a) returns a
+   *   function foo({a, b} = obj) {}; // getRootTarget(a) returns a
+   *   function foo(...a) {}; // getRootTarget(a) returns a
+   *   function foo() {}; // gotRootTarget(foo) returns foo
+   *   class foo {}; // gotRootTarget(foo) returns foo
+   *   import foo from './foo'; // getRootTarget(foo) returns foo
+   *   import {foo} from './foo'; // getRootTarget(foo) returns foo
+   *   import {foo as bar} from './foo'; // getRootTarget(bar) returns bar
+   * </code></pre>
+   *
+   * @param targetNode
+   * @throws IllegalStateException if targetNode is not actually used as a target
+   */
+  public static Node getRootTarget(Node targetNode) {
+    Node enclosingTarget = targetNode;
+    for (Node nextTarget = getEnclosingTarget(enclosingTarget);
+        nextTarget != null;
+        nextTarget = getEnclosingTarget(enclosingTarget)) {
+      enclosingTarget = nextTarget;
+    }
+    return enclosingTarget;
+  }
+
+  /**
+   * Returns the immediately enclosing target node for a given target node, or null if none found.
+   *
+   * @see #getRootTarget(Node) for examples
+   * @param targetNode
+   */
+  @Nullable
+  private static Node getEnclosingTarget(Node targetNode) {
+    checkState(checkNotNull(targetNode).isValidAssignmentTarget(), targetNode);
+    Node parent = checkNotNull(targetNode.getParent(), targetNode);
+    boolean targetIsFirstChild = parent.getFirstChild() == targetNode;
+    if (parent.isDefaultValue() || parent.isRest()) {
+      // in `([something = targetNode] = x)` targetNode isn't actually acting
+      // as a target.
+      checkState(targetIsFirstChild, parent);
+      // The DEFAULT_VALUE or REST occupies the place where the assignment target it contains would
+      // otherwise be in the AST, so pretend it is the target for the logic below.
+      targetNode = parent;
+      parent = checkNotNull(targetNode.getParent());
+      targetIsFirstChild = targetNode == parent.getFirstChild();
+    }
+    switch (parent.getToken()) {
+      case ARRAY_PATTERN:
+        // e.g. ([targetNode] = something)
+        return parent;
+
+      case COMPUTED_PROP:
+        // e.g. ({[expression]: targetNode} = something)
+        // e.g. ({[expression]: targetNode = default} = something)
+        // make sure the effective target (targetNode or DEFAULT_VALUE containing it)
+        // isn't the expression part
+        checkState(!targetIsFirstChild, parent);
+        // otherwise the same as STRING_KEY so fall through
+      case STRING_KEY:
+        // e.g. ({parent: targetNode} = something)
+        Node grandparent = checkNotNull(parent.getParent(), parent);
+        checkState(grandparent.isObjectPattern(), grandparent);
+        return grandparent;
+
+      case PARAM_LIST:
+        // e.g. `function foo(targetNode) {}`
+      case LET:
+      case CONST:
+      case VAR:
+        // non-destructured declarations
+        // e.g. `let targetNode = 3;`
+        return null;
+
+      case FUNCTION:
+      case CLASS:
+        // e.g. `function targetNode() {}`
+        // e.g. `class targetNode {}`
+        checkState(targetIsFirstChild, targetNode);
+        return null;
+
+      case FOR_IN:
+      case FOR_OF:
+        // e.g. `for ({length} in obj) {}` // targetNode is `{length}`
+        // e.g. `for ({length} of obj) {}` // targetNode is `{length}`
+        checkState(targetIsFirstChild, targetNode);
+        return null;
+
+      case DESTRUCTURING_LHS:
+        // destructured declarations
+        // e.g. `let [a] = 3`; // targetNode is `[a]`
+        checkState(targetIsFirstChild, targetNode);
+        return null;
+
+      case IMPORT:
+        // e.g. `import targetNode from './foo/bar';`
+        return null;
+
+      case IMPORT_SPEC:
+        // e.g. `import {bar as targetNode} from './foo/bar';`
+        // e.g. `import {targetNode} from './foo/bar';` // AST will have {targetNode as targetNode}
+        checkState(!targetIsFirstChild, parent);
+        return null;
+
+      default:
+        // e.g. targetNode = something
+        checkState(isAssignmentOp(parent) && targetIsFirstChild, parent);
+        return null;
+    }
+  }
+
+  /**
    * Returns true if the node is a lhs value of a destructuring assignment For example, x in {@code
    * var [x] = [1];}, {@code var [...x] = [1];}, and {@code var {a: x} = {a: 1}} or a.b in {@code
    * ([a.b] = [1]);} or {@code ({key: a.b} = {key: 1});}

@@ -164,12 +164,18 @@ public final class VarCheckTest extends CompilerTestCase {
     testError("let x = 1; let x = 2;", BLOCK_SCOPED_DECL_MULTIPLY_DECLARED_ERROR);
     testError("let x = 1; var x = 2;", BLOCK_SCOPED_DECL_MULTIPLY_DECLARED_ERROR);
     testError("var x = 1; let x = 2;", BLOCK_SCOPED_DECL_MULTIPLY_DECLARED_ERROR);
+    testError("let {x} = 1; let {x} = 2;", BLOCK_SCOPED_DECL_MULTIPLY_DECLARED_ERROR);
+    testError("let {x} = 1; var {x} = 2;", BLOCK_SCOPED_DECL_MULTIPLY_DECLARED_ERROR);
+    testError("var {x} = 1; let {x} = 2;", BLOCK_SCOPED_DECL_MULTIPLY_DECLARED_ERROR);
   }
 
   public void testMultiplyDeclaredConsts() {
     testError("const x = 1; const x = 2;", BLOCK_SCOPED_DECL_MULTIPLY_DECLARED_ERROR);
     testError("const x = 1; var x = 2;", BLOCK_SCOPED_DECL_MULTIPLY_DECLARED_ERROR);
     testError("var x = 1; const x = 2;", BLOCK_SCOPED_DECL_MULTIPLY_DECLARED_ERROR);
+    testError("const {x} = 1; const {x} = 2;", BLOCK_SCOPED_DECL_MULTIPLY_DECLARED_ERROR);
+    testError("const {x} = 1; var {x} = 2;", BLOCK_SCOPED_DECL_MULTIPLY_DECLARED_ERROR);
+    testError("var {x} = 1; const {x} = 2;", BLOCK_SCOPED_DECL_MULTIPLY_DECLARED_ERROR);
   }
 
   public void testMultiplyDeclaredConsts_withES6Modules() {

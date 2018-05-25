@@ -398,10 +398,12 @@ class VarCheck extends AbstractPostOrderCallback implements
     @Override
     public void onRedeclaration(
         Scope s, String name, Node n, CompilerInput input) {
-      Node parent = n.getParent();
+      Node parent = NodeUtil.getDeclaringParent(n);
 
       Var origVar = s.getVar(name);
-      Node origParent = origVar.getParentNode();
+      // origNode will be null for `arguments`, since there's no node that declares it.
+      Node origNode = origVar.getNode();
+      Node origParent = (origNode == null) ? null : NodeUtil.getDeclaringParent(origNode);
       if (parent.isLet()
           || parent.isConst()
           || parent.isClass()
