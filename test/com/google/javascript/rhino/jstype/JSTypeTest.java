@@ -166,8 +166,6 @@ public class JSTypeTest extends BaseJSTypeTestCase {
             NUMBER_OBJECT_TYPE,
             NUMBER_TYPE,
             DATE_TYPE,
-            ERROR_TYPE,
-            SYNTAX_ERROR_TYPE,
             dateMethod,
             functionType,
             unresolvedNamedType,
@@ -228,24 +226,17 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertFalse(U2U_CONSTRUCTOR_TYPE.isSubtype(BOOLEAN_TYPE));
     assertFalse(U2U_CONSTRUCTOR_TYPE.isSubtype(BOOLEAN_OBJECT_TYPE));
     assertFalse(U2U_CONSTRUCTOR_TYPE.isSubtype(DATE_TYPE));
-    assertFalse(U2U_CONSTRUCTOR_TYPE.isSubtype(ERROR_TYPE));
-    assertFalse(U2U_CONSTRUCTOR_TYPE.isSubtype(EVAL_ERROR_TYPE));
     assertTrue(U2U_CONSTRUCTOR_TYPE.isSubtype(functionType));
     assertFalse(U2U_CONSTRUCTOR_TYPE.isSubtype(recordType));
     assertFalse(U2U_CONSTRUCTOR_TYPE.isSubtype(NULL_TYPE));
     assertFalse(U2U_CONSTRUCTOR_TYPE.isSubtype(NUMBER_TYPE));
     assertFalse(U2U_CONSTRUCTOR_TYPE.isSubtype(NUMBER_OBJECT_TYPE));
     assertTrue(U2U_CONSTRUCTOR_TYPE.isSubtype(OBJECT_TYPE));
-    assertFalse(U2U_CONSTRUCTOR_TYPE.isSubtype(URI_ERROR_TYPE));
-    assertFalse(U2U_CONSTRUCTOR_TYPE.isSubtype(RANGE_ERROR_TYPE));
-    assertFalse(U2U_CONSTRUCTOR_TYPE.isSubtype(REFERENCE_ERROR_TYPE));
     assertFalse(U2U_CONSTRUCTOR_TYPE.isSubtype(REGEXP_TYPE));
     assertFalse(U2U_CONSTRUCTOR_TYPE.isSubtype(STRING_TYPE));
     assertFalse(U2U_CONSTRUCTOR_TYPE.isSubtype(STRING_OBJECT_TYPE));
     assertFalse(U2U_CONSTRUCTOR_TYPE.isSubtype(SYMBOL_TYPE));
     assertFalse(U2U_CONSTRUCTOR_TYPE.isSubtype(SYMBOL_OBJECT_TYPE));
-    assertFalse(U2U_CONSTRUCTOR_TYPE.isSubtype(SYNTAX_ERROR_TYPE));
-    assertFalse(U2U_CONSTRUCTOR_TYPE.isSubtype(TYPE_ERROR_TYPE));
     assertTrue(U2U_CONSTRUCTOR_TYPE.isSubtype(ALL_TYPE));
     assertFalse(U2U_CONSTRUCTOR_TYPE.isSubtype(VOID_TYPE));
 
@@ -265,10 +256,6 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertTrue(U2U_CONSTRUCTOR_TYPE.
         canTestForEqualityWith(DATE_TYPE));
     assertTrue(U2U_CONSTRUCTOR_TYPE.
-        canTestForEqualityWith(ERROR_TYPE));
-    assertTrue(U2U_CONSTRUCTOR_TYPE.
-        canTestForEqualityWith(EVAL_ERROR_TYPE));
-    assertTrue(U2U_CONSTRUCTOR_TYPE.
         canTestForEqualityWith(functionType));
     assertTrue(U2U_CONSTRUCTOR_TYPE.
         canTestForEqualityWith(recordType));
@@ -281,12 +268,6 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertTrue(U2U_CONSTRUCTOR_TYPE.
         canTestForEqualityWith(OBJECT_TYPE));
     assertTrue(U2U_CONSTRUCTOR_TYPE.
-        canTestForEqualityWith(URI_ERROR_TYPE));
-    assertTrue(U2U_CONSTRUCTOR_TYPE.
-        canTestForEqualityWith(RANGE_ERROR_TYPE));
-    assertTrue(U2U_CONSTRUCTOR_TYPE.
-        canTestForEqualityWith(REFERENCE_ERROR_TYPE));
-    assertTrue(U2U_CONSTRUCTOR_TYPE.
         canTestForEqualityWith(REGEXP_TYPE));
     assertFalse(U2U_CONSTRUCTOR_TYPE.
         canTestForEqualityWith(STRING_TYPE));
@@ -294,10 +275,6 @@ public class JSTypeTest extends BaseJSTypeTestCase {
         canTestForEqualityWith(STRING_OBJECT_TYPE));
     assertFalse(U2U_CONSTRUCTOR_TYPE.canTestForEqualityWith(SYMBOL_TYPE));
     assertFalse(U2U_CONSTRUCTOR_TYPE.canTestForEqualityWith(SYMBOL_OBJECT_TYPE));
-    assertTrue(U2U_CONSTRUCTOR_TYPE.
-        canTestForEqualityWith(SYNTAX_ERROR_TYPE));
-    assertTrue(U2U_CONSTRUCTOR_TYPE.
-        canTestForEqualityWith(TYPE_ERROR_TYPE));
     assertFalse(U2U_CONSTRUCTOR_TYPE.
         canTestForEqualityWith(VOID_TYPE));
 
@@ -314,10 +291,6 @@ public class JSTypeTest extends BaseJSTypeTestCase {
         canTestForShallowEqualityWith(BOOLEAN_OBJECT_TYPE));
     assertFalse(U2U_CONSTRUCTOR_TYPE.
         canTestForShallowEqualityWith(DATE_TYPE));
-    assertFalse(U2U_CONSTRUCTOR_TYPE.
-        canTestForShallowEqualityWith(ERROR_TYPE));
-    assertFalse(U2U_CONSTRUCTOR_TYPE.
-        canTestForShallowEqualityWith(EVAL_ERROR_TYPE));
     assertTrue(U2U_CONSTRUCTOR_TYPE.
         canTestForShallowEqualityWith(functionType));
     assertFalse(U2U_CONSTRUCTOR_TYPE.
@@ -331,12 +304,6 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertTrue(U2U_CONSTRUCTOR_TYPE.
         canTestForShallowEqualityWith(OBJECT_TYPE));
     assertFalse(U2U_CONSTRUCTOR_TYPE.
-        canTestForShallowEqualityWith(URI_ERROR_TYPE));
-    assertFalse(U2U_CONSTRUCTOR_TYPE.
-        canTestForShallowEqualityWith(RANGE_ERROR_TYPE));
-    assertFalse(U2U_CONSTRUCTOR_TYPE.
-        canTestForShallowEqualityWith(REFERENCE_ERROR_TYPE));
-    assertFalse(U2U_CONSTRUCTOR_TYPE.
         canTestForShallowEqualityWith(REGEXP_TYPE));
     assertFalse(U2U_CONSTRUCTOR_TYPE.
         canTestForShallowEqualityWith(STRING_TYPE));
@@ -344,9 +311,6 @@ public class JSTypeTest extends BaseJSTypeTestCase {
         canTestForShallowEqualityWith(STRING_OBJECT_TYPE));
     assertFalse(U2U_CONSTRUCTOR_TYPE.canTestForShallowEqualityWith(SYMBOL_TYPE));
     assertFalse(U2U_CONSTRUCTOR_TYPE.canTestForShallowEqualityWith(SYMBOL_OBJECT_TYPE));
-    assertFalse(U2U_CONSTRUCTOR_TYPE.canTestForShallowEqualityWith(SYNTAX_ERROR_TYPE));
-    assertFalse(U2U_CONSTRUCTOR_TYPE.
-        canTestForShallowEqualityWith(TYPE_ERROR_TYPE));
     assertTrue(U2U_CONSTRUCTOR_TYPE.
         canTestForShallowEqualityWith(ALL_TYPE));
     assertFalse(U2U_CONSTRUCTOR_TYPE.
@@ -424,24 +388,17 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertFalse(NO_OBJECT_TYPE.isSubtypeOf(BOOLEAN_TYPE));
     assertTrue(NO_OBJECT_TYPE.isSubtypeOf(BOOLEAN_OBJECT_TYPE));
     assertTrue(NO_OBJECT_TYPE.isSubtypeOf(DATE_TYPE));
-    assertTrue(NO_OBJECT_TYPE.isSubtypeOf(ERROR_TYPE));
-    assertTrue(NO_OBJECT_TYPE.isSubtypeOf(EVAL_ERROR_TYPE));
     assertTrue(NO_OBJECT_TYPE.isSubtypeOf(functionType));
     assertTrue(NO_OBJECT_TYPE.isSubtypeOf(recordType));
     assertFalse(NO_OBJECT_TYPE.isSubtypeOf(NULL_TYPE));
     assertFalse(NO_OBJECT_TYPE.isSubtypeOf(NUMBER_TYPE));
     assertTrue(NO_OBJECT_TYPE.isSubtypeOf(NUMBER_OBJECT_TYPE));
     assertTrue(NO_OBJECT_TYPE.isSubtypeOf(OBJECT_TYPE));
-    assertTrue(NO_OBJECT_TYPE.isSubtypeOf(URI_ERROR_TYPE));
-    assertTrue(NO_OBJECT_TYPE.isSubtypeOf(RANGE_ERROR_TYPE));
-    assertTrue(NO_OBJECT_TYPE.isSubtypeOf(REFERENCE_ERROR_TYPE));
     assertTrue(NO_OBJECT_TYPE.isSubtypeOf(REGEXP_TYPE));
     assertFalse(NO_OBJECT_TYPE.isSubtypeOf(STRING_TYPE));
     assertTrue(NO_OBJECT_TYPE.isSubtypeOf(STRING_OBJECT_TYPE));
     assertFalse(NO_OBJECT_TYPE.isSubtypeOf(SYMBOL_TYPE));
     assertTrue(NO_OBJECT_TYPE.isSubtypeOf(SYMBOL_OBJECT_TYPE));
-    assertTrue(NO_OBJECT_TYPE.isSubtypeOf(SYNTAX_ERROR_TYPE));
-    assertTrue(NO_OBJECT_TYPE.isSubtypeOf(TYPE_ERROR_TYPE));
     assertTrue(NO_OBJECT_TYPE.isSubtypeOf(ALL_TYPE));
     assertFalse(NO_OBJECT_TYPE.isSubtypeOf(VOID_TYPE));
 
@@ -453,24 +410,17 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertCanTestForEqualityWith(NO_OBJECT_TYPE, BOOLEAN_TYPE);
     assertCanTestForEqualityWith(NO_OBJECT_TYPE, BOOLEAN_OBJECT_TYPE);
     assertCanTestForEqualityWith(NO_OBJECT_TYPE, DATE_TYPE);
-    assertCanTestForEqualityWith(NO_OBJECT_TYPE, ERROR_TYPE);
-    assertCanTestForEqualityWith(NO_OBJECT_TYPE, EVAL_ERROR_TYPE);
     assertCanTestForEqualityWith(NO_OBJECT_TYPE, functionType);
     assertCanTestForEqualityWith(NO_OBJECT_TYPE, recordType);
     assertCanTestForEqualityWith(NO_OBJECT_TYPE, NULL_TYPE);
     assertCanTestForEqualityWith(NO_OBJECT_TYPE, NUMBER_TYPE);
     assertCanTestForEqualityWith(NO_OBJECT_TYPE, NUMBER_OBJECT_TYPE);
     assertCanTestForEqualityWith(NO_OBJECT_TYPE, OBJECT_TYPE);
-    assertCanTestForEqualityWith(NO_OBJECT_TYPE, URI_ERROR_TYPE);
-    assertCanTestForEqualityWith(NO_OBJECT_TYPE, RANGE_ERROR_TYPE);
-    assertCanTestForEqualityWith(NO_OBJECT_TYPE, REFERENCE_ERROR_TYPE);
     assertCanTestForEqualityWith(NO_OBJECT_TYPE, REGEXP_TYPE);
     assertCanTestForEqualityWith(NO_OBJECT_TYPE, STRING_TYPE);
     assertCanTestForEqualityWith(NO_OBJECT_TYPE, STRING_OBJECT_TYPE);
     assertCanTestForEqualityWith(NO_OBJECT_TYPE, SYMBOL_TYPE);
     assertCanTestForEqualityWith(NO_OBJECT_TYPE, SYMBOL_OBJECT_TYPE);
-    assertCanTestForEqualityWith(NO_OBJECT_TYPE, SYNTAX_ERROR_TYPE);
-    assertCanTestForEqualityWith(NO_OBJECT_TYPE, TYPE_ERROR_TYPE);
     assertCanTestForEqualityWith(NO_OBJECT_TYPE, VOID_TYPE);
 
     // canTestForShallowEqualityWith
@@ -481,8 +431,6 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertTrue(NO_OBJECT_TYPE.
         canTestForShallowEqualityWith(BOOLEAN_OBJECT_TYPE));
     assertTrue(NO_OBJECT_TYPE.canTestForShallowEqualityWith(DATE_TYPE));
-    assertTrue(NO_OBJECT_TYPE.canTestForShallowEqualityWith(ERROR_TYPE));
-    assertTrue(NO_OBJECT_TYPE.canTestForShallowEqualityWith(EVAL_ERROR_TYPE));
     assertTrue(NO_OBJECT_TYPE.canTestForShallowEqualityWith(functionType));
     assertTrue(NO_OBJECT_TYPE.canTestForShallowEqualityWith(recordType));
     assertFalse(NO_OBJECT_TYPE.canTestForShallowEqualityWith(NULL_TYPE));
@@ -490,19 +438,12 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertTrue(NO_OBJECT_TYPE.
         canTestForShallowEqualityWith(NUMBER_OBJECT_TYPE));
     assertTrue(NO_OBJECT_TYPE.canTestForShallowEqualityWith(OBJECT_TYPE));
-    assertTrue(NO_OBJECT_TYPE.canTestForShallowEqualityWith(URI_ERROR_TYPE));
-    assertTrue(NO_OBJECT_TYPE.canTestForShallowEqualityWith(RANGE_ERROR_TYPE));
-    assertTrue(NO_OBJECT_TYPE.
-        canTestForShallowEqualityWith(REFERENCE_ERROR_TYPE));
     assertTrue(NO_OBJECT_TYPE.canTestForShallowEqualityWith(REGEXP_TYPE));
     assertFalse(NO_OBJECT_TYPE.canTestForShallowEqualityWith(STRING_TYPE));
     assertTrue(NO_OBJECT_TYPE.
         canTestForShallowEqualityWith(STRING_OBJECT_TYPE));
     assertFalse(NO_OBJECT_TYPE.canTestForShallowEqualityWith(SYMBOL_TYPE));
     assertTrue(NO_OBJECT_TYPE.canTestForShallowEqualityWith(SYMBOL_OBJECT_TYPE));
-    assertTrue(NO_OBJECT_TYPE.
-        canTestForShallowEqualityWith(SYNTAX_ERROR_TYPE));
-    assertTrue(NO_OBJECT_TYPE.canTestForShallowEqualityWith(TYPE_ERROR_TYPE));
     assertTrue(NO_OBJECT_TYPE.canTestForShallowEqualityWith(ALL_TYPE));
     assertFalse(NO_OBJECT_TYPE.canTestForShallowEqualityWith(VOID_TYPE));
 
@@ -575,23 +516,16 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertTrue(NO_TYPE.isSubtypeOf(BOOLEAN_TYPE));
     assertTrue(NO_TYPE.isSubtypeOf(BOOLEAN_OBJECT_TYPE));
     assertTrue(NO_TYPE.isSubtypeOf(DATE_TYPE));
-    assertTrue(NO_TYPE.isSubtypeOf(ERROR_TYPE));
-    assertTrue(NO_TYPE.isSubtypeOf(EVAL_ERROR_TYPE));
     assertTrue(NO_TYPE.isSubtypeOf(functionType));
     assertTrue(NO_TYPE.isSubtypeOf(NULL_TYPE));
     assertTrue(NO_TYPE.isSubtypeOf(NUMBER_TYPE));
     assertTrue(NO_TYPE.isSubtypeOf(NUMBER_OBJECT_TYPE));
     assertTrue(NO_TYPE.isSubtypeOf(OBJECT_TYPE));
-    assertTrue(NO_TYPE.isSubtypeOf(URI_ERROR_TYPE));
-    assertTrue(NO_TYPE.isSubtypeOf(RANGE_ERROR_TYPE));
-    assertTrue(NO_TYPE.isSubtypeOf(REFERENCE_ERROR_TYPE));
     assertTrue(NO_TYPE.isSubtypeOf(REGEXP_TYPE));
     assertTrue(NO_TYPE.isSubtypeOf(STRING_TYPE));
     assertTrue(NO_TYPE.isSubtypeOf(STRING_OBJECT_TYPE));
     assertTrue(NO_TYPE.isSubtypeOf(SYMBOL_TYPE));
     assertTrue(NO_TYPE.isSubtypeOf(SYMBOL_OBJECT_TYPE));
-    assertTrue(NO_TYPE.isSubtypeOf(SYNTAX_ERROR_TYPE));
-    assertTrue(NO_TYPE.isSubtypeOf(TYPE_ERROR_TYPE));
     assertTrue(NO_TYPE.isSubtypeOf(ALL_TYPE));
     assertTrue(NO_TYPE.isSubtypeOf(VOID_TYPE));
 
@@ -602,23 +536,16 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertCanTestForEqualityWith(NO_TYPE, BOOLEAN_TYPE);
     assertCanTestForEqualityWith(NO_TYPE, BOOLEAN_OBJECT_TYPE);
     assertCanTestForEqualityWith(NO_TYPE, DATE_TYPE);
-    assertCanTestForEqualityWith(NO_TYPE, ERROR_TYPE);
-    assertCanTestForEqualityWith(NO_TYPE, EVAL_ERROR_TYPE);
     assertCanTestForEqualityWith(NO_TYPE, functionType);
     assertCanTestForEqualityWith(NO_TYPE, NULL_TYPE);
     assertCanTestForEqualityWith(NO_TYPE, NUMBER_TYPE);
     assertCanTestForEqualityWith(NO_TYPE, NUMBER_OBJECT_TYPE);
     assertCanTestForEqualityWith(NO_TYPE, OBJECT_TYPE);
-    assertCanTestForEqualityWith(NO_TYPE, URI_ERROR_TYPE);
-    assertCanTestForEqualityWith(NO_TYPE, RANGE_ERROR_TYPE);
-    assertCanTestForEqualityWith(NO_TYPE, REFERENCE_ERROR_TYPE);
     assertCanTestForEqualityWith(NO_TYPE, REGEXP_TYPE);
     assertCanTestForEqualityWith(NO_TYPE, STRING_TYPE);
     assertCanTestForEqualityWith(NO_TYPE, STRING_OBJECT_TYPE);
     assertCanTestForEqualityWith(NO_TYPE, SYMBOL_TYPE);
     assertCanTestForEqualityWith(NO_TYPE, SYMBOL_OBJECT_TYPE);
-    assertCanTestForEqualityWith(NO_TYPE, SYNTAX_ERROR_TYPE);
-    assertCanTestForEqualityWith(NO_TYPE, TYPE_ERROR_TYPE);
     assertCanTestForEqualityWith(NO_TYPE, ALL_TYPE);
     assertCanTestForEqualityWith(NO_TYPE, VOID_TYPE);
 
@@ -629,23 +556,16 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertTrue(NO_TYPE.canTestForShallowEqualityWith(BOOLEAN_TYPE));
     assertTrue(NO_TYPE.canTestForShallowEqualityWith(BOOLEAN_OBJECT_TYPE));
     assertTrue(NO_TYPE.canTestForShallowEqualityWith(DATE_TYPE));
-    assertTrue(NO_TYPE.canTestForShallowEqualityWith(ERROR_TYPE));
-    assertTrue(NO_TYPE.canTestForShallowEqualityWith(EVAL_ERROR_TYPE));
     assertTrue(NO_TYPE.canTestForShallowEqualityWith(functionType));
     assertTrue(NO_TYPE.canTestForShallowEqualityWith(NULL_TYPE));
     assertTrue(NO_TYPE.canTestForShallowEqualityWith(NUMBER_TYPE));
     assertTrue(NO_TYPE.canTestForShallowEqualityWith(NUMBER_OBJECT_TYPE));
     assertTrue(NO_TYPE.canTestForShallowEqualityWith(OBJECT_TYPE));
-    assertTrue(NO_TYPE.canTestForShallowEqualityWith(URI_ERROR_TYPE));
-    assertTrue(NO_TYPE.canTestForShallowEqualityWith(RANGE_ERROR_TYPE));
-    assertTrue(NO_TYPE.canTestForShallowEqualityWith(REFERENCE_ERROR_TYPE));
     assertTrue(NO_TYPE.canTestForShallowEqualityWith(REGEXP_TYPE));
     assertTrue(NO_TYPE.canTestForShallowEqualityWith(STRING_TYPE));
     assertTrue(NO_TYPE.canTestForShallowEqualityWith(STRING_OBJECT_TYPE));
     assertTrue(NO_TYPE.canTestForShallowEqualityWith(SYMBOL_TYPE));
     assertTrue(NO_TYPE.canTestForShallowEqualityWith(SYMBOL_OBJECT_TYPE));
-    assertTrue(NO_TYPE.canTestForShallowEqualityWith(SYNTAX_ERROR_TYPE));
-    assertTrue(NO_TYPE.canTestForShallowEqualityWith(TYPE_ERROR_TYPE));
     assertTrue(NO_TYPE.canTestForShallowEqualityWith(ALL_TYPE));
     assertTrue(NO_TYPE.canTestForShallowEqualityWith(VOID_TYPE));
 
@@ -718,23 +638,16 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertTrue(NO_RESOLVED_TYPE.isSubtypeOf(BOOLEAN_TYPE));
     assertTrue(NO_RESOLVED_TYPE.isSubtypeOf(BOOLEAN_OBJECT_TYPE));
     assertTrue(NO_RESOLVED_TYPE.isSubtypeOf(DATE_TYPE));
-    assertTrue(NO_RESOLVED_TYPE.isSubtypeOf(ERROR_TYPE));
-    assertTrue(NO_RESOLVED_TYPE.isSubtypeOf(EVAL_ERROR_TYPE));
     assertTrue(NO_RESOLVED_TYPE.isSubtypeOf(functionType));
     assertTrue(NO_RESOLVED_TYPE.isSubtypeOf(NULL_TYPE));
     assertTrue(NO_RESOLVED_TYPE.isSubtypeOf(NUMBER_TYPE));
     assertTrue(NO_RESOLVED_TYPE.isSubtypeOf(NUMBER_OBJECT_TYPE));
     assertTrue(NO_RESOLVED_TYPE.isSubtypeOf(OBJECT_TYPE));
-    assertTrue(NO_RESOLVED_TYPE.isSubtypeOf(URI_ERROR_TYPE));
-    assertTrue(NO_RESOLVED_TYPE.isSubtypeOf(RANGE_ERROR_TYPE));
-    assertTrue(NO_RESOLVED_TYPE.isSubtypeOf(REFERENCE_ERROR_TYPE));
     assertTrue(NO_RESOLVED_TYPE.isSubtypeOf(REGEXP_TYPE));
     assertTrue(NO_RESOLVED_TYPE.isSubtypeOf(STRING_TYPE));
     assertTrue(NO_RESOLVED_TYPE.isSubtypeOf(STRING_OBJECT_TYPE));
     assertTrue(NO_RESOLVED_TYPE.isSubtypeOf(SYMBOL_TYPE));
     assertTrue(NO_RESOLVED_TYPE.isSubtypeOf(SYMBOL_OBJECT_TYPE));
-    assertTrue(NO_RESOLVED_TYPE.isSubtypeOf(SYNTAX_ERROR_TYPE));
-    assertTrue(NO_RESOLVED_TYPE.isSubtypeOf(TYPE_ERROR_TYPE));
     assertTrue(NO_RESOLVED_TYPE.isSubtypeOf(ALL_TYPE));
     assertTrue(NO_RESOLVED_TYPE.isSubtypeOf(VOID_TYPE));
 
@@ -746,23 +659,16 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertCanTestForEqualityWith(NO_RESOLVED_TYPE, BOOLEAN_TYPE);
     assertCanTestForEqualityWith(NO_RESOLVED_TYPE, BOOLEAN_OBJECT_TYPE);
     assertCanTestForEqualityWith(NO_RESOLVED_TYPE, DATE_TYPE);
-    assertCanTestForEqualityWith(NO_RESOLVED_TYPE, ERROR_TYPE);
-    assertCanTestForEqualityWith(NO_RESOLVED_TYPE, EVAL_ERROR_TYPE);
     assertCanTestForEqualityWith(NO_RESOLVED_TYPE, functionType);
     assertCanTestForEqualityWith(NO_RESOLVED_TYPE, NULL_TYPE);
     assertCanTestForEqualityWith(NO_RESOLVED_TYPE, NUMBER_TYPE);
     assertCanTestForEqualityWith(NO_RESOLVED_TYPE, NUMBER_OBJECT_TYPE);
     assertCanTestForEqualityWith(NO_RESOLVED_TYPE, OBJECT_TYPE);
-    assertCanTestForEqualityWith(NO_RESOLVED_TYPE, URI_ERROR_TYPE);
-    assertCanTestForEqualityWith(NO_RESOLVED_TYPE, RANGE_ERROR_TYPE);
-    assertCanTestForEqualityWith(NO_RESOLVED_TYPE, REFERENCE_ERROR_TYPE);
     assertCanTestForEqualityWith(NO_RESOLVED_TYPE, REGEXP_TYPE);
     assertCanTestForEqualityWith(NO_RESOLVED_TYPE, STRING_TYPE);
     assertCanTestForEqualityWith(NO_RESOLVED_TYPE, STRING_OBJECT_TYPE);
     assertCanTestForEqualityWith(NO_RESOLVED_TYPE, SYMBOL_TYPE);
     assertCanTestForEqualityWith(NO_RESOLVED_TYPE, SYMBOL_OBJECT_TYPE);
-    assertCanTestForEqualityWith(NO_RESOLVED_TYPE, SYNTAX_ERROR_TYPE);
-    assertCanTestForEqualityWith(NO_RESOLVED_TYPE, TYPE_ERROR_TYPE);
     assertCanTestForEqualityWith(NO_RESOLVED_TYPE, ALL_TYPE);
     assertCanTestForEqualityWith(NO_RESOLVED_TYPE, VOID_TYPE);
 
@@ -775,28 +681,18 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertTrue(
         NO_RESOLVED_TYPE.canTestForShallowEqualityWith(BOOLEAN_OBJECT_TYPE));
     assertTrue(NO_RESOLVED_TYPE.canTestForShallowEqualityWith(DATE_TYPE));
-    assertTrue(NO_RESOLVED_TYPE.canTestForShallowEqualityWith(ERROR_TYPE));
-    assertTrue(NO_RESOLVED_TYPE.canTestForShallowEqualityWith(EVAL_ERROR_TYPE));
     assertTrue(NO_RESOLVED_TYPE.canTestForShallowEqualityWith(functionType));
     assertTrue(NO_RESOLVED_TYPE.canTestForShallowEqualityWith(NULL_TYPE));
     assertTrue(NO_RESOLVED_TYPE.canTestForShallowEqualityWith(NUMBER_TYPE));
     assertTrue(
         NO_RESOLVED_TYPE.canTestForShallowEqualityWith(NUMBER_OBJECT_TYPE));
     assertTrue(NO_RESOLVED_TYPE.canTestForShallowEqualityWith(OBJECT_TYPE));
-    assertTrue(NO_RESOLVED_TYPE.canTestForShallowEqualityWith(URI_ERROR_TYPE));
-    assertTrue(
-        NO_RESOLVED_TYPE.canTestForShallowEqualityWith(RANGE_ERROR_TYPE));
-    assertTrue(
-        NO_RESOLVED_TYPE.canTestForShallowEqualityWith(REFERENCE_ERROR_TYPE));
     assertTrue(NO_RESOLVED_TYPE.canTestForShallowEqualityWith(REGEXP_TYPE));
     assertTrue(NO_RESOLVED_TYPE.canTestForShallowEqualityWith(STRING_TYPE));
     assertTrue(
         NO_RESOLVED_TYPE.canTestForShallowEqualityWith(STRING_OBJECT_TYPE));
     assertTrue(NO_RESOLVED_TYPE.canTestForShallowEqualityWith(SYMBOL_TYPE));
     assertTrue(NO_RESOLVED_TYPE.canTestForShallowEqualityWith(SYMBOL_OBJECT_TYPE));
-    assertTrue(
-        NO_RESOLVED_TYPE.canTestForShallowEqualityWith(SYNTAX_ERROR_TYPE));
-    assertTrue(NO_RESOLVED_TYPE.canTestForShallowEqualityWith(TYPE_ERROR_TYPE));
     assertTrue(NO_RESOLVED_TYPE.canTestForShallowEqualityWith(ALL_TYPE));
     assertTrue(NO_RESOLVED_TYPE.canTestForShallowEqualityWith(VOID_TYPE));
 
@@ -909,24 +805,17 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertFalse(ARRAY_TYPE.canTestForShallowEqualityWith(BOOLEAN_TYPE));
     assertFalse(ARRAY_TYPE.canTestForShallowEqualityWith(BOOLEAN_OBJECT_TYPE));
     assertFalse(ARRAY_TYPE.canTestForShallowEqualityWith(DATE_TYPE));
-    assertFalse(ARRAY_TYPE.canTestForShallowEqualityWith(ERROR_TYPE));
-    assertFalse(ARRAY_TYPE.canTestForShallowEqualityWith(EVAL_ERROR_TYPE));
     assertFalse(ARRAY_TYPE.canTestForShallowEqualityWith(functionType));
     assertFalse(ARRAY_TYPE.canTestForShallowEqualityWith(recordType));
     assertFalse(ARRAY_TYPE.canTestForShallowEqualityWith(NULL_TYPE));
     assertFalse(ARRAY_TYPE.canTestForShallowEqualityWith(NUMBER_TYPE));
     assertFalse(ARRAY_TYPE.canTestForShallowEqualityWith(NUMBER_OBJECT_TYPE));
     assertTrue(ARRAY_TYPE.canTestForShallowEqualityWith(OBJECT_TYPE));
-    assertFalse(ARRAY_TYPE.canTestForShallowEqualityWith(URI_ERROR_TYPE));
-    assertFalse(ARRAY_TYPE.canTestForShallowEqualityWith(RANGE_ERROR_TYPE));
-    assertFalse(ARRAY_TYPE.canTestForShallowEqualityWith(REFERENCE_ERROR_TYPE));
     assertFalse(ARRAY_TYPE.canTestForShallowEqualityWith(REGEXP_TYPE));
     assertFalse(ARRAY_TYPE.canTestForShallowEqualityWith(STRING_TYPE));
     assertFalse(ARRAY_TYPE.canTestForShallowEqualityWith(STRING_OBJECT_TYPE));
     assertFalse(ARRAY_TYPE.canTestForShallowEqualityWith(SYMBOL_TYPE));
     assertFalse(ARRAY_TYPE.canTestForShallowEqualityWith(SYMBOL_OBJECT_TYPE));
-    assertFalse(ARRAY_TYPE.canTestForShallowEqualityWith(SYNTAX_ERROR_TYPE));
-    assertFalse(ARRAY_TYPE.canTestForShallowEqualityWith(TYPE_ERROR_TYPE));
     assertTrue(ARRAY_TYPE.canTestForShallowEqualityWith(ALL_TYPE));
     assertFalse(ARRAY_TYPE.canTestForShallowEqualityWith(VOID_TYPE));
 
@@ -1210,24 +1099,17 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertTrue(ALL_TYPE.canTestForShallowEqualityWith(BOOLEAN_TYPE));
     assertTrue(ALL_TYPE.canTestForShallowEqualityWith(BOOLEAN_OBJECT_TYPE));
     assertTrue(ALL_TYPE.canTestForShallowEqualityWith(DATE_TYPE));
-    assertTrue(ALL_TYPE.canTestForShallowEqualityWith(ERROR_TYPE));
-    assertTrue(ALL_TYPE.canTestForShallowEqualityWith(EVAL_ERROR_TYPE));
     assertTrue(ALL_TYPE.canTestForShallowEqualityWith(functionType));
     assertTrue(ALL_TYPE.canTestForShallowEqualityWith(recordType));
     assertTrue(ALL_TYPE.canTestForShallowEqualityWith(NULL_TYPE));
     assertTrue(ALL_TYPE.canTestForShallowEqualityWith(NUMBER_TYPE));
     assertTrue(ALL_TYPE.canTestForShallowEqualityWith(NUMBER_OBJECT_TYPE));
     assertTrue(ALL_TYPE.canTestForShallowEqualityWith(OBJECT_TYPE));
-    assertTrue(ALL_TYPE.canTestForShallowEqualityWith(URI_ERROR_TYPE));
-    assertTrue(ALL_TYPE.canTestForShallowEqualityWith(RANGE_ERROR_TYPE));
-    assertTrue(ALL_TYPE.canTestForShallowEqualityWith(REFERENCE_ERROR_TYPE));
     assertTrue(ALL_TYPE.canTestForShallowEqualityWith(REGEXP_TYPE));
     assertTrue(ALL_TYPE.canTestForShallowEqualityWith(STRING_TYPE));
     assertTrue(ALL_TYPE.canTestForShallowEqualityWith(STRING_OBJECT_TYPE));
     assertTrue(ALL_TYPE.canTestForShallowEqualityWith(SYMBOL_TYPE));
     assertTrue(ALL_TYPE.canTestForShallowEqualityWith(SYMBOL_OBJECT_TYPE));
-    assertTrue(ALL_TYPE.canTestForShallowEqualityWith(SYNTAX_ERROR_TYPE));
-    assertTrue(ALL_TYPE.canTestForShallowEqualityWith(TYPE_ERROR_TYPE));
     assertTrue(ALL_TYPE.canTestForShallowEqualityWith(ALL_TYPE));
     assertTrue(ALL_TYPE.canTestForShallowEqualityWith(VOID_TYPE));
 
@@ -1355,25 +1237,17 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertFalse(OBJECT_TYPE.canTestForShallowEqualityWith(BOOLEAN_TYPE));
     assertTrue(OBJECT_TYPE.canTestForShallowEqualityWith(BOOLEAN_OBJECT_TYPE));
     assertTrue(OBJECT_TYPE.canTestForShallowEqualityWith(DATE_TYPE));
-    assertTrue(OBJECT_TYPE.canTestForShallowEqualityWith(ERROR_TYPE));
-    assertTrue(OBJECT_TYPE.canTestForShallowEqualityWith(EVAL_ERROR_TYPE));
     assertTrue(OBJECT_TYPE.canTestForShallowEqualityWith(functionType));
     assertTrue(OBJECT_TYPE.canTestForShallowEqualityWith(recordType));
     assertFalse(OBJECT_TYPE.canTestForShallowEqualityWith(NULL_TYPE));
     assertFalse(OBJECT_TYPE.canTestForShallowEqualityWith(NUMBER_TYPE));
     assertTrue(OBJECT_TYPE.canTestForShallowEqualityWith(NUMBER_OBJECT_TYPE));
     assertTrue(OBJECT_TYPE.canTestForShallowEqualityWith(OBJECT_TYPE));
-    assertTrue(OBJECT_TYPE.canTestForShallowEqualityWith(URI_ERROR_TYPE));
-    assertTrue(OBJECT_TYPE.canTestForShallowEqualityWith(RANGE_ERROR_TYPE));
-    assertTrue(OBJECT_TYPE.
-        canTestForShallowEqualityWith(REFERENCE_ERROR_TYPE));
     assertTrue(OBJECT_TYPE.canTestForShallowEqualityWith(REGEXP_TYPE));
     assertFalse(OBJECT_TYPE.canTestForShallowEqualityWith(STRING_TYPE));
     assertTrue(OBJECT_TYPE.canTestForShallowEqualityWith(STRING_OBJECT_TYPE));
     assertFalse(OBJECT_TYPE.canTestForShallowEqualityWith(SYMBOL_TYPE));
     assertTrue(OBJECT_TYPE.canTestForShallowEqualityWith(SYMBOL_OBJECT_TYPE));
-    assertTrue(OBJECT_TYPE.canTestForShallowEqualityWith(SYNTAX_ERROR_TYPE));
-    assertTrue(OBJECT_TYPE.canTestForShallowEqualityWith(TYPE_ERROR_TYPE));
     assertTrue(OBJECT_TYPE.canTestForShallowEqualityWith(ALL_TYPE));
     assertFalse(OBJECT_TYPE.canTestForShallowEqualityWith(VOID_TYPE));
     assertTrue(OBJECT_TYPE.canTestForShallowEqualityWith(UNKNOWN_TYPE));
@@ -1525,30 +1399,18 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertFalse(NUMBER_OBJECT_TYPE.
         canTestForShallowEqualityWith(BOOLEAN_OBJECT_TYPE));
     assertFalse(NUMBER_OBJECT_TYPE.canTestForShallowEqualityWith(DATE_TYPE));
-    assertFalse(NUMBER_OBJECT_TYPE.canTestForShallowEqualityWith(ERROR_TYPE));
-    assertFalse(NUMBER_OBJECT_TYPE.
-        canTestForShallowEqualityWith(EVAL_ERROR_TYPE));
     assertFalse(NUMBER_OBJECT_TYPE.canTestForShallowEqualityWith(functionType));
     assertFalse(NUMBER_OBJECT_TYPE.canTestForShallowEqualityWith(NULL_TYPE));
     assertFalse(NUMBER_OBJECT_TYPE.canTestForShallowEqualityWith(NUMBER_TYPE));
     assertTrue(NUMBER_OBJECT_TYPE.
         canTestForShallowEqualityWith(NUMBER_OBJECT_TYPE));
     assertTrue(NUMBER_OBJECT_TYPE.canTestForShallowEqualityWith(OBJECT_TYPE));
-    assertFalse(NUMBER_OBJECT_TYPE.
-        canTestForShallowEqualityWith(URI_ERROR_TYPE));
-    assertFalse(NUMBER_OBJECT_TYPE.
-        canTestForShallowEqualityWith(RANGE_ERROR_TYPE));
-    assertFalse(NUMBER_OBJECT_TYPE.
-        canTestForShallowEqualityWith(REFERENCE_ERROR_TYPE));
     assertFalse(NUMBER_OBJECT_TYPE.canTestForShallowEqualityWith(REGEXP_TYPE));
     assertFalse(NUMBER_OBJECT_TYPE.canTestForShallowEqualityWith(STRING_TYPE));
     assertFalse(NUMBER_OBJECT_TYPE.
         canTestForShallowEqualityWith(STRING_OBJECT_TYPE));
     assertFalse(NUMBER_OBJECT_TYPE.canTestForShallowEqualityWith(SYMBOL_TYPE));
     assertFalse(NUMBER_OBJECT_TYPE.canTestForShallowEqualityWith(SYMBOL_OBJECT_TYPE));
-    assertFalse(NUMBER_OBJECT_TYPE.canTestForShallowEqualityWith(SYNTAX_ERROR_TYPE));
-    assertFalse(NUMBER_OBJECT_TYPE.
-        canTestForShallowEqualityWith(TYPE_ERROR_TYPE));
     assertTrue(NUMBER_OBJECT_TYPE.canTestForShallowEqualityWith(ALL_TYPE));
     assertFalse(NUMBER_OBJECT_TYPE.canTestForShallowEqualityWith(VOID_TYPE));
 
@@ -1671,24 +1533,16 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertFalse(NUMBER_TYPE.canTestForShallowEqualityWith(BOOLEAN_TYPE));
     assertFalse(NUMBER_TYPE.canTestForShallowEqualityWith(BOOLEAN_OBJECT_TYPE));
     assertFalse(NUMBER_TYPE.canTestForShallowEqualityWith(DATE_TYPE));
-    assertFalse(NUMBER_TYPE.canTestForShallowEqualityWith(ERROR_TYPE));
-    assertFalse(NUMBER_TYPE.canTestForShallowEqualityWith(EVAL_ERROR_TYPE));
     assertFalse(NUMBER_TYPE.canTestForShallowEqualityWith(functionType));
     assertFalse(NUMBER_TYPE.canTestForShallowEqualityWith(NULL_TYPE));
     assertTrue(NUMBER_TYPE.canTestForShallowEqualityWith(NUMBER_TYPE));
     assertFalse(NUMBER_TYPE.canTestForShallowEqualityWith(NUMBER_OBJECT_TYPE));
     assertFalse(NUMBER_TYPE.canTestForShallowEqualityWith(OBJECT_TYPE));
-    assertFalse(NUMBER_TYPE.canTestForShallowEqualityWith(URI_ERROR_TYPE));
-    assertFalse(NUMBER_TYPE.canTestForShallowEqualityWith(RANGE_ERROR_TYPE));
-    assertFalse(NUMBER_TYPE.
-        canTestForShallowEqualityWith(REFERENCE_ERROR_TYPE));
     assertFalse(NUMBER_TYPE.canTestForShallowEqualityWith(REGEXP_TYPE));
     assertFalse(NUMBER_TYPE.canTestForShallowEqualityWith(SYMBOL_TYPE));
     assertFalse(NUMBER_TYPE.canTestForShallowEqualityWith(SYMBOL_OBJECT_TYPE));
     assertFalse(NUMBER_TYPE.canTestForShallowEqualityWith(STRING_TYPE));
     assertFalse(NUMBER_TYPE.canTestForShallowEqualityWith(STRING_OBJECT_TYPE));
-    assertFalse(NUMBER_TYPE.canTestForShallowEqualityWith(SYNTAX_ERROR_TYPE));
-    assertFalse(NUMBER_TYPE.canTestForShallowEqualityWith(TYPE_ERROR_TYPE));
     assertTrue(NUMBER_TYPE.canTestForShallowEqualityWith(ALL_TYPE));
     assertFalse(NUMBER_TYPE.canTestForShallowEqualityWith(VOID_TYPE));
     assertTrue(NUMBER_TYPE.canTestForShallowEqualityWith(UNKNOWN_TYPE));
@@ -1809,23 +1663,16 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertCannotTestForEqualityWith(NULL_TYPE, BOOLEAN_TYPE);
     assertCannotTestForEqualityWith(NULL_TYPE, BOOLEAN_OBJECT_TYPE);
     assertCannotTestForEqualityWith(NULL_TYPE, DATE_TYPE);
-    assertCannotTestForEqualityWith(NULL_TYPE, ERROR_TYPE);
-    assertCannotTestForEqualityWith(NULL_TYPE, EVAL_ERROR_TYPE);
     assertCannotTestForEqualityWith(NULL_TYPE, functionType);
     assertCannotTestForEqualityWith(NULL_TYPE, NULL_TYPE);
     assertCannotTestForEqualityWith(NULL_TYPE, NUMBER_TYPE);
     assertCannotTestForEqualityWith(NULL_TYPE, NUMBER_OBJECT_TYPE);
     assertCannotTestForEqualityWith(NULL_TYPE, OBJECT_TYPE);
-    assertCannotTestForEqualityWith(NULL_TYPE, URI_ERROR_TYPE);
-    assertCannotTestForEqualityWith(NULL_TYPE, RANGE_ERROR_TYPE);
-    assertCannotTestForEqualityWith(NULL_TYPE, REFERENCE_ERROR_TYPE);
     assertCannotTestForEqualityWith(NULL_TYPE, REGEXP_TYPE);
     assertCannotTestForEqualityWith(NULL_TYPE, STRING_TYPE);
     assertCannotTestForEqualityWith(NULL_TYPE, STRING_OBJECT_TYPE);
     assertCannotTestForEqualityWith(NULL_TYPE, SYMBOL_TYPE);
     assertCannotTestForEqualityWith(NULL_TYPE, SYMBOL_OBJECT_TYPE);
-    assertCannotTestForEqualityWith(NULL_TYPE, SYNTAX_ERROR_TYPE);
-    assertCannotTestForEqualityWith(NULL_TYPE, TYPE_ERROR_TYPE);
     assertCannotTestForEqualityWith(NULL_TYPE, VOID_TYPE);
 
     // canTestForShallowEqualityWith
@@ -1836,24 +1683,16 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertFalse(NULL_TYPE.
         canTestForShallowEqualityWith(BOOLEAN_OBJECT_TYPE));
     assertFalse(NULL_TYPE.canTestForShallowEqualityWith(DATE_TYPE));
-    assertFalse(NULL_TYPE.canTestForShallowEqualityWith(ERROR_TYPE));
-    assertFalse(NULL_TYPE.canTestForShallowEqualityWith(EVAL_ERROR_TYPE));
     assertFalse(NULL_TYPE.canTestForShallowEqualityWith(functionType));
     assertTrue(NULL_TYPE.canTestForShallowEqualityWith(NULL_TYPE));
     assertFalse(NULL_TYPE.canTestForShallowEqualityWith(NUMBER_TYPE));
     assertFalse(NULL_TYPE.canTestForShallowEqualityWith(NUMBER_OBJECT_TYPE));
     assertFalse(NULL_TYPE.canTestForShallowEqualityWith(OBJECT_TYPE));
-    assertFalse(NULL_TYPE.canTestForShallowEqualityWith(URI_ERROR_TYPE));
-    assertFalse(NULL_TYPE.canTestForShallowEqualityWith(RANGE_ERROR_TYPE));
-    assertFalse(NULL_TYPE.
-        canTestForShallowEqualityWith(REFERENCE_ERROR_TYPE));
     assertFalse(NULL_TYPE.canTestForShallowEqualityWith(REGEXP_TYPE));
     assertFalse(NULL_TYPE.canTestForShallowEqualityWith(STRING_TYPE));
     assertFalse(NULL_TYPE.canTestForShallowEqualityWith(STRING_OBJECT_TYPE));
     assertFalse(NULL_TYPE.canTestForShallowEqualityWith(SYMBOL_TYPE));
     assertFalse(NULL_TYPE.canTestForShallowEqualityWith(SYMBOL_OBJECT_TYPE));
-    assertFalse(NULL_TYPE.canTestForShallowEqualityWith(SYNTAX_ERROR_TYPE));
-    assertFalse(NULL_TYPE.canTestForShallowEqualityWith(TYPE_ERROR_TYPE));
     assertTrue(NULL_TYPE.canTestForShallowEqualityWith(ALL_TYPE));
     assertFalse(NULL_TYPE.canTestForShallowEqualityWith(VOID_TYPE));
     assertTrue(NULL_TYPE.canTestForShallowEqualityWith(
@@ -1944,23 +1783,16 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertFalse(DATE_TYPE.isSubtypeOf(BOOLEAN_TYPE));
     assertFalse(DATE_TYPE.isSubtypeOf(BOOLEAN_OBJECT_TYPE));
     assertTrue(DATE_TYPE.isSubtypeOf(DATE_TYPE));
-    assertFalse(DATE_TYPE.isSubtypeOf(ERROR_TYPE));
-    assertFalse(DATE_TYPE.isSubtypeOf(EVAL_ERROR_TYPE));
     assertFalse(DATE_TYPE.isSubtypeOf(functionType));
     assertFalse(DATE_TYPE.isSubtypeOf(NULL_TYPE));
     assertFalse(DATE_TYPE.isSubtypeOf(NUMBER_TYPE));
     assertFalse(DATE_TYPE.isSubtypeOf(NUMBER_OBJECT_TYPE));
     assertTrue(DATE_TYPE.isSubtypeOf(OBJECT_TYPE));
-    assertFalse(DATE_TYPE.isSubtypeOf(URI_ERROR_TYPE));
-    assertFalse(DATE_TYPE.isSubtypeOf(RANGE_ERROR_TYPE));
-    assertFalse(DATE_TYPE.isSubtypeOf(REFERENCE_ERROR_TYPE));
     assertFalse(DATE_TYPE.isSubtypeOf(REGEXP_TYPE));
     assertFalse(DATE_TYPE.isSubtypeOf(STRING_TYPE));
     assertFalse(DATE_TYPE.isSubtypeOf(STRING_OBJECT_TYPE));
     assertFalse(DATE_TYPE.isSubtypeOf(SYMBOL_TYPE));
     assertFalse(DATE_TYPE.isSubtypeOf(SYMBOL_OBJECT_TYPE));
-    assertFalse(DATE_TYPE.isSubtypeOf(SYNTAX_ERROR_TYPE));
-    assertFalse(DATE_TYPE.isSubtypeOf(TYPE_ERROR_TYPE));
     assertTrue(DATE_TYPE.isSubtypeOf(ALL_TYPE));
     assertFalse(DATE_TYPE.isSubtypeOf(VOID_TYPE));
 
@@ -1988,24 +1820,16 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertFalse(DATE_TYPE.
         canTestForShallowEqualityWith(BOOLEAN_OBJECT_TYPE));
     assertTrue(DATE_TYPE.canTestForShallowEqualityWith(DATE_TYPE));
-    assertFalse(DATE_TYPE.canTestForShallowEqualityWith(ERROR_TYPE));
-    assertFalse(DATE_TYPE.canTestForShallowEqualityWith(EVAL_ERROR_TYPE));
     assertFalse(DATE_TYPE.canTestForShallowEqualityWith(functionType));
     assertFalse(DATE_TYPE.canTestForShallowEqualityWith(NULL_TYPE));
     assertFalse(DATE_TYPE.canTestForShallowEqualityWith(NUMBER_TYPE));
     assertFalse(DATE_TYPE.canTestForShallowEqualityWith(NUMBER_OBJECT_TYPE));
     assertTrue(DATE_TYPE.canTestForShallowEqualityWith(OBJECT_TYPE));
-    assertFalse(DATE_TYPE.canTestForShallowEqualityWith(URI_ERROR_TYPE));
-    assertFalse(DATE_TYPE.canTestForShallowEqualityWith(RANGE_ERROR_TYPE));
-    assertFalse(DATE_TYPE.
-        canTestForShallowEqualityWith(REFERENCE_ERROR_TYPE));
     assertFalse(DATE_TYPE.canTestForShallowEqualityWith(REGEXP_TYPE));
     assertFalse(DATE_TYPE.canTestForShallowEqualityWith(STRING_TYPE));
     assertFalse(DATE_TYPE.canTestForShallowEqualityWith(STRING_OBJECT_TYPE));
     assertFalse(DATE_TYPE.canTestForShallowEqualityWith(SYMBOL_TYPE));
     assertFalse(DATE_TYPE.canTestForShallowEqualityWith(SYMBOL_OBJECT_TYPE));
-    assertFalse(DATE_TYPE.canTestForShallowEqualityWith(SYNTAX_ERROR_TYPE));
-    assertFalse(DATE_TYPE.canTestForShallowEqualityWith(TYPE_ERROR_TYPE));
     assertTrue(DATE_TYPE.canTestForShallowEqualityWith(ALL_TYPE));
     assertFalse(DATE_TYPE.canTestForShallowEqualityWith(VOID_TYPE));
 
@@ -2163,23 +1987,16 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertFalse(REGEXP_TYPE.isSubtypeOf(BOOLEAN_TYPE));
     assertFalse(REGEXP_TYPE.isSubtypeOf(BOOLEAN_OBJECT_TYPE));
     assertFalse(REGEXP_TYPE.isSubtypeOf(DATE_TYPE));
-    assertFalse(REGEXP_TYPE.isSubtypeOf(ERROR_TYPE));
-    assertFalse(REGEXP_TYPE.isSubtypeOf(EVAL_ERROR_TYPE));
     assertFalse(REGEXP_TYPE.isSubtypeOf(functionType));
     assertFalse(REGEXP_TYPE.isSubtypeOf(NULL_TYPE));
     assertFalse(REGEXP_TYPE.isSubtypeOf(NUMBER_TYPE));
     assertFalse(REGEXP_TYPE.isSubtypeOf(NUMBER_OBJECT_TYPE));
     assertTrue(REGEXP_TYPE.isSubtypeOf(OBJECT_TYPE));
-    assertFalse(REGEXP_TYPE.isSubtypeOf(URI_ERROR_TYPE));
-    assertFalse(REGEXP_TYPE.isSubtypeOf(RANGE_ERROR_TYPE));
-    assertFalse(REGEXP_TYPE.isSubtypeOf(REFERENCE_ERROR_TYPE));
     assertTrue(REGEXP_TYPE.isSubtypeOf(REGEXP_TYPE));
     assertFalse(REGEXP_TYPE.isSubtypeOf(STRING_TYPE));
     assertFalse(REGEXP_TYPE.isSubtypeOf(STRING_OBJECT_TYPE));
     assertFalse(REGEXP_TYPE.isSubtypeOf(SYMBOL_TYPE));
     assertFalse(REGEXP_TYPE.isSubtypeOf(SYMBOL_OBJECT_TYPE));
-    assertFalse(REGEXP_TYPE.isSubtypeOf(SYNTAX_ERROR_TYPE));
-    assertFalse(REGEXP_TYPE.isSubtypeOf(TYPE_ERROR_TYPE));
     assertTrue(REGEXP_TYPE.isSubtypeOf(ALL_TYPE));
     assertFalse(REGEXP_TYPE.isSubtypeOf(VOID_TYPE));
 
@@ -2207,24 +2024,16 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertFalse(REGEXP_TYPE.
         canTestForShallowEqualityWith(BOOLEAN_OBJECT_TYPE));
     assertFalse(REGEXP_TYPE.canTestForShallowEqualityWith(DATE_TYPE));
-    assertFalse(REGEXP_TYPE.canTestForShallowEqualityWith(ERROR_TYPE));
-    assertFalse(REGEXP_TYPE.canTestForShallowEqualityWith(EVAL_ERROR_TYPE));
     assertFalse(REGEXP_TYPE.canTestForShallowEqualityWith(functionType));
     assertFalse(REGEXP_TYPE.canTestForShallowEqualityWith(NULL_TYPE));
     assertFalse(REGEXP_TYPE.canTestForShallowEqualityWith(NUMBER_TYPE));
     assertFalse(REGEXP_TYPE.canTestForShallowEqualityWith(NUMBER_OBJECT_TYPE));
     assertTrue(REGEXP_TYPE.canTestForShallowEqualityWith(OBJECT_TYPE));
-    assertFalse(REGEXP_TYPE.canTestForShallowEqualityWith(URI_ERROR_TYPE));
-    assertFalse(REGEXP_TYPE.canTestForShallowEqualityWith(RANGE_ERROR_TYPE));
-    assertFalse(REGEXP_TYPE.
-        canTestForShallowEqualityWith(REFERENCE_ERROR_TYPE));
     assertTrue(REGEXP_TYPE.canTestForShallowEqualityWith(REGEXP_TYPE));
     assertFalse(REGEXP_TYPE.canTestForShallowEqualityWith(STRING_TYPE));
     assertFalse(REGEXP_TYPE.canTestForShallowEqualityWith(STRING_OBJECT_TYPE));
     assertFalse(REGEXP_TYPE.canTestForShallowEqualityWith(SYMBOL_TYPE));
     assertFalse(REGEXP_TYPE.canTestForShallowEqualityWith(SYMBOL_OBJECT_TYPE));
-    assertFalse(REGEXP_TYPE.canTestForShallowEqualityWith(SYNTAX_ERROR_TYPE));
-    assertFalse(REGEXP_TYPE.canTestForShallowEqualityWith(TYPE_ERROR_TYPE));
     assertTrue(REGEXP_TYPE.canTestForShallowEqualityWith(ALL_TYPE));
     assertFalse(REGEXP_TYPE.canTestForShallowEqualityWith(VOID_TYPE));
 
@@ -2365,31 +2174,18 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertFalse(STRING_OBJECT_TYPE.
         canTestForShallowEqualityWith(BOOLEAN_OBJECT_TYPE));
     assertFalse(STRING_OBJECT_TYPE.canTestForShallowEqualityWith(DATE_TYPE));
-    assertFalse(STRING_OBJECT_TYPE.canTestForShallowEqualityWith(ERROR_TYPE));
-    assertFalse(STRING_OBJECT_TYPE.
-        canTestForShallowEqualityWith(EVAL_ERROR_TYPE));
     assertFalse(STRING_OBJECT_TYPE.canTestForShallowEqualityWith(functionType));
     assertFalse(STRING_OBJECT_TYPE.canTestForShallowEqualityWith(NULL_TYPE));
     assertFalse(STRING_OBJECT_TYPE.canTestForShallowEqualityWith(NUMBER_TYPE));
     assertFalse(STRING_OBJECT_TYPE.
         canTestForShallowEqualityWith(NUMBER_OBJECT_TYPE));
     assertTrue(STRING_OBJECT_TYPE.canTestForShallowEqualityWith(OBJECT_TYPE));
-    assertFalse(STRING_OBJECT_TYPE.
-        canTestForShallowEqualityWith(URI_ERROR_TYPE));
-    assertFalse(STRING_OBJECT_TYPE.
-        canTestForShallowEqualityWith(RANGE_ERROR_TYPE));
-    assertFalse(STRING_OBJECT_TYPE.
-        canTestForShallowEqualityWith(REFERENCE_ERROR_TYPE));
     assertFalse(STRING_OBJECT_TYPE.canTestForShallowEqualityWith(REGEXP_TYPE));
     assertFalse(STRING_OBJECT_TYPE.canTestForShallowEqualityWith(STRING_TYPE));
     assertTrue(STRING_OBJECT_TYPE.
         canTestForShallowEqualityWith(STRING_OBJECT_TYPE));
     assertFalse(STRING_OBJECT_TYPE.canTestForShallowEqualityWith(SYMBOL_TYPE));
     assertFalse(STRING_OBJECT_TYPE.canTestForShallowEqualityWith(SYMBOL_OBJECT_TYPE));
-    assertFalse(STRING_OBJECT_TYPE.
-        canTestForShallowEqualityWith(SYNTAX_ERROR_TYPE));
-    assertFalse(STRING_OBJECT_TYPE.
-        canTestForShallowEqualityWith(TYPE_ERROR_TYPE));
     assertTrue(STRING_OBJECT_TYPE.canTestForShallowEqualityWith(ALL_TYPE));
     assertFalse(STRING_OBJECT_TYPE.canTestForShallowEqualityWith(VOID_TYPE));
     assertTrue(STRING_OBJECT_TYPE.canTestForShallowEqualityWith(UNKNOWN_TYPE));
@@ -2537,24 +2333,16 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertFalse(STRING_TYPE.canTestForShallowEqualityWith(BOOLEAN_TYPE));
     assertFalse(STRING_TYPE.canTestForShallowEqualityWith(BOOLEAN_OBJECT_TYPE));
     assertFalse(STRING_TYPE.canTestForShallowEqualityWith(DATE_TYPE));
-    assertFalse(STRING_TYPE.canTestForShallowEqualityWith(ERROR_TYPE));
-    assertFalse(STRING_TYPE.canTestForShallowEqualityWith(EVAL_ERROR_TYPE));
     assertFalse(STRING_TYPE.canTestForShallowEqualityWith(functionType));
     assertFalse(STRING_TYPE.canTestForShallowEqualityWith(NULL_TYPE));
     assertFalse(STRING_TYPE.canTestForShallowEqualityWith(NUMBER_TYPE));
     assertFalse(STRING_TYPE.canTestForShallowEqualityWith(NUMBER_OBJECT_TYPE));
     assertFalse(STRING_TYPE.canTestForShallowEqualityWith(OBJECT_TYPE));
-    assertFalse(STRING_TYPE.canTestForShallowEqualityWith(URI_ERROR_TYPE));
-    assertFalse(STRING_TYPE.canTestForShallowEqualityWith(RANGE_ERROR_TYPE));
-    assertFalse(STRING_TYPE.
-        canTestForShallowEqualityWith(REFERENCE_ERROR_TYPE));
     assertFalse(STRING_TYPE.canTestForShallowEqualityWith(REGEXP_TYPE));
     assertTrue(STRING_TYPE.canTestForShallowEqualityWith(STRING_TYPE));
     assertFalse(STRING_TYPE.canTestForShallowEqualityWith(STRING_OBJECT_TYPE));
     assertFalse(STRING_TYPE.canTestForShallowEqualityWith(SYMBOL_TYPE));
     assertFalse(STRING_TYPE.canTestForShallowEqualityWith(SYMBOL_OBJECT_TYPE));
-    assertFalse(STRING_TYPE.canTestForShallowEqualityWith(SYNTAX_ERROR_TYPE));
-    assertFalse(STRING_TYPE.canTestForShallowEqualityWith(TYPE_ERROR_TYPE));
     assertTrue(STRING_TYPE.canTestForShallowEqualityWith(ALL_TYPE));
     assertFalse(STRING_TYPE.canTestForShallowEqualityWith(VOID_TYPE));
     assertTrue(STRING_TYPE.canTestForShallowEqualityWith(UNKNOWN_TYPE));
@@ -2655,21 +2443,14 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertTrue(SYMBOL_TYPE.canTestForShallowEqualityWith(SYMBOL_TYPE));
     assertFalse(SYMBOL_TYPE.canTestForShallowEqualityWith(BOOLEAN_TYPE));
     assertFalse(SYMBOL_TYPE.canTestForShallowEqualityWith(DATE_TYPE));
-    assertFalse(SYMBOL_TYPE.canTestForShallowEqualityWith(ERROR_TYPE));
-    assertFalse(SYMBOL_TYPE.canTestForShallowEqualityWith(EVAL_ERROR_TYPE));
     assertFalse(SYMBOL_TYPE.canTestForShallowEqualityWith(functionType));
     assertFalse(SYMBOL_TYPE.canTestForShallowEqualityWith(NULL_TYPE));
     assertFalse(SYMBOL_TYPE.canTestForShallowEqualityWith(NUMBER_TYPE));
     assertFalse(SYMBOL_TYPE.canTestForShallowEqualityWith(NUMBER_OBJECT_TYPE));
     assertFalse(SYMBOL_TYPE.canTestForShallowEqualityWith(OBJECT_TYPE));
-    assertFalse(SYMBOL_TYPE.canTestForShallowEqualityWith(URI_ERROR_TYPE));
-    assertFalse(SYMBOL_TYPE.canTestForShallowEqualityWith(RANGE_ERROR_TYPE));
-    assertFalse(SYMBOL_TYPE.canTestForShallowEqualityWith(REFERENCE_ERROR_TYPE));
     assertFalse(SYMBOL_TYPE.canTestForShallowEqualityWith(REGEXP_TYPE));
     assertFalse(SYMBOL_TYPE.canTestForShallowEqualityWith(STRING_TYPE));
     assertFalse(SYMBOL_TYPE.canTestForShallowEqualityWith(STRING_OBJECT_TYPE));
-    assertFalse(SYMBOL_TYPE.canTestForShallowEqualityWith(SYNTAX_ERROR_TYPE));
-    assertFalse(SYMBOL_TYPE.canTestForShallowEqualityWith(TYPE_ERROR_TYPE));
     assertTrue(SYMBOL_TYPE.canTestForShallowEqualityWith(ALL_TYPE));
     assertFalse(SYMBOL_TYPE.canTestForShallowEqualityWith(VOID_TYPE));
     assertTrue(SYMBOL_TYPE.canTestForShallowEqualityWith(UNKNOWN_TYPE));
@@ -2752,21 +2533,14 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertFalse(SYMBOL_OBJECT_TYPE.canTestForShallowEqualityWith(SYMBOL_TYPE));
     assertTrue(SYMBOL_OBJECT_TYPE.canTestForShallowEqualityWith(SYMBOL_OBJECT_TYPE));
     assertFalse(SYMBOL_OBJECT_TYPE.canTestForShallowEqualityWith(DATE_TYPE));
-    assertFalse(SYMBOL_OBJECT_TYPE.canTestForShallowEqualityWith(ERROR_TYPE));
-    assertFalse(SYMBOL_OBJECT_TYPE.canTestForShallowEqualityWith(EVAL_ERROR_TYPE));
     assertFalse(SYMBOL_OBJECT_TYPE.canTestForShallowEqualityWith(functionType));
     assertFalse(SYMBOL_OBJECT_TYPE.canTestForShallowEqualityWith(NULL_TYPE));
     assertFalse(SYMBOL_OBJECT_TYPE.canTestForShallowEqualityWith(NUMBER_TYPE));
     assertFalse(SYMBOL_OBJECT_TYPE.canTestForShallowEqualityWith(NUMBER_OBJECT_TYPE));
     assertTrue(SYMBOL_OBJECT_TYPE.canTestForShallowEqualityWith(OBJECT_TYPE));
-    assertFalse(SYMBOL_OBJECT_TYPE.canTestForShallowEqualityWith(URI_ERROR_TYPE));
-    assertFalse(SYMBOL_OBJECT_TYPE.canTestForShallowEqualityWith(RANGE_ERROR_TYPE));
-    assertFalse(SYMBOL_OBJECT_TYPE.canTestForShallowEqualityWith(REFERENCE_ERROR_TYPE));
     assertFalse(SYMBOL_OBJECT_TYPE.canTestForShallowEqualityWith(REGEXP_TYPE));
     assertFalse(SYMBOL_OBJECT_TYPE.canTestForShallowEqualityWith(STRING_TYPE));
     assertFalse(SYMBOL_OBJECT_TYPE.canTestForShallowEqualityWith(STRING_OBJECT_TYPE));
-    assertFalse(SYMBOL_OBJECT_TYPE.canTestForShallowEqualityWith(SYNTAX_ERROR_TYPE));
-    assertFalse(SYMBOL_OBJECT_TYPE.canTestForShallowEqualityWith(TYPE_ERROR_TYPE));
     assertTrue(SYMBOL_OBJECT_TYPE.canTestForShallowEqualityWith(ALL_TYPE));
     assertFalse(SYMBOL_OBJECT_TYPE.canTestForShallowEqualityWith(VOID_TYPE));
 
@@ -2860,24 +2634,16 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertFalse(recordType.
         canTestForShallowEqualityWith(BOOLEAN_OBJECT_TYPE));
     assertFalse(recordType.canTestForShallowEqualityWith(DATE_TYPE));
-    assertFalse(recordType.canTestForShallowEqualityWith(ERROR_TYPE));
-    assertFalse(recordType.canTestForShallowEqualityWith(EVAL_ERROR_TYPE));
     assertTrue(recordType.canTestForShallowEqualityWith(recordType));
     assertFalse(recordType.canTestForShallowEqualityWith(NULL_TYPE));
     assertFalse(recordType.canTestForShallowEqualityWith(NUMBER_TYPE));
     assertFalse(recordType.canTestForShallowEqualityWith(NUMBER_OBJECT_TYPE));
     assertTrue(recordType.canTestForShallowEqualityWith(OBJECT_TYPE));
-    assertFalse(recordType.canTestForShallowEqualityWith(URI_ERROR_TYPE));
-    assertFalse(recordType.canTestForShallowEqualityWith(RANGE_ERROR_TYPE));
-    assertFalse(recordType.
-        canTestForShallowEqualityWith(REFERENCE_ERROR_TYPE));
     assertFalse(recordType.canTestForShallowEqualityWith(REGEXP_TYPE));
     assertFalse(recordType.canTestForShallowEqualityWith(STRING_TYPE));
     assertFalse(recordType.canTestForShallowEqualityWith(STRING_OBJECT_TYPE));
     assertFalse(recordType.canTestForShallowEqualityWith(SYMBOL_TYPE));
     assertFalse(recordType.canTestForShallowEqualityWith(SYMBOL_OBJECT_TYPE));
-    assertFalse(recordType.canTestForShallowEqualityWith(SYNTAX_ERROR_TYPE));
-    assertFalse(recordType.canTestForShallowEqualityWith(TYPE_ERROR_TYPE));
     assertTrue(recordType.canTestForShallowEqualityWith(ALL_TYPE));
     assertFalse(recordType.canTestForShallowEqualityWith(VOID_TYPE));
     assertTrue(recordType.canTestForShallowEqualityWith(UNKNOWN_TYPE));
@@ -2939,24 +2705,16 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertFalse(functionInst.
         canTestForShallowEqualityWith(BOOLEAN_OBJECT_TYPE));
     assertFalse(functionInst.canTestForShallowEqualityWith(DATE_TYPE));
-    assertFalse(functionInst.canTestForShallowEqualityWith(ERROR_TYPE));
-    assertFalse(functionInst.canTestForShallowEqualityWith(EVAL_ERROR_TYPE));
     assertTrue(functionInst.canTestForShallowEqualityWith(functionInst));
     assertFalse(functionInst.canTestForShallowEqualityWith(NULL_TYPE));
     assertFalse(functionInst.canTestForShallowEqualityWith(NUMBER_TYPE));
     assertFalse(functionInst.canTestForShallowEqualityWith(NUMBER_OBJECT_TYPE));
     assertTrue(functionInst.canTestForShallowEqualityWith(OBJECT_TYPE));
-    assertFalse(functionInst.canTestForShallowEqualityWith(URI_ERROR_TYPE));
-    assertFalse(functionInst.canTestForShallowEqualityWith(RANGE_ERROR_TYPE));
-    assertFalse(functionInst.
-        canTestForShallowEqualityWith(REFERENCE_ERROR_TYPE));
     assertFalse(functionInst.canTestForShallowEqualityWith(REGEXP_TYPE));
     assertFalse(functionInst.canTestForShallowEqualityWith(STRING_TYPE));
     assertFalse(functionInst.canTestForShallowEqualityWith(STRING_OBJECT_TYPE));
     assertFalse(functionInst.canTestForShallowEqualityWith(SYMBOL_TYPE));
     assertFalse(functionInst.canTestForShallowEqualityWith(SYMBOL_OBJECT_TYPE));
-    assertFalse(functionInst.canTestForShallowEqualityWith(SYNTAX_ERROR_TYPE));
-    assertFalse(functionInst.canTestForShallowEqualityWith(TYPE_ERROR_TYPE));
     assertTrue(functionInst.canTestForShallowEqualityWith(ALL_TYPE));
     assertFalse(functionInst.canTestForShallowEqualityWith(VOID_TYPE));
     assertTrue(functionInst.canTestForShallowEqualityWith(UNKNOWN_TYPE));
@@ -3025,24 +2783,16 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertFalse(functionType.
         canTestForShallowEqualityWith(BOOLEAN_OBJECT_TYPE));
     assertFalse(functionType.canTestForShallowEqualityWith(DATE_TYPE));
-    assertFalse(functionType.canTestForShallowEqualityWith(ERROR_TYPE));
-    assertFalse(functionType.canTestForShallowEqualityWith(EVAL_ERROR_TYPE));
     assertTrue(functionType.canTestForShallowEqualityWith(functionType));
     assertFalse(functionType.canTestForShallowEqualityWith(NULL_TYPE));
     assertFalse(functionType.canTestForShallowEqualityWith(NUMBER_TYPE));
     assertFalse(functionType.canTestForShallowEqualityWith(NUMBER_OBJECT_TYPE));
     assertTrue(functionType.canTestForShallowEqualityWith(OBJECT_TYPE));
-    assertFalse(functionType.canTestForShallowEqualityWith(URI_ERROR_TYPE));
-    assertFalse(functionType.canTestForShallowEqualityWith(RANGE_ERROR_TYPE));
-    assertFalse(functionType.
-        canTestForShallowEqualityWith(REFERENCE_ERROR_TYPE));
     assertFalse(functionType.canTestForShallowEqualityWith(REGEXP_TYPE));
     assertFalse(functionType.canTestForShallowEqualityWith(STRING_TYPE));
     assertFalse(functionType.canTestForShallowEqualityWith(STRING_OBJECT_TYPE));
     assertFalse(functionType.canTestForShallowEqualityWith(SYMBOL_TYPE));
     assertFalse(functionType.canTestForShallowEqualityWith(SYMBOL_OBJECT_TYPE));
-    assertFalse(functionType.canTestForShallowEqualityWith(SYNTAX_ERROR_TYPE));
-    assertFalse(functionType.canTestForShallowEqualityWith(TYPE_ERROR_TYPE));
     assertTrue(functionType.canTestForShallowEqualityWith(ALL_TYPE));
     assertFalse(functionType.canTestForShallowEqualityWith(VOID_TYPE));
     assertTrue(functionType.canTestForShallowEqualityWith(UNKNOWN_TYPE));
@@ -3676,21 +3426,14 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertFalse(VOID_TYPE.canTestForShallowEqualityWith(BOOLEAN_TYPE));
     assertFalse(VOID_TYPE.canTestForShallowEqualityWith(BOOLEAN_OBJECT_TYPE));
     assertFalse(VOID_TYPE.canTestForShallowEqualityWith(DATE_TYPE));
-    assertFalse(VOID_TYPE.canTestForShallowEqualityWith(ERROR_TYPE));
-    assertFalse(VOID_TYPE.canTestForShallowEqualityWith(EVAL_ERROR_TYPE));
     assertFalse(VOID_TYPE.canTestForShallowEqualityWith(functionType));
     assertFalse(VOID_TYPE.canTestForShallowEqualityWith(NULL_TYPE));
     assertFalse(VOID_TYPE.canTestForShallowEqualityWith(NUMBER_TYPE));
     assertFalse(VOID_TYPE.canTestForShallowEqualityWith(NUMBER_OBJECT_TYPE));
     assertFalse(VOID_TYPE.canTestForShallowEqualityWith(OBJECT_TYPE));
-    assertFalse(VOID_TYPE.canTestForShallowEqualityWith(URI_ERROR_TYPE));
-    assertFalse(VOID_TYPE.canTestForShallowEqualityWith(RANGE_ERROR_TYPE));
-    assertFalse(VOID_TYPE.canTestForShallowEqualityWith(REFERENCE_ERROR_TYPE));
     assertFalse(VOID_TYPE.canTestForShallowEqualityWith(REGEXP_TYPE));
     assertFalse(VOID_TYPE.canTestForShallowEqualityWith(STRING_TYPE));
     assertFalse(VOID_TYPE.canTestForShallowEqualityWith(STRING_OBJECT_TYPE));
-    assertFalse(VOID_TYPE.canTestForShallowEqualityWith(SYNTAX_ERROR_TYPE));
-    assertFalse(VOID_TYPE.canTestForShallowEqualityWith(TYPE_ERROR_TYPE));
     assertTrue(VOID_TYPE.canTestForShallowEqualityWith(ALL_TYPE));
     assertTrue(VOID_TYPE.canTestForShallowEqualityWith(VOID_TYPE));
     assertTrue(VOID_TYPE.canTestForShallowEqualityWith(
@@ -3773,22 +3516,14 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertFalse(BOOLEAN_TYPE.
         canTestForShallowEqualityWith(BOOLEAN_OBJECT_TYPE));
     assertFalse(BOOLEAN_TYPE.canTestForShallowEqualityWith(DATE_TYPE));
-    assertFalse(BOOLEAN_TYPE.canTestForShallowEqualityWith(ERROR_TYPE));
-    assertFalse(BOOLEAN_TYPE.canTestForShallowEqualityWith(EVAL_ERROR_TYPE));
     assertFalse(BOOLEAN_TYPE.canTestForShallowEqualityWith(functionType));
     assertFalse(BOOLEAN_TYPE.canTestForShallowEqualityWith(NULL_TYPE));
     assertFalse(BOOLEAN_TYPE.canTestForShallowEqualityWith(NUMBER_TYPE));
     assertFalse(BOOLEAN_TYPE.canTestForShallowEqualityWith(NUMBER_OBJECT_TYPE));
     assertFalse(BOOLEAN_TYPE.canTestForShallowEqualityWith(OBJECT_TYPE));
-    assertFalse(BOOLEAN_TYPE.canTestForShallowEqualityWith(URI_ERROR_TYPE));
-    assertFalse(BOOLEAN_TYPE.canTestForShallowEqualityWith(RANGE_ERROR_TYPE));
-    assertFalse(BOOLEAN_TYPE.
-        canTestForShallowEqualityWith(REFERENCE_ERROR_TYPE));
     assertFalse(BOOLEAN_TYPE.canTestForShallowEqualityWith(REGEXP_TYPE));
     assertFalse(BOOLEAN_TYPE.canTestForShallowEqualityWith(STRING_TYPE));
     assertFalse(BOOLEAN_TYPE.canTestForShallowEqualityWith(STRING_OBJECT_TYPE));
-    assertFalse(BOOLEAN_TYPE.canTestForShallowEqualityWith(SYNTAX_ERROR_TYPE));
-    assertFalse(BOOLEAN_TYPE.canTestForShallowEqualityWith(TYPE_ERROR_TYPE));
     assertTrue(BOOLEAN_TYPE.canTestForShallowEqualityWith(ALL_TYPE));
     assertFalse(BOOLEAN_TYPE.canTestForShallowEqualityWith(VOID_TYPE));
     assertTrue(BOOLEAN_TYPE.canTestForShallowEqualityWith(UNKNOWN_TYPE));
@@ -3875,9 +3610,6 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertTrue(BOOLEAN_OBJECT_TYPE.
         canTestForShallowEqualityWith(BOOLEAN_OBJECT_TYPE));
     assertFalse(BOOLEAN_OBJECT_TYPE.canTestForShallowEqualityWith(DATE_TYPE));
-    assertFalse(BOOLEAN_OBJECT_TYPE.canTestForShallowEqualityWith(ERROR_TYPE));
-    assertFalse(BOOLEAN_OBJECT_TYPE.
-        canTestForShallowEqualityWith(EVAL_ERROR_TYPE));
     assertFalse(BOOLEAN_OBJECT_TYPE.
         canTestForShallowEqualityWith(functionType));
     assertFalse(BOOLEAN_OBJECT_TYPE.canTestForShallowEqualityWith(NULL_TYPE));
@@ -3885,20 +3617,10 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertFalse(BOOLEAN_OBJECT_TYPE.
         canTestForShallowEqualityWith(NUMBER_OBJECT_TYPE));
     assertTrue(BOOLEAN_OBJECT_TYPE.canTestForShallowEqualityWith(OBJECT_TYPE));
-    assertFalse(BOOLEAN_OBJECT_TYPE.
-        canTestForShallowEqualityWith(URI_ERROR_TYPE));
-    assertFalse(BOOLEAN_OBJECT_TYPE.
-        canTestForShallowEqualityWith(RANGE_ERROR_TYPE));
-    assertFalse(BOOLEAN_OBJECT_TYPE.
-        canTestForShallowEqualityWith(REFERENCE_ERROR_TYPE));
     assertFalse(BOOLEAN_OBJECT_TYPE.canTestForShallowEqualityWith(REGEXP_TYPE));
     assertFalse(BOOLEAN_OBJECT_TYPE.canTestForShallowEqualityWith(STRING_TYPE));
     assertFalse(BOOLEAN_OBJECT_TYPE.
         canTestForShallowEqualityWith(STRING_OBJECT_TYPE));
-    assertFalse(BOOLEAN_OBJECT_TYPE.
-        canTestForShallowEqualityWith(SYNTAX_ERROR_TYPE));
-    assertFalse(BOOLEAN_OBJECT_TYPE.
-        canTestForShallowEqualityWith(TYPE_ERROR_TYPE));
     assertTrue(BOOLEAN_OBJECT_TYPE.canTestForShallowEqualityWith(ALL_TYPE));
     assertFalse(BOOLEAN_OBJECT_TYPE.canTestForShallowEqualityWith(VOID_TYPE));
 
@@ -3987,9 +3709,6 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertTrue(enumType.
         canTestForShallowEqualityWith(enumType));
     assertFalse(enumType.canTestForShallowEqualityWith(DATE_TYPE));
-    assertFalse(enumType.canTestForShallowEqualityWith(ERROR_TYPE));
-    assertFalse(enumType.
-        canTestForShallowEqualityWith(EVAL_ERROR_TYPE));
     assertFalse(enumType.
         canTestForShallowEqualityWith(functionType));
     assertFalse(enumType.canTestForShallowEqualityWith(NULL_TYPE));
@@ -3997,20 +3716,10 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertFalse(enumType.
         canTestForShallowEqualityWith(NUMBER_OBJECT_TYPE));
     assertTrue(enumType.canTestForShallowEqualityWith(OBJECT_TYPE));
-    assertFalse(enumType.
-        canTestForShallowEqualityWith(URI_ERROR_TYPE));
-    assertFalse(enumType.
-        canTestForShallowEqualityWith(RANGE_ERROR_TYPE));
-    assertFalse(enumType.
-        canTestForShallowEqualityWith(REFERENCE_ERROR_TYPE));
     assertFalse(enumType.canTestForShallowEqualityWith(REGEXP_TYPE));
     assertFalse(enumType.canTestForShallowEqualityWith(STRING_TYPE));
     assertFalse(enumType.
         canTestForShallowEqualityWith(STRING_OBJECT_TYPE));
-    assertFalse(enumType.
-        canTestForShallowEqualityWith(SYNTAX_ERROR_TYPE));
-    assertFalse(enumType.
-        canTestForShallowEqualityWith(TYPE_ERROR_TYPE));
     assertTrue(enumType.canTestForShallowEqualityWith(ALL_TYPE));
     assertFalse(enumType.canTestForShallowEqualityWith(VOID_TYPE));
 
@@ -4102,9 +3811,6 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertTrue(elementsType.
         canTestForShallowEqualityWith(elementsType));
     assertFalse(elementsType.canTestForShallowEqualityWith(DATE_TYPE));
-    assertFalse(elementsType.canTestForShallowEqualityWith(ERROR_TYPE));
-    assertFalse(elementsType.
-        canTestForShallowEqualityWith(EVAL_ERROR_TYPE));
     assertFalse(elementsType.
         canTestForShallowEqualityWith(functionType));
     assertFalse(elementsType.canTestForShallowEqualityWith(NULL_TYPE));
@@ -4112,20 +3818,10 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertFalse(elementsType.
         canTestForShallowEqualityWith(NUMBER_OBJECT_TYPE));
     assertFalse(elementsType.canTestForShallowEqualityWith(OBJECT_TYPE));
-    assertFalse(elementsType.
-        canTestForShallowEqualityWith(URI_ERROR_TYPE));
-    assertFalse(elementsType.
-        canTestForShallowEqualityWith(RANGE_ERROR_TYPE));
-    assertFalse(elementsType.
-        canTestForShallowEqualityWith(REFERENCE_ERROR_TYPE));
     assertFalse(elementsType.canTestForShallowEqualityWith(REGEXP_TYPE));
     assertFalse(elementsType.canTestForShallowEqualityWith(STRING_TYPE));
     assertFalse(elementsType.
         canTestForShallowEqualityWith(STRING_OBJECT_TYPE));
-    assertFalse(elementsType.
-        canTestForShallowEqualityWith(SYNTAX_ERROR_TYPE));
-    assertFalse(elementsType.
-        canTestForShallowEqualityWith(TYPE_ERROR_TYPE));
     assertTrue(elementsType.canTestForShallowEqualityWith(ALL_TYPE));
     assertFalse(elementsType.canTestForShallowEqualityWith(VOID_TYPE));
 
@@ -4379,71 +4075,14 @@ public class JSTypeTest extends BaseJSTypeTestCase {
         DATE_TYPE.getImplicitPrototype().getImplicitPrototype(),
         OBJECT_TYPE);
     assertTypeEquals(
-        ERROR_TYPE.getImplicitPrototype().getImplicitPrototype(),
-        OBJECT_TYPE);
-    assertTypeEquals(
-        EVAL_ERROR_TYPE.getImplicitPrototype().getImplicitPrototype(),
-        ERROR_TYPE);
-    assertTypeEquals(
         NUMBER_OBJECT_TYPE.getImplicitPrototype().
         getImplicitPrototype(), OBJECT_TYPE);
-    assertTypeEquals(
-        URI_ERROR_TYPE.getImplicitPrototype().getImplicitPrototype(),
-        ERROR_TYPE);
-    assertTypeEquals(
-        RANGE_ERROR_TYPE.getImplicitPrototype().getImplicitPrototype(),
-        ERROR_TYPE);
-    assertTypeEquals(
-        REFERENCE_ERROR_TYPE.getImplicitPrototype().
-        getImplicitPrototype(), ERROR_TYPE);
     assertTypeEquals(
         STRING_OBJECT_TYPE.getImplicitPrototype().
         getImplicitPrototype(), OBJECT_TYPE);
     assertTypeEquals(
         REGEXP_TYPE.getImplicitPrototype().getImplicitPrototype(),
         OBJECT_TYPE);
-    assertTypeEquals(
-        SYNTAX_ERROR_TYPE.getImplicitPrototype().
-        getImplicitPrototype(), ERROR_TYPE);
-    assertTypeEquals(
-        TYPE_ERROR_TYPE.getImplicitPrototype().
-        getImplicitPrototype(), ERROR_TYPE);
-
-    // not same
-    assertNotSame(EVAL_ERROR_TYPE.getImplicitPrototype(),
-        URI_ERROR_TYPE.getImplicitPrototype());
-    assertNotSame(EVAL_ERROR_TYPE.getImplicitPrototype(),
-        RANGE_ERROR_TYPE.getImplicitPrototype());
-    assertNotSame(EVAL_ERROR_TYPE.getImplicitPrototype(),
-        REFERENCE_ERROR_TYPE.getImplicitPrototype());
-    assertNotSame(EVAL_ERROR_TYPE.getImplicitPrototype(),
-        SYNTAX_ERROR_TYPE.getImplicitPrototype());
-    assertNotSame(EVAL_ERROR_TYPE.getImplicitPrototype(),
-        TYPE_ERROR_TYPE.getImplicitPrototype());
-
-    assertNotSame(URI_ERROR_TYPE.getImplicitPrototype(),
-        RANGE_ERROR_TYPE.getImplicitPrototype());
-    assertNotSame(URI_ERROR_TYPE.getImplicitPrototype(),
-        REFERENCE_ERROR_TYPE.getImplicitPrototype());
-    assertNotSame(URI_ERROR_TYPE.getImplicitPrototype(),
-        SYNTAX_ERROR_TYPE.getImplicitPrototype());
-    assertNotSame(URI_ERROR_TYPE.getImplicitPrototype(),
-        TYPE_ERROR_TYPE.getImplicitPrototype());
-
-    assertNotSame(RANGE_ERROR_TYPE.getImplicitPrototype(),
-        REFERENCE_ERROR_TYPE.getImplicitPrototype());
-    assertNotSame(RANGE_ERROR_TYPE.getImplicitPrototype(),
-        SYNTAX_ERROR_TYPE.getImplicitPrototype());
-    assertNotSame(RANGE_ERROR_TYPE.getImplicitPrototype(),
-        TYPE_ERROR_TYPE.getImplicitPrototype());
-
-    assertNotSame(REFERENCE_ERROR_TYPE.getImplicitPrototype(),
-        SYNTAX_ERROR_TYPE.getImplicitPrototype());
-    assertNotSame(REFERENCE_ERROR_TYPE.getImplicitPrototype(),
-        TYPE_ERROR_TYPE.getImplicitPrototype());
-
-    assertNotSame(SYNTAX_ERROR_TYPE.getImplicitPrototype(),
-        TYPE_ERROR_TYPE.getImplicitPrototype());
   }
 
   /**
@@ -4464,14 +4103,6 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertTypeEquals(
         DATE_FUNCTION_TYPE, DATE_TYPE.getConstructor());
 
-    // Error
-    assertTypeEquals(
-        ERROR_FUNCTION_TYPE, ERROR_TYPE.getConstructor());
-
-    // EvalError
-    assertTypeEquals(
-        EVAL_ERROR_FUNCTION_TYPE, EVAL_ERROR_TYPE.getConstructor());
-
     // Number
     assertTypeEquals(
         NUMBER_OBJECT_FUNCTION_TYPE,
@@ -4481,15 +4112,6 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertTypeEquals(
         OBJECT_FUNCTION_TYPE, OBJECT_TYPE.getConstructor());
 
-    // RangeError
-    assertTypeEquals(
-        RANGE_ERROR_FUNCTION_TYPE, RANGE_ERROR_TYPE.getConstructor());
-
-    // ReferenceError
-    assertTypeEquals(
-        REFERENCE_ERROR_FUNCTION_TYPE,
-        REFERENCE_ERROR_TYPE.getConstructor());
-
     // RegExp
     assertTypeEquals(REGEXP_FUNCTION_TYPE, REGEXP_TYPE.getConstructor());
 
@@ -4497,19 +4119,6 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertTypeEquals(
         STRING_OBJECT_FUNCTION_TYPE,
         STRING_OBJECT_TYPE.getConstructor());
-
-    // SyntaxError
-    assertTypeEquals(
-        SYNTAX_ERROR_FUNCTION_TYPE,
-        SYNTAX_ERROR_TYPE.getConstructor());
-
-    // TypeError
-    assertTypeEquals(
-        TYPE_ERROR_FUNCTION_TYPE, TYPE_ERROR_TYPE.getConstructor());
-
-    // URIError
-    assertTypeEquals(
-        URI_ERROR_FUNCTION_TYPE, URI_ERROR_TYPE.getConstructor());
   }
 
   /**
@@ -4622,21 +4231,14 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertTrue(NO_TYPE.isSubtypeOf(BOOLEAN_TYPE));
     assertTrue(NO_TYPE.isSubtypeOf(BOOLEAN_OBJECT_TYPE));
     assertTrue(NO_TYPE.isSubtypeOf(DATE_TYPE));
-    assertTrue(NO_TYPE.isSubtypeOf(ERROR_TYPE));
-    assertTrue(NO_TYPE.isSubtypeOf(EVAL_ERROR_TYPE));
     assertTrue(NO_TYPE.isSubtypeOf(functionType));
     assertTrue(NO_TYPE.isSubtypeOf(NULL_TYPE));
     assertTrue(NO_TYPE.isSubtypeOf(NUMBER_TYPE));
     assertTrue(NO_TYPE.isSubtypeOf(NUMBER_OBJECT_TYPE));
     assertTrue(NO_TYPE.isSubtypeOf(OBJECT_TYPE));
-    assertTrue(NO_TYPE.isSubtypeOf(URI_ERROR_TYPE));
-    assertTrue(NO_TYPE.isSubtypeOf(RANGE_ERROR_TYPE));
-    assertTrue(NO_TYPE.isSubtypeOf(REFERENCE_ERROR_TYPE));
     assertTrue(NO_TYPE.isSubtypeOf(REGEXP_TYPE));
     assertTrue(NO_TYPE.isSubtypeOf(STRING_TYPE));
     assertTrue(NO_TYPE.isSubtypeOf(STRING_OBJECT_TYPE));
-    assertTrue(NO_TYPE.isSubtypeOf(SYNTAX_ERROR_TYPE));
-    assertTrue(NO_TYPE.isSubtypeOf(TYPE_ERROR_TYPE));
     assertTrue(NO_TYPE.isSubtypeOf(ALL_TYPE));
     assertTrue(NO_TYPE.isSubtypeOf(VOID_TYPE));
 
@@ -4647,21 +4249,14 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertFalse(NO_OBJECT_TYPE.isSubtypeOf(BOOLEAN_TYPE));
     assertTrue(NO_OBJECT_TYPE.isSubtypeOf(BOOLEAN_OBJECT_TYPE));
     assertTrue(NO_OBJECT_TYPE.isSubtypeOf(DATE_TYPE));
-    assertTrue(NO_OBJECT_TYPE.isSubtypeOf(ERROR_TYPE));
-    assertTrue(NO_OBJECT_TYPE.isSubtypeOf(EVAL_ERROR_TYPE));
     assertTrue(NO_OBJECT_TYPE.isSubtypeOf(functionType));
     assertFalse(NO_OBJECT_TYPE.isSubtypeOf(NULL_TYPE));
     assertFalse(NO_OBJECT_TYPE.isSubtypeOf(NUMBER_TYPE));
     assertTrue(NO_OBJECT_TYPE.isSubtypeOf(NUMBER_OBJECT_TYPE));
     assertTrue(NO_OBJECT_TYPE.isSubtypeOf(OBJECT_TYPE));
-    assertTrue(NO_OBJECT_TYPE.isSubtypeOf(URI_ERROR_TYPE));
-    assertTrue(NO_OBJECT_TYPE.isSubtypeOf(RANGE_ERROR_TYPE));
-    assertTrue(NO_OBJECT_TYPE.isSubtypeOf(REFERENCE_ERROR_TYPE));
     assertTrue(NO_OBJECT_TYPE.isSubtypeOf(REGEXP_TYPE));
     assertFalse(NO_OBJECT_TYPE.isSubtypeOf(STRING_TYPE));
     assertTrue(NO_OBJECT_TYPE.isSubtypeOf(STRING_OBJECT_TYPE));
-    assertTrue(NO_OBJECT_TYPE.isSubtypeOf(SYNTAX_ERROR_TYPE));
-    assertTrue(NO_OBJECT_TYPE.isSubtypeOf(TYPE_ERROR_TYPE));
     assertTrue(NO_OBJECT_TYPE.isSubtypeOf(ALL_TYPE));
     assertFalse(NO_OBJECT_TYPE.isSubtypeOf(VOID_TYPE));
 
@@ -4672,21 +4267,14 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertFalse(ARRAY_TYPE.isSubtypeOf(BOOLEAN_TYPE));
     assertFalse(ARRAY_TYPE.isSubtypeOf(BOOLEAN_OBJECT_TYPE));
     assertFalse(ARRAY_TYPE.isSubtypeOf(DATE_TYPE));
-    assertFalse(ARRAY_TYPE.isSubtypeOf(ERROR_TYPE));
-    assertFalse(ARRAY_TYPE.isSubtypeOf(EVAL_ERROR_TYPE));
     assertFalse(ARRAY_TYPE.isSubtypeOf(functionType));
     assertFalse(ARRAY_TYPE.isSubtypeOf(NULL_TYPE));
     assertFalse(ARRAY_TYPE.isSubtypeOf(NUMBER_TYPE));
     assertFalse(ARRAY_TYPE.isSubtypeOf(NUMBER_OBJECT_TYPE));
     assertTrue(ARRAY_TYPE.isSubtypeOf(OBJECT_TYPE));
-    assertFalse(ARRAY_TYPE.isSubtypeOf(URI_ERROR_TYPE));
-    assertFalse(ARRAY_TYPE.isSubtypeOf(RANGE_ERROR_TYPE));
-    assertFalse(ARRAY_TYPE.isSubtypeOf(REFERENCE_ERROR_TYPE));
     assertFalse(ARRAY_TYPE.isSubtypeOf(REGEXP_TYPE));
     assertFalse(ARRAY_TYPE.isSubtypeOf(STRING_TYPE));
     assertFalse(ARRAY_TYPE.isSubtypeOf(STRING_OBJECT_TYPE));
-    assertFalse(ARRAY_TYPE.isSubtypeOf(SYNTAX_ERROR_TYPE));
-    assertFalse(ARRAY_TYPE.isSubtypeOf(TYPE_ERROR_TYPE));
     assertTrue(ARRAY_TYPE.isSubtypeOf(ALL_TYPE));
     assertFalse(ARRAY_TYPE.isSubtypeOf(VOID_TYPE));
 
@@ -4697,21 +4285,14 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertTrue(BOOLEAN_TYPE.isSubtypeOf(BOOLEAN_TYPE));
     assertFalse(BOOLEAN_TYPE.isSubtypeOf(BOOLEAN_OBJECT_TYPE));
     assertFalse(BOOLEAN_TYPE.isSubtypeOf(DATE_TYPE));
-    assertFalse(BOOLEAN_TYPE.isSubtypeOf(ERROR_TYPE));
-    assertFalse(BOOLEAN_TYPE.isSubtypeOf(EVAL_ERROR_TYPE));
     assertFalse(BOOLEAN_TYPE.isSubtypeOf(functionType));
     assertFalse(BOOLEAN_TYPE.isSubtypeOf(NULL_TYPE));
     assertFalse(BOOLEAN_TYPE.isSubtypeOf(NUMBER_TYPE));
     assertFalse(BOOLEAN_TYPE.isSubtypeOf(NUMBER_OBJECT_TYPE));
     assertFalse(BOOLEAN_TYPE.isSubtypeOf(OBJECT_TYPE));
-    assertFalse(BOOLEAN_TYPE.isSubtypeOf(URI_ERROR_TYPE));
-    assertFalse(BOOLEAN_TYPE.isSubtypeOf(RANGE_ERROR_TYPE));
-    assertFalse(BOOLEAN_TYPE.isSubtypeOf(REFERENCE_ERROR_TYPE));
     assertFalse(BOOLEAN_TYPE.isSubtypeOf(REGEXP_TYPE));
     assertFalse(BOOLEAN_TYPE.isSubtypeOf(STRING_TYPE));
     assertFalse(BOOLEAN_TYPE.isSubtypeOf(STRING_OBJECT_TYPE));
-    assertFalse(BOOLEAN_TYPE.isSubtypeOf(SYNTAX_ERROR_TYPE));
-    assertFalse(BOOLEAN_TYPE.isSubtypeOf(TYPE_ERROR_TYPE));
     assertTrue(BOOLEAN_TYPE.isSubtypeOf(ALL_TYPE));
     assertFalse(BOOLEAN_TYPE.isSubtypeOf(VOID_TYPE));
 
@@ -4722,21 +4303,14 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertFalse(BOOLEAN_OBJECT_TYPE.isSubtypeOf(BOOLEAN_TYPE));
     assertTrue(BOOLEAN_OBJECT_TYPE.isSubtypeOf(BOOLEAN_OBJECT_TYPE));
     assertFalse(BOOLEAN_OBJECT_TYPE.isSubtypeOf(DATE_TYPE));
-    assertFalse(BOOLEAN_OBJECT_TYPE.isSubtypeOf(ERROR_TYPE));
-    assertFalse(BOOLEAN_OBJECT_TYPE.isSubtypeOf(EVAL_ERROR_TYPE));
     assertFalse(BOOLEAN_OBJECT_TYPE.isSubtypeOf(functionType));
     assertFalse(BOOLEAN_OBJECT_TYPE.isSubtypeOf(NULL_TYPE));
     assertFalse(BOOLEAN_OBJECT_TYPE.isSubtypeOf(NUMBER_TYPE));
     assertFalse(BOOLEAN_OBJECT_TYPE.isSubtypeOf(NUMBER_OBJECT_TYPE));
     assertTrue(BOOLEAN_OBJECT_TYPE.isSubtypeOf(OBJECT_TYPE));
-    assertFalse(BOOLEAN_OBJECT_TYPE.isSubtypeOf(URI_ERROR_TYPE));
-    assertFalse(BOOLEAN_OBJECT_TYPE.isSubtypeOf(RANGE_ERROR_TYPE));
-    assertFalse(BOOLEAN_OBJECT_TYPE.isSubtypeOf(REFERENCE_ERROR_TYPE));
     assertFalse(BOOLEAN_OBJECT_TYPE.isSubtypeOf(REGEXP_TYPE));
     assertFalse(BOOLEAN_OBJECT_TYPE.isSubtypeOf(STRING_TYPE));
     assertFalse(BOOLEAN_OBJECT_TYPE.isSubtypeOf(STRING_OBJECT_TYPE));
-    assertFalse(BOOLEAN_OBJECT_TYPE.isSubtypeOf(SYNTAX_ERROR_TYPE));
-    assertFalse(BOOLEAN_OBJECT_TYPE.isSubtypeOf(TYPE_ERROR_TYPE));
     assertTrue(BOOLEAN_OBJECT_TYPE.isSubtypeOf(ALL_TYPE));
     assertFalse(BOOLEAN_OBJECT_TYPE.isSubtypeOf(VOID_TYPE));
 
@@ -4747,85 +4321,16 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertFalse(DATE_TYPE.isSubtypeOf(BOOLEAN_TYPE));
     assertFalse(DATE_TYPE.isSubtypeOf(BOOLEAN_OBJECT_TYPE));
     assertTrue(DATE_TYPE.isSubtypeOf(DATE_TYPE));
-    assertFalse(DATE_TYPE.isSubtypeOf(ERROR_TYPE));
-    assertFalse(DATE_TYPE.isSubtypeOf(EVAL_ERROR_TYPE));
     assertFalse(DATE_TYPE.isSubtypeOf(functionType));
     assertFalse(DATE_TYPE.isSubtypeOf(NULL_TYPE));
     assertFalse(DATE_TYPE.isSubtypeOf(NUMBER_TYPE));
     assertFalse(DATE_TYPE.isSubtypeOf(NUMBER_OBJECT_TYPE));
     assertTrue(DATE_TYPE.isSubtypeOf(OBJECT_TYPE));
-    assertFalse(DATE_TYPE.isSubtypeOf(URI_ERROR_TYPE));
-    assertFalse(DATE_TYPE.isSubtypeOf(RANGE_ERROR_TYPE));
-    assertFalse(DATE_TYPE.isSubtypeOf(REFERENCE_ERROR_TYPE));
     assertFalse(DATE_TYPE.isSubtypeOf(REGEXP_TYPE));
     assertFalse(DATE_TYPE.isSubtypeOf(STRING_TYPE));
     assertFalse(DATE_TYPE.isSubtypeOf(STRING_OBJECT_TYPE));
-    assertFalse(DATE_TYPE.isSubtypeOf(SYNTAX_ERROR_TYPE));
-    assertFalse(DATE_TYPE.isSubtypeOf(TYPE_ERROR_TYPE));
     assertTrue(DATE_TYPE.isSubtypeOf(ALL_TYPE));
     assertFalse(DATE_TYPE.isSubtypeOf(VOID_TYPE));
-
-    // Error
-    assertFalse(ERROR_TYPE.isSubtypeOf(NO_TYPE));
-    assertFalse(ERROR_TYPE.isSubtypeOf(NO_OBJECT_TYPE));
-    assertFalse(ERROR_TYPE.isSubtypeOf(ARRAY_TYPE));
-    assertFalse(ERROR_TYPE.isSubtypeOf(BOOLEAN_TYPE));
-    assertFalse(ERROR_TYPE.isSubtypeOf(BOOLEAN_OBJECT_TYPE));
-    assertFalse(ERROR_TYPE.isSubtypeOf(DATE_TYPE));
-    assertTrue(ERROR_TYPE.isSubtypeOf(ERROR_TYPE));
-    assertFalse(ERROR_TYPE.isSubtypeOf(EVAL_ERROR_TYPE));
-    assertFalse(ERROR_TYPE.isSubtypeOf(functionType));
-    assertFalse(ERROR_TYPE.isSubtypeOf(NULL_TYPE));
-    assertFalse(ERROR_TYPE.isSubtypeOf(NUMBER_TYPE));
-    assertFalse(ERROR_TYPE.isSubtypeOf(NUMBER_OBJECT_TYPE));
-    assertTrue(ERROR_TYPE.isSubtypeOf(OBJECT_TYPE));
-    assertFalse(ERROR_TYPE.isSubtypeOf(URI_ERROR_TYPE));
-    assertFalse(ERROR_TYPE.isSubtypeOf(RANGE_ERROR_TYPE));
-    assertFalse(ERROR_TYPE.isSubtypeOf(REFERENCE_ERROR_TYPE));
-    assertFalse(ERROR_TYPE.isSubtypeOf(REGEXP_TYPE));
-    assertFalse(ERROR_TYPE.isSubtypeOf(STRING_TYPE));
-    assertFalse(ERROR_TYPE.isSubtypeOf(STRING_OBJECT_TYPE));
-    assertFalse(ERROR_TYPE.isSubtypeOf(SYNTAX_ERROR_TYPE));
-    assertFalse(ERROR_TYPE.isSubtypeOf(TYPE_ERROR_TYPE));
-    assertTrue(ERROR_TYPE.isSubtypeOf(ALL_TYPE));
-    assertFalse(ERROR_TYPE.isSubtypeOf(VOID_TYPE));
-
-    // EvalError
-    assertFalse(EVAL_ERROR_TYPE.isSubtypeOf(NO_TYPE));
-    assertFalse(EVAL_ERROR_TYPE.isSubtypeOf(NO_OBJECT_TYPE));
-    assertFalse(EVAL_ERROR_TYPE.isSubtypeOf(ARRAY_TYPE));
-    assertFalse(EVAL_ERROR_TYPE.isSubtypeOf(BOOLEAN_TYPE));
-    assertFalse(EVAL_ERROR_TYPE.isSubtypeOf(BOOLEAN_OBJECT_TYPE));
-    assertFalse(ERROR_TYPE.isSubtypeOf(DATE_TYPE));
-    assertTrue(EVAL_ERROR_TYPE.isSubtypeOf(ERROR_TYPE));
-    assertTrue(EVAL_ERROR_TYPE.isSubtypeOf(EVAL_ERROR_TYPE));
-    assertFalse(EVAL_ERROR_TYPE.isSubtypeOf(functionType));
-    assertFalse(EVAL_ERROR_TYPE.isSubtypeOf(NULL_TYPE));
-    assertFalse(EVAL_ERROR_TYPE.isSubtypeOf(NUMBER_TYPE));
-    assertFalse(EVAL_ERROR_TYPE.isSubtypeOf(NUMBER_OBJECT_TYPE));
-    assertTrue(EVAL_ERROR_TYPE.isSubtypeOf(OBJECT_TYPE));
-    assertFalse(EVAL_ERROR_TYPE.isSubtypeOf(URI_ERROR_TYPE));
-    assertFalse(EVAL_ERROR_TYPE.isSubtypeOf(RANGE_ERROR_TYPE));
-    assertFalse(EVAL_ERROR_TYPE.isSubtypeOf(REFERENCE_ERROR_TYPE));
-    assertFalse(EVAL_ERROR_TYPE.isSubtypeOf(REGEXP_TYPE));
-    assertFalse(EVAL_ERROR_TYPE.isSubtypeOf(STRING_TYPE));
-    assertFalse(EVAL_ERROR_TYPE.isSubtypeOf(STRING_OBJECT_TYPE));
-    assertFalse(EVAL_ERROR_TYPE.isSubtypeOf(SYNTAX_ERROR_TYPE));
-    assertFalse(EVAL_ERROR_TYPE.isSubtypeOf(TYPE_ERROR_TYPE));
-    assertTrue(EVAL_ERROR_TYPE.isSubtypeOf(ALL_TYPE));
-    assertFalse(EVAL_ERROR_TYPE.isSubtypeOf(VOID_TYPE));
-
-    // RangeError
-    assertTrue(RANGE_ERROR_TYPE.isSubtypeOf(ERROR_TYPE));
-
-    // ReferenceError
-    assertTrue(REFERENCE_ERROR_TYPE.isSubtypeOf(ERROR_TYPE));
-
-    // TypeError
-    assertTrue(TYPE_ERROR_TYPE.isSubtypeOf(ERROR_TYPE));
-
-    // UriError
-    assertTrue(URI_ERROR_TYPE.isSubtypeOf(ERROR_TYPE));
 
     // Unknown
     assertFalse(ALL_TYPE.isSubtypeOf(NO_TYPE));
@@ -4833,22 +4338,14 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertFalse(ALL_TYPE.isSubtypeOf(ARRAY_TYPE));
     assertFalse(ALL_TYPE.isSubtypeOf(BOOLEAN_TYPE));
     assertFalse(ALL_TYPE.isSubtypeOf(BOOLEAN_OBJECT_TYPE));
-    assertFalse(ERROR_TYPE.isSubtypeOf(DATE_TYPE));
-    assertFalse(ALL_TYPE.isSubtypeOf(ERROR_TYPE));
-    assertFalse(ALL_TYPE.isSubtypeOf(EVAL_ERROR_TYPE));
     assertFalse(ALL_TYPE.isSubtypeOf(functionType));
     assertFalse(ALL_TYPE.isSubtypeOf(NULL_TYPE));
     assertFalse(ALL_TYPE.isSubtypeOf(NUMBER_TYPE));
     assertFalse(ALL_TYPE.isSubtypeOf(NUMBER_OBJECT_TYPE));
     assertFalse(ALL_TYPE.isSubtypeOf(OBJECT_TYPE));
-    assertFalse(ALL_TYPE.isSubtypeOf(URI_ERROR_TYPE));
-    assertFalse(ALL_TYPE.isSubtypeOf(RANGE_ERROR_TYPE));
-    assertFalse(ALL_TYPE.isSubtypeOf(REFERENCE_ERROR_TYPE));
     assertFalse(ALL_TYPE.isSubtypeOf(REGEXP_TYPE));
     assertFalse(ALL_TYPE.isSubtypeOf(STRING_TYPE));
     assertFalse(ALL_TYPE.isSubtypeOf(STRING_OBJECT_TYPE));
-    assertFalse(ALL_TYPE.isSubtypeOf(SYNTAX_ERROR_TYPE));
-    assertFalse(ALL_TYPE.isSubtypeOf(TYPE_ERROR_TYPE));
     assertTrue(ALL_TYPE.isSubtypeOf(ALL_TYPE));
     assertFalse(ALL_TYPE.isSubtypeOf(VOID_TYPE));
   }
@@ -4900,8 +4397,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
   }
 
   public void testSubtypingFunctionMultipleFixedArgs() throws Exception {
-    FunctionType f1 = registry.createFunctionType(OBJECT_TYPE, EVAL_ERROR_TYPE, STRING_TYPE);
-    FunctionType f2 = registry.createFunctionType(STRING_OBJECT_TYPE, ERROR_TYPE, ALL_TYPE);
+    FunctionType f1 = registry.createFunctionType(OBJECT_TYPE, NUMBER_TYPE, STRING_TYPE);
+    FunctionType f2 = registry.createFunctionType(STRING_OBJECT_TYPE, NUMBER_STRING, ALL_TYPE);
 
     assertTrue(f1.isSubtype(f1));
     assertFalse(f1.isSubtype(f2));
@@ -4915,8 +4412,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
   }
 
   public void testSubtypingFunctionFixedArgsNotMatching() throws Exception {
-    FunctionType f1 = registry.createFunctionType(OBJECT_TYPE, EVAL_ERROR_TYPE, UNKNOWN_TYPE);
-    FunctionType f2 = registry.createFunctionType(STRING_OBJECT_TYPE, ERROR_TYPE, ALL_TYPE);
+    FunctionType f1 = registry.createFunctionType(OBJECT_TYPE, STRING_TYPE, UNKNOWN_TYPE);
+    FunctionType f2 = registry.createFunctionType(STRING_OBJECT_TYPE, NUMBER_STRING, ALL_TYPE);
 
     assertTrue(f1.isSubtype(f1));
     assertFalse(f1.isSubtype(f2));
@@ -4930,10 +4427,10 @@ public class JSTypeTest extends BaseJSTypeTestCase {
   }
 
   public void testSubtypingFunctionVariableArgsOneOnly() throws Exception {
-    // f1 = (EvalError...) -> Object
-    FunctionType f1 = registry.createFunctionTypeWithVarArgs(OBJECT_TYPE, EVAL_ERROR_TYPE);
-    // f2 = (Error, Object) -> String
-    FunctionType f2 = registry.createFunctionType(STRING_OBJECT_TYPE, ERROR_TYPE, OBJECT_TYPE);
+    // f1 = (string...) -> Object
+    FunctionType f1 = registry.createFunctionTypeWithVarArgs(OBJECT_TYPE, STRING_TYPE);
+    // f2 = (string|number, Object) -> String
+    FunctionType f2 = registry.createFunctionType(STRING_OBJECT_TYPE, NUMBER_STRING, OBJECT_TYPE);
 
     assertTrue(f1.isSubtype(f1));
     assertFalse(f1.isSubtype(f2));
@@ -4947,12 +4444,12 @@ public class JSTypeTest extends BaseJSTypeTestCase {
   }
 
   public void testSubtypingFunctionVariableArgsBoth() throws Exception {
-    // f1 = (UriError, EvalError, EvalError...) -> Object
+    // f1 = (number, String, string...) -> Object
     FunctionType f1 = registry.createFunctionTypeWithVarArgs(
-        OBJECT_TYPE, URI_ERROR_TYPE, EVAL_ERROR_TYPE, EVAL_ERROR_TYPE);
-    // f2 = (Error, Object, EvalError...) -> String
+        OBJECT_TYPE, NUMBER_TYPE, STRING_OBJECT_TYPE, STRING_TYPE);
+    // f2 = (string|number, Object, string...) -> String
     FunctionType f2 = registry.createFunctionTypeWithVarArgs(
-        STRING_OBJECT_TYPE, ERROR_TYPE, OBJECT_TYPE, EVAL_ERROR_TYPE);
+        STRING_OBJECT_TYPE, NUMBER_STRING, OBJECT_TYPE, STRING_TYPE);
 
     assertTrue(f1.isSubtype(f1));
     assertFalse(f1.isSubtype(f2));
@@ -4966,8 +4463,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
   }
 
   public void testSubtypingMostGeneralFunction() throws Exception {
-    // (EvalError, String) -> Object
-    FunctionType f1 = registry.createFunctionType(OBJECT_TYPE, EVAL_ERROR_TYPE, STRING_TYPE);
+    // (string, string) -> Object
+    FunctionType f1 = registry.createFunctionType(OBJECT_TYPE, STRING_TYPE, STRING_TYPE);
     // (string, void) -> number
     FunctionType f2 = registry.createFunctionType(NUMBER_TYPE, STRING_TYPE, VOID_TYPE);
     // (Date, string, number) -> AnyObject
@@ -4975,16 +4472,16 @@ public class JSTypeTest extends BaseJSTypeTestCase {
         NO_OBJECT_TYPE, DATE_TYPE, STRING_TYPE, NUMBER_TYPE);
     // (Number) -> Any
     FunctionType f4 = registry.createFunctionType(NO_TYPE, NUMBER_OBJECT_TYPE);
-    // f1 = (EvalError...) -> Object
-    FunctionType f5 = registry.createFunctionTypeWithVarArgs(OBJECT_TYPE, EVAL_ERROR_TYPE);
-    // f2 = (Error, Object) -> String
-    FunctionType f6 = registry.createFunctionType(STRING_OBJECT_TYPE, ERROR_TYPE, OBJECT_TYPE);
-    // f1 = (UriError, EvalError...) -> Object
+    // f1 = (string...) -> Object
+    FunctionType f5 = registry.createFunctionTypeWithVarArgs(OBJECT_TYPE, STRING_TYPE);
+    // f2 = (string|number, Object) -> String
+    FunctionType f6 = registry.createFunctionType(STRING_OBJECT_TYPE, NUMBER_STRING, OBJECT_TYPE);
+    // f1 = (number, string...) -> Object
     FunctionType f7 = registry.createFunctionTypeWithVarArgs(
-        OBJECT_TYPE, URI_ERROR_TYPE, EVAL_ERROR_TYPE);
-    // f2 = (Error, Object, EvalError...) -> String
+        OBJECT_TYPE, NUMBER_TYPE, STRING_TYPE);
+    // f2 = (string|number, Object, string...) -> String
     FunctionType f8 = registry.createFunctionTypeWithVarArgs(
-        STRING_OBJECT_TYPE, ERROR_TYPE, OBJECT_TYPE, EVAL_ERROR_TYPE);
+        STRING_OBJECT_TYPE, NUMBER_STRING, OBJECT_TYPE, STRING_TYPE);
 
     assertTrue(LEAST_FUNCTION_TYPE.isSubtypeOf(GREATEST_FUNCTION_TYPE));
     assertTrue(LEAST_FUNCTION_TYPE.isSubtypeOf(U2U_CONSTRUCTOR_TYPE));
@@ -5362,12 +4859,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
         ARRAY_TYPE.getGreatestSubtype(DATE_TYPE));
     assertTypeEquals(NO_OBJECT_TYPE,
         ARRAY_TYPE.getGreatestSubtype(REGEXP_TYPE));
-    assertTypeEquals(EVAL_ERROR_TYPE,
-        ERROR_TYPE.getGreatestSubtype(EVAL_ERROR_TYPE));
-    assertTypeEquals(EVAL_ERROR_TYPE,
-        EVAL_ERROR_TYPE.getGreatestSubtype(ERROR_TYPE));
     assertTypeEquals(NO_TYPE,
-        NULL_TYPE.getGreatestSubtype(ERROR_TYPE));
+        NULL_TYPE.getGreatestSubtype(ARRAY_TYPE));
     assertTypeEquals(UNKNOWN_TYPE,
         NUMBER_TYPE.getGreatestSubtype(UNKNOWN_TYPE));
 
@@ -6357,11 +5850,11 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertEquals("{...}", subDate.toString());
 
     // name, node, prototype
-    ObjectType subError = registry.createObjectType("Foo",
-        ERROR_TYPE.getImplicitPrototype());
-    assertTypeEquals(ERROR_TYPE.getImplicitPrototype(),
-        subError.getImplicitPrototype());
-    assertEquals("Foo", subError.getReferenceName());
+    ObjectType subArray = registry.createObjectType("Foo",
+        ARRAY_TYPE.getImplicitPrototype());
+    assertTypeEquals(ARRAY_TYPE.getImplicitPrototype(),
+        subArray.getImplicitPrototype());
+    assertEquals("Foo", subArray.getReferenceName());
   }
 
   /**

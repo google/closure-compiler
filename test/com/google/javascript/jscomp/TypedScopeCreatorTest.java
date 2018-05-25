@@ -2145,7 +2145,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
   }
 
   public void testReturnTypeInference4() {
-    testSame("function f() { throw Error(); }");
+    testSame("function f() { throw 'error'; }");
     assertEquals(
         "function(): ?",
         findNameType("f", globalScope).toString());
@@ -2409,7 +2409,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
         "",
         "function getStackTrace() {",
         "  try {",
-        "    throw new Error();",
+        "    throw 'error';",
         "  } catch (e) {",
         "    return 0;",
         "  }",

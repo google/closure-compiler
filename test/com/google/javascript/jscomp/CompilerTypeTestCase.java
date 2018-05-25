@@ -223,10 +223,6 @@ abstract class CompilerTypeTestCase extends TestCase {
     return getNativeObjectType(JSTypeNative.CHECKED_UNKNOWN_TYPE);
   }
 
-  protected ObjectType getNativeErrorType() {
-    return getNativeObjectType(JSTypeNative.ERROR_TYPE);
-  }
-
   protected ObjectType getNativeObjectType() {
     return getNativeObjectType(JSTypeNative.OBJECT_TYPE);
   }
@@ -253,34 +249,6 @@ abstract class CompilerTypeTestCase extends TestCase {
 
   protected FunctionType getNativeStringObjectConstructorType() {
     return getNativeFunctionType(JSTypeNative.STRING_OBJECT_FUNCTION_TYPE);
-  }
-
-  protected FunctionType getNativeErrorConstructorType() {
-    return getNativeFunctionType(JSTypeNative.ERROR_FUNCTION_TYPE);
-  }
-
-  protected FunctionType getNativeEvalErrorConstructorType() {
-    return getNativeFunctionType(JSTypeNative.EVAL_ERROR_FUNCTION_TYPE);
-  }
-
-  protected FunctionType getNativeRangeErrorConstructorType() {
-    return getNativeFunctionType(JSTypeNative.RANGE_ERROR_FUNCTION_TYPE);
-  }
-
-  protected FunctionType getNativeReferenceErrorConstructorType() {
-    return getNativeFunctionType(JSTypeNative.REFERENCE_ERROR_FUNCTION_TYPE);
-  }
-
-  protected FunctionType getNativeSyntaxErrorConstructorType() {
-    return getNativeFunctionType(JSTypeNative.SYNTAX_ERROR_FUNCTION_TYPE);
-  }
-
-  protected FunctionType getNativeTypeErrorConstructorType() {
-    return getNativeFunctionType(JSTypeNative.TYPE_ERROR_FUNCTION_TYPE);
-  }
-
-  protected FunctionType getNativeUriErrorConstructorType() {
-    return getNativeFunctionType(JSTypeNative.URI_ERROR_FUNCTION_TYPE);
   }
 
   protected FunctionType getNativeDateConstructorType() {

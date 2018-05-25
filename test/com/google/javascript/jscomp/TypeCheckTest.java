@@ -74,18 +74,10 @@ public final class TypeCheckTest extends TypeCheckTestCase {
     assertTypeEquals(getNativeArrayConstructorType(), s.getVar("Array").getType());
     assertTypeEquals(getNativeBooleanObjectConstructorType(), s.getVar("Boolean").getType());
     assertTypeEquals(getNativeDateConstructorType(), s.getVar("Date").getType());
-    assertTypeEquals(getNativeErrorConstructorType(), s.getVar("Error").getType());
-    assertTypeEquals(getNativeEvalErrorConstructorType(), s.getVar("EvalError").getType());
     assertTypeEquals(getNativeNumberObjectConstructorType(), s.getVar("Number").getType());
     assertTypeEquals(getNativeObjectConstructorType(), s.getVar("Object").getType());
-    assertTypeEquals(getNativeRangeErrorConstructorType(), s.getVar("RangeError").getType());
-    assertTypeEquals(
-        getNativeReferenceErrorConstructorType(), s.getVar("ReferenceError").getType());
     assertTypeEquals(getNativeRegexpConstructorType(), s.getVar("RegExp").getType());
     assertTypeEquals(getNativeStringObjectConstructorType(), s.getVar("String").getType());
-    assertTypeEquals(getNativeSyntaxErrorConstructorType(), s.getVar("SyntaxError").getType());
-    assertTypeEquals(getNativeTypeErrorConstructorType(), s.getVar("TypeError").getType());
-    assertTypeEquals(getNativeUriErrorConstructorType(), s.getVar("URIError").getType());
   }
 
   public void testPrivateType() {
@@ -4345,13 +4337,15 @@ public final class TypeCheckTest extends TypeCheckTestCase {
 
   public void testBackwardsTypedefUse9() {
     testTypes(
-        "/** @param {!Array} x */ function g(x) {}" +
-        "/** @this {goog.MyTypedef} */ function f() { g(this); }" +
-        "var goog = {};" +
-        "/** @typedef {(Error|null|undefined)} */ goog.MyTypedef;",
-        "actual parameter 1 of g does not match formal parameter\n" +
-        "found   : Error\n" +
-        "required: Array");
+        lines(
+            "/** @param {!Array} x */ function g(x) {}",
+            "/** @this {goog.MyTypedef} */ function f() { g(this); }",
+            "var goog = {};",
+            "/** @typedef {(RegExp|null|undefined)} */ goog.MyTypedef;"),
+        lines(
+            "actual parameter 1 of g does not match formal parameter",
+            "found   : RegExp",
+            "required: Array"));
   }
 
   public void testBackwardsTypedefUse10() {
@@ -6310,24 +6304,26 @@ public final class TypeCheckTest extends TypeCheckTestCase {
 
   public void testHigherOrderFunctions3() {
     testTypes(
-        "/** @type {function(this:Error):Date} */var f; new f",
+        "/** @type {function(this:Array):Date} */var f; new f",
         "cannot instantiate non-constructor");
   }
 
   public void testHigherOrderFunctions4() {
     testTypes(
-        "/** @type {function(this:Error, ...number):Date} */var f; new f",
+        "/** @type {function(this:Array, ...number):Date} */var f; new f",
         "cannot instantiate non-constructor");
   }
 
   public void testHigherOrderFunctions5() {
     testTypes(
-        "/** @param {number} x */ function g(x) {}" +
-        "/** @type {function(new:Error, ...number):Date} */ var f;" +
-        "g(new f());",
-        "actual parameter 1 of g does not match formal parameter\n" +
-        "found   : Error\n" +
-        "required: number");
+        lines(
+            "/** @param {number} x */ function g(x) {}",
+            "/** @type {function(new:Array, ...number):Date} */ var f;",
+            "g(new f());"),
+        lines(
+            "actual parameter 1 of g does not match formal parameter",
+            "found   : Array",
+            "required: number"));
   }
 
   public void testConstructorAlias1() {
@@ -10344,11 +10340,13 @@ public final class TypeCheckTest extends TypeCheckTestCase {
 
   public void testNativeCast4() {
     testTypes(
-        "/** @param {number} x */ function f(x) {}" +
-        "f(Error(''));",
-        "actual parameter 1 of f does not match formal parameter\n" +
-        "found   : Error\n" +
-        "required: number");
+        lines(
+            "/** @param {number} x */ function f(x) {}",
+            "f(Array(1));"),
+        lines(
+            "actual parameter 1 of f does not match formal parameter",
+            "found   : Array",
+            "required: number"));
   }
 
   public void testBadConstructorCall() {
@@ -11571,8 +11569,16 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   // constructor calls.
 
   public void testCallErrorConstructorAsFunction() {
-    Node n = parseAndTypeCheck("Error('x')");
-    assertTypeEquals(getNativeErrorType(), n.getFirstFirstChild().getJSType());
+    String externs = lines(
+        "/** @constructor",
+        "    @param {string} message",
+        "    @return {!Error} */",
+        "function Error(message) {}");
+    Node n = parseAndTypeCheck(externs, "Error('x')");
+    Node call = n.getFirstFirstChild();
+    assertTrue(call.isCall());
+    assertTypeEquals(
+        call.getFirstChild().getJSType().toMaybeFunctionType().getInstanceType(), call.getJSType());
   }
 
   public void testCallArrayConstructorAsFunction() {

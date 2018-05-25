@@ -25,8 +25,6 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.ARRAY_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.BOOLEAN_OBJECT_FUNCTION_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.BOOLEAN_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.DATE_FUNCTION_TYPE;
-import static com.google.javascript.rhino.jstype.JSTypeNative.ERROR_FUNCTION_TYPE;
-import static com.google.javascript.rhino.jstype.JSTypeNative.EVAL_ERROR_FUNCTION_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.FUNCTION_FUNCTION_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.GENERATOR_FUNCTION_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.GLOBAL_THIS;
@@ -38,17 +36,12 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.NUMBER_OBJECT_FUNC
 import static com.google.javascript.rhino.jstype.JSTypeNative.NUMBER_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.OBJECT_FUNCTION_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.OBJECT_TYPE;
-import static com.google.javascript.rhino.jstype.JSTypeNative.RANGE_ERROR_FUNCTION_TYPE;
-import static com.google.javascript.rhino.jstype.JSTypeNative.REFERENCE_ERROR_FUNCTION_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.REGEXP_FUNCTION_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.REGEXP_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.STRING_OBJECT_FUNCTION_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.STRING_TYPE;
-import static com.google.javascript.rhino.jstype.JSTypeNative.SYNTAX_ERROR_FUNCTION_TYPE;
-import static com.google.javascript.rhino.jstype.JSTypeNative.TYPE_ERROR_FUNCTION_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.U2U_CONSTRUCTOR_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.UNKNOWN_TYPE;
-import static com.google.javascript.rhino.jstype.JSTypeNative.URI_ERROR_FUNCTION_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.VOID_TYPE;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -395,21 +388,14 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
     declareNativeFunctionType(s, ARRAY_FUNCTION_TYPE);
     declareNativeFunctionType(s, BOOLEAN_OBJECT_FUNCTION_TYPE);
     declareNativeFunctionType(s, DATE_FUNCTION_TYPE);
-    declareNativeFunctionType(s, ERROR_FUNCTION_TYPE);
-    declareNativeFunctionType(s, EVAL_ERROR_FUNCTION_TYPE);
     declareNativeFunctionType(s, FUNCTION_FUNCTION_TYPE);
     declareNativeFunctionType(s, GENERATOR_FUNCTION_TYPE);
     declareNativeFunctionType(s, ITERABLE_FUNCTION_TYPE);
     declareNativeFunctionType(s, ITERATOR_FUNCTION_TYPE);
     declareNativeFunctionType(s, NUMBER_OBJECT_FUNCTION_TYPE);
     declareNativeFunctionType(s, OBJECT_FUNCTION_TYPE);
-    declareNativeFunctionType(s, RANGE_ERROR_FUNCTION_TYPE);
-    declareNativeFunctionType(s, REFERENCE_ERROR_FUNCTION_TYPE);
     declareNativeFunctionType(s, REGEXP_FUNCTION_TYPE);
     declareNativeFunctionType(s, STRING_OBJECT_FUNCTION_TYPE);
-    declareNativeFunctionType(s, SYNTAX_ERROR_FUNCTION_TYPE);
-    declareNativeFunctionType(s, TYPE_ERROR_FUNCTION_TYPE);
-    declareNativeFunctionType(s, URI_ERROR_FUNCTION_TYPE);
     declareNativeValueType(s, "undefined", VOID_TYPE);
 
     return s;

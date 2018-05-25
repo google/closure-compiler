@@ -460,61 +460,6 @@ public class JSTypeRegistry implements Serializable {
     ObjectType dateType = dateFunctionType.getInstanceType();
     registerNativeType(JSTypeNative.DATE_TYPE, dateType);
 
-    // Error
-    FunctionType errorFunctionType = new ErrorFunctionType(this, "Error");
-    registerNativeType(JSTypeNative.ERROR_FUNCTION_TYPE, errorFunctionType);
-
-    ObjectType errorType = errorFunctionType.getInstanceType();
-    registerNativeType(JSTypeNative.ERROR_TYPE, errorType);
-
-    // EvalError
-    FunctionType evalErrorFunctionType = new ErrorFunctionType(this, "EvalError");
-    evalErrorFunctionType.setPrototypeBasedOn(errorType);
-    registerNativeType(JSTypeNative.EVAL_ERROR_FUNCTION_TYPE, evalErrorFunctionType);
-
-    ObjectType evalErrorType = evalErrorFunctionType.getInstanceType();
-    registerNativeType(JSTypeNative.EVAL_ERROR_TYPE, evalErrorType);
-
-    // RangeError
-    FunctionType rangeErrorFunctionType = new ErrorFunctionType(this, "RangeError");
-    rangeErrorFunctionType.setPrototypeBasedOn(errorType);
-    registerNativeType(JSTypeNative.RANGE_ERROR_FUNCTION_TYPE, rangeErrorFunctionType);
-
-    ObjectType rangeErrorType = rangeErrorFunctionType.getInstanceType();
-    registerNativeType(JSTypeNative.RANGE_ERROR_TYPE, rangeErrorType);
-
-    // ReferenceError
-    FunctionType referenceErrorFunctionType = new ErrorFunctionType(this, "ReferenceError");
-    referenceErrorFunctionType.setPrototypeBasedOn(errorType);
-    registerNativeType(JSTypeNative.REFERENCE_ERROR_FUNCTION_TYPE, referenceErrorFunctionType);
-
-    ObjectType referenceErrorType = referenceErrorFunctionType.getInstanceType();
-    registerNativeType(JSTypeNative.REFERENCE_ERROR_TYPE, referenceErrorType);
-
-    // SyntaxError
-    FunctionType syntaxErrorFunctionType = new ErrorFunctionType(this, "SyntaxError");
-    syntaxErrorFunctionType.setPrototypeBasedOn(errorType);
-    registerNativeType(JSTypeNative.SYNTAX_ERROR_FUNCTION_TYPE, syntaxErrorFunctionType);
-
-    ObjectType syntaxErrorType = syntaxErrorFunctionType.getInstanceType();
-    registerNativeType(JSTypeNative.SYNTAX_ERROR_TYPE, syntaxErrorType);
-
-    // TypeError
-    FunctionType typeErrorFunctionType = new ErrorFunctionType(this, "TypeError");
-    typeErrorFunctionType.setPrototypeBasedOn(errorType);
-    registerNativeType(JSTypeNative.TYPE_ERROR_FUNCTION_TYPE, typeErrorFunctionType);
-
-    ObjectType typeErrorType = typeErrorFunctionType.getInstanceType();
-    registerNativeType(JSTypeNative.TYPE_ERROR_TYPE, typeErrorType);
-
-    // URIError
-    FunctionType uriErrorFunctionType = new ErrorFunctionType(this, "URIError");
-    uriErrorFunctionType.setPrototypeBasedOn(errorType);
-    registerNativeType(JSTypeNative.URI_ERROR_FUNCTION_TYPE, uriErrorFunctionType);
-
-    ObjectType uriErrorType = uriErrorFunctionType.getInstanceType();
-    registerNativeType(JSTypeNative.URI_ERROR_TYPE, uriErrorType);
-
     // Number
     FunctionType numberObjectFunctionType =
         nativeConstructorBuilder("Number")
@@ -701,13 +646,6 @@ public class JSTypeRegistry implements Serializable {
     registerGlobalType(getNativeType(JSTypeNative.NUMBER_OBJECT_TYPE));
     registerGlobalType(getNativeType(JSTypeNative.NUMBER_TYPE));
     registerGlobalType(getNativeType(JSTypeNative.OBJECT_TYPE));
-    registerGlobalType(getNativeType(JSTypeNative.ERROR_TYPE));
-    registerGlobalType(getNativeType(JSTypeNative.URI_ERROR_TYPE));
-    registerGlobalType(getNativeType(JSTypeNative.EVAL_ERROR_TYPE));
-    registerGlobalType(getNativeType(JSTypeNative.TYPE_ERROR_TYPE));
-    registerGlobalType(getNativeType(JSTypeNative.RANGE_ERROR_TYPE));
-    registerGlobalType(getNativeType(JSTypeNative.REFERENCE_ERROR_TYPE));
-    registerGlobalType(getNativeType(JSTypeNative.SYNTAX_ERROR_TYPE));
     registerGlobalType(getNativeType(JSTypeNative.REGEXP_TYPE));
     registerGlobalType(getNativeType(JSTypeNative.STRING_OBJECT_TYPE));
     registerGlobalType(getNativeType(JSTypeNative.STRING_TYPE));

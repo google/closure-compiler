@@ -253,19 +253,6 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     assertTypeEquals(REGEXP_TYPE, parse("@type {!RegExp}*/").getType());
   }
 
-  public void testParseErrorTypes() {
-    assertTypeEquals(ERROR_TYPE, parse("@type {!Error}*/").getType());
-    assertTypeEquals(URI_ERROR_TYPE, parse("@type {!URIError}*/").getType());
-    assertTypeEquals(EVAL_ERROR_TYPE, parse("@type {!EvalError}*/").getType());
-    assertTypeEquals(REFERENCE_ERROR_TYPE,
-        parse("@type {!ReferenceError}*/").getType());
-    assertTypeEquals(TYPE_ERROR_TYPE, parse("@type {!TypeError}*/").getType());
-    assertTypeEquals(
-        RANGE_ERROR_TYPE, parse("@type {!RangeError}*/").getType());
-    assertTypeEquals(
-        SYNTAX_ERROR_TYPE, parse("@type {!SyntaxError}*/").getType());
-  }
-
   public void testParseUndefinedType1() {
     assertTypeEquals(VOID_TYPE, parse("@type {undefined}*/").getType());
   }
