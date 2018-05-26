@@ -1846,11 +1846,21 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
         if (ownerType != null) {
           // Only declare this as an official property if it has not been
           // declared yet.
-          boolean isExtern = t.getInput() != null && t.getInput().isExtern();
-          if ((!ownerType.hasOwnProperty(propName) || ownerType.isPropertyTypeInferred(propName))
-              && ((isExtern && !ownerType.isNativeObjectType()) || !ownerType.isInstanceType())) {
-            // If the property is undeclared or inferred, declare it now.
-            ownerType.defineDeclaredProperty(propName, valueType, n);
+          if (!ownerType.hasOwnProperty(propName) || ownerType.isPropertyTypeInferred(propName)) {
+            // Define the property if any of the following are true:
+            //   (1) it's a non-native extern type. Native types are excluded here because we don't
+            //       want externs of the form "/** @type {!Object} */ var api = {}; api.foo;" to
+            //       cause a property "foo" to be declared on Object.
+            //   (2) it's a non-instance type. This primarily covers static properties on
+            //       constructors (which are FunctionTypes, not InstanceTypes).
+            //   (3) it's an assignment to 'this', which covers instance properties assigned in
+            //       constructors or other methods.
+            boolean isNonNativeExtern =
+                t.getInput() != null && t.getInput().isExtern() && !ownerType.isNativeObjectType();
+            if (isNonNativeExtern || !ownerType.isInstanceType() || ownerNode.isThis()) {
+              // If the property is undeclared or inferred, declare it now.
+              ownerType.defineDeclaredProperty(propName, valueType, n);
+            }
           }
         }
 
@@ -2098,14 +2108,11 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
    * local variables.
    */
   private final class LocalScopeBuilder extends AbstractScopeBuilder {
-    private final ObjectType thisTypeForProperties;
-
     /**
      * @param scope The scope that we're building.
      */
     private LocalScopeBuilder(TypedScope scope) {
       super(scope);
-      thisTypeForProperties = getThisTypeForCollectingProperties();
     }
 
     /**
@@ -2126,57 +2133,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
         return;
       }
 
-      // Gather the properties declared in the function,
-      // if that function has a @this type that we can
-      // build properties on.
-      // TODO(nick): It's not clear to me why this is necessary;
-      // it appears to be papering over bugs in the main analyzer.
-      if (thisTypeForProperties != null && n.getParent().isExprResult()) {
-        if (n.isAssign()) {
-          maybeCollectMember(n.getFirstChild(), n, n.getLastChild());
-        } else if (n.isGetProp()) {
-          maybeCollectMember(n, n, null);
-        }
-      }
-
       super.visit(t, n, parent);
-    }
-
-    private ObjectType getThisTypeForCollectingProperties() {
-      Node rootNode = currentHoistScope.getClosestContainerScope().getRootNode();
-      if (rootNode.isFromExterns()) {
-        return null;
-      }
-
-      JSType type = rootNode.getJSType();
-      if (type == null || !type.isFunctionType()) {
-        return null;
-      }
-
-      FunctionType fnType = type.toMaybeFunctionType();
-      JSType fnThisType = fnType.getTypeOfThis();
-      return fnThisType == null ? null : fnThisType.toObjectType();
-    }
-
-    private void maybeCollectMember(Node member,
-        Node nodeWithJsDocInfo, @Nullable Node value) {
-      JSDocInfo info = nodeWithJsDocInfo.getJSDocInfo();
-
-      // Do nothing if there is no JSDoc type info, or
-      // if the node is not a member expression, or
-      // if the member expression is not of the form: this.someProperty.
-      if (info == null || !member.isGetProp() || !member.getFirstChild().isThis()) {
-        return;
-      }
-
-      JSType jsType = getDeclaredType(info, member, value);
-      Node name = member.getLastChild();
-      if (jsType != null) {
-        thisTypeForProperties.defineDeclaredProperty(
-            name.getString(),
-            jsType,
-            member);
-      }
     }
 
     /** Handle bleeding functions and function parameters. */

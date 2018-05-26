@@ -1143,15 +1143,20 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
   }
 
   public void testPropertyInExterns1() {
+    // Declaring a property on a non-native extern type (e.g. 'Extern') declares it as a property
+    // on the instance type, but only in externs.
     testSame(
         externs(
-            "/** @constructor */ function Extern() {}"
-                + "/** @type {Extern} */ var extern;"
-                + "/** @return {number} */ extern.one;"),
+            lines(
+                "/** @constructor */ function Extern() {}",
+                "/** @type {Extern} */ var extern;",
+                "/** @return {number} */ extern.one;")),
         srcs(
-            "/** @constructor */ function Normal() {}"
-                + "/** @type {Normal} */ var normal;"
-                + "/** @return {number} */ normal.one;"));
+            lines(
+                "/** @constructor */ function Normal() {}",
+                "/** @type {Normal} */ var normal;",
+                "/** @return {number} */ normal.one;",
+                "var result = new Extern().one();")));
 
     JSType e = globalScope.getVar("Extern").getType();
     ObjectType externInstance = ((FunctionType) e).getInstanceType();
@@ -1159,6 +1164,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     assertTrue(externInstance.isPropertyTypeDeclared("one"));
     assertEquals("function(): number",
         externInstance.getPropertyType("one").toString());
+    assertEquals("number", globalScope.getVar("result").getType().toString());
 
     JSType n = globalScope.getVar("Normal").getType();
     ObjectType normalInstance = ((FunctionType) n).getInstanceType();
@@ -1166,12 +1172,26 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
   }
 
   public void testPropertyInExterns2() {
+    // Native extern types (such as Object) do not get stray properties declared, since this would
+    // cause problems with bad externs (such as `/** @type {!Object} */ var api = {}; api.foo;`,
+    // where we don't want to declare that all Objects have a "foo" property.  Nevertheless, the
+    // specific qualified name (i.e. extern.one, in the example below) is still declared on the
+    // global scope, so referring to the "one" property specifically on "extern" is still checked
+    // as one would expect.
     testSame(
-        externs("/** @type {Object} */ var extern;" + "/** @return {number} */ extern.one;"),
-        srcs("/** @type {Object} */ var normal;" + "/** @return {number} */ normal.one;"));
+        externs(
+            lines(
+                "/** @type {Object} */ var extern;", //
+                "/** @return {number} */ extern.one;")),
+        srcs(
+            lines(
+                "/** @type {Object} */ var normal;", //
+                "/** @return {number} */ normal.one;",
+                "var result = extern.one();")));
 
     JSType e = globalScope.getVar("extern").getType();
     assertFalse(e.dereference().hasOwnProperty("one"));
+    assertEquals("number", globalScope.getVar("result").getType().toString());
 
     JSType normal = globalScope.getVar("normal").getType();
     assertFalse(normal.dereference().hasOwnProperty("one"));
