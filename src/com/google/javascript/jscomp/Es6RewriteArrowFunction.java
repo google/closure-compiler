@@ -24,8 +24,10 @@ import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
+import com.google.javascript.rhino.jstype.JSType;
 import java.util.ArrayDeque;
 import java.util.Deque;
+import javax.annotation.Nullable;
 
 /** Converts ES6 arrow functions to standard anonymous ES3 functions. */
 public class Es6RewriteArrowFunction implements NodeTraversal.Callback, HotSwapCompilerPass {
@@ -62,11 +64,11 @@ public class Es6RewriteArrowFunction implements NodeTraversal.Callback, HotSwapC
   public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
     switch (n.getToken()) {
       case SCRIPT:
-        contextStack.push(ThisAndArgumentsContext.forScript(n));
+        contextStack.push(contextForScript(n));
         break;
       case FUNCTION:
         if (!n.isArrowFunction()) {
-          contextStack.push(ThisAndArgumentsContext.forFunction(n, parent));
+          contextStack.push(contextForFunction(n, parent));
         }
         break;
       case SUPER:
@@ -117,17 +119,9 @@ public class Es6RewriteArrowFunction implements NodeTraversal.Callback, HotSwapC
       n.addChildToBack(body);
     }
 
-    ThisAndArgumentsReferenceUpdater updater = new ThisAndArgumentsReferenceUpdater(compiler);
+    ThisAndArgumentsReferenceUpdater updater =
+        new ThisAndArgumentsReferenceUpdater(compiler, context);
     NodeTraversal.traverse(compiler, body, updater);
-
-    // TODO(nickreid): Should this just live in the updater? But that would make it more than a dumb
-    // data object.
-    if (updater.changedThis) {
-      context.needsThisVar = true;
-    }
-    if (updater.changedArguments) {
-      context.needsArgumentsVar = true;
-    }
 
     t.reportCodeChange();
   }
@@ -136,8 +130,8 @@ public class Es6RewriteArrowFunction implements NodeTraversal.Callback, HotSwapC
     Node scopeBody = context.scopeBody;
 
     if (context.needsThisVar) {
-      Node name = IR.name(THIS_VAR);
-      Node thisVar = IR.constNode(name, IR.thisNode());
+      Node name = IR.name(THIS_VAR).setJSType(context.getThisType());
+      Node thisVar = IR.constNode(name, IR.thisNode().setJSType(context.getThisType()));
       thisVar.useSourceInfoIfMissingFromForTree(scopeBody);
       makeTreeNonIndexable(thisVar);
 
@@ -153,8 +147,9 @@ public class Es6RewriteArrowFunction implements NodeTraversal.Callback, HotSwapC
     }
 
     if (context.needsArgumentsVar) {
-      Node name = IR.name(ARGUMENTS_VAR);
-      Node argumentsVar = IR.constNode(name, IR.name("arguments"));
+      Node name = IR.name(ARGUMENTS_VAR).setJSType(context.getArgumentsType());
+      Node argumentsVar =
+          IR.constNode(name, IR.name("arguments").setJSType(context.getArgumentsType()));
       scopeBody.addChildToFront(argumentsVar);
 
       JSDocInfoBuilder jsdoc = new JSDocInfoBuilder(false);
@@ -175,67 +170,116 @@ public class Es6RewriteArrowFunction implements NodeTraversal.Callback, HotSwapC
     }
   }
 
-  /** Accumulates information about a scope in which `this` and `arguments` are consistent. */
-  private static class ThisAndArgumentsContext {
+  /**
+   * Accumulates information about a scope in which `this` and `arguments` are consistent.
+   *
+   * <p>Instances are maintained in a DFS stack during traversal of {@link Es6RewriteArrowFunction}.
+   * They can't be immutable because a context isn't fully defined by a single node (`super()` makes
+   * this hard).
+   */
+  private class ThisAndArgumentsContext {
     final Node scopeBody;
     final boolean isConstructor;
     Node lastSuperStatement = null; // Last statement in the body that refers to super().
 
     boolean needsThisVar = false;
-    boolean needsArgumentsVar = false;
+    private @Nullable JSType thisType;
 
-    ThisAndArgumentsContext(Node scopeBody, boolean isConstructor) {
+    boolean needsArgumentsVar = false;
+    private @Nullable JSType argumentsType;
+
+    private ThisAndArgumentsContext(Node scopeBody, boolean isConstructor) {
       this.scopeBody = scopeBody;
       this.isConstructor = isConstructor;
     }
 
-    static ThisAndArgumentsContext forFunction(Node functionNode, Node functionParent) {
-      Node scopeBody = functionNode.getLastChild();
-      boolean isConstructor =
-          functionParent.isMemberFunctionDef() && functionParent.getString().equals("constructor");
-      return new ThisAndArgumentsContext(scopeBody, isConstructor);
+    @Nullable
+    JSType getThisType() {
+      return thisType;
     }
 
-    static ThisAndArgumentsContext forScript(Node scriptNode) {
-      return new ThisAndArgumentsContext(scriptNode, false /* isConstructor */);
+    ThisAndArgumentsContext setNeedsThisVarWithType(JSType type) {
+      if (compiler.hasTypeCheckingRun()) {
+        checkNotNull(type);
+      }
+      thisType = type;
+      needsThisVar = true;
+      return this;
+    }
+
+    @Nullable
+    JSType getArgumentsType() {
+      return argumentsType;
+    }
+
+    ThisAndArgumentsContext setNeedsArgumentsVarWithType(JSType type) {
+      if (compiler.hasTypeCheckingRun()) {
+        checkNotNull(type);
+      }
+      argumentsType = type;
+      needsArgumentsVar = true;
+      return this;
     }
   }
 
-  /** Sub-rewriter for references to `this` and `arguments` within a single arrow. */
-  private static class ThisAndArgumentsReferenceUpdater implements NodeTraversal.Callback {
-    private boolean changedThis = false;
-    private boolean changedArguments = false;
-    private final AbstractCompiler compiler;
+  private ThisAndArgumentsContext contextForFunction(Node functionNode, Node functionParent) {
+    Node scopeBody = functionNode.getLastChild();
+    boolean isConstructor =
+        functionParent.isMemberFunctionDef() && functionParent.getString().equals("constructor");
+    return new ThisAndArgumentsContext(scopeBody, isConstructor);
+  }
 
-    public ThisAndArgumentsReferenceUpdater(AbstractCompiler compiler) {
+  private ThisAndArgumentsContext contextForScript(Node scriptNode) {
+    return new ThisAndArgumentsContext(scriptNode, false /* isConstructor */);
+  }
+
+  /**
+   * Sub-rewriter for references to `this` and `arguments` in a single arrow function.
+   *
+   * <p>An instance is generated for each arrow function in order of <em>decreasing</em> depth. This
+   * isn't too inefficient, because instances don't traverse into non-arrow functions and all nested
+   * functions will already have been "de-arrowed".
+   */
+  private static class ThisAndArgumentsReferenceUpdater implements NodeTraversal.Callback {
+    private final AbstractCompiler compiler;
+    private final ThisAndArgumentsContext context;
+
+    public ThisAndArgumentsReferenceUpdater(
+        AbstractCompiler compiler, ThisAndArgumentsContext context) {
       this.compiler = compiler;
+      this.context = context;
     }
 
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       if (n.isThis()) {
-        Node name = IR.name(THIS_VAR).srcref(n);
+        context.setNeedsThisVarWithType(n.getJSType());
+
+        Node name = IR.name(THIS_VAR).setJSType(context.getThisType()).srcref(n);
         name.makeNonIndexable();
         if (compiler.getOptions().preservesDetailedSourceInfo()) {
           name.setOriginalName("this");
         }
 
         n.replaceWith(name);
-        changedThis = true;
       } else if (n.isName() && n.getString().equals("arguments")) {
-        Node name = IR.name(ARGUMENTS_VAR).srcref(n);
+        context.setNeedsArgumentsVarWithType(n.getJSType());
+
+        Node name = IR.name(ARGUMENTS_VAR).setJSType(context.getArgumentsType()).srcref(n);
         if (compiler.getOptions().preservesDetailedSourceInfo()) {
           name.setOriginalName("arguments");
         }
 
         n.replaceWith(name);
-        changedArguments = true;
       }
     }
 
     @Override
     public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
-      return !n.isFunction() || n.isArrowFunction();
+      return !n.isFunction()
+          // TODO(nickreid): Remove this check? All functions below root should have already been
+          // "de-arrowed".
+          || n.isArrowFunction();
     }
   }
 }

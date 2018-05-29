@@ -31,6 +31,9 @@ public class Es6RewriteArrowFunctionTest extends CompilerTestCase {
 
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     languageOut = LanguageMode.ECMASCRIPT3;
+
+    enableTypeInfoValidation();
+    enableTypeCheck();
   }
 
   @Override
@@ -168,6 +171,12 @@ public class Es6RewriteArrowFunctionTest extends CompilerTestCase {
   }
 
   public void testCapturingThisInArrowFromClassMethod() {
+    // TODO(b/76024335): Enable these validations and checks.
+    // We need to test classes the type-checker doesn't understand class syntax and fails before the
+    // test even runs.
+    disableTypeInfoValidation();
+    disableTypeCheck();
+
     test(
         lines(
             "class C {",
@@ -201,6 +210,12 @@ public class Es6RewriteArrowFunctionTest extends CompilerTestCase {
   }
 
   public void testCapturingThisInArrowFromClassConstructorWithSuperCall() {
+    // TODO(b/76024335): Enable these validations and checks.
+    // We need to test super, but super only makes sense in the context of a class, but
+    // the type-checker doesn't understand class syntax and fails before the test even runs.
+    disableTypeInfoValidation();
+    disableTypeCheck();
+
     test(
         lines(
             "class B {",
@@ -236,6 +251,12 @@ public class Es6RewriteArrowFunctionTest extends CompilerTestCase {
   }
 
   public void testCapturingThisInArrowFromClassConstructorWithMultipleSuperCallPaths() {
+    // TODO(b/76024335): Enable these validations and checks.
+    // We need to test super, but super only makes sense in the context of a class, but
+    // the type-checker doesn't understand class syntax and fails before the test even runs.
+    disableTypeInfoValidation();
+    disableTypeCheck();
+
     test(
         lines(
             "class B {",
