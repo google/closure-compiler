@@ -479,16 +479,15 @@ final class FunctionTypeBuilder {
    * @param info The JSDocInfo for this function.
    */
   FunctionTypeBuilder inferThisType(JSDocInfo info) {
-    JSType maybeThisType = null;
     if (info != null && info.hasThisType()) {
       // TODO(johnlenz): In ES5 strict mode a function can have a null or
       // undefined "this" value, but all the existing "@this" annotations
       // don't declare restricted types.
-      maybeThisType = info.getThisType().evaluate(scope, typeRegistry)
-          .restrictByNotNullOrUndefined();
-    }
-    if (maybeThisType != null) {
-      thisType = maybeThisType;
+      JSType maybeThisType =
+          info.getThisType().evaluate(scope, typeRegistry).restrictByNotNullOrUndefined();
+      if (maybeThisType != null) {
+        thisType = maybeThisType;
+      }
     }
 
     return this;
