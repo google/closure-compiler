@@ -23,8 +23,8 @@ import com.google.javascript.jscomp.NodeUtil;
 import com.google.javascript.rhino.Node;
 
 /**
- * A warnings guard that sets the errors found in type summary files to be warnings, leaving only
- * the errors found in the original source.
+ * A warnings guard that demotes the errors found in type summary files to be less severe,
+ * leaving only the errors found in the original source.
  */
 public class CheckTypeSummaryWarningsGuard extends FileAwareWarningsGuard {
 
@@ -35,7 +35,7 @@ public class CheckTypeSummaryWarningsGuard extends FileAwareWarningsGuard {
   @Override
   public CheckLevel level(JSError error) {
     if (inTypeSummary(error)) {
-      return CheckLevel.WARNING;
+      return CheckLevel.OFF;
     }
     return null;
   }
