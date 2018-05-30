@@ -117,23 +117,6 @@ public final class ModuleMetadataTest extends CompilerTestCase {
     assertThat(m.isScript()).isTrue();
   }
 
-  public void testLoadModuleWithPath() {
-    testSame("goog.loadModule(function() { goog.module('my.module'); }, '/my/file.js');");
-    assertThat(metadata.getModulesByGoogNamespace().keySet()).containsExactly("my.module");
-
-    Module m = metadata.getModulesByGoogNamespace().get("my.module");
-    assertThat(m.getGoogNamespaces()).containsExactly("my.module");
-    assertThat(m.isNonLegacyGoogModule()).isTrue();
-
-    m = metadata.getModulesByPath().get("testcode");
-    assertThat(m.getGoogNamespaces()).isEmpty();
-    assertThat(m.isScript()).isTrue();
-
-    m = metadata.getModulesByPath().get("/my/file.js");
-    assertThat(m.getGoogNamespaces()).containsExactly("my.module");
-    assertThat(m.isNonLegacyGoogModule()).isTrue();
-  }
-
   public void testEs6Module() {
     testSame("export var x;");
     assertThat(metadata.getModulesByGoogNamespace().keySet()).isEmpty();

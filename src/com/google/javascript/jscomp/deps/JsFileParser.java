@@ -280,14 +280,6 @@ public final class JsFileParser extends JsFileLineParser {
             } else if (!"goog".equals(arg)) {
               // goog is always implicit.
               Require require = Require.googRequireSymbol(arg);
-              if (ModuleLoader.isRelativeIdentifier(arg)) {
-                ModuleLoader.ModulePath path = file.resolveJsModule(arg);
-                if (path == null) {
-                  path = file.resolveModuleAsPath(arg);
-                }
-                String symbol = path.toModuleName();
-                require = Require.googRequirePath(symbol, arg);
-              }
               requires.add(require);
             }
           } else {

@@ -18,7 +18,6 @@ package com.google.javascript.jscomp.deps;
 
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.jscomp.deps.DependencyInfo.Require.es6Import;
-import static com.google.javascript.jscomp.deps.DependencyInfo.Require.googRequirePath;
 import static com.google.javascript.jscomp.deps.DependencyInfo.Require.googRequireSymbol;
 
 import com.google.common.collect.ImmutableList;
@@ -531,29 +530,6 @@ public final class JsFileParserTest extends TestCase {
             .build();
     DependencyInfo result = parser.setIncludeGoogBase(true).parseFile(
         SRC_PATH, CLOSURE_PATH, contents);
-    assertDeps(expected, result);
-  }
-
-  public void testParseGoogRequirePath() {
-    String contents =
-        ""
-            + "goog.module('yes1');\n"
-            + "var yes2=goog.require('yes2');\n"
-            + "var C=goog.require('./c.js');\n"
-            + "var DQuote=goog.require(\"../d/quote.js\");";
-
-    DependencyInfo expected =
-        SimpleDependencyInfo.builder(CLOSURE_PATH, SRC_PATH)
-            .setProvides("yes1")
-            .setRequires(
-                googRequireSymbol("yes2"),
-                googRequirePath("module$c", "./c.js"),
-                googRequirePath("module$__$d$quote", "../d/quote.js"))
-            .setLoadFlags(ImmutableMap.of("module", "goog"))
-            .build();
-
-    DependencyInfo result = parser.parseFile(SRC_PATH, CLOSURE_PATH, contents);
-
     assertDeps(expected, result);
   }
 

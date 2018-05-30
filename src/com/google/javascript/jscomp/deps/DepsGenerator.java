@@ -78,21 +78,6 @@ public class DepsGenerator {
           "DEPS_ES6_IMPORT_FOR_NON_ES6_MODULE",
           "Cannot import file \"{0}\" because it is not an ES6 module.");
 
-  static final DiagnosticType GOOG_REQUIRE_PATH_BETWEEN_ES6_MODULES =
-      DiagnosticType.warning(
-          "DEPS_GOOG_REQUIRE_PATH_BETWEEN_ES6_MODULES",
-          "Use ES6 import rather than goog.require to import ES6 module \"{0}\".");
-
-  static final DiagnosticType GOOG_REQUIRE_PATH_FOR_NON_ES6_MODULE =
-      DiagnosticType.warning(
-          "DEPS_GOOG_REQUIRE_PATH_FOR_NON_ES6_MODULE",
-          "Cannot goog.require \"{0}\" by path. It is not an ES6 module.");
-
-  static final DiagnosticType GOOG_REQUIRE_PATH_FROM_NON_GOOG_MODULE =
-      DiagnosticType.warning(
-          "DEPS_GOOG_REQUIRE_PATH_FROM_NON_GOOG_MODULE",
-          "Cannot goog.require by path outside of a goog.module.");
-
   static final DiagnosticType UNKNOWN_PATH_IMPORT =
       DiagnosticType.warning("DEPS_UNKNOWN_PATH_IMPORT", "Could not find file \"{0}\".");
 
@@ -218,8 +203,7 @@ public class DepsGenerator {
     for (DependencyInfo dependencyInfo : jsFiles.values()) {
       ArrayList<Require> newRequires = new ArrayList<>();
       for (Require require : dependencyInfo.getRequires()) {
-        if (require.getType() == Require.Type.ES6_IMPORT
-            || require.getType() == Require.Type.GOOG_REQUIRE_PATH) {
+        if (require.getType() == Require.Type.ES6_IMPORT) {
           // Symbols are unique per file and have nothing to do with paths so map lookups are safe
           // here.
           DependencyInfo provider = providesMap.get(require.getSymbol());
@@ -303,26 +287,13 @@ public class DepsGenerator {
         } else if (provider == depInfo) {
           reportSameFile(namespace, depInfo);
         } else {
-          boolean isGoogModule = depInfo.isModule();
-          boolean isEs6Module = "es6".equals(depInfo.getLoadFlags().get("module"));
+          depInfo.isModule();
           boolean providerIsEs6Module = "es6".equals(provider.getLoadFlags().get("module"));
 
           switch (require.getType()) {
             case ES6_IMPORT:
               if (!providerIsEs6Module) {
                 reportEs6ImportForNonEs6Module(provider, depInfo);
-              }
-              break;
-            case GOOG_REQUIRE_PATH:
-              if (isEs6Module && providerIsEs6Module) {
-                reportGoogRequirePathBetweenEs6Modules(provider, depInfo);
-              } else {
-                if (!isGoogModule) {
-                  reportGoogRequirePathFromNonGoogModule(depInfo);
-                }
-                if (!providerIsEs6Module) {
-                  reportGoogRequirePathForNonEs6Module(provider, depInfo);
-                }
               }
               break;
             case GOOG_REQUIRE_SYMBOL:
@@ -347,28 +318,6 @@ public class DepsGenerator {
     errorManager.report(
         CheckLevel.ERROR,
         JSError.make(depInfo.getName(), -1, -1, ES6_IMPORT_FOR_NON_ES6_MODULE, provider.getName()));
-  }
-
-  private void reportGoogRequirePathBetweenEs6Modules(
-      DependencyInfo provider, DependencyInfo depInfo) {
-    errorManager.report(
-        CheckLevel.ERROR,
-        JSError.make(
-            depInfo.getName(), -1, -1, GOOG_REQUIRE_PATH_BETWEEN_ES6_MODULES, provider.getName()));
-  }
-
-  private void reportGoogRequirePathForNonEs6Module(
-      DependencyInfo provider, DependencyInfo depInfo) {
-    errorManager.report(
-        CheckLevel.ERROR,
-        JSError.make(
-            depInfo.getName(), -1, -1, GOOG_REQUIRE_PATH_FOR_NON_ES6_MODULE, provider.getName()));
-  }
-
-  private void reportGoogRequirePathFromNonGoogModule(DependencyInfo depInfo) {
-    errorManager.report(
-        CheckLevel.ERROR,
-        JSError.make(depInfo.getName(), -1, -1, GOOG_REQUIRE_PATH_FROM_NON_GOOG_MODULE));
   }
 
   private void reportSameFile(String namespace, DependencyInfo depInfo) {

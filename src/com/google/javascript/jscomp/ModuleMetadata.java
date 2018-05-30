@@ -42,12 +42,9 @@ import javax.annotation.Nullable;
  * <p>TODO(johnplaisted): There's an opportunity for reuse here in ClosureRewriteModules, which
  * would involve putting this in some common location. Currently this is only used as a helper class
  * for Es6RewriteModules. CompilerInput already has some (not all) of this information but it is not
- * always populated. Additionally we'd ideally unwrap the goog.loadModule calls so each becomes its
- * own CompilerInput, otherwise goog.require(path) from loadModules won't work correctly. But not
- * having a 1:1 mapping of actual inputs to compiler inputs may cause issues. It may also be ideal
- * to include CommonJS here too as ES6 modules can import them. That would allow decoupling of how
- * these modules are written; right now Es6RewriteModule only checks this for goog.requires and
- * goog: imports, not for ES6 path imports.
+ * always populated. It may also be ideal to include CommonJS here too as ES6 modules can import
+ * them. That would allow decoupling of how these modules are written; right now Es6RewriteModule
+ * only checks this for goog.requires and goog: imports, not for ES6 path imports.
  */
 final class ModuleMetadata {
   /** Various types of Javascript "modules" that can be found in the JS Compiler. */
@@ -313,11 +310,7 @@ final class ModuleMetadata {
         case CALL:
           if (n.isCall() && n.getFirstChild().matchesQualifiedName("goog.loadModule")) {
             loadModuleCall = n;
-            if (n.getChildCount() > 2 && n.getChildAtIndex(2).isString()) {
-              enterModule(n, compiler.getModuleLoader().resolve(n.getChildAtIndex(2).getString()));
-            } else {
-              enterModule(n, null);
-            }
+            enterModule(n, null);
           }
           break;
         default:

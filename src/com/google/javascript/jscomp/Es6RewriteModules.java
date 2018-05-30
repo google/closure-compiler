@@ -16,7 +16,6 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.javascript.jscomp.ClosureCheckModule.MODULE_USES_GOOG_MODULE_GET;
 import static com.google.javascript.jscomp.ClosureRewriteModule.INVALID_GET_CALL_SCOPE;
@@ -26,7 +25,6 @@ import static com.google.javascript.jscomp.ClosureRewriteModule.MISSING_MODULE_O
 import static com.google.javascript.jscomp.ProcessClosurePrimitives.INVALID_CLOSURE_CALL_ERROR;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature.MODULES;
 
-import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Iterables;
@@ -35,7 +33,6 @@ import com.google.common.collect.Multimap;
 import com.google.javascript.jscomp.ModuleMetadata.Module;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.deps.ModuleLoader;
-import com.google.javascript.jscomp.deps.ModuleLoader.ModulePath;
 import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
@@ -84,24 +81,6 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
       DiagnosticType.error(
           "JSC_PATH_REQUIRE_IN_NON_GOOG_MODULE",
           "Cannot goog.require by path outside of goog.modules.");
-
-  static final DiagnosticType PATH_REQUIRE_IN_GOOG_PROVIDE_FILE =
-      DiagnosticType.error(
-          "JSC_PATH_REQUIRE_IN_GOOG_PROVIDE_FILE",
-          "goog.provide'd files can only goog.require namespaces. goog.require by path is only "
-              + "valid in goog.modules.");
-
-  static final DiagnosticType PATH_REQUIRE_IN_ES6_MODULE =
-      DiagnosticType.error(
-          "JSC_PATH_REQUIRE_IN_ES6_MODULE",
-          "Import other ES6 modules and goog.require namespaces in ES6 modules. Do not "
-              + "goog.require paths in ES6 modules.");
-
-  static final DiagnosticType PATH_REQUIRE_IN_GOOG_MODULE_WITH_NO_PATH =
-      DiagnosticType.error(
-          "JSC_PATH_REQUIRE_IN_GOOG_MODULE_WITH_NO_PATH",
-          "The goog.module {0} cannot require by path. It has been loaded without path "
-              + "information (is the path argument to goog.loadModule provided?).");
 
   private final AbstractCompiler compiler;
 
@@ -224,14 +203,6 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
           String name = n.getLastChild().getString();
           Module data = moduleMetadata.getModulesByGoogNamespace().get(name);
 
-          boolean isPathRequire = false;
-
-          // Can only goog.module.get by namespace.
-          if (data == null && isRequire && ModuleLoader.isRelativeIdentifier(name)) {
-            data = resolvePathRequire(t, n);
-            isPathRequire = true;
-          }
-
           if (data == null || !data.isEs6Module()) {
             return;
           }
@@ -244,14 +215,9 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
           Node statementNode = NodeUtil.getEnclosingStatement(n);
           boolean importHasAlias = NodeUtil.isNameDeclaration(statementNode);
           if (importHasAlias) {
-            //   const module = goog.require('./es6.js');
-            //   const module = module$es6;
-            //
             //   const module = goog.require('an.es6.namespace');
             //   const module = module$es6;
-            n.replaceWith(
-                IR.name(isPathRequire ? data.getGlobalName() : data.getGlobalName(name))
-                    .useSourceInfoFromForTree(n));
+            n.replaceWith(IR.name(data.getGlobalName(name)).useSourceInfoFromForTree(n));
             t.reportCodeChange();
           } else {
             if (parent.isExprResult()) {
@@ -265,70 +231,6 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
         }
       }
     }
-
-    @Nullable
-    private Module resolvePathRequire(NodeTraversal t, Node requireCall) {
-      String name = requireCall.getLastChild().getString();
-      Module thisModule = moduleMetadata.getContainingModule(requireCall);
-      checkNotNull(thisModule);
-
-      if (!thisModule.isGoogModule()) {
-        t.report(
-            requireCall,
-            thisModule.isGoogProvide()
-                ? PATH_REQUIRE_IN_GOOG_PROVIDE_FILE
-                : PATH_REQUIRE_IN_NON_GOOG_MODULE);
-        return null;
-      }
-
-      if (thisModule.getPath() == null) {
-        t.report(
-            requireCall,
-            PATH_REQUIRE_IN_GOOG_MODULE_WITH_NO_PATH,
-            Iterables.getOnlyElement(thisModule.getGoogNamespaces()));
-        return null;
-      }
-
-      ModulePath path =
-          thisModule
-              .getPath()
-              .resolveJsModule(
-                  name, t.getSourceName(), requireCall.getLineno(), requireCall.getCharno());
-
-      // If path is null then resolveJsModule has logged an error.
-      if (path != null) {
-        Module requiredModule = moduleMetadata.getModulesByPath().get(path.toString());
-        checkNotNull(requiredModule);
-        if (!requiredModule.isEs6Module()) {
-          reportPathRequireForNonEs6Module(requiredModule, t, requireCall);
-        }
-        return requiredModule;
-      }
-      return null;
-    }
-  }
-
-  private void reportPathRequireForNonEs6Module(
-      Module requiredModule, NodeTraversal t, Node requireCall) {
-    String suggestion = "";
-
-    if (requiredModule.getGoogNamespaces().size() == 1) {
-      suggestion =
-          " Did you mean to goog.require "
-              + Iterables.getOnlyElement(requiredModule.getGoogNamespaces())
-              + "?";
-    } else if (requiredModule.getGoogNamespaces().size() > 1) {
-      suggestion =
-          " Did you mean to goog.require one of ("
-              + Joiner.on(", ").join(requiredModule.getGoogNamespaces())
-              + ")?";
-    }
-
-    t.report(
-        requireCall,
-        PATH_REQUIRE_FOR_NON_ES6_MODULE,
-        t.getInput().getPath().toString(),
-        suggestion);
   }
 
   @Override
@@ -740,11 +642,7 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
     Module m = moduleMetadata.getModulesByGoogNamespace().get(namespace);
 
     if (m == null) {
-      if (ModuleLoader.isRelativeIdentifier(namespace)) {
-        t.report(requireCall, PATH_REQUIRE_IN_ES6_MODULE, namespace);
-      } else {
-        t.report(requireCall, MISSING_MODULE_OR_PROVIDE, namespace);
-      }
+      t.report(requireCall, MISSING_MODULE_OR_PROVIDE, namespace);
       return;
     }
 
