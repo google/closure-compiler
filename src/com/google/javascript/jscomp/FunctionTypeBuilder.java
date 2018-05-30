@@ -84,6 +84,7 @@ final class FunctionTypeBuilder {
   private boolean makesStructs = false;
   private boolean makesDicts = false;
   private boolean isInterface = false;
+  private boolean isRecord = false;
   private boolean isAbstract = false;
   private Node parametersNode = null;
   private ImmutableList<TemplateType> templateTypeNames = ImmutableList.of();
@@ -356,6 +357,7 @@ final class FunctionTypeBuilder {
     if (info != null) {
       isConstructor = info.isConstructor();
       isInterface = info.isInterface();
+      isRecord = info.usesImplicitMatch();
       isAbstract = info.isAbstract();
       makesStructs = info.makesStructs();
       makesDicts = info.makesDicts();
@@ -768,6 +770,10 @@ final class FunctionTypeBuilder {
 
     if (extendedInterfaces != null) {
       fnType.setExtendedInterfaces(extendedInterfaces);
+    }
+
+    if (isRecord) {
+      fnType.setImplicitMatch(true);
     }
 
     typeRegistry.clearTemplateTypeNames();

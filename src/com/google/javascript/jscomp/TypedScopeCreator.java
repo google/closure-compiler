@@ -147,6 +147,11 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
           "JSC_LENDS_ON_NON_OBJECT",
           "May only lend properties to object types. {0} has type {1}.");
 
+  static final DiagnosticType INCOMPATIBLE_ALIAS_ANNOTATION =
+      DiagnosticType.warning(
+          "JSC_INCOMPATIBLE_ALIAS_ANNOTATION",
+          "Annotation {0} on {1} incompatible with aliased type.");
+
   static final DiagnosticGroup ALL_DIAGNOSTICS = new DiagnosticGroup(
       DELEGATE_PROXY_SUFFIX,
       MALFORMED_TYPEDEF,
@@ -155,7 +160,8 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       IFACE_INITIALIZER,
       CONSTRUCTOR_EXPECTED,
       UNKNOWN_LENDS,
-      LENDS_ON_NON_OBJECT);
+      LENDS_ON_NON_OBJECT,
+      INCOMPATIBLE_ALIAS_ANNOTATION);
 
   private final AbstractCompiler compiler;
   private final ErrorReporter typeParsingErrorReporter;
@@ -977,127 +983,134 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
         @Nullable String name,
         @Nullable JSDocInfo info,
         @Nullable Node lvalueNode) {
-      FunctionType functionType = null;
-      if (rValue != null
-          && rValue.isQualifiedName()
-          && lvalueNode != null) {
+      if (rValue != null && rValue.isQualifiedName() && lvalueNode != null) {
         TypedVar var = currentScope.getVar(rValue.getQualifiedName());
         if (var != null && var.getType() != null && var.getType().isFunctionType()) {
           FunctionType aliasedType  = var.getType().toMaybeFunctionType();
           if ((aliasedType.isConstructor() || aliasedType.isInterface())
               && !isGoogAbstractMethod(rValue)) {
-            functionType = aliasedType;
-
             // TODO(nick): Remove this. This should already be handled by normal type resolution.
             if (name != null) {
-              typeRegistry.declareType(currentScope, name, functionType.getInstanceType());
+              typeRegistry.declareType(currentScope, name, aliasedType.getInstanceType());
             }
+            checkFunctionAliasAnnotations(lvalueNode, aliasedType, info);
+            return aliasedType;
           }
         }
       }
 
-      if (functionType == null) {
-        Node errorRoot = rValue == null ? lvalueNode : rValue;
-        boolean isFnLiteral =
-            rValue != null && rValue.isFunction();
-        Node fnRoot = isFnLiteral ? rValue : null;
-        Node parametersNode = isFnLiteral ? rValue.getSecondChild() : null;
+      if (info != null && info.hasType()) {
+        JSType type = info.getType().evaluate(currentScope, typeRegistry);
 
-        if (info != null && info.hasType()) {
-          JSType type = info.getType().evaluate(currentScope, typeRegistry);
-
-          // Known to be not null since we have the FUNCTION token there.
-          type = type.restrictByNotNullOrUndefined();
-          if (type.isFunctionType()) {
-            functionType = type.toMaybeFunctionType();
-            functionType.setJSDocInfo(info);
-          }
-        }
-
-        if (functionType == null) {
-          // Find the type of any overridden function.
-          Node ownerNode = NodeUtil.getBestLValueOwner(lvalueNode);
-          String ownerName = NodeUtil.getBestLValueName(ownerNode);
-          TypedVar ownerVar = null;
-          String propName = null;
-          ObjectType ownerType = null;
-          if (ownerName != null) {
-            ownerVar = currentScope.getVar(ownerName);
-            if (ownerVar != null) {
-              ownerType = ObjectType.cast(ownerVar.getType());
-            }
-            if (name != null) {
-              propName = name.substring(ownerName.length() + 1);
-            }
-          }
-
-          ObjectType prototypeOwner = getPrototypeOwnerType(ownerType);
-          TemplateTypeMap prototypeOwnerTypeMap = null;
-          if (prototypeOwner != null && prototypeOwner.getTypeOfThis() != null) {
-            prototypeOwnerTypeMap =
-                prototypeOwner.getTypeOfThis().getTemplateTypeMap();
-          }
-
-          FunctionType overriddenType = null;
-          if (ownerType != null && propName != null) {
-            overriddenType = findOverriddenFunction(
-                ownerType, propName, prototypeOwnerTypeMap);
-          }
-
-          AstFunctionContents contents = fnRoot != null ? new AstFunctionContents(fnRoot) : null;
-          if (functionsWithNonEmptyReturns.contains(fnRoot)) {
-            contents.recordNonEmptyReturn();
-          }
-
-          FunctionTypeBuilder builder =
-              new FunctionTypeBuilder(name, compiler, errorRoot, currentScope)
-                  .setContents(contents)
-                  .setDeclarationScope(lvalueNode != null ? getLValueRootScope(lvalueNode) : null)
-                  .inferFromOverriddenFunction(overriddenType, parametersNode)
-                  .inferTemplateTypeName(info, prototypeOwner)
-                  .inferInheritance(info);
-
-          if (info == null || !info.hasReturnType()) {
-            /**
-             * when there is no {@code @return} annotation, look for inline return type declaration
-             */
-            if (rValue != null && rValue.isFunction() && rValue.getFirstChild() != null) {
-              JSDocInfo nameDocInfo = rValue.getFirstChild().getJSDocInfo();
-              builder.inferReturnType(nameDocInfo, true);
-            }
-          } else {
-            builder.inferReturnType(info, false);
-          }
-
-          // Infer the context type.
-          boolean searchedForThisType = false;
-          if (ownerType != null
-              && ownerType.isFunctionPrototypeType()
-              && ownerType.getOwnerFunction().hasInstanceType()) {
-            builder.inferThisType(
-                info, ownerType.getOwnerFunction().getInstanceType());
-            searchedForThisType = true;
-          } else if (ownerNode != null && ownerNode.isThis()) {
-            // If we have a 'this' node, use the scope type.
-            builder.inferThisType(info, currentScope.getTypeOfThis());
-            searchedForThisType = true;
-          }
-
-          if (!searchedForThisType) {
-            builder.inferThisType(info);
-          }
-
-          functionType = builder
-              .inferParameterTypes(parametersNode, info)
-              .buildAndRegister();
+        // Known to be not null since we have the FUNCTION token there.
+        type = type.restrictByNotNullOrUndefined();
+        if (type.isFunctionType()) {
+          FunctionType functionType = type.toMaybeFunctionType();
+          functionType.setJSDocInfo(info);
+          return functionType;
         }
       }
-      // set structural interface matching flag
-      if (info != null && info.isInterface() && info.usesImplicitMatch()) {
-        functionType.setImplicitMatch(true);
+
+      Node errorRoot = rValue == null ? lvalueNode : rValue;
+      boolean isFnLiteral = rValue != null && rValue.isFunction();
+      Node fnRoot = isFnLiteral ? rValue : null;
+      Node parametersNode = isFnLiteral ? rValue.getSecondChild() : null;
+      // Find the type of any overridden function.
+      Node ownerNode = NodeUtil.getBestLValueOwner(lvalueNode);
+      String ownerName = NodeUtil.getBestLValueName(ownerNode);
+      TypedVar ownerVar = null;
+      String propName = null;
+      ObjectType ownerType = null;
+      if (ownerName != null) {
+        ownerVar = currentScope.getVar(ownerName);
+        if (ownerVar != null) {
+          ownerType = ObjectType.cast(ownerVar.getType());
+        }
+        if (name != null) {
+          propName = name.substring(ownerName.length() + 1);
+        }
       }
-      // all done
-      return functionType;
+
+      ObjectType prototypeOwner = getPrototypeOwnerType(ownerType);
+      TemplateTypeMap prototypeOwnerTypeMap = null;
+      if (prototypeOwner != null && prototypeOwner.getTypeOfThis() != null) {
+        prototypeOwnerTypeMap = prototypeOwner.getTypeOfThis().getTemplateTypeMap();
+      }
+
+      FunctionType overriddenType = null;
+      if (ownerType != null && propName != null) {
+        overriddenType = findOverriddenFunction(ownerType, propName, prototypeOwnerTypeMap);
+      }
+
+      AstFunctionContents contents = fnRoot != null ? new AstFunctionContents(fnRoot) : null;
+      if (functionsWithNonEmptyReturns.contains(fnRoot)) {
+        contents.recordNonEmptyReturn();
+      }
+
+      FunctionTypeBuilder builder =
+          new FunctionTypeBuilder(name, compiler, errorRoot, currentScope)
+              .setContents(contents)
+              .setDeclarationScope(lvalueNode != null ? getLValueRootScope(lvalueNode) : null)
+              .inferFromOverriddenFunction(overriddenType, parametersNode)
+              .inferTemplateTypeName(info, prototypeOwner)
+              .inferInheritance(info);
+
+      if (info == null || !info.hasReturnType()) {
+        /**
+         * when there is no {@code @return} annotation, look for inline return type declaration
+         */
+        if (rValue != null && rValue.isFunction() && rValue.getFirstChild() != null) {
+          JSDocInfo nameDocInfo = rValue.getFirstChild().getJSDocInfo();
+          builder.inferReturnType(nameDocInfo, true);
+        }
+      } else {
+        builder.inferReturnType(info, false);
+      }
+
+      // Infer the context type.
+      if (ownerType != null
+          && ownerType.isFunctionPrototypeType()
+          && ownerType.getOwnerFunction().hasInstanceType()) {
+        builder.inferThisType(info, ownerType.getOwnerFunction().getInstanceType());
+      } else if (ownerNode != null && ownerNode.isThis()) {
+        // If we have a 'this' node, use the scope type.
+        builder.inferThisType(info, currentScope.getTypeOfThis());
+      } else {
+        builder.inferThisType(info);
+      }
+
+      return builder.inferParameterTypes(parametersNode, info).buildAndRegister();
+    }
+
+    /**
+     * Checks that the annotations in {@code info} are compatible with the aliased {@code type}.
+     * Any errors will be reported at {@code n}, which should be the qualified name node.
+     */
+    private void checkFunctionAliasAnnotations(Node n, FunctionType type, JSDocInfo info) {
+      if (info == null) {
+        return;
+      }
+      String annotation = null;
+      if (info.usesImplicitMatch()) {
+        if (!type.isStructuralInterface()) {
+          annotation = "@record";
+        }
+      } else if (info.isInterface()) {
+        if (!type.isInterface()) {
+          annotation = "@interface";
+        }
+      } else if (info.isConstructor() && !type.isConstructor()) {
+        annotation = "@constructor";
+      }
+      // TODO(sdh): consider checking @template, @param, @return, and/or @this.
+      if (annotation != null
+          // TODO(sdh): Remove this extra check once TypeScript stops passing us duplicate
+          // conflicting externs.  In particular, TS considers everything an interface, but Closure
+          // externs mark most things as @constructor.  The load order is not always the same, so
+          // the error can show up in either the generated TS externs file or in our own extern.
+          && (!n.isFromExterns() || annotation.equals("@record"))) {
+        report(JSError.make(n, INCOMPATIBLE_ALIAS_ANNOTATION, annotation, n.getQualifiedName()));
+      }
     }
 
     /**

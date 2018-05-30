@@ -6454,6 +6454,38 @@ public final class TypeCheckTest extends TypeCheckTestCase {
         "required: (FooAlias2|null)");
   }
 
+  public void testConstructorAliasWithBadAnnotation1() {
+    testTypes(
+        lines(
+            "/** @constructor */ function Foo() {}",
+            "/** @record */ var Bar = Foo;"),
+        "Annotation @record on Bar incompatible with aliased type.");
+  }
+
+  public void testConstructorAliasWithBadAnnotation2() {
+    testTypes(
+        lines(
+            "/** @constructor */ function Foo() {}",
+            "/** @interface */ var Bar = Foo;"),
+        "Annotation @interface on Bar incompatible with aliased type.");
+  }
+
+  public void testConstructorAliasWithBadAnnotation3() {
+    testTypes(
+        lines(
+            "/** @interface */ function Foo() {}",
+            "/** @record */ var Bar = Foo;"),
+        "Annotation @record on Bar incompatible with aliased type.");
+  }
+
+  public void testConstructorAliasWithBadAnnotation4() {
+    testTypes(
+        lines(
+            "/** @interface */ function Foo() {}",
+            "/** @constructor */ var Bar = Foo;"),
+        "Annotation @constructor on Bar incompatible with aliased type.");
+  }
+
   public void testConstAliasedTypeCastInferredCorrectly1() {
     testTypesWithExterns(
         "// no externs",
