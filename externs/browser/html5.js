@@ -3778,15 +3778,16 @@ Document.prototype.msHidden;
  * @param {string} type
  * @param {{extends: (string|undefined), prototype: (Object|undefined)}=} options
  * @return {!function(new:Element, ...*)} a constructor for the new tag.
+ * @deprecated document.registerElement() is deprecated in favor of customElements.define()
  */
 Document.prototype.registerElement = function(type, options) {};
 
 /**
- * This method is deprecated and should be removed by the end of 2014.
  * @see http://www.w3.org/TR/components-intro/
  * @see http://w3c.github.io/webcomponents/spec/custom/#extensions-to-document-interface-to-register
  * @param {string} type
  * @param {{extends: (string|undefined), prototype: (Object|undefined)}} options
+ * @deprecated This method has been removed and will be removed soon from this file.
  */
 Document.prototype.register = function(type, options) {};
 
