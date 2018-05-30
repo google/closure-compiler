@@ -847,12 +847,12 @@ $jscomp.generator.Generator_ = function(engine) {
   $jscomp.initSymbolIterator();
 
   /** @this {$jscomp.generator.Generator_<VALUE>} */
-  this[Symbol.iterator] = function() {
+  this[$jscomp.global.Symbol.iterator] = function() {
     return this;
   };
 
   // TODO(skill): uncomment once Symbol.toStringTag is polyfilled:
-  // this[Symbol.toStringTag] = 'Generator';
+  // this[$jscomp.global.Symbol.toStringTag] = 'Generator';
 };
 
 /**

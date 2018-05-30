@@ -43,7 +43,8 @@ $jscomp.polyfill('Array.from', function(orig) {
     opt_mapFn = opt_mapFn != null ? opt_mapFn : function(x) { return x; };
     var result = [];
     // NOTE: this is cast to ? because [] on @struct is an error
-    var iteratorFunction = /** @type {?} */ (arrayLike)[Symbol.iterator];
+    var iteratorFunction =
+        /** @type {?} */ (arrayLike)[$jscomp.global.Symbol.iterator];
     if (typeof iteratorFunction == 'function') {
       arrayLike = iteratorFunction.call(arrayLike);
       var next;
