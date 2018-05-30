@@ -121,9 +121,6 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
     PhaseOptimizer optimizer = new PhaseOptimizer(compiler, null);
     optimizer.addOneTimePass(
         makePassFactory(
-            "Es6NormalizeShorthandProperties", new Es6NormalizeShorthandProperties(compiler)));
-    optimizer.addOneTimePass(
-        makePassFactory(
             "Es6RenameVariablesInParamLists", new Es6RenameVariablesInParamLists(compiler)));
     optimizer.addOneTimePass(
         makePassFactory("es6ConvertSuper", new Es6ConvertSuper(compiler)));
