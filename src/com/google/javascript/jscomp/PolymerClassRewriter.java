@@ -214,12 +214,13 @@ final class PolymerClassRewriter {
 
     // If an external interface is required, mark the class as implementing it
     if (!readOnlyProps.isEmpty() || !attributeReflectedProps.isEmpty()) {
-      JSDocInfoBuilder classInfo = JSDocInfoBuilder.maybeCopyFrom(clazz.getJSDocInfo());
+      Node jsDocInfoNode = NodeUtil.getBestJSDocInfoNode(clazz);
+      JSDocInfoBuilder classInfo = JSDocInfoBuilder.maybeCopyFrom(jsDocInfoNode.getJSDocInfo());
       String interfaceName = getInterfaceName(cls);
       JSTypeExpression interfaceType =
           new JSTypeExpression(new Node(Token.BANG, IR.string(interfaceName)), VIRTUAL_FILE);
       classInfo.recordImplementedInterface(interfaceType);
-      clazz.setJSDocInfo(classInfo.build());
+      jsDocInfoNode.setJSDocInfo(classInfo.build());
     }
 
     if (block.hasChildren()) {
