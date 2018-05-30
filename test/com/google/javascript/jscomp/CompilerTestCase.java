@@ -1872,7 +1872,7 @@ public abstract class CompilerTestCase extends TestCase {
         maybeCreateSources("input", input),
         options);
     compiler.parseInputs();
-    assertThat(compiler.hasErrors()).isFalse();
+    assertThat(compiler.getErrors()).isEmpty();
 
     Node externsAndJs = compiler.getRoot();
     Node root = externsAndJs.getLastChild();
