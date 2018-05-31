@@ -1184,6 +1184,119 @@ public final class CompilerTest extends TestCase {
 
   }
 
+  public void testStrictnessWithNonStrictOutputLanguage() {
+    Compiler compiler = new Compiler(new TestErrorManager());
+
+    CompilerOptions options = new CompilerOptions();
+    options.setAssumeForwardDeclaredForMissingTypes(true);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+
+    compiler.init(
+        Collections.emptyList(),
+        Collections.singletonList(SourceFile.fromCode("input.js", "console.log(0);")),
+        options);
+
+    compiler.parse();
+    String source = compiler.toSource();
+    assertEquals("console.log(0);", source);
+  }
+
+  public void testStrictnessWithStrictOutputLanguage() {
+    Compiler compiler = new Compiler(new TestErrorManager());
+
+    CompilerOptions options = new CompilerOptions();
+    options.setAssumeForwardDeclaredForMissingTypes(true);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5_STRICT);
+
+    compiler.init(
+        Collections.emptyList(),
+        Collections.singletonList(SourceFile.fromCode("input.js", "console.log(0);")),
+        options);
+
+    compiler.parse();
+    String source = compiler.toSource();
+    assertEquals("'use strict';console.log(0);", source);
+  }
+
+  public void testStrictnessWithNonStrictInputLanguage() {
+    Compiler compiler = new Compiler(new TestErrorManager());
+
+    CompilerOptions options = new CompilerOptions();
+    options.setAssumeForwardDeclaredForMissingTypes(true);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT5);
+
+    compiler.init(
+        Collections.emptyList(),
+        Collections.singletonList(SourceFile.fromCode("input.js", "console.log(0);")),
+        options);
+
+    compiler.parse();
+    String source = compiler.toSource();
+    assertEquals("console.log(0);", source);
+  }
+
+  public void testStrictnessWithStrictInputLanguage() {
+    Compiler compiler = new Compiler(new TestErrorManager());
+
+    CompilerOptions options = new CompilerOptions();
+    options.setAssumeForwardDeclaredForMissingTypes(true);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT5_STRICT);
+
+    compiler.init(
+        Collections.emptyList(),
+        Collections.singletonList(SourceFile.fromCode("input.js", "console.log(0);")),
+        options);
+
+    compiler.parse();
+
+    String source = compiler.toSource();
+    assertEquals("'use strict';console.log(0);", source);
+  }
+
+  public void testStrictnessWithNonStrictInputLanguageAndNoTranspileOutput() {
+    Compiler compiler = new Compiler(new TestErrorManager());
+
+    CompilerOptions options = new CompilerOptions();
+    options.setAssumeForwardDeclaredForMissingTypes(true);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT5);
+    options.setLanguageOut(LanguageMode.NO_TRANSPILE);
+
+    compiler.init(
+        Collections.emptyList(),
+        Collections.singletonList(SourceFile.fromCode("input.js", "console.log(0);")),
+        options);
+
+    compiler.parse();
+    compiler.check();
+    compiler.performOptimizations();
+
+    String source = compiler.toSource();
+    assertEquals("console.log(0);", source);
+  }
+
+  public void testStrictnessWithStrictInputLanguageAndNoTranspileOutput() {
+    Compiler compiler = new Compiler(new TestErrorManager());
+
+    CompilerOptions options = new CompilerOptions();
+    options.setAssumeForwardDeclaredForMissingTypes(true);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT5_STRICT);
+    options.setLanguageOut(LanguageMode.NO_TRANSPILE);
+
+    compiler.init(
+        Collections.emptyList(),
+        Collections.singletonList(SourceFile.fromCode("input.js", "console.log(0);")),
+        options);
+
+    compiler.parse();
+    compiler.check();
+    compiler.performOptimizations();
+
+    String source = compiler.toSource();
+    assertEquals("'use strict';console.log(0);", source);
+  }
+
   public void testExternsDependencyPruning() {
     List<SourceFile> inputs =
         ImmutableList.of(

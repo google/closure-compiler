@@ -115,9 +115,9 @@ public class CompilerOptions implements Serializable {
   /**
    * The JavaScript features that are allowed to be in the output.
    */
-  private FeatureSet outputFeatureSet;
+  private Optional<FeatureSet> outputFeatureSet = Optional.absent();
 
-  private boolean languageOutIsDefaultStrict;
+  private Optional<Boolean> languageOutIsDefaultStrict = Optional.absent();
 
   /**
    * The builtin set of externs to be used
@@ -1218,8 +1218,6 @@ public class CompilerOptions implements Serializable {
   public CompilerOptions() {
     // Accepted language
     languageIn = LanguageMode.ECMASCRIPT_2017;
-    outputFeatureSet = LanguageMode.NO_TRANSPILE.toFeatureSet();
-    languageOutIsDefaultStrict = false;
 
     // Which environment to use
     environment = Environment.BROWSER;
@@ -1941,8 +1939,13 @@ public class CompilerOptions implements Serializable {
    * #setOutputFeatureSet.
    */
   public void setLanguageOut(LanguageMode languageOut) {
-    this.languageOutIsDefaultStrict = languageOut.isDefaultStrict();
-    this.outputFeatureSet = languageOut.toFeatureSet();
+    if (languageOut == LanguageMode.NO_TRANSPILE) {
+      languageOutIsDefaultStrict = Optional.absent();
+      outputFeatureSet = Optional.absent();
+    } else {
+      languageOutIsDefaultStrict = Optional.of(languageOut.isDefaultStrict());
+      setOutputFeatureSet(languageOut.toFeatureSet());
+    }
   }
 
   /**
@@ -1950,14 +1953,19 @@ public class CompilerOptions implements Serializable {
    * in this output must be transpiled away.
    */
   public void setOutputFeatureSet(FeatureSet featureSet) {
-    this.outputFeatureSet = featureSet;
+    this.outputFeatureSet = Optional.of(featureSet);
   }
 
   /**
    * Gets the set of features that can appear in the output.
    */
   public FeatureSet getOutputFeatureSet() {
-    return outputFeatureSet;
+    if (outputFeatureSet.isPresent()) {
+      return outputFeatureSet.get();
+    }
+
+    // Backwards compatibility for those that predate language out.
+    return languageIn.toFeatureSet();
   }
 
   public boolean needsTranspilationFrom(FeatureSet languageLevel) {
@@ -2828,7 +2836,9 @@ public class CompilerOptions implements Serializable {
    * Whether the output should contain a 'use strict' directive.
    */
   public boolean shouldEmitUseStrict() {
-    return this.emitUseStrict.or(languageOutIsDefaultStrict);
+    // Fall back to the language in's strictness if there is no output language explicitly set
+    // for backwards compatibility.
+    return this.emitUseStrict.or(languageOutIsDefaultStrict).or(languageIn.isDefaultStrict());
   }
 
   public CompilerOptions setEmitUseStrict(boolean emitUseStrict) {
