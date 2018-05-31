@@ -16,14 +16,16 @@
 
 package com.google.javascript.jscomp.gwt.client;
 
+import java.util.AbstractList;
+import java.util.List;
 import jsinterop.annotations.JsMethod;
 import jsinterop.annotations.JsOverlay;
 import jsinterop.annotations.JsPackage;
 import jsinterop.annotations.JsProperty;
 import jsinterop.annotations.JsType;
-
-import java.util.AbstractList;
-import java.util.List;
+import jsinterop.base.Js;
+import jsinterop.base.JsArrayLike;
+import jsinterop.base.JsPropertyMap;
 
 /**
  * GWT/J2CL utilities to abstract out JS interop.
@@ -74,13 +76,18 @@ public class Util {
 
     @JsOverlay
     public final T get(String key) {
-      return objectGet(this, key);
+      return asPropertyMap().get(key);
     }
 
     @JsOverlay
     public final JsObject<T> set(String key, T value) {
-      objectSet(this, key, value);
+      asPropertyMap().set(key, value);
       return this;
+    }
+
+    @JsOverlay
+    private final JsPropertyMap<T> asPropertyMap() {
+      return Js.uncheckedCast(this);
     }
   }
 
@@ -108,17 +115,22 @@ public class Util {
 
     @JsOverlay
     public final T get(int i) {
-      return arrayGet(this, i);
+      return asArrayLike().getAt(i);
     }
 
     @JsOverlay
     public final void set(int i, T value) {
-      arraySet(this, i, value);
+      asArrayLike().setAt(i, value);
     }
 
     @JsOverlay
     public final List<T> asList() {
-      return new JsArrayList<T>(this);
+      return new JsArrayList(this);
+    }
+
+    @JsOverlay
+    private final JsArrayLike<T> asArrayLike() {
+      return Js.uncheckedCast(this);
     }
 
     @JsOverlay
@@ -181,28 +193,6 @@ public class Util {
       }
     }
   }
-
-  /** Wraps native String, to provide static methods. */
-  @JsType(isNative = true, name = "String", namespace = JsPackage.GLOBAL)
-  public static class JsString {
-    public JsString() {}
-
-    public static native String fromCharCode(int charCode);
-  }
-
-  // PRIVATE UTILITY METHODS
-
-  @JsMethod(namespace = "util")
-  private static native <T> T arrayGet(JsArray<T> array, int i);
-
-  @JsMethod(namespace = "util")
-  private static native <T> void arraySet(JsArray<T> array, int i, T value);
-
-  @JsMethod(namespace = "util")
-  private static native <T> T objectGet(JsObject<T> array, String key);
-
-  @JsMethod(namespace = "util")
-  private static native <T> void objectSet(JsObject<T> array, String key, T value);
 
   private Util() {}
 }
