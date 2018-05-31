@@ -552,8 +552,11 @@ final class FunctionTypeBuilder {
         parameterType =
             info.getParameterType(argumentName).evaluate(scope, typeRegistry);
       } else if (arg.getJSDocInfo() != null && arg.getJSDocInfo().hasType()) {
+        JSTypeExpression parameterTypeExpression = arg.getJSDocInfo().getType();
         parameterType =
-            arg.getJSDocInfo().getType().evaluate(scope, typeRegistry);
+            parameterTypeExpression.evaluate(scope, typeRegistry);
+        isOptionalParam = parameterTypeExpression.isOptionalArg();
+        isVarArgs = parameterTypeExpression.isVarArgs();
       } else if (oldParameterType != null &&
           oldParameterType.getJSType() != null) {
         parameterType = oldParameterType.getJSType();

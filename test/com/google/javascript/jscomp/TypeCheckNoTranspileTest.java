@@ -1697,7 +1697,7 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testTaggedTemplateLiteral_varArgs() {
     testTypes(
         lines(
-            "function tag(strings, /** number */ var_args){}", // preserve newline
+            "function tag(strings, /** ...number */ var_args){}", // preserve newline
             "tag`${1} ${'str'}`;"),
         lines(
             "actual parameter 3 of tag does not match formal parameter",

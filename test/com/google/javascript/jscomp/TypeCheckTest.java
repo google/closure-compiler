@@ -2704,6 +2704,18 @@ public final class TypeCheckTest extends TypeCheckTestCase {
         "Property prop never defined on Object");
   }
 
+  public void testFunctionInference24() {
+    testFunctionType(
+        "var f = (/** number */ n, /** string= */ s) => null;",
+        "function(number, string=): ?");
+  }
+
+  public void testFunctionInference25() {
+    testFunctionType(
+        "var f = (/** number */ n, /** ...string */ s) => null;",
+        "function(number, ...string): ?");
+  }
+
   public void testInnerFunction1() {
     testTypes(
         "function f() {" +
