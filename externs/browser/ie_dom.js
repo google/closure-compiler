@@ -285,12 +285,13 @@ Node.prototype.transformNodeToObject =
 Node.prototype.removeNode = function(opt_bRemoveChildren) {};
 
 /**
+ * @see https://technet.microsoft.com/en-us/ms535220(v=vs.71)
  * @constructor
  */
 function ClipboardData() {}
 
 /**
- * @see http://msdn.microsoft.com/en-us/library/ms535220(VS.85).aspx
+ * @see https://technet.microsoft.com/en-us/ms536352(v=vs.71)
  * @param {string=} opt_type Type of clipboard data to clear. 'Text' or
  *     'URL' or 'File' or 'HTML' or 'Image'.
  * @return {undefined}
@@ -298,7 +299,7 @@ function ClipboardData() {}
 ClipboardData.prototype.clearData = function(opt_type) {};
 
 /**
- * @see http://msdn.microsoft.com/en-us/library/ms535220(VS.85).aspx
+ * @see https://technet.microsoft.com/en-us/ms536744(v=vs.71)
  * @param {string} type Type of clipboard data to set ('Text' or 'URL').
  * @param {string} data Data to set
  * @return {boolean} Whether the data were set correctly.
@@ -306,11 +307,35 @@ ClipboardData.prototype.clearData = function(opt_type) {};
 ClipboardData.prototype.setData = function(type, data) {};
 
 /**
- * @see http://msdn.microsoft.com/en-us/library/ms535220(VS.85).aspx
+ * @see https://technet.microsoft.com/en-us/ms536436(v=vs.71)
  * @param {string} type Type of clipboard data to get ('Text' or 'URL').
  * @return {string} The current data
  */
 ClipboardData.prototype.getData = function(type) { };
+
+/**
+ * @see https://technet.microsoft.com/en-us/ms533741(v=vs.71)
+ * @type {string}
+ */
+ClipboardData.prototype.dropEffect;
+
+/**
+ * @see https://technet.microsoft.com/en-us/ms533743(v=vs.71)
+ * @type {string}
+ */
+ClipboardData.prototype.effectAllowed;
+
+/**
+ * @see https://technet.microsoft.com/en-us/dn254935(v=vs.71)
+ * @type {?FileList}
+ */
+ClipboardData.prototype.files;
+
+/**
+ * @see https://technet.microsoft.com/en-us/hh772719(v=vs.71)
+ * @type {?DOMStringList}
+ */
+ClipboardData.prototype.types;
 
 /**
  * @type {!Window}
