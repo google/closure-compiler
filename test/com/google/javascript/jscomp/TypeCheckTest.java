@@ -4862,16 +4862,18 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   }
 
   public void testGoodImplements4() {
-    testTypes("var goog = {};" +
-        "/** @type {!Function} */" +
-        "goog.abstractMethod = function() {};" +
-        "/** @interface */\n" +
-        "goog.Disposable = goog.abstractMethod;" +
-        "goog.Disposable.prototype.dispose = goog.abstractMethod;" +
-        "/** @implements {goog.Disposable}\n * @constructor */" +
-        "goog.SubDisposable = function() {};" +
-        "/** @inheritDoc */ " +
-        "goog.SubDisposable.prototype.dispose = function() {};");
+    testTypes(
+        lines(
+            "var goog = {};",
+            "/** @type {!Function} */",
+            "goog.abstractMethod = function() {};",
+            "/** @interface */",
+            "goog.Disposable = function() {};",
+            "goog.Disposable.prototype.dispose = goog.abstractMethod;",
+            "/** @implements {goog.Disposable}\n * @constructor */",
+            "goog.SubDisposable = function() {};",
+            "/** @inheritDoc */",
+            "goog.SubDisposable.prototype.dispose = function() {};"));
   }
 
   public void testGoodImplements5() {
@@ -4946,11 +4948,12 @@ public final class TypeCheckTest extends TypeCheckTestCase {
 
   public void testBadImplements3() {
     testTypes(
-        "var goog = {};" +
-        "/** @type {!Function} */ goog.abstractMethod = function(){};" +
-        "/** @interface */ var Disposable = goog.abstractMethod;" +
-        "Disposable.prototype.method = goog.abstractMethod;" +
-        "/** @implements {Disposable}\n * @constructor */function f() {}",
+        lines(
+            "var goog = {};",
+            "/** @type {!Function} */ goog.abstractMethod = function(){};",
+            "/** @interface */ var Disposable = function() {};",
+            "Disposable.prototype.method = goog.abstractMethod;",
+            "/** @implements {Disposable}\n * @constructor */function f() {}"),
         "property method on interface Disposable is not implemented by type f");
   }
 

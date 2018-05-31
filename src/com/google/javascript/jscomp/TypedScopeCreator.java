@@ -987,8 +987,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
         TypedVar var = currentScope.getVar(rValue.getQualifiedName());
         if (var != null && var.getType() != null && var.getType().isFunctionType()) {
           FunctionType aliasedType  = var.getType().toMaybeFunctionType();
-          if ((aliasedType.isConstructor() || aliasedType.isInterface())
-              && !isGoogAbstractMethod(rValue)) {
+          if (aliasedType.isConstructor() || aliasedType.isInterface()) {
             // TODO(nick): Remove this. This should already be handled by normal type resolution.
             if (name != null) {
               typeRegistry.declareType(currentScope, name, aliasedType.getInstanceType());
@@ -1111,17 +1110,6 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
           && (!n.isFromExterns() || annotation.equals("@record"))) {
         report(JSError.make(n, INCOMPATIBLE_ALIAS_ANNOTATION, annotation, n.getQualifiedName()));
       }
-    }
-
-    /**
-     * We have to special-case goog.abstractMethod in createFunctionTypeFromNodes,
-     * because some people use it (incorrectly) for interfaces:
-     *
-     * /* @interface * /
-     * var example.MyInterface = goog.abstractMethod;
-     */
-    private boolean isGoogAbstractMethod(Node n) {
-      return n.matchesQualifiedName("goog.abstractMethod");
     }
 
     private ObjectType getPrototypeOwnerType(ObjectType ownerType) {
