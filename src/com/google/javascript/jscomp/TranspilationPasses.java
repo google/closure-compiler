@@ -156,7 +156,7 @@ public class TranspilationPasses {
       new HotSwapPassFactory("convertEs7ToEs6") {
         @Override
         protected HotSwapCompilerPass create(final AbstractCompiler compiler) {
-          return new Es7ToEs6Converter(compiler);
+          return new Es7RewriteExponentialOperator(compiler);
         }
 
         @Override

@@ -21,9 +21,9 @@ import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
  * Test cases for ES6 transpilation. Despite the name, this isn't just testing {@link
  * Es6ToEs3Converter}, but also some other ES6 transpilation passes. See #getProcessor.
  */
-public final class Es7ToEs6ConverterTest extends CompilerTestCase {
+public final class Es7RewriteExponentialOperatorTest extends CompilerTestCase {
 
-  public Es7ToEs6ConverterTest() {
+  public Es7RewriteExponentialOperatorTest() {
     super(MINIMAL_EXTERNS);
   }
 
@@ -37,7 +37,7 @@ public final class Es7ToEs6ConverterTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
-    return new Es7ToEs6Converter(compiler);
+    return new Es7RewriteExponentialOperator(compiler);
   }
 
   @Override
