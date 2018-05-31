@@ -596,7 +596,7 @@ _.methods = function(obj) {};
 
 /**
  * @param {Object} obj
- * @param {...Object} objs
+ * @param {...(!Object|null|undefined)} objs
  */
 _.extend = function(obj, objs) {};
 
