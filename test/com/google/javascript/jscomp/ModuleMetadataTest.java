@@ -141,4 +141,66 @@ public final class ModuleMetadataTest extends CompilerTestCase {
     Module m = metadata.getModulesByPath().get("testcode");
     assertThat(m.isCommonJs()).isTrue();
   }
+
+  public void testDuplicateProvides() {
+    testError(
+        new String[] {"goog.provide('duplciated');", "goog.provide('duplciated');"},
+        ClosureRewriteModule.DUPLICATE_NAMESPACE);
+  }
+
+  public void testDuplicateProvideAndGoogModule() {
+    testError(
+        new String[] {"goog.provide('duplciated');", "goog.module('duplciated');"},
+        ClosureRewriteModule.DUPLICATE_NAMESPACE);
+    testError(
+        new String[] {"goog.module('duplciated');", "goog.provide('duplciated');"},
+        ClosureRewriteModule.DUPLICATE_MODULE);
+  }
+
+  public void testDuplicateProvideAndEs6Module() {
+    testError(
+        new String[] {
+          "goog.provide('duplciated');", "export {}; goog.module.declareNamespace('duplciated');"
+        },
+        ClosureRewriteModule.DUPLICATE_NAMESPACE);
+    testError(
+        new String[] {
+          "export {}; goog.module.declareNamespace('duplciated');", "goog.provide('duplciated');"
+        },
+        ClosureRewriteModule.DUPLICATE_MODULE);
+  }
+
+  public void testDuplicateGoogModules() {
+    testError(
+        new String[] {"goog.module('duplciated');", "goog.module('duplciated');"},
+        ClosureRewriteModule.DUPLICATE_MODULE);
+  }
+
+  public void testDuplicateGoogAndEs6Module() {
+    testError(
+        new String[] {
+            "goog.module('duplciated');", "export {}; goog.module.declareNamespace('duplciated');"
+        },
+        ClosureRewriteModule.DUPLICATE_MODULE);
+    testError(
+        new String[] {
+            "export {}; goog.module.declareNamespace('duplciated');", "goog.module('duplciated');"
+        },
+        ClosureRewriteModule.DUPLICATE_MODULE);
+  }
+
+  public void testDuplicatEs6Modules() {
+    testError(
+        new String[] {
+          "export {}; goog.module.declareNamespace('duplciated');",
+          "export {}; goog.module.declareNamespace('duplciated');"
+        },
+        ClosureRewriteModule.DUPLICATE_MODULE);
+    testError(
+        new String[] {
+          "export {}; goog.module.declareNamespace('duplciated');",
+          "export {}; goog.module.declareNamespace('duplciated');"
+        },
+        ClosureRewriteModule.DUPLICATE_MODULE);
+  }
 }

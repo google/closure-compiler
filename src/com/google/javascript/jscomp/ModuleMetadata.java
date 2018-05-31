@@ -426,10 +426,10 @@ final class ModuleMetadata {
           case GOOG_MODULE:
           case LEGACY_GOOG_MODULE:
             t.report(n, ClosureRewriteModule.DUPLICATE_MODULE, namespace);
-            break;
+            return;
           case GOOG_PROVIDE:
             t.report(n, ClosureRewriteModule.DUPLICATE_NAMESPACE, namespace);
-            break;
+            return;
           case COMMON_JS:
           case SCRIPT:
             // Fall through, error
