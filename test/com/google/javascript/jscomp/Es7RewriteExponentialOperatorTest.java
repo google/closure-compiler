@@ -17,22 +17,18 @@ package com.google.javascript.jscomp;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 
-/**
- * Test cases for ES6 transpilation. Despite the name, this isn't just testing {@link
- * Es6ToEs3Converter}, but also some other ES6 transpilation passes. See #getProcessor.
- */
+/** Test cases for transpilation pass that replaces the exponential operator (`**`). */
 public final class Es7RewriteExponentialOperatorTest extends CompilerTestCase {
-
-  public Es7RewriteExponentialOperatorTest() {
-    super(MINIMAL_EXTERNS);
-  }
 
   @Override
   protected void setUp() throws Exception {
     super.setUp();
+
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2016);
     setLanguageOut(LanguageMode.ECMASCRIPT5);
-    enableRunTypeCheckAfterProcessing();
+
+    enableTypeInfoValidation();
+    enableTypeCheck();
   }
 
   @Override
@@ -46,14 +42,15 @@ public final class Es7RewriteExponentialOperatorTest extends CompilerTestCase {
   }
 
   public void testExponentiationOperator() {
-    test("2 ** 2;", "Math.pow(2,2)");
+    test(srcs("2 ** 2"), expected("Math.pow(2, 2)"));
   }
 
   public void testExponentiationAssignmentOperator() {
-    test("x **= 2;", "x=Math.pow(x,2)");
+    test(srcs("x **= 2;"), expected("x = Math.pow(x, 2)"));
   }
 
-  public void testIssue2821() {
-    test("2 ** 3 > 0", "Math.pow(2, 3) > 0");
+  /** @see <a href="https://github.com/google/closure-compiler/issues/2821">Issue 2821</a> */
+  public void testExponentialOperatorInIfCondition() {
+    test(srcs("if (2 ** 3 > 0) { }"), expected("if (Math.pow(2, 3) > 0) { }"));
   }
 }
