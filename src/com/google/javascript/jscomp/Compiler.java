@@ -1145,11 +1145,11 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     if (options.printSourceAfterEachPass) {
       String currentJsSource = getCurrentJsSource();
       if (!currentJsSource.equals(this.lastJsSource)) {
-        System.out.println();
-        System.out.println("// " + passName + " yields:");
-        System.out.println("// ************************************");
-        System.out.println(currentJsSource);
-        System.out.println("// ************************************");
+        System.err.println();
+        System.err.println("// " + passName + " yields:");
+        System.err.println("// ************************************");
+        System.err.println(currentJsSource);
+        System.err.println("// ************************************");
         lastJsSource = currentJsSource;
       }
     }
@@ -1169,8 +1169,9 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       return toSource();
     }
     if (!fileNameRegexList.isEmpty()) {
+      checkNotNull(externsRoot);
       checkNotNull(jsRoot);
-      for (Node fileNode : jsRoot.children()) {
+      for (Node fileNode : Iterables.concat(externsRoot.children(), jsRoot.children())) {
         String fileName = fileNode.getSourceFileName();
         for (String regex : fileNameRegexList) {
           if (fileName.matches(regex)) {
