@@ -110,7 +110,6 @@ public class Es6RewriteArrowFunction implements NodeTraversal.Callback, HotSwapC
 
   private void visitArrowFunction(NodeTraversal t, Node n, ThisAndArgumentsContext context) {
     n.setIsArrowFunction(false);
-    n.makeNonIndexable();
 
     Node body = n.getLastChild();
     if (!body.isBlock()) {

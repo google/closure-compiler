@@ -165,14 +165,6 @@ public final class SymbolTable {
   }
 
   /**
-   * Declare a symbol after the main symbol table was constructed. Throws an exception if you try to
-   * declare a symbol twice.
-   */
-  public Symbol declareInferredSymbol(SymbolScope scope, String name, Node declNode) {
-    return declareSymbol(name, null, true, scope, declNode, null);
-  }
-
-  /**
    * Gets the scope that contains the given node. If {@code n} is a function name, we return the
    * scope that contains the function, not the function itself.
    */
@@ -476,7 +468,15 @@ public final class SymbolTable {
 
         int count = parent.innerAnonFunctionsWithNames++;
         String innerName = "function%" + count;
-        scope.setSymbolForScope(declareInferredSymbol(parent, innerName, scope.getRootNode()));
+        Symbol anonymousFunctionSymbol =
+            declareSymbol(
+                innerName,
+                scope.getRootNode().getJSType(),
+                /* inferred= */ true,
+                parent,
+                scope.getRootNode(),
+                /* info= */ null);
+        scope.setSymbolForScope(anonymousFunctionSymbol);
       }
     }
   }
