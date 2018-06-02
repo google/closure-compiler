@@ -1158,13 +1158,12 @@ public final class SymbolTable {
    * node. Creates one if it doesn't exist yet.
    */
   private SymbolScope createScopeFrom(StaticScope otherScope) {
-    Node otherScopeRoot = otherScope.getRootNode();
-
     // NOTE: Kythe is not set up to handle block scopes yet, so only create
     // SymbolScopes for container scope roots, giving a pre-ES6 view of the world.
-    while (NodeUtil.createsBlockScope(otherScopeRoot)) {
-      otherScopeRoot = otherScopeRoot.getParent();
+    while (NodeUtil.createsBlockScope(otherScope.getRootNode())) {
+      otherScope = otherScope.getParentScope();
     }
+    Node otherScopeRoot = otherScope.getRootNode();
 
     SymbolScope myScope = scopes.get(otherScopeRoot);
     if (myScope == null) {

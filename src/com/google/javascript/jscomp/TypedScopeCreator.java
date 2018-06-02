@@ -46,10 +46,12 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.VOID_TYPE;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.HashMultimap;
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Multimap;
 import com.google.common.collect.Multiset;
 import com.google.javascript.jscomp.CodingConvention.DelegateRelationship;
 import com.google.javascript.jscomp.CodingConvention.ObjectLiteralCast;
@@ -304,14 +306,15 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
 
       // Find all the classes in the global scope.
       newScope = createInitialScope(root);
-      scopeBuilder = new GlobalScopeBuilder(newScope);
     } else {
       newScope = new TypedScope(typedParent, root);
-      scopeBuilder = new LocalScopeBuilder(newScope);
+    }
+    if (root.isFunction()) {
+      scopeBuilder = new FunctionScopeBuilder(newScope);
+    } else {
+      scopeBuilder = new NormalScopeBuilder(newScope);
     }
     scopeBuilder.build();
-
-    scopeBuilder.resolveStubDeclarations();
 
     if (typedParent == null) {
       List<NominalTypeBuilder> delegateProxies = new ArrayList<>();
@@ -376,7 +379,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
     }
 
     // Now re-traverse the given script.
-    GlobalScopeBuilder scopeBuilder = new GlobalScopeBuilder(globalScope);
+    NormalScopeBuilder scopeBuilder = new NormalScopeBuilder(globalScope);
     NodeTraversal.traverseTyped(compiler, scriptRoot, scopeBuilder);
   }
 
@@ -517,36 +520,18 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
     /** The current hoist scope. */
     final TypedScope currentHoistScope;
 
-    /**
-     * Object literals with a @lends annotation aren't analyzed until we
-     * reach the root of the statement they're defined in.
-     *
-     * This ensures that if there are any @lends annotations on the object
-     * literals, the type on the @lends annotation resolves correctly.
-     *
-     * For more information, see
-     * http://blickly.github.io/closure-compiler-issues/#314
-     */
-    private List<Node> lentObjectLiterals = null;
-
-    /**
-     * Type-less stubs.
-     *
-     * If at the end of traversal, we still don't have types for these
-     * stubs, then we should declare UNKNOWN types.
-     */
-    private final List<StubDeclaration> stubDeclarations =
-         new ArrayList<>();
-
-    /**
-     * The current source file that we're in.
-     */
+    /** The current source file that we're in. */
     private String sourceName = null;
 
-    /**
-     * The InputId of the current node.
-     */
+    /** The InputId of the current node. */
     private InputId inputId;
+
+    /**
+     * Some actions need to be deferred, such as analyzing object literals with
+     * lends annotations, or resolving type-less stubs.  These actions are added
+     * to this map, keyed by the node that should be waited for before running.
+     */
+    final Multimap<Node, Runnable> deferredActions = HashMultimap.create();
 
     AbstractScopeBuilder(TypedScope scope) {
       this.currentScope = scope;
@@ -561,121 +546,34 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
     @Override
     public final boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
       inputId = t.getInputId();
-      if (n.isFunction() || n.isScript() || (n == currentScope.getRootNode() && inputId != null)) {
+      if (n.isFunction() || n.isScript() || (parent == null && inputId != null)) {
         checkNotNull(inputId);
         sourceName = NodeUtil.getSourceName(n);
       }
-
-      // The choice of whether to descend depends on the type of scope.  Function scopes
-      // should traverse the outer FUNCTION node, and the NAME and PARAM_LIST nodes, but
-      // should not descend into the body.  Non-function nodes need to at least look at
-      // every child node (parent == currentScope.root), but should not descend *into*
-      // any nodes that create scopes.  The only exception to this is that we do want
-      // to inspect the first (NAME) child of a named function.
-      boolean descend =
-          currentScope.isFunctionScope()
-              ? !n.isBlock()
-              : parent == null
-                  || !NodeUtil.createsScope(parent)
-                  || (parent.isFunction() && n == parent.getFirstChild())
-                  || parent == currentScope.getRootNode();
-
-      if (descend) {
-        // Handle hoisted functions on pre-order traversal, so that they
-        // get hit before other things in the scope.
-        if (NodeUtil.isStatementParent(n)) {
-          for (Node child = n.getFirstChild();
-               child != null;
-               child = child.getNext()) {
-            if (NodeUtil.isHoistedFunctionDeclaration(child)) {
-              defineFunctionLiteral(child);
-            }
-          }
-        }
-      }
-
-      // Create any child block scopes "pre-order" as we see them. This is required because hoisted
-      // or qualified names defined in earlier blocks might be referred to later outside the block.
-      // This isn't a big deal in most cases since a NamedType will be created and resolved later,
-      // but if a NamedType is used for a superclass, we lose a lot of valuable checking. Recursing
-      // into child blocks immediately prevents this from being a problem.
-      if (NodeUtil.createsBlockScope(n) && n != currentScope.getRootNode()) {
-        // Only create immediately-nested scopes.  We sometimes encounter nodes that create
-        // grandchild scopes, such as a BLOCK inside a FOR - in that case, don't create the
-        // scope here - it will be created while traversing its parent scope.
-        Node ancestor = parent;
-        while (ancestor != null && !NodeUtil.createsScope(ancestor)) {
-          ancestor = ancestor.getParent();
-        }
-        if (ancestor != null && ancestor == currentScope.getRootNode()) {
-          createScope(n, currentScope);
-        }
-      }
-
-      return descend;
+      visitPreorder(t, n, parent);
+      return parent == null || !NodeUtil.createsScope(n);
     }
 
     @Override
-    public void visit(NodeTraversal t, Node n, Node parent) {
+    public final void visit(NodeTraversal t, Node n, Node parent) {
       inputId = t.getInputId();
       attachLiteralTypes(n);
-
-      switch (n.getToken()) {
-        case CALL:
-          checkForClassDefiningCalls(n);
-          break;
-
-        case FUNCTION:
-          // Hoisted functions are handled during pre-traversal.
-          if (!NodeUtil.isHoistedFunctionDeclaration(n)) {
-            defineFunctionLiteral(n);
-          }
-          break;
-
-        case ASSIGN:
-          // Handle initialization of properties.
-          Node firstChild = n.getFirstChild();
-          if (firstChild.isGetProp() && firstChild.isQualifiedName()) {
-            maybeDeclareQualifiedName(t, n.getJSDocInfo(),
-                firstChild, n, firstChild.getNext());
-          }
-          break;
-
-        case CATCH:
-          defineCatch(n);
-          break;
-
-        case VAR:
-        case LET:
-        case CONST:
-          defineVar(n);
-          // Handle typedefs.
-          if (n.hasOneChild()) {
-            checkForTypedef(n.getFirstChild(), n.getJSDocInfo());
-          }
-          break;
-
-        case GETPROP:
-          checkForCallingConventionDefinitions(n);
-          // Handle stubbed properties.
-          if (parent.isExprResult() && n.isQualifiedName()) {
-            maybeDeclareQualifiedName(t, n.getJSDocInfo(), n, parent, null);
-          }
-          break;
-        default:
-          break;
-      }
-
-      // Analyze any @lends object literals in this statement.
-      if (n.getParent() != null && NodeUtil.isStatement(n) && lentObjectLiterals != null) {
-        for (Node objLit : lentObjectLiterals) {
-          defineObjectLiteral(objLit);
-        }
-        lentObjectLiterals.clear();
+      visitPostorder(t, n, parent);
+      if (parent == null) {
+        // Run *all* remaining deferred actions, in case any were missed.
+        deferredActions.values().stream().forEach(Runnable::run);
+      } else {
+        deferredActions.removeAll(n).stream().forEach(Runnable::run);
       }
     }
 
-    private void attachLiteralTypes(Node n) {
+    /** Called by shouldTraverse on nodes after ensuring the inputId is set. */
+    void visitPreorder(NodeTraversal t, Node n, Node parent) {}
+
+    /** Called by visit on nodes after updating the inputId. */
+    void visitPostorder(NodeTraversal t, Node n, Node parent) {}
+
+    void attachLiteralTypes(Node n) {
       switch (n.getToken()) {
         case NULL:
           n.setJSType(getNativeType(NULL_TYPE));
@@ -705,10 +603,14 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
         case OBJECTLIT:
           JSDocInfo info = n.getJSDocInfo();
           if (info != null && info.getLendsName() != null) {
-            if (lentObjectLiterals == null) {
-              lentObjectLiterals = new ArrayList<>();
-            }
-            lentObjectLiterals.add(n);
+            // Defer analyzing object literals with a @lends annotation until we
+            // reach the root of the statement they're defined in.
+            //
+            // This ensures that if there are any @lends annotations on the object
+            // literals, the type on the @lends annotation resolves correctly.
+            //
+            // For more information, see http://blickly.github.io/closure-compiler-issues/#314
+            deferredActions.put(NodeUtil.getEnclosingStatement(n), () -> defineObjectLiteral(n));
           } else {
             defineObjectLiteral(n);
           }
@@ -750,12 +652,11 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       }
 
       info = NodeUtil.getBestJSDocInfo(objectLit);
-      Node lValue = NodeUtil.getBestLValue(objectLit);
-      String lValueName = NodeUtil.getBestLValueName(lValue);
-      boolean createdEnumType = false;
-      if (info != null && info.hasEnumParameterType()) {
+      boolean createEnumType = info != null && info.hasEnumParameterType();
+      if (createEnumType) {
+        Node lValue = NodeUtil.getBestLValue(objectLit);
+        String lValueName = NodeUtil.getBestLValueName(lValue);
         type = createEnumTypeFromNodes(objectLit, lValueName, info);
-        createdEnumType = true;
       }
 
       if (type == null) {
@@ -766,7 +667,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
 
       // If this is an enum, the properties were already taken care of above.
       processObjectLitProperties(
-          objectLit, ObjectType.cast(objectLit.getJSType()), !createdEnumType);
+          objectLit, ObjectType.cast(objectLit.getJSType()), !createEnumType);
     }
 
     /**
@@ -780,8 +681,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
     void processObjectLitProperties(
         Node objLit, ObjectType objLitType,
         boolean declareOnOwner) {
-      for (Node keyNode = objLit.getFirstChild(); keyNode != null;
-           keyNode = keyNode.getNext()) {
+      for (Node keyNode = objLit.getFirstChild(); keyNode != null; keyNode = keyNode.getNext()) {
         if (keyNode.isComputedProp()) {
           // Don't try defining computed properties on an object.
           continue;
@@ -1365,8 +1265,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
             typeRegistry.getNativeObjectType(GLOBAL_THIS).getConstructor();
         globalThisCtor.getInstanceType().clearCachedValues();
         globalThisCtor.getPrototype().clearCachedValues();
-        globalThisCtor
-            .setPrototypeBasedOn((type.toMaybeFunctionType()).getInstanceType());
+        globalThisCtor.setPrototypeBasedOn((type.toMaybeFunctionType()).getInstanceType());
       }
     }
 
@@ -1422,7 +1321,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
           n,
           prototypeSlot.getType(),
           input,
-          /* declared iff there's an explicit supertype */
+          // declared iff there's an explicit supertype
           superClassCtor == null
               || superClassCtor.getInstanceType().isEquivalentTo(getNativeType(OBJECT_TYPE)));
 
@@ -1483,8 +1382,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
      * @param rValue The node that {@code n} is being initialized to,
      *     or {@code null} if this is a stub declaration.
      */
-    JSType getDeclaredType(JSDocInfo info, Node lValue,
-        @Nullable Node rValue) {
+    JSType getDeclaredType(JSDocInfo info, Node lValue, @Nullable Node rValue) {
       if (info != null && info.hasType()) {
         return getDeclaredTypeInAnnotation(lValue, info);
       } else if (rValue != null
@@ -1637,18 +1535,11 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
     }
 
     /**
-     * Look for expressions that set a delegate method's calling convention.
-     */
-    private void checkForCallingConventionDefinitions(Node n) {
-      codingConvention.checkForCallingConventionDefinitions(n, delegateCallingConventions);
-    }
-
-    /**
      * Look for class-defining calls.
      * Because JS has no 'native' syntax for defining classes,
      * this is often very coding-convention dependent and business-logic heavy.
      */
-    private void checkForClassDefiningCalls(Node n) {
+    void checkForClassDefiningCalls(Node n) {
       SubclassRelationship relationship =
           codingConvention.getClassesDefinedByCall(n);
       if (relationship != null) {
@@ -1686,22 +1577,19 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
         }
       }
 
-      DelegateRelationship delegateRelationship =
-          codingConvention.getDelegateRelationship(n);
+      DelegateRelationship delegateRelationship = codingConvention.getDelegateRelationship(n);
       if (delegateRelationship != null) {
         applyDelegateRelationship(delegateRelationship);
       }
 
-      ObjectLiteralCast objectLiteralCast =
-          codingConvention.getObjectLiteralCast(n);
+      ObjectLiteralCast objectLiteralCast = codingConvention.getObjectLiteralCast(n);
       if (objectLiteralCast != null) {
         if (objectLiteralCast.diagnosticType == null) {
           ObjectType type = ObjectType.cast(
               typeRegistry.getType(currentScope, objectLiteralCast.typeName));
           if (type != null && type.getConstructor() != null) {
             setDeferredType(objectLiteralCast.objectNode, type);
-            objectLiteralCast.objectNode.putBooleanProp(
-                Node.REFLECTED_OBJECT, true);
+            objectLiteralCast.objectNode.putBooleanProp(Node.REFLECTED_OBJECT, true);
           } else {
             report(JSError.make(n, CONSTRUCTOR_EXPECTED));
           }
@@ -1716,12 +1604,13 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
      */
     private void applyDelegateRelationship(
         DelegateRelationship delegateRelationship) {
-      ObjectType delegatorObject = ObjectType.cast(
-          typeRegistry.getType(currentScope, delegateRelationship.delegator));
-      ObjectType delegateBaseObject = ObjectType.cast(
-          typeRegistry.getType(currentScope, delegateRelationship.delegateBase));
-      ObjectType delegateSuperObject = ObjectType.cast(
-          typeRegistry.getType(currentScope, codingConvention.getDelegateSuperclassName()));
+      ObjectType delegatorObject =
+          ObjectType.cast(typeRegistry.getType(currentScope, delegateRelationship.delegator));
+      ObjectType delegateBaseObject =
+          ObjectType.cast(typeRegistry.getType(currentScope, delegateRelationship.delegateBase));
+      ObjectType delegateSuperObject =
+          ObjectType.cast(
+              typeRegistry.getType(currentScope, codingConvention.getDelegateSuperclassName()));
       if (delegatorObject != null
           && delegateBaseObject != null
           && delegateSuperObject != null) {
@@ -1730,10 +1619,8 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
         FunctionType delegateSuperCtor = delegateSuperObject.getConstructor();
 
         if (delegatorCtor != null && delegateBaseCtor != null && delegateSuperCtor != null) {
-          FunctionParamBuilder functionParamBuilder =
-              new FunctionParamBuilder(typeRegistry);
-          functionParamBuilder.addRequiredParams(
-              getNativeType(U2U_CONSTRUCTOR_TYPE));
+          FunctionParamBuilder functionParamBuilder = new FunctionParamBuilder(typeRegistry);
+          functionParamBuilder.addRequiredParams(getNativeType(U2U_CONSTRUCTOR_TYPE));
           FunctionType findDelegate = typeRegistry.createFunctionType(
               typeRegistry.createDefaultObjectUnion(delegateBaseObject),
               functionParamBuilder.build());
@@ -1831,17 +1718,16 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
 
       if (valueType == null) {
         if (parent.isExprResult()) {
-          stubDeclarations.add(new StubDeclaration(
-              n,
-              t.getInput() != null && t.getInput().isExtern(),
-              ownerName));
+          // t is mutable so make sure to capture the current state before the lambda.
+          boolean isExtern = t.getInput() != null && t.getInput().isExtern();
+          deferredActions.put(
+              currentScope.getRootNode(), () -> resolveStubDeclaration(n, isExtern, ownerName));
         }
 
         return;
       }
 
-      boolean inferred = isQualifiedNameInferred(
-          qName, n, info, rhsValue, valueType);
+      boolean inferred = isQualifiedNameInferred(qName, n, info, rhsValue, valueType);
       if (!inferred) {
         ObjectType ownerType = getObjectSlot(ownerName);
         if (ownerType != null) {
@@ -2013,37 +1899,33 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
     }
 
     /**
-     * Resolve any stub declarations to unknown types if we could not
-     * find types for them during traversal.
+     * Resolve any type-less stub declarations to unknown types if we could not find types for them
+     * during traversal.  This method is only called as a deferred action after the root node is
+     * visted.
      */
-    void resolveStubDeclarations() {
-      for (StubDeclaration stub : stubDeclarations) {
-        Node n = stub.node;
-        String qName = n.getQualifiedName();
-        String propName = n.getLastChild().getString();
-        String ownerName = stub.ownerName;
-        boolean isExtern = stub.isExtern;
+    void resolveStubDeclaration(Node n, boolean isExtern, String ownerName) {
+      String qName = n.getQualifiedName();
+      String propName = n.getLastChild().getString();
 
-        if (currentScope.hasOwnSlot(qName)) {
-          continue;
-        }
+      if (currentScope.hasOwnSlot(qName)) {
+        return;
+      }
 
-        // If we see a stub property, make sure to register this property
-        // in the type registry.
-        ObjectType ownerType = getObjectSlot(ownerName);
-        JSType inheritedType = getInheritedInterfacePropertyType(ownerType, propName);
-        JSType stubType = inheritedType == null ? unknownType : inheritedType;
-        defineSlot(n, stubType, true);
+      // If we see a stub property, make sure to register this property
+      // in the type registry.
+      ObjectType ownerType = getObjectSlot(ownerName);
+      JSType inheritedType = getInheritedInterfacePropertyType(ownerType, propName);
+      JSType stubType = inheritedType == null ? unknownType : inheritedType;
+      defineSlot(n, stubType, true);
 
-        if (ownerType != null && (isExtern || ownerType.isFunctionPrototypeType())) {
-          // If this is a stub for a prototype, just declare it
-          // as an unknown type. These are seen often in externs.
-          ownerType.defineInferredProperty(
-              propName, stubType, n);
-        } else {
-          typeRegistry.registerPropertyOnType(
-              propName, ownerType == null ? stubType : ownerType);
-        }
+      if (ownerType != null && (isExtern || ownerType.isFunctionPrototypeType())) {
+        // If this is a stub for a prototype, just declare it
+        // as an unknown type. These are seen often in externs.
+        ownerType.defineInferredProperty(
+            propName, stubType, n);
+      } else {
+        typeRegistry.registerPropertyOnType(
+            propName, ownerType == null ? stubType : ownerType);
       }
     }
 
@@ -2052,7 +1934,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
      * @param candidate A qualified name node.
      * @param info JSDoc comments.
      */
-    private void checkForTypedef(Node candidate, JSDocInfo info) {
+    void checkForTypedef(Node candidate, JSDocInfo info) {
       if (info == null || !info.hasTypedefType()) {
         return;
       }
@@ -2082,64 +1964,107 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
         defineSlot(candidate, getNativeType(NO_TYPE), false);
       }
     }
-  }
-
-  /** A stub declaration without any type information. */
-  private static final class StubDeclaration {
-    private final Node node;
-    private final boolean isExtern;
-    private final String ownerName;
-
-    private StubDeclaration(Node node, boolean isExtern, String ownerName) {
-      this.node = node;
-      this.isExtern = isExtern;
-      this.ownerName = ownerName;
-    }
-  }
+  } // end AbstractScopeBuilder
 
   /** A shallow traversal of the global scope to build up all classes, functions, and methods. */
-  private final class GlobalScopeBuilder extends AbstractScopeBuilder {
-    GlobalScopeBuilder(TypedScope scope) {
+  private final class NormalScopeBuilder extends AbstractScopeBuilder {
+
+    NormalScopeBuilder(TypedScope scope) {
       super(scope);
     }
-  } // end GlobalScopeBuilder
+
+    @Override
+    void visitPreorder(NodeTraversal t, Node n, Node parent) {
+      // Handle hoisted functions ahead of time, when preorder-visiting their enclosing block.
+      if (NodeUtil.isStatementParent(n)) {
+        for (Node child = n.getFirstChild(); child != null; child = child.getNext()) {
+          if (NodeUtil.isHoistedFunctionDeclaration(child)) {
+            defineFunctionLiteral(child);
+          }
+        }
+      }
+
+      // Create any child block scopes "pre-order" as we see them. This is required because hoisted
+      // or qualified names defined in earlier blocks might be referred to later outside the block.
+      // This isn't a big deal in most cases since a NamedType will be created and resolved later,
+      // but if a NamedType is used for a superclass, we lose a lot of valuable checking. Recursing
+      // into child blocks immediately prevents this from being a problem.
+      if (parent != null && NodeUtil.createsBlockScope(n)) {
+        createScope(n, currentScope);
+      }
+
+      // All other functions are handled when we see the actual function node.
+      if (n.isFunction() && !NodeUtil.isHoistedFunctionDeclaration(n)) {
+        defineFunctionLiteral(n);
+      }
+    }
+
+    @Override
+    void visitPostorder(NodeTraversal t, Node n, Node parent) {
+      switch (n.getToken()) {
+        case CALL:
+          checkForClassDefiningCalls(n);
+          break;
+
+        case ASSIGN:
+          // Handle initialization of properties.
+          Node firstChild = n.getFirstChild();
+          if (firstChild.isGetProp() && firstChild.isQualifiedName()) {
+            maybeDeclareQualifiedName(t, n.getJSDocInfo(), firstChild, n, firstChild.getNext());
+          }
+          break;
+
+        case CATCH:
+          defineCatch(n);
+          break;
+
+        case VAR:
+        case LET:
+        case CONST:
+          defineVar(n);
+          // Handle typedefs.
+          if (n.hasOneChild()) {
+            checkForTypedef(n.getFirstChild(), n.getJSDocInfo());
+          }
+          break;
+
+        case GETPROP:
+          codingConvention.checkForCallingConventionDefinitions(n, delegateCallingConventions);
+          // Handle stubbed properties.
+          if (parent.isExprResult() && n.isQualifiedName()) {
+            maybeDeclareQualifiedName(t, n.getJSDocInfo(), n, parent, null);
+          }
+          break;
+        default:
+          break;
+      }
+    }
+  } // end NormalScopeBuilder
 
   /**
-   * A shallow traversal of a local scope to find all arguments and
-   * local variables.
+   * Scope builder subclass for function scopes, which only contain bleeding function names and
+   * parameter names.  The main function body is handled by the a NormalScopeBuilder on the function
+   * block.
    */
-  private final class LocalScopeBuilder extends AbstractScopeBuilder {
-    /**
-     * @param scope The scope that we're building.
-     */
-    private LocalScopeBuilder(TypedScope scope) {
+  private final class FunctionScopeBuilder extends AbstractScopeBuilder {
+
+    FunctionScopeBuilder(TypedScope scope) {
       super(scope);
     }
 
-    /**
-     * Visit a node in a local scope, and add any local variables or catch
-     * parameters into the local symbol table.
-     *
-     * @param t The node traversal.
-     * @param n The node being visited.
-     * @param parent The parent of n
-     */
-    @Override public void visit(NodeTraversal t, Node n, Node parent) {
-      if (n == currentScope.getRootNode()) {
-        return;
+    @Override
+    void visitPreorder(NodeTraversal t, Node n, Node parent) {
+      if (parent == null) {
+        handleFunctionInputs();
+      } else if (n.isFunction()) {
+        defineFunctionLiteral(n);
       }
-
-      if (n.isParamList() && parent == currentScope.getRootNode()) {
-        handleFunctionInputs(parent);
-        return;
-      }
-
-      super.visit(t, n, parent);
     }
 
     /** Handle bleeding functions and function parameters. */
-    private void handleFunctionInputs(Node fnNode) {
+    void handleFunctionInputs() {
       // Handle bleeding functions.
+      Node fnNode = currentScope.getRootNode();
       Node fnNameNode = fnNode.getFirstChild();
       String fnName = fnNameNode.getString();
       if (!fnName.isEmpty()) {
@@ -2156,13 +2081,12 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
         }
       }
 
-      declareArguments(fnNode);
+      declareArguments();
     }
 
-    /**
-     * Declares all of a function's arguments.
-     */
-    private void declareArguments(Node functionNode) {
+    /** Declares all of a function's arguments. */
+    void declareArguments() {
+      Node functionNode = currentScope.getRootNode();
       Node astParameters = functionNode.getSecondChild();
       Node iifeArgumentNode = null;
 
@@ -2220,7 +2144,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
         }
       }
     } // end declareArguments
-  } // end LocalScopeBuilder
+  } // end FunctionScopeBuilder
 
   /**
    * Does a first-order function analysis that just looks at simple things like what variables are

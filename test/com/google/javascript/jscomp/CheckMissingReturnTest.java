@@ -277,27 +277,37 @@ public final class CheckMissingReturnTest extends CompilerTestCase {
     testNotMissing("number", body);
   }
 
-  public void testArrowFunctions() {
+  public void testArrowFunctions_noReturn() {
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
-
-    // undefined return statement
     testNoWarning(lines("/** @return {undefined} */", "() => {}"));
+  }
 
-    // arrow function with expression function body
+  public void testArrowFunctions_expressionBody1() {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     testSame(lines("/** @return {number} */", "() => 1"));
+  }
 
+  public void testArrowFunctions_expressionBody2() {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     testSame(lines("/** @return {number} */", "(a) => (a > 3) ? 1 : 0"));
+  }
 
-    // arrow function with block function body
+  public void testArrowFunctions_block() {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     testSame(
         lines(
             "/** @return {number} */", "(a) => { if (a > 3) { return 1; } else { return 0; }}"));
+  }
 
+  public void testArrowFunctions_blockMissingReturn() {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     testWarning(
         lines("/** @return {number} */", "(a) => { if (a > 3) { return 1; } else { } }"),
         CheckMissingReturn.MISSING_RETURN_STATEMENT);
+  }
 
-    // arrow function return is object literal
+  public void testArrowFunctions_objectLiteralExpression() {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     testSame("(a) => ({foo: 1});");
   }
 

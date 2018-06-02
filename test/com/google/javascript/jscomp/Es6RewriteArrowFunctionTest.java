@@ -447,8 +447,10 @@ public class Es6RewriteArrowFunctionTest extends CompilerTestCase {
   }
 
   public void testNestingArrow() {
-    test("var f = x => y => x+y;",
-         "var f = function(x) {return function(y) { return x+y; }; };");
+    test(
+        externs(""),
+        srcs("var f = x =>\n y => x+y;"),
+        expected("var f = function(x) {return function(y) { return x+y; }; };"));
   }
 
   public void testNestingArrowsCapturingThis() {

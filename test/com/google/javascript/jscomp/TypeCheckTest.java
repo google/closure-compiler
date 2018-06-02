@@ -19988,6 +19988,59 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "required: null"));
   }
 
+  public void testAnnotatedObjectLiteralInDefaultParameterInitializer() {
+    // Default parameter initializers need to handle defining object literals with annotated
+    // function members.
+    testTypes(
+        lines(
+            "/** @param {{g: function(number): undefined}=} x */",
+            "function f(x = {/** @param {string} x */ g(x) {}}) {}"),
+        lines(
+            "assignment",
+            "found   : ({g: function(number): undefined}|{g: function(string): undefined})",
+            "required: (undefined|{g: function(number): undefined})"));
+  }
+
+  public void testAnnotatedObjectLiteralInBlocklessArrow1() {
+    testTypes(
+        lines(
+            "function f(/** {g: function(number): undefined} */ x) {}",
+            "() => f({/** @param {string} x */ g(x) {}});"),
+        lines(
+            "actual parameter 1 of f does not match formal parameter",
+            "found   : {g: function(string): undefined}",
+            "required: {g: function(number): undefined}",
+            "missing : []",
+            "mismatch: [g]"));
+  }
+
+  public void testAnnotatedObjectLiteralInBlocklessArrow2() {
+    testTypes(
+        lines(
+            "function f(/** {g: function(): string} */ x) {}",
+            "() => f({/** @constructor */ g: function() {}});"),
+        lines(
+            "actual parameter 1 of f does not match formal parameter",
+            "found   : {g: function(new:): undefined}",
+            "required: {g: function(): string}",
+            "missing : []",
+            "mismatch: [g]"));
+  }
+
+  public void testAnnotatedObjectLiteralInBlocklessArrow3() {
+    testTypes(
+        lines(
+            "/** @constructor */ function G() {}",
+            "function f(/** {g: function(): string} */ x) {}",
+            "() => f({/** @constructor */ g: G});"),
+        lines(
+            "actual parameter 1 of f does not match formal parameter",
+            "found   : {g: function(new:G): undefined}",
+            "required: {g: function(): string}",
+            "missing : []",
+            "mismatch: [g]"));
+  }
+
   private void testClosureTypes(String js, String description) {
     testClosureTypesMultipleWarnings(js,
         description == null ? null : ImmutableList.of(description));
