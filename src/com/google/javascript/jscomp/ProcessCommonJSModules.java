@@ -334,10 +334,25 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
   static class ExportInfo {
     final Node node;
     final Scope scope;
+    final boolean isInSupportedScope;
 
     ExportInfo(Node node, Scope scope) {
       this.node = node;
       this.scope = scope;
+
+      Node disqualifyingParent =
+          NodeUtil.getEnclosingNode(
+              node,
+              new Predicate<Node>() {
+                @Override
+                public boolean apply(Node node) {
+                  return node.isIf()
+                      || node.isHook()
+                      || node.isFunction()
+                      || node.isArrowFunction();
+                }
+              });
+      this.isInSupportedScope = disqualifyingParent == null;
     }
   }
 
@@ -575,10 +590,9 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
           moduleExports.add(new ExportInfo(n, t.getScope()));
 
           // If the module.exports statement is nested in the then branch of an if statement,
+          // and the test of the if checks for "module" or "define,
           // assume the if statement is an UMD pattern with a common js export in the then branch
-          // This seems fragile but has worked well for a long time.
-          // TODO(ChadKillingsworth): Discover if there is a better way to detect these.
-          Node ifAncestor = getOutermostIfAncestor(parent);
+          Node ifAncestor = getOutermostUmdTest(parent);
           if (ifAncestor != null && (NodeUtil.isLValue(n) || isInIfTest(n))) {
             UmdPattern existingPattern = findUmdPattern(umdPatterns, ifAncestor);
             if (existingPattern != null) {
@@ -598,11 +612,10 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
         }
       } else if (n.matchesQualifiedName("define.amd")) {
         // If a define.amd statement is nested in the then branch of an if statement,
+        // and the test of the if checks for "module" or "define,
         // assume the if statement is an UMD pattern with a common js export
         // in the else branch
-        // This seems fragile but has worked well for a long time.
-        // TODO(ChadKillingsworth): Discover if there is a better way to detect these.
-        Node ifAncestor = getOutermostIfAncestor(parent);
+        Node ifAncestor = getOutermostUmdTest(parent);
         if (ifAncestor != null
             && findUmdPattern(umdPatterns, ifAncestor) == null
             && (NodeUtil.isLValue(n) || isInIfTest(n))) {
@@ -635,10 +648,9 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
             exports.add(new ExportInfo(n, t.getScope()));
 
             // If the exports statement is nested in the then branch of an if statement,
+            // and the test of the if checks for "module" or "define,
             // assume the if statement is an UMD pattern with a common js export in the then branch
-            // This seems fragile but has worked well for a long time.
-            // TODO(ChadKillingsworth): Discover if there is a better way to detect these.
-            Node ifAncestor = getOutermostIfAncestor(parent);
+            Node ifAncestor = getOutermostUmdTest(parent);
             if (ifAncestor != null
                 && findUmdPattern(umdPatterns, ifAncestor) == null
                 && (NodeUtil.isLValue(n) || isInIfTest(n))) {
@@ -848,8 +860,11 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
       return directAssignments < 2;
     }
 
-    /** Find the outermost if node ancestor for a node without leaving the function scope */
-    private Node getOutermostIfAncestor(Node n) {
+    /**
+     * Find the outermost if node ancestor for a node without leaving the function scope. To match,
+     * the test class of the "if" statement must reference "module" or "define" names.
+     */
+    private Node getOutermostUmdTest(Node n) {
       if (n == null || NodeUtil.isTopLevel(n) || n.isFunction()) {
         return null;
       }
@@ -861,15 +876,37 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
       // When walking up ternary operations (hook), don't check if parent is the condition,
       // because one ternary operation can be then/else branch of another.
       if (parent.isIf() || parent.isHook()) {
-        Node outerIf = getOutermostIfAncestor(parent);
+        Node outerIf = getOutermostUmdTest(parent);
         if (outerIf != null) {
           return outerIf;
         }
 
-        return parent;
+        final List<Node> umdTests = new ArrayList<>();
+        NodeUtil.visitPreOrder(
+            parent.getFirstChild(),
+            new NodeUtil.Visitor() {
+              @Override
+              public void visit(Node node) {
+                if (node.isName()
+                    && (node.getString().equals(MODULE) || node.getString().equals("define"))) {
+                  umdTests.add(node);
+                }
+              }
+            });
+
+        // Webpack replaces tests of `typeof module !== 'undefined'` with `true`
+        if (umdTests.size() == 0 && parent.getFirstChild().isTrue()) {
+          umdTests.add(parent.getFirstChild());
+        }
+
+        if (umdTests.size() > 0) {
+          return parent;
+        }
+
+        return null;
       }
 
-      return getOutermostIfAncestor(parent);
+      return getOutermostUmdTest(parent);
     }
 
     /** Return whether the node is within the test portion of an if statement */
@@ -1350,7 +1387,8 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
           && root.getParent().getParent().isExprResult()
           && rValueVar != null
           && (NodeUtil.getEnclosingScript(rValueVar.nameNode) == null
-              || (rValueVar.nameNode.getParent() != null && !rValueVar.isParam()))) {
+              || (rValueVar.nameNode.getParent() != null && !rValueVar.isParam()))
+          && export.isInSupportedScope) {
         root.getParent().getParent().detach();
         t.reportCodeChange();
         return;
@@ -1388,7 +1426,8 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
         } else if (root.getNext() != null
             && root.getNext().isName()
             && rValueVar != null
-            && rValueVar.isGlobal()) {
+            && rValueVar.isGlobal()
+            && export.isInSupportedScope) {
           // This is a where a module export assignment is used in a complex expression.
           // Before: `SOME_VALUE !== undefined && module.exports = SOME_VALUE`
           // After: `SOME_VALUE !== undefined && module$name`
@@ -1808,10 +1847,11 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
 
         Node exportedName = getExportedNameNode(export);
         // We don't want to handle the export itself
-        if (exportRValue == n
-            || ((NodeUtil.isClassExpression(exportRValue)
-                    || NodeUtil.isFunctionExpression(exportRValue))
-                && exportedName == n)) {
+        if (export.isInSupportedScope
+            && (exportRValue == n
+                || ((NodeUtil.isClassExpression(exportRValue)
+                        || NodeUtil.isFunctionExpression(exportRValue))
+                    && exportedName == n))) {
           return null;
         }
 
@@ -1858,9 +1898,16 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
             key = key.getNext();
           }
           if (key != null && keyIsExport) {
-            return baseExportName + "." + key.getString();
+            if (export.isInSupportedScope) {
+              return baseExportName + "." + key.getString();
+            } else {
+              return n.getQualifiedName();
+            }
           }
         } else {
+          if (!export.isInSupportedScope) {
+            return n.getQualifiedName();
+          }
           if (var.getNameNode() == exportedName) {
             String exportPrefix;
             if (exportBaseQName.startsWith(MODULE)) {
