@@ -17,6 +17,10 @@
 // Tests import statement with a ".js" extension in the module specifier.
 import * as m from './module_test_resources/simpleExport.js';
 
-function testImportStar() {
-  assertEquals('g', m.g());
-}
+const testSuite = goog.require('goog.testing.testSuite');
+
+testSuite({
+  testImportStar() {
+    assertEquals('g', m.g());
+  }
+});

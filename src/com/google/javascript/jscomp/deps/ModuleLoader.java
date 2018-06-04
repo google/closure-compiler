@@ -72,31 +72,51 @@ public final class ModuleLoader {
   /** Used to canonicalize paths before resolution. */
   private final PathResolver pathResolver;
 
+  private final PathEscaper pathEscaper;
+
   private final ModuleResolver moduleResolver;
 
   /**
    * Creates an instance of the module loader which can be used to locate ES6 and CommonJS modules.
    *
-   * @param inputs All inputs to the compilation process.
+   * @param moduleRoots path prefixes to strip from module paths
+   * @param inputs all inputs to the compilation process. Used to ensure that resolved paths
+   *     references an valid input.
+   * @param factory creates a module resolver, which determines how module identifiers are resolved
+   * @param pathResolver determines how to sanitize paths before resolving
+   * @param pathEscaper determines if / how paths should be escaped
    */
   public ModuleLoader(
       @Nullable ErrorHandler errorHandler,
       Iterable<String> moduleRoots,
       Iterable<? extends DependencyInfo> inputs,
       ModuleResolverFactory factory,
-      PathResolver pathResolver) {
+      PathResolver pathResolver,
+      PathEscaper pathEscaper) {
     checkNotNull(moduleRoots);
     checkNotNull(inputs);
     checkNotNull(pathResolver);
+    checkNotNull(pathEscaper);
     this.pathResolver = pathResolver;
+    this.pathEscaper = pathEscaper;
     this.errorHandler = errorHandler == null ? new NoopErrorHandler() : errorHandler;
-    this.moduleRootPaths = createRootPaths(moduleRoots, pathResolver);
+    this.moduleRootPaths = createRootPaths(moduleRoots, pathResolver, pathEscaper);
     this.modulePaths =
         resolvePaths(
             Iterables.transform(Iterables.transform(inputs, DependencyInfo::getName), pathResolver),
-            moduleRootPaths);
+            moduleRootPaths,
+            pathEscaper);
     this.moduleResolver =
-        factory.create(this.modulePaths, this.moduleRootPaths, this.errorHandler);
+        factory.create(this.modulePaths, this.moduleRootPaths, this.errorHandler, this.pathEscaper);
+  }
+
+  public ModuleLoader(
+      @Nullable ErrorHandler errorHandler,
+      Iterable<String> moduleRoots,
+      Iterable<? extends DependencyInfo> inputs,
+      ModuleResolverFactory factory,
+      PathResolver pathResolver) {
+    this(errorHandler, moduleRoots, inputs, factory, pathResolver, PathEscaper.ESCAPE);
   }
 
   public ModuleLoader(
@@ -104,7 +124,7 @@ public final class ModuleLoader {
       Iterable<String> moduleRoots,
       Iterable<? extends DependencyInfo> inputs,
       ModuleResolverFactory factory) {
-    this(errorHandler, moduleRoots, inputs, factory, PathResolver.RELATIVE);
+    this(errorHandler, moduleRoots, inputs, factory, PathResolver.RELATIVE, PathEscaper.ESCAPE);
   }
 
   @VisibleForTesting
@@ -197,14 +217,7 @@ public final class ModuleLoader {
 
   /** Resolves a path into a {@link ModulePath}. */
   public ModulePath resolve(String path) {
-    return new ModulePath(
-        normalize(ModuleNames.escapePath(pathResolver.apply(path)), moduleRootPaths));
-  }
-
-  /** Resolves a path into a {@link ModulePath}. */
-  public ModulePath resolveWithoutEscapingPath(String path) {
-    return new ModulePath(
-        normalize(pathResolver.apply(path), moduleRootPaths));
+    return new ModulePath(normalize(pathEscaper.escape(pathResolver.apply(path)), moduleRootPaths));
   }
 
   /** Whether this is relative to the current file, or a top-level identifier. */
@@ -228,14 +241,14 @@ public final class ModuleLoader {
   }
 
   /**
-   * @param roots List of module root paths. This path prefix will be removed from module paths when
-   *     resolved.
+   * Normalizes the given root paths, which are path prefixes to be removed from a module path when
+   * resolved.
    */
   private static ImmutableList<String> createRootPaths(
-      Iterable<String> roots, PathResolver resolver) {
+      Iterable<String> roots, PathResolver resolver, PathEscaper escaper) {
     ImmutableList.Builder<String> builder = ImmutableList.builder();
     for (String root : roots) {
-      String rootModuleName = ModuleNames.escapePath(resolver.apply(root));
+      String rootModuleName = escaper.escape(resolver.apply(root));
       if (isAmbiguousIdentifier(rootModuleName)) {
         rootModuleName = MODULE_SLASH + rootModuleName;
       }
@@ -251,11 +264,11 @@ public final class ModuleLoader {
    * @return List of normalized modules which always have a leading slash
    */
   private static ImmutableSet<String> resolvePaths(
-      Iterable<String> modulePaths, Iterable<String> roots) {
+      Iterable<String> modulePaths, Iterable<String> roots, PathEscaper escaper) {
     ImmutableSet.Builder<String> resolved = ImmutableSet.builder();
     Set<String> knownPaths = new HashSet<>();
     for (String name : modulePaths) {
-      String canonicalizedPath = ModuleNames.escapePath(name);
+      String canonicalizedPath = escaper.escape(name);
       if (!knownPaths.add(normalize(canonicalizedPath, roots))) {
         // Having root paths "a" and "b" and source files "a/f.js" and "b/f.js" is ambiguous.
         throw new IllegalArgumentException(
@@ -304,6 +317,33 @@ public final class ModuleLoader {
     return this.errorHandler;
   }
 
+  /** Indicates whether to escape characters in paths. */
+  public enum PathEscaper {
+    /**
+     * Escapes characters in paths according to {@link ModuleNames#escapePath(String)} and then
+     * canonicalizes it.
+     */
+    ESCAPE {
+      @Override
+      public String escape(String path) {
+        return ModuleNames.escapePath(path);
+      }
+    },
+
+    /**
+     * Does not escaped characters in paths, but does canonicalize it according to {@link
+     * ModuleNames#canonicalizePath(String)}.
+     */
+    CANONICALIZE_ONLY {
+      @Override
+      public String escape(String path) {
+        return ModuleNames.canonicalizePath(path);
+      }
+    };
+
+    public abstract String escape(String path);
+  }
+
   /** An enum indicating whether to absolutize paths. */
   public enum PathResolver implements Function<String, String> {
     RELATIVE {
@@ -328,7 +368,8 @@ public final class ModuleLoader {
     ModuleResolver create(
         ImmutableSet<String> modulePaths,
         ImmutableList<String> moduleRootPaths,
-        ErrorHandler errorHandler);
+        ErrorHandler errorHandler,
+        PathEscaper pathEscaper);
   }
 
   /** A trivial module loader with no roots. */

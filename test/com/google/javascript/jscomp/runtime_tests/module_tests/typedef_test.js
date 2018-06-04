@@ -16,9 +16,13 @@
 
 import * as t from './module_test_resources/typedef.js';
 
+const testSuite = goog.require('goog.testing.testSuite');
+
 /** @type {t.StringOrNumber} */
 var x = 1;
 
-function testNothing() {
-  // Nothing to do. Just making sure the typedef above is understood.
-}
+testSuite({
+  testNothing() {
+    // Nothing to do. Just making sure the typedef above is understood.
+  }
+});

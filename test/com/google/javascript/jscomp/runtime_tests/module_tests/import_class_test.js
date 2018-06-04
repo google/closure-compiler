@@ -22,6 +22,8 @@
 
 import {Parent} from './module_test_resources/exportClass.js';
 
+const testSuite = goog.require('goog.testing.testSuite');
+
 export class Child extends Parent {
   /**
    * @param {Parent} parent The parent.
@@ -32,11 +34,13 @@ export class Child extends Parent {
 
 export class GrandChild extends Child {}
 
-function testClass() {
-  new Child().useParent(new Parent());
-}
+testSuite({
+  testClass() {
+    new Child().useParent(new Parent());
+  },
 
-function testStaticInheritanceAcrossModules() {
-  assertEquals('Parent.staticFunction', Child.staticFunction());
-  assertEquals('Parent.staticFunction', GrandChild.staticFunction());
-}
+  testStaticInheritanceAcrossModules() {
+    assertEquals('Parent.staticFunction', Child.staticFunction());
+    assertEquals('Parent.staticFunction', GrandChild.staticFunction());
+  },
+});

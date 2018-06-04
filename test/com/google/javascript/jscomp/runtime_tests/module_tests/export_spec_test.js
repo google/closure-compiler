@@ -16,6 +16,10 @@
 
 import {x} from './module_test_resources/exportSpec.js';
 
-function testX() {
-  assertEquals(5, x);
-}
+const testSuite = goog.require('goog.testing.testSuite');
+
+testSuite({
+  testX() {
+    assertEquals(5, x);
+  }
+});

@@ -27,6 +27,7 @@ import com.google.javascript.jscomp.DiagnosticType;
 import com.google.javascript.jscomp.ErrorHandler;
 import com.google.javascript.jscomp.JSError;
 import com.google.javascript.jscomp.deps.ModuleLoader.ModuleResolverFactory;
+import com.google.javascript.jscomp.deps.ModuleLoader.PathEscaper;
 import java.util.Comparator;
 import java.util.Set;
 import javax.annotation.Nullable;
@@ -56,9 +57,10 @@ public class BrowserWithTransformedPrefixesModuleResolver extends ModuleResolver
     public ModuleResolver create(
         ImmutableSet<String> modulePaths,
         ImmutableList<String> moduleRootPaths,
-        ErrorHandler errorHandler) {
+        ErrorHandler errorHandler,
+        PathEscaper pathEscaper) {
       return new BrowserWithTransformedPrefixesModuleResolver(
-          modulePaths, moduleRootPaths, errorHandler, prefixReplacements);
+          modulePaths, moduleRootPaths, errorHandler, pathEscaper, prefixReplacements);
     }
   }
 
@@ -83,8 +85,9 @@ public class BrowserWithTransformedPrefixesModuleResolver extends ModuleResolver
       ImmutableSet<String> modulePaths,
       ImmutableList<String> moduleRootPaths,
       ErrorHandler errorHandler,
+      PathEscaper pathEscaper,
       ImmutableMap<String, String> prefixReplacements) {
-    super(modulePaths, moduleRootPaths, errorHandler);
+    super(modulePaths, moduleRootPaths, errorHandler, pathEscaper);
     Set<PrefixReplacement> p =
         prefixReplacements
             .entrySet()

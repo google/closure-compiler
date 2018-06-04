@@ -14,19 +14,23 @@
  * limitations under the License.
  */
 
-import Foo from 'goog:test.ns.Foo';
-import {staticBar} from 'goog:test.ns.Foo';
-import {foo, bar} from 'goog:test.goog.module';
+import {bar, foo} from 'goog:data.goog.module';
+import Foo from 'goog:data.ns.Foo';
+import {staticBar} from 'goog:data.ns.Foo';
 
-function testImportDefault() {
-  assertEquals(42, new Foo().bar);
-}
+const testSuite = goog.require('goog.testing.testSuite');
 
-function testImportDestructuring() {
-  assertEquals(23, staticBar);
-}
+testSuite({
+  testImportDefault() {
+    assertEquals(42, new Foo().bar);
+  },
 
-function testImportDestructuring_googModule() {
-  assertEquals(23, foo);
-  assertEquals(42, bar);
-}
+  testImportDestructuring() {
+    assertEquals(23, staticBar);
+  },
+
+  testImportDestructuring_googModule() {
+    assertEquals(23, foo);
+    assertEquals(42, bar);
+  },
+});

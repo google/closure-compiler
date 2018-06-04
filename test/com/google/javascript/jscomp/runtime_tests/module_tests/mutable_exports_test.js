@@ -14,19 +14,22 @@
  * limitations under the License.
  */
 
-import {a, b, set} from './module_test_resources/mutable_exports.js';
 import * as Mutable from './module_test_resources/mutable_exports.js';
+import {a, b, set} from './module_test_resources/mutable_exports.js';
 
-goog.require('goog.testing.asserts');
+const asserts = goog.require('goog.testing.asserts');
+const testSuite = goog.require('goog.testing.testSuite');
 
-function testMutableExportS() {
-  assertEquals(0, a);
-  assertEquals(1, b);
-  assertEquals(2, Mutable.c);
+testSuite({
+  testMutableExportS() {
+    asserts.assertEquals(0, a);
+    asserts.assertEquals(1, b);
+    asserts.assertEquals(2, Mutable.c);
 
-  set(1, 2, 3);
+    set(1, 2, 3);
 
-  assertEquals(1, a);
-  assertEquals(2, b);
-  assertEquals(3, Mutable.c);
-}
+    asserts.assertEquals(1, a);
+    asserts.assertEquals(2, b);
+    asserts.assertEquals(3, Mutable.c);
+  }
+});

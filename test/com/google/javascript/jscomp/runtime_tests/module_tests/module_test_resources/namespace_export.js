@@ -17,13 +17,13 @@
 /**
  * @fileoverview A file exporting symbols as namespaced properties.
  */
-goog.provide('test.ns.Foo');
+goog.provide('data.ns.Foo');
 
 /** @constructor */
-test.ns.Foo = function() {
+data.ns.Foo = function() {
   /** @public @type {number} */
   this.bar = 42;
 };
 
 /** @type {number} */
-test.ns.Foo.staticBar = 23;
+data.ns.Foo.staticBar = 23;

@@ -19,6 +19,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.deps.ModuleLoader;
+import com.google.javascript.jscomp.deps.ModuleLoader.PathEscaper;
 import java.util.List;
 
 
@@ -26,6 +27,7 @@ public final class Es6RewriteModulesToCommonJsModulesTest extends CompilerTestCa
   private List<String> moduleRoots;
   private ModuleLoader.ResolutionMode resolutionMode;
   private ImmutableMap<String, String> prefixReplacements;
+  private PathEscaper pathEscaper;
 
   @Override
   protected void setUp() throws Exception {
@@ -36,6 +38,7 @@ public final class Es6RewriteModulesToCommonJsModulesTest extends CompilerTestCa
     moduleRoots = ImmutableList.of();
     resolutionMode = ModuleLoader.ResolutionMode.BROWSER;
     prefixReplacements = ImmutableMap.of();
+    pathEscaper = PathEscaper.ESCAPE;
   }
 
   @Override
@@ -47,6 +50,7 @@ public final class Es6RewriteModulesToCommonJsModulesTest extends CompilerTestCa
     options.setModuleRoots(moduleRoots);
     options.setModuleResolutionMode(resolutionMode);
     options.setBrowserResolverPrefixReplacements(prefixReplacements);
+    options.setPathEscaper(pathEscaper);
     return options;
   }
 
@@ -454,7 +458,8 @@ public final class Es6RewriteModulesToCommonJsModulesTest extends CompilerTestCa
             "}, 'testcode', []);"));
   }
 
-  public void testFileNameIsPreserved() {
+  public void testFileNameIsPreservedInRegisteredPathWhenNotEscaping() {
+    pathEscaper = PathEscaper.CANONICALIZE_ONLY;
     test(
         srcs(SourceFile.fromCode("https://example.domain.google.com/test.js", "export var x;")),
         expected(
@@ -475,8 +480,21 @@ public final class Es6RewriteModulesToCommonJsModulesTest extends CompilerTestCa
                     "}, 'https://example.domain.google.com/test.js', []);"))));
   }
 
-  // TODO(johnplaisted): This should strip module roots
-  public void testRegisteredPathDoesIncludeModuleRoot() {
+  public void testFileNameIsPreservedInRequiredPathWhenNotEscaping() {
+    pathEscaper = PathEscaper.CANONICALIZE_ONLY;
+    test(
+        srcs(SourceFile.fromCode("test.js", "import 'file://imported.js';")),
+        expected(
+            SourceFile.fromCode(
+                "https://example.domain.google.com/test.js",
+                lines(
+                    "$jscomp.registerAndLoadModule(function($$require, $$exports, $$module) {",
+                    "  'test pragma';",
+                    "  var module$file_$$imported = $$require('file://imported.js');",
+                    "}, 'test.js', ['file://imported.js']);"))));
+  }
+
+  public void testRegisteredPathDoesNotIncludeModuleRoot() {
     moduleRoots = ImmutableList.of("module/root/");
 
     test(
@@ -487,11 +505,10 @@ public final class Es6RewriteModulesToCommonJsModulesTest extends CompilerTestCa
                 lines(
                     "$jscomp.registerAndLoadModule(function($$require, $$exports, $$module) {",
                     "  'test pragma';",
-                    "}, 'module/root/test.js', []);"))));
+                    "}, 'test.js', []);"))));
   }
 
-  // TODO(johnplaisted): This should strip module roots
-  public void testImportPathDoesIncludeModuleRoot() {
+  public void testImportPathDoesNotIncludeModuleRoot() {
     moduleRoots = ImmutableList.of("module/root/");
 
     test(
@@ -502,11 +519,10 @@ public final class Es6RewriteModulesToCommonJsModulesTest extends CompilerTestCa
                 lines(
                     "$jscomp.registerAndLoadModule(function($$require, $$exports, $$module) {",
                     "  'test pragma';",
-                    "  var module$foo = $$require('module/root/foo.js');",
-                    "}, 'not/root/test.js', ['module/root/foo.js']);"))));
+                    "  var module$foo = $$require('foo.js');",
+                    "}, 'not/root/test.js', ['foo.js']);"))));
   }
 
-  // TODO(johnplaisted): This should respect different browser resolutions.
   public void testImportPathWithBrowserPrefixReplacementResolution() {
     resolutionMode = ModuleLoader.ResolutionMode.BROWSER_WITH_TRANSFORMED_PREFIXES;
     prefixReplacements = ImmutableMap.of("@root/", "");
@@ -519,7 +535,7 @@ public final class Es6RewriteModulesToCommonJsModulesTest extends CompilerTestCa
                 lines(
                     "$jscomp.registerAndLoadModule(function($$require, $$exports, $$module) {",
                     "  'test pragma';",
-                    "  var module$foo = $$require('@root/foo.js');",
-                    "}, 'not/root/test.js', ['@root/foo.js']);"))));
+                    "  var module$foo = $$require('foo.js');",
+                    "}, 'not/root/test.js', ['foo.js']);"))));
   }
 }

@@ -16,6 +16,10 @@
 
 import s from '../module_tests/module_test_resources/exportDefault.js';
 
-function testDefault() {
-  assertEquals('this is the default export', s);
-}
+const testSuite = goog.require('goog.testing.testSuite');
+
+testSuite({
+  testDefault() {
+    assertEquals('this is the default export', s);
+  }
+});

@@ -14,18 +14,22 @@
  * limitations under the License.
  */
 
-import { record } from './module_test_resources/moduleOrderRecorder.js';
-import { A } from './module_test_resources/moduleOrderA.js';
-import { B } from './module_test_resources/moduleOrderB.js';
-import { C } from './module_test_resources/moduleOrderC.js';
+import {A} from './module_test_resources/moduleOrderA.js';
+import {B} from './module_test_resources/moduleOrderB.js';
+import {C} from './module_test_resources/moduleOrderC.js';
+import {record} from './module_test_resources/moduleOrderRecorder.js';
 
-function testModuleOrder() {
-  assertEquals(record[0], 'processed module C');
-  assertEquals(record[1], 'processed module A');
-  assertEquals(record[2], 'processed module B');
+const testSuite = goog.require('goog.testing.testSuite');
 
-  // Verify the imported aliases are usable.
-  new A().create();
-  new B();
-  new C();
-}
+testSuite({
+  testModuleOrder() {
+    assertEquals(record[0], 'processed module C');
+    assertEquals(record[1], 'processed module A');
+    assertEquals(record[2], 'processed module B');
+
+    // Verify the imported aliases are usable.
+    new A().create();
+    new B();
+    new C();
+  }
+});

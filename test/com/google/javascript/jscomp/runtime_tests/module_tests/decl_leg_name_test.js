@@ -17,11 +17,14 @@
 goog.provide("decl.leg.name.Test");
 goog.setTestOnly();
 
-
 goog.require("decl.leg.name.A");
+goog.require('goog.testing.testSuite');
 
+/** @type {decl.leg.name.A} */
+var a;
 
-function test_Main() {
-  /** @type {decl.leg.name.A} */
-  var a = new decl.leg.name.A;
-}
+goog.testing.testSuite({
+  test_Main: function() {
+    a = new decl.leg.name.A;
+  }
+});

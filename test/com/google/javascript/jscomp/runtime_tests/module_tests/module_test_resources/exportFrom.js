@@ -14,15 +14,19 @@
  * limitations under the License.
  */
 
-goog.require('goog.testing.asserts');
+// TODO(johnplaisted): This should goog.require asserts, but there's a type
+// error. Why?
 
-var alpha = 'a';
-var beta = 'b';
-var gamma = 'c';
+const alpha = 'a';
+const beta = 'b';
+const gamma = 'c';
 
 export {alpha, beta as gamma} from './simpleExport.js';
 
-function testVarsNotAddedToThisScope() {
+/**
+ * Asserts that exported vars are not in this scope.
+ */
+export function assertVarsNotAddedToThisScope() {
   assertEquals('a', alpha);
   assertEquals('b', beta);
   assertEquals('c', gamma);

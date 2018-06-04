@@ -1714,7 +1714,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
                 options.moduleRoots,
                 inputs,
                 moduleResolverFactory,
-                ModuleLoader.PathResolver.RELATIVE);
+                ModuleLoader.PathResolver.RELATIVE,
+                options.getPathEscaper());
       } else {
         // Use an empty module loader if we're not actually dealing with modules.
         this.moduleLoader = ModuleLoader.EMPTY;

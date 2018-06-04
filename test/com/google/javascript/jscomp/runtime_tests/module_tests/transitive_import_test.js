@@ -20,7 +20,11 @@
  */
 import {alpha, gamma} from './module_test_resources/importAndExport.js';
 
-function testTransitiveImport() {
-  assertEquals(3, alpha);
-  assertEquals(4, gamma);
-}
+const testSuite = goog.require('goog.testing.testSuite');
+
+testSuite({
+  testTransitiveImport() {
+    assertEquals(3, alpha);
+    assertEquals(4, gamma);
+  }
+});

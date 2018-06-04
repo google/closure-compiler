@@ -35,6 +35,7 @@ import com.google.javascript.jscomp.SourceMap;
 import com.google.javascript.jscomp.VariableRenamingPolicy;
 import com.google.javascript.jscomp.bundle.TranspilationException;
 import com.google.javascript.jscomp.deps.ModuleLoader;
+import com.google.javascript.jscomp.deps.ModuleLoader.PathEscaper;
 import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
 import com.google.javascript.rhino.Node;
 import java.io.IOException;
@@ -177,6 +178,8 @@ public final class BaseTranspiler implements Transpiler {
       options.setModuleResolutionMode(moduleResolution);
       options.setModuleRoots(moduleRoots);
       options.setBrowserResolverPrefixReplacements(prefixReplacements);
+      // Don't escape module paths when bundling in the event paths are URLs.
+      options.setPathEscaper(PathEscaper.CANONICALIZE_ONLY);
 
       options.setSourceMapOutputPath("/dev/null");
       options.setSourceMapIncludeSourcesContent(true);

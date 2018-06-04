@@ -17,7 +17,7 @@
 /**
  * @fileoverview A file exporting properties as a goog.module().
  */
-goog.module('test.goog.module');
+goog.module('data.goog.module');
 goog.module.declareLegacyNamespace();
 // This file is imported from an ES6 module and the ES6 module handling at the
 // moment can only successfully dep upon on legacy namespaces (or other ES6

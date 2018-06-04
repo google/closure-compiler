@@ -16,13 +16,17 @@
 
 import s from './module_test_resources/exportDefault.js';
 
-const {assertInstanceof} = goog.require('goog.asserts');
 const EventHandler = goog.require('goog.events.EventHandler');
+const testSuite = goog.require('goog.testing.testSuite');
+const {assertInstanceof} = goog.require('goog.asserts');
+
 
 // Just check to make sure the goog.require worked and the required class can
 // be used.
-function testRequire() {
-  assertEquals(s, s); // This is used to avoid the extra require warning
-  var eh = new EventHandler();
-  assertInstanceof(eh, EventHandler);
-}
+testSuite({
+  testRequire() {
+    assertEquals(s, s);  // This is used to avoid the extra require warning
+    var eh = new EventHandler();
+    assertInstanceof(eh, EventHandler);
+  }
+});

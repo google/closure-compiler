@@ -17,9 +17,15 @@
 /**
  * @fileoverview Tests for export statement with a "from" clause.
  */
-import {alpha, gamma} from './module_test_resources/exportFrom.js';
+import {alpha, assertVarsNotAddedToThisScope, gamma} from './module_test_resources/exportFrom.js';
 
-function testTransitiveImport() {
-  assertEquals(3, alpha);
-  assertEquals(4, gamma);
-}
+const testSuite = goog.require('goog.testing.testSuite');
+
+testSuite({
+  testTransitiveImport() {
+    assertEquals(3, alpha);
+    assertEquals(4, gamma);
+  },
+
+  testVarsNotAddedToThisScope: assertVarsNotAddedToThisScope,
+});

@@ -15,11 +15,15 @@
  */
 
 import defaultStr, * as mod from './module_test_resources/exportDefault.js';
-import defaultStr, {nonDefaultExport} from './module_test_resources/exportDefault.js';
+import {nonDefaultExport} from './module_test_resources/exportDefault.js';
 
-function testImportMixed() {
-  assertEquals('this is the default export', defaultStr);
-  assertEquals('this is the default export', mod.default);
-  assertEquals(2, mod.nonDefaultExport);
-  assertEquals(2, nonDefaultExport);
-}
+const testSuite = goog.require('goog.testing.testSuite');
+
+testSuite({
+  testImportMixed() {
+    assertEquals('this is the default export', defaultStr);
+    assertEquals('this is the default export', mod.default);
+    assertEquals(2, mod.nonDefaultExport);
+    assertEquals(2, nonDefaultExport);
+  }
+});

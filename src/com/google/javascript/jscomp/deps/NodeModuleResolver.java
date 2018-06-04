@@ -24,6 +24,7 @@ import com.google.javascript.jscomp.CheckLevel;
 import com.google.javascript.jscomp.ErrorHandler;
 import com.google.javascript.jscomp.JSError;
 import com.google.javascript.jscomp.deps.ModuleLoader.ModuleResolverFactory;
+import com.google.javascript.jscomp.deps.ModuleLoader.PathEscaper;
 import java.util.Map;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -114,10 +115,13 @@ public class NodeModuleResolver extends ModuleResolver {
     }
 
     @Override
-    public ModuleResolver create(ImmutableSet<String> modulePaths,
-        ImmutableList<String> moduleRootPaths, ErrorHandler errorHandler) {
+    public ModuleResolver create(
+        ImmutableSet<String> modulePaths,
+        ImmutableList<String> moduleRootPaths,
+        ErrorHandler errorHandler,
+        PathEscaper pathEscaper) {
       return new NodeModuleResolver(
-          modulePaths, moduleRootPaths, packageJsonMainEntries, errorHandler);
+          modulePaths, moduleRootPaths, packageJsonMainEntries, errorHandler, pathEscaper);
     }
   }
 
@@ -125,8 +129,9 @@ public class NodeModuleResolver extends ModuleResolver {
       ImmutableSet<String> modulePaths,
       ImmutableList<String> moduleRootPaths,
       Map<String, String> packageJsonMainEntries,
-      ErrorHandler errorHandler) {
-    super(modulePaths, moduleRootPaths, errorHandler);
+      ErrorHandler errorHandler,
+      PathEscaper pathEscaper) {
+    super(modulePaths, moduleRootPaths, errorHandler, pathEscaper);
     this.nodeModulesFolders = buildNodeModulesFoldersRegistry(modulePaths);
 
     if (packageJsonMainEntries == null) {

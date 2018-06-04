@@ -24,6 +24,8 @@ import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.CompilerInput;
 import com.google.javascript.jscomp.ErrorHandler;
 import com.google.javascript.jscomp.SourceFile;
+import com.google.javascript.jscomp.deps.ModuleLoader.PathEscaper;
+import com.google.javascript.jscomp.deps.ModuleLoader.PathResolver;
 import javax.annotation.Nullable;
 import junit.framework.TestCase;
 
@@ -241,6 +243,38 @@ public final class ModuleLoaderTest extends TestCase {
     assertEquals("/", ModuleNames.canonicalizePath("/a/.."));
   }
 
+  public void testEscapePath() {
+    ModuleLoader loader =
+        new ModuleLoader(
+            /* errorHandler= */ null,
+            /* moduleRoots= */ ImmutableList.of(),
+            inputs("/has:special:chars.js"),
+            BrowserModuleResolver.FACTORY,
+            PathResolver.RELATIVE,
+            PathEscaper.ESCAPE);
+
+    // : is escaped to -
+    assertThat(loader.resolve("file://my/file.js").toString()).isEqualTo("file-//my/file.js");
+    assertThat(loader.resolve("c").resolveJsModule("/has:special:chars.js").toString())
+        .isEqualTo("/has-special-chars.js");
+  }
+
+  public void testDoNoEscapePath() {
+    // : is a character that is escaped
+    ModuleLoader loader =
+        new ModuleLoader(
+            /* errorHandler= */ null,
+            /* moduleRoots= */ ImmutableList.of(),
+            inputs("/has:special:chars.js"),
+            BrowserModuleResolver.FACTORY,
+            PathResolver.RELATIVE,
+            PathEscaper.CANONICALIZE_ONLY);
+
+    assertThat(loader.resolve("file://my/file.js").toString()).isEqualTo("file://my/file.js");
+    assertThat(loader.resolve("c").resolveJsModule("/has:special:chars.js").toString())
+        .isEqualTo("/has:special:chars.js");
+  }
+
   ImmutableList<CompilerInput> inputs(String... names) {
     ImmutableList.Builder<CompilerInput> builder = ImmutableList.builder();
     for (String name : names) {
@@ -454,8 +488,9 @@ public final class ModuleLoaderTest extends TestCase {
             inputs("A/index.js", "B/index.js", "app.js"),
             (ImmutableSet<String> modulePaths,
                 ImmutableList<String> moduleRootPaths,
-                ErrorHandler errorHandler) ->
-                new ModuleResolver(modulePaths, moduleRootPaths, errorHandler) {
+                ErrorHandler errorHandler,
+                PathEscaper pathEscaper) ->
+                new ModuleResolver(modulePaths, moduleRootPaths, errorHandler, pathEscaper) {
                   @Nullable
                   @Override
                   public String resolveJsModule(

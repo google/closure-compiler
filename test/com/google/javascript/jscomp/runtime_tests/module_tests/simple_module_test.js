@@ -20,15 +20,18 @@
  * @author moz@google.com (Michael Zhou)
  */
 
-import {foo as f} from './module_test_resources/simpleExport.js';
-import {bar as b, alpha, beta} from './module_test_resources/simpleExport.js';
 import {a} from './module_test_resources/+subdir/module_es6.js';
+import {foo as f} from './module_test_resources/simpleExport.js';
+import {alpha, bar as b, beta} from './module_test_resources/simpleExport.js';
 
-goog.require('goog.testing.asserts');
+const asserts = goog.require('goog.testing.asserts');
+const testSuite = goog.require('goog.testing.testSuite');
 
-function testBasic() {
-  assertEquals(2, f + 1);
-  assertEquals(3, f + b);
-  assertEquals(12, alpha * beta);
-  assertEquals(1, a);
-}
+testSuite({
+  testBasic() {
+    asserts.assertEquals(2, f + 1);
+    asserts.assertEquals(3, f + b);
+    asserts.assertEquals(12, alpha * beta);
+    asserts.assertEquals(1, a);
+  }
+});

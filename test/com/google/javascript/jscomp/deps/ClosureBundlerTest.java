@@ -162,11 +162,11 @@ public final class ClosureBundlerTest extends TestCase {
                 + "  }}, y:{enumerable:true, get:function() {\n"
                 + "    return module$nested$path$other.x;\n"
                 + "  }}});\n"
-                + "  var module$nested$path$other = $$require(\"./other.js\");\n"
+                + "  var module$nested$path$other = $$require(\"nested/path/other.js\");\n"
                 + "  var local;\n"
                 + "  function foo() {\n"
                 + "    return local;\n"
                 + "  }\n"
-                + "}, \"nested/path/foo.js\", [\"./other.js\"]);\n");
+                + "}, \"nested/path/foo.js\", [\"nested/path/other.js\"]);\n");
   }
 }

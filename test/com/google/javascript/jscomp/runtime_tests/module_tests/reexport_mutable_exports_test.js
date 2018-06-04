@@ -17,22 +17,25 @@
 import * as Mutable from './module_test_resources/mutable_exports.js';
 import * as Reexported from './module_test_resources/reexport_mutable_exports.js';
 
-goog.require('goog.testing.asserts');
+const asserts = goog.require('goog.testing.asserts');
+const testSuite = goog.require('goog.testing.testSuite');
 
-function testMutableExportS() {
-  assertEquals(Mutable.a, Reexported.A);
-  assertEquals(Mutable.b, Reexported.B);
-  assertEquals(Mutable.c, Reexported.C);
+testSuite({
+  testMutableExportS() {
+    asserts.assertEquals(Mutable.a, Reexported.A);
+    asserts.assertEquals(Mutable.b, Reexported.B);
+    asserts.assertEquals(Mutable.c, Reexported.C);
 
-  Mutable.set(1, 2, 3);
+    Mutable.set(1, 2, 3);
 
-  assertEquals(Mutable.a, Reexported.A);
-  assertEquals(Mutable.b, Reexported.B);
-  assertEquals(Mutable.c, Reexported.C);
+    asserts.assertEquals(Mutable.a, Reexported.A);
+    asserts.assertEquals(Mutable.b, Reexported.B);
+    asserts.assertEquals(Mutable.c, Reexported.C);
 
-  Reexported.set(4, 5, 6);
+    Reexported.set(4, 5, 6);
 
-  assertEquals(Mutable.a, Reexported.A);
-  assertEquals(Mutable.b, Reexported.B);
-  assertEquals(Mutable.c, Reexported.C);
-}
+    asserts.assertEquals(Mutable.a, Reexported.A);
+    asserts.assertEquals(Mutable.b, Reexported.B);
+    asserts.assertEquals(Mutable.c, Reexported.C);
+  }
+});

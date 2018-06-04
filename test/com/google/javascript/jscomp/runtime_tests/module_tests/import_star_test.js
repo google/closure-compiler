@@ -16,12 +16,16 @@
 
 import * as m from './module_test_resources/simpleExport.js';
 
-function testImportStar() {
-  assertEquals('g', m.g());
-}
+const testSuite = goog.require('goog.testing.testSuite');
 
-/** @suppress {checkTypes} */
-function testUnexportedProperty() {
-  // Module-scoped variable, not exported with this name.
-  assertEquals(undefined, m.a);
-}
+testSuite({
+  testImportStar() {
+    assertEquals('g', m.g());
+  },
+
+  /** @suppress {checkTypes} */
+  testUnexportedProperty() {
+    // Module-scoped variable, not exported with this name.
+    assertEquals(undefined, m.a);
+  },
+});

@@ -22,12 +22,16 @@ import s from './module_test_resources/exportDefault.js';
 import ExampleClass from './module_test_resources/exportDefaultClass.js';
 import ExampleCtor from './module_test_resources/exportDefaultOldStyleClass.js';
 
-function testDefault() {
-  assertEquals('this is the default export', s);
-  assertEquals(0, (new ExampleClass).foo());
-}
+const testSuite = goog.require('goog.testing.testSuite');
 
-function testOldStyleClass() {
-  assertEquals('staticMethod', ExampleCtor.staticMethod());
-  assertEquals('method', (new ExampleCtor).method());
-}
+testSuite({
+  testDefault() {
+    assertEquals('this is the default export', s);
+    assertEquals(0, (new ExampleClass).foo());
+  },
+
+  testOldStyleClass() {
+    assertEquals('staticMethod', ExampleCtor.staticMethod());
+    assertEquals('method', (new ExampleCtor).method());
+  },
+});

@@ -1197,6 +1197,8 @@ public class CompilerOptions implements Serializable {
    */
   private ImmutableMap<String, String> browserResolverPrefixReplacements;
 
+  private ModuleLoader.PathEscaper pathEscaper;
+
   /** Which entries to look for in package.json files when processing modules */
   List<String> packageJsonEntryNames;
 
@@ -1226,6 +1228,7 @@ public class CompilerOptions implements Serializable {
     // Modules
     moduleResolutionMode = ModuleLoader.ResolutionMode.BROWSER;
     packageJsonEntryNames = ImmutableList.of("browser", "module", "main");
+    pathEscaper = ModuleLoader.PathEscaper.ESCAPE;
 
     // Checks
     skipNonTranspilationPasses = false;
@@ -2863,6 +2866,14 @@ public class CompilerOptions implements Serializable {
     this.browserResolverPrefixReplacements = browserResolverPrefixReplacements;
   }
 
+  public void setPathEscaper(ModuleLoader.PathEscaper pathEscaper) {
+    this.pathEscaper = pathEscaper;
+  }
+
+  public ModuleLoader.PathEscaper getPathEscaper() {
+    return pathEscaper;
+  }
+
   public List<String> getPackageJsonEntryNames() {
     return this.packageJsonEntryNames;
   }
@@ -2909,6 +2920,7 @@ public class CompilerOptions implements Serializable {
             .add("appNameStr", appNameStr)
             .add("assumeClosuresOnlyCaptureReferences", assumeClosuresOnlyCaptureReferences)
             .add("assumeStrictThis", assumeStrictThis())
+            .add("browserResolverPrefixReplacements", browserResolverPrefixReplacements)
             .add("brokenClosureRequiresLevel", brokenClosureRequiresLevel)
             .add("checkDeterminism", getCheckDeterminism())
             .add("checkGlobalNamesLevel", checkGlobalNamesLevel)
@@ -3014,6 +3026,7 @@ public class CompilerOptions implements Serializable {
                 "parentChunkCanSeeSymbolsDeclaredInChildren",
                 parentChunkCanSeeSymbolsDeclaredInChildren)
             .add("parseJsDocDocumentation", isParseJsDocDocumentation())
+            .add("pathEscaper", pathEscaper)
             .add("polymerVersion", polymerVersion)
             .add("preferLineBreakAtEndOfFile", preferLineBreakAtEndOfFile)
             .add("preferSingleQuotes", preferSingleQuotes)
