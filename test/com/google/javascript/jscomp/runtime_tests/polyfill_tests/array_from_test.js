@@ -46,13 +46,18 @@ testSuite({
     })('x', 'y');
 
     assertObjectEquals(['x', 'y'], Array.from(iterable('x', 'y')));
+  },
 
+  testMapFn() {
     const x2 = x => x + x;
     assertObjectEquals([2, 4, 8], Array.from([1, 2, 4], x2));
     assertObjectEquals(['aa', 'cc', 'bb'], Array.from(noCheck('acb'), x2));
     assertObjectEquals([6], Array.from({length: 1, 0: 3}, x2));
     assertObjectEquals([6, 'xx'], Array.from(iterable(3, 'x'), x2));
+  },
 
+  testMapFnWithContextObj() {
+    const x2 = x => x + x;
     /**
      * @this {!Function}
      * @param {?} x
@@ -61,5 +66,15 @@ testSuite({
     const applyThisTwice = function(x) { return this(this(x)); };
     assertObjectEquals([4, 8, 16], Array.from([1, 2, 4], applyThisTwice, x2));
     assertObjectEquals(['aaaa'], Array.from(noCheck('a'), applyThisTwice, x2));
+  },
+
+  testMapFnThatUsesIndexArg() {
+    const id = (x, i) => [x, i];
+    assertObjectEquals([[1, 0], [2, 1], [4, 2]], Array.from([1, 2, 4], id));
+    assertObjectEquals(
+        [['a', 0], ['c', 1], ['b', 2]], Array.from(noCheck('acb'), id));
+    assertObjectEquals(
+        [[3, 0], [undefined, 1]], Array.from({length: 2, 0: 3}, id));
+    assertObjectEquals([[3, 0], ['x', 1]], Array.from(iterable(3, 'x'), id));
   },
 });
