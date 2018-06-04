@@ -694,7 +694,8 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
         lines(
             "/** @const */ var module$test = {};",
             "(function(){",
-            "  /** @const */ module$test.default={foo:'bar'};",
+            "  var foobar = {foo: 'bar'};",
+            "  /** @const */ module$test.default=foobar;",
             "}).call(window);"));
 
     // Can't remove IIFEs when there are sibling statements
@@ -714,7 +715,8 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
         lines(
             "/** @const */ var module$test = {};",
             "(function(){",
-            "  /** @const */ module$test.default={foo:\"bar\"};",
+            "  var foobar = {foo: 'bar'};",
+            "  /** @const */ module$test.default = foobar;",
             "})();",
             "alert('foo');"));
 
@@ -736,7 +738,8 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "/** @const */ var module$test = {};",
             "alert('foo');",
             "(function(){",
-            "  /** @const */ module$test.default={foo:\"bar\"};",
+            "  var foobar={foo:\"bar\"};",
+            "  /** @const */ module$test.default=foobar;",
             "})();"));
 
     // Annotations for local names should be preserved
@@ -1207,5 +1210,17 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
                     "/** @const */ module$webpack$buildin$module.default = ",
                     "    function(module) { return module; };")));
     test(inputs, expecteds);
+  }
+
+  public void testUMDRequiresIfTest() {
+    testModules(
+        "test.js",
+        lines("var foobar = {foo: 'bar'};", "if (foobar) {", "  module.exports = foobar;", "}"),
+        lines(
+            "/** @const */ var module$test = {};",
+            "var foobar$$module$test={foo:\"bar\"};",
+            "if(foobar$$module$test) {",
+            "  /** @const */ module$test.default = foobar$$module$test;",
+            "}"));
   }
 }
