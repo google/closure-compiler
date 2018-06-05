@@ -2417,6 +2417,11 @@ public final class ParserTest extends BaseJSTypeTestCase {
         "Unterminated template literal");
   }
 
+  public void testTemplateLiteralOctalEscapes() {
+    assertSimpleTemplateLiteral("\0", "`\\0`");
+    assertSimpleTemplateLiteral("aaa\0aaa", "`aaa\\0aaa`");
+  }
+
   public void testIncorrectEscapeSequenceInTemplateLiteral() {
     mode = LanguageMode.ECMASCRIPT6;
 
@@ -2432,6 +2437,13 @@ public final class ParserTest extends BaseJSTypeTestCase {
     parseError("`hello\\5`", "Invalid escape sequence");
     parseError("`hello\\6`", "Invalid escape sequence");
     parseError("`hello\\7`", "Invalid escape sequence");
+    parseError("`hello\\01`", "Invalid escape sequence");
+    parseError("`hello\\02`", "Invalid escape sequence");
+    parseError("`hello\\03`", "Invalid escape sequence");
+    parseError("`hello\\04`", "Invalid escape sequence");
+    parseError("`hello\\05`", "Invalid escape sequence");
+    parseError("`hello\\06`", "Invalid escape sequence");
+    parseError("`hello\\07`", "Invalid escape sequence");
   }
 
   public void testExponentialLiterals() {
@@ -2821,6 +2833,15 @@ public final class ParserTest extends BaseJSTypeTestCase {
     parse("var i = \'\\u{1}ompiler\'");
   }
 
+  public void testUnicodePointEscapeTemplateLiterals() {
+    mode = LanguageMode.ECMASCRIPT6;
+    parse("var i = `\\u0043ompiler`");
+    parse("var i = `\\u{43}ompiler`");
+    parse("var i = `\\u{1f42a}ompiler`");
+    parse("var i = `\\u{2603}ompiler`");
+    parse("var i = `\\u{1}ompiler`");
+  }
+
   public void testInvalidUnicodePointEscapeInIdentifiers() {
     parseError("var \\u{defg", "Invalid escape sequence");
     parseError("var \\u{03b5", "Invalid escape sequence");
@@ -2838,11 +2859,23 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   public void testInvalidUnicodePointEscapeStringLiterals() {
+    mode = LanguageMode.ECMASCRIPT6;
     parseError("var i = \'\\u{defg\'", "Hex digit expected");
     parseError("var i = \'\\u{defgRestOfIdentifier\'", "Hex digit expected");
     parseError("var i = \'\\u{DEFG}\'", "Hex digit expected");
     parseError("var i = \'Js\\u{}ompiler\'", "Empty unicode escape");
     parseError("var i = \'\\u{345", "Hex digit expected");
+    parseError("var i = \'\\u{110000}\'", "Undefined Unicode code-point");
+  }
+
+  public void testInvalidUnicodePointEscapeTemplateLiterals() {
+    mode = LanguageMode.ECMASCRIPT6;
+    parseError("var i = `\\u{defg`", "Hex digit expected");
+    parseError("var i = `\\u{defgRestOfIdentifier`", "Hex digit expected");
+    parseError("var i = `\\u{DEFG}`", "Hex digit expected");
+    parseError("var i = `Js\\u{}ompiler`", "Empty unicode escape");
+    parseError("var i = `\\u{345`", "Hex digit expected");
+    parseError("var i = `\\u{110000}`", "Undefined Unicode code-point");
   }
 
   public void testInvalidEscape() {

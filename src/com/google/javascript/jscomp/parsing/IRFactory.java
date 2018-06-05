@@ -29,6 +29,7 @@ import static com.google.javascript.rhino.TypeDeclarationsIR.stringType;
 import static com.google.javascript.rhino.TypeDeclarationsIR.undefinedType;
 import static com.google.javascript.rhino.TypeDeclarationsIR.unionType;
 import static com.google.javascript.rhino.TypeDeclarationsIR.voidType;
+import static java.lang.Integer.parseInt;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -3041,15 +3042,27 @@ class IRFactory {
               charno(token.location.start));
           break;
         case '0':
-          if (cur + 1 >= value.length()) {
-            break;
+        case '1':
+        case '2':
+        case '3':
+        case '4':
+        case '5':
+        case '6':
+        case '7':
+          int numDigits;
+
+          if (cur + 1 < value.length() && isOctalDigit(value.charAt(cur + 1))) {
+            if (cur + 2 < value.length() && isOctalDigit(value.charAt(cur + 2))) {
+              numDigits = 3;
+            } else {
+              numDigits = 2;
+            }
+          } else {
+            numDigits = 1;
           }
-          // fall through
-        case '1': case '2': case '3': case '4': case '5': case '6': case '7':
-          char next1 = value.charAt(cur + 1);
 
           if (inStrictContext() || templateLiteral) {
-            if (c == '0' && !isOctalDigit(next1)) {
+            if (c == '0' && numDigits == 1) {
               // No warning: "\0" followed by a character which is not an octal digit
               // is allowed in strict mode.
             } else {
@@ -3059,19 +3072,8 @@ class IRFactory {
             }
           }
 
-          if (!isOctalDigit(next1)) {
-            result.append((char) octaldigit(c));
-          } else {
-            char next2 = value.charAt(cur + 2);
-            if (!isOctalDigit(next2)) {
-              result.append((char) (8 * octaldigit(c) + octaldigit(next1)));
-              cur += 1;
-            } else {
-              result.append((char)
-                  (8 * 8 * octaldigit(c) + 8 * octaldigit(next1) + octaldigit(next2)));
-              cur += 2;
-            }
-          }
+          result.append((char) parseInt(value.substring(cur, cur + numDigits), 8));
+          cur += numDigits - 1;
 
           break;
         case 'x':
@@ -3096,7 +3098,22 @@ class IRFactory {
             hexDigits = value.substring(cur + 2, escapeEnd);
             escapeEnd++;
           }
-          result.append(Character.toChars(Integer.parseInt(hexDigits, 0x10)));
+          int codePointValue = parseInt(hexDigits, 0x10);
+          if (codePointValue > 0x10ffff) {
+            errorReporter.error(
+                "Undefined Unicode code-point",
+                sourceName,
+                lineno(token.location.start),
+                charno(token.location.start));
+
+            // Compilation should stop, but we should finish the string and find more errors.
+            // These appends are just to have a placeholder for the errored normalization.
+            result.append("\\u{");
+            result.append(hexDigits);
+            result.append("}");
+          } else {
+            result.append(Character.toChars(codePointValue));
+          }
           cur = escapeEnd - 1;
           break;
         case '\'':

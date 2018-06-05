@@ -928,7 +928,12 @@ public class Scanner {
       case 'r':
       case 't':
       case 'v':
+        return true;
       case '0':
+        if (templateLiteral && peekOctalDigit()) {
+          reportError("Invalid escape sequence");
+          return false;
+        }
         return true;
       case '1':
       case '2':
@@ -1049,8 +1054,12 @@ public class Scanner {
     }
   }
 
+  private boolean peekOctalDigit() {
+    return isOctalDigit(peekChar());
+  }
+
   private void skipOctalDigits() {
-    while (isOctalDigit(peekChar())) {
+    while (peekOctalDigit()) {
       nextChar();
     }
   }
