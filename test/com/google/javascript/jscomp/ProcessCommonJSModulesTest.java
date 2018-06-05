@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.deps.ModuleLoader;
 import java.util.Map;
 
@@ -33,6 +34,7 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
   @Override
   protected CompilerOptions getOptions() {
     CompilerOptions options = super.getOptions();
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_2018);
     options.setProcessCommonJSModules(true);
     options.setModuleResolutionMode(resolutionMode);
 
@@ -820,14 +822,13 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
   public void testIssue2510() {
     testModules(
         "test.js",
-        lines("module.exports = {", "  a: 1,", "  get b() { return 2; }", "};"),
+        lines("module.exports = {a: 1, get b() { return 2; }};"),
         lines(
-            "/** @const */ var module$test = {",
-            "  /** @const */ default: {",
-            "    get b() { return 2; }",
-            "  }",
+            "/** @const */ var module$test = {};",
+            "/** @const */ module$test.default = {",
+            "  get b() { return 2; }",
             "};",
-            "module$test.default.a = 1"));
+            "module$test.default.a = 1;"));
   }
 
   public void testIssue2450() {
@@ -1222,5 +1223,17 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "if(foobar$$module$test) {",
             "  /** @const */ module$test.default = foobar$$module$test;",
             "}"));
+  }
+
+  public void testObjectSpreadExport() {
+    testModules(
+        "test.js",
+        "var g = {}; module.exports = { ...g };",
+        lines(
+            "/** @const */ var module$test = {};",
+            "var g$$module$test = {};",
+            "/** @const */ module$test.default = {",
+            "  ...g$$module$test",
+            "};"));
   }
 }
