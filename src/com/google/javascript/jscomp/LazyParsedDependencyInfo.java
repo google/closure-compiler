@@ -31,7 +31,7 @@ import java.util.TreeMap;
 public class LazyParsedDependencyInfo extends DependencyInfo.Base {
 
   private final DependencyInfo delegate;
-  private final JsAst ast;
+  private JsAst ast;
   private final transient AbstractCompiler compiler;
 
   private ImmutableMap<String, String> loadFlags;
@@ -60,6 +60,9 @@ public class LazyParsedDependencyInfo extends DependencyInfo.Base {
         loadFlagsBuilder.put("lang", version);
       }
       loadFlags = ImmutableMap.copyOf(loadFlagsBuilder);
+
+      // Don't preserve the full AST longer than necessary.  It can consume a lot of memory.
+      ast = null;
     }
     return loadFlags;
   }
