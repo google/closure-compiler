@@ -45,8 +45,9 @@ public final class Es6NormalizeShorthandPropertiesTest extends CompilerTestCase 
 
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2016);
     setLanguageOut(LanguageMode.ECMASCRIPT3);
-    enableRunTypeCheckAfterProcessing();
-    disableTypeCheck();
+
+    enableTypeInfoValidation();
+    enableTypeCheck();
   }
 
   @Override
