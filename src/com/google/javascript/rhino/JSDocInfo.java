@@ -768,8 +768,13 @@ public class JSDocInfo implements Serializable {
     return getFlag(MASK_MAPPEDIDGEN);
   }
 
+  /**
+   * @return whether this {@link JSDocInfo} implies that annotated value is constant.
+   */
   public boolean isConstant() {
-    return getFlag(MASK_CONSTANT | MASK_DEFINE | MASK_FINAL);
+    // @desc is used with goog.getMsg to define mesages to be translated,
+    // and thus must be @const in order for translation to work correctly.
+    return getFlag(MASK_CONSTANT | MASK_DEFINE | MASK_FINAL) || getDescription() != null;
   }
 
   /**

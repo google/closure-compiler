@@ -383,7 +383,7 @@ abstract class PotentialDeclaration {
     boolean isConst =
         nameNode.getParent().isConst()
             || isExportLhs(nameNode)
-            || (jsdoc != null && jsdoc.hasConstAnnotation());
+            || (jsdoc != null && jsdoc.isConstant());
     return isConst
         && !JsdocUtil.hasAnnotatedType(jsdoc)
         && !NodeUtil.isNamespaceDecl(nameNode);

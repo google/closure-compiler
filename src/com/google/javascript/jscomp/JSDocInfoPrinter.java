@@ -97,7 +97,7 @@ public final class JSDocInfoPrinter {
       parts.add("@lends {" + info.getLendsName() + "}");
     }
 
-    if (info.isConstant() && !info.isDefine() && !info.isFinal()) {
+    if (info.hasConstAnnotation()) {
       parts.add("@const");
     }
 

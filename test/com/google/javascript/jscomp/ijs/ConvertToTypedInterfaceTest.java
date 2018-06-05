@@ -1526,6 +1526,16 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
   public void testDescAnnotationCountsAsTyped() {
     test(
         lines(
+            "/** @desc Some description */",
+            "var MSG_DESCRIPTION = goog.getMsg('Text');",
+            ""),
+        lines(
+            "/** @const {string} @desc Some description */",
+            "var MSG_DESCRIPTION;",
+            ""));
+
+    test(
+        lines(
             "goog.module('a.b.c');",
             "",
             "/** @desc Some description */",

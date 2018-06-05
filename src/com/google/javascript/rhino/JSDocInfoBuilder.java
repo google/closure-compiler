@@ -740,7 +740,7 @@ public final class JSDocInfoBuilder {
    *     if it was already defined
    */
   public boolean recordConstancy() {
-    if (!currentInfo.isConstant()) {
+    if (!currentInfo.hasConstAnnotation()) {
       currentInfo.setConstant(true);
       populated = true;
       return true;

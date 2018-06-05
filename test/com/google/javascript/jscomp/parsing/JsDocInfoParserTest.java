@@ -1706,7 +1706,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   }
 
   public void testParseDefineErrors7() {
-    parse("@define {string}\n @const */", "conflicting @const tag");
+    assertThat(parse("@define {string}\n @const */").isConstant()).isTrue();
   }
 
   public void testParseDefineErrors8() {
@@ -2044,7 +2044,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
         " */");
 
     assertThat(jsdoc.getBaseType()).isNull();
-    assertThat(jsdoc.isConstant()).isFalse();
+    assertThat(jsdoc.isConstant()).isTrue();
     assertThat(jsdoc.getDescription()).isEqualTo("Hello, World!");
     assertThat(jsdoc.getEnumParameterType()).isNull();
     assertThat(jsdoc.isHidden()).isFalse();
