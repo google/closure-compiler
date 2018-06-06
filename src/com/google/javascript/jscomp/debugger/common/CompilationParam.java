@@ -86,7 +86,7 @@ public enum CompilationParam {
   // --------------------------------
 
   /** Checks types on expressions */
-  CHECK_TYPES(ParamGroup.ERROR_CHECKING) {
+  CHECK_TYPES(true, ParamGroup.ERROR_CHECKING) {
     @Override
     public void apply(CompilerOptions options, boolean value) {
       options.setCheckTypes(value);
