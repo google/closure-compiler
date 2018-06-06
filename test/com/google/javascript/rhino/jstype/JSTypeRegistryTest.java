@@ -96,6 +96,23 @@ public class JSTypeRegistryTest extends TestCase {
         typeRegistry.getGlobalType("ITemplateArray"));
   }
 
+  public void testGetBuiltInType_Promise() {
+    JSTypeRegistry registry = new JSTypeRegistry(null);
+    ObjectType promiseType = registry.getNativeObjectType(JSTypeNative.PROMISE_TYPE);
+    assertTypeEquals(promiseType, registry.getGlobalType("Promise"));
+
+    // Test that it takes one parameter of type
+    // function(function((IThenable<TYPE>|TYPE|null|{then: ?})=): ?, function(*=): ?): ?
+    FunctionType promiseCtor = promiseType.getConstructor();
+    Node paramList = promiseCtor.getParametersNode();
+    Node firstParameter = paramList.getFirstChild();
+    assertNotNull(firstParameter);
+    FunctionType paramType = paramList.getFirstChild().getJSType().toMaybeFunctionType();
+    assertEquals(
+        "function(function((IThenable<TYPE>|TYPE|null|{then: ?})=): ?, function(*=): ?): ?",
+        paramType.toString());
+  }
+
   public void testGetDeclaredType() {
     JSTypeRegistry typeRegistry = new JSTypeRegistry(null);
     JSType type = typeRegistry.createAnonymousObjectType(null);

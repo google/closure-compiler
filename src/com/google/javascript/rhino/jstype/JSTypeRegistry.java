@@ -58,6 +58,7 @@ import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Table;
 import com.google.javascript.rhino.ErrorReporter;
+import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
@@ -113,6 +114,9 @@ public class JSTypeRegistry implements Serializable {
 
   /** The template variable corresponding to the VALUE type in {@code IThenable<VALUE>} */
   private TemplateType iThenableTemplateKey;
+
+  /** The template variable corresponding to the TYPE in {@code Promise<TYPE>} */
+  private TemplateType promiseTemplateKey;
 
   /**
    * The template variable in {@code Array<T>}
@@ -336,6 +340,7 @@ public class JSTypeRegistry implements Serializable {
     generatorTemplate = new TemplateType(this, "VALUE");
     iterableTemplate = new TemplateType(this, "VALUE");
     iThenableTemplateKey = new TemplateType(this, "TYPE");
+    promiseTemplateKey = new TemplateType(this, "TYPE");
 
     // Top Level Prototype (the One)
     // The initializations of TOP_LEVEL_PROTOTYPE and OBJECT_FUNCTION_TYPE
@@ -428,6 +433,42 @@ public class JSTypeRegistry implements Serializable {
     FunctionType ithenableFunctionType = nativeInterface("IThenable", iThenableTemplateKey);
     registerNativeType(JSTypeNative.I_THENABLE_FUNCTION_TYPE, ithenableFunctionType);
     registerNativeType(JSTypeNative.I_THENABLE_TYPE, ithenableFunctionType.getInstanceType());
+
+    // Thenable is an @typedef
+    JSType thenableType = createRecordType(ImmutableMap.of("then", unknownType));
+    identifyNonNullableName("Thenable");
+    registerNativeType(JSTypeNative.THENABLE_TYPE, thenableType);
+
+    // Create built-in Promise type, whose constructor takes one parameter.
+    // @param {function(
+    //             function((TYPE|IThenable<TYPE>|Thenable|null)=),
+    //             function(*=))} resolver
+    JSType promiseParameterType =
+        createFunctionType(
+            /* returnType= */ unknownType,
+            /* parameterTypes= */ createFunctionType(
+                unknownType,
+                createOptionalParameters(
+                    createUnionType(
+                        promiseTemplateKey,
+                        createTemplatizedType(
+                            ithenableFunctionType.getInstanceType(), promiseTemplateKey),
+                        thenableType,
+                        nullType))),
+            /* parameterTypes= */ createFunctionType(
+                unknownType, createOptionalParameters(allType)));
+    Node promiseParameter = IR.name("");
+    promiseParameter.setJSType(promiseParameterType);
+
+    FunctionType promiseFunctionType =
+        nativeConstructorBuilder("Promise")
+            .withParamsNode(IR.paramList(promiseParameter))
+            .withTemplateKeys(promiseTemplateKey)
+            .withExtendedTemplate(iThenableTemplateKey, promiseTemplateKey)
+            .build();
+
+    registerNativeType(JSTypeNative.PROMISE_FUNCTION_TYPE, promiseFunctionType);
+    registerNativeType(JSTypeNative.PROMISE_TYPE, promiseFunctionType.getInstanceType());
 
     // Boolean
     FunctionType booleanObjectFunctionType =
@@ -646,11 +687,13 @@ public class JSTypeRegistry implements Serializable {
     registerGlobalType(getNativeType(JSTypeNative.NUMBER_OBJECT_TYPE));
     registerGlobalType(getNativeType(JSTypeNative.NUMBER_TYPE));
     registerGlobalType(getNativeType(JSTypeNative.OBJECT_TYPE));
+    registerGlobalType(getNativeType(JSTypeNative.PROMISE_TYPE));
     registerGlobalType(getNativeType(JSTypeNative.REGEXP_TYPE));
     registerGlobalType(getNativeType(JSTypeNative.STRING_OBJECT_TYPE));
     registerGlobalType(getNativeType(JSTypeNative.STRING_TYPE));
     registerGlobalType(getNativeType(JSTypeNative.SYMBOL_OBJECT_TYPE));
     registerGlobalType(getNativeType(JSTypeNative.SYMBOL_TYPE));
+    registerGlobalType(getNativeType(JSTypeNative.THENABLE_TYPE), "Thenable");
     registerGlobalType(getNativeType(JSTypeNative.VOID_TYPE));
     registerGlobalType(getNativeType(JSTypeNative.VOID_TYPE), "Undefined");
     registerGlobalType(getNativeType(JSTypeNative.VOID_TYPE), "void");

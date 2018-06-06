@@ -20041,6 +20041,24 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "mismatch: [g]"));
   }
 
+  public void testNativePromiseTypeWithExterns() {
+    // Test that we add Promise prototype properties defined in externs to the native Promise type
+    testTypesWithCommonExterns(
+        lines(
+            "var p = new Promise(function(resolve, reject) { resolve(3); });",
+            "p.then(result => {}, error => {});"));
+  }
+
+  public void testNativeThenableType() {
+    // Test that the native Thenable type is not nullable even without externs
+    testTypes(
+        "var /** Thenable */ t = null;",
+        lines(
+            "initializing variable", // preserve newline
+            "found   : null",
+            "required: {then: ?}"));
+  }
+
   private void testClosureTypes(String js, String description) {
     testClosureTypesMultipleWarnings(js,
         description == null ? null : ImmutableList.of(description));
