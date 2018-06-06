@@ -326,6 +326,14 @@ public final class JSDocInfoPrinterTest extends TestCase {
     assertEquals("/** @define {string} */ ", jsDocInfoPrinter.print(info));
   }
 
+  public void testConstDefines() {
+    builder.recordDefineType(new JSTypeExpression(
+        JsDocInfoParser.parseTypeString("string"), "<testDefines>"));
+    builder.recordConstancy();
+    JSDocInfo info = builder.buildAndReset();
+    assertEquals("/** @define {string} */ ", jsDocInfoPrinter.print(info));
+  }
+
   public void testDeprecated() {
     builder.recordDeprecated();
     builder.recordDeprecationReason("See {@link otherClass} for more info.");
