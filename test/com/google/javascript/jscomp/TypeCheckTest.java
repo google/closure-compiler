@@ -20021,7 +20021,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "() => f({/** @constructor */ g: function() {}});"),
         lines(
             "actual parameter 1 of f does not match formal parameter",
-            "found   : {g: function(new:): undefined}",
+            "found   : {g: function(new:<anonymous@[testcode]:2>): undefined}",
             "required: {g: function(): string}",
             "missing : []",
             "mismatch: [g]"));
