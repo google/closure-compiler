@@ -844,10 +844,6 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         visitFunction(t, n);
         break;
 
-      case CLASS:
-        visitClass(t, n);
-        break;
-
         // These nodes have no interesting type behavior.
         // These nodes require data flow analysis.
       case PARAM_LIST:
@@ -875,7 +871,6 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       case FOR:
       case TEMPLATELIT_SUB:
       case REST:
-      case CLASS_MEMBERS:
         typeable = false;
         break;
 
@@ -1929,133 +1924,91 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
    */
   private void visitFunction(NodeTraversal t, Node n) {
     FunctionType functionType = JSType.toMaybeFunctionType(n.getJSType());
+    String functionPrivateName = n.getFirstChild().getString();
     if (functionType.isConstructor()) {
-      checkConstructor(t, n, functionType);
+      FunctionType baseConstructor = functionType.getSuperClassConstructor();
+      if (!Objects.equals(baseConstructor, getNativeType(OBJECT_FUNCTION_TYPE))
+          && baseConstructor != null
+          && baseConstructor.isInterface()) {
+        compiler.report(
+            t.makeError(n, CONFLICTING_EXTENDED_TYPE,
+                        "constructor", functionPrivateName));
+      } else {
+        if (baseConstructor != null
+            && baseConstructor.getSource() != null
+            && baseConstructor.getSource().getBooleanProp(Node.IS_ES6_CLASS)
+            && !functionType.getSource().getBooleanProp(Node.IS_ES6_CLASS)) {
+          compiler.report(
+              t.makeError(
+                  n,
+                  ES5_CLASS_EXTENDING_ES6_CLASS,
+                  functionType.getDisplayName(),
+                  baseConstructor.getDisplayName()));
+        }
+
+        // All interfaces are properly implemented by a class
+        for (JSType baseInterface : functionType.getImplementedInterfaces()) {
+          boolean badImplementedType = false;
+          ObjectType baseInterfaceObj = ObjectType.cast(baseInterface);
+          if (baseInterfaceObj != null) {
+            FunctionType interfaceConstructor =
+              baseInterfaceObj.getConstructor();
+            if (interfaceConstructor != null && !interfaceConstructor.isInterface()) {
+              badImplementedType = true;
+            }
+          } else {
+            badImplementedType = true;
+          }
+          if (badImplementedType) {
+            report(t, n, BAD_IMPLEMENTED_TYPE, functionPrivateName);
+          }
+        }
+        // check properties
+        validator.expectAllInterfaceProperties(t, n, functionType);
+        if (!functionType.isAbstract()) {
+          validator.expectAbstractMethodsImplemented(n, functionType);
+        }
+      }
     } else if (functionType.isInterface()) {
-      checkInterface(t, n, functionType);
+      // Interface must extend only interfaces
+      for (ObjectType extInterface : functionType.getExtendedInterfaces()) {
+        if (extInterface.getConstructor() != null
+            && !extInterface.getConstructor().isInterface()) {
+          compiler.report(
+              t.makeError(n, CONFLICTING_EXTENDED_TYPE,
+                          "interface", functionPrivateName));
+        }
+      }
+
+      // Check whether the extended interfaces have any conflicts
+      if (functionType.getExtendedInterfacesCount() > 1) {
+        // Only check when extending more than one interfaces
+        HashMap<String, ObjectType> properties = new HashMap<>();
+        LinkedHashMap<String, ObjectType> currentProperties = new LinkedHashMap<>();
+        for (ObjectType interfaceType : functionType.getExtendedInterfaces()) {
+          currentProperties.clear();
+          checkInterfaceConflictProperties(t, n, functionPrivateName,
+              properties, currentProperties, interfaceType);
+          properties.putAll(currentProperties);
+        }
+      }
+
+      List<FunctionType> loopPath = functionType.checkExtendsLoop();
+      if (loopPath != null) {
+        String strPath = "";
+        for (int i = 0; i < loopPath.size() - 1; i++) {
+          strPath += loopPath.get(i).getDisplayName() + " -> ";
+        }
+        strPath += Iterables.getLast(loopPath).getDisplayName();
+        compiler.report(t.makeError(n, INTERFACE_EXTENDS_LOOP,
+            loopPath.get(0).getDisplayName(), strPath));
+      }
     } else if (n.isGeneratorFunction()) {
       // A generator function must return a Generator or supertype of Generator
       JSType returnType = functionType.getReturnType();
       validator.expectGeneratorSupertype(
           t, n, returnType, "A generator function must return a (supertype of) Generator");
     }
-  }
-
-  /** Visits a CLASS node. */
-  private void visitClass(NodeTraversal t, Node n) {
-    FunctionType functionType = JSType.toMaybeFunctionType(n.getJSType());
-    Node extendsClause = n.getSecondChild();
-    if (!extendsClause.isEmpty()) {
-      // Ensure that the `extends` clause is actually a constructor or interface.  If it is, but
-      // it's the wrong one then checkConstructor or checkInterface will warn.
-      JSType superType = extendsClause.getJSType();
-      if (!(superType.isConstructor() || superType.isInterface())) {
-        compiler.report(
-            t.makeError(
-                n,
-                CONFLICTING_EXTENDED_TYPE,
-                functionType.isConstructor() ? "constructor" : "interface",
-                getBestFunctionName(n)));
-      }
-    }
-    if (functionType.isConstructor()) {
-      checkConstructor(t, n, functionType);
-    } else if (functionType.isInterface()) {
-      checkInterface(t, n, functionType);
-    } else {
-      throw new IllegalStateException(
-          "CLASS node's type must be either constructor or interface: " + functionType);
-    }
-  }
-
-  /** Checks a constructor, which may be either an ES5-style FUNCTION node, or a CLASS node. */
-  private void checkConstructor(NodeTraversal t, Node n, FunctionType functionType) {
-    FunctionType baseConstructor = functionType.getSuperClassConstructor();
-    if (!Objects.equals(baseConstructor, getNativeType(OBJECT_FUNCTION_TYPE))
-        && baseConstructor != null
-        && baseConstructor.isInterface()) {
-      // Warn if a class extends an interface.
-      compiler.report(
-          t.makeError(n, CONFLICTING_EXTENDED_TYPE, "constructor", getBestFunctionName(n)));
-    } else {
-      if (n.isFunction()
-          && baseConstructor != null
-          && baseConstructor.getSource() != null
-          && baseConstructor.getSource().getBooleanProp(Node.IS_ES6_CLASS)
-          && !functionType.getSource().getBooleanProp(Node.IS_ES6_CLASS)) {
-        // Warn if an ES5 class extends an ES6 class.
-        compiler.report(
-            t.makeError(
-                n,
-                ES5_CLASS_EXTENDING_ES6_CLASS,
-                functionType.getDisplayName(),
-                baseConstructor.getDisplayName()));
-      }
-
-      // Warn if any interface property is missing or incorrect
-      for (JSType baseInterface : functionType.getImplementedInterfaces()) {
-        boolean badImplementedType = false;
-        ObjectType baseInterfaceObj = ObjectType.cast(baseInterface);
-        if (baseInterfaceObj != null) {
-          FunctionType interfaceConstructor =
-              baseInterfaceObj.getConstructor();
-          if (interfaceConstructor != null && !interfaceConstructor.isInterface()) {
-            badImplementedType = true;
-          }
-        } else {
-          badImplementedType = true;
-        }
-        if (badImplementedType) {
-          report(t, n, BAD_IMPLEMENTED_TYPE, getBestFunctionName(n));
-        }
-      }
-      // check properties
-      validator.expectAllInterfaceProperties(t, n, functionType);
-      if (!functionType.isAbstract()) {
-        validator.expectAbstractMethodsImplemented(n, functionType);
-      }
-    }
-  }
-
-  /** Checks an interface, which may be either an ES5-style FUNCTION node, or a CLASS node. */
-  private void checkInterface(NodeTraversal t, Node n, FunctionType functionType) {
-    // Interface must extend only interfaces
-    for (ObjectType extInterface : functionType.getExtendedInterfaces()) {
-      if (extInterface.getConstructor() != null && !extInterface.getConstructor().isInterface()) {
-        compiler.report(
-            t.makeError(n, CONFLICTING_EXTENDED_TYPE, "interface", getBestFunctionName(n)));
-      }
-    }
-
-    // Check whether the extended interfaces have any conflicts
-    if (functionType.getExtendedInterfacesCount() > 1) {
-      // Only check when extending more than one interfaces
-      HashMap<String, ObjectType> properties = new HashMap<>();
-      LinkedHashMap<String, ObjectType> currentProperties = new LinkedHashMap<>();
-      for (ObjectType interfaceType : functionType.getExtendedInterfaces()) {
-        currentProperties.clear();
-        checkInterfaceConflictProperties(t, n, getBestFunctionName(n),
-            properties, currentProperties, interfaceType);
-        properties.putAll(currentProperties);
-      }
-    }
-
-    List<FunctionType> loopPath = functionType.checkExtendsLoop();
-    if (loopPath != null) {
-      String strPath = "";
-      for (int i = 0; i < loopPath.size() - 1; i++) {
-        strPath += loopPath.get(i).getDisplayName() + " -> ";
-      }
-      strPath += Iterables.getLast(loopPath).getDisplayName();
-      compiler.report(t.makeError(n, INTERFACE_EXTENDS_LOOP,
-          loopPath.get(0).getDisplayName(), strPath));
-    }
-  }
-
-  private String getBestFunctionName(Node n) {
-    checkState(n.isClass() || n.isFunction());
-    String name = NodeUtil.getBestLValueName(NodeUtil.getBestLValue(n));
-    return name != null ? name : "<anonymous@" + n.getSourceFileName() + ":" + n.getLineno() + ">";
   }
 
   /**

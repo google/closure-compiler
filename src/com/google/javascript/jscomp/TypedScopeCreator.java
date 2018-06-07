@@ -311,8 +311,6 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
     }
     if (root.isFunction()) {
       scopeBuilder = new FunctionScopeBuilder(newScope);
-    } else if (root.isClass()) {
-      scopeBuilder = new ClassScopeBuilder(newScope);
     } else {
       scopeBuilder = new NormalScopeBuilder(newScope);
     }
@@ -553,47 +551,20 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
         sourceName = NodeUtil.getSourceName(n);
       }
       visitPreorder(t, n, parent);
-      return shouldDescend(n, parent);
+      return parent == null || !NodeUtil.createsScope(n);
     }
 
     @Override
     public final void visit(NodeTraversal t, Node n, Node parent) {
       inputId = t.getInputId();
-      if (parent != null) {
-        attachLiteralTypes(n);
-        visitPostorder(t, n, parent);
-        if (deferredActions.containsKey(n)) { // streams are expensive, only make if needed
-          deferredActions.removeAll(n).stream().forEach(Runnable::run);
-        }
-      } else if (!deferredActions.isEmpty()) {
+      attachLiteralTypes(n);
+      visitPostorder(t, n, parent);
+      if (parent == null) {
         // Run *all* remaining deferred actions, in case any were missed.
         deferredActions.values().stream().forEach(Runnable::run);
+      } else {
+        deferredActions.removeAll(n).stream().forEach(Runnable::run);
       }
-    }
-
-    /** Whether or not to descend into a given node. */
-    boolean shouldDescend(Node n, Node parent) {
-      if (parent == null) {
-        return true;
-      } else if (parent.isClass()) {
-        // We need some special handling for classes, since we need to fully traverse the 'extends'
-        // node in the outer scope before (post-order) visiting the class node.  But node traversals
-        // lump the 'extends' node into the inner scope, causing problems.
-        // If we're in the class scope we want to skip the extends node (since it was already
-        // visited in the outer scope).  If we're in the outer scope, we only want to descend into
-        // the extends node and not into any others.  This ensures all children are still visited
-        // exactly once.
-        // TODO(sdh): Rework NodeTraversal to visit the extends node in the outer scope, and rework
-        // this class to leverage enterScope and exitScope and call different template methods
-        // depending on whether we're in our own scope or a child scope.
-        boolean isClassScope = parent == currentScope.getRootNode();
-        boolean isExtendsNode = n == parent.getSecondChild();
-        return isClassScope != isExtendsNode;
-      } else if (n.isClass()) {
-        // We need to descend into classes from the outer scope in order to see the extends node.
-        return true;
-      }
-      return !NodeUtil.createsScope(n);
     }
 
     /** Called by shouldTraverse on nodes after ensuring the inputId is set. */
@@ -643,15 +614,6 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
           } else {
             defineObjectLiteral(n);
           }
-          break;
-
-        case CLASS:
-          // NOTE(sdh): We can't handle function nodes here because they need special behavior to
-          // deal with hoisting.  But since classes aren't hoisted, and may need to be handled in
-          // such places as default method initializers (i.e. in a FunctionScope) or class extends
-          // clauses (technically part of the ClassScope, but visited instead by the NormalScope),
-          // they can be handled consistently in all scopes.
-          defineClassLiteral(n);
           break;
 
         // NOTE(johnlenz): If we ever support Array tuples,
@@ -834,37 +796,6 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
     }
 
     /**
-     * Defines a class literal.  Handles any of the following cases:
-     * <ul>
-     * <li>Class declarations: <code>class Foo { ... }</code>
-     * <li>Class assignments: <code>foo.Bar = class { ... }</code>
-     * <li>Bleeding names: <code>foo.Bar = class Baz { ... }</code>
-     * <li>Properties: <code>{foo: class { ... }}</code>
-     * <li>Callbacks: <code>foo(class { ... })</code>
-     * </ul>
-     */
-    void defineClassLiteral(Node n) {
-      assertDefinitionNode(n, Token.CLASS);
-
-      // Determine the name and JSDocInfo and l-value for the class.
-      // Any of these may be null.
-      Node lValue = NodeUtil.getBestLValue(n);
-      JSDocInfo info = NodeUtil.getBestJSDocInfo(n);
-      String className = NodeUtil.getBestLValueName(lValue);
-
-      // Create the type and assign it on the CLASS node.
-      FunctionType classType = createClassTypeFromNodes(n, className, info, lValue);
-      setDeferredType(n, classType);
-
-      // Declare this symbol in the current scope iff it's a class
-      // declaration. Otherwise, the declaration will happen in other
-      // code paths.
-      if (NodeUtil.isClassDeclaration(n)) {
-        defineSlot(n.getFirstChild(), classType);
-      }
-    }
-
-    /**
      * Defines a function literal.
      */
     void defineFunctionLiteral(Node n) {
@@ -926,111 +857,12 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
     }
 
     /**
-     * Creates a new class type from the given class literal.
-     * This function does not need to worry about stubs and aliases because
-     * they are handled by createFunctionTypeFromNodes instead.
-     */
-    private FunctionType createClassTypeFromNodes(
-        Node n,
-        @Nullable String name,
-        @Nullable JSDocInfo info,
-        @Nullable Node lvalueNode) {
-
-      FunctionTypeBuilder builder =
-          new FunctionTypeBuilder(name, compiler, n, currentScope)
-              .usingClassSyntax()
-              .setContents(new AstFunctionContents(n))
-              .setDeclarationScope(lvalueNode != null ? getLValueRootScope(lvalueNode) : null)
-              .inferTemplateTypeName(info, null);
-
-      Node extendsClause = n.getSecondChild();
-      Node classMembers = n.getLastChild();
-
-      // Look at the extends clause and/or JSDoc info to find a super class.  Use generics from the
-      // JSDoc to supplement the extends type when available.
-      ObjectType baseType = findSuperClassFromNodes(extendsClause);
-      builder.inferInheritance(info, baseType);
-
-      // Look for an explicit constructor.
-      Node constructor = NodeUtil.getFirstPropMatchingKey(classMembers, "constructor");
-      if (constructor != null) {
-        // Note: constructor should have the following structure:
-        //   MEMBER_FUNCTION_DEF [jsdoc_info]
-        //     FUNCTION
-        //       NAME
-        //       PARAM_LIST ...
-        //       BLOCK ...
-        // NodeUtil.getFirstPropMatchingKey returns the FUNCTION node.
-        JSDocInfo ctorInfo = NodeUtil.getBestJSDocInfo(constructor);
-        builder.inferParameterTypes(constructor.getSecondChild(), ctorInfo);
-      } else if (extendsClause.isEmpty()) {
-        // No explicit constructor and no superclass: constructor is no-args.
-        builder.inferImplicitConstructorParameters(new Node(Token.PARAM_LIST));
-      } else {
-        // No explicit constructor, but we have a superclass.  If we know it's type, then copy its
-        // constructor arguments.  If not, make the constructor arguments unknown.
-        // TODO(sdh): consider allowing attaching constructor @param annotations somewhere else?
-        FunctionType extendsCtor = baseType != null ? baseType.getConstructor() : null;
-        if (extendsCtor != null) {
-          // Known superclass: copy the parameters node.
-          builder.inferImplicitConstructorParameters(extendsCtor.getParametersNode().cloneTree());
-        } else {
-          // Unresolveable extends clause: suppress typechecking.
-          builder.inferImplicitConstructorParameters(
-              typeRegistry.createParametersWithVarArgs(
-                  typeRegistry.getNativeType(JSTypeNative.UNKNOWN_TYPE)));
-        }
-      }
-
-      // TODO(sdh): Handle template parameters.  The constructor should store all parameters,
-      // while the instance type should only have the class-level parameters?
-
-      return builder.buildAndRegister();
-    }
-
-    /**
-     * Look at the {@code extends} clause to find the instance type being extended.
-     * Returns {@code null} if there is no such clause, and unknown if the type cannot
-     * be determined.
-     */
-    @Nullable
-    private ObjectType findSuperClassFromNodes(Node extendsNode) {
-      if (extendsNode.isEmpty()) {
-        // No extends clause: return null.
-        return null;
-      }
-      JSType ctorType = extendsNode.getJSType();
-      if (ctorType == null) {
-        if (extendsNode.isQualifiedName()) {
-          // Look up qualified names in the scope (types won't be set on the AST until inference).
-          TypedVar var = currentScope.getVar(extendsNode.getQualifiedName());
-          if (var != null) {
-            ctorType = var.getType();
-          }
-        } else if (extendsNode.isCall()) {
-          // TODO(sdh): Do some limited type inference to get the return type for a mixin?
-          // The difficulty is that mixin functions are likely to be generic, so we need to be at
-          // least a little sophisticated here.
-        }
-      }
-      if (ctorType != null && (ctorType.isConstructor() || ctorType.isInterface())) {
-        return ctorType.toMaybeFunctionType().getInstanceType();
-      }
-      // We couldn't determine the type, so for TypedScope creation purposes we will treat it as if
-      // there were no extends clause.  TypeCheck will give a more precise error later.
-      return null;
-    }
-
-    /**
      * Creates a new function type, based on the given nodes.
      *
      * This handles two cases that are semantically very different, but
      * are not mutually exclusive:
-     * - A function literal that needs a type attached to it (called from
-     *   defineClassLiteral with a non-null FUNCTION node for rValue).
-     * - An assignment expression with function-type info in the JsDoc
-     *   (called from getDeclaredType on a stub (rValue == null) or alias
-     *   (rValue is a qualified name).
+     * - A function literal that needs a type attached to it.
+     * - An assignment expression with function-type info in the JsDoc.
      *
      * All parameters are optional, and we will do the best we can to create
      * a function type.
@@ -1051,7 +883,6 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
         @Nullable String name,
         @Nullable JSDocInfo info,
         @Nullable Node lvalueNode) {
-      // Check for an alias.
       if (rValue != null && rValue.isQualifiedName() && lvalueNode != null) {
         TypedVar var = currentScope.getVar(rValue.getQualifiedName());
         if (var != null && var.getType() != null && var.getType().isFunctionType()) {
@@ -1067,7 +898,6 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
         }
       }
 
-      // No alias: look for an explicit @type in JSDocInfo.
       if (info != null && info.hasType()) {
         JSType type = info.getType().evaluate(currentScope, typeRegistry);
 
@@ -1080,12 +910,10 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
         }
       }
 
-      // No alias or explicit @type, so look for a function literal, or @param/@return.
       Node errorRoot = rValue == null ? lvalueNode : rValue;
       boolean isFnLiteral = rValue != null && rValue.isFunction();
       Node fnRoot = isFnLiteral ? rValue : null;
       Node parametersNode = isFnLiteral ? rValue.getSecondChild() : null;
-
       // Find the type of any overridden function.
       Node ownerNode = NodeUtil.getBestLValueOwner(lvalueNode);
       String ownerName = NodeUtil.getBestLValueName(ownerNode);
@@ -1124,10 +952,12 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
               .setDeclarationScope(lvalueNode != null ? getLValueRootScope(lvalueNode) : null)
               .inferFromOverriddenFunction(overriddenType, parametersNode)
               .inferTemplateTypeName(info, prototypeOwner)
-              .inferInheritance(info, null);
+              .inferInheritance(info);
 
       if (info == null || !info.hasReturnType()) {
-        // when there is no @return annotation, look for inline return type declaration
+        /**
+         * when there is no {@code @return} annotation, look for inline return type declaration
+         */
         if (rValue != null && rValue.isFunction() && rValue.getFirstChild() != null) {
           JSDocInfo nameDocInfo = rValue.getFirstChild().getJSDocInfo();
           builder.inferReturnType(nameDocInfo, true);
@@ -1307,7 +1137,6 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       if (n.isName()) {
         checkArgument(
             parent.isFunction()
-                || parent.isClass()
                 || NodeUtil.isNameDeclaration(parent)
                 || parent.isParamList()
                 || (parent.isRest() && parent.getParent().isParamList())
@@ -2160,11 +1989,11 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       // This isn't a big deal in most cases since a NamedType will be created and resolved later,
       // but if a NamedType is used for a superclass, we lose a lot of valuable checking. Recursing
       // into child blocks immediately prevents this from being a problem.
-      if (parent != null && NodeUtil.createsBlockScope(n) && !n.isClass()) {
+      if (parent != null && NodeUtil.createsBlockScope(n)) {
         createScope(n, currentScope);
       }
 
-      // All other functions (and classes, etc) are handled when we see the actual function node.
+      // All other functions are handled when we see the actual function node.
       if (n.isFunction() && !NodeUtil.isHoistedFunctionDeclaration(n)) {
         defineFunctionLiteral(n);
       }
@@ -2316,40 +2145,6 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       }
     } // end declareArguments
   } // end FunctionScopeBuilder
-
-  /**
-   * Scope builder subclass for class scopes, which only contain a bleeding class name.  Methods
-   * are handled by FunctionScopeBuilder and NormalScopeBuilder for the bodies.
-   */
-  private final class ClassScopeBuilder extends AbstractScopeBuilder {
-
-    ClassScopeBuilder(TypedScope scope) {
-      super(scope);
-    }
-
-    @Override
-    void visitPreorder(NodeTraversal t, Node n, Node parent) {
-      // These are not descended into, so must be done preorder
-      if (n.isFunction()) {
-        if (parent.getString().equals("constructor")) {
-          // Constructor has already been analyzed, so pull that here.
-          n.setJSType(currentScope.getRootNode().getJSType());
-        }
-        // TODO(sdh): handle non-constructor methods.
-      }
-    }
-
-    @Override
-    void visitPostorder(NodeTraversal t, Node n, Node parent) {
-      if (n.isName()
-          && parent == currentScope.getRootNode()
-          && NodeUtil.isClassExpression(parent)) {
-        // Declare bleeding class name in scope.  Pull the type off the AST.
-        checkState(!n.getString().isEmpty()); // anonymous classes have EMPTY nodes, not NAME
-        defineSlot(n, parent.getJSType(), false);
-      }
-    }
-  } // end ClassScopeBuilder
 
   /**
    * Does a first-order function analysis that just looks at simple things like what variables are

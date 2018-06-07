@@ -5221,7 +5221,8 @@ public final class NodeUtil {
   /** Find the l-value that the given r-value is being assigned to. */
   public static Node getBestLValue(Node n) {
     Node parent = n.getParent();
-    if (isFunctionDeclaration(n) || isClassDeclaration(n)) {
+    boolean isFunctionDeclaration = isFunctionDeclaration(n);
+    if (isFunctionDeclaration) {
       return n.getFirstChild();
     } else if (parent.isName()) {
       return parent;

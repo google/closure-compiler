@@ -160,7 +160,7 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
         templateTypeMap);
     setPrettyPrint(true);
 
-    checkArgument(source == null || source.isFunction() || source.isClass());
+    checkArgument(source == null || Token.FUNCTION == source.getToken());
     checkNotNull(arrowType);
     this.source = source;
     this.kind = kind;
