@@ -25,9 +25,11 @@
 
 /**
  * @constructor
- * @see http://www.w3.org/TR/1998/REC-DOM-Level-1-19981001/level-one-core.html#ID-17189187
+ * @param {string=} message
+ * @param {string=} name
+ * @see https://heycam.github.io/webidl/#idl-DOMException
  */
-function DOMException() {}
+function DOMException(message, name) {}
 
 /**
  * @type {number}
