@@ -290,7 +290,7 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
         lines(
             "for (var x in y) {",
             "  /** @type {number} */",
-            "  var i = /** @type {?} */ (undefined);",
+            "  var i = undefined;",
             "}"));
 
     test(lines(

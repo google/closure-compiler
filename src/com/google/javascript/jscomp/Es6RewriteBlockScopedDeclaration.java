@@ -35,7 +35,6 @@ import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfoBuilder;
-import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.FunctionBuilder;
@@ -95,10 +94,6 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
         && !n.isCatch()
         && inLoop(n)) {
       Node undefined = createUndefinedNode().srcref(nameNode);
-      if (nameNode.getJSDocInfo() != null || n.getJSDocInfo() != null) {
-        // TODO(b/77323139): Remove cast when this pass moves after type checking.
-        undefined = wrapWithCastToUnknown(undefined);
-      }
       nameNode.addChildToFront(undefined);
       compiler.reportChangeToEnclosingScope(undefined);
     }
@@ -687,22 +682,6 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
       commaNode.setJSType(expr2.getJSType());
     }
     return commaNode;
-  }
-
-  /**
-   * Return a cast to unknown type containing the given node.
-   *
-   * <p>The Node must already have correct source info, since it will be used to create the cast
-   * node.
-   */
-  private Node wrapWithCastToUnknown(Node n) {
-    JSDocInfoBuilder jsDoc = new JSDocInfoBuilder(false);
-    jsDoc.recordType(new JSTypeExpression(new Node(Token.QMARK), n.getSourceFileName()));
-    n = IR.cast(n, jsDoc.build()).srcref(n);
-    if (shouldAddTypesOnNewAstNodes) {
-      n.setJSType(getNativeType(UNKNOWN_TYPE));
-    }
-    return n;
   }
 
   private Node createObjectLit() {
