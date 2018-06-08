@@ -22,7 +22,6 @@ import static com.google.common.base.Strings.nullToEmpty;
 import com.google.common.base.Ascii;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.core.client.JavaScriptObject;
 import com.google.javascript.jscomp.BasicErrorManager;
 import com.google.javascript.jscomp.CheckLevel;
@@ -60,9 +59,9 @@ import jsinterop.annotations.JsProperty;
 import jsinterop.annotations.JsType;
 
 /**
- * Runner for the GWT-compiled JSCompiler as a single exported method.
+ * Runner for the GWT-compiled JSCompiler.
  */
-public final class GwtRunner implements EntryPoint {
+public final class GwtRunner {
   private static final CompilationLevel DEFAULT_COMPILATION_LEVEL =
       CompilationLevel.SIMPLE_OPTIMIZATIONS;
 
@@ -70,8 +69,6 @@ public final class GwtRunner implements EntryPoint {
   private static final String OUTPUT_MARKER_JS_STRING = "%output|jsstring%";
 
   private static final String EXTERNS_PREFIX = "externs/";
-
-  private GwtRunner() {}
 
   @JsType(namespace = JsPackage.GLOBAL, name = "Object", isNative = true)
   private static class Flags {
@@ -547,6 +544,7 @@ public final class GwtRunner implements EntryPoint {
   /**
    * Public compiler call. Exposed in {@link #exportCompile}.
    */
+  @JsMethod(namespace = "jscomp")
   public static ModuleOutput compile(Flags flags, File[] inputs) {
     String[] unhandled = updateFlags(flags, defaultFlags);
     if (unhandled.length > 0) {
@@ -602,7 +600,8 @@ public final class GwtRunner implements EntryPoint {
   /**
    * Exports the {@link #compile} method via JSNI.
    *
-   * This will be placed on {@code module.exports}, {@code self.compile} or {@code window.compile}.
+   * <p>This will be placed on {@code module.exports}, {@code self.compile} or {@code
+   * window.compile}.
    */
   public native void exportCompile() /*-{
     var fn = $entry(@com.google.javascript.jscomp.gwt.client.GwtRunner::compile(*));
@@ -614,11 +613,6 @@ public final class GwtRunner implements EntryPoint {
       window.compile = fn;
     }
   }-*/;
-
-  @Override
-  public void onModuleLoad() {
-    exportCompile();
-  }
 
   /**
    * Custom {@link BasicErrorManager} to record {@link JSError} instances.
