@@ -35,6 +35,17 @@ public class InlineAliasesTest extends CompilerTestCase {
     return options;
   }
 
+  /**
+   * Returns the number of times the pass should be run before results are
+   * verified.
+   *
+   * This pass is not idempotent so we only run it once.
+   */
+  @Override
+  protected int getNumRepetitions() {
+    return 1;
+  }
+
   public void testSimpleAliasInJSDoc() {
     test("function Foo(){}; var /** @const */ alias = Foo; /** @type {alias} */ var x;",
         "function Foo(){}; var /** @const */ alias = Foo; /** @type {Foo} */ var x;");
@@ -150,7 +161,11 @@ public class InlineAliasesTest extends CompilerTestCase {
             "/** @constructor */ ns.Foo.Bar = function() {};",
             "var /** @const */ alias = ns.Foo;",
             "var /** @const */ alias2 = ns.Foo.Bar;",
-            "var x = new ns.Foo.Bar;"));
+            // Note: in order to replace "alias2" with "ns.Foo.Bar", we would either have to do
+            // multiple traversals of the AST in InlineAliases, or mark alias2 as an alias of
+            // ns.Foo.Bar in the GlobalNamespace after replacing "alias2 = alias.Bar" with
+            // "alias2 = ns.Foo.Bar"
+            "var x = new alias2;"));
   }
 
   public void testAliasChains() {
@@ -531,5 +546,43 @@ public class InlineAliasesTest extends CompilerTestCase {
 
   public void testVarAliasDeclaredInBlockScope() {
     testSame("function Foo() {} { var /** @const */ alias = Foo; alias; }");
+  }
+
+  public void testDontInlineEscapedQnameProperty() {
+    testSame(
+        externs("function use(obj) {}"),
+        srcs(
+            lines(
+                "/** @const */",
+                "var ns = {};",
+                "ns.foo = 3;",
+                "const alias = ns.foo;",
+                "use(ns);",
+                // "ns" escapes and we don't know if the value of "ns.foo" has also changed, so
+                // we cannot replace "alias" with "ns.foo".
+                "alert(alias);")));
+  }
+
+  public void testDoInlineEscapedConstructorProperty() {
+    // TODO(b/80429954): this is unsafe. The call to use(Foobar) could have changed the value of
+    // Foobar.foo
+    test(
+        externs("function use(obj) {}"),
+        srcs(
+            lines(
+                "/** @constructor */",
+                "function Foobar() {}",
+                "Foobar.foo = 3;",
+                "const alias = Foobar.foo;",
+                "use(Foobar);",
+                "alert(alias);")),
+        expected(
+            lines(
+                "/** @constructor */",
+                "function Foobar() {}",
+                "Foobar.foo = 3;",
+                "const alias = Foobar.foo;",
+                "use(Foobar);",
+                "alert(Foobar.foo);")));
   }
 }

@@ -1521,4 +1521,87 @@ test(
             "  return new param();",
             "}"));
   }
+
+  public void testInliningPropertyAliasBeforeNamespace1() {
+    // TODO(b/80429954): Fix this test. It is producing bad output and will cause runtime errors
+    test(
+        lines(
+            "var prop = 1;",
+            "/** @constructor */",
+            "var Foo = function() {}",
+            "",
+            "Foo.prop = prop;",
+            "",
+            "var aliasOfFoo = Foo;",
+            "alert(aliasOfFoo.prop);"),
+        lines(
+            "var prop = 1;",
+            "/** @constructor */",
+            "var Foo = function() {}",
+            "",
+            "Foo.prop = null;",
+            "",
+            "var aliasOfFoo = null;",
+            "alert(Foo.prop);")); // NOTE - this is bad! Foo.prop is now null.
+  }
+
+  public void testInliningPropertyAliasBeforeNamespace2() {
+    // NOTE(b/80429954): the only difference between this input and the above input is that the
+    // above has annotated Foo with @constructor, which triggers some unsafe behavior, while this
+    // test case produces correct output.
+    test(
+        lines(
+            "var prop = 1;",
+            "/** @const */",
+            "var Foo = {}",
+            "",
+            "Foo.prop = prop;",
+            "",
+            "var aliasOfFoo = Foo;",
+            "alert(aliasOfFoo.prop);"),
+        lines(
+            "var prop = 1;",
+            "/** @const */",
+            "var Foo = {};",
+            "",
+            "Foo.prop = null;",
+            "",
+            "var aliasOfFoo = null;",
+            "alert(prop);"));
+  }
+
+  public void testAliasChain() {
+    test(
+        lines(
+            "var goog = {};",
+            "goog.DEBUG = false;",
+            "var foo = {};",
+            "var global_DEBUG = goog.DEBUG;",
+            "foo.DEBUG = global_DEBUG;",
+            "alert(foo.DEBUG);"),
+        lines(
+            "var goog = {};",
+            "goog.DEBUG = false;",
+            "var foo = {};",
+            "var global_DEBUG = null;",
+            "foo.DEBUG = null;",
+            "alert(goog.DEBUG);"));
+  }
+
+  public void testTranspiledEs6StaticMethods_withNoCollapse() {
+    // This is what transpiled ES6 class statics look like.
+    // We don't replace "Child.f = Parent.f" with "Child.f = null" because of the @nocollapse
+    testSame(
+        lines(
+            "/** @struct @constructor */ var Parent = function() {};",
+            "/** @nocollapse */ Parent.f = function() {};",
+            "/** @struct @constructor @extends {Parent} @param {...?} var_args  */",
+            "var Child = function(var_args) {",
+            "  Parent.apply(this, arguments);",
+            "}",
+            "$jscomp.inherits(Child, Parent);",
+            "/** @nocollapse */ Child.f = Parent.f;",
+            "Child.prototype.g = function() { return this.f(); }",
+            ""));
+  }
 }
