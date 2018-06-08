@@ -533,6 +533,42 @@ public final class JsFileParserTest extends TestCase {
     assertDeps(expected, result);
   }
 
+  public void testParseProvidesAndWrappedGoogModule() {
+    String contents =
+        ""
+            + "goog.loadModule(function(){\"use strict\";goog.module('yes1');\n"
+            + "goog.provide('my.provide');\n"
+            + "var yes2=goog.require('yes2');\n"
+            + "var C=goog.require(\"a.b.C\");\n"
+            + "const {\n  D,\n  E\n}=goog.require(\"a.b.d\");});";
+
+    DependencyInfo expected =
+        SimpleDependencyInfo.builder(CLOSURE_PATH, SRC_PATH)
+            .setProvides(ImmutableList.of("yes1", "my.provide"))
+            .setRequires(
+                ImmutableList.of(
+                    googRequireSymbol("yes2"),
+                    googRequireSymbol("a.b.C"),
+                    googRequireSymbol("a.b.d")))
+            .setLoadFlags(ImmutableMap.of())
+            .build(); // wrapped modules aren't marked as modules
+
+    DependencyInfo result = parser.parseFile(SRC_PATH, CLOSURE_PATH, contents);
+
+    assertDeps(expected, result);
+  }
+
+  public void testEs6AndWrappedGoogModuleIsError() {
+    String contents =
+        "goog.loadModule(function(){\"use strict\";goog.module('yes1');});\n" + "export {};";
+
+    parser.parseFile(SRC_PATH, CLOSURE_PATH, contents);
+
+    assertThat(errorManager.getErrorCount()).isEqualTo(0);
+    assertThat(errorManager.getWarningCount()).isEqualTo(1);
+    assertThat(errorManager.getWarnings()[0].getType()).isEqualTo(ModuleLoader.MODULE_CONFLICT);
+  }
+
   /** Asserts the deps match without errors */
   private void assertDeps(DependencyInfo expected, DependencyInfo actual) {
     assertThat(actual).isEqualTo(expected);

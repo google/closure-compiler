@@ -109,13 +109,13 @@ public final class JsFileParser extends JsFileLineParser {
 
   private enum ModuleType {
     NON_MODULE,
-    UNWRAPPED_GOOG_MODULE,
-    WRAPPED_GOOG_MODULE,
+    GOOG_MODULE,
     GOOG_PROVIDE,
     ES6_MODULE,
   }
 
   private ModuleType moduleType;
+  private boolean seenLoadModule = false;
 
   /** Whether to provide/require the root namespace. */
   private boolean includeGoogBase = false;
@@ -176,12 +176,13 @@ public final class JsFileParser extends JsFileLineParser {
 
   private DependencyInfo parseReader(String filePath,
       String closureRelativePath, Reader fileContents) {
-    this.provides = new ArrayList<>();
-    this.requires = new ArrayList<>();
-    this.weakRequires = new ArrayList<>();
-    this.fileHasProvidesOrRequires = false;
-    this.file = loader.resolve(filePath);
-    this.moduleType = ModuleType.NON_MODULE;
+    provides = new ArrayList<>();
+    requires = new ArrayList<>();
+    weakRequires = new ArrayList<>();
+    fileHasProvidesOrRequires = false;
+    file = loader.resolve(filePath);
+    moduleType = ModuleType.NON_MODULE;
+    seenLoadModule = false;
 
     if (logger.isLoggable(Level.FINE)) {
       logger.fine("Parsing Source: " + filePath);
@@ -194,7 +195,7 @@ public final class JsFileParser extends JsFileLineParser {
 
     Map<String, String> loadFlags = new LinkedHashMap<>();
     switch (moduleType) {
-      case UNWRAPPED_GOOG_MODULE:
+      case GOOG_MODULE:
         loadFlags.put("module", "goog");
         break;
       case ES6_MODULE:
@@ -218,11 +219,28 @@ public final class JsFileParser extends JsFileLineParser {
   }
 
   private void setModuleType(ModuleType type) {
-    if (moduleType != type && moduleType != ModuleType.NON_MODULE) {
+    boolean provide = type == ModuleType.GOOG_PROVIDE || moduleType == ModuleType.GOOG_PROVIDE;
+    boolean es6Module = type == ModuleType.ES6_MODULE || moduleType == ModuleType.ES6_MODULE;
+    boolean googModule = type == ModuleType.GOOG_MODULE || moduleType == ModuleType.GOOG_MODULE;
+
+    if (googModule && provide && seenLoadModule) {
+      // We have to assume this is a top level goog.provide and a wrapped goog.loadModule. We can't
+      // correctly validate this with just regular expressions.
+      moduleType = ModuleType.GOOG_PROVIDE;
+      return;
+    }
+
+    boolean provideGoogModuleConflict = googModule && provide && !seenLoadModule;
+    boolean provideEs6ModuleConflict = es6Module && provide;
+    // Don't allow nested goog modules in ES6 modules.
+    boolean googEs6ModuleConflict = (googModule || seenLoadModule) && es6Module;
+
+    if (provideGoogModuleConflict || provideEs6ModuleConflict || googEs6ModuleConflict) {
       // TODO(sdh): should this be an error?
       errorManager.report(
           CheckLevel.WARNING, JSError.make(ModuleLoader.MODULE_CONFLICT, file.toString()));
     }
+
     moduleType = type;
   }
 
@@ -235,7 +253,7 @@ public final class JsFileParser extends JsFileLineParser {
     boolean lineHasProvidesOrRequires = false;
 
     if (line.startsWith(BUNDLED_GOOG_MODULE_START)) {
-      setModuleType(ModuleType.WRAPPED_GOOG_MODULE);
+      seenLoadModule = true;
     }
 
     // Quick check that will catch most cases. This is a performance win for teams with a lot of JS.
@@ -262,8 +280,8 @@ public final class JsFileParser extends JsFileLineParser {
         boolean providesNamespace = isProvide || isModule || isDeclareModuleNamespace;
         boolean isRequire = firstChar == 'r';
 
-        if (isModule && this.moduleType != ModuleType.WRAPPED_GOOG_MODULE) {
-          setModuleType(ModuleType.UNWRAPPED_GOOG_MODULE);
+        if (isModule && !seenLoadModule) {
+          setModuleType(ModuleType.GOOG_MODULE);
         }
 
         if (isProvide) {
