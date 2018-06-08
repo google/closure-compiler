@@ -827,6 +827,13 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
           Node rValue = NodeUtil.getRValueOfLValue(export.node);
           if (rValue == null || !rValue.isObjectLit()) {
             directAssignments++;
+          } else if (rValue.isObjectLit()) {
+            for (Node key = rValue.getFirstChild(); key != null; key = key.getNext()) {
+              if ((!key.isStringKey() || key.isQuotedString()) && !key.isMemberFunctionDef()) {
+                directAssignments++;
+                break;
+              }
+            }
           }
         }
       }
@@ -1358,8 +1365,9 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
             && rValue.isObjectLit()
             && root.getParent().isAssign()
             && root.getParent().getParent().isExprResult()) {
-          expandObjectLitAssignment(t, root, export.scope);
-          return;
+          if (expandObjectLitAssignment(t, root, export.scope)) {
+            return;
+          }
         }
       }
 
@@ -1465,7 +1473,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
      *
      * <p>module.exports.foo = bar; // removed later module.exports.baz = function() {};
      */
-    private void expandObjectLitAssignment(NodeTraversal t, Node export, Scope scope) {
+    private boolean expandObjectLitAssignment(NodeTraversal t, Node export, Scope scope) {
       checkState(export.getParent().isAssign());
       Node insertionRef = export.getParent().getParent();
       checkState(insertionRef.isExprResult());
@@ -1475,14 +1483,15 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
       Node rValue = NodeUtil.getRValueOfLValue(export);
       Node key = rValue.getFirstChild();
 
+      boolean removedNodes = false;
       while (key != null) {
         Node lhs;
-        if (key.isQuotedString()) {
-          lhs = IR.getelem(export.cloneTree(), IR.string(key.getString()));
-        } else {
-          lhs = IR.getprop(export.cloneTree(), IR.string(key.getString()));
+        if ((!key.isStringKey() || key.isQuotedString()) && !key.isMemberFunctionDef()) {
+          key = key.getNext();
+          continue;
         }
 
+        lhs = IR.getprop(export.cloneTree(), IR.string(key.getString()));
         Node value = null;
         if (key.isStringKey()) {
           if (key.hasChildren()) {
@@ -1495,44 +1504,31 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
         }
 
         Node expr = null;
-        if (!key.isGetterDef()) {
-          expr = IR.exprResult(IR.assign(lhs, value)).useSourceInfoIfMissingFromForTree(key);
-          insertionParent.addChildAfter(expr, insertionRef);
-          ExportInfo newExport = new ExportInfo(lhs.getFirstChild(), scope);
-          visitExport(t, newExport);
-        } else {
-          String moduleName = getModuleName(t.getInput());
-          Var moduleVar = t.getScope().getVar(moduleName + "." + EXPORT_PROPERTY_NAME);
-          Node defaultProp = null;
-          if (moduleVar == null) {
-            moduleVar = t.getScope().getVar(moduleName);
-            if (moduleVar != null
-                && moduleVar.getNode().getFirstChild() != null
-                && moduleVar.getNode().getFirstChild().isObjectLit()) {
-              defaultProp =
-                  NodeUtil.getFirstPropMatchingKey(
-                      moduleVar.getNode().getFirstChild(), EXPORT_PROPERTY_NAME);
-            }
-          } else if (moduleVar.getNode().getFirstChild() != null
-              && moduleVar.getNode().getFirstChild().isObjectLit()) {
-            defaultProp = moduleVar.getNode().getFirstChild();
-          }
-
-          if (defaultProp != null) {
-            Node getter = key.detach();
-            defaultProp.addChildToBack(getter);
-          }
-        }
+        expr = IR.exprResult(IR.assign(lhs, value)).useSourceInfoIfMissingFromForTree(key);
+        insertionParent.addChildAfter(expr, insertionRef);
+        ExportInfo newExport = new ExportInfo(lhs.getFirstChild(), scope);
+        visitExport(t, newExport);
 
         // Export statements can be removed in visitExport
         if (expr != null && expr.getParent() != null) {
           insertionRef = expr;
         }
 
+        Node currentKey = key;
         key = key.getNext();
+        currentKey.detach();
+        removedNodes = true;
       }
 
-      export.getParent().getParent().detach();
+      if (!rValue.hasChildren()) {
+        export.getGrandparent().detach();
+        return true;
+      }
+
+      if (removedNodes) {
+        t.reportCodeChange(rValue);
+      }
+      return false;
     }
 
     /**
