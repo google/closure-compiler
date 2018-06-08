@@ -997,13 +997,6 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
 
   /** Gets the string representation of a var args param. */
   private void appendVarArgsString(StringBuilder sb, JSType paramType, boolean forAnnotations) {
-    if (paramType.isUnionType()) {
-      // Remove the optionality from the var arg.
-      paramType =
-          paramType
-              .toMaybeUnionType()
-              .getRestrictedUnion(registry.getNativeType(JSTypeNative.VOID_TYPE));
-    }
     sb.append("...");
     paramType.appendAsNonNull(sb, forAnnotations);
   }

@@ -202,9 +202,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
         .declares("nums")
         .onClosestContainerScope()
         .withTypeThat()
-        // TODO(bradfordcsmith): Should be 'Array<number>'
-        // See https://github.com/google/closure-compiler/issues/2561
-        .toStringIsEqualTo("Array<(number|undefined)>");
+        .toStringIsEqualTo("Array<number>");
   }
 
   public void testStubProperty() {

@@ -1927,9 +1927,8 @@ public class JSTypeRegistry implements Serializable {
                 n.getFirstChild(), sourceName, scope, recordUnresolvedTypes));
 
       case ELLIPSIS: // Var args
-        return createOptionalType(
-            createFromTypeNodesInternal(
-                n.getFirstChild(), sourceName, scope, recordUnresolvedTypes));
+        return createFromTypeNodesInternal(
+            n.getFirstChild(), sourceName, scope, recordUnresolvedTypes);
 
       case STAR: // The AllType
         return getNativeType(ALL_TYPE);

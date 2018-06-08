@@ -887,9 +887,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   public void testParseParam8() {
     // Var args @param
     JSDocInfo info = parse("@param {...number} index */");
-    assertTypeEquals(
-        registry.createOptionalType(NUMBER_TYPE),
-        info.getParameterType("index"));
+    assertTypeEquals(NUMBER_TYPE, info.getParameterType("index"));
   }
 
   public void testParseParam9() {
@@ -913,17 +911,13 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   public void testParseParam12() {
     JSDocInfo info = parse("@param {...number|string} index */");
     assertTypeEquals(
-        registry.createOptionalType(
-            registry.createUnionType(STRING_TYPE, NUMBER_TYPE)),
-        info.getParameterType("index"));
+        registry.createUnionType(STRING_TYPE, NUMBER_TYPE), info.getParameterType("index"));
   }
 
   public void testParseParam13() {
     JSDocInfo info = parse("@param {...(number|string)} index */");
     assertTypeEquals(
-        registry.createOptionalType(
-            registry.createUnionType(STRING_TYPE, NUMBER_TYPE)),
-        info.getParameterType("index"));
+        registry.createUnionType(STRING_TYPE, NUMBER_TYPE), info.getParameterType("index"));
   }
 
   public void testParseParam14() {
@@ -956,7 +950,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   public void testParseParam18() {
     JSDocInfo info = parse("@param {...string} [index] */");
     assertThat(info.getParameterCount()).isEqualTo(1);
-    assertTypeEquals(registry.createOptionalType(STRING_TYPE), info.getParameterType("index"));
+    assertTypeEquals(STRING_TYPE, info.getParameterType("index"));
   }
 
   public void testParseParam19() {

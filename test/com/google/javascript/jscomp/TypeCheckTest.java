@@ -2390,11 +2390,26 @@ public final class TypeCheckTest extends TypeCheckTestCase {
 
   public void testFunctionArguments16() {
     testTypes(
-        "/** @param {...number} var_args */" +
-        "function g(var_args) {} g(1, true);",
-        "actual parameter 2 of g does not match formal parameter\n" +
-        "found   : boolean\n" +
-        "required: (number|undefined)");
+        lines(
+            "/** @param {...number} var_args */", // preserve newlines
+            "function g(var_args) {}",
+            "g(1, true);"),
+        lines(
+            "actual parameter 2 of g does not match formal parameter",
+            "found   : boolean",
+            "required: number"));
+  }
+
+  public void testUndefinedPassedForVarArgs() {
+    testTypes(
+        lines(
+            "/** @param {...number} var_args */", // preserve newlines
+            "function g(var_args) {}",
+            "g(undefined, 1);"),
+        lines(
+            "actual parameter 1 of g does not match formal parameter",
+            "found   : undefined",
+            "required: number"));
   }
 
   public void testFunctionArguments17() {
@@ -6891,15 +6906,29 @@ public final class TypeCheckTest extends TypeCheckTestCase {
 
   public void testInferredParam4() {
     testTypes(
-        "/** @param {string} x */ function f(x) {}"
-            + "/** @constructor */ function Foo() {}"
-            + "/** @param {...number} x */ Foo.prototype.bar = function(x) {};"
-            + "/** @constructor \n * @extends {Foo} */ function SubFoo() {}"
-            + "/** @override @return {void} */ SubFoo.prototype.bar = "
-            + "    function(x) { f(x); }; (new SubFoo()).bar();",
-        "actual parameter 1 of f does not match formal parameter\n"
-            + "found   : (number|undefined)\n"
-            + "required: string");
+        lines(
+            "/** @param {string} x */ function f(x) {}",
+            "",
+            "/** @constructor */",
+            "function Foo() {}",
+            "/** @param {...number} x */",
+            "Foo.prototype.bar = function(x) {};",
+            "",
+            "/**",
+            " * @constructor",
+            " * @extends {Foo}",
+            " */",
+            "function SubFoo() {}",
+            "/**",
+            " * @override",
+            " * @return {void}",
+            " */",
+            "SubFoo.prototype.bar = function(x) { f(x); };",
+            "(new SubFoo()).bar();"),
+        lines(
+            "actual parameter 1 of f does not match formal parameter",
+            "found   : number",
+            "required: string"));
   }
 
   public void testInferredParam5() {
@@ -9834,22 +9863,26 @@ public final class TypeCheckTest extends TypeCheckTestCase {
 
   public void testFunctionBind4() {
     testTypesWithCommonExterns(
-        "/** @param {...number} x */" +
-        "function f(x) {}" +
-        "f.bind(null, 3, 3, 3)(true);",
-        "actual parameter 1 of function does not match formal parameter\n" +
-        "found   : boolean\n" +
-        "required: (number|undefined)");
+        lines(
+            "/** @param {...number} x */", // preserve newlines
+            "function f(x) {}",
+            "f.bind(null, 3, 3, 3)(true);"),
+        lines(
+            "actual parameter 1 of function does not match formal parameter",
+            "found   : boolean",
+            "required: number"));
   }
 
   public void testFunctionBind5() {
     testTypesWithCommonExterns(
-        "/** @param {...number} x */" +
-        "function f(x) {}" +
-        "f.bind(null, true)(3, 3, 3);",
-        "actual parameter 2 of f.bind does not match formal parameter\n" +
-        "found   : boolean\n" +
-        "required: (number|undefined)");
+        lines(
+            "/** @param {...number} x */", // preserve newlines
+            "function f(x) {}",
+            "f.bind(null, true)(3, 3, 3);"),
+        lines(
+            "actual parameter 2 of f.bind does not match formal parameter",
+            "found   : boolean",
+            "required: number"));
   }
 
   public void testFunctionBind6() {
@@ -13626,7 +13659,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
         lines(
             "actual parameter 1 of Array.prototype.push does not match formal parameter",
             "found   : number",
-            "required: (string|undefined)"));
+            "required: string"));
   }
 
   public void testTemplateType8() {

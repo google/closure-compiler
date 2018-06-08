@@ -420,11 +420,7 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
         lines(
             "actual parameter 2 of use does not match formal parameter",
             "found   : string",
-            // TODO(bradfordcsmith): should not allow undefined
-            // This is consistent with pre-ES6 var_args behavior.
-            // See https://github.com/google/closure-compiler/issues/2561
-            "required: (number|undefined)"
-        ));
+            "required: number"));
   }
 
   public void testNormalAndRestParameterWithJSDocCalledWithOneArg() {
@@ -481,11 +477,7 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
         lines(
             "actual parameter 2 of use does not match formal parameter",
             "found   : string",
-            // TODO(bradfordcsmith): should not allow undefined
-            // This is consistent with pre-ES6 var_args behavior.
-            // See https://github.com/google/closure-compiler/issues/2561
-            "required: (number|undefined)"
-        ));
+            "required: number"));
   }
 
   public void testExponent1() {
@@ -1702,7 +1694,7 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
         lines(
             "actual parameter 3 of tag does not match formal parameter",
             "found   : string",
-            "required: (number|undefined)"));
+            "required: number"));
   }
 
   public void testTaggedTemplateLiteral_returnType1() {

@@ -1765,11 +1765,9 @@ public final class TypeInferenceTest extends TestCase {
             "}",
             ");"));
     assertTypeOfExpression("N_START").toStringIsEqualTo("null");
-    // TODO(bradfordcsmith): Should be 'number'
-    // See https://github.com/google/closure-compiler/issues/2561
-    assertTypeOfExpression("N_IF_TRUE").toStringIsEqualTo("(number|undefined)");
+    assertTypeOfExpression("N_IF_TRUE").toStringIsEqualTo("number");
     assertTypeOfExpression("N_IF_FALSE").toStringIsEqualTo("null");
-    assertTypeOfExpression("N_FINAL").toStringIsEqualTo("(null|number|undefined)");
+    assertTypeOfExpression("N_FINAL").toStringIsEqualTo("(null|number)");
   }
 
   private ObjectType getNativeObjectType(JSTypeNative t) {

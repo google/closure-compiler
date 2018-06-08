@@ -96,14 +96,6 @@ public class FunctionParamBuilder {
       return false;
     }
 
-    // There are two types of variable argument functions:
-    // 1) Programmer-defined var args
-    // 2) Native bottom types that can accept any argument.
-    // For the first one, "undefined" is a valid value for all arguments.
-    // For the second, we do not want to cast it up to undefined.
-    if (!type.isEmptyType()) {
-      type = registry.createOptionalType(type);
-    }
     newParameter(type).setVarArgs(true);
     return true;
   }
