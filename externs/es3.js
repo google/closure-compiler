@@ -607,11 +607,12 @@ Array.prototype.join = function(opt_separator) {};
  */
 Array.prototype.pop = function() {};
 
+// TODO(bradfordcsmith): remove "undefined" from the var_args of push
 /**
  * Mutates an array by appending the given elements and returning the new
  * length of the array.
  *
- * @param {...T} var_args
+ * @param {...(T|undefined)} var_args
  * @return {number} The new length of the array.
  * @this {IArrayLike<T>}
  * @template T

@@ -1421,7 +1421,7 @@ Number.isSafeInteger = function(value) {};
 
 /**
  * @param {!Object} target
- * @param {...Object} var_args
+ * @param {...(Object|null|undefined)} var_args
  * @return {!Object}
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/assign
  */
