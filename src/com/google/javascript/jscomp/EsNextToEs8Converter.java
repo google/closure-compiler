@@ -121,7 +121,11 @@ public final class EsNextToEs8Converter implements NodeTraversal.Callback, HotSw
     // A trivial class mapping variable names to computations.
 
     private final Node pattern;
-    private final String varName;
+
+    // Name of the variable we will use to contain the result of the rhs
+    private final String rhsResultName;
+    // Name of the variable we will copy the rhs contents into before making deletions
+    private final String restDeletionVarName;
 
     // Collect DELPROP nodes to delete the appropriate properties for the assignment to the rest
     // variable.
@@ -136,14 +140,17 @@ public final class EsNextToEs8Converter implements NodeTraversal.Callback, HotSw
      * constructor.
      */
     private Node getRestRhs() {
-      Node restRhs = newName();
+      // If no deletions are to be performed, default to the original result.
+      Node restRhs = newName(this.rhsResultName);
 
       if (!this.deletions.isEmpty()) {
         Node comma = this.deletions.remove(0);
         for (Node deletion : this.deletions) {
           comma = IR.comma(comma, deletion);
         }
-        restRhs = IR.comma(comma, restRhs);
+
+        // The "rest" variable should now be assigned the value of deletionVar
+        restRhs = IR.comma(comma, IR.name(this.restDeletionVarName));
       }
 
       restRhs.useSourceInfoIfMissingFromForTree(this.pattern);
@@ -152,7 +159,9 @@ public final class EsNextToEs8Converter implements NodeTraversal.Callback, HotSw
 
     ObjectPatternConverter(Node pattern) {
       this.pattern = pattern;
-      this.varName = PATTERN_TEMP_VAR + (patternVarCounter++);
+      this.rhsResultName = PATTERN_TEMP_VAR + (patternVarCounter++);
+      this.restDeletionVarName = PATTERN_TEMP_VAR + (patternVarCounter++);
+
       for (Node child : pattern.children()) {
         if (child.isStringKey()) {
           // Add a deletion with the name of the child.
@@ -161,14 +170,16 @@ public final class EsNextToEs8Converter implements NodeTraversal.Callback, HotSw
                   Token.DELPROP,
                   new Node(
                       child.isQuotedString() ? Token.GETELEM : Token.GETPROP,
-                      newName(),
+                      newName(this.restDeletionVarName),
                       IR.string(child.getString()))));
         } else if (child.isComputedProp()) {
           // Create an auxiliary temp variable name.
           String auxTempVarName = PATTERN_TEMP_VAR + (patternVarCounter++);
           // Add a deletion with computed property using the auxiliary temp variable.
           deletions.add(
-              new Node(Token.DELPROP, IR.getelem(newName(), IR.name(auxTempVarName))));
+              new Node(
+                  Token.DELPROP,
+                  IR.getelem(newName(this.restDeletionVarName), IR.name(auxTempVarName))));
 
           // Add a pair mapping the auxiliary temp variable to the property name computation.
           ComputedPropertyName pair =
@@ -183,10 +194,33 @@ public final class EsNextToEs8Converter implements NodeTraversal.Callback, HotSw
     /*
      * Wraps a call to IR.name with the temp var name and the appropriate source info.
      */
-    Node newName() {
-      Node name = IR.name(this.varName);
+    Node newName(String nameString) {
+      Node name = IR.name(nameString);
       name.useSourceInfoIfMissingFrom(this.pattern);
       return name;
+    }
+
+    /**
+     * For a name F returns a Node equivalent to Object.assign({}, F).
+     * This permits deleting properties of F without deleting properties from the originally
+     * referenced object.
+     *
+     * The Node passed will be used in the AST, and must not exist anywhere else in the AST.
+     *
+     * @param from Node to copy
+     */
+    Node assignCopy(Node from) {
+      checkArgument(from.isName());
+
+      // TODO(mattmm): Only add types if the type checker passes have run already
+      JSType simpleObjectType =
+          createType(addTypes, compiler.getTypeRegistry(), JSTypeNative.EMPTY_OBJECT_LITERAL_TYPE);
+
+      Node call = IR.call(NodeUtil.newQName(compiler, "Object.assign"));
+      call.addChildToBack(withType(IR.objectlit(), simpleObjectType));
+      call.addChildToBack(from);
+
+      return call;
     }
 
     /*
@@ -205,7 +239,7 @@ public final class EsNextToEs8Converter implements NodeTraversal.Callback, HotSw
       checkState(NodeUtil.isNameDeclaration(grandparent), grandparent);
 
       // Add a binding for the temporary variable.
-      Node varName = this.newName();
+      Node varName = this.newName(this.rhsResultName);
       // The temp variable is bound to whatever the pattern was bound to.
       varName.addChildToBack(this.pattern.getNext().detach());
       // The temp variable binding goes before the DESTRUCTURING_LHS.
@@ -227,13 +261,22 @@ public final class EsNextToEs8Converter implements NodeTraversal.Callback, HotSw
       Node restNode = this.pattern.getLastChild().detach();
 
       // The DESTRUCTURING_LHS is now bound to the temporary variable.
-      parent.addChildToBack(this.newName());
+      parent.addChildToBack(this.newName(this.rhsResultName));
+
+      Node delVarLhs = IR.name(this.restDeletionVarName);
+      Node delVarRhs = assignCopy(IR.name(this.rhsResultName));
+      delVarLhs.useSourceInfoIfMissingFromForTree(pattern);
+      delVarRhs.useSourceInfoIfMissingFromForTree(pattern);
+      delVarLhs.addChildToBack(delVarRhs);
+
+      // The temporary deletion var binding goes after the DESTRUCTURING_LHS.
+      grandparent.addChildAfter(delVarLhs, parent);
 
       Node restLhs = restNode.removeFirstChild();
       restLhs.addChildToBack(this.getRestRhs()); // get the temp variable after deletions.
 
-      // The rest binding goes after the DESTRUCTURING_LHS.
-      grandparent.addChildAfter(restLhs, parent);
+      // The rest binding goes after the deletion var.
+      grandparent.addChildAfter(restLhs, delVarLhs);
     }
 
     /*
@@ -259,7 +302,7 @@ public final class EsNextToEs8Converter implements NodeTraversal.Callback, HotSw
 
       // Remove the pattern from its parent.
       Node headLhs = this.pattern.detach();
-      Node headRhs = this.newName();
+      Node headRhs = this.newName(this.rhsResultName);
 
       // Remove the rest variable from the pattern.
       Node restNode = this.pattern.getLastChild().detach();
@@ -267,12 +310,18 @@ public final class EsNextToEs8Converter implements NodeTraversal.Callback, HotSw
       Node restLhs = restNode.removeFirstChild();
       Node restRhs = this.getRestRhs(); // get the temp variable after deletions.
 
+      Node delVarLhs = IR.name(this.restDeletionVarName);
+      Node delVarRhs = assignCopy(IR.name(this.rhsResultName));
+
       if (declType == Token.ASSIGN) {
         Node assign =
             IR.exprResult(
                 IR.comma(
-                    // An assignment for the head.
-                    IR.assign(headLhs, headRhs),
+                    IR.comma(
+                        // An assignment for the head.
+                        IR.assign(headLhs, headRhs),
+                        // An assignment for the temp var.
+                        IR.assign(delVarLhs, delVarRhs)),
                     // An assignment for the rest.
                     IR.assign(restLhs, restRhs)));
         assign.useSourceInfoIfMissingFromForTree(this.pattern);
@@ -280,6 +329,10 @@ public final class EsNextToEs8Converter implements NodeTraversal.Callback, HotSw
       } else {
         // Create a declaration with the head.
         Node decl = IR.declaration(headLhs, headRhs, declType);
+
+        // Add the declaration of the temporary deletion variable
+        delVarLhs.addChildToBack(delVarRhs);
+        decl.addChildToBack(delVarLhs);
 
         // Add a second declaration for the rest.
         restLhs.addChildToBack(restRhs);
@@ -349,7 +402,7 @@ public final class EsNextToEs8Converter implements NodeTraversal.Callback, HotSw
       converter.prependDeclStatements(Token.LET, block); // Detaches the pattern from its parent.
 
       // Put the temp var in the catch, which was left empty by the removal of the pattern.
-      parent.addChildToFront(converter.newName());
+      parent.addChildToFront(converter.newName(converter.rhsResultName));
       compiler.reportChangeToEnclosingScope(parent);
       return;
     }
@@ -373,7 +426,7 @@ public final class EsNextToEs8Converter implements NodeTraversal.Callback, HotSw
 
       // Put the temp var in the param list (or default), which was left empty by the removal of the
       // pattern.
-      parent.addChildToFront(converter.newName());
+      parent.addChildToFront(converter.newName(converter.rhsResultName));
       compiler.reportChangeToEnclosingScope(parent);
       return;
     }
@@ -392,8 +445,13 @@ public final class EsNextToEs8Converter implements NodeTraversal.Callback, HotSw
       Node block = enhancedFor.getLastChild();
       converter.prependDeclStatements(Token.ASSIGN, block);
 
+      // Declare the deletion variable (will be assigned to later).
+      Node delVarDecl = IR.declaration(converter.newName(converter.restDeletionVarName), Token.LET);
+      delVarDecl.useSourceInfoIfMissingFromForTree(pattern);
+      block.addChildToFront(delVarDecl);
+
       // Replace the pattern with a let for the temp variable.
-      Node let = new Node(Token.LET, converter.newName());
+      Node let = new Node(Token.LET, converter.newName(converter.rhsResultName));
       let.useSourceInfoIfMissingFrom(pattern);
       enhancedFor.addChildToFront(let);
 
@@ -418,7 +476,7 @@ public final class EsNextToEs8Converter implements NodeTraversal.Callback, HotSw
           converter.prependDeclStatements(grandparent.getToken(), block);
 
           // Replace the name declaration with a let for the temp variable.
-          Node let = new Node(Token.LET, converter.newName());
+          Node let = new Node(Token.LET, converter.newName(converter.rhsResultName));
           let.useSourceInfoIfMissingFrom(pattern);
           enhancedFor.replaceChild(grandparent, let);
 
@@ -453,16 +511,15 @@ public final class EsNextToEs8Converter implements NodeTraversal.Callback, HotSw
       converter.prependDeclStatements(Token.ASSIGN, body);
       if (!canOmitResult(parent)) {
         // If the result is needed then we have to store and return a pristine copy whose
-        // properties are not deleted.
-        String copyName = PATTERN_TEMP_VAR + (patternVarCounter++);
-
-        // The copy goes at the front of the body, before the deletions.
-        body.addChildToFront(IR.let(IR.name(copyName), converter.newName()));
+        // properties are not deleted. This value is stored in the resultVar.
         // The return must be last.
-        body.addChildToBack(IR.returnNode(IR.name(copyName)));
+        body.addChildToBack(IR.returnNode(IR.name(converter.rhsResultName)));
       }
+      // Declare the deletion variable (will be assigned to later).
+      body.addChildToFront(
+          IR.declaration(converter.newName(converter.restDeletionVarName), Token.LET));
       // Add the new let for the temp variable at the beginning of the body.
-      body.addChildToFront(IR.let(converter.newName(), rhs.detach()));
+      body.addChildToFront(IR.let(converter.newName(converter.rhsResultName), rhs.detach()));
 
       Node call = IR.call(IR.arrowFunction(IR.name(""), IR.paramList(), body));
       call.putBooleanProp(Node.FREE_CALL, true);

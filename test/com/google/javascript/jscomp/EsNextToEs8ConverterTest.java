@@ -62,27 +62,30 @@ public final class EsNextToEs8ConverterTest extends CompilerTestCase {
         lines(
             "var $jscomp$objpattern$var0 = foo(),",
             "    {a: b, c: d} = $jscomp$objpattern$var0,",
-            "    rest = (delete $jscomp$objpattern$var0.a,",
-            "            delete $jscomp$objpattern$var0.c,",
-            "            $jscomp$objpattern$var0);"));
+            "    $jscomp$objpattern$var1 = Object.assign({}, $jscomp$objpattern$var0),",
+            "    rest = (delete $jscomp$objpattern$var1.a,",
+            "            delete $jscomp$objpattern$var1.c,",
+            "            $jscomp$objpattern$var1);"));
 
     test(
         "const {a: b, c: d, ...rest} = foo();",
         lines(
             "const $jscomp$objpattern$var0 = foo(),",
             "      {a: b, c: d} = $jscomp$objpattern$var0,",
-            "      rest = (delete $jscomp$objpattern$var0.a,",
-            "              delete $jscomp$objpattern$var0.c,",
-            "              $jscomp$objpattern$var0);"));
+            "      $jscomp$objpattern$var1 = Object.assign({}, $jscomp$objpattern$var0),",
+            "      rest = (delete $jscomp$objpattern$var1.a,",
+            "              delete $jscomp$objpattern$var1.c,",
+            "              $jscomp$objpattern$var1);"));
 
     test(
         "let {a: b, c: d, ...rest} = foo();",
         lines(
             "let $jscomp$objpattern$var0 = foo(),",
             "    {a: b, c: d} = $jscomp$objpattern$var0,",
-            "    rest = (delete $jscomp$objpattern$var0.a,",
-            "            delete $jscomp$objpattern$var0.c,",
-            "            $jscomp$objpattern$var0);"));
+            "    $jscomp$objpattern$var1 = Object.assign({}, $jscomp$objpattern$var0),",
+            "    rest = (delete $jscomp$objpattern$var1.a,",
+            "            delete $jscomp$objpattern$var1.c,",
+            "            $jscomp$objpattern$var1);"));
 
     test(
         "var pre = foo(), {a: b, c: d, ...rest} = foo();",
@@ -90,18 +93,20 @@ public final class EsNextToEs8ConverterTest extends CompilerTestCase {
             "var pre = foo(),",
             "    $jscomp$objpattern$var0 = foo(),",
             "    {a: b, c: d} = $jscomp$objpattern$var0,",
-            "    rest = (delete $jscomp$objpattern$var0.a,",
-            "            delete $jscomp$objpattern$var0.c,",
-            "            $jscomp$objpattern$var0);"));
+            "    $jscomp$objpattern$var1 = Object.assign({}, $jscomp$objpattern$var0),",
+            "    rest = (delete $jscomp$objpattern$var1.a,",
+            "            delete $jscomp$objpattern$var1.c,",
+            "            $jscomp$objpattern$var1);"));
 
     test(
         "var {a: b, c: d, ...rest} = foo(), post = foo();",
         lines(
             "var $jscomp$objpattern$var0 = foo(),",
             "    {a: b, c: d} = $jscomp$objpattern$var0,",
-            "    rest = (delete $jscomp$objpattern$var0.a,",
-            "            delete $jscomp$objpattern$var0.c,",
-            "            $jscomp$objpattern$var0),",
+            "    $jscomp$objpattern$var1 = Object.assign({}, $jscomp$objpattern$var0),",
+            "    rest = (delete $jscomp$objpattern$var1.a,",
+            "            delete $jscomp$objpattern$var1.c,",
+            "            $jscomp$objpattern$var1),",
             "    post = foo();"));
 
     test(
@@ -110,9 +115,10 @@ public final class EsNextToEs8ConverterTest extends CompilerTestCase {
             "var pre = foo(),",
             "    $jscomp$objpattern$var0 = foo(),",
             "    {a: b, c: d} = $jscomp$objpattern$var0,",
-            "    rest = (delete $jscomp$objpattern$var0.a,",
-            "            delete $jscomp$objpattern$var0.c,",
-            "            $jscomp$objpattern$var0),",
+            "    $jscomp$objpattern$var1 = Object.assign({}, $jscomp$objpattern$var0),",
+            "    rest = (delete $jscomp$objpattern$var1.a,",
+            "            delete $jscomp$objpattern$var1.c,",
+            "            $jscomp$objpattern$var1),",
             "    post = foo();"));
 
     test(
@@ -120,14 +126,16 @@ public final class EsNextToEs8ConverterTest extends CompilerTestCase {
         lines(
             "var $jscomp$objpattern$var0 = foo(),",
             "    {a: b1, c: d1} = $jscomp$objpattern$var0,",
-            "    rest1 = (delete $jscomp$objpattern$var0.a,",
-            "             delete $jscomp$objpattern$var0.c,",
-            "             $jscomp$objpattern$var0),",
-            "    $jscomp$objpattern$var1 = foo(),",
-            "    {a: b2, c: d2} = $jscomp$objpattern$var1,",
-            "    rest2 = (delete $jscomp$objpattern$var1.a,",
+            "    $jscomp$objpattern$var1 = Object.assign({}, $jscomp$objpattern$var0),",
+            "    rest1 = (delete $jscomp$objpattern$var1.a,",
             "             delete $jscomp$objpattern$var1.c,",
-            "             $jscomp$objpattern$var1);"));
+            "             $jscomp$objpattern$var1),",
+            "    $jscomp$objpattern$var2 = foo(),",
+            "    {a: b2, c: d2} = $jscomp$objpattern$var2,",
+            "    $jscomp$objpattern$var3 = Object.assign({}, $jscomp$objpattern$var2),",
+            "    rest2 = (delete $jscomp$objpattern$var3.a,",
+            "             delete $jscomp$objpattern$var3.c,",
+            "             $jscomp$objpattern$var3);"));
   }
 
   public void testObjectPatternWithRestAssignStatement() {
@@ -137,10 +145,12 @@ public final class EsNextToEs8ConverterTest extends CompilerTestCase {
             "var b,d,rest;",
             "(()=>{",
             "      let $jscomp$objpattern$var0 = foo();",
+            "      let $jscomp$objpattern$var1;",
             "      ({a: b, c: d} = $jscomp$objpattern$var0),",
-            "      rest = (delete $jscomp$objpattern$var0.a,",
-            "              delete $jscomp$objpattern$var0.c,",
-            "              $jscomp$objpattern$var0);",
+            "        $jscomp$objpattern$var1 = Object.assign({}, $jscomp$objpattern$var0),",
+            "        rest = (delete $jscomp$objpattern$var1.a,",
+            "                delete $jscomp$objpattern$var1.c,",
+            "                $jscomp$objpattern$var1);",
             "})();"));
 
     test(
@@ -150,10 +160,12 @@ public final class EsNextToEs8ConverterTest extends CompilerTestCase {
             "pre = foo(),",
             "(()=>{",
             "      let $jscomp$objpattern$var0 = foo();",
+            "      let $jscomp$objpattern$var1;",
             "      ({a: b, c: d} = $jscomp$objpattern$var0),",
-            "      rest = (delete $jscomp$objpattern$var0.a,",
-            "              delete $jscomp$objpattern$var0.c,",
-            "              $jscomp$objpattern$var0);",
+            "        $jscomp$objpattern$var1 = Object.assign({}, $jscomp$objpattern$var0),",
+            "        rest = (delete $jscomp$objpattern$var1.a,",
+            "                delete $jscomp$objpattern$var1.c,",
+            "                $jscomp$objpattern$var1);",
             "})();"));
 
     test(
@@ -162,10 +174,12 @@ public final class EsNextToEs8ConverterTest extends CompilerTestCase {
             "var b,d,rest,post;",
             "(()=>{",
             "      let $jscomp$objpattern$var0 = foo();",
+            "      let $jscomp$objpattern$var1;",
             "      ({a: b, c: d} = $jscomp$objpattern$var0),",
-            "      rest = (delete $jscomp$objpattern$var0.a,",
-            "              delete $jscomp$objpattern$var0.c,",
-            "              $jscomp$objpattern$var0);",
+            "        $jscomp$objpattern$var1 = Object.assign({}, $jscomp$objpattern$var0),",
+            "        rest = (delete $jscomp$objpattern$var1.a,",
+            "                delete $jscomp$objpattern$var1.c,",
+            "                $jscomp$objpattern$var1);",
             "})(),",
             "post = foo();"));
 
@@ -176,10 +190,12 @@ public final class EsNextToEs8ConverterTest extends CompilerTestCase {
             "pre = foo(),",
             "(()=>{",
             "      let $jscomp$objpattern$var0 = foo();",
+            "      let $jscomp$objpattern$var1;",
             "      ({a: b, c: d} = $jscomp$objpattern$var0),",
-            "      rest = (delete $jscomp$objpattern$var0.a,",
-            "              delete $jscomp$objpattern$var0.c,",
-            "              $jscomp$objpattern$var0);",
+            "        $jscomp$objpattern$var1 = Object.assign({}, $jscomp$objpattern$var0),",
+            "        rest = (delete $jscomp$objpattern$var1.a,",
+            "                delete $jscomp$objpattern$var1.c,",
+            "                $jscomp$objpattern$var1);",
             "})(),",
             "post = foo();"));
 
@@ -192,17 +208,21 @@ public final class EsNextToEs8ConverterTest extends CompilerTestCase {
             "var b1,d1,rest1,b2,d2,rest2;",
             "(()=>{",
             "      let $jscomp$objpattern$var0 = foo();",
+            "      let $jscomp$objpattern$var1;",
             "      ({a: b1, c: d1} = $jscomp$objpattern$var0),",
-            "      rest1 = (delete $jscomp$objpattern$var0.a,",
-            "               delete $jscomp$objpattern$var0.c,",
-            "               $jscomp$objpattern$var0);",
+            "        $jscomp$objpattern$var1 = Object.assign({}, $jscomp$objpattern$var0),",
+            "        rest1 = (delete $jscomp$objpattern$var1.a,",
+            "              delete $jscomp$objpattern$var1.c,",
+            "              $jscomp$objpattern$var1);",
             "})(),",
             "(()=>{",
-            "      let $jscomp$objpattern$var1 = foo();",
-            "      ({a: b2, c: d2} = $jscomp$objpattern$var1),",
-            "      rest2 = (delete $jscomp$objpattern$var1.a,",
-            "               delete $jscomp$objpattern$var1.c,",
-            "               $jscomp$objpattern$var1);",
+            "      let $jscomp$objpattern$var2 = foo();",
+            "      let $jscomp$objpattern$var3;",
+            "      ({a: b2, c: d2} = $jscomp$objpattern$var2),",
+            "        $jscomp$objpattern$var3 = Object.assign({}, $jscomp$objpattern$var2),",
+            "        rest2 = (delete $jscomp$objpattern$var3.a,",
+            "               delete $jscomp$objpattern$var3.c,",
+            "               $jscomp$objpattern$var3);",
             "})();"));
   }
 
@@ -213,12 +233,13 @@ public final class EsNextToEs8ConverterTest extends CompilerTestCase {
             "var x,b,d,rest;",
             "x = (()=>{",
             "    let $jscomp$objpattern$var0 = foo();",
-            "    let $jscomp$objpattern$var1 = $jscomp$objpattern$var0;",
+            "    let $jscomp$objpattern$var1;",
             "    ({a: b, c: d} = $jscomp$objpattern$var0),",
-            "    rest = (delete $jscomp$objpattern$var0.a,",
-            "            delete $jscomp$objpattern$var0.c,",
-            "            $jscomp$objpattern$var0);",
-            "    return $jscomp$objpattern$var1",
+            "      $jscomp$objpattern$var1 = Object.assign({}, $jscomp$objpattern$var0),",
+            "      rest = (delete $jscomp$objpattern$var1.a,",
+            "              delete $jscomp$objpattern$var1.c,",
+            "              $jscomp$objpattern$var1);",
+            "      return $jscomp$objpattern$var0",
             "})();"));
 
     test(
@@ -227,12 +248,13 @@ public final class EsNextToEs8ConverterTest extends CompilerTestCase {
             "var x,b,d,rest;",
             "baz((()=>{",
             "    let $jscomp$objpattern$var0 = foo();",
-            "    let $jscomp$objpattern$var1 = $jscomp$objpattern$var0;",
+            "    let $jscomp$objpattern$var1;",
             "    ({a: b, c: d} = $jscomp$objpattern$var0),",
-            "    rest = (delete $jscomp$objpattern$var0.a,",
-            "            delete $jscomp$objpattern$var0.c,",
-            "            $jscomp$objpattern$var0);",
-            "    return $jscomp$objpattern$var1",
+            "      $jscomp$objpattern$var1 = Object.assign({}, $jscomp$objpattern$var0),",
+            "      rest = (delete $jscomp$objpattern$var1.a,",
+            "              delete $jscomp$objpattern$var1.c,",
+            "              $jscomp$objpattern$var1);",
+            "      return $jscomp$objpattern$var0",
             "})());"));
   }
 
@@ -241,10 +263,12 @@ public final class EsNextToEs8ConverterTest extends CompilerTestCase {
         "for ({a: b, c: d, ...rest} of foo()) { console.log(rest.z); }",
         lines(
             "for (let $jscomp$objpattern$var0 of foo()) {",
-            "    ({a: b, c: d} = $jscomp$objpattern$var0,",
-            "     rest = (delete $jscomp$objpattern$var0.a,",
-            "            delete $jscomp$objpattern$var0.c,",
-            "            $jscomp$objpattern$var0));",
+            "    let $jscomp$objpattern$var1;",
+            "    ({a: b, c: d} = $jscomp$objpattern$var0),",
+            "      $jscomp$objpattern$var1 = Object.assign({}, $jscomp$objpattern$var0),",
+            "      rest = (delete $jscomp$objpattern$var1.a,",
+            "              delete $jscomp$objpattern$var1.c,",
+            "              $jscomp$objpattern$var1);",
             "    console.log(rest.z);",
             "}"));
 
@@ -253,9 +277,10 @@ public final class EsNextToEs8ConverterTest extends CompilerTestCase {
         lines(
             "for (let $jscomp$objpattern$var0 of foo()) {",
             "    var {a: b, c: d} = $jscomp$objpattern$var0,",
-            "        rest = (delete $jscomp$objpattern$var0.a,",
-            "                delete $jscomp$objpattern$var0.c,",
-            "                $jscomp$objpattern$var0);",
+            "      $jscomp$objpattern$var1 = Object.assign({}, $jscomp$objpattern$var0),",
+            "      rest = (delete $jscomp$objpattern$var1.a,",
+            "              delete $jscomp$objpattern$var1.c,",
+            "              $jscomp$objpattern$var1);",
             "    console.log(rest.z);",
             "}"));
 
@@ -264,9 +289,10 @@ public final class EsNextToEs8ConverterTest extends CompilerTestCase {
         lines(
             "for (let $jscomp$objpattern$var0 of foo()) {",
             "    let {a: b, c: d} = $jscomp$objpattern$var0,",
-            "        rest = (delete $jscomp$objpattern$var0.a,",
-            "                delete $jscomp$objpattern$var0.c,",
-            "                $jscomp$objpattern$var0);",
+            "      $jscomp$objpattern$var1 = Object.assign({}, $jscomp$objpattern$var0),",
+            "      rest = (delete $jscomp$objpattern$var1.a,",
+            "              delete $jscomp$objpattern$var1.c,",
+            "              $jscomp$objpattern$var1);",
             "    console.log(rest.z);",
             "}"));
 
@@ -275,9 +301,10 @@ public final class EsNextToEs8ConverterTest extends CompilerTestCase {
         lines(
             "for (let $jscomp$objpattern$var0 of foo()) {",
             "    const {a: b, c: d} = $jscomp$objpattern$var0,",
-            "          rest = (delete $jscomp$objpattern$var0.a,",
-            "                  delete $jscomp$objpattern$var0.c,",
-            "                  $jscomp$objpattern$var0);",
+            "      $jscomp$objpattern$var1 = Object.assign({}, $jscomp$objpattern$var0),",
+            "      rest = (delete $jscomp$objpattern$var1.a,",
+            "              delete $jscomp$objpattern$var1.c,",
+            "              $jscomp$objpattern$var1);",
             "    console.log(rest.z);",
             "}"));
 
@@ -285,11 +312,12 @@ public final class EsNextToEs8ConverterTest extends CompilerTestCase {
         "for (var {a: b, [baz()]: d, ...rest} of foo()) { console.log(rest.z); }",
         lines(
             "for (let $jscomp$objpattern$var0 of foo()) {",
-            "    let $jscomp$objpattern$var1 = baz();",
-            "    var {a: b, [$jscomp$objpattern$var1]: d} = $jscomp$objpattern$var0,",
-            "        rest = (delete $jscomp$objpattern$var0.a,",
-            "                delete $jscomp$objpattern$var0[$jscomp$objpattern$var1],",
-            "                $jscomp$objpattern$var0);",
+            "    let $jscomp$objpattern$var2 = baz();",
+            "    var {a: b, [$jscomp$objpattern$var2]: d} = $jscomp$objpattern$var0,",
+            "      $jscomp$objpattern$var1 = Object.assign({}, $jscomp$objpattern$var0),",
+            "      rest = (delete $jscomp$objpattern$var1.a,",
+            "              delete $jscomp$objpattern$var1[$jscomp$objpattern$var2],",
+            "              $jscomp$objpattern$var1);",
             "    console.log(rest.z);",
             "}"));
   }
@@ -299,15 +327,16 @@ public final class EsNextToEs8ConverterTest extends CompilerTestCase {
         "var {a: b = 3, [bar()]: d, [baz()]: e, ...rest} = foo();",
         lines(
             "var $jscomp$objpattern$var0 = foo(),",
-            "    $jscomp$objpattern$var1 = bar(),",
-            "    $jscomp$objpattern$var2 = baz(),",
+            "    $jscomp$objpattern$var2 = bar(),",
+            "    $jscomp$objpattern$var3 = baz(),",
             "    {a: b = 3, ",
-            "     [$jscomp$objpattern$var1]: d,",
-            "     [$jscomp$objpattern$var2]: e} = $jscomp$objpattern$var0,",
-            "    rest = (delete $jscomp$objpattern$var0.a,",
-            "            delete $jscomp$objpattern$var0[$jscomp$objpattern$var1],",
-            "            delete $jscomp$objpattern$var0[$jscomp$objpattern$var2],",
-            "            $jscomp$objpattern$var0);"));
+            "     [$jscomp$objpattern$var2]: d,",
+            "     [$jscomp$objpattern$var3]: e} = $jscomp$objpattern$var0,",
+            "     $jscomp$objpattern$var1 = Object.assign({}, $jscomp$objpattern$var0),",
+            "     rest = (delete $jscomp$objpattern$var1.a,",
+            "            delete $jscomp$objpattern$var1[$jscomp$objpattern$var2],",
+            "            delete $jscomp$objpattern$var1[$jscomp$objpattern$var3],",
+            "            $jscomp$objpattern$var1);"));
   }
 
   public void testObjectPatternWithRestAndDefaults() {
@@ -316,18 +345,20 @@ public final class EsNextToEs8ConverterTest extends CompilerTestCase {
         lines(
             "var $jscomp$objpattern$var0 = foo(),",
             "    {a = 3} = $jscomp$objpattern$var0,",
-            "    rest = (delete $jscomp$objpattern$var0.a,",
-            "            $jscomp$objpattern$var0);"));
+            "    $jscomp$objpattern$var1 = Object.assign({}, $jscomp$objpattern$var0),",
+            "    rest = (delete $jscomp$objpattern$var1.a,",
+            "            $jscomp$objpattern$var1);"));
 
     test(
         "var {[bar()]:a = 3, 'b c':b = 12, ...rest} = foo();",
         lines(
             "var $jscomp$objpattern$var0 = foo(),",
-            "    $jscomp$objpattern$var1 = bar(),",
-            "    {[$jscomp$objpattern$var1]:a = 3, 'b c':b = 12} = $jscomp$objpattern$var0,",
-            "    rest = (delete $jscomp$objpattern$var0[$jscomp$objpattern$var1],",
-            "            delete $jscomp$objpattern$var0['b c'],",
-            "            $jscomp$objpattern$var0);"));
+            "    $jscomp$objpattern$var2 = bar(),",
+            "    {[$jscomp$objpattern$var2]:a = 3, 'b c':b = 12} = $jscomp$objpattern$var0,",
+            "    $jscomp$objpattern$var1 = Object.assign({}, $jscomp$objpattern$var0),",
+            "    rest = (delete $jscomp$objpattern$var1[$jscomp$objpattern$var2],",
+            "            delete $jscomp$objpattern$var1['b c'],",
+            "            $jscomp$objpattern$var1);"));
   }
 
   public void testObjectPatternWithRestInCatch() {
@@ -337,9 +368,10 @@ public final class EsNextToEs8ConverterTest extends CompilerTestCase {
             "try {}",
             "catch ($jscomp$objpattern$var0) {",
             "  let {first, second} = $jscomp$objpattern$var0,",
-            "      rest = (delete $jscomp$objpattern$var0.first, ",
-            "              delete $jscomp$objpattern$var0.second, ",
-            "              $jscomp$objpattern$var0);",
+            "      $jscomp$objpattern$var1 = Object.assign({}, $jscomp$objpattern$var0),",
+            "      rest = (delete $jscomp$objpattern$var1.first, ",
+            "              delete $jscomp$objpattern$var1.second, ",
+            "              $jscomp$objpattern$var1);",
             "  console.log(rest.z);",
             "}"));
   }
@@ -351,11 +383,12 @@ public final class EsNextToEs8ConverterTest extends CompilerTestCase {
             "function f() {",
             "  return (()=>{",
             "    let $jscomp$objpattern$var0=foo();",
-            "    let $jscomp$objpattern$var1=$jscomp$objpattern$var0;",
+            "    let $jscomp$objpattern$var1;",
             "    ({x:a}=$jscomp$objpattern$var0),",
-            "    rest=(delete $jscomp$objpattern$var0.x,",
-            "          $jscomp$objpattern$var0);",
-            "    return $jscomp$objpattern$var1",
+            "      $jscomp$objpattern$var1 = Object.assign({}, $jscomp$objpattern$var0),",
+            "      rest=(delete $jscomp$objpattern$var1.x,",
+            "            $jscomp$objpattern$var1);",
+            "    return $jscomp$objpattern$var0",
             "  })();",
             "}"));
   }
@@ -366,7 +399,9 @@ public final class EsNextToEs8ConverterTest extends CompilerTestCase {
         lines(
             "function f($jscomp$objpattern$var0, y=b()) {",
             "  let {x=a()} = $jscomp$objpattern$var0,",
-            "      rest = (delete $jscomp$objpattern$var0.x, $jscomp$objpattern$var0);",
+            "      $jscomp$objpattern$var1 = Object.assign({}, $jscomp$objpattern$var0),",
+            "      rest=(delete $jscomp$objpattern$var1.x,",
+            "            $jscomp$objpattern$var1);",
             "  console.log(y);",
             "}"));
 
@@ -375,7 +410,9 @@ public final class EsNextToEs8ConverterTest extends CompilerTestCase {
         lines(
             "function f($jscomp$objpattern$var0={}, y=b()) {",
             "  let {x=a()} = $jscomp$objpattern$var0,",
-            "      rest = (delete $jscomp$objpattern$var0.x, $jscomp$objpattern$var0);",
+            "      $jscomp$objpattern$var1 = Object.assign({}, $jscomp$objpattern$var0),",
+            "      rest = (delete $jscomp$objpattern$var1.x,",
+            "              $jscomp$objpattern$var1);",
             "  console.log(y);",
             "}"));
   }
@@ -386,7 +423,9 @@ public final class EsNextToEs8ConverterTest extends CompilerTestCase {
         lines(
             "var f = ($jscomp$objpattern$var0, y=b()) => {",
             "  let {x=a()} = $jscomp$objpattern$var0,",
-            "      rest = (delete $jscomp$objpattern$var0.x, $jscomp$objpattern$var0);",
+            "      $jscomp$objpattern$var1 = Object.assign({}, $jscomp$objpattern$var0),",
+            "      rest = (delete $jscomp$objpattern$var1.x,",
+            "              $jscomp$objpattern$var1);",
             "  console.log(y);",
             "};"));
 
@@ -395,7 +434,9 @@ public final class EsNextToEs8ConverterTest extends CompilerTestCase {
         lines(
             "var f = ($jscomp$objpattern$var0={}, y=b()) => {",
             "  let {x=a()} = $jscomp$objpattern$var0,",
-            "      rest = (delete $jscomp$objpattern$var0.x, $jscomp$objpattern$var0);",
+            "  $jscomp$objpattern$var1 = Object.assign({}, $jscomp$objpattern$var0),",
+            "  rest = (delete $jscomp$objpattern$var1.x,",
+            "          $jscomp$objpattern$var1);",
             "  console.log(y);",
             "};"));
   }
