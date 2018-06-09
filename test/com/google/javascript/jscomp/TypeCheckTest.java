@@ -19598,6 +19598,23 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "required: (number|string)"));
   }
 
+  public void testComparisonTreatingUnknownAsNumber_leftTypeUnknown() {
+    // Because 'x' is unknown, we allow either of the comparible types: number or string.
+    compiler.getOptions().setWarningLevel(
+        DiagnosticGroups.STRICT_PRIMITIVE_OPERATORS, CheckLevel.OFF);
+    testTypes(
+        lines(
+        "/** @constructor */",
+        "function Bar() {}",
+        "function f(/** ? */ x) {",
+        "  return x < (new Bar);",
+        "}"),
+        lines(
+            "right side of comparison",
+            "found   : Bar",
+            "required: (number|string)"));
+  }
+
   public void testEnumOfSymbol1() {
     testTypes(
         lines("",
