@@ -81,42 +81,20 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
     if (!n.hasChildren() || !NodeUtil.isBlockScopedDeclaration(n.getFirstChild())) {
       return;
     }
-
-    Scope scope = t.getScope();
-    Node nameNode = n.getFirstChild();
     // NOTE: This pass depends on for-of being transpiled away before it runs.
     checkState(parent == null || !parent.isForOf(), parent);
-    // NOTE: This pass depends on classes being transpiled away before it runs.
-    checkState(!n.isClass(), n);
-    if (!n.isFunction()
-        && !nameNode.hasChildren()
-        && (parent == null || !parent.isForIn())
-        && !n.isCatch()
-        && inLoop(n)) {
-      Node undefined = createUndefinedNode().srcref(nameNode);
-      nameNode.addChildToFront(undefined);
-      compiler.reportChangeToEnclosingScope(undefined);
-    }
 
-    String oldName = nameNode.getString();
     if (n.isLet() || n.isConst()) {
       letConsts.add(n);
     }
-    Scope hoistScope = scope.getClosestHoistScope();
-    if (scope != hoistScope) {
-      String newName = oldName;
-      if (hoistScope.hasSlot(oldName) || undeclaredNames.contains(oldName)) {
-        do {
-          newName = oldName + "$" + compiler.getUniqueNameIdSupplier().get();
-        } while (hoistScope.hasSlot(newName));
-        nameNode.setString(newName);
-        compiler.reportChangeToEnclosingScope(nameNode);
-        Node scopeRoot = scope.getRootNode();
-        renameTable.put(scopeRoot, oldName, newName);
+    if (NodeUtil.isNameDeclaration(n)) {
+      for (Node nameNode : n.children()) {
+        visitBlockScopedName(t, n, nameNode);
       }
-      Var oldVar = scope.getVar(oldName);
-      scope.undeclare(oldVar);
-      hoistScope.declare(newName, nameNode, oldVar.input);
+    } else {
+      // NOTE: This pass depends on class declarations having been transpiled away
+      checkState(n.isFunction() || n.isCatch(), "Unexpected declaration node: %s", n);
+      visitBlockScopedName(t, n, n.getFirstChild());
     }
   }
 
@@ -153,6 +131,44 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
   }
 
   /**
+   * Renames block-scoped declarations that shadow a variable in an outer scope
+   *
+   * <p>Also normalizes declarations with no initializer in a loop to be initialized to undefined.
+   */
+  private void visitBlockScopedName(NodeTraversal t, Node decl, Node nameNode) {
+    Scope scope = t.getScope();
+    Node parent = decl.getParent();
+    // Normalize "let x;" to "let x = undefined;" if in a loop, since we later convert x
+    // to be $jscomp$loop$0.x and want to reset the property to undefined every loop iteration.
+    if ((decl.isLet() || decl.isConst())
+        && !nameNode.hasChildren()
+        && (parent == null || !parent.isForIn())
+        && inLoop(decl)) {
+      Node undefined = createUndefinedNode().srcref(nameNode);
+      nameNode.addChildToFront(undefined);
+      compiler.reportChangeToEnclosingScope(undefined);
+    }
+
+    String oldName = nameNode.getString();
+    Scope hoistScope = scope.getClosestHoistScope();
+    if (scope != hoistScope) {
+      String newName = oldName;
+      if (hoistScope.hasSlot(oldName) || undeclaredNames.contains(oldName)) {
+        do {
+          newName = oldName + "$" + compiler.getUniqueNameIdSupplier().get();
+        } while (hoistScope.hasSlot(newName));
+        nameNode.setString(newName);
+        compiler.reportChangeToEnclosingScope(nameNode);
+        Node scopeRoot = scope.getRootNode();
+        renameTable.put(scopeRoot, oldName, newName);
+      }
+      Var oldVar = scope.getVar(oldName);
+      scope.undeclare(oldVar);
+      hoistScope.declare(newName, nameNode, oldVar.input);
+    }
+  }
+
+  /**
    * Whether n is inside a loop. If n is inside a function which is inside a loop, we do not
    * consider it to be inside a loop.
    */
@@ -184,6 +200,7 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
       Node destDeclaration) {
     if (srcDeclaration.isConst()
         // Don't add @const for the left side of a for/in. If we do we get warnings from the NTI.
+        // TODO(lharker): Check if this condition is still necessary, since NTI is deleted
         && !(srcParent.isForIn() && srcDeclaration == srcParent.getFirstChild())) {
       extractInlineJSDoc(srcDeclaration, srcName, destDeclaration);
       JSDocInfoBuilder builder = JSDocInfoBuilder.maybeCopyFrom(destDeclaration.getJSDocInfo());

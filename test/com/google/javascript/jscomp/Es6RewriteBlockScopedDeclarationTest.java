@@ -156,6 +156,29 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
             "}"));
   }
 
+  public void testLetShadowingWithMultivariateDeclaration() {
+    test(
+        lines(
+            "{", // preserve newline
+            "  let x, y;",
+            "}",
+            "{",
+            "  let x, y;",
+            "  alert(y);",
+            "}"),
+        lines(
+            "{", // preserve newline
+            "  var x, y;",
+            "}",
+            "{",
+            "  var x$0, y$1;",
+            "  alert(y$1);",
+            "}"));
+    test(
+        "var x, y; for (let x, y;;) {}",
+        "var x, y; for (var x$0 = undefined, y$1 = undefined;;) {}");
+  }
+
   public void testNonUniqueLet() {
     test(
         lines(
@@ -818,15 +841,15 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
         lines(
             "/** @const */ var arr = [];",
             "var j = 0;",
-            "var $jscomp$loop$1 = {};",
+            "var $jscomp$loop$2 = {};",
             "var i = 0;",
-            "for (; i < 10; $jscomp$loop$1 = {i$0: $jscomp$loop$1.i$0,",
-            "    j: $jscomp$loop$1.j}, i++) {",
-            "    $jscomp$loop$1.i$0 = undefined;",
-            "    $jscomp$loop$1.j = 0;",
-            "  arr.push((function($jscomp$loop$1) {",
-            "      return function() { return $jscomp$loop$1.i$0 + $jscomp$loop$1.j; };",
-            "  })($jscomp$loop$1));",
+            "for (; i < 10; $jscomp$loop$2 = {i$0: $jscomp$loop$2.i$0,",
+            "    j$1: $jscomp$loop$2.j$1}, i++) {",
+            "    $jscomp$loop$2.i$0 = undefined;",
+            "    $jscomp$loop$2.j$1 = 0;",
+            "  arr.push((function($jscomp$loop$2) {",
+            "      return function() { return $jscomp$loop$2.i$0 + $jscomp$loop$2.j$1; };",
+            "  })($jscomp$loop$2));",
             "}"));
   }
 
@@ -1242,47 +1265,51 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
 
   // https://github.com/google/closure-compiler/issues/1557
   public void testNormalizeDeclarations() {
-    test(lines(
-        "while(true) {",
-        "  let x, y;",
-        "  let f = function() {",
-        "    x = 1;",
-        "    y = 2;",
-        "  }",
-        "}"),
+    test(
         lines(
-        "var $jscomp$loop$0 = {};",
-        "while(true) {",
-        "  $jscomp$loop$0.x = undefined;",
-        "  var f = function($jscomp$loop$0) {",
-        "    return function() {",
-        "      $jscomp$loop$0.x = 1;",
-        "      $jscomp$loop$0.y = 2;",
-        "    }",
-        "  }($jscomp$loop$0);",
-        "  $jscomp$loop$0 = {x: $jscomp$loop$0.x, y: $jscomp$loop$0.y};",
-        "}"));
+            "while(true) {",
+            "  let x, y;",
+            "  let f = function() {",
+            "    x = 1;",
+            "    y = 2;",
+            "  }",
+            "}"),
+        lines(
+            "var $jscomp$loop$0 = {};",
+            "while(true) {",
+            "  $jscomp$loop$0.x = undefined;",
+            "  $jscomp$loop$0.y = undefined;",
+            "  var f = function($jscomp$loop$0) {",
+            "    return function() {",
+            "      $jscomp$loop$0.x = 1;",
+            "      $jscomp$loop$0.y = 2;",
+            "    }",
+            "  }($jscomp$loop$0);",
+            "  $jscomp$loop$0 = {x: $jscomp$loop$0.x, y: $jscomp$loop$0.y};",
+            "}"));
 
-    test(lines(
-        "while(true) {",
-        "  let x, y;",
-        "  let f = function() {",
-        "    y = 2;",
-        "    x = 1;",
-        "  }",
-        "}"),
+    test(
         lines(
-        "var $jscomp$loop$0 = {};",
-        "while(true) {",
-        "  $jscomp$loop$0.x = undefined;",
-        "  var f = function($jscomp$loop$0) {",
-        "    return function() {",
-        "      $jscomp$loop$0.y = 2;",
-        "      $jscomp$loop$0.x = 1;",
-        "    }",
-        "  }($jscomp$loop$0);",
-        "  $jscomp$loop$0 = {y: $jscomp$loop$0.y, x: $jscomp$loop$0.x};",
-        "}"));
+            "while(true) {",
+            "  let x, y;",
+            "  let f = function() {",
+            "    y = 2;",
+            "    x = 1;",
+            "  }",
+            "}"),
+        lines(
+            "var $jscomp$loop$0 = {};",
+            "while(true) {",
+            "  $jscomp$loop$0.x = undefined;",
+            "  $jscomp$loop$0.y = undefined;",
+            "  var f = function($jscomp$loop$0) {",
+            "    return function() {",
+            "      $jscomp$loop$0.y = 2;",
+            "      $jscomp$loop$0.x = 1;",
+            "    }",
+            "  }($jscomp$loop$0);",
+            "  $jscomp$loop$0 = {y: $jscomp$loop$0.y, x: $jscomp$loop$0.x};",
+            "}"));
   }
 
   public void testTypeAnnotationsOnLetConst() {
