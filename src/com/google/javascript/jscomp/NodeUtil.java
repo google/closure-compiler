@@ -5303,12 +5303,15 @@ public final class NodeUtil {
       String methodName = lValue.getString();
       return className + ".prototype." + methodName;
     }
+    // TODO(sdh): Tighten this to simply require !lValue.isQuotedString()
+    // Could get rid of the isJSIdentifier check, but may need to fix depot.
     if (isObjectLitKey(lValue)) {
       Node owner = getBestLValue(lValue.getParent());
       if (owner != null) {
         String ownerName = getBestLValueName(owner);
         if (ownerName != null) {
-          return ownerName + "." + getObjectLitKeyName(lValue);
+          String key = getObjectLitKeyName(lValue);
+          return TokenStream.isJSIdentifier(key) ? ownerName + "." + key : null;
         }
       }
       return null;

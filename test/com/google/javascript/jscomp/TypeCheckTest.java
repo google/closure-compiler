@@ -20109,6 +20109,67 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "required: {then: ?}"));
   }
 
+  public void testFunctionOnObjLitWithAngleBracketKey() {
+    testTypes(
+        lines(
+            "/** @const {!Object<function()>} */", //
+            "var x = {'<': function() {}};"));
+  }
+
+  public void testFunctionOnObjLitWithAngleBracketKeyChecked() {
+    testTypes(
+        lines(
+            "/** @const {!Object<function(): number>} */", //
+            "var x = {'<': function() { return 'str'; }};"));
+  }
+
+  public void testFunctionOnObjLitWithAngleBracketKeyAndJsdoc() {
+    testTypes(
+        lines(
+            "/** @const */", //
+            "var x = {",
+            "  /** @param {number} arg */",
+            "  '<': function(arg) {},",
+            "};"));
+  }
+
+  public void testClassOnObjLitWithAngleBracketKey() {
+    testTypes(
+        lines(
+            "/** @const */", //
+            "var x = {",
+            "  /** @constructor */",
+            "  '<': function() {},",
+            "};"));
+  }
+
+  public void testQuotedPropertyWithDotInType() {
+    testTypes(
+        lines(
+            "/** @const */", //
+            "var x = {",
+            "  /** @constructor */",
+            "  'y.A': function() {},",
+            "};",
+            "var /** x.y.A */ a;"),
+        "Bad type annotation. Unknown type x.y.A");
+  }
+
+  public void testQuotedPropertyWithDotInCode() {
+    testTypes(
+        lines(
+            "/** @const */", //
+            "var x = {",
+            "  /** @constructor */",
+            "  'y.A': function() {},",
+            "};",
+            "var a = new x.y.A();"),
+        new String[] {
+          "Property y never defined on x",
+          "Property A never defined on x.y",
+        });
+  }
+
   private void testClosureTypes(String js, String description) {
     testClosureTypesMultipleWarnings(js,
         description == null ? null : ImmutableList.of(description));
