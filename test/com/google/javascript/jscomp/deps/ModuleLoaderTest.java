@@ -516,6 +516,17 @@ public final class ModuleLoaderTest extends TestCase {
     assertUri("A/index.js", loader.resolve("folder/app.js").resolveJsModule("@custom/A/index.js"));
   }
 
+  public void testRootsAppliedMostSpecificFirst() {
+    ModuleLoader loader =
+        new ModuleLoader(
+            /* errorHandler= */ null,
+            /* moduleRoots= */ ImmutableList.of("/path/", "/path/to/project/", "/path/to/"),
+            inputs(),
+            BrowserModuleResolver.FACTORY);
+
+    assertUri("file.js", loader.resolve("/path/to/project/file.js"));
+  }
+
   CompilerInput input(String name) {
     return new CompilerInput(SourceFile.fromCode(name, ""), false);
   }

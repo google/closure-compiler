@@ -29,9 +29,11 @@ import com.google.javascript.jscomp.DiagnosticType;
 import com.google.javascript.jscomp.ErrorHandler;
 import com.google.javascript.jscomp.JSError;
 import java.nio.file.Paths;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 import javax.annotation.Nullable;
 
 /**
@@ -246,7 +248,10 @@ public final class ModuleLoader {
    */
   private static ImmutableList<String> createRootPaths(
       Iterable<String> roots, PathResolver resolver, PathEscaper escaper) {
-    ImmutableList.Builder<String> builder = ImmutableList.builder();
+    // Sort longest length to shortest so that paths are applied most specific to least.
+    Set<String> builder =
+        new TreeSet<>(
+            Comparator.comparingInt(String::length).thenComparing(String::compareTo).reversed());
     for (String root : roots) {
       String rootModuleName = escaper.escape(resolver.apply(root));
       if (isAmbiguousIdentifier(rootModuleName)) {
@@ -254,7 +259,7 @@ public final class ModuleLoader {
       }
       builder.add(rootModuleName);
     }
-    return builder.build();
+    return ImmutableList.copyOf(builder);
   }
 
   /**
