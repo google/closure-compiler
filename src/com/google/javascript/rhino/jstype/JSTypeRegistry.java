@@ -1739,7 +1739,7 @@ public class JSTypeRegistry implements Serializable {
       JSType returnType,
       ImmutableList<TemplateType> templateKeys,
       boolean isAbstract) {
-    checkArgument(source == null || source.isFunction());
+    checkArgument(source == null || source.isFunction() || source.isClass());
     return new FunctionBuilder(this)
         .forConstructor()
         .withName(name)

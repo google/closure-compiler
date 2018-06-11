@@ -31,6 +31,7 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.STRING_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.UNKNOWN_TYPE;
 
 import com.google.common.base.Predicate;
+import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
@@ -1336,6 +1337,115 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     assertEquals("function(new:goog.Foo): undefined", ctor.toString());
   }
 
+  public void testClassDeclaration() {
+    testSame("class Foo {}");
+    FunctionType foo = (FunctionType) (findNameType("Foo", globalScope));
+    assertTrue(foo.isConstructor());
+    assertScope(globalScope).declares("Foo").withTypeThat().isEqualTo(foo);
+  }
+
+  public void testClassDeclarationWithConstructor() {
+    testSame(
+        lines(
+            "class Foo {", //
+            "  /** @param {number} arg */",
+            "  constructor(arg) {}",
+            "}"));
+    FunctionType foo = (FunctionType) (findNameType("Foo", globalScope));
+    assertTrue(foo.isConstructor());
+    List<JSType> params = ImmutableList.copyOf(foo.getParameterTypes());
+    assertThat(params).hasSize(1);
+    assertType(params.get(0)).isNumber();
+  }
+
+  public void testClassDeclarationWithExtends() {
+    testSame(
+        lines(
+            "class Bar {}", //
+            "class Foo extends Bar {}"));
+    FunctionType bar = (FunctionType) (findNameType("Bar", globalScope));
+    FunctionType foo = (FunctionType) (findNameType("Foo", globalScope));
+    assertType(foo.getInstanceType()).isSubtypeOf(bar.getInstanceType());
+    assertScope(globalScope).declares("Bar").withTypeThat().isEqualTo(bar);
+    assertScope(globalScope).declares("Foo").withTypeThat().isEqualTo(foo);
+  }
+
+  public void testClassDeclarationWithNestedExtends() {
+    testSame(
+        lines(
+            "class Bar {}", //
+            "class Foo extends class extends class extends Bar {} {} {}"));
+    FunctionType bar = (FunctionType) (findNameType("Bar", globalScope));
+    FunctionType foo = (FunctionType) (findNameType("Foo", globalScope));
+    assertType(foo.getInstanceType()).isSubtypeOf(bar.getInstanceType());
+  }
+
+  public void testClassDeclarationWithInheritedConstructor() {
+    testSame(
+        lines(
+            "class Bar {",
+            "  constructor(/** string */ arg) {}",
+            "}",
+            "class Foo extends Bar {}"));
+    FunctionType foo = (FunctionType) (findNameType("Foo", globalScope));
+    List<JSType> params = ImmutableList.copyOf(foo.getParameterTypes());
+    assertThat(params).hasSize(1);
+    assertType(params.get(0)).isString();
+  }
+
+  public void testClassDeclarationWithOverriddenConstructor() {
+    testSame(
+        lines(
+            "class Bar {",
+            "  constructor(/** string */ arg) {}",
+            "}",
+            "class Foo extends Bar {",
+            "  constructor(/** number */ arg) {}",
+            "}"));
+    FunctionType foo = (FunctionType) (findNameType("Foo", globalScope));
+    List<JSType> params = ImmutableList.copyOf(foo.getParameterTypes());
+    assertThat(params).hasSize(1);
+    assertType(params.get(0)).isNumber();
+  }
+
+  public void testClassDeclarationWithNestedExtendsAndInheritedConstructor() {
+    testSame(
+        lines(
+            "class Bar {",
+            "  constructor(/** string */ arg) {}",
+            "}",
+            "class Foo extends class extends class extends Bar {} {} {}"));
+    FunctionType foo = (FunctionType) (findNameType("Foo", globalScope));
+    List<JSType> params = ImmutableList.copyOf(foo.getParameterTypes());
+    assertThat(params).hasSize(1);
+    assertType(params.get(0)).isString();
+  }
+
+  public void testClassExpressionDeclaration() {
+    testSame("var Foo = class Bar {}");
+    FunctionType foo = (FunctionType) (findNameType("Foo", globalScope));
+    assertTrue(foo.isConstructor());
+    FunctionType bar = (FunctionType) (findNameType("Bar", globalScope));
+    assertEquals(foo, bar);
+  }
+
+  public void testClassExpressionBleedingNameScope() {
+    testSame(
+        lines(
+            "var Foo = class Bar {",
+            "  constructor() {",
+            "    CTOR:;",
+            "  }",
+            "}"));
+    FunctionType foo = (FunctionType) (findNameType("Foo", globalScope));
+    TypedScope ctorBlockScope = getLabeledStatement("CTOR").enclosingScope;
+    TypedScope ctorScope = ctorBlockScope.getParentScope();
+    TypedScope classScope = ctorScope.getParentScope();
+    assertScope(globalScope).declares("Foo").withTypeThat().isEqualTo(foo);
+    assertScope(classScope).declares("Bar").directly().withTypeThat().isEqualTo(foo);
+    assertScope(globalScope).doesNotDeclare("Bar");
+  }
+
   public void testForLoopIntegration() {
     testSame("var y = 3; for (var x = true; x; y = x) {}");
 
@@ -2470,15 +2580,15 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     return root;
   }
 
-  private JSType findNameType(final String name, TypedScope scope) {
+  private JSType findNameType(String name, TypedScope scope) {
     return findTypeOnMatchedNode(n -> n.matchesQualifiedName(name), scope);
   }
 
-  private String findNameTypeStr(final String name, TypedScope scope) {
+  private String findNameTypeStr(String name, TypedScope scope) {
     return findNameType(name, scope).toString();
   }
 
-  private JSType findTokenType(final Token type, TypedScope scope) {
+  private JSType findTokenType(Token type, TypedScope scope) {
     return findTypeOnMatchedNode(n -> type == n.getToken(), scope);
   }
 

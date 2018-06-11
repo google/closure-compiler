@@ -103,6 +103,11 @@ public final class TypeSubject extends Subject<TypeSubject, JSType> {
         "Type " + actualAsString() + " should not have property " + propName, actualPropType);
   }
 
+  public void isSubtypeOf(JSType superType) {
+    String message = "Type " + actualAsString() + " should be a subtype of " + superType;
+    assertTrue(message, actual().isSubtypeOf(superType));
+  }
+
   public void toStringIsEqualTo(String typeString) {
     assertEquals(typeString, actual().toString());
   }

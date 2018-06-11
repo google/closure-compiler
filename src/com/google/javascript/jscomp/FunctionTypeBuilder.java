@@ -80,6 +80,7 @@ final class FunctionTypeBuilder {
   private List<ObjectType> extendedInterfaces = null;
   private ObjectType baseType = null;
   private JSType thisType = null;
+  private boolean isClass = false;
   private boolean isConstructor = false;
   private boolean makesStructs = false;
   private boolean makesDicts = false;
@@ -349,11 +350,17 @@ final class FunctionTypeBuilder {
     return this;
   }
 
+  FunctionTypeBuilder usingClassSyntax() {
+    this.isClass = true;
+    return this;
+  }
+
   /**
    * Infer the role of the function (whether it's a constructor or interface)
    * and what it inherits from in JSDocInfo.
    */
-  FunctionTypeBuilder inferInheritance(@Nullable JSDocInfo info) {
+  FunctionTypeBuilder inferInheritance(
+      @Nullable JSDocInfo info, @Nullable ObjectType baseType) {
     if (info != null) {
       isConstructor = info.isConstructor();
       isInterface = info.isInterface();
@@ -361,97 +368,113 @@ final class FunctionTypeBuilder {
       isAbstract = info.isAbstract();
       makesStructs = info.makesStructs();
       makesDicts = info.makesDicts();
+    }
+    if (isClass) {
+      // If a CLASS literal has not been explicitly declared an interface, it's a constructor.
+      // If it's not expicitly @dict or @unrestricted then it's @struct.
+      isConstructor = !isInterface;
+      makesStructs = info == null || (!makesDicts && !info.makesUnrestricted());
+    }
 
-      if (makesStructs && !(isConstructor || isInterface)) {
-        reportWarning(CONSTRUCTOR_REQUIRED, "@struct", formatFnName());
-      } else if (makesDicts && !isConstructor) {
-        reportWarning(CONSTRUCTOR_REQUIRED, "@dict", formatFnName());
+    if (makesStructs && !(isConstructor || isInterface)) {
+      reportWarning(CONSTRUCTOR_REQUIRED, "@struct", formatFnName());
+    } else if (makesDicts && !isConstructor) {
+      reportWarning(CONSTRUCTOR_REQUIRED, "@dict", formatFnName());
+    }
+
+    // TODO(b/74253232): maybeGetNativeTypesOfBuiltin should also handle cases where a local type
+    // declaration shadows a templatized native type.
+    ImmutableList<TemplateType> nativeClassTemplateTypeNames =
+        typeRegistry.maybeGetTemplateTypesOfBuiltin(fnName);
+    ImmutableList<String> infoTemplateTypeNames =
+        info != null ? info.getTemplateTypeNames() : ImmutableList.of();
+    // TODO(b/73386087): Make infoTemplateTypeNames.size() == nativeClassTemplateTypeName.size() a
+    // Preconditions check. It currently fails for "var symbol" in the externs.
+    if (nativeClassTemplateTypeNames != null
+        && infoTemplateTypeNames.size() == nativeClassTemplateTypeNames.size()) {
+      classTemplateTypeNames = nativeClassTemplateTypeNames;
+      typeRegistry.setTemplateTypeNames(classTemplateTypeNames);
+    } else if (!infoTemplateTypeNames.isEmpty() && (isConstructor || isInterface)) {
+      // Otherwise, create new template type for
+      // the template values of the constructor/interface
+      // Class template types, which can be used in the scope of a constructor
+      // definition.
+      ImmutableList.Builder<TemplateType> builder = ImmutableList.builder();
+      for (String typeParameter : infoTemplateTypeNames) {
+        builder.add(typeRegistry.createTemplateType(typeParameter));
       }
+      classTemplateTypeNames = builder.build();
+      typeRegistry.setTemplateTypeNames(classTemplateTypeNames);
+    }
 
-      // TODO(b/74253232): maybeGetNativeTypesOfBuiltin should also handle cases where a local type
-      // declaration shadows a templatized native type.
-      ImmutableList<TemplateType> nativeClassTemplateTypeNames =
-          typeRegistry.maybeGetTemplateTypesOfBuiltin(fnName);
-      ImmutableList<String> infoTemplateTypeNames = info.getTemplateTypeNames();
-      // TODO(b/73386087): Make infoTemplateTypeNames.size() == nativeClassTemplateTypeName.size() a
-      // Preconditions check. It currently fails for "var symbol" in the externs.
-      if (nativeClassTemplateTypeNames != null
-          && infoTemplateTypeNames.size() == nativeClassTemplateTypeNames.size()) {
-        classTemplateTypeNames = nativeClassTemplateTypeNames;
-        typeRegistry.setTemplateTypeNames(classTemplateTypeNames);
+    // base type
+    if (info != null && info.hasBaseType()) {
+      if (isConstructor) {
+        ObjectType infoBaseType =
+            info.getBaseType().evaluate(scope, typeRegistry).toMaybeObjectType();
+        // TODO(sdh): ensure that JSDoc's baseType and AST's baseType are compatible if both are set
+        baseType = infoBaseType;
       } else {
-        // Otherwise, create new template type for
-        // the template values of the constructor/interface
-        // Class template types, which can be used in the scope of a constructor
-        // definition.
-        ImmutableList<String> typeParameters = info.getTemplateTypeNames();
-        if (!typeParameters.isEmpty() && (isConstructor || isInterface)) {
-          ImmutableList.Builder<TemplateType> builder = ImmutableList.builder();
-          for (String typeParameter : typeParameters) {
-            builder.add(typeRegistry.createTemplateType(typeParameter));
-          }
-          classTemplateTypeNames = builder.build();
-          typeRegistry.setTemplateTypeNames(classTemplateTypeNames);
-        }
+        reportWarning(EXTENDS_WITHOUT_TYPEDEF, formatFnName());
       }
-
-      // base type
-      if (info.hasBaseType()) {
-        if (isConstructor) {
-          JSType maybeBaseType =
-              info.getBaseType().evaluate(scope, typeRegistry);
-          if (maybeBaseType != null
-                  && maybeBaseType.setValidator(new ExtendedTypeValidator())) {
-            baseType = (ObjectType) maybeBaseType;
-          }
-        } else {
-          reportWarning(EXTENDS_WITHOUT_TYPEDEF, formatFnName());
-        }
+    }
+    if (baseType != null && isConstructor) {
+      if (baseType.setValidator(new ExtendedTypeValidator())) {
+        this.baseType = baseType;
       }
+    }
 
-      // Implemented interfaces (for constructors only).
-      if (info.getImplementedInterfaceCount() > 0) {
-        if (isConstructor) {
-          implementedInterfaces = new ArrayList<>();
-          Set<JSType> baseInterfaces = new HashSet<>();
-          for (JSTypeExpression t : info.getImplementedInterfaces()) {
-            JSType maybeInterType = t.evaluate(scope, typeRegistry);
+    // Implemented interfaces (for constructors only).
+    if (info != null && info.getImplementedInterfaceCount() > 0) {
+      if (isConstructor) {
+        implementedInterfaces = new ArrayList<>();
+        Set<JSType> baseInterfaces = new HashSet<>();
+        for (JSTypeExpression t : info.getImplementedInterfaces()) {
+          JSType maybeInterType = t.evaluate(scope, typeRegistry);
 
-            if (maybeInterType != null &&
-                maybeInterType.setValidator(new ImplementedTypeValidator())) {
-              // Disallow implementing the same base (not templatized) interface
-              // type more than once.
-              JSType baseInterface = maybeInterType;
-              if (baseInterface.toMaybeTemplatizedType() != null) {
-                baseInterface =
-                    baseInterface.toMaybeTemplatizedType().getReferencedType();
-              }
-              if (!baseInterfaces.add(baseInterface)) {
-                reportWarning(SAME_INTERFACE_MULTIPLE_IMPLEMENTS, baseInterface.toString());
-              }
-
-              implementedInterfaces.add((ObjectType) maybeInterType);
+          if (maybeInterType != null &&
+              maybeInterType.setValidator(new ImplementedTypeValidator())) {
+            // Disallow implementing the same base (not templatized) interface
+            // type more than once.
+            JSType baseInterface = maybeInterType;
+            if (baseInterface.toMaybeTemplatizedType() != null) {
+              baseInterface =
+                  baseInterface.toMaybeTemplatizedType().getReferencedType();
             }
-          }
-        } else if (isInterface) {
-          reportWarning(
-              TypeCheck.CONFLICTING_IMPLEMENTED_TYPE, formatFnName());
-        } else {
-          reportWarning(CONSTRUCTOR_REQUIRED, "@implements", formatFnName());
-        }
-      }
+            if (!baseInterfaces.add(baseInterface)) {
+              reportWarning(SAME_INTERFACE_MULTIPLE_IMPLEMENTS, baseInterface.toString());
+            }
 
-      // extended interfaces (for interfaces only)
-      // We've already emitted a warning if this is not an interface.
-      if (isInterface) {
-        extendedInterfaces = new ArrayList<>();
+            implementedInterfaces.add((ObjectType) maybeInterType);
+          }
+        }
+      } else if (isInterface) {
+        reportWarning(
+            TypeCheck.CONFLICTING_IMPLEMENTED_TYPE, formatFnName());
+      } else {
+        reportWarning(CONSTRUCTOR_REQUIRED, "@implements", formatFnName());
+      }
+    }
+
+    // extended interfaces (for interfaces only)
+    // We've already emitted a warning if this is not an interface.
+    if (isInterface) {
+      extendedInterfaces = new ArrayList<>();
+      if (info != null) {
         for (JSTypeExpression t : info.getExtendedInterfaces()) {
           JSType maybeInterfaceType = t.evaluate(scope, typeRegistry);
           if (maybeInterfaceType != null &&
               maybeInterfaceType.setValidator(new ExtendedTypeValidator())) {
             extendedInterfaces.add((ObjectType) maybeInterfaceType);
           }
+          // de-dupe baseType (from extends keyword) if it's also in @extends jsdoc.
+          if (baseType != null && maybeInterfaceType.isSubtypeOf(baseType)) {
+            baseType = null;
+          }
         }
+      }
+      if (baseType != null && baseType.setValidator(new ExtendedTypeValidator())) {
+        extendedInterfaces.add(baseType);
       }
     }
 
@@ -512,8 +535,7 @@ final class FunctionTypeBuilder {
    * Infer the parameter types from the list of argument names and
    * the doc info.
    */
-  FunctionTypeBuilder inferParameterTypes(@Nullable Node argsParent,
-      @Nullable JSDocInfo info) {
+  FunctionTypeBuilder inferParameterTypes(@Nullable Node argsParent, @Nullable JSDocInfo info) {
     if (argsParent == null) {
       if (info == null) {
         return this;
@@ -592,6 +614,11 @@ final class FunctionTypeBuilder {
     return this;
   }
 
+  FunctionTypeBuilder inferImplicitConstructorParameters(Node parametersNode) {
+    this.parametersNode = parametersNode;
+    return this;
+  }
+
   /**
    * @return Whether the given param is an optional param.
    */
@@ -624,8 +651,7 @@ final class FunctionTypeBuilder {
   /**
    * Infer the template type from the doc info.
    */
-  FunctionTypeBuilder inferTemplateTypeName(
-      @Nullable JSDocInfo info, JSType ownerType) {
+  FunctionTypeBuilder inferTemplateTypeName(@Nullable JSDocInfo info, @Nullable JSType ownerType) {
     // NOTE: these template type names may override a list
     // of inherited ones from an overridden function.
     if (info != null) {

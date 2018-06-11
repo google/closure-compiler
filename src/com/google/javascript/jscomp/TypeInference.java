@@ -363,6 +363,10 @@ class TypeInference
         scope = traverseGetProp(n, scope);
         break;
 
+      case CLASS:
+        scope = traverseClass(n, scope);
+        break;
+
       case AND:
         scope = traverseAnd(n, scope).getJoinedFlowScope();
         break;
@@ -928,6 +932,14 @@ class TypeInference
       }
     }
     n.setJSType(type);
+    return scope;
+  }
+
+  private FlowScope traverseClass(Node n, FlowScope scope) {
+    // The name already has a type applied (from TypedScopeCreator) if it's non-empty, and the
+    // members are traversed in the class scope (and in their own function scopes).  But the extends
+    // clause and computed property keys are in the outer scope and must be traversed here.
+    scope = traverse(n.getSecondChild(), scope);
     return scope;
   }
 

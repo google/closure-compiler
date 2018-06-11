@@ -1764,4 +1764,411 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "found   : string",
             "required: number"));
   }
+
+  public void testClassDeclaration() {
+    testTypes(
+        lines(
+            "class Foo {}", //
+            "var /** !Foo */ foo = new Foo();"));
+  }
+
+  public void testClassDeclarationMismatch() {
+    testTypes(
+        lines(
+            "class Foo {}", //
+            "class Bar {}",
+            "var /** !Foo */ foo = new Bar();"),
+        lines(
+            "initializing variable", //
+            "found   : Bar",
+            "required: Foo"));
+  }
+
+  public void testClassGenerics() {
+    testTypes(
+        lines(
+            "/** @template T */", //
+            "class Foo {}",
+            "var /** !Foo<number> */ x = new Foo();",
+            "var /** !Foo<string> */ y = x;"),
+        lines(
+            "initializing variable", //
+            "found   : Foo<number>",
+            "required: Foo<string>"));
+  }
+
+  public void testClassTooManyTypeParameters() {
+    // TODO(sdh): This should give a warning about too many type parameters.
+    testTypes(
+        lines(
+            "class Foo {}", //
+            "var /** !Foo<number> */ x = new Foo();",
+            "var /** !Foo<string> */ y = x;"));
+  }
+
+  public void testClassDeclarationWithExtends() {
+    testTypes(
+        lines(
+            "class Foo {}", //
+            "class Bar extends Foo {}",
+            "var /** !Foo */ foo = new Bar();"));
+  }
+
+  public void testClassDeclarationWithExtendsMismatch() {
+    testTypes(
+        lines(
+            "class Foo {}", //
+            "class Bar extends Foo {}",
+            "var /** !Bar */ foo = new Foo();"),
+        lines(
+            "initializing variable", //
+            "found   : Foo",
+            "required: Bar"));
+  }
+
+  public void testClassDeclarationWithTransitiveExtends() {
+    testTypes(
+        lines(
+            "class Foo {}", //
+            "class Bar extends Foo {}",
+            "class Baz extends Bar {}",
+            "var /** !Foo */ foo = new Baz();"));
+  }
+
+  public void testClassDeclarationWithAnonymousExtends() {
+    testTypes(
+        lines(
+            "class Foo {}", //
+            "class Bar extends class extends Foo {} {}",
+            "var /** !Foo */ foo = new Bar();"));
+  }
+
+  public void testClassDeclarationInlineConstructorParameters() {
+    testTypes(
+        lines(
+            "class Foo {", //
+            "  constructor(/** number */ arg) {}",
+            "}",
+            "new Foo(42);"));
+  }
+
+  public void testClassDeclarationConstructorParametersMismatch() {
+    testTypes(
+        lines(
+            "class Foo {",
+            "  constructor(/** number */ arg) {}",
+            "}",
+            "new Foo('xyz');"),
+        lines(
+            "actual parameter 1 of Foo does not match formal parameter",
+            "found   : string",
+            "required: number"));
+  }
+
+  public void testClassDeclarationTraditionalConstructorParameters() {
+    testTypes(
+        lines(
+            "class Foo {", //
+            "  /** @param {number} arg */",
+            "  constructor(arg) {}",
+            "}",
+            "new Foo(42);"));
+  }
+
+  public void testClassDeclarationTraditionalConstructorParametersMismatch() {
+    testTypes(
+        lines(
+            "class Foo {",
+            "  /** @param {number} arg */",
+            "  constructor(arg) {}",
+            "}",
+            "new Foo('xyz');"),
+        lines(
+            "actual parameter 1 of Foo does not match formal parameter",
+            "found   : string",
+            "required: number"));
+  }
+
+  public void testClassDeclarationInheritedConstructorParameters() {
+    testTypes(
+        lines(
+            "class Foo {",
+            "  constructor(/** number */ arg) {}",
+            "}",
+            "class Bar extends Foo {}",
+            "new Bar(42);"));
+  }
+
+  public void testClassDeclarationInheritedConstructorParametersMismatch() {
+    testTypes(
+        lines(
+            "class Foo {",
+            "  constructor(/** number */ arg) {}",
+            "}",
+            "class Bar extends Foo {}",
+            "new Bar('xyz');"),
+        lines(
+            "actual parameter 1 of Bar does not match formal parameter",
+            "found   : string",
+            "required: number"));
+  }
+
+  public void testClassPassedAsParameter() {
+    testTypes(
+        lines(
+            "class Foo {}",
+            "function foo(/** function(new: Foo) */ arg) {}",
+            "foo(class extends Foo {});"));
+  }
+
+  public void testClassPassedAsParameterClassMismatch() {
+    testTypes(
+        lines(
+            "class Foo {}",
+            "function foo(/** function(new: Foo) */ arg) {}",
+            "foo(class {});"),
+        lines(
+            "actual parameter 1 of foo does not match formal parameter",
+            "found   : function(new:<anonymous@[testcode]:3>): undefined",
+            "required: function(new:Foo): ?"));
+  }
+
+  public void testClassPassedAsParameterConstructorParamsMismatch() {
+    testTypes(
+        lines(
+            "class Foo {",
+            "  constructor(/** string */ arg) {}",
+            "}",
+            "function foo(/** function(new: Foo, number) */ arg) {}",
+            "foo(Foo);"),
+        lines(
+            "actual parameter 1 of foo does not match formal parameter",
+            "found   : function(new:Foo, string): undefined",
+            "required: function(new:Foo, number): ?"));
+  }
+
+  public void testClassExpression() {
+    testTypes(
+        lines(
+            "var Foo = class Bar {}", //
+            "var /** !Foo */ foo = new Foo();"));
+  }
+
+  public void testClassExpressionDoesNotDefineTypeNameInOuterScope() {
+    testTypes(
+        lines(
+            "var Foo = class Bar {}", //
+            "var /** !Bar */ foo = new Foo();"),
+        "Bad type annotation. Unknown type Bar");
+  }
+
+  public void testClassExpressionDoesNotDefineConstructorReferenceInOuterScope() {
+    // Test that Bar is not defined in the outer scope, which makes it unknown (the error is
+    // generated by VarCheck, which is not run here).  If it were defined in the outer scope then
+    // we'd get a type error assigning it to null.
+    testTypes(
+        lines(
+            "var Foo = class Bar {}", //
+            "var /** null */ foo = new Bar();"));
+  }
+
+  public void testClassExpressionAsStaticClassProeprty() {
+    testTypes(
+        lines(
+            "class Foo {}", //
+            "Foo.Bar = class extends Foo {}",
+            "var /** !Foo */ foo = new Foo.Bar();"));
+  }
+
+  public void testClassSyntaxClassExtendsInterface() {
+    testTypes(
+        lines(
+            "/** @interface */", //
+            "class Bar {}",
+            "class Foo extends Bar {}"),
+        "Foo cannot extend this type; constructors can only extend constructors");
+  }
+
+  public void testClassSyntaxClassExtendsNonClass() {
+    testTypes(
+        "class Foo extends 42 {}",
+        "Foo cannot extend this type; constructors can only extend constructors");
+  }
+
+  public void testClassSyntaxInterfaceExtendsClass() {
+    testTypes(
+        lines(
+            "class Bar {}", //
+            "/** @interface */",
+            "class Foo extends Bar {}"),
+        "Foo cannot extend this type; interfaces can only extend interfaces");
+  }
+
+  public void testClassSyntaxInterfaceExtendsInterface() {
+    testTypes(
+        lines(
+            "/** @interface */", //
+            "class Bar {}",
+            "/** @interface */",
+            "class Foo extends Bar {}",
+            "var /** !Foo */ foo;",
+            "var /** !Bar */ bar = foo;"));
+  }
+
+  public void testClassSyntaxInterfaceExtendsInterfaceMismatch() {
+    testTypes(
+        lines(
+            "/** @interface */", //
+            "class Bar {}",
+            "/** @interface */",
+            "class Foo extends Bar {}",
+            "var /** !Bar */ bar;",
+            "var /** !Foo */ foo = bar;"),
+        lines(
+            "initializing variable", //
+            "found   : Bar",
+            "required: Foo"));
+  }
+
+  public void testClassSyntaxRecord() {
+    // TODO(sdh): Add a matching property.
+    testTypes(
+        lines(
+            "/** @record */", //
+            "class Rec {}",
+            "var /** !Rec */ rec = {};"));
+  }
+
+  public void testClassSyntaxRecordMismatch() {
+    // TODO(sdh): Should be an error.
+    testTypes(
+        lines(
+            "/** @record */", //
+            "class Rec {",
+            "  constructor() {",
+            "    /** @type {number} */",
+            "    this.foo;",
+            "  }",
+            "}",
+            "var /** !Rec */ rec = {foo: string};"));
+  }
+
+  public void testClassJSDocExtendsInconsistentWithExtendsClause() {
+    // TODO(sdh): Should be an error.
+    testTypes(
+        lines(
+            "class Bar {}", //
+            "class Baz {}",
+            "/** @extends {Bar} */",
+            "class Foo extends Baz {}"));
+  }
+
+  public void testClassJSDocExtendsWithMissingExtendsClause() {
+    // TODO(sdh): Should be an error, but we may need to clean up the codebase first.
+    testTypes(
+        lines(
+            "class Bar {}", //
+            "/** @extends {Bar} */",
+            "class Foo {}"));
+  }
+
+  public void testClassMissingSuperCall() {
+    // TODO(sdh): Should be an error to access 'this' before super (but maybe not in TypeCheck).
+    testTypes(
+        lines(
+            "class Bar {}", //
+            "class Foo extends Bar {",
+            "  constructor() {",
+            "    this.x = 42;",
+            "  }",
+            "}"));
+  }
+
+  public void testClassDeclarationWithExtendsOnlyInJSDoc() {
+    // TODO(sdh): Should be an error, but we may need to clean up the codebase first.
+    testTypes(
+        lines(
+            "class Foo {}", //
+            "/** @extends {Foo} */",
+            "class Bar {}",
+            "var /** !Foo */ foo = new Bar();"));
+  }
+
+  public void testClassConstructorTypeParametersNotIncludedOnClass() {
+    // TODO(sdh): This should give a warning about too many type parameters.
+    testTypes(
+        lines(
+            "/** @template T */",
+            "class Foo {",
+            "  /** @template U */",
+            "  constructor() {}",
+            "}",
+            "var /** !Foo<string, string> */ x = new Foo();",
+            "var /** !Foo<string, number> */ y = x;"));
+  }
+
+  public void testClassConstructorTypeParametersChecked() {
+    // TODO(sdh): This should *not* give an error.
+    testTypes(
+        lines(
+            "/** @template T */",
+            "class Foo {",
+            "  /** @template U */",
+            "  constructor(/** U */ arg1, /** function(U): T */ arg2) {}",
+            "}",
+            "/** @param {string} arg",
+            "    @return {number} */",
+            "function f(arg) {}",
+            "var /** !Foo<number> */ foo = new Foo('x', f);"),
+        new String[] {
+          "Bad type annotation. Unknown type U",
+          "Bad type annotation. Unknown type U",
+        });
+  }
+
+  public void testClassConstructorTypeParametersWithClassTypeMismatch() {
+    // TODO(sdh): This should only fail with the type mismatch error.
+    testTypes(
+        lines(
+            "/** @template T */",
+            "class Foo {",
+            "  /** @template U */",
+            "  constructor(/** U */ arg1, /** function(U): T */ arg2) {}",
+            "}",
+            "/** @param {string} arg",
+            "    @return {number} */",
+            "function f(arg) {}",
+            "var /** !Foo<string> */ foo = new Foo('x', f);"),
+        new String[] {
+          "Bad type annotation. Unknown type U",
+          "Bad type annotation. Unknown type U",
+          lines(
+              "initializing variable", //
+              "found   : Foo<number>",
+              "required: Foo<string>"),
+        });
+  }
+
+  public void testClassConstructorTypeParametersWithParameterTypeMismatch() {
+    // TODO(sdh): This should fail with the correct error.
+    testTypes(
+        lines(
+            "/** @template T */",
+            "class Foo {",
+            "  /** @template U */",
+            "  constructor(/** U */ arg1, /** function(U): T */ arg2) {}",
+            "}",
+            "/** @param {string} arg",
+            "    @return {number} */",
+            "function f(arg) {}",
+            "var foo = new Foo(42, f);"),
+        new String[] {
+          "Bad type annotation. Unknown type U",
+          "Bad type annotation. Unknown type U",
+        });
+        // lines(
+        //     "actual parameter 2 of Foo does not match formal parameter",
+        //     "found   : function(string): ?",
+        //     "required: function(number): ?"));
+  }
 }
