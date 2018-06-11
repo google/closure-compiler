@@ -75,16 +75,14 @@ public final class FeatureSet implements Serializable {
   public static final FeatureSet TYPESCRIPT =  ES_NEXT.with(LangVersion.TYPESCRIPT.features());
 
   public static final FeatureSet TYPE_CHECK_SUPPORTED =
-      ES5.with(
-          Feature.BLOCK_SCOPED_FUNCTION_DECLARATION,
-          Feature.CONST_DECLARATIONS,
-          Feature.FOR_OF,
-          Feature.GENERATORS,
-          Feature.LET_DECLARATIONS,
-          Feature.COMPUTED_PROPERTIES,
-          Feature.MEMBER_DECLARATIONS,
-          Feature.TEMPLATE_LITERALS,
-          Feature.EXTENDED_OBJECT_LITERALS);
+      ES8.without(Feature.ARRAY_PATTERN_REST)
+          .without(Feature.ASYNC_FUNCTIONS)
+          .without(Feature.CLASSES)
+          .without(Feature.DEFAULT_PARAMETERS)
+          .without(Feature.DESTRUCTURING)
+          .without(Feature.MODULES)
+          .without(Feature.NEW_TARGET)
+          .without(Feature.SUPER);
 
   private enum LangVersion {
     ES3,
