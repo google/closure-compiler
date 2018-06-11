@@ -1082,6 +1082,13 @@ Document.prototype.postMessage = function(message) {};
 Document.prototype.head;
 
 /**
+ * @return {?Selection}
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/DocumentOrShadowRoot/getSelection
+ * @nosideeffects
+ */
+Document.prototype.getSelection = function() {};
+
+/**
  * @see https://developer.apple.com/webapps/docs/documentation/AppleApplications/Reference/SafariJSRef/DOMApplicationCache/DOMApplicationCache.html
  * @constructor
  * @implements {EventTarget}
