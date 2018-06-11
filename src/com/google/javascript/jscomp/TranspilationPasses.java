@@ -100,9 +100,26 @@ public class TranspilationPasses {
       // Don't run these passes in checksOnly mode since all the typechecking & checks passes
       // support the transpiled features.
       // TODO(b/73387406): Move each pass above here temporarily, then into
-      // addEs6PostTypecheckPasses once the pass supports propagating type information
+      // addEs6PostCheck Passes once the pass supports propagating type information
       passes.add(es6RewriteRestAndSpread);
     }
+  }
+
+  /** Deprecated: use addEs6PostCheckPasses instead. */
+  @Deprecated
+  public static void addEs6PostTypecheckPasses(List<PassFactory> passes) {}
+
+  /** Adds transpilation passes that should run after all checks are done. */
+  public static void addEs6PostCheckPasses(List<PassFactory> passes) {
+    // TODO(b/73387406): Move passes here as typechecking & other check passes are updated to cope
+    // with the features they transpile and as the passes themselves are updated to propagate type
+    // information to the transpiled code.
+    passes.add(lateConvertEs6ToEs3);
+    passes.add(es6ForOf);
+    passes.add(rewriteBlockScopedFunctionDeclaration);
+    passes.add(rewriteBlockScopedDeclaration);
+    passes.add(rewriteGenerators);
+    passes.add(es6ConvertSuperConstructorCalls);
   }
 
   /**
@@ -462,26 +479,6 @@ public class TranspilationPasses {
         }
       }
     }
-  }
-
-  /**
-   * Adds transpilation passes that should run after type checking is done, but before the other
-   * checks.
-   */
-  public static void addEs6PostTypecheckPasses(List<PassFactory> passes) {
-    // TODO(b/73387406): Move passes here as typecheck passes are updated to cope with the features
-    // they transpile and as the passes themselves are updated to propagate type information to the
-    // transpiled code.
-    passes.add(lateConvertEs6ToEs3);
-    passes.add(es6ForOf);
-    passes.add(rewriteBlockScopedFunctionDeclaration);
-    passes.add(rewriteBlockScopedDeclaration);
-    passes.add(rewriteGenerators);
-  }
-
-  /** Adds transpilation passes that should run after all checks are done. */
-  public static void addEs6PostCheckPasses(List<PassFactory> passes) {
-    passes.add(es6ConvertSuperConstructorCalls);
   }
 
   static void markFeaturesAsTranspiledAway(

@@ -183,7 +183,6 @@ public final class DefaultPassConfig extends PassConfig {
 
     if (options.needsTranspilationFrom(ES6)) {
       TranspilationPasses.addEs6PreTypecheckPasses(passes, options);
-      TranspilationPasses.addEs6PostTypecheckPasses(passes);
       TranspilationPasses.addEs6PostCheckPasses(passes);
       if (options.rewritePolyfills) {
         TranspilationPasses.addRewritePolyfillPass(passes);
@@ -403,80 +402,71 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(convertStaticInheritance);
     }
 
-    if (options.skipNonTranspilationPasses) {
-      if (options.needsTranspilationFrom(ES6)) {
-        TranspilationPasses.addEs6PostTypecheckPasses(checks);
-      }
-    } else {
-      checks.add(createEmptyPass(PassNames.BEFORE_TYPE_CHECKING));
+    checks.add(createEmptyPass(PassNames.BEFORE_TYPE_CHECKING));
 
-      addTypeCheckerPasses(checks, options);
+    addTypeCheckerPasses(checks, options);
 
-      if (options.j2clPassMode.shouldAddJ2clPasses()) {
-        checks.add(j2clSourceFileChecker);
-      }
-
-      if (!options.disables(DiagnosticGroups.CHECK_USELESS_CODE)
-          || !options.disables(DiagnosticGroups.MISSING_RETURN)) {
-        checks.add(checkControlFlow);
-      }
-
-      // CheckAccessControls only works if check types is on.
-      if (options.isTypecheckingEnabled()
-          && (!options.disables(DiagnosticGroups.ACCESS_CONTROLS)
-              || options.enables(DiagnosticGroups.CONSTANT_PROPERTY))) {
-        checks.add(checkAccessControls);
-      }
-
-      checks.add(checkConsts);
-
-      // Analyzer checks must be run after typechecking.
-      if (options.enables(DiagnosticGroups.ANALYZER_CHECKS) && options.isTypecheckingEnabled()) {
-        checks.add(analyzerChecks);
-      }
-
-      if (options.checkGlobalNamesLevel.isOn()) {
-        checks.add(checkGlobalNames);
-      }
-
-      if (!options.getConformanceConfigs().isEmpty()) {
-        checks.add(checkConformance);
-      }
-
-      // Replace 'goog.getCssName' before processing defines but after the
-      // other checks have been done.
-      if (options.closurePass && !options.shouldPreserveGoogLibraryPrimitives()) {
-        checks.add(closureReplaceGetCssName);
-      }
-
-      if (options.getTweakProcessing().isOn()) {
-        checks.add(processTweaks);
-      }
-
-      if (options.instrumentationTemplate != null || options.recordFunctionInformation) {
-        checks.add(computeFunctionNames);
-      }
-
-      if (options.checksOnly) {
-        // Run process defines here so that warnings/errors from that pass are emitted as part of
-        // checks.
-        // TODO(rluble): Split process defines into two stages, one that performs only checks to be
-        // run here, and the one that actually changes the AST that would run in the optimization
-        // phase.
-        checks.add(processDefines);
-      }
-
-      if (options.j2clPassMode.shouldAddJ2clPasses()) {
-        checks.add(j2clChecksPass);
-      }
-
-      if (options.shouldRunTypeSummaryChecksLate()) {
-        checks.add(generateIjs);
-      }
+    if (options.j2clPassMode.shouldAddJ2clPasses()) {
+      checks.add(j2clSourceFileChecker);
     }
 
+    if (!options.disables(DiagnosticGroups.CHECK_USELESS_CODE)
+        || !options.disables(DiagnosticGroups.MISSING_RETURN)) {
+      checks.add(checkControlFlow);
+    }
 
+    // CheckAccessControls only works if check types is on.
+    if (options.isTypecheckingEnabled()
+        && (!options.disables(DiagnosticGroups.ACCESS_CONTROLS)
+            || options.enables(DiagnosticGroups.CONSTANT_PROPERTY))) {
+      checks.add(checkAccessControls);
+    }
 
+    checks.add(checkConsts);
+
+    // Analyzer checks must be run after typechecking.
+    if (options.enables(DiagnosticGroups.ANALYZER_CHECKS) && options.isTypecheckingEnabled()) {
+      checks.add(analyzerChecks);
+    }
+
+    if (options.checkGlobalNamesLevel.isOn()) {
+      checks.add(checkGlobalNames);
+    }
+
+    if (!options.getConformanceConfigs().isEmpty()) {
+      checks.add(checkConformance);
+    }
+
+    // Replace 'goog.getCssName' before processing defines but after the
+    // other checks have been done.
+    if (options.closurePass && !options.shouldPreserveGoogLibraryPrimitives()) {
+      checks.add(closureReplaceGetCssName);
+    }
+
+    if (options.getTweakProcessing().isOn()) {
+      checks.add(processTweaks);
+    }
+
+    if (options.instrumentationTemplate != null || options.recordFunctionInformation) {
+      checks.add(computeFunctionNames);
+    }
+
+    if (options.checksOnly) {
+      // Run process defines here so that warnings/errors from that pass are emitted as part of
+      // checks.
+      // TODO(rluble): Split process defines into two stages, one that performs only checks to be
+      // run here, and the one that actually changes the AST that would run in the optimization
+      // phase.
+      checks.add(processDefines);
+    }
+
+    if (options.j2clPassMode.shouldAddJ2clPasses()) {
+      checks.add(j2clChecksPass);
+    }
+
+    if (options.shouldRunTypeSummaryChecksLate()) {
+      checks.add(generateIjs);
+    }
 
     // When options.generateExportsAfterTypeChecking is true, run GenerateExports after
     // both type checkers, not just after NTI.
@@ -489,8 +479,6 @@ public final class DefaultPassConfig extends PassConfig {
     if (options.needsTranspilationFrom(ES6) && !options.checksOnly) {
       // At this point all checks have been done.
       // There's no need to complete transpilation if we're only running checks.
-
-      TranspilationPasses.addEs6PostTypecheckPasses(checks);
       TranspilationPasses.addEs6PostCheckPasses(checks);
     }
 
