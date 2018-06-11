@@ -20,11 +20,13 @@ import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.annotations.GwtIncompatible;
 import com.google.common.collect.Iterables;
+import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 import javax.xml.XMLConstants;
 import javax.xml.parsers.ParserConfigurationException;
@@ -48,6 +50,22 @@ import org.xml.sax.XMLReader;
 @GwtIncompatible("Currently not used in GWT version")
 @SuppressWarnings("sunapi")
 public final class XtbMessageBundle implements MessageBundle {
+  /**
+   * Pattern to detect an ICU-formatted plural or select message. Any placeholders occurring inside
+   * these messages must be rewritten in ICU format.
+   */
+  private static final Pattern ICU_MESSAGE_PATTERN =
+      // We want the '.' to match newlines as well since some messages contain them.
+      Pattern.compile("^\\{[^,}]+,(plural|select),.*$", Pattern.DOTALL);
+
+  static boolean isStartOfIcuMessage(String part) {
+    return ICU_MESSAGE_PATTERN.matcher(part).matches();
+  }
+
+  static String asIcuPlaceholder(String phName) {
+    return SimpleFormat.format("{%s}", phName);
+  }
+
   private static final SecureEntityResolver NOOP_RESOLVER
       = new SecureEntityResolver();
 
@@ -133,6 +151,8 @@ public final class XtbMessageBundle implements MessageBundle {
     private static final String PLACEHOLDER_ELEM_NAME = "ph";
     private static final String PLACEHOLDER_NAME_ATT_NAME = "name";
 
+    boolean isIcuMessage;
+
     String lang;
     JsMessage.Builder msgBuilder;
 
@@ -167,7 +187,11 @@ public final class XtbMessageBundle implements MessageBundle {
         checkState(msgBuilder != null);
         String phRef = atts.getValue(PLACEHOLDER_NAME_ATT_NAME);
         phRef = JsMessageVisitor.toLowerCamelCaseWithNumericSuffixes(phRef);
-        msgBuilder.appendPlaceholderReference(phRef);
+        if (isIcuMessage) {
+          msgBuilder.appendStringPart(asIcuPlaceholder(phRef));
+        } else {
+          msgBuilder.appendPlaceholderReference(phRef);
+        }
       }
     }
 
@@ -187,8 +211,12 @@ public final class XtbMessageBundle implements MessageBundle {
     @Override
     public void characters(char ch[], int start, int length) {
       if (msgBuilder != null) {
+        String part = String.valueOf(ch, start, length);
+        if (!msgBuilder.hasParts()) {
+          isIcuMessage = isStartOfIcuMessage(part);
+        }
         // Append a string literal to the message.
-        msgBuilder.appendStringPart(String.valueOf(ch, start, length));
+        msgBuilder.appendStringPart(part);
       }
     }
 
