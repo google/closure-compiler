@@ -730,18 +730,20 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       case LE:
       case GT:
       case GE:
-        leftType = getJSType(n.getFirstChild());
-        rightType = getJSType(n.getLastChild());
+        Node leftSide = n.getFirstChild();
+        Node rightSide = n.getLastChild();
+        leftType = getJSType(leftSide);
+        rightType = getJSType(rightSide);
         if (rightType.isUnknownType()) {
           // validate comparable left
-          validator.expectStringOrNumber(t, n, leftType, "left side of comparison");
+          validator.expectStringOrNumber(t, leftSide, leftType, "left side of comparison");
         } else if (leftType.isUnknownType()) {
           // validate comparable right
-          validator.expectStringOrNumber(t, n, rightType, "right side of comparison");
+          validator.expectStringOrNumber(t, rightSide, rightType, "right side of comparison");
         } else if (rightType.isNumber()) {
-          validator.expectNumber(t, n, leftType, "left side of numeric comparison");
+          validator.expectNumber(t, leftSide, leftType, "left side of numeric comparison");
         } else if (leftType.isNumber()) {
-          validator.expectNumber(t, n, rightType, "right side of numeric comparison");
+          validator.expectNumber(t, rightSide, rightType, "right side of numeric comparison");
         } else if (this.strictOperatorChecks) {
           String errorMsg = "expected matching types in comparison";
           this.validator.expectMatchingTypes(n, leftType, rightType, errorMsg);
@@ -752,11 +754,13 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
           // each time the expression is evaluated. Regardless, both operands
           // should match a string context.
           String message = "left side of comparison";
-          validator.expectString(t, n, leftType, message);
-          validator.expectNotNullOrUndefined(t, n, leftType, message, getNativeType(STRING_TYPE));
+          validator.expectString(t, leftSide, leftType, message);
+          validator.expectNotNullOrUndefined(
+              t, leftSide, leftType, message, getNativeType(STRING_TYPE));
           message = "right side of comparison";
-          validator.expectString(t, n, rightType, message);
-          validator.expectNotNullOrUndefined(t, n, rightType, message, getNativeType(STRING_TYPE));
+          validator.expectString(t, rightSide, rightType, message);
+          validator.expectNotNullOrUndefined(
+              t, rightSide, rightType, message, getNativeType(STRING_TYPE));
         }
         ensureTyped(n, BOOLEAN_TYPE);
         break;
