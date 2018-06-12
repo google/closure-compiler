@@ -25,6 +25,7 @@ import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
@@ -693,21 +694,17 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
   @Override
   public void process(Node externs, Node root) {
     Deque<ScriptDescription> scriptDescriptions = new ArrayDeque<>();
-    processAllFiles(scriptDescriptions, externs);
-    processAllFiles(scriptDescriptions, root);
+    processAllFiles(scriptDescriptions, Iterables.concat(externs.children(), root.children()));
   }
 
-  private void processAllFiles(Deque<ScriptDescription> scriptDescriptions, Node scriptParent) {
-    if (scriptParent == null) {
-      return;
-    }
-    NodeTraversal.traverse(compiler, scriptParent, new UnwrapGoogLoadModule());
-
+  private void processAllFiles(
+      Deque<ScriptDescription> scriptDescriptions, Iterable<Node> scriptNodes) {
     // Record all the scripts first so that the googModuleNamespaces global state can be complete
     // before doing any updating also queue up scriptDescriptions for later use in ScriptUpdater
     // runs.
-    for (Node c = scriptParent.getFirstChild(); c != null; c = c.getNext()) {
+    for (Node c : scriptNodes) {
       checkState(c.isScript(), c);
+      NodeTraversal.traverse(compiler, c, new UnwrapGoogLoadModule());
       pushScript(new ScriptDescription());
       currentScript.rootNode = c;
       scriptDescriptions.addLast(currentScript);
@@ -723,7 +720,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
 
     // Update scripts using the now complete googModuleNamespaces global state and unspool the
     // scriptDescriptions that were queued up by all the recording.
-    for (Node c = scriptParent.getFirstChild(); c != null; c = c.getNext()) {
+    for (Node c : scriptNodes) {
       pushScript(scriptDescriptions.removeFirst());
       NodeTraversal.traverse(compiler, c, new ScriptUpdater());
       popScript();

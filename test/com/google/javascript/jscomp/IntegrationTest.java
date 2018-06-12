@@ -4671,6 +4671,28 @@ public final class IntegrationTest extends IntegrationTestCase {
         });
   }
 
+  public void testExternsReferencesToGoogModuleTypesAreRewritten() {
+    CompilerOptions options = createCompilerOptions();
+    options.setClosurePass(true);
+    options.setCheckTypes(true);
+
+    test(
+        options,
+        new String[] {
+            LINE_JOINER.join(
+                "/** @externs */",
+                "/** @constructor @template T */ function Bar() {}",
+                "/** @const {!Bar<!ns.Foo>} */ var B;",
+                ""),
+            LINE_JOINER.join(
+                "goog.module('ns');",
+                "",
+                "exports.Foo = class {}",
+                ""),
+        },
+        (String[]) null);
+  }
+
   // GitHub issue #250: https://github.com/google/closure-compiler/issues/250
   public void testInlineStringConcat() {
     CompilerOptions options = createCompilerOptions();
