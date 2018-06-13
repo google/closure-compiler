@@ -25,6 +25,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multiset;
 import com.google.common.collect.Ordering;
 import com.google.common.collect.TreeMultiset;
+import com.google.gwt.core.client.EntryPoint;
 import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerOptions;
 import com.google.javascript.jscomp.NodeTraversal;
@@ -53,7 +54,7 @@ import jsinterop.annotations.JsMethod;
  * {@literal @}{@code fileoverview} annotation
  * information.
  */
-public class JsfileParser {
+public class JsfileParser implements EntryPoint {
 
   /**
    * All the information parsed out of a single file.
@@ -142,17 +143,6 @@ public class JsfileParser {
     }
   }
 
-  /**
-   * Exports the {@link #compile} method via JSNI.
-   *
-   * <p>This will be placed on {@code module.exports.gjd} or the global {@code jscomp.gjd}.
-   */
-  public native void exportGjd() /*-{
-    if (typeof module !== 'undefined' && module.exports) {
-      module.exports.gjd = jscomp.gjd;
-    }
-  }-*/;
-
   /** Represents a single JSDoc annotation, with an optional argument. */
   private static class CommentAnnotation {
 
@@ -209,7 +199,7 @@ public class JsfileParser {
   }
 
   /** Method exported to JS to parse a file for dependencies and annotations. */
-  @JsMethod(namespace = "jscomp")
+  @JsMethod(name = "gjd", namespace = "jscomp")
   public static JsObject<Object> gjd(String code, String filename, @Nullable Reporter reporter) {
     return parse(code, filename, reporter).full();
   }
@@ -432,6 +422,9 @@ public class JsfileParser {
     public void report(
         boolean fatal, String message, String sourceName, int line, int lineOffset) {}
   };
+
+  @Override
+  public void onModuleLoad() {}
 
   /** Returns an associative multimap. */
   private static Set<JsArray<String>> assoc() {
