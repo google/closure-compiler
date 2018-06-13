@@ -390,6 +390,13 @@ public final class CheckUnreachableCodeTest extends CompilerTestCase {
             "}"));
   }
 
+  public void testAwaitCanCauseError() {
+    testSame("async function f(/** !Promise<?> */ p) { try { await p; } catch (e) {} }");
+    // Note: for simplicity, we assume that `await <expr>` may always throw an exception, even if
+    // <expr> is a literal.
+    testSame("async function f() { try { await 3; } catch (e) {} }");
+  }
+
   private void assertUnreachable(String js) {
     test(js, js, warning(CheckUnreachableCode.UNREACHABLE_CODE));
   }
