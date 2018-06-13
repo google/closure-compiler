@@ -112,14 +112,24 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
   public void testIjsModule() {
     allowExternsChanges();
     test(
-        // .i.js file
-        externs("goog.module('external'); /** @constructor */ exports = function() {};"),
-        // source file
-        srcs("goog.module('ns.a'); var b = goog.require('external'); /** @type {b} */ new b;"),
-        expected(
-            lines(
-                "/** @const */ var module$exports$ns$a = {};",
-                "/** @type {module$exports$external} */ new module$exports$external")));
+        new String[] {
+          // .i.js file
+          lines(
+              "/** @typeSummary */",
+              "goog.module('external');",
+              "/** @constructor */",
+              " exports = function() {};"),
+          // source file
+          lines(
+              "goog.module('ns.a');",
+              " var b = goog.require('external');",
+              " /** @type {b} */ new b;"),
+        },
+        new String[] {
+          lines(
+              "/** @const */ var module$exports$ns$a = {};",
+              "/** @type {module$exports$external} */ new module$exports$external"),
+        });
   }
 
   public void testDestructuringInsideModule() {
@@ -2295,7 +2305,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
     allowExternsChanges();
     testNoWarning(
         lines(
-            "/** @externs */",
+            "/** @typeSummary */",
             "goog.module('mod_B');",
             "",
             "/** @interface */ function B(){}",
@@ -2311,7 +2321,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
 
     testNoWarning(
         lines(
-            "/** @externs */",
+            "/** @typeSummary */",
             "goog.loadModule(function(exports) { 'use strict';",
             "  goog.module('mod_B');",
             "",
@@ -2331,7 +2341,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_NEXT);
     testNoWarning(
         lines(
-            "/** @externs */",
+            "/** @typeSummary */",
             "goog.loadModule(function(exports) { 'use strict';",
             "  goog.module('mod_B');",
             "",

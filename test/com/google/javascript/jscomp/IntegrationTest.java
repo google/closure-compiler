@@ -4671,6 +4671,28 @@ public final class IntegrationTest extends IntegrationTestCase {
         });
   }
 
+  public void testTypeSummaryReferencesToGoogModuleTypesAreRewritten() {
+    CompilerOptions options = createCompilerOptions();
+    options.setClosurePass(true);
+    options.setCheckTypes(true);
+
+    test(
+        options,
+        new String[] {
+            LINE_JOINER.join(
+                "/** @typeSummary */",
+                "/** @constructor @template T */ function Bar() {}",
+                "/** @const {!Bar<!ns.Foo>} */ var B;",
+                ""),
+            LINE_JOINER.join(
+                "goog.module('ns');",
+                "",
+                "exports.Foo = class {}",
+                ""),
+        },
+        (String[]) null);
+  }
+
   public void testExternsReferencesToGoogModuleTypesAreRewritten() {
     CompilerOptions options = createCompilerOptions();
     options.setClosurePass(true);
@@ -4681,8 +4703,9 @@ public final class IntegrationTest extends IntegrationTestCase {
         new String[] {
             LINE_JOINER.join(
                 "/** @externs */",
-                "/** @constructor @template T */ function Bar() {}",
-                "/** @const {!Bar<!ns.Foo>} */ var B;",
+                "/** @const */ var ns = {};",
+                "/** @constructor */ ns.Bar = function() {};",
+                "/** @const {!ns.Bar} */ var b;",
                 ""),
             LINE_JOINER.join(
                 "goog.module('ns');",

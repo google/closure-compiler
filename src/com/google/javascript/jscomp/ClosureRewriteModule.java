@@ -704,6 +704,9 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     // runs.
     for (Node c : scriptNodes) {
       checkState(c.isScript(), c);
+      if (c.isFromExterns() && !NodeUtil.isFromTypeSummary(c)) {
+        continue;
+      }
       NodeTraversal.traverse(compiler, c, new UnwrapGoogLoadModule());
       pushScript(new ScriptDescription());
       currentScript.rootNode = c;
@@ -721,6 +724,9 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     // Update scripts using the now complete googModuleNamespaces global state and unspool the
     // scriptDescriptions that were queued up by all the recording.
     for (Node c : scriptNodes) {
+      if (c.isFromExterns() && !NodeUtil.isFromTypeSummary(c)) {
+        continue;
+      }
       pushScript(scriptDescriptions.removeFirst());
       NodeTraversal.traverse(compiler, c, new ScriptUpdater());
       popScript();
