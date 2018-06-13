@@ -19,9 +19,10 @@
 /**
  * Definition for object reflection. See goog.reflect.object.
  *
- * @param {!Function} type Type to cast to.
- * @param {Object} object Object literal to cast.
- * @return {Object} The object literal.
+ * @param {?Object} type Type to cast to.
+ * @param {T} object Object literal to cast.
+ * @return {T} The object literal.
+ * @template T
  */
 $jscomp.reflectObject = function(type, object) {
   return object;
