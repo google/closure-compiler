@@ -17,11 +17,18 @@
 'require base';
 
 /**
- * Definition for object reflection. See goog.reflect.object.
+ * Definition for object reflection.
  *
- * @param {!Function} type Type to cast to.
- * @param {Object} object Object literal to cast.
- * @return {Object} The object literal.
+ * Internal compiler version of closure library goog.reflect.object.
+ *
+ * Use this if you have an object literal whose keys need to have the same names
+ * as the properties of some class even after they are renamed by the compiler.
+ *
+ * @param {?Object} type class, interface, or record
+ * @param {T} object Object literal whose properties must be renamed
+ *     consistently with type
+ * @return {T} The object literal.
+ * @template T
  */
 $jscomp.reflectObject = function(type, object) {
   return object;
