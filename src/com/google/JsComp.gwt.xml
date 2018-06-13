@@ -29,7 +29,7 @@
   <set-property name="user.agent" value="safari"/>
   <set-configuration-property name="user.agent.runtimeWarning" value="false"/>
   <set-property name="gwt.logging.enabled" value="TRUE"/>
-  <entry-point class="com.google.javascript.jscomp.gwt.client.GwtRunner"/>
+  <entry-point class="com.google.javascript.jscomp.gwt.client.CompilerMain"/>
   <public path="javascript/jscomp/gwt/public"/>
   <define-linker name="min" class="com.google.javascript.jscomp.gwt.linker.MinimalLinker"/>
   <add-linker name="min"/>
