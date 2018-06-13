@@ -13,6 +13,7 @@ install: true
 script:
   # Builds the compiler and runs tests
   - mvn install --batch-mode
+  - node test/gwt.js
   # Checks for JavaDoc errors
   - mvn -pl com.google.javascript:closure-compiler javadoc:javadoc
 
