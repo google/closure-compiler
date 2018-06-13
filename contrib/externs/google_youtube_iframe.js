@@ -345,6 +345,27 @@ YT.Player.prototype.setPlaybackRate = function(suggestedRate) {};
 YT.Player.prototype.getAvailablePlaybackRates = function() {};
 
 
+/**
+ * Gets the spherical video config object, with information about the viewport
+ * headings and zoom level.
+ *
+ * @return {{yaw: (undefined|number), pitch: (undefined|number),
+ *     roll: (undefined|number), fov: (undefined|number)}}
+ */
+YT.Player.prototype.getSphericalProperties = function() {};
+
+
+/**
+ * Sets the spherical video config object. The call will be No-Op for non-360
+ * videos, and will change the view port according to the input for 360 videos.
+ *
+ * @param {?{yaw: (undefined|number), pitch: (undefined|number),
+ *     roll: (undefined|number), fov: (undefined|number),
+ *     enableOrientationSensor: (undefined|boolean)}} option
+ */
+YT.Player.prototype.setSphericalProperties = function(option) {};
+
+
 /** @enum */
 YT.PlayerState = {
   UNSTARTED: -1,
