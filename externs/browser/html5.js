@@ -3713,7 +3713,7 @@ MutationRecord.prototype.oldValue;
 
 /**
  * @see http://www.w3.org/TR/domcore/#mutation-observers
- * @param {function(Array<!MutationRecord>, MutationObserver)} callback
+ * @param {function(!Array<!MutationRecord>, !MutationObserver)} callback
  * @constructor
  */
 function MutationObserver(callback) {}
