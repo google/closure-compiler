@@ -1272,6 +1272,7 @@ Location.prototype.pathname;
 
 /**
  * @see http://msdn.microsoft.com/en-us/library/ms534342(VS.85).aspx
+ * @type {string}
  */
 Location.prototype.port;
 
