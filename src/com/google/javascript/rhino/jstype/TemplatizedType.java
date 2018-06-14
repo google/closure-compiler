@@ -54,8 +54,12 @@ import java.util.Objects;
 public final class TemplatizedType extends ProxyObjectType {
   private static final long serialVersionUID = 1L;
 
-  final ImmutableList<JSType> templateTypes;
-  transient TemplateTypeMapReplacer replacer;
+  /** A cache of the type parameter values for this specialization. */
+  private final ImmutableList<JSType> templateTypes;
+  /** Whether all type parameter values for this specialization are `?`. */
+  private final boolean isSpecializedOnlyWithUnknown;
+
+  private transient TemplateTypeMapReplacer replacer;
 
   TemplatizedType(
       JSTypeRegistry registry, ObjectType objectType,
@@ -63,17 +67,20 @@ public final class TemplatizedType extends ProxyObjectType {
     super(registry, objectType, objectType.getTemplateTypeMap().addValues(
         templateTypes));
 
-    // Cache which template keys were filled, and what JSTypes they were filled
-    // with.
-    ImmutableList<TemplateType> filledTemplateKeys =
-        objectType.getTemplateTypeMap().getUnfilledTemplateKeys();
     ImmutableList.Builder<JSType> builder = ImmutableList.builder();
-    for (TemplateType filledTemplateKey : filledTemplateKeys) {
-      builder.add(getTemplateTypeMap().getResolvedTemplateType(filledTemplateKey));
+    boolean maybeIsSpecializedOnlyWithUnknown = true;
+    for (TemplateType newlyFilledTemplateKey :
+        objectType.getTemplateTypeMap().getUnfilledTemplateKeys()) {
+      JSType resolvedType = getTemplateTypeMap().getResolvedTemplateType(newlyFilledTemplateKey);
+
+      builder.add(resolvedType);
+      maybeIsSpecializedOnlyWithUnknown =
+          maybeIsSpecializedOnlyWithUnknown && resolvedType.isUnknownType();
     }
     this.templateTypes = builder.build();
+    this.isSpecializedOnlyWithUnknown = maybeIsSpecializedOnlyWithUnknown;
 
-    replacer = new TemplateTypeMapReplacer(registry, getTemplateTypeMap());
+    this.replacer = new TemplateTypeMapReplacer(registry, getTemplateTypeMap());
   }
 
   // NOTE(dimvar): If getCtorImplementedInterfaces is implemented here, this is the
@@ -118,7 +125,9 @@ public final class TemplatizedType extends ProxyObjectType {
   @Override
   public int hashCode() {
     int baseHash = super.hashCode();
-    if (templateTypes.isEmpty()) {
+
+    // TODO(b/110224889): This case can probably be removed if `equals()` is updated.
+    if (isSpecializedOnlyWithUnknown) {
       return baseHash;
     }
     return Objects.hash(templateTypes, baseHash);
