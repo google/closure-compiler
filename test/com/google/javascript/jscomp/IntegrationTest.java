@@ -5183,6 +5183,40 @@ public final class IntegrationTest extends IntegrationTestCase {
     test(options, "for (const [x] = [], {y} = {}, z = 2;;) {}", Es6ToEs3Util.CANNOT_CONVERT_YET);
   }
 
+  public void testDestructuringRest() {
+    CompilerOptions options = createCompilerOptions();
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_2018);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2017);
+
+    test(options, "const {y} = {}", "const {y} = {}");
+    test(
+        options,
+        "const {...y} = {}",
+        lines(
+            "const $jscomp$objpattern$var0={};",
+            "const {}=$jscomp$objpattern$var0;",
+            "const $jscomp$objpattern$var1=Object.assign({}, $jscomp$objpattern$var0);",
+            "const y=$jscomp$objpattern$var1"));
+
+    test(
+        options,
+        "function foo({ a, b, ...c}) { try { foo() } catch({...m}) {} }",
+        lines(
+            "function foo($jscomp$objpattern$var0) {",
+            "  let {a,b}=$jscomp$objpattern$var0;",
+            "  let $jscomp$objpattern$var1=Object.assign({}, $jscomp$objpattern$var0);",
+            "  let c=(delete $jscomp$objpattern$var1.a,",
+            "         delete $jscomp$objpattern$var1.b,",
+            "         $jscomp$objpattern$var1)",
+            "  try { foo() }",
+            "  catch ($jscomp$objpattern$var2) {",
+            "    let {}=$jscomp$objpattern$var2;",
+            "    let $jscomp$objpattern$var3=Object.assign({}, $jscomp$objpattern$var2)",
+            "    let m=$jscomp$objpattern$var3",
+            "  }",
+            "}"));
+  }
+
   /** Creates a CompilerOptions object with google coding conventions. */
   @Override
   protected CompilerOptions createCompilerOptions() {

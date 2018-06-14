@@ -136,6 +136,14 @@ public final class EsNextToEs8ConverterTest extends CompilerTestCase {
             "    rest2 = (delete $jscomp$objpattern$var3.a,",
             "             delete $jscomp$objpattern$var3.c,",
             "             $jscomp$objpattern$var3);"));
+
+    test(
+        "var {...rest} = foo();",
+        lines(
+            "var $jscomp$objpattern$var0 = foo(),",
+            "    {} = $jscomp$objpattern$var0,",
+            "    $jscomp$objpattern$var1 = Object.assign({}, $jscomp$objpattern$var0),",
+            "    rest = $jscomp$objpattern$var1;"));
   }
 
   public void testObjectPatternWithRestAssignStatement() {

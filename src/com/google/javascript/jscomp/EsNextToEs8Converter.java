@@ -140,8 +140,8 @@ public final class EsNextToEs8Converter implements NodeTraversal.Callback, HotSw
      * constructor.
      */
     private Node getRestRhs() {
-      // If no deletions are to be performed, default to the original result.
-      Node restRhs = newName(this.rhsResultName);
+      // If no deletions are to be performed, default to the clone without any deletions.
+      Node restRhs = newName(this.restDeletionVarName);
 
       if (!this.deletions.isEmpty()) {
         Node comma = this.deletions.remove(0);
