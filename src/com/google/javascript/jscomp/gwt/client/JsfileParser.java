@@ -148,8 +148,9 @@ public class JsfileParser {
    * <p>This will be placed on {@code module.exports.gjd} or the global {@code jscomp.gjd}.
    */
   public native void exportGjd() /*-{
+    var fn = $entry(@com.google.javascript.jscomp.gwt.client.JsfileParser::gjd(*));
     if (typeof module !== 'undefined' && module.exports) {
-      module.exports.gjd = jscomp.gjd;
+      module.exports.gjd = fn;
     }
   }-*/;
 
