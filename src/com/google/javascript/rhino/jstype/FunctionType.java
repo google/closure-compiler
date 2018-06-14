@@ -1237,7 +1237,16 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
     boolean changed = false;
     ImmutableList.Builder<ObjectType> resolvedList = ImmutableList.builder();
     for (ObjectType type : list) {
-      ObjectType resolved = (ObjectType) type.resolve(reporter);
+      JSType rt = type.resolve(reporter);
+      if (!rt.isObjectType()) {
+        reporter.warning(
+            "not an object type: " + rt + " (at " + toString() + ")",
+            source.getSourceFileName(),
+            source.getLineno(),
+            source.getCharno());
+        continue;
+      }
+      ObjectType resolved = rt.toObjectType();
       resolvedList.add(resolved);
       changed |= (resolved != type);
     }
