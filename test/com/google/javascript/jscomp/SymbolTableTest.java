@@ -1146,6 +1146,18 @@ public final class SymbolTableTest extends TestCase {
     new EqualsTester().addEqualityGroup(employerPrototype, prototypeOfEmployer).testEquals();
   }
 
+  public void testRestParameter() {
+    String input = "function f(...x) {} f(1, 2, 3);";
+
+    SymbolTable table = createSymbolTable(input);
+
+    Symbol f = getGlobalVar(table, "f");
+    assertNotNull(f);
+
+    Symbol x = table.getParameterInFunction(f, "x");
+    assertNotNull(x);
+  }
+
   private void assertSymmetricOrdering(Ordering<Symbol> ordering, Symbol first, Symbol second) {
     assertEquals(0, ordering.compare(first, first));
     assertEquals(0, ordering.compare(second, second));

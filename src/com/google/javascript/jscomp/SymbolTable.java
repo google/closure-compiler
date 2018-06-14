@@ -416,20 +416,18 @@ public final class SymbolTable {
 
   /** Finds all the scopes and adds them to this symbol table. */
   void findScopes(Node externs, Node root) {
-    NodeTraversal t =
-        new NodeTraversal(
-            compiler,
-            new NodeTraversal.AbstractScopedCallback() {
-              @Override
-              public void enterScope(NodeTraversal t) {
-                createScopeFrom(t.getScope());
-              }
+    NodeTraversal.traverseRoots(
+        compiler,
+        new NodeTraversal.AbstractScopedCallback() {
+          @Override
+          public void enterScope(NodeTraversal t) {
+            createScopeFrom(t.getScope());
+          }
 
-              @Override
-              public void visit(NodeTraversal t, Node n, Node p) {}
-            },
-            SyntacticScopeCreator.makeUntyped(compiler));
-    t.traverseRoots(externs, root);
+          @Override
+            public void visit(NodeTraversal t, Node n, Node p) {}
+          },
+          externs, root);
   }
 
   /** Gets all the scopes in this symbol table. */
@@ -871,12 +869,8 @@ public final class SymbolTable {
 
   /** Index JSDocInfo. */
   void fillJSDocInfo(Node externs, Node root) {
-    NodeTraversal t =
-        new NodeTraversal(
-            compiler,
-            new JSDocInfoCollector(compiler.getTypeRegistry()),
-            SyntacticScopeCreator.makeUntyped(compiler));
-    t.traverseRoots(externs, root);
+    NodeTraversal.traverseRoots(
+        compiler, new JSDocInfoCollector(compiler.getTypeRegistry()), externs, root);
 
     // Create references to parameters in the JSDoc.
     for (Symbol sym : getAllSymbols()) {
@@ -932,12 +926,11 @@ public final class SymbolTable {
     ImmutableMap<StaticSourceFile, Visibility> visibilityMap =
         collectPass.getFileOverviewVisibilityMap();
 
-    NodeTraversal t =
-        new NodeTraversal(
-            compiler,
-            new VisibilityCollector(visibilityMap, compiler.getCodingConvention()),
-            SyntacticScopeCreator.makeUntyped(compiler));
-    t.traverseRoots(externs, root);
+    NodeTraversal.traverseRoots(
+        compiler,
+        new VisibilityCollector(visibilityMap, compiler.getCodingConvention()),
+        externs,
+        root);
   }
 
   /**
@@ -1456,9 +1449,7 @@ public final class SymbolTable {
       implements CompilerPass {
     @Override
     public void process(Node externs, Node root) {
-      NodeTraversal t =
-          new NodeTraversal(compiler, this, SyntacticScopeCreator.makeUntyped(compiler));
-      t.traverseRoots(externs, root);
+      NodeTraversal.traverseRoots(compiler, this, externs, root);
     }
 
     private boolean maybeDefineReference(Node n, String propName, Symbol ownerSymbol) {
@@ -1567,13 +1558,14 @@ public final class SymbolTable {
     // then null should be on the stack. But this should be a rare
     // occurrence. We should strive to always be able to come up
     // with some symbol for 'this'.
+    //
+    // This list only has entries for function scopes and the global scope, and doesn't store a
+    // separate `this` value for other block scopes.
     private final List<Symbol> thisStack = new ArrayList<>();
 
     @Override
     public void process(Node externs, Node root) {
-      NodeTraversal t =
-          new NodeTraversal(compiler, this, SyntacticScopeCreator.makeUntyped(compiler));
-      t.traverseRoots(externs, root);
+      NodeTraversal.traverseRoots(compiler, this, externs, root);
     }
 
     @Override
@@ -1596,7 +1588,8 @@ public final class SymbolTable {
                   firstInputRoot);
           symbol.setDeclaration(new Reference(symbol, firstInputRoot));
         }
-      } else {
+        thisStack.add(symbol);
+      } else if (t.getScopeRoot().isFunction()) {
         // Otherwise, declare a "this" property when possible.
         Node scopeRoot = t.getScopeRoot();
         SymbolScope scope = scopes.get(scopeRoot);
@@ -1612,21 +1605,23 @@ public final class SymbolTable {
                 JSType rootType = t.getScopeRoot().getJSType();
                 FunctionType fnType = rootType == null ? null : rootType.toMaybeFunctionType();
                 JSType type = fnType == null ? null : fnType.getTypeOfThis();
-                symbol = addSymbol("this", type, false /* declared */, scope, t.getScopeRoot());
+                symbol = addSymbol("this", type, false/* inferred= */ , scope, scopeRoot);
               }
             }
           }
         } else {
           logger.fine("Skipping empty function: " + scopeRoot);
         }
+        thisStack.add(symbol);
       }
-
-      thisStack.add(symbol);
+      // Don't add to the `thisStack` for other block scopes.
     }
 
     @Override
     public void exitScope(NodeTraversal t) {
-      thisStack.remove(thisStack.size() - 1);
+      if (t.inGlobalScope() || t.getScopeRoot().isFunction()) {
+        thisStack.remove(thisStack.size() - 1);
+      }
     }
 
     @Override
