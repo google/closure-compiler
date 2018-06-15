@@ -3471,7 +3471,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   @Override
-  ModuleLoader getModuleLoader() {
+  public ModuleLoader getModuleLoader() {
     return moduleLoader;
   }
 

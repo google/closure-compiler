@@ -27,6 +27,10 @@ public final class JsFileParser {
     throw new UnsupportedOperationException("JsFileParser.setIncludeGoogBase not implemented");
   }
 
+  public JsFileParser setModuleLoader(ModuleLoader loader) {
+    throw new UnsupportedOperationException("JsFileParser.setModuleLoader not implemented");
+  }
+
   public DependencyInfo parseFile(String filePath, String closureRelativePath,
       String fileContents) {
     throw new UnsupportedOperationException("JsFileParser.parseFile not implemented");

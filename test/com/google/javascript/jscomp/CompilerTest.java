@@ -28,6 +28,7 @@ import com.google.debugging.sourcemap.SourceMapConsumerV3;
 import com.google.debugging.sourcemap.SourceMapGeneratorV3;
 import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import com.google.javascript.jscomp.deps.DependencyInfo;
 import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.InputId;
@@ -1736,5 +1737,45 @@ public final class CompilerTest extends TestCase {
     }
 
     assertThat(orderedInputs).containsExactly("/a.js", "/entry.js", "/b.js").inOrder();
+  }
+
+  public void testInputHasCorrectRequiresAfterCompile() throws Exception {
+    List<SourceFile> sources = new ArrayList<>();
+    sources.add(
+            SourceFile.fromCode(
+                    "/user/foo/projects/bar/node_modules/@scoped/base/index.js",
+                    lines("export class A {};")
+            ));
+    sources.add(
+            SourceFile.fromCode(
+                    "/user/foo/projects/bar/node_modules/@scoped/index.js",
+                    lines("import {A} from '@scoped/base/index';")
+            ));
+    sources.add(
+            SourceFile.fromCode(
+                    "/user/foo/projects/bar/a.js",
+                    lines("goog.require('@scoped/index');",
+                          "console.log('foo')")
+            ));
+    CompilerOptions options = new CompilerOptions();
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_2015);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    options.dependencyOptions.setEntryPoints(
+            ImmutableList.of(ModuleIdentifier.forFile("/user/foo/projects/bar/a.js")));
+    options.dependencyOptions.setDependencySorting(true);
+    options.setProcessCommonJSModules(true);
+    options.setModuleResolutionMode(ResolutionMode.NODE);
+    List<SourceFile> externs =
+            AbstractCommandLineRunner.getBuiltinExterns(options.getEnvironment());
+    Compiler compiler = new Compiler();
+    Result result = compiler.compile(externs, ImmutableList.copyOf(sources), options);
+    assertTrue(result.success);
+
+    for (CompilerInput input : compiler.getInputsInOrder()) {
+        if("/user/foo/projects/bar/node_modules/@scoped/index.js".equals(input.getName())) {
+            DependencyInfo.Require require = input.getRequires().get(0);
+            assertTrue(require.getSymbol().contains("user"));
+        }
+    }
   }
 }
