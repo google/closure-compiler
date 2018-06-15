@@ -2884,7 +2884,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
    * This is used to populate sourcesContent array in the output source map
    * even for sources embedded in the input source map.
    */
-  private void addSourceMapSourceFiles(SourceMapInput inputSourceMap) {
+  private synchronized void addSourceMapSourceFiles(SourceMapInput inputSourceMap) {
+    // synchronized annotation guards concurrent access to sourceMap during parsing.
     SourceMapConsumerV3 consumer = inputSourceMap.getSourceMap(errorManager);
     if (consumer == null) {
       return;
@@ -3481,7 +3482,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     return moduleLoader;
   }
 
-  private void addFilesToSourceMap(Iterable<? extends SourceFile> files) {
+  private synchronized void addFilesToSourceMap(Iterable<? extends SourceFile> files) {
+    // synchronized annotation guards concurrent access to sourceMap during parsing.
     if (getOptions().sourceMapIncludeSourcesContent && getSourceMap() != null) {
       for (SourceFile file : files) {
         try {
