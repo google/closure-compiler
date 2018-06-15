@@ -22,7 +22,8 @@ import static com.google.javascript.jscomp.ClosureCheckModule.DECLARE_LEGACY_NAM
 
 import com.google.auto.value.AutoValue;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableMultiset;
+import com.google.common.collect.LinkedHashMultiset;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.jscomp.deps.ModuleLoader.ModulePath;
 import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
@@ -83,6 +84,11 @@ public final class ModuleMetadata {
   static final DiagnosticType INVALID_REQUIRE_TYPE =
       DiagnosticType.error(
           "JSC_INVALID_REQUIRE_TYPE", "Argument to goog.requireType must be a string.");
+
+  static final DiagnosticType INVALID_SET_TEST_ONLY =
+      DiagnosticType.error(
+          "JSC_INVALID_SET_TEST_ONLY",
+          "Optional, single argument to goog.setTestOnly must be a string.");
 
   private static final Node GOOG_PROVIDE = IR.getprop(IR.name("goog"), IR.string("provide"));
   private static final Node GOOG_MODULE = IR.getprop(IR.name("goog"), IR.string("module"));
@@ -190,19 +196,19 @@ public final class ModuleMetadata {
      * Closure namespaces that this file is associated with. Created by goog.provide, goog.module,
      * and goog.module.declareNamespace.
      */
-    public abstract ImmutableSet<String> googNamespaces();
+    public abstract ImmutableMultiset<String> googNamespaces();
 
     /** Closure namespaces this file requires. e.g. all arguments to goog.require calls. */
-    public abstract ImmutableSet<String> requiredGoogNamespaces();
+    public abstract ImmutableMultiset<String> requiredGoogNamespaces();
 
     /**
      * Closure namespaces this file has weak dependencies on. e.g. all arguments to goog.requireType
      * calls.
      */
-    public abstract ImmutableSet<String> requiredTypes();
+    public abstract ImmutableMultiset<String> requiredTypes();
 
     /** Raw text of all ES6 import specifiers (includes "export from" as well). */
-    public abstract ImmutableSet<String> es6ImportSpecifiers();
+    public abstract ImmutableMultiset<String> es6ImportSpecifiers();
 
     abstract ImmutableList<Module> nestedModules();
 
@@ -247,12 +253,13 @@ public final class ModuleMetadata {
       private Node declaresLegacyNamespace;
       private Node rootNode;
       private AbstractCompiler compiler;
+      LinkedHashMultiset<String> googNamespaces = LinkedHashMultiset.create();
 
       abstract Module buildInternal();
-      abstract ImmutableSet.Builder<String> googNamespacesBuilder();
-      abstract ImmutableSet.Builder<String> requiredGoogNamespacesBuilder();
-      abstract ImmutableSet.Builder<String> requiredTypesBuilder();
-      abstract ImmutableSet.Builder<String> es6ImportSpecifiersBuilder();
+      abstract Builder googNamespaces(ImmutableMultiset<String> value);
+      abstract ImmutableMultiset.Builder<String> requiredGoogNamespacesBuilder();
+      abstract ImmutableMultiset.Builder<String> requiredTypesBuilder();
+      abstract ImmutableMultiset.Builder<String> es6ImportSpecifiersBuilder();
       abstract ImmutableList.Builder<Module> nestedModulesBuilder();
       abstract Builder path(@Nullable ModulePath value);
       abstract Builder usesClosure(boolean value);
@@ -289,6 +296,7 @@ public final class ModuleMetadata {
       }
 
       Module build() {
+        googNamespaces(ImmutableMultiset.copyOf(googNamespaces));
         if (!ambiguous) {
           if (declaresNamespace != null && moduleType() != ModuleType.ES6_MODULE) {
             compiler.report(
@@ -385,6 +393,9 @@ public final class ModuleMetadata {
         case SCRIPT:
           leaveModule();
           break;
+        case NAME:
+          visitName(t, n);
+          break;
         case CALL:
           if (loadModuleCall == n) {
             leaveModule();
@@ -407,6 +418,19 @@ public final class ModuleMetadata {
           && nameNode.getString().equals("goog")
           && nameNode.getParent().getFirstChild().isEmpty()
           && nameNode.getParent().getLastChild().getString().endsWith("/goog.js");
+    }
+
+    private void visitName(NodeTraversal t, Node n) {
+      if (!"goog".equals(n.getString())) {
+        return;
+      }
+
+      Var root = t.getScope().getVar("goog");
+      if (root != null && !isFromGoogImport(root)) {
+        return;
+      }
+
+      currentModule.usesClosure(true);
     }
 
     private void visitGoogCall(NodeTraversal t, Node n) {
@@ -439,8 +463,7 @@ public final class ModuleMetadata {
         currentModule.moduleType(ModuleType.GOOG_PROVIDE, t, n);
         if (n.hasTwoChildren() && n.getLastChild().isString()) {
           String namespace = n.getLastChild().getString();
-          currentModule.googNamespacesBuilder().add(namespace);
-          checkDuplicates(namespace, t, n);
+          addNamespace(currentModule, namespace, t, n);
         } else {
           t.report(n, ClosureRewriteModule.INVALID_PROVIDE_NAMESPACE);
         }
@@ -448,8 +471,7 @@ public final class ModuleMetadata {
         currentModule.moduleType(ModuleType.GOOG_MODULE, t, n);
         if (n.hasTwoChildren() && n.getLastChild().isString()) {
           String namespace = n.getLastChild().getString();
-          currentModule.googNamespacesBuilder().add(namespace);
-          checkDuplicates(namespace, t, n);
+          addNamespace(currentModule, namespace, t, n);
         } else {
           t.report(n, ClosureRewriteModule.INVALID_MODULE_NAMESPACE);
         }
@@ -462,8 +484,7 @@ public final class ModuleMetadata {
         if (n.hasTwoChildren() && n.getLastChild().isString()) {
           currentModule.recordDeclareNamespace(n);
           String namespace = n.getLastChild().getString();
-          currentModule.googNamespacesBuilder().add(namespace);
-          checkDuplicates(namespace, t, n);
+          addNamespace(currentModule, namespace, t, n);
         } else {
           t.report(n, INVALID_DECLARE_NAMESPACE_CALL);
         }
@@ -480,15 +501,31 @@ public final class ModuleMetadata {
           t.report(n, INVALID_REQUIRE_TYPE);
         }
       } else if (getprop.matchesQualifiedName(GOOG_SET_TEST_ONLY)) {
-        currentModule.isTestOnly(true);
+        if (n.hasOneChild() || (n.hasTwoChildren() && n.getLastChild().isString())) {
+          currentModule.isTestOnly(true);
+        } else {
+          t.report(n, INVALID_SET_TEST_ONLY);
+        }
       }
     }
 
-    /** Checks if the given Closure namespace is a duplicate or not. */
-    private void checkDuplicates(String namespace, NodeTraversal t, Node n) {
-      Module existing = modulesByGoogNamespace.get(namespace);
-      if (existing != null) {
-        switch (existing.moduleType()) {
+    /**
+     * Adds the namespaces to the module and checks if the given Closure namespace is a duplicate or
+     * not.
+     */
+    private void addNamespace(Module.Builder module, String namespace, NodeTraversal t, Node n) {
+      ModuleType existingType = null;
+      if (module.googNamespaces.contains(namespace)) {
+        existingType = module.moduleType();
+      } else {
+        Module existingModule = modulesByGoogNamespace.get(namespace);
+        if (existingModule != null) {
+          existingType = existingModule.moduleType();
+        }
+      }
+      currentModule.googNamespaces.add(namespace);
+      if (existingType != null) {
+        switch (existingType) {
           case ES6_MODULE:
           case GOOG_MODULE:
           case LEGACY_GOOG_MODULE:
@@ -501,7 +538,7 @@ public final class ModuleMetadata {
           case SCRIPT:
             // Fall through, error
         }
-        throw new IllegalStateException("Unexpected module type: " + existing.moduleType());
+        throw new IllegalStateException("Unexpected module type: " + existingType);
       }
     }
   }

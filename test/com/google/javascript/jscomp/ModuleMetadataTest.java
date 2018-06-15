@@ -148,6 +148,12 @@ public final class ModuleMetadataTest extends CompilerTestCase {
         ClosureRewriteModule.DUPLICATE_NAMESPACE);
   }
 
+  public void testDuplicateProvidesInSameFile() {
+    testError(
+        "goog.provide('duplciated');\ngoog.provide('duplciated');",
+        ClosureRewriteModule.DUPLICATE_NAMESPACE);
+  }
+
   public void testDuplicateProvideAndGoogModule() {
     testError(
         new String[] {"goog.provide('duplciated');", "goog.module('duplciated');"},
@@ -210,6 +216,12 @@ public final class ModuleMetadataTest extends CompilerTestCase {
     assertThat(m.usesClosure()).isTrue();
   }
 
+  public void testUsesGlobalClosureNoFunctionCall() {
+    testSame("var b = goog.nullFunction;");
+    Module m = metadata.getModulesByPath().get("testcode");
+    assertThat(m.usesClosure()).isTrue();
+  }
+
   public void testLocalGoogIsNotClosure() {
     testSame("var goog; goog.isArray(foo);");
     Module m = metadata.getModulesByPath().get("testcode");
@@ -256,5 +268,23 @@ public final class ModuleMetadataTest extends CompilerTestCase {
     testSame("goog.setTestOnly();");
     Module m = metadata.getModulesByPath().get("testcode");
     assertThat(m.isTestOnly()).isTrue();
+  }
+
+  public void testSetTestOnlyWithStringArg() {
+    testSame("goog.setTestOnly('string');");
+    Module m = metadata.getModulesByPath().get("testcode");
+    assertThat(m.isTestOnly()).isTrue();
+  }
+
+  public void testSetTestOnlyWithExtraArg() {
+    testError("goog.setTestOnly('string', 'string');", ModuleMetadata.INVALID_SET_TEST_ONLY);
+    Module m = metadata.getModulesByPath().get("testcode");
+    assertThat(m.isTestOnly()).isFalse();
+  }
+
+  public void testSetTestOnlyWithInvalidArg() {
+    testError("goog.setTestOnly(0);", ModuleMetadata.INVALID_SET_TEST_ONLY);
+    Module m = metadata.getModulesByPath().get("testcode");
+    assertThat(m.isTestOnly()).isFalse();
   }
 }
