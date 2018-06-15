@@ -1213,6 +1213,17 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
     test(inputs, expecteds);
   }
 
+  // https://github.com/google/closure-compiler/issues/2932
+  public void testComplexExportAssignment() {
+    testModules(
+        "test.js",
+        "const width = 800; const vwidth = exports.vwidth = width;",
+        lines(
+            "/** @const */ var module$test = { /** @const */ default: {}};",
+            "module$test.default.vwidth = 800;",
+            "const vwidth$$module$test = module$test.default.vwidth;"));
+  }
+
   public void testUMDRequiresIfTest() {
     testModules(
         "test.js",

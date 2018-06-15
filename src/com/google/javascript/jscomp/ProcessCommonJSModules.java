@@ -1382,6 +1382,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
       }
 
       if (root.getParent().isAssign()
+          && root.getGrandparent().isExprResult()
           && (root.getNext() != null && (root.getNext().isName() || root.getNext().isGetProp()))
           && root.getParent().getParent().isExprResult()
           && rValueVar != null
@@ -1410,39 +1411,35 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
       if (root.matchesQualifiedName("module.exports")
           && rValue != null
           && export.scope.getVar("module.exports") == null
-          && root.getParent().isAssign()) {
-        if (root.getGrandparent().isExprResult() && moduleInitialization == null) {
-          // Rewrite "module.exports = foo;" to "var moduleName = {default: foo};"
-          Node parent = root.getParent();
-          Node exportName = IR.exprResult(IR.assign(updatedExport, rValue.detach()));
-          if (exportIsConst) {
-            JSDocInfoBuilder info = new JSDocInfoBuilder(false);
-            info.recordConstancy();
-            exportName.getFirstChild().setJSDocInfo(info.build());
-          }
-          parent.getParent().replaceWith(exportName.useSourceInfoFromForTree(root.getParent()));
-          changeScope = NodeUtil.getEnclosingChangeScopeRoot(parent);
-        } else if (root.getNext() != null
-            && root.getNext().isName()
-            && rValueVar != null
-            && rValueVar.isGlobal()
-            && export.isInSupportedScope) {
-          // This is a where a module export assignment is used in a complex expression.
-          // Before: `SOME_VALUE !== undefined && module.exports = SOME_VALUE`
-          // After: `SOME_VALUE !== undefined && module$name`
-          root.getParent().replaceWith(updatedExport);
-          changeScope = NodeUtil.getEnclosingChangeScopeRoot(root);
-        } else {
-          // Other references to "module.exports" are just replaced with the module name.
-          export.node.replaceWith(updatedExport);
-          if (updatedExport.getParent().isAssign() && exportIsConst) {
-            JSDocInfoBuilder infoBuilder =
-                JSDocInfoBuilder.maybeCopyFrom(updatedExport.getParent().getJSDocInfo());
-            infoBuilder.recordConstancy();
-            updatedExport.getParent().setJSDocInfo(infoBuilder.build());
-          }
-          changeScope = NodeUtil.getEnclosingChangeScopeRoot(updatedExport);
+          && root.getParent().isAssign()
+          && root.getGrandparent().isExprResult()
+          && moduleInitialization == null) {
+        // Rewrite "module.exports = foo;" to "var moduleName = {default: foo};"
+        Node parent = root.getParent();
+        Node exportName = IR.exprResult(IR.assign(updatedExport, rValue.detach()));
+        if (exportIsConst) {
+          JSDocInfoBuilder info = new JSDocInfoBuilder(false);
+          info.recordConstancy();
+          exportName.getFirstChild().setJSDocInfo(info.build());
         }
+        parent.getParent().replaceWith(exportName.useSourceInfoFromForTree(root.getParent()));
+        changeScope = NodeUtil.getEnclosingChangeScopeRoot(parent);
+      } else if (root.getNext() != null
+          && root.getNext().isName()
+          && rValueVar != null
+          && rValueVar.isGlobal()
+          && export.isInSupportedScope) {
+        // This is a where a module export assignment is used in a complex expression.
+        // Before: `SOME_VALUE !== undefined && module.exports = SOME_VALUE`
+        // After: `SOME_VALUE !== undefined && module$name`
+        Node parent = root.getParent();
+        root.detach();
+        parent.replaceWith(root);
+        if (root == export.node) {
+          root = updatedExport;
+        }
+        export.node.replaceWith(updatedExport);
+        changeScope = NodeUtil.getEnclosingChangeScopeRoot(root);
       } else {
         // Other references to "module.exports" are just replaced with the module name.
         export.node.replaceWith(updatedExport);
@@ -1455,6 +1452,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
 
         changeScope = NodeUtil.getEnclosingChangeScopeRoot(updatedExport);
       }
+
       if (changeScope != null) {
         compiler.reportChangeToChangeScope(changeScope);
       }
