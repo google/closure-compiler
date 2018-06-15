@@ -4693,24 +4693,25 @@ public final class IntegrationTest extends IntegrationTestCase {
         (String[]) null);
   }
 
-  public void testExternsReferencesToGoogModuleTypesAreRewritten() {
+  public void testGoogModuleReferencesToExternsTypesAreRewritten() {
     CompilerOptions options = createCompilerOptions();
     options.setClosurePass(true);
     options.setCheckTypes(true);
 
+    // This is a very weird pattern, but we need to remove the usages before we remove support
     test(
         options,
         new String[] {
             LINE_JOINER.join(
                 "/** @externs */",
-                "/** @const */ var ns = {};",
-                "/** @constructor */ ns.Bar = function() {};",
-                "/** @const {!ns.Bar} */ var b;",
+                "goog.provide('ext.Bar');",
+                "/** @constructor */ ext.Bar = function() {};",
                 ""),
             LINE_JOINER.join(
                 "goog.module('ns');",
+                "const Bar = goog.require('ext.Bar');",
                 "",
-                "exports.Foo = class {}",
+                "exports.Foo = class extends Bar {}",
                 ""),
         },
         (String[]) null);
