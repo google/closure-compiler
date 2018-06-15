@@ -33,17 +33,14 @@ import java.util.Map;
 class CoverageInstrumentationCallback extends
     NodeTraversal.AbstractPostOrderCallback {
 
-  private final AbstractCompiler compiler;
   private final Map<String, FileInstrumentationData> instrumentationData;
   private final CoverageReach reach;
 
   static final String ARRAY_NAME_PREFIX = "JSCompiler_lcov_data_";
 
   public CoverageInstrumentationCallback(
-      AbstractCompiler compiler,
       Map<String, FileInstrumentationData> instrumentationData,
       CoverageReach reach) {
-    this.compiler = compiler;
     this.instrumentationData = instrumentationData;
     this.reach = reach;
   }
@@ -121,22 +118,24 @@ class CoverageInstrumentationCallback extends
     String objName = CoverageInstrumentationPass.JS_INSTRUMENTATION_OBJECT_NAME;
 
     // var JSCompiler_lcov_data_xx = [];
-    // __jscov.executedLines.push(JSCompiler_lcov_data_xx);
-    // __jscov.instrumentedLines.push(hex-data);
-    // __jscov.fileNames.push(filename);
+    // __jscov['executedLines'].push(JSCompiler_lcov_data_xx);
+    // __jscov['instrumentedLines'].push(hex-data);
+    // __jscov['fileNames'].push(filename);
     return IR.block(
             newArrayDeclarationNode(traversal),
             IR.exprResult(
                 IR.call(
-                    NodeUtil.newQName(compiler, objName + ".executedLines.push"),
+                    IR.getprop(IR.getelem(IR.name(objName), IR.string("executedLines")), "push"),
                     IR.name(arrayName))),
             IR.exprResult(
                 IR.call(
-                    NodeUtil.newQName(compiler, objName + ".instrumentedLines.push"),
+                    IR.getprop(
+                        IR.getelem(IR.name(objName), IR.string("instrumentedLines")), "push"),
                     IR.string(data.getInstrumentedLinesAsHexString()))),
             IR.exprResult(
                 IR.call(
-                    NodeUtil.newQName(compiler, objName + ".fileNames.push"), IR.string(fileName))))
+                    IR.getprop(IR.getelem(IR.name(objName), IR.string("fileNames")), "push"),
+                    IR.string(fileName))))
         .useSourceInfoIfMissingFromForTree(srcref);
   }
 

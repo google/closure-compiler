@@ -182,33 +182,34 @@ public class BranchCoverageInstrumentationCallback extends NodeTraversal.Abstrac
     checkNotNull(data);
 
     // var JSCompiler_lcov_branch_data_xx = [];
-    // __jscov.branchesTaken.push(JSCompiler_lcov_branch_data_xx);
+    // __jscov['branchesTaken'].push(JSCompiler_lcov_branch_data_xx);
     String objName = CoverageInstrumentationPass.JS_INSTRUMENTATION_OBJECT_NAME;
     List<Node> nodes = new ArrayList<>();
     nodes.add(newArrayDeclarationNode(traversal));
     nodes.add(
         IR.exprResult(
             IR.call(
-                NodeUtil.newQName(compiler, objName + ".branchesTaken.push"),
+                IR.getprop(IR.getelem(IR.name(objName), IR.string("branchesTaken")), "push"),
                 IR.name(createArrayName(traversal)))));
-    // __jscov.branchPresent.push(hex-data);
+    // __jscov['branchPresent'].push(hex-data);
     nodes.add(
         IR.exprResult(
             IR.call(
-                NodeUtil.newQName(compiler, objName + ".branchPresent.push"),
+                IR.getprop(IR.getelem(IR.name(objName), IR.string("branchPresent")), "push"),
                 IR.string(data.getBranchPresentAsHexString()))));
     nodes.add(newBranchesInLineNode("JSCompiler_lcov_branchesInLine", data));
-    // __jscov.branchesInLine.push(JSCompiler_lcov_branchesInLine);
+    // __jscov['branchesInLine'].push(JSCompiler_lcov_branchesInLine);
     nodes.add(
         IR.exprResult(
             IR.call(
-                NodeUtil.newQName(compiler, objName + ".branchesInLine.push"),
+                IR.getprop(IR.getelem(IR.name(objName), IR.string("branchesInLine")), "push"),
                 IR.name("JSCompiler_lcov_branchesInLine"))));
-    // __jscov.fileNames.push(filename);
+    // __jscov['fileNames'].push(filename);
     nodes.add(
         IR.exprResult(
             IR.call(
-                NodeUtil.newQName(compiler, objName + ".fileNames.push"), IR.string(fileName))));
+                IR.getprop(IR.getelem(IR.name(objName), IR.string("fileNames")), "push"),
+                IR.string(fileName))));
     return IR.block(nodes).useSourceInfoIfMissingFromForTree(srcref);
   }
 

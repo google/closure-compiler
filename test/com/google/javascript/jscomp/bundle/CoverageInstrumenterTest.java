@@ -80,15 +80,17 @@ public final class CoverageInstrumenterTest extends TestCase {
 
   public void testCompilerSupplier_instruments() {
     CoverageInstrumenter.CompileResult result = compiler.compile(SOURCE_JS, "var x = 42;");
-    String[] expected = new String[]{
-      "if(!self.window){self.window=self;self.window.top=self}",
-      "var __jscov=window.top.__jscov||",
-      "(window.top.__jscov={fileNames:[],instrumentedLines:[],executedLines:[]});",
-      "var JSCompiler_lcov_data_source_js=[];",
-      "__jscov.executedLines.push(JSCompiler_lcov_data_source_js);",
-      "__jscov.instrumentedLines.push(\"01\");",
-      "__jscov.fileNames.push(\"source.js\");",
-      "JSCompiler_lcov_data_source_js[0]=true;var x=42;"};
+    String[] expected =
+        new String[] {
+          "if(!self.window){self.window=self;self.window.top=self}",
+          "var __jscov=window.top[\"__jscov\"]||",
+          "(window.top[\"__jscov\"]={\"fileNames\":[],\"instrumentedLines\":[],\"executedLines\":[]});",
+          "var JSCompiler_lcov_data_source_js=[];",
+          "__jscov[\"executedLines\"].push(JSCompiler_lcov_data_source_js);",
+          "__jscov[\"instrumentedLines\"].push(\"01\");",
+          "__jscov[\"fileNames\"].push(\"source.js\");",
+          "JSCompiler_lcov_data_source_js[0]=true;var x=42;"
+        };
 
     assertThat(result.source).isEqualTo(Joiner.on("").join(expected));
     assertThat(result.errors).isEmpty();

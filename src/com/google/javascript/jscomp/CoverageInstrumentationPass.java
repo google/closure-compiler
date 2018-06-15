@@ -91,9 +91,7 @@ class CoverageInstrumentationPass implements CompilerPass {
             new BranchCoverageInstrumentationCallback(compiler, instrumentationData));
       } else {
         NodeTraversal.traverse(
-            compiler,
-            rootNode,
-            new CoverageInstrumentationCallback(compiler, instrumentationData, reach));
+            compiler, rootNode, new CoverageInstrumentationCallback(instrumentationData, reach));
       }
       Node firstScript = rootNode.getFirstChild();
       checkState(firstScript.isScript());
@@ -102,19 +100,22 @@ class CoverageInstrumentationPass implements CompilerPass {
   }
 
   private Node createConditionalObjectDecl(String name, Node srcref) {
+    // Make sure to quote properties so they are not renamed.
     String jscovData;
     if (instrumentOption == InstrumentOption.BRANCH_ONLY) {
-      jscovData = "{fileNames:[], branchPresent:[], branchesInLine: [], branchesTaken: []}";
+      jscovData = "{'fileNames':[], 'branchPresent':[], 'branchesInLine': [], 'branchesTaken': []}";
     } else if (instrumentOption == InstrumentOption.LINE_ONLY) {
-      jscovData = "{fileNames:[], instrumentedLines: [], executedLines: []}";
+      jscovData = "{'fileNames':[], 'instrumentedLines': [], 'executedLines': []}";
     } else {
       jscovData =
-          "{fileNames:[], instrumentedLines: [], executedLines: [],"
-              + " branchPresent:[], branchesInLine: [], branchesTaken: []}";
+          "{'fileNames:[], 'instrumentedLines: [], 'executedLines': [],"
+              + " 'branchPresent':[], 'branchesInLine': [], 'branchesTaken': []}";
     }
 
+    // Add the __jscov var to the window as a quoted key so it can be found even if property
+    // renaming is enabled.
     String jscovDecl =
-        " var " + name + " = window.top.__jscov || " + "(window.top.__jscov = " + jscovData + ");";
+        " var " + name + " = window.top['__jscov'] || (window.top['__jscov'] = " + jscovData + ");";
 
     Node script = compiler.parseSyntheticCode(jscovDecl);
     Node var = script.removeFirstChild();
