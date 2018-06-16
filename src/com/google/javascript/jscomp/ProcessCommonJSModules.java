@@ -601,7 +601,8 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
             umdPatterns.add(new UmdPattern(ifAncestor, enclosingIf.getSecondChild()));
           }
         }
-      } else if (n.matchesQualifiedName("define.amd")) {
+      } else if (n.matchesQualifiedName("define.amd")
+          || n.matchesQualifiedName("window.define.amd")) {
         // If a define.amd statement is nested in the then branch of an if statement,
         // and the test of the if checks for "module" or "define,
         // assume the if statement is an UMD pattern with a common js export
@@ -885,8 +886,9 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
             new NodeUtil.Visitor() {
               @Override
               public void visit(Node node) {
-                if (node.isName()
-                    && (node.getString().equals(MODULE) || node.getString().equals("define"))) {
+                if ((node.isName()
+                        && (node.getString().equals(MODULE) || node.getString().equals("define")))
+                    || (node.isGetProp() && node.matchesQualifiedName("window.define"))) {
                   umdTests.add(node);
                 }
               }
