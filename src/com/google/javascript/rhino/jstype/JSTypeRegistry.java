@@ -1962,9 +1962,8 @@ public class JSTypeRegistry implements Serializable {
                 recordUnresolvedTypes);
         if (namedType instanceof ObjectType && !nonNullableTypeNames.contains(n.getString())) {
           Node typeList = n.getFirstChild();
-          boolean isUnknownForwardDeclared =
-              namedType.isUnknownType() && isForwardDeclaredType(n.getString());
-          if ((!namedType.isUnknownType() || isUnknownForwardDeclared) && typeList != null) {
+          boolean isForwardDeclared = namedType instanceof NamedType;
+          if ((!namedType.isUnknownType() || isForwardDeclared) && typeList != null) {
             // Templatized types.
             ImmutableList.Builder<JSType> templateTypes = ImmutableList.builder();
 
@@ -1975,10 +1974,10 @@ public class JSTypeRegistry implements Serializable {
             }
 
             int nAllowedTypes =
-                isUnknownForwardDeclared
+                isForwardDeclared
                     ? Integer.MAX_VALUE
                     : namedType.getTemplateTypeMap().numUnfilledTemplateKeys();
-            boolean recordTemplateArgs = recordUnresolvedTypes && !isUnknownForwardDeclared;
+            boolean recordTemplateArgs = recordUnresolvedTypes && !isForwardDeclared;
             int templateNodeIndex = 0;
             for (Node templateNode : typeList.children()) {
               // Don't parse more templatized type nodes than the type can
@@ -2002,9 +2001,7 @@ public class JSTypeRegistry implements Serializable {
               templateTypes.add(
                   createFromTypeNodesInternal(templateNode, sourceName, scope, recordTemplateArgs));
             }
-            if (isUnknownForwardDeclared) {
-              // For backwards compatibility, construct a TemplatizedType but "hide" the template
-              // arguments from further resolution.
+            if (isForwardDeclared) {
               namedType =
                   new NamedType(
                       scope,

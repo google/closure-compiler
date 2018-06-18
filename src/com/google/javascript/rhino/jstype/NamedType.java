@@ -185,7 +185,12 @@ public final class NamedType extends ProxyObjectType {
 
   @Override
   StringBuilder appendTo(StringBuilder sb, boolean forAnnotations) {
-    return sb.append(this.reference);
+    JSType type = this.getReferencedType();
+    if (!isResolved() || type.isNoResolvedType()) {
+      return sb.append(this.reference);
+    } else {
+      return type.appendTo(sb, forAnnotations);
+    }
   }
 
   @Override
@@ -240,7 +245,26 @@ public final class NamedType extends ProxyObjectType {
     }
 
     JSType result = getReferencedType();
-    resolutionScope = null;
+
+    if (isResolved() && !result.isNoResolvedType()) {
+      int numKeys = result.getTemplateTypeMap().numUnfilledTemplateKeys();
+      if (result.isObjectType()
+          && (templateTypes != null && !templateTypes.isEmpty())
+          && numKeys > 0) {
+        ImmutableList<JSType> typeArgs = this.templateTypes;
+
+        // Ignore any extraneous type args
+        // TODO(johnlenz): report an error
+        if (numKeys < this.templateTypes.size()) {
+          typeArgs = typeArgs.subList(0, numKeys);
+        }
+
+        result = registry.createTemplatizedType(result.toMaybeObjectType(), typeArgs);
+        setReferencedType(result);
+      }
+
+      resolutionScope = null;
+    }
     return result;
   }
 

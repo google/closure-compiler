@@ -61,8 +61,9 @@ public class NamedTypeTest extends BaseJSTypeTestCase {
     MapBasedScope scope = new MapBasedScope(ImmutableMap.of("ActiveXObject", NO_OBJECT_TYPE));
 
     NamedType activeXObject = new NamedType(scope, registry, "ActiveXObject", "source", 1, 0);
-    activeXObject.resolve(null);
     assertEquals("ActiveXObject", activeXObject.toString());
+    activeXObject.resolve(null);
+    assertEquals("NoObject", activeXObject.toString());
     assertTypeEquals(NO_OBJECT_TYPE, activeXObject.getReferencedType());
   }
 }

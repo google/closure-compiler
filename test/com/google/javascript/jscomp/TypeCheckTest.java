@@ -6481,7 +6481,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
         "  return 1; }",
         "inconsistent return type\n" +
         "found   : number\n" +
-        "required: (FooAlias2|null)");
+        "required: (Foo|null)");
   }
 
   public void testConstructorAliasWithBadAnnotation1() {
@@ -14049,8 +14049,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
         "initializing variable\n" + "found   : Array<Object>\n" + "required: null");
   }
 
-  public void testTemplateTypeForwardReference() {
-    // TODO(martinprobst): the test below asserts incorrect behavior for backwards compatibility.
+  public void testTemplateTypeForwardReferenceFunction() {
     testTypes(
         lines(
             "/** @param {!Foo<string>} x */",
@@ -14065,7 +14064,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "/** @param {!Foo<number>} x */",
             "function g(x) {",
             "  f(x);",
-            "}"));
+            "}"),
+        lines(
+            "actual parameter 1 of f does not match formal parameter",
+            "found   : Foo<number>",
+            "required: Foo<string>"));
   }
 
   public void testTemplateTypeForwardReference_declared() {
@@ -14084,7 +14087,58 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "/** @param {!Foo<number>} x */",
             "function g(x) {",
             "  f(x);",
-            "}"));
+            "}"),
+        lines(
+            "actual parameter 1 of f does not match formal parameter",
+            "found   : Foo<number>",
+            "required: Foo<string>"));
+  }
+
+
+  public void testTemplateTypeForwardReferenceFunctionWithExtra() {
+    // TODO(johnlenz): report an error when forward references contain extraneous
+    // type arguments.
+    testTypes(
+        lines(
+            "/** @param {!Foo<string, boolean>} x */",
+            "function f(x) {}",
+            "",
+            "/**",
+            " * @constructor",
+            " * @template T",
+            " */",
+            "function Foo() {}",
+            "",
+            "/** @param {!Foo<number>} x */",
+            "function g(x) {",
+            "  f(x);",
+            "}"),
+        lines(
+            "actual parameter 1 of f does not match formal parameter",
+            "found   : Foo<number>",
+            "required: Foo<string>"));
+  }
+
+  public void testTemplateTypeForwardReferenceVar() {
+    testTypes(
+        lines(
+            "/** @param {!Foo<string>} x */",
+            "function f(x) {}",
+            "",
+            "/**",
+            " * @template T",
+            " * @constructor",
+            " */",
+            "var Foo = function() {}",
+            "",
+            "/** @param {!Foo<number>} x */",
+            "function g(x) {",
+            "  f(x);",
+            "}"),
+        lines(
+            "actual parameter 1 of f does not match formal parameter",
+            "found   : Foo<number>",
+            "required: Foo<string>"));
   }
 
   public void testTemplateTypeForwardReference_declaredMissing() {
