@@ -40,6 +40,7 @@ import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.testing.BaseJSTypeTestCase;
 import com.google.javascript.rhino.testing.TestErrorReporter;
+import java.util.ArrayDeque;
 import java.util.List;
 
 public final class ParserTest extends BaseJSTypeTestCase {
@@ -4338,7 +4339,27 @@ public final class ParserTest extends BaseJSTypeTestCase {
     // verifying that all warnings were seen
     testErrorReporter.assertHasEncounteredAllErrors();
     testErrorReporter.assertHasEncounteredAllWarnings();
+    assertSourceInfoPresent(result.ast);
     return result;
+  }
+
+  private void assertSourceInfoPresent(Node node) {
+    ArrayDeque<Node> deque = new ArrayDeque<>();
+    deque.add(node);
+
+    while (!deque.isEmpty()) {
+      node = deque.remove();
+
+      assertWithMessage(
+              String.format(
+                  "Source information must be present on %s", node.toString(true, true, true)))
+          .that(node.getLineno() >= 0)
+          .isTrue();
+
+      for (Node child : node.children()) {
+        deque.add(child);
+      }
+    }
   }
 
   /**
