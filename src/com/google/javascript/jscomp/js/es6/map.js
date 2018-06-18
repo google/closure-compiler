@@ -248,7 +248,7 @@ $jscomp.polyfill('Map',
   };
 
 
-  /** @type {?} */ (PolyfillMap.prototype)[Symbol.iterator] =
+  /** @type {?} */ (PolyfillMap.prototype)[$jscomp.global.Symbol.iterator] =
       PolyfillMap.prototype.entries;
 
 

@@ -32,7 +32,8 @@ $jscomp.makeIterator = function(iterable) {
   $jscomp.initSymbolIterator();
 
   // NOTE: Disabling typechecking because [] not allowed on @struct.
-  var iteratorFunction = /** @type {?} */ (iterable)[Symbol.iterator];
+  var iteratorFunction =
+      /** @type {?} */ (iterable)[$jscomp.global.Symbol.iterator];
   return iteratorFunction ? iteratorFunction.call(iterable) :
       $jscomp.arrayIterator(/** @type {!Array} */ (iterable));
 };

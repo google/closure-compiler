@@ -43,6 +43,6 @@ $jscomp.iteratorFromArray = function(array, transform) {
       return iter.next();
     }
   };
-  iter[Symbol.iterator] = function() { return iter; };
+  iter[$jscomp.global.Symbol.iterator] = function() { return iter; };
   return iter;
 };

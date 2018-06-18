@@ -154,7 +154,7 @@ $jscomp.polyfill('Set',
   PolyfillSet.prototype.keys = PolyfillSet.prototype.values;
 
 
-  /** @type {?} */ (PolyfillSet.prototype)[Symbol.iterator] =
+  /** @type {?} */ (PolyfillSet.prototype)[$jscomp.global.Symbol.iterator] =
       PolyfillSet.prototype.values;
 
 
