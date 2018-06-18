@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES2018;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES6;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES7;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES8;
@@ -72,6 +73,10 @@ public class TranspilationPasses {
   // parameter can be removed.
   static void addPreTypecheckTranspilationPasses(
       List<PassFactory> passes, CompilerOptions options, boolean doEs6ExternsCheck) {
+    if (options.needsTranspilationFrom(ES2018)) {
+      passes.add(rewriteObjRestSpread);
+    }
+
     if (options.needsTranspilationFrom(ES8)) {
       // Trailing commas in parameter lists are flagged as present by the parser,
       // but never actually represented in the AST.
@@ -120,10 +125,6 @@ public class TranspilationPasses {
 
   public static void addEs6ModuleToCjsPass(List<PassFactory> passes) {
     passes.add(es6RewriteModuleToCjs);
-  }
-
-  public static void addEs2018Passes(List<PassFactory> passes) {
-    passes.add(rewriteObjRestSpread);
   }
 
   /** Deprecated: use addPostCheckTranspilationPasses instead. */
