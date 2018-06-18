@@ -23,7 +23,6 @@ import static com.google.javascript.jscomp.PassFactory.createEmptyPass;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES2018;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES5;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES6;
-import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES7;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES8;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES8_MODULES;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES_NEXT;
@@ -173,17 +172,10 @@ public final class DefaultPassConfig extends PassConfig {
       TranspilationPasses.addEs2018Passes(passes);
     }
 
-    if (options.needsTranspilationFrom(ES8)) {
-      TranspilationPasses.addEs2017Passes(passes);
-    }
-
-    if (options.needsTranspilationFrom(ES7)) {
-      TranspilationPasses.addEs2016Passes(passes);
-    }
+    TranspilationPasses.addPreTypecheckTranspilationPasses(passes, options);
 
     if (options.needsTranspilationFrom(ES6)) {
-      TranspilationPasses.addEs6PreTypecheckPasses(passes, options);
-      TranspilationPasses.addEs6PostCheckPasses(passes);
+      TranspilationPasses.addPostCheckTranspilationPasses(passes);
       if (options.rewritePolyfills) {
         TranspilationPasses.addRewritePolyfillPass(passes);
       }
@@ -377,18 +369,7 @@ public final class DefaultPassConfig extends PassConfig {
     // Passes running before this point should expect to see language features up to ES_2017.
     checks.add(createEmptyPass(PassNames.BEFORE_ES_2017_TRANSPILATION));
 
-    if (options.needsTranspilationFrom(ES8)) {
-      TranspilationPasses.addEs2017Passes(checks);
-    }
-
-    if (options.needsTranspilationFrom(ES7)) {
-      TranspilationPasses.addEs2016Passes(checks);
-    }
-
-    if (options.needsTranspilationFrom(ES6)) {
-      checks.add(es6ExternsCheck);
-      TranspilationPasses.addEs6PreTypecheckPasses(checks, options);
-    }
+    TranspilationPasses.addPreTypecheckTranspilationPasses(checks, options);
 
     if (options.rewritePolyfills && !options.checksOnly) {
       TranspilationPasses.addRewritePolyfillPass(checks);
@@ -479,7 +460,7 @@ public final class DefaultPassConfig extends PassConfig {
     if (options.needsTranspilationFrom(ES6) && !options.checksOnly) {
       // At this point all checks have been done.
       // There's no need to complete transpilation if we're only running checks.
-      TranspilationPasses.addEs6PostCheckPasses(checks);
+      TranspilationPasses.addPostCheckTranspilationPasses(checks);
     }
 
 
@@ -1395,19 +1376,6 @@ public final class DefaultPassConfig extends PassConfig {
         @Override
         protected CompilerPass create(final AbstractCompiler compiler) {
           return new InjectRuntimeLibraries(compiler);
-        }
-
-        @Override
-        protected FeatureSet featureSet() {
-          return ES8_MODULES;
-        }
-      };
-
-  private final PassFactory es6ExternsCheck =
-      new PassFactory("es6ExternsCheck", true) {
-        @Override
-        protected CompilerPass create(final AbstractCompiler compiler) {
-          return new Es6ExternsCheck(compiler);
         }
 
         @Override

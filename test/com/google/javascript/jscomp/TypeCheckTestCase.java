@@ -283,9 +283,7 @@ abstract class TypeCheckTestCase extends CompilerTypeTestCase {
 
     if (compiler.getOptions().needsTranspilationFrom(FeatureSet.ES6)) {
       List<PassFactory> passes = new ArrayList<>();
-      TranspilationPasses.addEs2017Passes(passes);
-      TranspilationPasses.addEs2016Passes(passes);
-      TranspilationPasses.addEs6PreTypecheckPasses(passes, compiler.getOptions());
+      TranspilationPasses.addPreTypecheckTranspilationPasses(passes, compiler.getOptions(), false);
       PhaseOptimizer phaseopt = new PhaseOptimizer(compiler, null);
       phaseopt.consume(passes);
       phaseopt.process(externsNode, jsNode);

@@ -1782,11 +1782,12 @@ public abstract class CompilerTestCase extends TestCase {
     List<PassFactory> factories = new ArrayList<>();
     TranspilationPasses.addEs6ModulePass(
         factories, new PreprocessorSymbolTable.CachedInstanceFactory());
-    TranspilationPasses.addEs2017Passes(factories);
-    TranspilationPasses.addEs2016Passes(factories);
-    TranspilationPasses.addEs6PreTypecheckPasses(factories, compiler.getOptions());
-    TranspilationPasses.addEs6PostTypecheckPasses(factories);
-    TranspilationPasses.addEs6PostCheckPasses(factories);
+
+    compiler.getOptions().setLanguageIn(LanguageMode.ECMASCRIPT_NEXT);
+    compiler.getOptions().setLanguageOut(LanguageMode.ECMASCRIPT5);
+    TranspilationPasses.addPreTypecheckTranspilationPasses(factories, compiler.getOptions(), false);
+    TranspilationPasses.addPostTypecheckTranspilationPasses(factories);
+    TranspilationPasses.addPostCheckTranspilationPasses(factories);
     TranspilationPasses.addRewritePolyfillPass(factories);
     for (PassFactory factory : factories) {
       factory.create(compiler).process(externsRoot, codeRoot);
