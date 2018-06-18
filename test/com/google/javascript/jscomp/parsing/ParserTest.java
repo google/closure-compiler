@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp.parsing;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 import static com.google.javascript.jscomp.parsing.Config.StrictMode.SLOPPY;
 import static com.google.javascript.jscomp.parsing.Config.StrictMode.STRICT;
 import static com.google.javascript.jscomp.parsing.JsDocInfoParser.BAD_TYPE_WIKI_LINK;
@@ -31,10 +32,12 @@ import com.google.javascript.jscomp.parsing.ParserRunner.ParseResult;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.JSDocInfo;
+import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.SimpleSourceFile;
 import com.google.javascript.rhino.StaticSourceFile;
 import com.google.javascript.rhino.Token;
+import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.testing.BaseJSTypeTestCase;
 import com.google.javascript.rhino.testing.TestErrorReporter;
 import java.util.List;
@@ -80,7 +83,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
   @Override
   protected void setUp() throws Exception {
     super.setUp();
-    mode = LanguageMode.ECMASCRIPT3;
+    mode = LanguageMode.ES_NEXT;
     strictMode = SLOPPY;
     isIdeMode = false;
     expectedFeatures = FeatureSet.BARE_MINIMUM;
@@ -611,9 +614,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
     // VAR
     assertNode(varNode).hasType(Token.VAR);
-    JSDocInfo varInfo = varNode.getJSDocInfo();
-    assertThat(varInfo).isNotNull();
-    assertTypeEquals(NUMBER_TYPE, varInfo.getType());
+    assertNodeHasJSDocInfoWithJSType(varNode, NUMBER_TYPE);
 
     // VAR NAME
     Node varNameNode = varNode.getFirstChild();
@@ -628,9 +629,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
     // LET
     assertNode(letNode).hasType(Token.LET);
-    JSDocInfo letInfo = letNode.getJSDocInfo();
-    assertThat(letInfo).isNotNull();
-    assertTypeEquals(NUMBER_TYPE, letInfo.getType());
+    assertNodeHasJSDocInfoWithJSType(letNode, NUMBER_TYPE);
 
     // LET NAME
     Node letNameNode = letNode.getFirstChild();
@@ -642,9 +641,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
     // CONST
     assertNode(constNode).hasType(Token.CONST);
-    JSDocInfo constInfo = constNode.getJSDocInfo();
-    assertThat(constInfo).isNotNull();
-    assertTypeEquals(NUMBER_TYPE, constInfo.getType());
+    assertNodeHasJSDocInfoWithJSType(constNode, NUMBER_TYPE);
 
     // CONST NAME
     Node constNameNode = constNode.getFirstChild();
@@ -657,9 +654,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
     // VAR
     assertNode(varNode).hasType(Token.VAR);
-    JSDocInfo info = varNode.getJSDocInfo();
-    assertThat(info).isNotNull();
-    assertTypeEquals(NUMBER_TYPE, info.getType());
+    assertNodeHasJSDocInfoWithJSType(varNode, NUMBER_TYPE);
 
     // First NAME
     Node nameNode1 = varNode.getFirstChild();
@@ -675,9 +670,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
   public void testJSDocAttachment3() {
     Node assignNode = parse("/** @type {number} */goog.FOO = 5;").getFirstFirstChild();
     assertNode(assignNode).hasType(Token.ASSIGN);
-    JSDocInfo info = assignNode.getJSDocInfo();
-    assertThat(info).isNotNull();
-    assertTypeEquals(NUMBER_TYPE, info.getType());
+    assertNodeHasJSDocInfoWithJSType(assignNode, NUMBER_TYPE);
   }
 
   public void testJSDocAttachment4() {
@@ -797,16 +790,13 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
     // VAR
     assertNode(varNode).hasType(Token.VAR);
-    JSDocInfo info = varNode.getJSDocInfo();
-    assertThat(info).isNotNull();
-
-    assertTypeEquals(
+    assertNodeHasJSDocInfoWithJSType(
+        varNode,
         createRecordTypeBuilder()
             .addProperty("x", NUMBER_TYPE, null)
             .addProperty("y", STRING_TYPE, null)
             .addProperty("z", UNKNOWN_TYPE, null)
-            .build(),
-        info.getType());
+            .build());
 
     // NAME
     Node nameNode = varNode.getFirstChild();
@@ -920,6 +910,234 @@ public final class ParserTest extends BaseJSTypeTestCase {
     assertThat(export.getJSDocInfo()).isNull();
     assertThat(export.getFirstChild().getJSDocInfo()).isNotNull();
     assertThat(export.getFirstChild().getJSDocInfo().hasParameter("x")).isTrue();
+  }
+
+  public void testInlineJSDocAttachmentToVar() {
+    Node letNode = parse("let /** string */ x = 'a';").getFirstChild();
+    assertNode(letNode).hasType(Token.LET);
+
+    JSDocInfo info = letNode.getFirstChild().getJSDocInfo();
+    assertThat(info).isNotNull();
+    assertTypeEquals(STRING_TYPE, info.getType());
+  }
+
+  public void testInlineJSDocAttachmentToObjPatNormalProp() {
+    Node letNode =
+        parse("let { normalProp: /** string */ normalPropTarget } = {};").getFirstChild();
+    assertNode(letNode).hasType(Token.LET);
+
+    Node destructuringLhs = letNode.getFirstChild();
+    Node objectPattern = destructuringLhs.getFirstChild();
+
+    Node normalProp = objectPattern.getFirstChild();
+    assertNode(normalProp).hasType(Token.STRING_KEY);
+    Node normalPropTarget = normalProp.getOnlyChild();
+    assertNodeHasJSDocInfoWithJSType(normalPropTarget, STRING_TYPE);
+  }
+
+  public void testInlineJSDocAttachmentToObjPatNormalPropKey() {
+    Node letNode = parse("let { /** string */ normalProp: normalProp } = {};").getFirstChild();
+    assertNode(letNode).hasType(Token.LET);
+
+    Node destructuringLhs = letNode.getFirstChild();
+    Node objectPattern = destructuringLhs.getFirstChild();
+
+    Node normalProp = objectPattern.getFirstChild();
+    assertNode(normalProp).hasType(Token.STRING_KEY);
+    // TODO(bradfordcsmith): Putting the inline jsdoc on the key should be an error,
+    //     because it isn't clear what that should mean.
+    assertNodeHasNoJSDocInfo(normalProp);
+  }
+
+  public void testInlineJSDocAttachmentToObjPatShorthandProp() {
+    Node letNode = parse("let { /** string */ shorthandProp } = {};").getFirstChild();
+    assertNode(letNode).hasType(Token.LET);
+
+    Node destructuringLhs = letNode.getFirstChild();
+    Node objectPattern = destructuringLhs.getFirstChild();
+
+    Node shorthandProp = objectPattern.getFirstChild();
+    assertNode(shorthandProp).hasType(Token.STRING_KEY);
+    Node shorthandPropTarget = shorthandProp.getOnlyChild();
+    assertNodeHasJSDocInfoWithJSType(shorthandPropTarget, STRING_TYPE);
+  }
+
+  public void testInlineJSDocAttachmentToObjPatNormalPropWithDefault() {
+    Node letNode =
+        parse("let { normalPropWithDefault: /** string */ normalPropWithDefault = 'hi' } = {};")
+            .getFirstChild();
+    assertNode(letNode).hasType(Token.LET);
+
+    Node destructuringLhs = letNode.getFirstChild();
+    Node objectPattern = destructuringLhs.getFirstChild();
+
+    Node normalPropWithDefault = objectPattern.getFirstChild();
+    assertNode(normalPropWithDefault).hasType(Token.STRING_KEY);
+    Node normalPropDefaultValue = normalPropWithDefault.getOnlyChild();
+    assertNode(normalPropDefaultValue).hasType(Token.DEFAULT_VALUE);
+    Node normalPropWithDefaultTarget = normalPropDefaultValue.getFirstChild();
+    assertNodeHasJSDocInfoWithJSType(normalPropWithDefaultTarget, STRING_TYPE);
+  }
+
+  public void testInlineJSDocAttachmentToObjPatShorthandWithDefault() {
+    Node letNode =
+        parse("let { /** string */ shorthandPropWithDefault = 'lo' } = {};").getFirstChild();
+    assertNode(letNode).hasType(Token.LET);
+
+    Node destructuringLhs = letNode.getFirstChild();
+    Node objectPattern = destructuringLhs.getFirstChild();
+
+    Node shorthandPropWithDefault = objectPattern.getFirstChild();
+    assertNode(shorthandPropWithDefault).hasType(Token.STRING_KEY);
+    Node shorthandPropDefaultValue = shorthandPropWithDefault.getOnlyChild();
+    assertNode(shorthandPropDefaultValue).hasType(Token.DEFAULT_VALUE);
+    Node shorthandPropWithDefaultTarget = shorthandPropDefaultValue.getFirstChild();
+    assertNodeHasJSDocInfoWithJSType(shorthandPropWithDefaultTarget, STRING_TYPE);
+  }
+
+  public void testInlineJSDocAttachmentToObjPatComputedPropKey() {
+    Node letNode =
+        parse("let { /** string */ ['computedProp']: computedProp } = {};").getFirstChild();
+    assertNode(letNode).hasType(Token.LET);
+
+    Node destructuringLhs = letNode.getFirstChild();
+    Node objectPattern = destructuringLhs.getFirstChild();
+
+    Node computedProp = objectPattern.getFirstChild();
+    assertNode(computedProp).hasType(Token.COMPUTED_PROP);
+    // TODO(bradfordcsmith): Putting inline JSDoc on the computed property key should be an error,
+    //     since it's not clear what it should mean.
+    assertNodeHasNoJSDocInfo(computedProp);
+  }
+
+  public void testInlineJSDocAttachmentToObjPatComputedProp() {
+    Node letNode =
+        parse("let { ['computedProp']: /** string */ computedProp } = {};").getFirstChild();
+    assertNode(letNode).hasType(Token.LET);
+
+    Node destructuringLhs = letNode.getFirstChild();
+    Node objectPattern = destructuringLhs.getFirstChild();
+
+    Node computedProp = objectPattern.getFirstChild();
+    assertNode(computedProp).hasType(Token.COMPUTED_PROP);
+    Node computedPropTarget = computedProp.getSecondChild();
+    assertNodeHasJSDocInfoWithJSType(computedPropTarget, STRING_TYPE);
+  }
+
+  public void testInlineJSDocAttachmentToObjPatComputedPropWithDefault() {
+    Node letNode =
+        parse("let { ['computedPropWithDefault']: /** string */ computedProp = 'go' } = {};")
+            .getFirstChild();
+    assertNode(letNode).hasType(Token.LET);
+
+    Node destructuringLhs = letNode.getFirstChild();
+    Node objectPattern = destructuringLhs.getFirstChild();
+
+    Node computedPropWithDefault = objectPattern.getFirstChild();
+    assertNode(computedPropWithDefault).hasType(Token.COMPUTED_PROP);
+    Node computedPropDefaultValue = computedPropWithDefault.getSecondChild();
+    assertNode(computedPropDefaultValue).hasType(Token.DEFAULT_VALUE);
+    Node computedPropWithDefaultTarget = computedPropDefaultValue.getFirstChild();
+    assertNodeHasJSDocInfoWithJSType(computedPropWithDefaultTarget, STRING_TYPE);
+  }
+
+  public void testInlineJSDocAttachmentToArrayPatElement() {
+    Node letNode =
+        parse("let [/** string */ x] = [];")
+            .getFirstChild();
+    assertNode(letNode).hasType(Token.LET);
+
+    Node destructuringLhs = letNode.getFirstChild();
+    Node arrayPattern = destructuringLhs.getFirstChild();
+    Node xVarName = arrayPattern.getFirstChild();
+    assertNodeHasJSDocInfoWithJSType(xVarName, STRING_TYPE);
+  }
+
+  public void testInlineJSDocAttachmentToArrayPatElementWithDefault() {
+    Node letNode =
+        parse("let [/** string */ x = 'hi'] = [];")
+            .getFirstChild();
+    assertNode(letNode).hasType(Token.LET);
+
+    Node destructuringLhs = letNode.getFirstChild();
+    Node arrayPattern = destructuringLhs.getFirstChild();
+    Node defaultValue = arrayPattern.getFirstChild();
+    assertNode(defaultValue).hasType(Token.DEFAULT_VALUE);
+
+    Node xVarName = defaultValue.getFirstChild();
+    assertNodeHasJSDocInfoWithJSType(xVarName, STRING_TYPE);
+  }
+
+  public void testInlineJSDocAttachmentToObjLitNormalProp() {
+    Node letNode = parse("let x = { normalProp: /** string */ normalPropTarget };").getFirstChild();
+    assertNode(letNode).hasType(Token.LET);
+
+    Node xNode = letNode.getFirstChild();
+    Node objectLit = xNode.getFirstChild();
+
+    Node normalProp = objectLit.getFirstChild();
+    assertNode(normalProp).hasType(Token.STRING_KEY);
+    Node normalPropTarget = normalProp.getOnlyChild();
+    // TODO(bradfordcsmith): Make sure CheckJsDoc considers this an error, because it doesn't
+    //     make sense to have inline JSDoc on the value.
+    assertNodeHasJSDocInfoWithNoJSType(normalPropTarget);
+  }
+
+  public void testInlineJSDocAttachmentToObjLitNormalPropKey() {
+    Node letNode = parse("let x = { /** string */ normalProp: normalProp };").getFirstChild();
+    assertNode(letNode).hasType(Token.LET);
+
+    Node xNode = letNode.getFirstChild();
+    Node objectLit = xNode.getFirstChild();
+
+    Node normalProp = objectLit.getFirstChild();
+    assertNode(normalProp).hasType(Token.STRING_KEY);
+    // TODO(bradfordcsmith): We should either disallow inline JSDoc here or correctly pull the type
+    //     out of it.
+    assertNodeHasJSDocInfoWithNoJSType(normalProp);
+  }
+
+  public void testJSDocAttachmentToObjLitNormalPropKey() {
+    Node letNode =
+        parse("let x = { /** @type {string} */ normalProp: normalProp };").getFirstChild();
+    assertNode(letNode).hasType(Token.LET);
+
+    Node xNode = letNode.getFirstChild();
+    Node objectLit = xNode.getFirstChild();
+
+    Node normalProp = objectLit.getFirstChild();
+    assertNode(normalProp).hasType(Token.STRING_KEY);
+    assertNodeHasJSDocInfoWithJSType(normalProp, STRING_TYPE);
+  }
+
+  public void testInlineJSDocAttachmentToObjLitShorthandProp() {
+    Node letNode = parse("let x = { /** string */ shorthandProp };").getFirstChild();
+    assertNode(letNode).hasType(Token.LET);
+
+    Node xNode = letNode.getFirstChild();
+    Node objectLit = xNode.getFirstChild();
+
+    Node shorthandPropKey = objectLit.getFirstChild();
+    assertNode(shorthandPropKey).hasType(Token.STRING_KEY);
+    // TODO(bradfordcsmith): We should either disallow inline JSDoc here or correctly pull the type
+    //     out of it.
+    assertNodeHasJSDocInfoWithNoJSType(shorthandPropKey);
+    Node shorthandPropTarget = shorthandPropKey.getOnlyChild();
+    assertNodeHasNoJSDocInfo(shorthandPropTarget);
+  }
+
+  public void testJSDocAttachmentToObjLitShorthandProp() {
+    Node letNode = parse("let x = { /** @type {string} */ shorthandProp };").getFirstChild();
+    assertNode(letNode).hasType(Token.LET);
+
+    Node xNode = letNode.getFirstChild();
+    Node objectLit = xNode.getFirstChild();
+
+    Node shorthandPropKey = objectLit.getFirstChild();
+    assertNode(shorthandPropKey).hasType(Token.STRING_KEY);
+    assertNodeHasJSDocInfoWithJSType(shorthandPropKey, STRING_TYPE);
+    Node shorthandPropTarget = shorthandPropKey.getOnlyChild();
+    assertNodeHasNoJSDocInfo(shorthandPropTarget);
   }
 
   public void testInlineJSDocAttachment1() {
@@ -1428,6 +1646,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   public void testTrailingCommaWarning3() {
+    mode = LanguageMode.ECMASCRIPT3;
     expectFeatures(Feature.TRAILING_COMMA);
     parseWarning("var a = ['foo', 'bar',];", TRAILING_COMMA_MESSAGE);
     mode = LanguageMode.ECMASCRIPT5;
@@ -1436,6 +1655,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   public void testTrailingCommaWarning4() {
+    mode = LanguageMode.ECMASCRIPT3;
     expectFeatures(Feature.TRAILING_COMMA);
     parseWarning("var a = [,];", TRAILING_COMMA_MESSAGE);
     mode = LanguageMode.ECMASCRIPT5;
@@ -1448,6 +1668,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   public void testTrailingCommaWarning6() {
+    mode = LanguageMode.ECMASCRIPT3;
     expectFeatures(Feature.TRAILING_COMMA);
     parseWarning("var a = {'foo': 'bar',};", TRAILING_COMMA_MESSAGE);
     mode = LanguageMode.ECMASCRIPT5;
@@ -1513,6 +1734,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   public void testConstForbidden() {
+    mode = LanguageMode.ECMASCRIPT5;
     expectFeatures(Feature.CONST_DECLARATIONS);
     parseWarning("const x = 3;",
         getRequiresEs6Message(Feature.CONST_DECLARATIONS));
@@ -1973,12 +2195,14 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   public void testLetForbidden1() {
+    mode = LanguageMode.ECMASCRIPT5;
     expectFeatures(Feature.LET_DECLARATIONS);
     parseWarning("let x = 3;",
         getRequiresEs6Message(Feature.LET_DECLARATIONS));
   }
 
   public void testLetForbidden2() {
+    mode = LanguageMode.ECMASCRIPT5;
     expectFeatures(Feature.LET_DECLARATIONS);
     parseWarning("function f() { let x = 3; };",
         getRequiresEs6Message(Feature.LET_DECLARATIONS));
@@ -2054,45 +2278,53 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   public void testGettersForbidden1() {
+    mode = LanguageMode.ECMASCRIPT3;
     expectFeatures(Feature.GETTER);
     parseError("var x = {get foo() { return 3; }};",
         IRFactory.GETTER_ERROR_MESSAGE);
   }
 
   public void testGettersForbidden2() {
+    mode = LanguageMode.ECMASCRIPT3;
     parseError("var x = {get foo bar() { return 3; }};",
         "'(' expected");
   }
 
   public void testGettersForbidden3() {
+    mode = LanguageMode.ECMASCRIPT3;
     parseError("var x = {a getter:function b() { return 3; }};",
         "'}' expected");
   }
 
   public void testGettersForbidden4() {
+    mode = LanguageMode.ECMASCRIPT3;
     parseError("var x = {\"a\" getter:function b() { return 3; }};",
         "':' expected");
   }
 
   public void testGettersForbidden5() {
+    mode = LanguageMode.ECMASCRIPT3;
     expectFeatures(Feature.GETTER);
     parseError("var x = {a: 2, get foo() { return 3; }};",
         IRFactory.GETTER_ERROR_MESSAGE);
   }
 
   public void testGettersForbidden6() {
+    mode = LanguageMode.ECMASCRIPT3;
     expectFeatures(Feature.GETTER);
     parseError("var x = {get 'foo'() { return 3; }};",
         IRFactory.GETTER_ERROR_MESSAGE);
   }
 
   public void testSettersForbidden() {
+    mode = LanguageMode.ECMASCRIPT3;
     expectFeatures(Feature.SETTER);
     parseError("var x = {set foo(a) { y = 3; }};",
         IRFactory.SETTER_ERROR_MESSAGE);
   }
 
   public void testSettersForbidden2() {
+    mode = LanguageMode.ECMASCRIPT3;
     // TODO(johnlenz): maybe just report the first error, when not in IDE mode?
     parseError("var x = {a setter:function b() { return 3; }};",
         "'}' expected");
@@ -3132,6 +3364,18 @@ public final class ParserTest extends BaseJSTypeTestCase {
         getRequiresEs6Message(Feature.DEFAULT_PARAMETERS));
   }
 
+  public void testDefaultParameterInlineJSDoc() {
+    expectFeatures(Feature.DEFAULT_PARAMETERS);
+    Node functionNode = parse("function f(/** number */ a = 0) {}").getFirstChild();
+    Node parameterList = functionNode.getSecondChild();
+    Node defaultValue = parameterList.getFirstChild();
+    assertNode(defaultValue).hasType(Token.DEFAULT_VALUE);
+
+    Node aName = defaultValue.getFirstChild();
+    assertNode(aName).hasType(Token.NAME);
+    assertNodeHasJSDocInfoWithJSType(aName, NUMBER_TYPE);
+  }
+
   public void testRestParameters() {
     mode = LanguageMode.ECMASCRIPT6;
     strictMode = SLOPPY;
@@ -4000,6 +4244,24 @@ public final class ParserTest extends BaseJSTypeTestCase {
     ParseResult result = doParse(code);
     assertThat(result.sourceMapURL)
         .isEqualTo("http://google.com/some/absolute/path/to/somefile.js.map");
+  }
+
+  private void assertNodeHasJSDocInfoWithJSType(Node node, JSType jsType) {
+    JSDocInfo info = node.getJSDocInfo();
+    assertWithMessage("Node has no JSDocInfo: %s", node).that(info).isNotNull();
+    assertTypeEquals(jsType, info.getType());
+  }
+
+  private void assertNodeHasJSDocInfoWithNoJSType(Node node) {
+    JSDocInfo info = node.getJSDocInfo();
+    assertWithMessage("Node has no JSDocInfo: %s", node).that(info).isNotNull();
+    JSTypeExpression type = info.getType();
+    assertWithMessage("JSDoc unexpectedly has type").that(type).isNull();
+  }
+
+  private void assertNodeHasNoJSDocInfo(Node node) {
+    JSDocInfo info = node.getJSDocInfo();
+    assertWithMessage("Node %s has unexpected JSDocInfo %s", node, info).that(info).isNull();
   }
 
   private static String getRequiresEs6Message(Feature feature) {

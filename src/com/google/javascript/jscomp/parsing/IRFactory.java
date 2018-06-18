@@ -1035,7 +1035,14 @@ class IRFactory {
 
       Node node = newNode(Token.ARRAY_PATTERN);
       for (ParseTree child : tree.elements) {
-        node.addChildToBack(transformNodeWithInlineJsDoc(child));
+        Node elementNode;
+        if (child.type == ParseTreeType.DEFAULT_PARAMETER) {
+          // processDefaultParameter() knows how to find and apply inline JSDoc to the right node
+          elementNode = processDefaultParameter(child.asDefaultParameter());
+        } else {
+          elementNode = transformNodeWithInlineJsDoc(child);
+        }
+        node.addChildToBack(elementNode);
       }
       return node;
     }
@@ -1045,22 +1052,127 @@ class IRFactory {
 
       Node node = newNode(Token.OBJECT_PATTERN);
       for (ParseTree child : tree.fields) {
-        Node childNode = transformNodeWithInlineJsDoc(child);
-        if (childNode.isDefaultValue()) {
-          // Children of the form {a = b} are parsed as DEFAULT_VALUE{NAME, initializer}.
-          // In this case, insert an extra STRING_KEY node.
-          Node name = childNode.getFirstChild();
-          Node stringKey = newStringNode(Token.STRING_KEY, name.getString());
-          setSourceInfo(stringKey, name);
-          stringKey.setShorthandProperty(true);
-          stringKey.addChildToBack(childNode);
-          childNode = stringKey;
-        } else if (childNode.isRest()) {
-          maybeWarnForFeature(child, Feature.OBJECT_PATTERN_REST);
-        }
+        Node childNode = processObjectPatternElement(child);
         node.addChildToBack(childNode);
       }
       return node;
+    }
+
+    private Node processObjectPatternElement(ParseTree child) {
+      switch (child.type) {
+        case DEFAULT_PARAMETER:
+          // shorthand with a default value
+          // let { /** inlineType */ name = default } = something;
+          return processObjectPatternShorthandWithDefault(child.asDefaultParameter());
+        case PROPERTY_NAME_ASSIGNMENT:
+          return processObjectPatternPropertyNameAssignment(child.asPropertyNameAssignment());
+        case COMPUTED_PROPERTY_DEFINITION:
+          // let {[expression]: /** inlineType */ name} = something;
+          ComputedPropertyDefinitionTree computedPropertyDefinition =
+              child.asComputedPropertyDefinition();
+          return processObjectPatternComputedPropertyDefinition(computedPropertyDefinition);
+        default:
+          // let {...restObject} = someObject;
+          checkState(child.type == ParseTreeType.ASSIGNMENT_REST_ELEMENT, child);
+          maybeWarnForFeature(child, Feature.OBJECT_PATTERN_REST);
+          return processAssignmentRestElement(child.asAssignmentRestElement());
+      }
+    }
+
+    /**
+     * Process an object pattern element using shorthand and a default value.
+     *
+     * <p>e.g. the `/** inlineType * / name = default` part of this code
+     *
+     * <pre><code>
+     * let { /** inlineType * / name = default } = something;
+     * </code></pre>
+     */
+    private Node processObjectPatternShorthandWithDefault(DefaultParameterTree defaultParameter) {
+      Node defaultValueNode = processDefaultParameter(defaultParameter);
+      // Store in AST as non-shorthand form & just note it was originally shorthand
+      // {name: /**inlineType */ name = default }
+      Node nameNode = defaultValueNode.getFirstChild();
+      Node stringKeyNode = newStringNode(Token.STRING_KEY, nameNode.getString());
+      setSourceInfo(stringKeyNode, nameNode);
+      stringKeyNode.setShorthandProperty(true);
+      stringKeyNode.addChildToBack(defaultValueNode);
+      return stringKeyNode;
+    }
+
+    /**
+     * Processes property name assignments in an object pattern.
+     *
+     * <p>Covers these cases.
+     *
+     * <pre><code>
+     *   let {name} = someObject;
+     *   let {key: name} = someObject;
+     *   let {key: name = something} = someObject;
+     * </code></pre>
+     */
+    private Node processObjectPatternPropertyNameAssignment(
+        PropertyNameAssignmentTree propertyNameAssignment) {
+      Node key = processObjectLitKeyAsString(propertyNameAssignment.name);
+      key.setToken(Token.STRING_KEY);
+      ParseTree targetTree = propertyNameAssignment.value;
+      final Node valueNode;
+      if (targetTree == null) {
+        // `let { /** inlineType */ key } = something;`
+        // The key is also the target name.
+        valueNode = processNameWithInlineJSDoc(propertyNameAssignment.name.asIdentifier());
+        key.setShorthandProperty(true);
+      } else {
+        valueNode = processDestructuringElementTarget(targetTree);
+      }
+      key.addChildToFront(valueNode);
+      return key;
+    }
+
+    private Node processDestructuringElementTarget(ParseTree targetTree) {
+      final Node valueNode;
+      if (targetTree.type == ParseTreeType.DEFAULT_PARAMETER) {
+        // let {key: /** inlineType */ name = default} = something;
+        // let [/** inlineType */ name = default] = something;
+        // processDefaultParameter() knows how to apply the inline JSDoc, if any, to the right node
+        valueNode = processDefaultParameter(targetTree.asDefaultParameter());
+      } else if (targetTree.type == ParseTreeType.IDENTIFIER_EXPRESSION) {
+        // let {key: /** inlineType */ name} = something
+        // let [/** inlineType */ name] = something
+        // Allow inline JSDoc on the name, since we may well be declaring it here.
+        // TODO(bradfordcsmith): Do we need to allow this for qualified names, too?
+        valueNode = processNameWithInlineJSDoc(targetTree.asIdentifierExpression());
+      } else {
+        // arbitrarily complex target
+        // e.g.
+        // ({key: foo().someProperty} = someObject);
+        // ([foo().someProperty] = someIterable);
+        valueNode = transform(targetTree);
+      }
+      return valueNode;
+    }
+
+    /**
+     * Processes a computed property in an object pattern.
+     *
+     * <p>Covers these cases:
+     *
+     * <pre><code>
+     *   let {[expression]: name} = someObject;
+     *   let {[expression]: name = defaultValue} = someObject;
+     * </code></pre>
+     */
+    private Node processObjectPatternComputedPropertyDefinition(
+        ComputedPropertyDefinitionTree computedPropertyDefinition) {
+      maybeWarnForFeature(computedPropertyDefinition, Feature.COMPUTED_PROPERTIES);
+
+      Node expressionNode = transform(computedPropertyDefinition.property);
+
+      ParseTree valueTree = computedPropertyDefinition.value;
+      Node valueNode = processDestructuringElementTarget(valueTree);
+      Node computedPropertyNode = newNode(Token.COMPUTED_PROP, expressionNode, valueNode);
+      setSourceInfo(computedPropertyNode, computedPropertyDefinition);
+      return computedPropertyNode;
     }
 
     Node processAssignmentRestElement(AssignmentRestElementTree tree) {
@@ -1371,7 +1483,13 @@ class IRFactory {
       Node params = newNode(Token.PARAM_LIST);
       if (checkParameters(tree.parameters)) {
         for (ParseTree param : tree.parameters) {
-          Node paramNode = transformNodeWithInlineJsDoc(param);
+          Node paramNode;
+          if (param.type == ParseTreeType.DEFAULT_PARAMETER) {
+            // processDefaultParameter() knows how to find and apply inline JSDoc to the right node
+            paramNode = processDefaultParameter(param.asDefaultParameter());
+          } else {
+            paramNode = transformNodeWithInlineJsDoc(param);
+          }
           // Children must be simple names, default parameters, rest
           // parameters, or destructuring patterns.
           checkState(
@@ -1388,8 +1506,20 @@ class IRFactory {
 
     Node processDefaultParameter(DefaultParameterTree tree) {
       maybeWarnForFeature(tree, Feature.DEFAULT_PARAMETERS);
-      return newNode(Token.DEFAULT_VALUE,
-          transform(tree.lhs), transform(tree.defaultValue));
+      ParseTree targetTree = tree.lhs;
+      Node targetNode;
+      if (targetTree.type == ParseTreeType.IDENTIFIER_EXPRESSION) {
+        // allow inline JSDoc on an identifier
+        // let { /** inlineType */ x = defaultValue } = someObject;
+        // TODO(bradfordcsmith): Do we need to allow inline JSDoc for qualified names, too?
+        targetNode = processNameWithInlineJSDoc(targetTree.asIdentifierExpression());
+      } else {
+        targetNode = transform(targetTree);
+      }
+      Node defaultValueNode =
+          newNode(Token.DEFAULT_VALUE, targetNode, transform(tree.defaultValue));
+      setSourceInfo(defaultValueNode, tree);
+      return defaultValueNode;
     }
 
     Node processRestParameter(RestParameterTree tree) {
@@ -1557,6 +1687,10 @@ class IRFactory {
       return node;
     }
 
+    private Node processNameWithInlineJSDoc(IdentifierExpressionTree identifierExpression) {
+      return processNameWithInlineJSDoc(identifierExpression.identifierToken);
+    }
+
     Node processNameWithInlineJSDoc(IdentifierToken identifierToken) {
       JSDocInfo info = handleInlineJsDoc(identifierToken);
       maybeWarnReservedKeyword(identifierToken);
@@ -1659,8 +1793,7 @@ class IRFactory {
     Node processComputedPropertyDefinition(ComputedPropertyDefinitionTree tree) {
       maybeWarnForFeature(tree, Feature.COMPUTED_PROPERTIES);
 
-      return newNode(Token.COMPUTED_PROP,
-          transform(tree.property), transform(tree.value));
+      return newNode(Token.COMPUTED_PROP, transform(tree.property), transform(tree.value));
     }
 
     Node processComputedPropertyMemberVariable(ComputedPropertyMemberVariableTree tree) {
@@ -1749,9 +1882,6 @@ class IRFactory {
     }
 
     Node processPropertyNameAssignment(PropertyNameAssignmentTree tree) {
-      // TODO(tbreisacher): Allow inline JSDoc here (but then forbid it in CheckJSDoc)
-      // so that it's clear we don't support annotations like
-      //   function f({x: /** string */ y}) {}
       Node key = processObjectLitKeyAsString(tree.name);
       key.setToken(Token.STRING_KEY);
       if (tree.value != null) {

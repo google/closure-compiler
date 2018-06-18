@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.common.collect.Iterables;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.JSDocInfo;
@@ -107,7 +109,7 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements HotSwapCompi
     validateNoCollapse(n, info);
     validateClassLevelJsDoc(n, info);
     validateArrowFunction(n);
-    validateDefaultValue(n, info);
+    validateDefaultValue(n);
     validateTemplates(n, info);
     validateTypedefs(n, info);
     validateNoSideEffects(n, info);
@@ -470,24 +472,9 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements HotSwapCompi
         // Object literal properties, catch declarations and variable
         // initializers are valid.
         case NAME:
-        case DEFAULT_VALUE:
         case ARRAY_PATTERN:
         case OBJECT_PATTERN:
-          Node parent = n.getParent();
-          switch (parent.getToken()) {
-            case GETTER_DEF:
-            case SETTER_DEF:
-            case CATCH:
-            case FUNCTION:
-            case VAR:
-            case LET:
-            case CONST:
-            case PARAM_LIST:
-              valid = true;
-              break;
-            default:
-              break;
-          }
+          valid = isTypeAnnotationAllowedForNameOrPattern(n);
           break;
         // Casts, variable declarations, exports, and Object literal properties are valid.
         case CAST:
@@ -526,6 +513,66 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements HotSwapCompi
     }
   }
 
+  /**
+   * Is it valid to have a type annotation on the given NAME, ARRAY_PATTERN, or OBJECT_PATTERN node?
+   */
+  private boolean isTypeAnnotationAllowedForNameOrPattern(Node n) {
+    checkState(n.isName() || n.isArrayPattern() || n.isObjectPattern(), n);
+    final boolean isAllowed;
+    Node parent = n.getParent();
+    switch (parent.getToken()) {
+      case GETTER_DEF: // { /** typeAnnotation */ get n() {} }
+      case SETTER_DEF: // { /** typeAnnotation */ set n() {} }
+      case CATCH: // } catch ( /** typeAnnotation */ n ) {
+      case FUNCTION: // function /** typeAnnotation */ n() {}
+      case VAR: // var /** typeAnnotation */ n;
+      case LET:
+      case CONST:
+      case PARAM_LIST: // function f( /** typeAnnotation */ n ) {}
+      case ARRAY_PATTERN: // ([ /** typeAnnotation */ n ] = iterable);
+      case DEFAULT_VALUE: // function f( /** typeAnnotation */ n = 1 ) {}
+        isAllowed = true;
+        break;
+      case STRING_KEY:
+        {
+          Node stringKeyParent = parent.getParent();
+          if (stringKeyParent.isObjectPattern()) {
+            // e.g.
+            // ({prop: /** inlineType */ assignmentTarget} = something);
+            isAllowed = true;
+          } else {
+            checkState(stringKeyParent.isObjectLit(), stringKeyParent);
+            // It doesn't make much sense to put inline JSDoc on an obect literal property
+            // value. e.g.
+            // x = { prop: /** inlineType */ value };
+            isAllowed = false;
+          }
+        }
+        break;
+      case COMPUTED_PROP:
+        {
+          Node computedProp = parent;
+          Node computedPropParent = parent.getParent();
+          if (computedPropParent.isObjectPattern()) {
+            // You might want to apply inline JSDoc to the target, but not the expression.
+            // ({[computedPropName]: /** inlineType */ assignmentTarget} = something);
+            isAllowed = n.isSecondChildOf(computedProp);
+          } else {
+            checkState(computedPropParent.isObjectLit(), computedPropParent);
+            // neither of these makes sense
+            // x = { /** someType */ [expression]: value };
+            // x = { [expression]: /** someType */ value };
+            isAllowed = false;
+          }
+        }
+        break;
+      default:
+        isAllowed = false;
+        break;
+    }
+    return isAllowed;
+  }
+
   private void reportMisplaced(Node n, String annotationName, String note) {
     compiler.report(JSError.make(n, MISPLACED_ANNOTATION,
         annotationName, note));
@@ -548,14 +595,22 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements HotSwapCompi
   }
 
   /**
-   * Check that an arrow function is not annotated with {@constructor}.
+   * Check that a parameter with a default value is marked as optional.
+   * TODO(bradfordcsmith): This is redundant. We shouldn't require it.
    */
-  private void validateDefaultValue(Node n, JSDocInfo info) {
-    if (n.isDefaultValue() && n.getParent().isParamList() && info != null) {
+  private void validateDefaultValue(Node n) {
+    if (n.isDefaultValue() && n.getParent().isParamList()) {
+      Node targetNode = n.getFirstChild();
+      JSDocInfo info = targetNode.getJSDocInfo();
+      if (info == null) {
+        return;
+      }
+       
       JSTypeExpression typeExpr = info.getType();
       if (typeExpr == null) {
         return;
       }
+      
       Node typeNode = typeExpr.getRoot();
       if (typeNode.getToken() != Token.EQUALS) {
         report(typeNode, DEFAULT_PARAM_MUST_BE_MARKED_OPTIONAL);

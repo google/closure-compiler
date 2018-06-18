@@ -1622,6 +1622,14 @@ public class Node implements Serializable {
     return false;
   }
 
+  public final boolean isFirstChildOf(Node possibleParent) {
+    return possibleParent == getParent() && getPrevious() == null;
+  }
+
+  public final boolean isSecondChildOf(Node possibleParent) {
+    return getPrevious().isFirstChildOf(possibleParent);
+  }
+
   /**
    * Iterates all of the node's ancestors excluding itself.
    */

@@ -113,8 +113,10 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
     for (Node param = paramList.getFirstChild(); param != null; param = next, i++) {
       next = param.getNext();
       if (param.isDefaultValue()) {
-        JSDocInfo jsDoc = param.getJSDocInfo();
         Node nameOrPattern = param.removeFirstChild();
+        // We'll be cloning nameOrPattern below, and we don't want to clone the JSDoc info with it
+        JSDocInfo jsDoc = nameOrPattern.getJSDocInfo();
+        nameOrPattern.setJSDocInfo(null);
         Node defaultValue = param.removeFirstChild();
         Node newParam;
 

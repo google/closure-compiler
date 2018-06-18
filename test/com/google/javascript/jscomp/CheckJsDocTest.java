@@ -55,21 +55,35 @@ public final class CheckJsDocTest extends CompilerTestCase {
     return options;
   }
 
+  public void testInlineJsDocOnObjectPatternTargetNames() {
+    testSame("let {/** string */ prop} = {prop: 'hi'};");
+    testSame("let {/** string */ prop = 'default'} = {prop: 'hi'};");
+    testSame("let {prop: /** string */ x} = {prop: 'hi'};");
+    testSame("let {prop: /** string */ x = 'default'} = {prop: 'hi'};");
+    // TODO(bradfordcsmith): These two cases should be misplaced annotations.
+    testSame("let {/** string */ prop: x} = {prop: 'hi'};");
+    testSame("let {/** string */ prop: x = 'default'} = {prop: 'hi'};");
+  }
+
+  public void testInlineJsDocOnArrayPatternTargetNames() {
+    testSame("let [/** string */ x] = ['hi'];");
+    testSame("let [/** string */ x = 'lo'] = ['hi'];");
+  }
+
   public void testInlineJsDoc_ES6() {
     testSame("function f(/** string */ x) {}");
     testSame("function f(/** number= */ x=3) {}");
     testSame("function f(/** !Object */ {x}) {}");
     testSame("function f(/** !Array */ [x]) {}");
-
-    testWarning("function f([/** number */ x]) {}", MISPLACED_ANNOTATION);
+    testSame("function f([/** number */ x]) {}");
   }
 
   public void testValidInlineJsDoc_ES6_withES6Modules() {
     testSame("export function f(/** string */ x) {};");
   }
 
-  public void testInvalidInlineJsDoc_ES6_withES6Modules() {
-    testWarning("export function f([/** number */ x]) {};", MISPLACED_ANNOTATION);
+  public void testInlineJsDoc_ES6_withES6Modules() {
+    testSame("export function f([/** number */ x]) {};");
   }
 
   // TODO(tbreisacher): These should be a MISPLACED_ANNOTATION warning instead of silently failing.
