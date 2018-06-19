@@ -855,6 +855,10 @@ SinonFakeXmlHttpRequest.prototype.respond = function(status, headers, body) {};
  */
 sinon.useFakeTimers = function(params) {};
 
+/**
+ * Assertions
+ * @see http:/sinonjs.org/releases/1.17.7/assertions
+ */
 sinon.assert = {};
 
 /** @type {string} */
