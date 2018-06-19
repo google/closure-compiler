@@ -85,10 +85,6 @@ public final class Es6ToEs3Util {
     compiler.ensureLibraryInjected("es6/util/" + function.toLowerCase(Locale.US), false);
   }
 
-  static void preloadEs6Symbol(AbstractCompiler compiler) {
-    compiler.ensureLibraryInjected("es6/symbol", false);
-  }
-
   static Node callEs6RuntimeFunction(
       AbstractCompiler compiler, Node iterable, String function) {
     preloadEs6RuntimeFunction(compiler, function);
