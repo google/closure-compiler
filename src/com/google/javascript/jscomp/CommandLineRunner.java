@@ -48,6 +48,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintStream;
+import java.io.StringWriter;
 import java.lang.reflect.AnnotatedElement;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
@@ -817,6 +818,14 @@ public class CommandLineRunner extends
         usage = "Disables variable renaming. Cannot be used with ADVANCED optimizations.")
     private boolean renaming = true;
 
+    @Option(
+      name = "--help_markdown",
+      handler = BooleanOptionHandler.class,
+      hidden = true,
+      usage = "Prints markdown formatted flag usage"
+    )
+    private boolean helpMarkdown = false;
+
     @Argument
     private List<String> arguments = new ArrayList<>();
     private final CmdLineParser parser;
@@ -934,12 +943,24 @@ public class CommandLineRunner extends
         }
 
         if (entry.getKey().equals("Warning and Error Management")) {
-          suffix =
-              "\n"
-                  + boldPrefix
-                  + "Available Error Groups: "
-                  + normalPrefix
-                  + DiagnosticGroups.DIAGNOSTIC_GROUP_NAMES;
+          if (helpMarkdown) {
+            suffix =
+                "\n## Available Error Groups\n\n"
+                    + "  - "
+                    + DiagnosticGroups.DIAGNOSTIC_GROUP_NAMES.replace(", ", "\n  - ");
+          } else {
+            suffix =
+                "\n"
+                    + boldPrefix
+                    + "Available Error Groups: "
+                    + normalPrefix
+                    + DiagnosticGroups.DIAGNOSTIC_GROUP_NAMES;
+          }
+        }
+
+        if (this.helpMarkdown) {
+          maxLineLength = 5000;
+          parser.getProperties().withUsageWidth(maxLineLength);
         }
 
         printCategoryUsage(entry.getKey(), entry.getValue(), outputStream, prefix, suffix);
@@ -950,6 +971,7 @@ public class CommandLineRunner extends
 
     private final String boldPrefix = "\033[1m";
     private final String normalPrefix = "\033[0m";
+    private final String markdownCharsToEscape = "[-*\\`\\[\\]{}\\(\\)#+\\.!<>]";
 
     private void printCategoryUsage(
         String categoryName,
@@ -963,22 +985,62 @@ public class CommandLineRunner extends
           printStringLineWrapped(prefix, outputStream);
         }
 
-        outputStream.write(boldPrefix + categoryName + ":\n" + normalPrefix);
+        if (this.helpMarkdown) {
+          outputStream.write("# " + categoryName + "\n");
 
-        parser.printUsage(
-            outputStream,
-            null,
-            new OptionHandlerFilter() {
-              @Override
-              public boolean select(OptionHandler optionHandler) {
-                if (optionHandler.option instanceof NamedOptionDef) {
-                  return !optionHandler.option.hidden()
-                      && options.contains(
-                          ((NamedOptionDef) optionHandler.option).name().replaceFirst("^--", ""));
+          for (String optionName : options) {
+            StringWriter stringWriter = new StringWriter();
+            parser.printUsage(
+                stringWriter,
+                null,
+                new OptionHandlerFilter() {
+                  @Override
+                  public boolean select(OptionHandler optionHandler) {
+                    if (optionHandler.option instanceof NamedOptionDef) {
+                      return !optionHandler.option.hidden()
+                          && optionName.equals(
+                              ((NamedOptionDef) optionHandler.option)
+                                  .name()
+                                  .replaceFirst("^--", ""));
+                    }
+                    return false;
+                  }
+                });
+            stringWriter.flush();
+            String rawOptionUsage = stringWriter.toString();
+            int delimiterIndex = rawOptionUsage.indexOf(" : ");
+            if (delimiterIndex > 0) {
+              outputStream.write(
+                  "\n**" + rawOptionUsage.substring(0, delimiterIndex).trim() + "**  \n");
+
+              String optionDescription =
+                  rawOptionUsage
+                      .substring(delimiterIndex + 3)
+                      .replaceAll(markdownCharsToEscape, "\\\\$0")
+                      .trim();
+              outputStream.write(optionDescription + "\n");
+            } else {
+              outputStream.write(rawOptionUsage.replaceAll(markdownCharsToEscape, "\\\\$0"));
+            }
+            outputStream.flush();
+          }
+        } else {
+          outputStream.write(boldPrefix + categoryName + ":\n" + normalPrefix);
+          parser.printUsage(
+              outputStream,
+              null,
+              new OptionHandlerFilter() {
+                @Override
+                public boolean select(OptionHandler optionHandler) {
+                  if (optionHandler.option instanceof NamedOptionDef) {
+                    return !optionHandler.option.hidden()
+                        && options.contains(
+                            ((NamedOptionDef) optionHandler.option).name().replaceFirst("^--", ""));
+                  }
+                  return false;
                 }
-                return false;
-              }
-            });
+              });
+        }
 
         if (suffix != null) {
           printStringLineWrapped(suffix, outputStream);
@@ -988,7 +1050,7 @@ public class CommandLineRunner extends
       }
     }
 
-    private final int maxLineLength = 80;
+    private int maxLineLength = 80;
     private final Pattern whitespacePattern = Pattern.compile("\\s");
 
     private void printStringLineWrapped(String input, OutputStreamWriter outputStream)
@@ -1515,7 +1577,7 @@ public class CommandLineRunner extends
 
     if (errors) {
       Flags.printShortUsageAfterErrors(errorStream);
-    } else if (flags.displayHelp) {
+    } else if (flags.displayHelp || flags.helpMarkdown) {
       flags.printUsage(out);
     } else if (flags.version) {
       out.println(
