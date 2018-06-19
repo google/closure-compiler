@@ -91,10 +91,23 @@ WebAssembly.RuntimeError = function() {};
 WebAssembly.instantiate = function(moduleObject, importObject) {};
 
 /**
+ * @param {!Promise<Response>} moduleStream
+ * @param {Object=} importObject
+ * @return {!Promise<{module:WebAssembly.Module, instance:WebAssembly.Instance}>}
+ */
+WebAssembly.instantiateStreaming = function(moduleStream, importObject) {};
+
+/**
  * @param {!BufferSource} bytes
  * @return {!Promise<!WebAssembly.Module>}
  */
 WebAssembly.compile = function(bytes) {};
+
+/**
+ * @param {!Promise<Response>} moduleStream
+ * @return {!Promise<!WebAssembly.Module>}
+ */
+WebAssembly.compileStreaming = function(moduleStream) {};
 
 /**
  * @param {!BufferSource} bytes
