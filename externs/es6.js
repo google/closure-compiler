@@ -1265,6 +1265,14 @@ Array.prototype.keys;
 
 
 /**
+ * @return {!IteratorIterable<T>}
+ * @nosideeffects
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/values
+ */
+Array.prototype.values;
+
+
+/**
  * @return {!IteratorIterable<!Array<number|T>>} Iterator of [key, value] pairs.
  */
 Array.prototype.entries;
