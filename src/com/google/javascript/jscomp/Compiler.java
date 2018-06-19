@@ -2755,15 +2755,15 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     return config;
   }
 
-  //------------------------------------------------------------------------
+  // ------------------------------------------------------------------------
   // Error reporting
-  //------------------------------------------------------------------------
+  // ------------------------------------------------------------------------
 
   /**
-   * The warning classes that are available from the command-line, and
-   * are suppressible by the {@code @suppress} annotation.
+   * The warning classes that are available from the command-line, and are suppressible by the
+   * {@code @suppress} annotation.
    */
-  protected DiagnosticGroups getDiagnosticGroups() {
+  public DiagnosticGroups getDiagnosticGroups() {
     return new DiagnosticGroups();
   }
 
@@ -3511,7 +3511,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     return;
   }
 
-  void initWebpackMap(ImmutableMap<String, String> inputPathByWebpackId) {
+  public void initWebpackMap(ImmutableMap<String, String> inputPathByWebpackId) {
     this.inputPathByWebpackId = inputPathByWebpackId;
   }
 
