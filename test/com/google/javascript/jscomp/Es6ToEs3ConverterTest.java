@@ -152,7 +152,7 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
 
   public void testSpreadLibInjection() {
     testSame("var x = [...a];");
-    assertThat(getLastCompiler().injected).containsExactly("es6/util/makeiterator");
+    assertThat(getLastCompiler().injected).containsExactly("es6/util/arrayfromiterable");
   }
 
   public void testObjectLiteralMemberFunctionDef() {
