@@ -293,8 +293,38 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
         "test.js",
         lines(
             "var foobar = {foo: 'bar'};",
+            "if (typeof module === 'object' && module.exports) {",
+            "  module.exports = foobar;",
+            "} else if (typeof window.define === 'function' && window.define.amd) {",
+            "  window.define([], function() {return foobar;});",
+            "} else {",
+            "  this.foobar = foobar;",
+            "}"),
+        lines(
+            "/** @const */ var module$test = {};",
+            "/** @const */ module$test.default = {foo: 'bar'};"));
+
+    testModules(
+        "test.js",
+        lines(
+            "var foobar = {foo: 'bar'};",
             "if (typeof define === 'function' && define.amd) {",
             "  define([], function() {return foobar;});",
+            "} else if (typeof module === 'object' && module.exports) {",
+            "  module.exports = foobar;",
+            "} else {",
+            "  this.foobar = foobar;",
+            "}"),
+        lines(
+            "/** @const */ var module$test = {};",
+            "/** @const */ module$test.default = {foo: 'bar'};"));
+
+    testModules(
+        "test.js",
+        lines(
+            "var foobar = {foo: 'bar'};",
+            "if (typeof window.define === 'function' && window.define.amd) {",
+            "  window.define([], function() {return foobar;});",
             "} else if (typeof module === 'object' && module.exports) {",
             "  module.exports = foobar;",
             "} else {",
@@ -321,12 +351,48 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
     testModules(
         "test.js",
         lines(
+            "var foobar = {foo: 'bar'};",
+            "if (typeof module === 'object' && module.exports) {",
+            "  module.exports = foobar;",
+            "}",
+            "if (typeof window.define === 'function' && window.define.amd) {",
+            "  window.define([], function () {return foobar;});",
+            "}"),
+        lines(
+            "/** @const */ var module$test = {};",
+            "/** @const */ module$test.default = {foo: 'bar'};"));
+
+    testModules(
+        "test.js",
+        lines(
             "(function(global, factory) {",
             "  true ? module.exports = factory(",
             "             typeof angular === 'undefined' ? require('./other') :",
             "                                              angular) :",
             "         typeof define === 'function' && define.amd ?",
             "         define('angular-cache', ['angular'], factory) :",
+            "         (global.angularCacheModuleName = factory(global.angular));",
+            "}(this, function(angular) {",
+            "  'use strict';",
+            "  console.log(angular);",
+            "  return angular;",
+            "}));"),
+        lines(
+            "/** @const */ var module$test = {};",
+            "var angular$$module$test = ",
+            "    typeof angular === 'undefined' ? module$other.default : angular;",
+            "console.log(angular$$module$test);",
+            "module$test.default = angular$$module$test;"));
+
+    testModules(
+        "test.js",
+        lines(
+            "(function(global, factory) {",
+            "  true ? module.exports = factory(",
+            "             typeof angular === 'undefined' ? require('./other') :",
+            "                                              angular) :",
+            "         typeof window.define === 'function' && window.define.amd ?",
+            "         window.define('angular-cache', ['angular'], factory) :",
             "         (global.angularCacheModuleName = factory(global.angular));",
             "}(this, function(angular) {",
             "  'use strict';",
