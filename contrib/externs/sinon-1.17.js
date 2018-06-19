@@ -854,3 +854,124 @@ SinonFakeXmlHttpRequest.prototype.respond = function(status, headers, body) {};
  * @return {SinonClock}
  */
 sinon.useFakeTimers = function(params) {};
+
+sinon.assert = {};
+
+/** @type {string} */
+sinon.assert.failException;
+
+/** @param {string} message */
+sinon.assert.fail = function(message) {};
+
+/** @param {*} assertion */
+sinon.assert.pass = function(assertion) {};
+
+/** @param {!SinonSpy} spy */
+sinon.assert.notCalled = function(spy) {};
+
+/** @param {!SinonSpy} spy */
+sinon.assert.called = function(spy) {};
+
+/** @param {!SinonSpy} spy */
+sinon.assert.calledOnce = function(spy) {};
+
+/** @param {!SinonSpy} spy */
+sinon.assert.calledTwice = function(spy) {};
+
+/** @param {!SinonSpy} spy */
+sinon.assert.calledThrice = function(spy) {};
+
+/**
+ * @param {!SinonSpy} spy
+ * @param {number} count
+ */
+sinon.assert.callCount = function(spy, count) {};
+
+/** @param {...SinonSpy} spies */
+sinon.assert.callOrder = function(...spies) {};
+
+/**
+ * @param {!SinonSpy} spy
+ * @param {*} obj
+ */
+sinon.assert.calledOn = function(spy, obj) {};
+
+/**
+ * @param {!SinonSpy} spy
+ * @param {*} obj
+ */
+sinon.assert.alwaysCalledOn = function(spy, obj) {};
+
+/**
+ * @param {!SinonSpy} spy
+ * @param {...*} args
+ */
+sinon.assert.calledWith = function(spy, args) {};
+
+/**
+ * @param {!SinonSpy} spy
+ * @param {...*} args
+ */
+sinon.assert.alwaysCalledWith = function(spy, args) {};
+
+/**
+ * @param {!SinonSpy} spy
+ * @param {...*} args
+ */
+sinon.assert.neverCalledWith = function(spy, args) {};
+
+/**
+ * @param {!SinonSpy} spy
+ * @param {...*} args
+ */
+sinon.assert.calledWithExactly = function(spy, args) {};
+
+/**
+ * @param {!SinonSpy} spy
+ * @param {...*} args
+ */
+sinon.assert.alwaysCalledWithExactly = function(spy, args) {};
+
+/**
+ * @param {!SinonSpy} spy
+ * @param {...*} args
+ */
+sinon.assert.calledWithMatch = function(spy, args) {};
+
+/**
+ * @param {!SinonSpy} spy
+ * @param {...*} args
+ */
+sinon.assert.alwaysCalledWithMatch = function(spy, args) {};
+
+/**
+ * @param {!SinonSpy} spy
+ * @param {...*} args
+ */
+sinon.assert.neverCalledWithMatch = function(spy, args) {};
+
+/**
+ * @param {!SinonSpy} spy
+ * @param {*=} exception
+ */
+sinon.assert.threw = function(spy, exception) {};
+
+/**
+ * @param {!SinonSpy} spy
+ * @param {*=} exception
+ *
+ * */
+sinon.assert.alwaysThrew = function(spy, exception) {};
+
+/**
+ * @typedef {Object} SinonExposeOptions
+ * @property {string=} prefix
+ * @property {boolean=} includeFail
+ */
+var SinonExposeOptions = {};
+
+/**
+ * @param {*} obj
+ * @param {SinonExposeOptions=} options
+ **/
+sinon.assert.expose = function(obj, options) {};
