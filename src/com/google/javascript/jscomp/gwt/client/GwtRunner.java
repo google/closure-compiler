@@ -25,6 +25,8 @@ import com.google.common.collect.ImmutableMap;
 import com.google.gwt.core.client.JavaScriptObject;
 import com.google.javascript.jscomp.BasicErrorManager;
 import com.google.javascript.jscomp.CheckLevel;
+import com.google.javascript.jscomp.CommandLineRunnerUtils;
+import com.google.javascript.jscomp.CommandLineRunnerUtils.JsModuleSpec;
 import com.google.javascript.jscomp.CompilationLevel;
 import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerOptions;
@@ -35,6 +37,7 @@ import com.google.javascript.jscomp.DefaultExterns;
 import com.google.javascript.jscomp.DependencyOptions;
 import com.google.javascript.jscomp.DiagnosticType;
 import com.google.javascript.jscomp.JSError;
+import com.google.javascript.jscomp.JSModule;
 import com.google.javascript.jscomp.ModuleIdentifier;
 import com.google.javascript.jscomp.PropertyRenamingPolicy;
 import com.google.javascript.jscomp.SourceFile;
@@ -107,6 +110,9 @@ public final class GwtRunner {
     String[] formatting;
     boolean sourceMapIncludeContent;
     boolean parseInlineSourceMaps;
+    String[] chunk;
+    String[] chunkWrapper;
+    String chunkOutputPathPrefix;
 
     // These flags do not match the Java compiler JAR.
     @Deprecated
@@ -161,13 +167,16 @@ public final class GwtRunner {
     defaultFlags.useTypesForOptimization = true;
     defaultFlags.jsCode = null;
     defaultFlags.externs = null;
-    defaultFlags.createSourceMap = false;
+    defaultFlags.createSourceMap = true;
     defaultFlags.tracerMode = "OFF";
     defaultFlags.moduleResolutionMode = "BROWSER";
     defaultFlags.jsOutputFile = "compiled.js";
     defaultFlags.formatting = null;
     defaultFlags.sourceMapIncludeContent = false;
     defaultFlags.parseInlineSourceMaps = true;
+    defaultFlags.chunk = null;
+    defaultFlags.chunkWrapper = null;
+    defaultFlags.chunkOutputPathPrefix = "./";
     return defaultFlags;
   }
 
@@ -181,7 +190,7 @@ public final class GwtRunner {
   }
 
   @JsType(namespace = JsPackage.GLOBAL, name = "Object", isNative = true)
-  private static class ModuleOutput {
+  private static class ChunkOutput {
     @JsProperty @Deprecated String compiledCode;
     @JsProperty @Deprecated String sourceMap;
     @JsProperty File[] compiledFiles;
@@ -258,12 +267,86 @@ public final class GwtRunner {
     return out;
   }
 
-  /**
-   * Generates the output code, taking into account the passed {@code flags}.
-   */
-  private static ModuleOutput writeOutput(Compiler compiler, Flags flags) {
+  /** Generates the output code, taking into account the passed {@code flags}. */
+  private static ChunkOutput writeChunkOutput(
+      Compiler compiler, Flags flags, List<JSModule> chunks) {
     ArrayList<File> outputFiles = new ArrayList<>();
-    ModuleOutput output = new ModuleOutput();
+    ChunkOutput output = new ChunkOutput();
+
+    Map<String, String> parsedModuleWrappers =
+        CommandLineRunnerUtils.parseChunkWrappers(
+            Arrays.asList(flags.chunkWrapper == null ? new String[] {} : flags.chunkWrapper),
+            chunks);
+
+    for (JSModule c : chunks) {
+      if (flags.createSourceMap) {
+        compiler.getSourceMap().reset();
+      }
+
+      File file = new File();
+      file.path = flags.chunkOutputPathPrefix + c.getName() + ".js";
+
+      String code = compiler.toSource(c);
+
+      int lastSeparatorIndex = file.path.lastIndexOf('/');
+      if (lastSeparatorIndex < 0) {
+        lastSeparatorIndex = file.path.lastIndexOf('\\');
+      }
+      String baseName = file.path.substring(lastSeparatorIndex < 0 ? 0 : lastSeparatorIndex);
+      String wrapper = parsedModuleWrappers.get(c.getName()).replace("%basename%", baseName);
+      StringBuilder out = new StringBuilder();
+      int pos = wrapper.indexOf("%s");
+      if (pos != -1) {
+        String prefix = "";
+
+        if (pos > 0) {
+          prefix = wrapper.substring(0, pos);
+          out.append(prefix);
+        }
+
+        out.append(code);
+
+        int suffixStart = pos + "%s".length();
+        if (suffixStart != wrapper.length()) {
+          // Something after placeholder?
+          out.append(wrapper.substring(suffixStart));
+        }
+        // Make sure we always end output with a line feed.
+        out.append('\n');
+
+        // If we have a source map, adjust its offsets to match
+        // the code WITHIN the wrapper.
+        if (compiler != null && compiler.getSourceMap() != null) {
+          compiler.getSourceMap().setWrapperPrefix(prefix);
+        }
+
+      } else {
+        out.append(code);
+        out.append('\n');
+      }
+
+      file.src = out.toString();
+
+      if (flags.createSourceMap) {
+        StringBuilder b = new StringBuilder();
+        try {
+          compiler.getSourceMap().appendTo(b, file.path);
+        } catch (IOException e) {
+          // ignore
+        }
+        file.sourceMap = b.toString();
+      }
+      outputFiles.add(file);
+    }
+
+    output.compiledFiles = outputFiles.toArray(new File[0]);
+    return output;
+  }
+
+  /** Generates the output code, taking into account the passed {@code flags}. */
+  private static ChunkOutput writeOutput(Compiler compiler, Flags flags) {
+    ArrayList<File> outputFiles = new ArrayList<>();
+    ChunkOutput output = new ChunkOutput();
 
     File file = new File();
     file.path = flags.jsOutputFile;
@@ -490,7 +573,6 @@ public final class GwtRunner {
       options.setVariableRenaming(VariableRenamingPolicy.OFF);
       options.setPropertyRenaming(PropertyRenamingPolicy.OFF);
     }
-    options.setRewritePolyfills(flags.rewritePolyfills);
   }
 
   private static void disableUnsupportedOptions(CompilerOptions options) {
@@ -551,11 +633,9 @@ public final class GwtRunner {
     return unhandled;
   }-*/;
 
-  /**
-   * Public compiler call. Exposed in {@link #exportCompile}.
-   */
+  /** Public compiler call. Exposed in {@link #exportCompile}. */
   @JsMethod(namespace = "jscomp")
-  public static ModuleOutput compile(Flags flags, File[] inputs) {
+  public static ChunkOutput compile(Flags flags, File[] inputs) throws IOException {
     String[] unhandled = updateFlags(flags, getDefaultFlags());
     if (unhandled.length > 0) {
       throw new RuntimeException("Unhandled flag: " + unhandled[0]);
@@ -598,9 +678,26 @@ public final class GwtRunner {
     NodeErrorManager errorManager = new NodeErrorManager();
     Compiler compiler = new Compiler(new NodePrintStream());
     compiler.setErrorManager(errorManager);
-    compiler.compile(externs, jsCode, options);
 
-    ModuleOutput output = writeOutput(compiler, flags);
+    List<String> chunkSpecs = new ArrayList<>();
+    if (flags.chunk != null) {
+      chunkSpecs.addAll(Arrays.asList(flags.chunk));
+    }
+    List<JsModuleSpec> jsChunkSpecs = new ArrayList<>();
+    for (int i = 0; i < chunkSpecs.size(); i++) {
+      jsChunkSpecs.add(JsModuleSpec.create(chunkSpecs.get(i), i == 0));
+    }
+    ChunkOutput output;
+    if (jsChunkSpecs.size() > 0) {
+      List<JSModule> chunks = CommandLineRunnerUtils.createJsModules(jsChunkSpecs, jsCode);
+
+      compiler.compileModules(externs, chunks, options);
+      output = writeChunkOutput(compiler, flags, chunks);
+    } else {
+      compiler.compile(externs, jsCode, options);
+      output = writeOutput(compiler, flags);
+    }
+
     output.errors = toNativeErrorArray(errorManager.errors);
     output.warnings = toNativeErrorArray(errorManager.warnings);
 

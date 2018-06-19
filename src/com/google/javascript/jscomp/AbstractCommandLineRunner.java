@@ -19,6 +19,7 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.javascript.jscomp.CommandLineRunnerUtils.FlagUsageException;
 import static java.nio.charset.StandardCharsets.US_ASCII;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
@@ -31,11 +32,11 @@ import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Maps;
 import com.google.common.io.ByteStreams;
 import com.google.gson.Gson;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
+import com.google.javascript.jscomp.CommandLineRunnerUtils.JsModuleSpec;
 import com.google.javascript.jscomp.CompilerOptions.JsonStreamMode;
 import com.google.javascript.jscomp.CompilerOptions.OutputJs;
 import com.google.javascript.jscomp.CompilerOptions.TweakProcessing;
@@ -514,7 +515,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
     int result;
     try {
       result = doRun();
-    } catch (AbstractCommandLineRunner.FlagUsageException e) {
+    } catch (FlagUsageException e) {
       err.println(e.getMessage());
       result = -1;
     } catch (Throwable t) {
@@ -531,17 +532,6 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
    */
   protected final PrintStream getErrorPrintStream() {
     return err;
-  }
-
-  /**
-   * An exception thrown when command-line flags are used incorrectly.
-   */
-  public static class FlagUsageException extends RuntimeException {
-    private static final long serialVersionUID = 1L;
-
-    public FlagUsageException(String message) {
-      super(message);
-    }
   }
 
   public List<JsonFileSpec> parseJsonFilesFromInputStream() throws IOException {
@@ -617,7 +607,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
     int jsModuleIndex = 0;
     JsModuleSpec jsModuleSpec = Iterables.getFirst(jsModuleSpecs, null);
     int cumulatedInputFilesExpected =
-        jsModuleSpec == null ? Integer.MAX_VALUE : jsModuleSpec.numInputs;
+        jsModuleSpec == null ? Integer.MAX_VALUE : jsModuleSpec.getNumInputs();
     for (int i = 0; i < files.size(); i++) {
       FlagEntry<JsSourceType> file = files.get(i);
       String filename = file.value;
@@ -668,7 +658,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
         jsModuleIndex++;
         if (jsModuleIndex < jsModuleSpecs.size()) {
           jsModuleSpec = jsModuleSpecs.get(jsModuleIndex);
-          cumulatedInputFilesExpected += jsModuleSpec.numInputs;
+          cumulatedInputFilesExpected += jsModuleSpec.getNumInputs();
         }
       }
     }
@@ -780,105 +770,6 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
   }
 
   /**
-   * Creates module objects from a list of js module specifications.
-   *
-   * @param specs A list of js module specifications, not null or empty.
-   * @param inputs A list of JS file paths, not null
-   * @return An array of module objects
-   */
-  List<JSModule> createJsModules(List<JsModuleSpec> specs, List<SourceFile> inputs)
-      throws IOException {
-    if (isInTestMode()) {
-      return modulesSupplierForTesting.get();
-    }
-
-    checkState(specs != null);
-    checkState(!specs.isEmpty());
-    checkState(inputs != null);
-
-    List<String> moduleNames = new ArrayList<>(specs.size());
-    Map<String, JSModule> modulesByName = new LinkedHashMap<>();
-    Map<String, Integer> modulesFileCountMap = new LinkedHashMap<>();
-    int numJsFilesExpected = 0;
-    int minJsFilesRequired = 0;
-    for (JsModuleSpec spec : specs) {
-      checkModuleName(spec.name);
-      if (modulesByName.containsKey(spec.name)) {
-        throw new FlagUsageException("Duplicate module name: " + spec.name);
-      }
-      JSModule module = new JSModule(spec.name);
-
-      for (String dep : spec.deps) {
-        JSModule other = modulesByName.get(dep);
-        if (other == null) {
-          throw new FlagUsageException("Module '" + spec.name
-              + "' depends on unknown module '" + dep
-              + "'. Be sure to list modules in dependency order.");
-        }
-        module.addDependency(other);
-      }
-
-      // We will allow modules of zero input.
-      if (spec.numJsFiles < 0) {
-        numJsFilesExpected = -1;
-      } else {
-        minJsFilesRequired += spec.numJsFiles;
-      }
-
-
-      if (numJsFilesExpected >= 0) {
-        numJsFilesExpected += spec.numJsFiles;
-      }
-
-      // Add modules in reverse order so that source files are allocated to
-      // modules in reverse order. This allows the first module
-      // (presumably the base module) to have a size of 'auto'
-      moduleNames.add(0, spec.name);
-      modulesFileCountMap.put(spec.name, spec.numJsFiles);
-      modulesByName.put(spec.name, module);
-    }
-
-    final int totalNumJsFiles = inputs.size();
-
-    if (numJsFilesExpected >= 0 || minJsFilesRequired > totalNumJsFiles) {
-      if (minJsFilesRequired > totalNumJsFiles) {
-        numJsFilesExpected = minJsFilesRequired;
-      }
-
-      if (numJsFilesExpected > totalNumJsFiles) {
-        throw new FlagUsageException("Not enough JS files specified. Expected "
-            + numJsFilesExpected + " but found " + totalNumJsFiles);
-      } else if (numJsFilesExpected < totalNumJsFiles) {
-        throw new FlagUsageException("Too many JS files specified. Expected "
-                + numJsFilesExpected + " but found " + totalNumJsFiles);
-      }
-    }
-
-    int numJsFilesLeft = totalNumJsFiles;
-    int moduleIndex = 0;
-    for (String moduleName : moduleNames) {
-      // Parse module inputs.
-      int numJsFiles = modulesFileCountMap.get(moduleName);
-      JSModule module = modulesByName.get(moduleName);
-
-      // Check if the first js module specified 'auto' for the number of files
-      if (moduleIndex == moduleNames.size() - 1 && numJsFiles == -1) {
-        numJsFiles = numJsFilesLeft;
-      }
-
-      List<SourceFile> moduleFiles =
-          inputs.subList(numJsFilesLeft - numJsFiles, numJsFilesLeft);
-      for (SourceFile input : moduleFiles) {
-        module.add(input);
-      }
-      numJsFilesLeft -= numJsFiles;
-      moduleIndex++;
-    }
-
-    return new ArrayList<>(modulesByName.values());
-  }
-
-  /**
    * Validates the module name. Can be overridden by subclasses.
    * @param name The module name
    */
@@ -888,52 +779,6 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
     }
   }
 
-  /**
-   * Parses module wrapper specifications.
-   *
-   * @param specs A list of module wrapper specifications, not null. The spec
-   *        format is: <code>name:wrapper</code>. Wrappers.
-   * @param modules The JS modules whose wrappers are specified
-   * @return A map from module name to module wrapper. Modules with no wrapper
-   *         will have the empty string as their value in this map.
-   */
-  static Map<String, String> parseModuleWrappers(List<String> specs, List<JSModule> modules) {
-    checkState(specs != null);
-
-    Map<String, String> wrappers = Maps.newHashMapWithExpectedSize(modules.size());
-
-    // Prepopulate the map with module names.
-    for (JSModule m : modules) {
-      wrappers.put(m.getName(), "");
-    }
-
-    for (String spec : specs) {
-
-      // Format is "<name>:<wrapper>".
-      int pos = spec.indexOf(':');
-      if (pos == -1) {
-        throw new FlagUsageException("Expected module wrapper to have "
-            + "<name>:<wrapper> format: " + spec);
-      }
-
-      // Parse module name.
-      String name = spec.substring(0, pos);
-      if (!wrappers.containsKey(name)) {
-        throw new FlagUsageException("Unknown module: '" + name + "'");
-      }
-      String wrapper = spec.substring(pos + 1);
-      // Support for %n% and %output%
-      wrapper = wrapper.replace("%output%", "%s").replace("%n%", "\n");
-      if (!wrapper.contains("%s")) {
-        throw new FlagUsageException("No %s placeholder in module wrapper: '"
-            + wrapper + "'");
-      }
-
-      wrappers.put(name, wrapper);
-    }
-    return wrappers;
-  }
-
   private String getModuleOutputFileName(JSModule m) {
     return config.moduleOutputPathPrefix + m.getName() + ".js";
   }
@@ -941,10 +786,10 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
   @VisibleForTesting
   void writeModuleOutput(Appendable out, JSModule m) throws IOException {
     if (parsedModuleWrappers == null) {
-      parsedModuleWrappers = parseModuleWrappers(
-          config.moduleWrapper,
-          ImmutableList.copyOf(
-              compiler.getDegenerateModuleGraph().getAllModules()));
+      parsedModuleWrappers =
+          CommandLineRunnerUtils.parseChunkWrappers(
+              config.moduleWrapper,
+              ImmutableList.copyOf(compiler.getDegenerateModuleGraph().getAllModules()));
     }
 
     String fileName = getModuleOutputFileName(m);
@@ -1122,7 +967,14 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
     List<SourceFile> inputs =
         createSourceInputs(jsModuleSpecs, config.mixedJsSources, jsonFiles);
     if (!jsModuleSpecs.isEmpty()) {
-      modules = createJsModules(jsModuleSpecs, inputs);
+      if (isInTestMode()) {
+        modules = modulesSupplierForTesting.get();
+      } else {
+        for (JsModuleSpec m : jsModuleSpecs) {
+          checkModuleName(m.getName());
+        }
+        modules = CommandLineRunnerUtils.createJsModules(jsModuleSpecs, inputs);
+      }
       for (JSModule m : modules) {
         outputFileNames.add(getModuleOutputFileName(m));
       }
@@ -1421,8 +1273,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
 
   private DiagnosticType outputModuleBinaryAndSourceMaps(List<JSModule> modules, B options)
       throws IOException {
-    parsedModuleWrappers = parseModuleWrappers(
-        config.moduleWrapper, modules);
+    parsedModuleWrappers = CommandLineRunnerUtils.parseChunkWrappers(config.moduleWrapper, modules);
     maybeCreateDirsForPath(config.moduleOutputPathPrefix);
 
     // If the source map path is in fact a pattern for each
@@ -2820,92 +2671,6 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
 
     public String getValue() {
       return value;
-    }
-  }
-
-  /**
-   * Represents a specification for a js module.
-   */
-  public static class JsModuleSpec {
-    private final String name;
-    // Number of input files, including js and zip files.
-    private final int numInputs;
-    private final ImmutableList<String> deps;
-    // Number of input js files. All zip files should be expanded.
-    private int numJsFiles;
-
-    private JsModuleSpec(String name, int numInputs, ImmutableList<String> deps) {
-      this.name = name;
-      this.numInputs = numInputs;
-      this.deps = deps;
-      this.numJsFiles = numInputs;
-    }
-
-    /**
-     *
-     * @param specString The spec format is:
-     *        <code>name:num-js-files[:[dep,...][:]]</code>. Module names must
-     *        not contain the ':' character.
-     * @param isFirstModule Whether the spec is for the first module.
-     * @return A parsed js module spec.
-     */
-    static JsModuleSpec create(String specString, boolean isFirstModule) {
-      // Format is "<name>:<num-js-files>[:[<dep>,...][:]]".
-      String[] parts = specString.split(":");
-      if (parts.length < 2 || parts.length > 4) {
-        throw new FlagUsageException("Expected 2-4 colon-delimited parts in "
-            + "js module spec: " + specString);
-      }
-
-      // Parse module name.
-      String name = parts[0];
-
-      // Parse module dependencies.
-      String[] deps = parts.length > 2 && parts[2].length() > 0
-          ? parts[2].split(",")
-          : new String[0];
-
-      // Parse module inputs.
-      int numInputs = -1;
-      try {
-        numInputs = Integer.parseInt(parts[1]);
-      } catch (NumberFormatException ignored) {
-        numInputs = -1;
-      }
-
-      // We will allow modules of zero input.
-      if (numInputs < 0) {
-        // A size of 'auto' is only allowed on the base module if
-        // and it must also be the first module
-        if (parts.length == 2 && "auto".equals(parts[1])) {
-          if (!isFirstModule) {
-            throw new FlagUsageException("Invalid JS file count '" + parts[1]
-                + "' for module: " + name + ". Only the first module may specify "
-                + "a size of 'auto' and it must have no dependencies.");
-          }
-        } else {
-          throw new FlagUsageException("Invalid JS file count '" + parts[1]
-              + "' for module: " + name);
-        }
-      }
-
-      return new JsModuleSpec(name, numInputs, ImmutableList.copyOf(deps));
-    }
-
-    public String getName() {
-      return name;
-    }
-
-    public int getNumInputs() {
-      return numInputs;
-    }
-
-    public ImmutableList<String> getDeps() {
-      return deps;
-    }
-
-    public int getNumJsFiles() {
-      return numJsFiles;
     }
   }
 

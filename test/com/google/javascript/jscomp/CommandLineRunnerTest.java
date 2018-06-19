@@ -31,7 +31,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
 import com.google.javascript.jscomp.AbstractCommandLineRunner.FlagEntry;
-import com.google.javascript.jscomp.AbstractCommandLineRunner.FlagUsageException;
 import com.google.javascript.jscomp.AbstractCommandLineRunner.JsSourceType;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.SourceMap.LocationMapping;
@@ -950,7 +949,7 @@ public final class CommandLineRunnerTest extends TestCase {
       CommandLineRunner runner = createCommandLineRunner(new String[0]);
       runner.doRun();
       fail("Expected FlagUsageException");
-    } catch (FlagUsageException e) {
+    } catch (CommandLineRunnerUtils.FlagUsageException e) {
       assertTrue(e.getMessage(), e.getMessage().contains("dependency_mode=STRICT"));
     }
   }
@@ -1603,7 +1602,7 @@ public final class CommandLineRunnerTest extends TestCase {
     try {
       runner.doRun();
       fail("Expected flag usage exception");
-    } catch (FlagUsageException e) {
+    } catch (CommandLineRunnerUtils.FlagUsageException e) {
       assertThat(e).hasMessageThat().isEqualTo(
               "Bad --js flag. Manifest files cannot be generated when the input is from stdin.");
     }

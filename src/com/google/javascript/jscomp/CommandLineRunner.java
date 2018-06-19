@@ -1650,7 +1650,7 @@ public class CommandLineRunner extends
   protected void checkModuleName(String name) {
     if (!TokenStream.isJSIdentifier(
         extraChunkNameChars.matcher(name).replaceAll("_"))) {
-      throw new FlagUsageException("Invalid chunk name: '" + name + "'");
+      throw new CommandLineRunnerUtils.FlagUsageException("Invalid chunk name: '" + name + "'");
     }
   }
 
@@ -1664,7 +1664,8 @@ public class CommandLineRunner extends
       if (languageMode != null) {
         options.setLanguageIn(languageMode);
       } else {
-        throw new FlagUsageException("Unknown language `" + flags.languageIn + "' specified.");
+        throw new CommandLineRunnerUtils.FlagUsageException(
+            "Unknown language `" + flags.languageIn + "' specified.");
       }
     }
 
@@ -1676,7 +1677,8 @@ public class CommandLineRunner extends
       if (languageMode != null) {
         options.setLanguageOut(languageMode);
       } else {
-        throw new FlagUsageException("Unknown language `" + flags.languageOut + "' specified.");
+        throw new CommandLineRunnerUtils.FlagUsageException(
+            "Unknown language `" + flags.languageOut + "' specified.");
       }
     }
 
@@ -1744,7 +1746,7 @@ public class CommandLineRunner extends
             CompilerOptions.J2clPassMode.valueOf(Ascii.toUpperCase(flags.j2clPassMode));
         options.setJ2clPass(j2clPassMode);
       } catch (IllegalArgumentException ex) {
-        throw new FlagUsageException(
+        throw new CommandLineRunnerUtils.FlagUsageException(
             "Unknown J2clPassMode `" + flags.j2clPassMode + "' specified.");
       }
     }
