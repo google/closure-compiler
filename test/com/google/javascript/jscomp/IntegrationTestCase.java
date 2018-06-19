@@ -130,7 +130,7 @@ abstract class IntegrationTestCase extends TestCase {
                   "/** @type {number} */",
                   "Array.prototype.length;",
                   "",
-                  "/** @return {IteratorIterable<T>} */",
+                  "/** @return {!IteratorIterable<T>} */",
                   "Array.prototype.values;",
                   "",
                   "Array.prototype.splice;",
