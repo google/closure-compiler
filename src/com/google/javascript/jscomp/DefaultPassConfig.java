@@ -187,9 +187,7 @@ public final class DefaultPassConfig extends PassConfig {
       }
     }
 
-    if (!options.forceLibraryInjection.isEmpty()) {
-      passes.add(injectRuntimeLibraries);
-    }
+    passes.add(injectRuntimeLibraries);
 
     assertAllOneTimePasses(passes);
     assertValidOrderForChecks(passes);
@@ -377,9 +375,7 @@ public final class DefaultPassConfig extends PassConfig {
       TranspilationPasses.addRewritePolyfillPass(checks);
     }
 
-    if (!options.forceLibraryInjection.isEmpty()) {
-      checks.add(injectRuntimeLibraries);
-    }
+    checks.add(injectRuntimeLibraries);
 
     if (options.needsTranspilationFrom(ES6)) {
       checks.add(convertStaticInheritance);
