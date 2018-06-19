@@ -127,6 +127,10 @@ public class TranspilationPasses {
     passes.add(es6RewriteModuleToCjs);
   }
 
+  public static void addEs6RewriteImportPathPass(List<PassFactory> passes) {
+    passes.add(es6RewriteImportPaths);
+  }
+
   /** Deprecated: use addPostCheckTranspilationPasses instead. */
   @Deprecated
   public static void addPostTypecheckTranspilationPasses(List<PassFactory> passes) {}
@@ -157,6 +161,20 @@ public class TranspilationPasses {
         @Override
         protected CompilerPass create(AbstractCompiler compiler) {
           return new Es6RewriteModulesToCommonJsModules(compiler);
+        }
+
+        @Override
+        protected FeatureSet featureSet() {
+          return FeatureSet.latest();
+        }
+      };
+
+  /** Rewrites ES6 modules import paths to be browser compliant */
+  private static final PassFactory es6RewriteImportPaths =
+      new PassFactory("es6RewriteImportPaths", true) {
+        @Override
+        protected CompilerPass create(AbstractCompiler compiler) {
+          return new Es6RewriteImportPaths(compiler);
         }
 
         @Override

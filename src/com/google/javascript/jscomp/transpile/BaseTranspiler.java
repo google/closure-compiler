@@ -24,6 +24,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.CheckLevel;
 import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerOptions;
+import com.google.javascript.jscomp.CompilerOptions.Es6ModuleTranspilation;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.DiagnosticGroup;
 import com.google.javascript.jscomp.DiagnosticType;
@@ -183,7 +184,7 @@ public final class BaseTranspiler implements Transpiler {
       options.setWrapGoogModulesForWhitespaceOnly(false);
       options.setPrettyPrint(true);
       options.setWarningLevel(ES5_WARNINGS, CheckLevel.OFF);
-      options.setTranspileEs6ModulesToCjsModules(true);
+      options.setEs6ModuleTranspilation(Es6ModuleTranspilation.TO_COMMON_JS_LIKE_MODULES);
       options.setModuleResolutionMode(moduleResolution);
       options.setModuleRoots(moduleRoots);
       options.setBrowserResolverPrefixReplacements(prefixReplacements);

@@ -898,12 +898,6 @@ public class CompilerOptions implements Serializable {
   /** Rewrite CommonJS modules so that they can be concatenated together. */
   boolean processCommonJSModules = false;
 
-  /**
-   * Rewrite ES6 modules to CommonJs-like modules that can be concatenated together. Requires
-   * the module runtime.
-   */
-  private boolean transpileEs6ModulesToCjsModules = false;
-
   /** CommonJS module prefix. */
   List<String> moduleRoots = ImmutableList.of(ModuleLoader.DEFAULT_FILENAME_PREFIX);
 
@@ -2748,12 +2742,39 @@ public class CompilerOptions implements Serializable {
     this.processCommonJSModules = processCommonJSModules;
   }
 
-  public void setTranspileEs6ModulesToCjsModules(boolean transpileEs6ModulesToCjsModules) {
-    this.transpileEs6ModulesToCjsModules = transpileEs6ModulesToCjsModules;
+  /**
+   * How ES6 modules should be transformed.
+   */
+  public enum Es6ModuleTranspilation {
+    /**
+     * Do not touch any Es6 module feature.
+     */
+    NONE,
+
+    /**
+     * Rewrite import paths to resolved paths only.
+     */
+    RESOLVE_IMPORT_PATHS,
+
+    /**
+     * Rewrite to common js like modules for bundling.
+     */
+    TO_COMMON_JS_LIKE_MODULES,
+
+    /**
+     * Compile ES6 modules.
+     */
+    COMPILE
   }
 
-  public boolean getTranspileEs6ModulesToCjsModules() {
-    return transpileEs6ModulesToCjsModules;
+  private Es6ModuleTranspilation es6ModuleTranspilation = Es6ModuleTranspilation.COMPILE;
+
+  public void setEs6ModuleTranspilation(Es6ModuleTranspilation value) {
+    es6ModuleTranspilation = value;
+  }
+
+  public Es6ModuleTranspilation getEs6ModuleTranspilation() {
+    return es6ModuleTranspilation;
   }
 
   /**
@@ -2963,6 +2984,7 @@ public class CompilerOptions implements Serializable {
             .add("environment", getEnvironment())
             .add("errorFormat", errorFormat)
             .add("errorHandler", errorHandler)
+            .add("es6ModuleTranspilation", es6ModuleTranspilation)
             .add("exportLocalPropertyDefinitions", exportLocalPropertyDefinitions)
             .add("exportTestFunctions", exportTestFunctions)
             .add("externExports", isExternExportsEnabled())
@@ -3040,7 +3062,6 @@ public class CompilerOptions implements Serializable {
             .add("printInputDelimiter", printInputDelimiter)
             .add("printSourceAfterEachPass", printSourceAfterEachPass)
             .add("processCommonJSModules", processCommonJSModules)
-            .add("transpileEs6ModulesToCjsModules", transpileEs6ModulesToCjsModules)
             .add("processObjectPropertyString", processObjectPropertyString)
             .add("propertyInvalidationErrors", propertyInvalidationErrors)
             .add("propertyRenaming", propertyRenaming)
