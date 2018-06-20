@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
@@ -42,7 +44,7 @@ public final class SyntheticAst implements SourceAst {
   public SyntheticAst(Node root) {
     this.inputId = new InputId(root.getSourceFileName());
     this.sourceFile = new SourceFile(root.getSourceFileName());
-    this.root = root;
+    this.root = checkNotNull(root);
   }
 
   @Override
