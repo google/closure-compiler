@@ -1322,6 +1322,7 @@ Array.prototype.copyWithin = function(target, start, opt_end) {};
  * @return {boolean}
  * @this {!IArrayLike<T>|string}
  * @template T
+ * @nosideeffects
  * @see https://tc39.github.io/ecma262/#sec-array.prototype.includes
  */
 Array.prototype.includes = function(searchElement, opt_fromIndex) {};
