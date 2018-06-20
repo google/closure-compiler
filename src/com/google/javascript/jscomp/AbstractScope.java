@@ -429,7 +429,8 @@ abstract class AbstractScope<S extends AbstractScope<S, V>, V extends AbstractVa
    * the two scopes would be equivalent in a pre-ES2015-block-scopes view of the world.
    */
   boolean hasSameContainerScope(S other) {
-    return getClosestContainerScope() == other.getClosestContainerScope();
+    // Do identity check first as a shortcut.
+    return this == other || getClosestContainerScope() == other.getClosestContainerScope();
   }
 
   /**

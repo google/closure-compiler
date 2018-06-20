@@ -42,6 +42,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -3366,6 +3367,36 @@ public final class NodeUtilTest extends TestCase {
     assertThat(findLhsNodesInNode("x.y -= 1;")).hasSize(1);
     assertThat(findLhsNodesInNode("x *= 2;")).hasSize(1);
     assertThat(findLhsNodesInNode("x.y *= 2;")).hasSize(1);
+  }
+
+  public void testFindLhsNodesInForOfWithDeclaration() {
+    Iterable<Node> lhsNodes = findLhsNodesInNode("for (const {x, y} of iterable) {}");
+    assertThat(lhsNodes).hasSize(2);
+    Iterator<Node> nodeIterator = lhsNodes.iterator();
+    assertNode(nodeIterator.next()).isName("x");
+    assertNode(nodeIterator.next()).isName("y");
+  }
+
+  public void testFindLhsNodesInForOfWithoutDeclaration() {
+    Iterable<Node> lhsNodes = findLhsNodesInNode("for ({x, y: a.b} of iterable) {}");
+    assertThat(lhsNodes).hasSize(2);
+    Iterator<Node> nodeIterator = lhsNodes.iterator();
+    assertNode(nodeIterator.next()).isName("x");
+    assertNode(nodeIterator.next()).matchesQualifiedName("a.b");
+  }
+
+  public void testFindLhsNodesInForInWithDeclaration() {
+    Iterable<Node> lhsNodes = findLhsNodesInNode("for (const x in obj) {}");
+    assertThat(lhsNodes).hasSize(1);
+    Iterator<Node> nodeIterator = lhsNodes.iterator();
+    assertNode(nodeIterator.next()).isName("x");
+  }
+
+  public void testFindLhsNodesInForInWithoutDeclaration() {
+    Iterable<Node> lhsNodes = findLhsNodesInNode("for (a.b in iterable) {}");
+    assertThat(lhsNodes).hasSize(1);
+    Iterator<Node> nodeIterator = lhsNodes.iterator();
+    assertNode(nodeIterator.next()).matchesQualifiedName("a.b");
   }
 
   public void testIsConstructor() {

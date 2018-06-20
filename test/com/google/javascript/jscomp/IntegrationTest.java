@@ -49,6 +49,33 @@ public final class IntegrationTest extends IntegrationTestCase {
   private static final String CLOSURE_COMPILED =
       "var COMPILED = true; var goog$exportSymbol = function() {};";
 
+  public void testForOfDoesNotFoolSideEffectDetection() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_NEXT);
+    // we don't want to see injected library code in the output
+    useNoninjectingCompiler = true;
+    testSame(
+        options,
+        lines(
+            "class C {",
+            "  constructor(elements) {",
+            "    this.elements = elements;",
+            "    this.m1();", // this call should not be removed, because it has side effects
+            "  }",
+            // m1() must be considered to have side effects because it taints a non-local object
+            // through basically this.elements[i].sompProp.
+            "  m1() {",
+            "    for (const element of this.elements) {",
+            "      element.someProp = 1;",
+            "    }",
+            "  }",
+            "}",
+            "new C([]);",
+            ""));
+  }
+
   public void testIssue2822() {
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);

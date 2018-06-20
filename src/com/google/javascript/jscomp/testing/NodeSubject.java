@@ -18,6 +18,7 @@ package com.google.javascript.jscomp.testing;
 import static com.google.common.truth.Truth.assertAbout;
 import static org.junit.Assert.assertEquals;
 
+import com.google.common.truth.Fact;
 import com.google.common.truth.FailureMetadata;
 import com.google.common.truth.Subject;
 import com.google.javascript.rhino.Node;
@@ -53,6 +54,23 @@ public final class NodeSubject extends Subject<NodeSubject, Node> {
   public void hasType(Token type) {
     String message = "Node is of type " + actual().getToken() + " not of type " + type;
     assertEquals(message, type, actual().getToken());
+  }
+
+  public void isName(String name) {
+    Node node = actual();
+    if (!node.isName()) {
+      failWithActual(Fact.simpleFact("expected to be a NAME node"));
+    }
+    if (!node.getString().equals(name)) {
+      failWithActual("expected name to be", name);
+    }
+  }
+
+  public void matchesQualifiedName(String qname) {
+    Node node = actual();
+    if (!node.matchesQualifiedName(qname)) {
+      failWithActual("expected qualified name", qname);
+    }
   }
 
   public void hasCharno(int charno) {
