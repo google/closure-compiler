@@ -3367,6 +3367,10 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       return lastInjectedLibrary;
     }
 
+    if (hasTypeCheckingRun()) {
+      throw new RuntimeException("runtime library injected after type checking:" + resourceName);
+    }
+
     // Load/parse the code.
     String originalCode = ResourceLoader.loadTextResource(
         Compiler.class, "js/" + resourceName + ".js");
