@@ -78,6 +78,9 @@ public final class GwtRunner {
     boolean angularPass;
     boolean applyInputSourceMaps;
     boolean assumeFunctionWrapper;
+    String[] chunk;
+    String[] chunkWrapper;
+    String chunkOutputPathPrefix;
     String compilationLevel;
     boolean dartPass;
     JsMap defines;
@@ -86,13 +89,17 @@ public final class GwtRunner {
     String env;
     boolean exportLocalPropertyDefinitions;
     String[] extraAnnotationNames;
+    String[] formatting;
     boolean generateExports;
     String languageIn;
     String languageOut;
     boolean checksOnly;
     boolean newTypeInf;
     String isolationMode;
+    String jsOutputFile;
+    String moduleResolutionMode;
     String outputWrapper;
+    boolean parseInlineSourceMaps;
     @Deprecated
     boolean polymerPass;
     Double polymerVersion;  // nb. nullable JS number represented by java.lang.Double in GWT.
@@ -100,26 +107,23 @@ public final class GwtRunner {
     boolean processClosurePrimitives;
     boolean processCommonJsModules;
     boolean renaming;
-    public String renamePrefixNamespace;
+    String renamePrefixNamespace;
     boolean rewritePolyfills;
-    String warningLevel;
-    boolean useTypesForOptimization;
-    String tracerMode;
-    String moduleResolutionMode;
-    String jsOutputFile;
-    String[] formatting;
-    String errorFormat;
     boolean sourceMapIncludeContent;
-    boolean parseInlineSourceMaps;
-    String[] chunk;
-    String[] chunkWrapper;
-    String chunkOutputPathPrefix;
+    String tracerMode;
+    boolean useTypesForOptimization;
+    String warningLevel;
 
     // These flags do not match the Java compiler JAR.
     @Deprecated
     File[] jsCode;
     File[] externs;
     boolean createSourceMap;
+
+    // These flags do not apply to the JS compiler and specifying them is a noop
+    // They are listed here to make it easy to switch from the java version
+    String errorFormat;
+    String jsonStreams;
   }
 
   /**
@@ -142,20 +146,32 @@ public final class GwtRunner {
     defaultFlags.applyInputSourceMaps = true;
     defaultFlags.assumeFunctionWrapper = false;
     defaultFlags.checksOnly = false;
+    defaultFlags.chunk = null;
+    defaultFlags.chunkWrapper = null;
+    defaultFlags.chunkOutputPathPrefix = "./";
     defaultFlags.compilationLevel = "SIMPLE";
+    defaultFlags.createSourceMap = true;
     defaultFlags.dartPass = false;
     defaultFlags.defines = null;
     defaultFlags.dependencyMode = null;
     defaultFlags.entryPoint = null;
     defaultFlags.env = "BROWSER";
+    defaultFlags.errorFormat = "STANDARD";
     defaultFlags.exportLocalPropertyDefinitions = false;
     defaultFlags.extraAnnotationNames = null;
+    defaultFlags.externs = null;
+    defaultFlags.formatting = null;
     defaultFlags.generateExports = false;
+    defaultFlags.jsCode = null;
+    defaultFlags.jsOutputFile = "compiled.js";
+    defaultFlags.jsonStreams = "BOTH";
     defaultFlags.languageIn = "ECMASCRIPT_2017";
     defaultFlags.languageOut = "ECMASCRIPT5";
+    defaultFlags.moduleResolutionMode = "BROWSER";
     defaultFlags.newTypeInf = false;
     defaultFlags.isolationMode = "NONE";
     defaultFlags.outputWrapper = null;
+    defaultFlags.parseInlineSourceMaps = true;
     defaultFlags.polymerPass = false;
     defaultFlags.polymerVersion = null;
     defaultFlags.preserveTypeAnnotations = false;
@@ -164,21 +180,11 @@ public final class GwtRunner {
     defaultFlags.renamePrefixNamespace = null;
     defaultFlags.renaming = true;
     defaultFlags.rewritePolyfills = true;
+    defaultFlags.sourceMapIncludeContent = false;
+    defaultFlags.tracerMode = "OFF";
     defaultFlags.warningLevel = "DEFAULT";
     defaultFlags.useTypesForOptimization = true;
-    defaultFlags.jsCode = null;
-    defaultFlags.externs = null;
-    defaultFlags.createSourceMap = true;
-    defaultFlags.tracerMode = "OFF";
-    defaultFlags.moduleResolutionMode = "BROWSER";
-    defaultFlags.jsOutputFile = "compiled.js";
-    defaultFlags.formatting = null;
-    defaultFlags.errorFormat = "STANDARD";
-    defaultFlags.sourceMapIncludeContent = false;
-    defaultFlags.parseInlineSourceMaps = true;
-    defaultFlags.chunk = null;
-    defaultFlags.chunkWrapper = null;
-    defaultFlags.chunkOutputPathPrefix = "./";
+
     return defaultFlags;
   }
 
@@ -557,8 +563,13 @@ public final class GwtRunner {
     // Only one error format is supported by the JS version. However support the flag as a
     // noop to make it easy to switch between the Java and JS versions.
     if (flags.errorFormat != null
-        && flags.errorFormat != "STANDARD"
-        && flags.errorFormat != "JSON") {
+        && !("STANDARD".equals(flags.errorFormat) || "JSON".equals(flags.errorFormat))) {
+      throw new RuntimeException("Unknown errorFormat option: " + flags.errorFormat);
+    }
+
+    // Only one error format is supported by the JS version. However support the flag as a
+    // noop to make it easy to switch between the Java and JS versions.
+    if ("BOTH".equals(flags.jsonStreams)) {
       throw new RuntimeException("Unknown errorFormat option: " + flags.errorFormat);
     }
 
