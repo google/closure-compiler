@@ -19,9 +19,9 @@ package com.google.javascript.jscomp;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.google.javascript.jscomp.CodingConvention.SubclassRelationship;
+import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.StaticSourceFile;
-import com.google.javascript.rhino.Token;
 import junit.framework.TestCase;
 
 /**
@@ -31,12 +31,14 @@ public final class DefaultCodingConventionTest extends TestCase {
   private final CodingConvention conv = CodingConventions.getDefault();
 
   public void testVarAndOptionalParams() {
-    Node args = new Node(Token.PARAM_LIST,
-        Node.newString(Token.NAME, "a"),
-        Node.newString(Token.NAME, "b"));
-    Node optArgs = new Node(Token.PARAM_LIST,
-        Node.newString(Token.NAME, "opt_a"),
-        Node.newString(Token.NAME, "opt_b"));
+    Node args = IR.paramList(
+        IR.name("a"),
+        IR.name("b"));
+    Node optArgs = IR.paramList(
+        IR.name("opt_a"),
+        IR.name("opt_b"));
+   Node rest = IR.paramList(
+        IR.rest(IR.name("more")));
 
     assertFalse(conv.isVarArgsParameter(args.getFirstChild()));
     assertFalse(conv.isVarArgsParameter(args.getLastChild()));
@@ -47,6 +49,9 @@ public final class DefaultCodingConventionTest extends TestCase {
     assertFalse(conv.isOptionalParameter(args.getLastChild()));
     assertFalse(conv.isOptionalParameter(optArgs.getFirstChild()));
     assertFalse(conv.isOptionalParameter(optArgs.getLastChild()));
+
+    assertTrue(conv.isVarArgsParameter(rest.getLastChild()));
+    assertFalse(conv.isOptionalParameter(rest.getFirstChild()));
   }
 
   public void testInlineName() {
