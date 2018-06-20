@@ -90,6 +90,11 @@ public final class VarCheckTest extends CompilerTestCase {
   public void testShorthandObjLit() {
     testError("var x = {y};", VarCheck.UNDEFINED_VAR_ERROR);
     testSame("var {x} = {x: 5}; let y = x;");
+
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2018);
+    testError("var {...x} = {...y};", VarCheck.UNDEFINED_VAR_ERROR);
+    testSame("let y; var {...x} = {...y} = {};");
+    testSame("var {...x} = {x: 5}; let y = x;");
   }
 
   public void testBreak() {

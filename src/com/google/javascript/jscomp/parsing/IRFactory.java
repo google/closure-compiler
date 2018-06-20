@@ -1177,7 +1177,9 @@ class IRFactory {
 
     Node processAssignmentRestElement(AssignmentRestElementTree tree) {
       maybeWarnForFeature(tree, Feature.ARRAY_PATTERN_REST);
-      return newNode(Token.REST, transformNodeWithInlineJsDoc(tree.assignmentTarget));
+      Node restNode = newNode(Token.REST, transformNodeWithInlineJsDoc(tree.assignmentTarget));
+      setSourceInfo(restNode, tree);
+      return restNode;
     }
 
     Node processAstRoot(ProgramTree rootNode) {

@@ -16,6 +16,9 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES2018;
+import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES6;
+import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES7;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES8;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES8_MODULES;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES_NEXT;
@@ -55,62 +58,81 @@ public class TranspilationPasses {
         });
   }
 
+  public static void addPreTypecheckTranspilationPasses(
+      List<PassFactory> passes, CompilerOptions options) {
+    addPreTypecheckTranspilationPasses(
+        passes,
+        options,
+        // This condition works most of the time, but has edge cases that fail in tests.
+        !options.skipNonTranspilationPasses);
+  }
+
+  // TODO(mattmm): eliminate need for this boolean
+  // Tests extending CompilerTestCase and TypeCheckTestCase fail if the es6ExternsCheck pass is
+  // run. Ideally a condition based on the CompilerOptions should be used so that the boolean
+  // parameter can be removed.
+  static void addPreTypecheckTranspilationPasses(
+      List<PassFactory> passes, CompilerOptions options, boolean doEs6ExternsCheck) {
+    if (options.needsTranspilationFrom(ES2018)) {
+      passes.add(rewriteObjRestSpread);
+    }
+
+    if (options.needsTranspilationFrom(ES8)) {
+      // Trailing commas in parameter lists are flagged as present by the parser,
+      // but never actually represented in the AST.
+      // The only thing we need to do is mark them as not present in the AST.
+      passes.add(
+          createFeatureRemovalPass(
+              "markTrailingCommasInParameterListsRemoved", Feature.TRAILING_COMMA_IN_PARAM_LIST));
+      passes.add(rewriteAsyncFunctions);
+    }
+
+    if (options.needsTranspilationFrom(ES7)) {
+      passes.add(convertEs7ToEs6);
+    }
+
+    if (options.needsTranspilationFrom(ES6)) {
+      if (doEs6ExternsCheck) {
+        passes.add(es6ExternsCheck);
+      }
+      // Binary and octal literals are effectively transpiled by the parser.
+      // There's no transpilation we can do for the new regexp flags.
+      passes.add(
+          createFeatureRemovalPass(
+              "markEs6FeaturesNotRequiringTranspilationAsRemoved",
+              Feature.BINARY_LITERALS,
+              Feature.OCTAL_LITERALS,
+              Feature.REGEXP_FLAG_U,
+              Feature.REGEXP_FLAG_Y));
+      passes.add(es6NormalizeShorthandProperties);
+      passes.add(es6ConvertSuper);
+      passes.add(es6RenameVariablesInParamLists);
+      passes.add(es6SplitVariableDeclarations);
+      passes.add(es6RewriteDestructuring);
+      passes.add(es6RewriteArrowFunction);
+      passes.add(es6ExtractClasses);
+      passes.add(es6RewriteClass);
+      passes.add(es6InjectRuntimeLibraries);
+      if (!options.checksOnly) {
+        // Don't run these passes in checksOnly mode since all the typechecking & checks passes
+        // support the transpiled features.
+        // TODO(b/73387406): Move each pass above here temporarily, then into
+        // addEs6PostCheck Passes once the pass supports propagating type information
+        passes.add(es6RewriteRestAndSpread);
+      }
+    }
+  }
+
   public static void addEs6ModuleToCjsPass(List<PassFactory> passes) {
     passes.add(es6RewriteModuleToCjs);
   }
 
-  public static void addEs2018Passes(List<PassFactory> passes) {
-    passes.add(rewriteObjRestSpread);
-  }
-
-  public static void addEs2017Passes(List<PassFactory> passes) {
-    // Trailing commas in parameter lists are flagged as present by the parser,
-    // but never actually represented in the AST.
-    // The only thing we need to do is mark them as not present in the AST.
-    passes.add(
-        createFeatureRemovalPass(
-            "markTrailingCommasInParameterListsRemoved", Feature.TRAILING_COMMA_IN_PARAM_LIST));
-    passes.add(rewriteAsyncFunctions);
-  }
-
-  public static void addEs2016Passes(List<PassFactory> passes) {
-    passes.add(convertEs7ToEs6);
-  }
-
-  public static void addEs6PreTypecheckPasses(List<PassFactory> passes, CompilerOptions options) {
-    // Binary and octal literals are effectively transpiled by the parser.
-    // There's no transpilation we can do for the new regexp flags.
-    passes.add(
-        createFeatureRemovalPass(
-            "markEs6FeaturesNotRequiringTranspilationAsRemoved",
-            Feature.BINARY_LITERALS,
-            Feature.OCTAL_LITERALS,
-            Feature.REGEXP_FLAG_U,
-            Feature.REGEXP_FLAG_Y));
-    passes.add(es6NormalizeShorthandProperties);
-    passes.add(es6ConvertSuper);
-    passes.add(es6RenameVariablesInParamLists);
-    passes.add(es6SplitVariableDeclarations);
-    passes.add(es6RewriteDestructuring);
-    passes.add(es6RewriteArrowFunction);
-    passes.add(es6ExtractClasses);
-    passes.add(es6RewriteClass);
-    passes.add(es6InjectRuntimeLibraries);
-    if (!options.checksOnly) {
-      // Don't run these passes in checksOnly mode since all the typechecking & checks passes
-      // support the transpiled features.
-      // TODO(b/73387406): Move each pass above here temporarily, then into
-      // addEs6PostCheck Passes once the pass supports propagating type information
-      passes.add(es6RewriteRestAndSpread);
-    }
-  }
-
-  /** Deprecated: use addEs6PostCheckPasses instead. */
+  /** Deprecated: use addPostCheckTranspilationPasses instead. */
   @Deprecated
-  public static void addEs6PostTypecheckPasses(List<PassFactory> passes) {}
+  public static void addPostTypecheckTranspilationPasses(List<PassFactory> passes) {}
 
   /** Adds transpilation passes that should run after all checks are done. */
-  public static void addEs6PostCheckPasses(List<PassFactory> passes) {
+  public static void addPostCheckTranspilationPasses(List<PassFactory> passes) {
     // TODO(b/73387406): Move passes here as typechecking & other check passes are updated to cope
     // with the features they transpile and as the passes themselves are updated to propagate type
     // information to the transpiled code.
@@ -192,6 +214,20 @@ public class TranspilationPasses {
         @Override
         protected FeatureSet featureSet() {
           return ES8;
+        }
+      };
+
+  static final PassFactory es6ExternsCheck =
+      new PassFactory("es6ExternsCheck", true) {
+        @Override
+        protected CompilerPass create(final AbstractCompiler compiler) {
+          // TODO (mattmm): Investigate if this can be removed
+          return new Es6ExternsCheck(compiler);
+        }
+
+        @Override
+        protected FeatureSet featureSet() {
+          return ES8_MODULES;
         }
       };
 

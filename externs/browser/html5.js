@@ -1089,6 +1089,12 @@ Document.prototype.head;
 Document.prototype.getSelection = function() {};
 
 /**
+ * @type {string}
+ * @see https://html.spec.whatwg.org/multipage/dom.html#current-document-readiness
+ */
+Document.prototype.readyState;
+
+/**
  * @see https://developer.apple.com/webapps/docs/documentation/AppleApplications/Reference/SafariJSRef/DOMApplicationCache/DOMApplicationCache.html
  * @constructor
  * @implements {EventTarget}

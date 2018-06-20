@@ -24,6 +24,8 @@ import static com.google.javascript.jscomp.VariableReferenceCheck.REDECLARED_VAR
 import static com.google.javascript.jscomp.VariableReferenceCheck.REDECLARED_VARIABLE_ERROR;
 import static com.google.javascript.jscomp.VariableReferenceCheck.UNUSED_LOCAL_ASSIGNMENT;
 
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+
 /**
  * Test that warnings are generated in appropriate cases and appropriate
  * cases only by VariableReferenceCheck
@@ -1066,11 +1068,25 @@ public final class VariableReferenceCheckTest extends CompilerTestCase {
     // 'a' is not declared at all, so the 'a' passed to alert() references
     // the global variable 'a', and there is no warning.
     assertNoWarning("alert(a); var {a: b} = {};");
+    assertNoWarning("alert(a); var {a: {a: b}} = {};");
 
     assertUndeclared("alert(b); var {a: b} = {a: 1};");
     assertUndeclared("alert(a); var {a} = {a: 1};");
 
     assertUndeclared("({a: b} = {}); var a, b;");
+  }
+
+  public void testObjectPatternRest() {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2018);
+    assertNoWarning("var {a: b, ...r} = {a: 1};");
+    assertNoWarning("var {a: b, ...r} = {};");
+    assertNoWarning("var {a, ...r} = {a: 1};");
+
+    assertNoWarning("alert(r);");
+    assertUndeclared("alert(r); var {...r} = {a: 1};");
+
+    assertNoWarning("({...a} = {});");
+    assertUndeclared("({...a} = {}); var a;");
   }
 
   public void testObjectPattern_withES6Modules01() {
