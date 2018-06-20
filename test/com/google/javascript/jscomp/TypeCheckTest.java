@@ -9494,6 +9494,38 @@ public final class TypeCheckTest extends TypeCheckTestCase {
     testTypes("var f = new Function(); f();");
   }
 
+  public void testCall12() {
+    testTypes(
+        lines(
+            "/**",
+            " * @param {*} x",
+            " * @return {number}",
+            " */",
+            "function f(x, y) {",
+            "  return x && x.foo();",
+            "}"),
+        new String[] {
+          lines(
+              "inconsistent return type", // preserve new line
+              "found   : *",
+              "required: number"),
+          "Property foo never defined on *"
+        });
+  }
+
+  public void testCall13() {
+    // Test a case where we use inferred types across scopes.
+    testTypes(
+        lines(
+            "var x;",
+            "function useX() { var /** string */ str = x(); }",
+            "function setX() { x = /** @return {number} */ () => 3; }"),
+        lines(
+            "initializing variable", // preserve new line
+            "found   : number",
+            "required: string"));
+  }
+
   public void testAbstractMethodCall1() {
     // Converted from Closure style "goog.base" super call
     testTypesWithCommonExterns(
