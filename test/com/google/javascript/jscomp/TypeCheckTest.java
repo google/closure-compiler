@@ -2476,15 +2476,10 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "}",
             "/** @type {null} */ var a = firstOf('hi', 1);",
             ""),
-        ImmutableList.of(
-            // TODO(b/79707793): This will be fixed when transpilation of REST parameters moves
-            // after type checking.
-            "Bad type annotation. Unknown type T",
-            lines(
-                "initializing variable", // preserve newlinues
-                "found   : (number|string)",
-                "required: null")),
-        /* isError= */ false);
+        lines(
+            "initializing variable", // preserve newlines
+            "found   : (number|string)",
+            "required: null"));
   }
 
   // Test that when transpiling we don't use T in the body of f; it would cause a spurious

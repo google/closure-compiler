@@ -118,7 +118,6 @@ public class TranspilationPasses {
         // support the transpiled features.
         // TODO(b/73387406): Move each pass above here temporarily, then into
         // addEs6PostCheck Passes once the pass supports propagating type information
-        passes.add(es6RewriteRestAndSpread);
       }
     }
   }
@@ -140,6 +139,7 @@ public class TranspilationPasses {
     // TODO(b/73387406): Move passes here as typechecking & other check passes are updated to cope
     // with the features they transpile and as the passes themselves are updated to propagate type
     // information to the transpiled code.
+    passes.add(es6RewriteRestAndSpread);
     passes.add(lateConvertEs6ToEs3);
     passes.add(es6ForOf);
     passes.add(rewriteBlockScopedFunctionDeclaration);
