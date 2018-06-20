@@ -28,6 +28,22 @@ public class ConformanceWhitelister {
 
   public static ImmutableSet<String> getViolatingPaths(
       AbstractCompiler compiler, Node externs, Node ast, Requirement requirement) {
+    return getConformanceErrors(compiler, externs, ast, requirement)
+        .stream()
+        .map(e -> e.sourceName)
+        .collect(ImmutableSet.toImmutableSet());
+  }
+
+  public static ImmutableSet<Node> getViolatingNodes(
+      AbstractCompiler compiler, Node externs, Node ast, Requirement requirement) {
+    return getConformanceErrors(compiler, externs, ast, requirement)
+        .stream()
+        .map(e -> e.node)
+        .collect(ImmutableSet.toImmutableSet());
+  }
+
+  public static ImmutableList<JSError> getConformanceErrors(
+      AbstractCompiler compiler, Node externs, Node ast, Requirement requirement) {
     ConformanceViolationRecordingCompiler recordingCompiler =
         new ConformanceViolationRecordingCompiler(compiler);
     // Remove existing prefix whitelist entries, but keep regexps (which we don't re-add either).
@@ -45,11 +61,7 @@ public class ConformanceWhitelister {
         new CheckConformance(recordingCompiler, ImmutableList.of(cleanedConfig));
     check.process(externs, ast);
 
-    ImmutableSet.Builder<String> result = ImmutableSet.builder();
-    for (JSError e : recordingCompiler.getConformanceErrors()) {
-      result.add(e.sourceName);
-    }
-    return result.build();
+    return recordingCompiler.getConformanceErrors();
   }
 
   private static class ConformanceViolationRecordingCompiler extends ForwardingCompiler {
@@ -68,6 +80,8 @@ public class ConformanceWhitelister {
     public void report(JSError error) {
       if (error.getType().equals(CheckConformance.CONFORMANCE_ERROR)) {
         conformanceErrors.add(error);
+      } else if (error.getType().equals(CheckConformance.INVALID_REQUIREMENT_SPEC)) {
+        throw new IllegalArgumentException("Invalid conformance requirement" + error.description);
       } else {
         super.report(error);
       }

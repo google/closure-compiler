@@ -177,7 +177,8 @@ public final class SuggestedFix {
      */
     public Builder attachMatchedNodeInfo(Node node, AbstractCompiler compiler) {
       matchedNodeInfo =
-          MatchedNodeInfo.create(node, isInClosurizedFile(node, new NodeMetadata(compiler)));
+          MatchedNodeInfo.create(
+              node, RefactoringUtils.isInClosurizedFile(node, new NodeMetadata(compiler)));
       return this;
     }
 
@@ -917,28 +918,6 @@ public final class SuggestedFix {
           matchedNodeInfo, replacements.build(), description, alternatives.build());
     }
 
-    /** Looks for a goog.require(), goog.provide() or goog.module() call in the fix's file. */
-    private static boolean isInClosurizedFile(Node node, NodeMetadata metadata) {
-      Node script = NodeUtil.getEnclosingScript(node);
-
-      if (script == null) {
-        return false;
-      }
-
-      Node child = script.getFirstChild();
-      while (child != null) {
-        if (NodeUtil.isExprCall(child)) {
-          if (Matchers.googRequire().matches(child.getFirstChild(), metadata)) {
-            return true;
-          }
-          // goog.require or goog.module.
-        } else if (child.isVar() && child.getBooleanProp(Node.IS_NAMESPACE)) {
-          return true;
-        }
-        child = child.getNext();
-      }
-      return false;
-    }
   }
 
   /**
