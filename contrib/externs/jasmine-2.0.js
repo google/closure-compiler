@@ -466,10 +466,9 @@ function fit(description, handler) {}
 
 
 /**
- * @param {string} description
- * @param {function(this:jasmine.Spec, function())} handler
+ * @param {string=} description
  */
-function pending(description, handler) {}
+function pending(description) {}
 
 
 /**
