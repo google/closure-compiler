@@ -891,7 +891,7 @@ sinon.assert.calledThrice = function(spy) {};
  */
 sinon.assert.callCount = function(spy, count) {};
 
-/** @param {...SinonSpy} spies */
+/** @param {...!SinonSpy} spies */
 sinon.assert.callOrder = function(...spies) {};
 
 /**
@@ -968,14 +968,15 @@ sinon.assert.threw = function(spy, exception) {};
 sinon.assert.alwaysThrew = function(spy, exception) {};
 
 /**
- * @typedef {Object} SinonExposeOptions
- * @property {string=} prefix
- * @property {boolean=} includeFail
+ * @typedef {{
+ *     prefix: string|undefined,
+ *     includeFail: boolean|undefined
+ * }}
  */
 var SinonExposeOptions = {};
 
 /**
  * @param {*} obj
- * @param {SinonExposeOptions=} options
+ * @param {!SinonExposeOptions=} options
  **/
 sinon.assert.expose = function(obj, options) {};
