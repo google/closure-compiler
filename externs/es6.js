@@ -1683,3 +1683,65 @@ Atomics.wake = function(typedArray, index, count) {}
  * @return {number}
  */
 Atomics.xor = function(typedArray, index, value) {}
+
+
+/**
+ * @see https://tc39.github.io/proposal-async-iteration/
+ * @const {symbol}
+ */
+Symbol.asyncIterator;
+
+
+/**
+ * @interface
+ * @extends {AsyncIterable<VALUE>}
+ * @template VALUE
+ * @see https://tc39.github.io/proposal-async-iteration/
+ */
+function AsyncIterator() {}
+
+/**
+ * @param {?=} opt_value
+ * @return {!Promise<!IIterableResult<VALUE>>}
+ */
+AsyncIterator.prototype.next;
+
+
+/**
+ * @interface
+ * @template VALUE
+ */
+function AsyncIterable() {}
+
+
+/**
+ * @return {!AsyncIterator<VALUE>}
+ */
+AsyncIterable.prototype[Symbol.asyncIterator] = function() {};
+
+/**
+ * @interface
+ * @see https://tc39.github.io/proposal-async-iteration/
+ * @extends {AsyncIterator<VALUE>}
+ * @template VALUE
+ */
+function AsyncGenerator() {}
+
+/**
+ * @param {?=} opt_value
+ * @return {!Promise<!IIterableResult<VALUE>>}
+ * @override
+ */
+AsyncGenerator.prototype.next = function(opt_value) {};
+
+/**
+ * @param {VALUE} value
+ * @return {!Promise<!IIterableResult<VALUE>>}
+ */
+AsyncGenerator.prototype.return = function(value) {};
+
+/**
+ * @param {?} exception
+ * @return {!Promise<!IIterableResult<VALUE>>}
+ */
+AsyncGenerator.prototype.throw = function(exception) {};
