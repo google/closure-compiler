@@ -108,6 +108,7 @@ public final class GwtRunner {
     String moduleResolutionMode;
     String jsOutputFile;
     String[] formatting;
+    String errorFormat;
     boolean sourceMapIncludeContent;
     boolean parseInlineSourceMaps;
     String[] chunk;
@@ -172,6 +173,7 @@ public final class GwtRunner {
     defaultFlags.moduleResolutionMode = "BROWSER";
     defaultFlags.jsOutputFile = "compiled.js";
     defaultFlags.formatting = null;
+    defaultFlags.errorFormat = "STANDARD";
     defaultFlags.sourceMapIncludeContent = false;
     defaultFlags.parseInlineSourceMaps = true;
     defaultFlags.chunk = null;
@@ -552,6 +554,14 @@ public final class GwtRunner {
       }
     }
 
+    // Only one error format is supported by the JS version. However support the flag as a
+    // noop to make it easy to switch between the Java and JS versions.
+    if (flags.errorFormat != null
+        && flags.errorFormat != "STANDARD"
+        && flags.errorFormat != "JSON") {
+      throw new RuntimeException("Unknown errorFormat option: " + flags.errorFormat);
+    }
+
     options.setSourceMapIncludeSourcesContent(flags.sourceMapIncludeContent);
     options.setParseInlineSourceMaps(flags.parseInlineSourceMaps);
     options.setAngularPass(flags.angularPass);
@@ -648,6 +658,7 @@ public final class GwtRunner {
       sourceMaps = buildSourceMaps(flags.jsCode, "Input_");
     }
 
+    ImmutableMap.Builder<String, String> inputPathByWebpackId = new ImmutableMap.Builder<>();
     if (inputs != null) {
       List<SourceFile> sourceFiles = fromFileArray(inputs, "Input_");
       ImmutableMap<String, SourceMapInput> inputSourceMaps = buildSourceMaps(inputs, "Input_");
@@ -664,6 +675,12 @@ public final class GwtRunner {
         tempMaps.putAll(inputSourceMaps);
         sourceMaps = ImmutableMap.copyOf(tempMaps);
       }
+
+      for (int i = 0; i < inputs.length; i++) {
+        if (inputs[i].webpackId != null && inputs[i].path != null) {
+          inputPathByWebpackId.put(inputs[i].webpackId, inputs[i].path);
+        }
+      }
     }
 
     CompilerOptions options = new CompilerOptions();
@@ -677,6 +694,7 @@ public final class GwtRunner {
 
     NodeErrorManager errorManager = new NodeErrorManager();
     Compiler compiler = new Compiler(new NodePrintStream());
+    compiler.initWebpackMap(inputPathByWebpackId.build());
     compiler.setErrorManager(errorManager);
 
     List<String> chunkSpecs = new ArrayList<>();

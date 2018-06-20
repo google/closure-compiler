@@ -3511,7 +3511,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     return;
   }
 
-  void initWebpackMap(ImmutableMap<String, String> inputPathByWebpackId) {
+  public void initWebpackMap(ImmutableMap<String, String> inputPathByWebpackId) {
     this.inputPathByWebpackId = inputPathByWebpackId;
   }
 
