@@ -836,7 +836,7 @@ public class CompilerOptions implements Serializable {
 
   boolean checksOnly;
 
-  static enum OutputJs {
+  public static enum OutputJs {
     // Don't output anything.
     NONE,
     // Output a "sentinel" file containing just a comment.
@@ -1763,7 +1763,7 @@ public class CompilerOptions implements Serializable {
     this.checksOnly = checksOnly;
   }
 
-  void setOutputJs(OutputJs outputJs) {
+  public void setOutputJs(OutputJs outputJs) {
     this.outputJs = outputJs;
   }
 
@@ -2833,6 +2833,10 @@ public class CompilerOptions implements Serializable {
             .add(ResourceLoader.loadGlobalConformance(CompilerOptions.class))
             .addAll(configs)
             .build();
+  }
+
+  public void clearConformanceConfigs() {
+    this.conformanceConfigs = ImmutableList.of();
   }
 
   /**

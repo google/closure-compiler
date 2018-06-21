@@ -25,6 +25,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.gwt.core.client.JavaScriptObject;
 import com.google.javascript.jscomp.BasicErrorManager;
 import com.google.javascript.jscomp.CheckLevel;
+import com.google.javascript.jscomp.ClosureCodingConvention;
 import com.google.javascript.jscomp.CommandLineRunnerUtils;
 import com.google.javascript.jscomp.CommandLineRunnerUtils.JsModuleSpec;
 import com.google.javascript.jscomp.CompilationLevel;
@@ -35,11 +36,13 @@ import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.CompilerOptions.TracerMode;
 import com.google.javascript.jscomp.DefaultExterns;
 import com.google.javascript.jscomp.DependencyOptions;
+import com.google.javascript.jscomp.DiagnosticGroups;
 import com.google.javascript.jscomp.DiagnosticType;
 import com.google.javascript.jscomp.JSError;
 import com.google.javascript.jscomp.JSModule;
 import com.google.javascript.jscomp.ModuleIdentifier;
 import com.google.javascript.jscomp.PropertyRenamingPolicy;
+import com.google.javascript.jscomp.ShowByPathWarningsGuard;
 import com.google.javascript.jscomp.SourceFile;
 import com.google.javascript.jscomp.SourceMap;
 import com.google.javascript.jscomp.SourceMapInput;
@@ -47,6 +50,7 @@ import com.google.javascript.jscomp.VariableRenamingPolicy;
 import com.google.javascript.jscomp.WarningLevel;
 import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
 import com.google.javascript.jscomp.deps.SourceCodeEscapers;
+import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.resources.ResourceLoader;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -78,12 +82,15 @@ public final class GwtRunner {
     boolean angularPass;
     boolean applyInputSourceMaps;
     boolean assumeFunctionWrapper;
+    boolean checksOnly;
     String[] chunk;
     String[] chunkWrapper;
     String chunkOutputPathPrefix;
     String compilationLevel;
     boolean dartPass;
+    boolean debug;
     JsMap defines;
+    String[] define;
     String dependencyMode;
     String[] entryPoint;
     String env;
@@ -91,13 +98,17 @@ public final class GwtRunner {
     String[] extraAnnotationNames;
     String[] formatting;
     boolean generateExports;
+    String[] hideWarningsFor;
+    String isolationMode;
+    String[] jscompError;
+    String[] jscompOff;
+    String[] jscompWarning;
+    String[] jsModuleRoot;
+    String jsOutputFile;
     String languageIn;
     String languageOut;
-    boolean checksOnly;
+    String moduleResolution;
     boolean newTypeInf;
-    String isolationMode;
-    String jsOutputFile;
-    String moduleResolutionMode;
     String outputWrapper;
     boolean parseInlineSourceMaps;
     @Deprecated
@@ -119,11 +130,6 @@ public final class GwtRunner {
     File[] jsCode;
     File[] externs;
     boolean createSourceMap;
-
-    // These flags do not apply to the JS compiler and specifying them is a noop
-    // They are listed here to make it easy to switch from the java version
-    String errorFormat;
-    String jsonStreams;
   }
 
   /**
@@ -152,22 +158,27 @@ public final class GwtRunner {
     defaultFlags.compilationLevel = "SIMPLE";
     defaultFlags.createSourceMap = true;
     defaultFlags.dartPass = false;
+    defaultFlags.debug = false;
+    defaultFlags.define = null;
     defaultFlags.defines = null;
     defaultFlags.dependencyMode = null;
     defaultFlags.entryPoint = null;
     defaultFlags.env = "BROWSER";
-    defaultFlags.errorFormat = "STANDARD";
     defaultFlags.exportLocalPropertyDefinitions = false;
     defaultFlags.extraAnnotationNames = null;
     defaultFlags.externs = null;
     defaultFlags.formatting = null;
     defaultFlags.generateExports = false;
+    defaultFlags.hideWarningsFor = null;
     defaultFlags.jsCode = null;
+    defaultFlags.jscompError = null;
+    defaultFlags.jscompOff = null;
+    defaultFlags.jscompWarning = null;
+    defaultFlags.jsModuleRoot = null;
     defaultFlags.jsOutputFile = "compiled.js";
-    defaultFlags.jsonStreams = "BOTH";
     defaultFlags.languageIn = "ECMASCRIPT_2017";
     defaultFlags.languageOut = "ECMASCRIPT5";
-    defaultFlags.moduleResolutionMode = "BROWSER";
+    defaultFlags.moduleResolution = "BROWSER";
     defaultFlags.newTypeInf = false;
     defaultFlags.isolationMode = "NONE";
     defaultFlags.outputWrapper = null;
@@ -283,7 +294,7 @@ public final class GwtRunner {
 
     Map<String, String> parsedModuleWrappers =
         CommandLineRunnerUtils.parseChunkWrappers(
-            Arrays.asList(flags.chunkWrapper == null ? new String[] {} : flags.chunkWrapper),
+            Arrays.asList(getStringArray(flags, "chunkWrapper")),
             chunks);
 
     for (JSModule c : chunks) {
@@ -428,38 +439,50 @@ public final class GwtRunner {
     return builder.build();
   }
 
-  private static DependencyOptions createDependencyOptions(
-      CompilerOptions.DependencyMode dependencyMode,
-      List<ModuleIdentifier> entryPoints) {
-    // Copied from from AbstractCommandLineRunner.java.
-    if (dependencyMode == CompilerOptions.DependencyMode.STRICT) {
-      if (entryPoints.isEmpty()) {
-        throw new RuntimeException(
-            "When dependencyMode=STRICT, you must specify at least one entry point");
+  private static void applyWarnings(
+      String[] warningGuards,
+      CompilerOptions options,
+      DiagnosticGroups diagnosticGroups,
+      CheckLevel checkLevel) {
+    for (String warningGuardName : warningGuards) {
+      if ("*".equals(warningGuardName)) {
+        for (String groupName : diagnosticGroups.getRegisteredGroups().keySet()) {
+          if (!DiagnosticGroups.wildcardExcludedGroups.contains(groupName)) {
+            diagnosticGroups.setWarningLevel(options, groupName, checkLevel);
+          }
+        }
+      } else {
+        diagnosticGroups.setWarningLevel(options, warningGuardName, checkLevel);
       }
-      return new DependencyOptions()
-          .setDependencyPruning(true)
-          .setDependencySorting(true)
-          .setMoocherDropping(true)
-          .setEntryPoints(entryPoints);
-    } else if (dependencyMode == CompilerOptions.DependencyMode.LOOSE || !entryPoints.isEmpty()) {
-      return new DependencyOptions()
-          .setDependencyPruning(true)
-          .setDependencySorting(true)
-          .setMoocherDropping(false)
-          .setEntryPoints(entryPoints);
     }
-    return null;
   }
 
-  private static void applyDefaultOptions(CompilerOptions options) {
-    CompilationLevel.SIMPLE_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
-    WarningLevel.DEFAULT.setOptionsForWarningLevel(options);
-    options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
-    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
-  }
+  private static void applyOptionsFromFlags(
+      CompilerOptions options, Flags flags, DiagnosticGroups diagnosticGroups) {
 
-  private static void applyOptionsFromFlags(CompilerOptions options, Flags flags) {
+    // order matches createOptions in CommandLineRunner.java
+
+    LanguageMode languageIn = LanguageMode.fromString(flags.languageIn);
+    if (languageIn != null) {
+      options.setLanguageIn(languageIn);
+    } else {
+      throw new RuntimeException(
+          "Bad value for languageIn: " + flags.languageIn);
+    }
+    LanguageMode languageOut = LanguageMode.fromString(flags.languageOut);
+    if (languageOut != null) {
+      options.setLanguageOut(languageOut);
+    } else {
+      throw new RuntimeException(
+          "Bad value for languageOut: " + flags.languageOut);
+    }
+
+    options.setCodingConvention(new ClosureCodingConvention());
+
+    if (flags.extraAnnotationNames != null) {
+      options.setExtraAnnotationNames(Arrays.asList(flags.extraAnnotationNames));
+    }
+
     CompilationLevel level = DEFAULT_COMPILATION_LEVEL;
     if (flags.compilationLevel != null) {
       level = CompilationLevel.fromString(Ascii.toUpperCase(flags.compilationLevel));
@@ -473,18 +496,9 @@ public final class GwtRunner {
           "renaming cannot be disabled when ADVANCED_OPTIMIZATIONS is used");
     }
     level.setOptionsForCompilationLevel(options);
-    if (flags.assumeFunctionWrapper) {
-      level.setWrappedOutputOptimizations(options);
+    if (flags.debug) {
+      level.setDebugOptionsForCompilationLevel(options);
     }
-    if (flags.useTypesForOptimization) {
-      level.setTypeBasedOptimizationOptions(options);
-    }
-
-    WarningLevel warningLevel = WarningLevel.DEFAULT;
-    if (flags.warningLevel != null) {
-      warningLevel = WarningLevel.valueOf(flags.warningLevel);
-    }
-    warningLevel.setOptionsForWarningLevel(options);
 
     CompilerOptions.Environment environment = CompilerOptions.Environment.BROWSER;
     if (flags.env != null) {
@@ -492,47 +506,13 @@ public final class GwtRunner {
     }
     options.setEnvironment(environment);
 
-    CompilerOptions.DependencyMode dependencyMode = CompilerOptions.DependencyMode.NONE;
-    if (flags.dependencyMode != null) {
-      dependencyMode =
-          CompilerOptions.DependencyMode.valueOf(Ascii.toUpperCase(flags.dependencyMode));
-    }
-    List<ModuleIdentifier> entryPoints = createEntryPoints(getStringArray(flags, "entryPoint"));
-    DependencyOptions dependencyOptions = createDependencyOptions(dependencyMode, entryPoints);
-    if (dependencyOptions != null) {
-      options.setDependencyOptions(dependencyOptions);
+    options.setChecksOnly(flags.checksOnly);
+    if (flags.checksOnly) {
+      options.setOutputJs(CompilerOptions.OutputJs.NONE);
     }
 
-    LanguageMode languageIn = LanguageMode.fromString(flags.languageIn);
-    if (languageIn != null) {
-      options.setLanguageIn(languageIn);
-    }
-    LanguageMode languageOut = LanguageMode.fromString(flags.languageOut);
-    if (languageOut != null) {
-      options.setLanguageOut(languageOut);
-    }
-
-    if (flags.createSourceMap) {
-      options.setSourceMapOutputPath("%output%.map");
-    }
-
-    if (flags.defines != null) {
-      // CompilerOptions also validates types, but uses Preconditions and therefore won't generate
-      // a useful exception.
-      flags.defines.validatePrimitiveTypes();
-      options.setDefineReplacements(flags.defines.asMap());
-    }
-
-    if (flags.extraAnnotationNames != null) {
-      options.setExtraAnnotationNames(Arrays.asList(flags.extraAnnotationNames));
-    }
-
-    if (flags.tracerMode != null) {
-      options.setTracerMode(TracerMode.valueOf(flags.tracerMode));
-    }
-
-    if (flags.moduleResolutionMode != null) {
-      options.setModuleResolutionMode(ResolutionMode.valueOf(flags.moduleResolutionMode));
+    if (flags.useTypesForOptimization) {
+      level.setTypeBasedOptimizationOptions(options);
     }
 
     if (flags.isolationMode != null
@@ -540,6 +520,18 @@ public final class GwtRunner {
       flags.outputWrapper = "(function(){%output%}).call(this);";
       flags.assumeFunctionWrapper = true;
     }
+    if (flags.assumeFunctionWrapper) {
+      level.setWrappedOutputOptimizations(options);
+    }
+
+    options.setGenerateExports(flags.generateExports);
+    options.setExportLocalPropertyDefinitions(flags.exportLocalPropertyDefinitions);
+
+    WarningLevel warningLevel = WarningLevel.DEFAULT;
+    if (flags.warningLevel != null) {
+      warningLevel = WarningLevel.valueOf(flags.warningLevel);
+    }
+    warningLevel.setOptionsForWarningLevel(options);
 
     if (flags.formatting != null) {
       List<String> formattingOptions = Arrays.asList(getStringArray(flags, "formatting"));
@@ -560,44 +552,94 @@ public final class GwtRunner {
       }
     }
 
-    // Only one error format is supported by the JS version. However support the flag as a
-    // noop to make it easy to switch between the Java and JS versions.
-    if (flags.errorFormat != null
-        && !("STANDARD".equals(flags.errorFormat) || "JSON".equals(flags.errorFormat))) {
-      throw new RuntimeException("Unknown errorFormat option: " + flags.errorFormat);
-    }
+    options.setClosurePass(flags.processClosurePrimitives);
 
-    // Only one error format is supported by the JS version. However support the flag as a
-    // noop to make it easy to switch between the Java and JS versions.
-    if ("BOTH".equals(flags.jsonStreams)) {
-      throw new RuntimeException("Unknown errorFormat option: " + flags.errorFormat);
-    }
-
-    options.setSourceMapIncludeSourcesContent(flags.sourceMapIncludeContent);
-    options.setParseInlineSourceMaps(flags.parseInlineSourceMaps);
     options.setAngularPass(flags.angularPass);
-    options.setApplyInputSourceMaps(flags.applyInputSourceMaps);
-    options.setChecksOnly(flags.checksOnly);
-    options.setDartPass(flags.dartPass);
-    options.setExportLocalPropertyDefinitions(flags.exportLocalPropertyDefinitions);
-    options.setGenerateExports(flags.generateExports);
+
     if (flags.polymerPass) {
       options.setPolymerVersion(1);
     } else if (flags.polymerVersion != null) {
       options.setPolymerVersion(flags.polymerVersion.intValue());
     }
-    options.setPreserveTypeAnnotations(flags.preserveTypeAnnotations);
-    options.setClosurePass(flags.processClosurePrimitives);
-    options.setProcessCommonJSModules(flags.processCommonJsModules);
+
+    options.setDartPass(flags.dartPass);
+
     options.setRenamePrefixNamespace(flags.renamePrefixNamespace);
+
+    options.setPreserveTypeAnnotations(flags.preserveTypeAnnotations);
+
+    options.setRewritePolyfills(flags.rewritePolyfills
+        && options.getLanguageIn().toFeatureSet().contains(FeatureSet.ES6));
+
+    // We don't support conformance configs
+    options.clearConformanceConfigs();
+
+    if (flags.tracerMode != null) {
+      options.setTracerMode(TracerMode.valueOf(flags.tracerMode));
+    }
+
+    options.setSourceMapIncludeSourcesContent(flags.sourceMapIncludeContent);
+
+    if (flags.moduleResolution != null) {
+      options.setModuleResolutionMode(ResolutionMode.valueOf(flags.moduleResolution));
+    }
+
     if (!flags.renaming) {
       options.setVariableRenaming(VariableRenamingPolicy.OFF);
       options.setPropertyRenaming(PropertyRenamingPolicy.OFF);
     }
-  }
 
-  private static void disableUnsupportedOptions(CompilerOptions options) {
-    options.getDependencyOptions().setDependencySorting(false);
+
+    // order matches setRunOptions in AbstractCommandLineRunner.java
+
+    applyWarnings(getStringArray(flags, "jscompOff"), options, diagnosticGroups, CheckLevel.OFF);
+    applyWarnings(getStringArray(flags, "jscompWarning"), options, diagnosticGroups, CheckLevel.WARNING);
+    applyWarnings(getStringArray(flags, "jscompError"), options, diagnosticGroups, CheckLevel.ERROR);
+
+
+    if (flags.hideWarningsFor != null) {
+      options.addWarningsGuard(
+          new ShowByPathWarningsGuard(
+              getStringArray(flags, "hideWarningsFor"),
+              ShowByPathWarningsGuard.ShowType.EXCLUDE));
+    }
+
+    if (flags.define != null) {
+      CommandLineRunnerUtils.createDefineOrTweakReplacements(
+          Arrays.asList(getStringArray(flags, "define")), options, false);
+    }
+
+    if (flags.defines != null) {
+      // CompilerOptions also validates types, but uses Preconditions and therefore won't generate
+      // a useful exception.
+      flags.defines.validatePrimitiveTypes();
+      options.setDefineReplacements(flags.defines.asMap());
+    }
+
+    CompilerOptions.DependencyMode dependencyMode = CompilerOptions.DependencyMode.NONE;
+    if (flags.dependencyMode != null) {
+      dependencyMode =
+          CompilerOptions.DependencyMode.valueOf(Ascii.toUpperCase(flags.dependencyMode));
+    }
+    List<ModuleIdentifier> entryPoints = createEntryPoints(getStringArray(flags, "entryPoint"));
+    DependencyOptions dependencyOptions =
+        CommandLineRunnerUtils.createDependencyOptions(dependencyMode, entryPoints);
+    if (dependencyOptions != null) {
+      options.setDependencyOptions(dependencyOptions);
+    }
+
+    options.setTrustedStrings(true);
+
+    if (flags.createSourceMap) {
+      options.setSourceMapOutputPath("%output%.map");
+    }
+    options.setSourceMapIncludeSourcesContent(flags.sourceMapIncludeContent);
+    options.setParseInlineSourceMaps(flags.parseInlineSourceMaps);
+    options.setApplyInputSourceMaps(flags.applyInputSourceMaps);
+
+    options.setProcessCommonJSModules(flags.processCommonJsModules);
+
+    options.setModuleRoots(Arrays.asList(getStringArray(flags, "jsModuleRoot")));
   }
 
   private static List<SourceFile> fromFileArray(File[] src, String unknownPrefix) {
@@ -694,17 +736,15 @@ public final class GwtRunner {
       }
     }
 
+    Compiler compiler = new Compiler(new NodePrintStream());
     CompilerOptions options = new CompilerOptions();
-    applyDefaultOptions(options);
-    applyOptionsFromFlags(options, flags);
+    applyOptionsFromFlags(options, flags, compiler.getDiagnosticGroups());
     options.setInputSourceMaps(sourceMaps);
-    disableUnsupportedOptions(options);
 
     List<SourceFile> externs = fromFileArray(flags.externs, "Extern_");
     externs.addAll(createExterns(options.getEnvironment()));
 
     NodeErrorManager errorManager = new NodeErrorManager();
-    Compiler compiler = new Compiler(new NodePrintStream());
     compiler.initWebpackMap(inputPathByWebpackId.build());
     compiler.setErrorManager(errorManager);
 

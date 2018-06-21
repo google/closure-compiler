@@ -287,33 +287,6 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
     return compiler.getDiagnosticGroups();
   }
 
-  /**
-   * A helper function for creating the dependency options object.
-   */
-  static DependencyOptions createDependencyOptions(
-      CompilerOptions.DependencyMode dependencyMode,
-      List<ModuleIdentifier> entryPoints) {
-    if (dependencyMode == CompilerOptions.DependencyMode.STRICT) {
-      if (entryPoints.isEmpty()) {
-        throw new FlagUsageException(
-            "When dependency_mode=STRICT, you must " + "specify at least one entry_point");
-      }
-
-      return new DependencyOptions()
-          .setDependencyPruning(true)
-          .setDependencySorting(true)
-          .setMoocherDropping(true)
-          .setEntryPoints(entryPoints);
-    } else if (dependencyMode == CompilerOptions.DependencyMode.LOOSE || !entryPoints.isEmpty()) {
-      return new DependencyOptions()
-          .setDependencyPruning(true)
-          .setDependencySorting(true)
-          .setMoocherDropping(false)
-          .setEntryPoints(entryPoints);
-    }
-    return null;
-  }
-
   protected abstract void addWhitelistWarningsGuard(
       CompilerOptions options, File whitelistFile);
 
@@ -358,13 +331,13 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
           ShowByPathWarningsGuard.ShowType.EXCLUDE));
     }
 
-    createDefineOrTweakReplacements(config.define, options, false);
+    CommandLineRunnerUtils.createDefineOrTweakReplacements(config.define, options, false);
 
     options.setTweakProcessing(config.tweakProcessing);
-    createDefineOrTweakReplacements(config.tweak, options, true);
+    CommandLineRunnerUtils.createDefineOrTweakReplacements(config.tweak, options, true);
 
     DependencyOptions depOptions =
-        createDependencyOptions(config.dependencyMode, config.entryPoints);
+        CommandLineRunnerUtils.createDependencyOptions(config.dependencyMode, config.entryPoints);
     if (depOptions != null) {
       options.setDependencyOptions(depOptions);
     }
@@ -1672,84 +1645,6 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
       } else {
         compiler.getStringMap().save(config.stringMapOutputPath);
       }
-    }
-  }
-
-  /**
-   * Create a map of constant names to constant values from a textual
-   * description of the map.
-   *
-   * @param definitions A list of overriding definitions for defines in
-   *     the form {@code <name>[=<val>]}, where {@code <val>} is a number, boolean, or
-   *     single-quoted string without single quotes.
-   */
-  @VisibleForTesting
-  static void createDefineOrTweakReplacements(List<String> definitions,
-      CompilerOptions options, boolean tweaks) {
-    // Parse the definitions
-    for (String override : definitions) {
-      String[] assignment = override.split("=", 2);
-      String defName = assignment[0];
-
-      if (defName.length() > 0) {
-        String defValue = assignment.length == 1 ? "true" : assignment[1];
-
-        boolean isTrue = defValue.equals("true");
-        boolean isFalse = defValue.equals("false");
-        if (isTrue || isFalse) {
-          if (tweaks) {
-            options.setTweakToBooleanLiteral(defName, isTrue);
-          } else {
-            options.setDefineToBooleanLiteral(defName, isTrue);
-          }
-          continue;
-        } else if (defValue.length() > 1
-            && ((defValue.charAt(0) == '\'' &&
-                defValue.charAt(defValue.length() - 1) == '\'')
-                || (defValue.charAt(0) == '\"' &&
-                    defValue.charAt(defValue.length() - 1) == '\"'))) {
-          // If the value starts and ends with a single quote,
-          // we assume that it's a string.
-          String maybeStringVal =
-              defValue.substring(1, defValue.length() - 1);
-          if (maybeStringVal.indexOf(defValue.charAt(0)) == -1) {
-            if (tweaks) {
-              options.setTweakToStringLiteral(defName, maybeStringVal);
-            } else {
-              options.setDefineToStringLiteral(defName, maybeStringVal);
-            }
-            continue;
-          }
-        } else {
-          try {
-            double value = Double.parseDouble(defValue);
-            if (tweaks) {
-              options.setTweakToDoubleLiteral(defName, value);
-            } else {
-              options.setDefineToDoubleLiteral(defName, value);
-            }
-            continue;
-          } catch (NumberFormatException e) {
-            // do nothing, it will be caught at the end
-          }
-
-          if (defValue.length() > 0) {
-            if (tweaks) {
-              options.setTweakToStringLiteral(defName, defValue);
-            } else {
-              options.setDefineToStringLiteral(defName, defValue);
-            }
-            continue;
-          }
-        }
-      }
-
-      if (tweaks) {
-        throw new RuntimeException(
-            "--tweak flag syntax invalid: " + override);
-      }
-      throw new RuntimeException(
-          "--define flag syntax invalid: " + override);
     }
   }
 

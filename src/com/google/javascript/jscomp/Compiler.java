@@ -2764,7 +2764,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
    * The warning classes that are available from the command-line, and
    * are suppressible by the {@code @suppress} annotation.
    */
-  protected DiagnosticGroups getDiagnosticGroups() {
+  public DiagnosticGroups getDiagnosticGroups() {
     return new DiagnosticGroups();
   }
 

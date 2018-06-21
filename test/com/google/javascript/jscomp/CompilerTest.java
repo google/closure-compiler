@@ -867,7 +867,7 @@ public final class CompilerTest extends TestCase {
   static void assertCreateDefinesThrowsException(List<String> defines) {
     try {
       CompilerOptions options = new CompilerOptions();
-      AbstractCommandLineRunner.createDefineOrTweakReplacements(defines,
+      CommandLineRunnerUtils.createDefineOrTweakReplacements(defines,
           options, false);
     } catch (RuntimeException e) {
       return;
@@ -879,7 +879,7 @@ public final class CompilerTest extends TestCase {
   static void assertDefineOverrides(Map<String, Node> expected,
       List<String> defines) {
     CompilerOptions options = new CompilerOptions();
-    AbstractCommandLineRunner.createDefineOrTweakReplacements(defines, options,
+    CommandLineRunnerUtils.createDefineOrTweakReplacements(defines, options,
         false);
     Map<String, Node> actual = options.getDefineReplacements();
 
