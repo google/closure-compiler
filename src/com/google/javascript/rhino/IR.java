@@ -549,6 +549,24 @@ public class IR {
     return objectlit;
   }
 
+  public static Node objectPattern(Node... keys) {
+    Node objectPattern = new Node(Token.OBJECT_PATTERN);
+    for (Node key : keys) {
+      checkState(key.isStringKey() || key.isComputedProp() || key.isRest());
+      objectPattern.addChildToBack(key);
+    }
+    return objectPattern;
+  }
+
+  public static Node arrayPattern(Node... keys) {
+    Node arrayPattern = new Node(Token.ARRAY_PATTERN);
+    for (Node key : keys) {
+      checkState(key.isRest() || key.isValidAssignmentTarget());
+      arrayPattern.addChildToBack(key);
+    }
+    return arrayPattern;
+  }
+
   public static Node computedProp(Node key, Node value) {
     checkState(mayBeExpression(key), key);
     checkState(mayBeExpression(value), value);

@@ -864,7 +864,7 @@ public final class AstValidator implements CompilerPass {
     validateNodeType(Token.PARAM_LIST, n);
     for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
       if (c.isRest()) {
-        validateRest(Token.PARAM_LIST, c);
+        validateRestParameters(Token.PARAM_LIST, c);
       } else if (c.isDefaultValue()) {
         validateDefaultValue(Token.PARAM_LIST, c);
       } else {
@@ -894,13 +894,27 @@ public final class AstValidator implements CompilerPass {
     }
   }
 
+  private void validateRestParameters(Token contextType, Node n) {
+    validateFeature(Feature.REST_PARAMETERS, n);
+    validateRest(contextType, n);
+  }
+
+  private void validateArrayPatternRest(Token contextType, Node n) {
+    validateFeature(Feature.ARRAY_PATTERN_REST, n);
+    validateRest(contextType, n);
+  }
+
+  private void validateObjectPatternRest(Token contextType, Node n) {
+    validateFeature(Feature.OBJECT_PATTERN_REST, n);
+    validateRest(contextType, n);
+  }
+
   /**
    * @param contextType A {@link Token} constant value indicating that {@code n} should be validated
    *     appropriately for a descendant of a {@link Node} of this type.
    * @param n
    */
   private void validateRest(Token contextType, Node n) {
-    validateFeature(Feature.REST_PARAMETERS, n);
     validateNodeType(Token.REST, n);
     validateChildCount(n);
     validateLHS(contextType, n.getFirstChild());
@@ -940,6 +954,11 @@ public final class AstValidator implements CompilerPass {
     validateMinimumChildCount(n, 1);
     for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
       validateNameDeclarationChild(type, c);
+    }
+    if (type == Token.LET) {
+      validateFeature(Feature.LET_DECLARATIONS, n);
+    } else if (type == Token.CONST) {
+      validateFeature(Feature.CONST_DECLARATIONS, n);
     }
   }
 
@@ -1033,7 +1052,7 @@ public final class AstValidator implements CompilerPass {
           validateDefaultValue(type, c);
           break;
         case REST:
-          validateRest(type, c);
+          validateArrayPatternRest(type, c);
           break;
         case EMPTY:
           validateChildless(c);
@@ -1053,7 +1072,7 @@ public final class AstValidator implements CompilerPass {
           validateObjectPatternStringKey(type, c);
           break;
         case REST:
-          validateRest(type, c);
+          validateObjectPatternRest(type, c);
           break;
         case COMPUTED_PROP:
           validateObjectPatternComputedPropKey(type, c);

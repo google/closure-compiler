@@ -172,6 +172,26 @@ public final class AstValidatorTest extends CompilerTestCase {
     expectInvalid(n, Check.STATEMENT);
   }
 
+  public void testInvalidConstLanguageLevel() {
+    Node n = IR.constNode(IR.name("x"), IR.number(3));
+
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT5);
+    expectInvalid(n, Check.STATEMENT);
+
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
+    expectValid(n, Check.STATEMENT);
+  }
+
+  public void testInvalidLetLanguageLevel() {
+    Node n = IR.let(IR.name("x"), IR.number(3));
+
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT5);
+    expectInvalid(n, Check.STATEMENT);
+
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
+    expectValid(n, Check.STATEMENT);
+  }
+
   public void testNewTargetIsValidExpression() {
     Node n = new Node(Token.NEW_TARGET);
     expectValid(n, Check.EXPRESSION);
@@ -324,6 +344,26 @@ public final class AstValidatorTest extends CompilerTestCase {
     valid("({a:b().c = 1, ...rest} = obj);");
     valid("({a:b['c'] = 1, ...rest} = obj);");
     valid("({a:b()['c'] = 1, ...rest} = obj);");
+  }
+
+  public void testInvalidObjectRestForLanguageLevel() {
+    Node n = IR.assign(IR.objectPattern(IR.rest(IR.name("x"))), IR.objectlit());
+
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
+    expectInvalid(n, Check.EXPRESSION);
+
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2018);
+    expectValid(n, Check.EXPRESSION);
+  }
+
+  public void testInvalidArrayRestForLanguageLevel() {
+    Node n = IR.assign(IR.arrayPattern(IR.rest(IR.name("x"))), IR.arraylit());
+
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT5);
+    expectInvalid(n, Check.EXPRESSION);
+
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
+    expectValid(n, Check.EXPRESSION);
   }
 
   public void testInvalidDestructuringAssignment() {
