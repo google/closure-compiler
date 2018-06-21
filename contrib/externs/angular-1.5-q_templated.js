@@ -35,6 +35,7 @@ angular.$q = function() {};
 /**
  * @constructor
  * @template T
+ * @implements {IThenable<T>}
  */
 angular.$q.Promise = function() {};
 
@@ -48,6 +49,7 @@ angular.$q.Promise = function() {};
  * @param {?(function(?): ?)=} opt_onRejected
  * @param {?(function(?): ?)=} opt_notifyCallback
  * @return {RESULT}
+ * @override
  * @template THIS
  * @template VALUE
  * @template RESULT := type('angular.$q.Promise',
