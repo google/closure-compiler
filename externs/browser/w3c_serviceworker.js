@@ -72,6 +72,15 @@ NavigationPreloadManager.prototype.getState = function() {};
  */
 var NavigationPreloadState;
 
+/** @record */
+function PushSubscriptionOptions() {}
+
+/** @type {ArrayBuffer|undefined} */
+PushSubscriptionOptions.prototype.applicationServerKey;
+
+/** @type {boolean|undefined} */
+PushSubscriptionOptions.prototype.userVisibleOnly;
+
 /**
  * @see https://w3c.github.io/push-api/
  * @constructor
@@ -87,6 +96,9 @@ PushSubscription.prototype.endpoint;
  * @type {string}
  */
 PushSubscription.prototype.subscriptionId;
+
+/** @type {!PushSubscriptionOptions} */
+PushSubscription.prototype.options;
 
 /** @return {!Promise<boolean>} */
 PushSubscription.prototype.unsubscribe = function() {};
@@ -149,12 +161,6 @@ SyncEvent.prototype.tag;
 
 /** @type {boolean} */
 SyncEvent.prototype.lastChance;
-
-/**
- * @typedef {{userVisibleOnly: (boolean|undefined)}}
- * @see https://w3c.github.io/push-api/#idl-def-PushSubscriptionOptions
- */
-var PushSubscriptionOptions;
 
 /**
  * @see http://www.w3.org/TR/push-api/#idl-def-PushMessageData
