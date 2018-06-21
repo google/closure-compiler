@@ -331,8 +331,8 @@ public final class Es6RewriteModulesToCommonJsModulesTest extends CompilerTestCa
         lines(
             "$jscomp.registerAndLoadModule(function($$require, $$exports, $$module) {",
             "  'test pragma';",
-            "  var module$other = $$require('other.js');",
-            "  use(module$other, module$other.y);",
+            "  var x = $$require('other.js');",
+            "  use(x, x.y);",
             "}, 'testcode', ['other.js']);"));
 
     test(
@@ -343,6 +343,15 @@ public final class Es6RewriteModulesToCommonJsModulesTest extends CompilerTestCa
             "  var module$bogus = $$require('bogus.js');",
             "  use(module$bogus.x, module$bogus.y, module$bogus.default);",
             "}, 'testcode', ['bogus.js']);"));
+
+    test(
+        "import Default, * as x from 'other.js'; use(x, x.y, Default);",
+        lines(
+            "$jscomp.registerAndLoadModule(function($$require, $$exports, $$module) {",
+            "  'test pragma';",
+            "  var x = $$require('other.js');",
+            "  use(x, x.y, x.default);",
+            "}, 'testcode', ['other.js']);"));
 
     test(
         "import First from 'other.js'; import {Second} from 'other.js'; use(First, Second);",
@@ -519,7 +528,7 @@ public final class Es6RewriteModulesToCommonJsModulesTest extends CompilerTestCa
                 lines(
                     "$jscomp.registerAndLoadModule(function($$require, $$exports, $$module) {",
                     "  'test pragma';",
-                    "  var module$foo = $$require('foo.js');",
+                    "  var foo = $$require('foo.js');",
                     "}, 'not/root/test.js', ['foo.js']);"))));
   }
 
@@ -535,7 +544,7 @@ public final class Es6RewriteModulesToCommonJsModulesTest extends CompilerTestCa
                 lines(
                     "$jscomp.registerAndLoadModule(function($$require, $$exports, $$module) {",
                     "  'test pragma';",
-                    "  var module$foo = $$require('foo.js');",
+                    "  var foo = $$require('foo.js');",
                     "}, 'not/root/test.js', ['foo.js']);"))));
   }
 }

@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
+import com.google.auto.value.AutoValue;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.deps.ModuleLoader;
@@ -100,6 +101,17 @@ public class Es6RewriteModulesToCommonJsModules implements CompilerPass {
     return path;
   }
 
+  // package public only for @AutoValue
+  @AutoValue
+  abstract static class ModuleRequest {
+    abstract String specifier();
+    abstract String varName();
+
+    private static ModuleRequest create(String specifier, String varName) {
+      return new AutoValue_Es6RewriteModulesToCommonJsModules_ModuleRequest(specifier, varName);
+    }
+  }
+
   /**
    * Rewrites a single ES6 module into a CommonJS like module designed to be loaded in the
    * compiler's module runtime.
@@ -109,7 +121,7 @@ public class Es6RewriteModulesToCommonJsModules implements CompilerPass {
     private final Node script;
     private final Map<String, LocalQName> exportedNameToLocalQName;
     private final Set<Node> imports;
-    private final Set<String> importRequests;
+    private final Set<ModuleRequest> importRequests;
     private final AbstractCompiler compiler;
     private final ModulePath modulePath;
 
@@ -152,9 +164,21 @@ public class Es6RewriteModulesToCommonJsModules implements CompilerPass {
      * Can become:
      *   const module$foo = require('./foo.js'); use(module$foo.v);
      * This method would return "module$foo".
+     *
+     * Note that if there is a star import the name will be preserved.
+     *
+     * Example:
+     *   import defaultValue, * as foo from './foo.js'; use(defaultValue, foo.bar);
+     * Can become:
+     *   const foo = require('./foo.js'); use(foo.defaultValue, foo.bar);
+     *
+     * This makes debugging quite a bit easier as source maps are not great with renaming.
      */
     private String getVarNameOfImport(Node importDecl) {
       checkState(importDecl.isImport());
+      if (importDecl.getSecondChild().isImportStar()) {
+        return importDecl.getSecondChild().getString();
+      }
       return getVarNameOfImport(importDecl.getLastChild().getString());
     }
 
@@ -169,7 +193,7 @@ public class Es6RewriteModulesToCommonJsModules implements CompilerPass {
      *       <li>If referencing an import spec like v in "import {v} from './foo.js'" then this
      *           would return "module$foo.v".
      *       <li>If referencing an import star like m in "import * as m from './foo.js'" then this
-     *           would return "module$foo".
+     *           would return "m".
      *       <li>If referencing an import default like d in "import d from './foo.js'" then this
      *           would return "module$foo.default".
      *
@@ -271,10 +295,10 @@ public class Es6RewriteModulesToCommonJsModules implements CompilerPass {
 
         Set<String> importedNames = new HashSet<>();
 
-        for (String request : importRequests) {
-          String varName = getVarNameOfImport(request);
+        for (ModuleRequest request : importRequests) {
+          String varName = request.varName();
           if (importedNames.add(varName)) {
-            Node requireCall = IR.call(IR.name(REQUIRE), IR.string(request));
+            Node requireCall = IR.call(IR.name(REQUIRE), IR.string(request.specifier()));
             requireCall.putBooleanProp(Node.FREE_CALL, true);
             Node var = IR.var(IR.name(varName), requireCall);
             var.useSourceInfoIfMissingFromForTree(script);
@@ -302,8 +326,8 @@ public class Es6RewriteModulesToCommonJsModules implements CompilerPass {
 
       Node shallowDeps = new Node(Token.ARRAYLIT);
 
-      for (String request : importRequests) {
-        shallowDeps.addChildToBack(IR.string(request));
+      for (ModuleRequest request : importRequests) {
+        shallowDeps.addChildToBack(IR.string(request.specifier()));
       }
 
       Node exprResult =
@@ -362,8 +386,10 @@ public class Es6RewriteModulesToCommonJsModules implements CompilerPass {
       // Normalize the import path according to the module resolution scheme so that bundles are
       // compatible with the compiler's module loader options.
       importRequests.add(
-          normalizePath(
-              path.resolveModuleAsPath(importDecl.getLastChild().getString()).toString()));
+          ModuleRequest.create(
+              normalizePath(
+                  path.resolveModuleAsPath(importDecl.getLastChild().getString()).toString()),
+              getVarNameOfImport(importDecl)));
       imports.add(importDecl);
     }
 
