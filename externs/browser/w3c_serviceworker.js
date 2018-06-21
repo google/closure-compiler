@@ -81,6 +81,16 @@ PushSubscriptionOptions.prototype.applicationServerKey;
 /** @type {boolean|undefined} */
 PushSubscriptionOptions.prototype.userVisibleOnly;
 
+/** @record */
+function PushSubscriptionOptionsInit() {}
+
+/** @type {BufferSource|string|undefined} */
+PushSubscriptionOptionsInit.prototype.applicationServerKey;
+
+/** @type {boolean|undefined} */
+PushSubscriptionOptionsInit.prototype.userVisibleOnly;
+
+
 /**
  * @see https://w3c.github.io/push-api/
  * @constructor
@@ -119,7 +129,7 @@ PushSubscription.prototype.unsubscribe = function() {};
 function PushManager() {}
 
 /**
- * @param {PushSubscriptionOptions=} opt_options
+ * @param {PushSubscriptionOptionsInit=} opt_options
  * @return {!Promise<!PushSubscription>}
  */
 PushManager.prototype.subscribe = function(opt_options) {};
