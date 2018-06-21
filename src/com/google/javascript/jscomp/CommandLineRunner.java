@@ -30,11 +30,14 @@ import com.google.common.collect.Multimap;
 import com.google.common.io.Files;
 import com.google.javascript.jscomp.AbstractCommandLineRunner.CommandLineConfig.ErrorFormatOption;
 import com.google.javascript.jscomp.CompilerOptions.IsolationMode;
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.SourceMap.LocationMapping;
 import com.google.javascript.jscomp.deps.ClosureBundler;
 import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
+import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.jscomp.transpile.BaseTranspiler;
+import com.google.javascript.jscomp.transpile.BaseTranspiler.CompilerSupplier;
 import com.google.javascript.jscomp.transpile.Transpiler;
 import com.google.javascript.rhino.TokenStream;
 import com.google.protobuf.TextFormat;
@@ -1858,14 +1861,16 @@ public class CommandLineRunner extends
     }
 
     CompilerOptions options = createOptions();
-    return bundler = new ClosureBundler(
-        Transpiler.NULL,
-        new BaseTranspiler(
-            new BaseTranspiler.EsmToCjsCompilerSupplier(
-                options.getModuleResolutionMode(),
-                moduleRoots,
-                options.getBrowserResolverPrefixReplacements()),
-            /* runtimeLibraryName= */ ""));
+    return bundler =
+        new ClosureBundler(
+            Transpiler.NULL,
+            new BaseTranspiler(
+                new CompilerSupplier(
+                    LanguageMode.ECMASCRIPT_NEXT.toFeatureSet().without(Feature.MODULES),
+                    options.getModuleResolutionMode(),
+                    moduleRoots,
+                    options.getBrowserResolverPrefixReplacements()),
+                /* runtimeLibraryName= */ ""));
   }
 
   @Override
