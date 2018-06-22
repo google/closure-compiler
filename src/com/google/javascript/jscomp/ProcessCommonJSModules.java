@@ -2014,7 +2014,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
             Var typeDeclaration = t.getScope().getVar(baseName);
 
             // Make sure we can find a variable declaration (and it's in this file)
-            if (typeDeclaration != null
+            if (typeDeclaration != null && typeDeclaration.getNode() != null
                 && Objects.equals(typeDeclaration.getNode().getInputId(), typeNode.getInputId())) {
               String importedModuleName = getModuleImportName(t, typeDeclaration.getNode());
 
