@@ -72,6 +72,7 @@ HTMLInputElement.prototype.onwebkitspeechchange;
 // W3C Web Speech API implemented in Chrome M23
 /**
  * @constructor
+ * @extends {EventTarget}
  */
 function SpeechRecognition() {}
 
