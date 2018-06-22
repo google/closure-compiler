@@ -19,6 +19,7 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Strings.isNullOrEmpty;
 
+import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
@@ -48,13 +49,23 @@ public final class AstValidator implements CompilerPass {
 
   private final AbstractCompiler compiler;
   private final ViolationHandler violationHandler;
+  private Node currentScript;
 
   /** Perform type validation if this is enabled. */
   private boolean isTypeValidationEnabled = false;
 
-  public AstValidator(AbstractCompiler compiler, ViolationHandler handler) {
+  /** Validate that a SCRIPT's FeatureSet property includes all features if this is enabled. */
+  private boolean isScriptFeatureValidationEnabled;
+
+  public AstValidator(
+      AbstractCompiler compiler, ViolationHandler handler, boolean validateScriptFeatures) {
     this.compiler = compiler;
     this.violationHandler = handler;
+    this.isScriptFeatureValidationEnabled = validateScriptFeatures;
+  }
+
+  public AstValidator(AbstractCompiler compiler, ViolationHandler handler) {
+    this(compiler, handler, false);
   }
 
   public AstValidator(AbstractCompiler compiler) {
@@ -108,6 +119,7 @@ public final class AstValidator implements CompilerPass {
     validateNodeType(Token.SCRIPT, n);
     validateHasSourceName(n);
     validateHasInputId(n);
+    currentScript = n;
     if (n.hasChildren() && n.getFirstChild().isModuleBody()) {
       validateChildCount(n, 1);
       validateModuleContents(n.getFirstChild());
@@ -1678,5 +1690,14 @@ public final class AstValidator implements CompilerPass {
     if (!compiler.getFeatureSet().has(feature)) {
       violation("AST should not contain " + feature, n);
     }
+    // Note: currentScript may be null if someone called validateStatement or validateExpression
+    if (!isScriptFeatureValidationEnabled || currentScript == null) {
+      return;
+    }
+    FeatureSet scriptFeatures = NodeUtil.getFeatureSetOfScript(currentScript);
+    if (scriptFeatures == null || !NodeUtil.getFeatureSetOfScript(currentScript).has(feature)) {
+      violation("SCRIPT node should be marked as containing feature " + feature, currentScript);
+    }
   }
 }
+

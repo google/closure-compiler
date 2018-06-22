@@ -18,6 +18,8 @@ package com.google.javascript.jscomp;
 
 import com.google.javascript.jscomp.AstValidator.ViolationHandler;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import com.google.javascript.jscomp.parsing.parser.FeatureSet;
+import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.JSDocInfoBuilder;
@@ -40,12 +42,15 @@ public final class AstValidatorTest extends CompilerTestCase {
 
   private AstValidator createValidator(Compiler compiler) {
     lastCheckWasValid = true;
-    return new AstValidator(compiler, new ViolationHandler() {
-      @Override
-      public void handleViolation(String message, Node n) {
-        lastCheckWasValid = false;
-      }
-    });
+    return new AstValidator(
+        compiler,
+        new ViolationHandler() {
+          @Override
+          public void handleViolation(String message, Node n) {
+            lastCheckWasValid = false;
+          }
+        },
+        /* validateScriptFeatures= */ true);
   }
 
   @Override
@@ -382,6 +387,21 @@ public final class AstValidatorTest extends CompilerTestCase {
     stringkey.addChildToFront(IR.computedProp(IR.string("x"), IR.number(1)));
     n = IR.assign(new Node(Token.OBJECT_PATTERN, stringkey), IR.objectlit());
     expectInvalid(n, Check.EXPRESSION);
+  }
+
+  public void testValidFeatureInScript() {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
+
+    Node n = new Node(Token.SCRIPT);
+    n.setInputId(new InputId("something_input"));
+    n.setStaticSourceFile(new SimpleSourceFile("something", false));
+    expectValid(n, Check.SCRIPT);
+
+    n.addChildToFront(IR.let(IR.name("a"), IR.number(3)));
+    expectInvalid(n, Check.SCRIPT);
+
+    n.putProp(Node.FEATURE_SET, FeatureSet.BARE_MINIMUM.with(Feature.LET_DECLARATIONS));
+    expectValid(n, Check.SCRIPT);
   }
 
   private void valid(String code) {
