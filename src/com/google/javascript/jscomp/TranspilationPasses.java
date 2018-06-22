@@ -118,13 +118,16 @@ public class TranspilationPasses {
         // support the transpiled features.
         // TODO(b/73387406): Move each pass above here temporarily, then into
         // addEs6PostCheck Passes once the pass supports propagating type information
-        passes.add(es6RewriteRestAndSpread);
       }
     }
   }
 
   public static void addEs6ModuleToCjsPass(List<PassFactory> passes) {
     passes.add(es6RewriteModuleToCjs);
+  }
+
+  public static void addEs6RewriteImportPathPass(List<PassFactory> passes) {
+    passes.add(es6RewriteImportPaths);
   }
 
   /** Deprecated: use addPostCheckTranspilationPasses instead. */
@@ -136,6 +139,7 @@ public class TranspilationPasses {
     // TODO(b/73387406): Move passes here as typechecking & other check passes are updated to cope
     // with the features they transpile and as the passes themselves are updated to propagate type
     // information to the transpiled code.
+    passes.add(es6RewriteRestAndSpread);
     passes.add(lateConvertEs6ToEs3);
     passes.add(es6ForOf);
     passes.add(rewriteBlockScopedFunctionDeclaration);
@@ -157,6 +161,20 @@ public class TranspilationPasses {
         @Override
         protected CompilerPass create(AbstractCompiler compiler) {
           return new Es6RewriteModulesToCommonJsModules(compiler);
+        }
+
+        @Override
+        protected FeatureSet featureSet() {
+          return FeatureSet.latest();
+        }
+      };
+
+  /** Rewrites ES6 modules import paths to be browser compliant */
+  private static final PassFactory es6RewriteImportPaths =
+      new PassFactory("es6RewriteImportPaths", true) {
+        @Override
+        protected CompilerPass create(AbstractCompiler compiler) {
+          return new Es6RewriteImportPaths(compiler);
         }
 
         @Override

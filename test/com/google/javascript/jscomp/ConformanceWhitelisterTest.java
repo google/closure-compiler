@@ -20,9 +20,10 @@ import static com.google.javascript.jscomp.CompilerTestCase.lines;
 
 import com.google.common.annotations.GwtIncompatible;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableMultimap;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.Requirement.Type;
+import com.google.javascript.rhino.Node;
 import java.io.IOException;
 import java.util.List;
 import junit.framework.TestCase;
@@ -44,7 +45,7 @@ public class ConformanceWhitelisterTest extends TestCase {
         .addValue("Object.prototype.innerHTML");
 
     assertThat(testConformanceWhitelister(sources.build(), requirement.build()))
-        .containsExactly("/entry.js");
+        .containsExactly("/entry.js", 2);
   }
 
   public void testConformanceWhitelistRemove() throws IOException {
@@ -81,12 +82,12 @@ public class ConformanceWhitelisterTest extends TestCase {
         .addWhitelist("/entry.js");
 
     assertThat(testConformanceWhitelister(sources.build(), requirement.build()))
-        .containsExactly("/entry.js");
+        .containsExactly("/entry.js", 2);
   }
 
   // TODO(bangert): Evaluate if this is always the best behaviour.
   // The current behaviour pushes the behaviour of how to cluster the whitelist to the program
-  // driving ConformanceWhitelister. 
+  // driving ConformanceWhitelister.
   public void testConformanceWhitelistBreaksDownFolder() throws IOException {
     ImmutableList.Builder<SourceFile> sources = ImmutableList.builder();
 
@@ -103,10 +104,10 @@ public class ConformanceWhitelisterTest extends TestCase {
         .addWhitelist("/test/");
 
     assertThat(testConformanceWhitelister(sources.build(), requirement.build()))
-        .containsExactly("/test/entry.js");
+        .containsExactly("/test/entry.js", 2);
   }
 
-  private ImmutableSet<String> testConformanceWhitelister(
+  private ImmutableMultimap<String, Integer> testConformanceWhitelister(
       ImmutableList<SourceFile> sources, Requirement config) throws IOException {
 
     CompilerOptions options = new CompilerOptions();
@@ -121,7 +122,16 @@ public class ConformanceWhitelisterTest extends TestCase {
     Result result = compiler.compile(externs, sources, options);
     assertTrue(result.success);
 
-    return ConformanceWhitelister.getViolatingPaths(
-        compiler, compiler.getExternsRoot(), compiler.getJsRoot(), config);
+    ImmutableMultimap.Builder<String, Integer> errors = ImmutableMultimap.builder();
+    for (Node node :
+        ConformanceWhitelister.getViolatingNodes(
+            compiler, compiler.getExternsRoot(), compiler.getJsRoot(), config)) {
+      errors.put(node.getSourceFileName(), node.getLineno());
+    }
+    assertThat(errors.build().keySet())
+        .containsExactlyElementsIn(
+            ConformanceWhitelister.getViolatingPaths(
+                compiler, compiler.getExternsRoot(), compiler.getJsRoot(), config));
+    return errors.build();
   }
 }

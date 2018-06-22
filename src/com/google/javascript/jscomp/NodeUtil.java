@@ -1498,7 +1498,7 @@ public final class NodeUtil {
    *
    * <p>This is a non-recursive version of the may have side effects
    * check; used to check wherever the current node's type is one of
-   * the reason's why a subtree has side effects.
+   * the reasons why a subtree has side effects.
    */
   static boolean nodeTypeMayHaveSideEffects(Node n) {
     return nodeTypeMayHaveSideEffects(n, null);
@@ -1516,6 +1516,8 @@ public final class NodeUtil {
       case YIELD:
       case THROW:
       case AWAIT:
+      case FOR_IN: // assigns to a loop LHS
+      case FOR_OF: // assigns to a loop LHS
         return true;
       case CALL:
         return NodeUtil.functionCallHasSideEffects(n, compiler);
@@ -4236,6 +4238,14 @@ public final class NodeUtil {
         return;
       case EMPTY:
         return;
+      case FOR_IN:
+      case FOR_OF:
+        // Enhanced for loops assign to variables in their first child
+        // e.g.
+        // for (some.prop in someObj) {...
+        // for ({a, b} of someIterable) {...
+        getLhsNodesHelper(n.getFirstChild(), lhsNodes);
+        return;
       default:
         if (isAssignmentOp(n)) {
           getLhsNodesHelper(n.getFirstChild(), lhsNodes);
@@ -4245,19 +4255,25 @@ public final class NodeUtil {
     }
   }
 
-  /** Retrieves lhs nodes declared in the current declaration or ASSIGN statement. */
-  public static List<Node> findLhsNodesInNode(Node declNode) {
+  /**
+   * Retrieves lhs nodes declared or assigned in a given assigning parent node.
+   *
+   * <p>An assigning parent node is one that assigns a value to one or more LHS nodes.
+   */
+  public static List<Node> findLhsNodesInNode(Node assigningParent) {
     checkArgument(
-        isNameDeclaration(declNode)
-            || declNode.isParamList()
-            || isAssignmentOp(declNode)
-            || declNode.isCatch()
-            || declNode.isDestructuringLhs()
-            || declNode.isDefaultValue()
-            || declNode.isImport(),
-        declNode);
+        isNameDeclaration(assigningParent)
+            || assigningParent.isParamList()
+            || isAssignmentOp(assigningParent)
+            || assigningParent.isCatch()
+            || assigningParent.isDestructuringLhs()
+            || assigningParent.isDefaultValue()
+            || assigningParent.isImport()
+            // enhanced for loops assign to loop variables
+            || isEnhancedFor(assigningParent),
+        assigningParent);
     ArrayList<Node> lhsNodes = new ArrayList<>();
-    getLhsNodesHelper(declNode, lhsNodes);
+    getLhsNodesHelper(assigningParent, lhsNodes);
     return lhsNodes;
   }
 

@@ -1923,6 +1923,232 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
     assertPureCallsMarked(source, ImmutableList.of("this.m1", "NEW STRING m2"));
   }
 
+  public void testGlobalScopeTaintedByWayOfThisPropertyAndForOfLoop() {
+    // TODO(bradfordcsmith): Enable type check when it supports the languages features used here.
+    disableTypeCheck();
+    String source =
+        lines(
+            "class C {",
+            "  constructor(elements) {",
+            "    this.elements = elements;",
+            "    this.m1();",
+            "  }",
+            "  m1() {",
+            "    for (const element of this.elements) {",
+            "      element.someProp = 1;",
+            "    }",
+            "  }",
+            "}",
+            "new C([]).m1()",
+            "");
+    assertPureCallsMarked(source, ImmutableList.of());
+  }
+
+  public void testGlobalScopeTaintedByWayOfThisPropertyAndForOfLoopWithDestructuring() {
+    // TODO(bradfordcsmith): Enable type check when it supports the languages features used here.
+    disableTypeCheck();
+    String source =
+        lines(
+            "class C {",
+            "  constructor(elements) {",
+            "    this.elements = elements;",
+            "    this.m1();",
+            "  }",
+            "  m1() {",
+            "    this.elements[0].someProp = 1;",
+            "    for (const {prop} of this.elements) {",
+            "      prop.someProp = 1;",
+            "    }",
+            "  }",
+            "}",
+            "new C([]).m1()",
+            "");
+    assertPureCallsMarked(source, ImmutableList.of());
+  }
+
+  public void testArgumentTaintedByWayOfFunctionScopedLet() {
+    // TODO(bradfordcsmith): Enable type check when it supports the languages features used here.
+    disableTypeCheck();
+    String source =
+        lines(
+            "function m1(elements) {",
+            "  let e;",
+            "  for (let i = 0; i < elements.length; ++i) {",
+            "    e = elements[i];",
+            "    e.someProp = 1;",
+            "  }",
+            "}",
+            "m1([]);",
+            "");
+    assertPureCallsMarked(source, ImmutableList.of());
+  }
+
+  public void testArgumentTaintedByWayOfFunctionScopedLetAssignedInForOf() {
+    // TODO(bradfordcsmith): Enable type check when it supports the languages features used here.
+    disableTypeCheck();
+    String source =
+        lines(
+            "function m1(elements) {",
+            "  let e;",
+            "  for (e of elements) {",
+            "    e.someProp = 1;",
+            "  }",
+            "}",
+            "m1([]);",
+            "");
+    assertPureCallsMarked(source, ImmutableList.of());
+  }
+
+  public void testArgumentTaintedByWayOfFunctionScopedLetAssignedInForOfWithDestructuring() {
+    // TODO(bradfordcsmith): Enable type check when it supports the languages features used here.
+    disableTypeCheck();
+    String source =
+        lines(
+            "function m1(elements) {",
+            "  let e;",
+            "  for ({e} of elements) {",
+            "    e.someProp = 1;",
+            "  }",
+            "}",
+            "m1([]);",
+            "");
+    assertPureCallsMarked(source, ImmutableList.of());
+  }
+
+  public void testArgumentTaintedByWayOfForOfAssignmentToQualifiedName() {
+    // TODO(bradfordcsmith): Enable type check when it supports the languages features used here.
+    disableTypeCheck();
+    String source =
+        lines(
+            "function m1(obj, elements) {",
+            "  for (obj.e of elements) {",
+            "    if (obj.e != null) break;",
+            "  }",
+            "}",
+            "var globalObj = {};",
+            "m1(globalObj, []);",
+            "");
+    assertPureCallsMarked(source, ImmutableList.of());
+  }
+
+  public void testArgumentTaintedByWayOfForInAssignmentToQualifiedName() {
+    // TODO(bradfordcsmith): Enable type check when it supports the languages features used here.
+    String source =
+        lines(
+            "/**",
+            " *@param {!Object} obj",
+            " *@param {!Object} propObj",
+            " *@returns {number}",
+            " */",
+            "function m1(/** ? */ obj, /** Object */ propObj) {",
+            "  var propCharCount = 0;",
+            // TODO(bradfordcsmith): Fix JSC_POSSIBLE_INEXISTENT_PROPERTY warning that occurs
+            //     if the assignment to obj.e before the loop is dropped from this test case.
+            "  obj.e = '';",
+            "  for (obj.e in propObj) {",
+            "    propCharCount += obj.e.length;",
+            "  }",
+            "  return propCharCount;",
+            "}",
+            "var globalObj = {};",
+            "m1(globalObj, {x: 1});",
+            "");
+    assertPureCallsMarked(source, ImmutableList.of());
+  }
+
+  public void testArgumentTaintedByWayOfBlockScopedLet() {
+    // TODO(bradfordcsmith): Enable type check when it supports the languages features used here.
+    disableTypeCheck();
+    String source =
+        lines(
+            "function m1(elements) {",
+            "  for (let i = 0; i < elements.length; ++i) {",
+            "    let e;",
+            "    e = elements[i];",
+            "    e.someProp = 1;",
+            "  }",
+            "}",
+            "m1([]);",
+            "");
+    assertPureCallsMarked(source, ImmutableList.of());
+  }
+
+  public void testArgumentTaintedByWayOfBlockScopedConst() {
+    // TODO(bradfordcsmith): Enable type check when it supports the languages features used here.
+    disableTypeCheck();
+    String source =
+        lines(
+            "function m1(elements) {",
+            "  for (let i = 0; i < elements.length; ++i) {",
+            "    const e = elements[i];",
+            "    e.someProp = 1;",
+            "  }",
+            "}",
+            "m1([]);",
+            "");
+    assertPureCallsMarked(source, ImmutableList.of());
+  }
+
+  public void testArgumentTaintedByWayOfForOfScopedConst() {
+    // TODO(bradfordcsmith): Enable type check when it supports the languages features used here.
+    disableTypeCheck();
+    String source =
+        lines(
+            "function m1(elements) {",
+            "  for (const e of elements) {",
+            "    e.someProp = 1;",
+            "  }",
+            "}",
+            "m1([]);",
+            "");
+    assertPureCallsMarked(source, ImmutableList.of());
+  }
+
+  public void testArgumentTaintedByWayOfNameDeclaration() {
+    // TODO(bradfordcsmith): Enable type check when it supports the languages features used here.
+    disableTypeCheck();
+    String source =
+        lines(
+            "function m1(obj) {",
+            "  let p = obj.p;",
+            "  p.someProp = 1;",
+            "}",
+            "m1([]);",
+            "");
+    assertPureCallsMarked(source, ImmutableList.of());
+  }
+
+  public void testArgumentTaintedByWayOfDestructuringNameDeclaration() {
+    // TODO(bradfordcsmith): Enable type check when it supports the languages features used here.
+    disableTypeCheck();
+    String source =
+        lines(
+            "function m1(obj) {",
+            "  let {p} = obj;",
+            "  p.someProp = 1;",
+            "}",
+            "m1([]);",
+            "");
+    // TODO(bradfordcsmith): Fix this logic for destructuring declarations.
+    assertPureCallsMarked(source, ImmutableList.of("m1"));
+  }
+
+  public void testArgumentTaintedByWayOfDestructuringAssignment() {
+    // TODO(bradfordcsmith): Enable type check when it supports the languages features used here.
+    disableTypeCheck();
+    String source =
+        lines(
+            "function m1(obj) {",
+            "  let p;",
+            "  ({p} = obj);",
+            "  p.someProp = 1;",
+            "}",
+            "m1([]);",
+            "");
+    // TODO(bradfordcsmith): Fix this logic for destructuring.
+    assertPureCallsMarked(source, ImmutableList.of("m1"));
+  }
+
   public void testFunctionProperties1() throws Exception {
     String source = lines(
         "/** @constructor */",

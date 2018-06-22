@@ -49,6 +49,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Predicate;
 import javax.annotation.Nullable;
 
 /**
@@ -435,6 +436,14 @@ class PureFunctionIdentifier implements CompilerPass {
     }
   }
 
+  private static final Predicate<Node> RHS_IS_ALWAYS_LOCAL = lhs -> true;
+  private static final Predicate<Node> RHS_IS_NEVER_LOCAL = lhs -> false;
+  private static final Predicate<Node> FIND_RHS_AND_CHECK_FOR_LOCAL_VALUE = lhs -> {
+    Node rhs = NodeUtil.getRValueOfLValue(lhs);
+    return rhs == null || NodeUtil.evaluatesToLocalValue(rhs);
+  };
+
+
   /**
    * Gather list of functions, functions with @nosideeffects annotations, call sites, and functions
    * that may mutate variables not defined in the local scope.
@@ -478,11 +487,12 @@ class PureFunctionIdentifier implements CompilerPass {
         allFunctionCalls.add(node);
       }
 
-      // TODO: This may be more expensive than necessary.
-      Node enclosingFunction = traversal.getEnclosingFunction();
-      if (enclosingFunction == null) {
+      Scope containerScope = traversal.getScope().getClosestContainerScope();
+      if (!containerScope.isFunctionScope()) {
+        // We only need to look at nodes in function scopes.
         return;
       }
+      Node enclosingFunction = containerScope.getRootNode();
 
       for (FunctionInformation sideEffectInfo : functionSideEffectMap.get(enclosingFunction)) {
         checkNotNull(sideEffectInfo);
@@ -495,9 +505,64 @@ class PureFunctionIdentifier implements CompilerPass {
         NodeTraversal traversal,
         Node node,
         Node enclosingFunction) {
-      if (NodeUtil.isAssignmentOp(node) || node.isInc() || node.isDelProp() || node.isDec()) {
-        visitAssignmentOrUnaryOperator(
-            sideEffectInfo, traversal.getScope(), node, enclosingFunction);
+      if (node.isAssign()) {
+        // e.g.
+        // lhs = rhs;
+        // ({x, y} = object);
+        visitLhsNodes(
+            sideEffectInfo,
+            traversal.getScope(),
+            enclosingFunction,
+            NodeUtil.findLhsNodesInNode(node),
+            FIND_RHS_AND_CHECK_FOR_LOCAL_VALUE);
+      } else if (NodeUtil.isCompoundAssignmentOp(node)) {
+        // e.g.
+        // x += 3;
+        visitLhsNodes(
+            sideEffectInfo,
+            traversal.getScope(),
+            enclosingFunction,
+            ImmutableList.of(node.getFirstChild()),
+            // The update assignments (e.g. `+=) always assign primitive, and therefore local,
+            // values.
+            RHS_IS_ALWAYS_LOCAL);
+      } else if (node.isInc() || node.isDelProp() || node.isDec()) {
+        // e.g.
+        // x++;
+        visitLhsNodes(
+            sideEffectInfo,
+            traversal.getScope(),
+            enclosingFunction,
+            ImmutableList.of(node.getOnlyChild()),
+            // The value assigned by a unary op is always local.
+            RHS_IS_ALWAYS_LOCAL);
+      } else if (node.isForOf()) {
+        // e.g.
+        // for (const {prop1, prop2} of iterable) {...}
+        // for ({prop1: x.p1, prop2: x.p2} of iterable) {...}
+        //
+        // TODO(bradfordcsmith): Possibly we should try to determine whether the iteration itself
+        //     could have side effects.
+        visitLhsNodes(
+            sideEffectInfo,
+            traversal.getScope(),
+            enclosingFunction,
+            NodeUtil.findLhsNodesInNode(node),
+            // The RHS of a for-of must always be an iterable, making it a container, so we can't
+            // consider its contents to be local
+            RHS_IS_NEVER_LOCAL);
+      } else if (node.isForIn()) {
+        // e.g.
+        // for (prop in obj) {...}
+        // Also this, though not very useful or readable.
+        // for ([char1, char2, ...x.rest] in obj) {...}
+        visitLhsNodes(
+            sideEffectInfo,
+            traversal.getScope(),
+            enclosingFunction,
+            NodeUtil.findLhsNodesInNode(node),
+            // A for-in always assigns a string, which is a local value by definition.
+            RHS_IS_ALWAYS_LOCAL);
       } else if (NodeUtil.isCallOrNew(node)) {
         visitCall(sideEffectInfo, node);
       } else if (node.isName()) {
@@ -537,14 +602,12 @@ class PureFunctionIdentifier implements CompilerPass {
 
     @Override
     public void exitScope(NodeTraversal t) {
-      if (!t.getScope().isFunctionBlockScope() && !t.getScope().isFunctionScope()) {
+      Scope closestContainerScope = t.getScope().getClosestContainerScope();
+      if (!closestContainerScope.isFunctionScope()) {
+        // Only functions and the scopes within them are of interest to us.
         return;
       }
-
-      Node function = NodeUtil.getEnclosingFunction(t.getScopeRoot());
-      if (function == null) {
-        return;
-      }
+      Node function = closestContainerScope.getRootNode();
 
       // Handle deferred local variable modifications:
       for (FunctionInformation sideEffectInfo : functionSideEffectMap.get(function)) {
@@ -589,34 +652,28 @@ class PureFunctionIdentifier implements CompilerPass {
       }
     }
 
-    private boolean isVarDeclaredInScope(@Nullable Var v, Scope scope) {
-      if (v == null) {
-        return false;
-      }
-      if (v.scope == scope) {
-        return true;
-      }
-      Node declarationRoot = NodeUtil.getEnclosingFunction(v.scope.getRootNode());
-      Node scopeRoot = NodeUtil.getEnclosingFunction(scope.getRootNode());
-      return declarationRoot == scopeRoot;
+    private boolean isVarDeclaredInSameContainerScope(@Nullable Var v, Scope scope) {
+      return v != null && v.scope.hasSameContainerScope(scope);
     }
 
     /**
-     * Record information about the side effects caused by an assignment or mutating unary operator.
+     * Record information about the side effects caused by assigning a value to a given LHS.
      *
      * <p>If the operation modifies this or taints global state, mark the enclosing function as
      * having those side effects.
      *
-     * @param op operation being performed.
+     * @param sideEffectInfo Function side effect record to be updated
+     * @param scope variable scope in which the variable assignment occurs
+     * @param enclosingFunction FUNCTION node for the enclosing function
+     * @param lhsNodes LHS nodes that are all assigned values by a given parent node
+     * @param hasLocalRhs Predicate indicating whether a given LHS is being assigned a local value
      */
-    private void visitAssignmentOrUnaryOperator(
-        FunctionInformation sideEffectInfo, Scope scope, Node op, Node enclosingFunction) {
-      Iterable<Node> lhsNodes;
-      if (isIncDec(op) || op.isDelProp()) {
-        lhsNodes = ImmutableList.of(op.getOnlyChild());
-      } else {
-        lhsNodes = NodeUtil.findLhsNodesInNode(op);
-      }
+    private void visitLhsNodes(
+        FunctionInformation sideEffectInfo,
+        Scope scope,
+        Node enclosingFunction,
+        Iterable<Node> lhsNodes,
+        Predicate<Node> hasLocalRhs) {
       for (Node lhs : lhsNodes) {
         if (NodeUtil.isGet(lhs)) {
           if (lhs.getFirstChild().isThis()) {
@@ -625,7 +682,7 @@ class PureFunctionIdentifier implements CompilerPass {
             Node objectNode = lhs.getFirstChild();
             if (objectNode.isName()) {
               Var var = scope.getVar(objectNode.getString());
-              if (isVarDeclaredInScope(var, scope)) {
+              if (isVarDeclaredInSameContainerScope(var, scope)) {
                 // Maybe a local object modification.  We won't know for sure until
                 // we exit the scope and can validate the value of the local.
                 taintedVarsByFunction.put(enclosingFunction, var);
@@ -633,22 +690,18 @@ class PureFunctionIdentifier implements CompilerPass {
                 sideEffectInfo.setTaintsGlobalState();
               }
             } else {
-              // TODO(tdeegan): Perhaps handle multi level locals: local.prop.prop2++;
+              // Don't track multi level locals: local.prop.prop2++;
               sideEffectInfo.setTaintsGlobalState();
             }
           }
         } else {
+          checkState(lhs.isName(), lhs);
           Var var = scope.getVar(lhs.getString());
-          if (isVarDeclaredInScope(var, scope)) {
-            // Assignment to local, if the value isn't a safe local value,
-            // a literal or new object creation, add it to the local blacklist.
-            // parameter values depend on the caller.
-
-            // Note: other ops result in the name or prop being assigned a local
-            // value (x++ results in a number, for instance)
-            checkState(NodeUtil.isAssignmentOp(op) || isIncDec(op) || op.isDelProp());
-            Node rhs = NodeUtil.getRValueOfLValue(lhs);
-            if (rhs != null && op.isAssign() && !NodeUtil.evaluatesToLocalValue(rhs)) {
+          if (isVarDeclaredInSameContainerScope(var, scope)) {
+            if (!hasLocalRhs.test(lhs)) {
+              // Assigned value is not guaranteed to be a local value,
+              // so if we see any property assignments on this variable,
+              // they could be tainting a non-local value.
               blacklistedVarsByFunction.put(enclosingFunction, var);
             }
           } else {
@@ -683,11 +736,6 @@ class PureFunctionIdentifier implements CompilerPass {
         sideEffectGraph.connect(sideEffectNode.graphNode, edge, sideEffectInfo.graphNode);
       }
     }
-  }
-
-  private static boolean isIncDec(Node n) {
-    Token type = n.getToken();
-    return (type == Token.INC || type == Token.DEC);
   }
 
   private static boolean isCallOrApply(Node callSite) {

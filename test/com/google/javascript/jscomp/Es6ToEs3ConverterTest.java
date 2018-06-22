@@ -150,6 +150,11 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
     assertThat(getLastCompiler().injected).isEmpty();
   }
 
+  public void testSpreadLibInjection() {
+    testSame("var x = [...a];");
+    assertThat(getLastCompiler().injected).containsExactly("es6/util/arrayfromiterable");
+  }
+
   public void testObjectLiteralMemberFunctionDef() {
     test(
         "var x = {/** @return {number} */ a() { return 0; } };",

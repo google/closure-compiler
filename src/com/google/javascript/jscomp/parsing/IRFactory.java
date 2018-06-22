@@ -701,6 +701,7 @@ class IRFactory {
       case EXPRESSION_STATEMENT:
       case LABELLED_STATEMENT:
       case EXPORT_DECLARATION:
+      case TEMPLATE_SUBSTITUTION:
         return false;
       case CALL_EXPRESSION:
       case CONDITIONAL_EXPRESSION:

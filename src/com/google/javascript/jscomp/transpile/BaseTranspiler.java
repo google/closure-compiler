@@ -24,9 +24,11 @@ import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.CheckLevel;
 import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerOptions;
+import com.google.javascript.jscomp.CompilerOptions.Es6ModuleTranspilation;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.DiagnosticGroup;
 import com.google.javascript.jscomp.DiagnosticType;
+import com.google.javascript.jscomp.Es6RewriteModulesToCommonJsModules;
 import com.google.javascript.jscomp.PropertyRenamingPolicy;
 import com.google.javascript.jscomp.Result;
 import com.google.javascript.jscomp.SourceFile;
@@ -36,8 +38,7 @@ import com.google.javascript.jscomp.bundle.TranspilationException;
 import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.jscomp.deps.ModuleLoader.PathEscaper;
 import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
-import com.google.javascript.jscomp.parsing.parser.FeatureSet;
-import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
+import com.google.javascript.rhino.Node;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -74,17 +75,11 @@ public final class BaseTranspiler implements Transpiler {
     return sb.toString();
   }
 
-  public static final BaseTranspiler LATEST_TRANSPILER = to(FeatureSet.latest(), "");
+  public static final BaseTranspiler ES5_TRANSPILER = new BaseTranspiler(
+      new CompilerSupplier(), "es6_runtime");
 
-  public static final BaseTranspiler ES5_TRANSPILER = to(LanguageMode.ECMASCRIPT5.toFeatureSet());
-
-  public static final BaseTranspiler to(FeatureSet featureSet, String runtime) {
-    return new BaseTranspiler(new CompilerSupplier(featureSet), runtime);
-  }
-
-  public static final BaseTranspiler to(FeatureSet featureSet) {
-    return to(featureSet, "es6_runtime");
-  }
+  public static final BaseTranspiler ES_MODULE_TO_CJS_TRANSPILER =
+      new BaseTranspiler(new EsmToCjsCompilerSupplier(), "");
 
   /**
    * Wraps the Compiler into a more relevant interface, making it
@@ -98,19 +93,10 @@ public final class BaseTranspiler implements Transpiler {
     protected final ResolutionMode moduleResolution;
     protected final ImmutableList<String> moduleRoots;
     protected final ImmutableMap<String, String> prefixReplacements;
-    protected final FeatureSet outputFeatureSet;
 
     public CompilerSupplier() {
-      this(LanguageMode.ECMASCRIPT5.toFeatureSet());
-    }
-
-    public CompilerSupplier(FeatureSet outputFeatureSet) {
       // Use the default resolution mode
-      this(
-          outputFeatureSet,
-          new CompilerOptions().getModuleResolutionMode(),
-          ImmutableList.of(),
-          ImmutableMap.of());
+      this(new CompilerOptions().getModuleResolutionMode(), ImmutableList.of(), ImmutableMap.of());
     }
 
     /**
@@ -121,11 +107,9 @@ public final class BaseTranspiler implements Transpiler {
      *     ModuleLoader.ResolutionMode#BROWSER_WITH_TRANSFORMED_PREFIXES}
      */
     public CompilerSupplier(
-        FeatureSet outputFeatureSet,
         ModuleLoader.ResolutionMode moduleResolution,
         ImmutableList<String> moduleRoots,
         ImmutableMap<String, String> prefixReplacements) {
-      this.outputFeatureSet = outputFeatureSet;
       this.moduleResolution = moduleResolution;
       this.moduleRoots = moduleRoots;
       this.prefixReplacements = prefixReplacements;
@@ -174,8 +158,16 @@ public final class BaseTranspiler implements Transpiler {
 
     protected void setOptions(CompilerOptions options) {
       options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT);
-      options.setOutputFeatureSet(outputFeatureSet.without(Feature.MODULES));
-      options.setEmitUseStrict(false);
+      // TODO(sdh): It would be nice to allow people to output code in
+      // strict mode.  But currently we swallow all the input language
+      // strictness checks, and there are various tests that are never
+      // compiled and so are broken when we output 'use strict'.  We
+      // could consider adding some sort of logging/warning/error in
+      // cases where the input was not strict, though there could still
+      // be semantic differences even if syntax is strict.  Possibly
+      // the first step would be to allow the option of outputting strict
+      // and then change the default and see what breaks.  b/33005948
+      options.setLanguageOut(LanguageMode.ECMASCRIPT5);
       options.setQuoteKeywordProperties(true);
       options.setSkipNonTranspilationPasses(true);
       options.setVariableRenaming(VariableRenamingPolicy.OFF);
@@ -183,7 +175,7 @@ public final class BaseTranspiler implements Transpiler {
       options.setWrapGoogModulesForWhitespaceOnly(false);
       options.setPrettyPrint(true);
       options.setWarningLevel(ES5_WARNINGS, CheckLevel.OFF);
-      options.setTranspileEs6ModulesToCjsModules(true);
+      options.setEs6ModuleTranspilation(Es6ModuleTranspilation.TO_COMMON_JS_LIKE_MODULES);
       options.setModuleResolutionMode(moduleResolution);
       options.setModuleRoots(moduleRoots);
       options.setBrowserResolverPrefixReplacements(prefixReplacements);
@@ -213,6 +205,76 @@ public final class BaseTranspiler implements Transpiler {
     protected static final SourceFile EMPTY = SourceFile.fromCode("empty.js", "");
     protected static final DiagnosticGroup ES5_WARNINGS = new DiagnosticGroup(
         DiagnosticType.error("JSC_CANNOT_CONVERT", ""));
+  }
+
+  /**
+   * CompilerSupplier that only transforms EcmaScript Modules into a form that can be safely
+   * transformed on a file by file basis and concatenated.
+   */
+  public static class EsmToCjsCompilerSupplier extends CompilerSupplier {
+
+    public EsmToCjsCompilerSupplier() {
+      super();
+    }
+
+    public EsmToCjsCompilerSupplier(
+        ModuleLoader.ResolutionMode moduleResolution,
+        ImmutableList<String> moduleRoots,
+        ImmutableMap<String, String> prefixReplacements) {
+      super(moduleResolution, moduleRoots, prefixReplacements);
+    }
+
+
+    @Override
+    public CompileResult compile(URI path, String code) {
+      CompilerOptions options = new CompilerOptions();
+      options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT);
+      options.setEmitUseStrict(false);
+      options.setSourceMapOutputPath("/dev/null");
+      options.setSourceMapIncludeSourcesContent(true);
+      options.setPrettyPrint(true);
+      options.setModuleResolutionMode(moduleResolution);
+      options.setModuleRoots(moduleRoots);
+      options.setBrowserResolverPrefixReplacements(prefixReplacements);
+
+      // Create a compiler and run specifically this one pass on it.
+      Compiler compiler = compiler();
+      compiler.init(
+          ImmutableList.of(),
+          ImmutableList.of(SourceFile.fromCode(path.toString(), code)),
+          options);
+      compiler.parseForCompilation();
+
+      boolean transpiled = false;
+
+      if (!compiler.hasErrors()
+          && compiler.getRoot().getSecondChild().getFirstFirstChild().isModuleBody()
+          && !compiler
+              .getRoot()
+              .getSecondChild()
+              .getFirstChild()
+              .getBooleanProp(Node.GOOG_MODULE)) {
+        new Es6RewriteModulesToCommonJsModules(compiler)
+            .process(null, compiler.getRoot().getSecondChild());
+        compiler.getRoot().getSecondChild().getFirstChild().putBooleanProp(Node.TRANSPILED, true);
+        transpiled = true;
+      }
+
+      Result result = compiler.getResult();
+      String source = compiler.toSource();
+      StringBuilder sourceMap = new StringBuilder();
+      if (result.sourceMap != null) {
+        try {
+          result.sourceMap.appendTo(sourceMap, path.toString());
+        } catch (IOException e) {
+          // impossible, and not a big deal even if it did happen.
+        }
+      }
+      if (result.errors.length > 0) {
+        throw new TranspilationException(compiler, result.errors, result.warnings);
+      }
+      return new CompileResult(source, transpiled, transpiled ? sourceMap.toString() : "");
+    }
   }
 
   /**

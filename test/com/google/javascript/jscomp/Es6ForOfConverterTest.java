@@ -193,6 +193,40 @@ public final class Es6ForOfConverterTest extends CompilerTestCase {
         TypeValidator.TYPE_MISMATCH_WARNING);
   }
 
+  public void testForOfWithQualifiedNameInitializer() {
+    // TODO(b/79532975): handle this case in the type checker and remove disableTypeCheck();
+    disableTypeCheck();
+    disableTypeInfoValidation();
+    test(
+        "var obj = {a: 0}; for (obj.a of [1,2,3]) { console.log(obj.a); }",
+        lines(
+            "var obj = {a: 0};",
+            "for (var $jscomp$iter$0 = $jscomp.makeIterator([1,2,3]),",
+            "    $jscomp$key$a = $jscomp$iter$0.next();",
+            "    !$jscomp$key$a.done; $jscomp$key$a = $jscomp$iter$0.next()) {",
+            "  obj.a = $jscomp$key$a.value;",
+            "  {",
+            "    console.log(obj.a);",
+            "  }",
+            "}"));
+  }
+
+  public void testForOfWithComplexInitializer() {
+    // TODO(b/79532975): handle this case in the type checker and remove disableTypeCheck();
+    disableTypeCheck();
+    disableTypeInfoValidation();
+    test(
+        "function f() { return {}; } for (f()['x' + 1] of [1,2,3]) {}",
+        lines(
+            "function f() { return {}; }",
+            "for (var $jscomp$iter$0 = $jscomp.makeIterator([1,2,3]),",
+            "    $jscomp$key$a = $jscomp$iter$0.next();",
+            "    !$jscomp$key$a.done; $jscomp$key$a = $jscomp$iter$0.next()) {",
+            "  f()['x' + 1] = $jscomp$key$a.value;",
+            "  {}",
+            "}"));
+  }
+
   @Override
   protected Compiler createCompiler() {
     return new NoninjectingCompiler();

@@ -122,12 +122,9 @@ public class CompilerInput extends DependencyInfo.Base implements SourceAst {
 
   @Override
   public Node getAstRoot(AbstractCompiler compiler) {
-    Node root = ast.getAstRoot(compiler);
-    // The root maybe null if the AST can not be created.
-    if (root != null) {
-      checkState(root.isScript());
-      checkNotNull(root.getInputId());
-    }
+    Node root = checkNotNull(ast.getAstRoot(compiler));
+    checkState(root.isScript());
+    checkNotNull(root.getInputId());
     return root;
   }
 

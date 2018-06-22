@@ -18,7 +18,6 @@ package com.google.javascript.jscomp;
 
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
-
 import java.io.Serializable;
 
 /**
@@ -29,6 +28,7 @@ public interface SourceAst extends Serializable {
   /**
    * Gets the root node of the AST for the source file this represents. The AST
    * is lazily instantiated and cached.
+   * This node is always non-null, even in the case of parse errors.
    */
   public Node getAstRoot(AbstractCompiler compiler);
 

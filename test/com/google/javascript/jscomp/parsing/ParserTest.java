@@ -2679,6 +2679,24 @@ public final class ParserTest extends BaseJSTypeTestCase {
     parseError("`hello\\07`", "Invalid escape sequence");
   }
 
+  public void testTemplateLiteralSubstitutionWithCast() {
+    mode = LanguageMode.ECMASCRIPT6;
+
+    Node root = parse("`${ /** @type {?} */ (3)}`");
+    Node exprResult = root.getFirstChild();
+    Node templateLiteral = exprResult.getFirstChild();
+    assertNode(templateLiteral).hasType(Token.TEMPLATELIT);
+
+    Node substitution = templateLiteral.getSecondChild();
+    assertNode(substitution).hasType(Token.TEMPLATELIT_SUB);
+
+    Node cast = substitution.getFirstChild();
+    assertNode(cast).hasType(Token.CAST);
+
+    Node number = cast.getFirstChild();
+    assertNode(number).hasType(Token.NUMBER);
+  }
+
   public void testExponentialLiterals() {
     parse("0e0");
     parse("0E0");

@@ -1679,6 +1679,13 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "required: string"));
   }
 
+  public void testTaggedTemplateLiteral_argumentWithCast() {
+    testTypes(
+        lines(
+            "function tag(strings, /** string */ s) {}", // preserve newline
+            "tag`${ /** @type {?} */ (123) }`;"));
+  }
+
   public void testTaggedTemplateLiteral_optionalArguments() {
     testTypes(
         lines(

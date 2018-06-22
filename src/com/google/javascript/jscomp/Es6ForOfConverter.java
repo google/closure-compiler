@@ -18,7 +18,6 @@ package com.google.javascript.jscomp;
 import static com.google.javascript.jscomp.Es6ToEs3Util.createType;
 import static com.google.javascript.jscomp.Es6ToEs3Util.withType;
 
-import com.google.common.base.Preconditions;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.IR;
@@ -46,6 +45,7 @@ public final class Es6ForOfConverter implements NodeTraversal.Callback, HotSwapC
   private final JSType unknownType;
   private final JSType stringType;
   private final JSType booleanType;
+  private final DefaultNameGenerator namer;
 
   private static final String ITER_BASE = "$jscomp$iter$";
 
@@ -59,6 +59,7 @@ public final class Es6ForOfConverter implements NodeTraversal.Callback, HotSwapC
     this.unknownType = createType(addTypes, registry, JSTypeNative.UNKNOWN_TYPE);
     this.stringType = createType(addTypes, registry, JSTypeNative.STRING_TYPE);
     this.booleanType = createType(addTypes, registry, JSTypeNative.BOOLEAN_TYPE);
+    namer = new DefaultNameGenerator();
   }
 
   @Override
@@ -126,18 +127,16 @@ public final class Es6ForOfConverter implements NodeTraversal.Callback, HotSwapC
                     IR.getprop(iterName.cloneTree(), withStringType(IR.string("next"))),
                     iteratorNextType)),
             iIterableResultType);
-    String variableName;
-    Token declType;
-    if (variable.isName()) {
-      declType = Token.NAME;
-      variableName = variable.getQualifiedName();
+    String iteratorResultName = ITER_RESULT;
+    if (NodeUtil.isNameDeclaration(variable)) {
+      iteratorResultName += variable.getFirstChild().getString();
+    } else if (variable.isName()) {
+      iteratorResultName += variable.getString();
     } else {
-      Preconditions.checkState(NodeUtil.isNameDeclaration(variable),
-          "Expected var, let, or const. Got %s", variable);
-      declType = variable.getToken();
-      variableName = variable.getFirstChild().getQualifiedName();
+      // give arbitrary lhs expressions an arbitrary name
+      iteratorResultName += namer.generateNextName();
     }
-    Node iterResult = withType(IR.name(ITER_RESULT + variableName), iIterableResultType);
+    Node iterResult = withType(IR.name(iteratorResultName), iIterableResultType);
     iterResult.makeNonIndexable();
 
     Node call = Es6ToEs3Util.makeIterator(compiler, iterable);
@@ -182,11 +181,11 @@ public final class Es6ForOfConverter implements NodeTraversal.Callback, HotSwapC
         withType(IR.assign(iterResult.cloneTree(), getNext.cloneTree()), iIterableResultType);
 
     Node declarationOrAssign;
-    if (declType == Token.NAME) {
+    if (!NodeUtil.isNameDeclaration(variable)) {
       declarationOrAssign =
           withType(
               IR.assign(
-                  withType(IR.name(variableName).useSourceInfoFrom(variable), typeParam),
+                  withType(variable.cloneTree().setJSDocInfo(null), typeParam),
                   withType(
                       IR.getprop(iterResult.cloneTree(), withStringType(IR.string("value"))),
                       typeParam)),
@@ -194,9 +193,13 @@ public final class Es6ForOfConverter implements NodeTraversal.Callback, HotSwapC
       declarationOrAssign.setJSDocInfo(varJSDocInfo);
       declarationOrAssign = IR.exprResult(declarationOrAssign);
     } else {
-      declarationOrAssign = new Node(
-          declType,
-          withType(IR.name(variableName).useSourceInfoFrom(variable.getFirstChild()), typeParam));
+      Token declarationType = variable.getToken(); // i.e. VAR, CONST, or LET.
+      declarationOrAssign =
+          new Node(
+                  declarationType,
+                  IR.name(variable.getFirstChild().getString())
+                      .useSourceInfoFrom(variable.getFirstChild()))
+              .setJSType(typeParam);
       declarationOrAssign.getFirstChild().addChildToBack(
               withType(
                   IR.getprop(iterResult.cloneTree(), withStringType(IR.string("value"))),

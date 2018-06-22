@@ -129,13 +129,13 @@ public class GoogleCodingConvention extends CodingConventions.Proxy {
   @Override
   public boolean isOptionalParameter(Node parameter) {
     return super.isOptionalParameter(parameter)
-        || parameter.getString().startsWith(OPTIONAL_ARG_PREFIX);
+        || (parameter.isName() && parameter.getString().startsWith(OPTIONAL_ARG_PREFIX));
   }
 
   @Override
   public boolean isVarArgsParameter(Node parameter) {
     return super.isVarArgsParameter(parameter)
-        || VAR_ARGS_NAME.equals(parameter.getString());
+        || (parameter.isName() && VAR_ARGS_NAME.equals(parameter.getString()));
   }
 
   /**
@@ -151,8 +151,9 @@ public class GoogleCodingConvention extends CodingConventions.Proxy {
 
   @Override
   public boolean isClassFactoryCall(Node callNode) {
+    Node callTarget = callNode.getFirstChild();
     return super.isClassFactoryCall(callNode)
-        || callNode.getFirstChild().matchesQualifiedName("Polymer");
+        || (callTarget.isName() && callTarget.toString().equals("Polymer"));
   }
 
   /**

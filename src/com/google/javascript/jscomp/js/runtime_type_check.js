@@ -240,6 +240,7 @@ $jscomp.typecheck.ExternClassChecker_.oldOpenFuns = [];
  * Redefines the open method on the given window, adding tracking.
  *
  * @param {!Window} win the window to track.
+ * @suppress {uselessCode}
  */
 $jscomp.typecheck.ExternClassChecker_.trackOpenOnWindow = function(win) {
   // Declare the property we add to the window object.

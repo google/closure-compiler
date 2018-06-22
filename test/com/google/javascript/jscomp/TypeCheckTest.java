@@ -2476,15 +2476,10 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "}",
             "/** @type {null} */ var a = firstOf('hi', 1);",
             ""),
-        ImmutableList.of(
-            // TODO(b/79707793): This will be fixed when transpilation of REST parameters moves
-            // after type checking.
-            "Bad type annotation. Unknown type T",
-            lines(
-                "initializing variable", // preserve newlinues
-                "found   : (number|string)",
-                "required: null")),
-        /* isError= */ false);
+        lines(
+            "initializing variable", // preserve newlines
+            "found   : (number|string)",
+            "required: null"));
   }
 
   // Test that when transpiling we don't use T in the body of f; it would cause a spurious
@@ -3990,13 +3985,25 @@ public final class TypeCheckTest extends TypeCheckTestCase {
         "/** @enum */ var b = a;");
   }
 
-  public void testEnum13() {
+  public void testEnum13a() {
     testTypes(
         "/** @enum {number} */ var a = {};" +
         "/** @enum {string} */ var b = a;",
         "incompatible enum element types\n" +
         "found   : number\n" +
         "required: string");
+  }
+
+  public void testEnum13b() {
+    testTypes(
+        lines(
+            "/** @enum {number} */ var a = {};",
+            "/** @const */ var ns = {};",
+            "/** @enum {string} */ ns.b = a;"),
+        lines(
+            "incompatible enum element types", // preserve newlines
+            "found   : number",
+            "required: string"));
   }
 
   public void testEnum14() {
@@ -7269,6 +7276,24 @@ public final class TypeCheckTest extends TypeCheckTestCase {
         "SubFoo.prototype.bar = 3;");
   }
 
+  public void testOverriddenPropertyWithUnknown() {
+    // When overriding a declared property with a declared unknown property, we warn for a missing
+    // override but not a type mismatch.
+    testTypes(
+        lines(
+            "/** @constructor */ function Foo() {}",
+            "/** @type {?number} */ Foo.prototype.bar = null;",
+            "",
+            "/**",
+            " * @constructor",
+            " * @extends {Foo}",
+            " */",
+            "function SubFoo() {}",
+            "/** @type {?} */",
+            "SubFoo.prototype.bar = 'not a number';"),
+        "property bar already defined on superclass Foo; use @override to override it");
+  }
+
   public void testThis2() {
     testTypes("var goog = {};" +
         "/** @constructor */goog.A = function(){" +
@@ -9492,6 +9517,38 @@ public final class TypeCheckTest extends TypeCheckTestCase {
 
   public void testCall11() {
     testTypes("var f = new Function(); f();");
+  }
+
+  public void testCall12() {
+    testTypes(
+        lines(
+            "/**",
+            " * @param {*} x",
+            " * @return {number}",
+            " */",
+            "function f(x, y) {",
+            "  return x && x.foo();",
+            "}"),
+        new String[] {
+          lines(
+              "inconsistent return type", // preserve new line
+              "found   : *",
+              "required: number"),
+          "Property foo never defined on *"
+        });
+  }
+
+  public void testCall13() {
+    // Test a case where we use inferred types across scopes.
+    testTypes(
+        lines(
+            "var x;",
+            "function useX() { var /** string */ str = x(); }",
+            "function setX() { x = /** @return {number} */ () => 3; }"),
+        lines(
+            "initializing variable", // preserve new line
+            "found   : number",
+            "required: string"));
   }
 
   public void testAbstractMethodCall1() {

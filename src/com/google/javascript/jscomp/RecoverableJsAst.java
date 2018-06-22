@@ -71,7 +71,7 @@ public class RecoverableJsAst implements SourceAst {
         }
       }
     }
-    return root;
+    return checkNotNull(root);
   }
 
   private void replay(AbstractCompiler compiler, ParseResult result) {

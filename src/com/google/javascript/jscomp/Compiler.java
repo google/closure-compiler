@@ -1356,7 +1356,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     checkState(input.isExtern(), "Not an extern input: %s", input.getName());
     inputsById.remove(id);
     externs.remove(input);
-    Node root = input.getAstRoot(this);
+    Node root = checkNotNull(input.getAstRoot(this));
     if (root != null) {
       root.detach();
     }
@@ -1376,10 +1376,10 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     CompilerInput input = new CompilerInput(ast, true);
     putCompilerInput(input.getInputId(), input);
     if (pos == SyntheticExternsPosition.START) {
-      externsRoot.addChildToFront(ast.getAstRoot(this));
+      externsRoot.addChildToFront(checkNotNull(ast.getAstRoot(this)));
       externs.add(0, input);
     } else {
-      externsRoot.addChildToBack(ast.getAstRoot(this));
+      externsRoot.addChildToBack(checkNotNull(ast.getAstRoot(this)));
       externs.add(input);
     }
     return input;
@@ -1402,17 +1402,9 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   boolean replaceIncrementalSourceAst(JsAst ast) {
     CompilerInput oldInput = getInput(ast.getInputId());
     checkNotNull(oldInput, "No input to replace: %s", ast.getInputId().getIdName());
-    Node newRoot = ast.getAstRoot(this);
-    if (newRoot == null) {
-      return false;
-    }
-
+    Node newRoot = checkNotNull(ast.getAstRoot(this));
     Node oldRoot = oldInput.getAstRoot(this);
-    if (oldRoot != null) {
-      oldRoot.replaceWith(newRoot);
-    } else {
-      getRoot().getLastChild().addChildToBack(newRoot);
-    }
+    oldRoot.replaceWith(newRoot);
 
     CompilerInput newInput = new CompilerInput(ast);
     putCompilerInput(ast.getInputId(), newInput);
@@ -1448,11 +1440,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       throw new IllegalStateException(
           "Input already exists: " + ast.getInputId().getIdName());
     }
-    Node newRoot = ast.getAstRoot(this);
-    if (newRoot == null) {
-      return false;
-    }
-
+    Node newRoot = checkNotNull(ast.getAstRoot(this));
     getRoot().getLastChild().addChildToBack(newRoot);
 
     CompilerInput newInput = new CompilerInput(ast);
@@ -1674,7 +1662,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
         new PrebuildAst(this, options.numParallelThreads).prebuild(externs);
       }
       for (CompilerInput input : externs) {
-        Node n = input.getAstRoot(this);
+        Node n = checkNotNull(input.getAstRoot(this));
         if (hasErrors()) {
           return null;
         }
@@ -1777,11 +1765,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       }
 
       for (CompilerInput input : inputs) {
-        Node n = input.getAstRoot(this);
-        if (n == null) {
-          continue;
-        }
-
+        Node n = checkNotNull(input.getAstRoot(this));
         if (devMode) {
           runValidityCheck();
           if (hasErrors()) {
@@ -1945,7 +1929,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     FindModuleDependencies findDeps =
         new FindModuleDependencies(
             this, supportEs6Modules, supportCommonJSModules, inputPathByWebpackId);
-    findDeps.process(input.getAstRoot(this));
+    findDeps.process(checkNotNull(input.getAstRoot(this)));
 
     // If this input was imported by another module, it is itself a module
     // so we force it to be detected as such.
@@ -2013,12 +1997,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
    */
   private boolean hoistIfExtern(CompilerInput input) {
     Node n = input.getAstRoot(this);
-
-    // Inputs can have a null AST on a parse error.
-    if (n == null) {
-      return false;
-    }
-
     JSDocInfo info = n.getJSDocInfo();
     if (info != null && info.isExterns()) {
       // If the input file is explicitly marked as an externs file, then move it out of the main
@@ -2044,12 +2022,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     }
     for (CompilerInput input : inputs) {
       Node n = input.getAstRoot(this);
-
-      // Inputs can have a null AST on a parse error.
-      if (n == null) {
-        continue;
-      }
-
       JSDocInfo info = n.getJSDocInfo();
       if (info != null && info.isNoCompile()) {
         input.getModule().remove(input);
@@ -2086,10 +2058,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
         continue;
       }
 
-      Node root = input.getAstRoot(this);
-      if (root == null) {
-        continue;
-      }
+      Node root = checkNotNull(input.getAstRoot(this));
       input.setJsModuleType(CompilerInput.ModuleType.JSON);
       rewriteJson.process(null, root);
     }
@@ -2123,10 +2092,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   void processAMDModules() {
     for (CompilerInput input : inputs) {
       input.setCompiler(this);
-      Node root = input.getAstRoot(this);
-      if (root == null) {
-        continue;
-      }
+      Node root = checkNotNull(input.getAstRoot(this));
       new TransformAMDToCJSModule(this).process(null, root);
     }
   }
@@ -2172,7 +2138,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   private Node parseCodeHelper(SourceFile src) {
     CompilerInput input = new CompilerInput(src);
     putCompilerInput(input.getInputId(), input);
-    return input.getAstRoot(this);
+    return checkNotNull(input.getAstRoot(this));
   }
 
   @Override
@@ -3288,7 +3254,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     if (!replaceIncrementalSourceAst(ast)) {
       return;
     }
-    Node originalRoot = input.getAstRoot(this);
+    Node originalRoot = checkNotNull(input.getAstRoot(this));
 
     processNewScript(ast, originalRoot);
   }
@@ -3316,8 +3282,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   private void processNewScript(JsAst ast, Node originalRoot) {
     setFeatureSet(options.getLanguageIn().toFeatureSet());
 
-    Node js = ast.getAstRoot(this);
-    checkNotNull(js);
+    Node js = checkNotNull(ast.getAstRoot(this));
 
     runHotSwap(originalRoot, js, this.getCleanupPassConfig());
     // NOTE: If hot swap passes that use GlobalNamespace are added, we will need
@@ -3366,6 +3331,10 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
         !force && (options.skipNonTranspilationPasses || options.preventLibraryInjection);
     if (injectedLibraries.containsKey(resourceName) || doNotInject) {
       return lastInjectedLibrary;
+    }
+
+    if (hasTypeCheckingRun()) {
+      throw new RuntimeException("runtime library injected after type checking:" + resourceName);
     }
 
     // Load/parse the code.

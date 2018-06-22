@@ -51,7 +51,7 @@ public final class ClosureBundler {
   }
 
   public ClosureBundler(Transpiler transpiler) {
-    this(transpiler, BaseTranspiler.LATEST_TRANSPILER);
+    this(transpiler, BaseTranspiler.ES_MODULE_TO_CJS_TRANSPILER);
   }
 
   public ClosureBundler(Transpiler transpiler, Transpiler es6ModuleTranspiler) {
@@ -77,20 +77,6 @@ public final class ClosureBundler {
     this.path = path;
     this.sourceMapCache = sourceMapCache;
     this.es6ModuleTranspiler = es6ModuleTranspiler;
-  }
-
-  public ClosureBundler withTranspilers(
-      Transpiler newTranspiler, Transpiler newEs6ModuleTranspiler) {
-    return new ClosureBundler(
-        newTranspiler, newEs6ModuleTranspiler, mode, sourceUrl, path, sourceMapCache);
-  }
-
-  public ClosureBundler withTranspiler(Transpiler newTranspiler) {
-    return withTranspilers(newTranspiler, es6ModuleTranspiler);
-  }
-
-  public ClosureBundler withEs6ModuleTranspiler(Transpiler newEs6ModuleTranspiler) {
-    return withTranspilers(transpiler, newEs6ModuleTranspiler);
   }
 
   public final ClosureBundler useEval(boolean useEval) {

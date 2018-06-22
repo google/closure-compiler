@@ -15,8 +15,9 @@
  */
 package com.google.javascript.jscomp;
 
-import com.google.javascript.jscomp.NodeTraversal.Callback;
+import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
+import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 
@@ -28,25 +29,60 @@ import com.google.javascript.rhino.Node;
  * type checking code can add type information to the injected JavaScript for checking and
  * optimization purposes.
  *
- * This class also reports an error if it finds getters or setters are used and the language output
- * level is too low to support them.
- * TODO(bradfordcsmith): The getter/setter check should probably be done separately in an earlier
- * pass that only runs when the output language level is ES3 and the input language level is
- * ES5 or greater.
+ * <p>This class also reports an error if it finds getters or setters are used and the language
+ * output level is too low to support them. TODO(bradfordcsmith): The getter/setter check should
+ * probably be done separately in an earlier pass that only runs when the output language level is
+ * ES3 and the input language level is ES5 or greater.
  */
-public final class Es6InjectRuntimeLibraries implements Callback, HotSwapCompilerPass {
+public final class Es6InjectRuntimeLibraries extends AbstractPostOrderCallback
+    implements HotSwapCompilerPass {
   private final AbstractCompiler compiler;
+  private final boolean getterSetterSupported;
 
   // Since there's currently no Feature for Symbol, run this pass if the code has any ES6 features.
   private static final FeatureSet requiredForFeatures = FeatureSet.ES6.without(FeatureSet.ES5);
 
+  private static final FeatureSet knownToRequireSymbol =
+      FeatureSet.BARE_MINIMUM.with(Feature.FOR_OF, Feature.SPREAD_EXPRESSIONS);
+
   public Es6InjectRuntimeLibraries(AbstractCompiler compiler) {
     this.compiler = compiler;
+    this.getterSetterSupported =
+        !FeatureSet.ES3.contains(compiler.getOptions().getOutputFeatureSet());
   }
 
   @Override
   public void process(Node externs, Node root) {
+    FeatureSet used = FeatureSet.ES3;
+    for (Node script : root.children()) {
+      used = used.with(getScriptFeatures(script));
+    }
+
+    // We will need these runtime methods when we transpile, but we want the runtime
+    // functions to be have JSType applied to it by the type inferrence.
+
+    if (used.contains(Feature.FOR_OF)) {
+      Es6ToEs3Util.preloadEs6RuntimeFunction(compiler, "makeIterator");
+    }
+
+    if (used.contains(Feature.SPREAD_EXPRESSIONS)) {
+      Es6ToEs3Util.preloadEs6RuntimeFunction(compiler, "arrayfromiterable");
+    }
+
+
+    if (used.contains(Feature.GENERATORS)) {
+      compiler.ensureLibraryInjected("es6/generator_engine", /* force= */ false);
+    }
+
+    boolean requiresSymbol = used.contains(knownToRequireSymbol);
+
+    // TODO(johnlenz): remove this.  Symbol should be handled like the other polyfills.
     TranspilationPasses.processTranspile(compiler, root, requiredForFeatures, this);
+  }
+
+  private static FeatureSet getScriptFeatures(Node script) {
+    FeatureSet features = NodeUtil.getFeatureSetOfScript(script);
+    return features != null ? features : FeatureSet.ES3;
   }
 
   @Override
@@ -55,45 +91,27 @@ public final class Es6InjectRuntimeLibraries implements Callback, HotSwapCompile
   }
 
   @Override
-  public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
-    switch (n.getToken()) {
-      case FOR_OF:
-        // We will need this when we transpile for/of in LateEs6ToEs3Converter,
-        // but we want the runtime functions to be have JSType applied to it by the type checker.
-        Es6ToEs3Util.preloadEs6RuntimeFunction(compiler, "makeIterator");
-        break;
-      case GETTER_DEF:
-      case SETTER_DEF:
-        if (FeatureSet.ES3.contains(compiler.getOptions().getOutputFeatureSet())) {
-          Es6ToEs3Util.cannotConvert(
-              compiler, n, "ES5 getters/setters (consider using --language_out=ES5)");
-        }
-        break;
-      case FUNCTION:
-        if (n.isAsyncFunction()) {
-          throw new IllegalStateException("async functions should have already been converted");
-        }
-        if (n.isGeneratorFunction()) {
-          compiler.ensureLibraryInjected("es6/generator_engine", /* force= */ false);
-        }
-        break;
-      default:
-        break;
-    }
-    return true;
-  }
-
-  @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
     switch (n.getToken()) {
+      // TODO(johnlenz): remove this.  Symbol should be handled like the other polyfills.
       case NAME:
         if (!n.isFromExterns() && isGlobalSymbol(t, n)) {
           initSymbolBefore(n);
         }
         break;
+
       case GETPROP:
         if (!n.isFromExterns()) {
           visitGetprop(t, n);
+        }
+        break;
+
+      // TODO(johnlenz): this check doesn't belong here.
+      case GETTER_DEF:
+      case SETTER_DEF:
+        if (!getterSetterSupported) {
+          Es6ToEs3Util.cannotConvert(
+              compiler, n, "ES5 getters/setters (consider using --language_out=ES5)");
         }
         break;
       default:

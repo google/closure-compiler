@@ -280,6 +280,13 @@ public final class FeatureSet implements Serializable {
     return this.features.containsAll(other.features);
   }
 
+  /**
+   * Does this {@link FeatureSet} contain the given feature?
+   */
+  public boolean contains(Feature feature) {
+    return this.features.containsAll(EnumSet.of(feature));
+  }
+
   private static EnumSet<Feature> emptyEnumSet() {
     return EnumSet.noneOf(Feature.class);
   }
@@ -324,6 +331,12 @@ public final class FeatureSet implements Serializable {
   @VisibleForTesting
   public FeatureSet with(Set<Feature> newFeatures) {
     return new FeatureSet(union(features, newFeatures));
+  }
+
+  /** Returns a feature set combining all the features from {@code this} and {@code newFeatures}. */
+  @VisibleForTesting
+  public FeatureSet with(FeatureSet newFeatures) {
+    return new FeatureSet(union(features, newFeatures.features));
   }
 
   /**

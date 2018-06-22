@@ -31,7 +31,12 @@ class InjectRuntimeLibraries implements CompilerPass {
 
   @Override
   public void process(Node externs, Node root) {
-    for (String forced : compiler.getOptions().forceLibraryInjection) {
+    CompilerOptions options = compiler.getOptions();
+    if (options.runtimeTypeCheck) {
+      compiler.ensureLibraryInjected("runtime_type_check", true);
+    }
+
+    for (String forced : options.forceLibraryInjection) {
       compiler.ensureLibraryInjected(forced, true);
     }
   }
