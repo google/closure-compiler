@@ -935,6 +935,13 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       visitImplicitReturnExpression(t, n);
     }
 
+    // Visit the loop initializer of a for-of loop
+    // We do this check here, instead of when visiting FOR_OF, in order to get the correct
+    // TypedScope.
+    if (n.getParent().isForOf() && n.getParent().getFirstChild() == n) {
+      checkForOfTypes(t, n.getParent());
+    }
+
     // Don't count externs since the user's code may not even use that part.
     typeable = typeable && !inExterns;
 
@@ -1542,17 +1549,8 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       return false;
     }
 
-    // Not need to type first key in for in.
-    if (parent.isForIn() && parent.getFirstChild() == n) {
-      return false;
-    }
-
-    // Check that the declared type of the for-of key matches the inferred type.
-    // Do this check here instead of when visiting a FOR_OF node in order to get the correct
-    // syntactic scope.
-    if (parent.isForOf() && parent.getFirstChild() == n) {
-      // e.g. for (x of arr) {
-      checkForOfTypes(t, parent, n);
+    // Not need to type first key in for-in or for-of.
+    if (NodeUtil.isEnhancedFor(parent) && parent.getFirstChild() == n) {
       return false;
     }
 
@@ -1572,17 +1570,53 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
   }
 
   /** Visits the loop variable of a FOR_OF and verifies the type being assigned to it */
-  private void checkForOfTypes(NodeTraversal t, Node forOf, Node lhs) {
-    JSType iterable = getJSType(forOf.getSecondChild());
+  private void checkForOfTypes(NodeTraversal t, Node forOf) {
+    Node lhs = forOf.getFirstChild();
+    Node iterable = forOf.getSecondChild();
+    JSType iterableType = getJSType(iterable);
     // Convert primitives to their wrapper type and remove null/undefined
     // If iterable is a union type, autoboxes each member of the union.
-    iterable = iterable.autobox();
+    iterableType = iterableType.autobox();
     JSType actualType =
-        iterable.getTemplateTypeMap().getResolvedTemplateType(typeRegistry.getIterableTemplate());
+        iterableType
+            .getTemplateTypeMap()
+            .getResolvedTemplateType(typeRegistry.getIterableTemplate());
 
-    // TODO(b/79532975): "checkCanAssignToWithScope" skips some GETPROP specific checks that we do
-    // for
-    // ASSIGNs, that apply to "for (obj.a of arr) {" as well.
+    if (NodeUtil.isNameDeclaration(lhs)) {
+      // e.g. get "x" given the VAR in "for (var x of arr) {"
+      lhs = lhs.getFirstChild();
+    }
+
+    // Do some additional checks for property accesses in the initializer
+    // e.g. check `obj.foo` in `for (obj.foo of someIterable) {`
+    if (lhs.isGetProp()) {
+      Node object = lhs.getFirstChild();
+      // Don't allow assigning to an interface member
+      if (object.isGetProp() && object.getLastChild().getString().equals("prototype")) {
+        JSType jsType = getJSType(object.getFirstChild());
+        if (jsType.isInterface()) {
+          reportInvalidInterfaceMemberDeclaration(t, object);
+        }
+      }
+      checkPropCreation(t, lhs);
+
+      JSType objectJsType = getJSType(object);
+      Node property = lhs.getLastChild();
+      String pname = property.getString();
+
+      ObjectType objectCastType = ObjectType.cast(objectJsType.restrictByNotNullOrUndefined());
+      JSType expectedPropertyType = getPropertyTypeIfDeclared(objectCastType, pname);
+      if (!expectedPropertyType.isUnknownType()) {
+        // Note: if the property has @implicitCast at its declaration, we don't check any
+        // assignments to it.
+        if (!propertyIsImplicitCast(objectCastType, pname)) {
+          validator.expectCanAssignToPropertyOf(
+              t, iterable, actualType, expectedPropertyType, object, pname);
+        }
+        return;
+      }
+    }
+
     checkCanAssignToWithScope(
         t,
         forOf,
@@ -1790,7 +1824,6 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
   private void visitVar(NodeTraversal t, Node n) {
     // Handle var declarations in for-of loops separately from regular var declarations.
     if (n.getParent().isForOf()) {
-      checkForOfTypes(t, n.getParent(), n.getFirstChild());
       return;
     }
 

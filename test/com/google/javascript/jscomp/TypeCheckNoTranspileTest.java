@@ -827,9 +827,26 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "required: string"));
   }
 
-  public void disabled_testForOf4() {
-    // TODO(b/79532975): this currently crashes in TypeInference
+  public void testForOf4() {
     testTypes("/** @type {!Iterable} */ var it; var obj = {}; for (obj.elem of it) {}");
+  }
+
+  public void testForOf5() {
+    // We infer the type of a qualified name in a for-of loop initializer
+    testTypes(
+        lines(
+            "function takesString(/** string */ s) {}",
+            "",
+            "function f(/** !Iterable<number> */ it) {",
+            "  var obj = {};",
+            "  for (obj.elem of it) {",
+            "    takesString(obj.elem);",
+            "  }",
+            "}"),
+        lines(
+            "actual parameter 1 of takesString does not match formal parameter",
+            "found   : number",
+            "required: string"));
   }
 
   public void testForOf_wrongLoopVarType1() {
@@ -929,6 +946,56 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "declared type of for-of loop variable does not match inferred type",
             "found   : string",
             "required: number"));
+  }
+
+  public void testForOf_wrongLoopVarType7() {
+    testTypes(
+        lines(
+            "/** @type {!Iterable<string>} */ var it;",
+            "var /** !Object<string, number> */ obj = {};",
+            "for (obj['x'] of it) {}"),
+        lines(
+            "declared type of for-of loop variable does not match inferred type",
+            "found   : string",
+            "required: number"));
+  }
+
+  public void testForOf_wrongLoopVarType8() {
+    testTypes(
+        lines(
+            "/** @type {!Iterable<string>} */ var it;",
+            "const /** @type {{x: number}} */ obj = {x: 5};",
+            "for (obj.x of it) {}"),
+        lines(
+            "assignment to property x of obj", // preserve newline
+            "found   : string",
+            "required: number"));
+  }
+
+  public void testForOf_illegalPropertyCreation() {
+    testTypes(
+        lines(
+            "/** @type {!Iterable<string>} */ var it;",
+            "const /** @struct */ obj = {};",
+            "for (obj.x of it) {}"),
+        "Cannot add a property to a struct instance after it is constructed. "
+            + "(If you already declared the property, make sure to give it a type.)");
+  }
+
+  public void testForOf_badInterfaceMemberCreation() {
+    testTypesWithCommonExterns(
+        lines(
+            "/** @interface */", // preserve newline
+            "function Foo() {}",
+            "for (Foo.prototype.bar of []) {}"),
+        "interface members can only be empty property declarations, "
+            + "empty functions, or goog.abstractMethod");
+  }
+
+  public void testForOf_badEnumCreation() {
+    testTypesWithCommonExterns(
+        "for (var /** @enum */ myEnum of []) {}",
+        "enum initializer must be an object literal or an enum");
   }
 
   public void testForOf_array1() {
@@ -1084,6 +1151,25 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testForOf_const() {
     // TypeCheck can now handle const
     testTypesWithCommonExterns("/** @type {!Iterable} */ const it = []; for (const elem of it) {}");
+  }
+
+  public void testImplicitCastInForOf() {
+    testTypesWithExtraExterns(
+        lines(
+            "/** @constructor */ function Element() {};",
+            "/**",
+            " * @type {string}",
+            " * @implicitCast",
+            " */",
+            "Element.prototype.innerHTML;"),
+        lines(
+            "/** @param {?Element} element",
+            " * @param {!Array<string|number>} texts",
+            " */",
+            "function f(element, texts) {",
+            "  for (element.innerHTML of texts) {};",
+            "}",
+            ""));
   }
 
   public void testGenerator1() {

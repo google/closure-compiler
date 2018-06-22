@@ -275,10 +275,9 @@ class TypeInference
               // NOTE: this returns the UNKNOWN_TYPE if objType does not implement Iterable
               JSType newType = objType.getInstantiatedTypeArgument(getNativeType(ITERABLE_TYPE));
 
-              // Redeclare the loop var. Note that if we can't determine the type of the "object"
-              // we declare the var as the unknown type and let TypeCheck warn for using a non-
-              // Iterable in a for/of loop.
-              informed = redeclareSimpleVar(informed, item, newType);
+              // Note that `item` can be an arbitrary LHS expression we need to check.
+              informed = traverse(item, informed);
+              informed = updateScopeForAssignment(informed, item, item.getJSType(), newType);
             }
             newScope = informed;
             break;
