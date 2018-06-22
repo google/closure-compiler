@@ -962,7 +962,7 @@ public class CommandLineRunner extends
           // For markdown docs we don't want any line wrapping so we just set a very
           // large line length.
           maxLineLength = 5000;
-          parser.getProperties().withUsageWidth(maxLineLength);
+          parser.setUsageWidth(maxLineLength);
         }
 
         printCategoryUsage(entry.getKey(), entry.getValue(), outputStream, prefix, suffix);
