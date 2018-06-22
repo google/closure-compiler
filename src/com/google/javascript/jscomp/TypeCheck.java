@@ -64,6 +64,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import javax.annotation.Nullable;
 
 /**
  * <p>Checks the types of JS expressions against any declared type
@@ -84,10 +85,6 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
   //
   // User warnings
   //
-
-  protected static final String OVERRIDING_PROTOTYPE_WITH_NON_OBJECT =
-      "overriding prototype with non-object";
-
   static final DiagnosticType DETERMINISTIC_TEST =
       DiagnosticType.warning(
           "JSC_DETERMINISTIC_TEST",
@@ -1012,7 +1009,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       if (object.isGetProp()) {
         JSType jsType = getJSType(object.getFirstChild());
         if (jsType.isInterface() && object.getLastChild().getString().equals("prototype")) {
-          visitInterfaceGetprop(t, assign, object, rvalue);
+          visitInterfacePropertyAssignment(t, object, rvalue);
         }
       }
 
@@ -1024,42 +1021,29 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       // during TypedScopeCreator, and we only look for the "dumb" cases here.
       // object.prototype = ...;
       if (pname.equals("prototype")) {
-        if (objectJsType != null && objectJsType.isFunctionType()) {
-          FunctionType functionType = objectJsType.toMaybeFunctionType();
-          if (functionType.isConstructor()) {
-            JSType rvalueType = rvalue.getJSType();
-            validator.expectObject(t, rvalue, rvalueType,
-                OVERRIDING_PROTOTYPE_WITH_NON_OBJECT);
-            return;
-          }
-        }
+        validator.expectCanAssignToPrototype(t, objectJsType, rvalue, getJSType(rvalue));
+        return;
       }
 
       // The generic checks for 'object.property' when 'object' is known,
       // and 'property' is declared on it.
       // object.property = ...;
-      ObjectType type = ObjectType.cast(
-          objectJsType.restrictByNotNullOrUndefined());
-      if (type != null) {
-        if (type.hasProperty(pname) && !type.isPropertyTypeInferred(pname)) {
-          JSType expectedType = type.getPropertyType(pname);
-          if (!expectedType.isUnknownType()) {
-            if (!propertyIsImplicitCast(type, pname)) {
-              validator.expectCanAssignToPropertyOf(
-                  t, assign, getJSType(rvalue),
-                  expectedType, object, pname);
-              checkPropertyInheritanceOnGetpropAssign(
-                  t, assign, object, pname, info, expectedType);
-            }
-            return;
-          }
-        }
-      }
+      ObjectType objectCastType = ObjectType.cast(objectJsType.restrictByNotNullOrUndefined());
+      JSType expectedPropertyType = getPropertyTypeIfDeclared(objectCastType, pname);
 
-      // If we couldn't get the property type with normal object property
-      // lookups, then check inheritance anyway with the unknown type.
-      checkPropertyInheritanceOnGetpropAssign(
-          t, assign, object, pname, info, getNativeType(UNKNOWN_TYPE));
+      checkPropertyInheritanceOnGetpropAssign(t, assign, object, pname, info, expectedPropertyType);
+
+      // If we successfully found a non-unknown declared type, validate the assignment and don't do
+      // any further checks.
+      if (!expectedPropertyType.isUnknownType()) {
+        // Note: if the property has @implicitCast at its declaration, we don't check any
+        // assignments to it.
+        if (!propertyIsImplicitCast(objectCastType, pname)) {
+          validator.expectCanAssignToPropertyOf(
+              t, assign, getJSType(rvalue), expectedPropertyType, object, pname);
+        }
+        return;
+      }
     }
 
     checkCanAssignToWithScope(t, assign, lvalue, getJSType(rvalue), "assignment");
@@ -1502,37 +1486,34 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
    * Visits an ASSIGN node for cases such as
    *
    * <pre>
-   * interface.property2.property = ...;
+   * interface.prototype.property = ...;
    * </pre>
    */
-  private void visitInterfaceGetprop(NodeTraversal t, Node assign, Node object, Node rvalue) {
-
+  private void visitInterfacePropertyAssignment(NodeTraversal t, Node object, Node rvalue) {
     JSType rvalueType = getJSType(rvalue);
 
-    // Only 2 values are allowed for methods:
+    // Only 2 values are allowed for interface methods:
     //    goog.abstractMethod
     //    function () {};
-    // or for properties, no assignment such as:
-    //    InterfaceFoo.prototype.foobar;
-
-    String abstractMethodName =
-        compiler.getCodingConvention().getAbstractMethodName();
+    // Other (non-method) interface properties must be stub declarations without assignments, e.g.
+    //     someinterface.prototype.nonMethodProperty;
+    // which is why we enforce that `rvalueType.isFunctionType()`.
     if (!rvalueType.isFunctionType()) {
-      // This is bad i18n style but we don't localize our compiler errors.
-      String abstractMethodMessage = (abstractMethodName != null)
-         ? ", or " + abstractMethodName
-         : "";
-      compiler.report(
-          t.makeError(object, INVALID_INTERFACE_MEMBER_DECLARATION,
-              abstractMethodMessage));
+      reportInvalidInterfaceMemberDeclaration(t, object);
     }
 
-    if (assign.getLastChild().isFunction()
-        && !NodeUtil.isEmptyBlock(assign.getLastChild().getLastChild())) {
-      compiler.report(
-          t.makeError(object, INTERFACE_METHOD_NOT_EMPTY,
-              abstractMethodName));
+    if (rvalue.isFunction() && !NodeUtil.isEmptyBlock(NodeUtil.getFunctionBody(rvalue))) {
+      String abstractMethodName = compiler.getCodingConvention().getAbstractMethodName();
+      compiler.report(t.makeError(object, INTERFACE_METHOD_NOT_EMPTY, abstractMethodName));
     }
+  }
+
+  private void reportInvalidInterfaceMemberDeclaration(NodeTraversal t, Node interfaceNode) {
+    String abstractMethodName = compiler.getCodingConvention().getAbstractMethodName();
+    // This is bad i18n style but we don't localize our compiler errors.
+    String abstractMethodMessage = (abstractMethodName != null) ? ", or " + abstractMethodName : "";
+    compiler.report(
+        t.makeError(interfaceNode, INVALID_INTERFACE_MEMBER_DECLARATION, abstractMethodMessage));
   }
 
   /**
@@ -2568,6 +2549,18 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     } else {
       return jsType;
     }
+  }
+
+  /**
+   * Returns the type of the property with the given name if declared. Otherwise returns unknown.
+   */
+  private JSType getPropertyTypeIfDeclared(@Nullable ObjectType objectType, String propertyName) {
+    if (objectType != null
+        && objectType.hasProperty(propertyName)
+        && !objectType.isPropertyTypeInferred(propertyName)) {
+      return objectType.getPropertyType(propertyName);
+    }
+    return getNativeType(UNKNOWN_TYPE);
   }
 
   // TODO(nicksantos): TypeCheck should never be attaching types to nodes.

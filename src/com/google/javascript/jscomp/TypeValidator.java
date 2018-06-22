@@ -667,6 +667,27 @@ class TypeValidator implements Serializable {
   }
 
   /**
+   * Expect that it's valid to assign something to a given type's prototype.
+   *
+   * <p>Most of these checks occur during TypedScopeCreator, so we just handle very basic cases here
+   *
+   * <p>For example, assuming `Foo` is a constructor, `Foo.prototype = 3;` will warn because `3`
+   * is not an object.
+   *
+   * @param ownerType The type of the object whose prototype is being changed. (e.g. `Foo` above)
+   * @param node Node to issue warnings on (e.g. `3` above)
+   * @param rightType the rvalue type being assigned to the prototype (e.g. `number` above)
+   */
+  void expectCanAssignToPrototype(NodeTraversal t, JSType ownerType, Node node, JSType rightType) {
+    if (ownerType.isFunctionType()) {
+      FunctionType functionType = ownerType.toMaybeFunctionType();
+      if (functionType.isConstructor()) {
+        expectObject(t, node, rightType, "cannot override prototype with non-object");
+      }
+    }
+  }
+
+  /**
    * Expect that the first type can be cast to the second type. The first type
    * must have some relationship with the second.
    *

@@ -7794,6 +7794,25 @@ public final class TypeCheckTest extends TypeCheckTestCase {
         "};\n");
   }
 
+  public void testImplicitCast3() {
+    testTypesWithExterns(
+        lines(
+            "/** @constructor */ function Element() {};",
+            "/**",
+            " * @type {string}",
+            " * @implicitCast",
+            " */",
+            "Element.prototype.innerHTML;"),
+        lines(
+            "/** @param {?Element} element",
+            " * @param {string|number} text",
+            " */",
+            "function f(element, text) {",
+            "  element.innerHTML = text;",
+            "}",
+            ""));
+  }
+
   public void testImplicitCastSubclassAccess() {
     testTypesWithExterns("/** @constructor */ function Element() {};\n" +
              "/** @type {string}\n" +
@@ -15587,23 +15606,17 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   }
 
   public void testIssue1024b() {
-    /* TODO(blickly): Make this warning go away.
-     * This is old behavior, but it doesn't make sense to warn about since
-     * both assignments are inferred.
-     */
     testTypes(
-        "/** @param {Object} a */\n"
-            + "function f(a) {\n"
-            + "  a.prototype = {foo:3};\n"
-            + "}\n"
-            + "/** @param {Object} b\n"
-            + " */\n"
-            + "function g(b) {\n"
-            + "  b.prototype = function(){};\n"
-            + "}\n",
-        "assignment to property prototype of Object\n"
-            + "found   : {foo: number}\n"
-            + "required: function(): undefined");
+        lines(
+            "/** @param {Object} a */",
+            "function f(a) {",
+            "  a.prototype = {foo:3};",
+            "}",
+            "/** @param {Object} b",
+            " */",
+            "function g(b) {",
+            "  b.prototype = function(){};",
+            "}"));
   }
 
   public void testBug12722936() {
