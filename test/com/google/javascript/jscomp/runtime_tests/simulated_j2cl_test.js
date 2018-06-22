@@ -24,14 +24,14 @@ const testSuite = goog.require('goog.testing.testSuite');
 
 class Main {
   /**
-   * @return {IThenable<number>}
+   * @return {!IThenable<number>}
    */
   static async ten() {
     return 10;
   }
 
   /**
-   * @return {IThenable<number>}
+   * @return {!IThenable<number>}
    */
   static async main() {
     return Main.same(await Main.ten());
