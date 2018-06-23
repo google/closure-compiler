@@ -1645,9 +1645,10 @@ RTCStatsReport.prototype.id;
 // Mozilla.
 // See https://www.w3.org/TR/webrtc/#rtcstatsreport-object for definition.
 /**
- * @param {function(this:SCOPE, Object)} callback
+ * @param {function(this:SCOPE, Object, string, MAP)} callback
  * @param {SCOPE=} opt_thisObj The value of "this" inside callback function.
- * @template SCOPE
+ * @this {MAP}
+ * @template MAP,SCOPE
  * @readonly
  */
 RTCStatsReport.prototype.forEach = function(callback, opt_thisObj) {};
