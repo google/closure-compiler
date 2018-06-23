@@ -241,6 +241,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
     if (export.matchesQualifiedName(MODULE + "." + EXPORTS)
         || (export.isGetElem()
         && export.getFirstChild().matchesQualifiedName(MODULE)
+        && export.getSecondChild().isString()
         && export.getSecondChild().getString().equals(EXPORTS))) {
       Var v = t.getScope().getVar(MODULE);
       if (v == null || v.isExtern()) {
@@ -572,7 +573,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
 
       if (n.matchesQualifiedName(MODULE + "." + EXPORTS)
           || (n.isGetElem() && n.getFirstChild().matchesQualifiedName(MODULE)
-          && n.getSecondChild().getString().equals(EXPORTS))) {
+          && n.getSecondChild().isString() && n.getSecondChild().getString().equals(EXPORTS))) {
         if (isCommonJsExport(t, n)) {
           moduleExports.add(new ExportInfo(n, t.getScope()));
 
