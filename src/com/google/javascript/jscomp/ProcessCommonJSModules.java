@@ -93,11 +93,11 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
 
       boolean isCommonJsModule = finder.isCommonJsModule();
       ImmutableList.Builder<ExportInfo> exports = ImmutableList.builder();
-      boolean needsRetraverse = false;
       if (isCommonJsModule || forceModuleDetection) {
         finder.reportModuleErrors();
 
         if (!finder.umdPatterns.isEmpty()) {
+          boolean needsRetraverse = false;
           if (finder.replaceUmdPatterns()) {
             needsRetraverse = true;
           }
@@ -115,27 +115,17 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
 
         defaultExportIsConst = finder.initializeModule();
 
-        //UMD pattern replacement can leave detached export references - don't include those
-        for (ExportInfo export : finder.getModuleExports()) {
-          if (NodeUtil.getEnclosingScript(export.node) != null) {
-            exports.add(export);
-          }
-        }
-        for (ExportInfo export : finder.getExports()) {
-          if (NodeUtil.getEnclosingScript(export.node) != null) {
-            exports.add(export);
-          }
-        }
-      } else if (needsRetraverse) {
-        finder = new FindImportsAndExports();
-        NodeTraversal.traverse(compiler, n, finder);
+        exports.addAll(finder.getModuleExports());
+        exports.addAll(finder.getExports());
       }
 
       NodeTraversal.traverse(
           compiler,
           n,
           new RewriteModule(
-              isCommonJsModule || forceModuleDetection, exports.build(), defaultExportIsConst));
+              isCommonJsModule || forceModuleDetection,
+              exports.build(),
+              defaultExportIsConst));
     }
     return false;
   }
@@ -772,6 +762,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
       List<ExportInfo> exportsToRemove = new ArrayList<>();
       for (ExportInfo export : exports) {
         if (NodeUtil.getEnclosingScript(export.node) == null) {
+          exportsToRemove.add(export);
           continue;
         }
         Node qNameBase = getBaseQualifiedNameNode(export.node);
@@ -810,10 +801,32 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
             exportsToRemove.add(export);
             compiler.reportChangeToEnclosingScope(assign);
           }
+          // Find babel transpiled interop assignment
+          // module.exports = exports['default'];
+        } else if (export.node.getParent().isGetElem()
+            && export.node.getNext().isString()
+            && export.node.getNext().getString().equals(EXPORT_PROPERTY_NAME)
+            && export.node.getGrandparent().isAssign()
+            && export.node.getParent().getPrevious() != null
+            && export.node.getParent().getPrevious().matchesQualifiedName(MODULE + "." + EXPORTS)) {
+          Node parent = export.node.getParent();
+          Node grandparent = parent.getParent();
+          Node prop = export.node.getNext();
+          parent.replaceWith(
+              IR.getprop(export.node.detach(), prop.detach()).useSourceInfoFrom(parent));
+
+          compiler.reportChangeToEnclosingScope(grandparent);
         }
       }
 
       exports.removeAll(exportsToRemove);
+      exportsToRemove.clear();
+      for (ExportInfo export : moduleExports) {
+        if (NodeUtil.getEnclosingScript(export.node) == null) {
+          exportsToRemove.add(export);
+        }
+      }
+      moduleExports.removeAll(exportsToRemove);
 
       // If we assign to the variable more than once or all the assignments
       // are properties, initialize the variable as well.
@@ -844,19 +857,21 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
       JSDocInfoBuilder builder = new JSDocInfoBuilder(true);
       builder.recordConstancy();
       initModule.setJSDocInfo(builder.build());
-      if (directAssignments == 0) {
+      if (directAssignments == 0 || (exports.size() > 0 && moduleExports.size() > 0)) {
         Node defaultProp = IR.stringKey(EXPORT_PROPERTY_NAME);
         defaultProp.putBooleanProp(Node.MODULE_EXPORT, true);
         defaultProp.addChildToFront(IR.objectlit());
         initModule.getFirstFirstChild().addChildToFront(defaultProp);
-        builder = new JSDocInfoBuilder(true);
-        builder.recordConstancy();
-        defaultProp.setJSDocInfo(builder.build());
+        if (exports.size() == 0 || moduleExports.size() == 0) {
+          builder = new JSDocInfoBuilder(true);
+          builder.recordConstancy();
+          defaultProp.setJSDocInfo(builder.build());
+        }
       }
       this.script.addChildToFront(initModule.useSourceInfoFromForTree(this.script));
       compiler.reportChangeToEnclosingScope(this.script);
 
-      return directAssignments < 2;
+      return directAssignments < 2 && (exports.size() == 0 || moduleExports.size() == 0);
     }
 
     /**

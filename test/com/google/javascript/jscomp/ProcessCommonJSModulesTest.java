@@ -131,10 +131,10 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
   public void testPropertyExports() {
     testModules(
         "test.js",
-        lines("exports.one = 1;", "module.exports.obj = {};", "module.exports.obj.two = 2;"),
+        lines("exports.one = 1; module.exports.obj = {}; module.exports.obj.two = 2;"),
         lines(
-            "/** @const */ var module$test = {/** @const */ default: {}};",
-            "" + "module$test.default.one = 1;",
+            "/** @const */ var module$test = {default: {}};",
+            "module$test.default.one = 1;",
             "module$test.default.obj = {};",
             "module$test.default.obj.two = 2;"));
   }
@@ -149,7 +149,7 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
         "test.js",
         lines("exports.one = 1;", "module.exports = {};"),
         lines(
-            "/** @const */ var module$test = {/** @const */ default: {}};",
+            "/** @const */ var module$test = { default: {}};",
             "module$test.default.one = 1;"));
   }
 
@@ -724,8 +724,8 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "  global.foobar = foobar;",
             "}})(this)"),
         lines(
-            "/** @const */ var module$test = {};",
-            "/** @const */ module$test.default = {foo: 'bar'};",
+            "/** @const */ var module$test = { default: {}};",
+            "module$test.default = {foo: 'bar'};",
             "module$test.default.foobar = module$test.default;"));
 
     testModules(
@@ -742,8 +742,8 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "  global.foobar = foobar;",
             "}}.call(this, this))"),
         lines(
-            "/** @const */ var module$test = {};",
-            "/** @const */ module$test.default = {foo: 'bar'};",
+            "/** @const */ var module$test = { default: {}};",
+            "module$test.default = {foo: 'bar'};",
             "module$test.default.foobar = module$test.default;"));
 
     // We can't remove IIFEs explict calls that don't use "this"
@@ -827,10 +827,10 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "  global.foobar = foobar;",
             "}}.call(this, this))"),
         lines(
-            "/** @const */ var module$test = {};",
+            "/** @const */ var module$test = { default: {}};",
             "/** @param {...*} var_args */",
             "function log$$module$test(var_args){}",
-            "/** @const */ module$test.default = {",
+            "module$test.default = {",
             "  foo: 'bar',",
             "  log: function() { log$$module$test.apply(null,arguments); }",
             "};",
@@ -929,7 +929,7 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "      (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));",
             ""),
         lines(
-            "/** @const */ var module$test = {};",
+            "/** @const */ var module$test = { default: {}};",
             "var __WEBPACK_AMD_DEFINE_ARRAY__$$module$test;",
             "!(__WEBPACK_AMD_DEFINE_ARRAY__$$module$test = ",
             "    [__webpack_require__(1), __webpack_require__(2)],",
@@ -1123,8 +1123,8 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "console.log(typeof module);",
             "console.log(typeof exports);"),
         lines(
-            "/** @const */ var module$test={};",
-            "/** @const */ module$test.default = 'foo';",
+            "/** @const */ var module$test={ default: {}};",
+            "module$test.default = 'foo';",
             "console.log('object');",
             "console.log('object');"));
   }
@@ -1312,5 +1312,24 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "/** @const */ module$test.default = {",
             "  ...g$$module$test",
             "};"));
+  }
+  
+  public void testBabelTranspiledESModules() {
+    testModules(
+        "test.js",
+        lines(
+            "'use strict';",
+            "",
+            "Object.defineProperty(exports, '__esModule', {",
+            "  value: true",
+            "});",
+            "exports.default = toInteger;",
+            "function toInteger(dirtyNumber) { }",
+            "module.exports = exports['default'];"),
+        lines(
+            "/** @const */ var module$test = {default: {}};",
+            "module$test.default.default = function(dirtyNumber) { };",
+            "module$test.default = module$test.default.default;",
+            "Object.defineProperty(module$test.default, '__esModule',{value:true})"));
   }
 }
