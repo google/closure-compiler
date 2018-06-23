@@ -25,7 +25,7 @@
 
 
 /**
- * @interface
+ * @constructor
  * @see https://dom.spec.whatwg.org/#interface-eventtarget
  */
 function EventTarget() {}
