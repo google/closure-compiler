@@ -1362,4 +1362,30 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "Object.defineProperty(module$test.default, '__esModule',{value:true})",
             "module$test.default = module$test.default.default;"));
   }
+  
+  public void testWebpackAMDDefine() {
+    testModules(
+        "test.js",
+        lines(
+            "/** @suppress {duplicate} */var __WEBPACK_AMD_DEFINE_RESULT__;(function() {",
+            "  var dialogPolyfill = {prop: 'DIALOG_POLYFILL'};",
+            "",
+            "  if ('function' === 'function' && 'amd' in __webpack_require__(124)) {",
+            "    // AMD support",
+            "    !(__WEBPACK_AMD_DEFINE_RESULT__ = (function() { return dialogPolyfill; }).call(exports, __webpack_require__, exports, module),",
+            "				__WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));",
+            "  } else if (typeof module === 'object' && typeof module['exports'] === 'object') {",
+            "    // CommonJS support",
+            "    module['exports'] = dialogPolyfill;",
+            "  } else {",
+            "    // all others",
+            "    window['dialogPolyfill'] = dialogPolyfill;",
+            "  }",
+            "})();"),
+        lines(
+            "/** @const */ var module$test={};",
+            "/** @suppress {duplicate} */",
+            "var __WEBPACK_AMD_DEFINE_RESULT__$$module$test;",
+            "(function(){/** @const */ module$test.default={prop:'DIALOG_POLYFILL'}})()"));
+  }
 }

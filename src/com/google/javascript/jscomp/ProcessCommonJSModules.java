@@ -922,7 +922,10 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
               public void visit(Node node) {
                 if ((node.isName()
                         && (node.getString().equals(MODULE) || node.getString().equals("define")))
-                    || (node.isGetProp() && node.matchesQualifiedName("window.define"))) {
+                    || (node.isGetProp() && node.matchesQualifiedName("window.define"))
+                    || (node.isString()
+                        && node.getString().equals("amd")
+                        && node.getParent().isIn())) {
                   umdTests.add(node);
                 }
               }
