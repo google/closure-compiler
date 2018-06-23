@@ -30,6 +30,7 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
 
@@ -237,7 +238,10 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
    */
   public static boolean isCommonJsExport(
       NodeTraversal t, Node export, ModuleLoader.ResolutionMode resolutionMode) {
-    if (export.matchesQualifiedName(MODULE + "." + EXPORTS)) {
+    if (export.matchesQualifiedName(MODULE + "." + EXPORTS)
+        || (export.isGetElem()
+        && export.getFirstChild().matchesQualifiedName(MODULE)
+        && export.getSecondChild().getString().equals(EXPORTS))) {
       Var v = t.getScope().getVar(MODULE);
       if (v == null || v.isExtern()) {
         return true;
@@ -566,7 +570,9 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
         visitRequireEnsureCall(t, n);
       }
 
-      if (n.matchesQualifiedName(MODULE + "." + EXPORTS)) {
+      if (n.matchesQualifiedName(MODULE + "." + EXPORTS)
+          || (n.isGetElem() && n.getFirstChild().matchesQualifiedName(MODULE)
+          && n.getSecondChild().getString().equals(EXPORTS))) {
         if (isCommonJsExport(t, n)) {
           moduleExports.add(new ExportInfo(n, t.getScope()));
 
@@ -821,12 +827,25 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
 
       exports.removeAll(exportsToRemove);
       exportsToRemove.clear();
+      HashMap<ExportInfo, ExportInfo> exportsToReplace = new HashMap<>();
       for (ExportInfo export : moduleExports) {
         if (NodeUtil.getEnclosingScript(export.node) == null) {
           exportsToRemove.add(export);
+        } else if (export.node.isGetElem()) {
+          Node prop = export.node.getSecondChild().detach();
+          ExportInfo newExport = new ExportInfo(
+              IR.getprop(export.node.getFirstChild().detach(), prop), export.scope);
+          export.node.replaceWith(newExport.node);
+          compiler.reportChangeToEnclosingScope(newExport.node);
+          exportsToReplace.put(export, newExport);
         }
       }
       moduleExports.removeAll(exportsToRemove);
+      for (ExportInfo oldExport : exportsToReplace.keySet()) {
+        int oldIndex = moduleExports.indexOf(oldExport);
+        moduleExports.remove(oldIndex);
+        moduleExports.add(oldIndex, exportsToReplace.get(oldExport));
+      }
 
       // If we assign to the variable more than once or all the assignments
       // are properties, initialize the variable as well.

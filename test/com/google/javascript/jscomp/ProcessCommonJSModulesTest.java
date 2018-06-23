@@ -308,6 +308,21 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
         "test.js",
         lines(
             "var foobar = {foo: 'bar'};",
+            "if (typeof module === 'object' && module['exports']) {",
+            "  module['exports'] = foobar;",
+            "} else if (typeof define === 'function' && define['amd']) {",
+            "  define([], function() {return foobar;});",
+            "} else {",
+            "  this.foobar = foobar;",
+            "}"),
+        lines(
+            "/** @const */ var module$test = {};",
+            "/** @const */ module$test.default = {foo: 'bar'};"));
+
+    testModules(
+        "test.js",
+        lines(
+            "var foobar = {foo: 'bar'};",
             "if (typeof define === 'function' && define.amd) {",
             "  define([], function() {return foobar;});",
             "} else if (typeof module === 'object' && module.exports) {",
@@ -327,6 +342,21 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "  window.define([], function() {return foobar;});",
             "} else if (typeof module === 'object' && module.exports) {",
             "  module.exports = foobar;",
+            "} else {",
+            "  this.foobar = foobar;",
+            "}"),
+        lines(
+            "/** @const */ var module$test = {};",
+            "/** @const */ module$test.default = {foo: 'bar'};"));
+
+    testModules(
+        "test.js",
+        lines(
+            "var foobar = {foo: 'bar'};",
+            "if (typeof define === 'function' && define['amd']) {",
+            "  define([], function() {return foobar;});",
+            "} else if (typeof module === 'object' && module['exports']) {",
+            "  module['exports'] = foobar;",
             "} else {",
             "  this.foobar = foobar;",
             "}"),
@@ -1329,7 +1359,7 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
         lines(
             "/** @const */ var module$test = {default: {}};",
             "module$test.default.default = function(dirtyNumber) { };",
-            "module$test.default = module$test.default.default;",
-            "Object.defineProperty(module$test.default, '__esModule',{value:true})"));
+            "Object.defineProperty(module$test.default, '__esModule',{value:true})",
+            "module$test.default = module$test.default.default;"));
   }
 }
