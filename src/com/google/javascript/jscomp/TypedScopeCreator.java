@@ -542,7 +542,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
 
     /** Traverse the scope root and build it. */
     void build() {
-      NodeTraversal.traverseTyped(compiler, currentScope.getRootNode(), this);
+      NodeTraversal.traverse(compiler, currentScope.getRootNode(), this);
     }
 
     @Override
@@ -552,8 +552,22 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
         checkNotNull(inputId);
         sourceName = NodeUtil.getSourceName(n);
       }
-      visitPreorder(t, n, parent);
-      return shouldDescend(n, parent);
+      if (inCurrentScope(t)) {
+        visitPreorder(t, n, parent);
+        return true;
+      }
+      return false;
+    }
+
+    private boolean inCurrentScope(NodeTraversal t) {
+      Node traversalScopeRoot = t.getScopeRoot();
+      // NOTE: we need special handling for SCRIPT nodes, since Compiler.replaceScript causes a
+      // traversal rooted at a SCRIPT but with the global scope whose root node is the ROOT.
+      if (traversalScopeRoot.isScript()) {
+        return currentScope.isGlobal();
+      }
+      // Otherwise we're in the current scope as long as the root nodes match up.
+      return traversalScopeRoot == currentScope.getRootNode();
     }
 
     @Override
@@ -569,31 +583,6 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
         // Run *all* remaining deferred actions, in case any were missed.
         deferredActions.values().stream().forEach(Runnable::run);
       }
-    }
-
-    /** Whether or not to descend into a given node. */
-    boolean shouldDescend(Node n, Node parent) {
-      if (parent == null) {
-        return true;
-      } else if (parent.isClass()) {
-        // We need some special handling for classes, since we need to fully traverse the 'extends'
-        // node in the outer scope before (post-order) visiting the class node.  But node traversals
-        // lump the 'extends' node into the inner scope, causing problems.
-        // If we're in the class scope we want to skip the extends node (since it was already
-        // visited in the outer scope).  If we're in the outer scope, we only want to descend into
-        // the extends node and not into any others.  This ensures all children are still visited
-        // exactly once.
-        // TODO(sdh): Rework NodeTraversal to visit the extends node in the outer scope, and rework
-        // this class to leverage enterScope and exitScope and call different template methods
-        // depending on whether we're in our own scope or a child scope.
-        boolean isClassScope = parent == currentScope.getRootNode();
-        boolean isExtendsNode = n == parent.getSecondChild();
-        return isClassScope != isExtendsNode;
-      } else if (n.isClass()) {
-        // We need to descend into classes from the outer scope in order to see the extends node.
-        return true;
-      }
-      return !NodeUtil.createsScope(n);
     }
 
     /** Called by shouldTraverse on nodes after ensuring the inputId is set. */

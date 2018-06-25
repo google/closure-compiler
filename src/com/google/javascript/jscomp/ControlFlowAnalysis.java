@@ -38,7 +38,8 @@ import java.util.Map;
 import java.util.PriorityQueue;
 
 /**
- * This is a compiler pass that computes a control flow graph.
+ * This is a compiler pass that computes a control flow graph. Note that this is only a CompilerPass
+ * because the Compiler invokes it via Compiler#process. It is never included in a PassConfig.
  *
  */
 public final class ControlFlowAnalysis implements Callback, CompilerPass {
@@ -47,7 +48,7 @@ public final class ControlFlowAnalysis implements Callback, CompilerPass {
    * Based roughly on the first few pages of
    *
    * "Declarative Intraprocedural Flow Analysis of Java Source Code by
-   * Nilsson-Nyman, Hedin, Magnusson & Ekman",
+   * Nilsson-Nyman, Hedin, Magnusson &amp; Ekman",
    *
    * this pass computes the control flow graph from the AST. However, a full
    * attribute grammar is not necessary. We will compute the flow edges with a
@@ -269,6 +270,7 @@ public final class ControlFlowAnalysis implements Callback, CompilerPass {
           return n == parent.getLastChild();
         case CLASS:
           return shouldTraverseFunctions && n == parent.getLastChild();
+        case COMPUTED_PROP:
         case CONTINUE:
         case BREAK:
         case EXPR_RESULT:

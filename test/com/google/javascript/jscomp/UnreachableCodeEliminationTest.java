@@ -531,4 +531,31 @@ public final class UnreachableCodeEliminationTest extends CompilerTestCase {
         "export function bar(){if(foo)x=1;else if(bar){return}"
             + "else{x=3;return}return 5}");
   }
+
+  public void testComputedClassPropertyNotRemoved() {
+    testSame("class Foo { ['x']() {} }");
+  }
+
+  public void testClassExtendsNotRemoved() {
+    testSame(
+        lines(
+            "function f() {}", //
+            "class Foo extends f() {}"));
+  }
+
+  public void testRemoveUnreachableCodeInComputedPropertIife() {
+    test(
+        lines(
+            "class Foo {",
+            "  [function() {",
+            "    1; return 'x';",
+            "  }()]() { return 1; }",
+            "}"),
+        lines(
+            "class Foo {",
+            "  [function() {",
+            "    return 'x';",
+            "  }()]() { return 1; }",
+            "}"));
+  }
 }

@@ -794,6 +794,8 @@ public class NodeTraversal {
 
     if (type == Token.CLASS) {
       traverseClass(n);
+    } else if (type == Token.CLASS_MEMBERS) {
+      traverseClassMembers(n);
     } else if (type == Token.MODULE_BODY) {
       traverseModule(n);
     } else if (useBlockScope && NodeUtil.createsBlockScope(n)) {
@@ -838,10 +840,31 @@ public class NodeTraversal {
     popScope();
   }
 
-  /** Traverses a class. */
+  /**
+   * Traverses a class.  Note that we traverse some of the child nodes slightly out of order to
+   * ensure children are visited in the correct scope.  The following children are in the outer
+   * scope: (1) the 'extends' clause, (2) any computed method keys, (3) the class name for class
+   * declarations only (class expression names are traversed in the class scope).  This requires
+   * that we visit the extends node (second child) and any computed member keys (grandchildren of
+   * the last, body, child) before visiting the name (first child) or body (last child).
+   */
   private void traverseClass(Node n) {
     final Node className = n.getFirstChild();
     boolean isClassExpression = NodeUtil.isClassExpression(n);
+
+    final Node extendsClause = n.getSecondChild();
+    final Node body = extendsClause.getNext();
+
+    // Extends
+    traverseBranch(extendsClause, n);
+
+    for (Node child = body.getFirstChild(); child != null;) {
+      Node next = child.getNext(); // see traverseChildren
+      if (child.isComputedProp()) {
+        traverseBranch(child.getFirstChild(), child);
+      }
+      child = next;
+    }
 
     if (!isClassExpression) {
       // Class declarations are in the scope containing the declaration.
@@ -857,16 +880,28 @@ public class NodeTraversal {
       traverseBranch(className, n);
     }
 
-    final Node extendsClause = n.getSecondChild();
-    final Node body = extendsClause.getNext();
-
-    // Extends
-    traverseBranch(extendsClause, n);
-
     // Body
     traverseBranch(body, n);
 
     popScope();
+  }
+
+  /** Traverse class members, excluding keys of computed props. */
+  private void traverseClassMembers(Node n) {
+    for (Node child = n.getFirstChild(); child != null;) {
+      Node next = child.getNext(); // see traverseChildren
+      if (child.isComputedProp()) {
+        curNode = n;
+        if (callback.shouldTraverse(this, child, n)) {
+          traverseBranch(child.getLastChild(), child);
+          curNode = n;
+          callback.visit(this, child, n);
+        }
+      } else {
+        traverseBranch(child, n);
+      }
+      child = next;
+    }
   }
 
   private void traverseChildren(Node n) {
