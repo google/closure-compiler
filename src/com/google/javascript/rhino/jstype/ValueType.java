@@ -75,4 +75,9 @@ abstract class ValueType extends JSType {
       return super.getPropertyKind(propertyName, autobox);
     }
   }
+
+  @Override
+  public final int hashCode() {
+    return System.identityHashCode(this);
+  }
 }

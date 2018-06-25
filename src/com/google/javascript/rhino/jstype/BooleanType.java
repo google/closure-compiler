@@ -112,9 +112,4 @@ public class BooleanType extends ValueType {
   public <T> T visit(Visitor<T> visitor) {
     return visitor.caseBooleanType();
   }
-
-  @Override
-  public int hashCode() {
-    return System.identityHashCode(this);
-  }
 }

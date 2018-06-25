@@ -111,9 +111,4 @@ public final class StringType extends ValueType {
   public <T> T visit(Visitor<T> visitor) {
     return visitor.caseStringType();
   }
-
-  @Override
-  public int hashCode() {
-    return System.identityHashCode(this);
-  }
 }

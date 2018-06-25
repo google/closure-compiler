@@ -118,9 +118,4 @@ public final class NullType extends ValueType {
   public <T> T visit(Visitor<T> visitor) {
     return visitor.caseNullType();
   }
-
-  @Override
-  public int hashCode() {
-    return System.identityHashCode(this);
-  }
 }

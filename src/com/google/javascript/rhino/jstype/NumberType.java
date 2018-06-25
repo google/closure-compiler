@@ -111,9 +111,4 @@ public class NumberType extends ValueType {
   public JSType autoboxesTo() {
     return getNativeType(JSTypeNative.NUMBER_OBJECT_TYPE);
   }
-
-  @Override
-  public int hashCode() {
-    return System.identityHashCode(this);
-  }
 }
