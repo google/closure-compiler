@@ -682,11 +682,8 @@ public class DiagnosticGroups {
     DiagnosticGroups.registerDeprecatedGroup("duplicateZipContents");
   }
 
-  /**
-   * Adds warning levels by name.
-   */
-  void setWarningLevel(CompilerOptions options,
-      String name, CheckLevel level) {
+  /** Adds warning levels by name. */
+  public void setWarningLevel(CompilerOptions options, String name, CheckLevel level) {
     DiagnosticGroup group = forName(name);
     Preconditions.checkNotNull(group, "No warning class for name: %s", name);
     options.setWarningLevel(group, level);
