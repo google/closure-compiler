@@ -55,7 +55,7 @@ public final class AstValidator implements CompilerPass {
   private boolean isTypeValidationEnabled = false;
 
   /** Validate that a SCRIPT's FeatureSet property includes all features if this is enabled. */
-  private boolean isScriptFeatureValidationEnabled;
+  private final boolean isScriptFeatureValidationEnabled;
 
   public AstValidator(
       AbstractCompiler compiler, ViolationHandler handler, boolean validateScriptFeatures) {
