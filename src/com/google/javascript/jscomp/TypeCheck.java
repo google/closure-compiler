@@ -617,7 +617,10 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
 
       case YIELD:
         visitYield(t, n);
-        typeable = false;
+        break;
+
+      case AWAIT:
+        ensureTyped(n);
         break;
 
       case DEC:
@@ -1956,6 +1959,11 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       JSType returnType = functionType.getReturnType();
       validator.expectGeneratorSupertype(
           t, n, returnType, "A generator function must return a (supertype of) Generator");
+
+    } else if (n.isAsyncFunction()) {
+      // An async function must return a Promise or supertype of Promise
+      JSType returnType = functionType.getReturnType();
+      validator.expectValidAsyncReturnType(t, n, returnType.restrictByNotNullOrUndefined());
     }
   }
 
@@ -2284,8 +2292,10 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     }
   }
 
+  /** Visits an arrow function expression body. */
   private void visitImplicitReturnExpression(NodeTraversal t, Node exprNode) {
-    JSType jsType = getJSType(t.getEnclosingFunction());
+    Node enclosingFunction = t.getEnclosingFunction();
+    JSType jsType = getJSType(enclosingFunction);
     if (jsType.isFunctionType()) {
       FunctionType functionType = jsType.toMaybeFunctionType();
 
@@ -2294,10 +2304,16 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       // (it's a void function)
       if (expectedReturnType == null) {
         expectedReturnType = getNativeType(VOID_TYPE);
+      } else if (enclosingFunction.isAsyncFunction()) {
+        // Unwrap the async function's declared return type.
+        expectedReturnType = Promises.getTemplateTypeOfThenable(typeRegistry, expectedReturnType);
       }
 
       // Fetch the returned value's type
       JSType actualReturnType = getJSType(exprNode);
+      if (enclosingFunction.isAsyncFunction()) {
+        actualReturnType = Promises.getResolvedType(typeRegistry, actualReturnType);
+      }
 
       validator.expectCanAssignTo(t, exprNode, actualReturnType, expectedReturnType,
           "inconsistent return type");
@@ -2335,6 +2351,10 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         // Unwrap the template variable from a generator function's declared return type.
         // e.g. if returnType is "Generator<string>", make it just "string".
         returnType = getTemplateTypeOfGenerator(returnType);
+      } else if (enclosingFunction.isAsyncFunction()) {
+        // Unwrap the template variable from a async function's declared return type.
+        // e.g. if returnType is "!Promise<string>" or "!IThenable<string>", make it just "string".
+        returnType = Promises.getTemplateTypeOfThenable(typeRegistry, returnType);
       }
 
       // fetching the returned value's type
@@ -2345,11 +2365,16 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         valueNode = n;
       } else {
         actualReturnType = getJSType(valueNode);
+        if (enclosingFunction.isAsyncFunction()) {
+          // We want to treat `return Promise.resolve(1);` as if it were `return 1;` inside an async
+          // function.
+          actualReturnType = Promises.getResolvedType(typeRegistry, actualReturnType);
+        }
       }
 
       // verifying
-      validator.expectCanAssignTo(t, valueNode, actualReturnType, returnType,
-          "inconsistent return type");
+      validator.expectCanAssignTo(
+          t, valueNode, actualReturnType, returnType, "inconsistent return type");
     }
   }
 

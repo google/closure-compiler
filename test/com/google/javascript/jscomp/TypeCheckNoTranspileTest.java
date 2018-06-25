@@ -187,6 +187,24 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "required: null"));
   }
 
+  public void testAsyncArrowWithCorrectBlocklessReturn() {
+    testTypes(
+        lines(
+            "function takesPromiseProvider(/** function(): !Promise<number> */ getPromise) {}",
+            "takesPromiseProvider(async () => 1);"));
+  }
+
+  public void testAsyncArrowWithIncorrectBlocklessReturn() {
+    testTypes(
+        lines(
+            "function takesPromiseProvider(/** function(): ?Promise<string> */ getPromise) {}",
+            "takesPromiseProvider(async () => 1);"),
+        lines(
+            "inconsistent return type", // preserve newline
+            "found   : number",
+            "required: string"));
+  }
+
   public void testArrayLitSpread() {
     // TODO(bradfordcsmith): check spread in array literal
     // Note that there's not much point in doing such a check until we check array literal
@@ -2263,5 +2281,275 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
         //     "actual parameter 2 of Foo does not match formal parameter",
         //     "found   : function(string): ?",
         //     "required: function(number): ?"));
+  }
+
+  public void testAsyncFunctionWithoutJSDoc() {
+    testTypes("async function f() { return 3; }");
+  }
+
+  public void testAsyncFunctionInferredToReturnPromise() {
+    testTypes(
+        "async function f() {} var /** null */ n = f();",
+        lines(
+            "initializing variable", // preserve newline
+            "found   : Promise<?>",
+            "required: null"));
+  }
+
+  public void testAsyncFunctionCannotReturnNumber() {
+    testTypes(
+        "/** @return {number} */ async function f() {}",
+        lines(
+            "An async function must return a (supertype of) Promise",
+            "found   : number",
+            "required: IThenable"));
+  }
+
+  public void testAsyncFunctionCannotReturnArray() {
+    testTypes(
+        "/** @return {!Array} */ async function f() {}",
+        lines(
+            "An async function must return a (supertype of) Promise",
+            "found   : Array",
+            "required: IThenable"));
+  }
+
+  public void testAsyncFunctionCanReturnObject() {
+    testTypes("/** @return {!Object} */ async function f() {}");
+  }
+
+  public void testAsyncFunctionCanReturnAllType() {
+    testTypes("/** @return {*} */ async function f() {}");
+  }
+
+  public void testAsyncReturnsPromise1() {
+    testTypes(
+        lines(
+            "/** @return {!Promise<number>} */",
+            "async function getANumber() {",
+            "  return 1;",
+            "}"));
+  }
+
+  public void testAsyncReturnsPromise2() {
+    testTypes(
+        lines(
+            "/** @return {!Promise<string>} */",
+            "async function getAString() {",
+            "  return 1;",
+            "}"),
+        lines(
+            "inconsistent return type", // preserve newline
+            "found   : number",
+            "required: string"));
+  }
+
+  public void testAsyncCanReturnNullablePromise() {
+    // TODO(lharker): don't allow async functions to return null.
+    testTypes(
+        lines(
+            "/** @return {?Promise<string>} */",
+            "async function getAString() {",
+            "  return 1;",
+            "}"),
+        lines(
+            "inconsistent return type", // preserve newline
+            "found   : number",
+            "required: string"));
+  }
+
+  public void testAsyncCannotReturnUnionOfPromiseAndNumber() {
+    testTypes(
+        lines(
+            "/** @return {(number|!Promise<string>)} */",
+            "async function getAString() {",
+            "  return 1;",
+            "}"),
+        lines(
+            "An async function must return a (supertype of) Promise",
+            "found   : (Promise<string>|number)",
+            "required: IThenable"));
+  }
+
+  public void testAsyncCanReturnIThenable1() {
+    testTypes(
+        lines(
+            "/** @return {!IThenable<string>} */",
+            "async function getAString() {",
+            "  return 1;",
+            "}"),
+        lines("inconsistent return type", "found   : number", "required: string"));
+  }
+
+  public void testAsyncReturnStatementIsResolved() {
+    // Test that we correctly handle resolving an "IThenable" return statement inside an async
+    // function.
+    testTypes(
+        lines(
+            "/** @return {!IThenable<string>} */",
+            "async function getAString(/** !IThenable<number> */ iThenable) {",
+            "  return iThenable;",
+            "}"),
+        lines(
+            "inconsistent return type", // preserve newline
+            "found   : number",
+            "required: string"));
+  }
+
+  public void testAwaitPromiseOfNumber1() {
+    testTypes(
+        lines(
+            "function takesNumber(/** number*/ num) {}",
+            "",
+            "async function f(/** !Promise<number> */ p) {",
+            "  takesNumber(await p);",
+            "}"));
+  }
+
+  public void testAwaitPromiseOfNumber2() {
+    testTypes(
+        lines(
+            "function takesNumber(/** number*/ num) {}",
+            "",
+            "async function f(/** !Promise<string> */ p) {",
+            "  takesNumber(await p);",
+            "}"),
+        lines(
+            "actual parameter 1 of takesNumber does not match formal parameter",
+            "found   : string",
+            "required: number"));
+  }
+
+  public void testAwaitPromiseOfPromise() {
+    // TODO(lharker): forbid this annotation, since it is impossible for a Promise to resolve to a
+    // Promise.
+    testTypes(
+        lines(
+            "function takesNumber(/** number*/ num) {}",
+            "",
+            "async function f(/** !Promise<!Promise<number>> */ p) {",
+            "  takesNumber(await p);",
+            "}"));
+  }
+
+  public void testAwaitPromiseOfUnknown() {
+    testTypes(
+        lines(
+            "function takesNumber(/** number*/ num) {}",
+            "",
+            "async function f(/** !Promise<?> */ p) {",
+            "  takesNumber(await p);",
+            "}"));
+  }
+
+  public void testAwaitIThenable() {
+    testTypes(
+        lines(
+            "function takesNumber(/** number*/ num) {}",
+            "",
+            "async function f(/** !IThenable<string> */ p) {",
+            "  takesNumber(await p);",
+            "}"),
+        lines(
+            "actual parameter 1 of takesNumber does not match formal parameter",
+            "found   : string",
+            "required: number"));
+  }
+
+  public void testAwaitNumber() {
+    testTypes(
+        lines(
+            "function takesNumber(/** number*/ num) {}",
+            "",
+            "async function f(/** string */ str) {",
+            "  takesNumber(await str);",
+            "}"),
+        lines(
+            "actual parameter 1 of takesNumber does not match formal parameter",
+            "found   : string",
+            "required: number"));
+  }
+
+  public void testAwaitDoesTypeInferenceWithin() {
+    testTypes(
+        lines(
+            "function takesNumber(/** number*/ num) {}",
+            "",
+            "async function f() {",
+            "  var x = 1;",
+            "  await (x = 'some string');", // test we recognize that "x" is now a string.
+            "  takesNumber(x);",
+            "}"),
+        lines(
+            "actual parameter 1 of takesNumber does not match formal parameter",
+            "found   : string",
+            "required: number"));
+  }
+
+  public void testAwaitUnionType1() {
+    testTypes(
+        lines(
+            "function takesNumber(/** number*/ num) {}",
+            "",
+            "async function f(/** (number|!Promise<number>) */ param) {",
+            "  takesNumber(await param);",
+            "}"));
+  }
+
+  public void testAwaitUnionType2() {
+    testTypes(
+        lines(
+            "function takesNumber(/** number*/ num) {}",
+            "",
+            "async function f(/** (string|!Promise<number>) */ param) {",
+            "  takesNumber(await param);",
+            "}"),
+        lines(
+            "actual parameter 1 of takesNumber does not match formal parameter",
+            "found   : (number|string)",
+            "required: number"));
+  }
+
+  public void testAwaitUnionType3() {
+    testTypes(
+        lines(
+            "function takesNumber(/** number*/ num) {}",
+            "",
+            "async function f(/** (number|!Promise<string>) */ param) {",
+            "  takesNumber(await param);",
+            "}"),
+        lines(
+            "actual parameter 1 of takesNumber does not match formal parameter",
+            "found   : (number|string)",
+            "required: number"));
+  }
+
+  public void testAwaitUnionOfPromiseAndIThenable() {
+    testTypes(
+        lines(
+            "function takesNumber(/** number*/ num) {}",
+            "",
+            "async function f(/** (!IThenable<number>|!Promise<string>) */ param) {",
+            "  takesNumber(await param);",
+            "}"),
+        lines(
+            "actual parameter 1 of takesNumber does not match formal parameter",
+            "found   : (number|string)",
+            "required: number"));
+  }
+
+  public void testAwaitNullableIThenable() {
+    // We treat "?IThenable" the same as any other union type
+    testTypes(
+        lines(
+            "function takesNumber(/** number */ n) {}",
+            "",
+            "async function main(/** ?IThenable<number> */ iThenable) {",
+            "  takesNumber(await iThenable);",
+            "}"),
+        lines(
+            "actual parameter 1 of takesNumber does not match formal parameter",
+            "found   : (null|number)",
+            "required: number"));
   }
 }

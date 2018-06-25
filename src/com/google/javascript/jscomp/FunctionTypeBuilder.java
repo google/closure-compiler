@@ -22,6 +22,7 @@ import static com.google.common.base.Strings.nullToEmpty;
 import static com.google.javascript.jscomp.TypeCheck.BAD_IMPLEMENTED_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.FUNCTION_FUNCTION_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.GENERATOR_TYPE;
+import static com.google.javascript.rhino.jstype.JSTypeNative.PROMISE_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.UNKNOWN_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.VOID_TYPE;
 
@@ -737,36 +738,47 @@ final class FunctionTypeBuilder {
     return emittedWarning;
   }
 
+  /** Sets the returnType for this function using very basic type inference. */
+  private void provideDefaultReturnType() {
+    if (contents.getSourceNode() != null && contents.getSourceNode().isGeneratorFunction()) {
+      // Set the return type of a generator function to:
+      //   @return {!Generator<?>}
+      ObjectType generatorType = typeRegistry.getNativeObjectType(GENERATOR_TYPE);
+      returnType =
+          typeRegistry.createTemplatizedType(
+              generatorType, typeRegistry.getNativeType(UNKNOWN_TYPE));
+    } else if (contents.getSourceNode() != null && contents.getSourceNode().isAsyncFunction()) {
+      // Set the return type of an async function to:
+      //   @return {!Promise<?>}
+      ObjectType promiseType = typeRegistry.getNativeObjectType(PROMISE_TYPE);
+      returnType =
+          typeRegistry.createTemplatizedType(promiseType, typeRegistry.getNativeType(UNKNOWN_TYPE));
+    } else if (!contents.mayHaveNonEmptyReturns()
+        && !contents.mayHaveSingleThrow()
+        && !contents.mayBeFromExterns()) {
+      // Infer return types for non-generator functions.
+      // We need to be extremely conservative about this, because of two
+      // competing needs.
+      // 1) If we infer the return type of f too widely, then we won't be able
+      //    to assign f to other functions.
+      // 2) If we infer the return type of f too narrowly, then we won't be
+      //    able to override f in subclasses.
+      // So we only infer in cases where the user doesn't expect to write
+      // @return annotations--when it's very obvious that the function returns
+      // nothing.
+      returnType = typeRegistry.getNativeType(VOID_TYPE);
+      returnTypeInferred = true;
+    } else {
+      returnType = typeRegistry.getNativeType(UNKNOWN_TYPE);
+    }
+  }
+
   /**
    * Builds the function type, and puts it in the registry.
    */
   FunctionType buildAndRegister() {
     if (returnType == null) {
-      if (contents.getSourceNode() != null && contents.getSourceNode().isGeneratorFunction()) {
-        // Set the return type of a generator function to:
-        //   @return {!Generator<?>}
-        ObjectType generatorType = typeRegistry.getNativeObjectType(GENERATOR_TYPE);
-        returnType =
-            typeRegistry.createTemplatizedType(
-                generatorType, typeRegistry.getNativeType(UNKNOWN_TYPE));
-      } else if (!contents.mayHaveNonEmptyReturns()
-          && !contents.mayHaveSingleThrow()
-          && !contents.mayBeFromExterns()) {
-        // Infer return types for non-generator functions.
-        // We need to be extremely conservative about this, because of two
-        // competing needs.
-        // 1) If we infer the return type of f too widely, then we won't be able
-        //    to assign f to other functions.
-        // 2) If we infer the return type of f too narrowly, then we won't be
-        //    able to override f in subclasses.
-        // So we only infer in cases where the user doesn't expect to write
-        // @return annotations--when it's very obvious that the function returns
-        // nothing.
-        returnType = typeRegistry.getNativeType(VOID_TYPE);
-        returnTypeInferred = true;
-      } else {
-        returnType = typeRegistry.getNativeType(UNKNOWN_TYPE);
-      }
+      provideDefaultReturnType();
     }
 
     if (parametersNode == null) {

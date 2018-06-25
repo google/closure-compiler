@@ -276,6 +276,11 @@ public class JSTypeRegistry implements Serializable {
     return checkNotNull(iteratorTemplate);
   }
 
+  /** @return The template variable for the IThenable interface. */
+  public TemplateType getIThenableTemplate() {
+    return checkNotNull(iThenableTemplateKey);
+  }
+
   /** @return return an immutable list of template types of the given builtin. */
   public ImmutableList<TemplateType> maybeGetTemplateTypesOfBuiltin(String fnName) {
     JSType type = getType(null, fnName);

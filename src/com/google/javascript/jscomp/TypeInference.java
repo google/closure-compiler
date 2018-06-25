@@ -537,6 +537,10 @@ class TypeInference
         scope = traverseChildren(n, scope);
         break;
 
+      case AWAIT:
+        scope = traverseAwait(n, scope);
+        break;
+
       default:
         break;
     }
@@ -1863,6 +1867,16 @@ class TypeInference
         scope = traverse(n, scope);
         return newBooleanOutcomePair(n.getJSType(), scope);
     }
+  }
+
+  private FlowScope traverseAwait(Node await, FlowScope scope) {
+    scope = traverseChildren(await, scope);
+
+    Node expr = await.getFirstChild();
+    JSType exprType = getJSType(expr);
+    await.setJSType(Promises.getResolvedType(registry, exprType));
+
+    return scope;
   }
 
   private static BooleanLiteralSet joinBooleanOutcomes(

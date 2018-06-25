@@ -553,7 +553,11 @@ public abstract class JSType implements Serializable {
   public boolean isObject() {
     return false;
   }
-
+  /**
+   * Tests whether this type is an {@code Object}, or any subtype thereof.
+   *
+   * @return <code>this &lt;: Object</code>
+   */
   public final boolean isObjectType() {
     return isObject();
   }
@@ -595,6 +599,10 @@ public abstract class JSType implements Serializable {
       // Native constructors are always nominal.
       return fn.isNativeObjectType();
     }
+    return false;
+  }
+
+  public boolean isNativeObjectType() {
     return false;
   }
 

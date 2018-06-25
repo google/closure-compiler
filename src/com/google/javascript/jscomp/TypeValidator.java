@@ -25,6 +25,7 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.BOOLEAN_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.GENERATOR_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.ITERABLE_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.I_TEMPLATE_ARRAY_TYPE;
+import static com.google.javascript.rhino.jstype.JSTypeNative.I_THENABLE_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NO_OBJECT_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NULL_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NUMBER_STRING;
@@ -302,6 +303,28 @@ class TypeValidator implements Serializable {
   void expectGeneratorSupertype(NodeTraversal t, Node n, JSType type, String msg) {
     if (!getNativeType(GENERATOR_TYPE).isSubtypeOf(type)) {
       mismatch(t, n, msg, type, GENERATOR_TYPE);
+    }
+  }
+
+  /**
+   * Expect the type to be an IThenable, Promise, or the all type/unknown type/Object type.
+   *
+   * <p>We forbid returning a union type containing Promise/IThenable because it complicates how we
+   * typecheck returns within async functions.
+   */
+  @SuppressWarnings("ReferenceEquality")
+  void expectValidAsyncReturnType(NodeTraversal t, Node n, JSType type) {
+    // Allow returning `?`, `*`, or `Object`.
+    if (type.isUnknownType()
+        || type.isAllType()
+        || type == getNativeType(JSTypeNative.OBJECT_TYPE)) {
+      return;
+    }
+
+    // Get "Promise" from "Promise<string>" or "IThenable" from "IThenable<!Array<number>>"
+    if (!type.getTemplateTypeMap().hasTemplateKey(typeRegistry.getIThenableTemplate())) {
+      mismatch(
+          t, n, "An async function must return a (supertype of) Promise", type, I_THENABLE_TYPE);
     }
   }
 
