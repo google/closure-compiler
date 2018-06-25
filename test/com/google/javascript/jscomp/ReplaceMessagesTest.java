@@ -105,6 +105,14 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
         "/** @desc d */\n var MSG_E=obj.getAmt()");
   }
 
+  public void testMethodCallReplacementEmptyMessage() {
+    registerMessage(new JsMessage.Builder("MSG_M").build());
+
+    test(
+       "/** @desc d */\n var MSG_M = goog.getMsg('${$amount}', {amount: obj.getAmt()});",
+       "/** @desc d */\n var MSG_M=\"\"");
+  }
+
   public void testHookReplacement()  {
     registerMessage(new JsMessage.Builder("MSG_F")
         .appendStringPart("#")
