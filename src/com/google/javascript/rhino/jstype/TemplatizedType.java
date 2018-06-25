@@ -123,8 +123,8 @@ public final class TemplatizedType extends ProxyObjectType {
   }
 
   @Override
-  int recursionUnsafeHashCode() {
-    int baseHash = super.recursionUnsafeHashCode();
+  public int hashCode() {
+    int baseHash = super.hashCode();
 
     // TODO(b/110224889): This case can probably be removed if `equals()` is updated.
     if (isSpecializedOnlyWithUnknown) {

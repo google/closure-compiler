@@ -40,8 +40,6 @@
 package com.google.javascript.rhino.jstype;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.common.base.Preconditions.checkState;
-import static com.google.common.base.Strings.emptyToNull;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
@@ -85,12 +83,6 @@ import javax.annotation.Nullable;
  */
 public final class NamedType extends ProxyObjectType {
   private static final long serialVersionUID = 1L;
-
-  static int nominalHashCode(ObjectType type) {
-    checkState(type.hasReferenceName());
-    String name = checkNotNull(emptyToNull(type.getReferenceName()));
-    return name.hashCode();
-  }
 
   private final String reference;
   private final String sourceName;
@@ -217,11 +209,13 @@ public final class NamedType extends ProxyObjectType {
   }
 
   @Override
-  int recursionUnsafeHashCode() {
-    return nominalHashCode(this);
+  public int hashCode() {
+    return reference.hashCode();
   }
 
-  /** Resolve the referenced type within the enclosing scope. */
+  /**
+   * Resolve the referenced type within the enclosing scope.
+   */
   @Override
   JSType resolveInternal(ErrorReporter reporter) {
 

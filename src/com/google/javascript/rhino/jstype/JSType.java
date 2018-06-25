@@ -76,8 +76,6 @@ public abstract class JSType implements Serializable {
   private JSType resolveResult = null;
   protected TemplateTypeMap templateTypeMap;
 
-  private boolean hashCodeInProgress = false;
-
   private boolean inTemplatedCheckVisit = false;
   private static final CanCastToVisitor CAN_CAST_TO_VISITOR =
       new CanCastToVisitor();
@@ -775,40 +773,12 @@ public abstract class JSType implements Serializable {
     return (jsType instanceof JSType) && isEquivalentTo((JSType) jsType);
   }
 
-  /**
-   * Calculates a hash of the object as per {@link Object#hashCode()}.
-   *
-   * <p>This method is <em>unsafe</em> for multi-threaded use. The implementation mutates instance
-   * state to prevent recursion and therefore expects sole access.
-   */
   @Override
-  public final int hashCode() {
-    if (hashCodeInProgress) {
-      return -1; // Recursive base-case.
-    }
-
-    this.hashCodeInProgress = true;
-    int hashCode = recursionUnsafeHashCode();
-    this.hashCodeInProgress = false;
-    return hashCode;
-  }
+  public abstract int hashCode();
 
   /**
-   * Calculates {@code #hashCode()} with the assumption that it will never be called recursively.
-   *
-   * <p>To work correctly this method should only called under the following conditions:
-   *
-   * <ul>
-   *   <li>by a subclass of {@link JSType};
-   *   <li>within the body of an override;
-   *   <li>when delegating to a superclass implementation.
-   * </ul>
-   */
-  abstract int recursionUnsafeHashCode();
-
-  /**
-   * This predicate is used to test whether a given type can appear in a numeric context, such as an
-   * operand of a multiply operator.
+   * This predicate is used to test whether a given type can appear in a
+   * numeric context, such as an operand of a multiply operator.
    */
   public boolean matchesNumberContext() {
     return false;

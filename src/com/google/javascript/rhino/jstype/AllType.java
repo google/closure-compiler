@@ -110,7 +110,7 @@ public final class AllType extends JSType {
   }
 
   @Override
-  int recursionUnsafeHashCode() {
+  public int hashCode() {
     return System.identityHashCode(this);
   }
 

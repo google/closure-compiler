@@ -167,10 +167,14 @@ class InstanceObjectType extends PrototypeObjectType {
     return hasReferenceName();
   }
 
+  /**
+   * If this is equal to a NamedType object, its hashCode must be equal
+   * to the hashCode of the NamedType object.
+   */
   @Override
-  int recursionUnsafeHashCode() {
+  public int hashCode() {
     if (hasReferenceName()) {
-      return NamedType.nominalHashCode(this);
+      return getReferenceName().hashCode();
     } else {
       return super.hashCode();
     }

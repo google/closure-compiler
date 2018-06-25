@@ -176,7 +176,7 @@ public class UnknownType extends ObjectType {
   }
 
   @Override
-  int recursionUnsafeHashCode() {
+  public int hashCode() {
     return System.identityHashCode(this);
   }
 }

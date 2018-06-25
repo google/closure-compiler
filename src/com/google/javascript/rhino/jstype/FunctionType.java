@@ -919,7 +919,7 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
   }
 
   @Override
-  int recursionUnsafeHashCode() {
+  public int hashCode() {
     int hc = kind.hashCode();
     switch (kind) {
       case CONSTRUCTOR:
