@@ -58,10 +58,12 @@ import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Table;
 import com.google.javascript.rhino.ErrorReporter;
+import com.google.javascript.rhino.HamtPMap;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.PMap;
 import com.google.javascript.rhino.SimpleErrorReporter;
 import com.google.javascript.rhino.StaticScope;
 import com.google.javascript.rhino.StaticSlot;
@@ -209,9 +211,6 @@ public class JSTypeRegistry implements Serializable {
 
   // All the unresolved named types.
   private final List<NamedType> unresolvedNamedTypes = new ArrayList<>();
-
-  // The template type name.
-  private final Map<String, TemplateType> templateTypes = new HashMap<>();
 
   // A single empty TemplateTypeMap, which can be safely reused in cases where
   // there are no template types.
@@ -769,6 +768,12 @@ public class JSTypeRegistry implements Serializable {
 
   private JSType getTypeInternal(StaticScope scope, String name) {
     checkTypeName(name);
+    if (scope instanceof SyntheticTemplateScope) {
+      TemplateType type = ((SyntheticTemplateScope) scope).getTemplateType(name);
+      if (type != null) {
+        return type;
+      }
+    }
     return getTypeForScopeInternal(getLookupScope(scope, name), name);
   }
 
@@ -1262,11 +1267,6 @@ public class JSTypeRegistry implements Serializable {
    * @return the corresponding JSType object or {@code null} it cannot be found
    */
   public JSType getTypeForScope(StaticScope scope, String jsTypeName) {
-    TemplateType templateType = templateTypes.get(jsTypeName);
-    if (templateType != null) {
-      return templateType;
-    }
-
     return getTypeForScopeInternal(scope, jsTypeName);
   }
 
@@ -1281,11 +1281,6 @@ public class JSTypeRegistry implements Serializable {
    * @return the corresponding JSType object or {@code null} it cannot be found
    */
   public JSType getType(StaticScope scope, String jsTypeName) {
-    TemplateType templateType = templateTypes.get(jsTypeName);
-    if (templateType != null) {
-      return templateType;
-    }
-
     return getTypeInternal(scope, jsTypeName);
   }
 
@@ -2159,20 +2154,76 @@ public class JSTypeRegistry implements Serializable {
   }
 
   /**
-   * Sets the template type name.
+   * Registers template types on the given scope root. This takes a Node rather than a
+   * StaticScope because at the time it is called, the scope has not yet been created.
    */
-  public void setTemplateTypeNames(List<TemplateType> keys) {
-    checkNotNull(keys);
+  public void registerTemplateTypeNamesInScope(List<TemplateType> keys, Node scopeRoot) {
     for (TemplateType key : keys) {
-      templateTypes.put(key.getReferenceName(), key);
+      scopedNameTable.put(scopeRoot, key.getReferenceName(), key);
     }
   }
 
   /**
-   * Clears the template type name.
+   * Returns a new scope that includes the given template names for type resolution
+   * purposes.
    */
-  public void clearTemplateTypeNames() {
-    templateTypes.clear();
+  public StaticTypedScope createScopeWithTemplates(
+      StaticTypedScope scope, Iterable<TemplateType> templates) {
+    return new SyntheticTemplateScope(scope, templates);
+  }
+
+  /**
+   * Synthetic scope that includes template names. This is necessary for resolving
+   * template names outside the body of templated functions (e.g. when evaluating
+   * JSDoc on things assigned to a prototype, or the parameter or return types of
+   * an annotated function), since there is not yet (and may never be) any real
+   * scope to attach the types to.
+   */
+  private static class SyntheticTemplateScope implements StaticTypedScope, Serializable {
+    final StaticTypedScope delegate;
+    final PMap<String, TemplateType> types;
+
+    SyntheticTemplateScope(StaticTypedScope delegate, Iterable<TemplateType> templates) {
+      this.delegate = delegate;
+      PMap<String, TemplateType> types =
+          delegate instanceof SyntheticTemplateScope
+              ? ((SyntheticTemplateScope) delegate).types
+              : HamtPMap.<String, TemplateType>empty();
+      for (TemplateType key : templates) {
+        types = types.plus(key.getReferenceName(), key);
+      }
+      this.types = types;
+    }
+
+    @Override
+    public Node getRootNode() {
+      return delegate.getRootNode();
+    }
+
+    @Override
+    public StaticTypedScope getParentScope() {
+      return delegate.getParentScope();
+    }
+
+    @Override
+    public StaticTypedSlot getSlot(String name) {
+      return delegate.getSlot(name);
+    }
+
+    @Override
+    public StaticTypedSlot getOwnSlot(String name) {
+      return delegate.getOwnSlot(name);
+    }
+
+    @Override
+    public JSType getTypeOfThis() {
+      return delegate.getTypeOfThis();
+    }
+
+    @Nullable
+    TemplateType getTemplateType(String name) {
+      return types.get(name);
+    }
   }
 
   /**

@@ -14144,7 +14144,21 @@ public final class TypeCheckTest extends TypeCheckTestCase {
         "initializing variable\n" + "found   : Array<Object>\n" + "required: null");
   }
 
-  public void testTemplateTypeForwardReferenceFunction() {
+  public void testTemplateTypeCollidesWithParameter() {
+    // Function templates are in the same scope as parameters, so cannot collide.
+    testTypes(
+        lines(
+            "/**", //
+            " * @param {T} T",
+            " * @template T",
+            " */",
+            "function f(T) {}"),
+        "variable T redefined with type undefined, "
+            + "original definition at [testcode]:5 with type T");
+  }
+
+  public void testTemplateTypeForwardReference() {
+    // TODO(martinprobst): the test below asserts incorrect behavior for backwards compatibility.
     testTypes(
         lines(
             "/** @param {!Foo<string>} x */",
@@ -20311,6 +20325,120 @@ public final class TypeCheckTest extends TypeCheckTestCase {
           "Property y never defined on x",
           "Property A never defined on x.y",
         });
+  }
+
+  public void testClassTemplateParamsInMethodBody() {
+    testTypes(
+        lines(
+            "/** @constructor @template T */",
+            "function Foo() {}",
+            "Foo.prototype.foo = function() {",
+            "  var /** T */ x;",
+            "};"));
+  }
+
+  public void testClassTtlParamsInMethodBody() {
+    // NOTE: TTL is not supported in class templates, so this does not work.
+    // This test simply documents this fact.
+    testTypes(
+        lines(
+            "/** @constructor @template T := 'number' =: */",
+            "function Foo() {}",
+            "Foo.prototype.foo = function() {",
+            "  var /** T */ x;",
+            "};"),
+        "Bad type annotation. Unknown type T");
+  }
+
+  public void testClassTtlParamsInMethodSignature() {
+    // NOTE: TTL is not supported in class templates, so this does not work.
+    // This test simply documents this fact.
+    testTypes(
+        lines(
+            "/** @constructor @template T := 'number' =: */",
+            "function Foo() {}",
+            "/** @return {T} */",
+            "Foo.prototype.foo = function() {};"),
+        "Bad type annotation. Unknown type T");
+  }
+
+  public void testFunctionTemplateParamsInBody() {
+    testTypes(
+        lines(
+            "/** @template T */",
+            "function f(/** !Array<T> */ arr) {",
+            "  var /** T */ first = arr[0];",
+            "}"));
+  }
+
+  public void testFunctionTtlParamsInBody() {
+    testTypes(
+        lines(
+            "/** @template T := 'number' =: */",
+            "function f(/** !Array<T> */ arr) {",
+            "  var /** T */ first = arr[0];",
+            "}"));
+  }
+
+  public void testFunctionTemplateParamsInBodyMismatch() {
+    testTypes(
+        lines(
+            "/** @template T, V */",
+            "function f(/** !Array<T> */ ts, /** !Array<V> */ vs) {",
+            "  var /** T */ t = vs[0];",
+            "}"));
+    // TODO(b/35241823): This should be an error, but we currently treat generic types
+    // as unknown. Once we have bounded generics we can treat templates as unique types.
+    // lines(
+    //     "actual parameter 1 of f does not match formal parameter",
+    //     "found   : V",
+    //     "required: T"));
+  }
+
+  public void testClassAndMethodTemplateParamsInMethodBody() {
+    testTypes(
+        lines(
+            "/** @constructor @template T */",
+            "function Foo() {}",
+            "/** @template U */",
+            "Foo.prototype.foo = function() {",
+            "  var /** T */ x;",
+            "  var /** U */ y;",
+            "};"));
+  }
+
+  public void testNestedFunctionTemplates() {
+    testTypes(
+        lines(
+            "/** @constructor @template A, B */",
+            "function Foo(/** A */ a, /** B */ b) {}",
+            "/** @template T */",
+            "function f(/** T */ t) {",
+            "  /** @template S */",
+            "  function g(/** S */ s) {",
+            "    var /** !Foo<T, S> */ foo = new Foo(t, s);",
+            "  }",
+            "}"));
+  }
+
+  public void testNestedFunctionTemplatesMismatch() {
+    testTypes(
+        lines(
+            "/** @constructor @template A, B */",
+            "function Foo(/** A */ a, /** B */ b) {}",
+            "/** @template T */",
+            "function f(/** T */ t) {",
+            "  /** @template S */",
+            "  function g(/** S */ s) {",
+            "    var /** !Foo<T, S> */ foo = new Foo(s, t);",
+            "  }",
+            "}"));
+    // TODO(b/35241823): This should be an error, but we currently treat generic types
+    // as unknown. Once we have bounded generics we can treat templates as unique types.
+    // lines(
+    //     "initializing variable",
+    //     "found   : Foo<S, T>",
+    //     "required: Foo<T, S>"));
   }
 
   private void testClosureTypes(String js, String description) {

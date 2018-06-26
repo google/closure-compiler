@@ -389,7 +389,7 @@ abstract class AbstractScope<S extends AbstractScope<S, V>, V extends AbstractVa
   }
 
   /** Performs simple validity checks on when constructing a child scope. */
-  void checkChildScope(S parent) {
+  final void checkChildScope(S parent) {
     checkNotNull(parent);
     checkArgument(NodeUtil.createsScope(rootNode), rootNode);
     checkArgument(
@@ -398,7 +398,7 @@ abstract class AbstractScope<S extends AbstractScope<S, V>, V extends AbstractVa
   }
 
   /** Performs simple validity checks on when constructing a root scope. */
-  void checkRootScope() {
+  final void checkRootScope() {
     // TODO(tbreisacher): Can we tighten this to just NodeUtil.createsScope?
     checkArgument(
         NodeUtil.createsScope(rootNode) || rootNode.isScript() || rootNode.isRoot(), rootNode);
