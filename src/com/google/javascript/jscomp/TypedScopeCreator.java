@@ -75,7 +75,6 @@ import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.NominalTypeBuilderOti;
 import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.Property;
-import com.google.javascript.rhino.jstype.StaticTypedScope;
 import com.google.javascript.rhino.jstype.TemplateType;
 import com.google.javascript.rhino.jstype.TemplateTypeMap;
 import com.google.javascript.rhino.jstype.TemplateTypeMapReplacer;
@@ -541,11 +540,6 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       this.currentHoistScope = scope.getClosestHoistScope();
     }
 
-    /** Returns the current compiler input. */
-    CompilerInput getCompilerInput() {
-      return compiler.getInput(inputId);
-    }
-
     /** Traverse the scope root and build it. */
     void build() {
       NodeTraversal.traverse(compiler, currentScope.getRootNode(), this);
@@ -772,11 +766,15 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
             }
           }
 
-          StaticTypedScope templateScope =
-              !ownerTypeKeys.isEmpty()
-                  ? typeRegistry.createScopeWithTemplates(currentScope, ownerTypeKeys)
-                  : currentScope;
-          jsType = info.getType().evaluate(templateScope, typeRegistry);
+          if (!ownerTypeKeys.isEmpty()) {
+            typeRegistry.setTemplateTypeNames(ownerTypeKeys);
+          }
+
+          jsType = info.getType().evaluate(currentScope, typeRegistry);
+
+          if (!ownerTypeKeys.isEmpty()) {
+            typeRegistry.clearTemplateTypeNames();
+          }
         } else if (FunctionTypeBuilder.isFunctionTypeDeclaration(info)) {
           String fnName = node.getQualifiedName();
           jsType = createFunctionTypeFromNodes(null, fnName, info, node);
@@ -2300,34 +2298,6 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
             }
             if (iifeArgumentNode != null) {
               iifeArgumentNode = iifeArgumentNode.getNext();
-            }
-          }
-        }
-        // Also add template params to the scope so that JSTypeRegistry can find them (they
-        // were already registered by FunctionTypeBuilder).
-        JSDocInfo info = NodeUtil.getBestJSDocInfo(functionNode);
-        if (info != null) {
-          Iterable<String> templateNames =
-              Iterables.concat(info.getTemplateTypeNames(), info.getTypeTransformations().keySet());
-          if (!Iterables.isEmpty(templateNames)) {
-            CompilerInput input = getCompilerInput();
-            JSType voidType = typeRegistry.getNativeType(VOID_TYPE);
-            // Declare any template names in the function scope. This means that if someone shadows
-            // an outer variable FOO with a @template FOO and refers to FOO inside the method, we
-            // will treat it as undefined, rather than the correct type, which could lead to weird
-            // errors. Ideally we'd have a "don't use me" type that gives an error at use.
-            for (String name : templateNames) {
-              if (!currentScope.canDeclare(name)) {
-                validator.expectUndeclaredVariable(
-                    NodeUtil.getSourceName(functionNode),
-                    input,
-                    functionNode,
-                    functionNode.getParent(),
-                    currentScope.getVar(name),
-                    name,
-                    voidType);
-              }
-              currentScope.declare(name, functionNode, voidType, input, /* inferred= */ false);
             }
           }
         }
