@@ -81,4 +81,12 @@ public interface ErrorReporter {
      */
     void error(String message, String sourceName, int line, int lineOffset);
 
+  static final ErrorReporter NULL_INSTANCE =
+      new ErrorReporter() {
+        @Override
+        public void warning(String message, String sourceName, int line, int lineOffset) {}
+
+        @Override
+        public void error(String message, String sourceName, int line, int lineOffset) {}
+      };
 }

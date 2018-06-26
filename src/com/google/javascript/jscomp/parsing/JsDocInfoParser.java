@@ -250,13 +250,9 @@ public final class JsDocInfoParser {
             .setLanguageMode(LanguageMode.ECMASCRIPT3)
             .setStrictMode(Config.StrictMode.SLOPPY)
             .build();
-    JsDocInfoParser parser = new JsDocInfoParser(
-        new JsDocTokenStream(toParse),
-        toParse,
-        0,
-        null,
-        config,
-        NullErrorReporter.forOldRhino());
+    JsDocInfoParser parser =
+        new JsDocInfoParser(
+            new JsDocTokenStream(toParse), toParse, 0, null, config, ErrorReporter.NULL_INSTANCE);
 
     return parser;
   }
