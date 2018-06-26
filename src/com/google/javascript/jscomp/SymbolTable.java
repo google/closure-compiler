@@ -183,6 +183,26 @@ public final class SymbolTable {
   }
 
   /**
+   * Gets the scope that contains the given node. If {@code n} is a function name, we return the
+   * scope that contains the function, not the function itself. The returned scope is either
+   * function or global scope.
+   */
+  public SymbolScope getEnclosingFunctionScope(Node n) {
+    Node current = n.getParent();
+    if (n.isName() && current != null && current.isFunction()) {
+      current = current.getParent();
+    }
+
+    for (; current != null; current = current.getParent()) {
+      SymbolScope scope = scopes.get(current);
+      if (scope != null && !scope.isBlockScope()) {
+        return scope;
+      }
+    }
+    return globalScope;
+  }
+
+  /**
    * If {@code sym} is a function, try to find a Symbol for a parameter with the given name.
    *
    * <p>Returns null if we couldn't find one.
@@ -1151,11 +1171,6 @@ public final class SymbolTable {
    * node. Creates one if it doesn't exist yet.
    */
   private SymbolScope createScopeFrom(StaticScope otherScope) {
-    // NOTE: Kythe is not set up to handle block scopes yet, so only create
-    // SymbolScopes for container scope roots, giving a pre-ES6 view of the world.
-    while (NodeUtil.createsBlockScope(otherScope.getRootNode())) {
-      otherScope = otherScope.getParentScope();
-    }
     Node otherScopeRoot = otherScope.getRootNode();
 
     SymbolScope myScope = scopes.get(otherScopeRoot);
@@ -1428,6 +1443,10 @@ public final class SymbolTable {
 
     public boolean isLexicalScope() {
       return getRootNode() != null;
+    }
+
+    public boolean isBlockScope() {
+      return getRootNode() != null && NodeUtil.createsBlockScope(getRootNode());
     }
 
     public int getScopeDepth() {
@@ -1846,7 +1865,18 @@ public final class SymbolTable {
         @Override
         public int compare(SymbolScope a, SymbolScope b) {
           checkState(a.isLexicalScope() && b.isLexicalScope(), "We can only sort lexical scopes");
-          return nodeOrdering.compare(a.getRootNode(), b.getRootNode());
+          int result = nodeOrdering.compare(a.getRootNode(), b.getRootNode());
+          if (result != 0) {
+            return result;
+          }
+
+          // If result = 0 it means that rootNodes either the same or that one of them was added
+          // by compiler during transpilation and uses the same source info as original node.
+          // In that case compare scopes by depth because one of them (probably generated one) is
+          // a child of the other scope.
+          // TODO(b/62349230): remove this once transpilation is disabled. No two different scopes
+          // should have the same source info.
+          return a.getScopeDepth() - b.getScopeDepth();
         }
       };
 

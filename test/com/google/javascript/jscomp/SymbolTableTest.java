@@ -1158,6 +1158,93 @@ public final class SymbolTableTest extends TestCase {
     assertNotNull(x);
   }
 
+  public void testGetEnclosingScope_Global() {
+    SymbolTable table = createSymbolTable("const baz = 1;");
+
+    Symbol baz = getLocalVar(table, "baz");
+    SymbolScope bazScope = table.getEnclosingScope(baz.getDeclarationNode());
+
+    assertNotNull(bazScope);
+    assertTrue(bazScope.isGlobalScope());
+  }
+
+  public void testGetEnclosingScope_GlobalNested() {
+    SymbolTable table = createSymbolTable("{ const baz = 1; }");
+
+    Symbol baz = getLocalVar(table, "baz");
+    SymbolScope bazScope = table.getEnclosingScope(baz.getDeclarationNode());
+
+    assertNotNull(bazScope);
+    assertTrue(bazScope.isBlockScope());
+    assertTrue(bazScope.getParentScope().isGlobalScope());
+  }
+
+  public void testGetEnclosingScope_FunctionNested() {
+    SymbolTable table = createSymbolTable("function foo() { { const baz = 1; } }");
+
+    Symbol baz = getLocalVar(table, "baz");
+    SymbolScope bazScope = table.getEnclosingScope(baz.getDeclarationNode());
+
+    assertNotNull(bazScope);
+    assertTrue(bazScope.isBlockScope());
+    assertTrue(bazScope.getParentScope().isBlockScope());
+    Node foo = getGlobalVar(table, "foo").getDeclarationNode().getParent();
+    assertEquals(foo, bazScope.getParentScope().getParentScope().getRootNode());
+  }
+
+  public void testGetEnclosingFunctionScope_GlobalScopeNoNesting() {
+    SymbolTable table = createSymbolTable("const baz = 1;");
+
+    Symbol baz = getLocalVar(table, "baz");
+    SymbolScope bazFunctionScope = table.getEnclosingFunctionScope(baz.getDeclarationNode());
+
+    assertNotNull(bazFunctionScope);
+    assertTrue(bazFunctionScope.isGlobalScope());
+  }
+
+  public void testGetEnclosingFunctionScope_GlobalScopeNested() {
+    SymbolTable table = createSymbolTable("{ const baz = 1; }");
+
+    Symbol baz = getLocalVar(table, "baz");
+    SymbolScope bazFunctionScope = table.getEnclosingFunctionScope(baz.getDeclarationNode());
+
+    assertNotNull(bazFunctionScope);
+    assertTrue(bazFunctionScope.isGlobalScope());
+  }
+
+  public void testGetEnclosingFunctionScope_FunctionNoNestedScopes() {
+    SymbolTable table = createSymbolTable("function foo() { const baz = 1; }");
+
+    Symbol baz = getLocalVar(table, "baz");
+    SymbolScope bazFunctionScope = table.getEnclosingFunctionScope(baz.getDeclarationNode());
+
+    assertNotNull(bazFunctionScope);
+    Node foo = getGlobalVar(table, "foo").getDeclarationNode().getParent();
+    assertEquals(foo, bazFunctionScope.getRootNode());
+  }
+
+  public void testGetEnclosingFunctionScope_FunctionNested() {
+    SymbolTable table = createSymbolTable("function foo() { { { const baz = 1; } } }");
+
+    Symbol baz = getLocalVar(table, "baz");
+    SymbolScope bazFunctionScope = table.getEnclosingFunctionScope(baz.getDeclarationNode());
+
+    assertNotNull(bazFunctionScope);
+    Node foo = getGlobalVar(table, "foo").getDeclarationNode().getParent();
+    assertEquals(foo, bazFunctionScope.getRootNode());
+  }
+
+  public void testGetEnclosingFunctionScope_FunctionInsideFunction() {
+    SymbolTable table = createSymbolTable("function foo() { function baz() {} }");
+
+    Symbol baz = getLocalVar(table, "baz");
+    SymbolScope bazFunctionScope = table.getEnclosingFunctionScope(baz.getDeclarationNode());
+
+    assertNotNull(bazFunctionScope);
+    Node foo = getGlobalVar(table, "foo").getDeclarationNode().getParent();
+    assertEquals(foo, bazFunctionScope.getRootNode());
+  }
+
   private void assertSymmetricOrdering(Ordering<Symbol> ordering, Symbol first, Symbol second) {
     assertEquals(0, ordering.compare(first, first));
     assertEquals(0, ordering.compare(second, second));
