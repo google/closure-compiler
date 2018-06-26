@@ -453,11 +453,6 @@ public class PrototypeObjectType extends ObjectType {
     return true;
   }
 
-  @Override
-  public boolean hasCachedValues() {
-    return super.hasCachedValues();
-  }
-
   /** Whether this is a built-in object. */
   @Override
   public boolean isNativeObjectType() {
