@@ -194,9 +194,6 @@ public final class Es6ForOfConverterTest extends CompilerTestCase {
   }
 
   public void testForOfWithQualifiedNameInitializer() {
-    // TODO(b/79532975): handle this case in the type checker and remove disableTypeCheck();
-    disableTypeCheck();
-    disableTypeInfoValidation();
     test(
         "var obj = {a: 0}; for (obj.a of [1,2,3]) { console.log(obj.a); }",
         lines(
@@ -212,9 +209,6 @@ public final class Es6ForOfConverterTest extends CompilerTestCase {
   }
 
   public void testForOfWithComplexInitializer() {
-    // TODO(b/79532975): handle this case in the type checker and remove disableTypeCheck();
-    disableTypeCheck();
-    disableTypeInfoValidation();
     test(
         "function f() { return {}; } for (f()['x' + 1] of [1,2,3]) {}",
         lines(

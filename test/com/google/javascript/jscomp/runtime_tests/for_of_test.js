@@ -106,3 +106,24 @@ function testForOfArrayNested() {
   assertEquals(13, result[7]);
   assertEquals(14, result[8]);
 }
+
+function testForOfWithGetPropInitializer() {
+  const /** {a: number} */ obj = {a: 3};
+  for (obj.a of [4]) {}
+  assertEquals(4, obj.a);
+}
+
+function testForOfWithGetElemInitializer() {
+  const /** !Object<number, number> */ obj = {};
+
+  const /** !Array<number> */ arr = [5, 6, 7];
+  const /** !Array<number> */ newArr = [];
+  var index = 0;
+  for (obj[index] of arr) {
+    newArr.push(obj[index]);
+    index++;
+  }
+
+  assertArrayEquals(arr, newArr);
+  assertObjectEquals({0: 5, 1: 6, 2: 7}, obj);
+}
