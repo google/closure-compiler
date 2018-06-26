@@ -7558,11 +7558,12 @@ public final class TypeCheckTest extends TypeCheckTestCase {
 
   public void testGlobalThis6() {
     testTypes(
-        "/** @param {string} msg */ " +
-        "var alert = function(msg) {};" +
-        "var x = 3;" +
-        "x = 'msg';" +
-        "this.alert(this.x);");
+        lines(
+            "/** @param {string} msg */ ",
+            "var alert = function(msg) {};",
+            "var x = 3;",
+            "x = 'msg';",
+            "this.alert(this.x);"));
   }
 
   public void testGlobalThis7() {
@@ -7591,6 +7592,24 @@ public final class TypeCheckTest extends TypeCheckTestCase {
         "function Window() {}" +
         "Window.prototype.alert = function() {};" +
         "this.alert();",
+        "Property alert never defined on global this");
+  }
+
+  public void testGlobalThisDoesNotIncludeVarsDeclaredWithConst() {
+    testTypes(
+        lines(
+            "/** @param {string} msg */ ", // preserve newlines
+            "const alert = function(msg) {};",
+            "this.alert('boo');"),
+        "Property alert never defined on global this");
+  }
+
+  public void testGlobalThisDoesNotIncludeVarsDeclaredWithLet() {
+    testTypes(
+        lines(
+            "/** @param {string} msg */ ", // preserve newlines
+            "let alert = function(msg) {};",
+            "this.alert('boo');"),
         "Property alert never defined on global this");
   }
 

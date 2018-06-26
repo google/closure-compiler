@@ -1322,8 +1322,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       TypedScope scopeToDeclareIn = getLValueRootScope(n);
 
       boolean isGlobalVar = n.isName() && scopeToDeclareIn.isGlobal();
-      boolean shouldDeclareOnGlobalThis =
-          isGlobalVar && (NodeUtil.isNameDeclaration(parent) || parent.isFunction());
+      boolean shouldDeclareOnGlobalThis = isGlobalVar && (parent.isVar() || parent.isFunction());
       // If n is a property, then we should really declare it in the
       // scope where the root object appears. This helps out people
       // who declare "global" names in an anonymous namespace.
