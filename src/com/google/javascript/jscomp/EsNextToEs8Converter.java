@@ -58,13 +58,13 @@ public final class EsNextToEs8Converter implements NodeTraversal.Callback, HotSw
   public void process(Node externs, Node root) {
     TranspilationPasses.processTranspile(compiler, externs, transpiledFeatures, this);
     TranspilationPasses.processTranspile(compiler, root, transpiledFeatures, this);
-    TranspilationPasses.markFeaturesAsTranspiledAway(compiler, transpiledFeatures);
+    TranspilationPasses.maybeMarkFeaturesAsTranspiledAway(compiler, transpiledFeatures);
   }
 
   @Override
   public void hotSwapScript(Node scriptRoot, Node originalRoot) {
     TranspilationPasses.hotSwapTranspile(compiler, scriptRoot, transpiledFeatures, this);
-    TranspilationPasses.markFeaturesAsTranspiledAway(compiler, transpiledFeatures);
+    TranspilationPasses.maybeMarkFeaturesAsTranspiledAway(compiler, transpiledFeatures);
   }
 
   @Override

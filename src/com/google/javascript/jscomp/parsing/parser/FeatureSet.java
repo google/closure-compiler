@@ -81,8 +81,7 @@ public final class FeatureSet implements Serializable {
           .without(Feature.DEFAULT_PARAMETERS)
           .without(Feature.DESTRUCTURING)
           .without(Feature.MODULES)
-          .without(Feature.NEW_TARGET)
-          .without(Feature.SUPER);
+          .without(Feature.NEW_TARGET);
 
   private enum LangVersion {
     ES3,

@@ -48,8 +48,6 @@ public final class LateEs6ToEs3Converter implements NodeTraversal.Callback, HotS
   private static final FeatureSet transpiledFeatures =
       FeatureSet.BARE_MINIMUM.with(
           Feature.COMPUTED_PROPERTIES,
-          Feature.EXTENDED_OBJECT_LITERALS,
-          Feature.FOR_OF,
           Feature.MEMBER_DECLARATIONS,
           Feature.TEMPLATE_LITERALS);
   // addTypes indicates whether we should add type information when transpiling.
@@ -73,13 +71,13 @@ public final class LateEs6ToEs3Converter implements NodeTraversal.Callback, HotS
   public void process(Node externs, Node root) {
     TranspilationPasses.processTranspile(compiler, externs, transpiledFeatures, this);
     TranspilationPasses.processTranspile(compiler, root, transpiledFeatures, this);
-    TranspilationPasses.markFeaturesAsTranspiledAway(compiler, transpiledFeatures);
+    TranspilationPasses.maybeMarkFeaturesAsTranspiledAway(compiler, transpiledFeatures);
   }
 
   @Override
   public void hotSwapScript(Node scriptRoot, Node originalRoot) {
     TranspilationPasses.hotSwapTranspile(compiler, scriptRoot, transpiledFeatures, this);
-    TranspilationPasses.markFeaturesAsTranspiledAway(compiler, transpiledFeatures);
+    TranspilationPasses.maybeMarkFeaturesAsTranspiledAway(compiler, transpiledFeatures);
   }
 
   @Override

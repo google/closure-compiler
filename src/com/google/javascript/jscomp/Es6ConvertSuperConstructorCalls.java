@@ -51,8 +51,7 @@ implements NodeTraversal.Callback, HotSwapCompilerPass {
   private final AbstractCompiler compiler;
   private final Deque<ConstructorData> constructorDataStack;
   private GlobalNamespace globalNamespace;
-  private static final FeatureSet transpiledFeatures =
-      FeatureSet.BARE_MINIMUM.with(Feature.CLASSES, Feature.SUPER);
+  private static final FeatureSet transpiledFeatures = FeatureSet.BARE_MINIMUM.with(Feature.SUPER);
 
   public Es6ConvertSuperConstructorCalls(AbstractCompiler compiler) {
     this.compiler = compiler;
@@ -492,6 +491,7 @@ implements NodeTraversal.Callback, HotSwapCompilerPass {
     // Might need to synthesize constructors for ambient classes in .d.ts externs
     TranspilationPasses.processTranspile(compiler, externs, transpiledFeatures, this);
     TranspilationPasses.processTranspile(compiler, root, transpiledFeatures, this);
+    TranspilationPasses.maybeMarkFeaturesAsTranspiledAway(compiler, transpiledFeatures);
   }
 
   @Override

@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.javascript.jscomp.testing.NodeSubject.assertNode;
+
 import com.google.javascript.jscomp.AstValidator.ViolationHandler;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
@@ -268,8 +270,6 @@ public final class AstValidatorTest extends CompilerTestCase {
   public void testInvalidArrayPattern0() {
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
 
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
-
     // [...x = 1] = [];
     Node n = IR.assign(
         new Node(Token.ARRAY_PATTERN,
@@ -389,6 +389,117 @@ public final class AstValidatorTest extends CompilerTestCase {
     expectInvalid(n, Check.EXPRESSION);
   }
 
+  /** Tests checking that AstValidator validates one particular Feature in the AST. */
+  public void testFeatureValidation_getter() {
+    testFeatureValidation("var obj = {get f() {}};", Feature.GETTER);
+  }
+
+  public void testFeatureValidation_setter() {
+    testFeatureValidation("var obj = {set f(x) {}};", Feature.SETTER);
+  }
+
+  public void testFeatureValidation_arrowFunctions() {
+    testFeatureValidation("var arrow = () => 3", Feature.ARROW_FUNCTIONS);
+    testFeatureValidation("var asyncArrow = async () => 3", Feature.ARROW_FUNCTIONS);
+  }
+
+  public void testFeatureValidation_blockScopedFunctionDeclaration() {
+    testFeatureValidation("{ function f() {} }", Feature.BLOCK_SCOPED_FUNCTION_DECLARATION);
+    testFeatureValidation(
+        "function f() { if (true) { function g() {} } }",
+        Feature.BLOCK_SCOPED_FUNCTION_DECLARATION);
+    valid("function f() {}");
+  }
+
+  public void testFeatureValidation_classes() {
+    testFeatureValidation("class C {}", Feature.CLASSES);
+    testFeatureValidation("var C = class {}", Feature.CLASSES);
+  }
+
+  public void testFeatureValidation_computedProperties() {
+    testFeatureValidation("var obj = { ['foo' + 3]: 4};", Feature.COMPUTED_PROPERTIES);
+    testFeatureValidation("var { ['foo' + 3]: x} = obj;", Feature.COMPUTED_PROPERTIES);
+    testFeatureValidation("class C { ['foobar']() {} }", Feature.COMPUTED_PROPERTIES);
+  }
+
+  public void testFeatureValidation_defaultParameters() {
+    testFeatureValidation("function f(a = 1) {}", Feature.DEFAULT_PARAMETERS);
+    testFeatureValidation("((a = 3) => a)", Feature.DEFAULT_PARAMETERS);
+  }
+
+  public void testFeatureValidation_destructuring() {
+    testFeatureValidation("var x, {a, b} = obj;", Feature.DESTRUCTURING);
+    testFeatureValidation("var x, [a, b] = arr;", Feature.DESTRUCTURING);
+    testFeatureValidation("(x = 0, {a, b} = obj);", Feature.DESTRUCTURING);
+    testFeatureValidation("x = 0, [a, b] = obj;", Feature.DESTRUCTURING);
+    testFeatureValidation("for ({a, b} of c) {}", Feature.DESTRUCTURING);
+    testFeatureValidation("for ([a, b] of c) {}", Feature.DESTRUCTURING);
+  }
+
+  public void testFeatureValidation_extendedObjectLiterals() {
+    testFeatureValidation("var obj = { x };", Feature.EXTENDED_OBJECT_LITERALS);
+  }
+
+  public void testFeatureValidation_forOf() {
+    testFeatureValidation("for (const a of b) {}", Feature.FOR_OF);
+  }
+
+  public void testFeatureValidation_generatorFunctions() {
+    testFeatureValidation("const f = function *() {}", Feature.GENERATORS);
+    testFeatureValidation("function *f() {}", Feature.GENERATORS);
+    testFeatureValidation("class C { *f() {} }", Feature.GENERATORS);
+  }
+
+  public void testFeatureValidation_memberDeclarations() {
+    testFeatureValidation("class C { f() {} }", Feature.MEMBER_DECLARATIONS);
+    testFeatureValidation("var obj = { f() {} };", Feature.MEMBER_DECLARATIONS);
+  }
+
+  public void testFeatureValidation_newTarget() {
+    testFeatureValidation("function f() { new.target }", Feature.NEW_TARGET);
+  }
+
+  public void testFeatureValidation_restParameters() {
+    testFeatureValidation("function f(...rest) {}", Feature.REST_PARAMETERS);
+  }
+
+  public void testFeatureValidation_spreadExpressions() {
+    testFeatureValidation("f(...arr);", Feature.SPREAD_EXPRESSIONS);
+    testFeatureValidation("var arr = [...something];", Feature.SPREAD_EXPRESSIONS);
+    testFeatureValidation("var obj = {...something};", Feature.SPREAD_EXPRESSIONS);
+  }
+
+  public void testFeatureValidation_super() {
+    testFeatureValidation("class C extends B { constructor() { super(); } }", Feature.SUPER);
+    testFeatureValidation("class C extends B { f() { super.method(); } }", Feature.SUPER);
+  }
+
+  public void testFeatureValidation_templateLiterals() {
+    testFeatureValidation("`foo ${3} bar `", Feature.TEMPLATE_LITERALS);
+    testFeatureValidation("tag`foo ${3} bar`", Feature.TEMPLATE_LITERALS);
+  }
+
+  public void testFeatureValidation_modules() {
+    testFeatureValidation("export {x};", Feature.MODULES);
+    testFeatureValidation("import {x} from './foo.js';", Feature.MODULES);
+  }
+
+  public void testFeatureValidation_exponentOp() {
+    testFeatureValidation("2 ** 3", Feature.EXPONENT_OP);
+    testFeatureValidation("x **= 3;", Feature.EXPONENT_OP);
+  }
+
+  public void testFeatureValidation_asyncFunctions() {
+    testFeatureValidation("const f = async function() {}", Feature.ASYNC_FUNCTIONS);
+    testFeatureValidation("async function f() {}", Feature.ASYNC_FUNCTIONS);
+    testFeatureValidation("class C { async f() {} }", Feature.ASYNC_FUNCTIONS);
+    testFeatureValidation("(async () => {})", Feature.ASYNC_FUNCTIONS);
+  }
+
+  public void testFeatureValidation_objectLiteralsWithSpread() {
+    testFeatureValidation("var obj = {...something};", Feature.OBJECT_LITERALS_WITH_SPREAD);
+  }
+
   public void testValidFeatureInScript() {
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
 
@@ -437,5 +548,34 @@ public final class AstValidatorTest extends CompilerTestCase {
 
   private void expectValid(Node n, Check level) {
     assertTrue(doCheck(n, level));
+  }
+
+  /**
+   * Tests that AstValidator checks for the given feature in the AST
+   *
+   * <p>This will raise an error if a) the AST parsed from {@code code} lacks {@code feature}, or
+   * b) AstValidator does not validate {@code feature}'s presence in the AST.
+   */
+  private void testFeatureValidation(String code, Feature feature) {
+    Node script = parseScriptWithoutCheckingLanguageLevel(code);
+    expectValid(script, Check.SCRIPT);
+
+    // Remove `feature` from the SCRIPT node's feature set, checking that it was originally present,
+    // and then validate that AstValidator errors because it expects `feature` to be present.
+    FeatureSet currentFeatures = NodeUtil.getFeatureSetOfScript(script);
+    assertTrue(currentFeatures.contains(feature));
+
+    script.putProp(Node.FEATURE_SET, currentFeatures.without(feature));
+    expectInvalid(script, Check.SCRIPT);
+  }
+
+  private Node parseScriptWithoutCheckingLanguageLevel(String code) {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_NEXT);
+    Node n = parseExpectedJs(code);
+    Node script = n.getFirstChild();
+    assertNode(script).hasType(Token.SCRIPT);
+    script.setInputId(new InputId("something_input"));
+    script.setStaticSourceFile(new SimpleSourceFile("something", false));
+    return script;
   }
 }

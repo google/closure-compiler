@@ -75,12 +75,7 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, HotSwapCom
   public void process(Node externs, Node root) {
     TranspilationPasses.processTranspile(compiler, externs, features, this);
     TranspilationPasses.processTranspile(compiler, root, features, this);
-    // Don't mark features as transpiled away if we had errors that prevented transpilation.
-    // We don't want a redundant error from the AstValidator complaining that the features are still
-    // there
-    if (!compiler.hasHaltingErrors()) {
-      TranspilationPasses.markFeaturesAsTranspiledAway(compiler, features);
-    }
+    TranspilationPasses.maybeMarkFeaturesAsTranspiledAway(compiler, features);
   }
 
   @Override
@@ -90,7 +85,7 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, HotSwapCom
     // We don't want a redundant error from the AstValidator complaining that the features are still
     // there
     if (!compiler.hasHaltingErrors()) {
-      TranspilationPasses.markFeaturesAsTranspiledAway(compiler, features);
+      TranspilationPasses.maybeMarkFeaturesAsTranspiledAway(compiler, features);
     }
   }
 

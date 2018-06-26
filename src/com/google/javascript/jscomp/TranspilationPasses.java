@@ -535,15 +535,21 @@ public class TranspilationPasses {
     }
   }
 
-  static void markFeaturesAsTranspiledAway(
+  static void maybeMarkFeaturesAsTranspiledAway(
       AbstractCompiler compiler, FeatureSet transpiledFeatures) {
-    compiler.setFeatureSet(compiler.getFeatureSet().without(transpiledFeatures));
+    // We don't bother to do this if the compiler has halting errors, which avoids unnecessary
+    // warnings from AstValidator warning that the features are still there.
+    if (!compiler.hasHaltingErrors()) {
+      compiler.setFeatureSet(compiler.getFeatureSet().without(transpiledFeatures));
+    }
   }
 
-  static void markFeaturesAsTranspiledAway(
+  static void maybeMarkFeaturesAsTranspiledAway(
       AbstractCompiler compiler, Feature transpiledFeature, Feature... moreTranspiledFeatures) {
-    compiler.setFeatureSet(
-        compiler.getFeatureSet().without(transpiledFeature, moreTranspiledFeatures));
+    if (!compiler.hasHaltingErrors()) {
+      compiler.setFeatureSet(
+          compiler.getFeatureSet().without(transpiledFeature, moreTranspiledFeatures));
+    }
   }
 
   /**
@@ -560,12 +566,12 @@ public class TranspilationPasses {
         return new HotSwapCompilerPass() {
           @Override
           public void hotSwapScript(Node scriptRoot, Node originalRoot) {
-            markFeaturesAsTranspiledAway(compiler, featureToRemove, moreFeaturesToRemove);
+            maybeMarkFeaturesAsTranspiledAway(compiler, featureToRemove, moreFeaturesToRemove);
           }
 
           @Override
           public void process(Node externs, Node root) {
-            markFeaturesAsTranspiledAway(compiler, featureToRemove, moreFeaturesToRemove);
+            maybeMarkFeaturesAsTranspiledAway(compiler, featureToRemove, moreFeaturesToRemove);
           }
         };
       }

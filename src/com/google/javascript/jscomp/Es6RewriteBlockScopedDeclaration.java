@@ -110,7 +110,7 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
     NodeTraversal.traverse(compiler, root, transformer);
     transformer.transformLoopClosure();
     rewriteDeclsToVars();
-    TranspilationPasses.markFeaturesAsTranspiledAway(compiler, transpiledFeatures);
+    TranspilationPasses.maybeMarkFeaturesAsTranspiledAway(compiler, transpiledFeatures);
   }
 
   @Override
@@ -123,7 +123,7 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
     NodeTraversal.traverse(compiler, scriptRoot, transformer);
     transformer.transformLoopClosure();
     rewriteDeclsToVars();
-    TranspilationPasses.markFeaturesAsTranspiledAway(compiler, transpiledFeatures);
+    TranspilationPasses.maybeMarkFeaturesAsTranspiledAway(compiler, transpiledFeatures);
   }
 
   private boolean getShouldAddTypesOnNewAstNodes() {
