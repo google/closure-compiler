@@ -67,7 +67,7 @@ import java.util.TreeSet;
  * unions.<p>
  */
 public class UnionType extends JSType {
-  private static final long serialVersionUID = 1L;
+  private static final long serialVersionUID = 2L;
 
   // NOTE: to avoid allocating iterators, all the loops below iterate over alternates by index
   // instead of using the for-each loop idiom.
@@ -76,7 +76,6 @@ public class UnionType extends JSType {
   ImmutableList<JSType> alternatesWithoutStucturalTyping;
   // alternates under structural typing
   ImmutableList<JSType> alternates;
-  private int hashcode;
 
   /**
    * Creates a union type.
@@ -93,7 +92,6 @@ public class UnionType extends JSType {
       builder.addAlternate(alternate, true);
     }
     this.alternates = builder.getAlternates();
-    this.hashcode = this.alternatesWithoutStucturalTyping.hashCode();
   }
 
   /**
@@ -163,7 +161,6 @@ public class UnionType extends JSType {
       builder.addAlternate(alternate, true);
     }
     alternates = builder.getAlternates();
-    hashcode = alternatesWithoutStucturalTyping.hashCode();
   }
 
   /**
@@ -508,8 +505,15 @@ public class UnionType extends JSType {
   }
 
   @Override
-  int recursionUnsafeHashCode() {
-    return this.hashcode;
+  final int recursionUnsafeHashCode() {
+    int hashCode = alternatesWithoutStucturalTyping.size();
+    for (int i = 0; i < alternatesWithoutStucturalTyping.size(); i++) {
+      // To be determinisitic this aggregation must be order-independent. Using a commutative
+      // operatator (multiplication) allows us to achieve that without sorting. Multiplication also
+      // has some nice properties about reducing collisions compared to addition or xor.
+      hashCode *= alternatesWithoutStucturalTyping.get(i).hashCode();
+    }
+    return hashCode;
   }
 
   @Override
