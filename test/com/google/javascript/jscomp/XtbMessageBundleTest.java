@@ -58,6 +58,10 @@ public final class XtbMessageBundleTest extends TestCase {
           + "male{Hello <ph name=\"USER_IDENTIFIER\"/>.}"
           + "other{Hello <ph name=\"USER_IDENTIFIER\"/>.}}"
           + "</translation>\n"
+          + "<translation id=\"123457\">"
+          + "<ph name=\"START_PARAGRAPH\"/>p1<ph name=\"END_PARAGRAPH\"/>"
+          + "<ph name=\"START_PARAGRAPH\"/>p1<ph name=\"END_PARAGRAPH\"/>"
+          + "</translation>"
           + "</translationbundle>";
 
   public void testXtbBundle() {
@@ -93,12 +97,17 @@ public final class XtbMessageBundleTest extends TestCase {
     InputStream stream = new ByteArrayInputStream(XTB_WITH_MIXED_PLACEHOLDERS.getBytes(UTF_8));
     XtbMessageBundle bundle = new XtbMessageBundle(stream, PROJECT_ID);
 
-    assertThat(bundle.getAllMessages()).hasSize(1);
+    assertThat(bundle.getAllMessages()).hasSize(2);
     assertEquals(
         "{USER_GENDER,select,"
             + "female{Hello {userIdentifier}.}"
             + "male{Hello {userIdentifier}.}"
             + "other{Hello {userIdentifier}.}}",
         bundle.getMessage("123456").toString());
+
+    // Previous ICU message should not to affect next message
+    assertEquals(
+        "{$startParagraph}p1{$endParagraph}{$startParagraph}p1{$endParagraph}",
+        bundle.getMessage("123457").toString());
   }
 }

@@ -205,6 +205,7 @@ public final class XtbMessageBundle implements MessageBundle {
         String key = msgBuilder.getKey();
         messages.put(key, msgBuilder.build());
         msgBuilder = null;
+        isIcuMessage = false;
       }
     }
 
