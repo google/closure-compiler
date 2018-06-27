@@ -131,10 +131,10 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
   public void testPropertyExports() {
     testModules(
         "test.js",
-        lines("exports.one = 1;", "module.exports.obj = {};", "module.exports.obj.two = 2;"),
+        "exports.one = 1; module.exports.obj = {}; module.exports.obj.two = 2;",
         lines(
-            "/** @const */ var module$test = {/** @const */ default: {}};",
-            "" + "module$test.default.one = 1;",
+            "/** @const */ var module$test = {default: {}};",
+            "module$test.default.one = 1;",
             "module$test.default.obj = {};",
             "module$test.default.obj.two = 2;"));
   }
@@ -148,9 +148,7 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
     testModules(
         "test.js",
         lines("exports.one = 1;", "module.exports = {};"),
-        lines(
-            "/** @const */ var module$test = {/** @const */ default: {}};",
-            "module$test.default.one = 1;"));
+        "/** @const */ var module$test = { default: {}}; module$test.default.one = 1;");
   }
 
   public void testVarRenaming() {
@@ -308,6 +306,21 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
         "test.js",
         lines(
             "var foobar = {foo: 'bar'};",
+            "if (typeof module === 'object' && module['exports']) {",
+            "  module['exports'] = foobar;",
+            "} else if (typeof define === 'function' && define['amd']) {",
+            "  define([], function() {return foobar;});",
+            "} else {",
+            "  this.foobar = foobar;",
+            "}"),
+        lines(
+            "/** @const */ var module$test = {};",
+            "/** @const */ module$test.default = {foo: 'bar'};"));
+
+    testModules(
+        "test.js",
+        lines(
+            "var foobar = {foo: 'bar'};",
             "if (typeof define === 'function' && define.amd) {",
             "  define([], function() {return foobar;});",
             "} else if (typeof module === 'object' && module.exports) {",
@@ -327,6 +340,21 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "  window.define([], function() {return foobar;});",
             "} else if (typeof module === 'object' && module.exports) {",
             "  module.exports = foobar;",
+            "} else {",
+            "  this.foobar = foobar;",
+            "}"),
+        lines(
+            "/** @const */ var module$test = {};",
+            "/** @const */ module$test.default = {foo: 'bar'};"));
+
+    testModules(
+        "test.js",
+        lines(
+            "var foobar = {foo: 'bar'};",
+            "if (typeof define === 'function' && define['amd']) {",
+            "  define([], function() {return foobar;});",
+            "} else if (typeof module === 'object' && module['exports']) {",
+            "  module['exports'] = foobar;",
             "} else {",
             "  this.foobar = foobar;",
             "}"),
@@ -724,8 +752,8 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "  global.foobar = foobar;",
             "}})(this)"),
         lines(
-            "/** @const */ var module$test = {};",
-            "/** @const */ module$test.default = {foo: 'bar'};",
+            "/** @const */ var module$test = { default: {}};",
+            "module$test.default = {foo: 'bar'};",
             "module$test.default.foobar = module$test.default;"));
 
     testModules(
@@ -742,8 +770,8 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "  global.foobar = foobar;",
             "}}.call(this, this))"),
         lines(
-            "/** @const */ var module$test = {};",
-            "/** @const */ module$test.default = {foo: 'bar'};",
+            "/** @const */ var module$test = { default: {}};",
+            "module$test.default = {foo: 'bar'};",
             "module$test.default.foobar = module$test.default;"));
 
     // We can't remove IIFEs explict calls that don't use "this"
@@ -827,10 +855,10 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "  global.foobar = foobar;",
             "}}.call(this, this))"),
         lines(
-            "/** @const */ var module$test = {};",
+            "/** @const */ var module$test = { default: {}};",
             "/** @param {...*} var_args */",
             "function log$$module$test(var_args){}",
-            "/** @const */ module$test.default = {",
+            "module$test.default = {",
             "  foo: 'bar',",
             "  log: function() { log$$module$test.apply(null,arguments); }",
             "};",
@@ -929,13 +957,84 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "      (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));",
             ""),
         lines(
-            "/** @const */ var module$test = {};",
+            "/** @const */ var module$test = { default: {}};",
             "var __WEBPACK_AMD_DEFINE_ARRAY__$$module$test;",
             "!(__WEBPACK_AMD_DEFINE_ARRAY__$$module$test = ",
             "    [__webpack_require__(1), __webpack_require__(2)],",
             "    module$test.default = function(b,c){console.log(b,c.exportA,c.exportB)}",
             "        .apply(module$test.default,__WEBPACK_AMD_DEFINE_ARRAY__$$module$test),",
             "    module$test.default!==undefined && module$test.default)"));
+
+    testModules(
+        "test.js",
+        lines(
+            "/** @suppress {duplicate} */var __WEBPACK_AMD_DEFINE_RESULT__;(function() {",
+            "  var dialogPolyfill = {prop: 'DIALOG_POLYFILL'};",
+            "",
+            "  if ('function' === 'function' && 'amd' in __webpack_require__(124)) {",
+            "    // AMD support",
+            "    !(__WEBPACK_AMD_DEFINE_RESULT__ = (function() { return dialogPolyfill; }).call(exports, __webpack_require__, exports, module),",
+            "				__WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));",
+            "  } else if (typeof module === 'object' && typeof module['exports'] === 'object') {",
+            "    // CommonJS support",
+            "    module['exports'] = dialogPolyfill;",
+            "  } else {",
+            "    // all others",
+            "    window['dialogPolyfill'] = dialogPolyfill;",
+            "  }",
+            "})();"),
+        lines(
+            "/** @const */ var module$test = {default: {}};",
+            "/** @suppress {duplicate} */",
+            "var __WEBPACK_AMD_DEFINE_RESULT__$$module$test;",
+            "(function () {",
+            "  var dialogPolyfill = {prop: \"DIALOG_POLYFILL\"};",
+            "  !(__WEBPACK_AMD_DEFINE_RESULT__$$module$test = function () {",
+            "    return dialogPolyfill",
+            "  }.call(module$test.default, __webpack_require__, module$test.default, {}),",
+            "  __WEBPACK_AMD_DEFINE_RESULT__$$module$test !== undefined && (module$test.default = __WEBPACK_AMD_DEFINE_RESULT__$$module$test))",
+            "})()"));
+
+    Map<String, String> webpackModulesById =
+        ImmutableMap.of(
+            "1", "other.js",
+            "yet_another.js", "yet_another.js",
+            "3", "test.js");
+
+    setWebpackModulesById(webpackModulesById);
+    resolutionMode = ModuleLoader.ResolutionMode.WEBPACK;
+
+    testModules(
+        "test.js",
+        lines(
+            "/** @suppress {duplicate} */var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;(function (root, factory) {",
+            "  if (true) {",
+            "    !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(1),__webpack_require__('yet_another.js')], __WEBPACK_AMD_DEFINE_RESULT__ = function (a0,b1) {",
+            "      return (factory(a0,b1));",
+            "    }.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__),",
+            "				__WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));",
+            "  } else if (typeof module === 'object' && module.exports) {",
+            "    module.exports = factory(require('angular'),require('tinymce'));",
+            "  } else {",
+            "    root['banno.wysiwyg'] = factory(root['angular'],root['tinymce']);",
+            "  }",
+            "}(this, function (angular, tinymce) {",
+            "  console.log(angular, tinymce);",
+            "}))"),
+        lines(
+            "/** @const */ var module$test = {default: {}};",
+            "/** @suppress {duplicate} */",
+            "var __WEBPACK_AMD_DEFINE_ARRAY__$$module$test;",
+            "/** @suppress {duplicate} */",
+            "module$test.default;",
+            "var factory$$module$test = function (angular, tinymce) {",
+            "  console.log(angular, tinymce)",
+            "};",
+            "!(__WEBPACK_AMD_DEFINE_ARRAY__$$module$test = [module$other.default,",
+            "  module$yet_another.default], module$test.default = function (a0, b1) {",
+            "  return factory$$module$test(a0, b1)",
+            "}.apply(module$test.default, __WEBPACK_AMD_DEFINE_ARRAY__$$module$test),",
+            "  module$test.default !== undefined && module$test.default)"));
   }
 
   public void testIssue2593() {
@@ -1123,8 +1222,8 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "console.log(typeof module);",
             "console.log(typeof exports);"),
         lines(
-            "/** @const */ var module$test={};",
-            "/** @const */ module$test.default = 'foo';",
+            "/** @const */ var module$test={ default: {}};",
+            "module$test.default = 'foo';",
             "console.log('object');",
             "console.log('object');"));
   }
@@ -1312,5 +1411,24 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "/** @const */ module$test.default = {",
             "  ...g$$module$test",
             "};"));
+  }
+
+  public void testBabelTranspiledESModules() {
+    testModules(
+        "test.js",
+        lines(
+            "'use strict';",
+            "",
+            "Object.defineProperty(exports, '__esModule', {",
+            "  value: true",
+            "});",
+            "exports.default = toInteger;",
+            "function toInteger(dirtyNumber) { }",
+            "module.exports = exports['default'];"),
+        lines(
+            "/** @const */ var module$test = {default: {}};",
+            "module$test.default.default = function(dirtyNumber) { };",
+            "Object.defineProperty(module$test.default, '__esModule',{value:true})",
+            "module$test.default = module$test.default.default;"));
   }
 }
