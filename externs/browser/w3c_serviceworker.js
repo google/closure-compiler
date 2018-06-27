@@ -677,3 +677,53 @@ FetchEvent.prototype.default = function() {};
  * }}
  */
 var FetchEventInit;
+
+
+/**
+ * @see https://www.w3.org/TR/service-workers/#extendablemessage-event-interface
+ * @param {string} type
+ * @param {!ExtendableMessageEventInit<T>=} opt_eventInitDict
+ * @constructor
+ * @extends {ExtendableEvent}
+ * @template T
+ */
+function ExtendableMessageEvent(type, opt_eventInitDict) {};
+
+/** @type {T} */
+ExtendableMessageEvent.prototype.data;
+
+/** @type {string} */
+ExtendableMessageEvent.prototype.origin;
+
+/** @type {string} */
+ExtendableMessageEvent.prototype.lastEventId;
+
+/** @type {?ServiceWorkerClient|?ServiceWorker|?MessagePort} */
+ExtendableMessageEvent.prototype.source;
+
+/** @type {?Array<!MessagePort>} */
+ExtendableMessageEvent.prototype.ports;
+
+
+/**
+ * @see https://www.w3.org/TR/service-workers/#extendablemessage-event-init-dictionary
+ * @record
+ * @extends {ExtendableEventInit}
+ * @template T
+ */
+function ExtendableMessageEventInit() {};
+
+/** @type {T} */
+ExtendableMessageEventInit.prototype.data;
+
+/** @type {string|undefined} */
+ExtendableMessageEventInit.prototype.origin;
+
+/** @type {string|undefined} */
+ExtendableMessageEventInit.prototype.lastEventId;
+
+/** @type {!ServiceWorkerClient|!ServiceWorker|!MessagePort|undefined} */
+ExtendableMessageEventInit.prototype.source;
+
+/** @type {!Array<!MessagePort>|undefined} */
+ExtendableMessageEventInit.prototype.ports;
