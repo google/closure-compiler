@@ -1776,10 +1776,10 @@ public final class CommandLineRunnerTest extends TestCase {
               "var Foo$$module$foo=function(){};",
               "Foo$$module$foo.prototype.bar=function(){console.log(\"bar\")};",
               "var module$foo={};",
-              "module$foo.default=Foo$$module$foo;"),
+              "/** @const */ module$foo.default=Foo$$module$foo;"),
           LINE_JOINER.join(
-              "var FooBar = module$foo.default,",
-              "    baz = new module$foo.default();",
+              "var FooBar = Foo$$module$foo,",
+              "    baz = new Foo$$module$foo();",
               "console.log(baz.bar());")
         });
   }
@@ -1851,10 +1851,10 @@ public final class CommandLineRunnerTest extends TestCase {
         new String[] {
           LINE_JOINER.join(
               "var $jscompDefaultExport$$module$message = 'message', module$message = {};",
-              "module$message.default = $jscompDefaultExport$$module$message;"),
+              "/** @const */ module$message.default = $jscompDefaultExport$$module$message;"),
           LINE_JOINER.join(
               "function foo$$module$foo(){",
-              "  alert(module$message.default);",
+              "  alert($jscompDefaultExport$$module$message);",
               "}",
               "foo$$module$foo();",
               "/** @const */ var module$foo = {};"),

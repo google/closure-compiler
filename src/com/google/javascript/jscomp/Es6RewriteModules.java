@@ -104,7 +104,6 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
 
   private final Set<Node> importedGoogNames;
 
-  private Set<String> classes;
   private Set<String> typedefs;
 
   private final ModuleMetadata moduleMetadata;
@@ -178,7 +177,6 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
     this.exportsByLocalName = LinkedHashMultimap.create();
     this.importMap = new HashMap<>();
     this.importedGoogNames.clear();
-    this.classes = new HashSet<>();
     this.typedefs = new HashSet<>();
   }
 
@@ -453,14 +451,6 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
       Node nameNode = declaration.getFirstChild();
       String name = nameNode.getString();
       exportsByLocalName.put(name, new NameNodePair(name, nameNode));
-
-      // If the declaration declares a new type, create annotations for
-      // the type checker.
-      // TODO(moz): Currently we only record ES6 classes and typedefs,
-      // need to handle other kinds of type declarations too.
-      if (declaration.isClass()) {
-        classes.add(name);
-      }
     }
 
     parent.replaceChild(export, declaration.detach());
@@ -551,12 +541,10 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
         // actually type checkable.
         // exports.foo = foo;
         Node assign = IR.assign(getProp, NodeUtil.newQName(compiler, withSuffix));
-        if (classes.contains(exportedName)) {
-          JSDocInfoBuilder builder = new JSDocInfoBuilder(true);
-          builder.recordConstancy();
-          JSDocInfo info = builder.build();
-          assign.setJSDocInfo(info);
-        }
+        JSDocInfoBuilder builder = new JSDocInfoBuilder(true);
+        builder.recordConstancy();
+        JSDocInfo info = builder.build();
+        assign.setJSDocInfo(info);
         script.addChildToBack(
             IR.exprResult(assign).useSourceInfoIfMissingFromForTree(nodeForSourceInfo));
       }

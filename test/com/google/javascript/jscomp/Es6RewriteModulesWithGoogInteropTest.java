@@ -174,7 +174,9 @@ public final class Es6RewriteModulesWithGoogInteropTest extends CompilerTestCase
     SourceFile expectedEs6 =
         SourceFile.fromCode(
             "es6.js",
-            "var x$$module$es6;/** @const */ var module$es6={};module$es6.x=x$$module$es6;");
+            lines(
+                "var x$$module$es6;/** @const */ var module$es6={};",
+                "/** @const */ module$es6.x=x$$module$es6;"));
 
     test(
         srcs(

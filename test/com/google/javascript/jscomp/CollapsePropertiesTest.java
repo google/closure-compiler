@@ -2191,8 +2191,8 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
                 "var $jscompDefaultExport$$module$mod1=123;",
                 "var bar$$module$mod1 = 'bar';",
                 "/** @const */ var module$mod1={};",
-                "var module$mod1$default = $jscompDefaultExport$$module$mod1;",
-                "var module$mod1$bar = bar$$module$mod1")));
+                "/** @const */ var module$mod1$default = $jscompDefaultExport$$module$mod1;",
+                "/** @const */ var module$mod1$bar = bar$$module$mod1")));
     expected.add(
         SourceFile.fromCode("entry.js", "alert(module$mod1$default); alert(module$mod1$bar);"));
 
@@ -2223,7 +2223,7 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
                 "/** @const */ var module$mod1= {",
                 "  /** @return {?} */ get bar() { return bar$$module$mod1; },",
                 "};",
-                "var module$mod1$default = $jscompDefaultExport$$module$mod1;")));
+                "/** @const */ var module$mod1$default = $jscompDefaultExport$$module$mod1;")));
     expected.add(
         SourceFile.fromCode("entry.js", "alert(module$mod1$default); alert(module$mod1.bar);"));
 
@@ -2279,7 +2279,7 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
                 "foo$$module$mod1.bar.baz = 123;",
                 "var $jscompDefaultExport$$module$mod1 = foo$$module$mod1;",
                 "/** @const */ var module$mod1={};",
-                "var module$mod1$default = $jscompDefaultExport$$module$mod1;")));
+                "/** @const */ var module$mod1$default = $jscompDefaultExport$$module$mod1;")));
     expected.add(SourceFile.fromCode("entry.js", "alert(module$mod1$default.bar.baz);"));
 
     test(inputs, expected);
