@@ -220,7 +220,7 @@ final class ArrowType extends JSType {
   }
 
   @Override
-  public int hashCode() {
+  int recursionUnsafeHashCode() {
     int hashCode = Objects.hashCode(returnType);
     if (parameters != null) {
       Node param = parameters.getFirstChild();

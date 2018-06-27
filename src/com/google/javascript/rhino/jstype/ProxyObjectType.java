@@ -290,7 +290,7 @@ public class ProxyObjectType extends ObjectType {
   }
 
   @Override
-  public int hashCode() {
+  int recursionUnsafeHashCode() {
     return referencedType.hashCode();
   }
 

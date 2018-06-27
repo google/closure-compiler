@@ -144,7 +144,7 @@ public class NoObjectType extends FunctionType {
   }
 
   @Override
-  public final int hashCode() {
+  int recursionUnsafeHashCode() {
     return System.identityHashCode(this);
   }
 

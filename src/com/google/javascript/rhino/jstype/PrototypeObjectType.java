@@ -550,7 +550,7 @@ public class PrototypeObjectType extends ObjectType {
   }
 
   @Override
-  public int hashCode() {
+  int recursionUnsafeHashCode() {
     if (isStructuralType()) {
       return Objects.hash(className, properties);
     } else {

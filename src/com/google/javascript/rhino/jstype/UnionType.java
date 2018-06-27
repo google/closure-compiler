@@ -508,7 +508,7 @@ public class UnionType extends JSType {
   }
 
   @Override
-  public int hashCode() {
+  int recursionUnsafeHashCode() {
     return this.hashcode;
   }
 
