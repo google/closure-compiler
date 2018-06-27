@@ -37,7 +37,7 @@ final class JsdocUtil {
   }
 
   static JSDocInfo getUnusableTypeJSDoc(JSDocInfo oldJSDoc) {
-    return getConstJSDoc(oldJSDoc, new Node(Token.STAR));
+    return getConstJSDoc(oldJSDoc, "UnusableType");
   }
 
   static JSDocInfo getQmarkTypeJSDoc() {
