@@ -3289,7 +3289,9 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     // to revisit this approach to clearing GlobalNamespaces
     runHotSwapPass(null, null, ensureDefaultPassConfig().garbageCollectChecks);
 
+    // Type information is not reliable for hotswap runs.
     this.getTypeRegistry().clearNamedTypes();
+    this.typeCheckingHasRun = false;
     this.removeSyntheticVarsInput();
 
     runHotSwap(originalRoot, js, this.ensureDefaultPassConfig());
