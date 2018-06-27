@@ -726,8 +726,12 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
         // has an authoritative name.
         String qualifiedName = NodeUtil.getBestLValueName(keyNode);
         if (qualifiedName != null) {
-          boolean inferred = keyType == null;
-          defineSlot(keyNode, qualifiedName, keyType, inferred);
+          new SlotDefiner()
+              .forDeclarationNode(keyNode)
+              .forVariableName(qualifiedName)
+              .withType(keyType)
+              .allowLaterTypeInference(keyType == null)
+              .defineSlot();
         } else if (keyType != null) {
           setDeferredType(keyNode, keyType);
         }
@@ -798,7 +802,13 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
     void defineCatch(Node n) {
       assertDefinitionNode(n, Token.CATCH);
       Node catchName = n.getFirstChild();
-      defineSlot(catchName, getDeclaredType(catchName.getJSDocInfo(), catchName, null));
+      JSType type = getDeclaredType(catchName.getJSDocInfo(), catchName, null);
+      new SlotDefiner()
+          .forDeclarationNode(catchName)
+          .readVariableNameFromDeclarationNode()
+          .withType(type)
+          .allowLaterTypeInference(type == null)
+          .defineSlot();
     }
 
     /**
@@ -849,7 +859,12 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       // declaration. Otherwise, the declaration will happen in other
       // code paths.
       if (NodeUtil.isClassDeclaration(n)) {
-        defineSlot(n.getFirstChild(), classType);
+        new SlotDefiner()
+            .forDeclarationNode(n.getFirstChild())
+            .readVariableNameFromDeclarationNode()
+            .withType(classType)
+            .allowLaterTypeInference(classType == null)
+            .defineSlot();
       }
     }
 
@@ -873,7 +888,12 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       // declaration. Otherwise, the declaration will happen in other
       // code paths.
       if (NodeUtil.isFunctionDeclaration(n)) {
-        defineSlot(n.getFirstChild(), functionType);
+        new SlotDefiner()
+            .forDeclarationNode(n.getFirstChild())
+            .readVariableNameFromDeclarationNode()
+            .withType(functionType)
+            .allowLaterTypeInference(functionType == null)
+            .defineSlot();
       }
     }
 
@@ -892,7 +912,12 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
         // The variable's type will be inferred.
         type = name.isFromExterns() ? unknownType : null;
       }
-      defineSlot(name, type);
+      new SlotDefiner()
+          .forDeclarationNode(name)
+          .readVariableNameFromDeclarationNode()
+          .withType(type)
+          .allowLaterTypeInference(type == null)
+          .defineSlot();
     }
 
     /**
@@ -1278,164 +1303,194 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       return enumType;
     }
 
-    /**
-     * Defines a typed variable. The defining node will be annotated with the variable's type or
-     * {@code null} if its type is inferred.
-     *
-     * @param name the defining node. It must be a {@link Token#NAME}.
-     * @param type the variable's type. It may be {@code null}, in which case
-     */
-    private void defineSlot(Node name, JSType type) {
-      defineSlot(name, type, type == null);
-    }
+    /** Responsible for defining typed variable "slots". */
+    class SlotDefiner {
+      Node declarationNode;
+      String variableName;
+      // default is no type and a type may be inferred later
+      JSType type = null;
+      boolean allowLaterTypeInference = true;
 
-    /**
-     * Defines a typed variable. The defining node will be annotated with the variable's type of
-     * {@link JSTypeNative#UNKNOWN_TYPE} if its type is inferred.
-     *
-     * <p>Slots may be any variable or any qualified name in the global scope.
-     *
-     * @param n the defining NAME or GETPROP node.
-     * @param type the variable's type. It may be {@code null} if {@code inferred} is {@code true}.
-     */
-    void defineSlot(Node n, JSType type, boolean inferred) {
-      Node parent = n.getParent();
-      checkArgument(inferred || type != null);
+      // TODO(bradfordcsmith): Once all the logic needed for ES_2017 features has been added,
+      //     make the API to this class more restrictive to avoid accidental misuse.
+      //     e.g. There will probably always be a declarationNode, so make it a constructor
+      //     parameter.
 
-      // Only allow declarations of NAMEs and qualified names.
-      // Object literal keys will have to compute their names themselves.
-      if (n.isName()) {
-        checkArgument(
-            parent.isFunction()
-                || parent.isClass()
-                || NodeUtil.isNameDeclaration(parent)
-                || parent.isParamList()
-                || (parent.isRest() && parent.getParent().isParamList())
-                || parent.isCatch());
-      } else {
-        checkArgument(n.isGetProp() && (parent.isAssign() || parent.isExprResult()));
+      /** @param declarationNode the defining NAME or GETPROP or object literal key node. */
+      SlotDefiner forDeclarationNode(Node declarationNode) {
+        this.declarationNode = declarationNode;
+        return this;
       }
-      defineSlot(n, n.getQualifiedName(), type, inferred);
-    }
 
-    /**
-     * Defines a symbol in the current scope.
-     *
-     * @param n the defining NAME or GETPROP or object literal key node.
-     * @param variableName The name that this should be known by.
-     * @param type the variable's type. It may be {@code null} if {@code inferred} is {@code true}.
-     * @param inferred Whether the type is inferred or declared.
-     */
-    void defineSlot(Node n, String variableName, JSType type, boolean inferred) {
-      Node parent = n.getParent();
-      checkArgument(!variableName.isEmpty());
-
-      TypedScope scopeToDeclareIn = getLValueRootScope(n);
-
-      boolean isGlobalVar = n.isName() && scopeToDeclareIn.isGlobal();
-      boolean shouldDeclareOnGlobalThis = isGlobalVar && (parent.isVar() || parent.isFunction());
-      // If n is a property, then we should really declare it in the
-      // scope where the root object appears. This helps out people
-      // who declare "global" names in an anonymous namespace.
-      TypedScope ownerScope = null;
-      if (n.isGetProp()) {
-        ownerScope = scopeToDeclareIn;
-      } else if (variableName.contains(".")) {
-        TypedVar rootVar =
-            currentScope.getVar(variableName.substring(0, variableName.indexOf('.')));
-        if (rootVar != null) {
-          ownerScope = rootVar.getScope();
+      SlotDefiner readVariableNameFromDeclarationNode() {
+        // Only qualified name nodes can use this method to get the variable name
+        // Object literal keys will have to compute their names themselves.
+        // TODO(bradfordcsmith): Clean up these checks of the parent.
+        Node parent = declarationNode.getParent();
+        if (declarationNode.isName()) {
+          checkArgument(
+              parent.isFunction()
+                  || parent.isClass()
+                  || NodeUtil.isNameDeclaration(parent)
+                  || parent.isParamList()
+                  || (parent.isRest() && parent.getParent().isParamList())
+                  || parent.isCatch());
+        } else {
+          checkArgument(
+              declarationNode.isGetProp() && (parent.isAssign() || parent.isExprResult()));
         }
-      }
-      // The owner scope could be any of the following:
-      //   1. in the same CFG as scopeToDeclareIn
-      //   2. in an outer CFG, which this scope closes over
-      //   3. null, if this isn't a qualified name
-      // In case 1, we need to clobber the declaration in ownerScope.
-      // In case 2, we only declare in the outer scope if the qname is not already declared,
-      // since qualified names are declare lazily.
-      if (ownerScope != null
-          && scopeToDeclareIn != ownerScope
-          && (!ownerScope.hasOwnSlot(variableName)
-              || ownerScope.hasSameContainerScope(scopeToDeclareIn))) {
-        scopeToDeclareIn = ownerScope;
+        variableName = declarationNode.getQualifiedName();
+        return this;
       }
 
-      // TODO(sdh): Remove this special case.  It is required to reproduce the original
-      // non-block-scoped behavior, which is depended on in several places including
-      // https://github.com/angular/tsickle/issues/761.  But it's more correct to always
-      // declare on the owner scope.  Once all the bugs are fixed, this should be removed.
-      // We may be able to get by with checking a "declared" function's source for jsdoc.
-      if (scopeToDeclareIn != currentHoistScope
-          && scopeToDeclareIn.isGlobal()
-          && scopeToDeclareIn.hasOwnSlot(variableName)) {
-        scopeToDeclareIn = currentHoistScope;
+      // TODO(bradfordcsmith): maybe change to withVariableName(). Need to make these names more
+      //     consistent.
+      SlotDefiner forVariableName(String variableName) {
+        this.variableName = variableName;
+        return this;
       }
 
-      // The input may be null if we are working with a AST snippet. So read
-      // the extern info from the node.
-      TypedVar newVar = null;
+      SlotDefiner withType(@Nullable JSType type) {
+        this.type = type;
+        return this;
+      }
 
-      // declared in closest scope?
-      CompilerInput input = compiler.getInput(inputId);
-      if (!scopeToDeclareIn.canDeclare(variableName)) {
-        TypedVar oldVar = scopeToDeclareIn.getVar(variableName);
-        newVar = validator.expectUndeclaredVariable(
-            sourceName, input, n, parent, oldVar, variableName, type);
-      } else {
-        if (type != null) {
-          setDeferredType(n, type);
-        }
+      SlotDefiner allowLaterTypeInference(boolean allowLaterTypeInference) {
+        this.allowLaterTypeInference = allowLaterTypeInference;
+        return this;
+      }
 
-        newVar = declare(scopeToDeclareIn, variableName, n, type, input, inferred);
+      /**
+       * Define the slot and do related work.
+       *
+       * <p>At minimum the declaration node and variable name must have been set.
+       */
+      void defineSlot() {
+        checkNotNull(declarationNode, "declarationNode not set");
+        checkNotNull(variableName, "variableName not set");
+        checkState(allowLaterTypeInference || type != null, "null type but inference not allowed");
+        Node parent = declarationNode.getParent();
+        checkArgument(!variableName.isEmpty());
 
-        if (type instanceof EnumType) {
-          Node initialValue = newVar.getInitialValue();
-          boolean isValidValue =
-              initialValue != null
-                  && (initialValue.isObjectLit() || initialValue.isQualifiedName());
-          if (!isValidValue) {
-            report(JSError.make(n, ENUM_INITIALIZER));
+        TypedScope scopeToDeclareIn = getLValueRootScope(declarationNode);
+
+        boolean isGlobalVar = declarationNode.isName() && scopeToDeclareIn.isGlobal();
+        boolean shouldDeclareOnGlobalThis = isGlobalVar && (parent.isVar() || parent.isFunction());
+        // If n is a property, then we should really declare it in the
+        // scope where the root object appears. This helps out people
+        // who declare "global" names in an anonymous namespace.
+        TypedScope ownerScope = null;
+        if (declarationNode.isGetProp()) {
+          ownerScope = scopeToDeclareIn;
+        } else if (variableName.contains(".")) {
+          TypedVar rootVar =
+              currentScope.getVar(variableName.substring(0, variableName.indexOf('.')));
+          if (rootVar != null) {
+            ownerScope = rootVar.getScope();
           }
         }
-      }
-
-      // We need to do some additional work for constructors and interfaces.
-      FunctionType fnType = JSType.toMaybeFunctionType(type);
-      if (fnType != null
-          // We don't want to look at empty function types.
-          && !type.isEmptyType()) {
-
-        // We want to make sure that when we declare a new instance type
-        // (with @constructor) that there's actually a ctor for it.
-        // This doesn't apply to structural constructors (like
-        // function(new:Array). Checking the constructed type against
-        // the variable name is a sufficient check for this.
-        if ((fnType.isConstructor() || fnType.isInterface())
-            && variableName.equals(fnType.getReferenceName())) {
-          finishConstructorDefinition(n, variableName, fnType, scopeToDeclareIn, input, newVar);
+        // The owner scope could be any of the following:
+        //   1. in the same CFG as scopeToDeclareIn
+        //   2. in an outer CFG, which this scope closes over
+        //   3. null, if this isn't a qualified name
+        // In case 1, we need to clobber the declaration in ownerScope.
+        // In case 2, we only declare in the outer scope if the qname is not already declared,
+        // since qualified names are declare lazily.
+        if (ownerScope != null
+            && scopeToDeclareIn != ownerScope
+            && (!ownerScope.hasOwnSlot(variableName)
+                || ownerScope.hasSameContainerScope(scopeToDeclareIn))) {
+          scopeToDeclareIn = ownerScope;
         }
-      }
 
-      if (shouldDeclareOnGlobalThis) {
-        ObjectType globalThis = typeRegistry.getNativeObjectType(GLOBAL_THIS);
-        if (inferred) {
-          globalThis.defineInferredProperty(
-              variableName, type == null ? getNativeType(JSTypeNative.NO_TYPE) : type, n);
+        // TODO(sdh): Remove this special case.  It is required to reproduce the original
+        // non-block-scoped behavior, which is depended on in several places including
+        // https://github.com/angular/tsickle/issues/761.  But it's more correct to always
+        // declare on the owner scope.  Once all the bugs are fixed, this should be removed.
+        // We may be able to get by with checking a "declared" function's source for jsdoc.
+        if (scopeToDeclareIn != currentHoistScope
+            && scopeToDeclareIn.isGlobal()
+            && scopeToDeclareIn.hasOwnSlot(variableName)) {
+          scopeToDeclareIn = currentHoistScope;
+        }
+
+        // The input may be null if we are working with a AST snippet. So read
+        // the extern info from the node.
+        TypedVar newVar = null;
+
+        // declared in closest scope?
+        CompilerInput input = compiler.getInput(inputId);
+        if (!scopeToDeclareIn.canDeclare(variableName)) {
+          TypedVar oldVar = scopeToDeclareIn.getVar(variableName);
+          newVar =
+              validator.expectUndeclaredVariable(
+                  sourceName, input, declarationNode, parent, oldVar, variableName, type);
         } else {
-          globalThis.defineDeclaredProperty(variableName, type, n);
-        }
-      }
+          if (type != null) {
+            setDeferredType(declarationNode, type);
+          }
 
-      if (isGlobalVar && "Window".equals(variableName)
-          && type != null
-          && type.isFunctionType()
-          && type.isConstructor()) {
-        FunctionType globalThisCtor =
-            typeRegistry.getNativeObjectType(GLOBAL_THIS).getConstructor();
-        globalThisCtor.getInstanceType().clearCachedValues();
-        globalThisCtor.getPrototype().clearCachedValues();
-        globalThisCtor.setPrototypeBasedOn((type.toMaybeFunctionType()).getInstanceType());
+          newVar =
+              declare(
+                  scopeToDeclareIn,
+                  variableName,
+                  declarationNode,
+                  type,
+                  input,
+                  allowLaterTypeInference);
+
+          if (type instanceof EnumType) {
+            Node initialValue = newVar.getInitialValue();
+            boolean isValidValue =
+                initialValue != null
+                    && (initialValue.isObjectLit() || initialValue.isQualifiedName());
+            if (!isValidValue) {
+              report(JSError.make(declarationNode, ENUM_INITIALIZER));
+            }
+          }
+        }
+
+        // We need to do some additional work for constructors and interfaces.
+        FunctionType fnType = JSType.toMaybeFunctionType(type);
+        if (fnType != null
+            // We don't want to look at empty function types.
+            && !type.isEmptyType()) {
+
+          // We want to make sure that when we declare a new instance type
+          // (with @constructor) that there's actually a ctor for it.
+          // This doesn't apply to structural constructors (like
+          // function(new:Array). Checking the constructed type against
+          // the variable name is a sufficient check for this.
+          if ((fnType.isConstructor() || fnType.isInterface())
+              && variableName.equals(fnType.getReferenceName())) {
+            finishConstructorDefinition(
+                declarationNode, variableName, fnType, scopeToDeclareIn, input, newVar);
+          }
+        }
+
+        if (shouldDeclareOnGlobalThis) {
+          ObjectType globalThis = typeRegistry.getNativeObjectType(GLOBAL_THIS);
+          if (allowLaterTypeInference) {
+            globalThis.defineInferredProperty(
+                variableName,
+                type == null ? getNativeType(JSTypeNative.NO_TYPE) : type,
+                declarationNode);
+          } else {
+            globalThis.defineDeclaredProperty(variableName, type, declarationNode);
+          }
+        }
+
+        if (isGlobalVar
+            && "Window".equals(variableName)
+            && type != null
+            && type.isFunctionType()
+            && type.isConstructor()) {
+          FunctionType globalThisCtor =
+              typeRegistry.getNativeObjectType(GLOBAL_THIS).getConstructor();
+          globalThisCtor.getInstanceType().clearCachedValues();
+          globalThisCtor.getPrototype().clearCachedValues();
+          globalThisCtor.setPrototypeBasedOn((type.toMaybeFunctionType()).getInstanceType());
+        }
       }
     }
 
@@ -1925,7 +1980,12 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
 
         // If the property is already declared, the error will be
         // caught when we try to declare it in the current scope.
-        defineSlot(n, valueType, inferred);
+        new SlotDefiner()
+            .forDeclarationNode(n)
+            .readVariableNameFromDeclarationNode()
+            .withType(valueType)
+            .allowLaterTypeInference(inferred)
+            .defineSlot();
       }
     }
 
@@ -2088,7 +2148,12 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       ObjectType ownerType = getObjectSlot(ownerName);
       JSType inheritedType = getInheritedInterfacePropertyType(ownerType, propName);
       JSType stubType = inheritedType == null ? unknownType : inheritedType;
-      defineSlot(n, stubType, true);
+      new SlotDefiner()
+          .forDeclarationNode(n)
+          .readVariableNameFromDeclarationNode()
+          .withType(stubType)
+          .allowLaterTypeInference(true)
+          .defineSlot();
 
       if (ownerType != null && (isExtern || ownerType.isFunctionPrototypeType())) {
         // If this is a stub for a prototype, just declare it
@@ -2133,7 +2198,12 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
 
       typeRegistry.overwriteDeclaredType(currentScope, typedef, realType);
       if (candidate.isGetProp()) {
-        defineSlot(candidate, getNativeType(NO_TYPE), false);
+        new SlotDefiner()
+            .forDeclarationNode(candidate)
+            .readVariableNameFromDeclarationNode()
+            .withType(getNativeType(NO_TYPE))
+            .allowLaterTypeInference(false)
+            .defineSlot();
       }
     }
   } // end AbstractScopeBuilder
@@ -2249,7 +2319,12 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
                 // Make sure that the function is actually bleeding by checking
                 // if has already been declared.
                 && fnVar.getInitialValue() != fnNode)) {
-          defineSlot(fnNameNode, fnNode.getJSType(), false);
+          new SlotDefiner()
+              .forDeclarationNode(fnNameNode)
+              .readVariableNameFromDeclarationNode()
+              .withType(fnNode.getJSType())
+              .allowLaterTypeInference(false)
+              .defineSlot();
         }
       }
 
@@ -2304,7 +2379,12 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
               paramType = unknownType;
             }
 
-            defineSlot(astParameter, paramType, inferred);
+            new SlotDefiner()
+                .forDeclarationNode(astParameter)
+                .readVariableNameFromDeclarationNode()
+                .withType(paramType)
+                .allowLaterTypeInference(inferred)
+                .defineSlot();
 
             if (jsDocParameter != null) {
               jsDocParameter = jsDocParameter.getNext();
@@ -2348,7 +2428,12 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
           && NodeUtil.isClassExpression(parent)) {
         // Declare bleeding class name in scope.  Pull the type off the AST.
         checkState(!n.getString().isEmpty()); // anonymous classes have EMPTY nodes, not NAME
-        defineSlot(n, parent.getJSType(), false);
+        new SlotDefiner()
+            .forDeclarationNode(n)
+            .readVariableNameFromDeclarationNode()
+            .withType(parent.getJSType())
+            .allowLaterTypeInference(false)
+            .defineSlot();
       } else if (n.isMemberFunctionDef() && !"constructor".equals(n.getString())) {
         defineMemberFunction(n);
       }
