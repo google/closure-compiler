@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+
 import com.google.common.base.Predicate;
 import com.google.javascript.jscomp.ControlFlowGraph.Branch;
 import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
@@ -25,6 +26,7 @@ import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.TernaryValue;
+import javax.annotation.Nullable;
 
 /**
  * Checks functions for missing return statements. Return statements are only
@@ -91,7 +93,7 @@ class CheckMissingReturn implements ScopedCallback {
   @Override
   public void enterScope(NodeTraversal t) {
     Node n = t.getScopeRoot();
-    JSType returnType = explicitReturnExpected(n);
+    JSType returnType = getExplicitReturnTypeIfExpected(n);
 
     if (returnType == null) {
       // No return value is expected, so nothing to check.
@@ -172,7 +174,12 @@ class CheckMissingReturn implements ScopedCallback {
    *
    * @return If a return type is expected, returns it. Otherwise, returns null.
    */
-  private JSType explicitReturnExpected(Node scopeRoot) {
+  @Nullable
+  private JSType getExplicitReturnTypeIfExpected(Node scopeRoot) {
+    if (!scopeRoot.isFunction()) {
+      // Nothing to do in a global/module/block scope.
+      return null;
+    }
     FunctionType scopeType = JSType.toMaybeFunctionType(scopeRoot.getJSType());
 
     if (scopeType == null) {
@@ -191,6 +198,11 @@ class CheckMissingReturn implements ScopedCallback {
 
     if (returnType == null) {
       return null;
+    }
+
+    if (scopeRoot.isAsyncFunction()) {
+      // Unwrap the declared return type (e.g. "!Promise<number>" becomes "number")
+      returnType = Promises.getTemplateTypeOfThenable(compiler.getTypeRegistry(), returnType);
     }
 
     if (!isVoidOrUnknown(returnType)) {

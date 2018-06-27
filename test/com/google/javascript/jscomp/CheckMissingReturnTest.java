@@ -332,4 +332,29 @@ public final class CheckMissingReturnTest extends CompilerTestCase {
             "/** @return {!Object} */", // Return type more vague than Generator is also OK
             "function *gen() {}"));
   }
+
+  public void testAsyncFunction_noJSDoc() {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2017);
+    // Note: we add the alert because CheckMissingReturn never warns on functions with empty bodies.
+    testNoWarning("async function foo() { alert(1); }");
+  }
+
+  public void testAsyncFunction_returnsUndefined() {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2017);
+    testNoWarning("/** @return {!Promise<undefined>} */ async function foo() { alert(1); }");
+  }
+
+  public void testAsyncFunction_returnsUnknown() {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2017);
+    testNoWarning("/** @return {!Promise<?>} */ async function foo() { alert(1); }");
+  }
+
+  public void testAsyncFunction_returnsNumber() {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2017);
+    testNoWarning("/** @return {!Promise<number>} */ async function foo() { return 1; }");
+
+    testWarning(
+        "/** @return {!Promise<string>} */ async function foo() { alert(1); }",
+        CheckMissingReturn.MISSING_RETURN_STATEMENT);
+  }
 }
