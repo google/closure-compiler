@@ -202,12 +202,15 @@ public class FunctionTypeTest extends BaseJSTypeTestCase {
 
   public void testCtorWithClassSideInheritance() {
     FunctionType fooCtor = new FunctionBuilder(registry).forConstructor().withName("Foo").build();
+    // NOTE: FunctionType does not look into the node, only at its token.
+    Node source = new Node(Token.CLASS);
     FunctionType barCtor =
         new FunctionBuilder(registry)
+            .withSourceNode(source)
             .forConstructor()
             .withName("Bar")
-            .withImplicitPrototype(fooCtor)
             .build();
+    barCtor.setPrototypeBasedOn(fooCtor.getInstanceType());
     fooCtor.defineDeclaredProperty("foo", NUMBER_TYPE, null);
 
     assertEquals(fooCtor, barCtor.getImplicitPrototype());

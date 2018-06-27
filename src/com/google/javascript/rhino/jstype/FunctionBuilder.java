@@ -192,12 +192,6 @@ public final class FunctionBuilder {
     return this;
   }
 
-  /** Set the implicit prototype of the function. */
-  public FunctionBuilder withImplicitPrototype(ObjectType implicitPrototype) {
-    this.implicitPrototype = implicitPrototype;
-    return this;
-  }
-
   /** Set the prototype property of a constructor. */
   public FunctionBuilder withPrototypeBasedOn(ObjectType setPrototypeBasedOn) {
     this.setPrototypeBasedOn = setPrototypeBasedOn;
@@ -238,9 +232,6 @@ public final class FunctionBuilder {
         kind,
         isNative,
         isAbstract);
-    if (implicitPrototype != null) {
-      ft.setImplicitPrototype(implicitPrototype);
-    }
     if (setPrototypeBasedOn != null) {
       ft.setPrototypeBasedOn(setPrototypeBasedOn);
     }

@@ -1154,7 +1154,7 @@ public class JSTypeRegistry implements Serializable {
       if (type.toObjectType() != null && type.toObjectType().getConstructor() != null) {
         Node source = type.toObjectType().getConstructor().getSource();
         if (source != null) {
-          checkState(source.isFunction(), source);
+          checkState(source.isFunction() || source.isClass(), source);
           String readable = source.getFirstChild().getOriginalName();
           if (readable != null) {
             return readable;

@@ -414,6 +414,13 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
   }
 
   final void setPrototypeBasedOn(ObjectType baseType, Node propertyNode) {
+    // First handle class-side inheritance for ES6 classes, before reassigning baseType.
+    if (source != null && source.isClass()) {
+      FunctionType superCtor = baseType.getConstructor();
+      if (superCtor != null) {
+        setImplicitPrototype(superCtor);
+      }
+    }
     // This is a bit weird. We need to successfully handle these
     // two cases:
     // Foo.prototype = new Bar();
@@ -1149,6 +1156,9 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
     subTypes.add(subType);
   }
 
+  // NOTE(sdh): One might assume that immediately after calling this, hasCachedValues() should
+  // always return false.  This is not the case, since hasCachedValues() will return true if
+  // prototypeSlot is non-null, and this override does nothing to change that state.
   @Override
   public final void clearCachedValues() {
     super.clearCachedValues();
