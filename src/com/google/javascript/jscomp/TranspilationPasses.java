@@ -127,7 +127,7 @@ public class TranspilationPasses {
   }
 
   public static void addEs6RewriteImportPathPass(List<PassFactory> passes) {
-    passes.add(es6RewriteImportPaths);
+    passes.add(es6RelativizeImportPaths);
   }
 
   /** Deprecated: use addPostCheckTranspilationPasses instead. */
@@ -170,11 +170,11 @@ public class TranspilationPasses {
       };
 
   /** Rewrites ES6 modules import paths to be browser compliant */
-  private static final PassFactory es6RewriteImportPaths =
-      new PassFactory("es6RewriteImportPaths", true) {
+  private static final PassFactory es6RelativizeImportPaths =
+      new PassFactory("es6RelativizeImportPaths", true) {
         @Override
         protected CompilerPass create(AbstractCompiler compiler) {
-          return new Es6RewriteImportPaths(compiler);
+          return new Es6RelativizeImportPaths(compiler);
         }
 
         @Override

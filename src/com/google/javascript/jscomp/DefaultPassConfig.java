@@ -160,7 +160,7 @@ public final class DefaultPassConfig extends PassConfig {
         case TO_COMMON_JS_LIKE_MODULES:
           TranspilationPasses.addEs6ModuleToCjsPass(passes);
           break;
-        case RESOLVE_IMPORT_PATHS:
+        case RELATIVIZE_IMPORT_PATHS:
           TranspilationPasses.addEs6RewriteImportPathPass(passes);
           break;
         case NONE:

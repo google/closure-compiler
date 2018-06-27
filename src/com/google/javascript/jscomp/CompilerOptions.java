@@ -2753,9 +2753,9 @@ public class CompilerOptions implements Serializable {
     NONE,
 
     /**
-     * Rewrite import paths to resolved paths only.
+     * Rewrite import paths to resolved, relative paths only.
      */
-    RESOLVE_IMPORT_PATHS,
+    RELATIVIZE_IMPORT_PATHS,
 
     /**
      * Rewrite to common js like modules for bundling.
