@@ -46,6 +46,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 import javax.annotation.Nullable;
 import junit.framework.TestCase;
 
@@ -2346,6 +2347,23 @@ public final class NodeUtilTest extends TestCase {
     assertEquals("x", getFunctionLValue("var x = y && function() {};"));
     assertEquals("x", getFunctionLValue("var x = y || function() {};"));
     assertEquals("x", getFunctionLValue("var x = (y, function() {});"));
+  }
+
+  public void testGetBestLValueName() {
+    Function<String, String> getBestName =
+        (js) -> NodeUtil.getBestLValueName(NodeUtil.getBestLValue(getFunctionNode(js)));
+    assertEquals("x", getBestName.apply("var x = function() {};"));
+    assertEquals("x", getBestName.apply("x = function() {};"));
+    assertEquals("x", getBestName.apply("function x() {};"));
+    assertEquals("x", getBestName.apply("var x = y ? z : function() {};"));
+    assertEquals("x", getBestName.apply("var x = y ? function() {} : z;"));
+    assertEquals("x", getBestName.apply("var x = y && function() {};"));
+    assertEquals("x", getBestName.apply("var x = y || function() {};"));
+    assertEquals("x", getBestName.apply("var x = (y, function() {});"));
+    assertEquals("C.prototype.d", getBestName.apply("C.prototype.d = function() {};"));
+    assertEquals("C.prototype.d", getBestName.apply("class C { d() {} };"));
+    assertEquals("C.d", getBestName.apply("C.d = function() {};"));
+    assertEquals("C.d", getBestName.apply("class C { static d() {} };"));
   }
 
   public void testGetRValueOfLValue() {

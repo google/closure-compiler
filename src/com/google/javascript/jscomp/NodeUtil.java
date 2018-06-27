@@ -5239,6 +5239,8 @@ public final class NodeUtil {
     Node parent = n.getParent();
     if (isFunctionDeclaration(n) || isClassDeclaration(n)) {
       return n.getFirstChild();
+    } else if (n.isClassMembers()) {
+      return getBestLValue(parent);
     } else if (parent.isName()) {
       return parent;
     } else if (parent.isAssign()) {
@@ -5316,7 +5318,8 @@ public final class NodeUtil {
         return null;
       }
       String methodName = lValue.getString();
-      return className + ".prototype." + methodName;
+      String maybePrototype = lValue.isStaticMember() ? "." : ".prototype.";
+      return className + maybePrototype + methodName;
     }
     // TODO(sdh): Tighten this to simply require !lValue.isQuotedString()
     // Could get rid of the isJSIdentifier check, but may need to fix depot.

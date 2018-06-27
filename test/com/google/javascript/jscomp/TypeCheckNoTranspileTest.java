@@ -2151,7 +2151,6 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   }
 
   public void testClassSyntaxRecordMismatch() {
-    // TODO(sdh): Should be an error.
     testTypes(
         lines(
             "/** @record */", //
@@ -2161,7 +2160,13 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "    this.foo;",
             "  }",
             "}",
-            "var /** !Rec */ rec = {foo: string};"));
+            "var /** !Rec */ rec = {foo: 'string'};"),
+        lines(
+            "initializing variable",
+            "found   : {foo: string}",
+            "required: Rec",
+            "missing : []",
+            "mismatch: [foo]"));
   }
 
   public void testClassJSDocExtendsInconsistentWithExtendsClause() {
@@ -2181,6 +2186,117 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "class Bar {}", //
             "/** @extends {Bar} */",
             "class Foo {}"));
+  }
+
+  public void testClassExtendsGetElem() {
+    testTypes(
+        lines(
+            "class Foo {}",
+            "/** @const {!Object<string, function(new:Foo)>} */",
+            "var obj = {};",
+            "class Bar extends obj['abc'] {}",
+            "var /** !Foo */ foo = new Bar();"),
+        // TODO(sdh): It would be good to recognize that Bar actually *is* a Foo.
+        lines(
+            "initializing variable",
+            "found   : Bar",
+            "required: Foo"));
+  }
+
+  public void testClassExtendsFunctionCall() {
+    testTypes(
+        lines(
+            "class Foo {}",
+            "/** @return {function(new:Foo)} */",
+            "function mixin() {}",
+            "class Bar extends mixin() {}",
+            "var /** !Foo */ foo = new Bar();"),
+        // TODO(sdh): It would be good to recognize that Bar actually *is* a Foo.
+        lines(
+            "initializing variable",
+            "found   : Bar",
+            "required: Foo"));
+  }
+
+  public void testClassImplementsInterface() {
+    testTypes(
+        lines(
+            "/** @interface */",
+            "class Foo { foo() {} }",
+            "/** @implements {Foo} */",
+            "class Bar {",
+            "  /** @override */",
+            "  foo() {}",
+            "}"));
+  }
+
+  public void testClassMissingInterfaceMethod() {
+    testTypes(
+        lines(
+            "/** @interface */",
+            "class Foo { foo() {} }",
+            "/** @implements {Foo} */",
+            "class Bar {}"),
+        "property foo on interface Foo is not implemented by type Bar");
+  }
+
+  public void testClassAbstractClassNeedNonExplicitlyOverrideUnimplementedInterfaceMethods() {
+    testTypes(
+        lines(
+            "/** @interface */",
+            "class Foo { foo() {} }",
+            "/** @abstract @implements {Foo} */",
+            "class Bar {}"),
+        // TODO(sdh): allow this without error, provided we can get the error on the concrete class
+        "property foo on interface Foo is not implemented by type Bar");
+  }
+
+  public void testClassIncompatibleInterfaceMethodImplementation() {
+    testTypes(
+        lines(
+            "/** @interface */",
+            "class Foo {",
+            "  /** @return {number} */ foo() {}",
+            "}",
+            "/** @implements {Foo} */",
+            "class Bar {",
+            "  /** @override @return {number|string} */",
+            "  foo() {}",
+            "}"),
+        lines(
+            "mismatch of the foo property on type Bar and the type of the property it overrides "
+                + "from interface Foo",
+            "original: function(this:Foo): number",
+            "override: function(this:Bar): (number|string)"));
+  }
+
+  public void testClassMissingTransitiveInterfaceMethod() {
+    testTypes(
+        lines(
+            "/** @interface */",
+            "class Foo { foo() {} }",
+            "/** @interface @extends {Foo} */",
+            "class Bar {}",
+            "/** @implements {Bar} */",
+            "class Baz {}"),
+        "property foo on interface Foo is not implemented by type Baz");
+  }
+
+  public void testClassMixinAllowsNonOverriddenInterfaceMethods() {
+    testTypes(
+        lines(
+            "/** @interface */",
+            "class Foo {",
+            "  /** @return {number} */ foo() {}",
+            "}",
+            "class Bar {}",
+            // TODO(sdh): Intersection types would allow annotating this correctly.
+            "/** @return {function(new:Bar)} */",
+            "function mixin() {}",
+            "/** @implements {Foo} */",
+            "class Baz extends mixin() {}"),
+        // TODO(sdh): This is supposed to be allowed.
+        "property foo on interface Foo is not implemented by type Baz");
   }
 
   public void testClassMissingSuperCall() {
@@ -2281,6 +2397,268 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
         //     "actual parameter 2 of Foo does not match formal parameter",
         //     "found   : function(string): ?",
         //     "required: function(number): ?"));
+  }
+
+  public void testClassSideInheritanceFillsInParameterTypesWhenCheckingBody() {
+    testTypes(
+        lines(
+            "class Foo {",
+            "  static foo(/** string */ arg) {}",
+            "}",
+            "class Bar extends Foo {",
+            // TODO(sdh): Should need @override here.
+            "  static foo(arg) {",
+            "    var /** null */ x = arg;",
+            "  }",
+            "}"),
+        lines(
+            "initializing variable", //
+            "found   : string",
+            "required: null"));
+  }
+
+  public void testClassMethodParameters() {
+    testTypes(
+        lines(
+            "class C {",
+            "  /** @param {number} arg */",
+            "  m(arg) {}",
+            "}",
+            "new C().m('x');"),
+        lines(
+            "actual parameter 1 of C.prototype.m does not match formal parameter",
+            "found   : string",
+            "required: number"));
+  }
+
+  public void testClassInheritedMethodParameters() {
+    testTypes(
+        lines(
+            "var B = class {",
+            "  /** @param {boolean} arg */",
+            "  method(arg) {}",
+            "};",
+            "var C = class extends B {};",
+            "new C().method(1);"),
+        lines(
+            "actual parameter 1 of B.prototype.method does not match formal parameter",
+            "found   : number",
+            "required: boolean"));
+  }
+
+  public void testClassMethodReturns() {
+    testTypes(
+        lines(
+            "var D = class {",
+            "  /** @return {number} */",
+            "  m() {}",
+            "}",
+            "var /** null */ x = new D().m();"),
+        lines(
+            "initializing variable", //
+            "found   : number",
+            "required: null"));
+  }
+
+  public void testClassInheritedMethodReturns() {
+    testTypes(
+        lines(
+            "class Q {",
+            "  /** @return {string} */",
+            "  method() {}",
+            "};",
+            "var P = class extends Q {};",
+            "var /** null */ x = new P().method();"),
+        lines(
+            "initializing variable", //
+            "found   : string",
+            "required: null"));
+  }
+
+  public void testClassStaticMethodParameters() {
+    testTypes(
+        lines(
+            "class C {",
+            "  /** @param {number} arg */",
+            "  static m(arg) {}",
+            "}",
+            "C.m('x');"),
+        lines(
+            "actual parameter 1 of C.m does not match formal parameter",
+            "found   : string",
+            "required: number"));
+  }
+
+  public void testClassInheritedStaticMethodParameters() {
+    testTypes(
+        lines(
+            "var B = class {",
+            "  /** @param {boolean} arg */",
+            "  static method(arg) {}",
+            "};",
+            "var C = class extends B {};",
+            "C.method(1);"),
+        lines(
+            "actual parameter 1 of C.method does not match formal parameter",
+            "found   : number",
+            "required: boolean"));
+  }
+
+  public void testClassStaticMethodReturns() {
+    testTypes(
+        lines(
+            "var D = class {",
+            "  /** @return {number} */",
+            "  static m() {}",
+            "};",
+            "var /** null */ x = D.m();"),
+        lines(
+            "initializing variable", //
+            "found   : number",
+            "required: null"));
+  }
+
+  public void testClassInheritedStaticMethodReturns() {
+    testTypes(
+        lines(
+            "class Q {",
+            "  /** @return {string} */",
+            "  static method() {}",
+            "}",
+            "class P extends Q {}",
+            "var /** null */ x = P.method();"),
+        lines(
+            "initializing variable", //
+            "found   : string",
+            "required: null"));
+  }
+
+  public void testClassStaticMethodCalledOnInstance() {
+    testTypes(
+        lines(
+            "class C {",
+            "  static m() {}",
+            "}",
+            "new C().m();"),
+        // TODO(sdh): This error message should be different from the converse case.
+        // Probably should say "Instance property m never defined on C".
+        "Property m never defined on C");
+  }
+
+  public void testClassInstanceMethodCalledOnClass() {
+    testTypes(
+        lines(
+            "class C {",
+            "  m() {}",
+            "}",
+            "C.m();"),
+        // TODO(sdh): This error message should be different from the converse case.
+        // Probably should say "Static property m never defined on C".
+        "Property m never defined on C");
+  }
+
+  public void testClassInstanceMethodOverriddenWithWidenedType() {
+    testTypes(
+        lines(
+            "class Base {",
+            "  /** @param {string} arg */",
+            "  method(arg) {}",
+            "}",
+            "class Sub extends Base {",
+            "  /** @override @param {string|number} arg */",
+            "  method(arg) {}",
+            "}"));
+  }
+
+  public void testClassStaticMethodOverriddenWithWidenedType() {
+    testTypes(
+        lines(
+            "class Base {",
+            "  /** @param {string} arg */",
+            "  static method(arg) {}",
+            "}",
+            "class Sub extends Base {",
+            // TODO(sdh): should need @override
+            "  /** @param {string|number} arg */",
+            "  static method(arg) {}",
+            "}"));
+  }
+
+  public void testClassStaticMethodOverriddenWithIncompatibleType() {
+    testTypes(
+        lines(
+            "class Base {",
+            "  /** @param {string|number} arg */",
+            "  static method(arg) {}",
+            "}",
+            "class Sub extends Base {",
+            "  /** @override */",
+            "  static method(arg) {}",
+            "}"));
+        // TODO(sdh): This should actually check the override.
+        // lines(
+        //     "mismatch of the method property type and the type of the property it overrides "
+        //         + "from superclass Base",
+        //     "original: function((number|string)): undefined",
+        //     "override: function(string): undefined"));
+  }
+
+  public void testClassTreatedAsStruct() {
+    testTypes(
+        lines(
+            "class Foo {}", //
+            "var foo = new Foo();",
+            "foo.x = 42;"),
+        "Cannot add a property to a struct instance after it is constructed."
+              + " (If you already declared the property, make sure to give it a type.)");
+  }
+
+  public void testClassTreatedAsStructSymbolAccess() {
+    testTypesWithCommonExterns(
+        lines(
+            "class Foo {}", //
+            "var foo = new Foo();",
+            "foo[Symbol.iterator] = 42;"));
+  }
+
+  public void testClassAnnotatedWithUnrestricted() {
+    disableStrictMissingPropertyChecks();
+    testTypes(
+        lines(
+            "/** @unrestricted */ class Foo {}", //
+            "var foo = new Foo();",
+            "foo.x = 42;"));
+  }
+
+  public void testClassAnnotatedWithDictDotAccess() {
+    disableStrictMissingPropertyChecks();
+    testTypes(
+        lines(
+            "/** @dict */ class Foo {}",
+            "var foo = new Foo();",
+            "foo.x = 42;"),
+        "Cannot do '.' access on a dict");
+  }
+
+  public void testClassAnnotatedWithDictComputedAccess() {
+    testTypes(
+        lines(
+            "/** @dict */ class Foo {}",
+            "var foo = new Foo();",
+            "foo['x'] = 42;"));
+  }
+
+  public void testClassSuperConstructorParameterMismatch() {
+    testTypes(
+        lines(
+            "class Foo {}",
+            "class Bar extends Foo {",
+            "  constructor() {",
+            "    super(1);",
+            "  }",
+            "}"),
+        "Function super: called with 1 argument(s). Function requires at least 0 argument(s) "
+            + "and no more than 0 argument(s).");
   }
 
   public void testAsyncFunctionWithoutJSDoc() {

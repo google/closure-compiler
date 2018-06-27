@@ -1074,21 +1074,32 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       boolean isFnLiteral = rValue != null && rValue.isFunction();
       Node fnRoot = isFnLiteral ? rValue : null;
       Node parametersNode = isFnLiteral ? rValue.getSecondChild() : null;
+      Node classRoot =
+          lvalueNode != null && lvalueNode.getParent().isClassMembers()
+              ? lvalueNode.getGrandparent()
+              : null;
 
       // Find the type of any overridden function.
       Node ownerNode = NodeUtil.getBestLValueOwner(lvalueNode);
       String ownerName = NodeUtil.getBestLValueName(ownerNode);
-      TypedVar ownerVar = null;
-      String propName = null;
       ObjectType ownerType = null;
-      if (ownerName != null) {
-        ownerVar = currentScope.getVar(ownerName);
+      if (ownerNode != null && classRoot != null) {
+        // Static members are owned by the constructor, non-statics are owned by the prototype.
+        ownerType = JSType.toMaybeFunctionType(classRoot.getJSType());
+        if (!lvalueNode.isStaticMember() && ownerType != null) {
+          ownerType = ((FunctionType) ownerType).getPrototype();
+          ownerName = ownerName + ".prototype";
+        }
+      } else if (ownerName != null) {
+        TypedVar ownerVar = currentScope.getVar(ownerName);
         if (ownerVar != null) {
           ownerType = ObjectType.cast(ownerVar.getType());
         }
-        if (name != null) {
-          propName = name.substring(ownerName.length() + 1);
-        }
+      }
+
+      String propName = null;
+      if (ownerName != null && name != null) {
+        propName = name.substring(ownerName.length() + 1);
       }
 
       ObjectType prototypeOwner = getPrototypeOwnerType(ownerType);
@@ -1548,6 +1559,8 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
           && rValue.isFunction()
           && shouldUseFunctionLiteralType(
               JSType.toMaybeFunctionType(rValue.getJSType()), info, lValue)) {
+        return rValue.getJSType();
+      } else if (rValue != null && rValue.isClass()) {
         return rValue.getJSType();
       } else if (info != null) {
         if (info.hasEnumParameterType()) {
@@ -2321,9 +2334,10 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       if (n.isFunction()) {
         if (parent.getString().equals("constructor")) {
           // Constructor has already been analyzed, so pull that here.
-          n.setJSType(currentScope.getRootNode().getJSType());
+          setDeferredType(n, currentScope.getRootNode().getJSType());
+        } else {
+          defineFunctionLiteral(n);
         }
-        // TODO(sdh): handle non-constructor methods.
       }
     }
 
@@ -2335,7 +2349,20 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
         // Declare bleeding class name in scope.  Pull the type off the AST.
         checkState(!n.getString().isEmpty()); // anonymous classes have EMPTY nodes, not NAME
         defineSlot(n, parent.getJSType(), false);
+      } else if (n.isMemberFunctionDef() && !"constructor".equals(n.getString())) {
+        defineMemberFunction(n);
       }
+    }
+
+    void defineMemberFunction(Node n) {
+      // MEMBER_FUNCTION_DEF -> CLASS_MEMBERS -> CLASS
+      Node ownerNode = n.getGrandparent();
+      checkState(ownerNode.isClass());
+      ObjectType ownerType = ownerNode.getJSType().toMaybeFunctionType();
+      if (!n.isStaticMember()) {
+        ownerType = ((FunctionType) ownerType).getPrototype();
+      }
+      ownerType.defineDeclaredProperty(n.getString(), n.getLastChild().getJSType(), n);
     }
   } // end ClassScopeBuilder
 

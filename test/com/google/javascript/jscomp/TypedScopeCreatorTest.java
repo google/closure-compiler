@@ -1421,7 +1421,132 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     assertType(params.get(0)).isString();
   }
 
-  public void testClassExpressionDeclaration() {
+  public void testClassDeclarationWithMethod() {
+    testSame(
+        lines(
+            "class Foo {",
+            "  /** @param {string} arg */",
+            "  method(arg) {",
+            "    METHOD:;",
+            "    var /** number */ foo;",
+            "  }",
+            "}"));
+    TypedScope methodBlockScope = getLabeledStatement("METHOD").enclosingScope;
+    TypedScope methodScope = methodBlockScope.getParentScope();
+    assertScope(methodBlockScope).declares("foo").directly().withTypeThat().isNumber();
+    assertScope(methodScope).declares("arg").directly().withTypeThat().isString();
+
+    FunctionType method = (FunctionType) methodScope.getRootNode().getJSType();
+    assertType(method).toStringIsEqualTo("function(this:Foo, string): undefined");
+    FunctionType foo = (FunctionType) (findNameType("Foo", globalScope));
+    assertType(foo.getInstanceType()).withTypeOfProp("method").isEqualTo(method);
+  }
+
+  public void testClassDeclarationWithMethodAndInlineParamDocs() {
+    testSame(
+        lines(
+            "class Foo {",
+            "  method(/** string */ arg) {",
+            "    METHOD:;",
+            "    var /** number */ foo;",
+            "  }",
+            "}"));
+    TypedScope methodBlockScope = getLabeledStatement("METHOD").enclosingScope;
+    TypedScope methodScope = methodBlockScope.getParentScope();
+    assertScope(methodBlockScope).declares("foo").directly().withTypeThat().isNumber();
+    assertScope(methodScope).declares("arg").directly().withTypeThat().isString();
+
+    FunctionType method = (FunctionType) methodScope.getRootNode().getJSType();
+    assertType(method).toStringIsEqualTo("function(this:Foo, string): undefined");
+    FunctionType foo = (FunctionType) (findNameType("Foo", globalScope));
+    assertType(foo.getInstanceType()).withTypeOfProp("method").isEqualTo(method);
+  }
+
+  public void testClassDeclarationWithOverriddenMethod() {
+    testSame(
+        lines(
+            "class Bar {",
+            "  method(/** string */ arg) {}",
+            "}",
+            "class Foo extends Bar {",
+            "  method(arg) {",
+            "    METHOD:;",
+            "  }",
+            "}"));
+    TypedScope methodBlockScope = getLabeledStatement("METHOD").enclosingScope;
+    TypedScope methodScope = methodBlockScope.getParentScope();
+    assertScope(methodScope).declares("arg").directly().withTypeThat().isString();
+
+    FunctionType method = (FunctionType) methodScope.getRootNode().getJSType();
+    assertType(method).toStringIsEqualTo("function(this:Foo, string): undefined");
+    FunctionType foo = (FunctionType) (findNameType("Foo", globalScope));
+    assertType(foo.getInstanceType()).withTypeOfProp("method").isEqualTo(method);
+  }
+
+  public void testClassDeclarationWithStaticMethod() {
+    testSame(
+        lines(
+            "class Foo {",
+            "  static method(/** string */ arg) {",
+            "    METHOD:;",
+            "    var /** number */ foo;",
+            "  }",
+            "}"));
+    TypedScope methodBlockScope = getLabeledStatement("METHOD").enclosingScope;
+    TypedScope methodScope = methodBlockScope.getParentScope();
+    assertScope(methodBlockScope).declares("foo").directly().withTypeThat().isNumber();
+    assertScope(methodScope).declares("arg").directly().withTypeThat().isString();
+
+    FunctionType method = (FunctionType) methodScope.getRootNode().getJSType();
+    // TODO(sdh): Probably want function(this:function(new:Foo), string): undefined
+    assertType(method).toStringIsEqualTo("function(string): undefined");
+    FunctionType foo = (FunctionType) (findNameType("Foo", globalScope));
+    assertType(foo).withTypeOfProp("method").isEqualTo(method);
+  }
+
+  public void testClassDeclarationWithOverriddenStaticMethod() {
+    testSame(
+        lines(
+            "class Foo {",
+            "  /** @param {number} arg */",
+            "  static method(arg) {}",
+            "}",
+            "class Bar extends Foo {",
+            "  static method(arg) {",
+            "    METHOD:;",
+            "  }",
+            "}"));
+    TypedScope methodBlockScope = getLabeledStatement("METHOD").enclosingScope;
+    TypedScope methodScope = methodBlockScope.getParentScope();
+    assertScope(methodScope).declares("arg").directly().withTypeThat().isNumber();
+
+    FunctionType method = (FunctionType) methodScope.getRootNode().getJSType();
+    // TODO(sdh): Probably want function(this:function(new:Foo), string): undefined
+    assertType(method).toStringIsEqualTo("function(number): undefined");
+    FunctionType foo = (FunctionType) (findNameType("Foo", globalScope));
+    assertType(foo).withTypeOfProp("method").isEqualTo(method);
+  }
+
+  public void testClassDeclarationWithGeneratorMethod() {
+    testSame(
+        lines(
+            "class Foo {",
+            "  /** @param {string} arg */",
+            "  * method(arg) {",
+            "    METHOD:;",
+            "  }",
+            "}"));
+    TypedScope methodBlockScope = getLabeledStatement("METHOD").enclosingScope;
+    TypedScope methodScope = methodBlockScope.getParentScope();
+    assertScope(methodScope).declares("arg").directly().withTypeThat().isString();
+
+    FunctionType method = (FunctionType) methodScope.getRootNode().getJSType();
+    assertType(method).toStringIsEqualTo("function(this:Foo, string): Generator<?>");
+    FunctionType foo = (FunctionType) (findNameType("Foo", globalScope));
+    assertType(foo.getInstanceType()).withTypeOfProp("method").isEqualTo(method);
+  }
+
+  public void testClassExpressionAssignment() {
     testSame("var Foo = class Bar {}");
     FunctionType foo = (FunctionType) (findNameType("Foo", globalScope));
     assertTrue(foo.isConstructor());
@@ -1436,13 +1561,74 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
             "  constructor() {",
             "    CTOR:;",
             "  }",
-            "}"));
+            "};"));
     FunctionType foo = (FunctionType) (findNameType("Foo", globalScope));
     TypedScope ctorBlockScope = getLabeledStatement("CTOR").enclosingScope;
     TypedScope ctorScope = ctorBlockScope.getParentScope();
     TypedScope classScope = ctorScope.getParentScope();
     assertScope(globalScope).declares("Foo").withTypeThat().isEqualTo(foo);
     assertScope(classScope).declares("Bar").directly().withTypeThat().isEqualTo(foo);
+    assertScope(globalScope).doesNotDeclare("Bar");
+  }
+
+  public void testClassExpressionWithMethod() {
+    testSame(
+        lines(
+            "var Foo = class {",
+            "  /** @param {string} arg */",
+            "  method(arg) {",
+            "    METHOD:;",
+            "  }",
+            "};"));
+    TypedScope methodBlockScope = getLabeledStatement("METHOD").enclosingScope;
+    TypedScope methodScope = methodBlockScope.getParentScope();
+    assertScope(methodScope).declares("arg").directly().withTypeThat().isString();
+
+    FunctionType foo = (FunctionType) (findNameType("Foo", globalScope));
+    assertType(foo.getInstanceType())
+        .withTypeOfProp("method")
+        .toStringIsEqualTo("function(this:Foo, string): undefined");
+  }
+
+  public void testClassExpressionWithStaticMethod() {
+    testSame(
+        lines(
+            "var Foo = class {",
+            "  static method(/** string */ arg) {",
+            "    METHOD:;",
+            "    var /** number */ foo;",
+            "  }",
+            "}"));
+    TypedScope methodBlockScope = getLabeledStatement("METHOD").enclosingScope;
+    TypedScope methodScope = methodBlockScope.getParentScope();
+    assertScope(methodBlockScope).declares("foo").directly().withTypeThat().isNumber();
+    assertScope(methodScope).declares("arg").directly().withTypeThat().isString();
+
+    FunctionType method = (FunctionType) methodScope.getRootNode().getJSType();
+    // TODO(sdh): Probably want function(this:function(new:Foo), string): undefined
+    assertType(method).toStringIsEqualTo("function(string): undefined");
+    FunctionType foo = (FunctionType) (findNameType("Foo", globalScope));
+    assertType(foo).withTypeOfProp("method").isEqualTo(method);
+  }
+
+  public void testClassExpressionInCallback() {
+    testSame(
+        lines(
+            "function use(arg) {}",
+            "use(class Bar {",
+            "  constructor() {",
+            "    CTOR:;",
+            "  }",
+            "});"));
+    TypedScope ctorBlockScope = getLabeledStatement("CTOR").enclosingScope;
+    TypedScope ctorScope = ctorBlockScope.getParentScope();
+    TypedScope classScope = ctorScope.getParentScope();
+    assertScope(classScope)
+        .declares("Bar")
+        .directly()
+        .withTypeThat()
+        // TODO(sdh): Print a better name (https://github.com/google/closure-compiler/issues/2982)
+        .toStringIsEqualTo("function(new:<anonymous@testcode:2>): undefined");
     assertScope(globalScope).doesNotDeclare("Bar");
   }
 
