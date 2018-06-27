@@ -44,9 +44,6 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, HotSwapCom
   private static final FeatureSet features =
       FeatureSet.BARE_MINIMUM.with(Feature.CLASSES, Feature.NEW_TARGET);
 
-  // Whether to add $jscomp.inherits(Parent, Child) for each subclass.
-  private final boolean shouldAddInheritsPolyfill;
-
   static final DiagnosticType DYNAMIC_EXTENDS_TYPE = DiagnosticType.error(
       "JSC_DYNAMIC_EXTENDS_TYPE",
       "The class in an extends clause must be a qualified name.");
@@ -63,12 +60,7 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, HotSwapCom
   static final String INHERITS = "$jscomp.inherits";
 
   public Es6RewriteClass(AbstractCompiler compiler) {
-    this(compiler, true);
-  }
-
-  public Es6RewriteClass(AbstractCompiler compiler, boolean shouldAddInheritsPolyfill) {
     this.compiler = compiler;
-    this.shouldAddInheritsPolyfill = shouldAddInheritsPolyfill;
   }
 
   @Override
@@ -224,7 +216,7 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, HotSwapCom
             IR.string(superClassString)),
             metadata.superClassNameNode.getSourceFileName()));
       } else {
-        if (shouldAddInheritsPolyfill && !classNode.isFromExterns()) {
+        if (!classNode.isFromExterns()) {
           Node classNameNode = NodeUtil.newQName(compiler, metadata.fullClassName)
               .useSourceInfoIfMissingFrom(metadata.classNameNode);
           Node superClassNameNode = metadata.superClassNameNode.cloneTree();

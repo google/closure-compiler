@@ -266,7 +266,7 @@ public class TranspilationPasses {
       new HotSwapPassFactory("Es6RewriteClass") {
         @Override
         protected HotSwapCompilerPass create(AbstractCompiler compiler) {
-          return new Es6RewriteClass(compiler, true);
+          return new Es6RewriteClass(compiler);
         }
 
         @Override

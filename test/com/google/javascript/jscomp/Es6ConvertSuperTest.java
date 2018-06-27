@@ -425,7 +425,7 @@ public final class Es6ConvertSuperTest extends CompilerTestCase {
                 "",
                 "class B extends A {",
                 "  /** @param {...?} var_args */",
-                "  constructor(var_args) { super.apply(this, arguments); }",
+                "  constructor(var_args) { super(...arguments); }",
                 "}")));
   }
 

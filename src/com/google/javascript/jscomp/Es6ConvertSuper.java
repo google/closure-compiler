@@ -84,10 +84,11 @@ public final class Es6ConvertSuper extends NodeTraversal.AbstractPostOrderCallba
       // A call to super() shouldn't actually exist for these cases and is problematic to
       // transpile, so don't generate it.
       if (!classNode.isFromExterns()  && !isInterface(classNode)) {
-        Node exprResult = IR.exprResult(IR.call(
-            IR.getprop(IR.superNode(), IR.string("apply")),
-            IR.thisNode(),
-            IR.name("arguments")));
+        // Generate required call to super()
+        // `super(...arguments);`
+        // Note that transpilation of spread args must occur after this pass for this to work.
+        Node exprResult =
+            IR.exprResult(NodeUtil.newCallNode(IR.superNode(), IR.spread(IR.name("arguments"))));
         body.addChildToFront(exprResult);
       }
       Node constructor = IR.function(

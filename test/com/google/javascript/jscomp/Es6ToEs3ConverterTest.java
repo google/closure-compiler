@@ -128,6 +128,11 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
     optimizer.addOneTimePass(makePassFactory("es6RewriteClass", new Es6RewriteClass(compiler)));
     optimizer.addOneTimePass(
         makePassFactory("es6InjectRuntimeLibraries", new Es6InjectRuntimeLibraries(compiler)));
+    // Automatically generated constructor calls will contain a call to super() using spread.
+    // super(...arguments);
+    // We depend on that getting rewritten before we do the super constructor call rewriting.
+    optimizer.addOneTimePass(
+        makePassFactory("es6RewriteRestAndSpread", new Es6RewriteRestAndSpread(compiler)));
     optimizer.addOneTimePass(
         makePassFactory("convertEs6Late", new LateEs6ToEs3Converter(compiler)));
     optimizer.addOneTimePass(makePassFactory("es6ForOf", new Es6ForOfConverter(compiler)));
@@ -151,7 +156,7 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
   }
 
   public void testSpreadLibInjection() {
-    testSame("var x = [...a];");
+    test("var x = [...a];", "var x=[].concat($jscomp.arrayFromIterable(a))");
     assertThat(getLastCompiler().injected).containsExactly("es6/util/arrayfromiterable");
   }
 
