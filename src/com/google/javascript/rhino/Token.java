@@ -165,6 +165,7 @@ public enum Token {
     LET, // block scoped vars
 
     FOR_OF, // for-of
+    FOR_AWAIT_OF, // for-await-of
 
     YIELD, // generators
 
@@ -372,6 +373,7 @@ public enum Token {
       case CLASS:
       case FOR_IN:
       case FOR_OF:
+      case FOR_AWAIT_OF:
       case FUNCTION:
       case HOOK:
       case IMPORT:

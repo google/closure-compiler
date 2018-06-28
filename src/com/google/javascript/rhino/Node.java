@@ -3055,6 +3055,10 @@ public class Node implements Serializable {
     return this.token == Token.FOR_OF;
   }
 
+  public final boolean isForAwaitOf() {
+    return this.token == Token.FOR_AWAIT_OF;
+  }
+
   public final boolean isFunction() {
     return this.token == Token.FUNCTION;
   }

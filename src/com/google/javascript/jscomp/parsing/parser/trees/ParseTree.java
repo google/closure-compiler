@@ -174,6 +174,10 @@ public class ParseTree {
     return (UpdateExpressionTree) this;
   }
 
+  public ForAwaitOfStatementTree asForAwaitOfStatement() {
+    return (ForAwaitOfStatementTree) this;
+  }
+
   public boolean isPattern() {
     ParseTree parseTree = this;
     while (parseTree.type == ParseTreeType.PAREN_EXPRESSION) {
