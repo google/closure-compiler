@@ -573,8 +573,6 @@ public class IR {
     return new Node(Token.COMPUTED_PROP, key, value);
   }
 
-  // TODO(johnlenz): quoted props
-
   public static Node propdef(Node string, Node value) {
     checkState(string.isStringKey());
     checkState(!string.hasChildren());
@@ -616,6 +614,12 @@ public class IR {
     Node stringKey = stringKey(s);
     stringKey.addChildToFront(value);
     return stringKey;
+  }
+
+  public static Node quotedStringKey(String s, Node value) {
+    Node k = stringKey(s, value);
+    k.putBooleanProp(Node.QUOTED_PROP, true);
+    return k;
   }
 
   public static Node rest(Node target) {
