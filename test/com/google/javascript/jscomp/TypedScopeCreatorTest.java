@@ -143,115 +143,6 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     };
   }
 
-  public void testVarDeclarationWithJSDocForObjPatWithOneVariable() {
-    testSame("/** @type {number} */ const {a} = {a: 1};");
-    TypedVar aVar = checkNotNull(globalScope.getVar("a"));
-    assertType(aVar.getType()).toStringIsEqualTo("number");
-    assertFalse(aVar.isTypeInferred());
-  }
-
-  public void testVarDeclarationWithJSDocForObjPatWithMultipleVariables() {
-    // We don't allow statement-level JSDoc when multiple variables are declared.
-    testWarning("/** @type {number} */ const {a, b} = {a: 1};", TypeCheck.MULTIPLE_VAR_DEF);
-  }
-
-  public void testVarDeclarationObjPatShorthandProp() {
-    testSame("var {/** number */ a} = {a: 1};");
-
-    TypedVar aVar = checkNotNull(globalScope.getVar("a"));
-    assertType(aVar.getType()).toStringIsEqualTo("number");
-    assertFalse(aVar.isTypeInferred());
-  }
-
-  public void testVarDeclarationObjPatShorthandPropWithDefault() {
-    testSame("var {/** number */ a = 2} = {a: 1};");
-
-    TypedVar aVar = checkNotNull(globalScope.getVar("a"));
-    assertType(aVar.getType()).toStringIsEqualTo("number");
-    assertFalse(aVar.isTypeInferred());
-  }
-
-  public void testVarDeclarationObjPatNormalProp() {
-    testSame("var {a: /** number */ a} = {a: 1};");
-
-    TypedVar aVar = checkNotNull(globalScope.getVar("a"));
-    assertType(aVar.getType()).toStringIsEqualTo("number");
-    assertFalse(aVar.isTypeInferred());
-  }
-
-  public void testVarDeclarationObjPatNormalPropWithDefault() {
-    testSame("var {a: /** number */ a = 2} = {a: 1};");
-
-    TypedVar aVar = checkNotNull(globalScope.getVar("a"));
-    assertType(aVar.getType()).toStringIsEqualTo("number");
-    assertFalse(aVar.isTypeInferred());
-  }
-
-  public void testVarDeclarationObjPatComputedProp() {
-    testSame("var {['a']: /** number */ a} = {a: 1};");
-
-    TypedVar aVar = checkNotNull(globalScope.getVar("a"));
-    assertType(aVar.getType()).toStringIsEqualTo("number");
-    assertFalse(aVar.isTypeInferred());
-  }
-
-  public void testVarDeclarationObjPatComputedPropWithDefault() {
-    testSame("var {['a']: /** number */ a = 2} = {a: 1};");
-
-    TypedVar aVar = checkNotNull(globalScope.getVar("a"));
-    assertType(aVar.getType()).toStringIsEqualTo("number");
-    assertFalse(aVar.isTypeInferred());
-  }
-
-  public void testVarDeclarationArrayPat() {
-    testSame("var [ /** number */ a ] = [1];");
-
-    TypedVar aVar = checkNotNull(globalScope.getVar("a"));
-    assertType(aVar.getType()).toStringIsEqualTo("number");
-    assertFalse(aVar.isTypeInferred());
-  }
-
-  public void testVarDeclarationArrayPatWithDefault() {
-    testSame("var [ /** number */ a = 2 ] = [1];");
-
-    TypedVar aVar = checkNotNull(globalScope.getVar("a"));
-    assertType(aVar.getType()).toStringIsEqualTo("number");
-    assertFalse(aVar.isTypeInferred());
-  }
-
-  public void testVarDeclarationArrayPatRest() {
-    // TODO(bradfordcsmith): Add a TypeCheck test case to ensure rest values are always Arrays
-    testSame("var [ ... /** !Array<number> */ a ] = [1];");
-
-    TypedVar aVar = checkNotNull(globalScope.getVar("a"));
-    assertType(aVar.getType()).toStringIsEqualTo("Array<number>");
-    assertFalse(aVar.isTypeInferred());
-  }
-
-  // TODO(bradfordcsmith): Add Object rest test case.
-
-  public void testVarDeclarationNestedPatterns() {
-    testSame(
-        lines(
-            "var [",
-            "    {a: /** number */ a1},",
-            "    {a: /** string */ a2},",
-            "    ...{/** number */ length}",
-            "  ] = [{a: 1}, {a: '2'}, 1, 2, 3];"));
-
-    TypedVar a1Var = checkNotNull(globalScope.getVar("a1"));
-    assertType(a1Var.getType()).toStringIsEqualTo("number");
-    assertFalse(a1Var.isTypeInferred());
-
-    TypedVar a2Var = checkNotNull(globalScope.getVar("a2"));
-    assertType(a2Var.getType()).toStringIsEqualTo("string");
-    assertFalse(a2Var.isTypeInferred());
-
-    TypedVar lengthVar = checkNotNull(globalScope.getVar("length"));
-    assertType(lengthVar.getType()).toStringIsEqualTo("number");
-    assertFalse(lengthVar.isTypeInferred());
-  }
-
   public void testDeclarativelyUnboundVarsWithoutTypes() {
     testSame(
         lines(
@@ -2784,13 +2675,6 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     testSame(
         "try {} catch (/** @type {string} */ e) {}");
     assertEquals("string", lastLocalScope.getVar("e").getType().toString());
-  }
-
-  public void testDestructuringCatch() {
-    testSame(
-        "try {} catch ({/** string */ message, /** number */ errno}) {}");
-    assertType(lastLocalScope.getVar("message").getType()).toStringIsEqualTo("string");
-    assertType(lastLocalScope.getVar("errno").getType()).toStringIsEqualTo("number");
   }
 
   public void testDuplicateCatchVariableNames() {
