@@ -86,7 +86,7 @@ class CheckConstPrivateProperties extends NodeTraversal.AbstractPostOrderCallbac
         String propName = lastChild.getString();
 
         // Only consider non-const @private class properties as candidates
-        if (isCandidatePropertyDefinition(n) && isNonConstCheckablePrivatePropDecl(n)) {
+        if (isCandidatePropertyDefinition(n)) {
           candidates.add(n);
         } else if (isModificationOp(n)) {
           // Mark any other modification operation as a modified property, to deal with lambdas, etc
@@ -102,7 +102,17 @@ class CheckConstPrivateProperties extends NodeTraversal.AbstractPostOrderCallbac
   /**
    * @return Whether the given node is a @private property declaration that is not marked constant.
    */
-  private boolean isNonConstCheckablePrivatePropDecl(Node n) {
+  private boolean isCandidatePropertyDefinition(Node n) {
+    if (!NodeUtil.isLhsOfAssign(n)) {
+      return false;
+    }
+
+    Node target = n.getFirstChild();
+    // Check whether the given property access is on 'this' or a static property on a class.
+    if (!(target.isThis() || isConstructor(target))) {
+      return false;
+    }
+
     JSDocInfo info = NodeUtil.getBestJSDocInfo(n);
     return info != null
         && info.getVisibility() == Visibility.PRIVATE
@@ -121,12 +131,6 @@ class CheckConstPrivateProperties extends NodeTraversal.AbstractPostOrderCallbac
     }
     Node assignedValue = NodeUtil.getAssignedValue(n);
     return assignedValue != null && assignedValue.isFunction();
-  }
-
-  /** @return Whether the given property access is on 'this' or a static property on a class. */
-  private boolean isCandidatePropertyDefinition(Node n) {
-    Node target = n.getFirstChild();
-    return target.isThis() || isConstructor(target);
   }
 
   /**

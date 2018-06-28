@@ -221,4 +221,22 @@ public final class CheckConstPrivatePropertiesTest extends CompilerTestCase {
     testSame(
         "/** @constructor */ function C() {} /** @private */ C.prototype.method = function() {};");
   }
+
+  public void testPropertyAsRvalueOfDeclaration() {
+    // Test bug where the rhs of a @private prop declaration was treated like a declaration.
+    // See b/110938671
+
+    // In the repro below, there was a spurious warning that Foo.SOME_PROP was an effectively
+    // constant private property, and the JSDoc "/** @private {number} */" should be @const.
+    testNoWarning(
+        lines(
+            "class Foo {}",
+            "class C {",
+            "  constructor() {",
+            "    /** @private {number} */",
+            "    this.nonConstProp_ = Foo.SOME_PROP;",
+            "    this.nonConstProp_ = 4;", // change this.nonConstProp_ to avoid a warning
+            "  }",
+            "}"));
+  }
 }
