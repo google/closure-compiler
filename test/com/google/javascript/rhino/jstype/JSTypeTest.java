@@ -3881,7 +3881,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertFalse(objectType.isArrayType());
     assertFalse(objectType.isDateType());
     assertFalse(objectType.isFunctionPrototypeType());
-    assertTrue(objectType.getImplicitPrototype() == OBJECT_TYPE);
+    assertSame(objectType.getImplicitPrototype(), OBJECT_TYPE);
 
     // isSubtype
     assertTrue(objectType.isSubtypeOf(ALL_TYPE));

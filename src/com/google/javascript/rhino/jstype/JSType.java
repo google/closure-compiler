@@ -72,6 +72,11 @@ import javax.annotation.Nullable;
 public abstract class JSType implements Serializable {
   private static final long serialVersionUID = 1L;
 
+  @SuppressWarnings("ReferenceEquality")
+  static final boolean areIdentical(JSType a, JSType b) {
+    return a == b;
+  }
+
   private boolean resolved = false;
   private JSType resolveResult = null;
   protected TemplateTypeMap templateTypeMap;
@@ -184,7 +189,7 @@ public abstract class JSType implements Serializable {
   }
 
   public final boolean isUnresolvedOrResolvedUnknown() {
-    return isNoResolvedType() || isNamedType() && isUnknownType();
+    return isNoResolvedType() || (isNamedType() && isUnknownType());
   }
 
   public boolean isNoObjectType() {
@@ -192,9 +197,10 @@ public abstract class JSType implements Serializable {
   }
 
   public final boolean isEmptyType() {
-    return isNoType() || isNoObjectType() || isNoResolvedType() ||
-        (registry.getNativeFunctionType(
-             JSTypeNative.LEAST_FUNCTION_TYPE) == this);
+    return isNoType()
+        || isNoObjectType()
+        || isNoResolvedType()
+        || areIdentical(this, registry.getNativeFunctionType(JSTypeNative.LEAST_FUNCTION_TYPE));
   }
 
   public boolean isNumberObjectType() {
@@ -383,7 +389,7 @@ public abstract class JSType implements Serializable {
 
   /** Returns true if this is a global this type. */
   public final boolean isGlobalThisType() {
-    return this == registry.getNativeType(JSTypeNative.GLOBAL_THIS);
+    return areIdentical(this, registry.getNativeType(JSTypeNative.GLOBAL_THIS));
   }
 
   /** Returns true if toMaybeFunctionType returns a non-null FunctionType. */
@@ -392,24 +398,22 @@ public abstract class JSType implements Serializable {
   }
 
   /**
-   * Downcasts this to a FunctionType, or returns null if this is not
-   * a function.
+   * Downcasts this to a FunctionType, or returns null if this is not a function.
    *
-   * For the purposes of this function, we define a MaybeFunctionType as any
-   * type in the sub-lattice
-   * { x | LEAST_FUNCTION_TYPE &lt;= x &lt;= GREATEST_FUNCTION_TYPE }
-   * This definition excludes bottom types like NoType and NoObjectType.
+   * <p>For the purposes of this function, we define a MaybeFunctionType as any type in the
+   * sub-lattice { x | LEAST_FUNCTION_TYPE &lt;= x &lt;= GREATEST_FUNCTION_TYPE } This definition
+   * excludes bottom types like NoType and NoObjectType.
    *
-   * This definition is somewhat arbitrary and axiomatic, but this is the
-   * definition that makes the most sense for the most callers.
+   * <p>This definition is somewhat arbitrary and axiomatic, but this is the definition that makes
+   * the most sense for the most callers.
    */
+  @SuppressWarnings("AmbiguousMethodReference")
   public FunctionType toMaybeFunctionType() {
     return null;
   }
 
-  /**
-   * Null-safe version of toMaybeFunctionType().
-   */
+  /** Null-safe version of toMaybeFunctionType(). */
+  @SuppressWarnings("AmbiguousMethodReference")
   public static FunctionType toMaybeFunctionType(JSType type) {
     return type == null ? null : type.toMaybeFunctionType();
   }
@@ -553,6 +557,7 @@ public abstract class JSType implements Serializable {
   public boolean isObject() {
     return false;
   }
+
   /**
    * Tests whether this type is an {@code Object}, or any subtype thereof.
    *
@@ -669,7 +674,7 @@ public abstract class JSType implements Serializable {
   }
 
   boolean checkEquivalenceHelper(final JSType that, EquivalenceMethod eqMethod, EqCache eqCache) {
-    if (this == that) {
+    if (areIdentical(this, that)) {
       return true;
     }
     if (this.isNoResolvedType() && that.isNoResolvedType()) {
@@ -767,7 +772,8 @@ public abstract class JSType implements Serializable {
 
   public static boolean isEquivalent(JSType typeA, JSType typeB) {
     return (typeA == null || typeB == null)
-        ? typeA == typeB : typeA.isEquivalentTo(typeB);
+        ? areIdentical(typeA, typeB)
+        : typeA.isEquivalentTo(typeB);
   }
 
   @Override
@@ -1043,12 +1049,13 @@ public abstract class JSType implements Serializable {
     }
 
     JSType inf = getGreatestSubtype(that);
-    return !inf.isEmptyType() ||
+    return !inf.isEmptyType()
+        ||
         // Our getGreatestSubtype relation on functions is pretty bad.
         // Let's just say it's always ok to compare two functions.
         // Once the TODO in FunctionType is fixed, we should be able to
         // remove this.
-        inf == registry.getNativeType(JSTypeNative.LEAST_FUNCTION_TYPE);
+        areIdentical(inf, registry.getNativeType(JSTypeNative.LEAST_FUNCTION_TYPE));
   }
 
   /**
@@ -1081,19 +1088,22 @@ public abstract class JSType implements Serializable {
   }
 
   /**
-   * Gets the least supertype of {@code this} and {@code that}.
-   * The least supertype is the join (&#8744;) or supremum of both types in the
-   * type lattice.<p>
-   * Examples:
+   * Gets the least supertype of {@code this} and {@code that}. The least supertype is the join
+   * (&#8744;) or supremum of both types in the type lattice.
+   *
+   * <p>Examples:
+   *
    * <ul>
-   * <li><code>number &#8744; *</code> = {@code *}</li>
-   * <li><code>number &#8744; Object</code> = {@code (number, Object)}</li>
-   * <li><code>Number &#8744; Object</code> = {@code Object}</li>
+   *   <li><code>number &#8744; *</code> = {@code *}
+   *   <li><code>number &#8744; Object</code> = {@code (number, Object)}
+   *   <li><code>Number &#8744; Object</code> = {@code Object}
    * </ul>
+   *
    * @return <code>this &#8744; that</code>
    */
+  @SuppressWarnings("AmbiguousMethodReference")
   public JSType getLeastSupertype(JSType that) {
-    if (this == that) {
+    if (areIdentical(this, that)) {
       return this;
     }
 
@@ -1106,9 +1116,10 @@ public abstract class JSType implements Serializable {
   }
 
   /**
-   * A generic implementation meant to be used as a helper for common
-   * getLeastSupertype implementations.
+   * A generic implementation meant to be used as a helper for common getLeastSupertype
+   * implementations.
    */
+  @SuppressWarnings("AmbiguousMethodReference")
   static JSType getLeastSupertype(JSType thisType, JSType thatType) {
     boolean areEquivalent = thisType.isEquivalentTo(thatType);
     return areEquivalent ? thisType :
@@ -1121,25 +1132,29 @@ public abstract class JSType implements Serializable {
   }
 
   /**
-   * Gets the greatest subtype of {@code this} and {@code that}.
-   * The greatest subtype is the meet (&#8743;) or infimum of both types in the
-   * type lattice.<p>
-   * Examples
+   * Gets the greatest subtype of {@code this} and {@code that}. The greatest subtype is the meet
+   * (&#8743;) or infimum of both types in the type lattice.
+   *
+   * <p>Examples
+   *
    * <ul>
-   * <li><code>Number &#8743; Any</code> = {@code Any}</li>
-   * <li><code>number &#8743; Object</code> = {@code Any}</li>
-   * <li><code>Number &#8743; Object</code> = {@code Number}</li>
+   *   <li><code>Number &#8743; Any</code> = {@code Any}
+   *   <li><code>number &#8743; Object</code> = {@code Any}
+   *   <li><code>Number &#8743; Object</code> = {@code Number}
    * </ul>
+   *
    * @return <code>this &#8744; that</code>
    */
+  @SuppressWarnings("AmbiguousMethodReference")
   public JSType getGreatestSubtype(JSType that) {
     return getGreatestSubtype(this, that);
   }
 
   /**
-   * A generic implementation meant to be used as a helper for common
-   * getGreatestSubtype implementations.
+   * A generic implementation meant to be used as a helper for common getGreatestSubtype
+   * implementations.
    */
+  @SuppressWarnings("AmbiguousMethodReference")
   static JSType getGreatestSubtype(JSType thisType, JSType thatType) {
     if (thisType.isFunctionType() && thatType.isFunctionType()) {
       // The FunctionType sub-lattice is not well-defined. i.e., the
@@ -1249,7 +1264,7 @@ public abstract class JSType implements Serializable {
    * method of types to get the restricted type.
    */
   public JSType getRestrictedTypeGivenToBooleanOutcome(boolean outcome) {
-    if (outcome && this == getNativeType(JSTypeNative.UNKNOWN_TYPE)) {
+    if (outcome && areIdentical(this, getNativeType(JSTypeNative.UNKNOWN_TYPE))) {
       return getNativeType(JSTypeNative.CHECKED_UNKNOWN_TYPE);
     }
 
@@ -1379,8 +1394,7 @@ public abstract class JSType implements Serializable {
     // Other types.
     // There are only two types whose shallow inequality is deterministically
     // true -- null and undefined. We can just enumerate them.
-    if (isNullType() && that.isNullType() ||
-        isVoidType() && that.isVoidType()) {
+    if ((isNullType() && that.isNullType()) || (isVoidType() && that.isVoidType())) {
       return new TypePair(null, null);
     } else {
       return new TypePair(this, that);
