@@ -43,6 +43,9 @@ public class NodeTraversal {
   /** Contains the current node*/
   private Node curNode;
 
+  /** Contains the enclosing SCRIPT node if there is one, otherwise null. */
+  private Node curScript;
+
   /** The change scope for the current node being visiteds */
   private Node currentChangeScope;
 
@@ -754,6 +757,7 @@ public class NodeTraversal {
     setInputId(n.getInputId(), getSourceName(n));
 
     curNode = n;
+    curScript = n;
     if (callback.shouldTraverse(this, n, parent)) {
       traverseChildren(n);
       curNode = n;
@@ -1206,6 +1210,10 @@ public class NodeTraversal {
     return nullToEmpty(name);
   }
 
+  public Node getCurrentFile() {
+    return curScript;
+  }
+
   /**
    * @param n The current change scope, should be null when the traversal is complete.
    */
@@ -1232,6 +1240,7 @@ public class NodeTraversal {
     } else {
       setInputId(null, "");
     }
+    curScript = script;
   }
 
   /**

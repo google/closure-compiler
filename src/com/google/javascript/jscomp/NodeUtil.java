@@ -5880,4 +5880,15 @@ public final class NodeUtil {
     checkState(scriptNode.isScript(), scriptNode);
     return (FeatureSet) scriptNode.getProp(Node.FEATURE_SET);
   }
+
+  /** Adds the given features to a SCRIPT node's FeatureSet property. */
+  static void addFeatureToScript(Node scriptNode, Feature feature) {
+    checkState(scriptNode.isScript(), scriptNode);
+    FeatureSet currentFeatures = getFeatureSetOfScript(scriptNode);
+    FeatureSet newFeatures =
+        currentFeatures != null
+            ? currentFeatures.with(feature)
+            : FeatureSet.BARE_MINIMUM.with(feature);
+    scriptNode.putProp(Node.FEATURE_SET, newFeatures);
+  }
 }

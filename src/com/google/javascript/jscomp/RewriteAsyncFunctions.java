@@ -168,7 +168,7 @@ public final class RewriteAsyncFunctions implements NodeTraversal.Callback, HotS
             context.function);
         checkState(contextStack.removeFirst() == context);
         if (context.isAsyncContext()) {
-          convertAsyncFunction(context);
+          convertAsyncFunction(t, context);
         }
         break;
 
@@ -226,7 +226,7 @@ public final class RewriteAsyncFunctions implements NodeTraversal.Callback, HotS
     }
   }
 
-  private void convertAsyncFunction(LexicalContext functionContext) {
+  private void convertAsyncFunction(NodeTraversal t, LexicalContext functionContext) {
     Node originalFunction = checkNotNull(functionContext.function);
     originalFunction.setIsAsyncFunction(false);
     Node originalBody = originalFunction.getLastChild();
@@ -236,19 +236,23 @@ public final class RewriteAsyncFunctions implements NodeTraversal.Callback, HotS
     if (functionContext.mustAddAsyncThisVariable) {
       // const this$ = this;
       newBody.addChildToBack(IR.constNode(IR.name(ASYNC_THIS), IR.thisNode()));
+      NodeUtil.addFeatureToScript(t.getCurrentFile(), Feature.CONST_DECLARATIONS);
     }
     if (functionContext.mustAddAsyncArgumentsVariable) {
       // const arguments$ = arguments;
       newBody.addChildToBack(IR.constNode(IR.name(ASYNC_ARGUMENTS), IR.name("arguments")));
+      NodeUtil.addFeatureToScript(t.getCurrentFile(), Feature.CONST_DECLARATIONS);
     }
     for (String replacedMethodName : functionContext.replacedSuperProperties) {
       // const super$get$x = () => super.x;
       Node arrowFunction = IR.arrowFunction(
           IR.name(""), IR.paramList(), IR.getprop(IR.superNode(), IR.string(replacedMethodName)));
       compiler.reportChangeToChangeScope(arrowFunction);
+      NodeUtil.addFeatureToScript(t.getCurrentFile(), Feature.ARROW_FUNCTIONS);
 
       String superReplacementName = ASYNC_SUPER_PROP_GETTER_PREFIX + replacedMethodName;
       newBody.addChildToBack(IR.constNode(IR.name(superReplacementName), arrowFunction));
+      NodeUtil.addFeatureToScript(t.getCurrentFile(), Feature.CONST_DECLARATIONS);
     }
 
     // Normalize arrow function short body to block body
@@ -261,6 +265,7 @@ public final class RewriteAsyncFunctions implements NodeTraversal.Callback, HotS
     Node generatorFunction = IR.function(IR.name(""), IR.paramList(), originalBody);
     generatorFunction.setIsGeneratorFunction(true);
     compiler.reportChangeToChangeScope(generatorFunction);
+    NodeUtil.addFeatureToScript(t.getCurrentFile(), Feature.GENERATORS);
 
     // return $jscomp.asyncExecutePromiseGeneratorFunction(function* () { ... });
     newBody.addChildToBack(IR.returnNode(IR.call(
