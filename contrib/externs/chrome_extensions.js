@@ -81,25 +81,30 @@
  *    callback/listener or returned by an extension API so there is no
  *    defined type.
  *
- * For #1, use a typedef so object literals and objects created via goog.object
- * are acceptable, for example, the Permissions type defined at
+ * For #1, use a record type so object literals and objects created via
+ * goog.object are acceptable. (Note: a named record type may be declared using
+ * the at-record syntax; an anonymous record type may be described using the
+ * {foo: !Foo, ...} syntax. Anonymous record types may be named using an
+ * at-typedef annotation. See
+ * https://github.com/google/closure-compiler/wiki/Types-in-the-Closure-Type-System
+ * for more information.) For example, the Permissions type defined at
  * http://developer.chrome.com/extensions/permissions.html#type-Permissions
- * should be:
+ * could be:
  *
  *   / **
  *     * at-typedef {?{
  *     *   permissions: (!Array<string>|undefined),
- *     *   origins: (!Array<string>|undefined)
+ *     *   origins: (!Array<string>|undefined),
  *     * }}
  *     * /
  *   chrome.permissions.Permissions;
  *
- * Using typedefs provides type-safety for the fields that are defined in
- * the object literal and also defined in the typedef. Note that typedefs define
- * a minimal interface and will not complain about extraneous (often
- * misspelled) fields.
+ * Using record types provides type-safety for the fields that are defined in
+ * the object literal and also defined in the record type. Note that record
+ * types define a minimal interface and will not complain about extraneous
+ * (often misspelled) fields.
  *
- * Also, typedefs of record types are non-nullable by default. The "{?{"
+ * Also, record types are non-nullable by default. The "{?{"
  * creates a nullable record-type typedef so ! has the same meaning in usages
  * as it does for real types.
  *
@@ -119,7 +124,7 @@
  *
  * For #3, use {!Object}, that is, a bag of properites. This is a sad reality
  * given that the Chrome extensions do not document a real type. It is tempting
- * to define a real-type within this file and treat this situation as identical
+ * to define a real type within this file and treat this situation as identical
  * to #2, but that means a new type is being defined in this file and developers
  * do not expect to find required new types in extension files.
  *
@@ -4968,8 +4973,55 @@ chrome.privacy.websites;
 chrome.proxy = {};
 
 
-/** @type {!Object<string,!ChromeSetting>} */
-chrome.proxy.settings;
+/**
+ * @const
+ * @see https://developer.chrome.com/extensions/proxy#property-settings
+ */
+chrome.proxy.settings = {};
+
+
+/**
+ * @typedef {?{
+ *   incognito: (boolean|undefined),
+ * }}
+ */
+chrome.proxy.settings.GetParameter;
+
+
+/**
+ * @typedef {{
+ *   value: *,
+ *   levelOfControl: string,
+ *   incognitoSpecific: (boolean|undefined),
+ * }}
+ */
+chrome.proxy.settings.GetResponse;
+
+
+/**
+ * @param {!chrome.proxy.settings.GetParameter} details
+ * @param {(function(!chrome.proxy.settings.GetResponse): void)=} callback
+ */
+chrome.proxy.settings.get = function(details, callback) {};
+
+
+/**
+ * @param {{
+ *   value: *,
+ *   scope: (string|undefined),
+ * }} details
+ * @param {(function(): void)=} callback
+ */
+chrome.proxy.settings.set = function(details, callback) {};
+
+
+/**
+ * @param {{
+ *   scope: (string|undefined),
+ * }} details
+ * @param {(function(): void)=} callback
+ */
+chrome.proxy.settings.clear = function(details, callback) {};
 
 
 /** @type {!ChromeEvent} */
