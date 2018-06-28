@@ -64,20 +64,34 @@ public final class AstValidator implements CompilerPass {
     this.isScriptFeatureValidationEnabled = validateScriptFeatures;
   }
 
+  /**
+   * Deprecated - use the three-argument constructor instead to specify validateScriptFeatures.
+   * TODO(lharker): remove this constructor after the next external release.
+   */
+  @Deprecated
   public AstValidator(AbstractCompiler compiler, ViolationHandler handler) {
     this(compiler, handler, false);
   }
 
   public AstValidator(AbstractCompiler compiler) {
-    this(compiler, new ViolationHandler() {
-      @Override
-      public void handleViolation(String message, Node n) {
-        throw new IllegalStateException(
-            message + ". Reference node:\n" + n.toStringTree()
-            + "\n Parent node:\n"
-            + ((n.getParent() != null) ? n.getParent().toStringTree() : " no parent "));
-      }
-    });
+    this(compiler, /* validateScriptFeatures= */ false);
+  }
+
+  public AstValidator(AbstractCompiler compiler, boolean validateScriptFeatures) {
+    this(
+        compiler,
+        new ViolationHandler() {
+          @Override
+          public void handleViolation(String message, Node n) {
+            throw new IllegalStateException(
+                message
+                    + ". Reference node:\n"
+                    + n.toStringTree()
+                    + "\n Parent node:\n"
+                    + ((n.getParent() != null) ? n.getParent().toStringTree() : " no parent "));
+          }
+        },
+        validateScriptFeatures);
   }
 
   /**

@@ -183,6 +183,12 @@ public abstract class CompilerTestCase extends TestCase {
    */
   private boolean typeInfoValidationEnabled;
 
+  /**
+   * Whether we should verify that for every SCRIPT node, all features present in its AST are also
+   * present in its FeatureSet property.
+   */
+  private boolean scriptFeatureValidationEnabled;
+
   private final Set<DiagnosticType> ignoredWarnings = new HashSet<>();
 
   private final Map<String, String> webpackModulesById = new HashMap<>();
@@ -578,6 +584,7 @@ public abstract class CompilerTestCase extends TestCase {
     this.allowSourcelessWarnings = false;
     this.astValidationEnabled = true;
     this.typeInfoValidationEnabled = false;
+    this.scriptFeatureValidationEnabled = false;
     this.checkAccessControls = false;
     this.checkAstChangeMarking = true;
     this.checkLineNumbers = true;
@@ -947,6 +954,18 @@ public abstract class CompilerTestCase extends TestCase {
   protected final void disableTypeInfoValidation() {
     checkState(this.setUpRan, "Attempted to configure before running setUp().");
     typeInfoValidationEnabled = false;
+  }
+
+  /** Enable validating script featuresets after each run of the pass. */
+  protected final void enableScriptFeatureValidation() {
+    checkState(this.setUpRan, "Attempted to configure before running setUp().");
+    scriptFeatureValidationEnabled = true;
+  }
+
+  /** Disable validating script featuresets after each run of the pass. */
+  protected final void disableScriptFeatureValidation() {
+    checkState(this.setUpRan, "Attempted to configure before running setUp().");
+    scriptFeatureValidationEnabled = false;
   }
 
   /**
@@ -1429,7 +1448,7 @@ public abstract class CompilerTestCase extends TestCase {
     if (astValidationEnabled) {
       // NOTE: We do not enable type validation here, because type information never exists
       // immediately after parsing.
-      (new AstValidator(compiler)).validateRoot(root);
+      (new AstValidator(compiler, scriptFeatureValidationEnabled)).validateRoot(root);
     }
     Node externsRoot = root.getFirstChild();
     Node mainRoot = root.getLastChild();
@@ -1561,7 +1580,7 @@ public abstract class CompilerTestCase extends TestCase {
         }
 
         if (astValidationEnabled) {
-          new AstValidator(compiler)
+          new AstValidator(compiler, scriptFeatureValidationEnabled)
               .setTypeValidationEnabled(typeInfoValidationEnabled)
               .validateRoot(root);
         }
