@@ -114,4 +114,25 @@ public final class CheckSuperTest extends CompilerTestCase {
     // TODO(tbreisacher): Consider warning for this. It's valid but likely indicates a mistake.
     testSame("class C extends D { foo() { super.bar(); }}");
   }
+
+  public void testNoWarning_withExplicitReturnInConstructor() {
+    testNoWarning("class C extends D { constructor() { return {}; } }");
+    testNoWarning("class C extends D { constructor() { return f(); } }");
+    // the following cases will error at runtime but we don't bother checking them.
+    testNoWarning("class C extends D { constructor() { return 3; } }");
+    testNoWarning("class C extends D { constructor() { if (false) return {}; } }");
+  }
+
+  public void testWarning_withInvalidReturnInConstructor() {
+    // empty return
+    testError("class C extends D { constructor() { return; } }", MISSING_CALL_TO_SUPER);
+
+    // return in arrow function
+    testError(
+        "class C extends D { constructor() { () => { return {}; } } }", MISSING_CALL_TO_SUPER);
+  }
+
+  public void testInvalidThisReference_withExplicitReturnInConstructor() {
+    testError("class C extends D { constructor() { this.x = 3; return {}; } }", THIS_BEFORE_SUPER);
+  }
 }

@@ -82,7 +82,7 @@ final class CheckSuper implements HotSwapCompilerPass, Callback {
       return true;
     }
 
-    FindSuper finder = new FindSuper();
+    FindSuperOrReturn finder = new FindSuperOrReturn();
     NodeTraversal.traverse(compiler, NodeUtil.getFunctionBody(constructor), finder);
 
     if (!finder.found) {
@@ -119,7 +119,7 @@ final class CheckSuper implements HotSwapCompilerPass, Callback {
     }
   }
 
-  private static final class FindSuper implements Callback {
+  private static final class FindSuperOrReturn implements Callback {
     boolean found = false;
 
     @Override
@@ -135,6 +135,12 @@ final class CheckSuper implements HotSwapCompilerPass, Callback {
         t.report(n, THIS_BEFORE_SUPER);
       }
       if (n.isSuper() && parent.isCall()) {
+        found = true;
+        return;
+      }
+      // allow return <some expr>; instead of super(), which works at runtime as long as
+      //  <some expr> is an object.
+      if (n.isReturn() && n.hasChildren()) {
         found = true;
         return;
       }
