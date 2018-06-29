@@ -16,7 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES2018;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES6;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES7;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES8;
@@ -73,7 +72,7 @@ public class TranspilationPasses {
   // parameter can be removed.
   static void addPreTypecheckTranspilationPasses(
       List<PassFactory> passes, CompilerOptions options, boolean doEs6ExternsCheck) {
-    if (options.needsTranspilationFrom(ES2018)) {
+    if (options.needsTranspilationFrom(ES_NEXT)) {
       passes.add(rewriteObjRestSpread);
     }
 

@@ -5213,7 +5213,7 @@ public final class IntegrationTest extends IntegrationTestCase {
 
   public void testDestructuringRest() {
     CompilerOptions options = createCompilerOptions();
-    options.setLanguageIn(LanguageMode.ECMASCRIPT_2018);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT);
     options.setLanguageOut(LanguageMode.ECMASCRIPT_2017);
 
     test(options, "const {y} = {}", "const {y} = {}");
