@@ -57,14 +57,14 @@ public final class Es6ConvertSuper extends NodeTraversal.AbstractPostOrderCallba
         }
       }
       if (!hasConstructor) {
-        addSyntheticConstructor(n);
+        addSyntheticConstructor(t, n);
       }
     } else if (n.isSuper()) {
       visitSuper(n, parent);
     }
   }
 
-  private void addSyntheticConstructor(Node classNode) {
+  private void addSyntheticConstructor(NodeTraversal t, Node classNode) {
     Node superClass = classNode.getSecondChild();
     Node classMembers = classNode.getLastChild();
     Node memberDef;
@@ -90,6 +90,8 @@ public final class Es6ConvertSuper extends NodeTraversal.AbstractPostOrderCallba
         Node exprResult =
             IR.exprResult(NodeUtil.newCallNode(IR.superNode(), IR.spread(IR.name("arguments"))));
         body.addChildToFront(exprResult);
+        NodeUtil.addFeatureToScript(t.getCurrentFile(), Feature.SUPER);
+        NodeUtil.addFeatureToScript(t.getCurrentFile(), Feature.SPREAD_EXPRESSIONS);
       }
       Node constructor = IR.function(
           IR.name(""),
@@ -107,6 +109,7 @@ public final class Es6ConvertSuper extends NodeTraversal.AbstractPostOrderCallba
     memberDef.useSourceInfoIfMissingFromForTree(classNode);
     memberDef.makeNonIndexableRecursive();
     classMembers.addChildToFront(memberDef);
+    NodeUtil.addFeatureToScript(t.getCurrentFile(), Feature.MEMBER_DECLARATIONS);
     compiler.reportChangeToEnclosingScope(memberDef);
   }
 

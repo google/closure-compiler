@@ -71,6 +71,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     setLanguageOut(LanguageMode.ECMASCRIPT3);
     enableRunTypeCheckAfterProcessing();
+    enableScriptFeatureValidation();
   }
 
   protected final PassFactory makePassFactory(

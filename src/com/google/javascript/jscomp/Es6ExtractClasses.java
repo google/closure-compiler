@@ -86,7 +86,7 @@ public final class Es6ExtractClasses
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
     if (n.isClass() && shouldExtractClass(n, parent)) {
-      extractClass(n, parent);
+      extractClass(t, n, parent);
     }
   }
 
@@ -175,7 +175,7 @@ public final class Es6ExtractClasses
     return true;
   }
 
-  private void extractClass(Node classNode, Node parent) {
+  private void extractClass(NodeTraversal t, Node classNode, Node parent) {
     String name = ModuleNames.fileToJsIdentifier(classNode.getStaticSourceFile().getName())
         + CLASS_DECL_VAR
         + (classDeclVarCounter++);
@@ -185,6 +185,7 @@ public final class Es6ExtractClasses
     parent.replaceChild(classNode, IR.name(name));
     Node classDeclaration = IR.constNode(IR.name(name), classNode)
         .useSourceInfoIfMissingFromForTree(classNode);
+    NodeUtil.addFeatureToScript(t.getCurrentFile(), Feature.CONST_DECLARATIONS);
     classDeclaration.setJSDocInfo(JSDocInfoBuilder.maybeCopyFrom(info).build());
     statement.getParent().addChildBefore(classDeclaration, statement);
     compiler.reportChangeToEnclosingScope(classDeclaration);

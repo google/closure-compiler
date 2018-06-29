@@ -541,7 +541,8 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             " */",
             "var C = function(var_args) { D.apply(this, arguments); };",
             "$jscomp.inherits(C, D);"));
-    assertThat(getLastCompiler().injected).containsExactly("es6/util/inherits");
+    assertThat(getLastCompiler().injected)
+        .containsExactly("es6/util/inherits", "es6/util/arrayfromiterable");
 
     test(
         "class D {} class C extends D { constructor() { super(); } }",

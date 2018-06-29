@@ -9837,7 +9837,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   // GitHub issue #2262: https://github.com/google/closure-compiler/issues/2262
   public void testAbstractMethodCall_Es6ClassWithSpread() {
     testTypesWithExterns(
-        new TestExternsBuilder().addObject().addArray().build(),
+        new TestExternsBuilder().addObject().addArray().addArguments().build(),
         lines(
             "/** @abstract */",
             "class Base {",

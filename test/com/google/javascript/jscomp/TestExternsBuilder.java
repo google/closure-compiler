@@ -258,11 +258,24 @@ public class TestExternsBuilder {
           "Array.prototype.concat = function(var_args) {};",
           "");
 
+  private final String argumentsExterns =
+      lines(
+          "/**",
+          " * @constructor",
+          " * @implements {IArrayLike<T>}",
+          " * @implements {Iterable<?>}",
+          " * @template T",
+          " * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions_and_function_scope/arguments",
+          " */",
+          "function Arguments() {}",
+          "");
+
   private boolean includeIterableExterns = false;
   private boolean includeStringExterns = false;
   private boolean includeFunctionExterns = false;
   private boolean includeObjectExterns = false;
   private boolean includeArrayExterns = false;
+  private boolean includeArgumentsExterns = false;
 
   public TestExternsBuilder addIterable() {
     includeIterableExterns = true;
@@ -292,6 +305,13 @@ public class TestExternsBuilder {
     return this;
   }
 
+  public TestExternsBuilder addArguments() {
+    includeArgumentsExterns = true;
+    addArray(); // Arguments implements IArrayLike
+    addIterable(); // Arguments implements Iterable
+    return this;
+  }
+
   public String build() {
     List<String> externSections = new ArrayList<>();
     if (includeIterableExterns) {
@@ -308,6 +328,9 @@ public class TestExternsBuilder {
     }
     if (includeArrayExterns) {
       externSections.add(ARRAY_EXTERNS);
+    }
+    if (includeArgumentsExterns) {
+      externSections.add(argumentsExterns);
     }
     return LINE_JOINER.join(externSections);
   }
