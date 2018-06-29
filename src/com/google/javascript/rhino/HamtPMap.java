@@ -42,6 +42,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
+import java.io.Serializable;
 import java.util.ArrayDeque;
 import java.util.Arrays;
 import java.util.Collections;
@@ -66,7 +67,7 @@ import javax.annotation.Nullable;
  */
 // TODO(sdh): Consider using tricks from https://bendyworks.com/blog/leveling-clojures-hash-maps
 // We need a solid way to profile the results to see if it's actually worth the extra code.
-public final class HamtPMap<K, V> implements PMap<K, V> {
+public final class HamtPMap<K, V> implements PMap<K, V>, Serializable {
 
   /**
    * Number of bits of fan-out at each level. May be anywhere from 1 (a binary tree) to 5 (for a

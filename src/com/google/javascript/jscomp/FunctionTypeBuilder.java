@@ -39,6 +39,7 @@ import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
+import com.google.javascript.rhino.jstype.StaticTypedScope;
 import com.google.javascript.rhino.jstype.TemplateType;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -71,7 +72,7 @@ final class FunctionTypeBuilder {
   private final CodingConvention codingConvention;
   private final JSTypeRegistry typeRegistry;
   private final Node errorRoot;
-  private final TypedScope scope;
+  private final TypedScope enclosingScope;
 
   private FunctionContents contents = UnknownFunctionContents.get();
 
@@ -94,6 +95,7 @@ final class FunctionTypeBuilder {
   // list.
   private ImmutableList<TemplateType> classTemplateTypeNames = ImmutableList.of();
   private TypedScope declarationScope = null;
+  private StaticTypedScope templateScope;
 
   static final DiagnosticType EXTENDS_WITHOUT_TYPEDEF = DiagnosticType.warning(
       "JSC_EXTENDS_WITHOUT_TYPEDEF",
@@ -226,13 +228,13 @@ final class FunctionTypeBuilder {
   FunctionTypeBuilder(String fnName, AbstractCompiler compiler,
       Node errorRoot, TypedScope scope) {
     checkNotNull(errorRoot);
-
     this.fnName = nullToEmpty(fnName);
     this.codingConvention = compiler.getCodingConvention();
     this.typeRegistry = compiler.getTypeRegistry();
     this.errorRoot = errorRoot;
     this.compiler = compiler;
-    this.scope = scope;
+    this.enclosingScope = scope;
+    this.templateScope = scope;
   }
 
   /** Format the function name for use in warnings. */
@@ -343,7 +345,7 @@ final class FunctionTypeBuilder {
       JSTypeExpression returnTypeExpr =
           fromInlineDoc ? info.getType() : info.getReturnType();
       if (returnTypeExpr != null) {
-        returnType = returnTypeExpr.evaluate(scope, typeRegistry);
+        returnType = returnTypeExpr.evaluate(templateScope, typeRegistry);
         returnTypeInferred = false;
       }
     }
@@ -394,7 +396,6 @@ final class FunctionTypeBuilder {
     if (nativeClassTemplateTypeNames != null
         && infoTemplateTypeNames.size() == nativeClassTemplateTypeNames.size()) {
       classTemplateTypeNames = nativeClassTemplateTypeNames;
-      typeRegistry.setTemplateTypeNames(classTemplateTypeNames);
     } else if (!infoTemplateTypeNames.isEmpty() && (isConstructor || isInterface)) {
       // Otherwise, create new template type for
       // the template values of the constructor/interface
@@ -405,15 +406,25 @@ final class FunctionTypeBuilder {
         builder.add(typeRegistry.createTemplateType(typeParameter));
       }
       classTemplateTypeNames = builder.build();
-      typeRegistry.setTemplateTypeNames(classTemplateTypeNames);
+    }
+
+    if (!classTemplateTypeNames.isEmpty()) {
+      // Make a new templateScope for resolving types against.
+      templateScope = typeRegistry.createScopeWithTemplates(templateScope, classTemplateTypeNames);
+
+      // Register the template types on the function node.
+      Node functionNode = contents != null ? contents.getSourceNode() : null;
+      if (functionNode != null) {
+        typeRegistry.registerTemplateTypeNamesInScope(classTemplateTypeNames, functionNode);
+      }
     }
 
     // base type
     if (info != null && info.hasBaseType()) {
       if (isConstructor) {
         ObjectType infoBaseType =
-            info.getBaseType().evaluate(scope, typeRegistry).toMaybeObjectType();
-        // TODO(sdh): ensure that JSDoc's baseType and AST's baseType are compatible if both are set
+            info.getBaseType().evaluate(templateScope, typeRegistry).toMaybeObjectType();
+        // TODO(sdh): ensure JSDoc's baseType and AST's baseType are compatible if both are set
         baseType = infoBaseType;
       } else {
         reportWarning(EXTENDS_WITHOUT_TYPEDEF, formatFnName());
@@ -431,7 +442,7 @@ final class FunctionTypeBuilder {
         implementedInterfaces = new ArrayList<>();
         Set<JSType> baseInterfaces = new HashSet<>();
         for (JSTypeExpression t : info.getImplementedInterfaces()) {
-          JSType maybeInterType = t.evaluate(scope, typeRegistry);
+          JSType maybeInterType = t.evaluate(templateScope, typeRegistry);
 
           if (maybeInterType != null &&
               maybeInterType.setValidator(new ImplementedTypeValidator())) {
@@ -463,7 +474,7 @@ final class FunctionTypeBuilder {
       extendedInterfaces = new ArrayList<>();
       if (info != null) {
         for (JSTypeExpression t : info.getExtendedInterfaces()) {
-          JSType maybeInterfaceType = t.evaluate(scope, typeRegistry);
+          JSType maybeInterfaceType = t.evaluate(templateScope, typeRegistry);
           if (maybeInterfaceType != null &&
               maybeInterfaceType.setValidator(new ExtendedTypeValidator())) {
             extendedInterfaces.add((ObjectType) maybeInterfaceType);
@@ -510,7 +521,7 @@ final class FunctionTypeBuilder {
       // undefined "this" value, but all the existing "@this" annotations
       // don't declare restricted types.
       JSType maybeThisType =
-          info.getThisType().evaluate(scope, typeRegistry).restrictByNotNullOrUndefined();
+          info.getThisType().evaluate(templateScope, typeRegistry).restrictByNotNullOrUndefined();
       if (maybeThisType != null) {
         thisType = maybeThisType;
       }
@@ -573,11 +584,10 @@ final class FunctionTypeBuilder {
       JSType parameterType = null;
       if (info != null && info.hasParameterType(argumentName)) {
         parameterType =
-            info.getParameterType(argumentName).evaluate(scope, typeRegistry);
+            info.getParameterType(argumentName).evaluate(templateScope, typeRegistry);
       } else if (arg.getJSDocInfo() != null && arg.getJSDocInfo().hasType()) {
         JSTypeExpression parameterTypeExpression = arg.getJSDocInfo().getType();
-        parameterType =
-            parameterTypeExpression.evaluate(scope, typeRegistry);
+        parameterType = parameterTypeExpression.evaluate(templateScope, typeRegistry);
         isOptionalParam = parameterTypeExpression.isOptionalArg();
         isVarArgs = parameterTypeExpression.isVarArgs();
       } else if (oldParameterType != null &&
@@ -657,24 +667,17 @@ final class FunctionTypeBuilder {
     // of inherited ones from an overridden function.
     if (info != null) {
       ImmutableList.Builder<TemplateType> builder = ImmutableList.builder();
-      ImmutableList<String> infoTemplateTypeNames =
-          info.getTemplateTypeNames();
-      ImmutableMap<String, Node> infoTypeTransformations =
-          info.getTypeTransformations();
-      if (!infoTemplateTypeNames.isEmpty()) {
-        for (String key : infoTemplateTypeNames) {
-          builder.add(typeRegistry.createTemplateType(key));
-        }
+      ImmutableList<String> infoTemplateTypeNames = info.getTemplateTypeNames();
+      ImmutableMap<String, Node> infoTypeTransformations = info.getTypeTransformations();
+      for (String key : infoTemplateTypeNames) {
+        builder.add(typeRegistry.createTemplateType(key));
       }
-      if (!infoTypeTransformations.isEmpty()) {
-        for (Entry<String, Node> entry : infoTypeTransformations.entrySet()) {
-          builder.add(typeRegistry.createTemplateTypeWithTransformation(
-              entry.getKey(), entry.getValue()));
-        }
+      for (Entry<String, Node> entry : infoTypeTransformations.entrySet()) {
+        builder.add(typeRegistry.createTemplateTypeWithTransformation(
+            entry.getKey(), entry.getValue()));
       }
-      if (!infoTemplateTypeNames.isEmpty()
-          || !infoTypeTransformations.isEmpty()) {
-        templateTypeNames = builder.build();
+      if (!infoTemplateTypeNames.isEmpty() || !infoTypeTransformations.isEmpty()) {
+        this.templateTypeNames = builder.build();
       }
     }
 
@@ -684,6 +687,9 @@ final class FunctionTypeBuilder {
           ownerType.getTemplateTypeMap().getTemplateKeys();
       if (!ownerTypeKeys.isEmpty()) {
         ImmutableList.Builder<TemplateType> builder = ImmutableList.builder();
+        // TODO(sdh): The order of these should be switched to avoid class templates shadowing
+        // method templates, but this currently loosens type checking of arrays more than we'd like.
+        // See http://github.com/google/closure-compiler/issues/2973
         builder.addAll(templateTypeNames);
         builder.addAll(ownerTypeKeys);
         keys = builder.build();
@@ -691,7 +697,14 @@ final class FunctionTypeBuilder {
     }
 
     if (!keys.isEmpty()) {
-      typeRegistry.setTemplateTypeNames(keys);
+      // Add any templates from JSDoc into our template scope.
+      templateScope = typeRegistry.createScopeWithTemplates(templateScope, keys);
+
+      // Register the template types on the function node.
+      Node functionNode = contents != null ? contents.getSourceNode() : null;
+      if (functionNode != null) {
+        typeRegistry.registerTemplateTypeNamesInScope(keys, functionNode);
+      }
     }
     return this;
   }
@@ -816,8 +829,6 @@ final class FunctionTypeBuilder {
     if (isRecord) {
       fnType.setImplicitMatch(true);
     }
-
-    typeRegistry.clearTemplateTypeNames();
 
     return fnType;
   }
@@ -965,12 +976,12 @@ final class FunctionTypeBuilder {
     int dotIndex = fnName.indexOf('.');
     if (dotIndex != -1) {
       String rootVarName = fnName.substring(0, dotIndex);
-      TypedVar rootVar = scope.getVar(rootVarName);
+      TypedVar rootVar = enclosingScope.getVar(rootVarName);
       if (rootVar != null) {
         return rootVar.getScope();
       }
     }
-    return scope;
+    return enclosingScope;
   }
 
   /**

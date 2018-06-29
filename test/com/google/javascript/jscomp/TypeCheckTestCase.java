@@ -262,7 +262,6 @@ abstract class TypeCheckTestCase extends CompilerTypeTestCase {
 
   protected TypeCheckResult parseAndTypeCheckWithScope(String externs, String js) {
     registry.clearNamedTypes();
-    registry.clearTemplateTypeNames();
     compiler.init(
         ImmutableList.of(SourceFile.fromCode("[externs]", externs)),
         ImmutableList.of(SourceFile.fromCode("[testcode]", js)),
