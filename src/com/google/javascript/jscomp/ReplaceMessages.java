@@ -298,8 +298,10 @@ final class ReplaceMessages extends JsMessageVisitor {
     Node objLitNode = stringExprNode.getNext();
 
     // Build the replacement tree.
-    return constructStringExprNode(
-        message.parts().iterator(), objLitNode, callNode);
+    Iterator<CharSequence> iterator = message.parts().iterator();
+    return iterator.hasNext()
+        ? constructStringExprNode(iterator, objLitNode, callNode)
+        : IR.string("");
   }
 
   /**
