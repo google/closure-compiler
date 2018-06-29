@@ -382,7 +382,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     this.typeRegistry = typeRegistry;
     this.topScope = topScope;
     this.scopeCreator = scopeCreator;
-    this.reportUnknownTypes = ((Compiler) compiler).getOptions().enables(
+    this.reportUnknownTypes = compiler.getOptions().enables(
         DiagnosticGroups.REPORT_UNKNOWN_TYPES);
     this.inferJSDocInfo = new InferJSDocInfo(compiler);
   }

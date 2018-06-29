@@ -24,7 +24,7 @@ import com.google.javascript.rhino.Node;
  */
 class RecordFunctionInformation extends AbstractPostOrderCallback
     implements CompilerPass {
-  private final Compiler compiler;
+  private final AbstractCompiler compiler;
   private final FunctionNames functionNames;
   private final JSModuleGraph moduleGraph;
 
@@ -39,7 +39,7 @@ class RecordFunctionInformation extends AbstractPostOrderCallback
    * @param compiler       The JSCompiler
    * @param functionNames  Assigned function identifiers.
    */
-  RecordFunctionInformation(Compiler compiler,
+  RecordFunctionInformation(AbstractCompiler compiler,
       FunctionNames functionNames) {
     this.compiler = compiler;
     this.moduleGraph = compiler.getModuleGraph();
