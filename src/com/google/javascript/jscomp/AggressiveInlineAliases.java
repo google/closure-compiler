@@ -160,7 +160,10 @@ class AggressiveInlineAliases implements CompilerPass {
         continue;
       }
 
-      if (!name.inExterns && name.globalSets == 1 && name.localSets == 0 && name.aliasingGets > 0) {
+      if (!name.inExterns()
+          && name.globalSets == 1
+          && name.localSets == 0
+          && name.aliasingGets > 0) {
         // {@code name} meets condition (b). Find all of its local aliases
         // and try to inline them.
         List<Ref> refs = new ArrayList<>(name.getRefs());
@@ -184,7 +187,7 @@ class AggressiveInlineAliases implements CompilerPass {
         }
       }
 
-      if (!name.inExterns && name.type == Name.Type.CLASS) {
+      if (!name.inExterns() && name.type == Name.Type.CLASS) {
         List<Name> subclasses = name.subclasses;
         if (subclasses != null && name.props != null) {
           for (Name subclass : subclasses) {

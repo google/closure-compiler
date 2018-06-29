@@ -31,7 +31,7 @@ import junit.framework.TestCase;
 public final class GlobalNamespaceTest extends TestCase {
 
   public void testRemoveDeclaration1() {
-    Name n = new Name("a", null, false);
+    Name n = Name.createForTesting("a");
     Ref set1 = createNodelessRef(Ref.Type.SET_FROM_GLOBAL);
     Ref set2 = createNodelessRef(Ref.Type.SET_FROM_GLOBAL);
 
@@ -50,7 +50,7 @@ public final class GlobalNamespaceTest extends TestCase {
   }
 
   public void testRemoveDeclaration2() {
-    Name n = new Name("a", null, false);
+    Name n = Name.createForTesting("a");
     Ref set1 = createNodelessRef(Ref.Type.SET_FROM_GLOBAL);
     Ref set2 = createNodelessRef(Ref.Type.SET_FROM_LOCAL);
 

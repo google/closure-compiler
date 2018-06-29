@@ -53,9 +53,25 @@ class GlobalNamespace
   private final AbstractCompiler compiler;
   private final Node root;
   private final Node externsRoot;
-  private boolean inExterns;
+  private SourceKind sourceKind;
   private Scope externsScope;
   private boolean generated = false;
+
+  enum SourceKind {
+    EXTERN,
+    TYPE_SUMMARY,
+    CODE;
+
+    static SourceKind fromScriptNode(Node n) {
+       if (!n.isFromExterns()) {
+         return CODE;
+       } else if (NodeUtil.isFromTypeSummary(n)) {
+         return TYPE_SUMMARY;
+       } else {
+         return EXTERN;
+       }
+    }
+  }
 
   /**
    * Each reference has an index in post-order.
@@ -228,10 +244,10 @@ class GlobalNamespace
    */
   private void process() {
     if (hasExternsRoot()) {
-      inExterns = true;
+      sourceKind = SourceKind.EXTERN;
       NodeTraversal.traverse(compiler, externsRoot, new BuildGlobalNamespace());
     }
-    inExterns = false;
+    sourceKind = SourceKind.CODE;
 
     NodeTraversal.traverse(compiler, root, new BuildGlobalNamespace());
     generated = true;
@@ -996,9 +1012,9 @@ class GlobalNamespace
         if (i >= 0) {
           String parentName = name.substring(0, i);
           Name parent = getOrCreateName(parentName, true);
-          node = parent.addProperty(name.substring(i + 1), inExterns, shouldCreateProp);
+          node = parent.addProperty(name.substring(i + 1), sourceKind, shouldCreateProp);
         } else {
-          node = new Name(name, null, inExterns);
+          node = new Name(name, null, sourceKind);
           globalNames.add(node);
         }
         nameMap.put(name, node);
@@ -1052,22 +1068,26 @@ class GlobalNamespace
     int totalGets = 0;
     int callGets = 0;
     int deleteProps = 0;
-    final boolean inExterns;
+    private final SourceKind sourceKind;
 
     JSDocInfo docInfo = null;
 
-    Name(String name, Name parent, boolean inExterns) {
+    static Name createForTesting(String name) {
+      return new Name(name, null, SourceKind.CODE);
+    }
+
+    private Name(String name, Name parent, SourceKind sourceKind) {
       this.baseName = name;
       this.parent = parent;
       this.type = Type.OTHER;
-      this.inExterns = inExterns;
+      this.sourceKind = sourceKind;
     }
 
-    Name addProperty(String name, boolean inExterns, boolean shouldCreateProp) {
+    Name addProperty(String name, SourceKind sourceKind, boolean shouldCreateProp) {
       if (props == null) {
         props = new ArrayList<>();
       }
-      Name node = new Name(name, this, inExterns);
+      Name node = new Name(name, this, sourceKind);
       if (shouldCreateProp) {
         props.add(node);
       }
@@ -1085,6 +1105,10 @@ class GlobalNamespace
 
     String getBaseName() {
       return baseName;
+    }
+
+    boolean inExterns() {
+      return this.sourceKind == SourceKind.EXTERN;
     }
 
     @Override
@@ -1253,7 +1277,7 @@ class GlobalNamespace
 
     boolean isInlinableGlobalAlias() {
       // Only simple aliases with direct usage are inlinable.
-      if (inExterns || globalSets != 1 || localSets != 0 || !canCollapse()) {
+      if (inExterns() || globalSets != 1 || localSets != 0 || !canCollapse()) {
         return false;
       }
 
@@ -1280,7 +1304,7 @@ class GlobalNamespace
     }
 
     boolean canCollapse() {
-      return !inExterns
+      return !inExterns()
           && !isGetOrSetDefinition()
           && !isCollapsingExplicitlyDenied()
           && (declaredType

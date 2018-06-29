@@ -98,7 +98,7 @@ class CheckGlobalNames implements CompilerPass {
       // var x;
       // x.method;
       // which this check forbids.
-      if (name.inExterns) {
+      if (name.inExterns()) {
         continue;
       }
 
