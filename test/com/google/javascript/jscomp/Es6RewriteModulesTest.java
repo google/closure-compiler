@@ -34,6 +34,7 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
     // ECMASCRIPT5 to trigger module processing after parsing.
     setLanguage(LanguageMode.ECMASCRIPT_2015, LanguageMode.ECMASCRIPT5);
     enableRunTypeCheckAfterProcessing();
+    disableScriptFeatureValidation();
   }
 
   @Override

@@ -99,6 +99,7 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
     setLanguageOut(LanguageMode.ECMASCRIPT3);
     enableRunTypeCheckAfterProcessing();
     disableTypeCheck();
+    disableScriptFeatureValidation();
   }
 
   protected final PassFactory makePassFactory(

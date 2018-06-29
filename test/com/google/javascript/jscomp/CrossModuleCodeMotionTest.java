@@ -39,6 +39,7 @@ public final class CrossModuleCodeMotionTest extends CompilerTestCase {
   protected void setUp() throws Exception {
     super.setUp();
 
+    disableScriptFeatureValidation();
     parentModuleCanSeeSymbolsDeclaredInChildren = false;
   }
 

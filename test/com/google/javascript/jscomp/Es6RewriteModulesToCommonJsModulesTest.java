@@ -39,6 +39,7 @@ public final class Es6RewriteModulesToCommonJsModulesTest extends CompilerTestCa
     resolutionMode = ModuleLoader.ResolutionMode.BROWSER;
     prefixReplacements = ImmutableMap.of();
     pathEscaper = PathEscaper.ESCAPE;
+    disableScriptFeatureValidation();
   }
 
   @Override

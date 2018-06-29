@@ -584,7 +584,7 @@ public abstract class CompilerTestCase extends TestCase {
     this.allowSourcelessWarnings = false;
     this.astValidationEnabled = true;
     this.typeInfoValidationEnabled = false;
-    this.scriptFeatureValidationEnabled = false;
+    this.scriptFeatureValidationEnabled = true;
     this.checkAccessControls = false;
     this.checkAstChangeMarking = true;
     this.checkLineNumbers = true;

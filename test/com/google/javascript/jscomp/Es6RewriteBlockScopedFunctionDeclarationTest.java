@@ -27,6 +27,7 @@ public final class Es6RewriteBlockScopedFunctionDeclarationTest extends Compiler
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     enableTypeCheck();
     enableTypeInfoValidation();
+    disableScriptFeatureValidation();
   }
 
   @Override

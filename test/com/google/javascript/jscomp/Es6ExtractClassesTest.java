@@ -35,6 +35,7 @@ public final class Es6ExtractClassesTest extends CompilerTestCase {
     setLanguageOut(LanguageMode.ECMASCRIPT3);
     disableTypeCheck();
     enableRunTypeCheckAfterProcessing();
+    disableScriptFeatureValidation();
   }
 
   public void testExtractionFromCall() {

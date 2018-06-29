@@ -21,6 +21,13 @@ package com.google.javascript.jscomp;
  */
 public final class MinimizeExitPointsTest extends CompilerTestCase {
   @Override
+  protected void setUp() throws Exception {
+    super.setUp();
+
+    disableScriptFeatureValidation();
+  }
+
+  @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
     return new PeepholeOptimizationsPass(compiler, getName(), new MinimizeExitPoints());
   }

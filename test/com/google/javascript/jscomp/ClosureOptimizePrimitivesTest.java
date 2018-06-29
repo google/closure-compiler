@@ -38,6 +38,7 @@ public final class ClosureOptimizePrimitivesTest extends CompilerTestCase {
   protected void setUp() throws Exception {
     super.setUp();
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2017);
+    disableScriptFeatureValidation();
   }
 
   public void testObjectCreateOddParams() {
