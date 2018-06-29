@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.jscomp.testing.JSErrorSubject.assertError;
 
 import com.google.common.base.Joiner;
@@ -483,6 +484,16 @@ abstract class IntegrationTestCase extends TestCase {
                 ImmutableList.copyOf(original), inputFileNamePrefix, inputFileNameSuffix)),
         options);
     return compiler;
+  }
+
+  protected void testNoWarnings(CompilerOptions options, String code) {
+    testNoWarnings(options, new String[] { code });
+  }
+
+  protected void testNoWarnings(CompilerOptions options, String[] sources) {
+    Compiler compiler = compile(options, sources);
+    assertThat(compiler.getErrors()).isEmpty();
+    assertThat(compiler.getWarnings()).isEmpty();
   }
 
   /**

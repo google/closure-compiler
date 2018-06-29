@@ -4744,6 +4744,25 @@ public final class IntegrationTest extends IntegrationTestCase {
         (String[]) null);
   }
 
+  public void testIjsWithDestructuringTypeWorks() {
+    CompilerOptions options = createCompilerOptions();
+    options.setCheckTypes(true);
+    // To enable type-checking
+    options.setLanguage(LanguageMode.ECMASCRIPT_2017);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+
+    testNoWarnings(
+        options,
+        LINE_JOINER.join(
+          "/** @typeSummary */",
+          "const ns = {}",
+          "/** @enum {number} */ ns.ENUM = {A:1};",
+          "const {ENUM} = ns;",
+          "/** @type {ENUM} */ let x = ENUM.A;",
+          "/** @type {ns.ENUM} */ let y = ENUM.A;",
+          ""));
+  }
+
   // GitHub issue #250: https://github.com/google/closure-compiler/issues/250
   public void testInlineStringConcat() {
     CompilerOptions options = createCompilerOptions();

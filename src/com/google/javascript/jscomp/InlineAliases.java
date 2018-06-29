@@ -17,7 +17,7 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Predicates;
-import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
+import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfo.Visibility;
 import com.google.javascript.rhino.Node;
@@ -56,11 +56,18 @@ final class InlineAliases implements CompilerPass {
   @Override
   public void process(Node externs, Node root) {
     namespace = new GlobalNamespace(compiler, root);
-    NodeTraversal.traverse(compiler, root, new AliasesCollector());
-    NodeTraversal.traverse(compiler, root, new AliasesInliner());
+    NodeTraversal.traverseRoots(compiler, new AliasesCollector(), externs, root);
+    NodeTraversal.traverseRoots(compiler, new AliasesInliner(), externs, root);
   }
 
-  private class AliasesCollector extends AbstractPostOrderCallback {
+  private abstract static class ExternsSkippingCallback implements Callback {
+    @Override
+    public final boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
+      return !n.isScript() || !n.isFromExterns() || NodeUtil.isFromTypeSummary(n);
+    }
+  }
+
+  private class AliasesCollector extends ExternsSkippingCallback {
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       switch (n.getToken()) {
@@ -121,7 +128,7 @@ final class InlineAliases implements CompilerPass {
     }
   }
 
-  private class AliasesInliner extends AbstractPostOrderCallback {
+  private class AliasesInliner extends ExternsSkippingCallback {
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       switch (n.getToken()) {
