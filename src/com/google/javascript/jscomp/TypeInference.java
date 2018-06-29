@@ -31,7 +31,6 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.STRING_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.UNKNOWN_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.VOID_TYPE;
 
-import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
@@ -549,13 +548,37 @@ class TypeInference
   }
 
   private void traverseSuper(Node superNode) {
-    // We only need to handle cases of super() constructor calls for now.
-    // All super.method() uses are transpiled away before this pass.
     JSType jsType = functionScope.getRootNode().getJSType();
-    FunctionType constructorType = (jsType == null) ? null : jsType.toMaybeFunctionType();
-    FunctionType superConstructorType =
-        (constructorType == null) ? null : constructorType.getSuperClassConstructor();
-    superNode.setJSType(MoreObjects.firstNonNull(superConstructorType, unknownType));
+    FunctionType functionType = jsType != null ? jsType.toMaybeFunctionType() : null;
+    ObjectType superNodeType = unknownType;
+    Node context = superNode.getParent();
+    // NOTE: we currently transpile subclass constructors to use "super.apply", which is not
+    // actually valid ES6.  For now, provide a special case to support this, but it should be
+    // removed once class transpilation is after type checking.
+    if (context.isCall()) {
+      // Call the superclass constructor.
+      if (functionType != null && functionType.isConstructor()) {
+        FunctionType superCtor = functionType.getSuperClassConstructor();
+        if (superCtor != null) {
+          superNodeType = superCtor;
+        }
+      }
+    } else if (context.isGetProp() || context.isGetElem()) {
+      // Refer to a superclass instance property.
+      if (functionType != null) {
+        ObjectType thisInstance = ObjectType.cast(functionType.getTypeOfThis());
+        if (thisInstance != null) {
+          FunctionType superCtor = thisInstance.getSuperClassConstructor();
+          if (superCtor != null) {
+            ObjectType superInstance = superCtor.getInstanceType();
+            if (superInstance != null) {
+              superNodeType = superInstance;
+            }
+          }
+        }
+      }
+    }
+    superNode.setJSType(superNodeType);
   }
 
   /** Traverse a return value. */

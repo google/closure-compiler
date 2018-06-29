@@ -2661,6 +2661,80 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             + "and no more than 0 argument(s).");
   }
 
+  public void testClassSuperMethodNotPresent() {
+    testTypes(
+        lines(
+            "class Foo {}",
+            "class Bar extends Foo {",
+            "  foo() {",
+            "    super.foo();",
+            "  }",
+            "}"),
+        "Property foo never defined on Foo");
+  }
+
+  public void testClassSuperMethodParameterMismatch() {
+    testTypes(
+        lines(
+            "class Foo {",
+            "  /** @param {string} arg */",
+            "  foo(arg) {}",
+            "}",
+            "class Bar extends Foo {",
+            "  /** @override */",
+            "  foo() {",
+            "    super.foo(42);",
+            "  }",
+            "}"),
+        lines(
+            "actual parameter 1 of Foo.prototype.foo does not match formal parameter",
+            "found   : number",
+            "required: string"));
+  }
+
+  public void testClassSuperMethodReturnType() {
+    testTypes(
+        lines(
+            "class Foo {",
+            "  /** @return {string} */",
+            "  foo() {}",
+            "}",
+            "class Bar extends Foo {",
+            "  /** @override */",
+            "  foo() {",
+            "    var /** null */ x = super.foo();",
+            "  }",
+            "}"),
+        lines(
+            "initializing variable",
+            "found   : string",
+            "required: null"));
+  }
+
+  public void testClassSuperMethodNotWidenedWhenOverrideWidens() {
+    testTypes(
+        lines(
+            "class Foo {",
+            "  /** @param {string} arg */",
+            "  foo(arg) {}",
+            "}",
+            "class Bar extends Foo {",
+            "  /** @override @param {string|number} arg */",
+            "  foo(arg) {}",
+            "  bar() {",
+            "    super.foo(42);",
+            "  }",
+            "}"),
+        lines(
+            "actual parameter 1 of Foo.prototype.foo does not match formal parameter",
+            "found   : number",
+            "required: string"));
+  }
+
+  // TODO - class methods (parameter types, return types, overrides inherit param/returns,
+  // errors for wrong-variant overrides, class-side inheritance override errors, calling
+  // infers correctly, templates, async, super in ctor, super.foo in method)
+
   public void testAsyncFunctionWithoutJSDoc() {
     testTypes("async function f() { return 3; }");
   }
