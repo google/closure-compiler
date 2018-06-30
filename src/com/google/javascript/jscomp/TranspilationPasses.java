@@ -105,6 +105,7 @@ public class TranspilationPasses {
               Feature.REGEXP_FLAG_U,
               Feature.REGEXP_FLAG_Y));
       passes.add(es6NormalizeShorthandProperties);
+      passes.add(es6RewriteClassExtends);
       passes.add(es6ConvertSuper);
       passes.add(es6RenameVariablesInParamLists);
       passes.add(es6SplitVariableDeclarations);
@@ -246,6 +247,19 @@ public class TranspilationPasses {
         @Override
         protected FeatureSet featureSet() {
           return ES8_MODULES;
+        }
+      };
+
+  static final HotSwapPassFactory es6RewriteClassExtends =
+      new HotSwapPassFactory(PassNames.ES6_REWRITE_CLASS_EXTENDS) {
+        @Override
+        protected HotSwapCompilerPass create(AbstractCompiler compiler) {
+          return new Es6RewriteClassExtendsExpressions(compiler);
+        }
+
+        @Override
+        protected FeatureSet featureSet() {
+          return ES8;
         }
       };
 
