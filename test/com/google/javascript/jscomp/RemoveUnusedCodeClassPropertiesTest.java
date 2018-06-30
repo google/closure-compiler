@@ -486,7 +486,7 @@ public final class RemoveUnusedCodeClassPropertiesTest extends CompilerTestCase 
     enableTypeCheck();
     test(
         // This is the output of ES6->ES5 class getter converter.
-        // See Es6ToEs3ConverterTest.testEs5GettersAndSettersClasses test method.
+        // See Es6TranspilationIntegrationTest.testEs5GettersAndSettersClasses test method.
         lines(
             "/** @constructor @struct */",
             "var C = function() {};",
@@ -511,7 +511,7 @@ public final class RemoveUnusedCodeClassPropertiesTest extends CompilerTestCase 
     enableTypeCheck();
     test(
         // This is the output of ES6->ES5 class setter converter.
-        // See Es6ToEs3ConverterTest.testEs5GettersAndSettersClasses test method.
+        // See Es6TranspilationIntegrationTest.testEs5GettersAndSettersClasses test method.
         lines(
             "/** @constructor @struct */",
             "var C = function() {};",

@@ -30,12 +30,9 @@ import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 /**
  * Test cases for ES6 transpilation.
  *
- * This class actually tests several transpilation passes together.
- * See {@link #getProcessor}.
+ * <p>This class actually tests several transpilation passes together. See {@link #getProcessor}.
  */
-// TODO(tbreisacher): Rename this to Es6TranspilationIntegrationTest since it's really testing
-// a lot of different passes. Also create a unit test for Es6ToEs3Converter.
-public final class Es6ToEs3ConverterTest extends CompilerTestCase {
+public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
 
   private static final String EXTERNS_BASE =
       lines(
@@ -88,7 +85,7 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
           "*/",
           "$jscomp.global.Object.defineProperties = function(obj, props) {};");
 
-  public Es6ToEs3ConverterTest() {
+  public Es6TranspilationIntegrationTest() {
     super(EXTERNS_BASE);
   }
 
@@ -119,6 +116,8 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
+    // TODO(lharker): we should just use TranspilationPasses.addPreTypecheck/PostCheckPasses
+    // instead of re-enumerating all these passes.
     PhaseOptimizer optimizer = new PhaseOptimizer(compiler, null);
     optimizer.addOneTimePass(
         makePassFactory(
