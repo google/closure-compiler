@@ -64,6 +64,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import jsinterop.annotations.JsMethod;
 import jsinterop.annotations.JsPackage;
 import jsinterop.annotations.JsProperty;
@@ -73,6 +75,9 @@ import jsinterop.annotations.JsType;
  * Runner for the GWT-compiled JSCompiler.
  */
 public final class GwtRunner {
+  private static Logger phaseLogger
+      = Logger.getLogger("com.google.javascript.jscomp.PhaseOptimizer");
+
   private static final CompilationLevel DEFAULT_COMPILATION_LEVEL =
       CompilationLevel.SIMPLE_OPTIMIZATIONS;
 
@@ -697,6 +702,10 @@ public final class GwtRunner {
   /** Public compiler call. Exposed in {@link #exportCompile}. */
   @JsMethod(namespace = "jscomp")
   public static ChunkOutput compile(Flags flags, File[] inputs) throws IOException {
+    // The PhaseOptimizer logs skipped pass warnings that interfere with capturing
+    // output and errors in the open source runners.
+    phaseLogger.setLevel(Level.OFF);
+
     String[] unhandled = updateFlags(flags, getDefaultFlags());
     if (unhandled.length > 0) {
       throw new RuntimeException("Unhandled flag: " + unhandled[0]);
