@@ -232,7 +232,7 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
     } else if (NodeUtil.isEnhancedFor(parent) || NodeUtil.isEnhancedFor(parent.getParent())) {
       visitDestructuringPatternInEnhancedFor(pattern);
     } else if (parent.isCatch()) {
-      visitDestructuringPatternInCatch(pattern);
+      visitDestructuringPatternInCatch(t, pattern);
     } else {
       throw new IllegalStateException("unexpected parent");
     }
@@ -437,11 +437,13 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
     String tempVarName = DESTRUCTURING_TEMP_VAR + (destructuringVarCounter++);
     Node rhs = assignment.getLastChild().detach();
     Node newAssignment = IR.let(IR.name(tempVarName), rhs);
+    NodeUtil.addFeatureToScript(t.getCurrentFile(), Feature.LET_DECLARATIONS);
     Node replacementExpr = IR.assign(assignment.getFirstChild().detach(), IR.name(tempVarName));
     Node exprResult = IR.exprResult(replacementExpr);
     Node returnNode = IR.returnNode(IR.name(tempVarName));
     Node block = IR.block(newAssignment, exprResult, returnNode);
     Node call = IR.call(IR.arrowFunction(IR.name(""), IR.paramList(), block));
+    NodeUtil.addFeatureToScript(t.getCurrentFile(), Feature.ARROW_FUNCTIONS);
     call.useSourceInfoIfMissingFromForTree(assignment);
     call.putBooleanProp(Node.FREE_CALL, true);
     assignment.getParent().replaceChild(assignment, call);
@@ -482,12 +484,13 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
     }
   }
 
-  private void visitDestructuringPatternInCatch(Node pattern) {
+  private void visitDestructuringPatternInCatch(NodeTraversal t, Node pattern) {
     String tempVarName = DESTRUCTURING_TEMP_VAR + (destructuringVarCounter++);
     Node catchBlock = pattern.getNext();
 
     pattern.replaceWith(IR.name(tempVarName));
     catchBlock.addChildToFront(IR.declaration(pattern, IR.name(tempVarName), Token.LET));
+    NodeUtil.addFeatureToScript(t.getCurrentFile(), Feature.LET_DECLARATIONS);
   }
 
   /**

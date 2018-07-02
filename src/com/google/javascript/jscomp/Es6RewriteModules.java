@@ -34,6 +34,7 @@ import com.google.javascript.jscomp.ModuleMetadata.Module;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
+import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfoBuilder;
@@ -535,6 +536,7 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
         script.addChildToBack(exprResult);
       } else if (mutated || importMap.containsKey(withSuffix)) {
         addGetterExport(script, nodeForSourceInfo, objLit, exportedName, withSuffix);
+        NodeUtil.addFeatureToScript(t.getCurrentFile(), Feature.GETTER);
       } else {
         // This step is done before type checking and the type checker doesn't understand getters.
         // However it does understand aliases. So if an export isn't mutated use an alias to make it

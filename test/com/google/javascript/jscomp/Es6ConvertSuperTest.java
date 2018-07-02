@@ -55,7 +55,6 @@ public final class Es6ConvertSuperTest extends CompilerTestCase {
     setLanguageOut(LanguageMode.ECMASCRIPT5);
     enableRunTypeCheckAfterProcessing();
     disableTypeCheck();
-    disableScriptFeatureValidation();
   }
 
   @Override

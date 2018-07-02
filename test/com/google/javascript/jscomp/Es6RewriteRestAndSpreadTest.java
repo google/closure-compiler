@@ -54,7 +54,6 @@ public final class Es6RewriteRestAndSpreadTest extends CompilerTestCase {
     setLanguageOut(LanguageMode.ECMASCRIPT3);
     enableTypeInfoValidation();
     enableTypeCheck();
-    disableScriptFeatureValidation();
   }
 
   // Spreading into array literals.

@@ -104,7 +104,7 @@ public class Es6RewriteArrowFunction implements NodeTraversal.Callback, HotSwapC
       visitArrowFunction(t, n, checkNotNull(context));
     } else if (context != null && context.scopeBody == n) {
       contextStack.pop();
-      addVarDeclarations(context);
+      addVarDeclarations(t, context);
     }
   }
 
@@ -125,12 +125,13 @@ public class Es6RewriteArrowFunction implements NodeTraversal.Callback, HotSwapC
     t.reportCodeChange();
   }
 
-  private void addVarDeclarations(ThisAndArgumentsContext context) {
+  private void addVarDeclarations(NodeTraversal t, ThisAndArgumentsContext context) {
     Node scopeBody = context.scopeBody;
 
     if (context.needsThisVar) {
       Node name = IR.name(THIS_VAR).setJSType(context.getThisType());
       Node thisVar = IR.constNode(name, IR.thisNode().setJSType(context.getThisType()));
+      NodeUtil.addFeatureToScript(t.getCurrentFile(), Feature.CONST_DECLARATIONS);
       thisVar.useSourceInfoIfMissingFromForTree(scopeBody);
       makeTreeNonIndexable(thisVar);
 
@@ -149,6 +150,7 @@ public class Es6RewriteArrowFunction implements NodeTraversal.Callback, HotSwapC
       Node name = IR.name(ARGUMENTS_VAR).setJSType(context.getArgumentsType());
       Node argumentsVar =
           IR.constNode(name, IR.name("arguments").setJSType(context.getArgumentsType()));
+      NodeUtil.addFeatureToScript(t.getCurrentFile(), Feature.CONST_DECLARATIONS);
       scopeBody.addChildToFront(argumentsVar);
 
       JSDocInfoBuilder jsdoc = new JSDocInfoBuilder(false);

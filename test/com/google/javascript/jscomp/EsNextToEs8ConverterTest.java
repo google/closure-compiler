@@ -30,7 +30,6 @@ public final class EsNextToEs8ConverterTest extends CompilerTestCase {
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_NEXT);
     setLanguageOut(LanguageMode.ECMASCRIPT_2017);
     enableRunTypeCheckAfterProcessing();
-    disableScriptFeatureValidation();
   }
 
   @Override

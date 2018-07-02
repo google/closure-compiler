@@ -27,7 +27,6 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_NEXT);
     setLanguageOut(LanguageMode.ECMASCRIPT3);
     enableRunTypeCheckAfterProcessing();
-    enableScriptFeatureValidation();
   }
 
   @Override

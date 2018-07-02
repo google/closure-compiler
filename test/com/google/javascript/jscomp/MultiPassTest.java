@@ -40,7 +40,6 @@ public final class MultiPassTest extends CompilerTestCase {
     setAcceptedLanguage(LanguageMode.ECMASCRIPT5);
     enableNormalize();
     enableGatherExternProperties();
-    disableScriptFeatureValidation();
   }
 
   @Override

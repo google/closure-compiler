@@ -96,7 +96,6 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
     setLanguageOut(LanguageMode.ECMASCRIPT3);
     enableRunTypeCheckAfterProcessing();
     disableTypeCheck();
-    disableScriptFeatureValidation();
   }
 
   protected final PassFactory makePassFactory(

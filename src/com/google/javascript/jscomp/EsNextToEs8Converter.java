@@ -37,6 +37,7 @@ import java.util.List;
  * <p>Currently this class converts Object Rest/Spread properties as documented in tc39.
  * https://github.com/tc39/proposal-object-rest-spread
  */
+// TODO(lharker): object rest and spread are officially in ES2018/ES9, rename this pass.
 public final class EsNextToEs8Converter implements NodeTraversal.Callback, HotSwapCompilerPass {
   private final AbstractCompiler compiler;
   private static final FeatureSet transpiledFeatures =
@@ -80,7 +81,7 @@ public final class EsNextToEs8Converter implements NodeTraversal.Callback, HotSw
         break;
       case OBJECT_PATTERN:
         if (n.hasChildren() && n.getLastChild().isRest()) {
-          visitObjectPatternWithRest(n, parent);
+          visitObjectPatternWithRest(t, n, parent);
         }
         break;
       default:
@@ -287,7 +288,7 @@ public final class EsNextToEs8Converter implements NodeTraversal.Callback, HotSw
      *     (a) the head: the pattern without the rest, whose value is the temporary variable.
      *     (b) the rest variable, whose value is the temporary variable after deletions.
      */
-    void prependDeclStatements(Token declType, Node block) {
+    void prependDeclStatements(NodeTraversal t, Token declType, Node block) {
       List<Node> statements = new ArrayList<>();
 
       for (ComputedPropertyName pair : this.computedProperties) {
@@ -296,6 +297,7 @@ public final class EsNextToEs8Converter implements NodeTraversal.Callback, HotSw
 
         Node let = IR.let(IR.name(pair.varName()), pair.computation());
         let.useSourceInfoIfMissingFromForTree(this.pattern);
+        NodeUtil.addFeatureToScript(t.getCurrentFile(), Feature.LET_DECLARATIONS);
 
         statements.add(let);
       }
@@ -378,7 +380,7 @@ public final class EsNextToEs8Converter implements NodeTraversal.Callback, HotSw
   /*
    * Handle object patterns with rest.
    */
-  private void visitObjectPatternWithRest(Node pattern, Node parent) {
+  private void visitObjectPatternWithRest(NodeTraversal t, Node pattern, Node parent) {
     checkArgument(pattern.isObjectPattern(), pattern);
 
     // A Builder object that will effect necessary changes to the syntax tree.  The constructor
@@ -399,7 +401,8 @@ public final class EsNextToEs8Converter implements NodeTraversal.Callback, HotSw
       Node block = parent.getSecondChild();
 
       // Use let so that the variables have block scope.
-      converter.prependDeclStatements(Token.LET, block); // Detaches the pattern from its parent.
+      converter.prependDeclStatements(t, Token.LET, block); // Detaches the pattern from its parent.
+      NodeUtil.addFeatureToScript(t.getCurrentFile(), Feature.LET_DECLARATIONS);
 
       // Put the temp var in the catch, which was left empty by the removal of the pattern.
       parent.addChildToFront(converter.newName(converter.rhsResultName));
@@ -422,7 +425,8 @@ public final class EsNextToEs8Converter implements NodeTraversal.Callback, HotSw
       Node body = parent.isParamList() ? parent.getNext() : grandparent.getNext();
 
       // Use let so that the variables have function scope.
-      converter.prependDeclStatements(Token.LET, body); // Detaches the pattern from its parent.
+      converter.prependDeclStatements(t, Token.LET, body); // Detaches the pattern from its parent.
+      NodeUtil.addFeatureToScript(t.getCurrentFile(), Feature.LET_DECLARATIONS);
 
       // Put the temp var in the param list (or default), which was left empty by the removal of the
       // pattern.
@@ -443,7 +447,7 @@ public final class EsNextToEs8Converter implements NodeTraversal.Callback, HotSw
       Node enhancedFor = parent;
 
       Node block = enhancedFor.getLastChild();
-      converter.prependDeclStatements(Token.ASSIGN, block);
+      converter.prependDeclStatements(t, Token.ASSIGN, block);
 
       // Declare the deletion variable (will be assigned to later).
       Node delVarDecl = IR.declaration(converter.newName(converter.restDeletionVarName), Token.LET);
@@ -456,6 +460,7 @@ public final class EsNextToEs8Converter implements NodeTraversal.Callback, HotSw
       enhancedFor.addChildToFront(let);
 
       compiler.reportChangeToEnclosingScope(enhancedFor);
+      NodeUtil.addFeatureToScript(t.getCurrentFile(), Feature.LET_DECLARATIONS);
     }
 
     if (parent.isDestructuringLhs()) {
@@ -473,7 +478,7 @@ public final class EsNextToEs8Converter implements NodeTraversal.Callback, HotSw
           Node enhancedFor = grandparent.getParent();
 
           Node block = enhancedFor.getLastChild();
-          converter.prependDeclStatements(grandparent.getToken(), block);
+          converter.prependDeclStatements(t, grandparent.getToken(), block);
 
           // Replace the name declaration with a let for the temp variable.
           Node let = new Node(Token.LET, converter.newName(converter.rhsResultName));
@@ -481,6 +486,7 @@ public final class EsNextToEs8Converter implements NodeTraversal.Callback, HotSw
           enhancedFor.replaceChild(grandparent, let);
 
           compiler.reportChangeToEnclosingScope(enhancedFor);
+          NodeUtil.addFeatureToScript(t.getCurrentFile(), Feature.LET_DECLARATIONS);
           return;
         } else {
           /*
@@ -508,7 +514,7 @@ public final class EsNextToEs8Converter implements NodeTraversal.Callback, HotSw
       Node rhs = pattern.getNext();
 
       Node body = IR.block();
-      converter.prependDeclStatements(Token.ASSIGN, body);
+      converter.prependDeclStatements(t, Token.ASSIGN, body);
       if (!canOmitResult(parent)) {
         // If the result is needed then we have to store and return a pristine copy whose
         // properties are not deleted. This value is stored in the resultVar.
@@ -520,8 +526,10 @@ public final class EsNextToEs8Converter implements NodeTraversal.Callback, HotSw
           IR.declaration(converter.newName(converter.restDeletionVarName), Token.LET));
       // Add the new let for the temp variable at the beginning of the body.
       body.addChildToFront(IR.let(converter.newName(converter.rhsResultName), rhs.detach()));
+      NodeUtil.addFeatureToScript(t.getCurrentFile(), Feature.LET_DECLARATIONS);
 
       Node call = IR.call(IR.arrowFunction(IR.name(""), IR.paramList(), body));
+      NodeUtil.addFeatureToScript(t.getCurrentFile(), Feature.ARROW_FUNCTIONS);
       call.putBooleanProp(Node.FREE_CALL, true);
       call.useSourceInfoIfMissingFromForTree(pattern);
       NodeUtil.markNewScopesChanged(call, compiler);
