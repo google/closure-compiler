@@ -1431,4 +1431,23 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "Object.defineProperty(module$test.default, '__esModule',{value:true})",
             "module$test.default = module$test.default.default;"));
   }
+
+  /** @see https://github.com/google/closure-compiler/issues/2999 */
+  public void testLodashModulesCheck() {
+    testModules(
+        "test.js",
+        lines(
+            "/* Detect free variable `exports`. */",
+            "const freeExports = typeof exports == 'object' && exports !== null && !exports.nodeType && exports",
+            "/* Detect free variable `module`. */",
+            "const freeModule = freeExports && typeof module == 'object' && module !== null && !module.nodeType && module",
+            "console.log(freeExports, freeModule);",
+            "module.exports = true;"),
+        lines(
+            "/** @const */ var module$test = {default: {}};",
+            "const freeExports$$module$test = 'object' == 'object' && module$test.default !== null && !module$test.default.nodeType && module$test.default;",
+            "const freeModule$$module$test = freeExports$$module$test && 'object' == 'object' && {} !== null && !{}.nodeType && {};",
+            "console.log(freeExports$$module$test, freeModule$$module$test);",
+            "module$test.default = true;"));
+  }
 }
