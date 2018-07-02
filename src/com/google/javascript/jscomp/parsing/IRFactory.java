@@ -1331,13 +1331,8 @@ class IRFactory {
     }
 
     Node processForInLoop(ForInStatementTree loopNode) {
+      // TODO(bradfordcsmith): Rename initializer to something more intuitive like "lhs"
       Node initializer = transform(loopNode.initializer);
-      ImmutableSet<Token> invalidInitializers =
-          ImmutableSet.of(Token.ARRAYLIT, Token.OBJECTLIT);
-      if (invalidInitializers.contains(initializer.getToken())) {
-        errorReporter.error("Invalid LHS for a for-in loop", sourceName,
-            lineno(loopNode.initializer), charno(loopNode.initializer));
-      }
       return newNode(
           Token.FOR_IN, initializer, transform(loopNode.collection), transformBlock(loopNode.body));
     }
@@ -1345,12 +1340,6 @@ class IRFactory {
     Node processForOf(ForOfStatementTree loopNode) {
       maybeWarnForFeature(loopNode, Feature.FOR_OF);
       Node initializer = transform(loopNode.initializer);
-      ImmutableSet<Token> invalidInitializers =
-          ImmutableSet.of(Token.ARRAYLIT, Token.OBJECTLIT);
-      if (invalidInitializers.contains(initializer.getToken())) {
-        errorReporter.error("Invalid LHS for a for-of loop", sourceName,
-            lineno(loopNode.initializer), charno(loopNode.initializer));
-      }
       return newNode(
           Token.FOR_OF,
           initializer,
