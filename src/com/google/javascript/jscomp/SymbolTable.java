@@ -445,9 +445,10 @@ public final class SymbolTable {
           }
 
           @Override
-            public void visit(NodeTraversal t, Node n, Node p) {}
-          },
-          externs, root);
+          public void visit(NodeTraversal t, Node n, Node p) {}
+        },
+        externs,
+        root);
   }
 
   /** Gets all the scopes in this symbol table. */
@@ -633,10 +634,10 @@ public final class SymbolTable {
 
   private void removeSymbol(Symbol s) {
     SymbolScope scope = getScope(s);
-    if (!scope.ownSymbols.remove(s.getName()).equals(s)) {
+    if (!s.equals(scope.ownSymbols.remove(s.getName()))) {
       throw new IllegalStateException("Symbol not found in scope " + s);
     }
-    if (!symbols.remove(s.getDeclaration().getNode(), s.getName()).equals(s)) {
+    if (!s.equals(symbols.remove(s.getDeclaration().getNode(), s.getName()))) {
       throw new IllegalStateException("Symbol not found in table " + s);
     }
     // If s declares a property scope then all child symbols should be removed as well.
@@ -1104,8 +1105,11 @@ public final class SymbolTable {
         inlineEs6ExportProperty(symbol, nodeToSymbol);
       } else if (isSymbolAQuotedObjectKey(symbol)) {
         // Quoted object keys are not considered symbols. Only unquoted keys and dot-access
-        // properties are considered symbols.
-        removeSymbol(symbol);
+        // properties are considered symbols. Remove the quoted key.
+        boolean symbolAlreadyRemoved = !getScope(symbol).ownSymbols.containsKey(symbol.getName());
+        if (!symbolAlreadyRemoved) {
+          removeSymbol(symbol);
+        }
       }
     }
   }
