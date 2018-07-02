@@ -1518,6 +1518,7 @@ public final class NodeUtil {
       case AWAIT:
       case FOR_IN: // assigns to a loop LHS
       case FOR_OF: // assigns to a loop LHS
+      case FOR_AWAIT_OF: // assigns to a loop LHS
         return true;
       case CALL:
         return NodeUtil.functionCallHasSideEffects(n, compiler);
@@ -2414,7 +2415,7 @@ public final class NodeUtil {
   }
 
   public static boolean isEnhancedFor(Node n) {
-    return n.isForOf() || n.isForIn();
+    return n.isForOf() || n.isForAwaitOf() || n.isForIn();
   }
 
   public static boolean isAnyFor(Node n) {
@@ -2429,6 +2430,7 @@ public final class NodeUtil {
       case FOR:
       case FOR_IN:
       case FOR_OF:
+      case FOR_AWAIT_OF:
       case DO:
       case WHILE:
         return true;
@@ -2447,6 +2449,7 @@ public final class NodeUtil {
       case FOR:
       case FOR_IN:
       case FOR_OF:
+      case FOR_AWAIT_OF:
       case WHILE:
         return n.getLastChild();
       case DO:
@@ -2481,6 +2484,7 @@ public final class NodeUtil {
       case FOR:
       case FOR_IN:
       case FOR_OF:
+      case FOR_AWAIT_OF:
       case DO:
       case WHILE:
       case WITH:
@@ -2510,6 +2514,7 @@ public final class NodeUtil {
       case FOR:
       case FOR_IN:
       case FOR_OF:
+      case FOR_AWAIT_OF:
       case WHILE:
       case LABEL:
       case WITH:
@@ -2543,6 +2548,7 @@ public final class NodeUtil {
         return n.getSecondChild();
       case FOR_IN:
       case FOR_OF:
+      case FOR_AWAIT_OF:
       case CASE:
         return null;
       default:
@@ -2577,6 +2583,7 @@ public final class NodeUtil {
       case FOR:
       case FOR_IN:
       case FOR_OF:
+      case FOR_AWAIT_OF:
       case SWITCH:
       case CLASS:
         return true;
@@ -3311,6 +3318,7 @@ public final class NodeUtil {
       case FOR:
       case FOR_IN:
       case FOR_OF:
+      case FOR_AWAIT_OF:
         return parent.getFirstChild() == n;
       case ARRAY_PATTERN:
       case STRING_KEY:
@@ -3511,6 +3519,7 @@ public final class NodeUtil {
 
       case FOR_IN:
       case FOR_OF:
+      case FOR_AWAIT_OF:
         // e.g. `for ({length} in obj) {}` // targetNode is `{length}`
         // e.g. `for ({length} of obj) {}` // targetNode is `{length}`
         checkState(targetIsFirstChild, targetNode);
@@ -4240,6 +4249,7 @@ public final class NodeUtil {
         return;
       case FOR_IN:
       case FOR_OF:
+      case FOR_AWAIT_OF:
         // Enhanced for loops assign to variables in their first child
         // e.g.
         // for (some.prop in someObj) {...

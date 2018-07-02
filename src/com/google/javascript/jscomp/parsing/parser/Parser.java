@@ -57,6 +57,7 @@ import com.google.javascript.jscomp.parsing.parser.trees.ExportDeclarationTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ExportSpecifierTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ExpressionStatementTree;
 import com.google.javascript.jscomp.parsing.parser.trees.FinallyTree;
+import com.google.javascript.jscomp.parsing.parser.trees.ForAwaitOfStatementTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ForInStatementTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ForOfStatementTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ForStatementTree;
@@ -173,7 +174,18 @@ public class Parser {
    * Indicates the type of function currently being parsed.
    */
   private enum FunctionFlavor {
-    NORMAL, GENERATOR, ASYNCHRONOUS;
+    NORMAL(false, false),
+    GENERATOR(true, false),
+    ASYNCHRONOUS(false, true),
+    ASYNCHRONOUS_GENERATOR(true, true);
+
+    final boolean isGenerator;
+    final boolean isAsynchronous;
+
+    FunctionFlavor(boolean isGenerator, boolean isAsynchronous) {
+      this.isGenerator = isGenerator;
+      this.isAsynchronous = isAsynchronous;
+    }
   }
 
   private final Scanner scanner;
@@ -868,7 +880,8 @@ public class Parser {
   private boolean peekAsyncMethod() {
     return peekPredefinedString(ASYNC)
         && !peekImplicitSemiColon(1)
-        && peekPropertyNameOrComputedProp(1);
+        && (peekPropertyNameOrComputedProp(1)
+            || (peek(1, TokenType.STAR) && peekPropertyNameOrComputedProp(2)));
   }
 
   private ParseTree parseClassMemberDeclaration() {
@@ -972,12 +985,17 @@ public class Parser {
 
   private ParseTree parseAsyncMethod(PartialClassElement partial) {
     eatPredefinedString(ASYNC);
+    boolean generator = peek(TokenType.STAR);
+    if (generator) {
+      eat(TokenType.STAR);
+    }
     if (peekPropertyName(0)) {
       if (peekIdOrKeyword()) {
         IdentifierToken name = eatIdOrKeywordAsId();
         FunctionDeclarationTree.Builder builder =
             FunctionDeclarationTree.builder(FunctionDeclarationTree.Kind.MEMBER)
                 .setAsync(true)
+                .setGenerator(generator)
                 .setStatic(partial.isStatic)
                 .setName(name)
                 .setAccess(partial.accessModifier);
@@ -989,7 +1007,9 @@ public class Parser {
               .setFunctionBody(new EmptyStatementTree(getTreeLocation(partial.start)));
           eatPossibleImplicitSemiColon();
         } else {
-          parseFunctionTail(builder, FunctionFlavor.ASYNCHRONOUS);
+          parseFunctionTail(
+              builder,
+              generator ? FunctionFlavor.ASYNCHRONOUS_GENERATOR : FunctionFlavor.ASYNCHRONOUS);
         }
 
         return builder.build(getTreeLocation(name.getStart()));
@@ -1001,8 +1021,11 @@ public class Parser {
         FunctionDeclarationTree.Builder builder =
             FunctionDeclarationTree.builder(FunctionDeclarationTree.Kind.EXPRESSION)
                 .setAsync(true)
+                .setGenerator(generator)
                 .setStatic(partial.isStatic);
-        parseFunctionTail(builder, FunctionFlavor.ASYNCHRONOUS);
+        parseFunctionTail(
+            builder,
+            generator ? FunctionFlavor.ASYNCHRONOUS_GENERATOR : FunctionFlavor.ASYNCHRONOUS);
 
         ParseTree function = builder.build(getTreeLocation(nameExpr.getStart()));
         return new ComputedPropertyMethodTree(
@@ -1017,8 +1040,10 @@ public class Parser {
       FunctionDeclarationTree.Builder builder =
           FunctionDeclarationTree.builder(FunctionDeclarationTree.Kind.EXPRESSION)
               .setAsync(true)
+              .setGenerator(generator)
               .setStatic(partial.isStatic);
-      parseFunctionTail(builder, FunctionFlavor.ASYNCHRONOUS);
+      parseFunctionTail(
+          builder, generator ? FunctionFlavor.ASYNCHRONOUS_GENERATOR : FunctionFlavor.ASYNCHRONOUS);
 
       ParseTree function = builder.build(getTreeLocation(nameExpr.getStart()));
       return new ComputedPropertyMethodTree(
@@ -1070,7 +1095,7 @@ public class Parser {
       FunctionDeclarationTree.Builder builder, FunctionFlavor functionFlavor) {
     functionContextStack.addLast(functionFlavor);
     builder
-        .setGenerator(functionFlavor == FunctionFlavor.GENERATOR)
+        .setGenerator(functionFlavor.isGenerator)
         .setGenerics(maybeParseGenericTypes())
         .setFormalParameterList(parseFormalParameterList(ParamContext.IMPLEMENTATION))
         .setReturnType(maybeParseColonType())
@@ -1253,9 +1278,8 @@ public class Parser {
     SourcePosition start = getTreeStartLocation();
     eatAsyncFunctionStart();
 
-    if (peek(TokenType.STAR)) {
-      reportError("async functions cannot be generators");
-      // ignore the star to see how much more we can parse for errors
+    boolean generator = peek(TokenType.STAR);
+    if (generator) {
       eat(TokenType.STAR);
     }
 
@@ -1264,7 +1288,8 @@ public class Parser {
             .setName(eatId())
             .setAsync(true);
 
-    parseFunctionTail(builder, FunctionFlavor.ASYNCHRONOUS);
+    parseFunctionTail(
+        builder, generator ? FunctionFlavor.ASYNCHRONOUS_GENERATOR : FunctionFlavor.ASYNCHRONOUS);
     return builder.build(getTreeLocation(start));
   }
 
@@ -1272,9 +1297,8 @@ public class Parser {
     SourcePosition start = getTreeStartLocation();
     eatAsyncFunctionStart();
 
-    if (peek(TokenType.STAR)) {
-      reportError("async functions cannot be generators");
-      // ignore the star to see how much more we can parse for errors
+    boolean generator = peek(TokenType.STAR);
+    if (generator) {
       eat(TokenType.STAR);
     }
 
@@ -1283,7 +1307,8 @@ public class Parser {
             .setName(eatIdOpt())
             .setAsync(true);
 
-    parseFunctionTail(builder, FunctionFlavor.ASYNCHRONOUS);
+    parseFunctionTail(
+        builder, generator ? FunctionFlavor.ASYNCHRONOUS_GENERATOR : FunctionFlavor.ASYNCHRONOUS);
     return builder.build(getTreeLocation(start));
   }
 
@@ -1862,13 +1887,21 @@ public class Parser {
   // 12.6.3 The for Statement
   // 12.6.4 The for-in Statement
   // The for-of Statement
+  // The for-await-of Statement
   private ParseTree parseForStatement() {
     SourcePosition start = getTreeStartLocation();
     eat(TokenType.FOR);
+    boolean awaited = peekPredefinedString(AWAIT);
+    if (awaited) {
+      eatPredefinedString(AWAIT);
+    }
     eat(TokenType.OPEN_PAREN);
     if (peekVariableDeclarationList()) {
       VariableDeclarationListTree variables = parseVariableDeclarationListNoIn();
       if (peek(TokenType.IN)) {
+        if (awaited) {
+          reportError("for-await-of is the only allowed asynchronous iteration");
+        }
         // for-in: only one declaration allowed
         if (variables.declarations.size() > 1) {
           reportError("for-in statement may not have more than one variable declaration");
@@ -1890,15 +1923,27 @@ public class Parser {
       } else if (peekPredefinedString(PredefinedName.OF)) {
         // for-of: only one declaration allowed
         if (variables.declarations.size() > 1) {
-          reportError("for-of statement may not have more than one variable declaration");
+          if (awaited) {
+            reportError("for-await-of statement may not have more than one variable declaration");
+          } else {
+            reportError("for-of statement may not have more than one variable declaration");
+          }
         }
         // for-of: initializer is illegal
         VariableDeclarationTree declaration = variables.declarations.get(0);
         if (declaration.initializer != null) {
-          reportError("for-of statement may not have initializer");
+          if (awaited) {
+            reportError("for-await-of statement may not have initializer");
+          } else {
+            reportError("for-of statement may not have initializer");
+          }
         }
 
-        return parseForOfStatement(start, variables);
+        if (awaited) {
+          return parseForAwaitOfStatement(start, variables);
+        } else {
+          return parseForOfStatement(start, variables);
+        }
       } else {
         // "Vanilla" for statement: const/destructuring must have initializer
         checkVanillaForInitializers(variables);
@@ -1924,7 +1969,12 @@ public class Parser {
         if (peek(TokenType.IN)) {
           return parseForInStatement(start, initializer);
         } else {
-          return parseForOfStatement(start, initializer);
+          // for {await}? ( _ of _ )
+          if (awaited) {
+            return parseForAwaitOfStatement(start, initializer);
+          } else {
+            return parseForOfStatement(start, initializer);
+          }
         }
       }
     }
@@ -1942,6 +1992,14 @@ public class Parser {
     ParseTree body = parseStatement();
     return new ForOfStatementTree(
         getTreeLocation(start), initializer, collection, body);
+  }
+
+  private ParseTree parseForAwaitOfStatement(SourcePosition start, ParseTree initializer) {
+    eatPredefinedString(PredefinedName.OF);
+    ParseTree collection = parseExpression();
+    eat(TokenType.CLOSE_PAREN);
+    ParseTree body = parseStatement();
+    return new ForAwaitOfStatementTree(getTreeLocation(start), initializer, collection, body);
   }
 
   /** Checks variable declarations in for statements. */
@@ -3074,7 +3132,7 @@ public class Parser {
 
   private boolean inGeneratorContext() {
     // disallow yield outside of generators
-    return functionContextStack.peekLast() == FunctionFlavor.GENERATOR;
+    return functionContextStack.peekLast().isGenerator;
   }
 
   // yield [no line terminator] (*)? AssignExpression
@@ -3349,8 +3407,7 @@ public class Parser {
 
   private ParseTree parseAwaitExpression() {
     SourcePosition start = getTreeStartLocation();
-    if (functionContextStack.isEmpty()
-        || functionContextStack.peekLast() != FunctionFlavor.ASYNCHRONOUS) {
+    if (functionContextStack.isEmpty() || !functionContextStack.peekLast().isAsynchronous) {
       reportError("'await' used in a non-async function context");
     }
     eatPredefinedString(AWAIT);

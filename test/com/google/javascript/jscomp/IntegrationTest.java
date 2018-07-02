@@ -5230,6 +5230,25 @@ public final class IntegrationTest extends IntegrationTestCase {
     test(options, "for (const [x] = [], {y} = {}, z = 2;;) {}", Es6ToEs3Util.CANNOT_CONVERT_YET);
   }
 
+  public void testAsyncIter() {
+    CompilerOptions options = createCompilerOptions();
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_2018);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2018);
+    testSame(options, "async function* foo() {}");
+    testSame(options, "for await (a of b) {}");
+
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2017);
+    test(
+        options,
+        "async function* foo() {}",
+        RewriteAsyncIteration.CANNOT_CONVERT_ASYNC_ITERATION_YET);
+
+    test(
+        options,
+        "for await (a of foo()) {}",
+        RewriteAsyncIteration.CANNOT_CONVERT_ASYNC_ITERATION_YET);
+  }
+
   public void testDestructuringRest() {
     CompilerOptions options = createCompilerOptions();
     options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT);

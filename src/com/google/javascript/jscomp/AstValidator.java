@@ -185,6 +185,9 @@ public final class AstValidator implements CompilerPass {
       case FOR_OF:
         validateForOf(n);
         return;
+      case FOR_AWAIT_OF:
+        validateForAwaitOf(n);
+        return;
       case WHILE:
         validateWhile(n);
         return;
@@ -908,6 +911,9 @@ public final class AstValidator implements CompilerPass {
     if (n.isAsyncFunction()) {
       validateFeature(Feature.ASYNC_FUNCTIONS, n);
     }
+    if (n.isAsyncFunction() && n.isGeneratorFunction()) {
+      validateFeature(Feature.ASYNC_GENERATORS, n);
+    }
   }
 
   private void validateFunctionBody(Node n, boolean noBlock) {
@@ -1166,6 +1172,15 @@ public final class AstValidator implements CompilerPass {
   private void validateForOf(Node n) {
     validateFeature(Feature.FOR_OF, n);
     validateNodeType(Token.FOR_OF, n);
+    validateChildCount(n);
+    validateVarOrAssignmentTarget(n.getFirstChild());
+    validateExpression(n.getSecondChild());
+    validateBlock(n.getLastChild());
+  }
+
+  private void validateForAwaitOf(Node n) {
+    validateFeature(Feature.FOR_AWAIT_OF, n);
+    validateNodeType(Token.FOR_AWAIT_OF, n);
     validateChildCount(n);
     validateVarOrAssignmentTarget(n.getFirstChild());
     validateExpression(n.getSecondChild());

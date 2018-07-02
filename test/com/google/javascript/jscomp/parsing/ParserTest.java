@@ -3684,11 +3684,13 @@ public final class ParserTest extends BaseJSTypeTestCase {
         "let foo = async(5);"));
   }
 
-  public void testInvalidAsyncFunction() {
-    mode = LanguageMode.ECMASCRIPT8;
+  public void testAsyncGeneratorFunction() {
+    mode = LanguageMode.ECMASCRIPT2018;
+    expectFeatures(Feature.ASYNC_FUNCTIONS, Feature.GENERATORS, Feature.ASYNC_GENERATORS);
     strictMode = STRICT;
-    parseError("async function *f(){}", "async functions cannot be generators");
-    parseError("f = async function *(){}", "async functions cannot be generators");
+    parse("async function *f(){}");
+    parse("f = async function *(){}");
+    parse("class C { async *foo(){} }");
   }
 
   public void testAsyncArrowFunction() {
@@ -3933,6 +3935,53 @@ public final class ParserTest extends BaseJSTypeTestCase {
     strictMode = SLOPPY;
 
     parseError("for(a, b of c) d;", INVALID_ASSIGNMENT_TARGET);
+  }
+
+  public void testValidForAwaitOf() {
+    mode = LanguageMode.ECMASCRIPT2018;
+    strictMode = SLOPPY;
+
+    expectFeatures(Feature.FOR_AWAIT_OF);
+    parse("for await(a of b) c;");
+    parse("for await(var a of b) c;");
+    parse("for await (a.x of b) c;");
+    parse("for await ([a1, a2, a3] of b) c;");
+    parse("for await (const {x, y, z} of b) c;");
+    // default value inside a pattern isn't an initializer
+    parse("for await (const {x, y = 2, z} of b) c;");
+    expectFeatures(Feature.FOR_AWAIT_OF, Feature.LET_DECLARATIONS);
+    parse("for await(let a of b) c;");
+    expectFeatures(Feature.FOR_AWAIT_OF, Feature.CONST_DECLARATIONS);
+    parse("for await(const a of b) c;");
+  }
+
+  public void testInvalidForAwaitOfInitializers() {
+    mode = LanguageMode.ECMASCRIPT2018;
+    strictMode = SLOPPY;
+
+    parseError("for await (a=1 of b) c;", INVALID_ASSIGNMENT_TARGET);
+    parseError("for await (var a=1 of b) c;", "for-await-of statement may not have initializer");
+    parseError("for await (let a=1 of b) c;", "for-await-of statement may not have initializer");
+    parseError("for await (const a=1 of b) c;", "for-await-of statement may not have initializer");
+    parseError(
+        "for await (let {a} = {} of b) c;", "for-await-of statement may not have initializer");
+  }
+
+  public void testInvalidForAwaitOfMultipleInitializerTargets() {
+    mode = LanguageMode.ECMASCRIPT2018;
+    strictMode = SLOPPY;
+
+    parseError("for await (a, b of c) d;", INVALID_ASSIGNMENT_TARGET);
+
+    parseError(
+        "for await (var a, b of c) d;",
+        "for-await-of statement may not have more than one variable declaration");
+    parseError(
+        "for await (let a, b of c) d;",
+        "for-await-of statement may not have more than one variable declaration");
+    parseError(
+        "for await (const a, b of c) d;",
+        "for-await-of statement may not have more than one variable declaration");
   }
 
   public void testDestructuringInForLoops() {

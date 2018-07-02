@@ -685,12 +685,30 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     assertPrettyPrintSame("for ([x, y] of [[1, 2]]) {\n  c;\n}\n");
   }
 
+  public void testForAwaitOf() {
+    languageMode = LanguageMode.ECMASCRIPT_2018;
+
+    assertPrintSame("for await(a of b)c");
+    assertPrintSame("for await(var a of b)c");
+  }
+
+  // In pretty-print mode, make sure there is a space before and after the 'of' in a for/of loop.
+  public void testForAwaitOfPretty() {
+    languageMode = LanguageMode.ECMASCRIPT_2018;
+
+    assertPrettyPrintSame("for await ([x, y] of b) {\n  c;\n}\n");
+    assertPrettyPrintSame("for await (x of [[1, 2]]) {\n  c;\n}\n");
+    assertPrettyPrintSame("for await ([x, y] of [[1, 2]]) {\n  c;\n}\n");
+  }
+
   public void testLetFor() {
     languageMode = LanguageMode.ECMASCRIPT_2015;
 
     assertPrintSame("for(let a=0;a<5;a++)b");
     assertPrintSame("for(let a in b)c");
     assertPrintSame("for(let a of b)c");
+    languageMode = LanguageMode.ECMASCRIPT_2018;
+    assertPrintSame("for await(let a of b)c");
   }
 
   public void testConstFor() {
@@ -699,7 +717,11 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     assertPrintSame("for(const a=5;b<a;b++)c");
     assertPrintSame("for(const a in b)c");
     assertPrintSame("for(const a of b)c");
+
+    languageMode = LanguageMode.ECMASCRIPT_2018;
+    assertPrintSame("for await(const a of b)c");
   }
+
 
   public void testLiteralProperty() {
     assertPrint("(64).toString()", "(64).toString()");
@@ -2444,6 +2466,16 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     assertPrint("let f=async\nfunction f(){}", "let f=async;function f(){}");
   }
 
+  public void testAsyncGeneratorFunction() {
+    languageMode = LanguageMode.ECMASCRIPT_2018;
+    assertPrintSame("async function*f(){}");
+    assertPrintSame("let f=async function*f(){}");
+    assertPrintSame("let f=async function*(){}");
+    // implicit semicolon prevents async being treated as a keyword
+    assertPrint("async\nfunction*f(){}", "async;function*f(){}");
+    assertPrint("let f=async\nfunction*f(){}", "let f=async;function*f(){}");
+  }
+
   public void testAsyncArrowFunction() {
     languageMode = LanguageMode.ECMASCRIPT_NEXT;
     assertPrintSame("async()=>1");
@@ -2459,6 +2491,16 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     assertPrintSame("class C{async[a+b](){}}");
     assertPrintSame("class C{static async m(){}}");
     assertPrintSame("class C{static async[a+b](){}}");
+  }
+
+  public void testAsyncGeneratorMethod() {
+    languageMode = LanguageMode.ECMASCRIPT_2018;
+    assertPrintSame("o={async *m(){}}");
+    assertPrintSame("o={async*[a+b](){}}");
+    assertPrintSame("class C{async *m(){}}");
+    assertPrintSame("class C{async*[a+b](){}}");
+    assertPrintSame("class C{static async *m(){}}");
+    assertPrintSame("class C{static async*[a+b](){}}");
   }
 
   public void testAwaitExpression() {

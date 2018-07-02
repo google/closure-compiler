@@ -711,6 +711,7 @@ public class IR {
       case FOR:
       case FOR_IN:
       case FOR_OF:
+      case FOR_AWAIT_OF:
       case IF:
       case LABEL:
       case LET:

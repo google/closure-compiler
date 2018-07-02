@@ -167,6 +167,7 @@ public class Es6SyntacticScopeCreator implements ScopeCreator {
 
         case FOR:
         case FOR_OF:
+        case FOR_AWAIT_OF:
         case FOR_IN:
         case SWITCH:
           scanVars(n, null, scope);

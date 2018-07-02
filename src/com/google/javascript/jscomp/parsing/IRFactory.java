@@ -78,6 +78,7 @@ import com.google.javascript.jscomp.parsing.parser.trees.ExportDeclarationTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ExportSpecifierTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ExpressionStatementTree;
 import com.google.javascript.jscomp.parsing.parser.trees.FinallyTree;
+import com.google.javascript.jscomp.parsing.parser.trees.ForAwaitOfStatementTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ForInStatementTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ForOfStatementTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ForStatementTree;
@@ -489,6 +490,7 @@ class IRFactory {
       case FOR:
       case FOR_IN:
       case FOR_OF:
+      case FOR_AWAIT_OF:
       case WHILE:
       case DO:
       case SWITCH:
@@ -503,6 +505,7 @@ class IRFactory {
       case FOR:
       case FOR_IN:
       case FOR_OF:
+      case FOR_AWAIT_OF:
       case WHILE:
       case DO:
         return true;
@@ -1355,6 +1358,16 @@ class IRFactory {
           transformBlock(loopNode.body));
     }
 
+    Node processForAwaitOf(ForAwaitOfStatementTree loopNode) {
+      maybeWarnForFeature(loopNode, Feature.FOR_AWAIT_OF);
+      Node initializer = transform(loopNode.initializer);
+      return newNode(
+          Token.FOR_AWAIT_OF,
+          initializer,
+          transform(loopNode.collection),
+          transformBlock(loopNode.body));
+    }
+
     Node processForLoop(ForStatementTree loopNode) {
       Node node = newNode(
           Token.FOR,
@@ -1414,6 +1427,10 @@ class IRFactory {
 
       if (isAsync) {
         maybeWarnForFeature(functionTree, Feature.ASYNC_FUNCTIONS);
+      }
+
+      if (isGenerator && isAsync) {
+        maybeWarnForFeature(functionTree, Feature.ASYNC_GENERATORS);
       }
 
       IdentifierToken name = functionTree.name;
@@ -2981,6 +2998,8 @@ class IRFactory {
           return processAwait(node.asAwaitExpression());
         case FOR_OF_STATEMENT:
           return processForOf(node.asForOfStatement());
+        case FOR_AWAIT_OF_STATEMENT:
+          return processForAwaitOf(node.asForAwaitOfStatement());
 
         case EXPORT_DECLARATION:
           return processExportDecl(node.asExportDeclaration());

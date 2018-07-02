@@ -115,6 +115,16 @@ public final class AstValidatorTest extends CompilerTestCase {
     valid("for(a of {});");
   }
 
+  public void testForAwaitOf() {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2018);
+    valid("for await(var a of b);");
+    valid("for await(let a of b);");
+    valid("for await(const a of b);");
+    valid("for await(a of b);");
+    valid("for await(a of []);");
+    valid("for await(a of {});");
+  }
+
   public void testQuestionableForIn() {
     setAcceptedLanguage(LanguageMode.ECMASCRIPT5);
     setExpectParseWarningsThisTest();
@@ -444,6 +454,10 @@ public final class AstValidatorTest extends CompilerTestCase {
     testFeatureValidation("for (const a of b) {}", Feature.FOR_OF);
   }
 
+  public void testFeatureValidation_forAwaitOf() {
+    testFeatureValidation("for await (const a of b) {}", Feature.FOR_AWAIT_OF);
+  }
+
   public void testFeatureValidation_generatorFunctions() {
     testFeatureValidation("const f = function *() {}", Feature.GENERATORS);
     testFeatureValidation("function *f() {}", Feature.GENERATORS);
@@ -494,6 +508,12 @@ public final class AstValidatorTest extends CompilerTestCase {
     testFeatureValidation("async function f() {}", Feature.ASYNC_FUNCTIONS);
     testFeatureValidation("class C { async f() {} }", Feature.ASYNC_FUNCTIONS);
     testFeatureValidation("(async () => {})", Feature.ASYNC_FUNCTIONS);
+  }
+
+  public void testFeatureValidation_asyncGeneratorFunctions() {
+    testFeatureValidation("const f = async function *() {}", Feature.ASYNC_GENERATORS);
+    testFeatureValidation("async function *f() {}", Feature.ASYNC_GENERATORS);
+    testFeatureValidation("class C { async *f() {} }", Feature.ASYNC_GENERATORS);
   }
 
   public void testFeatureValidation_objectLiteralsWithSpread() {
@@ -570,7 +590,7 @@ public final class AstValidatorTest extends CompilerTestCase {
   }
 
   private Node parseScriptWithoutCheckingLanguageLevel(String code) {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT_NEXT);
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2018);
     Node n = parseExpectedJs(code);
     Node script = n.getFirstChild();
     assertNode(script).hasType(Token.SCRIPT);

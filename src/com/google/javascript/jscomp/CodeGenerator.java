@@ -547,13 +547,13 @@ public class CodeGenerator {
             add("static ");
           }
 
+          if (n.isMemberFunctionDef() && n.getFirstChild().isAsyncFunction()) {
+            add("async ");
+          }
+
           if (!n.isMemberVariableDef() && n.getFirstChild().isGeneratorFunction()) {
             checkState(type == Token.MEMBER_FUNCTION_DEF, n);
             add("*");
-          }
-
-          if (n.isMemberFunctionDef() && n.getFirstChild().isAsyncFunction()) {
-            add("async ");
           }
 
           switch (type) {
@@ -692,6 +692,20 @@ public class CodeGenerator {
       case FOR_OF:
         Preconditions.checkState(childCount == 3, n);
         add("for");
+        cc.maybeInsertSpace();
+        add("(");
+        add(first);
+        cc.maybeInsertSpace();
+        add("of");
+        cc.maybeInsertSpace();
+        add(first.getNext());
+        add(")");
+        addNonEmptyStatement(last, getContextForNonEmptyExpression(context), false);
+        break;
+
+      case FOR_AWAIT_OF:
+        Preconditions.checkState(childCount == 3, n);
+        add("for await");
         cc.maybeInsertSpace();
         add("(");
         add(first);
@@ -1014,10 +1028,13 @@ public class CodeGenerator {
           add("get ");
         } else if (n.getBooleanProp(Node.COMPUTED_PROP_SETTER)) {
           add("set ");
-        } else if (last.getBooleanProp(Node.GENERATOR_FN)) {
-          add("*");
-        } else if (last.isAsyncFunction()) {
-          add("async");
+        } else {
+          if (last.isAsyncFunction()) {
+            add("async");
+          }
+          if (last.getBooleanProp(Node.GENERATOR_FN)) {
+            add("*");
+          }
         }
         add("[");
         add(first);

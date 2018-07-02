@@ -153,6 +153,10 @@ public final class FeatureSet implements Serializable {
     OBJECT_LITERALS_WITH_SPREAD("object literals with spread", LangVersion.ES_NEXT),
     OBJECT_PATTERN_REST("object pattern rest", LangVersion.ES_NEXT),
 
+    // https://github.com/tc39/proposal-async-iteration
+    ASYNC_GENERATORS("async generator functions", LangVersion.ES2018),
+    FOR_AWAIT_OF("for-await-of loop", LangVersion.ES2018),
+
     // ES6 typed features that are not at all implemented in browsers
     ACCESSIBILITY_MODIFIER("accessibility modifier", LangVersion.TYPESCRIPT),
     AMBIENT_DECLARATION("ambient declaration", LangVersion.TYPESCRIPT),
