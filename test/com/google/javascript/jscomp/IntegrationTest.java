@@ -5255,30 +5255,32 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setLanguageOut(LanguageMode.ECMASCRIPT_2017);
 
     test(options, "const {y} = {}", "const {y} = {}");
+
     test(
         options,
         "const {...y} = {}",
         lines(
-            "const $jscomp$objpattern$var0={};",
-            "const {}=$jscomp$objpattern$var0;",
-            "const $jscomp$objpattern$var1=Object.assign({}, $jscomp$objpattern$var0);",
-            "const y=$jscomp$objpattern$var1"));
+            "var $jscomp$destructuring$var0 = {};",
+            "var $jscomp$destructuring$var1 = Object.assign({},$jscomp$destructuring$var0);",
+            "const y = $jscomp$destructuring$var1"));
 
     test(
         options,
         "function foo({ a, b, ...c}) { try { foo() } catch({...m}) {} }",
         lines(
-            "function foo($jscomp$objpattern$var0) {",
-            "  let {a,b}=$jscomp$objpattern$var0;",
-            "  let $jscomp$objpattern$var1=Object.assign({}, $jscomp$objpattern$var0);",
-            "  let c=(delete $jscomp$objpattern$var1.a,",
-            "         delete $jscomp$objpattern$var1.b,",
-            "         $jscomp$objpattern$var1)",
-            "  try { foo() }",
-            "  catch ($jscomp$objpattern$var2) {",
-            "    let {}=$jscomp$objpattern$var2;",
-            "    let $jscomp$objpattern$var3=Object.assign({}, $jscomp$objpattern$var2)",
-            "    let m=$jscomp$objpattern$var3",
+            "function foo($jscomp$destructuring$var0){",
+            "  var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;",
+            "  var $jscomp$destructuring$var2 = Object.assign({},$jscomp$destructuring$var1);",
+            "  var a=$jscomp$destructuring$var1.a;",
+            "  var b=$jscomp$destructuring$var1.b;",
+            "  var c= (delete $jscomp$destructuring$var2.a,",
+            "          delete $jscomp$destructuring$var2.b,",
+            "          $jscomp$destructuring$var2);",
+            "  try{ foo() }",
+            "  catch ($jscomp$destructuring$var3) {",
+            "    var $jscomp$destructuring$var4 = $jscomp$destructuring$var3;",
+            "    var $jscomp$destructuring$var5 = Object.assign({}, $jscomp$destructuring$var4);",
+            "    let m = $jscomp$destructuring$var5",
             "  }",
             "}"));
   }

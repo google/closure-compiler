@@ -24,6 +24,7 @@ import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES8;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES8_MODULES;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES_NEXT;
 
+import com.google.javascript.jscomp.Es6RewriteDestructuring.ObjectDestructuringRewriteMode;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.jscomp.PassFactory.HotSwapPassFactory;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
@@ -114,7 +115,8 @@ public class TranspilationPasses {
       passes.add(es6ConvertSuper);
       passes.add(es6RenameVariablesInParamLists);
       passes.add(es6SplitVariableDeclarations);
-      passes.add(es6RewriteDestructuring);
+      passes.add(
+          getEs6RewriteDestructuring(ObjectDestructuringRewriteMode.REWRITE_ALL_OBJECT_PATTERNS));
       passes.add(es6RewriteArrowFunction);
       passes.add(es6ExtractClasses);
       passes.add(es6RewriteClass);
@@ -125,6 +127,10 @@ public class TranspilationPasses {
         // TODO(b/73387406): Move each pass above here temporarily, then into
         // addEs6PostCheck Passes once the pass supports propagating type information
       }
+    } else if (options.needsTranspilationOf(Feature.OBJECT_PATTERN_REST)) {
+      passes.add(es6RenameVariablesInParamLists);
+      passes.add(es6SplitVariableDeclarations);
+      passes.add(getEs6RewriteDestructuring(ObjectDestructuringRewriteMode.REWRITE_OBJECT_REST));
     }
   }
 
@@ -198,7 +204,7 @@ public class TranspilationPasses {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES8;
+          return ES2018;
         }
       };
 
@@ -237,7 +243,7 @@ public class TranspilationPasses {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES8;
+          return ES2018;
         }
       };
 
@@ -250,7 +256,7 @@ public class TranspilationPasses {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES8;
+          return ES2018;
         }
       };
 
@@ -264,7 +270,7 @@ public class TranspilationPasses {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES8_MODULES;
+          return ES2018_MODULES;
         }
       };
 
@@ -294,18 +300,22 @@ public class TranspilationPasses {
         }
       };
 
-  static final HotSwapPassFactory es6RewriteDestructuring =
-      new HotSwapPassFactory("Es6RewriteDestructuring") {
-        @Override
-        protected HotSwapCompilerPass create(final AbstractCompiler compiler) {
-          return new Es6RewriteDestructuring(compiler);
-        }
+  static final HotSwapPassFactory getEs6RewriteDestructuring(
+      ObjectDestructuringRewriteMode rewriteMode) {
+    return new HotSwapPassFactory("Es6RewriteDestructuring") {
+      @Override
+      protected HotSwapCompilerPass create(final AbstractCompiler compiler) {
+        return new Es6RewriteDestructuring.Builder(compiler)
+            .setDestructuringRewriteMode(rewriteMode)
+            .build();
+      }
 
-        @Override
-        protected FeatureSet featureSet() {
-          return ES8;
-        }
-      };
+      @Override
+      protected FeatureSet featureSet() {
+        return ES2018;
+      }
+    };
+  }
 
   static final HotSwapPassFactory es6RenameVariablesInParamLists =
       new HotSwapPassFactory("Es6RenameVariablesInParamLists") {
@@ -316,7 +326,7 @@ public class TranspilationPasses {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES8;
+          return ES2018;
         }
       };
 
@@ -355,7 +365,7 @@ public class TranspilationPasses {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES8;
+          return ES2018;
         }
       };
 
@@ -381,9 +391,9 @@ public class TranspilationPasses {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES8;
+          return ES2018;
         }
-  };
+      };
 
   /** Injects runtime library code needed for transpiled ES6 code. */
   static final HotSwapPassFactory es6InjectRuntimeLibraries =

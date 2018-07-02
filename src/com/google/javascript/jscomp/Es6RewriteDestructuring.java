@@ -17,6 +17,7 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.javascript.jscomp.DiagnosticType.error;
 import static com.google.javascript.jscomp.Es6ToEs3Util.arrayFromIterator;
 import static com.google.javascript.jscomp.Es6ToEs3Util.makeIterator;
 
@@ -28,46 +29,155 @@ import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.TokenStream;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Deque;
+import java.util.Iterator;
 
 /**
- * Rewrites ES6 destructuring patterns and default parameters to valid ES3 code.
+ * Rewrites destructuring patterns and default parameters to valid ES3 code or to a different form
+ * of destructuring.
  */
+// TODO(mattmm): Rename class to drop Es6 prefix
 public final class Es6RewriteDestructuring implements NodeTraversal.Callback, HotSwapCompilerPass {
+
+  public static final DiagnosticType UNEXPECTED_DESTRUCTURING_REST_PARAMETER =
+      error(
+          "JSC_UNEXPECTED_DESTRUCTURING_REST_PARAMETER",
+          "Es6RewriteDestructuring not expecting object pattern rest parameter");
+
+  enum ObjectDestructuringRewriteMode {
+    /**
+     * Rewrite all object destructuring patterns. This is the default mode used if no
+     * ObjectDestructuringRewriteMode is provided to the Builder.
+     *
+     * <p>Used to transpile ES2018 -> ES5
+     */
+    REWRITE_ALL_OBJECT_PATTERNS,
+
+    /**
+     * Rewrite only destructuring patterns that contain object pattern rest properties (whether the
+     * rest is on the top level or nested within a property).
+     *
+     * <p>Used to transpile ES2018 -> ES2017
+     */
+    REWRITE_OBJECT_REST,
+  }
+
   private final AbstractCompiler compiler;
-  private static final FeatureSet transpiledFeatures =
-      FeatureSet.BARE_MINIMUM.with(
-          Feature.DEFAULT_PARAMETERS, Feature.DESTRUCTURING, Feature.ARRAY_PATTERN_REST);
+  private final ObjectDestructuringRewriteMode rewriteMode;
+
+  private final FeatureSet featuresToTriggerRunningPass;
+  private final FeatureSet featuresToMarkAsRemoved;
+
+  private final Deque<PatternNestingLevel> patternNestingStack = new ArrayDeque<>();
 
   static final String DESTRUCTURING_TEMP_VAR = "$jscomp$destructuring$var";
 
   private int destructuringVarCounter = 0;
 
-  public Es6RewriteDestructuring(AbstractCompiler compiler) {
-    this.compiler = compiler;
+  private Es6RewriteDestructuring(Builder builder) {
+    this.compiler = builder.compiler;
+    this.rewriteMode = builder.rewriteMode;
+
+    switch (this.rewriteMode) {
+      case REWRITE_ALL_OBJECT_PATTERNS:
+        this.featuresToTriggerRunningPass =
+            FeatureSet.BARE_MINIMUM.with(
+                Feature.DEFAULT_PARAMETERS, Feature.DESTRUCTURING, Feature.ARRAY_PATTERN_REST);
+
+        // If OBJECT_PATTERN_REST were to be present in featuresToTriggerRunningPass and not the
+        // input language featureSet (such as ES6=>ES5) the pass would be skipped.
+        this.featuresToMarkAsRemoved =
+            featuresToTriggerRunningPass.with(Feature.OBJECT_PATTERN_REST);
+        break;
+      case REWRITE_OBJECT_REST:
+        // TODO(bradfordcsmith): We shouldn't really need to remove default parameters for this
+        // case.
+        this.featuresToTriggerRunningPass =
+            FeatureSet.BARE_MINIMUM.with(Feature.DEFAULT_PARAMETERS, Feature.OBJECT_PATTERN_REST);
+        this.featuresToMarkAsRemoved = this.featuresToTriggerRunningPass;
+        break;
+      default:
+        throw new AssertionError(
+            "Es6RewriteDestructuring cannot handle ObjectDestructuringRewriteMode "
+                + this.rewriteMode);
+    }
+  }
+
+  static class Builder {
+
+    private final AbstractCompiler compiler;
+    private ObjectDestructuringRewriteMode rewriteMode =
+        ObjectDestructuringRewriteMode.REWRITE_ALL_OBJECT_PATTERNS;
+
+    public Builder(AbstractCompiler compiler) {
+      this.compiler = compiler;
+    }
+
+    public Builder setDestructuringRewriteMode(ObjectDestructuringRewriteMode rewriteMode) {
+      this.rewriteMode = rewriteMode;
+      return this;
+    }
+
+    public Es6RewriteDestructuring build() {
+      return new Es6RewriteDestructuring(this);
+    }
+  }
+
+  private static final class PatternNestingLevel {
+
+    final Node pattern;
+    boolean hasNestedObjectRest;
+
+    public PatternNestingLevel(Node pattern, boolean hasNestedRest) {
+      this.pattern = pattern;
+      this.hasNestedObjectRest = hasNestedRest;
+    }
   }
 
   @Override
   public void process(Node externs, Node root) {
-    TranspilationPasses.processTranspile(compiler, externs, transpiledFeatures, this);
-    TranspilationPasses.processTranspile(compiler, root, transpiledFeatures, this);
-    TranspilationPasses.maybeMarkFeaturesAsTranspiledAway(compiler, transpiledFeatures);
+    checkState(patternNestingStack.isEmpty());
+    TranspilationPasses.processTranspile(compiler, externs, featuresToTriggerRunningPass, this);
+    TranspilationPasses.processTranspile(compiler, root, featuresToTriggerRunningPass, this);
+    TranspilationPasses.maybeMarkFeaturesAsTranspiledAway(compiler, featuresToMarkAsRemoved);
+    checkState(patternNestingStack.isEmpty());
   }
 
   @Override
   public void hotSwapScript(Node scriptRoot, Node originalRoot) {
-    TranspilationPasses.hotSwapTranspile(compiler, scriptRoot, transpiledFeatures, this);
-    TranspilationPasses.maybeMarkFeaturesAsTranspiledAway(compiler, transpiledFeatures);
+    checkState(patternNestingStack.isEmpty());
+    TranspilationPasses.hotSwapTranspile(compiler, scriptRoot, featuresToTriggerRunningPass, this);
+    TranspilationPasses.maybeMarkFeaturesAsTranspiledAway(compiler, featuresToMarkAsRemoved);
+    checkState(patternNestingStack.isEmpty());
   }
 
   @Override
   public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
     switch (n.getToken()) {
       case FUNCTION:
-        visitFunction(t, n);
+        ensureArrowFunctionsHaveBlockBodies(t, n);
         break;
       case PARAM_LIST:
-        visitParamList(n, parent);
+        pullDestructuringOutOfParams(n, parent);
         break;
+      case ARRAY_PATTERN:
+      case OBJECT_PATTERN:
+        {
+          boolean hasRest = n.isObjectPattern() && n.hasChildren() && n.getLastChild().isRest();
+          if (!this.patternNestingStack.isEmpty() && hasRest) {
+            for (PatternNestingLevel level : patternNestingStack) {
+              if (level.hasNestedObjectRest) {
+                break;
+              }
+              level.hasNestedObjectRest = true;
+            }
+            this.patternNestingStack.peekLast().hasNestedObjectRest = true;
+          }
+          this.patternNestingStack.addLast(new PatternNestingLevel(n, hasRest));
+          break;
+        }
       default:
         break;
     }
@@ -83,6 +193,9 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
       case ARRAY_PATTERN:
       case OBJECT_PATTERN:
         visitPattern(t, n, parent);
+        if (n == this.patternNestingStack.getLast().pattern) {
+          this.patternNestingStack.removeLast();
+        }
         break;
       default:
         break;
@@ -92,7 +205,8 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
   /**
    * If the function is an arrow function, wrap the body in a block if it is not already a block.
    */
-  private void visitFunction(NodeTraversal t, Node function) {
+  // TODO(mattmm): This should be separated from this pass.
+  private void ensureArrowFunctionsHaveBlockBodies(NodeTraversal t, Node function) {
     Node body = function.getLastChild();
     if (!body.isBlock()) {
       body.detach();
@@ -102,10 +216,10 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
     }
   }
 
-  /**
-   * Processes trailing default and rest parameters.
-   */
-  private void visitParamList(Node paramList, Node function) {
+  /** Processes trailing default and rest of function parameters. */
+  // TODO(bradfordcsmith): Ideally if we're only removing OBJECT_REST, we should only do this when
+  // the parameter list contains a usage of OBJECT_REST.
+  private void pullDestructuringOutOfParams(Node paramList, Node function) {
     Node insertSpot = null;
     Node body = function.getLastChild();
     int i = 0;
@@ -227,7 +341,8 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
     } else if (parent.isRest()
         || parent.isStringKey()
         || parent.isArrayPattern()
-        || parent.isDefaultValue()) {
+        || parent.isDefaultValue()
+        || parent.isComputedProp()) {
       // Nested pattern; do nothing. We will visit it after rewriting the parent.
     } else if (NodeUtil.isEnhancedFor(parent) || NodeUtil.isEnhancedFor(parent.getParent())) {
       visitDestructuringPatternInEnhancedFor(pattern);
@@ -260,6 +375,24 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
   private void replaceObjectPattern(
       NodeTraversal t, Node objectPattern, Node rhs, Node parent, Node nodeToDetach) {
     String tempVarName = DESTRUCTURING_TEMP_VAR + (destructuringVarCounter++);
+    String restTempVarName = null;
+    // If the last child is a rest node we will want a list of the stated properties so we can
+    // exclude them from being written to the rest variable.
+    ArrayList<Node> propsToDeleteForRest = null;
+    if (objectPattern.hasChildren() && objectPattern.getLastChild().isRest()) {
+      propsToDeleteForRest = new ArrayList<>();
+      restTempVarName = DESTRUCTURING_TEMP_VAR + destructuringVarCounter++;
+    } else if (rewriteMode == ObjectDestructuringRewriteMode.REWRITE_OBJECT_REST) {
+      // We are configured to only break object pattern rest, but this destructure has none.
+      if (!this.patternNestingStack.peekLast().hasNestedObjectRest) {
+        // Replacement is performed after the post-order visit has reached the root pattern node, so
+        // peeking last represents if there is a rest property anywhere in the entire pattern. All
+        // nesting levels of lower levels have already been popped.
+        destructuringVarCounter--;
+        return;
+      }
+    }
+
     Node tempDecl = IR.var(IR.name(tempVarName), rhs.detach())
             .useSourceInfoIfMissingFromForTree(objectPattern);
     // TODO(tbreisacher): Remove the "if" and add this JSDoc unconditionally.
@@ -296,28 +429,64 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
           Node defaultValue = value.removeFirstChild();
           newRHS = defaultValueHook(getprop, defaultValue);
         }
+        if (propsToDeleteForRest != null) {
+          Node propName = IR.string(child.getString());
+          if (child.isQuotedString()) {
+            propName.setQuotedString();
+          }
+          propsToDeleteForRest.add(propName);
+        }
       } else if (child.isComputedProp()) {
-        if (child.getLastChild().isDefaultValue()) {
-          newLHS = child.getLastChild().removeFirstChild();
-          Node getelem = IR.getelem(IR.name(tempVarName), child.removeFirstChild());
-
+        boolean hasDefault = child.getLastChild().isDefaultValue();
+        Node defaultNode = null;
+        Node defaultValue = null;
+        Node propExpr = child.removeFirstChild();
+        if (hasDefault) {
+          defaultNode = child.getLastChild();
+          newLHS = defaultNode.removeFirstChild();
+          defaultValue = defaultNode.removeFirstChild();
+        } else {
+          newLHS = child.removeFirstChild();
+        }
+        if (propsToDeleteForRest != null) {
+          // A "...rest" variable is present and result of computation must be cached
+          String exprEvalTempVarName = DESTRUCTURING_TEMP_VAR + destructuringVarCounter++;
+          Node exprEvalDecl = IR.var(IR.name(exprEvalTempVarName), propExpr);
+          exprEvalDecl.useSourceInfoIfMissingFromForTree(child);
+          nodeToDetach.getParent().addChildBefore(exprEvalDecl, nodeToDetach);
+          propExpr = IR.name(exprEvalTempVarName);
+          propsToDeleteForRest.add(IR.name(exprEvalTempVarName));
+        }
+        if (hasDefault) {
+          Node getelem = IR.getelem(IR.name(tempVarName), propExpr);
           String intermediateTempVarName = DESTRUCTURING_TEMP_VAR + (destructuringVarCounter++);
           Node intermediateDecl = IR.var(IR.name(intermediateTempVarName), getelem);
           intermediateDecl.useSourceInfoIfMissingFromForTree(child);
           nodeToDetach.getParent().addChildBefore(intermediateDecl, nodeToDetach);
-
-          newRHS =
-              defaultValueHook(
-                  IR.name(intermediateTempVarName), child.getLastChild().removeFirstChild());
+          newRHS = defaultValueHook(IR.name(intermediateTempVarName), defaultValue);
         } else {
-          newRHS = IR.getelem(IR.name(tempVarName), child.removeFirstChild());
-          newLHS = child.removeFirstChild();
+          newRHS = IR.getelem(IR.name(tempVarName), propExpr);
         }
       } else if (child.isDefaultValue()) {
         newLHS = child.removeFirstChild();
         Node defaultValue = child.removeFirstChild();
         Node getprop = IR.getprop(IR.name(tempVarName), IR.string(newLHS.getString()));
         newRHS = defaultValueHook(getprop, defaultValue);
+        if (propsToDeleteForRest != null) {
+          propsToDeleteForRest.add(IR.stringKey(newLHS.getString()));
+        }
+      } else if (child.isRest()) {
+        if (next != null) {
+          throw new IllegalStateException("object rest may not be followed by any properties");
+        }
+        Node assignCall = IR.call(NodeUtil.newQName(compiler, "Object.assign"));
+        assignCall.addChildToBack(IR.objectlit());
+        assignCall.addChildToBack(IR.name(tempVarName));
+        Node restTempDecl = IR.var(IR.name(restTempVarName), assignCall);
+        restTempDecl.useSourceInfoIfMissingFromForTree(objectPattern);
+        nodeToDetach.getParent().addChildAfter(restTempDecl, tempDecl);
+        newLHS = IR.name(child.getOnlyChild().getString());
+        newRHS = objectPatternRestRHS(objectPattern, child, restTempVarName, propsToDeleteForRest);
       } else {
         throw new IllegalStateException("unexpected child");
       }
@@ -344,6 +513,52 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
   }
 
   /**
+   * Convert "rest" of object destructuring lhs by making a clone and deleting any properties that
+   * were stated in the original object pattern.
+   *
+   * <p>Nodes in statedProperties that are a stringKey will be used in a getprop when deleting. All
+   * other types will be used in a getelem such as what is done for computed properties.
+   *
+   * <pre>
+   *   {a, [foo()]:b, ...x} = rhs;
+   * becomes
+   *   var temp = rhs;
+   *   var temp1 = Object.assign({}, temp);
+   *   var temp2 = foo()
+   *   a = temp.a
+   *   b = temp[foo()]
+   *   x = (delete temp1.a, delete temp1[temp2], temp1);
+   * </pre>
+   *
+   * @param rest node representing the "...rest" of objectPattern
+   * @param restTempVarName name of var containing clone of result of rhs evaluation
+   * @param statedProperties list of properties to delete from the clone
+   */
+  private Node objectPatternRestRHS(
+      Node objectPattern, Node rest, String restTempVarName, ArrayList<Node> statedProperties) {
+    checkArgument(objectPattern.getLastChild() == rest);
+    Node result = IR.name(restTempVarName);
+    if (!statedProperties.isEmpty()) {
+      Iterator<Node> propItr = statedProperties.iterator();
+      Node comma = deletionNodeForRestProperty(restTempVarName, propItr.next());
+      while (propItr.hasNext()) {
+        comma = IR.comma(comma, deletionNodeForRestProperty(restTempVarName, propItr.next()));
+      }
+      result = IR.comma(comma, result);
+    }
+    result.useSourceInfoIfMissingFromForTree(rest);
+    return result;
+  }
+
+  private Node deletionNodeForRestProperty(String restTempVarName, Node property) {
+    boolean useSquareBrackets = !property.isString() || property.isQuotedString();
+    return new Node(
+        Token.DELPROP,
+        new Node(
+            useSquareBrackets ? Token.GETELEM : Token.GETPROP, IR.name(restTempVarName), property));
+  }
+
+  /**
    * Convert <pre>var [x, y] = rhs<pre> to:
    * <pre>
    *   var temp = $jscomp.makeIterator(rhs);
@@ -353,6 +568,13 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
    */
   private void replaceArrayPattern(
       NodeTraversal t, Node arrayPattern, Node rhs, Node parent, Node nodeToDetach) {
+
+    if (rewriteMode == ObjectDestructuringRewriteMode.REWRITE_OBJECT_REST) {
+      if (patternNestingStack.isEmpty() || !patternNestingStack.peekLast().hasNestedObjectRest) {
+        return;
+      }
+    }
+
     String tempVarName = DESTRUCTURING_TEMP_VAR + (destructuringVarCounter++);
     Node tempDecl = IR.var(
         IR.name(tempVarName),

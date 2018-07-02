@@ -19,6 +19,7 @@ package com.google.javascript.jscomp;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES8_MODULES;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import com.google.javascript.jscomp.Es6RewriteDestructuring.ObjectDestructuringRewriteMode;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import java.util.ArrayList;
 import java.util.List;
@@ -433,7 +434,10 @@ public final class MultiPassTest extends CompilerTestCase {
         new PassFactory("destructuringPass", true) {
           @Override
           protected CompilerPass create(final AbstractCompiler compiler) {
-            return new Es6RewriteDestructuring(compiler);
+            return new Es6RewriteDestructuring.Builder(compiler)
+                .setDestructuringRewriteMode(
+                    ObjectDestructuringRewriteMode.REWRITE_ALL_OBJECT_PATTERNS)
+                .build();
           }
 
           @Override
