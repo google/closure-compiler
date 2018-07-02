@@ -1368,10 +1368,19 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
           }
 
         case GETPROP:
-          if (n.matchesQualifiedName(MODULE + ".id")) {
+          if (n.matchesQualifiedName(MODULE + ".id")
+              || n.matchesQualifiedName(MODULE + ".filename")) {
             Var v = t.getScope().getVar(MODULE);
             if (v == null || v.isExtern()) {
               n.replaceWith(IR.string(t.getInput().getPath().toString()).useSourceInfoFrom(n));
+            }
+          } else if (allowFullRewrite
+              && n.getFirstChild().isName()
+              && n.getFirstChild().getString().equals(MODULE)
+              && !n.matchesQualifiedName(MODULE + "." + EXPORTS)) {
+            Var v = t.getScope().getVar(MODULE);
+            if (v == null || v.isExtern()) {
+              n.getFirstChild().replaceWith(IR.objectlit().useSourceInfoFrom(n.getFirstChild()));
             }
           }
           break;
