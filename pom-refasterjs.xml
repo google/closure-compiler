@@ -24,7 +24,7 @@
   <packaging>jar</packaging>
 
   <name>Closure Compiler RefasterJS</name>
-  <version>1.0-SNAPSHOT</version>
+  <version>v20180701.webpack-beta</version>
 
   <url>https://developers.google.com/closure/compiler/</url>
   <description>
@@ -43,7 +43,7 @@
   <parent>
     <groupId>com.google.javascript</groupId>
     <artifactId>closure-compiler-main</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>v20180701.webpack-beta</version>
     <relativePath>pom-main.xml</relativePath>
   </parent>
 
