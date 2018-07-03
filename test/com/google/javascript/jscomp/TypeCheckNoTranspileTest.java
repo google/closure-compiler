@@ -2838,9 +2838,18 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
     testTypes("async function f() { return 3; }");
   }
 
-  public void testAsyncFunctionInferredToReturnPromise() {
+  public void testAsyncFunctionInferredToReturnPromise_noExplicitReturns() {
     testTypes(
         "async function f() {} var /** null */ n = f();",
+        lines(
+            "initializing variable", // preserve newline
+            "found   : Promise<undefined>",
+            "required: null"));
+  }
+
+  public void testAsyncFunctionInferredToReturnPromise_withExplicitReturns() {
+    testTypes(
+        "async function f() { return 3; } var /** null */ n = f();",
         lines(
             "initializing variable", // preserve newline
             "found   : Promise<?>",
@@ -3102,5 +3111,19 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "actual parameter 1 of takesNumber does not match formal parameter",
             "found   : (null|number)",
             "required: number"));
+  }
+
+  public void testAwaitThenable() {
+    // awaiting something with a .then property that does not implement IThenable results in the
+    // unknown type. This matches the behavior of IThenable.then(...)
+    // Thus the call to takesNumber below doesn't cause a type error, although at runtime
+    // `await thenable` evaluates to `thenable`, since `thenable.then` is not a function.
+    testTypes(
+        lines(
+            "function takesNumber(/** number */ n) {}",
+            "",
+            "async function f(/** {then: string} */ thenable) {",
+            "  takesNumber(await thenable);",
+            "}"));
   }
 }

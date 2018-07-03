@@ -760,13 +760,11 @@ final class FunctionTypeBuilder {
       returnType =
           typeRegistry.createTemplatizedType(
               generatorType, typeRegistry.getNativeType(UNKNOWN_TYPE));
-    } else if (contents.getSourceNode() != null && contents.getSourceNode().isAsyncFunction()) {
-      // Set the return type of an async function to:
-      //   @return {!Promise<?>}
-      ObjectType promiseType = typeRegistry.getNativeObjectType(PROMISE_TYPE);
-      returnType =
-          typeRegistry.createTemplatizedType(promiseType, typeRegistry.getNativeType(UNKNOWN_TYPE));
-    } else if (!contents.mayHaveNonEmptyReturns()
+      return;
+    }
+
+    JSType inferredReturnType = typeRegistry.getNativeType(UNKNOWN_TYPE);
+    if (!contents.mayHaveNonEmptyReturns()
         && !contents.mayHaveSingleThrow()
         && !contents.mayBeFromExterns()) {
       // Infer return types for non-generator functions.
@@ -779,10 +777,17 @@ final class FunctionTypeBuilder {
       // So we only infer in cases where the user doesn't expect to write
       // @return annotations--when it's very obvious that the function returns
       // nothing.
-      returnType = typeRegistry.getNativeType(VOID_TYPE);
+      inferredReturnType = typeRegistry.getNativeType(VOID_TYPE);
       returnTypeInferred = true;
+    }
+
+    if (contents.getSourceNode() != null && contents.getSourceNode().isAsyncFunction()) {
+      // Set the return type of an async function:
+      //   @return {!Promise<?>} or @return {!Promise<undefined>}
+      ObjectType promiseType = typeRegistry.getNativeObjectType(PROMISE_TYPE);
+      returnType = typeRegistry.createTemplatizedType(promiseType, inferredReturnType);
     } else {
-      returnType = typeRegistry.getNativeType(UNKNOWN_TYPE);
+      returnType = inferredReturnType;
     }
   }
 
@@ -792,6 +797,7 @@ final class FunctionTypeBuilder {
   FunctionType buildAndRegister() {
     if (returnType == null) {
       provideDefaultReturnType();
+      checkNotNull(returnType);
     }
 
     if (parametersNode == null) {

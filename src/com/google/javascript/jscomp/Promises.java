@@ -41,8 +41,7 @@ final class Promises {
    */
   static final JSType getTemplateTypeOfThenable(JSTypeRegistry registry, JSType maybeThenable) {
     return maybeThenable
-        // TODO(lharker): if we ban declaring async functions to return nullable promises/thenables
-        // then we should remove this .restrictByNotNullOrUndefined()
+        // Without ".restrictByNotNullOrUndefined" we'd get the unknown type for "?IThenable<null>"
         .restrictByNotNullOrUndefined()
         .getInstantiatedTypeArgument(registry.getNativeType(JSTypeNative.I_THENABLE_TYPE));
   }
@@ -87,6 +86,12 @@ final class Promises {
       // type annotation (not here, maybe in TypeCheck). A Promise cannot resolve to another Promise
       return getResolvedType(
           registry, templates.getResolvedTemplateType(registry.getIThenableTemplate()));
+    }
+
+    // Awaiting anything with a ".then" property (other than IThenable, handled above) should return
+    // unknown, rather than the type itself.
+    if (type.isSubtypeOf(registry.getNativeType(JSTypeNative.THENABLE_TYPE))) {
+      return registry.getNativeType(JSTypeNative.UNKNOWN_TYPE);
     }
 
     return type;
