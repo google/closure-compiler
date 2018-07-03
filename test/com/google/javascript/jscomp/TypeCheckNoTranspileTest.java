@@ -2218,6 +2218,22 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "required: Foo"));
   }
 
+  public void testClassExtendsFunctionCallOverridesMethod() {
+    testTypes(
+        lines(
+            "class Foo {",
+            "  /** @return {number} */ foo() {}",
+            "}",
+            "/** @return {function(new:Foo)} */",
+            "function mixin() {}",
+            "class Bar extends mixin() {",
+            "  /** @override */",
+            "  foo() {}",
+            "}"),
+        // TODO(sdh): We should respect the type of the function return if possible.
+        "property foo not defined on any superclass of Bar");
+  }
+
   public void testClassImplementsInterface() {
     testTypes(
         lines(
@@ -2249,6 +2265,18 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "class Bar {}"),
         // TODO(sdh): allow this without error, provided we can get the error on the concrete class
         "property foo on interface Foo is not implemented by type Bar");
+  }
+
+  public void testClassMissingOverrideAnnotationForInterfaceMethod() {
+    testTypes(
+        lines(
+            "/** @interface */",
+            "class Foo { foo() {} }",
+            "/** @implements {Foo} */",
+            "class Bar {",
+            "  foo() {}",
+            "}"),
+        "property foo already defined on interface Foo; use @override to override it");
   }
 
   public void testClassIncompatibleInterfaceMethodImplementation() {
@@ -2557,6 +2585,19 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
         "Property m never defined on C");
   }
 
+  public void testClassInstanceMethodOverriddenWithMissingOverrideAnnotation() {
+    testTypes(
+        lines(
+            "class Base {",
+            "  /** @param {string|number} arg */",
+            "  method(arg) {}",
+            "}",
+            "class Sub extends Base {",
+            "  method(arg) {}",
+            "}"),
+        "property method already defined on superclass Base; use @override to override it");
+  }
+
   public void testClassInstanceMethodOverriddenWithWidenedType() {
     testTypes(
         lines(
@@ -2568,6 +2609,42 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "  /** @override @param {string|number} arg */",
             "  method(arg) {}",
             "}"));
+  }
+
+  public void testClassInstanceMethodOverriddenWithIncompatibleType() {
+    testTypes(
+        lines(
+            "class Base {",
+            "  /** @param {string|number} arg */",
+            "  method(arg) {}",
+            "}",
+            "class Sub extends Base {",
+            "  /** @override @param {string} arg */",
+            "  method(arg) {}",
+            "}"),
+        lines(
+            "mismatch of the method property type and the type of the property it overrides "
+                + "from superclass Base",
+            "original: function(this:Base, (number|string)): undefined",
+            "override: function(this:Sub, string): undefined"));
+  }
+
+  public void testClassInstanceMethodOverriddenWithIncompatibleType2() {
+    testTypes(
+        lines(
+            "class Base {",
+            "  /** @return {string} */",
+            "  method() {}",
+            "}",
+            "class Sub extends Base {",
+            "  /** @override @return {string|number} */",
+            "  method() {}",
+            "}"),
+        lines(
+            "mismatch of the method property type and the type of the property it overrides "
+                + "from superclass Base",
+            "original: function(this:Base): string",
+            "override: function(this:Sub): (number|string)"));
   }
 
   public void testClassStaticMethodOverriddenWithWidenedType() {
@@ -2709,6 +2786,28 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "initializing variable",
             "found   : string",
             "required: null"));
+  }
+
+  public void testClassSuperMethodFromDifferentMethod() {
+    testTypes(
+        lines(
+            "class Foo {",
+            "  /** @return {string} */",
+            "  foo() {}",
+            "}",
+            "class Bar extends Foo {",
+            "  /** @override */",
+            "  bar() {",
+            "    var /** null */ x = super.foo();",
+            "  }",
+            "}"),
+        // TODO(sdh): This should allow the call to super.foo but cause a type error.
+        new String[] {
+          "property bar not defined on any superclass of Bar",
+          lines(
+              "initializing variable",
+              "found   : string",
+              "required: null")});
   }
 
   public void testClassSuperMethodNotWidenedWhenOverrideWidens() {

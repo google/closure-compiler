@@ -879,9 +879,17 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       case FOR:
       case TEMPLATELIT_SUB:
       case REST:
-      case CLASS_MEMBERS:
         typeable = false;
         break;
+
+      case CLASS_MEMBERS: {
+        JSType typ = parent.getJSType().toMaybeFunctionType().getInstanceType();
+        for (Node child = n.getFirstChild(); child != null; child = child.getNext()) {
+          visitObjectOrClassLiteralKey(t, child, n.getParent(), typ);
+        }
+        typeable = false;
+        break;
+      }
 
       case FOR_IN:
         Node obj = n.getSecondChild();
@@ -917,7 +925,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         if (n.isObjectLit()) {
           JSType typ = getJSType(n);
           for (Node key : n.children()) {
-            visitObjLitKey(t, key, n, typ);
+            visitObjectOrClassLiteralKey(t, key, n, typ);
           }
         }
         break;
@@ -1176,31 +1184,48 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     // As-is, this misses many other ways to override a property.
     //
     // object.prototype = { key: function() {} };
-    FunctionType ctorType = type.getOwnerFunction();
-    if (ctorType == null || (!ctorType.isConstructor() && !ctorType.isInterface())) {
+    checkPropertyInheritance(t, key, propertyName, type.getOwnerFunction(), type);
+  }
+
+  private void checkPropertyInheritanceOnClassMember(
+      NodeTraversal t, Node key, String propertyName, FunctionType ctorType) {
+    if (key.isStaticMember()) {
+      // TODO(sdh): Handle static members later - will probably need to add an extra boolean
+      // parameter to checkDeclaredPropertyInheritance, as well as an extra case to getprop
+      // assigns to check if the owner's type is an ES6 constructor.  Put it off for now
+      // because it's a change in behavior from transpiled code and it may break things.
       return;
     }
+    ObjectType owner = key.isStaticMember() ? ctorType : ctorType.getInstanceType();
+    checkPropertyInheritance(t, key, propertyName, ctorType, owner);
+  }
 
-    JSType propertyType = type.getPropertyType(propertyName);
-    checkDeclaredPropertyInheritance(
-        t, key.getFirstChild(), ctorType, propertyName,
-        key.getJSDocInfo(), propertyType);
+  private void checkPropertyInheritance(
+      NodeTraversal t, Node key, String propertyName, FunctionType ctorType, ObjectType type) {
+    if (ctorType != null && (ctorType.isConstructor() || ctorType.isInterface())) {
+      checkDeclaredPropertyInheritance(
+          t, key.getFirstChild(), ctorType, propertyName,
+          key.getJSDocInfo(), type.getPropertyType(propertyName));
+    }
   }
 
   /**
-   * Visits an object literal field definition <code>key : value</code>.
+   * Visits an object literal field definition <code>key : value</code>, or a class member
+   * definition <code>key() { ... }</code>
    *
    * If the <code>lvalue</code> is a prototype modification, we change the
    * schema of the object type it is referring to.
    *
    * @param t the traversal
-   * @param key the assign node
+   * @param key the ASSIGN, STRING_KEY, MEMBER_FUNCTION_DEF, or COMPUTED_PROPERTY node
+   * @param owner the parent node, either OBJECTLIT or CLASS_MEMBERS
+   * @param litType the instance type of the enclosing object/class
    */
-  private void visitObjLitKey(
-      NodeTraversal t, Node key, Node objlit, JSType litType) {
+  private void visitObjectOrClassLiteralKey(
+      NodeTraversal t, Node key, Node owner, JSType litType) {
     // Do not validate object lit value types in externs. We don't really care,
     // and it makes it easier to generate externs.
-    if (objlit.isFromExterns()) {
+    if (owner.isFromExterns()) {
       ensureTyped(key);
       return;
     }
@@ -1230,10 +1255,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       rightType = getNativeType(UNKNOWN_TYPE);
     }
 
-    Node owner = objlit;
-
     // Validate value is assignable to the key type.
-
     JSType keyType = getJSType(key);
 
     JSType allowedValueType = keyType;
@@ -1252,17 +1274,21 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     }
 
     // Validate that the key type is assignable to the object property type.
-    // This is necessary as the objlit may have been cast to a non-literal
+    // This is necessary as the owner may have been cast to a non-literal
     // object type.
     // TODO(johnlenz): consider introducing a CAST node to the AST (or
     // perhaps a parentheses node).
 
-    JSType objlitType = getJSType(objlit);
+    JSType objlitType = getJSType(owner);
     ObjectType type = ObjectType.cast(
         objlitType.restrictByNotNullOrUndefined());
     if (type != null) {
       String property = NodeUtil.getObjectLitKeyName(key);
-      checkPropertyInheritanceOnPrototypeLitKey(t, key, property, type);
+      if (owner.isClass()) {
+        checkPropertyInheritanceOnClassMember(t, key, property, type.toMaybeFunctionType());
+      } else {
+        checkPropertyInheritanceOnPrototypeLitKey(t, key, property, type);
+      }
       // TODO(lharker): add a unit test for the following if case or remove it.
       // Removing the check doesn't break any unit tests, but it does have coverage in
       // our coverage report.
