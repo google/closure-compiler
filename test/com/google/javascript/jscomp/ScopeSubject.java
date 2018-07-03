@@ -43,7 +43,10 @@ import javax.annotation.Nullable;
 public final class ScopeSubject extends Subject<ScopeSubject, AbstractScope<?, ?>> {
   @CheckReturnValue
   public static ScopeSubject assertScope(AbstractScope<?, ?> scope) {
-    return assertAbout(ScopeSubject::new).that(scope);
+    // NB: Eclipse's Java compiler bails on just passing ScopeSubject::new below, so wrap it in a
+    // Closure.
+    return assertAbout((FailureMetadata fm, AbstractScope<?, ?> s) -> new ScopeSubject(fm, s))
+        .that(scope);
   }
 
   private ScopeSubject(FailureMetadata failureMetadata, AbstractScope<?, ?> scope) {

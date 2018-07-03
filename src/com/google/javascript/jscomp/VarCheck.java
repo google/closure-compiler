@@ -209,8 +209,9 @@ class VarCheck extends AbstractPostOrderCallback implements
           // where b is defined in a module's export entries but not in any module scope.
         } else {
           boolean isArguments = scope.isFunctionScope() && ARGUMENTS.equals(varName);
+          boolean isTypeOf = parent.isTypeOf();
           // The extern checks are stricter, don't report a second error.
-          if (!isArguments && !(strictExternCheck && t.getInput().isExtern())) {
+          if (!isArguments && !isTypeOf && !(strictExternCheck && t.getInput().isExtern())) {
             t.report(n, UNDEFINED_VAR_ERROR, varName);
           }
 

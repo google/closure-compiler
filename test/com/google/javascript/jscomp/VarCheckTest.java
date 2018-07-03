@@ -109,6 +109,15 @@ public final class VarCheckTest extends CompilerTestCase {
     testError("x = 0;", VarCheck.UNDEFINED_VAR_ERROR);
   }
 
+  public void testReferencedVarNotDefined_typeof() {
+    // typeof x !== 'undefined' is the strict mode compliant way to check for a variable's
+    // existence.
+    testSame("if (typeof undeclaredVariable !== 'undefined') {}");
+    // Regression test: the exact pattern emitted by TypeScript to reference possibly declared
+    // generic type variables in decorator emit.
+    testSame("var _a; typeof (_a = typeof Value !== \"undefined\" && Value) === \"function\"");
+  }
+
   public void testReferencedVarNotDefined_arrowFunctionBody() {
     testError("() => y", VarCheck.UNDEFINED_VAR_ERROR);
   }
