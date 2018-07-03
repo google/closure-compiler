@@ -930,6 +930,7 @@ public final class AstValidator implements CompilerPass {
       if (c.isRest()) {
         validateRestParameters(Token.PARAM_LIST, c);
       } else if (c.isDefaultValue()) {
+        validateFeature(Feature.DEFAULT_PARAMETERS, c);
         validateDefaultValue(Token.PARAM_LIST, c);
       } else {
         if (c.isName()) {
@@ -944,7 +945,6 @@ public final class AstValidator implements CompilerPass {
   }
 
   private void validateDefaultValue(Token contextType, Node n) {
-    validateFeature(Feature.DEFAULT_PARAMETERS, n);
     validateChildCount(n);
     validateLHS(contextType, n.getFirstChild());
     validateExpression(n.getLastChild());

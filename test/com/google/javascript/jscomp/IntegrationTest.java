@@ -5230,6 +5230,31 @@ public final class IntegrationTest extends IntegrationTestCase {
     test(options, "for (const [x] = [], {y} = {}, z = 2;;) {}", Es6ToEs3Util.CANNOT_CONVERT_YET);
   }
 
+  public void testDefaultParameterRemoval() {
+    CompilerOptions options = createCompilerOptions();
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2017);
+    test(
+        options,
+        "foo = { func: (params = {}) => { console.log(params); } }",
+        "foo = { func: (params = {}) => { console.log(params); } }");
+
+    // TODO(bradfordcsmith): Default params are removed if source code uses 2018 features because of
+    // doesScriptHaveUnsupportedFeatures in processTranspile. This "sometimes-removal" of default
+    // parameters in Es6RewriteDestructuring really needs to be avoided.
+    test(
+        options,
+        "let {...foo} = { func: (params = {}) => { console.log(params); } }",
+        lines(
+            "var $jscomp$destructuring$var0 = {",
+            "  func:(params)=>{",
+            "    params=params===undefined?{}:params;",
+            "    console.log(params);",
+            "  }};",
+            "var $jscomp$destructuring$var1 = Object.assign({},$jscomp$destructuring$var0);",
+            "let foo=$jscomp$destructuring$var1"));
+  }
+
   public void testAsyncIter() {
     CompilerOptions options = createCompilerOptions();
     options.setLanguageIn(LanguageMode.ECMASCRIPT_2018);

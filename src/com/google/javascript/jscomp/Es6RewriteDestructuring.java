@@ -95,7 +95,7 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
         // TODO(bradfordcsmith): We shouldn't really need to remove default parameters for this
         // case.
         this.featuresToTriggerRunningPass =
-            FeatureSet.BARE_MINIMUM.with(Feature.DEFAULT_PARAMETERS, Feature.OBJECT_PATTERN_REST);
+            FeatureSet.BARE_MINIMUM.with(Feature.OBJECT_PATTERN_REST);
         this.featuresToMarkAsRemoved = this.featuresToTriggerRunningPass;
         break;
       default:
