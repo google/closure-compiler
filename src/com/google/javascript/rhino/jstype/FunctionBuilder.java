@@ -40,8 +40,10 @@
 package com.google.javascript.rhino.jstype;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.FunctionType.Kind;
+import java.util.Set;
 
 /**
  * A builder class for function and arrow types.
@@ -65,9 +67,9 @@ public final class FunctionBuilder {
   private Node parametersNode = null;
   private JSType returnType = null;
   private JSType typeOfThis = null;
-  private ObjectType implicitPrototype = null;
   private ObjectType setPrototypeBasedOn = null;
   private TemplateTypeMap templateTypeMap = null;
+  private Set<TemplateType> constructorOnlyKeys = ImmutableSet.of();
   private Kind kind = Kind.ORDINARY;
   private int properties = 0;
 
@@ -137,8 +139,7 @@ public final class FunctionBuilder {
   }
 
   /** Set the template name. */
-  public FunctionBuilder withTemplateKeys(
-      ImmutableList<TemplateType> templateKeys) {
+  public FunctionBuilder withTemplateKeys(ImmutableList<TemplateType> templateKeys) {
     this.templateTypeMap = registry.createTemplateTypeMap(templateKeys, null);
     return this;
   }
@@ -158,6 +159,15 @@ public final class FunctionBuilder {
 
   FunctionBuilder withTemplateTypeMap(TemplateTypeMap templateTypeMap) {
     this.templateTypeMap = templateTypeMap;
+    return this;
+  }
+
+  /**
+   * Specifies a subset of the template keys that only apply to the constructor, and should be
+   * removed from the instance type.  These keys must still be passed to {@link #withTemplateKeys}.
+   */
+  public FunctionBuilder withConstructorTemplateKeys(Iterable<TemplateType> constructorOnlyKeys) {
+    this.constructorOnlyKeys = ImmutableSet.copyOf(constructorOnlyKeys);
     return this;
   }
 
@@ -211,7 +221,6 @@ public final class FunctionBuilder {
     this.templateTypeMap = otherType.getTemplateTypeMap();
     this.kind = otherType.getKind();
     this.properties = isNative | isAbstract | inferredReturnType;
-    this.implicitPrototype = otherType.getImplicitPrototype();
     return this;
   }
 
@@ -222,6 +231,12 @@ public final class FunctionBuilder {
     boolean isNative = (properties & IS_NATIVE) != 0;
     boolean isAbstract = (properties & IS_ABSTRACT) != 0;
     boolean returnsOwnInstanceType = (properties & RETURNS_OWN_INSTANCE_TYPE) != 0;
+    boolean hasConstructorOnlyKeys = !constructorOnlyKeys.isEmpty();
+    if (hasConstructorOnlyKeys) {
+      // We can't pass in the correct this type yet because it depends on the finished constructor.
+      // Instead, just pass in unknown so that it doesn't try to instantiate a new instance type.
+      typeOfThis = registry.getNativeObjectType(JSTypeNative.UNKNOWN_TYPE);
+    }
     FunctionType ft = new FunctionType(
         registry,
         name,
@@ -237,6 +252,11 @@ public final class FunctionBuilder {
     }
     if (returnsOwnInstanceType) {
       ft.getInternalArrowType().returnType = ft.getInstanceType();
+    }
+    if (hasConstructorOnlyKeys) {
+      ft.setInstanceType(
+          new InstanceObjectType(
+              registry, ft, isNative, templateTypeMap.remove(constructorOnlyKeys)));
     }
     return ft;
   }

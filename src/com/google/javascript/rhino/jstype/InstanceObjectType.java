@@ -55,11 +55,17 @@ class InstanceObjectType extends PrototypeObjectType {
     this(registry, constructor, false);
   }
 
-  InstanceObjectType(JSTypeRegistry registry, FunctionType constructor,
-                     boolean isNativeType) {
-    super(registry, null, null, isNativeType, constructor.getTemplateTypeMap());
-    checkNotNull(constructor);
-    this.constructor = constructor;
+  InstanceObjectType(JSTypeRegistry registry, FunctionType constructor, boolean isNativeType) {
+    this(registry, constructor, isNativeType, constructor.getTemplateTypeMap());
+  }
+
+  InstanceObjectType(
+      JSTypeRegistry registry,
+      FunctionType constructor,
+      boolean isNativeType,
+      TemplateTypeMap templateTypeMap) {
+    super(registry, null, null, isNativeType, templateTypeMap);
+    this.constructor = checkNotNull(constructor);
   }
 
   @Override

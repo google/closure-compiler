@@ -46,6 +46,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.javascript.rhino.jstype.JSType.EqCache;
 import com.google.javascript.rhino.jstype.JSType.SubtypingMode;
 import java.io.Serializable;
+import java.util.Set;
 
 /**
  * Manages a mapping from TemplateType to its resolved JSType. Provides utility
@@ -333,6 +334,22 @@ public class TemplateTypeMap implements Serializable {
 
     return registry.createTemplateTypeMap(
         templateKeys, concatImmutableLists(templateValues, newValues));
+  }
+
+  /**
+   * Returns a new TemplateTypeMap with the given template types removed. Keys will only be removed
+   * if they are unmapped.
+   */
+  TemplateTypeMap remove(Set<TemplateType> toRemove) {
+    ImmutableList.Builder<TemplateType> keys = ImmutableList.builder();
+    keys.addAll(templateKeys.subList(0, templateValues.size()));
+    for (int i = templateValues.size(); i < templateKeys.size(); i++) {
+      TemplateType key = templateKeys.get(i);
+      if (!toRemove.contains(key)) {
+        keys.add(key);
+      }
+    }
+    return registry.createTemplateTypeMap(keys.build(), templateValues);
   }
 
   /**

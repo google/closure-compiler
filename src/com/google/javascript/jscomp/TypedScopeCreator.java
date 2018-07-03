@@ -957,6 +957,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
               .usingClassSyntax()
               .setContents(new AstFunctionContents(n))
               .setDeclarationScope(lvalueNode != null ? getLValueRootScope(lvalueNode) : null)
+              .inferKind(info)
               .inferTemplateTypeName(info, null);
 
       Node extendsClause = n.getSecondChild();
@@ -978,13 +979,13 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
         //       BLOCK ...
         // NodeUtil.getFirstPropMatchingKey returns the FUNCTION node.
         JSDocInfo ctorInfo = NodeUtil.getBestJSDocInfo(constructor);
-        builder.inferParameterTypes(constructor.getSecondChild(), ctorInfo);
+        builder.inferConstructorParameters(constructor.getSecondChild(), ctorInfo);
       } else if (extendsClause.isEmpty()) {
         // No explicit constructor and no superclass: constructor is no-args.
         builder.inferImplicitConstructorParameters(new Node(Token.PARAM_LIST));
       } else {
-        // No explicit constructor, but we have a superclass.  If we know it's type, then copy its
-        // constructor arguments.  If not, make the constructor arguments unknown.
+        // No explicit constructor, but we have a superclass.  If we know its type, then copy its
+        // constructor arguments (and templates).  If not, make the constructor arguments unknown.
         // TODO(sdh): consider allowing attaching constructor @param annotations somewhere else?
         FunctionType extendsCtor = baseType != null ? baseType.getConstructor() : null;
         if (extendsCtor != null) {
@@ -1150,6 +1151,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
               .setContents(contents)
               .setDeclarationScope(lvalueNode != null ? getLValueRootScope(lvalueNode) : null)
               .inferFromOverriddenFunction(overriddenType, parametersNode)
+              .inferKind(info)
               .inferTemplateTypeName(info, prototypeOwner)
               .inferInheritance(info, null);
 
@@ -1254,7 +1256,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
      * Creates a new enum type, based on the given nodes.
      *
      * <p>This handles two cases that are semantically very different, but are not mutually
-     * exclusive: - An object literal that needs an enum type attached to it. - An assignment
+     * exclusive: (1) An object literal that needs an enum type attached to it. (2) An assignment
      * expression with an enum tag in the JsDoc.
      *
      * <p>This function will always create an enum type, so only call it if you're sure that's what

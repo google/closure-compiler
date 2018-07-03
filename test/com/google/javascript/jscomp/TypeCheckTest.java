@@ -20338,8 +20338,6 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   }
 
   public void testClassTtlParamsInMethodBody() {
-    // NOTE: TTL is not supported in class templates, so this does not work.
-    // This test simply documents this fact.
     testTypes(
         lines(
             "/** @constructor @template T := 'number' =: */",
@@ -20347,19 +20345,23 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "Foo.prototype.foo = function() {",
             "  var /** T */ x;",
             "};"),
-        "Bad type annotation. Unknown type T");
+        new String[] {
+          "Template type transformation T not allowed on classes or interfaces",
+          "Bad type annotation. Unknown type T",
+        });
   }
 
   public void testClassTtlParamsInMethodSignature() {
-    // NOTE: TTL is not supported in class templates, so this does not work.
-    // This test simply documents this fact.
     testTypes(
         lines(
             "/** @constructor @template T := 'number' =: */",
             "function Foo() {}",
             "/** @return {T} */",
             "Foo.prototype.foo = function() {};"),
-        "Bad type annotation. Unknown type T");
+        new String[] {
+          "Template type transformation T not allowed on classes or interfaces",
+          "Bad type annotation. Unknown type T",
+        });
   }
 
   public void testFunctionTemplateParamsInBody() {

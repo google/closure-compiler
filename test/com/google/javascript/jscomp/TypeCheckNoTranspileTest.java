@@ -1917,6 +1917,29 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "var /** !Foo<string> */ y = x;"));
   }
 
+  public void testClassWithTemplatizedConstructorTooManyTypeParameters() {
+    // TODO(sdh): This should give a warning about too many type parameters.
+    testTypes(
+        lines(
+            "class Foo {",
+            "  /** @template T */ constructor() {}",
+            "}", //
+            "var /** !Foo<number> */ x = new Foo();",
+            "var /** !Foo<string> */ y = x;"));
+  }
+
+  public void testClassWithTemplatizedClassAndConstructorTooManyTypeParameters() {
+    // TODO(sdh): This should give a warning about too many type parameters.
+    testTypes(
+        lines(
+            "/** @template T */",
+            "class Foo {",
+            "  /** @template U */ constructor() {}",
+            "}", //
+            "var /** !Foo<number, number> */ x = new Foo();",
+            "var /** !Foo<number, string> */ y = x;"));
+  }
+
   public void testClassDeclarationWithExtends() {
     testTypes(
         lines(
@@ -2379,8 +2402,57 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "var /** !Foo<string, number> */ y = x;"));
   }
 
+  public void testClassConstructorTypeParametersNotVisibleFromOtherMethods() {
+    testTypes(
+        lines(
+            "class Foo {",
+            "  /** @template T */",
+            "  constructor() {}",
+            "  foo() {",
+            "    var /** T */ x;",
+            "  }",
+            "}"),
+        "Bad type annotation. Unknown type T");
+  }
+
+  public void testClassTtlNotAllowedOnClass() {
+    testTypes(
+        "/** @template T := 'number' =: */ class Foo {}",
+        "Template type transformation T not allowed on classes or interfaces");
+  }
+
+  public void testClassTtlAllowedOnConstructor() {
+    // TODO(sdh): Induce a mismatch by assigning T to null, once typevars aren't treated as unknown
+    testTypes(
+        lines(
+            "class Foo {",
+            "  /**",
+            "   * @param {T} arg",
+            "   * @template T := 'number' =:",
+            "   */",
+            "  constructor(arg) {",
+            "    var /** T */ x = arg;",
+            "  }",
+            "}"));
+  }
+
+  public void testClassTtlAllowedOnMethod() {
+    testTypes(
+        lines(
+            "class Foo {",
+            "  /** @template T := 'number' =: */",
+            "  foo(/** T */ arg) {",
+            "    var /** T */ x = arg;",
+            "  }",
+            "}",
+            "new Foo().foo('x')"),
+        lines(
+            "actual parameter 1 of Foo.prototype.foo does not match formal parameter",
+            "found   : string",
+            "required: number"));
+  }
+
   public void testClassConstructorTypeParametersChecked() {
-    // TODO(sdh): This should *not* give an error.
     testTypes(
         lines(
             "/** @template T */",
@@ -2391,15 +2463,10 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "/** @param {string} arg",
             "    @return {number} */",
             "function f(arg) {}",
-            "var /** !Foo<number> */ foo = new Foo('x', f);"),
-        new String[] {
-          "Bad type annotation. Unknown type U",
-          "Bad type annotation. Unknown type U",
-        });
+            "var /** !Foo<number> */ foo = new Foo('x', f);"));
   }
 
   public void testClassConstructorTypeParametersWithClassTypeMismatch() {
-    // TODO(sdh): This should only fail with the type mismatch error.
     testTypes(
         lines(
             "/** @template T */",
@@ -2411,18 +2478,13 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "    @return {number} */",
             "function f(arg) {}",
             "var /** !Foo<string> */ foo = new Foo('x', f);"),
-        new String[] {
-          "Bad type annotation. Unknown type U",
-          "Bad type annotation. Unknown type U",
-          lines(
-              "initializing variable", //
-              "found   : Foo<number>",
-              "required: Foo<string>"),
-        });
+        lines(
+            "initializing variable", //
+            "found   : Foo<number>",
+            "required: Foo<string>"));
   }
 
   public void testClassConstructorTypeParametersWithParameterTypeMismatch() {
-    // TODO(sdh): This should fail with the correct error.
     testTypes(
         lines(
             "/** @template T */",
@@ -2434,14 +2496,10 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "    @return {number} */",
             "function f(arg) {}",
             "var foo = new Foo(42, f);"),
-        new String[] {
-          "Bad type annotation. Unknown type U",
-          "Bad type annotation. Unknown type U",
-        });
-        // lines(
-        //     "actual parameter 2 of Foo does not match formal parameter",
-        //     "found   : function(string): ?",
-        //     "required: function(number): ?"));
+        lines(
+            "actual parameter 2 of Foo does not match formal parameter",
+            "found   : function(string): number",
+            "required: function((number|string)): number"));
   }
 
   public void testClassSideInheritanceFillsInParameterTypesWhenCheckingBody() {
@@ -2928,10 +2986,6 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
         //     "found   : number",
         //     "required: string"));
   }
-
-  // TODO - class methods (parameter types, return types, overrides inherit param/returns,
-  // errors for wrong-variant overrides, class-side inheritance override errors, calling
-  // infers correctly, templates, async, super in ctor, super.foo in method)
 
   public void testAsyncFunctionWithoutJSDoc() {
     testTypes("async function f() { return 3; }");

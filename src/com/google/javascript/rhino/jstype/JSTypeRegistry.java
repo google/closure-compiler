@@ -2157,7 +2157,7 @@ public class JSTypeRegistry implements Serializable {
    * Registers template types on the given scope root. This takes a Node rather than a
    * StaticScope because at the time it is called, the scope has not yet been created.
    */
-  public void registerTemplateTypeNamesInScope(List<TemplateType> keys, Node scopeRoot) {
+  public void registerTemplateTypeNamesInScope(Iterable<TemplateType> keys, Node scopeRoot) {
     for (TemplateType key : keys) {
       scopedNameTable.put(scopeRoot, key.getReferenceName(), key);
     }

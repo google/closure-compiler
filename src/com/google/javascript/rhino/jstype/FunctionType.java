@@ -1456,4 +1456,21 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
     result.setPrototypeBasedOn(getInstanceType());
     return result;
   }
+
+  /** Returns a list of template types present on the constructor but not on the instance. */
+  public final ImmutableList<TemplateType> getConstructorOnlyTemplateParameters() {
+    TemplateTypeMap ctorMap = getTemplateTypeMap();
+    TemplateTypeMap instanceMap = getInstanceType().getTemplateTypeMap();
+    if (ctorMap == instanceMap) {
+      return ImmutableList.of();
+    }
+    ImmutableList.Builder<TemplateType> ctorKeys = ImmutableList.builder();
+    Set<TemplateType> instanceKeys = ImmutableSet.copyOf(instanceMap.getUnfilledTemplateKeys());
+    for (TemplateType ctorKey : ctorMap.getUnfilledTemplateKeys()) {
+      if (!instanceKeys.contains(ctorKey)) {
+        ctorKeys.add(ctorKey);
+      }
+    }
+    return ctorKeys.build();
+  }
 }
