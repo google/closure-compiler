@@ -118,118 +118,112 @@ class InferJSDocInfo extends AbstractPostOrderCallback implements HotSwapCompile
 
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
-    JSDocInfo docInfo;
-
     switch (n.getToken()) {
         // Infer JSDocInfo on types of all type declarations on variables.
       case NAME:
         {
-        if (parent == null) {
-          return;
-        }
+          if (parent == null) {
+            return;
+          }
 
-        // Only allow JSDoc on variable declarations, function declarations, and assigns.
-        if (!NodeUtil.isNameDeclaration(parent)
-            && !NodeUtil.isFunctionDeclaration(parent)
-            && !(parent.isAssign() && n == parent.getFirstChild())) {
-          return;
-        }
+          // Only allow JSDoc on variable declarations, named functions, and assigns.
+          final JSDocInfo typeDoc;
+          final JSType inferredType;
+          if (NodeUtil.isNameDeclaration(parent)) {
+            // Case: `/** ... */ (var|let|const) x = function() { ... }`.
+            // Case: `(var|let|const) /** ... */ x = function() { ... }`.
+            JSDocInfo nameInfo = n.getJSDocInfo();
+            typeDoc = (nameInfo != null) ? nameInfo : parent.getJSDocInfo();
 
-        // There are four places the doc info could live.
-        // 1) A FUNCTION node.
-        // /** ... */ function f() { ... }
-        // 2) An ASSIGN parent.
-        // /** ... */ x = function () { ... }
-        // 3) A NAME parent.
-        // var x, /** ... */ y = function() { ... }
-        // 4) A VAR, CONST, or LET grandparent.
-        // /** ... */ var x = function() { ... }
-        docInfo = n.getJSDocInfo();
-        if (docInfo == null && !(NodeUtil.isNameDeclaration(parent) && !parent.hasOneChild())) {
-          docInfo = parent.getJSDocInfo();
-        }
+            inferredType = n.getJSType();
+          } else if (NodeUtil.isFunctionDeclaration(parent)) {
+            // Case: `/** ... */ function f() { ... }`.
+            typeDoc = parent.getJSDocInfo();
+            inferredType = parent.getJSType();
+          } else if (parent.isAssign() && n.isFirstChildOf(parent)) {
+            // Case: `/** ... */ x = function () { ... }`
+            typeDoc = parent.getJSDocInfo();
+            inferredType = n.getJSType();
+          } else {
+            return;
+          }
 
-        // Try to find the type of the NAME.
-        JSType varType = n.getJSType();
-        if (varType == null && parent.isFunction()) {
-          varType = parent.getJSType();
-        }
+          if (typeDoc == null) {
+            return;
+          }
 
-        // If we have no type to attach JSDocInfo to, then there's nothing
-        // we can do.
-        if (varType == null || docInfo == null) {
-          return;
-        }
+          // If we have no type, or the type already has a JSDocInfo, then we're done.
+          ObjectType objType = dereferenceToObject(inferredType);
+          if (objType == null || objType.getJSDocInfo() != null) {
+            return;
+          }
 
-        // Dereference the type. If the result is not an object, or already
-        // has docs attached, then do nothing.
-        ObjectType objType = dereferenceToObject(varType);
-        if (objType == null || objType.getJSDocInfo() != null) {
-          return;
+          attachJSDocInfoToNominalTypeOrShape(objType, typeDoc, n.getString());
         }
-
-          attachJSDocInfoToNominalTypeOrShape(objType, docInfo, n.getString());
-        }
-        break;
+        return;
 
       case STRING_KEY:
       case GETTER_DEF:
       case SETTER_DEF:
       case MEMBER_FUNCTION_DEF:
-        docInfo = n.getJSDocInfo();
-        if (docInfo == null) {
-          return;
-        }
-        ObjectType owningType = dereferenceToObject(parent.getJSType());
-        if (owningType != null) {
+        {
+          JSDocInfo typeDoc = n.getJSDocInfo();
+          if (typeDoc == null) {
+            return;
+          }
+
+          ObjectType owningType = dereferenceToObject(parent.getJSType());
+          if (owningType == null) {
+            return;
+          }
+
           String propName = n.getString();
           if (owningType.hasOwnProperty(propName)) {
-            owningType.setPropertyJSDocInfo(propName, docInfo);
+            owningType.setPropertyJSDocInfo(propName, typeDoc);
           }
         }
-        break;
+        return;
 
       case GETPROP:
-        // Infer JSDocInfo on properties.
-        // There are two ways to write doc comments on a property.
-        //
-        // 1)
-        // /** @deprecated */
-        // obj.prop = ...
-        //
-        // 2)
-        // /** @deprecated */
-        // obj.prop;
-        if (parent.isExprResult() ||
-            (parent.isAssign() &&
-             parent.getFirstChild() == n)) {
-          docInfo = n.getJSDocInfo();
-          if (docInfo == null) {
-            docInfo = parent.getJSDocInfo();
+        {
+          // Infer JSDocInfo on properties.
+          // There are two ways to write doc comments on a property.
+          final JSDocInfo typeDoc;
+          if (parent.isAssign() && n.isFirstChildOf(parent)) {
+            // Case: `/** @deprecated */ obj.prop = ...;`
+            typeDoc = parent.getJSDocInfo();
+          } else if (parent.isExprResult()) {
+            // Case: `/** @deprecated */ obj.prop;`
+            typeDoc = n.getJSDocInfo();
+          } else {
+            return;
           }
-          if (docInfo != null) {
-            ObjectType lhsType =
-                dereferenceToObject(n.getFirstChild().getJSType());
-            if (lhsType != null) {
-              // Put the JSDoc in the property slot, if there is one.
-              String propName = n.getLastChild().getString();
-              if (lhsType.hasOwnProperty(propName)) {
-                lhsType.setPropertyJSDocInfo(propName, docInfo);
-              }
 
-              // Put the JSDoc in any constructors or function shapes as well.
-              ObjectType propType =
-                  dereferenceToObject(lhsType.getPropertyType(propName));
-              if (propType != null) {
-                attachJSDocInfoToNominalTypeOrShape(
-                    propType, docInfo, n.getQualifiedName());
-              }
-            }
+          if (typeDoc == null) {
+            return;
+          }
+
+          ObjectType lhsType = dereferenceToObject(n.getFirstChild().getJSType());
+          if (lhsType == null) {
+            return;
+          }
+
+          // Put the JSDoc in the property slot, if there is one.
+          String propName = n.getLastChild().getString();
+          if (lhsType.hasOwnProperty(propName)) {
+            lhsType.setPropertyJSDocInfo(propName, typeDoc);
+          }
+
+          // Put the JSDoc in any constructors or function shapes as well.
+          ObjectType propType = dereferenceToObject(lhsType.getPropertyType(propName));
+          if (propType != null) {
+            attachJSDocInfoToNominalTypeOrShape(propType, typeDoc, n.getQualifiedName());
           }
         }
-        break;
+        return;
+
       default:
-        break;
+        return;
     }
   }
 
@@ -240,9 +234,7 @@ class InferJSDocInfo extends AbstractPostOrderCallback implements HotSwapCompile
     return ObjectType.cast(type == null ? null : type.dereference());
   }
 
-  /**
-   * Handle cases #1 and #3 in the class doc.
-   */
+  /** Handle cases #1 and #3 in the class doc. */
   private static void attachJSDocInfoToNominalTypeOrShape(
       ObjectType objType, JSDocInfo docInfo, @Nullable String qName) {
 
@@ -275,3 +267,4 @@ class InferJSDocInfo extends AbstractPostOrderCallback implements HotSwapCompile
     return type.hasReferenceName() && type.getReferenceName().equals(name);
   }
 }
+
