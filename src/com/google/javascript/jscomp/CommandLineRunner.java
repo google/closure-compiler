@@ -68,6 +68,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.kohsuke.args4j.Argument;
@@ -2106,10 +2107,16 @@ public class CommandLineRunner extends
     return this.errors;
   }
 
+  private static final Logger phaseLogger = Logger.getLogger(PhaseOptimizer.class.getName());
+
   /**
    * Runs the Compiler. Exits cleanly in the event of an error.
    */
   public static void main(String[] args) {
+    // disable any logging messages that can interfere with standard error reporting
+    if (phaseLogger != null) {
+      phaseLogger.setLevel(Level.OFF);
+    }
     CommandLineRunner runner = new CommandLineRunner(args);
     if (runner.shouldRunCompiler()) {
       runner.run();

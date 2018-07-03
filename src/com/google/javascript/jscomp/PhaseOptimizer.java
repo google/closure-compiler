@@ -277,6 +277,10 @@ class PhaseOptimizer implements CompilerPass {
     @Override
     public void process(Node externs, Node root) {
       if (!factory.featureSet().contains(compiler.getFeatureSet())) {
+        // NOTE: this warning ONLY appears in code using the Google-internal runner.
+        // Both CommandLineRunner.java and gwt/client/GwtRunner.java explicitly set the logging
+        // level to Level.OFF to avoid seeing this warning.
+        // See https://github.com/google/closure-compiler/pull/2998 for why.
         logger.warning("Skipping pass " + name);
         logger.info(
             "pass supports: " + factory.featureSet()
