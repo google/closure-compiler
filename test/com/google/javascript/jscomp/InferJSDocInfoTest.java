@@ -17,13 +17,11 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
-import static com.google.common.truth.Truth.assertWithMessage;
 import static com.google.javascript.jscomp.parsing.Config.JsDocParsing.INCLUDE_DESCRIPTIONS_NO_WHITESPACE;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
-import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfo.Visibility;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.FunctionType;
@@ -41,14 +39,21 @@ import java.util.Deque;
 // assertions about type information.
 public final class InferJSDocInfoTest extends CompilerTestCase {
 
-  private static final String OBJECT_EXTERNS = ""
-        + "/**\n"
-        + " * Object.\n"
-        + " * @param {*=} x\n"
-        + " * @return {!Object}\n"
-        + " * @constructor\n"
-        + " */\n"
-        + "function Object(x) {};";
+  private static enum DeclarationKeyword {
+    VAR("var"),
+    LET("let"),
+    CONST("const");
+
+    private final String string;
+
+    private DeclarationKeyword(String string) {
+      this.string = string;
+    }
+
+    public String toJs() {
+      return string;
+    }
+  }
 
   private TypedScope globalScope;
 
@@ -78,149 +83,724 @@ public final class InferJSDocInfoTest extends CompilerTestCase {
       public void process(Node externs, Node root) {
         TypedScopeCreator scopeCreator = new TypedScopeCreator(compiler);
         TypedScope topScope = scopeCreator.createScope(root.getParent(), null);
-        (new TypeInferencePass(
-            compiler, compiler.getReverseAbstractInterpreter(),
-            topScope, scopeCreator)).process(externs, root);
-        NodeTraversal t = new NodeTraversal(
-            compiler, callback, scopeCreator);
+
+        new TypeInferencePass(
+                compiler, compiler.getReverseAbstractInterpreter(), topScope, scopeCreator)
+            .process(externs, root);
+
+        NodeTraversal t = new NodeTraversal(compiler, callback, scopeCreator);
         t.traverseRoots(externs, root);
-        (new InferJSDocInfo(compiler)).process(externs, root);
+
+        new InferJSDocInfo(compiler).process(externs, root);
       }
     };
   }
 
-  public void testNativeCtor() {
+  public void testJSDocFromExternTypesIsPreserved() {
+    // Given
     testSame(
-        externs(OBJECT_EXTERNS),
-        srcs("var x = new Object();" + "/** Another object. */ var y = new Object();"));
-    assertEquals(
-        "Object.",
-        findGlobalNameType("x").getJSDocInfo().getBlockDescription());
-    assertEquals(
-        "Object.",
-        findGlobalNameType("y").getJSDocInfo().getBlockDescription());
-    assertEquals(
-        "Object.",
-        globalScope.getVar("y").getType().getJSDocInfo().getBlockDescription());
+        externs(
+            lines(
+                "/**",
+                " * I'm an Object.",
+                " * @param {*=} x",
+                " * @return {!Object}",
+                " * @constructor",
+                " */",
+                "function Object(x) {};")),
+        srcs("var x = new Object();"));
+
+    JSType xType = inferredTypeOfName("x");
+    assertEquals("Object", xType.toString());
+
+    // Then
+    assertEquals("I'm an Object.", xType.getJSDocInfo().getBlockDescription());
   }
 
-  public void testStructuralFunctions() {
+  public void testJSDocFromInstanceNodesIsIgnored() {
+    // Given
     testSame(
-        externs(OBJECT_EXTERNS),
         srcs(
-            "/** Function. \n * @param {*} x */ "
-                + "function fn(x) {};"
-                + "var goog = {};"
-                + "/** Another object. \n * @type {Object} */ goog.x = new Object();"
-                + "/** Another function. \n * @param {number} x */ goog.y = fn;"));
-    assertEquals(
-        "(Object|null)",
-        globalScope.getVar("goog.x").getType().toString());
-    assertEquals(
-        "Object.",
-        globalScope.getVar("goog.x").getType().restrictByNotNullOrUndefined()
-        .getJSDocInfo().getBlockDescription());
-    assertEquals(
-        "Another function.",
-        globalScope.getVar("goog.y").getType()
-        .getJSDocInfo().getBlockDescription());
+            lines(
+                "/**",
+                " * I'm a user type.",
+                " * @constructor",
+                " */",
+                "function Foo() {};",
+                "",
+                "/** I'm a Foo instance */", // This should not be attached to a type.
+                "var x = new Foo();")));
+
+    JSType xType = inferredTypeOfName("x");
+    assertEquals("Foo", xType.toString());
+
+    // Then
+    assertEquals("I'm a user type.", xType.getJSDocInfo().getBlockDescription());
   }
 
-  public void testInstanceObject() {
-    // Asserts that no property gets attached to the instance object.
+  public void testJSDocIsNotPropagatedToNativeFunctionType() {
+    // Given
     testSame(
-        "/** @constructor */ function Foo() {}" +
-        "var f = new Foo();" +
-        "/** @type {number} */ f.bar = 4;");
-    ObjectType type = (ObjectType) globalScope.getVar("f").getType();
-    assertEquals("Foo", type.toString());
-    assertFalse(type.hasProperty("bar"));
-    assertNull(type.getOwnPropertyJSDocInfo("bar"));
+        srcs(
+            lines(
+                "/**", //
+                "* I'm some function.",
+                " * @type {!Function}",
+                " */",
+                "var x;")));
+
+    JSType xType = inferredTypeOfName("x");
+    assertEquals("Function", xType.toString());
+
+    // Then
+    assertNull(xType.getJSDocInfo());
   }
 
-  public void testInterface() {
-    testInterface("var");
-    testInterface("let");
-    testInterface("const");
+  public void testJSDocFromNamedFunctionPropagatesToDefinedType() {
+    // Given
+    testSame(
+        srcs(
+            lines(
+                "/**",
+                " * I'm a user type.",
+                " * @constructor",
+                " */",
+                "function Foo() {};",
+                "",
+                "var x = new Foo();" // Just a hook to access type "Foo".
+                )));
+
+    JSType xType = inferredTypeOfName("x");
+    assertEquals("Foo", xType.toString());
+
+    // Then
+    assertEquals("I'm a user type.", xType.getJSDocInfo().getBlockDescription());
   }
 
-  private void testInterface(String varOrLetOrConst) {
+  public void testJSDocFromGlobalAssignmentPropagatesToDefinedType() {
+    // Given
+    testSame(
+        srcs(
+            lines(
+                "/**",
+                " * I'm a user type.",
+                " * @constructor",
+                " */",
+                "Foo = function() {};",
+                "",
+                "var x = new Foo();" // Just a hook to access type "Foo".
+                )));
+
+    JSType xType = inferredTypeOfName("x");
+    assertEquals("Foo", xType.toString());
+
+    // Then
+    assertEquals("I'm a user type.", xType.getJSDocInfo().getBlockDescription());
+  }
+
+  public void testJSDocFromNamespacedNameAssignmentPropagatesToDefinedType() {
+    // Given
+    testSame(
+        srcs(
+            lines(
+                "var namespace = {}",
+                "",
+                "/**",
+                " * I'm a user type.",
+                " * @constructor",
+                " */",
+                "namespace.Foo = function() {};",
+                "",
+                "var x = new namespace.Foo();" // Just a hook to access type "Foo".
+                )));
+
+    JSType xType = inferredTypeOfName("x");
+    assertEquals("namespace.Foo", xType.toString());
+
+    // Then
+    assertEquals("I'm a user type.", xType.getJSDocInfo().getBlockDescription());
+  }
+
+  public void testJSDocFromVarAssignmentPropagatesToDefinedType() {
+    testJSDocFromVariableAssignmentPropagatesToDefinedType(DeclarationKeyword.VAR);
+  }
+
+  public void testJSDocFromLetAssignmentPropagatesToDefinedType() {
+    testJSDocFromVariableAssignmentPropagatesToDefinedType(DeclarationKeyword.LET);
+  }
+
+  public void testJSDocFromConstAssignmentPropagatesToDefinedType() {
+    testJSDocFromVariableAssignmentPropagatesToDefinedType(DeclarationKeyword.CONST);
+  }
+
+  private void testJSDocFromVariableAssignmentPropagatesToDefinedType(DeclarationKeyword keyword) {
+    // Given
+    testSame(
+        srcs(
+            lines(
+                "/**",
+                " * I'm a user type.",
+                " * @constructor",
+                " */",
+                keyword.toJs() + " Foo = function() {};",
+                "",
+                "var x = new Foo();" // Just a hook to access type "Foo".
+                )));
+
+    JSType xType = inferredTypeOfName("x");
+    assertEquals("Foo", xType.toString());
+
+    // Then
+    assertEquals("I'm a user type.", xType.getJSDocInfo().getBlockDescription());
+  }
+
+  public void testJSDocFromVariableNameAssignmentPropagatesToDefinedType() {
+    // Given
+    testSame(
+        srcs(
+            lines(
+                "var /**",
+                " * I'm a user type.",
+                " * @constructor",
+                " */",
+                "Foo = function() {};",
+                "",
+                "var x = new Foo();" // Just a hook to access type "Foo".
+                )));
+
+    JSType xType = inferredTypeOfName("x");
+    assertEquals("Foo", xType.toString());
+
+    // Then
+    assertEquals("I'm a user type.", xType.getJSDocInfo().getBlockDescription());
+  }
+
+  public void testJSDocIsPropagatedToClasses() {
+    // Given
+    testSame(
+        srcs(
+            lines(
+                "/**",
+                " * I'm a user class.",
+                " * @constructor",
+                " */",
+                "var Foo = function() {};",
+                "",
+                "var x = new Foo();" // Just a hook to access type "Foo".
+                )));
+
+    JSType xType = inferredTypeOfName("x");
+    assertEquals("Foo", xType.toString());
+
+    // Then
+    assertEquals("I'm a user class.", xType.getJSDocInfo().getBlockDescription());
+  }
+
+  public void testJSDocIsPropagatedToCtors() {
+    // Given
+    testSame(
+        srcs(
+            lines(
+                "/**",
+                " * I'm a user class.",
+                " * @constructor",
+                " */",
+                "var Foo = function() {};",
+                "",
+                "var x = Foo;" // Just a hook to access type "ctor{Foo}".
+                )));
+
+    JSType xType = inferredTypeOfName("x");
+    assertEquals("function(new:Foo): undefined", xType.toString());
+
+    // Then
+    assertEquals("I'm a user class.", xType.getJSDocInfo().getBlockDescription());
+  }
+
+  public void testJSDocIsPropagatedToInterfaces() {
+    // Given
+    testSame(
+        srcs(
+            lines(
+                "/**",
+                " * I'm a user interface.",
+                " * @interface",
+                " */",
+                "var Foo = function() {};",
+                "",
+                "var x = /** @type {!Foo} */ ({});" // Just a hook to access type "Foo".
+                )));
+
+    JSType xType = inferredTypeOfName("x");
+    assertEquals("Foo", xType.toString());
+
+    // Then
+    assertEquals("I'm a user interface.", xType.getJSDocInfo().getBlockDescription());
+  }
+
+  public void testJSDocIsPropagatedToEnums() {
+    // Given
+    testSame(
+        srcs(
+            lines(
+                "/**",
+                " * I'm a user enum.",
+                " * @enum {number}",
+                " */",
+                "var Foo = {BAR: 0};",
+                "",
+                "var x = Foo;" // Just a hook to access "enum{Foo}".
+                )));
+
+    JSType xType = inferredTypeOfName("x");
+    assertEquals("enum{Foo}", xType.toString());
+
+    // Then
+    assertEquals("I'm a user enum.", xType.getJSDocInfo().getBlockDescription());
+  }
+
+  public void testJSDocIsPropagatedToEnumElements() {
+    // Given
+    testSame(
+        srcs(
+            lines(
+                "/**",
+                " * I'm a user enum.",
+                " * @enum {number}",
+                " */",
+                "var Foo = {BAR: 0};",
+                "",
+                "var x = Foo.BAR;" // Just a hook to access "Foo".
+                )));
+
+    JSType xType = inferredTypeOfName("x");
+    assertEquals("Foo<number>", xType.toString());
+
+    // Then
+    assertEquals("I'm a user enum.", xType.getJSDocInfo().getBlockDescription());
+  }
+
+  public void testJSDocIsPropagatedToFunctionTypes() {
+    // Given
+    testSame(
+        srcs(
+            lines(
+                "/**",
+                " * I'm a custom function.",
+                " * @param {*} a",
+                " * @return {string}",
+                " */",
+                "function test(a) {};",
+                "",
+                "var x = test;" // Just a hook to access type of "test".
+                )));
+
+    JSType xType = inferredTypeOfName("x");
+    assertEquals("function(*): string", xType.toString());
+
+    // Then
+    assertEquals("I'm a custom function.", xType.getJSDocInfo().getBlockDescription());
+  }
+
+  public void testJSDocIsNotPropagatedToFunctionTypesFromMethodAssigments() {
+    // Given
+    testSame(
+        srcs(
+            lines(
+                "/** @constructor */",
+                "function Foo() {};",
+                "",
+                "/**",
+                " * I'm a method.",
+                " * @return {number} a",
+                " */",
+                "Foo.prototype.method = function() { };",
+                "",
+                "var x = Foo.prototype.method;" // Just a hook to access type "Foo::method".
+                )));
+
+    JSType xType = inferredTypeOfName("x");
+    assertEquals("function(this:Foo): number", xType.toString());
+
+    // Then
+    assertNull(xType.getJSDocInfo());
+  }
+
+  // TODO(b/111070482): Why is this expected? Why are there multiple type instances? This can cause
+  // non-determinism.
+  public void testJSDocIsPropagatedDistinctlyToStructuralTypes_ObjectLiteralTypes() {
+    // Given
+    testSame(
+        srcs(
+            lines(
+                "/**",
+                " * I'm test0.",
+                " */",
+                "var test0 = {a: 4, b: 5};",
+                "",
+                // The type of this object *looks* is the same, but it is different (for some
+                // reason) and we should get a different JSDoc.
+                "/**",
+                " * I'm test1.",
+                " */",
+                "var test1 = {a: 4, b: 5};")));
+
+    JSType test0Type = inferredTypeOfName("test0");
+    JSType test1Type = inferredTypeOfName("test1");
+    assertNotSame(test0Type, test1Type);
+
+    // Then
+    assertEquals("I'm test0.", test0Type.getJSDocInfo().getBlockDescription());
+    assertEquals("I'm test1.", test1Type.getJSDocInfo().getBlockDescription());
+  }
+
+  // TODO(b/111070482): Why is this expected? Why are there multiple type instances? This can cause
+  // non-determinism.
+  public void testJSDocIsPropagatedDistinctlyToStructuralTypes_FunctionTypes() {
+    // Given
+    testSame(
+        srcs(
+            lines(
+                "/**",
+                " * I'm test0.",
+                " * @param {*} a",
+                " * @return {string}",
+                " */",
+                "function test0(a) {};",
+                "",
+                // The type of this function *looks* is the same, but it is different (for some
+                // reason) and we should get a different JSDoc.
+                "/**",
+                " * I'm test1.",
+                " * @param {*} a",
+                " * @return {string}",
+                " */",
+                "function test1(a) {};")));
+
+    JSType test0Type = inferredTypeOfName("test0");
+    JSType test1Type = inferredTypeOfName("test1");
+    assertNotSame(test0Type, test1Type);
+
+    // Then
+    assertEquals("I'm test0.", test0Type.getJSDocInfo().getBlockDescription());
+    assertEquals("I'm test1.", test1Type.getJSDocInfo().getBlockDescription());
+  }
+
+  // TODO(nickreid): The comments in `InferJSDocInfo` claim the opposite of this test should be
+  // true, but as it stands, this is what happens.
+  public void testJSDocPropagatesDistinctlyToStructuralTypes_FunctionAndMethodTypes() {
+    // Given
+    testSame(
+        srcs(
+            lines(
+                "/** @constructor */",
+                "function Foo() {};",
+                "",
+                "/**",
+                " * I'm a free function.",
+                " * @return {number}",
+                " */",
+                "function free() { return 0; }",
+                "",
+                "/**",
+                " * I'm a method.",
+                " * @return {*} a",
+                " */",
+                "Foo.prototype.method = free;",
+                "",
+                "var x = new Foo();" // Just a hook to access type "Foo".
+                )));
+
+    JSType freeType = inferredTypeOfName("free");
+    ObjectType xType = (ObjectType) inferredTypeOfName("x");
+    assertNotSame(freeType, xType);
+
+    // Then
+    assertEquals("I'm a free function.", freeType.getJSDocInfo().getBlockDescription());
+    assertEquals("I'm a method.", xType.getPropertyJSDocInfo("method").getBlockDescription());
+  }
+
+  public void testJSDocIsNotOverriddenByStructuralTypeAssignments_ObjectLiteralTypes() {
+    // Given
+    testSame(
+        srcs(
+            lines(
+                "/**",
+                " * I'm test0.",
+                " */",
+                "var test0 = {a: 4, b: 5};",
+                "",
+                // The type of these objects should be identical.
+                "/**",
+                " * I'm test1.",
+                // We need this so inferrence understands thes two objects/types are stuck together.
+                " * @const",
+                " */",
+                "var test1 = test0;")));
+
+    JSType test0Type = inferredTypeOfName("test0");
+    JSType test1Type = inferredTypeOfName("test1");
+    assertSame(test0Type, test1Type);
+
+    // Then
+    assertEquals("I'm test0.", test0Type.getJSDocInfo().getBlockDescription());
+  }
+
+  public void testJSDocIsNotOverriddenByStructuralTypeAssignments_FunctionTypes() {
+    // Given
+    testSame(
+        srcs(
+            lines(
+                "/**",
+                " * I'm test0.",
+                " * @param {*} a",
+                " * @return {string}",
+                " */",
+                "function test0(a) {};",
+                "",
+                // The type of these objects should be identical.
+                "/**",
+                " * I'm test1.",
+                " * @param {string} a",
+                " * @return {*}",
+                // We need this so inferrence understands thes two objects/types are stuck together.
+                " * @const",
+                " */",
+                "var test1 = test0;")));
+
+    JSType test0Type = inferredTypeOfName("test0");
+    JSType test1Type = inferredTypeOfName("test1");
+    assertSame(test0Type, test1Type);
+
+    // Then
+    assertEquals("I'm test0.", test0Type.getJSDocInfo().getBlockDescription());
+  }
+
+  public void testJSDocIsPropagatedToFieldProperties() {
+    // Given
+    testSame(
+        srcs(
+            lines(
+                "/** @constructor */",
+                "function Foo() {",
+                "  /**",
+                "   * I'm a field.",
+                "   * @const",
+                "   */",
+                "   this.field = 5;",
+                "};",
+                "",
+                "var x = new Foo();" // Just a hook to access type "Foo".
+                )));
+
+    ObjectType xType = (ObjectType) inferredTypeOfName("x");
+    assertEquals("Foo", xType.toString());
+
+    // Then
+    assertEquals("I'm a field.", xType.getPropertyJSDocInfo("field").getBlockDescription());
+  }
+
+  public void testJSDocIsPropagatedToGetterProperties() {
+    // Given
+    testSame(
+        srcs(
+            lines(
+                "/** @constructor */",
+                "function Foo() {};",
+                "",
+                "Foo.prototype = {",
+                "  /**",
+                "   * I'm a getter.",
+                "   * @return {number}",
+                "   */",
+                "  get getter() {}",
+                "};",
+                "",
+                "var x = new Foo();" // Just a hook to access type "Foo".
+                )));
+
+    ObjectType xType = (ObjectType) inferredTypeOfName("x");
+    assertEquals("Foo", xType.toString());
+
+    // Then
+    assertEquals("I'm a getter.", xType.getPropertyJSDocInfo("getter").getBlockDescription());
+  }
+
+  public void testJSDocIsPropagatedToSetterProperties() {
+    // Given
+    testSame(
+        srcs(
+            lines(
+                "/** @constructor */",
+                "function Foo() {};",
+                "",
+                "Foo.prototype = {",
+                "  /**",
+                "   * I'm a setter.",
+                "   * @param {number} a",
+                "   */",
+                "  set setter(a) {}",
+                "};",
+                "",
+                "var x = new Foo();" // Just a hook to access type "Foo".
+                )));
+
+    ObjectType xType = (ObjectType) inferredTypeOfName("x");
+    assertEquals("Foo", xType.toString());
+
+    // Then
+    assertEquals("I'm a setter.", xType.getPropertyJSDocInfo("setter").getBlockDescription());
+  }
+
+  public void testJSDocIsPropagatedToMethodProperties() {
+    // Given
+    testSame(
+        srcs(
+            lines(
+                "/** @constructor */",
+                "function Foo() {};",
+                "",
+                "/**",
+                " * I'm a method.",
+                " * @return {number} a",
+                " */",
+                "Foo.prototype.method = function() { };",
+                "",
+                "var x = new Foo();" // Just a hook to access type "Foo".
+                )));
+
+    ObjectType xType = (ObjectType) inferredTypeOfName("x");
+    assertEquals("Foo", xType.toString());
+
+    // Then
+    assertEquals("I'm a method.", xType.getPropertyJSDocInfo("method").getBlockDescription());
+  }
+
+  public void testJSDocIsPropagatedToAbstractMethodProperties() {
+    // Given
+    testSame(
+        srcs(
+            lines(
+                "/** @constructor */",
+                "function Foo() {};",
+                "",
+                "/**",
+                " * I'm a method.",
+                " * @abstract",
+                " * @return {number} a",
+                " */",
+                "Foo.prototype.method = goog.abstractMethod;",
+                "",
+                "var x = new Foo();" // Just a hook to access type "Foo".
+                )));
+
+    ObjectType xType = (ObjectType) inferredTypeOfName("x");
+    assertEquals("Foo", xType.toString());
+
+    // Then
+    assertEquals("I'm a method.", xType.getPropertyJSDocInfo("method").getBlockDescription());
+  }
+
+  public void testJSDocIsPropagatedToStaticProperties() {
+    // Given
+    testSame(
+        srcs(
+            lines(
+                "/** @constructor */",
+                "function Foo() {};",
+                "",
+                "/**",
+                " * I'm a static.",
+                " * @return {number} a",
+                " */",
+                "Foo.static = function() { };",
+                "",
+                "var x = Foo;" // Just a hook to access type "ctor{Foo}".
+                )));
+
+    ObjectType xType = (ObjectType) inferredTypeOfName("x");
+    assertEquals("function(new:Foo): undefined", xType.toString());
+
+    // Then
+    assertEquals("I'm a static.", xType.getPropertyJSDocInfo("static").getBlockDescription());
+  }
+
+  public void testJSDocDoesNotPropagateBackwardFromInstancesToTypes() {
+    // Given
     testSame(
         lines(
-            "/**", // preserve newlines
-            " * An interface.",
-            " * @interface",
-            " */",
-            varOrLetOrConst + " Foo = function Foo() {}",
-            ""));
-    assertThat(getGlobalVarTypeJSDocInfoBlockDescription("Foo")).isEqualTo("An interface.");
+            "/** @constructor */",
+            "function Foo() {}",
+            "",
+            "var x = new Foo();",
+            "",
+            "/** @type {number} */",
+            "x.bar = 4;"));
+
+    ObjectType xType = (ObjectType) inferredTypeOfName("x");
+    assertEquals("Foo", xType.toString());
+
+    // Then
+    assertFalse(xType.hasProperty("bar"));
+    assertNull(xType.getOwnPropertyJSDocInfo("bar"));
   }
 
-  private String getGlobalVarTypeJSDocInfoBlockDescription(String varName) {
-    TypedVar var = globalScope.getVar(varName);
-    assertWithMessage("%s is not defined", varName).that(var).isNotNull();
-    ObjectType type = (ObjectType) var.getType();
-    assertWithMessage("%s has no type", varName).that(type).isNotNull();
-    JSDocInfo jsDocInfo = type.getJSDocInfo();
-    assertWithMessage("%s type has no JSDocInfo", varName).that(jsDocInfo).isNotNull();
-    return jsDocInfo.getBlockDescription();
-  }
-
-  public void testNamespacedCtor() {
+  public void testJSDocFromDuplicateDefinitionDoesNotOverrideJSDocFromOriginal() {
+    // Given
     testSame(
-        "var goog = {};" +
-        "/** Hello! \n * @constructor */ goog.Foo = function() {};" +
-        "goog.Foo.bar = goog.Foo;" +
-        "/** Bye! \n * @param {string=} opt_x */" +
-        "goog.Foo.prototype.baz = goog.Foo;" +
-        "/** Blargh */ var x = new goog.Foo();");
-    assertEquals(
-        "Hello!",
-        findGlobalNameType("x").getJSDocInfo().getBlockDescription());
-    assertEquals(
-        "Hello!",
-        findGlobalNameType("goog.Foo").getJSDocInfo().getBlockDescription());
-    assertEquals(
-        "Hello!",
-        findGlobalNameType(
-            "goog.Foo.bar").getJSDocInfo().getBlockDescription());
+        srcs(
+            lines(
+                "/**",
+                " * I'm a user type.",
+                " * @constructor",
+                " */",
+                "var Foo = function() {};",
+                "",
+                "/**",
+                " * I'm a different type.",
+                " * @constructor",
+                " */",
+                "Foo = function() {};",
+                "",
+                "var x = new Foo();" // Just a hook to access type "Foo".
+                )));
 
-    assertEquals(
-        "Hello!",
-        findGlobalNameType(
-            "goog.Foo.prototype.baz").getJSDocInfo().getBlockDescription());
+    JSType xType = inferredTypeOfName("x");
+    assertEquals("Foo", xType.toString());
 
-    ObjectType proto = (ObjectType) findGlobalNameType("goog.Foo.prototype");
-    assertEquals(
-        "Bye!",
-        proto.getPropertyType("baz").getJSDocInfo().getBlockDescription());
+    // Then
+    assertEquals("I'm a user type.", xType.getJSDocInfo().getBlockDescription());
   }
 
-  public void testAbstractMethod() {
+  public void testJSDocFromDuplicateDefinitionIsUsedIfThereWasNoOriginalJSDocFromOriginal() {
+    // Given
     testSame(
-        "/** Abstract method. \n * @type {!Function} */ var abstractMethod;" +
-        "/** @constructor */ function Foo() {}" +
-        "/** Block description. \n * @param {number} x */" +
-        "Foo.prototype.bar = abstractMethod;");
-    FunctionType abstractMethod =
-        (FunctionType) findGlobalNameType("abstractMethod");
-    assertNull(abstractMethod.getJSDocInfo());
+        srcs(
+            lines(
+                "var Foo = function() {};",
+                "",
+                "/**",
+                " * I'm a different type.",
+                " * @constructor",
+                " */",
+                "Foo = function() {};",
+                "",
+                "var x = new Foo();" // Just a hook to access type "Foo".
+                )));
 
-    FunctionType ctor = (FunctionType) findGlobalNameType("Foo");
-    ObjectType proto = ctor.getInstanceType().getImplicitPrototype();
-    FunctionType method = (FunctionType) proto.getPropertyType("bar");
-    assertEquals(
-        "Block description.",
-        method.getJSDocInfo().getBlockDescription());
-    assertEquals(
-        "Block description.",
-        proto.getOwnPropertyJSDocInfo("bar").getBlockDescription());
+    JSType xType = inferredTypeOfName("x");
+    assertEquals("Foo", xType.toString());
+
+    // Then
+    assertEquals("I'm a different type.", xType.getJSDocInfo().getBlockDescription());
   }
 
-  public void testPrototypeObjectLiteral() {
+  public void testJSDocIsPropagatedToTypeFromPrototypeObjectLiteral() {
     testSame(
         lines(
-            "/** @constructor */ function Foo() {}",
+            "/** @constructor */",
+            "function Foo() {}",
+            "",
             "Foo.prototype = {",
             "  /** @protected */ a: function() {},",
             "  /** @protected */ get b() {},",
@@ -228,7 +808,7 @@ public final class InferJSDocInfoTest extends CompilerTestCase {
             "  /** @protected */ d() {}",
             "};"));
 
-    FunctionType ctor = findGlobalNameType("Foo").toMaybeFunctionType();
+    FunctionType ctor = inferredTypeOfName("Foo").toMaybeFunctionType();
     ObjectType prototype = ctor.getInstanceType().getImplicitPrototype();
 
     assertThat(prototype.getOwnPropertyJSDocInfo("a").getVisibility())
@@ -241,11 +821,13 @@ public final class InferJSDocInfoTest extends CompilerTestCase {
         .isEqualTo(Visibility.PROTECTED);
   }
 
-  private JSType findGlobalNameType(String name) {
-    return findNameType(name, globalScope);
+  /** Returns the inferred type of the reference {@code name} in the global scope. */
+  private JSType inferredTypeOfName(String name) {
+    return inferredTypeHavingScopedName(name, globalScope);
   }
 
-  private JSType findNameType(String name, TypedScope scope) {
+  /** Returns the inferred type of the reference {@code name} in {@code scope}. */
+  private JSType inferredTypeHavingScopedName(String name, TypedScope scope) {
     Node root = scope.getRootNode();
     Deque<Node> queue = new ArrayDeque<>();
     queue.push(root);

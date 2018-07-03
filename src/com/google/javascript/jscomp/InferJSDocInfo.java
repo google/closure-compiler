@@ -22,44 +22,77 @@ import static com.google.common.base.Preconditions.checkState;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.jstype.EnumType;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.ObjectType;
 import javax.annotation.Nullable;
 
 /**
- * Set the JSDocInfo on all types.
+ * Sets the {@link JSDocInfo} on all {@code JSType}s using the JSDoc on the node defining that type.
  *
- * Propagates JSDoc across the type graph, but not across the symbol graph.
- * This means that if you have:
- * <code>
- * var x = new Foo();
- * x.bar;
- * </code>
- * then the JSType attached to x.bar may get associated JSDoc, but the
- * Node and Var will not.
+ * <p>This pass propagates JSDocs across the type graph, but not across the symbol graph. For
+ * example:
  *
- * JSDoc is initially attached to AST Nodes at parse time.
- * There are 3 ways that JSDoc get propagated across the type system.
- * 1) Nominal types (e.g., constructors) may contain JSDocInfo for their
- *    declaration.
- * 2) Object types have a JSDocInfo slot for each property on that type.
- * 3) Shape types (like structural functions) may have JSDocInfo.
+ * <pre>{@code
+ * /**
+ *  * I'm a user type!
+ *  * @constructor
+ *  *\/
+ * var Foo = function() { };
  *
- * #1 and #2 should be self-explanatory, and non-controversial. #3 is
- * a bit trickier. It means that if you have:
- * <code>
- * /** @param {number} x /
- * Foo.prototype.bar = goog.abstractMethod;
- * </code>
- * the JSDocInfo will appear in two places in the type system: in the 'bar'
- * slot of Foo.prototype, and on the function expression type created by
- * this expression.
+ * var Bar = Foo;
+ * }</pre>
+ *
+ * will assign the "I'm a user type!" JSDoc from the `Foo` node to type "Foo" and type "ctor{Foo}".
+ * However, this pass says nothing about JSDocs being propagated to the `Bar` node.
+ *
+ * <p>JSDoc is initially attached to AST Nodes at parse time. There are 3 cases where JSDocs get
+ * attached to the type system, always from the associated declaration node:
+ *
+ * <ul>
+ *   <li>Nominal types (e.g. constructors, interfaces, enums).
+ *   <li>Object type properties (e.g. `Foo.prototype.bar`).
+ *   <li>Anonymous structural types, including functions. (Some function types with the same
+ *       signature are unique and therefore can have distinct JSDocs.) (b/111070482: it's unclear
+ *       why we support this.)
+ * </ul>
+ *
+ * <p>#2 should be self-explanatory. #1 is also fairly straight-forward with the additional detail
+ * that JSDocs are propagated to both the instance type <em>and</em> the declaration type (i.e. the
+ * ctor or enum object). #3 is a bit trickier; it covers types such as the following declarations:
+ *
+ * <pre>{@code
+ * /** I'm an anonymous structural object type! *\/
+ * var myObject = {a: 5, b: 'Hello'};
+ *
+ * /**
+ *  * I'm an anonymous structural function type!
+ *  * @param {number} x
+ *  * @return {string}
+ *  *\/
+ * var myFunction = function(x) { ... };
+ *
+ * }</pre>
+ *
+ * which define unique types with their own JSDoc attributes. Object literal or function types with
+ * the same structure will get different JSDocs despite comparing equal. Additionally, structural
+ * types cover the following scenario:
+ *
+ * <pre>{@code
+ * /**
+ *  * I'm a method with a novel function type!
+ *  * @param {number} x
+ *  * @return {number}
+ *  *\/
+ * Foo.prototype.bar = function(x) { ... };
+ * }</pre>
+ *
+ * the JSDocInfo will appear in two places in the type system: in the "bar" slot of `Foo.prototype`,
+ * and on the specific instance of type `function(this:Foo, number): number`. Note that this example
+ * would work equally well if `bar` were declared abstract.
  *
  * @author nicksantos@google.com (Nick Santos)
  */
-class InferJSDocInfo extends AbstractPostOrderCallback
-    implements HotSwapCompilerPass {
+class InferJSDocInfo extends AbstractPostOrderCallback implements HotSwapCompilerPass {
   private final AbstractCompiler compiler;
 
   InferJSDocInfo(AbstractCompiler compiler) {
@@ -88,8 +121,9 @@ class InferJSDocInfo extends AbstractPostOrderCallback
     JSDocInfo docInfo;
 
     switch (n.getToken()) {
-      // Infer JSDocInfo on types of all type declarations on variables.
+        // Infer JSDocInfo on types of all type declarations on variables.
       case NAME:
+        {
         if (parent == null) {
           return;
         }
@@ -134,7 +168,8 @@ class InferJSDocInfo extends AbstractPostOrderCallback
           return;
         }
 
-        attachJSDocInfoToNominalTypeOrShape(objType, docInfo, n.getString());
+          attachJSDocInfoToNominalTypeOrShape(objType, docInfo, n.getString());
+        }
         break;
 
       case STRING_KEY:
@@ -210,23 +245,33 @@ class InferJSDocInfo extends AbstractPostOrderCallback
    */
   private static void attachJSDocInfoToNominalTypeOrShape(
       ObjectType objType, JSDocInfo docInfo, @Nullable String qName) {
-    if (objType.isConstructor() ||
-        objType.isEnumType() ||
-        objType.isInterface()) {
-      // Named types.
-      if (objType.hasReferenceName() &&
-          objType.getReferenceName().equals(qName)) {
-        objType.setJSDocInfo(docInfo);
 
-        if (objType.isConstructor() || objType.isInterface()) {
-          JSType.toMaybeFunctionType(objType).getInstanceType().setJSDocInfo(docInfo);
-        } else if (objType instanceof EnumType) {
-          ((EnumType) objType).getElementsType().setJSDocInfo(docInfo);
-        }
+    if (objType.isConstructor() || objType.isInterface()) {
+      if (!isReferenceNameOf(objType, qName)) {
+        return;
       }
+
+      objType.setJSDocInfo(docInfo);
+      JSType.toMaybeFunctionType(objType).getInstanceType().setJSDocInfo(docInfo);
+    } else if (objType.isEnumType()) {
+      // Given: `/** @enum {number} */ MyEnum = { FOO: 0 };`
+      // Then: typeOf(MyEnum).referenceName() == "enum{MyEnum}"
+      // Then: typeOf(MyEnum.FOO).referenceName() == "MyEnum"
+      ObjectType elementType = objType.toMaybeEnumType().getElementsType();
+      if (!isReferenceNameOf(elementType, qName)) {
+        return;
+      }
+
+      objType.setJSDocInfo(docInfo);
+      elementType.setJSDocInfo(docInfo);
     } else if (!objType.isNativeObjectType() && objType.isFunctionType()) {
-      // Structural functions.
+      // Anonymous function types identified by their parameter and return types. Remember there can
+      // be many unique but equal instances.
       objType.setJSDocInfo(docInfo);
     }
+  }
+
+  private static boolean isReferenceNameOf(ObjectType type, String name) {
+    return type.hasReferenceName() && type.getReferenceName().equals(name);
   }
 }
