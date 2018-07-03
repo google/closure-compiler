@@ -1527,6 +1527,25 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     assertType(foo).withTypeOfProp("method").isEqualTo(method);
   }
 
+  public void testClassDeclarationWithAsyncMethod() {
+    testSame(
+        lines(
+            "class Foo {",
+            "  /** @param {string} arg */",
+            "  async method(arg) {",
+            "    METHOD:;",
+            "  }",
+            "}"));
+    TypedScope methodBlockScope = getLabeledStatement("METHOD").enclosingScope;
+    TypedScope methodScope = methodBlockScope.getParentScope();
+    assertScope(methodScope).declares("arg").directly().withTypeThat().isString();
+
+    FunctionType method = (FunctionType) methodScope.getRootNode().getJSType();
+    assertType(method).toStringIsEqualTo("function(this:Foo, string): Promise<undefined>");
+    FunctionType foo = (FunctionType) (findNameType("Foo", globalScope));
+    assertType(foo.getInstanceType()).withTypeOfProp("method").isEqualTo(method);
+  }
+
   public void testClassDeclarationWithGeneratorMethod() {
     testSame(
         lines(

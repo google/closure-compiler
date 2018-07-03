@@ -15,8 +15,10 @@
  */
 package com.google.javascript.jscomp;
 
+import static com.google.javascript.jscomp.CheckSuper.INVALID_SUPER_ACCESS;
 import static com.google.javascript.jscomp.CheckSuper.INVALID_SUPER_CALL;
 import static com.google.javascript.jscomp.CheckSuper.INVALID_SUPER_CALL_WITH_SUGGESTION;
+import static com.google.javascript.jscomp.CheckSuper.INVALID_SUPER_USAGE;
 import static com.google.javascript.jscomp.CheckSuper.MISSING_CALL_TO_SUPER;
 import static com.google.javascript.jscomp.CheckSuper.THIS_BEFORE_SUPER;
 
@@ -29,6 +31,14 @@ public final class CheckSuperTest extends CompilerTestCase {
   @Override
   protected void setUp() throws Exception {
     super.setUp();
+  }
+
+  public void testInvalidUsage() {
+    // 'super' may only appear directly within a CALL, a GETPROP, or a GETELEM.
+    testError("class Foo extends Bar { constructor() { super(); super; } }", INVALID_SUPER_USAGE);
+    testError("class Foo extends Bar { foo() { super; } }", INVALID_SUPER_USAGE);
+    testError("function f() { super; }", INVALID_SUPER_USAGE);
+    testError("super;", INVALID_SUPER_USAGE);
   }
 
   public void testMissingSuper() {
@@ -72,27 +82,34 @@ public final class CheckSuperTest extends CompilerTestCase {
     testSame("class C extends D { constructor() { const c = function() { this; }; super(); } }");
   }
 
-  public void testInConstructorNoBaseClass() {
+  public void testOutsideClass() {
     testError("var i = super();", INVALID_SUPER_CALL);
+    testError("var i = super.i;", INVALID_SUPER_ACCESS);
+    testError("var i = super[x];", INVALID_SUPER_ACCESS);
   }
 
-  public void testNoBaseClass() {
+  public void testInOrdinaryFunction() {
+    testError("function f() { super(); }", INVALID_SUPER_CALL);
+    testError("function f() { var i = super.i; }", INVALID_SUPER_ACCESS);
+    testError("function f() { var i = super[x]; }", INVALID_SUPER_ACCESS);
+  }
+
+  public void testCallWithNoBaseClass() {
     testError("class C { constructor() { super(); }}", INVALID_SUPER_CALL);
     testError("class C { constructor() { super(1); }}", INVALID_SUPER_CALL);
-    testError("class C { static foo() { super(); }}", INVALID_SUPER_CALL);
   }
 
-  public void testInConstructor() {
+  public void testCallInConstructor() {
     testSame("class C extends D { constructor() { super(); }}");
     testSame("class C extends D { constructor() { super(1); }}");
   }
 
-  public void testNestedInConstructor() {
+  public void testNestedCallInConstructor() {
     testError(
         "class C extends D { constructor() { (()=>{ super(); })(); }}", MISSING_CALL_TO_SUPER);
   }
 
-  public void testInNonConstructor() {
+  public void testCallInMethod() {
     test(
         srcs("class C extends D { foo() { super(); }}"),
         error(INVALID_SUPER_CALL_WITH_SUGGESTION)
@@ -101,17 +118,17 @@ public final class CheckSuperTest extends CompilerTestCase {
         srcs("class C extends D { foo() { super(1); }}"),
         error(INVALID_SUPER_CALL_WITH_SUGGESTION)
             .withMessage("super() not allowed here. Did you mean super.foo?"));
-  }
-
-  public void testNestedInNonConstructor() {
+    testError("class C { static foo() { super(); }}", INVALID_SUPER_CALL);
     testError("class C extends D { foo() { (()=>{ super(); })(); }}", INVALID_SUPER_CALL);
   }
 
-  public void testDotMethodInNonConstructor() {
+  public void testPropertyInMethod() {
     testSame("class C extends D { foo() { super.foo(); }}");
     testSame("class C extends D { foo() { super.foo(1); }}");
 
     // TODO(tbreisacher): Consider warning for this. It's valid but likely indicates a mistake.
+    testSame("class C extends D { foo() { var x = super.bar; }}");
+    testSame("class C extends D { foo() { var x = super[y]; }}");
     testSame("class C extends D { foo() { super.bar(); }}");
   }
 
@@ -135,4 +152,27 @@ public final class CheckSuperTest extends CompilerTestCase {
   public void testInvalidThisReference_withExplicitReturnInConstructor() {
     testError("class C extends D { constructor() { this.x = 3; return {}; } }", THIS_BEFORE_SUPER);
   }
+
+  public void testPropertyInConstructor() {
+    // TODO(sdh): See note in testPropertyInMethod - these are valid but questionable.
+    testSame("class C extends D { constructor() { super(); super.foo(); }}");
+    testSame("class C extends D { constructor() { super(); super.foo(1); }}");
+    testSame("class C extends D { constructor() { super(); var x = super.bar; }}");
+  }
+
+  public void testNestedProperty() {
+    testSame("class C extends D { constructor() { super(); (()=>{ super.foo(); })(); }}");
+    testSame("class C extends D { foo() { (()=>{ super.foo(); })(); }}");
+  }
+
+  public void testPropertyNoBaseClass() {
+    // TODO(sdh): See note in testPropertyInMethod - these are valid but questionable.
+    testSame("class C { constructor() { super.foo(); }}");
+    testSame("class C { foo() { super.foo(1); }}");
+    testSame("class C { foo() { super.bar(); }}");
+    testSame("class C { foo() { super.baz; }}");
+    testSame("class C { foo() { super[x](); }}");
+  }
+
+  // TODO(sdh): test super.prop access from static methods - this will need runtime tests, too!
 }

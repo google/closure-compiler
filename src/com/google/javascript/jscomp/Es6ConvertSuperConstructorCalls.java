@@ -64,7 +64,19 @@ implements NodeTraversal.Callback, HotSwapCompilerPass {
       // TODO(bradfordcsmith): Avoid creating data for non-constructor functions.
       constructorDataStack.push(new ConstructorData(n));
     } else if (n.isSuper()) {
+      // NOTE(sdh): Es6RewriteRestAndSpread rewrites super(...args) to super.apply(this, args),
+      // so we need to go up a level if that happened.  This extra getParent() could be removed
+      // if we could flip the order of these transpilation passes.
       Node superCall = parent.isCall() ? parent : parent.getParent();
+      if (!superCall.isCall() && parent.isGetProp()) {
+        // This is currently broken because whatever earlier pass is responsible for transpiling
+        // away super inside GETPROP is not handling it. Unfortunately there's not really a good
+        // way to handle it without additional runtime support, and it will be a lot easier to deal
+        // with after classes are typechecked natively. So for now, we just don't support it. This
+        // is not a problem, since any such usages were already broken, just with a different error.
+        t.report(n, Es6ToEs3Util.CANNOT_CONVERT_YET, "super access with no extends clause");
+        return false;
+      }
       checkState(superCall.isCall(), superCall);
       ConstructorData constructorData = checkNotNull(constructorDataStack.peek());
       constructorData.superCalls.add(superCall);

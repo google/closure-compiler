@@ -218,3 +218,24 @@ function testExtendsObject() {
   const withConstructor = new WithConstructor('message');
   assertEquals(withConstructor, withConstructor.superResult);
 }
+
+function testSuperInStaticMethod() {
+  class C1 {
+    static foo() { return 42; }
+  }
+  class D extends C1 {
+    static foo() { return super.foo() + 1; }
+  }
+  assertEquals(43, D.foo());
+}
+
+function testSuperInDifferentStaticMethod() {
+  class C2 {
+    static foo() { return 12; }
+  }
+  class D extends C2 {
+    static foo() { throw new Error('unexpected'); }
+    static bar() { return super.foo() + 2; }
+  }
+  assertEquals(14, D.bar());
+}

@@ -1966,7 +1966,7 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testClassDeclarationConstructorParametersMismatch() {
     testTypes(
         lines(
-            "class Foo {",
+            "class Foo {", //
             "  constructor(/** number */ arg) {}",
             "}",
             "new Foo('xyz');"),
@@ -2142,15 +2142,33 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   }
 
   public void testClassSyntaxRecord() {
-    // TODO(sdh): Add a matching property.
     testTypes(
         lines(
             "/** @record */", //
-            "class Rec {}",
-            "var /** !Rec */ rec = {};"));
+            "class Rec {",
+            "  constructor() { /** @type {string} */ this.bar; }",
+            "  foo(/** number */ arg) {}",
+            "}",
+            "var /** !Rec */ rec = {bar: 'x', foo() {}};"));
   }
 
-  public void testClassSyntaxRecordMismatch() {
+  public void testClassSyntaxRecordWithMethodMismatch() {
+    testTypes(
+        lines(
+            "/** @record */", //
+            "class Rec {",
+            "  foo(/** number */ arg) {}",
+            "}",
+            "var /** !Rec */ rec = {foo(/** string */ arg) {}};"),
+        lines(
+            "initializing variable",
+            "found   : {foo: function(string): undefined}",
+            "required: Rec",
+            "missing : []",
+            "mismatch: [foo]"));
+  }
+
+  public void testClassSyntaxRecordWithPropertyMismatch() {
     testTypes(
         lines(
             "/** @record */", //
@@ -2310,6 +2328,17 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
         "property foo on interface Foo is not implemented by type Baz");
   }
 
+  public void testClassInheritedInterfaceMethod() {
+    testTypes(
+        lines(
+            "/** @interface */",
+            "class Foo { foo() {} bar() {} }",
+            "/** @abstract */",
+            "class Bar { foo() {} }",
+            "/** @implements {Foo} */",
+            "class Baz extends Bar { /** @override */ bar() {} }"));
+  }
+
   public void testClassMixinAllowsNonOverriddenInterfaceMethods() {
     testTypes(
         lines(
@@ -2325,18 +2354,6 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "class Baz extends mixin() {}"),
         // TODO(sdh): This is supposed to be allowed.
         "property foo on interface Foo is not implemented by type Baz");
-  }
-
-  public void testClassMissingSuperCall() {
-    // TODO(sdh): Should be an error to access 'this' before super (but maybe not in TypeCheck).
-    testTypes(
-        lines(
-            "class Bar {}", //
-            "class Foo extends Bar {",
-            "  constructor() {",
-            "    this.x = 42;",
-            "  }",
-            "}"));
   }
 
   public void testClassDeclarationWithExtendsOnlyInJSDoc() {
@@ -2669,8 +2686,26 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "  static method(arg) {}",
             "}",
             "class Sub extends Base {",
-            "  /** @override */",
+            "  /** @override @param {string} arg */",
             "  static method(arg) {}",
+            "}"));
+        // TODO(sdh): This should actually check the override.
+        // lines(
+        //     "mismatch of the method property type and the type of the property it overrides "
+        //         + "from superclass Base",
+        //     "original: function((number|string)): undefined",
+        //     "override: function(string): undefined"));
+  }
+
+  public void testClassStaticMethodOverriddenWithIncompatibleInlineType() {
+    testTypes(
+        lines(
+            "class Base {",
+            "  static method(/** string|number */ arg) {}",
+            "}",
+            "class Sub extends Base {",
+            "  /** @override */",
+            "  static method(/** string */ arg) {}",
             "}"));
         // TODO(sdh): This should actually check the override.
         // lines(
@@ -2796,18 +2831,14 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "  foo() {}",
             "}",
             "class Bar extends Foo {",
-            "  /** @override */",
             "  bar() {",
             "    var /** null */ x = super.foo();",
             "  }",
             "}"),
-        // TODO(sdh): This should allow the call to super.foo but cause a type error.
-        new String[] {
-          "property bar not defined on any superclass of Bar",
-          lines(
-              "initializing variable",
-              "found   : string",
-              "required: null")});
+        lines(
+            "initializing variable",
+            "found   : string",
+            "required: null"));
   }
 
   public void testClassSuperMethodNotWidenedWhenOverrideWidens() {
@@ -2828,6 +2859,74 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "actual parameter 1 of Foo.prototype.foo does not match formal parameter",
             "found   : number",
             "required: string"));
+  }
+
+  public void testClassStaticSuperParameterMismatch() {
+    testTypes(
+        lines(
+            "class Foo {",
+            "  static foo(/** number */ arg) {}",
+            "}",
+            "class Bar extends Foo {",
+            "  /** @override */",
+            "  static foo() {",
+            "    super.foo('x');",
+            "  }",
+            "}"));
+        // TODO(sdh): Should produce an error.
+        // lines(
+        //     "actual parameter 1 of Foo.foo does not match formal parameter",
+        //     "found   : string",
+        //     "required: number"));
+  }
+
+  public void testClassStaticSuperParameterCountMismatch() {
+    testTypes(
+        lines(
+            "class Foo {",
+            "  static foo() {}",
+            "}",
+            "class Bar extends Foo {",
+            "  /** @override */",
+            "  static foo() {",
+            "    super.foo(1);",
+            "  }",
+            "}"));
+        // TODO(sdh): Should produce an error.
+        // "Function super.foo: called with 1 argument(s). "
+        //     + "Function requires at least 0 argument(s) and no more than 0 argument(s).");
+  }
+
+  public void testClassStaticSuperNotPresent() {
+    testTypes(
+        lines(
+            "class Foo {}",
+            "class Bar extends Foo {",
+            "  static foo() {",
+            "    super.foo;",
+            "  }",
+            "}"));
+        // TODO(sdh): Should produce an error.
+        // "Property foo never defined on Foo");
+  }
+
+  public void testClassStaticSuperCallsDifferentMethod() {
+    testTypes(
+        lines(
+            "class Foo {",
+            "  /** @param {string} arg */",
+            "  static foo(arg) {}",
+            "}",
+            "class Bar extends Foo {",
+            "  /** @override */",
+            "  static foo(/** string|number */ arg) {}",
+            "  static bar() { super.foo(42); }",
+            "}"));
+        // TODO(sdh): Should produce an error.
+        // lines(
+        //     "actual parameter 1 of Foo.foo does not match formal parameter",
+        //     "found   : number",
+        //     "required: string"));
   }
 
   // TODO - class methods (parameter types, return types, overrides inherit param/returns,

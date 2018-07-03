@@ -32,6 +32,14 @@ final class CheckSuper implements HotSwapCompilerPass, Callback {
       "JSC_INVALID_SUPER_CALL",
       "super() not allowed except in the constructor of a subclass");
 
+  static final DiagnosticType INVALID_SUPER_USAGE =
+      DiagnosticType.error(
+          "JSC_INVALID_SUPER_USAGE", "''super'' may only be used in a call or property access");
+
+  static final DiagnosticType INVALID_SUPER_ACCESS =
+      DiagnosticType.error(
+          "JSC_INVALID_SUPER_ACCESS", "''super'' may only be accessed within a class method");
+
   static final DiagnosticType INVALID_SUPER_CALL_WITH_SUGGESTION = DiagnosticType.error(
       "JSC_INVALID_SUPER_CALL_WITH_SUGGESTION",
       "super() not allowed here. Did you mean super.{0}?");
@@ -93,29 +101,45 @@ final class CheckSuper implements HotSwapCompilerPass, Callback {
   }
 
   private void visitSuper(NodeTraversal t, Node n, Node parent) {
+    if (parent.isCall()) {
+      visitSuperCall(t, n, parent);
+    } else if (parent.isGetProp() || parent.isGetElem()) {
+      visitSuperAccess(t, n);
+    } else {
+      t.report(n, INVALID_SUPER_USAGE);
+    }
+  }
+
+  private void visitSuperCall(NodeTraversal t, Node n, Node parent) {
     Node classNode = NodeUtil.getEnclosingClass(n);
     if (classNode == null || classNode.getSecondChild().isEmpty()) {
       t.report(n, INVALID_SUPER_CALL);
       return;
     }
 
-    if (parent.isCall()) {
-      Node fn = NodeUtil.getEnclosingFunction(parent);
-      if (fn == null) {
-        t.report(n, INVALID_SUPER_CALL);
-        return;
-      }
+    Node fn = NodeUtil.getEnclosingFunction(parent);
+    if (fn == null) {
+      t.report(n, INVALID_SUPER_CALL);
+      return;
+    }
 
-      Node memberDef = fn.getParent();
-      if (memberDef.isMemberFunctionDef()) {
-        if (memberDef.matchesQualifiedName("constructor")) {
-          // No error.
-        } else {
-          t.report(n, INVALID_SUPER_CALL_WITH_SUGGESTION, memberDef.getString());
-        }
+    Node memberDef = fn.getParent();
+    if (memberDef.isMemberFunctionDef()) {
+      if (memberDef.matchesQualifiedName("constructor")) {
+        // No error.
       } else {
-        t.report(n, INVALID_SUPER_CALL);
+        t.report(n, INVALID_SUPER_CALL_WITH_SUGGESTION, memberDef.getString());
       }
+    } else {
+      t.report(n, INVALID_SUPER_CALL);
+    }
+  }
+
+  private void visitSuperAccess(NodeTraversal t, Node n) {
+    Node classNode = NodeUtil.getEnclosingClass(n);
+    if (classNode == null) {
+      t.report(n, INVALID_SUPER_ACCESS);
+      return;
     }
   }
 
