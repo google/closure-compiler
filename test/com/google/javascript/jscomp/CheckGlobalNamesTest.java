@@ -461,4 +461,32 @@ public final class CheckGlobalNamesTest extends CompilerTestCase {
         "  console.log(e.name)" +
         "}");
   }
+
+  public void testEs6Subclass_noWarningOnValidPropertyAccess() {
+    testNoWarning(
+        lines(
+            "class Parent {",
+            "  static f() {}",
+            "}",
+            "class Child extends Parent {}",
+            "Child.f();"));
+  }
+
+  public void testEs6Subclass_noWarningOnInvalidPropertyAccess() {
+    // We don't warn for accesses on any ES6 class that extend another class and let typechecking
+    // handle warning for missing static properties.
+    // It's not clear that this class can actually do any better than typechecking.
+
+    // Not ok but we don't warn
+    testNoWarning(
+        lines(
+            "class Parent {}", // preserve newline
+            "class Child extends Parent {}",
+            "Child.f();"));
+  }
+
+  public void testEs6NonSubclass_stillWarnsForMissingProperty() {
+    // We still do warn for undefined properties on an ES6 class with no superclass
+    testWarning("class Child {} Child.f();", UNDEFINED_NAME_WARNING);
+  }
 }

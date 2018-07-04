@@ -276,12 +276,25 @@ class CheckGlobalNames implements CompilerPass {
       return false;
     }
 
-    if (name.parent.type == Name.Type.OBJECTLIT
-        || name.parent.type == Name.Type.CLASS) {
+    if (name.parent.type == Name.Type.OBJECTLIT) {
       return true;
+    }
+
+    if (name.parent.type == Name.Type.CLASS) {
+      return !hasSuperclass(name.parent);
     }
 
     return name.parent.type == Name.Type.FUNCTION && name.parent.isDeclaredType()
         && !functionPrototypeProps.contains(name.getBaseName());
+  }
+
+  /** Returns whether the given ES6 class extends something. */
+  private boolean hasSuperclass(Name es6Class) {
+    Node decl = es6Class.getDeclaration().getNode();
+    Node classNode = NodeUtil.getRValueOfLValue(decl);
+    checkState(classNode.isClass(), classNode);
+    Node superclass = classNode.getSecondChild();
+
+    return !superclass.isEmpty();
   }
 }
