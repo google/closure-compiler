@@ -96,18 +96,20 @@ public final class GwtRunner {
     String[] chunkWrapper;
     String chunkOutputPathPrefix;
     String compilationLevel;
+    Object createSourceMap;
     boolean dartPass;
     boolean debug;
-    JsMap defines;
     String[] define;
     String dependencyMode;
     String[] entryPoint;
     String env;
     boolean exportLocalPropertyDefinitions;
-    String[] extraAnnotationNames;
+    String[] extraAnnotationName;
+    String[] forceInjectLibraries;
     String[] formatting;
     boolean generateExports;
     String[] hideWarningsFor;
+    boolean injectLibraries;
     String isolationMode;
     String[] jscompError;
     String[] jscompOff;
@@ -117,8 +119,9 @@ public final class GwtRunner {
     String languageIn;
     String languageOut;
     String moduleResolution;
-    boolean newTypeInf;
+    @Deprecated boolean newTypeInf;
     String outputWrapper;
+    String packageJsonEntryNames;
     boolean parseInlineSourceMaps;
     @Deprecated
     boolean polymerPass;
@@ -128,8 +131,10 @@ public final class GwtRunner {
     boolean processCommonJsModules;
     boolean renaming;
     String renamePrefixNamespace;
+    String renameVariablePrefix;
     boolean rewritePolyfills;
     boolean sourceMapIncludeContent;
+    boolean strictModeInput;
     String tracerMode;
     boolean useTypesForOptimization;
     String warningLevel;
@@ -138,7 +143,7 @@ public final class GwtRunner {
     @Deprecated
     File[] jsCode;
     File[] externs;
-    boolean createSourceMap;
+    JsMap defines;
   }
 
   /**
@@ -174,11 +179,13 @@ public final class GwtRunner {
     defaultFlags.entryPoint = null;
     defaultFlags.env = "BROWSER";
     defaultFlags.exportLocalPropertyDefinitions = false;
-    defaultFlags.extraAnnotationNames = null;
+    defaultFlags.extraAnnotationName = null;
     defaultFlags.externs = null;
+    defaultFlags.forceInjectLibraries = null;
     defaultFlags.formatting = null;
     defaultFlags.generateExports = false;
     defaultFlags.hideWarningsFor = null;
+    defaultFlags.injectLibraries = true;
     defaultFlags.jsCode = null;
     defaultFlags.jscompError = null;
     defaultFlags.jscompOff = null;
@@ -191,6 +198,7 @@ public final class GwtRunner {
     defaultFlags.newTypeInf = false;
     defaultFlags.isolationMode = "NONE";
     defaultFlags.outputWrapper = null;
+    defaultFlags.packageJsonEntryNames = null;
     defaultFlags.parseInlineSourceMaps = true;
     defaultFlags.polymerPass = false;
     defaultFlags.polymerVersion = null;
@@ -198,9 +206,11 @@ public final class GwtRunner {
     defaultFlags.processClosurePrimitives = true;
     defaultFlags.processCommonJsModules = false;
     defaultFlags.renamePrefixNamespace = null;
+    defaultFlags.renameVariablePrefix = null;
     defaultFlags.renaming = true;
     defaultFlags.rewritePolyfills = true;
     defaultFlags.sourceMapIncludeContent = false;
+    defaultFlags.strictModeInput = true;
     defaultFlags.tracerMode = "OFF";
     defaultFlags.warningLevel = "DEFAULT";
     defaultFlags.useTypesForOptimization = true;
@@ -305,7 +315,7 @@ public final class GwtRunner {
         parseModuleWrappers(Arrays.asList(getStringArray(flags, "chunkWrapper")), chunks);
 
     for (JSModule c : chunks) {
-      if (flags.createSourceMap) {
+      if (flags.createSourceMap != null) {
         compiler.getSourceMap().reset();
       }
 
@@ -353,7 +363,7 @@ public final class GwtRunner {
 
       file.src = out.toString();
 
-      if (flags.createSourceMap) {
+      if (flags.createSourceMap != null) {
         StringBuilder b = new StringBuilder();
         try {
           compiler.getSourceMap().appendTo(b, file.path);
@@ -403,7 +413,7 @@ public final class GwtRunner {
       }
       postfix = flags.outputWrapper.substring(pos + marker.length());
     }
-    if (flags.createSourceMap) {
+    if (flags.createSourceMap != null) {
       StringBuilder b = new StringBuilder();
       try {
         compiler.getSourceMap().appendTo(b, flags.jsOutputFile);
@@ -484,8 +494,8 @@ public final class GwtRunner {
 
     options.setCodingConvention(new ClosureCodingConvention());
 
-    if (flags.extraAnnotationNames != null) {
-      options.setExtraAnnotationNames(Arrays.asList(flags.extraAnnotationNames));
+    if (flags.extraAnnotationName != null) {
+      options.setExtraAnnotationNames(Arrays.asList(flags.extraAnnotationName));
     }
 
     CompilationLevel level = DEFAULT_COMPILATION_LEVEL;
@@ -569,7 +579,14 @@ public final class GwtRunner {
 
     options.setDartPass(flags.dartPass);
 
+    options.setRenamePrefix(flags.renameVariablePrefix);
     options.setRenamePrefixNamespace(flags.renamePrefixNamespace);
+
+    options.setPreventLibraryInjection(!flags.injectLibraries);
+
+    if (flags.forceInjectLibraries != null) {
+      options.setForceLibraryInjection(Arrays.asList(flags.forceInjectLibraries));
+    }
 
     options.setPreserveTypeAnnotations(flags.preserveTypeAnnotations);
 
@@ -582,11 +599,16 @@ public final class GwtRunner {
     if (flags.tracerMode != null) {
       options.setTracerMode(TracerMode.valueOf(flags.tracerMode));
     }
+    options.setStrictModeInput(flags.strictModeInput);
 
     options.setSourceMapIncludeSourcesContent(flags.sourceMapIncludeContent);
 
     if (flags.moduleResolution != null) {
       options.setModuleResolutionMode(ResolutionMode.valueOf(flags.moduleResolution));
+    }
+
+    if (flags.packageJsonEntryNames != null) {
+      options.setPackageJsonEntryNames(Arrays.asList(flags.packageJsonEntryNames.split(",\\s*")));
     }
 
     if (!flags.renaming) {
@@ -633,8 +655,12 @@ public final class GwtRunner {
 
     options.setTrustedStrings(true);
 
-    if (flags.createSourceMap) {
-      options.setSourceMapOutputPath("%output%.map");
+    if (flags.createSourceMap != null) {
+      if (flags.createSourceMap instanceof String) {
+        options.setSourceMapOutputPath((String) flags.createSourceMap);
+      } else if (!flags.createSourceMap.equals(false)) {
+        options.setSourceMapOutputPath("%output%.map");
+      }
     }
     options.setSourceMapIncludeSourcesContent(flags.sourceMapIncludeContent);
     options.setParseInlineSourceMaps(flags.parseInlineSourceMaps);
