@@ -1866,6 +1866,12 @@ CSSProperties.prototype.animationPlayState;
  */
 CSSProperties.prototype.animationDelay;
 
+/**
+ * @type {string}
+ * @see https://www.w3.org/TR/css-animations-1/#animation-fill-mode
+ */
+CSSProperties.prototype.animationFillMode;
+
 // CSS 3 transforms
 
 /**
