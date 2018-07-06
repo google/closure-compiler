@@ -1842,6 +1842,12 @@ CSSProperties.prototype.animationDuration;
  */
 CSSProperties.prototype.animationTimingFunction;
 
+/**
+ * @type {string|number}
+ * @see https://www.w3.org/TR/css-animations-1/#animation-iteration-count
+ */
+CSSProperties.prototype.animationIterationCount;
+
 // CSS 3 transforms
 
 /**
