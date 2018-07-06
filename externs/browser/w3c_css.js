@@ -1854,6 +1854,12 @@ CSSProperties.prototype.animationIterationCount;
  */
 CSSProperties.prototype.animationDirection;
 
+/**
+ * @type {string}
+ * @see https://www.w3.org/TR/css-animations-1/#animation-play-state
+ */
+CSSProperties.prototype.animationPlayState;
+
 // CSS 3 transforms
 
 /**
