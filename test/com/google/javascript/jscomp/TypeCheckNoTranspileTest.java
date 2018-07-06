@@ -2211,13 +2211,16 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   }
 
   public void testClassJSDocExtendsInconsistentWithExtendsClause() {
-    // TODO(sdh): Should be an error.
     testTypes(
         lines(
             "class Bar {}", //
             "class Baz {}",
             "/** @extends {Bar} */",
-            "class Foo extends Baz {}"));
+            "class Foo extends Baz {}"),
+        lines(
+            "mismatch in declaration of superclass type",
+            "found   : Baz",
+            "required: Bar"));
   }
 
   public void testClassJSDocExtendsWithMissingExtendsClause() {
@@ -2237,11 +2240,16 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "var obj = {};",
             "class Bar extends obj['abc'] {}",
             "var /** !Foo */ foo = new Bar();"),
-        // TODO(sdh): It would be good to recognize that Bar actually *is* a Foo.
-        lines(
-            "initializing variable",
-            "found   : Bar",
-            "required: Foo"));
+        new String[] {
+          "The right-hand side of an extends clause must be a qualified name, or else @extends must"
+              + " be specified in JSDoc",
+          // TODO(sdh): This is a little confusing, but there doesn't seem to be a way to suppress
+          // this additional error.
+          lines(
+              "initializing variable",
+              "found   : Bar",
+              "required: Foo"),
+        });
   }
 
   public void testClassExtendsFunctionCall() {
@@ -2252,27 +2260,61 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "function mixin() {}",
             "class Bar extends mixin() {}",
             "var /** !Foo */ foo = new Bar();"),
-        // TODO(sdh): It would be good to recognize that Bar actually *is* a Foo.
-        lines(
-            "initializing variable",
-            "found   : Bar",
-            "required: Foo"));
+        new String[] {
+          "The right-hand side of an extends clause must be a qualified name, or else @extends must"
+              + " be specified in JSDoc",
+          // TODO(sdh): This is a little confusing, but there doesn't seem to be a way to suppress
+          // this additional error.
+          lines(
+              "initializing variable",
+              "found   : Bar",
+              "required: Foo"),
+        });
   }
 
-  public void testClassExtendsFunctionCallOverridesMethod() {
+  public void testClassInterfaceExtendsFunctionCall() {
+    testTypes(
+        lines(
+            "/** @interface */",
+            "class Foo {}",
+            "/** @return {function(new:Foo)} */",
+            "function mixin() {}",
+            "/** @interface */",
+            "class Bar extends mixin() {}"),
+        "The right-hand side of an extends clause must be a qualified name, or else @extends must"
+            + " be specified in JSDoc");
+  }
+
+  public void testClassExtendsFunctionCallWithJSDoc() {
     testTypes(
         lines(
             "class Foo {",
-            "  /** @return {number} */ foo() {}",
+            "  constructor() { /** @type {number} */ this.foo; }",
             "}",
             "/** @return {function(new:Foo)} */",
             "function mixin() {}",
-            "class Bar extends mixin() {",
-            "  /** @override */",
-            "  foo() {}",
-            "}"),
-        // TODO(sdh): We should respect the type of the function return if possible.
-        "property foo not defined on any superclass of Bar");
+            "/** @extends {Foo} */",
+            "class Bar extends mixin() {}",
+            "var /** null */ x = new Bar().foo;"),
+        lines(
+            "initializing variable", //
+            "found   : number",
+            "required: null"));
+  }
+
+  public void testClassExtendsFunctionCallWithIncompatibleJSDoc() {
+    testTypes(
+        lines(
+            "class Foo {}",
+            "class Baz {}",
+            "/** @return {function(new:Foo)} */",
+            "function mixin() {}",
+            "/** @extends {Baz} */",
+            "class Bar extends mixin() {}"),
+        lines(
+            "mismatch in declaration of superclass type", //
+            "found   : Foo",
+            "required: Baz"));
   }
 
   public void testClassImplementsInterface() {
@@ -2297,7 +2339,7 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
         "property foo on interface Foo is not implemented by type Bar");
   }
 
-  public void testClassAbstractClassNeedNonExplicitlyOverrideUnimplementedInterfaceMethods() {
+  public void testClassAbstractClassNeedNotExplicitlyOverrideUnimplementedInterfaceMethods() {
     testTypes(
         lines(
             "/** @interface */",
@@ -2363,6 +2405,7 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   }
 
   public void testClassMixinAllowsNonOverriddenInterfaceMethods() {
+    // See cl/188076790 and b/74120976
     testTypes(
         lines(
             "/** @interface */",
@@ -2373,7 +2416,7 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             // TODO(sdh): Intersection types would allow annotating this correctly.
             "/** @return {function(new:Bar)} */",
             "function mixin() {}",
-            "/** @implements {Foo} */",
+            "/** @extends {Bar} @implements {Foo} */",
             "class Baz extends mixin() {}"),
         // TODO(sdh): This is supposed to be allowed.
         "property foo on interface Foo is not implemented by type Baz");
@@ -2644,7 +2687,7 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "}",
             "new C().m();"),
         // TODO(sdh): This error message should be different from the converse case.
-        // Probably should say "Instance property m never defined on C".
+        // Probably should say "Property m never defined on instances of C".
         "Property m never defined on C");
   }
 
@@ -2656,7 +2699,8 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "}",
             "C.m();"),
         // TODO(sdh): This error message should be different from the converse case.
-        // Probably should say "Static property m never defined on C".
+        // Maybe should say "Property m never defined on namespace C". (but we need to think
+        // about union types, etc)
         "Property m never defined on C");
   }
 

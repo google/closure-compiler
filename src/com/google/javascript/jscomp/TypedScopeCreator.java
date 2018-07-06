@@ -155,6 +155,12 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
           "JSC_INCOMPATIBLE_ALIAS_ANNOTATION",
           "Annotation {0} on {1} incompatible with aliased type.");
 
+  static final DiagnosticType DYNAMIC_EXTENDS_WITHOUT_JSDOC =
+      DiagnosticType.warning(
+          "JSC_DYNAMIC_EXTENDS_WITHOUT_JSDOC",
+          "The right-hand side of an extends clause must be a qualified name, or else @extends must"
+              + " be specified in JSDoc");
+
   static final DiagnosticGroup ALL_DIAGNOSTICS = new DiagnosticGroup(
       DELEGATE_PROXY_SUFFIX,
       MALFORMED_TYPEDEF,
@@ -164,7 +170,8 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       CONSTRUCTOR_EXPECTED,
       UNKNOWN_LENDS,
       LENDS_ON_NON_OBJECT,
-      INCOMPATIBLE_ALIAS_ANNOTATION);
+      INCOMPATIBLE_ALIAS_ANNOTATION,
+      DYNAMIC_EXTENDS_WITHOUT_JSDOC);
 
   private final AbstractCompiler compiler;
   private final ErrorReporter typeParsingErrorReporter;
@@ -966,7 +973,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
 
       // Look at the extends clause and/or JSDoc info to find a super class.  Use generics from the
       // JSDoc to supplement the extends type when available.
-      ObjectType baseType = findSuperClassFromNodes(extendsClause);
+      ObjectType baseType = findSuperClassFromNodes(extendsClause, info);
       builder.inferInheritance(info, baseType);
 
       // Look for an explicit constructor.
@@ -1012,7 +1019,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
      * be determined.
      */
     @Nullable
-    private ObjectType findSuperClassFromNodes(Node extendsNode) {
+    private ObjectType findSuperClassFromNodes(Node extendsNode, @Nullable JSDocInfo info) {
       if (extendsNode.isEmpty()) {
         // No extends clause: return null.
         return null;
@@ -1025,10 +1032,13 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
           if (var != null) {
             ctorType = var.getType();
           }
-        } else if (extendsNode.isCall()) {
-          // TODO(sdh): Do some limited type inference to get the return type for a mixin?
-          // The difficulty is that mixin functions are likely to be generic, so we need to be at
-          // least a little sophisticated here.
+        } else {
+          // Anything TypedScopeCreator can infer has already been read off the AST.  This is likely
+          // a CALL or GETELEM, which are unknown until TypeInference.  Instead, ignore it for now,
+          // require an @extends tag in the JSDoc, and verify correctness in TypeCheck.
+          if (info == null || !info.hasBaseType()) {
+            report(JSError.make(extendsNode, DYNAMIC_EXTENDS_WITHOUT_JSDOC));
+          }
         }
       }
       if (ctorType != null && (ctorType.isConstructor() || ctorType.isInterface())) {

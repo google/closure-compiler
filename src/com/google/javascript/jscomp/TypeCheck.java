@@ -2001,7 +2001,9 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       // Ensure that the `extends` clause is actually a constructor or interface.  If it is, but
       // it's the wrong one then checkConstructor or checkInterface will warn.
       JSType superType = extendsClause.getJSType();
-      if (!(superType.isConstructor() || superType.isInterface())) {
+      if (superType.isConstructor() || superType.isInterface()) {
+        validator.expectExtends(n, functionType, superType.toMaybeFunctionType());
+      } else {
         compiler.report(
             t.makeError(
                 n,
