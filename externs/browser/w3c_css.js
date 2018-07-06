@@ -1836,6 +1836,12 @@ CSSProperties.prototype.animationName;
  */
 CSSProperties.prototype.animationDuration;
 
+/**
+ * @type {string}
+ * @see https://www.w3.org/TR/css-animations-1/#animation-timing-function
+ */
+CSSProperties.prototype.animationTimingFunction;
+
 // CSS 3 transforms
 
 /**
