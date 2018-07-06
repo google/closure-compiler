@@ -1872,6 +1872,12 @@ CSSProperties.prototype.animationDelay;
  */
 CSSProperties.prototype.animationFillMode;
 
+/**
+ * @type {string|number}
+ * @see https://www.w3.org/TR/css-animations-1/#animation
+ */
+CSSProperties.prototype.animation;
+
 // CSS 3 transforms
 
 /**
