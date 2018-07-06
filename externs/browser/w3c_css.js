@@ -1860,6 +1860,12 @@ CSSProperties.prototype.animationDirection;
  */
 CSSProperties.prototype.animationPlayState;
 
+/**
+ * @type {string}
+ * @see https://www.w3.org/TR/css-animations-1/#animation-delay
+ */
+CSSProperties.prototype.animationDelay;
+
 // CSS 3 transforms
 
 /**
