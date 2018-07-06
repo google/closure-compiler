@@ -1822,6 +1822,14 @@ CSSProperties.prototype.opacity;
  */
 CSSProperties.prototype.textOverflow;
 
+// CSS 3 animations
+
+/**
+ * @type {string}
+ * @see https://www.w3.org/TR/css-animations-1/#animation-name
+ */
+CSSProperties.prototype.animationName;
+
 // CSS 3 transforms
 
 /**
