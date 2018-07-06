@@ -1162,8 +1162,11 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
       if (isInTestMode()) {
         modules = modulesSupplierForTesting.get();
       } else {
-        for (JsModuleSpec m : jsModuleSpecs) {
-          checkModuleName(m.getName());
+        if (JsonStreamMode.IN.equals(config.jsonStreamMode)
+            || JsonStreamMode.NONE.equals(config.jsonStreamMode)) {
+          for (JsModuleSpec m : jsModuleSpecs) {
+            checkModuleName(m.getName());
+          }
         }
         modules = createJsModules(jsModuleSpecs, inputs);
       }
