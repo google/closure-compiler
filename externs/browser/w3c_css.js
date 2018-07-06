@@ -1830,6 +1830,12 @@ CSSProperties.prototype.textOverflow;
  */
 CSSProperties.prototype.animationName;
 
+/**
+ * @type {string}
+ * @see https://www.w3.org/TR/css-animations-1/#animation-duration
+ */
+CSSProperties.prototype.animationDuration;
+
 // CSS 3 transforms
 
 /**
