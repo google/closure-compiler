@@ -383,7 +383,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
 
     // Now re-traverse the given script.
     NormalScopeBuilder scopeBuilder = new NormalScopeBuilder(globalScope);
-    NodeTraversal.traverseTyped(compiler, scriptRoot, scopeBuilder);
+    NodeTraversal.traverse(compiler, scriptRoot, scopeBuilder);
   }
 
   /**
@@ -548,7 +548,8 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
 
     /** Traverse the scope root and build it. */
     void build() {
-      NodeTraversal.traverse(compiler, currentScope.getRootNode(), this);
+      new NodeTraversal(compiler, this, ScopeCreator.ASSERT_NO_SCOPES_CREATED)
+          .traverseAtScope(currentScope);
     }
 
     @Override
@@ -558,7 +559,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
         checkNotNull(inputId);
         sourceName = NodeUtil.getSourceName(n);
       }
-      if (inCurrentScope(t)) {
+      if (parent == null || inCurrentScope(t)) {
         visitPreorder(t, n, parent);
         return true;
       }

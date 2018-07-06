@@ -34,4 +34,23 @@ interface ScopeCreator {
   AbstractScope<?, ?> createScope(Node n, AbstractScope<?, ?> parent);
 
   boolean hasBlockScope();
+
+  /**
+   * A scope creator that can be provided to NodeTraversal to ensure that no scopes are actually
+   * ever created. This is in contrast to the default Es6SyntacticScopeCreator, which will create
+   * scopes on demand.
+   */
+  ScopeCreator ASSERT_NO_SCOPES_CREATED =
+      new ScopeCreator() {
+        @Override
+        public AbstractScope<?, ?> createScope(Node n, AbstractScope<?, ?> parent) {
+          throw new IllegalStateException(
+              "ScopeCreator.ASSERT_NO_SCOPES_CREATED cannot create child scopes.");
+        }
+
+        @Override
+        public boolean hasBlockScope() {
+          return true;
+        }
+      };
 }
