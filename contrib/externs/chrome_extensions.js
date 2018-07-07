@@ -122,15 +122,30 @@
  * Note that, unfortunately, the actual Port class definition in this file
  * does not follow this recommendation.
  *
- * For #3, use {!Object}, that is, a bag of properites. This is a sad reality
- * given that the Chrome extensions do not document a real type. It is tempting
- * to define a real type within this file and treat this situation as identical
- * to #2, but that means a new type is being defined in this file and developers
- * do not expect to find required new types in extension files.
+ * For #3, the introduction of arrow functions that are frequently used for
+ * callbacks has changed things. Prior to arrow functions, the Best Practices
+ * recommended using !Object since that's what in the docs. It was tempting to
+ * define a real type within this file and treat this situation as identical to
+ * #2, but that meant a new type was being defined in this file and developers
+ * did not expect to find required new types in extension files.
  *
- * If a real type is declared here, then developers will need to incorporate
- * that type into the signature of their callback method and there will be
- * no indication from the docs that they need to do so.
+ * Arrow functions change things. The common use of them does not include
+ * specifying a type for the callback's param, so the compiler infers the type
+ * from the externs file. This is good and happens automatically with no actions
+ * required of the developer. Futhermore, since the param has a type, field
+ * references can use dot access, obj.someField, vs bracket access,
+ * obj['someField'] as required for !Object.
+ *
+ * So, for #3, the best practice is to define a record type for the parameter.
+ * See chrome.proxy.settings.GetResponse for an example. As mentioned above in
+ * the section for #1, there are three common ways to introduce a record type
+ * and any of them are acceptable. Of course, if a type is going to be used more
+ * than once, it should be named.
+ *
+ * While the externs file will define an undocumented record type for a
+ * callback's param, using !Object as specified in the docs will continue to
+ * work. This is crucial when a callback is a regular function, as opposed to an
+ * arrow function (whose parameter's type can be inferred).
  *
  * D. Events
  * Most packages define a set of events with the standard set of methods:
