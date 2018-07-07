@@ -482,10 +482,13 @@ public class CommandLineRunner extends
         + "QUIET, DEFAULT, VERBOSE")
     private WarningLevel warningLevel = WarningLevel.DEFAULT;
 
-    @Option(name = "--debug",
-        hidden = true,
-        handler = BooleanOptionHandler.class,
-        usage = "Enable debugging options")
+    @Option(
+      name = "--debug",
+      handler = BooleanOptionHandler.class,
+      usage =
+          "Enable debugging options. Property renaming uses long mangled names which can be "
+              + "mapped back to the original name."
+    )
     private boolean debug = false;
 
     @Option(name = "--generate_exports",
@@ -571,9 +574,12 @@ public class CommandLineRunner extends
         + "annotated with @ngInject")
     private boolean angularPass = false;
 
-    @Option(name = "--polymer_pass",
-        handler = BooleanOptionHandler.class,
-        usage = "Equivalent to --polymer_version=1")
+    @Option(
+      name = "--polymer_pass",
+      handler = BooleanOptionHandler.class,
+      hidden = true,
+      usage = "Equivalent to --polymer_version=1"
+    )
     @Deprecated
     private boolean polymerPass = false;
 
@@ -633,8 +639,7 @@ public class CommandLineRunner extends
       usage =
           "Sets the language spec to which output should conform. "
               + "Options: ECMASCRIPT3, ECMASCRIPT5, ECMASCRIPT5_STRICT, "
-              + "ECMASCRIPT6_TYPED (experimental), ECMASCRIPT_2015, ECMASCRIPT_2016, "
-              + "ECMASCRIPT_2017, ECMASCRIPT_NEXT, NO_TRANSPILE"
+              + "ECMASCRIPT_2015"
     )
     private String languageOut = "ECMASCRIPT5";
 
@@ -683,9 +688,12 @@ public class CommandLineRunner extends
     private CompilerOptions.TracerMode tracerMode =
         CompilerOptions.TracerMode.OFF;
 
-    @Option(name = "--new_type_inf",
-        handler = BooleanOptionHandler.class,
-        usage = "Deprecated.  Does nothing. Use jscomp_error=strictCheckTypes instead.")
+    @Option(
+      name = "--new_type_inf",
+      hidden = true,
+      handler = BooleanOptionHandler.class,
+      usage = "Deprecated.  Does nothing. Use jscomp_error=strictCheckTypes instead."
+    )
     private boolean useNewTypeInference = false;
 
     @Option(name = "--rename_variable_prefix",
@@ -848,6 +856,27 @@ public class CommandLineRunner extends
       }
     }
 
+    private static final ImmutableSet<String> gwtUnsupportedFlags =
+        new ImmutableSet.Builder<String>()
+            .add(
+                "externs",
+                "js",
+                "conformance_configs",
+                "error_format",
+                "warnings_whitelist_file",
+                "output_wrapper_file",
+                "output_manifest",
+                "output_chunk_dependencies",
+                "property_renaming_report",
+                "source_map_input",
+                "source_map_location_mapping",
+                "variable_renaming_report",
+                "charset",
+                "help",
+                "third_party",
+                "version")
+            .build();
+
     private static final Multimap<String, String> categories =
         new ImmutableMultimap.Builder<String, String>()
             .putAll(
@@ -901,7 +930,7 @@ public class CommandLineRunner extends
                     "dart_pass",
                     "force_inject_library",
                     "inject_libraries",
-                    "polymer_pass",
+                    "polymer_version",
                     "process_closure_primitives",
                     "rewrite_polyfills"))
             .putAll(
@@ -1011,10 +1040,18 @@ public class CommandLineRunner extends
                 });
             stringWriter.flush();
             String rawOptionUsage = stringWriter.toString();
+            Matcher optionNameMatches = Pattern.compile(" *--([a-z0-9_]+)").matcher(rawOptionUsage);
+            String jsVersionDisclaimer = "";
+            if (optionNameMatches.find()
+                && gwtUnsupportedFlags.contains(optionNameMatches.group(1))) {
+              jsVersionDisclaimer =
+                  "<sub><sup>*Not supported by the JavaScript version*</sup></sub>  \n";
+            }
             int delimiterIndex = rawOptionUsage.indexOf(" : ");
             if (delimiterIndex > 0) {
               outputStream.write(
                   "\n**" + rawOptionUsage.substring(0, delimiterIndex).trim() + "**  \n");
+              outputStream.write(jsVersionDisclaimer);
 
               String optionDescription =
                   rawOptionUsage
@@ -1024,6 +1061,7 @@ public class CommandLineRunner extends
               outputStream.write(optionDescription + "\n");
             } else {
               outputStream.write(rawOptionUsage.replaceAll(markdownCharsToEscape, "\\\\$0"));
+              outputStream.write(jsVersionDisclaimer);
             }
             outputStream.flush();
           }
