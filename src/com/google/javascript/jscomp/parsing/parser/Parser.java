@@ -1420,6 +1420,26 @@ public class Parser {
         getTreeLocation(listStart), result.build());
   }
 
+  private FormalParameterListTree parseSetterParameterList() {
+    FormalParameterListTree parameterList = parseFormalParameterList(ParamContext.IMPLEMENTATION);
+
+    if (parameterList.parameters.size() != 1) {
+      reportError(
+          parameterList,
+          "Setter must have exactly 1 parameter, found %d",
+          parameterList.parameters.size());
+    }
+
+    if (parameterList.parameters.size() >= 1) {
+      ParseTree parameter = parameterList.parameters.get(0);
+      if (parameter.isRestParameter()) {
+        reportError(parameter, "Setter must not have a rest parameter");
+      }
+    }
+
+    return parameterList;
+  }
+
   private ParseTree parseTypeAnnotation() {
     eat(TokenType.COLON);
     return parseType();
@@ -2667,31 +2687,28 @@ public class Parser {
     eatPredefinedString(PredefinedName.SET);
     if (peekPropertyName(0)) {
       Token propertyName = eatObjectLiteralPropertyName();
-      eat(TokenType.OPEN_PAREN);
-      IdentifierToken parameter = eatId();
-      ParseTree type = maybeParseColonType();
-      eat(TokenType.CLOSE_PAREN);
+      FormalParameterListTree parameter = parseSetterParameterList();
+
       ParseTree returnType = maybeParseColonType();
       if (returnType != null) {
         reportError(scanner.peekToken(), "setter should not have any returns");
       }
+
       BlockTree body = parseFunctionBody();
+
       return new SetAccessorTree(
-          getTreeLocation(partial.start), propertyName, partial.isStatic, parameter, type, body);
+          getTreeLocation(partial.start), propertyName, partial.isStatic, parameter, body);
     } else {
       ParseTree property = parseComputedPropertyName();
-      eat(TokenType.OPEN_PAREN);
-      IdentifierToken parameter = eatId();
-      ParseTree type = maybeParseColonType();
-      eat(TokenType.CLOSE_PAREN);
+      FormalParameterListTree parameter = parseSetterParameterList();
       BlockTree body = parseFunctionBody();
+
       return new ComputedPropertySetterTree(
           getTreeLocation(partial.start),
           property,
           partial.isStatic,
           partial.accessModifier,
           parameter,
-          type,
           body);
     }
   }

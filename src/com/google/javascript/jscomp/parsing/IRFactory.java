@@ -1848,10 +1848,15 @@ class IRFactory {
       maybeWarnForFeature(tree, Feature.COMPUTED_PROPERTIES);
 
       Node key = transform(tree.property);
+
+      Node paramList = processFormalParameterList(tree.parameter);
+      setSourceInfo(paramList, tree.parameter);
+
       Node body = transform(tree.body);
-      Node paramList = IR.paramList(safeProcessName(tree.parameter));
+
       Node function = IR.function(IR.name(""), paramList, body);
       function.useSourceInfoIfMissingFromForTree(body);
+
       Node n = newNode(Token.COMPUTED_PROP, key, function);
       n.putBooleanProp(Node.COMPUTED_PROP_SETTER, true);
       n.putBooleanProp(Node.STATIC_MEMBER, tree.isStatic);
@@ -1877,14 +1882,18 @@ class IRFactory {
     Node processSetAccessor(SetAccessorTree tree) {
       Node key = processObjectLitKeyAsString(tree.propertyName);
       key.setToken(Token.SETTER_DEF);
+
+      Node paramList = processFormalParameterList(tree.parameter);
+      setSourceInfo(paramList, tree.parameter);
+
       Node body = transform(tree.body);
+
       Node dummyName = newStringNode(Token.NAME, "");
       setSourceInfo(dummyName, tree.propertyName);
-      Node paramList = newNode(Token.PARAM_LIST, safeProcessName(tree.parameter));
-      setSourceInfo(paramList, tree.parameter);
-      maybeProcessType(paramList.getFirstChild(), tree.type);
+
       Node value = newNode(Token.FUNCTION, dummyName, paramList, body);
       setSourceInfo(value, tree.body);
+
       key.addChildToFront(value);
       key.setStaticMember(tree.isStatic);
       return key;
@@ -1902,14 +1911,6 @@ class IRFactory {
         key.addChildToFront(value);
       }
       return key;
-    }
-
-    private Node safeProcessName(IdentifierToken identifierToken) {
-      if (identifierToken == null) {
-        return createMissingExpressionNode();
-      } else {
-        return processName(identifierToken);
-      }
     }
 
     private void checkParenthesizedExpression(ParenExpressionTree exprNode) {

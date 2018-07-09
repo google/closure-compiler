@@ -16,18 +16,15 @@
 
 package com.google.javascript.jscomp.parsing.parser.trees;
 
-import com.google.javascript.jscomp.parsing.parser.IdentifierToken;
 import com.google.javascript.jscomp.parsing.parser.TokenType;
 import com.google.javascript.jscomp.parsing.parser.util.SourceRange;
-
 import javax.annotation.Nullable;
 
 public class ComputedPropertySetterTree extends ParseTree {
   public final ParseTree property;
-  public final IdentifierToken parameter;
+  public final FormalParameterListTree parameter;
   public final boolean isStatic;
   @Nullable public final TokenType access;
-  @Nullable public final ParseTree type;
   public final BlockTree body;
 
   public ComputedPropertySetterTree(
@@ -35,8 +32,7 @@ public class ComputedPropertySetterTree extends ParseTree {
       ParseTree property,
       boolean isStatic,
       @Nullable TokenType access,
-      IdentifierToken parameter,
-      @Nullable ParseTree type,
+      FormalParameterListTree parameter,
       BlockTree body) {
     super(ParseTreeType.COMPUTED_PROPERTY_SETTER, location);
 
@@ -44,7 +40,6 @@ public class ComputedPropertySetterTree extends ParseTree {
     this.isStatic = isStatic;
     this.access = access;
     this.parameter = parameter;
-    this.type = type;
     this.body = body;
   }
 }

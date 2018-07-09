@@ -2822,19 +2822,74 @@ public final class ParserTest extends BaseJSTypeTestCase {
     expectFeatures(Feature.SETTER);
     mode = LanguageMode.ECMASCRIPT3;
     strictMode = SLOPPY;
+
     parseError("var x = {set 1(x){}};",
         IRFactory.SETTER_ERROR_MESSAGE);
     parseError("var x = {set 'a'(x){}};",
         IRFactory.SETTER_ERROR_MESSAGE);
     parseError("var x = {set a(x){}};",
         IRFactory.SETTER_ERROR_MESSAGE);
+
     mode = LanguageMode.ECMASCRIPT5;
+
     parse("var x = {set 1(x){}};");
     parse("var x = {set 'a'(x){}};");
     parse("var x = {set a(x){}};");
-    expectFeatures();
-    parseError("var x = {set a(){}};",
-        "'identifier' expected");
+
+    mode = LanguageMode.ECMASCRIPT6; // We only cover some of the common permutations though.
+
+    parse("var x = {set 1(x){}};");
+    parse("var x = {set 'a'(x){}};");
+    parse("var x = {set a(x){}};");
+
+    parse("var x = {set setter(x = 5) {}};");
+    parse("var x = {set setter(x = a) {}};");
+    parse("var x = {set setter(x = a + 5) {}};");
+
+    parse("var x = {set setter([x, y, z]) {}};");
+    parse("var x = {set setter([x, y, ...z]) {}};");
+    parse("var x = {set setter([x, y, z] = [1, 2, 3]) {}};");
+    parse("var x = {set setter([x = 1, y = 2, z = 3]) {}};");
+
+    parse("var x = {set setter({x, y, z}) {}};");
+    parse("var x = {set setter({x, y, z} = {x: 1, y: 2, z: 3}) {}};");
+    parse("var x = {set setter({x = 1, y = 2, z = 3}) {}};");
+
+    expectFeatures(); // Because these snippets don't contain valid setters.
+
+    parseError("var x = {set a() {}};", "Setter must have exactly 1 parameter, found 0");
+    parseError("var x = {set a(x, y) {}};", "Setter must have exactly 1 parameter, found 2");
+    parseError("var x = {set a(...x, y) {}};", "Setter must have exactly 1 parameter, found 2");
+
+    parseError("var x = {set a(...x) {}};", "Setter must not have a rest parameter");
+  }
+
+  public void testComputedSetter() {
+    expectFeatures(Feature.COMPUTED_PROPERTIES); // Because computed setters aren't setters.
+    mode = LanguageMode.ECMASCRIPT6; // We only cover some of the common permutations though.
+    strictMode = SLOPPY;
+
+    parse("var x = {set [setter](x = 5) {}};");
+    parse("var x = {set [setter](x = a) {}};");
+    parse("var x = {set [setter](x = a + 5) {}};");
+
+    parse("var x = {set [setter]([x, y, z]) {}};");
+    parse("var x = {set [setter]([x, y, ...z]) {}};");
+    parse("var x = {set [setter]([x, y, z] = [1, 2, 3]) {}};");
+    parse("var x = {set [setter]([x = 1, y = 2, z = 3]) {}};");
+
+    parse("var x = {set [setter]({x, y, z}) {}};");
+    parse("var x = {set [setter]({x, y, z} = {x: 1, y: 2, z: 3}) {}};");
+    parse("var x = {set [setter]({x = 1, y = 2, z = 3}) {}};");
+
+    expectFeatures(); // Because these snippets don't contain valid computed properties.
+
+    parseError("var x = {set [setter]() {}};", "Setter must have exactly 1 parameter, found 0");
+    parseError("var x = {set [setter](x, y) {}};", "Setter must have exactly 1 parameter, found 2");
+    parseError(
+        "var x = {set [setter](...x, y) {}};", "Setter must have exactly 1 parameter, found 2");
+
+    parseError("var x = {set [setter](...x) {}};", "Setter must not have a rest parameter");
   }
 
   public void testLamestWarningEver() {
