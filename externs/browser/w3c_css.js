@@ -1822,6 +1822,62 @@ CSSProperties.prototype.opacity;
  */
 CSSProperties.prototype.textOverflow;
 
+// CSS 3 animations
+
+/**
+ * @type {string|number}
+ * @see https://www.w3.org/TR/css-animations-1/#animation
+ */
+CSSProperties.prototype.animation;
+
+/**
+ * @type {string}
+ * @see https://www.w3.org/TR/css-animations-1/#animation-delay
+ */
+CSSProperties.prototype.animationDelay;
+
+/**
+ * @type {string}
+ * @see https://www.w3.org/TR/css-animations-1/#animation-direction
+ */
+CSSProperties.prototype.animationDirection;
+
+/**
+ * @type {string}
+ * @see https://www.w3.org/TR/css-animations-1/#animation-duration
+ */
+CSSProperties.prototype.animationDuration;
+
+/**
+ * @type {string}
+ * @see https://www.w3.org/TR/css-animations-1/#animation-fill-mode
+ */
+CSSProperties.prototype.animationFillMode;
+
+/**
+ * @type {string|number}
+ * @see https://www.w3.org/TR/css-animations-1/#animation-iteration-count
+ */
+CSSProperties.prototype.animationIterationCount;
+
+/**
+ * @type {string}
+ * @see https://www.w3.org/TR/css-animations-1/#animation-name
+ */
+CSSProperties.prototype.animationName;
+
+/**
+ * @type {string}
+ * @see https://www.w3.org/TR/css-animations-1/#animation-play-state
+ */
+CSSProperties.prototype.animationPlayState;
+
+/**
+ * @type {string}
+ * @see https://www.w3.org/TR/css-animations-1/#animation-timing-function
+ */
+CSSProperties.prototype.animationTimingFunction;
+
 // CSS 3 transforms
 
 /**
