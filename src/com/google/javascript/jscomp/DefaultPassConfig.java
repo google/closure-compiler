@@ -509,14 +509,15 @@ public final class DefaultPassConfig extends PassConfig {
     // optimizing passes.
     passes.add(gatherExternProperties);
 
-    if (options.instrumentForCoverage) {
-      passes.add(instrumentForCodeCoverage);
-    }
-
-    // Should be run before runtimeTypeCheck.
+    // Should be run before runtimeTypeCheck and instrumentForCoverage as they rewrite code that
+    // this pass expects to see.
     if (options.j2clPassMode.shouldAddJ2clPasses()) {
       passes.add(j2clPass);
       passes.add(j2clUtilGetDefineRewriterPass);
+    }
+
+    if (options.instrumentForCoverage) {
+      passes.add(instrumentForCodeCoverage);
     }
 
     if (options.runtimeTypeCheck) {
