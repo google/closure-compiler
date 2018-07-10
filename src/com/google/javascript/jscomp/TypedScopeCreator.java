@@ -2032,11 +2032,11 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
      * or a function literal with a name we haven't seen before.
      */
     private boolean isQualifiedNameInferred(
-        String qName, Node n, JSDocInfo info, Node rhsValue, JSType valueType) {
-      if (valueType == null) {
-        return true;
-      }
-
+        @Nullable String qName,
+        Node n,
+        @Nullable JSDocInfo info,
+        @Nullable Node rhsValue,
+        JSType valueType) {
       // Prototypes of constructors and interfaces are always declared.
       if (qName != null && qName.endsWith(".prototype")) {
         String className = qName.substring(0, qName.lastIndexOf(".prototype"));
