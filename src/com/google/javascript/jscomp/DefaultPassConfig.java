@@ -180,8 +180,9 @@ public final class DefaultPassConfig extends PassConfig {
 
     TranspilationPasses.addPreTypecheckTranspilationPasses(passes, options);
 
+    TranspilationPasses.addPostCheckTranspilationPasses(passes, options);
+
     if (options.needsTranspilationFrom(ES6)) {
-      TranspilationPasses.addPostCheckTranspilationPasses(passes);
       if (options.rewritePolyfills) {
         TranspilationPasses.addRewritePolyfillPass(passes);
       }
@@ -455,12 +456,11 @@ public final class DefaultPassConfig extends PassConfig {
 
     checks.add(createEmptyPass(PassNames.AFTER_STANDARD_CHECKS));
 
-    if (options.needsTranspilationFrom(ES6) && !options.checksOnly) {
+    if (!options.checksOnly) {
       // At this point all checks have been done.
       // There's no need to complete transpilation if we're only running checks.
-      TranspilationPasses.addPostCheckTranspilationPasses(checks);
+      TranspilationPasses.addPostCheckTranspilationPasses(checks, options);
     }
-
 
     assertAllOneTimePasses(checks);
     assertValidOrderForChecks(checks);

@@ -94,23 +94,11 @@ public class TranspilationPasses {
       passes.add(rewriteAsyncFunctions);
     }
 
-    if (options.needsTranspilationFrom(ES7)) {
-      passes.add(convertEs7ToEs6);
-    }
-
     if (options.needsTranspilationFrom(ES6)) {
       if (doEs6ExternsCheck) {
         passes.add(es6ExternsCheck);
       }
-      // Binary and octal literals are effectively transpiled by the parser.
-      // There's no transpilation we can do for the new regexp flags.
-      passes.add(
-          createFeatureRemovalPass(
-              "markEs6FeaturesNotRequiringTranspilationAsRemoved",
-              Feature.BINARY_LITERALS,
-              Feature.OCTAL_LITERALS,
-              Feature.REGEXP_FLAG_U,
-              Feature.REGEXP_FLAG_Y));
+
       passes.add(es6NormalizeShorthandProperties);
       passes.add(es6ConvertSuper);
       passes.add(es6RenameVariablesInParamLists);
@@ -121,6 +109,7 @@ public class TranspilationPasses {
       passes.add(es6ExtractClasses);
       passes.add(es6RewriteClass);
       passes.add(es6InjectRuntimeLibraries);
+
       if (!options.checksOnly) {
         // Don't run these passes in checksOnly mode since all the typechecking & checks passes
         // support the transpiled features.
@@ -142,22 +131,35 @@ public class TranspilationPasses {
     passes.add(es6RelativizeImportPaths);
   }
 
-  /** Deprecated: use addPostCheckTranspilationPasses instead. */
-  @Deprecated
-  public static void addPostTypecheckTranspilationPasses(List<PassFactory> passes) {}
-
   /** Adds transpilation passes that should run after all checks are done. */
-  public static void addPostCheckTranspilationPasses(List<PassFactory> passes) {
-    // TODO(b/73387406): Move passes here as typechecking & other check passes are updated to cope
-    // with the features they transpile and as the passes themselves are updated to propagate type
-    // information to the transpiled code.
-    passes.add(es6RewriteRestAndSpread);
-    passes.add(lateConvertEs6ToEs3);
-    passes.add(es6ForOf);
-    passes.add(rewriteBlockScopedFunctionDeclaration);
-    passes.add(rewriteBlockScopedDeclaration);
-    passes.add(rewriteGenerators);
-    passes.add(es6ConvertSuperConstructorCalls);
+  public static void addPostCheckTranspilationPasses(
+      List<PassFactory> passes, CompilerOptions options) {
+    if (options.needsTranspilationFrom(ES7)) {
+      passes.add(rewriteExponentialOperator);
+    }
+
+    if (options.needsTranspilationFrom(ES6)) {
+      // TODO(b/73387406): Move passes here as typechecking & other check passes are updated to cope
+      // with the features they transpile and as the passes themselves are updated to propagate type
+      // information to the transpiled code.
+      // Binary and octal literals are effectively transpiled by the parser.
+      // There's no transpilation we can do for the new regexp flags.
+      passes.add(
+          createFeatureRemovalPass(
+              "markEs6FeaturesNotRequiringTranspilationAsRemoved",
+              Feature.BINARY_LITERALS,
+              Feature.OCTAL_LITERALS,
+              Feature.REGEXP_FLAG_U,
+              Feature.REGEXP_FLAG_Y));
+
+      passes.add(es6RewriteRestAndSpread);
+      passes.add(lateConvertEs6ToEs3);
+      passes.add(es6ForOf);
+      passes.add(rewriteBlockScopedFunctionDeclaration);
+      passes.add(rewriteBlockScopedDeclaration);
+      passes.add(rewriteGenerators);
+      passes.add(es6ConvertSuperConstructorCalls);
+    }
   }
 
   /**
@@ -234,8 +236,8 @@ public class TranspilationPasses {
         }
       };
 
-  private static final PassFactory convertEs7ToEs6 =
-      new HotSwapPassFactory("convertEs7ToEs6") {
+  private static final PassFactory rewriteExponentialOperator =
+      new HotSwapPassFactory("rewriteExponentialOperator") {
         @Override
         protected HotSwapCompilerPass create(final AbstractCompiler compiler) {
           return new Es7RewriteExponentialOperator(compiler);
