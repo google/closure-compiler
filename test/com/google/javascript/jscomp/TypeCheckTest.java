@@ -20443,6 +20443,42 @@ public final class TypeCheckTest extends TypeCheckTestCase {
     //     "required: Foo<T, S>"));
   }
 
+  public void testTypedefOfPropertyInBlock() {
+    // TODO(b/111216910): this should issue the same warning as the case below
+    disableStrictMissingPropertyChecks();
+    testTypesWithExterns(
+        "/** @interface */ function Foo() {}",
+        lines(
+            "/** @constructor */",
+            "function Bar(/** !Foo */ foo) {",
+            "  /** @type {!Foo} */",
+            "  this.foo = foo;",
+            "  {",
+            "    /** @typedef {boolean} */",
+            "    this.foo.bar;",
+            "    (() => this.foo.bar)();",
+            "  }",
+            "}"));
+  }
+
+  public void testTypedefOfPropertyInFunctionScope() {
+    disableStrictMissingPropertyChecks();
+    testTypesWithExterns(
+        "/** @interface */ function Foo() {}",
+        lines(
+            "/** @constructor */",
+            "function Bar(/** !Foo */ foo) {",
+            "  /** @type {!Foo} */",
+            "  this.foo = foo;",
+            "  /** @typedef {boolean} */",
+            "  this.foo.bar;",
+            "  {",
+            "    (() => this.foo.bar)();",
+            "  }",
+            "}"),
+        "Property bar never defined on Foo");
+  }
+
   private void testClosureTypes(String js, String description) {
     testClosureTypesMultipleWarnings(js,
         description == null ? null : ImmutableList.of(description));

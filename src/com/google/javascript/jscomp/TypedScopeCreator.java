@@ -743,6 +743,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
           new SlotDefiner()
               .forDeclarationNode(keyNode)
               .forVariableName(qualifiedName)
+              .inScope(getLValueRootScope(keyNode))
               .withType(keyType)
               .allowLaterTypeInference(keyType == null)
               .defineSlot();
@@ -811,34 +812,61 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
      */
     void defineCatch(Node n) {
       assertDefinitionNode(n, Token.CATCH);
-      Node catchName = n.getFirstChild();
-      JSType type = getDeclaredType(catchName.getJSDocInfo(), catchName, null);
-      new SlotDefiner()
-          .forDeclarationNode(catchName)
-          .readVariableNameFromDeclarationNode()
-          .withType(type)
-          .allowLaterTypeInference(type == null)
-          .defineSlot();
+      // Though almost certainly a terrible idea, it is possible to do destructuring in
+      // the catch declaration.
+      // e.g. `} catch ({message, errno}) {`
+      for (Node catchName : NodeUtil.findLhsNodesInNode(n)) {
+        JSType type = getDeclaredType(catchName.getJSDocInfo(), catchName, null);
+        new SlotDefiner()
+            .forDeclarationNode(catchName)
+            .forVariableName(catchName.getString())
+            .inScope(currentScope)
+            .withType(type)
+            .allowLaterTypeInference(type == null)
+            .defineSlot();
+      }
     }
 
-    /**
-     * Defines a VAR initialization.
-     */
-    void defineVar(Node n) {
+    /** Defines a variable declared with `var`, `let`, or `const`. */
+    void defineVars(Node n) {
       checkState(sourceName != null);
       checkState(NodeUtil.isNameDeclaration(n));
       JSDocInfo info = n.getJSDocInfo();
-      if (n.hasMoreThanOneChild()) {
+      // `var` declarations are hoisted, but `let` and `const` are not.
+      TypedScope scope = n.isVar() ? currentHoistScope : currentScope;
+      // Get a list of all of the name nodes for all the variables being declared.
+      // This handles even complex destructuring cases.
+      // e.g.
+      // let x = 3, {y, someProp: [ a1, a2 ]} = someObject;
+      // varNames will contain x, y, a1, and a2
+      List<Node> varNames = NodeUtil.findLhsNodesInNode(n);
+      if (varNames.size() == 1) {
+        // e.g.
+        // /** @type {string} */
+        // let x = 'hi';
+        Node singleVarName = varNames.get(0);
+        if (info == null) {
+          // There might be inline JSDoc on the variable name.
+          // e.g.
+          // let /** string */ x = 'hi';
+          info = singleVarName.getJSDocInfo();
+          // TODO(bradfordcsmith): Report an error if both the declaration node and the name itself
+          //     have JSDoc.
+        }
+        defineName(singleVarName, scope, info);
+      } else {
         if (info != null) {
-          // multiple children
+          // We do not allow a single JSDoc to apply to multiple variables in a single
+          // declaration.
           report(JSError.make(n, MULTIPLE_VAR_DEF));
         }
-        for (Node name : n.children()) {
-          defineName(name, name.getJSDocInfo());
+        // TODO(bradfordcsmith): Should we report an error if there are actually 0 variable names?
+        // This can happen with destructuring patterns.
+        // e.g.
+        // let {} = foo();
+        for (Node nameNode : varNames) {
+          defineName(nameNode, scope, nameNode.getJSDocInfo());
         }
-      } else {
-        Node name = n.getFirstChild();
-        defineName(name, (info != null) ? info : name.getJSDocInfo());
       }
     }
 
@@ -869,9 +897,11 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       // declaration. Otherwise, the declaration will happen in other
       // code paths.
       if (NodeUtil.isClassDeclaration(n)) {
+        checkNotNull(className);
         new SlotDefiner()
             .forDeclarationNode(n.getFirstChild())
-            .readVariableNameFromDeclarationNode()
+            .forVariableName(className)
+            .inScope(currentScope)
             .withType(classType)
             .allowLaterTypeInference(classType == null)
             .defineSlot();
@@ -900,7 +930,8 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       if (NodeUtil.isFunctionDeclaration(n)) {
         new SlotDefiner()
             .forDeclarationNode(n.getFirstChild())
-            .readVariableNameFromDeclarationNode()
+            .forVariableName(functionName)
+            .inScope(currentScope)
             .withType(functionType)
             .allowLaterTypeInference(functionType == null)
             .defineSlot();
@@ -909,11 +940,12 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
 
     /**
      * Defines a variable based on the {@link Token#NAME} node passed.
+     *
      * @param name The {@link Token#NAME} node.
-     * @param info the {@link JSDocInfo} information relating to this
-     *     {@code name} node.
+     * @param scope
+     * @param info the {@link JSDocInfo} information relating to this {@code name} node.
      */
-    private void defineName(Node name, JSDocInfo info) {
+    private void defineName(Node name, TypedScope scope, JSDocInfo info) {
       Node value = name.getFirstChild();
 
       // variable's type
@@ -924,7 +956,8 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       }
       new SlotDefiner()
           .forDeclarationNode(name)
-          .readVariableNameFromDeclarationNode()
+          .forVariableName(name.getString())
+          .inScope(scope)
           .withType(type)
           .allowLaterTypeInference(type == null)
           .defineSlot();
@@ -1322,6 +1355,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
     class SlotDefiner {
       Node declarationNode;
       String variableName;
+      TypedScope scope;
       // default is no type and a type may be inferred later
       JSType type = null;
       boolean allowLaterTypeInference = true;
@@ -1365,6 +1399,11 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
         return this;
       }
 
+      SlotDefiner inScope(TypedScope scope) {
+        this.scope = checkNotNull(scope);
+        return this;
+      }
+
       SlotDefiner withType(@Nullable JSType type) {
         this.type = type;
         return this;
@@ -1384,10 +1423,12 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
         checkNotNull(declarationNode, "declarationNode not set");
         checkNotNull(variableName, "variableName not set");
         checkState(allowLaterTypeInference || type != null, "null type but inference not allowed");
-        Node parent = declarationNode.getParent();
-        checkArgument(!variableName.isEmpty());
+        checkState(!variableName.isEmpty());
+        checkNotNull(scope);
 
-        TypedScope scopeToDeclareIn = getLValueRootScope(declarationNode);
+        Node parent = declarationNode.getParent();
+
+        TypedScope scopeToDeclareIn = scope;
 
         boolean isGlobalVar = declarationNode.isName() && scopeToDeclareIn.isGlobal();
         boolean shouldDeclareOnGlobalThis = isGlobalVar && (parent.isVar() || parent.isFunction());
@@ -1998,6 +2039,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
         new SlotDefiner()
             .forDeclarationNode(n)
             .readVariableNameFromDeclarationNode()
+            .inScope(getLValueRootScope(n))
             .withType(valueType)
             .allowLaterTypeInference(inferred)
             .defineSlot();
@@ -2154,6 +2196,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       String qName = n.getQualifiedName();
       String propName = n.getLastChild().getString();
 
+      // TODO(b/111216910): should this be getLValueRoot(n).hasOwnSlot(qName)?
       if (currentScope.hasOwnSlot(qName)) {
         return;
       }
@@ -2166,6 +2209,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       new SlotDefiner()
           .forDeclarationNode(n)
           .readVariableNameFromDeclarationNode()
+          .inScope(getLValueRootScope(n))
           .withType(stubType)
           .allowLaterTypeInference(true)
           .defineSlot();
@@ -2216,6 +2260,8 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
         new SlotDefiner()
             .forDeclarationNode(candidate)
             .readVariableNameFromDeclarationNode()
+            .forVariableName(typedef)
+            .inScope(getLValueRootScope(candidate))
             .withType(getNativeType(NO_TYPE))
             .allowLaterTypeInference(false)
             .defineSlot();
@@ -2278,7 +2324,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
         case VAR:
         case LET:
         case CONST:
-          defineVar(n);
+          defineVars(n);
           // Handle typedefs.
           if (n.hasOneChild()) {
             checkForTypedef(n.getFirstChild(), n.getJSDocInfo());
@@ -2336,7 +2382,8 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
                 && fnVar.getInitialValue() != fnNode)) {
           new SlotDefiner()
               .forDeclarationNode(fnNameNode)
-              .readVariableNameFromDeclarationNode()
+              .forVariableName(fnName)
+              .inScope(currentScope)
               .withType(fnNode.getJSType())
               .allowLaterTypeInference(false)
               .defineSlot();
@@ -2397,6 +2444,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
             new SlotDefiner()
                 .forDeclarationNode(astParameter)
                 .readVariableNameFromDeclarationNode()
+                .inScope(currentScope)
                 .withType(paramType)
                 .allowLaterTypeInference(inferred)
                 .defineSlot();
@@ -2474,6 +2522,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
         new SlotDefiner()
             .forDeclarationNode(n)
             .readVariableNameFromDeclarationNode()
+            .inScope(currentScope)
             .withType(parent.getJSType())
             .allowLaterTypeInference(false)
             .defineSlot();
