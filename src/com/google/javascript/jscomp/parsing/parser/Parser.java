@@ -898,7 +898,7 @@ public class Parser {
         nameExpr = null;
         name = eatIdOrKeywordAsId();
         if (Keywords.isKeyword(name.value, /* includeTypeScriptKeywords= */ false)) {
-          features = features.with(Feature.KEYWORDS_AS_PROPERTIES);
+          recordFeatureUsed(Feature.KEYWORDS_AS_PROPERTIES);
         }
       } else {
         // { 'str'() {} }
@@ -1406,7 +1406,7 @@ public class Parser {
       if (!peek(TokenType.CLOSE_PAREN)) {
         Token comma = eat(TokenType.COMMA);
         if (peek(TokenType.CLOSE_PAREN)) {
-          features = features.with(Feature.TRAILING_COMMA_IN_PARAM_LIST);
+          recordFeatureUsed(Feature.TRAILING_COMMA_IN_PARAM_LIST);
           if (!config.atLeast8) {
             reportError(comma, "Invalid trailing comma in formal parameter list");
           }
@@ -2477,7 +2477,7 @@ public class Parser {
         elements.add(new NullTree(getTreeLocation(getTreeStartLocation())));
       } else {
         if (peek(TokenType.SPREAD)) {
-          features = features.with(Feature.SPREAD_EXPRESSIONS);
+          recordFeatureUsed(Feature.SPREAD_EXPRESSIONS);
           elements.add(parseSpreadExpression());
         } else {
           elements.add(parseAssignmentExpression());
@@ -2522,7 +2522,7 @@ public class Parser {
 
   void maybeReportTrailingComma(Token commaToken) {
     if (commaToken != null) {
-      features = features.with(Feature.TRAILING_COMMA);
+      recordFeatureUsed(Feature.TRAILING_COMMA);
       if (config.warnTrailingCommas) {
         // In ES3 mode warn about trailing commas which aren't accepted by
         // older browsers (such as IE8).
@@ -2554,7 +2554,7 @@ public class Parser {
     if (type == TokenType.STAR) {
       return parsePropertyAssignmentGenerator();
     } else if (peek(TokenType.SPREAD)) {
-      features = features.with(Feature.OBJECT_LITERALS_WITH_SPREAD);
+      recordFeatureUsed(Feature.OBJECT_LITERALS_WITH_SPREAD);
       return parseSpreadExpression();
     } else if (type == TokenType.STRING
         || type == TokenType.NUMBER
@@ -2657,6 +2657,7 @@ public class Parser {
       eat(TokenType.CLOSE_PAREN);
       ParseTree returnType = maybeParseColonType();
       BlockTree body = parseFunctionBody();
+      recordFeatureUsed(Feature.GETTER);
       return new GetAccessorTree(
           getTreeLocation(partial.start), propertyName, partial.isStatic, returnType, body);
     } else {
@@ -2665,6 +2666,7 @@ public class Parser {
       eat(TokenType.CLOSE_PAREN);
       ParseTree returnType = maybeParseColonType();
       BlockTree body = parseFunctionBody();
+      recordFeatureUsed(Feature.GETTER);
       return new ComputedPropertyGetterTree(
           getTreeLocation(partial.start),
           property,
@@ -2696,6 +2698,7 @@ public class Parser {
 
       BlockTree body = parseFunctionBody();
 
+      recordFeatureUsed(Feature.SETTER);
       return new SetAccessorTree(
           getTreeLocation(partial.start), propertyName, partial.isStatic, parameter, body);
     } else {
@@ -2703,6 +2706,7 @@ public class Parser {
       FormalParameterListTree parameter = parseSetterParameterList();
       BlockTree body = parseFunctionBody();
 
+      recordFeatureUsed(Feature.SETTER);
       return new ComputedPropertySetterTree(
           getTreeLocation(partial.start),
           property,
@@ -3599,7 +3603,7 @@ public class Parser {
       if (!peek(TokenType.CLOSE_PAREN)) {
         Token comma = eat(TokenType.COMMA);
         if (peek(TokenType.CLOSE_PAREN)) {
-          features = features.with(Feature.TRAILING_COMMA_IN_PARAM_LIST);
+          recordFeatureUsed(Feature.TRAILING_COMMA_IN_PARAM_LIST);
           if (!config.atLeast8) {
             reportError(comma, "Invalid trailing comma in arguments list");
           }
@@ -3694,7 +3698,7 @@ public class Parser {
       }
     }
     if (peek(TokenType.SPREAD)) {
-      features = features.with(Feature.ARRAY_PATTERN_REST);
+      recordFeatureUsed(Feature.ARRAY_PATTERN_REST);
       elements.add(parsePatternRest(kind));
     }
     eat(TokenType.CLOSE_SQUARE);
@@ -3718,7 +3722,7 @@ public class Parser {
       }
     }
     if (peek(TokenType.SPREAD)) {
-      features = features.with(Feature.OBJECT_PATTERN_REST);
+      recordFeatureUsed(Feature.OBJECT_PATTERN_REST);
       fields.add(parsePatternRest(kind));
     }
     eat(TokenType.CLOSE_CURLY);
@@ -4203,5 +4207,10 @@ public class Parser {
   @FormatMethod
   private void reportError(@FormatString String message, Object... arguments) {
     errorReporter.reportError(scanner.getPosition(), message, arguments);
+  }
+
+  private Parser recordFeatureUsed(Feature feature) {
+    features = features.with(feature);
+    return this;
   }
 }

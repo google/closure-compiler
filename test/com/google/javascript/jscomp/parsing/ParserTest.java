@@ -2799,44 +2799,117 @@ public final class ParserTest extends BaseJSTypeTestCase {
         "Invalid octal digit in octal literal.");
   }
 
-  public void testGetter() {
+  public void testGetter_ObjectLiteral_Es3() {
     expectFeatures(Feature.GETTER);
     mode = LanguageMode.ECMASCRIPT3;
     strictMode = SLOPPY;
-    parseError("var x = {get 1(){}};",
-        IRFactory.GETTER_ERROR_MESSAGE);
-    parseError("var x = {get 'a'(){}};",
-        IRFactory.GETTER_ERROR_MESSAGE);
-    parseError("var x = {get a(){}};",
-        IRFactory.GETTER_ERROR_MESSAGE);
+
+    parseError("var x = {get 1(){}};", IRFactory.GETTER_ERROR_MESSAGE);
+    parseError("var x = {get 'a'(){}};", IRFactory.GETTER_ERROR_MESSAGE);
+    parseError("var x = {get a(){}};", IRFactory.GETTER_ERROR_MESSAGE);
     mode = LanguageMode.ECMASCRIPT5;
     parse("var x = {get 1(){}};");
     parse("var x = {get 'a'(){}};");
     parse("var x = {get a(){}};");
+  }
 
+  public void testGetter_ObjectLiteral_Es5() {
+    expectFeatures(Feature.GETTER);
+    mode = LanguageMode.ECMASCRIPT5;
+    strictMode = SLOPPY;
+
+    parse("var x = {get 1(){}};");
+    parse("var x = {get 'a'(){}};");
+    parse("var x = {get a(){}};");
+  }
+
+  public void testGetterInvalid_ObjectLiteral_EsNext() {
     expectFeatures();
+    mode = LanguageMode.ES_NEXT;
+    strictMode = SLOPPY;
+
     parseError("var x = {get a(b){}};", "')' expected");
   }
 
-  public void testSetter() {
+  public void testGetter_Computed_ObjectLiteral_Es6() {
+    expectFeatures(Feature.GETTER, Feature.COMPUTED_PROPERTIES);
+    mode = LanguageMode.ECMASCRIPT6;
+    strictMode = SLOPPY;
+
+    parse("var x = {get [1](){}};");
+    parse("var x = {get ['a'](){}};");
+    parse("var x = {get [a](){}};");
+  }
+
+  public void testGetterInvalid_Computed_ObjectLiteral_EsNext() {
+    expectFeatures();
+    mode = LanguageMode.ES_NEXT;
+    strictMode = SLOPPY;
+
+    parseError("var x = {get [a](b){}};", "')' expected");
+  }
+
+  public void testGetter_ClassSyntax() {
+    expectFeatures(Feature.CLASSES, Feature.GETTER);
+    mode = LanguageMode.ECMASCRIPT6;
+    strictMode = SLOPPY;
+
+    parse("class Foo { get 1() {} };");
+    parse("class Foo { get 'a'() {} };");
+    parse("class Foo { get a() {} };");
+  }
+
+  public void testGetterInvalid_ClassSyntax_EsNext() {
+    expectFeatures();
+    mode = LanguageMode.ES_NEXT;
+    strictMode = SLOPPY;
+
+    parseError("class Foo { get a(b) {} };", "')' expected");
+  }
+
+  public void testGetter_Computed_ClassSyntax() {
+    expectFeatures(Feature.CLASSES, Feature.GETTER, Feature.COMPUTED_PROPERTIES);
+    mode = LanguageMode.ECMASCRIPT6;
+    strictMode = SLOPPY;
+
+    parse("class Foo { get [1]() {} };");
+    parse("class Foo { get ['a']() {} };");
+    parse("class Foo { get [a]() {} };");
+  }
+
+  public void testGetterInvalid_Computed_ClassSyntax_EsNext() {
+    expectFeatures();
+    mode = LanguageMode.ES_NEXT;
+    strictMode = SLOPPY;
+
+    parseError("class Foo { get [a](b) {} };", "')' expected");
+  }
+
+  public void testSetter_ObjectLiteral_Es3() {
     expectFeatures(Feature.SETTER);
     mode = LanguageMode.ECMASCRIPT3;
     strictMode = SLOPPY;
 
-    parseError("var x = {set 1(x){}};",
-        IRFactory.SETTER_ERROR_MESSAGE);
-    parseError("var x = {set 'a'(x){}};",
-        IRFactory.SETTER_ERROR_MESSAGE);
-    parseError("var x = {set a(x){}};",
-        IRFactory.SETTER_ERROR_MESSAGE);
+    parseError("var x = {set 1(x){}};", IRFactory.SETTER_ERROR_MESSAGE);
+    parseError("var x = {set 'a'(x){}};", IRFactory.SETTER_ERROR_MESSAGE);
+    parseError("var x = {set a(x){}};", IRFactory.SETTER_ERROR_MESSAGE);
+  }
 
+  public void testSetter_ObjectLiteral_Es5() {
+    expectFeatures(Feature.SETTER);
     mode = LanguageMode.ECMASCRIPT5;
+    strictMode = SLOPPY;
 
     parse("var x = {set 1(x){}};");
     parse("var x = {set 'a'(x){}};");
     parse("var x = {set a(x){}};");
+  }
 
-    mode = LanguageMode.ECMASCRIPT6; // We only cover some of the common permutations though.
+  // We only cover some of the common permutations though.
+  public void testSetter_ObjectLiteral_Es6() {
+    expectFeatures(Feature.SETTER);
+    mode = LanguageMode.ECMASCRIPT6;
+    strictMode = SLOPPY;
 
     parse("var x = {set 1(x){}};");
     parse("var x = {set 'a'(x){}};");
@@ -2854,19 +2927,23 @@ public final class ParserTest extends BaseJSTypeTestCase {
     parse("var x = {set setter({x, y, z}) {}};");
     parse("var x = {set setter({x, y, z} = {x: 1, y: 2, z: 3}) {}};");
     parse("var x = {set setter({x = 1, y = 2, z = 3}) {}};");
+  }
 
-    expectFeatures(); // Because these snippets don't contain valid setters.
+  public void testSetterInvalid_ObjectLiteral_EsNext() {
+    expectFeatures();
+    mode = LanguageMode.ES_NEXT;
+    strictMode = SLOPPY;
 
     parseError("var x = {set a() {}};", "Setter must have exactly 1 parameter, found 0");
     parseError("var x = {set a(x, y) {}};", "Setter must have exactly 1 parameter, found 2");
     parseError("var x = {set a(...x, y) {}};", "Setter must have exactly 1 parameter, found 2");
-
     parseError("var x = {set a(...x) {}};", "Setter must not have a rest parameter");
   }
 
-  public void testComputedSetter() {
-    expectFeatures(Feature.COMPUTED_PROPERTIES); // Because computed setters aren't setters.
-    mode = LanguageMode.ECMASCRIPT6; // We only cover some of the common permutations though.
+  // We only cover some of the common permutations though.
+  public void testSetter_Computed_ObjectLiteral_Es6() {
+    expectFeatures(Feature.SETTER, Feature.COMPUTED_PROPERTIES);
+    mode = LanguageMode.ECMASCRIPT6;
     strictMode = SLOPPY;
 
     parse("var x = {set [setter](x = 5) {}};");
@@ -2881,15 +2958,80 @@ public final class ParserTest extends BaseJSTypeTestCase {
     parse("var x = {set [setter]({x, y, z}) {}};");
     parse("var x = {set [setter]({x, y, z} = {x: 1, y: 2, z: 3}) {}};");
     parse("var x = {set [setter]({x = 1, y = 2, z = 3}) {}};");
+  }
 
-    expectFeatures(); // Because these snippets don't contain valid computed properties.
+  // We only cover some of the common permutations though.
+  public void testSetterInvalid_Computed_ObjectLiteral_EsNext() {
+    expectFeatures();
+    mode = LanguageMode.ES_NEXT;
+    strictMode = SLOPPY;
 
     parseError("var x = {set [setter]() {}};", "Setter must have exactly 1 parameter, found 0");
     parseError("var x = {set [setter](x, y) {}};", "Setter must have exactly 1 parameter, found 2");
     parseError(
         "var x = {set [setter](...x, y) {}};", "Setter must have exactly 1 parameter, found 2");
-
     parseError("var x = {set [setter](...x) {}};", "Setter must not have a rest parameter");
+  }
+
+  public void testSetter_ClassSyntax() {
+    expectFeatures(Feature.CLASSES, Feature.SETTER);
+    mode = LanguageMode.ECMASCRIPT6; // We only cover some of the common permutations though.
+
+    parse("class Foo { set setter(x = 5) {} };");
+    parse("class Foo { set setter(x = a) {} };");
+    parse("class Foo { set setter(x = a + 5) {} };");
+
+    parse("class Foo { set setter([x, y, z]) {} };");
+    parse("class Foo { set setter([x, y, ...z]) {}};");
+    parse("class Foo { set setter([x, y, z] = [1, 2, 3]) {} };");
+    parse("class Foo { set setter([x = 1, y = 2, z = 3]) {} };");
+
+    parse("class Foo { set setter({x, y, z}) {}};");
+    parse("class Foo { set setter({x, y, z} = {x: 1, y: 2, z: 3}) {} };");
+    parse("class Foo { set setter({x = 1, y = 2, z = 3}) {} };");
+  }
+
+  public void testSetterInvalid_ClassSyntax_EsNext() {
+    expectFeatures();
+    mode = LanguageMode.ES_NEXT;
+
+    parseError("class Foo { set setter() {} };", "Setter must have exactly 1 parameter, found 0");
+    parseError(
+        "class Foo { set setter(x, y) {} };", "Setter must have exactly 1 parameter, found 2");
+    parseError(
+        "class Foo { set setter(...x, y) {} };", "Setter must have exactly 1 parameter, found 2");
+    parseError("class Foo { set setter(...x) {} };", "Setter must not have a rest parameter");
+  }
+
+  // We only cover some of the common permutations though.
+  public void testSetter_Computed_ClassSyntax() {
+    expectFeatures(Feature.CLASSES, Feature.SETTER, Feature.COMPUTED_PROPERTIES);
+    mode = LanguageMode.ECMASCRIPT6;
+
+    parse("class Foo { set [setter](x = 5) {} };");
+    parse("class Foo { set [setter](x = a) {} };");
+    parse("class Foo { set [setter](x = a + 5) {} };");
+
+    parse("class Foo { set [setter]([x, y, z]) {} };");
+    parse("class Foo { set [setter]([x, y, ...z]) {}};");
+    parse("class Foo { set [setter]([x, y, z] = [1, 2, 3]) {} };");
+    parse("class Foo { set [setter]([x = 1, y = 2, z = 3]) {} };");
+
+    parse("class Foo { set [setter]({x, y, z}) {}};");
+    parse("class Foo { set [setter]({x, y, z} = {x: 1, y: 2, z: 3}) {} };");
+    parse("class Foo { set [setter]({x = 1, y = 2, z = 3}) {} };");
+  }
+
+  public void testSetterInvalid_Computed_ClassSyntax_EsNext() {
+    expectFeatures();
+    mode = LanguageMode.ES_NEXT;
+
+    parseError("class Foo { set [setter]() {} };", "Setter must have exactly 1 parameter, found 0");
+    parseError(
+        "class Foo { set [setter](x, y) {} };", "Setter must have exactly 1 parameter, found 2");
+    parseError(
+        "class Foo { set [setter](...x, y) {} };", "Setter must have exactly 1 parameter, found 2");
+    parseError("class Foo { set [setter](...x) {} };", "Setter must not have a rest parameter");
   }
 
   public void testLamestWarningEver() {
@@ -2999,25 +3141,6 @@ public final class ParserTest extends BaseJSTypeTestCase {
     parse("var module = 3;");
     parse("module\nx = 5");
     parse("while (i--) { module = module[i]; }");
-  }
-
-  public void testGettersES3() {
-    mode = LanguageMode.ECMASCRIPT3;
-    strictMode = SLOPPY;
-
-    parseError("var x = {get x(){} };", IRFactory.GETTER_ERROR_MESSAGE);
-    parseError("var x = {get function(){} };", IRFactory.GETTER_ERROR_MESSAGE);
-    parseError("var x = {get 'function'(){} };", IRFactory.GETTER_ERROR_MESSAGE);
-    parseError("var x = {get 1(){} };", IRFactory.GETTER_ERROR_MESSAGE);
-  }
-
-  public void testSettersES3() {
-    mode = LanguageMode.ECMASCRIPT3;
-    strictMode = SLOPPY;
-
-    parseError("var x = {set function(a){} };", IRFactory.SETTER_ERROR_MESSAGE);
-    parseError("var x = {set 'function'(a){} };", IRFactory.SETTER_ERROR_MESSAGE);
-    parseError("var x = {set 1(a){} };", IRFactory.SETTER_ERROR_MESSAGE);
   }
 
   public void testKeywordsAsProperties1() {
