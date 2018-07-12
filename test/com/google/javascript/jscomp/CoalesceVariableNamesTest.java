@@ -333,6 +333,30 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
     testSame("class C { f(a, b=0, c=0) {} }");
   }
 
+  public void testDontCoalesceClassDeclarationsWithConstDeclaration() {
+    testSame(
+        lines(
+            "function f() {", // preserve newline
+            "  class A {}",
+            "  const b = {};",
+            "  return b;",
+            "}"));
+  }
+
+  public void testDontCoalesceClassDeclarationsWithDestructuringDeclaration() {
+    // See https://github.com/google/closure-compiler/issues/3019 - this used to cause a syntax
+    // error by coalescing `B` and `C` without converting `class B {}` to a non-block-scoped
+    // declaration.
+    testSame(
+        lines(
+            "function f(obj) {",
+            "  class B {}",
+            "  console.log(B);",
+            "  const {default: C} = obj;",
+            "  return {obj, C};",
+            "}"));
+  }
+
   public void testObjDestructuringConst1() {
     test(
         lines(

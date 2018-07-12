@@ -272,13 +272,22 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
         continue;
       }
 
-      // TODO(user): In theory, we CAN coalesce function names just like
-      // any variables. Our Liveness analysis captures this just like it as
-      // described in the specification. However, we saw some zipped and
-      // and unzipped size increase after this. We are not totally sure why
-      // that is but, for now, we will respect the dead functions and not play
-      // around with it.
+      // NOTE(user): In theory, we CAN coalesce function names just like any variables. Our
+      // Liveness analysis captures this just like it as described in the specification. However, we
+      // saw some zipped and unzipped size increase after this. We are not totally sure why
+      // that is but, for now, we will respect the dead functions and not play around with it
       if (v.getParentNode().isFunction()) {
+        continue;
+      }
+
+      // NOTE: we skip class declarations for a combination of two reasons:
+      // 1. they are block-scoped, so we would need to rewrite them as class expressions
+      //      e.g. `class C {}` -> `var C = class {}` to avoid incorrect semantics
+      //      (see testDontCoalesceClassDeclarationsWithDestructuringDeclaration).
+      //    This is possible but increases pre-gzip code size and complexity.
+      // 2. since function declaration coalescing seems to cause a size regression (as discussed
+      //    above) we assume that coalescing class names may cause a similar size regression.
+      if (v.getParentNode().isClass()) {
         continue;
       }
 
