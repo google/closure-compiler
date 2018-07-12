@@ -482,11 +482,11 @@ public final class SymbolTable {
           && !scope.isGlobalScope()
           && scope.getRootNode() != null
           && !scope.getRootNode().isFromExterns()
-          && scope.getParentScope() != null) {
+          && scope.getParentScope() != null
+          && scope.getRootNode().isFunction()) {
         SymbolScope parent = scope.getParentScope();
 
-        int count = parent.innerAnonFunctionsWithNames++;
-        String innerName = "function%" + count;
+        String innerName = "function%" + scope.getIndexInParent();
         Symbol anonymousFunctionSymbol =
             declareSymbol(
                 innerName,
@@ -1352,8 +1352,11 @@ public final class SymbolTable {
     private final Map<String, Symbol> ownSymbols = new LinkedHashMap<>();
     private final int scopeDepth;
 
-    // The number of inner anonymous functions that we've given names to.
-    private int innerAnonFunctionsWithNames = 0;
+    // Index of current scope in the parent scope. Used to generate unique names for variables
+    // having the same name but defined in different scopes.
+    private final int indexInParent;
+
+    private int numberOfChildScopes = 0;
 
     // The symbol associated with a property scope or doc scope.
     private Symbol mySymbol;
@@ -1364,6 +1367,12 @@ public final class SymbolTable {
       this.typeOfThis = typeOfThis;
       this.scopeDepth = parent == null ? 0 : (parent.getScopeDepth() + 1);
       this.mySymbol = mySymbol;
+      if (parent == null) {
+        this.indexInParent = 0;
+      } else {
+        this.indexInParent = parent.numberOfChildScopes;
+        parent.numberOfChildScopes++;
+      }
     }
 
     Symbol getSymbolForScope() {
@@ -1455,6 +1464,10 @@ public final class SymbolTable {
 
     public int getScopeDepth() {
       return scopeDepth;
+    }
+
+    public int getIndexInParent() {
+      return indexInParent;
     }
 
     @Override
