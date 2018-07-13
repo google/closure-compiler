@@ -759,43 +759,33 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
     }
 
     /**
-     * Returns the type specified in a JSDoc annotation near a GETPROP or NAME.
+     * Returns the type specified in a JSDoc annotation near a GETPROP, NAME, member function, or
+     * object literal key.
      *
-     * Extracts type information from either the {@code @type} tag or from
-     * the {@code @return} and {@code @param} tags.
+     * <p>Extracts type information from the {@code @type} tag.
      */
     private JSType getDeclaredTypeInAnnotation(Node node, JSDocInfo info) {
-      JSType jsType = null;
-      if (info != null) {
-        if (info.hasType()) {
+      checkArgument(info.hasType());
 
-          ImmutableList<TemplateType> ownerTypeKeys = ImmutableList.of();
-          Node ownerNode = NodeUtil.getBestLValueOwner(node);
-          String ownerName = NodeUtil.getBestLValueName(ownerNode);
-          ObjectType ownerType = null;
-          if (ownerName != null) {
-            TypedVar ownerVar = currentScope.getVar(ownerName);
-            if (ownerVar != null) {
-              ownerType = getPrototypeOwnerType(
-                  ObjectType.cast(ownerVar.getType()));
-              if (ownerType != null) {
-                ownerTypeKeys =
-                    ownerType.getTemplateTypeMap().getTemplateKeys();
-              }
-            }
+      ImmutableList<TemplateType> ownerTypeKeys = ImmutableList.of();
+      Node ownerNode = NodeUtil.getBestLValueOwner(node);
+      String ownerName = NodeUtil.getBestLValueName(ownerNode);
+      ObjectType ownerType = null;
+      if (ownerName != null) {
+        TypedVar ownerVar = currentScope.getVar(ownerName);
+        if (ownerVar != null) {
+          ownerType = getPrototypeOwnerType(ObjectType.cast(ownerVar.getType()));
+          if (ownerType != null) {
+            ownerTypeKeys = ownerType.getTemplateTypeMap().getTemplateKeys();
           }
-
-          StaticTypedScope templateScope =
-              !ownerTypeKeys.isEmpty()
-                  ? typeRegistry.createScopeWithTemplates(currentScope, ownerTypeKeys)
-                  : currentScope;
-          jsType = info.getType().evaluate(templateScope, typeRegistry);
-        } else if (FunctionTypeBuilder.isFunctionTypeDeclaration(info)) {
-          String fnName = node.getQualifiedName();
-          jsType = createFunctionTypeFromNodes(null, fnName, info, node);
         }
       }
-      return jsType;
+
+      StaticTypedScope templateScope =
+          !ownerTypeKeys.isEmpty()
+              ? typeRegistry.createScopeWithTemplates(currentScope, ownerTypeKeys)
+              : currentScope;
+      return info.getType().evaluate(templateScope, typeRegistry);
     }
 
     /**
@@ -1697,7 +1687,12 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
         }
       }
 
-      return getDeclaredTypeInAnnotation(lValue, info);
+      if (info != null && FunctionTypeBuilder.isFunctionTypeDeclaration(info)) {
+        String fnName = lValue.getQualifiedName();
+        return createFunctionTypeFromNodes(null, fnName, info, lValue);
+      }
+
+      return null;
     }
 
     /**
