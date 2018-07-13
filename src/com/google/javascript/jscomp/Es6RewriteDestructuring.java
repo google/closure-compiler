@@ -682,6 +682,7 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
     checkArgument(pattern.isDestructuringPattern());
     String tempVarName = DESTRUCTURING_TEMP_VAR + (destructuringVarCounter++);
     if (NodeUtil.isEnhancedFor(pattern.getParent())) {
+      // for ([a, b, c] of arr) {
       Node forNode = pattern.getParent();
       Node block = forNode.getLastChild();
       Node decl = IR.var(IR.name(tempVarName));
@@ -691,6 +692,7 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
       exprResult.useSourceInfoIfMissingFromForTree(pattern);
       block.addChildToFront(exprResult);
     } else {
+      // for (const [a, b, c] of arr) {
       Node destructuringLhs = pattern.getParent();
       checkState(destructuringLhs.isDestructuringLhs());
       Node declarationNode = destructuringLhs.getParent();
@@ -702,7 +704,12 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
       Token declarationType = declarationNode.getToken();
       Node decl = IR.declaration(pattern.detach(), IR.name(tempVarName), declarationType);
       decl.useSourceInfoIfMissingFromForTree(pattern);
-      block.addChildToFront(decl);
+      // Move the body into an inner block to handle cases where declared variables in the for
+      // loop initializer are shadowed by variables in the for loop body. e.g.
+      //   for (const [value] of []) { const value = 1; }
+      Node newBlock = IR.block(decl);
+      block.replaceWith(newBlock);
+      newBlock.addChildToBack(block);
     }
   }
 

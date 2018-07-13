@@ -127,3 +127,13 @@ function testForOfWithGetElemInitializer() {
   assertArrayEquals(arr, newArr);
   assertObjectEquals({0: 5, 1: 6, 2: 7}, obj);
 }
+
+function testIterationVarIsShadowedWithDestructuring() {
+  var arr = [[5], [6], [7]];
+  var result = [];
+  for (const [key, value] of arr) {
+    const value = key;
+    result.push(value);
+  }
+  assertArrayEquals([5, 6, 7], result);
+}

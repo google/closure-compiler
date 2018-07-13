@@ -467,6 +467,32 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
             "}"));
   }
 
+  public void testDestructuringForOfWithShadowing() {
+    test(
+        "for (const [value] of []) { const value = 0; }",
+        lines(
+            "for (const $jscomp$destructuring$var0 of []) {",
+            "  var $jscomp$destructuring$var1 = $jscomp.makeIterator($jscomp$destructuring$var0);",
+            "  const value = $jscomp$destructuring$var1.next().value;",
+            "  {",
+            "    const value = 0;",
+            "  }",
+            "}"));
+  }
+
+  public void testDestructuringForInWithShadowing() {
+    test(
+        "for (const [value] in {}) { const value = 0; }",
+        lines(
+            "for (const $jscomp$destructuring$var0 in {}) {",
+            "  var $jscomp$destructuring$var1 = $jscomp.makeIterator($jscomp$destructuring$var0);",
+            "  const value = $jscomp$destructuring$var1.next().value;",
+            "  {",
+            "    const value = 0;",
+            "  }",
+            "}"));
+  }
+
   public void testDefaultValueInObjectPattern() {
     test(
         "function f({x = a()}, y = b()) {}",
@@ -1092,7 +1118,9 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
             "    var rest = (delete $jscomp$destructuring$var2.a,",
             "            delete $jscomp$destructuring$var2.c,",
             "            $jscomp$destructuring$var2);",
-            "    console.log(rest.z);",
+            "    {",
+            "      console.log(rest.z);",
+            "    }",
             "}"));
 
     test(
@@ -1106,7 +1134,9 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
             "    let rest = (delete $jscomp$destructuring$var2.a,",
             "            delete $jscomp$destructuring$var2.c,",
             "            $jscomp$destructuring$var2);",
-            "    console.log(rest.z);",
+            "    {",
+            "      console.log(rest.z);",
+            "    }",
             "}"));
 
     test(
@@ -1120,7 +1150,9 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
             "    const rest = (delete $jscomp$destructuring$var2.a,",
             "            delete $jscomp$destructuring$var2.c,",
             "            $jscomp$destructuring$var2);",
-            "    console.log(rest.z);",
+            "    {",
+            "      console.log(rest.z);",
+            "    }",
             "}"));
 
     test(
@@ -1135,7 +1167,9 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
             "    var rest = (delete $jscomp$destructuring$var2.a,",
             "            delete $jscomp$destructuring$var2[$jscomp$destructuring$var3],",
             "            $jscomp$destructuring$var2);",
-            "    console.log(rest.z);",
+            "    {",
+            "      console.log(rest.z);",
+            "    }",
             "}"));
 
     test(
@@ -1152,7 +1186,9 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
             "    var rest = (delete $jscomp$destructuring$var2.a,",
             "            delete $jscomp$destructuring$var2[$jscomp$destructuring$var3],",
             "            $jscomp$destructuring$var2);",
-            "    console.log(rest.z);",
+            "    {",
+            "      console.log(rest.z);",
+            "    }",
             "}"));
   }
 
