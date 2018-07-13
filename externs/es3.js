@@ -457,12 +457,32 @@ Object.prototype.toSource = function() {};
 Object.prototype.toString = function() {};
 
 /**
+ * Removes a watchpoint set with the {@see Object.prototype.watch} method.
+ * Mozilla-only.
+ * @param {string} prop The name of a property of the object.
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/unwatch
+ * @return {undefined}
+ */
+Object.prototype.unwatch = function(prop) {};
+
+/**
  * Returns the object's `this` value.
  * @return {*}
  * @nosideeffects
  * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/valueOf
  */
 Object.prototype.valueOf = function() {};
+
+/**
+ * Sets a watchpoint method.
+ * Mozilla-only.
+ * @param {string} prop The name of a property of the object.
+ * @param {Function} handler A function to call.
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/watch
+ * @return {undefined}
+ */
+Object.prototype.watch = function(prop, handler) {};
+
 
 /**
  * @constructor
