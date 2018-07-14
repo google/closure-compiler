@@ -2396,6 +2396,11 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     assertTypeEquals(STRING_TYPE, info.getType());
   }
 
+  public void testMultipleSuppressTags() {
+    JSDocInfo info = parse("@suppress {x} \n * @suppress {y} */");
+    assertThat(info.getSuppressions()).isEqualTo(ImmutableSet.of("x", "y"));
+  }
+
   public void testBadSuppress1() {
     parse("@suppress {} */", "malformed @suppress tag");
   }
@@ -2410,10 +2415,6 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
 
   public void testBadSuppress4() {
     parse("@suppress {x|y */", "malformed @suppress tag");
-  }
-
-  public void testBadSuppress6() {
-    parse("@suppress {x} \n * @suppress {y} */", "duplicate @suppress tag");
   }
 
   public void testBadSuppress7() {

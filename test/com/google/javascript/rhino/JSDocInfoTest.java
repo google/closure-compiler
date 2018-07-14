@@ -521,7 +521,7 @@ public class JSDocInfoTest extends TestCase {
 
   public void testSetSuppressions() {
     JSDocInfo info = new JSDocInfo(true);
-    info.setSuppressions(ImmutableSet.of("sam", "bob"));
+    info.addSuppressions(ImmutableSet.of("sam", "bob"));
     assertEquals(ImmutableSet.of("bob", "sam"), info.getSuppressions());
   }
 

@@ -47,6 +47,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Sets;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -1099,18 +1100,16 @@ public class JSDocInfo implements Serializable {
   }
 
   /**
-   * Sets suppressed warnings.
+   * Adds a set of suppressions to the (possibly currently empty) set of suppressions.
    * @param suppressions A list of suppressed warning types.
    */
-  boolean setSuppressions(Set<String> suppressions) {
+  void addSuppressions(Set<String> suppressions) {
     lazyInitInfo();
 
     if (info.suppressions != null) {
-      return false;
+      suppressions = Sets.union(suppressions, info.suppressions);
     }
-
     info.suppressions = ImmutableSet.copyOf(suppressions);
-    return true;
   }
 
   /**

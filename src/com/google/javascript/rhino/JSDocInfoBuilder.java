@@ -531,15 +531,12 @@ public final class JSDocInfoBuilder {
   }
 
   /**
-   * Records the list of suppressed warnings.
+   * Records the list of suppressed warnings, possibly adding to the set of already configured
+   * warnings.
    */
-  public boolean recordSuppressions(Set<String> suppressions) {
-    if (currentInfo.setSuppressions(suppressions)) {
-      populated = true;
-      return true;
-    } else {
-      return false;
-    }
+  public void recordSuppressions(Set<String> suppressions) {
+    currentInfo.addSuppressions(suppressions);
+    populated = true;
   }
 
   public void addSuppression(String suppression) {

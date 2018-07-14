@@ -1338,9 +1338,7 @@ public final class JsDocInfoParser {
         addParserWarning("msg.jsdoc.suppress");
       } else {
         token = next();
-        if (!jsdocBuilder.recordSuppressions(suppressions)) {
-          addParserWarning("msg.jsdoc.suppress.duplicate");
-        }
+        jsdocBuilder.recordSuppressions(suppressions);
       }
       return eatUntilEOLIfNotAnnotation();
     }
