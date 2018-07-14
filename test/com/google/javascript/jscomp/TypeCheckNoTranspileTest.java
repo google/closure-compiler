@@ -2686,8 +2686,7 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "  static m() {}",
             "}",
             "new C().m();"),
-        // TODO(sdh): This error message should be different from the converse case.
-        // Probably should say "Property m never defined on instances of C".
+        // TODO(b/111229815): Fix to "Property m never defined on instances of C".
         "Property m never defined on C");
   }
 
@@ -2698,9 +2697,7 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "  m() {}",
             "}",
             "C.m();"),
-        // TODO(sdh): This error message should be different from the converse case.
-        // Maybe should say "Property m never defined on namespace C". (but we need to think
-        // about union types, etc)
+        // TODO(b/111229815): Fix to "Property m never defined on namespace C".
         "Property m never defined on C");
   }
 
@@ -2774,7 +2771,7 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "  static method(arg) {}",
             "}",
             "class Sub extends Base {",
-            // TODO(sdh): should need @override
+            // TODO(sdh): should need @override (new warning: wait until later)
             "  /** @param {string|number} arg */",
             "  static method(arg) {}",
             "}"));
@@ -2791,7 +2788,7 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "  /** @override @param {string} arg */",
             "  static method(arg) {}",
             "}"));
-        // TODO(sdh): This should actually check the override.
+        // TODO(sdh): This should actually check the override (new warning: wait until later).
         // lines(
         //     "mismatch of the method property type and the type of the property it overrides "
         //         + "from superclass Base",
@@ -2906,6 +2903,25 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "required: string"));
   }
 
+  public void testClassSuperMethodCalledFromArrow() {
+    testTypes(
+        lines(
+            "class Foo {",
+            "  /** @param {string} arg */",
+            "  foo(arg) {}",
+            "}",
+            "class Bar extends Foo {",
+            "  /** @override */",
+            "  foo() {",
+            "    () => super.foo(42);",
+            "  }",
+            "}"),
+        lines(
+            "actual parameter 1 of Foo.prototype.foo does not match formal parameter",
+            "found   : number",
+            "required: string"));
+  }
+
   public void testClassSuperMethodReturnType() {
     testTypes(
         lines(
@@ -2974,12 +2990,31 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "  static foo() {",
             "    super.foo('x');",
             "  }",
-            "}"));
-        // TODO(sdh): Should produce an error.
-        // lines(
-        //     "actual parameter 1 of Foo.foo does not match formal parameter",
-        //     "found   : string",
-        //     "required: number"));
+            "}"),
+        lines(
+            // TODO(b/111229815): "Foo.foo" instead of "super.foo"
+            "actual parameter 1 of super.foo does not match formal parameter",
+            "found   : string",
+            "required: number"));
+  }
+
+  public void testClassStaticSuperCalledFromArrow() {
+    testTypes(
+        lines(
+            "class Foo {",
+            "  static foo(/** number */ arg) {}",
+            "}",
+            "class Bar extends Foo {",
+            "  /** @override */",
+            "  static foo() {",
+            "    () => super.foo('x');",
+            "  }",
+            "}"),
+        lines(
+            // TODO(b/111229815): "Foo.foo" instead of "super.foo"
+            "actual parameter 1 of super.foo does not match formal parameter",
+            "found   : string",
+            "required: number"));
   }
 
   public void testClassStaticSuperParameterCountMismatch() {
@@ -2993,10 +3028,10 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "  static foo() {",
             "    super.foo(1);",
             "  }",
-            "}"));
-        // TODO(sdh): Should produce an error.
-        // "Function super.foo: called with 1 argument(s). "
-        //     + "Function requires at least 0 argument(s) and no more than 0 argument(s).");
+            "}"),
+        // TODO(b/111229815): "Foo.foo" instead of "super.foo"
+        "Function super.foo: called with 1 argument(s). "
+            + "Function requires at least 0 argument(s) and no more than 0 argument(s).");
   }
 
   public void testClassStaticSuperNotPresent() {
@@ -3007,9 +3042,9 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "  static foo() {",
             "    super.foo;",
             "  }",
-            "}"));
-        // TODO(sdh): Should produce an error.
-        // "Property foo never defined on Foo");
+            "}"),
+        // TODO(b/111229815): "Property foo never defined on namespace Foo"
+        "Property foo never defined on super");
   }
 
   public void testClassStaticSuperCallsDifferentMethod() {
@@ -3023,12 +3058,55 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "  /** @override */",
             "  static foo(/** string|number */ arg) {}",
             "  static bar() { super.foo(42); }",
+            "}"),
+        lines(
+            // TODO(b/111229815): "Foo.foo" instead of "super.foo"
+            "actual parameter 1 of super.foo does not match formal parameter",
+            "found   : number",
+            "required: string"));
+  }
+
+  public void testClassTypeOfThisInConstructor() {
+    testTypes(
+        lines(
+            "class Foo {",
+            "  constructor() {",
+            "    var /** null */ foo = this;",
+            "  }",
+            "}"),
+        lines(
+            "initializing variable",
+            "found   : Foo",
+            "required: null"));
+  }
+
+  public void testClassTypeOfThisInMethod() {
+    testTypes(
+        lines(
+            "class Foo {",
+            "  foo() {",
+            "    var /** null */ foo = this;",
+            "  }",
+            "}"),
+        lines(
+            "initializing variable",
+            "found   : Foo",
+            "required: null"));
+  }
+
+  public void testClassTypeOfThisInStaticMethod() {
+    testTypes(
+        lines(
+            "class Foo {",
+            "  static foo() {",
+            "    var /** null */ foo = this;",
+            "  }",
             "}"));
-        // TODO(sdh): Should produce an error.
+        // TODO(sdh): Should be an error, but wait on it since it's a new warning.
         // lines(
-        //     "actual parameter 1 of Foo.foo does not match formal parameter",
-        //     "found   : number",
-        //     "required: string"));
+        //     "initializing variable",
+        //     "found   : function(new:Foo): undefined",
+        //     "required: null"));
   }
 
   public void testAsyncFunctionWithoutJSDoc() {

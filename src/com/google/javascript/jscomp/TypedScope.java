@@ -155,7 +155,6 @@ public class TypedScope extends AbstractScope<TypedScope, TypedVar> implements S
           ? globalArgs.getType()
           : null;
     }
-    // TODO(sdh): get the superclass for super?
     return getTypeOfThis();
   }
 

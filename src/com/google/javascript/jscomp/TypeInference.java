@@ -548,7 +548,17 @@ class TypeInference
   }
 
   private void traverseSuper(Node superNode) {
-    JSType jsType = functionScope.getRootNode().getJSType();
+    // Find the closest non-arrow function (TODO(sdh): this could be an AbstractScope method).
+    TypedScope scope = containerScope;
+    while (scope != null && !NodeUtil.isVanillaFunction(scope.getRootNode())) {
+      scope = scope.getParent();
+    }
+    if (scope == null) {
+      superNode.setJSType(unknownType);
+      return;
+    }
+    Node root = scope.getRootNode();
+    JSType jsType = root.getJSType();
     FunctionType functionType = jsType != null ? jsType.toMaybeFunctionType() : null;
     ObjectType superNodeType = unknownType;
     Node context = superNode.getParent();
@@ -564,8 +574,21 @@ class TypeInference
         }
       }
     } else if (context.isGetProp() || context.isGetElem()) {
-      // Refer to a superclass instance property.
-      if (functionType != null) {
+      // TODO(sdh): once getTypeOfThis supports statics, we can get rid of this branch, as well as
+      // the vanilla function search at the top and just return functionScope.getVar("super").
+      if (root.getParent().isStaticMember()) {
+        // Since the root is a static member, we're guaranteed that the parent scope is a class.
+        Node classNode = scope.getParent().getRootNode();
+        checkState(classNode.isClass());
+        FunctionType thisCtor = JSType.toMaybeFunctionType(classNode.getJSType());
+        if (thisCtor != null) {
+          FunctionType superCtor = thisCtor.getSuperClassConstructor();
+          if (superCtor != null) {
+            superNodeType = superCtor;
+          }
+        }
+      } else if (functionType != null) {
+        // Refer to a superclass instance property.
         ObjectType thisInstance = ObjectType.cast(functionType.getTypeOfThis());
         if (thisInstance != null) {
           FunctionType superCtor = thisInstance.getSuperClassConstructor();
