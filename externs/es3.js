@@ -2390,31 +2390,3 @@ function URIError(opt_message, opt_file, opt_line) {}
  * @type {function(new:?, string, string=)}
  */
 function ActiveXObject(progId, opt_location) {}
-
-/**
- * @return {string}
- * @nosideeffects
- * @see http://msdn.microsoft.com/en-us/library/9k34bww2(VS.80).aspx
- */
-function ScriptEngine() {}
-
-/**
- * @return {number}
- * @nosideeffects
- * @see http://msdn.microsoft.com/en-us/library/yf25ky07(VS.80).aspx
- */
-function ScriptEngineMajorVersion() {}
-
-/**
- * @return {number}
- * @nosideeffects
- * @see http://msdn.microsoft.com/en-us/library/wx3812cz(VS.80).aspx
- */
-function ScriptEngineMinorVersion() {}
-
-/**
- * @return {number}
- * @nosideeffects
- * @see http://msdn.microsoft.com/en-us/library/e98hsk2f(VS.80).aspx
- */
-function ScriptEngineBuildVersion() {}
