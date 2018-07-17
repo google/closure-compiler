@@ -27,20 +27,23 @@ import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 
 /**
- * Converts ESNext code to valid ES8 code.
+ * Converts object spread to valid ES2017 code.
  *
- * <p>Currently this class converts Object Rest/Spread properties as documented in tc39.
- * https://github.com/tc39/proposal-object-rest-spread
+ * <p>Currently this class converts Object spread properties as documented in tc39.
+ * https://github.com/tc39/proposal-object-rest-spread. For example:
+ *
+ * <p>{@code const bar = {a: 1, ...foo};}
+ *
+ * <p>Note that object rest is handled by {@link Es6RewriteDestructuring}
  */
-// TODO(lharker): object rest and spread are officially in ES2018/ES9, rename this pass.
-public final class EsNextToEs8Converter implements NodeTraversal.Callback, HotSwapCompilerPass {
+public final class RewriteObjectSpread implements NodeTraversal.Callback, HotSwapCompilerPass {
   private final AbstractCompiler compiler;
   private static final FeatureSet transpiledFeatures =
       FeatureSet.BARE_MINIMUM.with(Feature.OBJECT_LITERALS_WITH_SPREAD);
 
   private final boolean addTypes;
 
-  public EsNextToEs8Converter(AbstractCompiler compiler) {
+  public RewriteObjectSpread(AbstractCompiler compiler) {
     this.compiler = compiler;
     this.addTypes = compiler.hasTypeCheckingRun();
   }

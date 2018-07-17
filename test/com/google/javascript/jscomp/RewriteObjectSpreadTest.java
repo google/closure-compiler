@@ -17,10 +17,10 @@ package com.google.javascript.jscomp;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 
-/** Test cases for ESNext transpilation. */
-public final class EsNextToEs8ConverterTest extends CompilerTestCase {
+/** Test cases for {@link RewriteObjectSpread} */
+public final class RewriteObjectSpreadTest extends CompilerTestCase {
 
-  public EsNextToEs8ConverterTest() {
+  public RewriteObjectSpreadTest() {
     super(MINIMAL_EXTERNS);
   }
 
@@ -34,7 +34,7 @@ public final class EsNextToEs8ConverterTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
-    return new EsNextToEs8Converter(compiler);
+    return new RewriteObjectSpread(compiler);
   }
 
   @Override

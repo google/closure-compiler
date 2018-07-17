@@ -227,7 +227,7 @@ public class TranspilationPasses {
       new HotSwapPassFactory("rewriteObjRestSpread") {
         @Override
         protected HotSwapCompilerPass create(final AbstractCompiler compiler) {
-          return new EsNextToEs8Converter(compiler);
+          return new RewriteObjectSpread(compiler);
         }
 
         @Override
