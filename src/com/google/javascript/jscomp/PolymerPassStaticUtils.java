@@ -36,19 +36,37 @@ final class PolymerPassStaticUtils {
 
   /** @return Whether the call represents a call to the Polymer function. */
   @VisibleForTesting
-  public static boolean isPolymerCall(Node value) {
-    return value != null && value.isCall() && value.getFirstChild().matchesQualifiedName("Polymer");
+  public static boolean isPolymerCall(Node call) {
+    if (call == null || !call.isCall()) {
+      return false;
+    }
+    Node name = call.getFirstChild();
+    // When imported from an ES module, we'll have a GETPROP like
+    // `module$polymer$polymer_legacy.Polymer`.
+    return name.matchesQualifiedName("Polymer")
+        || (name.isGetProp() && name.getLastChild().getString().equals("Polymer"));
   }
 
-  /** @return Whether the class extends Polymer.Element */
+  /** @return Whether the class extends PolymerElement. */
   @VisibleForTesting
-  public static boolean isPolymerClass(Node value) {
-    JSDocInfo info = value == null ? null : NodeUtil.getBestJSDocInfo(value);
-    return value != null
-        && value.isClass()
-        && ((!value.getSecondChild().isEmpty()
-                && value.getSecondChild().matchesQualifiedName("Polymer.Element"))
-            || (info != null && info.isPolymer()));
+  public static boolean isPolymerClass(Node cls) {
+    if (cls == null || !cls.isClass()) {
+      return false;
+    }
+    // A class with the @polymer annotation is always considered a Polymer element.
+    JSDocInfo info = NodeUtil.getBestJSDocInfo(cls);
+    if (info != null && info.isPolymer()) {
+      return true;
+    }
+    Node heritage = cls.getSecondChild();
+    // In Polymer 3, the base class was renamed from `Polymer.Element` to `PolymerElement`. When
+    // imported from an ES module, we'll have a GETPROP like
+    // `module$polymer$polymer_element.PolymerElement`.
+    return !heritage.isEmpty()
+        && (heritage.matchesQualifiedName("Polymer.Element")
+            || heritage.matchesQualifiedName("PolymerElement")
+            || (heritage.isGetProp()
+                && heritage.getLastChild().getString().equals("PolymerElement")));
   }
 
   /** Switches all "this.$.foo" to "this.$['foo']". */

@@ -843,6 +843,64 @@ public final class IntegrationTest extends IntegrationTestCase {
     assertThat(compiler.getWarnings()).isEmpty();
   }
 
+  public void testPolymerElementImportedFromEsModule() {
+    CompilerOptions options = createCompilerOptions();
+    options.setPolymerVersion(2);
+    options.setWarningLevel(DiagnosticGroups.CHECK_TYPES, CheckLevel.ERROR);
+    options.declaredGlobalExternsOnWindow = true;
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    addPolymerExterns();
+
+    Compiler compiler =
+        compile(
+            options,
+            new String[] {
+              lines("export class PolymerElement {};"),
+              lines(
+                  "import {PolymerElement} from './i0.js';",
+                  "class Foo extends PolymerElement {",
+                  "  get is() { return 'foo-element'; }",
+                  "  static get properties() { return { fooProp: String }; }",
+                  "}",
+                  "const foo = new Foo();",
+                  // This property access would be an unknown property error unless the PolymerPass
+                  // had successfully parsed the element definition.
+                  "foo.fooProp;")
+            });
+    assertThat(compiler.getErrors()).isEmpty();
+    assertThat(compiler.getWarnings()).isEmpty();
+  }
+
+  public void testPolymerFunctionImportedFromEsModule() {
+    CompilerOptions options = createCompilerOptions();
+    options.setPolymerVersion(2);
+    options.setWarningLevel(DiagnosticGroups.CHECK_TYPES, CheckLevel.ERROR);
+    options.declaredGlobalExternsOnWindow = true;
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    addPolymerExterns();
+
+    Compiler compiler =
+        compile(
+            options,
+            new String[] {
+              lines("export function Polymer(def) {};"),
+              lines(
+                  "import {Polymer} from './i0.js';",
+                  "Polymer({",
+                  "  is: 'foo-element',",
+                  "  properties: { fooProp: String },",
+                  "});",
+                  // This interface cast and property access would be an error unless the
+                  // PolymerPass had successfully parsed the element definition.
+                  "const foo = /** @type{!FooElementElement} */({});",
+                  "foo.fooProp;")
+            });
+    assertThat(compiler.getErrors()).isEmpty();
+    assertThat(compiler.getWarnings()).isEmpty();
+  }
+
   public void testPreservedForwardDeclare() {
     CompilerOptions options = createCompilerOptions();
     WarningLevel.VERBOSE.setOptionsForWarningLevel(options);
