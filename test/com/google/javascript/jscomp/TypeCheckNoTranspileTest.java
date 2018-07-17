@@ -3119,6 +3119,56 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
         //     "required: null"));
   }
 
+  public void testClassNewTargetInArrowFunction() {
+    // TODO(sdh): This should be an error.
+    testTypes("const f = () => { const /** null */ x = new.target; };");
+  }
+
+  public void testClassNewTargetInMethod() {
+    testTypes(
+        "class Foo { foo() { const /** null */ x = new.target; } }",
+        lines(
+            "initializing variable",
+            "found   : undefined",
+            "required: null"));
+  }
+
+  public void testClassNewTargetInVanillaFunction() {
+    testTypes(
+        "function f() { const /** null */ x = new.target; }",
+        lines(
+            "initializing variable",
+            "found   : (Function|undefined)",
+            "required: null"));
+  }
+
+  public void testClassNewTargetInVanillaFunctionNestedArrow() {
+    testTypes(
+        "function f() { const f = () => { const /** null */ x = new.target; }; }",
+        lines(
+            "initializing variable",
+            "found   : (Function|undefined)",
+            "required: null"));
+  }
+
+  public void testClassNewTargetInConstructor() {
+    testTypes(
+        "class Foo { constructor() { const /** null */ x = new.target; } };",
+        lines(
+            "initializing variable",
+            "found   : Function",
+            "required: null"));
+  }
+
+  public void testClassNewTargetInConstructorNestedArrow() {
+    testTypes(
+        "class Foo { constructor() { const f = () => { const /** null */ x = new.target; }; } };",
+        lines(
+            "initializing variable",
+            "found   : Function",
+            "required: null"));
+  }
+
   public void testAsyncFunctionWithoutJSDoc() {
     testTypes("async function f() { return 3; }");
   }

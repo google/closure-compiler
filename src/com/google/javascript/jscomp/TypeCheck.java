@@ -605,6 +605,10 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         visitNew(t, n);
         break;
 
+      case NEW_TARGET:
+        ensureTyped(n);
+        break;
+
       case CALL:
         visitCall(t, n);
         typeable = !parent.isExprResult();

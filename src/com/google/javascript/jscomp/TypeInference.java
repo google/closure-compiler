@@ -390,6 +390,10 @@ class TypeInference
         scope = traverseNew(n, scope);
         break;
 
+      case NEW_TARGET:
+        traverseNewTarget(n);
+        break;
+
       case ASSIGN_ADD:
       case ADD:
         scope = traverseAdd(n, scope);
@@ -602,6 +606,38 @@ class TypeInference
       }
     }
     superNode.setJSType(superNodeType);
+  }
+
+  private void traverseNewTarget(Node newTargetNode) {
+    // new.target is (undefined|!Function) within a vanilla function and !Function within an ES6
+    // constructor.
+    // Find the closest non-arrow function (TODO(sdh): this could be an AbstractScope method).
+    TypedScope scope = containerScope;
+    while (scope != null && !NodeUtil.isVanillaFunction(scope.getRootNode())) {
+      scope = scope.getParent();
+    }
+    if (scope == null) {
+      // NOTE: we already have a parse error for new.target outside a function.  The only other case
+      // where this might happen is a top-level arrow function, which is a parse error in the VM,
+      // but allowed by our parser.
+      newTargetNode.setJSType(unknownType);
+      return;
+    }
+    Node root = scope.getRootNode();
+    Node parent = root.getParent();
+    if (parent.isMemberFunctionDef() && parent.getGrandparent().isClass()) {
+      // In an ES6 constuctor, new.target may not be undefined.  In any other method, it must be
+      // undefined, since methods are not constructable.
+      JSTypeNative type =
+          "constructor".equals(parent.getString()) ? JSTypeNative.U2U_CONSTRUCTOR_TYPE : VOID_TYPE;
+      newTargetNode.setJSType(registry.getNativeType(type));
+    } else {
+      // Other functions also include undefined, in case they are not called with 'new'.
+      newTargetNode.setJSType(
+          registry.createUnionType(
+              registry.getNativeType(JSTypeNative.U2U_CONSTRUCTOR_TYPE),
+              registry.getNativeType(VOID_TYPE)));
+    }
   }
 
   /** Traverse a return value. */
