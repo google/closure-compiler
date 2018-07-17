@@ -1738,6 +1738,47 @@ public class PolymerPassTest extends CompilerTestCase {
             });
   }
 
+  /** Check that we can resolve behaviors through a chain of identifiers. */
+  public void testIndirectBehaviorAssignment() {
+    test(
+        srcs(
+            lines(
+                "/** @polymerBehavior */",
+                "var MyBehavior = {",
+                "  properties: {",
+                "    behaviorProperty: Boolean",
+                "  }",
+                "};",
+                "var BehaviorAlias1 = MyBehavior;",
+                "var BehaviorAlias2 = BehaviorAlias1;",
+                "var MyElement = Polymer({",
+                "  is: 'my-element',",
+                "  behaviors: [ BehaviorAlias2 ]",
+                "});")),
+        expected(
+            lines(
+                "/** @polymerBehavior @nocollapse */",
+                "var MyBehavior = {",
+                "  properties: {",
+                "    behaviorProperty: Boolean",
+                "  }",
+                "};",
+                "var BehaviorAlias1 = MyBehavior;",
+                "var BehaviorAlias2 = BehaviorAlias1;",
+                "/**",
+                " * @constructor",
+                " * @extends {PolymerElement}",
+                " * @implements {PolymerMyElementInterface}",
+                " */",
+                "var MyElement = function(){};",
+                "/** @type {boolean} */",
+                "MyElement.prototype.behaviorProperty;",
+                "MyElement = Polymer(/** @lends {MyElement.prototype} */ {",
+                "  is: 'my-element',",
+                "  behaviors: [ BehaviorAlias2 ]",
+                "});")));
+  }
+
   private static class DoSomethingFunFinder implements Visitor {
     boolean found = false;
 

@@ -26,6 +26,7 @@ import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import java.util.List;
+import javax.annotation.Nullable;
 
 /**
  * Helpers to extract behaviors from Polymer element declarations.
@@ -81,44 +82,14 @@ final class PolymerBehaviorExtractor {
         continue;
       }
 
-      Name behaviorGlobalName = globalNames.getSlot(behaviorName.getQualifiedName());
-      boolean isGlobalDeclaration = true;
-      if (behaviorGlobalName == null) {
+      ResolveBehaviorNameResult resolveResult = resolveBehaviorName(behaviorName);
+      if (resolveResult == null) {
         compiler.report(JSError.make(behaviorName, PolymerPassErrors.POLYMER_UNQUALIFIED_BEHAVIOR));
         continue;
       }
+      Node behaviorValue = resolveResult.node;
 
-      Ref behaviorDeclaration = behaviorGlobalName.getDeclaration();
-
-      // Use any set as a backup declaration, even if it's local.
-      if (behaviorDeclaration == null) {
-        List<Ref> behaviorRefs = behaviorGlobalName.getRefs();
-        for (Ref ref : behaviorRefs) {
-          if (ref.isSet()) {
-            isGlobalDeclaration = false;
-            behaviorDeclaration = ref;
-            break;
-          }
-        }
-      }
-
-      if (behaviorDeclaration == null) {
-        compiler.report(JSError.make(behaviorName, PolymerPassErrors.POLYMER_UNQUALIFIED_BEHAVIOR));
-        continue;
-      }
-
-      Node behaviorDeclarationNode = behaviorDeclaration.getNode();
-      JSDocInfo behaviorInfo = NodeUtil.getBestJSDocInfo(behaviorDeclarationNode);
-      if (behaviorInfo == null || !behaviorInfo.isPolymerBehavior()) {
-        compiler.report(
-            JSError.make(behaviorDeclarationNode, PolymerPassErrors.POLYMER_UNANNOTATED_BEHAVIOR));
-      }
-
-      Node behaviorValue = NodeUtil.getRValueOfLValue(behaviorDeclarationNode);
-
-      if (behaviorValue == null) {
-        compiler.report(JSError.make(behaviorName, PolymerPassErrors.POLYMER_UNQUALIFIED_BEHAVIOR));
-      } else if (behaviorValue.isArrayLit()) {
+      if (behaviorValue.isArrayLit()) {
         // Individual behaviors can also be arrays of behaviors. Parse them recursively.
         behaviors.addAll(extractBehaviors(behaviorValue));
       } else if (behaviorValue.isObjectLit()) {
@@ -133,7 +104,7 @@ final class PolymerBehaviorExtractor {
                     behaviorValue, PolymerClassDefinition.DefinitionType.ObjectLiteral, compiler),
                 getBehaviorFunctionsToCopy(behaviorValue),
                 getNonPropertyMembersToCopy(behaviorValue),
-                isGlobalDeclaration,
+                resolveResult.isGlobalDeclaration,
                 (FeatureSet) NodeUtil.getEnclosingScript(behaviorValue).getProp(Node.FEATURE_SET)));
       } else {
         compiler.report(JSError.make(behaviorName, PolymerPassErrors.POLYMER_UNQUALIFIED_BEHAVIOR));
@@ -141,6 +112,75 @@ final class PolymerBehaviorExtractor {
     }
 
     return behaviors.build();
+  }
+
+  private static class ResolveBehaviorNameResult {
+    final Node node;
+    final boolean isGlobalDeclaration;
+
+    public ResolveBehaviorNameResult(Node node, boolean isGlobalDeclaration) {
+      this.node = node;
+      this.isGlobalDeclaration = isGlobalDeclaration;
+    }
+  }
+
+  /**
+   * Resolve an identifier, which is presumed to refer to a Polymer Behavior declaration, using the
+   * global namespace. Recurses to resolve assignment chains of any length.
+   *
+   * @param nameNode The NAME or GETPROP node containing the identifier.
+   * @return The behavior declaration node, or null if it couldn't be resolved.
+   */
+  @Nullable
+  private ResolveBehaviorNameResult resolveBehaviorName(Node nameNode) {
+    String name = nameNode.getQualifiedName();
+    if (name == null) {
+      return null;
+    }
+    Name globalName = globalNames.getSlot(name);
+    if (globalName == null) {
+      return null;
+    }
+
+    boolean isGlobalDeclaration = true;
+
+    // Use any set as a backup declaration, even if it's local.
+    Ref declarationRef = globalName.getDeclaration();
+    if (declarationRef == null) {
+      List<Ref> behaviorRefs = globalName.getRefs();
+      for (Ref ref : behaviorRefs) {
+        if (ref.isSet()) {
+          isGlobalDeclaration = false;
+          declarationRef = ref;
+          break;
+        }
+      }
+    }
+    if (declarationRef == null) {
+      return null;
+    }
+
+    Node declarationNode = declarationRef.getNode();
+    if (declarationNode == null) {
+      return null;
+    }
+    Node rValue = NodeUtil.getRValueOfLValue(declarationNode);
+    if (rValue == null) {
+      return null;
+    }
+
+    if (rValue.isQualifiedName()) {
+      // Another identifier; recurse.
+      return resolveBehaviorName(rValue);
+    }
+
+    JSDocInfo behaviorInfo = NodeUtil.getBestJSDocInfo(declarationNode);
+    if (behaviorInfo == null || !behaviorInfo.isPolymerBehavior()) {
+      compiler.report(
+          JSError.make(declarationNode, PolymerPassErrors.POLYMER_UNANNOTATED_BEHAVIOR));
+    }
+
+    return new ResolveBehaviorNameResult(rValue, isGlobalDeclaration);
   }
 
   /**
