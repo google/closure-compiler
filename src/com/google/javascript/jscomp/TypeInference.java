@@ -167,7 +167,10 @@ class TypeInference
             // set astParameter = restParamName
             astParameter = astParameter.getOnlyChild();
           }
-          checkState(astParameter.isName(), astParameter);
+          if (!astParameter.isName()) {
+            // TODO(lharker): support destructuring parameters
+            continue;
+          }
           TypedVar var = functionScope.getVar(astParameter.getString());
           checkNotNull(var);
           if (var.isTypeInferred() && var.getType() == unknownType) {

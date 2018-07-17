@@ -2423,6 +2423,11 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
             if (astParameter.isDefaultValue()) {
               astParameter = astParameter.getFirstChild();
             }
+
+            if (!astParameter.isName()) {
+              // TODO(lharker): support destructuring ast parameters
+              continue;
+            }
             JSType paramType = jsDocParameter == null ? unknownType : jsDocParameter.getJSType();
             boolean inferred = paramType == null || paramType.equals(unknownType);
             if (isRestParameter) {

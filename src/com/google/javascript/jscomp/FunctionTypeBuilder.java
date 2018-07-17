@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Strings.nullToEmpty;
 import static com.google.javascript.jscomp.TypeCheck.BAD_IMPLEMENTED_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.FUNCTION_FUNCTION_TYPE;
@@ -529,8 +530,8 @@ final class FunctionTypeBuilder {
   }
 
   /** Infer the parameter types from the list of parameter names and the JSDoc info. */
-  FunctionTypeBuilder inferParameterTypes(@Nullable Node argsParent, @Nullable JSDocInfo info) {
-    if (argsParent == null) {
+  FunctionTypeBuilder inferParameterTypes(@Nullable Node paramsParent, @Nullable JSDocInfo info) {
+    if (paramsParent == null) {
       if (info == null) {
         return this;
       } else {
@@ -549,30 +550,41 @@ final class FunctionTypeBuilder {
     Set<String> allJsDocParams =
         (info == null) ? new HashSet<>() : new HashSet<>(info.getParameterNames());
     boolean isVarArgs = false;
-    for (Node arg : argsParent.children()) {
+    int paramIndex = 0;
+    for (Node param : paramsParent.children()) {
       boolean isOptionalParam = false;
-      if (arg.isDefaultValue()) {
+      if (param.isDefaultValue()) {
         // The first child is the actual positional parameter
-        arg = checkNotNull(arg.getFirstChild(), arg);
+        param = checkNotNull(param.getFirstChild(), param);
       }
-      if (arg.isRest()) {
+      if (param.isRest()) {
         isVarArgs = true;
-        arg = arg.getOnlyChild();
+        param = param.getOnlyChild();
       } else {
-        isVarArgs = isVarArgsParameter(arg, info);
-        isOptionalParam = isOptionalParameter(arg, info);
+        isVarArgs = isVarArgsParameter(param, info);
+        isOptionalParam = isOptionalParameter(param, info);
       }
 
-      String argumentName = arg.getString();
-      allJsDocParams.remove(argumentName);
+      String paramName = null;
+      if (param.isName()) {
+        paramName = param.getString();
+      } else {
+        checkState(param.isDestructuringPattern());
+        // Right now, the only way to match a JSDoc param to a destructuring parameter is through
+        // ordering the JSDoc parameters. So the third formal parameter will correspond to the
+        // third JSDoc parameter.
+        if (info != null) {
+          paramName = info.getParameterNameAt(paramIndex);
+        }
+      }
+      allJsDocParams.remove(paramName);
 
       // type from JSDocInfo
       JSType parameterType = null;
-      if (info != null && info.hasParameterType(argumentName)) {
-        parameterType =
-            info.getParameterType(argumentName).evaluate(templateScope, typeRegistry);
-      } else if (arg.getJSDocInfo() != null && arg.getJSDocInfo().hasType()) {
-        JSTypeExpression parameterTypeExpression = arg.getJSDocInfo().getType();
+      if (info != null && info.hasParameterType(paramName)) {
+        parameterType = info.getParameterType(paramName).evaluate(templateScope, typeRegistry);
+      } else if (param.getJSDocInfo() != null && param.getJSDocInfo().hasType()) {
+        JSTypeExpression parameterTypeExpression = param.getJSDocInfo().getType();
         parameterType = parameterTypeExpression.evaluate(templateScope, typeRegistry);
         isOptionalParam = parameterTypeExpression.isOptionalArg();
         isVarArgs = parameterTypeExpression.isVarArgs();
@@ -593,8 +605,8 @@ final class FunctionTypeBuilder {
       if (oldParameterType != null) {
         oldParameterType = oldParameterType.getNext();
       }
+      paramIndex++;
     }
-
     // Copy over any old parameters that aren't in the param list.
     if (!isVarArgs) {
       while (oldParameterType != null && !isVarArgs) {
@@ -669,6 +681,9 @@ final class FunctionTypeBuilder {
    * @return Whether the given param is an optional param.
    */
   private boolean isOptionalParameter(Node param, @Nullable JSDocInfo info) {
+    if (param.isDestructuringPattern()) {
+      return false;
+    }
     if (codingConvention.isOptionalParameter(param)) {
       return true;
     }
@@ -684,6 +699,9 @@ final class FunctionTypeBuilder {
    */
   private boolean isVarArgsParameter(
       Node param, @Nullable JSDocInfo info) {
+    if (param.isDestructuringPattern()) {
+      return false;
+    }
     if (codingConvention.isVarArgsParameter(param)) {
       return true;
     }

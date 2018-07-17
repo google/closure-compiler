@@ -408,6 +408,146 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
         .toStringIsEqualTo("(string|undefined)");
   }
 
+  public void testDestructuringParameterWithNoJSDoc() {
+    testSame("function f([x, y], {z}) {}");
+
+    TypedVar fVar = checkNotNull(globalScope.getVar("f"));
+    assertType(fVar.getType()).toStringIsEqualTo("function(?, ?): undefined");
+    assertFalse(fVar.isTypeInferred());
+  }
+
+  public void testArrayPatternParameterWithFullJSDoc() {
+    testSame(
+        lines(
+            "/**",
+            " * @param {string} x",
+            " * @param {!Iterable<number>} arr",
+            " */",
+            "function f(x, [y]) {}"));
+
+    TypedVar fVar = checkNotNull(globalScope.getVar("f"));
+    assertType(fVar.getType()).toStringIsEqualTo("function(string, Iterable<number>): undefined");
+    assertFalse(fVar.isTypeInferred());
+
+    TypedVar xVar = checkNotNull(lastFunctionScope.getVar("x"));
+    assertType(xVar.getType()).toStringIsEqualTo("string");
+    assertFalse(xVar.isTypeInferred());
+
+    // TODO(b/77597706): declare y in the function scope
+    TypedVar yVar = lastFunctionScope.getVar("y");
+    assertNull(yVar);
+    // assertType(yVar.getType()).toStringIsEqualTo("number");
+    // assertFalse(yVar.isTypeInferred());
+  }
+
+  public void testArrayPatternParameterWithRestWithFullJSDoc() {
+    testSame("/**  @param {!Iterable<number>} arr */ function f([x, ...y]) {}");
+
+    TypedVar fVar = checkNotNull(globalScope.getVar("f"));
+    assertType(fVar.getType()).toStringIsEqualTo("function(Iterable<number>): undefined");
+    assertFalse(fVar.isTypeInferred());
+  }
+
+  public void testObjectPatternParameterWithFullJSDoc() {
+    testSame("/** @param {{a: string, b: number}} arr */ function f({a, b}) {}");
+
+    TypedVar fVar = checkNotNull(globalScope.getVar("f"));
+    assertType(fVar.getType()).toStringIsEqualTo("function({a: string, b: number}): undefined");
+    assertFalse(fVar.isTypeInferred());
+  }
+
+  public void testObjectPatternParameterWithUnknownPropertyWithFullJSDoc() {
+    testSame("/** @param {{a: string}} arr */ function f({a, b}) {}");
+
+    TypedVar fVar = checkNotNull(globalScope.getVar("f"));
+    assertType(fVar.getType()).toStringIsEqualTo("function({a: string}): undefined");
+    assertFalse(fVar.isTypeInferred());
+  }
+
+  public void testNestedPatternParameterWithFullJSDoc() {
+    testSame(
+        lines(
+            "/**",
+            " * @param {string} x",
+            " * @param {{a: !Iterable<number>}} obj",
+            " * @param {!Iterable<{z: null}>} arr",
+            " */",
+            "function f(x, {a: [y]}, [{z}]) {}"));
+
+    TypedVar fVar = checkNotNull(globalScope.getVar("f"));
+    assertType(fVar.getType())
+        .toStringIsEqualTo(
+            "function(string, {a: Iterable<number>}, Iterable<{z: null}>): undefined");
+    assertFalse(fVar.isTypeInferred());
+
+    TypedVar xVar = checkNotNull(lastFunctionScope.getVar("x"));
+    assertType(xVar.getType()).toStringIsEqualTo("string");
+    assertFalse(xVar.isTypeInferred());
+  }
+
+  public void testObjectPatternParameterWithComputedPropertyWithFullJSDoc() {
+    // TODO(lharker): re-enable type info validation. it's currently failing on the computed
+    // property because TypeInference doesn't traverse the destructuring pattern.
+    disableTypeInfoValidation();
+    testSame(
+        lines(
+            "/**",
+            " * @param {string} x",
+            " * @param {!Object<string, number>} arr",
+            " */",
+            "function f(x, {['foobar' + 3]: a}) {}"));
+
+    TypedVar xVar = checkNotNull(lastFunctionScope.getVar("x"));
+    assertType(xVar.getType()).toStringIsEqualTo("string");
+    assertFalse(xVar.isTypeInferred());
+  }
+
+  public void testOutOfOrderJSDocForDestructuringParameter() {
+    // Even though regular JSDoc parameters can be out of order, there's currently no way for
+    // putting arbitrary orders on destructuring parameters.
+    testWarning(
+        lines(
+            "/**",
+            " * @param {!Iterable<number>} arr",
+            " * @param {string} x",
+            " */",
+            "function f(x, [y, z]) {}"),
+        FunctionTypeBuilder.INEXISTENT_PARAM);
+
+    TypedVar fVar = checkNotNull(globalScope.getVar("f"));
+    // TODO(b/77597706): it would make more sense for this to be function(string, ?) instead
+    assertType(fVar.getType()).toStringIsEqualTo("function(string, string): undefined");
+    assertFalse(fVar.isTypeInferred());
+  }
+
+  public void testObjectPatternParameterWithInlineJSDoc() {
+    testSame("function f({/** number */ x}) {}");
+
+    // TODO(lharker): infer that f takes {x: number}
+    TypedVar fVar = checkNotNull(globalScope.getVar("f"));
+    assertType(fVar.getType()).toStringIsEqualTo("function(?): undefined");
+    assertFalse(fVar.isTypeInferred());
+  }
+
+  public void testArrayPatternParameterWithInlineJSDoc() {
+    testSame("function f([/** number */ x]) {}");
+
+    // TODO(lharker): either forbid this case or infer that f takes an !Iterable<number>
+    TypedVar fVar = checkNotNull(globalScope.getVar("f"));
+    assertType(fVar.getType()).toStringIsEqualTo("function(?): undefined");
+    assertFalse(fVar.isTypeInferred());
+  }
+
+  public void testArrayPatternParametersWithDifferingInlineJSDoc() {
+    testSame("function f([/** number */ x, /** string */ y]) {}");
+
+    // TODO(lharker): forbid this case, as there's not a good way to type the function without
+    // having tuple types.
+    TypedVar fVar = checkNotNull(globalScope.getVar("f"));
+    assertType(fVar.getType()).toStringIsEqualTo("function(?): undefined");
+    assertFalse(fVar.isTypeInferred());
+  }
+
   public void testStubProperty() {
     testSame("function Foo() {}; Foo.bar;");
     ObjectType foo = (ObjectType) globalScope.getVar("Foo").getType();
@@ -3032,3 +3172,4 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     return (ObjectType) registry.getNativeType(type);
   }
 }
+
