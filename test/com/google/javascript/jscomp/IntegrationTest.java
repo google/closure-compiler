@@ -5338,6 +5338,18 @@ public final class IntegrationTest extends IntegrationTestCase {
         (String []) null);
   }
 
+  // NOTE(nicksantos): This test currently fails, because CompilerOptions has broken defaults.
+  public void testIssue3016() {
+    CompilerOptions options = new CompilerOptions();
+    // uncommenting this line makes the test pass, because it sets a reasonable language out
+    //options.setLanguageOut(LanguageMode.ECMASCRIPT3);
+    options.setCheckTypes(true);
+    test(
+        options,
+        "/** @return {number} */ function f() { return 'x'; }",
+        TypeValidator.TYPE_MISMATCH_WARNING);
+  }
+
   /** Creates a CompilerOptions object with google coding conventions. */
   @Override
   protected CompilerOptions createCompilerOptions() {
