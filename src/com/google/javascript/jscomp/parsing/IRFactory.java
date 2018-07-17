@@ -2325,6 +2325,9 @@ class IRFactory {
       maybeProcessGenerics(name, tree.generics);
 
       Node superClass = transformOrEmpty(tree.superClass, tree);
+      if (!superClass.isEmpty()) {
+        features = features.with(Feature.CLASS_EXTENDS);
+      }
       Node interfaces = transformListOrEmpty(Token.IMPLEMENTS, tree.interfaces);
 
       Node body = newNode(Token.CLASS_MEMBERS);
@@ -2333,6 +2336,12 @@ class IRFactory {
         if (child.type == ParseTreeType.MEMBER_VARIABLE
             || child.type == ParseTreeType.COMPUTED_PROPERTY_MEMBER_VARIABLE) {
           maybeWarnTypeSyntax(child, Feature.MEMBER_VARIABLE_IN_CLASS);
+        }
+        if (child.type == ParseTreeType.COMPUTED_PROPERTY_GETTER
+            || child.type == ParseTreeType.COMPUTED_PROPERTY_SETTER
+            || child.type == ParseTreeType.GET_ACCESSOR
+            || child.type == ParseTreeType.SET_ACCESSOR) {
+          features = features.with(Feature.CLASS_GETTER_SETTER);
         }
         body.addChildToBack(transform(child));
       }

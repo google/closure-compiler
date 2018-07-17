@@ -79,6 +79,8 @@ public final class FeatureSet implements Serializable {
       ES8.without(Feature.ARRAY_PATTERN_REST)
           .without(Feature.ASYNC_FUNCTIONS)
           .without(Feature.CLASSES)
+          .without(Feature.CLASS_EXTENDS)
+          .without(Feature.CLASS_GETTER_SETTER)
           .without(Feature.DEFAULT_PARAMETERS)
           .without(Feature.DESTRUCTURING)
           .without(Feature.MODULES)
@@ -121,6 +123,8 @@ public final class FeatureSet implements Serializable {
     BINARY_LITERALS("binary literal", LangVersion.ES6),
     BLOCK_SCOPED_FUNCTION_DECLARATION("block-scoped function declaration", LangVersion.ES6),
     CLASSES("class", LangVersion.ES6),
+    CLASS_EXTENDS("class extends", LangVersion.ES6),
+    CLASS_GETTER_SETTER("class getters/setters", LangVersion.ES6),
     COMPUTED_PROPERTIES("computed property", LangVersion.ES6),
     CONST_DECLARATIONS("const declaration", LangVersion.ES6),
     DEFAULT_PARAMETERS("default parameter", LangVersion.ES6),

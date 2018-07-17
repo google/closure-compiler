@@ -408,6 +408,15 @@ public final class AstValidatorTest extends CompilerTestCase {
     testFeatureValidation("var obj = {set f(x) {}};", Feature.SETTER);
   }
 
+  public void testFeatureValidation_classGetterSetter() {
+    testFeatureValidation("class C { get f() {} }", Feature.CLASS_GETTER_SETTER);
+    testFeatureValidation("class C { set f(x) {} }", Feature.CLASS_GETTER_SETTER);
+  }
+
+  public void testFeatureValidation_classExtends() {
+    testFeatureValidation("class C extends B {}", Feature.CLASS_EXTENDS);
+  }
+
   public void testFeatureValidation_arrowFunctions() {
     testFeatureValidation("var arrow = () => 3", Feature.ARROW_FUNCTIONS);
     testFeatureValidation("var asyncArrow = async () => 3", Feature.ARROW_FUNCTIONS);

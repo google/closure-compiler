@@ -732,6 +732,7 @@ public final class AstValidator implements CompilerPass {
     if (superClass.isEmpty()) {
       validateChildless(superClass);
     } else {
+      validateFeature(Feature.CLASS_EXTENDS, n);
       validateExpression(superClass);
     }
 
@@ -749,17 +750,16 @@ public final class AstValidator implements CompilerPass {
     switch (n.getToken()) {
       case MEMBER_FUNCTION_DEF:
         validateFeature(Feature.MEMBER_DECLARATIONS, n);
-        // fall through
-      case GETTER_DEF:
-      case SETTER_DEF:
         validateObjectLiteralKeyName(n);
         validateChildCount(n);
-        Node function = n.getFirstChild();
-        if (isAmbient) {
-          validateFunctionSignature(function);
-        } else {
-          validateFunctionExpression(function);
-        }
+        validateMemberFunction(n, isAmbient);
+        break;
+      case GETTER_DEF:
+      case SETTER_DEF:
+        validateFeature(Feature.CLASS_GETTER_SETTER, n);
+        validateObjectLiteralKeyName(n);
+        validateChildCount(n);
+        validateMemberFunction(n, isAmbient);
         break;
       case MEMBER_VARIABLE_DEF:
         validateChildless(n);
@@ -778,6 +778,15 @@ public final class AstValidator implements CompilerPass {
         break;
       default:
         violation("Class contained member of invalid type " + n.getToken(), n);
+    }
+  }
+
+  private void validateMemberFunction(Node n, boolean isAmbient) {
+    Node function = n.getFirstChild();
+    if (isAmbient) {
+      validateFunctionSignature(function);
+    } else {
+      validateFunctionExpression(function);
     }
   }
 
@@ -1777,4 +1786,3 @@ public final class AstValidator implements CompilerPass {
     }
   }
 }
-

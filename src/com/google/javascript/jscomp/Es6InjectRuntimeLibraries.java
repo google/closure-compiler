@@ -69,12 +69,17 @@ public final class Es6InjectRuntimeLibraries extends AbstractPostOrderCallback
       Es6ToEs3Util.preloadEs6RuntimeFunction(compiler, "arrayfromiterable");
     }
 
+    if (used.contains(Feature.CLASS_EXTENDS)) {
+      Es6ToEs3Util.preloadEs6RuntimeFunction(compiler, "inherits");
+    }
+
+    if (used.contains(Feature.CLASS_GETTER_SETTER)) {
+      compiler.ensureLibraryInjected("util/global", /* force= */ false);
+    }
 
     if (used.contains(Feature.GENERATORS)) {
       compiler.ensureLibraryInjected("es6/generator_engine", /* force= */ false);
     }
-
-    boolean requiresSymbol = used.contains(knownToRequireSymbol);
 
     // TODO(johnlenz): remove this.  Symbol should be handled like the other polyfills.
     TranspilationPasses.processTranspile(compiler, root, requiredForFeatures, this);

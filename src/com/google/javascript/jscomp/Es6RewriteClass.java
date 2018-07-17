@@ -42,7 +42,11 @@ import javax.annotation.Nullable;
 public final class Es6RewriteClass implements NodeTraversal.Callback, HotSwapCompilerPass {
   private final AbstractCompiler compiler;
   private static final FeatureSet features =
-      FeatureSet.BARE_MINIMUM.with(Feature.CLASSES, Feature.NEW_TARGET);
+      FeatureSet.BARE_MINIMUM.with(
+          Feature.CLASSES,
+          Feature.CLASS_EXTENDS,
+          Feature.CLASS_GETTER_SETTER,
+          Feature.NEW_TARGET);
 
   static final DiagnosticType DYNAMIC_EXTENDS_TYPE = DiagnosticType.error(
       "JSC_DYNAMIC_EXTENDS_TYPE",
