@@ -1460,10 +1460,3 @@ Screen.prototype.logicalXDPI;
  * @see http://msdn.microsoft.com/en-us/library/ms534130%28v=vs.85%29.aspx
  */
 Screen.prototype.logicalYDPI;
-
-/**
- * @see http://msdn.microsoft.com/en-us/library/7sw4ddf8.aspx
- * @type {function(new:?, string, string=)}
- * @deprecated
- */
-function ActiveXObject(progId, opt_location) {}
