@@ -2655,6 +2655,11 @@ public class Node implements Serializable {
     return getBooleanProp(YIELD_ALL);
   }
 
+  /** Returns true if this is or ever was a CLASS node (i.e. even after transpilation). */
+  public final boolean isEs6Class() {
+    return isClass() || getBooleanProp(IS_ES6_CLASS);
+  }
+
   // There are four values of interest:
   //   global state changes
   //   this state changes

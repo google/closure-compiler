@@ -2048,8 +2048,8 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       if (n.isFunction()
           && baseConstructor != null
           && baseConstructor.getSource() != null
-          && baseConstructor.getSource().getBooleanProp(Node.IS_ES6_CLASS)
-          && !functionType.getSource().getBooleanProp(Node.IS_ES6_CLASS)) {
+          && baseConstructor.getSource().isEs6Class()
+          && !functionType.getSource().isEs6Class()) {
         // Warn if an ES5 class extends an ES6 class.
         compiler.report(
             t.makeError(

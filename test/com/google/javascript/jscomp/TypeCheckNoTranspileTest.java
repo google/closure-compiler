@@ -3339,6 +3339,24 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "required: null"));
   }
 
+  public void testClassEs5ClassCannotExtendEs6Class() {
+    testTypes(
+        lines(
+            "class Base {}",
+            "/** @constructor @extends {Base} */",
+            "function Sub() {}"),
+        "ES5 class Sub cannot extend ES6 class Base");
+  }
+
+  public void testClassEs5ClassCanImplementEs6Interface() {
+    testTypes(
+        lines(
+            "/** @interface */",
+            "class Inter {}",
+            "/** @constructor @implements {Inter} */",
+            "function Sub() {}"));
+  }
+
   public void testAsyncFunctionWithoutJSDoc() {
     testTypes("async function f() { return 3; }");
   }
