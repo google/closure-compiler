@@ -3119,6 +3119,147 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
         //     "required: null"));
   }
 
+  public void testClassGetter() {
+    testTypes(
+        lines(
+            "class C {",
+            "  get x() {}",
+            "}",
+            "var /** null */ y = new C().x;"));
+  }
+
+  public void testClassGetterMismatch() {
+    testTypes(
+        lines(
+            "class C {",
+            "  /** @return {number} */",
+            "  get x() {}",
+            "}",
+            "var /** null */ y = new C().x;"),
+        lines(
+            "initializing variable",
+            "found   : number",
+            "required: null"));
+  }
+
+  public void testClassStaticGetter() {
+    testTypes(
+        lines(
+            "class C {",
+            "  static get x() {}",
+            "}",
+            "var /** null */ y = C.x;"));
+  }
+
+  public void testClassStaticGetterMismatch() {
+    testTypes(
+        lines(
+            "class C {",
+            "  /** @return {number} */",
+            "  static get x() {}",
+            "}",
+            "var /** null */ y = C.x;"),
+        lines(
+            "initializing variable",
+            "found   : number",
+            "required: null"));
+  }
+
+  public void testClassSetter() {
+    testTypes(
+        lines(
+            "class C {",
+            "  set x(arg) {}",
+            "}",
+            "new C().x = null;"));
+  }
+
+  public void testClassSetterMismatch() {
+    testTypes(
+        lines(
+            "class C {",
+            "  /** @param {number} arg */",
+            "  set x(arg) {}",
+            "}",
+            "new C().x = null;"),
+        lines(
+            "assignment to property x of C",
+            "found   : null",
+            "required: number"));
+  }
+
+  public void testClassStaticSetter() {
+    testTypes(
+        lines(
+            "class C {",
+            "  static set x(arg) {}",
+            "}",
+            "C.x = null;"));
+  }
+
+  public void testClassStaticSetterMismatch() {
+    testTypes(
+        lines(
+            "class C {",
+            "  /** @param {number} arg */",
+            "  static set x(arg) {}",
+            "}",
+            "C.x = null;"),
+        lines(
+            "assignment to property x of C",
+            "found   : null",
+            "required: number"));
+  }
+
+  public void testClassGetterAndSetter() {
+    testTypes(
+        lines(
+            "class C {",
+            "  /** @return {number} */",
+            "  get x() {}",
+            "  /** @param {number} arg */",
+            "  set x(arg) {}",
+            "}",
+            "var /** number */ y = new C().x;",
+            "new C().x = 42;"));
+  }
+
+  public void testClassGetterAndSetterNoJsDoc() {
+    testTypes(
+        lines(
+            "class C {",
+            "  get x() {}",
+            "  set x(arg) {}",
+            "}",
+            "var /** number */ y = new C().x;",
+            "new C().x = 42;"));
+  }
+
+  public void testClassGetterAndSetterDifferentTypes() {
+    testTypes(
+        lines(
+            "class C {",
+            "  /** @return {number} */",
+            "  get x() {}",
+            "  /** @param {string} arg */",
+            "  set x(arg) {}",
+            "}",
+            "var /** null */ y = new C().x;",
+            "new C().x = null;"),
+        new String[] {
+          // TODO(sdh): This should be allowed and not produce this first error.
+          "The types of the getter and setter for property 'x' do not match.",
+          lines(
+              "initializing variable",
+              "found   : number",
+              "required: null"),
+          lines(
+              "assignment to property x of C",
+              "found   : null",
+              // TODO(sdh): This should report that it requires a string.
+              "required: number")});
+  }
+
   public void testClassNewTargetInArrowFunction() {
     // TODO(sdh): This should be an error.
     testTypes("const f = () => { const /** null */ x = new.target; };");

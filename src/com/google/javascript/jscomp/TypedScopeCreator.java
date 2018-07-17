@@ -46,6 +46,7 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.VOID_TYPE;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.ImmutableList;
@@ -53,6 +54,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multiset;
+import com.google.common.collect.Table;
 import com.google.javascript.jscomp.CodingConvention.DelegateRelationship;
 import com.google.javascript.jscomp.CodingConvention.ObjectLiteralCast;
 import com.google.javascript.jscomp.CodingConvention.SubclassRelationship;
@@ -160,6 +162,11 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
           "JSC_DYNAMIC_EXTENDS_WITHOUT_JSDOC",
           "The right-hand side of an extends clause must be a qualified name, or else @extends must"
               + " be specified in JSDoc");
+
+  static final DiagnosticType CONFLICTING_GETTER_SETTER_TYPE =
+      DiagnosticType.warning(
+          "JSC_CONFLICTING_GETTER_SETTER_TYPE",
+          "The types of the getter and setter for property ''{0}'' do not match.");
 
   static final DiagnosticGroup ALL_DIAGNOSTICS = new DiagnosticGroup(
       DELEGATE_PROXY_SUFFIX,
@@ -1161,6 +1168,8 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
 
       String propName = null;
       if (ownerName != null && name != null) {
+        checkState(
+            name.startsWith(ownerName), "Expected \"%s\" to start with \"%s\"", name, ownerName);
         propName = name.substring(ownerName.length() + 1);
       }
 
@@ -2491,6 +2500,8 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
    */
   private final class ClassScopeBuilder extends AbstractScopeBuilder {
 
+    private Table<String, Token, JSType> getterSetterTypes = null;
+
     ClassScopeBuilder(TypedScope scope) {
       super(scope);
     }
@@ -2524,6 +2535,8 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
             .defineSlot();
       } else if (n.isMemberFunctionDef() && !"constructor".equals(n.getString())) {
         defineMemberFunction(n);
+      } else if (n.isGetterDef() || n.isSetterDef()) {
+        defineGetterSetter(n);
       }
     }
 
@@ -2536,6 +2549,44 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
         ownerType = ((FunctionType) ownerType).getPrototype();
       }
       ownerType.defineDeclaredProperty(n.getString(), n.getLastChild().getJSType(), n);
+    }
+
+    void defineGetterSetter(Node n) {
+      // GETTER_DEF -> CLASS_MEMBERS -> CLASS
+      if (getterSetterTypes == null) {
+        this.getterSetterTypes = HashBasedTable.create();
+      }
+      Node ownerNode = n.getGrandparent();
+      checkState(ownerNode.isClass());
+      ObjectType ownerType = ownerNode.getJSType().toMaybeFunctionType();
+      if (!n.isStaticMember()) {
+        ownerType = ((FunctionType) ownerType).getPrototype();
+      }
+
+      FunctionType methodType = n.getLastChild().getJSType().toMaybeFunctionType();
+      JSType propertyType =
+          n.isGetterDef()
+              ? determineGetterType(methodType)
+              : Iterables.getFirst(methodType.getParameterTypes(), null);
+      propertyType = propertyType != null ? propertyType : unknownType;
+      String name = n.getString();
+
+      JSType previousType =
+          getterSetterTypes.get(name, n.isGetterDef() ? Token.SETTER_DEF : Token.GETTER_DEF);
+      if (previousType != null && !previousType.equals(propertyType)) {
+        // TODO(sdh): make this not an error - instead, store the getter and setter types separately
+        report(JSError.make(n, CONFLICTING_GETTER_SETTER_TYPE, name));
+      } else if (previousType == null) {
+        ownerType.defineDeclaredProperty(name, propertyType, n);
+        getterSetterTypes.put(name, n.getToken(), propertyType);
+      }
+    }
+
+    /** Returns the type of the getter, falling back on unknown if the return type was inferred. */
+    private JSType determineGetterType(FunctionType methodType) {
+      // TODO(sdh): consider only falling back on unknown if the function body is empty?  But we
+      // need to not report a conflicting type error if there's different unknowns.
+      return !methodType.isReturnTypeInferred() ? methodType.getReturnType() : unknownType;
     }
   } // end ClassScopeBuilder
 

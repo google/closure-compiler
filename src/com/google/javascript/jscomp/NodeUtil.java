@@ -5322,7 +5322,7 @@ public final class NodeUtil {
     if (lValue == null || lValue.getParent() == null) {
       return null;
     }
-    if (lValue.isMemberFunctionDef() && lValue.getParent().isClassMembers()) {
+    if (lValue.getParent().isClassMembers() && !lValue.isComputedProp()) {
       String className = NodeUtil.getName(lValue.getGrandparent());
       if (className == null) { // Anonymous class
         return null;
