@@ -1374,7 +1374,11 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         boolean interfaceHasProperty =
             interfaceType.getPrototype().hasProperty(propertyName);
         foundInterfaceProperty = foundInterfaceProperty || interfaceHasProperty;
-        if (!declaredOverride && interfaceHasProperty && !"__proto__".equals(propertyName)) {
+        if (!declaredOverride
+            && interfaceHasProperty
+            && !"__proto__".equals(propertyName)
+            // TODO(b/76025401): Remove this allowance once Es6ConvertSuper is after type checking
+            && !"constructor".equals(propertyName)) {
           // @override not present, but the property does override an interface property
           compiler.report(
               t.makeError(

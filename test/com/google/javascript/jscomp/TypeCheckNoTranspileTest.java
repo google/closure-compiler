@@ -2869,7 +2869,36 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "foo['x'] = 42;"));
   }
 
+  public void testClassSuperInConstructor() {
+    testTypes(
+        lines(
+            "class Foo {",
+            "  constructor(/** number */ arg) {}",
+            "}",
+            "class Bar extends Foo {",
+            "  constructor(/** string */ arg) { super(1); }",
+            "}",
+            "var /** !Foo */ foo = new Bar('x');"));
+  }
+
   public void testClassSuperConstructorParameterMismatch() {
+    testTypes(
+        lines(
+            "class Foo {",
+            "  constructor(/** number */ arg) {}",
+            "}",
+            "class Bar extends Foo {",
+            "  constructor() {",
+            "    super('x');",
+            "  }",
+            "}"),
+        lines(
+            "actual parameter 1 of super does not match formal parameter",
+            "found   : string",
+            "required: number"));
+  }
+
+  public void testClassSuperConstructorParameterCountMismatch() {
     testTypes(
         lines(
             "class Foo {}",
