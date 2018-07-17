@@ -1223,6 +1223,11 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
    */
   private void visitObjectOrClassLiteralKey(
       NodeTraversal t, Node key, Node owner, JSType litType) {
+    // Semicolons in a CLASS_MEMBERS body will produce EMPTY nodes: skip them.
+    if (key.isEmpty()) {
+      return;
+    }
+
     // Do not validate object lit value types in externs. We don't really care,
     // and it makes it easier to generate externs.
     if (owner.isFromExterns()) {

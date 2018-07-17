@@ -2047,6 +2047,16 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "required: number"));
   }
 
+  public void testClassDeclarationWithSemicolonsBetweenMembers() {
+    testTypes(
+        lines(
+            "class Foo {",
+            "  constructor() {};",
+            "  foo() {};",
+            "  bar() {};",
+            "}"));
+  }
+
   public void testClassPassedAsParameter() {
     testTypes(
         lines(
