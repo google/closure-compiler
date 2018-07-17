@@ -528,10 +528,7 @@ final class FunctionTypeBuilder {
     return inferParameterTypes(lp, info);
   }
 
-  /**
-   * Infer the parameter types from the list of argument names and
-   * the doc info.
-   */
+  /** Infer the parameter types from the list of parameter names and the JSDoc info. */
   FunctionTypeBuilder inferParameterTypes(@Nullable Node argsParent, @Nullable JSDocInfo info) {
     if (argsParent == null) {
       if (info == null) {
@@ -554,6 +551,10 @@ final class FunctionTypeBuilder {
     boolean isVarArgs = false;
     for (Node arg : argsParent.children()) {
       boolean isOptionalParam = false;
+      if (arg.isDefaultValue()) {
+        // The first child is the actual positional parameter
+        arg = checkNotNull(arg.getFirstChild(), arg);
+      }
       if (arg.isRest()) {
         isVarArgs = true;
         arg = arg.getOnlyChild();

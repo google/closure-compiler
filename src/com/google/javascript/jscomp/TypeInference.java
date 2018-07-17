@@ -109,7 +109,7 @@ class TypeInference
     this.unknownType = registry.getNativeObjectType(UNKNOWN_TYPE);
 
     this.containerScope = syntacticScope;
-    inferArguments(syntacticScope);
+    inferParameters(syntacticScope);
 
     this.scopeCreator = scopeCreator;
     this.assertionFunctionsMap = assertionFunctionsMap;
@@ -141,11 +141,9 @@ class TypeInference
     return flow;
   }
 
-  /**
-   * Infers all of a function's arguments if their types aren't declared.
-   */
+  /** Infers all of a function's parameters if their types aren't declared. */
   @SuppressWarnings("ReferenceEquality") // unknownType is a singleton
-  private void inferArguments(TypedScope functionScope) {
+  private void inferParameters(TypedScope functionScope) {
     Node functionNode = functionScope.getRootNode();
     Node astParameters = functionNode.getSecondChild();
     Node iifeArgumentNode = null;
@@ -161,6 +159,9 @@ class TypeInference
       if (parameterTypes != null) {
         Node parameterTypeNode = parameterTypes.getFirstChild();
         for (Node astParameter : astParameters.children()) {
+          if (astParameter.isDefaultValue()) {
+            astParameter = astParameter.getFirstChild();
+          }
           if (astParameter.isRest()) {
             // e.g. `function f(p1, ...restParamName) {}`
             // set astParameter = restParamName

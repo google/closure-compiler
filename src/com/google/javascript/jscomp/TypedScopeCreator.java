@@ -2254,7 +2254,6 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       if (candidate.isGetProp()) {
         new SlotDefiner()
             .forDeclarationNode(candidate)
-            .readVariableNameFromDeclarationNode()
             .forVariableName(typedef)
             .inScope(getLValueRootScope(candidate))
             .withType(getNativeType(NO_TYPE))
@@ -2412,7 +2411,9 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
               astParameter = astParameter.getOnlyChild();
               isRestParameter = true;
             }
-            checkState(astParameter.isName(), astParameter);
+            if (astParameter.isDefaultValue()) {
+              astParameter = astParameter.getFirstChild();
+            }
             JSType paramType = jsDocParameter == null ? unknownType : jsDocParameter.getJSType();
             boolean inferred = paramType == null || paramType.equals(unknownType);
             if (isRestParameter) {
@@ -2438,7 +2439,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
 
             new SlotDefiner()
                 .forDeclarationNode(astParameter)
-                .readVariableNameFromDeclarationNode()
+                .forVariableName(astParameter.getString())
                 .inScope(currentScope)
                 .withType(paramType)
                 .allowLaterTypeInference(inferred)
