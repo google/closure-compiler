@@ -4628,6 +4628,12 @@ Navigator.prototype.storage;
 Navigator.prototype.share = function(data) {};
 
 /**
+ * @type {number}
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/NavigatorConcurrentHardware/hardwareConcurrency
+ */
+Navigator.prototype.hardwareConcurrency;
+
+/**
  * @record
  * @see https://wicg.github.io/web-share/#sharedata-dictionary
  */
