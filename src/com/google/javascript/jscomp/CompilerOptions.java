@@ -631,6 +631,10 @@ public class CompilerOptions implements Serializable {
     collapseObjectLiterals = enabled;
   }
 
+  public boolean getCollapseObjectLiterals() {
+    return collapseObjectLiterals;
+  }
+
   /**
    * Devirtualize prototype method by rewriting them to be static calls that
    * take the this pointer as their first argument

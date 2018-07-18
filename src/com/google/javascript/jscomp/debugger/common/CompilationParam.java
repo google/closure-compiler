@@ -413,6 +413,19 @@ public enum CompilationParam {
     }
   },
 
+  /** Flattens object literals in local scopes (e.g. a$b = x) */
+  COLLAPSE_OBJECT_LITERALS(ParamGroup.OPTIMIZATION) {
+    @Override
+    public void apply(CompilerOptions options, boolean value) {
+      options.setCollapseObjectLiterals(value);
+    }
+
+    @Override
+    public boolean isApplied(CompilerOptions options) {
+      return options.getCollapseObjectLiterals();
+    }
+  },
+
   COMPUTE_FUNCTION_SIDE_EFFECTS(ParamGroup.OPTIMIZATION){
     @Override
     public void apply(CompilerOptions options, boolean value) {
