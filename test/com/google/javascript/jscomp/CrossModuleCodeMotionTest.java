@@ -640,6 +640,37 @@ public final class CrossModuleCodeMotionTest extends CompilerTestCase {
             "new Foo();"));
   }
 
+  public void testClassMovement8() {
+    test(
+        createModuleChain(
+            // m1
+            lines(
+                "function Foo(){}",
+                "Object.defineProperties(Foo.prototype, {a: {get:function(){return 0;}}});"),
+            // m2
+            "new Foo();"),
+        new String[] {
+          "", // m1
+          lines(
+              "function Foo(){}",
+              "Object.defineProperties(Foo.prototype, {a: {get:function(){return 0;}}});",
+              "new Foo();") // m2
+        });
+  }
+
+  public void testEs6ClassMovement8() {
+    test(
+        createModuleChain(
+            // m1
+            "class Foo { get test() { return 0; }}",
+            // m2
+            "new Foo();"),
+        new String[] {
+          "", // m1
+          "class Foo { get test() { return 0; }} new Foo();" // m2
+        });
+  }
+
   public void testStubMethodMovement() {
     // The method stub can move, but the unstub definition cannot, because
     // CrossModuleCodeMotion doesn't know where individual methods are used.
@@ -670,6 +701,28 @@ public final class CrossModuleCodeMotionTest extends CompilerTestCase {
         createModuleChain(
             // m1
             "function Foo(){}  Foo.prototype.bar = createSomething();",
+            // m2
+            "new Foo();"));
+  }
+
+  public void testNoMoveSideEffectDefineProperties() {
+    testSame(
+        createModuleChain(
+            // m1
+            lines(
+                "function Foo(){}",
+                "Object.defineProperties(Foo.prototype, {a: {get: createSomething()}})"),
+            // m2
+            "new Foo();"));
+  }
+
+  public void testNoMoveSideEffectDefinePropertiesComputed() {
+    testSame(
+        createModuleChain(
+            // m1
+            lines(
+                "function Foo(){}",
+                "Object.defineProperties(Foo.prototype,{[test()]:{get: function() {return 10;}}})"),
             // m2
             "new Foo();"));
   }

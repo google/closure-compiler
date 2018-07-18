@@ -277,6 +277,34 @@ public final class CrossModuleReferenceCollectorTest extends CompilerTestCase {
     assertThat(inheritsStatement.isMovableDeclaration()).isTrue();
   }
 
+  public void testDefinePropertiesIsMovableDeclaration() {
+    testSame("function A() {} Object.defineProperties(A, {});");
+
+    List<TopLevelStatement> statements = testedCollector.getTopLevelStatements();
+    assertThat(statements).hasSize(2);
+
+    TopLevelStatement definePropertiesStatement = statements.get(1);
+    Reference declaredNameReference = definePropertiesStatement.getDeclaredNameReference();
+    assertThat(declaredNameReference).isNotNull();
+    assertThat(definePropertiesStatement.getNonDeclarationReferences()).isEmpty();
+    // defineProperties statements are always movable
+    assertThat(definePropertiesStatement.isMovableDeclaration()).isTrue();
+  }
+
+  public void testDefinePropertiesWithPrototypeIsMovableDeclaration() {
+    testSame("function A() {} Object.defineProperties(A.prototype, {});");
+
+    List<TopLevelStatement> statements = testedCollector.getTopLevelStatements();
+    assertThat(statements).hasSize(2);
+
+    TopLevelStatement definePropertiesStatement = statements.get(1);
+    Reference declaredNameReference = definePropertiesStatement.getDeclaredNameReference();
+    assertThat(declaredNameReference).isNotNull();
+    assertThat(definePropertiesStatement.getNonDeclarationReferences()).isEmpty();
+    // defineProperties statements are always movable
+    assertThat(definePropertiesStatement.isMovableDeclaration()).isTrue();
+  }
+
   public void testFunctionDeclarationOrAssignmentIsMovable() {
     testSame("function f() {}");
     assertThat(testedCollector.getTopLevelStatements().get(0).isMovableDeclaration()).isTrue();

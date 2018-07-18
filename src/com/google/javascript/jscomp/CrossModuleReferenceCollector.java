@@ -218,12 +218,13 @@ public final class CrossModuleReferenceCollector implements ScopedCallback, Comp
           }
         }
       } else if (expr.isCall()) {
-        // Check for $jscomp.inherits(SubC, SuperC), goog.inherits(Sub, SuperC), etc.
+        Node nameNode = null;
+        Node valueNode = null;
         CodingConvention.SubclassRelationship relationship =
             compiler.getCodingConvention().getClassesDefinedByCall(expr);
         if (relationship != null) {
+          // Check for $jscomp.inherits(SubC, SuperC), goog.inherits(Sub, SuperC), etc.
           String declaredName = checkNotNull(relationship.subclassName);
-          Node nameNode = null;
           for (Node callArg = expr.getSecondChild(); callArg != null; callArg = callArg.getNext()) {
             // We're assuming that the child class must be an argument to the function that
             // establishes its inheritance, which is true for `goog.inherits()` and
@@ -234,10 +235,21 @@ public final class CrossModuleReferenceCollector implements ScopedCallback, Comp
               break;
             }
           }
-          if (nameNode != null) {
-            draft.declaredNameNode = nameNode;
-            draft.declaredValueNode = null;
-          }
+        } else if (NodeUtil.isObjectDefinePropertiesDefinition(expr)) {
+          // Check for $jscomp$global.Object.defineProperties.
+          Node targetObject = expr.getSecondChild();
+
+          // Get the global var being referenced in the first parameter of Object.defineProperties.
+          // Can be 'Foo' or 'Foo.prototype'.
+          nameNode = targetObject.isName() ? targetObject : targetObject.getFirstChild();
+
+          // Second parameter of defineProperties is the value node.
+          valueNode = targetObject.getNext();
+        }
+
+        if (nameNode != null) {
+          draft.declaredNameNode = nameNode;
+          draft.declaredValueNode = valueNode;
         }
       }
     }
