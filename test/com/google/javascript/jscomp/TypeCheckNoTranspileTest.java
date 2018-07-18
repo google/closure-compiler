@@ -3357,6 +3357,17 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "function Sub() {}"));
   }
 
+  public void testClassExtendsForwardReferencedClass() {
+    testTypes(
+        lines(
+            "/** @const */ var ns = {};",
+            "(function() {",
+            "  ns.Base = class {};",
+            "})();",
+            "class Sub extends ns.Base {}",
+            "var /** !ns.Base */ x = new Sub();"));
+  }
+
   public void testAsyncFunctionWithoutJSDoc() {
     testTypes("async function f() { return 3; }");
   }

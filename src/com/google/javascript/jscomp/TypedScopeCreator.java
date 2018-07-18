@@ -1062,6 +1062,16 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
           if (var != null) {
             ctorType = var.getType();
           }
+          // If that doesn't work, then fall back on the registry
+          if (ctorType == null) {
+            return ObjectType.cast(
+                typeRegistry.getType(
+                    currentScope,
+                    extendsNode.getQualifiedName(),
+                    extendsNode.getSourceFileName(),
+                    extendsNode.getLineno(),
+                    extendsNode.getCharno()));
+          }
         } else {
           // Anything TypedScopeCreator can infer has already been read off the AST.  This is likely
           // a CALL or GETELEM, which are unknown until TypeInference.  Instead, ignore it for now,
@@ -1071,9 +1081,11 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
           }
         }
       }
+
       if (ctorType != null && (ctorType.isConstructor() || ctorType.isInterface())) {
         return ctorType.toMaybeFunctionType().getInstanceType();
       }
+
       // We couldn't determine the type, so for TypedScope creation purposes we will treat it as if
       // there were no extends clause.  TypeCheck will give a more precise error later.
       return null;
