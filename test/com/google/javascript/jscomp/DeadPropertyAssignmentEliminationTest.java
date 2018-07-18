@@ -78,8 +78,8 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
             "}"),
         lines(
             "var foo = function() {",
-            "  10;",
-            "  15;",
+            "  this.a = 10;",
+            "  this.a + 15;",
             "  this.a = 20;",
             "}"));
   }
@@ -1251,6 +1251,21 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
             "}",
             "func({i0:2});",
             "alert(globalObj);"));
+  }
+
+  public void testReplaceShorthandAssignmentOpWithRegularOp() {
+    // See https://github.com/google/closure-compiler/issues/3017
+    test(
+        lines(
+            "function f(obj) {", // preserve newlines
+            "  obj.a = (obj.a |= 2) | 8;",
+            "  obj.a = (obj.a |= 16) | 32;",
+            "}"),
+        lines(
+            "function f(obj) {", // preserve newlines
+            "  obj.a = (obj.a | 2) | 8;",
+            "  obj.a = (obj.a | 16) | 32;",
+            "}"));
   }
 
   @Override

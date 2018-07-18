@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Iterators;
@@ -128,9 +129,18 @@ public class DeadPropertyAssignmentElimination implements CompilerPass {
             Node lhs = propertyWrite.assignedAt;
             Node rhs = lhs.getNext();
             Node assignNode = lhs.getParent();
-            rhs.detach();
-            assignNode.replaceWith(rhs);
-            compiler.reportChangeToEnclosingScope(rhs);
+            if (assignNode.isAssign()) {
+              // replace "a.b.c = <expr>" with "<expr>"
+              rhs.detach();
+              assignNode.replaceWith(rhs);
+              compiler.reportChangeToEnclosingScope(rhs);
+            } else {
+              checkState(NodeUtil.isAssignmentOp(assignNode));
+              // replace "a.b.c += <expr>" with "a.b.c + expr"
+              Token opType = NodeUtil.getOpFromAssignmentOp(assignNode);
+              assignNode.setToken(opType);
+              compiler.reportChangeToEnclosingScope(assignNode);
+            }
           }
         }
       }
@@ -187,6 +197,11 @@ public class DeadPropertyAssignmentElimination implements CompilerPass {
     void addWrite(Node lhs) {
       checkArgument(lhs.isQualifiedName());
       writes.addLast(new PropertyWrite(lhs));
+    }
+
+    @Override
+    public String toString() {
+      return "Property " + name;
     }
   }
 
