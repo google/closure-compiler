@@ -22,12 +22,14 @@ import static com.google.common.base.Preconditions.checkState;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.ObjectType;
 import javax.annotation.Nullable;
 
 /**
- * Sets the {@link JSDocInfo} on all {@code JSType}s using the JSDoc on the node defining that type.
+ * Sets the {@link JSDocInfo} on all {@code JSType}s, including their properties, using the JSDoc on
+ * the node defining that type or property.
  *
  * <p>This pass propagates JSDocs across the type graph, but not across the symbol graph. For
  * example:
@@ -56,9 +58,23 @@ import javax.annotation.Nullable;
  *       why we support this.)
  * </ul>
  *
- * <p>#2 should be self-explanatory. #1 is also fairly straight-forward with the additional detail
- * that JSDocs are propagated to both the instance type <em>and</em> the declaration type (i.e. the
- * ctor or enum object). #3 is a bit trickier; it covers types such as the following declarations:
+ * <p>#1 is fairly straight-forward with the additional detail that JSDocs are propagated to both
+ * the instance type <em>and</em> the declaration type (i.e. the ctor or enum type). #2 should also
+ * be mostly self-explanatory; it covers scenarios like the following:
+ *
+ * <pre>{@code
+ * /**
+ *  * I'm a method!
+ *  * @param {number} x
+ *  * @return {number}
+ *  *\/
+ * Foo.prototype.bar = function(x) { ... };
+ * }</pre>
+ *
+ * in which JSDocInfo will appear on the "bar" slot of `Foo.prototype` and `Foo`. The function type
+ * used as the RHS of the assignments (i.e. `function(this:Foo, number): number`) is not considered.
+ * Note that this example would work equally well if `bar` were declared abstract. #3 is a bit
+ * trickier; it covers types such as the following declarations:
  *
  * <pre>{@code
  * /** I'm an anonymous structural object type! *\/
@@ -74,21 +90,9 @@ import javax.annotation.Nullable;
  * }</pre>
  *
  * which define unique types with their own JSDoc attributes. Object literal or function types with
- * the same structure will get different JSDocs despite comparing equal. Additionally, structural
- * types cover the following scenario:
- *
- * <pre>{@code
- * /**
- *  * I'm a method with a novel function type!
- *  * @param {number} x
- *  * @return {number}
- *  *\/
- * Foo.prototype.bar = function(x) { ... };
- * }</pre>
- *
- * the JSDocInfo will appear in two places in the type system: in the "bar" slot of `Foo.prototype`,
- * and on the specific instance of type `function(this:Foo, number): number`. Note that this example
- * would work equally well if `bar` were declared abstract.
+ * the same structure will get different JSDocs despite possibly comparing equal. Additionally, when
+ * assigning instances of these types as properties of nominal types (e.g. using `myFunction` as the
+ * RHS of #2) the structural type JSDoc plays no part.
  *
  * @author nicksantos@google.com (Nick Santos)
  */
@@ -126,7 +130,7 @@ class InferJSDocInfo extends AbstractPostOrderCallback implements HotSwapCompile
             return;
           }
 
-          // Only allow JSDoc on variable declarations, named functions, and assigns.
+          // Only allow JSDoc on variable declarations, named functions, named classes, and assigns.
           final JSDocInfo typeDoc;
           final JSType inferredType;
           if (NodeUtil.isNameDeclaration(parent)) {
@@ -136,8 +140,10 @@ class InferJSDocInfo extends AbstractPostOrderCallback implements HotSwapCompile
             typeDoc = (nameInfo != null) ? nameInfo : parent.getJSDocInfo();
 
             inferredType = n.getJSType();
-          } else if (NodeUtil.isFunctionDeclaration(parent)) {
+          } else if (NodeUtil.isFunctionDeclaration(parent)
+              || NodeUtil.isClassDeclaration(parent)) {
             // Case: `/** ... */ function f() { ... }`.
+            // Case: `/** ... */ class Foo() { ... }`.
             typeDoc = parent.getJSDocInfo();
             inferredType = parent.getJSType();
           } else if (parent.isAssign() && n.isFirstChildOf(parent)) {
@@ -153,7 +159,7 @@ class InferJSDocInfo extends AbstractPostOrderCallback implements HotSwapCompile
           }
 
           // If we have no type, or the type already has a JSDocInfo, then we're done.
-          ObjectType objType = dereferenceToObject(inferredType);
+          ObjectType objType = dereferenced(inferredType);
           if (objType == null || objType.getJSDocInfo() != null) {
             return;
           }
@@ -172,7 +178,17 @@ class InferJSDocInfo extends AbstractPostOrderCallback implements HotSwapCompile
             return;
           }
 
-          ObjectType owningType = dereferenceToObject(parent.getJSType());
+          final ObjectType owningType;
+          if (parent.isClassMembers()) {
+            FunctionType ctorType = (FunctionType) parent.getParent().getJSType();
+            if (ctorType == null) {
+              return;
+            }
+
+            owningType = n.isStaticMember() ? ctorType : ctorType.getPrototype();
+          } else {
+            owningType = dereferenced(parent.getJSType());
+          }
           if (owningType == null) {
             return;
           }
@@ -203,7 +219,7 @@ class InferJSDocInfo extends AbstractPostOrderCallback implements HotSwapCompile
             return;
           }
 
-          ObjectType lhsType = dereferenceToObject(n.getFirstChild().getJSType());
+          ObjectType lhsType = dereferenced(n.getFirstChild().getJSType());
           if (lhsType == null) {
             return;
           }
@@ -215,7 +231,7 @@ class InferJSDocInfo extends AbstractPostOrderCallback implements HotSwapCompile
           }
 
           // Put the JSDoc in any constructors or function shapes as well.
-          ObjectType propType = dereferenceToObject(lhsType.getPropertyType(propName));
+          ObjectType propType = dereferenced(lhsType.getPropertyType(propName));
           if (propType != null) {
             attachJSDocInfoToNominalTypeOrShape(propType, typeDoc, n.getQualifiedName());
           }
@@ -227,11 +243,9 @@ class InferJSDocInfo extends AbstractPostOrderCallback implements HotSwapCompile
     }
   }
 
-  /**
-   * Dereferences the given type to an object, or returns null.
-   */
-  private static ObjectType dereferenceToObject(JSType type) {
-    return ObjectType.cast(type == null ? null : type.dereference());
+  /** Nullsafe wrapper for {@code JSType#dereference()}. */
+  private static ObjectType dereferenced(@Nullable JSType type) {
+    return type == null ? null : type.dereference();
   }
 
   /** Handle cases #1 and #3 in the class doc. */
