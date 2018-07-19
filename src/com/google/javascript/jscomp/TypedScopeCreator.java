@@ -1180,6 +1180,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
 
       String propName = null;
       if (ownerName != null && name != null) {
+        // TODO(b/111621092): Use the AST rather than manipulating strings here.
         checkState(
             name.startsWith(ownerName), "Expected \"%s\" to start with \"%s\"", name, ownerName);
         propName = name.substring(ownerName.length() + 1);
@@ -2527,7 +2528,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
     void visitPreorder(NodeTraversal t, Node n, Node parent) {
       // These are not descended into, so must be done preorder
       if (n.isFunction()) {
-        if (parent.getString().equals("constructor")) {
+        if (parent.isMemberFunctionDef() && parent.getString().equals("constructor")) {
           // Constructor has already been analyzed, so pull that here.
           setDeferredType(n, currentScope.getRootNode().getJSType());
         } else {

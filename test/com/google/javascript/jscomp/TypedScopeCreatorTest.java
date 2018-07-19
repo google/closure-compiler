@@ -1907,6 +1907,25 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     assertType(foo.getInstanceType()).withTypeOfProp("method").isEqualTo(method);
   }
 
+  public void testClassDeclarationWithComputedPropertyMethod() {
+    testSame(
+        lines(
+            "class Foo {",
+            "  /** @param {string} arg */",
+            "  ['method'](arg) {",
+            "    METHOD:;",
+            "    var /** number */ foo;",
+            "  }",
+            "}"));
+    TypedScope methodBlockScope = getLabeledStatement("METHOD").enclosingScope;
+    TypedScope methodScope = methodBlockScope.getParentScope();
+    assertScope(methodBlockScope).declares("foo").directly().withTypeThat().isNumber();
+    assertScope(methodScope).declares("arg").directly().withTypeThat().isString();
+
+    FunctionType method = (FunctionType) methodScope.getRootNode().getJSType();
+    assertType(method).toStringIsEqualTo("function(this:Foo, string): undefined");
+  }
+
   public void testClassExpressionAssignment() {
     testSame("var Foo = class Bar {}");
     FunctionType foo = (FunctionType) (findNameType("Foo", globalScope));

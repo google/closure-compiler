@@ -3613,8 +3613,8 @@ public final class NodeUtil {
   }
 
   /**
-   * Determines whether a node represents an object literal key
-   * (e.g. key1 in {key1: value1, key2: value2}).
+   * Determines whether a node represents an object literal key (e.g. key1 in {key1: value1, key2:
+   * value2}). Computed properties are excluded here (see b/111621528).
    *
    * @param node A node
    */
@@ -3626,9 +3626,8 @@ public final class NodeUtil {
       case MEMBER_FUNCTION_DEF:
         return true;
       default:
-        break;
+        return false;
     }
-    return false;
   }
 
   /**
@@ -4110,17 +4109,14 @@ public final class NodeUtil {
     return nameNode;
   }
 
-  /** Test if all characters in the string are in the Basic Latin (aka ASCII)
-   * character set - that they have UTF-16 values equal to or below 0x7f.
-   * This check can find which identifiers with Unicode characters need to be
-   * escaped in order to allow resulting files to be processed by non-Unicode
-   * aware UNIX tools and editors.
-   * *
-   * See http://en.wikipedia.org/wiki/Latin_characters_in_Unicode
-   * for more on Basic Latin.
+  /**
+   * Test if all characters in the string are in the Basic Latin (aka ASCII) character set - that
+   * they have UTF-16 values equal to or below 0x7f. This check can find which identifiers with
+   * Unicode characters need to be escaped in order to allow resulting files to be processed by
+   * non-Unicode aware UNIX tools and editors. * See
+   * http://en.wikipedia.org/wiki/Latin_characters_in_Unicode for more on Basic Latin.
    *
    * @param s The string to be checked for ASCII-goodness.
-   *
    * @return True if all characters in the string are in Basic Latin set.
    */
   static boolean isLatin(String s) {
@@ -5255,7 +5251,7 @@ public final class NodeUtil {
       return parent;
     } else if (parent.isAssign()) {
       return parent.getFirstChild();
-    } else if (isObjectLitKey(parent)) {
+    } else if (isObjectLitKey(parent) || parent.isComputedProp()) {
       return parent;
     } else if ((parent.isHook() && parent.getFirstChild() != n)
         || parent.isOr()
@@ -5308,7 +5304,7 @@ public final class NodeUtil {
     if (lValue == null || lValue.getParent() == null) {
       return null;
     }
-    if (isObjectLitKey(lValue)) {
+    if (isObjectLitKey(lValue) || lValue.isComputedProp()) {
       return getBestLValue(lValue.getParent());
     } else if (isGet(lValue)) {
       return lValue.getFirstChild();
