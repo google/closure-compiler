@@ -2297,6 +2297,18 @@ Element.prototype.getBoundingClientRect = function() {};
 Element.prototype.scrollIntoView = function(opt_top) {};
 
 /**
+ * @param {number|{
+ *   left: (number|undefined),
+ *   top: (number|undefined),
+ *   behavior: (string|undefined),
+ * }} ElementScrollToOptions
+ * @param {number=} opt_y
+ * @see https://www.w3.org/TR/cssom-view/#extension-to-the-element-interface
+ * @return {undefined}
+ */
+Element.prototype.scrollTo = function(ElementScrollToOptions, opt_y) {};
+
+/**
  * @type {number}
  * @see http://www.w3.org/TR/cssom-view/#dom-element-scrolltop
  */
