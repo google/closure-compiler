@@ -8463,19 +8463,19 @@ chrome.system.storage.StorageUnitInfo = function() {};
 
 
 /** @type {string} */
-chrome.system.storage.StorageUnitInfo.id;
+chrome.system.storage.StorageUnitInfo.prototype.id;
 
 
 /** @type {string} */
-chrome.system.storage.StorageUnitInfo.name;
+chrome.system.storage.StorageUnitInfo.prototype.name;
 
 
 /** @type {string} Any of 'fixed', 'removable', or 'unknown' */
-chrome.system.storage.StorageUnitInfo.type;
+chrome.system.storage.StorageUnitInfo.prototype.type;
 
 
 /** @type {number} */
-chrome.system.storage.StorageUnitInfo.capacity;
+chrome.system.storage.StorageUnitInfo.prototype.capacity;
 
 
 
