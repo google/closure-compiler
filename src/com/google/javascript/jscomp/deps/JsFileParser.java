@@ -21,6 +21,7 @@ import static com.google.common.base.Preconditions.checkState;
 import com.google.common.annotations.GwtIncompatible;
 import com.google.common.base.CharMatcher;
 import com.google.javascript.jscomp.CheckLevel;
+import com.google.javascript.jscomp.DiagnosticType;
 import com.google.javascript.jscomp.ErrorManager;
 import com.google.javascript.jscomp.JSError;
 import com.google.javascript.jscomp.deps.DependencyInfo.Require;
@@ -80,6 +81,31 @@ public final class JsFileParser extends JsFileLineParser {
           // Finally, this should be the entire statement, so ensure there's a semicolon.
           + "\\s*;");
 
+  /** Pattern for matching the beginning multi-line import statements. */
+  private static final Pattern ES6_MODULE_START_PATTERN =
+      Pattern.compile("^(im|ex)port\\b");
+
+  /** Pattern for matching a failed multi-line import statements.
+   *
+   * A multi-line import statement can fail because it is missing a semicolon at the end.
+   * Note that it might not be an import statement at all (it could be a valid export
+   * statement), so a failed match will not raise an error.
+   *
+   * We consider a multi-line failed when the parser encounters a line beginning with a commonly
+   * used keyword or the beginning of a property in a object literal (which is common in an export
+   * statement).
+   */
+  private static final Pattern ES6_MODULE_FAIL_PATTERN =
+      Pattern.compile(
+          // Ignore whitespace at the beginning of the line.
+          "^\\s*(?:"
+          // Then match one of these commonly used keyword.
+          + "(?:return|if|var|function|for|while|let|const)\\b"
+          // Alternatively match a common property name in an object literal.
+          + "|(?:[a-zA-Z_$][0-9a-zA-Z_$]*\\s*:)"
+          // Ignore the rest of the line.
+          + ")");
+
   /**
    * Pattern for 'export' keyword, e.g. "export default class ..." or "export {blah}".
    * The '\b' ensures we don't also match "exports = ...", which is not an ES6 module.
@@ -92,11 +118,18 @@ public final class JsFileParser extends JsFileLineParser {
   /** The start of a bundled goog.module, i.e. one that is wrapped in a goog.loadModule call */
   private static final String BUNDLED_GOOG_MODULE_START = "goog.loadModule(function(";
 
+  /** Multi-line import statement length limit */
+  private static final int ES6_MODULE_LIMIT = 1024 - 100;
+  private static final DiagnosticType PARSE_LONG_WARNING = DiagnosticType.warning(
+      "DEPS_PARSE_WARNING", "Statement length limit reached ({1} chars) after reading line {0}");
+
   /** Matchers used in the parsing. */
   private final Matcher googMatcher = GOOG_PROVIDE_REQUIRE_PATTERN.matcher("");
 
   /** Matchers used in the parsing. */
   private final Matcher es6Matcher = ES6_MODULE_PATTERN.matcher("");
+  private final Matcher es6StartMatcher = ES6_MODULE_START_PATTERN.matcher("");
+  private final Matcher es6FailMatcher = ES6_MODULE_FAIL_PATTERN.matcher("");
 
   /** The info for the file we are currently parsing. */
   private List<String> provides;
@@ -106,6 +139,9 @@ public final class JsFileParser extends JsFileLineParser {
   private boolean fileHasProvidesOrRequires;
   private ModuleLoader loader = ModuleLoader.EMPTY;
   private ModuleLoader.ModulePath file;
+
+  private StringBuilder partialEs6Statement = new StringBuilder();
+  private int es6StatementLineNum;
 
   private enum ModuleType {
     NON_MODULE,
@@ -183,6 +219,7 @@ public final class JsFileParser extends JsFileLineParser {
     file = loader.resolve(filePath);
     moduleType = ModuleType.NON_MODULE;
     seenLoadModule = false;
+    partialEs6Statement.setLength(0);
 
     if (logger.isLoggable(Level.FINE)) {
       logger.fine("Parsing Source: " + filePath);
@@ -256,65 +293,88 @@ public final class JsFileParser extends JsFileLineParser {
       seenLoadModule = true;
     }
 
-    // Quick check that will catch most cases. This is a performance win for teams with a lot of JS.
-    if (line.contains("provide")
-        || line.contains("require")
-        || line.contains("module")
-        || line.contains("addDependency")) {
-      // Iterate over the provides/requires.
-      googMatcher.reset(line);
-      while (googMatcher.find()) {
-        lineHasProvidesOrRequires = true;
+    if (partialEs6Statement.length() == 0) {
+      // Quick check that will catch most cases. This is a performance win for teams with a lot of JS.
+      if (line.contains("provide")
+          || line.contains("require")
+          || line.contains("module")
+          || line.contains("addDependency")) {
+        // Iterate over the provides/requires.
+        googMatcher.reset(line);
+        while (googMatcher.find()) {
+          lineHasProvidesOrRequires = true;
 
-        if (includeGoogBase && !fileHasProvidesOrRequires) {
-          fileHasProvidesOrRequires = true;
-          requires.add(Require.BASE);
-        }
+          if (includeGoogBase && !fileHasProvidesOrRequires) {
+            fileHasProvidesOrRequires = true;
+            requires.add(Require.BASE);
+          }
 
-        // See if it's a require or provide.
-        String methodName = googMatcher.group("func");
-        char firstChar = methodName.charAt(0);
-        boolean isDeclareModuleNamespace = firstChar == 'm' && googMatcher.group("subfunc") != null;
-        boolean isModule = !isDeclareModuleNamespace && firstChar == 'm';
-        boolean isProvide = firstChar == 'p';
-        boolean providesNamespace = isProvide || isModule || isDeclareModuleNamespace;
-        boolean isRequire = firstChar == 'r';
+          // See if it's a require or provide.
+          String methodName = googMatcher.group("func");
+          char firstChar = methodName.charAt(0);
+          boolean isDeclareModuleNamespace = firstChar == 'm' && googMatcher.group("subfunc") != null;
+          boolean isModule = !isDeclareModuleNamespace && firstChar == 'm';
+          boolean isProvide = firstChar == 'p';
+          boolean providesNamespace = isProvide || isModule || isDeclareModuleNamespace;
+          boolean isRequire = firstChar == 'r';
 
-        if (isModule && !seenLoadModule) {
-          setModuleType(ModuleType.GOOG_MODULE);
-        }
+          if (isModule && !seenLoadModule) {
+            setModuleType(ModuleType.GOOG_MODULE);
+          }
 
-        if (isProvide) {
-          setModuleType(ModuleType.GOOG_PROVIDE);
-        }
+          if (isProvide) {
+            setModuleType(ModuleType.GOOG_PROVIDE);
+          }
 
-        if (providesNamespace || isRequire) {
-          // Parse the param.
-          String arg = parseJsString(googMatcher.group("args"));
-          // Add the dependency.
-          if (isRequire) {
-            if ("requireType".equals(methodName)) {
-              weakRequires.add(arg);
-            } else if (!"goog".equals(arg)) {
-              // goog is always implicit.
-              Require require = Require.googRequireSymbol(arg);
-              requires.add(require);
+          if (providesNamespace || isRequire) {
+            // Parse the param.
+            String arg = parseJsString(googMatcher.group("args"));
+            // Add the dependency.
+            if (isRequire) {
+              if ("requireType".equals(methodName)) {
+                weakRequires.add(arg);
+              } else if (!"goog".equals(arg)) {
+                // goog is always implicit.
+                Require require = Require.googRequireSymbol(arg);
+                requires.add(require);
+              }
+            } else {
+              provides.add(arg);
             }
-          } else {
-            provides.add(arg);
           }
         }
-      }
-    } else if (includeGoogBase && line.startsWith(BASE_JS_START) &&
-               provides.isEmpty() && requires.isEmpty()) {
-      provides.add("goog");
+      } else if (includeGoogBase && line.startsWith(BASE_JS_START) &&
+                 provides.isEmpty() && requires.isEmpty()) {
+        provides.add("goog");
 
-      // base.js can't provide or require anything else.
-      return false;
+        // base.js can't provide or require anything else.
+        return false;
+      }
+    } else if (es6FailMatcher.reset(line).find()) {
+      partialEs6Statement.setLength(0);
     }
 
-    if (line.startsWith("import") || line.startsWith("export")) {
-      es6Matcher.reset(line);
+    if (partialEs6Statement.length() != 0
+        || es6StartMatcher.reset(line).find()) {
+      if (partialEs6Statement.length() == 0) {
+        es6StatementLineNum = lineNum;
+      }
+      partialEs6Statement.append(line);
+      if (!line.contains(";")) {
+        if (partialEs6Statement.length() > ES6_MODULE_LIMIT) {
+          partialEs6Statement.setLength(0);
+          errorManager.report(
+              CheckLevel.WARNING,
+              JSError.make(filePath, es6StatementLineNum, 1, PARSE_LONG_WARNING,
+                "" + lineNum, "" + ES6_MODULE_LIMIT));
+          return false;
+        }
+        return true;
+      }
+
+      es6Matcher.reset(partialEs6Statement.toString());
+      partialEs6Statement.setLength(0);
+      es6StatementLineNum = 0;
       while (es6Matcher.find()) {
         setModuleType(ModuleType.ES6_MODULE);
         lineHasProvidesOrRequires = true;
@@ -340,6 +400,7 @@ public final class JsFileParser extends JsFileLineParser {
     return !shortcutMode || lineHasProvidesOrRequires
         || CharMatcher.whitespace().matchesAllOf(line)
         || !line.contains(";")
+        || partialEs6Statement.length() > 0
         || line.contains("goog.setTestOnly")
         || line.contains("goog.module.declareLegacyNamespace");
   }

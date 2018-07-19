@@ -200,20 +200,26 @@ public final class JsFileParserTest extends TestCase {
    */
   public void testParseEs6Module() {
     String contents = ""
+        + "import {nonDefaultExport} from './subdir/otherFile.js';\n"
         + "import def, {yes2} from './yes2';\n"
+        + "import defmulti, {\n  yes2multi\n} from './yes2multi';\n"
         + "import C from './a/b/C';\n"
         + "import * as d from './a/b/d';\n"
         + "import \"./dquote\";\n"
+        + "export *\n from './exportedmulti';\n"
         + "export * from './exported';\n";
 
     DependencyInfo expected =
         SimpleDependencyInfo.builder("a.js", "b.js")
             .setProvides(ImmutableList.of("module$b"))
             .setRequires(
+                es6Import("module$subdir$otherFile", "./subdir/otherFile.js"),
                 es6Import("module$yes2", "./yes2"),
+                es6Import("module$yes2multi", "./yes2multi"),
                 es6Import("module$a$b$C", "./a/b/C"),
                 es6Import("module$a$b$d", "./a/b/d"),
                 es6Import("module$dquote", "./dquote"),
+                es6Import("module$exportedmulti", "./exportedmulti"),
                 es6Import("module$exported", "./exported"))
             .setLoadFlags(ImmutableMap.of("module", "es6"))
             .build();
