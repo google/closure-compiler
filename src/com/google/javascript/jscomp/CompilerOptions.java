@@ -1915,7 +1915,7 @@ public class CompilerOptions implements Serializable {
    */
   public void setLanguage(LanguageMode language) {
     checkState(language != LanguageMode.NO_TRANSPILE);
-    this.languageIn = language;
+    this.setLanguageIn(language);
     this.setLanguageOut(language);
   }
 
@@ -1925,7 +1925,7 @@ public class CompilerOptions implements Serializable {
    */
   public void setLanguageIn(LanguageMode languageIn) {
     checkState(languageIn != LanguageMode.NO_TRANSPILE);
-    this.languageIn = languageIn;
+    this.languageIn = languageIn == LanguageMode.STABLE ? LanguageMode.STABLE_IN : languageIn;
   }
 
   public LanguageMode getLanguageIn() {
@@ -1945,6 +1945,7 @@ public class CompilerOptions implements Serializable {
       languageOutIsDefaultStrict = Optional.absent();
       outputFeatureSet = Optional.absent();
     } else {
+      languageOut = languageOut == LanguageMode.STABLE ? LanguageMode.STABLE_OUT : languageOut;
       languageOutIsDefaultStrict = Optional.of(languageOut.isDefaultStrict());
       setOutputFeatureSet(languageOut.toFeatureSet());
     }
@@ -3184,11 +3185,16 @@ public class CompilerOptions implements Serializable {
     /** ECMAScript latest draft standard. */
     ECMASCRIPT_NEXT,
 
+    /** Use stable features. */
+    STABLE,
+
     /**
      * For languageOut only. The same language mode as the input.
      */
     NO_TRANSPILE;
 
+    public static final LanguageMode STABLE_IN = ECMASCRIPT_2017;
+    public static final LanguageMode STABLE_OUT = ECMASCRIPT5;
 
     /** Whether this language mode defaults to strict mode */
     boolean isDefaultStrict() {
@@ -3240,6 +3246,10 @@ public class CompilerOptions implements Serializable {
           return FeatureSet.ES_NEXT;
         case ECMASCRIPT6_TYPED:
           return FeatureSet.TYPESCRIPT;
+        case STABLE:
+          throw new UnsupportedOperationException(
+              "STABLE has different feature sets for language in and out. "
+                  + "Use STABLE_IN or STABLE_OUT.");
       }
       throw new IllegalStateException();
     }

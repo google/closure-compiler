@@ -625,23 +625,21 @@ public class CommandLineRunner extends
     private String outputChunkDependencies = "";
 
     @Option(
-      name = "--language_in",
-      usage =
-          "Sets the language spec to which input sources should conform. "
-              + "Options: ECMASCRIPT3, ECMASCRIPT5, ECMASCRIPT5_STRICT, "
-              + "ECMASCRIPT6_TYPED (experimental), ECMASCRIPT_2015, ECMASCRIPT_2016, "
-              + "ECMASCRIPT_2017, ECMASCRIPT_NEXT"
-    )
-    private String languageIn = "ECMASCRIPT_2017";
+        name = "--language_in",
+        usage =
+            "Sets the language spec to which input sources should conform. "
+                + "Options: ECMASCRIPT3, ECMASCRIPT5, ECMASCRIPT5_STRICT, "
+                + "ECMASCRIPT6_TYPED (experimental), ECMASCRIPT_2015, ECMASCRIPT_2016, "
+                + "ECMASCRIPT_2017, STABLE, ECMASCRIPT_NEXT")
+    private String languageIn = "STABLE";
 
     @Option(
-      name = "--language_out",
-      usage =
-          "Sets the language spec to which output should conform. "
-              + "Options: ECMASCRIPT3, ECMASCRIPT5, ECMASCRIPT5_STRICT, "
-              + "ECMASCRIPT_2015"
-    )
-    private String languageOut = "ECMASCRIPT5";
+        name = "--language_out",
+        usage =
+            "Sets the language spec to which output should conform. "
+                + "Options: ECMASCRIPT3, ECMASCRIPT5, ECMASCRIPT5_STRICT, "
+                + "ECMASCRIPT_2015, STABLE")
+    private String languageOut = "STABLE";
 
     @Option(name = "--version",
         handler = BooleanOptionHandler.class,
