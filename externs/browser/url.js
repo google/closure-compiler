@@ -24,8 +24,8 @@
 
 /**
  * @constructor
- * @implements {Iterable<!Array<string>>|Object<*, *>}
- * @param {(string|!URLSearchParams)=} init
+ * @implements {Iterable<!Array<string>>}
+ * @param {(string|!URLSearchParams|Object<*, *>)=} init
  */
 function URLSearchParams(init) {}
 
