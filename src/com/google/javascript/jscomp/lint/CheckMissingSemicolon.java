@@ -64,6 +64,11 @@ public final class CheckMissingSemicolon extends AbstractPostOrderCallback imple
     if (statement.isExport()) {
       return shouldHaveSemicolon(statement.getFirstChild());
     }
+
+    // CommonJS module's 'initModule' transform
+    if (statement.hasChildren() && statement.getFirstChild().getBooleanProp(Node.MODULE_EXPORT)) {
+      return false;
+    }
     return true;
   }
 
