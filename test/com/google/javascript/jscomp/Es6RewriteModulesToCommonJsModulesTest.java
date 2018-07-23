@@ -467,7 +467,7 @@ public final class Es6RewriteModulesToCommonJsModulesTest extends CompilerTestCa
             "}, 'testcode', []);"));
   }
 
-  public void testFileNameIsPreservedInRegisteredPathWhenNotEscaping() {
+  public void testProtocolAndDomainAreRemovedInRegisteredPathWhenNotEscaping() {
     pathEscaper = PathEscaper.CANONICALIZE_ONLY;
     test(
         srcs(SourceFile.fromCode("https://example.domain.google.com/test.js", "export var x;")),
@@ -486,21 +486,11 @@ public final class Es6RewriteModulesToCommonJsModulesTest extends CompilerTestCa
                     "    },",
                     "  });",
                     "  var x;",
-                    "}, 'https://example.domain.google.com/test.js', []);"))));
+                    "}, 'test.js', []);"))));
   }
 
-  public void testFileNameIsPreservedInRequiredPathWhenNotEscaping() {
-    pathEscaper = PathEscaper.CANONICALIZE_ONLY;
-    test(
-        srcs(SourceFile.fromCode("test.js", "import 'file://imported.js';")),
-        expected(
-            SourceFile.fromCode(
-                "https://example.domain.google.com/test.js",
-                lines(
-                    "$jscomp.registerAndLoadModule(function($$require, $$exports, $$module) {",
-                    "  'test pragma';",
-                    "  var module$file_$$imported = $$require('file://imported.js');",
-                    "}, 'test.js', ['file://imported.js']);"))));
+  public void testProtocolInImportPathIsError() {
+    testError("import * as foo from 'file://imported.js';", Es6ToEs3Util.CANNOT_CONVERT);
   }
 
   public void testRegisteredPathDoesNotIncludeModuleRoot() {

@@ -93,10 +93,22 @@ public class Es6RewriteModulesToCommonJsModules implements CompilerPass {
    * <p>Absolute import paths need to match the registered path exactly. Some {@link
    * ModuleLoader.ModulePath}s will have a leading slash and some won't. So in order to have
    * everything line up AND preserve schemes (if they exist) then just strip leading /.
+   *
+   * <p>Additionally if any path contains a protocol it will be stripped only the path part will
+   * remain. This is done heuristically as we cannot use {@link java.net.URL} or {@link
+   * java.nio.file.Path} due to GWT. As a result of stripping this cross-domain imports are not
+   * compatible with this pass.
    */
   private static String normalizePath(String path) {
-    if (path.startsWith("/")) {
-      return path.substring(1);
+    int indexOfProtocol = path.indexOf("://");
+    if (indexOfProtocol > -1) {
+      path = path.substring(indexOfProtocol + 3);
+      int indexOfSlash = path.indexOf('/');
+      if (indexOfSlash > -1) {
+        path = path.substring(indexOfSlash + 1);
+      }
+    } else if (path.startsWith("/")) {
+      path = path.substring(1);
     }
     return path;
   }
@@ -383,6 +395,12 @@ public class Es6RewriteModulesToCommonJsModules implements CompilerPass {
     }
 
     private void visitImport(ModuleLoader.ModulePath path, Node importDecl) {
+      if (importDecl.getLastChild().getString().contains("://")) {
+        compiler.report(
+            JSError.make(
+                importDecl, Es6ToEs3Util.CANNOT_CONVERT, "Module requests with protocols."));
+      }
+
       // Normalize the import path according to the module resolution scheme so that bundles are
       // compatible with the compiler's module loader options.
       importRequests.add(
