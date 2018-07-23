@@ -76,11 +76,11 @@ public class TranspilationPasses {
   static void addPreTypecheckTranspilationPasses(
       List<PassFactory> passes, CompilerOptions options, boolean doEs6ExternsCheck) {
 
-    if (options.needsTranspilationFrom(ES2018)) {
+    if (options.needsTranspilationFrom(ES_NEXT)) {
       passes.add(rewriteAsyncIteration);
     }
 
-    if (options.needsTranspilationFrom(ES_NEXT)) {
+    if (options.needsTranspilationFrom(ES2018)) {
       passes.add(rewriteObjRestSpread);
     }
 
@@ -206,7 +206,7 @@ public class TranspilationPasses {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES2018;
+          return ES_NEXT;
         }
       };
 
@@ -219,7 +219,7 @@ public class TranspilationPasses {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES2018_MODULES;
+          return ES_NEXT;
         }
       };
 

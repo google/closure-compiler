@@ -116,7 +116,7 @@ public final class AstValidatorTest extends CompilerTestCase {
   }
 
   public void testForAwaitOf() {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2018);
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_NEXT);
     valid("for await(var a of b);");
     valid("for await(let a of b);");
     valid("for await(const a of b);");
@@ -599,7 +599,7 @@ public final class AstValidatorTest extends CompilerTestCase {
   }
 
   private Node parseScriptWithoutCheckingLanguageLevel(String code) {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2018);
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_NEXT);
     Node n = parseExpectedJs(code);
     Node script = n.getFirstChild();
     assertNode(script).hasType(Token.SCRIPT);

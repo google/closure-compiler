@@ -5290,7 +5290,7 @@ public final class IntegrationTest extends IntegrationTestCase {
 
   public void testDefaultParameterRemoval() {
     CompilerOptions options = createCompilerOptions();
-    options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_2018);
     options.setLanguageOut(LanguageMode.ECMASCRIPT_2017);
     test(
         options,
@@ -5315,8 +5315,8 @@ public final class IntegrationTest extends IntegrationTestCase {
 
   public void testAsyncIter() {
     CompilerOptions options = createCompilerOptions();
-    options.setLanguageIn(LanguageMode.ECMASCRIPT_2018);
-    options.setLanguageOut(LanguageMode.ECMASCRIPT_2018);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_NEXT);
     testSame(options, "async function* foo() {}");
     testSame(options, "for await (a of b) {}");
 
@@ -5334,7 +5334,7 @@ public final class IntegrationTest extends IntegrationTestCase {
 
   public void testDestructuringRest() {
     CompilerOptions options = createCompilerOptions();
-    options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_2018);
     options.setLanguageOut(LanguageMode.ECMASCRIPT_2017);
 
     test(options, "const {y} = {}", "const {y} = {}");

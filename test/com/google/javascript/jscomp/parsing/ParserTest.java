@@ -3863,7 +3863,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   public void testAsyncGeneratorFunction() {
-    mode = LanguageMode.ECMASCRIPT2018;
+    mode = LanguageMode.ES_NEXT;
     expectFeatures(Feature.ASYNC_FUNCTIONS, Feature.GENERATORS, Feature.ASYNC_GENERATORS);
     strictMode = STRICT;
     parse("async function *f(){}");
@@ -4116,7 +4116,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   public void testValidForAwaitOf() {
-    mode = LanguageMode.ECMASCRIPT2018;
+    mode = LanguageMode.ES_NEXT;
     strictMode = SLOPPY;
 
     expectFeatures(Feature.FOR_AWAIT_OF);
@@ -4134,7 +4134,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   public void testInvalidForAwaitOfInitializers() {
-    mode = LanguageMode.ECMASCRIPT2018;
+    mode = LanguageMode.ES_NEXT;
     strictMode = SLOPPY;
 
     parseError("for await (a=1 of b) c;", INVALID_ASSIGNMENT_TARGET);
@@ -4146,7 +4146,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   public void testInvalidForAwaitOfMultipleInitializerTargets() {
-    mode = LanguageMode.ECMASCRIPT2018;
+    mode = LanguageMode.ES_NEXT;
     strictMode = SLOPPY;
 
     parseError("for await (a, b of c) d;", INVALID_ASSIGNMENT_TARGET);

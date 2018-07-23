@@ -21,7 +21,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.javascript.jscomp.PassFactory.createEmptyPass;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES2018;
-import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES2018_MODULES;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES5;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES6;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES8;
@@ -961,7 +960,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES2018_MODULES;
+          return ES_NEXT;
         }
       };
 
@@ -1003,7 +1002,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES2018_MODULES;
+          return ES_NEXT;
         }
       };
 
@@ -1129,7 +1128,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES2018_MODULES;
+          return ES_NEXT;
         }
       };
 
@@ -1143,7 +1142,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES2018_MODULES;
+          return ES_NEXT;
         }
       };
 
@@ -1233,7 +1232,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES2018_MODULES;
+          return ES_NEXT;
         }
       };
 
@@ -1290,7 +1289,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES2018_MODULES;
+          return ES_NEXT;
         }
       };
 
@@ -1304,7 +1303,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         public FeatureSet featureSet() {
-          return ES2018_MODULES;
+          return ES_NEXT;
         }
       };
 
@@ -1366,7 +1365,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES2018_MODULES;
+          return ES_NEXT;
         }
       };
 
@@ -1446,7 +1445,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES2018_MODULES;
+          return ES_NEXT;
         }
       };
 
@@ -1460,7 +1459,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES2018_MODULES;
+          return ES_NEXT;
         }
       };
 
@@ -1474,7 +1473,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES2018_MODULES;
+          return ES_NEXT;
         }
       };
 
@@ -1491,7 +1490,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES2018_MODULES;
+          return ES_NEXT;
         }
       };
 
@@ -1522,7 +1521,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES2018_MODULES;
+          return ES_NEXT;
         }
       };
 
@@ -1571,7 +1570,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES2018_MODULES;
+          return ES_NEXT;
         }
       };
 
@@ -1697,7 +1696,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES2018_MODULES;
+          return ES_NEXT;
         }
       };
 
@@ -1711,7 +1710,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES2018_MODULES;
+          return ES_NEXT;
         }
       };
 
@@ -1733,7 +1732,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES2018_MODULES;
+          return ES_NEXT;
         }
       };
 
@@ -1761,7 +1760,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES2018_MODULES;
+          return ES_NEXT;
         }
       };
 
@@ -1775,7 +1774,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES2018_MODULES;
+          return ES_NEXT;
         }
       };
 
@@ -1789,7 +1788,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES2018_MODULES;
+          return ES_NEXT;
         }
       };
 
@@ -1963,7 +1962,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES2018_MODULES;
+          return ES_NEXT;
         }
       };
 
@@ -2003,7 +2002,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES2018_MODULES;
+          return ES_NEXT;
         }
       };
 
@@ -2079,7 +2078,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES2018_MODULES;
+          return ES_NEXT;
         }
       };
 
@@ -3216,7 +3215,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES2018_MODULES;
+          return ES_NEXT;
         }
       };
 
@@ -3242,7 +3241,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES2018_MODULES;
+          return ES_NEXT;
         }
       };
 

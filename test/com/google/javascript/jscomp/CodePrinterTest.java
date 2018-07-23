@@ -686,7 +686,7 @@ public final class CodePrinterTest extends CodePrinterTestBase {
   }
 
   public void testForAwaitOf() {
-    languageMode = LanguageMode.ECMASCRIPT_2018;
+    languageMode = LanguageMode.ECMASCRIPT_NEXT;
 
     assertPrintSame("for await(a of b)c");
     assertPrintSame("for await(var a of b)c");
@@ -694,7 +694,7 @@ public final class CodePrinterTest extends CodePrinterTestBase {
 
   // In pretty-print mode, make sure there is a space before and after the 'of' in a for/of loop.
   public void testForAwaitOfPretty() {
-    languageMode = LanguageMode.ECMASCRIPT_2018;
+    languageMode = LanguageMode.ECMASCRIPT_NEXT;
 
     assertPrettyPrintSame("for await ([x, y] of b) {\n  c;\n}\n");
     assertPrettyPrintSame("for await (x of [[1, 2]]) {\n  c;\n}\n");
@@ -707,7 +707,7 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     assertPrintSame("for(let a=0;a<5;a++)b");
     assertPrintSame("for(let a in b)c");
     assertPrintSame("for(let a of b)c");
-    languageMode = LanguageMode.ECMASCRIPT_2018;
+    languageMode = LanguageMode.ECMASCRIPT_NEXT;
     assertPrintSame("for await(let a of b)c");
   }
 
@@ -718,7 +718,7 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     assertPrintSame("for(const a in b)c");
     assertPrintSame("for(const a of b)c");
 
-    languageMode = LanguageMode.ECMASCRIPT_2018;
+    languageMode = LanguageMode.ECMASCRIPT_NEXT;
     assertPrintSame("for await(const a of b)c");
   }
 
@@ -2467,7 +2467,7 @@ public final class CodePrinterTest extends CodePrinterTestBase {
   }
 
   public void testAsyncGeneratorFunction() {
-    languageMode = LanguageMode.ECMASCRIPT_2018;
+    languageMode = LanguageMode.ECMASCRIPT_NEXT;
     assertPrintSame("async function*f(){}");
     assertPrintSame("let f=async function*f(){}");
     assertPrintSame("let f=async function*(){}");
@@ -2494,7 +2494,7 @@ public final class CodePrinterTest extends CodePrinterTestBase {
   }
 
   public void testAsyncGeneratorMethod() {
-    languageMode = LanguageMode.ECMASCRIPT_2018;
+    languageMode = LanguageMode.ECMASCRIPT_NEXT;
     assertPrintSame("o={async *m(){}}");
     assertPrintSame("o={async*[a+b](){}}");
     assertPrintSame("class C{async *m(){}}");

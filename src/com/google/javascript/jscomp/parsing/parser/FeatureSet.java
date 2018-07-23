@@ -66,12 +66,11 @@ public final class FeatureSet implements Serializable {
 
   public static final FeatureSet ES8 = ES8_MODULES.without(Feature.MODULES);
 
-  public static final FeatureSet ES_NEXT = ES8_MODULES.with(LangVersion.ES_NEXT.features());
-
-  public static final FeatureSet ES2018_MODULES = ES_NEXT.with(LangVersion.ES2018.features());
+  public static final FeatureSet ES2018_MODULES = ES8_MODULES.with(LangVersion.ES2018.features());
 
   public static final FeatureSet ES2018 = ES2018_MODULES.without(Feature.MODULES);
 
+  public static final FeatureSet ES_NEXT = ES2018_MODULES.with(LangVersion.ES_NEXT.features());
 
   public static final FeatureSet TYPESCRIPT =  ES_NEXT.with(LangVersion.TYPESCRIPT.features());
 
@@ -154,12 +153,12 @@ public final class FeatureSet implements Serializable {
     TRAILING_COMMA_IN_PARAM_LIST("trailing comma in param list", LangVersion.ES8),
 
     // ES 2018 adds https://github.com/tc39/proposal-object-rest-spread
-    OBJECT_LITERALS_WITH_SPREAD("object literals with spread", LangVersion.ES_NEXT),
-    OBJECT_PATTERN_REST("object pattern rest", LangVersion.ES_NEXT),
+    OBJECT_LITERALS_WITH_SPREAD("object literals with spread", LangVersion.ES2018),
+    OBJECT_PATTERN_REST("object pattern rest", LangVersion.ES2018),
 
     // https://github.com/tc39/proposal-async-iteration
-    ASYNC_GENERATORS("async generator functions", LangVersion.ES2018),
-    FOR_AWAIT_OF("for-await-of loop", LangVersion.ES2018),
+    ASYNC_GENERATORS("async generator functions", LangVersion.ES_NEXT),
+    FOR_AWAIT_OF("for-await-of loop", LangVersion.ES_NEXT),
 
     // ES6 typed features that are not at all implemented in browsers
     ACCESSIBILITY_MODIFIER("accessibility modifier", LangVersion.TYPESCRIPT),
