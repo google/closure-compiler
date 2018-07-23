@@ -354,15 +354,6 @@ class IRFactory {
     return irFactory;
   }
 
-  static final Config NULL_CONFIG = Config.builder().build();
-
-  static final ErrorReporter NULL_REPORTER = new ErrorReporter() {
-    @Override
-    public void warning(String message, String sourceName, int line, int lineOffset) {}
-    @Override
-    public void error(String message, String sourceName, int line, int lineOffset) {}
-  };
-
   Node getResultNode() {
     return resultNode;
   }
