@@ -2693,8 +2693,9 @@ chrome.tabs.HighlightInfo;
 
 
 /**
+ * @see https://developer.chrome.com/extensions/tabs#method-highlight
  * @param {!chrome.tabs.HighlightInfo} highlightInfo
- * @param {function(!Window): void} callback Callback function invoked
+ * @param {function(!ChromeWindow): void} callback Callback function invoked
  *    with each appropriate Window.
  * @return {undefined}
  */
