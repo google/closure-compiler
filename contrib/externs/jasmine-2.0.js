@@ -415,8 +415,13 @@ jasmine.getEnv = function() {};
 jasmine.Reporter = function() {};
 
 /**
- * @param {{id: number, description: string, fullName: string, status: string}}
- *     result
+ * @param {{
+ *   id: number,
+ *   description: string,
+ *   fullName: string,
+ *   pendingReason: string,
+ *   status: string
+ * }} result
  */
 jasmine.Reporter.prototype.specDone = function(result) {};
 
