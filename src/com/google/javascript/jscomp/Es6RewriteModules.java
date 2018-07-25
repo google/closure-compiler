@@ -103,36 +103,6 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
    */
   private Map<String, ModuleOriginalNamePair> importMap;
 
-  /**
-   * Local variable names that were goog.require'd to qualified name we need to line. We need to
-   * inline all required names since there are certain well-known Closure symbols (like
-   * goog.asserts) that later stages of the compiler check for and cannot handle aliases.
-   *
-   * <p>We use this to rewrite something like:
-   *
-   * <pre>
-   *   import {x} from '';
-   *   const {assert} = goog.require('goog.asserts');
-   *   assert(x);
-   * </pre>
-   *
-   * To:
-   *
-   * <pre>
-   *   import {x} from '';
-   *   goog.asserts.assert(x);
-   * </pre>
-   *
-   * Because if we used an alias like below the assertion would not be recognized:
-   *
-   * <pre>
-   *   import {x} from '';
-   *   const {assert} = goog.asserts;
-   *   assert(x);
-   * </pre>
-   */
-  private Map<String, String> namesToInlineByAlias;
-
   private final Set<Node> importedGoogNames;
 
   private Set<String> typedefs;
@@ -209,7 +179,6 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
     this.importMap = new HashMap<>();
     this.importedGoogNames.clear();
     this.typedefs = new HashSet<>();
-    this.namesToInlineByAlias = new HashMap<>();
   }
 
   /**
@@ -617,23 +586,9 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
         (NodeTraversal t, Node n, Node parent) -> {
           if (n.isCall()) {
             if (n.getFirstChild().matchesQualifiedName("goog.require")) {
-              visitRequireOrGet(t, n, parent, /* isRequire= */ true);
+              visitRequire(t, n, parent, true /* checkScope */);
             } else if (n.getFirstChild().matchesQualifiedName("goog.module.get")) {
               visitGoogModuleGet(t, n, parent);
-            }
-          }
-        });
-    NodeTraversal.traversePostOrder(
-        compiler,
-        script,
-        (NodeTraversal t, Node n, Node parent) -> {
-          if (n.isName() && namesToInlineByAlias.containsKey(n.getString())) {
-            Var v = t.getScope().getVar(n.getString());
-            if (v == null || v.getNameNode() != n) {
-              Node replacement =
-                  NodeUtil.newQName(compiler, namesToInlineByAlias.get(n.getString()));
-              replacement.useSourceInfoFromForTree(n);
-              n.replaceWith(replacement);
             }
           }
         });
@@ -651,18 +606,17 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
       return;
     }
 
-    visitRequireOrGet(t, getCall, parent, /* isRequire= */ false);
+    visitRequire(t, getCall, parent, false /* checkScope */);
   }
 
-  private void visitRequireOrGet(
-      NodeTraversal t, Node requireCall, Node parent, boolean isRequire) {
+  private void visitRequire(NodeTraversal t, Node requireCall, Node parent, boolean checkScope) {
     if (!requireCall.hasTwoChildren() || !requireCall.getLastChild().isString()) {
       t.report(requireCall, INVALID_REQUIRE_NAMESPACE);
       return;
     }
 
     // Module has already been turned into a script at this point.
-    if (isRequire && !t.getScope().isGlobal()) {
+    if (checkScope && !t.getScope().isGlobal()) {
       t.report(requireCall, INVALID_CLOSURE_CALL_ERROR);
       return;
     }
@@ -683,31 +637,9 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
     }
 
     if (isStoredInDeclaration) {
-      if (isRequire) {
-        if (parent.isDestructuringLhs()) {
-          checkState(parent.getFirstChild().isObjectPattern());
-          for (Node child : parent.getFirstChild().children()) {
-            if (child.isStringKey()) {
-              checkState(child.getFirstChild().isName());
-              namesToInlineByAlias.put(
-                  child.getFirstChild().getString(),
-                  m.getGlobalName(namespace) + "." + child.getString());
-            } else {
-              checkState(child.isName());
-              namesToInlineByAlias.put(
-                  child.getString(), m.getGlobalName(namespace) + "." + child.getString());
-            }
-          }
-        } else {
-          checkState(parent.isName());
-          namesToInlineByAlias.put(parent.getString(), m.getGlobalName(namespace));
-        }
-        parent.getParent().detach();
-      } else {
-        Node replacement =
-            NodeUtil.newQName(compiler, m.getGlobalName(namespace)).srcrefTree(requireCall);
-        parent.replaceChild(requireCall, replacement);
-      }
+      Node replacement =
+          NodeUtil.newQName(compiler, m.getGlobalName(namespace)).srcrefTree(requireCall);
+      parent.replaceChild(requireCall, replacement);
     } else {
       checkState(requireCall.getParent().isExprResult());
       requireCall.getParent().detach();
