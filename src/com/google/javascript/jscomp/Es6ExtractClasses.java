@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkState;
 import static com.google.javascript.jscomp.Es6ToEs3Util.CANNOT_CONVERT;
 
 import com.google.javascript.jscomp.ExpressionDecomposer.DecompositionType;
@@ -28,6 +29,7 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
+import com.google.javascript.rhino.jstype.JSType;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.HashSet;
@@ -139,7 +141,10 @@ public final class Es6ExtractClasses
         if (nameNode != klass.nameNode && nameNode.matchesQualifiedName(klass.nameNode)) {
           Var var = t.getScope().getVar(nameNode.getString());
           if (var != null && var.getNameNode() == klass.nameNode) {
-            Node newNameNode = IR.name(klass.outerName).useSourceInfoFrom(nameNode);
+            Node newNameNode =
+                IR.name(klass.outerName)
+                    .setJSType(nameNode.getJSType())
+                    .useSourceInfoFrom(nameNode);
             parent.replaceChild(nameNode, newNameNode);
             compiler.reportChangeToEnclosingScope(newNameNode);
             return;
@@ -182,9 +187,12 @@ public final class Es6ExtractClasses
     JSDocInfo info = NodeUtil.getBestJSDocInfo(classNode);
 
     Node statement = NodeUtil.getEnclosingStatement(parent);
-    parent.replaceChild(classNode, IR.name(name));
-    Node classDeclaration = IR.constNode(IR.name(name), classNode)
-        .useSourceInfoIfMissingFromForTree(classNode);
+    JSType classType = classNode.getJSType();
+    checkState(!compiler.hasTypeCheckingRun() || classType != null);
+    Node className = IR.name(name).setJSType(classType);
+    parent.replaceChild(classNode, className.cloneTree());
+    Node classDeclaration =
+        IR.constNode(className, classNode).useSourceInfoIfMissingFromForTree(classNode);
     NodeUtil.addFeatureToScript(t.getCurrentFile(), Feature.CONST_DECLARATIONS);
     classDeclaration.setJSDocInfo(JSDocInfoBuilder.maybeCopyFrom(info).build());
     statement.getParent().addChildBefore(classDeclaration, statement);

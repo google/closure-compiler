@@ -33,9 +33,10 @@ public final class Es6ExtractClassesTest extends CompilerTestCase {
     super.setUp();
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     setLanguageOut(LanguageMode.ECMASCRIPT3);
-    disableTypeCheck();
-    enableRunTypeCheckAfterProcessing();
-    disableScriptFeatureValidation();
+
+    enableTypeInfoValidation();
+    enableRewriteClosureCode();
+    enableTypeCheck();
   }
 
   public void testExtractionFromCall() {
@@ -103,19 +104,21 @@ public final class Es6ExtractClassesTest extends CompilerTestCase {
             "goog.module('example');",
             "exports = class Inner { constructor() { alert(Inner); } };"),
         lines(
-            "goog.module('example');",
-            "const testcode$classdecl$var0 = class {",
-            "  constructor() {",
-            "    alert(testcode$classdecl$var0);",
-            "  }",
+            "/** @const */ const testcode$classdecl$var0=class {",
+            "  constructor(){ alert(testcode$classdecl$var0); }",
             "};",
-            "exports = testcode$classdecl$var0;"));
+            "/** @const */ var module$exports$example=testcode$classdecl$var0"));
   }
 
   public void testSelfReference_qualifiedName() {
     test(
-        "outer.qual.Name = class Inner { constructor() { alert(Inner); } };",
         lines(
+            "const outer = {};",
+            "/** @const */ outer.qual = {};",
+            "outer.qual.Name = class Inner { constructor() { alert(Inner); } };"),
+        lines(
+            "const outer = {};",
+            "/** @const */ outer.qual = {};",
             "const testcode$classdecl$var0 = class {",
             "  constructor() {",
             "    alert(testcode$classdecl$var0);",
@@ -207,9 +210,8 @@ public final class Es6ExtractClassesTest extends CompilerTestCase {
 
     testError(
         lines(
-            "var x;",
+            "/** @type {number} */ var x = 0;",
             "function f(x, y) {}",
-
             "f(x = 2, class Foo { [x=3]() {} });"),
         CANNOT_CONVERT);
   }
