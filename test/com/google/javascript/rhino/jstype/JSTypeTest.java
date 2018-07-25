@@ -38,6 +38,7 @@
 
 package com.google.javascript.rhino.jstype;
 
+import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.rhino.jstype.TernaryValue.FALSE;
 import static com.google.javascript.rhino.jstype.TernaryValue.TRUE;
 import static com.google.javascript.rhino.jstype.TernaryValue.UNKNOWN;
@@ -6009,29 +6010,15 @@ public class JSTypeTest extends BaseJSTypeTestCase {
   }
 
   public void testObjectGetSubTypes() throws Exception {
-    assertTrue(
-        containsType(
-            OBJECT_FUNCTION_TYPE.getDirectSubTypes(), googBar));
-    assertTrue(
-        containsType(
-            googBar.getDirectSubTypes(), googSubBar));
-    assertFalse(
-        containsType(
-            googBar.getDirectSubTypes(), googSubSubBar));
-    assertFalse(
-        containsType(
-            googSubBar.getDirectSubTypes(), googSubBar));
-    assertTrue(
-        containsType(
-            googSubBar.getDirectSubTypes(), googSubSubBar));
+    assertThat(OBJECT_FUNCTION_TYPE.getDirectSubTypes()).contains(googBar);
+    assertThat(googBar.getDirectSubTypes()).contains(googSubBar);
+    assertThat(googBar.getDirectSubTypes()).doesNotContain(googSubSubBar);
+    assertThat(googSubBar.getDirectSubTypes()).doesNotContain(googSubBar);
+    assertThat(googSubBar.getDirectSubTypes()).contains(googSubSubBar);
   }
 
   public void testImplementingType() throws Exception {
-    assertTrue(
-        containsType(
-            registry.getDirectImplementors(
-                interfaceType.getInstanceType()),
-            googBar));
+    assertThat(registry.getDirectImplementors(interfaceType.getInstanceType())).contains(googBar);
   }
 
   public void testIsTemplatedType() throws Exception {
@@ -6187,16 +6174,5 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
     // We currently allow any function to be cast to any other function type
     assertTrue(ARRAY_FUNCTION_TYPE.canCastTo(BOOLEAN_OBJECT_FUNCTION_TYPE));
-
-  }
-
-  private static boolean containsType(
-      Iterable<? extends JSType> types, JSType type) {
-    for (JSType alt : types) {
-      if (alt.equals(type)) {
-        return true;
-      }
-    }
-    return false;
   }
 }
