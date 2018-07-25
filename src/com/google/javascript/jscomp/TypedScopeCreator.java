@@ -1946,6 +1946,31 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       }
     }
 
+    /** Calls maybeDeclareQualifiedName on all names in the LHS of an assign */
+    void defineQualifiedNamesFromAssign(NodeTraversal t, Node assign) {
+      Node lhs = assign.getFirstChild();
+      if (lhs.isGetProp() && lhs.isQualifiedName()) {
+        maybeDeclareQualifiedName(t, assign.getJSDocInfo(), lhs, assign, lhs.getNext());
+        return;
+      }
+      // Handle destructuring assigns
+      List<Node> lhsNodes = NodeUtil.findLhsNodesInNode(assign);
+      JSDocInfo info = assign.getJSDocInfo();
+
+      if (lhsNodes.size() > 1 && info != null) {
+        t.report(assign, TypeCheck.MULTIPLE_VAR_DEF);
+        info = null;
+      }
+
+      for (Node target : lhsNodes) {
+        if (target.isGetProp() && target.isQualifiedName()) {
+          // TODO(b/77597706): make maybeDeclareQualifiedName able to handle a destructuring rhs
+            // and handle inline JSDoc info (i.e. JSDoc on `target` instead of on `assign`)
+          maybeDeclareQualifiedName(t, info, target, target.getParent(), null);
+        }
+      }
+    }
+
     /**
      * Declare the symbol for a qualified name in the global scope.
      *
@@ -2055,7 +2080,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
         // caught when we try to declare it in the current scope.
         new SlotDefiner()
             .forDeclarationNode(n)
-            .readVariableNameFromDeclarationNode()
+            .forVariableName(qName)
             .inScope(getLValueRootScope(n))
             .withType(valueType)
             .allowLaterTypeInference(inferred)
@@ -2327,10 +2352,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
 
         case ASSIGN:
           // Handle initialization of properties.
-          Node firstChild = n.getFirstChild();
-          if (firstChild.isGetProp() && firstChild.isQualifiedName()) {
-            maybeDeclareQualifiedName(t, n.getJSDocInfo(), firstChild, n, firstChild.getNext());
-          }
+          defineQualifiedNamesFromAssign(t, n);
           break;
 
         case CATCH:
