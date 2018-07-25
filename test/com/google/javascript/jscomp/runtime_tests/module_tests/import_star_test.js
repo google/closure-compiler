@@ -23,9 +23,8 @@ testSuite({
     assertEquals('g', m.g());
   },
 
-  /** @suppress {checkTypes} */
   testUnexportedProperty() {
     // Module-scoped variable, not exported with this name.
-    assertEquals(undefined, m.a);
+    assertEquals(undefined, m['a']);
   },
 });
