@@ -15,6 +15,8 @@
  */
 package com.google.javascript.jscomp.parsing.parser.testing;
 
+import static com.google.common.base.Strings.lenientFormat;
+import static com.google.common.truth.Fact.simpleFact;
 import static com.google.common.truth.Truth.assertAbout;
 
 import com.google.common.truth.FailureMetadata;
@@ -44,27 +46,35 @@ public class FeatureSetSubject extends Subject<FeatureSetSubject, FeatureSet> {
 
   public void contains(FeatureSet other) {
     if (!actual().contains(other)) {
-      failWithRawMessage("Expected a FeatureSet containing: %s\nBut got: %s", other, actual());
+      failWithoutActual(
+          simpleFact(
+              lenientFormat("Expected a FeatureSet containing: %s\nBut got: %s", other, actual())));
     }
   }
 
   public void containsNoneOf(FeatureSet other) {
     if (!other.without(actual()).equals(other)) {
-      failWithRawMessage("Expected a FeatureSet containing none of: %s\nBut got: %s",
-          other, actual());
+      failWithoutActual(
+          simpleFact(
+              lenientFormat(
+                  "Expected a FeatureSet containing none of: %s\nBut got: %s", other, actual())));
     }
   }
 
   public void has(Feature feature) {
     if (!actual().has(feature)) {
-      failWithRawMessage("Expected a FeatureSet that has: %s\nBut got: %s", feature, actual());
+      failWithoutActual(
+          simpleFact(
+              lenientFormat("Expected a FeatureSet that has: %s\nBut got: %s", feature, actual())));
     }
   }
 
   public void doesNotHave(Feature feature) {
     if (actual().has(feature)) {
-      failWithRawMessage(
-          "Expected a FeatureSet that doesn't have: %s\nBut got: %s", feature, actual());
+      failWithoutActual(
+          simpleFact(
+              lenientFormat(
+                  "Expected a FeatureSet that doesn't have: %s\nBut got: %s", feature, actual())));
     }
   }
 }

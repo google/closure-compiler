@@ -15,10 +15,11 @@
  */
 package com.google.javascript.jscomp.testing;
 
+import static com.google.common.base.Strings.lenientFormat;
+import static com.google.common.truth.Fact.simpleFact;
 import static com.google.common.truth.Truth.assertAbout;
 import static org.junit.Assert.assertEquals;
 
-import com.google.common.truth.Fact;
 import com.google.common.truth.FailureMetadata;
 import com.google.common.truth.Subject;
 import com.google.javascript.rhino.Node;
@@ -47,7 +48,7 @@ public final class NodeSubject extends Subject<NodeSubject, Node> {
   public void isEqualTo(Node node) {
     String treeDiff = node.checkTreeEquals(actual());
     if (treeDiff != null) {
-      failWithRawMessage("%s", treeDiff);
+      failWithoutActual(simpleFact(lenientFormat("%s", treeDiff)));
     }
   }
 
@@ -59,7 +60,7 @@ public final class NodeSubject extends Subject<NodeSubject, Node> {
   public void isName(String name) {
     Node node = actual();
     if (!node.isName()) {
-      failWithActual(Fact.simpleFact("expected to be a NAME node"));
+      failWithActual(simpleFact("expected to be a NAME node"));
     }
     if (!node.getString().equals(name)) {
       failWithActual("expected name to be", name);
