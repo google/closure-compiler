@@ -3368,6 +3368,44 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "var /** !ns.Base */ x = new Sub();"));
   }
 
+  public void testClassExtendsItself() {
+    testTypes(
+        "class Foo extends Foo {}",
+        new String[] {
+          "Could not resolve type in @extends tag of Foo",
+          "Parse error. Cycle detected in inheritance chain of type Foo",
+        });
+  }
+
+  public void testClassExtendsCycle() {
+    testTypes(
+        lines(
+            "class Foo extends Bar {}",
+            "class Bar extends Foo {}"),
+        "Parse error. Cycle detected in inheritance chain of type Bar");
+  }
+
+  public void testClassExtendsCycleOnlyInJsdoc() {
+    testTypes(
+        lines(
+            "class Bar {}",
+            "/** @extends {Foo} */",
+            "class Foo extends Bar {}"),
+        new String[] {
+          "Parse error. Cycle detected in inheritance chain of type Foo",
+          "Could not resolve type in @extends tag of Foo",
+        });
+  }
+
+  public void testClassExtendsCycleOnlyInAst() {
+    // TODO(sdh): This should give an error.
+    testTypes(
+        lines(
+            "class Bar {}",
+            "/** @extends {Bar} */",
+            "class Foo extends Foo {}"));
+  }
+
   public void testAsyncFunctionWithoutJSDoc() {
     testTypes("async function f() { return 3; }");
   }

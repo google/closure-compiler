@@ -690,35 +690,47 @@ class TypeValidator implements Serializable {
 
   /**
    * Expect that an ES6 class's extends clause is actually a supertype of the given class.
+   * Compares the registered supertype, which is taken from the JSDoc if present, otherwise
+   * from the AST, with the type in the extends node of the AST.
    *
    * @param n The node where warnings should point to.
    * @param subCtor The sub constructor type.
-   * @param superCtor The expected super constructor.
+   * @param astSuperCtor The expected super constructor from the extends node in the AST.
    */
-  void expectExtends(Node n, FunctionType subCtor, FunctionType superCtor) {
-    if (superCtor == null || (!superCtor.isConstructor() && !superCtor.isInterface())) {
+  void expectExtends(Node n, FunctionType subCtor, FunctionType astSuperCtor) {
+    if (astSuperCtor == null || (!astSuperCtor.isConstructor() && !astSuperCtor.isInterface())) {
       // toMaybeFunctionType failed, or we've got a loose type.  Let it go for now.
       return;
     }
-    if (superCtor.isConstructor() != subCtor.isConstructor()) {
+    if (astSuperCtor.isConstructor() != subCtor.isConstructor()) {
       // Don't bother looking if one is a constructor and the other is an interface.
       // We'll report an error elsewhere.
       return;
     }
-    ObjectType superInstance = superCtor.getInstanceType();
+    ObjectType astSuperInstance = astSuperCtor.getInstanceType();
     if (subCtor.isConstructor()) {
       // There should be exactly one superclass, and it needs to have this constructor.
-      ObjectType declaredSuper = subCtor.getSuperClassConstructor().getInstanceType();
-      if (!superInstance.isEquivalentTo(declaredSuper)) {
-        mismatch(n, "mismatch in declaration of superclass type", superInstance, declaredSuper);
+      // Note: if the registered supertype (from the @extends jsdoc) was unresolved,
+      // then getSuperClassConstructor will be null - make sure not to crash.
+      FunctionType registeredSuperCtor = subCtor.getSuperClassConstructor();
+      if (registeredSuperCtor != null) {
+        ObjectType registeredSuperInstance = registeredSuperCtor.getInstanceType();
+        if (!astSuperInstance.isEquivalentTo(registeredSuperInstance)) {
+          mismatch(
+              n,
+              "mismatch in declaration of superclass type",
+              astSuperInstance,
+              registeredSuperInstance);
+        }
       }
     } else if (subCtor.isInterface()) {
       // Find an equivalent constructor in the superinterfaces.  There may have been multiple
       // super-interfaces marked, but we can't know which was intended so just give the error
       // on the first one.
-      if (!subCtor.explicitlyImplOrExtInterface(superCtor)) {
-        ObjectType extended = subCtor.getExtendedInterfaces().get(0);
-        mismatch(n, "mismatch in declaration of superclass type", superInstance, extended);
+      if (!subCtor.explicitlyImplOrExtInterface(astSuperCtor)) {
+        ObjectType registeredExtended = subCtor.getExtendedInterfaces().get(0);
+        mismatch(
+            n, "mismatch in declaration of superclass type", astSuperInstance, registeredExtended);
       }
     }
   }
