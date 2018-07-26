@@ -39,7 +39,9 @@ import com.google.common.collect.ImmutableList;
 /**
  * Tests for {@link CheckAccessControls}.
  *
- * @author nicksantos@google.com (Nick Santos)
+ * <p>This file has a fork, {@link CheckAccessControlsEs6Test}, because nearly all cases require
+ * duplication. If a case using `@constructor`, `@interface`, or `@record` is added to this suite, a
+ * similar case should be added there under the same name using `class`.
  */
 
 public final class CheckAccessControlsTest extends CompilerTestCase {
@@ -828,6 +830,20 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
               "/** @constructor @extends {Foo} */",
               "var OtherFoo = function() { this['bar'](); };",
               "OtherFoo.prototype = { ['bar']() { new Foo().bar(); }};")
+        });
+  }
+
+  public void testProtectedAccessForProperties16() {
+    // access in nested arrow function
+    testNoWarning(
+        new String[] {
+          lines(
+              "/** @constructor */ var Foo = function() {};",
+              "/** @protected */ Foo.prototype.bar = function() {};"),
+          lines(
+              "/** @constructor @extends {Foo} */",
+              "var OtherFoo = function() { var f = () => this.bar(); };",
+              "OtherFoo.prototype.baz = function() { return () => this.bar(); };")
         });
   }
 

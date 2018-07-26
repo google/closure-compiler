@@ -17,15 +17,18 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 import static com.google.javascript.jscomp.testing.JSErrorSubject.assertError;
 
 import com.google.common.annotations.GwtIncompatible;
 import com.google.common.base.Joiner;
+import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
+import com.google.common.truth.Correspondence;
 import com.google.errorprone.annotations.ForOverride;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.deps.ModuleLoader;
@@ -46,7 +49,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Consumer;
 import junit.framework.TestCase;
 
 /**
@@ -1234,7 +1236,7 @@ public abstract class CompilerTestCase extends TestCase {
       Externs externs,
       Sources inputs,
       Expected expected,
-      Diagnostic diagnostic,
+      List<Diagnostic> diagnostics,
       List<Postcondition> postconditions) {
 
     Compiler compiler = createCompiler();
@@ -1253,7 +1255,7 @@ public abstract class CompilerTestCase extends TestCase {
       BaseJSTypeTestCase.addNativeProperties(compiler.getTypeRegistry());
     }
 
-    testInternal(compiler, inputs, expected, diagnostic, postconditions);
+    testInternal(compiler, inputs, expected, diagnostics, postconditions);
   }
 
   private static ImmutableList<SourceFile> maybeCreateSources(String name, String srcText) {
@@ -1394,51 +1396,54 @@ public abstract class CompilerTestCase extends TestCase {
   }
 
   /**
-   * Verifies that the compiler pass's JS output matches the expected output
-   * and (optionally) that an expected warning is issued. Or, if an error is
-   * expected, this method just verifies that the error is encountered.
-   *  @param compiler A compiler that has been initialized via
-   *     {@link Compiler#init}
-   *  @param inputsObj Input source files
-   *  @param expectedObj Expected outputs
-   *  @param diagnostic Expected warning/error diagnostic
+   * Verifies that the compiler pass's JS output matches the expected output and (optionally) that
+   * an expected warning is issued. Or, if an error is expected, this method just verifies that the
+   * error is encountered.
+   *
+   * @param compiler A compiler that has been initialized via {@link Compiler#init}
+   * @param inputsObj Input source files
+   * @param expectedObj Expected outputs
+   * @param diagnostics Expected warning/error diagnostics
    */
   private void testInternal(
       Compiler compiler,
-      Sources inputsObj,  // TODO remove this parameter
+      Sources inputsObj, // TODO remove this parameter
       Expected expectedObj,
-      Diagnostic diagnostic,
+      List<Diagnostic> diagnostics,
       List<Postcondition> postconditions) {
     List<SourceFile> inputs =
         (inputsObj instanceof FlatSources)
             ? ((FlatSources) inputsObj).sources
             : null;
     List<SourceFile> expected = expectedObj != null ? expectedObj.expected : null;
+    List<Diagnostic> expectedErrors =
+        diagnostics.stream().filter(d -> d.level == CheckLevel.ERROR).collect(toImmutableList());
+    List<Diagnostic> expectedWarnings =
+        diagnostics.stream().filter(d -> d.level == CheckLevel.WARNING).collect(toImmutableList());
+    checkState(
+        expectedErrors.isEmpty() || expectedWarnings.isEmpty(),
+        "Cannot expect both errors and warnings.");
+    checkState(
+        expectedErrors.isEmpty() || expected == null,
+        "Cannot expect both errors and compiled output.");
     checkState(this.setUpRan, "CompilerTestCase.setUp not run: call super.setUp() from overrides.");
     RecentChange recentChange = new RecentChange();
     compiler.addChangeHandler(recentChange);
 
     Node root = compiler.parseInputs();
 
-    String errorMsg = LINE_JOINER.join(compiler.getErrors());
-    if (root == null && expected == null
-        && diagnostic != null
-        && diagnostic.level == CheckLevel.ERROR) {
+    if (root == null) {
       // Might be an expected parse error.
-      assertWithMessage("Expected one parse error, but got " + errorMsg)
-          .that(compiler.getErrorCount())
-          .isEqualTo(1);
-      JSError actualError = compiler.getErrors()[0];
-      assertWithMessage("Unexpected parse error(s): " + errorMsg)
-          .that(actualError.getType())
-          .isEqualTo(diagnostic.diagnostic);
-      diagnostic.verifyMessage(actualError.description);
+      assertThat(compiler.getErrors())
+          .named("parse errors")
+          .asList()
+          .comparingElementsUsing(new DiagnosticCorrespondence())
+          .containsExactlyElementsIn(expectedErrors);
       for (Postcondition postcondition : postconditions) {
         postcondition.verify(compiler);
       }
       return;
     }
-    assertWithMessage("Unexpected parse error(s): " + errorMsg).that(root).isNotNull();
     if (!expectParseWarningsThisTest) {
       assertWithMessage("Unexpected parser warning(s)").that(compiler.getWarnings()).isEmpty();
     } else {
@@ -1609,7 +1614,7 @@ public abstract class CompilerTestCase extends TestCase {
       }
     }
 
-    if (diagnostic == null || diagnostic.level != CheckLevel.ERROR) {
+    if (expectedErrors.isEmpty()) {
       assertThat(compiler.getErrors()).isEmpty();
 
       // Verify the symbol table.
@@ -1628,23 +1633,27 @@ public abstract class CompilerTestCase extends TestCase {
       } else {
         assertThat(stErrors).named("symbol table errors").isEmpty();
       }
-
-      if (diagnostic == null || diagnostic.level != CheckLevel.WARNING) {
+      if (expectedWarnings.isEmpty()) {
         assertThat(aggregateWarnings).named("aggregate warnings").isEmpty();
       } else {
         assertEquals(
-            "There should be one warning, repeated "
+            "There should be "
+                + expectedWarnings.size()
+                + " warnings, repeated "
                 + numRepetitions
                 + " time(s). Warnings: \n"
                 + LINE_JOINER.join(aggregateWarnings),
             numRepetitions,
             aggregateWarningCount);
-        for (int i = 0; i < numRepetitions; ++i) {
-          JSError[] warnings = errorManagers[i].getWarnings();
-          JSError actual = warnings[0];
-          assertError(actual).hasType(diagnostic.diagnostic);
-          validateSourceLocation(actual);
-          diagnostic.verifyMessage(actual.description);
+        for (int i = 0; i < numRepetitions; i++) {
+          assertThat(errorManagers[i].getWarnings())
+              .named("compile warnings from repetition " + (i + 1))
+              .asList()
+              .comparingElementsUsing(new DiagnosticCorrespondence())
+              .containsExactlyElementsIn(expectedWarnings);
+          for (JSError warning : errorManagers[i].getWarnings()) {
+            validateSourceLocation(warning);
+          }
         }
       }
 
@@ -1767,29 +1776,16 @@ public abstract class CompilerTestCase extends TestCase {
             explanation);
       }
     } else {
-      assertNull("expected must be null if error != null", expected);
-      assertEquals(
-          "There should be one error of type '" + diagnostic.diagnostic.key + "' but there were: "
-          + Arrays.toString(compiler.getErrors()),
-          1, compiler.getErrorCount());
-      JSError actualError = compiler.getErrors()[0];
-      assertEquals(errorMsg, diagnostic.diagnostic, actualError.getType());
-      validateSourceLocation(actualError);
-      diagnostic.verifyMessage(actualError.description);
-      assertWithMessage("Some placeholders in the error message were not replaced")
-          .that(actualError.description)
-          .doesNotContainMatch("\\{\\d\\}");
-
-      if (diagnostic != null && diagnostic.level == CheckLevel.WARNING) {
-        String warnings = "";
-        for (JSError actualWarning : compiler.getWarnings()) {
-          warnings += actualWarning.description + "\n";
-          assertWithMessage("Some placeholders in the warning message were not replaced")
-              .that(actualWarning.description)
-              .doesNotContainMatch("\\{\\d\\}");
-        }
-        assertEquals("There should be one warning. " + warnings, 1, compiler.getWarningCount());
-        assertEquals(warnings, diagnostic.diagnostic, compiler.getWarnings()[0].getType());
+      assertThat(compiler.getErrors())
+          .named("compile errors")
+          .asList()
+          .comparingElementsUsing(new DiagnosticCorrespondence())
+          .containsExactlyElementsIn(expectedErrors);
+      for (JSError error : compiler.getErrors()) {
+        validateSourceLocation(error);
+        assertWithMessage("Some placeholders in the error message were not replaced")
+            .that(error.description)
+            .doesNotContainMatch("\\{\\d\\}");
       }
     }
     for (Postcondition postcondition : postconditions) {
@@ -2139,7 +2135,7 @@ public abstract class CompilerTestCase extends TestCase {
     return new FlatSources(maybeCreateSources("testcode",  srcText));
   }
 
-  protected static Sources srcs(String[] srcTexts) {
+  protected static Sources srcs(String... srcTexts) {
     return new FlatSources(createSources("input", srcTexts));
   }
 
@@ -2225,7 +2221,7 @@ public abstract class CompilerTestCase extends TestCase {
     Externs externs = null;
     Sources srcs = null;
     Expected expected = null;
-    Diagnostic diagnostic = null;
+    List<Diagnostic> diagnostics = new ArrayList<>();
     List<Postcondition> postconditions = new ArrayList<>();
     for (TestPart part : parts) {
       if (part instanceof Externs) {
@@ -2238,8 +2234,7 @@ public abstract class CompilerTestCase extends TestCase {
         checkState(expected == null);
         expected = (Expected) part;
       } else if (part instanceof Diagnostic) {
-        checkState(diagnostic == null);
-        diagnostic = (Diagnostic) part;
+        diagnostics.add((Diagnostic) part);
       } else if (part instanceof Postcondition) {
         postconditions.add((Postcondition) part);
       } else {
@@ -2252,7 +2247,7 @@ public abstract class CompilerTestCase extends TestCase {
     if (externs == null) {
       externs = externs(externsInputs);
     }
-    testInternal(externs, srcs, expected, diagnostic, postconditions);
+    testInternal(externs, srcs, expected, diagnostics, postconditions);
   }
 
   private static Expected fromSources(Sources srcs) {
@@ -2329,28 +2324,46 @@ public abstract class CompilerTestCase extends TestCase {
   protected static class Diagnostic implements TestPart {
     final CheckLevel level;
     final DiagnosticType diagnostic;
-    final Consumer<String> messagePostcondition;
+    final NamedPredicate<String> messagePredicate;
 
-    Diagnostic(CheckLevel level, DiagnosticType diagnostic, Consumer<String> messagePostcondition) {
+    Diagnostic(
+        CheckLevel level, DiagnosticType diagnostic, NamedPredicate<String> messagePredicate) {
       this.level = level;
       this.diagnostic = diagnostic;
-      this.messagePostcondition = messagePostcondition;
+      this.messagePredicate = messagePredicate;
     }
 
-    protected void verifyMessage(String message) {
-      if (messagePostcondition != null) {
-        messagePostcondition.accept(message);
+    private boolean matches(JSError error) {
+      return diagnostic == error.getType()
+          && (messagePredicate == null || messagePredicate.apply(error.description));
+    }
+
+    private String formatDiff(JSError error) {
+      if (diagnostic != error.getType()) {
+        return "diagnostic type " + error.getType().key + " did not match";
       }
+      return "message \"" + error.description + "\" was not " + messagePredicate;
     }
 
     protected Diagnostic withMessage(final String expected) {
-      checkState(messagePostcondition == null);
-      return new Diagnostic(level, diagnostic, message -> assertThat(message).isEqualTo(expected));
+      checkState(messagePredicate == null);
+      return new Diagnostic(
+          level, diagnostic, NamedPredicate.of(expected::equals, "\"" + expected + "\""));
     }
 
     public Diagnostic withMessageContaining(final String substring) {
-      checkState(messagePostcondition == null);
-      return new Diagnostic(level, diagnostic, message -> assertThat(message).contains(substring));
+      checkState(messagePredicate == null);
+      return new Diagnostic(
+          level,
+          diagnostic,
+          NamedPredicate.of(
+              message -> message.contains(substring), "containing \"" + substring + "\""));
+    }
+
+    @Override
+    public String toString() {
+      return String.valueOf(diagnostic.key)
+          + (messagePredicate != null ? " with message " + messagePredicate : "");
     }
   }
 
@@ -2368,5 +2381,46 @@ public abstract class CompilerTestCase extends TestCase {
 
   protected interface Postcondition extends TestPart {
     void verify(Compiler compiler);
+  }
+
+  private static class DiagnosticCorrespondence extends Correspondence<JSError, Diagnostic> {
+    @Override
+    public boolean compare(JSError actual, Diagnostic expected) {
+      return expected.matches(actual);
+    }
+
+    @Override
+    public String formatDiff(JSError actual, Diagnostic expected) {
+      return expected.formatDiff(actual);
+    }
+
+    @Override
+    public String toString() {
+      return "is a JSError matching";
+    }
+  }
+
+  private static class NamedPredicate<T> implements Predicate<T> {
+    final Predicate<T> delegate;
+    final String name;
+
+    static <T> NamedPredicate<T> of(Predicate<T> delegate, String name) {
+      return new NamedPredicate<>(delegate, name);
+    }
+
+    NamedPredicate(Predicate<T> delegate, String name) {
+      this.delegate = delegate;
+      this.name = name;
+    }
+
+    @Override
+    public boolean apply(T arg) {
+      return delegate.apply(arg);
+    }
+
+    @Override
+    public String toString() {
+      return name;
+    }
   }
 }
