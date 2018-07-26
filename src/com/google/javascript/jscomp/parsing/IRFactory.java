@@ -1135,12 +1135,14 @@ class IRFactory {
         // let {key: /** inlineType */ name} = something
         // let [/** inlineType */ name] = something
         // Allow inline JSDoc on the name, since we may well be declaring it here.
+        // TODO(bradfordcsmith): Do we need to allow this for qualified names, too?
         valueNode = processNameWithInlineJSDoc(targetTree.asIdentifierExpression());
       } else {
-        // ({prop: /** string */ ns.a.b} = someObject);
-        // NOTE: CheckJSDoc will report an error for this case, since we want qualified names to be
-        // declared with individual statements, like `/** @type {string} */ ns.a.b;`
-        valueNode = transformNodeWithInlineJsDoc(targetTree);
+        // arbitrarily complex target
+        // e.g.
+        // ({key: foo().someProperty} = someObject);
+        // ([foo().someProperty] = someIterable);
+        valueNode = transform(targetTree);
       }
       return valueNode;
     }
@@ -1512,10 +1514,7 @@ class IRFactory {
         // TODO(bradfordcsmith): Do we need to allow inline JSDoc for qualified names, too?
         targetNode = processNameWithInlineJSDoc(targetTree.asIdentifierExpression());
       } else {
-        // ({prop: /** string */ ns.a.b = 'foo'} = someObject);
-        // NOTE: CheckJSDoc will report an error for this case, since we want qualified names to be
-        // declared with individual statements, like `/** @type {string} */ ns.a.b;`
-        targetNode = transformNodeWithInlineJsDoc(targetTree);
+        targetNode = transform(targetTree);
       }
       Node defaultValueNode =
           newNode(Token.DEFAULT_VALUE, targetNode, transform(tree.defaultValue));

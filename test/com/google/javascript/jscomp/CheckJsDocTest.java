@@ -65,45 +65,9 @@ public final class CheckJsDocTest extends CompilerTestCase {
     testSame("let {/** string */ prop: x = 'default'} = {prop: 'hi'};");
   }
 
-  public void testInlineJsDocOnObjectPatternTargetNamesInAssign() {
-    // We don't allow any inline type annotations in object pattern assigns.
-    // Simple variable names must have their type declared upon the variable declaration, and
-    // qualified names must be declared outside of a destructuring pattern.
-    testWarning("({/** string */ prop} = {prop: 'hi'});", CheckJSDoc.MISPLACED_ANNOTATION);
-    testWarning(
-        "({['prop']: /** string */ prop} = {prop: 'hi'});", CheckJSDoc.MISPLACED_ANNOTATION);
-    testWarning("({prop: /** string */ ns.prop} = {prop: 'hi'});", CheckJSDoc.MISPLACED_ANNOTATION);
-    testWarning(
-        "({prop: /** string */ ns.prop = 'default'} = {prop: 'hi'});",
-        CheckJSDoc.MISPLACED_ANNOTATION);
-    testWarning(
-        "({prop: /** string */ f().y['z']} = {prop: 'hi'});", CheckJSDoc.MISPLACED_ANNOTATION);
-  }
-
   public void testInlineJsDocOnArrayPatternTargetNames() {
     testSame("let [/** string */ x] = ['hi'];");
     testSame("let [/** string */ x = 'lo'] = ['hi'];");
-    testSame("try {} catch ([/** string */ x]) {}");
-  }
-
-  public void testInlineJsDocOnArrayPatternTargetInAssign() {
-    // We don't allow any inline type annotations in array pattern assigns.
-    // Simple variable names must have their type declared upon the variable declaration, and
-    // qualified names must be declared outside of a destructuring pattern.
-    testWarning("[/** string */ x] = ['hi'];", CheckJSDoc.MISPLACED_ANNOTATION);
-    testWarning("[/** string */ x = 'foo'] = ['hi'];", CheckJSDoc.MISPLACED_ANNOTATION);
-    testWarning("[/** string */ x.y] = ['hi'];", CheckJSDoc.MISPLACED_ANNOTATION);
-    testWarning("[/** string */ x.y = 'lo'] = ['hi'];", CheckJSDoc.MISPLACED_ANNOTATION);
-    testWarning("[/** string */ f().y['z']] = [];", CheckJSDoc.MISPLACED_ANNOTATION);
-  }
-
-  public void testInlineJsDocOnDeclaration() {
-    testSame("var /** number */ x;");
-    testSame("var /** number */ x = 3;");
-    // See testInlineJsDocOnArrayPatternTargetNames() for cases where the inline JSDoc is attached
-    // to the names within the pattern.
-    testWarning("var /** !Array<number> */ [x, y] = someArr;", CheckJSDoc.MISPLACED_ANNOTATION);
-    testWarning("var /** {x: number} */ {x} = someObj;", CheckJSDoc.MISPLACED_ANNOTATION);
   }
 
   public void testInlineJsDoc_ES6() {
@@ -132,14 +96,6 @@ public final class CheckJsDocTest extends CompilerTestCase {
 
   public void testInlineJsDocInsideObjectParams_withES6Modules() {
     testSame("export function f({ prop: {/** string */ x} }) {};");
-  }
-
-  public void testJsDocOnCatchVariables() {
-    testSame("try {} catch (/** @type {number} */ n) {}");
-    // See testInlineJsDocOnArrayPatternTargetNames for cases where the inline JsDoc is attached to
-    // the names within the pattern.
-    testWarning(
-        "try {} catch (/** @type {!Array<number>} */ [x, y]) {}", CheckJSDoc.MISPLACED_ANNOTATION);
   }
 
   public void testInvalidClassJsdoc() {

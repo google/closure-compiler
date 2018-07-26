@@ -472,14 +472,9 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements HotSwapCompi
         // Object literal properties, catch declarations and variable
         // initializers are valid.
         case NAME:
-          valid = isTypeAnnotationAllowedForName(n);
-          break;
         case ARRAY_PATTERN:
         case OBJECT_PATTERN:
-          // allow JSDoc like
-          //   function f(/** !Object */ {x}) {}
-          //   function f(/** !Array */ [x]) {}
-          valid = n.getParent().isParamList();
+          valid = isTypeAnnotationAllowedForNameOrPattern(n);
           break;
         // Casts, variable declarations, exports, and Object literal properties are valid.
         case CAST:
@@ -519,18 +514,63 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements HotSwapCompi
   }
 
   /**
-   * Is it valid to have a type annotation on the given NAME node?
+   * Is it valid to have a type annotation on the given NAME, ARRAY_PATTERN, or OBJECT_PATTERN node?
    */
-  private boolean isTypeAnnotationAllowedForName(Node n) {
-    checkState(n.isName(), n);
-    // Only allow type annotations on nodes used as an lvalue.
-    if (!NodeUtil.isLValue(n)) {
-      return false;
+  private boolean isTypeAnnotationAllowedForNameOrPattern(Node n) {
+    checkState(n.isName() || n.isArrayPattern() || n.isObjectPattern(), n);
+    final boolean isAllowed;
+    Node parent = n.getParent();
+    switch (parent.getToken()) {
+      case GETTER_DEF: // { /** typeAnnotation */ get n() {} }
+      case SETTER_DEF: // { /** typeAnnotation */ set n() {} }
+      case CATCH: // } catch ( /** typeAnnotation */ n ) {
+      case FUNCTION: // function /** typeAnnotation */ n() {}
+      case VAR: // var /** typeAnnotation */ n;
+      case LET:
+      case CONST:
+      case PARAM_LIST: // function f( /** typeAnnotation */ n ) {}
+      case ARRAY_PATTERN: // ([ /** typeAnnotation */ n ] = iterable);
+      case DEFAULT_VALUE: // function f( /** typeAnnotation */ n = 1 ) {}
+        isAllowed = true;
+        break;
+      case STRING_KEY:
+        {
+          Node stringKeyParent = parent.getParent();
+          if (stringKeyParent.isObjectPattern()) {
+            // e.g.
+            // ({prop: /** inlineType */ assignmentTarget} = something);
+            isAllowed = true;
+          } else {
+            checkState(stringKeyParent.isObjectLit(), stringKeyParent);
+            // It doesn't make much sense to put inline JSDoc on an obect literal property
+            // value. e.g.
+            // x = { prop: /** inlineType */ value };
+            isAllowed = false;
+          }
+        }
+        break;
+      case COMPUTED_PROP:
+        {
+          Node computedProp = parent;
+          Node computedPropParent = parent.getParent();
+          if (computedPropParent.isObjectPattern()) {
+            // You might want to apply inline JSDoc to the target, but not the expression.
+            // ({[computedPropName]: /** inlineType */ assignmentTarget} = something);
+            isAllowed = n.isSecondChildOf(computedProp);
+          } else {
+            checkState(computedPropParent.isObjectLit(), computedPropParent);
+            // neither of these makes sense
+            // x = { /** someType */ [expression]: value };
+            // x = { [expression]: /** someType */ value };
+            isAllowed = false;
+          }
+        }
+        break;
+      default:
+        isAllowed = false;
+        break;
     }
-    // Don't allow JSDoc on a name in an assignment. Simple names should only have JSDoc on them
-    // when originally declared.
-    Node rootTarget = NodeUtil.getRootTarget(n);
-    return !NodeUtil.isLhsOfAssign(rootTarget);
+    return isAllowed;
   }
 
   private void reportMisplaced(Node n, String annotationName, String note) {
