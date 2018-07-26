@@ -208,6 +208,20 @@ public final class VarCheckTest extends CompilerTestCase {
     testSame("try {let x = 1;} catch(x){}");
   }
 
+  public void testMultiplyDeclaredCatchAndVar() {
+    // Note: This is technically valid code, but it's difficult to model the scoping rules in the
+    // compiler and inconsistent across browsers. We forbid it in VariableReferenceCheck.
+    testSame("try {} catch (x) { var x = 1; }");
+  }
+
+  public void testMultiplyDeclaredCatchAndLet() {
+    testError("try {} catch (x) { let x = 1; }", BLOCK_SCOPED_DECL_MULTIPLY_DECLARED_ERROR);
+  }
+
+  public void testMultiplyDeclaredCatchAndConst() {
+    testError("try {} catch (x) { const x = 1; }", BLOCK_SCOPED_DECL_MULTIPLY_DECLARED_ERROR);
+  }
+
   public void testReferencedVarDefinedClass() {
     testError("var x; class x{ }", BLOCK_SCOPED_DECL_MULTIPLY_DECLARED_ERROR);
     testError("let x; class x{ }", BLOCK_SCOPED_DECL_MULTIPLY_DECLARED_ERROR);

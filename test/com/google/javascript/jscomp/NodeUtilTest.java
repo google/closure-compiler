@@ -3236,6 +3236,26 @@ public final class NodeUtilTest extends TestCase {
     assertThat(NodeUtil.getDeclaringParent(nameNodeA)).isSameAs(varNode);
   }
 
+  public void testDestructuringWithArrayPatternInCatch() {
+    Node actual = parse("try {} catch([a]) {}");
+
+    Node tryNode = actual.getFirstChild();
+    Node catchBlock = tryNode.getSecondChild();
+    Node catchNode = catchBlock.getFirstChild();
+    assertNode(catchNode).hasType(Token.CATCH);
+
+    Node arrayPattern = catchNode.getFirstChild();
+    Node nameNodeA = arrayPattern.getOnlyChild();
+    assertNode(nameNodeA).isName("a");
+
+    assertLhsByDestructuring(nameNodeA);
+
+    assertThat(NodeUtil.getRootTarget(arrayPattern)).isSameAs(arrayPattern);
+    assertThat(NodeUtil.getRootTarget(nameNodeA)).isSameAs(arrayPattern);
+
+    assertThat(NodeUtil.getDeclaringParent(nameNodeA)).isSameAs(catchNode);
+  }
+
   private static void assertLhsByDestructuring(Node n) {
     assertTrue(NodeUtil.isLhsByDestructuring(n));
   }

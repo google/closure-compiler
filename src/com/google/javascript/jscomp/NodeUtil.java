@@ -3378,6 +3378,7 @@ public final class NodeUtil {
    * Returns the node that is effectively declaring the given target.
    *
    * <p>Examples:
+   *
    * <pre><code>
    *   const a = 1; // getDeclaringParent(a) returns CONST
    *   let {[expression]: [x = 3]} = obj; // getDeclaringParent(x) returns LET
@@ -3390,10 +3391,11 @@ public final class NodeUtil {
    *   import foo from './foo'; // getDeclaringParent(foo) returns IMPORT
    *   import {foo} from './foo'; // getDeclaringParent(foo) returns IMPORT
    *   import {foo as bar} from './foo'; // getDeclaringParent(bar) returns IMPORT
+   *   } catch (err) { // getDeclaringParent(err) returns CATCH
    * </code></pre>
    *
    * @param targetNode a NAME, OBJECT_PATTERN, or ARRAY_PATTERN
-   * @return node of type LET, CONST, VAR, FUNCTION, CLASS, PARAM_LIST, or IMPORT
+   * @return node of type LET, CONST, VAR, FUNCTION, CLASS, PARAM_LIST, CATCH, or IMPORT
    * @throws IllegalStateException if targetNode is not actually used as a declaration target
    */
   public static Node getDeclaringParent(Node targetNode) {
@@ -3422,7 +3424,13 @@ public final class NodeUtil {
       // e.g. `function foo(targetNode) {};`
       // e.g. `let targetNode = something;`
       // e.g. `import targetNode from './foo';
-      checkState(parent.isParamList() || isNameDeclaration(parent) || parent.isImport(), parent);
+      // e.g. `} catch (foo) {`
+      checkState(
+          parent.isParamList()
+              || isNameDeclaration(parent)
+              || parent.isImport()
+              || parent.isCatch(),
+          parent);
     }
     return parent;
   }
@@ -3539,6 +3547,10 @@ public final class NodeUtil {
         // e.g. `import {bar as targetNode} from './foo/bar';`
         // e.g. `import {targetNode} from './foo/bar';` // AST will have {targetNode as targetNode}
         checkState(!targetIsFirstChild, parent);
+        return null;
+
+      case CATCH:
+        // e.g. `try {} catch (foo) {}`
         return null;
 
       default:
