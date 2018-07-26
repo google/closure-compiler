@@ -537,4 +537,14 @@ public final class Es6RewriteModulesToCommonJsModulesTest extends CompilerTestCa
                     "  var foo = $$require('foo.js');",
                     "}, 'not/root/test.js', ['foo.js']);"))));
   }
+
+  public void testExportStarFrom() {
+    test("export * from './other.js';",
+        lines(
+            "$jscomp.registerAndLoadModule(function($$require, $$exports, $$module) {",
+            "  'test pragma';",
+            "  var module$other = $$require('other.js');",
+            "  $$module.exportAllFrom(module$other);",
+            "}, 'testcode', ['other.js']);"));
+  }
 }

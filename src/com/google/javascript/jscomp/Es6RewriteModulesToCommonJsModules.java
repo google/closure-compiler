@@ -117,6 +117,7 @@ public class Es6RewriteModulesToCommonJsModules implements CompilerPass {
   @AutoValue
   abstract static class ModuleRequest {
     abstract String specifier();
+
     abstract String varName();
 
     private static ModuleRequest create(String specifier, String varName) {
@@ -171,20 +172,27 @@ public class Es6RewriteModulesToCommonJsModules implements CompilerPass {
     /**
      * Given an import node gets the name of the var to use for the imported module.
      *
-     * Example:
-     *   import {v} from './foo.js'; use(v);
-     * Can become:
-     *   const module$foo = require('./foo.js'); use(module$foo.v);
+     * <p>Example: {@code import {v} from './foo.js'; use(v);} Can become:
+     * <pre>
+     *   const module$foo = require('./foo.js');
+     *   use(module$foo.v);
+     * </pre>
      * This method would return "module$foo".
      *
-     * Note that if there is a star import the name will be preserved.
+     * <p>Note that if there is a star import the name will be preserved.
      *
-     * Example:
-     *   import defaultValue, * as foo from './foo.js'; use(defaultValue, foo.bar);
+     * <p>Example:
+     * <pre>
+     *   import defaultValue, * as foo from './foo.js';
+     *   use(defaultValue, foo.bar);
+     * </pre>
+     *
      * Can become:
+     * <pre>
      *   const foo = require('./foo.js'); use(foo.defaultValue, foo.bar);
+     * </pre>
      *
-     * This makes debugging quite a bit easier as source maps are not great with renaming.
+     * <p>This makes debugging quite a bit easier as source maps are not great with renaming.
      */
     private String getVarNameOfImport(Node importDecl) {
       checkState(importDecl.isImport());
@@ -208,8 +216,7 @@ public class Es6RewriteModulesToCommonJsModules implements CompilerPass {
      *           would return "m".
      *       <li>If referencing an import default like d in "import d from './foo.js'" then this
      *           would return "module$foo.default".
-     *
-     * Used to rename references to imported values within this module.
+     *           <p>Used to rename references to imported values within this module.
      */
     private String getNameOfImportedValue(Node nameNode) {
       Node importDecl = nameNode;
@@ -251,9 +258,7 @@ public class Es6RewriteModulesToCommonJsModules implements CompilerPass {
       return null;
     }
 
-    /**
-     * Renames the given name node if it is an imported value.
-     */
+    /** Renames the given name node if it is an imported value. */
     private void maybeRenameImportedValue(NodeTraversal t, Node n) {
       checkState(n.isName());
       Node parent = n.getParent();
@@ -321,9 +326,7 @@ public class Es6RewriteModulesToCommonJsModules implements CompilerPass {
       }
     }
 
-    /**
-     * Wraps the entire current module definition in a $jscomp.registerAndLoadModule function.
-     */
+    /** Wraps the entire current module definition in a $jscomp.registerAndLoadModule function. */
     private void registerAndLoadModule(NodeTraversal t) {
       Node block = IR.block();
       block.addChildrenToFront(script.removeChildren());
@@ -501,12 +504,32 @@ public class Es6RewriteModulesToCommonJsModules implements CompilerPass {
       t.reportCodeChange();
     }
 
+    private void visitExportStar(NodeTraversal t, Node export, Node parent) {
+      //   export * from 'moduleIdentifier';
+      Node moduleIdentifier = export.getLastChild();
+
+      // Make an "import 'spec'" from this export node and then visit it to rewrite to a require().
+      Node importNode = IR.importNode(IR.empty(), IR.empty(), moduleIdentifier.cloneNode());
+      importNode.useSourceInfoFrom(export);
+      parent.addChildBefore(importNode, export);
+      visit(t, importNode, parent);
+
+      String moduleName = getVarNameOfImport(moduleIdentifier.getString());
+      export.replaceWith(
+          IR.exprResult(
+                  IR.call(
+                      IR.getprop(IR.name("$$module"), IR.string("exportAllFrom")),
+                      IR.name(moduleName)))
+              .useSourceInfoFromForTree(export));
+
+      t.reportCodeChange();
+    }
+
     private void visitExport(NodeTraversal t, Node export, Node parent) {
       if (export.getBooleanProp(Node.EXPORT_DEFAULT)) {
         visitExportDefault(t, export, parent);
       } else if (export.getBooleanProp(Node.EXPORT_ALL_FROM)) {
-        // TODO(johnplaisted)
-        compiler.report(JSError.make(export, Es6ToEs3Util.CANNOT_CONVERT_YET, "Wildcard export"));
+        visitExportStar(t, export, parent);
       } else if (export.hasTwoChildren()) {
         visitExportFrom(t, export, parent);
       } else {

@@ -42,6 +42,7 @@
 'require base';
 'require es6/map';
 'require es6/set';
+'require util/global';
 
 (function() {
 /**
@@ -55,6 +56,29 @@ var Module = function(id, opt_exports) {
   this.id = id;
   /** @type {?} */
   this.exports = opt_exports || {};
+};
+
+
+/**
+ * @param {?} other
+ */
+Module.prototype.exportAllFrom = function(other) {
+  var module = this;
+  var define = {};
+  for (var key in other) {
+    if (key == 'default' || key in module.exports || key in define) {
+      continue;
+    }
+    define[key] = {
+      enumerable: true,
+      get: (function(key) {
+        return function() {
+          return other[key];
+        };
+      })(key)
+    };
+  }
+  $jscomp.global.Object.defineProperties(module.exports, define);
 };
 
 
