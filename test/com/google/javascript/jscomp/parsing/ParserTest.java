@@ -1042,6 +1042,36 @@ public final class ParserTest extends BaseJSTypeTestCase {
     assertNodeHasJSDocInfoWithJSType(computedPropWithDefaultTarget, STRING_TYPE);
   }
 
+  public void testInlineJSDocAttachmentToObjPatNormalPropWithQualifiedName() {
+    Node exprResult =
+        parse("({ normalProp: /** string */ ns.normalPropTarget } = {});").getFirstChild();
+    Node assignNode = exprResult.getFirstChild();
+    assertNode(assignNode).hasType(Token.ASSIGN);
+
+    Node objectPattern = assignNode.getFirstChild();
+
+    Node normalProp = objectPattern.getFirstChild();
+    assertNode(normalProp).hasType(Token.STRING_KEY);
+    Node nsNormalPropTarget = normalProp.getOnlyChild();
+    assertNodeHasJSDocInfoWithJSType(nsNormalPropTarget, STRING_TYPE);
+  }
+
+  public void testInlineJSDocAttachmentToObjPatNormalPropWithQualifiedNameWithDefault() {
+    Node exprResult =
+        parse("({ normalProp: /** string */ ns.normalPropTarget = 'foo' } = {});").getFirstChild();
+    Node assignNode = exprResult.getFirstChild();
+    assertNode(assignNode).hasType(Token.ASSIGN);
+
+    Node objectPattern = assignNode.getFirstChild();
+
+    Node normalProp = objectPattern.getFirstChild();
+    assertNode(normalProp).hasType(Token.STRING_KEY);
+    Node defaultValue = normalProp.getFirstChild();
+    assertNode(defaultValue).hasType(Token.DEFAULT_VALUE);
+    Node nsNormalPropTarget = defaultValue.getFirstChild();
+    assertNodeHasJSDocInfoWithJSType(nsNormalPropTarget, STRING_TYPE);
+  }
+
   public void testInlineJSDocAttachmentToArrayPatElement() {
     Node letNode =
         parse("let [/** string */ x] = [];")
@@ -1067,6 +1097,30 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
     Node xVarName = defaultValue.getFirstChild();
     assertNodeHasJSDocInfoWithJSType(xVarName, STRING_TYPE);
+  }
+
+  public void testInlineJSDocAttachmentToArrayPatElementQualifiedName() {
+    Node exprResult = parse("[/** string */ x.y.z] = [];").getFirstChild();
+    Node assignNode = exprResult.getFirstChild();
+    assertNode(assignNode).hasType(Token.ASSIGN);
+
+    Node arrayPattern = assignNode.getFirstChild();
+    assertNode(arrayPattern).hasType(Token.ARRAY_PATTERN);
+    Node xYZName = arrayPattern.getFirstChild();
+    assertNodeHasJSDocInfoWithJSType(xYZName, STRING_TYPE);
+  }
+
+  public void testInlineJSDocAttachmentToArrayPatElementQualifiedNameWithDefault() {
+    Node exprResult = parse("[/** string */ x.y.z = 'foo'] = [];").getFirstChild();
+    Node assignNode = exprResult.getFirstChild();
+    assertNode(assignNode).hasType(Token.ASSIGN);
+
+    Node arrayPattern = assignNode.getFirstChild();
+    assertNode(arrayPattern).hasType(Token.ARRAY_PATTERN);
+    Node defaultValue = arrayPattern.getOnlyChild();
+    assertNode(defaultValue).hasType(Token.DEFAULT_VALUE);
+    Node xYZName = defaultValue.getFirstChild();
+    assertNodeHasJSDocInfoWithJSType(xYZName, STRING_TYPE);
   }
 
   public void testInlineJSDocAttachmentToObjLitNormalProp() {
