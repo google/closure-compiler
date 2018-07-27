@@ -2381,3 +2381,12 @@ function TypeError(opt_message, opt_file, opt_line) {}
  */
 function URIError(opt_message, opt_file, opt_line) {}
 
+
+// JScript extensions.
+// @see http://msdn.microsoft.com/en-us/library/894hfyb4(VS.80).aspx
+
+/**
+ * @see http://msdn.microsoft.com/en-us/library/7sw4ddf8.aspx
+ * @type {function(new:?, string, string=)}
+ */
+function ActiveXObject(progId, opt_location) {}
