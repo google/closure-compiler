@@ -1305,7 +1305,7 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
   }
 
   @Override
-  public final boolean hasAnyTemplateTypesInternal() {
+  final boolean hasAnyTemplateTypesInternal() {
     return getTemplateTypeMap().numUnfilledTemplateKeys() > 0
         || typeOfThis.hasAnyTemplateTypes()
         || call.hasAnyTemplateTypes();
