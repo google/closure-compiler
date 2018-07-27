@@ -228,6 +228,46 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     assertFalse(aVar.isTypeInferred());
   }
 
+  public void testConstDeclarationObjectPatternInfersType_forAliasedConstructor() {
+    disableTypeInfoValidation();
+    testSame(
+        lines(
+            "const ns = {};",
+            "/** @constructor */",
+            "ns.Foo = function() {}",
+            "",
+            "const {Foo} = ns;",
+            "// const /** !Foo */ fooInstance = new Foo();"));
+
+    TypedVar fooVar = checkNotNull(globalScope.getVar("Foo"));
+    // TODO(b/77597706): treat `Foo` as an alias type for `ns.Foo`
+    assertNull(fooVar.getType()); // type should be `function(new:ns.Foo): undefined`
+  }
+
+  public void testConstDeclarationObjectPatternInfersType() {
+    disableTypeInfoValidation();
+    testSame(
+        lines(
+            "const /** {a: number} */ obj = {a: 3};", // preserve newline
+            "const {a} = obj;"));
+
+    // TODO(b/77597706): Infer `a` to have type number
+    TypedVar aVar = checkNotNull(globalScope.getVar("a"));
+    assertNull(aVar.getType());
+  }
+
+  public void testConstDeclarationArrayPatternInfersType() {
+    disableTypeInfoValidation();
+    testSame(
+        lines(
+            "const /** !Iterable<number> */ arr = [1, 2, 3];", // preserve newline
+            "const [a] = arr;"));
+
+    // TODO(b/77597706): Infer `a` to have type number
+    TypedVar aVar = checkNotNull(globalScope.getVar("a"));
+    assertNull(aVar.getType());
+  }
+
   // TODO(bradfordcsmith): Add Object rest test case.
 
   public void testVarDeclarationNestedPatterns() {
@@ -250,6 +290,111 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     TypedVar lengthVar = checkNotNull(globalScope.getVar("length"));
     assertType(lengthVar.getType()).toStringIsEqualTo("number");
     assertFalse(lengthVar.isTypeInferred());
+  }
+
+  // The following testAssign* tests check that we never treat qualified names in destructuring
+  // patterns as declared. CheckJSDoc will warn on those cases, so TypedScopeCreator just ignores
+  // them. The only way to 'declare' a qualified name is:
+  //    /** @type {number} */ a.b.c = rhs;
+
+  public void testAssignWithJSDocForObjPatWithOneVariable() {
+    // Ignore the JSDoc on the assignment
+    testSame("const ns = {}; (/** @type {number} */ {a: ns.a} = {a: 1});");
+
+    TypedVar aVar = globalScope.getVar("ns.a");
+    assertNull(aVar);
+    }
+
+  public void testAssignWithJSDocForObjPatWithMultipleVariables() {
+    // Ignore the JSDoc on the assignment
+    testSame(
+        "const ns = {}; (/** @type {number} */ {a: ns.a, b: ns.b} = {a: 1});");
+
+    TypedVar aVar = globalScope.getVar("ns.a");
+    assertNull(aVar);
+  }
+
+  public void testAssignObjPatNormalProp() {
+    // CheckJSDoc will warn on the inline type annotation here, typechecking just ignores it.
+    testSame("const ns = {}; ({a: /** number */ ns.a} = {a: 1});");
+
+    TypedVar aVar = globalScope.getVar("ns.a");
+    assertNull(aVar);
+  }
+
+  public void testAssignObjPatComputedProp() {
+    // CheckJSDoc will warn on the inline type annotation here, typechecking just ignores it.
+    testSame("const ns = {}; ({['a']: /** number */ ns.a} = {a: 1});");
+
+    TypedVar aVar = globalScope.getVar("ns.a");
+    assertNull(aVar);
+  }
+
+  public void testAssignArrayPatWithJSDocOnAssign() {
+    testSame("const ns = {}; /** @type {number} */ [ ns.a ] = [1];");
+
+    TypedVar aVar = globalScope.getVar("ns.a");
+    assertNull(aVar);
+  }
+
+  public void testAssignArrayPatWithQualifiedName() {
+    // CheckJSDoc will warn on the inline type annotation here, typechecking just ignores it.
+    testSame("const ns = {}; [ /** number */ ns.a ] = [1];");
+
+    TypedVar aVar = globalScope.getVar("ns.a");
+    assertNull(aVar);
+  }
+
+  public void testAssignArrayPatWithQualifiedNameAndDefaultValue() {
+    // CheckJSDoc will warn on the inline type annotation here, typechecking just ignores it.
+    testSame("const ns = {}; [ /** number */ ns.a = 1 ] = [];");
+
+    TypedVar aVar = globalScope.getVar("ns.a");
+    assertNull(aVar);
+  }
+
+  public void testForOfWithObjectPatVarDeclarationWithShorthand() {
+    testSame("for (var {/** number */ a} of {}) {}");
+
+    TypedVar aVar = checkNotNull(globalScope.getVar("a"));
+    assertType(aVar.getType()).toStringIsEqualTo("number");
+    assertFalse(aVar.isTypeInferred());
+  }
+
+  public void testForOfWithArrayPatVarDeclaration() {
+    testSame("for (var [/** number */ a] of []) {}");
+
+    TypedVar aVar = checkNotNull(globalScope.getVar("a"));
+    assertType(aVar.getType()).toStringIsEqualTo("number");
+    assertFalse(aVar.isTypeInferred());
+  }
+
+  public void testCastOnLhsDoesntDeclareProperty() {
+    testSame("const ns = {}; /** @type {null} */ (ns.a) = null;");
+
+    assertNull(globalScope.getVar("ns.a"));
+  }
+
+  public void testForOfWithObjectPatConstDeclarationShadowedInLoop() {
+    testSame(
+        lines(
+            "for (const {/** number */ a} of {}) {",
+            "  const /** string */ a = 'foo';",
+            "  IN_LOOP: a;",
+            "}"));
+
+    assertScope(globalScope).doesNotDeclare("a");
+    TypedScope loopBlockScope = getLabeledStatement("IN_LOOP").enclosingScope;
+    TypedScope loopInitializerScope = loopBlockScope.getParent();
+    assertThat(loopInitializerScope).isNotEqualTo(globalScope);
+
+    TypedVar aVarloopBlock = loopBlockScope.getVar("a");
+    assertType(aVarloopBlock.getType()).toStringIsEqualTo("string");
+    assertFalse(aVarloopBlock.isTypeInferred());
+
+    TypedVar aVarLoopInit = loopInitializerScope.getVar("a");
+    assertType(aVarLoopInit.getType()).toStringIsEqualTo("number");
+    assertFalse(aVarLoopInit.isTypeInferred());
   }
 
   public void testDeclarativelyUnboundVarsWithoutTypes() {

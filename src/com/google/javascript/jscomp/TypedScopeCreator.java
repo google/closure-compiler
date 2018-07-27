@@ -2055,7 +2055,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
         // caught when we try to declare it in the current scope.
         new SlotDefiner()
             .forDeclarationNode(n)
-            .readVariableNameFromDeclarationNode()
+            .forVariableName(qName)
             .inScope(getLValueRootScope(n))
             .withType(valueType)
             .allowLaterTypeInference(inferred)
@@ -2327,6 +2327,11 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
 
         case ASSIGN:
           // Handle initialization of properties.
+          // We only allow qualified name declarations of the form
+          //   /** @type {number} */ a.b.c = rhs;
+          // TODO(b/77597706): Ensure that CheckJSDoc warns for JSDoc on assignments not to
+          // qualified names, e.g.
+          //   /** @type {number} */ [a.b.c] = someArr;
           Node firstChild = n.getFirstChild();
           if (firstChild.isGetProp() && firstChild.isQualifiedName()) {
             maybeDeclareQualifiedName(t, n.getJSDocInfo(), firstChild, n, firstChild.getNext());

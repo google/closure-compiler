@@ -4237,6 +4237,7 @@ public final class NodeUtil {
       case DEFAULT_VALUE:
       case CATCH:
       case REST:
+      case CAST:
         getLhsNodesHelper(n.getFirstChild(), lhsNodes);
         return;
       case IMPORT_SPEC:

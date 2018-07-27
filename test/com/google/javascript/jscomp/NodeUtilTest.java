@@ -3380,25 +3380,44 @@ public final class NodeUtilTest extends TestCase {
     assertThat(typeExpr.getRoot().getFirstChild().getString()).isEqualTo("number");
   }
 
-  public void testFindLhsNodesInNode() {
+  public void testFindLhsNodesInNodeWithNameDeclaration() {
     assertThat(findLhsNodesInNode("var x;")).hasSize(1);
     assertThat(findLhsNodesInNode("var x, y;")).hasSize(2);
     assertThat(findLhsNodesInNode("var f = function(x, y, z) {};")).hasSize(1);
+  }
+
+  public void testFindLhsNodesInNodeWithArrayPatternDeclaration() {
     assertThat(findLhsNodesInNode("var [x=a => a, y = b=>b+1] = arr;")).hasSize(2);
     assertThat(findLhsNodesInNode("var [x=a => a, y = b=>b+1, ...z] = arr;")).hasSize(3);
     assertThat(findLhsNodesInNode("var [ , , , y = b=>b+1, ...z] = arr;")).hasSize(2);
+  }
+
+  public void testFindLhsNodesInNodeWithObjectPatternDeclaration() {
     assertThat(findLhsNodesInNode("var {x = a=>a, y = b=>b+1} = obj;")).hasSize(2);
     assertThat(findLhsNodesInNode("var {p1: x = a=>a, p2: y = b=>b+1} = obj;")).hasSize(2);
     assertThat(findLhsNodesInNode("var {[pname]: x = a=>a, [p2name]: y} = obj;")).hasSize(2);
     assertThat(findLhsNodesInNode("var {lhs1 = a, p2: [lhs2, lhs3 = b] = [notlhs]} = obj;"))
         .hasSize(3);
+  }
+
+  public void testFindLhsNodesInNodeWithCastOnLhs() {
+    Iterable<Node> lhsNodes = findLhsNodesInNode("/** @type {*} */ (a.b) = 3;");
+    assertThat(lhsNodes).hasSize(1);
+    Iterator<Node> nodeIterator = lhsNodes.iterator();
+    assertNode(nodeIterator.next()).matchesQualifiedName("a.b");
+  }
+
+  public void testFindLhsNodesInNodeWithArrayPatternAssign() {
     assertThat(findLhsNodesInNode("[this.x] = rhs;")).hasSize(1);
     assertThat(findLhsNodesInNode("[this.x, y] = rhs;")).hasSize(2);
     assertThat(findLhsNodesInNode("[this.x, y, this.z] = rhs;")).hasSize(3);
     assertThat(findLhsNodesInNode("[y, this.z] = rhs;")).hasSize(2);
     assertThat(findLhsNodesInNode("[x[y]] = rhs;")).hasSize(1);
     assertThat(findLhsNodesInNode("[x.y.z] = rhs;")).hasSize(1);
+    assertThat(findLhsNodesInNode("[ /** @type {*} */ (x.y.z) ] = rhs;")).hasSize(1);
+  }
 
+  public void testFindLhsNodesInNodeWithComplexAssign() {
     assertThat(findLhsNodesInNode("x += 1;")).hasSize(1);
     assertThat(findLhsNodesInNode("x.y += 1;")).hasSize(1);
     assertThat(findLhsNodesInNode("x -= 1;")).hasSize(1);
