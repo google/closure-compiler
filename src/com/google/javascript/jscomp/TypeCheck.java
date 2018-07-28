@@ -2016,7 +2016,8 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       JSType superType = extendsClause.getJSType();
       if (superType.isConstructor() || superType.isInterface()) {
         validator.expectExtends(n, functionType, superType.toMaybeFunctionType());
-      } else {
+      } else if (!superType.isUnknownType()) {
+        // Only give this error for supertypes *known* to be wrong - unresolved types are OK here.
         compiler.report(
             t.makeError(
                 n,

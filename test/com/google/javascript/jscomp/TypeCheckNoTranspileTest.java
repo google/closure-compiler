@@ -3420,6 +3420,30 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "class Foo extends Foo {}"));
   }
 
+  public void testClassExtendsUnresolvedClass() {
+    testTypes(
+        lines(
+            "/** @param {function(new: ?, ...?)} ctor */",
+            "function mixin(ctor) {",
+            "  class Foo extends ctor {}",
+            "}"),
+        // TODO(sdh): This should probably not produce an error.
+        "Could not resolve type in @extends tag of Foo");
+  }
+
+  public void testClassImplementsForwardReferencedInterface() {
+    testTypes(
+        lines(
+            "/** @const */ var ns = {};",
+            "(function() {",
+            "  /** @interface */",
+            "  ns.Base = class {};",
+            "})();",
+            "/** @implements {ns.Base} */",
+            "class Sub {}",
+            "var /** !ns.Base */ x = new Sub();"));
+  }
+
   public void testClassSuperCallResult() {
     testTypes(
         lines(

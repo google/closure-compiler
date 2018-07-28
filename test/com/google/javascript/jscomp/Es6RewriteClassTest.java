@@ -622,6 +622,52 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
             "let C = function(var_args) {};"));
   }
 
+  public void testExtendForwardDeclaredClass() {
+    ignoreWarnings(TypeCheck.POSSIBLE_INEXISTENT_PROPERTY);
+    enableClosurePass();
+    test(
+        srcs(
+            lines(
+                "goog.forwardDeclare('ns.D');", //
+                "class C extends ns.D { }")),
+        expected(
+            lines(
+                "/** @constructor @struct",
+                " * @extends {ns.D}",
+                " * @param {...?} var_args */",
+                "let C = function(var_args) {",
+                "  return ns.D.apply(this, arguments) || this;",
+                "};",
+                "$jscomp.inherits(C, ns.D);")));
+  }
+
+  public void testImplementForwardDeclaredInterface() {
+    enableClosurePass();
+    test(
+        srcs(
+            lines(
+                "goog.forwardDeclare('ns.D');", //
+                "/** @implements {ns.D} */",
+                "class C { }")),
+        expected(
+            lines(
+                "/** @constructor @struct @implements {ns.D} */", //
+                "let C = function() {};")));
+  }
+
+  public void testExtendForwardDeclaredInterface() {
+    enableClosurePass();
+    test(
+        srcs(
+            lines(
+                "goog.forwardDeclare('ns.D');", //
+                "/** @interface @extends {ns.D} */ class C { }")),
+        expected(
+            lines(
+                "/** @struct @interface @extends {ns.D} */", //
+                "let C = function() {};")));
+  }
+
   public void testExtendNonNativeError() {
     test(
         lines(
@@ -1895,7 +1941,9 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
             "})"));
 
     test(
-        lines("class C { static get foo() {} }", "class Sub extends C {}"),
+        lines(
+            "class C { static get foo() {} }", //
+            "class Sub extends C {}"),
         lines(
             "/** @constructor @struct */",
             "let C = function() {};",
