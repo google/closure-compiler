@@ -757,9 +757,7 @@ public final class CheckAccessControlsEs6ClassTest extends CompilerTestCase {
                 "  constructor() {",
                 "    this.bar();",
                 "  }",
-                "}")),
-        // TODO(b/80580110): This should pass without warning.
-        error(BAD_PROTECTED_PROPERTY_ACCESS));
+                "}")));
   }
 
   public void testProtectedAccessForProperties3() {
@@ -775,9 +773,7 @@ public final class CheckAccessControlsEs6ClassTest extends CompilerTestCase {
             lines(
                 "class SubFoo extends Foo {", //
                 "  static baz() { (new Foo()).bar(); }",
-                "}")),
-        // TODO(b/80580110): This should pass without warning.
-        error(BAD_PROTECTED_PROPERTY_ACCESS));
+                "}")));
   }
 
   public void testProtectedAccessForProperties4() {
@@ -791,9 +787,7 @@ public final class CheckAccessControlsEs6ClassTest extends CompilerTestCase {
             lines(
                 "class SubFoo extends Foo {", //
                 "  static foo() { super.bar(); }",
-                "}")),
-        // TODO(b/80580110): This should pass without warning.
-        error(BAD_PROTECTED_PROPERTY_ACCESS));
+                "}")));
   }
 
   public void testProtectedAccessForProperties5() {
@@ -811,9 +805,7 @@ public final class CheckAccessControlsEs6ClassTest extends CompilerTestCase {
                 "    super();",
                 "    this.bar();",
                 "  }",
-                "}")),
-        // TODO(b/80580110): This should pass without warning.
-        error(BAD_PROTECTED_PROPERTY_ACCESS));
+                "}")));
   }
 
   public void testProtectedAccessForProperties6() {
@@ -832,9 +824,7 @@ public final class CheckAccessControlsEs6ClassTest extends CompilerTestCase {
                 "    super();",
                 "    this.bar();",
                 "  }",
-                "};")),
-        // TODO(b/80580110): This should pass without warning.
-        error(BAD_PROTECTED_PROPERTY_ACCESS));
+                "};")));
   }
 
   public void testProtectedAccessForProperties7() {
@@ -853,9 +843,7 @@ public final class CheckAccessControlsEs6ClassTest extends CompilerTestCase {
                 "  }",
                 "};",
                 "",
-                "SubFoo.prototype.moo = function() { this.bar(); };")),
-        // TODO(b/80580110): This should pass without warning.
-        error(BAD_PROTECTED_PROPERTY_ACCESS));
+                "SubFoo.prototype.moo = function() { this.bar(); };")));
   }
 
   public void testProtectedAccessForProperties8() {
@@ -869,25 +857,23 @@ public final class CheckAccessControlsEs6ClassTest extends CompilerTestCase {
             lines(
                 "var SubFoo = class extends Foo {", //
                 "  get moo() { this.bar(); }",
-                "};")),
-        // TODO(b/80580110): This should pass without warning.
-        error(BAD_PROTECTED_PROPERTY_ACCESS));
+                "};")));
   }
 
   public void testProtectedAccessForProperties9() {
     test(
         srcs(
             lines(
-                "var Foo = class {};", //
+                "/** @unrestricted */", //
+                "var Foo = class {};",
                 "",
                 "/** @protected */",
                 "Foo.prototype.bar = function() {};"),
             lines(
-                "var SubFoo = class extends Foo {", //
+                "/** @unrestricted */", //
+                "var SubFoo = class extends Foo {",
                 "  set moo(val) { this.x = this.bar(); }",
-                "};")),
-        // TODO(b/80580110): This should pass without warning.
-        error(BAD_PROTECTED_PROPERTY_ACCESS));
+                "};")));
   }
 
   public void testProtectedAccessForProperties10() {
@@ -933,9 +919,7 @@ public final class CheckAccessControlsEs6ClassTest extends CompilerTestCase {
                     "  constructor() {",
                     "    Foo.prop;",
                     "  }",
-                    "};"))),
-        // TODO(b/80580110): This should pass without warning.
-        error(BAD_PROTECTED_PROPERTY_ACCESS));
+                    "};"))));
   }
 
   public void testProtectedAccessForProperties12() {
@@ -963,9 +947,7 @@ public final class CheckAccessControlsEs6ClassTest extends CompilerTestCase {
                     "",
                     "    this.prop.length;",
                     "  }",
-                    "};"))),
-        // TODO(b/80580110): This should pass without warning.
-        error(BAD_PROTECTED_PROPERTY_ACCESS));
+                    "};"))));
   }
 
   // FYI: Java warns for the b1.method access in c.js.
@@ -1016,9 +998,7 @@ public final class CheckAccessControlsEs6ClassTest extends CompilerTestCase {
                     "  constructor(b1) {",
                     "    var x = b1.method();",
                     "  }",
-                    "};"))),
-        // TODO(b/80580110): This should pass without warning.
-        error(BAD_PROTECTED_PROPERTY_ACCESS));
+                    "};"))));
   }
 
   public void testProtectedAccessForProperties14() {
@@ -1039,9 +1019,7 @@ public final class CheckAccessControlsEs6ClassTest extends CompilerTestCase {
                 "  }",
                 "};",
                 "",
-                "OtherFoo.prototype.moo = function() { new Foo().bar(); };")),
-        // TODO(b/80580110): This should pass without warning.
-        error(BAD_PROTECTED_PROPERTY_ACCESS));
+                "OtherFoo.prototype.moo = function() { new Foo().bar(); };")));
   }
 
   public void testProtectedAccessForProperties15() {
@@ -1078,9 +1056,44 @@ public final class CheckAccessControlsEs6ClassTest extends CompilerTestCase {
                 "class OtherFoo extends Foo {",
                 "  constructor() { super(); var f = () => this.bar(); }",
                 "  baz() { return () => this.bar(); }",
+                "}")));
+  }
+
+  public void testProtectedAccessFromFunctionNestedInsideClass() {
+    test(
+        srcs(
+            lines(
+                "class Foo {", //
+                "  /** @protected */ bar() {}",
+                "}"),
+            lines(
+                "class Bar extends Foo {",
+                "  foo(/** Foo */ foo) {",
+                "    function f() {",
+                "      foo.bar();",
+                "    }",
+                "  }",
+                "}")));
+  }
+
+  public void testProtectedAccessFromClassNestedInsideClass() {
+    test(
+        srcs(
+            lines(
+                "class Foo {", //
+                "  /** @protected */ bar() {}",
+                "}"),
+            lines(
+                "class Bar extends Foo {",
+                "  foo() {",
+                "    class Nested {",
+                "      foo(/** Foo */ foo) {",
+                "        foo.bar();",
+                "      }",
+                "    }",
+                "  }",
                 "}")),
-        // TODO(b/80580110): This should pass without warning.
-        error(BAD_PROTECTED_PROPERTY_ACCESS),
+        // TODO(sdh): This should not be an error.
         error(BAD_PROTECTED_PROPERTY_ACCESS));
   }
 

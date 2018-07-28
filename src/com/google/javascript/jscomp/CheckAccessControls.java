@@ -31,7 +31,8 @@ import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
-import java.util.ArrayDeque;
+import java.util.Deque;
+import java.util.LinkedList;
 import javax.annotation.Nullable;
 
 /**
@@ -134,8 +135,10 @@ class CheckAccessControls extends AbstractPostOrderCallback
 
   // State about the current traversal.
   private int deprecatedDepth = 0;
-  private final ArrayDeque<JSType> currentClassStack = new ArrayDeque<>();
-  private final JSType noTypeSentinel;
+  // NOTE: LinkedList is almost always the wrong choice, but in this case we have at most a small
+  // handful of elements, it provides the smoothest API (push, pop, and a peek that doesn't throw
+  // on empty), and (unlike ArrayDeque) is null-permissive. No other option meets all these needs.
+  private final Deque<JSType> currentClassStack = new LinkedList<JSType>();
 
   private ImmutableMap<StaticSourceFile, Visibility> defaultVisibilityForFiles;
   private final Multimap<JSType, String> initializedConstantProperties;
@@ -147,7 +150,6 @@ class CheckAccessControls extends AbstractPostOrderCallback
     this.typeRegistry = compiler.getTypeRegistry();
     this.initializedConstantProperties = HashMultimap.create();
     this.enforceCodingConventions = enforceCodingConventions;
-    this.noTypeSentinel = typeRegistry.getNativeType(JSTypeNative.NO_TYPE);
   }
 
   @Override
@@ -179,15 +181,17 @@ class CheckAccessControls extends AbstractPostOrderCallback
       if (isDeprecatedFunction(n)) {
         deprecatedDepth++;
       }
-      JSType prevClass = getCurrentClass();
+      JSType prevClass = currentClassStack.peek();
       JSType currentClass = prevClass == null
           ? getClassOfMethod(n, parent)
           : prevClass;
-      // ArrayDeques can't handle nulls, so we reuse the bottom type
-      // as a null sentinel.
-      currentClassStack.addFirst(currentClass == null
-          ? noTypeSentinel
-          : currentClass);
+      currentClassStack.push(currentClass);
+    } else if (n.isClass()) {
+      FunctionType ctor = JSType.toMaybeFunctionType(n.getJSType());
+      JSType instance = ctor != null && ctor.isConstructor() ? ctor.getInstanceType() : null;
+      // TODO(sdh): We should probably handle nested classes better, allowing them to access
+      // protected members of any enclosing class.
+      currentClassStack.push(instance);
     }
   }
 
@@ -199,12 +203,13 @@ class CheckAccessControls extends AbstractPostOrderCallback
         deprecatedDepth--;
       }
       currentClassStack.pop();
+    } else if (n.isClass()) {
+      currentClassStack.pop();
     }
   }
 
   /**
-   * Gets the type of the class that "owns" a method, or null if
-   * we know that its un-owned.
+   * Gets the instance type of the class that "owns" a method, or null if we know that its un-owned.
    */
   private JSType getClassOfMethod(Node n, Node parent) {
     checkState(n.isFunction(), n);
@@ -831,13 +836,6 @@ class CheckAccessControls extends AbstractPostOrderCallback
       }
   }
 
-  @Nullable private JSType getCurrentClass() {
-    JSType cur = currentClassStack.peekFirst();
-    return cur == noTypeSentinel
-        ? null
-        : cur;
-  }
-
   private void checkPrivatePropertyVisibility(
       NodeTraversal t,
       Node getprop,
@@ -873,7 +871,7 @@ class CheckAccessControls extends AbstractPostOrderCallback
     // 2) Overriding the property in a subclass
     // 3) Accessing the property from inside a subclass
     // The first two have already been checked for.
-    JSType currentClass = getCurrentClass();
+    JSType currentClass = currentClassStack.peek();
     if (currentClass == null || !currentClass.isSubtypeOf(ownerType)) {
       String propertyName = getprop.getLastChild().getString();
       compiler.report(
