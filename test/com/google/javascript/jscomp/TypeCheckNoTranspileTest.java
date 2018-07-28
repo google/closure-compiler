@@ -1501,7 +1501,10 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testComputedProp2a() {
     // Computed properties do type inference within
     testTypes(
-        lines("var n; var obj = {[n = 'foo']: i}; var /** number */ m = n;"),
+        lines(
+            "var n;", //
+            "var obj = {[n = 'foo']: i};",
+            "var /** number */ m = n;"),
         lines(
             "initializing variable", // preserve new line
             "found   : string",
@@ -1525,7 +1528,10 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testComputedProp2c() {
     // Computed properties do type inference within
     testTypes(
-        lines("var n; var obj = {[foo]: n = 'bar'}; var /** number */ m = n;"),
+        lines(
+            "var n;", //
+            "var obj = {[foo]: n = 'bar'};",
+            "var /** number */ m = n;"),
         lines(
             "initializing variable", // preserve new line
             "found   : string",
@@ -1535,14 +1541,19 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testComputedProp3() {
     // Computed prop does not exist as obj prop
     testTypes(
-        lines("var i = 1; var obj = { ['var' + i]: i }; var x = obj.var1"),
+        lines(
+            "var i = 1;", //
+            "var obj = { ['var' + i]: i };",
+            "var x = obj.var1"),
         "Property var1 never defined on obj");
   }
 
   public void testComputedProp3b() {
     // Computed prop does not exist as obj prop even when a simple string literal
     testTypes(
-        lines("var obj = { ['static']: 1 }; var /** number */ x = obj.static"),
+        lines(
+            "var obj = { ['static']: 1 };", //
+            "var /** number */ x = obj.static"),
         "Property static never defined on obj");
   }
 
@@ -1857,7 +1868,10 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "function f(x, z) {}",
             // infers that "this" is ITemplateArray inside the function literal
             "f`${ function() { /** @type {string} */ var x = this } }`;"),
-        lines("initializing variable", "found   : ITemplateArray", "required: string"));
+        lines(
+            "initializing variable", //
+            "found   : ITemplateArray",
+            "required: string"));
   }
 
   public void testITemplateArray1() {
@@ -3406,6 +3420,22 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "class Foo extends Foo {}"));
   }
 
+  public void testClassSuperCallResult() {
+    testTypes(
+        lines(
+            "class Bar {}",
+            "class Foo extends Bar {",
+            "  constructor() {",
+            "    var /** null */ x = super();",
+            "  }",
+            "}"),
+        // TODO(sdh): This should probably infer Foo, rather than Bar?
+        lines(
+            "initializing variable", //
+            "found   : Bar",
+            "required: null"));
+  }
+
   public void testAsyncFunctionWithoutJSDoc() {
     testTypes("async function f() { return 3; }");
   }
@@ -3510,7 +3540,10 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "async function getAString() {",
             "  return 1;",
             "}"),
-        lines("inconsistent return type", "found   : number", "required: string"));
+        lines(
+            "inconsistent return type", //
+            "found   : number",
+            "required: string"));
   }
 
   public void testAsyncReturnStatementIsResolved() {

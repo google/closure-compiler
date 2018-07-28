@@ -1178,7 +1178,10 @@ class TypeInference
 
     Node left = n.getFirstChild();
     JSType functionType = getJSType(left).restrictByNotNullOrUndefined();
-    if (functionType.isFunctionType()) {
+    if (left.isSuper()) {
+      // TODO(sdh): This will probably return the super type; might want to return 'this' instead?
+      return traverseInstantiation(n, functionType, scope);
+    } else if (functionType.isFunctionType()) {
       FunctionType fnType = functionType.toMaybeFunctionType();
       n.setJSType(fnType.getReturnType());
       backwardsInferenceFromCallSite(n, fnType, scope);
@@ -1693,9 +1696,12 @@ class TypeInference
 
   private FlowScope traverseNew(Node n, FlowScope scope) {
     scope = traverseChildren(n, scope);
-
     Node constructor = n.getFirstChild();
     JSType constructorType = constructor.getJSType();
+    return traverseInstantiation(n, constructorType, scope);
+  }
+
+  private FlowScope traverseInstantiation(Node n, JSType constructorType, FlowScope scope) {
     JSType type = null;
     if (constructorType != null) {
       constructorType = constructorType.restrictByNotNullOrUndefined();

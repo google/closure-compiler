@@ -441,7 +441,10 @@ public final class AstValidator implements CompilerPass {
         break;
 
       case CALL:
-        validateCallType(n);
+        if (!n.getFirstChild().isSuper()) {
+          // TODO(sdh): need to validate super() using validateNewType() instead, if it existed
+          validateCallType(n);
+        }
         break;
 
       default:
