@@ -3436,6 +3436,12 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "required: null"));
   }
 
+  public void testClassComputedSymbolPropAllowed() {
+    testTypesWithExterns(
+        new TestExternsBuilder().addIterable().build(), //
+        "class Foo { [Symbol.iterator]() {} }");
+  }
+
   public void testAsyncFunctionWithoutJSDoc() {
     testTypes("async function f() { return 3; }");
   }

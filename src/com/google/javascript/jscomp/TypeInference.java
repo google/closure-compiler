@@ -1029,6 +1029,12 @@ class TypeInference
     // members are traversed in the class scope (and in their own function scopes).  But the extends
     // clause and computed property keys are in the outer scope and must be traversed here.
     scope = traverse(n.getSecondChild(), scope);
+    Node classMembers = NodeUtil.getClassMembers(n);
+    for (Node member = classMembers.getFirstChild(); member != null; member = member.getNext()) {
+      if (member.isComputedProp()) {
+        scope = traverse(member.getFirstChild(), scope);
+      }
+    }
     return scope;
   }
 
