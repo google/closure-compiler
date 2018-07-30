@@ -312,8 +312,17 @@ SpeechSynthesisUtterance.prototype.text;
 /** @type {string} */
 SpeechSynthesisUtterance.prototype.lang;
 
+/** @type {number} */
+SpeechSynthesisUtterance.prototype.pitch;
+
+/** @type {number} */
+SpeechSynthesisUtterance.prototype.rate;
+
 /** @type {SpeechSynthesisVoice} */
 SpeechSynthesisUtterance.prototype.voice;
+
+/** @type {number} */
+SpeechSynthesisUtterance.prototype.volume;
 
 /**
  * @param {Event} event
