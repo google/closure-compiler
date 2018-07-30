@@ -33,7 +33,6 @@ import com.google.common.io.Files;
 import com.google.javascript.jscomp.AbstractCommandLineRunner.FlagEntry;
 import com.google.javascript.jscomp.AbstractCommandLineRunner.FlagUsageException;
 import com.google.javascript.jscomp.AbstractCommandLineRunner.JsSourceType;
-import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.SourceMap.LocationMapping;
 import com.google.javascript.rhino.Node;
 import java.io.ByteArrayInputStream;
@@ -1551,6 +1550,7 @@ public final class CommandLineRunnerTest extends TestCase {
 
   public void testES5() {
     args.add("--language_in=ECMASCRIPT5");
+    args.add("--language_out=ECMASCRIPT5");
     args.add("--strict_mode_input=false");
     test("var x = f.function", "var x = f.function");
     test("var let", "var let");
@@ -1789,6 +1789,7 @@ public final class CommandLineRunnerTest extends TestCase {
     args.add("--entry_point=app");
     args.add("--dependency_mode=STRICT");
     args.add("--language_in=ECMASCRIPT6");
+    args.add("--language_out=ECMASCRIPT5");
     args.add("--module_resolution=NODE");
     setFilename(0, "foo.js");
     setFilename(1, "app.js");
@@ -2200,6 +2201,47 @@ public final class CommandLineRunnerTest extends TestCase {
                 + "\\\"foo.js\\\"],\\n\\\"names\\\":[\\\"console\\\",\\\"log\\\"]\\n}\\n\"}]");
   }
 
+  public void testEscapeDollarInTemplateLiteralInOutput() {
+    args.add("--language_in=ECMASCRIPT6");
+    args.add("--language_out=ECMASCRIPT6");
+
+    test(
+        "let Foo; const x = `${Foo}`;",
+        "let Foo; const x = `${Foo}`;");
+
+    test(
+        "const x = `\\${Foo}`;",
+        "const x = '\\${Foo}'");
+
+    test(
+        "let Foo; const x = `${Foo}\\${Foo}`;",
+        "let Foo; const x = `${Foo}\\${Foo}`;");
+    test(
+        "let Foo; const x = `\\${Foo}${Foo}`;",
+        "let Foo; const x = `\\${Foo}${Foo}`;");
+  }
+
+  public void testEscapeDollarInTemplateLiteralEs5Output() {
+    args.add("--language_in=ECMASCRIPT6");
+    args.add("--language_out=ECMASCRIPT5");
+
+    test(
+        "let Foo; const x = `${Foo}`;",
+        "var Foo, x = ''+Foo;");
+
+    test(
+        "const x = `\\${Foo}`;",
+        "var x = '\\${Foo}'");
+
+    test(
+        "let Foo; const x = `${Foo}\\${Foo}`;",
+        "var Foo, x = Foo+'\\${Foo}';");
+    test(
+        "let Foo; const x = `\\${Foo}${Foo}`;",
+        "var Foo, x = '\\${Foo}'+Foo;");
+  }
+
+
   /* Helper functions */
 
   private void testSame(String original) {
@@ -2478,12 +2520,10 @@ public final class CommandLineRunnerTest extends TestCase {
     for (int i = 0; i < original.length; i++) {
       inputs.add(SourceFile.fromCode(getFilename(i), original[i]));
     }
-    CompilerOptions options = new CompilerOptions();
-    // ECMASCRIPT5 is the most forgiving.
-    options.setLanguageIn(LanguageMode.ECMASCRIPT5);
+    CompilerOptions options = runner.createOptions();
     compiler.init(externs, inputs, options);
     Node all = compiler.parseInputs();
-    checkState(compiler.getErrorCount() == 0);
+    assertThat(compiler.getErrors()).isEmpty();
     checkNotNull(all);
     Node n = all.getLastChild();
     return n;

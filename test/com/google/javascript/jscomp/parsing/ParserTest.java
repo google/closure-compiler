@@ -2647,6 +2647,11 @@ public final class ParserTest extends BaseJSTypeTestCase {
     testTemplateLiteral("{ `in ${block}` }");
   }
 
+  public void testEscapedTemplateLiteral() {
+    expectFeatures(Feature.TEMPLATE_LITERALS);
+    assertSimpleTemplateLiteral("${escaped}", "`\\${escaped}`");
+  }
+
   public void testTemplateLiteralWithNulChar() {
     expectFeatures(Feature.TEMPLATE_LITERALS);
     mode = LanguageMode.ECMASCRIPT6;

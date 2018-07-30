@@ -2883,6 +2883,70 @@ public final class CodePrinterTest extends CodePrinterTestBase {
         .build());
   }
 
+  public void testEscapeDollarInTemplateLiteralInOutput() {
+    CompilerOptions compilerOptions = new CompilerOptions();
+    compilerOptions.skipAllCompilerPasses();
+    compilerOptions.setLanguageIn(LanguageMode.ECMASCRIPT_2015);
+    compilerOptions.setLanguageOut(LanguageMode.ECMASCRIPT_2015);
+
+    checkWithOriginalName(
+        "let Foo; const x = `${Foo}`;", "let Foo;\nconst x = `${Foo}`;\n", compilerOptions);
+
+    checkWithOriginalName("const x = `\\${Foo}`;", "const x = `\\${Foo}`;\n", compilerOptions);
+
+    checkWithOriginalName(
+        "let Foo; const x = `${Foo}\\${Foo}`;",
+        "let Foo;\nconst x = `${Foo}\\${Foo}`;\n",
+        compilerOptions);
+
+    checkWithOriginalName(
+        "let Foo; const x = `\\${Foo}${Foo}`;",
+        "let Foo;\nconst x = `\\${Foo}${Foo}`;\n",
+        compilerOptions);
+  }
+
+  public void testEscapeDollarInTemplateLiteralEs5Output() {
+    CompilerOptions compilerOptions = new CompilerOptions();
+    compilerOptions.skipAllCompilerPasses();
+    compilerOptions.setLanguageIn(LanguageMode.ECMASCRIPT_2015);
+    compilerOptions.setLanguageOut(LanguageMode.ECMASCRIPT5);
+
+    checkWithOriginalName(
+        "let Foo; const x = `${Foo}`;", "var Foo;\nvar x = '' + Foo;\n", compilerOptions);
+
+    checkWithOriginalName("const x = `\\${Foo}`;", "var x = '${Foo}';\n", compilerOptions);
+
+    checkWithOriginalName(
+        "let Foo; const x = `${Foo}\\${Foo}`;",
+        "var Foo;\nvar x = Foo + '${Foo}';\n",
+        compilerOptions);
+    checkWithOriginalName(
+        "let Foo; const x = `\\${Foo}${Foo}`;",
+        "var Foo;\nvar x = '${Foo}' + Foo;\n",
+        compilerOptions);
+  }
+
+  public void testDoNotEscapeDollarInRegex() {
+    CompilerOptions compilerOptions = new CompilerOptions();
+    compilerOptions.skipAllCompilerPasses();
+    compilerOptions.setLanguageIn(LanguageMode.ECMASCRIPT_2015);
+    compilerOptions.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    checkWithOriginalName("var x = /\\$qux/;", "var x = /\\$qux/;\n", compilerOptions);
+    checkWithOriginalName("var x = /$qux/;", "var x = /$qux/;\n", compilerOptions);
+  }
+
+  public void testDoNotEscapeDollarInStringLiteral() {
+    String code = "var x = '\\$qux';";
+    String expectedCode = "var x = '$qux';\n";
+    CompilerOptions compilerOptions = new CompilerOptions();
+    compilerOptions.skipAllCompilerPasses();
+    compilerOptions.setLanguageIn(LanguageMode.ECMASCRIPT_2015);
+    compilerOptions.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    checkWithOriginalName(code, expectedCode, compilerOptions);
+    checkWithOriginalName("var x = '\\$qux';", "var x = '$qux';\n", compilerOptions);
+    checkWithOriginalName("var x = '$qux';", "var x = '$qux';\n", compilerOptions);
+  }
+
   private void checkWithOriginalName(
       String code, String expectedCode, CompilerOptions compilerOptions) {
     compilerOptions.setCheckSymbols(true);

@@ -1129,7 +1129,7 @@ public class CodeGenerator {
         add("`");
         for (Node c = first; c != null; c = c.getNext()) {
           if (c.isString()) {
-            add(strEscape(c.getString(), "\"", "'", "\\`", "\\\\", false, false));
+            add(strEscape(c.getString(), "\"", "'", "\\`", "\\\\", "\\$", false, false));
           } else {
             // Can't use add() since isWordChar('$') == true and cc would add
             // an extra space.
@@ -1759,12 +1759,14 @@ public class CodeGenerator {
       singlequote = "\'";
     }
 
-    return quote + strEscape(s, doublequote, singlequote, "`", "\\\\", useSlashV, false) + quote;
+    return quote
+        + strEscape(s, doublequote, singlequote, "`", "\\\\", "$", useSlashV, false)
+        + quote;
   }
 
   /** Escapes regular expression */
   String regexpEscape(String s) {
-    return '/' + strEscape(s, "\"", "'", "`", "\\", false, true) + '/';
+    return '/' + strEscape(s, "\"", "'", "`", "\\", "$", false, true) + '/';
   }
 
   /** Helper to escape JavaScript string as well as regular expression */
@@ -1774,6 +1776,7 @@ public class CodeGenerator {
       String singlequoteEscape,
       String backtickEscape,
       String backslashEscape,
+      String dollarEscape,
       boolean useSlashV,
       boolean isRegexp) {
     StringBuilder sb = new StringBuilder(s.length() + 2);
@@ -1797,6 +1800,7 @@ public class CodeGenerator {
         case '\\': sb.append(backslashEscape); break;
         case '\"': sb.append(doublequoteEscape); break;
         case '\'': sb.append(singlequoteEscape); break;
+        case '$': sb.append(dollarEscape); break;
         case '`': sb.append(backtickEscape); break;
 
         // From LineTerminators (ES5 Section 7.3, Table 3)
