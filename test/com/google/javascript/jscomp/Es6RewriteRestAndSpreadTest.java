@@ -452,7 +452,6 @@ public final class Es6RewriteRestAndSpreadTest extends CompilerTestCase {
     test("function f(/** ...number */ ...zero) {}", "function f(/** ...number */ zero) {}");
   }
 
-  // Make sure we get type checking inside the function for the rest parameters.
   public void testUsedRestParameterAtPositionTwoWithTypingOnFunction() {
     test(
         "/** @param {...number} two */ function f(zero, one, ...two) { return two; }",
@@ -465,7 +464,7 @@ public final class Es6RewriteRestAndSpreadTest extends CompilerTestCase {
             "    $jscomp$restParams[$jscomp$restIndex - 2] = arguments[$jscomp$restIndex];",
             "  }",
             "  {",
-            "    let /** @type {!Array<number>} */ two = $jscomp$restParams;",
+            "    let two = $jscomp$restParams;",
             "    return two;",
             "  }",
             "}"));
@@ -482,7 +481,7 @@ public final class Es6RewriteRestAndSpreadTest extends CompilerTestCase {
             "    $jscomp$restParams[$jscomp$restIndex - 2] = arguments[$jscomp$restIndex];",
             "  }",
             "  {",
-            "    let /** @type {!Array<number>} */ two = $jscomp$restParams;",
+            "    let two = $jscomp$restParams;",
             "    return two;",
             "  }",
             "}"));
@@ -499,7 +498,7 @@ public final class Es6RewriteRestAndSpreadTest extends CompilerTestCase {
             "    $jscomp$restParams[$jscomp$restIndex - 2] = arguments[$jscomp$restIndex];",
             "  }",
             "  {",
-            "    let /** @type {!Array<number>} */ two = $jscomp$restParams;",
+            "    let two = $jscomp$restParams;",
             "    return two;",
             "  }",
             "}"));
