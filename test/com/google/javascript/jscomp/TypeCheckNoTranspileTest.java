@@ -3477,6 +3477,24 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
         "class Foo { [Symbol.iterator]() {} }");
   }
 
+  public void testClassExtendsNonNativeObject() {
+    // This is a weird thing to do but should not crash the compiler.
+    testTypes(
+        lines(
+            "class Object {}",
+            "class Foo extends Object {",
+            "  /** @param {string} msg */",
+            "  constructor(msg) {",
+            "    super();",
+            "    this.msg = msg;",
+            "  }",
+            "}"),
+        lines(
+            "attempted re-definition of type Object",
+            "found   : function(new:Object): undefined",
+            "expected: function(new:Object, *=): Object"));
+  }
+
   public void testAsyncFunctionWithoutJSDoc() {
     testTypes("async function f() { return 3; }");
   }
