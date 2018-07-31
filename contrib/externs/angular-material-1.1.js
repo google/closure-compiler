@@ -1017,6 +1017,7 @@ md.$panel = function() {};
  *   onDomRemoved: (Function|undefined),
  *   origin: (!angular.JQLite|!Element|undefined),
  *   onCloseSuccess: (function(!md.$panel.MdPanelRef, string)|undefined),
+ *   groupName: (string|!Array<string>|undefined),
  * }}
  */
 md.$panel.config;
@@ -1038,6 +1039,23 @@ md.$panel.prototype.newPanelPosition = function() {};
 
 /** @return {!md.$panel.MdPanelAnimation} */
 md.$panel.prototype.newPanelAnimation = function() {};
+
+/**
+ * @param {string} groupName
+ * @param {{maxOpen: (number|undefined)}=} opt_config
+ * @return {{
+ *   panels: !Array<!md.$panel.MdPanelRef>,
+ *   openPanels: !Array<!md.$panel.MdPanelRef>,
+ *   maxOpen: number,
+ * }}
+ */
+md.$panel.prototype.newPanelGroup = function(groupName, opt_config) {};
+
+/**
+ * @param {string} groupName
+ * @param {number} maxOpen
+ */
+md.$panel.prototype.setGroupMaxOpen = function(groupName, maxOpen) {};
 
 /**
  * Possible values of xPosition.
