@@ -61,6 +61,7 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -806,7 +807,7 @@ public class CommandLineRunner extends
         usage =
             "Prefixes to replace in ES6 import paths before resolving. "
                 + "module_resolution must be BROWSER_WITH_TRANSFORMED_PREFIXES to take effect.")
-    private Map<String, String> browserResolverPrefixReplacements = ImmutableMap.of();
+    private Map<String, String> browserResolverPrefixReplacements = new HashMap<>();
 
     @Option(
       name = "--package_json_entry_names",
