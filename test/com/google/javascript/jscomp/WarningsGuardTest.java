@@ -305,24 +305,8 @@ public final class WarningsGuardTest extends TestCase {
 
     assertEquals(ERROR, guard.level(makeError("foo", DETERMINISTIC_TEST)));
 
-    assertFalse(guard.disables(DiagnosticGroups.OLD_CHECK_TYPES));
     assertFalse(guard.disables(DiagnosticGroups.CHECK_TYPES));
 
-    assertEnables(guard, DiagnosticGroups.OLD_CHECK_TYPES);
-    assertEnables(guard, DiagnosticGroups.CHECK_TYPES);
-    assertNotEnables(guard, DiagnosticGroups.MESSAGE_DESCRIPTIONS);
-  }
-
-  public void testDiagnosticGuard2() {
-    WarningsGuard guard = new DiagnosticGroupWarningsGuard(
-        DiagnosticGroups.OLD_CHECK_TYPES, ERROR);
-
-    assertEquals(ERROR, guard.level(makeError("foo", DETERMINISTIC_TEST)));
-
-    assertFalse(guard.disables(DiagnosticGroups.OLD_CHECK_TYPES));
-    assertFalse(guard.disables(DiagnosticGroups.CHECK_TYPES));
-
-    assertEnables(guard, DiagnosticGroups.OLD_CHECK_TYPES);
     assertEnables(guard, DiagnosticGroups.CHECK_TYPES);
     assertNotEnables(guard, DiagnosticGroups.MESSAGE_DESCRIPTIONS);
   }
@@ -331,10 +315,8 @@ public final class WarningsGuardTest extends TestCase {
     WarningsGuard guard = new DiagnosticGroupWarningsGuard(
         DiagnosticGroups.CHECK_TYPES, OFF);
 
-    assertTrue(guard.disables(DiagnosticGroups.OLD_CHECK_TYPES));
     assertTrue(guard.disables(DiagnosticGroups.CHECK_TYPES));
 
-    assertNotEnables(guard, DiagnosticGroups.OLD_CHECK_TYPES);
     assertNotEnables(guard, DiagnosticGroups.CHECK_TYPES);
     assertNotEnables(guard, DiagnosticGroups.MESSAGE_DESCRIPTIONS);
   }

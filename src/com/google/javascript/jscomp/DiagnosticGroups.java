@@ -282,8 +282,8 @@ public class DiagnosticGroups {
   // NOTE(dimvar): it'd be nice to add TypedScopeCreator.ALL_DIAGNOSTICS here,
   // but we would first need to cleanup projects that would break because
   // they set --jscomp_error=checkTypes.
-  public static final DiagnosticGroup OLD_CHECK_TYPES =
-      DiagnosticGroups.registerGroup("oldCheckTypes",  // undocumented
+  public static final DiagnosticGroup CHECK_TYPES =
+      DiagnosticGroups.registerGroup("checkTypes",
           TypeValidator.ALL_DIAGNOSTICS,
           TypeCheck.ALL_DIAGNOSTICS,
           FunctionTypeBuilder.ALL_DIAGNOSTICS,
@@ -302,17 +302,8 @@ public class DiagnosticGroups {
   public static final DiagnosticGroup NEW_CHECK_TYPES =
       DiagnosticGroups.registerDeprecatedGroup("newCheckTypes");
 
-  public static final DiagnosticGroup CHECK_TYPES =
-      DiagnosticGroups.registerGroup("checkTypes",
-          OLD_CHECK_TYPES);
-
   public static final DiagnosticGroup NEW_CHECK_TYPES_ALL_CHECKS =
       DiagnosticGroups.registerDeprecatedGroup("newCheckTypesAllChecks");
-
-  static {
-      // Warnings that are absent in closure library
-      DiagnosticGroups.registerDeprecatedGroup("newCheckTypesClosureClean");
-  }
 
   public static final DiagnosticGroup TOO_MANY_TYPE_PARAMS =
       DiagnosticGroups.registerGroup("tooManyTypeParams",
