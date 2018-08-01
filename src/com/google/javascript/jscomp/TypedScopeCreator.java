@@ -46,6 +46,7 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.VOID_TYPE;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Supplier;
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.HashMultiset;
@@ -737,7 +738,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
         Node value = keyNode.getFirstChild();
         String memberName = NodeUtil.getObjectLitKeyName(keyNode);
         JSDocInfo info = keyNode.getJSDocInfo();
-        JSType valueType = getDeclaredType(info, keyNode, value);
+        JSType valueType = getDeclaredType(info, keyNode, value, null);
         JSType keyType =
             objLitType.isEnumType()
                 ? objLitType.toMaybeEnumType().getElementsType()
@@ -813,7 +814,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       // the catch declaration.
       // e.g. `} catch ({message, errno}) {`
       for (Node catchName : NodeUtil.findLhsNodesInNode(n)) {
-        JSType type = getDeclaredType(catchName.getJSDocInfo(), catchName, null);
+        JSType type = getDeclaredType(catchName.getJSDocInfo(), catchName, null, null);
         new SlotDefiner()
             .forDeclarationNode(catchName)
             .forVariableName(catchName.getString())
@@ -831,38 +832,61 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       JSDocInfo info = n.getJSDocInfo();
       // `var` declarations are hoisted, but `let` and `const` are not.
       TypedScope scope = n.isVar() ? currentHoistScope : currentScope;
-      // Get a list of all of the name nodes for all the variables being declared.
-      // This handles even complex destructuring cases.
-      // e.g.
-      // let x = 3, {y, someProp: [ a1, a2 ]} = someObject;
-      // varNames will contain x, y, a1, and a2
-      List<Node> varNames = NodeUtil.findLhsNodesInNode(n);
-      if (varNames.size() == 1) {
-        // e.g.
-        // /** @type {string} */
-        // let x = 'hi';
-        Node singleVarName = varNames.get(0);
-        if (info == null) {
-          // There might be inline JSDoc on the variable name.
-          // e.g.
-          // let /** string */ x = 'hi';
-          info = singleVarName.getJSDocInfo();
+
+      if (n.hasMoreThanOneChild() && info != null) {
+        report(JSError.make(n, MULTIPLE_VAR_DEF));
+      }
+
+      for (Node child : n.children()) {
+        defineVarChild(info, child, scope);
+      }
+    }
+
+    /** Defines a variable declared with `var`, `let`, or `const`. */
+    void defineVarChild(JSDocInfo declarationInfo, Node child, TypedScope scope) {
+      if (child.isName()) {
+        if (declarationInfo == null) {
+          declarationInfo = child.getJSDocInfo();
           // TODO(bradfordcsmith): Report an error if both the declaration node and the name itself
           //     have JSDoc.
         }
-        defineName(singleVarName, scope, info);
+        defineName(child, scope, declarationInfo);
       } else {
-        if (info != null) {
-          // We do not allow a single JSDoc to apply to multiple variables in a single
-          // declaration.
-          report(JSError.make(n, MULTIPLE_VAR_DEF));
-        }
-        // TODO(bradfordcsmith): Should we report an error if there are actually 0 variable names?
-        // This can happen with destructuring patterns.
-        // e.g.
-        // let {} = foo();
-        for (Node nameNode : varNames) {
-          defineName(nameNode, scope, nameNode.getJSDocInfo());
+        checkState(child.isDestructuringLhs(), child);
+        Node pattern = child.getFirstChild();
+        Node value = child.getSecondChild();
+        defineDestructuringPatternInVarDeclaration(
+            pattern, scope, () -> getDeclaredRValueType(/* lValue= */ null, value));
+      }
+    }
+
+    void defineDestructuringPatternInVarDeclaration(
+        Node pattern, TypedScope scope, Supplier<JSType> patternTypeSupplier) {
+      for (Node child : pattern.children()) {
+        DestructuredTarget target =
+            DestructuredTarget.createTarget(typeRegistry, patternTypeSupplier, child);
+        if (target.getNode().isDestructuringPattern()) {
+          defineDestructuringPatternInVarDeclaration(
+              target.getNode(), scope, target.getInferredTypeSupplier());
+        } else {
+          Node name = target.getNode();
+          checkState(name.isName(), "This method is only for declaring variables: %s", name);
+
+          // variable's type
+          JSType type =
+              getDeclaredType(
+                  name.getJSDocInfo(), name, /* rValue= */ null, target.getInferredTypeSupplier());
+          if (type == null) {
+            // The variable's type will be inferred.
+            type = name.isFromExterns() ? unknownType : null;
+          }
+          new SlotDefiner()
+              .forDeclarationNode(name)
+              .forVariableName(name.getString())
+              .inScope(scope)
+              .withType(type)
+              .allowLaterTypeInference(type == null)
+              .defineSlot();
         }
       }
     }
@@ -946,7 +970,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       Node value = name.getFirstChild();
 
       // variable's type
-      JSType type = getDeclaredType(info, name, value);
+      JSType type = getDeclaredType(info, name, value, /* declaredRValueTypeSupplier= */ null);
       if (type == null) {
         // The variable's type will be inferred.
         type = name.isFromExterns() ? unknownType : null;
@@ -1668,14 +1692,20 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
     }
 
     /**
-     * Look for a type declaration on a property assignment
-     * (in an ASSIGN or an object literal key).
+     * Look for a type declaration on a property assignment (in an ASSIGN or an object literal key).
+     *
      * @param info The doc info for this property.
      * @param lValue The l-value node.
-     * @param rValue The node that {@code n} is being initialized to,
-     *     or {@code null} if this is a stub declaration.
+     * @param rValue The node that {@code n} is being initialized to, or {@code null} if this is a
+     *     stub declaration.
+     * @param declaredRValueTypeSupplier A supplier for the declared type of the rvalue, used for
+     *     destructuring declarations where we have to do additional work on the rvalue.
      */
-    JSType getDeclaredType(JSDocInfo info, Node lValue, @Nullable Node rValue) {
+    JSType getDeclaredType(
+        JSDocInfo info,
+        Node lValue,
+        @Nullable Node rValue,
+        @Nullable Supplier<JSType> declaredRValueTypeSupplier) {
       if (info != null && info.hasType()) {
         return getDeclaredTypeInAnnotation(lValue, info);
       } else if (rValue != null
@@ -1698,11 +1728,17 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       }
 
       // Check if this is constant, and if it has a known type.
-      if (NodeUtil.isConstantDeclaration(
-              compiler.getCodingConvention(), info, lValue)) {
+      if (NodeUtil.isConstantDeclaration(compiler.getCodingConvention(), info, lValue)) {
         if (rValue != null) {
           JSType rValueType = getDeclaredRValueType(lValue, rValue);
           maybeDeclareAliasType(lValue, rValue, rValueType);
+          if (rValueType != null) {
+            return rValueType;
+          }
+        } else if (declaredRValueTypeSupplier != null) {
+          JSType rValueType = declaredRValueTypeSupplier.get();
+          // TODO(b/77597706): make this work for destructuring?
+          // maybeDeclareAliasType(lValue, rValue, rValueType);
           if (rValueType != null) {
             return rValueType;
           }
@@ -1722,6 +1758,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
      * as a type name, depending on what other.name is defined to be.
      */
     private void maybeDeclareAliasType(Node lValue, Node rValue, JSType rValueType) {
+      // TODO(b/77597706): handle destructuring here
       if (!lValue.isQualifiedName() || !rValue.isQualifiedName()) {
         return;
       }
@@ -1980,7 +2017,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       // about getting as much type information as possible for them.
 
       // Determining type for #1 + #2 + #3 + #4
-      JSType valueType = getDeclaredType(info, n, rhsValue);
+      JSType valueType = getDeclaredType(info, n, rhsValue, null);
       if (valueType == null && rhsValue != null) {
         // Determining type for #5
         valueType = rhsValue.getJSType();

@@ -2560,8 +2560,16 @@ public final class NodeUtilTest extends TestCase {
     assertIsConstantDeclaration(true, parse("var /** @const */ x = 1;").getFirstFirstChild());
     assertIsConstantDeclaration(false, parse("var x, /** @const */ y = 1;").getFirstFirstChild());
 
-    // TODO(b/77597706): Update this NodeUtil.isConstantDeclaration() to handle destructured
-    //     declarations.
+    assertIsConstantDeclaration(true, getNameNodeFrom("const [a] = [];", "a"));
+    assertIsConstantDeclaration(true, getNameNodeFrom("const [[[a]]] = [];", "a"));
+    assertIsConstantDeclaration(true, getNameNodeFrom("const [a = 1] = [];", "a"));
+    assertIsConstantDeclaration(true, getNameNodeFrom("const [...a] = [];", "a"));
+
+    assertIsConstantDeclaration(true, getNameNodeFrom("const {a} = {};", "a"));
+    assertIsConstantDeclaration(true, getNameNodeFrom("const {a = 1} = {};", "a"));
+    assertIsConstantDeclaration(true, getNameNodeFrom("const {[3]: a} = {};", "a"));
+    assertIsConstantDeclaration(true, getNameNodeFrom("const {a: [a]} = {};", "a"));
+
     // TODO(bradfordcsmith): Add test cases for other coding conventions.
   }
 

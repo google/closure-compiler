@@ -144,15 +144,18 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
   }
 
   public void testVarDeclarationWithJSDocForObjPatWithOneVariable() {
+    // Ignore JSDoc on a destructuring declaration
+    // TODO(b/111938518): warn for this in CheckJSDoc instead of silently ignoring it.
     testSame("/** @type {number} */ const {a} = {a: 1};");
     TypedVar aVar = checkNotNull(globalScope.getVar("a"));
-    assertType(aVar.getType()).toStringIsEqualTo("number");
-    assertFalse(aVar.isTypeInferred());
+    assertType(aVar.getType()).toStringIsEqualTo("?");
   }
 
   public void testVarDeclarationWithJSDocForObjPatWithMultipleVariables() {
-    // We don't allow statement-level JSDoc when multiple variables are declared.
-    testWarning("/** @type {number} */ const {a, b} = {a: 1};", TypeCheck.MULTIPLE_VAR_DEF);
+    // Ignore JSDoc on a destructuring declaration
+    testSame("/** @type {number} */ const {a, b} = {a: 1};");
+    TypedVar aVar = checkNotNull(globalScope.getVar("a"));
+    assertType(aVar.getType()).toStringIsEqualTo("?");
   }
 
   public void testVarDeclarationObjPatShorthandProp() {
@@ -237,11 +240,15 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
             "ns.Foo = function() {}",
             "",
             "const {Foo} = ns;",
-            "// const /** !Foo */ fooInstance = new Foo();"));
+            "const /** !Foo */ fooInstance = new Foo();"));
 
     TypedVar fooVar = checkNotNull(globalScope.getVar("Foo"));
-    // TODO(b/77597706): treat `Foo` as an alias type for `ns.Foo`
-    assertNull(fooVar.getType()); // type should be `function(new:ns.Foo): undefined`
+    assertType(fooVar.getType()).toStringIsEqualTo("function(new:ns.Foo): undefined");
+    assertFalse(fooVar.isTypeInferred());
+
+    TypedVar fooInstanceVar = checkNotNull(globalScope.getVar("fooInstance"));
+    assertType(fooInstanceVar.getType()).toStringIsEqualTo("ns.Foo");
+    assertFalse(fooInstanceVar.isTypeInferred());
   }
 
   public void testConstDeclarationObjectPatternInfersType() {
@@ -251,9 +258,33 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
             "const /** {a: number} */ obj = {a: 3};", // preserve newline
             "const {a} = obj;"));
 
-    // TODO(b/77597706): Infer `a` to have type number
     TypedVar aVar = checkNotNull(globalScope.getVar("a"));
-    assertNull(aVar.getType());
+    assertType(aVar.getType()).toStringIsEqualTo("number");
+    assertFalse(aVar.isTypeInferred());
+  }
+
+  public void testConstDeclarationObjectPatternInfersTypeGivenComputedProperty() {
+    disableTypeInfoValidation();
+    testSame(
+        lines(
+            "const /** !IObject<string, number> */ obj = {a: 3};", // preserve newline
+            "const {['foobar']: a} = obj;"));
+
+    TypedVar aVar = checkNotNull(globalScope.getVar("a"));
+    assertType(aVar.getType()).toStringIsEqualTo("number");
+    assertFalse(aVar.isTypeInferred());
+  }
+
+  public void testConstDeclarationObjectPatternInfersTypeGivenUnknownComputedProperty() {
+    disableTypeInfoValidation();
+    testSame(
+        lines(
+            "var obj = {};", // preserve newline
+            "const {['foobar']: a} = obj;"));
+
+    TypedVar aVar = checkNotNull(globalScope.getVar("a"));
+    assertType(aVar.getType()).toStringIsEqualTo("?");
+    assertFalse(aVar.isTypeInferred());
   }
 
   public void testConstDeclarationArrayPatternInfersType() {
