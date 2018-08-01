@@ -38,6 +38,7 @@
 
 package com.google.javascript.rhino.jstype;
 
+import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.rhino.jstype.TernaryValue.FALSE;
 import static com.google.javascript.rhino.jstype.TernaryValue.TRUE;
@@ -57,9 +58,9 @@ import com.google.javascript.rhino.jstype.JSType.TypePair;
 import com.google.javascript.rhino.testing.Asserts;
 import com.google.javascript.rhino.testing.BaseJSTypeTestCase;
 import com.google.javascript.rhino.testing.MapBasedScope;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 
 // TODO(nicksantos): Split some of this up into per-class unit tests.
 public class JSTypeTest extends BaseJSTypeTestCase {
@@ -5568,26 +5569,31 @@ public class JSTypeTest extends BaseJSTypeTestCase {
   }
 
   public void testRegisterProperty() {
-    int i = 0;
-    List<JSType> allObjects = new ArrayList<>();
-    for (JSType type : types) {
-      String propName = "ALF" + i++;
-      if (type instanceof ObjectType) {
+    // Get a subset of our list of standard types to test containing just ObjectTypes and already
+    // cast to ObjectType.
+    ImmutableList<ObjectType> objectTypes =
+        types
+            .stream()
+            .map(JSType::toMaybeObjectType)
+            .filter(Objects::nonNull)
+            .collect(toImmutableList());
+    assertThat(objectTypes).isNotEmpty();
 
-        ObjectType objType = (ObjectType) type;
-        objType.defineDeclaredProperty(propName, UNKNOWN_TYPE, null);
-        objType.defineDeclaredProperty("allHaz", UNKNOWN_TYPE, null);
+    for (int i = 0; i < objectTypes.size(); i++) {
+      ObjectType type = objectTypes.get(i);
+      String propName = "ALF" + i;
 
-        // We exclude {a: number, b: string} because, for inline record types,
-        // we register their properties on a sentinel object literal in the registry.
-        if (!type.equals(this.recordType)) {
-          assertTypeEquals(type, registry.getGreatestSubtypeWithProperty(type, propName));
-        }
+      type.defineDeclaredProperty(propName, UNKNOWN_TYPE, null);
+      type.defineDeclaredProperty("allHaz", UNKNOWN_TYPE, null);
 
-        assertTypeEquals(NO_TYPE,
-            registry.getGreatestSubtypeWithProperty(type, "GRRR"));
-        allObjects.add(type);
+      // We exclude {a: number, b: string} because, for inline record types,
+      // we register their properties on a sentinel object literal in the registry.
+      if (!type.equals(this.recordType)) {
+        assertTypeEquals(type, registry.getGreatestSubtypeWithProperty(type, propName));
       }
+
+      // We don't define property "GRRR" on any of our ObjectTypes.
+      assertTypeEquals(NO_TYPE, registry.getGreatestSubtypeWithProperty(type, "GRRR"));
     }
   }
 
