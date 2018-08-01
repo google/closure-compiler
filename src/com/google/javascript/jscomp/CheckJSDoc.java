@@ -481,16 +481,21 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements HotSwapCompi
           //   function f(/** !Array */ [x]) {}
           valid = n.getParent().isParamList();
           break;
-        // Casts, variable declarations, exports, and Object literal properties are valid.
+        // Casts, exports, and Object literal properties are valid.
         case CAST:
-        case VAR:
-        case LET:
-        case CONST:
         case EXPORT:
         case STRING_KEY:
         case GETTER_DEF:
         case SETTER_DEF:
           valid = true;
+          break;
+        // Declarations are valid iff they only contain simple names
+        //   /** @type {number} */ var x = 3; // ok
+        //   /** @type {number} */ var {x} = obj; // forbidden
+        case VAR:
+        case LET:
+        case CONST:
+          valid = !NodeUtil.isDestructuringDeclaration(n);
           break;
         // Property assignments are valid, if at the root of an expression.
         case ASSIGN: {

@@ -106,6 +106,14 @@ public final class CheckJsDocTest extends CompilerTestCase {
     testWarning("var /** {x: number} */ {x} = someObj;", CheckJSDoc.MISPLACED_ANNOTATION);
   }
 
+  public void testInvalidJsDocOnDestructuringDeclaration() {
+    // Type annotations are not allowed on any declaration containing >=1 destructuring pattern.
+    testWarning("/** @type {number} */ const [a] = arr;", CheckJSDoc.MISPLACED_ANNOTATION);
+    testWarning("/** @type {number} */ const {a} = obj;", CheckJSDoc.MISPLACED_ANNOTATION);
+    testWarning("/** @type {number} */ const a = 1, [b] = arr;", CheckJSDoc.MISPLACED_ANNOTATION);
+    testWarning("/** @type {number} */ const a = 1, {b} = obj;", CheckJSDoc.MISPLACED_ANNOTATION);
+  }
+
   public void testInlineJsDoc_ES6() {
     testSame("function f(/** string */ x) {}");
     testSame("function f(/** number= */ x=3) {}");
