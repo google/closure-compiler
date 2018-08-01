@@ -29,7 +29,8 @@ import java.util.List;
 import javax.annotation.Nullable;
 
 /**
- * Helpers to extract behaviors from Polymer element declarations.
+ * Finds the Polymer behavior definitions associated with Polymer element definitions.
+ * @see https://www.polymer-project.org/1.0/docs/devguide/behaviors
  */
 final class PolymerBehaviorExtractor {
 
@@ -128,12 +129,12 @@ final class PolymerBehaviorExtractor {
    * Resolve an identifier, which is presumed to refer to a Polymer Behavior declaration, using the
    * global namespace. Recurses to resolve assignment chains of any length.
    *
-   * @param nameNode The NAME or GETPROP node containing the identifier.
+   * @param nameNode The NAME, GETPROP, or CAST node containing the identifier.
    * @return The behavior declaration node, or null if it couldn't be resolved.
    */
   @Nullable
   private ResolveBehaviorNameResult resolveBehaviorName(Node nameNode) {
-    String name = nameNode.getQualifiedName();
+    String name = getQualifiedNameThroughCast(nameNode);
     if (name == null) {
       return null;
     }
@@ -200,6 +201,29 @@ final class PolymerBehaviorExtractor {
     }
 
     return functionsToCopy.build();
+  }
+
+  /**
+   * Similar to {@link Node#getQualifiedName} but also handles CAST nodes. For example, given a
+   * GETPROP representing "(/** @type {?} *\/ (x)).y.z" returns "x.y.z". Returns null if node is
+   * not a NAME, GETPROP, or CAST. See b/64389806 for Polymer-specific context.
+   */
+  @Nullable
+  private static String getQualifiedNameThroughCast(Node node) {
+    if (node.isName()) {
+      String name = node.getString();
+      return name.isEmpty() ? null : name;
+    } else if (node.isGetProp()) {
+      String left = getQualifiedNameThroughCast(node.getFirstChild());
+      if (left == null) {
+        return null;
+      }
+      String right = node.getLastChild().getString();
+      return left + "." + right;
+    } else if (node.isCast()) {
+      return getQualifiedNameThroughCast(node.getFirstChild());
+    }
+    return null;
   }
 
   /**

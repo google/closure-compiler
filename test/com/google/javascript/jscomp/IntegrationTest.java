@@ -901,6 +901,36 @@ public final class IntegrationTest extends IntegrationTestCase {
     assertThat(compiler.getWarnings()).isEmpty();
   }
 
+  /** See b/64389806. */
+  public void testPolymerBehaviorWithTypeCast() {
+    CompilerOptions options = createCompilerOptions();
+    options.setPolymerVersion(2);
+    options.setWarningLevel(DiagnosticGroups.CHECK_TYPES, CheckLevel.ERROR);
+    options.declaredGlobalExternsOnWindow = true;
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    addPolymerExterns();
+
+    test(
+        options,
+        lines(
+            "Polymer({",
+            "  is: 'foo-element',",
+            "  behaviors: [",
+            "    ((/** @type {?} */ (Polymer))).SomeBehavior",
+            "  ]",
+            "});",
+            "/** @polymerBehavior */",
+            "Polymer.SomeBehavior = {};"),
+        lines(
+            "var FooElementElement=function(){};",
+            "Polymer({",
+            "  is:\"foo-element\",",
+            "  behaviors:[Polymer.SomeBehavior]",
+            "});",
+            "Polymer.SomeBehavior={}"));
+  }
+
   public void testPreservedForwardDeclare() {
     CompilerOptions options = createCompilerOptions();
     WarningLevel.VERBOSE.setOptionsForWarningLevel(options);
