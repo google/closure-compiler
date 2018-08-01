@@ -22,7 +22,7 @@ import static com.google.javascript.jscomp.parsing.Config.StrictMode.SLOPPY;
 import static com.google.javascript.jscomp.parsing.Config.StrictMode.STRICT;
 import static com.google.javascript.jscomp.parsing.JsDocInfoParser.BAD_TYPE_WIKI_LINK;
 import static com.google.javascript.jscomp.parsing.parser.testing.FeatureSetSubject.assertFS;
-import static com.google.javascript.jscomp.testing.NodeSubject.assertNode;
+import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;

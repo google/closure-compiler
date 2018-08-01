@@ -23,7 +23,7 @@ import static com.google.javascript.jscomp.FunctionArgumentInjector.getFunctionC
 import static com.google.javascript.jscomp.FunctionArgumentInjector.inject;
 import static com.google.javascript.jscomp.FunctionArgumentInjector.maybeAddTempsForCallArguments;
 import static com.google.javascript.jscomp.NodeUtil.getFunctionBody;
-import static com.google.javascript.jscomp.testing.NodeSubject.assertNode;
+import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableMap;
