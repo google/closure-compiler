@@ -71,7 +71,11 @@ public final class NodeSubject extends Subject<NodeSubject, Node> {
     super(failureMetadata, node);
   }
 
-  public void isEqualTo(Node node) {
+  @Override
+  public void isEqualTo(Object o) {
+    check().that(actual()).isInstanceOf(Node.class);
+    Node node = (Node) o;
+
     check("checkTreeEquals(%s)", node).that(actual().checkTreeEquals(node)).isNull();
   }
 
