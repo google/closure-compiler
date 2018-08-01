@@ -240,7 +240,6 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
   }
 
   public void testConstDeclarationObjectPatternInfersType_forAliasedConstructor() {
-    disableTypeInfoValidation();
     testSame(
         lines(
             "const ns = {};",
@@ -260,7 +259,6 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
   }
 
   public void testConstDeclarationObjectPatternInfersType() {
-    disableTypeInfoValidation();
     testSame(
         lines(
             "const /** {a: number} */ obj = {a: 3};", // preserve newline
@@ -272,7 +270,6 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
   }
 
   public void testConstDeclarationObjectPatternInfersTypeGivenComputedProperty() {
-    disableTypeInfoValidation();
     testSame(
         lines(
             "const /** !IObject<string, number> */ obj = {a: 3};", // preserve newline
@@ -284,7 +281,6 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
   }
 
   public void testConstDeclarationObjectPatternInfersTypeGivenUnknownComputedProperty() {
-    disableTypeInfoValidation();
     testSame(
         lines(
             "var obj = {};", // preserve newline
@@ -296,16 +292,14 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
   }
 
   public void testConstDeclarationArrayPatternInfersType() {
-    disableTypeInfoValidation();
     testSame(
         lines(
             "const /** !Iterable<number> */ arr = [1, 2, 3];", // preserve newline
             "const [a] = arr;"));
 
     TypedVar aVar = checkNotNull(globalScope.getVar("a"));
-    assertType(aVar.getType()).toStringIsEqualTo("?");
-    // TODO(b/77597706): Infer `a` to have declared type number
-    assertTrue(aVar.isTypeInferred());
+    assertType(aVar.getType()).toStringIsEqualTo("number");
+    assertFalse(aVar.isTypeInferred());
   }
 
   // TODO(bradfordcsmith): Add Object rest test case.
@@ -3376,5 +3370,3 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     return (ObjectType) registry.getNativeType(type);
   }
 }
-
-

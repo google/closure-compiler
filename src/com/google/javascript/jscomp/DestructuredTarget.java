@@ -52,15 +52,20 @@ final class DestructuredTarget {
    */
   private final Supplier<JSType> patternTypeSupplier;
 
+  /** Whether this is a rest key */
+  private final boolean isRest;
+
   private DestructuredTarget(
       Node node,
       @Nullable Node objectPatternKey,
       JSTypeRegistry registry,
-      Supplier<JSType> patternTypeSupplier) {
+      Supplier<JSType> patternTypeSupplier,
+      boolean isRest) {
     this.node = node;
     this.objectPatternKey = objectPatternKey;
     this.registry = registry;
     this.patternTypeSupplier = patternTypeSupplier;
+    this.isRest = isRest;
   }
 
   @Nullable
@@ -86,6 +91,7 @@ final class DestructuredTarget {
     checkArgument(destructuringChild.getParent().isDestructuringPattern(), destructuringChild);
     final Node node;
     Node objectLiteralKey = null;
+    boolean isRest = false;
     switch (destructuringChild.getToken()) {
       case STRING_KEY:
         // const {objectLiteralKey: x} = ...
@@ -110,14 +116,19 @@ final class DestructuredTarget {
         break;
 
       case DEFAULT_VALUE: // const [x = 3] = ...
+        node = destructuringChild.getFirstChild();
+        break;
+
       case REST: // const [...x] = ...
         node = destructuringChild.getFirstChild();
+        isRest = true;
         break;
 
       default:
         throw new IllegalStateException("Unexpected parameter node " + destructuringChild);
     }
-    return new DestructuredTarget(node, objectLiteralKey, registry, destructuringPatternType);
+    return new DestructuredTarget(
+        node, objectLiteralKey, registry, destructuringPatternType, isRest);
   }
 
   Supplier<JSType> getInferredTypeSupplier() {
@@ -125,8 +136,11 @@ final class DestructuredTarget {
   }
 
   JSType inferType() {
-    // TODO(b/203401365): handle array patterns
-    return objectPatternKey != null ? inferObjectPatternKeyType() : null;
+    if (objectPatternKey != null) {
+      return inferObjectPatternKeyType();
+    } else {
+      return inferArrayPatternTargetType();
+    }
   }
 
   private JSType inferObjectPatternKeyType() {
@@ -151,5 +165,21 @@ final class DestructuredTarget {
     }
 
     // TODO(b/77597706): handle default values
+  }
+
+  private JSType inferArrayPatternTargetType() {
+    JSType patternType = patternTypeSupplier.get();
+
+    // e.g. get `number` from `!Iterable<number>`
+    JSType templateTypeOfIterable =
+        patternType.getInstantiatedTypeArgument(registry.getNativeType(JSTypeNative.ITERABLE_TYPE));
+
+    if (isRest) {
+      // return `!Array<number>`
+      return registry.createTemplatizedType(
+          registry.getNativeObjectType(JSTypeNative.ARRAY_TYPE), templateTypeOfIterable);
+    } else {
+      return templateTypeOfIterable;
+    }
   }
 }

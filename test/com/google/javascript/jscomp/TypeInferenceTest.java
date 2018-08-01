@@ -1866,6 +1866,85 @@ public final class TypeInferenceTest extends TestCase {
     assertTypeOfExpression("X").toStringIsEqualTo("number");
   }
 
+  public void testArrayDestructuringDeclaration() {
+    inFunction(
+        lines(
+            "const /** !Iterable<number> */ numbers = [1, 2, 3];",
+            "let [x, y] = numbers;",
+            "X: x",
+            "Y: y"));
+
+    assertTypeOfExpression("X").toStringIsEqualTo("number");
+    assertTypeOfExpression("Y").toStringIsEqualTo("number");
+  }
+
+  public void testArrayDestructuringDeclarationWithRest() {
+    inFunction(
+        lines(
+            "const /** !Iterable<number> */ numbers = [1, 2, 3];",
+            "let [x, ...y] = numbers;",
+            "X: x",
+            "Y: y"));
+
+    assertTypeOfExpression("X").toStringIsEqualTo("number");
+    assertTypeOfExpression("Y").toStringIsEqualTo("Array<number>");
+  }
+
+  public void testArrayDestructuringDeclarationWithNestedArrayPattern() {
+    inFunction(
+        lines(
+            "const /** !Iterable<!Iterable<number>> */ numbers = [[1, 2, 3]];",
+            "let [[x], y] = numbers;",
+            "X: x",
+            "Y: y"));
+
+    assertTypeOfExpression("X").toStringIsEqualTo("number");
+    assertTypeOfExpression("Y").toStringIsEqualTo("Iterable<number>");
+  }
+
+  public void testArrayDestructuringDeclarationWithNestedObjectPattern() {
+    inFunction(
+        lines(
+            "const /** !Iterable<{x: number}> */ numbers = [{x: 3}, {x: 4}];",
+            "let [{x}, {x: y}] = numbers;",
+            "X: x",
+            "Y: y"));
+
+    assertTypeOfExpression("X").toStringIsEqualTo("number");
+    assertTypeOfExpression("Y").toStringIsEqualTo("number");
+  }
+
+  public void testArrayDestructuringDeclarationWithNonIterableRhs() {
+    // TODO(lharker): make sure TypeCheck warns on this
+    inFunction("let [x] = 3; X: x;");
+
+    assertTypeOfExpression("X").toStringIsEqualTo("?");
+  }
+
+  public void testArrayDestructuringAssignWithGetProp() {
+    inFunction(
+        lines(
+            "const ns = {};", //
+            "const /** !Iterable<number> */ numbers = [1, 2, 3];",
+            "[ns.x] = numbers;",
+            "NSX: ns.x;"));
+
+    assertTypeOfExpression("NSX").toStringIsEqualTo("number");
+  }
+
+  public void testArrayDestructuringAssignWithGetElem() {
+    // we don't update the scope on an assignment to a getelem, so this test just verifies that
+    // a) type inference doesn't crash and b) type info validation passes.
+    inFunction(
+        lines(
+            "const arr = [];", //
+            "const /** !Iterable<number> */ numbers = [1, 2, 3];",
+            "[arr[1]] = numbers;",
+            "ARR1: arr[1];"));
+
+    assertTypeOfExpression("ARR1").toStringIsEqualTo("?");
+  }
+
   private ObjectType getNativeObjectType(JSTypeNative t) {
     return registry.getNativeObjectType(t);
   }
