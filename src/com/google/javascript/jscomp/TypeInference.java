@@ -255,6 +255,9 @@ class TypeInference
             if (NodeUtil.isNameDeclaration(item)) {
               item = item.getFirstChild();
             }
+            if (item.isDestructuringLhs()) {
+              item = item.getFirstChild();
+            }
             if (source.isForIn()) {
               // item is assigned a property name, so its type should be string.
               if (item.isName()) {
@@ -279,8 +282,13 @@ class TypeInference
               JSType newType = objType.getInstantiatedTypeArgument(getNativeType(ITERABLE_TYPE));
 
               // Note that `item` can be an arbitrary LHS expression we need to check.
-              informed = traverse(item, informed);
-              informed = updateScopeForAssignment(informed, item, item.getJSType(), newType);
+              if (item.isDestructuringPattern()) {
+                // for (const {x, y} of data) {
+                informed = traverseDestructuringPattern(item, informed, newType);
+              } else {
+                informed = traverse(item, informed);
+                informed = updateScopeForAssignment(informed, item, item.getJSType(), newType);
+              }
             }
             newScope = informed;
             break;
@@ -518,6 +526,9 @@ class TypeInference
       case VAR:
       case LET:
       case CONST:
+        scope = traverseDeclaration(n, scope);
+        break;
+
       case THROW:
         scope = traverseChildren(n, scope);
         break;
@@ -687,13 +698,20 @@ class TypeInference
   private FlowScope traverseAssign(Node n, FlowScope scope) {
     Node target = n.getFirstChild();
     Node value = n.getLastChild();
-    scope = traverseChildren(n, scope);
+    if (target.isDestructuringPattern()) {
+      scope = traverse(value, scope);
+      JSType valueType = getJSType(value);
+      n.setJSType(valueType);
+      return traverseDestructuringPattern(target, scope, valueType);
+    } else {
+      scope = traverseChildren(n, scope);
 
-    JSType targetType = target.getJSType();
-    JSType valueType = getJSType(value);
-    n.setJSType(valueType);
+      JSType targetType = target.getJSType();
+      JSType valueType = getJSType(value);
+      n.setJSType(valueType);
 
-    return updateScopeForAssignment(scope, target, targetType, valueType);
+      return updateScopeForAssignment(scope, target, targetType, valueType);
+    }
   }
 
   @CheckReturnValue
@@ -768,6 +786,7 @@ class TypeInference
         TypedVar var = getDeclaredVar(scope, varName);
         JSType varType = var == null ? null : var.getType();
         boolean isVarDeclaration =
+            // TODO(b/77597706): this won't work for destructuring declarations
             target.hasChildren()
                 && varType != null
                 && !var.isTypeInferred()
@@ -961,6 +980,56 @@ class TypeInference
       }
     }
     return false;
+  }
+
+  private FlowScope traverseDeclaration(Node n, FlowScope scope) {
+    for (Node declarationChild : n.children()) {
+      scope = traverseDeclarationChild(declarationChild, scope);
+    }
+
+    return scope;
+  }
+
+  private FlowScope traverseDeclarationChild(Node n, FlowScope scope) {
+    if (n.isName()) {
+      return traverseName(n, scope);
+    }
+
+    checkState(n.isDestructuringLhs(), n);
+    scope = traverse(n.getSecondChild(), scope);
+    return traverseDestructuringPattern(n.getFirstChild(), scope, getJSType(n.getSecondChild()));
+  }
+
+  /**
+   * Traverses a possibly nested destructuring pattern in an assignment or declaration, updating the
+   * scope with all the lvalues in the pattern.
+   *
+   * @param {patternType} The pattern's inferred type, e.g. `{a: number}` for `let {a} = {a: 3};`
+   */
+  private FlowScope traverseDestructuringPattern(
+      Node pattern, FlowScope scope, JSType patternType) {
+    checkArgument(pattern.isDestructuringPattern(), pattern);
+    checkNotNull(patternType);
+    for (Node key : pattern.children()) {
+      DestructuredTarget target = DestructuredTarget.createTarget(registry, patternType, key);
+      Node targetNode = target.getNode();
+      JSType targetType = target.inferType();
+      targetType = targetType != null ? targetType : getNativeType(UNKNOWN_TYPE);
+
+      if (target.hasComputedProperty()) {
+        scope = traverse(target.getComputedProperty(), scope);
+      }
+
+      if (targetNode.isDestructuringPattern()) {
+        // traverse into nested patterns
+        scope = traverseDestructuringPattern(targetNode, scope, targetType);
+      } else {
+        // declare in the scope
+        scope = traverse(targetNode, scope);
+        scope = updateScopeForAssignment(scope, targetNode, targetNode.getJSType(), targetType);
+      }
+    }
+    return scope;
   }
 
   private FlowScope traverseName(Node n, FlowScope scope) {

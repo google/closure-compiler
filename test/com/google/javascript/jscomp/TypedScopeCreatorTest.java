@@ -144,18 +144,26 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
   }
 
   public void testVarDeclarationWithJSDocForObjPatWithOneVariable() {
-    // Ignore JSDoc on a destructuring declaration
-    // TODO(b/111938518): warn for this in CheckJSDoc instead of silently ignoring it.
-    testSame("/** @type {number} */ const {a} = {a: 1};");
+    // Ignore JSDoc on a destructuring declaration, and just infer the type.
+    // CheckJSDoc will issue a warning for the @type annotation.
+    testSame("/** @type {string} */ var {a} = {a: 1};");
     TypedVar aVar = checkNotNull(globalScope.getVar("a"));
-    assertType(aVar.getType()).toStringIsEqualTo("?");
+    assertType(aVar.getType()).toStringIsEqualTo("number");
+    assertTrue(aVar.isTypeInferred());
   }
 
   public void testVarDeclarationWithJSDocForObjPatWithMultipleVariables() {
     // Ignore JSDoc on a destructuring declaration
-    testSame("/** @type {number} */ const {a, b} = {a: 1};");
+    // CheckJSDoc will issue a warning for the @type annotation.
+    testSame("/** @type {string} */ var {a, b} = {a: 1};");
     TypedVar aVar = checkNotNull(globalScope.getVar("a"));
-    assertType(aVar.getType()).toStringIsEqualTo("?");
+    assertType(aVar.getType()).toStringIsEqualTo("number");
+    assertTrue(aVar.isTypeInferred());
+
+    // TODO(b/77597706): add a test to TypeCheck verifying we issue a missing property warning for b
+    TypedVar bVar = checkNotNull(globalScope.getVar("b"));
+    assertType(bVar.getType()).toStringIsEqualTo("?");
+    assertTrue(bVar.isTypeInferred());
   }
 
   public void testVarDeclarationObjPatShorthandProp() {
@@ -294,9 +302,10 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
             "const /** !Iterable<number> */ arr = [1, 2, 3];", // preserve newline
             "const [a] = arr;"));
 
-    // TODO(b/77597706): Infer `a` to have type number
     TypedVar aVar = checkNotNull(globalScope.getVar("a"));
-    assertNull(aVar.getType());
+    assertType(aVar.getType()).toStringIsEqualTo("?");
+    // TODO(b/77597706): Infer `a` to have declared type number
+    assertTrue(aVar.isTypeInferred());
   }
 
   // TODO(bradfordcsmith): Add Object rest test case.
@@ -3367,4 +3376,5 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     return (ObjectType) registry.getNativeType(type);
   }
 }
+
 

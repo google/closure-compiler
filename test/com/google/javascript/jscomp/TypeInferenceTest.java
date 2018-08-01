@@ -39,6 +39,7 @@ import static com.google.javascript.rhino.testing.TypeSubject.assertType;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.CodingConvention.AssertionFunctionSpec;
 import com.google.javascript.jscomp.DataFlowAnalysis.BranchedFlowState;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
@@ -1768,6 +1769,101 @@ public final class TypeInferenceTest extends TestCase {
     assertTypeOfExpression("N_IF_TRUE").toStringIsEqualTo("number");
     assertTypeOfExpression("N_IF_FALSE").toStringIsEqualTo("null");
     assertTypeOfExpression("N_FINAL").toStringIsEqualTo("(null|number)");
+  }
+
+  public void testObjectDestructuringDeclarationInference() {
+    JSType recordType =
+        registry.createRecordType(
+            ImmutableMap.of(
+                "x", getNativeType(STRING_TYPE),
+                "y", getNativeType(NUMBER_TYPE)));
+    assuming("obj", recordType);
+
+    inFunction(
+        lines(
+            "let {x, y} = obj; ", // preserve newline
+            "X: x;",
+            "Y: y;"));
+    assertTypeOfExpression("X").toStringIsEqualTo("string");
+    assertTypeOfExpression("Y").toStringIsEqualTo("number");
+
+    assertScopeEnclosing("X").declares("x").withTypeThat().toStringIsEqualTo("string");
+  }
+
+  public void testObjectDestructuringDeclarationInferenceWithUnknownProperty() {
+    JSType recordType = registry.createRecordType(ImmutableMap.of());
+    assuming("obj", recordType);
+
+    inFunction(
+        lines(
+            "let {x} = obj; ", // preserve newline
+            "X: x;"));
+    assertTypeOfExpression("X").toStringIsEqualTo("?");
+  }
+
+  public void testObjectDestructuringDoesInferenceWithinComputedProp() {
+    inFunction(
+        lines(
+            "let y = 'foobar'; ", // preserve newline
+            "let {[y = 3]: z} = {};",
+            "Y: y",
+            "Z: z"));
+
+    assertTypeOfExpression("Y").toStringIsEqualTo("number");
+    assertTypeOfExpression("Z").toStringIsEqualTo("?");
+  }
+
+  public void testObjectDestructuringUsesIObjectTypeForComputedProp() {
+    inFunction(
+        lines(
+            "let /** !IObject<string, number> */ myObj = {['foo']: 3}; ", // preserve newline
+            "let {[42]: x} = myObj;",
+            "X: x"));
+
+    assertTypeOfExpression("X").toStringIsEqualTo("number");
+  }
+
+  public void testObjectDestructuringDeclarationWithNestedPattern() {
+    inFunction(
+        lines(
+            "let /** {a: {b: number}} */ obj = {a: {b: 3}};", //
+            "let {a: {b: x}} = obj;",
+            "X: x"));
+
+    assertTypeOfExpression("X").toStringIsEqualTo("number");
+  }
+
+  public void testObjectDestructuringAssignmentToQualifiedName() {
+    inFunction(
+        lines(
+            "const ns = {};", //
+            "({x: ns.x} = {x: 3});",
+            "X: ns.x;"));
+
+    assertTypeOfExpression("X").toStringIsEqualTo("number");
+  }
+
+  public void testObjectDestructuringDeclarationInForOf() {
+    inFunction(
+        lines(
+            "const /** !Iterable<{x: number}> */ data = [{x: 3}];", //
+            "for (let {x} of data) {",
+            "  X: x;",
+            "}"));
+
+    assertTypeOfExpression("X").toStringIsEqualTo("number");
+  }
+
+  public void testObjectDestructuringAssignInForOf() {
+    inFunction(
+        lines(
+            "const /** !Iterable<{x: number}> */ data = [{x: 3}];", //
+            "var x;",
+            "for ({x} of data) {",
+            "  X: x;",
+            "}"));
+
+    assertTypeOfExpression("X").toStringIsEqualTo("number");
   }
 
   private ObjectType getNativeObjectType(JSTypeNative t) {

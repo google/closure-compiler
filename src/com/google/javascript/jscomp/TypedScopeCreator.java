@@ -856,7 +856,11 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
         Node pattern = child.getFirstChild();
         Node value = child.getSecondChild();
         defineDestructuringPatternInVarDeclaration(
-            pattern, scope, () -> getDeclaredRValueType(/* lValue= */ null, value));
+            pattern,
+            scope,
+            // Note that value will be null if we are in an enhanced for loop
+            //   for (const {x, y} of data) {
+            () -> value != null ? getDeclaredRValueType(/* lValue= */ null, value) : unknownType);
       }
     }
 

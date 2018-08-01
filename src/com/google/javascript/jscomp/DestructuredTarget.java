@@ -63,8 +63,22 @@ final class DestructuredTarget {
     this.patternTypeSupplier = patternTypeSupplier;
   }
 
+  @Nullable
+  Node getComputedProperty() {
+    return hasComputedProperty() ? objectPatternKey.getFirstChild() : null;
+  }
+
+  boolean hasComputedProperty() {
+    return objectPatternKey != null && objectPatternKey.isComputedProp();
+  }
+
   public Node getNode() {
     return node;
+  }
+
+  static DestructuredTarget createTarget(
+      JSTypeRegistry registry, JSType destructuringPatternType, Node destructuringChild) {
+    return createTarget(registry, () -> destructuringPatternType, destructuringChild);
   }
 
   static DestructuredTarget createTarget(
@@ -90,6 +104,8 @@ final class DestructuredTarget {
       case OBJECT_PATTERN: // const [{x}] = ...
       case ARRAY_PATTERN: // const [[x]] = ...
       case NAME: // const [x] = ...
+      case GETELEM: // [obj[3]] = ...
+      case GETPROP: // [this.x] = ...
         node = destructuringChild;
         break;
 
