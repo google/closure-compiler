@@ -89,6 +89,23 @@ $jscomp.initSymbolIterator = function() {
 
 
 /**
+ * Initializes Symbol.asyncIterator (if it's not already defined)
+ * @suppress {reportUnknownTypes}
+ */
+$jscomp.initSymbolAsyncIterator = function() {
+  $jscomp.initSymbol();
+  var symbolAsyncIterator = $jscomp.global['Symbol'].asyncIterator;
+  if (!symbolAsyncIterator) {
+    symbolAsyncIterator = $jscomp.global['Symbol'].asyncIterator =
+        $jscomp.global['Symbol']('asyncIterator');
+  }
+
+  // Only need to do this once. All future calls are no-ops.
+  $jscomp.initSymbolAsyncIterator = function() {};
+};
+
+
+/**
  * Returns an iterator from the given array.
  * @param {!Array<T>} array
  * @return {!IteratorIterable<T>}

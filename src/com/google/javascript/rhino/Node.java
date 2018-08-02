@@ -2637,6 +2637,11 @@ public class Node implements Serializable {
     return isFunction() && getBooleanProp(ASYNC_FN);
   }
 
+  /** Returns whether this is an async generator function node. */
+  public final boolean isAsyncGeneratorFunction() {
+    return isAsyncFunction() && isGeneratorFunction();
+  }
+
   /**
    * Sets whether this node is a generator node. This
    * method is meaningful only on {@link Token#FUNCTION} or

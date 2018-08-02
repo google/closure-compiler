@@ -5346,6 +5346,14 @@ public final class IntegrationTest extends IntegrationTestCase {
   public void testAsyncIter() {
     CompilerOptions options = createCompilerOptions();
     options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT);
+    useNoninjectingCompiler = true;
+    ImmutableList.Builder<SourceFile> externsList = ImmutableList.builder();
+    externsList.addAll(externs);
+    externsList.add(
+        SourceFile.fromCode(
+            "extraExterns", "var $jscomp = {}; Symbol.iterator; Symbol.asyncIterator;"));
+    externs = externsList.build();
+
     options.setLanguageOut(LanguageMode.ECMASCRIPT_NEXT);
     testSame(options, "async function* foo() {}");
     testSame(options, "for await (a of b) {}");
@@ -5354,7 +5362,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     test(
         options,
         "async function* foo() {}",
-        RewriteAsyncIteration.CANNOT_CONVERT_ASYNC_ITERATION_YET);
+        "function foo() { return new $jscomp.AsyncGeneratorWrapper((function*(){})()); }");
 
     test(
         options,
