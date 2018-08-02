@@ -285,7 +285,7 @@ public class JsfileParser {
     info.requires.addAll(module.requiredGoogNamespaces());
     info.typeRequires.addAll(module.requiredTypes());
     info.testonly = module.isTestOnly();
-    info.importedModules.addAll(module.es6ImportSpecifiers());
+    info.importedModules.addAll(module.es6ImportSpecifiers().elementSet());
     info.goog = module.usesClosure();
     return info;
   }

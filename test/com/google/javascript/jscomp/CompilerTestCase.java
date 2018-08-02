@@ -2362,8 +2362,7 @@ public abstract class CompilerTestCase extends TestCase {
 
     @Override
     public String toString() {
-      return String.valueOf(diagnostic.key)
-          + (messagePredicate != null ? " with message " + messagePredicate : "");
+      return diagnostic.key + (messagePredicate != null ? " with message " + messagePredicate : "");
     }
   }
 

@@ -4580,8 +4580,8 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     //     STRING string
     JSDocInfo info = parse("@type {Set<!string>} */");
     Node root = info.getType().getRoot();
-    checkTokenPosition(root.getFirstChild().getFirstChild(), Token.BANG, 0, 11);
-    checkTokenPosition(root.getFirstChild().getFirstChild().getFirstChild(), Token.STRING, 0, 12);
+    checkTokenPosition(root.getFirstFirstChild(), Token.BANG, 0, 11);
+    checkTokenPosition(root.getFirstChild().getFirstFirstChild(), Token.STRING, 0, 12);
   }
 
   public void testParseTokenPositions7() {
@@ -4595,15 +4595,10 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
      JSDocInfo info = parse("@type {?{foo: !Object}} */");
     Node root = info.getType().getRoot();
     checkTokenPosition(root, Token.QMARK, 0, 7);
+    checkTokenPosition(root.getFirstFirstChild().getFirstFirstChild(), Token.STRING_KEY, 0, 9);
+    checkTokenPosition(root.getFirstChild().getFirstFirstChild().getLastChild(), Token.BANG, 0, 14);
     checkTokenPosition(
-        root.getFirstChild().getFirstChild().getFirstChild().getFirstChild(),
-        Token.STRING_KEY,
-        0,
-        9);
-    checkTokenPosition(
-        root.getFirstChild().getFirstChild().getFirstChild().getLastChild(), Token.BANG, 0, 14);
-    checkTokenPosition(
-        root.getFirstChild().getFirstChild().getFirstChild().getLastChild().getFirstChild(),
+        root.getFirstChild().getFirstFirstChild().getLastChild().getFirstChild(),
         Token.STRING,
         0,
         15);
@@ -4618,8 +4613,8 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     //     STRING string
     JSDocInfo info = parse("@type {function(!Object): ?string} */");
     Node root = info.getType().getRoot();
-    checkTokenPosition(root.getFirstChild().getFirstChild(), Token.BANG, 0, 16);
-    checkTokenPosition(root.getFirstChild().getFirstChild().getFirstChild(), Token.STRING, 0, 17);
+    checkTokenPosition(root.getFirstFirstChild(), Token.BANG, 0, 16);
+    checkTokenPosition(root.getFirstChild().getFirstFirstChild(), Token.STRING, 0, 17);
     checkTokenPosition(root.getLastChild(), Token.QMARK, 0, 26);
     checkTokenPosition(root.getLastChild().getFirstChild(), Token.STRING, 0, 27);
   }
