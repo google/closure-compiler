@@ -1945,6 +1945,13 @@ public final class TypeInferenceTest extends TestCase {
     assertTypeOfExpression("ARR1").toStringIsEqualTo("?");
   }
 
+  public void testTypeInferenceOccursInsideVoidOperator() {
+    inFunction("var x; var y = void (x = 3); X: x; Y: y");
+
+    assertTypeOfExpression("X").toStringIsEqualTo("number");
+    assertTypeOfExpression("Y").toStringIsEqualTo("undefined");
+  }
+
   private ObjectType getNativeObjectType(JSTypeNative t) {
     return registry.getNativeObjectType(t);
   }

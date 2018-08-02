@@ -559,7 +559,14 @@ class TypeInference
         scope = traverseAwait(n, scope);
         break;
 
+      case VOID:
+        n.setJSType(getNativeType(VOID_TYPE));
+        scope = traverseChildren(n, scope);
+        break;
+
       default:
+        // TODO(b/112112613): throw an error on unknown nodes instead of silently ignoring them.
+        // The current behavior has caused at least one bug.
         break;
     }
 

@@ -1382,6 +1382,22 @@ public final class CheckConformanceTest extends CompilerTestCase {
         "}"));
   }
 
+  public void testCustomBanUnknownProp_getPropInVoidOperatorDoesntCauseSpuriousWarning() {
+    // See b/112072360
+    configuration =
+        config(rule("BanUnknownTypedClassPropsReferences"), "My rule message", value("String"));
+
+    testNoWarning(
+        lines(
+            "/** @constructor */",
+            "function Foo() {",
+            "  /** @type {!Object<number, number>} */",
+            "  this.prop;",
+            "}",
+            "const foo = new Foo();",
+            "const f = () => void foo.prop;"));
+  }
+
   public void testCustomBanUnknownInterfaceProp1() {
     configuration =
         config(rule("BanUnknownTypedClassPropsReferences"), "My rule message", value("String"));
