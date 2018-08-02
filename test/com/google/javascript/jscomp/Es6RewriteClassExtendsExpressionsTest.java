@@ -28,7 +28,7 @@ public final class Es6RewriteClassExtendsExpressionsTest extends CompilerTestCas
   @Override
   protected void setUp() throws Exception {
     super.setUp();
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_NEXT);
     setLanguageOut(LanguageMode.ECMASCRIPT3);
     disableTypeCheck();
     enableRunTypeCheckAfterProcessing();
@@ -103,13 +103,18 @@ public final class Es6RewriteClassExtendsExpressionsTest extends CompilerTestCas
             "const foo = {'bar': Object};",
             "const testcode$classextends$var0 = foo['bar'];",
             "const Foo = class extends testcode$classextends$var0 {};"));
+  }
 
+  public void testDeclarationInForLoop() {
     test(
         lines(
             "const foo = {'bar': Object};",
             "for (let Foo = class extends foo['bar'] {}, i = 0; i < 1; i++) {}"),
         lines(
             "const foo = {'bar': Object};",
+            // use an iife since parent of the let isn't a block where we can add statements
+            // TODO(bradfordcsmith): Would it be better (smaller output code) to just declare
+            //     the temporary variable in the block containing the for-loop?
             "for (let Foo = (function() {",
             "    const testcode$classextends$var0 = foo['bar'];",
             "    return class extends testcode$classextends$var0 {};",
@@ -154,7 +159,9 @@ public final class Es6RewriteClassExtendsExpressionsTest extends CompilerTestCas
             "const foo = {'bar': Object, baz: {}};",
             "const testcode$classextends$var0 = foo['bar'];",
             "foo.baz['foo'] = class extends testcode$classextends$var0 {};"));
+  }
 
+  public void testAssignWithSideEffects() {
     test(
         lines(
             "let baz = 1;",
@@ -163,6 +170,7 @@ public final class Es6RewriteClassExtendsExpressionsTest extends CompilerTestCas
         lines(
             "let baz = 1;",
             "const foo = {'bar': Object};",
+            // Use an IIFE to preserve execution order when expressions have side effects.
             "foo[baz++] = (function() {",
             "  const testcode$classextends$var0 = foo['bar'];",
             "  return class extends testcode$classextends$var0 {};",
