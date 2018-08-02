@@ -2452,11 +2452,11 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
         }
       }
 
-      declareArguments();
+      declareParameters();
     }
 
-    /** Declares all of a function's arguments. */
-    void declareArguments() {
+    /** Declares all of a function's parameters inside the function's scope. */
+    void declareParameters() {
       Node functionNode = currentScope.getRootNode();
       Node astParameters = functionNode.getSecondChild();
       Node iifeArgumentNode = null;
@@ -2468,56 +2468,13 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       FunctionType functionType =
           JSType.toMaybeFunctionType(functionNode.getJSType());
       if (functionType != null) {
+
         Node jsDocParameters = functionType.getParametersNode();
         if (jsDocParameters != null) {
           Node jsDocParameter = jsDocParameters.getFirstChild();
           for (Node astParameter : astParameters.children()) {
-            boolean isRestParameter = false;
-            if (astParameter.isRest()) {
-              // e.g. `function f(p1, ...restParamName) {}`
-              // set astParameter = restParamName
-              astParameter = astParameter.getOnlyChild();
-              isRestParameter = true;
-            }
-            if (astParameter.isDefaultValue()) {
-              astParameter = astParameter.getFirstChild();
-            }
-
-            if (!astParameter.isName()) {
-              // TODO(lharker): support destructuring ast parameters
-              continue;
-            }
-            JSType paramType = jsDocParameter == null ? unknownType : jsDocParameter.getJSType();
-            boolean inferred = paramType == null || paramType.equals(unknownType);
-            if (isRestParameter) {
-              // rest parameter is actually an array of the type specified in the JSDoc
-              ObjectType arrayType = typeRegistry.getNativeObjectType(ARRAY_TYPE);
-              paramType = typeRegistry.createTemplatizedType(arrayType, paramType);
-            }
-
-            if (iifeArgumentNode != null && inferred) {
-              String argumentName = iifeArgumentNode.getQualifiedName();
-              TypedVar argumentVar =
-                  argumentName == null || currentScope.getParent() == null
-                      ? null
-                      : currentScope.getParent().getVar(argumentName);
-              if (argumentVar != null && !argumentVar.isTypeInferred()) {
-                paramType = argumentVar.getType();
-              }
-            }
-
-            if (paramType == null) {
-              paramType = unknownType;
-            }
-
-            new SlotDefiner()
-                .forDeclarationNode(astParameter)
-                .forVariableName(astParameter.getString())
-                .inScope(currentScope)
-                .withType(paramType)
-                .allowLaterTypeInference(inferred)
-                .defineSlot();
-
+            JSType declaredType = jsDocParameter == null ? unknownType : jsDocParameter.getJSType();
+            declareNamesInPositionalParameter(astParameter, declaredType, iifeArgumentNode);
             if (jsDocParameter != null) {
               jsDocParameter = jsDocParameter.getNext();
             }
@@ -2526,6 +2483,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
             }
           }
         }
+
         // Also add template params to the scope so that JSTypeRegistry can find them (they
         // were already registered by FunctionTypeBuilder).
         JSDocInfo info = NodeUtil.getBestJSDocInfo(functionNode);
@@ -2555,7 +2513,94 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
           }
         }
       }
-    } // end declareArguments
+    } // end declareParameters
+
+    /**
+     * Declares the name(s) in a positional AST parameter in the scope.
+     *
+     * @param astParameter the positional parameter node
+     * @param declaredParameterType the declared parameter type, or the unknown type if there is
+     *     none
+     * @param iifeArgumentNode the corresponding argument from the iife, if in an iife. e.g. for
+     *     `(function (x) {}(3);` this would be `3`.
+     */
+    private void declareNamesInPositionalParameter(
+        Node astParameter, JSType declaredParameterType, @Nullable Node iifeArgumentNode) {
+      JSType paramType = declaredParameterType;
+      boolean isInferred = paramType.equals(unknownType);
+
+      if (iifeArgumentNode != null && isInferred) {
+        String argumentName = iifeArgumentNode.getQualifiedName();
+        TypedVar argumentVar =
+            argumentName == null || currentScope.getParent() == null
+                ? null
+                : currentScope.getParent().getVar(argumentName);
+        if (argumentVar != null && !argumentVar.isTypeInferred()) {
+          paramType = argumentVar.getType();
+        }
+      }
+
+      if (paramType == null) {
+        paramType = unknownType;
+      }
+
+      switch (astParameter.getToken()) {
+        case NAME: // function f(x) {}
+          declareSingleParameterName(isInferred, astParameter, paramType);
+          break;
+
+        case REST: // function f(...x) {}
+          // rest parameter is actually an array of the type specified in the JSDoc
+          ObjectType arrayType = typeRegistry.getNativeObjectType(ARRAY_TYPE);
+          JSType restParamType = typeRegistry.createTemplatizedType(arrayType, paramType);
+          declareSingleParameterName(isInferred, astParameter.getFirstChild(), restParamType);
+          break;
+
+        case DEFAULT_VALUE: // function f(x = 3) {} or function f([x] = []) {}
+          // TODO(lharker): handle destructuring parameters with default values
+          declareSingleParameterName(isInferred, astParameter.getFirstChild(), paramType);
+          break;
+
+        case ARRAY_PATTERN: // function f([x]) {}
+        case OBJECT_PATTERN: // function f({x}) {}
+          declareDestructuringParameter(isInferred, astParameter, paramType);
+          break;
+
+        default:
+          throw new IllegalStateException("Unexpected function parameter node " + astParameter);
+      }
+    }
+
+    /** Declares all names inside a destructuring pattern in a parameter list in the scope */
+    private void declareDestructuringParameter(
+        boolean isInferred, Node pattern, JSType patternType) {
+      for (Node child : pattern.children()) {
+        DestructuredTarget target =
+            DestructuredTarget.createTarget(typeRegistry, () -> patternType, child);
+        JSType inferredType = target.inferType();
+
+        if (target.getNode().isDestructuringPattern()) {
+          declareDestructuringParameter(isInferred, target.getNode(), target.inferType());
+        } else {
+          checkState(
+              target.getNode().isName(),
+              "Expected all parameters to be names, got %s",
+              target.getNode());
+
+          declareSingleParameterName(isInferred, target.getNode(), inferredType);
+        }
+      }
+    }
+
+    private void declareSingleParameterName(boolean isInferred, Node name, JSType type) {
+      new SlotDefiner()
+          .forDeclarationNode(name)
+          .forVariableName(name.getString())
+          .inScope(currentScope)
+          .withType(type)
+          .allowLaterTypeInference(isInferred)
+          .defineSlot();
+    }
   } // end FunctionScopeBuilder
 
   /**

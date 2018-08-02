@@ -612,19 +612,25 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     assertType(xVar.getType()).toStringIsEqualTo("string");
     assertFalse(xVar.isTypeInferred());
 
-    // TODO(b/77597706): declare y in the function scope
-    TypedVar yVar = lastFunctionScope.getVar("y");
-    assertNull(yVar);
-    // assertType(yVar.getType()).toStringIsEqualTo("number");
-    // assertFalse(yVar.isTypeInferred());
+    TypedVar yVar = checkNotNull(lastFunctionScope.getVar("y"));
+    assertType(yVar.getType()).toStringIsEqualTo("number");
+    assertFalse(yVar.isTypeInferred());
   }
 
   public void testArrayPatternParameterWithRestWithFullJSDoc() {
-    testSame("/**  @param {!Iterable<number>} arr */ function f([x, ...y]) {}");
+    testSame("/** @param {!Iterable<number>} arr */ function f([x, ...y]) {}");
 
     TypedVar fVar = checkNotNull(globalScope.getVar("f"));
     assertType(fVar.getType()).toStringIsEqualTo("function(Iterable<number>): undefined");
     assertFalse(fVar.isTypeInferred());
+
+    TypedVar xVar = checkNotNull(lastFunctionScope.getVar("x"));
+    assertType(xVar.getType()).toStringIsEqualTo("number");
+    assertFalse(xVar.isTypeInferred());
+
+    TypedVar yVar = checkNotNull(lastFunctionScope.getVar("y"));
+    assertType(yVar.getType()).toStringIsEqualTo("Array<number>");
+    assertFalse(yVar.isTypeInferred());
   }
 
   public void testObjectPatternParameterWithFullJSDoc() {
@@ -633,6 +639,14 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     TypedVar fVar = checkNotNull(globalScope.getVar("f"));
     assertType(fVar.getType()).toStringIsEqualTo("function({a: string, b: number}): undefined");
     assertFalse(fVar.isTypeInferred());
+
+    TypedVar aVar = checkNotNull(lastFunctionScope.getVar("a"));
+    assertType(aVar.getType()).toStringIsEqualTo("string");
+    assertFalse(aVar.isTypeInferred());
+
+    TypedVar bVar = checkNotNull(lastFunctionScope.getVar("b"));
+    assertType(bVar.getType()).toStringIsEqualTo("number");
+    assertFalse(bVar.isTypeInferred());
   }
 
   public void testObjectPatternParameterWithUnknownPropertyWithFullJSDoc() {
@@ -641,9 +655,17 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     TypedVar fVar = checkNotNull(globalScope.getVar("f"));
     assertType(fVar.getType()).toStringIsEqualTo("function({a: string}): undefined");
     assertFalse(fVar.isTypeInferred());
+
+    TypedVar aVar = checkNotNull(lastFunctionScope.getVar("a"));
+    assertType(aVar.getType()).toStringIsEqualTo("string");
+    assertFalse(aVar.isTypeInferred());
+
+    TypedVar bVar = checkNotNull(lastFunctionScope.getVar("b"));
+    assertType(bVar.getType()).toStringIsEqualTo("?");
+    assertFalse(bVar.isTypeInferred());
   }
 
-  public void testNestedPatternParameterWithFullJSDoc() {
+  public void testMixedParametersWithFullJSDoc() {
     testSame(
         lines(
             "/**",
@@ -662,6 +684,14 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     TypedVar xVar = checkNotNull(lastFunctionScope.getVar("x"));
     assertType(xVar.getType()).toStringIsEqualTo("string");
     assertFalse(xVar.isTypeInferred());
+
+    TypedVar yVar = checkNotNull(lastFunctionScope.getVar("y"));
+    assertType(yVar.getType()).toStringIsEqualTo("number");
+    assertFalse(yVar.isTypeInferred());
+
+    TypedVar zVar = checkNotNull(lastFunctionScope.getVar("z"));
+    assertType(zVar.getType()).toStringIsEqualTo("null");
+    assertFalse(zVar.isTypeInferred());
   }
 
   public void testObjectPatternParameterWithComputedPropertyWithFullJSDoc() {
@@ -679,6 +709,27 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     TypedVar xVar = checkNotNull(lastFunctionScope.getVar("x"));
     assertType(xVar.getType()).toStringIsEqualTo("string");
     assertFalse(xVar.isTypeInferred());
+
+    TypedVar aVar = checkNotNull(lastFunctionScope.getVar("a"));
+    assertType(aVar.getType()).toStringIsEqualTo("number");
+    assertFalse(aVar.isTypeInferred());
+  }
+
+  public void testDestructuringParametersInIifeInfersType() {
+    testSame(
+        lines(
+            "const /** {x:  number} */ data = {x: 3}; ",
+            "const /** !Iterable<string> */ strings = ['foo', 'bar'];",
+            "",
+            "(function ({x}, [y]) {})(data, strings);"));
+
+    TypedVar xVar = checkNotNull(lastFunctionScope.getVar("x"));
+    assertType(xVar.getType()).toStringIsEqualTo("number");
+    assertTrue(xVar.isTypeInferred());
+
+    TypedVar yVar = checkNotNull(lastFunctionScope.getVar("y"));
+    assertType(yVar.getType()).toStringIsEqualTo("string");
+    assertTrue(yVar.isTypeInferred());
   }
 
   public void testOutOfOrderJSDocForDestructuringParameter() {

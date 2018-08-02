@@ -145,6 +145,9 @@ final class DestructuredTarget {
 
   private JSType inferObjectPatternKeyType() {
     JSType patternType = patternTypeSupplier.get();
+    if (patternType == null || patternType.isUnknownType()) {
+      return registry.getNativeType(JSTypeNative.UNKNOWN_TYPE);
+    }
     switch (objectPatternKey.getToken()) {
       case STRING_KEY:
         JSType propertyType = patternType.findPropertyType(objectPatternKey.getString());
