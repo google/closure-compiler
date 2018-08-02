@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.javascript.jscomp.deps.ModuleNames;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
@@ -56,6 +57,7 @@ public final class Es6RewriteClassExtendsExpressions extends NodeTraversal.Abstr
 
   @Override
   public void process(Node externs, Node root) {
+    // TODO(bradfordcsmith): Do we really need to run this on externs?
     TranspilationPasses.processTranspile(compiler, externs, features, this);
     TranspilationPasses.processTranspile(compiler, root, features, this);
   }
@@ -93,53 +95,40 @@ public final class Es6RewriteClassExtendsExpressions extends NodeTraversal.Abstr
    * order of side-effect causing statements.
    */
   private boolean canDecomposeSimply(Node classNode) {
-    Node ancestor = classNode.getParent();
-    switch (ancestor.getToken()) {
-      case RETURN:
-        ancestor = ancestor.getParent();
-        break;
-
-      case NAME:
-        if (ancestor.getParent() != null
-            && NodeUtil.isNameDeclaration(ancestor.getParent())
-            && ancestor.getParent().getFirstChild() == ancestor) {
-          ancestor = ancestor.getGrandparent();
-        } else {
-          return false;
-        }
-        break;
-
-      case ASSIGN:
-        if (classNode.getPrevious() != null
-            && ancestor.getParent() != null
-            && ancestor.getParent().isExprResult()
-            && (classNode.getPrevious().isQualifiedName()
-                || isSimpleGetPropOrElem(classNode.getPrevious()))) {
-          ancestor = ancestor.getGrandparent();
-        } else {
-          return false;
-        }
-        break;
-    }
-
-    if (NodeUtil.isStatementParent(ancestor)) {
+    Node enclosingStatement = checkNotNull(NodeUtil.getEnclosingStatement(classNode), classNode);
+    if (enclosingStatement == classNode) {
+      // `class Foo extends some_expression {}`
+      // can always be converted to
+      // ```
+      // const tmpvar = some_expression;
+      // class Foo extends tmpvar {}
+      // ```
       return true;
+    } else {
+      Node classNodeParent = classNode.getParent();
+      if (NodeUtil.isNameDeclaration(enclosingStatement)
+          && classNodeParent.isName()
+          && classNodeParent.isFirstChildOf(enclosingStatement)) {
+        // `const Foo = class extends some_expression {}, maybe_other_var;`
+        // can always be converted to
+        // ```
+        // const tmpvar = some_expression;
+        // const Foo = class extends tmpvar {}, maybe_other_var;
+        // ```
+        return true;
+      } else if (enclosingStatement.isExprResult()
+          && classNodeParent.isOnlyChildOf(enclosingStatement)
+          && classNodeParent.isAssign()
+          && classNode.isSecondChildOf(classNodeParent)) {
+        // `lhs = class extends some_expression {};`
+        Node lhsNode = classNodeParent.getFirstChild();
+        // We can extract a temporary variable for some_expression as long as lhs expression
+        // has no side effects.
+        return !NodeUtil.mayHaveSideEffects(lhsNode);
+      } else {
+        return false;
+      }
     }
-    return false;
-  }
-
-  private boolean isSimpleGetPropOrElem(Node prop) {
-    checkArgument(prop.isGetElem() || prop.isGetProp());
-    if (!prop.getSecondChild().isString()) {
-      return false;
-    }
-    if (prop.getFirstChild().isQualifiedName()) {
-      return true;
-    }
-    if (prop.getFirstChild().isGetElem()) {
-      return isSimpleGetPropOrElem(prop.getFirstChild());
-    }
-    return false;
   }
 
   private void extractExtends(NodeTraversal t, Node classNode) {
@@ -165,14 +154,20 @@ public final class Es6RewriteClassExtendsExpressions extends NodeTraversal.Abstr
    * decomposition can happen safely.
    */
   private void decomposeInIIFE(NodeTraversal t, Node classNode) {
-    Node placeholder = IR.function(IR.name(""), IR.paramList(), IR.block());
-    classNode.replaceWith(placeholder);
-    Node functionBody = IR.block(IR.returnNode(classNode));
+    // converts
+    // `class X extends something {}`
+    // to
+    // `(function() { return class X extends something {}; })()`
+    Node functionBody = IR.block();
     Node function = IR.function(IR.name(""), IR.paramList(), functionBody);
-    Node call = IR.call(function).useSourceInfoIfMissingFromForTree(classNode);
-    call.putBooleanProp(Node.FREE_CALL, true);
-    placeholder.replaceWith(call);
+    Node call = NodeUtil.newCallNode(function);
+    classNode.replaceWith(call);
+    functionBody.addChildToBack(IR.returnNode(classNode));
+    call.useSourceInfoIfMissingFromForTree(classNode);
+    // NOTE: extractExtends() will end up reporting the change for the new function, so we only
+    //     need to report the change to the enclosing scope
     t.reportCodeChange(call);
+    // Now do the extends expression extraction within the IIFE
     extractExtends(t, classNode);
   }
 }
