@@ -284,7 +284,7 @@ public class TranspilationPasses {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES8;
+          return ES2018;
         }
       };
 
