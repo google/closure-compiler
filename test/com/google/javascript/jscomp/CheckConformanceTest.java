@@ -1435,6 +1435,8 @@ public final class CheckConformanceTest extends CompilerTestCase {
 
     testNoWarning("goog.provide('x');");
 
+    testNoWarning("/** @externs */ var x;");
+
     // TODO(johnlenz): This might be overly conservative but doing otherwise is more complicated
     // so let see if we can get away with this.
     testWarning(

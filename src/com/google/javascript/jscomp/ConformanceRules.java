@@ -1455,6 +1455,9 @@ public final class ConformanceRules {
     }
 
     private boolean isWhitelisted(Node n) {
+      if (n.isFromExterns()) {
+        return true;
+      }
       return (NodeUtil.isNameDeclaration(n) || n.isFunction())
           && isWhitelistedName(n.getFirstChild().getString());
     }
