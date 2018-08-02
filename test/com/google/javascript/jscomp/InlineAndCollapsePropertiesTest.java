@@ -1399,4 +1399,16 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
         "class A {}     A.foo = 3; var obj = {foo: class extends A {}}; use(obj.foo.foo);",
         "class A {} var A$foo = 3; var obj$foo =   class extends A{};   use(obj$foo.foo)");
   }
+
+  public void testLoopInAliasChainOfTypedefConstructorProperty() {
+    test(
+        lines(
+            "/** @constructor */ var Item = function() {};",
+            "/** @typedef {number} */ Item.Models;",
+            "Item.Models = Item.Models;"),
+        lines(
+            "/** @constructor */ var Item = function() {};",
+            "Item$Models;",
+            "var Item$Models = Item$Models;"));
+  }
 }

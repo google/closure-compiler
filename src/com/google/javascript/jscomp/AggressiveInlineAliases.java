@@ -506,6 +506,7 @@ class AggressiveInlineAliases implements CompilerPass {
    * defined: assigned unconditionally, assigned exactly once. It is assumed that, the name for
    * which it is an alias must already meet these same requirements.
    *
+   * @param name The global name being aliased
    * @param alias The alias to inline
    * @return Whether the alias was inlined.
    */
@@ -519,7 +520,6 @@ class AggressiveInlineAliases implements CompilerPass {
         // more aggressively in global scope.
         // We do this because constructor properties are always collapsed,
         // so we want to inline the aliases also to avoid breakages.
-        // TODO(tbreisacher): Do we still need this special case?
         || (aliasParent.isName() && name.isConstructor())) {
       Node lvalue = aliasParent.isName() ? aliasParent : aliasParent.getFirstChild();
       if (!lvalue.isQualifiedName()) {
@@ -529,11 +529,18 @@ class AggressiveInlineAliases implements CompilerPass {
           && compiler.getCodingConvention().isExported(lvalue.getString(), /* local */ false)) {
         return false;
       }
-      name = namespace.getSlot(lvalue.getQualifiedName());
-      if (name != null && name.isInlinableGlobalAlias()) {
+      Name aliasingName = namespace.getSlot(lvalue.getQualifiedName());
+
+      if (name.equals(aliasingName) && aliasParent.isAssign()) {
+        // Ignore `a.b.c = a.b.c;` with `a.b.c;`.
+        return false;
+      }
+
+      if (aliasingName != null && aliasingName.isInlinableGlobalAlias()) {
+
         Set<AstChange> newNodes = new LinkedHashSet<>();
 
-        List<Ref> refs = new ArrayList<>(name.getRefs());
+        List<Ref> refs = new ArrayList<>(aliasingName.getRefs());
         for (Ref ref : refs) {
           switch (ref.type) {
             case SET_FROM_GLOBAL:
@@ -547,14 +554,14 @@ class AggressiveInlineAliases implements CompilerPass {
               node.getParent().replaceChild(node, newNode);
               compiler.reportChangeToEnclosingScope(newNode);
               newNodes.add(new AstChange(ref.module, ref.scope, newNode));
-              name.removeRef(ref);
+              aliasingName.removeRef(ref);
               break;
             default:
               throw new IllegalStateException();
           }
         }
 
-        rewriteAliasProps(name, alias.node, 0, newNodes);
+        rewriteAliasProps(aliasingName, alias.node, 0, newNodes);
 
         // just set the original alias to null.
         aliasParent.replaceChild(alias.node, IR.nullNode());

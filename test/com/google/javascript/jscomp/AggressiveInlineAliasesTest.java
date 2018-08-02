@@ -1604,4 +1604,14 @@ test(
             "Child.prototype.g = function() { return this.f(); }",
             ""));
   }
+
+  public void testLoopInAliasChainWithTypedefConstructorProperty() {
+    // This kind of code can get produced by module exports rewriting and was causing a crash in
+    // AggressiveInlineAliases.
+    testSame(
+        lines(
+            "/** @constructor */ var Item = function() {};",
+            "/** @typedef {number} */ Item.Models;",
+            "Item.Models = Item.Models;"));
+  }
 }
