@@ -564,10 +564,41 @@ class TypeInference
         scope = traverseChildren(n, scope);
         break;
 
-      default:
-        // TODO(b/112112613): throw an error on unknown nodes instead of silently ignoring them.
-        // The current behavior has caused at least one bug.
+      case ROOT:
+      case SCRIPT:
+      case FUNCTION:
+      case PARAM_LIST:
+      case BLOCK:
+      case EMPTY:
+      case IF:
+      case WHILE:
+      case DO:
+      case FOR:
+      case FOR_IN:
+      case FOR_OF:
+      case FOR_AWAIT_OF:
+      case BREAK:
+      case CONTINUE:
+      case TRY:
+      case CASE:
+      case DEFAULT_CASE:
+      case WITH:
+      case DEBUGGER:
+        // These don't need to be typed here, since they only affect control flow.
         break;
+
+      case TRUE:
+      case FALSE:
+      case STRING:
+      case NUMBER:
+      case NULL:
+      case REGEXP:
+        // Primitives are typed in TypedScopeCreator.AbstractScopeBuilder#attachLiteralTypes
+        break;
+
+      default:
+        throw new IllegalStateException(
+            "Type inference doesn't know to handle token " + n.getToken());
     }
 
     return scope;

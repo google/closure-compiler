@@ -20479,6 +20479,10 @@ public final class TypeCheckTest extends TypeCheckTestCase {
         "Property bar never defined on Foo");
   }
 
+  public void testTypeCheckingDoesntCrashOnDebuggerStatement() {
+    testTypes("var x = 1; debugger; x = 2;");
+  }
+
   private void testClosureTypes(String js, String description) {
     testClosureTypesMultipleWarnings(js,
         description == null ? null : ImmutableList.of(description));
