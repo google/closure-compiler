@@ -3790,4 +3790,30 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "  takesNumber(await thenable);",
             "}"));
   }
+
+  public void testDefaultParameterWithCorrectType() {
+    testTypes("function f(/** number= */ n = 3) {}");
+  }
+
+  public void testDefaultParameterWithWrongType() {
+    testTypes(
+        "function f(/** number= */ n = 'foo') {}",
+        lines(
+            "default value has wrong type", //
+            "found   : string",
+            "required: (number|undefined)"));
+  }
+
+  public void testDefaultParameterIsUndefined() {
+    testTypes("function f(/** number= */ n = undefined) {}");
+  }
+
+  public void testTypeCheckingOccursWithinDefaultParameter() {
+    testTypes(
+        "let /** number */ age = 0; function f(x = age = 'foo') {}",
+        lines(
+            "assignment", //
+            "found   : string",
+            "required: number"));
+  }
 }

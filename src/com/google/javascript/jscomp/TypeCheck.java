@@ -886,6 +886,12 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         typeable = false;
         break;
 
+      case DEFAULT_VALUE:
+        checkCanAssignToWithScope(
+            t, n, n.getFirstChild(), getJSType(n.getSecondChild()), "default value has wrong type");
+        typeable = false;
+        break;
+
       case CLASS_MEMBERS: {
         JSType typ = parent.getJSType().toMaybeFunctionType().getInstanceType();
         for (Node child = n.getFirstChild(); child != null; child = child.getNext()) {
