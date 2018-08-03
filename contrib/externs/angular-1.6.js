@@ -2374,6 +2374,31 @@ angular.$route.Route.prototype.regexp;
 angular.$sanitize;
 
 /******************************************************************************
+ * $sanitizeProvider Service
+ *****************************************************************************/
+
+/** @interface */
+angular.$sanitizeProvider = function() {};
+
+/**
+ * @param {boolean=} enableSvg
+ * @return {boolean|!angular.$sanitizeProvider}
+ */
+angular.$sanitizeProvider.prototype.enableSvg = function(enableSvg) {};
+
+/**
+ * @param {!Array<string>|!Object} elements
+ * @return {!angular.$sanitizeProvider}
+ */
+angular.$sanitizeProvider.prototype.addValidElements = function(elements) {};
+
+/**
+ * @param {!Array<string>} attrs
+ * @return {!angular.$sanitizeProvider}
+ */
+angular.$sanitizeProvider.prototype.addValidAttrs = function(attrs) {};
+
+/******************************************************************************
  * $sce Service
  *****************************************************************************/
 
