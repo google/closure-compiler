@@ -857,8 +857,6 @@ public class CommandLineRunner extends
 
     private static final ImmutableSet<String> gwtUnsupportedFlags =
         ImmutableSet.of(
-            "externs",
-            "js",
             "conformance_configs",
             "error_format",
             "warnings_whitelist_file",
