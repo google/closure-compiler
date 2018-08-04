@@ -164,6 +164,143 @@ public class RewriteAsyncIterationTest extends CompilerTestCase {
             "}"));
   }
 
+  public void testForAwaitOfDeclarations() {
+    test(
+        lines("async function abc() { for await (a of foo()) { bar(); } }"),
+        lines(
+            "async function abc() {",
+            "  for (const $jscomp$forAwait$tempIterator0 = $jscomp.makeAsyncIterator(foo());;) {",
+            "    const $jscomp$forAwait$tempResult0 = await $jscomp$forAwait$tempIterator0.next();",
+            "    if ($jscomp$forAwait$tempResult0.done) {",
+            "      break;",
+            "    }",
+            "    a = $jscomp$forAwait$tempResult0.value;",
+            "    {",
+            "      bar();",
+            "    }",
+            "  }",
+            "}"));
+
+    test(
+        lines("async function abc() { for await (var a of foo()) { bar(); } }"),
+        lines(
+            "async function abc() {",
+            "  for (const $jscomp$forAwait$tempIterator0 = $jscomp.makeAsyncIterator(foo());;) {",
+            "    const $jscomp$forAwait$tempResult0 = await $jscomp$forAwait$tempIterator0.next();",
+            "    if ($jscomp$forAwait$tempResult0.done) {",
+            "      break;",
+            "    }",
+            "    var a = $jscomp$forAwait$tempResult0.value;",
+            "    {",
+            "      bar();",
+            "    }",
+            "  }",
+            "}"));
+
+    test(
+        lines("async function abc() { for await (let a of foo()) { bar(); } }"),
+        lines(
+            "async function abc() {",
+            "  for (const $jscomp$forAwait$tempIterator0 = $jscomp.makeAsyncIterator(foo());;) {",
+            "    const $jscomp$forAwait$tempResult0 = await $jscomp$forAwait$tempIterator0.next();",
+            "    if ($jscomp$forAwait$tempResult0.done) {",
+            "      break;",
+            "    }",
+            "    let a = $jscomp$forAwait$tempResult0.value;",
+            "    {",
+            "      bar();",
+            "    }",
+            "  }",
+            "}"));
+
+    test(
+        lines("async function abc() { for await (const a of foo()) { bar(); } }"),
+        lines(
+            "async function abc() {",
+            "  for (const $jscomp$forAwait$tempIterator0 = $jscomp.makeAsyncIterator(foo());;) {",
+            "    const $jscomp$forAwait$tempResult0 = await $jscomp$forAwait$tempIterator0.next();",
+            "    if ($jscomp$forAwait$tempResult0.done) {",
+            "      break;",
+            "    }",
+            "    const a = $jscomp$forAwait$tempResult0.value;",
+            "    {",
+            "      bar();",
+            "    }",
+            "  }",
+            "}"));
+  }
+
+  public void testForAwaitOfInAsyncArrow() {
+    test(
+        lines("async () => { for await (let a of foo()) { bar(); } }"),
+        lines(
+            "async () => {",
+            "  for (const $jscomp$forAwait$tempIterator0 = $jscomp.makeAsyncIterator(foo());;) {",
+            "    const $jscomp$forAwait$tempResult0 = await $jscomp$forAwait$tempIterator0.next();",
+            "    if ($jscomp$forAwait$tempResult0.done) {",
+            "      break;",
+            "    }",
+            "    let a = $jscomp$forAwait$tempResult0.value;",
+            "    {",
+            "      bar();",
+            "    }",
+            "  }",
+            "}"));
+  }
+
+  public void testLabelledForAwaitOf() {
+    test(
+        lines(
+            "async () => {",
+            "  label:",
+            "  for await (let a of foo()) {",
+            "    bar();",
+            "  }",
+            "}"),
+        lines(
+            "async () => {",
+            "  label:",
+            "  for (const $jscomp$forAwait$tempIterator0 = $jscomp.makeAsyncIterator(foo());;) {",
+            "    const $jscomp$forAwait$tempResult0 = await $jscomp$forAwait$tempIterator0.next();",
+            "    if ($jscomp$forAwait$tempResult0.done) {",
+            "      break;",
+            "    }",
+            "    let a = $jscomp$forAwait$tempResult0.value;",
+            "    {",
+            "      bar();",
+            "    }",
+            "  }",
+            "}"));
+  }
+
+  public void testForAwaitOfInAsyncGenerator() {
+    test(
+        lines(
+            "async function* foo() {",
+            "  for await (let val of bar()) {",
+            "    yield* val;",
+            "  }",
+            "}"),
+        lines(
+            "function foo() {",
+            "  return new $jscomp.AsyncGeneratorWrapper(function*() {",
+            "    for (const $jscomp$forAwait$tempIterator0 = $jscomp.makeAsyncIterator(bar());;) {",
+            "      const $jscomp$forAwait$tempResult0 =",
+            "          yield new $jscomp.AsyncGeneratorWrapper$ActionRecord(",
+            "              $jscomp.AsyncGeneratorWrapper$ActionEnum.AWAIT_VALUE,",
+            "              $jscomp$forAwait$tempIterator0.next());",
+            "      if ($jscomp$forAwait$tempResult0.done) {",
+            "        break;",
+            "      }",
+            "      let val = $jscomp$forAwait$tempResult0.value;",
+            "      {",
+            "        yield new $jscomp.AsyncGeneratorWrapper$ActionRecord(",
+            "            $jscomp.AsyncGeneratorWrapper$ActionEnum.YIELD_STAR,val)",
+            "      }",
+            "    }}());",
+            "}"));
+  }
+
   @Override
   protected Compiler createCompiler() {
     return new NoninjectingCompiler();

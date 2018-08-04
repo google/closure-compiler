@@ -361,4 +361,109 @@ testSuite({
           (actual) => compareResults({value: undefined, done: true}, actual)),
     ]);
   },
+
+  testForAwaitOfOverArray() {
+    async function foo() {
+      let results = [];
+      for await (let val of [1, 2, 3]) {
+        results.push(val);
+      }
+      return results;
+    }
+    return foo().then(function(results) {
+      assertEquals(1, results[0]);
+      assertEquals(2, results[1]);
+      assertEquals(3, results[2]);
+    });
+  },
+  testForAwaitOfOverAsyncGenerator() {
+    async function* bar() {
+      yield 0;
+      yield 1;
+      yield 2;
+    }
+    async function foo() {
+      let results = [];
+      for await (let val of bar()) {
+        results.push(val + 1);
+      }
+      return results;
+    }
+
+    return foo().then(function(results) {
+      assertEquals(1, results[0]);
+      assertEquals(2, results[1]);
+      assertEquals(3, results[2]);
+    });
+  },
+  testForAwaitInAsyncGenerator() {
+    async function* bar() {
+      yield [10, 11, 12];
+      yield [20, 21, 22];
+      yield [30, 31, 32];
+    }
+    async function* foo() {
+      for await (let val of bar()) {
+        yield* val;
+      }
+    }
+
+    return (async function() {
+      let gen = /** @type {AsyncGenerator<?>} */ (foo());
+      compareResults({value: 10, done: false}, await gen.next());
+      compareResults({value: 11, done: false}, await gen.next());
+      compareResults({value: 12, done: false}, await gen.next());
+      compareResults({value: 20, done: false}, await gen.next());
+      compareResults({value: 21, done: false}, await gen.next());
+      compareResults({value: 22, done: false}, await gen.next());
+      compareResults({value: 30, done: false}, await gen.next());
+      compareResults({value: 31, done: false}, await gen.next());
+      compareResults({value: 32, done: false}, await gen.next());
+      compareResults({value: undefined, done: true}, await gen.next());
+    })();
+  },
+  testNestedForAwaitWithLabels() {
+    async function* bar() {
+      yield* [0, 1, 2, 3, 4, 5];
+    }
+    async function* foo() {
+      outer: for await (let oVal of bar()) {
+        inner: for await (let iVal of bar()) {
+          if (iVal > oVal) {
+            continue outer;
+          } else if (oVal === 5 && iVal === 1) {
+            break inner;
+          }
+          yield(oVal * 10) + iVal;
+        }
+      }
+    }
+
+    return (async function() {
+      let gen = /** @type {AsyncGenerator<?>} */ (foo());
+      // oVal: 0
+      compareResults({value: 0, done: false}, await gen.next());
+      // oVal: 1
+      compareResults({value: 10, done: false}, await gen.next());
+      compareResults({value: 11, done: false}, await gen.next());
+      // oVal: 2
+      compareResults({value: 20, done: false}, await gen.next());
+      compareResults({value: 21, done: false}, await gen.next());
+      compareResults({value: 22, done: false}, await gen.next());
+      // oVal: 3
+      compareResults({value: 30, done: false}, await gen.next());
+      compareResults({value: 31, done: false}, await gen.next());
+      compareResults({value: 32, done: false}, await gen.next());
+      compareResults({value: 33, done: false}, await gen.next());
+      // oVal: 4
+      compareResults({value: 40, done: false}, await gen.next());
+      compareResults({value: 41, done: false}, await gen.next());
+      compareResults({value: 42, done: false}, await gen.next());
+      compareResults({value: 43, done: false}, await gen.next());
+      compareResults({value: 44, done: false}, await gen.next());
+      // oVal: 5
+      compareResults({value: 50, done: false}, await gen.next());
+      compareResults({value: undefined, done: true}, await gen.next());
+    })();
+  },
 });

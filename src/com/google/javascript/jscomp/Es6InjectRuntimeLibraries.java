@@ -85,6 +85,10 @@ public final class Es6InjectRuntimeLibraries extends AbstractPostOrderCallback
       compiler.ensureLibraryInjected("es6/async_generator_wrapper", /* force= */ false);
     }
 
+    if (used.contains(Feature.FOR_AWAIT_OF)) {
+      compiler.ensureLibraryInjected("es6/util/makeiterator", /* force= */ false);
+    }
+
     // TODO(johnlenz): remove this.  Symbol should be handled like the other polyfills.
     TranspilationPasses.processTranspile(compiler, root, requiredForFeatures, this);
   }
@@ -148,23 +152,34 @@ public final class Es6InjectRuntimeLibraries extends AbstractPostOrderCallback
 
   // TODO(tbreisacher): Do this for all well-known symbols.
   private void visitGetprop(NodeTraversal t, Node n) {
-    if (n.matchesQualifiedName("Symbol.iterator")) {
-      if (isGlobalSymbol(t, n.getFirstChild())) {
-        compiler.ensureLibraryInjected("es6/symbol", false);
-        Node statement = NodeUtil.getEnclosingStatement(n);
-        Node init =
-            IR.exprResult(IR.call(NodeUtil.newQName(compiler, "$jscomp.initSymbolIterator")));
-        statement.getParent().addChildBefore(init.useSourceInfoFromForTree(statement), statement);
-        compiler.reportChangeToEnclosingScope(init);
-      }
-    } else if (n.matchesQualifiedName("Symbol.asyncIterator")) {
-      if (isGlobalSymbol(t, n.getFirstChild())) {
-        compiler.ensureLibraryInjected("es6/symbol", false);
-        Node statement = NodeUtil.getEnclosingStatement(n);
-        Node init =
-            IR.exprResult(IR.call(NodeUtil.newQName(compiler, "$jscomp.initSymbolAsyncIterator")));
-        statement.getParent().addChildBefore(init.useSourceInfoFromForTree(statement), statement);
-        compiler.reportChangeToEnclosingScope(init);
+    Node receiverNode = n.getFirstChild();
+    String propName = receiverNode.getNext().getString();
+    if (isGlobalSymbol(t, receiverNode)) {
+      compiler.ensureLibraryInjected("es6/symbol", false);
+      Node statement = NodeUtil.getEnclosingStatement(n);
+      switch (propName) {
+        case "iterator":
+          {
+            Node init =
+                IR.exprResult(IR.call(NodeUtil.newQName(compiler, "$jscomp.initSymbolIterator")))
+                    .useSourceInfoFromForTree(statement);
+            statement.getParent().addChildBefore(init, statement);
+            compiler.reportChangeToEnclosingScope(init);
+            break;
+          }
+        case "asyncIterator":
+          {
+            Node init =
+                IR.exprResult(
+                        IR.call(NodeUtil.newQName(compiler, "$jscomp.initSymbolAsyncIterator")))
+                    .useSourceInfoFromForTree(statement);
+            statement.getParent().addChildBefore(init, statement);
+            compiler.reportChangeToEnclosingScope(init);
+            break;
+          }
+        default:
+          // TODO(bradfordcsmith): Should we warn for unrecognized symbol names?
+          break;
       }
     }
   }

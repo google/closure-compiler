@@ -5366,8 +5366,21 @@ public final class IntegrationTest extends IntegrationTestCase {
 
     test(
         options,
-        "for await (a of foo()) {}",
-        RewriteAsyncIteration.CANNOT_CONVERT_ASYNC_ITERATION_YET);
+        lines("async function abc() { for await (a of foo()) { bar(); } }"),
+        lines(
+            "async function abc() {",
+            "  for (const $jscomp$forAwait$tempIterator0 = $jscomp.makeAsyncIterator(foo());;) {",
+            "    const $jscomp$forAwait$tempResult0 =",
+            "        await $jscomp$forAwait$tempIterator0.next();",
+            "    if ($jscomp$forAwait$tempResult0.done) {",
+            "      break;",
+            "    }",
+            "    a = $jscomp$forAwait$tempResult0.value;",
+            "    {",
+            "      bar();",
+            "    }",
+            "  }",
+            "}"));
   }
 
   public void testDestructuringRest() {

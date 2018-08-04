@@ -17,6 +17,7 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.javascript.rhino.IR.getprop;
 
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
@@ -49,10 +50,6 @@ import java.util.ArrayDeque;
  */
 public final class RewriteAsyncIteration implements NodeTraversal.Callback, HotSwapCompilerPass {
 
-  static final DiagnosticType CANNOT_CONVERT_ASYNC_ITERATION_YET =
-      DiagnosticType.error(
-          "JSC_CANNOT_CONVERT_ASYNC_ITERATION_YET", "Cannot convert async iteration yet.");
-
   private static final FeatureSet transpiledFeatures =
       FeatureSet.BARE_MINIMUM.with(Feature.ASYNC_GENERATORS, Feature.FOR_AWAIT_OF);
 
@@ -68,6 +65,10 @@ public final class RewriteAsyncIteration implements NodeTraversal.Callback, HotS
       "$jscomp.AsyncGeneratorWrapper$ActionEnum.YIELD_VALUE";
   private static final String ACTION_ENUM_YIELD_STAR =
       "$jscomp.AsyncGeneratorWrapper$ActionEnum.YIELD_STAR";
+
+  private static final String FOR_AWAIT_ITERATOR_TEMP_NAME = "$jscomp$forAwait$tempIterator";
+  private static final String FOR_AWAIT_RESULT_TEMP_NAME = "$jscomp$forAwait$tempResult";
+  private int nextForAwaitId = 0;
 
   /** Indicates the type of function currently being parsed. */
   private enum FunctionFlavor {
@@ -98,7 +99,7 @@ public final class RewriteAsyncIteration implements NodeTraversal.Callback, HotS
     }
   }
 
-  public RewriteAsyncIteration(AbstractCompiler compiler) {
+  RewriteAsyncIteration(AbstractCompiler compiler) {
     this.compiler = compiler;
     this.functionFlavorStack = new ArrayDeque<>();
   }
@@ -139,9 +140,9 @@ public final class RewriteAsyncIteration implements NodeTraversal.Callback, HotS
       }
     }
 
-    // TODO(mattmm): Implement for-await-of
     if (n.isForAwaitOf()) {
-      compiler.report(JSError.make(CANNOT_CONVERT_ASYNC_ITERATION_YET));
+      replaceForAwaitOf(n);
+      NodeUtil.addFeatureToScript(t.getCurrentFile(), Feature.CONST_DECLARATIONS);
     }
 
     if (n.isFunction()) {
@@ -271,5 +272,92 @@ public final class RewriteAsyncIteration implements NodeTraversal.Callback, HotS
     newActionRecord.useSourceInfoIfMissingFromForTree(yieldNode);
     yieldNode.addChildToFront(newActionRecord);
     yieldNode.removeProp(Node.YIELD_ALL);
+  }
+
+  /**
+   * for await (lhs of rhs) { block(); }
+   *
+   * <p>...becomes...
+   *
+   * <pre>{@code
+   * for (const tmpIterator = makeAsyncIterator(rhs);;) {
+   *    const tmpRes = await tmpIterator.next();
+   *    if (tmpRes.done) {
+   *      break;
+   *    }
+   *    lhs = $tmpRes.value;
+   *    {
+   *      block(); // Wrapped in a block in case block re-declares lhs variable.
+   *    }
+   * }
+   * }</pre>
+   *
+   * @param forAwaitOf
+   */
+  private void replaceForAwaitOf(Node forAwaitOf) {
+    int forAwaitId = nextForAwaitId++;
+    String iteratorTempName = FOR_AWAIT_ITERATOR_TEMP_NAME + forAwaitId;
+    String resultTempName = FOR_AWAIT_RESULT_TEMP_NAME + forAwaitId;
+
+    checkState(forAwaitOf.getParent() != null, "Cannot replace parentless for-await-of");
+
+    Node lhs = forAwaitOf.removeFirstChild();
+    Node rhs = forAwaitOf.removeFirstChild();
+    Node originalBody = forAwaitOf.removeFirstChild();
+
+    Node initializer =
+        IR.constNode(
+                IR.name(iteratorTempName),
+                NodeUtil.newCallNode(NodeUtil.newQName(compiler, "$jscomp.makeAsyncIterator"), rhs))
+            .useSourceInfoIfMissingFromForTree(rhs);
+
+    // const tmpRes = await tmpIterator.next()
+    Node resultDeclaration =
+        IR.constNode(IR.name(resultTempName), constructAwaitNextResult(iteratorTempName));
+    Node breakIfDone =
+        IR.ifNode(getprop(IR.name(resultTempName), "done"), IR.block(IR.breakNode()));
+
+    // Assignment statement to be moved from lhs into body of new for-loop
+    Node lhsAssignment;
+    if (lhs.isValidAssignmentTarget()) {
+      // In case of "for await (x of _)" just assign into the lhs.
+      lhsAssignment = IR.exprResult(IR.assign(lhs, getprop(IR.name(resultTempName), "value")));
+    } else if (NodeUtil.isNameDeclaration(lhs)) {
+      // In case of "for await (let x of _)" add a rhs to the let, becoming "let x = res.value"
+      lhs.getFirstChild().addChildToBack(getprop(IR.name(resultTempName), "value"));
+      lhsAssignment = lhs;
+    } else {
+      throw new AssertionError("unexpected for-await-of lhs");
+    }
+    lhsAssignment.useSourceInfoIfMissingFromForTree(lhs);
+
+    Node newForLoop =
+        IR.forNode(
+            initializer,
+            IR.empty(),
+            IR.empty(),
+            IR.block(resultDeclaration, breakIfDone, lhsAssignment, ensureBlock(originalBody)));
+    forAwaitOf.replaceWith(newForLoop);
+    newForLoop.useSourceInfoIfMissingFromForTree(forAwaitOf);
+    compiler.reportChangeToEnclosingScope(newForLoop);
+  }
+
+  private Node ensureBlock(Node possiblyBlock) {
+    return possiblyBlock.isBlock()
+        ? possiblyBlock
+        : IR.block(possiblyBlock).useSourceInfoFrom(possiblyBlock);
+  }
+
+  private Node constructAwaitNextResult(String iteratorTempName) {
+    if (functionFlavorStack.peek() != FunctionFlavor.ASYNCHRONOUS_GENERATOR) {
+      return IR.await(NodeUtil.newCallNode(getprop(IR.name(iteratorTempName), "next")));
+    } else {
+      // We are in an AsyncGenerator and must instead yield an "await" ActionRecord
+      return IR.yield(
+          IR.newNode(
+              NodeUtil.newQName(compiler, ACTION_RECORD_NAME),
+              NodeUtil.newQName(compiler, ACTION_ENUM_AWAIT),
+              NodeUtil.newCallNode(getprop(IR.name(iteratorTempName), "next"))));
+    }
   }
 }

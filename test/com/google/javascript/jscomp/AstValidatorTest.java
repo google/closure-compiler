@@ -117,12 +117,12 @@ public final class AstValidatorTest extends CompilerTestCase {
 
   public void testForAwaitOf() {
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_NEXT);
-    valid("for await(var a of b);");
-    valid("for await(let a of b);");
-    valid("for await(const a of b);");
-    valid("for await(a of b);");
-    valid("for await(a of []);");
-    valid("for await(a of {});");
+    valid("async () => { for await(var a of b); }");
+    valid("async () => { for await(let a of b); }");
+    valid("async () => { for await(const a of b); }");
+    valid("async () => { for await(a of b); }");
+    valid("async () => { for await(a of []); }");
+    valid("async () => { for await(a of {}); }");
   }
 
   public void testQuestionableForIn() {
@@ -464,7 +464,7 @@ public final class AstValidatorTest extends CompilerTestCase {
   }
 
   public void testFeatureValidation_forAwaitOf() {
-    testFeatureValidation("for await (const a of b) {}", Feature.FOR_AWAIT_OF);
+    testFeatureValidation("async () => { for await (const a of b) {} }", Feature.FOR_AWAIT_OF);
   }
 
   public void testFeatureValidation_generatorFunctions() {

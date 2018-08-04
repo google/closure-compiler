@@ -277,7 +277,7 @@ public class IR {
   }
 
   public static Node forNode(Node init, Node cond, Node incr, Node body) {
-    checkState(init.isVar() || mayBeExpressionOrEmpty(init));
+    checkState(init.isVar() || init.isLet() || init.isConst() || mayBeExpressionOrEmpty(init));
     checkState(mayBeExpressionOrEmpty(cond));
     checkState(mayBeExpressionOrEmpty(incr));
     checkState(body.isBlock());
