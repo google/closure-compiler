@@ -1256,31 +1256,6 @@ public final class CheckAccessControlsEs6ClassTest extends CompilerTestCase {
                 "Bar.prototype.x;")));
   }
 
-  public void testPackagePrivateAccessForNames() {
-    test(
-        srcs(
-            SourceFile.fromCode(
-                Compiler.joinPathParts("foo", "bar.js"),
-                lines(
-                    "class Parent {",
-                    "  constructor() {",
-                    "    /** @package */",
-                    "    this.prop = 'foo';",
-                    "  }",
-                    "}")),
-            SourceFile.fromCode(
-                Compiler.joinPathParts("baz", "quux.js"),
-                lines(
-                    "class Child extends Parent {",
-                    "  constructor() {",
-                    "    this.prop = 'asdf';",
-                    "  }",
-                    "}",
-                    "",
-                    "Child.prototype = new Parent();"))),
-        error(BAD_PACKAGE_PROPERTY_ACCESS));
-  }
-
   public void testPackagePrivateAccessForProperties1() {
     test(
         srcs(

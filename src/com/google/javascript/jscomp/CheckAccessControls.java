@@ -17,6 +17,7 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkState;
 
+import com.google.auto.value.AutoValue;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Multimap;
@@ -33,6 +34,7 @@ import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
 import java.util.Deque;
 import java.util.LinkedList;
+import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
 /**
@@ -283,11 +285,6 @@ class CheckAccessControls extends AbstractPostOrderCallback
         checkNameDeprecation(t, n, parent);
         checkNameVisibility(t, n, parent);
         break;
-      case GETPROP:
-        checkPropertyDeprecation(t, n, parent);
-        checkPropertyVisibility(t, n, parent);
-        checkConstantProperty(t, n);
-        break;
       case STRING_KEY:
       case GETTER_DEF:
       case SETTER_DEF:
@@ -295,7 +292,7 @@ class CheckAccessControls extends AbstractPostOrderCallback
         checkKeyVisibilityConvention(t, n, parent);
         break;
       case NEW:
-        checkConstructorDeprecation(t, n, parent);
+        checkConstructorDeprecation(t, n);
         break;
       case FUNCTION:
         checkFinalClassOverrides(t, n, parent);
@@ -303,19 +300,23 @@ class CheckAccessControls extends AbstractPostOrderCallback
       default:
         break;
     }
+
+    @Nullable PropertyReference propRef = createPropertyReference(n);
+    if (propRef != null) {
+      checkPropertyDeprecation(t, propRef);
+      checkPropertyVisibility(t, propRef);
+      checkConstantProperty(t, propRef);
+    }
   }
 
-  /**
-   * Checks the given NEW node to ensure that access restrictions are obeyed.
-   */
-  private void checkConstructorDeprecation(NodeTraversal t, Node n,
-      Node parent) {
+  /** Checks the given NEW node to ensure that access restrictions are obeyed. */
+  private void checkConstructorDeprecation(NodeTraversal t, Node n) {
     JSType type = n.getJSType();
 
     if (type != null) {
       String deprecationInfo = getTypeDeprecationInfo(type);
 
-      if (deprecationInfo != null && shouldEmitDeprecationWarning(t, n, parent)) {
+      if (deprecationInfo != null && shouldEmitDeprecationWarning(t, n)) {
 
         if (!deprecationInfo.isEmpty()) {
             compiler.report(
@@ -341,7 +342,7 @@ class CheckAccessControls extends AbstractPostOrderCallback
     Var var = t.getScope().getVar(n.getString());
     JSDocInfo docInfo = var == null ? null : var.getJSDocInfo();
 
-    if (docInfo != null && docInfo.isDeprecated() && shouldEmitDeprecationWarning(t, n, parent)) {
+    if (docInfo != null && docInfo.isDeprecated() && shouldEmitDeprecationWarning(t, n)) {
       if (docInfo.getDeprecationReason() != null) {
         compiler.report(
             t.makeError(n, DEPRECATED_NAME_REASON, n.getString(),
@@ -353,34 +354,37 @@ class CheckAccessControls extends AbstractPostOrderCallback
     }
   }
 
-  /**
-   * Checks the given GETPROP node to ensure that access restrictions are
-   * obeyed.
-   */
-  private void checkPropertyDeprecation(NodeTraversal t, Node n, Node parent) {
+  /** Checks the given GETPROP node to ensure that access restrictions are obeyed. */
+  private void checkPropertyDeprecation(NodeTraversal t, PropertyReference propRef) {
     // Don't bother checking constructors.
-    if (parent.isNew()) {
+    if (propRef.getSourceNode().getParent().isNew()) {
       return;
     }
 
-    ObjectType objectType = castToObject(dereference(n.getFirstChild().getJSType()));
-    String propertyName = n.getLastChild().getString();
+    ObjectType objectType = castToObject(dereference(propRef.getReceiverType()));
+    String propertyName = propRef.getName();
 
     if (objectType != null) {
       String deprecationInfo
           = getPropertyDeprecationInfo(objectType, propertyName);
 
-      if (deprecationInfo != null && shouldEmitDeprecationWarning(t, n, parent)) {
+      if (deprecationInfo != null && shouldEmitDeprecationWarning(t, propRef)) {
 
         if (!deprecationInfo.isEmpty()) {
           compiler.report(
-              t.makeError(n, DEPRECATED_PROP_REASON, propertyName,
-                  typeRegistry.getReadableTypeName(n.getFirstChild()),
+              t.makeError(
+                  propRef.getSourceNode(),
+                  DEPRECATED_PROP_REASON,
+                  propertyName,
+                  propRef.getReadableTypeNameOrDefault(),
                   deprecationInfo));
         } else {
           compiler.report(
-              t.makeError(n, DEPRECATED_PROP, propertyName,
-                  typeRegistry.getReadableTypeName(n.getFirstChild())));
+              t.makeError(
+                  propRef.getSourceNode(),
+                  DEPRECATED_PROP,
+                  propertyName,
+                  propRef.getReadableTypeNameOrDefault()));
         }
       }
     }
@@ -459,7 +463,6 @@ class CheckAccessControls extends AbstractPostOrderCallback
     }
   }
 
-
   /**
    * Returns the effective visibility of the given name, reporting an error
    * if there is a contradiction in the various sources of visibility
@@ -515,16 +518,16 @@ class CheckAccessControls extends AbstractPostOrderCallback
       Visibility overridden,
       @Nullable Visibility fileOverview,
       NodeTraversal t,
-      Node getprop) {
+      PropertyReference propRef) {
     if (overriding == Visibility.INHERITED
         && overriding != overridden
         && fileOverview != null
         && fileOverview != Visibility.INHERITED) {
-      String propertyName = getprop.getLastChild().getString();
       compiler.report(
-          t.makeError(getprop,
+          t.makeError(
+              propRef.getSourceNode(),
               BAD_PROPERTY_OVERRIDE_IN_FILE_WITH_FILEOVERVIEW_VISIBILITY,
-              propertyName,
+              propRef.getName(),
               fileOverview.name()));
     }
   }
@@ -554,36 +557,27 @@ class CheckAccessControls extends AbstractPostOrderCallback
     }
   }
 
-  /**
-   * Determines whether the given constant property got reassigned
-   * @param t The current traversal.
-   * @param getprop The getprop node.
-   */
-  private void checkConstantProperty(NodeTraversal t, Node getprop) {
-    // Check whether the property is modified
-    Node parent = getprop.getParent();
-    boolean isDelete = parent.isDelProp();
-    if (!(NodeUtil.isAssignmentOp(parent) && parent.getFirstChild() == getprop)
-        && !parent.isInc() && !parent.isDec()
-        && !isDelete) {
+  /** Determines whether the given constant property got reassigned */
+  private void checkConstantProperty(NodeTraversal t, PropertyReference propRef) {
+    if (!propRef.isMutation()) {
       return;
     }
 
-    ObjectType objectType = castToObject(dereference(getprop.getFirstChild().getJSType()));
+    ObjectType objectType = castToObject(dereference(propRef.getReceiverType()));
 
-    String propertyName = getprop.getLastChild().getString();
+    String propertyName = propRef.getName();
 
     boolean isConstant = isPropertyDeclaredConstant(objectType, propertyName);
 
     // Check whether constant properties are reassigned
     if (isConstant) {
-      JSDocInfo info = parent.getJSDocInfo();
+      JSDocInfo info = propRef.getJSDocInfo();
       if (info != null && info.getSuppressions().contains("const")) {
         return;
       }
 
-      if (isDelete) {
-        compiler.report(t.makeError(getprop, CONST_PROPERTY_DELETED, propertyName));
+      if (propRef.isDeletion()) {
+        compiler.report(t.makeError(propRef.getSourceNode(), CONST_PROPERTY_DELETED, propertyName));
         return;
       }
 
@@ -601,7 +595,8 @@ class CheckAccessControls extends AbstractPostOrderCallback
         if (initializedConstantProperties.containsEntry(oType, propertyName)
             || initializedConstantProperties.containsEntry(
                 getCanonicalInstance(oType), propertyName)) {
-          compiler.report(t.makeError(getprop, CONST_PROPERTY_REASSIGNED_VALUE, propertyName));
+          compiler.report(
+              t.makeError(propRef.getSourceNode(), CONST_PROPERTY_REASSIGNED_VALUE, propertyName));
           break;
         }
         oType = oType.getPrototypeObject();
@@ -628,48 +623,50 @@ class CheckAccessControls extends AbstractPostOrderCallback
     return ctor == null ? obj : ctor.getInstanceType();
   }
 
-  private JSType typeOrUnknown(JSType type) {
-    if (type == null) {
-      return typeRegistry.getNativeType(JSTypeNative.UNKNOWN_TYPE);
-    }
-    return type;
+  /** Dereference a type, autoboxing it and filtering out null. */
+  @Nullable
+  private static ObjectType dereference(JSType type) {
+    return type == null ? null : type.dereference();
   }
 
-  /**
-   * Reports an error if the given property is not visible in the current
-   * context.
-   * @param t The current traversal.
-   * @param getprop The getprop node.
-   */
-  private void checkPropertyVisibility(NodeTraversal t,
-      Node getprop, Node parent) {
-    JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(getprop);
+  private JSType typeOrUnknown(JSType type) {
+    return (type == null) ? typeRegistry.getNativeType(JSTypeNative.UNKNOWN_TYPE) : type;
+  }
+
+  private ObjectType typeOrUnknown(ObjectType type) {
+    return (ObjectType) typeOrUnknown((JSType) type);
+  }
+
+  private ObjectType boxedOrUnknown(@Nullable JSType type) {
+    return typeOrUnknown(dereference(type));
+  }
+
+  /** Reports an error if the given property is not visible in the current context. */
+  private void checkPropertyVisibility(NodeTraversal t, PropertyReference propRef) {
+    JSDocInfo jsdoc = propRef.getJSDocInfo();
     if (jsdoc != null && jsdoc.getSuppressions().contains("visibility")) {
       return;
     }
 
-    JSType rawReferenceType = typeOrUnknown(getprop.getFirstChild().getJSType()).autobox();
+    JSType rawReferenceType = typeOrUnknown(propRef.getReceiverType()).autobox();
     ObjectType referenceType = castToObject(rawReferenceType);
 
-    String propertyName = getprop.getLastChild().getString();
+    String propertyName = propRef.getName();
     boolean isPrivateByConvention = isPrivateByConvention(propertyName);
 
-    if (isPrivateByConvention
-        && propertyIsDeclaredButNotPrivate(getprop, parent)) {
-      compiler.report(t.makeError(getprop, CONVENTION_MISMATCH));
+    if (isPrivateByConvention && propertyIsDeclaredButNotPrivate(propRef)) {
+      compiler.report(t.makeError(propRef.getSourceNode(), CONVENTION_MISMATCH));
       return;
     }
 
-    StaticSourceFile definingSource = AccessControlUtils.getDefiningSource(
-        getprop, referenceType, propertyName);
+    StaticSourceFile definingSource =
+        AccessControlUtils.getDefiningSource(propRef.getSourceNode(), referenceType, propertyName);
 
     boolean isClassType = false;
 
     // Is this a normal property access, or are we trying to override
     // an existing property?
-    boolean isOverride =
-        jsdoc != null
-            && (parent.isExprResult() || (parent.isAssign() && parent.getFirstChild() == getprop));
+    boolean isOverride = propRef.isDocumentedDeclaration() || propRef.isOverride();
 
     ObjectType objectType = AccessControlUtils.getObjectType(
         referenceType, isOverride, propertyName);
@@ -677,17 +674,18 @@ class CheckAccessControls extends AbstractPostOrderCallback
     Visibility fileOverviewVisibility =
         defaultVisibilityForFiles.get(definingSource);
 
-    Visibility visibility = AccessControlUtils.getEffectivePropertyVisibility(
-        getprop,
-        referenceType,
-        defaultVisibilityForFiles,
-        enforceCodingConventions ? compiler.getCodingConvention() : null);
+    Visibility visibility =
+        getEffectivePropertyVisibility(
+            propRef,
+            referenceType,
+            defaultVisibilityForFiles,
+            enforceCodingConventions ? compiler.getCodingConvention() : null);
 
     if (isOverride) {
-      Visibility overriding = getOverridingPropertyVisibility(parent);
+      Visibility overriding = getOverridingPropertyVisibility(propRef.getParentNode());
       if (overriding != null) {
         checkOverriddenPropertyVisibilityMismatch(
-            overriding, visibility, fileOverviewVisibility, t, getprop);
+            overriding, visibility, fileOverviewVisibility, t, propRef);
       }
     }
 
@@ -708,61 +706,41 @@ class CheckAccessControls extends AbstractPostOrderCallback
       return;
     }
 
-    StaticSourceFile referenceSource = getprop.getStaticSourceFile();
+    StaticSourceFile referenceSource = propRef.getSourceNode().getStaticSourceFile();
 
     if (isOverride) {
       boolean sameInput = referenceSource != null
           && referenceSource.getName().equals(definingSource.getName());
       checkOverriddenPropertyVisibility(
-          t,
-          getprop,
-          parent,
-          visibility,
-          fileOverviewVisibility,
-          reportType,
-          sameInput);
+          t, propRef, visibility, fileOverviewVisibility, reportType, sameInput);
     } else {
       checkNonOverriddenPropertyVisibility(
-          t,
-          getprop,
-          parent,
-          visibility,
-          isClassType,
-          reportType,
-          referenceSource,
-          definingSource);
+          t, propRef, visibility, isClassType, reportType, referenceSource, definingSource);
     }
   }
 
-  private static boolean propertyIsDeclaredButNotPrivate(Node getprop, Node parent) {
-    // This is a declaration with JSDoc
-    JSDocInfo info = NodeUtil.getBestJSDocInfo(getprop);
-    if ((parent.isAssign() || parent.isExprResult())
-        && parent.getFirstChild() == getprop
-        && info != null) {
-      Visibility declaredVisibility = info.getVisibility();
-      if (declaredVisibility != Visibility.PRIVATE
-      && declaredVisibility != Visibility.INHERITED) {
-          return true;
-      }
+  private static boolean propertyIsDeclaredButNotPrivate(PropertyReference propRef) {
+    if (!propRef.isDocumentedDeclaration() && !propRef.isOverride()) {
+      return false;
     }
-    return false;
+
+    Visibility declaredVisibility = propRef.getJSDocInfo().getVisibility();
+    if (declaredVisibility == Visibility.PRIVATE || declaredVisibility == Visibility.INHERITED) {
+      return false;
+    }
+
+    return true;
   }
 
   private void checkOverriddenPropertyVisibility(
       NodeTraversal t,
-      Node getprop,
-      Node parent,
+      PropertyReference propRef,
       Visibility visibility,
       Visibility fileOverviewVisibility,
       JSType objectType,
       boolean sameInput) {
-    // Check an ASSIGN statement that's trying to override a property
-    // on a superclass.
-    JSDocInfo overridingInfo = parent.getJSDocInfo();
-    Visibility overridingVisibility = overridingInfo == null
-        ? Visibility.INHERITED
-        : overridingInfo.getVisibility();
+    Visibility overridingVisibility =
+        propRef.isOverride() ? propRef.getJSDocInfo().getVisibility() : Visibility.INHERITED;
 
     // Check that:
     // (a) the property *can* be overridden,
@@ -772,22 +750,23 @@ class CheckAccessControls extends AbstractPostOrderCallback
     //     a file with default visibility in the @fileoverview block.
     if (visibility == Visibility.PRIVATE && !sameInput) {
       compiler.report(
-          t.makeError(getprop, PRIVATE_OVERRIDE,
-              objectType.toString()));
+          t.makeError(propRef.getSourceNode(), PRIVATE_OVERRIDE, objectType.toString()));
     } else if (overridingVisibility != Visibility.INHERITED
         && overridingVisibility != visibility
         && fileOverviewVisibility == null) {
       compiler.report(
-          t.makeError(getprop, VISIBILITY_MISMATCH,
-              visibility.name(), objectType.toString(),
+          t.makeError(
+              propRef.getSourceNode(),
+              VISIBILITY_MISMATCH,
+              visibility.name(),
+              objectType.toString(),
               overridingVisibility.name()));
     }
   }
 
   private void checkNonOverriddenPropertyVisibility(
       NodeTraversal t,
-      Node getprop,
-      Node parent,
+      PropertyReference propRef,
       Visibility visibility,
       boolean isClassType,
       JSType objectType,
@@ -804,13 +783,13 @@ class CheckAccessControls extends AbstractPostOrderCallback
 
     switch (visibility) {
       case PACKAGE:
-        checkPackagePropertyVisibility(t, getprop, referenceSource, definingSource);
+        checkPackagePropertyVisibility(t, propRef, referenceSource, definingSource);
         break;
       case PRIVATE:
-        checkPrivatePropertyVisibility(t, getprop, parent, isClassType, ownerType);
+        checkPrivatePropertyVisibility(t, propRef, isClassType, ownerType);
         break;
       case PROTECTED:
-        checkProtectedPropertyVisibility(t, getprop, ownerType);
+        checkProtectedPropertyVisibility(t, propRef, ownerType);
         break;
       default:
         break;
@@ -819,7 +798,7 @@ class CheckAccessControls extends AbstractPostOrderCallback
 
   private void checkPackagePropertyVisibility(
       NodeTraversal t,
-      Node getprop,
+      PropertyReference propRef,
       StaticSourceFile referenceSource,
       StaticSourceFile definingSource) {
     CodingConvention codingConvention = compiler.getCodingConvention();
@@ -828,44 +807,39 @@ class CheckAccessControls extends AbstractPostOrderCallback
     if (refPackage == null
         || defPackage == null
         || !refPackage.equals(defPackage)) {
-      String propertyName = getprop.getLastChild().getString();
       compiler.report(
-          t.makeError(getprop, BAD_PACKAGE_PROPERTY_ACCESS,
-              propertyName,
-              typeRegistry.getReadableTypeName(getprop.getFirstChild())));
+          t.makeError(
+              propRef.getSourceNode(),
+              BAD_PACKAGE_PROPERTY_ACCESS,
+              propRef.getName(),
+              propRef.getReadableTypeNameOrDefault()));
       }
   }
 
   private void checkPrivatePropertyVisibility(
-      NodeTraversal t,
-      Node getprop,
-      Node parent,
-      boolean isClassType,
-      JSType ownerType) {
+      NodeTraversal t, PropertyReference propRef, boolean isClassType, JSType ownerType) {
 
-    if (isClassType && isValidPrivateConstructorAccess(parent)) {
+    if (isClassType && isValidPrivateConstructorAccess(propRef.getParentNode())) {
       return;
     }
 
     // private access is not allowed outside the file from a different
     // enclosing class.
-    JSType accessedType = getprop.getFirstChild().getJSType();
-    String propertyName = getprop.getLastChild().getString();
-    String readableTypeName = ownerType.equals(accessedType)
-        ? typeRegistry.getReadableTypeName(getprop.getFirstChild())
-        : ownerType.toString();
     // TODO(tbreisacher): Should we also include the filename where ownerType is defined?
+    String readableTypeName =
+        ownerType.equals(propRef.getReceiverType())
+            ? propRef.getReadableTypeNameOrDefault()
+            : ownerType.toString();
     compiler.report(
-        t.makeError(getprop,
+        t.makeError(
+            propRef.getSourceNode(),
             BAD_PRIVATE_PROPERTY_ACCESS,
-            propertyName,
+            propRef.getName(),
             readableTypeName));
   }
 
   private void checkProtectedPropertyVisibility(
-      NodeTraversal t,
-      Node getprop,
-      JSType ownerType) {
+      NodeTraversal t, PropertyReference propRef, JSType ownerType) {
     // There are 3 types of legal accesses of a protected property:
     // 1) Accesses in the same file
     // 2) Overriding the property in a subclass
@@ -873,11 +847,12 @@ class CheckAccessControls extends AbstractPostOrderCallback
     // The first two have already been checked for.
     JSType currentClass = currentClassStack.peek();
     if (currentClass == null || !currentClass.isSubtypeOf(ownerType)) {
-      String propertyName = getprop.getLastChild().getString();
       compiler.report(
-          t.makeError(getprop,  BAD_PROTECTED_PROPERTY_ACCESS,
-              propertyName,
-              typeRegistry.getReadableTypeName(getprop.getFirstChild())));
+          t.makeError(
+              propRef.getSourceNode(),
+              BAD_PROTECTED_PROPERTY_ACCESS,
+              propRef.getName(),
+              propRef.getReadableTypeNameOrDefault()));
     }
   }
 
@@ -901,30 +876,46 @@ class CheckAccessControls extends AbstractPostOrderCallback
 
   /**
    * Determines whether a deprecation warning should be emitted.
+   *
    * @param t The current traversal.
    * @param n The node which we are checking.
    * @param parent The parent of the node which we are checking.
    */
-  private boolean shouldEmitDeprecationWarning(
-      NodeTraversal t, Node n, Node parent) {
+  private boolean shouldEmitDeprecationWarning(NodeTraversal t, Node n) {
     // In the global scope, there are only two kinds of accesses that should
     // be flagged for warnings:
     // 1) Calls of deprecated functions and methods.
     // 2) Instantiations of deprecated classes.
     // For now, we just let everything else by.
     if (t.inGlobalScope()) {
-      if (!((parent.isCall() && parent.getFirstChild() == n) || n.isNew())) {
+      if (!NodeUtil.isInvocationTarget(n) && !n.isNew()) {
+        return false;
+      }
+    }
+
+    return !canAccessDeprecatedTypes(t);
+  }
+
+  /** Determines whether a deprecation warning should be emitted. */
+  private boolean shouldEmitDeprecationWarning(NodeTraversal t, PropertyReference propRef) {
+    // In the global scope, there are only two kinds of accesses that should
+    // be flagged for warnings:
+    // 1) Calls of deprecated functions and methods.
+    // 2) Instantiations of deprecated classes.
+    // For now, we just let everything else by.
+    if (t.inGlobalScope()) {
+      if (!NodeUtil.isInvocationTarget(propRef.getSourceNode())) {
         return false;
       }
     }
 
     // We can always assign to a deprecated property, to keep it up to date.
-    if (n.isGetProp() && n == parent.getFirstChild() && NodeUtil.isAssignmentOp(parent)) {
+    if (propRef.isMutation()) {
       return false;
     }
 
     // Don't warn if the node is just declaring the property, not reading it.
-    if (n.isGetProp() && parent.isExprResult() && n.getJSDocInfo().isDeprecated()) {
+    if (propRef.isDeclaration() && propRef.getJSDocInfo().isDeprecated()) {
       return false;
     }
 
@@ -1042,14 +1033,6 @@ class CheckAccessControls extends AbstractPostOrderCallback
   }
 
   /**
-   * Dereference a type, autoboxing it and filtering out null.
-   */
-  @Nullable
-  private static ObjectType dereference(JSType type) {
-    return type == null ? null : type.dereference();
-  }
-
-  /**
    * If the superclass is final, this method returns an instance of the superclass.
    */
   @Nullable
@@ -1084,5 +1067,202 @@ class CheckAccessControls extends AbstractPostOrderCallback
       // Executed when the current scope has not been typechecked.
       return null;
     }
+  }
+
+  /**
+   * A representation of an object property reference in JS code.
+   *
+   * <p>This is an abstraction to smooth over the various AST structures that can act on
+   * <em>properties</em>. It is not useful for names (variables) or anonymous JS constructs.
+   *
+   * <p>This class should only be used within {@link CheckAccessControls}. Having package-private
+   * visibility is a quirk of {@link AutoValue}.
+   */
+  @AutoValue
+  abstract static class PropertyReference {
+
+    public static Builder builder() {
+      return new AutoValue_CheckAccessControls_PropertyReference.Builder();
+    }
+
+    /** The {@link Node} that spawned this reference. */
+    public abstract Node getSourceNode();
+
+    public abstract String getName();
+
+    /** The type from which the property is referenced, not necessarily the one that declared it. */
+    public abstract ObjectType getReceiverType();
+
+    public abstract boolean isMutation();
+
+    public abstract boolean isDeclaration();
+
+    public abstract boolean isOverride();
+
+    /**
+     * A lazy source for a human-readable type name to use when generating messages.
+     *
+     * <p>Most users probably want {@link #getReadableTypeNameOrDefault()}.
+     */
+    public abstract Supplier<String> getReadableTypeName();
+
+    @AutoValue.Builder
+    abstract interface Builder {
+      Builder setSourceNode(Node node);
+
+      Builder setName(String name);
+
+      Builder setReceiverType(ObjectType receiverType);
+
+      Builder setMutation(boolean isMutation);
+
+      Builder setDeclaration(boolean isDeclaration);
+
+      Builder setOverride(boolean isOverride);
+
+      Builder setReadableTypeName(Supplier<String> typeName);
+
+      PropertyReference build();
+    }
+
+    // Derived properties.
+
+    public final Node getParentNode() {
+      return getSourceNode().getParent();
+    }
+
+    public final JSType getJSType() {
+      return getSourceNode().getJSType();
+    }
+
+    @Nullable
+    public final JSDocInfo getJSDocInfo() {
+      return NodeUtil.getBestJSDocInfo(getSourceNode());
+    }
+
+    public final boolean isDocumentedDeclaration() {
+      return isDeclaration() && (getJSDocInfo() != null);
+    }
+
+    public final boolean isDeletion() {
+      return getSourceNode().getParent().isDelProp();
+    }
+
+    public final String getReadableTypeNameOrDefault() {
+      String preferred = getReadableTypeName().get();
+      return preferred.isEmpty() ? getReceiverType().toString() : preferred;
+    }
+  }
+
+  @Nullable
+  private PropertyReference createPropertyReference(Node sourceNode) {
+    Node parent = sourceNode.getParent();
+    @Nullable JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(sourceNode);
+
+    PropertyReference.Builder builder = PropertyReference.builder();
+
+    switch (sourceNode.getToken()) {
+      case GETPROP:
+        {
+          boolean isLValue = NodeUtil.isLValue(sourceNode);
+
+          builder
+              .setName(sourceNode.getLastChild().getString())
+              .setReceiverType(boxedOrUnknown(sourceNode.getFirstChild().getJSType()))
+              // Props are always mutated as L-values, even when assigned `undefined`.
+              .setMutation(isLValue || sourceNode.getParent().isDelProp())
+              .setDeclaration(parent.isExprResult())
+              // TODO(nickreid): This definition is way too loose. It was used to prevent breakages
+              // during refactoring and should be tightened.
+              .setOverride((jsdoc != null) && isLValue)
+              .setReadableTypeName(
+                  () -> typeRegistry.getReadableTypeName(sourceNode.getFirstChild()));
+        }
+        break;
+      default:
+        return null;
+    }
+
+    return builder.setSourceNode(sourceNode).build();
+  }
+
+  /**
+   * Returns the effective visibility of the given property. This can differ from the property's
+   * declared visibility if the property is inherited from a superclass, or if the file's
+   * {@code @fileoverview} JsDoc specifies a default visibility.
+   *
+   * <p>TODO(b/111789692): The following methods are forked from `AccessControlUtils`. Consider
+   * consolidating them.
+   *
+   * @param referenceType The JavaScript type of the property.
+   * @param fileVisibilityMap A map of {@code @fileoverview} visibility annotations, used to compute
+   *     the property's default visibility.
+   * @param codingConvention The coding convention in effect (if any), used to determine whether the
+   *     property is private by lexical convention (example: trailing underscore).
+   */
+  static Visibility getEffectivePropertyVisibility(
+      PropertyReference propRef,
+      ObjectType referenceType,
+      ImmutableMap<StaticSourceFile, Visibility> fileVisibilityMap,
+      @Nullable CodingConvention codingConvention) {
+    String propertyName = propRef.getName();
+    boolean isOverride = propRef.isOverride();
+
+    StaticSourceFile definingSource =
+        AccessControlUtils.getDefiningSource(propRef.getSourceNode(), referenceType, propertyName);
+    Visibility fileOverviewVisibility = fileVisibilityMap.get(definingSource);
+    ObjectType objectType =
+        AccessControlUtils.getObjectType(referenceType, isOverride, propertyName);
+
+    if (isOverride) {
+      Visibility overridden =
+          AccessControlUtils.getOverriddenPropertyVisibility(objectType, propertyName);
+      return AccessControlUtils.getEffectiveVisibilityForOverriddenProperty(
+          overridden, fileOverviewVisibility, propertyName, codingConvention);
+    } else {
+      return getEffectiveVisibilityForNonOverriddenProperty(
+          propRef, objectType, fileOverviewVisibility, codingConvention);
+    }
+  }
+
+  /**
+   * Returns the effective visibility of the given non-overridden property. Non-overridden
+   * properties without an explicit visibility annotation receive the default visibility declared in
+   * the file's {@code @fileoverview} block, if one exists.
+   *
+   * <p>TODO(b/111789692): The following methods are forked from `AccessControlUtils`. Consider
+   * consolidating them.
+   */
+  private static Visibility getEffectiveVisibilityForNonOverriddenProperty(
+      PropertyReference propRef,
+      ObjectType objectType,
+      @Nullable Visibility fileOverviewVisibility,
+      @Nullable CodingConvention codingConvention) {
+    String propertyName = propRef.getName();
+    if (codingConvention != null && codingConvention.isPrivate(propertyName)) {
+      return Visibility.PRIVATE;
+    }
+    Visibility raw = Visibility.INHERITED;
+    if (objectType != null) {
+      raw = objectType.getOwnPropertyJSDocInfo(propertyName).getVisibility();
+    }
+    JSType type = propRef.getJSType();
+    boolean createdFromGoogProvide = (type != null && type.isLiteralObject());
+    // Ignore @fileoverview visibility when computing the effective visibility
+    // for properties created by goog.provide.
+    //
+    // ProcessClosurePrimitives rewrites goog.provide()s as object literal
+    // declarations, but the exact form depends on the ordering of the
+    // input files. If goog.provide('a.b.c') occurs in the inputs before
+    // goog.provide('a'), it is rewritten like
+    //
+    // var a={};a.b={}a.b.c={};
+    //
+    // If the file containing goog.provide('a.b.c') also declares
+    // a @fileoverview visibility, it must not apply to b, as this would make
+    // every a.b.* namespace effectively package-private.
+    return (raw != Visibility.INHERITED || fileOverviewVisibility == null || createdFromGoogProvide)
+        ? raw
+        : fileOverviewVisibility;
   }
 }

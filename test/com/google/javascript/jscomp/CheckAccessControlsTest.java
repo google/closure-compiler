@@ -768,8 +768,10 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
                 "a.js",
                 lines(
                     "goog.provide('A');",
+                    "",
                     "/** @constructor */",
                     "var A = function() {}",
+                    "",
                     "/** @protected */",
                     "A.prototype.method = function() {};")),
             SourceFile.fromCode(
@@ -777,8 +779,13 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
                 lines(
                     "goog.require('A');",
                     "goog.provide('B1');",
-                    "/** @constructor @extends {A} */",
+                    "",
+                    "/**",
+                    " * @constructor",
+                    " * @extends {A}",
+                    " */",
                     "var B1 = function() {};",
+                    "",
                     "/** @override */",
                     "B1.prototype.method = function() {};")),
             SourceFile.fromCode(
@@ -786,8 +793,13 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
                 lines(
                     "goog.require('A');",
                     "goog.provide('B2');",
-                    "/** @constructor @extends {A} */",
+                    "",
+                    "/**",
+                    " * @constructor",
+                    " * @extends {A}",
+                    " */",
                     "var B2 = function() {};",
+                    "",
                     "/** @override */",
                     "B2.prototype.method = function() {};")),
             SourceFile.fromCode(
@@ -795,6 +807,7 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
                 lines(
                     "goog.require('B1');",
                     "goog.require('B2');",
+                    "",
                     "/**",
                     " * @param {!B1} b1",
                     " * @constructor",
@@ -958,21 +971,12 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
         ImmutableList.of(
             SourceFile.fromCode(
                 Compiler.joinPathParts("foo", "bar.js"),
-                "/** @constructor */\n"
-                + "function Parent() {\n"
-                + "/** @package */\n"
-                + "this.prop = 'foo';\n"
-                + "}\n;"),
+                lines(
+                    "/** @package */", //
+                    "var name = 'foo';")),
             SourceFile.fromCode(
-                Compiler.joinPathParts("baz", "quux.js"),
-                "/**"
-                + " * @constructor\n"
-                + " * @extends {Parent}\n"
-                + " */\n"
-                + "function Child() {\n"
-                + "  this.prop = 'asdf';\n"
-                + "}\n"
-                + "Child.prototype = new Parent();")),
+                Compiler.joinPathParts("baz", "quux.js"), //
+                lines("name;"))),
         BAD_PACKAGE_PROPERTY_ACCESS);
   }
 
@@ -1796,27 +1800,23 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
   }
 
   public void testConstantProperty3a1() {
-    testSame("var o = { /** @const */ x: 1 };"
-        + "o.x = 2;");
+    // Known broken: Should be `error(CONST_PROPERTY_REASSIGNED_VALUE)`.
+    testSame("var o = { /** @const */ x: 1 };" + "o.x = 2;");
   }
 
   public void testConstantProperty3a2() {
-    // The old type checker should report this but it doesn't.
-    // NTI reports CONST_PROPERTY_REASSIGNED.
-    testSame("/** @const */ var o = { /** @const */ x: 1 };"
-        + "o.x = 2;");
+    // Known broken: Should be `error(CONST_PROPERTY_REASSIGNED_VALUE)`.
+    testSame("/** @const */ var o = { /** @const */ x: 1 };" + "o.x = 2;");
   }
 
   public void testConstantProperty3b1() {
-    // We should report this but we don't.
-    testSame("var o = { XYZ: 1 };"
-        + "o.XYZ = 2;");
+    // Known broken: Should be `error(CONST_PROPERTY_REASSIGNED_VALUE)`.
+    testSame("var o = { XYZ: 1 };" + "o.XYZ = 2;");
   }
 
   public void testConstantProperty3b2() {
-    // The old type checker should report this but it doesn't.
-    testSame("/** @const */ var o = { XYZ: 1 };"
-        + "o.XYZ = 2;");
+    // Known broken: Should be `error(CONST_PROPERTY_REASSIGNED_VALUE)`.
+    testSame("/** @const */ var o = { XYZ: 1 };" + "o.XYZ = 2;");
   }
 
   public void testConstantProperty4() {

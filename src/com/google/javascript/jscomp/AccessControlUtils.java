@@ -118,19 +118,17 @@ public final class AccessControlUtils {
     }
   }
 
-  /**
-   * Returns the source file in which the given property is defined,
-   * or null if it is not known.
-   */
-  @Nullable static StaticSourceFile getDefiningSource(
-      Node getprop, @Nullable ObjectType referenceType, String propertyName) {
+  /** Returns the source file in which the given property is defined, or null if it is not known. */
+  @Nullable
+  static StaticSourceFile getDefiningSource(
+      Node node, @Nullable ObjectType referenceType, String propertyName) {
     if (referenceType != null) {
       Node propDefNode = referenceType.getPropertyDefSite(propertyName);
       if (propDefNode != null) {
         return propDefNode.getStaticSourceFile();
       }
     }
-    return getprop.getStaticSourceFile();
+    return node.getStaticSourceFile();
   }
 
   /**
@@ -155,22 +153,18 @@ public final class AccessControlUtils {
     return null;
   }
 
-  /**
-   * Returns the original visibility of an overridden property.
-   */
-  private static Visibility getOverriddenPropertyVisibility(
-      ObjectType objectType, String propertyName) {
+  /** Returns the original visibility of an overridden property. */
+  static Visibility getOverriddenPropertyVisibility(ObjectType objectType, String propertyName) {
     return objectType != null
         ? objectType.getOwnPropertyJSDocInfo(propertyName).getVisibility()
         : Visibility.INHERITED;
   }
 
   /**
-   * Returns the effective visibility of the given overridden property.
-   * An overridden property inherits the visibility of the property it
-   * overrides.
+   * Returns the effective visibility of the given overridden property. An overridden property
+   * inherits the visibility of the property it overrides.
    */
-  private static Visibility getEffectiveVisibilityForOverriddenProperty(
+  static Visibility getEffectiveVisibilityForOverriddenProperty(
       Visibility visibility,
       @Nullable Visibility fileOverviewVisibility,
       String propertyName,
