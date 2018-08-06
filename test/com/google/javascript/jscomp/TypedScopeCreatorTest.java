@@ -3353,6 +3353,19 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     testSame(js);
   }
 
+  public void testSpreadInIifeBlocksTypeInference() {
+    testSame(
+        lines(
+            "const /** !Array<string> */ arr = [];",
+            "(function (x = 4, y = 5) {})(...arr, undefined);"));
+
+    TypedVar xVar = checkNotNull(lastFunctionScope.getVar("x"));
+    assertType(xVar.getType()).toStringIsEqualTo("?");
+
+    TypedVar yVar = checkNotNull(lastFunctionScope.getVar("y"));
+    assertType(yVar.getType()).toStringIsEqualTo("?");
+  }
+
   public void testMemoization() throws Exception {
     Node root1 = createEmptyRoot();
     Node root2 = createEmptyRoot();

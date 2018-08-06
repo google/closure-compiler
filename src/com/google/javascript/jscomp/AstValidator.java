@@ -447,6 +447,10 @@ public final class AstValidator implements CompilerPass {
         }
         break;
 
+      case SPREAD:
+        // we don't type spread nodes
+        break;
+
       default:
         expectSomeTypeInformation(n);
     }

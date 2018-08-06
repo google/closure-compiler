@@ -509,6 +509,21 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "required: number"));
   }
 
+  public void testRestParameterInCallbackIsInferred() {
+    testTypes(
+        lines(
+            "/** @param {function(...number)} callback */",
+            "function f(callback) {}",
+            "",
+            "f((...strings) => {",
+            "  const /** null */ n = strings;", // verify that this causes a type mismatch
+            "});"),
+        lines(
+            "initializing variable", //
+            "found   : Array<number>",
+            "required: null"));
+  }
+
   public void testExponent1() {
     testTypes(
         lines(

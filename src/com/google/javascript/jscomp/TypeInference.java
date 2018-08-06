@@ -159,6 +159,7 @@ class TypeInference
       if (parameterTypes != null) {
         Node parameterTypeNode = parameterTypes.getFirstChild();
         for (Node astParameter : astParameters.children()) {
+          boolean isRest = false;
           if (astParameter.isDefaultValue()) {
             astParameter = astParameter.getFirstChild();
           }
@@ -166,14 +167,21 @@ class TypeInference
             // e.g. `function f(p1, ...restParamName) {}`
             // set astParameter = restParamName
             astParameter = astParameter.getOnlyChild();
+            isRest = true;
           }
           if (!astParameter.isName()) {
             // TODO(lharker): support destructuring parameters
             continue;
           }
+
+          if (iifeArgumentNode != null && iifeArgumentNode.isSpread()) {
+            // block inference on all parameters that might possibly be set by a spread, e.g. `z` in
+            // (function f(x, y, z = 1))(...[1, 2], 'foo')
+            iifeArgumentNode = null;
+          }
           TypedVar var = functionScope.getVar(astParameter.getString());
           checkNotNull(var);
-          if (var.isTypeInferred() && var.getType() == unknownType) {
+          if (var.isTypeInferred() && (var.getType() == unknownType || isRest)) {
             JSType newType = null;
 
             if (iifeArgumentNode != null) {
@@ -183,6 +191,12 @@ class TypeInference
             }
 
             if (newType != null) {
+              if (isRest) {
+                // convert 'number' into 'Array<number>' for rest parameters
+                newType =
+                    registry.createTemplatizedType(
+                        registry.getNativeObjectType(ARRAY_TYPE), newType);
+              }
               var.setType(newType);
               astParameter.setJSType(newType);
             }

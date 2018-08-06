@@ -2465,14 +2465,18 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
         iifeArgumentNode = functionNode.getNext();
       }
 
-      FunctionType functionType =
-          JSType.toMaybeFunctionType(functionNode.getJSType());
+      FunctionType functionType = JSType.toMaybeFunctionType(functionNode.getJSType());
       if (functionType != null) {
 
         Node jsDocParameters = functionType.getParametersNode();
         if (jsDocParameters != null) {
           Node jsDocParameter = jsDocParameters.getFirstChild();
           for (Node astParameter : astParameters.children()) {
+            if (iifeArgumentNode != null && iifeArgumentNode.isSpread()) {
+              // don't try inferring types from spreads in iifes because we don't know how
+              // many items are in the iterable.
+              iifeArgumentNode = null;
+            }
             JSType declaredType = jsDocParameter == null ? unknownType : jsDocParameter.getJSType();
             declareNamesInPositionalParameter(astParameter, declaredType, iifeArgumentNode);
             if (jsDocParameter != null) {
