@@ -869,17 +869,23 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       for (Node child : pattern.children()) {
         DestructuredTarget target =
             DestructuredTarget.createTarget(typeRegistry, patternTypeSupplier, child);
+
+        // Currently we only do type inference for string key nodes in object patterns here, to
+        // handle aliasing types. e.g
+        //   const {Foo} = ns;
+        // TypeInference takes care of the rest.
+        Supplier<JSType> typeSupplier =
+            target.hasStringKey() ? target.getInferredTypeSupplier() : () -> null;
+
         if (target.getNode().isDestructuringPattern()) {
-          defineDestructuringPatternInVarDeclaration(
-              target.getNode(), scope, target.getInferredTypeSupplier());
+          defineDestructuringPatternInVarDeclaration(target.getNode(), scope, typeSupplier);
         } else {
           Node name = target.getNode();
           checkState(name.isName(), "This method is only for declaring variables: %s", name);
 
           // variable's type
           JSType type =
-              getDeclaredType(
-                  name.getJSDocInfo(), name, /* rValue= */ null, target.getInferredTypeSupplier());
+              getDeclaredType(name.getJSDocInfo(), name, /* rValue= */ null, typeSupplier);
           if (type == null) {
             // The variable's type will be inferred.
             type = name.isFromExterns() ? unknownType : null;

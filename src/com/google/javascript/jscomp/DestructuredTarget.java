@@ -77,6 +77,10 @@ final class DestructuredTarget {
     return objectPatternKey != null && objectPatternKey.isComputedProp();
   }
 
+  boolean hasStringKey() {
+    return objectPatternKey != null && objectPatternKey.isStringKey();
+  }
+
   public Node getNode() {
     return node;
   }

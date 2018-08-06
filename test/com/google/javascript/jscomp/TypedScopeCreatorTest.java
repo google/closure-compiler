@@ -258,12 +258,13 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     assertFalse(fooInstanceVar.isTypeInferred());
   }
 
-  public void testConstDeclarationObjectPatternInfersType() {
+  public void testConstDeclarationObjectPatternInfersTypeAsDeclared() {
     testSame(
         lines(
             "const /** {a: number} */ obj = {a: 3};", // preserve newline
             "const {a} = obj;"));
 
+    // we treat this as declaring a type on `a`
     TypedVar aVar = checkNotNull(globalScope.getVar("a"));
     assertType(aVar.getType()).toStringIsEqualTo("number");
     assertFalse(aVar.isTypeInferred());
@@ -277,7 +278,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
 
     TypedVar aVar = checkNotNull(globalScope.getVar("a"));
     assertType(aVar.getType()).toStringIsEqualTo("number");
-    assertFalse(aVar.isTypeInferred());
+    assertTrue(aVar.isTypeInferred());
   }
 
   public void testConstDeclarationObjectPatternInfersTypeGivenUnknownComputedProperty() {
@@ -288,7 +289,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
 
     TypedVar aVar = checkNotNull(globalScope.getVar("a"));
     assertType(aVar.getType()).toStringIsEqualTo("?");
-    assertFalse(aVar.isTypeInferred());
+    assertTrue(aVar.isTypeInferred());
   }
 
   public void testConstDeclarationArrayPatternInfersType() {
@@ -299,7 +300,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
 
     TypedVar aVar = checkNotNull(globalScope.getVar("a"));
     assertType(aVar.getType()).toStringIsEqualTo("number");
-    assertFalse(aVar.isTypeInferred());
+    assertTrue(aVar.isTypeInferred());
   }
 
   // TODO(bradfordcsmith): Add Object rest test case.
