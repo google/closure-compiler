@@ -260,6 +260,12 @@ jasmine.CallTracker.prototype.any = function() {};
 
 
 /**
+ * @return {!Array<{args: !Array, object: Object}>}
+ */
+jasmine.CallTracker.prototype.all = function() {};
+
+
+/**
  * @return {number}
  */
 jasmine.CallTracker.prototype.count = function() {};
