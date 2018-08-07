@@ -21,6 +21,7 @@ import static com.google.common.base.Preconditions.checkState;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.IR;
+import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayDeque;
 import java.util.Deque;
@@ -195,8 +196,8 @@ public final class RewriteAsyncFunctions implements NodeTraversal.Callback, HotS
                 JSError.make(parent, Es6ToEs3Util.CANNOT_CONVERT_YET, "super expression"));
           }
 
-          Node medhodName = n.getNext();
-          String superPropertyName = ASYNC_SUPER_PROP_GETTER_PREFIX + medhodName.getString();
+          Node methodName = n.getNext();
+          String superPropertyName = ASYNC_SUPER_PROP_GETTER_PREFIX + methodName.getString();
 
           // super.x   =>   $super$get$x()
           Node getPropReplacement = NodeUtil.newCallNode(IR.name(superPropertyName));
@@ -209,7 +210,7 @@ public final class RewriteAsyncFunctions implements NodeTraversal.Callback, HotS
           }
           getPropReplacement.useSourceInfoFromForTree(parent);
           grandparent.replaceChild(parent, getPropReplacement);
-          context.recordAsyncSuperReplacementWasDone(medhodName.getString());
+          context.recordAsyncSuperReplacementWasDone(methodName.getString());
           compiler.reportChangeToChangeScope(context.function);
         }
         break;
@@ -247,6 +248,13 @@ public final class RewriteAsyncFunctions implements NodeTraversal.Callback, HotS
       // const super$get$x = () => super.x;
       Node arrowFunction = IR.arrowFunction(
           IR.name(""), IR.paramList(), IR.getprop(IR.superNode(), IR.string(replacedMethodName)));
+
+      // Temporary workaround to prevent the arrow function from being inlined
+      // TODO(ChadKillingsworth): Remove this when function inlining properly backs off for super
+      JSDocInfoBuilder info = new JSDocInfoBuilder(false);
+      info.recordNoInline();
+      arrowFunction.setJSDocInfo(info.build());
+
       compiler.reportChangeToChangeScope(arrowFunction);
       NodeUtil.addFeatureToScript(t.getCurrentFile(), Feature.ARROW_FUNCTIONS);
 
