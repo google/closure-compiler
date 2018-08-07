@@ -15,6 +15,7 @@
  */
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.auto.value.AutoValue;
@@ -289,6 +290,13 @@ class CheckAccessControls extends AbstractPostOrderCallback
       case GETTER_DEF:
       case SETTER_DEF:
       case MEMBER_FUNCTION_DEF:
+        if (!parent.isObjectLit()) {
+          // TODO(b/80580110): Eventually object literals should be covered by `PropertyReference`s.
+          // However, doing so initially would have caused too many errors in existing code and
+          // delayed support for class syntax.
+          break;
+        }
+
         checkKeyVisibilityConvention(t, n, parent);
         break;
       case NEW:
@@ -1179,6 +1187,35 @@ class CheckAccessControls extends AbstractPostOrderCallback
                   () -> typeRegistry.getReadableTypeName(sourceNode.getFirstChild()));
         }
         break;
+
+      case STRING_KEY:
+      case GETTER_DEF:
+      case SETTER_DEF:
+      case MEMBER_FUNCTION_DEF:
+        {
+          if (!parent.isClassMembers()) {
+            // TODO(b/80580110): Eventually non-class members should be covered by
+            // `PropertyReference`s. However, doing so initially would have caused too many errors
+            // in existing code and delayed support for class syntax.
+            return null;
+          }
+
+          FunctionType ctorType =
+              checkNotNull(parent.getParent().getJSType().toMaybeFunctionType());
+
+          builder
+              .setName(sourceNode.getString())
+              .setReceiverType(
+                  sourceNode.isStaticMember() ? ctorType : ctorType.getPrototypeObject())
+              .setMutation(true)
+              .setDeclaration(true)
+              // TODO(nickreid): This definition is way too loose. It was used to prevent breakages
+              // during refactoring and should be tightened.
+              .setOverride((jsdoc != null))
+              .setReadableTypeName(() -> ""); // The default is fine for class types.
+        }
+        break;
+
       default:
         return null;
     }

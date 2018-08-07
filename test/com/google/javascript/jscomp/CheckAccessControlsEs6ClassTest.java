@@ -1925,10 +1925,11 @@ public final class CheckAccessControlsEs6ClassTest extends CompilerTestCase {
                 "  constructor() {",
                 "    /** @deprecated GRR */",
                 "    this.bar = 3;",
+                "",
+                "    this.baz = this.bar;",
                 "  }",
-                "}")));
-    // TODO(b/80580110): This should fail.
-    // deprecatedProp("Property bar of type Foo has been deprecated: GRR"));
+                "}")),
+        deprecatedProp("Property bar of type Foo has been deprecated: GRR"));
   }
 
   public void testNullableDeprecatedProperty() {
@@ -2062,9 +2063,8 @@ public final class CheckAccessControlsEs6ClassTest extends CompilerTestCase {
                 "class Foo {", //
                 "  /** @protected */",
                 "  get length_() { return 1; }",
-                "}")));
-    // TODO(b/80580110): This should fail.
-    // error(CONVENTION_MISMATCH));
+                "}")),
+        error(CONVENTION_MISMATCH));
   }
 
   public void testDeclarationAndConventionConflict6() {
@@ -2074,9 +2074,8 @@ public final class CheckAccessControlsEs6ClassTest extends CompilerTestCase {
                 "class Foo {", //
                 "  /** @protected */",
                 "  set length_(x) { }",
-                "}")));
-    // TODO(b/80580110): This should fail.
-    // error(CONVENTION_MISMATCH));
+                "}")),
+        error(CONVENTION_MISMATCH));
   }
 
   public void testDeclarationAndConventionConflict10() {
