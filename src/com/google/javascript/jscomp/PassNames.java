@@ -51,6 +51,7 @@ public final class PassNames {
   public static final String DISAMBIGUATE_PRIVATE_PROPERTIES = "disambiguatePrivateProperties";
   public static final String DISAMBIGUATE_PROPERTIES = "disambiguateProperties";
   public static final String ES6_EXTRACT_CLASSES = "Es6ExtractClasses";
+  public static final String ES6_REWRITE_CLASS_EXTENDS = "Es6ExtractClassExtends";
   public static final String EXPLOIT_ASSIGN = "exploitAssign";
   public static final String EXPORT_TEST_FUNCTIONS = "exportTestFunctions";
   public static final String EXTERN_EXPORTS = "externExports";
