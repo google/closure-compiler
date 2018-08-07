@@ -119,7 +119,6 @@ public final class Es6RewriteModulesWithGoogInteropTest extends CompilerTestCase
     testModules(
         lines("const y = goog.require('closure.provide');", "use(y, y.x)", "export {};"),
         lines(
-            "const y$$module$testcode = closure.provide;",
             "use(closure.provide, closure.provide.x);",
             "/** @const */ var module$testcode = {};"));
   }
@@ -128,7 +127,6 @@ public final class Es6RewriteModulesWithGoogInteropTest extends CompilerTestCase
     testModules(
         lines("const {a, b:c} = goog.require('closure.provide');", "use(a, a.z, c)", "export {};"),
         lines(
-            "const {a:a$$module$testcode, b:c$$module$testcode} = closure.provide;",
             "use(closure.provide.a, closure.provide.a.z, closure.provide.b);",
             "/** @const */ var module$testcode = {};"));
   }
@@ -137,7 +135,6 @@ public final class Es6RewriteModulesWithGoogInteropTest extends CompilerTestCase
     testModules(
         lines("const y = goog.require('closure.module');", "use(y, y.x)", "export {};"),
         lines(
-            "const y$$module$testcode = module$exports$closure$module;",
             "use(module$exports$closure$module, module$exports$closure$module.x);",
             "/** @const */ var module$testcode = {};"));
   }
@@ -146,7 +143,6 @@ public final class Es6RewriteModulesWithGoogInteropTest extends CompilerTestCase
     testModules(
         lines("const {a, b:c} = goog.require('closure.module');", "use(a, a.z, c)", "export {};"),
         lines(
-            "const {a:a$$module$testcode, b:c$$module$testcode} = module$exports$closure$module;",
             "use(module$exports$closure$module.a, module$exports$closure$module.a.z,",
             "  module$exports$closure$module.b);",
             "/** @const */ var module$testcode = {};"));
@@ -164,7 +160,6 @@ public final class Es6RewriteModulesWithGoogInteropTest extends CompilerTestCase
     testModules(
         lines("const y = goog.require('closure.legacy.module');", "use(y, y.x)", "export {};"),
         lines(
-            "const y$$module$testcode=closure.legacy.module;",
             "use(closure.legacy.module, closure.legacy.module.x);",
             "/** @const */ var module$testcode = {};"));
   }
@@ -176,7 +171,6 @@ public final class Es6RewriteModulesWithGoogInteropTest extends CompilerTestCase
             "use(a, a.z, c)",
             "export {};"),
         lines(
-            "const {a:a$$module$testcode,b:c$$module$testcode} = closure.legacy.module;",
             "use(closure.legacy.module.a, closure.legacy.module.a.z, closure.legacy.module.b);",
             "/** @const */ var module$testcode = {};"));
   }
@@ -289,12 +283,24 @@ public final class Es6RewriteModulesWithGoogInteropTest extends CompilerTestCase
 
   public void testExportSpecRequiredSymbol() {
     testModules(
+        lines("const {a} = goog.require('closure.provide');", "export {a};"),
         lines(
-            "const {a} = goog.require('closure.provide');",
-            "export {a};"),
-        lines(
-            "const {a:a$$module$testcode} = closure.provide",
             "/** @const */ var module$testcode={};",
-            "/** @const */ module$testcode.a = a$$module$testcode;"));
+            "/** @const */ module$testcode.a = closure.provide.a;"));
+  }
+
+  public void testRequireAndStoreGlobalUnqualifiedProvide() {
+    test(
+        ImmutableList.of(
+            SourceFile.fromCode("provide.js", "goog.provide('foo')"),
+            SourceFile.fromCode(
+                "testcode", lines("const foo = goog.require('foo');", "use(foo);", "export {};"))),
+        ImmutableList.of(
+            SourceFile.fromCode("provide.js", "goog.provide('foo')"),
+            SourceFile.fromCode(
+                "testcode",
+                lines(
+                    "use(foo);",
+                    "/** @const */ var module$testcode={};"))));
   }
 }

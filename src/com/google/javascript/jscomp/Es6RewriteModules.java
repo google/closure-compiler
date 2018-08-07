@@ -131,6 +131,10 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
    *   assert(x);
    * </pre>
    */
+  // TODO(johnplaisted): This is actually incorrect if the require'd thing is mutated. But we need
+  // it so that things like goog.asserts work. Mutated closure symbols are a lot rarer than needing
+  // to use asserts and the like. Until there's a better solution to finding aliases of well known
+  // symbols we have to inline anything that is require'd.
   private Map<String, String> namesToInlineByAlias;
 
   private final Set<Node> importedGoogNames;
@@ -507,16 +511,21 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
         scriptNodeCount == 1,
         "Es6RewriteModules supports only one invocation per " + "CompilerInput / script node");
 
-    // rewriteRequires is here (rather than being part of the main visit() method, because we only
-    // want to rewrite the requires if this is an ES6 module.
-    rewriteRequires(script);
-
     String moduleName = t.getInput().getPath().toModuleName();
 
     Node moduleVar = createExportsObject(t, script);
 
     // Rename vars to not conflict in global scope.
     NodeTraversal.traverse(compiler, script, new RenameGlobalVars(moduleName));
+
+    // rewriteRequires is here (rather than being part of the main visit() method, because we only
+    // want to rewrite the requires if this is an ES6 module. Note that we also want to do this
+    // AFTER renaming all module scoped vars in the event that something that is goog.require'd is
+    // a global, unqualified name (e.g. if "goog.provide('foo')" exists, we don't want to rewrite
+    // "const foo = goog.require('foo')" to "const foo = foo". If we rewrite our module scoped names
+    // first then we'll rewrite to "const foo$module$fudge = goog.require('foo')", then to
+    // "const foo$module$fudge = foo".
+    rewriteRequires(script);
 
     // Rename the exports object to something we can reference later.
     moduleVar.getFirstChild().setString(moduleName);
@@ -684,8 +693,11 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
 
     if (isStoredInDeclaration) {
       if (isRequire) {
+        Node toDetach;
+
         if (parent.isDestructuringLhs()) {
           checkState(parent.getFirstChild().isObjectPattern());
+          toDetach = parent.getParent();
           for (Node child : parent.getFirstChild().children()) {
             if (child.isStringKey()) {
               checkState(child.getFirstChild().isName());
@@ -698,14 +710,19 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
                   child.getString(), m.getGlobalName(namespace) + "." + child.getString());
             }
           }
-        } else {
-          checkState(parent.isName());
+        } else if (parent.isName()) {
           namesToInlineByAlias.put(parent.getString(), m.getGlobalName(namespace));
+          toDetach = parent.getParent();
+        } else {
+          checkState(parent.isExprResult());
+          toDetach = parent;
         }
+        toDetach.detach();
+      } else {
+        Node replacement =
+            NodeUtil.newQName(compiler, m.getGlobalName(namespace)).srcrefTree(requireCall);
+        parent.replaceChild(requireCall, replacement);
       }
-      Node replacement =
-          NodeUtil.newQName(compiler, m.getGlobalName(namespace)).srcrefTree(requireCall);
-      parent.replaceChild(requireCall, replacement);
     } else {
       checkState(requireCall.getParent().isExprResult());
       requireCall.getParent().detach();
