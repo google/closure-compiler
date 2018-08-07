@@ -112,6 +112,21 @@ public enum CompilationParam {
     }
   },
 
+  /** Skip all optimizations & non-checks, and don't output code. */
+  CHECKS_ONLY(ParamGroup.ERROR_CHECKING) {
+    @Override
+    public void apply(CompilerOptions options, boolean value) {
+      options.setChecksOnly(value);
+      options.setOutputJs(
+          value ? CompilerOptions.OutputJs.SENTINEL : CompilerOptions.OutputJs.NORMAL);
+    }
+
+    @Override
+    public String getJavaInfo() {
+      return diagGroupWarningInfo("CHECKS_ONLY");
+    }
+  },
+
   /** Checks visibility. */
   CHECK_CONSTANTS(ParamGroup.ERROR_CHECKING) {
     @Override
