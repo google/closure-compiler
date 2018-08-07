@@ -109,9 +109,10 @@ class InstanceObjectType extends PrototypeObjectType {
     if (name.isEmpty()) {
       Node n = constructor.getSource();
       return sb.append("<anonymous@")
-          .append(n.getSourceFileName())
+          .append(n != null ? n.getSourceFileName() : "unknown")
           .append(":")
-          .append(n.getLineno()).append(">");
+          .append(n != null ? n.getLineno() : 0)
+          .append(">");
     }
     return sb.append(name);
   }
