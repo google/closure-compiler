@@ -1352,6 +1352,23 @@ DomRepeatElement.prototype.indexForElement = function(el) {};
 DomRepeatElement.prototype.renderedItemCount;
 
 
+/**
+ * Event object for an event handler on a child of a dom-repeat template.
+ * @see https://www.polymer-project.org/1.0/docs/devguide/templates#handling-events
+ * @extends {CustomEvent}
+ * @constructor
+ * @template T
+ */
+var DomRepeatEvent = function() {};
+
+/**
+ * @type {{
+ *   index: number,
+ *   item: T
+ * }}
+ */
+DomRepeatEvent.prototype.model;
+
 
 /**
  * @see https://github.com/Polymer/polymer/blob/master/src/lib/template/array-selector.html
