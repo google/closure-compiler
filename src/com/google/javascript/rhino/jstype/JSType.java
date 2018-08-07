@@ -1415,6 +1415,11 @@ public abstract class JSType implements Serializable {
     return this;
   }
 
+  /** If this is a union type, returns a union type that does not include the undefined type. */
+  public JSType restrictByNotUndefined() {
+    return this;
+  }
+
   /**
    * the logic of this method is similar to isSubtype,
    * except that it does not perform structural interface matching

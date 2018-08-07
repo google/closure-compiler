@@ -1790,6 +1790,60 @@ public final class TypeInferenceTest extends TestCase {
     assertScopeEnclosing("X").declares("x").withTypeThat().toStringIsEqualTo("string");
   }
 
+  public void testObjectDestructuringDeclarationInferenceWithDefaultValue() {
+    inFunction(
+        lines(
+            "var /** {x: (?string|undefined)} */ obj;",
+            "let {x = 3} = obj; ", // preserve newline
+            "X: x;"));
+    assertTypeOfExpression("X").toStringIsEqualTo("(null|number|string)");
+  }
+
+  public void testObjectDestructuringDeclarationInferenceWithUnnecessaryDefaultValue() {
+    inFunction(
+        lines(
+            "var /** {x: string} */ obj;",
+            "let {x = 3} = obj; ", // we ignore the default value's type
+            "X: x;"));
+    // TODO(b/77597706): should this just be `string`?
+    // the legacy behavior (typechecking transpiled code) produces (number|string), but we should
+    // possibly realize that the default value will never be evaluated.
+    assertTypeOfExpression("X").toStringIsEqualTo("(number|string)");
+  }
+
+  public void testObjectDestructuringDeclarationInference_unknownRhsAndKnownDefaultValue() {
+    inFunction(
+        lines(
+            "var /** ? */ obj;",
+            "let {x = 3} = obj; ", // preserve newline
+            "X: x;"));
+    assertTypeOfExpression("X").toStringIsEqualTo("?");
+  }
+
+  public void testObjectDestructuringDeclarationInference_knownRhsAndUnknownDefaultValue() {
+    inFunction(
+        lines(
+            "var /** {x: (string|undefined)} */ obj;",
+            "let {x = someUnknown} = obj; ", // preserve newline
+            "X: x;"));
+    assertTypeOfExpression("X").toStringIsEqualTo("?");
+  }
+
+  public void testObjectDestructuringDeclaration_defaultValueEvaluatedAfterComputedProperty() {
+    // contrived example to verify that we traverse the computed property before the default value.
+
+    inFunction(
+        lines(
+            "var /** !Object<string, (number|undefined)> */ obj = {};",
+            "var a = 1;",
+            "const {[a = 'string']: b = a} = obj",
+            "A: a",
+            "B: b"));
+
+    assertTypeOfExpression("A").toStringIsEqualTo("string");
+    assertTypeOfExpression("B").toStringIsEqualTo("(number|string)");
+  }
+
   public void testObjectDestructuringDeclarationInferenceWithUnknownProperty() {
     JSType recordType = registry.createRecordType(ImmutableMap.of());
     assuming("obj", recordType);
@@ -1866,6 +1920,14 @@ public final class TypeInferenceTest extends TestCase {
     assertTypeOfExpression("X").toStringIsEqualTo("number");
   }
 
+  public void testObjectDestructuringParameterWithDefaults() {
+    parseAndRunTypeInference(
+        "(/** @param {{x: (number|undefined)}} data */ function f({x = 3}) { X: x; });");
+
+    // TODO(b/77597706): this should be just `number`
+    assertTypeOfExpression("X").toStringIsEqualTo("(number|undefined)");
+  }
+
   public void testArrayDestructuringDeclaration() {
     inFunction(
         lines(
@@ -1876,6 +1938,29 @@ public final class TypeInferenceTest extends TestCase {
 
     assertTypeOfExpression("X").toStringIsEqualTo("number");
     assertTypeOfExpression("Y").toStringIsEqualTo("number");
+  }
+
+  public void testArrayDestructuringDeclarationWithDefaultValue() {
+    inFunction(
+        lines(
+            "const /** !Iterable<(number|undefined)> */ numbers = [1, 2, 3];",
+            "let [x = 'x', y = 'y'] = numbers;",
+            "X: x",
+            "Y: y"));
+
+    assertTypeOfExpression("X").toStringIsEqualTo("(number|string)");
+    assertTypeOfExpression("Y").toStringIsEqualTo("(number|string)");
+  }
+
+  public void testArrayDestructuringDeclarationWithDefaultValueForNestedPattern() {
+    inFunction(
+        lines(
+            "const /** !Iterable<({x: number}|undefined)> */ xNumberObjs = [];",
+            "let [{x = 'foo'} = {}] = xNumberObjs;",
+            "X: x",
+            "Y: y"));
+
+    assertTypeOfExpression("X").toStringIsEqualTo("(number|string)");
   }
 
   public void testArrayDestructuringDeclarationWithRest() {

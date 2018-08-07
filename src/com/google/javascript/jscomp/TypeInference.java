@@ -1052,32 +1052,41 @@ class TypeInference
     return traverseDestructuringPattern(n.getFirstChild(), scope, getJSType(n.getSecondChild()));
   }
 
-  /**
-   * Traverses a possibly nested destructuring pattern in an assignment or declaration, updating the
-   * scope with all the lvalues in the pattern.
-   *
-   * @param {patternType} The pattern's inferred type, e.g. `{a: number}` for `let {a} = {a: 3};`
-   */
+  /** Traverses a destructuring pattern in an assignment or declaration */
   private FlowScope traverseDestructuringPattern(
       Node pattern, FlowScope scope, JSType patternType) {
     checkArgument(pattern.isDestructuringPattern(), pattern);
     checkNotNull(patternType);
     for (Node key : pattern.children()) {
       DestructuredTarget target = DestructuredTarget.createTarget(registry, patternType, key);
-      Node targetNode = target.getNode();
-      JSType targetType = target.inferType();
-      targetType = targetType != null ? targetType : getNativeType(UNKNOWN_TYPE);
 
+      // The computed property is always evaluated first.
       if (target.hasComputedProperty()) {
         scope = traverse(target.getComputedProperty(), scope);
       }
+      Node targetNode = target.getNode();
 
       if (targetNode.isDestructuringPattern()) {
+        if (target.hasDefaultValue()) {
+          traverse(target.getDefaultValue(), scope);
+        }
+
         // traverse into nested patterns
+        JSType targetType = target.inferType();
+        targetType = targetType != null ? targetType : getNativeType(UNKNOWN_TYPE);
         scope = traverseDestructuringPattern(targetNode, scope, targetType);
       } else {
-        // declare in the scope
         scope = traverse(targetNode, scope);
+
+        if (target.hasDefaultValue()) {
+          // TODO(lharker): what do we do with the inferred slots in the scope?
+          // throw them away or join them with the previous scope?
+          traverse(target.getDefaultValue(), scope);
+        }
+
+        // declare in the scope
+        JSType targetType = target.inferType();
+        targetType = targetType != null ? targetType : getNativeType(UNKNOWN_TYPE);
         scope = updateScopeForAssignment(scope, targetNode, targetNode.getJSType(), targetType);
       }
     }

@@ -301,6 +301,15 @@ public class UnionType extends JSType {
   }
 
   @Override
+  public JSType restrictByNotUndefined() {
+    UnionTypeBuilder restricted = new UnionTypeBuilder(registry);
+    for (JSType t : alternatesWithoutStucturalTyping) {
+      restricted.addAlternate(t.restrictByNotUndefined());
+    }
+    return restricted.build();
+  }
+
+  @Override
   public TernaryValue testForEquality(JSType that) {
     TernaryValue result = null;
     for (int i = 0; i < alternatesWithoutStucturalTyping.size(); i++) {
