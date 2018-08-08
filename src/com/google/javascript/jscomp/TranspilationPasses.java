@@ -82,6 +82,13 @@ public class TranspilationPasses {
 
     if (options.needsTranspilationFrom(ES2018)) {
       passes.add(rewriteObjRestSpread);
+      passes.add(
+          createFeatureRemovalPass(
+              "markEs2018FeaturesNotRequiringTranspilationAsRemoved",
+              Feature.REGEXP_FLAG_S,
+              Feature.REGEXP_LOOKBEHIND,
+              Feature.REGEXP_NAMED_GROUPS,
+              Feature.REGEXP_UNICODE_PROPERTY_ESCAPE));
     }
 
     if (options.needsTranspilationFrom(ES8)) {

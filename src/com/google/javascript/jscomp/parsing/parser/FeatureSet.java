@@ -160,6 +160,16 @@ public final class FeatureSet implements Serializable {
     ASYNC_GENERATORS("async generator functions", LangVersion.ES_NEXT),
     FOR_AWAIT_OF("for-await-of loop", LangVersion.ES_NEXT),
 
+    // ES 2018 adds Regex Features:
+    // https://github.com/tc39/proposal-regexp-dotall-flag
+    REGEXP_FLAG_S("RegExp flag 's'", LangVersion.ES2018),
+    // https://github.com/tc39/proposal-regexp-lookbehind
+    REGEXP_LOOKBEHIND("RegExp Lookbehind", LangVersion.ES2018),
+    // https://github.com/tc39/proposal-regexp-named-groups
+    REGEXP_NAMED_GROUPS("RegExp named groups", LangVersion.ES2018),
+    // https://github.com/tc39/proposal-regexp-unicode-property-escapes
+    REGEXP_UNICODE_PROPERTY_ESCAPE("RegExp unicode property escape", LangVersion.ES2018),
+
     // ES6 typed features that are not at all implemented in browsers
     ACCESSIBILITY_MODIFIER("accessibility modifier", LangVersion.TYPESCRIPT),
     AMBIENT_DECLARATION("ambient declaration", LangVersion.TYPESCRIPT),
