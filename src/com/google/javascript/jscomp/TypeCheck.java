@@ -1074,7 +1074,9 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       }
     }
 
-    checkCanAssignToWithScope(t, assign, lvalue, getJSType(rvalue), "assignment");
+    JSType rightType = getJSType(rvalue);
+    checkCanAssignToWithScope(t, assign, lvalue, rightType, "assignment");
+    ensureTyped(assign, rightType);
   }
 
   /**
@@ -1115,14 +1117,9 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
           leftType = var.getType();
         }
       }
-    }
+    } // Fall through case for arbitrary LHS and arbitrary RHS.
 
-    // Fall through case for arbitrary LHS and arbitrary RHS.
-    if (validator.expectCanAssignTo(t, assign, rightType, leftType, msg)) {
-      ensureTyped(assign, rightType);
-    } else {
-      ensureTyped(assign);
-    }
+    validator.expectCanAssignTo(t, assign, rightType, leftType, msg);
   }
 
   private void checkPropCreation(NodeTraversal t, Node lvalue) {
