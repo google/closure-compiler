@@ -3210,6 +3210,7 @@ public final class DefaultPassConfig extends PassConfig {
           return new PolymerPass(
               compiler,
               compiler.getOptions().polymerVersion,
+              compiler.getOptions().polymerExportPolicy,
               compiler.getOptions().propertyRenaming == PropertyRenamingPolicy.ALL_UNQUOTED);
         }
 

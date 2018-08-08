@@ -588,6 +588,13 @@ public class CommandLineRunner extends
         usage = "Which version of Polymer is being used (1 or 2).")
     private Integer polymerVersion = null;
 
+    @Option(
+        name = "--polymer_export_policy",
+        usage =
+            "How to handle exports/externs for Polymer properties and methods. "
+                + "Values: LEGACY, EXPORT_ALL.")
+    private String polymerExportPolicy = PolymerExportPolicy.LEGACY.name();
+
     @Option(name = "--chrome_pass",
         handler = BooleanOptionHandler.class,
         usage = "Enable Chrome-specific options for handling cr.* functions.",
@@ -1830,6 +1837,13 @@ public class CommandLineRunner extends
       options.polymerVersion = 1;
     } else {
       options.polymerVersion = flags.polymerVersion;
+    }
+    try {
+      options.polymerExportPolicy =
+          PolymerExportPolicy.valueOf(Ascii.toUpperCase(flags.polymerExportPolicy));
+    } catch (IllegalArgumentException ex) {
+      throw new FlagUsageException(
+          "Unknown PolymerExportPolicy `" + flags.polymerExportPolicy + "' specified.");
     }
 
     options.setChromePass(flags.chromePass);

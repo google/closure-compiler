@@ -43,6 +43,7 @@ final class PolymerClassRewriter {
   private static final String VIRTUAL_FILE = "<PolymerClassRewriter.java>";
   private final AbstractCompiler compiler;
   private final int polymerVersion;
+  private final PolymerExportPolicy polymerExportPolicy;
   private final boolean propertyRenamingEnabled;
 
   @VisibleForTesting
@@ -54,10 +55,12 @@ final class PolymerClassRewriter {
       AbstractCompiler compiler,
       Node polymerElementExterns,
       int polymerVersion,
+      PolymerExportPolicy polymerExportPolicy,
       boolean propertyRenamingEnabled) {
     this.compiler = compiler;
     this.polymerElementExterns = polymerElementExterns;
     this.polymerVersion = polymerVersion;
+    this.polymerExportPolicy = polymerExportPolicy;
     this.propertyRenamingEnabled = propertyRenamingEnabled;
   }
 
@@ -118,7 +121,7 @@ final class PolymerClassRewriter {
       block.addChildToBack(var);
     }
 
-    appendPropertiesToBlock(cls, block, cls.target.getQualifiedName() + ".prototype.");
+    appendPropertiesToBlock(cls.props, block, cls.target.getQualifiedName() + ".prototype.");
     appendBehaviorMembersToBlock(cls, block);
     ImmutableList<MemberDefinition> readOnlyProps = parseReadOnlyProperties(cls, block);
     ImmutableList<MemberDefinition> attributeReflectedProps =
@@ -206,14 +209,16 @@ final class PolymerClassRewriter {
     // For simplicity add everything into a block, before adding it to the AST.
     Node block = IR.block();
 
-    appendPropertiesToBlock(cls, block, cls.target.getQualifiedName() + ".prototype.");
+    appendPropertiesToBlock(cls.props, block, cls.target.getQualifiedName() + ".prototype.");
     ImmutableList<MemberDefinition> readOnlyProps = parseReadOnlyProperties(cls, block);
     ImmutableList<MemberDefinition> attributeReflectedProps =
         parseAttributeReflectedProperties(cls);
     addInterfaceExterns(cls, readOnlyProps, attributeReflectedProps);
 
     // If an external interface is required, mark the class as implementing it
-    if (!readOnlyProps.isEmpty() || !attributeReflectedProps.isEmpty()) {
+    if (polymerExportPolicy == PolymerExportPolicy.EXPORT_ALL
+        || !readOnlyProps.isEmpty()
+        || !attributeReflectedProps.isEmpty()) {
       Node jsDocInfoNode = NodeUtil.getBestJSDocInfoNode(clazz);
       JSDocInfoBuilder classInfo = JSDocInfoBuilder.maybeCopyFrom(jsDocInfoNode.getJSDocInfo());
       String interfaceName = getInterfaceName(cls);
@@ -384,11 +389,11 @@ final class PolymerClassRewriter {
   }
 
   /**
-   * Appends all properties in the ClassDefinition to the prototype of the custom element.
+   * Appends all of the given properties to the given block.
    */
   private void appendPropertiesToBlock(
-      final PolymerClassDefinition cls, Node block, String basePath) {
-    for (MemberDefinition prop : cls.props) {
+      List<MemberDefinition> props, Node block, String basePath) {
+    for (MemberDefinition prop : props) {
       Node propertyNode = IR.exprResult(
           NodeUtil.newQName(compiler, basePath + prop.name.getString()));
 
@@ -407,6 +412,21 @@ final class PolymerClassRewriter {
       info.recordType(propType);
       propertyNode.getFirstChild().setJSDocInfo(info.build());
 
+      block.addChildToBack(propertyNode);
+    }
+  }
+
+  /**
+   * Appends all of the given methods to the given block.
+   */
+  private void appendMethodsToBlock(
+      final List<MemberDefinition> methods, Node block, String basePath) {
+    for (MemberDefinition method : methods) {
+      Node propertyNode = IR.exprResult(
+          NodeUtil.newQName(compiler, basePath + method.name.getString()));
+      propertyNode.useSourceInfoIfMissingFromForTree(method.name);
+      JSDocInfoBuilder info = JSDocInfoBuilder.maybeCopyFrom(method.info);
+      propertyNode.getFirstChild().setJSDocInfo(info.build());
       block.addChildToBack(propertyNode);
     }
   }
@@ -534,34 +554,28 @@ final class PolymerClassRewriter {
     info.recordInterface();
     varNode.setJSDocInfo(info.build());
     block.addChildToBack(varNode);
+    String interfaceBasePath = interfaceName + ".prototype.";
 
-    if (polymerVersion == 1) {
+    if (polymerExportPolicy == PolymerExportPolicy.EXPORT_ALL) {
+      appendPropertiesToBlock(cls.props, block, interfaceBasePath);
+      appendMethodsToBlock(cls.methods, block, interfaceBasePath);
+      if (cls.behaviors != null) {
+        for (BehaviorDefinition behavior : cls.behaviors) {
+          appendMethodsToBlock(behavior.functionsToCopy, block, interfaceBasePath);
+        }
+      }
+    } else if (polymerVersion == 1) {
       // For Polymer 1, all declared properties are non-renameable
-      appendPropertiesToBlock(cls, block, interfaceName + ".prototype.");
+      appendPropertiesToBlock(cls.props, block, interfaceBasePath);
     } else {
+      // For Polymer 2, only read-only properties and reflectToAttribute properties are
+      // non-renameable. Other properties follow the ALL_UNQUOTED renaming rules.
       List<MemberDefinition> interfaceProperties = new ArrayList<>();
       interfaceProperties.addAll(readOnlyProps);
       if (attributeReflectedProps != null) {
         interfaceProperties.addAll(attributeReflectedProps);
       }
-
-      // For Polymer 2, only read-only properties and reflectToAttribute properties are
-      // non-renameable. Other properties follow the ALL_UNQUOTED renaming rules.
-      PolymerClassDefinition tmpDef =
-          new PolymerClassDefinition(
-              cls.defType,
-              cls.definition,
-              cls.target,
-              cls.descriptor,
-              null,
-              null,
-              null,
-              interfaceProperties,
-              null,
-              null);
-
-      // disallow renaming of readonly properties
-      appendPropertiesToBlock(tmpDef, block, interfaceName + ".prototype.");
+      appendPropertiesToBlock(interfaceProperties, block, interfaceBasePath);
     }
 
     for (MemberDefinition prop : readOnlyProps) {
@@ -569,7 +583,7 @@ final class PolymerClassRewriter {
       String propName = prop.name.getString();
       String setterName = "_set" + propName.substring(0, 1).toUpperCase() + propName.substring(1);
       Node setterExprNode = IR.exprResult(
-          NodeUtil.newQName(compiler, interfaceName + ".prototype." + setterName));
+          NodeUtil.newQName(compiler, interfaceBasePath + setterName));
 
       JSDocInfoBuilder setterInfo = new JSDocInfoBuilder(true);
       JSTypeExpression propType = PolymerPassStaticUtils.getTypeFromProperty(prop, compiler);

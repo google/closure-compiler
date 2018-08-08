@@ -61,6 +61,9 @@ final class PolymerClassDefinition {
   /** Properties declared in the Polymer "properties" block. */
   final List<MemberDefinition> props;
 
+  /** Methods on the element. */
+  @Nullable final List<MemberDefinition> methods;
+
   /** Flattened list of behavior definitions used by this element. */
   @Nullable final ImmutableList<BehaviorDefinition> behaviors;
 
@@ -76,6 +79,7 @@ final class PolymerClassDefinition {
       MemberDefinition constructor,
       String nativeBaseElement,
       List<MemberDefinition> props,
+      List<MemberDefinition> methods,
       ImmutableList<BehaviorDefinition> behaviors,
       FeatureSet features) {
     this.defType = defType;
@@ -86,6 +90,7 @@ final class PolymerClassDefinition {
     this.constructor = constructor;
     this.nativeBaseElement = nativeBaseElement;
     this.props = props;
+    this.methods = methods;
     this.behaviors = behaviors;
     this.features = features;
   }
@@ -166,6 +171,18 @@ final class PolymerClassDefinition {
       }
     }
 
+    List<MemberDefinition> methods = new ArrayList<>();
+    for (Node keyNode : descriptor.children()) {
+      boolean isFunctionDefinition =
+          keyNode.isMemberFunctionDef()
+              || (keyNode.isStringKey() && keyNode.getFirstChild().isFunction());
+      if (isFunctionDefinition) {
+        methods.add(
+            new MemberDefinition(
+                NodeUtil.getBestJSDocInfo(keyNode), keyNode, keyNode.getFirstChild()));
+      }
+    }
+
     return new PolymerClassDefinition(
         DefinitionType.ObjectLiteral,
         callNode,
@@ -175,6 +192,7 @@ final class PolymerClassDefinition {
         new MemberDefinition(ctorInfo, null, constructor),
         nativeBaseElement,
         allProperties,
+        methods,
         behaviors,
         newFeatures);
   }
@@ -240,6 +258,15 @@ final class PolymerClassDefinition {
         PolymerPassStaticUtils.extractProperties(
             propertiesDescriptor, DefinitionType.ES6Class, compiler);
 
+    List<MemberDefinition> methods = new ArrayList<>();
+    for (Node keyNode : NodeUtil.getClassMembers(classNode).children()) {
+      if (!keyNode.isMemberFunctionDef()) {
+        continue;
+      }
+      methods.add(new MemberDefinition(
+                      NodeUtil.getBestJSDocInfo(keyNode), keyNode, keyNode.getFirstChild()));
+    }
+
     return new PolymerClassDefinition(
         DefinitionType.ES6Class,
         classNode,
@@ -249,6 +276,7 @@ final class PolymerClassDefinition {
         new MemberDefinition(ctorInfo, null, constructor),
         null,
         allProperties,
+        methods,
         null,
         null);
   }

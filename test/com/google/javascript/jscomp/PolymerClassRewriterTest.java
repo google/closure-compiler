@@ -169,7 +169,11 @@ public final class PolymerClassRewriterTest extends CompilerTypeTestCase {
 
     rewriter =
         new PolymerClassRewriter(
-            compiler, findExternsCallback.getPolymerElementExterns(), version, true);
+            compiler,
+            findExternsCallback.getPolymerElementExterns(),
+            version,
+            PolymerExportPolicy.LEGACY,
+            true);
 
     NodeUtil.visitPostOrder(
         rootNode,

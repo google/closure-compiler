@@ -116,6 +116,7 @@ public class PolymerPassTest extends CompilerTestCase {
           "$jscomp.reflectObject = function (type, object) { return object; };");
 
   private int polymerVersion = 1;
+  private PolymerExportPolicy polymerExportPolicy = PolymerExportPolicy.LEGACY;
   private boolean propertyRenamingEnabled = false;
 
   public PolymerPassTest() {
@@ -124,7 +125,7 @@ public class PolymerPassTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
-    return new PolymerPass(compiler, polymerVersion, propertyRenamingEnabled);
+    return new PolymerPass(compiler, polymerVersion, polymerExportPolicy, propertyRenamingEnabled);
   }
 
   @Override

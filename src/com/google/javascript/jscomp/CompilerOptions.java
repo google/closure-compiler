@@ -767,6 +767,9 @@ public class CompilerOptions implements Serializable {
   @Nullable
   Integer polymerVersion;
 
+  /** How to handle exports/externs for Polymer properties and methods. */
+  PolymerExportPolicy polymerExportPolicy;
+
   /** Processes cr.* functions */
   private boolean chromePass;
 
@@ -1309,6 +1312,7 @@ public class CompilerOptions implements Serializable {
     preserveClosurePrimitives = false;
     angularPass = false;
     polymerVersion = null;
+    polymerExportPolicy = PolymerExportPolicy.LEGACY;
     dartPass = false;
     j2clPassMode = J2clPassMode.AUTO;
     removeAbstractMethods = false;
@@ -3060,6 +3064,7 @@ public class CompilerOptions implements Serializable {
             .add("parseJsDocDocumentation", isParseJsDocDocumentation())
             .add("pathEscaper", pathEscaper)
             .add("polymerVersion", polymerVersion)
+            .add("polymerExportPolicy", polymerExportPolicy)
             .add("preferLineBreakAtEndOfFile", preferLineBreakAtEndOfFile)
             .add("preferSingleQuotes", preferSingleQuotes)
             .add("preferStableNames", preferStableNames)

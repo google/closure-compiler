@@ -267,7 +267,7 @@ final class PolymerBehaviorExtractor {
     final List<MemberDefinition> nonPropertyMembersToCopy;
 
     /**
-     * Whether this Behvaior is declared in the global scope.
+     * Whether this Behavior is declared in the global scope.
      */
     final boolean isGlobalDeclaration;
 

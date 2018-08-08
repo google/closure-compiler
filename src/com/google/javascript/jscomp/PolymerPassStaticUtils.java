@@ -44,6 +44,7 @@ final class PolymerPassStaticUtils {
     // When imported from an ES module, we'll have a GETPROP like
     // `module$polymer$polymer_legacy.Polymer`.
     return name.matchesQualifiedName("Polymer")
+        || "Polymer".equals(name.getOriginalQualifiedName())
         || (name.isGetProp() && name.getLastChild().getString().equals("Polymer"));
   }
 
@@ -65,6 +66,7 @@ final class PolymerPassStaticUtils {
     return !heritage.isEmpty()
         && (heritage.matchesQualifiedName("Polymer.Element")
             || heritage.matchesQualifiedName("PolymerElement")
+            || "PolymerElement".equals(heritage.getOriginalQualifiedName())
             || (heritage.isGetProp()
                 && heritage.getLastChild().getString().equals("PolymerElement")));
   }

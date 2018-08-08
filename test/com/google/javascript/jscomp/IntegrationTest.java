@@ -931,6 +931,43 @@ public final class IntegrationTest extends IntegrationTestCase {
             "Polymer.SomeBehavior={}"));
   }
 
+  public void testPolymerExportPolicyExportAll() {
+    CompilerOptions options = createCompilerOptions();
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    options.setPolymerVersion(2);
+    options.setWarningLevel(DiagnosticGroups.CHECK_TYPES, CheckLevel.ERROR);
+    addPolymerExterns();
+
+    options.setRenamingPolicy(
+        VariableRenamingPolicy.ALL, PropertyRenamingPolicy.ALL_UNQUOTED);
+    options.setRemoveUnusedPrototypeProperties(true);
+    options.polymerExportPolicy = PolymerExportPolicy.EXPORT_ALL;
+
+    Compiler compiler =
+        compile(options,
+        lines(
+            "class FooElement extends PolymerElement {",
+            "  static get properties() {",
+            "    return {",
+            "      longUnusedProperty: String,",
+            "    }",
+            "  }",
+            "  longUnusedMethod() {",
+            "    return this.longUnusedProperty;",
+            "  }",
+            "}"));
+    String source = compiler.getCurrentJsSource();
+
+    // If we see these identifiers anywhere in the output source, we know that we successfully
+    // protected it against removal and renaming.
+    assertThat(source).contains("longUnusedProperty");
+    assertThat(source).contains("longUnusedMethod");
+
+    assertThat(compiler.getErrors()).isEmpty();
+    assertThat(compiler.getWarnings()).isEmpty();
+  }
+
   public void testPreservedForwardDeclare() {
     CompilerOptions options = createCompilerOptions();
     WarningLevel.VERBOSE.setOptionsForWarningLevel(options);

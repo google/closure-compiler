@@ -34,6 +34,7 @@ public final class PolymerPassStaticUtilsTest extends TestCase {
             null,
             null,
             null,
+            null,
             null);
     assertThat(PolymerPassStaticUtils.getPolymerElementType(def)).isEqualTo("PolymerElement");
   }
@@ -48,6 +49,7 @@ public final class PolymerPassStaticUtilsTest extends TestCase {
             null,
             null,
             "input",
+            null,
             null,
             null,
             null);
