@@ -60,6 +60,8 @@ message Requirement {
     //  - A global name like "eval" or "goog"
     //  - A namespaced value or type:  namespace.Banned
     //  - A 'static' property:  "namespace.Foo.banned"
+    // TODO(b/112325992): If namespace.Banned is a goog.module that does not
+    // call goog.module.declareNamespace, the rule will not match.
     BANNED_NAME = 3;
 
     // A banned instance property, for example:
