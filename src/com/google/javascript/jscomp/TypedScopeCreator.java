@@ -2569,8 +2569,22 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
           break;
 
         case DEFAULT_VALUE: // function f(x = 3) {} or function f([x] = []) {}
-          // TODO(lharker): handle destructuring parameters with default values
-          declareSingleParameterName(isInferred, astParameter.getFirstChild(), paramType);
+          Node value = astParameter.getSecondChild();
+          // e.g. given
+          //     /** @param {number=} age */
+          //     function f(age = 3) {}
+          // the function type for f will say the first parameter is (number|undefined)
+          // Then since the default value `3` is not literally `undefined`, declare `age` inside the
+          // function as just `number`.
+          if (!NodeUtil.isUndefined(value)) {
+            paramType = paramType.restrictByNotUndefined();
+          }
+          Node actualParam = astParameter.getFirstChild();
+          if (actualParam.isName()) {
+            declareSingleParameterName(isInferred, actualParam, paramType);
+          } else {
+            declareDestructuringParameter(isInferred, actualParam, paramType);
+          }
           break;
 
         case ARRAY_PATTERN: // function f([x]) {}
@@ -2590,6 +2604,11 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
         DestructuredTarget target =
             DestructuredTarget.createTarget(typeRegistry, () -> patternType, child);
         JSType inferredType = target.inferTypeWithoutUsingDefaultValue();
+
+        if (target.hasDefaultValue()) {
+          // i.e. replace `(string|undefined)` with just `string`
+          inferredType = inferredType.restrictByNotUndefined();
+        }
 
         if (target.getNode().isDestructuringPattern()) {
           declareDestructuringParameter(isInferred, target.getNode(), inferredType);

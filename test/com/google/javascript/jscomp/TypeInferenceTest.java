@@ -1924,8 +1924,7 @@ public final class TypeInferenceTest extends TestCase {
     parseAndRunTypeInference(
         "(/** @param {{x: (number|undefined)}} data */ function f({x = 3}) { X: x; });");
 
-    // TODO(b/77597706): this should be just `number`
-    assertTypeOfExpression("X").toStringIsEqualTo("(number|undefined)");
+    assertTypeOfExpression("X").toStringIsEqualTo("number");
   }
 
   public void testArrayDestructuringDeclaration() {

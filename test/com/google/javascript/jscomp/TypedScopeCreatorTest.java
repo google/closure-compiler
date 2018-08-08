@@ -510,10 +510,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
         .declares("str")
         .onClosestContainerScope()
         .withTypeThat()
-        // TODO(b/111064087): cannot really be undefined, because there is a default string value.
-        // NOTE: we may want to hold off on this change, because it will start throwing new warnings
-        // when people write 'str = undefined;' inside the function.
-        .toStringIsEqualTo("(string|undefined)");
+        .toStringIsEqualTo("string");
   }
 
   public void testDefaultParameterInlineJSDoc() {
@@ -529,8 +526,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
         .declares("str")
         .onClosestContainerScope()
         .withTypeThat()
-        // TODO(b/111064087): cannot really be undefined, because there is a default string value.
-        .toStringIsEqualTo("(string|undefined)");
+        .toStringIsEqualTo("string");
   }
 
   public void testDefaultParameterNoJSDoc() {
@@ -566,6 +562,22 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
         .withTypeThat()
         // TODO(b/111523967): Should report an error when header and inline JSDoc types
         //     conflict.
+        .toStringIsEqualTo("number");
+  }
+
+  public void testDefaultParameterSetToUndefinedIsDeclaredAsPossiblyUndefined() {
+    testSame(
+        lines(
+            "/** @param {number=} num */",
+            "function doSomething(num = undefined) {",
+            "  FUNCTION_BODY: 0;",
+            "}",
+            ""));
+    TypedScope functionBodyScope = getLabeledStatement("FUNCTION_BODY").enclosingScope;
+    assertScope(functionBodyScope)
+        .declares("num")
+        .onClosestContainerScope()
+        .withTypeThat()
         .toStringIsEqualTo("(number|undefined)");
   }
 
@@ -573,7 +585,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     testSame(
         lines(
             "/**", // preserve newlines
-            " * @param {(string|undefined)=} str",
+            " * @param {(string|undefined)=} str", // NOTE: we just drop the |undefined here
             " */",
             "function doSomething(str = '') {",
             "  FUNCTION_BODY: 0;",
@@ -584,8 +596,22 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
         .declares("str")
         .onClosestContainerScope()
         .withTypeThat()
-        // We want to be able to assign `undefined` to str.
-        .toStringIsEqualTo("(string|undefined)");
+        .toStringIsEqualTo("string");
+  }
+
+  public void testDefaultDestructuringParameterFullJSDoc() {
+    testSame(
+        lines(
+            "/** @param {{str: (string|undefined)}=} data */",
+            "function f({str = ''} = {}) {",
+            "  FUNCTION_BODY: 0;",
+            "}"));
+    TypedScope functionBodyScope = getLabeledStatement("FUNCTION_BODY").enclosingScope;
+    assertScope(functionBodyScope)
+        .declares("str")
+        .onClosestContainerScope()
+        .withTypeThat()
+        .toStringIsEqualTo("string");
   }
 
   public void testDestructuringParameterWithNoJSDoc() {

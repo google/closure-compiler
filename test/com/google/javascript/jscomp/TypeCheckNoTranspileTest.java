@@ -3816,7 +3816,7 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
         lines(
             "default value has wrong type", //
             "found   : string",
-            "required: (number|undefined)"));
+            "required: number"));
   }
 
   public void testDefaultParameterIsUndefined() {
@@ -3830,5 +3830,28 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "assignment", //
             "found   : string",
             "required: number"));
+  }
+
+  public void testDefaultParameterWithTypeInferredFromCallback() {
+    testTypes(
+        lines(
+            "function f(/** function(number=) */ callback) {}",
+            "",
+            "f((x = 3) => {",
+            "  var /** number */ y = x;",
+            "})"));
+  }
+
+  public void testDefaultParameterInIifeWithInferredType() {
+    testTypes(
+        lines(
+            "var /** string|undefined */ stringOrUndefined;",
+            "(function f(x = 3) {",
+            "  var /** string */ str = x;",
+            "})(stringOrUndefined);"),
+        lines(
+            "initializing variable", //
+            "found   : (number|string)",
+            "required: string"));
   }
 }

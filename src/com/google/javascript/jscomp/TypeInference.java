@@ -109,14 +109,15 @@ class TypeInference
     this.unknownType = registry.getNativeObjectType(UNKNOWN_TYPE);
 
     this.containerScope = syntacticScope;
-    inferParameters(syntacticScope);
 
     this.scopeCreator = scopeCreator;
     this.assertionFunctionsMap = assertionFunctionsMap;
 
-    this.functionScope =
+    FlowScope entryScope =
         inferDeclarativelyUnboundVarsWithoutTypes(
             LinkedFlowScope.createEntryLattice(syntacticScope));
+
+    this.functionScope = inferParameters(syntacticScope, entryScope);
 
     this.bottomScope =
         LinkedFlowScope.createEntryLattice(
@@ -143,7 +144,7 @@ class TypeInference
 
   /** Infers all of a function's parameters if their types aren't declared. */
   @SuppressWarnings("ReferenceEquality") // unknownType is a singleton
-  private void inferParameters(TypedScope functionScope) {
+  private FlowScope inferParameters(TypedScope functionScope, FlowScope entryFlowScope) {
     Node functionNode = functionScope.getRootNode();
     Node astParameters = functionNode.getSecondChild();
     Node iifeArgumentNode = null;
@@ -160,7 +161,9 @@ class TypeInference
         Node parameterTypeNode = parameterTypes.getFirstChild();
         for (Node astParameter : astParameters.children()) {
           boolean isRest = false;
+          Node defaultValue = null;
           if (astParameter.isDefaultValue()) {
+            defaultValue = astParameter.getSecondChild();
             astParameter = astParameter.getFirstChild();
           }
           if (astParameter.isRest()) {
@@ -208,9 +211,23 @@ class TypeInference
           if (iifeArgumentNode != null) {
             iifeArgumentNode = iifeArgumentNode.getNext();
           }
+
+          // 1. do type inference within the default value expression
+          // 2. add a flow scope slot for the assignment to the parameter. (which will not matter
+          //     for declared parameters, just inferred parameters.
+          if (defaultValue != null) {
+            traverse(defaultValue, entryFlowScope);
+            JSType newType =
+                registry.createUnionType(
+                    getJSType(astParameter).restrictByNotUndefined(), getJSType(defaultValue));
+            entryFlowScope =
+                updateScopeForAssignment(
+                    entryFlowScope, astParameter, getJSType(astParameter), newType);
+          }
         }
       }
     }
+    return entryFlowScope;
   }
 
   @Override
