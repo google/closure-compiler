@@ -361,6 +361,54 @@ testSuite({
           (actual) => compareResults({value: undefined, done: true}, actual)),
     ]);
   },
+  testAsyncGenThisAndArguments() {
+    let C = class {
+      constructor(argIdx) {
+        /** @type {string} */
+        this.msg = 'first_';
+        /** @const {number} */
+        this.argIdx = argIdx;
+      }
+      async * foo(arg0, arg1, arg2) {
+        while (this.msg !== 'last_') {
+          this.msg = yield this.msg + arguments[this.argIdx];
+        }
+        yield this.msg + arguments[this.argIdx];
+      }
+    };
+    let c = new C(0);
+    let gen = c.foo('foo', 'wrong_arg', 'another_wrong_arg');
+    return (async function() {
+      compareResults({value: 'first_foo', done: false}, await gen.next());
+      compareResults({value: 'next_foo', done: false}, await gen.next('next_'));
+      compareResults({value: 'next_foo', done: false}, await gen.next('next_'));
+      compareResults({value: 'last_foo', done: false}, await gen.next('last_'));
+      compareResults({value: undefined, done: true}, await gen.next());
+    })();
+  },
+  testAsyncGenSuper() {
+    let A = class {
+      constructor() {
+        /** @const {string} */
+        this.foo = 'ABC';
+      }
+      m() {
+        return this.foo;
+      }
+    };
+    let B = class extends A {
+      async * m() {
+        yield* super.m();
+      }
+    };
+    let gen = new B().m();
+    return (async function() {
+      compareResults({value: 'A', done: false}, await gen.next());
+      compareResults({value: 'B', done: false}, await gen.next());
+      compareResults({value: 'C', done: false}, await gen.next());
+      compareResults({value: undefined, done: true}, await gen.next());
+    })();
+  },
 
   testForAwaitOfOverArray() {
     async function foo() {

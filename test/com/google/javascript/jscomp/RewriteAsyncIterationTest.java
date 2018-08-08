@@ -136,31 +136,130 @@ public class RewriteAsyncIterationTest extends CompilerTestCase {
             "}"));
   }
 
-  public void testRuntimeTest() {
+  public void testThisInAsyncGenerator() {
+    test(
+        "async function* baz() { yield this; }",
+        lines(
+            "function baz() {",
+            "  const $jscomp$asyncIter$this = this;",
+            "  return new $jscomp.AsyncGeneratorWrapper((function*() {",
+            "    yield new $jscomp.AsyncGeneratorWrapper$ActionRecord(",
+            "      $jscomp.AsyncGeneratorWrapper$ActionEnum.YIELD_VALUE, $jscomp$asyncIter$this);",
+            "  })());",
+            "}"));
+  }
+
+  public void testThisInAsyncGeneratorNestedInAsyncGenerator() {
+    test(
+        "async function* baz() { return async function*() { yield this; } }",
+        lines(
+            "function baz() {",
+            "  return new $jscomp.AsyncGeneratorWrapper((function*() {",
+            "    return function() {",
+            "      const $jscomp$asyncIter$this = this;",
+            "      return new $jscomp.AsyncGeneratorWrapper((function*() {",
+            "        yield new $jscomp.AsyncGeneratorWrapper$ActionRecord(",
+            "          $jscomp.AsyncGeneratorWrapper$ActionEnum.YIELD_VALUE,",
+            "          $jscomp$asyncIter$this);",
+            "      })());",
+            "    };",
+            "  })());",
+            "}"));
+  }
+
+  public void testThisInFunctionNestedInAsyncGenerator() {
+    test(
+        lines("async function* baz() {  return function() { return this; }; }"),
+        lines(
+            "function baz() {",
+            "  return new $jscomp.AsyncGeneratorWrapper((function*() {",
+            "    return function() { return this; };",
+            "  })());",
+            "}"));
+
+    test(
+        lines("async function* baz() {  return () => this; }"),
+        lines(
+            "function baz() {",
+            "  const $jscomp$asyncIter$this = this;",
+            "  return new $jscomp.AsyncGeneratorWrapper((function*() {",
+            "    return () => $jscomp$asyncIter$this;",
+            "  })());",
+            "}"));
+  }
+
+  public void testInnerSuperReferenceInAsyncGenerator() {
     test(
         lines(
-            "function testBasic() {",
-            "  async function* foo() {",
-            "    yield (await Promise.resolve(1234))",
+            "class A {",
+            "  m() {",
+            "    return this;",
             "  }",
-            "  let gen = foo();",
-            "  assertEquals({ next: 1234, done: false }, gen.next());",
-            "  assertEquals({ next: undefined, done: true }, gen.next());",
+            "}",
+            "class X extends A {",
+            "  async *m() {",
+            "    const tmp = super.m;",
+            "    return tmp.call(null);",
+            "  }",
             "}"),
         lines(
-            "function testBasic(){",
-            "  function foo(){",
-            "    return new $jscomp.AsyncGeneratorWrapper(function*(){",
-            "      yield new $jscomp.AsyncGeneratorWrapper$ActionRecord(",
-            "        $jscomp.AsyncGeneratorWrapper$ActionEnum.YIELD_VALUE,",
-            "        yield new $jscomp.AsyncGeneratorWrapper$ActionRecord(",
-            "          $jscomp.AsyncGeneratorWrapper$ActionEnum.AWAIT_VALUE,",
-            "          Promise.resolve(1234)))",
-            "    }())",
+            "class A {",
+            "  m() {",
+            "    return this;",
             "  }",
-            "  let gen=foo();",
-            "  assertEquals({next:1234,done:false}, gen.next());",
-            "  assertEquals({next:undefined,done:true},gen.next())",
+            "}",
+            "class X extends A {",
+            "  m() {",
+            "    const $jscomp$asyncIter$super$get$m = () => super.m;",
+            "    return new $jscomp.AsyncGeneratorWrapper(",
+            "        function* () {",
+            "          const tmp = $jscomp$asyncIter$super$get$m();",
+            "          return tmp.call(null);",
+            "        }());",
+            "  }",
+            "}"));
+  }
+
+  public void testCannotConvertSuperGetElemInAsyncGenerator() {
+    testError(
+        lines(
+            "class A {",
+            "  m() {",
+            "    return this;",
+            "  }",
+            "}",
+            "class X extends A {",
+            "  async *m() {",
+            "    const tmp = super['m'];",
+            "    return tmp.call(null);",
+            "  }",
+            "}"),
+        RewriteAsyncIteration.CANNOT_CONVERT_ASYNCGEN,
+        RewriteAsyncIteration.CANNOT_CONVERT_ASYNCGEN.format(
+            "super only allowed with getprop (like super.foo(), not super['foo']())"));
+  }
+
+  public void testInnerArrowFunctionUsingArguments() {
+    test(
+        lines(
+            "class X {",
+            "  async *m() {",
+            "    return new Promise((resolve, reject) => {",
+            "      return arguments;",
+            "    });",
+            "  }",
+            "}"),
+        lines(
+            "class X {",
+            "  m() {",
+            "    const $jscomp$asyncIter$arguments = arguments;",
+            "    return new $jscomp.AsyncGeneratorWrapper(",
+            "        function* () {",
+            "          return new Promise((resolve, reject) => {",
+            "            return $jscomp$asyncIter$arguments",
+            "          });",
+            "        }());",
+            "  }",
             "}"));
   }
 
