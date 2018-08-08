@@ -883,12 +883,20 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       case FOR:
       case TEMPLATELIT_SUB:
       case REST:
+      case DESTRUCTURING_LHS:
+      case ARRAY_PATTERN:
+      case OBJECT_PATTERN:
         typeable = false;
         break;
 
       case DEFAULT_VALUE:
         checkCanAssignToWithScope(
-            t, n, n.getFirstChild(), getJSType(n.getSecondChild()), "default value has wrong type");
+            t,
+            n,
+            n.getFirstChild(),
+            getJSType(n.getSecondChild()),
+            /* info= */ null,
+            "default value has wrong type");
         typeable = false;
         break;
 
@@ -1025,7 +1033,53 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     Node lvalue = assign.getFirstChild();
     Node rvalue = assign.getLastChild();
 
-    // Check property sets to 'object.property' when 'object' is known.
+    JSType rightType = getJSType(rvalue);
+    checkCanAssignToWithScope(t, assign, lvalue, rightType, info, "assignment");
+    ensureTyped(assign, rightType);
+  }
+
+  /**
+   * Checks that we can assign the given right type to the given lvalue or destructuring pattern.
+   *
+   * <p>See {@link #checkCanAssignToNameGetpropOrGetelem(NodeTraversal, Node, Node, JSType,
+   * JSDocInfo, String)} for more details
+   *
+   * @param nodeToWarn A node to report type mismatch warnings on
+   * @param lvalue The lvalue to which we're assigning or a destructuring pattern
+   * @param rightType The type we're assigning to the lvalue
+   * @param msg A message to report along with any type mismatch warnings
+   */
+  private void checkCanAssignToWithScope(
+      NodeTraversal t, Node nodeToWarn, Node lvalue, JSType rightType, JSDocInfo info, String msg) {
+    if (lvalue.isDestructuringPattern()) {
+      for (Node child : lvalue.children()) {
+        DestructuredTarget target = DestructuredTarget.createTarget(typeRegistry, rightType, child);
+        // TODO(b/77597706): this is not very efficient because it re-infers the types below,
+        // which we already did once in TypeInference. don't repeat the work.
+        checkCanAssignToWithScope(
+            t, nodeToWarn, target.getNode(), target.inferType(), /* info= */ null, msg);
+      }
+    } else {
+      checkCanAssignToNameGetpropOrGetelem(t, nodeToWarn, lvalue, rightType, info, msg);
+    }
+  }
+
+  /**
+   * Checks that we can assign the given right type to the given lvalue.
+   *
+   * <p>If the lvalue is a qualified name, and has a declared type in the given scope, uses the
+   * declared type of the qualified name instead of the type on the node.
+   *
+   * @param nodeToWarn A node to report type mismatch warnings on
+   * @param lvalue The lvalue to which we're assigning - a NAME, GETELEM, or GETPROP
+   * @param rightType The type we're assigning to the lvalue
+   * @param msg A message to report along with any type mismatch warnings
+   */
+  private void checkCanAssignToNameGetpropOrGetelem(
+      NodeTraversal t, Node nodeToWarn, Node lvalue, JSType rightType, JSDocInfo info, String msg) {
+    checkArgument(
+        lvalue.isName() || lvalue.isGetProp() || lvalue.isGetElem() || lvalue.isCast(), lvalue);
+
     if (lvalue.isGetProp()) {
       Node object = lvalue.getFirstChild();
       JSType objectJsType = getJSType(object);
@@ -1037,11 +1091,11 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       if (object.isGetProp()) {
         JSType jsType = getJSType(object.getFirstChild());
         if (jsType.isInterface() && object.getLastChild().getString().equals("prototype")) {
-          visitInterfacePropertyAssignment(t, object, rvalue);
+          visitInterfacePropertyAssignment(t, object, lvalue);
         }
       }
 
-      checkEnumAlias(t, info, rvalue);
+      checkEnumAlias(t, info, rightType, nodeToWarn);
       checkPropCreation(t, lvalue);
 
       // Prototype assignments are special, because they actually affect
@@ -1049,7 +1103,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       // during TypedScopeCreator, and we only look for the "dumb" cases here.
       // object.prototype = ...;
       if (pname.equals("prototype")) {
-        validator.expectCanAssignToPrototype(t, objectJsType, rvalue, getJSType(rvalue));
+        validator.expectCanAssignToPrototype(t, objectJsType, nodeToWarn, rightType);
         return;
       }
 
@@ -1059,7 +1113,8 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       ObjectType objectCastType = ObjectType.cast(objectJsType.restrictByNotNullOrUndefined());
       JSType expectedPropertyType = getPropertyTypeIfDeclared(objectCastType, pname);
 
-      checkPropertyInheritanceOnGetpropAssign(t, assign, object, pname, info, expectedPropertyType);
+      checkPropertyInheritanceOnGetpropAssign(
+          t, nodeToWarn, object, pname, info, expectedPropertyType);
 
       // If we successfully found a non-unknown declared type, validate the assignment and don't do
       // any further checks.
@@ -1068,30 +1123,12 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         // assignments to it.
         if (!propertyIsImplicitCast(objectCastType, pname)) {
           validator.expectCanAssignToPropertyOf(
-              t, assign, getJSType(rvalue), expectedPropertyType, object, pname);
+              t, nodeToWarn, rightType, expectedPropertyType, object, pname);
         }
         return;
       }
     }
 
-    JSType rightType = getJSType(rvalue);
-    checkCanAssignToWithScope(t, assign, lvalue, rightType, "assignment");
-    ensureTyped(assign, rightType);
-  }
-
-  /**
-   * Checks that we can assign the given right type to the given lvalue.
-   *
-   * <p>If the lvalue is a qualified name, and has a declared type in the given scope, uses the
-   * declared type of the qualified name instead of the type on the node.
-   *
-   * @param assign A node to report warnings on for this assignment
-   * @param lvalue The lvalue to which we're assigning
-   * @param rightType The type we're assigning to the lvalue
-   * @param msg A message to report along with any type mismatch warnings
-   */
-  private void checkCanAssignToWithScope(
-      NodeTraversal t, Node assign, Node lvalue, JSType rightType, String msg) {
 
     // Check qualified name sets to 'object' and 'object.property'.
     // This can sometimes handle cases when the type of 'object' is not known.
@@ -1119,7 +1156,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       }
     } // Fall through case for arbitrary LHS and arbitrary RHS.
 
-    validator.expectCanAssignTo(t, assign, rightType, leftType, msg);
+    validator.expectCanAssignTo(t, nodeToWarn, rightType, leftType, msg);
   }
 
   private void checkPropCreation(NodeTraversal t, Node lvalue) {
@@ -1535,13 +1572,20 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
   }
 
   /**
-   * Visits an ASSIGN node for cases such as
+   * Visits an lvalue node for cases such as
    *
    * <pre>
    * interface.prototype.property = ...;
    * </pre>
    */
-  private void visitInterfacePropertyAssignment(NodeTraversal t, Node object, Node rvalue) {
+  private void visitInterfacePropertyAssignment(NodeTraversal t, Node object, Node lvalue) {
+    if (!lvalue.getParent().isAssign()) {
+      // assignments to interface properties cannot be in destructuring patterns or for-of loops
+      reportInvalidInterfaceMemberDeclaration(t, object);
+      return;
+    }
+    Node assign = lvalue.getParent();
+    Node rvalue = assign.getSecondChild();
     JSType rvalueType = getJSType(rvalue);
 
     // Only 2 values are allowed for interface methods:
@@ -1631,35 +1675,9 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       // e.g. get "x" given the VAR in "for (var x of arr) {"
       lhs = lhs.getFirstChild();
     }
-
-    // Do some additional checks for property accesses in the initializer
-    // e.g. check `obj.foo` in `for (obj.foo of someIterable) {`
-    if (lhs.isGetProp()) {
-      Node object = lhs.getFirstChild();
-      // Don't allow assigning to an interface member
-      if (object.isGetProp() && object.getLastChild().getString().equals("prototype")) {
-        JSType jsType = getJSType(object.getFirstChild());
-        if (jsType.isInterface()) {
-          reportInvalidInterfaceMemberDeclaration(t, object);
-        }
-      }
-      checkPropCreation(t, lhs);
-
-      JSType objectJsType = getJSType(object);
-      Node property = lhs.getLastChild();
-      String pname = property.getString();
-
-      ObjectType objectCastType = ObjectType.cast(objectJsType.restrictByNotNullOrUndefined());
-      JSType expectedPropertyType = getPropertyTypeIfDeclared(objectCastType, pname);
-      if (!expectedPropertyType.isUnknownType()) {
-        // Note: if the property has @implicitCast at its declaration, we don't check any
-        // assignments to it.
-        if (!propertyIsImplicitCast(objectCastType, pname)) {
-          validator.expectCanAssignToPropertyOf(
-              t, iterable, actualType, expectedPropertyType, object, pname);
-        }
-        return;
-      }
+    if (lhs.isDestructuringLhs()) {
+      // e.g. get `[x, y]` given the VAR in `for (var [x, y] of arr) {`
+      lhs = lhs.getFirstChild();
     }
 
     checkCanAssignToWithScope(
@@ -1667,6 +1685,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         forOf,
         lhs,
         actualType,
+        lhs.getJSDocInfo(),
         "declared type of for-of loop variable does not match inferred type");
   }
 
@@ -1876,27 +1895,27 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     // on the NAME node. We probably want to wait for the parser
     // merge to fix this.
     JSDocInfo varInfo = n.hasOneChild() ? n.getJSDocInfo() : null;
-    for (Node name : n.children()) {
-      Node value = name.getFirstChild();
-      // A null var would indicate a bug in the scope creation logic.
-      TypedVar var = t.getTypedScope().getVar(name.getString());
+    for (Node child : n.children()) {
+      if (child.isName()) {
+        Node value = child.getFirstChild();
 
-      if (value != null) {
+        if (value != null) {
+          JSType valueType = getJSType(value);
+          JSDocInfo info = child.getJSDocInfo();
+          if (info == null) {
+            info = varInfo;
+          }
+
+          checkEnumAlias(t, info, valueType, value);
+          checkCanAssignToWithScope(t, value, child, valueType, info, "initializing variable");
+        }
+      } else {
+        checkState(child.isDestructuringLhs(), child);
+        Node name = child.getFirstChild();
+        Node value = child.getSecondChild();
         JSType valueType = getJSType(value);
-        JSType nameType = var.getType();
-        nameType = (nameType == null) ? getNativeType(UNKNOWN_TYPE) : nameType;
-        JSDocInfo info = name.getJSDocInfo();
-        if (info == null) {
-          info = varInfo;
-        }
-
-        checkEnumAlias(t, info, value);
-        if (var.isTypeInferred()) {
-          ensureTyped(name, valueType);
-        } else {
-          validator.expectCanAssignTo(
-              t, value, valueType, nameType, "initializing variable");
-        }
+        checkCanAssignToWithScope(
+            t, child, name, valueType, /* info= */ null, "initializing variable");
       }
     }
   }
@@ -2605,26 +2624,26 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
   }
 
   /**
-   * <p>Checks enum aliases.
+   * Checks enum aliases.
    *
-   * <p>We verify that the enum element type of the enum used
-   * for initialization is a subtype of the enum element type of
-   * the enum the value is being copied in.</p>
+   * <p>We verify that the enum element type of the enum used for initialization is a subtype of the
+   * enum element type of the enum the value is being copied in.
    *
-   * <p>Example:</p>
+   * <p>Example:
+   *
    * <pre>var myEnum = myOtherEnum;</pre>
    *
-   * <p>Enum aliases are irregular, so we need special code for this :(</p>
+   * <p>Enum aliases are irregular, so we need special code for this :(
    *
-   * @param value the value used for initialization of the enum
+   * @param valueType the type of the value used for initialization of the enum
+   * @param nodeToWarn the node on which to issue warnings on
    */
   private void checkEnumAlias(
-      NodeTraversal t, JSDocInfo declInfo, Node value) {
+      NodeTraversal t, JSDocInfo declInfo, JSType valueType, Node nodeToWarn) {
     if (declInfo == null || !declInfo.hasEnumParameterType()) {
       return;
     }
 
-    JSType valueType = getJSType(value);
     if (!valueType.isEnumType()) {
       return;
     }
@@ -2632,7 +2651,10 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     EnumType valueEnumType = valueType.toMaybeEnumType();
     JSType valueEnumPrimitiveType =
         valueEnumType.getElementsType().getPrimitiveType();
-    validator.expectCanAssignTo(t, value, valueEnumPrimitiveType,
+    validator.expectCanAssignTo(
+        t,
+        nodeToWarn,
+        valueEnumPrimitiveType,
         declInfo.getEnumParameterType().evaluate(t.getTypedScope(), typeRegistry),
         "incompatible enum element types");
   }

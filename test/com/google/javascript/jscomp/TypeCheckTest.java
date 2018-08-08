@@ -20483,6 +20483,10 @@ public final class TypeCheckTest extends TypeCheckTestCase {
     testTypes("var x = 1; debugger; x = 2;");
   }
 
+  public void testCastOnLhsOfAssignBlocksBadAssignmentWarning() {
+    testTypes("var /** number */ x = 1; (/** @type {?} */ (x)) = 'foobar';");
+  }
+
   private void testClosureTypes(String js, String description) {
     testClosureTypesMultipleWarnings(js,
         description == null ? null : ImmutableList.of(description));

@@ -5538,4 +5538,17 @@ public final class IntegrationTest extends IntegrationTestCase {
             "  JSCompiler_StaticMethods_restart(e)",
             "}"));
   }
+
+  public void testCastInLhsOfAssign() {
+    CompilerOptions options = createCompilerOptions();
+    options.setCheckTypes(true);
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+
+    test(
+        options,
+        // it's kind of weird that we allow casts on the lhs, but some existing code uses this
+        // feature. this is just a regression test so we won't accidentally break this feature.
+        "var /** string */ str = 'foo'; (/** @type {?} */ (str)) = 3;",
+        "");
+  }
 }
