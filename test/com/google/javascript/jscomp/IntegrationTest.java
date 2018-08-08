@@ -5494,4 +5494,48 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setRenamePrefixNamespaceAssumeCrossModuleNames(true);
     return options;
   }
+
+  public void testGithubIssue3040() {
+    CompilerOptions options = createCompilerOptions();
+    options.checkTypes = true;
+    options.devirtualizePrototypeMethods = true;
+
+    ImmutableList.Builder<SourceFile> externsList = ImmutableList.builder();
+    externsList.addAll(externs);
+    externsList.add(
+        SourceFile.fromCode(
+            "other_externs.js",
+            lines(
+                "/** @constructor */",
+                "var SomeExternType = function() {",
+                "  /** @type {function()} */",
+                "  this.restart;",
+                "}")));
+    externs = externsList.build();
+
+    test(
+        options,
+        lines(
+            "class X {",
+            "  restart(n) {",
+            "    console.log(n);",
+            "  }",
+            "}",
+            "/** @param {SomeExternType} e */",
+            "function f(e) {",
+            "  new X().restart(5);",
+            "  e.restart();",
+            "}"),
+        lines(
+            "var X = function() {};",
+            "var JSCompiler_StaticMethods_restart = function(",
+            "    JSCompiler_StaticMethods_restart$self, n) {",
+            "  console.log(n)",
+            "};",
+            "function f(e) {",
+            "  JSCompiler_StaticMethods_restart(new X, 5);",
+            // TODO(tjgq): The following line should be `e.restart()`.
+            "  JSCompiler_StaticMethods_restart(e)",
+            "}"));
+  }
 }
