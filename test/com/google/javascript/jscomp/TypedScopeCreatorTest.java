@@ -495,6 +495,26 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
         .toStringIsEqualTo("Array<number>");
   }
 
+  public void testRestObjectPatternParameters() {
+    testSame(
+        externs("/** @type {number} */ Array.prototype.length"),
+        srcs(
+            lines(
+                "/**", // preserve newlines
+                " * @param {...string} strs",
+                " */",
+                "function doSomething(...{length}) {",
+                "  FUNCTION_BODY: 0;",
+                "}",
+                "")));
+    TypedScope functionBodyScope = getLabeledStatement("FUNCTION_BODY").enclosingScope;
+    assertScope(functionBodyScope)
+        .declares("length")
+        .onClosestContainerScope()
+        .withTypeThat()
+        .toStringIsEqualTo("number");
+  }
+
   public void testDefaultParameterFullJSDoc() {
     testSame(
         lines(

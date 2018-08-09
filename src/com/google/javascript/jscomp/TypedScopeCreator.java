@@ -2583,9 +2583,15 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
 
         case REST: // function f(...x) {}
           // rest parameter is actually an array of the type specified in the JSDoc
+          Node param = astParameter.getFirstChild();
           ObjectType arrayType = typeRegistry.getNativeObjectType(ARRAY_TYPE);
           JSType restParamType = typeRegistry.createTemplatizedType(arrayType, paramType);
-          declareSingleParameterName(isInferred, astParameter.getFirstChild(), restParamType);
+          if (param.isName()) {
+            declareSingleParameterName(isInferred, astParameter.getFirstChild(), restParamType);
+          } else {
+            // function f(...{length}) {}
+            declareDestructuringParameter(isInferred, param, restParamType);
+          }
           break;
 
         case DEFAULT_VALUE: // function f(x = 3) {} or function f([x] = []) {}
