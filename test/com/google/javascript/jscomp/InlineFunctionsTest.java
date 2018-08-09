@@ -3382,4 +3382,22 @@ public class InlineFunctionsTest extends CompilerTestCase {
             "}",
             "alert(g(10));"));
   }
+
+  public void testNotInliningFunctionWithSuper() {
+    // Super field accessor arrow functions like this one are used for transpilation of some
+    // features such as async functions and async generators. If inlined, it becomes a syntax error
+    // as the inner function has no super.
+    testSame(
+        lines(
+            "class A { m(){ return 1 } };",
+            "class B extends A {",
+            "  m() {",
+            "    const super$m = () => super.m;",
+            "    const jscomp$this = this;",
+            "    return function*() {",
+            "      yield super$m().call(jscomp$this);",
+            "    };",
+            "  }",
+            "}"));
+  }
 }

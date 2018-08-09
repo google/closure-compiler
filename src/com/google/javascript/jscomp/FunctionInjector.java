@@ -159,22 +159,24 @@ class FunctionInjector {
     boolean referencesArguments = NodeUtil.isNameReferenced(
         block, "arguments", NodeUtil.MATCH_NOT_FUNCTION);
 
-    // or it references "eval" or one of its names anywhere.
-    Predicate<Node> p = new Predicate<Node>(){
-      @Override
-      public boolean apply(Node n) {
-        if (n.isName()) {
-          return n.getString().equals("eval")
-            || (!fnName.isEmpty()
-                && n.getString().equals(fnName))
-            || (!fnRecursionName.isEmpty()
-                && n.getString().equals(fnRecursionName));
-        }
-        return false;
-      }
-    };
+    Predicate<Node> blocksInjection =
+        new Predicate<Node>() {
+          @Override
+          public boolean apply(Node n) {
+            if (n.isName()) {
+              // References "eval" or one of its names anywhere.
+              return n.getString().equals("eval")
+                  || (!fnName.isEmpty() && n.getString().equals(fnName))
+                  || (!fnRecursionName.isEmpty() && n.getString().equals(fnRecursionName));
+            } else if (n.isSuper()) {
+              // Don't inline if this function or its inner functions contains super
+              return true;
+            }
+            return false;
+          }
+        };
 
-    return !referencesArguments && !NodeUtil.has(block, p, Predicates.alwaysTrue());
+    return !referencesArguments && !NodeUtil.has(block, blocksInjection, Predicates.alwaysTrue());
   }
 
   /**
@@ -372,7 +374,7 @@ class FunctionInjector {
     /**
      * An var declaration and initialization, where the result of the call is
      * assigned to the declared name
-     * name. For example: "a = foo();".
+     * name. For example: "var a = foo();".
      *   VAR
      *     NAME A
      *       CALL

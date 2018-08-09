@@ -3275,6 +3275,109 @@ public final class IntegrationTest extends IntegrationTestCase {
         TypeCheck.INEXISTENT_PROPERTY);
   }
 
+  public void testAsyncFunctionSuper() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.SIMPLE_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2015);
+    options.setPropertyRenaming(PropertyRenamingPolicy.OFF);
+    options.setVariableRenaming(VariableRenamingPolicy.OFF);
+    options.setPrettyPrint(true);
+
+    // Create a noninjecting compiler avoid comparing all the polyfill code.
+    useNoninjectingCompiler = true;
+
+    // include externs definitions for the stuff that would have been injected
+    ImmutableList.Builder<SourceFile> externsList = ImmutableList.builder();
+    externsList.addAll(externs);
+    externsList.add(SourceFile.fromCode("extraExterns", "var $jscomp = {};"));
+    externs = externsList.build();
+
+    test(
+        options,
+        lines(
+            "class Foo {",
+            "  async bar() {",
+            "    console.log('bar');",
+            "  }",
+            "}",
+            "",
+            "class Baz extends Foo {",
+            "  async bar() {",
+            "    await Promise.resolve();",
+            "    super.bar();",
+            "  }",
+            "}\n"),
+        lines(
+            "class Foo {",
+            "  bar() {",
+            "    return $jscomp.asyncExecutePromiseGeneratorFunction(function*() {",
+            "      console.log(\"bar\");",
+            "    });",
+            "  }",
+            "}",
+            "class Baz extends Foo {",
+            "  bar() {",
+            "    const $jscomp$async$this = this, $jscomp$async$super$get$bar = () => super.bar;",
+            "    return $jscomp.asyncExecutePromiseGeneratorFunction(function*() {",
+            "      yield Promise.resolve();",
+            "      $jscomp$async$super$get$bar().call($jscomp$async$this);",
+            "    });",
+            "  }",
+            "}"));
+  }
+
+  public void testAsyncIterationSuper() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.SIMPLE_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2017);
+    options.setPropertyRenaming(PropertyRenamingPolicy.OFF);
+    options.setVariableRenaming(VariableRenamingPolicy.OFF);
+    options.setPrettyPrint(true);
+
+    // Create a noninjecting compiler avoid comparing all the polyfill code.
+    useNoninjectingCompiler = true;
+
+    // include externs definitions for the stuff that would have been injected
+    ImmutableList.Builder<SourceFile> externsList = ImmutableList.builder();
+    externsList.addAll(externs);
+    externsList.add(SourceFile.fromCode("extraExterns", "var $jscomp = {};"));
+    externs = externsList.build();
+
+    test(
+        options,
+        lines(
+            "class Foo {",
+            "  async *bar() {",
+            "    console.log('bar');",
+            "  }",
+            "}",
+            "",
+            "class Baz extends Foo {",
+            "  async *bar() {",
+            "    super.bar().next();",
+            "  }",
+            "}\n"),
+        lines(
+            "class Foo {",
+            "  bar() {",
+            "    return new $jscomp.AsyncGeneratorWrapper(function*() {",
+            "      console.log(\"bar\");",
+            "    }());",
+            "  }",
+            "}",
+            "class Baz extends Foo {",
+            "  bar() {",
+            "    const $jscomp$asyncIter$this = this,",
+            "          $jscomp$asyncIter$super$get$bar = () => super.bar;",
+            "    return new $jscomp.AsyncGeneratorWrapper(function*() {",
+            "      $jscomp$asyncIter$super$get$bar().call($jscomp$asyncIter$this).next();",
+            "    }());",
+            "  }",
+            "}"));
+  }
+
   public void testLanguageMode() {
     CompilerOptions options = createCompilerOptions();
 
