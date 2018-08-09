@@ -914,7 +914,7 @@ public final class InferJSDocInfoTest extends CompilerTestCase {
 
     // Then
     assertEquals("I'm a class.", xType.getJSDocInfo().getBlockDescription());
-    assertNull(xType.getPropertyJSDocInfo("constructor"));
+    assertNotNull(xType.getPropertyJSDocInfo("constructor"));
   }
 
   public void testJSDocDoesNotPropagateFromStructuralTypesToClassProperties() {

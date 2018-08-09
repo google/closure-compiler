@@ -1999,12 +1999,28 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
             "  constructor(/** string */ arg) {}",
             "}",
             "class Foo extends Bar {",
-            "  constructor(/** number */ arg) {}",
+            "  constructor(/** number */ arg) { super(''); }",
+            "  static method() {}",
             "}"));
+    FunctionType bar = (FunctionType) (findNameType("Bar", globalScope));
     FunctionType foo = (FunctionType) (findNameType("Foo", globalScope));
+    assertType(foo).withTypeOfProp("method").isNotUnknown();
+    assertType(foo).withTypeOfProp("method").isNotEmpty();
+
+    ObjectType barObject = bar.getInstanceType();
+    ObjectType fooObject = foo.getInstanceType();
+
     List<JSType> params = ImmutableList.copyOf(foo.getParameterTypes());
     assertThat(params).hasSize(1);
     assertType(params.get(0)).isNumber();
+    JSType barConstructorProperty = barObject.getPropertyType("constructor");
+    assertType(barConstructorProperty).toStringIsEqualTo("function(new:Bar, ...?): ?");
+
+    JSType fooConstructorProperty = fooObject.getPropertyType("constructor");
+    assertType(fooConstructorProperty).toStringIsEqualTo("function(new:Foo, ...?): ?");
+
+    assertType(fooConstructorProperty).isSubtypeOf(barConstructorProperty);
+    assertType(fooConstructorProperty).withTypeOfProp("method").isNotUnknown();
   }
 
   public void testClassDeclarationWithNestedExtendsAndInheritedConstructor() {

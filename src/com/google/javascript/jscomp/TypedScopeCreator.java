@@ -1076,7 +1076,27 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       // TODO(sdh): Handle template parameters.  The constructor should store all parameters,
       // while the instance type should only have the class-level parameters?
 
-      return builder.buildAndRegister();
+      // Add the type for the "constructor" property.
+      FunctionType classType = builder.buildAndRegister();
+      if (classType.isConstructor()) {
+        // NOTE: This logic is similar to the goog.inherits handling in
+        // ClosureCodingConvention#applySubclassRelationship. If this logic is modified
+        // it is likely that code needs to be modified as well.
+
+        // Notice that constructor functions do not need to be covariant on the superclass.
+        // So if G extends F, new G() and new F() can accept completely different argument
+        // types, but G.prototype.constructor needs to be covariant on F.prototype.constructor.
+        // To get around this, we just turn off type-checking on arguments and return types
+        // of G.prototype.constructor.
+
+        // NOTE: For final classes we could do better here and retain the parameter types.
+
+        FunctionType qmarkCtor = classType.forgetParameterAndReturnTypes();
+        ObjectType classPrototypeType = classType.getPrototypeProperty();
+        classPrototypeType.defineDeclaredProperty("constructor", qmarkCtor, classType.getSource());
+      }
+
+      return classType;
     }
 
     /**
