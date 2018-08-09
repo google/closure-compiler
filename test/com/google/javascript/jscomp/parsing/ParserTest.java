@@ -1123,6 +1123,22 @@ public final class ParserTest extends BaseJSTypeTestCase {
     assertNodeHasJSDocInfoWithJSType(xYZName, STRING_TYPE);
   }
 
+  public void testInlineJSDocAttachmentToArrayPatElementAfterElision() {
+    Node letNode =
+        parse("let [, /** string */ x] = [];")
+            .getFirstChild();
+    assertNode(letNode).hasType(Token.LET);
+
+    Node destructuringLhs = letNode.getFirstChild();
+    Node arrayPattern = destructuringLhs.getFirstChild();
+    Node empty = arrayPattern.getFirstChild();
+    assertNode(empty).hasToken(Token.EMPTY);
+    assertNode(empty).hasCharno(5);
+    assertNode(empty).hasLength(1);
+    Node xVarName = arrayPattern.getSecondChild();
+    assertNodeHasJSDocInfoWithJSType(xVarName, STRING_TYPE);
+  }
+
   public void testInlineJSDocAttachmentToObjLitNormalProp() {
     Node letNode = parse("let x = { normalProp: /** string */ normalPropTarget };").getFirstChild();
     assertNode(letNode).hasType(Token.LET);

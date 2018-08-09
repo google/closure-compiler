@@ -3683,8 +3683,9 @@ public class Parser {
     eat(TokenType.OPEN_SQUARE);
     while (peek(TokenType.COMMA) || peekArrayPatternElement()) {
       if (peek(TokenType.COMMA)) {
+        SourcePosition nullStart = getTreeStartLocation();
         eat(TokenType.COMMA);
-        elements.add(new NullTree(getTreeLocation(getTreeStartLocation())));
+        elements.add(new NullTree(getTreeLocation(nullStart)));
       } else {
         elements.add(parsePatternAssignmentTarget(kind));
 
