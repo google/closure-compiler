@@ -206,13 +206,13 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
   static final DiagnosticType HIDDEN_SUPERCLASS_PROPERTY =
       DiagnosticType.disabled(
           "JSC_HIDDEN_SUPERCLASS_PROPERTY",
-          "property {0} already defined on superclass {1}; " + "use @override to override it");
+          "property {0} already defined on superclass {1}; use @override to override it");
 
   // disabled by default.
   static final DiagnosticType HIDDEN_INTERFACE_PROPERTY =
       DiagnosticType.disabled(
           "JSC_HIDDEN_INTERFACE_PROPERTY",
-          "property {0} already defined on interface {1}; " + "use @override to override it");
+          "property {0} already defined on interface {1}; use @override to override it");
 
   static final DiagnosticType HIDDEN_SUPERCLASS_PROPERTY_MISMATCH =
       DiagnosticType.warning(
@@ -1454,7 +1454,6 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         if (!declaredOverride
             && interfaceHasProperty
             && !"__proto__".equals(propertyName)
-            // TODO(b/76025401): Remove this allowance once Es6ConvertSuper is after type checking
             && !"constructor".equals(propertyName)) {
           // @override not present, but the property does override an interface property
           compiler.report(
@@ -1483,7 +1482,10 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     if (!declaredOverride
         && superClassHasDeclaredProperty
         && declaredLocally
-        && !"__proto__".equals(propertyName)) {
+        && !"__proto__".equals(propertyName)
+        // constructor always "overrides" the superclass "constructor" there is no
+        // value in marking it with "@override".
+        && !"constructor".equals(propertyName)) {
       // @override not present, but the property does override a superclass
       // property
       compiler.report(
