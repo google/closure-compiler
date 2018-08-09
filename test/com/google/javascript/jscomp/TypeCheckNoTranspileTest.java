@@ -30,7 +30,7 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
     return options;
   }
 
-    public void testArrowInferredReturn() {
+  public void testArrowInferredReturn() {
     // TODO(johnlenz): infer simple functions return results.
 
     // Verify arrows have do not have an incorrect inferred return.
