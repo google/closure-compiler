@@ -2168,14 +2168,14 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       // At this point, we're pretty sure it's inferred, since there's neither
       // useful jsdoc info, nor a useful const or doc'd function RHS.  But
       // there's still one case where it may still not be: if the RHS is a
-      // function that is not
+      // class or function that is not
       //   (1) a scoped qualified name (i.e. this.b.c or super.b.c),
       //   (2) already declared in a scope,
       //   (3) assigned in a conditional block, or
       //   (4) escaped to a closure,
       // then we treat it as if it is declared, rather than inferred.
-      // Stubs and non-functions are always considered inferred at this point.
-      if (rhsValue == null || !rhsValue.isFunction()) {
+      // Stubs and other values are always considered inferred at this point.
+      if (rhsValue == null || (!rhsValue.isFunction() && !rhsValue.isClass())) {
         return true;
       }
 

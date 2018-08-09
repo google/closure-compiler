@@ -49,6 +49,54 @@ public final class IntegrationTest extends IntegrationTestCase {
   private static final String CLOSURE_COMPILED =
       "var COMPILED = true; var goog$exportSymbol = function() {};";
 
+  public void testStaticMemberClass() {
+    CompilerOptions options = createCompilerOptions();
+    options.setClosurePass(true);
+    options.setCheckTypes(true);
+    options.setChecksOnly(true);
+
+    test(
+        options,
+        new String[] {
+          lines(
+              "/** @fileoverview @typeSummary */",
+              "goog.loadModule(function(exports) {",
+              "  \"use strict\";",
+              "  goog.module(\"foo.Foo\");",
+              "  goog.module.declareLegacyNamespace();",
+              "  class Foo {",
+              "    /**",
+              "     * @param {!Foo.Something} something",
+              "     */",
+              "     constructor(something) {",
+              "     }",
+              "  }",
+              "  /** @private @const @type {!Foo.Something} */ Foo.prototype.something_;",
+              "",
+              // We're testing to be sure that the reference to Foo.Something
+              // in JSDoc below resolves correctly even after module rewriting.
+              "  Foo.Something = class {",
+              "  };",
+              "  exports = Foo;",
+              "  return exports;",
+              "});",
+              ""),
+          lines(
+              "goog.module('b4d');",
+              "",
+              "const Foo = goog.require('foo.Foo');",
+              "",
+              "/**",
+              " * @param {!Foo.Something} something",
+              " */",
+              "function foo(something) {",
+              "  console.log(something);",
+              "}",
+              ""),
+        },
+        (String[]) null);
+  }
+
   public void testForOfDoesNotFoolSideEffectDetection() {
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);

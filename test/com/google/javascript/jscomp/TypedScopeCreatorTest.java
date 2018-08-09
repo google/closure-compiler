@@ -2248,6 +2248,25 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     assertType(foo).withTypeOfProp("method").isEqualTo(method);
   }
 
+  public void testClassExpressionWithStaticClassAssignedLater() {
+    testSame(
+        lines(
+            "var Foo = class {};",
+            // even though there's no JSDoc, this should be treated as a type declaration.
+            "Foo.Something = class {};",
+            ""));
+    assertScope(globalScope)
+        .declares("Foo")
+        .directly()
+        .withTypeThat()
+        .toStringIsEqualTo("function(new:Foo): undefined");
+    assertScope(globalScope)
+        .declares("Foo.Something")
+        .directly()
+        .withTypeThat()
+        .toStringIsEqualTo("function(new:Foo.Something): undefined");
+  }
+
   public void testClassExpressionInCallback() {
     testSame(
         lines(
