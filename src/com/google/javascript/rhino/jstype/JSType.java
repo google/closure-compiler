@@ -636,17 +636,23 @@ public abstract class JSType implements Serializable {
     return false;
   }
 
-  /**
-   * Checks if two types are equivalent.
-   */
-  public final boolean isEquivalentTo(JSType that) {
+  @Override
+  public boolean equals(@Nullable Object jsType) {
+    return (jsType instanceof JSType) && isEquivalentTo((JSType) jsType);
+  }
+
+  /** Checks if two types are equivalent. */
+  public final boolean isEquivalentTo(@Nullable JSType that) {
     return isEquivalentTo(that, false);
   }
 
-  public final boolean isEquivalentTo(JSType that, boolean isStructural) {
-    EqCache eqCache = isStructural ? EqCache.create()
-        : EqCache.createWithoutStructuralTyping();
+  public final boolean isEquivalentTo(@Nullable JSType that, boolean isStructural) {
+    EqCache eqCache = isStructural ? EqCache.create() : EqCache.createWithoutStructuralTyping();
     return checkEquivalenceHelper(that, EquivalenceMethod.IDENTITY, eqCache);
+  }
+
+  public static final boolean isEquivalent(@Nullable JSType typeA, @Nullable JSType typeB) {
+    return (typeA == null) ? (typeB == null) : typeA.isEquivalentTo(typeB);
   }
 
   /**
@@ -673,10 +679,14 @@ public abstract class JSType implements Serializable {
         EqCache.create());
   }
 
-  boolean checkEquivalenceHelper(final JSType that, EquivalenceMethod eqMethod, EqCache eqCache) {
-    if (areIdentical(this, that)) {
+  boolean checkEquivalenceHelper(
+      final @Nullable JSType that, EquivalenceMethod eqMethod, EqCache eqCache) {
+    if (that == null) {
+      return false;
+    } else if (areIdentical(this, that)) {
       return true;
     }
+
     if (this.isNoResolvedType() && that.isNoResolvedType()) {
       if (this.isNamedType() && that.isNamedType()) {
         return Objects.equals(
@@ -768,17 +778,6 @@ public abstract class JSType implements Serializable {
       }
     }
     return objType.getReferenceName();
-  }
-
-  public static boolean isEquivalent(JSType typeA, JSType typeB) {
-    return (typeA == null || typeB == null)
-        ? areIdentical(typeA, typeB)
-        : typeA.isEquivalentTo(typeB);
-  }
-
-  @Override
-  public boolean equals(Object jsType) {
-    return (jsType instanceof JSType) && isEquivalentTo((JSType) jsType);
   }
 
   /**
