@@ -119,8 +119,7 @@ public final class Es6RewriteModulesWithGoogInteropTest extends CompilerTestCase
     testModules(
         lines("const y = goog.require('closure.provide');", "use(y, y.x)", "export {};"),
         lines(
-            "use(closure.provide, closure.provide.x);",
-            "/** @const */ var module$testcode = {};"));
+            "use(closure.provide, closure.provide.x);", "/** @const */ var module$testcode = {};"));
   }
 
   public void testGoogRequireForProvideWithDestructure() {
@@ -298,9 +297,41 @@ public final class Es6RewriteModulesWithGoogInteropTest extends CompilerTestCase
         ImmutableList.of(
             SourceFile.fromCode("provide.js", "goog.provide('foo')"),
             SourceFile.fromCode(
-                "testcode",
-                lines(
-                    "use(foo);",
-                    "/** @const */ var module$testcode={};"))));
+                "testcode", lines("use(foo);", "/** @const */ var module$testcode={};"))));
+  }
+
+  public void testTypeNodeIsRenamed() {
+    testModules(
+        lines("const {Type} = goog.require('closure.provide');", "export let /** !Type */ value;"),
+        lines(
+            "let /** !closure.provide.Type */ value$$module$testcode;",
+            "/** @const */ var module$testcode={};",
+            "/** @const */ module$testcode.value = value$$module$testcode;"));
+
+    testModules(
+        lines("const Type = goog.require('closure.provide');", "export let /** !Type */ value;"),
+        lines(
+            "let /** !closure.provide */ value$$module$testcode;",
+            "/** @const */ var module$testcode={};",
+            "/** @const */ module$testcode.value = value$$module$testcode;"));
+  }
+
+  public void testCorrectTypeNodeIsRenamed() {
+    testModules(
+        lines(
+            "const {Type} = goog.require('closure.provide');",
+            "export let /** !Type */ value;",
+            "function foo() {",
+            "  class Type {}",
+            "  let /** !Type */ value;",
+            "}"),
+        lines(
+            "let /** !closure.provide.Type */ value$$module$testcode;",
+            "function foo$$module$testcode() {",
+            "  class Type {}",
+            "  let /** !Type */ value;",
+            "}",
+            "/** @const */ var module$testcode={};",
+            "/** @const */ module$testcode.value = value$$module$testcode;"));
   }
 }

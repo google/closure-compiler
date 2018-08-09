@@ -73,16 +73,6 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
   static final DiagnosticType DUPLICATE_EXPORT =
       DiagnosticType.error("JSC_DUPLICATE_EXPORT", "Duplicate export ''{0}''.");
 
-  static final DiagnosticType PATH_REQUIRE_FOR_NON_ES6_MODULE =
-      DiagnosticType.error(
-          "JSC_PATH_REQUIRE_FOR_NON_ES6_MODULE",
-          "Cannot goog.require ''{0}'' by path, it is not an ES6 module.{0}");
-
-  static final DiagnosticType PATH_REQUIRE_IN_NON_GOOG_MODULE =
-      DiagnosticType.error(
-          "JSC_PATH_REQUIRE_IN_NON_GOOG_MODULE",
-          "Cannot goog.require by path outside of goog.modules.");
-
   private final AbstractCompiler compiler;
 
   @Nullable private final PreprocessorSymbolTable preprocessorSymbolTable;
@@ -137,8 +127,6 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
   // symbols we have to inline anything that is require'd.
   private Map<String, String> namesToInlineByAlias;
 
-  private final Set<Node> importedGoogNames;
-
   private Set<String> typedefs;
 
   private final ModuleMetadata moduleMetadata;
@@ -155,7 +143,6 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
     this.compiler = compiler;
     this.preprocessorSymbolTable = preprocessorSymbolTable;
     moduleMetadata = new ModuleMetadata(compiler, processCommonJsModules, moduleResolutionMode);
-    this.importedGoogNames = new HashSet<>();
   }
 
   /**
@@ -211,7 +198,6 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
     this.scriptNodeCount = 0;
     this.exportsByLocalName = LinkedHashMultimap.create();
     this.importMap = new HashMap<>();
-    this.importedGoogNames.clear();
     this.typedefs = new HashSet<>();
     this.namesToInlineByAlias = new HashMap<>();
   }
@@ -636,6 +622,13 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
         compiler,
         script,
         (NodeTraversal t, Node n, Node parent) -> {
+          JSDocInfo info = n.getJSDocInfo();
+          if (info != null) {
+            for (Node typeNode : info.getTypeNodes()) {
+              inlineRequiredType(t, typeNode);
+            }
+          }
+
           if (n.isName() && namesToInlineByAlias.containsKey(n.getString())) {
             Var v = t.getScope().getVar(n.getString());
             if (v == null || v.getNameNode() != n) {
@@ -646,6 +639,30 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
             }
           }
         });
+  }
+
+  private void inlineRequiredType(NodeTraversal t, Node typeNode) {
+    if (typeNode.isString()) {
+      String name = typeNode.getString();
+      List<String> split = Splitter.on('.').limit(2).splitToList(name);
+
+      // We've already removed the alias.
+      if (t.getScope().getVar(split.get(0)) == null) {
+        String replacement = namesToInlineByAlias.get(split.get(0));
+        if (replacement != null) {
+          String rest = "";
+          if (split.size() == 2) {
+            rest = "." + split.get(1);
+          }
+          typeNode.setOriginalName(name);
+          typeNode.setString(replacement + rest);
+          t.reportCodeChange();
+        }
+      }
+    }
+    for (Node child : typeNode.children()) {
+      inlineRequiredType(t, child);
+    }
   }
 
   private void visitGoogModuleGet(NodeTraversal t, Node getCall, Node parent) {
@@ -789,14 +806,13 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
         }
 
         Var var = t.getScope().getVar(name);
-        if (var != null && var.isGlobal() && !importedGoogNames.contains(var.getNameNode())) {
+        if (var != null && var.isGlobal()) {
           // Avoid polluting the global namespace.
           String newName = name + "$$" + suffix;
           n.setString(newName);
           n.setOriginalName(name);
           t.reportCodeChange(n);
-        } else if ((var == null || importedGoogNames.contains(var.getNameNode()))
-            && importMap.containsKey(name)) {
+        } else if (var == null && importMap.containsKey(name)) {
           // Change to property access on the imported module object.
           if (parent.isCall() && parent.getFirstChild() == n) {
             parent.putBooleanProp(Node.FREE_CALL, false);
@@ -864,10 +880,9 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
             rest = "." + splitted.get(1);
           }
           Var var = t.getScope().getVar(baseName);
-          if (var != null && var.isGlobal() && !importedGoogNames.contains(var.getNameNode())) {
+          if (var != null && var.isGlobal()) {
             maybeSetNewName(t, typeNode, name, baseName + "$$" + suffix + rest);
-          } else if ((var == null || importedGoogNames.contains(var.getNameNode()))
-              && importMap.containsKey(baseName)) {
+          } else if (var == null && importMap.containsKey(baseName)) {
             ModuleOriginalNamePair pair = importMap.get(baseName);
             if (pair.originalName.isEmpty()) {
               maybeSetNewName(t, typeNode, name, pair.module + rest);
