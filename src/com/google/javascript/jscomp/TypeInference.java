@@ -1079,7 +1079,7 @@ class TypeInference
 
       // The computed property is always evaluated first.
       if (target.hasComputedProperty()) {
-        scope = traverse(target.getComputedProperty(), scope);
+        scope = traverse(target.getComputedProperty().getFirstChild(), scope);
       }
       Node targetNode = target.getNode();
 
@@ -1107,6 +1107,8 @@ class TypeInference
         scope = updateScopeForAssignment(scope, targetNode, targetNode.getJSType(), targetType);
       }
     }
+    // put the `inferred type` of a pattern on it, to make it easier to do typechecking
+    pattern.setJSType(patternType);
     return scope;
   }
 

@@ -74,9 +74,10 @@ final class DestructuredTarget {
     this.defaultValue = defaultValue;
   }
 
+  /** Returns a COMPUTED_PROP node or null */
   @Nullable
   Node getComputedProperty() {
-    return hasComputedProperty() ? objectPatternKey.getFirstChild() : null;
+    return hasComputedProperty() ? objectPatternKey : null;
   }
 
   boolean hasComputedProperty() {

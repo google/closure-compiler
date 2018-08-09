@@ -3935,7 +3935,8 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   }
 
   public void testArrayPatternAssign_badInterfacePropertyCreation() {
-    testTypes(
+    testTypesWithExterns(
+        new TestExternsBuilder().addArray().build(),
         "/** @interface */ function Foo() {}; [Foo.prototype.bar] = [];",
         "interface members can only be "
             + "empty property declarations, empty functions, or goog.abstractMethod");
@@ -3955,6 +3956,69 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "required: string"));
   }
 
-  // TODO(b/77597706): add tests for default values and computed properties in destructuring,
-  // and cases where the rvalue is not iterable/an object
+  public void testBadComputedPropertyKeyInObjectPattern() {
+    testTypes(
+        "const {[{}]: x} = {};",
+        lines(
+            "property access", //
+            "found   : {}",
+            "required: (string|symbol)"));
+  }
+
+  public void testRestrictedIndexTypeInComputedPropertyKeyInObjectPattern() {
+    testTypes(
+        lines(
+            "const /** !Object<number, number> */ obj = {3: 3, 4: 4};",
+            "const {['string']: x} = obj;"),
+        lines(
+            "restricted index type", //
+            "found   : string",
+            "required: number"));
+  }
+
+  public void testObjectDestructuringNullCausesWarning() {
+    testTypes(
+        "const {} = null;",
+        lines(
+            "cannot destructure 'null' or 'undefined'", //
+            "found   : null",
+            "required: Object"));
+  }
+
+  public void testObjectDestructuringNullableDoesntCausesWarning() {
+    // This matches the behavior of typechecking transpiled destructuring patterns, although
+    // we certainly could be more strict in the future and forbid dereferencing undefined/null.
+    testTypes(lines("function f(/** ?Object */ nullableObj) {", "const {x} = nullableObj;", "}"));
+  }
+
+  public void testArrayDestructuringNonIterableCausesWarning() {
+    testTypes(
+        "const [] = 3;",
+        lines(
+            "array destructuring rhs must be Iterable", //
+            "found   : number",
+            "required: Iterable"));
+  }
+
+  public void testBadDefaultValueInArrayPatternCausesWarning() {
+    testTypesWithExterns(
+        new TestExternsBuilder().addArray().build(),
+        "const [/** string */ foo = 0] = [];",
+        lines(
+            "default value has wrong type", //
+            "found   : number",
+            "required: string"));
+  }
+
+  public void testDefaultValueForNestedArrayPatternMustBeIterable() {
+    testTypesWithExterns(
+        new TestExternsBuilder().addArray().build(),
+        "const [[/** string */ x] = 0] = [];",
+        lines(
+            "array destructuring rhs must be Iterable", //
+            "found   : number",
+            "required: Iterable"));
+  }
+
+  // TODO(b/77597706): add tests for missing property warnings on object destructuring string keys
 }

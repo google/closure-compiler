@@ -885,8 +885,24 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       case REST:
       case DESTRUCTURING_LHS:
       case ARRAY_PATTERN:
-      case OBJECT_PATTERN:
         typeable = false;
+        break;
+
+      case OBJECT_PATTERN:
+        // We only check that COMPUTED_PROP keys are valid here
+        // Other checks for object patterns are done when visiting DEFAULT_VALUEs or assignments/
+        // declarations
+        JSType patternType = getJSType(n);
+        for (Node child : n.children()) {
+          DestructuredTarget target =
+              DestructuredTarget.createTarget(typeRegistry, patternType, child);
+
+          if (target.hasComputedProperty()) {
+            Node computedProperty = target.getComputedProperty();
+            validator.expectIndexMatch(
+                t, computedProperty, patternType, getJSType(computedProperty.getFirstChild()));
+          }
+        }
         break;
 
       case DEFAULT_VALUE:
@@ -1052,15 +1068,36 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
   private void checkCanAssignToWithScope(
       NodeTraversal t, Node nodeToWarn, Node lvalue, JSType rightType, JSDocInfo info, String msg) {
     if (lvalue.isDestructuringPattern()) {
-      for (Node child : lvalue.children()) {
-        DestructuredTarget target = DestructuredTarget.createTarget(typeRegistry, rightType, child);
-        // TODO(b/77597706): this is not very efficient because it re-infers the types below,
-        // which we already did once in TypeInference. don't repeat the work.
-        checkCanAssignToWithScope(
-            t, nodeToWarn, target.getNode(), target.inferType(), /* info= */ null, msg);
-      }
+      checkDestructuringAssignment(t, nodeToWarn, lvalue, rightType, msg);
     } else {
       checkCanAssignToNameGetpropOrGetelem(t, nodeToWarn, lvalue, rightType, info, msg);
+    }
+  }
+
+  /**
+   * Recursively checks that an assignment to a destructuring pattern is valid for all the lvalues
+   * contained in the pattern (including in nested patterns).
+   */
+  private void checkDestructuringAssignment(
+      NodeTraversal t, Node nodeToWarn, Node pattern, JSType rightType, String msg) {
+    if (pattern.isArrayPattern()) {
+      validator.expectAutoboxesToIterable(
+          t, nodeToWarn, rightType, "array destructuring rhs must be Iterable");
+    } else {
+      validator.expectNotNullOrUndefined(
+          t,
+          nodeToWarn,
+          rightType,
+          "cannot destructure 'null' or 'undefined'",
+          getNativeType(JSTypeNative.OBJECT_TYPE));
+    }
+
+    for (Node child : pattern.children()) {
+      DestructuredTarget target = DestructuredTarget.createTarget(typeRegistry, rightType, child);
+      // TODO(b/77597706): this is not very efficient because it re-infers the types below,
+      // which we already did once in TypeInference. don't repeat the work.
+      checkCanAssignToWithScope(
+          t, nodeToWarn, target.getNode(), target.inferType(), /* info= */ null, msg);
     }
   }
 
