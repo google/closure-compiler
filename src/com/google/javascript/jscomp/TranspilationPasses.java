@@ -76,19 +76,16 @@ public class TranspilationPasses {
   static void addPreTypecheckTranspilationPasses(
       List<PassFactory> passes, CompilerOptions options, boolean doEs6ExternsCheck) {
 
+    passes.add(
+        markUntranspilableFeaturesAsRemoved(
+            options.getLanguageIn().toFeatureSet(), options.getOutputFeatureSet()));
+
     if (options.needsTranspilationFrom(ES_NEXT)) {
       passes.add(rewriteAsyncIteration);
     }
 
     if (options.needsTranspilationFrom(ES2018)) {
       passes.add(rewriteObjRestSpread);
-      passes.add(
-          createFeatureRemovalPass(
-              "markEs2018FeaturesNotRequiringTranspilationAsRemoved",
-              Feature.REGEXP_FLAG_S,
-              Feature.REGEXP_LOOKBEHIND,
-              Feature.REGEXP_NAMED_GROUPS,
-              Feature.REGEXP_UNICODE_PROPERTY_ESCAPE));
     }
 
     if (options.needsTranspilationFrom(ES8)) {
@@ -175,6 +172,20 @@ public class TranspilationPasses {
    */
   public static void addRewritePolyfillPass(List<PassFactory> passes) {
     passes.add(rewritePolyfills);
+  }
+
+  private static PassFactory markUntranspilableFeaturesAsRemoved(FeatureSet from, FeatureSet to) {
+    return new PassFactory("markUntranspilableFeaturesAsRemoved", true) {
+      @Override
+      protected CompilerPass create(AbstractCompiler compiler) {
+        return new MarkUntranspilableFeaturesAsRemoved(compiler, from, to);
+      }
+
+      @Override
+      protected FeatureSet featureSet() {
+        return ES_NEXT;
+      }
+    };
   }
 
   /** Rewrites ES6 modules */
