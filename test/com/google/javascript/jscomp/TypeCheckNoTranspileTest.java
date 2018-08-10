@@ -3855,6 +3855,10 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "required: string"));
   }
 
+  public void testDefaultParameterWithNoJSDocTreatedAsOptional() {
+    testTypes("function f(a = 3) {} f();");
+  }
+
   public void testBasicArrayPatternDeclaration() {
     testTypes(
         lines(

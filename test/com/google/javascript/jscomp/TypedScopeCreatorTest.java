@@ -565,6 +565,15 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
         .toStringIsEqualTo("?");
   }
 
+  public void testDefaultParameterNoJSDocInferredToBeOptional() {
+    testSame("function f(a = 3) {}");
+
+    assertScope(globalScope)
+        .declares("f")
+        .withTypeThat()
+        .toStringIsEqualTo("function(?=): undefined");
+  }
+
   public void testDefaultParameterConflictingJSDoc() {
     testSame(
         lines(

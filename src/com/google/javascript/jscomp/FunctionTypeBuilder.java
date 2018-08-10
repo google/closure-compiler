@@ -553,13 +553,14 @@ final class FunctionTypeBuilder {
     int paramIndex = 0;
     for (Node param : paramsParent.children()) {
       boolean isOptionalParam = false;
-      if (param.isDefaultValue()) {
-        // The first child is the actual positional parameter
-        param = checkNotNull(param.getFirstChild(), param);
-      }
+
       if (param.isRest()) {
         isVarArgs = true;
         param = param.getOnlyChild();
+      } else if (param.isDefaultValue()) {
+        // The first child is the actual positional parameter
+        param = checkNotNull(param.getFirstChild(), param);
+        isOptionalParam = true;
       } else {
         isVarArgs = isVarArgsParameter(param, info);
         isOptionalParam = isOptionalParameter(param, info);
