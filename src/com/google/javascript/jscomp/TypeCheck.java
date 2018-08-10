@@ -1321,7 +1321,15 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     if (litType.isStruct() && key.isQuotedString()) {
       report(t, key, ILLEGAL_OBJLIT_KEY, "struct");
     } else if (litType.isDict() && !(key.isQuotedString() || key.isComputedProp())) {
-      report(t, key, ILLEGAL_OBJLIT_KEY, "dict");
+      // Allow the definition of "constructor" as an unquoted key in class bodies.  They will
+      // never be renamed so quoting is unimportant for the ALL_UNQUOTED renaming policy
+      // and the property is not accessed directly.
+      boolean temp = true;
+      if (temp || !key.isMemberFunctionDef()
+          || !key.getParent().isClassMembers()
+          || !key.getString().equals("constructor")) {
+        report(t, key, ILLEGAL_OBJLIT_KEY, "dict");
+      }
     }
 
     // Validate computed properties similarly to how we validate GETELEMs.
