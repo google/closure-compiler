@@ -68,6 +68,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import javax.annotation.CheckReturnValue;
+import javax.annotation.Nullable;
 
 /**
  * Type inference within a script node or a function body, using the data-flow
@@ -220,9 +221,7 @@ class TypeInference
             JSType newType =
                 registry.createUnionType(
                     getJSType(astParameter).restrictByNotUndefined(), getJSType(defaultValue));
-            entryFlowScope =
-                updateScopeForAssignment(
-                    entryFlowScope, astParameter, getJSType(astParameter), newType);
+            entryFlowScope = updateScopeForAssignment(entryFlowScope, astParameter, newType);
           }
         }
       }
@@ -318,7 +317,7 @@ class TypeInference
                 informed = traverseDestructuringPattern(item, informed, newType);
               } else {
                 informed = traverse(item, informed);
-                informed = updateScopeForAssignment(informed, item, item.getJSType(), newType);
+                informed = updateScopeForAssignment(informed, item, newType);
               }
             }
             newScope = informed;
@@ -775,11 +774,10 @@ class TypeInference
     } else {
       scope = traverseChildren(n, scope);
 
-      JSType targetType = target.getJSType();
       JSType valueType = getJSType(value);
       n.setJSType(valueType);
 
-      return updateScopeForAssignment(scope, target, targetType, valueType);
+      return updateScopeForAssignment(scope, target, valueType);
     }
   }
 
@@ -788,11 +786,10 @@ class TypeInference
     Node left = n.getFirstChild();
     scope = traverseChildren(n, scope);
 
-    JSType leftType = left.getJSType();
     n.setJSType(resultType);
 
     // The lhs is both an input and an output, so don't update the input type here.
-    return updateScopeForAssignment(scope, left, leftType, resultType, null);
+    return updateScopeForAssignment(scope, left, resultType, null);
   }
 
   private static boolean isInExternFile(Node n) {
@@ -831,18 +828,28 @@ class TypeInference
     }
   }
 
+  /**
+   * Calls {@link #updateScopeForAssignment(FlowScope, Node, JSType, Node)} and updates the given
+   * `target` node with the given `resultType` if it's a name or getprop.
+   */
   @CheckReturnValue
-  private FlowScope updateScopeForAssignment(
-      FlowScope scope, Node target, JSType targetType, JSType resultType) {
-    return updateScopeForAssignment(scope, target, targetType, resultType, target);
+  private FlowScope updateScopeForAssignment(FlowScope scope, Node target, JSType resultType) {
+    return updateScopeForAssignment(scope, target, resultType, target);
   }
 
-  /** Updates the scope according to the result of an assignment. */
+  /**
+   * Updates the scope according to the result of an assignment.
+   *
+   * @param target the node being assigned to, e.g. `a.b` in `a.b = 3;`
+   * @param resultType the type being assigned to `target`, e.g. `number` in `a.b = 3;`
+   * @param updateNode a node to update with the `resultType`. must be either `target` or null.
+   */
   @CheckReturnValue
   private FlowScope updateScopeForAssignment(
-      FlowScope scope, Node target, JSType targetType, JSType resultType, Node updateNode) {
+      FlowScope scope, Node target, JSType resultType, @Nullable Node updateNode) {
     checkNotNull(resultType);
     checkState(updateNode == null || updateNode == target);
+    JSType targetType = target.getJSType();
 
     Node right = NodeUtil.getRValueOfLValue(target);
     if (isPossibleMixinApplication(target, right)) {
@@ -1104,7 +1111,7 @@ class TypeInference
         // declare in the scope
         JSType targetType = target.inferType();
         targetType = targetType != null ? targetType : getNativeType(UNKNOWN_TYPE);
-        scope = updateScopeForAssignment(scope, targetNode, targetNode.getJSType(), targetType);
+        scope = updateScopeForAssignment(scope, targetNode, targetType);
       }
     }
     // put the `inferred type` of a pattern on it, to make it easier to do typechecking
@@ -1118,8 +1125,7 @@ class TypeInference
     JSType type = n.getJSType();
     if (value != null) {
       scope = traverse(value, scope);
-      return updateScopeForAssignment(
-          scope, n, n.getJSType() /* could be null */, getJSType(value));
+      return updateScopeForAssignment(scope, n, getJSType(value));
     } else if (n.getParent().isLet()) {
       // Whenever we see a LET, we're guaranteed it's not yet in the scope, and we don't need to
       // worry about it being from an outer scope.  In this case, it has no child, so the actual
@@ -1128,7 +1134,7 @@ class TypeInference
       // TODO(sdh): I would have thought that #updateScopeForTypeChange would handle using the
       // declared type correctly, but for some reason it doesn't so we handle it here.
       JSType resultType = type != null ? type : getNativeType(VOID_TYPE);
-      scope = updateScopeForAssignment(scope, n, type, resultType);
+      scope = updateScopeForAssignment(scope, n, resultType);
       type = resultType;
     } else {
       StaticTypedSlot var = scope.getSlot(varName);
@@ -1280,8 +1286,8 @@ class TypeInference
     if (n.isAssignAdd()) {
       // TODO(johnlenz): this should not update the type of the lhs as that is use as a
       // input and need to be preserved for type checking.
-      // Instead call this overload `updateScopeForAssignment(scope, left, leftType, type, null);`
-      scope = updateScopeForAssignment(scope, left, leftType, type);
+      // Instead call this overload `updateScopeForAssignment(scope, left, type, null);`
+      scope = updateScopeForAssignment(scope, left, type);
     }
 
     return scope;
