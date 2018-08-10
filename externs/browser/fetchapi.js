@@ -208,6 +208,9 @@ Request.prototype.redirect;
 /** @type {string} */
 Request.prototype.integrity;
 
+/** @type {boolean} */
+Request.prototype.isHistoryNavigation;
+
 /** @return {!Request} */
 Request.prototype.clone = function() {};
 
