@@ -157,8 +157,8 @@ public final class FeatureSet implements Serializable {
     OBJECT_PATTERN_REST("object pattern rest", LangVersion.ES2018),
 
     // https://github.com/tc39/proposal-async-iteration
-    ASYNC_GENERATORS("async generator functions", LangVersion.ES_NEXT),
-    FOR_AWAIT_OF("for-await-of loop", LangVersion.ES_NEXT),
+    ASYNC_GENERATORS("async generator functions", LangVersion.ES2018),
+    FOR_AWAIT_OF("for-await-of loop", LangVersion.ES2018),
 
     // ES 2018 adds Regex Features:
     // https://github.com/tc39/proposal-regexp-dotall-flag
