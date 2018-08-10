@@ -116,7 +116,7 @@ public class PolymerPassTest extends CompilerTestCase {
           "$jscomp.reflectObject = function (type, object) { return object; };");
 
   private int polymerVersion = 1;
-  private PolymerExportPolicy polymerExportPolicy = PolymerExportPolicy.LEGACY;
+  private final PolymerExportPolicy polymerExportPolicy = PolymerExportPolicy.LEGACY;
   private boolean propertyRenamingEnabled = false;
 
   public PolymerPassTest() {
