@@ -726,6 +726,8 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
    * Helper for transpiling DEFAULT_VALUE trees.
    */
   private static Node defaultValueHook(Node getprop, Node defaultValue) {
-    return IR.hook(IR.sheq(getprop, IR.name("undefined")), defaultValue, getprop.cloneTree());
+    Node undefined = IR.name("undefined");
+    undefined.makeNonIndexable();
+    return IR.hook(IR.sheq(getprop, undefined), defaultValue, getprop.cloneTree());
   }
 }
