@@ -3624,6 +3624,26 @@ public final class ParserTest extends BaseJSTypeTestCase {
         getRequiresEs6Message(Feature.REGEXP_FLAG_U));
   }
 
+  /** New RegExp flag 's' added in ES2018. */
+  public void testES2018RegExpFlagS() {
+    expectFeatures(Feature.REGEXP_FLAG_S);
+    mode = LanguageMode.ECMASCRIPT2018;
+    parse("/a/s");
+
+    mode = LanguageMode.ECMASCRIPT6;
+    expectFeatures(Feature.REGEXP_FLAG_S);
+    parseWarning("/a/s", getRequiresEs2018Message(Feature.REGEXP_FLAG_S));
+    parseWarning(
+        "/a/us", // 'u' added in es6
+        getRequiresEs2018Message(Feature.REGEXP_FLAG_S));
+
+    mode = LanguageMode.ECMASCRIPT5;
+    parseWarning(
+        "/a/us", // 'u' added in es6
+        getRequiresEs6Message(Feature.REGEXP_FLAG_U),
+        getRequiresEs2018Message(Feature.REGEXP_FLAG_S));
+  }
+
   public void testDefaultParameters() {
     mode = LanguageMode.ECMASCRIPT6;
     strictMode = SLOPPY;

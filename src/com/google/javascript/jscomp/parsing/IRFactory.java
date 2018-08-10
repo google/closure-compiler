@@ -1967,6 +1967,9 @@ class IRFactory {
             Feature feature = flag == 'u' ? Feature.REGEXP_FLAG_U : Feature.REGEXP_FLAG_Y;
             maybeWarnForFeature(tree, feature);
             break;
+          case 's':
+            maybeWarnForFeature(tree, Feature.REGEXP_FLAG_S);
+            break;
           default:
             errorReporter.error(
                 "Invalid RegExp flag '" + flag + "'",
