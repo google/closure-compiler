@@ -527,13 +527,23 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
   public void testNoPrivateAccessForProperties6() {
     // Overriding a private property with a non-private property
     // in a different file causes problems.
-    testError(new String[] {
-        "/** @constructor */ function Foo() {} "
-        + "/** @private */ Foo.prototype.bar_ = function() {};",
-        "/** @constructor \n * @extends {Foo} */ "
-        + "function SubFoo() {};"
-        + "SubFoo.prototype.bar_ = function() {};"},
-        BAD_PRIVATE_PROPERTY_ACCESS);
+    test(
+        srcs(
+            lines(
+                "/** @constructor */",
+                "function Foo() {}",
+                "",
+                "/** @private */",
+                "Foo.prototype.bar_ = function() {};"),
+            lines(
+                "/**",
+                " * @constructor",
+                " * @extends {Foo}",
+                " */",
+                "function SubFoo() {};",
+                "",
+                "SubFoo.prototype.bar_ = function() {};")),
+        error(BAD_PRIVATE_PROPERTY_ACCESS));
   }
 
   public void testNoPrivateAccessForProperties6a() {

@@ -15,7 +15,7 @@
  */
 package com.google.javascript.jscomp;
 
-import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.auto.value.AutoValue;
@@ -137,7 +137,7 @@ class CheckAccessControls extends AbstractPostOrderCallback
   private final boolean enforceCodingConventions;
 
   // State about the current traversal.
-  private int deprecatedDepth = 0;
+  private int deprecationDepth = 0;
   // NOTE: LinkedList is almost always the wrong choice, but in this case we have at most a small
   // handful of elements, it provides the smoothest API (push, pop, and a peek that doesn't throw
   // on empty), and (unlike ArrayDeque) is null-permissive. No other option meets all these needs.
@@ -179,15 +179,15 @@ class CheckAccessControls extends AbstractPostOrderCallback
   @Override
   public void enterScope(NodeTraversal t) {
     Node n = t.getScopeRoot();
+
+    if (isDeprecationScopeRoot(n)) {
+      deprecationDepth++;
+    }
+
     if (n.isFunction()) {
-      Node parent = n.getParent();
-      if (isDeprecatedFunction(n)) {
-        deprecatedDepth++;
-      }
       JSType prevClass = currentClassStack.peek();
-      JSType currentClass = prevClass == null
-          ? getClassOfMethod(n, parent)
-          : prevClass;
+      JSType currentClass =
+          (prevClass == null) ? bestInstanceTypeForMethodOrCtor(n, n.getParent()) : prevClass;
       currentClassStack.push(currentClass);
     } else if (n.isClass()) {
       FunctionType ctor = JSType.toMaybeFunctionType(n.getJSType());
@@ -201,10 +201,12 @@ class CheckAccessControls extends AbstractPostOrderCallback
   @Override
   public void exitScope(NodeTraversal t) {
     Node n = t.getScopeRoot();
+
+    if (isDeprecationScopeRoot(n)) {
+      deprecationDepth--;
+    }
+
     if (n.isFunction()) {
-      if (isDeprecatedFunction(n)) {
-        deprecatedDepth--;
-      }
       currentClassStack.pop();
     } else if (n.isClass()) {
       currentClassStack.pop();
@@ -212,23 +214,33 @@ class CheckAccessControls extends AbstractPostOrderCallback
   }
 
   /**
-   * Gets the instance type of the class that "owns" a method, or null if we know that its un-owned.
+   * Returns the instance object type that best represents a method or constructor definition, or
+   * {@code null} if there is no representative type.
+   *
+   * <ul>
+   *   <li>Prototype methods => The instance type having that prototype
+   *   <li>Instance methods => The type the method is attached to
+   *   <li>Constructors => The type that constructor instantiates
+   *   <li>Object literal members => {@code null}
+   * </ul>
    */
-  private JSType getClassOfMethod(Node n, Node parent) {
-    checkState(n.isFunction(), n);
+  @Nullable
+  private JSType bestInstanceTypeForMethodOrCtor(Node n, Node parent) {
+    checkState(isFunctionOrClass(n), n);
+
     if (parent.isAssign()) {
       Node lValue = parent.getFirstChild();
       if (NodeUtil.isGet(lValue)) {
-        // We have an assignment of the form "a.b = ...".
+        // We have an assignment of the form `a.b = ...`.
         JSType lValueType = lValue.getJSType();
         if (lValueType != null && (lValueType.isConstructor() || lValueType.isInterface())) {
-          // If a.b is a constructor, then everything in this function
-          // belongs to the "a.b" type.
-          return (lValueType.toMaybeFunctionType()).getInstanceType();
+          // Case `a.B = ...`
+          return normalizeClassType(lValueType);
         } else if (NodeUtil.isPrototypeProperty(lValue)) {
-          return normalizeClassType(
-              NodeUtil.getPrototypeClassName(lValue).getJSType());
+          // Case `a.B.prototype = ...`
+          return normalizeClassType(NodeUtil.getPrototypeClassName(lValue).getJSType());
         } else {
+          // Case `a.b = ...`
           return normalizeClassType(lValue.getFirstChild().getJSType());
         }
       } else {
@@ -236,7 +248,9 @@ class CheckAccessControls extends AbstractPostOrderCallback
         // type off the "a".
         return normalizeClassType(lValue.getJSType());
       }
-    } else if (NodeUtil.isFunctionDeclaration(n) || parent.isName()) {
+    } else if (NodeUtil.isFunctionDeclaration(n)
+        || NodeUtil.isClassDeclaration(n)
+        || parent.isName()) {
       return normalizeClassType(n.getJSType());
     } else if (parent.isStringKey()
         || parent.isGetterDef()
@@ -303,6 +317,7 @@ class CheckAccessControls extends AbstractPostOrderCallback
         checkConstructorDeprecation(t, n);
         break;
       case FUNCTION:
+      case CLASS:
         checkFinalClassOverrides(t, n, parent);
         break;
       default:
@@ -319,12 +334,16 @@ class CheckAccessControls extends AbstractPostOrderCallback
 
   /** Checks the given NEW node to ensure that access restrictions are obeyed. */
   private void checkConstructorDeprecation(NodeTraversal t, Node n) {
+    if (!shouldEmitDeprecationWarning(t, n)) {
+      return;
+    }
+
     JSType type = n.getJSType();
 
     if (type != null) {
       String deprecationInfo = getTypeDeprecationInfo(type);
 
-      if (deprecationInfo != null && shouldEmitDeprecationWarning(t, n)) {
+      if (deprecationInfo != null) {
 
         if (!deprecationInfo.isEmpty()) {
             compiler.report(
@@ -342,6 +361,10 @@ class CheckAccessControls extends AbstractPostOrderCallback
    * Checks the given NAME node to ensure that access restrictions are obeyed.
    */
   private void checkNameDeprecation(NodeTraversal t, Node n, Node parent) {
+    if (!shouldEmitDeprecationWarning(t, n)) {
+      return;
+    }
+
     // Don't bother checking definitions or constructors.
     if (parent.isFunction() || NodeUtil.isNameDeclaration(parent) || parent.isNew()) {
       return;
@@ -350,7 +373,7 @@ class CheckAccessControls extends AbstractPostOrderCallback
     Var var = t.getScope().getVar(n.getString());
     JSDocInfo docInfo = var == null ? null : var.getJSDocInfo();
 
-    if (docInfo != null && docInfo.isDeprecated() && shouldEmitDeprecationWarning(t, n)) {
+    if (docInfo != null && docInfo.isDeprecated()) {
       if (docInfo.getDeprecationReason() != null) {
         compiler.report(
             t.makeError(n, DEPRECATED_NAME_REASON, n.getString(),
@@ -364,6 +387,10 @@ class CheckAccessControls extends AbstractPostOrderCallback
 
   /** Checks the given GETPROP node to ensure that access restrictions are obeyed. */
   private void checkPropertyDeprecation(NodeTraversal t, PropertyReference propRef) {
+    if (!shouldEmitDeprecationWarning(t, propRef)) {
+      return;
+    }
+
     // Don't bother checking constructors.
     if (propRef.getSourceNode().getParent().isNew()) {
       return;
@@ -376,7 +403,7 @@ class CheckAccessControls extends AbstractPostOrderCallback
       String deprecationInfo
           = getPropertyDeprecationInfo(objectType, propertyName);
 
-      if (deprecationInfo != null && shouldEmitDeprecationWarning(t, propRef)) {
+      if (deprecationInfo != null) {
 
         if (!deprecationInfo.isEmpty()) {
           compiler.report(
@@ -540,27 +567,29 @@ class CheckAccessControls extends AbstractPostOrderCallback
     }
   }
 
-  @Nullable private static Visibility getOverridingPropertyVisibility(Node parent) {
-    JSDocInfo overridingInfo = parent.getJSDocInfo();
+  @Nullable
+  private static Visibility getOverridingPropertyVisibility(PropertyReference propRef) {
+    JSDocInfo overridingInfo = propRef.getJSDocInfo();
     return overridingInfo == null || !overridingInfo.isOverride()
         ? null
         : overridingInfo.getVisibility();
   }
 
+  /** Checks if a constructor is trying to override a final class. */
+  private void checkFinalClassOverrides(NodeTraversal t, Node ctor, Node parent) {
+    checkArgument(isFunctionOrClass(ctor), ctor);
 
-
-  /**
-   * Checks if a constructor is trying to override a final class.
-   */
-  private void checkFinalClassOverrides(NodeTraversal t, Node fn, Node parent) {
-    checkState(fn.isFunction(), fn);
-    JSType type = fn.getJSType().toMaybeFunctionType();
+    JSType type = ctor.getJSType().toMaybeFunctionType();
     if (type != null && type.isConstructor()) {
-      JSType finalParentClass = getSuperClassInstanceIfFinal(getClassOfMethod(fn, parent));
+      JSType finalParentClass =
+          getSuperClassInstanceIfFinal(bestInstanceTypeForMethodOrCtor(ctor, parent));
       if (finalParentClass != null) {
         compiler.report(
-            t.makeError(fn, EXTEND_FINAL_CLASS,
-                type.getDisplayName(), finalParentClass.getDisplayName()));
+            t.makeError(
+                ctor,
+                EXTEND_FINAL_CLASS,
+                type.getDisplayName(),
+                finalParentClass.getDisplayName()));
       }
     }
   }
@@ -690,7 +719,7 @@ class CheckAccessControls extends AbstractPostOrderCallback
             enforceCodingConventions ? compiler.getCodingConvention() : null);
 
     if (isOverride) {
-      Visibility overriding = getOverridingPropertyVisibility(propRef.getParentNode());
+      Visibility overriding = getOverridingPropertyVisibility(propRef);
       if (overriding != null) {
         checkOverriddenPropertyVisibilityMismatch(
             overriding, visibility, fileOverviewVisibility, t, propRef);
@@ -923,7 +952,8 @@ class CheckAccessControls extends AbstractPostOrderCallback
     }
 
     // Don't warn if the node is just declaring the property, not reading it.
-    if (propRef.isDeclaration() && propRef.getJSDocInfo().isDeprecated()) {
+    JSDocInfo jsdoc = propRef.getJSDocInfo();
+    if (propRef.isDeclaration() && (jsdoc != null) && jsdoc.isDeprecated()) {
       return false;
     }
 
@@ -949,20 +979,25 @@ class CheckAccessControls extends AbstractPostOrderCallback
 
     return
     // Case #1
-    (deprecatedDepth > 0)
+    (deprecationDepth > 0)
         // Case #2
         || (getTypeDeprecationInfo(getTypeOfThis(scopeRoot)) != null)
         // Case #3
         || (scopeRootParent != null
             && scopeRootParent.isAssign()
-            && getTypeDeprecationInfo(getClassOfMethod(scopeRoot, scopeRootParent)) != null);
+            && getTypeDeprecationInfo(bestInstanceTypeForMethodOrCtor(scopeRoot, scopeRootParent))
+                != null);
   }
 
   /**
-   * Returns whether this is a function node annotated as deprecated.
+   * Returns whether this node roots a subtree under which references to deprecated constructs are
+   * allowed.
    */
-  private static boolean isDeprecatedFunction(Node n) {
-    checkState(n.isFunction(), n);
+  private static boolean isDeprecationScopeRoot(Node n) {
+    if (!isFunctionOrClass(n)) {
+      return false;
+    }
+
     return getDeprecationReason(NodeUtil.getBestJSDocInfo(n)) != null;
   }
 
@@ -1061,13 +1096,18 @@ class CheckAccessControls extends AbstractPostOrderCallback
     return type == null ? null : type.toMaybeObjectType();
   }
 
+  static boolean isFunctionOrClass(Node n) {
+    return n.isFunction() || n.isClass();
+  }
+
   @Nullable
   private JSType getTypeOfThis(Node scopeRoot) {
-    if (scopeRoot.isRoot()) {
+    if (scopeRoot.isRoot() || scopeRoot.isScript()) {
       return castToObject(scopeRoot.getJSType());
     }
 
-    checkState(scopeRoot.isFunction(), scopeRoot);
+    checkArgument(scopeRoot.isFunction(), scopeRoot);
+
     JSType nodeType = scopeRoot.getJSType();
     if (nodeType != null && nodeType.isFunctionType()) {
       return nodeType.toMaybeFunctionType().getTypeOfThis();
@@ -1200,19 +1240,22 @@ class CheckAccessControls extends AbstractPostOrderCallback
             return null;
           }
 
-          FunctionType ctorType =
-              checkNotNull(parent.getParent().getJSType().toMaybeFunctionType());
-
           builder
               .setName(sourceNode.getString())
-              .setReceiverType(
-                  sourceNode.isStaticMember() ? ctorType : ctorType.getPrototypeObject())
+              .setReceiverType((ObjectType) typeRegistry.getNativeType(JSTypeNative.UNKNOWN_TYPE))
               .setMutation(true)
               .setDeclaration(true)
               // TODO(nickreid): This definition is way too loose. It was used to prevent breakages
               // during refactoring and should be tightened.
-              .setOverride((jsdoc != null))
+              .setOverride(jsdoc != null)
               .setReadableTypeName(() -> ""); // The default is fine for class types.
+
+          JSType ctorType = parent.getParent().getJSType();
+          if (ctorType != null && ctorType.isFunctionType()) {
+            FunctionType ctorFunctionType = ctorType.toMaybeFunctionType();
+            builder.setReceiverType(
+                sourceNode.isStaticMember() ? ctorFunctionType : ctorFunctionType.getPrototype());
+          }
         }
         break;
 

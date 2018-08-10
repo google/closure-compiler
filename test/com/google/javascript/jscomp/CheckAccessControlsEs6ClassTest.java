@@ -19,17 +19,19 @@ package com.google.javascript.jscomp;
 import static com.google.javascript.jscomp.CheckAccessControls.BAD_PACKAGE_PROPERTY_ACCESS;
 import static com.google.javascript.jscomp.CheckAccessControls.BAD_PRIVATE_GLOBAL_ACCESS;
 import static com.google.javascript.jscomp.CheckAccessControls.BAD_PRIVATE_PROPERTY_ACCESS;
+import static com.google.javascript.jscomp.CheckAccessControls.BAD_PROPERTY_OVERRIDE_IN_FILE_WITH_FILEOVERVIEW_VISIBILITY;
 import static com.google.javascript.jscomp.CheckAccessControls.BAD_PROTECTED_PROPERTY_ACCESS;
 import static com.google.javascript.jscomp.CheckAccessControls.CONST_PROPERTY_DELETED;
 import static com.google.javascript.jscomp.CheckAccessControls.CONST_PROPERTY_REASSIGNED_VALUE;
 import static com.google.javascript.jscomp.CheckAccessControls.CONVENTION_MISMATCH;
 import static com.google.javascript.jscomp.CheckAccessControls.DEPRECATED_CLASS;
 import static com.google.javascript.jscomp.CheckAccessControls.DEPRECATED_CLASS_REASON;
-import static com.google.javascript.jscomp.CheckAccessControls.DEPRECATED_NAME;
 import static com.google.javascript.jscomp.CheckAccessControls.DEPRECATED_NAME_REASON;
 import static com.google.javascript.jscomp.CheckAccessControls.DEPRECATED_PROP;
 import static com.google.javascript.jscomp.CheckAccessControls.DEPRECATED_PROP_REASON;
+import static com.google.javascript.jscomp.CheckAccessControls.EXTEND_FINAL_CLASS;
 import static com.google.javascript.jscomp.CheckAccessControls.PRIVATE_OVERRIDE;
+import static com.google.javascript.jscomp.CheckAccessControls.VISIBILITY_MISMATCH;
 
 
 /**
@@ -262,9 +264,7 @@ public final class CheckAccessControlsEs6ClassTest extends CompilerTestCase {
                 "/** @deprecated */ ",
                 "var Foo = class {",
                 "  static bar() { f(); }",
-                "};")),
-        // TODO(b/80580110): This should pass without warning.
-        error(DEPRECATED_NAME));
+                "};")));
   }
 
   public void testNoWarningInDeprecatedStaticMethod() {
@@ -617,11 +617,9 @@ public final class CheckAccessControlsEs6ClassTest extends CompilerTestCase {
                 "}"),
             lines(
                 "class SubFoo extends Foo {", //
-                "  /** @override */",
                 "  bar_() {}",
-                "}")));
-    // TODO(b/80580110): This should fail.
-    // BAD_PRIVATE_PROPERTY_ACCESS);
+                "}")),
+        error(BAD_PRIVATE_PROPERTY_ACCESS));
   }
 
   public void testNoPrivateAccessForProperties6a() {
@@ -638,9 +636,8 @@ public final class CheckAccessControlsEs6ClassTest extends CompilerTestCase {
             lines(
                 "ns.SubFoo = class extends ns.Foo {", //
                 "  bar_() {}",
-                "};")));
-    // TODO(b/80580110): This should fail.
-    // BAD_PRIVATE_PROPERTY_ACCESS);
+                "};")),
+        error(BAD_PRIVATE_PROPERTY_ACCESS));
   }
 
   public void testNoPrivateAccessForProperties7() {
@@ -1455,9 +1452,8 @@ public final class CheckAccessControlsEs6ClassTest extends CompilerTestCase {
                 lines(
                     "class SubFoo extends Foo {", //
                     "  bar() {}",
-                    "}"))));
-    // TODO(b/80580110): This should fail.
-    // error(BAD_PACKAGE_PROPERTY_ACCESS));
+                    "}"))),
+        error(BAD_PACKAGE_PROPERTY_ACCESS));
   }
 
   public void testNoPackagePrivateAccessForProperties7() {
@@ -1501,9 +1497,8 @@ public final class CheckAccessControlsEs6ClassTest extends CompilerTestCase {
                 "Bar = class extends Foo {",
                 "  /** @override */",
                 "  privateMethod_() {}",
-                "}")));
-    // TODO(b/80580110): This should fail.
-    // error(BAD_PROPERTY_OVERRIDE_IN_FILE_WITH_FILEOVERVIEW_VISIBILITY));
+                "}")),
+        error(BAD_PROPERTY_OVERRIDE_IN_FILE_WITH_FILEOVERVIEW_VISIBILITY));
   }
 
   public void
@@ -1524,9 +1519,8 @@ public final class CheckAccessControlsEs6ClassTest extends CompilerTestCase {
                 "Bar = class extends Foo {",
                 "  /** @override */",
                 "  protectedMethod() {}",
-                "};")));
-    // TODO(b/80580110): This should fail.
-    // error(BAD_PROPERTY_OVERRIDE_IN_FILE_WITH_FILEOVERVIEW_VISIBILITY));
+                "};")),
+        error(BAD_PROPERTY_OVERRIDE_IN_FILE_WITH_FILEOVERVIEW_VISIBILITY));
   }
 
   public void testOverrideWithoutVisibilityRedeclInFileWithNoFileOverviewOk() {
@@ -1822,9 +1816,8 @@ public final class CheckAccessControlsEs6ClassTest extends CompilerTestCase {
                 "class SubFoo extends Foo {", //
                 "  /** @private */",
                 "  bar() {}",
-                "}")));
-    // TODO(b/80580110): This should fail.
-    // error(VISIBILITY_MISMATCH));
+                "}")),
+        error(VISIBILITY_MISMATCH));
   }
 
   public void testBadOverrideOfPrivateProperty() {
@@ -1839,9 +1832,8 @@ public final class CheckAccessControlsEs6ClassTest extends CompilerTestCase {
                 "class SubFoo extends Foo {", //
                 "  /** @protected */",
                 "  bar() {}",
-                "}")));
-    // TODO(b/80580110): This should fail.
-    // error(PRIVATE_OVERRIDE));
+                "}")),
+        error(PRIVATE_OVERRIDE));
 
     test(
         srcs(
@@ -2517,9 +2509,8 @@ public final class CheckAccessControlsEs6ClassTest extends CompilerTestCase {
                 "/** @final */", //
                 "var Foo = class {};",
                 "",
-                "var Bar = class extends Foo {};")));
-    // TODO(b/80580110): This should fail.
-    // EXTEND_FINAL_CLASS);
+                "var Bar = class extends Foo {};")),
+        error(EXTEND_FINAL_CLASS));
 
     test(
         srcs(
@@ -2527,9 +2518,8 @@ public final class CheckAccessControlsEs6ClassTest extends CompilerTestCase {
                 "/** @final */", //
                 "class Foo {};",
                 "",
-                "class Bar extends Foo {};")));
-    // TODO(b/80580110): This should fail.
-    // EXTEND_FINAL_CLASS);
+                "class Bar extends Foo {};")),
+        error(EXTEND_FINAL_CLASS));
 
     test(
         srcs(
