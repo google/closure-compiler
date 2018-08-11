@@ -83,7 +83,7 @@ public final class Es6ConvertSuper extends NodeTraversal.AbstractPostOrderCallba
       // implementation that should be instantiated.
       // A call to super() shouldn't actually exist for these cases and is problematic to
       // transpile, so don't generate it.
-      if (!classNode.isFromExterns()  && !isInterface(classNode)) {
+      if (!classNode.isFromExterns() && !isInterface(classNode)) {
         // Generate required call to super()
         // `super(...arguments);`
         // Note that transpilation of spread args must occur after this pass for this to work.
@@ -93,10 +93,7 @@ public final class Es6ConvertSuper extends NodeTraversal.AbstractPostOrderCallba
         NodeUtil.addFeatureToScript(t.getCurrentFile(), Feature.SUPER);
         NodeUtil.addFeatureToScript(t.getCurrentFile(), Feature.SPREAD_EXPRESSIONS);
       }
-      Node constructor = IR.function(
-          IR.name(""),
-          IR.paramList(IR.name("var_args")),
-          body);
+      Node constructor = IR.function(IR.name(""), IR.paramList(IR.name("var_args")), body);
       compiler.reportChangeToChangeScope(constructor);
       memberDef = IR.memberFunctionDef("constructor", constructor);
       JSDocInfoBuilder info = new JSDocInfoBuilder(false);
@@ -158,15 +155,21 @@ public final class Es6ConvertSuper extends NodeTraversal.AbstractPostOrderCallba
         }
       } else {
         // super.something used in some other way
-        compiler.report(JSError.make(node, CANNOT_CONVERT_YET,
-            "Only calls to super or to a method of super are supported."));
+        compiler.report(
+            JSError.make(
+                node,
+                CANNOT_CONVERT_YET,
+                "Only calls to super or to a method of super are supported."));
       }
     } else if (parent.isNew()) {
       throw new IllegalStateException("This should never happen. Did Es6SuperCheck fail to run?");
     } else {
       // some other use of super we don't support yet
-      compiler.report(JSError.make(node, CANNOT_CONVERT_YET,
-          "Only calls to super or to a method of super are supported."));
+      compiler.report(
+          JSError.make(
+              node,
+              CANNOT_CONVERT_YET,
+              "Only calls to super or to a method of super are supported."));
     }
   }
 
@@ -217,19 +220,23 @@ public final class Es6ConvertSuper extends NodeTraversal.AbstractPostOrderCallba
     }
 
     Node callTarget = parent;
+    Node thisNode = IR.thisNode();
+    thisNode.makeNonIndexable();
+    Node callNode = IR.string("call");
+    callNode.makeNonIndexable();
     if (enclosingMemberDef.isStaticMember()) {
-      callTarget.replaceChild(node, superName.cloneTree());
-      callTarget = IR.getprop(callTarget.detach(), IR.string("call"));
+      callTarget.replaceChild(node, superName.cloneTree().useSourceInfoFromForTree(node));
+      callTarget = IR.getprop(callTarget.detach(), callNode);
       grandparent.addChildToFront(callTarget);
-      grandparent.addChildAfter(IR.thisNode(), callTarget);
+      grandparent.addChildAfter(thisNode, callTarget);
       grandparent.useSourceInfoIfMissingFromForTree(parent);
     } else {
       String newPropName = Joiner.on('.').join(superName.getQualifiedName(), "prototype");
-      Node newProp = NodeUtil.newQName(compiler, newPropName);
+      Node newProp = NodeUtil.newQName(compiler, newPropName).useSourceInfoFromForTree(node);
       node.replaceWith(newProp);
-      callTarget = IR.getprop(callTarget.detach(), IR.string("call"));
+      callTarget = IR.getprop(callTarget.detach(), callNode);
       grandparent.addChildToFront(callTarget);
-      grandparent.addChildAfter(IR.thisNode(), callTarget);
+      grandparent.addChildAfter(thisNode, callTarget);
       grandparent.putBooleanProp(Node.FREE_CALL, false);
       grandparent.useSourceInfoIfMissingFromForTree(parent);
     }
@@ -243,8 +250,7 @@ public final class Es6ConvertSuper extends NodeTraversal.AbstractPostOrderCallba
 
     if (NodeUtil.isLValue(parent)) {
       // We don't support assigning to a super property
-      compiler.report(
-          JSError.make(parent, CANNOT_CONVERT_YET, "assigning to a super property"));
+      compiler.report(JSError.make(parent, CANNOT_CONVERT_YET, "assigning to a super property"));
       return;
     }
 
@@ -256,10 +262,11 @@ public final class Es6ConvertSuper extends NodeTraversal.AbstractPostOrderCallba
     }
 
     if (enclosingMemberDef.isStaticMember()) {
-      node.replaceWith(superName.cloneTree());
+      node.replaceWith(superName.cloneTree().useSourceInfoFromForTree(node));
     } else {
       String newPropName = Joiner.on('.').join(superName.getQualifiedName(), "prototype");
-      Node newprop = NodeUtil.newQName(compiler, newPropName, node, "super");
+      Node newprop =
+          NodeUtil.newQName(compiler, newPropName, node, "super").useSourceInfoFromForTree(node);
       node.replaceWith(newprop);
     }
 
