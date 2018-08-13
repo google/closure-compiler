@@ -4024,5 +4024,9 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "required: Iterable"));
   }
 
+  public void testDictClass1() {
+    testTypes("/** @dict */ var C = class { constructor() {} 'x'(){} };");
+  }
+
   // TODO(b/77597706): add tests for missing property warnings on object destructuring string keys
 }

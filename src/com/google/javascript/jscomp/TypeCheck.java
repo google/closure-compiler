@@ -1324,8 +1324,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       // Allow the definition of "constructor" as an unquoted key in class bodies.  They will
       // never be renamed so quoting is unimportant for the ALL_UNQUOTED renaming policy
       // and the property is not accessed directly.
-      boolean temp = true;
-      if (temp || !key.isMemberFunctionDef()
+      if (!key.isMemberFunctionDef()
           || !key.getParent().isClassMembers()
           || !key.getString().equals("constructor")) {
         report(t, key, ILLEGAL_OBJLIT_KEY, "dict");

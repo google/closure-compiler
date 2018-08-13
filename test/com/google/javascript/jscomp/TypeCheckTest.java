@@ -1199,10 +1199,6 @@ public final class TypeCheckTest extends TypeCheckTestCase {
         "Illegal key, the object literal is a dict");
   }
 
-  public void testDictClass1() {
-    testTypes("var C = /** @dict */ class { constructor() {} 'x'(){} };");
-  }
-
   public void testInstanceOfReduction1() {
     testTypes("/** @constructor */ var T = function() {};\n" +
         "/** @param {T|string} x\n@return {T} */\n" +
