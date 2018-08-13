@@ -866,9 +866,9 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
 
     void defineDestructuringPatternInVarDeclaration(
         Node pattern, TypedScope scope, Supplier<JSType> patternTypeSupplier) {
-      for (Node child : pattern.children()) {
-        DestructuredTarget target =
-            DestructuredTarget.createTarget(typeRegistry, patternTypeSupplier, child);
+      for (DestructuredTarget target :
+          DestructuredTarget.createAllNonEmptyTargetsInPattern(
+              typeRegistry, patternTypeSupplier, pattern)) {
 
         // Currently we only do type inference for string key nodes in object patterns here, to
         // handle aliasing types. e.g
@@ -2626,9 +2626,10 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
     /** Declares all names inside a destructuring pattern in a parameter list in the scope */
     private void declareDestructuringParameter(
         boolean isInferred, Node pattern, JSType patternType) {
-      for (Node child : pattern.children()) {
-        DestructuredTarget target =
-            DestructuredTarget.createTarget(typeRegistry, () -> patternType, child);
+
+      for (DestructuredTarget target :
+          DestructuredTarget.createAllNonEmptyTargetsInPattern(
+              typeRegistry, patternType, pattern)) {
         JSType inferredType = target.inferTypeWithoutUsingDefaultValue();
 
         if (target.hasDefaultValue()) {

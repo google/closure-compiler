@@ -19,6 +19,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.common.base.Supplier;
+import com.google.common.collect.ImmutableList;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
@@ -147,6 +148,11 @@ final class DestructuredTarget {
     return createTarget(registry, () -> destructuringPatternType, destructuringChild);
   }
 
+  /**
+   * Converts a given child of a destructuring pattern (in the AST) to an instance of this class.
+   *
+   * NOTE: does not accept EMPTY nodes
+   */
   static DestructuredTarget createTarget(
       JSTypeRegistry registry, Supplier<JSType> destructuringPatternType, Node destructuringChild) {
     checkArgument(destructuringChild.getParent().isDestructuringPattern(), destructuringChild);
@@ -208,6 +214,35 @@ final class DestructuredTarget {
 
   Supplier<JSType> getInferredTypeSupplierWithoutDefaultValue() {
     return () -> inferTypeWithoutUsingDefaultValue();
+  }
+
+  /**
+   * Returns all the targets directly in the given pattern, except for EMPTY nodes
+   *
+   * <p>EMPTY nodes occur in array patterns with elisions, e.g. `[, , a] = []`
+   */
+  static ImmutableList<DestructuredTarget> createAllNonEmptyTargetsInPattern(
+      JSTypeRegistry registry, JSType patternType, Node pattern) {
+    return createAllNonEmptyTargetsInPattern(registry, () -> patternType, pattern);
+  }
+
+  /**
+   * Returns all the targets directly in the given pattern, except for EMPTY nodes
+   *
+   * <p>EMPTY nodes occur in array patterns with elisions, e.g. `[, , a] = []`
+   */
+  static ImmutableList<DestructuredTarget> createAllNonEmptyTargetsInPattern(
+      JSTypeRegistry registry, Supplier<JSType> patternType, Node pattern) {
+    checkArgument(pattern.isDestructuringPattern(), pattern);
+    ImmutableList.Builder<DestructuredTarget> builder = ImmutableList.builder();
+    for (Node child : pattern.children()) {
+      if (child.isEmpty()) {
+        continue;
+      }
+
+      builder.add(createTarget(registry, patternType, child));
+    }
+    return builder.build();
   }
 
   /**

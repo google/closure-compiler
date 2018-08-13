@@ -3883,6 +3883,18 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "required: string"));
   }
 
+  public void testArrayPatternDeclarationWithElision() {
+    testTypes(
+        lines(
+            "function f(/** !Iterable<number> */ numbers) {",
+            "  const [, /** number */ x, , /** string */ y] = numbers;",
+            "}"),
+        lines(
+            "initializing variable", //
+            "found   : number",
+            "required: string"));
+  }
+
   public void testBasicArrayPatternAssign() {
     testTypes(
         lines(
@@ -4022,6 +4034,10 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "array destructuring rhs must be Iterable", //
             "found   : number",
             "required: Iterable"));
+  }
+
+  public void testArrayDestructuringParameterWithElision() {
+    testTypes("/** @param {!Array<number>} numbers */ function f([, x, , y]) {}");
   }
 
   public void testDictClass1() {

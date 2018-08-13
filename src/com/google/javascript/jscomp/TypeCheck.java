@@ -1092,8 +1092,9 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
           getNativeType(JSTypeNative.OBJECT_TYPE));
     }
 
-    for (Node child : pattern.children()) {
-      DestructuredTarget target = DestructuredTarget.createTarget(typeRegistry, rightType, child);
+    for (DestructuredTarget target :
+        DestructuredTarget.createAllNonEmptyTargetsInPattern(typeRegistry, rightType, pattern)) {
+
       // TODO(b/77597706): this is not very efficient because it re-infers the types below,
       // which we already did once in TypeInference. don't repeat the work.
       checkCanAssignToWithScope(

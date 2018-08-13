@@ -1131,8 +1131,8 @@ class TypeInference
       Node pattern, FlowScope scope, JSType patternType, TypeDeclaringCallback declarer) {
     checkArgument(pattern.isDestructuringPattern(), pattern);
     checkNotNull(patternType);
-    for (Node key : pattern.children()) {
-      DestructuredTarget target = DestructuredTarget.createTarget(registry, patternType, key);
+    for (DestructuredTarget target :
+        DestructuredTarget.createAllNonEmptyTargetsInPattern(registry, patternType, pattern)) {
 
       // The computed property is always evaluated first.
       if (target.hasComputedProperty()) {
