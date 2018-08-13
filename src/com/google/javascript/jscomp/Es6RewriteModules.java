@@ -235,10 +235,32 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
           Node statementNode = NodeUtil.getEnclosingStatement(n);
           boolean importHasAlias = NodeUtil.isNameDeclaration(statementNode);
           if (importHasAlias) {
-            //   const module = goog.require('an.es6.namespace');
-            //   const module = module$es6;
-            n.replaceWith(IR.name(data.getGlobalName(name)).useSourceInfoFromForTree(n));
-            t.reportCodeChange();
+            if (statementNode.getFirstChild().isDestructuringLhs()) {
+              // Work around a bug in the type checker where destructing can create
+              // too many layers of aliases and confuse the type checker. b/112061124.
+
+              //   const {a, c:b} = goog.require('an.es6.namespace');
+              //   const a = module$es6.a;
+              //   const b = module$es6.c;
+              for (Node child : statementNode.getFirstFirstChild().children()) {
+                checkState(child.isStringKey());
+                checkState(child.getFirstChild().isName());
+                Node constNode =
+                    IR.constNode(
+                        IR.name(child.getFirstChild().getString()),
+                        IR.getprop(
+                            IR.name(data.getGlobalName(name)), IR.string(child.getString())));
+                constNode.useSourceInfoFromForTree(child);
+                statementNode.getParent().addChildBefore(constNode, statementNode);
+              }
+              statementNode.detach();
+              t.reportCodeChange();
+            } else {
+              //   const module = goog.require('an.es6.namespace');
+              //   const module = module$es6;
+              n.replaceWith(IR.name(data.getGlobalName(name)).useSourceInfoFromForTree(n));
+              t.reportCodeChange();
+            }
           } else {
             if (parent.isExprResult()) {
               parent.detach();

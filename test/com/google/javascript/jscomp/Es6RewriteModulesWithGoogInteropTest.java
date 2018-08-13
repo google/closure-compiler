@@ -196,22 +196,36 @@ public final class Es6RewriteModulesWithGoogInteropTest extends CompilerTestCase
   }
 
   public void testDeclareNamespace() {
-    SourceFile srcEs6 =
-        SourceFile.fromCode("es6.js", "export var x; goog.module.declareNamespace('my.es6');");
-    SourceFile expectedEs6 =
-        SourceFile.fromCode(
-            "es6.js",
-            lines(
-                "var x$$module$es6;/** @const */ var module$es6={};",
-                "/** @const */ module$es6.x=x$$module$es6;"));
-
     test(
         srcs(
-            srcEs6,
+            SourceFile.fromCode("es6.js", "export var x; goog.module.declareNamespace('my.es6');"),
             SourceFile.fromCode("goog.js", "const es6 = goog.require('my.es6'); use(es6, es6.x);")),
         expected(
-            expectedEs6,
+            SourceFile.fromCode(
+                "es6.js",
+                lines(
+                    "var x$$module$es6;/** @const */ var module$es6={};",
+                    "/** @const */ module$es6.x=x$$module$es6;")),
             SourceFile.fromCode("goog.js", "const es6 = module$es6; use(es6, es6.x);")));
+  }
+
+  public void testDestructureDeclareNamespace() {
+    test(
+        srcs(
+            SourceFile.fromCode(
+                "es6.js", "export var x, z; goog.module.declareNamespace('my.es6');"),
+            SourceFile.fromCode("goog.js", "const {x, z: y} = goog.require('my.es6'); use(x, y);")),
+        expected(
+            SourceFile.fromCode(
+                "es6.js",
+                lines(
+                    "var x$$module$es6, z$$module$es6;",
+                    "/** @const */ var module$es6={};",
+                    "/** @const */ module$es6.x=x$$module$es6;",
+                    "/** @const */ module$es6.z=z$$module$es6;")),
+            SourceFile.fromCode(
+                "goog.js",
+                lines("const x = module$es6.x;", "const y = module$es6.z;", "use(x, y);"))));
   }
 
   public void testGoogRequireLhsNonConstIsError() {
