@@ -118,7 +118,7 @@ class TypeInference
         inferDeclarativelyUnboundVarsWithoutTypes(
             LinkedFlowScope.createEntryLattice(syntacticScope));
 
-    this.functionScope = inferParameters(syntacticScope, entryScope);
+    this.functionScope = inferParameters(entryScope);
 
     this.bottomScope =
         LinkedFlowScope.createEntryLattice(
@@ -145,8 +145,8 @@ class TypeInference
 
   /** Infers all of a function's parameters if their types aren't declared. */
   @SuppressWarnings("ReferenceEquality") // unknownType is a singleton
-  private FlowScope inferParameters(TypedScope functionScope, FlowScope entryFlowScope) {
-    Node functionNode = functionScope.getRootNode();
+  private FlowScope inferParameters(FlowScope entryFlowScope) {
+    Node functionNode = containerScope.getRootNode();
     Node astParameters = functionNode.getSecondChild();
     Node iifeArgumentNode = null;
 
@@ -154,8 +154,7 @@ class TypeInference
       iifeArgumentNode = functionNode.getNext();
     }
 
-    FunctionType functionType =
-        JSType.toMaybeFunctionType(functionNode.getJSType());
+    FunctionType functionType = JSType.toMaybeFunctionType(functionNode.getJSType());
     if (functionType != null) {
       Node parameterTypes = functionType.getParametersNode();
       if (parameterTypes != null) {
@@ -173,36 +172,53 @@ class TypeInference
             astParameter = astParameter.getOnlyChild();
             isRest = true;
           }
-          if (!astParameter.isName()) {
-            // TODO(lharker): support destructuring parameters
-            continue;
-          }
 
           if (iifeArgumentNode != null && iifeArgumentNode.isSpread()) {
             // block inference on all parameters that might possibly be set by a spread, e.g. `z` in
             // (function f(x, y, z = 1))(...[1, 2], 'foo')
             iifeArgumentNode = null;
           }
-          TypedVar var = functionScope.getVar(astParameter.getString());
-          checkNotNull(var);
-          if (var.isTypeInferred() && (var.getType() == unknownType || isRest)) {
-            JSType newType = null;
+          JSType inferredType = null;
 
-            if (iifeArgumentNode != null) {
-              newType = iifeArgumentNode.getJSType();
-            } else if (parameterTypeNode != null) {
-              newType = parameterTypeNode.getJSType();
-            }
+          if (iifeArgumentNode != null) {
+            inferredType = iifeArgumentNode.getJSType();
+          } else if (parameterTypeNode != null) {
+            inferredType = parameterTypeNode.getJSType();
+          }
 
-            if (newType != null) {
+          if (inferredType != null && astParameter.isDestructuringPattern()) {
+            entryFlowScope =
+                traverseDestructuringPatternHelper(
+                    astParameter,
+                    entryFlowScope,
+                    inferredType,
+                    (FlowScope scope, Node lvalue, JSType type) -> {
+                      TypedVar var = containerScope.getVar(lvalue.getString());
+                      checkNotNull(var);
+                      // This condition will trigger on cases like
+                      //   (function f({x}) {})({x: 3})
+                      // where `x` is of unknown type during the typed scope creation phase, but
+                      // here we can infer that it is of type `number`
+                      // Don't update the variable if it has a declared type or was already
+                      // inferred to be something other than unknown.
+                      if (var.isTypeInferred() && var.getType() == unknownType) {
+                        var.setType(type);
+                        lvalue.setJSType(type);
+                      }
+                      return scope;
+                    });
+          } else if (inferredType != null) {
+            TypedVar var = containerScope.getVar(astParameter.getString());
+            checkNotNull(var);
+            if (var.isTypeInferred() && (var.getType() == unknownType || isRest)) {
               if (isRest) {
                 // convert 'number' into 'Array<number>' for rest parameters
-                newType =
+                inferredType =
                     registry.createTemplatizedType(
-                        registry.getNativeObjectType(ARRAY_TYPE), newType);
+                        registry.getNativeObjectType(ARRAY_TYPE), inferredType);
               }
-              var.setType(newType);
-              astParameter.setJSType(newType);
+              var.setType(inferredType);
+              astParameter.setJSType(inferredType);
             }
           }
 
@@ -227,6 +243,20 @@ class TypeInference
       }
     }
     return entryFlowScope;
+  }
+
+  /** Abstracts logic for declaring an lvalue in a particular scope */
+  interface TypeDeclaringCallback {
+
+    /**
+     * Updates the given scope upon seeing an assignment or declaration
+     *
+     * @param scope the scope we are in
+     * @param lvalue the value being updated, a NAME, GETPROP, GETELEM, or CAST
+     * @param type the type we've inferred for the lvalue
+     * @return the updated flow scope
+     */
+    FlowScope declareTypeInScope(FlowScope scope, Node lvalue, @Nullable JSType type);
   }
 
   @Override
@@ -1079,6 +1109,26 @@ class TypeInference
   /** Traverses a destructuring pattern in an assignment or declaration */
   private FlowScope traverseDestructuringPattern(
       Node pattern, FlowScope scope, JSType patternType) {
+    return traverseDestructuringPatternHelper(
+        pattern,
+        scope,
+        patternType,
+        (FlowScope flowScope, Node targetNode, JSType targetType) -> {
+          targetType = targetType != null ? targetType : getNativeType(UNKNOWN_TYPE);
+          return updateScopeForAssignment(flowScope, targetNode, targetType);
+        });
+  }
+
+  /**
+   * Traverses a destructuring pattern, and calls {@code declarer.declareTypeInScope} on each lvalue
+   *
+   * <p>The purpose of the callback is to abstract different logic for declaring lvalues in function
+   * parameters vs. in regular assignments/declarations.
+   *
+   * @param declarer contains a callback called on every lvalue.
+   */
+  private FlowScope traverseDestructuringPatternHelper(
+      Node pattern, FlowScope scope, JSType patternType, TypeDeclaringCallback declarer) {
     checkArgument(pattern.isDestructuringPattern(), pattern);
     checkNotNull(patternType);
     for (Node key : pattern.children()) {
@@ -1098,7 +1148,7 @@ class TypeInference
         // traverse into nested patterns
         JSType targetType = target.inferType();
         targetType = targetType != null ? targetType : getNativeType(UNKNOWN_TYPE);
-        scope = traverseDestructuringPattern(targetNode, scope, targetType);
+        scope = traverseDestructuringPatternHelper(targetNode, scope, targetType, declarer);
       } else {
         scope = traverse(targetNode, scope);
 
@@ -1109,6 +1159,7 @@ class TypeInference
         }
 
         // declare in the scope
+        scope = declarer.declareTypeInScope(scope, targetNode, target.inferType());
         JSType targetType = target.inferType();
         targetType = targetType != null ? targetType : getNativeType(UNKNOWN_TYPE);
         scope = updateScopeForAssignment(scope, targetNode, targetType);

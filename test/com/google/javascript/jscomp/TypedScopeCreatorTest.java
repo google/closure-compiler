@@ -751,9 +751,6 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
   }
 
   public void testObjectPatternParameterWithComputedPropertyWithFullJSDoc() {
-    // TODO(lharker): re-enable type info validation. it's currently failing on the computed
-    // property because TypeInference doesn't traverse the destructuring pattern.
-    disableTypeInfoValidation();
     testSame(
         lines(
             "/**",
@@ -771,13 +768,45 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     assertFalse(aVar.isTypeInferred());
   }
 
-  public void testDestructuringParametersInIifeInfersType() {
+  public void testDestructuringParametersInIifeInfersType_withNameArguments() {
     testSame(
         lines(
             "const /** {x:  number} */ data = {x: 3}; ",
             "const /** !Iterable<string> */ strings = ['foo', 'bar'];",
             "",
             "(function ({x}, [y]) {})(data, strings);"));
+
+    TypedVar xVar = checkNotNull(lastFunctionScope.getVar("x"));
+    assertType(xVar.getType()).toStringIsEqualTo("number");
+    assertTrue(xVar.isTypeInferred());
+
+    TypedVar yVar = checkNotNull(lastFunctionScope.getVar("y"));
+    assertType(yVar.getType()).toStringIsEqualTo("string");
+    assertTrue(yVar.isTypeInferred());
+  }
+
+  public void testDestructuringParametersInIifeInfersType_withLiteralArguments() {
+    testSame("(function ({x}) {})({x: 3});");
+
+    TypedVar xVar = checkNotNull(lastFunctionScope.getVar("x"));
+    assertType(xVar.getType()).toStringIsEqualTo("number");
+    assertTrue(xVar.isTypeInferred());
+  }
+
+  public void testDestructuringParametersInIifeInfersType_withLiteralArgumentsAndDefaultValue() {
+    testSame("(function ({x = 'bar' + 'baz'}) {})({x: true ? 3 : undefined});");
+
+    TypedVar xVar = checkNotNull(lastFunctionScope.getVar("x"));
+    assertType(xVar.getType()).toStringIsEqualTo("(number|string)");
+    assertTrue(xVar.isTypeInferred());
+  }
+
+  public void testDestructuringParametersInCallbackInfersType() {
+    testSame(
+        lines(
+            "function f(/** function({x: number}, !Iterable<string>) */ callback) {}",
+            "",
+            "f(function ({x}, [y]) {});"));
 
     TypedVar xVar = checkNotNull(lastFunctionScope.getVar("x"));
     assertType(xVar.getType()).toStringIsEqualTo("number");
