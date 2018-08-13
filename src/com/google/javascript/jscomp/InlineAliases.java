@@ -55,7 +55,7 @@ final class InlineAliases implements CompilerPass {
 
   @Override
   public void process(Node externs, Node root) {
-    namespace = new GlobalNamespace(compiler, root);
+    namespace = new GlobalNamespace(compiler, externs, root);
     NodeTraversal.traverseRoots(compiler, new AliasesCollector(), externs, root);
     NodeTraversal.traverseRoots(compiler, new AliasesInliner(), externs, root);
   }
