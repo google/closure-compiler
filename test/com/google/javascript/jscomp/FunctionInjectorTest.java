@@ -1485,6 +1485,17 @@ public final class FunctionInjectorTest extends TestCase {
         INLINE_DIRECT);
   }
 
+  public void testArgumentsReferenceInArrowFunction() {
+    assertFalse(
+        doesFunctionMeetMinimumRequirements("function foo() { return () => arguments; }", "foo"));
+  }
+
+  public void testArgumentsReferenceInNestedVanillaFunction() {
+    assertTrue(
+        doesFunctionMeetMinimumRequirements(
+            "function foo() { return function() { return arguments; }; }", "foo"));
+  }
+
   /**
    * Test case
    *
@@ -1625,6 +1636,26 @@ public final class FunctionInjectorTest extends TestCase {
     TestCallback test = new TestCallback(fnName, tester);
     NodeTraversal.traverse(compiler, tree, test);
     verifier.checkRecordedChanges("helperInlineReferenceToFunction", mainRoot);
+  }
+
+  /**
+   * Calls {@link FunctionInjector#doesFunctionMeetMinimumRequirements(String, Node)}
+   *
+   * <p>This method is called as a prerequisite to checking if a particular reference is inlinable
+   */
+  public boolean doesFunctionMeetMinimumRequirements(final String code, final String fnName) {
+    final Compiler compiler = new Compiler();
+    final FunctionInjector injector =
+        new FunctionInjector(
+            compiler,
+            compiler.getUniqueNameIdSupplier(),
+            allowDecomposition,
+            assumeStrictThis,
+            assumeMinimumCapture);
+    final Node tree = parse(compiler, code);
+
+    final Node fnNode = findFunction(tree, fnName);
+    return injector.doesFunctionMeetMinimumRequirements(fnName, fnNode);
   }
 
   interface Method {

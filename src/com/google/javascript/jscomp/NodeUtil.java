@@ -2292,7 +2292,7 @@ public final class NodeUtil {
    */
   static boolean referencesThis(Node n) {
     Node start = (n.isFunction()) ? n.getLastChild() : n;
-    return containsType(start, Token.THIS, MATCH_NOT_THIS_BINDING);
+    return containsType(start, Token.THIS, MATCH_NOT_VANILLA_FUNCTION);
   }
 
   /**
@@ -4571,7 +4571,8 @@ public final class NodeUtil {
 
   static final Predicate<Node> MATCH_NOT_FUNCTION = n -> !n.isFunction();
 
-  static final Predicate<Node> MATCH_NOT_THIS_BINDING = n -> !NodeUtil.isVanillaFunction(n);
+  /** A predicate for matching anything except for a vanilla function (i.e. not arrow functions) */
+  static final Predicate<Node> MATCH_NOT_VANILLA_FUNCTION = n -> !NodeUtil.isVanillaFunction(n);
 
   /**
    * A predicate for matching statements without exiting the current scope.

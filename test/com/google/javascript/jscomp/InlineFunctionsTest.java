@@ -423,10 +423,6 @@ public class InlineFunctionsTest extends CompilerTestCase {
     testSame("function foo(x){return this}foo(1)");
   }
 
-  public void testInlineFunctions25() {
-    testSame("function foo(){return arguments[0]}foo()");
-  }
-
   public void testInlineFunctions26() {
     // Don't inline external functions
     testSame("function _foo(x){return x}_foo(1)");
@@ -548,6 +544,20 @@ public class InlineFunctionsTest extends CompilerTestCase {
             "       el$jscomp$inline_3 = el$jscomp$inline_3.parent) {}",
             "}",
             ""));
+  }
+
+  public void testDontInlineFunctionsWithDirectArgumentsReferences() {
+    testSame("function foo() { return arguments[0]; } foo(1);");
+  }
+
+  public void testDontInlineFunctionsWithArgumentsReferencesInArrowFunction() {
+    testSame("function foo() { return () => arguments[0]; } foo(1);");
+  }
+
+  public void testDoInlineFunctionsWithArgumentsReferencesInInnerVanillaFunction() {
+    test(
+        "function foo() { return function() { return arguments[0]; } } foo(1);",
+        "(function() { return arguments[0]; })");
   }
 
   public void testMixedModeInlining1() {

@@ -155,9 +155,9 @@ class FunctionInjector {
     final String fnRecursionName = fnNode.getFirstChild().getString();
     checkState(fnRecursionName != null);
 
-    // If the function references "arguments" directly in the function
-    boolean referencesArguments = NodeUtil.isNameReferenced(
-        block, "arguments", NodeUtil.MATCH_NOT_FUNCTION);
+    // If the function references "arguments" directly in the function or in an arrow function
+    boolean referencesArguments =
+        NodeUtil.isNameReferenced(block, "arguments", NodeUtil.MATCH_NOT_VANILLA_FUNCTION);
 
     Predicate<Node> blocksInjection =
         new Predicate<Node>() {
