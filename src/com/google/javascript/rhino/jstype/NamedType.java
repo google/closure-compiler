@@ -217,7 +217,9 @@ public final class NamedType extends ProxyObjectType {
 
   @Override
   int recursionUnsafeHashCode() {
-    return nominalHashCode(this);
+    // Recall that equality on `NamedType` uses only the name until successful resolution, then
+    // delegates to the resolved type.
+    return isSuccessfullyResolved() ? super.recursionUnsafeHashCode() : nominalHashCode(this);
   }
 
   /**
@@ -253,7 +255,7 @@ public final class NamedType extends ProxyObjectType {
 
     JSType result = getReferencedType();
 
-    if (isResolved() && !result.isNoResolvedType()) {
+    if (isSuccessfullyResolved()) {
       int numKeys = result.getTemplateTypeMap().numUnfilledTemplateKeys();
       if (result.isObjectType()
           && (templateTypes != null && !templateTypes.isEmpty())

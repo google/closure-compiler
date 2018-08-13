@@ -48,6 +48,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
+import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfo.Visibility;
 import com.google.javascript.rhino.JSDocInfoBuilder;
@@ -4607,14 +4608,20 @@ public class JSTypeTest extends BaseJSTypeTestCase {
         JSType aOnB = typeA.getLeastSupertype(typeB);
         JSType bOnA = typeB.getLeastSupertype(typeA);
 
-        // Use a custom assert message instead of the normal assertTypeEquals,
-        // to make it more helpful.
+        // TODO(b/110226422): This should use `assertTypeEquals` but at least one of the cases
+        // doesn't have matching `hashCode()` values.
         assertTrue(
-            String.format("getLeastSupertype not symmetrical:\n" +
-                "typeA: %s\ntypeB: %s\n" +
-                "a.getLeastSupertype(b): %s\n" +
-                "b.getLeastSupertype(a): %s\n",
-                typeA, typeB, aOnB, bOnA),
+            String.format(
+                lines(
+                    "getLeastSupertype not symmetrical:",
+                    "typeA: %s",
+                    "typeB: %s",
+                    "a.getLeastSupertype(b): %s",
+                    "b.getLeastSupertype(a): %s"),
+                typeA,
+                typeB,
+                aOnB,
+                bOnA),
             aOnB.isEquivalentTo(bOnA));
       }
     }
@@ -4637,14 +4644,20 @@ public class JSTypeTest extends BaseJSTypeTestCase {
         JSType aOnB = typeA.getGreatestSubtype(typeB);
         JSType bOnA = typeB.getGreatestSubtype(typeA);
 
-        // Use a custom assert message instead of the normal assertTypeEquals,
-        // to make it more helpful.
+        // TODO(b/110226422): This should use `assertTypeEquals` but at least one of the cases
+        // doesn't have matching `hashCode()` values.
         assertTrue(
-            String.format("getGreatestSubtype not symmetrical:\n" +
-                "typeA: %s\ntypeB: %s\n" +
-                "a.getGreatestSubtype(b): %s\n" +
-                "b.getGreatestSubtype(a): %s\n",
-                typeA, typeB, aOnB, bOnA),
+            String.format(
+                lines(
+                    "getGreatestSubtype not symmetrical:",
+                    "typeA: %s",
+                    "typeB: %s",
+                    "a.getGreatestSubtype(b): %s",
+                    "b.getGreatestSubtype(a): %s"),
+                typeA,
+                typeB,
+                aOnB,
+                bOnA),
             aOnB.isEquivalentTo(bOnA));
       }
     }
@@ -4800,40 +4813,55 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertSame(resolvedB, realB);
   }
 
-  /**
-   * Tests the {@link NamedType#equals} function against other types
-   * when it's forward-declared.
-   */
-  public void testForwardDeclaredNamedTypeEquals() {
-    // test == if references are equal
-    NamedType a = new NamedType(EMPTY_SCOPE, registry, "forwardDeclared", "source", 1, 0);
-    NamedType b = new NamedType(EMPTY_SCOPE, registry, "forwardDeclared", "source", 1, 0);
+  public void testMeaningOfUnresolved() {
+    // Given
+    JSType underTest = new UnitTestingJSType(registry);
 
-    assertTypeEquals(a, b);
+    // When
+    // No resolution.
 
-    a.resolve(null);
-
-    assertTrue(a.isResolved());
-    assertFalse(b.isResolved());
-
-    assertTypeEquals(a, b);
-
-    assertFalse(a.isEquivalentTo(UNKNOWN_TYPE));
-    assertFalse(b.isEquivalentTo(UNKNOWN_TYPE));
-    assertTrue(a.isEmptyType());
-    assertFalse(a.isNoType());
-    assertTrue(a.isNoResolvedType());
+    // Then
+    assertFalse(underTest.isResolved());
+    assertFalse(underTest.isSuccessfullyResolved());
+    assertFalse(underTest.isUnsuccessfullyResolved());
   }
 
-  public void testForwardDeclaredNamedType() {
-    NamedType a = new NamedType(EMPTY_SCOPE, registry, "forwardDeclared", "source", 1, 0);
+  public void testMeaningOfSuccessfullyResolved() {
+    // Given
+    JSType underTest =
+        new UnitTestingJSType(registry) {
+          @Override
+          public boolean isNoResolvedType() {
+            return false;
+          }
+        };
 
-    assertTypeEquals(UNKNOWN_TYPE, a.getLeastSupertype(UNKNOWN_TYPE));
-    assertTypeEquals(CHECKED_UNKNOWN_TYPE,
-        a.getLeastSupertype(CHECKED_UNKNOWN_TYPE));
-    assertTypeEquals(UNKNOWN_TYPE, UNKNOWN_TYPE.getLeastSupertype(a));
-    assertTypeEquals(CHECKED_UNKNOWN_TYPE,
-        CHECKED_UNKNOWN_TYPE.getLeastSupertype(a));
+    // When
+    underTest.resolve(ErrorReporter.NULL_INSTANCE);
+
+    // Then
+    assertTrue(underTest.isResolved());
+    assertTrue(underTest.isSuccessfullyResolved());
+    assertFalse(underTest.isUnsuccessfullyResolved());
+  }
+
+  public void testMeaningOfUnsuccessfullyResolved() {
+    // Given
+    JSType underTest =
+        new UnitTestingJSType(registry) {
+          @Override
+          public boolean isNoResolvedType() {
+            return true;
+          }
+        };
+
+    // When
+    underTest.resolve(ErrorReporter.NULL_INSTANCE);
+
+    // Then
+    assertTrue(underTest.isResolved());
+    assertFalse(underTest.isSuccessfullyResolved());
+    assertTrue(underTest.isUnsuccessfullyResolved());
   }
 
   /**
@@ -6180,5 +6208,49 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
     // We currently allow any function to be cast to any other function type
     assertTrue(ARRAY_FUNCTION_TYPE.canCastTo(BOOLEAN_OBJECT_FUNCTION_TYPE));
+  }
+
+  /**
+   * A minimal implementation of {@link JSType} for unit tests and nothing else.
+   *
+   * <p>This class has no innate behaviour. It is intended as a stand-in for testing behaviours on
+   * {@link JSType} that require a concrete instance. Test cases are responsible for any
+   * configuration.
+   */
+  private static class UnitTestingJSType extends JSType {
+
+    UnitTestingJSType(JSTypeRegistry registry) {
+      super(registry);
+    }
+
+    @Override
+    int recursionUnsafeHashCode() {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public BooleanLiteralSet getPossibleToBooleanOutcomes() {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public <T> T visit(Visitor<T> visitor) {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    <T> T visit(RelationshipVisitor<T> visitor, JSType that) {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    JSType resolveInternal(ErrorReporter reporter) {
+      return this;
+    }
+
+    @Override
+    StringBuilder appendTo(StringBuilder builder, boolean forAnnotation) {
+      throw new UnsupportedOperationException();
+    }
   }
 }

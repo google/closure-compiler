@@ -20137,23 +20137,52 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "}"));
   }
 
-  public void testShadowedForwardReference() {
-    // TODO(sdh): fix this.
+  public void testTypeDeclarationsShadowOneAnotherWithFunctionScoping() {
+    // TODO(b/110538992): Accuracy of shadowing is unclear here. b/110741413 may be confusing the
+    // issue.
+
+    // `C` at (2) should refer to `C` at (3) and not `C` at (1). Otherwise the assignment at (4)
+    // would be invalid.
     testTypes(
         lines(
-            "/** @constructor */ var C = function() { /** @type {string} */ this.prop = 's'; };",
-            "var fn = function() {",
-            "/** @type {C} */ var x",
-            "/** @constructor */ var C = function() { /** @type {number} */ this.prop = 1; };",
-            "/** @return {C} */ function fn() { return new C(); };",
-            "/** @type {number} */ var n1 = x.prop;",
-            "/** @type {number} */ var n2 = new C().prop;",
+            "/** @constructor */",
+            "var A = function() { };",
             "",
-            "}"),
+            "/**",
+            " * @constructor",
+            " * @extends {A}",
+            " */",
+            "var C = function() { };", // (1)
+            "",
+            "var fn = function() {",
+            "  /** @type {?C} */ var innerC;", // (2)
+            "",
+            "  /** @constructor */",
+            "  var C = function() { };", // (3)
+            "",
+            "  innerC = new C();", // (4)
+            "}"));
+  }
+
+  public void testTypeDeclarationsShadowOneAnotherWithFunctionScopingConsideringHoisting() {
+    // TODO(b/110538992): Accuracy of shadowing is unclear here. b/110741413 may be confusing the
+    // issue.
+
+    // `C` at (3) should refer to `C` at (2) and not `C` at (1). Otherwise return the value at (4)
+    // would be invalid.
+    testTypes(
         lines(
-            "initializing variable", //
-            "found   : string", // should be "number"
-            "required: number"));
+            "/** @constructor */",
+            "var C = function() { };", // (1)
+            "",
+            "var fn = function() {",
+            "  /** @constructor */",
+            "  var C = function() { };", // (2)
+            "",
+            // This function will be hoisted above, and therefore type-analysed before, (2).
+            "  /** @return {!C} */", // (3)
+            "  function hoisted() { return new C(); };", // (4)
+            "}"));
   }
 
   public void testRefinedTypeInNestedShortCircuitingAndOr() {

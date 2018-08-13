@@ -55,6 +55,8 @@ import com.google.javascript.rhino.jstype.TemplatizedType;
 import junit.framework.TestCase;
 
 public abstract class BaseJSTypeTestCase extends TestCase {
+  protected static final String FORWARD_DECLARED_TYPE_NAME = "forwardDeclared";
+
   protected static final Joiner LINE_JOINER = Joiner.on('\n');
 
   protected JSTypeRegistry registry;
@@ -107,7 +109,7 @@ public abstract class BaseJSTypeTestCase extends TestCase {
   protected void setUp() throws Exception {
     super.setUp();
     errorReporter = new TestErrorReporter(null, null);
-    registry = new JSTypeRegistry(errorReporter, ImmutableSet.of("forwardDeclared"));
+    registry = new JSTypeRegistry(errorReporter, ImmutableSet.of(FORWARD_DECLARED_TYPE_NAME));
     initTypes();
   }
 

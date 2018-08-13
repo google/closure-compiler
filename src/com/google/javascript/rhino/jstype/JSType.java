@@ -690,7 +690,8 @@ public abstract class JSType implements Serializable {
     if (this.isNoResolvedType() && that.isNoResolvedType()) {
       if (this.isNamedType() && that.isNamedType()) {
         return Objects.equals(
-            ((NamedType) this).getReferenceName(), ((NamedType) that).getReferenceName());
+            this.toMaybeNamedType().getReferenceName(), //
+            that.toMaybeNamedType().getReferenceName());
       } else {
         return true;
       }
@@ -738,8 +739,14 @@ public abstract class JSType implements Serializable {
 
     if (isNominalType() && that.isNominalType()) {
       // TODO(johnlenz): is this valid across scopes?
-      return getConcreteNominalTypeName(this.toObjectType())
-          .equals(getConcreteNominalTypeName(that.toObjectType()));
+      @Nullable String nameOfThis = deepestResolvedTypeNameOf(this.toObjectType());
+      @Nullable String nameOfThat = deepestResolvedTypeNameOf(that.toObjectType());
+
+      if ((nameOfThis == null) && (nameOfThat == null)) {
+        // These are two anonymous types that were masquerading as nominal, so don't compare names.
+      } else {
+        return Objects.equals(nameOfThis, nameOfThat);
+      }
     }
 
     if (isTemplateType() && that.isTemplateType()) {
@@ -769,15 +776,16 @@ public abstract class JSType implements Serializable {
   }
 
   // Named types may be proxies of concrete types.
-  private String getConcreteNominalTypeName(ObjectType objType) {
-    if (objType instanceof ProxyObjectType) {
-      ObjectType internal = ((ProxyObjectType) objType)
-          .getReferencedObjTypeInternal();
-      if (internal != null && internal.isNominalType()) {
-        return getConcreteNominalTypeName(internal);
-      }
+  @Nullable
+  private String deepestResolvedTypeNameOf(ObjectType objType) {
+    if (!objType.isResolved() || !(objType instanceof ProxyObjectType)) {
+      return objType.getReferenceName();
     }
-    return objType.getReferenceName();
+
+    ObjectType internal = ((ProxyObjectType) objType).getReferencedObjTypeInternal();
+    return (internal != null && internal.isNominalType())
+        ? deepestResolvedTypeNameOf(internal)
+        : null;
   }
 
   /**
@@ -1661,9 +1669,24 @@ public abstract class JSType implements Serializable {
     resolved = true;
   }
 
-  /** Whether the type has been resolved. */
+  /**
+   * Returns whether the type has undergone resolution.
+   *
+   * <p>A value of {@code true} <em>does not</em> indicate that resolution was successful, only that
+   * it was attempted and has finished.
+   */
   public final boolean isResolved() {
     return resolved;
+  }
+
+  /** Returns whether the type has undergone resolution and resolved to a "useful" type. */
+  public final boolean isSuccessfullyResolved() {
+    return isResolved() && !isNoResolvedType();
+  }
+
+  /** Returns whether the type has undergone resolution and resolved to a "useless" type. */
+  public final boolean isUnsuccessfullyResolved() {
+    return isResolved() && isNoResolvedType();
   }
 
   /**

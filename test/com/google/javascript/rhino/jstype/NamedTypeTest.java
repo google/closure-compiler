@@ -38,32 +38,174 @@
 
 package com.google.javascript.rhino.jstype;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.javascript.rhino.testing.MapBasedScope.emptyScope;
+
 import com.google.common.collect.ImmutableMap;
+import com.google.common.testing.EqualsTester;
+import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.testing.BaseJSTypeTestCase;
 import com.google.javascript.rhino.testing.MapBasedScope;
+import javax.annotation.Nullable;
 
 /**
  * @author nicksantos@google.com (Nick Santos)
  */
 public class NamedTypeTest extends BaseJSTypeTestCase {
-  public void testNamedTypeProperties() {
-    FunctionType ctorA = registry.createConstructorType("TypeA", null, null, null, null, false);
-    MapBasedScope scope = new MapBasedScope(ImmutableMap.of("TypeA", ctorA));
-    ObjectType typeA = ctorA.getInstanceType();
-    NamedType namedA = new NamedType(scope, registry, "TypeA", "source", 1, 0);
 
-    namedA.defineDeclaredProperty("foo", NUMBER_TYPE, null);
-    namedA.resolve(null);
-    assertTypeEquals(NUMBER_TYPE, typeA.getPropertyType("foo"));
+  private FunctionType fooCtorType; // The type of the constructor of "Foo".
+  private ObjectType fooType; // A realized type with the canonical name "Foo".
+
+  @Override
+  public void setUp() throws Exception {
+    super.setUp();
+
+    fooCtorType =
+        forceResolutionOf(new FunctionBuilder(registry).forConstructor().withName("Foo").build());
+    fooType = forceResolutionOf(fooCtorType.getInstanceType());
+  }
+
+  public void testResolutionPropagatesNamedTypePropertiesToResolvedType() {
+    // Given
+    StaticTypedScope fooToFooScope = new MapBasedScope(ImmutableMap.of("Foo", fooCtorType));
+    NamedType namedFooType = new NamedTypeBuilder().setScope(fooToFooScope).setName("Foo").build();
+
+    namedFooType.defineDeclaredProperty("myProperty", NUMBER_TYPE, null);
+
+    // The property should not be typed yet.
+    assertTypeNotEquals(NUMBER_TYPE, fooType.getPropertyType("myProperty"));
+
+    // When
+    namedFooType.resolve(ErrorReporter.NULL_INSTANCE);
+
+    // Then
+    assertTypeEquals(NUMBER_TYPE, fooType.getPropertyType("myProperty"));
+  }
+
+  public void testStateOfForwardDeclaredType_Unresolved() {
+    // Given
+    NamedType type = new NamedTypeBuilder().setName(FORWARD_DECLARED_TYPE_NAME).build();
+
+    // Then
+    assertFalse(type.isResolved());
+    assertFalse(type.isEmptyType());
+    assertTypeNotEquals(UNKNOWN_TYPE, type);
+    assertTypeEquals(UNKNOWN_TYPE, type.getReferencedType());
+  }
+
+  public void testStateOfForwardDeclaredType_UnsuccesfullyResolved() {
+    // Given
+    NamedType type = new NamedTypeBuilder().setName(FORWARD_DECLARED_TYPE_NAME).build();
+
+    // When
+    type.resolve(ErrorReporter.NULL_INSTANCE);
+
+    // Then
+    assertTrue(type.isUnsuccessfullyResolved());
+    assertFalse(type.isUnknownType());
+  }
+
+  public void testStateOfForwardDeclaredType_SuccessfullyResolved() {
+    // Given
+    StaticTypedScope fooToFooScope = new MapBasedScope(ImmutableMap.of("Foo", fooCtorType));
+    NamedType namedFooType = new NamedTypeBuilder().setScope(fooToFooScope).setName("Foo").build();
+
+    // When
+    namedFooType.resolve(ErrorReporter.NULL_INSTANCE);
+
+    // Then
+    assertTrue(namedFooType.isSuccessfullyResolved());
+    assertTypeEquals(namedFooType, fooType);
+  }
+
+  public void testEquality() {
+    // Given
+    ObjectType barType = createNominalType("Bar");
+    FunctionType anonType = forceResolutionOf(new FunctionBuilder(registry).build());
+
+    NamedTypeBuilder namedFooBuilder = new NamedTypeBuilder().setName("Foo");
+    NamedType namedFooUnresolved = namedFooBuilder.build();
+    NamedType namedFooUnsuccessfullyResolved =
+        forceResolutionWith(NO_RESOLVED_TYPE, namedFooBuilder.build());
+    NamedType namedFooResolvedToFoo = forceResolutionWith(fooType, namedFooBuilder.build());
+    NamedType namedFooResolvedToAnon = forceResolutionWith(anonType, namedFooBuilder.build());
+    NamedType namedFooResolvedToBar = forceResolutionWith(barType, namedFooBuilder.build());
+
+    NamedTypeBuilder namedBarBuilder = new NamedTypeBuilder().setName("Bar");
+    NamedType namedBarUnresolved = namedBarBuilder.build();
+    NamedType namedBarUnsuccessfullyResolved =
+        forceResolutionWith(NO_RESOLVED_TYPE, namedBarBuilder.build());
+    NamedType namedBarResolvedToFoo = forceResolutionWith(fooType, namedBarBuilder.build());
+    NamedType namedBarResolvedToAnon = forceResolutionWith(anonType, namedBarBuilder.build());
+    NamedType namedBarResolvedToBar = forceResolutionWith(barType, namedBarBuilder.build());
+
+    // Then
+    new EqualsTester()
+        .addEqualityGroup(fooType, namedFooUnresolved, namedFooResolvedToFoo, namedBarResolvedToFoo)
+        .addEqualityGroup(barType, namedFooResolvedToBar, namedBarUnresolved, namedBarResolvedToBar)
+        .addEqualityGroup(anonType, namedFooResolvedToAnon, namedBarResolvedToAnon)
+        .addEqualityGroup(namedFooUnsuccessfullyResolved)
+        .addEqualityGroup(namedBarUnsuccessfullyResolved)
+        // TODO(b/112425334): Either re-enable this equality group or remove the NO_RESOLVED_TYPE
+        // from the typesystem.
+        // .addEqualityGroup(NO_RESOLVED_TYPE)
+        .testEquals();
+  }
+
+  public void testForwardDeclaredNamedType() {
+    NamedType a = new NamedTypeBuilder().setName("Unresolvable").build();
+
+    assertTypeEquals(UNKNOWN_TYPE, a.getLeastSupertype(UNKNOWN_TYPE));
+    assertTypeEquals(CHECKED_UNKNOWN_TYPE, a.getLeastSupertype(CHECKED_UNKNOWN_TYPE));
+    assertTypeEquals(UNKNOWN_TYPE, UNKNOWN_TYPE.getLeastSupertype(a));
+    assertTypeEquals(CHECKED_UNKNOWN_TYPE, CHECKED_UNKNOWN_TYPE.getLeastSupertype(a));
   }
 
   public void testActiveXObjectResolve() {
     MapBasedScope scope = new MapBasedScope(ImmutableMap.of("ActiveXObject", NO_OBJECT_TYPE));
+    NamedType activeXObject =
+        new NamedTypeBuilder().setScope(scope).setName("ActiveXObject").build();
 
-    NamedType activeXObject = new NamedType(scope, registry, "ActiveXObject", "source", 1, 0);
     assertEquals("ActiveXObject", activeXObject.toString());
     activeXObject.resolve(null);
     assertEquals("NoObject", activeXObject.toString());
     assertTypeEquals(NO_OBJECT_TYPE, activeXObject.getReferencedType());
+  }
+
+  private static NamedType forceResolutionWith(JSType type, NamedType proxy) {
+    proxy.setResolvedTypeInternal(type);
+    proxy.setReferencedType(type);
+    return proxy;
+  }
+
+  private static <T extends JSType> T forceResolutionOf(T type) {
+    type.setResolvedTypeInternal(type);
+    return type;
+  }
+
+  private ObjectType createNominalType(String name) {
+    FunctionType ctorType =
+        forceResolutionOf(new FunctionBuilder(registry).forConstructor().withName(name).build());
+    return forceResolutionOf(ctorType.getInstanceType());
+  }
+
+  private class NamedTypeBuilder {
+    private StaticTypedScope scope = emptyScope();
+    @Nullable private String name;
+
+    public NamedTypeBuilder setScope(StaticTypedScope scope) {
+      this.scope = scope;
+      return this;
+    }
+
+    public NamedTypeBuilder setName(String name) {
+      this.name = name;
+      return this;
+    }
+
+    public NamedType build() {
+      checkNotNull(name, "NamedType requires a name");
+      return new NamedType(scope, registry, name, "source", 1, 0);
+    }
   }
 }
