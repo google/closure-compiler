@@ -73,9 +73,9 @@ public class UnionType extends JSType {
   // instead of using the for-each loop idiom.
 
   // alternates without merging structural interfaces and their subtypes
-  ImmutableList<JSType> alternatesWithoutStucturalTyping;
+  private ImmutableList<JSType> alternatesWithoutStucturalTyping;
   // alternates under structural typing
-  ImmutableList<JSType> alternates;
+  private ImmutableList<JSType> alternates;
 
   /**
    * Creates a union type.

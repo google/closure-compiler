@@ -1512,7 +1512,7 @@ public abstract class JSType implements Serializable {
       UnionType union = thatType.toMaybeUnionType();
       // use an indexed for-loop to avoid allocations
       ImmutableList<JSType> alternatesWithoutStucturalTyping =
-          union.alternatesWithoutStucturalTyping;
+          union.getAlternatesWithoutStructuralTypingList();
       for (int i = 0; i < alternatesWithoutStucturalTyping.size(); i++) {
         JSType element = alternatesWithoutStucturalTyping.get(i);
         if (thisType.isSubtype(element, implicitImplCache, subtypingMode)) {
