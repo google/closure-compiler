@@ -166,7 +166,7 @@ public class UnionTypeBuilder implements Serializable {
       if (alternate.isUnionType()) {
         UnionType union = alternate.toMaybeUnionType();
         List<JSType> alternatesWithoutStructuralTyping =
-            union.getAlternatesWithoutStructuralTypingList();
+            union.getAlternatesWithoutStructuralTyping();
         for (int i = 0; i < alternatesWithoutStructuralTyping.size(); i++) {
           JSType unionAlt = alternatesWithoutStructuralTyping.get(i);
           addAlternate(unionAlt);

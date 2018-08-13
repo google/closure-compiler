@@ -46,7 +46,6 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.rhino.ErrorReporter;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -96,19 +95,10 @@ public class UnionType extends JSType {
 
   /**
    * Gets the alternate types of this union type.
-   * @return The alternate types of this union type. The returned set is
-   *     immutable.
-   */
-  public Collection<JSType> getAlternates() {
-    return getAlternatesList();
-  }
-
-  /**
-   * Gets the alternate types of this union type.
    *
-   * @return The alternate types of this union type. The returned list is immutable.
+   * @return The alternate types of this union type. The returned set is immutable.
    */
-  ImmutableList<JSType> getAlternatesList() {
+  public ImmutableList<JSType> getAlternates() {
     for (int i = 0; i < alternatesWithoutStucturalTyping.size(); i++) {
       JSType t = alternatesWithoutStucturalTyping.get(i);
       if (t.isUnionType()) {
@@ -120,22 +110,12 @@ public class UnionType extends JSType {
   }
 
   /**
-   * Gets the alternate types of this union type, including structural interfaces
-   *  and implicit implementations as are distinct alternates.
-   * @return The alternate types of this union type. The returned set is
-   *     immutable.
-   */
-  public Collection<JSType> getAlternatesWithoutStructuralTyping() {
-    return getAlternatesWithoutStructuralTypingList();
-  }
-
-  /**
    * Gets the alternate types of this union type, including structural interfaces and implicit
-   * implementations as are distinct alternates.
+   * implementations as distinct alternates.
    *
    * @return The alternate types of this union type. The returned set is immutable.
    */
-  ImmutableList<JSType> getAlternatesWithoutStructuralTypingList() {
+  public ImmutableList<JSType> getAlternatesWithoutStructuralTyping() {
     for (int i = 0; i < alternatesWithoutStucturalTyping.size(); i++) {
       JSType t = alternatesWithoutStucturalTyping.get(i);
       if (t.isUnionType()) {
@@ -384,7 +364,7 @@ public class UnionType extends JSType {
 
   @Override
   public boolean isStruct() {
-    List<JSType> alternates = getAlternatesList();
+    List<JSType> alternates = getAlternates();
     for (int i = 0; i < alternates.size(); i++) {
       JSType typ = alternates.get(i);
       if (typ.isStruct()) {
@@ -396,7 +376,7 @@ public class UnionType extends JSType {
 
   @Override
   public boolean isDict() {
-    List<JSType> alternates = getAlternatesList();
+    List<JSType> alternates = getAlternates();
     for (int i = 0; i < alternates.size(); i++) {
       JSType typ = alternates.get(i);
       if (typ.isDict()) {
@@ -457,7 +437,7 @@ public class UnionType extends JSType {
    */
   boolean checkUnionEquivalenceHelper(
       UnionType that, EquivalenceMethod eqMethod, EqCache eqCache) {
-    List<JSType> thatAlternates = that.getAlternatesWithoutStructuralTypingList();
+    List<JSType> thatAlternates = that.getAlternatesWithoutStructuralTyping();
     if (eqMethod == EquivalenceMethod.IDENTITY
         && getAlternatesWithoutStructuralTyping().size() != thatAlternates.size()) {
       return false;
@@ -473,7 +453,7 @@ public class UnionType extends JSType {
 
   private boolean hasAlternate(JSType type, EquivalenceMethod eqMethod,
       EqCache eqCache) {
-    List<JSType> alternatesWithoutStructuralTyping = getAlternatesWithoutStructuralTypingList();
+    List<JSType> alternatesWithoutStructuralTyping = getAlternatesWithoutStructuralTyping();
     for (int i = 0; i < alternatesWithoutStructuralTyping.size(); i++) {
       JSType alternate = alternatesWithoutStructuralTyping.get(i);
       if (alternate.checkEquivalenceHelper(type, eqMethod, eqCache)) {
