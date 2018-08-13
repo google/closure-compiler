@@ -1639,7 +1639,9 @@ public abstract class JSType implements Serializable {
       // TODO(nicksantos): Check to see if resolve() looped back on itself.
       // Preconditions.checkNotNull(resolveResult);
       if (resolveResult == null) {
-        return registry.getNativeType(JSTypeNative.UNKNOWN_TYPE);
+        // If there is a circular definition, keep the NamedType around. This is not ideal,
+        // but is still a better type than unknown.
+        return this;
       }
       return resolveResult;
     }
