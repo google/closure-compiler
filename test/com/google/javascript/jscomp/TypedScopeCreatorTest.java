@@ -2115,6 +2115,48 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     assertType(foo.getInstanceType()).withTypeOfProp("method").isEqualTo(method);
   }
 
+  public void testClassDeclarationWithDucplicatePrototypeMethodAfterward() {
+    // Given
+    testSame(
+        lines(
+            "class Foo {",
+            "  /** @param {string} arg */",
+            "  method(arg) { }",
+            "}",
+            "",
+            // This declaration should be ignored in preference of the one in the CLASS body.
+            // Constructs like this are sometimes valid (e.g. in mod files) and have error reporting
+            // separate from `TypedScopeCreator`.
+            "/** @param {number} arg */",
+            "Foo.prototype.method = function(arg) { }"));
+
+    // Then
+    FunctionType foo = (FunctionType) findNameType("Foo", globalScope);
+    assertType(foo.getInstanceType())
+        .withTypeOfProp("method")
+        .toStringIsEqualTo("function(this:Foo, string): undefined");
+  }
+
+  public void testClassDeclarationWithDucplicateStaticMethodAfterward() {
+    // Given
+    testSame(
+        lines(
+            "class Foo {",
+            "  /** @param {string} arg */",
+            "  static method(arg) { }",
+            "}",
+            "",
+            // This declaration should be ignored in preference of the one in the CLASS body.
+            // Constructs like this are sometimes valid (e.g. in mod files) and have error reporting
+            // separate from `TypedScopeCreator`.
+            "/** @param {number} arg */",
+            "Foo.method = function(arg) { }"));
+
+    // Then
+    FunctionType foo = (FunctionType) findNameType("Foo", globalScope);
+    assertType(foo).withTypeOfProp("method").toStringIsEqualTo("function(string): undefined");
+  }
+
   public void testClassDeclarationWithMethodAndInlineParamDocs() {
     testSame(
         lines(

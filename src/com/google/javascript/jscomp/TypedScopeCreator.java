@@ -2372,11 +2372,17 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
         }
       }
 
-      // Create any child block scopes "pre-order" as we see them. This is required because hoisted
-      // or qualified names defined in earlier blocks might be referred to later outside the block.
-      // This isn't a big deal in most cases since a NamedType will be created and resolved later,
-      // but if a NamedType is used for a superclass, we lose a lot of valuable checking. Recursing
-      // into child blocks immediately prevents this from being a problem.
+      // Create any child block scopes "pre-order" as we see them.
+      //
+      // This is required because hoisted or qualified names defined in earlier blocks might be
+      // referred to later outside the block. This isn't a big deal in most cases since a NamedType
+      // will be created and resolved later, but if a NamedType is used for a superclass, we lose a
+      // lot of valuable checking. Recursing into child blocks immediately prevents this from being
+      // a problem.
+      //
+      // We don't traverse into CLASSes because we haven't yet have created the class-type on which
+      // to assign members. We'll do this on the way back up (post-order) instead, after the
+      // class-type has been attached to the AST.
       if (parent != null && NodeUtil.createsBlockScope(n) && !n.isClass()) {
         createScope(n, currentScope);
       }
@@ -2428,6 +2434,14 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
             maybeDeclareQualifiedName(t, n.getJSDocInfo(), n, parent, null);
           }
           break;
+
+        case CLASS:
+          // Analyse CLASS child-scopes now because later code in this scope may assign
+          // properties to these class-types. We want to ensure declarations within the CLASS have
+          // priority.
+          createScope(n, currentScope);
+          break;
+
         default:
           break;
       }
