@@ -765,7 +765,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   }
 
   public void testSymbolComparison9() {
-    testTypes(
+    testTypesWithCommonExterns(
         lines(
             "/** @enum {symbol} */ var E = {A:Symbol()};",
             "/**",
@@ -776,7 +776,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   }
 
   public void testSymbolComparison10() {
-    testTypes(
+    testTypesWithCommonExterns(
         lines(
             "/** @enum {symbol} */ var E = {A:Symbol()};",
             "/**",
@@ -787,7 +787,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   }
 
   public void testSymbolComparison11() {
-    testTypes(
+    testTypesWithCommonExterns(
         lines(
             "/** @enum {!Symbol} */ var E = {A:/** @type {!Symbol} */ (Object(Symbol()))};",
             "/**",
@@ -798,7 +798,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   }
 
   public void testSymbolComparison12() {
-    testTypes(
+    testTypesWithCommonExterns(
         lines(
             "/** @enum {!Symbol} */ var E = {A:/** @type {!Symbol} */ (Object(Symbol()))};",
             "/**",
@@ -806,9 +806,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             " * @param {E} y",
             "*/",
             "function f(x, y) { return x === y; }"),
-        "condition always evaluates to false\n"
-            + "left : symbol\n"
-            + "right: E<Symbol>");
+        "condition always evaluates to false\n" + "left : symbol\n" + "right: E<Symbol>");
   }
 
   public void testSymbolComparison13() {
@@ -19773,8 +19771,9 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   }
 
   public void testEnumOfSymbol1() {
-    testTypes(
-        lines("",
+    testTypesWithCommonExterns(
+        lines(
+            "",
             "/** @enum {symbol} */",
             "var ES = {A: Symbol('a'), B: Symbol('b')};",
             "",
@@ -19785,8 +19784,9 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   }
 
   public void testEnumOfSymbol2() {
-    testTypes(
-        lines("",
+    testTypesWithCommonExterns(
+        lines(
+            "",
             "/** @enum {symbol} */",
             "var ES = {A: Symbol('a'), B: Symbol('b')};",
             "",
@@ -19794,15 +19794,13 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "var o = {};",
             "",
             "o[ES.A] = 1;"),
-        lines(
-            "restricted index type",
-            "found   : ES<symbol>",
-            "required: number"));
+        lines("restricted index type", "found   : ES<symbol>", "required: number"));
   }
 
   public void testEnumOfSymbol4() {
-    testTypes(
-        lines("",
+    testTypesWithCommonExterns(
+        lines(
+            "",
             "/** @enum {symbol} */",
             "var ES = {A: Symbol('a'), B: Symbol('b')};",
             "",

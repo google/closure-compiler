@@ -121,10 +121,13 @@ public class TranspilationPasses {
         // TODO(b/73387406): Move each pass above here temporarily, then into
         // addEs6PostCheck Passes once the pass supports propagating type information
       }
-    } else if (options.needsTranspilationOf(Feature.OBJECT_PATTERN_REST)) {
-      passes.add(es6RenameVariablesInParamLists);
-      passes.add(es6SplitVariableDeclarations);
-      passes.add(getEs6RewriteDestructuring(ObjectDestructuringRewriteMode.REWRITE_OBJECT_REST));
+    } else if (options.needsTranspilationFrom(ES2018)) {
+      if (options.needsTranspilationOf(Feature.OBJECT_PATTERN_REST)) {
+        passes.add(es6RenameVariablesInParamLists);
+        passes.add(es6SplitVariableDeclarations);
+        passes.add(getEs6RewriteDestructuring(ObjectDestructuringRewriteMode.REWRITE_OBJECT_REST));
+      }
+      passes.add(es6InjectRuntimeLibraries);
     }
   }
 

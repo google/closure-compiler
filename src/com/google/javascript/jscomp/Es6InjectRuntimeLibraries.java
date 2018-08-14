@@ -39,12 +39,6 @@ public final class Es6InjectRuntimeLibraries extends AbstractPostOrderCallback
   private final AbstractCompiler compiler;
   private final boolean getterSetterSupported;
 
-  // Since there's currently no Feature for Symbol, run this pass if the code has any ES6 features.
-  private static final FeatureSet requiredForFeatures = FeatureSet.ES6.without(FeatureSet.ES5);
-
-  private static final FeatureSet knownToRequireSymbol =
-      FeatureSet.BARE_MINIMUM.with(Feature.FOR_OF, Feature.SPREAD_EXPRESSIONS);
-
   public Es6InjectRuntimeLibraries(AbstractCompiler compiler) {
     this.compiler = compiler;
     this.getterSetterSupported =
@@ -61,36 +55,42 @@ public final class Es6InjectRuntimeLibraries extends AbstractPostOrderCallback
     // We will need these runtime methods when we transpile, but we want the runtime
     // functions to be have JSType applied to it by the type inferrence.
 
-    if (used.contains(Feature.FOR_OF)) {
-      Es6ToEs3Util.preloadEs6RuntimeFunction(compiler, "makeIterator");
+    if (compiler.getOptions().needsTranspilationFrom(FeatureSet.ES6)) {
+      if (used.contains(Feature.FOR_OF)) {
+        Es6ToEs3Util.preloadEs6RuntimeFunction(compiler, "makeIterator");
+      }
+
+      if (used.contains(Feature.SPREAD_EXPRESSIONS)) {
+        Es6ToEs3Util.preloadEs6RuntimeFunction(compiler, "arrayfromiterable");
+      }
+
+      if (used.contains(Feature.CLASS_EXTENDS)) {
+        Es6ToEs3Util.preloadEs6RuntimeFunction(compiler, "inherits");
+      }
+
+      if (used.contains(Feature.CLASS_GETTER_SETTER)) {
+        compiler.ensureLibraryInjected("util/global", /* force= */ false);
+      }
+
+      if (used.contains(Feature.GENERATORS)) {
+        compiler.ensureLibraryInjected("es6/generator_engine", /* force= */ false);
+      }
     }
 
-    if (used.contains(Feature.SPREAD_EXPRESSIONS)) {
-      Es6ToEs3Util.preloadEs6RuntimeFunction(compiler, "arrayfromiterable");
-    }
+    if (compiler.getOptions().needsTranspilationFrom(FeatureSet.ES2018)) {
+      if (used.contains(Feature.ASYNC_GENERATORS)) {
+        compiler.ensureLibraryInjected("es6/async_generator_wrapper", /* force= */ false);
+      }
 
-    if (used.contains(Feature.CLASS_EXTENDS)) {
-      Es6ToEs3Util.preloadEs6RuntimeFunction(compiler, "inherits");
-    }
-
-    if (used.contains(Feature.CLASS_GETTER_SETTER)) {
-      compiler.ensureLibraryInjected("util/global", /* force= */ false);
-    }
-
-    if (used.contains(Feature.GENERATORS)) {
-      compiler.ensureLibraryInjected("es6/generator_engine", /* force= */ false);
-    }
-
-    if (used.contains(Feature.ASYNC_GENERATORS)) {
-      compiler.ensureLibraryInjected("es6/async_generator_wrapper", /* force= */ false);
-    }
-
-    if (used.contains(Feature.FOR_AWAIT_OF)) {
-      compiler.ensureLibraryInjected("es6/util/makeiterator", /* force= */ false);
+      if (used.contains(Feature.FOR_AWAIT_OF)) {
+        compiler.ensureLibraryInjected("es6/util/makeasynciterator", /* force= */ false);
+      }
     }
 
     // TODO(johnlenz): remove this.  Symbol should be handled like the other polyfills.
-    TranspilationPasses.processTranspile(compiler, root, requiredForFeatures, this);
+    for (Node singleRoot : root.children()) {
+      NodeTraversal.traverse(compiler, singleRoot, this);
+    }
   }
 
   private static FeatureSet getScriptFeatures(Node script) {
@@ -100,7 +100,9 @@ public final class Es6InjectRuntimeLibraries extends AbstractPostOrderCallback
 
   @Override
   public void hotSwapScript(Node scriptRoot, Node originalRoot) {
-    TranspilationPasses.hotSwapTranspile(compiler, scriptRoot, requiredForFeatures, this);
+    for (Node singleRoot : scriptRoot.children()) {
+      NodeTraversal.traverse(compiler, singleRoot, this);
+    }
   }
 
   @Override
