@@ -76,6 +76,7 @@ public class ConvertToTypedInterface implements CompilerPass {
           "goog.forwardDeclare",
           "goog.module",
           "goog.module.declareLegacyNamespace",
+          "goog.module.declareNamespace",
           "goog.provide",
           "goog.require");
 
