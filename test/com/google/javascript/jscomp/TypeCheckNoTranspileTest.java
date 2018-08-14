@@ -3941,6 +3941,15 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "required: string"));
   }
 
+  public void testBadDefaultValueInCatchCausesWarning() {
+    testTypes(
+        "try { throw {x: undefined}; } catch ({/** string */ x = 3 + 4}) {}",
+        lines(
+            "default value has wrong type", //
+            "found   : number",
+            "required: string"));
+  }
+
   public void testCannotAliasEnumThroughDestructuring() {
     testTypesWithExterns(
         new TestExternsBuilder().addArray().build(),

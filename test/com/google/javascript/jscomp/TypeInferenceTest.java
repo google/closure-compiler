@@ -2041,6 +2041,39 @@ public final class TypeInferenceTest extends TestCase {
     assertTypeOfExpression("X").toStringIsEqualTo("number");
   }
 
+  public void testTypeInferenceOccursInDestructuringCatch() {
+    assuming("x", NUMBER_TYPE);
+
+    inFunction(
+        lines(
+            "try {",
+            "  throw {err: 3}; ",
+            "} catch ({[x = 'err']: /** number */ err}) {",
+            "  ERR: err;",
+            "  X: x;",
+            "}"));
+
+    assertTypeOfExpression("ERR").toStringIsEqualTo("number");
+    // verify we do inference on the assignment to `x` inside the computed property
+    assertTypeOfExpression("X").toStringIsEqualTo("string");
+  }
+
+  public void testTypeInferenceOccursInDestructuringForIn() {
+    assuming("x", NUMBER_TYPE);
+
+    inFunction(
+        lines(
+            "/** @type {number} */",
+            "String.prototype.length;",
+            "",
+            "var obj = {};",
+            "for ({length: obj.length} in {'1': 1, '22': 22}) {",
+            "  LENGTH: obj.length;", // set to '1'.length and '22'.length
+            "}"));
+
+    assertTypeOfExpression("LENGTH").toStringIsEqualTo("number");
+  }
+
   public void testTypeInferenceOccursInsideVoidOperator() {
     inFunction("var x; var y = void (x = 3); X: x; Y: y");
 

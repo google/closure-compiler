@@ -325,21 +325,24 @@ class TypeInference
               item = item.getFirstChild();
             }
             if (source.isForIn()) {
-              // item is assigned a property name, so its type should be string.
-              if (item.isName()) {
-                JSType iterKeyType = getNativeType(STRING_TYPE);
-                JSType objType = getJSType(obj).autobox();
-                JSType objIndexType =
-                    objType
-                        .getTemplateTypeMap()
-                        .getResolvedTemplateType(registry.getObjectIndexKey());
-                if (objIndexType != null && !objIndexType.isUnknownType()) {
-                  JSType narrowedKeyType = iterKeyType.getGreatestSubtype(objIndexType);
-                  if (!narrowedKeyType.isEmptyType()) {
-                    iterKeyType = narrowedKeyType;
-                  }
+              // item is assigned a property name, so its type should be string
+              JSType iterKeyType = getNativeType(STRING_TYPE);
+              JSType objType = getJSType(obj).autobox();
+              JSType objIndexType =
+                  objType
+                      .getTemplateTypeMap()
+                      .getResolvedTemplateType(registry.getObjectIndexKey());
+              if (objIndexType != null && !objIndexType.isUnknownType()) {
+                JSType narrowedKeyType = iterKeyType.getGreatestSubtype(objIndexType);
+                if (!narrowedKeyType.isEmptyType()) {
+                  iterKeyType = narrowedKeyType;
                 }
+              }
+              if (item.isName()) {
                 informed = redeclareSimpleVar(informed, item, iterKeyType);
+              } else if (item.isDestructuringPattern()) {
+                informed =
+                    traverseDestructuringPattern(item, informed, iterKeyType, assignmentType);
               }
             } else {
               // for/of. The type of `item` is the type parameter of the Iterable type.
@@ -784,18 +787,29 @@ class TypeInference
    */
   @CheckReturnValue
   private FlowScope traverseCatch(Node catchNode, FlowScope scope) {
-    Node name = catchNode.getFirstChild();
-    JSType type;
-    // If the catch expression name was declared in the catch use that type,
-    // otherwise use "unknown".
-    JSDocInfo info = name.getJSDocInfo();
-    if (info != null && info.hasType()) {
-      type = info.getType().evaluate(scope.getDeclarationScope(), registry);
+    Node catchTarget = catchNode.getFirstChild();
+    if (catchTarget.isName()) {
+      // TODO(lharker): is this case even necessary? seems like TypedScopeCreator handles it
+      Node name = catchNode.getFirstChild();
+      JSType type;
+      // If the catch expression name was declared in the catch use that type,
+      // otherwise use "unknown".
+      JSDocInfo info = name.getJSDocInfo();
+      if (info != null && info.hasType()) {
+        type = info.getType().evaluate(scope.getDeclarationScope(), registry);
+      } else {
+        type = getNativeType(JSTypeNative.UNKNOWN_TYPE);
+      }
+      name.setJSType(type);
+      return redeclareSimpleVar(scope, name, type);
+    } else if (catchTarget.isDestructuringPattern()) {
+      Node pattern = catchNode.getFirstChild();
+      return traverseDestructuringPattern(pattern, scope, unknownType, AssignmentType.DECLARATION);
     } else {
-      type = getNativeType(JSTypeNative.UNKNOWN_TYPE);
+      checkState(catchTarget.isEmpty(), catchTarget);
+      // ES2019 allows `try {} catch {}` with no catch expression
+      return scope;
     }
-    name.setJSType(type);
-    return redeclareSimpleVar(scope, name, type);
   }
 
   @CheckReturnValue
