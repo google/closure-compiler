@@ -864,66 +864,34 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
     private void fixTypeNode(NodeTraversal t, Node typeNode) {
       if (typeNode.isString()) {
         String name = typeNode.getString();
-        if (ModuleLoader.isPathIdentifier(name)) {
-          int lastSlash = name.lastIndexOf('/');
-          int endIndex = name.indexOf('.', lastSlash);
-          String localTypeName = null;
-          if (endIndex == -1) {
-            endIndex = name.length();
-          } else {
-            localTypeName = name.substring(endIndex);
-          }
-
-          String moduleName = name.substring(0, endIndex);
-          ModuleLoader.ModulePath path =
-              t.getInput()
-                  .getPath()
-                  .resolveJsModule(
-                      moduleName,
-                      typeNode.getSourceFileName(),
-                      typeNode.getLineno(),
-                      typeNode.getCharno());
-
-          if (path == null) {
-            path = t.getInput().getPath().resolveModuleAsPath(moduleName);
-          }
-          String globalModuleName = path.toModuleName();
-
-          maybeSetNewName(
-              t,
-              typeNode,
-              name,
-              localTypeName == null ? globalModuleName : globalModuleName + localTypeName);
-        } else {
-          List<String> splitted = Splitter.on('.').limit(2).splitToList(name);
-          String baseName = splitted.get(0);
-          String rest = "";
-          if (splitted.size() == 2) {
-            rest = "." + splitted.get(1);
-          }
-          Var var = t.getScope().getVar(baseName);
-          if (var != null && var.isGlobal()) {
-            maybeSetNewName(t, typeNode, name, baseName + "$$" + suffix + rest);
-          } else if (var == null && importMap.containsKey(baseName)) {
-            ModuleOriginalNamePair pair = importMap.get(baseName);
-            if (pair.originalName.isEmpty()) {
-              maybeSetNewName(t, typeNode, name, pair.module + rest);
-            } else {
-              maybeSetNewName(t, typeNode, name, baseName + "$$" + pair.module + rest);
-            }
-
-            if (preprocessorSymbolTable != null) {
-              // Jsdoc type node is a single STRING node that spans the whole type. For example
-              // STRING node "bar.Foo". ES6 import rewrite replaces only "module"
-              // part of the type: "bar.Foo" => "module$full$path$bar$Foo". We have to record
-              // "bar" as alias.
-              Node onlyBaseName = Node.newString(baseName).useSourceInfoFrom(typeNode);
-              onlyBaseName.setLength(baseName.length());
-              maybeAddAliasToSymbolTable(onlyBaseName, t.getSourceName());
-            }
-          }
-          typeNode.setOriginalName(name);
+        List<String> splitted = Splitter.on('.').limit(2).splitToList(name);
+        String baseName = splitted.get(0);
+        String rest = "";
+        if (splitted.size() == 2) {
+          rest = "." + splitted.get(1);
         }
+        Var var = t.getScope().getVar(baseName);
+        if (var != null && var.isGlobal()) {
+          maybeSetNewName(t, typeNode, name, baseName + "$$" + suffix + rest);
+        } else if (var == null && importMap.containsKey(baseName)) {
+          ModuleOriginalNamePair pair = importMap.get(baseName);
+          if (pair.originalName.isEmpty()) {
+            maybeSetNewName(t, typeNode, name, pair.module + rest);
+          } else {
+            maybeSetNewName(t, typeNode, name, baseName + "$$" + pair.module + rest);
+          }
+
+          if (preprocessorSymbolTable != null) {
+            // Jsdoc type node is a single STRING node that spans the whole type. For example
+            // STRING node "bar.Foo". ES6 import rewrite replaces only "module"
+            // part of the type: "bar.Foo" => "module$full$path$bar$Foo". We have to record
+            // "bar" as alias.
+            Node onlyBaseName = Node.newString(baseName).useSourceInfoFrom(typeNode);
+            onlyBaseName.setLength(baseName.length());
+            maybeAddAliasToSymbolTable(onlyBaseName, t.getSourceName());
+          }
+        }
+        typeNode.setOriginalName(name);
       }
 
       for (Node child = typeNode.getFirstChild(); child != null; child = child.getNext()) {

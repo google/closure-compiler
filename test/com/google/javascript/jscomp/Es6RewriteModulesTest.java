@@ -653,45 +653,6 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
             "/** @const */ module$testcode.Child = Child$$module$testcode;"));
   }
 
-  public void testReferenceToTypeFromOtherModule() {
-    setModuleResolutionMode(ModuleLoader.ResolutionMode.NODE);
-    testModules(
-        lines(
-            "export class Foo {", "  /** @param {./other.Baz} baz */", "  useBaz(baz) {}", "}"),
-        lines(
-            "class Foo$$module$testcode {",
-            "  /** @param {module$other.Baz} baz */",
-            "  useBaz(baz) {}",
-            "}",
-            "/** @const */ var module$testcode = {};",
-            "/** @const */ module$testcode.Foo = Foo$$module$testcode;"));
-
-    testModules(
-        lines(
-            "export class Foo {", "  /** @param {/other.Baz} baz */", "  useBaz(baz) {}", "}"),
-        lines(
-            "class Foo$$module$testcode {",
-            "  /** @param {module$other.Baz} baz */",
-            "  useBaz(baz) {}",
-            "}",
-            "/** @const */ var module$testcode = {};",
-            "/** @const */ module$testcode.Foo = Foo$$module$testcode;"));
-
-    testModules(
-        lines(
-            "import {Parent} from './other.js';",
-            "class Child extends Parent {",
-            "  /** @param {./other.Parent} parent */",
-            "  useParent(parent) {}",
-            "}"),
-        lines(
-            "class Child$$module$testcode extends module$other.Parent {",
-            "  /** @param {module$other.Parent} parent */",
-            "  useParent(parent) {}",
-            "}",
-            "/** @const */ var module$testcode = {};"));
-  }
-
   public void testRenameTypedef() {
     testModules(
         lines(
