@@ -5039,40 +5039,6 @@ public final class IntegrationTest extends IntegrationTestCase {
           ""));
   }
 
-  public void testTypeSummaryWithTypedefAliasWorks() {
-    CompilerOptions options = createCompilerOptions();
-    options.setCheckTypes(true);
-    options.setClosurePass(true);
-    // To enable type-checking
-    options.setLanguage(LanguageMode.ECMASCRIPT_2017);
-    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
-
-    test(
-        options,
-        new String[] {
-            LINE_JOINER.join(
-                "/** @typeSummary */",
-                "goog.module('a.b.Foo');",
-                "goog.module.declareLegacyNamespace();",
-                "",
-                "class Foo {}",
-                "",
-                "/** @typedef {number} */",
-                "Foo.num;",
-                "",
-                "exports = Foo;"),
-            LINE_JOINER.join(
-                "goog.module('x.y.z');",
-                "",
-                "const Foo = goog.require('a.b.Foo');",
-                "",
-                "/** @type {Foo.num} */",
-                "var x = 'str';"),
-        },
-        (String[]) null,
-        TypeValidator.TYPE_MISMATCH_WARNING);
-  }
-
   // GitHub issue #250: https://github.com/google/closure-compiler/issues/250
   public void testInlineStringConcat() {
     CompilerOptions options = createCompilerOptions();
