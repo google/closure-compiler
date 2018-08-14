@@ -89,6 +89,12 @@ final class DestructuredTarget {
     return objectPatternKey != null && objectPatternKey.isStringKey();
   }
 
+  /** Returns a STRING_KEY node or null */
+  @Nullable
+  Node getStringKey() {
+    return hasStringKey() ? objectPatternKey : null;
+  }
+
   @Nullable
   Node getDefaultValue() {
     return defaultValue;

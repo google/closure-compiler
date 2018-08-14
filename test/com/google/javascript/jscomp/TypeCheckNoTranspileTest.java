@@ -4001,10 +4001,14 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "required: Object"));
   }
 
-  public void testObjectDestructuringNullableDoesntCausesWarning() {
-    // This matches the behavior of typechecking transpiled destructuring patterns, although
-    // we certainly could be more strict in the future and forbid dereferencing undefined/null.
-    testTypes(lines("function f(/** ?Object */ nullableObj) {", "const {x} = nullableObj;", "}"));
+  public void testObjectDestructuringNullableDoesntCauseWarning() {
+    // Test that we don't get a "cannot destructure 'null' or 'undefined'" warning, which matches
+    // the legacy behavior when typechecking transpiled destructuring patterns.
+    testTypes(
+        lines(
+            "function f(/** ?{x: number} */ nullableObj) {", //
+            "const {x} = nullableObj;",
+            "}"));
   }
 
   public void testArrayDestructuringNonIterableCausesWarning() {
@@ -4040,9 +4044,58 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
     testTypes("/** @param {!Array<number>} numbers */ function f([, x, , y]) {}");
   }
 
+  public void testObjectPatternDeclarationWithMissingPropertyWarning() {
+    testTypes(
+        lines(
+            "function f(/** {a: number} */ obj) {", //
+            "  const {a, b} = obj;",
+            "}"),
+        "Property b never defined on obj");
+  }
+
+  public void testObjectPatternAssignWithMissingPropertyWarning() {
+    testTypes(
+        lines(
+            "function f(/** {a: number} */ obj) {", //
+            "  let a, b;",
+            "  ({a, b} = obj);",
+            "}"),
+        "Property b never defined on obj");
+  }
+
+  public void testObjectPatternDeclarationWithMissingPropertyWarningInForOf() {
+    testTypes(
+        lines(
+            "function f(/** !Iterable<{a: number}> */ aNumberObj) {",
+            "  for (const {a, b} of aNumberObj) {}",
+            "}"),
+        "Property b never defined on {a: number}");
+  }
+
+  public void testObjectPatternWithMissingPropertyWarningInParameters() {
+    testTypes(
+        lines(
+            "/** @param {{a: number}} obj */", //
+            "function f(/** {a: number} */ {b}) {}"),
+        "Property b never defined on {a: number}");
+  }
+
+  public void testArrayPatternAssignWithIllegalPropCreationInStruct() {
+    testTypes(
+        lines(
+            "class C {", //
+            "  f(/** !Iterable<number> */ ) {",
+            "    [this.x] = arr;",
+            "  }",
+            "}"),
+        new String[] {
+          "Cannot add a property to a struct instance after it is constructed. "
+              + "(If you already declared the property, make sure to give it a type.)",
+          "Property x never defined on C"
+        });
+  }
+
   public void testDictClass1() {
     testTypes("/** @dict */ var C = class { constructor() {} 'x'(){} };");
   }
-
-  // TODO(b/77597706): add tests for missing property warnings on object destructuring string keys
 }
