@@ -325,7 +325,10 @@ public final class JsFileParser extends JsFileLineParser {
             // cut off the "goog:" prefix
             requires.add(Require.googRequireSymbol(arg.substring(5)));
           } else {
-            ModuleLoader.ModulePath path = file.resolveModuleAsPath(arg);
+            ModuleLoader.ModulePath path = file.resolveJsModule(arg);
+            if (path == null) {
+              path = file.resolveModuleAsPath(arg);
+            }
             requires.add(Require.es6Import(path.toModuleName(), arg));
           }
         }

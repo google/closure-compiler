@@ -290,9 +290,10 @@ public class CompilerInput extends DependencyInfo.Base implements SourceAst {
       // symbol dependencies.)
       try {
         DependencyInfo info =
-            (new JsFileParser(compiler.getErrorManager()))
-            .setIncludeGoogBase(true)
-            .parseFile(getName(), getName(), getCode());
+            new JsFileParser(compiler.getErrorManager())
+                .setModuleLoader(compiler.getModuleLoader())
+                .setIncludeGoogBase(true)
+                .parseFile(getName(), getName(), getCode());
         return new LazyParsedDependencyInfo(info, (JsAst) ast, compiler);
       } catch (IOException e) {
         compiler.getErrorManager().report(CheckLevel.ERROR,
