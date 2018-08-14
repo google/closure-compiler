@@ -2029,6 +2029,18 @@ public final class TypeInferenceTest extends TestCase {
     assertTypeOfExpression("ARR1").toStringIsEqualTo("?");
   }
 
+  public void testDeclarationDoesntOverrideInferredTypeInDestructuringPattern() {
+    inFunction("var [/** number */ x] = /** @type {?} */ ([null]); X: x");
+
+    assertTypeOfExpression("X").toStringIsEqualTo("number");
+  }
+
+  public void testDeclarationDoesntOverrideInferredTypeInForOfLoop() {
+    inFunction("for (var /** number */ x of /** @type {?} */ [null]) { X: x; }");
+
+    assertTypeOfExpression("X").toStringIsEqualTo("number");
+  }
+
   public void testTypeInferenceOccursInsideVoidOperator() {
     inFunction("var x; var y = void (x = 3); X: x; Y: y");
 

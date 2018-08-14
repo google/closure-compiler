@@ -237,7 +237,9 @@ class TypeInference
             JSType newType =
                 registry.createUnionType(
                     getJSType(astParameter).restrictByNotUndefined(), getJSType(defaultValue));
-            entryFlowScope = updateScopeForAssignment(entryFlowScope, astParameter, newType);
+            entryFlowScope =
+                updateScopeForAssignment(
+                    entryFlowScope, astParameter, newType, AssignmentType.ASSIGN);
           }
         }
       }
@@ -312,8 +314,12 @@ class TypeInference
 
             FlowScope informed = traverse(obj, output);
 
+            final AssignmentType assignmentType;
             if (NodeUtil.isNameDeclaration(item)) {
               item = item.getFirstChild();
+              assignmentType = AssignmentType.DECLARATION;
+            } else {
+              assignmentType = AssignmentType.ASSIGN;
             }
             if (item.isDestructuringLhs()) {
               item = item.getFirstChild();
@@ -344,10 +350,10 @@ class TypeInference
               // Note that `item` can be an arbitrary LHS expression we need to check.
               if (item.isDestructuringPattern()) {
                 // for (const {x, y} of data) {
-                informed = traverseDestructuringPattern(item, informed, newType);
+                informed = traverseDestructuringPattern(item, informed, newType, assignmentType);
               } else {
                 informed = traverse(item, informed);
-                informed = updateScopeForAssignment(informed, item, newType);
+                informed = updateScopeForAssignment(informed, item, newType, assignmentType);
               }
             }
             newScope = informed;
@@ -800,14 +806,14 @@ class TypeInference
       scope = traverse(value, scope);
       JSType valueType = getJSType(value);
       n.setJSType(valueType);
-      return traverseDestructuringPattern(target, scope, valueType);
+      return traverseDestructuringPattern(target, scope, valueType, AssignmentType.ASSIGN);
     } else {
       scope = traverseChildren(n, scope);
 
       JSType valueType = getJSType(value);
       n.setJSType(valueType);
 
-      return updateScopeForAssignment(scope, target, valueType);
+      return updateScopeForAssignment(scope, target, valueType, AssignmentType.ASSIGN);
     }
   }
 
@@ -819,7 +825,8 @@ class TypeInference
     n.setJSType(resultType);
 
     // The lhs is both an input and an output, so don't update the input type here.
-    return updateScopeForAssignment(scope, left, resultType, null);
+    return updateScopeForAssignment(
+        scope, left, resultType, /* updateNode= */ null, AssignmentType.ASSIGN);
   }
 
   private static boolean isInExternFile(Node n) {
@@ -858,28 +865,26 @@ class TypeInference
     }
   }
 
-  /**
-   * Calls {@link #updateScopeForAssignment(FlowScope, Node, JSType, Node)} and updates the given
-   * `target` node with the given `resultType` if it's a name or getprop.
-   */
-  @CheckReturnValue
-  private FlowScope updateScopeForAssignment(FlowScope scope, Node target, JSType resultType) {
-    return updateScopeForAssignment(scope, target, resultType, target);
+  // Either a combined declaration/initialization or a regular assignment
+  private enum AssignmentType {
+    DECLARATION, // var x = 3;
+    ASSIGN // `a.b.c = d;` or `x = 4;`
   }
 
-  /**
-   * Updates the scope according to the result of an assignment.
-   *
-   * @param target the node being assigned to, e.g. `a.b` in `a.b = 3;`
-   * @param resultType the type being assigned to `target`, e.g. `number` in `a.b = 3;`
-   * @param updateNode a node to update with the `resultType`. must be either `target` or null.
-   */
   @CheckReturnValue
   private FlowScope updateScopeForAssignment(
-      FlowScope scope, Node target, JSType resultType, @Nullable Node updateNode) {
+      FlowScope scope, Node target, JSType resultType, AssignmentType type) {
+    return updateScopeForAssignment(scope, target, resultType, target, type);
+  }
+
+  /** Updates the scope according to the result of an assignment. */
+  @CheckReturnValue
+  private FlowScope updateScopeForAssignment(
+      FlowScope scope, Node target, JSType resultType, Node updateNode, AssignmentType type) {
     checkNotNull(resultType);
     checkState(updateNode == null || updateNode == target);
-    JSType targetType = target.getJSType();
+
+    JSType targetType = target.getJSType(); // may be null
 
     Node right = NodeUtil.getRValueOfLValue(target);
     if (isPossibleMixinApplication(target, right)) {
@@ -892,8 +897,7 @@ class TypeInference
         TypedVar var = getDeclaredVar(scope, varName);
         JSType varType = var == null ? null : var.getType();
         boolean isVarDeclaration =
-            // TODO(b/77597706): this won't work for destructuring declarations
-            target.hasChildren()
+            type == AssignmentType.DECLARATION
                 && varType != null
                 && !var.isTypeInferred()
                 && var.getNameNode() != null;
@@ -1103,19 +1107,20 @@ class TypeInference
 
     checkState(n.isDestructuringLhs(), n);
     scope = traverse(n.getSecondChild(), scope);
-    return traverseDestructuringPattern(n.getFirstChild(), scope, getJSType(n.getSecondChild()));
+    return traverseDestructuringPattern(
+        n.getFirstChild(), scope, getJSType(n.getSecondChild()), AssignmentType.DECLARATION);
   }
 
   /** Traverses a destructuring pattern in an assignment or declaration */
   private FlowScope traverseDestructuringPattern(
-      Node pattern, FlowScope scope, JSType patternType) {
+      Node pattern, FlowScope scope, JSType patternType, AssignmentType assignmentType) {
     return traverseDestructuringPatternHelper(
         pattern,
         scope,
         patternType,
         (FlowScope flowScope, Node targetNode, JSType targetType) -> {
           targetType = targetType != null ? targetType : getNativeType(UNKNOWN_TYPE);
-          return updateScopeForAssignment(flowScope, targetNode, targetType);
+          return updateScopeForAssignment(flowScope, targetNode, targetType, assignmentType);
         });
   }
 
@@ -1160,9 +1165,6 @@ class TypeInference
 
         // declare in the scope
         scope = declarer.declareTypeInScope(scope, targetNode, target.inferType());
-        JSType targetType = target.inferType();
-        targetType = targetType != null ? targetType : getNativeType(UNKNOWN_TYPE);
-        scope = updateScopeForAssignment(scope, targetNode, targetType);
       }
     }
     // put the `inferred type` of a pattern on it, to make it easier to do typechecking
@@ -1175,8 +1177,10 @@ class TypeInference
     Node value = n.getFirstChild();
     JSType type = n.getJSType();
     if (value != null) {
+      // The only case where `value` isn't null is when we are in a name declaration/initialization
+      //     var x = 3;
       scope = traverse(value, scope);
-      return updateScopeForAssignment(scope, n, getJSType(value));
+      return updateScopeForAssignment(scope, n, getJSType(value), AssignmentType.DECLARATION);
     } else if (n.getParent().isLet()) {
       // Whenever we see a LET, we're guaranteed it's not yet in the scope, and we don't need to
       // worry about it being from an outer scope.  In this case, it has no child, so the actual
@@ -1185,7 +1189,7 @@ class TypeInference
       // TODO(sdh): I would have thought that #updateScopeForTypeChange would handle using the
       // declared type correctly, but for some reason it doesn't so we handle it here.
       JSType resultType = type != null ? type : getNativeType(VOID_TYPE);
-      scope = updateScopeForAssignment(scope, n, resultType);
+      scope = updateScopeForAssignment(scope, n, resultType, AssignmentType.DECLARATION);
       type = resultType;
     } else {
       StaticTypedSlot var = scope.getSlot(varName);
@@ -1337,8 +1341,8 @@ class TypeInference
     if (n.isAssignAdd()) {
       // TODO(johnlenz): this should not update the type of the lhs as that is use as a
       // input and need to be preserved for type checking.
-      // Instead call this overload `updateScopeForAssignment(scope, left, type, null);`
-      scope = updateScopeForAssignment(scope, left, type);
+      // Instead call this overload `updateScopeForAssignment(scope, left, leftType, type, null);`
+      scope = updateScopeForAssignment(scope, left, type, AssignmentType.ASSIGN);
     }
 
     return scope;
