@@ -17,7 +17,6 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
-import static com.google.javascript.jscomp.CompilerTestCase.lines;
 import static com.google.javascript.jscomp.TypeValidator.TYPE_MISMATCH_WARNING;
 
 import com.google.common.annotations.GwtIncompatible;
@@ -1811,7 +1810,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setRemoveDeadCode(true);
     options.setRemoveAbstractMethods(true);
     test(options,
-        LINE_JOINER.join(
+        lines(
             "/** @const */ var goog = {};",
             "goog.abstractMethod = function() {};",
             "/** @interface */ function I() {}",
@@ -1820,7 +1819,7 @@ public final class IntegrationTest extends IntegrationTestCase {
             "/** @override */ Foo.prototype.a = goog.abstractMethod;",
             "/** @constructor @extends Foo */ function Bar() {}",
             "/** @override */ Bar.prototype.a = function(x) {};"),
-        LINE_JOINER.join(
+        lines(
             "var goog={};",
             "goog.abstractMethod = function() {};",
             "function I(){}",
@@ -1828,6 +1827,35 @@ public final class IntegrationTest extends IntegrationTestCase {
             "function Foo(){}",
             "function Bar(){}",
             "Bar.prototype.a=function(x){};"));
+  }
+
+  public void testDisambiguatePropertiesWithPropertyInvalidationError() {
+    CompilerOptions options = createCompilerOptions();
+    options.setClosurePass(true);
+    options.setCheckTypes(true);
+    options.setDisambiguateProperties(true);
+    options.setPropertyInvalidationErrors(
+       ImmutableMap.of("a", CheckLevel.ERROR));
+    options.setRemoveDeadCode(true);
+    options.setRemoveAbstractMethods(true);
+    test(options,
+        lines(
+            "function fn(x){return x.a;}",
+            "/** @interface */ function I() {}",
+            "I.prototype.a = function(x) {};",
+            "/** @constructor @implements {I} */ function Foo() {}",
+            "/** @override */ Foo.prototype.a = function(x) {};",
+            "/** @constructor @extends Foo */ function Bar() {}",
+            "/** @override */ Bar.prototype.a = function(x) {};"),
+        lines(
+            "function fn(x){return x.a;}",
+            "function I(){}",
+            "I.prototype.a=function(x){};",
+            "function Foo(){}",
+            "Foo.prototype.a = function(x) {};",
+            "function Bar(){}",
+            "Bar.prototype.a=function(x){};"),
+        DisambiguateProperties.Warnings.INVALIDATION);
   }
 
   public void testMarkPureCalls() {

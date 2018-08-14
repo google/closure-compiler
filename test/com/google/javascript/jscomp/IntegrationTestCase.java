@@ -36,12 +36,20 @@ abstract class IntegrationTestCase extends TestCase {
   protected static final Joiner LINE_JOINER = Joiner.on('\n');
   protected static final Joiner EMPTY_JOINER = Joiner.on("");
 
+  protected static String lines(String line) {
+    return line;
+  }
+
+  protected static String lines(String... lines) {
+    return LINE_JOINER.join(lines);
+  }
+
   /** Externs for the test */
   protected static final ImmutableList<SourceFile> DEFAULT_EXTERNS =
       ImmutableList.of(
           SourceFile.fromCode(
               "externs",
-              LINE_JOINER.join(
+              lines(
                   "var arguments;",
                   "var undefined;",
                   "/**",
