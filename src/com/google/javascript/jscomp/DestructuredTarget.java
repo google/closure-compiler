@@ -24,6 +24,11 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
+import com.google.javascript.rhino.jstype.ObjectType;
+import com.google.javascript.rhino.jstype.RecordTypeBuilder;
+import com.google.javascript.rhino.jstype.TemplateTypeMap;
+import java.util.HashSet;
+import java.util.Set;
 import javax.annotation.Nullable;
 
 /**
@@ -60,13 +65,18 @@ final class DestructuredTarget {
   /** Whether this is a rest key */
   private final boolean isRest;
 
+  /** The destructuring pattern containing this target */
+  private final Node pattern;
+
   private DestructuredTarget(
+      Node pattern,
       Node node,
       @Nullable Node defaultValue,
       @Nullable Node objectPatternKey,
       JSTypeRegistry registry,
       Supplier<JSType> patternTypeSupplier,
       boolean isRest) {
+    this.pattern = pattern;
     this.node = node;
     this.objectPatternKey = objectPatternKey;
     this.registry = registry;
@@ -111,14 +121,16 @@ final class DestructuredTarget {
   private static class Builder {
     private final JSTypeRegistry registry;
     private final Supplier<JSType> patternTypeSupplier;
+    private final Node pattern;
     private Node node;
     @Nullable private Node defaultValue = null;
     @Nullable private Node objectPatternKey = null;
     private boolean isRest = false;
 
-    Builder(JSTypeRegistry registry, Supplier<JSType> patternTypeSupplier) {
+    Builder(JSTypeRegistry registry, Node pattern, Supplier<JSType> patternTypeSupplier) {
       this.registry = registry;
       this.patternTypeSupplier = patternTypeSupplier;
+      this.pattern = pattern;
     }
 
     Builder setNode(Node node) {
@@ -145,7 +157,7 @@ final class DestructuredTarget {
       checkNotNull(this.node, "Must set a node");
 
       return new DestructuredTarget(
-          node, defaultValue, objectPatternKey, registry, patternTypeSupplier, isRest);
+          pattern, node, defaultValue, objectPatternKey, registry, patternTypeSupplier, isRest);
     }
   }
 
@@ -163,7 +175,8 @@ final class DestructuredTarget {
       JSTypeRegistry registry, Supplier<JSType> destructuringPatternType, Node destructuringChild) {
     checkArgument(destructuringChild.getParent().isDestructuringPattern(), destructuringChild);
 
-    Builder builder = new Builder(registry, destructuringPatternType);
+    Builder builder =
+        new Builder(registry, destructuringChild.getParent(), destructuringPatternType);
     switch (destructuringChild.getToken()) {
       case STRING_KEY:
         // const {objectLiteralKey: x} = ...
@@ -202,7 +215,9 @@ final class DestructuredTarget {
         builder.setDefaultValue(destructuringChild.getSecondChild());
         break;
 
-      case REST: // const [...x] = ...
+      case REST:
+        // const [...x] = ...
+        // const {...x} = ...
         builder.setNode(destructuringChild.getFirstChild());
         builder.setIsRest(true);
         break;
@@ -257,7 +272,7 @@ final class DestructuredTarget {
    * <p>e.g. given `a` in const {a = 3} = {}; returns `undefined`
    */
   JSType inferTypeWithoutUsingDefaultValue() {
-    if (objectPatternKey != null) {
+    if (pattern.isObjectPattern()) {
       return inferObjectPatternKeyType();
     } else {
       return inferArrayPatternTargetType();
@@ -285,6 +300,10 @@ final class DestructuredTarget {
 
   private JSType inferObjectPatternKeyType() {
     JSType patternType = patternTypeSupplier.get();
+    if (isRest) {
+      return inferObjectRestType(patternType);
+    }
+
     if (patternType == null || patternType.isUnknownType()) {
       return registry.getNativeType(JSTypeNative.UNKNOWN_TYPE);
     }
@@ -303,9 +322,58 @@ final class DestructuredTarget {
             : registry.getNativeType(JSTypeNative.UNKNOWN_TYPE);
 
       default:
-        // TODO(b/203401365): handle object rest
         throw new IllegalStateException("Unexpected key " + objectPatternKey);
     }
+  }
+
+  private JSType inferObjectRestType(JSType patternType) {
+    ObjectType objectType = registry.getNativeObjectType(JSTypeNative.OBJECT_TYPE);
+    if (patternType == null) {
+      return objectType;
+    }
+
+    ObjectType patternObjectType = patternType.dereference();
+    if (patternObjectType == null) {
+      return objectType;
+    }
+
+    // handle the case where it is a templatized object, e.g. Object<number,string>
+    TemplateTypeMap templates = patternObjectType.getTemplateTypeMap();
+    if (templates.hasTemplateKey(registry.getObjectIndexKey())) {
+      return registry.createTemplatizedType(
+          objectType,
+          templates.getResolvedTemplateType(registry.getObjectIndexKey()),
+          templates.getResolvedTemplateType(registry.getObjectElementKey()));
+    }
+
+    // Otherwise, try to infer what properties the rest will have based on the other destructuring
+    // keys.
+    Set<String> otherKeys = new HashSet<>();
+    for (Node child : pattern.children()) {
+      if (child.isRest()) {
+        break;
+      }
+      if (child.isComputedProp()) {
+        // we don't know what properties are being accessed after all
+        return objectType;
+      }
+
+      otherKeys.add(child.getString());
+    }
+
+    // return a new record type containing all the properties on `patternObjectType` minus those
+    // included in `otherKeys`
+    // e.g. `const {a, ...rest} = {a: 3, b: 4}` -> type `rest` is `{b: number}`
+    RecordTypeBuilder builder = new RecordTypeBuilder(registry);
+    for (String propertyName : patternObjectType.getOwnPropertyNames()) {
+      if (!otherKeys.contains(propertyName)) {
+        builder.addProperty(
+            propertyName,
+            patternObjectType.getPropertyType(propertyName),
+            patternObjectType.getPropertyNode(propertyName));
+      }
+    }
+    return builder.build();
   }
 
   private JSType inferArrayPatternTargetType() {

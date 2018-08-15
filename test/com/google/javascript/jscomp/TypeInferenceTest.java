@@ -41,6 +41,7 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.CodingConvention.AssertionFunctionSpec;
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.DataFlowAnalysis.BranchedFlowState;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.type.FlowScope;
@@ -103,6 +104,7 @@ public final class TypeInferenceTest extends TestCase {
     CompilerOptions options = new CompilerOptions();
     options.setClosurePass(true);
     compiler.initOptions(options);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_2018);
     registry = compiler.getTypeRegistry();
     assumptions = new HashMap<>();
     returnScope = null;
@@ -1925,6 +1927,34 @@ public final class TypeInferenceTest extends TestCase {
         "(/** @param {{x: (number|undefined)}} data */ function f({x = 3}) { X: x; });");
 
     assertTypeOfExpression("X").toStringIsEqualTo("number");
+  }
+
+  public void testObjectRestInferredAsObjectIfGivenUnknownType() {
+    assuming("unknown", UNKNOWN_TYPE);
+    inFunction("const {a, ...rest} = unknown;  A: a; REST: rest;");
+
+    assertTypeOfExpression("REST").toStringIsEqualTo("Object");
+  }
+
+  public void testObjectRestInferredGivenRecordType() {
+    inFunction("var obj = {a: 1, b: 2, c: 3}; const {a, ...rest} = obj;  A: a; REST: rest;");
+
+    assertTypeOfExpression("A").toStringIsEqualTo("number");
+    assertTypeOfExpression("REST").toStringIsEqualTo("{b: number, c: number}");
+  }
+
+  public void testObjectRestInferredGivenRecordTypeAndComputedProperty() {
+    inFunction(
+        "var obj =  {a: 1, b: 2, c: 3}; const {['a']: a, ...rest} = obj;  A: a; REST: rest;");
+
+    assertTypeOfExpression("A").toStringIsEqualTo("?");
+    assertTypeOfExpression("REST").toStringIsEqualTo("Object");
+  }
+
+  public void testObjectRestInferredAsTemplatizedObjectType() {
+    inFunction("var /** !Object<number, string> */ obj = {}; const {...rest} = obj; REST: rest;");
+
+    assertTypeOfExpression("REST").toStringIsEqualTo("Object<number,string>");
   }
 
   public void testArrayDestructuringDeclaration() {

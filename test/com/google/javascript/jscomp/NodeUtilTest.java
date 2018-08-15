@@ -3264,6 +3264,31 @@ public final class NodeUtilTest extends TestCase {
     assertThat(NodeUtil.getDeclaringParent(nameNodeA)).isSameAs(catchNode);
   }
 
+  public void testDestructuringObjectRest() {
+    Node root = parse("var {...rest} = obj;");
+    Node varNode = root.getFirstChild();
+    Node destructLhs = varNode.getFirstChild();
+    checkState(destructLhs.isDestructuringLhs(), destructLhs);
+    Node destructPat = destructLhs.getFirstChild();
+    checkState(destructPat.isObjectPattern(), destructPat);
+
+    Node restNode = destructPat.getFirstChild();
+    Node nameNodeRest = restNode.getFirstChild();
+    checkState(nameNodeRest.getString().equals("rest"), nameNodeRest);
+
+    Node nameNodeObj = destructPat.getNext();
+    checkState(nameNodeObj.getString().equals("obj"), nameNodeObj);
+
+    assertNotLhsByDestructuring(restNode);
+    assertLhsByDestructuring(nameNodeRest);
+    assertNotLhsByDestructuring(nameNodeObj);
+
+    assertThat(NodeUtil.getRootTarget(destructPat)).isSameAs(destructPat);
+    assertThat(NodeUtil.getRootTarget(nameNodeRest)).isSameAs(destructPat);
+
+    assertThat(NodeUtil.getDeclaringParent(nameNodeRest)).isSameAs(varNode);
+  }
+
   private static void assertLhsByDestructuring(Node n) {
     assertTrue(NodeUtil.isLhsByDestructuring(n));
   }

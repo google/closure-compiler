@@ -3496,6 +3496,10 @@ public final class NodeUtil {
         // e.g. ([targetNode] = something)
         return parent;
 
+      case OBJECT_PATTERN:
+        // e.g. ({...rest} = something);
+        return parent;
+
       case COMPUTED_PROP:
         // e.g. ({[expression]: targetNode} = something)
         // e.g. ({[expression]: targetNode = default} = something)
