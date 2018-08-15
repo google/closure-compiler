@@ -87,11 +87,11 @@ public final class TypeSubject extends Subject<TypeSubject, JSType> {
   }
 
   public void isNotUnknown() {
-    check("isNotUnknownType()").that(actual().isUnknownType()).isFalse();
+    check("isUnknownType()").that(actual().isUnknownType()).isFalse();
   }
 
   public void isNotEmpty() {
-    check("isNotEmptyType()").that(actual().isEmptyType()).isFalse();
+    check("isEmptyType()").that(actual().isEmptyType()).isFalse();
   }
 
   public void isLiteralObject() {
