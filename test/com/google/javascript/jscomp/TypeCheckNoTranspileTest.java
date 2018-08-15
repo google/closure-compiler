@@ -3823,6 +3823,37 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
     testTypes("function f(/** number= */ n = undefined) {}");
   }
 
+  public void testDefaultParameterInDestructuringIsUndefined() {
+    testTypes(
+        lines(
+            "/** @param {{prop: (string|undefined)}} obj */", //
+            "function f({prop = undefined}) {}"));
+  }
+
+  public void testDefaultParameterInDestructuringIsVariableTypedUndefined() {
+    // In TypedScopeCreator, when declaring parameters in a scope, we declare any parameter with a
+    // default value as not undefined UNLESS it has the literal 'undefined' as a default value.
+    // This is because for arbitrary cases in TypedScopeCreator, we do not know what the actual
+    // type of the default value is because TypeInference hasn't yet run.
+    // Consequently, if the default value is possibly undefined but is not the literal undefined,
+    // we will emit a warning saying the default value has the wrong type. See the below test.
+
+    // We are assuming this use case is rare, and that special casing the literal undefined is
+    // more readable than special casing anything that may be undefined (especially unknown values).
+    // If there turns out to be large demand for this use case we can revisit this decision.
+    // See also b/112651122
+    testTypes(
+        lines(
+            "const alsoUndefined = undefined;",
+            "",
+            "/** @param {{prop: (string|undefined)}} obj */", //
+            "function f({prop = alsoUndefined}) {}"),
+        lines(
+            "default value has wrong type", //
+            "found   : undefined",
+            "required: string"));
+  }
+
   public void testTypeCheckingOccursWithinDefaultParameter() {
     testTypes(
         "let /** number */ age = 0; function f(x = age = 'foo') {}",

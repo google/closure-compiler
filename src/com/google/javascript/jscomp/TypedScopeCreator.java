@@ -2646,8 +2646,9 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
               typeRegistry, patternType, pattern)) {
         JSType inferredType = target.inferTypeWithoutUsingDefaultValue();
 
-        if (target.hasDefaultValue()) {
+        if (target.hasDefaultValue() && !NodeUtil.isUndefined(target.getDefaultValue())) {
           // i.e. replace `(string|undefined)` with just `string`
+          // unless the default value is actually `undefined`, which we allow.
           inferredType = inferredType.restrictByNotUndefined();
         }
 
