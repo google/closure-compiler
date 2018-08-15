@@ -3454,58 +3454,6 @@ public final class IntegrationTest extends IntegrationTestCase {
             "}"));
   }
 
-  public void testInitSymbolIteratorInjection() {
-    CompilerOptions options = createCompilerOptions();
-    options.setLanguageIn(LanguageMode.ECMASCRIPT_2015);
-    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
-    useNoninjectingCompiler = true;
-    ImmutableList.Builder<SourceFile> externsList = ImmutableList.builder();
-    externsList.addAll(externs);
-    externsList.add(SourceFile.fromCode("extraExterns", "var $jscomp = {};"));
-    externs = externsList.build();
-    test(
-        options,
-        lines(
-            "var itr = {",
-            "  next: function() { return { value: 1234, done: false }; },",
-            "};",
-            "itr[Symbol.iterator] = function() { return itr; }"),
-        lines(
-            "var itr = {",
-            "  next: function() { return { value: 1234, done: false }; },",
-            "};",
-            // TODO(mattmm): Avoid calls to initSymbol if we can
-            "$jscomp.initSymbol();",
-            "$jscomp.initSymbolIterator();",
-            "itr[Symbol.iterator] = function() { return itr; }"));
-  }
-
-  public void testInitSymbolAsyncIteratorInjection() {
-    CompilerOptions options = createCompilerOptions();
-    options.setLanguageIn(LanguageMode.ECMASCRIPT_2018);
-    options.setLanguageOut(LanguageMode.ECMASCRIPT_2015);
-    useNoninjectingCompiler = true;
-    ImmutableList.Builder<SourceFile> externsList = ImmutableList.builder();
-    externsList.addAll(externs);
-    externsList.add(SourceFile.fromCode("extraExterns", "var $jscomp = {};"));
-    externs = externsList.build();
-    test(
-        options,
-        lines(
-            "const itr = {",
-            "  next() { return { value: 1234, done: false }; },",
-            "  [Symbol.asyncIterator]() { return this; },",
-            "};"),
-        lines(
-            // TODO(mattmm): Avoid calls to initSymbol if we can
-            "$jscomp.initSymbol();",
-            "$jscomp.initSymbolAsyncIterator();",
-            "const itr = {",
-            "  next() { return { value: 1234, done: false }; },",
-            "  [Symbol.asyncIterator]() { return this; },",
-            "};"));
-  }
-
   public void testLanguageMode() {
     CompilerOptions options = createCompilerOptions();
 
@@ -5611,7 +5559,7 @@ public final class IntegrationTest extends IntegrationTestCase {
             "let foo=$jscomp$destructuring$var1"));
   }
 
-  public void testAsyncGenerators() {
+  public void testAsyncIter() {
     CompilerOptions options = createCompilerOptions();
     options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT);
     useNoninjectingCompiler = true;
@@ -5624,33 +5572,14 @@ public final class IntegrationTest extends IntegrationTestCase {
 
     options.setLanguageOut(LanguageMode.ECMASCRIPT_NEXT);
     testSame(options, "async function* foo() {}");
-    assertThat(((NoninjectingCompiler) lastCompiler).injected).isEmpty();
+    testSame(options, "for await (a of b) {}");
 
     options.setLanguageOut(LanguageMode.ECMASCRIPT_2017);
     test(
         options,
         "async function* foo() {}",
         "function foo() { return new $jscomp.AsyncGeneratorWrapper((function*(){})()); }");
-    assertThat(((NoninjectingCompiler) lastCompiler).injected)
-        .containsExactly("es6/async_generator_wrapper");
-  }
 
-  public void testForAwaitOf() {
-    CompilerOptions options = createCompilerOptions();
-    options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT);
-    useNoninjectingCompiler = true;
-    ImmutableList.Builder<SourceFile> externsList = ImmutableList.builder();
-    externsList.addAll(externs);
-    externsList.add(
-        SourceFile.fromCode(
-            "extraExterns", "var $jscomp = {}; Symbol.iterator; Symbol.asyncIterator;"));
-    externs = externsList.build();
-
-    options.setLanguageOut(LanguageMode.ECMASCRIPT_NEXT);
-    testSame(options, "for await (a of b) {}");
-    assertThat(((NoninjectingCompiler) lastCompiler).injected).isEmpty();
-
-    options.setLanguageOut(LanguageMode.ECMASCRIPT_2017);
     test(
         options,
         lines("async function abc() { for await (a of foo()) { bar(); } }"),
@@ -5668,8 +5597,6 @@ public final class IntegrationTest extends IntegrationTestCase {
             "    }",
             "  }",
             "}"));
-    assertThat(((NoninjectingCompiler) lastCompiler).injected)
-        .containsExactly("es6/util/makeasynciterator");
   }
 
   public void testDestructuringRest() {
