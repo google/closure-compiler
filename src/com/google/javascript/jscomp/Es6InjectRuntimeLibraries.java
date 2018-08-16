@@ -86,7 +86,7 @@ public final class Es6InjectRuntimeLibraries extends AbstractPostOrderCallback
     }
 
     if (used.contains(Feature.FOR_AWAIT_OF)) {
-      compiler.ensureLibraryInjected("es6/util/makeiterator", /* force= */ false);
+      compiler.ensureLibraryInjected("es6/util/makeasynciterator", /* force= */ false);
     }
 
     // TODO(johnlenz): remove this.  Symbol should be handled like the other polyfills.
