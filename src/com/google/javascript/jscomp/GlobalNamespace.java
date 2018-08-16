@@ -402,10 +402,16 @@ class GlobalNamespace
                 type = Name.Type.CLASS;
               }
               break;
+            case STRING_KEY:
             case ARRAY_PATTERN:
-              // Specific case to handle inlining with array destructuring
-              isSet = true;
-              type = Name.Type.OTHER;
+            case DEFAULT_VALUE:
+            case COMPUTED_PROP:
+            case REST:
+              // This may be a set.
+              if (NodeUtil.isLhsByDestructuring(n)) {
+                isSet = true;
+                type = Name.Type.OTHER;
+              }
               break;
             default:
               if (NodeUtil.isAssignmentOp(parent) && parent.getFirstChild() == n) {

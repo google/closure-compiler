@@ -415,7 +415,8 @@ public final class CheckGlobalNamesTest extends CompilerTestCase {
   }
 
   public void testFunctionPrototypeProperties() {
-    testSame("var x = {}; var y = x.hasOwnProperty('z');");
+    // don't warn for "Foo.call"
+    testSame("/** @constructor */ function Foo() {}; Foo.call({});");
   }
 
   public void testIndirectlyDeclaredProperties() {
@@ -488,5 +489,69 @@ public final class CheckGlobalNamesTest extends CompilerTestCase {
   public void testEs6NonSubclass_stillWarnsForMissingProperty() {
     // We still do warn for undefined properties on an ES6 class with no superclass
     testWarning("class Child {} Child.f();", UNDEFINED_NAME_WARNING);
+  }
+
+  public void testObjectDestructuringAlias() {
+    testSame(
+        lines(
+            "var ns = {};",
+            "/** @enum */",
+            "ns.AdjustMode = {SELECT: 0, MOVE: 1};",
+            "const {AdjustMode} = ns;",
+            "alert(AdjustMode.SELECT);"));
+  }
+
+  public void testObjectDestructuringAlias_computedProperty() {
+    testSame(
+        lines(
+            "var ns = {};",
+            "/** @enum */",
+            "ns.AdjustMode = {SELECT: 0, MOVE: 1};",
+            "const {['AdjustMode']: AdjustMode} = ns;",
+            "alert(AdjustMode.SELECT);"));
+  }
+
+  public void testObjectDestructuringAlias_defaultValue() {
+    testSame(
+        lines(
+            "var ns = {};",
+            "/** @enum */",
+            "ns.AdjustMode = {SELECT: 0, MOVE: 1};",
+            "const {AdjustMode = {}} = ns;",
+            "alert(AdjustMode.SELECT);"));
+  }
+
+  public void testArrayDestructuring() {
+    // Currently, we never issue warnings for property access on an object created through
+    // destructuring.
+    testSame(lines("const [ns] = [{foo: 3}];", "alert(ns.foo);", "alert(ns.bar);")); // undefined
+  }
+
+  public void testArrayDestructuring_rest() {
+    testSame(
+        lines(
+            "const [...ns] = [{foo: 3}];", //
+            "alert(ns[0].foo);",
+            "alert(ns[0].bar);"));
+  }
+
+  public void testPropertyCreationOnDestructuringAlias() {
+    testSame(
+        lines(
+            "var ns = {};",
+            "ns.AdjustMode = {SELECT: 0, MOVE: 1};",
+            "const {AdjustMode} = ns;",
+            "AdjustMode.OTHER = 2;",
+            "alert(ns.AdjustMode.OTHER);"));
+  }
+
+  public void testNamespaceAliasPreventsWarning() {
+    // When a variable is aliased, we back off warning for potentially missing properties on that
+    // variable.
+    testSame(
+        lines(
+            "var a = {};",
+            "var alias = a;",
+            "alert(a.b.c.d);")); // This will cause a runtime error but not a compiler warning.
   }
 }
