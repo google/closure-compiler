@@ -925,6 +925,14 @@ public final class CheckJSDocStyleTest extends CompilerTestCase {
     testSame("/** @override */ var f = function(x) { return x; }");
   }
 
+  public void testMissingReturn_constructor_noWarning() {
+    testSame("/** @constructor */ var C = function() { return null; }");
+  }
+
+  public void testMissingReturn_class_constructor_noWarning() {
+    testSame("class C { /** @param {Array} x */ constructor(x) { return x; } }");
+  }
+
   public void testMissingReturn_var_noWarning_withES6Modules() {
     testSame("export /** @param {number} x */ var f = function(x) {}");
   }

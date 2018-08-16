@@ -401,10 +401,18 @@ public final class CheckJSDocStyle extends AbstractPostOrderCallback implements 
   private void checkReturn(NodeTraversal t, Node function, JSDocInfo jsDoc) {
     if (jsDoc != null
         && (jsDoc.hasType()
+            || jsDoc.isConstructor()
             || jsDoc.hasReturnType()
             || jsDoc.isOverride())) {
       return;
     }
+
+    Node parent = function.getParent();
+    if (parent.isMemberFunctionDef() && parent.getString().equals("constructor")) {
+      // ES6 class constructors should never have "@return".
+      return;
+    }
+
     if (function.getFirstChild().getJSDocInfo() != null) {
       return;
     }
