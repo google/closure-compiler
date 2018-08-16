@@ -2245,6 +2245,14 @@ Document.prototype.elementFromPoint = function(x, y) {};
 /**
  * @param {number} x
  * @param {number} y
+ * @return {!IArrayLike<!Element>}
+ * @see http://www.w3.org/TR/cssom-view/#dom-document-elementsfrompoint
+ */
+Document.prototype.elementsFromPoint = function(x, y) {};
+
+/**
+ * @param {number} x
+ * @param {number} y
  * @return {CaretPosition}
  * @see http://www.w3.org/TR/cssom-view/#dom-document-caretpositionfrompoint
  */

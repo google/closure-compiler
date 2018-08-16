@@ -3892,6 +3892,15 @@ ShadowRoot.prototype.elementFromPoint = function(x, y) {};
 
 
 /**
+ * @param {number} x
+ * @param {number} y
+ * @return {!IArrayLike<!Element>}
+ * @nosideeffects
+ */
+ShadowRoot.prototype.elementsFromPoint = function(x, y) {};
+
+
+/**
  * @type {boolean}
  */
 ShadowRoot.prototype.applyAuthorStyles;
