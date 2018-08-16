@@ -3454,6 +3454,62 @@ public final class IntegrationTest extends IntegrationTestCase {
             "}"));
   }
 
+  public void testInitSymbolIteratorInjection() {
+    CompilerOptions options = createCompilerOptions();
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_2015);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    useNoninjectingCompiler = true;
+    ImmutableList.Builder<SourceFile> externsList = ImmutableList.builder();
+    externsList.addAll(externs);
+    externsList.add(SourceFile.fromCode("extraExterns", "var $jscomp = {};"));
+    externs = externsList.build();
+    test(
+        options,
+        lines(
+            "var itr = {",
+            "  next: function() { return { value: 1234, done: false }; },",
+            "};",
+            "itr[Symbol.iterator] = function() { return itr; }"),
+        lines(
+            "var itr = {",
+            "  next: function() { return { value: 1234, done: false }; },",
+            "};",
+            // TODO(bradfordcsmith): Es6InjectRuntimeLibraries should traverse even if no Es6
+            // features are present
+            // "$jscomp.initSymbol();",
+            // "$jscomp.initSymbolIterator();",
+            "itr[Symbol.iterator] = function() { return itr; }"));
+  }
+
+  public void testInitSymbolAsyncIteratorInjection() {
+    CompilerOptions options = createCompilerOptions();
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_2018);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2015);
+    useNoninjectingCompiler = true;
+    ImmutableList.Builder<SourceFile> externsList = ImmutableList.builder();
+    externsList.addAll(externs);
+    externsList.add(SourceFile.fromCode("extraExterns", "var $jscomp = {};"));
+    externs = externsList.build();
+    test(
+        options,
+        lines(
+            "const itr = {",
+            "  next() { return { value: 1234, done: false }; },",
+            "  [Symbol.asyncIterator]() { return this; },",
+            "};"),
+        lines(
+            // TODO(bradfordcsmith): initSymbolAsyncIterator isn't added because Es6RewriteInjection
+            // isn't added by TranspilationPasses and it doesn't run its traversal unless ES6
+            // transpilation is needed.
+            // TODO(bradfordcsmith): Avoid calls to initSymbol if we can
+            // "$jscomp.initSymbol();",
+            // "$jscomp.initSymbolAsyncIterator();",
+            "const itr = {",
+            "  next() { return { value: 1234, done: false }; },",
+            "  [Symbol.asyncIterator]() { return this; },",
+            "};"));
+  }
+
   public void testLanguageMode() {
     CompilerOptions options = createCompilerOptions();
 
