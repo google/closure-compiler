@@ -144,7 +144,7 @@ public final class Es6ForOfConverter implements NodeTraversal.Callback, HotSwapC
       // Create the function type for $jscomp.makeIterator.
       // Build "@param {string|!Iterable<T>|!Iterator<T>|!Arguments<T>}"
       UnionTypeBuilder paramBuilder =
-          new UnionTypeBuilder(registry)
+          UnionTypeBuilder.create(registry)
               .addAlternate(registry.getNativeType(JSTypeNative.STRING_TYPE))
               .addAlternate(registry.getNativeType(JSTypeNative.ITERATOR_TYPE))
               .addAlternate(registry.getNativeType(JSTypeNative.ITERABLE_TYPE));

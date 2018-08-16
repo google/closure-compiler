@@ -128,15 +128,6 @@ public class JSTypeRegistry implements Serializable {
   @Deprecated
   public static final String OBJECT_ELEMENT_TEMPLATE = I_OBJECT_ELEMENT_TEMPLATE;
 
-  /**
-   * The UnionTypeBuilder caps the maximum number of alternate types it
-   * remembers and then defaults to "?" (unknown type). By default this max
-   * is 20, but it's very easy for the same property to appear on more than 20
-   * types. Use larger unions for property checking. 3000 was picked
-   * semi-randomly for use by the Google+ FE project.
-   */
-  private static final int PROPERTY_CHECKING_UNION_SIZE = 3000;
-
   // TODO(user): An instance of this class should be used during
   // compilation. We also want to make all types' constructors package private
   // and force usage of this registry instead. This will allow us to evolve the
@@ -854,7 +845,7 @@ public class JSTypeRegistry implements Serializable {
   public void registerPropertyOnType(String propertyName, JSType type) {
     UnionTypeBuilder typeSet =
         typesIndexedByProperty.computeIfAbsent(
-            propertyName, k -> new UnionTypeBuilder(this, PROPERTY_CHECKING_UNION_SIZE));
+            propertyName, k -> UnionTypeBuilder.createForPropertyChecking(this));
 
     if (isObjectLiteralThatCanBeSkipped(type)) {
       type = getSentinelObjectLiteral();
@@ -1453,7 +1444,7 @@ public class JSTypeRegistry implements Serializable {
    * Creates a union type whose variants are the arguments.
    */
   public JSType createUnionType(JSType... variants) {
-    UnionTypeBuilder builder = new UnionTypeBuilder(this);
+    UnionTypeBuilder builder = UnionTypeBuilder.create(this);
     for (JSType type : variants) {
       builder.addAlternate(type);
     }
@@ -1469,7 +1460,7 @@ public class JSTypeRegistry implements Serializable {
    * by the arguments.
    */
   public JSType createUnionType(JSTypeNative... variants) {
-    UnionTypeBuilder builder = new UnionTypeBuilder(this);
+    UnionTypeBuilder builder = UnionTypeBuilder.create(this);
     for (JSTypeNative typeId : variants) {
       builder.addAlternate(getNativeType(typeId));
     }
@@ -1934,7 +1925,7 @@ public class JSTypeRegistry implements Serializable {
         return getNativeType(ALL_TYPE);
 
       case PIPE: // Union type
-        UnionTypeBuilder builder = new UnionTypeBuilder(this);
+        UnionTypeBuilder builder = UnionTypeBuilder.create(this);
         for (Node child = n.getFirstChild(); child != null;
              child = child.getNext()) {
           builder.addAlternate(

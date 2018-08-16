@@ -249,7 +249,7 @@ public class ModificationVisitor implements Visitor<JSType> {
     }
 
     if (changed) {
-      UnionTypeBuilder builder = new UnionTypeBuilder(registry);
+      UnionTypeBuilder builder = UnionTypeBuilder.create(registry);
       for (JSType alternate : results) {
         builder.addAlternate(alternate);
       }

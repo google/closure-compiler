@@ -84,11 +84,18 @@ public class UnionType extends JSType {
    */
   UnionType(JSTypeRegistry registry, ImmutableList<JSType> alternatesWithoutStructuralTyping) {
     super(registry);
+
+    // TODO(nickreid): This assignment is load bearing and should be cleaned-up. It, and the loop
+    // below, duplicate `rebuildAlternates()`. However, if that method were called eagerly it would
+    // break some assumptions of `JSTypeRegisty` by using a builder with a default configuration to
+    // do the rebuild. The registry just seems to trust this will never happen. The design of
+    // `UnionType(Builder)` should be changed to ensure that rebuild uses a builder with the same
+    // configuration.
     this.alternatesWithoutStucturalTyping = alternatesWithoutStructuralTyping;
 
-    UnionTypeBuilder builder = new UnionTypeBuilder(registry);
+    UnionTypeBuilder builder = UnionTypeBuilder.createForCollapsingStructuralSubtypes(registry);
     for (JSType alternate : alternatesWithoutStructuralTyping) {
-      builder.addAlternate(alternate, true);
+      builder.addAlternate(alternate);
     }
     this.alternates = builder.getAlternates();
   }
@@ -123,16 +130,17 @@ public class UnionType extends JSType {
    * of the current UnionType.
    */
   private void rebuildAlternates() {
-    UnionTypeBuilder builder = new UnionTypeBuilder(registry);
+    UnionTypeBuilder nonCollapsingBuilder = UnionTypeBuilder.create(registry);
+    UnionTypeBuilder collapsingBuilder =
+        UnionTypeBuilder.createForCollapsingStructuralSubtypes(registry);
+
     for (JSType alternate : alternatesWithoutStucturalTyping) {
-      builder.addAlternate(alternate);
+      nonCollapsingBuilder.addAlternate(alternate);
+      collapsingBuilder.addAlternate(alternate);
     }
-    alternatesWithoutStucturalTyping = builder.getAlternates();
-    builder = new UnionTypeBuilder(registry);
-    for (JSType alternate : alternatesWithoutStucturalTyping) {
-      builder.addAlternate(alternate, true);
-    }
-    alternates = builder.getAlternates();
+
+    alternatesWithoutStucturalTyping = nonCollapsingBuilder.getAlternates();
+    alternates = collapsingBuilder.getAlternates();
   }
 
   /**
@@ -229,7 +237,7 @@ public class UnionType extends JSType {
 
   @Override
   public JSType autobox() {
-    UnionTypeBuilder restricted = new UnionTypeBuilder(registry);
+    UnionTypeBuilder restricted = UnionTypeBuilder.create(registry);
     for (int i = 0; i < alternatesWithoutStucturalTyping.size(); i++) {
       JSType t = alternatesWithoutStucturalTyping.get(i);
       restricted.addAlternate(t.autobox());
@@ -239,7 +247,7 @@ public class UnionType extends JSType {
 
   @Override
   public JSType restrictByNotNullOrUndefined() {
-    UnionTypeBuilder restricted = new UnionTypeBuilder(registry);
+    UnionTypeBuilder restricted = UnionTypeBuilder.create(registry);
     for (int i = 0; i < alternatesWithoutStucturalTyping.size(); i++) {
       JSType t = alternatesWithoutStucturalTyping.get(i);
       restricted.addAlternate(t.restrictByNotNullOrUndefined());
@@ -249,7 +257,7 @@ public class UnionType extends JSType {
 
   @Override
   public JSType restrictByNotUndefined() {
-    UnionTypeBuilder restricted = new UnionTypeBuilder(registry);
+    UnionTypeBuilder restricted = UnionTypeBuilder.create(registry);
     for (JSType t : alternatesWithoutStucturalTyping) {
       restricted.addAlternate(t.restrictByNotUndefined());
     }
@@ -328,7 +336,7 @@ public class UnionType extends JSType {
   }
 
   JSType meet(JSType that) {
-    UnionTypeBuilder builder = new UnionTypeBuilder(registry);
+    UnionTypeBuilder builder = UnionTypeBuilder.create(registry);
     for (int i = 0; i < alternatesWithoutStucturalTyping.size(); i++) {
       JSType alternate = alternatesWithoutStucturalTyping.get(i);
       if (alternate.isSubtypeOf(that)) {
@@ -469,7 +477,7 @@ public class UnionType extends JSType {
    * @param type the supertype of the types to remove from this union type
    */
   public JSType getRestrictedUnion(JSType type) {
-    UnionTypeBuilder restricted = new UnionTypeBuilder(registry);
+    UnionTypeBuilder restricted = UnionTypeBuilder.create(registry);
     for (int i = 0; i < alternatesWithoutStucturalTyping.size(); i++) {
       JSType t = alternatesWithoutStucturalTyping.get(i);
       // Keep all unknown/unresolved types.
@@ -525,7 +533,7 @@ public class UnionType extends JSType {
   @Override
   public JSType getRestrictedTypeGivenToBooleanOutcome(boolean outcome) {
     // gather elements after restriction
-    UnionTypeBuilder restricted = new UnionTypeBuilder(registry);
+    UnionTypeBuilder restricted = UnionTypeBuilder.create(registry);
     for (int i = 0; i < alternatesWithoutStucturalTyping.size(); i++) {
       JSType element = alternatesWithoutStucturalTyping.get(i);
       restricted.addAlternate(
@@ -549,8 +557,8 @@ public class UnionType extends JSType {
 
   @Override
   public TypePair getTypesUnderEquality(JSType that) {
-    UnionTypeBuilder thisRestricted = new UnionTypeBuilder(registry);
-    UnionTypeBuilder thatRestricted = new UnionTypeBuilder(registry);
+    UnionTypeBuilder thisRestricted = UnionTypeBuilder.create(registry);
+    UnionTypeBuilder thatRestricted = UnionTypeBuilder.create(registry);
     for (int i = 0; i < alternatesWithoutStucturalTyping.size(); i++) {
       JSType element = alternatesWithoutStucturalTyping.get(i);
       TypePair p = element.getTypesUnderEquality(that);
@@ -568,8 +576,8 @@ public class UnionType extends JSType {
 
   @Override
   public TypePair getTypesUnderInequality(JSType that) {
-    UnionTypeBuilder thisRestricted = new UnionTypeBuilder(registry);
-    UnionTypeBuilder thatRestricted = new UnionTypeBuilder(registry);
+    UnionTypeBuilder thisRestricted = UnionTypeBuilder.create(registry);
+    UnionTypeBuilder thatRestricted = UnionTypeBuilder.create(registry);
     for (int i = 0; i < alternatesWithoutStucturalTyping.size(); i++) {
       JSType element = alternatesWithoutStucturalTyping.get(i);
       TypePair p = element.getTypesUnderInequality(that);
@@ -587,8 +595,8 @@ public class UnionType extends JSType {
 
   @Override
   public TypePair getTypesUnderShallowInequality(JSType that) {
-    UnionTypeBuilder thisRestricted = new UnionTypeBuilder(registry);
-    UnionTypeBuilder thatRestricted = new UnionTypeBuilder(registry);
+    UnionTypeBuilder thisRestricted = UnionTypeBuilder.create(registry);
+    UnionTypeBuilder thatRestricted = UnionTypeBuilder.create(registry);
     for (int i = 0; i < alternatesWithoutStucturalTyping.size(); i++) {
       JSType element = alternatesWithoutStucturalTyping.get(i);
       TypePair p = element.getTypesUnderShallowInequality(that);

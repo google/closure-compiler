@@ -1242,7 +1242,7 @@ public abstract class JSType implements Serializable {
       }
 
       if (needsFiltering) {
-        UnionTypeBuilder builder = new UnionTypeBuilder(type.registry);
+        UnionTypeBuilder builder = UnionTypeBuilder.create(type.registry);
         builder.addAlternate(type.getNativeType(JSTypeNative.NO_RESOLVED_TYPE));
         for (int i = 0; i < alternatesList.size(); i++) {
           JSType alt = alternatesList.get(i);

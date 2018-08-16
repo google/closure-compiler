@@ -142,7 +142,7 @@ public class UnionTypeBuilderTest extends BaseJSTypeTestCase {
   }
 
   public void testRemovalOfDuplicateRecordTypes1() {
-    UnionTypeBuilder builder = new UnionTypeBuilder(registry);
+    UnionTypeBuilder builder = UnionTypeBuilder.create(registry);
 
     addRecordType(builder, false);
     addRecordType(builder, false);
@@ -151,7 +151,7 @@ public class UnionTypeBuilderTest extends BaseJSTypeTestCase {
   }
 
   public void testRemovalOfDuplicateRecordTypes2() {
-    UnionTypeBuilder builder = new UnionTypeBuilder(registry);
+    UnionTypeBuilder builder = UnionTypeBuilder.create(registry);
 
     addRecordType(builder, true);
     addRecordType(builder, true);
@@ -167,7 +167,7 @@ public class UnionTypeBuilderTest extends BaseJSTypeTestCase {
   }
 
   public void assertUnion(String expected, JSType ... types) {
-    UnionTypeBuilder builder = new UnionTypeBuilder(registry);
+    UnionTypeBuilder builder = UnionTypeBuilder.create(registry);
     for (JSType type : types) {
       builder.addAlternate(type);
     }

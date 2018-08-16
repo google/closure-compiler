@@ -38,6 +38,7 @@
 
 package com.google.javascript.rhino.jstype;
 
+import static com.google.common.truth.Truth.assertWithMessage;
 import static com.google.javascript.rhino.jstype.JSTypeNative.ALL_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.BOOLEAN_OBJECT_FUNCTION_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.BOOLEAN_OBJECT_TYPE;
@@ -51,6 +52,7 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.NULL_VOID;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NUMBER_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.STRING_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.STRING_VALUE_OR_OBJECT_TYPE;
+import static com.google.javascript.rhino.testing.TypeSubject.types;
 
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -127,19 +129,24 @@ public class JSTypeRegistryTest extends TestCase {
   }
 
   public void testPropertyOnManyTypes() {
+    // Given
     JSTypeRegistry typeRegistry = new JSTypeRegistry(null);
 
-    JSType type = null;
-
-    // By default the UnionTypeBuilder will treat a union of more than 20
+    // By default the UnionTypeBuilder will treat a union of more than 30
     // types as an unknown type. We don't want that for property checking
     // so test that the limit is higher.
     for (int i = 0; i < 100; i++) {
-      type = typeRegistry.createObjectType("type: " + i, null);
-      typeRegistry.registerPropertyOnType("foo", type);
-    }
+      JSType type = typeRegistry.createObjectType("type: " + i, null);
 
-    assertFalse(typeRegistry.getGreatestSubtypeWithProperty(type, "foo").isUnknownType());
+      // When
+      typeRegistry.registerPropertyOnType("foo", type);
+
+      // Then
+      assertWithMessage("Registered property `foo` on <%s> types.", i + 1)
+          .about(types())
+          .that(typeRegistry.getGreatestSubtypeWithProperty(type, "foo"))
+          .isNotUnknown();
+    }
   }
 
   public void testReadableTypeName() {
