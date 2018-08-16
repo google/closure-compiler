@@ -22,8 +22,11 @@ import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.parsing.Config.LanguageMode;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
+import com.google.javascript.jscomp.regex.RegExpTree;
+import com.google.javascript.jscomp.regex.RegExpTree.LookbehindAssertion;
 import com.google.javascript.rhino.Node;
 import java.util.EnumSet;
+import java.util.function.Predicate;
 
 /**
  * Looks for presence of features that are not supported for transpilation (mostly new RegExp
@@ -56,7 +59,7 @@ public final class MarkUntranspilableFeaturesAsRemoved extends AbstractPostOrder
   private final AbstractCompiler compiler;
   private final FeatureSet untranspilableFeaturesToRemove;
 
-  public MarkUntranspilableFeaturesAsRemoved(
+  MarkUntranspilableFeaturesAsRemoved(
       AbstractCompiler compiler, FeatureSet inputFeatures, FeatureSet outputFeatures) {
     checkNotNull(compiler);
     checkNotNull(inputFeatures);
@@ -79,7 +82,8 @@ public final class MarkUntranspilableFeaturesAsRemoved extends AbstractPostOrder
   }
 
   private void checkForUntranspilable(Node root) {
-    TranspilationPasses.processTranspile(compiler, root, untranspilableFeaturesToRemove, this);
+    // Non-flag RegExp features are not attached to nodes, so we must force traversal.
+    NodeTraversal.traverse(compiler, root, this);
     TranspilationPasses.maybeMarkFeaturesAsTranspiledAway(compiler, untranspilableFeaturesToRemove);
   }
 
@@ -96,8 +100,18 @@ public final class MarkUntranspilableFeaturesAsRemoved extends AbstractPostOrder
   public void visit(NodeTraversal t, Node n, Node parent) {
     switch (n.getToken()) {
       case REGEXP:
-        checkForRegExpSFlag(n);
-        break;
+        {
+          String pattern = n.getFirstChild().getString();
+          String flags = n.hasTwoChildren() ? n.getLastChild().getString() : "";
+          RegExpTree reg = RegExpTree.parseRegExp(pattern, flags);
+          if (untranspilableFeaturesToRemove.contains(Feature.REGEXP_FLAG_S)) {
+            checkForRegExpSFlag(n);
+          }
+          if (untranspilableFeaturesToRemove.contains(Feature.REGEXP_LOOKBEHIND)) {
+            checkForLookbehind(n, reg);
+          }
+          break;
+        }
 
       default:
         break;
@@ -111,4 +125,24 @@ public final class MarkUntranspilableFeaturesAsRemoved extends AbstractPostOrder
       reportUntranspilable(Feature.REGEXP_FLAG_S, regexpNode);
     }
   }
+
+  private void checkForLookbehind(Node regexpNode, RegExpTree tree) {
+    checkArgument(regexpNode != null);
+    if (anySubtreeMeetsPredicate(tree, t -> t instanceof LookbehindAssertion)) {
+      reportUntranspilable(Feature.REGEXP_LOOKBEHIND, regexpNode);
+    }
+  }
+
+  private static boolean anySubtreeMeetsPredicate(RegExpTree tree, Predicate<RegExpTree> p) {
+    if (p.test(tree)) {
+      return true;
+    }
+    for (RegExpTree subTree : tree.children()) {
+      if (anySubtreeMeetsPredicate(subTree, p)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
 }

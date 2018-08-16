@@ -97,6 +97,14 @@ public abstract class RegExpTree {
   @Override
   public abstract int hashCode();
 
+  private enum ParentheticalType {
+    CAPTURING,
+    NONCAPTURING,
+    POSITIVE_LOOKAHEAD,
+    NEGATIVE_LOOKAHEAD,
+    POSITIVE_LOOKBEHIND,
+    NEGATIVE_LOOKBEHIND,
+  }
 
   /**
    * Parses a regular expression to an AST.
@@ -239,26 +247,49 @@ public abstract class RegExpTree {
         checkState(pattern.charAt(pos) == '(');
         int start = pos;
         ++pos;
-        boolean capturing = true;
-        int type = 0;
+        ParentheticalType type;
         if (pos < limit && pattern.charAt(pos) == '?') {
           if (pos + 1 < limit) {
-            capturing = false;
             char ch = pattern.charAt(pos + 1);
             switch (ch) {
-              case ':':  // A (?:...) style non-capturing group.
+                // (?:...) Non-capturing groups.
+              case ':':
                 pos += 2;
+                type = ParentheticalType.NONCAPTURING;
                 break;
-              case '!':  // A lookahead assertion
+
+                // (?=...) and (?!...) Lookahead Assertions
               case '=':
                 pos += 2;
-                type = ch;
+                type = ParentheticalType.POSITIVE_LOOKAHEAD;
                 break;
+              case '!':
+                pos += 2;
+                type = ParentheticalType.NEGATIVE_LOOKAHEAD;
+                break;
+
+                // (?<=...) and (?<!...) Lookbehind Assertions
+              case '<':
+                if (pos + 2 < limit && pattern.charAt(pos + 2) == '=') {
+                  pos += 3;
+                  type = ParentheticalType.POSITIVE_LOOKBEHIND;
+                  break;
+                } else if (pos + 2 < limit && pattern.charAt(pos + 2) == '!') {
+                  pos += 3;
+                  type = ParentheticalType.NEGATIVE_LOOKBEHIND;
+                  break;
+                }
+                // fall through if not '!' or '='
               default:
                 throw new IllegalArgumentException(
                     "Malformed parenthetical: " + pattern.substring(start));
             }
+          } else {
+            throw new IllegalArgumentException(
+                "Malformed parenthetical: " + pattern.substring(start));
           }
+        } else {
+          type = ParentheticalType.CAPTURING;
         }
         RegExpTree body = parse();
         if (pos < limit && pattern.charAt(pos) == ')') {
@@ -267,14 +298,24 @@ public abstract class RegExpTree {
           throw new IllegalArgumentException(
               "Unclosed parenthetical group: " + pattern.substring(start));
         }
-        if (capturing) {
-          ++numCapturingGroups;
-          return new CapturingGroup(body);
-        } else if (type != 0) {
-          return new LookaheadAssertion(body, type == '=');
-        } else {
-          return body;
+        switch (type) {
+          case CAPTURING:
+            ++numCapturingGroups;
+            return new CapturingGroup(body);
+          case NONCAPTURING:
+            return body;
+
+          case POSITIVE_LOOKAHEAD:
+            return new LookaheadAssertion(body, true);
+          case NEGATIVE_LOOKAHEAD:
+            return new LookaheadAssertion(body, false);
+
+          case POSITIVE_LOOKBEHIND:
+            return new LookbehindAssertion(body, true);
+          case NEGATIVE_LOOKBEHIND:
+            return new LookbehindAssertion(body, false);
         }
+        throw new AssertionError("Unrecognized ParentheticalType " + type);
       }
 
       /**
@@ -559,8 +600,8 @@ public abstract class RegExpTree {
     return ((Anchor) first).type == '^' && ((Anchor) last).type == '$';
   }
 
-
-  static abstract class RegExpTreeAtom extends RegExpTree {
+  /** Represents a node that never has children such as an anchor or charset. */
+  public abstract static class RegExpTreeAtom extends RegExpTree {
     @Override
     public boolean isCaseSensitive() {
       return false;
@@ -582,7 +623,8 @@ public abstract class RegExpTree {
     }
   }
 
-  static final class Empty extends RegExpTreeAtom {
+  /** Represents an empty portion of a RegExp such as the middle of "||" */
+  public static final class Empty extends RegExpTreeAtom {
     static final Empty INSTANCE = new Empty();
 
     @Override
@@ -611,7 +653,8 @@ public abstract class RegExpTree {
     }
   }
 
-  static final class Anchor extends RegExpTreeAtom {
+  /** Represents an anchor, namely ^ or $. */
+  public static final class Anchor extends RegExpTreeAtom {
     final char type;
     Anchor(char type) { this.type = type; }
 
@@ -646,7 +689,8 @@ public abstract class RegExpTree {
     }
   }
 
-  static final class WordBoundary extends RegExpTreeAtom {
+  /** Represents \b or \B */
+  public static final class WordBoundary extends RegExpTreeAtom {
     final char type;
 
     WordBoundary(char type) {
@@ -679,7 +723,8 @@ public abstract class RegExpTree {
     }
   }
 
-  static final class BackReference extends RegExpTreeAtom {
+  /** Represents a reference to a previous group such as \1 or \2 */
+  public static final class BackReference extends RegExpTreeAtom {
     final int groupIndex;
 
     BackReference(int groupIndex) {
@@ -714,7 +759,8 @@ public abstract class RegExpTree {
     }
   }
 
-  static final class Text extends RegExpTreeAtom {
+  /** Represents a run of non-special characters such as "foobar" */
+  public static final class Text extends RegExpTreeAtom {
     final String text;
 
     Text(String text) {
@@ -802,7 +848,8 @@ public abstract class RegExpTree {
     }
   }
 
-  static final class Repetition extends RegExpTree {
+  /** Represents a repeating item such as ...+, ...*, or ...{0,1} */
+  public static final class Repetition extends RegExpTree {
     final RegExpTree body;
     final int min, max;
     final boolean greedy;
@@ -989,7 +1036,8 @@ public abstract class RegExpTree {
     }
   }
 
-  static final class Alternation extends RegExpTree {
+  /** Represents the possibilities ["foo", "bar" ] for a RegExp /foo|bar/ */
+  public static final class Alternation extends RegExpTree {
     final ImmutableList<RegExpTree> alternatives;
 
     Alternation(List<? extends RegExpTree> alternatives) {
@@ -1140,7 +1188,8 @@ public abstract class RegExpTree {
   private static final RegExpTree NEVER_MATCHES = new LookaheadAssertion(
       Empty.INSTANCE, false);
 
-  static final class LookaheadAssertion extends RegExpTree {
+  /** Represents a lookahead assertion such as (?=...) or (?!...) */
+  public static final class LookaheadAssertion extends RegExpTree {
     final RegExpTree body;
     final boolean positive;
 
@@ -1205,7 +1254,76 @@ public abstract class RegExpTree {
     }
   }
 
-  static final class CapturingGroup extends RegExpTree {
+  /** Represents a lookbehind assertion such as {@code (?<=...) } or  {@code (?<!...) } */
+  public static final class LookbehindAssertion extends RegExpTree {
+    final RegExpTree body;
+    final boolean positive;
+
+    LookbehindAssertion(RegExpTree body, boolean positive) {
+      this.body = body;
+      this.positive = positive;
+    }
+
+    @Override
+    public RegExpTree simplify(String flags) {
+      RegExpTree simpleBody = body.simplify(flags);
+      if (simpleBody instanceof Empty) {
+        if (positive) { // Always true
+          return simpleBody;
+        }
+      }
+      return new LookbehindAssertion(simpleBody, positive);
+    }
+
+    @Override
+    public boolean isCaseSensitive() {
+      return body.isCaseSensitive();
+    }
+
+    @Override
+    public boolean containsAnchor() {
+      return body.containsAnchor();
+    }
+
+    @Override
+    public int numCapturingGroups() {
+      return body.numCapturingGroups();
+    }
+
+    @Override
+    public ImmutableList<? extends RegExpTree> children() {
+      return ImmutableList.of(body);
+    }
+
+    @Override
+    protected void appendSourceCode(StringBuilder sb) {
+      sb.append(positive ? "(?<=" : "(?<!");
+      body.appendSourceCode(sb);
+      sb.append(')');
+    }
+
+    @Override
+    protected void appendDebugInfo(StringBuilder sb) {
+      sb.append(positive ? "positive" : "negative");
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (!(o instanceof LookbehindAssertion)) {
+        return false;
+      }
+      LookbehindAssertion that = (LookbehindAssertion) o;
+      return this.positive == that.positive && this.body.equals(that.body);
+    }
+
+    @Override
+    public int hashCode() {
+      return 0x723aba9 ^ body.hashCode();
+    }
+  }
+
+  /** Represents a capturing group such as (asdf) */
+  public static final class CapturingGroup extends RegExpTree {
     final RegExpTree body;
 
     CapturingGroup(RegExpTree body) {
@@ -1316,7 +1434,8 @@ public abstract class RegExpTree {
           CharRanges.withMembers('\n', '\r', '\u2028', '\u2029')),
       CharRanges.EMPTY);
 
-  static final class Charset extends RegExpTreeAtom {
+  /** Represents a set of possible characters structured as [a-zA-Z] or [^a-zA-Z] */
+  public static final class Charset extends RegExpTreeAtom {
     final CharRanges ranges;
     /**
      * Code units that were mentioned explicitly and that might be matched by
@@ -1486,6 +1605,7 @@ public abstract class RegExpTree {
     }
   }
 
+  /** Internal representation for [] charsets */
   static final class DecomposedCharset {
     boolean inverted;
     final CharRanges ranges;
@@ -1610,7 +1730,8 @@ public abstract class RegExpTree {
     }
   }
 
-  static final class Concatenation extends RegExpTree {
+  /** Represents a series of nodes chained one after another such as (?:...)[a-z]*(...) */
+  public static final class Concatenation extends RegExpTree {
     final ImmutableList<RegExpTree> elements;
 
     Concatenation(RegExpTree a, RegExpTree b) {

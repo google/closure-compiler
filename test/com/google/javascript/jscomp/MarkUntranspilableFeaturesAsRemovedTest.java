@@ -76,6 +76,30 @@ public class MarkUntranspilableFeaturesAsRemovedTest extends CompilerTestCase {
             + "Either remove feature \"RegExp flag 's'\" or raise output level to ECMASCRIPT2018.");
   }
 
+  public void testEs2018RegexLookbehind() {
+    languageIn = LanguageMode.ECMASCRIPT_2018;
+    languageOut = LanguageMode.ECMASCRIPT_2018;
+    testSame("const a = /(?<=asdf)/;");
+    testSame("const a = /(?<!asdf)/;");
+
+    languageIn = LanguageMode.ECMASCRIPT_2018;
+    languageOut = LanguageMode.ECMASCRIPT_2017;
+    testSame("const a = /(?=asdf)/;"); // Lookaheads are fine
+    testSame("const a = /(?!asdf)/g;"); // Lookaheads are fine
+    testError(
+        "const a = /(?<=asdf)/;",
+        UNTRANSPILABLE_FEATURE_PRESENT,
+        "Cannot convert ECMASCRIPT2018 feature \"RegExp Lookbehind\" to targeted output language. "
+            + "Either remove feature \"RegExp Lookbehind\" or raise output level to ECMASCRIPT2018."
+            + "");
+    testError(
+        "const a = /(?<!asdf)/;",
+        UNTRANSPILABLE_FEATURE_PRESENT,
+        "Cannot convert ECMASCRIPT2018 feature \"RegExp Lookbehind\" to targeted output language. "
+            + "Either remove feature \"RegExp Lookbehind\" or raise output level to ECMASCRIPT2018."
+            + "");
+  }
+
   public void testRegExpConstructorCalls() {
     languageIn = LanguageMode.ECMASCRIPT_2018;
     languageOut = LanguageMode.ECMASCRIPT_2017;
