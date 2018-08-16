@@ -1249,9 +1249,36 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       }
 
       FunctionType overriddenType = null;
+      // the type of the property this overrides, not necessarily a function.
+
       if (ownerType != null && propName != null) {
-        overriddenType = findOverriddenFunction(ownerType, propName, prototypeOwnerTypeMap);
+        JSType overriddenPropType =
+            findOverriddenProperty(ownerType, propName, prototypeOwnerTypeMap);
+        if (overriddenPropType != null) {
+          // Overridden getters and setters need special handling because we declare
+          // getters/setters as simple properties with their respective return/parameter type. This
+          // causes a split during inference where left and right sides of a getter/setter
+          // declaration will be inferred to have different types; if the left side has type `T`,
+          // the right side will be some function type involving `T`.
+          if (lvalueNode.isGetterDef()) {
+            // Convert `number` to `function(): number`
+            overriddenType = typeRegistry.createFunctionType(overriddenPropType);
+          } else if (lvalueNode.isSetterDef()) {
+            // Convert `number` to `function(number): undefined`
+            overriddenType =
+                typeRegistry.createFunctionType(getNativeType(VOID_TYPE), overriddenPropType);
+          } else if (overriddenPropType.isFunctionType()) {
+            // for cases where we override a non-method (e.g. a number) with a method, don't put the
+            // non-method type (e.g. number) on the function.
+            // Instead do some basic inference to create a function type.
+            // we will warn during typechecking for an invalid override, but we don't want to put a
+            // non-function type on this function because that will interfere with type inference
+            // inside the function.
+            overriddenType = overriddenPropType.toMaybeFunctionType();
+          }
+        }
       }
+
 
       AstFunctionContents contents = fnRoot != null ? new AstFunctionContents(fnRoot) : null;
       if (functionsWithNonEmptyReturns.contains(fnRoot)) {
@@ -1331,34 +1358,34 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
     }
 
     /**
-     * Find the function that's being overridden on this type, if any.
+     * Find the property that's being overridden on this type, if any.
+     *
+     * <p>Said property could be a method, field, getter, or setter. We don't distinguish between
+     * these when looking up a property type.
      */
-    private FunctionType findOverriddenFunction(
+    private JSType findOverriddenProperty(
         ObjectType ownerType, String propName, TemplateTypeMap typeMap) {
-      FunctionType result = null;
+      JSType result = null;
 
       // First, check to see if the property is implemented
       // on a superclass.
       JSType propType = ownerType.getPropertyType(propName);
-      if (propType != null && propType.isFunctionType()) {
-        result =  propType.toMaybeFunctionType();
+      if (propType != null && !propType.isUnknownType()) {
+        result = propType;
       } else {
         // If it's not, then check to see if it's implemented
         // on an implemented interface.
-        for (ObjectType iface :
-                 ownerType.getCtorImplementedInterfaces()) {
+        for (ObjectType iface : ownerType.getCtorImplementedInterfaces()) {
           propType = iface.getPropertyType(propName);
-          if (propType != null && propType.isFunctionType()) {
-            result = propType.toMaybeFunctionType();
+          if (propType != null && !propType.isUnknownType()) {
+            result = propType;
             break;
           }
         }
       }
 
       if (result != null && typeMap != null && !typeMap.isEmpty()) {
-        result = result.visit(
-            new TemplateTypeMapReplacer(typeRegistry, typeMap))
-            .toMaybeFunctionType();
+        result = result.visit(new TemplateTypeMapReplacer(typeRegistry, typeMap));
       }
 
       return result;

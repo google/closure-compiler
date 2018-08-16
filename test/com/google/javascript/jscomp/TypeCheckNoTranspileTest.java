@@ -4138,4 +4138,195 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testDictClass1() {
     testTypes("/** @dict */ var C = class { constructor() {} 'x'(){} };");
   }
+
+  public void testTypeCheckingOverriddenGetterFromSuperclass() {
+    testTypes(
+        lines(
+            "/** @abstract */",
+            "class Bar {",
+            "  /**",
+            "   * @abstract",
+            "   * @return {number} ",
+            "   */",
+            "  get num() { return 1; }",
+            "}",
+            "/** @extends {Bar} */",
+            "class Baz extends Bar {",
+            "  /** @override */",
+            "  get num() { return 3; }",
+            "}",
+            "var /** string */ x = (new Baz).num;"),
+        lines(
+            "initializing variable", //
+            "found   : number",
+            "required: string"));
+  }
+
+  public void testTypeCheckingOverriddenGetterFromSuperclassWithBadReturnType() {
+    testTypes(
+        lines(
+            "/** @abstract */",
+            "class Bar {",
+            "  /**",
+            "   * @abstract",
+            "   * @return {number} ",
+            "   */",
+            "  get num() { return 1; }",
+            "}",
+            "/** @extends {Bar} */",
+            "class Baz extends Bar {",
+            "  /** @override */",
+            "  get num() { return 'foo'; }",
+            "}"),
+        lines(
+            "inconsistent return type", //
+            "found   : string",
+            "required: number"));
+  }
+
+  public void testGetterOverridesPrototypePropertyFromInterface() {
+    testTypes(
+        lines(
+            "/** @interface */",
+            "class Bar {}",
+            "/** @type {number} */",
+            "Bar.prototype.num;",
+            "",
+            "/** @implements {Bar} */",
+            "class Baz {",
+            "  /** @override */",
+            "  get num() { return 3; }",
+            "}",
+            "var /** string */ x = (new Baz).num;"),
+        lines(
+            "initializing variable", //
+            "found   : number",
+            "required: string"));
+  }
+
+  public void testGetterOverridesInstancePropertyFromInterface() {
+    // We treat the interface fields in the constructor as different from prototype properties,
+    // so trying to override the `num` field with a getter doesn't work.
+    testTypes(
+        lines(
+            "/** @interface */",
+            "class Bar {",
+            "  constructor() {",
+            "    /** @type {number} */",
+            "    this.num;",
+            "  }",
+            "}",
+            "/** @implements {Bar} */",
+            "class Baz {",
+            "  /** @override */",
+            "  get num() { return 3; }",
+            "}",
+            "var /** string */ x = (new Baz).num;"),
+        "property num not defined on any superclass of Baz");
+  }
+
+  public void testOverriddenSetterFromSuperclass() {
+    testTypes(
+        lines(
+            "/** @abstract */",
+            "class Bar {",
+            "  /**",
+            "   * @abstract",
+            "   * @param {number} x",
+            "   */",
+            "  set num(x) {}",
+            "}",
+            "/** @extends {Bar} */",
+            "class Baz extends Bar {",
+            "  /** @override */",
+            "  set num(x) {}",
+            "}",
+            "(new Baz).num = 'foo';"),
+        lines(
+            "assignment to property num of Baz", //
+            "found   : string",
+            "required: number"));
+  }
+
+  public void testGetterOverridesMethod() {
+    // If a getter overrides a method, we infer the getter to be for a function type
+    testTypes(
+        lines(
+            "class Bar {",
+            "  /** @return {number} */",
+            "  num() { return 1; }",
+            "}",
+            "/** @extends {Bar} */",
+            "class Baz extends Bar {",
+            "  /** @override */",
+            "  get num() { return 1; }",
+            "}"),
+        lines(
+            "inconsistent return type", //
+            "found   : number",
+            "required: function(this:Bar): number"));
+  }
+
+  public void testMisplacedOverrideOnGetter() {
+    testTypes(
+        lines(
+            "/** @abstract */",
+            "class Bar {}",
+            "/** @extends {Bar} */",
+            "class Baz extends Bar {",
+            "  /** @override */",
+            "  get num() { return 3; }",
+            "}",
+            "var /** string */ x = (new Baz).num;"),
+        "property num not defined on any superclass of Baz");
+  }
+
+  public void testOverridingNonMethodWithMethodDoesntBlockTypeCheckingInsideMethod() {
+    // verify that we still type Bar.prototype.bar with function(this:Bar, number) even though it
+    // overrides a property from Foo
+    // thus we get both a "mismatch of ... and the property it overrides" warning
+    // and a warning for "initializing variable ..." inside bar()
+    testTypes(
+        lines(
+            "class Foo {}",
+            "/** @type {number} */",
+            "Foo.prototype.bar = 3;",
+            "",
+            "class Bar extends Foo {",
+            "  /** @override */",
+            "  bar(/** number */ n) {",
+            "    var /** string */ str = n;",
+            "  }",
+            "}"),
+        new String[] {
+          lines(
+              "mismatch of the bar property type "
+                  + "and the type of the property it overrides from superclass Foo",
+              "original: number",
+              "override: function(this:Bar, number): undefined"),
+          lines(
+              "initializing variable", //
+              "found   : number",
+              "required: string")
+        });
+  }
+
+  public void testGetterWithTemplateTypeReturnIsTypeChecked() {
+    testTypes(
+        lines(
+            "/** @interface @template T */",
+            "class C {",
+            "  /** @return {T} */",
+            "  get t() {}",
+            "}",
+            "/** @implements {C<string>} */",
+            "class CString {",
+            "  /** @override */",
+            "  get t() { return 3; }", // inconsistent return type
+            "}"),
+        lines(
+            "inconsistent return type", //
+            "found   : number",
+            "required: string"));
+  }
 }
