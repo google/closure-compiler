@@ -2156,7 +2156,7 @@ public abstract class CompilerTestCase extends TestCase {
     return new Expected(maybeCreateSources("expected",  srcText));
   }
 
-  protected static Expected expected(String[] srcTexts) {
+  protected static Expected expected(String... srcTexts) {
     return new Expected(createSources("expected", srcTexts));
   }
 
@@ -2189,7 +2189,7 @@ public abstract class CompilerTestCase extends TestCase {
     return new Externs(maybeCreateSources("externs",  externSrc));
   }
 
-  protected static Externs externs(String[] srcTexts) {
+  protected static Externs externs(String... srcTexts) {
     return new Externs(createSources("externs", srcTexts));
   }
 
