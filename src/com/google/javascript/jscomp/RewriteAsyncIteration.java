@@ -272,7 +272,6 @@ public final class RewriteAsyncIteration implements NodeTraversal.Callback, HotS
     Node innerFunction = IR.function(IR.name(""), IR.paramList(), innerBlock);
     innerFunction.setIsGeneratorFunction(true);
 
-    // TODO(mattmm): Redirect this, super, arguments to appropriate context
     // Body should be:
     // return new $jscomp.AsyncGeneratorWrapper((new function with original block here)());
     Node outerBlock =

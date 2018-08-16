@@ -38,7 +38,6 @@ import java.util.Iterator;
  * Rewrites destructuring patterns and default parameters to valid ES3 code or to a different form
  * of destructuring.
  */
-// TODO(mattmm): Rename class to drop Es6 prefix
 public final class Es6RewriteDestructuring implements NodeTraversal.Callback, HotSwapCompilerPass {
 
   public static final DiagnosticType UNEXPECTED_DESTRUCTURING_REST_PARAMETER =
@@ -205,7 +204,7 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
   /**
    * If the function is an arrow function, wrap the body in a block if it is not already a block.
    */
-  // TODO(mattmm): This should be separated from this pass.
+  // TODO(bradfordcsmith): This should be separated from this pass.
   private void ensureArrowFunctionsHaveBlockBodies(NodeTraversal t, Node function) {
     Node body = function.getLastChild();
     if (!body.isBlock()) {

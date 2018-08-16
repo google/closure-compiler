@@ -69,7 +69,6 @@ public class TranspilationPasses {
         !options.skipNonTranspilationPasses);
   }
 
-  // TODO(mattmm): eliminate need for this boolean
   // Tests extending CompilerTestCase and TypeCheckTestCase fail if the es6ExternsCheck pass is
   // run. Ideally a condition based on the CompilerOptions should be used so that the boolean
   // parameter can be removed.
@@ -285,7 +284,7 @@ public class TranspilationPasses {
       new PassFactory("es6ExternsCheck", true) {
         @Override
         protected CompilerPass create(final AbstractCompiler compiler) {
-          // TODO (mattmm): Investigate if this can be removed
+          // TODO(johnlenz): Investigate if this can be removed
           return new Es6ExternsCheck(compiler);
         }
 
