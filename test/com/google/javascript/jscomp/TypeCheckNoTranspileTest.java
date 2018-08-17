@@ -1916,6 +1916,60 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "required: number"));
   }
 
+  public void testClassDeclarationWithReturn() {
+    testTypes(
+        lines(
+            "var /** ?Foo */ cached = null;", //
+            "class Foo {",
+            "  constructor() {",
+            "    if (cached) return cached; ",
+            "  }",
+            "}",
+            ""));
+  }
+
+  public void testInvalidInvocationOfClassConstructor() {
+    testTypes(
+        lines(
+            "class Foo {", //
+            "  constructor() {",
+            "  }",
+            "}",
+            "let /** ? */ x = Foo()"),
+        lines(
+            "Constructor function(new:Foo): undefined should be called with the \"new\" keyword"));
+  }
+
+  public void testInvalidInvocationOfClassConstructorWithReturnDeclaration() {
+    testTypes(
+        lines(
+            "class Foo {", //
+            "  /** @return {!Array} */",
+            "  constructor() {",
+            "  }",
+            "}",
+            "let /** ? */ x = Foo()"),
+        lines(
+            "Constructor function(new:Foo): undefined should be called with the \"new\" keyword"));
+  }
+
+  public void testClassDeclarationWithTemplate() {
+    testTypes(
+        lines(
+            "/** @template T */", //
+            "class C {",
+            "  /** @param {T} a */",
+            "  constructor(a) {",
+            "  }",
+            "}",
+            "/** @type {null} */",
+            "const x = new C(0);"),
+        lines(
+            "initializing variable", //
+            "found   : C<number>",
+            "required: null"));
+  }
+
   public void testClassDeclaration() {
     testTypes(
         lines(

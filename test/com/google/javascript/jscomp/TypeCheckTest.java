@@ -6737,8 +6737,13 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   }
 
   public void testReturn5() {
-    testTypes("/** @param {number} n\n" +
-        "@constructor */function n(n){return};");
+    testTypes(
+        lines(
+            "/**", //
+            " * @param {number} n",
+            " * @constructor",
+            " */",
+            "function fn(n){ return }"));
   }
 
   public void testReturn6() {

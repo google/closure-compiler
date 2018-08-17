@@ -2512,7 +2512,6 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       FunctionType functionType = jsType.toMaybeFunctionType();
 
       JSType returnType = functionType.getReturnType();
-
       // if no return type is specified, undefined must be returned
       // (it's a void function)
       if (returnType == null) {
@@ -2525,6 +2524,14 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         // Unwrap the template variable from a async function's declared return type.
         // e.g. if returnType is "!Promise<string>" or "!IThenable<string>", make it just "string".
         returnType = Promises.getTemplateTypeOfThenable(typeRegistry, returnType);
+      } else if (returnType.isVoidType() && functionType.isConstructor()) {
+        // Allow constructors to use empty returns for flow control.
+        if (!n.hasChildren()) {
+          return;
+        }
+
+        // Allow constructors to return its own instance type
+        returnType = functionType.getInstanceType();
       }
 
       // fetching the returned value's type
