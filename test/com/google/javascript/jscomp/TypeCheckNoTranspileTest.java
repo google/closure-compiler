@@ -4329,4 +4329,67 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "found   : number",
             "required: string"));
   }
+
+  public void testOverrideSupertypeOnAnonymousClass() {
+    // Test that we infer the supertype of a class not assigned to an lvalue
+    testTypes(
+        lines(
+            "function use(ctor) {}",
+            "",
+            "class Foo { ",
+            "  constructor() {",
+            "    /** @type {string} */",
+            "    this.str;",
+            "  }",
+            "}",
+            "use(class extends Foo {",
+            "  f() { this.str = 3; }",
+            "});"),
+        lines(
+            "assignment to property str of <anonymous@[testcode]:9>", //
+            "found   : number",
+            "required: string"));
+  }
+
+  public void testOverrideSupertypeOnClassExpression() {
+    // Test that we infer the supertype of a class not assigned to an lvalue
+    testTypes(
+        lines(
+            "function use(ctor) {}",
+            "",
+            "class Foo { ",
+            "  constructor() {",
+            "    /** @type {string} */",
+            "    this.str;",
+            "  }",
+            "}",
+            "use(class Bar extends Foo {",
+            "  f() { this.str = 3; }",
+            "});"),
+        lines(
+            "assignment to property str of <anonymous@[testcode]:9>", //
+            "found   : number",
+            "required: string"));
+  }
+
+  public void testOverrideInferredOnClassExpression() {
+    // Test that we infer the type of overridden methods even on classes not assigned to an lvalue
+    testTypes(
+        lines(
+            "function use(ctor) {}",
+            "",
+            "class Foo { ",
+            "  f(/** number */ num) {}",
+            "}",
+            "use(class Bar extends Foo {",
+            "  /** @override */",
+            "  f(num) {",
+            "    var /** string */ str = num;",
+            "  }",
+            "});"),
+        lines(
+            "initializing variable", //
+            "found   : number",
+            "required: string"));
+  }
 }

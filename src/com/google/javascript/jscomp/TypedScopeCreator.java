@@ -1211,35 +1211,40 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       boolean isFnLiteral = rValue != null && rValue.isFunction();
       Node fnRoot = isFnLiteral ? rValue : null;
       Node parametersNode = isFnLiteral ? rValue.getSecondChild() : null;
+
+      // If this function is being assigned as a property on a type, try finding the owner type
+      // and the property name.
+      // This is easy to do for class members because the owner type is on the CLASS node and
+      // the property name is the MEMBER_FUNCTION_DEF/GETTER_DEF/SETTER_DEF string.
+      // For other functions, we rely on NodeUtil.getBestLValueOwner.
       Node classRoot =
           lvalueNode != null && lvalueNode.getParent().isClassMembers()
               ? lvalueNode.getGrandparent()
               : null;
-
-      // Find the type of any overridden function.
       Node ownerNode = NodeUtil.getBestLValueOwner(lvalueNode);
-      String ownerName = NodeUtil.getBestLValueName(ownerNode);
+
       ObjectType ownerType = null;
-      if (ownerNode != null && classRoot != null) {
+      String propName = null;
+      if (classRoot != null) {
         // Static members are owned by the constructor, non-statics are owned by the prototype.
         ownerType = JSType.toMaybeFunctionType(classRoot.getJSType());
         if (!lvalueNode.isStaticMember() && ownerType != null) {
           ownerType = ((FunctionType) ownerType).getPrototype();
-          ownerName = ownerName + ".prototype";
         }
-      } else if (ownerName != null) {
-        TypedVar ownerVar = currentScope.getVar(ownerName);
+        propName = lvalueNode.isComputedProp() ? null : lvalueNode.getString();
+      } else {
+        String ownerName = NodeUtil.getBestLValueName(ownerNode);
+        TypedVar ownerVar = ownerName != null ? currentScope.getVar(ownerName) : null;
         if (ownerVar != null) {
           ownerType = ObjectType.cast(ownerVar.getType());
         }
-      }
 
-      String propName = null;
-      if (ownerName != null && name != null) {
-        // TODO(b/111621092): Use the AST rather than manipulating strings here.
-        checkState(
-            name.startsWith(ownerName), "Expected \"%s\" to start with \"%s\"", name, ownerName);
-        propName = name.substring(ownerName.length() + 1);
+        if (ownerName != null && name != null) {
+          // TODO(b/111621092): Use the AST rather than manipulating strings here.
+          checkState(
+              name.startsWith(ownerName), "Expected \"%s\" to start with \"%s\"", name, ownerName);
+          propName = name.substring(ownerName.length() + 1);
+        }
       }
 
       ObjectType prototypeOwner = getPrototypeOwnerType(ownerType);
@@ -1248,10 +1253,10 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
         prototypeOwnerTypeMap = prototypeOwner.getTypeOfThis().getTemplateTypeMap();
       }
 
+      // Find the type of any overridden function.
       FunctionType overriddenType = null;
-      // the type of the property this overrides, not necessarily a function.
-
       if (ownerType != null && propName != null) {
+        // the type of the property this overrides, not necessarily a function.
         JSType overriddenPropType =
             findOverriddenProperty(ownerType, propName, prototypeOwnerTypeMap);
         if (overriddenPropType != null) {
