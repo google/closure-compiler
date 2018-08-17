@@ -870,6 +870,76 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
         });
   }
 
+  public void testProtectedAccessThroughNestedFunction() {
+    test(
+        srcs(
+            lines(
+                "/** @constructor */", //
+                "function Foo() { }",
+                "",
+                "/** @protected */",
+                "Foo.prototype.bar = function() { };"),
+            lines(
+                "/**",
+                " * @constructor",
+                " * @extends {Foo}",
+                " */",
+                "function Bar() {",
+                "  function f(/** !Foo */ foo) {",
+                "    foo.bar();",
+                "  }",
+                "}")));
+  }
+
+  public void testProtectedAccessThroughNestedEs5Class() {
+    test(
+        srcs(
+            lines(
+                "/** @constructor */", //
+                "function Foo() { }",
+                "",
+                "/** @protected */",
+                "Foo.prototype.bar = function() { };"),
+            lines(
+                "/**",
+                " * @constructor",
+                " * @extends {Foo}",
+                " */",
+                "function Bar() {",
+                "  /** @constructor */",
+                "  var Nested = function() { }",
+                "",
+                "  /** @param {!Foo} foo */",
+                "  Nested.prototype.qux = function(foo) {",
+                "    foo.bar();",
+                "  }",
+                "}")));
+  }
+
+  public void testProtectedAccessThroughNestedEs6Class() {
+    test(
+        srcs(
+            lines(
+                "/** @constructor */", //
+                "function Foo() { }",
+                "",
+                "/** @protected */",
+                "Foo.prototype.bar = function() { };"),
+            lines(
+                "/**",
+                " * @constructor",
+                " * @extends {Foo}",
+                " */",
+                "function Bar() {",
+                "  class Nested {",
+                "    /** @param {!Foo} foo */",
+                "    qux(foo) {",
+                "      foo.bar();",
+                "    }",
+                "  }",
+                "}")));
+  }
+
   public void testNoProtectedAccessForProperties1() {
     testError(new String[] {
         "/** @constructor */ function Foo() {} "

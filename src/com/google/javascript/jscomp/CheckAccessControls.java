@@ -184,17 +184,8 @@ class CheckAccessControls extends AbstractPostOrderCallback
       deprecationDepth++;
     }
 
-    if (n.isFunction()) {
-      JSType prevClass = currentClassStack.peek();
-      JSType currentClass =
-          (prevClass == null) ? bestInstanceTypeForMethodOrCtor(n, n.getParent()) : prevClass;
-      currentClassStack.push(currentClass);
-    } else if (n.isClass()) {
-      FunctionType ctor = JSType.toMaybeFunctionType(n.getJSType());
-      JSType instance = ctor != null && ctor.isConstructor() ? ctor.getInstanceType() : null;
-      // TODO(sdh): We should probably handle nested classes better, allowing them to access
-      // protected members of any enclosing class.
-      currentClassStack.push(instance);
+    if (isFunctionOrClass(n)) {
+      currentClassStack.push(bestInstanceTypeForMethodOrCtor(n, n.getParent()));
     }
   }
 
@@ -223,6 +214,8 @@ class CheckAccessControls extends AbstractPostOrderCallback
    *   <li>Constructors => The type that constructor instantiates
    *   <li>Object literal members => {@code null}
    * </ul>
+   *
+   * TODO(nickreid): Remove the {@code parent} parameter.
    */
   @Nullable
   private JSType bestInstanceTypeForMethodOrCtor(Node n, Node parent) {
@@ -882,15 +875,20 @@ class CheckAccessControls extends AbstractPostOrderCallback
     // 2) Overriding the property in a subclass
     // 3) Accessing the property from inside a subclass
     // The first two have already been checked for.
-    JSType currentClass = currentClassStack.peek();
-    if (currentClass == null || !currentClass.isSubtypeOf(ownerType)) {
-      compiler.report(
-          t.makeError(
-              propRef.getSourceNode(),
-              BAD_PROTECTED_PROPERTY_ACCESS,
-              propRef.getName(),
-              propRef.getReadableTypeNameOrDefault()));
+    for (JSType scopeType : currentClassStack) {
+      if (scopeType == null) {
+        continue;
+      } else if (scopeType.isSubtypeOf(ownerType)) {
+        return;
+      }
     }
+
+    compiler.report(
+        t.makeError(
+            propRef.getSourceNode(),
+            BAD_PROTECTED_PROPERTY_ACCESS,
+            propRef.getName(),
+            propRef.getReadableTypeNameOrDefault()));
   }
 
   /**

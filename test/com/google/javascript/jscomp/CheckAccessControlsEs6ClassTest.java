@@ -1056,7 +1056,7 @@ public final class CheckAccessControlsEs6ClassTest extends CompilerTestCase {
                 "}")));
   }
 
-  public void testProtectedAccessFromFunctionNestedInsideClass() {
+  public void testProtectedAccessThroughNestedFunction() {
     test(
         srcs(
             lines(
@@ -1065,7 +1065,7 @@ public final class CheckAccessControlsEs6ClassTest extends CompilerTestCase {
                 "}"),
             lines(
                 "class Bar extends Foo {",
-                "  foo(/** Foo */ foo) {",
+                "  constructor(/** Foo */ foo) {",
                 "    function f() {",
                 "      foo.bar();",
                 "    }",
@@ -1073,7 +1073,7 @@ public final class CheckAccessControlsEs6ClassTest extends CompilerTestCase {
                 "}")));
   }
 
-  public void testProtectedAccessFromClassNestedInsideClass() {
+  public void testProtectedAccessThroughNestedEs5Class() {
     test(
         srcs(
             lines(
@@ -1082,16 +1082,35 @@ public final class CheckAccessControlsEs6ClassTest extends CompilerTestCase {
                 "}"),
             lines(
                 "class Bar extends Foo {",
-                "  foo() {",
+                "  constructor() {",
+                "    /** @constructor */",
+                "    const Nested = function() {}",
+                "",
+                "    /** @param {!Foo} foo */",
+                "    Nested.prototype.qux = function(foo) {",
+                "      foo.bar();",
+                "    }",
+                "  }",
+                "}")));
+  }
+
+  public void testProtectedAccessThroughNestedEs6Class() {
+    test(
+        srcs(
+            lines(
+                "class Foo {", //
+                "  /** @protected */ bar() {}",
+                "}"),
+            lines(
+                "class Bar extends Foo {",
+                "  constructor() {",
                 "    class Nested {",
-                "      foo(/** Foo */ foo) {",
+                "      qux(/** Foo */ foo) {",
                 "        foo.bar();",
                 "      }",
                 "    }",
                 "  }",
-                "}")),
-        // TODO(sdh): This should not be an error.
-        error(BAD_PROTECTED_PROPERTY_ACCESS));
+                "}")));
   }
 
   public void testNoProtectedAccessForProperties1() {
