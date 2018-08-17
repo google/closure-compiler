@@ -18,7 +18,6 @@ package com.google.javascript.jscomp;
 
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.rhino.Node;
-
 import junit.framework.TestCase;
 
 /**
@@ -33,28 +32,31 @@ public final class RecordFunctionInformationTest extends TestCase {
     String fAndG = "function f(){" + g + "}";
     String js = "var h=" + fAndG + ";h()";
 
-    FunctionInformationMap.Builder expected =
-        FunctionInformationMap.newBuilder();
-    expected.addEntry(
-        FunctionInformationMap.Entry.newBuilder()
-        .setId(0)
-        .setSourceName("testcode")
-        .setLineNumber(1)
-        .setModuleName("")
-        .setSize(g.length())
-        .setName("f::g")
-        .setCompiledSource(g).build());
-    expected.addEntry(
-        FunctionInformationMap.Entry.newBuilder()
-        .setId(1)
-        .setSourceName("testcode")
-        .setLineNumber(1)
-        .setModuleName("")
-        .setSize(fAndG.length())
-        .setName("f")
-        .setCompiledSource(fAndG).build());
+    FunctionInformationMap expected =
+        FunctionInformationMap.newBuilder()
+            .addEntry(
+                FunctionInformationMap.Entry.newBuilder()
+                    .setId(0)
+                    .setSourceName("testcode")
+                    .setLineNumber(1)
+                    .setModuleName("")
+                    .setSize(g.length())
+                    .setName("f::g")
+                    .setCompiledSource(g)
+                    .build())
+            .addEntry(
+                FunctionInformationMap.Entry.newBuilder()
+                    .setId(1)
+                    .setSourceName("testcode")
+                    .setLineNumber(1)
+                    .setModuleName("")
+                    .setSize(fAndG.length())
+                    .setName("f")
+                    .setCompiledSource(fAndG)
+                    .build())
+            .build();
 
-    test(js, expected.build());
+    test(js, expected);
   }
 
   public void testMotionPreservesOriginalSourceName() {
@@ -74,27 +76,31 @@ public final class RecordFunctionInformationTest extends TestCase {
     mainRoot.getFirstChild().removeChild(nodeG);
     mainRoot.getLastChild().addChildToBack(nodeG.cloneTree());
 
-    FunctionInformationMap.Builder expected = FunctionInformationMap.newBuilder();
-    expected.addEntry(
-        FunctionInformationMap.Entry.newBuilder()
-        .setId(0)
-        .setSourceName("i0.js")
-        .setLineNumber(1)
-        .setModuleName("m0")
-        .setSize(g.length())
-        .setName("f")
-        .setCompiledSource(f).build());
-    expected.addEntry(
-        FunctionInformationMap.Entry.newBuilder()
-        .setId(1)
-        .setSourceName("i0.js")
-        .setLineNumber(1)
-        .setModuleName("m1")
-        .setSize(g.length())
-        .setName("g")
-        .setCompiledSource(g).build());
+    FunctionInformationMap expected =
+        FunctionInformationMap.newBuilder()
+            .addEntry(
+                FunctionInformationMap.Entry.newBuilder()
+                    .setId(0)
+                    .setSourceName("i0.js")
+                    .setLineNumber(1)
+                    .setModuleName("m0")
+                    .setSize(g.length())
+                    .setName("f")
+                    .setCompiledSource(f)
+                    .build())
+            .addEntry(
+                FunctionInformationMap.Entry.newBuilder()
+                    .setId(1)
+                    .setSourceName("i0.js")
+                    .setLineNumber(1)
+                    .setModuleName("m1")
+                    .setSize(g.length())
+                    .setName("g")
+                    .setCompiledSource(g)
+                    .build())
+            .build();
 
-    test(compiler, externsRoot, mainRoot, expected.build());
+    test(compiler, externsRoot, mainRoot, expected);
   }
 
 

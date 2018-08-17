@@ -38,13 +38,14 @@ public class ConformanceWhitelisterTest extends TestCase {
             "/entry.js",
             lines("var foo = document.getElementById('name');", "foo.innerHTML = 'test';")));
 
-    Requirement.Builder requirement = Requirement.newBuilder();
-    requirement
-        .setType(Type.BANNED_PROPERTY)
-        .setErrorMessage("Lorem Ipsum")
-        .addValue("Object.prototype.innerHTML");
+    Requirement requirement =
+        Requirement.newBuilder()
+            .setType(Type.BANNED_PROPERTY)
+            .setErrorMessage("Lorem Ipsum")
+            .addValue("Object.prototype.innerHTML")
+            .build();
 
-    assertThat(testConformanceWhitelister(sources.build(), requirement.build()))
+    assertThat(testConformanceWhitelister(sources.build(), requirement))
         .containsExactly("/entry.js", 2);
   }
 
@@ -56,14 +57,15 @@ public class ConformanceWhitelisterTest extends TestCase {
             "/entry.js",
             lines("var foo = document.getElementById('name');", "foo.outerHTML = 'test';")));
 
-    Requirement.Builder requirement = Requirement.newBuilder();
-    requirement
-        .setType(Type.BANNED_PROPERTY)
-        .setErrorMessage("Lorem Ipsum")
-        .addValue("Object.prototype.innerHTML")
-        .addWhitelist("/entry.js");
+    Requirement requirement =
+        Requirement.newBuilder()
+            .setType(Type.BANNED_PROPERTY)
+            .setErrorMessage("Lorem Ipsum")
+            .addValue("Object.prototype.innerHTML")
+            .addWhitelist("/entry.js")
+            .build();
 
-    assertThat(testConformanceWhitelister(sources.build(), requirement.build())).isEmpty();
+    assertThat(testConformanceWhitelister(sources.build(), requirement)).isEmpty();
   }
 
   public void testConformanceWhitelistPreserve() throws IOException {
@@ -74,14 +76,15 @@ public class ConformanceWhitelisterTest extends TestCase {
             "/entry.js",
             lines("var foo = document.getElementById('name');", "foo.innerHTML = 'test';")));
 
-    Requirement.Builder requirement = Requirement.newBuilder();
-    requirement
-        .setType(Type.BANNED_PROPERTY)
-        .setErrorMessage("Lorem Ipsum")
-        .addValue("Object.prototype.innerHTML")
-        .addWhitelist("/entry.js");
+    Requirement requirement =
+        Requirement.newBuilder()
+            .setType(Type.BANNED_PROPERTY)
+            .setErrorMessage("Lorem Ipsum")
+            .addValue("Object.prototype.innerHTML")
+            .addWhitelist("/entry.js")
+            .build();
 
-    assertThat(testConformanceWhitelister(sources.build(), requirement.build()))
+    assertThat(testConformanceWhitelister(sources.build(), requirement))
         .containsExactly("/entry.js", 2);
   }
 
@@ -96,14 +99,15 @@ public class ConformanceWhitelisterTest extends TestCase {
             "/test/entry.js",
             lines("var foo = document.getElementById('name');", "foo.innerHTML = 'test';")));
 
-    Requirement.Builder requirement = Requirement.newBuilder();
-    requirement
-        .setType(Type.BANNED_PROPERTY)
-        .setErrorMessage("Lorem Ipsum")
-        .addValue("Object.prototype.innerHTML")
-        .addWhitelist("/test/");
+    Requirement requirement =
+        Requirement.newBuilder()
+            .setType(Type.BANNED_PROPERTY)
+            .setErrorMessage("Lorem Ipsum")
+            .addValue("Object.prototype.innerHTML")
+            .addWhitelist("/test/")
+            .build();
 
-    assertThat(testConformanceWhitelister(sources.build(), requirement.build()))
+    assertThat(testConformanceWhitelister(sources.build(), requirement))
         .containsExactly("/test/entry.js", 2);
   }
 
