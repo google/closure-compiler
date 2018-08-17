@@ -27,6 +27,7 @@ import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -439,11 +440,59 @@ public abstract class RegExpTree {
        */
       private RegExpTree parseEscape() {
         checkState(pattern.charAt(pos) == '\\');
+        int start = pos;
         ++pos;
         char ch = pattern.charAt(pos);
         if (ch == 'b' || ch == 'B') {
           ++pos;
           return new WordBoundary(ch);
+        } else if ((ch == 'p' || ch == 'P') && flags.contains("u")) {
+          // handle ES2018 unicode property tests, e.g.
+          // /\p{ASCII_Hex_Digit=true}/ only hex digits
+          // /\P{Script=Greek}/  no greek letters
+          boolean negated = ch == 'P';
+          ++pos;
+          if (pos < limit && pattern.charAt(pos) == '{') {
+            StringBuilder lhs = new StringBuilder();
+            while (++pos < limit
+                && ((ch = pattern.charAt(pos)) == '_'
+                    || ('a' <= ch && ch <= 'z')
+                    || ('A' <= ch && ch <= 'Z')
+                    || ('0' <= ch && ch <= '9'))) {
+              lhs.append(ch);
+            }
+            if (pos < limit && ch == '}') {
+              // Case of shorthand like /\p{ASCII_Hex_Digit}/u
+              ++pos;
+              return new UnicodePropertyEscape(null, lhs.toString(), negated);
+            } else if (pos < limit && ch == '=') {
+              // Case of having '=' like /\p{Script=Greek}/u
+              StringBuilder rhs = new StringBuilder();
+              while (++pos < limit
+                  && ((ch = pattern.charAt(pos)) == '_'
+                      || ('a' <= ch && ch <= 'z')
+                      || ('A' <= ch && ch <= 'Z')
+                      || ('0' <= ch && ch <= '9'))) {
+                rhs.append(ch);
+              }
+              if (pos < limit && ch == '}') {
+                ++pos;
+                return new UnicodePropertyEscape(lhs.toString(), rhs.toString(), negated);
+              } else {
+                throw new IllegalArgumentException(
+                    "Malformed Unicode Property Escape: expected '}' after "
+                        + pattern.substring(start, pos));
+              }
+            } else {
+              throw new IllegalArgumentException(
+                  "Malformed Unicode Property Escape: expected '=' or '}' after "
+                      + pattern.substring(start, pos));
+            }
+          } else {
+            throw new IllegalArgumentException(
+                "Malformed Unicode Property Escape: expected '{' after "
+                    + pattern.substring(start, pos));
+          }
         } else if ('1' <= ch && ch <= '9') {
           ++pos;
           int possibleGroupIndex = ch - '0';
@@ -1376,6 +1425,59 @@ public abstract class RegExpTree {
     @Override
     public int hashCode() {
       return 0x55781738 ^ body.hashCode();
+    }
+  }
+
+  /** Represents a Unicode Property Escape such as in /\p{Script=Greek}/u */
+  public static final class UnicodePropertyEscape extends RegExpTreeAtom {
+
+    private final String propertyName;
+    private final String propertyValue;
+    private final boolean negated;
+
+    UnicodePropertyEscape(String propertyName, String propertyValue, boolean negated) {
+      checkState(propertyValue != null);
+      checkArgument(
+          propertyName == null || !propertyName.isEmpty(),
+          "if '=' is present in a unicode property escape, the name cannot be empty");
+      checkArgument(!propertyValue.isEmpty(), "unicode property escape value cannot be empty");
+      this.propertyName = propertyName;
+      this.propertyValue = propertyValue;
+      this.negated = negated;
+    }
+
+    @Override
+    public RegExpTree simplify(String flags) {
+      return this;
+    }
+
+    @Override
+    protected void appendSourceCode(StringBuilder sb) {
+      sb.append(negated ? "\\P{" : "\\p{");
+      if (propertyName != null) {
+        sb.append(propertyName);
+        sb.append('=');
+      }
+      sb.append(propertyValue);
+      sb.append("}");
+    }
+
+    @Override
+    protected void appendDebugInfo(StringBuilder sb) {
+      // Nothing besides properties and possible negation.
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      return (o instanceof UnicodePropertyEscape)
+          && negated == ((UnicodePropertyEscape) o).negated
+          && Objects.equals(propertyName, ((UnicodePropertyEscape) o).propertyName)
+          && Objects.equals(propertyValue, ((UnicodePropertyEscape) o).propertyValue);
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(negated, propertyName, propertyValue);
     }
   }
 

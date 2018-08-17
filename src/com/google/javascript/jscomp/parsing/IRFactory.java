@@ -3115,6 +3115,8 @@ class IRFactory {
         case 'D':
         case 'f':
         case 'n':
+        case 'p': // 2018 unicode property escapes
+        case 'P': // 2018 unicode property escapes
         case 'r':
         case 's':
         case 'S':

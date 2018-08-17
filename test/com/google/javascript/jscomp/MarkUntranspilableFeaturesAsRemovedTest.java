@@ -105,6 +105,32 @@ public class MarkUntranspilableFeaturesAsRemovedTest extends CompilerTestCase {
             + "");
   }
 
+  public void testEs2018RegexUnicodePropertyEscape() {
+    languageIn = LanguageMode.ECMASCRIPT_2018;
+    languageOut = LanguageMode.ECMASCRIPT_2018;
+    testSame("const a = /\\p{Script=Greek}/u;");
+    testSame("const a = /\\P{Script=Greek}/u;");
+    testSame("const a = /\\p{Script=Greek}/;"); // Without u flag, /\p/ is same as /p/
+    testSame("const a = /\\P{Script=Greek}/;"); // Without u flag, /\p/ is same as /p/
+
+    languageIn = LanguageMode.ECMASCRIPT_2018;
+    languageOut = LanguageMode.ECMASCRIPT_2017;
+    testSame("const a = /\\p{Script=Greek}/;"); // Without u flag, /\p/ is same as /p/
+    testSame("const a = /\\P{Script=Greek}/;"); // Without u flag, /\p/ is same as /p/
+    testError(
+        "const a = /\\p{Script=Greek}/u;",
+        UNTRANSPILABLE_FEATURE_PRESENT,
+        "Cannot convert ECMASCRIPT2018 feature \"RegExp unicode property escape\" to targeted "
+            + "output language. Either remove feature \"RegExp unicode property escape\" or raise "
+            + "output level to ECMASCRIPT2018.");
+    testError(
+        "const a = /\\P{Script=Greek}/u;",
+        UNTRANSPILABLE_FEATURE_PRESENT,
+        "Cannot convert ECMASCRIPT2018 feature \"RegExp unicode property escape\" to targeted "
+            + "output language. Either remove feature \"RegExp unicode property escape\" or raise "
+            + "output level to ECMASCRIPT2018.");
+  }
+
   public void testRegExpConstructorCalls() {
     languageIn = LanguageMode.ECMASCRIPT_2018;
     languageOut = LanguageMode.ECMASCRIPT_2017;

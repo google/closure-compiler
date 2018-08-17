@@ -25,6 +25,7 @@ import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.jscomp.regex.RegExpTree;
 import com.google.javascript.jscomp.regex.RegExpTree.LookbehindAssertion;
+import com.google.javascript.jscomp.regex.RegExpTree.UnicodePropertyEscape;
 import com.google.javascript.rhino.Node;
 import java.util.EnumSet;
 import java.util.function.Predicate;
@@ -117,6 +118,9 @@ public final class MarkUntranspilableFeaturesAsRemoved extends AbstractPostOrder
           if (untranspilableFeaturesToRemove.contains(Feature.REGEXP_LOOKBEHIND)) {
             checkForLookbehind(n, reg);
           }
+          if (untranspilableFeaturesToRemove.contains(Feature.REGEXP_UNICODE_PROPERTY_ESCAPE)) {
+            checkForUnicodePropertyEscape(n, reg);
+          }
           break;
         }
 
@@ -137,6 +141,13 @@ public final class MarkUntranspilableFeaturesAsRemoved extends AbstractPostOrder
     checkArgument(regexpNode != null);
     if (anySubtreeMeetsPredicate(tree, t -> t instanceof LookbehindAssertion)) {
       reportUntranspilable(Feature.REGEXP_LOOKBEHIND, regexpNode);
+    }
+  }
+
+  private void checkForUnicodePropertyEscape(Node regexpNode, RegExpTree tree) {
+    checkArgument(regexpNode != null);
+    if (anySubtreeMeetsPredicate(tree, t -> t instanceof UnicodePropertyEscape)) {
+      reportUntranspilable(Feature.REGEXP_UNICODE_PROPERTY_ESCAPE, regexpNode);
     }
   }
 
