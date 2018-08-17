@@ -15,6 +15,7 @@
  */
 package com.google.javascript.jscomp;
 
+import static com.google.javascript.jscomp.CheckRegExp.MALFORMED_REGEXP;
 import static com.google.javascript.jscomp.MarkUntranspilableFeaturesAsRemoved.UNTRANSPILABLE_FEATURE_PRESENT;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
@@ -74,6 +75,10 @@ public class MarkUntranspilableFeaturesAsRemovedTest extends CompilerTestCase {
         UNTRANSPILABLE_FEATURE_PRESENT,
         "Cannot convert ECMASCRIPT2018 feature \"RegExp flag 's'\" to targeted output language. "
             + "Either remove feature \"RegExp flag 's'\" or raise output level to ECMASCRIPT2018.");
+  }
+
+  public void testInvalidRegExpReportsWarning() {
+    testWarning("const a = /([0-9a-zA-Z_\\-]{20,}/", MALFORMED_REGEXP);
   }
 
   public void testEs2018RegexLookbehind() {

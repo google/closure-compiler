@@ -17,6 +17,7 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.javascript.jscomp.CheckRegExp.MALFORMED_REGEXP;
 
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.parsing.Config.LanguageMode;
@@ -103,7 +104,13 @@ public final class MarkUntranspilableFeaturesAsRemoved extends AbstractPostOrder
         {
           String pattern = n.getFirstChild().getString();
           String flags = n.hasTwoChildren() ? n.getLastChild().getString() : "";
-          RegExpTree reg = RegExpTree.parseRegExp(pattern, flags);
+          RegExpTree reg;
+          try {
+            reg = RegExpTree.parseRegExp(pattern, flags);
+          } catch (IllegalArgumentException | IndexOutOfBoundsException ex) {
+            t.report(n, MALFORMED_REGEXP, ex.getMessage());
+            break;
+          }
           if (untranspilableFeaturesToRemove.contains(Feature.REGEXP_FLAG_S)) {
             checkForRegExpSFlag(n);
           }
