@@ -15,27 +15,29 @@
  */
 package com.google.javascript.jscomp.ijs;
 
-import com.google.javascript.jscomp.AbstractCompiler;
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import com.google.javascript.jscomp.CheckLevel;
-import com.google.javascript.jscomp.FileAwareWarningsGuard;
 import com.google.javascript.jscomp.JSError;
-import com.google.javascript.jscomp.NodeUtil;
-import com.google.javascript.rhino.Node;
+import com.google.javascript.jscomp.WarningsGuard;
 
 /**
- * A warnings guard that demotes the errors found in type summary files to be less severe,
- * leaving only the errors found in the original source.
+ * A warnings guard that demotes the errors found in type summary files to be less severe, leaving
+ * only the errors found in the original source.
  */
-public class CheckTypeSummaryWarningsGuard extends FileAwareWarningsGuard {
+public class CheckTypeSummaryWarningsGuard extends WarningsGuard {
 
-  public CheckTypeSummaryWarningsGuard(AbstractCompiler compiler) {
-    super(compiler);
+  private final CheckLevel level;
+
+  public CheckTypeSummaryWarningsGuard(CheckLevel level) {
+    this.level = level;
   }
 
   @Override
   public CheckLevel level(JSError error) {
+    checkNotNull(error);
     if (inTypeSummary(error)) {
-      return CheckLevel.OFF;
+      return this.level;
     }
     return null;
   }
@@ -48,7 +50,6 @@ public class CheckTypeSummaryWarningsGuard extends FileAwareWarningsGuard {
 
   /** Return whether the given error was produced inside a type summary file */
   private boolean inTypeSummary(JSError error) {
-    Node scriptNode = getScriptNodeForError(error);
-    return scriptNode != null && NodeUtil.isFromTypeSummary(scriptNode);
+    return error.sourceName != null && error.sourceName.endsWith(".i.js");
   }
 }
