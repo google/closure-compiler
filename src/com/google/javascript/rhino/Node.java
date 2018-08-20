@@ -2356,6 +2356,9 @@ public class Node implements Serializable {
       length = other.length;
     }
 
+    // TODO(lharker): should this be inside the above if condition?
+    // If the node already has a source file, it seems strange to
+    // go ahead and set the original name anyway.
     if (getProp(ORIGINALNAME_PROP) == null) {
       putProp(ORIGINALNAME_PROP, other.getProp(ORIGINALNAME_PROP));
     }

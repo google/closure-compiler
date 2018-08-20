@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.jscomp.TypeValidator.TYPE_MISMATCH_WARNING;
+import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
 import com.google.common.annotations.GwtIncompatible;
 import com.google.common.base.Joiner;
@@ -5819,5 +5820,46 @@ public final class IntegrationTest extends IntegrationTestCase {
         // feature. this is just a regression test so we won't accidentally break this feature.
         "var /** string */ str = 'foo'; (/** @type {?} */ (str)) = 3;",
         "");
+  }
+
+  public void testGetOriginalQualifiedNameAfterEs6RewriteClasses() {
+    // A bug in Es6RewriteClasses meant we were putting the wrong `originalName` on some nodes.
+    CompilerOptions options = createCompilerOptions();
+    // force SourceInformationAnnotator to run
+    options.setExternExports(true);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    options.setClosurePass(true);
+
+    test(
+        options,
+        lines(
+            "goog.module('a');",
+            "class Foo { static method() {} }",
+            "class Bar { foo() { Foo.method(); } }"),
+        lines(
+            "var module$exports$a = {};",
+            "/** @constructor @struct */",
+            "var module$contents$a_Foo = function() {};",
+            "module$contents$a_Foo.method = function() {};",
+            "",
+            "/** @constructor @struct */",
+            "var module$contents$a_Bar = function () {}",
+            "module$contents$a_Bar.prototype.foo = ",
+            "    function() { module$contents$a_Foo.method(); }"));
+
+    Node script = lastCompiler.getJsRoot().getFirstChild();
+
+    Node exprResult = script.getLastChild();
+    Node anonFunction = exprResult.getFirstChild().getLastChild();
+    assertNode(anonFunction).hasToken(Token.FUNCTION);
+    Node body = anonFunction.getLastChild();
+
+    Node callNode = body.getOnlyChild().getOnlyChild();
+    assertNode(callNode).hasToken(Token.CALL);
+
+    Node modulecontentsFooMethod = callNode.getFirstChild();
+    // Verify this is actually "Foo.method" - it used to be "Foo.foo".
+    assertThat(modulecontentsFooMethod.getOriginalQualifiedName()).isEqualTo("Foo.method");
+    assertThat(modulecontentsFooMethod.getSecondChild().getOriginalName()).isNull();
   }
 }

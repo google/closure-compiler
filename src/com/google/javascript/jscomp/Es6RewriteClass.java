@@ -459,7 +459,7 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, HotSwapCom
     Node assign = IR.assign(qualifiedMemberAccess, method);
     // Use the source info from the method (a FUNCTION) not the MEMBER_FUNCTION_DEF
     // because the MEMBER_FUNCTION_DEf source info only corresponds to the identifier
-    assign.useSourceInfoIfMissingFromForTree(method);
+    assign.useSourceInfoIfMissingFrom(method);
 
     JSDocInfo info = member.getJSDocInfo();
     if (member.isStaticMember() && NodeUtil.referencesThis(assign.getLastChild())) {
@@ -529,10 +529,10 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, HotSwapCom
   private static Node getQualifiedMemberAccess(Node member,
       Node staticAccess, Node instanceAccess) {
     Node context = member.isStaticMember() ? staticAccess : instanceAccess;
-    context = context.cloneTree();
+    context = context.cloneTree().useSourceInfoIfMissingFromForTree(member);
     context.makeNonIndexableRecursive();
     if (member.isComputedProp()) {
-      return IR.getelem(context, member.removeFirstChild());
+      return IR.getelem(context, member.removeFirstChild()).useSourceInfoFrom(member);
     } else {
       Node methodName = member.getFirstFirstChild();
       return IR.getprop(context, IR.string(member.getString()))
