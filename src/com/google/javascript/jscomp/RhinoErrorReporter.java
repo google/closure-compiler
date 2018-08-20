@@ -83,11 +83,11 @@ class RhinoErrorReporter {
       "set the appropriate language_in option.");
 
   static final DiagnosticType PARSE_TREE_TOO_DEEP =
-      DiagnosticType.error("PARSE_TREE_TOO_DEEP",
-          "Parse tree too deep.");
+      DiagnosticType.error("JSC_PARSE_TREE_TOO_DEEP", "Parse tree too deep.");
 
   static final DiagnosticType INVALID_OCTAL_LITERAL =
-      DiagnosticType.warning("INVALID_OCTAL_LITERAL",
+      DiagnosticType.warning(
+          "JSC_INVALID_OCTAL_LITERAL",
           "This style of octal literal is not supported in strict mode.");
 
   static final DiagnosticType STRING_CONTINUATION =
@@ -97,12 +97,13 @@ class RhinoErrorReporter {
       DiagnosticType.error("JSC_LANGUAGE_FEATURE", "{0}.");
 
   static final DiagnosticType ES6_TYPED =
-      DiagnosticType.error("ES6_TYPED",
+      DiagnosticType.error(
+          "JSC_ES6_TYPED",
           "{0}. Use --language_in=ECMASCRIPT6_TYPED to enable ES6 typed features.");
 
   static final DiagnosticType MISPLACED_TYPE_SYNTAX =
-      DiagnosticType.error("MISPLACED_TYPE_SYNTAX",
-          "Can only have JSDoc or inline type annotations, not both");
+      DiagnosticType.error(
+          "JSC_MISPLACED_TYPE_SYNTAX", "Can only have JSDoc or inline type annotations, not both");
 
   // A map of Rhino messages to their DiagnosticType.
   private final Map<Pattern, DiagnosticType> typeMap;
