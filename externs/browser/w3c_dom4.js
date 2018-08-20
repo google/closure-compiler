@@ -73,3 +73,87 @@ CharacterData.prototype.replaceWith = function(nodes) {};
  * @see https://dom.spec.whatwg.org/#dom-element-getattributenames
  */
 Element.prototype.getAttributeNames = function() {};
+
+/**
+ * @param {...(!Node|string)} nodes
+ * @return {undefined}
+ * @see https://dom.spec.whatwg.org/#dom-parentnode-append
+ */
+Element.prototype.append = function(nodes) {};
+
+/**
+ * @param {...(!Node|string)} nodes
+ * @return {undefined}
+ * @see https://dom.spec.whatwg.org/#dom-parentnode-append
+ */
+Document.prototype.append = function(nodes) {};
+
+/**
+ * @param {...(!Node|string)} nodes
+ * @return {undefined}
+ * @see https://dom.spec.whatwg.org/#dom-parentnode-append
+ */
+DocumentFragment.prototype.append = function(nodes) {};
+
+/**
+ * @param {...(!Node|string)} nodes
+ * @return {undefined}
+ * @see https://dom.spec.whatwg.org/#dom-parentnode-prepend
+ */
+Element.prototype.prepend = function(nodes) {};
+
+/**
+ * @param {...(!Node|string)} nodes
+ * @return {undefined}
+ * @see https://dom.spec.whatwg.org/#dom-parentnode-prepend
+ */
+Document.prototype.prepend = function(nodes) {};
+
+/**
+ * @param {...(!Node|string)} nodes
+ * @return {undefined}
+ * @see https://dom.spec.whatwg.org/#dom-parentnode-prepend
+ */
+DocumentFragment.prototype.prepend = function(nodes) {};
+
+/**
+ * @param {...(!Node|string)} nodes
+ * @return {undefined}
+ * @see https://dom.spec.whatwg.org/#dom-childnode-before
+ */
+Element.prototype.before = function(nodes) {};
+
+/**
+ * @param {...(!Node|string)} nodes
+ * @return {undefined}
+ * @see https://dom.spec.whatwg.org/#dom-childnode-before
+ */
+DocumentType.prototype.before = function(nodes) {};
+
+/**
+ * @param {...(!Node|string)} nodes
+ * @return {undefined}
+ * @see https://dom.spec.whatwg.org/#dom-childnode-before
+ */
+CharacterData.prototype.before = function(nodes) {};
+
+/**
+ * @param {...(!Node|string)} nodes
+ * @return {undefined}
+ * @see https://dom.spec.whatwg.org/#dom-childnode-after
+ */
+Element.prototype.after = function(nodes) {};
+
+/**
+ * @param {...(!Node|string)} nodes
+ * @return {undefined}
+ * @see https://dom.spec.whatwg.org/#dom-childnode-after
+ */
+DocumentType.prototype.after = function(nodes) {};
+
+/**
+ * @param {...(!Node|string)} nodes
+ * @return {undefined}
+ * @see https://dom.spec.whatwg.org/#dom-childnode-after
+ */
+CharacterData.prototype.after = function(nodes) {};
