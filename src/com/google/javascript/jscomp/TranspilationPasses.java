@@ -110,6 +110,8 @@ public class TranspilationPasses {
       passes.add(
           getEs6RewriteDestructuring(ObjectDestructuringRewriteMode.REWRITE_ALL_OBJECT_PATTERNS));
       passes.add(es6RewriteArrowFunction);
+      passes.add(es6ExtractClasses);
+      passes.add(es6RewriteClass);
       passes.add(es6InjectRuntimeLibraries);
 
       if (!options.checksOnly) {
@@ -117,8 +119,6 @@ public class TranspilationPasses {
         // support the transpiled features.
         // TODO(b/73387406): Move each pass above here temporarily, then into
         // addEs6PostCheck Passes once the pass supports propagating type information
-        passes.add(es6ExtractClasses);
-        passes.add(es6RewriteClass);
       }
     } else if (options.needsTranspilationOf(Feature.OBJECT_PATTERN_REST)) {
       passes.add(es6RenameVariablesInParamLists);
