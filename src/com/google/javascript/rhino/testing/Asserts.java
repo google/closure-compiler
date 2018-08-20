@@ -39,10 +39,10 @@
 
 package com.google.javascript.rhino.testing;
 
-import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
+import static com.google.javascript.rhino.testing.TypeSubject.types;
 
-import com.google.common.base.Joiner;
 import com.google.common.collect.Iterables;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.jstype.JSType;
@@ -73,28 +73,8 @@ public class Asserts {
     assertTypeNotEquals("", a, b);
   }
 
-  public static void assertTypeNotEquals(String message, JSType a, JSType b) {
-    if (!message.isEmpty()) {
-      message += "\n";
-    }
-    String aDebug = debugStringOf(a);
-    String bDebug = debugStringOf(b);
-
-    Assert.assertFalse(
-        lines(
-            message,
-            "Type should not be equal.",
-            "First type              : " + aDebug,
-            "was equal to second type: " + bDebug),
-        a.isEquivalentTo(b));
-    Assert.assertFalse(
-        lines(
-            message,
-            "Inequality was found to be asymmetric.",
-            "Type should not be equal.",
-            "First type              : " + aDebug,
-            "was equal to second type: " + bDebug),
-        b.isEquivalentTo(a));
+  public static void assertTypeNotEquals(String message, JSType expected, JSType actual) {
+    assertWithMessage(message).about(types()).that(actual).isNotEqualTo(expected);
   }
 
   public static void assertTypeEquals(JSType a, JSType b) {
@@ -102,46 +82,7 @@ public class Asserts {
   }
 
   public static void assertTypeEquals(String message, JSType expected, JSType actual) {
-    checkNotNull(expected);
-    checkNotNull(actual);
-
-    if (!message.isEmpty()) {
-      message += "\n";
-    }
-    String expectedDebug = debugStringOf(expected);
-    String actualDebug = debugStringOf(actual);
-
-    Assert.assertTrue(
-        lines(
-            message, //
-            "Types should be equal.",
-            "Expected: " + expectedDebug,
-            "Actual  : " + actualDebug),
-        expected.isEquivalentTo(actual, true));
-    Assert.assertTrue(
-        lines(
-            message,
-            "Equality was found to be asymmetric.",
-            "Types should be equal.",
-            "Expected: " + expectedDebug,
-            "Actual  : " + actualDebug),
-        actual.isEquivalentTo(expected, true));
-
-    // Recall the `equals-hashCode` contract: if two objects report being equal, their hashcodes
-    // must also be equal. Breaking this contract breaks structures that depend on it (e.g.
-    // `HashMap`).
-    //
-    // The implementations of `hashCode()` and `equals()` are a bit tricky in some of the `JSType`
-    // classes, so we want to check specifically that this contract is fulfilled in all the unit
-    // tests involving them.
-    Assert.assertEquals(
-        lines(
-            message,
-            "Types violate the `equals-hashCode`: types report e `hashCode()`s do not match.",
-            "Expected: " + expected.hashCode() + " [on " + expectedDebug + "]",
-            "Actual  : " + actual.hashCode() + " [on " + actualDebug + "]"),
-        expected.hashCode(),
-        actual.hashCode());
+    assertWithMessage(message).about(types()).that(actual).isStructurallyEqualTo(expected);
   }
 
   public static <T extends JSType, S extends JSType> void
@@ -182,15 +123,5 @@ public class Asserts {
     Assert.assertTrue(a.canCastTo(a));
     Assert.assertTrue(b.canCastTo(b));
     Assert.assertTrue(b.canCastTo(a));
-  }
-
-  private static String debugStringOf(JSType type) {
-    return (type == null)
-        ? "<Java null>"
-        : type.toString() + " [instanceof " + type.getClass().getName() + "]";
-  }
-
-  private static final String lines(String... lines) {
-    return Joiner.on("\n").join(lines);
   }
 }
