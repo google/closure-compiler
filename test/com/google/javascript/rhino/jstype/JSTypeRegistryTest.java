@@ -52,11 +52,11 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.NULL_VOID;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NUMBER_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.STRING_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.STRING_VALUE_OR_OBJECT_TYPE;
+import static com.google.javascript.rhino.testing.TypeSubject.assertType;
 import static com.google.javascript.rhino.testing.TypeSubject.types;
 
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-import com.google.javascript.rhino.testing.Asserts;
 import junit.framework.TestCase;
 
 /**
@@ -68,40 +68,38 @@ public class JSTypeRegistryTest extends TestCase {
   // now much larger
   public void testGetBuiltInType_boolean() {
     JSTypeRegistry typeRegistry = new JSTypeRegistry(null);
-    assertTypeEquals(
-        typeRegistry.getNativeType(JSTypeNative.BOOLEAN_TYPE),
-        typeRegistry.getType(null, "boolean"));
+    assertType(typeRegistry.getType(null, "boolean"))
+        .isStructurallyEqualTo(typeRegistry.getNativeType(JSTypeNative.BOOLEAN_TYPE));
   }
 
   public void testGetBuiltInType_iterable() {
     JSTypeRegistry typeRegistry = new JSTypeRegistry(null);
-    assertTypeEquals(
-        typeRegistry.getNativeType(ITERABLE_TYPE), typeRegistry.getGlobalType("Iterable"));
+    assertType(typeRegistry.getGlobalType("Iterable"))
+        .isStructurallyEqualTo(typeRegistry.getNativeType(ITERABLE_TYPE));
   }
 
   public void testGetBuiltInType_iterator() {
     JSTypeRegistry typeRegistry = new JSTypeRegistry(null);
-    assertTypeEquals(
-        typeRegistry.getNativeType(ITERATOR_TYPE), typeRegistry.getGlobalType("Iterator"));
+    assertType(typeRegistry.getGlobalType("Iterator"))
+        .isStructurallyEqualTo(typeRegistry.getNativeType(ITERATOR_TYPE));
   }
 
   public void testGetBuiltInType_generator() {
     JSTypeRegistry typeRegistry = new JSTypeRegistry(null);
-    assertTypeEquals(
-        typeRegistry.getNativeType(GENERATOR_TYPE), typeRegistry.getGlobalType("Generator"));
+    assertType(typeRegistry.getGlobalType("Generator"))
+        .isStructurallyEqualTo(typeRegistry.getNativeType(GENERATOR_TYPE));
   }
 
   public void testGetBuildInType_iTemplateArray() {
     JSTypeRegistry typeRegistry = new JSTypeRegistry(null);
-    assertTypeEquals(
-        typeRegistry.getNativeType(I_TEMPLATE_ARRAY_TYPE),
-        typeRegistry.getGlobalType("ITemplateArray"));
+    assertType(typeRegistry.getGlobalType("ITemplateArray"))
+        .isStructurallyEqualTo(typeRegistry.getNativeType(I_TEMPLATE_ARRAY_TYPE));
   }
 
   public void testGetBuiltInType_Promise() {
     JSTypeRegistry registry = new JSTypeRegistry(null);
     ObjectType promiseType = registry.getNativeObjectType(JSTypeNative.PROMISE_TYPE);
-    assertTypeEquals(promiseType, registry.getGlobalType("Promise"));
+    assertType(registry.getGlobalType("Promise")).isStructurallyEqualTo(promiseType);
 
     // Test that it takes one parameter of type
     // function(function((IThenable<TYPE>|TYPE|null|{then: ?})=): ?, function(*=): ?): ?
@@ -120,12 +118,12 @@ public class JSTypeRegistryTest extends TestCase {
     JSType type = typeRegistry.createAnonymousObjectType(null);
     String name = "Foo";
     typeRegistry.declareType(null, name, type);
-    assertTypeEquals(type, typeRegistry.getType(null, name));
+    assertType(typeRegistry.getType(null, name)).isStructurallyEqualTo(type);
 
     // Ensure different instances are independent.
     JSTypeRegistry typeRegistry2 = new JSTypeRegistry(null);
     assertEquals(null, typeRegistry2.getType(null, name));
-    assertTypeEquals(type, typeRegistry.getType(null, name));
+    assertType(typeRegistry.getType(null, name)).isStructurallyEqualTo(type);
   }
 
   public void testPropertyOnManyTypes() {
@@ -195,9 +193,5 @@ public class JSTypeRegistryTest extends TestCase {
     Node n = new Node(Token.ADD);
     n.setJSType(type);
     return registry.getReadableJSTypeName(n, deref);
-  }
-
-  private void assertTypeEquals(JSType a, JSType b) {
-    Asserts.assertTypeEquals(a, b);
   }
 }

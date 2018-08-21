@@ -47,13 +47,13 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.BOOLEAN_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NUMBER_OBJECT_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NUMBER_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.STRING_TYPE;
+import static com.google.javascript.rhino.testing.TypeSubject.assertType;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
-import com.google.javascript.rhino.testing.Asserts;
 import com.google.javascript.rhino.testing.TestErrorReporter;
 import java.util.Collection;
 import junit.framework.TestCase;
@@ -86,7 +86,7 @@ public class JSDocInfoTest extends TestCase {
     assertNull(info.getEnumParameterType());
     assertEquals(0, info.getParameterCount());
     assertNull(info.getReturnType());
-    assertTypeEquals(STRING_TYPE, resolve(info.getType()));
+    assertType(resolve(info.getType())).isStructurallyEqualTo(getNativeType(STRING_TYPE));
     assertNull(info.getVisibility());
     assertTrue(info.hasType());
     assertFalse(info.isConstant());
@@ -104,7 +104,7 @@ public class JSDocInfoTest extends TestCase {
     assertNull(info.getEnumParameterType());
     assertEquals(0, info.getParameterCount());
     assertNull(info.getReturnType());
-    assertTypeEquals(STRING_TYPE, resolve(info.getType()));
+    assertType(resolve(info.getType())).isStructurallyEqualTo(getNativeType(STRING_TYPE));
     assertEquals(PROTECTED, info.getVisibility());
     assertTrue(info.hasType());
     assertFalse(info.isConstant());
@@ -120,7 +120,7 @@ public class JSDocInfoTest extends TestCase {
     assertNull(info.getDescription());
     assertNull(info.getEnumParameterType());
     assertEquals(0, info.getParameterCount());
-    assertTypeEquals(STRING_TYPE, resolve(info.getReturnType()));
+    assertType(resolve(info.getReturnType())).isStructurallyEqualTo(getNativeType(STRING_TYPE));
     assertNull(info.getType());
     assertNull(info.getVisibility());
     assertFalse(info.hasType());
@@ -136,12 +136,12 @@ public class JSDocInfoTest extends TestCase {
             new Node(Token.BANG, Node.newString("Number")), ""));
     info.setReturnType(fromString("string"));
 
-    assertTypeEquals(NUMBER_OBJECT_TYPE,
-        resolve(info.getBaseType()));
+    assertType(resolve(info.getBaseType()))
+        .isStructurallyEqualTo(getNativeType(NUMBER_OBJECT_TYPE));
     assertNull(info.getDescription());
     assertNull(info.getEnumParameterType());
     assertEquals(0, info.getParameterCount());
-    assertTypeEquals(STRING_TYPE, resolve(info.getReturnType()));
+    assertType(resolve(info.getReturnType())).isStructurallyEqualTo(getNativeType(STRING_TYPE));
     assertNull(info.getType());
     assertNull(info.getVisibility());
     assertFalse(info.hasType());
@@ -156,8 +156,8 @@ public class JSDocInfoTest extends TestCase {
 
     assertNull(info.getBaseType());
     assertNull(info.getDescription());
-    assertTypeEquals(STRING_TYPE,
-        resolve(info.getEnumParameterType()));
+    assertType(resolve(info.getEnumParameterType()))
+        .isStructurallyEqualTo(getNativeType(STRING_TYPE));
     assertEquals(0, info.getParameterCount());
     assertNull(info.getReturnType());
     assertNull(info.getType());
@@ -193,7 +193,7 @@ public class JSDocInfoTest extends TestCase {
       // expected
     }
 
-    assertTypeEquals(NUMBER_TYPE, resolve(info.getType()));
+    assertType(resolve(info.getType())).isStructurallyEqualTo(getNativeType(NUMBER_TYPE));
     assertNull(info.getReturnType());
     assertNull(info.getEnumParameterType());
     assertNull(info.getTypedefType());
@@ -226,8 +226,7 @@ public class JSDocInfoTest extends TestCase {
       // expected
     }
 
-    assertTypeEquals(BOOLEAN_TYPE,
-        resolve(info.getReturnType()));
+    assertType(resolve(info.getReturnType())).isStructurallyEqualTo(getNativeType(BOOLEAN_TYPE));
     assertNull(info.getEnumParameterType());
     assertNull(info.getType());
     assertNull(info.getTypedefType());
@@ -262,16 +261,15 @@ public class JSDocInfoTest extends TestCase {
     assertNull(info.getType());
     assertNull(info.getTypedefType());
     assertNull(info.getReturnType());
-    assertTypeEquals(BOOLEAN_TYPE,
-        resolve(info.getEnumParameterType()));
+    assertType(resolve(info.getEnumParameterType()))
+        .isStructurallyEqualTo(getNativeType(BOOLEAN_TYPE));
   }
 
   public void testSetTypedefType() {
     JSDocInfo info = new JSDocInfo();
     info.declareTypedefType(fromString("boolean"));
 
-    assertTypeEquals(BOOLEAN_TYPE,
-        resolve(info.getTypedefType()));
+    assertType(resolve(info.getTypedefType())).isStructurallyEqualTo(getNativeType(BOOLEAN_TYPE));
     assertTrue(info.hasTypedefType());
     assertFalse(info.hasType());
     assertFalse(info.hasEnumParameterType());
@@ -452,9 +450,10 @@ public class JSDocInfoTest extends TestCase {
 
     JSDocInfo cloned = info.clone();
 
-    assertTypeEquals(NUMBER_OBJECT_TYPE, resolve(cloned.getBaseType()));
+    assertType(resolve(cloned.getBaseType()))
+        .isStructurallyEqualTo(getNativeType(NUMBER_OBJECT_TYPE));
     assertEquals("The source info", cloned.getDescription());
-    assertTypeEquals(STRING_TYPE, resolve(cloned.getReturnType()));
+    assertType(resolve(cloned.getReturnType())).isStructurallyEqualTo(getNativeType(STRING_TYPE));
     assertTrue(cloned.isConstant());
     assertTrue(cloned.isConstructor());
     assertTrue(cloned.isHidden());
@@ -463,14 +462,15 @@ public class JSDocInfoTest extends TestCase {
     cloned.setHidden(false);
     cloned.setBaseType(fromString("string"));
 
-    assertTypeEquals(STRING_TYPE, resolve(cloned.getBaseType()));
+    assertType(resolve(cloned.getBaseType())).isStructurallyEqualTo(getNativeType(STRING_TYPE));
     assertEquals("The cloned info", cloned.getDescription());
     assertFalse(cloned.isHidden());
 
     // Original info should be unchanged.
-    assertTypeEquals(NUMBER_OBJECT_TYPE, resolve(info.getBaseType()));
+    assertType(resolve(info.getBaseType()))
+        .isStructurallyEqualTo(getNativeType(NUMBER_OBJECT_TYPE));
     assertEquals("The source info", info.getDescription());
-    assertTypeEquals(STRING_TYPE, resolve(info.getReturnType()));
+    assertType(resolve(info.getReturnType())).isStructurallyEqualTo(getNativeType(STRING_TYPE));
     assertTrue(info.isConstant());
     assertTrue(info.isConstructor());
     assertTrue(info.isHidden());
@@ -491,12 +491,14 @@ public class JSDocInfoTest extends TestCase {
     JSDocInfo cloned = info.clone(true);
 
     assertNotSame(info.getBaseType().getRoot(), cloned.getBaseType().getRoot());
-    assertTypeEquals(NUMBER_OBJECT_TYPE, resolve(cloned.getBaseType()));
+    assertType(resolve(cloned.getBaseType()))
+        .isStructurallyEqualTo(getNativeType(NUMBER_OBJECT_TYPE));
     assertEquals("The source info", cloned.getDescription());
     assertNotSame(info.getReturnType().getRoot(), cloned.getReturnType().getRoot());
-    assertTypeEquals(STRING_TYPE, resolve(cloned.getReturnType()));
+    assertType(resolve(cloned.getReturnType())).isStructurallyEqualTo(getNativeType(STRING_TYPE));
     assertNotSame(info.getParameterType("a").getRoot(), cloned.getParameterType("a").getRoot());
-    assertTypeEquals(STRING_TYPE, resolve(cloned.getParameterType("a")));
+    assertType(resolve(cloned.getParameterType("a")))
+        .isStructurallyEqualTo(getNativeType(STRING_TYPE));
   }
 
   public void testCloneTypeExpressions2() {
@@ -590,13 +592,5 @@ public class JSDocInfoTest extends TestCase {
   private JSType resolve(JSTypeExpression n, String... warnings) {
     errorReporter.setWarnings(warnings);
     return n.evaluate(null, registry);
-  }
-
-  private void assertTypeEquals(JSTypeNative a, JSType b) {
-    assertTypeEquals(getNativeType(a), b);
-  }
-
-  private void assertTypeEquals(JSType a, JSType b) {
-    Asserts.assertTypeEquals(a, b);
   }
 }
