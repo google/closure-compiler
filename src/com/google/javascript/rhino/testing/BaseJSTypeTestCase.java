@@ -39,6 +39,10 @@
 
 package com.google.javascript.rhino.testing;
 
+import static com.google.common.truth.Truth.assertWithMessage;
+import static com.google.javascript.rhino.testing.TypeSubject.assertType;
+import static com.google.javascript.rhino.testing.TypeSubject.types;
+
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -370,11 +374,11 @@ public abstract class BaseJSTypeTestCase extends TestCase {
   }
 
   protected final void assertTypeEquals(JSType a, JSType b) {
-    Asserts.assertTypeEquals(a, b);
+    assertType(b).isStructurallyEqualTo(a);
   }
 
   protected final void assertTypeEquals(String msg, JSType a, JSType b) {
-    Asserts.assertTypeEquals(msg, a, b);
+    assertWithMessage(msg).about(types()).that(b).isStructurallyEqualTo(a);
   }
 
   /**
@@ -534,7 +538,7 @@ public abstract class BaseJSTypeTestCase extends TestCase {
       "function ActiveXObject(progId, opt_location) {}");
 
   protected final void assertTypeNotEquals(JSType a, JSType b) {
-    Asserts.assertTypeNotEquals(a, b);
+    assertType(b).isNotEqualTo(a);
   }
 
   protected static String lines(String line) {
