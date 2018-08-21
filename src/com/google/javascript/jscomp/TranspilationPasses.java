@@ -79,12 +79,9 @@ public class TranspilationPasses {
         markUntranspilableFeaturesAsRemoved(
             options.getLanguageIn().toFeatureSet(), options.getOutputFeatureSet()));
 
-    if (options.needsTranspilationFrom(ES_NEXT)) {
-      passes.add(rewriteAsyncIteration);
-    }
-
     if (options.needsTranspilationFrom(ES2018)) {
-      passes.add(rewriteObjRestSpread);
+      passes.add(rewriteAsyncIteration);
+      passes.add(rewriteObjectSpread);
     }
 
     if (options.needsTranspilationFrom(ES8)) {
@@ -112,6 +109,9 @@ public class TranspilationPasses {
       passes.add(es6RewriteArrowFunction);
       passes.add(es6ExtractClasses);
       passes.add(es6RewriteClass);
+      // TODO(bradfordcsmith): Inject runtime libraries now includes async generator support
+      //     (ES_2018), so this should be moved earlier and possibly run unconditionally by this
+      //     method, since it will itself detect what it needs to inject or doesn't need to inject.
       passes.add(es6InjectRuntimeLibraries);
 
       if (!options.checksOnly) {
@@ -241,8 +241,8 @@ public class TranspilationPasses {
         }
       };
 
-  private static final PassFactory rewriteObjRestSpread =
-      new HotSwapPassFactory("rewriteObjRestSpread") {
+  private static final PassFactory rewriteObjectSpread =
+      new HotSwapPassFactory("rewriteObjectSpread") {
         @Override
         protected HotSwapCompilerPass create(final AbstractCompiler compiler) {
           return new RewriteObjectSpread(compiler);
