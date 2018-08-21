@@ -1971,15 +1971,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   void hoistExterns() {
     boolean staleInputs = false;
     for (CompilerInput input : inputs) {
-      // TODO(b/65450037): Remove this if. All @externs annotated files should be hoisted.
-      if (options.dependencyOptions.needsManagement()) {
-        // If we're doing scanning dependency info anyway, use that
-        // information to skip sources that obviously aren't externs.
-        if (!input.getProvides().isEmpty() || !input.getRequires().isEmpty()) {
-          continue;
-        }
-      }
-
       if (hoistIfExtern(input)) {
         staleInputs = true;
       }

@@ -5862,4 +5862,74 @@ public final class IntegrationTest extends IntegrationTestCase {
     assertThat(modulecontentsFooMethod.getOriginalQualifiedName()).isEqualTo("Foo.method");
     assertThat(modulecontentsFooMethod.getSecondChild().getOriginalName()).isNull();
   }
+
+  public void testExternsWithGoogProvide() {
+    CompilerOptions options = createCompilerOptions();
+    options.setClosurePass(true);
+    options.setChecksOnly(true);
+    options.setCheckGlobalNamesLevel(CheckLevel.ERROR);
+    options.getDependencyOptions().setDependencySorting(true);
+
+    test(
+        options,
+        lines(
+            "var ns = {};",
+            // generally it's not allowed to access undefined namespaces
+            "ns.subns.foo = function() {};"),
+        CheckGlobalNames.UNDEFINED_NAME_WARNING);
+
+    testSame(
+        options,
+        lines(
+            "/** @externs */",
+            "var ns = {};",
+            // but @externs annotation hoists code to externs, where it is allowed
+            "ns.subns.foo = function() {};"));
+
+    testSame(
+        options,
+        lines(
+            "/** @externs */",
+            "var ns = {};",
+            "ns.subns.foo = function() {};",
+            // even when there is a goog.provide statement
+            "goog.provide('provided');"));
+  }
+
+  public void testExternsWithGoogProvide_required() {
+    CompilerOptions options = createCompilerOptions();
+    options.setClosurePass(true);
+    options.setChecksOnly(true);
+    options.setCheckGlobalNamesLevel(CheckLevel.ERROR);
+    options.getDependencyOptions().setDependencySorting(true);
+    String externs =
+        lines(
+            "/** @externs */",
+            "/** @const */",
+            "var mangled$name$from$externs = {};",
+            "/** @constructor */",
+            "mangled$name$from$externs.Clazz = function() {};",
+            "goog.provide('ns.from.externs');",
+            "/** @const */ var ns = {};",
+            "/** @const */ ns.from = {};",
+            "ns.from.externs = mangled$name$from$externs;");
+
+    test(
+        options,
+        new String[] {
+          externs,
+          lines(
+              "goog.module('ns.from.other');",
+              "exports = {val: 1};",
+              "/** @type {ns.from.externs.Clazz} */",
+              "var usingExterns = null;"),
+        },
+        new String[] {
+          "",
+          lines(
+              "var module$exports$ns$from$other = {val: 1};",
+              "/** @type {ns.from.externs.Clazz} */",
+              "var module$contents$ns$from$other_usingExterns = null;"),
+        });
+  }
 }
