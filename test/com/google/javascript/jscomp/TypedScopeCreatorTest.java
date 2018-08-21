@@ -28,6 +28,7 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.NUMBER_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.OBJECT_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.STRING_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.UNKNOWN_TYPE;
+import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 import static com.google.javascript.rhino.testing.TypeSubject.assertType;
 
 import com.google.common.base.Predicate;
@@ -2000,18 +2001,67 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     assertScope(globalScope).declares("Foo").withTypeThat().isEqualTo(foo);
   }
 
+  public void testClassDeclarationWithoutConstructor() {
+    testSame("class Foo {}");
+
+    FunctionType fooClass = (FunctionType) findNameType("Foo", globalScope);
+    ObjectType fooProto = fooClass.getPrototype();
+
+    // Test class typing.
+    assertTrue(fooClass.isConstructor());
+
+    // Test constructor property.
+    assertThat(fooProto.hasOwnProperty("constructor")).isTrue();
+    assertNode(fooProto.getOwnPropertyDefSite("constructor")).isNull();
+    assertType(fooProto)
+        .withTypeOfProp("constructor")
+        .toStringIsEqualTo("function(new:Foo, ...?): ?");
+  }
+
   public void testClassDeclarationWithConstructor() {
     testSame(
         lines(
             "class Foo {", //
             "  /** @param {number} arg */",
-            "  constructor(arg) {}",
+            "  constructor(arg) {",
+            "    CTOR_BODY:;",
+            "  }",
             "}"));
-    FunctionType foo = (FunctionType) (findNameType("Foo", globalScope));
-    assertTrue(foo.isConstructor());
-    List<JSType> params = ImmutableList.copyOf(foo.getParameterTypes());
+
+    FunctionType fooClass = (FunctionType) findNameType("Foo", globalScope);
+    ObjectType fooProto = fooClass.getPrototype();
+    List<JSType> params = ImmutableList.copyOf(fooClass.getParameterTypes());
+    Node ctorDef = getLabeledStatement("CTOR_BODY").statementNode.getAncestor(3);
+
+    // Test class typing.
+    assertTrue(fooClass.isConstructor());
     assertThat(params).hasSize(1);
     assertType(params.get(0)).isNumber();
+
+    // Test constructor property.
+    assertThat(fooProto.hasOwnProperty("constructor")).isTrue();
+    assertNode(fooProto.getOwnPropertyDefSite("constructor")).isSameAs(ctorDef);
+    assertType(fooProto)
+        .withTypeOfProp("constructor")
+        .toStringIsEqualTo("function(new:Foo, ...?): ?");
+  }
+
+  public void testInterfaceClassDeclarationWithConstructor() {
+    testSame(
+        lines(
+            "/** @interface */", //
+            "class Foo {",
+            "  constructor(arg) {}",
+            "}"));
+
+    FunctionType fooClass = (FunctionType) findNameType("Foo", globalScope);
+    ObjectType fooProto = fooClass.getPrototype();
+
+    // Test class typing.
+    assertTrue(fooClass.isInterface());
+
+    // Test constructor property.
+    assertThat(fooProto.hasOwnProperty("constructor")).isFalse();
   }
 
   public void testClassDeclarationWithExtends() {
@@ -2043,10 +2093,22 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
             "  constructor(/** string */ arg) {}",
             "}",
             "class Foo extends Bar {}"));
-    FunctionType foo = (FunctionType) (findNameType("Foo", globalScope));
-    List<JSType> params = ImmutableList.copyOf(foo.getParameterTypes());
+
+    FunctionType fooClass = (FunctionType) findNameType("Foo", globalScope);
+    ObjectType fooProto = fooClass.getPrototype();
+    List<JSType> params = ImmutableList.copyOf(fooClass.getParameterTypes());
+
+    // Test class typing.
+    assertTrue(fooClass.isConstructor());
     assertThat(params).hasSize(1);
     assertType(params.get(0)).isString();
+
+    // Test constructor property.
+    assertThat(fooProto.hasOwnProperty("constructor")).isTrue();
+    assertNode(fooProto.getOwnPropertyDefSite("constructor")).isNull();
+    assertType(fooProto)
+        .withTypeOfProp("constructor")
+        .toStringIsEqualTo("function(new:Foo, ...?): ?");
   }
 
   public void testClassDeclarationWithOverriddenConstructor() {
@@ -2056,25 +2118,30 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
             "  constructor(/** string */ arg) {}",
             "}",
             "class Foo extends Bar {",
-            "  constructor(/** number */ arg) { super(''); }",
+            "  constructor(/** number */ arg) { CTOR_BODY:super(''); }",
             "  static method() {}",
             "}"));
+
     FunctionType bar = (FunctionType) (findNameType("Bar", globalScope));
+    ObjectType barObject = bar.getInstanceType();
+    JSType barConstructorProperty = barObject.getPropertyType("constructor");
+
     FunctionType foo = (FunctionType) (findNameType("Foo", globalScope));
+    ObjectType fooObject = foo.getInstanceType();
+    ObjectType fooProto = foo.getPrototype();
+    JSType fooConstructorProperty = fooObject.getPropertyType("constructor");
+    Node fooCtorDef = getLabeledStatement("CTOR_BODY").statementNode.getAncestor(3);
+
     assertType(foo).withTypeOfProp("method").isNotUnknown();
     assertType(foo).withTypeOfProp("method").isNotEmpty();
-
-    ObjectType barObject = bar.getInstanceType();
-    ObjectType fooObject = foo.getInstanceType();
 
     List<JSType> params = ImmutableList.copyOf(foo.getParameterTypes());
     assertThat(params).hasSize(1);
     assertType(params.get(0)).isNumber();
-    JSType barConstructorProperty = barObject.getPropertyType("constructor");
     assertType(barConstructorProperty).toStringIsEqualTo("function(new:Bar, ...?): ?");
 
-    JSType fooConstructorProperty = fooObject.getPropertyType("constructor");
     assertType(fooConstructorProperty).toStringIsEqualTo("function(new:Foo, ...?): ?");
+    assertNode(fooProto.getOwnPropertyDefSite("constructor")).isSameAs(fooCtorDef);
 
     assertType(fooConstructorProperty).isSubtypeOf(barConstructorProperty);
     assertType(fooConstructorProperty).withTypeOfProp("method").isNotUnknown();

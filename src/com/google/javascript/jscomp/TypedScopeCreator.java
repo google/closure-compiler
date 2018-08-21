@@ -1093,7 +1093,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
 
         FunctionType qmarkCtor = classType.forgetParameterAndReturnTypes();
         ObjectType classPrototypeType = classType.getPrototypeProperty();
-        classPrototypeType.defineDeclaredProperty("constructor", qmarkCtor, classType.getSource());
+        classPrototypeType.defineDeclaredProperty("constructor", qmarkCtor, constructor);
       }
 
       return classType;
@@ -2748,6 +2748,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
             .allowLaterTypeInference(false)
             .defineSlot();
       } else if (n.isMemberFunctionDef() && !"constructor".equals(n.getString())) {
+        // Ignore "constructor" since it has special handling in `createClassTypeFromNodes()`.
         defineMemberFunction(n);
       } else if (n.isGetterDef() || n.isSetterDef()) {
         defineGetterSetter(n);
