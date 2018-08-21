@@ -1398,6 +1398,21 @@ public final class CheckConformanceTest extends CompilerTestCase {
             "const f = () => void foo.prop;"));
   }
 
+  public void testCustomBanUnknownProp_GetPropInDestructuringDoesntCauseSpuriousWarning() {
+    configuration =
+        config(rule("BanUnknownTypedClassPropsReferences"), "My rule message", value("String"));
+    test(
+        externs("var unknownItem;"),
+        srcs(
+            lines(
+                "/** @constructor */",
+                "function Foo() {}",
+                "const foo = new Foo();",
+                // note that `foo.prop` is unknown here, but we don't warn because it's not being
+                // used
+                "[foo.prop] = unknownItem;")));
+  }
+
   public void testCustomBanUnknownInterfaceProp1() {
     configuration =
         config(rule("BanUnknownTypedClassPropsReferences"), "My rule message", value("String"));

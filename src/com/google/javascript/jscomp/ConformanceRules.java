@@ -262,14 +262,10 @@ public final class ConformanceRules {
     }
   }
 
-
-
-
   abstract static class AbstractTypeRestrictionRule extends AbstractRule {
     private final JSType nativeObjectType;
     private final JSType whitelistedTypes;
     private final ImmutableList<Node> assertionsFunctionNames;
-
 
     public AbstractTypeRestrictionRule(AbstractCompiler compiler, Requirement requirement)
         throws InvalidRequirementSpec {
@@ -367,10 +363,19 @@ public final class ConformanceRules {
     }
 
     protected boolean isUsed(Node n) {
-      return !n.getParent().isName()
-          && ((NodeUtil.isAssignmentOp(n.getParent()))
-              ? NodeUtil.isExpressionResultUsed(n.getParent())
-              : NodeUtil.isExpressionResultUsed(n));
+      if (n.getParent().isName() || NodeUtil.isLhsByDestructuring(n)) {
+        return false;
+      }
+
+      // Consider lvalues in assignment operations to be used iff the actual assignment
+      // operation's result is used. e.g. for `a.b.c`:
+      //     USED: `alert(x = a.b.c);`
+      //   UNUSED: `x = a.b.c;`
+      if (NodeUtil.isAssignmentOp(n.getParent())) {
+        return NodeUtil.isExpressionResultUsed(n.getParent());
+      }
+
+      return NodeUtil.isExpressionResultUsed(n);
     }
   }
 
