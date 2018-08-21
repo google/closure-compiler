@@ -1497,6 +1497,22 @@ public final class CheckConformanceTest extends CompilerTestCase {
             "});"));
   }
 
+  public void testCustomBanGlobalVarsWithDestructuring() {
+    configuration =
+        "requirement: {\n"
+            + "  type: CUSTOM\n"
+            + "  java_class: 'com.google.javascript.jscomp.ConformanceRules$BanGlobalVars'\n"
+            + "  error_message: 'BanGlobalVars Message'\n"
+            + "}";
+
+    testWarning(
+        "var [x] = [];",
+        CheckConformance.CONFORMANCE_VIOLATION,
+        "Violation: BanGlobalVars Message");
+
+    testNoWarning("/** @externs */ var [x] = [];");
+  }
+
   public void testRequireFileoverviewVisibility() {
     configuration =
         "requirement: {\n" +

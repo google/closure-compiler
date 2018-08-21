@@ -1458,8 +1458,21 @@ public final class ConformanceRules {
       if (n.isFromExterns()) {
         return true;
       }
-      return (NodeUtil.isNameDeclaration(n) || n.isFunction())
-          && isWhitelistedName(n.getFirstChild().getString());
+
+      if (n.isFunction()) {
+        return isWhitelistedName(n.getFirstChild().getString());
+      }
+
+      if (NodeUtil.isNameDeclaration(n)) {
+        for (Node name : NodeUtil.findLhsNodesInNode(n)) {
+          if (!isWhitelistedName(name.getString())) {
+            return false;
+          }
+        }
+        return true;
+      }
+
+      return false;
     }
 
     private boolean isWhitelistedName(String name) {
