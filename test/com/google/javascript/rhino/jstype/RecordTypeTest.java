@@ -38,6 +38,8 @@
 
 package com.google.javascript.rhino.jstype;
 
+import static com.google.javascript.rhino.testing.TypeSubject.assertType;
+
 import com.google.javascript.rhino.jstype.JSType.Nullability;
 import com.google.javascript.rhino.testing.Asserts;
 import com.google.javascript.rhino.testing.BaseJSTypeTestCase;
@@ -118,15 +120,11 @@ public class RecordTypeTest extends BaseJSTypeTestCase {
 
     JSType aSupC = registry.createUnionType(recordA, recordC);
 
-    Asserts.assertTypeEquals(
-        aInfC, recordA.getGreatestSubtype(recordC));
-    Asserts.assertTypeEquals(
-        aSupC, recordA.getLeastSupertype(recordC));
+    assertType(recordA.getGreatestSubtype(recordC)).isStructurallyEqualTo(aInfC);
+    assertType(recordA.getLeastSupertype(recordC)).isStructurallyEqualTo(aSupC);
 
-    Asserts.assertTypeEquals(
-        aInfC, proxyRecordA.getGreatestSubtype(proxyRecordC));
-    Asserts.assertTypeEquals(
-        aSupC, proxyRecordA.getLeastSupertype(proxyRecordC));
+    assertType(proxyRecordA.getGreatestSubtype(proxyRecordC)).isStructurallyEqualTo(aInfC);
+    assertType(proxyRecordA.getLeastSupertype(proxyRecordC)).isStructurallyEqualTo(aSupC);
   }
 
   public void testSubtypeWithUnknowns() throws Exception {

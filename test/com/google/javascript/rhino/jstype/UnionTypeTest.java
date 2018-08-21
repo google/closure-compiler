@@ -38,6 +38,8 @@
 
 package com.google.javascript.rhino.jstype;
 
+import static com.google.javascript.rhino.testing.TypeSubject.assertType;
+
 import com.google.javascript.rhino.testing.Asserts;
 import com.google.javascript.rhino.testing.BaseJSTypeTestCase;
 import com.google.javascript.rhino.testing.MapBasedScope;
@@ -99,8 +101,8 @@ public class UnionTypeTest extends BaseJSTypeTestCase {
     UnionType stringOrNull =
         (UnionType) createUnionType(STRING_OBJECT_TYPE, NULL_TYPE);
 
-    Asserts.assertTypeEquals(nullOrString, stringOrNull);
-    Asserts.assertTypeEquals(stringOrNull, nullOrString);
+    assertType(stringOrNull).isStructurallyEqualTo(nullOrString);
+    assertType(nullOrString).isStructurallyEqualTo(stringOrNull);
 
     assertTypeCanAssignToItself(createUnionType(VOID_TYPE, NUMBER_TYPE));
     assertTypeCanAssignToItself(
@@ -111,12 +113,10 @@ public class UnionTypeTest extends BaseJSTypeTestCase {
     UnionType nullOrUnknown =
         (UnionType) createUnionType(NULL_TYPE, unresolvedNamedType);
     assertTrue(nullOrUnknown.isUnknownType());
-    Asserts.assertTypeEquals(nullOrUnknown, NULL_TYPE.getLeastSupertype(nullOrUnknown));
-    Asserts.assertTypeEquals(nullOrUnknown, nullOrUnknown.getLeastSupertype(NULL_TYPE));
-    Asserts.assertTypeEquals(UNKNOWN_TYPE,
-        NULL_TYPE.getGreatestSubtype(nullOrUnknown));
-    Asserts.assertTypeEquals(UNKNOWN_TYPE,
-        nullOrUnknown.getGreatestSubtype(NULL_TYPE));
+    assertType(NULL_TYPE.getLeastSupertype(nullOrUnknown)).isStructurallyEqualTo(nullOrUnknown);
+    assertType(nullOrUnknown.getLeastSupertype(NULL_TYPE)).isStructurallyEqualTo(nullOrUnknown);
+    assertType(NULL_TYPE.getGreatestSubtype(nullOrUnknown)).isStructurallyEqualTo(UNKNOWN_TYPE);
+    assertType(nullOrUnknown.getGreatestSubtype(NULL_TYPE)).isStructurallyEqualTo(UNKNOWN_TYPE);
 
     assertTrue(NULL_TYPE.differsFrom(nullOrUnknown));
     assertTrue(nullOrUnknown.differsFrom(NULL_TYPE));
@@ -126,11 +126,11 @@ public class UnionTypeTest extends BaseJSTypeTestCase {
     assertTrue(unresolvedNamedType.isSubtype(nullOrUnknown));
     assertTrue(nullOrUnknown.isSubtype(NULL_TYPE));
 
-    Asserts.assertTypeEquals(unresolvedNamedType,
-        nullOrUnknown.restrictByNotNullOrUndefined());
+    assertType(nullOrUnknown.restrictByNotNullOrUndefined())
+        .isStructurallyEqualTo(unresolvedNamedType);
 
     // findPropertyType
-    Asserts.assertTypeEquals(NUMBER_TYPE, nullOrString.findPropertyType("length"));
+    assertType(nullOrString.findPropertyType("length")).isStructurallyEqualTo(NUMBER_TYPE);
     assertEquals(null, nullOrString.findPropertyType("lengthx"));
 
     Asserts.assertResolvesToSame(nullOrString);
@@ -140,8 +140,8 @@ public class UnionTypeTest extends BaseJSTypeTestCase {
    * Tests {@link JSType#getGreatestSubtype(JSType)} on union types.
    */
   public void testGreatestSubtypeUnionTypes1() {
-    Asserts.assertTypeEquals(NULL_TYPE, createNullableType(STRING_TYPE).getGreatestSubtype(
-            createNullableType(NUMBER_TYPE)));
+    assertType(createNullableType(STRING_TYPE).getGreatestSubtype(createNullableType(NUMBER_TYPE)))
+        .isStructurallyEqualTo(NULL_TYPE);
   }
 
   /**
@@ -150,7 +150,7 @@ public class UnionTypeTest extends BaseJSTypeTestCase {
   @SuppressWarnings("checked")
   public void testGreatestSubtypeUnionTypes2() {
     UnionType subUnion = (UnionType) createUnionType(sub1, sub2);
-    Asserts.assertTypeEquals(subUnion, subUnion.getGreatestSubtype(base));
+    assertType(subUnion.getGreatestSubtype(base)).isStructurallyEqualTo(subUnion);
   }
 
   /**
@@ -164,10 +164,10 @@ public class UnionTypeTest extends BaseJSTypeTestCase {
     // (null,undefined)
     UnionType nullUndefined =
         (UnionType) createUnionType(VOID_TYPE, NULL_TYPE);
-    Asserts.assertTypeEquals(nullUndefined,
-        nullUndefined.getGreatestSubtype(nullableOptionalNumber));
-    Asserts.assertTypeEquals(nullUndefined,
-        nullableOptionalNumber.getGreatestSubtype(nullUndefined));
+    assertType(nullUndefined.getGreatestSubtype(nullableOptionalNumber))
+        .isStructurallyEqualTo(nullUndefined);
+    assertType(nullableOptionalNumber.getGreatestSubtype(nullUndefined))
+        .isStructurallyEqualTo(nullUndefined);
   }
 
   /**
@@ -175,7 +175,7 @@ public class UnionTypeTest extends BaseJSTypeTestCase {
    */
   public void testGreatestSubtypeUnionTypes4() throws Exception {
     UnionType union = (UnionType) createUnionType(NULL_TYPE, sub1, sub2);
-    Asserts.assertTypeEquals(createUnionType(sub1, sub2), union.getGreatestSubtype(base));
+    assertType(union.getGreatestSubtype(base)).isStructurallyEqualTo(createUnionType(sub1, sub2));
   }
 
   /**
@@ -183,7 +183,8 @@ public class UnionTypeTest extends BaseJSTypeTestCase {
    */
   public void testGreatestSubtypeUnionTypes5() throws Exception {
     JSType subUnion = createUnionType(sub1, sub2);
-    Asserts.assertTypeEquals(NO_OBJECT_TYPE, subUnion.getGreatestSubtype(STRING_OBJECT_TYPE));
+    assertType(subUnion.getGreatestSubtype(STRING_OBJECT_TYPE))
+        .isStructurallyEqualTo(NO_OBJECT_TYPE);
   }
 
   /**
@@ -294,12 +295,12 @@ public class UnionTypeTest extends BaseJSTypeTestCase {
 
   public void testGetRestrictedUnion1() throws Exception {
     UnionType numStr = (UnionType) createUnionType(NUMBER_TYPE, STRING_TYPE);
-    Asserts.assertTypeEquals(STRING_TYPE, numStr.getRestrictedUnion(NUMBER_TYPE));
+    assertType(numStr.getRestrictedUnion(NUMBER_TYPE)).isStructurallyEqualTo(STRING_TYPE);
   }
 
   public void testGetRestrictedUnion2() throws Exception {
     UnionType numStr = (UnionType) createUnionType(NULL_TYPE, sub1, sub2);
-    Asserts.assertTypeEquals(NULL_TYPE, numStr.getRestrictedUnion(base));
+    assertType(numStr.getRestrictedUnion(base)).isStructurallyEqualTo(NULL_TYPE);
   }
 
   public void testIsEquivalentTo() {
