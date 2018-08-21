@@ -1378,7 +1378,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES8_MODULES;
+          return ES2018;
         }
       };
 
@@ -1418,7 +1418,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES8_MODULES;
+          return ES2018;
         }
       };
 
@@ -1526,36 +1526,33 @@ public final class DefaultPassConfig extends PassConfig {
       };
 
   /**
-   * Processes goog.getCssName.  The cssRenamingMap is used to lookup
-   * replacement values for the classnames.  If null, the raw class names are
-   * inlined.
+   * Processes goog.getCssName. The cssRenamingMap is used to lookup replacement values for the
+   * classnames. If null, the raw class names are inlined.
    */
   private final PassFactory closureReplaceGetCssName =
       new PassFactory("closureReplaceGetCssName", true) {
-    @Override
-    protected CompilerPass create(final AbstractCompiler compiler) {
-      return new CompilerPass() {
         @Override
-        public void process(Node externs, Node jsRoot) {
-          Map<String, Integer> newCssNames = null;
-          if (options.gatherCssNames) {
-            newCssNames = new HashMap<>();
-          }
-          ReplaceCssNames pass = new ReplaceCssNames(
-              compiler,
-              newCssNames,
-              options.cssRenamingWhitelist);
-          pass.process(externs, jsRoot);
-          compiler.setCssNames(newCssNames);
+        protected CompilerPass create(final AbstractCompiler compiler) {
+          return new CompilerPass() {
+            @Override
+            public void process(Node externs, Node jsRoot) {
+              Map<String, Integer> newCssNames = null;
+              if (options.gatherCssNames) {
+                newCssNames = new HashMap<>();
+              }
+              ReplaceCssNames pass =
+                  new ReplaceCssNames(compiler, newCssNames, options.cssRenamingWhitelist);
+              pass.process(externs, jsRoot);
+              compiler.setCssNames(newCssNames);
+            }
+          };
+        }
+
+        @Override
+        protected FeatureSet featureSet() {
+          return ES2018;
         }
       };
-    }
-
-    @Override
-    protected FeatureSet featureSet() {
-      return ES8_MODULES;
-    }
-  };
 
   /**
    * Creates synthetic blocks to prevent FoldConstants from moving code past markers in the source.
@@ -1922,7 +1919,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         public FeatureSet featureSet() {
-          return ES8_MODULES;
+          return ES2018;
         }
       };
 
@@ -2179,17 +2176,18 @@ public final class DefaultPassConfig extends PassConfig {
   };
 
   /** Checks that all constants are not modified */
-  private final PassFactory checkConsts = new PassFactory("checkConsts", true) {
-    @Override
-    protected CompilerPass create(AbstractCompiler compiler) {
-      return new ConstCheck(compiler);
-    }
+  private final PassFactory checkConsts =
+      new PassFactory("checkConsts", true) {
+        @Override
+        protected CompilerPass create(AbstractCompiler compiler) {
+          return new ConstCheck(compiler);
+        }
 
-    @Override
-    public FeatureSet featureSet() {
-      return ES8_MODULES;
-    }
-  };
+        @Override
+        public FeatureSet featureSet() {
+          return ES2018;
+        }
+      };
 
   /** Checks that the arguments are constants */
   private final PassFactory checkConstParams =
@@ -2222,7 +2220,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         public FeatureSet featureSet() {
-          return ES8_MODULES;
+          return ES2018;
         }
       };
 
@@ -3352,7 +3350,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES8_MODULES;
+          return ES2018;
         }
       };
 
