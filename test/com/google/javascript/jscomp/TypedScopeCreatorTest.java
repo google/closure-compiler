@@ -42,7 +42,6 @@ import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
-import com.google.javascript.rhino.testing.Asserts;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
@@ -867,8 +866,8 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     testSame("function Foo() {}; Foo.bar;");
     ObjectType foo = (ObjectType) globalScope.getVar("Foo").getType();
     assertFalse(foo.hasProperty("bar"));
-    Asserts.assertTypeEquals(registry.getNativeType(UNKNOWN_TYPE),
-        foo.getPropertyType("bar"));
+    assertType(foo.getPropertyType("bar"))
+        .isStructurallyEqualTo(registry.getNativeType(UNKNOWN_TYPE));
   }
 
   public void testConstructorProperty() {
@@ -1159,8 +1158,8 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
 
     assertEquals("Foo<number>",
         registry.getType(null, "FooAlias").toString());
-    Asserts.assertTypeEquals(registry.getType(null, "FooAlias"),
-        registry.getType(null, "Foo"));
+    assertType(registry.getType(null, "Foo"))
+        .isStructurallyEqualTo(registry.getType(null, "FooAlias"));
 
     ObjectType f = (ObjectType) findNameType("f", globalScope);
     assertTrue(f.hasProperty("BAR"));
@@ -1174,8 +1173,8 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
 
     assertEquals("goog.Foo<number>",
         registry.getType(null, "goog.FooAlias").toString());
-    Asserts.assertTypeEquals(registry.getType(null, "goog.Foo"),
-        registry.getType(null, "goog.FooAlias"));
+    assertType(registry.getType(null, "goog.FooAlias"))
+        .isStructurallyEqualTo(registry.getType(null, "goog.Foo"));
   }
 
   public void testCollectedFunctionStub() {
@@ -1219,8 +1218,8 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
         goog.getPropertyType("foo").toString());
     assertTrue(goog.isPropertyTypeDeclared("foo"));
 
-    Asserts.assertTypeEquals(globalScope.getVar("goog.foo").getType(),
-        goog.getPropertyType("foo"));
+    assertType(goog.getPropertyType("foo"))
+        .isStructurallyEqualTo(globalScope.getVar("goog.foo").getType());
   }
 
   public void testNamespacedFunctionStubLocal() {
@@ -1236,8 +1235,8 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
         goog.getPropertyType("foo").toString());
     assertTrue(goog.isPropertyTypeDeclared("foo"));
 
-    Asserts.assertTypeEquals(lastLocalScope.getVar("goog.foo").getType(),
-        goog.getPropertyType("foo"));
+    assertType(goog.getPropertyType("foo"))
+        .isStructurallyEqualTo(lastLocalScope.getVar("goog.foo").getType());
   }
 
   public void testCollectedCtorProperty1() {
@@ -1513,12 +1512,12 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     assertEquals(
         getNativeObjectType(OBJECT_TYPE).getPropertiesCount() + 3,
         instanceType.getPropertiesCount());
-    Asserts.assertTypeEquals(getNativeType(NUMBER_TYPE),
-        instanceType.getPropertyType("m1"));
-    Asserts.assertTypeEquals(getNativeType(BOOLEAN_TYPE),
-        instanceType.getPropertyType("m2"));
-    Asserts.assertTypeEquals(getNativeType(STRING_TYPE),
-        instanceType.getPropertyType("m3"));
+    assertType(instanceType.getPropertyType("m1"))
+        .isStructurallyEqualTo(getNativeType(NUMBER_TYPE));
+    assertType(instanceType.getPropertyType("m2"))
+        .isStructurallyEqualTo(getNativeType(BOOLEAN_TYPE));
+    assertType(instanceType.getPropertyType("m3"))
+        .isStructurallyEqualTo(getNativeType(STRING_TYPE));
 
     // Verify the prototype chain.
     // This is a special case where we want the anonymous object to
@@ -1698,7 +1697,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     assertEquals("function(this:I): undefined",
         iPrototype.getPropertyType("baz").toString());
 
-    Asserts.assertTypeEquals(iPrototype, globalScope.getVar("I.prototype").getType());
+    assertType(globalScope.getVar("I.prototype").getType()).isStructurallyEqualTo(iPrototype);
   }
 
   public void testPropertiesOnInterface2() throws Exception {
@@ -2417,7 +2416,8 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
         "/** @constructor */ var Foo = function() {};" +
         "/** @constructor */ var FooAlias = Foo;");
     assertEquals("Foo", registry.getType(null, "FooAlias").toString());
-    Asserts.assertTypeEquals(registry.getType(null, "Foo"), registry.getType(null, "FooAlias"));
+    assertType(registry.getType(null, "FooAlias"))
+        .isStructurallyEqualTo(registry.getType(null, "Foo"));
   }
 
   public void testNamespacedConstructorAlias() {
@@ -2426,8 +2426,8 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
         "/** @constructor */ goog.Foo = function() {};" +
         "/** @constructor */ goog.FooAlias = goog.Foo;");
     assertEquals("goog.Foo", registry.getType(null, "goog.FooAlias").toString());
-    Asserts.assertTypeEquals(registry.getType(null, "goog.Foo"),
-        registry.getType(null, "goog.FooAlias"));
+    assertType(registry.getType(null, "goog.FooAlias"))
+        .isStructurallyEqualTo(registry.getType(null, "goog.Foo"));
   }
 
   public void testTemplateType1() {

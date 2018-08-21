@@ -18,6 +18,9 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
+import static com.google.javascript.rhino.testing.TypeSubject.assertType;
+import static com.google.javascript.rhino.testing.TypeSubject.types;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
@@ -32,7 +35,6 @@ import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.RecordTypeBuilder;
 import com.google.javascript.rhino.jstype.TemplatizedType;
-import com.google.javascript.rhino.testing.Asserts;
 import com.google.javascript.rhino.testing.TestErrorReporter;
 import java.util.Arrays;
 import junit.framework.TestCase;
@@ -178,11 +180,11 @@ abstract class CompilerTypeTestCase extends TestCase {
   }
 
   protected final void assertTypeEquals(JSType a, JSType b) {
-    Asserts.assertTypeEquals(a, b);
+    assertType(b).isStructurallyEqualTo(a);
   }
 
   protected final void assertTypeEquals(String msg, JSType a, JSType b) {
-    Asserts.assertTypeEquals(msg, a, b);
+    assertWithMessage(msg).about(types()).that(b).isStructurallyEqualTo(a);
   }
 
   /** Resolves a type expression, expecting the given warnings. */

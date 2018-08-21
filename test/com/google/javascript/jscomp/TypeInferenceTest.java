@@ -36,6 +36,7 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.STRING_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.UNKNOWN_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.VOID_TYPE;
 import static com.google.javascript.rhino.testing.TypeSubject.assertType;
+import static com.google.javascript.rhino.testing.TypeSubject.types;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
@@ -53,7 +54,6 @@ import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.StaticTypedSlot;
-import com.google.javascript.rhino.testing.Asserts;
 import com.google.javascript.rhino.testing.TypeSubject;
 import java.util.HashMap;
 import java.util.Map;
@@ -232,7 +232,10 @@ public final class TypeInferenceTest extends TestCase {
   }
 
   private void verify(String name, JSType type) {
-    Asserts.assertTypeEquals("Mismatch for " + name, type, getType(name));
+    assertWithMessage("Mismatch for " + name)
+        .about(types())
+        .that(getType(name))
+        .isStructurallyEqualTo(type);
   }
 
   private void verify(String name, JSTypeNative type) {

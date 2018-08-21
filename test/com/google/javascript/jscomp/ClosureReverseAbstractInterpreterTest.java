@@ -17,13 +17,13 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.javascript.rhino.testing.TypeSubject.assertType;
 
 import com.google.javascript.jscomp.type.ClosureReverseAbstractInterpreter;
 import com.google.javascript.jscomp.type.FlowScope;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.JSType;
-import com.google.javascript.rhino.testing.Asserts;
 
 public final class ClosureReverseAbstractInterpreterTest extends
     CompilerTypeTestCase {
@@ -335,9 +335,11 @@ public final class ClosureReverseAbstractInterpreterTest extends
     ClosureReverseAbstractInterpreter rai = new ClosureReverseAbstractInterpreter(registry);
 
     // trueScope
-    Asserts.assertTypeEquals(
-        trueType,
-        rai.getPreciserScopeKnowingConditionOutcome(call, flowScope, true).getSlot("a").getType());
+    assertType(
+            rai.getPreciserScopeKnowingConditionOutcome(call, flowScope, true)
+                .getSlot("a")
+                .getType())
+        .isStructurallyEqualTo(trueType);
 
     // falseScope
     JSType aType = rai.getPreciserScopeKnowingConditionOutcome(call, flowScope, false)
@@ -345,7 +347,7 @@ public final class ClosureReverseAbstractInterpreterTest extends
     if (falseType == null) {
       assertThat(aType).isNull();
     } else {
-      Asserts.assertTypeEquals(falseType, aType);
+      assertType(aType).isStructurallyEqualTo(falseType);
     }
   }
 }
