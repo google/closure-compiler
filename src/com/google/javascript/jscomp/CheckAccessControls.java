@@ -22,8 +22,7 @@ import com.google.auto.value.AutoValue;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Multimap;
-import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
-import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
+import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfo.Visibility;
 import com.google.javascript.rhino.Node;
@@ -39,17 +38,15 @@ import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
 /**
- * A compiler pass that checks that the programmer has obeyed all the access
- * control restrictions indicated by JSDoc annotations, like
- * {@code @private} and {@code @deprecated}.
+ * A compiler pass that checks that the programmer has obeyed all the access control restrictions
+ * indicated by JSDoc annotations, like {@code @private} and {@code @deprecated}.
  *
- * Because access control restrictions are attached to type information, this pass must run
- * after TypeInference, and InferJSDocInfo.
+ * <p>Because access control restrictions are attached to type information, this pass must run after
+ * TypeInference, and InferJSDocInfo.
  *
  * @author nicksantos@google.com (Nick Santos)
  */
-class CheckAccessControls extends AbstractPostOrderCallback
-    implements ScopedCallback, HotSwapCompilerPass {
+class CheckAccessControls implements Callback, HotSwapCompilerPass {
 
   static final DiagnosticType DEPRECATED_NAME = DiagnosticType.disabled(
       "JSC_DEPRECATED_VAR",
@@ -176,31 +173,49 @@ class CheckAccessControls extends AbstractPostOrderCallback
     NodeTraversal.traverse(compiler, scriptRoot, this);
   }
 
-  @Override
-  public void enterScope(NodeTraversal t) {
-    Node n = t.getScopeRoot();
+  private void enterAccessControlScope(Node root) {
+    @Nullable ObjectType scopeType = bestInstanceTypeForMethodOrCtor(root);
 
-    if (isDeprecationScopeRoot(n)) {
+    if (isMarkedDeprecated(root)) {
       deprecationDepth++;
     }
-
-    if (isFunctionOrClass(n)) {
-      currentClassStack.push(bestInstanceTypeForMethodOrCtor(n));
-    }
+    currentClassStack.push(scopeType);
   }
 
-  @Override
-  public void exitScope(NodeTraversal t) {
-    Node n = t.getScopeRoot();
-
-    if (isDeprecationScopeRoot(n)) {
+  private void exitAccessControlScope(Node root) {
+    if (isMarkedDeprecated(root)) {
       deprecationDepth--;
     }
+    currentClassStack.pop();
+  }
 
-    if (n.isFunction()) {
-      currentClassStack.pop();
-    } else if (n.isClass()) {
-      currentClassStack.pop();
+  /**
+   * Maps {@code node} to the <em>primary</em> root of an access-control scope if it is some root,
+   * or {@code null} if it is a non-root of the scope.
+   *
+   * <p>We define access-control scopes differently from {@code Scope}s because of mismatches
+   * between ECMAScript scoping and our AST structure (e.g. the `extends` clause of a CLASS). {@link
+   * NodeTraveral} is designed to walk the AST in ECMAScript scope order, which is not the pre-order
+   * traversal that we would prefer here. This requires us to treat access-control scopes as a
+   * forest with a primary root.
+   *
+   * <p>Each access-control scope corresponds to some "owner" JavaScript type which is used when
+   * computing access-controls. At this time, each also corresponds to an AST subtree.
+   *
+   * <p>Known mismatches:
+   *
+   * <ul>
+   *   <li>CLASS extends clause: secondary root of the scope defined by the CLASS.
+   * </ul>
+   */
+  @Nullable
+  private static Node primaryAccessControlScopeRootFor(Node node) {
+    if (isExtendsTarget(node)) {
+      return node.getParent();
+    } else if (isFunctionOrClass(node)) {
+      return node;
+    } else {
+      return null;
     }
   }
 
@@ -305,6 +320,16 @@ class CheckAccessControls extends AbstractPostOrderCallback
   }
 
   @Override
+  public boolean shouldTraverse(NodeTraversal traversal, Node node, Node parent) {
+    @Nullable Node accessControlRoot = primaryAccessControlScopeRootFor(node);
+    if (accessControlRoot != null) {
+      enterAccessControlScope(accessControlRoot);
+    }
+
+    return true;
+  }
+
+  @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
     switch (n.getToken()) {
       case NAME:
@@ -340,6 +365,11 @@ class CheckAccessControls extends AbstractPostOrderCallback
       checkPropertyDeprecation(t, propRef);
       checkPropertyVisibility(t, propRef);
       checkConstantProperty(t, propRef);
+    }
+
+    @Nullable Node accessControlRoot = primaryAccessControlScopeRootFor(n);
+    if (accessControlRoot != null) {
+      exitAccessControlScope(accessControlRoot);
     }
   }
 
@@ -1007,11 +1037,7 @@ class CheckAccessControls extends AbstractPostOrderCallback
    * Returns whether this node roots a subtree under which references to deprecated constructs are
    * allowed.
    */
-  private static boolean isDeprecationScopeRoot(Node n) {
-    if (!isFunctionOrClass(n)) {
-      return false;
-    }
-
+  private static boolean isMarkedDeprecated(Node n) {
     return getDeprecationReason(NodeUtil.getBestJSDocInfo(n)) != null;
   }
 
@@ -1110,8 +1136,13 @@ class CheckAccessControls extends AbstractPostOrderCallback
     return type == null ? null : type.toMaybeObjectType();
   }
 
-  static boolean isFunctionOrClass(Node n) {
+  private static boolean isFunctionOrClass(Node n) {
     return n.isFunction() || n.isClass();
+  }
+
+  private static boolean isExtendsTarget(Node node) {
+    Node parent = node.getParent();
+    return parent.isClass() && node.isSecondChildOf(parent);
   }
 
   @Nullable
