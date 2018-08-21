@@ -1409,6 +1409,34 @@ public final class ControlFlowAnalysisTest extends TestCase {
             Token.SCRIPT, Token.BLOCK, Token.VAR, Token.DO, Token.EXPR_RESULT));
   }
 
+  public void testForOfOrder() throws IOException {
+    assertNodeOrder(
+        createCfg("async function f() { for (x of y) { z; } return 0; }"),
+        ImmutableList.of(
+            Token.SCRIPT,
+            Token.FUNCTION,
+            Token.BLOCK,
+            Token.NAME,
+            Token.FOR_OF,
+            Token.BLOCK,
+            Token.EXPR_RESULT,
+            Token.RETURN));
+  }
+
+  public void testForAwaitOfOrder() throws IOException {
+    assertNodeOrder(
+        createCfg("async function f() { for await (x of y) { z; } return 0; }"),
+        ImmutableList.of(
+            Token.SCRIPT,
+            Token.FUNCTION,
+            Token.BLOCK,
+            Token.NAME,
+            Token.FOR_AWAIT_OF,
+            Token.BLOCK,
+            Token.EXPR_RESULT,
+            Token.RETURN));
+  }
+
   public void testBreakInFinally1() throws IOException {
     String src =
         "f = function() {\n" +

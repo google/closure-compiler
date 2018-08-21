@@ -32,7 +32,7 @@ public final class CheckUnreachableCodeTest extends CompilerTestCase {
   @Override
   public void setUp() throws Exception {
     super.setUp();
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2017);
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2018);
   }
 
   public void testCorrectSimple() {
@@ -395,6 +395,15 @@ public final class CheckUnreachableCodeTest extends CompilerTestCase {
     // Note: for simplicity, we assume that `await <expr>` may always throw an exception, even if
     // <expr> is a literal.
     testSame("async function f() { try { await 3; } catch (e) {} }");
+  }
+
+  public void testForAwait() {
+    testSame("async function f(iter) { for await (const item of iter) { item; } }");
+    assertUnreachable(
+        lines(
+            "async function f(iter) {",
+            "  for await (const item of iter) { if (false) { 3; } }",
+            "}"));
   }
 
   private void assertUnreachable(String js) {
