@@ -34,6 +34,7 @@ import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
 import java.util.Deque;
 import java.util.LinkedList;
+import java.util.Objects;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
@@ -138,7 +139,7 @@ class CheckAccessControls implements Callback, HotSwapCompilerPass {
   // NOTE: LinkedList is almost always the wrong choice, but in this case we have at most a small
   // handful of elements, it provides the smoothest API (push, pop, and a peek that doesn't throw
   // on empty), and (unlike ArrayDeque) is null-permissive. No other option meets all these needs.
-  private final Deque<JSType> currentClassStack = new LinkedList<JSType>();
+  private final Deque<ObjectType> currentClassStack = new LinkedList<>();
 
   private ImmutableMap<StaticSourceFile, Visibility> defaultVisibilityForFiles;
   private final Multimap<JSType, String> initializedConstantProperties;
@@ -174,7 +175,7 @@ class CheckAccessControls implements Callback, HotSwapCompilerPass {
   }
 
   private void enterAccessControlScope(Node root) {
-    @Nullable JSType scopeType = bestInstanceTypeForMethodOrCtor(root, root.getParent());
+    @Nullable ObjectType scopeType = bestInstanceTypeForMethodOrCtor(root);
 
     if (isMarkedDeprecated(root)) {
       deprecationDepth++;
@@ -227,78 +228,103 @@ class CheckAccessControls implements Callback, HotSwapCompilerPass {
    *   <li>Prototype methods => The instance type having that prototype
    *   <li>Instance methods => The type the method is attached to
    *   <li>Constructors => The type that constructor instantiates
-   *   <li>Object literal members => {@code null}
+   *   <li>Object-literal members => The object-literal type
    * </ul>
-   *
-   * TODO(nickreid): Remove the {@code parent} parameter.
    */
   @Nullable
-  private JSType bestInstanceTypeForMethodOrCtor(Node n, Node parent) {
+  private ObjectType bestInstanceTypeForMethodOrCtor(Node n) {
     checkState(isFunctionOrClass(n), n);
+    Node parent = n.getParent();
 
-    if (parent.isAssign()) {
-      Node lValue = parent.getFirstChild();
-      if (NodeUtil.isGet(lValue)) {
-        // We have an assignment of the form `a.b = ...`.
-        JSType lValueType = lValue.getJSType();
-        if (lValueType != null && (lValueType.isConstructor() || lValueType.isInterface())) {
-          // Case `a.B = ...`
-          return normalizeClassType(lValueType);
-        } else if (NodeUtil.isPrototypeProperty(lValue)) {
-          // Case `a.B.prototype = ...`
-          return normalizeClassType(NodeUtil.getPrototypeClassName(lValue).getJSType());
-        } else {
-          // Case `a.b = ...`
-          return normalizeClassType(lValue.getFirstChild().getJSType());
-        }
-      } else {
-        // We have an assignment of the form "a = ...", so pull the
-        // type off the "a".
-        return normalizeClassType(lValue.getJSType());
-      }
-    } else if (NodeUtil.isFunctionDeclaration(n)
-        || NodeUtil.isClassDeclaration(n)
-        || parent.isName()) {
-      return normalizeClassType(n.getJSType());
-    } else if (parent.isStringKey()
-        || parent.isGetterDef()
-        || parent.isSetterDef()
-        || parent.isMemberFunctionDef()
-        || parent.isComputedProp()) {
-      Node objectLitParent = parent.getGrandparent();
-      if (!objectLitParent.isAssign()) {
-        return null;
-      }
-      Node className = NodeUtil.getPrototypeClassName(objectLitParent.getFirstChild());
-      if (className != null) {
-        return normalizeClassType(className.getJSType());
-      }
+    // We need to handle declaration syntaxes separately in a way that we can't determine based on
+    // the type of just one node.
+    // TODO(nickreid): Determine if these can be replaced with FUNCTION and CLASS cases below.
+    if (NodeUtil.isFunctionDeclaration(n) || NodeUtil.isClassDeclaration(n)) {
+      return instanceTypeFor(n.getJSType());
     }
 
-    return null;
+    // All the remaining cases can be isolated based on `parent`.
+    switch (parent.getToken()) {
+      case NAME:
+        return instanceTypeFor(n.getJSType());
+
+      case ASSIGN:
+        {
+          Node lValue = parent.getFirstChild();
+          if (NodeUtil.isGet(lValue)) {
+            // We have an assignment of the form `a.b = ...`.
+            JSType lValueType = lValue.getJSType();
+            if (lValueType != null && (lValueType.isConstructor() || lValueType.isInterface())) {
+              // Case `a.B = ...`
+              return instanceTypeFor(lValueType);
+            } else if (NodeUtil.isPrototypeProperty(lValue)) {
+              // Case `a.B.prototype = ...`
+              return instanceTypeFor(NodeUtil.getPrototypeClassName(lValue).getJSType());
+            } else {
+              // Case `a.b = ...`
+              return instanceTypeFor(lValue.getFirstChild().getJSType());
+            }
+          } else {
+            // We have an assignment of the form "a = ...", so pull the type off the "a".
+            return instanceTypeFor(lValue.getJSType());
+          }
+        }
+
+      case STRING_KEY:
+      case GETTER_DEF:
+      case SETTER_DEF:
+      case MEMBER_FUNCTION_DEF:
+      case COMPUTED_PROP:
+        {
+          Node grandparent = parent.getParent();
+          Node greatGrandparent = grandparent.getParent();
+
+          if (grandparent.isObjectLit()) {
+            return grandparent.getJSType().isFunctionPrototypeType()
+                // Case: `grandparent` is an object-literal prototype.
+                // Example: `Foo.prototype = { a: function() {} };` where `parent` is "a".
+                ? instanceTypeFor(grandparent.getJSType())
+                : null;
+          } else if (greatGrandparent.isClass()) {
+            // Case: `n` is a class member definition.
+            // Example: `class Foo { a() {} }` where `parent` is "a".
+            return instanceTypeFor(greatGrandparent.getJSType());
+          } else {
+            // This would indicate the AST is malformed.
+            throw new AssertionError(greatGrandparent);
+          }
+        }
+
+      default:
+        return null;
+    }
   }
 
   /**
-   * Normalize the type of a constructor, its instance, and its prototype all down to the same type
-   * (the instance type).
+   * Returns the type that best represents the instance type for {@code type}.
+   *
+   * <ul>
+   *   <li>Prototype type => The instance type having that prototype
+   *   <li>Instance type => The type
+   *   <li>Constructor type => The type that constructor instantiates
+   *   <li>Object-literal type => The type
+   * </ul>
    */
-  private static JSType normalizeClassType(JSType type) {
-    if (type == null || type.isUnknownType()) {
-      return type;
+  @Nullable
+  private static ObjectType instanceTypeFor(JSType type) {
+    if (type == null) {
+      return null;
+    } else if (type.isUnionType()) {
+      return null; // A union has no meaningful instance type.
+    } else if (type.isInstanceType() || type.isUnknownType()) {
+      return type.toMaybeObjectType();
     } else if (type.isConstructor() || type.isInterface()) {
       return type.toMaybeFunctionType().getInstanceType();
     } else if (type.isFunctionPrototypeType()) {
-      return normalizePrototypeObject(type.toMaybeObjectType());
+      return instanceTypeFor(type.toMaybeObjectType().getOwnerFunction());
     }
-    return type;
-  }
 
-  private static ObjectType normalizePrototypeObject(ObjectType type) {
-    FunctionType owner = type.getOwnerFunction();
-    if (owner.hasInstanceType()) {
-      return owner.getInstanceType();
-    }
-    return type;
+    return type.toMaybeObjectType();
   }
 
   @Override
@@ -336,7 +362,7 @@ class CheckAccessControls implements Callback, HotSwapCompilerPass {
         break;
       case FUNCTION:
       case CLASS:
-        checkFinalClassOverrides(t, n, parent);
+        checkFinalClassOverrides(t, n);
         break;
       default:
         break;
@@ -599,13 +625,12 @@ class CheckAccessControls implements Callback, HotSwapCompilerPass {
   }
 
   /** Checks if a constructor is trying to override a final class. */
-  private void checkFinalClassOverrides(NodeTraversal t, Node ctor, Node parent) {
+  private void checkFinalClassOverrides(NodeTraversal t, Node ctor) {
     checkArgument(isFunctionOrClass(ctor), ctor);
 
     JSType type = ctor.getJSType().toMaybeFunctionType();
     if (type != null && type.isConstructor()) {
-      JSType finalParentClass =
-          getSuperClassInstanceIfFinal(bestInstanceTypeForMethodOrCtor(ctor, parent));
+      JSType finalParentClass = getSuperClassInstanceIfFinal(bestInstanceTypeForMethodOrCtor(ctor));
       if (finalParentClass != null) {
         compiler.report(
             t.makeError(
@@ -839,7 +864,7 @@ class CheckAccessControls implements Callback, HotSwapCompilerPass {
       return;
     }
 
-    JSType ownerType = normalizeClassType(objectType);
+    @Nullable ObjectType ownerType = instanceTypeFor(objectType);
 
     switch (visibility) {
       case PACKAGE:
@@ -877,7 +902,10 @@ class CheckAccessControls implements Callback, HotSwapCompilerPass {
   }
 
   private void checkPrivatePropertyVisibility(
-      NodeTraversal t, PropertyReference propRef, boolean isClassType, JSType ownerType) {
+      NodeTraversal t,
+      PropertyReference propRef,
+      boolean isClassType,
+      @Nullable ObjectType ownerType) {
 
     if (isClassType && isValidPrivateConstructorAccess(propRef.getParentNode())) {
       return;
@@ -887,7 +915,7 @@ class CheckAccessControls implements Callback, HotSwapCompilerPass {
     // enclosing class.
     // TODO(tbreisacher): Should we also include the filename where ownerType is defined?
     String readableTypeName =
-        ownerType.equals(propRef.getReceiverType())
+        Objects.equals(ownerType, propRef.getReceiverType())
             ? propRef.getReadableTypeNameOrDefault()
             : ownerType.toString();
     compiler.report(
@@ -899,17 +927,19 @@ class CheckAccessControls implements Callback, HotSwapCompilerPass {
   }
 
   private void checkProtectedPropertyVisibility(
-      NodeTraversal t, PropertyReference propRef, JSType ownerType) {
+      NodeTraversal t, PropertyReference propRef, @Nullable ObjectType ownerType) {
     // There are 3 types of legal accesses of a protected property:
     // 1) Accesses in the same file
     // 2) Overriding the property in a subclass
     // 3) Accessing the property from inside a subclass
     // The first two have already been checked for.
-    for (JSType scopeType : currentClassStack) {
-      if (scopeType == null) {
-        continue;
-      } else if (scopeType.isSubtypeOf(ownerType)) {
-        return;
+    if (ownerType != null) {
+      for (JSType scopeType : currentClassStack) {
+        if (scopeType == null) {
+          continue;
+        } else if (scopeType.isSubtypeOf(ownerType)) {
+          return;
+        }
       }
     }
 
@@ -1013,8 +1043,7 @@ class CheckAccessControls implements Callback, HotSwapCompilerPass {
         // Case #3
         || (scopeRootParent != null
             && scopeRootParent.isAssign()
-            && getTypeDeprecationInfo(bestInstanceTypeForMethodOrCtor(scopeRoot, scopeRootParent))
-                != null);
+            && getTypeDeprecationInfo(bestInstanceTypeForMethodOrCtor(scopeRoot)) != null);
   }
 
   /**
