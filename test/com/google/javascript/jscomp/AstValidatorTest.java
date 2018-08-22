@@ -28,6 +28,7 @@ import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.SimpleSourceFile;
+import com.google.javascript.rhino.StaticSourceFile.SourceKind;
 import com.google.javascript.rhino.Token;
 
 /**
@@ -139,7 +140,7 @@ public final class AstValidatorTest extends CompilerTestCase {
     Node n = new Node(Token.SCRIPT);
     expectInvalid(n, Check.SCRIPT);
     n.setInputId(new InputId("something_input"));
-    n.setStaticSourceFile(new SimpleSourceFile("something", false));
+    n.setStaticSourceFile(new SimpleSourceFile("something", SourceKind.STRONG));
     expectValid(n, Check.SCRIPT);
     expectInvalid(n, Check.STATEMENT);
     expectInvalid(n, Check.EXPRESSION);
@@ -534,7 +535,7 @@ public final class AstValidatorTest extends CompilerTestCase {
 
     Node n = new Node(Token.SCRIPT);
     n.setInputId(new InputId("something_input"));
-    n.setStaticSourceFile(new SimpleSourceFile("something", false));
+    n.setStaticSourceFile(new SimpleSourceFile("something", SourceKind.STRONG));
     expectValid(n, Check.SCRIPT);
 
     n.addChildToFront(IR.let(IR.name("a"), IR.number(3)));
@@ -604,7 +605,7 @@ public final class AstValidatorTest extends CompilerTestCase {
     Node script = n.getFirstChild();
     assertNode(script).hasType(Token.SCRIPT);
     script.setInputId(new InputId("something_input"));
-    script.setStaticSourceFile(new SimpleSourceFile("something", false));
+    script.setStaticSourceFile(new SimpleSourceFile("something", SourceKind.STRONG));
     return script;
   }
 }

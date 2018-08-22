@@ -47,6 +47,7 @@ import static com.google.common.base.Preconditions.checkState;
 import com.google.common.annotations.GwtIncompatible;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Objects;
+import com.google.javascript.rhino.StaticSourceFile.SourceKind;
 import com.google.javascript.rhino.jstype.JSType;
 import java.io.IOException;
 import java.io.ObjectInput;
@@ -1334,7 +1335,7 @@ public class Node implements Serializable {
 
   /** Sets the source file to a non-extern file of the given name. */
   public final void setSourceFileForTesting(String name) {
-    this.putProp(STATIC_SOURCE_FILE, new SimpleSourceFile(name, false));
+    this.putProp(STATIC_SOURCE_FILE, new SimpleSourceFile(name, SourceKind.STRONG));
   }
 
   // TODO(johnlenz): make this final

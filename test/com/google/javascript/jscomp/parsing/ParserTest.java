@@ -36,6 +36,7 @@ import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.SimpleSourceFile;
 import com.google.javascript.rhino.StaticSourceFile;
+import com.google.javascript.rhino.StaticSourceFile.SourceKind;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.testing.BaseJSTypeTestCase;
@@ -4639,11 +4640,12 @@ public final class ParserTest extends BaseJSTypeTestCase {
    */
   private Node parseError(String source, String... errors) {
     TestErrorReporter testErrorReporter = new TestErrorReporter(errors, null);
-    ParseResult result = ParserRunner.parse(
-        new SimpleSourceFile("input", false),
-        source,
-        createConfig(),
-        testErrorReporter);
+    ParseResult result =
+        ParserRunner.parse(
+            new SimpleSourceFile("input", SourceKind.STRONG),
+            source,
+            createConfig(),
+            testErrorReporter);
     Node script = result.ast;
 
     // check expected features if specified
@@ -4666,7 +4668,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
   private ParserRunner.ParseResult doParse(String string, String... warnings) {
     TestErrorReporter testErrorReporter = new TestErrorReporter(null, warnings);
-    StaticSourceFile file = new SimpleSourceFile("input", false);
+    StaticSourceFile file = new SimpleSourceFile("input", SourceKind.STRONG);
     ParserRunner.ParseResult result = ParserRunner.parse(
         file,
         string,

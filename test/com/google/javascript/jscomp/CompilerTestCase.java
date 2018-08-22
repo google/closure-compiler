@@ -35,6 +35,7 @@ import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.jscomp.type.ReverseAbstractInterpreter;
 import com.google.javascript.jscomp.type.SemanticReverseAbstractInterpreter;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.StaticSourceFile.SourceKind;
 import com.google.javascript.rhino.testing.BaseJSTypeTestCase;
 import java.io.IOException;
 import java.io.InputStream;
@@ -2316,7 +2317,7 @@ public abstract class CompilerTestCase extends TestCase {
       externs = files;
       if (files != null) {
         for (SourceFile s : files) {
-          s.setIsExtern(true);
+          s.setKind(SourceKind.EXTERN);
         }
       }
     }

@@ -33,6 +33,7 @@ import com.google.javascript.jscomp.deps.SimpleDependencyInfo;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.StaticSourceFile.SourceKind;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -70,6 +71,15 @@ public class CompilerInput extends DependencyInfo.Base implements SourceAst {
   private transient AbstractCompiler compiler;
   private transient ModulePath modulePath;
 
+  // TODO(tjgq): Whether a CompilerInput is an externs file is determined by the `isExtern`
+  // constructor argument and the `setIsExtern` method. Both are necessary because, while externs
+  // files passed under the --externs flag are not required to contain an @externs annotation,
+  // externs files passed under any other flag must have one, and the presence of the latter can
+  // only be known once the file has been parsed. To add to the confusion, note that CompilerInput
+  // doesn't actually store the extern bit itself, but instead mutates the SourceFile associated
+  // with the AST node. Once (when?) we enforce that extern files always contain an @externs
+  // annotation, we can store the extern bit in the AST node, and make SourceFile immutable.
+
   public CompilerInput(SourceAst ast) {
     this(ast, ast.getSourceFile().getName(), false);
   }
@@ -86,10 +96,8 @@ public class CompilerInput extends DependencyInfo.Base implements SourceAst {
     this.ast = ast;
     this.id = inputId;
 
-    // TODO(nicksantos): Add a precondition check here. People are passing
-    // in null, but they should not be.
-    if (ast != null && ast.getSourceFile() != null) {
-      ast.getSourceFile().setIsExtern(isExtern);
+    if (isExtern) {
+      setIsExtern();
     }
   }
 
@@ -498,11 +506,12 @@ public class CompilerInput extends DependencyInfo.Base implements SourceAst {
     return ast.getSourceFile().isExtern();
   }
 
-  void setIsExtern(boolean isExtern) {
+  void setIsExtern() {
+    // TODO(tjgq): Add a precondition check here. People are passing in null, but they shouldn't be.
     if (ast == null || ast.getSourceFile() == null) {
       return;
     }
-    ast.getSourceFile().setIsExtern(isExtern);
+    ast.getSourceFile().setKind(SourceKind.EXTERN);
   }
 
   public int getLineOffset(int lineno) {

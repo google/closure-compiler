@@ -23,6 +23,7 @@ import com.google.javascript.jscomp.parsing.Config.StrictMode;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.SimpleSourceFile;
+import com.google.javascript.rhino.StaticSourceFile.SourceKind;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.testing.BaseJSTypeTestCase;
 import com.google.javascript.rhino.testing.TestErrorReporter;
@@ -795,11 +796,10 @@ public final class AttachJsdocsTest extends BaseJSTypeTestCase {
             null,
             true,
             StrictMode.SLOPPY);
-    Node script = ParserRunner.parse(
-        new SimpleSourceFile("input", false),
-        source,
-        config,
-        testErrorReporter).ast;
+    Node script =
+        ParserRunner.parse(
+                new SimpleSourceFile("input", SourceKind.STRONG), source, config, testErrorReporter)
+            .ast;
 
     // verifying that all warnings were seen
     testErrorReporter.assertHasEncounteredAllErrors();

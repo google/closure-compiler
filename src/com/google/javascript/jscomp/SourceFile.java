@@ -25,6 +25,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.io.CharStreams;
 import com.google.common.io.Resources;
 import com.google.javascript.rhino.StaticSourceFile;
+import com.google.javascript.rhino.StaticSourceFile.SourceKind;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -57,6 +58,7 @@ import java.util.zip.ZipFile;
  * @author nicksantos@google.com (Nick Santos)
  */
 public class SourceFile implements StaticSourceFile, Serializable {
+
   private static final long serialVersionUID = 1L;
   private static final String UTF8_BOM = "\uFEFF";
 
@@ -74,7 +76,7 @@ public class SourceFile implements StaticSourceFile, Serializable {
   private static final int SOURCE_EXCERPT_REGION_LENGTH = 5;
 
   private final String fileName;
-  private boolean isExternFile = false;
+  private SourceKind kind;
 
   // The fileName may not always identify the original file - for example,
   // supersourced Java inputs, or Java inputs that come from Jar files. This
@@ -94,8 +96,9 @@ public class SourceFile implements StaticSourceFile, Serializable {
    * @param fileName The file name of the source file. It does not necessarily need to correspond to
    *     a real path. But it should be unique. Will appear in warning messages emitted by the
    *     compiler.
+   * @param kind The source kind.
    */
-  public SourceFile(String fileName) {
+  public SourceFile(String fileName, SourceKind kind) {
     if (isNullOrEmpty(fileName)) {
       throw new IllegalArgumentException("a source must have a name");
     }
@@ -145,9 +148,6 @@ public class SourceFile implements StaticSourceFile, Serializable {
     lineOffsets = null;
   }
 
-  //////////////////////////////////////////////////////////////////////////////
-  // Implementation
-
   /**
    * Gets all the code in this source file.
    * @throws IOException
@@ -155,7 +155,6 @@ public class SourceFile implements StaticSourceFile, Serializable {
   public String getCode() throws IOException {
     return code;
   }
-
 
   /**
    * Gets a reader for the code in this source file.
@@ -210,15 +209,21 @@ public class SourceFile implements StaticSourceFile, Serializable {
     return fileName;
   }
 
-  /** Returns whether this is an extern. */
+  /** Returns the source kind. */
   @Override
-  public boolean isExtern() {
-    return isExternFile;
+  public SourceKind getKind() {
+    return kind;
   }
 
-  /** Sets that this is an extern. */
-  void setIsExtern(boolean newVal) {
-    isExternFile = newVal;
+  /**
+   * Sets the source kind.
+   *
+   * <p>TODO(tjgq): Move the extern bit into the AST, so we can make the kind immutable. This is
+   * currently not possible because for some files the extern bit is not determined by the contents
+   * (e.g. files passed under the --externs flag and missing an externs annotation).
+   */
+  void setKind(SourceKind kind) {
+    this.kind = kind;
   }
 
   @Override
@@ -537,7 +542,7 @@ public class SourceFile implements StaticSourceFile, Serializable {
     private static final long serialVersionUID = 1L;
 
     Preloaded(String fileName, String originalPath, String code) {
-      super(fileName);
+      super(fileName, SourceKind.STRONG);
       super.setOriginalPath(originalPath);
       super.setCode(code);
     }
@@ -556,7 +561,7 @@ public class SourceFile implements StaticSourceFile, Serializable {
 
     // Not private, so that LazyInput can extend it.
     Generated(String fileName, String originalPath, Generator generator) {
-      super(fileName);
+      super(fileName, SourceKind.STRONG);
       super.setOriginalPath(originalPath);
       this.generator = generator;
     }
@@ -597,7 +602,7 @@ public class SourceFile implements StaticSourceFile, Serializable {
     private transient Charset inputCharset = UTF_8;
 
     OnDisk(Path path, String originalPath, Charset c) {
-      super(path.toString());
+      super(path.toString(), SourceKind.STRONG);
       this.path = path;
       setOriginalPath(originalPath);
       if (c != null) {
@@ -670,7 +675,7 @@ public class SourceFile implements StaticSourceFile, Serializable {
       out.writeObject(inputCharset != null ? inputCharset.name() : null);
       out.writeObject(path != null ? path.toUri() : null);
     }
-    
+
     @GwtIncompatible("ObjectInputStream")
     private void readObject(java.io.ObjectInputStream in) throws Exception {
       in.defaultReadObject();
@@ -702,9 +707,9 @@ public class SourceFile implements StaticSourceFile, Serializable {
     private String inputCharset = UTF_8.name();
 
     AtUrl(URL url, String originalPath, Charset c) {
-      super(originalPath);
-      this.url = url;
+      super(originalPath, SourceKind.STRONG);
       super.setOriginalPath(originalPath);
+      this.url = url;
       if (c != null) {
         this.setCharset(c);
       }

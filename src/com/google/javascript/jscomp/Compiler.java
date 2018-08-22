@@ -1787,7 +1787,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
         }
 
         if (NodeUtil.isFromTypeSummary(n)) {
-          input.setIsExtern(true);
+          input.setIsExtern();
           externsRoot.addChildToBack(n);
         } else {
           jsRoot.addChildToBack(n);
@@ -1991,7 +1991,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       // If the input file is explicitly marked as an externs file, then move it out of the main
       // JS root and put it with the other externs.
       externsRoot.addChildToBack(n);
-      input.setIsExtern(true);
+      input.setIsExtern();
 
       input.getModule().remove(input);
 

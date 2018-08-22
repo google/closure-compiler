@@ -38,6 +38,7 @@ import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.SimpleSourceFile;
 import com.google.javascript.rhino.StaticSourceFile;
+import com.google.javascript.rhino.StaticSourceFile.SourceKind;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.ObjectType;
@@ -4781,8 +4782,9 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
             .setStrictMode(StrictMode.SLOPPY)
             .build();
 
-    ParseResult result = ParserRunner.parse(
-        new SimpleSourceFile("source", false), code, config, testErrorReporter);
+    ParseResult result =
+        ParserRunner.parse(
+            new SimpleSourceFile("source", SourceKind.STRONG), code, config, testErrorReporter);
 
     testErrorReporter.assertHasEncounteredAllWarnings();
     return result.ast;
@@ -4833,7 +4835,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
             .setStrictMode(Config.StrictMode.SLOPPY)
             .build();
 
-    StaticSourceFile file = new SimpleSourceFile("testcode", false);
+    StaticSourceFile file = new SimpleSourceFile("testcode", SourceKind.STRONG);
     Node templateNode = IR.script();
     templateNode.setStaticSourceFile(file);
 
