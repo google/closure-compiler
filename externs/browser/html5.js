@@ -1434,6 +1434,9 @@ WorkerGlobalScope.prototype.ononline;
 /** @type {!WorkerPerformance} */
 WorkerGlobalScope.prototype.performance;
 
+/** @type {!WorkerNavigator} */
+WorkerGlobalScope.prototype.navigator;
+
 /**
  * @see http://dev.w3.org/html5/workers/
  * @interface
@@ -4507,6 +4510,7 @@ HTMLMeterElement.prototype.labels;
  * @see https://www.w3.org/TR/html5/webappapis.html#navigator
  */
 function Navigator() {}
+
 /**
  * @type {string}
  * @see https://www.w3.org/TR/html5/webappapis.html#dom-navigator-appcodename
@@ -4641,6 +4645,25 @@ Navigator.prototype.share = function(data) {};
  * @see https://developer.mozilla.org/en-US/docs/Web/API/NavigatorConcurrentHardware/hardwareConcurrency
  */
 Navigator.prototype.hardwareConcurrency;
+
+/**
+ * @constructor
+ * @see https://html.spec.whatwg.org/multipage/workers.html#the-workernavigator-object
+ */
+function WorkerNavigator() {}
+
+/**
+ * @type {number}
+ * @see https://developers.google.com/web/updates/2017/12/device-memory
+ * https://github.com/w3c/device-memory
+ */
+WorkerNavigator.prototype.deviceMemory;
+
+/**
+ * @type {number}
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/NavigatorConcurrentHardware/hardwareConcurrency
+ */
+WorkerNavigator.prototype.hardwareConcurrency;
 
 /**
  * @record
