@@ -303,6 +303,16 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     assertTrue(aVar.isTypeInferred());
   }
 
+  public void testConstDeclarationWithOrInRhs() {
+    // needed because there is a special case for `var goog = goog || {};` that was crashing when
+    // given a destructuring lhs.
+    testSame("let obj; const {a} = obj || {};");
+
+    TypedVar aVar = checkNotNull(globalScope.getVar("a"));
+    assertType(aVar.getType()).toStringIsEqualTo("?");
+    assertFalse(aVar.isTypeInferred());
+  }
+
   // TODO(bradfordcsmith): Add Object rest test case.
 
   public void testVarDeclarationNestedPatterns() {

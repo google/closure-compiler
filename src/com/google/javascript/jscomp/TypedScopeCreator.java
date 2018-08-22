@@ -1845,12 +1845,13 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
     /**
      * Check for common idioms of a typed R-value assigned to a const L-value.
      *
-     * Normally, we would only want this sort of propagation to happen under
-     * type inference. But we want a declared const to be nameable in a type
-     * annotation, so we need to figure out the type before we try to resolve
-     * the annotation.
+     * <p>Normally, we would only want this sort of propagation to happen under type inference. But
+     * we want a declared const to be nameable in a type annotation, so we need to figure out the
+     * type before we try to resolve the annotation.
+     *
+     * @param lValue is the lvalue node if this is a simple assignment, null for destructuring
      */
-    private JSType getDeclaredRValueType(Node lValue, Node rValue) {
+    private JSType getDeclaredRValueType(@Nullable Node lValue, Node rValue) {
       // If rValue has a type-cast, we use the type in the type-cast.
       JSDocInfo rValueInfo = rValue.getJSDocInfo();
       if (rValue.isCast() && rValueInfo != null && rValueInfo.hasType()) {
@@ -1902,9 +1903,11 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       if (rValue.isOr()) {
         Node firstClause = rValue.getFirstChild();
         Node secondClause = firstClause.getNext();
-        boolean namesMatch = firstClause.isName()
-            && lValue.isName()
-            && firstClause.getString().equals(lValue.getString());
+        boolean namesMatch =
+            firstClause.isName()
+                && lValue != null
+                && lValue.isName()
+                && firstClause.getString().equals(lValue.getString());
         if (namesMatch) {
           type = secondClause.getJSType();
           if (type != null && !type.isUnknownType()) {
