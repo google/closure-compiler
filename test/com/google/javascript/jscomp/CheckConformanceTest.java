@@ -1132,6 +1132,20 @@ public final class CheckConformanceTest extends CompilerTestCase {
         "anything;", CheckConformance.CONFORMANCE_VIOLATION, "Violation: CustomRule Message");
   }
 
+  public void testCustomBanForOf() {
+    configuration =
+        "requirement: {\n"
+            + "  type: CUSTOM\n"
+            + "  java_class: 'com.google.javascript.jscomp.ConformanceRules$BanForOf'\n"
+            + "  error_message: 'BanForOf Message'\n"
+            + "}";
+
+    testWarning(
+        "for (var x of y) { var z = x; }",
+        CheckConformance.CONFORMANCE_VIOLATION,
+        "Violation: BanForOf Message");
+  }
+
   public void testCustomBanExpose() {
     configuration =
         "requirement: {\n" +

@@ -1114,6 +1114,22 @@ public final class ConformanceRules {
     }
   }
 
+  /** Banned for/of loops */
+  public static final class BanForOf extends AbstractRule {
+    public BanForOf(AbstractCompiler compiler, Requirement requirement)
+        throws InvalidRequirementSpec {
+      super(compiler, requirement);
+    }
+
+    @Override
+    protected ConformanceResult checkConformance(NodeTraversal t, Node n) {
+      if (n.isForOf() || n.isForAwaitOf()) {
+        return ConformanceResult.VIOLATION;
+      }
+      return ConformanceResult.CONFORMANCE;
+    }
+  }
+
   /**
    * Banned @expose
    */
