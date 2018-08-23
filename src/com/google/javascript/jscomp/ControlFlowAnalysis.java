@@ -834,7 +834,6 @@ public final class ControlFlowAnalysis implements Callback, CompilerPass {
   static Node computeFallThrough(Node n) {
     switch (n.getToken()) {
       case DO:
-        return computeFallThrough(n.getFirstChild());
       case FOR:
         return computeFallThrough(n.getFirstChild());
       case FOR_IN:
