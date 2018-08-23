@@ -308,24 +308,29 @@ final class FunctionTypeBuilder {
           Node oldParam = oldParams.next();
           Node newParam = paramBuilder.newParameterFromNode(oldParam);
 
-          oldParamsListHitOptArgs = oldParamsListHitOptArgs ||
-              oldParam.isVarArgs() ||
-              oldParam.isOptionalArg();
+          oldParamsListHitOptArgs =
+              oldParamsListHitOptArgs || oldParam.isVarArgs() || oldParam.isOptionalArg();
 
-          // The subclass method might write its var_args as individual
-          // arguments.
+          // The subclass method might write its var_args as individual arguments.
           if (currentParam.getNext() != null && newParam.isVarArgs()) {
             newParam.setVarArgs(false);
             newParam.setOptionalArg(true);
           }
+          // The subclass method might also make a required parameter into an optional parameter
+          // with a default value
+          if (currentParam.isDefaultValue()) {
+            newParam.setOptionalArg(true);
+          }
         } else {
-          warnedAboutArgList |= addParameter(
-              paramBuilder,
-              typeRegistry.getNativeType(UNKNOWN_TYPE),
-              warnedAboutArgList,
-              codingConvention.isOptionalParameter(currentParam) ||
-                  oldParamsListHitOptArgs,
-              codingConvention.isVarArgsParameter(currentParam));
+          warnedAboutArgList |=
+              addParameter(
+                  paramBuilder,
+                  typeRegistry.getNativeType(UNKNOWN_TYPE),
+                  warnedAboutArgList,
+                  codingConvention.isOptionalParameter(currentParam)
+                      || oldParamsListHitOptArgs
+                      || currentParam.isDefaultValue(),
+                  codingConvention.isVarArgsParameter(currentParam));
         }
       }
 
@@ -562,8 +567,8 @@ final class FunctionTypeBuilder {
         param = checkNotNull(param.getFirstChild(), param);
         isOptionalParam = true;
       } else {
-        isVarArgs = isVarArgsParameter(param, info);
-        isOptionalParam = isOptionalParameter(param, info);
+        isVarArgs = isVarArgsParameterByConvention(param);
+        isOptionalParam = isOptionalParameterByConvention(param);
       }
 
       String paramName = null;
@@ -583,7 +588,10 @@ final class FunctionTypeBuilder {
       // type from JSDocInfo
       JSType parameterType = null;
       if (info != null && info.hasParameterType(paramName)) {
-        parameterType = info.getParameterType(paramName).evaluate(templateScope, typeRegistry);
+        JSTypeExpression parameterTypeExpression = info.getParameterType(paramName);
+        parameterType = parameterTypeExpression.evaluate(templateScope, typeRegistry);
+        isOptionalParam = isOptionalParam || parameterTypeExpression.isOptionalArg();
+        isVarArgs = isVarArgs || parameterTypeExpression.isVarArgs();
       } else if (param.getJSDocInfo() != null && param.getJSDocInfo().hasType()) {
         JSTypeExpression parameterTypeExpression = param.getJSDocInfo().getType();
         parameterType = parameterTypeExpression.evaluate(templateScope, typeRegistry);
@@ -678,38 +686,25 @@ final class FunctionTypeBuilder {
     }
   }
 
-  /**
-   * @return Whether the given param is an optional param.
-   */
-  private boolean isOptionalParameter(Node param, @Nullable JSDocInfo info) {
+  /** @return Whether the given param is an optional param. */
+  private boolean isOptionalParameterByConvention(Node param) {
     if (param.isDestructuringPattern()) {
       return false;
     }
-    if (codingConvention.isOptionalParameter(param)) {
-      return true;
-    }
-
-    String paramName = param.getString();
-    return info != null && info.hasParameterType(paramName) &&
-        info.getParameterType(paramName).isOptionalArg();
+    return codingConvention.isOptionalParameter(param);
   }
 
   /**
    * Determine whether this is a var args parameter.
+   *
    * @return Whether the given param is a var args param.
    */
-  private boolean isVarArgsParameter(
-      Node param, @Nullable JSDocInfo info) {
+  private boolean isVarArgsParameterByConvention(Node param) {
     if (param.isDestructuringPattern()) {
       return false;
     }
-    if (codingConvention.isVarArgsParameter(param)) {
-      return true;
-    }
 
-    String paramName = param.getString();
-    return info != null && info.hasParameterType(paramName) &&
-        info.getParameterType(paramName).isVarArgs();
+    return codingConvention.isVarArgsParameter(param);
   }
 
   private ImmutableList<TemplateType> buildTemplateTypesFromJSDocInfo(

@@ -3944,6 +3944,41 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
     testTypes("function f(a = 3) {} f();");
   }
 
+  public void testOverridingMethodHasDefaultParameterInPlaceOfRequiredParam() {
+    testTypes(
+        lines(
+            "class Parent {",
+            "  /** @param {number} num */",
+            "  f(num) {}",
+            "}",
+            "class Child extends Parent {",
+            "  /** @override */",
+            "  f(num = undefined) {}",
+            "}",
+            "(new Child()).f();",
+            "(new Child()).f(undefined);"));
+  }
+
+  public void testOverridingMethodAddsOptionalParameterWithDefaultValue() {
+    testTypes(
+        lines(
+            "class Parent {",
+            "  /** @param {number} num */",
+            "  f(num) {}",
+            "}",
+            "class Child extends Parent {",
+            "  /** @override */",
+            "  f(num, otherParam = undefined) {}",
+            "}",
+            "(new Child()).f(3);",
+            "(new Child()).f(3, 'str');",
+            "(new Child()).f(3, undefined);"));
+  }
+
+  public void testOptionalDestructuringParameterWithoutDefaultValue() {
+    testTypes("/** @param {{x: number}=} opts */ function f({x}) {} f();");
+  }
+
   public void testBasicArrayPatternDeclaration() {
     testTypes(
         lines(
