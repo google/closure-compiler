@@ -162,6 +162,49 @@ public final class DepsGeneratorTest extends TestCase {
     assertEquals(expected, output);
   }
 
+  // Unit test for an issue run into by https://github.com/google/closure-compiler/pull/3026
+  public void testEs6ModuleScanDeps() throws Exception {
+    // Simple ES6 modules
+    ImmutableList<SourceFile> srcs =
+        ImmutableList.of(
+            SourceFile.fromCode("/src/css-parse.js", "export class StyleNode {}"),
+            SourceFile.fromCode(
+                "/src/apply-shim-utils.js", "import {StyleNode} from './css-parse.js';"));
+
+    // Run them through a DepsGenerator that is set up the same way as our internal MakeJsDeps tool.
+    DepsGenerator depsGenerator =
+        new DepsGenerator(
+            ImmutableList.of(),
+            srcs,
+            DepsGenerator.InclusionStrategy.ALWAYS,
+            PathUtil.makeAbsolute("/base/javascript/closure"),
+            errorManager,
+            new ModuleLoader(
+                null,
+                ImmutableList.of("."),
+                ImmutableList.of(),
+                BrowserModuleResolver.FACTORY,
+                ModuleLoader.PathResolver.ABSOLUTE));
+
+    String output = depsGenerator.computeDependencyCalls();
+
+    // Make sure that there are no spurious errors.
+    assertNoWarnings();
+
+    String expected =
+        LINE_JOINER.join(
+            "goog.addDependency('../../../src/css-parse.js',"
+                + " [],"
+                + " [],"
+                + " {'lang': 'es6', 'module': 'es6'});",
+            "goog.addDependency('../../../src/apply-shim-utils.js',"
+                + " [],"
+                + " ['../../../src/css-parse.js'],"
+                + " {'lang': 'es6', 'module': 'es6'});",
+            "");
+    assertThat(output).isEqualTo(expected);
+  }
+
   /**
    * Ensures that deps files are handled correctly both when listed as deps and when listed as
    * sources.
