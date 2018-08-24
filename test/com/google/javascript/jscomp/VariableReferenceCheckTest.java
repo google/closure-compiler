@@ -228,11 +228,11 @@ public final class VariableReferenceCheckTest extends CompilerTestCase {
   }
 
   public void testEarlyReference() {
-    assertUndeclared("function f() { a = 2; var a = 3; }");
+    assertEarlyReferenceWarning("function f() { a = 2; var a = 3; }");
   }
 
   public void testEarlyReference_withES6Modules() {
-    assertUndeclared("export function f() { a = 2; var a = 3; }");
+    assertEarlyReferenceWarning("export function f() { a = 2; var a = 3; }");
   }
 
   public void testCorrectEarlyReference() {
@@ -297,7 +297,7 @@ public final class VariableReferenceCheckTest extends CompilerTestCase {
   }
 
   public void testNonHoistedFunction() {
-    assertUndeclared("if (true) { f(); function f() {} }");
+    assertEarlyReferenceWarning("if (true) { f(); function f() {} }");
   }
 
   public void testNonHoistedFunction2() {
@@ -317,15 +317,15 @@ public final class VariableReferenceCheckTest extends CompilerTestCase {
   }
 
   public void testNonHoistedFunction6() {
-    assertUndeclared("if (false) { f(); function f() {} }");
+    assertEarlyReferenceWarning("if (false) { f(); function f() {} }");
   }
 
   public void testNonHoistedFunction7() {
-    assertUndeclared("function g() { if (false) { f(); function f() {} }}");
+    assertEarlyReferenceWarning("function g() { if (false) { f(); function f() {} }}");
   }
 
   public void testNonHoistedFunction_withES6Modules() {
-    assertUndeclared("export function g() { if (false) { f(); function f() {} }}");
+    assertEarlyReferenceWarning("export function g() { if (false) { f(); function f() {} }}");
   }
 
   public void testNonHoistedRecursiveFunction1() {
@@ -552,7 +552,7 @@ public final class VariableReferenceCheckTest extends CompilerTestCase {
 
   public void testUsedInShorthandObjLit() {
     enableUnusedLocalAssignmentCheck = true;
-    assertUndeclared("var z = {x}; z(); var x;");
+    assertEarlyReferenceWarning("var z = {x}; z(); var x;");
     testSame("var {x} = foo();");
     testSame("var {x} = {};"); // TODO(moz): Maybe add a warning for this case
     testSame("function f() { var x = 1; return {x}; }");
@@ -560,7 +560,7 @@ public final class VariableReferenceCheckTest extends CompilerTestCase {
 
   public void testUsedInShorthandObjLit_withES6Modules() {
     enableUnusedLocalAssignmentCheck = true;
-    assertUndeclared("export var z = {x}; z(); var x;");
+    assertEarlyReferenceWarning("export var z = {x}; z(); var x;");
     testSame("export var {x} = foo();");
   }
 
@@ -916,7 +916,7 @@ public final class VariableReferenceCheckTest extends CompilerTestCase {
   }
 
   public void testFunctionHoisting() {
-    assertUndeclared("if (true) { f(); function f() {} }");
+    assertEarlyReferenceWarning("if (true) { f(); function f() {} }");
   }
 
   public void testFunctionHoistingRedeclaration1() {
@@ -1035,11 +1035,11 @@ public final class VariableReferenceCheckTest extends CompilerTestCase {
   public void testArrayPattern() {
     assertNoWarning("var [a] = [1];");
     assertNoWarning("var [a, b] = [1, 2];");
-    assertUndeclared("alert(a); var [a] = [1];");
-    assertUndeclared("alert(b); var [a, b] = [1, 2];");
+    assertEarlyReferenceWarning("alert(a); var [a] = [1];");
+    assertEarlyReferenceWarning("alert(b); var [a, b] = [1, 2];");
 
-    assertUndeclared("[a] = [1]; var a;");
-    assertUndeclared("[a, b] = [1]; var b;");
+    assertEarlyReferenceWarning("[a] = [1]; var a;");
+    assertEarlyReferenceWarning("[a, b] = [1]; var b;");
   }
 
   public void testArrayPattern_withES6Modules01() {
@@ -1049,11 +1049,11 @@ public final class VariableReferenceCheckTest extends CompilerTestCase {
   public void testArrayPattern_defaultValue() {
     assertNoWarning("var [a = 1] = [2];");
     assertNoWarning("var [a = 1] = [];");
-    assertUndeclared("alert(a); var [a = 1] = [2];");
-    assertUndeclared("alert(a); var [a = 1] = [];");
+    assertEarlyReferenceWarning("alert(a); var [a = 1] = [2];");
+    assertEarlyReferenceWarning("alert(a); var [a = 1] = [];");
 
-    assertUndeclared("alert(a); var [a = b] = [1];");
-    assertUndeclared("alert(a); var [a = b] = [];");
+    assertEarlyReferenceWarning("alert(a); var [a = b] = [1];");
+    assertEarlyReferenceWarning("alert(a); var [a = b] = [];");
   }
 
   public void testArrayPattern_defaultValue_withES6Modules01() {
@@ -1070,10 +1070,10 @@ public final class VariableReferenceCheckTest extends CompilerTestCase {
     assertNoWarning("alert(a); var {a: b} = {};");
     assertNoWarning("alert(a); var {a: {a: b}} = {};");
 
-    assertUndeclared("alert(b); var {a: b} = {a: 1};");
-    assertUndeclared("alert(a); var {a} = {a: 1};");
+    assertEarlyReferenceWarning("alert(b); var {a: b} = {a: 1};");
+    assertEarlyReferenceWarning("alert(a); var {a} = {a: 1};");
 
-    assertUndeclared("({a: b} = {}); var a, b;");
+    assertEarlyReferenceWarning("({a: b} = {}); var a, b;");
   }
 
   public void testObjectPatternRest() {
@@ -1083,10 +1083,10 @@ public final class VariableReferenceCheckTest extends CompilerTestCase {
     assertNoWarning("var {a, ...r} = {a: 1};");
 
     assertNoWarning("alert(r);");
-    assertUndeclared("alert(r); var {...r} = {a: 1};");
+    assertEarlyReferenceWarning("alert(r); var {...r} = {a: 1};");
 
     assertNoWarning("({...a} = {});");
-    assertUndeclared("({...a} = {}); var a;");
+    assertEarlyReferenceWarning("({...a} = {}); var a;");
   }
 
   public void testObjectPattern_withES6Modules01() {
@@ -1094,16 +1094,16 @@ public final class VariableReferenceCheckTest extends CompilerTestCase {
   }
 
   public void testObjectPattern_defaultValue() {
-    assertUndeclared("alert(b); var {a: b = c} = {a: 1};");
-    assertUndeclared("alert(b); var c; var {a: b = c} = {a: 1};");
-    assertUndeclared("var {a: b = c} = {a: 1}; var c;");
-    assertUndeclared("alert(b); var {a: b = c} = {};");
-    assertUndeclared("alert(a); var {a = c} = {a: 1};");
-    assertUndeclared("alert(a); var {a = c} = {};");
+    assertEarlyReferenceWarning("alert(b); var {a: b = c} = {a: 1};");
+    assertEarlyReferenceWarning("alert(b); var c; var {a: b = c} = {a: 1};");
+    assertEarlyReferenceWarning("var {a: b = c} = {a: 1}; var c;");
+    assertEarlyReferenceWarning("alert(b); var {a: b = c} = {};");
+    assertEarlyReferenceWarning("alert(a); var {a = c} = {a: 1};");
+    assertEarlyReferenceWarning("alert(a); var {a = c} = {};");
   }
 
   public void testObjectPattern_defaultValue_withES6Modules() {
-    assertUndeclared("export var {a: b = c} = {a: 1}; var c;");
+    assertEarlyReferenceWarning("export var {a: b = c} = {a: 1}; var c;");
   }
 
   /**
@@ -1158,12 +1158,11 @@ public final class VariableReferenceCheckTest extends CompilerTestCase {
             "  var c = b;",
             "}"));
 
-    assertUndeclared(
-        lines(
-            "function f() { ", "  var {a:c, b:d} = obj;", "  var obj = {a:1, b:2};", "}"));
-    assertUndeclared(
+    assertEarlyReferenceWarning(
+        lines("function f() { ", "  var {a:c, b:d} = obj;", "  var obj = {a:1, b:2};", "}"));
+    assertEarlyReferenceWarning(
         lines("function f() { ", "  var {a, b} = obj;", "  var obj = {a:1, b:2};", "}"));
-    assertUndeclared(
+    assertEarlyReferenceWarning(
         lines("function f() { ", "  var e = c;", "  var {a:c, b:d} = {a:1, b:2};", "}"));
   }
 
@@ -1180,15 +1179,36 @@ public final class VariableReferenceCheckTest extends CompilerTestCase {
             "  var c = b;",
             "}"));
 
-    assertUndeclared(
-        lines(
-            "export function f() { ", "  var {a:c, b:d} = obj;", "  var obj = {a:1, b:2};", "}"));
+    assertEarlyReferenceWarning(
+        lines("export function f() { ", "  var {a:c, b:d} = obj;", "  var obj = {a:1, b:2};", "}"));
   }
 
   public void testDestructuringInLoop() {
     testSame("for (let {length: x} in obj) {}");
 
     testSame("for (let [{length: z}, w] in obj) {}");
+  }
+
+  public void testReferencingPreviouslyDeclaredVariableInConst() {
+    testSame("const [a, b = a] = [];");
+    // TODO(b/111441110): don't error on this. it's valid code.
+    assertEarlyReferenceError("for (const [a, b = a] of []);");
+  }
+
+  public void testEarlyReferenceInInnerBlock() {
+    assertEarlyReferenceError("for (x of [1, 2, 3]) {} let x;");
+    assertEarlyReferenceError("{ x; } let x;");
+    assertEarlyReferenceError("{ C; } class C {}");
+    assertEarlyReferenceWarning("{ x; }  var x;");
+  }
+
+  public void testEarlyVariableReferenceInsideFunction() {
+    testSame("function f() { x; } let x; f(); ");
+    testSame("function f() { const f = () => x; let x = 3; return f; }");
+    // NOTE: this will cause an error at runtime, but we don't report it because we don't track
+    // where `f` is being called.
+    testSame("function f() { x; } f(); let x;");
+    testSame("function f() { x; } f(); var x;");
   }
 
   public void testEnhancedForLoopTemporalDeadZone() {
@@ -1246,10 +1266,8 @@ public final class VariableReferenceCheckTest extends CompilerTestCase {
     testError(js, VarCheck.VAR_MULTIPLY_DECLARED_ERROR);
   }
 
-  /**
-   * Expects the JS to generate one bad-write warning.
-   */
-  private void assertUndeclared(String js) {
+  /** Expects the JS to generate one bad-write warning. */
+  private void assertEarlyReferenceWarning(String js) {
     testWarning(js, EARLY_REFERENCE);
   }
 

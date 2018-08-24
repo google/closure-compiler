@@ -264,7 +264,10 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
           }
 
           // Check for temporal dead zone of let / const declarations in for-in and for-of loops
-          if ((v.isLet() || v.isConst()) && v.getScope() == reference.getScope()
+          // TODO(b/111441110): Fix this check. it causes spurious warnings on `b = a` in
+          //   for (const [a, b = a] of []) {}
+          if ((v.isLet() || v.isConst())
+              && v.getScope() == reference.getScope()
               && NodeUtil.isEnhancedFor(reference.getScope().getRootNode())) {
             compiler.report(JSError.make(referenceNode, EARLY_REFERENCE_ERROR, v.name));
           }
@@ -391,7 +394,7 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
    * @return If an early reference has been found
    */
   private boolean checkEarlyReference(Var v, Reference reference, Node referenceNode) {
-    // Don't check the order of refer in externs files.
+    // Don't check the order of references in externs files.
     if (!referenceNode.isFromExterns()) {
       // Special case to deal with var goog = goog || {}. Note that
       // let x = x || {} is illegal, just like var y = x || {}; let x = y;
@@ -405,10 +408,14 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
         }
       }
 
-      // Only generate warnings if the scopes do not match in order
-      // to deal with possible forward declarations and recursion
+      // Only generate warnings for early references in the same function scope/global scope in
+      // order to deal with possible forward declarations and recursion
+      // e.g. don't warn on:
+      //   function f() { return x; } f(); let x = 5;
+      // We don't track where `f` is called, just where it's defined, and don't want to warn for
+      //     function f() { return x; } let x = 5; f();
       // TODO(moz): See if we can remove the bypass for "goog"
-      if (reference.getScope() == v.scope && !v.getName().equals("goog")) {
+      if (reference.getScope().hasSameContainerScope(v.scope) && !v.getName().equals("goog")) {
         compiler.report(
             JSError.make(
                 reference.getNode(),
