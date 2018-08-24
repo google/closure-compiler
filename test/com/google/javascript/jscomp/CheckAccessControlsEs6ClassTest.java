@@ -506,6 +506,40 @@ public final class CheckAccessControlsEs6ClassTest extends CompilerTestCase {
             .withMessage("Access to private property prop of x.y.z.Parent not allowed here."));
   }
 
+  public void testPrivateAccessToConstructorThroughNew() {
+    test(
+        srcs(
+            lines(
+                "class Foo {", //
+                "  /** @private */",
+                "  constructor() { }",
+                "}",
+                "",
+                "new Foo();")));
+  }
+
+  public void testPrivateAccessToConstructorThroughExtendsClause() {
+    test(
+        srcs(
+            lines(
+                "class Foo {", //
+                "  /** @private */",
+                "  constructor() { }",
+                "}",
+                "",
+                "class SubFoo extends Foo { }")));
+  }
+
+  public void testPrivateAccessToClass() {
+    test(
+        srcs(
+            lines(
+                "/** @private */", //
+                "class Foo { }",
+                "",
+                "Foo;")));
+  }
+
   public void testPrivateAccess_googModule() {
     test(
         srcs(
@@ -724,6 +758,40 @@ public final class CheckAccessControlsEs6ClassTest extends CompilerTestCase {
                 "}"),
             lines("new Foo().bar_ = 1;")),
         error(BAD_PRIVATE_PROPERTY_ACCESS));
+  }
+
+  public void testNoPrivateAccessToConstructorThroughNew() {
+    test(
+        srcs(
+            lines(
+                "class Foo {", //
+                "  /** @private */",
+                "  constructor() { }",
+                "}"),
+            lines("new Foo();")),
+        error(BAD_PRIVATE_PROPERTY_ACCESS));
+  }
+
+  public void testNoPrivateAccessToConstructorThroughExtendsClause() {
+    test(
+        srcs(
+            lines(
+                "class Foo {", //
+                "  /** @private */",
+                "  constructor() { }",
+                "}"),
+            lines("class SubFoo extends Foo { }")),
+        error(BAD_PRIVATE_PROPERTY_ACCESS));
+  }
+
+  public void testNoPrivateAccessToClass() {
+    test(
+        srcs(
+            lines(
+                "/** @private */", //
+                "class Foo { }"),
+            lines("Foo")),
+        error(BAD_PRIVATE_GLOBAL_ACCESS));
   }
 
   public void testProtectedAccessForProperties1() {
@@ -1056,6 +1124,41 @@ public final class CheckAccessControlsEs6ClassTest extends CompilerTestCase {
                 "}")));
   }
 
+  public void testProtectedAccessToConstructorThroughExtendsClause() {
+    test(
+        srcs(
+            lines(
+                "class Foo {", //
+                "  /** @protected */ constructor() {}",
+                "}"),
+            lines("class OtherFoo extends Foo { }")));
+  }
+
+  public void testProtectedAccessToConstructorThroughSubclassInstanceMethod() {
+    test(
+        srcs(
+            lines(
+                "class Foo {", //
+                "  /** @protected */ constructor() {}",
+                "}"),
+            lines(
+                "class OtherFoo extends Foo {", //
+                "  bar() { new Foo(); }",
+                "}")));
+  }
+
+  public void testProtectedAccessToClassThroughSubclassInstanceMethod() {
+    test(
+        srcs(
+            lines(
+                "/** @protected */", //
+                "class Foo {}"),
+            lines(
+                "class OtherFoo extends Foo {", //
+                "  bar() { Foo; }",
+                "}")));
+  }
+
   public void testProtectedAccessThroughNestedFunction() {
     test(
         srcs(
@@ -1257,6 +1360,21 @@ public final class CheckAccessControlsEs6ClassTest extends CompilerTestCase {
         error(BAD_PROTECTED_PROPERTY_ACCESS));
   }
 
+  public void testNoProtectedAccessToConstructorFromUnrelatedClass() {
+    test(
+        srcs(
+            lines(
+                "class Foo {", //
+                "  /** @protected */",
+                "  constructor() {}",
+                "}"),
+            lines(
+                "class OtherFoo {", //
+                "  bar() { new Foo(); }",
+                "}")),
+        error(BAD_PROTECTED_PROPERTY_ACCESS));
+  }
+
   public void testNoProtectedAccessForPropertiesWithNoRhs() {
     test(
         srcs(
@@ -1356,6 +1474,95 @@ public final class CheckAccessControlsEs6ClassTest extends CompilerTestCase {
                     "",
                     "Child.prototype = new Parent();"))),
         error(BAD_PACKAGE_PROPERTY_ACCESS));
+  }
+
+  public void testPackageAccessToConstructorThroughNew() {
+    test(
+        srcs(
+            SourceFile.fromCode(
+                Compiler.joinPathParts("foo", "bar.js"),
+                lines(
+                    "class Foo {", //
+                    "  /** @package */",
+                    "  constructor() {}",
+                    "}")),
+            SourceFile.fromCode(
+                Compiler.joinPathParts("foo", "quux.js"), //
+                "new Foo();")));
+  }
+
+  public void testPackageAccessToConstructorThroughExtendsClause() {
+    test(
+        srcs(
+            SourceFile.fromCode(
+                Compiler.joinPathParts("foo", "bar.js"),
+                lines(
+                    "class Foo {", //
+                    "  /** @package */",
+                    "  constructor() {}",
+                    "}")),
+            SourceFile.fromCode(
+                Compiler.joinPathParts("foo", "quux.js"), //
+                "class SubFoo extends Foo { }")));
+  }
+
+  public void testPackageAccessToClass() {
+    test(
+        srcs(
+            SourceFile.fromCode(
+                Compiler.joinPathParts("foo", "bar.js"),
+                lines(
+                    "/** @package */", //
+                    "class Foo {}")),
+            SourceFile.fromCode(
+                Compiler.joinPathParts("foo", "quux.js"), //
+                "Foo;")));
+  }
+
+  public void testPackageAccessToConstructorThroughNew_fileOveriew() {
+    test(
+        srcs(
+            SourceFile.fromCode(
+                Compiler.joinPathParts("foo", "bar.js"),
+                lines(
+                    "/** @fileoverview @package */", //
+                    "",
+                    "class Foo {", //
+                    "  constructor() {}",
+                    "}")),
+            SourceFile.fromCode(
+                Compiler.joinPathParts("foo", "quux.js"), //
+                "new Foo();")));
+  }
+
+  public void testPackageAccessToConstructorThroughExtendsClause_fileOveriew() {
+    test(
+        srcs(
+            SourceFile.fromCode(
+                Compiler.joinPathParts("foo", "bar.js"),
+                lines(
+                    "/** @fileoverview @package */", //
+                    "",
+                    "class Foo {", //
+                    "  constructor() {}",
+                    "}")),
+            SourceFile.fromCode(
+                Compiler.joinPathParts("foo", "quux.js"), //
+                "class SubFoo extends Foo { }")));
+  }
+
+  public void testPackageAccessToClass_fileOveriew() {
+    test(
+        srcs(
+            SourceFile.fromCode(
+                Compiler.joinPathParts("foo", "bar.js"),
+                lines(
+                    "/** @fileoverview @package */", //
+                    "",
+                    "class Foo {}")),
+            SourceFile.fromCode(
+                Compiler.joinPathParts("foo", "quux.js"), //
+                "Foo;")));
   }
 
   public void testNoPackagePrivateAccessForProperties1() {
@@ -1498,6 +1705,103 @@ public final class CheckAccessControlsEs6ClassTest extends CompilerTestCase {
         error(BAD_PACKAGE_PROPERTY_ACCESS));
   }
 
+  public void testNoPackgeAccessToConstructorThroughNew() {
+    test(
+        srcs(
+            SourceFile.fromCode(
+                Compiler.joinPathParts("foo", "bar.js"),
+                lines(
+                    "class Foo {", //
+                    "  /** @package */",
+                    "  constructor() {}",
+                    "}")),
+            SourceFile.fromCode(
+                Compiler.joinPathParts("baz", "quux.js"), //
+                "new Foo();")),
+        error(BAD_PACKAGE_PROPERTY_ACCESS));
+  }
+
+  public void testNoPackageAccessToConstructorThroughExtendsClause() {
+    test(
+        srcs(
+            SourceFile.fromCode(
+                Compiler.joinPathParts("foo", "bar.js"),
+                lines(
+                    "class Foo {", //
+                    "  /** @package */",
+                    "  constructor() {}",
+                    "}")),
+            SourceFile.fromCode(
+                Compiler.joinPathParts("baz", "quux.js"), //
+                "class SubFoo extends Foo { }")),
+        error(BAD_PACKAGE_PROPERTY_ACCESS));
+  }
+
+  public void testNoPackageAccessToClass() {
+    test(
+        srcs(
+            SourceFile.fromCode(
+                Compiler.joinPathParts("foo", "bar.js"),
+                lines(
+                    "/** @package */", //
+                    "class Foo {}")),
+            SourceFile.fromCode(
+                Compiler.joinPathParts("baz", "quux.js"), //
+                "Foo;")),
+        error(BAD_PACKAGE_PROPERTY_ACCESS));
+  }
+
+  public void testNoPackgeAccessToConstructorThroughNew_fileOveriew() {
+    test(
+        srcs(
+            SourceFile.fromCode(
+                Compiler.joinPathParts("foo", "bar.js"),
+                lines(
+                    "/** @fileoverview @package */", //
+                    "",
+                    "/** @public */",
+                    "class Foo {",
+                    "  constructor() {}",
+                    "}")),
+            SourceFile.fromCode(
+                Compiler.joinPathParts("baz", "quux.js"), //
+                "new Foo();")),
+        error(BAD_PACKAGE_PROPERTY_ACCESS));
+  }
+
+  public void testNoPackageAccessToConstructorThroughExtendsClause_fileOveriew() {
+    test(
+        srcs(
+            SourceFile.fromCode(
+                Compiler.joinPathParts("foo", "bar.js"),
+                lines(
+                    "/** @fileoverview @package */", //
+                    "",
+                    "/** @public */",
+                    "class Foo {",
+                    "  constructor() {}",
+                    "}")),
+            SourceFile.fromCode(
+                Compiler.joinPathParts("baz", "quux.js"), //
+                "class SubFoo extends Foo { }")),
+        error(BAD_PACKAGE_PROPERTY_ACCESS));
+  }
+
+  public void testNoPackageAccessToClass_fileOveriew() {
+    test(
+        srcs(
+            SourceFile.fromCode(
+                Compiler.joinPathParts("foo", "bar.js"),
+                lines(
+                    "/** @fileoverview @package */", //
+                    "",
+                    "class Foo {}")),
+            SourceFile.fromCode(
+                Compiler.joinPathParts("baz", "quux.js"), //
+                "Foo;")),
+        error(BAD_PACKAGE_PROPERTY_ACCESS));
+  }
+
   public void
       testOverrideWithoutVisibilityRedeclInFileWithFileOverviewVisibilityNotAllowed_OneFile() {
     test(
@@ -1629,7 +1933,9 @@ public final class CheckAccessControlsEs6ClassTest extends CompilerTestCase {
                     "",
                     "/** @package */",
                     "class Foo {}")),
-            SourceFile.fromCode(Compiler.joinPathParts("baz", "quux.js"), "new Foo();")),
+            SourceFile.fromCode(
+                Compiler.joinPathParts("baz", "quux.js"), //
+                "new Foo();")),
         error(BAD_PACKAGE_PROPERTY_ACCESS));
   }
 
@@ -1645,7 +1951,9 @@ public final class CheckAccessControlsEs6ClassTest extends CompilerTestCase {
                     " */",
                     "/** @public */",
                     "class Foo {}")),
-            SourceFile.fromCode(Compiler.joinPathParts("baz", "quux.js"), "new Foo();")));
+            SourceFile.fromCode(
+                Compiler.joinPathParts("baz", "quux.js"), //
+                "new Foo();")));
   }
 
   public void testPackageFileOverviewVisibilityAppliesToNameWithoutExplicitVisibility() {
@@ -1660,7 +1968,9 @@ public final class CheckAccessControlsEs6ClassTest extends CompilerTestCase {
                     " */",
                     "",
                     "var Foo = class {};")),
-            SourceFile.fromCode(Compiler.joinPathParts("baz", "quux.js"), "new Foo();")),
+            SourceFile.fromCode(
+                Compiler.joinPathParts("baz", "quux.js"), //
+                "new Foo();")),
         error(BAD_PACKAGE_PROPERTY_ACCESS));
   }
 
@@ -1704,7 +2014,10 @@ public final class CheckAccessControlsEs6ClassTest extends CompilerTestCase {
                     "  bar() {}",
                     "};")),
             SourceFile.fromCode(
-                Compiler.joinPathParts("baz", "quux.js"), "var foo = new Foo();" + "foo.bar();")),
+                Compiler.joinPathParts("baz", "quux.js"),
+                lines(
+                    "var foo = new Foo();", //
+                    "foo.bar();"))),
         error(BAD_PACKAGE_PROPERTY_ACCESS));
   }
 
@@ -1880,8 +2193,6 @@ public final class CheckAccessControlsEs6ClassTest extends CompilerTestCase {
                 "  static create() { return new Foo(); }",
                 "}"),
             lines("Foo.create()")),
-        // TODO(b/80580110): This error is probably correct, but will break the depot, so
-        // we should suppress it until we fix usages.
         error(BAD_PRIVATE_GLOBAL_ACCESS));
   }
 
@@ -1897,8 +2208,6 @@ public final class CheckAccessControlsEs6ClassTest extends CompilerTestCase {
                 "  static create() { return new goog.Foo(); }",
                 "}"),
             lines("goog.Foo.create()")),
-        // TODO(b/80580110): This error is probably correct, but will break the depot, so
-        // we should suppress it until we fix usages.
         error(BAD_PRIVATE_PROPERTY_ACCESS));
   }
 
