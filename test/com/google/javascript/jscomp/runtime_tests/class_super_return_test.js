@@ -23,9 +23,7 @@ class Foo {
     /** @type {number} */
     this.x;
 
-    return {
-      x: 1,
-    };
+    return /** @type {!Foo} */ ({x: 1});
   }
 }
 
