@@ -2216,28 +2216,6 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
       return this;
     }
 
-    private final List<String> js = new ArrayList<>();
-
-    /**
-     * The JavaScript filename. You may specify multiple.
-     */
-    public CommandLineConfig setJs(List<String> js) {
-      this.js.clear();
-      this.js.addAll(js);
-      return this;
-    }
-
-    private final List<String> jsZip = new ArrayList<>();
-
-    /**
-     * The JavaScript zip filename. You may specify multiple.
-     */
-    public CommandLineConfig setJsZip(List<String> zip) {
-      this.jsZip.clear();
-      this.jsZip.addAll(zip);
-      return this;
-    }
-
     private final List<FlagEntry<JsSourceType>> mixedJsSources =
         new ArrayList<>();
 

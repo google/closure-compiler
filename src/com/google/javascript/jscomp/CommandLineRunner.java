@@ -217,11 +217,12 @@ public class CommandLineRunner extends
         + "js files that do not end in _test.js")
     private List<String> js = new ArrayList<>();
 
-    @Option(name = "--jszip",
+    @Option(
+        name = "--jszip",
         hidden = true,
         handler = JsZipOptionHandler.class,
         usage = "The JavaScript zip filename. You may specify multiple.")
-    private List<String> jszip = new ArrayList<>();
+    private List<String> unusedJsZip = null;
 
     @Option(name = "--js_output_file",
         usage = "Primary output filename. If not specified, output is "
@@ -1543,7 +1544,6 @@ public class CommandLineRunner extends
     Flags.guardLevels.clear();
     Flags.mixedJsSources.clear();
 
-    List<String> jsFiles = null;
     List<FlagEntry<JsSourceType>> mixedSources = null;
     List<LocationMapping> mappings = null;
     ImmutableMap<String, String> sourceMapInputs = null;
@@ -1554,7 +1554,6 @@ public class CommandLineRunner extends
 
       processFlagFiles();
 
-      jsFiles = flags.getJsFiles();
       mixedSources = flags.getMixedJsSources();
       mappings = flags.getSourceMapLocationMappings();
       sourceMapInputs = flags.getSourceMapInputs();
@@ -1702,8 +1701,6 @@ public class CommandLineRunner extends
           .setJscompDevMode(flags.jscompDevMode)
           .setLoggingLevel(flags.loggingLevel)
           .setExterns(flags.externs)
-          .setJs(jsFiles)
-          .setJsZip(flags.jszip)
           .setMixedJsSources(mixedSources)
           .setJsOutputFile(flags.jsOutputFile)
           .setSaveAfterChecksFileName(flags.saveAfterChecksFile)
