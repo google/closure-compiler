@@ -105,6 +105,21 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
          "var a$b = {set c(d) {}};");
   }
 
+  public void testObjLitDeclarationWithUsedSetter() {
+    testSame("var a = {set b(c) {}}; a.b = 4;");
+  }
+
+  public void testObjLitDeclarationDoesntCollapsePropertiesOnGetter() {
+    testSame(
+        lines(
+            "var a = {",
+            "  get b() { return class {}; },",
+            "  set b(c) {}",
+            "};",
+            "a.b = class {};",
+            "a.b.c = 4;"));
+  }
+
   public void testObjLitDeclarationWithGetAndSet1() {
     test("var a = {b: {get c() { return 3; },set c(d) {}}};",
          "var a$b = {get c() { return 3; },set c(d) {}};");

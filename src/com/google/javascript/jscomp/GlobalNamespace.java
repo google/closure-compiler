@@ -354,10 +354,8 @@ class GlobalNamespace
               type = getValueType(n.getFirstChild());
               break;
             case GETTER_DEF:
-              type = Name.Type.GET;
-              break;
             case SETTER_DEF:
-              type = Name.Type.SET;
+              type = Name.Type.GET_SET;
               break;
             default:
               throw new IllegalStateException("unexpected:" + n);
@@ -635,7 +633,15 @@ class GlobalNamespace
       }
 
       Name nameObj = getOrCreateName(name, shouldCreateProp);
-      nameObj.type = type;
+      if (!nameObj.isGetOrSetDefinition()) {
+        // Don't change the type of a getter or setter. This is because given:
+        //   var a = {set b(item) {}}; a.b = class {};
+        // `a.b = class {};` does not change the runtime value of a.b, and we do not want to change
+        // the 'type' of a.b to Type.CLASS.
+        // TODO(lharker): for non-setter cases, do we really want to just treat the last set of
+        // a name as canonical? e.g. what if a name is first set to a class, then an object literal?
+        nameObj.type = type;
+      }
       if (n.getBooleanProp(Node.MODULE_EXPORT)) {
         nameObj.isModuleProp = true;
       }
@@ -1044,12 +1050,11 @@ class GlobalNamespace
    */
   static class Name implements StaticTypedSlot {
     enum Type {
-      CLASS,
-      OBJECTLIT,
-      FUNCTION,
-      GET,
-      SET,
-      OTHER,
+      CLASS, // class C {}
+      OBJECTLIT, // var x = {};
+      FUNCTION, // function f() {}
+      GET_SET, // a getter, setter, or both; e.g. `obj.b` in `const obj = {set b(x) {}};`
+      OTHER, // anything else, including `var x = 1;`, var x = new Something();`, etc.
     }
 
     private final String baseName;
@@ -1068,6 +1073,9 @@ class GlobalNamespace
     /** All Es6 subclasses of a name that is an Es6 class. Must be null if not an ES6 class. */
     @Nullable List<Name> subclasses;
 
+    // TODO(lharker): make this private. No users of GlobalNamespace should need to set it.
+    // Ideally it would be final, too, but that might not work for names that are referenced/created
+    // before being initialized.
     Type type;
     private boolean declaredType = false;
     private boolean isDeclared = false;
@@ -1347,7 +1355,7 @@ class GlobalNamespace
     }
 
     boolean isGetOrSetDefinition() {
-      return this.type == Type.GET || this.type == Type.SET;
+      return this.type == Type.GET_SET;
     }
 
     boolean canCollapseUnannotatedChildNames() {

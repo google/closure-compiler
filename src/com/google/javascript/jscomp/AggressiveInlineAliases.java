@@ -156,7 +156,7 @@ class AggressiveInlineAliases implements CompilerPass {
       Name name = workList.pop();
 
       // Don't attempt to inline a getter or setter property as a variable.
-      if (name.type == Name.Type.GET || name.type == Name.Type.SET) {
+      if (name.isGetOrSetDefinition()) {
         continue;
       }
 
