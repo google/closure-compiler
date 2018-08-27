@@ -1889,17 +1889,15 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     }
 
     Set<CompilerInput> workingInputSet = new HashSet<>(inputs);
-    List<CompilerInput> orderedInputs = new ArrayList<>();
     for (CompilerInput entryPoint : entryPoints) {
-      orderedInputs.addAll(
-          depthFirstDependenciesFromInput(
-              entryPoint,
-              /* wasImportedByModule = */ false,
-              workingInputSet,
-              inputsByIdentifier,
-              inputsByProvide,
-              supportEs6Modules,
-              supportCommonJSModules));
+      depthFirstDependenciesFromInput(
+          entryPoint,
+          /* wasImportedByModule = */ false,
+          workingInputSet,
+          inputsByIdentifier,
+          inputsByProvide,
+          supportEs6Modules,
+          supportCommonJSModules);
     }
   }
 
