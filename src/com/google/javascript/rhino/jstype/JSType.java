@@ -732,7 +732,13 @@ public abstract class JSType implements Serializable {
       return false;
     }
 
-    if (eqCache.isStructuralTyping() && this.isStructuralType() && that.isStructuralType()) {
+    // Whether or not we use structural typing to compare object types is based on:
+    // 1. if eqCache.isStructuralTyping() is true, we always use structural typing
+    // 2. if we are comparing to anonymous record types (e.g. `{a: 3}`), always use structural types
+    // Ideally we would also use structural typing to compare anything declared @record, but
+    // that is harder to do with our current representation of types.
+    if ((eqCache.isStructuralTyping() && this.isStructuralType() && that.isStructuralType())
+        || (this.isRecordType() && that.isRecordType())) {
       return toMaybeObjectType()
           .checkStructuralEquivalenceHelper(that.toMaybeObjectType(), eqMethod, eqCache);
     }

@@ -92,6 +92,10 @@ public final class TypeSubject extends Subject<TypeSubject, JSType> {
     checkEqualityAgainst(provided, false, NATURAL_EQUIVALENCE);
   }
 
+  public void isNotStructurallyEqualTo(@Nullable JSType provided) {
+    checkEqualityAgainst(provided, false, STRUCTURAL_EQUIVALENCE);
+  }
+
   public void isNumber() {
     check("isNumberValueType()").that(actualNonNull().isNumberValueType()).isTrue();
   }
@@ -147,6 +151,10 @@ public final class TypeSubject extends Subject<TypeSubject, JSType> {
 
   public void isSubtypeOf(JSType superType) {
     check("isSubtypeOf(%s)", superType).that(actualNonNull().isSubtypeOf(superType)).isTrue();
+  }
+
+  public void isNotSubtypeOf(JSType superType) {
+    check("isSubtypeOf(%s)", superType).that(actualNonNull().isSubtypeOf(superType)).isFalse();
   }
 
   public void toStringIsEqualTo(String typeString) {

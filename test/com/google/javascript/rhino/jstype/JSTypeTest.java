@@ -43,6 +43,7 @@ import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.rhino.jstype.TernaryValue.FALSE;
 import static com.google.javascript.rhino.jstype.TernaryValue.TRUE;
 import static com.google.javascript.rhino.jstype.TernaryValue.UNKNOWN;
+import static com.google.javascript.rhino.testing.TypeSubject.assertType;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -6208,6 +6209,55 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
     // We currently allow any function to be cast to any other function type
     assertTrue(ARRAY_FUNCTION_TYPE.canCastTo(BOOLEAN_OBJECT_FUNCTION_TYPE));
+  }
+
+  public void testRecordTypeEquality() {
+    // {x: number}
+    JSType firstType = registry.createRecordType(ImmutableMap.of("x", NUMBER_TYPE));
+    JSType secondType = registry.createRecordType(ImmutableMap.of("x", NUMBER_TYPE));
+
+    assertType(firstType).isNotSameAs(secondType);
+    assertType(firstType).isEqualTo(secondType);
+    assertType(firstType).isStructurallyEqualTo(secondType);
+  }
+
+  public void testRecordAndInterfaceObjectTypeNotEqualWithSameProperties() {
+    // {x: number}
+    JSType firstType = registry.createRecordType(ImmutableMap.of("x", NUMBER_TYPE));
+    // /** @interface */
+    // function Foo() {}
+    // /** @type {number} */
+    // Foo.prototype.x;
+    FunctionType secondTypeConstructor =
+        registry.createInterfaceType("Foo", null, ImmutableList.of(), false);
+
+    secondTypeConstructor.getPrototype().defineProperty("x", NUMBER_TYPE, false, null);
+    secondTypeConstructor.setImplicitMatch(true);
+    JSType secondType = secondTypeConstructor.getInstanceType();
+
+    // These are not equal but are structurally equivalent
+    assertType(firstType).isNotEqualTo(secondType);
+    assertType(firstType).isStructurallyEqualTo(secondType);
+  }
+
+  public void testRecordAndObjectLiteralWithSameProperties() {
+    // {x: number}
+    JSType firstType = registry.createRecordType(ImmutableMap.of("x", NUMBER_TYPE));
+    assertType(firstType).toStringIsEqualTo("{x: number}");
+    // the type inferred for `const obj = {x: 1};`
+    ObjectType secondType = registry.createAnonymousObjectType(null);
+    secondType.defineDeclaredProperty("x", NUMBER_TYPE, null);
+    assertType(secondType).toStringIsEqualTo("{x: number}");
+
+    // These are neither equal nor structurally equivalent because the second type is not a
+    // structural type.
+    assertType(firstType).isNotEqualTo(secondType);
+    assertType(firstType).isNotStructurallyEqualTo(secondType);
+
+    // The second type is a subtype of the first type but not vice versa because only the first type
+    // is structural.
+    assertType(firstType).isNotSubtypeOf(secondType);
+    assertType(secondType).isSubtypeOf(firstType);
   }
 
   /**
