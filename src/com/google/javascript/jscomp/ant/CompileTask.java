@@ -652,11 +652,8 @@ public final class CompileTask
     while (iter.hasNext()) {
       FileResource fr = (FileResource) iter.next();
       // Construct path to file, relative to current working directory.
-      File file = Paths.get("")
-          .toAbsolutePath()
-          .relativize(fr.getFile().toPath())
-          .toFile();
-      files.add(SourceFile.fromFile(file, Charset.forName(encoding)));
+      java.nio.file.Path path = Paths.get("").toAbsolutePath().relativize(fr.getFile().toPath());
+      files.add(SourceFile.fromPath(path, Charset.forName(encoding)));
     }
     return files;
   }
