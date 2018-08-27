@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.javascript.jscomp.CompilerTestCase.lines;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
@@ -1341,6 +1342,121 @@ public final class CodePrinterTest extends CodePrinterTestBase {
             " * @implements {a.I2}",
             " * @constructor\n */",
             "a.Bar = function() {\n};\n"));
+  }
+
+  public void testTypeAnnotationClassImplements() {
+    languageMode = LanguageMode.ECMASCRIPT_2015;
+    assertTypeAnnotations(
+        lines(
+            "/** @interface */ class Foo {}", //
+            "/** @implements {Foo} */ class Bar {}"),
+        lines(
+            // TODO(b/111818228): Should print annotations
+            // "/**\n * @interface\n */",
+            "class Foo {\n}",
+            // "/**\n * @implements {Foo}\n */",
+            "class Bar {\n}\n"));
+  }
+
+  public void testTypeAnnotationClassMember() {
+    languageMode = LanguageMode.ECMASCRIPT_2015;
+    assertTypeAnnotations(
+        lines(
+            "class Foo {", //
+            "  /** @return {number} */ method(/** string */ arg) {}",
+            "}"),
+        lines(
+            "class Foo {",
+            // TODO(b/111818228): Should print annotations
+            // "  /**\n * @param {string} arg\n * @return {number}\n */",
+            "  method(arg) {\n  }",
+            "}\n"));
+  }
+
+  public void testRestParameter() {
+    languageMode = LanguageMode.ECMASCRIPT_2015;
+    assertTypeAnnotations(
+        lines(
+            "/** @param {...string} args */", //
+            "function f(...args) {}"),
+        lines(
+            "/**\n * @param {...string} args\n * @return {undefined}\n */",
+            "function f(...args) {\n}\n"));
+  }
+
+  public void testDefaultParameter() {
+    languageMode = LanguageMode.ECMASCRIPT_2015;
+    assertTypeAnnotations(
+        lines(
+            "/** @param {string=} msg */", //
+            "function f(msg = 'hi') {}"),
+        lines(
+            "/**\n * @param {string=} msg\n * @return {undefined}\n */",
+            "function f(msg = \"hi\") {\n}\n"));
+  }
+
+  public void testObjectDestructuringParameter() {
+    languageMode = LanguageMode.ECMASCRIPT_2015;
+    assertTypeAnnotations(
+        lines(
+            "/** @param {{a: number, b: number}} ignoredName */", //
+            "function f({a, b}) {}"),
+        lines(
+            "/**",
+            " * @param {{a: number, b: number}} p0", // old JSDoc name is ignored
+            " * @return {undefined}",
+            " */",
+            "function f({a, b}) {", // whitespace in output must match
+            "}",
+            ""));
+  }
+
+  public void testObjectDestructuringParameterWithDefault() {
+    languageMode = LanguageMode.ECMASCRIPT_2015;
+    assertTypeAnnotations(
+        lines(
+            "/** @param {{a: number, b: number}=} ignoredName */", //
+            "function f({a, b} = {a: 1, b: 2}) {}"),
+        lines(
+            "/**",
+            " * @param {{a: number, b: number}=} p0", // old JSDoc name is ignored
+            " * @return {undefined}",
+            " */",
+            "function f({a, b} = {a:1, b:2}) {", // whitespace in output must match
+            "}",
+            ""));
+  }
+
+  public void testArrayDestructuringParameter() {
+    languageMode = LanguageMode.ECMASCRIPT_2015;
+    assertTypeAnnotations(
+        lines(
+            "/** @param {!Iterable<number>} ignoredName */", //
+            "function f([a, b]) {}"),
+        lines(
+            "/**",
+            " * @param {!Iterable<number>} p0", // old JSDoc name is ignored
+            " * @return {undefined}",
+            " */",
+            "function f([a, b]) {", // whitespace in output must match
+            "}",
+            ""));
+  }
+
+  public void testArrayDestructuringParameterWithDefault() {
+    languageMode = LanguageMode.ECMASCRIPT_2015;
+    assertTypeAnnotations(
+        lines(
+            "/** @param {!Iterable<number>=} ignoredName */", //
+            "function f([a, b] = [1, 2]) {}"),
+        lines(
+            "/**",
+            " * @param {!Iterable<number>=} p0", // old JSDoc name is ignored
+            " * @return {undefined}",
+            " */",
+            "function f([a, b] = [1, 2]) {", // whitespace in output must match
+            "}",
+            ""));
   }
 
   public void testU2UFunctionTypeAnnotation1() {
