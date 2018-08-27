@@ -46,6 +46,7 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.google.common.truth.FailureMetadata;
 import com.google.common.truth.Subject;
+import com.google.errorprone.annotations.ForOverride;
 import com.google.javascript.rhino.jstype.JSType;
 import javax.annotation.CheckReturnValue;
 import javax.annotation.Nullable;
@@ -180,12 +181,12 @@ public final class TypeSubject extends Subject<TypeSubject, JSType> {
     }
 
     if (expectation) {
-      // TODO(nickreid): Use a `hash` method defined on `Equivalence`.
-      if (actual().hashCode() != provided.hashCode()) {
+      if (equivalence.hash(actual()) != equivalence.hash(provided)) {
         failWithActual(
             simpleFact("If two types are equal their hashcodes must also be equal"), //
-            fact("actual.hashCode()", actual().hashCode()),
-            fact("provided.hashCode()", provided.hashCode()),
+            fact("definition of equality", equivalence.stringify("actual", "provided")),
+            fact("hash of actual", equivalence.hash(actual())),
+            fact("hash of provided", equivalence.hash(provided)),
             fact("provided", providedString));
       }
     }
@@ -194,12 +195,21 @@ public final class TypeSubject extends Subject<TypeSubject, JSType> {
   private abstract static class Equivalence {
     public final boolean test(@Nullable JSType receiver, @Nullable JSType parameter) {
       // As long as a real value is provided for `receiver` we want to see how its methods handle
-      // any value of 'parameter', including `null`.
+      // any value of `parameter`, including `null`.
       return (receiver == null) ? (parameter == null) : nullUnsafeTest(receiver, parameter);
     }
 
     /** Calls a method on {@code receiver}, passing {@code parameter}, that defines an equality. */
-    public abstract boolean nullUnsafeTest(JSType receiver, @Nullable JSType parameter);
+    @ForOverride
+    protected abstract boolean nullUnsafeTest(JSType receiver, @Nullable JSType parameter);
+
+    public final int hash(@Nullable JSType type) {
+      return (type == null) ? 0 : nullUnsafeHash(type);
+    }
+
+    /** Generates a hashcode for {@code type} consistent with this definition of equality. */
+    @ForOverride
+    protected abstract int nullUnsafeHash(JSType type);
 
     /** Returns a representation of {@link #test()} on {@code receiver} and {@code parameter}. */
     public abstract String stringify(@Nullable String receiver, @Nullable String parameter);
@@ -208,8 +218,13 @@ public final class TypeSubject extends Subject<TypeSubject, JSType> {
   private static final Equivalence NATURAL_EQUIVALENCE =
       new Equivalence() {
         @Override
-        public boolean nullUnsafeTest(JSType receiver, @Nullable JSType parameter) {
+        protected boolean nullUnsafeTest(JSType receiver, @Nullable JSType parameter) {
           return receiver.equals(parameter);
+        }
+
+        @Override
+        protected int nullUnsafeHash(JSType type) {
+          return type.hashCode();
         }
 
         @Override
@@ -221,8 +236,15 @@ public final class TypeSubject extends Subject<TypeSubject, JSType> {
   private static final Equivalence STRUCTURAL_EQUIVALENCE =
       new Equivalence() {
         @Override
-        public boolean nullUnsafeTest(JSType receiver, @Nullable JSType parameter) {
+        protected boolean nullUnsafeTest(JSType receiver, @Nullable JSType parameter) {
           return receiver.isEquivalentTo(parameter, true);
+        }
+
+        @Override
+        protected int nullUnsafeHash(JSType type) {
+          // TODO(nickreid): Give this a real implementation if hashcodes for structural equivalence
+          // become useful in production code.
+          return 1;
         }
 
         @Override
