@@ -19,6 +19,7 @@ package com.google.javascript.jscomp;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.google.common.io.MoreFiles;
+import com.google.javascript.rhino.StaticSourceFile.SourceKind;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -32,24 +33,35 @@ import junit.framework.TestCase;
 
 public final class SourceFileTest extends TestCase {
 
-  private static class ResetableSourceFile extends SourceFile.Preloaded {
-    ResetableSourceFile(String fileName, String code) {
-      super(fileName, null, code);
-    }
+  public void testSourceKind() {
+    SourceFile sf1 = SourceFile.fromCode("test1.js", "1");
+    assertThat(sf1.isStrong()).isTrue();
+    assertThat(sf1.isWeak()).isFalse();
+    assertThat(sf1.isExtern()).isFalse();
 
-    void updateCode(String code) {
-      setCode(code);
-    }
+    sf1.setKind(SourceKind.WEAK);
+    assertThat(sf1.isStrong()).isFalse();
+    assertThat(sf1.isWeak()).isTrue();
+    assertThat(sf1.isExtern()).isFalse();
+
+    SourceFile sf2 = SourceFile.fromCode("test2.js", "2", SourceKind.WEAK);
+    assertThat(sf2.isStrong()).isFalse();
+    assertThat(sf2.isWeak()).isTrue();
+    assertThat(sf2.isExtern()).isFalse();
+
+    sf2.setKind(SourceKind.EXTERN);
+    assertThat(sf2.isStrong()).isFalse();
+    assertThat(sf2.isWeak()).isFalse();
+    assertThat(sf2.isExtern()).isTrue();
   }
 
-  /** Tests that keys are assigned sequentially. */
   public void testLineOffset() throws Exception {
-    ResetableSourceFile sf = new ResetableSourceFile("test.js", "'1';\n'2';\n'3'\n");
+    SourceFile sf = SourceFile.fromCode("test.js", "'1';\n'2';\n'3'\n");
     assertThat(sf.getLineOffset(1)).isEqualTo(0);
     assertThat(sf.getLineOffset(2)).isEqualTo(5);
     assertThat(sf.getLineOffset(3)).isEqualTo(10);
 
-    sf.updateCode("'100';\n'200;'\n'300'\n");
+    sf.setCode("'100';\n'200;'\n'300'\n");
     assertThat(sf.getLineOffset(1)).isEqualTo(0);
     assertThat(sf.getLineOffset(2)).isEqualTo(7);
     assertThat(sf.getLineOffset(3)).isEqualTo(14);
