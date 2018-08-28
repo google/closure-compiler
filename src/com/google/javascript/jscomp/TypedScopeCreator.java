@@ -167,7 +167,9 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
   static final DiagnosticType CONFLICTING_GETTER_SETTER_TYPE =
       DiagnosticType.warning(
           "JSC_CONFLICTING_GETTER_SETTER_TYPE",
-          "The types of the getter and setter for property ''{0}'' do not match.");
+          "The types of the getter and setter for property ''{0}'' do not match.\n"
+              + "getter type is: {1}\n"
+              + "setter type is: {2}");
 
   static final DiagnosticGroup ALL_DIAGNOSTICS = new DiagnosticGroup(
       DELEGATE_PROXY_SUFFIX,
@@ -2759,13 +2761,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
     }
 
     void defineMemberFunction(Node n) {
-      // MEMBER_FUNCTION_DEF -> CLASS_MEMBERS -> CLASS
-      Node ownerNode = n.getGrandparent();
-      checkState(ownerNode.isClass());
-      ObjectType ownerType = ownerNode.getJSType().toMaybeFunctionType();
-      if (!n.isStaticMember()) {
-        ownerType = ((FunctionType) ownerType).getPrototype();
-      }
+      ObjectType ownerType = determineOwnerTypeForClassMember(n);
       ownerType.defineDeclaredProperty(n.getString(), n.getLastChild().getJSType(), n);
     }
 
@@ -2773,12 +2769,6 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       // GETTER_DEF -> CLASS_MEMBERS -> CLASS
       if (getterSetterTypes == null) {
         this.getterSetterTypes = HashBasedTable.create();
-      }
-      Node ownerNode = n.getGrandparent();
-      checkState(ownerNode.isClass());
-      ObjectType ownerType = ownerNode.getJSType().toMaybeFunctionType();
-      if (!n.isStaticMember()) {
-        ownerType = ((FunctionType) ownerType).getPrototype();
       }
 
       FunctionType methodType = n.getLastChild().getJSType().toMaybeFunctionType();
@@ -2793,11 +2783,37 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
           getterSetterTypes.get(name, n.isGetterDef() ? Token.SETTER_DEF : Token.GETTER_DEF);
       if (previousType != null && !previousType.equals(propertyType)) {
         // TODO(sdh): make this not an error - instead, store the getter and setter types separately
-        report(JSError.make(n, CONFLICTING_GETTER_SETTER_TYPE, name));
+
+        report(
+            JSError.make(
+                n,
+                CONFLICTING_GETTER_SETTER_TYPE,
+                name,
+                n.isGetterDef() ? propertyType.toString() : previousType.toString(),
+                n.isGetterDef() ? previousType.toString() : propertyType.toString()));
       } else if (previousType == null) {
+        ObjectType ownerType = determineOwnerTypeForClassMember(n);
         ownerType.defineDeclaredProperty(name, propertyType, n);
         getterSetterTypes.put(name, n.getToken(), propertyType);
       }
+    }
+
+    /**
+     * Returns the owner type for a class member function, getter, or setter.
+     *
+     * <p>For a member on class C, this is either `C` for a static member or `C.prototype` for a
+     * nonstatic member.
+     */
+    private ObjectType determineOwnerTypeForClassMember(Node member) {
+      // MEMBER_FUNCTION_DEF -> CLASS_MEMBERS -> CLASS  or
+      // GETTER_DEF -> CLASS_MEMBERS -> CLASS
+      Node ownerNode = member.getGrandparent();
+      checkState(ownerNode.isClass());
+      ObjectType ownerType = ownerNode.getJSType().toMaybeFunctionType();
+      if (!member.isStaticMember()) {
+        ownerType = ((FunctionType) ownerType).getPrototype();
+      }
+      return ownerType;
     }
 
     /** Returns the type of the getter, falling back on unknown if the return type was inferred. */

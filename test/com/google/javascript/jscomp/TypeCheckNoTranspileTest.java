@@ -3311,6 +3311,10 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "required: number"));
   }
 
+  public void testClassSetterWithMissingParameter() {
+    testTypes("class C { set a(b) {} }");
+  }
+
   public void testClassStaticSetter() {
     testTypes(
         lines(
@@ -3370,17 +3374,64 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "var /** null */ y = new C().x;",
             "new C().x = null;"),
         new String[] {
-          // TODO(sdh): This should be allowed and not produce this first error.
-          "The types of the getter and setter for property 'x' do not match.",
           lines(
-              "initializing variable",
+              // TODO(sdh): Having different getter and setter types should be allowed and not
+              // produce the following error.
+              "The types of the getter and setter for property 'x' do not match.",
+              "getter type is: number",
+              "setter type is: string"),
+          lines(
+              "initializing variable", //
               "found   : number",
               "required: null"),
           lines(
               "assignment to property x of C",
               "found   : null",
               // TODO(sdh): This should report that it requires a string.
-              "required: number")});
+              "required: number")
+        });
+  }
+
+  public void testClassGetterAndSetterWithSameStructuralTypeIsAllowed() {
+    // Regression test for a case where we were warning for CONFLICTING_GETTER_SETTER_TYPE when the
+    // getter and setter used record types.
+    // This was fixed by always using structural equality when checking equality for RecordTypes
+    testTypes(
+        lines(
+            "class C {",
+            "  /** @return {{x: number}} */",
+            "  get x() { return {x: 0}; }",
+            "  /** @param {{x: number}} arg */",
+            "  set x(arg) {}",
+            "}",
+            "const c = new C();",
+            "c.x = {x: 3};",
+            "const /** {x: number} */ something = c.x;"));
+  }
+
+  public void testClassGetterAndSetterWithSameStructuralRecordAndNominalTypeIsAllowed() {
+    // NOTE: we would actually `like` to allow this, but right now only actual RecordTypes are
+    // compared structurally when checking equality.
+    testTypes(
+        lines(
+            "/** @record */",
+            "function xRecord() {}",
+            "/** @type {number} */",
+            "xRecord.prototype.x;",
+            "",
+            "class C {",
+            "  /** @return {!xRecord} */",
+            "  get x() { return {x: 0}; }",
+            "  /** @param {{x: number}} arg */",
+            "  set x(arg) {}",
+            "}",
+            "const c = new C();",
+            "c.x = {x: 3};",
+            "const /** {x: number} */ something = c.x;"),
+        lines(
+            "The types of the getter and setter for property 'x' do not match.",
+            "getter type is: xRecord",
+            "setter type is: {x: number}"));
   }
 
   public void testClassNewTargetInArrowFunction() {
