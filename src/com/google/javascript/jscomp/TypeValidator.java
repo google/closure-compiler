@@ -81,9 +81,6 @@ class TypeValidator implements Serializable {
   // In TypeCheck, when we are analyzing a file with .java.js suffix, we set
   // this field to IGNORE_NULL_UNDEFINED
   private SubtypingMode subtypingMode = SubtypingMode.NORMAL;
-  // If true, we typecheck the operands of primitive operators more strictly, without relying
-  // on implicit conversion rules.
-  private boolean strictOperatorChecks = false;
 
   // TODO(nicksantos): Provide accessors to better filter the list of type
   // mismatches. For example, if we pass (Cake|null) where only Cake is
@@ -115,7 +112,7 @@ class TypeValidator implements Serializable {
       DiagnosticType.warning("JSC_TYPE_MISMATCH", "{0}");
 
   static final DiagnosticType INVALID_OPERAND_TYPE =
-      DiagnosticType.warning("JSC_INVALID_OPERAND_TYPE", "{0}");
+      DiagnosticType.disabled("JSC_INVALID_OPERAND_TYPE", "{0}");
 
   static final DiagnosticType MISSING_EXTENDS_TAG_WARNING =
       DiagnosticType.warning(
@@ -213,10 +210,6 @@ class TypeValidator implements Serializable {
 
   void setSubtypingMode(SubtypingMode mode) {
     this.subtypingMode = mode;
-  }
-
-  void setStrictOperatorChecks(boolean strictChecks) {
-    this.strictOperatorChecks = strictChecks;
   }
 
   /**
@@ -354,7 +347,7 @@ class TypeValidator implements Serializable {
   void expectNumber(NodeTraversal t, Node n, JSType type, String msg) {
     if (!type.matchesNumberContext()) {
       mismatch(t, n, msg, type, NUMBER_TYPE);
-    } else if (this.strictOperatorChecks) {
+    } else {
       expectNumberStrict(n, type, msg);
     }
   }
@@ -363,15 +356,13 @@ class TypeValidator implements Serializable {
    * Expect the type to be a number or a subtype.
    */
   void expectNumberStrict(Node n, JSType type, String msg) {
-    checkState(this.strictOperatorChecks);
     if (!type.isSubtypeOf(getNativeType(NUMBER_TYPE))) {
       registerMismatchAndReport(
           n, INVALID_OPERAND_TYPE, msg, type, getNativeType(NUMBER_TYPE), null, null);
     }
   }
 
-  void expectMatchingTypes(Node n, JSType left, JSType right, String msg) {
-    checkState(this.strictOperatorChecks);
+  void expectMatchingTypesStrict(Node n, JSType left, JSType right, String msg) {
     if (!left.isSubtypeOf(right) && !right.isSubtypeOf(left)) {
       registerMismatchAndReport(n, INVALID_OPERAND_TYPE, msg, right, left, null, null);
     }
@@ -385,7 +376,7 @@ class TypeValidator implements Serializable {
   void expectBitwiseable(NodeTraversal t, Node n, JSType type, String msg) {
     if (!type.matchesNumberContext() && !type.isSubtypeOf(allBitwisableValueTypes)) {
       mismatch(t, n, msg, type, allBitwisableValueTypes);
-    } else if (this.strictOperatorChecks) {
+    } else {
       expectNumberStrict(n, type, msg);
     }
   }
@@ -420,13 +411,12 @@ class TypeValidator implements Serializable {
         && !type.matchesStringContext()
         && !type.matchesStringContext()) {
       mismatch(t, n, msg, type, NUMBER_STRING);
-    } else if (this.strictOperatorChecks) {
+    } else {
       expectStringOrNumberOrSymbolStrict(n, type, msg);
     }
   }
 
   void expectStringOrNumberStrict(Node n, JSType type, String msg) {
-    checkState(this.strictOperatorChecks);
     if (!type.isSubtypeOf(getNativeType(NUMBER_STRING))) {
       registerMismatchAndReport(
           n, INVALID_OPERAND_TYPE, msg, type, getNativeType(NUMBER_STRING), null, null);
@@ -443,13 +433,12 @@ class TypeValidator implements Serializable {
         && !type.matchesStringContext()
         && !type.matchesSymbolContext()) {
       mismatch(t, n, msg, type, NUMBER_STRING_SYMBOL);
-    } else if (this.strictOperatorChecks) {
+    } else {
       expectStringOrNumberOrSymbolStrict(n, type, msg);
     }
   }
 
   void expectStringOrNumberOrSymbolStrict(Node n, JSType type, String msg) {
-    checkState(this.strictOperatorChecks);
     if (!type.isSubtypeOf(getNativeType(NUMBER_STRING_SYMBOL))) {
       registerMismatchAndReport(
           n, INVALID_OPERAND_TYPE, msg, type, getNativeType(NUMBER_STRING_SYMBOL), null, null);

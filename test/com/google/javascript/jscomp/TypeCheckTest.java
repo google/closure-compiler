@@ -20521,6 +20521,15 @@ public final class TypeCheckTest extends TypeCheckTestCase {
     testTypes("var /** number */ x = 1; (/** @type {?} */ (x)) = 'foobar';");
   }
 
+  public void testInvalidComparisonsInStrictOperatorsMode() {
+    testTypes(
+        "function f(/** (void|string) */ x, /** void */ y) { return x < y; }",
+        lines(
+            "right side of comparison", //
+            "found   : undefined",
+            "required: string"));
+  }
+
   private void testClosureTypes(String js, String description) {
     testClosureTypesMultipleWarnings(js,
         description == null ? null : ImmutableList.of(description));

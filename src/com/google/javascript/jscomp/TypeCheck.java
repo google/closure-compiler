@@ -351,8 +351,6 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
   // explicitly turned off.
   private boolean reportMissingProperties = true;
 
-  private boolean strictOperatorChecks = false;
-
   private InferJSDocInfo inferJSDocInfo = null;
 
   // These fields are used to calculate the percentage of expressions typed.
@@ -410,11 +408,6 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
   public void process(Node externsRoot, Node jsRoot) {
     checkNotNull(scopeCreator);
     checkNotNull(topScope);
-
-    if (this.compiler.getOptions().enables(DiagnosticGroups.STRICT_PRIMITIVE_OPERATORS)) {
-      this.strictOperatorChecks = true;
-      this.validator.setStrictOperatorChecks(true);
-    }
 
     Node externsAndJs = jsRoot.getParent();
     checkState(externsAndJs != null);
@@ -657,7 +650,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         childType = getJSType(n.getFirstChild());
         if (!childType.matchesNumberContext()) {
           report(t, n, BIT_OPERATION, NodeUtil.opToStr(n.getToken()), childType.toString());
-        } else if (this.strictOperatorChecks) {
+        } else {
           this.validator.expectNumberStrict(n, childType, "bitwise NOT");
         }
         ensureTyped(n, NUMBER_TYPE);
@@ -748,23 +741,22 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
           validator.expectNumber(t, leftSide, leftType, "left side of numeric comparison");
         } else if (leftType.isNumber()) {
           validator.expectNumber(t, rightSide, rightType, "right side of numeric comparison");
-        } else if (this.strictOperatorChecks) {
-          String errorMsg = "expected matching types in comparison";
-          this.validator.expectMatchingTypes(n, leftType, rightType, errorMsg);
-        } else if (leftType.matchesNumberContext() && rightType.matchesNumberContext()) {
-          // OK.
         } else {
-          // Whether the comparison is numeric will be determined at runtime
-          // each time the expression is evaluated. Regardless, both operands
-          // should match a string context.
-          String message = "left side of comparison";
-          validator.expectString(t, leftSide, leftType, message);
-          validator.expectNotNullOrUndefined(
-              t, leftSide, leftType, message, getNativeType(STRING_TYPE));
-          message = "right side of comparison";
-          validator.expectString(t, rightSide, rightType, message);
-          validator.expectNotNullOrUndefined(
-              t, rightSide, rightType, message, getNativeType(STRING_TYPE));
+          String errorMsg = "expected matching types in comparison";
+          this.validator.expectMatchingTypesStrict(n, leftType, rightType, errorMsg);
+          if (!leftType.matchesNumberContext() || !rightType.matchesNumberContext()) {
+            // Whether the comparison is numeric will be determined at runtime
+            // each time the expression is evaluated. Regardless, both operands
+            // should match a string context.
+            String message = "left side of comparison";
+            validator.expectString(t, leftSide, leftType, message);
+            validator.expectNotNullOrUndefined(
+                t, leftSide, leftType, message, getNativeType(STRING_TYPE));
+            message = "right side of comparison";
+            validator.expectString(t, rightSide, rightType, message);
+            validator.expectNotNullOrUndefined(
+                t, rightSide, rightType, message, getNativeType(STRING_TYPE));
+          }
         }
         ensureTyped(n, BOOLEAN_TYPE);
         break;
@@ -2692,12 +2684,12 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         String opStr = NodeUtil.opToStr(n.getToken());
         if (!leftType.matchesNumberContext()) {
           report(t, left, BIT_OPERATION, opStr, leftType.toString());
-        } else if (this.strictOperatorChecks) {
+        } else {
           this.validator.expectNumberStrict(n, leftType, "operator " + opStr);
         }
         if (!rightType.matchesNumberContext()) {
           report(t, right, BIT_OPERATION, opStr, rightType.toString());
-        } else if (this.strictOperatorChecks) {
+        } else {
           this.validator.expectNumberStrict(n, rightType, "operator " + opStr);
         }
         break;
