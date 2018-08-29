@@ -106,16 +106,6 @@ public abstract class WarningsGuard implements Serializable {
   }
 
   /**
-   * The enables method returns true if any of the diagnostic types in the group is
-   * enabled. Sometimes this is too wide a net, eg, we don't want DiagnosticGroups.CONST
-   * to turn on NTI. This method returns true iff the particular group as a whole is
-   * explicitly enabled.
-   */
-  protected DiagnosticGroupState enablesExplicitly(DiagnosticGroup group) {
-    return DiagnosticGroupState.UNSPECIFIED;
-  }
-
-  /**
    * Make a warnings guard that's the same as this one but with
    * all escalating guards turned down.
    */
