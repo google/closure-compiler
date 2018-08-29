@@ -71,15 +71,15 @@ public final class SourceFileTest extends TestCase {
     // Setup environment.
     String expectedContent = "// content content content";
     String newExpectedContent = "// new content new content new content";
-    Path jsFile = Files.createTempFile("test", ".js");
-    MoreFiles.asCharSink(jsFile, StandardCharsets.UTF_8).write(expectedContent);
-    SourceFile sourceFile = SourceFile.fromFile(jsFile.toFile());
+    Path jsPath = Files.createTempFile("test", ".js");
+    MoreFiles.asCharSink(jsPath, StandardCharsets.UTF_8).write(expectedContent);
+    SourceFile sourceFile = SourceFile.fromPath(jsPath, StandardCharsets.UTF_8);
 
     // Verify initial state.
     assertEquals(expectedContent, sourceFile.getCode());
 
     // Perform a change.
-    MoreFiles.asCharSink(jsFile, StandardCharsets.UTF_8).write(newExpectedContent);
+    MoreFiles.asCharSink(jsPath, StandardCharsets.UTF_8).write(newExpectedContent);
     sourceFile.clearCachedSource();
 
     // Verify final state.
@@ -115,37 +115,33 @@ public final class SourceFileTest extends TestCase {
   public void testSourceFileResolvesZipEntries() throws IOException {
     // Setup environment.
     String expectedContent = "// <program goes here>";
-    Path jsZipFile = Files.createTempFile("test", ".js.zip");
-    createZipWithContent(jsZipFile, expectedContent);
+    Path jsZipPath = Files.createTempFile("test", ".js.zip");
+    createZipWithContent(jsZipPath, expectedContent);
 
     // Test SourceFile#fromZipEntry(String, String, String, Charset)
     SourceFile sourceFileFromZipEntry =
         SourceFile.fromZipEntry(
-            jsZipFile.toString(),
-            jsZipFile.toAbsolutePath().toString(),
+            jsZipPath.toString(),
+            jsZipPath.toAbsolutePath().toString(),
             "foo.js",
             StandardCharsets.UTF_8);
     assertEquals(expectedContent, sourceFileFromZipEntry.getCode());
 
     // Test SourceFile#fromFile(String)
-    SourceFile sourceFileFromFileString = SourceFile.fromFile(jsZipFile + "!/foo.js");
+    SourceFile sourceFileFromFileString =
+        SourceFile.fromFile(jsZipPath + "!/foo.js", StandardCharsets.UTF_8);
     assertEquals(expectedContent, sourceFileFromFileString.getCode());
 
     // Test SourceFile#fromFile(String, Charset)
     SourceFile sourceFileFromFileStringCharset =
-        SourceFile.fromFile(jsZipFile + "!/foo.js", StandardCharsets.UTF_8);
+        SourceFile.fromFile(jsZipPath + "!/foo.js", StandardCharsets.UTF_8);
     assertEquals(expectedContent, sourceFileFromFileStringCharset.getCode());
 
     // Test SourceFile#fromPath(Path, Charset)
-    Path zipEntryPath = Paths.get(jsZipFile + "!/foo.js");
+    Path zipEntryPath = Paths.get(jsZipPath + "!/foo.js");
     SourceFile sourceFileFromPathCharset =
         SourceFile.fromPath(zipEntryPath, StandardCharsets.UTF_8);
     assertEquals(expectedContent, sourceFileFromPathCharset.getCode());
-
-    // Test SourceFile#fromFile(File, Charset)
-    SourceFile sourceFileFromFileCharset =
-        SourceFile.fromFile(zipEntryPath.toFile(), StandardCharsets.UTF_8);
-    assertEquals(expectedContent, sourceFileFromFileCharset.getCode());
   }
 
   private static void createZipWithContent(Path zipFile, String content) throws IOException {
