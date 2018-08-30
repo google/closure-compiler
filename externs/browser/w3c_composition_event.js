@@ -81,3 +81,13 @@ function CompositionEvent(type, opt_eventInitDict) {}
  */
 CompositionEvent.prototype.initCompositionEvent = function(
     typeArg, canBubbleArg, cancelableArg, viewArg, dataArg, localeArg) {};
+
+/**
+ * @type {string}
+ */
+CompositionEvent.prototype.data;
+
+/**
+ * @type {string}
+ */
+CompositionEvent.prototype.locale;
