@@ -15472,15 +15472,13 @@ public final class TypeCheckTest extends TypeCheckTestCase {
 
 
   public void testUnknownTypeReport() {
-    compiler.getOptions().setWarningLevel(DiagnosticGroups.REPORT_UNKNOWN_TYPES,
-        CheckLevel.WARNING);
+    enableReportUnknownTypes();
     testTypes("function id(x) { return x; }",
         "could not determine the type of this expression");
   }
 
   public void testUnknownForIn() {
-    compiler.getOptions().setWarningLevel(DiagnosticGroups.REPORT_UNKNOWN_TYPES,
-        CheckLevel.WARNING);
+    enableReportUnknownTypes();
     testTypes("var x = {'a':1}; var y; \n for(\ny\n in x) {}");
   }
 

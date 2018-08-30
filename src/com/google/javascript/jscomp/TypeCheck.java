@@ -233,8 +233,8 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
           "property {0} is already defined by the {1} extended interface");
 
   static final DiagnosticType UNKNOWN_EXPR_TYPE =
-      DiagnosticType.disabled("JSC_UNKNOWN_EXPR_TYPE",
-          "could not determine the type of this expression");
+      DiagnosticType.warning(
+          "JSC_UNKNOWN_EXPR_TYPE", "could not determine the type of this expression");
 
   static final DiagnosticType UNRESOLVED_TYPE =
       DiagnosticType.warning("JSC_UNRESOLVED_TYPE",
@@ -344,7 +344,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
 
   private TypedScopeCreator scopeCreator;
 
-  private final boolean reportUnknownTypes;
+  private boolean reportUnknownTypes = false;
   private SubtypingMode subtypingMode = SubtypingMode.NORMAL;
 
   // This may be expensive, so don't emit these warnings if they're
@@ -380,8 +380,6 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     this.typeRegistry = typeRegistry;
     this.topScope = topScope;
     this.scopeCreator = scopeCreator;
-    this.reportUnknownTypes = compiler.getOptions().enables(
-        DiagnosticGroups.REPORT_UNKNOWN_TYPES);
     this.inferJSDocInfo = new InferJSDocInfo(compiler);
   }
 
@@ -394,6 +392,12 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
   /** Turn on the missing property check. Returns this for easy chaining. */
   TypeCheck reportMissingProperties(boolean report) {
     reportMissingProperties = report;
+    return this;
+  }
+
+  /** Turn on the unknown types check. Returns this for easy chaining. */
+  TypeCheck reportUnknownTypes(boolean report) {
+    reportUnknownTypes = report;
     return this;
   }
 

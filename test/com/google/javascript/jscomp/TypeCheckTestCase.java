@@ -35,9 +35,12 @@ import java.util.List;
 
 abstract class TypeCheckTestCase extends CompilerTypeTestCase {
 
+  private boolean reportUnknownTypes = false;
+
   @Override
   public void setUp() throws Exception {
     super.setUp();
+    this.reportUnknownTypes = false;
     // Enable missing override checks that are disabled by default.
     compiler.getOptions().setWarningLevel(DiagnosticGroups.MISSING_OVERRIDE, CheckLevel.WARNING);
     compiler
@@ -52,6 +55,10 @@ abstract class TypeCheckTestCase extends CompilerTypeTestCase {
     compiler
         .getOptions()
         .setWarningLevel(DiagnosticGroups.STRICT_MISSING_PROPERTIES, CheckLevel.OFF);
+  }
+
+  protected void enableReportUnknownTypes() {
+    this.reportUnknownTypes = true;
   }
 
   protected static ObjectType getInstanceType(Node js1Node) {
@@ -302,7 +309,8 @@ abstract class TypeCheckTestCase extends CompilerTypeTestCase {
   }
 
   protected TypeCheck makeTypeCheck() {
-    return new TypeCheck(compiler, new SemanticReverseAbstractInterpreter(registry), registry);
+    return new TypeCheck(compiler, new SemanticReverseAbstractInterpreter(registry), registry)
+        .reportUnknownTypes(reportUnknownTypes);
   }
 
   protected String suppressMissingProperty(String... props) {
