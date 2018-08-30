@@ -89,7 +89,8 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
   VariableReferenceCheck(AbstractCompiler compiler, boolean forTranspileOnly) {
     this.compiler = compiler;
     this.forTranspileOnly = forTranspileOnly;
-    this.checkUnusedLocals = compiler.getOptions().enables(DiagnosticGroups.UNUSED_LOCAL_VARIABLE);
+    this.checkUnusedLocals =
+        compiler.getOptions().enables(DiagnosticGroup.forType(UNUSED_LOCAL_ASSIGNMENT));
   }
 
   private boolean shouldProcess(Node root) {
