@@ -136,6 +136,26 @@ public class UnionTypeTest extends BaseJSTypeTestCase {
     Asserts.assertResolvesToSame(nullOrString);
   }
 
+  public void testRestrictByNotUndefined() throws Exception {
+    UnionType nullOrString = (UnionType) createUnionType(NULL_TYPE, STRING_OBJECT_TYPE);
+    UnionType nullOrStringOrUndefined =
+        (UnionType) createUnionType(NULL_TYPE, STRING_OBJECT_TYPE, VOID_TYPE);
+
+    assertType(nullOrStringOrUndefined.restrictByNotUndefined())
+        .isStructurallyEqualTo(nullOrString);
+  }
+
+  public void testRestrictByPossiblyFalsy() throws Exception {
+    UnionType allPossiblyFalsy =
+        (UnionType) createUnionType(NULL_TYPE, VOID_TYPE, STRING_TYPE, NUMBER_TYPE, BOOLEAN_TYPE);
+    UnionType nonePossiblyFalsy = (UnionType) createUnionType(ARRAY_TYPE, STRING_OBJECT_TYPE);
+    UnionType mixture = (UnionType) createUnionType(allPossiblyFalsy, nonePossiblyFalsy);
+
+    assertType(allPossiblyFalsy.restrictByPossiblyFalsy()).isStructurallyEqualTo(allPossiblyFalsy);
+    assertType(mixture.restrictByPossiblyFalsy()).isStructurallyEqualTo(allPossiblyFalsy);
+    assertType(nonePossiblyFalsy.restrictByPossiblyFalsy()).isEmpty();
+  }
+
   /**
    * Tests {@link JSType#getGreatestSubtype(JSType)} on union types.
    */

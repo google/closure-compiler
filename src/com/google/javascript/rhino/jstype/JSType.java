@@ -40,6 +40,7 @@
 package com.google.javascript.rhino.jstype;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.javascript.rhino.jstype.JSTypeNative.NO_TYPE;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.HashBasedTable;
@@ -1431,6 +1432,15 @@ public abstract class JSType implements Serializable {
   /** If this is a union type, returns a union type that does not include the undefined type. */
   public JSType restrictByNotUndefined() {
     return this;
+  }
+
+  /**
+   * If this is a union type, returns a union type that only includes members that may be falsy. For
+   * example, {@code null|number|Object} would restrict to {@code null|number}, since null and
+   * number may both be falsy, while {@code Object} is never falsy.
+   */
+  public JSType restrictByPossiblyFalsy() {
+    return getNativeType(NO_TYPE);
   }
 
   /**

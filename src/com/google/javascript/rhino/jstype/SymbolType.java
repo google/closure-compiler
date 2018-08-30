@@ -39,11 +39,11 @@
 
 package com.google.javascript.rhino.jstype;
 
+import static com.google.javascript.rhino.jstype.JSTypeNative.NO_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.SYMBOL_OBJECT_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.SYMBOL_VALUE_OR_OBJECT_TYPE;
 import static com.google.javascript.rhino.jstype.TernaryValue.FALSE;
 import static com.google.javascript.rhino.jstype.TernaryValue.UNKNOWN;
-
 
 /**
  * Symbol type.
@@ -117,5 +117,10 @@ public final class SymbolType extends ValueType {
   @Override
   public <T> T visit(Visitor<T> visitor) {
     return visitor.caseSymbolType();
+  }
+
+  @Override
+  public JSType restrictByPossiblyFalsy() {
+    return registry.getNativeType(NO_TYPE);
   }
 }

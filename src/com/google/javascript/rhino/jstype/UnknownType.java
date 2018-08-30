@@ -179,4 +179,9 @@ public class UnknownType extends ObjectType {
   int recursionUnsafeHashCode() {
     return System.identityHashCode(this);
   }
+
+  @Override
+  public JSType restrictByPossiblyFalsy() {
+    return this;
+  }
 }
