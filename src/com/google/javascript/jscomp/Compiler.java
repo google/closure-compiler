@@ -3316,9 +3316,9 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
   @Override
   Node ensureLibraryInjected(String resourceName, boolean force) {
-    boolean doNotInject =
-        !force && (options.skipNonTranspilationPasses || options.preventLibraryInjection);
-    if (injectedLibraries.containsKey(resourceName) || doNotInject) {
+    boolean shouldInject =
+        force || (!options.skipNonTranspilationPasses && !options.preventLibraryInjection);
+    if (injectedLibraries.containsKey(resourceName) || !shouldInject) {
       return lastInjectedLibrary;
     }
 
