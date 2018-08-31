@@ -6233,6 +6233,16 @@ chrome.system.display.MirrorModeInfo;
 
 
 /**
+ * @typedef {!{
+ *   manufacturerId: string,
+ *   productId: string,
+ *   yearOfManufacture: number,
+ * }}
+ */
+chrome.system.display.Edid;
+
+
+/**
  * An undocumented type that defines the objects passed to getInfo()'s callback.
  * @constructor
  */
@@ -6245,6 +6255,10 @@ chrome.system.display.DisplayUnitInfo.prototype.id;
 
 /** @type {string} */
 chrome.system.display.DisplayUnitInfo.prototype.name;
+
+
+/** @type {!chrome.system.display.Edid|undefined} */
+chrome.system.display.DisplayUnitInfo.prototype.edid;
 
 
 /** @type {string} */
