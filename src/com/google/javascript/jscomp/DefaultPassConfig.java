@@ -474,6 +474,9 @@ public final class DefaultPassConfig extends PassConfig {
     if (options.skipNonTranspilationPasses) {
       return passes;
     }
+
+    passes.add(removeWeakSources);
+
     passes.add(garbageCollectChecks);
 
     // i18n
@@ -1433,6 +1436,19 @@ public final class DefaultPassConfig extends PassConfig {
         @Override
         protected FeatureSet featureSet() {
           return ES8_MODULES;
+        }
+      };
+
+  private final PassFactory removeWeakSources =
+      new PassFactory("removeWeakSources", true) {
+        @Override
+        protected CompilerPass create(AbstractCompiler compiler) {
+          return new RemoveWeakSources(compiler);
+        }
+
+        @Override
+        protected FeatureSet featureSet() {
+          return FeatureSet.latest();
         }
       };
 

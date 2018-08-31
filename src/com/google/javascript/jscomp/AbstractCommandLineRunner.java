@@ -42,6 +42,7 @@ import com.google.javascript.jscomp.CompilerOptions.TweakProcessing;
 import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.jscomp.deps.SourceCodeEscapers;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.StaticSourceFile.SourceKind;
 import com.google.javascript.rhino.TokenStream;
 import com.google.protobuf.CodedOutputStream;
 import java.io.BufferedInputStream;
@@ -663,7 +664,8 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
           }
         }
       } else if (!"-".equals(filename)) {
-        SourceFile newFile = SourceFile.fromFile(filename, inputCharset);
+        SourceKind kind = file.flag == JsSourceType.WEAKDEP ? SourceKind.WEAK : SourceKind.STRONG;
+        SourceFile newFile = SourceFile.fromFile(filename, inputCharset, kind);
         inputs.add(newFile);
       } else {
         if (!allowStdIn) {
@@ -2804,7 +2806,8 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
   protected enum JsSourceType {
     EXTERN("extern"),
     JS("js"),
-    JS_ZIP("jszip");
+    JS_ZIP("jszip"),
+    WEAKDEP("weakdep");
 
     @VisibleForTesting
     final String flagName;
