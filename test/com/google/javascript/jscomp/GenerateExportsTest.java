@@ -50,8 +50,11 @@ public final class GenerateExportsTest extends CompilerTestCase {
     super.setUp();
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2017);
     this.allowNonGlobalExports  = true;
+    // TODO(b/76025401): since this pass sometimes runs after typechecking, verify it correctly
+    // propagates type information.
+    // enableTypeCheck();
+    // enableTypeInfoValidation();
   }
-
 
   public void testExportSymbol() {
     test(
@@ -258,6 +261,50 @@ public final class GenerateExportsTest extends CompilerTestCase {
             "/** @export */ class G { /** @export */ static method() {} }",
             "google_exportSymbol('G', G);",
             "goog.exportProperty(G, 'method', G.method);"));
+  }
+
+  public void testExportEs6ClassMembersWithSameName() {
+    // Regression test for b/113617023, where we were silently dropping exports of different member
+    // functions with the same name.
+    test(
+        lines(
+            "/** @export */",
+            "class G {",
+            "  /** @export */ method() {}",
+            "}",
+            "/** @export */",
+            "class H {",
+            "  /** @export */ method() {}",
+            "}"),
+        lines(
+            "/** @export */",
+            "class G {",
+            "  /** @export */ method() {}",
+            "}",
+            "google_exportSymbol('G', G);",
+            "goog.exportProperty(G.prototype, 'method', G.prototype.method);",
+            "/** @export */",
+            "class H {",
+            "  /** @export */ method() {}",
+            "}",
+            "google_exportSymbol('H', H);",
+            "goog.exportProperty(H.prototype, 'method', H.prototype.method);"));
+  }
+
+  public void testExportEs6ClassMembersOnSameClass() {
+    test(
+        lines(
+            "class G {", //
+            "  /** @export */ methodA() {}",
+            "  /** @export */ methodB() {}",
+            "}"),
+        lines(
+            "class G {",
+            "  /** @export */ methodA() {}",
+            "  /** @export */ methodB() {}",
+            "}",
+            "goog.exportProperty(G.prototype, 'methodB', G.prototype.methodB);",
+            "goog.exportProperty(G.prototype, 'methodA', G.prototype.methodA);"));
   }
 
   public void testGoogScopeFunctionOutput() {
