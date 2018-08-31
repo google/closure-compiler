@@ -307,6 +307,53 @@ public final class GenerateExportsTest extends CompilerTestCase {
             "goog.exportProperty(G.prototype, 'methodA', G.prototype.methodA);"));
   }
 
+  public void testExportEs6ClassMemberInObjectLitProperty() {
+    test(
+        lines(
+            "const obj = {", //
+            "  prop: class G {",
+            "    /** @export */ method() {}",
+            "  }",
+            "};"),
+        lines(
+            "const obj = {", //
+            "  prop: class G {",
+            "    /** @export */ method() {}",
+            "  }",
+            "};",
+            "goog.exportProperty(obj.prop.prototype, 'method', obj.prop.prototype.method);"));
+  }
+
+  public void testCannotExportEs6ClassMemberInClassExpressionAssignedToGetElem() {
+    testError(
+        lines(
+            "const ns = {};",
+            "ns['G'] = class G {", //
+            "  /** @export */ method() {}",
+            "};"),
+        FindExportableNodes.EXPORT_ANNOTATION_NOT_ALLOWED);
+  }
+
+  public void testCannotExportEs6ClassMemberInClassExpressionWithoutLValue() {
+    testError(
+        lines(
+            "use(class G {", //
+            "  /** @export */ method() {}",
+            "});"),
+        FindExportableNodes.EXPORT_ANNOTATION_NOT_ALLOWED);
+  }
+
+  public void testCannotExportEs6ClassMemberInClassExpressionInReturnExpression() {
+    testError(
+        lines(
+            "function f() {",
+            "  return class {", //
+            "    /** @export */ method() {}",
+            "  }",
+            "};"),
+        FindExportableNodes.EXPORT_ANNOTATION_NOT_ALLOWED);
+  }
+
   public void testGoogScopeFunctionOutput() {
     test(
         "/** @export */ $jscomp.scope.foo = /** @export */ function() {}",

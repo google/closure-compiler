@@ -151,8 +151,12 @@ class FindExportableNodes extends AbstractPostOrderCallback {
 
         case MEMBER_FUNCTION_DEF:
           if (parent.getParent().isClass()) {
-            // TODO(b/113617023): stop using NodeUtil.getName and add a a check for nullness
-            String methodOwnerName = NodeUtil.getName(parent.getParent());
+            String methodOwnerName =
+                NodeUtil.getBestLValueName(NodeUtil.getBestLValue(parent.getParent()));
+            if (methodOwnerName == null) {
+              t.report(n, EXPORT_ANNOTATION_NOT_ALLOWED);
+              return;
+            }
             es6ClassExports.put(n, methodOwnerName + (n.isStaticMember() ? "" : ".prototype"));
             return;
           }
