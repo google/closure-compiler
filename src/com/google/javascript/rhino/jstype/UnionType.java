@@ -269,15 +269,6 @@ public class UnionType extends JSType {
   }
 
   @Override
-  public JSType restrictByPossiblyFalsy() {
-    UnionTypeBuilder restricted = UnionTypeBuilder.create(registry);
-    for (JSType t : alternatesRetainingStructuralSubtypes) {
-      restricted.addAlternate(t.restrictByPossiblyFalsy());
-    }
-    return restricted.build();
-  }
-
-  @Override
   public TernaryValue testForEquality(JSType that) {
     TernaryValue result = null;
     for (int i = 0; i < alternatesRetainingStructuralSubtypes.size(); i++) {

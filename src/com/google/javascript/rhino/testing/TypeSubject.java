@@ -116,10 +116,6 @@ public final class TypeSubject extends Subject<TypeSubject, JSType> {
     check("isUnknownType()").that(actualNonNull().isUnknownType()).isFalse();
   }
 
-  public void isEmpty() {
-    check("isEmptyType()").that(actualNonNull().isEmptyType()).isTrue();
-  }
-
   public void isNotEmpty() {
     check("isEmptyType()").that(actualNonNull().isEmptyType()).isFalse();
   }

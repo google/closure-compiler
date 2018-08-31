@@ -81,9 +81,4 @@ abstract class ValueType extends JSType {
     // Subclasses of this type are unique within a JSTypeRegisty.
     return System.identityHashCode(this);
   }
-
-  @Override
-  public JSType restrictByPossiblyFalsy() {
-    return this;
-  }
 }

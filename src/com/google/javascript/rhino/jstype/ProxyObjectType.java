@@ -417,9 +417,4 @@ public class ProxyObjectType extends ObjectType {
   public TemplateTypeMap getTemplateTypeMap() {
     return referencedType.getTemplateTypeMap();
   }
-
-  @Override
-  public JSType restrictByPossiblyFalsy() {
-    return referencedType.restrictByPossiblyFalsy();
-  }
 }

@@ -255,9 +255,4 @@ public class EnumElementType extends ObjectType {
     primitiveObjectType = ObjectType.cast(primitiveType);
     return this;
   }
-
-  @Override
-  public JSType restrictByPossiblyFalsy() {
-    return primitiveType.restrictByPossiblyFalsy();
-  }
 }
