@@ -4233,6 +4233,14 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
         "Property b never defined on obj");
   }
 
+  public void testObjectPatternDoesntCheckMissingPropertyForQuotedStringKey() {
+    testTypes(
+        lines(
+            "function f(/** {a: number} */ obj) {", //
+            "  const {a, 'b': b} = obj;",
+            "}"));
+  }
+
   public void testObjectPatternAssignWithMissingPropertyWarning() {
     testTypes(
         lines(

@@ -899,7 +899,8 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
                 t, computedProperty, patternType, getJSType(computedProperty.getFirstChild()));
           }
 
-          if (target.hasStringKey()) {
+          if (target.hasStringKey() && !target.getStringKey().isQuotedString()) {
+            // check `const {a} = obj;` but not `const {'a': a} = obj;`
             checkPropertyAccessForDestructuring(
                 t, n, getJSType(n), target.getStringKey(), getJSType(target.getNode()));
           }
