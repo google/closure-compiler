@@ -160,7 +160,6 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     assertType(aVar.getType()).toStringIsEqualTo("number");
     assertTrue(aVar.isTypeInferred());
 
-    // TODO(b/77597706): add a test to TypeCheck verifying we issue a missing property warning for b
     TypedVar bVar = checkNotNull(globalScope.getVar("b"));
     assertType(bVar.getType()).toStringIsEqualTo("?");
     assertTrue(bVar.isTypeInferred());
@@ -310,7 +309,39 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
 
     TypedVar aVar = checkNotNull(globalScope.getVar("a"));
     assertType(aVar.getType()).toStringIsEqualTo("?");
-    assertFalse(aVar.isTypeInferred());
+    assertTrue(aVar.isTypeInferred());
+  }
+
+  public void testConstDestructuringDeclarationWithUnknownTypeInExtendsClause() {
+    disableTypeInfoValidation();
+    testWarning(
+        externs("var someUnknownExtern;"),
+        srcs("const {Parent} = someUnknownExtern; class Child extends Parent {}"),
+        warning(RhinoErrorReporter.UNRECOGNIZED_TYPE_ERROR));
+
+    TypedVar parentVar = checkNotNull(globalScope.getVar("Parent"));
+    assertType(parentVar.getType()).isUnknown();
+
+    TypedVar childVar = checkNotNull(globalScope.getVar("Child"));
+    FunctionType childType = childVar.getType().toMaybeFunctionType();
+    JSType superclassCtor = childType.getSuperClassConstructor();
+    assertType(superclassCtor).isNull();
+  }
+
+  public void testConstDestructuringDeclarationWithUnknownPropertyInExtendsClause() {
+    disableTypeInfoValidation();
+    testWarning(
+        externs("var /** !Object */ someUnknownExtern;"),
+        srcs("const {Parent} = someUnknownExtern; class Child extends Parent {}"),
+        warning(RhinoErrorReporter.UNRECOGNIZED_TYPE_ERROR));
+
+    TypedVar parentVar = checkNotNull(globalScope.getVar("Parent"));
+    assertType(parentVar.getType()).isUnknown();
+
+    TypedVar childVar = checkNotNull(globalScope.getVar("Child"));
+    FunctionType childType = childVar.getType().toMaybeFunctionType();
+    JSType superclassCtor = childType.getSuperClassConstructor();
+    assertType(superclassCtor).isNull();
   }
 
   // TODO(bradfordcsmith): Add Object rest test case.

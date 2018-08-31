@@ -4275,6 +4275,29 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
         });
   }
 
+  public void testEnumAliasedThroughDestructuringPassesTypechecking() {
+    testTypes(
+        lines(
+            "const ns = {};",
+            "/** @enum {number} */",
+            "ns.myEnum = {FOO: 1, BAR: 2};",
+            "",
+            "const {myEnum} = ns;",
+            "const /** myEnum */ n = myEnum.FOO;"));
+  }
+
+  public void testEnumAliasedThroughDestructuringReportsCorrectMissingPropWarning() {
+    testTypes(
+        lines(
+            "const ns = {};",
+            "/** @enum {number} */",
+            "ns.myEnum = {FOO: 1, BAR: 2};",
+            "",
+            "const {myEnum} = ns;",
+            "const missing = myEnum.MISSING;"),
+        "element MISSING does not exist on this enum");
+  }
+
   public void testDictClass1() {
     testTypes("/** @dict */ var C = class { constructor() {} 'x'(){} };");
   }

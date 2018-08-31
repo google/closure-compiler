@@ -866,20 +866,42 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       }
     }
 
+    @Nullable
+    private JSType inferTypeForDestructuredTarget(
+        DestructuredTarget target, Supplier<JSType> patternTypeSupplier) {
+      // Currently we only do type inference for string key nodes in object patterns here, to
+      // handle aliasing types. e.g
+      //   const {Foo} = ns;
+      // TypeInference takes care of the rest.
+      // Note that although DestructuredTarget includes logic for inferring types, we don't use
+      // it here because we only do some very limited type inference during TypedScopeCreation,
+      // and only return a non-null type here if we are accessing a declared property on a known
+      // type.
+      if (!target.hasStringKey() || target.hasDefaultValue()) {
+        return null;
+      }
+      JSType patternType = patternTypeSupplier.get();
+      if (patternType == null || patternType.isUnknownType() || !patternType.isObjectType()) {
+        // TypeCheck should emit an error later if this is not an object type.
+        return null;
+      }
+      ObjectType patternObjectType = patternType.toMaybeObjectType();
+      String propertyName = target.getStringKey().getString();
+      if (patternObjectType.hasProperty(propertyName)
+          && !patternObjectType.isPropertyTypeInferred(propertyName)) {
+        return patternObjectType.getPropertyType(propertyName);
+      }
+      return null;
+    }
+
     void defineDestructuringPatternInVarDeclaration(
         Node pattern, TypedScope scope, Supplier<JSType> patternTypeSupplier) {
       for (DestructuredTarget target :
           DestructuredTarget.createAllNonEmptyTargetsInPattern(
               typeRegistry, patternTypeSupplier, pattern)) {
 
-        // Currently we only do type inference for string key nodes in object patterns here, to
-        // handle aliasing types. e.g
-        //   const {Foo} = ns;
-        // TypeInference takes care of the rest.
         Supplier<JSType> typeSupplier =
-            (target.hasStringKey() && !target.hasDefaultValue())
-                ? target.getInferredTypeSupplier()
-                : () -> null;
+            () -> inferTypeForDestructuredTarget(target, patternTypeSupplier);
 
         if (target.getNode().isDestructuringPattern()) {
           defineDestructuringPatternInVarDeclaration(target.getNode(), scope, typeSupplier);
@@ -1598,13 +1620,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
                   allowLaterTypeInference);
 
           if (type instanceof EnumType) {
-            Node initialValue = newVar.getInitialValue();
-            boolean isValidValue =
-                initialValue != null
-                    && (initialValue.isObjectLit() || initialValue.isQualifiedName());
-            if (!isValidValue) {
-              report(JSError.make(declarationNode, ENUM_INITIALIZER));
-            }
+            validateEnumInitializer(newVar, declarationNode);
           }
         }
 
@@ -1649,6 +1665,28 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
           globalThisCtor.getPrototype().clearCachedValues();
           globalThisCtor.setPrototypeBasedOn((type.toMaybeFunctionType()).getInstanceType());
         }
+      }
+    }
+
+    /**
+     * Validates that anything typed as an enum is initialized to either a qualified name or another
+     * enum.
+     *
+     * <p>Explicitly allows any name created through destructuring to be of the enum type, because
+     * the only way to have a destructuring name typed as an enum if it is aliasing something else.
+     * You cannot put the @enum JSDoc on destructuring declarations
+     */
+    private void validateEnumInitializer(TypedVar var, Node declarationNode) {
+      final boolean isValidValue;
+      if (NodeUtil.isLhsByDestructuring(var.getNameNode())) {
+        isValidValue = true;
+      } else {
+        Node initialValue = var.getInitialValue();
+        isValidValue =
+            initialValue != null && (initialValue.isObjectLit() || initialValue.isQualifiedName());
+      }
+      if (!isValidValue) {
+        report(JSError.make(declarationNode, ENUM_INITIALIZER));
       }
     }
 
