@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.javascript.jscomp.PolymerPassErrors.POLYMER_MISPLACED_PROPERTY_JSDOC;
 import static com.google.javascript.jscomp.TypeValidator.TYPE_MISMATCH_WARNING;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
@@ -1014,6 +1015,77 @@ public final class IntegrationTest extends IntegrationTestCase {
 
     assertThat(compiler.getErrors()).isEmpty();
     assertThat(compiler.getWarnings()).isEmpty();
+  }
+
+  public void testPolymerPropertyDeclarationsWithConstructor() {
+    CompilerOptions options = createCompilerOptions();
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    options.setPolymerVersion(2);
+    options.setWarningLevel(DiagnosticGroups.CHECK_TYPES, CheckLevel.ERROR);
+    addPolymer2Externs();
+
+    Compiler compiler =
+        compile(
+            options,
+            lines(
+                "class FooElement extends PolymerElement {",
+                "  constructor() {",
+                "    super();",
+                "    /** @type {number} */",
+                "    this.p1 = 0;",
+                "    /** @type {string|undefined} */",
+                "    this.p2;",
+                "    if (condition) {",
+                "      this.p3 = true;",
+                "    }",
+                "  }",
+                "  static get properties() {",
+                "    return {",
+                "      /** @type {boolean} */",
+                "      p1: String,",
+                "      p2: String,",
+                "      p3: Boolean,",
+                "      p4: Object,",
+                "      /** @type {number} */",
+                "      p5: String,",
+                "    };",
+                "  }",
+
+                // p1 has 3 possible types that could win out: 1) string (inferred from the Polymer
+                // attribute de-serialization function), 2) boolean (from the @type annotation in
+                // the properties configuration), 3) number (from the @type annotation in the
+                // constructor). We want the constructor annotation to win (number). If it didn't,
+                // this method signature would have a type error.
+                "  /** @return {number}  */ getP1() { return this.p1; }",
+                "  /** @return {string|undefined}  */ getP2() { return this.p2; }",
+                "  /** @return {boolean} */ getP3() { return this.p3; }",
+                "  /** @return {!Object} */ getP4() { return this.p4; }",
+                "  /** @return {number}  */ getP5() { return this.p5; }",
+                "}"));
+    String source = compiler.getCurrentJsSource();
+
+    // These properties are already declared in the constructor, so the PolymerPass should not add
+    // them to the prototype.
+    assertThat(source).doesNotContain("FooElement.prototype.p1");
+    assertThat(source).doesNotContain("FooElement.prototype.p2");
+    assertThat(source).doesNotContain("FooElement.prototype.p3");
+
+    // These properties are not declared in the constructor, so the PolymerPass should add a
+    // property to the prototype.
+    assertThat(source).contains("FooElement.prototype.p4");
+    assertThat(source).contains("FooElement.prototype.p5");
+
+    assertThat(compiler.getErrors()).isEmpty();
+
+    // We should have one warning: that property p1 shouldn't have any JSDoc inside the properties
+    // configuration, because when a property is also declared in the constructor, the constructor
+    // JSDoc will take precedence.
+    JSError[] warnings = compiler.getWarnings();
+    assertThat(warnings).hasLength(1);
+    JSError warning = warnings[0];
+    assertThat(warning.getType()).isEqualTo(POLYMER_MISPLACED_PROPERTY_JSDOC);
+    assertThat(warning.node.getString()).isEqualTo("p1");
   }
 
   public void testPreservedForwardDeclare() {
