@@ -2317,8 +2317,8 @@ public final class IntegrationTest extends IntegrationTestCase {
             "('undefined'!=typeof window&&window===this?this:'undefined'!=typeof ",
             "global&&null!=global?global:this).",
             "Object.defineProperties(function() {},",
-            "{d:{a:!0,b:!0,c:function(){}},", // renamed from init
-            "e:{a:!0,b:!0,f:function(){}}})"); // renamed from prop
+            "{a:{configurable:!0,enumerable:!0,get:function(){}},", // renamed from init
+            "b:{configurable:!0,enumerable:!0,set:function(){}}})"); // renamed from prop
 
     options.setLanguageIn(LanguageMode.ECMASCRIPT_2015);
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
@@ -2342,7 +2342,8 @@ public final class IntegrationTest extends IntegrationTestCase {
             "function a(){}('undefined'!=typeof window&&",
             "window===this?this:'undefined'!=typeof global&&",
             "null!=global?global:this).Object.defineProperties(",
-            "a.prototype,{exportedName:{a:!0,b:!0,get:function(){}}});(new a).exportedName"));
+            "a.prototype,{exportedName:{configurable:!0,enumerable:!0,get:function(){}}});",
+            "(new a).exportedName"));
   }
 
   public void testExportOnClassSetter() {
@@ -2360,7 +2361,8 @@ public final class IntegrationTest extends IntegrationTestCase {
             "function a(){}('undefined'!=typeof window&&",
             "window===this?this:'undefined'!=typeof global&&",
             "null!=global?global:this).Object.defineProperties(",
-            "a.prototype,{exportedName:{a:!0,b:!0,set:function(){}}});(new a).exportedName"));
+            "a.prototype,{exportedName:{configurable:!0,enumerable:!0,set:function(){}}});",
+            "(new a).exportedName"));
   }
 
   public void testExportOnStaticGetter() {
@@ -2387,7 +2389,8 @@ public final class IntegrationTest extends IntegrationTestCase {
             "function a(){}('undefined'!=typeof window&&window===this?",
             "this:'undefined'!=typeof global&&null!=global?",
             "global:this).Object.defineProperties(a,",
-            "{exportedName:{a:!0,b:!0,get:function(){}}});alert(a.exportedName)"));
+            "{exportedName:{configurable:!0,enumerable:!0,get:function(){}}});",
+            "alert(a.exportedName)"));
   }
 
   public void testExportOnStaticSetter() {
@@ -2413,7 +2416,8 @@ public final class IntegrationTest extends IntegrationTestCase {
             // TODO(tbreisacher): Find out why C is removed despite the @export annotation.
             "('undefined'!=typeof window&&window===this?",
             "this:'undefined'!=typeof global&&null!=global?global:this)",
-            ".Object.defineProperties(function(){},{exportedName:{a:!0,b:!0,set:function(){}}})"));
+            ".Object.defineProperties(function(){},",
+            "{exportedName:{configurable:!0,enumerable:!0,set:function(){}}})"));
   }
 
   public void testSmartNamePassBug11163486() {
