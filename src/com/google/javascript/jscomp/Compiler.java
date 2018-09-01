@@ -1444,7 +1444,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     CompilerInput newInput = new CompilerInput(ast);
 
     // TODO(tylerg): handle this for multiple modules at some point.
-    if (moduleGraph == null && !modules.isEmpty()) {
+    if (modules.size() == 1) {
       // singleton module
       modules.get(0).add(newInput);
     }
@@ -1455,19 +1455,14 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   /**
-   * The graph of the JS source modules.
+   * Gets the graph of JS source modules.
    *
-   * <p>Must return null if there are less than 2 modules,
-   * because we use this as a signal for which passes to run.
-   * TODO(bradfordcsmith): Just check for a single module instead of null.
+   * <p>This always returns a module graph, even in the degenerate case when there's only one
+   * module.
    */
   @Override
   JSModuleGraph getModuleGraph() {
-    if (moduleGraph != null && modules.size() > 1) {
-      return moduleGraph;
-    } else {
-      return null;
-    }
+    return moduleGraph;
   }
 
   /**
@@ -1475,14 +1470,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
    */
   public List<JSModule> getModules() {
     return modules;
-  }
-
-  /**
-   * Gets a module graph. This will always return a module graph, even
-   * in the degenerate case when there's only one module.
-   */
-  JSModuleGraph getDegenerateModuleGraph() {
-    return moduleGraph;
   }
 
   @Override
@@ -1833,7 +1820,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       }
 
       try {
-        inputs = getDegenerateModuleGraph().manageDependencies(options.dependencyOptions, inputs);
+        inputs = getModuleGraph().manageDependencies(options.dependencyOptions, inputs);
         staleInputs = true;
       } catch (MissingProvideException e) {
         report(JSError.make(

@@ -1374,7 +1374,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
     private void updateMinimumModule(JSModule newModule) {
       if (minimumModule == null) {
         minimumModule = newModule;
-      } else if (moduleGraph != null) {
+      } else if (moduleGraph != null && moduleGraph.getModuleCount() > 1) {
         minimumModule = moduleGraph.getDeepestCommonDependencyInclusive(
             minimumModule, newModule);
       } else {

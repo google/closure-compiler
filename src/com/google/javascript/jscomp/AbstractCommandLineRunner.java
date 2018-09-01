@@ -968,10 +968,10 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
   @GwtIncompatible("Unnecessary")
   void writeModuleOutput(Appendable out, JSModule m) throws IOException {
     if (parsedModuleWrappers == null) {
-      parsedModuleWrappers = parseModuleWrappers(
-          config.moduleWrapper,
-          ImmutableList.copyOf(
-              compiler.getDegenerateModuleGraph().getAllModules()));
+      parsedModuleWrappers =
+          parseModuleWrappers(
+              config.moduleWrapper,
+              ImmutableList.copyOf(compiler.getModuleGraph().getAllModules()));
     }
 
     String fileName = getModuleOutputFileName(m);
@@ -1210,8 +1210,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
 
     if (createCommonJsModules) {
       // For CommonJS modules construct modules from actual inputs.
-      modules = ImmutableList.copyOf(compiler.getDegenerateModuleGraph()
-          .getAllModules());
+      modules = ImmutableList.copyOf(compiler.getModuleGraph().getAllModules());
       for (JSModule m : modules) {
         outputFileNames.add(getModuleOutputFileName(m));
       }
@@ -1992,8 +1991,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
 
       if (shouldGenerateOutputPerModule(output)) {
         // Generate per-module manifests or bundles
-        JSModuleGraph graph = compiler.getDegenerateModuleGraph();
-        Iterable<JSModule> modules = graph.getAllModules();
+        Iterable<JSModule> modules = compiler.getModuleGraph().getAllModules();
         for (JSModule module : modules) {
           try (Writer out = fileNameToOutputWriter2(expandCommandLinePath(output, module))) {
             if (isManifest) {
@@ -2013,8 +2011,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
               printBundleTo(compiler.getInputsInOrder(), out);
             }
           } else {
-            printModuleGraphManifestOrBundleTo(
-                compiler.getDegenerateModuleGraph(), out, isManifest);
+            printModuleGraphManifestOrBundleTo(compiler.getModuleGraph(), out, isManifest);
           }
         }
       }
@@ -2036,7 +2033,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
   @VisibleForTesting
   @GwtIncompatible("Unnecessary")
   void printModuleGraphJsonTo(Appendable out) throws IOException {
-    out.append(compiler.getDegenerateModuleGraph().toJson().toString());
+    out.append(compiler.getModuleGraph().toJson().toString());
   }
 
   /** Prints a set of modules to the manifest or bundle file. */

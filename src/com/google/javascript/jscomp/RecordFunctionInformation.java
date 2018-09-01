@@ -73,13 +73,16 @@ class RecordFunctionInformation extends AbstractPostOrderCallback
 
     String compiledSource = compiler.toSource(n);
     JSModule module = t.getModule();
-    mapBuilder.addEntry(FunctionInformationMap.Entry.newBuilder()
-      .setId(id)
-      .setSourceName(NodeUtil.getSourceName(n))
-      .setLineNumber(n.getLineno())
-      .setModuleName(moduleGraph == null ? "" : module.getName())
-      .setSize(compiledSource.length())
-      .setName(functionNames.getFunctionName(n))
-      .setCompiledSource(compiledSource).build());
+    mapBuilder.addEntry(
+        FunctionInformationMap.Entry.newBuilder()
+            .setId(id)
+            .setSourceName(NodeUtil.getSourceName(n))
+            .setLineNumber(n.getLineno())
+            .setModuleName(
+                moduleGraph == null || moduleGraph.getModuleCount() <= 1 ? "" : module.getName())
+            .setSize(compiledSource.length())
+            .setName(functionNames.getFunctionName(n))
+            .setCompiledSource(compiledSource)
+            .build());
   }
 }

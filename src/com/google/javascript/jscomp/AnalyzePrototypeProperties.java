@@ -124,7 +124,7 @@ class AnalyzePrototypeProperties implements CompilerPass {
     this.anchorUnusedVars = anchorUnusedVars;
       this.rootScopeUsesAreGlobal = rootScopeUsesAreGlobal;
 
-    if (moduleGraph != null) {
+    if (moduleGraph != null && moduleGraph.getModuleCount() > 1) {
       firstModule = moduleGraph.getRootModule();
     } else {
       firstModule = null;

@@ -1532,7 +1532,9 @@ public abstract class CompilerTestCase extends TestCase {
           // Only run multistage compilation when normalizing.
 
           // TODO(rluble): enable multistage compilation when invoking with modules.
-          if (inputs != null && compiler.getModuleGraph() == null) {
+          if (inputs != null
+              && compiler.getModuleGraph() == null
+              && compiler.getModuleGraph().getModuleCount() > 1) {
             compiler =
                 CompilerTestCaseUtils.multistageSerializeAndDeserialize(
                     this, compiler, inputs, recentChange);
