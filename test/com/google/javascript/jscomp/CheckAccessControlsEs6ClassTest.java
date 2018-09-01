@@ -1124,6 +1124,26 @@ public final class CheckAccessControlsEs6ClassTest extends CompilerTestCase {
                 "}")));
   }
 
+  public void testNoProtectedAccess_forOverriddenProperty_elsewhereInSubclassFile() {
+    test(
+        srcs(
+            lines(
+                "class Foo {", //
+                "  /** @protected */",
+                "  bar() { }",
+                "}"),
+            lines(
+                "class Bar extends Foo {", //
+                "  /** @override */",
+                "  bar() { }",
+                "}",
+                "",
+                // TODO(b/113705099): This should be legal.
+                "(new Bar()).bar();" // But `Foo::bar` is still invisible.
+                )),
+        error(BAD_PROTECTED_PROPERTY_ACCESS));
+  }
+
   public void testProtectedAccessToConstructorThroughExtendsClause() {
     test(
         srcs(
@@ -1357,6 +1377,22 @@ public final class CheckAccessControlsEs6ClassTest extends CompilerTestCase {
                 "};",
                 "",
                 "OtherFoo.prototype['bar'] = function() { new Foo().bar(); };")),
+        error(BAD_PROTECTED_PROPERTY_ACCESS));
+  }
+
+  public void testNoProtectedAccess_forInheritedProperty_elsewhereInSubclassFile() {
+    test(
+        srcs(
+            lines(
+                "class Foo {", //
+                "  /** @protected */",
+                "  bar() { }",
+                "}"),
+            lines(
+                "class Bar extends Foo { }", //
+                "",
+                "(new Bar()).bar();" // But `Foo::bar` is still invisible.
+                )),
         error(BAD_PROTECTED_PROPERTY_ACCESS));
   }
 

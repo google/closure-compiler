@@ -1362,8 +1362,8 @@ class CheckAccessControls implements Callback, HotSwapCompilerPass {
               // Props are always mutated as L-values, even when assigned `undefined`.
               .setMutation(isLValue || sourceNode.getParent().isDelProp())
               .setDeclaration(parent.isExprResult())
-              // TODO(nickreid): This definition is way too loose. It was used to prevent breakages
-              // during refactoring and should be tightened.
+              // TODO(b/113704668): This definition is way too loose. It was used to prevent
+              // breakages during refactoring and should be tightened.
               .setOverride((jsdoc != null) && isLValue)
               .setReadableTypeName(
                   () -> typeRegistry.getReadableTypeName(sourceNode.getFirstChild()));
@@ -1387,8 +1387,8 @@ class CheckAccessControls implements Callback, HotSwapCompilerPass {
               .setReceiverType((ObjectType) typeRegistry.getNativeType(JSTypeNative.UNKNOWN_TYPE))
               .setMutation(true)
               .setDeclaration(true)
-              // TODO(nickreid): This definition is way too loose. It was used to prevent breakages
-              // during refactoring and should be tightened.
+              // TODO(b/113704668): This definition is way too loose. It was used to prevent
+              // breakages during refactoring and should be tightened.
               .setOverride(jsdoc != null)
               .setReadableTypeName(() -> ""); // The default is fine for class types.
 

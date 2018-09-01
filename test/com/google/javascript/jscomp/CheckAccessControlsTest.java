@@ -870,6 +870,31 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
         });
   }
 
+  public void testNoProtectedAccess_forOverriddenProperty_elsewhereInSubclassFile() {
+    test(
+        srcs(
+            lines(
+                "/** @constructor */", //
+                "function Foo() { }",
+                "",
+                "/** @protected */",
+                "Foo.prototype.bar = function() { };"),
+            lines(
+                "/**",
+                " * @constructor",
+                " * @extends {Foo}",
+                " */",
+                "function Bar() { }",
+                "",
+                "/** @override */",
+                "Bar.prototype.bar = function() { };",
+                "",
+                // TODO(b/113705099): This should be legal.
+                "(new Bar()).bar();" // But `Foo::bar` is still invisible.
+                )),
+        error(BAD_PROTECTED_PROPERTY_ACCESS));
+  }
+
   public void testProtectedAccessThroughNestedFunction() {
     test(
         srcs(
@@ -1033,6 +1058,27 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
               "OtherFoo.prototype = { ['bar']() { new Foo().bar(); }};")
         },
         BAD_PROTECTED_PROPERTY_ACCESS);
+  }
+
+  public void testNoProtectedAccess_forInheritedProperty_elsewhereInSubclassFile() {
+    test(
+        srcs(
+            lines(
+                "/** @constructor */", //
+                "function Foo() { }",
+                "",
+                "/** @protected */",
+                "Foo.prototype.bar = function() { };"),
+            lines(
+                "/**",
+                " * @constructor",
+                " * @extends {Foo}",
+                " */",
+                "function Bar() { }",
+                "",
+                "(new Bar()).bar();" // But `Foo::bar` is still invisible.
+                )),
+        error(BAD_PROTECTED_PROPERTY_ACCESS));
   }
 
   public void testNoProtectedAccessForPropertiesWithNoRhs() {
