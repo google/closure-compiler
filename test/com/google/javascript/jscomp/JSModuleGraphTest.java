@@ -194,12 +194,12 @@ public final class JSModuleGraphTest extends TestCase {
   }
 
   public void testManageDependencies1() throws Exception {
-    List<CompilerInput> inputs = setUpManageDependenciesTest();
+    setUpManageDependenciesTest();
     DependencyOptions depOptions = new DependencyOptions();
     depOptions.setDependencySorting(true);
     depOptions.setDependencyPruning(true);
     depOptions.setEntryPoints(ImmutableList.<ModuleIdentifier>of());
-    List<CompilerInput> results = graph.manageDependencies(depOptions, inputs);
+    List<CompilerInput> results = graph.manageDependencies(depOptions);
 
     assertInputs(A, "a1", "a3");
     assertInputs(B, "a2", "b2");
@@ -210,12 +210,12 @@ public final class JSModuleGraphTest extends TestCase {
   }
 
   public void testManageDependencies2() throws Exception {
-    List<CompilerInput> inputs = setUpManageDependenciesTest();
+    setUpManageDependenciesTest();
     DependencyOptions depOptions = new DependencyOptions();
     depOptions.setDependencySorting(true);
     depOptions.setDependencyPruning(true);
     depOptions.setEntryPoints(ImmutableList.of(ModuleIdentifier.forClosure("c2")));
-    List<CompilerInput> results = graph.manageDependencies(depOptions, inputs);
+    List<CompilerInput> results = graph.manageDependencies(depOptions);
 
     assertInputs(A, "a1", "a3");
     assertInputs(B, "a2", "b2");
@@ -227,13 +227,13 @@ public final class JSModuleGraphTest extends TestCase {
   }
 
   public void testManageDependencies3Impl() throws Exception {
-    List<CompilerInput> inputs = setUpManageDependenciesTest();
+    setUpManageDependenciesTest();
     DependencyOptions depOptions = new DependencyOptions();
     depOptions.setDependencySorting(true);
     depOptions.setDependencyPruning(true);
     depOptions.setMoocherDropping(true);
     depOptions.setEntryPoints(ImmutableList.of(ModuleIdentifier.forClosure("c2")));
-    List<CompilerInput> results = graph.manageDependencies(depOptions, inputs);
+    List<CompilerInput> results = graph.manageDependencies(depOptions);
 
     // Everything gets pushed up into module c, because that's
     // the only one that has entry points.
@@ -250,15 +250,7 @@ public final class JSModuleGraphTest extends TestCase {
     DependencyOptions depOptions = new DependencyOptions();
     depOptions.setDependencySorting(true);
 
-    List<CompilerInput> inputs = new ArrayList<>();
-
-    // Add the inputs in a random order.
-    inputs.addAll(E.getInputs());
-    inputs.addAll(B.getInputs());
-    inputs.addAll(A.getInputs());
-    inputs.addAll(C.getInputs());
-
-    List<CompilerInput> results = graph.manageDependencies(depOptions, inputs);
+    List<CompilerInput> results = graph.manageDependencies(depOptions);
 
     assertInputs(A, "a1", "a2", "a3");
     assertInputs(B, "b1", "b2");
@@ -286,9 +278,7 @@ public final class JSModuleGraphTest extends TestCase {
     DependencyOptions depOptions = new DependencyOptions();
     depOptions.setDependencySorting(true);
 
-    List<CompilerInput> inputs = new ArrayList<>();
-    inputs.addAll(A.getInputs());
-    List<CompilerInput> results = graph.manageDependencies(depOptions, inputs);
+    List<CompilerInput> results = graph.manageDependencies(depOptions);
 
     assertInputs(A, "base.js", "a1", "a2");
 
@@ -299,8 +289,7 @@ public final class JSModuleGraphTest extends TestCase {
     DependencyOptions depOptions = new DependencyOptions();
     depOptions.setDependencySorting(true);
 
-    List<CompilerInput> inputs = new ArrayList<>();
-    List<CompilerInput> results = graph.manageDependencies(depOptions, inputs);
+    List<CompilerInput> results = graph.manageDependencies(depOptions);
     assertThat(results).isEmpty();
   }
 
@@ -378,9 +367,7 @@ public final class JSModuleGraphTest extends TestCase {
         input.setCompiler(compiler);
       }
 
-      List<CompilerInput> inputs = new ArrayList<>();
-      inputs.addAll(A.getInputs());
-      List<CompilerInput> results = graph.manageDependencies(depOptions, inputs);
+      List<CompilerInput> results = graph.manageDependencies(depOptions);
 
       assertInputs(A, "base.js", "a2", "a3", "a4", "a5", "a6", "a7", "a8", "a9", "a1");
 
@@ -437,9 +424,7 @@ public final class JSModuleGraphTest extends TestCase {
         input.setHasFullParseDependencyInfo(true);
       }
 
-      List<CompilerInput> inputs = new ArrayList<>();
-      inputs.addAll(A.getInputs());
-      List<CompilerInput> results = graph.manageDependencies(depOptions, inputs);
+      List<CompilerInput> results = graph.manageDependencies(depOptions);
 
       assertInputs(
           A, "/b/c.js", "/b/b.js", "/b/a.js", "/important.js", "/a/b.js", "/a/a.js", "/entry.js");

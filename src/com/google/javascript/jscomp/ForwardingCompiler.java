@@ -85,7 +85,7 @@ class ForwardingCompiler extends AbstractCompiler {
   }
 
   @Override
-  public List<CompilerInput> getInputsInOrder() {
+  public Iterable<CompilerInput> getInputsInOrder() {
     return abstractCompiler.getInputsInOrder();
   }
 

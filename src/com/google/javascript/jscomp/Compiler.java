@@ -28,6 +28,7 @@ import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Sets;
 import com.google.debugging.sourcemap.SourceMapConsumerV3;
 import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping;
 import com.google.javascript.jscomp.CompilerOptions.DevMode;
@@ -143,9 +144,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
   // The module loader for resolving paths into module URIs.
   private ModuleLoader moduleLoader;
-
-  // The JS source inputs
-  private List<CompilerInput> inputs;
 
   // Map of module names to module types - used for module rewriting
   private final Map<String, CompilerInput.ModuleType> moduleTypesByName;
@@ -398,7 +396,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     printStream.println("==== Externs ====");
     printStream.println(externs);
     printStream.println("==== Inputs ====");
-    printStream.println(inputs);
+    printStream.println(Iterables.toString(moduleGraph.getAllInputs()));
     printStream.println("==== CompilerOptions ====");
     printStream.println(options);
     printStream.println("==== WarningsGuard ====");
@@ -498,8 +496,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       return;
     }
 
-    this.inputs = getAllInputsFromModules(modules);
-    this.commentsPerFile = new ConcurrentHashMap<>(inputs.size());
+    this.commentsPerFile = new ConcurrentHashMap<>(moduleGraph.getInputCount());
     initBasedOnOptions();
 
     initInputsByIdMap();
@@ -596,29 +593,11 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   /**
-   * Rebuilds the internal list of inputs by iterating over all modules.
-   * This is necessary if inputs have been added to or removed from a module
-   * after the {@link #init(List, List, CompilerOptions)} call.
+   * Rebuilds the internal input map by iterating over all modules. This is necessary if inputs have
+   * been added to or removed from a module after an {@link #init} or {@link #initModules} call.
    */
   public void rebuildInputsFromModules() {
-    inputs = getAllInputsFromModules(modules);
     initInputsByIdMap();
-  }
-
-  /**
-   * Builds a single list of all module inputs. Verifies that it contains no
-   * duplicates.
-   */
-  private static List<CompilerInput> getAllInputsFromModules(
-      List<JSModule> modules) {
-    List<CompilerInput> inputs = new ArrayList<>();
-    for (JSModule module : modules) {
-      // NOTE(nicksantos): If an input is in more than one module,
-      // it will show up twice in the inputs list, and then we
-      // will get an error down the line.
-      inputs.addAll(module.getInputs());
-    }
-    return inputs;
   }
 
   static final DiagnosticType DUPLICATE_INPUT =
@@ -640,7 +619,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
         report(JSError.make(DUPLICATE_EXTERN_INPUT, input.getName()));
       }
     }
-    for (CompilerInput input : inputs) {
+    for (CompilerInput input : moduleGraph.getAllInputs()) {
       InputId id = input.getInputId();
       CompilerInput previous = putCompilerInput(id, input);
       if (previous != null) {
@@ -770,8 +749,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
    * warnings and errors to stderr. See the invocation in {@link #compile} for a good example.
    */
   public void stage1Passes() {
-    checkState(
-        inputs != null && !inputs.isEmpty(), "No inputs. Did you call init() or initModules()?");
+    checkState(moduleGraph != null, "No inputs. Did you call init() or initModules()?");
     checkState(!hasErrors());
     checkState(!options.getInstrumentForCoverageOnly());
     runInCompilerThread(
@@ -795,8 +773,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
    * warnings and errors to stderr. See the invocation in {@link #compile} for a good example.
    */
   public void stage2Passes() {
-    checkState(
-        inputs != null && !inputs.isEmpty(), "No inputs. Did you call init() or initModules()?");
+    checkState(moduleGraph != null, "No inputs. Did you call init() or initModules()?");
     checkState(!hasErrors());
     checkState(!options.getInstrumentForCoverageOnly());
     runInCompilerThread(
@@ -897,8 +874,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
    * Either call those two methods or this one, but not both.
    */
   public void instrumentForCoverage() {
-    checkState(
-        inputs != null && !inputs.isEmpty(), "No inputs. Did you call init() or initModules()?");
+    checkState(moduleGraph != null, "No inputs. Did you call init() or initModules()?");
     checkState(!hasErrors());
     runInCompilerThread(
         new Callable<Void>() {
@@ -1418,7 +1394,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     InputId inputIdOnAst = newInput.getAstRoot(this).getInputId();
     checkState(newInput.getInputId().equals(inputIdOnAst));
 
-    inputs.remove(oldInput);
     return true;
   }
 
@@ -1655,7 +1630,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       }
 
       if (options.transformAMDToCJSModules) {
-        processAMDModules();
+        processAMDModules(moduleGraph.getAllInputs());
       }
 
       if (options.getLanguageIn().toFeatureSet().has(FeatureSet.Feature.MODULES)
@@ -1670,7 +1645,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
           case NODE:
             // processJsonInputs requires a module loader to already be defined
             // so we redefine it afterwards with the package.json inputs
-            moduleResolverFactory = new NodeModuleResolver.Factory(processJsonInputs(inputs));
+            moduleResolverFactory =
+                new NodeModuleResolver.Factory(processJsonInputs(moduleGraph.getAllInputs()));
             break;
           case WEBPACK:
             moduleResolverFactory = new WebpackModuleResolver.Factory(inputPathByWebpackId);
@@ -1686,7 +1662,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
             new ModuleLoader(
                 null,
                 options.moduleRoots,
-                inputs,
+                moduleGraph.getAllInputs(),
                 moduleResolverFactory,
                 ModuleLoader.PathResolver.RELATIVE,
                 options.getPathEscaper());
@@ -1702,13 +1678,13 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       } else if (options.needsTranspilationFrom(FeatureSet.ES6_MODULES)
           || options.processCommonJSModules) {
         if (options.getLanguageIn().toFeatureSet().has(Feature.MODULES)) {
-          parsePotentialModules(inputs);
+          parsePotentialModules(moduleGraph.getAllInputs());
         }
 
         // Build a map of module identifiers for any input which provides no namespace.
         // These files could be imported modules which have no exports, but do have side effects.
         Map<String, CompilerInput> inputModuleIdentifiers = new HashMap<>();
-        for (CompilerInput input : inputs) {
+        for (CompilerInput input : moduleGraph.getAllInputs()) {
           if (input.getKnownProvides().isEmpty()) {
             ModuleLoader.ModulePath modPath =
                 moduleLoader.resolve(input.getSourceFile().getOriginalPath());
@@ -1719,7 +1695,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
         // Find out if any input attempted to import a module that had no exports.
         // In this case we must force module rewriting to occur on the imported file
         Map<String, CompilerInput> inputsToRewrite = new HashMap<>();
-        for (CompilerInput input : inputs) {
+        for (CompilerInput input : moduleGraph.getAllInputs()) {
           for (String require : input.getKnownRequiredSymbols()) {
             if (inputModuleIdentifiers.containsKey(require)
                 && !inputsToRewrite.containsKey(require)) {
@@ -1746,10 +1722,10 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
       // Build the AST.
       if (options.numParallelThreads > 1) {
-        new PrebuildAst(this, options.numParallelThreads).prebuild(inputs);
+        new PrebuildAst(this, options.numParallelThreads).prebuild(moduleGraph.getAllInputs());
       }
 
-      for (CompilerInput input : inputs) {
+      for (CompilerInput input : moduleGraph.getAllInputs()) {
         Node n = checkNotNull(input.getAstRoot(this));
         if (devMode) {
           runValidityCheck();
@@ -1811,7 +1787,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     // Check if the sources need to be re-ordered.
     boolean staleInputs = false;
     if (options.dependencyOptions.needsManagement()) {
-      for (CompilerInput input : inputs) {
+      for (CompilerInput input : moduleGraph.getAllInputs()) {
         // Forward-declare all the provided types, so that they
         // are not flagged even if they are dropped from the process.
         for (String provide : input.getProvides()) {
@@ -1820,7 +1796,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       }
 
       try {
-        inputs = getModuleGraph().manageDependencies(options.dependencyOptions, inputs);
+        moduleGraph.manageDependencies(options.dependencyOptions);
         staleInputs = true;
       } catch (MissingProvideException e) {
         report(JSError.make(
@@ -1853,7 +1829,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     List<CompilerInput> entryPoints = new ArrayList<>();
     Map<String, CompilerInput> inputsByProvide = new HashMap<>();
     Map<String, CompilerInput> inputsByIdentifier = new HashMap<>();
-    for (CompilerInput input : inputs) {
+    for (CompilerInput input : moduleGraph.getAllInputs()) {
       if (!options.getDependencyOptions().shouldDropMoochers() && input.getProvides().isEmpty()) {
         entryPoints.add(input);
       }
@@ -1875,7 +1851,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       }
     }
 
-    Set<CompilerInput> workingInputSet = new HashSet<>(inputs);
+    Set<CompilerInput> workingInputSet = Sets.newHashSet(moduleGraph.getAllInputs());
     for (CompilerInput entryPoint : entryPoints) {
       depthFirstDependenciesFromInput(
           entryPoint,
@@ -1955,7 +1931,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
    */
   void hoistExterns() {
     boolean staleInputs = false;
-    for (CompilerInput input : inputs) {
+    // Iterate a copy because hoisting modifies what we're iterating over.
+    for (CompilerInput input : ImmutableList.copyOf(moduleGraph.getAllInputs())) {
       if (hoistIfExtern(input)) {
         staleInputs = true;
       }
@@ -1992,9 +1969,10 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   void hoistNoCompileFiles() {
     boolean staleInputs = false;
     if (options.numParallelThreads > 1) {
-      new PrebuildAst(this, options.numParallelThreads).prebuild(inputs);
+      new PrebuildAst(this, options.numParallelThreads).prebuild(moduleGraph.getAllInputs());
     }
-    for (CompilerInput input : inputs) {
+    // Iterate a copy because hoisting modifies what we're iterating over.
+    for (CompilerInput input : ImmutableList.copyOf(moduleGraph.getAllInputs())) {
       Node n = input.getAstRoot(this);
       JSDocInfo info = n.getJSDocInfo();
       if (info != null && info.isNoCompile()) {
@@ -2017,7 +1995,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
    * Transforms JSON files to a module export that closure compiler can process and keeps track of
    * any "main" entries in package.json files.
    */
-  Map<String, String> processJsonInputs(List<CompilerInput> inputsToProcess) {
+  Map<String, String> processJsonInputs(Iterable<CompilerInput> inputsToProcess) {
     RewriteJsonToModule rewriteJson = new RewriteJsonToModule(this);
     for (CompilerInput input : inputsToProcess) {
       if (!input.getSourceFile().getOriginalPath().endsWith(".json")) {
@@ -2039,8 +2017,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     return rewriteJson.getPackageJsonMainEntries();
   }
 
-
-  private List<CompilerInput> parsePotentialModules(List<CompilerInput> inputsToProcess) {
+  private List<CompilerInput> parsePotentialModules(Iterable<CompilerInput> inputsToProcess) {
     List<CompilerInput> filteredInputs = new ArrayList<>();
     for (CompilerInput input : inputsToProcess) {
       // Only process files that are detected as ES6 modules
@@ -2063,7 +2040,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   /** Transforms AMD to CJS modules */
-  void processAMDModules() {
+  void processAMDModules(Iterable<CompilerInput> inputs) {
     for (CompilerInput input : inputs) {
       input.setCompiler(this);
       Node root = checkNotNull(input.getAstRoot(this));
@@ -2282,26 +2259,26 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
    * Converts the parse tree for each input back to JS code.
    */
   public String[] toSourceArray() {
-    return runInCompilerThread(new Callable<String[]>() {
-      @Override
-      public String[] call() throws Exception {
-        Tracer tracer = newTracer("toSourceArray");
-        try {
-          int numInputs = inputs.size();
-          String[] sources = new String[numInputs];
-          CodeBuilder cb = new CodeBuilder();
-          for (int i = 0; i < numInputs; i++) {
-            Node scriptNode = inputs.get(i).getAstRoot(Compiler.this);
-            cb.reset();
-            toSource(cb, i, scriptNode);
-            sources[i] = cb.toString();
+    return runInCompilerThread(
+        () -> {
+          Tracer tracer = newTracer("toSourceArray");
+          try {
+            int numInputs = moduleGraph.getInputCount();
+            String[] sources = new String[numInputs];
+            CodeBuilder cb = new CodeBuilder();
+            int i = 0;
+            for (CompilerInput input : moduleGraph.getAllInputs()) {
+              Node scriptNode = input.getAstRoot(Compiler.this);
+              cb.reset();
+              toSource(cb, i, scriptNode);
+              sources[i] = cb.toString();
+              i++;
+            }
+            return sources;
+          } finally {
+            stopTracer(tracer, "toSourceArray");
           }
-          return sources;
-        } finally {
-          stopTracer(tracer, "toSourceArray");
-        }
-      }
-    });
+        });
   }
 
   /**
@@ -2925,11 +2902,11 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   @Override
   Node getNodeForCodeInsertion(@Nullable JSModule module) {
     if (module == null) {
-      if (inputs.isEmpty()) {
+      if (moduleGraph == null || Iterables.isEmpty(moduleGraph.getAllInputs())) {
         throw new IllegalStateException("No inputs");
       }
-
-      return inputs.get(0).getAstRoot(this);
+      CompilerInput firstInput = Iterables.getFirst(moduleGraph.getAllInputs(), null);
+      return firstInput.getAstRoot(this);
     }
 
     List<CompilerInput> moduleInputs = module.getInputs();
@@ -3084,8 +3061,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   @Override
-  List<CompilerInput> getInputsInOrder() {
-    return Collections.unmodifiableList(inputs);
+  Iterable<CompilerInput> getInputsInOrder() {
+    return moduleGraph.getAllInputs();
   }
 
   @Override
@@ -3094,7 +3071,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     // The intended use of this method is to allow passes to estimate how much memory they will
     // need for data structures, so it's not necessary that the returned value be exactly right
     // in the corner cases where inputs ends up being null.
-    return (inputs != null) ? inputs.size() : 1;
+    return (moduleGraph != null) ? moduleGraph.getInputCount() : 1;
   }
 
   /**
@@ -3113,7 +3090,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
   @VisibleForTesting
   List<CompilerInput> getInputsForTesting() {
-    return inputs;
+    return moduleGraph != null ? ImmutableList.copyOf(moduleGraph.getAllInputs()) : null;
   }
 
   @VisibleForTesting
@@ -3478,7 +3455,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     private final Node jsRoot;
     private final FeatureSet featureSet;
     private final List<CompilerInput> externs;
-    private final List<CompilerInput> inputs;
     private final Map<InputId, CompilerInput> inputsById;
     private final JSTypeRegistry typeRegistry;
     private final TypeValidator typeValidator;
@@ -3516,7 +3492,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       this.featureSet = checkNotNull(compiler.featureSet);
       this.typeRegistry = compiler.typeRegistry;
       this.externs = compiler.externs;
-      this.inputs = checkNotNull(compiler.inputs);
       this.inputsById = checkNotNull(compiler.inputsById);
       this.typeCheckingHasRun = compiler.typeCheckingHasRun;
       this.synthesizedExternsInput = compiler.synthesizedExternsInput;
@@ -3607,7 +3582,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
     featureSet = compilerState.featureSet;
     externs = compilerState.externs;
-    inputs = compilerState.inputs;
     inputsById.clear();
     inputsById.putAll(compilerState.inputsById);
     typeRegistry = compilerState.typeRegistry;

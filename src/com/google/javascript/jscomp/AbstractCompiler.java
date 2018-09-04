@@ -83,10 +83,10 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
   abstract JSModuleGraph getModuleGraph();
 
   /**
-   * Gets the inputs in the order in which they are being processed.
-   * Only for use by {@code AbstractCompilerRunner}.
+   * Gets the inputs in the order in which they are being processed. Only for use by {@code
+   * AbstractCompilerRunner}.
    */
-  abstract List<CompilerInput> getInputsInOrder();
+  abstract Iterable<CompilerInput> getInputsInOrder();
 
   /**
    * Gets the total number of inputs.
