@@ -1023,6 +1023,10 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
     options.setPolymerVersion(2);
     options.setWarningLevel(DiagnosticGroups.CHECK_TYPES, CheckLevel.ERROR);
+    // By setting the EXPORT_ALL export policy, all properties will be added to an interface that
+    // is injected into the externs. We need to make sure the types of the properties on this
+    // interface aligns with the types we declared in the constructor, or else we'll get an error.
+    options.polymerExportPolicy = PolymerExportPolicy.EXPORT_ALL;
     addPolymer2Externs();
 
     Compiler compiler =
@@ -1063,18 +1067,6 @@ public final class IntegrationTest extends IntegrationTestCase {
                 "  /** @return {!Object} */ getP4() { return this.p4; }",
                 "  /** @return {number}  */ getP5() { return this.p5; }",
                 "}"));
-    String source = compiler.getCurrentJsSource();
-
-    // These properties are already declared in the constructor, so the PolymerPass should not add
-    // them to the prototype.
-    assertThat(source).doesNotContain("FooElement.prototype.p1");
-    assertThat(source).doesNotContain("FooElement.prototype.p2");
-    assertThat(source).doesNotContain("FooElement.prototype.p3");
-
-    // These properties are not declared in the constructor, so the PolymerPass should add a
-    // property to the prototype.
-    assertThat(source).contains("FooElement.prototype.p4");
-    assertThat(source).contains("FooElement.prototype.p5");
 
     assertThat(compiler.getErrors()).isEmpty();
 

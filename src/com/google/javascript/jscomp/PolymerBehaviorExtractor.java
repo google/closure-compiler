@@ -75,7 +75,11 @@ final class PolymerBehaviorExtractor {
         behaviors.add(
             new BehaviorDefinition(
                 PolymerPassStaticUtils.extractProperties(
-                    behaviorName, PolymerClassDefinition.DefinitionType.ObjectLiteral, compiler),
+                    behaviorName,
+                    PolymerClassDefinition.DefinitionType.ObjectLiteral,
+                    compiler,
+                    /** constructor= */
+                    null),
                 getBehaviorFunctionsToCopy(behaviorName),
                 getNonPropertyMembersToCopy(behaviorName),
                 !NodeUtil.isInFunction(behaviorName),
@@ -102,7 +106,11 @@ final class PolymerBehaviorExtractor {
         behaviors.add(
             new BehaviorDefinition(
                 PolymerPassStaticUtils.extractProperties(
-                    behaviorValue, PolymerClassDefinition.DefinitionType.ObjectLiteral, compiler),
+                    behaviorValue,
+                    PolymerClassDefinition.DefinitionType.ObjectLiteral,
+                    compiler,
+                    /** constructor= */
+                    null),
                 getBehaviorFunctionsToCopy(behaviorValue),
                 getNonPropertyMembersToCopy(behaviorValue),
                 resolveResult.isGlobalDeclaration,

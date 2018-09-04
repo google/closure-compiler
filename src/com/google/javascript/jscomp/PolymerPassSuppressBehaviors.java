@@ -83,7 +83,11 @@ final class PolymerPassSuppressBehaviors extends AbstractPostOrderCallback {
   private void stripPropertyTypes(Node behaviorValue) {
     List<MemberDefinition> properties =
         PolymerPassStaticUtils.extractProperties(
-            behaviorValue, PolymerClassDefinition.DefinitionType.ObjectLiteral, compiler);
+            behaviorValue,
+            PolymerClassDefinition.DefinitionType.ObjectLiteral,
+            compiler,
+            /** constructor= */
+            null);
     for (MemberDefinition property : properties) {
       property.name.removeProp(Node.JSDOC_INFO_PROP);
     }
@@ -92,7 +96,11 @@ final class PolymerPassSuppressBehaviors extends AbstractPostOrderCallback {
   private void suppressDefaultValues(Node behaviorValue) {
     for (MemberDefinition property :
         PolymerPassStaticUtils.extractProperties(
-            behaviorValue, PolymerClassDefinition.DefinitionType.ObjectLiteral, compiler)) {
+            behaviorValue,
+            PolymerClassDefinition.DefinitionType.ObjectLiteral,
+            compiler,
+            /** constructor= */
+            null)) {
       if (!property.value.isObjectLit()) {
         continue;
       }

@@ -161,7 +161,11 @@ final class PolymerClassDefinition {
     overwriteMembersIfPresent(
         allProperties,
         PolymerPassStaticUtils.extractProperties(
-            descriptor, DefinitionType.ObjectLiteral, compiler));
+            descriptor,
+            DefinitionType.ObjectLiteral,
+            compiler,
+            /** constructor= */
+            null));
 
     FeatureSet newFeatures = null;
     if (!behaviors.isEmpty()) {
@@ -256,7 +260,7 @@ final class PolymerClassDefinition {
 
     List<MemberDefinition> allProperties =
         PolymerPassStaticUtils.extractProperties(
-            propertiesDescriptor, DefinitionType.ES6Class, compiler);
+            propertiesDescriptor, DefinitionType.ES6Class, compiler, constructor);
 
     List<MemberDefinition> methods = new ArrayList<>();
     for (Node keyNode : NodeUtil.getClassMembers(classNode).children()) {
