@@ -664,4 +664,14 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
   Object getAnnotation(String key) {
     return annotationMap.get(key);
   }
+
+  /**
+   * Returns a new AstFactory that will add type information to the nodes it creates if and only if
+   * type type checking has already happened.
+   */
+  public AstFactory createAstFactory() {
+    return hasTypeCheckingRun()
+        ? AstFactory.createFactoryWithTypes(getTypeRegistry())
+        : AstFactory.createFactoryWithoutTypes();
+  }
 }
