@@ -453,10 +453,9 @@ public class ConvertToTypedInterface implements CompilerPass {
       checkArgument(paramList.isParamList());
       for (Node arg = paramList.getFirstChild(); arg != null; arg = arg.getNext()) {
         if (arg.isDefaultValue()) {
-          Node replacement = arg.getFirstChild().detach();
-          arg.replaceWith(replacement);
-          arg = replacement;
-          compiler.reportChangeToEnclosingScope(replacement);
+          Node rhs = arg.getLastChild();
+          rhs.replaceWith(NodeUtil.newUndefinedNode(rhs));
+          compiler.reportChangeToEnclosingScope(arg);
         }
       }
     }

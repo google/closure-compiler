@@ -540,7 +540,12 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
             " * @param {number=} num",
             " * @param {...!Object} rest",
             " */",
-            "function foo(o, str, num, ...rest) {}"));
+            "function foo(o, str=void 0, num=void 0, ...rest) {}"));
+  }
+
+  public void testDefaultValuesRemain() {
+    test("function f(x = 0) {}", "function f(x = void 0) {}");
+    test("function f(x = window.foobar()) {}", "function f(x = void 0) {}");
   }
 
   public void testConstJsdocPropagationForNames_defaultValue() {
@@ -558,7 +563,7 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
             " * @constructor",
             " * @param {string=} str",
             " */",
-            "function Foo(str) {}",
+            "function Foo(str = void 0) {}",
             "/** @const {string} */ Foo.prototype.s;"));
 
     test(
@@ -572,10 +577,9 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
         lines(
             "class Foo {",
             "  /** @param {string=} str */",
-            "  constructor(str) {}",
+            "  constructor(str = void 0) {}",
             "}",
             "/** @const {string} */ Foo.prototype.s;"));
-
   }
 
   public void testConstWithDeclaredTypes() {
@@ -835,7 +839,7 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
             "const Foobar = goog.require('f.b.Foobar');",
             "",
             "/** @type {Foobar} */",
-            "exports = /** @const {?} */ (0);"));
+            "exports = /** @type {?} */ (0);"));
   }
 
   public void testCrossFileModifications() {

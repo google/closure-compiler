@@ -41,11 +41,13 @@ final class JsdocUtil {
   }
 
   static JSDocInfo getQmarkTypeJSDoc() {
-    return getConstJSDoc(null, new Node(Token.QMARK));
+    return makeBuilderWithType(null, new Node(Token.QMARK)).build();
   }
 
-  private static JSTypeExpression asTypeExpression(Node typeAst) {
-    return new JSTypeExpression(typeAst, "<synthetic>");
+  private static JSDocInfoBuilder makeBuilderWithType(@Nullable JSDocInfo oldJSDoc, Node typeAst) {
+    JSDocInfoBuilder builder = JSDocInfoBuilder.maybeCopyFrom(oldJSDoc);
+    builder.recordType(new JSTypeExpression(typeAst, "<synthetic>"));
+    return builder;
   }
 
   private static JSDocInfo getConstJSDoc(JSDocInfo oldJSDoc, String contents) {
@@ -53,12 +55,7 @@ final class JsdocUtil {
   }
 
   private static JSDocInfo getConstJSDoc(JSDocInfo oldJSDoc, Node typeAst) {
-    return getConstJSDoc(oldJSDoc, asTypeExpression(typeAst));
-  }
-
-  private static JSDocInfo getConstJSDoc(JSDocInfo oldJSDoc, JSTypeExpression newType) {
-    JSDocInfoBuilder builder = JSDocInfoBuilder.maybeCopyFrom(oldJSDoc);
-    builder.recordType(newType);
+    JSDocInfoBuilder builder = makeBuilderWithType(oldJSDoc, typeAst);
     builder.recordConstancy();
     return builder.build();
   }
@@ -128,27 +125,28 @@ final class JsdocUtil {
     if (expr == null) {
       return null;
     }
-    switch (expr.getRoot().getToken()) {
+    Node typeAst = expr.getRoot();
+    switch (typeAst.getToken()) {
       case EQUALS:
-        Node typeRoot = expr.getRoot().getFirstChild().cloneTree();
+        Node typeRoot = typeAst.getFirstChild().cloneTree();
         if (!decl.isDefaultParam()) {
           typeRoot = new Node(Token.PIPE, typeRoot, IR.string("undefined"));
         }
-        expr = asTypeExpression(typeRoot);
+        typeAst = typeRoot;
         break;
       case ELLIPSIS:
         {
-          Node type = new Node(Token.BANG);
+          Node newType = new Node(Token.BANG);
           Node array = IR.string("Array");
-          type.addChildToBack(array);
-          Node block = new Node(Token.BLOCK, expr.getRoot().getFirstChild().cloneTree());
+          newType.addChildToBack(array);
+          Node block = new Node(Token.BLOCK, typeAst.getFirstChild().cloneTree());
           array.addChildToBack(block);
-          expr = asTypeExpression(type);
+          typeAst = newType;
           break;
         }
       default:
         break;
     }
-    return getConstJSDoc(oldJSDoc, expr);
+    return getConstJSDoc(oldJSDoc, typeAst);
   }
 }

@@ -4486,11 +4486,8 @@ public final class NodeUtil {
     return qNameStr.substring(memberIndex);
   }
 
-  /**
-   * Create a node for an empty result expression:
-   *   "void 0"
-   */
-  static Node newUndefinedNode(Node srcReferenceNode) {
+  /** Create a node for an empty result expression: "void 0" */
+  public static Node newUndefinedNode(Node srcReferenceNode) {
     Node node = IR.voidNode(IR.number(0));
     if (srcReferenceNode != null) {
       node.useSourceInfoFromForTree(srcReferenceNode);
