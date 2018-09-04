@@ -137,9 +137,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   // The externs inputs
   private List<CompilerInput> externs;
 
-  // The JS source modules
-  private List<JSModule> modules;
-
+  // The source module graph, denoting dependencies between chunks.
   private JSModuleGraph moduleGraph;
 
   // The module loader for resolving paths into module URIs.
@@ -483,9 +481,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
     this.externs = makeExternInputs(externs);
 
-    // Generate the module graph, and report any errors in the module
-    // specification as errors.
-    this.modules = modules;
+    // Generate the module graph, and report any errors in the module specification as errors.
     try {
       this.moduleGraph = new JSModuleGraph(modules);
     } catch (JSModuleGraph.ModuleDependenceException e) {
@@ -579,11 +575,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     return pathJoiner.join(pathParts);
   }
 
-  /**
-   * Fill any empty modules with a place holder file. It makes any cross module
-   * motion easier.
-   */
-  private static void fillEmptyModules(List<JSModule> modules) {
+  /** Fill any empty modules with a place holder file. It makes any cross module motion easier. */
+  private static void fillEmptyModules(Iterable<JSModule> modules) {
     for (JSModule module : modules) {
       if (module.getInputs().isEmpty()) {
         module.add(SourceFile.fromCode(
@@ -1161,7 +1154,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       }
     }
     if (!moduleNameRegexList.isEmpty()) {
-      for (JSModule jsModule : modules) {
+      for (JSModule jsModule : getModules()) {
         for (String regex : moduleNameRegexList) {
           if (jsModule.getName().matches(regex)) {
             String source = "// module '" + jsModule.getName() + "'\n" + toSource(jsModule);
@@ -1419,9 +1412,11 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     CompilerInput newInput = new CompilerInput(ast);
 
     // TODO(tylerg): handle this for multiple modules at some point.
-    if (modules.size() == 1) {
+    Iterable<JSModule> modules = getModules();
+    if (Iterables.size(modules) == 1) {
       // singleton module
-      modules.get(0).add(newInput);
+      JSModule firstModule = Iterables.getFirst(modules, null);
+      firstModule.add(newInput);
     }
 
     putCompilerInput(ast.getInputId(), newInput);
@@ -1432,19 +1427,24 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   /**
    * Gets the graph of JS source modules.
    *
-   * <p>This always returns a module graph, even in the degenerate case when there's only one
-   * module.
+   * <p>Returns null if {@code #init} or {@code #initModules} hasn't been called yet. Otherwise, the
+   * result is always a module graph, even in the degenerate case where there's only one module.
    */
+  @Nullable
   @Override
   JSModuleGraph getModuleGraph() {
     return moduleGraph;
   }
 
   /**
-   * Gets the list of modules.
+   * Gets the JS source modules in dependency order.
+   *
+   * <p>Returns null if {@code #init} or {@code #initModules} hasn't been called yet. Otherwise, the
+   * result is always non-empty, even in the degenerate case where there's only one module.
    */
-  public List<JSModule> getModules() {
-    return modules;
+  @Nullable
+  public Iterable<JSModule> getModules() {
+    return moduleGraph != null ? moduleGraph.getAllModules() : null;
   }
 
   @Override
@@ -1987,7 +1987,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   private void repartitionInputs() {
-    fillEmptyModules(modules);
+    fillEmptyModules(getModules());
     rebuildInputsFromModules();
   }
 
@@ -3469,7 +3469,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     private final JSError[] errors;
     private final JSError[] warnings;
     private final JSModuleGraph moduleGraph;
-    private final List<JSModule> modules;
     private final int uniqueNameId;
     private final Set<String> exportedNames;
     private final Map<String, Integer> cssNames;
@@ -3505,7 +3504,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       this.errors = compiler.errorManager.getErrors();
       this.warnings = compiler.errorManager.getWarnings();
       this.moduleGraph = compiler.moduleGraph;
-      this.modules = compiler.modules;
       this.uniqueNameId = compiler.uniqueNameId;
       this.exportedNames = compiler.exportedNames;
       this.cssNames = compiler.cssNames;
@@ -3546,7 +3544,12 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     initWarningsGuard(options.getWarningsGuard());
     maybeSetTracker();
 
-    List<JSModule> newModules = modules;
+    // Make a copy of the current module list so we can later reapply their names to the
+    // deserialized modules.
+    List<JSModule> newModules = null;
+    if (getModules() != null) {
+      newModules = ImmutableList.copyOf(getModules());
+    }
 
     class CompilerObjectInputStream extends ObjectInputStream implements HasCompiler {
       public CompilerObjectInputStream(InputStream in) throws IOException {
@@ -3599,7 +3602,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     setLifeCycleStage(compilerState.lifeCycleStage);
     externProperties = compilerState.externProperties;
     moduleGraph = compilerState.moduleGraph;
-    modules = compilerState.modules;
     uniqueNameId = compilerState.uniqueNameId;
     exportedNames.clear();
     exportedNames.addAll(compilerState.exportedNames);
@@ -3617,7 +3619,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     changeStamp = compilerState.changeStamp;
 
     // Reapply module names to deserialized modules
-    renameModules(newModules, modules);
+    renameModules(newModules, ImmutableList.copyOf(getModules()));
 
     // restore errors.
     if (compilerState.errors != null) {

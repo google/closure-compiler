@@ -1202,7 +1202,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
     } else if (continueSavedCompilationFilename != null) {
       result = restoreAndPerformStage2(continueSavedCompilationFilename);
       if (modules != null) {
-        modules = compiler.getModules();
+        modules = ImmutableList.copyOf(compiler.getModules());
       }
     } else {
       result = performFullCompilation();
@@ -1210,7 +1210,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
 
     if (createCommonJsModules) {
       // For CommonJS modules construct modules from actual inputs.
-      modules = ImmutableList.copyOf(compiler.getModuleGraph().getAllModules());
+      modules = ImmutableList.copyOf(compiler.getModules());
       for (JSModule m : modules) {
         outputFileNames.add(getModuleOutputFileName(m));
       }

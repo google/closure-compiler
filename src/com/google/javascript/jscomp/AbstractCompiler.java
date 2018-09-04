@@ -80,6 +80,7 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
   abstract Node getScriptNode(String filename);
 
   /** Gets the module graph. */
+  @Nullable
   abstract JSModuleGraph getModuleGraph();
 
   /**

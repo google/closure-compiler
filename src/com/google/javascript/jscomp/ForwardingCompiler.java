@@ -79,6 +79,7 @@ class ForwardingCompiler extends AbstractCompiler {
     return abstractCompiler.getScriptNode(filename);
   }
 
+  @Nullable
   @Override
   public JSModuleGraph getModuleGraph() {
     return abstractCompiler.getModuleGraph();
