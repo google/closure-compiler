@@ -25,9 +25,12 @@ import com.google.javascript.jscomp.lint.CheckArrayWithGoogObject;
 import com.google.javascript.jscomp.lint.CheckDuplicateCase;
 import com.google.javascript.jscomp.lint.CheckEmptyStatements;
 import com.google.javascript.jscomp.lint.CheckEnums;
+import com.google.javascript.jscomp.lint.CheckEs6ModuleFileStructure;
+import com.google.javascript.jscomp.lint.CheckEs6Modules;
 import com.google.javascript.jscomp.lint.CheckInterfaces;
 import com.google.javascript.jscomp.lint.CheckJSDocStyle;
 import com.google.javascript.jscomp.lint.CheckMissingSemicolon;
+import com.google.javascript.jscomp.lint.CheckNoMutatedEs6Exports;
 import com.google.javascript.jscomp.lint.CheckNullableReturn;
 import com.google.javascript.jscomp.lint.CheckPrimitiveAsObject;
 import com.google.javascript.jscomp.lint.CheckPrototypeProperties;
@@ -564,6 +567,10 @@ public class DiagnosticGroups {
               CheckEnums.DUPLICATE_ENUM_VALUE,
               CheckEnums.ENUM_PROP_NOT_CONSTANT,
               CheckEnums.SHORTHAND_ASSIGNMENT_IN_ENUM,
+              CheckEs6ModuleFileStructure.MUST_COME_BEFORE,
+              CheckEs6Modules.DUPLICATE_IMPORT,
+              CheckEs6Modules.NO_DEFAULT_EXPORT,
+              CheckNoMutatedEs6Exports.MUTATED_EXPORT,
               // TODO(tbreisacher): Consider moving the CheckInterfaces warnings into the
               // checkTypes DiagnosticGroup
               CheckInterfaces.INTERFACE_FUNCTION_NOT_EMPTY,
