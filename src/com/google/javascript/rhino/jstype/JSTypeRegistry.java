@@ -385,7 +385,7 @@ public class JSTypeRegistry implements Serializable {
     NoObjectType noObjectType = new NoObjectType(this);
     registerNativeType(JSTypeNative.NO_OBJECT_TYPE, noObjectType);
 
-    NoObjectType noResolvedType = new NoResolvedType(this);
+    NoResolvedType noResolvedType = new NoResolvedType(this);
     registerNativeType(JSTypeNative.NO_RESOLVED_TYPE, noResolvedType);
 
     // Array
