@@ -1650,8 +1650,6 @@ public abstract class JSType implements Serializable {
    */
   public final JSType resolve(ErrorReporter reporter) {
     if (resolved) {
-      // TODO(nicksantos): Check to see if resolve() looped back on itself.
-      // Preconditions.checkNotNull(resolveResult);
       if (resolveResult == null) {
         // If there is a circular definition, keep the NamedType around. This is not ideal,
         // but is still a better type than unknown.
