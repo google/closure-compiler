@@ -1558,4 +1558,8 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
             "exports.MSG_DESCRIPTION;",
             ""));
   }
+
+  public void testEmptyFile() {
+    test(new String[] {"const x = 42;", ""}, new String[] {"/** @const {number} */ var x;", ""});
+  }
 }

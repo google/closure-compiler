@@ -20,7 +20,6 @@ import static com.google.common.base.Preconditions.checkState;
 import static java.util.Comparator.comparing;
 
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
 import com.google.javascript.jscomp.AbstractCompiler;
 import com.google.javascript.jscomp.CompilerPass;
 import com.google.javascript.jscomp.DiagnosticType;
@@ -104,18 +103,8 @@ public class ConvertToTypedInterface implements CompilerPass {
     }
   }
 
-  private void removeUselessFiles(Node externs, Node root) {
-    for (Node script : Iterables.concat(externs.children(), root.children())) {
-      if (!script.hasChildren()) {
-        script.detach();
-        compiler.reportChangeToChangeScope(script);
-      }
-    }
-  }
-
   @Override
   public void process(Node externs, Node root) {
-    removeUselessFiles(externs, root);
     for (Node script = root.getFirstChild(); script != null; script = script.getNext()) {
       processFile(script);
     }
