@@ -4563,4 +4563,18 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "found   : number",
             "required: string"));
   }
+
+  public void testMixinWithUnknownTemplatedSupertypeDoesntCauseWarning() {
+    // Although in general we warn when we can't resolve the superclass type in an extends clause,
+    // we allow this when the superclass type is a template type in order to support mixins.
+    testTypes(
+        lines(
+            "/**",
+            " * @template T",
+            " * @param {function(new:T)} superClass",
+            " */",
+            "function mixin(superClass) {",
+            "  class Changed extends superClass {}",
+            "}"));
+  }
 }

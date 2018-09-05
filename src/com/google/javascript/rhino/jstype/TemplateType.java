@@ -45,6 +45,7 @@
  */
 package com.google.javascript.rhino.jstype;
 
+import com.google.common.base.Predicate;
 import com.google.javascript.rhino.Node;
 
 /** A placeholder type, used as keys in {@link TemplateTypeMap}s. */
@@ -99,5 +100,15 @@ public final class TemplateType extends ProxyObjectType {
 
   public Node getTypeTransformation() {
     return typeTransformation;
+  }
+
+  @Override
+  public boolean setValidator(Predicate<JSType> validator) {
+    // ProxyObjectType will delegate to the unknown type's setValidator, which we don't want.
+    // Some validator functions special-case template types.
+    // Note that this.isUnknownType() is still true, so this override only affects validators that
+    // treat TemplateTypes differently from a random type for which isUnknownType() is true.
+    // (e.g. FunctionTypeBuilder#ExtendedTypeValidator)
+    return validator.apply(this);
   }
 }

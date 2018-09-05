@@ -6162,6 +6162,15 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertEquals("TestingType<number,?>", templatizedInstance.toString());
   }
 
+  public void testTemplateTypeValidator() {
+    // The template type setValidator() will see the TemplateType, not the referenced unknown type
+    // like other ProxyObjectTypes do.
+    TemplateType t = new TemplateType(registry, "T");
+
+    assertThat(t.setValidator(type -> type.isTemplateType())).isTrue();
+    assertThat(t.setValidator(type -> !type.isTemplateType())).isFalse();
+  }
+
   public void testCanCastTo() {
     assertTrue(ALL_TYPE.canCastTo(NULL_TYPE));
     assertTrue(ALL_TYPE.canCastTo(VOID_TYPE));
