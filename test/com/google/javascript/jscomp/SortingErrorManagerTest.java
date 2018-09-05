@@ -18,17 +18,17 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import com.google.javascript.jscomp.BasicErrorManager.ErrorWithLevel;
-import com.google.javascript.jscomp.BasicErrorManager.LeveledJSErrorComparator;
+import com.google.javascript.jscomp.SortingErrorManager.ErrorWithLevel;
+import com.google.javascript.jscomp.SortingErrorManager.LeveledJSErrorComparator;
 import java.util.ArrayList;
 import java.util.List;
 import junit.framework.TestCase;
 
 /**
- * Tests {@link BasicErrorManager}.
+ * Tests {@link SortingErrorManager}.
  *
  */
-public final class BasicErrorManagerTest extends TestCase {
+public final class SortingErrorManagerTest extends TestCase {
   private static final String NULL_SOURCE = null;
 
   private final LeveledJSErrorComparator comparator = new LeveledJSErrorComparator();

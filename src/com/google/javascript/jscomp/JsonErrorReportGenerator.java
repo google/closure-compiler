@@ -20,6 +20,8 @@ import com.google.common.annotations.GwtIncompatible;
 import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping;
 import com.google.gson.stream.JsonWriter;
 import com.google.javascript.jscomp.LightweightMessageFormatter.LineNumberingFormatter;
+import com.google.javascript.jscomp.SortingErrorManager.ErrorReportGenerator;
+import com.google.javascript.jscomp.SortingErrorManager.ErrorWithLevel;
 import com.google.javascript.jscomp.SourceExcerptProvider.SourceExcerpt;
 import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
 import com.google.javascript.rhino.TokenUtil;
@@ -27,14 +29,12 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.PrintStream;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
- * An error manager that prints error and warning data to the print stream as an array of JSON
- * objects provided in addition to the functionality of the {@link BasicErrorManager}.
+ * An error report generator that prints error and warning data to the print stream as an array of
+ * JSON objects.
  */
-public class PrintStreamJSONErrorManager extends BasicErrorManager {
+public class JsonErrorReportGenerator implements ErrorReportGenerator {
   private final PrintStream stream;
   private final SourceExcerptProvider sourceExcerptProvider;
   private static final LineNumberingFormatter excerptFormatter = new LineNumberingFormatter();
@@ -46,20 +46,18 @@ public class PrintStreamJSONErrorManager extends BasicErrorManager {
    *     not close the stream
    * @param sourceExcerptProvider used to retrieve the source context which generated the error
    */
-  public PrintStreamJSONErrorManager(
-      PrintStream stream, SourceExcerptProvider sourceExcerptProvider) {
+  public JsonErrorReportGenerator(PrintStream stream, SourceExcerptProvider sourceExcerptProvider) {
     this.stream = stream;
     this.sourceExcerptProvider = sourceExcerptProvider;
   }
 
   @Override
   @GwtIncompatible
-  public void generateReport() {
+  public void generateReport(SortingErrorManager manager) {
     ByteArrayOutputStream bufferedStream = new ByteArrayOutputStream();
-    List<ErrorWithLevel> list = new ArrayList<>();
     try (JsonWriter jsonWriter = new JsonWriter(new OutputStreamWriter(bufferedStream, "UTF-8"))) {
       jsonWriter.beginArray();
-      for (ErrorWithLevel message = messages.poll(); message != null; message = messages.poll()) {
+      for (ErrorWithLevel message : manager.getSortedDiagnostics()) {
         String sourceName = message.error.sourceName;
         int lineNumber = message.error.getLineNumber();
         int charno = message.error.getCharno();
@@ -119,18 +117,18 @@ public class PrintStreamJSONErrorManager extends BasicErrorManager {
         }
 
         jsonWriter.endObject();
-        list.add(message);
       }
 
       StringBuilder summaryBuilder = new StringBuilder();
-      if (getTypedPercent() > 0.0) {
+      if (manager.getTypedPercent() > 0.0) {
         summaryBuilder.append(
             SimpleFormat.format(
                 "%d error(s), %d warning(s), %.1f%% typed",
-                getErrorCount(), getWarningCount(), getTypedPercent()));
+                manager.getErrorCount(), manager.getWarningCount(), manager.getTypedPercent()));
       } else {
         summaryBuilder.append(
-            SimpleFormat.format("%d error(s), %d warning(s)", getErrorCount(), getWarningCount()));
+            SimpleFormat.format(
+                "%d error(s), %d warning(s)", manager.getErrorCount(), manager.getWarningCount()));
       }
       jsonWriter.beginObject();
       jsonWriter.name("level").value("info");
@@ -139,27 +137,9 @@ public class PrintStreamJSONErrorManager extends BasicErrorManager {
 
       jsonWriter.endArray();
       jsonWriter.flush();
-      jsonWriter.close();
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
     stream.append(bufferedStream.toString());
-
-    // Restore the messages since some tests assert the values after generating the report.
-    messages.addAll(list);
-  }
-
-  // This class overrides generateReport(), so nothing will call println().
-  @Override
-  public void println(CheckLevel level, JSError error) {
-    throw new UnsupportedOperationException(
-        "should not be called for PrintStreamJSONErrorManager");
-  }
-
-  // This class overrides generateReport(), so nothing will call printSummary().
-  @Override
-  public void printSummary() {
-    throw new UnsupportedOperationException(
-        "should not be called for PrintStreamJSONErrorManager");
   }
 }

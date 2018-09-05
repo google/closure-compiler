@@ -30,6 +30,7 @@ import com.google.common.base.Strings;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 import com.google.common.io.ByteStreams;
@@ -475,9 +476,9 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
     options.instrumentationTemplateFile = config.instrumentationTemplateFile;
 
     if (config.errorFormat == CommandLineConfig.ErrorFormatOption.JSON) {
-      PrintStreamJSONErrorManager printer =
-          new PrintStreamJSONErrorManager(getErrorPrintStream(), compiler);
-      compiler.setErrorManager(printer);
+      JsonErrorReportGenerator errorGenerator =
+          new JsonErrorReportGenerator(getErrorPrintStream(), compiler);
+      compiler.setErrorManager(new SortingErrorManager(ImmutableSet.of(errorGenerator)));
     }
   }
 

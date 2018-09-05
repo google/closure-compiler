@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 The Closure Compiler Authors.
+ * Copyright 2018 The Closure Compiler Authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,13 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.google.javascript.jscomp;
 
-import com.google.common.collect.ImmutableSet;
+import com.google.javascript.jscomp.SortingErrorManager.ErrorReportGenerator;
+import java.io.PrintStream;
 
-/** An ErrorManager that silently swallows all messages. */
-public final class BlackHoleErrorManager extends SortingErrorManager {
-  public BlackHoleErrorManager() {
-    super(ImmutableSet.of());
+/** Fail early if someone tries to use the JSON otuput mode */
+public class JsonErrorReportGenerator implements ErrorReportGenerator {
+  public JsonErrorReportGenerator(PrintStream stream, SourceExcerptProvider sourceExcerptProvider) {
+    throw new UnsupportedOperationException("JSON printing not (yet) supported in JS version");
   }
+
+  @Override
+  public void generateReport(SortingErrorManager manager) {}
 }
