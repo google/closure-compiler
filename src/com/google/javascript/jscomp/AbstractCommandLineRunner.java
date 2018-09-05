@@ -788,9 +788,6 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
   /** Creates JS extern inputs from a list of files. */
   @GwtIncompatible("Unnecessary")
   private List<SourceFile> createExternInputs(List<String> files) throws IOException {
-    if (files.isEmpty()) {
-      return ImmutableList.of(SourceFile.fromCode("/dev/null", ""));
-    }
     List<FlagEntry<JsSourceType>> externFiles = new ArrayList<>();
     for (String file : files) {
       externFiles.add(new FlagEntry<JsSourceType>(JsSourceType.EXTERN, file));
