@@ -2172,18 +2172,15 @@ public abstract class CompilerTestCase extends TestCase {
   }
 
   protected static Expected expected(JSModule[] modules) {
-    // create an expected source output from the list of inputs in the modules in order.
     List<String> expectedSrcs = new ArrayList<>();
     for (JSModule module : modules) {
-      String expectedSrc  = "";
       for (CompilerInput input : module.getInputs()) {
         try {
-          expectedSrc += input.getSourceFile().getCode();
+          expectedSrcs.add(input.getSourceFile().getCode());
         } catch (IOException e) {
           throw new RuntimeException("ouch", e);
         }
       }
-      expectedSrcs.add(expectedSrc);
     }
     return expected(expectedSrcs.toArray(new String[0]));
   }
