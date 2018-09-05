@@ -116,7 +116,7 @@ public class PolymerPassTest extends CompilerTestCase {
           "$jscomp.reflectObject = function (type, object) { return object; };");
 
   private int polymerVersion = 1;
-  private final PolymerExportPolicy polymerExportPolicy = PolymerExportPolicy.LEGACY;
+  private PolymerExportPolicy polymerExportPolicy = PolymerExportPolicy.LEGACY;
   private boolean propertyRenamingEnabled = false;
 
   public PolymerPassTest() {
@@ -3486,6 +3486,46 @@ public class PolymerPassTest extends CompilerTestCase {
             "XElement.prototype.name;",
             "/** @type {!Function} */",
             "XElement.prototype.thingToDo;"));
+  }
+
+  /**
+   * When --polymer_export_policy=EXPORT_ALL, the PolymerPass will add all methods of an element to
+   * that element's generated interface (which is injected into the externs), including methods
+   * inherited from Polymer Behaviors. Ensure that each method is included on the interface only
+   * once, even when it is implemented in multiple places.
+   */
+  public void testExportAllOnlyExportsEachMethodOnce() {
+    polymerExportPolicy = PolymerExportPolicy.EXPORT_ALL;
+
+    String js =
+        lines(
+            "/** @polymerBehavior */",
+            "const Behavior1 = {",
+            "  onAll: function() {},",
+            "  onBehavior1: function() {},",
+            "};",
+            "/** @polymerBehavior */",
+            "const Behavior2 = {",
+            "  onAll: function() {},",
+            "  onBehavior2: function() {},",
+            "};",
+            "Polymer({",
+            "  is: 'test-element',",
+            "  behaviors: [Behavior1, Behavior2],",
+            "  onAll() {},",
+            "  onElement: function() {},",
+            "});");
+
+    String newExterns =
+        lines(
+            EXTERNS,
+            "/** @interface */ var PolymerTestElementElementInterface=function(){};",
+            "PolymerTestElementElementInterface.prototype.onAll;",
+            "PolymerTestElementElementInterface.prototype.onBehavior1;",
+            "PolymerTestElementElementInterface.prototype.onBehavior2;",
+            "PolymerTestElementElementInterface.prototype.onElement");
+
+    testExternChanges(EXTERNS, js, newExterns);
   }
 
   @Override

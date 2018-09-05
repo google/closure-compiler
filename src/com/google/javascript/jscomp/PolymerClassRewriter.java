@@ -31,7 +31,9 @@ import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -424,11 +426,9 @@ final class PolymerClassRewriter {
     }
   }
 
-  /**
-   * Appends all of the given methods to the given block.
-   */
+  /** Appends all of the given methods to the given block. */
   private void appendMethodsToBlock(
-      final List<MemberDefinition> methods, Node block, String basePath) {
+      final Collection<MemberDefinition> methods, Node block, String basePath) {
     for (MemberDefinition method : methods) {
       Node propertyNode = IR.exprResult(
           NodeUtil.newQName(compiler, basePath + method.name.getString()));
@@ -570,13 +570,29 @@ final class PolymerClassRewriter {
     String interfaceBasePath = interfaceName + ".prototype.";
 
     if (polymerExportPolicy == PolymerExportPolicy.EXPORT_ALL) {
+      // Properties from behaviors were added to our element definition earlier.
       appendPropertiesToBlock(cls.props, block, interfaceBasePath);
-      appendMethodsToBlock(cls.methods, block, interfaceBasePath);
+
+      // Methods from behaviors were not already added to our element definition, so we need to
+      // export those in addition to methods defined directly on the element. Note it's possible
+      // and valid for two behaviors, or a behavior and an element, to implement the same method,
+      // so we de-dupe by name. We're not checking that the signatures are compatible in the way
+      // that normal class inheritance would, but that's not easy to do since these aren't classes.
+      // Class mixins replace Polymer behaviors and are supported directly by Closure, so new code
+      // should use those instead.
+      LinkedHashMap<String, MemberDefinition> uniqueMethods = new LinkedHashMap<>();
       if (cls.behaviors != null) {
         for (BehaviorDefinition behavior : cls.behaviors) {
-          appendMethodsToBlock(behavior.functionsToCopy, block, interfaceBasePath);
+          for (MemberDefinition method : behavior.functionsToCopy) {
+            uniqueMethods.put(method.name.getString(), method);
+          }
         }
       }
+      for (MemberDefinition method : cls.methods) {
+        uniqueMethods.put(method.name.getString(), method);
+      }
+      appendMethodsToBlock(uniqueMethods.values(), block, interfaceBasePath);
+
     } else if (polymerVersion == 1) {
       // For Polymer 1, all declared properties are non-renameable
       appendPropertiesToBlock(cls.props, block, interfaceBasePath);
