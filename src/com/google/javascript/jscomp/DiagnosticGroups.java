@@ -253,6 +253,10 @@ public class DiagnosticGroups {
           TypeCheck.INEXISTENT_PROPERTY_WITH_SUGGESTION,
           TypeCheck.POSSIBLE_INEXISTENT_PROPERTY);
 
+  public static final DiagnosticGroup GLOBALLY_MISSING_PROPERTIES =
+      DiagnosticGroups.registerGroup(
+          "globallyMissingProperties", TypeCheck.POSSIBLE_INEXISTENT_PROPERTY);
+
   public static final DiagnosticGroup J2CL_CHECKS =
       DiagnosticGroups.registerGroup("j2clChecks",
           J2clChecksPass.J2CL_REFERENCE_EQUALITY);
