@@ -227,6 +227,12 @@ public final class NamedType extends ProxyObjectType {
    */
   @Override
   JSType resolveInternal(ErrorReporter reporter) {
+    if (!getReferencedType().isUnknownType()) {
+      // In some cases (e.g. typeof(ns) when the actual type is just a literal object), a NamedType
+      // is created solely for the purpose of naming an already-known type. When that happens,
+      // there's nothing to look up, so just resolve the referenced type.
+      return super.resolveInternal(reporter);
+    }
 
     // TODO(user): Investigate whether it is really necessary to keep two
     // different mechanisms for resolving named types, and if so, which order

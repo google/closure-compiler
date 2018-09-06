@@ -688,6 +688,36 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
         "Bad type annotation. type not recognized due to syntax error." + BAD_TYPE_WIKI_LINK);
   }
 
+  public void testParseTypeofType1() {
+    Node node = parse("@type {typeof Foo}*/").getType().getRoot();
+    assertEquals(Token.TYPEOF, node.getToken());
+    assertEquals(1, node.getChildCount());
+    assertEquals(Token.STRING, node.getFirstChild().getToken());
+    assertEquals("Foo", node.getFirstChild().getString());
+  }
+
+  public void testParseTypeofType2() {
+    Node node = parse("@type {(typeof Foo)}*/").getType().getRoot();
+    assertEquals(Token.TYPEOF, node.getToken());
+    assertEquals(1, node.getChildCount());
+    assertEquals(Token.STRING, node.getFirstChild().getToken());
+    assertEquals("Foo", node.getFirstChild().getString());
+  }
+
+  public void testParseTypeofType3() {
+    Node node = parse("@type {typeof Foo|Bar<typeof Baz>}*/").getType().getRoot();
+    assertEquals(Token.PIPE, node.getToken());
+    assertEquals(Token.TYPEOF, node.getFirstChild().getToken());
+    assertEquals(Token.STRING, node.getFirstFirstChild().getToken());
+    assertEquals("Foo", node.getFirstFirstChild().getString());
+    assertEquals(Token.STRING, node.getLastChild().getToken());
+    assertEquals("Bar", node.getLastChild().getString());
+    assertEquals(Token.BLOCK, node.getLastChild().getFirstChild().getToken());
+    assertEquals(Token.TYPEOF, node.getLastChild().getFirstFirstChild().getToken());
+    assertEquals(Token.STRING, node.getLastChild().getFirstFirstChild().getFirstChild().getToken());
+    assertEquals("Baz", node.getLastChild().getFirstFirstChild().getFirstChild().getString());
+  }
+
   private JSType testParseType(String type) {
     return testParseType(type, type);
   }

@@ -20213,6 +20213,151 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "required: null"));
   }
 
+  public void testTypeofType_notInScope() {
+    testTypes("var /** typeof ns */ x;", "Parse error. Not in scope: ns");
+  }
+
+  public void testTypeofType_namespace() {
+    testTypes(
+        lines(
+            "/** @const */ var ns = {};", //
+            "var /** typeof ns */ x = ns;"));
+  }
+
+  public void testTypeofType_namespaceMismatch() {
+    testTypes(
+        lines(
+            "/** @const */ var ns = {};", //
+            "var /** typeof ns */ x = {};"),
+        lines(
+            "initializing variable", //
+            "found   : {}",
+            "required: {}"));
+  }
+
+  public void testTypeofType_constructor() {
+    testTypesWithExterns(
+        new TestExternsBuilder().addArray().build(),
+        lines(
+            "/** @constructor */ function Foo() {}", //
+            "var /** !Array<typeof Foo> */ x = [];",
+            "x.push(Foo);"));
+  }
+
+  public void testTypeofType_constructorMismatch1() {
+    testTypesWithExterns(
+        new TestExternsBuilder().addArray().build(),
+        lines(
+            "/** @constructor */ function Foo() {}", //
+            "var /** !Array<(typeof Foo)> */ x = [];",
+            "x.push(new Foo());"),
+        lines(
+            "actual parameter 1 of Array.prototype.push does not match formal parameter",
+            "found   : Foo",
+            "required: function(new:Foo): undefined"));
+  }
+
+  public void testTypeofType_constructorMismatch2() {
+    testTypesWithExterns(
+        new TestExternsBuilder().addArray().build(),
+        lines(
+            "/** @constructor */ function Foo() {}",
+            "var /** !Array<!Foo> */ x = [];",
+            "var /** typeof Foo */ y = Foo;",
+            "x.push(y);"),
+        lines(
+            "actual parameter 1 of Array.prototype.push does not match formal parameter",
+            "found   : function(new:Foo): undefined",
+            "required: Foo"));
+  }
+
+  public void testTypeofType_enum() {
+    testTypes(
+        lines(
+            "/** @enum */ var Foo = {A: 1}", //
+            "var /** typeof Foo */ x = Foo;"));
+  }
+
+  public void testTypeofType_enumMismatch1() {
+    testTypes(
+        lines("/** @enum */ var Foo = {A: 1}", "var /** typeof Foo */ x = Foo.A;"),
+        lines(
+            "initializing variable", //
+            "found   : Foo<number>",
+            "required: enum{Foo}"));
+  }
+
+  public void testTypeofType_enumMismatch2() {
+    testTypes(
+        lines(
+            "/** @enum */ var Foo = {A: 1}",
+            "/** @enum */ var Bar = {A: 1}",
+            "var /** typeof Foo */ x = Bar;"),
+        lines(
+            "initializing variable", //
+            "found   : enum{Bar}",
+            "required: enum{Foo}"));
+  }
+
+  public void testTypeofType_castNamespaceIncludesPropertiesFromTypeofType() {
+    testTypes(
+        lines(
+            "/** @const */ var ns1 = {};",
+            "/** @type {string} */ ns1.foo;",
+            "/** @const */ var ns2 = {};",
+            "/** @type {number} */ ns2.bar;",
+            "",
+            "/** @const {typeof ns2} */ var ns = /** @type {?} */ (ns1);",
+            "/** @type {null} */ var x = ns.bar;"),
+        lines(
+            "initializing variable", //
+            "found   : number",
+            "required: null"));
+  }
+
+  public void testTypeofType_castNamespaceDoesNotIncludeOwnProperties() {
+    testTypes(
+        lines(
+            "/** @const */ var ns1 = {};",
+            "/** @type {string} */ ns1.foo;",
+            "/** @const */ var ns2 = {};",
+            "/** @type {number} */ ns2.bar;",
+            "",
+            "/** @const {typeof ns2} */ var ns = /** @type {?} */ (ns1);",
+            "/** @type {null} */ var x = ns.foo;"),
+        "Property foo never defined on ns");
+  }
+
+  public void testTypeofType_namespaceTypeIsAnAliasNotACopy() {
+    testTypes(
+        lines(
+            "/** @const */ var ns1 = {};",
+            "/** @type {string} */ ns1.foo;",
+            "",
+            "/** @const {typeof ns1} */ var ns = /** @type {?} */ (x);",
+            "",
+            "/** @type {string} */ ns1.bar;",
+            "",
+            "/** @type {null} */ var x = ns.bar;"),
+        lines(
+            "initializing variable", //
+            "found   : string",
+            "required: null"));
+  }
+
+  public void testTypeofType_namespacedTypeNameResolves() {
+    testTypes(
+        lines(
+            "/** @const */ var ns1 = {};",
+            "/** @constructor */ ns1.Foo = function() {};",
+            "/** @const {typeof ns1} */ var ns = /** @type {?} */ (x);",
+            "/** @type {!ns.Foo} */ var x = null;"),
+        lines(
+            "initializing variable", //
+            "found   : null",
+            "required: ns1.Foo"));
+  }
+
   public void testAssignOp() {
     testTypes(
         lines(

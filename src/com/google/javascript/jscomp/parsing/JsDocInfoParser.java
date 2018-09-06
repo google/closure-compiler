@@ -2141,6 +2141,8 @@ public final class JsDocInfoParser {
         case "null":
         case "undefined":
           return newStringNode(string);
+        case "typeof":
+          return parseTypeofType(next());
         default:
           return parseTypeName(token);
       }
@@ -2150,11 +2152,7 @@ public final class JsDocInfoParser {
     return reportGenericTypeSyntaxWarning();
   }
 
-  /**
-   * TypeName := NameExpression | NameExpression TypeApplication
-   * TypeApplication := '.<' TypeExpressionList '>'
-   */
-  private Node parseTypeName(JsDocToken token) {
+  private Node parseNameExpression(JsDocToken token) {
     if (token != JsDocToken.STRING) {
       return reportGenericTypeSyntaxWarning();
     }
@@ -2162,8 +2160,7 @@ public final class JsDocInfoParser {
     String typeName = stream.getString();
     int lineno = stream.getLineno();
     int charno = stream.getCharno();
-    while (match(JsDocToken.EOL) &&
-        typeName.charAt(typeName.length() - 1) == '.') {
+    while (match(JsDocToken.EOL) && typeName.charAt(typeName.length() - 1) == '.') {
       skipEOLs();
       if (match(JsDocToken.STRING)) {
         next();
@@ -2171,12 +2168,20 @@ public final class JsDocInfoParser {
       }
     }
 
-    Node typeNameNode = newStringNode(typeName, lineno, charno);
+    return newStringNode(typeName, lineno, charno);
+  }
+
+  /**
+   * TypeName := NameExpression | NameExpression TypeApplication TypeApplication := '.'? '<'
+   * TypeExpressionList '>'
+   */
+  private Node parseTypeName(JsDocToken token) {
+    Node typeNameNode = parseNameExpression(token);
 
     if (match(JsDocToken.LEFT_ANGLE)) {
       next();
       skipEOLs();
-      Node memberType = parseTypeExpressionList(typeName, next());
+      Node memberType = parseTypeExpressionList(typeNameNode.getString(), next());
       if (memberType != null) {
         typeNameNode.addChildToFront(memberType);
 
@@ -2189,6 +2194,16 @@ public final class JsDocInfoParser {
       }
     }
     return typeNameNode;
+  }
+
+  /** TypeofType := 'typeof' NameExpression | 'typeof' '(' NameExpression ')' */
+  private Node parseTypeofType(JsDocToken token) {
+    Node typeofType = newNode(Token.TYPEOF);
+    skipEOLs();
+    Node name = parseNameExpression(token);
+    skipEOLs();
+    typeofType.addChildToFront(name);
+    return typeofType;
   }
 
   /**

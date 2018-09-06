@@ -1939,6 +1939,22 @@ public class JSTypeRegistry implements Serializable {
       case VOID: // Only allowed in the return value of a function.
         return getNativeType(VOID_TYPE);
 
+      case TYPEOF: {
+        String name = n.getFirstChild().getString();
+        StaticTypedSlot slot = scope.getSlot(name);
+        if (slot == null) {
+          reporter.warning("Not in scope: " + name, sourceName, n.getLineno(), n.getCharno());
+          return getNativeType(UNKNOWN_TYPE);
+        }
+        // TODO(sdh): require var to be const?
+        JSType type = slot.getType();
+        if (type.isLiteralObject()) {
+          type = createNamedType(scope, "typeof " + name, sourceName, n.getLineno(), n.getCharno());
+          ((NamedType) type).setReferencedType(slot.getType());
+        }
+        return type;
+      }
+
       case STRING:
         // TODO(martinprobst): The new type syntax resolution should be separate.
         // Remove the NAME case then.
