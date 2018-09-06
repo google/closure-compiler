@@ -318,11 +318,19 @@ class ExpressionDecomposer {
 
     // Now this node.
 
+    if (n.isTemplateLitSub()) {
+      // A template literal substitution expression like ${f()} is represented in the AST as
+      //   TEMPLATELIT_SUB
+      //     CALL
+      //       NAME f
+      // The TEMPLATELIT_SUB node is not actually an expression and can't be extracted, but we may
+      // need to extract the expression inside of it.
+      n = n.getFirstChild();
+    } else if (!IR.mayBeExpression(n)) {
     // If n is not an expression then it can't be extracted. For example if n is the destructuring
     // pattern on the left side of a VAR statement:
     //   var {pattern} = rhs();
     // See test case: testExposeExpression18
-    if (!IR.mayBeExpression(n)) {
       return;
     }
 

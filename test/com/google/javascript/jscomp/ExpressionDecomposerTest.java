@@ -57,6 +57,8 @@ public final class ExpressionDecomposerTest extends TestCase {
     knownConstants.clear();
     times = 1;
     // Tests using ES6+ features not in the typechecker should set this option to false
+    // TODO(lharker): stop setting this flag to false, since the typechecker should now understand
+    // all features in ES2017
     shouldTestTypes = true;
   }
 
@@ -294,6 +296,20 @@ public final class ExpressionDecomposerTest extends TestCase {
     helperCanExposeExpression(DecompositionType.DECOMPOSABLE,
         "[{ [foo()]: a } = goo()] = arr;",
         "foo");
+  }
+
+  public void testCanExposeExpressionInTemplateLiteralSubstitution() {
+    helperCanExposeExpression(DecompositionType.MOVABLE, "const result = `${foo()}`;", "foo");
+
+    allowMethodCallDecomposing = true;
+    helperCanExposeExpression(
+        DecompositionType.DECOMPOSABLE, "const obj = {f(x) {}}; obj.f(`${foo()}`);", "foo");
+
+    helperCanExposeExpression(
+        DecompositionType.MOVABLE, "const result = `${foo()} ${goo()}`;", "foo");
+
+    helperCanExposeExpression(
+        DecompositionType.DECOMPOSABLE, "const result = `${foo()} ${goo()}`;", "goo");
   }
 
   public void testMoveExpression1() {
@@ -804,6 +820,27 @@ public final class ExpressionDecomposerTest extends TestCase {
         "var x = {set a(p) {}, b: foo()};",
         "foo",
         "var result$jscomp$0=foo();var x = {set a(p) {}, b: result$jscomp$0};");
+  }
+
+  public void testExposeExpressionInTemplateLibSub() {
+    helperExposeExpression(
+        "` ${ foo() }  ${ goo() } `;",
+        "goo",
+        "var temp_const$jscomp$0 = foo(); ` ${ temp_const$jscomp$0 }  ${ goo() } `;");
+  }
+
+  public void testExposeSubExpressionInTemplateLibSub() {
+    helperExposeExpression(
+        "` ${ foo() + goo() } `;",
+        "goo",
+        "var temp_const$jscomp$0 = foo(); ` ${ temp_const$jscomp$0 + goo() } `;");
+  }
+
+  public void testMoveExpressionInTemplateLibSub() {
+    helperMoveExpression(
+        "` ${ foo() }  ${ goo() } `;",
+        "foo",
+        "var result$jscomp$0 = foo(); ` ${ result$jscomp$0 }  ${ goo() } `;");
   }
 
   public void testFindExpressionRoot1() {
