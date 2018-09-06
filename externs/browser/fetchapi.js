@@ -424,3 +424,10 @@ Window.prototype.fetch = function(input, opt_init) {};
  * @see https://fetch.spec.whatwg.org/#fetch-method
  */
 WorkerGlobalScope.prototype.fetch = function(input, opt_init) {};
+
+/**
+ * if WorkerOptions.type = 'module', it specifies how `scriptURL` is fetched.
+ * WorkerOptions is defined in html5.js.
+ * @type {!RequestCredentials|undefined}
+ */
+WorkerOptions.prototype.credentials;

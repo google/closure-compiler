@@ -1280,10 +1280,12 @@ WebWorker.prototype.onerror;
 
 /**
  * @see http://dev.w3.org/html5/workers/
+ * @param {!string} scriptURL
+ * @param {!WorkerOptions=} opt_options
  * @constructor
  * @implements {EventTarget}
  */
-function Worker(opt_arg0) {}
+function Worker(scriptURL, opt_options) {}
 
 /** @override */
 Worker.prototype.addEventListener = function(type, listener, opt_options) {};
@@ -1327,6 +1329,30 @@ Worker.prototype.onmessage;
  * @type {?function(!ErrorEvent): void}
  */
 Worker.prototype.onerror;
+
+/**
+ * @see http://dev.w3.org/html5/workers/
+ * @record
+ */
+function WorkerOptions() {}
+
+/**
+ * Defines a name for the new global environment of the worker, primarily for
+ * debugging purposes.
+ * @type {string|undefined}
+ */
+WorkerOptions.prototype.name;
+
+/**
+ * 'classic' or 'module'. Default: 'classic'.
+ * Specifying 'module' ensures the worker environment supports JavaScript
+ * modules.
+ * @type {string|undefined}
+ */
+WorkerOptions.prototype.type;
+
+// WorkerOptions.prototype.credentials is defined in fetchapi.js.
+// if type = 'module', it specifies how scriptURL is fetched.
 
 /**
  * @see http://dev.w3.org/html5/workers/
