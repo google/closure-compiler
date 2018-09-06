@@ -16,13 +16,13 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableSet;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.PriorityQueue;
 import java.util.Set;
 
@@ -202,16 +202,21 @@ public class SortingErrorManager implements ErrorManager {
 
     @Override
     public int hashCode() {
-      return Objects.hashCode(
+      return Objects.hash(
           level, error.description, error.sourceName, error.lineNumber, error.getCharno());
     }
 
     @Override
     public boolean equals(Object obj) {
-      if (obj == null) {
+      if (!(obj instanceof ErrorWithLevel)) {
         return false;
       }
-      return obj.hashCode() == this.hashCode();
+      ErrorWithLevel e = (ErrorWithLevel) obj;
+      return Objects.equals(level, e.level)
+          && Objects.equals(error.description, e.error.description)
+          && Objects.equals(error.sourceName, e.error.sourceName)
+          && error.lineNumber == e.error.lineNumber
+          && error.getCharno() == e.error.getCharno();
     }
   }
 }
