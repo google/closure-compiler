@@ -20358,6 +20358,164 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "required: ns1.Foo"));
   }
 
+  public void testTypeofType_withGlobalDeclaredVariableWithHoistedFunction() {
+    // TODO(sdh): fix this.  This is another form of problems with partially constructed scopes.
+    // "x" is in scope but because "g" is hoisted its type is created before "x" is introduced
+    // to the scope.
+    testTypes(
+        lines(
+            "/** @type {string|number} */",
+            "var x = 1;",
+            "function g(/** typeof x */ a) {}",
+            "x = 'str';",
+            "g(null);"),
+        lines("Parse error. Not in scope: x"));
+  }
+
+  public void testTypeofType_withGlobalDeclaredVariableWithFunction() {
+    testTypes(
+        lines(
+            "/** @type {string|number} */",
+            "var x = 1;",
+            "let g = function(/** typeof x */ a) {}",
+            "x = 'str';",
+            "g(null);"),
+        lines(
+            "actual parameter 1 of g does not match formal parameter", //
+            "found   : null",
+            "required: (number|string)"));
+  }
+
+  public void testTypeofType_withGlobalInferredVariableWithFunctionExpression() {
+    testTypes(
+        lines(
+            "var x = 1;", //
+            "var g = function (/** typeof x */ a) {}",
+            "x = 'str';",
+            "g(null);"),
+        lines("Parse error. No type for: x"));
+  }
+
+  public void testTypeofType_withLocalInferredVariableInHoistedFunction() {
+    // TODO(sdh): fix this.  This is another form of problems with partially constructed scopes.
+    // "x" is in scope but because "g" is hoisted its type is created before "x" is introduced
+    // to the scope.
+    testTypes(
+        lines(
+            "function f() {",
+            "  var x = 1;",
+            "  function g(/** typeof x */ a) {}",
+            "  x = 'str';",
+            "  g(null);",
+            "}"),
+        lines("Parse error. Not in scope: x"));
+  }
+
+  public void testTypeofType_withLocalDeclaredVariableWithHoistedFunction() {
+    // TODO(sdh): fix this.  This is another form of problems with partially constructed scopes.
+    // "x" is in scope but because "g" is hoisted its type is created before "x" is introduced
+    // to the scope.
+    testTypes(
+        lines(
+            "function f() {",
+            "  /** @type {string|number} */",
+            "  var x = 1;",
+            "  function g(/** typeof x */ a) {}",
+            "  x = 'str';",
+            "  g(null);",
+            "}"),
+        lines("Parse error. Not in scope: x"));
+  }
+
+  public void testTypeofType_withLocalInferredVariableWithFunctionExpression() {
+    testTypes(
+        lines(
+            "function f() {",
+            "  var x = 1;",
+            "  var g = function (/** typeof x */ a) {}",
+            "  x = 'str';",
+            "  g(null);",
+            "}"),
+        lines("Parse error. No type for: x"));
+  }
+
+  public void testTypeofType_withLocalDeclaredVariableWithFunctionExpression() {
+    testTypes(
+        lines(
+            "function f() {",
+            "  /** @type {string|number} */",
+            "  var x = 1;",
+            "  var g = function (/** typeof x */ a) {}",
+            "  x = 'str';",
+            "  g(null);",
+            "}"),
+        lines(
+            "actual parameter 1 of g does not match formal parameter", //
+            "found   : null",
+            "required: (number|string)"));
+  }
+
+  public void testTypeofType_withLocalInferredVariable() {
+    testTypes(
+        lines(
+            "function f() {",
+            "  var x = 1;",
+            "  /** @type {typeof x} */",
+            "  var g = null",
+            "  x = 'str';",
+            "}"),
+        lines("Parse error. No type for: x"));
+  }
+
+  public void testTypeofType_withLocalDeclaredVariable1() {
+    testTypes(
+        lines(
+            "function f() {",
+            "  /** @type {string|number} */",
+            "  var x = 1;",
+            "  /** @type {typeof x} */",
+            "  var g = null",
+            "  x = 'str';",
+            "}"),
+        lines(
+            "initializing variable", //
+            "found   : null",
+            "required: (number|string)"));
+  }
+
+  public void testTypeofType_withLocalDeclaredVariableAfterReassignment() {
+    testTypes(
+        lines(
+            "function f() {",
+            "  /** @type {string|number} */",
+            "  var x = 1;",
+            "  x = 'str';",
+            "  /** @type {typeof x} */",
+            "  var g = null",
+            "}"),
+        lines(
+            "initializing variable", //
+            "found   : null",
+            "required: (number|string)"));
+  }
+
+  public void testTypeofType_withLocalDeclaredVariableAfterTightening() {
+    testTypes(
+        lines(
+            "function f() {",
+            "  /** @type {string|number} */",
+            "  var x = 'str';",
+            "  if (typeof x == 'string') {",
+            "    /** @type {typeof x} */",
+            "    let g = null",
+            "  }",
+            "}"),
+        lines(
+            "initializing variable", //
+            "found   : null",
+            "required: (number|string)"));
+  }
+
   public void testAssignOp() {
     testTypes(
         lines(
