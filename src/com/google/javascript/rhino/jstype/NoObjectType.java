@@ -117,6 +117,12 @@ public class NoObjectType extends FunctionType {
   public String getReferenceName() {
     return null;
   }
+
+  @Override
+  public boolean hasReferenceName() {
+    return false;
+  }
+
   @Override
   public final boolean matchesNumberContext() {
     return true;

@@ -161,24 +161,6 @@ public final class TypeSubject extends Subject<TypeSubject, JSType> {
     check("toString()").that(actualNonNull().toString()).isEqualTo(typeString);
   }
 
-  public void getReferenceNameIsEqualTo(String referenceName) {
-    check("getReferenceName()")
-        .that(actualNonNull().toMaybeObjectType().getReferenceName())
-        .isEqualTo(referenceName);
-    check("hasReferenceName()")
-        .that(actualNonNull().toMaybeObjectType().hasReferenceName())
-        .isTrue();
-  }
-
-  public void getReferenceNameIsNull() {
-    check("getReferenceName()")
-        .that(actualNonNull().toMaybeObjectType().getReferenceName())
-        .isNull();
-    check("hasReferenceName()")
-        .that(actualNonNull().toMaybeObjectType().hasReferenceName())
-        .isFalse();
-  }
-
   private JSType actualNonNull() {
     isNotNull();
     return actual();

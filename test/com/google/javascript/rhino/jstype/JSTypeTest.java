@@ -3921,7 +3921,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     // toString
     assertEquals("{...}", objectType.toString());
     assertEquals(null, objectType.getDisplayName());
-    assertType(objectType).getReferenceNameIsNull();
+    assertFalse(objectType.hasReferenceName());
     assertEquals("anObject", new PrototypeObjectType(registry, "anObject",
         null).getDisplayName());
 
@@ -5835,7 +5835,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     // anonymous
     ObjectType anonymous = registry.createAnonymousObjectType(null);
     assertTypeEquals(OBJECT_TYPE, anonymous.getImplicitPrototype());
-    assertType(anonymous).getReferenceNameIsNull();
+    assertNull(anonymous.getReferenceName());
     assertEquals("{}", anonymous.toString());
   }
 
@@ -5882,7 +5882,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
         registry.createObjectType(null, DATE_TYPE.getImplicitPrototype());
     assertTypeEquals(DATE_TYPE.getImplicitPrototype(),
         subDate.getImplicitPrototype());
-    assertType(subDate).getReferenceNameIsNull();
+    assertNull(subDate.getReferenceName());
     assertEquals("{...}", subDate.toString());
 
     // name, node, prototype
@@ -5890,7 +5890,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
         ARRAY_TYPE.getImplicitPrototype());
     assertTypeEquals(ARRAY_TYPE.getImplicitPrototype(),
         subArray.getImplicitPrototype());
-    assertType(subArray).getReferenceNameIsEqualTo("Foo");
+    assertEquals("Foo", subArray.getReferenceName());
   }
 
   /**
@@ -6169,12 +6169,6 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
     assertThat(t.setValidator(type -> type.isTemplateType())).isTrue();
     assertThat(t.setValidator(type -> !type.isTemplateType())).isFalse();
-  }
-
-  public void testTemplateTypeHasReferenceName() {
-    TemplateType t = new TemplateType(registry, "T");
-
-    assertType(t).getReferenceNameIsEqualTo("T");
   }
 
   public void testCanCastTo() {

@@ -201,6 +201,11 @@ public final class NamedType extends ProxyObjectType {
   }
 
   @Override
+  public boolean hasReferenceName() {
+    return true;
+  }
+
+  @Override
   public NamedType toMaybeNamedType() {
     return this;
   }

@@ -74,6 +74,11 @@ class InstanceObjectType extends PrototypeObjectType {
   }
 
   @Override
+  public boolean hasReferenceName() {
+    return getConstructor().hasReferenceName();
+  }
+
+  @Override
   public ObjectType getImplicitPrototype() {
     return getConstructor().getPrototype();
   }
