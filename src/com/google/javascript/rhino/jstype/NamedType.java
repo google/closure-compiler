@@ -239,28 +239,17 @@ public final class NamedType extends ProxyObjectType {
     // makes more sense. Now, resolution via registry is first in order to
     // avoid triggering the warnings built into the resolution via properties.
     boolean resolved = resolveViaRegistry(reporter);
+    if (!resolved) {
+      resolveViaProperties(reporter);
+    }
+
     if (detectInheritanceCycle()) {
       handleTypeCycle(reporter);
     }
-
-    if (resolved) {
-      super.resolveInternal(reporter);
-      finishPropertyContinuations();
-    } else {
-
-      resolveViaProperties(reporter);
-      if (detectInheritanceCycle()) {
-        handleTypeCycle(reporter);
-      }
-
-      super.resolveInternal(reporter);
-      if (isResolved()) {
-        finishPropertyContinuations();
-      }
-    }
+    super.resolveInternal(reporter);
+    finishPropertyContinuations();
 
     JSType result = getReferencedType();
-
     if (isSuccessfullyResolved()) {
       int numKeys = result.getTemplateTypeMap().numUnfilledTemplateKeys();
       if (result.isObjectType()
@@ -301,7 +290,7 @@ public final class NamedType extends ProxyObjectType {
    * as properties. The scope must have been fully parsed and a symbol table constructed.
    */
   private void resolveViaProperties(ErrorReporter reporter) {
-    JSType value = lookupViaProperties(reporter);
+    JSType value = lookupViaProperties();
     // last component of the chain
     if (value != null && value.isFunctionType() &&
         (value.isConstructor() || value.isInterface())) {
@@ -331,15 +320,17 @@ public final class NamedType extends ProxyObjectType {
    * parsed and a symbol table constructed.
    * @return The type of the symbol, or null if the type could not be found.
    */
-  private JSType lookupViaProperties(ErrorReporter reporter) {
+  private JSType lookupViaProperties() {
     String[] componentNames = reference.split("\\.", -1);
     if (componentNames[0].length() == 0) {
       return null;
     }
+
     StaticTypedSlot slot = resolutionScope.getSlot(componentNames[0]);
     if (slot == null) {
       return null;
     }
+
     // If the first component has a type of 'Unknown', then any type
     // names using it should be regarded as silently 'Unknown' rather than be
     // noisy about it.
@@ -347,23 +338,19 @@ public final class NamedType extends ProxyObjectType {
     if (slotType == null || slotType.isAllType() || slotType.isNoType()) {
       return null;
     }
-    JSType value = getTypedefType(reporter, slot);
-    if (value == null) {
-      return null;
-    }
 
     // resolving component by component
     for (int i = 1; i < componentNames.length; i++) {
-      ObjectType parentClass = ObjectType.cast(value);
-      if (parentClass == null) {
+      ObjectType parentObj = ObjectType.cast(slotType);
+      if (parentObj == null) {
         return null;
       }
       if (componentNames[i].length() == 0) {
         return null;
       }
-      value = parentClass.getPropertyType(componentNames[i]);
+      slotType = parentObj.getPropertyType(componentNames[i]);
     }
-    return value;
+    return slotType;
   }
 
   private void setReferencedAndResolvedType(
@@ -416,15 +403,6 @@ public final class NamedType extends ProxyObjectType {
     }
 
     setResolvedTypeInternal(getReferencedType());
-  }
-
-  private JSType getTypedefType(ErrorReporter reporter, StaticTypedSlot slot) {
-    JSType type = slot.getType();
-    if (type != null) {
-      return type;
-    }
-    handleUnresolvedType(reporter, true);
-    return null;
   }
 
   @Override
