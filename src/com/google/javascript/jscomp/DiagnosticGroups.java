@@ -31,10 +31,10 @@ import com.google.javascript.jscomp.lint.CheckInterfaces;
 import com.google.javascript.jscomp.lint.CheckJSDocStyle;
 import com.google.javascript.jscomp.lint.CheckMissingSemicolon;
 import com.google.javascript.jscomp.lint.CheckNoMutatedEs6Exports;
+import com.google.javascript.jscomp.lint.CheckNullabilityModifiers;
 import com.google.javascript.jscomp.lint.CheckNullableReturn;
 import com.google.javascript.jscomp.lint.CheckPrimitiveAsObject;
 import com.google.javascript.jscomp.lint.CheckPrototypeProperties;
-import com.google.javascript.jscomp.lint.CheckRedundantNullabilityModifier;
 import com.google.javascript.jscomp.lint.CheckRequiresAndProvidesSorted;
 import com.google.javascript.jscomp.lint.CheckUnusedLabels;
 import com.google.javascript.jscomp.lint.CheckUselessBlocks;
@@ -580,10 +580,11 @@ public class DiagnosticGroups {
               CheckInterfaces.INTERFACE_FUNCTION_NOT_EMPTY,
               CheckInterfaces.INTERFACE_SHOULD_NOT_TAKE_ARGS,
               CheckMissingSemicolon.MISSING_SEMICOLON,
+              CheckNullabilityModifiers.MISSING_NULLABILITY_MODIFIER_JSDOC,
+              CheckNullabilityModifiers.REDUNDANT_NULLABILITY_MODIFIER_JSDOC,
               CheckPrimitiveAsObject.NEW_PRIMITIVE_OBJECT,
               CheckPrimitiveAsObject.PRIMITIVE_OBJECT_DECLARATION,
               CheckPrototypeProperties.ILLEGAL_PROTOTYPE_MEMBER,
-              CheckRedundantNullabilityModifier.REDUNDANT_NULLABILITY_MODIFIER_JSDOC,
               CheckRequiresAndProvidesSorted.DUPLICATE_REQUIRE,
               CheckRequiresAndProvidesSorted.REQUIRES_NOT_SORTED,
               CheckRequiresAndProvidesSorted.PROVIDES_NOT_SORTED,
@@ -659,7 +660,8 @@ public class DiagnosticGroups {
   // the file level is by using a whitelist file.
   @GwtIncompatible("Conformance")
   public static final DiagnosticGroup CONFORMANCE_VIOLATIONS =
-      DiagnosticGroups.registerGroup("conformanceViolations",
+      DiagnosticGroups.registerGroup(
+          "conformanceViolations",
           CheckConformance.CONFORMANCE_VIOLATION,
           CheckConformance.CONFORMANCE_POSSIBLE_VIOLATION);
 
@@ -670,16 +672,14 @@ public class DiagnosticGroups {
 
   public static final DiagnosticGroup MISSING_POLYFILL =
       DiagnosticGroups.registerGroup(
-          "missingPolyfill",
-          RewritePolyfills.INSUFFICIENT_OUTPUT_VERSION_ERROR);
+          "missingPolyfill", RewritePolyfills.INSUFFICIENT_OUTPUT_VERSION_ERROR);
 
   // For internal use only, so there are no constants for these groups.
   static {
-    DiagnosticGroups.registerGroup("invalidProvide",
-        ProcessClosurePrimitives.INVALID_PROVIDE_ERROR);
+    DiagnosticGroups.registerGroup(
+        "invalidProvide", ProcessClosurePrimitives.INVALID_PROVIDE_ERROR);
 
-    DiagnosticGroups.registerGroup("es6Typed",
-        RhinoErrorReporter.MISPLACED_TYPE_SYNTAX);
+    DiagnosticGroups.registerGroup("es6Typed", RhinoErrorReporter.MISPLACED_TYPE_SYNTAX);
 
     DiagnosticGroups.registerDeprecatedGroup("duplicateZipContents");
   }
