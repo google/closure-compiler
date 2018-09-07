@@ -370,11 +370,6 @@ public class PrototypeObjectType extends ObjectType {
     }
   }
 
-  @Override
-  public boolean hasReferenceName() {
-    return className != null || ownerFunction != null;
-  }
-
   public boolean isAnonymous() {
     return anonymousType;
   }

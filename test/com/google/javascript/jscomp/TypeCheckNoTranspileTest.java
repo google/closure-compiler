@@ -4577,4 +4577,31 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "  class Changed extends superClass {}",
             "}"));
   }
+
+  public void testMixinImplementingInterfaceAndUnknownTemplatedSuperclass() {
+    testTypes(
+        lines(
+            "/**",
+            " * @template T",
+            " * @param {function(new:T)} superClass",
+            " */",
+            "function mixin(superClass) {",
+            "  /** @implements {ChangedInterface} */",
+            "  class Changed extends superClass {",
+            "    /**",
+            "     * @override",
+            "     * @return {number} ",
+            "     */",
+            "    method() {",
+            "      return 3;",
+            "    }",
+            "  }",
+            "}",
+            "",
+            "/** @interface */",
+            "class ChangedInterface {",
+            "  /** @return {number} */",
+            "  method() {}",
+            "}"));
+  }
 }

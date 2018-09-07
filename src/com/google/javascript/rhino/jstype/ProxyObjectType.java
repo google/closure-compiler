@@ -108,14 +108,7 @@ public class ProxyObjectType extends ObjectType {
 
   @Override
   public String getReferenceName() {
-    return referencedObjType == null ?
-        "" : referencedObjType.getReferenceName();
-  }
-
-  @Override
-  public boolean hasReferenceName() {
-    checkNotNull(referencedObjType);
-    return referencedObjType.hasReferenceName();
+    return referencedObjType == null ? "" : referencedObjType.getReferenceName();
   }
 
   @Override
