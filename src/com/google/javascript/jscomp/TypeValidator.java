@@ -713,14 +713,8 @@ class TypeValidator implements Serializable {
         }
       }
     } else if (subCtor.isInterface()) {
-      // Find an equivalent constructor in the superinterfaces.  There may have been multiple
-      // super-interfaces marked, but we can't know which was intended so just give the error
-      // on the first one.
-      if (!subCtor.explicitlyImplOrExtInterface(astSuperCtor)) {
-        ObjectType registeredExtended = subCtor.getExtendedInterfaces().get(0);
-        mismatch(
-            n, "mismatch in declaration of superclass type", astSuperInstance, registeredExtended);
-      }
+      // We intentionally skip this check for interfaces because they can extend multiple other
+      // interfaces.
     }
   }
 

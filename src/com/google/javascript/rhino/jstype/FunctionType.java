@@ -511,32 +511,6 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
   }
 
   /**
-   * check whether or not this function type has implemented the given interface if this function is
-   * an interface, check whether or not this interface has extended the given interface
-   *
-   * @param interfaceType the interface type
-   * @return true if implemented
-   */
-  public final boolean explicitlyImplOrExtInterface(FunctionType interfaceType) {
-    checkArgument(interfaceType.isInterface());
-    for (ObjectType implementedInterface : getAllImplementedInterfaces()) {
-      FunctionType ctor = implementedInterface.getConstructor();
-      if (ctor != null && ctor.checkEquivalenceHelper(interfaceType, EquivalenceMethod.IDENTITY)) {
-        return true;
-      }
-    }
-    for (ObjectType implementedInterface : getExtendedInterfaces()) {
-      FunctionType ctor = implementedInterface.getConstructor();
-      if (ctor != null && ctor.checkEquivalenceHelper(interfaceType, EquivalenceMethod.IDENTITY)) {
-        return true;
-      } else if (ctor != null) {
-        return ctor.explicitlyImplOrExtInterface(interfaceType);
-      }
-    }
-    return false;
-  }
-
-  /**
    * Returns all interfaces implemented by a class or its superclass and any superclasses for any of
    * those interfaces. If this is called before all types are resolved, it may return an incomplete
    * set.

@@ -2336,6 +2336,24 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "class Foo {}"));
   }
 
+  public void testInterfaceHasBothExtendsClauseAndExtendsJSDoc() {
+    // TODO(b/114472257): ban this syntax because it results in strange behavior in class-side
+    // inheritance - the inferface only inherits properties from one of the extended interfaces.
+    // We may also ban using the extends keyword at all for extending interfaces, since extending
+    // an interface should not result in actually sharing code.
+    testTypes(
+        lines(
+            "/** @interface */",
+            "class Bar {}",
+            "/** @interface */",
+            "class Baz {}",
+            "/**",
+            " * @interface",
+            " * @extends {Bar}",
+            " */",
+            "class Foo extends Baz {}"));
+  }
+
   public void testClassExtendsGetElem() {
     testTypes(
         lines(
