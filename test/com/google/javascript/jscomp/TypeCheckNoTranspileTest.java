@@ -1650,6 +1650,35 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
     testTypes("/** @enum */ var obj = {[1]: 2};", "enum key must be a string or numeric literal");
   }
 
+  public void testComputedPropAllowedOnDictClass() {
+    testTypes(
+        lines(
+            "/** @dict */", //
+            "class C {",
+            "  ['f']() {}",
+            "}"));
+  }
+
+  public void testNormalPropNotAllowedOnDictClass() {
+    testTypes(
+        lines(
+            "/** @dict */", //
+            "class C {",
+            "  foo() {}",
+            "}"),
+        "Illegal key, the class is a dict");
+  }
+
+  public void testComputedPropNotAllowedOnStructClass() {
+    testTypes(
+        lines(
+            "class C {", // @struct is the default
+            "  foo() {}",
+            "  ['f']() {}",
+            "}"),
+        "Cannot do '[]' access on a struct");
+  }
+
   public void testTemplateLiteral1() {
     testTypes(
         lines(

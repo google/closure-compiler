@@ -26,6 +26,7 @@ import com.google.javascript.jscomp.Es6SyntacticScopeCreator.RedeclarationHandle
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
+import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
@@ -56,11 +57,15 @@ public class AstFactoryTest extends TestCase {
   }
 
   private Node parseAndAddTypes(String source) {
+    return parseAndAddTypes("", source);
+  }
+
+  private Node parseAndAddTypes(String externs, String source) {
     // parse the test code
     CompilerOptions options = new CompilerOptions();
     options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT);
     compiler.init(
-        ImmutableList.of(SourceFile.fromCode("externs", "")),
+        ImmutableList.of(SourceFile.fromCode("externs", externs)),
         ImmutableList.of(SourceFile.fromCode("source", source)),
         options);
     compiler.parseInputs();
@@ -116,6 +121,18 @@ public class AstFactoryTest extends TestCase {
     Node falseNode = astFactory.createBoolean(false);
     assertNode(falseNode).hasType(Token.FALSE);
     assertType(falseNode.getJSType()).isBoolean();
+  }
+
+  public void testCreateArgumentsReference() {
+    // Make sure the compiler's type registry includes the standard externs definition for
+    // Arguments.
+    parseAndAddTypes(new TestExternsBuilder().addArguments().build(), "");
+
+    AstFactory astFactory = createTestAstFactory();
+
+    Node argumentsNode = astFactory.createArgumentsReference();
+    assertNode(argumentsNode).matchesQualifiedName("arguments");
+    assertType(argumentsNode.getJSType()).isEqualTo(getRegistry().getGlobalType("Arguments"));
   }
 
   public void testCreateNameWithJSType() {
@@ -475,5 +492,91 @@ public class AstFactoryTest extends TestCase {
     assertThat(callNode.getBooleanProp(Node.FREE_CALL)).isFalse();
     assertThat(callNode.children()).containsExactly(callee, nullNode, arg1, arg2).inOrder();
     assertType(callNode.getJSType()).isString();
+  }
+
+  public void testCreateConstructorCall() {
+    AstFactory astFactory = createTestAstFactory();
+
+    Node root =
+        parseAndAddTypes(
+            lines(
+                "class A {}", //
+                "class B extends A {}"));
+
+    Node classBNode =
+        root.getFirstChild() // script node
+            .getSecondChild();
+    Node classBExtendsNode = classBNode.getSecondChild();
+    FunctionType classBType = classBNode.getJSType().toMaybeFunctionType();
+    ObjectType classBInstanceType = classBType.getInstanceType();
+
+    // simulate creating a call to super() intended to go in a constructor for B
+    Node callee = IR.superNode().setJSType(classBExtendsNode.getJSType());
+    Node arg1 = astFactory.createString("hi");
+    Node arg2 = astFactory.createNumber(2112D);
+    Node callNode = astFactory.createConstructorCall(classBType, callee, arg1, arg2);
+
+    assertNode(callNode).hasType(Token.CALL);
+    assertThat(callNode.getBooleanProp(Node.FREE_CALL)).isTrue();
+    assertThat(callNode.children()).containsExactly(callee, arg1, arg2).inOrder();
+    assertType(callNode.getJSType()).isEqualTo(classBInstanceType);
+  }
+
+  public void testCreateEmptyFunction() {
+    AstFactory astFactory = createTestAstFactory();
+
+    // just a quick way to get a valid function type
+    Node root = parseAndAddTypes("function foo() {}");
+    JSType functionType =
+        root.getFirstChild() // script
+            .getFirstChild() // function
+            .getJSType();
+
+    Node emptyFunction = astFactory.createEmptyFunction(functionType);
+    assertNode(emptyFunction).hasToken(Token.FUNCTION);
+    assertType(emptyFunction.getJSType()).isEqualTo(functionType);
+  }
+
+  public void testCreateFunction() {
+    AstFactory astFactory = createTestAstFactory();
+
+    // just a quick way to get a valid function type
+    Node root = parseAndAddTypes("function foo() {}");
+    JSType functionType =
+        root.getFirstChild() // script
+            .getFirstChild() // function
+            .getJSType();
+
+    Node paramList = IR.paramList();
+    Node body = IR.block();
+
+    Node functionNode = astFactory.createFunction("bar", paramList, body, functionType);
+    assertNode(functionNode).hasToken(Token.FUNCTION);
+    assertType(functionNode.getJSType()).isEqualTo(functionType);
+    Node functionNameNode = functionNode.getFirstChild();
+    assertNode(functionNameNode).isName("bar");
+    assertThat(functionNode.children())
+        .containsExactly(functionNameNode, paramList, body)
+        .inOrder();
+  }
+
+  public void testCreateMemberFunctionDef() {
+    AstFactory astFactory = createTestAstFactory();
+
+    // just a quick way to get a valid function type
+    Node root = parseAndAddTypes("function foo() {}");
+    JSType functionType =
+        root.getFirstChild() // script
+            .getFirstChild() // function
+            .getJSType();
+
+    Node paramList = IR.paramList();
+    Node body = IR.block();
+    Node functionNode = astFactory.createFunction("", paramList, body, functionType);
+
+    Node memberFunctionDef = astFactory.createMemberFunctionDef("bar", functionNode);
+    assertNode(memberFunctionDef).hasToken(Token.MEMBER_FUNCTION_DEF);
+    assertThat(memberFunctionDef.getString()).isEqualTo("bar");
+    assertType(memberFunctionDef.getJSType()).isEqualTo(functionType);
   }
 }

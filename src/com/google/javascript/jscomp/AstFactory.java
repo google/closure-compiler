@@ -15,6 +15,7 @@
  */
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
@@ -101,6 +102,22 @@ final class AstFactory {
     Node result = IR.thisNode();
     if (isAddingTypes()) {
       result.setJSType(checkNotNull(thisType));
+    }
+    return result;
+  }
+
+  /**
+   * Creates a reference to "arguments" with the type specified in externs, or unknown if the
+   * externs for it weren't included.
+   */
+  Node createArgumentsReference() {
+    Node result = IR.name("arguments");
+    if (isAddingTypes()) {
+      JSType argumentsType = registry.getGlobalType("Arguments");
+      if (argumentsType == null) {
+        argumentsType = getNativeType(JSTypeNative.UNKNOWN_TYPE);
+      }
+      result.setJSType(argumentsType);
     }
     return result;
   }
@@ -294,10 +311,59 @@ final class AstFactory {
     return result;
   }
 
+  /**
+   * Create a call that returns an instance of the given class type.
+   *
+   * <p>This method is intended for use in special cases, such as calling `super()` in a
+   * constructor.
+   */
+  Node createConstructorCall(@Nullable JSType classType, Node callee, Node... args) {
+    Node result = NodeUtil.newCallNode(callee, args);
+    if (isAddingTypes()) {
+      checkNotNull(classType);
+      FunctionType constructorType = checkNotNull(classType.toMaybeFunctionType());
+      ObjectType instanceType = checkNotNull(constructorType.getInstanceType());
+      result.setJSType(instanceType);
+    }
+    return result;
+  }
+
   Node createAssign(Node lhs, Node rhs) {
     Node result = IR.assign(lhs, rhs);
     if (isAddingTypes()) {
       result.setJSType(rhs.getJSType());
+    }
+    return result;
+  }
+
+  Node createEmptyFunction(JSType type) {
+    Node result = NodeUtil.emptyFunction();
+    if (isAddingTypes()) {
+      checkNotNull(type);
+      checkArgument(type.isFunctionType(), type);
+      result.setJSType(checkNotNull(type));
+    }
+    return result;
+  }
+
+  Node createFunction(String name, Node paramList, Node body, JSType type) {
+    Node nameNode = createName(name, type);
+    Node result = IR.function(nameNode, paramList, body);
+    if (isAddingTypes()) {
+      checkArgument(type.isFunctionType(), type);
+      result.setJSType(type);
+    }
+    return result;
+  }
+
+  Node createMemberFunctionDef(String name, Node function) {
+    // A function used for a member function definition must have an empty name,
+    // because the name string goes on the MEMBER_FUNCTION_DEF node.
+    checkArgument(function.getFirstChild().getString().isEmpty(), function);
+    Node result = IR.memberFunctionDef(name, function);
+    if (isAddingTypes()) {
+      // member function definition must share the type of the function that implements it
+      result.setJSType(function.getJSType());
     }
     return result;
   }

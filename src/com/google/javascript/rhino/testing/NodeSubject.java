@@ -83,28 +83,55 @@ public final class NodeSubject extends Subject<NodeSubject, Node> {
     hasToken(type);
   }
 
-  public void hasToken(Token token) {
+  public NodeSubject hasToken(Token token) {
     check("getToken()").that(actual().getToken()).isEqualTo(token);
+    return this;
   }
 
-  public void isName(String name) {
+  public NodeSubject isName(String name) {
     check("isName()").that(actual().isName()).isTrue();
     check("getString()").that(actual().getString()).isEqualTo(name);
+    return this;
   }
 
-  public void matchesQualifiedName(String qname) {
+  public NodeSubject isMemberFunctionDef(String name) {
+    check("isMemberFunction()").that(actual().isMemberFunctionDef()).isTrue();
+    check("getString()").that(actual().getString()).isEqualTo(name);
+    return this;
+  }
+
+  public NodeSubject matchesQualifiedName(String qname) {
     check("matchesQualifiedName(%s)", qname).that(actual().matchesQualifiedName(qname)).isTrue();
+    return this;
   }
 
-  public void hasCharno(int charno) {
+  public NodeSubject hasCharno(int charno) {
     check("getCharno()").that(actual().getCharno()).isEqualTo(charno);
+    return this;
   }
 
-  public void hasLineno(int lineno) {
+  public NodeSubject hasLineno(int lineno) {
     check("getLineno()").that(actual().getLineno()).isEqualTo(lineno);
+    return this;
   }
 
-  public void hasLength(int length) {
+  public NodeSubject hasLength(int length) {
     check("getLength()").that(actual().getLength()).isEqualTo(length);
+    return this;
+  }
+
+  public NodeSubject isIndexable(boolean isIndexable) {
+    check("isIndexable()").that(actual().isIndexable()).isEqualTo(isIndexable);
+    return this;
+  }
+
+  public NodeSubject hasOriginalName(String originalName) {
+    check("getOriginalName()").that(actual().getOriginalName()).isEqualTo(originalName);
+    return this;
+  }
+
+  public NodeSubject hasChildren(boolean hasChildren) {
+    check("hasChildren()").that(actual().hasChildren()).isEqualTo(hasChildren);
+    return this;
   }
 }

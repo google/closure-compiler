@@ -15,6 +15,7 @@
  */
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.javascript.jscomp.Es6ToEs3Util.CANNOT_CONVERT_YET;
 
@@ -28,6 +29,8 @@ import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
+import com.google.javascript.rhino.jstype.JSType;
+import com.google.javascript.rhino.jstype.JSTypeNative;
 
 /**
  * Converts {@code super.method()} calls and adds constructors to any classes that lack them.
@@ -38,10 +41,12 @@ import com.google.javascript.rhino.Token;
 public final class Es6ConvertSuper extends NodeTraversal.AbstractPostOrderCallback
     implements HotSwapCompilerPass {
   private final AbstractCompiler compiler;
+  private final AstFactory astFactory;
   private static final FeatureSet transpiledFeatures = FeatureSet.BARE_MINIMUM.with(Feature.SUPER);
 
   public Es6ConvertSuper(AbstractCompiler compiler) {
     this.compiler = compiler;
+    this.astFactory = compiler.createAstFactory();
   }
 
   @Override
@@ -69,9 +74,9 @@ public final class Es6ConvertSuper extends NodeTraversal.AbstractPostOrderCallba
     Node classMembers = classNode.getLastChild();
     Node memberDef;
     if (superClass.isEmpty()) {
-      Node function = NodeUtil.emptyFunction();
+      Node function = astFactory.createEmptyFunction(classNode.getJSType());
       compiler.reportChangeToChangeScope(function);
-      memberDef = IR.memberFunctionDef("constructor", function);
+      memberDef = astFactory.createMemberFunctionDef("constructor", function);
     } else {
       if (!superClass.isQualifiedName()) {
         // This will be reported as an error in Es6ToEs3Converter.
@@ -88,14 +93,23 @@ public final class Es6ConvertSuper extends NodeTraversal.AbstractPostOrderCallba
         // `super(...arguments);`
         // Note that transpilation of spread args must occur after this pass for this to work.
         Node exprResult =
-            IR.exprResult(NodeUtil.newCallNode(IR.superNode(), IR.spread(IR.name("arguments"))));
+            IR.exprResult(
+                astFactory.createConstructorCall(
+                    classNode.getJSType(), // returned type is the subclass
+                    IR.superNode().setJSType(superClass.getJSType()),
+                    IR.spread(astFactory.createArgumentsReference())));
         body.addChildToFront(exprResult);
         NodeUtil.addFeatureToScript(t.getCurrentFile(), Feature.SUPER);
         NodeUtil.addFeatureToScript(t.getCurrentFile(), Feature.SPREAD_EXPRESSIONS);
       }
-      Node constructor = IR.function(IR.name(""), IR.paramList(IR.name("var_args")), body);
-      compiler.reportChangeToChangeScope(constructor);
-      memberDef = IR.memberFunctionDef("constructor", constructor);
+      Node constructor =
+          astFactory.createFunction(
+              "",
+              IR.paramList(astFactory.createName("var_args", JSTypeNative.UNKNOWN_TYPE)),
+              body,
+              classNode.getJSType());
+      memberDef = astFactory.createMemberFunctionDef("constructor", constructor);
+      // TODO(bradfordcsmith): Drop creation of JSDoc once transpilation moves after all checks.
       JSDocInfoBuilder info = new JSDocInfoBuilder(false);
       info.recordParameter(
           "var_args",
@@ -107,6 +121,9 @@ public final class Es6ConvertSuper extends NodeTraversal.AbstractPostOrderCallba
     memberDef.makeNonIndexableRecursive();
     classMembers.addChildToFront(memberDef);
     NodeUtil.addFeatureToScript(t.getCurrentFile(), Feature.MEMBER_DECLARATIONS);
+    // report newly created constructor
+    compiler.reportChangeToChangeScope(memberDef.getOnlyChild());
+    // report change to scope containing the class
     compiler.reportChangeToEnclosingScope(memberDef);
   }
 
@@ -220,27 +237,52 @@ public final class Es6ConvertSuper extends NodeTraversal.AbstractPostOrderCallba
     }
 
     Node callTarget = parent;
-    Node thisNode = IR.thisNode();
-    thisNode.makeNonIndexable();
     Node callNode = IR.string("call");
     callNode.makeNonIndexable();
     if (enclosingMemberDef.isStaticMember()) {
-      callTarget.replaceChild(node, superName.cloneTree().useSourceInfoFromForTree(node));
-      callTarget = IR.getprop(callTarget.detach(), callNode);
+      Node expandedSuper = superName.cloneTree().useSourceInfoFromForTree(node);
+      expandedSuper.setOriginalName("super");
+      callTarget.replaceChild(node, expandedSuper);
+      callTarget = astFactory.createGetProp(callTarget.detach(), "call");
       grandparent.addChildToFront(callTarget);
+      Node thisNode = astFactory.createThis(clazz.getJSType());
+      thisNode.makeNonIndexable(); // no direct correlation with original source
       grandparent.addChildAfter(thisNode, callTarget);
       grandparent.useSourceInfoIfMissingFromForTree(parent);
     } else {
-      String newPropName = Joiner.on('.').join(superName.getQualifiedName(), "prototype");
-      Node newProp = NodeUtil.newQName(compiler, newPropName).useSourceInfoFromForTree(node);
-      node.replaceWith(newProp);
-      callTarget = IR.getprop(callTarget.detach(), callNode);
+      // Replace super node to give
+      // super.method(...) -> SuperClass.prototype.method(...)
+      Node expandedSuper =
+          astFactory
+              .createGetProp(superName.cloneTree(), "prototype")
+              .useSourceInfoFromForTree(node);
+      expandedSuper.setOriginalName("super");
+      node.replaceWith(expandedSuper);
+      // Set the 'this' object correctly for the call
+      // SuperClass.prototype.method(...) -> SuperClass.prototype.method.call(this, ...)
+      callTarget = astFactory.createGetProp(callTarget.detach(), "call");
       grandparent.addChildToFront(callTarget);
+      JSType thisType = getInstanceTypeForClassNode(clazz);
+      Node thisNode = astFactory.createThis(thisType);
+      thisNode.makeNonIndexable(); // no direct correlation with original source
       grandparent.addChildAfter(thisNode, callTarget);
       grandparent.putBooleanProp(Node.FREE_CALL, false);
       grandparent.useSourceInfoIfMissingFromForTree(parent);
     }
     compiler.reportChangeToEnclosingScope(grandparent);
+  }
+
+  private JSType getInstanceTypeForClassNode(Node classNode) {
+    checkArgument(classNode.isClass(), classNode);
+    final JSType constructorType = classNode.getJSType();
+    final JSType result;
+    if (constructorType != null) {
+      checkArgument(constructorType.isConstructor(), classNode);
+      result = JSType.toMaybeFunctionType(constructorType).getInstanceType();
+    } else {
+      result = null;
+    }
+    return result;
   }
 
   private void visitSuperPropertyAccess(Node node, Node parent, Node enclosingMemberDef) {
@@ -262,12 +304,28 @@ public final class Es6ConvertSuper extends NodeTraversal.AbstractPostOrderCallba
     }
 
     if (enclosingMemberDef.isStaticMember()) {
-      node.replaceWith(superName.cloneTree().useSourceInfoFromForTree(node));
+      // super.prop -> SuperClass.prop
+      Node expandedSuper = superName.cloneTree().useSourceInfoFromForTree(node);
+      expandedSuper.setOriginalName("super");
+      node.replaceWith(expandedSuper);
     } else {
-      String newPropName = Joiner.on('.').join(superName.getQualifiedName(), "prototype");
-      Node newprop =
-          NodeUtil.newQName(compiler, newPropName, node, "super").useSourceInfoFromForTree(node);
-      node.replaceWith(newprop);
+      if (astFactory.isAddingTypes()) {
+        // super.prop -> SuperClass.prototype.prop
+        Node newprop =
+            astFactory
+                .createGetProp(superName.cloneTree(), "prototype")
+                .useSourceInfoFromForTree(node);
+        newprop.setOriginalName("super");
+        node.replaceWith(newprop);
+      } else {
+        String newPropName = Joiner.on('.').join(superName.getQualifiedName(), "prototype");
+        // TODO(bradfordcsmith): This is required for Kythe, which doesn't work correctly with
+        // Node#useSourceInfoIfMissingFromForTree.  Fortunately, we only care about Kythe
+        // if we're not adding types.
+        // Once this pass is always run after type checking, we can eliminate this branch.
+        node.replaceWith(
+            NodeUtil.newQName(compiler, newPropName, node, "super").useSourceInfoFromForTree(node));
+      }
     }
 
     compiler.reportChangeToEnclosingScope(grandparent);
