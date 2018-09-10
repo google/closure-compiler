@@ -16,6 +16,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.javascript.jscomp.ClosureCheckModule.MODULE_USES_GOOG_MODULE_GET;
 import static com.google.javascript.jscomp.ClosureRewriteModule.INVALID_GET_CALL_SCOPE;
@@ -30,10 +31,9 @@ import com.google.common.base.Splitter;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
-import com.google.javascript.jscomp.ModuleMetadata.Module;
+import com.google.javascript.jscomp.ModuleMetadataMap.ModuleMetadata;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.deps.ModuleLoader;
-import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
@@ -47,6 +47,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
 /**
@@ -129,7 +130,7 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
 
   private Set<String> typedefs;
 
-  private final ModuleMetadata moduleMetadata;
+  private final ModuleMetadataMap moduleMetadataMap;
 
   /**
    * Creates a new Es6RewriteModules instance which can be used to rewrite ES6 modules to a
@@ -137,12 +138,23 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
    */
   public Es6RewriteModules(
       AbstractCompiler compiler,
-      @Nullable PreprocessorSymbolTable preprocessorSymbolTable,
-      boolean processCommonJsModules,
-      ResolutionMode moduleResolutionMode) {
+      Supplier<ModuleMetadataMap> moduleMetadataMapSupplier,
+      @Nullable PreprocessorSymbolTable preprocessorSymbolTable) {
+    this(compiler, moduleMetadataMapSupplier.get(), preprocessorSymbolTable);
+  }
+
+  /**
+   * Creates a new Es6RewriteModules instance which can be used to rewrite ES6 modules to a
+   * concatenable form.
+   */
+  public Es6RewriteModules(
+      AbstractCompiler compiler,
+      ModuleMetadataMap moduleMetadataMap,
+      @Nullable PreprocessorSymbolTable preprocessorSymbolTable) {
+    checkNotNull(moduleMetadataMap);
     this.compiler = compiler;
+    this.moduleMetadataMap = moduleMetadataMap;
     this.preprocessorSymbolTable = preprocessorSymbolTable;
-    moduleMetadata = new ModuleMetadata(compiler, processCommonJsModules, moduleResolutionMode);
   }
 
   /**
@@ -160,7 +172,6 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
   public void process(Node externs, Node root) {
     checkArgument(externs.isRoot(), externs);
     checkArgument(root.isRoot(), root);
-    moduleMetadata.process(externs, root);
     for (Node file : Iterables.concat(externs.children(), root.children())) {
       checkState(file.isScript(), file);
       hotSwapScript(file, null);
@@ -170,7 +181,6 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
 
   @Override
   public void hotSwapScript(Node scriptNode, Node originalRoot) {
-    moduleMetadata.hotSwapScript(scriptNode);
     if (isEs6ModuleRoot(scriptNode)) {
       processFile(scriptNode);
     } else {
@@ -221,7 +231,7 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
           }
 
           String name = n.getLastChild().getString();
-          Module data = moduleMetadata.getModulesByGoogNamespace().get(name);
+          ModuleMetadata data = moduleMetadataMap.getModulesByGoogNamespace().get(name);
 
           if (data == null || !data.isEs6Module()) {
             return;
@@ -310,7 +320,7 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
       //   import ... from 'goog:my.ns.Object'.
       String namespace = importName.substring("goog:".length());
       moduleName = namespace;
-      Module m = moduleMetadata.getModulesByGoogNamespace().get(namespace);
+      ModuleMetadata m = moduleMetadataMap.getModulesByGoogNamespace().get(namespace);
 
       if (m == null) {
         t.report(importDecl, MISSING_MODULE_OR_PROVIDE, namespace);
@@ -723,7 +733,7 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
       compiler.report(JSError.make(parent.getParent(), LHS_OF_GOOG_REQUIRE_MUST_BE_CONST));
     }
 
-    Module m = moduleMetadata.getModulesByGoogNamespace().get(namespace);
+    ModuleMetadata m = moduleMetadataMap.getModulesByGoogNamespace().get(namespace);
 
     if (m == null) {
       t.report(requireCall, MISSING_MODULE_OR_PROVIDE, namespace);

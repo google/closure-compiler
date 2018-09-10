@@ -20,49 +20,24 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.javascript.jscomp.ClosureCheckModule.DECLARE_LEGACY_NAMESPACE_IN_NON_MODULE;
 
-import com.google.auto.value.AutoValue;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMultiset;
 import com.google.common.collect.LinkedHashMultiset;
+import com.google.javascript.jscomp.ModuleMetadataMap.ModuleMetadata;
+import com.google.javascript.jscomp.ModuleMetadataMap.ModuleType;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.jscomp.deps.ModuleLoader.ModulePath;
 import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
 /**
- * Gathers metadata around modules that is useful for checking imports / requires.
- *
- * <p>TODO(johnplaisted): There's an opportunity for reuse here in ClosureRewriteModules, which
- * would involve putting this in some common location. Currently this is only used as a helper class
- * for Es6RewriteModules. CompilerInput already has some (not all) of this information but it is not
- * always populated. It may also be ideal to include CommonJS here too as ES6 modules can import
- * them. That would allow decoupling of how these modules are written; right now Es6RewriteModule
- * only checks this for goog.requires and goog: imports, not for ES6 path imports.
+ * Gathers metadata around modules that is useful for checking imports / requires and creates a
+ * {@link ModuleMetadataMap}.
  */
-public final class ModuleMetadata {
-  /** Various types of Javascript "modules" that can be found in the JS Compiler. */
-  public enum ModuleType {
-    ES6_MODULE("an ES6 module"),
-    GOOG_PROVIDE("a goog.provide'd file"),
-    /** A goog.module that does not declare a legacy namespace. */
-    GOOG_MODULE("a goog.module"),
-    /** A goog.module that declares a legacy namespace with goog.module.declareLegacyNamespace. */
-    LEGACY_GOOG_MODULE("a goog.module"),
-    COMMON_JS("a CommonJS module"),
-    SCRIPT("a script");
-
-    private final String description;
-
-    ModuleType(String description) {
-      this.description = description;
-    }
-  }
-
+public final class GatherModuleMetadata implements CompilerPass, Supplier<ModuleMetadataMap> {
   static final DiagnosticType MIXED_MODULE_TYPE =
       DiagnosticType.error("JSC_MIXED_MODULE_TYPE", "A file cannot be both {0} and {1}.");
 
@@ -106,26 +81,26 @@ public final class ModuleMetadata {
    * Map from module path to module. These modules represent files and thus will contain all goog
    * namespaces that are in the file. These are not the same modules in modulesByGoogNamespace.
    */
-  private final Map<String, Module> modulesByPath = new HashMap<>();
+  private final Map<String, ModuleMetadata> modulesByPath = new HashMap<>();
 
   /**
    * Map from Closure namespace to module. These modules represent just the single namespace and
-   * thus each module has only one goog namespace in its {@link Module#googNamespaces()}. These
-   * are not the same modules in modulesByPath.
+   * thus each module has only one goog namespace in its {@link ModuleMetadata#googNamespaces()}.
+   * These are not the same modules in modulesByPath.
    */
-  private final Map<String, Module> modulesByGoogNamespace = new HashMap<>();
+  private final Map<String, ModuleMetadata> modulesByGoogNamespace = new HashMap<>();
 
   /** Modules by AST node. */
-  private final Map<Node, Module> modulesByNode = new HashMap<>();
+  private final Map<Node, ModuleMetadata> modulesByNode = new HashMap<>();
 
   /** The current module being traversed. */
-  private Module.Builder currentModule;
+  private ModuleMetadataBuilder currentModule;
 
   /**
    * The module currentModule is nested under, if any. Modules are expected to be at most two deep
    * (a script and then a goog.loadModule call).
    */
-  private Module.Builder parentModule;
+  private ModuleMetadataBuilder parentModule;
 
   /** The call to goog.loadModule we are traversing. */
   private Node loadModuleCall;
@@ -134,191 +109,82 @@ public final class ModuleMetadata {
   private final boolean processCommonJsModules;
   private final ResolutionMode moduleResolutionMode;
   private Finder finder;
+  private ModuleMetadataMap metadataMap;
 
-  public ModuleMetadata(AbstractCompiler compiler) {
-    this(compiler, false, ResolutionMode.BROWSER);
-  }
-
-  public ModuleMetadata(
+  public GatherModuleMetadata(
       AbstractCompiler compiler,
       boolean processCommonJsModules,
       ResolutionMode moduleResolutionMode) {
     this.compiler = compiler;
     this.processCommonJsModules = processCommonJsModules;
     this.moduleResolutionMode = moduleResolutionMode;
-    this.finder = new Finder();
   }
 
-  /** Struct containing basic information about a module including its type and goog namespaces. */
-  @AutoValue
-  public abstract static class Module {
-    public abstract ModuleType moduleType();
+  private class ModuleMetadataBuilder {
+    private boolean ambiguous;
+    private Node declaresNamespace;
+    private Node declaresLegacyNamespace;
+    private final Node rootNode;
+    final ModuleMetadata.Builder metadataBuilder;
+    LinkedHashMultiset<String> googNamespaces = LinkedHashMultiset.create();
 
-    public boolean isEs6Module() {
-      return moduleType() == ModuleType.ES6_MODULE;
+    ModuleMetadataBuilder(Node rootNode, @Nullable ModulePath path) {
+      this.metadataBuilder = ModuleMetadata.builder();
+      this.rootNode = rootNode;
+      metadataBuilder.path(path).moduleType(ModuleType.SCRIPT).usesClosure(false).isTestOnly(false);
     }
 
-    public boolean isGoogModule() {
-      return isNonLegacyGoogModule() || isLegacyGoogModule();
-    }
+    void moduleType(ModuleType type, NodeTraversal t, Node n) {
+      checkNotNull(type);
 
-    public boolean isNonLegacyGoogModule() {
-      return moduleType() == ModuleType.GOOG_MODULE;
-    }
-
-    public boolean isLegacyGoogModule() {
-      return moduleType() == ModuleType.LEGACY_GOOG_MODULE;
-    }
-
-    public boolean isGoogProvide() {
-      return moduleType() == ModuleType.GOOG_PROVIDE;
-    }
-
-    public boolean isCommonJs() {
-      return moduleType() == ModuleType.COMMON_JS;
-    }
-
-    public boolean isScript() {
-      return moduleType() == ModuleType.SCRIPT;
-    }
-
-    /**
-     * Whether this file uses Closure Library at all. Note that a file could use Closure Library
-     * even without calling goog.provide/module/require - there are some primitives in base.js that
-     * can be used without being required like goog.isArray.
-     */
-    public abstract boolean usesClosure();
-
-    /** Whether goog.setTestOnly was called. */
-    public abstract boolean isTestOnly();
-
-    /**
-     * Closure namespaces that this file is associated with. Created by goog.provide, goog.module,
-     * and goog.module.declareNamespace.
-     */
-    public abstract ImmutableMultiset<String> googNamespaces();
-
-    /** Closure namespaces this file requires. e.g. all arguments to goog.require calls. */
-    public abstract ImmutableMultiset<String> requiredGoogNamespaces();
-
-    /**
-     * Closure namespaces this file has weak dependencies on. e.g. all arguments to goog.requireType
-     * calls.
-     */
-    public abstract ImmutableMultiset<String> requiredTypes();
-
-    /** Raw text of all ES6 import specifiers (includes "export from" as well). */
-    public abstract ImmutableMultiset<String> es6ImportSpecifiers();
-
-    abstract ImmutableList<Module> nestedModules();
-
-    @Nullable
-    public abstract ModulePath path();
-
-    /** @return the global, qualified name to rewrite any references to this module to */
-    public String getGlobalName() {
-      return getGlobalName(null);
-    }
-
-    /** @return the global, qualified name to rewrite any references to this module to */
-    public String getGlobalName(@Nullable String googNamespace) {
-      checkState(googNamespace == null || googNamespaces().contains(googNamespace));
-      switch (moduleType()) {
-        case GOOG_MODULE:
-          return ClosureRewriteModule.getBinaryModuleNamespace(googNamespace);
-        case GOOG_PROVIDE:
-        case LEGACY_GOOG_MODULE:
-          return googNamespace;
-        case ES6_MODULE:
-        case COMMON_JS:
-          return path().toModuleName();
-        case SCRIPT:
-          // fall through, throw an error
+      if (metadataBuilder.moduleType() == type) {
+        return;
       }
-      throw new IllegalStateException("Unexpected module type: " + moduleType());
+
+      if (metadataBuilder.moduleType() == ModuleType.SCRIPT) {
+        metadataBuilder.moduleType(type);
+        return;
+      }
+
+      ambiguous = true;
+      t.report(n, MIXED_MODULE_TYPE, metadataBuilder.moduleType().description, type.description);
     }
 
-    private static Builder builder(
-        AbstractCompiler compiler, Node rootNode, @Nullable ModulePath path) {
-      Builder builder = new AutoValue_ModuleMetadata_Module.Builder();
-      builder.compiler = compiler;
-      builder.rootNode = rootNode;
-      return builder.path(path).moduleType(ModuleType.SCRIPT).usesClosure(false).isTestOnly(false);
+    void recordDeclareNamespace(Node declaresNamespace) {
+      this.declaresNamespace = declaresNamespace;
     }
 
-    @AutoValue.Builder
-    abstract static class Builder {
-      private boolean ambiguous;
-      private Node declaresNamespace;
-      private Node declaresLegacyNamespace;
-      private Node rootNode;
-      private AbstractCompiler compiler;
-      LinkedHashMultiset<String> googNamespaces = LinkedHashMultiset.create();
+    void recordDeclareLegacyNamespace(Node declaresLegacyNamespace) {
+      this.declaresLegacyNamespace = declaresLegacyNamespace;
+    }
 
-      abstract Module buildInternal();
-      abstract Builder googNamespaces(ImmutableMultiset<String> value);
-      abstract ImmutableMultiset.Builder<String> requiredGoogNamespacesBuilder();
-      abstract ImmutableMultiset.Builder<String> requiredTypesBuilder();
-      abstract ImmutableMultiset.Builder<String> es6ImportSpecifiersBuilder();
-      abstract ImmutableList.Builder<Module> nestedModulesBuilder();
-      abstract Builder path(@Nullable ModulePath value);
-      abstract Builder usesClosure(boolean value);
-      abstract Builder isTestOnly(boolean value);
+    boolean isScript() {
+      return metadataBuilder.moduleType() == ModuleType.SCRIPT;
+    }
 
-      abstract ModuleType moduleType();
-      abstract Builder moduleType(ModuleType value);
-      void moduleType(ModuleType type, NodeTraversal t, Node n) {
-        checkNotNull(type);
-
-        if (moduleType() == type) {
-          return;
+    ModuleMetadata build() {
+      metadataBuilder.googNamespacesBuilder().addAll(googNamespaces);
+      if (!ambiguous) {
+        if (declaresNamespace != null && metadataBuilder.moduleType() != ModuleType.ES6_MODULE) {
+          compiler.report(
+              JSError.make(declaresNamespace, DECLARE_MODULE_NAMESPACE_OUTSIDE_ES6_MODULE));
         }
 
-        if (moduleType() == ModuleType.SCRIPT) {
-          moduleType(type);
-          return;
-        }
-
-        ambiguous = true;
-        t.report(n, MIXED_MODULE_TYPE, moduleType().description, type.description);
-      }
-
-      void recordDeclareNamespace(Node declaresNamespace) {
-        this.declaresNamespace = declaresNamespace;
-      }
-
-      void recordDeclareLegacyNamespace(Node declaresLegacyNamespace) {
-        this.declaresLegacyNamespace = declaresLegacyNamespace;
-      }
-
-      boolean isScript() {
-        return moduleType() == ModuleType.SCRIPT;
-      }
-
-      Module build() {
-        googNamespaces(ImmutableMultiset.copyOf(googNamespaces));
-        if (!ambiguous) {
-          if (declaresNamespace != null && moduleType() != ModuleType.ES6_MODULE) {
+        if (declaresLegacyNamespace != null) {
+          if (metadataBuilder.moduleType() == ModuleType.GOOG_MODULE) {
+            metadataBuilder.moduleType(ModuleType.LEGACY_GOOG_MODULE);
+          } else {
             compiler.report(
-                JSError.make(declaresNamespace, DECLARE_MODULE_NAMESPACE_OUTSIDE_ES6_MODULE));
-          }
-
-          if (declaresLegacyNamespace != null) {
-            if (moduleType() == ModuleType.GOOG_MODULE) {
-              moduleType(ModuleType.LEGACY_GOOG_MODULE);
-            } else {
-              compiler.report(
-                  JSError.make(declaresLegacyNamespace, DECLARE_LEGACY_NAMESPACE_IN_NON_MODULE));
-            }
+                JSError.make(declaresLegacyNamespace, DECLARE_LEGACY_NAMESPACE_IN_NON_MODULE));
           }
         }
-
-        return buildInternal();
       }
+
+      return metadataBuilder.build();
     }
   }
 
-  /** Traverses the AST and build a sets of {@link Module}s. */
+  /** Traverses the AST and build a sets of {@link ModuleMetadata}s. */
   private final class Finder implements Callback {
     @Override
     public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
@@ -349,12 +215,15 @@ public final class ModuleMetadata {
       if (importOrExport.isImport()
           // export from
           || (importOrExport.hasTwoChildren() && importOrExport.getLastChild().isString())) {
-        currentModule.es6ImportSpecifiersBuilder().add(importOrExport.getLastChild().getString());
+        currentModule
+            .metadataBuilder
+            .es6ImportSpecifiersBuilder()
+            .add(importOrExport.getLastChild().getString());
       }
     }
 
     private void enterModule(Node n, @Nullable ModulePath path) {
-      Module.Builder newModule = Module.builder(compiler, n, path);
+      ModuleMetadataBuilder newModule = new ModuleMetadataBuilder(n, path);
       if (currentModule != null) {
         checkState(parentModule == null, "Expected modules to be nested at most 2 deep.");
         parentModule = currentModule;
@@ -364,7 +233,7 @@ public final class ModuleMetadata {
 
     private void leaveModule() {
       checkNotNull(currentModule);
-      Module module = currentModule.build();
+      ModuleMetadata module = currentModule.build();
       modulesByNode.put(currentModule.rootNode, module);
       if (module.path() != null) {
         modulesByPath.put(module.path().toString(), module);
@@ -373,7 +242,7 @@ public final class ModuleMetadata {
         modulesByGoogNamespace.put(namespace, module);
       }
       if (parentModule != null) {
-        parentModule.nestedModulesBuilder().add(module);
+        parentModule.metadataBuilder.nestedModulesBuilder().add(module);
       }
       currentModule = parentModule;
       parentModule = null;
@@ -430,7 +299,7 @@ public final class ModuleMetadata {
         return;
       }
 
-      currentModule.usesClosure(true);
+      currentModule.metadataBuilder.usesClosure(true);
     }
 
     private void visitGoogCall(NodeTraversal t, Node n) {
@@ -453,11 +322,11 @@ public final class ModuleMetadata {
       }
 
       Var root = t.getScope().getVar("goog");
-      if (root != null && !isFromGoogImport(root)) {
+      if (root != null && root.input == t.getInput() && !isFromGoogImport(root)) {
         return;
       }
 
-      currentModule.usesClosure(true);
+      currentModule.metadataBuilder.usesClosure(true);
 
       if (getprop.matchesQualifiedName(GOOG_PROVIDE)) {
         currentModule.moduleType(ModuleType.GOOG_PROVIDE, t, n);
@@ -490,19 +359,22 @@ public final class ModuleMetadata {
         }
       } else if (getprop.matchesQualifiedName(GOOG_REQUIRE)) {
         if (n.hasTwoChildren() && n.getLastChild().isString()) {
-          currentModule.requiredGoogNamespacesBuilder().add(n.getLastChild().getString());
+          currentModule
+              .metadataBuilder
+              .requiredGoogNamespacesBuilder()
+              .add(n.getLastChild().getString());
         } else {
           t.report(n, ClosureRewriteModule.INVALID_REQUIRE_NAMESPACE);
         }
       } else if (getprop.matchesQualifiedName(GOOG_REQUIRE_TYPE)) {
         if (n.hasTwoChildren() && n.getLastChild().isString()) {
-          currentModule.requiredTypesBuilder().add(n.getLastChild().getString());
+          currentModule.metadataBuilder.requiredTypesBuilder().add(n.getLastChild().getString());
         } else {
           t.report(n, INVALID_REQUIRE_TYPE);
         }
       } else if (getprop.matchesQualifiedName(GOOG_SET_TEST_ONLY)) {
         if (n.hasOneChild() || (n.hasTwoChildren() && n.getLastChild().isString())) {
-          currentModule.isTestOnly(true);
+          currentModule.metadataBuilder.isTestOnly(true);
         } else {
           t.report(n, INVALID_SET_TEST_ONLY);
         }
@@ -513,12 +385,13 @@ public final class ModuleMetadata {
      * Adds the namespaces to the module and checks if the given Closure namespace is a duplicate or
      * not.
      */
-    private void addNamespace(Module.Builder module, String namespace, NodeTraversal t, Node n) {
+    private void addNamespace(
+        ModuleMetadataBuilder module, String namespace, NodeTraversal t, Node n) {
       ModuleType existingType = null;
       if (module.googNamespaces.contains(namespace)) {
-        existingType = module.moduleType();
+        existingType = module.metadataBuilder.moduleType();
       } else {
-        Module existingModule = modulesByGoogNamespace.get(namespace);
+        ModuleMetadata existingModule = modulesByGoogNamespace.get(namespace);
         if (existingModule != null) {
           existingType = existingModule.moduleType();
         }
@@ -543,65 +416,23 @@ public final class ModuleMetadata {
     }
   }
 
+  @Override
   public void process(Node externs, Node root) {
+    if (metadataMap != null) {
+      return;
+    }
+
     finder = new Finder();
-    NodeTraversal.traverse(compiler, externs, finder);
     NodeTraversal.traverse(compiler, root, finder);
-  }
-
-  private void remove(Module module) {
-    if (module != null) {
-      for (String symbol : module.googNamespaces()) {
-        modulesByGoogNamespace.remove(symbol);
-      }
-      if (module.path() != null) {
-        modulesByPath.remove(module.path().toString());
-      }
-      for (Module nested : module.nestedModules()) {
-        remove(nested);
-      }
-    }
-  }
-
-  public void hotSwapScript(Node scriptRoot) {
-    Module existing =
-        modulesByPath.get(compiler.getInput(scriptRoot.getInputId()).getPath().toString());
-    remove(existing);
-    NodeTraversal.traverse(compiler, scriptRoot, finder);
+    metadataMap = new ModuleMetadataMap(modulesByPath, modulesByGoogNamespace);
   }
 
   /**
-   * @return map from module path to module. These modules represent files and thus {@link
-   *     Module#googNamespaces()} contains all Closure namespaces in the file. These are not the
-   *     same modules from {@link ModuleMetadata#getModulesByGoogNamespace()}. It is not valid to
-   *     call {@link Module#getGlobalName()} on {@link ModuleType#GOOG_PROVIDE} modules from this
-   *     map that have more than one Closure namespace as it is ambiguous.
+   * Gets the module metadata map, which is only available after calling {@link #process(Node,
+   * Node)}.
    */
-  public Map<String, Module> getModulesByPath() {
-    return Collections.unmodifiableMap(modulesByPath);
-  }
-
-  /**
-   * @return map from Closure namespace to module. These modules represent the Closure namespace and
-   *     thus {@link Module#googNamespaces()} will have size 1. As a result, it is valid to call
-   *     {@link Module#getGlobalName()} on these modules. These are not the same modules from {@link
-   *     ModuleMetadata#getModulesByPath()}.
-   */
-  public Map<String, Module> getModulesByGoogNamespace() {
-    return Collections.unmodifiableMap(modulesByGoogNamespace);
-  }
-
-  /** @return the {@link Module} that contains the given AST node */
-  @Nullable
-  Module getContainingModule(Node n) {
-    if (finder == null) {
-      return null;
-    }
-    Module m = null;
-    while (m == null && n != null) {
-      m = modulesByNode.get(n);
-      n = n.getParent();
-    }
-    return m;
+  @Override
+  public ModuleMetadataMap get() {
+    return metadataMap;
   }
 }
