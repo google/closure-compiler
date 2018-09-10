@@ -27,6 +27,7 @@ import com.google.common.base.Splitter;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 import com.google.debugging.sourcemap.SourceMapConsumerV3;
@@ -334,10 +335,10 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
         setErrorManager(
             new LoggerErrorManager(createMessageFormatter(), logger));
       } else {
-        PrintStreamErrorManager printer =
-            new PrintStreamErrorManager(createMessageFormatter(), this.outStream);
-        printer.setSummaryDetailLevel(options.summaryDetailLevel);
-        setErrorManager(printer);
+        PrintStreamErrorReportGenerator printer =
+            new PrintStreamErrorReportGenerator(
+                createMessageFormatter(), this.outStream, options.summaryDetailLevel);
+        setErrorManager(new SortingErrorManager(ImmutableSet.of(printer)));
       }
     }
 
