@@ -1720,6 +1720,152 @@ chrome.bluetoothLowEnergy.onDescriptorReadRequest;
  */
 chrome.bluetoothLowEnergy.onDescriptorWriteRequest;
 
+/**
+ * @const
+ * @see https://developer.chrome.com/extensions/browsingData
+ */
+chrome.browsingData = {};
+
+/**
+ * @typedef {?{
+ *   since: (number|undefined),
+ *   originTypes: ({
+ *     unprotectedWeb: (boolean|undefined),
+ *     protectedWeb: (boolean|undefined),
+ *     extension: (boolean|undefined)
+ *   }|undefined),
+ * }}
+ * @see https://developer.chrome.com/extensions/browsingData#type-RemovalOptions
+ */
+chrome.browsingData.RemovalOptions;
+
+/**
+ * @typedef {?{
+ *   appcache: (boolean|undefined),
+ *   cache: (boolean|undefined),
+ *   cookies: (boolean|undefined),
+ *   downloads: (boolean|undefined),
+ *   fileSystems: (boolean|undefined),
+ *   formData: (boolean|undefined),
+ *   history: (boolean|undefined),
+ *   indexedDB: (boolean|undefined),
+ *   localStorage: (boolean|undefined),
+ *   serverBoundCertificates: (boolean|undefined),
+ *   passwords: (boolean|undefined),
+ *   pluginData: (boolean|undefined),
+ *   serviceWorkers: (boolean|undefined),
+ *   webSQL: (boolean|undefined),
+ * }}
+ * @see https://developer.chrome.com/extensions/browsingData#type-DataTypeSet
+ */
+chrome.browsingData.DataTypeSet;
+
+/**
+ * @typedef {?{
+ *   options: !chrome.browsingData.RemovalOptions,
+ *   dataToRemove: !chrome.browsingData.DataTypeSet,
+ *   dataRemovalPermitted: !chrome.browsingData.DataTypeSet,
+ * }}
+ */
+chrome.browsingData.SettingsResponse;
+
+/**
+ * @param {function(!chrome.browsingData.SettingsResponse): void} callback
+ * @see https://developer.chrome.com/extensions/browsingData#method-settings
+ */
+chrome.browsingData.settings = function(callback) {};
+
+/**
+ * @param {!chrome.browsingData.RemovalOptions} options
+ * @param {!chrome.browsingData.DataTypeSet} dataToRemove
+ * @param {function(): void=} callback
+ * @see https://developer.chrome.com/extensions/browsingData#method-remove
+ */
+chrome.browsingData.remove = function(options, dataToRemove, callback) {};
+
+/**
+ * @param {!chrome.browsingData.RemovalOptions} options
+ * @param {function(): void=} callback
+ * @see https://developer.chrome.com/extensions/browsingData#method-removeAppcache
+ */
+chrome.browsingData.removeAppcache = function(options, callback) {};
+
+/**
+ * @param {!chrome.browsingData.RemovalOptions} options
+ * @param {function(): void=} callback
+ * @see https://developer.chrome.com/extensions/browsingData#method-removeCache
+ */
+chrome.browsingData.removeCache = function(options, callback) {};
+
+/**
+ * @param {!chrome.browsingData.RemovalOptions} options
+ * @param {function(): void=} callback
+ * @see https://developer.chrome.com/extensions/browsingData#method-removeCookies
+ */
+chrome.browsingData.removeCookies = function(options, callback) {};
+
+/**
+ * @param {!chrome.browsingData.RemovalOptions} options
+ * @param {function(): void=} callback
+ * @see https://developer.chrome.com/extensions/browsingData#method-removeDownloads
+ */
+chrome.browsingData.removeDownloads = function(options, callback) {};
+
+/**
+ * @param {!chrome.browsingData.RemovalOptions} options
+ * @param {function(): void=} callback
+ * @see https://developer.chrome.com/extensions/browsingData#method-removeFileSystems
+ */
+chrome.browsingData.removeFileSystems = function(options, callback) {};
+
+/**
+ * @param {!chrome.browsingData.RemovalOptions} options
+ * @param {function(): void=} callback
+ * @see https://developer.chrome.com/extensions/browsingData#method-removeFormData
+ */
+chrome.browsingData.removeFormData = function(options, callback) {};
+
+/**
+ * @param {!chrome.browsingData.RemovalOptions} options
+ * @param {function(): void=} callback
+ * @see https://developer.chrome.com/extensions/browsingData#method-removeHistory
+ */
+chrome.browsingData.removeHistory = function(options, callback) {};
+
+/**
+ * @param {!chrome.browsingData.RemovalOptions} options
+ * @param {function(): void=} callback
+ * @see https://developer.chrome.com/extensions/browsingData#method-removeIndexedDB
+ */
+chrome.browsingData.removeIndexedDB = function(options, callback) {};
+
+/**
+ * @param {!chrome.browsingData.RemovalOptions} options
+ * @param {function(): void=} callback
+ * @see https://developer.chrome.com/extensions/browsingData#method-removeLocalStorage
+ */
+chrome.browsingData.removeLocalStorage = function(options, callback) {};
+
+/**
+ * @param {!chrome.browsingData.RemovalOptions} options
+ * @param {function(): void=} callback
+ * @see https://developer.chrome.com/extensions/browsingData#method-removePluginData
+ */
+chrome.browsingData.removePluginData = function(options, callback) {};
+
+/**
+ * @param {!chrome.browsingData.RemovalOptions} options
+ * @param {function(): void=} callback
+ * @see https://developer.chrome.com/extensions/browsingData#method-removePasswords
+ */
+chrome.browsingData.removePasswords = function(options, callback) {};
+
+/**
+ * @param {!chrome.browsingData.RemovalOptions} options
+ * @param {function(): void=} callback
+ * @see https://developer.chrome.com/extensions/browsingData#method-removeWebSQL
+ */
+chrome.browsingData.removeWebSQL = function(options, callback) {};
 
 /**
  * @see http://developer.chrome.com/extensions/commands.html
@@ -7738,7 +7884,7 @@ chrome.syncFileSystem = {};
 /**
  * Returns a syncable filesystem backed by Google Drive. The returned
  * DOMFileSystem instance can be operated on in the same way as
- * the Temporary and Persistant file systems (see
+ * the Temporary and Persistent file systems (see
  * http://www.w3.org/TR/file-system-api/), except that the filesystem
  * object returned for Sync FileSystem does NOT support directory
  * operations (yet). You can get a list of file entries by reading
