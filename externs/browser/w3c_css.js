@@ -2039,6 +2039,11 @@ CSSProperties.prototype.order;
  */
 CSSProperties.prototype.willChange;
 
+/**
+ * @type {string}
+ * @see https://www.w3.org/TR/css-ui-4/#propdef-user-select
+ */
+CSSProperties.prototype.userSelect;
 
 /**
  * TODO(dbeam): Put this in separate file named w3c_cssom.js.
