@@ -1258,6 +1258,14 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
         "Bad type annotation. expected end of line or comment." + BAD_TYPE_WIKI_LINK);
   }
 
+  public void testParseExtendsWithQualifier() {
+    parse(
+        "@extends {!Base}*/",
+        "Bad type annotation. "
+            + "@implements/@extends requires a bare interface/record name without ! or ?."
+            + BAD_TYPE_WIKI_LINK);
+  }
+
   public void testParseEnum1() {
     assertTypeEquals(NUMBER_TYPE, parse("@enum*/").getEnumParameterType());
   }
@@ -2216,6 +2224,14 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     parse(
         "@implements Base? */",
         "Bad type annotation. expected end of line or comment." + BAD_TYPE_WIKI_LINK);
+  }
+
+  public void testParseImplementsWithQualifier() {
+    parse(
+        "@implements {!Base}*/",
+        "Bad type annotation. "
+            + "@implements/@extends requires a bare interface/record name without ! or ?."
+            + BAD_TYPE_WIKI_LINK);
   }
 
   public void testInterfaceExtends() {

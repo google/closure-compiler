@@ -630,6 +630,8 @@ public final class JsDocInfoParser {
                 && token != JsDocToken.EOC) {
               addTypeWarning("msg.end.annotation.expected");
             }
+          } else if (token == JsDocToken.BANG || token == JsDocToken.QMARK) {
+            addTypeWarning("msg.jsdoc.implements.extraqualifier", lineno, charno);
           } else {
             addTypeWarning("msg.no.type.name", lineno, charno);
           }
