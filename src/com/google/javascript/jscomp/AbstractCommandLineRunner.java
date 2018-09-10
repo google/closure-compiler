@@ -2109,8 +2109,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
       // module spec, and we're printing a bundle file, we'll have a fake
       // input file that shouldn't be copied. So we special-case this, to
       // make all the other cases simpler.
-      if (input.getName().equals(
-              Compiler.createFillFileName(Compiler.SINGLETON_MODULE_NAME))) {
+      if (input.getName().equals(Compiler.createFillFileName(JSModule.SINGLETON_MODULE_NAME))) {
         checkState(1 == Iterables.size(inputs));
         return;
       }

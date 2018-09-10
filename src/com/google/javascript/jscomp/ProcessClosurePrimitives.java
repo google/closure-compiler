@@ -462,9 +462,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
           checkNotNull(providedModule, n);
 
           JSModule module = t.getModule();
-          if (moduleGraph != null
-              && module != providedModule
-              && !moduleGraph.dependsOn(module, providedModule)) {
+          if (module != providedModule && !moduleGraph.dependsOn(module, providedModule)) {
             compiler.report(
                 t.makeError(n, XMODULE_REQUIRE_ERROR, ns,
                     providedModule.getName(),
@@ -1376,7 +1374,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
     private void updateMinimumModule(JSModule newModule) {
       if (minimumModule == null) {
         minimumModule = newModule;
-      } else if (moduleGraph != null && moduleGraph.getModuleCount() > 1) {
+      } else if (moduleGraph.getModuleCount() > 1) {
         minimumModule = moduleGraph.getDeepestCommonDependencyInclusive(
             minimumModule, newModule);
       } else {

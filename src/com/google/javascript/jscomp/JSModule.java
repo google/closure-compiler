@@ -40,6 +40,9 @@ import java.util.Set;
  *
  */
 public final class JSModule extends DependencyInfo.Base implements Serializable {
+  // The name of the artificial module containing all sources when no module spec is specified.
+  public static final String SINGLETON_MODULE_NAME = "$singleton$";
+
   private static final long serialVersionUID = 1;
 
   /** Module name */

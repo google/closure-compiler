@@ -84,7 +84,7 @@ class CrossModuleMethodMotion implements CompilerPass {
   public void process(Node externRoot, Node root) {
     // If there are < 2 modules, then we will never move anything,
     // so we're done.
-    if (moduleGraph != null && moduleGraph.getModuleCount() > 1) {
+    if (moduleGraph.getModuleCount() > 1) {
       analyzer.process(externRoot, root);
       moveMethods(analyzer.getAllNameInfo());
     }

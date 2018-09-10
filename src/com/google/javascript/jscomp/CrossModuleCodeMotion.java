@@ -93,7 +93,7 @@ class CrossModuleCodeMotion implements CompilerPass {
   @Override
   public void process(Node externs, Node root) {
     // If there are <2 modules, then we will never move anything, so we're done
-    if (graph != null && graph.getModuleCount() > 1) {
+    if (graph.getModuleCount() > 1) {
       CrossModuleReferenceCollector referenceCollector =
           new CrossModuleReferenceCollector(compiler, new Es6SyntacticScopeCreator(compiler));
       referenceCollector.process(root);

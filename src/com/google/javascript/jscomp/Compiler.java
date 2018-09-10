@@ -107,8 +107,6 @@ import javax.annotation.Nullable;
 // TODO(tbreisacher): Rename Compiler to JsCompiler and remove this suppression.
 @SuppressWarnings("JavaLangClash")
 public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFileMapping {
-  static final String SINGLETON_MODULE_NAME = "$singleton$";
-
   static final DiagnosticType MODULE_DEPENDENCY_ERROR =
       DiagnosticType.error("JSC_MODULE_DEPENDENCY_ERROR",
           "Bad dependency: {0} -> {1}. "
@@ -457,7 +455,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   /** Initializes the instance state needed for a compile job. */
   public final <T1 extends SourceFile, T2 extends SourceFile> void init(
       List<T1> externs, List<T2> sources, CompilerOptions options) {
-    JSModule module = new JSModule(SINGLETON_MODULE_NAME);
+    JSModule module = new JSModule(JSModule.SINGLETON_MODULE_NAME);
     for (SourceFile source : sources) {
       module.add(new CompilerInput(source));
     }
