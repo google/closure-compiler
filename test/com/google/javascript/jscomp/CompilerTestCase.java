@@ -2381,10 +2381,6 @@ public abstract class CompilerTestCase extends TestCase {
     }
   }
 
-  protected interface Postcondition extends TestPart {
-    void verify(Compiler compiler);
-  }
-
   private static class DiagnosticCorrespondence extends Correspondence<JSError, Diagnostic> {
     @Override
     public boolean compare(JSError actual, Diagnostic expected) {
@@ -2424,5 +2420,15 @@ public abstract class CompilerTestCase extends TestCase {
     public String toString() {
       return name;
     }
+  }
+
+  protected interface Postcondition extends TestPart {
+    void verify(Compiler compiler);
+  }
+
+  protected static Postcondition expectRuntimeLibraries(String... expected) {
+    return (compiler) -> {
+      assertThat(((NoninjectingCompiler) compiler).injected).containsExactlyElementsIn(expected);
+    };
   }
 }
