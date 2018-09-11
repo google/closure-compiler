@@ -51,6 +51,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import junit.framework.TestCase;
+import org.junit.Before;
 
 /**
  * <p>Base class for testing JS compiler classes that change
@@ -576,6 +577,7 @@ public abstract class CompilerTestCase extends TestCase {
 
   // Overridden here so that we can easily find all classes that override.
   @Override
+  @Before
   protected void setUp() throws Exception {
     super.setUp();
 
