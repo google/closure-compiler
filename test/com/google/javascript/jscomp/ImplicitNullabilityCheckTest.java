@@ -16,7 +16,13 @@
 
 package com.google.javascript.jscomp;
 
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
+
 /** Unit tests for {@link ImplicitNullabilityCheck}. */
+@RunWith(JUnit4.class)
 public final class ImplicitNullabilityCheckTest extends CompilerTestCase {
 
   @Override
@@ -36,11 +42,13 @@ public final class ImplicitNullabilityCheckTest extends CompilerTestCase {
   }
 
   @Override
-  protected void setUp() throws Exception {
+  @Before
+  public void setUp() throws Exception {
     super.setUp();
     enableTypeCheck();
   }
 
+  @Test
   public void testExplicitJsdocDoesntWarn() {
     noWarning("/** @type {boolean} */ var x;");
     noWarning("/** @type {symbol} */ var x;");
@@ -59,6 +67,7 @@ public final class ImplicitNullabilityCheckTest extends CompilerTestCase {
     noWarning("/** @type {boolean} */ const x = true;");
   }
 
+  @Test
   public void testExplicitlyNullableUnion() {
     noWarning("/** @type {(Object|null)} */ var x;");
     noWarning("/** @type {(Object|number)?} */ var x;");
@@ -73,6 +82,7 @@ public final class ImplicitNullabilityCheckTest extends CompilerTestCase {
     warnImplicitlyNullable("/** @type {(Object|number)} */ const x = 3;;");
   }
 
+  @Test
   public void testJsdocPositions() {
     warnImplicitlyNullable("/** @type {Object} */ var x;");
     warnImplicitlyNullable("var /** Object */ x;");
@@ -84,17 +94,20 @@ public final class ImplicitNullabilityCheckTest extends CompilerTestCase {
     warnImplicitlyNullable("/** @type {Object} */ const x = {};");
   }
 
+  @Test
   public void testParameterizedObject() {
     warnImplicitlyNullable(lines(
         "/** @param {Object<string, string>=} opt_values */",
         "function getMsg(opt_values) {};"));
   }
 
+  @Test
   public void testNullableTypedef() {
     // Arguable whether or not this deserves a warning
     warnImplicitlyNullable("/** @typedef {?number} */ var Num; var /** Num */ x;");
   }
 
+  @Test
   public void testUnknownTypenameDoesntWarn() {
     test(
         externs(DEFAULT_EXTERNS),
@@ -102,11 +115,13 @@ public final class ImplicitNullabilityCheckTest extends CompilerTestCase {
         warning(RhinoErrorReporter.UNRECOGNIZED_TYPE_ERROR));
   }
 
+  @Test
   public void testThrowsDoesntWarn() {
     noWarning("/** @throws {Error} */ function f() {}");
     noWarning("/** @throws {TypeError}\n * @throws {SyntaxError} */ function f() {}");
   }
 
+  @Test
   public void testUserDefinedClass() {
     warnImplicitlyNullable(lines(
         "/** @constructor */",
@@ -121,6 +136,7 @@ public final class ImplicitNullabilityCheckTest extends CompilerTestCase {
         "}"));
   }
 
+  @Test
   public void testNamespacedTypeDoesntCrash() {
     warnImplicitlyNullable(lines(
         "/** @const */ var a = {};",

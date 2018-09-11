@@ -17,13 +17,14 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.collect.ImmutableList;
-
 import java.util.List;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
-/**
- * Tests for hotswap functionality of the ClosureRewriteModule pass.
- */
+/** Tests for hotswap functionality of the ClosureRewriteModule pass. */
 
+@RunWith(JUnit4.class)
 public final class GoogModuleReplaceScriptTest extends BaseReplaceScriptTestCase {
 
   private void runNoOpReplaceScriptNoWarnings(List<String> sources) {
@@ -32,6 +33,7 @@ public final class GoogModuleReplaceScriptTest extends BaseReplaceScriptTestCase
     }
   }
 
+  @Test
   public void testSimpleGoogModule() {
     String source0 =
         LINE_JOINER.join(
@@ -45,6 +47,7 @@ public final class GoogModuleReplaceScriptTest extends BaseReplaceScriptTestCase
     runNoOpReplaceScriptNoWarnings(ImmutableList.of(source0, source1));
   }
 
+  @Test
   public void testWrappedGoogModules() {
     String source0 =
         LINE_JOINER.join(
@@ -63,6 +66,7 @@ public final class GoogModuleReplaceScriptTest extends BaseReplaceScriptTestCase
     runNoOpReplaceScriptNoWarnings(ImmutableList.of(source0, source1));
   }
 
+  @Test
   public void testSimpleBundledGoogModule() {
     String source0 =
         LINE_JOINER.join(
@@ -80,6 +84,7 @@ public final class GoogModuleReplaceScriptTest extends BaseReplaceScriptTestCase
     runNoOpReplaceScriptNoWarnings(ImmutableList.of(source0));
   }
 
+  @Test
   public void testSimpleGoogModuleWithChangedFile() {
     String source0 =
         LINE_JOINER.join(
@@ -99,6 +104,7 @@ public final class GoogModuleReplaceScriptTest extends BaseReplaceScriptTestCase
     runReplaceScriptNoWarnings(ImmutableList.of(source0, source1), newSource1, 1);
   }
 
+  @Test
   public void testLegacyGoogModuleUsedFromModule() {
     String source0 =
         LINE_JOINER.join(
@@ -115,6 +121,7 @@ public final class GoogModuleReplaceScriptTest extends BaseReplaceScriptTestCase
     runNoOpReplaceScriptNoWarnings(ImmutableList.of(source0, source1));
   }
 
+  @Test
   public void testLegacyGoogModuleUsedFromProvideFile() {
     String source0 =
         LINE_JOINER.join(
@@ -128,6 +135,7 @@ public final class GoogModuleReplaceScriptTest extends BaseReplaceScriptTestCase
     runNoOpReplaceScriptNoWarnings(ImmutableList.of(source0, source1));
   }
 
+  @Test
   public void testGoogModuleDependsOnGoogProvide() {
     String source0 = "goog.provide('ns.Bar'); /** @constructor */ ns.Bar = function() {};";
     String source1 =
@@ -139,6 +147,7 @@ public final class GoogModuleReplaceScriptTest extends BaseReplaceScriptTestCase
     runNoOpReplaceScriptNoWarnings(ImmutableList.of(source0, source1));
   }
 
+  @Test
   public void testGoogModuleDependsOnGoogProvideError() {
     String source0 = "goog.provide('ns.Bar'); /** @constructor */ ns.Bar = function() {};";
     String source1 =

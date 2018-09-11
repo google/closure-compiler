@@ -20,16 +20,20 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.google.javascript.jscomp.GlobalNamespace.Name;
 import com.google.javascript.jscomp.GlobalNamespace.Ref;
-
 import junit.framework.TestCase;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /**
  * Tests for {@link GlobalNamespace}.
  *
  * @author nicksantos@google.com (Nick Santos)
  */
+@RunWith(JUnit4.class)
 public final class GlobalNamespaceTest extends TestCase {
 
+  @Test
   public void testRemoveDeclaration1() {
     Name n = Name.createForTesting("a");
     Ref set1 = createNodelessRef(Ref.Type.SET_FROM_GLOBAL);
@@ -49,6 +53,7 @@ public final class GlobalNamespaceTest extends TestCase {
     assertThat(n.getRefs()).hasSize(1);
   }
 
+  @Test
   public void testRemoveDeclaration2() {
     Name n = Name.createForTesting("a");
     Ref set1 = createNodelessRef(Ref.Type.SET_FROM_GLOBAL);

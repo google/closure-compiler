@@ -26,12 +26,17 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import junit.framework.TestCase;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /**
  * Unit-tests for the GlobalVarReferenceMap class.
  *
  * @author bashir@google.com (Bashir Sadjad)
  */
+@RunWith(JUnit4.class)
 public final class GlobalVarReferenceMapTest extends TestCase {
 
   private final CompilerInput INPUT1 =
@@ -68,7 +73,8 @@ public final class GlobalVarReferenceMapTest extends TestCase {
   private final Reference var3In1Ext = createRefForTest(EXTERN1);
 
   @Override
-  protected void setUp() throws Exception {
+  @Before
+  public void setUp() throws Exception {
     super.setUp();
     globalScope.declare(VAR1, new Node(Token.NAME), INPUT1);
     var1Refs.references = ImmutableList.of(var1In1Ref,
@@ -95,6 +101,7 @@ public final class GlobalVarReferenceMapTest extends TestCase {
   }
 
   /** Tests whether the global variable references are set/reset properly. */
+  @Test
   public void testUpdateGlobalVarReferences_ResetReferences() {
     // First we check the original setup then reset again.
     for (int i = 0; i < 2; i++) {
@@ -109,6 +116,7 @@ public final class GlobalVarReferenceMapTest extends TestCase {
   }
 
   /** Removes all variable references in second script. */
+  @Test
   public void testUpdateGlobalVarReferences_UpdateScriptNoRef() {
     Map<Var, ReferenceCollection> scriptMap = new HashMap<>();
     map.updateGlobalVarReferences(scriptMap, scriptRoot);
@@ -124,6 +132,7 @@ public final class GlobalVarReferenceMapTest extends TestCase {
   }
 
   /** Changes variable references in second script. */
+  @Test
   public void testUpdateGlobalVarReferences_UpdateScriptNewRefs() {
     Map<Var, ReferenceCollection> scriptMap = new HashMap<>();
 
@@ -160,6 +169,7 @@ public final class GlobalVarReferenceMapTest extends TestCase {
   }
 
   /** Changes variable references in second script. */
+  @Test
   public void testUpdateGlobalVarReferences_UpdateScriptNewVar() {
     Map<Var, ReferenceCollection> scriptMap = new HashMap<>();
     final String var4 = "var4";
@@ -174,6 +184,7 @@ public final class GlobalVarReferenceMapTest extends TestCase {
     assertEquals(newVar3In2Ref, refs.references.get(0));
   }
 
+  @Test
   public void testUpdateReferencesWithGlobalScope() {
     Scope newGlobalScope = Scope.createGlobalScope(root);
     map.updateReferencesWithGlobalScope(newGlobalScope);

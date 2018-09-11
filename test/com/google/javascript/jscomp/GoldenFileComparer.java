@@ -15,6 +15,7 @@
  */
 package com.google.javascript.jscomp;
 
+
 import static com.google.common.truth.Truth.assertWithMessage;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
