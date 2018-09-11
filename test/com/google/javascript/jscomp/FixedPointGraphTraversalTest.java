@@ -23,11 +23,17 @@ import com.google.javascript.jscomp.graph.FixedPointGraphTraversal;
 import com.google.javascript.jscomp.graph.FixedPointGraphTraversal.EdgeCallback;
 import com.google.javascript.jscomp.graph.LinkedDirectedGraph;
 import junit.framework.TestCase;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /**
  * Test for FixedPointGraphTraversal.
+ *
  * @author nicksantos@google.com (Nick Santos)
  */
+@RunWith(JUnit4.class)
 public final class FixedPointGraphTraversalTest extends TestCase {
 
   // The maximum value of a counter that counts as a "change"
@@ -66,6 +72,7 @@ public final class FixedPointGraphTraversalTest extends TestCase {
   //
   // with all edges pointing downwards, and an "up-edge" from E to D.
   @Override
+  @Before
   public void setUp() {
     A = new Counter();
     B = new Counter();
@@ -89,6 +96,7 @@ public final class FixedPointGraphTraversalTest extends TestCase {
     graph.connect(E, "->", D);
   }
 
+  @Test
   public void testGraph1() {
     maxChange = 0;
     traversal.computeFixedPoint(graph, A);
@@ -100,6 +108,7 @@ public final class FixedPointGraphTraversalTest extends TestCase {
     assertEquals(0, E.value);
   }
 
+  @Test
   public void testGraph2() {
     maxChange = 0;
     traversal.computeFixedPoint(graph, D);
@@ -111,6 +120,7 @@ public final class FixedPointGraphTraversalTest extends TestCase {
     assertEquals(1, E.value);
   }
 
+  @Test
   public void testGraph3() {
     maxChange = 1;
     traversal.computeFixedPoint(graph, A);
@@ -122,6 +132,7 @@ public final class FixedPointGraphTraversalTest extends TestCase {
     assertEquals(2, E.value);
   }
 
+  @Test
   public void testGraph4() {
     maxChange = 1;
     traversal.computeFixedPoint(graph, D);
@@ -133,6 +144,7 @@ public final class FixedPointGraphTraversalTest extends TestCase {
     assertEquals(2, E.value);
   }
 
+  @Test
   public void testGraph5() {
     maxChange = 5;
     traversal.computeFixedPoint(graph, A);
@@ -144,6 +156,7 @@ public final class FixedPointGraphTraversalTest extends TestCase {
     assertEquals(5, E.value);
   }
 
+  @Test
   public void testGraph6() {
     maxChange = 5;
     traversal.computeFixedPoint(graph, B);
@@ -155,6 +168,7 @@ public final class FixedPointGraphTraversalTest extends TestCase {
     assertEquals(5, E.value);
   }
 
+  @Test
   public void testGraph8() {
     maxChange = 2;
     traversal.computeFixedPoint(graph, A);
@@ -175,6 +189,7 @@ public final class FixedPointGraphTraversalTest extends TestCase {
     }
   }
 
+  @Test
   public void testGraph9() {
     maxChange = 0;
 
@@ -189,6 +204,7 @@ public final class FixedPointGraphTraversalTest extends TestCase {
     assertEquals(2, E.value);
   }
 
+  @Test
   public void testGraph10() {
     // Test a graph with self-edges.
     maxChange = 5;
