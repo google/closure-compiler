@@ -38,6 +38,7 @@ import com.google.javascript.rhino.jstype.TemplatizedType;
 import com.google.javascript.rhino.testing.TestErrorReporter;
 import java.util.Arrays;
 import junit.framework.TestCase;
+import org.junit.Before;
 
 /**
  * This class is mostly used by passes testing the old type checker. Passes that run after type
@@ -123,6 +124,7 @@ abstract class CompilerTypeTestCase extends TestCase {
   }
 
   @Override
+  @Before
   protected void setUp() throws Exception {
     super.setUp();
     errorReporter = new TestErrorReporter(null, null);
