@@ -128,6 +128,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   private static final String CONFIG_RESOURCE =
       "com.google.javascript.jscomp.parsing.ParserConfig";
 
+  private static final String FILL_FILE_SUFFIX = "$fillFile";
+
   CompilerOptions options = null;
 
   private PassConfig passes = null;
@@ -563,7 +565,12 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
    * an empty module.
    */
   static String createFillFileName(String moduleName) {
-    return moduleName + "$fillFile";
+    return moduleName + FILL_FILE_SUFFIX;
+  }
+
+  /** Returns whether a file name was created by {@link createFillFileName}. */
+  static boolean isFillFileName(String fileName) {
+    return fileName.endsWith(FILL_FILE_SUFFIX);
   }
 
   /**

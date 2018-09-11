@@ -2098,23 +2098,18 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
     }
 
     for (CompilerInput input : inputs) {
-      // Every module has an empty file in it. This makes it easier to implement
-      // cross-module code motion.
-      //
-      // But it also leads to a weird edge case because
-      // a) If we don't have a module spec, we create a singleton module, and
-      // b) If we print a bundle file, we copy the original input files.
-      //
-      // This means that in the (rare) case where we have no inputs, and no
-      // module spec, and we're printing a bundle file, we'll have a fake
-      // input file that shouldn't be copied. So we special-case this, to
-      // make all the other cases simpler.
-      if (input.getName().equals(Compiler.createFillFileName(JSModule.SINGLETON_MODULE_NAME))) {
-        checkState(1 == Iterables.size(inputs));
-        return;
+      String name = input.getName();
+      String code = input.getSourceFile().getCode();
+
+      // Ignore empty fill files created by the compiler to facilitate cross-module code motion.
+      // Note that non-empty fill files (ones whose code has actually been moved into) are still
+      // emitted. In particular, this ensures that if there are no (real) inputs the bundle will be
+      // empty.
+      if (Compiler.isFillFileName(name) && code.isEmpty()) {
+        continue;
       }
 
-      String rootRelativePath = rootRelativePathsMap.get(input.getName());
+      String rootRelativePath = rootRelativePathsMap.get(name);
       String displayName = rootRelativePath != null
           ? rootRelativePath
           : input.getName();
@@ -2122,7 +2117,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
       out.append(displayName);
       out.append("\n");
 
-      prepForBundleAndAppendTo(out, input, input.getSourceFile().getCode());
+      prepForBundleAndAppendTo(out, input, code);
 
       out.append("\n");
     }
