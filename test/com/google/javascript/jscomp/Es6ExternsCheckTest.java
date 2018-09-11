@@ -18,10 +18,13 @@ package com.google.javascript.jscomp;
 import static com.google.javascript.jscomp.Es6ExternsCheck.MISSING_ES6_EXTERNS;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
-/**
- * Test cases for Es6ExternsCheck
- */
+/** Test cases for Es6ExternsCheck */
+@RunWith(JUnit4.class)
 public final class Es6ExternsCheckTest extends CompilerTestCase {
 
   private static final String EXTERNS_BASE = "";
@@ -41,7 +44,8 @@ public final class Es6ExternsCheckTest extends CompilerTestCase {
   }
 
   @Override
-  protected void setUp() throws Exception {
+  @Before
+  public void setUp() throws Exception {
     super.setUp();
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     setLanguageOut(LanguageMode.ECMASCRIPT3);
@@ -58,11 +62,13 @@ public final class Es6ExternsCheckTest extends CompilerTestCase {
     return 1;
   }
 
+  @Test
   public void testEs6Syntax() {
     // Report the missing externs if the project includes files with ES6 syntax
     testError("const x = {a, b};", MISSING_ES6_EXTERNS);
   }
 
+  @Test
   public void testEs6ONoEs6() {
     allowExternsChanges();  // adding Symbol
     // Don't report the missing externs if the project does not includes files with ES6 syntax.

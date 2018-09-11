@@ -18,12 +18,17 @@ package com.google.javascript.jscomp;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /**
  * Test cases for {@link Es6ForOfConverter}
  *
  * @author lharker@google.com (Laura Harker)
  */
+@RunWith(JUnit4.class)
 public final class Es6ForOfConverterTest extends CompilerTestCase {
 
   private static final String EXTERNS_BASE =
@@ -45,7 +50,8 @@ public final class Es6ForOfConverterTest extends CompilerTestCase {
   }
 
   @Override
-  protected void setUp() throws Exception {
+  @Before
+  public void setUp() throws Exception {
     super.setUp();
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     setLanguageOut(LanguageMode.ECMASCRIPT3);
@@ -62,6 +68,7 @@ public final class Es6ForOfConverterTest extends CompilerTestCase {
     return 1;
   }
 
+  @Test
   public void testForOf() {
 
     // With array literal and declaring new bound variable.
@@ -144,6 +151,7 @@ public final class Es6ForOfConverterTest extends CompilerTestCase {
             "alert(i);"));
   }
 
+  @Test
   public void testForOfRedeclaredVar() {
     test(
         lines("for (let x of []) {", "  let x = 0;", "}"),
@@ -158,6 +166,7 @@ public final class Es6ForOfConverterTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testForOfJSDoc() {
     test(
         "for (/** @type {string} */ let x of []) {}",
@@ -181,6 +190,7 @@ public final class Es6ForOfConverterTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testForOfOnNonIterable() {
     testWarning(
         lines(
@@ -193,6 +203,7 @@ public final class Es6ForOfConverterTest extends CompilerTestCase {
         TypeValidator.TYPE_MISMATCH_WARNING);
   }
 
+  @Test
   public void testForOfWithQualifiedNameInitializer() {
     test(
         "var obj = {a: 0}; for (obj.a of [1,2,3]) { console.log(obj.a); }",
@@ -208,6 +219,7 @@ public final class Es6ForOfConverterTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testForOfWithComplexInitializer() {
     test(
         "function f() { return {}; } for (f()['x' + 1] of [1,2,3]) {}",

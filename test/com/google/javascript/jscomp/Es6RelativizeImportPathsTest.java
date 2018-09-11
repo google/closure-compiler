@@ -21,8 +21,13 @@ import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.deps.ModuleLoader.PathEscaper;
 import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
 import java.util.List;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 
+@RunWith(JUnit4.class)
 public class Es6RelativizeImportPathsTest extends CompilerTestCase {
 
   private ImmutableMap<String, String> prefixReplacements;
@@ -30,7 +35,8 @@ public class Es6RelativizeImportPathsTest extends CompilerTestCase {
   private List<String> moduleRoots;
 
   @Override
-  protected void setUp() throws Exception {
+  @Before
+  public void setUp() throws Exception {
     super.setUp();
     prefixReplacements = ImmutableMap.of();
     moduleResolutionMode = ResolutionMode.BROWSER;
@@ -52,6 +58,7 @@ public class Es6RelativizeImportPathsTest extends CompilerTestCase {
     return new Es6RelativizeImportPaths(compiler);
   }
 
+  @Test
   public void testLocalRelativePathStayTheSame() {
     testSame(ImmutableList.of(SourceFile.fromCode("/file.js", "import './foo.js';")));
 
@@ -63,6 +70,7 @@ public class Es6RelativizeImportPathsTest extends CompilerTestCase {
         ImmutableList.of(SourceFile.fromCode("http://google.com/file.js", "import './foo.js';")));
   }
 
+  @Test
   public void testRelativeParentPathStayTheSame() {
     testSame(ImmutableList.of(SourceFile.fromCode("/nested/file.js", "import '../foo.js';")));
 
@@ -78,6 +86,7 @@ public class Es6RelativizeImportPathsTest extends CompilerTestCase {
             SourceFile.fromCode("http://google.com/nested/file.js", "import '../foo.js';")));
   }
 
+  @Test
   public void testAbsolutePathsStayTheSame() {
     // Absolute means that with a scheme, not those starting with "/"
     testSame(
@@ -96,6 +105,7 @@ public class Es6RelativizeImportPathsTest extends CompilerTestCase {
                 "/file.js", "import 'http://google.com/other/file.js';")));
   }
 
+  @Test
   public void testRootedPathsBecomeRelative() {
     test(
         ImmutableList.of(SourceFile.fromCode("/file.js", "import '/foo.js';")),
@@ -114,6 +124,7 @@ public class Es6RelativizeImportPathsTest extends CompilerTestCase {
         ImmutableList.of(SourceFile.fromCode("/file.js", "import './nested/foo.js';")));
   }
 
+  @Test
   public void testNonStandardResolutionBecomesRelative() {
     moduleResolutionMode = ResolutionMode.BROWSER_WITH_TRANSFORMED_PREFIXES;
     prefixReplacements = ImmutableMap.of("raw0/", "/mapped0/", "raw1/", "/mapped1/");
@@ -150,6 +161,7 @@ public class Es6RelativizeImportPathsTest extends CompilerTestCase {
             SourceFile.fromCode("http://google.com/file.js", "import '../mapped1/foo.js';")));
   }
 
+  @Test
   public void testModuleRootsBecomeRelative() {
     moduleRoots = ImmutableList.of("root1", "root2");
 

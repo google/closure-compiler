@@ -16,6 +16,10 @@
 package com.google.javascript.jscomp;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /**
  * Test case for {@link Es6RewriteBlockScopedDeclaration} with Es6 as the Language Out
@@ -24,10 +28,12 @@ import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
  *
  * @author simranarora@google.com (Simran Arora)
  */
+@RunWith(JUnit4.class)
 public class Es6RewriteBlockScopedDeclarationEs6LangOutTest extends CompilerTestCase {
 
   @Override
-  protected void setUp() throws Exception {
+  @Before
+  public void setUp() throws Exception {
     super.setUp();
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     enableRunTypeCheckAfterProcessing();
@@ -50,12 +56,14 @@ public class Es6RewriteBlockScopedDeclarationEs6LangOutTest extends CompilerTest
     return 1;
   }
 
+  @Test
   public void testNoTranspilationForBlockScopedFunctionDeclarations() {
     testSame("for (var x of y) { function f() { x; } }");
   }
 
   // TODO (simarora) Correct output is commented out for now - transpilation mode is being entered
   // to convert lets and consts to vars even though output is ES6
+  @Test
   public void testNoTranspilationForLetConstDeclarations() {
     /*testSame(
         "for (var x of y) {" +

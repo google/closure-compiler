@@ -17,16 +17,22 @@
 package com.google.javascript.jscomp;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /**
  * Test case for {@link Es6RenameVariablesInParamLists}.
  *
  * @author moz@google.com (Michael Zhou)
  */
+@RunWith(JUnit4.class)
 public final class Es6RenameVariablesInParamListsTest extends CompilerTestCase {
 
   @Override
-  protected void setUp() throws Exception {
+  @Before
+  public void setUp() throws Exception {
     super.setUp();
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     enableRunTypeCheckAfterProcessing();
@@ -49,6 +55,7 @@ public final class Es6RenameVariablesInParamListsTest extends CompilerTestCase {
     return 1;
   }
 
+  @Test
   public void testRenameVar() {
     test("var x = 5; function f(y=x) { var x; }",
         "var x = 5; function f(y=x) { var x$0; }");
@@ -113,6 +120,7 @@ public final class Es6RenameVariablesInParamListsTest extends CompilerTestCase {
 
   }
 
+  @Test
   public void testRenameFunction() {
     test(
         lines(
@@ -121,6 +129,7 @@ public final class Es6RenameVariablesInParamListsTest extends CompilerTestCase {
             "function x() {}", "function f(y=x()) {", "  x$0();", "  function x$0() {}", "}"));
   }
 
+  @Test
   public void testGlobalDeclaration() {
     test(
         lines(
@@ -179,6 +188,7 @@ public final class Es6RenameVariablesInParamListsTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testMultipleDefaultParams() {
     test(
         lines(
@@ -219,6 +229,7 @@ public final class Es6RenameVariablesInParamListsTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testArrow() {
     testSame("var x = true; var f = (a=x) => x;");
     test("var x = true; var f = (a=x) => { var x = false; return a; }",

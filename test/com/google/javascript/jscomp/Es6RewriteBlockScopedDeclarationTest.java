@@ -17,12 +17,17 @@
 package com.google.javascript.jscomp;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /**
  * Test case for {@link Es6RewriteBlockScopedDeclaration}.
  *
  * @author moz@google.com (Michael Zhou)
  */
+@RunWith(JUnit4.class)
 public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase {
 
   public Es6RewriteBlockScopedDeclarationTest() {
@@ -30,7 +35,8 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
   }
 
   @Override
-  protected void setUp() throws Exception {
+  @Before
+  public void setUp() throws Exception {
     super.setUp();
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     enableTypeCheck();
@@ -54,6 +60,7 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
     return 1;
   }
 
+  @Test
   public void testSimple() {
     test("let x = 3;", "var x = 3;");
     test("const x = 3;", "/** @const */ var x = 3;");
@@ -64,6 +71,7 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
         "function f() { /** @const */ var x = 3; }");
   }
 
+  @Test
   public void testLetShadowing() {
     test(
         lines(
@@ -156,6 +164,7 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
             "}"));
   }
 
+  @Test
   public void testLetShadowingWithMultivariateDeclaration() {
     test(
         lines(
@@ -179,6 +188,7 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
         "var x, y; for (var x$0 = undefined, y$1 = undefined;;) {}");
   }
 
+  @Test
   public void testNonUniqueLet() {
     test(
         lines(
@@ -233,6 +243,7 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
             "}"));
   }
 
+  @Test
   public void testRenameConflict() {
     test(
         lines(
@@ -253,6 +264,7 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
             "}"));
   }
 
+  @Test
   public void testForLoop() {
     test(
         lines(
@@ -336,6 +348,7 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
             "}"));
   }
 
+  @Test
   public void testLoopClosure() {
     test(
         lines(
@@ -634,6 +647,7 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
             "}"));
   }
 
+  @Test
   public void testLoopClosureWithContinue() {
     // We must add a labeled block and convert continue statements to breaks to ensure that the
     // loop variable gets updated on every loop iteration of all loop types other than vanilla for.
@@ -829,6 +843,7 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
             ""));
   }
 
+  @Test
   public void testLoopClosureCommaInBody() {
     test(
         lines(
@@ -853,6 +868,7 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
             "}"));
   }
 
+  @Test
   public void testLoopClosureCommaInIncrement() {
     test(
         lines(
@@ -874,6 +890,7 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
             "}"));
   }
 
+  @Test
   public void testLoopClosureCommaInInitializerAndIncrement() {
     test(
         lines(
@@ -913,6 +930,7 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
             "}"));
   }
 
+  @Test
   public void testLoopClosureMutated() {
     test(
         lines(
@@ -955,6 +973,7 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
             "}"));
   }
 
+  @Test
   public void testLoopClosureWithNestedInnerFunctions() {
     test(lines(
         "for (let i = 0; i < 10; i++) {",
@@ -1019,6 +1038,7 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
         "});"));
   }
 
+  @Test
   public void testNestedLoop() {
     test(
         lines(
@@ -1094,6 +1114,7 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
             "}"));
   }
 
+  @Test
   public void testLabeledLoop() {
     test(
         lines(
@@ -1118,6 +1139,7 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
             "}"));
   }
 
+  @Test
   public void testForInAndForOf() {
     test(
         lines(
@@ -1164,6 +1186,7 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
             "}"));
   }
 
+  @Test
   public void testDoWhileForInCapturedLet() {
     test(
         lines(
@@ -1201,6 +1224,7 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
   }
 
   // https://github.com/google/closure-compiler/issues/1124
+  @Test
   public void testFunctionsInLoop() {
     test(
         lines(
@@ -1264,6 +1288,7 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
   }
 
   // https://github.com/google/closure-compiler/issues/1557
+  @Test
   public void testNormalizeDeclarations() {
     test(
         lines(
@@ -1312,6 +1337,7 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
             "}"));
   }
 
+  @Test
   public void testTypeAnnotationsOnLetConst() {
     Diagnostic mismatch =
         warning(TypeValidator.TYPE_MISMATCH_WARNING);
@@ -1327,6 +1353,7 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
     test(srcs("const /** @type {string} */ x = 'str', /** @type {string} */ y = 3;"), mismatch);
   }
 
+  @Test
   public void testDoWhileForOfCapturedLetAnnotated() {
     test(
         lines(
@@ -1368,6 +1395,7 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
         warning(TypeValidator.TYPE_MISMATCH_WARNING));
   }
 
+  @Test
   public void testLetForInitializers() {
     test(
         lines(
@@ -1397,6 +1425,7 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
             "}"));
   }
 
+  @Test
   public void testRenameJsDoc() {
     test(lines(
         "function f() {",
@@ -1468,6 +1497,7 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
         "}"));
   }
 
+  @Test
   public void testCatch() {
     test("function f(e) { try {} catch (e) { throw e; } }",
          "function f(e) { try {} catch (e$0) { throw e$0; } }");
@@ -1490,6 +1520,7 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
         "}"));
   }
 
+  @Test
   public void testExterns() {
     testExternChanges("let x;", "", "var x;");
   }

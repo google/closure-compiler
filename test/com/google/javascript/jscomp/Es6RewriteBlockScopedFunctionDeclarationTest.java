@@ -17,12 +17,18 @@
 package com.google.javascript.jscomp;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /** Test case for {@link Es6RewriteBlockScopedFunctionDeclaration}. */
+@RunWith(JUnit4.class)
 public final class Es6RewriteBlockScopedFunctionDeclarationTest extends CompilerTestCase {
 
   @Override
-  protected void setUp() throws Exception {
+  @Before
+  public void setUp() throws Exception {
     super.setUp();
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     enableTypeCheck();
@@ -46,10 +52,12 @@ public final class Es6RewriteBlockScopedFunctionDeclarationTest extends Compiler
     return 1;
   }
 
+  @Test
   public void testRewritesBlockScopedFunctionDeclaration() {
     test("{ function f(){} }", "{ let f = function(){}; }");
   }
 
+  @Test
   public void testHoistsFunctionToStartOfBlock() {
     test(
         lines(
@@ -64,10 +72,12 @@ public final class Es6RewriteBlockScopedFunctionDeclarationTest extends Compiler
             ""));
   }
 
+  @Test
   public void testBlockScopedGeneratorFunction() {
     test("{ function* f() {yield 1;} }", "{ let f = function*() { yield 1; }; }");
   }
 
+  @Test
   public void testBlockNestedInsideFunction() {
     test(
         lines(
@@ -90,6 +100,7 @@ public final class Es6RewriteBlockScopedFunctionDeclarationTest extends Compiler
             "}"));
   }
 
+  @Test
   public void testFunctionInLoop() {
     test(
         lines(
@@ -108,10 +119,12 @@ public final class Es6RewriteBlockScopedFunctionDeclarationTest extends Compiler
             "}"));
   }
 
+  @Test
   public void testDoesNotRewriteTopLevelDeclarations() {
     testSame("function f(){}");
   }
 
+  @Test
   public void testDoesNotRewriteFunctionScopedDeclarations() {
     testSame("function g() {function f(){}}");
   }
