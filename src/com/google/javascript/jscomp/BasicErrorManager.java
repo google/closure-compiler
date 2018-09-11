@@ -17,6 +17,8 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.collect.ImmutableSet;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * An error manager that generates a sorted report when the {@link #generateReport()} method is
@@ -35,9 +37,13 @@ public abstract class BasicErrorManager extends SortingErrorManager {
 
   @Override
   public void generateReport() {
-    for (ErrorWithLevel message : super.getSortedDiagnostics()) {
+    List<ErrorWithLevel> list = new ArrayList<>();
+    for (ErrorWithLevel message = messages.poll(); message != null; message = messages.poll()) {
       println(message.level, message.error);
+      list.add(message);
     }
+    // Restore the messages since some tests assert the values after generating the report.
+    messages.addAll(list);
     printSummary();
   }
 

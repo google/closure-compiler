@@ -123,7 +123,11 @@ public final class SortingErrorManagerTest extends TestCase {
     assertThat(printedErrors).hasSize(1);
   }
 
-  // This test is testing a "feature" that seems bogus and should likely be forbidden.
+  // Ensure that more warnings can be added from generating the report.
+  // One case in which this happened is when the report tries to use the source maps to map back to
+  // the original source, yet a warning was produced because of a corrupted source map. This test
+  // ensures that there is no java.util.ConcurrentModificationException while adding a new warning
+  // when iterating over the existing warnings to print them out.
   public void testGenerateReportCausesMoreWarnings() {
     BasicErrorManager manager =
         new BasicErrorManager() {
@@ -132,8 +136,6 @@ public final class SortingErrorManagerTest extends TestCase {
           @Override
           public void println(CheckLevel level, JSError error) {
             if (error.getType().equals(FOO_TYPE)) {
-              // TODO(b/114762232) This behavior should not be supported, and will become malformed
-              // when migrating to a SortingErrorManager with an ErrorReportGenerator.
               this.report(CheckLevel.ERROR, JSError.make(NULL_SOURCE, -1, -1, JOO_TYPE));
             }
             printed++;
@@ -141,7 +143,7 @@ public final class SortingErrorManagerTest extends TestCase {
 
           @Override
           protected void printSummary() {
-            assertEquals(1, printed);
+            assertEquals(2, printed);
           }
         };
     manager.report(CheckLevel.ERROR, JSError.make(NULL_SOURCE, -1, -1, FOO_TYPE));
