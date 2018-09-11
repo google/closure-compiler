@@ -1800,9 +1800,7 @@ public abstract class CompilerTestCase extends TestCase {
   private static void transpileToEs5(AbstractCompiler compiler, Node externsRoot, Node codeRoot) {
     List<PassFactory> factories = new ArrayList<>();
     TranspilationPasses.addEs6ModulePass(
-        factories,
-        () -> new ModuleMetadataMap(ImmutableMap.of(), ImmutableMap.of()),
-        new PreprocessorSymbolTable.CachedInstanceFactory());
+        factories, new PreprocessorSymbolTable.CachedInstanceFactory());
     CompilerOptions options = compiler.getOptions();
     options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT);
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);

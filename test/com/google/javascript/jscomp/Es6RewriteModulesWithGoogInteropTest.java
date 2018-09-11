@@ -61,14 +61,11 @@ public final class Es6RewriteModulesWithGoogInteropTest extends CompilerTestCase
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
-    return (externs, root) -> {
-      GatherModuleMetadata gatherModuleMetadata =
-          new GatherModuleMetadata(
-              compiler, /* processCommonJsModules= */ false, ResolutionMode.BROWSER);
-      gatherModuleMetadata.process(externs, root);
-      new Es6RewriteModules(compiler, gatherModuleMetadata, /* preprocessorSymbolTable= */ null)
-          .process(externs, root);
-    };
+    return new Es6RewriteModules(
+        compiler,
+        /* preprocessorSymbolTable= */ null,
+        /* processCommonJsModules= */ false,
+        ResolutionMode.BROWSER);
   }
 
   @Override

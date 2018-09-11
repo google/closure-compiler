@@ -58,7 +58,6 @@ public final class PassNames {
   public static final String EXTRACT_PROTOTYPE_MEMBER_DECLARATIONS =
       "extractPrototypeMemberDeclarations";
   public static final String FLOW_SENSITIVE_INLINE_VARIABLES = "flowSensitiveInlineVariables";
-  public static final String GATHER_MODULE_METADATA = "gatherModuleMetadata";
   public static final String GATHER_RAW_EXPORTS = "gatherRawExports";
   public static final String GENERATE_EXPORTS = "generateExports";
   public static final String INFER_CONSTS = "inferConsts";

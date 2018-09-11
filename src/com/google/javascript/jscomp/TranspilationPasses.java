@@ -31,7 +31,6 @@ import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.Node;
 import java.util.List;
-import java.util.function.Supplier;
 
 /**
  * Provides a single place to manage transpilation passes.
@@ -41,7 +40,6 @@ public class TranspilationPasses {
 
   public static void addEs6ModulePass(
       List<PassFactory> passes,
-      Supplier<ModuleMetadataMap> moduleMetadataMapSupplier,
       final PreprocessorSymbolTable.CachedInstanceFactory preprocessorTableFactory) {
     passes.add(
         new HotSwapPassFactory("es6RewriteModule") {
@@ -49,7 +47,10 @@ public class TranspilationPasses {
           protected HotSwapCompilerPass create(AbstractCompiler compiler) {
             preprocessorTableFactory.maybeInitialize(compiler);
             return new Es6RewriteModules(
-                compiler, moduleMetadataMapSupplier, preprocessorTableFactory.getInstanceOrNull());
+                compiler,
+                preprocessorTableFactory.getInstanceOrNull(),
+                compiler.getOptions().processCommonJSModules,
+                compiler.getOptions().moduleResolutionMode);
           }
 
           @Override

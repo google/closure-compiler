@@ -69,7 +69,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
 /**
@@ -154,14 +153,11 @@ public final class DefaultPassConfig extends PassConfig {
       passes.add(convertEs6TypedToEs6);
     }
 
-    passes.add(gatherModuleMetadataPass);
-
     if (options.getLanguageIn().toFeatureSet().has(FeatureSet.Feature.MODULES)) {
       passes.add(rewriteGoogJsImports);
       switch (options.getEs6ModuleTranspilation()) {
         case COMPILE:
-          TranspilationPasses.addEs6ModulePass(
-              passes, moduleMetadataMapSupplier, preprocessorSymbolTableFactory);
+          TranspilationPasses.addEs6ModulePass(passes, preprocessorSymbolTableFactory);
           break;
         case TO_COMMON_JS_LIKE_MODULES:
           TranspilationPasses.addEs6ModuleToCjsPass(passes);
@@ -271,8 +267,6 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(convertEs6TypedToEs6);
     }
 
-    checks.add(gatherModuleMetadataPass);
-
     if (options.enables(DiagnosticGroups.LINT_CHECKS)) {
       checks.add(lintChecks);
     }
@@ -289,8 +283,7 @@ public final class DefaultPassConfig extends PassConfig {
 
     if (options.getLanguageIn().toFeatureSet().has(FeatureSet.Feature.MODULES)) {
       checks.add(rewriteGoogJsImports);
-      TranspilationPasses.addEs6ModulePass(
-          checks, moduleMetadataMapSupplier, preprocessorSymbolTableFactory);
+      TranspilationPasses.addEs6ModulePass(checks, preprocessorSymbolTableFactory);
     }
 
     checks.add(checkVariableReferences);
@@ -3456,25 +3449,6 @@ public final class DefaultPassConfig extends PassConfig {
         @Override
         protected CompilerPass create(AbstractCompiler compiler) {
           return new Es6RewriteScriptsToModules(compiler);
-        }
-
-        @Override
-        protected FeatureSet featureSet() {
-          return ES_NEXT;
-        }
-      };
-
-  private GatherModuleMetadata gatherModuleMetadata;
-  private final Supplier<ModuleMetadataMap> moduleMetadataMapSupplier =
-      () -> gatherModuleMetadata.get();
-
-  private final PassFactory gatherModuleMetadataPass =
-      new PassFactory(PassNames.GATHER_MODULE_METADATA, /* isOneTimePass= */ true) {
-        @Override
-        protected CompilerPass create(AbstractCompiler compiler) {
-          return gatherModuleMetadata =
-              new GatherModuleMetadata(
-                  compiler, options.processCommonJSModules, options.moduleResolutionMode);
         }
 
         @Override
