@@ -1328,7 +1328,7 @@ public class JSTypeRegistry implements Serializable {
       }
     }
 
-    // TODO(sdh): The use of "getType" here is incorrect. This currently will pick up a type\
+    // TODO(sdh): The use of "getType" here is incorrect. This currently will pick up a type
     // in an outer scope if it will be shadowed by a local type.  But creating a unique NamedType
     // object for every name referenced (even if interned) in every scope would be expensive.
     //
