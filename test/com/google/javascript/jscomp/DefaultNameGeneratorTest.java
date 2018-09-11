@@ -38,7 +38,7 @@ public final class DefaultNameGeneratorTest extends TestCase {
     return result;
   }
 
-  public static void testNameGeneratorInvalidPrefixes() throws Exception {
+  public void testNameGeneratorInvalidPrefixes() throws Exception {
     try {
       new DefaultNameGenerator(Collections.<String>emptySet(), "123abc", null);
       fail("Constructor should throw exception when the first char of prefix "
@@ -57,7 +57,7 @@ public final class DefaultNameGeneratorTest extends TestCase {
     }
   }
 
-  public static void testGenerate() throws Exception {
+  public void testGenerate() throws Exception {
     DefaultNameGenerator ng = new DefaultNameGenerator(
         RESERVED_NAMES, "", null);
     String[] result = generate(ng, "", 106);
@@ -83,7 +83,7 @@ public final class DefaultNameGeneratorTest extends TestCase {
     assertEquals("xca", result[66]);
   }
 
-  public static void testReserve() throws Exception {
+  public void testReserve() throws Exception {
     DefaultNameGenerator ng = new DefaultNameGenerator(
         RESERVED_NAMES, "", new char[] {'$'});
     String[] result = generate(ng, "", 106);
@@ -97,7 +97,7 @@ public final class DefaultNameGeneratorTest extends TestCase {
     assertEquals("ab", result[103]);
   }
 
-  public static void testGenerateWithPriority1() throws Exception {
+  public void testGenerateWithPriority1() throws Exception {
     DefaultNameGenerator ng = new DefaultNameGenerator(
         RESERVED_NAMES, "", null);
     String[] result = generate(ng, "", 106);
@@ -125,7 +125,7 @@ public final class DefaultNameGeneratorTest extends TestCase {
     assertEquals("d", result[3]);
   }
 
-  public static void testGenerateWithPriority2() throws Exception {
+  public void testGenerateWithPriority2() throws Exception {
     DefaultNameGenerator ng = new DefaultNameGenerator(
         RESERVED_NAMES, "", null);
     String[] result = generate(ng, "", 106);
@@ -165,7 +165,7 @@ public final class DefaultNameGeneratorTest extends TestCase {
     assertEquals("cn", result[54]);
   }
 
-  public static void testGenerateWithPriority3() throws Exception {
+  public void testGenerateWithPriority3() throws Exception {
     DefaultNameGenerator ng = new DefaultNameGenerator(
         RESERVED_NAMES, "", null);
     String[] result = generate(ng, "", 106);
