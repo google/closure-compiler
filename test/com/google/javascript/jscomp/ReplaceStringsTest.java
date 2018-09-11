@@ -30,11 +30,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
-/**
- * Tests for {@link ReplaceStrings}.
- *
- */
+/** Tests for {@link ReplaceStrings}. */
+@RunWith(JUnit4.class)
 public final class ReplaceStringsTest extends CompilerTestCase {
   private ReplaceStrings pass;
   private Set<String> reserved;
@@ -89,7 +91,8 @@ public final class ReplaceStringsTest extends CompilerTestCase {
   }
 
   @Override
-  protected void setUp() throws Exception {
+  @Before
+  public void setUp() throws Exception {
     super.setUp();
     enableTypeCheck();
     enableNormalize();
@@ -152,6 +155,7 @@ public final class ReplaceStringsTest extends CompilerTestCase {
     return 1;
   }
 
+  @Test
   public void testStable1() {
     previous = VariableMap.fromMap(ImmutableMap.of("previous", "xyz"));
     testDebugStrings(
@@ -165,6 +169,7 @@ public final class ReplaceStringsTest extends CompilerTestCase {
         (new String[] { "c", "xyz" }));
   }
 
+  @Test
   public void testStable2() {
     // Two things happen here:
     // 1) a previously used name "a" is not used for another string, "b" is
@@ -178,6 +183,7 @@ public final class ReplaceStringsTest extends CompilerTestCase {
         (new String[] { "b", "xyz" }));
   }
 
+  @Test
   public void testRenameName() {
     rename = true;
     testDebugStrings(
@@ -186,6 +192,7 @@ public final class ReplaceStringsTest extends CompilerTestCase {
         (new String[] { "a", "xyz" }));
   }
 
+  @Test
   public void testRenameStaticProp() {
     rename = true;
     testDebugStrings(
@@ -194,6 +201,7 @@ public final class ReplaceStringsTest extends CompilerTestCase {
         (new String[] { "a", "HistoryManager.updateHistory" }));
   }
 
+  @Test
   public void testThrowError1() {
     testDebugStrings(
         "throw Error('xyz');",
@@ -206,6 +214,7 @@ public final class ReplaceStringsTest extends CompilerTestCase {
         (new String[] { "previous", "xyz" }));
   }
 
+  @Test
   public void testThrowError2() {
     testDebugStrings(
         "throw Error('x' +\n    'yz');",
@@ -213,6 +222,7 @@ public final class ReplaceStringsTest extends CompilerTestCase {
         (new String[] { "a", "xyz" }));
   }
 
+  @Test
   public void testThrowError3() {
     testDebugStrings(
         "throw Error('Unhandled mail' + ' search type ' + type);",
@@ -220,6 +230,7 @@ public final class ReplaceStringsTest extends CompilerTestCase {
         (new String[] { "a", "Unhandled mail search type `" }));
   }
 
+  @Test
   public void testThrowError4() {
     testDebugStrings(
         lines(
@@ -251,6 +262,7 @@ public final class ReplaceStringsTest extends CompilerTestCase {
         }));
   }
 
+  @Test
   public void testThrowNonStringError() {
     // No replacement is done when an error is neither a string literal nor
     // a string concatenation expression.
@@ -260,6 +272,7 @@ public final class ReplaceStringsTest extends CompilerTestCase {
         (new String[] { }));
   }
 
+  @Test
   public void testThrowConstStringError() {
     testDebugStrings(
         "var AA = 'uvw', AB = 'xyz'; throw Error(AB);",
@@ -267,6 +280,7 @@ public final class ReplaceStringsTest extends CompilerTestCase {
         (new String [] { "a", "xyz" }));
   }
 
+  @Test
   public void testThrowNewError1() {
     testDebugStrings(
         "throw new Error('abc');",
@@ -274,6 +288,7 @@ public final class ReplaceStringsTest extends CompilerTestCase {
         (new String[] { "a", "abc" }));
   }
 
+  @Test
   public void testThrowNewError2() {
     testDebugStrings(
         "throw new Error();",
@@ -281,6 +296,7 @@ public final class ReplaceStringsTest extends CompilerTestCase {
         new String[] {});
   }
 
+  @Test
   public void testStartTracer1() {
     testDebugStrings(
         "goog.debug.Trace.startTracer('HistoryManager.updateHistory');",
@@ -288,6 +304,7 @@ public final class ReplaceStringsTest extends CompilerTestCase {
         (new String[] { "a", "HistoryManager.updateHistory" }));
   }
 
+  @Test
   public void testStartTracer2() {
     testDebugStrings(
         "goog$debug$Trace.startTracer('HistoryManager', 'updateHistory');",
@@ -297,6 +314,7 @@ public final class ReplaceStringsTest extends CompilerTestCase {
             "b", "updateHistory" }));
   }
 
+  @Test
   public void testStartTracer3() {
     testDebugStrings(
         "goog$debug$Trace.startTracer('ThreadlistView',\n" +
@@ -305,6 +323,7 @@ public final class ReplaceStringsTest extends CompilerTestCase {
         new String[] { "a", "ThreadlistView", "b", "Updating ` rows" });
   }
 
+  @Test
   public void testStartTracer4() {
     testDebugStrings(
         "goog.debug.Trace.startTracer(s, 'HistoryManager.updateHistory');",
@@ -312,6 +331,7 @@ public final class ReplaceStringsTest extends CompilerTestCase {
         (new String[] { "a", "HistoryManager.updateHistory" }));
   }
 
+  @Test
   public void testLoggerInitialization() {
     testDebugStrings(
         "goog$debug$Logger$getLogger('my.app.Application');",
@@ -319,6 +339,7 @@ public final class ReplaceStringsTest extends CompilerTestCase {
         (new String[] { "a", "my.app.Application" }));
   }
 
+  @Test
   public void testLoggerOnObject1() {
     testDebugStrings(
         "var x = {};" +
@@ -332,6 +353,7 @@ public final class ReplaceStringsTest extends CompilerTestCase {
   }
 
   // Non-matching "info" property.
+  @Test
   public void testLoggerOnObject2() {
     test(
         "var x = {};" +
@@ -342,6 +364,7 @@ public final class ReplaceStringsTest extends CompilerTestCase {
   }
 
   // Non-matching "info" prototype property.
+  @Test
   public void testLoggerOnObject3a() {
     testSame(
         "/** @constructor */\n" +
@@ -351,6 +374,7 @@ public final class ReplaceStringsTest extends CompilerTestCase {
   }
 
   // Non-matching "info" prototype property.
+  @Test
   public void testLoggerOnObject3b() {
     testSame(
       "/** @constructor */\n" +
@@ -360,15 +384,18 @@ public final class ReplaceStringsTest extends CompilerTestCase {
   }
 
   // Non-matching "info" property on "NoObject" type.
+  @Test
   public void testLoggerOnObject4() {
     testSame("(new x).info('Some message');");
   }
 
   // Non-matching "info" property on "UnknownObject" type.
+  @Test
   public void testLoggerOnObject5() {
     testSame("my$Thing.logger_.info('Some message');");
   }
 
+  @Test
   public void testLoggerOnVar() {
     testDebugStrings(
         "var logger = goog.debug.Logger.getLogger('foo');" +
@@ -380,6 +407,7 @@ public final class ReplaceStringsTest extends CompilerTestCase {
             "b", "Some message"});
   }
 
+  @Test
   public void testLoggerOnThis() {
     testDebugStrings(
         "function f() {" +
@@ -395,6 +423,7 @@ public final class ReplaceStringsTest extends CompilerTestCase {
             "b", "Some message"});
   }
 
+  @Test
   public void testLoggerOnThis2() {
     testDebugStrings(
         lines(
@@ -418,6 +447,7 @@ public final class ReplaceStringsTest extends CompilerTestCase {
         new String[] { "a", "Some message" });
   }
 
+  @Test
   public void testRepeatedErrorString1() {
     testDebugStrings(
         "Error('abc');Error('def');Error('abc');",
@@ -425,6 +455,7 @@ public final class ReplaceStringsTest extends CompilerTestCase {
         (new String[] { "a", "abc", "b", "def" }));
   }
 
+  @Test
   public void testRepeatedErrorString2() {
     testDebugStrings(
         "Error('a:' + u + ', b:' + v); Error('a:' + x + ', b:' + y);",
@@ -432,6 +463,7 @@ public final class ReplaceStringsTest extends CompilerTestCase {
         (new String[] { "a", "a:`, b:`" }));
   }
 
+  @Test
   public void testRepeatedErrorString3() {
     testDebugStrings(
         "var AB = 'b'; throw Error(AB); throw Error(AB);",
@@ -439,6 +471,7 @@ public final class ReplaceStringsTest extends CompilerTestCase {
         (new String[] { "a", "b" }));
   }
 
+  @Test
   public void testRepeatedTracerString() {
     testDebugStrings(
         "goog$debug$Trace.startTracer('A', 'B', 'A');",
@@ -446,6 +479,7 @@ public final class ReplaceStringsTest extends CompilerTestCase {
         (new String[] { "a", "A", "b", "B" }));
   }
 
+  @Test
   public void testRepeatedLoggerString() {
     testDebugStrings(
         "goog$debug$Logger$getLogger('goog.net.XhrTransport');" +
@@ -458,6 +492,7 @@ public final class ReplaceStringsTest extends CompilerTestCase {
             "a", "goog.net.XhrTransport", "b", "my.app.Application" });
   }
 
+  @Test
   public void testRepeatedStringsWithDifferentMethods() {
     test(
         "throw Error('A');"
@@ -480,6 +515,7 @@ public final class ReplaceStringsTest extends CompilerTestCase {
             + "throw Error('a');");
   }
 
+  @Test
   public void testReserved() {
     testDebugStrings(
         "throw Error('xyz');",
@@ -492,6 +528,7 @@ public final class ReplaceStringsTest extends CompilerTestCase {
         (new String[] { "d", "xyz" }));
   }
 
+  @Test
   public void testLoggerWithNoReplacedParam() {
     testDebugStrings(
         "var x = {};" +
@@ -504,6 +541,7 @@ public final class ReplaceStringsTest extends CompilerTestCase {
             "b", "Some message"});
   }
 
+  @Test
   public void testLoggerWithSomeParametersNotReplaced() {
     testDebugStrings(
         "var x = {};" +
@@ -518,7 +556,8 @@ public final class ReplaceStringsTest extends CompilerTestCase {
             "c", "Some message2"});
   }
 
-  public void testWithDisambiguateProperties() throws Exception {
+  @Test
+  public void testWithDisambiguateProperties() {
     runDisambiguateProperties = true;
 
     ImmutableList.Builder<String> builder = ImmutableList.builder();
@@ -578,6 +617,7 @@ public final class ReplaceStringsTest extends CompilerTestCase {
         });
   }
 
+  @Test
   public void testExcludedFile() {
     testDebugStrings("Excluded('xyz');", "Excluded('xyz');", new String[0]);
     testDebugStrings("NotExcluded('xyz');", "NotExcluded('a');", (new String[] { "a", "xyz" }));

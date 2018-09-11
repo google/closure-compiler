@@ -18,11 +18,17 @@ package com.google.javascript.jscomp;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
+@RunWith(JUnit4.class)
 public class RewriteAsyncFunctionsTest extends CompilerTestCase {
 
   @Override
-  protected void setUp() throws Exception {
+  @Before
+  public void setUp() throws Exception {
     super.setUp();
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_NEXT);
     setLanguageOut(LanguageMode.ECMASCRIPT3);
@@ -46,6 +52,7 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
     return (NoninjectingCompiler) super.getLastCompiler();
   }
 
+  @Test
   public void testInnerArrowFunctionUsingThis() {
     test(
         lines(
@@ -70,6 +77,7 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testInnerSuperCall() {
     test(
         lines(
@@ -101,6 +109,7 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testInnerSuperReference() {
     test(
         lines(
@@ -133,6 +142,7 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testNestedArrowFunctionUsingThis() {
     test(
         lines(
@@ -155,6 +165,7 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testInnerArrowFunctionUsingArguments() {
     test(
         lines(
@@ -179,6 +190,7 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testRequiredCodeInjected() {
     test(
         "async function foo() { return 1; }",
@@ -192,6 +204,7 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
     assertThat(getLastCompiler().injected).containsExactly("es6/execute_async_generator");
   }
 
+  @Test
   public void testAwaitReplacement() {
     test(
         "async function foo(promise) { return await promise; }",
@@ -204,14 +217,17 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testArgumentsReplacement_topLevelCode() {
     testSame("arguments;");
   }
 
+  @Test
   public void testArgumentsReplacement_normalFunction() {
     testSame("function f(a, b, ...rest) { return arguments.length; }");
   }
 
+  @Test
   public void testArgumentsReplacement_asyncFunction() {
     test(
         "async function f(a, b, ...rest) { return arguments.length; }",
@@ -225,6 +241,7 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testArgumentsReplacement_asyncClosure() {
     test(
         lines(
@@ -245,6 +262,7 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testArgumentsReplacement_normalClosureInAsync() {
     test(
         lines(
@@ -267,6 +285,7 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testClassMethod() {
     test(
         "class A { async f() { return this.x; } }",
@@ -282,6 +301,7 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testAsyncClassMethodWithAsyncArrow() {
     test(
         lines(
@@ -310,6 +330,7 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testNonAsyncClassMethodWithAsyncArrow() {
     test(
         lines(
@@ -335,6 +356,7 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testArrowFunctionExpressionBody() {
     test(
         "let f = async () => 1;",

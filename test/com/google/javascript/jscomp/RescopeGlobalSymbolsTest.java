@@ -16,10 +16,16 @@
 
 package com.google.javascript.jscomp;
 
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
+
 /**
  * Unit tests for {@link RescopeGlobalSymbols}
  *
  */
+@RunWith(JUnit4.class)
 public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
 
   private static final String NAMESPACE = "_";
@@ -35,7 +41,8 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
   }
 
   @Override
-  protected void setUp() throws Exception {
+  @Before
+  public void setUp() throws Exception {
     super.setUp();
     assumeCrossModuleNames = true;
   }
@@ -45,6 +52,7 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
     return 1;
   }
 
+  @Test
   public void testVarDeclarations() {
     test("var a = 1;", "_.a = 1;");
     test("var a = 1, b = 2, c = 3;", "_.a = 1; _.b = 2; _.c = 3;");
@@ -58,6 +66,7 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
     test("var a, b = 1; alert(a);", "_.b = 1; window.alert(_.a);");
   }
 
+  @Test
   public void testVarDeclarations_allSameModule() {
     assumeCrossModuleNames = false;
     testSame("var a = 1;");
@@ -68,12 +77,13 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
     testSame("var a, b = 1;");
   }
 
+  @Test
   public void testVarDeclarations_export() {
     assumeCrossModuleNames = false;
     test("var _dumpException = 1;", "_._dumpException = 1");
   }
 
-
+  @Test
   public void testVarDeclarations_acrossModules() {
     assumeCrossModuleNames = false;
     test(createModules(
@@ -105,6 +115,7 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
         new String[] {"var a, c;1;_.b = 1;c = 2", "_.b"});
   }
 
+  @Test
   public void testLetDeclarations() {
     test("let a = 1;", "_.a = 1;");
     test("let a = 1, b = 2, c = 3;", "_.a = 1; _.b = 2; _.c = 3;");
@@ -118,6 +129,7 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
     test("let a, b = 1; alert(a);", "_.b = 1; window.alert(_.a);");
   }
 
+  @Test
   public void testLetDeclarations_allSameModule() {
     assumeCrossModuleNames = false;
     testSame("let a = 1;");
@@ -128,11 +140,13 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
     testSame("let a, b = 1;");
   }
 
+  @Test
   public void testLetDeclarations_export() {
     assumeCrossModuleNames = false;
     test("let _dumpException = 1;", "_._dumpException = 1");
   }
 
+  @Test
   public void testLetDeclarations_acrossModules() {
     assumeCrossModuleNames = false;
     // test references across modules.
@@ -163,6 +177,7 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
         new String[] {"var a, c; 1;_.b = 1;c = 2", "_.b; if (true) { let b = 3; b; }"});
   }
 
+  @Test
   public void testConstDeclarations() {
     test("const a = 1;", "_.a = 1;");
     test("const a = 1, b = 2, c = 3;", "_.a = 1; _.b = 2; _.c = 3;");
@@ -172,6 +187,7 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
     testSame("if(1){const x = 1;}");
   }
 
+  @Test
   public void testConstDeclarations_allSameModule() {
     assumeCrossModuleNames = false;
     testSame("const a = 1;");
@@ -180,11 +196,13 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
     testSame("if(1){const x = 1;}");
   }
 
+  @Test
   public void testConstDeclarations_export() {
     assumeCrossModuleNames = false;
     test("const _dumpException = 1;", "_._dumpException = 1");
   }
 
+  @Test
   public void testConstDeclarations_acrossModules() {
     assumeCrossModuleNames = false;
     // test references across modules.
@@ -208,6 +226,7 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
         new String[] {"var a, c; 1;a = 1; _.b = 1;c = 2", "_.b; if (true) { const b = 3; b; }"});
   }
 
+  @Test
   public void testObjectDestructuringDeclarations() {
     test("var {a} = {}; a;", "({a: _.a} = {}); _.a;");
     test("var {a: a} = {}; a;", "({a: _.a} = {}); _.a;");
@@ -221,6 +240,7 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
     test("var {a} = {}, [b] = [], c = 3", "({a: _.a} = {}); [_.b] = []; _.c = 3;");
   }
 
+  @Test
   public void testObjectDestructuringDeclarations_allSameModule() {
     assumeCrossModuleNames = false;
     testSame("var {a} = {}; a;");
@@ -236,6 +256,7 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
     testSame("var a = 1, [b] = [], {c} = {};");
   }
 
+  @Test
   public void testObjectDestructuringDeclarations_acrossModules() {
     assumeCrossModuleNames = false;
     test(createModules("var {a: a} = {};", "a"), new String[] {"({a: _.a} = {});", "_.a"});
@@ -257,6 +278,7 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
         new String[] {"var a; ({a} = {}); _.b = 3;", "_.b"});
   }
 
+  @Test
   public void testObjectDestructuringAssignments() {
     test("var a, b; ({key1: a, key2: b} = {}); a; b;", "({key1: _.a, key2: _.b} = {}); _.a; _.b;");
     // Test a destructuring assignment with mixed global and local variables.
@@ -269,6 +291,7 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
         "  _.obj = {}; ({a: _.obj['foo bar']} = {}); _.obj['foo bar'];");
   }
 
+  @Test
   public void testArrayDestructuringDeclarations() {
     test("var [a] = [1]; a", "[_.a] = [1]; _.a;");
     test("var [a, b, c] = [1, 2, 3]; a; b; c;", "[_.a, _.b, _.c] = [1, 2, 3]; _.a; _.b; _.c");
@@ -280,6 +303,7 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
     test("var [a] = 1, b = 2; a; b;", "[_.a] = 1; _.b = 2; _.a; _.b;");
   }
 
+  @Test
   public void testArrayDestructuringDeclarations_sameModule() {
     assumeCrossModuleNames = false;
     testSame("var [a] = [1]; a");
@@ -291,6 +315,7 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
     testSame("var [a, ...b] = [1, 2, 3]; a; b;");
   }
 
+  @Test
   public void testArrayDestructuringDeclarations_acrossModules() {
     assumeCrossModuleNames = false;
     test(createModules("var [a] = [];", "a"), new String[] {"[_.a] = [];", "_.a"});
@@ -305,6 +330,7 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
         new String[] {"var b; [_.a, b, _.c] = []; b; _.c;", "_.a; _.c"});
   }
 
+  @Test
   public void testArrayDestructuringAssignments() {
     test("var a, b; [a, b] = []; a; b;", "[_.a, _.b] = []; _.a; _.b;");
     // Test a destructuring assignment with mixed global and local variables.
@@ -318,6 +344,7 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
         "  _.obj = {}; [_.obj['foo bar']] = []; _.obj['foo bar'];");
   }
 
+  @Test
   public void testClasses() {
     test("class A {}", "_.A = class {};");
     test("class A {} class B extends A {}", "_.A = class {}; _.B = class extends _.A {}");
@@ -345,12 +372,14 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
     test("var A = class A {};", "_.A = class A {};");
   }
 
+  @Test
   public void testClasses_nonGlobal() {
     testSame("if (true) { class A {} }");
     test("function foo() { class A {} }", "_.foo = function() { class A {} };");
     test("const A = 5; { class A {} }", "_.A = 5; { class A {} }");
   }
 
+  @Test
   public void testClasses_allSameModule() {
     assumeCrossModuleNames = false;
     test("class A {}", "var A = class {};");
@@ -358,6 +387,7 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
     testSame("if (true) { class A {} }");
   }
 
+  @Test
   public void testForLoops() {
     assumeCrossModuleNames = false;
     test(createModules(
@@ -374,6 +404,7 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
         new String[] {"var i; for (    [i, _.c] = [0, 2]; i < 1000; i++);", "_.c;"});
   }
 
+  @Test
   public void testForLoops_acrossModules() {
     test(
         "for (var i = 0; i < 1000; i++);",
@@ -401,6 +432,7 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
     testSame("for (let [i] = [0]; i  < 1000; i++);");
   }
 
+  @Test
   public void testForInLoops_allSameModule() {
     assumeCrossModuleNames = false;
     testSame("for (var i in {});");
@@ -408,6 +440,7 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
     testSame("for (var {a: a} in {});");
   }
 
+  @Test
   public void testForInLoops_acrossModules() {
     assumeCrossModuleNames = false;
     test(createModules("for (var i in {});", "i"), new String[] {"for (_.i in {});", "_.i"});
@@ -419,6 +452,7 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
         new String[] {"var i; for (    {i: i, c: _.c} in {});", "_.c"});
   }
 
+  @Test
   public void testForOfLoops_allSameModule() {
     assumeCrossModuleNames = false;
     testSame("for (var i of [1, 2, 3]);");
@@ -426,6 +460,7 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
     testSame("for (var {a: a} of {});");
   }
 
+  @Test
   public void testForOfLoops_acrossModules() {
     assumeCrossModuleNames = false;
     test(createModules("for (var i of []);", "i"), new String[] {"for (_.i of []);", "_.i"});
@@ -437,6 +472,7 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
         new String[] {"var i; for (    {i: i, c: _.c} of []);", "_.c"});
   }
 
+  @Test
   public void testFunctionStatements() {
     test(
         "function test(){}",
@@ -448,13 +484,15 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
     test("function *test() {}", "_.test = function *() {}");
   }
 
+  @Test
   public void testFunctionStatements_allSameModule() {
     assumeCrossModuleNames = false;
     test("function f() {}", "var f = function() {}");
     test("if (true) { function f() {} }", "if (true) { var f = function() {}; }");
   }
 
-  public void testFunctionStatements_freeCallSemantics1() throws Exception {
+  @Test
+  public void testFunctionStatements_freeCallSemantics1() {
     disableCompareAsTree();
 
     // This triggers free call.
@@ -475,6 +513,7 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
         "_.ns={};_.ns.a=function(){};_.ns.a()");
   }
 
+  @Test
   public void testFunctionStatements_freeCallSemantics2() {
     // Cases where free call forcing through (0, foo)() is not necessary.
     test(
@@ -492,6 +531,7 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
     test("var a = () => this; a();", "_.a = () => this; _.a();");
   }
 
+  @Test
   public void testFunctionStatements_freeCallSemantics3() {
     disableCompareAsTree();
 
@@ -502,10 +542,12 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
         "_.a=_.b;(0,_.a)()");
   }
 
+  @Test
   public void testFunctionStatements_defaultParameters() {
     test("var a = 1; function f(param = a) {}", "_.a = 1; _.f = function(param = _.a) {}");
   }
 
+  @Test
   public void testDeeperScopes() {
     test(
         "var a = function(b){return b}",
@@ -524,12 +566,14 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
         "_.x=1;_.a = function(b){return function(){var a; return a+b+_.x}}");
   }
 
+  @Test
   public void testTryCatch() {
     test(
         "try{var a = 1}catch(e){throw e}",
         "try{_.a = 1}catch(e){throw e}");
   }
 
+  @Test
   public void testShadowInFunctionScope() {
     test(
         "var _ = 1; (function () { _ = 2 })()",
@@ -577,6 +621,7 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
     test("function foo() { var _$a = 1;}", "_.foo = function () { var _$a$ = 1;}");
   }
 
+  @Test
   public void testShadowInBlockScope() {
     test(
         "var foo = 1; if (true) { const _ = {}; _.foo = foo; _.bar = 1; }",
@@ -592,6 +637,7 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
         "  _.foo = 1; if (true) { const [_$] = [{}]; _$.foo = _.foo; }");
   }
 
+  @Test
   public void testExterns() {
     test(
         externs("var document;"),
@@ -642,6 +688,7 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
         + "SyntaxError;TypeError;URIError;");
   }
 
+  @Test
   public void testSameVarDeclaredInExternsAndSource() {
     test(
         externs("/** @const */ var ns = {}; function f() {}"),
@@ -706,6 +753,7 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
         expected("window.f = 1; _.x = 2;"));
   }
 
+  @Test
   public void testSameVarDeclaredInExternsAndSource2() {
     assumeCrossModuleNames = false;
 
@@ -737,6 +785,7 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
             "var x; x = 1; window.y = 2; var f = function() { return x + window.y; }"));
   }
 
+  @Test
   public void testArrowFunctions() {
     test("const fn = () => 3;", "_.fn = () => 3;");
     test("const PI = 3.14; const fn = () => PI;", "_.PI = 3.14; _.fn = () => _.PI");
@@ -745,6 +794,7 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
     test("const PI = 3.14; (() => { return PI; })()", "_.PI = 3.14; (() => { return _.PI; })()");
   }
 
+  @Test
   public void testEnhancedObjectLiterals() {
     test("var a = 3; var obj = {[a]: a};", "_.a = 3; _.obj = {[_.a]: _.a};");
     test(
@@ -753,6 +803,7 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
     test("var a = 1; var obj = {a}", "_.a = 1; _.obj = {a: _.a};");
   }
 
+  @Test
   public void testEs6Modules() {
     // Test that this pass does nothing to ES6 modules.
     testSame("var a = 3; a; export default a;");

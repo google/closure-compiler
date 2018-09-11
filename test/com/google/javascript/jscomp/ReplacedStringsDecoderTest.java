@@ -16,13 +16,16 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.collect.ImmutableMap;
-
 import junit.framework.TestCase;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /**
  * Tests for ReplacedStringsDecoder.
  *
  */
+@RunWith(JUnit4.class)
 public class ReplacedStringsDecoderTest extends TestCase {
 
   private void verifyDecoder(String original, String replacement) {
@@ -38,30 +41,37 @@ public class ReplacedStringsDecoderTest extends TestCase {
     assertEquals(original, decoder.decode(encoding + args));
   }
 
+  @Test
   public void testSimpleDecoding() {
     verifyDecoder("A Message.", "A Message.");
   }
 
+  @Test
   public void testDecodingWithArgs() {
     verifyDecoder("A foo B bar C.", "A ` B ` C.", "`foo`bar");
   }
 
+  @Test
   public void testDecodingWithExcessSlots() {
     verifyDecoder("A foo B bar C - D -.", "A ` B ` C ` D `.", "`foo`bar");
   }
 
+  @Test
   public void testDecodingWithExcessArgs() {
     verifyDecoder("A foo B bar C.baz-bam-", "A ` B ` C.", "`foo`bar`baz`bam");
   }
 
+  @Test
   public void testTrailingArg() {
     verifyDecoder("foo bar", "foo `", "`bar");
   }
 
+  @Test
   public void testEmptyArgs() {
     verifyDecoder("foo bar", "foo `bar``", "```");
   }
 
+  @Test
   public void testNullDecoder() {
     ReplacedStringsDecoder nullDecoder = ReplacedStringsDecoder.NULL_DECODER;
     assertEquals("foo", nullDecoder.decode("foo"));
