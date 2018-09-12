@@ -19,6 +19,7 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_CLOSURE_CALL_ERROR;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
@@ -120,10 +121,6 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
           "JSC_XMODULE_REQUIRE_ERROR",
           "namespace \"{0}\" is required in module {2} but provided in module {1}."
               + " Is module {2} missing a dependency on module {1}?");
-
-  static final DiagnosticType INVALID_CLOSURE_CALL_ERROR = DiagnosticType.error(
-      "JSC_INVALID_CLOSURE_CALL_ERROR",
-      "Closure dependency methods(goog.provide, goog.require, etc) must be called at file scope.");
 
   static final DiagnosticType NON_STRING_PASSED_TO_SET_CSS_NAME_MAPPING_ERROR =
       DiagnosticType.error(

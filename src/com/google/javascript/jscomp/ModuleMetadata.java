@@ -19,6 +19,7 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.javascript.jscomp.ClosureCheckModule.DECLARE_LEGACY_NAMESPACE_IN_NON_MODULE;
+import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_REQUIRE_NAMESPACE;
 
 import com.google.auto.value.AutoValue;
 import com.google.common.collect.ImmutableList;
@@ -492,7 +493,7 @@ public final class ModuleMetadata {
         if (n.hasTwoChildren() && n.getLastChild().isString()) {
           currentModule.requiredGoogNamespacesBuilder().add(n.getLastChild().getString());
         } else {
-          t.report(n, ClosureRewriteModule.INVALID_REQUIRE_NAMESPACE);
+          t.report(n, INVALID_REQUIRE_NAMESPACE);
         }
       } else if (getprop.matchesQualifiedName(GOOG_REQUIRE_TYPE)) {
         if (n.hasTwoChildren() && n.getLastChild().isString()) {

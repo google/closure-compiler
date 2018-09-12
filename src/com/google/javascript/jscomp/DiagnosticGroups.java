@@ -16,6 +16,9 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_CLOSURE_CALL_ERROR;
+import static com.google.javascript.jscomp.ClosurePrimitiveErrors.MISSING_MODULE_OR_PROVIDE;
+
 import com.google.common.annotations.GwtIncompatible;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
@@ -419,9 +422,8 @@ public class DiagnosticGroups {
           ES5_STRICT_REFLECTION);
 
   public static final DiagnosticGroup MISSING_PROVIDE =
-      DiagnosticGroups.registerGroup("missingProvide",
-          CheckProvides.MISSING_PROVIDE_WARNING,
-          ClosureRewriteModule.MISSING_MODULE_OR_PROVIDE);
+      DiagnosticGroups.registerGroup(
+          "missingProvide", CheckProvides.MISSING_PROVIDE_WARNING, MISSING_MODULE_OR_PROVIDE);
 
   public static final DiagnosticGroup UNRECOGNIZED_TYPE_ERROR =
       DiagnosticGroups.registerGroup("unrecognizedTypeError", // undocumented
@@ -638,8 +640,7 @@ public class DiagnosticGroups {
           ProcessClosurePrimitives.USE_OF_GOOG_BASE);
 
   public static final DiagnosticGroup CLOSURE_DEP_METHOD_USAGE_CHECKS =
-      DiagnosticGroups.registerGroup("closureDepMethodUsageChecks",
-          ProcessClosurePrimitives.INVALID_CLOSURE_CALL_ERROR);
+      DiagnosticGroups.registerGroup("closureDepMethodUsageChecks", INVALID_CLOSURE_CALL_ERROR);
 
   // This group exists so that generated code can suppress these
   // warnings. Not for general use. These diagnostics will most likely

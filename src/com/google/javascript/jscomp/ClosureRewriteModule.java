@@ -18,6 +18,11 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_FORWARD_DECLARE_NAMESPACE;
+import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_GET_CALL_SCOPE;
+import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_GET_NAMESPACE;
+import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_REQUIRE_NAMESPACE;
+import static com.google.javascript.jscomp.ClosurePrimitiveErrors.MISSING_MODULE_OR_PROVIDE;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.MoreObjects;
@@ -99,30 +104,10 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
           "JSC_GOOG_MODULE_INVALID_PROVIDE_NAMESPACE",
           "goog.provide parameter must be a string literal.");
 
-  static final DiagnosticType INVALID_REQUIRE_NAMESPACE =
-      DiagnosticType.error(
-          "JSC_GOOG_MODULE_INVALID_REQUIRE_NAMESPACE",
-          "goog.require parameter must be a string literal.");
-
-  static final DiagnosticType INVALID_FORWARD_DECLARE_NAMESPACE =
-      DiagnosticType.error(
-          "JSC_GOOG_MODULE_INVALID_FORWARD_DECLARE_NAMESPACE",
-          "goog.forwardDeclare parameter must be a string literal.");
-
-  static final DiagnosticType INVALID_GET_NAMESPACE =
-      DiagnosticType.error(
-          "JSC_GOOG_MODULE_INVALID_GET_NAMESPACE",
-          "goog.module.get parameter must be a string literal.");
-
   static final DiagnosticType INVALID_PROVIDE_CALL =
       DiagnosticType.error(
           "JSC_GOOG_MODULE_INVALID_PROVIDE_CALL",
           "goog.provide can not be called in goog.module.");
-
-  static final DiagnosticType INVALID_GET_CALL_SCOPE =
-      DiagnosticType.error(
-          "JSC_GOOG_MODULE_INVALID_GET_CALL_SCOPE",
-          "goog.module.get can not be called in global scope.");
 
   static final DiagnosticType INVALID_GET_ALIAS =
       DiagnosticType.error(
@@ -148,11 +133,6 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
       DiagnosticType.error(
           "JSC_DUPLICATE_NAMESPACE",
           "Duplicate namespace: {0}");
-
-  static final DiagnosticType MISSING_MODULE_OR_PROVIDE =
-      DiagnosticType.error(
-          "JSC_MISSING_MODULE_OR_PROVIDE",
-          "Required namespace \"{0}\" never defined.");
 
   static final DiagnosticType LATE_PROVIDE_ERROR =
       DiagnosticType.error(

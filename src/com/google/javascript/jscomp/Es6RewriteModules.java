@@ -17,19 +17,23 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
-import static com.google.javascript.jscomp.ClosureCheckModule.MODULE_USES_GOOG_MODULE_GET;
-import static com.google.javascript.jscomp.ClosureRewriteModule.INVALID_GET_CALL_SCOPE;
-import static com.google.javascript.jscomp.ClosureRewriteModule.INVALID_GET_NAMESPACE;
-import static com.google.javascript.jscomp.ClosureRewriteModule.INVALID_REQUIRE_NAMESPACE;
-import static com.google.javascript.jscomp.ClosureRewriteModule.MISSING_MODULE_OR_PROVIDE;
-import static com.google.javascript.jscomp.ProcessClosurePrimitives.INVALID_CLOSURE_CALL_ERROR;
+import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_CLOSURE_CALL_ERROR;
+import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_DESTRUCTURING_FORWARD_DECLARE;
+import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_FORWARD_DECLARE_NAMESPACE;
+import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_GET_CALL_SCOPE;
+import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_GET_NAMESPACE;
+import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_REQUIRE_NAMESPACE;
+import static com.google.javascript.jscomp.ClosurePrimitiveErrors.MISSING_MODULE_OR_PROVIDE;
+import static com.google.javascript.jscomp.ClosurePrimitiveErrors.MODULE_USES_GOOG_MODULE_GET;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature.MODULES;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
+import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
+import com.google.common.collect.Table;
 import com.google.javascript.jscomp.ModuleMetadata.Module;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.deps.ModuleLoader;
@@ -72,6 +76,11 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
 
   static final DiagnosticType DUPLICATE_EXPORT =
       DiagnosticType.error("JSC_DUPLICATE_EXPORT", "Duplicate export ''{0}''.");
+
+  static final DiagnosticType FORWARD_DECLARE_IN_ES6_SHOULD_BE_CONST =
+      DiagnosticType.error(
+          "JSC_FORWARD_DECLARE_IN_ES6_SHOULD_BE_CONST",
+          "Aliases of goog.forwardDeclare() in an ES6 module should be const.");
 
   private final AbstractCompiler compiler;
 
@@ -174,13 +183,7 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
     if (isEs6ModuleRoot(scriptNode)) {
       processFile(scriptNode);
     } else {
-      RewriteRequiresForEs6Modules rewriter = new RewriteRequiresForEs6Modules();
-
-      NodeTraversal.traverse(compiler, scriptNode, rewriter);
-
-      if (rewriter.transpiled) {
-        scriptNode.putBooleanProp(Node.TRANSPILED, true);
-      }
+      new RewriteRequiresForEs6Modules().rewrite(scriptNode);
     }
   }
 
@@ -203,20 +206,46 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
   }
 
   /**
-   * Checks for goog.require + goog.module.get calls in non-ES6 modules that are meant to import ES6
-   * modules and rewrites them.
+   * Checks for goog.require + goog.module.get + goog.forwardDeclare calls in non-ES6 modules that
+   * are meant to import ES6 modules and rewrites them.
    */
   private class RewriteRequiresForEs6Modules extends AbstractPostOrderCallback {
-    boolean transpiled = false;
+    private boolean transpiled = false;
+    private Table<Node, String, String> forwardDeclareRenameTable;
+
+    void rewrite(Node scriptNode) {
+      transpiled = false;
+      forwardDeclareRenameTable = HashBasedTable.create();
+      NodeTraversal.traverse(compiler, scriptNode, this);
+
+      if (transpiled) {
+        scriptNode.putBooleanProp(Node.TRANSPILED, true);
+      }
+
+      if (!forwardDeclareRenameTable.isEmpty()) {
+        NodeTraversal.traverse(
+            compiler,
+            scriptNode,
+            new Es6RenameReferences(forwardDeclareRenameTable, /* typesOnly= */ true));
+      }
+    }
 
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       if (n.isCall()) {
         boolean isRequire = n.getFirstChild().matchesQualifiedName("goog.require");
         boolean isGet = n.getFirstChild().matchesQualifiedName("goog.module.get");
-        if (isRequire || isGet) {
+        boolean isForwardDeclare = n.getFirstChild().matchesQualifiedName("goog.forwardDeclare");
+
+        if (isRequire || isGet || isForwardDeclare) {
           if (!n.hasTwoChildren() || !n.getLastChild().isString()) {
-            t.report(n, isRequire ? INVALID_REQUIRE_NAMESPACE : INVALID_GET_NAMESPACE);
+            if (isRequire) {
+              t.report(n, INVALID_REQUIRE_NAMESPACE);
+            } else if (isGet) {
+              t.report(n, INVALID_GET_NAMESPACE);
+            } else {
+              t.report(n, INVALID_FORWARD_DECLARE_NAMESPACE);
+            }
             return;
           }
 
@@ -236,6 +265,10 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
           boolean importHasAlias = NodeUtil.isNameDeclaration(statementNode);
           if (importHasAlias) {
             if (statementNode.getFirstChild().isDestructuringLhs()) {
+              if (isForwardDeclare) {
+                t.report(n, INVALID_DESTRUCTURING_FORWARD_DECLARE);
+                return;
+              }
               // Work around a bug in the type checker where destructing can create
               // too many layers of aliases and confuse the type checker. b/112061124.
 
@@ -256,12 +289,28 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
               statementNode.detach();
               t.reportCodeChange();
             } else {
-              //   const module = goog.require('an.es6.namespace');
-              //   const module = module$es6;
-              n.replaceWith(IR.name(data.getGlobalName(name)).useSourceInfoFromForTree(n));
-              t.reportCodeChange();
+              if (isForwardDeclare) {
+                if (statementNode.isConst()) {
+                  forwardDeclareRenameTable.put(
+                      t.getScopeRoot(),
+                      statementNode.getFirstChild().getString(),
+                      data.getGlobalName(name));
+                  statementNode.detach();
+                  t.reportCodeChange();
+                } else {
+                  t.report(statementNode, FORWARD_DECLARE_IN_ES6_SHOULD_BE_CONST);
+                }
+              } else {
+                //   const module = goog.require('an.es6.namespace');
+                //   const module = module$es6;
+                n.replaceWith(IR.name(data.getGlobalName(name)).useSourceInfoFromForTree(n));
+                t.reportCodeChange();
+              }
             }
           } else {
+            if (isForwardDeclare) {
+              forwardDeclareRenameTable.put(t.getScopeRoot(), name, data.getGlobalName(name));
+            }
             if (parent.isExprResult()) {
               parent.detach();
             }
