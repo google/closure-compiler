@@ -36,7 +36,7 @@ public final class ProcessTweaksTest extends CompilerTestCase {
   }
 
   @Override
-  protected void setUp() throws Exception {
+  public void setUp() throws Exception {
     super.setUp();
     defaultValueOverrides = new HashMap<>();
     stripTweaks = false;

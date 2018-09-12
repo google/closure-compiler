@@ -26,7 +26,7 @@ public final class PolymerClassDefinitionTest extends CompilerTypeTestCase {
   private Node polymerCall;
 
   @Override
-  protected void setUp() throws Exception {
+  public void setUp() throws Exception {
     super.setUp();
     polymerCall = null;
   }

@@ -26,7 +26,7 @@ import java.util.function.Consumer;
 public final class ExternExportsPassTest extends CompilerTestCase {
 
   @Override
-  protected void setUp() throws Exception {
+  public void setUp() throws Exception {
     super.setUp();
     enableNormalize();
     enableTypeCheck();

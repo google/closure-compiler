@@ -42,7 +42,7 @@ public final class Es6RewriteModulesWithGoogInteropTest extends CompilerTestCase
           "goog.module('closure.legacy.module'); goog.module.declareLegacyNamespace();");
 
   @Override
-  protected void setUp() throws Exception {
+  public void setUp() throws Exception {
     super.setUp();
     // ECMASCRIPT5 to trigger module processing after parsing.
     setLanguage(LanguageMode.ECMASCRIPT_2015, LanguageMode.ECMASCRIPT5);

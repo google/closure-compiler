@@ -34,7 +34,7 @@ public final class MissingRequireTest extends CompilerTestCase {
   private CheckMissingAndExtraRequires.Mode mode;
 
   @Override
-  protected void setUp() throws Exception {
+  public void setUp() throws Exception {
     super.setUp();
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2017);
     mode = CheckMissingAndExtraRequires.Mode.FULL_COMPILE;

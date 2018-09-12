@@ -30,7 +30,7 @@ import com.google.javascript.rhino.Node;
 public final class MissingProvideTest extends CompilerTestCase {
 
   @Override
-  protected void setUp() throws Exception {
+  public void setUp() throws Exception {
     super.setUp();
     enableRewriteClosureCode();
     enableClosurePass();

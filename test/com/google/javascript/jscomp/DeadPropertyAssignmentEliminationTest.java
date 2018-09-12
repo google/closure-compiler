@@ -21,7 +21,7 @@ import static com.google.javascript.jscomp.DeadPropertyAssignmentElimination.ASS
 public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
 
   @Override
-  protected void setUp() throws Exception {
+  public void setUp() throws Exception {
     super.setUp();
     enableGatherExternProperties();
   }

@@ -33,7 +33,7 @@ public final class ReferenceCollectingCallbackTest extends CompilerTestCase {
   private boolean es6ScopeCreator;
 
   @Override
-  protected void setUp() throws Exception {
+  public void setUp() throws Exception {
     super.setUp();
     setLanguage(ECMASCRIPT_NEXT, ECMASCRIPT_NEXT);
     behavior = null;

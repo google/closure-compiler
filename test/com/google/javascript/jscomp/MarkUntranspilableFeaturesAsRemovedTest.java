@@ -26,7 +26,7 @@ public class MarkUntranspilableFeaturesAsRemovedTest extends CompilerTestCase {
   private LanguageMode languageOut;
 
   @Override
-  protected void setUp() throws Exception {
+  public void setUp() throws Exception {
     super.setUp();
     languageIn = LanguageMode.ECMASCRIPT_NEXT;
     languageOut = LanguageMode.ECMASCRIPT3;

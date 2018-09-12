@@ -26,7 +26,8 @@ public final class UnreachableCodeEliminationTest extends CompilerTestCase {
     return new UnreachableCodeElimination(compiler);
   }
 
-  @Override protected void setUp() throws Exception {
+  @Override
+  public void setUp() throws Exception {
     super.setUp();
     enableComputeSideEffects();
   }

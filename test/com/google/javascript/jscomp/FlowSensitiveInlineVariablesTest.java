@@ -33,7 +33,7 @@ public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase  {
           "                      function hasSFX() {}");
 
   @Override
-  protected void setUp() throws Exception {
+  public void setUp() throws Exception {
     super.setUp();
     enableNormalize();
   }

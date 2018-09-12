@@ -20,7 +20,7 @@ import static com.google.javascript.jscomp.CheckConstPrivateProperties.MISSING_C
 public final class CheckConstPrivatePropertiesTest extends CompilerTestCase {
 
   @Override
-  protected void setUp() throws Exception {
+  public void setUp() throws Exception {
     super.setUp();
     // TODO(tbreisacher): After the typechecker is updated to understand ES6, add non-transpiling
     // versions of these tests.

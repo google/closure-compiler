@@ -23,7 +23,7 @@ package com.google.javascript.jscomp;
 public final class ConvertToDottedPropertiesTest extends CompilerTestCase {
 
   @Override
-  protected void setUp() throws Exception {
+  public void setUp() throws Exception {
     super.setUp();
   }
 

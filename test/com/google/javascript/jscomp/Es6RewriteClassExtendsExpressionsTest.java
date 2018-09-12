@@ -26,7 +26,7 @@ public final class Es6RewriteClassExtendsExpressionsTest extends CompilerTestCas
   }
 
   @Override
-  protected void setUp() throws Exception {
+  public void setUp() throws Exception {
     super.setUp();
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_NEXT);
     setLanguageOut(LanguageMode.ECMASCRIPT3);

@@ -23,7 +23,7 @@ import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 /** Tests for {@link CheckMissingAndExtraRequires} in single-file mode. */
 public final class SingleFileCheckRequiresTest extends CompilerTestCase {
   @Override
-  protected void setUp() throws Exception {
+  public void setUp() throws Exception {
     super.setUp();
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2017);
   }

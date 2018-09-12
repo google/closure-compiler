@@ -51,7 +51,7 @@ public final class CheckJSDocStyleTest extends CompilerTestCase {
   private CodingConvention codingConvention;
 
   @Override
-  protected void setUp() throws Exception {
+  public void setUp() throws Exception {
     super.setUp();
     codingConvention = new GoogleCodingConvention();
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_NEXT);

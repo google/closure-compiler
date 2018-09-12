@@ -578,7 +578,7 @@ public abstract class CompilerTestCase extends TestCase {
   // Overridden here so that we can easily find all classes that override.
   @Override
   @Before
-  protected void setUp() throws Exception {
+  public void setUp() throws Exception {
     super.setUp();
 
     // TODO(sdh): Initialize *all* the options here, but first we must ensure no subclass

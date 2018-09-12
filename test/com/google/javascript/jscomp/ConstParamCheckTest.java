@@ -30,7 +30,7 @@ public final class ConstParamCheckTest extends CompilerTestCase {
       + "goog.string.Const.from = function(x) {};";
 
   @Override
-  protected void setUp() throws Exception {
+  public void setUp() throws Exception {
     super.setUp();
     enableInferConsts();
     enableNormalize();

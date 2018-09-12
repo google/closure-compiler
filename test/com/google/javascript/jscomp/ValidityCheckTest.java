@@ -29,7 +29,8 @@ public final class ValidityCheckTest extends CompilerTestCase {
 
   private CompilerPass otherPass = null;
 
-  @Override protected void setUp() throws Exception {
+  @Override
+  public void setUp() throws Exception {
     super.setUp();
     otherPass = null;
   }

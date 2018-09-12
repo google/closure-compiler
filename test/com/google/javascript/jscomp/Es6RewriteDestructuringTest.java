@@ -26,7 +26,7 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
       ObjectDestructuringRewriteMode.REWRITE_ALL_OBJECT_PATTERNS;
 
   @Override
-  protected void setUp() throws Exception {
+  public void setUp() throws Exception {
     super.setUp();
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2018);
     disableTypeCheck();

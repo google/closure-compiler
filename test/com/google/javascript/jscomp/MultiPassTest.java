@@ -36,7 +36,7 @@ public final class MultiPassTest extends CompilerTestCase {
   private List<PassFactory> passes;
 
   @Override
-  protected void setUp() throws Exception {
+  public void setUp() throws Exception {
     super.setUp();
     setAcceptedLanguage(LanguageMode.ECMASCRIPT5);
     enableNormalize();

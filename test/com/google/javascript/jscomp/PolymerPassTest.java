@@ -129,7 +129,7 @@ public class PolymerPassTest extends CompilerTestCase {
   }
 
   @Override
-  protected void setUp() throws Exception {
+  public void setUp() throws Exception {
     super.setUp();
     enableTypeCheck();
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2017);

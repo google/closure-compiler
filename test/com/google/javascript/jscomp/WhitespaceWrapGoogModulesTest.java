@@ -22,7 +22,7 @@ public class WhitespaceWrapGoogModulesTest extends CompilerTestCase {
   private LanguageMode languageOut;
 
   @Override
-  protected void setUp() throws Exception {
+  public void setUp() throws Exception {
     super.setUp();
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     languageOut = LanguageMode.ECMASCRIPT_2015;

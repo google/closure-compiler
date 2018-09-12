@@ -33,7 +33,7 @@ public final class OptimizeParametersTest extends CompilerTestCase {
   }
 
   @Override
-  protected void setUp() throws Exception {
+  public void setUp() throws Exception {
     super.setUp();
     enableNormalize();
     enableGatherExternProperties();

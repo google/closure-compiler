@@ -42,7 +42,7 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
   private int numRepetitions;
 
   @Override
-  protected void setUp() throws Exception {
+  public void setUp() throws Exception {
     super.setUp();
     disableTypeCheck();
     late = false;

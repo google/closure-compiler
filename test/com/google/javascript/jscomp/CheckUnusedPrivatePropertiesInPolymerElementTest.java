@@ -35,7 +35,7 @@ public final class CheckUnusedPrivatePropertiesInPolymerElementTest extends Comp
   }
 
   @Override
-  protected void setUp() throws Exception {
+  public void setUp() throws Exception {
     super.setUp();
     enableTypeCheck();
     enableGatherExternProperties();

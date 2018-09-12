@@ -28,7 +28,7 @@ public final class CreateSyntheticBlocksTest extends CompilerTestCase {
   private static final String END_MARKER = "endMarker";
 
   @Override
-  protected void setUp() throws Exception {
+  public void setUp() throws Exception {
     super.setUp();
     // Can't use compare as a tree because of the added synthetic blocks.
     disableCompareAsTree();

@@ -38,7 +38,7 @@ public final class ProcessDefinesTest extends CompilerTestCase {
   private boolean doReplacements;
 
   @Override
-  protected void setUp() throws Exception {
+  public void setUp() throws Exception {
     super.setUp();
     overrides.clear();
     doReplacements = true;

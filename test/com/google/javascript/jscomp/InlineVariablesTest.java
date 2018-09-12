@@ -32,7 +32,7 @@ public final class InlineVariablesTest extends CompilerTestCase {
   private boolean inlineLocalsOnly = false;
 
   @Override
-  protected void setUp() throws Exception {
+  public void setUp() throws Exception {
     super.setUp();
     enableNormalize();
     setAcceptedLanguage(ECMASCRIPT_NEXT);

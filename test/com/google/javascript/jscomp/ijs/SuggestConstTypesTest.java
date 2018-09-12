@@ -27,7 +27,7 @@ import com.google.javascript.jscomp.CompilerTestCase;
  */
 public final class SuggestConstTypesTest extends CompilerTestCase {
   @Override
-  protected void setUp() throws Exception {
+  public void setUp() throws Exception {
     super.setUp();
     allowExternsChanges();
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2017);

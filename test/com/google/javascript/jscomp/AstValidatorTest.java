@@ -62,7 +62,7 @@ public final class AstValidatorTest extends CompilerTestCase {
   }
 
   @Override
-  protected void setUp() throws Exception {
+  public void setUp() throws Exception {
     super.setUp();
     disableAstValidation();
     disableNormalize();

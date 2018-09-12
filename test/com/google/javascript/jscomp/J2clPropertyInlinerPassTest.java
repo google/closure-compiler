@@ -22,7 +22,7 @@ import java.util.List;
 public class J2clPropertyInlinerPassTest extends CompilerTestCase {
 
   @Override
-  protected void setUp() throws Exception {
+  public void setUp() throws Exception {
     super.setUp();
     enableNormalize(); // Inlining will fail if normalization hasn't happened yet.
   }

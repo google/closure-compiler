@@ -24,7 +24,7 @@ import com.google.javascript.jscomp.CompilerTestCase;
 /** Unit tests for {@link ConvertToTypedInterface}. */
 public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
   @Override
-  protected void setUp() throws Exception {
+  public void setUp() throws Exception {
     super.setUp();
     allowExternsChanges();
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2017);
