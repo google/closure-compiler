@@ -161,11 +161,6 @@ public class EnumElementType extends ObjectType {
   }
 
   @Override
-  public boolean hasReferenceName() {
-    return true;
-  }
-
-  @Override
   public boolean isSubtype(JSType that) {
     return isSubtype(that, ImplCache.create(), SubtypingMode.NORMAL);
   }
