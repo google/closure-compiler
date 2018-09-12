@@ -16,15 +16,14 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
-import java.util.PriorityQueue;
 import java.util.Set;
+import java.util.TreeSet;
 
 /**
  * A customizable error manager that sorts all errors and warnings reported to it, and has
@@ -32,9 +31,7 @@ import java.util.Set;
  */
 public class SortingErrorManager implements ErrorManager {
 
-  final PriorityQueue<ErrorWithLevel> messages =
-      new PriorityQueue<>(1, new LeveledJSErrorComparator());
-  private final Set<ErrorWithLevel> alreadyAdded = new HashSet<>();
+  private final TreeSet<ErrorWithLevel> messages = new TreeSet<>(new LeveledJSErrorComparator());
   private int originalErrorCount = 0;
   private int promotedErrorCount = 0;
   private int warningCount = 0;
@@ -50,8 +47,7 @@ public class SortingErrorManager implements ErrorManager {
   @Override
   public void report(CheckLevel level, JSError error) {
     ErrorWithLevel e = new ErrorWithLevel(error, level);
-    if (alreadyAdded.add(e)) {
-      messages.add(e);
+    if (messages.add(e)) {
       if (level == CheckLevel.ERROR) {
         if (error.getType().level == CheckLevel.ERROR) {
           originalErrorCount++;
@@ -90,7 +86,9 @@ public class SortingErrorManager implements ErrorManager {
   }
 
   Iterable<ErrorWithLevel> getSortedDiagnostics() {
-    return Collections.unmodifiableCollection(messages);
+    // TODO(b/114762232): It should be possible to remove the copying here and switch to an
+    // unmodifiable collection once we get rid of usages that add warnings during generateReport.
+    return ImmutableList.copyOf(messages);
   }
 
   @Override
@@ -113,6 +111,8 @@ public class SortingErrorManager implements ErrorManager {
     return errors.toArray(new JSError[0]);
   }
 
+  // TODO(b/114762232): It should be invalid to report errors during the execution of this method;
+  // doing so will become impossible once all subclases have migrated to an ErrorReportGenerator.
   @Override
   public void generateReport() {
     for (ErrorReportGenerator generator : this.errorReportGenerators) {
