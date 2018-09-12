@@ -1327,13 +1327,12 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     }
 
     if (key.isQuotedString()) {
-      // We must have an object literal, because
-      // class { 'foo'() {} }
-      // is stored in the AST as a computed property
-      // class { ['foo']() {} }
-      checkState(owner.isObjectLit(), owner);
+      // NB: this case will never be triggered for member functions, since we store quoted
+      // member functions as computed properties. This case does apply to regular string key
+      // properties, getters, and setters.
+      // See also https://github.com/google/closure-compiler/issues/3071
       if (ownerType.isStruct()) {
-        report(t, key, ILLEGAL_OBJLIT_KEY, "struct");
+        report(t, key, owner.isClass() ? ILLEGAL_CLASS_KEY : ILLEGAL_OBJLIT_KEY, "struct");
       }
     } else {
       // we have either a non-quoted string or a member function def

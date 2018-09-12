@@ -1679,6 +1679,16 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
         "Cannot do '[]' access on a struct");
   }
 
+  public void testQuotedGetterPropNotAllowedOnStructClass() {
+    testTypes(
+        lines(
+            "class C {", // @struct is the default
+            "  foo() {}",
+            "  get 'f'() {}",
+            "}"),
+        "Illegal key, the class is a struct");
+  }
+
   public void testTemplateLiteral1() {
     testTypes(
         lines(
