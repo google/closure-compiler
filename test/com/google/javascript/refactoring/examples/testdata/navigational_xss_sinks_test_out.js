@@ -144,7 +144,7 @@ refactoring_testcase.unknown_location = function(target, val) {
 };
 
 /**
- * @param {Object} target The target.
+ * @param {!Object} target The target.
  * @param {string} val The value.
  */
 refactoring_testcase.object_location = function(target, val) {

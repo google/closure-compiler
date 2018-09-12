@@ -100,7 +100,7 @@ public class ErrorToFixMapperTest {
         options);
     assertThat(compiler.getErrors()).isEmpty();
     JSError[] warnings = compiler.getWarnings();
-    assertThat(warnings).hasLength(1);
+    assertThat(warnings).hasLength(2);
     JSError warning = warnings[0];
     List<SuggestedFix> fixes = ErrorToFixMapper.getFixesForJsError(warning, compiler);
     assertThat(fixes).hasSize(2);
@@ -125,7 +125,7 @@ public class ErrorToFixMapperTest {
         options);
     assertThat(compiler.getErrors()).isEmpty();
     JSError[] warnings = compiler.getWarnings();
-    assertThat(warnings).hasLength(1);
+    assertThat(warnings).hasLength(2);
     JSError warning = warnings[0];
     List<SuggestedFix> fixes = ErrorToFixMapper.getFixesForJsError(warning, compiler);
     assertThat(fixes).hasSize(2);
@@ -155,7 +155,7 @@ public class ErrorToFixMapperTest {
         options);
     assertThat(compiler.getErrors()).isEmpty();
     JSError[] warnings = compiler.getWarnings();
-    assertThat(warnings).hasLength(1);
+    assertThat(warnings).hasLength(2);
     JSError warning = warnings[0];
     List<SuggestedFix> fixes = ErrorToFixMapper.getFixesForJsError(warning, compiler);
     assertThat(fixes).hasSize(2);
