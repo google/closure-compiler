@@ -22,11 +22,15 @@ import com.google.javascript.jscomp.graph.DiGraph;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphEdge;
 import com.google.javascript.jscomp.graph.LinkedDirectedGraph;
 import junit.framework.TestCase;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /**
  * Tests for {@link CheckPathsBetweenNodes}.
  *
  */
+@RunWith(JUnit4.class)
 public final class CheckPathsBetweenNodesTest extends TestCase {
 
   /**
@@ -54,6 +58,7 @@ public final class CheckPathsBetweenNodesTest extends TestCase {
     Predicates.alwaysFalse();
 
   /** Tests straight-line graphs. */
+  @Test
   public void testSimple() {
     DiGraph<String, String> g = LinkedDirectedGraph.create();
     g.createDirectedGraphNode("a");
@@ -80,10 +85,8 @@ public final class CheckPathsBetweenNodesTest extends TestCase {
     assertBad(createTest(g, "a", "d", Predicates.equalTo("b"), edgeIs("x")));
   }
 
-  /**
-   * Tests a graph where some paths between the nodes are valid and others
-   * are invalid.
-   */
+  /** Tests a graph where some paths between the nodes are valid and others are invalid. */
+  @Test
   public void testSomeValidPaths() {
     DiGraph<String, String> g = LinkedDirectedGraph.create();
     g.createDirectedGraphNode("a");
@@ -103,6 +106,7 @@ public final class CheckPathsBetweenNodesTest extends TestCase {
   }
 
   /** Tests a graph with many valid paths. */
+  @Test
   public void testManyValidPaths() {
     DiGraph<String, String> g = LinkedDirectedGraph.create();
     g.createDirectedGraphNode("a");
@@ -124,6 +128,7 @@ public final class CheckPathsBetweenNodesTest extends TestCase {
   }
 
   /** Tests a graph with some cycles. */
+  @Test
   public void testCycles1() {
     DiGraph<String, String> g = LinkedDirectedGraph.create();
     g.createDirectedGraphNode("a");
@@ -148,10 +153,10 @@ public final class CheckPathsBetweenNodesTest extends TestCase {
   }
 
   /**
-   * Tests another graph with cycles. The topology of this graph was inspired
-   * by a control flow graph that was being incorrectly analyzed by an early
-   * version of CheckPathsBetweenNodes.
+   * Tests another graph with cycles. The topology of this graph was inspired by a control flow
+   * graph that was being incorrectly analyzed by an early version of CheckPathsBetweenNodes.
    */
+  @Test
   public void testCycles2() {
     DiGraph<String, String> g = LinkedDirectedGraph.create();
     g.createDirectedGraphNode("a");
@@ -169,10 +174,10 @@ public final class CheckPathsBetweenNodesTest extends TestCase {
   }
 
   /**
-   * Tests another graph with cycles. The topology of this graph was inspired
-   * by a control flow graph that was being incorrectly analyzed by an early
-   * version of CheckPathsBetweenNodes.
+   * Tests another graph with cycles. The topology of this graph was inspired by a control flow
+   * graph that was being incorrectly analyzed by an early version of CheckPathsBetweenNodes.
    */
+  @Test
   public void testCycles3() {
     DiGraph<String, String> g = LinkedDirectedGraph.create();
     g.createDirectedGraphNode("a");
@@ -190,11 +195,11 @@ public final class CheckPathsBetweenNodesTest extends TestCase {
     assertBad(createTest(g, "a", "d", Predicates.equalTo("z"), ALL_EDGE));
   }
 
-
   /**
-   * Much of the tests are done by testing all paths. We quickly verified
-   * that some paths are indeed correct for the some path case.
+   * Much of the tests are done by testing all paths. We quickly verified that some paths are indeed
+   * correct for the some path case.
    */
+  @Test
   public void testSomePath1() {
     DiGraph<String, String> g = LinkedDirectedGraph.create();
     g.createDirectedGraphNode("a");
@@ -219,6 +224,7 @@ public final class CheckPathsBetweenNodesTest extends TestCase {
         .somePathsSatisfyPredicate());
   }
 
+  @Test
   public void testSomePath2() {
     // No Paths between nodes, by definition, always false.
     DiGraph<String, String> g = LinkedDirectedGraph.create();
@@ -233,6 +239,7 @@ public final class CheckPathsBetweenNodesTest extends TestCase {
         .somePathsSatisfyPredicate());
   }
 
+  @Test
   public void testSomePathRevisiting() {
     DiGraph<String, String> g = LinkedDirectedGraph.create();
     g.createDirectedGraphNode("1");
@@ -261,6 +268,7 @@ public final class CheckPathsBetweenNodesTest extends TestCase {
     assertEquals(4, p.count);
   }
 
+  @Test
   public void testNonInclusive() {
     // No Paths between nodes, by definition, always false.
     DiGraph<String, String> g = LinkedDirectedGraph.create();

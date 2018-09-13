@@ -17,10 +17,12 @@
 package com.google.javascript.jscomp;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
-/**
- * @author johnlenz@google.com (John Lenz)
- */
+/** @author johnlenz@google.com (John Lenz) */
+@RunWith(JUnit4.class)
 public final class CheckRegExpTest extends CompilerTestCase {
   CheckRegExp last = null;
 
@@ -50,6 +52,7 @@ public final class CheckRegExpTest extends CompilerTestCase {
     assertEquals(expected, last.isGlobalRegExpPropertiesUsed());
   }
 
+  @Test
   public void testRegExp() {
     // Creating RegExp's is OK.
     testReference("RegExp();", false);
@@ -118,6 +121,7 @@ public final class CheckRegExpTest extends CompilerTestCase {
         "}"), false);
   }
 
+  @Test
   public void testInvalidRange() {
     this.testWarning("\"asdf\".match(/[z-a]/)", CheckRegExp.MALFORMED_REGEXP);
   }
