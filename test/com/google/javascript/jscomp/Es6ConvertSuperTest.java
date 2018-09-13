@@ -27,7 +27,10 @@ import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
-
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 /**
  * Test cases for a transpilation pass that rewrites most usages of `super` syntax.
  *
@@ -40,6 +43,7 @@ import com.google.javascript.rhino.jstype.ObjectType;
  *   <li>stripping `super()` calls from constructors of externs classes and interfaces (i.e stubs)
  * </ul>
  */
+@RunWith(JUnit4.class)
 public final class Es6ConvertSuperTest extends CompilerTestCase {
 
   public Es6ConvertSuperTest() {
@@ -57,6 +61,7 @@ public final class Es6ConvertSuperTest extends CompilerTestCase {
   }
 
   @Override
+  @Before
   public void setUp() throws Exception {
     super.setUp();
 
@@ -79,6 +84,7 @@ public final class Es6ConvertSuperTest extends CompilerTestCase {
 
   // Instance `super` resolution
 
+  @Test
   public void testCallingSuperInstanceProperty() {
     test(
         externs(
@@ -173,6 +179,7 @@ public final class Es6ConvertSuperTest extends CompilerTestCase {
     assertType(thisNode.getJSType()).isEqualTo(classBInstanceType);
   }
 
+  @Test
   public void testCallingSuperInstanceElement() {
     test(
         externs(
@@ -271,6 +278,7 @@ public final class Es6ConvertSuperTest extends CompilerTestCase {
     assertType(thisNode.getJSType()).isEqualTo(classBInstanceType);
   }
 
+  @Test
   public void testAccessingSuperInstanceProperty() {
     test(
         externs(
@@ -333,6 +341,7 @@ public final class Es6ConvertSuperTest extends CompilerTestCase {
     assertType(superReplacement.getJSType()).isEqualTo(classAPrototypeType);
   }
 
+  @Test
   public void testAccessingSuperInstanceElement() {
     test(
         externs(
@@ -401,6 +410,7 @@ public final class Es6ConvertSuperTest extends CompilerTestCase {
     assertType(superReplacement.getJSType()).isEqualTo(classAPrototypeType);
   }
 
+  @Test
   public void testCannotAssignToSuperInstanceProperty() {
     testError(
         lines(
@@ -419,6 +429,7 @@ public final class Es6ConvertSuperTest extends CompilerTestCase {
         CANNOT_CONVERT_YET);
   }
 
+  @Test
   public void testCannotAssignToSuperInstanceElement() {
     testError(
         lines(
@@ -440,6 +451,7 @@ public final class Es6ConvertSuperTest extends CompilerTestCase {
 
   // Static `super` resolution
 
+  @Test
   public void testCallingSuperStaticProperty() {
     test(
         externs(
@@ -533,6 +545,7 @@ public final class Es6ConvertSuperTest extends CompilerTestCase {
     assertType(thisNode.getJSType()).isEqualTo(classBType);
   }
 
+  @Test
   public void testCallingSuperStaticElement() {
     test(
         externs(
@@ -631,6 +644,7 @@ public final class Es6ConvertSuperTest extends CompilerTestCase {
     assertType(thisNode.getJSType()).isEqualTo(classBType);
   }
 
+  @Test
   public void testAccessingSuperStaticProperty() {
     test(
         externs(
@@ -692,6 +706,7 @@ public final class Es6ConvertSuperTest extends CompilerTestCase {
     assertType(superReplacement.getJSType()).isEqualTo(classAType);
   }
 
+  @Test
   public void testAccessingSuperStaticElement() {
     test(
         externs(
@@ -761,6 +776,7 @@ public final class Es6ConvertSuperTest extends CompilerTestCase {
 
   // Getters and setters
 
+  @Test
   public void testResolvingSuperInGetter() {
     test(
         externs(
@@ -855,6 +871,7 @@ public final class Es6ConvertSuperTest extends CompilerTestCase {
     assertType(thisNode.getJSType()).isEqualTo(classBInstanceType);
   }
 
+  @Test
   public void testResolvingSuperInSetter() {
     test(
         externs(
@@ -953,6 +970,7 @@ public final class Es6ConvertSuperTest extends CompilerTestCase {
 
   // Constructor synthesis
 
+  @Test
   public void testSynthesizingConstructorOfBaseClassInSource() {
     test(
         externs(""),
@@ -1009,6 +1027,7 @@ public final class Es6ConvertSuperTest extends CompilerTestCase {
     assertType(constructorFunctionForA.getJSType()).isEqualTo(classAConstructorType);
   }
 
+  @Test
   public void testSynthesizingConstructorOfDerivedClassInSource() {
     test(
         externs(new TestExternsBuilder().addArguments().build()),
@@ -1104,6 +1123,7 @@ public final class Es6ConvertSuperTest extends CompilerTestCase {
     assertType(argumentsNode.getJSType()).isEqualTo(argumentsType);
   }
 
+  @Test
   public void testSynthesizingConstructorOfBaseClassInExtern() {
     testExternChanges(
         "class A { }",
@@ -1114,6 +1134,7 @@ public final class Es6ConvertSuperTest extends CompilerTestCase {
     // and looking up type information in the registry to work.
   }
 
+  @Test
   public void testSynthesizingConstructorOfDerivedClassInExtern() {
     testExternChanges(
         lines(
@@ -1137,6 +1158,7 @@ public final class Es6ConvertSuperTest extends CompilerTestCase {
     // and looking up type information in the registry to work.
   }
 
+  @Test
   public void testStrippingSuperCallFromConstructorOfDerivedClassInExtern() {
     testExternChanges(
         lines(
@@ -1165,6 +1187,7 @@ public final class Es6ConvertSuperTest extends CompilerTestCase {
     // and looking up type information in the registry to work.
   }
 
+  @Test
   public void testSynthesizingConstructorOfBaseInterface() {
     test(
         externs(""),
@@ -1207,6 +1230,7 @@ public final class Es6ConvertSuperTest extends CompilerTestCase {
     assertType(constructorFunctionForA.getJSType()).isEqualTo(classAConstructorType);
   }
 
+  @Test
   public void testSynthesizingConstructorOfDerivedInterface() {
     test(
         externs(
@@ -1225,6 +1249,7 @@ public final class Es6ConvertSuperTest extends CompilerTestCase {
                 "}")));
   }
 
+  @Test
   public void testStrippingSuperCallFromConstructorOfDerivedInterface() {
     test(
         externs(

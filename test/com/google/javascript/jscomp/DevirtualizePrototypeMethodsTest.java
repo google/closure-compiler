@@ -22,11 +22,16 @@ import com.google.common.base.Joiner;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /**
  * Tests for {@link DevirtualizePrototypeMethods}
  *
  */
+@RunWith(JUnit4.class)
 public final class DevirtualizePrototypeMethodsTest extends CompilerTestCase {
   private static final String EXTERNAL_SYMBOLS =
       DEFAULT_EXTERNS + "var extern;extern.externalMethod";
@@ -42,6 +47,7 @@ public final class DevirtualizePrototypeMethodsTest extends CompilerTestCase {
   }
 
   @Override
+  @Before
   public void setUp() throws Exception {
     super.setUp();
     disableTypeCheck();
@@ -54,7 +60,8 @@ public final class DevirtualizePrototypeMethodsTest extends CompilerTestCase {
     return Joiner.on(";").join(parts);
   }
 
-  public void testRewritePrototypeMethodsWithCorrectTypes() throws Exception {
+  @Test
+  public void testRewritePrototypeMethodsWithCorrectTypes() {
     String input =
         lines(
             "/** @constructor */",
@@ -143,8 +150,8 @@ public final class DevirtualizePrototypeMethodsTest extends CompilerTestCase {
     return node.getJSType();
   }
 
-
-  public void testRewriteChained() throws Exception {
+  @Test
+  public void testRewriteChained() {
     String source =
         lines(
             "A.prototype.foo = function(){return this.b};",
@@ -174,7 +181,8 @@ public final class DevirtualizePrototypeMethodsTest extends CompilerTestCase {
     private NoRewriteDeclarationUsedAsRValue() {}
   }
 
-  public void testRewriteDeclIsExpressionStatement() throws Exception {
+  @Test
+  public void testRewriteDeclIsExpressionStatement() {
     test(semicolonJoin(NoRewriteDeclarationUsedAsRValue.DECL,
                        NoRewriteDeclarationUsedAsRValue.CALL),
          "var JSCompiler_StaticMethods_foo =" +
@@ -182,12 +190,14 @@ public final class DevirtualizePrototypeMethodsTest extends CompilerTestCase {
          "JSCompiler_StaticMethods_foo(o)");
   }
 
-  public void testNoRewriteDeclUsedAsAssignmentRhs() throws Exception {
+  @Test
+  public void testNoRewriteDeclUsedAsAssignmentRhs() {
     testSame(semicolonJoin("var c = " + NoRewriteDeclarationUsedAsRValue.DECL,
                            NoRewriteDeclarationUsedAsRValue.CALL));
   }
 
-  public void testNoRewriteDeclUsedAsCallArgument() throws Exception {
+  @Test
+  public void testNoRewriteDeclUsedAsCallArgument() {
     testSame(semicolonJoin("f(" + NoRewriteDeclarationUsedAsRValue.DECL + ")",
                            NoRewriteDeclarationUsedAsRValue.CALL));
   }
@@ -206,7 +216,8 @@ public final class DevirtualizePrototypeMethodsTest extends CompilerTestCase {
     private NoRewriteIfNotInGlobalScopeTestInput() {}
   }
 
-  public void testRewriteInGlobalScope() throws Exception {
+  @Test
+  public void testRewriteInGlobalScope() {
     String expected =
         lines(
             "function a(){}",
@@ -220,23 +231,27 @@ public final class DevirtualizePrototypeMethodsTest extends CompilerTestCase {
     test(NoRewriteIfNotInGlobalScopeTestInput.INPUT, expected);
   }
 
-  public void testNoRewriteIfNotInGlobalScope1() throws Exception {
+  @Test
+  public void testNoRewriteIfNotInGlobalScope1() {
     setAcceptedLanguage(CompilerOptions.LanguageMode.ECMASCRIPT_2015);
     testSame("if(true){" + NoRewriteIfNotInGlobalScopeTestInput.INPUT + "}");
   }
 
-  public void testNoRewriteIfNotInGlobalScope2() throws Exception {
+  @Test
+  public void testNoRewriteIfNotInGlobalScope2() {
     testSame("function enclosingFunction() {" +
              NoRewriteIfNotInGlobalScopeTestInput.INPUT +
              "}");
   }
 
-  public void testNoRewriteNamespaceFunctions() throws Exception {
+  @Test
+  public void testNoRewriteNamespaceFunctions() {
     String source = "function a(){}; a.foo = function() {return this.x}; a.foo()";
     testSame(source);
   }
 
-  public void testRewriteIfDuplicates() throws Exception {
+  @Test
+  public void testRewriteIfDuplicates() {
     test(
         lines(
             "function A(){}; A.prototype.getFoo = function() { return 1; }; ",
@@ -253,7 +268,8 @@ public final class DevirtualizePrototypeMethodsTest extends CompilerTestCase {
             "alert(JSCompiler_StaticMethods_getFoo(x));"));
   }
 
-  public void testRewriteIfDuplicatesWithThis() throws Exception {
+  @Test
+  public void testRewriteIfDuplicatesWithThis() {
     test(
         lines(
             "function A(){}; A.prototype.getFoo = ",
@@ -274,7 +290,8 @@ public final class DevirtualizePrototypeMethodsTest extends CompilerTestCase {
             "alert(JSCompiler_StaticMethods_getFoo(x));"));
   }
 
-  public void testNoRewriteIfDuplicates() throws Exception {
+  @Test
+  public void testNoRewriteIfDuplicates() {
     testSame(
         lines(
             "function A(){}; A.prototype.getFoo = function() { return 1; }; ",
@@ -294,7 +311,8 @@ public final class DevirtualizePrototypeMethodsTest extends CompilerTestCase {
     private NoRewritePrototypeObjectLiteralsTestInput() {}
   }
 
-  public void testRewritePrototypeNoObjectLiterals() throws Exception {
+  @Test
+  public void testRewritePrototypeNoObjectLiterals() {
     test(
         semicolonJoin(
             NoRewritePrototypeObjectLiteralsTestInput.REGULAR,
@@ -305,7 +323,8 @@ public final class DevirtualizePrototypeMethodsTest extends CompilerTestCase {
             "JSCompiler_StaticMethods_foo(o)"));
   }
 
-  public void testRewritePrototypeObjectLiterals1() throws Exception {
+  @Test
+  public void testRewritePrototypeObjectLiterals1() {
     test(
         semicolonJoin(
             NoRewritePrototypeObjectLiteralsTestInput.OBJ_LIT,
@@ -317,26 +336,31 @@ public final class DevirtualizePrototypeMethodsTest extends CompilerTestCase {
             "JSCompiler_StaticMethods_foo(o)"));
   }
 
-  public void testNoRewritePrototypeObjectLiterals2() throws Exception {
+  @Test
+  public void testNoRewritePrototypeObjectLiterals2() {
     testSame(semicolonJoin(NoRewritePrototypeObjectLiteralsTestInput.OBJ_LIT,
                            NoRewritePrototypeObjectLiteralsTestInput.REGULAR,
                            NoRewritePrototypeObjectLiteralsTestInput.CALL));
   }
 
-  public void testNoRewriteExternalMethods1() throws Exception {
+  @Test
+  public void testNoRewriteExternalMethods1() {
     testSame("a.externalMethod()");
   }
 
-  public void testNoRewriteExternalMethods2() throws Exception {
+  @Test
+  public void testNoRewriteExternalMethods2() {
     testSame("A.prototype.externalMethod = function(){}; o.externalMethod()");
   }
 
-  public void testNoRewriteCodingConvention() throws Exception {
+  @Test
+  public void testNoRewriteCodingConvention() {
     // no rename, leading _ indicates exported symbol
     testSame("a.prototype._foo = function() {};");
   }
 
-  public void testRewriteNoVarArgs() throws Exception {
+  @Test
+  public void testRewriteNoVarArgs() {
     String source =
         lines(
             "function a(){}",
@@ -355,7 +379,8 @@ public final class DevirtualizePrototypeMethodsTest extends CompilerTestCase {
     test(source, expected);
   }
 
-  public void testNoRewriteVarArgs() throws Exception {
+  @Test
+  public void testNoRewriteVarArgs() {
     String source =
         lines(
             "function a(){}",
@@ -375,7 +400,8 @@ public final class DevirtualizePrototypeMethodsTest extends CompilerTestCase {
     private NoRewriteNonCallReferenceTestInput() {}
   }
 
-  public void testRewriteCallReference() throws Exception {
+  @Test
+  public void testRewriteCallReference() {
     String expected =
         lines(
             "function a(){}",
@@ -389,11 +415,13 @@ public final class DevirtualizePrototypeMethodsTest extends CompilerTestCase {
     test(NoRewriteNonCallReferenceTestInput.BASE + "o.foo()", expected);
   }
 
-  public void testNoRewriteNoReferences() throws Exception {
+  @Test
+  public void testNoRewriteNoReferences() {
     testSame(NoRewriteNonCallReferenceTestInput.BASE);
   }
 
-  public void testNoRewriteNonCallReference() throws Exception {
+  @Test
+  public void testNoRewriteNonCallReference() {
     testSame(NoRewriteNonCallReferenceTestInput.BASE + "o.foo && o.foo()");
   }
 
@@ -413,7 +441,8 @@ public final class DevirtualizePrototypeMethodsTest extends CompilerTestCase {
     private NoRewriteNestedFunctionTestInput() {}
   }
 
-  public void testRewriteNoNestedFunction() throws Exception {
+  @Test
+  public void testRewriteNoNestedFunction() {
     test(semicolonJoin(
              NoRewriteNestedFunctionTestInput.PREFIX + "}",
              NoRewriteNestedFunctionTestInput.SUFFIX,
@@ -426,7 +455,8 @@ public final class DevirtualizePrototypeMethodsTest extends CompilerTestCase {
              "JSCompiler_StaticMethods_bar(o)"));
   }
 
-  public void testNoRewriteNestedFunction() throws Exception {
+  @Test
+  public void testNoRewriteNestedFunction() {
     test(NoRewriteNestedFunctionTestInput.PREFIX +
          NoRewriteNestedFunctionTestInput.INNER + "};" +
          NoRewriteNestedFunctionTestInput.SUFFIX,
@@ -435,7 +465,8 @@ public final class DevirtualizePrototypeMethodsTest extends CompilerTestCase {
          NoRewriteNestedFunctionTestInput.EXPECTED_SUFFIX);
   }
 
-  public void testRewriteImplementedMethod() throws Exception {
+  @Test
+  public void testRewriteImplementedMethod() {
     String source =
         lines(
             "function a(){}",
@@ -452,7 +483,8 @@ public final class DevirtualizePrototypeMethodsTest extends CompilerTestCase {
     test(source, expected);
   }
 
-  public void testRewriteImplementedMethod2() throws Exception {
+  @Test
+  public void testRewriteImplementedMethod2() {
     String source =
         lines(
             "function a(){}",
@@ -462,7 +494,8 @@ public final class DevirtualizePrototypeMethodsTest extends CompilerTestCase {
     testSame(source);
   }
 
-  public void testRewriteImplementedMethod3() throws Exception {
+  @Test
+  public void testRewriteImplementedMethod3() {
     String source =
         lines(
             "function a(){}",
@@ -472,7 +505,8 @@ public final class DevirtualizePrototypeMethodsTest extends CompilerTestCase {
     testSame(source);
   }
 
-  public void testRewriteImplementedMethod4() throws Exception {
+  @Test
+  public void testRewriteImplementedMethod4() {
     String source =
         lines(
             "function a(){}",
@@ -482,12 +516,14 @@ public final class DevirtualizePrototypeMethodsTest extends CompilerTestCase {
     testSame(source);
   }
 
-  public void testRewriteImplementedMethod5() throws Exception {
+  @Test
+  public void testRewriteImplementedMethod5() {
     String source = "(function() {this.foo()}).prototype.foo = function() {extern();};";
     testSame(source);
   }
 
-  public void testRewriteImplementedMethodInObj() throws Exception {
+  @Test
+  public void testRewriteImplementedMethodInObj() {
     String source =
         lines(
             "function a(){}",
@@ -503,32 +539,38 @@ public final class DevirtualizePrototypeMethodsTest extends CompilerTestCase {
         "JSCompiler_StaticMethods_foo(o)");
   }
 
-  public void testNoRewriteGet1() throws Exception {
+  @Test
+  public void testNoRewriteGet1() {
     // Getters and setter require special handling.
     testSame("function a(){}; a.prototype = {get foo(){return f}}; var o = new a; o.foo()");
   }
 
-  public void testNoRewriteGet2() throws Exception {
+  @Test
+  public void testNoRewriteGet2() {
     // Getters and setter require special handling.
     testSame("function a(){}; a.prototype = {get foo(){return 1}}; var o = new a; o.foo");
   }
 
-  public void testNoRewriteSet1() throws Exception {
+  @Test
+  public void testNoRewriteSet1() {
     // Getters and setter require special handling.
     String source = "function a(){}; a.prototype = {set foo(a){}}; var o = new a; o.foo()";
     testSame(source);
   }
 
-  public void testNoRewriteSet2() throws Exception {
+  @Test
+  public void testNoRewriteSet2() {
     // Getters and setter require special handling.
     String source = "function a(){}; a.prototype = {set foo(a){}}; var o = new a; o.foo = 1";
     testSame(source);
   }
 
-  public void testNoRewriteNotImplementedMethod() throws Exception {
+  @Test
+  public void testNoRewriteNotImplementedMethod() {
     testSame("function a(){}; var o = new a; o.foo()");
   }
 
+  @Test
   public void testWrapper() {
     testSame("(function() {})()");
   }
@@ -546,7 +588,8 @@ public final class DevirtualizePrototypeMethodsTest extends CompilerTestCase {
     private ModuleTestInput() {}
   }
 
-  public void testRewriteSameModule1() throws Exception {
+  @Test
+  public void testRewriteSameModule1() {
     JSModule[] modules = createModuleStar(
         // m1
         semicolonJoin(ModuleTestInput.DEFINITION,
@@ -563,7 +606,8 @@ public final class DevirtualizePrototypeMethodsTest extends CompilerTestCase {
       });
   }
 
-  public void testRewriteSameModule2() throws Exception {
+  @Test
+  public void testRewriteSameModule2() {
     JSModule[] modules = createModuleStar(
         // m1
         "",
@@ -580,7 +624,8 @@ public final class DevirtualizePrototypeMethodsTest extends CompilerTestCase {
       });
   }
 
-  public void testRewriteSameModule3() throws Exception {
+  @Test
+  public void testRewriteSameModule3() {
     JSModule[] modules = createModuleStar(
         // m1
         semicolonJoin(ModuleTestInput.USE,
@@ -597,7 +642,8 @@ public final class DevirtualizePrototypeMethodsTest extends CompilerTestCase {
       });
   }
 
-  public void testRewriteDefinitionBeforeUse() throws Exception {
+  @Test
+  public void testRewriteDefinitionBeforeUse() {
     JSModule[] modules = createModuleStar(
         // m1
         ModuleTestInput.DEFINITION,
@@ -612,7 +658,8 @@ public final class DevirtualizePrototypeMethodsTest extends CompilerTestCase {
       });
   }
 
-  public void testNoRewriteUseBeforeDefinition() throws Exception {
+  @Test
+  public void testNoRewriteUseBeforeDefinition() {
     JSModule[] modules = createModuleStar(
         // m1
         ModuleTestInput.USE,

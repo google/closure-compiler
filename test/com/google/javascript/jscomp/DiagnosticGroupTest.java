@@ -17,14 +17,20 @@
 package com.google.javascript.jscomp;
 
 import junit.framework.TestCase;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /**
  * Tests for DiagnosticGroup.
+ *
  * @author nicksantos@google.com (Nick Santos)
  */
+@RunWith(JUnit4.class)
 public final class DiagnosticGroupTest extends TestCase {
 
-  public void testRegistration() throws Exception {
+  @Test
+  public void testRegistration() {
     DiagnosticGroups dg = new DiagnosticGroups();
     assertEquals(DiagnosticGroups.DEPRECATED,
         dg.forName("deprecated"));

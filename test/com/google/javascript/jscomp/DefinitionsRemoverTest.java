@@ -20,6 +20,9 @@ import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
 import java.util.List;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /**
  * Test for {@link DefinitionsRemover}. Basically test for the simple removal cases. More
@@ -27,8 +30,10 @@ import java.util.List;
  * PureFunctionIdentifierTest} and {@link RemoveUnusedCodeTest}.
  *
  */
+@RunWith(JUnit4.class)
 public final class DefinitionsRemoverTest extends CompilerTestCase {
 
+  @Test
   public void testRemoveFunction() {
     setAcceptedLanguage(CompilerOptions.LanguageMode.ECMASCRIPT_2015);
     testSame("{(function (){bar()})}");
@@ -37,6 +42,7 @@ public final class DefinitionsRemoverTest extends CompilerTestCase {
     test("foo(); function a(){} function b(){} bar()", "foo(); bar();");
   }
 
+  @Test
   public void testRemoveAssignment() {
     test("x = 0;", "0");
     test("{x = 0}", "{0}");
@@ -44,6 +50,7 @@ public final class DefinitionsRemoverTest extends CompilerTestCase {
     test("for (x = 0;x;x) {};", "for(0;x;x) {};");
   }
 
+  @Test
   public void testRemoveVarAssignment() {
     test("var x = 0;", "0");
     test("{var x = 0}", "{0}");
@@ -51,28 +58,33 @@ public final class DefinitionsRemoverTest extends CompilerTestCase {
     test("var x = 0; var y = 0;", "0;0");
   }
 
+  @Test
   public void testRemoveLiteral() {
     test("foo({ 'one' : 1 })", "foo({ })");
     test("foo({ 'one' : 1 , 'two' : 2 })", "foo({ })");
   }
 
+  @Test
   public void testRemoveFunctionExpressionName() {
     test("foo(function f(){})", "foo(function (){})");
     test("var c = function() {}", "(function() {})");
   }
 
+  @Test
   public void testRemoveClass() {
     test("class C {}", "");
     test("f(class C {})", "f(class {})");
     test("var c = class C {}", "(class{})");
   }
 
+  @Test
   public void testRemoveClassMemberFunctions() {
     test("f(class {func(){}})", "f(class{})");
     test("f(class {static func(){}})", "f(class{})");
     testSame("f(class {[Symbol.iterator](){}})");
   }
 
+  @Test
   public void testRemoveObjectMemberFunctions() {
     test("use({func(){}});", "use({});");
     test("use({x: 1, func(){}});", "use({});");

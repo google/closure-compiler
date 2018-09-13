@@ -19,11 +19,14 @@ package com.google.javascript.jscomp;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import junit.framework.TestCase;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
+@RunWith(JUnit4.class)
 public final class DotFormatterTest extends TestCase {
-  /**
-   * Tests that keys are assigned sequentially.
-   */
+  /** Tests that keys are assigned sequentially. */
+  @Test
   public void testKeyAssignementSequential() throws Exception {
     DotFormatter dot = DotFormatter.newInstanceForTesting();
     assertEquals(0, dot.key(new Node(Token.BLOCK)));
@@ -33,9 +36,8 @@ public final class DotFormatterTest extends TestCase {
     assertEquals(4, dot.key(new Node(Token.BLOCK)));
   }
 
-  /**
-   * Tests that keys are assigned once per node.
-   */
+  /** Tests that keys are assigned once per node. */
+  @Test
   public void testKeyAssignementOncePerNode() throws Exception {
     DotFormatter dot = DotFormatter.newInstanceForTesting();
     Node node0 = new Node(Token.BLOCK);
@@ -50,9 +52,8 @@ public final class DotFormatterTest extends TestCase {
     assertEquals(2, dot.key(node2));
   }
 
-  /**
-   * Tests the formatting (simple tree).
-   */
+  /** Tests the formatting (simple tree). */
+  @Test
   public void testToDotSimple() throws Exception {
     Node ast = new Node(Token.BITOR);
 
@@ -63,9 +64,8 @@ public final class DotFormatterTest extends TestCase {
     test(expected, ast);
   }
 
-  /**
-   * Tests the formatting (3 element tree).
-   */
+  /** Tests the formatting (3 element tree). */
+  @Test
   public void testToDot3Elements() throws Exception {
     Node ast = new Node(Token.BLOCK);
     ast.addChildToBack(new Node(Token.NAME));
