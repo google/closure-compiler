@@ -22,24 +22,32 @@ import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import java.util.Arrays;
 import java.util.List;
 import junit.framework.TestCase;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /**
  * Tests for error message filtering.
+ *
  * @author nicksantos@google.com (Nick Santos)
  */
+@RunWith(JUnit4.class)
 public final class RhinoErrorReporterTest extends TestCase {
 
   private boolean reportEs3Props;
   private boolean reportLintWarnings;
 
   @Override
-  protected void setUp() throws Exception {
+  @Before
+  public void setUp() throws Exception {
     reportEs3Props = true;
     reportLintWarnings = true;
     super.setUp();
   }
 
-  public void testTrailingComma() throws Exception {
+  @Test
+  public void testTrailingComma() {
     String message =
         "Parse error. IE8 (and below) will parse trailing commas in " +
         "array and object literals incorrectly. " +
@@ -60,7 +68,8 @@ public final class RhinoErrorReporterTest extends TestCase {
     assertEquals(8, error.getCharno());
   }
 
-  public void testInvalidEs3Prop() throws Exception {
+  @Test
+  public void testInvalidEs3Prop() {
     reportEs3Props = false;
 
     assertNoWarningOrError("var x = y.function;");
@@ -81,8 +90,8 @@ public final class RhinoErrorReporterTest extends TestCase {
     assertEquals(10, error.getCharno());
   }
 
-
-  public void testMissingTypeWarnings() throws Exception {
+  @Test
+  public void testMissingTypeWarnings() {
     reportLintWarnings = false;
 
     assertNoWarningOrError("/** @return */ function f() {}");
@@ -100,6 +109,7 @@ public final class RhinoErrorReporterTest extends TestCase {
     assertEquals(4, error.getCharno());
   }
 
+  @Test
   public void testMissingCurlyBraceWarning() {
     reportLintWarnings = false;
     assertNoWarningOrError("/** @type string */ var x;");

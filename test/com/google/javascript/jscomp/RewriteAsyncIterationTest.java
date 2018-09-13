@@ -16,10 +16,16 @@
 package com.google.javascript.jscomp;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
+@RunWith(JUnit4.class)
 public class RewriteAsyncIterationTest extends CompilerTestCase {
 
   @Override
+  @Before
   public void setUp() throws Exception {
     super.setUp();
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_NEXT);
@@ -44,6 +50,7 @@ public class RewriteAsyncIterationTest extends CompilerTestCase {
     return new RewriteAsyncIteration(compiler);
   }
 
+  @Test
   public void testAsyncGenerator() {
     test(
         "async function* baz() { foo() }",
@@ -55,6 +62,7 @@ public class RewriteAsyncIterationTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testAwaitInAsyncGenerator() {
     test(
         "async function* baz() { await foo() }",
@@ -77,6 +85,7 @@ public class RewriteAsyncIterationTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testYieldInAsyncGenerator() {
     test(
         "async function* baz() { yield foo() }",
@@ -99,6 +108,7 @@ public class RewriteAsyncIterationTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testYieldAllInAsyncGenerator() {
     test(
         "async function* baz() { yield* foo() }",
@@ -121,6 +131,7 @@ public class RewriteAsyncIterationTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testComplexAsyncGeneratorStatements() {
     test(
         "async function* baz() { yield* (await foo()); }",
@@ -136,6 +147,7 @@ public class RewriteAsyncIterationTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testThisInAsyncGenerator() {
     test(
         "async function* baz() { yield this; }",
@@ -149,6 +161,7 @@ public class RewriteAsyncIterationTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testThisInAsyncGeneratorNestedInAsyncGenerator() {
     test(
         "async function* baz() { return async function*() { yield this; } }",
@@ -167,6 +180,7 @@ public class RewriteAsyncIterationTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testThisInFunctionNestedInAsyncGenerator() {
     test(
         lines("async function* baz() {  return function() { return this; }; }"),
@@ -188,6 +202,7 @@ public class RewriteAsyncIterationTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testInnerSuperReferenceInAsyncGenerator() {
     test(
         lines(
@@ -220,6 +235,7 @@ public class RewriteAsyncIterationTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testCannotConvertSuperGetElemInAsyncGenerator() {
     testError(
         lines(
@@ -239,6 +255,7 @@ public class RewriteAsyncIterationTest extends CompilerTestCase {
             "super only allowed with getprop (like super.foo(), not super['foo']())"));
   }
 
+  @Test
   public void testInnerArrowFunctionUsingArguments() {
     test(
         lines(
@@ -263,6 +280,7 @@ public class RewriteAsyncIterationTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testForAwaitOfDeclarations() {
     test(
         lines("async function abc() { for await (a of foo()) { bar(); } }"),
@@ -329,6 +347,7 @@ public class RewriteAsyncIterationTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testForAwaitOfInAsyncArrow() {
     test(
         lines("async () => { for await (let a of foo()) { bar(); } }"),
@@ -347,6 +366,7 @@ public class RewriteAsyncIterationTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testLabelledForAwaitOf() {
     test(
         lines(
@@ -372,6 +392,7 @@ public class RewriteAsyncIterationTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testForAwaitOfInAsyncGenerator() {
     test(
         lines(
