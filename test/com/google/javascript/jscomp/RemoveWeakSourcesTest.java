@@ -17,8 +17,12 @@
 package com.google.javascript.jscomp;
 
 import com.google.javascript.rhino.StaticSourceFile.SourceKind;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /** Unit test for {@link RemoveWeakSources}. */
+@RunWith(JUnit4.class)
 public final class RemoveWeakSourcesTest extends CompilerTestCase {
 
   @Override
@@ -26,6 +30,7 @@ public final class RemoveWeakSourcesTest extends CompilerTestCase {
     return new RemoveWeakSources(compiler);
   }
 
+  @Test
   public void test() {
     SourceFile strongSrc1 = SourceFile.fromCode("a.js", "var a = 1;", SourceKind.STRONG);
     SourceFile weakSrc1 = SourceFile.fromCode("b.js", "var b = 2;", SourceKind.WEAK);

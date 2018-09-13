@@ -16,8 +16,13 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.collect.ImmutableList;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /** Tests for {@link RemoveSuperMethodsPass} */
+@RunWith(JUnit4.class)
 public final class RemoveSuperMethodsPassTest extends CompilerTestCase {
 
   private static final String BOILERPLATE =
@@ -48,6 +53,7 @@ public final class RemoveSuperMethodsPassTest extends CompilerTestCase {
   }
 
   @Override
+  @Before
   public void setUp() throws Exception {
     super.setUp();
     enableTypeCheck();
@@ -66,6 +72,7 @@ public final class RemoveSuperMethodsPassTest extends CompilerTestCase {
     testSame(lines(BOILERPLATE, code));
   }
 
+  @Test
   public void testOptimize_noArgs() {
     testOptimize(
         lines(
@@ -73,6 +80,7 @@ public final class RemoveSuperMethodsPassTest extends CompilerTestCase {
             "Foo.prototype.bar = function() { Foo.superClass_.bar.call(this); };"));
   }
 
+  @Test
   public void testOptimize_noArgs_baseClassName() {
     testOptimize(
         lines(
@@ -80,6 +88,7 @@ public final class RemoveSuperMethodsPassTest extends CompilerTestCase {
             "Foo.prototype.bar = function() { FooBase.prototype.bar.call(this) };"));
   }
 
+  @Test
   public void testOptimize_noArgs_namespace() {
     testOptimize(
         lines(
@@ -87,6 +96,7 @@ public final class RemoveSuperMethodsPassTest extends CompilerTestCase {
             "ns.Foo.prototype.bar = function() { ns.Foo.superClass_.bar.call(this); };"));
   }
 
+  @Test
   public void testOptimize_noArgs_baseClassName_namespace() {
     testOptimize(
         lines(
@@ -94,6 +104,7 @@ public final class RemoveSuperMethodsPassTest extends CompilerTestCase {
             "ns.Foo.prototype.bar = function() { ns.FooBase.prototype.bar.call(this); };"));
   }
 
+  @Test
   public void testOptimize_twoArgs() {
     testOptimize(
         lines(
@@ -103,6 +114,7 @@ public final class RemoveSuperMethodsPassTest extends CompilerTestCase {
             "};"));
   }
 
+  @Test
   public void testOptimize_varArgs() {
     testOptimize(
         lines(
@@ -112,6 +124,7 @@ public final class RemoveSuperMethodsPassTest extends CompilerTestCase {
             "};"));
   }
 
+  @Test
   public void testNoOptimize_numArgsMismatch() {
     testNoOptimize(
         lines(
@@ -121,6 +134,7 @@ public final class RemoveSuperMethodsPassTest extends CompilerTestCase {
             "};"));
   }
 
+  @Test
   public void testNoOptimize_notBaseClass() {
     testNoOptimize(
         lines(
@@ -128,6 +142,7 @@ public final class RemoveSuperMethodsPassTest extends CompilerTestCase {
             "Foo.prototype.bar = function() { FooBaz.prototype.bar.call(this) };"));
   }
 
+  @Test
   public void testNoOptimize_argOrderMismatch() {
     testNoOptimize(
         lines(
@@ -137,6 +152,7 @@ public final class RemoveSuperMethodsPassTest extends CompilerTestCase {
             "};"));
   }
 
+  @Test
   public void testNoOptimize_argNameMismatch() {
     testNoOptimize(
         lines(
@@ -146,6 +162,7 @@ public final class RemoveSuperMethodsPassTest extends CompilerTestCase {
             "};"));
   }
 
+  @Test
   public void testNoOptimize_methodNameMismatch() {
     testNoOptimize(
         lines(
@@ -182,6 +199,7 @@ public final class RemoveSuperMethodsPassTest extends CompilerTestCase {
             "};"));
   }
 
+  @Test
   public void testNoOptimize_unsound_grandparentClass() {
     // It's technically unsound to remove a call to the grandparent class's method if that makes the
     // parent's override to be skipped.
@@ -195,6 +213,7 @@ public final class RemoveSuperMethodsPassTest extends CompilerTestCase {
             "};"));
   }
 
+  @Test
   public void testNoOptimize_moreThanOneStatement() {
     testNoOptimize(
         lines(
@@ -205,6 +224,7 @@ public final class RemoveSuperMethodsPassTest extends CompilerTestCase {
             "};"));
   }
 
+  @Test
   public void testNoOptimize_missingReturn() {
     testNoOptimize(
         lines(
@@ -214,6 +234,7 @@ public final class RemoveSuperMethodsPassTest extends CompilerTestCase {
             "};"));
   }
 
+  @Test
   public void testNoOptimize_wizaction() {
     testNoOptimize(
         lines(
@@ -221,6 +242,7 @@ public final class RemoveSuperMethodsPassTest extends CompilerTestCase {
             "Foo.prototype.bar = function() { Foo.superClass_.bar.call(this); };"));
   }
 
+  @Test
   public void testNoOptimize_duplicate() {
     testSame(ImmutableList.of(
         SourceFile.fromCode("file1.js",
