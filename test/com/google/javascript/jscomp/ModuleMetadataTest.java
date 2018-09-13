@@ -22,12 +22,18 @@ import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.ModuleMetadata.Module;
 import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
 import com.google.javascript.rhino.Node;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 
+@RunWith(JUnit4.class)
 public final class ModuleMetadataTest extends CompilerTestCase {
   ModuleMetadata metadata;
 
   @Override
+  @Before
   public void setUp() throws Exception {
     super.setUp();
     // ECMASCRIPT5 to trigger module processing after parsing.
@@ -42,6 +48,7 @@ public final class ModuleMetadataTest extends CompilerTestCase {
     return (Node externs, Node root) -> metadata.process(externs, root);
   }
 
+  @Test
   public void testGoogProvide() {
     testSame("goog.provide('my.provide');");
     assertThat(metadata.getModulesByGoogNamespace().keySet()).containsExactly("my.provide");
@@ -51,6 +58,7 @@ public final class ModuleMetadataTest extends CompilerTestCase {
     assertThat(m.isGoogProvide()).isTrue();
   }
 
+  @Test
   public void testMultipleGoogProvide() {
     testSame("goog.provide('my.first.provide'); goog.provide('my.second.provide');");
     assertThat(metadata.getModulesByGoogNamespace().keySet())
@@ -69,6 +77,7 @@ public final class ModuleMetadataTest extends CompilerTestCase {
     assertThat(m.isGoogProvide()).isTrue();
   }
 
+  @Test
   public void testGoogModule() {
     testSame("goog.module('my.module');");
     assertThat(metadata.getModulesByGoogNamespace().keySet()).containsExactly("my.module");
@@ -80,6 +89,7 @@ public final class ModuleMetadataTest extends CompilerTestCase {
     assertThat(m.isLegacyGoogModule()).isFalse();
   }
 
+  @Test
   public void testGoogModuleWithDefaultExport() {
     // exports = 0; on its own is CommonJS!
     testSame("goog.module('my.module'); exports = 0;");
@@ -92,6 +102,7 @@ public final class ModuleMetadataTest extends CompilerTestCase {
     assertThat(m.isLegacyGoogModule()).isFalse();
   }
 
+  @Test
   public void testLegacyGoogModule() {
     testSame("goog.module('my.module'); goog.module.declareLegacyNamespace();");
     assertThat(metadata.getModulesByGoogNamespace().keySet()).containsExactly("my.module");
@@ -103,6 +114,7 @@ public final class ModuleMetadataTest extends CompilerTestCase {
     assertThat(m.isLegacyGoogModule()).isTrue();
   }
 
+  @Test
   public void testLoadModule() {
     testSame("goog.loadModule(function() { goog.module('my.module'); });");
     assertThat(metadata.getModulesByGoogNamespace().keySet()).containsExactly("my.module");
@@ -117,6 +129,7 @@ public final class ModuleMetadataTest extends CompilerTestCase {
     assertThat(m.isScript()).isTrue();
   }
 
+  @Test
   public void testEs6Module() {
     testSame("export var x;");
     assertThat(metadata.getModulesByGoogNamespace().keySet()).isEmpty();
@@ -126,6 +139,7 @@ public final class ModuleMetadataTest extends CompilerTestCase {
     assertThat(m.isEs6Module()).isTrue();
   }
 
+  @Test
   public void testEs6ModuleDeclareNamespace() {
     testSame("export var x; goog.module.declareNamespace('my.module');");
     assertThat(metadata.getModulesByGoogNamespace().keySet()).containsExactly("my.module");
@@ -135,6 +149,7 @@ public final class ModuleMetadataTest extends CompilerTestCase {
     assertThat(m.isGoogModule()).isFalse();
   }
 
+  @Test
   public void testCommonJsModule() {
     testSame("exports = 0;");
     assertThat(metadata.getModulesByGoogNamespace()).isEmpty();
@@ -142,18 +157,21 @@ public final class ModuleMetadataTest extends CompilerTestCase {
     assertThat(m.isCommonJs()).isTrue();
   }
 
+  @Test
   public void testDuplicateProvides() {
     testError(
         new String[] {"goog.provide('duplciated');", "goog.provide('duplciated');"},
         ClosureRewriteModule.DUPLICATE_NAMESPACE);
   }
 
+  @Test
   public void testDuplicateProvidesInSameFile() {
     testError(
         "goog.provide('duplciated');\ngoog.provide('duplciated');",
         ClosureRewriteModule.DUPLICATE_NAMESPACE);
   }
 
+  @Test
   public void testDuplicateProvideAndGoogModule() {
     testError(
         new String[] {"goog.provide('duplciated');", "goog.module('duplciated');"},
@@ -163,6 +181,7 @@ public final class ModuleMetadataTest extends CompilerTestCase {
         ClosureRewriteModule.DUPLICATE_MODULE);
   }
 
+  @Test
   public void testDuplicateProvideAndEs6Module() {
     testError(
         new String[] {
@@ -176,12 +195,14 @@ public final class ModuleMetadataTest extends CompilerTestCase {
         ClosureRewriteModule.DUPLICATE_MODULE);
   }
 
+  @Test
   public void testDuplicateGoogModules() {
     testError(
         new String[] {"goog.module('duplciated');", "goog.module('duplciated');"},
         ClosureRewriteModule.DUPLICATE_MODULE);
   }
 
+  @Test
   public void testDuplicateGoogAndEs6Module() {
     testError(
         new String[] {
@@ -195,6 +216,7 @@ public final class ModuleMetadataTest extends CompilerTestCase {
         ClosureRewriteModule.DUPLICATE_MODULE);
   }
 
+  @Test
   public void testDuplicatEs6Modules() {
     testError(
         new String[] {
@@ -210,78 +232,91 @@ public final class ModuleMetadataTest extends CompilerTestCase {
         ClosureRewriteModule.DUPLICATE_MODULE);
   }
 
+  @Test
   public void testUsesGlobalClosure() {
     testSame("goog.isArray(foo);");
     Module m = metadata.getModulesByPath().get("testcode");
     assertThat(m.usesClosure()).isTrue();
   }
 
+  @Test
   public void testUsesGlobalClosureNoFunctionCall() {
     testSame("var b = goog.nullFunction;");
     Module m = metadata.getModulesByPath().get("testcode");
     assertThat(m.usesClosure()).isTrue();
   }
 
+  @Test
   public void testLocalGoogIsNotClosure() {
     testSame("var goog; goog.isArray(foo);");
     Module m = metadata.getModulesByPath().get("testcode");
     assertThat(m.usesClosure()).isFalse();
   }
 
+  @Test
   public void testImportedGoogIsClosure() {
     testSame("import * as goog from '/goog.js'; goog.isArray(foo);");
     Module m = metadata.getModulesByPath().get("testcode");
     assertThat(m.usesClosure()).isTrue();
   }
 
+  @Test
   public void testRequireType() {
     testSame("goog.requireType('my.Type');");
     Module m = metadata.getModulesByPath().get("testcode");
     assertThat(m.requiredTypes()).containsExactly("my.Type");
   }
 
+  @Test
   public void testRequiredClosureNamespaces() {
     testSame("goog.require('my.Type');");
     Module m = metadata.getModulesByPath().get("testcode");
     assertThat(m.requiredGoogNamespaces()).containsExactly("my.Type");
   }
 
+  @Test
   public void testImport() {
     testSame("import '@spec!';");
     Module m = metadata.getModulesByPath().get("testcode");
     assertThat(m.es6ImportSpecifiers()).containsExactly("@spec!");
   }
 
+  @Test
   public void testExport() {
     testSame("export { name } from '@spec!';");
     Module m = metadata.getModulesByPath().get("testcode");
     assertThat(m.es6ImportSpecifiers()).containsExactly("@spec!");
   }
 
+  @Test
   public void testImportOrder() {
     testSame("import 'first'; export { name } from 'second'; import 'third';");
     Module m = metadata.getModulesByPath().get("testcode");
     assertThat(m.es6ImportSpecifiers()).containsExactly("first", "second", "third");
   }
 
+  @Test
   public void testSetTestOnly() {
     testSame("goog.setTestOnly();");
     Module m = metadata.getModulesByPath().get("testcode");
     assertThat(m.isTestOnly()).isTrue();
   }
 
+  @Test
   public void testSetTestOnlyWithStringArg() {
     testSame("goog.setTestOnly('string');");
     Module m = metadata.getModulesByPath().get("testcode");
     assertThat(m.isTestOnly()).isTrue();
   }
 
+  @Test
   public void testSetTestOnlyWithExtraArg() {
     testError("goog.setTestOnly('string', 'string');", ModuleMetadata.INVALID_SET_TEST_ONLY);
     Module m = metadata.getModulesByPath().get("testcode");
     assertThat(m.isTestOnly()).isFalse();
   }
 
+  @Test
   public void testSetTestOnlyWithInvalidArg() {
     testError("goog.setTestOnly(0);", ModuleMetadata.INVALID_SET_TEST_ONLY);
     Module m = metadata.getModulesByPath().get("testcode");

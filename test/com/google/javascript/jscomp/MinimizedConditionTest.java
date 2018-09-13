@@ -25,14 +25,17 @@ import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
 import java.util.List;
 import junit.framework.TestCase;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /**
- * Tests for {@link MinimizedCondition} in isolation.
- * Tests for the containing PeepholeMinimizeConditions pass are in
- * {@link PeepholeMinimizeConditionsTest}.
+ * Tests for {@link MinimizedCondition} in isolation. Tests for the containing
+ * PeepholeMinimizeConditions pass are in {@link PeepholeMinimizeConditionsTest}.
  *
  * @author blickly@google.com (Ben Lickly)
  */
+@RunWith(JUnit4.class)
 public final class MinimizedConditionTest extends TestCase {
 
   private static Node parseExpr(String code) {
@@ -83,6 +86,7 @@ public final class MinimizedConditionTest extends TestCase {
     }
   }
 
+  @Test
   public void testTryMinimizeCondSimple() {
     minCond("x", "x", "x");
     minCond("!x", "!x", "!x");
@@ -90,6 +94,7 @@ public final class MinimizedConditionTest extends TestCase {
     minCond("!(x && y)", "!x || !y", "!(x && y)");
   }
 
+  @Test
   public void testMinimizeDemorganSimple() {
     minCond("!(x&&y)", "!x||!y", "!(x&&y)");
     minCond("!(x||y)", "!x&&!y", "!(x||y)");
@@ -100,6 +105,7 @@ public final class MinimizedConditionTest extends TestCase {
     minCond("(!a||!b)&&(c||d)", "!(a&&b||!c&&!d)", "!(a&&b||!c&&!d)");
   }
 
+  @Test
   public void testMinimizeBug8494751() {
     minCond(
         "x && (y===2 || !f()) && (y===3 || !h())",
@@ -109,6 +115,7 @@ public final class MinimizedConditionTest extends TestCase {
         "!(!x || (y!==2 && f()) || (y!==3 && h()))");
   }
 
+  @Test
   public void testMinimizeComplementableOperator() {
     minCond(
         "0===c && (2===a || 1===a)",
@@ -116,10 +123,12 @@ public final class MinimizedConditionTest extends TestCase {
         "!(0!==c || 2!==a && 1!==a)");
   }
 
+  @Test
   public void testMinimizeHook() {
     minCond("!(x ? y : z)", "(x ? !y : !z)",  "!(x ? y : z)");
   }
 
+  @Test
   public void testMinimizeComma() {
     minCond("!(inc(), test())", "inc(), !test()", "!(inc(), test())");
     minCond("!((x,y)&&z)", "(x,!y)||!z", "!((x,y)&&z)");

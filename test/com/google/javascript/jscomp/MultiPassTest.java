@@ -23,19 +23,24 @@ import com.google.javascript.jscomp.Es6RewriteDestructuring.ObjectDestructuringR
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import java.util.ArrayList;
 import java.util.List;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /**
- * This file contains the only tests that use the infrastructure in
- * CompilerTestCase to run multiple passes and do validity checks. The other files
- * that use CompilerTestCase unit test a single pass.
+ * This file contains the only tests that use the infrastructure in CompilerTestCase to run multiple
+ * passes and do validity checks. The other files that use CompilerTestCase unit test a single pass.
  *
  * @author dimvar@google.com (Dimitris Vardoulakis)
  */
 
+@RunWith(JUnit4.class)
 public final class MultiPassTest extends CompilerTestCase {
   private List<PassFactory> passes;
 
   @Override
+  @Before
   public void setUp() throws Exception {
     super.setUp();
     setAcceptedLanguage(LanguageMode.ECMASCRIPT5);
@@ -75,6 +80,7 @@ public final class MultiPassTest extends CompilerTestCase {
     return options;
   }
 
+  @Test
   public void testInlineVarsAndPeephole() {
     passes = new ArrayList<>();
     addInlineVariables();
@@ -83,6 +89,7 @@ public final class MultiPassTest extends CompilerTestCase {
         "function f() { return 6; }");
   }
 
+  @Test
   public void testInlineFunctionsAndPeephole() {
     passes = new ArrayList<>();
     addInlineFunctions();
@@ -93,6 +100,7 @@ public final class MultiPassTest extends CompilerTestCase {
         "var n = 1");
   }
 
+  @Test
   public void testInlineVarsAndDeadCodeElim() {
     passes = new ArrayList<>();
     addDeadCodeElimination();
@@ -101,6 +109,7 @@ public final class MultiPassTest extends CompilerTestCase {
         "function f() { return 1; }");
   }
 
+  @Test
   public void testCollapseObjectLiteralsScopeChange() {
     passes = new ArrayList<>();
     addCollapseObjectLiterals();
@@ -116,6 +125,7 @@ public final class MultiPassTest extends CompilerTestCase {
         "}");
   }
 
+  @Test
   public void testRemoveUnusedClassPropertiesScopeChange() {
     passes = new ArrayList<>();
     addRemoveUnusedClassProperties();
@@ -124,6 +134,7 @@ public final class MultiPassTest extends CompilerTestCase {
         "/** @constructor */ function Foo() {             } Foo.baz = function() {};");
   }
 
+  @Test
   public void testRemoveUnusedVariablesScopeChange() {
     passes = new ArrayList<>();
     addRemoveUnusedVars();
@@ -135,6 +146,7 @@ public final class MultiPassTest extends CompilerTestCase {
         "function f() {}");
   }
 
+  @Test
   public void testTopScopeChange() {
     passes = new ArrayList<>();
     addInlineVariables();
@@ -142,6 +154,7 @@ public final class MultiPassTest extends CompilerTestCase {
     test("var x = 1, y = x, z = x + y;", "var z = 2;");
   }
 
+  @Test
   public void testDestructuringAndArrowFunction() {
     setLanguage(LanguageMode.ECMASCRIPT_2015, LanguageMode.ECMASCRIPT5);
     disableNormalize();
