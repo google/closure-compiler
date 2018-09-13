@@ -23,11 +23,15 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import junit.framework.TestCase;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /**
  * Tests {@link XtbMessageBundle}.
  *
  */
+@RunWith(JUnit4.class)
 public final class XtbMessageBundleTest extends TestCase {
   private static final String PROJECT_ID = "TestProject";
 
@@ -64,6 +68,7 @@ public final class XtbMessageBundleTest extends TestCase {
           + "</translation>"
           + "</translationbundle>";
 
+  @Test
   public void testXtbBundle() {
     InputStream stream = new ByteArrayInputStream(XTB.getBytes(UTF_8));
     XtbMessageBundle bundle = new XtbMessageBundle(
@@ -93,6 +98,7 @@ public final class XtbMessageBundleTest extends TestCase {
    * However, JsMessage and the Closure Library runtime don't expect to see regular placeholders, so
    * they must be rewritten.
    */
+  @Test
   public void testXtbBundle_mixedPlaceholders() throws IOException {
     InputStream stream = new ByteArrayInputStream(XTB_WITH_MIXED_PLACEHOLDERS.getBytes(UTF_8));
     XtbMessageBundle bundle = new XtbMessageBundle(stream, PROJECT_ID);
