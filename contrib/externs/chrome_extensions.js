@@ -3690,8 +3690,20 @@ chrome.omnibox.InputChangedEvent = function() {};
 
 
 /**
+ * @enum {string}
+ * @see https://developer.chrome.com/extensions/omnibox#type-OnInputEnteredDisposition
+ */
+chrome.omnibox.OnInputEnteredDisposition = {
+  CURRENT_TAB: '',
+  NEW_BACKGROUND_TAB: '',
+  NEW_FOREGROUND_TAB: '',
+};
+
+
+/**
  * @interface
- * @extends {ChromeBaseEvent<function(string, string)>}
+ * @extends {ChromeBaseEvent<
+ * function(string,!chrome.omnibox.OnInputEnteredDisposition)>}
  */
 chrome.omnibox.InputEnteredEvent = function() {};
 
