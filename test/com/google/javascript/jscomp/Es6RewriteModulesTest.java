@@ -20,15 +20,19 @@ import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
-/**
- * Unit tests for {@link Es6RewriteModules}
- */
+/** Unit tests for {@link Es6RewriteModules} */
 
+@RunWith(JUnit4.class)
 public final class Es6RewriteModulesTest extends CompilerTestCase {
   private ImmutableList<String> moduleRoots = null;
 
   @Override
+  @Before
   public void setUp() throws Exception {
     super.setUp();
     // ECMASCRIPT5 to trigger module processing after parsing.
@@ -69,6 +73,7 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
     ModulesTestUtils.testModules(this, "testcode.js", input, expected);
   }
 
+  @Test
   public void testImport() {
     testModules(
         "import name from './other.js';\n use(name);",
@@ -90,17 +95,20 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
         "use(module$other.class); /** @const */ var module$testcode = {};");
   }
 
+  @Test
   public void testImport_missing() {
     ModulesTestUtils.testModulesError(this, "import name from './does_not_exist';\n use(name);",
         ModuleLoader.LOAD_WARNING);
   }
 
+  @Test
   public void testImportStar() {
     testModules(
         "import * as name from './other.js';\n use(name.foo);",
         "use(module$other.foo); /** @const */ var module$testcode = {};");
   }
 
+  @Test
   public void testTypeNodeRewriting() {
     testModules(
         "import * as name from './other.js';\n /** @type {name.foo} */ var x;",
@@ -109,6 +117,7 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
             "/** @const */ var module$testcode = {};"));
   }
 
+  @Test
   public void testExport() {
     testModules(
         "export var a = 1, b = 2;",
@@ -173,6 +182,7 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
             "/** @const */ module$testcode.class = f$$module$testcode;"));
   }
 
+  @Test
   public void testModulesInExterns() {
     testError(
         ImmutableList.of(
@@ -185,6 +195,7 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
         Es6ToEs3Util.CANNOT_CONVERT_YET);
   }
 
+  @Test
   public void testModulesInTypeSummary() {
     allowExternsChanges();
     test(
@@ -212,6 +223,7 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
                     ""))));
   }
 
+  @Test
   public void testMutableExport() {
     testModules(
         lines(
@@ -343,6 +355,7 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
             "/** @const */ module$testcode.UNCHANGED = UNCHANGED$$module$testcode"));
   }
 
+  @Test
   public void testConstClassExportIsConstant() {
     testModules(
         "export const Class = class {}",
@@ -352,6 +365,7 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
             "/** @const */ module$testcode.Class = Class$$module$testcode;"));
   }
 
+  @Test
   public void testTopLevelMutationIsNotMutable() {
     testModules(
         lines("export var a = 1, b = 2;",
@@ -431,6 +445,7 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
             "/** @const */ module$testcode.default = C$$module$testcode;"));
   }
 
+  @Test
   public void testExportWithJsDoc() {
     testModules(
         "/** @constructor */\nexport function F() { return '';}",
@@ -465,6 +480,7 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
             "/** @const */ module$testcode.x = x$$module$testcode;"));
   }
 
+  @Test
   public void testImportAndExport() {
     testModules(
         lines("import {name as n} from './other.js';", "use(n);", "export {n as name};"),
@@ -475,6 +491,7 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
             "};"));
   }
 
+  @Test
   public void testExportFrom() {
     testModules(
         lines(
@@ -519,6 +536,7 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
             "};"));
   }
 
+  @Test
   public void testExportDefault() {
     testModules(
         "export default 'someString';",
@@ -552,6 +570,7 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
             "/** @const */ module$testcode.default = Foo$$module$testcode;"));
   }
 
+  @Test
   public void testExportDefault_anonymous() {
     testModules(
         "export default class {};",
@@ -568,6 +587,7 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
             "/** @const */ module$testcode.default = $jscompDefaultExport$$module$testcode;"));
   }
 
+  @Test
   public void testExportDestructureDeclaration() {
     testModules(
         "export let {a, c:b} = obj;",
@@ -595,6 +615,7 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
             "/** @const */ module$testcode.d = d$$module$testcode;"));
   }
 
+  @Test
   public void testExtendImportedClass() {
     testModules(
         lines(
@@ -626,6 +647,7 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
             "/** @const */ module$testcode.Child = Child$$module$testcode;"));
   }
 
+  @Test
   public void testFixTypeNode() {
     testModules(
         lines(
@@ -653,6 +675,7 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
             "/** @const */ module$testcode.Child = Child$$module$testcode;"));
   }
 
+  @Test
   public void testRenameTypedef() {
     testModules(
         lines(
@@ -665,6 +688,7 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
             "module$testcode.UnionType;"));
   }
 
+  @Test
   public void testNoInnerChange() {
     testModules(
         lines(
@@ -684,6 +708,7 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
             "/** @const */ module$testcode.Foo = Foo$$module$testcode;"));
   }
 
+  @Test
   public void testRenameImportedReference() {
     testModules(
         lines(
@@ -711,6 +736,7 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
             "/** @const */ var module$testcode = {};"));
   }
 
+  @Test
   public void testObjectDestructuringAndObjLitShorthand() {
     testModules(
         lines(
@@ -728,6 +754,7 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
             "/** @const */ var module$testcode = {};"));
   }
 
+  @Test
   public void testObjectDestructuringAndObjLitShorthandWithDefaultValue() {
     testModules(
         lines(
@@ -745,6 +772,7 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
             "/** @const */ var module$testcode = {};"));
   }
 
+  @Test
   public void testImportWithoutReferences() {
     testModules("import './other.js';", "/** @const */ var module$testcode = {};");
     // GitHub issue #1819: https://github.com/google/closure-compiler/issues/1819
@@ -754,17 +782,20 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
         "/** @const */ var module$testcode = {};");
   }
 
+  @Test
   public void testUselessUseStrict() {
     ModulesTestUtils.testModulesError(this, "'use strict';\nexport default undefined;",
         ClosureRewriteModule.USELESS_USE_STRICT_DIRECTIVE);
   }
 
+  @Test
   public void testUseStrict_noWarning() {
     testSame(lines(
         "'use strict';",
         "var x;"));
   }
 
+  @Test
   public void testAbsoluteImportsWithModuleRoots() {
     moduleRoots = ImmutableList.of("/base");
     test(
@@ -780,6 +811,7 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
                 "/** @const */ var module$test$sub = {};")));
   }
 
+  @Test
   public void testUseImportInEs6ObjectLiteralShorthand() {
     testModules(
         "import {f} from './other.js';\nvar bar = {a: 1, f};",
@@ -806,6 +838,7 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
             "/** @const */ var module$testcode = {};"));
   }
 
+  @Test
   public void testDuplicateExportError() {
     ModulesTestUtils.testModulesError(
         this, "var x, y; export {x, y as x};", Es6RewriteModules.DUPLICATE_EXPORT);

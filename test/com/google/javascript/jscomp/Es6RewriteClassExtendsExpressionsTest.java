@@ -17,7 +17,12 @@
 package com.google.javascript.jscomp;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
+@RunWith(JUnit4.class)
 public final class Es6RewriteClassExtendsExpressionsTest extends CompilerTestCase {
 
   @Override
@@ -26,6 +31,7 @@ public final class Es6RewriteClassExtendsExpressionsTest extends CompilerTestCas
   }
 
   @Override
+  @Before
   public void setUp() throws Exception {
     super.setUp();
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_NEXT);
@@ -34,6 +40,7 @@ public final class Es6RewriteClassExtendsExpressionsTest extends CompilerTestCas
     enableRunTypeCheckAfterProcessing();
   }
 
+  @Test
   public void testBasic() {
     test(
         "const foo = {'bar': Object}; class Foo extends foo['bar'] {}",
@@ -43,14 +50,17 @@ public final class Es6RewriteClassExtendsExpressionsTest extends CompilerTestCas
             "class Foo extends testcode$classextends$var0 {}"));
   }
 
+  @Test
   public void testName() {
     testSame("class Foo extends Object {}");
   }
 
+  @Test
   public void testGetProp() {
     testSame("const foo = { bar: Object}; class Foo extends foo.bar {}");
   }
 
+  @Test
   public void testMixinFunction() {
     test(
         lines(
@@ -74,6 +84,7 @@ public final class Es6RewriteClassExtendsExpressionsTest extends CompilerTestCas
             "class Bar extends testcode$classextends$var0 {}"));
   }
 
+  @Test
   public void testClassExpressions() {
     testSame(
         lines(
@@ -82,6 +93,7 @@ public final class Es6RewriteClassExtendsExpressionsTest extends CompilerTestCas
             "baz(class extends foo.bar {});"));
   }
 
+  @Test
   public void testVarDeclaration() {
     test(
         "const foo = {'bar': Object}; var Foo = class extends foo['bar'] {};",
@@ -105,6 +117,7 @@ public final class Es6RewriteClassExtendsExpressionsTest extends CompilerTestCas
             "const Foo = class extends testcode$classextends$var0 {};"));
   }
 
+  @Test
   public void testDeclarationInForLoop() {
     test(
         lines(
@@ -121,6 +134,7 @@ public final class Es6RewriteClassExtendsExpressionsTest extends CompilerTestCas
             "  })(), i = 0; i < 1; i++) {}"));
   }
 
+  @Test
   public void testAssign() {
     test(
         "const foo = {'bar': Object}; var Foo; Foo = class extends foo['bar'] {};",
@@ -161,6 +175,7 @@ public final class Es6RewriteClassExtendsExpressionsTest extends CompilerTestCas
             "foo.baz['foo'] = class extends testcode$classextends$var0 {};"));
   }
 
+  @Test
   public void testAssignWithSideEffects() {
     test(
         lines(
@@ -177,6 +192,7 @@ public final class Es6RewriteClassExtendsExpressionsTest extends CompilerTestCas
             "})();"));
   }
 
+  @Test
   public void testMultipleVarDeclaration() {
     test(
         lines(

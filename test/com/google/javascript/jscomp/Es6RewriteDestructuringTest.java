@@ -19,13 +19,19 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.Es6RewriteDestructuring.ObjectDestructuringRewriteMode;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
+@RunWith(JUnit4.class)
 public class Es6RewriteDestructuringTest extends CompilerTestCase {
 
   private ObjectDestructuringRewriteMode destructuringRewriteMode =
       ObjectDestructuringRewriteMode.REWRITE_ALL_OBJECT_PATTERNS;
 
   @Override
+  @Before
   public void setUp() throws Exception {
     super.setUp();
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2018);
@@ -58,6 +64,7 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
         .build();
   }
 
+  @Test
   public void testObjectDestructuring() {
     test(
         "var {a: b, c: d} = foo();",
@@ -96,6 +103,7 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
             "x = $jscomp$destructuring$var0.a;"));
   }
 
+  @Test
   public void testObjectDestructuringWithInitializer() {
     test(
         "var {a : b = 'default'} = foo();",
@@ -114,6 +122,7 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
             "    $jscomp$destructuring$var0.a"));
   }
 
+  @Test
   public void testObjectDestructuringNested() {
     test(
         "var {a: {b}} = foo();",
@@ -123,6 +132,7 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
             "var b = $jscomp$destructuring$var1.b"));
   }
 
+  @Test
   public void testObjectDestructuringComputedProps() {
     test(
         "var {[a]: b} = foo();",
@@ -150,6 +160,7 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
   }
 
   // https://github.com/google/closure-compiler/issues/2189
+  @Test
   public void testGithubIssue2189() {
     setExpectParseWarningsThisTest();
     test(
@@ -170,6 +181,7 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testObjectDestructuringStrangeProperties() {
     test(
         "var {5: b} = foo();",
@@ -188,6 +200,7 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
             "var b = $jscomp$destructuring$var0['str']"));
   }
 
+  @Test
   public void testObjectDestructuringFunction() {
     test(
         "function f({a: b}) {}",
@@ -256,6 +269,7 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testObjectDestructuringFunctionJsDoc() {
     test(
         "function f(/** {x: number, y: number} */ {x, y}) {}",
@@ -267,6 +281,7 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testDefaultParametersDestructuring() {
     test(
         "function f({a,b} = foo()) {}",
@@ -279,6 +294,7 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testArrayDestructuring() {
     test(
         "var [x,y] = z();",
@@ -306,6 +322,7 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
             "var y = $jscomp$destructuring$var1.next().value;"));
   }
 
+  @Test
   public void testArrayDestructuringDefaultValues() {
     test(
         "var a; [a=1] = b();",
@@ -350,6 +367,7 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
             "a = $jscomp$destructuring$var2.next().value"));
   }
 
+  @Test
   public void testArrayDestructuringParam() {
     test(
         "function f([x,y]) { use(x); use(y); }",
@@ -375,6 +393,7 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testArrayDestructuringRest() {
     test(
         "let [one, ...others] = f();",
@@ -395,6 +414,7 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testRestParamDestructuring() {
     test(
         "function f(first, ...[re, st, ...{length: num_left}]) {}",
@@ -409,6 +429,7 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testArrayDestructuringMixedRest() {
     test(
         "let [first, ...[re, st, ...{length: num_left}]] = f();",
@@ -425,6 +446,7 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
             "let num_left = $jscomp$destructuring$var2.length;"));
   }
 
+  @Test
   public void testArrayDestructuringArguments() {
     test(
     "function f() { var [x, y] = arguments; }",
@@ -436,6 +458,7 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
         "}"));
   }
 
+  @Test
   public void testMixedDestructuring() {
     test(
         "var [a,{b,c}] = foo();",
@@ -456,6 +479,7 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
             "var d = $jscomp$destructuring$var1.next().value"));
   }
 
+  @Test
   public void testDestructuringForOf() {
     test(
         "for ({x} of y) { console.log(x); }",
@@ -467,6 +491,7 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testDestructuringForOfWithShadowing() {
     test(
         "for (const [value] of []) { const value = 0; }",
@@ -480,6 +505,7 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testDestructuringForInWithShadowing() {
     test(
         "for (const [value] in {}) { const value = 0; }",
@@ -493,6 +519,7 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testDefaultValueInObjectPattern() {
     test(
         "function f({x = a()}, y = b()) {}",
@@ -505,6 +532,7 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testDefaultParameters() {
     enableTypeCheck();
 
@@ -528,6 +556,7 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
         warning(TypeCheck.WRONG_ARGUMENT_COUNT));
   }
 
+  @Test
   public void testDefaultAndRestParameters() {
     test(
         "function f(zero, one = 1, ...two) {}",
@@ -544,6 +573,7 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testDefaultUndefinedParameters() {
     enableTypeCheck();
 
@@ -564,6 +594,7 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
         "function f(zero, one) {   one = (one === undefined) ? void g() : one; }");
   }
 
+  @Test
   public void testCatch() {
     test(
         "try {} catch ({message}) {}",
@@ -574,6 +605,7 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testTypeCheck() {
     enableTypeCheck();
 
@@ -644,6 +676,7 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
             "};"));
   }
 
+  @Test
   public void testDestructuringPatternInExterns() {
     enableTypeCheck();
     allowExternsChanges();
@@ -661,6 +694,7 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
     // TODO(sdh): figure out what's going on here
   }
 
+  @Test
   public void testTypeCheck_inlineAnnotations() {
     enableTypeCheck();
 
@@ -677,6 +711,7 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
         warning(TypeValidator.TYPE_MISMATCH_WARNING));
   }
 
+  @Test
   public void testDestructuringArrayNotInExprResult() {
     test(
         lines("var x, a, b;", "x = ([a,b] = [1,2])"),
@@ -752,6 +787,7 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testDestructuringObjectNotInExprResult() {
     test(
         "var x = ({a: b, c: d} = foo());",
@@ -801,6 +837,7 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
             "})();"));
   }
 
+  @Test
   public void testNestedDestructuring() {
     test(
         "var [[x]] = [[1]];",
@@ -833,6 +870,7 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
             "var z = $jscomp$destructuring$var0.next().value;"));
   }
 
+  @Test
   public void testTryCatch() {
     test(
         lines("var x = 1;", "try {", "  throw [];", "} catch ([x]) {}"),
@@ -859,6 +897,7 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testObjectPatternWithRestDecl() {
     test(
         "var {a: b, c: d, ...rest} = foo();",
@@ -963,6 +1002,7 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
             "const rest = ($jscomp$destructuring$var1);"));
   }
 
+  @Test
   public void testObjectPatternWithRestAssignStatement() {
     test(
         "var b,d,rest; ({a: b, c: d, ...rest} = foo());",
@@ -1058,6 +1098,7 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
             "      })();"));
   }
 
+  @Test
   public void testObjectPatternWithRestAssignExpr() {
     test(
         "var x,b,d,rest; x = ({a: b, c: d, ...rest} = foo());",
@@ -1092,6 +1133,7 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
             "})());"));
   }
 
+  @Test
   public void testObjectPatternWithRestForOf() {
     test(
         "for ({a: b, c: d, ...rest} of foo()) { console.log(rest.z); }",
@@ -1192,6 +1234,7 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testObjectPatternWithRestAndComputedPropertyName() {
     test(
         "var {a: b = 3, [bar()]: d, [baz()]: e, ...rest} = foo();",
@@ -1209,6 +1252,7 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
             "            $jscomp$destructuring$var1);"));
   }
 
+  @Test
   public void testObjectPatternWithRestAndDefaults() {
     test(
         "var {a = 3, ...rest} = foo();",
@@ -1235,6 +1279,7 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
             "          $jscomp$destructuring$var1);"));
   }
 
+  @Test
   public void testObjectPatternWithRestInCatch() {
     test(
         "try {} catch ({first, second, ...rest}) { console.log(rest.z); }",
@@ -1252,6 +1297,7 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testObjectPatternWithRestAssignReturn() {
     test(
         "function f() { return {x:a, ...rest} = foo(); }",
@@ -1269,6 +1315,7 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testObjectPatternWithRestParamList() {
     test(
         "function f({x = a(), ...rest}, y=b()) { console.log(y); }",
@@ -1300,6 +1347,7 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testObjectPatternWithRestArrowParamList() {
     test(
         "var f = ({x = a(), ...rest}, y=b()) => { console.log(y); };",
@@ -1331,6 +1379,7 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testAllRewriteMode() {
     this.destructuringRewriteMode = ObjectDestructuringRewriteMode.REWRITE_ALL_OBJECT_PATTERNS;
 
@@ -1378,6 +1427,7 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
             "var c = $jscomp$destructuring$var5"));
   }
 
+  @Test
   public void testOnlyRestRewriteMode() {
     this.destructuringRewriteMode = ObjectDestructuringRewriteMode.REWRITE_OBJECT_REST;
 
