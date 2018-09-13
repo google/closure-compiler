@@ -903,6 +903,12 @@ public final class CheckJsDocTest extends CompilerTestCase {
             "}"));
     testSame(
         lines(
+            "var obj = {", //
+            "  /** @suppress {uselessCode} */",
+            "  ['h' + 6]() {},",
+            "}"));
+    testSame(
+        lines(
             "class Example {",
             "  /** @suppress {uselessCode} */",
             "  f() {}",
@@ -928,6 +934,20 @@ public final class CheckJsDocTest extends CompilerTestCase {
             "   */",
             "  set f(val) {}",
             "}"));
+    testSame(
+        lines(
+            "class Example {", //
+            "  /** @suppress {uselessCode} */",
+            "  ['f' + 7]() {}",
+            "}"));
+
+    testWarning(
+        lines(
+            "var obj = {", //
+            "  /** @suppress {uselessCode} */",
+            "  ['h' + 6]: 'hello',",
+            "}"),
+        MISPLACED_SUPPRESS);
 
     testSame("/** @suppress {extraRequire} */ goog.require('unused.Class');");
     testSame("/** @const @suppress {duplicate} */ var google = {};");

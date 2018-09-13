@@ -136,6 +136,12 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements HotSwapCompi
         // Suppressions are always valid here.
         return;
 
+      case COMPUTED_PROP:
+        if (n.getLastChild().isFunction()) {
+          return; // Suppressions are valid on computed properties that declare functions.
+        }
+        break;
+
       case STRING_KEY:
         if (n.getParent().isObjectLit()) {
           return;
