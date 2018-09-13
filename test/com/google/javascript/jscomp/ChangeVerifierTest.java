@@ -22,9 +22,14 @@ import static com.google.common.truth.Truth.assertThat;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import junit.framework.TestCase;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
+@RunWith(JUnit4.class)
 public final class ChangeVerifierTest extends TestCase {
 
+  @Test
   public void testCorrectValidationOfScriptWithChangeAfterFunction() {
     Node script = parse("function A() {} if (0) { A(); }");
     checkState(script.isScript());
@@ -45,6 +50,7 @@ public final class ChangeVerifierTest extends TestCase {
     verifier.checkRecordedChanges("test1", script);
   }
 
+  @Test
   public void testChangeToScriptNotReported() {
     Node script = parse("function A() {} if (0) { A(); }");
     checkState(script.isScript());
@@ -67,6 +73,7 @@ public final class ChangeVerifierTest extends TestCase {
     }
   }
 
+  @Test
   public void testDeletedFunction() {
     Node script = parse("function A() {}");
 
@@ -98,6 +105,7 @@ public final class ChangeVerifierTest extends TestCase {
     verifier.checkRecordedChanges("test2", script);
   }
 
+  @Test
   public void testNotDeletedFunction() {
     Node script = parse("function A() {}");
 

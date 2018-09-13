@@ -27,11 +27,16 @@ import com.google.javascript.rhino.Node;
 import com.google.protobuf.TextFormat;
 import com.google.protobuf.TextFormat.ParseException;
 import java.util.List;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /**
  * Tests for {@link CheckConformance}.
  *
  */
+@RunWith(JUnit4.class)
 public final class CheckConformanceTest extends CompilerTestCase {
   private String configuration;
 
@@ -73,6 +78,7 @@ public final class CheckConformanceTest extends CompilerTestCase {
   }
 
   @Override
+  @Before
   public void setUp() throws Exception {
     super.setUp();
     enableTypeCheck();
@@ -102,6 +108,7 @@ public final class CheckConformanceTest extends CompilerTestCase {
     return 1;
   }
 
+  @Test
   public void testViolation1() {
     configuration =
         "requirement: {\n" +
@@ -116,10 +123,12 @@ public final class CheckConformanceTest extends CompilerTestCase {
         "Function.prototype.name; eval.name.length", CheckConformance.CONFORMANCE_VIOLATION);
   }
 
+  @Test
   public void testViolation2() {
     testWarning("function f() { arguments.callee }", CheckConformance.CONFORMANCE_VIOLATION);
   }
 
+  @Test
   public void testNotViolation1() {
     testNoWarning(
         "/** @constructor */ function Foo() { this.callee = 'string'; }\n" +
@@ -142,6 +151,7 @@ public final class CheckConformanceTest extends CompilerTestCase {
         "}");
   }
 
+  @Test
   public void testNotViolation2() {
     configuration =
         "requirement: {\n"
@@ -152,6 +162,7 @@ public final class CheckConformanceTest extends CompilerTestCase {
     testNoWarning("function f() { var location = null; }");
   }
 
+  @Test
   public void testMaybeViolation1() {
     testWarning("function f() { y.callee }", CheckConformance.CONFORMANCE_POSSIBLE_VIOLATION);
 
@@ -168,6 +179,7 @@ public final class CheckConformanceTest extends CompilerTestCase {
     testNoWarning("function f() {/** @const */ var x = {}; x.callee = 1; x.callee}");
   }
 
+  @Test
   public void testBadWhitelist1() {
     allowSourcelessWarnings();
     configuration =
@@ -189,6 +201,7 @@ public final class CheckConformanceTest extends CompilerTestCase {
             + "value: \"eval\"\n");
   }
 
+  @Test
   public void testViolationWhitelisted1() {
     configuration =
         "requirement: {\n" +
@@ -202,6 +215,7 @@ public final class CheckConformanceTest extends CompilerTestCase {
         "eval()");
   }
 
+  @Test
   public void testViolationWhitelisted2() {
     configuration =
         "requirement: {\n" +
@@ -215,6 +229,7 @@ public final class CheckConformanceTest extends CompilerTestCase {
         "eval()");
   }
 
+  @Test
   public void testFileOnOnlyApplyToIsChecked() {
     configuration =
         "requirement: {\n" +
@@ -229,6 +244,7 @@ public final class CheckConformanceTest extends CompilerTestCase {
         "Violation: eval is not allowed");
   }
 
+  @Test
   public void testFileNotOnOnlyApplyToIsNotChecked() {
     configuration =
         "requirement: {\n" +
@@ -240,6 +256,7 @@ public final class CheckConformanceTest extends CompilerTestCase {
     testNoWarning(ImmutableList.of(SourceFile.fromCode("bar.js", "eval()")));
   }
 
+  @Test
   public void testFileOnOnlyApplyToRegexpIsChecked() {
     configuration =
         "requirement: {\n" +
@@ -254,6 +271,7 @@ public final class CheckConformanceTest extends CompilerTestCase {
         "Violation: eval is not allowed");
   }
 
+  @Test
   public void testFileNotOnOnlyApplyToRegexpIsNotChecked() {
     configuration =
         "requirement: {\n" +
@@ -265,6 +283,7 @@ public final class CheckConformanceTest extends CompilerTestCase {
     testNoWarning(ImmutableList.of(SourceFile.fromCode("bar.js", "eval()")));
   }
 
+  @Test
   public void testBannedNameCall() {
     configuration =
         "requirement: {\n" +
@@ -277,6 +296,7 @@ public final class CheckConformanceTest extends CompilerTestCase {
     testWarning("new Function(str);", CheckConformance.CONFORMANCE_VIOLATION);
   }
 
+  @Test
   public void testInferredConstCheck() {
     configuration =
         lines(
@@ -356,6 +376,7 @@ public final class CheckConformanceTest extends CompilerTestCase {
             "var x = new f();"));
   }
 
+  @Test
   public void testBannedCodePattern1() {
     configuration =
         "requirement: {\n" +
@@ -398,6 +419,7 @@ public final class CheckConformanceTest extends CompilerTestCase {
         + "The type information available for this expression is too loose to ensure conformance.");
   }
 
+  @Test
   public void testBannedDep1() {
     configuration =
         "requirement: {\n" +
@@ -410,6 +432,7 @@ public final class CheckConformanceTest extends CompilerTestCase {
         "anything;", CheckConformance.CONFORMANCE_VIOLATION, "Violation: testcode is not allowed");
   }
 
+  @Test
   public void testReportLooseTypeViolations() {
     configuration =
         lines(
@@ -443,6 +466,7 @@ public final class CheckConformanceTest extends CompilerTestCase {
     testNoWarning(externs, "(new Element).textContent = 'safe'");
   }
 
+  @Test
   public void testDontCrashOnNonConstructorWithPrototype() {
     configuration =
         lines(
@@ -477,6 +501,7 @@ public final class CheckConformanceTest extends CompilerTestCase {
     testWarning(inputs, warning);
   }
 
+  @Test
   public void testBannedProperty0() {
     configuration = lines(
         "requirement: {",
@@ -500,6 +525,7 @@ public final class CheckConformanceTest extends CompilerTestCase {
     testConformance(cDecl, dDecl);
   }
 
+  @Test
   public void testBannedProperty1() {
     configuration = lines(
         "requirement: {",
@@ -524,6 +550,7 @@ public final class CheckConformanceTest extends CompilerTestCase {
     testConformance(cDecl, dDecl);
   }
 
+  @Test
   public void testBannedProperty2() {
     configuration = lines(
         "requirement: {",
@@ -562,6 +589,7 @@ public final class CheckConformanceTest extends CompilerTestCase {
         CheckConformance.CONFORMANCE_VIOLATION);
   }
 
+  @Test
   public void testBannedProperty3() {
     configuration = lines(
         "requirement: {",
@@ -588,6 +616,7 @@ public final class CheckConformanceTest extends CompilerTestCase {
         CheckConformance.CONFORMANCE_POSSIBLE_VIOLATION);
   }
 
+  @Test
   public void testBannedProperty4() {
     configuration = lines(
         "requirement: {",
@@ -631,6 +660,7 @@ public final class CheckConformanceTest extends CompilerTestCase {
         CheckConformance.CONFORMANCE_POSSIBLE_VIOLATION);
   }
 
+  @Test
   public void testBannedProperty5() {
     configuration = lines(
         "requirement: {",
@@ -642,6 +672,7 @@ public final class CheckConformanceTest extends CompilerTestCase {
     testWarning("[1, 2, 3].push(4);\n", CheckConformance.CONFORMANCE_VIOLATION);
   }
 
+  @Test
   public void testBannedProperty_recordType() {
     // TODO(b/76025401): remove the enableTranspile() call once we natively typecheck classes
     enableTranspile();
@@ -675,6 +706,7 @@ public final class CheckConformanceTest extends CompilerTestCase {
         CheckConformance.CONFORMANCE_POSSIBLE_VIOLATION);
   }
 
+  @Test
   public void testBannedProperty_namespacedType() {
     configuration = lines(
         "requirement: {",
@@ -705,6 +737,7 @@ public final class CheckConformanceTest extends CompilerTestCase {
         CheckConformance.CONFORMANCE_POSSIBLE_VIOLATION);
   }
 
+  @Test
   public void testBannedPropertyWrite() {
     configuration =
         "requirement: {\n" +
@@ -737,6 +770,7 @@ public final class CheckConformanceTest extends CompilerTestCase {
         declarations + "var c = new C(); c['p'] = 'boo';", CheckConformance.CONFORMANCE_VIOLATION);
   }
 
+  @Test
   public void testBannedPropertyWriteExtern() {
     configuration =
         "requirement: {\n" +
@@ -761,6 +795,7 @@ public final class CheckConformanceTest extends CompilerTestCase {
         CheckConformance.CONFORMANCE_VIOLATION);
   }
 
+  @Test
   public void testBannedPropertyNonConstantWrite() {
     configuration =
         "requirement: {\n" +
@@ -782,6 +817,7 @@ public final class CheckConformanceTest extends CompilerTestCase {
         CheckConformance.CONFORMANCE_VIOLATION);
   }
 
+  @Test
   public void testBannedPropertyRead() {
     configuration =
         "requirement: {\n" +
@@ -822,6 +858,7 @@ public final class CheckConformanceTest extends CompilerTestCase {
         declarations + "var c = new C(); use(c['p']);", CheckConformance.CONFORMANCE_VIOLATION);
   }
 
+  @Test
   public void testRestrictedCall1() {
     configuration =
         "requirement: {\n" +
@@ -847,6 +884,7 @@ public final class CheckConformanceTest extends CompilerTestCase {
         code + "new C().m.call(new C(), 'str');", CheckConformance.CONFORMANCE_VIOLATION);
   }
 
+  @Test
   public void testRestrictedCall2() {
     configuration =
         "requirement: {\n" +
@@ -871,6 +909,7 @@ public final class CheckConformanceTest extends CompilerTestCase {
     testWarning(code + "C.m.call(this, 'str');", CheckConformance.CONFORMANCE_VIOLATION);
   }
 
+  @Test
   public void testRestrictedCall3() {
     configuration =
         "requirement: {\n" +
@@ -892,6 +931,7 @@ public final class CheckConformanceTest extends CompilerTestCase {
     testWarning(code + "new C();", CheckConformance.CONFORMANCE_VIOLATION);
   }
 
+  @Test
   public void testRestrictedCall4() {
     configuration =
         "requirement: {\n" +
@@ -906,6 +946,7 @@ public final class CheckConformanceTest extends CompilerTestCase {
     testNoWarning(EXTERNS + "goog.inherits;", code + "goog.inherits(A, C);");
   }
 
+  @Test
   public void testRestrictedMethodCallThisType() {
     configuration = ""
         + "requirement: {\n"
@@ -930,6 +971,7 @@ public final class CheckConformanceTest extends CompilerTestCase {
     testNoWarning(code + "maybeS.m(1)");
   }
 
+  @Test
   public void testRestrictedMethodCallUsingCallThisType() {
     configuration = ""
         + "requirement: {\n"
@@ -954,6 +996,7 @@ public final class CheckConformanceTest extends CompilerTestCase {
     testNoWarning(code + "b.m.call(maybeS, 1)");
   }
 
+  @Test
   public void testCustom1() {
     allowSourcelessWarnings();
     configuration =
@@ -971,6 +1014,7 @@ public final class CheckConformanceTest extends CompilerTestCase {
             + "type: CUSTOM\n");
   }
 
+  @Test
   public void testCustom2() {
     allowSourcelessWarnings();
     configuration =
@@ -990,6 +1034,7 @@ public final class CheckConformanceTest extends CompilerTestCase {
             + "java_class: \"MissingClass\"\n");
   }
 
+  @Test
   public void testCustom3() {
     allowSourcelessWarnings();
     configuration =
@@ -1063,6 +1108,7 @@ public final class CheckConformanceTest extends CompilerTestCase {
     }
   }
 
+  @Test
   public void testCustom4() {
     allowSourcelessWarnings();
     configuration =
@@ -1084,7 +1130,7 @@ public final class CheckConformanceTest extends CompilerTestCase {
             + "CustomRuleMissingPublicConstructor\"\n");
   }
 
-
+  @Test
   public void testCustom5() {
     allowSourcelessWarnings();
     configuration =
@@ -1104,6 +1150,7 @@ public final class CheckConformanceTest extends CompilerTestCase {
             + "java_class: \"com.google.javascript.jscomp.CheckConformanceTest$CustomRule\"\n");
   }
 
+  @Test
   public void testCustom6() {
     allowSourcelessWarnings();
     configuration =
@@ -1118,6 +1165,7 @@ public final class CheckConformanceTest extends CompilerTestCase {
         "anything;");
   }
 
+  @Test
   public void testCustom7() {
     configuration =
         "requirement: {\n" +
@@ -1132,6 +1180,7 @@ public final class CheckConformanceTest extends CompilerTestCase {
         "anything;", CheckConformance.CONFORMANCE_VIOLATION, "Violation: CustomRule Message");
   }
 
+  @Test
   public void testCustomBanForOf() {
     configuration =
         "requirement: {\n"
@@ -1146,6 +1195,7 @@ public final class CheckConformanceTest extends CompilerTestCase {
         "Violation: BanForOf Message");
   }
 
+  @Test
   public void testCustomBanExpose() {
     configuration =
         "requirement: {\n" +
@@ -1160,6 +1210,7 @@ public final class CheckConformanceTest extends CompilerTestCase {
         "Violation: BanExpose Message");
   }
 
+  @Test
   public void testCustomRestrictThrow1() {
     configuration =
         "requirement: {\n" +
@@ -1174,6 +1225,7 @@ public final class CheckConformanceTest extends CompilerTestCase {
         "Violation: BanThrowOfNonErrorTypes Message");
   }
 
+  @Test
   public void testCustomRestrictThrow2() {
     configuration =
         "requirement: {\n" +
@@ -1185,6 +1237,7 @@ public final class CheckConformanceTest extends CompilerTestCase {
     testNoWarning("throw new Error('test');");
   }
 
+  @Test
   public void testCustomRestrictThrow3() {
     configuration =
         "requirement: {\n" +
@@ -1200,6 +1253,7 @@ public final class CheckConformanceTest extends CompilerTestCase {
         "}"));
   }
 
+  @Test
   public void testCustomRestrictThrow4() {
     configuration =
         "requirement: {\n" +
@@ -1220,6 +1274,7 @@ public final class CheckConformanceTest extends CompilerTestCase {
         "}"));
   }
 
+  @Test
   public void testCustomBanUnknownThis1() {
     configuration =
         "requirement: {\n" +
@@ -1236,6 +1291,7 @@ public final class CheckConformanceTest extends CompilerTestCase {
 
   // TODO(johnlenz): add a unit test for templated "this" values.
 
+  @Test
   public void testCustomBanUnknownThis2() {
     configuration =
         "requirement: {\n" +
@@ -1248,6 +1304,7 @@ public final class CheckConformanceTest extends CompilerTestCase {
         "/** @constructor */ function C() {alert(this);}");
   }
 
+  @Test
   public void testCustomBanUnknownThis3() {
     configuration =
         "requirement: {\n" +
@@ -1260,6 +1317,7 @@ public final class CheckConformanceTest extends CompilerTestCase {
         "function f() {alert(/** @type {Error} */(this));}");
   }
 
+  @Test
   public void testCustomBanUnknownThis4() {
     configuration =
         "requirement: {\n" +
@@ -1291,6 +1349,7 @@ public final class CheckConformanceTest extends CompilerTestCase {
     return "  value: '" + value + "'\n";
   }
 
+  @Test
   public void testCustomBanUnknownThisProp1() {
     configuration = config(rule("BanUnknownDirectThisPropsReferences"), "My rule message");
 
@@ -1301,6 +1360,7 @@ public final class CheckConformanceTest extends CompilerTestCase {
         "Violation: My rule message");
   }
 
+  @Test
   public void testCustomBanUnknownThisProp2() {
     configuration = config(rule("BanUnknownDirectThisPropsReferences"), "My rule message");
 
@@ -1309,6 +1369,7 @@ public final class CheckConformanceTest extends CompilerTestCase {
             + "f.prototype.method = function() { this.prop = foo; };");
   }
 
+  @Test
   public void testCustomBanUnknownProp1() {
     configuration =
         config(rule("BanUnknownTypedClassPropsReferences"), "My rule message", value("String"));
@@ -1320,6 +1381,7 @@ public final class CheckConformanceTest extends CompilerTestCase {
         "Violation: My rule message\nThe property \"prop\" on type \"f\"");
   }
 
+  @Test
   public void testCustomBanUnknownProp2() {
     configuration =
         config(rule("BanUnknownTypedClassPropsReferences"), "My rule message", value("String"));
@@ -1335,6 +1397,7 @@ public final class CheckConformanceTest extends CompilerTestCase {
         "Violation: My rule message\nThe property \"foobar\" on type \"(ObjectWithNoProps|null)\"");
   }
 
+  @Test
   public void testCustomBanUnknownProp3() {
     configuration =
         config(rule("BanUnknownTypedClassPropsReferences"), "My rule message", value("String"));
@@ -1344,6 +1407,7 @@ public final class CheckConformanceTest extends CompilerTestCase {
             + "f.prototype.method = function() { this.prop = foo; };");
   }
 
+  @Test
   public void testCustomBanUnknownProp4() {
     configuration =
         config(rule("BanUnknownTypedClassPropsReferences"), "My rule message", value("String"));
@@ -1354,6 +1418,7 @@ public final class CheckConformanceTest extends CompilerTestCase {
             "f.prototype.method = function() { alert(this.prop); }"));
   }
 
+  @Test
   public void testCustomBanUnknownProp5() {
     configuration =
         config(rule("BanUnknownTypedClassPropsReferences"), "My rule message", value("String"));
@@ -1367,6 +1432,7 @@ public final class CheckConformanceTest extends CompilerTestCase {
         "Violation: My rule message\nThe property \"prop\" on type \"f\"");
   }
 
+  @Test
   public void testCustomBanUnknownProp6() {
     configuration =
         config(rule("BanUnknownTypedClassPropsReferences"), "My rule message", value("String"));
@@ -1381,6 +1447,7 @@ public final class CheckConformanceTest extends CompilerTestCase {
         "Violation: My rule message\nThe property \"prop\" on type \"module$contents$example_f\"");
   }
 
+  @Test
   public void testCustomBanUnknownProp7() {
     configuration =
         config(rule("BanUnknownTypedClassPropsReferences"), "My rule message", value("String"));
@@ -1396,6 +1463,7 @@ public final class CheckConformanceTest extends CompilerTestCase {
         "}"));
   }
 
+  @Test
   public void testCustomBanUnknownProp_getPropInVoidOperatorDoesntCauseSpuriousWarning() {
     // See b/112072360
     configuration =
@@ -1412,6 +1480,7 @@ public final class CheckConformanceTest extends CompilerTestCase {
             "const f = () => void foo.prop;"));
   }
 
+  @Test
   public void testCustomBanUnknownProp_GetPropInDestructuringDoesntCauseSpuriousWarning() {
     configuration =
         config(rule("BanUnknownTypedClassPropsReferences"), "My rule message", value("String"));
@@ -1427,6 +1496,7 @@ public final class CheckConformanceTest extends CompilerTestCase {
                 "[foo.prop] = unknownItem;")));
   }
 
+  @Test
   public void testCustomBanUnknownInterfaceProp1() {
     configuration =
         config(rule("BanUnknownTypedClassPropsReferences"), "My rule message", value("String"));
@@ -1447,6 +1517,7 @@ public final class CheckConformanceTest extends CompilerTestCase {
         "Violation: My rule message\nThe property \"gak\" on type \"I\"");
   }
 
+  @Test
   public void testCustomBanUnknownInterfaceProp2() {
     configuration =
         config(rule("BanUnknownTypedClassPropsReferences"), "My rule message", value("String"));
@@ -1460,6 +1531,7 @@ public final class CheckConformanceTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testCustomBanGlobalVars1() {
     configuration =
         "requirement: {\n" +
@@ -1490,6 +1562,7 @@ public final class CheckConformanceTest extends CompilerTestCase {
         "Violation: BanGlobalVars Message");
   }
 
+  @Test
   public void testCustomBanGlobalVars2() {
     configuration =
         "requirement: {\n"
@@ -1526,6 +1599,7 @@ public final class CheckConformanceTest extends CompilerTestCase {
             "});"));
   }
 
+  @Test
   public void testCustomBanGlobalVarsWithDestructuring() {
     configuration =
         "requirement: {\n"
@@ -1542,6 +1616,7 @@ public final class CheckConformanceTest extends CompilerTestCase {
     testNoWarning("/** @externs */ var [x] = [];");
   }
 
+  @Test
   public void testRequireFileoverviewVisibility() {
     configuration =
         "requirement: {\n" +
@@ -1574,6 +1649,7 @@ public final class CheckConformanceTest extends CompilerTestCase {
         "var foo = function() {};");
   }
 
+  @Test
   public void testBanGlobalVarsInEs6Module() {
     // ES6 modules cannot be type checked yet
     disableTypeCheck();
@@ -1590,6 +1666,7 @@ public final class CheckConformanceTest extends CompilerTestCase {
     testNoWarning("export var s;");
   }
 
+  @Test
   public void testCustomBanUnresolvedType() {
     configuration =
         "requirement: {\n"
@@ -1612,6 +1689,7 @@ public final class CheckConformanceTest extends CompilerTestCase {
         "}"));
   }
 
+  @Test
   public void testCustomStrictBanUnresolvedType() {
     configuration =
         "requirement: {\n"
@@ -1640,6 +1718,7 @@ public final class CheckConformanceTest extends CompilerTestCase {
         CheckConformance.CONFORMANCE_VIOLATION);
   }
 
+  @Test
   public void testMergeRequirements() {
     Compiler compiler = createCompiler();
     ConformanceConfig.Builder builder = ConformanceConfig.newBuilder();
@@ -1653,6 +1732,7 @@ public final class CheckConformanceTest extends CompilerTestCase {
     assertEquals(2, requirement.getWhitelistRegexpCount());
   }
 
+  @Test
   public void testMergeRequirements_findsDuplicates() {
     Compiler compiler = createCompiler();
     ErrorManager errorManager = new BlackHoleErrorManager();
@@ -1665,6 +1745,7 @@ public final class CheckConformanceTest extends CompilerTestCase {
     assertEquals(0, errorManager.getErrorCount());
   }
 
+  @Test
   public void testCustomBanNullDeref1() {
     configuration = config(rule("BanNullDeref"), "My rule message");
 
@@ -1716,6 +1797,7 @@ public final class CheckConformanceTest extends CompilerTestCase {
         "/** @param {?} n */ function f(n) { alert(n.prop); }");
   }
 
+  @Test
   public void testCustomBanNullDeref2() {
     configuration =
         config(rule("BanNullDeref"), "My rule message");
@@ -1736,6 +1818,7 @@ public final class CheckConformanceTest extends CompilerTestCase {
     testNoWarning(externs, code);
   }
 
+  @Test
   public void testCustomBanNullDeref3() {
     configuration =
         config(rule("BanNullDeref"), "My rule message");
@@ -1754,6 +1837,7 @@ public final class CheckConformanceTest extends CompilerTestCase {
     testNoWarning(typedefExterns, code);
   }
 
+  @Test
   public void testCustomBanNullDeref4() {
     configuration =
         config(rule("BanNullDeref"), "My rule message");
@@ -1766,24 +1850,28 @@ public final class CheckConformanceTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testRequireUseStrict0() {
     configuration = config(rule("RequireUseStrict"), "My rule message");
 
     testWarning("anything;", CheckConformance.CONFORMANCE_VIOLATION, "Violation: My rule message");
   }
 
+  @Test
   public void testRequireUseStrictScript() {
     configuration = config(rule("RequireUseStrict"), "My rule message");
 
     testNoWarning("'use strict';");
   }
 
+  @Test
   public void testRequireUseStrictGoogModule() {
     configuration = config(rule("RequireUseStrict"), "My rule message");
 
     testNoWarning("goog.module('foo');");
   }
 
+  @Test
   public void testRequireUseStrictEs6Module() {
     // TODO(b/76025401): remove the enableTranspile() call once we natively typecheck classes
     enableTranspile();
@@ -1793,6 +1881,7 @@ public final class CheckConformanceTest extends CompilerTestCase {
         "export var x = 2;");
   }
 
+  @Test
   public void testBanCreateElement() {
     configuration =
         "requirement: {\n" +
@@ -1843,6 +1932,7 @@ public final class CheckConformanceTest extends CompilerTestCase {
     testNoWarning("goog.dom.createElement(goog.dom.TagName.SCRIPT);");
   }
 
+  @Test
   public void testBanCreateDom() {
     configuration =
         "requirement: {\n" +
@@ -1939,6 +2029,7 @@ public final class CheckConformanceTest extends CompilerTestCase {
         "goog.dom.createDom('iframe', Classes.A);");
   }
 
+  @Test
   public void testBanCreateDomIgnoreLooseType() {
     configuration =
         "requirement: {\n" +
@@ -1958,6 +2049,7 @@ public final class CheckConformanceTest extends CompilerTestCase {
     testNoWarning("goog.dom.createDom(tag, {'src': src});");
   }
 
+  @Test
   public void testBanCreateDomTagNameType() {
     configuration =
         "requirement: {\n" +
@@ -1995,6 +2087,7 @@ public final class CheckConformanceTest extends CompilerTestCase {
         "Violation: BanCreateDom Message");
   }
 
+  @Test
   public void testBanCreateDomMultiType() {
     configuration =
         lines(
@@ -2023,6 +2116,7 @@ public final class CheckConformanceTest extends CompilerTestCase {
         "Violation: BanCreateDom Message");
   }
 
+  @Test
   public void testBanCreateDomAnyTagName() {
     configuration =
         "requirement: {\n" +
@@ -2051,6 +2145,7 @@ public final class CheckConformanceTest extends CompilerTestCase {
     testNoWarning("goog.dom.createDom('span', {'innerhtml': html});");
   }
 
+  @Test
   public void testBanCreateDomTextContent() {
     configuration =
         "requirement: {\n" +

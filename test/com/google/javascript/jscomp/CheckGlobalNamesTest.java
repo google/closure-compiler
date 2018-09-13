@@ -21,12 +21,17 @@ import static com.google.javascript.jscomp.CheckGlobalNames.STRICT_MODULE_DEP_QN
 import static com.google.javascript.jscomp.CheckGlobalNames.UNDEFINED_NAME_WARNING;
 
 import com.google.javascript.rhino.Node;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /**
  * Tests for {@code CheckGlobalNames.java}.
  *
  * @author nicksantos@google.com (Nick Santos)
  */
+@RunWith(JUnit4.class)
 public final class CheckGlobalNamesTest extends CompilerTestCase {
 
   private boolean injectNamespace = false;
@@ -65,6 +70,7 @@ public final class CheckGlobalNamesTest extends CompilerTestCase {
   }
 
   @Override
+  @Before
   public void setUp() throws Exception {
     super.setUp();
     injectNamespace = false;
@@ -82,6 +88,7 @@ public final class CheckGlobalNamesTest extends CompilerTestCase {
   private static final String CLASS_EXPRESSION_NAMES = "var " + CLASS_EXPRESSION_NAMES_STUB;
   private static final String EXT_OBJLIT_NAMES = "var a = {b(){}, d}; a.c = 3;";
 
+  @Test
   public void testRefToDefinedProperties1() {
     testSame(NAMES + "alert(a.b); alert(a.c.e);");
     testSame(GET_NAMES + "alert(a.b); alert(a.c.e);");
@@ -98,6 +105,7 @@ public final class CheckGlobalNamesTest extends CompilerTestCase {
     testSame(EXT_OBJLIT_NAMES + "alert(a.b()); alert(a.c); alert(a.d);");
   }
 
+  @Test
   public void testRefToDefinedProperties2() {
     testSame(NAMES + "a.x={}; alert(a.c);");
     testSame(GET_NAMES + "a.x={}; alert(a.c);");
@@ -107,6 +115,7 @@ public final class CheckGlobalNamesTest extends CompilerTestCase {
     testSame(EXT_OBJLIT_NAMES + "a.x = {}; alert(a.c);");
   }
 
+  @Test
   public void testRefToDefinedProperties3() {
     testSame(NAMES + "alert(a.d);");
     testSame(GET_NAMES + "alert(a.d);");
@@ -116,25 +125,30 @@ public final class CheckGlobalNamesTest extends CompilerTestCase {
     testSame(CONST_NAMES + "alert(a.d);");
   }
 
+  @Test
   public void testRefToMethod1() {
     testSame("function foo() {}; foo.call();");
   }
 
+  @Test
   public void testRefToMethod2() {
     testSame("function foo() {}; foo.call.call();");
   }
 
+  @Test
   public void testCallUndefinedFunctionGivesNoWaring() {
     // We don't bother checking undeclared variables--there's another
     // pass that does this already.
     testSame("foo();");
   }
 
+  @Test
   public void testRefToPropertyOfAliasedName() {
     // this is OK, because "a" was aliased
     testSame(NAMES + "alert(a); alert(a.x);");
   }
 
+  @Test
   public void testRefToUndefinedProperty1() {
     testWarning(NAMES + "alert(a.x);", UNDEFINED_NAME_WARNING);
 
@@ -148,6 +162,7 @@ public final class CheckGlobalNamesTest extends CompilerTestCase {
 
   }
 
+  @Test
   public void testRefToUndefinedProperty2() {
     testWarning(NAMES + "a.x();", UNDEFINED_NAME_WARNING);
 
@@ -162,6 +177,7 @@ public final class CheckGlobalNamesTest extends CompilerTestCase {
         UNDEFINED_NAME_WARNING);
   }
 
+  @Test
   public void testRefToUndefinedProperty3() {
     testWarning(NAMES + "alert(a.c.x);", UNDEFINED_NAME_WARNING);
     testWarning(GET_NAMES + "alert(a.c.x);", UNDEFINED_NAME_WARNING);
@@ -171,12 +187,14 @@ public final class CheckGlobalNamesTest extends CompilerTestCase {
     testWarning(CONST_NAMES + "alert(a.c.x);", UNDEFINED_NAME_WARNING);
   }
 
+  @Test
   public void testRefToUndefinedProperty4() {
     testSame(NAMES + "alert(a.d.x);");
     testSame(GET_NAMES + "alert(a.d.x);");
     testSame(SET_NAMES + "alert(a.d.x);");
   }
 
+  @Test
   public void testRefToDescendantOfUndefinedProperty1() {
     testWarning(NAMES + "var c = a.x.b;", UNDEFINED_NAME_WARNING);
 
@@ -191,6 +209,7 @@ public final class CheckGlobalNamesTest extends CompilerTestCase {
         UNDEFINED_NAME_WARNING);
   }
 
+  @Test
   public void testRefToDescendantOfUndefinedProperty2() {
     testWarning(NAMES + "a.x.b();", UNDEFINED_NAME_WARNING);
 
@@ -202,6 +221,7 @@ public final class CheckGlobalNamesTest extends CompilerTestCase {
         UNDEFINED_NAME_WARNING);
   }
 
+  @Test
   public void testRefToDescendantOfUndefinedProperty3() {
     testWarning(NAMES + "a.x.b = 3;", UNDEFINED_NAME_WARNING);
 
@@ -213,23 +233,28 @@ public final class CheckGlobalNamesTest extends CompilerTestCase {
         UNDEFINED_NAME_WARNING);
   }
 
+  @Test
   public void testComputedPropNameNoWarning() {
     // Computed prop name is not collected in GlobalNamespace
     testSame("var comp; var a = {}; a[comp + 'name'] = 3");
   }
 
+  @Test
   public void testUndefinedPrototypeMethodRefGivesNoWarning() {
     testSame("function Foo() {} var a = new Foo(); a.bar();");
   }
 
+  @Test
   public void testComplexPropAssignGivesNoWarning() {
     testSame("var a = {}; var b = a.b = 3;");
   }
 
+  @Test
   public void testTypedefGivesNoWarning() {
     testSame("var a = {}; /** @typedef {number} */ a.b;");
   }
 
+  @Test
   public void testRefToDescendantOfUndefinedPropertyGivesCorrectWarning() {
     testWarning(NAMES + "a.x.b = 3;", UNDEFINED_NAME_WARNING,
         UNDEFINED_NAME_WARNING.format("a.x"));
@@ -245,11 +270,13 @@ public final class CheckGlobalNamesTest extends CompilerTestCase {
         UNDEFINED_NAME_WARNING.format("A.x"));
   }
 
+  @Test
   public void testNamespaceInjection() {
     injectNamespace = true;
     testWarning(NAMES + "var c = a.x.b;", UNDEFINED_NAME_WARNING);
   }
 
+  @Test
   public void testSuppressionOfUndefinedNamesWarning() {
     testSame(new String[] {
         NAMES +
@@ -267,6 +294,7 @@ public final class CheckGlobalNamesTest extends CompilerTestCase {
     });
   }
 
+  @Test
   public void testNoWarningForSimpleVarModuleDep1() {
     testSame(createModuleChain(
         NAMES,
@@ -274,12 +302,15 @@ public final class CheckGlobalNamesTest extends CompilerTestCase {
     ));
   }
 
+  @Test
   public void testNoWarningForSimpleVarModuleDep2() {
     testSame(createModuleChain(
         "var c = a;",
         NAMES
     ));
   }
+
+  @Test
   public void testNoWarningForGoodModuleDep1() {
     testSame(createModuleChain(
         NAMES,
@@ -287,6 +318,7 @@ public final class CheckGlobalNamesTest extends CompilerTestCase {
     ));
   }
 
+  @Test
   public void testBadModuleDep1() {
     testSame(createModuleChain(
         "var c = a.b;",
@@ -294,6 +326,7 @@ public final class CheckGlobalNamesTest extends CompilerTestCase {
     ), STRICT_MODULE_DEP_QNAME);
   }
 
+  @Test
   public void testBadModuleDep2() {
     testSame(createModuleStar(
         NAMES,
@@ -302,12 +335,14 @@ public final class CheckGlobalNamesTest extends CompilerTestCase {
     ), STRICT_MODULE_DEP_QNAME);
   }
 
+  @Test
   public void testSelfModuleDep() {
     testSame(createModuleChain(
         NAMES + "var c = a.b;"
     ));
   }
 
+  @Test
   public void testUndefinedModuleDep1() {
     testSame(createModuleChain(
         "var c = a.xxx;",
@@ -315,18 +350,21 @@ public final class CheckGlobalNamesTest extends CompilerTestCase {
     ), UNDEFINED_NAME_WARNING);
   }
 
+  @Test
   public void testLateDefinedName1() {
     testWarning("x.y = {}; var x = {};", NAME_DEFINED_LATE_WARNING);
     testWarning("x.y = {}; let x = {};", NAME_DEFINED_LATE_WARNING);
     testWarning("x.y = {}; const x = {};", NAME_DEFINED_LATE_WARNING);
   }
 
+  @Test
   public void testLateDefinedName2() {
     testWarning("var x = {}; x.y.z = {}; x.y = {};", NAME_DEFINED_LATE_WARNING);
     testWarning("let x = {}; x.y.z = {}; x.y = {};", NAME_DEFINED_LATE_WARNING);
     testWarning("const x = {}; x.y.z = {}; x.y = {};", NAME_DEFINED_LATE_WARNING);
   }
 
+  @Test
   public void testLateDefinedName3() {
     testWarning("var x = {}; x.y.z = {}; x.y = {z: {}};",
         NAME_DEFINED_LATE_WARNING);
@@ -338,16 +376,19 @@ public final class CheckGlobalNamesTest extends CompilerTestCase {
         NAME_DEFINED_LATE_WARNING);
   }
 
+  @Test
   public void testLateDefinedName4() {
     testWarning("var x = {}; x.y.z.bar = {}; x.y = {z: {}};",
         NAME_DEFINED_LATE_WARNING);
   }
 
+  @Test
   public void testLateDefinedName5() {
     testWarning("var x = {}; /** @typedef {number} */ x.y.z; x.y = {};",
         NAME_DEFINED_LATE_WARNING);
   }
 
+  @Test
   public void testLateDefinedName6() {
     testWarning(
         "var x = {}; x.y.prototype.z = 3;" +
@@ -355,29 +396,35 @@ public final class CheckGlobalNamesTest extends CompilerTestCase {
         NAME_DEFINED_LATE_WARNING);
   }
 
+  @Test
   public void testLateDefinedNameOfClass1() {
     testWarning("X.y = function(){}; class X{};", NAME_DEFINED_LATE_WARNING);
     testWarning("X.y = function(){}; var X = class{};", NAME_DEFINED_LATE_WARNING);
   }
 
+  @Test
   public void testLateDefinedNameOfClass2() {
     testWarning("X.y = {}; class X{};", NAME_DEFINED_LATE_WARNING);
     testWarning("X.y = {}; var X = class{};", NAME_DEFINED_LATE_WARNING);
   }
 
+  @Test
   public void testLateDefinedNameOfClass3() {
     testWarning("class X{}; X.y.z = {}; X.y = {};", NAME_DEFINED_LATE_WARNING);
     testWarning("var X = class{}; X.y.z = {}; X.y = {};", NAME_DEFINED_LATE_WARNING);
   }
 
+  @Test
   public void testOkLateDefinedName1() {
     testSame("function f() { x.y = {}; } var x = {};");
   }
 
+  @Test
   public void testOkLateDefinedName2() {
     testSame("var x = {}; function f() { x.y.z = {}; } x.y = {};");
   }
 
+  @Test
   public void testPathologicalCaseThatsOkAnyway() {
     testWarning(
         "var x = {};"
@@ -388,10 +435,12 @@ public final class CheckGlobalNamesTest extends CompilerTestCase {
         NAME_DEFINED_LATE_WARNING);
   }
 
+  @Test
   public void testOkGlobalDeclExpr() {
     testSame("var x = {}; /** @type {string} */ x.foo;");
   }
 
+  @Test
   public void testBadInterfacePropRef() {
     testWarning(
         "/** @interface */ function F() {}" +
@@ -399,26 +448,31 @@ public final class CheckGlobalNamesTest extends CompilerTestCase {
          UNDEFINED_NAME_WARNING);
   }
 
+  @Test
   public void testInterfaceFunctionPropRef() {
     testSame(
         "/** @interface */ function F() {}" +
          "F.call(); F.hasOwnProperty('z');");
   }
 
+  @Test
   public void testObjectPrototypeProperties() {
     testSame("var x = {}; var y = x.hasOwnProperty('z');");
   }
 
+  @Test
   public void testCustomObjectPrototypeProperties() {
     testSame("Object.prototype.seal = function() {};" +
         "var x = {}; x.seal();");
   }
 
+  @Test
   public void testFunctionPrototypeProperties() {
     // don't warn for "Foo.call"
     testSame("/** @constructor */ function Foo() {}; Foo.call({});");
   }
 
+  @Test
   public void testIndirectlyDeclaredProperties() {
     testSame(
         "Function.prototype.inherits = function(ctor) {" +
@@ -431,6 +485,7 @@ public final class CheckGlobalNamesTest extends CompilerTestCase {
         "SubFoo.superClass_.bar();");
   }
 
+  @Test
   public void testGoogInheritsAlias() {
     testSame(
         "Function.prototype.inherits = function(ctor) {" +
@@ -443,6 +498,7 @@ public final class CheckGlobalNamesTest extends CompilerTestCase {
         "SubFoo.superClass_.bar();");
   }
 
+  @Test
   public void testGoogInheritsAlias2() {
     testWarning(
         CompilerTypeTestCase.CLOSURE_DEFS +
@@ -454,7 +510,8 @@ public final class CheckGlobalNamesTest extends CompilerTestCase {
          UNDEFINED_NAME_WARNING);
   }
 
-  public void testGlobalCatch() throws Exception {
+  @Test
+  public void testGlobalCatch() {
     testSame(
         "try {" +
         "  throw Error();" +
@@ -463,6 +520,7 @@ public final class CheckGlobalNamesTest extends CompilerTestCase {
         "}");
   }
 
+  @Test
   public void testEs6Subclass_noWarningOnValidPropertyAccess() {
     testNoWarning(
         lines(
@@ -473,6 +531,7 @@ public final class CheckGlobalNamesTest extends CompilerTestCase {
             "Child.f();"));
   }
 
+  @Test
   public void testEs6Subclass_noWarningOnInvalidPropertyAccess() {
     // We don't warn for accesses on any ES6 class that extend another class and let typechecking
     // handle warning for missing static properties.
@@ -486,11 +545,13 @@ public final class CheckGlobalNamesTest extends CompilerTestCase {
             "Child.f();"));
   }
 
+  @Test
   public void testEs6NonSubclass_stillWarnsForMissingProperty() {
     // We still do warn for undefined properties on an ES6 class with no superclass
     testWarning("class Child {} Child.f();", UNDEFINED_NAME_WARNING);
   }
 
+  @Test
   public void testObjectDestructuringAlias() {
     testSame(
         lines(
@@ -501,6 +562,7 @@ public final class CheckGlobalNamesTest extends CompilerTestCase {
             "alert(AdjustMode.SELECT);"));
   }
 
+  @Test
   public void testObjectDestructuringAlias_computedProperty() {
     testSame(
         lines(
@@ -511,6 +573,7 @@ public final class CheckGlobalNamesTest extends CompilerTestCase {
             "alert(AdjustMode.SELECT);"));
   }
 
+  @Test
   public void testObjectDestructuringAlias_defaultValue() {
     testSame(
         lines(
@@ -521,12 +584,14 @@ public final class CheckGlobalNamesTest extends CompilerTestCase {
             "alert(AdjustMode.SELECT);"));
   }
 
+  @Test
   public void testArrayDestructuring() {
     // Currently, we never issue warnings for property access on an object created through
     // destructuring.
     testSame(lines("const [ns] = [{foo: 3}];", "alert(ns.foo);", "alert(ns.bar);")); // undefined
   }
 
+  @Test
   public void testArrayDestructuring_rest() {
     testSame(
         lines(
@@ -535,6 +600,7 @@ public final class CheckGlobalNamesTest extends CompilerTestCase {
             "alert(ns[0].bar);"));
   }
 
+  @Test
   public void testPropertyCreationOnDestructuringAlias() {
     testSame(
         lines(
@@ -545,6 +611,7 @@ public final class CheckGlobalNamesTest extends CompilerTestCase {
             "alert(ns.AdjustMode.OTHER);"));
   }
 
+  @Test
   public void testNamespaceAliasPreventsWarning() {
     // When a variable is aliased, we back off warning for potentially missing properties on that
     // variable.
