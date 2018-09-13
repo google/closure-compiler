@@ -17,11 +17,16 @@
 package com.google.javascript.jscomp;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /**
  * Tests for {@link CheckUnreachableCode}.
  *
  */
+@RunWith(JUnit4.class)
 public final class CheckUnreachableCodeTest extends CompilerTestCase {
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
@@ -30,11 +35,13 @@ public final class CheckUnreachableCodeTest extends CompilerTestCase {
   }
 
   @Override
+  @Before
   public void setUp() throws Exception {
     super.setUp();
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2018);
   }
 
+  @Test
   public void testCorrectSimple() {
     testSame("var x");
     testSame("var x = 1");
@@ -44,12 +51,14 @@ public final class CheckUnreachableCodeTest extends CompilerTestCase {
     testSame("while(x) {}");
   }
 
+  @Test
   public void testIncorrectSimple() {
     assertUnreachable("function f() { return; x=1; }");
     assertUnreachable("function f() { return; x=1; x=1; }");
     assertUnreachable("function f() { return; var x = 1; }");
   }
 
+  @Test
   public void testCorrectIfReturns() {
     testSame("function f() { if (x) { return } }");
     testSame("function f() { if (x) { return } return }");
@@ -58,11 +67,13 @@ public final class CheckUnreachableCodeTest extends CompilerTestCase {
         "{ if (x) { if (y) { return } return } else { return }}");
   }
 
+  @Test
   public void testInCorrectIfReturns() {
     assertUnreachable(
         "function f() { if (x) { return } else { return } return }");
   }
 
+  @Test
   public void testCorrectSwitchReturn() {
     testSame("function f() { switch(x) { default: return; case 1: x++; }}");
     testSame("function f() {" +
@@ -79,6 +90,7 @@ public final class CheckUnreachableCodeTest extends CompilerTestCase {
         "switch(x) { case 1 : return; case 2: return; } return }");
   }
 
+  @Test
   public void testInCorrectSwitchReturn() {
     assertUnreachable("function f() {" +
         "switch(x) { default: return; case 1: return; } return }");
@@ -86,6 +98,7 @@ public final class CheckUnreachableCodeTest extends CompilerTestCase {
         "switch(x) { default: return; return; case 1: return; } }");
   }
 
+  @Test
   public void testCorrectLoopBreaksAndContinues() {
     testSame("while(1) { foo(); break }");
     testSame("while(1) { foo(); continue }");
@@ -96,6 +109,7 @@ public final class CheckUnreachableCodeTest extends CompilerTestCase {
     testSame("do { foo(); continue} while(1)");
   }
 
+  @Test
   public void testInCorrectLoopBreaksAndContinues() {
     assertUnreachable("while(1) { foo(); break; bar()}");
     assertUnreachable("while(1) { foo(); continue; bar() }");
@@ -106,25 +120,30 @@ public final class CheckUnreachableCodeTest extends CompilerTestCase {
     assertUnreachable("do { foo(); continue; bar()} while(1)");
   }
 
+  @Test
   public void testUncheckedWhileInDo() {
     assertUnreachable("do { foo(); break} while(1)");
   }
 
+  @Test
   public void testUncheckedConditionInFor() {
     assertUnreachable("for(var x = 0; x < 100; x++) { break };");
   }
 
+  @Test
   public void testFunctionDeclaration() {
     // functions are not in our CFG.
     testSame("function f() { return; function ff() { }}");
   }
 
+  @Test
   public void testVarDeclaration() {
     assertUnreachable("function f() { return; var x = 1 }");
     // I think the user should fix this as well.
     assertUnreachable("function f() { return; var x }");
   }
 
+  @Test
   public void testReachableTryCatchFinally() {
     testSame("try { } finally {  }");
     testSame("try { foo(); } finally { bar() } ");
@@ -134,29 +153,35 @@ public final class CheckUnreachableCodeTest extends CompilerTestCase {
     testSame("try { foo() } catch (e) { throw e; } finally { bar() }");
   }
 
+  @Test
   public void testUnreachableCatch() {
     assertUnreachable("try { var x = 0 } catch (e) { }");
     assertUnreachable("try { } catch (e) { throw e; }");
   }
 
+  @Test
   public void testSpuriousBreak() {
     testSame("switch (x) { default: throw x; break; }");
   }
 
+  @Test
   public void testInstanceOfThrowsException() {
     testSame("function f() {try { if (value instanceof type) return true; } " +
              "catch (e) { }}");
   }
 
+  @Test
   public void testFalseCondition() {
     assertUnreachable("if(false) { }");
     assertUnreachable("if(0) { }");
   }
 
+  @Test
   public void testUnreachableLoop() {
     assertUnreachable("while(false) {}");
   }
 
+  @Test
   public void testInfiniteLoop() {
     testSame("while (true) { foo(); break; }");
 
@@ -164,6 +189,7 @@ public final class CheckUnreachableCodeTest extends CompilerTestCase {
     assertUnreachable("while(true) {} foo()");
   }
 
+  @Test
   public void testSuppression() {
     assertUnreachable("if(false) { }");
 
@@ -217,6 +243,7 @@ public final class CheckUnreachableCodeTest extends CompilerTestCase {
         "}\n");
   }
 
+  @Test
   public void testES6FeaturesInIfExpression() {
     // class X{} always eval to true by toBoolean();
     assertUnreachable("if(!class {}) x = 1;");
@@ -235,6 +262,7 @@ public final class CheckUnreachableCodeTest extends CompilerTestCase {
     assertUnreachable("if(()=>true) {x = 1;} else {x = 2;}");
   }
 
+  @Test
   public void testES6FeaturesInTryCatch() {
     assertUnreachable("try { let x = 1; } catch(e) {}");
     assertUnreachable("try { const x = 1; } catch(e) {}");
@@ -247,12 +275,14 @@ public final class CheckUnreachableCodeTest extends CompilerTestCase {
     testSame("try { var obj = {a(){}}; obj.a();} catch(e) {}");
   }
 
+  @Test
   public void testCorrectForOfBreakAndContinues() {
     testSame("for(x of [1, 2, 3]) {foo();}");
     testSame("for(x of [1, 2, 3]) {foo(); break;}");
     testSame("for(x of [1, 2, 3]) {foo(); continue;}");
   }
 
+  @Test
   public void testInCorrectForOfBreakAndContinues() {
     assertUnreachable("for(x of [1, 2, 3]) {foo(); break; bar();}");
     assertUnreachable("for(x of [1, 2, 3]) {foo(); continue; bar();}");
@@ -261,11 +291,13 @@ public final class CheckUnreachableCodeTest extends CompilerTestCase {
     assertUnreachable("for(x of [1, 2, 3]) {if(x) {continue; bar();}}");
   }
 
+  @Test
   public void testForLoopsEs6() {
     assertUnreachable("for(;;) {if(x) {continue; bar();}}");
     assertUnreachable("for(x in y) {if(x) {continue; bar();}}");
   }
 
+  @Test
   public void testReturnsInShorthandFunctionOfObjLit() {
     testSame(lines(
         "var obj = {",
@@ -296,10 +328,12 @@ public final class CheckUnreachableCodeTest extends CompilerTestCase {
         "}}"));
   }
 
+  @Test
   public void testObjLit() {
     assertUnreachable("var a = {c(){if(true){return;}x = 1;}};");
   }
 
+  @Test
   public void testClass() {
     testSame("class C{func(){}}");
     assertUnreachable("class C{func(){if (true){return;} else {return;}}}");
@@ -311,16 +345,19 @@ public final class CheckUnreachableCodeTest extends CompilerTestCase {
     assertUnreachable("var C = class{func(){if (true){return;} x = 1;}}");
   }
 
+  @Test
   public void testUnderClass() {
     testSame("class C {} alert(1);");
     testSame("class D {} class C extends D {} alert(1)");
     testSame("class D{} alert(1); class C extends D {}");
   }
 
+  @Test
   public void testFunction() {
     testSame("function f() {} alert(1);");
   }
 
+  @Test
   public void testSubclass() {
     testSame(
         lines(
@@ -328,6 +365,7 @@ public final class CheckUnreachableCodeTest extends CompilerTestCase {
             "class C extends D {foo() {super.foo();}}"));
   }
 
+  @Test
   public void testArrowFunction() {
     testSame("() => 3");
     testSame("e => e + 1");
@@ -340,6 +378,7 @@ public final class CheckUnreachableCodeTest extends CompilerTestCase {
     assertUnreachable("var f = array.filter(g => {if (false) g = 1;});");
   }
 
+  @Test
   public void testGenerators() {
     testSame(
         lines(
@@ -390,6 +429,7 @@ public final class CheckUnreachableCodeTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testAwaitCanCauseError() {
     testSame("async function f(/** !Promise<?> */ p) { try { await p; } catch (e) {} }");
     // Note: for simplicity, we assume that `await <expr>` may always throw an exception, even if
@@ -397,6 +437,7 @@ public final class CheckUnreachableCodeTest extends CompilerTestCase {
     testSame("async function f() { try { await 3; } catch (e) {} }");
   }
 
+  @Test
   public void testForAwait() {
     testSame("async function f(iter) { for await (const item of iter) { item; } }");
     assertUnreachable(

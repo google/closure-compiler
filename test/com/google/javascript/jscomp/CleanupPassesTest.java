@@ -18,16 +18,18 @@ package com.google.javascript.jscomp;
 
 import java.util.List;
 import junit.framework.TestCase;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
-
-/**
- * @author tylerg@google.com (Tyler Goodwin)
- */
+/** @author tylerg@google.com (Tyler Goodwin) */
+@RunWith(JUnit4.class)
 public final class CleanupPassesTest extends TestCase {
 
   private final AbstractCompiler compiler = new Compiler();
   private final CompilerOptions options = new CompilerOptions();
 
+  @Test
   public void testCleanupPassOrder() {
 
     CleanupPasses config = new CleanupPasses(options);
@@ -38,6 +40,7 @@ public final class CleanupPassesTest extends TestCase {
         checks.get(0).create(compiler) instanceof FieldCleanupPass);
   }
 
+  @Test
   public void testNoOptimizations() {
     CompilerOptions options = new CompilerOptions();
     CleanupPasses config = new CleanupPasses(options);

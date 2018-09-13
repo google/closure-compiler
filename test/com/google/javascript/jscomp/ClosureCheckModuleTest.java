@@ -36,7 +36,12 @@ import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_DESTRU
 import static com.google.javascript.jscomp.ClosurePrimitiveErrors.MODULE_USES_GOOG_MODULE_GET;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
+@RunWith(JUnit4.class)
 public final class ClosureCheckModuleTest extends CompilerTestCase {
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
@@ -44,6 +49,7 @@ public final class ClosureCheckModuleTest extends CompilerTestCase {
   }
 
   @Override
+  @Before
   public void setUp() throws Exception {
     super.setUp();
     setLanguage(LanguageMode.ECMASCRIPT_NEXT, LanguageMode.ECMASCRIPT_NEXT);
@@ -56,6 +62,7 @@ public final class ClosureCheckModuleTest extends CompilerTestCase {
     return options;
   }
 
+  @Test
   public void testGoogModuleReferencesThis() {
     testError("goog.module('xyz');\nfoo.call(this, 1, 2, 3);", GOOG_MODULE_REFERENCES_THIS);
 
@@ -83,6 +90,7 @@ public final class ClosureCheckModuleTest extends CompilerTestCase {
             "exports = Foo;"));
   }
 
+  @Test
   public void testGoogModuleUsesThrow() {
     testError("goog.module('xyz');\nthrow 4;", GOOG_MODULE_USES_THROW);
 
@@ -98,6 +106,7 @@ public final class ClosureCheckModuleTest extends CompilerTestCase {
         GOOG_MODULE_USES_THROW);
   }
 
+  @Test
   public void testGoogModuleGetAtTopLevel() {
     testError("goog.module('xyz');\ngoog.module.get('abc');", MODULE_USES_GOOG_MODULE_GET);
 
@@ -123,10 +132,12 @@ public final class ClosureCheckModuleTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testGoogModuleAndProvide() {
     testError("goog.module('xyz');\ngoog.provide('abc');", MODULE_AND_PROVIDES);
   }
 
+  @Test
   public void testMultipleGoogModules() {
     testError(
         lines(
@@ -137,6 +148,7 @@ public final class ClosureCheckModuleTest extends CompilerTestCase {
         MULTIPLE_MODULES_IN_FILE);
   }
 
+  @Test
   public void testBundledGoogModules() {
     testError(
         lines(
@@ -186,10 +198,12 @@ public final class ClosureCheckModuleTest extends CompilerTestCase {
         MULTIPLE_MODULES_IN_FILE);
   }
 
+  @Test
   public void testGoogModuleReferencesGlobalName() {
     testError("goog.module('x.y.z');\nx.y.z = function() {};", REFERENCE_TO_MODULE_GLOBAL_NAME);
   }
 
+  @Test
   public void testIllegalAtExport() {
     testError(
         lines(
@@ -240,6 +254,7 @@ public final class ClosureCheckModuleTest extends CompilerTestCase {
         ClosureCheckModule.AT_EXPORT_IN_GOOG_MODULE);
   }
 
+  @Test
   public void testLegalAtExport() {
     testSame(
         lines(
@@ -329,6 +344,7 @@ public final class ClosureCheckModuleTest extends CompilerTestCase {
             "exports.prototype.fly = function() {};"));
   }
 
+  @Test
   public void testIllegalDeclareLegacyNamespace() {
     testError(
         lines(
@@ -337,6 +353,7 @@ public final class ClosureCheckModuleTest extends CompilerTestCase {
         DECLARE_LEGACY_NAMESPACE_IN_NON_MODULE);
   }
 
+  @Test
   public void testIllegalGoogRequires() {
     testError(
         lines(
@@ -425,6 +442,7 @@ public final class ClosureCheckModuleTest extends CompilerTestCase {
         ProcessClosurePrimitives.INVALID_ARGUMENT_ERROR);
   }
 
+  @Test
   public void testIllegalShortImportReferencedByLongName() {
     testError(
         lines(
@@ -436,6 +454,7 @@ public final class ClosureCheckModuleTest extends CompilerTestCase {
         REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME_INCLUDING_SHORT_NAME);
   }
 
+  @Test
   public void testIllegalShortImportReferencedByLongName_extends() {
     testError(
         lines(
@@ -490,6 +509,7 @@ public final class ClosureCheckModuleTest extends CompilerTestCase {
         JSDOC_REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME_INCLUDING_SHORT_NAME);
   }
 
+  @Test
   public void testIllegalShortImportDestructuring() {
     testError(
         lines(
@@ -510,6 +530,7 @@ public final class ClosureCheckModuleTest extends CompilerTestCase {
         REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME_INCLUDING_SHORT_NAME);
   }
 
+  @Test
   public void testIllegalImportNoAlias() {
     testError(
         lines(
@@ -544,6 +565,7 @@ public final class ClosureCheckModuleTest extends CompilerTestCase {
         REFERENCE_TO_FULLY_QUALIFIED_IMPORT_NAME);
   }
 
+  @Test
   public void testSingleNameImportCrossAlias() {
     testSame(
         lines(
@@ -555,6 +577,7 @@ public final class ClosureCheckModuleTest extends CompilerTestCase {
             "exports = function() { return foo.doThing(''); };"));
   }
 
+  @Test
   public void testLegalSingleNameImport() {
     testSame(
         lines(
@@ -565,6 +588,7 @@ public final class ClosureCheckModuleTest extends CompilerTestCase {
             "exports = function() { return foo.doThing(''); };"));
   }
 
+  @Test
   public void testIllegalLetShortRequire() {
     testSame(
         lines(
@@ -580,12 +604,14 @@ public final class ClosureCheckModuleTest extends CompilerTestCase {
         LET_GOOG_REQUIRE);
   }
 
+  @Test
   public void testIllegalDestructuringForwardDeclare() {
     testError(
         "goog.module('m'); var {x} = goog.forwardDeclare('a.b.c');",
         INVALID_DESTRUCTURING_FORWARD_DECLARE);
   }
 
+  @Test
   public void testLegalGoogRequires() {
     testSame(
         lines(
@@ -606,6 +632,7 @@ public final class ClosureCheckModuleTest extends CompilerTestCase {
             "const {assert, fail} = goog.require('goog.asserts');"));
   }
 
+  @Test
   public void testShorthandNameConvention() {
     testSame(
         lines(
@@ -636,6 +663,7 @@ public final class ClosureCheckModuleTest extends CompilerTestCase {
         "The capitalization of short name event is incorrect; it should be Event.");
   }
 
+  @Test
   public void testIllegalExports() {
     testError(
         lines(
@@ -675,6 +703,7 @@ public final class ClosureCheckModuleTest extends CompilerTestCase {
 
   }
 
+  @Test
   public void testDontCrashOnTrailingDot() {
     testSame(
         lines(
