@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import junit.framework.TestCase;
+import org.junit.Before;
 
 public abstract class BaseReplaceScriptTestCase extends TestCase {
   protected static final Joiner LINE_JOINER = Joiner.on('\n');
@@ -57,7 +58,8 @@ public abstract class BaseReplaceScriptTestCase extends TestCase {
   protected ImmutableList<SourceFile> testExterns = EXTVAR_EXTERNS;
 
   @Override
-  protected void setUp() throws Exception {
+  @Before
+  public void setUp() throws Exception {
     super.setUp();
     testExterns = EXTVAR_EXTERNS;
   }
