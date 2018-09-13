@@ -22,6 +22,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
 import com.google.debugging.sourcemap.FilePosition;
 import com.google.debugging.sourcemap.SourceMapConsumerV3;
@@ -32,6 +33,7 @@ import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.StaticSourceFile.SourceKind;
 import com.google.javascript.rhino.Token;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -1898,5 +1900,83 @@ public final class CompilerTest extends TestCase {
     }
 
     assertThat(orderedInputs).containsExactly("/a.js", "/entry.js", "/b.js").inOrder();
+  }
+
+  public void testWeakSources() throws Exception {
+    List<SourceFile> sources =
+        ImmutableList.of(
+            SourceFile.fromCode("weak1.js", "goog.provide('a');", SourceKind.WEAK),
+            SourceFile.fromCode("strong1.js", "goog.provide('a.b');", SourceKind.STRONG),
+            SourceFile.fromCode("weak2.js", "goog.provide('c');", SourceKind.WEAK),
+            SourceFile.fromCode("strong2.js", "goog.provide('d');", SourceKind.STRONG));
+
+    CompilerOptions options = new CompilerOptions();
+    options.setEmitUseStrict(false);
+    options.setClosurePass(true);
+
+    Compiler compiler = new Compiler();
+
+    compiler.init(ImmutableList.of(), sources, options);
+
+    compiler.parse();
+    compiler.check();
+    compiler.performOptimizations();
+
+    assertThat(compiler.getModuleGraph().getModuleCount()).isEqualTo(2);
+    assertThat(Iterables.get(compiler.getModuleGraph().getAllModules(), 0).getName())
+        .isEqualTo(JSModule.STRONG_MODULE_NAME);
+    assertThat(Iterables.get(compiler.getModuleGraph().getAllModules(), 1).getName())
+        .isEqualTo(JSModule.WEAK_MODULE_NAME);
+
+    assertThat(compiler.toSource()).isEqualTo("var a={};a.b={};var d={};");
+  }
+
+  private void weakSourcesModulesHelper(boolean saveAndRestore) throws Exception {
+    JSModule m1 = new JSModule("m1");
+    m1.add(SourceFile.fromCode("weak1.js", "goog.provide('a');", SourceKind.WEAK));
+    m1.add(SourceFile.fromCode("strong1.js", "goog.provide('a.b');", SourceKind.STRONG));
+    JSModule m2 = new JSModule("m2");
+    m2.add(SourceFile.fromCode("weak2.js", "goog.provide('c');", SourceKind.WEAK));
+    m2.add(SourceFile.fromCode("strong2.js", "goog.provide('d');", SourceKind.STRONG));
+
+    CompilerOptions options = new CompilerOptions();
+    options.setEmitUseStrict(false);
+    options.setClosurePass(true);
+
+    Compiler compiler = new Compiler();
+
+    compiler.initModules(ImmutableList.of(), ImmutableList.of(m1, m2), options);
+
+    compiler.parse();
+    compiler.check();
+
+    if (saveAndRestore) {
+      ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+      compiler.saveState(byteArrayOutputStream);
+      byteArrayOutputStream.close();
+      try (ByteArrayInputStream byteArrayInputStream =
+          new ByteArrayInputStream(byteArrayOutputStream.toByteArray())) {
+        compiler.restoreState(byteArrayInputStream);
+      }
+    }
+
+    compiler.performOptimizations();
+
+    assertThat(compiler.getModuleGraph().getModuleCount()).isEqualTo(3);
+
+    JSModule weakModule = compiler.getModuleGraph().getModuleByName("$weak$");
+    assertThat(weakModule).isNotNull();
+
+    assertThat(compiler.toSource(m1)).isEqualTo("var a={};a.b={};");
+    assertThat(compiler.toSource(m2)).isEqualTo("var d={};");
+    assertThat(compiler.toSource(weakModule)).isEmpty();
+  }
+
+  public void testWeakSourcesModules() throws Exception {
+    weakSourcesModulesHelper(/* saveAndRestore= */ false);
+  }
+
+  public void testWeakSourcesSaveRestore() throws Exception {
+    weakSourcesModulesHelper(/* saveAndRestore= */ true);
   }
 }

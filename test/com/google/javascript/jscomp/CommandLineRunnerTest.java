@@ -1350,19 +1350,23 @@ public final class CommandLineRunnerTest extends TestCase {
     lastCommandLineRunner.printModuleGraphManifestOrBundleTo(
         lastCompiler.getModuleGraph(), builder, true);
     assertThat(builder.toString())
-        .isEqualTo(Joiner.on('\n').join(
-            "{m0}",
-            "i0.js",
-            "",
-            "{m1:m0}",
-            "i1.js",
-            "",
-            "{m2:m1}",
-            "i2.js",
-            "",
-            "{m3:m2}",
-            "i3.js",
-            ""));
+        .isEqualTo(
+            Joiner.on('\n')
+                .join(
+                    "{m0}",
+                    "i0.js",
+                    "",
+                    "{m1:m0}",
+                    "i1.js",
+                    "",
+                    "{m2:m1}",
+                    "i2.js",
+                    "",
+                    "{m3:m2}",
+                    "i3.js",
+                    "",
+                    "{$weak$:m0,m1,m2,m3}",
+                    ""));
   }
 
   public void testStarModuleManifest() throws Exception {
@@ -1374,19 +1378,23 @@ public final class CommandLineRunnerTest extends TestCase {
     lastCommandLineRunner.printModuleGraphManifestOrBundleTo(
         lastCompiler.getModuleGraph(), builder, true);
     assertThat(builder.toString())
-        .isEqualTo(Joiner.on('\n').join(
-            "{m0}",
-            "i0.js",
-            "",
-            "{m1:m0}",
-            "i1.js",
-            "",
-            "{m2:m0}",
-            "i2.js",
-            "",
-            "{m3:m0}",
-            "i3.js",
-            ""));
+        .isEqualTo(
+            Joiner.on('\n')
+                .join(
+                    "{m0}",
+                    "i0.js",
+                    "",
+                    "{m1:m0}",
+                    "i1.js",
+                    "",
+                    "{m2:m0}",
+                    "i2.js",
+                    "",
+                    "{m3:m0}",
+                    "i3.js",
+                    "",
+                    "{$weak$:m0,m1,m2,m3}",
+                    ""));
   }
 
   public void testOutputModuleGraphJson() throws Exception {
@@ -2114,12 +2122,17 @@ public final class CommandLineRunnerTest extends TestCase {
       fail("Unexpected exception " + e);
     }
     String output = new String(outReader.toByteArray(), UTF_8);
-    assertThat(output).isEqualTo("[{\"src\":\"alert(\\\"foo\\\");\\n\","
-        + "\"path\":\"./foo/bar/baz.js\",\"source_map\":\"{\\n\\\"version\\\":3,"
-        + "\\n\\\"file\\\":\\\"./foo/bar/baz.js\\\",\\n\\\"lineCount\\\":1,"
-        + "\\n\\\"mappings\\\":\\\"AAAAA,KAAA,CAAM,KAAN;\\\","
-        + "\\n\\\"sources\\\":[\\\"foo.js\\\"],"
-        + "\\n\\\"names\\\":[\\\"alert\\\"]\\n}\\n\"}]");
+    assertThat(output)
+        .isEqualTo(
+            "[{\"src\":\"alert(\\\"foo\\\");\\n\","
+                + "\"path\":\"./foo/bar/baz.js\",\"source_map\":\"{\\n\\\"version\\\":3,"
+                + "\\n\\\"file\\\":\\\"./foo/bar/baz.js\\\",\\n\\\"lineCount\\\":1,"
+                + "\\n\\\"mappings\\\":\\\"AAAAA,KAAA,CAAM,KAAN;\\\","
+                + "\\n\\\"sources\\\":[\\\"foo.js\\\"],\\n\\\"names\\\":[\\\"alert\\\"]\\n}\\n\"},"
+                + "{\"src\":\"\\n\",\"path\":\"./$weak$.js\",\"source_map\":"
+                + "\"{\\n\\\"version\\\":3,\\n\\\"file\\\":\\\"./$weak$.js\\\","
+                + "\\n\\\"lineCount\\\":1,\\n\\\"mappings\\\":\\\";\\\",\\n\\\"sources\\\":[],"
+                + "\\n\\\"names\\\":[]\\n}\\n\"}]");
   }
 
   public void testOutputModuleNaming() {
@@ -2142,12 +2155,17 @@ public final class CommandLineRunnerTest extends TestCase {
       fail("Unexpected exception " + e);
     }
     String output = new String(outReader.toByteArray(), UTF_8);
-    assertThat(output).isEqualTo("[{\"src\":\"alert(\\\"foo\\\");\\n\","
-        + "\"path\":\"./foo--bar.baz.js\",\"source_map\":\"{\\n\\\"version\\\":3,"
-        + "\\n\\\"file\\\":\\\"./foo--bar.baz.js\\\",\\n\\\"lineCount\\\":1,"
-        + "\\n\\\"mappings\\\":\\\"AAAAA,KAAA,CAAM,KAAN;\\\","
-        + "\\n\\\"sources\\\":[\\\"foo.js\\\"],"
-        + "\\n\\\"names\\\":[\\\"alert\\\"]\\n}\\n\"}]");
+    assertThat(output)
+        .isEqualTo(
+            "[{\"src\":\"alert(\\\"foo\\\");\\n\","
+                + "\"path\":\"./foo--bar.baz.js\",\"source_map\":\"{\\n\\\"version\\\":3,"
+                + "\\n\\\"file\\\":\\\"./foo--bar.baz.js\\\",\\n\\\"lineCount\\\":1,"
+                + "\\n\\\"mappings\\\":\\\"AAAAA,KAAA,CAAM,KAAN;\\\","
+                + "\\n\\\"sources\\\":[\\\"foo.js\\\"],\\n\\\"names\\\":[\\\"alert\\\"]\\n}\\n\"},"
+                + "{\"src\":\"\\n\",\"path\":\"./$weak$.js\","
+                + "\"source_map\":\"{\\n\\\"version\\\":3,\\n\\\"file\\\":\\\"./$weak$.js\\\","
+                + "\\n\\\"lineCount\\\":1,\\n\\\"mappings\\\":\\\";\\\",\\n\\\"sources\\\":[],"
+                + "\\n\\\"names\\\":[]\\n}\\n\"}]");
   }
 
   public void testAssumeFunctionWrapper() {
