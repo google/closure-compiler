@@ -21,6 +21,7 @@ import static com.google.javascript.jscomp.CheckAccessControls.VISIBILITY_MISMAT
 import static com.google.javascript.jscomp.CheckLevel.ERROR;
 import static com.google.javascript.jscomp.CheckLevel.OFF;
 import static com.google.javascript.jscomp.CheckLevel.WARNING;
+import static com.google.javascript.jscomp.CompilerTestCase.lines;
 import static com.google.javascript.jscomp.TypeCheck.DETERMINISTIC_TEST;
 
 import com.google.common.collect.ImmutableList;
@@ -426,8 +427,26 @@ public final class WarningsGuardTest extends TestCase {
     Compiler compiler = new Compiler();
     WarningsGuard guard = new SuppressDocWarningsGuard(compiler, map);
 
-    Node code = compiler.parseTestCode(
-        "/** @fileoverview @suppress {deprecated} */\n console.log(a);");
+    Node code =
+        compiler.parseTestCode("/** @fileoverview @suppress {deprecated} */\n console.log(a);");
+
+    assertThat(guard.level(JSError.make(findNameNode(code, "a"), BAR_WARNING))).isEqualTo(OFF);
+  }
+
+  public void testSuppressDocGuard_appliesSuppressionsOnComputedPropMethod_toPropNameExpression() {
+    Map<String, DiagnosticGroup> map = new HashMap<>();
+    map.put("deprecated", new DiagnosticGroup(BAR_WARNING));
+
+    Compiler compiler = new Compiler();
+    WarningsGuard guard = new SuppressDocWarningsGuard(compiler, map);
+
+    Node code =
+        compiler.parseTestCode(
+            lines(
+                "class Foo {", //
+                "  /** @suppress {deprecated} */",
+                "  [a]() { }",
+                "}"));
 
     assertThat(guard.level(JSError.make(findNameNode(code, "a"), BAR_WARNING))).isEqualTo(OFF);
   }
