@@ -25,12 +25,15 @@ import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.jscomp.deps.SimpleDependencyInfo;
 import java.util.Arrays;
 import junit.framework.TestCase;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
-/**
- * Tests for {@link LazyParsedDependencyInfo}.
- */
+/** Tests for {@link LazyParsedDependencyInfo}. */
+@RunWith(JUnit4.class)
 public final class LazyParsedDependencyInfoTest extends TestCase {
 
+  @Test
   public void testDelegation() {
     Require baz = Require.googRequireSymbol("baz");
     Require qux = Require.googRequireSymbol("qux");
@@ -49,6 +52,7 @@ public final class LazyParsedDependencyInfoTest extends TestCase {
     assertThat(info.getRequires()).containsExactly(baz, qux);
   }
 
+  @Test
   public void testLoadFlagsParsesEs3() {
     Compiler compiler = new Compiler();
     compiler.initOptions(new CompilerOptions());
@@ -68,6 +72,7 @@ public final class LazyParsedDependencyInfoTest extends TestCase {
     assertFalse(info.isModule());
   }
 
+  @Test
   public void testLoadFlagsParsesEs5() {
     Compiler compiler = new Compiler();
     compiler.initOptions(new CompilerOptions());
@@ -82,6 +87,7 @@ public final class LazyParsedDependencyInfoTest extends TestCase {
     assertTrue(info.isModule());
   }
 
+  @Test
   public void testLoadFlagsParsesEs6Impl() {
     Compiler compiler = new Compiler();
     compiler.initOptions(new CompilerOptions());
@@ -96,6 +102,7 @@ public final class LazyParsedDependencyInfoTest extends TestCase {
     assertFalse(info.isModule());
   }
 
+  @Test
   public void testLoadFlagsParsesEs6() {
     Compiler compiler = new Compiler();
     compiler.initOptions(new CompilerOptions());
@@ -110,6 +117,7 @@ public final class LazyParsedDependencyInfoTest extends TestCase {
     assertFalse(info.isModule());
   }
 
+  @Test
   public void testParseIsLazy() {
     Compiler compiler = new Compiler();
     compiler.initOptions(new CompilerOptions());
@@ -128,6 +136,7 @@ public final class LazyParsedDependencyInfoTest extends TestCase {
     assertThat(compiler.getErrorManager().getErrorCount()).isAtLeast(1);
   }
 
+  @Test
   public void testModuleConflict() {
     Compiler compiler = new Compiler();
     CompilerOptions options = new CompilerOptions();

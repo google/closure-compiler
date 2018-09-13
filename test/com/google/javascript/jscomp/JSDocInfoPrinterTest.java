@@ -29,21 +29,26 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import java.util.function.Function;
 import junit.framework.TestCase;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
-/**
- * @author moz@google.com (Michael Zhou)
- */
+/** @author moz@google.com (Michael Zhou) */
+@RunWith(JUnit4.class)
 public final class JSDocInfoPrinterTest extends TestCase {
   private static final Joiner LINE_JOINER = Joiner.on('\n');
   private JSDocInfoBuilder builder;
   private JSDocInfoPrinter jsDocInfoPrinter;
 
   @Override
-  protected void setUp() {
+  @Before
+  public void setUp() {
     builder = new JSDocInfoBuilder(true);
     jsDocInfoPrinter = new JSDocInfoPrinter(false);
   }
 
+  @Test
   public void testBasic() {
     builder.recordConstancy();
     JSDocInfo info = builder.buildAndReset();
@@ -57,6 +62,7 @@ public final class JSDocInfoPrinterTest extends TestCase {
         jsDocInfoPrinter.print(info));
   }
 
+  @Test
   public void testDontCrashWhenNoThrowType() {
     // Happens for code like: @throws TypeNameWithoutBraces
     builder.recordThrowType(null);
@@ -65,24 +71,28 @@ public final class JSDocInfoPrinterTest extends TestCase {
     assertEquals("/** */ ", jsDocInfoPrinter.print(info));
   }
 
+  @Test
   public void testFinal() {
     builder.recordFinality();
     JSDocInfo info = builder.buildAndReset();
     assertEquals("/** @final */ ", jsDocInfoPrinter.print(info));
   }
 
+  @Test
   public void testDescTag() {
     builder.recordDescription("foo");
     JSDocInfo info = builder.buildAndReset();
     assertEquals("/** @desc foo\n */ ", jsDocInfoPrinter.print(info));
   }
 
+  @Test
   public void testRecordTag() {
     builder.recordImplicitMatch();
     JSDocInfo info = builder.buildAndReset();
     assertEquals("/** @record */ ", jsDocInfoPrinter.print(info));
   }
 
+  @Test
   public void testTemplate() {
     builder.recordTemplateTypeName("T");
     builder.recordTemplateTypeName("U");
@@ -90,12 +100,14 @@ public final class JSDocInfoPrinterTest extends TestCase {
     assertEquals("/**\n @template T,U\n */\n", jsDocInfoPrinter.print(info));
   }
 
+  @Test
   public void testTypeTransformationLanguageTemplate() {
     builder.recordTypeTransformation("T", IR.string("Promise"));
     JSDocInfo info = builder.buildAndReset();
     assertEquals("/**\n @template T := \"Promise\" =:\n */\n", jsDocInfoPrinter.print(info));
   }
 
+  @Test
   public void testParam() {
     builder.recordParameter("foo",
         new JSTypeExpression(JsDocInfoParser.parseTypeString("number"), "<testParam>"));
@@ -125,6 +137,7 @@ public final class JSDocInfoPrinterTest extends TestCase {
     assertEquals("/**\n @param foo\n */\n", jsDocInfoPrinter.print(info));
   }
 
+  @Test
   public void testRecordTypes() {
     builder.recordType(new JSTypeExpression(
         JsDocInfoParser.parseTypeString("{foo: number}"), "<testRecordTypes>"));
@@ -152,6 +165,7 @@ public final class JSDocInfoPrinterTest extends TestCase {
     assertEquals("/** @type {{foo,bar:number}} */ ", jsDocInfoPrinter.print(info));
   }
 
+  @Test
   public void testTypes() {
     builder.recordReturnType(
         new JSTypeExpression(JsDocInfoParser.parseTypeString("number|string"), "<testTypes>"));
@@ -225,6 +239,7 @@ public final class JSDocInfoPrinterTest extends TestCase {
     assertEquals("/** Map */ ", jsDocInfoPrinter.print(info));
   }
 
+  @Test
   public void testInheritance() {
     builder.recordImplementedInterface(
         new JSTypeExpression(JsDocInfoParser.parseTypeString("Foo"), "<testInheritance>"));
@@ -253,6 +268,7 @@ public final class JSDocInfoPrinterTest extends TestCase {
         jsDocInfoPrinter.print(info));
   }
 
+  @Test
   public void testInterfaceInheritance() {
     builder.recordInterface();
     builder.recordExtendedInterface(
@@ -264,6 +280,7 @@ public final class JSDocInfoPrinterTest extends TestCase {
         jsDocInfoPrinter.print(info));
   }
 
+  @Test
   public void testFunctions() {
     builder.recordType(new JSTypeExpression(
         JsDocInfoParser.parseTypeString("function()"), "<testFunctions>"));
@@ -319,6 +336,7 @@ public final class JSDocInfoPrinterTest extends TestCase {
     assertEquals("/** @type {function(this:foo):?} */ ", jsDocInfoPrinter.print(info));
   }
 
+  @Test
   public void testDefines() {
     builder.recordDefineType(new JSTypeExpression(
         JsDocInfoParser.parseTypeString("string"), "<testDefines>"));
@@ -326,6 +344,7 @@ public final class JSDocInfoPrinterTest extends TestCase {
     assertEquals("/** @define {string} */ ", jsDocInfoPrinter.print(info));
   }
 
+  @Test
   public void testConstDefines() {
     builder.recordDefineType(new JSTypeExpression(
         JsDocInfoParser.parseTypeString("string"), "<testDefines>"));
@@ -334,6 +353,7 @@ public final class JSDocInfoPrinterTest extends TestCase {
     assertEquals("/** @define {string} */ ", jsDocInfoPrinter.print(info));
   }
 
+  @Test
   public void testDeprecated() {
     builder.recordDeprecated();
     builder.recordDeprecationReason("See {@link otherClass} for more info.");
@@ -349,26 +369,32 @@ public final class JSDocInfoPrinterTest extends TestCase {
         jsDocInfoPrinter.print(info));
   }
 
+  @Test
   public void testExterns() {
     testSameFileoverview("/** @externs */ ");
   }
 
+  @Test
   public void testTypeSummary() {
     testSameFileoverview("/** @typeSummary */ ");
   }
 
+  @Test
   public void testExport() {
     testSame("/** @export */ ");
   }
 
+  @Test
   public void testAbstract() {
     testSame("/** @abstract */ ");
   }
 
+  @Test
   public void testImplicitCast() {
     testSame("/** @implicitCast */ ");
   }
 
+  @Test
   public void testNoCollapse() {
     testSame("/** @nocollapse */ ");
   }

@@ -20,15 +20,19 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-
-import junit.framework.TestCase;
 import java.util.ArrayList;
 import java.util.List;
+import junit.framework.TestCase;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /**
  * Tests for {@link JSModule}
  *
  */
+@RunWith(JUnit4.class)
 public final class JSModuleTest extends TestCase {
   private JSModule mod1;
   private JSModule mod2;  // depends on mod1
@@ -37,7 +41,8 @@ public final class JSModuleTest extends TestCase {
   private JSModule mod5;  // depends on mod1
 
   @Override
-  protected void setUp() {
+  @Before
+  public void setUp() throws Exception {
     List<JSModule> modulesInDepOrder = new ArrayList<>();
 
     mod1 = new JSModule("mod1");
@@ -61,6 +66,7 @@ public final class JSModuleTest extends TestCase {
     modulesInDepOrder.add(mod5);
   }
 
+  @Test
   public void testDependencies() {
     assertThat(mod1.getAllDependencies()).isEmpty();
     assertEquals(ImmutableSet.of(mod1), mod2.getAllDependencies());
@@ -74,6 +80,7 @@ public final class JSModuleTest extends TestCase {
                  mod4.getThisAndAllDependencies());
   }
 
+  @Test
   public void testSortInputs() throws Exception {
     CompilerInput a = new CompilerInput(
         SourceFile.fromCode("a.js",

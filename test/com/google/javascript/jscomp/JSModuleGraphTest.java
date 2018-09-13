@@ -31,11 +31,16 @@ import java.util.BitSet;
 import java.util.HashMap;
 import java.util.List;
 import junit.framework.TestCase;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /**
  * Tests for {@link JSModuleGraph}
  *
  */
+@RunWith(JUnit4.class)
 public final class JSModuleGraphTest extends TestCase {
 
   // NOTE: These are not static. It would probably be clearer to initialize them in setUp()
@@ -51,6 +56,7 @@ public final class JSModuleGraphTest extends TestCase {
   private Compiler compiler;
 
   @Override
+  @Before
   public void setUp() throws Exception {
     super.setUp();
     B.addDependency(A); //     __A__
@@ -65,6 +71,7 @@ public final class JSModuleGraphTest extends TestCase {
     compiler = new Compiler();
   }
 
+  @Test
   public void testSmallerTreeBeatsDeeperTree() {
     final JSModule a = new JSModule("a");
     final JSModule b = new JSModule("b");
@@ -103,6 +110,7 @@ public final class JSModuleGraphTest extends TestCase {
     assertSmallestCoveringSubtree(d, graph, c, e, f, g);
   }
 
+  @Test
   public void testModuleDepth() {
     assertEquals("A should have depth 0", 0, A.getDepth());
     assertEquals("B should have depth 1", 1, B.getDepth());
@@ -112,6 +120,7 @@ public final class JSModuleGraphTest extends TestCase {
     assertEquals("F should have depth 3", 3, F.getDepth());
   }
 
+  @Test
   public void testDeepestCommonDep() {
     assertDeepestCommonDep(null, A, A);
     assertDeepestCommonDep(null, A, B);
@@ -136,6 +145,7 @@ public final class JSModuleGraphTest extends TestCase {
     assertDeepestCommonDep(E, F, F);
   }
 
+  @Test
   public void testDeepestCommonDepInclusive() {
     assertDeepestCommonDepInclusive(A, A, A);
     assertDeepestCommonDepInclusive(A, A, B);
@@ -160,6 +170,7 @@ public final class JSModuleGraphTest extends TestCase {
     assertDeepestCommonDepInclusive(F, F, F);
   }
 
+  @Test
   public void testSmallestCoveringSubtree() {
     assertSmallestCoveringSubtree(A, A, A, A);
     assertSmallestCoveringSubtree(A, A, A, B);
@@ -184,6 +195,7 @@ public final class JSModuleGraphTest extends TestCase {
     assertSmallestCoveringSubtree(F, A, F, F);
   }
 
+  @Test
   public void testGetTransitiveDepsDeepestFirst() {
     assertTransitiveDepsDeepestFirst(A);
     assertTransitiveDepsDeepestFirst(B, A);
@@ -193,6 +205,7 @@ public final class JSModuleGraphTest extends TestCase {
     assertTransitiveDepsDeepestFirst(F, E, C, B, A);
   }
 
+  @Test
   public void testManageDependencies1() throws Exception {
     setUpManageDependenciesTest();
     DependencyOptions depOptions = new DependencyOptions();
@@ -209,6 +222,7 @@ public final class JSModuleGraphTest extends TestCase {
     assertEquals(ImmutableList.of("a1", "a3", "a2", "b2", "c1", "e1", "e2"), sourceNames(results));
   }
 
+  @Test
   public void testManageDependencies2() throws Exception {
     setUpManageDependenciesTest();
     DependencyOptions depOptions = new DependencyOptions();
@@ -226,6 +240,7 @@ public final class JSModuleGraphTest extends TestCase {
         ImmutableList.of("a1", "a3", "a2", "b2", "c1", "c2", "e1", "e2"), sourceNames(results));
   }
 
+  @Test
   public void testManageDependencies3Impl() throws Exception {
     setUpManageDependenciesTest();
     DependencyOptions depOptions = new DependencyOptions();
@@ -245,6 +260,7 @@ public final class JSModuleGraphTest extends TestCase {
     assertThat(sourceNames(results)).containsExactly("a1", "c1", "c2").inOrder();
   }
 
+  @Test
   public void testManageDependencies4() throws Exception {
     setUpManageDependenciesTest();
     DependencyOptions depOptions = new DependencyOptions();
@@ -266,6 +282,7 @@ public final class JSModuleGraphTest extends TestCase {
   private static final String BASEJS =
       "/** @provideGoog */\nvar COMPILED = false; var goog = goog || {}";
 
+  @Test
   public void testManageDependencies5Impl() throws Exception {
     A.add(code("a2", provides("a2"), requires("a1")));
     A.add(code("a1", provides("a1"), requires()));
@@ -285,6 +302,7 @@ public final class JSModuleGraphTest extends TestCase {
     assertThat(sourceNames(results)).containsExactly("base.js", "a1", "a2").inOrder();
   }
 
+  @Test
   public void testNoFiles() throws Exception {
     DependencyOptions depOptions = new DependencyOptions();
     depOptions.setDependencySorting(true);
@@ -293,6 +311,7 @@ public final class JSModuleGraphTest extends TestCase {
     assertThat(results).isEmpty();
   }
 
+  @Test
   public void testToJson() {
     JsonArray modules = graph.toJson();
     assertEquals(6, modules.size());
@@ -337,6 +356,7 @@ public final class JSModuleGraphTest extends TestCase {
     return inputs;
   }
 
+  @Test
   public void testGoogBaseOrderedCorrectly() throws Exception {
     List<SourceFile> sourceFiles = new ArrayList<>();
     sourceFiles.add(code("a9", provides("a9"), requires()));
@@ -377,6 +397,7 @@ public final class JSModuleGraphTest extends TestCase {
     }
   }
 
+  @Test
   public void testProperEs6ModuleOrdering() throws Exception {
     List<SourceFile> sourceFiles = new ArrayList<>();
     sourceFiles.add(code("/entry.js", provides(), requires()));

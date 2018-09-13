@@ -19,8 +19,13 @@ import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.jscomp.Es6ToEs3Util.CANNOT_CONVERT_YET;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /** Test cases for ES6 transpilation. This tests {@link LateEs6ToEs3Converter} */
+@RunWith(JUnit4.class)
 public final class LateEs6ToEs3ConverterTest extends CompilerTestCase {
 
   public LateEs6ToEs3ConverterTest() {
@@ -28,6 +33,7 @@ public final class LateEs6ToEs3ConverterTest extends CompilerTestCase {
   }
 
   @Override
+  @Before
   public void setUp() throws Exception {
     super.setUp();
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
@@ -46,7 +52,7 @@ public final class LateEs6ToEs3ConverterTest extends CompilerTestCase {
     return 1;
   }
 
-
+  @Test
   public void testObjectLiteralMemberFunctionDef() {
     test(
         "var x = {/** @return {number} */ a() { return 0; } };",
@@ -54,6 +60,7 @@ public final class LateEs6ToEs3ConverterTest extends CompilerTestCase {
     assertThat(getLastCompiler().injected).isEmpty();
   }
 
+  @Test
   public void testInitSymbolIterator() {
     test(
         externs("/** @type {symbol} */ Symbol.iterator;"),
@@ -64,6 +71,7 @@ public final class LateEs6ToEs3ConverterTest extends CompilerTestCase {
             "         $jscomp$compprop0)")));
   }
 
+  @Test
   public void testMethodInObject() {
     test("var obj = { f() {alert(1); } };",
         "var obj = { f: function() {alert(1); } };");
@@ -73,6 +81,7 @@ public final class LateEs6ToEs3ConverterTest extends CompilerTestCase {
         "var obj = { f: function() { alert(1); }, x: x };");
   }
 
+  @Test
   public void testComputedPropertiesWithMethod() {
     test(
         "var obj = { ['f' + 1]: 1, m() {}, ['g' + 1]: 1, };",
@@ -83,6 +92,7 @@ public final class LateEs6ToEs3ConverterTest extends CompilerTestCase {
             "     ($jscomp$compprop0['g' + 1] = 1, $jscomp$compprop0)));"));
   }
 
+  @Test
   public void testComputedProperties() {
     test(
         "var obj = { ['f' + 1] : 1, ['g' + 1] : 1 };",
@@ -169,6 +179,7 @@ public final class LateEs6ToEs3ConverterTest extends CompilerTestCase {
             "var obj = ($jscomp$compprop0[foo] = function(){}, $jscomp$compprop0)"));
   }
 
+  @Test
   public void testComputedPropGetterSetter() {
     setLanguageOut(LanguageMode.ECMASCRIPT5);
 
@@ -187,16 +198,19 @@ public final class LateEs6ToEs3ConverterTest extends CompilerTestCase {
             "var obj = ($jscomp$compprop0['a' + 'b'] = 2, $jscomp$compprop0);"));
   }
 
+  @Test
   public void testComputedPropCannotConvert() {
     testError("var o = { get [foo]() {}}", CANNOT_CONVERT_YET);
     testError("var o = { set [foo](val) {}}", CANNOT_CONVERT_YET);
   }
 
+  @Test
   public void testNoComputedProperties() {
     testSame("({'a' : 1})");
     testSame("({'a' : 1, f : 1, b : 1})");
   }
 
+  @Test
   public void testUntaggedTemplateLiteral() {
     test("``", "''");
     test("`\"`", "'\\\"'");
@@ -224,6 +238,7 @@ public final class LateEs6ToEs3ConverterTest extends CompilerTestCase {
     test("`hello ${a ? b : c}${a * b}`", "'hello ' + (a ? b : c) + (a * b)");
   }
 
+  @Test
   public void testTaggedTemplateLiteral() {
     test(
         "tag``",
@@ -294,6 +309,7 @@ public final class LateEs6ToEs3ConverterTest extends CompilerTestCase {
             "tag($jscomp$templatelit$0, x);"));
   }
 
+  @Test
   public void testUnicodeEscapes() {
     test("var \\u{73} = \'\\u{2603}\'", "var s = \'\u2603\'");  // ☃
     test("var \\u{63} = \'\\u{1f42a}\'", "var c = \'\uD83D\uDC2A\'");  // 🐪

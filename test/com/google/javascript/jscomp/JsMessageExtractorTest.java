@@ -25,17 +25,23 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import junit.framework.TestCase;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /**
  * Unit test for {@link JsMessageExtractor}.
  *
  */
+@RunWith(JUnit4.class)
 public final class JsMessageExtractorTest extends TestCase {
 
   private JsMessage.Style mode;
 
   @Override
-  protected void setUp() throws Exception {
+  @Before
+  public void setUp() throws Exception {
     super.setUp();
     mode = JsMessage.Style.LEGACY;
   }
@@ -57,6 +63,7 @@ public final class JsMessageExtractorTest extends TestCase {
     return messages.iterator().next();
   }
 
+  @Test
   public void testSyntaxError1() {
     try {
       extractMessage("if (true) {}}");
@@ -68,6 +75,7 @@ public final class JsMessageExtractorTest extends TestCase {
     }
   }
 
+  @Test
   public void testSyntaxError2() {
     try {
       extractMessage("", "if (true) {}}");
@@ -79,6 +87,7 @@ public final class JsMessageExtractorTest extends TestCase {
     }
   }
 
+  @Test
   public void testExtractNewStyleMessage1() {
     // A simple message with no description.
     assertEquals(
@@ -88,6 +97,7 @@ public final class JsMessageExtractorTest extends TestCase {
         extractMessage("var MSG_SILLY = goog.getMsg('silly test message');"));
   }
 
+  @Test
   public void testExtractNewStyleMessage2() {
     // A message with placeholders and meta data.
     assertEquals(
@@ -112,6 +122,7 @@ public final class JsMessageExtractorTest extends TestCase {
             "    {userName: someUserName, product: getProductName()});"));
   }
 
+  @Test
   public void testExtractOldStyleMessage1() {
     // Description before the message.
     assertEquals(
@@ -124,6 +135,7 @@ public final class JsMessageExtractorTest extends TestCase {
             "var MSG_SILLY = 'silly test message';"));
   }
 
+  @Test
   public void testExtractOldStyleMessage2() {
     // Description after the message, broken into parts.
     assertEquals(
@@ -136,6 +148,7 @@ public final class JsMessageExtractorTest extends TestCase {
             "var MSG_SILLY_HELP = 'Descrip' + 'tion.';"));
   }
 
+  @Test
   public void testExtractOldStyleMessage3() {
     // Function-style message with two placeholders and no description.
     assertEquals(
@@ -151,6 +164,7 @@ public final class JsMessageExtractorTest extends TestCase {
             "};"));
   }
 
+  @Test
   public void testExtractMixedMessages() {
     // Several mixed-style messages in succession, one containing newlines.
     Iterator<JsMessage> msgs = extractMessages(
@@ -186,6 +200,7 @@ public final class JsMessageExtractorTest extends TestCase {
         msgs.next());
   }
 
+  @Test
   public void testDuplicateUnnamedVariables() {
     // Make sure that duplicate unnamed variables don't get swallowed when using
     // a Google-specific ID generator.
@@ -203,6 +218,7 @@ public final class JsMessageExtractorTest extends TestCase {
     assertEquals("bar", iter.next().toString());
   }
 
+  @Test
   public void testMeaningAnnotation() {
     List<JsMessage> msgs = new ArrayList<>(
         extractMessages(

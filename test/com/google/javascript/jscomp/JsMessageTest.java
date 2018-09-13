@@ -17,12 +17,15 @@
 package com.google.javascript.jscomp;
 
 import junit.framework.TestCase;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
-/**
- * @author anatol@google.com (Anatol Pomazau)
- */
+/** @author anatol@google.com (Anatol Pomazau) */
+@RunWith(JUnit4.class)
 public final class JsMessageTest extends TestCase {
 
+  @Test
   public void testIsEmpty() {
     assertTrue(new JsMessage.Builder().build().isEmpty());
     assertTrue(new JsMessage.Builder().appendStringPart("").build().isEmpty());
@@ -34,6 +37,7 @@ public final class JsMessageTest extends TestCase {
         .build().isEmpty());
   }
 
+  @Test
   public void testMeaningChangesId() {
     String id1 = new JsMessage.Builder()
         .appendStringPart("foo").build().getId();
@@ -42,6 +46,7 @@ public final class JsMessageTest extends TestCase {
     assertFalse(id1.equals(id2));
   }
 
+  @Test
   public void testHashValues() {
     final String EMPTY = "";
     final String VAL = "Hello, world";
