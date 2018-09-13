@@ -17,10 +17,15 @@
 
 package com.google.javascript.jscomp;
 
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
+
 /**
  * Tests for {@link ObjectPropertyStringPostprocess}.
  *
  */
+@RunWith(JUnit4.class)
 public final class ObjectPropertyStringPostprocessTest extends CompilerTestCase {
 
   @Override
@@ -33,14 +38,17 @@ public final class ObjectPropertyStringPostprocessTest extends CompilerTestCase 
     return 1;
   }
 
+  @Test
   public void testFooDotBar() {
     testPass("goog.global, foo.bar", "foo, 'bar'");
   }
 
+  @Test
   public void testFooGetElemBar() {
     testPass("goog.global, foo[bar]", "foo, bar");
   }
 
+  @Test
   public void testFooBar() {
     testPass("goog.global, foo$bar", "goog.global, 'foo$bar'");
   }

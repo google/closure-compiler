@@ -17,11 +17,16 @@
 package com.google.javascript.jscomp;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /**
  * Tests for {@link ObjectPropertyStringPreprocess}
  *
  */
+@RunWith(JUnit4.class)
 public final class ObjectPropertyStringPreprocessTest extends CompilerTestCase {
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
@@ -34,42 +39,50 @@ public final class ObjectPropertyStringPreprocessTest extends CompilerTestCase {
   }
 
   @Override
+  @Before
   public void setUp() throws Exception {
     super.setUp();
     allowExternsChanges();
   }
 
+  @Test
   public void testDeclaration() {
     test("goog.testing.ObjectPropertyString = function() {}",
          "JSCompiler_ObjectPropertyString = function() {}");
   }
 
+  @Test
   public void testFooBar() {
     test("new goog.testing.ObjectPropertyString(foo, 'bar')",
          "new JSCompiler_ObjectPropertyString(goog.global, foo.bar)");
   }
 
+  @Test
   public void testFooPrototypeBar() {
     test("new goog.testing.ObjectPropertyString(foo.prototype, 'bar')",
          "new JSCompiler_ObjectPropertyString(goog.global, " +
          "foo.prototype.bar)");
   }
 
+  @Test
   public void testInvalidNumArgumentsError() {
     testError("new goog.testing.ObjectPropertyString()",
         ObjectPropertyStringPreprocess.INVALID_NUM_ARGUMENTS_ERROR);
   }
 
+  @Test
   public void testQualifedNameExpectedError() {
     testError("new goog.testing.ObjectPropertyString(foo[a], 'bar')",
         ObjectPropertyStringPreprocess.QUALIFIED_NAME_EXPECTED_ERROR);
   }
 
+  @Test
   public void testStringLiteralExpectedError() {
     testError("new goog.testing.ObjectPropertyString(foo, bar)",
         ObjectPropertyStringPreprocess.STRING_LITERAL_EXPECTED_ERROR);
   }
 
+  @Test
   public void testTemplateStringError() {
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     testError("new goog.testing.ObjectPropertyString(foo, `bar`)",
@@ -80,6 +93,7 @@ public final class ObjectPropertyStringPreprocessTest extends CompilerTestCase {
         ObjectPropertyStringPreprocess.STRING_LITERAL_EXPECTED_ERROR);
   }
 
+  @Test
   public void testTaggedTemplateError() {
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     testError("new goog.testing.ObjectPropertyString(foo, tagged`bar`)",

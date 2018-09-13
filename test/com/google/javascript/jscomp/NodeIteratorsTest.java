@@ -25,11 +25,16 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import junit.framework.TestCase;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /**
  * Tests for NodeIterators.
+ *
  * @author nicksantos@google.com (Nick Santos)
  */
+@RunWith(JUnit4.class)
 public final class NodeIteratorsTest extends TestCase {
 
   // In each test, we find the declaration of "X" in the local scope,
@@ -37,95 +42,114 @@ public final class NodeIteratorsTest extends TestCase {
   // original value, and compare those nodes against an expected list of
   // tokens.
 
+  @Test
   public void testBasic() {
     testVarMotionWithCode("var X = 3;", Token.VAR, Token.SCRIPT);
   }
 
+  @Test
   public void testNamedFunction() {
     testVarMotionWithCode("var X = 3; function f() {}",
         Token.VAR, Token.SCRIPT);
   }
 
+  @Test
   public void testNamedFunction2() {
     testVarMotionWithCode("var X = 3; function f() {} var Y;",
         Token.VAR, Token.NAME, Token.VAR, Token.SCRIPT);
   }
 
+  @Test
   public void testFunctionExpression() {
     testVarMotionWithCode("var X = 3, Y = function() {}; 3;",
         Token.NAME, Token.VAR, Token.NUMBER, Token.EXPR_RESULT, Token.SCRIPT);
   }
 
+  @Test
   public void testFunctionExpression2() {
     testVarMotionWithCode("var X = 3; var Y = function() {}; 3;",
         Token.VAR, Token.NAME, Token.VAR, Token.NUMBER,
         Token.EXPR_RESULT, Token.SCRIPT);
   }
 
+  @Test
   public void testHaltAtVarRef() {
     testVarMotionWithCode("var X, Y = 3; var Z = X;",
         Token.NUMBER, Token.NAME, Token.VAR, Token.NAME);
   }
 
+  @Test
   public void testHaltAtVarRef2() {
     testVarMotionWithCode("var X, Y = 3; (function() {})(3, X);",
         Token.NUMBER, Token.NAME, Token.VAR, Token.NUMBER, Token.NAME);
   }
 
+  @Test
   public void testHaltAtVarRef3() {
     testVarMotionWithCode("var X, Y = 3; X;",
         Token.NUMBER, Token.NAME, Token.VAR, Token.NAME);
   }
 
+  @Test
   public void testHaltAtSideEffects() {
     testVarMotionWithCode("var X, Y = 3; var Z = B(3);",
         Token.NUMBER, Token.NAME, Token.VAR, Token.NAME, Token.NUMBER);
   }
 
+  @Test
   public void testHaltAtSideEffects2() {
     testVarMotionWithCode("var A = 1, X = A, Y = 3; delete A;",
         Token.NUMBER, Token.NAME, Token.VAR, Token.NAME);
   }
 
+  @Test
   public void testHaltAtSideEffects3() {
     testVarMotionWithCode("var A = 1, X = A, Y = 3; A++;",
         Token.NUMBER, Token.NAME, Token.VAR, Token.NAME);
   }
 
+  @Test
   public void testHaltAtSideEffects4() {
     testVarMotionWithCode("var A = 1, X = A, Y = 3; A--;",
         Token.NUMBER, Token.NAME, Token.VAR, Token.NAME);
   }
 
+  @Test
   public void testHaltAtSideEffects5() {
     testVarMotionWithCode("var A = 1, X = A, Y = 3; A = 'a';",
         Token.NUMBER, Token.NAME, Token.VAR, Token.NAME, Token.STRING);
   }
 
+  @Test
   public void testNoHaltReadWhenValueIsImmutable() {
     testVarMotionWithCode("var X = 1, Y = 3; alert();",
         Token.NUMBER, Token.NAME, Token.VAR, Token.NAME);
   }
 
+  @Test
   public void testHaltReadWhenValueHasSideEffects() {
     testVarMotionWithCode("var X = f(), Y = 3; alert();",
         Token.NUMBER, Token.NAME, Token.VAR);
   }
 
+  @Test
   public void testCatchBlock() {
     testVarMotionWithCode("var X = 1; try { 4; } catch (X) {}",
         Token.VAR, Token.NUMBER, Token.EXPR_RESULT, Token.BLOCK);
   }
 
+  @Test
   public void testIfBranch() {
     testVarMotionWithCode("var X = foo(); if (X) {}",
         Token.VAR, Token.NAME);
   }
 
+  @Test
   public void testLet() {
     testVarMotionWithCode("let X = foo(); if (X) {}", Token.LET, Token.NAME);
   }
 
+  @Test
   public void testConst() {
     testVarMotionWithCode("const X = foo(); if (X) {}", Token.CONST, Token.NAME);
   }
