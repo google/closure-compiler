@@ -19,8 +19,12 @@ package com.google.javascript.jscomp;
 import static com.google.javascript.jscomp.InlineAliases.ALIAS_CYCLE;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /** Unit tests for {@link InlineAliases}. */
+@RunWith(JUnit4.class)
 public class InlineAliasesTest extends CompilerTestCase {
 
   @Override
@@ -46,6 +50,7 @@ public class InlineAliasesTest extends CompilerTestCase {
     return 1;
   }
 
+  @Test
   public void testSimpleAliasInJSDoc() {
     test("function Foo(){}; var /** @const */ alias = Foo; /** @type {alias} */ var x;",
         "function Foo(){}; var /** @const */ alias = Foo; /** @type {Foo} */ var x;");
@@ -75,6 +80,7 @@ public class InlineAliasesTest extends CompilerTestCase {
             "/** @type {Foo.Subfoo} */ var x;"));
   }
 
+  @Test
   public void testSimpleAliasInCode() {
     test("function Foo(){}; var /** @const */ alias = Foo; var x = new alias;",
         "function Foo(){}; var /** @const */ alias = Foo; var x = new Foo;");
@@ -86,6 +92,7 @@ public class InlineAliasesTest extends CompilerTestCase {
         "var ns={}; function Foo(){}; /** @const */ ns.alias = Foo; var x = new Foo.Subfoo;");
   }
 
+  @Test
   public void testAliasQualifiedName() {
     test(
         lines(
@@ -112,6 +119,7 @@ public class InlineAliasesTest extends CompilerTestCase {
             "var x = new ns.Foo.Subfoo;"));
   }
 
+  @Test
   public void testHoistedAliasesInCode() {
     // Unqualified
     test(
@@ -138,6 +146,7 @@ public class InlineAliasesTest extends CompilerTestCase {
             "/** @const */ ns.alias = ns.Foo;"));
   }
 
+  @Test
   public void testAliasCycleError() {
     testError(
         lines(
@@ -146,6 +155,7 @@ public class InlineAliasesTest extends CompilerTestCase {
         ALIAS_CYCLE);
   }
 
+  @Test
   public void testTransitiveAliases() {
     test(
         lines(
@@ -168,6 +178,7 @@ public class InlineAliasesTest extends CompilerTestCase {
             "var x = new alias2;"));
   }
 
+  @Test
   public void testAliasChains() {
     // Unqualified
     test(
@@ -198,25 +209,30 @@ public class InlineAliasesTest extends CompilerTestCase {
             "var x = new ns.Foo;"));
   }
 
+  @Test
   public void testAliasedEnums() {
     test(
         "/** @enum {number} */ var E = { A : 1 }; var /** @const */ alias = E.A; alias;",
         "/** @enum {number} */ var E = { A : 1 }; var /** @const */ alias = E.A; E.A;");
   }
 
+  @Test
   public void testIncorrectConstAnnotationDoesntCrash() {
     testSame("var x = 0; var /** @const */ alias = x; alias = 5; use(alias);");
     testSame("var x = 0; var ns={}; /** @const */ ns.alias = x; ns.alias = 5; use(ns.alias);");
   }
 
+  @Test
   public void testRedefinedAliasesNotRenamed() {
     testSame("var x = 0; var /** @const */ alias = x; x = 5; use(alias);");
   }
 
+  @Test
   public void testDefinesAreNotInlined() {
     testSame("var ns = {}; var /** @define {boolean} */ alias = ns.Foo; var x = new alias;");
   }
 
+  @Test
   public void testConstWithTypesAreNotInlined() {
     testSame(
         lines(
@@ -225,11 +241,13 @@ public class InlineAliasesTest extends CompilerTestCase {
             "var x = use(alias)"));
   }
 
+  @Test
   public void testPrivateVariablesAreNotInlined() {
     testSame("/** @private */ var x = 0; var /** @const */ alias = x; var y = alias;");
     testSame("var x_ = 0; var /** @const */ alias = x_; var y = alias;");
   }
 
+  @Test
   public void testShadowedAliasesNotRenamed() {
     testSame(
         lines(
@@ -262,6 +280,7 @@ public class InlineAliasesTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testShadowedAliasesNotRenamed_withBlockScope() {
     testSame(
         lines(
@@ -285,18 +304,21 @@ public class InlineAliasesTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testES6VarAliasClassDeclarationWithNew() {
     test(
         "class Foo{}; var /** @const */ alias = Foo; var x = new alias;",
         "class Foo{}; var /** @const */ alias = Foo; var x = new Foo;");
   }
 
+  @Test
   public void testES6VarAliasClassDeclarationWithoutNew() {
     test(
         "class Foo{}; var /** @const */ alias = Foo; var x = alias;",
         "class Foo{}; var /** @const */ alias = Foo; var x = Foo;");
   }
 
+  @Test
   public void testNoInlineAliasesInsideClassConstructor() {
     testSame(
         lines(
@@ -310,6 +332,7 @@ public class InlineAliasesTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testArrayDestructuringVarAssign() {
     test(
         lines(
@@ -324,6 +347,7 @@ public class InlineAliasesTest extends CompilerTestCase {
             "var [one, two] = a;"));
   }
 
+  @Test
   public void testArrayDestructuringFromFunction() {
     test(
         lines(
@@ -344,6 +368,7 @@ public class InlineAliasesTest extends CompilerTestCase {
             "[a, b] = f();"));
   }
 
+  @Test
   public void testArrayDestructuringSwapIsNotInlined() {
     testSame(
         lines(
@@ -353,6 +378,7 @@ public class InlineAliasesTest extends CompilerTestCase {
             "[A, temp] = [temp, A];"));
   }
 
+  @Test
   public void testArrayDestructuringSwapIsNotInlinedWithClassDeclaration() {
     testSame(
         lines(
@@ -362,10 +388,12 @@ public class InlineAliasesTest extends CompilerTestCase {
             "[A, temp] = [temp, A];"));
   }
 
+  @Test
   public void testArrayDestructuringAndRedefinedAliasesNotRenamed() {
     testSame("var x = 0; var /** @const */ alias = x; [x] = [5]; use(alias);");
   }
 
+  @Test
   public void testArrayDestructuringTwoVarsAndRedefinedAliasesNotRenamed() {
     testSame(
         lines(
@@ -376,6 +404,7 @@ public class InlineAliasesTest extends CompilerTestCase {
             "use(alias);"));
   }
 
+  @Test
   public void testObjectDestructuringBasicAssign() {
     test(
         lines(
@@ -390,6 +419,7 @@ public class InlineAliasesTest extends CompilerTestCase {
             "var {p, q} = o;"));
   }
 
+  @Test
   public void testObjectDestructuringAssignWithoutDeclaration() {
     test(
         lines(
@@ -402,6 +432,7 @@ public class InlineAliasesTest extends CompilerTestCase {
             "({a, b} = {a: Foo, b: Foo});"));
   }
 
+  @Test
   public void testObjectDestructuringAssignNewVarNames() {
     test(
         lines(
@@ -416,6 +447,7 @@ public class InlineAliasesTest extends CompilerTestCase {
             "var {p: newName1, q: newName2} = o;"));
   }
 
+  @Test
   public void testObjectDestructuringDefaultVals() {
     test(
         lines(
@@ -428,6 +460,7 @@ public class InlineAliasesTest extends CompilerTestCase {
             "var {a = Foo, b = Foo} = {a: 13};"));
   }
 
+  @Test
   public void testArrayDestructuringWithParameter() {
     test(
         lines(
@@ -446,6 +479,7 @@ public class InlineAliasesTest extends CompilerTestCase {
             "f([Foo, Foo]);"));
   }
 
+  @Test
   public void testObjectDestructuringWithParameters() {
    test(
        lines(
@@ -476,6 +510,7 @@ public class InlineAliasesTest extends CompilerTestCase {
            "});"));
   }
 
+  @Test
   public void testObjectDestructuringWithParametersAndStyleShortcut() {
    test(
        lines(
@@ -500,12 +535,14 @@ public class InlineAliasesTest extends CompilerTestCase {
            "h({name: Foo, val: Foo});"));
   }
 
+  @Test
   public void testSimpleConstAliasInJSDoc() {
     test(
         "function Foo(){}; const alias = Foo; /** @type {alias} */ var x;",
         "function Foo(){}; const alias = Foo; /** @type {Foo} */ var x;");
   }
 
+  @Test
   public void testSimpleConstAliasInCode() {
     test(
         "function Foo(){}; const alias = Foo; var x = new alias;",
@@ -513,41 +550,48 @@ public class InlineAliasesTest extends CompilerTestCase {
   }
 
   /**
-   * Note: having @const annotating a let is very strange style, but it's very little extra work
-   * to support it.
+   * Note: having @const annotating a let is very strange style, but it's very little extra work to
+   * support it.
    */
+  @Test
   public void testSimpleLetAliasInJSDoc() {
     test(
         "function Foo(){}; let /** @const */ alias = Foo; /** @type {alias} */ var x;",
         "function Foo(){}; let /** @const */ alias = Foo; /** @type {Foo} */ var x;");
   }
 
+  @Test
   public void testSimpleLetAliasInCode() {
     test(
         "function Foo(){}; let /** @const */ alias = Foo; var x = new alias;",
         "function Foo(){}; let /** @const */ alias = Foo; var x = new Foo;");
   }
 
+  @Test
   public void testClassExtendsAlias1() {
     test(
         "function Foo() {} const alias = Foo; class Bar extends alias {}",
         "function Foo() {} const alias = Foo; class Bar extends Foo {}");
   }
 
+  @Test
   public void testClassExtendsAlias2() {
     test(
         "var ns = {}; ns.Foo = function () {}; const alias = ns.Foo; class Bar extends alias {}",
         "var ns = {}; ns.Foo = function () {}; const alias = ns.Foo; class Bar extends ns.Foo {}");
   }
 
+  @Test
   public void testBlockScopedAlias() {
     testSame("function Foo() {} if (true) { const alias = Foo; alias; }");
   }
 
+  @Test
   public void testVarAliasDeclaredInBlockScope() {
     testSame("function Foo() {} { var /** @const */ alias = Foo; alias; }");
   }
 
+  @Test
   public void testDontInlineEscapedQnameProperty() {
     testSame(
         externs("function use(obj) {}"),
@@ -563,6 +607,7 @@ public class InlineAliasesTest extends CompilerTestCase {
                 "alert(alias);")));
   }
 
+  @Test
   public void testDoInlineEscapedConstructorProperty() {
     // TODO(b/80429954): this is unsafe. The call to use(Foobar) could have changed the value of
     // Foobar.foo
