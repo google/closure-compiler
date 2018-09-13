@@ -16,19 +16,24 @@
 package com.google.javascript.jscomp;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /**
- * Round-trip test for TypeScript-style inline type syntax.  Each expression is
- * parsed and then printed, and we assert that the pretty-printed result is identical
- * to the input.
+ * Round-trip test for TypeScript-style inline type syntax. Each expression is parsed and then
+ * printed, and we assert that the pretty-printed result is identical to the input.
  *
- * <p>See {@link JsdocToEs6TypedConverterTest} for tests which start from
- * closure-style JSDoc type declaration syntax.
+ * <p>See {@link JsdocToEs6TypedConverterTest} for tests which start from closure-style JSDoc type
+ * declaration syntax.
  */
+@RunWith(JUnit4.class)
 public final class CodePrinterEs6TypedTest extends CodePrinterTestBase {
 
   @Override
-  protected void setUp() throws Exception {
+  @Before
+  public void setUp() throws Exception {
     super.setUp();
     languageMode = LanguageMode.ECMASCRIPT6_TYPED;
   }
@@ -45,6 +50,7 @@ public final class CodePrinterEs6TypedTest extends CodePrinterTestBase {
     assertEquals(js, parsed);
   }
 
+  @Test
   public void testVariableDeclaration() {
     assertPrettyPrintSame("var foo: any = 'hello';");
     assertPrettyPrintSame("var foo: number = 'hello';");
@@ -54,10 +60,12 @@ public final class CodePrinterEs6TypedTest extends CodePrinterTestBase {
     assertPrettyPrintSame("var foo: hello = 'hello';");
   }
 
+  @Test
   public void testFunctionParamDeclaration() {
     assertPrettyPrintSame("function foo(x: string) {\n}");
   }
 
+  @Test
   public void testFunctionParamDeclaration_defaultValue() {
     assertPrettyPrintSame("function foo(x: string = 'hello') {\n}");
   }
@@ -66,6 +74,7 @@ public final class CodePrinterEs6TypedTest extends CodePrinterTestBase {
     assertPrettyPrintSame("(x: string) => 'hello' + x;");
   }
 
+  @Test
   public void testFunctionReturn() {
     assertPrettyPrintSame("function foo(): string {\n  return 'hello';\n}");
   }
@@ -74,18 +83,22 @@ public final class CodePrinterEs6TypedTest extends CodePrinterTestBase {
     assertPrettyPrintSame("(): string => 'hello';");
   }
 
+  @Test
   public void testCompositeType() {
     assertPrettyPrintSame("var foo: mymod.ns.Type;");
   }
 
+  @Test
   public void testArrayType() {
     assertPrettyPrintSame("var foo: string[];");
   }
 
+  @Test
   public void testArrayType_qualifiedType() {
     assertPrettyPrintSame("var foo: mymod.ns.Type[];");
   }
 
+  @Test
   public void testParameterizedType() {
     assertPrettyPrintSame("var x: my.parameterized.Type<ns.A, ns.B>;");
   }

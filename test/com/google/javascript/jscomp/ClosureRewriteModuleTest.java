@@ -32,12 +32,18 @@ import static com.google.javascript.jscomp.ClosureRewriteModule.INVALID_PROVIDE_
 import static com.google.javascript.jscomp.ClosureRewriteModule.LATE_PROVIDE_ERROR;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /**
  * Unit tests for ClosureRewriteModule
+ *
  * @author johnlenz@google.com (John Lenz)
  * @author stalcup@google.com (John Stalcup)
  */
+@RunWith(JUnit4.class)
 public final class ClosureRewriteModuleTest extends CompilerTestCase {
 
   private boolean preserveClosurePrimitives = false;
@@ -53,6 +59,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
   }
 
   @Override
+  @Before
   public void setUp() throws Exception {
     super.setUp();
     preserveClosurePrimitives = false;
@@ -68,11 +75,13 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
     return options;
   }
 
+  @Test
   public void testBasic0() {
     testSame("");
     testSame("goog.provide('a');");
   }
 
+  @Test
   public void testBasic1() {
     test(
         "goog.module('a');",
@@ -80,6 +89,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
         "/** @const */ var module$exports$a = {};");
   }
 
+  @Test
   public void testBasic2() {
     test(
         new String[] {
@@ -93,6 +103,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
             "/** @const */ var module$exports$ns$a = {};"});
   }
 
+  @Test
   public void testBasic3() {
     // Multivar.
     test(
@@ -109,6 +120,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
             "/** @const */ var module$exports$ns$a = {};"});
   }
 
+  @Test
   public void testIjsModule() {
     allowExternsChanges();
     test(
@@ -132,6 +144,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
         });
   }
 
+  @Test
   public void testDestructuringInsideModule() {
     // Array destrucuturing
     test(
@@ -161,6 +174,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
           "var {x: module$contents$a_x, y: module$contents$a_y} = foo();"));
   }
 
+  @Test
   public void testShortObjectLiteralsInsideModule() {
     test(
         lines(
@@ -182,6 +196,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
           "module$exports$a.x = foo();"));
   }
 
+  @Test
   public void testDestructuringImports() {
     test(
         new String[] {
@@ -394,6 +409,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
               "var module$contents$modB_f = new modA.Foo;")});
   }
 
+  @Test
   public void testUninlinableExports() {
     test(
         new String[] {
@@ -416,6 +432,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
               "var module$contents$ns$a_f = new module$exports$ns$b.Foo;")});
   }
 
+  @Test
   public void testObjectLiteralDefaultExport() {
     testError(
         new String[] {
@@ -430,6 +447,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
         ILLEGAL_DESTRUCTURING_DEFAULT_EXPORT);
   }
 
+  @Test
   public void testUninlinableNamedExports() {
     test(
         new String[] {
@@ -502,6 +520,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
         });
   }
 
+  @Test
   public void testIllegalDestructuringImports() {
     testError(
         new String[] {
@@ -564,11 +583,12 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
         null);
   }
 
-
+  @Test
   public void testDeclareLegacyNamespace() {
     test("goog.module('ns.a'); goog.module.declareLegacyNamespace();", "goog.provide('ns.a');");
   }
 
+  @Test
   public void testSideEffectOnlyModuleImport() {
     test(
         new String[] {
@@ -584,6 +604,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
             "/** @const */ var module$exports$ns$a = {};"});
   }
 
+  @Test
   public void testTypeOnlyModuleImport() {
     test(
         new String[] {
@@ -604,6 +625,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
                 "/** @type {module$exports$ns$B} */ var module$contents$ns$a_c;")});
   }
 
+  @Test
   public void testSideEffectOnlyImportOfGoogProvide() {
     test(
         new String[] {
@@ -621,6 +643,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
             "/** @const */ var module$exports$ns$a = {}; goog.require('ns.b');"});
   }
 
+  @Test
   public void testSideEffectOnlyImportOfLegacyGoogModule() {
     test(
         new String[] {
@@ -637,6 +660,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
         });
   }
 
+  @Test
   public void testTypeOnlyModuleImportFromLegacyFile() {
     test(
         new String[] {
@@ -658,6 +682,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
                 "/** @type {module$exports$ns$B} */ var c;")});
   }
 
+  @Test
   public void testBundle1() {
     test(
         new String[] {
@@ -677,6 +702,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
                 "/** @const */ module$exports$ns$a.b = module$exports$ns$b;")});
   }
 
+  @Test
   public void testBundle2() {
     test(
         lines(
@@ -705,6 +731,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
             "/** @const */ module$exports$ns$c.b = module$exports$ns$b;"));
   }
 
+  @Test
   public void testBundle3() {
     test(
         lines(
@@ -722,6 +749,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
         lines("/** @const */ var module$exports$ns$b = {};", "goog.provide('ns.a');"));
   }
 
+  @Test
   public void testBundle4() {
     test(
         lines(
@@ -741,6 +769,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
             "/** @const */ var module$exports$ns$a = {};"));
   }
 
+  @Test
   public void testBundle5() {
     test(
         lines(
@@ -768,6 +797,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
             "var module$contents$xid_xid = xid"));
   }
 
+  @Test
   public void testBundle6() {
     test(
         lines(
@@ -797,6 +827,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
             "/** @const */ xid = module$contents$xid_xid "));
   }
 
+  @Test
   public void testBundleWithDestructuringImport() {
     test(
         lines(
@@ -826,10 +857,12 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
             "function module$contents$mod_A_A(){}"));
   }
 
+  @Test
   public void testGoogLoadModuleString() {
     testSame("goog.loadModule(\"goog.module('a.b.c'); exports = class {};\");");
   }
 
+  @Test
   public void testGoogScope1() {
     // Typedef defined inside a goog.scope(). The typedef is seen and is *not* legacy-to-binary
     // bridge exported.
@@ -845,6 +878,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
             "});"));
   }
 
+  @Test
   public void testTopLevelNames1() {
     // Vars defined inside functions are not module top level.
     test(
@@ -869,6 +903,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testTopLevelNames2() {
     // Vars in blocks are module top level because they are hoisted to the first execution context.
     test(
@@ -885,6 +920,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testTopLevelNames3() {
     // Functions in blocks are not module top level because they are block scoped.
     test(
@@ -905,6 +941,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testThis() {
     // global "this" is retained.
     test(
@@ -917,20 +954,24 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
             "this;"));
   }
 
+  @Test
   public void testInvalidModule() {
     testError("goog.module(a);", INVALID_MODULE_NAMESPACE);
   }
 
+  @Test
   public void testInvalidRequire() {
     testError("goog.module('ns.a');" + "goog.require(a);", INVALID_REQUIRE_NAMESPACE);
   }
 
+  @Test
   public void testInvalidProvide() {
     // The ES6 path turns on DependencyOptions.needsManagement() which leads to JsFileLineParser
     // execution that throws a different exception on some invalid goog.provide()s.
     testError("goog.module('a'); goog.provide('b');", INVALID_PROVIDE_CALL);
   }
 
+  @Test
   public void testGoogModuleGet1() {
     test(
         new String[] {
@@ -948,6 +989,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
                 "}")});
   }
 
+  @Test
   public void testGoogModuleGet2() {
     test(
         new String[] {
@@ -965,6 +1007,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
                 "}")});
   }
 
+  @Test
   public void testGoogModuleGet3() {
     test(
         new String[] {
@@ -987,6 +1030,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
                 "}")});
   }
 
+  @Test
   public void testGoogModuleGet_missing() {
     test(
         srcs(lines(
@@ -1006,6 +1050,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
         warning(MISSING_MODULE_OR_PROVIDE));
   }
 
+  @Test
   public void testGoogModuleGet_missing_preserve() {
     preserveClosurePrimitives = true;
     // Need to disable tree comparison because compiler adds MODULE_BODY token when parsing
@@ -1028,6 +1073,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
         warning(MISSING_MODULE_OR_PROVIDE));
   }
 
+  @Test
   public void testAliasedGoogModuleGet1() {
     test(
         new String[] {
@@ -1049,6 +1095,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
                 "}")});
   }
 
+  @Test
   public void testAliasedGoogModuleGet2() {
     test(
         new String[] {
@@ -1070,6 +1117,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
                 "}")});
   }
 
+  @Test
   public void testAliasedGoogModuleGet3() {
     test(
         new String[] {
@@ -1095,6 +1143,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
                 "}")});
   }
 
+  @Test
   public void testAliasedGoogModuleGet4() {
     test(
         new String[] {
@@ -1121,6 +1170,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
                 "}")});
   }
 
+  @Test
   public void testAliasedGoogModuleGet5() {
     test(
         new String[] {
@@ -1143,6 +1193,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
                 "}")});
   }
 
+  @Test
   public void testAliasedGoogModuleGet6() {
     test(
         new String[] {
@@ -1165,6 +1216,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
                 "}")});
   }
 
+  @Test
   public void testAliasedGoogModuleGet7() {
     test(
         new String[] {
@@ -1183,6 +1235,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
                 "});")});
   }
 
+  @Test
   public void testAliasedGoogModuleGet8() {
     test(
         new String[] {
@@ -1203,6 +1256,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
                 "});")});
   }
 
+  @Test
   public void testInvalidGoogForwardDeclareParameter() {
     // Wrong parameter count.
     testError(
@@ -1229,6 +1283,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
         INVALID_FORWARD_DECLARE_NAMESPACE);
   }
 
+  @Test
   public void testInvalidGoogModuleGetAlias() {
     testError(
         new String[] {
@@ -1260,7 +1315,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
         INVALID_GET_ALIAS);
   }
 
-
+  @Test
   public void testInvalidGoogModuleGet1() {
     testError(
         lines(
@@ -1271,10 +1326,12 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
         INVALID_GET_NAMESPACE);
   }
 
+  @Test
   public void testInvalidGoogModuleGet2() {
     testError("goog.module.get('a');", INVALID_GET_CALL_SCOPE);
   }
 
+  @Test
   public void testExtractableExport1() {
     test(
         lines(
@@ -1285,6 +1342,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
         "var module$exports$xid = function() {};");
   }
 
+  @Test
   public void testExtractableExport2() {
     test(
         lines(
@@ -1295,6 +1353,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
         "function module$exports$xid() {}");
   }
 
+  @Test
   public void testExtractableExport3() {
     test(
         lines(
@@ -1305,6 +1364,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
         "class module$exports$Foo {}");
   }
 
+  @Test
   public void testExtractableExport4() {
     test(
         lines(
@@ -1315,6 +1375,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
         "const module$exports$Foo = class {};");
   }
 
+  @Test
   public void testExport0() {
     test(
         "goog.module('ns.a');",
@@ -1322,6 +1383,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
         "/** @const */ var module$exports$ns$a = {};");
   }
 
+  @Test
   public void testExport1() {
     test(
         lines(
@@ -1331,6 +1393,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
         "/** @const */ var module$exports$ns$a = {};");
   }
 
+  @Test
   public void testExport2() {
     test(
         lines(
@@ -1342,6 +1405,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
             "/** @const */ module$exports$ns$a.x = 1"));
   }
 
+  @Test
   public void testExport4() {
     test(
         lines(
@@ -1351,6 +1415,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
         "/** @const */ var module$exports$ns$a = { /** @const */ something : 1 };");
   }
 
+  @Test
   public void testExport5() {
     test(
         lines(
@@ -1363,6 +1428,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
             "/** @typedef {string} */ module$exports$ns$a.x;"));
   }
 
+  @Test
   public void testExport6() {
     test(
         lines(
@@ -1375,6 +1441,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
           "/** @typedef {string} */ module$exports$ns$a.something;"));
   }
 
+  @Test
   public void testExport6_1() {
     test(
         lines(
@@ -1387,6 +1454,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
           "/** @typedef {string} */ module$exports$ns$a.something;"));
   }
 
+  @Test
   public void testExport7() {
     test(
         lines(
@@ -1397,6 +1465,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
         "/** @constructor @const */ var module$exports$ns$a = function() {};");
   }
 
+  @Test
   public void testExport8() {
     test(
         lines(
@@ -1406,6 +1475,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
         "/** @const */ var module$exports$ns$a = goog.defineClass({});");
   }
 
+  @Test
   public void testExport9() {
     // Doesn't legacy-to-binary bridge export a typedef.
     testSame(
@@ -1414,6 +1484,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
             "/** @typedef {string} */ goog.ui.ControlContent;"));
   }
 
+  @Test
   public void testExport10() {
     // Doesn't rewrite exports in legacy scripts.
     testSame(
@@ -1424,6 +1495,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
             "})();"));
   }
 
+  @Test
   public void testExport11() {
     // Does rewrite export typedefs and defensively creates the exports root object first.
     test(
@@ -1436,6 +1508,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
             "/** @const @typedef {string} */ module$exports$a$B.C;"));
   }
 
+  @Test
   public void testExport12() {
     test(
         lines(
@@ -1447,6 +1520,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
             "/** @const */ module$exports$ns$a.foo = goog.defineClass({});"));
   }
 
+  @Test
   public void testExport13() {
     // Creates the exports root object before export object reads.
     test(
@@ -1459,6 +1533,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
             "var module$contents$a$B_field = module$exports$a$B;"));
   }
 
+  @Test
   public void testExportEnhancedObjectLiteral() {
     test(
         lines(
@@ -1478,6 +1553,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
         INVALID_EXPORT_COMPUTED_PROPERTY);
   }
 
+  @Test
   public void testImport() {
     // A goog.module() that imports, jsdocs, and uses both another goog.module() and a legacy
     // script.
@@ -1513,6 +1589,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
                 "}")});
   }
 
+  @Test
   public void testSetTestOnly() {
     test(
         lines(
@@ -1524,6 +1601,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
             "goog.setTestOnly();"));
   }
 
+  @Test
   public void testRewriteJsDoc1() {
     // Inlines JsDoc references to aliases of imported types.
     test(
@@ -1551,6 +1629,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
                 "}")});
   }
 
+  @Test
   public void testRewriteJsDoc2() {
     // Inlines JsDoc references to own declared types.
     test(
@@ -1575,6 +1654,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
                 "}")});
   }
 
+  @Test
   public void testRewriteJsDoc3() {
     // Rewrites fully qualified JsDoc references to types.
     test(
@@ -1604,6 +1684,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
                 "}")});
   }
 
+  @Test
   public void testRewriteJsDoc4() {
     // Rewrites fully qualified JsDoc references to types in goog.module() files even if they come
     // after the reference.
@@ -1634,6 +1715,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
                 "module$exports$p$B.prototype = new module$exports$p$A;")});
   }
 
+  @Test
   public void testRewriteJsDoc5() {
     test(
           lines(
@@ -1653,6 +1735,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
               "var module$contents$p$A_x = new module$exports$p$A;"));
   }
 
+  @Test
   public void testDuplicateModule() {
     testError(
         new String[] {
@@ -1662,6 +1745,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
         DUPLICATE_MODULE);
   }
 
+  @Test
   public void testDuplicateNamespace() {
     testError(
         new String[] {
@@ -1671,6 +1755,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
         DUPLICATE_NAMESPACE);
   }
 
+  @Test
   public void testImportInliningDoesntShadow() {
     testNoWarning(
         lines(
@@ -1686,6 +1771,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
             "});"));
   }
 
+  @Test
   public void testImportInliningShadowsVar() {
     testError(
         new String[] {
@@ -1702,6 +1788,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
         IMPORT_INLINING_SHADOWS_VAR);
   }
 
+  @Test
   public void testImportInliningShadowsDestructuredImport() {
     testError(
         new String[] {
@@ -1718,6 +1805,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
         IMPORT_INLINING_SHADOWS_VAR);
   }
 
+  @Test
   public void testExportsShadowingAllowed() {
     testNoWarning(
         lines(
@@ -1732,6 +1820,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
             "});"));
   }
 
+  @Test
   public void testExportRewritingShadows() {
     test(
         lines(
@@ -1755,6 +1844,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
             "function module$contents$a$b$c_f(test) { return test; }"));
   }
 
+  @Test
   public void testRequireTooEarly1() {
     // Module to Module require.
     testError(
@@ -1767,6 +1857,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
         LATE_PROVIDE_ERROR);
   }
 
+  @Test
   public void testValidEarlyGoogModuleGet() {
     // Legacy Script to Module goog.module.get.
     test(
@@ -1784,6 +1875,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
         });
   }
 
+  @Test
   public void testRequireTooEarly3() {
     // Module to Legacy Script require.
     testError(
@@ -1796,6 +1888,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
         LATE_PROVIDE_ERROR);
   }
 
+  @Test
   public void testInnerScriptOuterModule() {
     // Rewrites fully qualified JsDoc references to types but without writing a prefix as
     // module$exports when there's a longer prefix that references a script.
@@ -1828,6 +1921,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
                 "}")});
   }
 
+  @Test
   public void testModuleLevelVars() {
     test(
         lines(
@@ -1840,6 +1934,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
             "/** @const */ var module$contents$b$c$c_F = 0;"));
   }
 
+  @Test
   public void testPublicExport() {
     test(
         lines(
@@ -1851,12 +1946,14 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
             "/** @const @public */ a.b.c = 5;"));
   }
 
+  @Test
   public void testReferenceToNonLegacyGoogModuleName() {
     test(
         new String[] {"goog.module('a.b.c');", "use(a.b.c);"},
         new String[] {"/** @const */ var module$exports$a$b$c={}", "use(a.b.c);"});
   }
 
+  @Test
   public void testGoogModuleValidReferences() {
     test(
         new String[] {
@@ -1884,6 +1981,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
         });
   }
 
+  @Test
   public void testLegacyGoogModuleValidReferences() {
     test(
         new String[] {
@@ -1972,11 +2070,13 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
         });
   }
 
+  @Test
   public void testUselessUseStrict() {
     testWarning(
         "'use strict'; goog.module('b.c.c');", ClosureRewriteModule.USELESS_USE_STRICT_DIRECTIVE);
   }
 
+  @Test
   public void testRewriteGoogModuleAliases1() {
     test(
         new String[] {
@@ -1999,6 +2099,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
         });
   }
 
+  @Test
   public void testRewriteGoogModuleAliases2() {
     test(
         new String[] {
@@ -2021,6 +2122,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
         });
   }
 
+  @Test
   public void testRewriteGoogModuleAliases3() {
     test(
         new String[] {
@@ -2046,6 +2148,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
         });
   }
 
+  @Test
   public void testRewriteGoogModuleAliases4() {
     test(
         new String[] {
@@ -2066,6 +2169,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
         });
   }
 
+  @Test
   public void testRewriteGoogModuleAliases5() {
     test(
         new String[] {
@@ -2091,6 +2195,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
         });
   }
 
+  @Test
   public void testRewriteGoogModuleAliases6() {
     test(
         new String[] {
@@ -2112,6 +2217,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
         });
   }
 
+  @Test
   public void testRewriteGoogModuleAliases7() {
     test(
         new String[] {
@@ -2133,6 +2239,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
         });
   }
 
+  @Test
   public void testRewriteGoogModuleAliasesWithPreservedPrimitives() {
     preserveClosurePrimitives = true;
     // Need to disable tree comparison because compiler adds MODULE_BODY token when parsing
@@ -2179,6 +2286,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
         });
   }
 
+  @Test
   public void testGoogModuleExportsProvidedName() {
     test(
         new String[] {
@@ -2202,6 +2310,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
         });
   }
 
+  @Test
   public void testRewriteGoogModuleAliasesWithPrototypeGets1() {
     test(
         new String[] {
@@ -2230,6 +2339,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
         });
   }
 
+  @Test
   public void testRewriteGoogModuleAliasesWithPrototypeGets2() {
     test(
         new String[] {
@@ -2257,6 +2367,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
         });
   }
 
+  @Test
   public void testLegacyModuleIsUninlined() {
     test(
         lines(
@@ -2272,6 +2383,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
             "/** @const */ mod.ns.Foo = module$contents$mod$ns_Foo;"));
   }
 
+  @Test
   public void testLegacyModuleExportStillExported() {
     test(
           lines(
@@ -2286,6 +2398,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
               "/** @const @export */ modA.Foo = module$contents$modA_Foo;"));
   }
 
+  @Test
   public void testMultiplyExportedSymbolDoesntCrash() {
     test(
         lines(
@@ -2301,6 +2414,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
             "/** @const */ module$exports$mod.name2 = module$exports$mod.name1;"));
   }
 
+  @Test
   public void testIjsFileInExterns() {
     allowExternsChanges();
     testNoWarning(
@@ -2360,6 +2474,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
   }
 
   // This pass only handles goog.modules. ES6 modules are left alone.
+  @Test
   public void testEs6Module() {
     testSame("export var x;");
     testSame("import {x} from 'y';");

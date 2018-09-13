@@ -18,11 +18,16 @@ package com.google.javascript.jscomp;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.rhino.Node;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /**
  * Unit tests for {@link CoalesceVariableNames}
  *
  */
+@RunWith(JUnit4.class)
 public final class CoalesceVariableNamesTest extends CompilerTestCase {
   // The spacing in this file is not exactly standard but it greatly helps
   // picking out which variable names are merged.
@@ -35,6 +40,7 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
   }
 
   @Override
+  @Before
   public void setUp() throws Exception {
     super.setUp();
     usePseudoName = false;
@@ -54,6 +60,7 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
     };
   }
 
+  @Test
   public void testSimple() {
     inFunction(
         "var x; var y; x=1; x; y=1; y; return y",
@@ -97,18 +104,21 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
     inFunction("var x; var y; y = y + 1, y, x = 1; x");
   }
 
+  @Test
   public void testMergeThreeVarNames() {
     inFunction(
         "var x,y,z; x=1; x; y=1; y; z=1; z",
         "var x    ; x=1; x; x=1; x; x=1; x");
   }
 
+  @Test
   public void testDifferentBlock() {
     inFunction(
         "if(1) { var x = 0; x } else { var y = 0; y }",
         "if(1) { var x = 0; x } else {     x = 0; x }");
   }
 
+  @Test
   public void testLoops() {
     inFunction("var x; for ( ; 1; ) { x; x = 1; var y = 1; y }");
 
@@ -117,16 +127,19 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
         "var y = 1; y; for ( ; 1; ) {     y = 1; y }");
   }
 
+  @Test
   public void testEscaped() {
     inFunction("function f() { x } var x = 1; x; var y = 0; y; f()");
   }
 
+  @Test
   public void testFor() {
     inFunction(
         "var x = 1; x; for (;;) var y; y = 1; y",
         "var x = 1; x; for (;;)      ; x = 1; x");
   }
 
+  @Test
   public void testForIn() {
     // We lose some precision here, unless we have "branched-backward-dataflow".
     inFunction("var x = 1; var k; x; var y; for ( y in k ) y");
@@ -138,6 +151,7 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
     inFunction("function f(param){ var foo; for([foo] in arr); param }");
   }
 
+  @Test
   public void testForOf() {
     // We lose some precision here, unless we have "branched-backward-dataflow".
     inFunction("var x = 1; var k; x; var y; for ( y of k ) y");
@@ -149,6 +163,7 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
     inFunction("function f(param){ var foo; for([foo] of arr); param }");
   }
 
+  @Test
   public void testLoopInductionVar() {
     inFunction(
         "for(var x = 0; x < 10; x++){}"
@@ -168,12 +183,14 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
     inFunction("var x = 1; x; f:var y; y=1", "var x = 1; x; f:{} x=1");
   }
 
+  @Test
   public void testSwitchCase() {
     inFunction(
         "var x = 1; switch(x) { case 1: var y; case 2: } y = 1; y",
         "var x = 1; switch(x) { case 1:        case 2: } x = 1; x");
   }
 
+  @Test
   public void testDuplicatedVar() {
     // Is there a shorter version without multiple declarations?
     inFunction(
@@ -181,11 +198,13 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
         "z = 1; var x = 0; x; z;     x = 2; var z = 1; x; z;");
   }
 
+  @Test
   public void testTryCatch() {
     inFunction("try {} catch (e) { } var x = 4; x;");
     inFunction("var x = 4; x; try {} catch (e) { }");
   }
 
+  @Test
   public void testDeadAssignment() {
     inFunction("var x = 6; var y; y = 4 ; x");
     inFunction("var y = 3; y = y + 4; x");
@@ -193,22 +212,26 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
     inFunction("y = 3; var x; var y = 1 ; x");
   }
 
+  @Test
   public void testParameter() {
     test("function FUNC(param) {var x = 0; x}",
          "function FUNC(param) {param = 0; param}");
   }
 
+  @Test
   public void testParameter2() {
     // Make sure two formal parameter name never merges.
     testSame("function FUNC(x,y) {x = 0; x; y = 0; y}");
     testSame("function FUNC(x,y,z) {x = 0; x; y = 0; z = 0; z}");
   }
 
+  @Test
   public void testParameter3() {
     // Make sure the formal parameter declaration is consider a def.
     testSame("function FUNC(x) {var y; y = 0; x; y}");
   }
 
+  @Test
   public void testParameter4a() {
     // Make sure that we do not merge two-arg functions because of the
     // IE sort bug (see comments in computeEscaped)
@@ -218,6 +241,7 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
         "function FUNC(x, y) {var a;   y; a=0; a; x; a=0; a}");
   }
 
+  @Test
   public void testParameter4b() {
     // Go ahead and merge, if language-out is ES5, because that means IE8 does
     // not need to be supported.
@@ -227,6 +251,7 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
         "function FUNC(x, y) {         y; y=0; y; x; x=0; x}");
   }
 
+  @Test
   public void testParameter5() {
     // Merge parameters
     test(
@@ -234,6 +259,7 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
         "function FUNC(x, y, z) {         y; y=0; y; x; x=0; x}");
   }
 
+  @Test
   public void testLiveRangeChangeWithinCfgNode() {
     inFunction("var x; var y; x = 1, y = 2, y, x");
     inFunction("var x; var y; x = 1,x; y");
@@ -248,6 +274,7 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
     inFunction("var x; var y; y = 1, x = 1, x, y = y + 1, y");
   }
 
+  @Test
   public void testLiveRangeChangeWithinCfgNode2() {
     inFunction("var x; var y; var a; var b; y = 1, a = 1, y, a, x = 1, b = 1; x; b");
 
@@ -260,6 +287,7 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
         "var x; var y; var a;        y = 1, a = 1, y, x = 1; a; x; x = 1; x");
   }
 
+  @Test
   public void testFunctionNameReuse() {
     inFunction("function x() {}; x(); var y = 1; y");
 
@@ -279,6 +307,7 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
     inFunction("function x() {} var y = 1; y; x = 1; x");
   }
 
+  @Test
   public void testBug65688660() {
     test(
         lines(
@@ -309,6 +338,7 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testBug1401831() {
     // Verify that we don't wrongly merge "opt_a2" and "i" without considering
     // arguments[0] aliasing it.
@@ -328,11 +358,13 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
 
   // Code inside a class is automatically in strict mode, so duplicated parameter names are not
   // allowed.
+  @Test
   public void testBug64898400() {
     testSame("class C { f(a, b, c) {} }");
     testSame("class C { f(a, b=0, c=0) {} }");
   }
 
+  @Test
   public void testDontCoalesceClassDeclarationsWithConstDeclaration() {
     testSame(
         lines(
@@ -343,6 +375,7 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testDontCoalesceClassDeclarationsWithDestructuringDeclaration() {
     // See https://github.com/google/closure-compiler/issues/3019 - this used to cause a syntax
     // error by coalescing `B` and `C` without converting `class B {}` to a non-block-scoped
@@ -357,6 +390,7 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testObjDestructuringConst1() {
     test(
         lines(
@@ -375,6 +409,7 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testObjDestructuringConst2() {
     test(
         lines(
@@ -401,6 +436,7 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testObjDestructuringConst3() {
     testSame(
         lines(
@@ -411,6 +447,7 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testObjDestructuringVar() {
     test(
         lines(
@@ -427,6 +464,7 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testDestructuringDefaultValue() {
     testSame("function f(param) {  var a;  [a = param] = {};  param;  }");
 
@@ -435,6 +473,7 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
         "function f(param) {  [param = param] = {};  param;  }");
   }
 
+  @Test
   public void testDestructuringEvaluationOrder() {
     // Since the "a = 5" assignment is evaluated before "a = param" (which is
     // conditionally evaluated), we must not coalesce param and a.
@@ -443,6 +482,7 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
 
   // We would normally coalesce 'key' with 'collidesWithKey', but in doing so we'd change the 'let'
   // on line 2 to a 'var' which would cause the inner function to capture the wrong value of 'val'.
+  @Test
   public void testCapture() {
     testSame(
         lines(
@@ -455,6 +495,7 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testDestructuring() {
     testSame(
         lines(
@@ -465,6 +506,7 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
   public void testDeterministic() {
     // Make the variable interference graph a pentagon.
     //         a - b
@@ -517,6 +559,7 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
   }
 
   // Sometimes live range can be cross even within a VAR declaration.
+  @Test
   public void testVarLiveRangeCross() {
     inFunction("var a={}; var b=a.S(); b", "var a={};     a=a.S(); a");
 
@@ -535,6 +578,7 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
     inFunction("var a={}; d=1; d; var b=a.S(); var c=a.SS(); var d=a.SSS(); b; c; d");
   }
 
+  @Test
   public void testBug1445366() {
     // An assignment might not be complete if the RHS throws an exception.
     inFunction(
@@ -570,6 +614,7 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
 
   // Parameter 'e' is never used, but if we coalesce 'command' with 'e' then the 'if (command)'
   // check will produce an incorrect result if none of the 'case' statements is executed.
+  @Test
   public void testCannotReuseAnyParamsBug() {
     testSame(
         lines(
@@ -601,6 +646,7 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
             "};"));
   }
 
+  @Test
   public void testCannotReuseAnyParamsBugWithDestructuring() {
     testSame(lines(
         "function handleKeyboardShortcut({type: type}, key, isModifierPressed) {",
@@ -631,6 +677,7 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
         "};"));
   }
 
+  @Test
   public void testForInWithAssignment() {
     inFunction(
         "function f(commands) {"
@@ -649,6 +696,7 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
             + "}}");
   }
 
+  @Test
   public void testUsePseudoNames() {
     usePseudoName = true;
     inFunction("var x   = 0; print(x  ); var   y = 1; print(  y)",
@@ -699,6 +747,7 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
             "var closure_var"));
   }
 
+  @Test
   public void testUsePseudoNamesWithLets() {
     usePseudoName = true;
     inFunction(
@@ -722,6 +771,7 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
             "var x_y=1"));
   }
 
+  @Test
   public void testMaxVars() {
     String code = "";
     for (int i = 0; i < LiveVariablesAnalysis.MAX_VARIABLES_TO_ANALYZE + 1; i++) {
@@ -731,6 +781,7 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
   }
 
   // Testing Es6 features
+  @Test
   public void testCoalesceInInnerBlock() {
     inFunction(
         "{ var x = 1; var y = 2; y }",
@@ -741,6 +792,7 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
         "var x = 1;     x = 2; x;");
   }
 
+  @Test
   public void testLetSimple() {
     inFunction(
         "let x = 0; x; let y = 5; y",
@@ -761,6 +813,7 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
     // --> var x = 1; var y = 2; { let x = 3; y }
   }
 
+  @Test
   public void testLetDifferentBlocks() {
     inFunction(
         "var x = 0; if (1) { let y = 1; x } else { let z = 1; x }",
@@ -803,6 +856,7 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
             "  return a;"));
   }
 
+  @Test
   public void testLetWhileLoops() {
     // Simple
     // It violates the temporal deadzone for let x = 1; while (1) { x = 2; x; let x = 0; x } to
@@ -812,6 +866,7 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
     inFunction("let x = 1; for(;1;) { x = 2; x; let y = 0; y } x;");
   }
 
+  @Test
   public void testLetForLoops() {
     // TODO (simranarora) We should get rid of declaration hoisting from the normalize pass.
     // Right now, because of declaration hoisting, this following test reads the expected code as:
@@ -839,6 +894,7 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
     inFunction("let y = 2; for (let x = 1, z = 3; (x + z) < 10; x ++) { x + z; }");
   }
 
+  @Test
   public void testArrowFunctions() {
     inFunction(
         "var x = 1; var y = () => { let z = 0; z }",
@@ -870,6 +926,7 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
         "(x) => {     x = 1; x; }");
   }
 
+  @Test
   public void testCodeWithTwoFunctions() {
     // We only want to coalesce within a function, not across functions
     test(
@@ -906,6 +963,7 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
             "() => { var z = 3;     z = 4; z; };"));
   }
 
+  @Test
   public void testNestedFunctionCoalescing() {
     test(
         lines(

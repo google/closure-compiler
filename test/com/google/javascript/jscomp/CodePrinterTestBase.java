@@ -19,6 +19,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.rhino.Node;
 import junit.framework.TestCase;
+import org.junit.Before;
 
 /** Base class for tests that exercise {@link CodePrinter}. */
 public abstract class CodePrinterTestBase extends TestCase {
@@ -31,7 +32,8 @@ public abstract class CodePrinterTestBase extends TestCase {
   protected Compiler lastCompiler = null;
 
   @Override
-  protected void setUp() throws Exception {
+  @Before
+  public void setUp() throws Exception {
     super.setUp();
     allowWarnings = false;
     preserveTypeAnnotations = false;
