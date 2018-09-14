@@ -3931,10 +3931,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
 
   @Test
   public void testIn4() {
-    testTypes("Date in Object",
-        "left side of 'in'\n" +
-        "found   : function(new:Date, ?=, ?=, ?=, ?=, ?=, ?=, ?=): string\n" +
-        "required: string");
+    testTypes(
+        "Date in Object",
+        "left side of 'in'\n"
+            + "found   : function(new:Date, ?=, ?=, ?=, ?=, ?=, ?=, ?=): string\n"
+            + "required: (string|symbol)");
   }
 
   @Test
@@ -3960,19 +3961,36 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testIn7() {
     // Make sure we do inference in the 'in' expression.
     testTypes(
-        "/**\n" +
-        " * @param {number} x\n" +
-        " * @return {number}\n" +
-        " */\n" +
-        "function g(x) { return 5; }" +
-        "function f() {" +
-        "  var x = {};" +
-        "  x.foo = '3';" +
-        "  return g(x.foo) in {};" +
-        "}",
-        "actual parameter 1 of g does not match formal parameter\n" +
-        "found   : string\n" +
-        "required: number");
+        lines(
+            "/**",
+            " * @param {number} x",
+            " * @return {number}",
+            " */",
+            "function g(x) { return 5; }",
+            "function f() {",
+            "  var x = {};",
+            "  x.foo = '3';",
+            "  return g(x.foo) in {};",
+            "}"),
+        lines(
+            "actual parameter 1 of g does not match formal parameter",
+            "found   : string",
+            "required: number"));
+  }
+
+  @Test
+  public void testInWithWellKnownSymbol() {
+    testTypesWithCommonExterns("Symbol.iterator in Object");
+  }
+
+  @Test
+  public void testInWithUniqueSymbol() {
+    testTypes("Symbol('foo') in Object");
+  }
+
+  @Test
+  public void testInWithSymbol() {
+    testTypes("function f(/** symbol */ s) { return s in {}; }");
   }
 
   @Test

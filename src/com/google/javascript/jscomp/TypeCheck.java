@@ -771,7 +771,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         left = n.getFirstChild();
         right = n.getLastChild();
         rightType = getJSType(right);
-        validator.expectString(t, left, getJSType(left), "left side of 'in'");
+        validator.expectStringOrSymbol(t, left, getJSType(left), "left side of 'in'");
         validator.expectObject(t, n, rightType, "'in' requires an object");
         if (rightType.isStruct()) {
           report(t, right, IN_USED_WITH_STRUCT);
