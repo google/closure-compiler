@@ -22,9 +22,18 @@ import static com.google.javascript.jscomp.Es6RewriteClass.DYNAMIC_EXTENDS_TYPE;
 import static com.google.javascript.jscomp.Es6ToEs3Util.CANNOT_CONVERT;
 import static com.google.javascript.jscomp.Es6ToEs3Util.CANNOT_CONVERT_YET;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES6_MODULES;
+import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
+import static com.google.javascript.rhino.testing.TypeSubject.assertType;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
+import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.Token;
+import com.google.javascript.rhino.jstype.FunctionType;
+import com.google.javascript.rhino.jstype.JSType;
+import com.google.javascript.rhino.jstype.JSTypeNative;
+import com.google.javascript.rhino.jstype.JSTypeRegistry;
+import com.google.javascript.rhino.jstype.ObjectType;
 
 public final class Es6RewriteClassTest extends CompilerTestCase {
 
@@ -75,6 +84,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     setLanguageOut(LanguageMode.ECMASCRIPT3);
     enableTypeCheck();
+    enableTypeInfoValidation();
     enableScriptFeatureValidation();
   }
 
@@ -118,12 +128,42 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
 
   public void testSimpleClassStatement() {
     test("class C { }", "/** @constructor @struct */ let C = function() {};");
+
+    // get types we need to check
+    JSTypeRegistry registry = getLastCompiler().getTypeRegistry();
+    ObjectType classCInstanceType = registry.getGlobalType("C").toObjectType();
+    FunctionType classCConstructorType = classCInstanceType.getConstructor();
+
+    // `C` from `let C = function() {};`
+    Node cName = getNodeMatchingQName(getLastCompiler().getJsRoot(), "C");
+    assertNode(cName).hasToken(Token.NAME);
+    assertType(cName.getJSType()).isEqualTo(classCConstructorType);
+
+    // function() {}
+    Node function = cName.getOnlyChild();
+    assertNode(function).hasToken(Token.FUNCTION);
+    assertType(cName.getJSType()).isEqualTo(classCConstructorType);
   }
 
   public void testClassStatementWithConstructor() {
     test(
         "class C { constructor() {} }",
         "/** @constructor @struct */ let C = function() {};");
+
+    // get types we need to check
+    JSTypeRegistry registry = getLastCompiler().getTypeRegistry();
+    ObjectType classCInstanceType = registry.getGlobalType("C").toObjectType();
+    FunctionType classCConstructorType = classCInstanceType.getConstructor();
+
+    // `C` from `let C = function() {};`
+    Node cName = getNodeMatchingQName(getLastCompiler().getJsRoot(), "C");
+    assertNode(cName).hasToken(Token.NAME);
+    assertType(cName.getJSType()).isEqualTo(classCConstructorType);
+
+    // function() {}
+    Node function = cName.getOnlyChild();
+    assertNode(function).hasToken(Token.FUNCTION);
+    assertType(cName.getJSType()).isEqualTo(classCConstructorType);
   }
 
   public void testClassStatementWithMethod() {
@@ -133,6 +173,34 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
             "/** @constructor @struct */",
             "let C = function() {};",
             "C.prototype.method = function() {};"));
+
+    // get types we need to check
+    JSTypeRegistry registry = getLastCompiler().getTypeRegistry();
+    ObjectType classCInstanceType = registry.getGlobalType("C").toObjectType();
+    FunctionType classCConstructorType = classCInstanceType.getConstructor();
+    ObjectType classCPrototypeType = classCConstructorType.getPrototype();
+    JSType methodType = classCPrototypeType.getPropertyType("method");
+
+    // `C.prototype.method`
+    Node cPrototypeMethod =
+        getNodeMatchingQName(getLastCompiler().getJsRoot(), "C.prototype.method");
+    assertNode(cPrototypeMethod).matchesQualifiedName("C.prototype.method");
+    assertType(cPrototypeMethod.getJSType()).isEqualTo(methodType);
+
+    // `C.prototype`
+    Node cPrototype = cPrototypeMethod.getFirstChild();
+    assertNode(cPrototype).matchesQualifiedName("C.prototype");
+    assertType(cPrototype.getJSType()).isEqualTo(classCPrototypeType);
+
+    // `C`
+    Node cName = cPrototype.getFirstChild();
+    assertNode(cName).matchesQualifiedName("C");
+    assertType(cName.getJSType()).isEqualTo(classCConstructorType);
+
+    // `function() {}`
+    Node function = cPrototypeMethod.getNext();
+    assertNode(function).hasToken(Token.FUNCTION);
+    assertType(function.getJSType()).isEqualTo(methodType);
   }
 
   public void testClassStatementWithConstructorReferencingThis() {
@@ -960,15 +1028,47 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
 
   public void testSuperCall() {
     test(
-        "class D {} class C extends D { constructor() { super(); } }",
+        lines(
+            "class D {}", //
+            "class C extends D {",
+            "  constructor() { SUPER: super(); } ",
+            "}"),
         lines(
             "/** @constructor @struct */",
             "let D = function() {};",
             "/** @constructor @struct @extends {D} */",
             "let C = function() {",
-            "  D.call(this);",
+            "  SUPER: D.call(this);",
             "}",
             "$jscomp.inherits(C, D);"));
+
+    // get types we need to check
+    JSTypeRegistry registry = getLastCompiler().getTypeRegistry();
+    ObjectType classDInstanceType = registry.getGlobalType("D").toObjectType();
+    FunctionType classDConstructorType = classDInstanceType.getConstructor();
+    JSType dDotCallType = classDConstructorType.getPropertyType("call");
+    //
+    JSType classCInstanceType = registry.getGlobalType("C");
+
+    // D.call(this);
+    Node callNode = getNodeMatchingLabel(getLastCompiler().getJsRoot(), "SUPER").getOnlyChild();
+    assertNode(callNode).hasToken(Token.CALL);
+    assertType(callNode.getJSType()).isEqualTo(registry.getNativeType(JSTypeNative.VOID_TYPE));
+
+    // D.call
+    Node callee = callNode.getFirstChild();
+    assertNode(callee).matchesQualifiedName("D.call");
+    assertType(callee.getJSType()).isEqualTo(dDotCallType);
+
+    // D
+    Node superDotGReplacement = callee.getFirstChild();
+    assertNode(superDotGReplacement).matchesQualifiedName("D");
+    assertType(superDotGReplacement.getJSType()).isEqualTo(classDConstructorType);
+
+    // `this` node from `D.call(this)`
+    Node thisNode = callee.getNext();
+    assertNode(thisNode).hasToken(Token.THIS);
+    assertType(thisNode.getJSType()).isEqualTo(classCInstanceType);
   }
 
   public void testSuperCall_withArgument() {
@@ -1214,7 +1314,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
             "/** @unrestricted */",
             "class Bar extends Foo {",
             "  ['m']() {",
-            "    return super['m']() + 1;",
+            "    RETURN: return super['m']() + 1;",
             "  }",
             "}"),
         lines(
@@ -1224,7 +1324,47 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
             "/** @constructor @unrestricted @extends {Foo} @param {...?} var_args */",
             "let Bar = function(var_args) { Foo.apply(this, arguments); };",
             "$jscomp.inherits(Bar, Foo);",
-            "Bar.prototype['m'] = function () { return Foo.prototype['m'].call(this) + 1; };"));
+            "Bar.prototype['m'] = function () {",
+            "  RETURN: return Foo.prototype['m'].call(this) + 1;",
+            "};"));
+
+    // get types we need to check
+    JSTypeRegistry registry = getLastCompiler().getTypeRegistry();
+    ObjectType classFooInstanceType = registry.getGlobalType("Foo").toObjectType();
+    FunctionType classFooConstructorType = classFooInstanceType.getConstructor();
+    ObjectType classFooPrototypeType = classFooConstructorType.getPrototype();
+    JSType classBarInstanceType = registry.getGlobalType("Bar");
+
+    // Foo.prototype['m'].call(this)
+    Node callNode =
+        getNodeMatchingLabel(getLastCompiler().getJsRoot(), "RETURN").getFirstFirstChild();
+    assertNode(callNode).hasToken(Token.CALL);
+    assertType(callNode.getJSType()).isEqualTo(registry.getNativeType(JSTypeNative.UNKNOWN_TYPE));
+
+    // Foo.prototype['m'].call
+    Node callee = callNode.getFirstChild();
+    assertNode(callee).hasToken(Token.GETPROP);
+    assertType(callee.getJSType()).isEqualTo(registry.getNativeType(JSTypeNative.UNKNOWN_TYPE));
+
+    // Foo.prototype['m']
+    Node property = callee.getFirstChild();
+    assertNode(property).hasToken(Token.GETELEM);
+    assertType(callee.getJSType()).isEqualTo(registry.getNativeType(JSTypeNative.UNKNOWN_TYPE));
+
+    // Foo.prototype
+    Node prototype = property.getFirstChild();
+    assertNode(prototype).matchesQualifiedName("Foo.prototype").hasOriginalName("super");
+    assertType(prototype.getJSType()).isEqualTo(classFooPrototypeType);
+
+    // Foo
+    Node superDotGReplacement = prototype.getFirstChild();
+    assertNode(superDotGReplacement).matchesQualifiedName("Foo");
+    assertType(superDotGReplacement.getJSType()).isEqualTo(classFooConstructorType);
+
+    // `this` node from `Foo.prototype['m'].call(this)`
+    Node thisNode = callee.getNext();
+    assertNode(thisNode).hasToken(Token.THIS);
+    assertType(thisNode.getJSType()).isEqualTo(classBarInstanceType);
   }
 
   public void testSuperMethodInGetter() {
@@ -1371,6 +1511,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
   }
 
   public void testExtendFunction_withImplicitConstructor() {
+    disableTypeInfoValidation(); // type info is incorrect because transpilation did not finish
     testError(
         "class FooFunction extends Function {}",
         CANNOT_CONVERT);
@@ -2300,6 +2441,241 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
     assertThat(getLastCompiler().injected).isEmpty();
   }
 
+  /**
+   * Tests that we have reasonable source information on the transpiled nodes.
+   *
+   * <p>We do this by comparing the source information of nodes on the transpiled AST with nodes on
+   * a different parsed-but-not-transpiled AST.
+   */
+  public void testSimpleClassStatement_hasCorrectSourceInfo() {
+    String source = "class C { }";
+    String expected = "/** @constructor @struct */ let C = function() {};";
+
+    AstPair asts = testAndReturnAsts(source, expected);
+    Node sourceRoot = asts.sourceRoot;
+    Node expectedRoot = asts.expectedRoot;
+
+    // Get nodes from the original, pre-transpiled AST
+    // `C` from `class C { }`
+    Node sourceCName = getNodeMatchingQName(sourceRoot, "C");
+    Node sourceClass = sourceCName.getParent();
+
+    // `C` from `let C = function() {};` matches `C` from `class C { }`
+    Node expectedCName = getNodeMatchingQName(expectedRoot, "C");
+    assertNode(expectedCName).matchesQualifiedName("C").hasEqualSourceInfoTo(sourceCName);
+
+    // function() {}
+    Node expectedFunction = expectedCName.getOnlyChild();
+    assertNode(expectedFunction).hasToken(Token.FUNCTION).hasEqualSourceInfoTo(sourceClass);
+  }
+
+  public void testClassStatementWithConstructor_hasCorrectSourceInfo() {
+    String source = "class C { constructor() {} }";
+    String expected = "/** @constructor @struct */ let C = function() {};";
+
+    AstPair asts = testAndReturnAsts(source, expected);
+    Node sourceRoot = asts.sourceRoot;
+    Node expectedRoot = asts.expectedRoot;
+
+    // Get nodes from the original, pre-transpiled AST
+    // `C` from `class C {`
+    Node sourceCName = getNodeMatchingQName(sourceRoot, "C");
+    // `constructor() {}`
+    Node sourceConstructorFunction = getNodeMatchingQName(sourceRoot, "constructor").getOnlyChild();
+    assertNode(sourceConstructorFunction).hasToken(Token.FUNCTION);
+
+    // `C` from `let C = function() {};` matches `C` from `class C {`
+    Node expectedCName = getNodeMatchingQName(expectedRoot, "C");
+    assertNode(expectedCName).matchesQualifiedName("C").hasEqualSourceInfoTo(sourceCName);
+
+    // `function() {}` matches `constructor() {}`
+    Node expectedFunction = expectedCName.getOnlyChild();
+    assertNode(expectedFunction)
+        .hasToken(Token.FUNCTION)
+        .hasEqualSourceInfoTo(sourceConstructorFunction);
+  }
+
+  public void testClassStatementWithMethod_hasCorrectSourceInfo() {
+    String source = "class C { method() {}; }";
+    String expected =
+        lines(
+            "/** @constructor @struct */",
+            "let C = function() {};",
+            "C.prototype.method = function() {};");
+
+    AstPair asts = testAndReturnAsts(source, expected);
+    Node sourceRoot = asts.sourceRoot;
+    Node expectedRoot = asts.expectedRoot;
+
+    // Get nodes from the original, pre-transpiled AST
+    // The MEMBER_FUNCTION_DEF for `method`
+    Node sourceMethodMemberDef = getNodeMatchingQName(sourceRoot, "method");
+    // The FUNCTION node for `method() {}`
+    Node sourceMethodFunction = sourceMethodMemberDef.getOnlyChild();
+
+    // `C.prototype.method` has source info matching `method`
+    Node cPrototypeMethod = getNodeMatchingQName(expectedRoot, "C.prototype.method");
+    assertNode(cPrototypeMethod).hasEqualSourceInfoTo(sourceMethodMemberDef);
+
+    // `C.prototype` has source info matching `method`
+    Node cPrototype = cPrototypeMethod.getFirstChild();
+    assertNode(cPrototype)
+        .matchesQualifiedName("C.prototype")
+        .hasEqualSourceInfoTo(sourceMethodMemberDef);
+
+    // `C` has source info matching `method`
+    Node cName = cPrototype.getFirstChild();
+    assertNode(cName).matchesQualifiedName("C").hasEqualSourceInfoTo(sourceMethodMemberDef);
+
+    // `function() {}` has source info matching `method() {}`
+    assertNode(cPrototypeMethod.getNext())
+        .hasToken(Token.FUNCTION)
+        .hasEqualSourceInfoTo(sourceMethodFunction);
+  }
+
+  public void testSuperCall_hasCorrectSourceInfo() {
+    String source =
+        lines(
+            "class D {}", //
+            "class C extends D {",
+            "  constructor() {",
+            "    SUPER: super();",
+            "  } ",
+            "}");
+    String expected =
+        lines(
+            "/** @constructor @struct */",
+            "let D = function() {};",
+            "/** @constructor @struct @extends {D} */",
+            "let C = function() {",
+            "  SUPER: D.call(this);",
+            "}",
+            "$jscomp.inherits(C, D);");
+
+    AstPair asts = testAndReturnAsts(source, expected);
+    Node sourceRoot = asts.sourceRoot;
+    Node expectedRoot = asts.expectedRoot;
+
+    // Get nodes from the original, pre-transpiled AST
+    Node sourceSuperCall = getNodeMatchingLabel(sourceRoot, "SUPER").getOnlyChild();
+    assertNode(sourceSuperCall).hasToken(Token.CALL);
+    Node sourceSuper = sourceSuperCall.getFirstChild();
+    assertNode(sourceSuper).hasToken(Token.SUPER);
+
+    // D.call(this); has the position and length of `super()`
+    Node callNode = getNodeMatchingLabel(expectedRoot, "SUPER").getOnlyChild();
+    assertNode(callNode).hasToken(Token.CALL).hasEqualSourceInfoTo(sourceSuperCall);
+
+    // D.call has the position and length of `super`
+    Node callee = callNode.getFirstChild();
+    assertNode(callee).matchesQualifiedName("D.call").hasEqualSourceInfoTo(sourceSuper);
+
+    // D has the position and length of `super`
+    Node superDotGReplacement = callee.getFirstChild();
+    assertNode(superDotGReplacement).matchesQualifiedName("D").hasEqualSourceInfoTo(sourceSuper);
+
+    // `this` node from `D.call(this)` has the position and length of `super`
+    Node thisNode = callee.getNext();
+    assertNode(thisNode).hasToken(Token.THIS).hasEqualSourceInfoTo(sourceSuper);
+  }
+
+  public void testComputedSuper_hasCorrectSourceInfo() {
+    String source =
+        lines(
+            "/** @unrestricted */",
+            "class Foo {",
+            "  ['m']() { return 1; }",
+            "}",
+            "",
+            "/** @unrestricted */",
+            "class Bar extends Foo {",
+            "  ['m']() {",
+            "    RETURN: return super['m']();",
+            "  }",
+            "}");
+    String expected =
+        lines(
+            "/** @constructor @unrestricted */",
+            "let Foo = function() {};",
+            "Foo.prototype['m'] = function() { return 1; };",
+            "/** @constructor @unrestricted @extends {Foo} @param {...?} var_args */",
+            "let Bar = function(var_args) { Foo.apply(this, arguments); };",
+            "$jscomp.inherits(Bar, Foo);",
+            "Bar.prototype['m'] = function () {",
+            "  RETURN: return Foo.prototype['m'].call(this);",
+            "};");
+
+    AstPair asts = testAndReturnAsts(source, expected);
+    Node sourceRoot = asts.sourceRoot;
+    Node expectedRoot = asts.expectedRoot;
+
+    // Get nodes from the original, pre-transpiled AST
+    Node sourceSuperCall = getNodeMatchingLabel(sourceRoot, "RETURN").getOnlyChild();
+    assertNode(sourceSuperCall).hasToken(Token.CALL);
+    Node sourceSuperGet = sourceSuperCall.getFirstChild();
+    assertNode(sourceSuperGet).hasToken(Token.GETELEM);
+    Node sourceSuper = sourceSuperGet.getFirstChild();
+    assertNode(sourceSuper).hasToken(Token.SUPER);
+
+    // Foo.prototype['m'].call(this) matches source info of `super['m']()`
+    Node callNode = getNodeMatchingLabel(expectedRoot, "RETURN").getOnlyChild();
+    assertNode(callNode).hasToken(Token.CALL).hasEqualSourceInfoTo(sourceSuperCall);
+
+    // Foo.prototype['m'].call has the position and length of `super['m']'`
+    Node callee = callNode.getFirstChild();
+    assertNode(callee).hasToken(Token.GETPROP).hasEqualSourceInfoTo(sourceSuperGet);
+
+    // Foo.prototype['m'] has the position and length of `super['m']'`
+    Node property = callee.getFirstChild();
+    assertNode(property).hasToken(Token.GETELEM).hasEqualSourceInfoTo(sourceSuperGet);
+
+    // Foo.prototype has the position and length of `super`
+    Node prototype = property.getFirstChild();
+    assertNode(prototype).matchesQualifiedName("Foo.prototype").hasEqualSourceInfoTo(sourceSuper);
+
+    // Foo has the position and length of `super`
+    Node superDotGReplacement = prototype.getFirstChild();
+    assertNode(superDotGReplacement).matchesQualifiedName("Foo").hasEqualSourceInfoTo(sourceSuper);
+
+    // `this` node from `Foo.prototype['m'].call(this)` has position and length of `super['m']`
+    Node thisNode = callee.getNext();
+    assertNode(thisNode).hasToken(Token.THIS).hasEqualSourceInfoTo(sourceSuperGet);
+  }
+
+  /** Returns the first node (preorder) in the given AST labeled as {@code label} */
+  private Node getNodeMatchingLabel(Node root, String label) {
+    if (root.isLabel() && root.getFirstChild().getString().equals(label)) {
+      // "FOO: return foo;"
+      //   becomes
+      // LABEL
+      //   LABEL_NAME FOO
+      //   RETURN
+      //   NAME foo
+      return root.getSecondChild();
+    }
+    for (Node child : root.children()) {
+      Node result = getNodeMatchingLabel(child, label);
+      if (result != null) {
+        return result;
+      }
+    }
+    return null;
+  }
+
+  /** Returns the first node (preorder) in the given AST that matches the given qualified name */
+  private Node getNodeMatchingQName(Node root, String qname) {
+    if (root.matchesQualifiedName(qname)) {
+      return root;
+    }
+    for (Node child : root.children()) {
+      Node result = getNodeMatchingQName(child, qname);
+      if (result != null) {
+        return result;
+      }
+    }
+    return null;
+  }
+
   @Override
   protected Compiler createCompiler() {
     return new NoninjectingCompiler();
@@ -2308,5 +2684,28 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
   @Override
   protected NoninjectingCompiler getLastCompiler() {
     return (NoninjectingCompiler) super.getLastCompiler();
+  }
+
+  /**
+   * Tests that the transpiled source matches the expected code and then returns the AST roots for
+   * the source and the transpiled source respectively.
+   */
+  private AstPair testAndReturnAsts(String source, String expected) {
+    Node originalRoot = createCompiler().parseTestCode(source);
+
+    test(source, expected);
+
+    return new AstPair(originalRoot, getLastCompiler().getJsRoot());
+  }
+
+  private static class AstPair {
+    final Node sourceRoot;
+
+    final Node expectedRoot;
+
+    AstPair(Node sourceRoot, Node expectedRoot) {
+      this.sourceRoot = sourceRoot;
+      this.expectedRoot = expectedRoot;
+    }
   }
 }

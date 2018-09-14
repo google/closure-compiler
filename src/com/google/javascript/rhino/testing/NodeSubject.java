@@ -120,6 +120,10 @@ public final class NodeSubject extends Subject<NodeSubject, Node> {
     return this;
   }
 
+  public NodeSubject hasEqualSourceInfoTo(Node other) {
+    return hasLineno(other.getLineno()).hasCharno(other.getCharno()).hasLength(other.getLength());
+  }
+
   public NodeSubject isIndexable(boolean isIndexable) {
     check("isIndexable()").that(actual().isIndexable()).isEqualTo(isIndexable);
     return this;

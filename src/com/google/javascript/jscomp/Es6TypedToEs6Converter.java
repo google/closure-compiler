@@ -269,7 +269,8 @@ public final class Es6TypedToEs6Converter implements NodeTraversal.Callback, Hot
         return;
       }
 
-      metadata.insertNodeAndAdvance(createPropertyDefinition(t, member, metadata.fullClassName));
+      metadata.insertNodeAndAdvance(
+          createPropertyDefinition(t, member, metadata.getFullClassNameNode().getQualifiedName()));
       t.reportCodeChange();
     }
 
