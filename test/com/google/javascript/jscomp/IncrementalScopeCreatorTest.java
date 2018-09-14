@@ -28,13 +28,16 @@ import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import java.util.List;
 import junit.framework.TestCase;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
-/**
- * A tests for {@link IncrementalScopeCreator}.
- */
+/** A tests for {@link IncrementalScopeCreator}. */
+@RunWith(JUnit4.class)
 public final class IncrementalScopeCreatorTest extends TestCase {
 
-  public void testMemoization() throws Exception {
+  @Test
+  public void testMemoization() {
 
     List<SourceFile> externs = ImmutableList.of(
         SourceFile.fromCode("externs.js", "var ext"));
@@ -65,7 +68,8 @@ public final class IncrementalScopeCreatorTest extends TestCase {
     }
   }
 
-  public void testParialGlobalScopeRefresh() throws Exception {
+  @Test
+  public void testParialGlobalScopeRefresh() {
     List<SourceFile> externs = ImmutableList.of(
         SourceFile.fromCode("externs.js", "var ext"));
     List<SourceFile> srcs = ImmutableList.of(
@@ -126,7 +130,8 @@ public final class IncrementalScopeCreatorTest extends TestCase {
     IncrementalScopeCreator.getInstance(compiler).thaw();
   }
 
-  public void testPartialGlobalScopeRefreshWithMove() throws Exception {
+  @Test
+  public void testPartialGlobalScopeRefreshWithMove() {
     // This test verifies that when a variable declarations moves between script, the
     // original script correctly "forgets" that the moved variables was associated with
     // it.  If this were not the case, invalidating the original script would
@@ -195,7 +200,8 @@ public final class IncrementalScopeCreatorTest extends TestCase {
     creator.thaw();
   }
 
-  public void testRefreshedGlobalScopeWithRedeclaration() throws Exception {
+  @Test
+  public void testRefreshedGlobalScopeWithRedeclaration() {
 
     List<SourceFile> externs = ImmutableList.of(
         SourceFile.fromCode("externs.js", ""));
@@ -231,7 +237,8 @@ public final class IncrementalScopeCreatorTest extends TestCase {
     IncrementalScopeCreator.getInstance(compiler).thaw();
   }
 
-  public void testValidScopeReparenting() throws Exception {
+  @Test
+  public void testValidScopeReparenting() {
     List<SourceFile> externs = ImmutableList.of(
         SourceFile.fromCode("externs.js", "var ext"));
     List<SourceFile> srcs = ImmutableList.of(

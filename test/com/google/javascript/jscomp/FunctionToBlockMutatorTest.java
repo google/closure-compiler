@@ -25,21 +25,26 @@ import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import junit.framework.TestCase;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
-/**
- * @author johnlenz@google.com (John Lenz)
- */
+/** @author johnlenz@google.com (John Lenz) */
+@RunWith(JUnit4.class)
 public final class FunctionToBlockMutatorTest extends TestCase {
 
   private boolean needsDefaultResult;
   private boolean isCallInLoop;
 
   @Override
+  @Before
   public void setUp() {
     needsDefaultResult = false;
     isCallInLoop = false;
   }
 
+  @Test
   public void testMutateNoReturnWithoutResultAssignment() {
     helperMutate(
         "function foo(){}; foo();",
@@ -47,6 +52,7 @@ public final class FunctionToBlockMutatorTest extends TestCase {
         "foo");
   }
 
+  @Test
   public void testMutateNoReturnWithResultAssignment() {
     needsDefaultResult = true;
     helperMutate(
@@ -55,7 +61,7 @@ public final class FunctionToBlockMutatorTest extends TestCase {
         "foo");
   }
 
-
+  @Test
   public void testMutateNoValueReturnWithoutResultAssignment() {
     helperMutate(
         "function foo(){return;}; foo();",
@@ -63,6 +69,7 @@ public final class FunctionToBlockMutatorTest extends TestCase {
         "foo", null);
   }
 
+  @Test
   public void testMutateNoValueReturnWithResultAssignment() {
     helperMutate(
         "function foo(){return;}; var result = foo();",
@@ -70,6 +77,7 @@ public final class FunctionToBlockMutatorTest extends TestCase {
         "foo");
   }
 
+  @Test
   public void testMutateValueReturnWithoutResultAssignment() {
     helperMutate(
         "function foo(){return true;}; foo();",
@@ -77,6 +85,7 @@ public final class FunctionToBlockMutatorTest extends TestCase {
         "foo", null);
   }
 
+  @Test
   public void testMutateValueReturnWithResultAssignment() {
     needsDefaultResult = true;
     helperMutate(
@@ -85,6 +94,7 @@ public final class FunctionToBlockMutatorTest extends TestCase {
         "foo", "x");
   }
 
+  @Test
   public void testMutateWithMultipleReturns() {
     needsDefaultResult = true;
     helperMutate(
@@ -105,6 +115,7 @@ public final class FunctionToBlockMutatorTest extends TestCase {
         "foo");
   }
 
+  @Test
   public void testMutateWithParameters1() {
     // Simple call with useless parameter
     helperMutate(
@@ -113,6 +124,7 @@ public final class FunctionToBlockMutatorTest extends TestCase {
         "foo", null);
   }
 
+  @Test
   public void testMutateWithParameters2() {
     // Simple call with parameter
     helperMutate(
@@ -121,6 +133,7 @@ public final class FunctionToBlockMutatorTest extends TestCase {
         "foo", null);
   }
 
+  @Test
   public void testMutateWithParameters3() {
     // Parameter has side-effects.
     helperMutate(
@@ -129,6 +142,7 @@ public final class FunctionToBlockMutatorTest extends TestCase {
         "foo", null);
   }
 
+  @Test
   public void testMutate8() {
     // Parameter has side-effects.
     helperMutate(
@@ -137,6 +151,7 @@ public final class FunctionToBlockMutatorTest extends TestCase {
         "foo", null);
   }
 
+  @Test
   public void testMutateInitializeUninitializedVars1() {
     isCallInLoop = true;
     helperMutate(
@@ -146,6 +161,7 @@ public final class FunctionToBlockMutatorTest extends TestCase {
         null);
   }
 
+  @Test
   public void testMutateInitializeUninitializedVars2() {
     helperMutate(
         "function foo(a) {for(var b in c)return a;}; foo(1);",
@@ -163,6 +179,7 @@ public final class FunctionToBlockMutatorTest extends TestCase {
         null);
   }
 
+  @Test
   public void testMutateInitializeUninitializedLets1() {
     isCallInLoop = true;
     helperMutate(
@@ -172,6 +189,7 @@ public final class FunctionToBlockMutatorTest extends TestCase {
         null);
   }
 
+  @Test
   public void testMutateInitializeUninitializedLets2() {
     helperMutate(
         "function foo(a) {for(let b in c)return a;}; foo(1);",
@@ -189,6 +207,7 @@ public final class FunctionToBlockMutatorTest extends TestCase {
         null);
   }
 
+  @Test
   public void testMutateCallInLoopVars1() {
     String src = lines(
         "function foo(a) {",
@@ -214,6 +233,7 @@ public final class FunctionToBlockMutatorTest extends TestCase {
         null);
   }
 
+  @Test
   public void testMutateFunctionDefinition() {
     // Function declarations are rewritten as function expressions.
     helperMutate(
@@ -223,6 +243,7 @@ public final class FunctionToBlockMutatorTest extends TestCase {
         null);
   }
 
+  @Test
   public void testMutateFunctionDefinitionHoisting() {
     helperMutate(
         lines(

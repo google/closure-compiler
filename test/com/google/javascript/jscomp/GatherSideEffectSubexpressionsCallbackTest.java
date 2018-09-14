@@ -20,24 +20,28 @@ import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.GatherSideEffectSubexpressionsCallback.GetReplacementSideEffectSubexpressions;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-
-import junit.framework.TestCase;
-
 import java.util.ArrayList;
 import java.util.List;
+import junit.framework.TestCase;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /**
  * Tests for {@link GatherSideEffectSubexpressionsCallback}
  *
  */
+@RunWith(JUnit4.class)
 public final class GatherSideEffectSubexpressionsCallbackTest extends TestCase {
-  public void testAndOr() throws Exception {
+  @Test
+  public void testAndOr() {
     Node andNode = getSideEffectsAndNode();
     checkKeepSimplifiedShortCircuitExpr(andNode,
                                         ImmutableList.of("foo&&(bar=0)"));
   }
 
-  public void testIllegalArgumentIfNotAndOr() throws Exception {
+  @Test
+  public void testIllegalArgumentIfNotAndOr() {
     Node nameNode = Node.newString(Token.NAME, "foo");
     try {
       checkKeepSimplifiedShortCircuitExpr(nameNode,
@@ -48,7 +52,8 @@ public final class GatherSideEffectSubexpressionsCallbackTest extends TestCase {
     }
   }
 
-  public void testIllegalArgumentIfNoSideEffectAndOr() throws Exception {
+  @Test
+  public void testIllegalArgumentIfNoSideEffectAndOr() {
     Node andNode = getNoSideEffectsAndNode();
     try {
       checkKeepSimplifiedShortCircuitExpr(andNode,
@@ -59,7 +64,8 @@ public final class GatherSideEffectSubexpressionsCallbackTest extends TestCase {
     }
   }
 
-  public void testHook() throws Exception {
+  @Test
+  public void testHook() {
     Node hook = getSideEffectsHookNode();
 
     checkKeepSimplifiedHookExpr(hook,
@@ -68,7 +74,8 @@ public final class GatherSideEffectSubexpressionsCallbackTest extends TestCase {
                                 ImmutableList.of("foo?bar=0:baz=0"));
   }
 
-  public void testIllegalArgumentIfNotHook() throws Exception {
+  @Test
+  public void testIllegalArgumentIfNotHook() {
     Node nameNode = Node.newString(Token.NAME, "foo");
     try {
       checkKeepSimplifiedHookExpr(nameNode,
@@ -81,7 +88,8 @@ public final class GatherSideEffectSubexpressionsCallbackTest extends TestCase {
     }
   }
 
-  public void testIllegalArgumentIfNoSideEffectHook() throws Exception {
+  @Test
+  public void testIllegalArgumentIfNoSideEffectHook() {
     Node hookNode = getNoSideEffectsHookNode();
     try {
       checkKeepSimplifiedHookExpr(hookNode,
@@ -94,7 +102,8 @@ public final class GatherSideEffectSubexpressionsCallbackTest extends TestCase {
     }
   }
 
-  public void testIllegalArgumentIfHookKeepNeitherBranch() throws Exception {
+  @Test
+  public void testIllegalArgumentIfHookKeepNeitherBranch() {
     Node hookNode = getSideEffectsHookNode();
     try {
       checkKeepSimplifiedHookExpr(hookNode,

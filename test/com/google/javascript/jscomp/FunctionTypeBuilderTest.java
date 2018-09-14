@@ -23,14 +23,20 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.ObjectType;
 import java.util.List;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /**
  * Unit tests for {@link FunctionTypeBuilder}.
  *
  */
+@RunWith(JUnit4.class)
 public final class FunctionTypeBuilderTest extends CompilerTestCase {
 
   @Override
+  @Before
   public void setUp() throws Exception {
     super.setUp();
     enableParseTypeInfo();
@@ -51,11 +57,13 @@ public final class FunctionTypeBuilderTest extends CompilerTestCase {
     return 1;
   }
 
-  public void testValidBuiltInTypeRedefinition() throws Exception {
+  @Test
+  public void testValidBuiltInTypeRedefinition() {
     testSame(externs(ALL_NATIVE_EXTERN_TYPES), srcs(""));
   }
 
-  public void testBuiltInTypeDifferentReturnType() throws Exception {
+  @Test
+  public void testBuiltInTypeDifferentReturnType() {
     test(
         externs(
             "/**\n"
@@ -72,7 +80,8 @@ public final class FunctionTypeBuilderTest extends CompilerTestCase {
                     + "expected: function(new:String, *=): string"));
   }
 
-  public void testBuiltInTypeDifferentNumParams() throws Exception {
+  @Test
+  public void testBuiltInTypeDifferentNumParams() {
     test(
         externs(
             "/**\n"
@@ -88,7 +97,8 @@ public final class FunctionTypeBuilderTest extends CompilerTestCase {
                     + "expected: function(new:String, *=): string"));
   }
 
-  public void testBuiltInTypeDifferentNumParams2() throws Exception {
+  @Test
+  public void testBuiltInTypeDifferentNumParams2() {
     test(
         externs(
             "/**\n"
@@ -104,7 +114,8 @@ public final class FunctionTypeBuilderTest extends CompilerTestCase {
                     + "expected: function(new:String, *=): string"));
   }
 
-  public void testBuiltInTypeDifferentParamType() throws Exception {
+  @Test
+  public void testBuiltInTypeDifferentParamType() {
     test(
         externs(
             "/**\n"
@@ -120,7 +131,8 @@ public final class FunctionTypeBuilderTest extends CompilerTestCase {
                     + "expected: function(new:String, *=): string"));
   }
 
-  public void testBadFunctionTypeDefinition() throws Exception {
+  @Test
+  public void testBadFunctionTypeDefinition() {
     test(
         externs("/** @constructor */function Function(opt_str) {}\n"),
         srcs(""),
@@ -131,7 +143,8 @@ public final class FunctionTypeBuilderTest extends CompilerTestCase {
                     + "expected: function(new:Function, ...*): ?"));
   }
 
-  public void testInlineJsDoc() throws Exception {
+  @Test
+  public void testInlineJsDoc() {
     test(
         externs("/** @return {number} */ function f(/** string */ x) { return x; }"),
         srcs(""),
@@ -139,7 +152,8 @@ public final class FunctionTypeBuilderTest extends CompilerTestCase {
             .withMessage("inconsistent return type\n" + "found   : string\n" + "required: number"));
   }
 
-  public void testInlineJsDoc2() throws Exception {
+  @Test
+  public void testInlineJsDoc2() {
     test(
         externs(
             "/** @return {T} \n @template T */ "
@@ -150,7 +164,8 @@ public final class FunctionTypeBuilderTest extends CompilerTestCase {
             .withMessage("initializing variable\n" + "found   : number\n" + "required: string"));
   }
 
-  public void testExternSubTypes() throws Exception {
+  @Test
+  public void testExternSubTypes() {
     testSame(externs(ALL_NATIVE_EXTERN_TYPES), srcs(""));
 
     List<FunctionType> subtypes =
