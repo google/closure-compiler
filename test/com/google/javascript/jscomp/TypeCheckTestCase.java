@@ -32,12 +32,14 @@ import com.google.javascript.rhino.jstype.ObjectType;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import org.junit.Before;
 
 abstract class TypeCheckTestCase extends CompilerTypeTestCase {
 
   private boolean reportUnknownTypes = false;
 
   @Override
+  @Before
   public void setUp() throws Exception {
     super.setUp();
     this.reportUnknownTypes = false;

@@ -27,9 +27,12 @@ import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.TypeMatchingStrategy.MatchResult;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.JSType;
-
 import junit.framework.TestCase;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
+@RunWith(JUnit4.class)
 public final class TypeMatchingStrategyTest extends TestCase {
 
   private static final String EXTERNS = Joiner.on("\n").join(
@@ -40,6 +43,7 @@ public final class TypeMatchingStrategyTest extends TestCase {
       "/** @constructor @extends {SuperType} */",
       "var SubType = function() {};");
 
+  @Test
   public void testMatch_default() {
     assertMatch(LOOSE, "!SuperType", "!SuperType", true, false);
     assertMatch(LOOSE, "!SuperType", "?SuperType", true, false);
@@ -55,6 +59,7 @@ public final class TypeMatchingStrategyTest extends TestCase {
     assertMatch(LOOSE, "?", "string", true, false);
   }
 
+  @Test
   public void testMatch_respectNullability() {
     assertMatch(STRICT_NULLABILITY, "!SuperType", "!SuperType", true, false);
     assertMatch(STRICT_NULLABILITY, "!SuperType", "?SuperType", false, false);
@@ -70,6 +75,7 @@ public final class TypeMatchingStrategyTest extends TestCase {
     assertMatch(STRICT_NULLABILITY, "?", "string", true, false);
   }
 
+  @Test
   public void testMatch_subtypes() {
     assertMatch(SUBTYPES, "!SuperType", "!SuperType", true, false);
     assertMatch(SUBTYPES, "!SuperType", "?SuperType", false, false);
@@ -102,6 +108,7 @@ public final class TypeMatchingStrategyTest extends TestCase {
     assertMatch(SUBTYPES, "*", "?", false, false);
   }
 
+  @Test
   public void testMatch_exact() {
     assertMatch(EXACT, "!SuperType", "!SuperType", true, false);
     assertMatch(EXACT, "!SuperType", "?SuperType", false, false);
