@@ -575,6 +575,11 @@ public abstract class CompilerTestCase extends TestCase {
     this("");
   }
 
+  @SuppressWarnings("MissingOverride")
+  public String getName() {
+    return this.getClass().getSimpleName();
+  }
+
   // Overridden here so that we can easily find all classes that override.
   @Override
   @Before
